@@ -14,7 +14,7 @@ const {
 
 const ICONS = {
   [ICON_LABEL_LEVEL.INFO]: "chrome://global/skin/icons/info.svg",
-  [ICON_LABEL_LEVEL.OK]: "chrome://global/skin/icons/check.svg",
+  [ICON_LABEL_LEVEL.OK]: "chrome://global/skin/icons/success.svg",
 };
 
 /* This component displays an icon accompanied by some content. It's similar

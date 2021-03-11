@@ -5,7 +5,7 @@
 :host {
   --info-icon-url: url("chrome://global/skin/icons/info.svg");
   --warn-icon-url: url("chrome://global/skin/icons/warning.svg");
-  --check-icon-url: url("chrome://global/skin/icons/check.svg");
+  --success-icon-url: url("chrome://global/skin/icons/success.svg");
   --error-icon-url: url("chrome://global/skin/icons/error.svg");
   --close-icon-url: url("chrome://global/skin/icons/close.svg");
   --icon-size: 16px;
@@ -45,7 +45,7 @@
   background-color: var(--green-50);
   color: var(--green-90);
 
-  --message-bar-icon-url: var(--check-icon-url);
+  --message-bar-icon-url: var(--success-icon-url);
   --in-content-button-background: var(--green-60);
   --in-content-button-background-hover: var(--green-70);
   --in-content-button-background-active: var(--green-80);

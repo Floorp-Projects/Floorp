@@ -343,7 +343,7 @@ addon-card[expanded] .update-postponed-bar + .addon-card-message {
 
 .addon-badge-verified {
   background-color: var(--green-70);
-  background-image: url("chrome://global/skin/icons/check.svg");
+  background-image: url("chrome://global/skin/icons/success.svg");
 }
 
 .theme-enable-button {

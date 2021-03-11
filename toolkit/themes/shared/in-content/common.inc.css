@@ -606,9 +606,9 @@ xul|checkbox {
 xul|*.checkbox-check,
 html|input[type="checkbox"] {
   appearance: none;
-  width: 20px;
-  height: 20px;
-  padding: 1px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
   margin-block: 3px; /* extend the vertical clicktarget */
@@ -677,8 +677,9 @@ xul|radio {
 html|input[type="radio"],
 xul|*.radio-check {
   appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 100%;
   margin-block: 3px; /* extend the vertical clicktarget */
