@@ -534,16 +534,24 @@ class RefType {
   bool operator!=(const RefType& that) const { return ptc_ != that.ptc_; }
 };
 
-// The ValType represents the storage type of a WebAssembly location, whether
-// parameter, local, or global.
+class FieldTypeTraits {
+ public:
+  enum Kind {
+    I8 = uint8_t(TypeCode::I8),
+    I16 = uint8_t(TypeCode::I16),
+    I32 = uint8_t(TypeCode::I32),
+    I64 = uint8_t(TypeCode::I64),
+    F32 = uint8_t(TypeCode::F32),
+    F64 = uint8_t(TypeCode::F64),
+    V128 = uint8_t(TypeCode::V128),
+    Rtt = uint8_t(TypeCode::Rtt),
+    Ref = uint8_t(AbstractReferenceTypeCode),
+  };
 
-class ValType {
-  PackedTypeCode tc_;
-
-#ifdef DEBUG
-  bool isValidTypeCode() {
-    MOZ_ASSERT(isValid());
-    switch (tc_.typeCode()) {
+  static bool isValidTypeCode(TypeCode tc) {
+    switch (tc) {
+      case TypeCode::I8:
+      case TypeCode::I16:
       case TypeCode::I32:
       case TypeCode::I64:
       case TypeCode::F32:
@@ -559,8 +567,9 @@ class ValType {
         return false;
     }
   }
-#endif
+};
 
+class ValTypeTraits {
  public:
   enum Kind {
     I32 = uint8_t(TypeCode::I32),
@@ -572,8 +581,38 @@ class ValType {
     Ref = uint8_t(AbstractReferenceTypeCode),
   };
 
- private:
-  explicit ValType(TypeCode c) : tc_(PackedTypeCode::pack(c)) {
+  static bool isValidTypeCode(TypeCode tc) {
+    switch (tc) {
+      case TypeCode::I32:
+      case TypeCode::I64:
+      case TypeCode::F32:
+      case TypeCode::F64:
+      case TypeCode::V128:
+      case TypeCode::FuncRef:
+      case TypeCode::ExternRef:
+      case TypeCode::EqRef:
+      case TypeCode::Rtt:
+      case AbstractReferenceTypeIndexCode:
+        return true;
+      default:
+        return false;
+    }
+  }
+};
+
+// The PackedType represents the storage type of a WebAssembly location, whether
+// parameter, local, field, or global. See specializations below for ValType and
+// FieldType.
+
+template <class T>
+class PackedType : public T {
+ public:
+  using Kind = typename T::Kind;
+
+ protected:
+  PackedTypeCode tc_;
+
+  explicit PackedType(TypeCode c) : tc_(PackedTypeCode::pack(c)) {
     MOZ_ASSERT(c != AbstractReferenceTypeIndexCode);
     MOZ_ASSERT(isValid());
   }
@@ -584,22 +623,20 @@ class ValType {
   }
 
  public:
-  ValType() : tc_(PackedTypeCode::invalid()) {}
+  PackedType() : tc_(PackedTypeCode::invalid()) {}
 
-  MOZ_IMPLICIT ValType(Kind c) : tc_(PackedTypeCode::pack(TypeCode(c))) {
-    MOZ_ASSERT(c != Ref);
-    MOZ_ASSERT(isValidTypeCode());
+  MOZ_IMPLICIT PackedType(Kind c) : tc_(PackedTypeCode::pack(TypeCode(c))) {
+    MOZ_ASSERT(c != Kind::Ref);
+    MOZ_ASSERT(isValid());
   }
 
-  MOZ_IMPLICIT ValType(RefType rt) : tc_(rt.packed()) {
-    MOZ_ASSERT(isValidTypeCode());
+  MOZ_IMPLICIT PackedType(RefType rt) : tc_(rt.packed()) {
+    MOZ_ASSERT(isValid());
   }
 
-  explicit ValType(PackedTypeCode ptc) : tc_(ptc) {
-    MOZ_ASSERT(isValidTypeCode());
-  }
+  explicit PackedType(PackedTypeCode ptc) : tc_(ptc) { MOZ_ASSERT(isValid()); }
 
-  explicit ValType(jit::MIRType mty) {
+  explicit PackedType(jit::MIRType mty) {
     switch (mty) {
       case jit::MIRType::Int32:
         tc_ = PackedTypeCode::pack(TypeCode::I32);
@@ -617,13 +654,15 @@ class ValType {
         tc_ = PackedTypeCode::pack(TypeCode::V128);
         break;
       default:
-        MOZ_CRASH("ValType(MIRType): unexpected type");
+        MOZ_CRASH("PackedType(MIRType): unexpected type");
     }
   }
 
-  static ValType fromNonRefTypeCode(TypeCode tc) {
+  static PackedType fromNonRefTypeCode(TypeCode tc) {
 #ifdef DEBUG
     switch (tc) {
+      case TypeCode::I8:
+      case TypeCode::I16:
       case TypeCode::I32:
       case TypeCode::I64:
       case TypeCode::F32:
@@ -634,19 +673,24 @@ class ValType {
         MOZ_CRASH("Bad type code");
     }
 #endif
-    return ValType(tc);
+    return PackedType(tc);
   }
 
-  static ValType fromRtt(uint32_t typeIndex, uint32_t rttDepth) {
-    return ValType(
+  static PackedType fromRtt(uint32_t typeIndex, uint32_t rttDepth) {
+    return PackedType(
         PackedTypeCode::pack(TypeCode::Rtt, typeIndex, false, rttDepth));
   }
 
-  static ValType fromBitsUnsafe(uint32_t bits) {
-    return ValType(PackedTypeCode::fromBits(bits));
+  static PackedType fromBitsUnsafe(uint64_t bits) {
+    return PackedType(PackedTypeCode::fromBits(bits));
   }
 
-  bool isValid() const { return tc_.isValid(); }
+  bool isValid() const {
+    if (!tc_.isValid()) {
+      return false;
+    }
+    return T::isValidTypeCode(tc_.typeCode());
+  }
 
   PackedTypeCode packed() const {
     MOZ_ASSERT(isValid());
@@ -686,7 +730,7 @@ class ValType {
   bool isExposable() const {
     MOZ_ASSERT(isValid());
 #if defined(ENABLE_WASM_SIMD) || defined(ENABLE_WASM_GC)
-    return !(kind() == ValType::V128 || isRtt() || isTypeIndex());
+    return !(kind() == Kind::V128 || isRtt() || isTypeIndex());
 #else
     return true;
 #endif
@@ -722,43 +766,6 @@ class ValType {
     return RefType(tc_).kind();
   }
 
-  // Some types are encoded as JS::Value when they escape from Wasm (when passed
-  // as parameters to imports or returned from exports).  For ExternRef the
-  // Value encoding is pretty much a requirement.  For other types it's a choice
-  // that may (temporarily) simplify some code.
-  bool isEncodedAsJSValueOnEscape() const {
-    switch (typeCode()) {
-      case TypeCode::FuncRef:
-      case TypeCode::ExternRef:
-      case TypeCode::EqRef:
-        return true;
-      default:
-        return false;
-    }
-  }
-
-  uint32_t size() const {
-    switch (kind()) {
-      case ValType::I32:
-        return 4;
-      case ValType::I64:
-        return 8;
-      case ValType::F32:
-        return 4;
-      case ValType::F64:
-        return 8;
-      case ValType::V128:
-        return 16;
-      case ValType::Rtt:
-      case ValType::Ref:
-        return sizeof(void*);
-    }
-    MOZ_ASSERT_UNREACHABLE();
-    return 0;
-  }
-
-  uint32_t alignmentInStruct() { return size(); }
-
   void renumber(const RenumberMap& map) {
     if (!isTypeIndex()) {
       return;
@@ -777,12 +784,63 @@ class ValType {
         RefType::fromTypeIndex(refType().typeIndex() + offsetBy, isNullable());
   }
 
-  bool operator==(const ValType& that) const {
+  // Some types are encoded as JS::Value when they escape from Wasm (when passed
+  // as parameters to imports or returned from exports).  For ExternRef the
+  // Value encoding is pretty much a requirement.  For other types it's a choice
+  // that may (temporarily) simplify some code.
+  bool isEncodedAsJSValueOnEscape() const {
+    switch (typeCode()) {
+      case TypeCode::FuncRef:
+      case TypeCode::ExternRef:
+      case TypeCode::EqRef:
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  uint32_t size() const {
+    switch (tc_.typeCodeAbstracted()) {
+      case TypeCode::I8:
+        return 1;
+      case TypeCode::I16:
+        return 2;
+      case TypeCode::I32:
+        return 4;
+      case TypeCode::I64:
+        return 8;
+      case TypeCode::F32:
+        return 4;
+      case TypeCode::F64:
+        return 8;
+      case TypeCode::V128:
+        return 16;
+      case TypeCode::Rtt:
+      case AbstractReferenceTypeCode:
+        return sizeof(void*);
+      default:
+        MOZ_ASSERT_UNREACHABLE();
+        return 0;
+    }
+  }
+  uint32_t alignmentInStruct() { return size(); }
+
+  PackedType<ValTypeTraits> widenToValType() const {
+    switch (tc_.typeCodeAbstracted()) {
+      case TypeCode::I8:
+      case TypeCode::I16:
+        return PackedType<ValTypeTraits>::I32;
+      default:
+        return PackedType<ValTypeTraits>(tc_);
+    }
+  }
+
+  bool operator==(const PackedType& that) const {
     MOZ_ASSERT(isValid() && that.isValid());
     return tc_ == that.tc_;
   }
 
-  bool operator!=(const ValType& that) const {
+  bool operator!=(const PackedType& that) const {
     MOZ_ASSERT(isValid() && that.isValid());
     return tc_ != that.tc_;
   }
@@ -795,6 +853,9 @@ class ValType {
 
   bool operator!=(Kind that) const { return !(*this == that); }
 };
+
+using ValType = PackedType<ValTypeTraits>;
+using FieldType = PackedType<FieldTypeTraits>;
 
 struct V128 {
   uint8_t bytes[16];  // Little-endian
@@ -1411,6 +1472,9 @@ class DebugCodegenVal;
 //
 // [1] https://webassembly.github.io/spec/js-api/index.html#towebassemblyvalue
 template <typename Debug = NoDebug>
+extern bool ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
+                               void* loc, bool mustWrite64);
+template <typename Debug = NoDebug>
 extern bool ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
                                void* loc, bool mustWrite64);
 
@@ -1422,6 +1486,9 @@ extern bool ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
 // not desirable.
 //
 // [1] https://webassembly.github.io/spec/js-api/index.html#tojsvalue
+template <typename Debug = NoDebug>
+extern bool ToJSValue(JSContext* cx, const void* src, FieldType type,
+                      MutableHandleValue dst);
 template <typename Debug = NoDebug>
 extern bool ToJSValue(JSContext* cx, const void* src, ValType type,
                       MutableHandleValue dst);
@@ -1971,7 +2038,7 @@ class BlockType {
 // array of types in the ModuleEnvironment when the Module is created.
 
 struct StructField {
-  ValType type;
+  FieldType type;
   uint32_t offset;
   bool isMutable;
 };

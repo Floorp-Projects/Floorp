@@ -175,7 +175,7 @@ struct BD_ConstantValue {
 };
 
 struct BD_ValType {
-  uint32_t packed;
+  size_t packed;
 };
 
 // A subset of the wasm SymbolicAddress enum. This is converted to wasm using
