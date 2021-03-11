@@ -914,9 +914,14 @@ class UrlbarView {
       return true;
     }
     let row = this._rows.children[rowIndex];
-    // Don't reuse rows with different suggested indexes since they stick to the
-    // same spot in the view, making any flicker very noticeable.
-    if (result.suggestedIndex !== row.result.suggestedIndex) {
+    // Don't reuse the final row if the result has a different suggested index
+    // since it sticks to the same spot in the view, making any flicker very
+    // noticeable.  This should apply to every row, but we want to avoid bug
+    // 1697517.
+    if (
+      result.suggestedIndex !== row.result.suggestedIndex &&
+      rowIndex == this._rows.children.length - 1
+    ) {
       return false;
     }
     let resultIsSearchSuggestion = this._resultIsSearchSuggestion(result);
