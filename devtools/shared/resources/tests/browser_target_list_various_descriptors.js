@@ -3,9 +3,7 @@
 
 "use strict";
 
-// Test the TargetList API with all possible descriptors
-
-const { TargetList } = require("devtools/shared/resources/target-list");
+// Test the TargetCommand API with all possible descriptors
 
 const TEST_URL = "https://example.org/document-builder.sjs?html=org";
 const CHROME_WORKER_URL = CHROME_URL_ROOT + "test_worker.js";
@@ -32,13 +30,14 @@ add_task(async function() {
 });
 
 async function testParentProcess(rootFront) {
-  info("Test TargetList against parent process descriptor");
+  info("Test TargetCommand against parent process descriptor");
 
   const descriptor = await rootFront.getMainProcess();
-  const targetList = new TargetList(descriptor);
+  const commands = await descriptor.getCommands();
+  const targetList = commands.targetCommand;
   await targetList.startListening();
 
-  const targets = await targetList.getAllTargets(TargetList.ALL_TYPES);
+  const targets = await targetList.getAllTargets(targetList.ALL_TYPES);
   ok(
     targets.length > 1,
     "We get many targets when debugging the parent process"
@@ -47,7 +46,7 @@ async function testParentProcess(rootFront) {
   is(targetFront, targetList.targetFront, "The first is the top level one");
   is(
     targetFront.targetType,
-    TargetList.TYPES.FRAME,
+    targetList.TYPES.FRAME,
     "the parent process target is of frame type, because it inherits from BrowsingContextTargetActor"
   );
   is(targetFront.isTopLevel, true, "This is flagged as top level");
@@ -57,22 +56,23 @@ async function testParentProcess(rootFront) {
 }
 
 async function testTab(rootFront) {
-  info("Test TargetList against tab descriptor");
+  info("Test TargetCommand against tab descriptor");
 
   const tab = await addTab(TEST_URL);
   const descriptor = await rootFront.getTab({ tab });
-  const targetList = new TargetList(descriptor);
+  const commands = await descriptor.getCommands();
+  const targetList = commands.targetCommand;
   await targetList.startListening();
   // Avoid the target to close the client when we destroy the target list and the target
   targetList.targetFront.shouldCloseClient = false;
 
-  const targets = await targetList.getAllTargets(TargetList.ALL_TYPES);
+  const targets = await targetList.getAllTargets(targetList.ALL_TYPES);
   is(targets.length, 1, "Got a unique target");
   const targetFront = targets[0];
   is(targetFront, targetList.targetFront, "The first is the top level one");
   is(
     targetFront.targetType,
-    TargetList.TYPES.FRAME,
+    targetList.TYPES.FRAME,
     "the tab target is of frame type"
   );
   is(targetFront.isTopLevel, true, "This is flagged as top level");
@@ -83,7 +83,7 @@ async function testTab(rootFront) {
 }
 
 async function testWebExtension(rootFront) {
-  info("Test TargetList against webextension descriptor");
+  info("Test TargetCommand against webextension descriptor");
 
   const extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
@@ -95,16 +95,17 @@ async function testWebExtension(rootFront) {
   await extension.startup();
 
   const descriptor = await rootFront.getAddon({ id: extension.id });
-  const targetList = new TargetList(descriptor);
+  const commands = await descriptor.getCommands();
+  const targetList = commands.targetCommand;
   await targetList.startListening();
 
-  const targets = await targetList.getAllTargets(TargetList.ALL_TYPES);
+  const targets = await targetList.getAllTargets(targetList.ALL_TYPES);
   is(targets.length, 1, "Got a unique target");
   const targetFront = targets[0];
   is(targetFront, targetList.targetFront, "The first is the top level one");
   is(
     targetFront.targetType,
-    TargetList.TYPES.FRAME,
+    targetList.TYPES.FRAME,
     "the web extension target is of frame type, because it inherits from BrowsingContextTargetActor"
   );
   is(targetFront.isTopLevel, true, "This is flagged as top level");
@@ -115,7 +116,7 @@ async function testWebExtension(rootFront) {
 }
 
 async function testContentProcess(rootFront) {
-  info("Test TargetList against content process descriptor");
+  info("Test TargetCommand against content process descriptor");
 
   const tab = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
@@ -126,16 +127,17 @@ async function testContentProcess(rootFront) {
   const { osPid } = tab.linkedBrowser.browsingContext.currentWindowGlobal;
 
   const descriptor = await rootFront.getProcess(osPid);
-  const targetList = new TargetList(descriptor);
+  const commands = await descriptor.getCommands();
+  const targetList = commands.targetCommand;
   await targetList.startListening();
 
-  const targets = await targetList.getAllTargets(TargetList.ALL_TYPES);
+  const targets = await targetList.getAllTargets(targetList.ALL_TYPES);
   is(targets.length, 1, "Got a unique target");
   const targetFront = targets[0];
   is(targetFront, targetList.targetFront, "The first is the top level one");
   is(
     targetFront.targetType,
-    TargetList.TYPES.PROCESS,
+    targetList.TYPES.PROCESS,
     "the content process target is of process type"
   );
   is(targetFront.isTopLevel, true, "This is flagged as top level");
@@ -146,23 +148,24 @@ async function testContentProcess(rootFront) {
 }
 
 async function testWorker(rootFront) {
-  info("Test TargetList against worker descriptor");
+  info("Test TargetCommand against worker descriptor");
 
   const workerUrl = CHROME_WORKER_URL + "#descriptor";
   new Worker(workerUrl);
 
   const { workers } = await rootFront.listWorkers();
   const descriptor = workers.find(w => w.url == workerUrl);
-  const targetList = new TargetList(descriptor);
+  const commands = await descriptor.getCommands();
+  const targetList = commands.targetCommand;
   await targetList.startListening();
 
-  const targets = await targetList.getAllTargets(TargetList.ALL_TYPES);
+  const targets = await targetList.getAllTargets(targetList.ALL_TYPES);
   is(targets.length, 1, "Got a unique target");
   const targetFront = targets[0];
   is(targetFront, targetList.targetFront, "The first is the top level one");
   is(
     targetFront.targetType,
-    TargetList.TYPES.WORKER,
+    targetList.TYPES.WORKER,
     "the worker target is of worker type"
   );
   is(targetFront.isTopLevel, true, "This is flagged as top level");

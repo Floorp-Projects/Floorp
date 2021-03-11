@@ -6,7 +6,6 @@
 
 const Services = require("Services");
 const WebConsole = require("devtools/client/webconsole/webconsole");
-const { TargetList } = require("devtools/shared/resources/target-list");
 const {
   ResourceWatcher,
 } = require("devtools/shared/resources/resource-watcher");
@@ -46,8 +45,7 @@ class BrowserConsole extends WebConsole {
 
     this._browserConsoleTarget = target;
     this._descriptorFront = target.descriptorFront;
-    this._targetList = new TargetList(target.descriptorFront);
-    this._resourceWatcher = new ResourceWatcher(this._targetList);
+    this._resourceWatcher = new ResourceWatcher(this.targetList);
     this._telemetry = new Telemetry();
     this._bcInitializer = null;
     this._bcDestroyer = null;
@@ -55,10 +53,6 @@ class BrowserConsole extends WebConsole {
 
   get currentTarget() {
     return this._browserConsoleTarget;
-  }
-
-  get targetList() {
-    return this._targetList;
   }
 
   get resourceWatcher() {

@@ -17,7 +17,6 @@ const {
   DocumentWalker: _documentWalker,
 } = require("devtools/server/actors/inspector/document-walker");
 
-const { TargetList } = require("devtools/shared/resources/target-list");
 const {
   ResourceWatcher,
 } = require("devtools/shared/resources/resource-watcher");
@@ -146,7 +145,8 @@ function runNextTest() {
 }
 
 async function createResourceWatcher(target) {
-  const targetList = new TargetList(target.descriptorFront);
+  const commands = await target.descriptorFront.getCommands();
+  const targetList = commands.targetCommand;
   await targetList.startListening();
   return new ResourceWatcher(targetList);
 }

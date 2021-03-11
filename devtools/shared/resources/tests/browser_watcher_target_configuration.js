@@ -5,8 +5,6 @@
 
 // Test the watcher's target-configuration actor API.
 
-const { TargetList } = require("devtools/shared/resources/target-list");
-
 add_task(async function() {
   info("Setup the test page with workers of all types");
   const client = await createLocalClient();
@@ -15,7 +13,8 @@ add_task(async function() {
 
   info("Create a target list for a tab target");
   const descriptor = await mainRoot.getTab({ tab });
-  const targetList = new TargetList(descriptor);
+  const commands = await descriptor.getCommands();
+  const targetList = commands.targetCommand;
   await targetList.startListening();
 
   const { watcherFront } = targetList;

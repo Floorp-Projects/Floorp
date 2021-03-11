@@ -3,15 +3,13 @@
 
 "use strict";
 
-// Test the TargetList's `watchTargets` function
-
-const { TargetList } = require("devtools/shared/resources/target-list");
+// Test the TargetCommand's `watchTargets` function
 
 const TEST_URL =
   "data:text/html;charset=utf-8," + encodeURIComponent(`<div id="test"></div>`);
 
 add_task(async function() {
-  // Enabled fission's pref as the TargetList is almost disabled without it
+  // Enabled fission's pref as the TargetCommand is almost disabled without it
   await pushPref("devtools.browsertoolbox.fission", true);
   // Disable the preloaded process as it gets created lazily and may interfere
   // with process count assertions
@@ -30,10 +28,12 @@ add_task(async function() {
 });
 
 async function testWatchTargets(mainRoot) {
-  info("Test TargetList watchTargets function");
+  info("Test TargetCommand watchTargets function");
 
   const targetDescriptor = await mainRoot.getMainProcess();
-  const targetList = new TargetList(targetDescriptor);
+  const commands = await targetDescriptor.getCommands();
+  const targetList = commands.targetCommand;
+  const { TYPES } = targetList;
 
   await targetList.startListening();
 
@@ -51,7 +51,7 @@ async function testWatchTargets(mainRoot) {
     }
     is(
       targetFront.targetType,
-      TargetList.TYPES.PROCESS,
+      TYPES.PROCESS,
       "We are only notified about process targets"
     );
     ok(
@@ -71,7 +71,7 @@ async function testWatchTargets(mainRoot) {
     }
     is(
       targetFront.targetType,
-      TargetList.TYPES.PROCESS,
+      TYPES.PROCESS,
       "We are only notified about process targets"
     );
     ok(
@@ -80,11 +80,7 @@ async function testWatchTargets(mainRoot) {
     );
     targets.delete(targetFront);
   };
-  await targetList.watchTargets(
-    [TargetList.TYPES.PROCESS],
-    onAvailable,
-    onDestroyed
-  );
+  await targetList.watchTargets([TYPES.PROCESS], onAvailable, onDestroyed);
   is(
     targets.size,
     originalProcessesCount,
@@ -111,10 +107,10 @@ async function testWatchTargets(mainRoot) {
       if (previousTargets.has(targetFront)) {
         return;
       }
-      targetList.unwatchTargets([TargetList.TYPES.PROCESS], onAvailable2);
+      targetList.unwatchTargets([TYPES.PROCESS], onAvailable2);
       resolve(targetFront);
     };
-    targetList.watchTargets([TargetList.TYPES.PROCESS], onAvailable2);
+    targetList.watchTargets([TYPES.PROCESS], onAvailable2);
   });
   const tab1 = await BrowserTestUtils.openNewForegroundTab({
     gBrowser,
@@ -134,17 +130,9 @@ async function testWatchTargets(mainRoot) {
     const onAvailable3 = () => {};
     const onDestroyed3 = ({ targetFront }) => {
       resolve(targetFront);
-      targetList.unwatchTargets(
-        [TargetList.TYPES.PROCESS],
-        onAvailable3,
-        onDestroyed3
-      );
+      targetList.unwatchTargets([TYPES.PROCESS], onAvailable3, onDestroyed3);
     };
-    targetList.watchTargets(
-      [TargetList.TYPES.PROCESS],
-      onAvailable3,
-      onDestroyed3
-    );
+    targetList.watchTargets([TYPES.PROCESS], onAvailable3, onDestroyed3);
   });
 
   BrowserTestUtils.removeTab(tab1);
@@ -165,20 +153,22 @@ async function testWatchTargets(mainRoot) {
     "The destroyed target is the one that has been reported as created"
   );
 
-  targetList.unwatchTargets(
-    [TargetList.TYPES.PROCESS],
-    onAvailable,
-    onDestroyed
-  );
+  targetList.unwatchTargets([TYPES.PROCESS], onAvailable, onDestroyed);
 
   targetList.destroy();
+
+  // Also destroy the descriptor so that testThrowingInOnAvailable can get a fresh
+  // commands object and also a fresh TargetList instance
+  targetDescriptor.destroy();
 }
 
 async function testContentProcessTarget(mainRoot) {
-  info("Test TargetList watchTargets with a content process target");
+  info("Test TargetCommand watchTargets with a content process target");
 
   const processes = await mainRoot.listProcesses();
-  const targetList = new TargetList(processes[1]);
+  const commands = await processes[1].getCommands();
+  const targetList = commands.targetCommand;
+  const { TYPES } = targetList;
 
   await targetList.startListening();
 
@@ -190,12 +180,12 @@ async function testContentProcessTarget(mainRoot) {
   const onAvailable = ({ targetFront }) => {
     if (targets.has(targetFront)) {
       // This may fail if the top level target is reported by LegacyImplementation
-      // to TargetList and emits an available event for it.
+      // to TargetCommand and emits an available event for it.
       ok(false, "The same target is notified multiple times via onAvailable");
     }
     is(
       targetFront.targetType,
-      TargetList.TYPES.PROCESS,
+      TYPES.PROCESS,
       "We are only notified about process targets"
     );
     is(targetFront, topLevelTarget, "This is the existing top level target");
@@ -208,26 +198,25 @@ async function testContentProcessTarget(mainRoot) {
   const onDestroyed = _ => {
     ok(false, "onDestroyed should never be called in this test");
   };
-  await targetList.watchTargets(
-    [TargetList.TYPES.PROCESS],
-    onAvailable,
-    onDestroyed
-  );
+  await targetList.watchTargets([TYPES.PROCESS], onAvailable, onDestroyed);
 
   // This may fail if the top level target is reported by LegacyImplementation
-  // to TargetList and registers a duplicated entry
+  // to TargetCommand and registers a duplicated entry
   is(targets.size, 1, "We were only notified about the top level target");
 
+  targetList.unwatchTargets([TYPES.PROCESS], onAvailable, onDestroyed);
   targetList.destroy();
 }
 
 async function testThrowingInOnAvailable(mainRoot) {
   info(
-    "Test TargetList watchTargets function when an exception is thrown in onAvailable callback"
+    "Test TargetCommand watchTargets function when an exception is thrown in onAvailable callback"
   );
 
   const targetDescriptor = await mainRoot.getMainProcess();
-  const targetList = new TargetList(targetDescriptor);
+  const commands = await targetDescriptor.getCommands();
+  const targetList = commands.targetCommand;
+  const { TYPES } = targetList;
 
   await targetList.startListening();
 
@@ -246,7 +235,7 @@ async function testThrowingInOnAvailable(mainRoot) {
     }
     targets.add(targetFront);
   };
-  await targetList.watchTargets([TargetList.TYPES.PROCESS], onAvailable);
+  await targetList.watchTargets([TYPES.PROCESS], onAvailable);
   is(
     targets.size,
     originalProcessesCount - 1,

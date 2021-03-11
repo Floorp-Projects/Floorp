@@ -22,7 +22,7 @@ const {
   LegacyWorkersWatcher,
 } = require("devtools/shared/resources/legacy-target-watchers/legacy-workers-watcher");
 
-class TargetList extends EventEmitter {
+class TargetCommand extends EventEmitter {
   /**
    * This class helps managing, iterating over and listening for Targets.
    *
@@ -41,7 +41,7 @@ class TargetList extends EventEmitter {
    * @param {DescriptorFront} descriptorFront
    *        The context to inspector identified by this descriptor.
    */
-  constructor(descriptorFront) {
+  constructor({ descriptorFront }) {
     super();
 
     this.descriptorFront = descriptorFront;
@@ -125,7 +125,7 @@ class TargetList extends EventEmitter {
       // already registered.
       if (targetFront != this.targetFront) {
         console.error(
-          "Target is already registered in the TargetList",
+          "Target is already registered in the TargetCommand",
           targetFront.actorID
         );
       }
@@ -138,7 +138,7 @@ class TargetList extends EventEmitter {
 
     // Handle top level target switching
     // Note that, for now, `_onTargetAvailable` isn't called for the *initial* top level target.
-    // i.e. the one that is passed to TargetList constructor.
+    // i.e. the one that is passed to TargetCommand constructor.
     if (targetFront.isTopLevel) {
       // First report that all existing targets are destroyed
       for (const target of this._targets) {
@@ -250,7 +250,7 @@ class TargetList extends EventEmitter {
     }
 
     // Cache the Watcher once for all, the first time we call `startListening()`.
-    // This `watcherFront` attribute may be then used in any function in TargetList or ResourceWatcher after this.
+    // This `watcherFront` attribute may be then used in any function in TargetCommand or ResourceWatcher after this.
     if (!this.watcherFront) {
       // Bug 1675763: Watcher actor is not available in all situations yet.
       const supportsWatcher = this.descriptorFront.traits?.watcher;
@@ -265,25 +265,25 @@ class TargetList extends EventEmitter {
         BROWSERTOOLBOX_FISSION_ENABLED
       );
       if (fissionBrowserToolboxEnabled) {
-        types = TargetList.ALL_TYPES;
+        types = TargetCommand.ALL_TYPES;
       }
     } else if (this.descriptorFront.isLocalTab) {
-      types = [TargetList.TYPES.FRAME];
+      types = [TargetCommand.TYPES.FRAME];
     }
-    if (this.listenForWorkers && !types.includes(TargetList.TYPES.WORKER)) {
-      types.push(TargetList.TYPES.WORKER);
+    if (this.listenForWorkers && !types.includes(TargetCommand.TYPES.WORKER)) {
+      types.push(TargetCommand.TYPES.WORKER);
     }
     if (
       this.listenForWorkers &&
-      !types.includes(TargetList.TYPES.SHARED_WORKER)
+      !types.includes(TargetCommand.TYPES.SHARED_WORKER)
     ) {
-      types.push(TargetList.TYPES.SHARED_WORKER);
+      types.push(TargetCommand.TYPES.SHARED_WORKER);
     }
     if (
       this.listenForServiceWorkers &&
-      !types.includes(TargetList.TYPES.SERVICE_WORKER)
+      !types.includes(TargetCommand.TYPES.SERVICE_WORKER)
     ) {
-      types.push(TargetList.TYPES.SERVICE_WORKER);
+      types.push(TargetCommand.TYPES.SERVICE_WORKER);
     }
 
     // If no pref are set to true, nor is listenForWorkers set to true,
@@ -330,7 +330,7 @@ class TargetList extends EventEmitter {
    *        but still unregister listeners set via Legacy Listeners.
    */
   stopListening({ onlyLegacy = false } = {}) {
-    for (const type of TargetList.ALL_TYPES) {
+    for (const type of TargetCommand.ALL_TYPES) {
       if (!this._isListening(type)) {
         continue;
       }
@@ -358,26 +358,26 @@ class TargetList extends EventEmitter {
   getTargetType(target) {
     const { typeName } = target;
     if (typeName == "browsingContextTarget") {
-      return TargetList.TYPES.FRAME;
+      return TargetCommand.TYPES.FRAME;
     }
 
     if (
       typeName == "contentProcessTarget" ||
       typeName == "parentProcessTarget"
     ) {
-      return TargetList.TYPES.PROCESS;
+      return TargetCommand.TYPES.PROCESS;
     }
 
     if (typeName == "workerDescriptor" || typeName == "workerTarget") {
       if (target.isSharedWorker) {
-        return TargetList.TYPES.SHARED_WORKER;
+        return TargetCommand.TYPES.SHARED_WORKER;
       }
 
       if (target.isServiceWorker) {
-        return TargetList.TYPES.SERVICE_WORKER;
+        return TargetCommand.TYPES.SERVICE_WORKER;
       }
 
-      return TargetList.TYPES.WORKER;
+      return TargetCommand.TYPES.WORKER;
     }
 
     throw new Error("Unsupported target typeName: " + typeName);
@@ -391,7 +391,7 @@ class TargetList extends EventEmitter {
    * Listen for the creation and/or destruction of target fronts matching one of the provided types.
    *
    * @param {Array<String>} types
-   *        The type of target to listen for. Constant of TargetList.TYPES.
+   *        The type of target to listen for. Constant of TargetCommand.TYPES.
    * @param {Function} onAvailable
    *        Callback fired when a target has been just created or was already available.
    *        The function is called with the following arguments:
@@ -405,7 +405,7 @@ class TargetList extends EventEmitter {
   async watchTargets(types, onAvailable, onDestroy) {
     if (typeof onAvailable != "function") {
       throw new Error(
-        "TargetList.watchTargets expects a function as second argument"
+        "TargetCommand.watchTargets expects a function as second argument"
       );
     }
 
@@ -477,7 +477,7 @@ class TargetList extends EventEmitter {
   unwatchTargets(types, onAvailable, onDestroy) {
     if (typeof onAvailable != "function") {
       throw new Error(
-        "TargetList.unwatchTargets expects a function as second argument"
+        "TargetCommand.unwatchTargets expects a function as second argument"
       );
     }
 
@@ -494,7 +494,7 @@ class TargetList extends EventEmitter {
    * Retrieve all the current target fronts of a given type.
    *
    * @param {Array<String>} types
-   *        The types of target to retrieve. Array of TargetList.TYPES
+   *        The types of target to retrieve. Array of TargetCommand.TYPES
    * @return {Array<TargetFront>} Array of target fronts matching any of the
    *         provided types.
    */
@@ -514,7 +514,7 @@ class TargetList extends EventEmitter {
    * For all the target fronts of a given type, retrieve all the target-scoped fronts of a given type.
    *
    * @param {String} targetType
-   *        The type of target to iterate over. Constant of TargetList.TYPES.
+   *        The type of target to iterate over. Constant of TargetCommand.TYPES.
    * @param {String} frontType
    *        The type of target-scoped front to retrieve. It can be "inspector", "console", "thread",...
    */
@@ -578,7 +578,7 @@ class TargetList extends EventEmitter {
 
   /**
    * Update the DevTools configuration on the server.
-   * TODO: This API is temporarily on the TargetList but should move to a
+   * TODO: This API is temporarily on the TargetCommand but should move to a
    * command as soon as https://bugzilla.mozilla.org/show_bug.cgi?id=1691681
    * lands.
    */
@@ -593,7 +593,7 @@ class TargetList extends EventEmitter {
 
   /**
    * Check if JavaScript is currently enabled.
-   * TODO: This API is temporarily on the TargetList but should move to a
+   * TODO: This API is temporarily on the TargetCommand but should move to a
    * command as soon as https://bugzilla.mozilla.org/show_bug.cgi?id=1691681
    * lands.
    */
@@ -628,15 +628,15 @@ class TargetList extends EventEmitter {
 /**
  * All types of target:
  */
-TargetList.TYPES = TargetList.prototype.TYPES = {
+TargetCommand.TYPES = TargetCommand.prototype.TYPES = {
   PROCESS: "process",
   FRAME: "frame",
   WORKER: "worker",
   SHARED_WORKER: "shared_worker",
   SERVICE_WORKER: "service_worker",
 };
-TargetList.ALL_TYPES = TargetList.prototype.ALL_TYPES = Object.values(
-  TargetList.TYPES
+TargetCommand.ALL_TYPES = TargetCommand.prototype.ALL_TYPES = Object.values(
+  TargetCommand.TYPES
 );
 
-module.exports = { TargetList };
+module.exports = TargetCommand;
