@@ -188,20 +188,25 @@ a.perf-photon-button:focus {
 
   /* Presentational: */
   appearance: none;
-  background-color: var(--grey-20);
+  color: var(--theme-select-color);
+  background-color: var(--theme-select-background);
   background-image: url('chrome://global/skin/icons/arrow-dropdown-12.svg');
   background-position: right 4px center;
   background-repeat: no-repeat;
+
+  /* adapt the SVG color using the text color */
+  -moz-context-properties: fill;
+  fill: currentColor;
+
   border-radius: 2px;
   border: 1px solid transparent;
-  color: #0c0c0d;
   font-size: 12px;
   font-weight: 400;
   text-decoration: none;
 }
 
 .perf-presets-select:hover {
-  border: 1px solid var(--grey-30);
+  border: 1px solid var(--theme-select-hover-border-color);
 }
 
 .perf-presets-select:focus {
