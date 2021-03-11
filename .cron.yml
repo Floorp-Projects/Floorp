@@ -267,24 +267,6 @@ jobs:
           - {weekday: 'Saturday', hour: 3, minute: 0}
           - {weekday: 'Sunday', hour: 3, minute: 0}
 
-    - name: raptor-tp6-windows10-64-ref-hw-2017
-      job:
-          type: decision-task
-          treeherder-symbol: tp6
-          target-tasks-method: raptor_tp6_windows10_64_ref_hw_2017
-          include-push-tasks: true
-      run-on-projects:
-          - mozilla-central
-      when:
-          - {weekday: 'Monday', hour: 3, minute: 0}
-          - {weekday: 'Tuesday', hour: 3, minute: 0}
-          - {weekday: 'Wednesday', hour: 3, minute: 0}
-          - {weekday: 'Thursday', hour: 3, minute: 0}
-          - {weekday: 'Friday', hour: 3, minute: 0}
-          - {weekday: 'Saturday', hour: 3, minute: 0}
-          - {weekday: 'Sunday', hour: 3, minute: 0}
-
-
     - name: condprof
       job:
           type: decision-task
