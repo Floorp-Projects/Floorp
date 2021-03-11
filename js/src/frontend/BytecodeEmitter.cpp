@@ -1626,7 +1626,12 @@ bool BytecodeEmitter::emitThisEnvironmentCallee() {
       ENVCOORD_HOPS_LIMIT - 1 <= UINT8_MAX,
       "JSOp::EnvCallee operand size should match ENVCOORD_HOPS_LIMIT");
 
-  MOZ_ASSERT(numHops < ENVCOORD_HOPS_LIMIT - 1);
+  // Note: we need to check numHops here because we don't call
+  // checkEnvironmentChainLength in all cases (like 'eval').
+  if (numHops >= ENVCOORD_HOPS_LIMIT - 1) {
+    reportError(nullptr, JSMSG_TOO_DEEP, js_function_str);
+    return false;
+  }
 
   return emit2(JSOp::EnvCallee, numHops);
 }
@@ -1766,14 +1771,11 @@ bool BytecodeEmitter::emitGetPrivateName(NameNode* name) {
 }
 
 bool BytecodeEmitter::emitGetPrivateName(TaggedParserAtomIndex nameAtom) {
-  // The parser ensures the private name is present on the environment chain,
-  // but its location can be Dynamic or Global when emitting debugger
-  // eval-in-frame code.
+  // The parser ensures the private name is present on the environment chain.
   NameLocation location = lookupName(nameAtom);
   MOZ_ASSERT(location.kind() == NameLocation::Kind::FrameSlot ||
              location.kind() == NameLocation::Kind::EnvironmentCoordinate ||
-             location.kind() == NameLocation::Kind::Dynamic ||
-             location.kind() == NameLocation::Kind::Global);
+             location.kind() == NameLocation::Kind::Dynamic);
 
   return emitGetNameAtLocation(nameAtom, location);
 }
