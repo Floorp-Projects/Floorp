@@ -2320,11 +2320,13 @@ var BrowserTestUtils = {
       return this.windowClosed(win);
     }
     let container = win.top.document.getElementById("window-modal-dialog");
-    return this.waitForMutationCondition(
-      container,
-      { childList: true, attributes: true },
-      () => !container.hasChildNodes() && !container.open
-    );
+    return this.waitForEvent(container, "close").then(() => {
+      return this.waitForMutationCondition(
+        container,
+        { childList: true, attributes: true },
+        () => !container.hasChildNodes() && !container.open
+      );
+    });
   },
 
   /**
