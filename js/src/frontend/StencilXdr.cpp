@@ -442,7 +442,7 @@ template <XDRMode mode>
   uint32_t atomVectorLength;
   MOZ_TRY(XDRAtomCount(xdr, &atomVectorLength));
 
-  frontend::ParserAtomSpanBuilder builder(xdr->cx()->runtime(), parserAtomData);
+  frontend::ParserAtomSpanBuilder builder(parserAtomData);
   if (!builder.allocate(xdr->cx(), alloc, atomVectorLength)) {
     return xdr->fail(JS::TranscodeResult::Throw);
   }
