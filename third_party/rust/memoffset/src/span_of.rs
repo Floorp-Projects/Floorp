@@ -93,56 +93,61 @@ macro_rules! span_of {
     (@helper $root:ident, [] ..) => {
         _memoffset__compile_error!("Expected a range, found '..'")
     };
+    // Lots of UB due to taking references to uninitialized fields! But that can currently
+    // not be avoided.
     // No explicit begin for range.
-    (@helper $root:ident, $parent:path, [] ..) => {{
-        // UB due to taking references to uninitialized fields for `size_of_val`.
+    (@helper $root:ident, $parent:tt, [] ..) => {{
         ($root as usize,
          $root as usize + $crate::mem::size_of_val(&(*$root)))
     }};
-    (@helper $root:ident, $parent:path, [] ..= $field:tt) => {{
-        // UB due to taking references to uninitialized fields for `size_of_val`.
+    (@helper $root:ident, $parent:tt, [] ..= $field:tt) => {{
+        _memoffset__field_check!($parent, $field);
         ($root as usize,
-         raw_field!($root, $parent, $field) as usize + $crate::mem::size_of_val(&(*$root).$field))
+         &(*$root).$field as *const _ as usize + $crate::mem::size_of_val(&(*$root).$field))
     }};
-    (@helper $root:ident, $parent:path, [] .. $field:tt) => {{
-        ($root as usize, raw_field!($root, $parent, $field) as usize)
+    (@helper $root:ident, $parent:tt, [] .. $field:tt) => {{
+        _memoffset__field_check!($parent, $field);
+        ($root as usize, &(*$root).$field as *const _ as usize)
     }};
     // Explicit begin and end for range.
-    (@helper $root:ident, $parent:path, # $begin:tt [] ..= $end:tt) => {{
-        // UB due to taking references to uninitialized fields for `size_of_val`.
-        (raw_field!($root, $parent, $begin) as usize,
-         raw_field!($root, $parent, $end) as usize + $crate::mem::size_of_val(&(*$root).$end))
+    (@helper $root:ident, $parent:tt, # $begin:tt [] ..= $end:tt) => {{
+        _memoffset__field_check!($parent, $begin);
+        _memoffset__field_check!($parent, $end);
+        (&(*$root).$begin as *const _ as usize,
+         &(*$root).$end as *const _ as usize + $crate::mem::size_of_val(&(*$root).$end))
     }};
-    (@helper $root:ident, $parent:path, # $begin:tt [] .. $end:tt) => {{
-        (raw_field!($root, $parent, $begin) as usize,
-         raw_field!($root, $parent, $end) as usize)
+    (@helper $root:ident, $parent:tt, # $begin:tt [] .. $end:tt) => {{
+        _memoffset__field_check!($parent, $begin);
+        _memoffset__field_check!($parent, $end);
+        (&(*$root).$begin as *const _ as usize,
+         &(*$root).$end as *const _ as usize)
     }};
     // No explicit end for range.
-    (@helper $root:ident, $parent:path, # $begin:tt [] ..) => {{
-        // UB due to taking references to uninitialized fields for `size_of_val`.
-        (raw_field!($root, $parent, $begin) as usize,
+    (@helper $root:ident, $parent:tt, # $begin:tt [] ..) => {{
+        _memoffset__field_check!($parent, $begin);
+        (&(*$root).$begin as *const _ as usize,
          $root as usize + $crate::mem::size_of_val(&*$root))
     }};
-    (@helper $root:ident, $parent:path, # $begin:tt [] ..=) => {{
+    (@helper $root:ident, $parent:tt, # $begin:tt [] ..=) => {{
         _memoffset__compile_error!(
             "Found inclusive range to the end of a struct. Did you mean '..' instead of '..='?")
     }};
     // Just one field.
-    (@helper $root:ident, $parent:path, # $begin:tt []) => {{
-        // UB due to taking references to uninitialized fields for `size_of_val`.
-        (raw_field!($root, $parent, $begin) as usize,
-         raw_field!($root, $parent, $begin) as usize + $crate::mem::size_of_val(&(*$root).$begin))
+    (@helper $root:ident, $parent:tt, # $begin:tt []) => {{
+        _memoffset__field_check!($parent, $begin);
+        (&(*$root).$begin as *const _ as usize,
+         &(*$root).$begin as *const _ as usize + $crate::mem::size_of_val(&(*$root).$begin))
     }};
     // Parsing.
-    (@helper $root:ident, $parent:path, $(# $begin:tt)+ [] $tt:tt $($rest:tt)*) => {{
+    (@helper $root:ident, $parent:tt, $(# $begin:tt)+ [] $tt:tt $($rest:tt)*) => {{
         span_of!(@helper $root, $parent, $(#$begin)* #$tt [] $($rest)*)
     }};
-    (@helper $root:ident, $parent:path, [] $tt:tt $($rest:tt)*) => {{
+    (@helper $root:ident, $parent:tt, [] $tt:tt $($rest:tt)*) => {{
         span_of!(@helper $root, $parent, #$tt [] $($rest)*)
     }};
 
     // Entry point.
-    ($sty:path, $($exp:tt)+) => ({
+    ($sty:tt, $($exp:tt)+) => ({
         unsafe {
             // Get a base pointer.
             _memoffset__let_base_ptr!(root, $sty);
@@ -172,7 +177,7 @@ mod tests {
     }
 
     #[test]
-    #[cfg_attr(miri, ignore)] // this creates unaligned references
+    #[cfg(not(miri))] // this creates unaligned references
     fn span_simple_packed() {
         #[repr(C, packed)]
         struct Foo {
