@@ -120,6 +120,11 @@ async function retrieveRenderContent() {
     aboutWelcomeProps = featureConfig.screens ? featureConfig : {};
   }
 
+  // Set design if exists in featureConfig
+  if (featureConfig.design && !aboutWelcomeProps?.design) {
+    aboutWelcomeProps = { ...aboutWelcomeProps, design: featureConfig.design };
+  }
+
   let { messageId, UTMTerm } = ComputeTelemetryInfo(
     aboutWelcomeProps,
     featureConfig.slug,
