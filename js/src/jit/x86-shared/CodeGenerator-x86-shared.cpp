@@ -292,8 +292,7 @@ void CodeGenerator::visitWasmStackArg(LWasmStackArg* ins) {
       default:
         break;
     }
-    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE(
-        "unexpected mir type in WasmStackArg");
+    MOZ_CRASH("unexpected mir type in WasmStackArg");
   }
 }
 

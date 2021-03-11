@@ -3687,7 +3687,7 @@ CodeOffset MacroAssembler::wasmCallBuiltinInstanceMethod(
     Label noTrap;
     switch (failureMode) {
       case wasm::FailureMode::Infallible:
-        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE();
+        MOZ_CRASH();
       case wasm::FailureMode::FailOnNegI32:
         branchTest32(Assembler::NotSigned, ReturnReg, ReturnReg, &noTrap);
         break;
