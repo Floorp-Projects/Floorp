@@ -15,13 +15,19 @@ var subtests = [
   // clicking on element with :active::after CSS property
   {"file": "helper_bug1473108.html"},
   // Resetting isFirstPaint shouldn't clobber the visual viewport
-  {"file": "helper_bug1509575.html", "prefs": [["apz.allow_zooming", true],
-                                               ...getPrefs("TOUCH_EVENTS:PAN")]},
+  {"file": "helper_bug1509575.html", "prefs": [
+    ["apz.allow_zooming", true],
+    ["dom.visualviewport.enabled", true],
+    ...getPrefs("TOUCH_EVENTS:PAN")
+  ]},
   // Exercise one of the main-thread touch-action determination codepaths.
   {"file": "helper_bug1506497_touch_action_fixed_on_fixed.html", "prefs": touch_action_prefs},
-  {"file": "helper_bug1637113_main_thread_hit_test.html", "prefs": [["apz.allow_zooming", true]]},
-  {"file": "helper_bug1638458_contextmenu.html", "prefs": [["apz.allow_zooming", true]]},
-  {"file": "helper_bug1638441_fixed_pos_hit_test.html", "prefs": [["apz.allow_zooming", true]]},
+  {"file": "helper_bug1637113_main_thread_hit_test.html",
+   "prefs": [["apz.allow_zooming", true], ["dom.visualviewport.enabled", true]]},
+  {"file": "helper_bug1638458_contextmenu.html",
+   "prefs": [["apz.allow_zooming", true], ["dom.visualviewport.enabled", true]]},
+  {"file": "helper_bug1638441_fixed_pos_hit_test.html",
+   "prefs": [["apz.allow_zooming", true], ["dom.visualviewport.enabled", true]]},
   {"file": "helper_bug1637135_narrow_viewport.html", "prefs": [["apz.allow_zooming", true],
                                                                ["dom.meta-viewport.enabled", true]]},
 
