@@ -33,6 +33,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Result.h"
 #include "mozilla/SelectionState.h"
+#include "mozilla/TypeInState.h"
 #include "nsAString.h"
 #include "nsCOMPtr.h"
 #include "nsCRTGlue.h"  // for CRLF
@@ -565,7 +566,7 @@ nsresult HTMLEditor::HTMLWithContextInserter::Run(
           MOZ_KnownLive(mHTMLEditor)
               .ClearStyleAt(
                   EditorDOMPoint(mHTMLEditor.SelectionRefPtr()->AnchorRef()),
-                  nullptr, nullptr);
+                  nullptr, nullptr, SpecifiedStyle::Preserve);
       if (result.Failed()) {
         NS_WARNING("HTMLEditor::ClearStyleAt() failed");
         return result.Rv();

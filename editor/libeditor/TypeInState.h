@@ -32,16 +32,24 @@ class MouseEvent;
 class Selection;
 }  // namespace dom
 
+enum class SpecifiedStyle : uint8_t { Preserve, Discard };
+
 struct PropItem {
   nsAtom* tag;
   nsAtom* attr;
   nsString value;
+  // Whether the class and style attribute should be perserved or discarded.
+  SpecifiedStyle specifiedStyle;
 
-  PropItem() : tag(nullptr), attr(nullptr) { MOZ_COUNT_CTOR(PropItem); }
+  PropItem()
+      : tag(nullptr), attr(nullptr), specifiedStyle(SpecifiedStyle::Preserve) {
+    MOZ_COUNT_CTOR(PropItem);
+  }
   PropItem(nsAtom* aTag, nsAtom* aAttr, const nsAString& aValue)
       : tag(aTag),
         attr(aAttr != nsGkAtoms::_empty ? aAttr : nullptr),
-        value(aValue) {
+        value(aValue),
+        specifiedStyle(SpecifiedStyle::Preserve) {
     MOZ_COUNT_CTOR(PropItem);
   }
   MOZ_COUNTED_DTOR(PropItem)
@@ -110,6 +118,7 @@ class TypeInState final {
 
   void ClearAllProps();
   void ClearProp(nsAtom* aProp, nsAtom* aAttr);
+  void ClearLinkPropAndDiscardItsSpecifiedStyle();
 
   /**
    * TakeClearProperty() hands back next property item on the clear list.
