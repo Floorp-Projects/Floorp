@@ -7,13 +7,11 @@
 #ifndef TrustOverrides_h
 #define TrustOverrides_h
 
+#include "X509CertValidity.h"
+#include "nsNSSCertificate.h"
 #include "mozilla/ArrayUtils.h"
-#include "mozpkix/pkix.h"
-#include "mozpkix/pkixnss.h"
-#include "mozpkix/pkixutil.h"
 
 using namespace mozilla;
-using namespace mozilla::pkix;
 
 struct DataAndLength {
   const uint8_t* data;
@@ -21,33 +19,16 @@ struct DataAndLength {
 };
 
 template <size_t T>
-static bool CertDNIsInList(const nsTArray<uint8_t>& aCert,
+static bool CertDNIsInList(const CERTCertificate* aCert,
                            const DataAndLength (&aDnList)[T]) {
-  Input certInput;
-  mozilla::pkix::Result rv = certInput.Init(aCert.Elements(), aCert.Length());
-  if (rv != Success) {
+  MOZ_ASSERT(aCert);
+  if (!aCert) {
     return false;
   }
-
-  // we don't use the certificate for path building, so this parameter doesn't
-  // matter
-  EndEntityOrCA notUsedForPaths = EndEntityOrCA::MustBeEndEntity;
-  BackCert cert(certInput, notUsedForPaths, nullptr);
-  rv = cert.Init();
-  if (rv != Success) {
-    return false;
-  }
-
-  Input subject(cert.GetSubject());
 
   for (auto& dn : aDnList) {
-    Input dnInput;
-    rv = dnInput.Init(dn.data, dn.len);
-    if (rv != Success) {
-      return false;
-    }
-
-    if (InputsAreEqual(subject, dnInput)) {
+    if (aCert->derSubject.len == dn.len &&
+        mozilla::ArrayEqual(aCert->derSubject.data, dn.data, dn.len)) {
       return true;
     }
   }
@@ -55,33 +36,16 @@ static bool CertDNIsInList(const nsTArray<uint8_t>& aCert,
 }
 
 template <size_t T>
-static bool CertSPKIIsInList(const nsTArray<uint8_t>& aCert,
+static bool CertSPKIIsInList(const CERTCertificate* aCert,
                              const DataAndLength (&aSpkiList)[T]) {
-  Input certInput;
-  mozilla::pkix::Result rv = certInput.Init(aCert.Elements(), aCert.Length());
-  if (rv != Success) {
+  MOZ_ASSERT(aCert);
+  if (!aCert) {
     return false;
   }
-
-  // we don't use the certificate for path building, so this parameter doesn't
-  // matter
-  EndEntityOrCA notUsedForPaths = EndEntityOrCA::MustBeEndEntity;
-  BackCert cert(certInput, notUsedForPaths, nullptr);
-  rv = cert.Init();
-  if (rv != Success) {
-    return false;
-  }
-
-  Input publicKey(cert.GetSubjectPublicKeyInfo());
 
   for (auto& spki : aSpkiList) {
-    Input spkiInput;
-    rv = spkiInput.Init(spki.data, spki.len);
-    if (rv != Success) {
-      return false;
-    }
-
-    if (InputsAreEqual(publicKey, spkiInput)) {
+    if (aCert->derPublicKey.len == spki.len &&
+        mozilla::ArrayEqual(aCert->derPublicKey.data, spki.data, spki.len)) {
       return true;
     }
   }
@@ -89,41 +53,17 @@ static bool CertSPKIIsInList(const nsTArray<uint8_t>& aCert,
 }
 
 template <size_t T, size_t R>
-static bool CertMatchesStaticData(const nsTArray<uint8_t>& aCert,
+static bool CertMatchesStaticData(const CERTCertificate* cert,
                                   const unsigned char (&subject)[T],
                                   const unsigned char (&spki)[R]) {
-  Input certInput;
-  mozilla::pkix::Result rv = certInput.Init(aCert.Elements(), aCert.Length());
-  if (rv != Success) {
+  MOZ_ASSERT(cert);
+  if (!cert) {
     return false;
   }
-
-  // we don't use the certificate for path building, so this parameter doesn't
-  // matter
-  EndEntityOrCA notUsedForPaths = EndEntityOrCA::MustBeEndEntity;
-  BackCert cert(certInput, notUsedForPaths, nullptr);
-  rv = cert.Init();
-  if (rv != Success) {
-    return false;
-  }
-
-  Input certSubject(cert.GetSubject());
-  Input certSPKI(cert.GetSubjectPublicKeyInfo());
-
-  Input subjectInput;
-  rv = subjectInput.Init(subject, T);
-  if (rv != Success) {
-    return false;
-  }
-
-  Input spkiInput;
-  rv = spkiInput.Init(spki, R);
-  if (rv != Success) {
-    return false;
-  }
-
-  return InputsAreEqual(certSubject, subjectInput) &&
-         InputsAreEqual(certSPKI, spkiInput);
+  return cert->derSubject.len == T &&
+         mozilla::ArrayEqual(cert->derSubject.data, subject, T) &&
+         cert->derPublicKey.len == R &&
+         mozilla::ArrayEqual(cert->derPublicKey.data, spki, R);
 }
 
 // Implements the graduated Symantec distrust algorithm from Bug 1409257.
@@ -136,7 +76,7 @@ static bool CertMatchesStaticData(const nsTArray<uint8_t>& aCert,
 // "distrusted."
 template <size_t T>
 static nsresult CheckForSymantecDistrust(
-    const nsTArray<nsTArray<uint8_t>>& intCerts,
+    const nsTArray<RefPtr<nsIX509Cert>>& intCerts,
     const DataAndLength (&allowlist)[T],
     /* out */ bool& isDistrusted) {
   // PRECONDITION: The rootCert is already verified as being one of the
@@ -145,7 +85,8 @@ static nsresult CheckForSymantecDistrust(
   isDistrusted = true;
 
   for (const auto& cert : intCerts) {
-    if (CertSPKIIsInList(cert, allowlist)) {
+    UniqueCERTCertificate nssCert(cert->GetCert());
+    if (CertSPKIIsInList(nssCert.get(), allowlist)) {
       isDistrusted = false;
       break;
     }

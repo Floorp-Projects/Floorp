@@ -110,6 +110,17 @@ static const DataAndLength OverrideCaSPKIs[] = {
     {CAcaSPKI, sizeof(CAcaSPKI)},
 };
 
+static mozilla::UniqueCERTCertificate CertFromString(const char* aPem) {
+  nsCOMPtr<nsIX509Cert> cert =
+      nsNSSCertificate::ConstructFromDER(const_cast<char*>(aPem), strlen(aPem));
+  if (!cert) {
+    return nullptr;
+  }
+
+  mozilla::UniqueCERTCertificate nssCert(cert->GetCert());
+  return nssCert;
+}
+
 class psm_TrustOverrideTest : public ::testing::Test {
  protected:
   void SetUp() override {
@@ -130,23 +141,31 @@ class psm_TrustOverrideTest : public ::testing::Test {
 };
 
 TEST_F(psm_TrustOverrideTest, CheckCertDNIsInList) {
-  nsTArray<uint8_t> caArray(kOverrideCaPem, strlen(kOverrideCaPem));
-  nsTArray<uint8_t> intermediateArray(kOverrideCaIntermediatePem,
-                                      strlen(kOverrideCaIntermediatePem));
+  mozilla::UniqueCERTCertificate caObj = CertFromString(kOverrideCaPem);
+  ASSERT_TRUE(caObj != nullptr)
+  << "Should have parsed";
+  mozilla::UniqueCERTCertificate intObj =
+      CertFromString(kOverrideCaIntermediatePem);
+  ASSERT_TRUE(intObj != nullptr)
+  << "Should have parsed";
 
-  EXPECT_TRUE(CertDNIsInList(caArray, OverrideCaDNs))
+  EXPECT_TRUE(CertDNIsInList(caObj.get(), OverrideCaDNs))
       << "CA should be in the DN list";
-  EXPECT_FALSE(CertDNIsInList(intermediateArray, OverrideCaDNs))
+  EXPECT_FALSE(CertDNIsInList(intObj.get(), OverrideCaDNs))
       << "Int should not be in the DN list";
 }
 
 TEST_F(psm_TrustOverrideTest, CheckCertSPKIIsInList) {
-  nsTArray<uint8_t> caArray(kOverrideCaPem, strlen(kOverrideCaPem));
-  nsTArray<uint8_t> intermediateArray(kOverrideCaIntermediatePem,
-                                      strlen(kOverrideCaIntermediatePem));
+  mozilla::UniqueCERTCertificate caObj = CertFromString(kOverrideCaPem);
+  ASSERT_TRUE(caObj != nullptr)
+  << "Should have parsed";
+  mozilla::UniqueCERTCertificate intObj =
+      CertFromString(kOverrideCaIntermediatePem);
+  ASSERT_TRUE(intObj != nullptr)
+  << "Should have parsed";
 
-  EXPECT_TRUE(CertSPKIIsInList(caArray, OverrideCaSPKIs))
+  EXPECT_TRUE(CertSPKIIsInList(caObj.get(), OverrideCaSPKIs))
       << "CA should be in the SPKI list";
-  EXPECT_FALSE(CertSPKIIsInList(intermediateArray, OverrideCaSPKIs))
+  EXPECT_FALSE(CertSPKIIsInList(intObj.get(), OverrideCaSPKIs))
       << "Int should not be in the SPKI list";
 }
