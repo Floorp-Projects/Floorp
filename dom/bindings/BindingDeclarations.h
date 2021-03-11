@@ -34,6 +34,11 @@ class nsIPrincipal;
 class nsWrapperCache;
 
 namespace mozilla {
+
+class ErrorResult;
+class OOMReporter;
+class CopyableErrorResult;
+
 namespace dom {
 
 class BindingCallContext;
