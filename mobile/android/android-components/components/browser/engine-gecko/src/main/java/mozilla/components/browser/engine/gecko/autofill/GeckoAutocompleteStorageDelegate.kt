@@ -31,15 +31,17 @@ class GeckoAutocompleteStorageDelegate(
     private val loginStorageDelegate: LoginStorageDelegate
 ) : Autocomplete.StorageDelegate {
 
-    override fun onCreditCardFetch(): GeckoResult<Array<Autocomplete.CreditCard>>? {
+    override fun onCreditCardFetch(): GeckoResult<Array<Autocomplete.CreditCard>> {
         val result = GeckoResult<Array<Autocomplete.CreditCard>>()
 
         @OptIn(DelicateCoroutinesApi::class)
         GlobalScope.launch(IO) {
-            val creditCards = creditCardsAddressesStorageDelegate.onCreditCardsFetch().await()
+            val key = creditCardsAddressesStorageDelegate.getOrGenerateKey()
+
+            val creditCards = creditCardsAddressesStorageDelegate.onCreditCardsFetch()
                 .mapNotNull {
                     val plaintextCardNumber =
-                        creditCardsAddressesStorageDelegate.decrypt(it.encryptedCardNumber)?.number
+                        creditCardsAddressesStorageDelegate.decrypt(key, it.encryptedCardNumber)?.number
 
                     if (plaintextCardNumber == null) {
                         null
@@ -54,6 +56,7 @@ class GeckoAutocompleteStorageDelegate(
                     }
                 }
                 .toTypedArray()
+
             result.complete(creditCards)
         }
 
@@ -64,7 +67,7 @@ class GeckoAutocompleteStorageDelegate(
         loginStorageDelegate.onLoginSave(login.toLoginEntry())
     }
 
-    override fun onLoginFetch(domain: String): GeckoResult<Array<Autocomplete.LoginEntry>>? {
+    override fun onLoginFetch(domain: String): GeckoResult<Array<Autocomplete.LoginEntry>> {
         val result = GeckoResult<Array<Autocomplete.LoginEntry>>()
 
         @OptIn(DelicateCoroutinesApi::class)

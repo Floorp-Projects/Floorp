@@ -10,9 +10,12 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineScope
 import mozilla.components.concept.storage.CreditCard
+import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.NewCreditCardFields
+import mozilla.components.concept.storage.UpdatableCreditCardFields
 import mozilla.components.lib.dataprotect.SecureAbove22Preferences
+import mozilla.components.support.ktx.kotlin.last4Digits
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
@@ -46,26 +49,28 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
     }
 
     @Test
-    fun `decrypt`() = runBlocking {
-        val plaintextNumber = CreditCardNumber.Plaintext("4111111111111111")
-        val creditCardFields = NewCreditCardFields(
-            billingName = "Jon Doe",
-            plaintextCardNumber = plaintextNumber,
-            cardNumberLast4 = "1111",
-            expiryMonth = 12,
-            expiryYear = 2028,
-            cardType = "amex"
-        )
-        val creditCard = storage.addCreditCard(creditCardFields)
+    fun `GIVEN a newly added credit card WHEN decrypt is called THEN it returns the plain credit card number`() =
+        runBlocking {
+            val plaintextNumber = CreditCardNumber.Plaintext("4111111111111111")
+            val creditCardFields = NewCreditCardFields(
+                billingName = "Jon Doe",
+                plaintextCardNumber = plaintextNumber,
+                cardNumberLast4 = "1111",
+                expiryMonth = 12,
+                expiryYear = 2028,
+                cardType = "amex"
+            )
+            val creditCard = storage.addCreditCard(creditCardFields)
+            val key = delegate.getOrGenerateKey()
 
-        assertEquals(
-            plaintextNumber,
-            delegate.decrypt(creditCard.encryptedCardNumber)
-        )
-    }
+            assertEquals(
+                plaintextNumber,
+                delegate.decrypt(key, creditCard.encryptedCardNumber)
+            )
+        }
 
     @Test
-    fun `onAddressFetch`() {
+    fun `WHEN onAddressFetch is called THEN the storage is called to gett all addresses`() {
         scope.launch {
             delegate.onAddressesFetch()
             verify(storage, times(1)).getAllAddresses()
@@ -99,6 +104,83 @@ class GeckoCreditCardsAddressesStorageDelegateTest {
 
             verify(storage, times(1)).getAllCreditCards()
             assertEquals(emptyList<CreditCard>(), result)
+        }
+    }
+
+    @Test
+    fun `GIVEN a new credit card WHEN onCreditCardSave is called THEN it adds a new credit card in storage`() {
+        scope.launch {
+            val billingName = "Jon Doe"
+            val cardNumber = "4111111111111111"
+            val expiryMonth = 12L
+            val expiryYear = 2028L
+            val cardType = "amex"
+
+            delegate.onCreditCardSave(
+                CreditCardEntry(
+                    name = billingName,
+                    number = cardNumber,
+                    expiryMonth = expiryMonth.toString(),
+                    expiryYear = expiryYear.toString(),
+                    cardType = cardType
+                )
+            )
+
+            verify(storage, times(1)).addCreditCard(
+                creditCardFields = NewCreditCardFields(
+                    billingName = billingName,
+                    plaintextCardNumber = CreditCardNumber.Plaintext(cardNumber),
+                    cardNumberLast4 = cardNumber.last4Digits(),
+                    expiryMonth = expiryMonth,
+                    expiryYear = expiryYear,
+                    cardType = cardType
+                )
+            )
+        }
+    }
+
+    @Test
+    fun `GIVEN an existing credit card WHEN onCreditCardSave is called THEN it updates the existing credit card in storage`() {
+        scope.launch {
+            val billingName = "Jon Doe"
+            val cardNumber = "4111111111111111"
+            val expiryMonth = 12L
+            val expiryYear = 2028L
+            val cardType = "amex"
+
+            val creditCard = storage.addCreditCard(
+                NewCreditCardFields(
+                    billingName = "Jon Doe",
+                    plaintextCardNumber = CreditCardNumber.Plaintext(cardNumber),
+                    cardNumberLast4 = "1111",
+                    expiryMonth = expiryMonth,
+                    expiryYear = expiryYear,
+                    cardType = cardType
+                )
+            )
+
+            delegate.onCreditCardSave(
+                CreditCardEntry(
+                    guid = creditCard.guid,
+                    name = billingName,
+                    number = "4111111111111112",
+                    expiryMonth = expiryMonth.toString(),
+                    expiryYear = expiryYear.toString(),
+                    cardType = cardType
+                )
+            )
+
+            verify(storage, times(1)).updateCreditCard(
+                guid = creditCard.guid,
+                creditCardFields = UpdatableCreditCardFields(
+                    billingName = billingName,
+                    cardNumber = CreditCardNumber.Plaintext("4111111111111112"),
+                    cardNumberLast4 = "4111111111111112".last4Digits(),
+                    expiryMonth = expiryMonth,
+                    expiryYear = expiryYear,
+                    cardType = cardType
+                )
+            )
         }
     }
 }

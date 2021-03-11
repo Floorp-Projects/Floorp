@@ -12,10 +12,10 @@ import mozilla.components.browser.engine.gecko.ext.toAutocompleteCreditCard
 import mozilla.components.browser.engine.gecko.ext.toLoginEntry
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.prompt.Choice
-import mozilla.components.concept.engine.prompt.CreditCard
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
+import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.support.ktx.kotlin.toDate
@@ -850,7 +850,7 @@ class GeckoPromptDelegateTest {
             }
         })
 
-        val creditCard1 = CreditCard(
+        val creditCard1 = CreditCardEntry(
             guid = "1",
             name = "Banana Apple",
             number = "4111111111111110",
@@ -861,7 +861,7 @@ class GeckoPromptDelegateTest {
         val creditCardSelectOption1 =
             Autocomplete.CreditCardSelectOption(creditCard1.toAutocompleteCreditCard())
 
-        val creditCard2 = CreditCard(
+        val creditCard2 = CreditCardEntry(
             guid = "2",
             name = "Orange Pineapple",
             number = "4111111111115555",

@@ -10,8 +10,8 @@ import mozilla.components.browser.state.state.ContentState
 import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.prompt.CreditCard
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.whenever
 import org.junit.Assert.assertEquals
@@ -30,7 +30,7 @@ class CreditCardPickerTest {
     private lateinit var creditCardPicker: CreditCardPicker
     private lateinit var creditCardSelectBar: CreditCardSelectBar
 
-    private val creditCard = CreditCard(
+    private val creditCard = CreditCardEntry(
         guid = "1",
         name = "Banana Apple",
         number = "4111111111111110",
@@ -39,7 +39,7 @@ class CreditCardPickerTest {
         cardType = ""
     )
     var onDismissCalled = false
-    var confirmedCreditCard: CreditCard? = null
+    var confirmedCreditCard: CreditCardEntry? = null
     private val promptRequest = PromptRequest.SelectCreditCard(
         creditCards = listOf(creditCard),
         onDismiss = { onDismissCalled = true },

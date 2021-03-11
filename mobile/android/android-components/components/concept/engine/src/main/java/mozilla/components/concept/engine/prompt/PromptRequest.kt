@@ -9,6 +9,7 @@ import android.net.Uri
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Level
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication.Method
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type
+import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 import java.util.UUID
@@ -93,13 +94,13 @@ sealed class PromptRequest(
 
     /**
      * Value type that represents a request for a select credit card prompt.
-     * @property creditCards a list of [CreditCard]s to select from.
+     * @property creditCards a list of [CreditCardEntry]s to select from.
      * @property onConfirm callback that is called when the user confirms the credit card selection.
      * @property onDismiss callback to let the page know the user dismissed the dialog.
      */
     data class SelectCreditCard(
-        val creditCards: List<CreditCard>,
-        val onConfirm: (CreditCard) -> Unit,
+        val creditCards: List<CreditCardEntry>,
+        val onConfirm: (CreditCardEntry) -> Unit,
         override val onDismiss: () -> Unit
     ) : PromptRequest(), Dismissible
 

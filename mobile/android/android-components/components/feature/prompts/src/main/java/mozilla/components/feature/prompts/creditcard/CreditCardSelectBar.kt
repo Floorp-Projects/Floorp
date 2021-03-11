@@ -17,7 +17,7 @@ import androidx.core.widget.ImageViewCompat
 import androidx.core.widget.TextViewCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import mozilla.components.concept.engine.prompt.CreditCard
+import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.concept.SelectablePromptView
 import mozilla.components.feature.prompts.facts.emitCreditCardAutofillExpandedFact
@@ -31,7 +31,7 @@ class CreditCardSelectBar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0
-) : ConstraintLayout(context, attrs, defStyleAttr), SelectablePromptView<CreditCard> {
+) : ConstraintLayout(context, attrs, defStyleAttr), SelectablePromptView<CreditCardEntry> {
 
     private var view: View? = null
     private var recyclerView: RecyclerView? = null
@@ -47,7 +47,7 @@ class CreditCardSelectBar @JvmOverloads constructor(
         }
     }
 
-    override var listener: SelectablePromptView.Listener<CreditCard>? = null
+    override var listener: SelectablePromptView.Listener<CreditCardEntry>? = null
 
     init {
         context.withStyledAttributes(
@@ -78,7 +78,7 @@ class CreditCardSelectBar @JvmOverloads constructor(
         toggleSelectCreditCardHeader(shouldExpand = false)
     }
 
-    override fun showPrompt(options: List<CreditCard>) {
+    override fun showPrompt(options: List<CreditCardEntry>) {
         if (view == null) {
             view = View.inflate(context, LAYOUT_ID, this)
             bindViews()

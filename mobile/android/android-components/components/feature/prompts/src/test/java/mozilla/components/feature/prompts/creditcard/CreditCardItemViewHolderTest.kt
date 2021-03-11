@@ -9,7 +9,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.concept.engine.prompt.CreditCard
+import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.feature.prompts.R
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
@@ -27,9 +27,9 @@ class CreditCardItemViewHolderTest {
     private lateinit var cardLogoView: ImageView
     private lateinit var cardNumberView: TextView
     private lateinit var expirationDateView: TextView
-    private lateinit var onCreditCardSelected: (CreditCard) -> Unit
+    private lateinit var onCreditCardSelected: (CreditCardEntry) -> Unit
 
-    private val creditCard = CreditCard(
+    private val creditCard = CreditCardEntry(
         guid = "1",
         name = "Banana Apple",
         number = "4111111111111111",
@@ -58,8 +58,8 @@ class CreditCardItemViewHolderTest {
 
     @Test
     fun `GIVEN a credit card item WHEN a credit item is clicked THEN onCreditCardSelected is called with the given credit card item`() {
-        var onCreditCardSelectedCalled: CreditCard? = null
-        val onCreditCardSelected = { creditCard: CreditCard ->
+        var onCreditCardSelectedCalled: CreditCardEntry? = null
+        val onCreditCardSelected = { creditCard: CreditCardEntry ->
             onCreditCardSelectedCalled = creditCard
         }
         CreditCardItemViewHolder(view, onCreditCardSelected).bind(creditCard)

@@ -8,7 +8,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
-import mozilla.components.concept.engine.prompt.CreditCard
+import mozilla.components.concept.storage.CreditCardEntry
 
 /**
  * Adapter for a list of credit cards to be displayed.
@@ -16,8 +16,8 @@ import mozilla.components.concept.engine.prompt.CreditCard
  * @param onCreditCardSelected Callback invoked when a credit card item is selected.
  */
 class CreditCardsAdapter(
-    private val onCreditCardSelected: (CreditCard) -> Unit
-) : ListAdapter<CreditCard, CreditCardItemViewHolder>(DiffCallback) {
+    private val onCreditCardSelected: (CreditCardEntry) -> Unit
+) : ListAdapter<CreditCardEntry, CreditCardItemViewHolder>(DiffCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CreditCardItemViewHolder {
         val view = LayoutInflater.from(parent.context)
@@ -29,11 +29,11 @@ class CreditCardsAdapter(
         holder.bind(getItem(position))
     }
 
-    internal object DiffCallback : DiffUtil.ItemCallback<CreditCard>() {
-        override fun areItemsTheSame(oldItem: CreditCard, newItem: CreditCard) =
+    internal object DiffCallback : DiffUtil.ItemCallback<CreditCardEntry>() {
+        override fun areItemsTheSame(oldItem: CreditCardEntry, newItem: CreditCardEntry) =
             oldItem.guid == newItem.guid
 
-        override fun areContentsTheSame(oldItem: CreditCard, newItem: CreditCard) =
+        override fun areContentsTheSame(oldItem: CreditCardEntry, newItem: CreditCardEntry) =
             oldItem == newItem
     }
 }

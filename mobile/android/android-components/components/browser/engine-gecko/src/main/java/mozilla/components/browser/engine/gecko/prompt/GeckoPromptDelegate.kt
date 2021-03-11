@@ -9,15 +9,15 @@ import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.browser.engine.gecko.ext.toAutocompleteCreditCard
-import mozilla.components.browser.engine.gecko.ext.toCreditCard
+import mozilla.components.browser.engine.gecko.ext.toCreditCardEntry
 import mozilla.components.browser.engine.gecko.ext.toLoginEntry
 import mozilla.components.concept.engine.prompt.Choice
-import mozilla.components.concept.engine.prompt.CreditCard
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.MenuChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.ShareData
+import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.support.base.log.logger.Logger
@@ -77,7 +77,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
     ): GeckoResult<PromptResponse>? {
         val geckoResult = GeckoResult<PromptResponse>()
 
-        val onConfirm: (CreditCard) -> Unit = { creditCard ->
+        val onConfirm: (CreditCardEntry) -> Unit = { creditCard ->
             if (!request.isComplete) {
                 geckoResult.complete(
                     request.confirm(
@@ -94,7 +94,7 @@ internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSe
         geckoEngineSession.notifyObservers {
             onPromptRequest(
                 PromptRequest.SelectCreditCard(
-                    creditCards = request.options.map { it.value.toCreditCard() },
+                    creditCards = request.options.map { it.value.toCreditCardEntry() },
                     onDismiss = onDismiss,
                     onConfirm = onConfirm
                 )

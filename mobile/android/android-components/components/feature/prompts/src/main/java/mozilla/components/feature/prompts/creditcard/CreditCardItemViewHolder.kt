@@ -8,7 +8,7 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
-import mozilla.components.concept.engine.prompt.CreditCard
+import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.feature.prompts.R
 import mozilla.components.support.utils.creditCardIssuerNetwork
 import java.text.SimpleDateFormat
@@ -22,15 +22,15 @@ import java.util.Locale
  */
 class CreditCardItemViewHolder(
     view: View,
-    private val onCreditCardSelected: (CreditCard) -> Unit
+    private val onCreditCardSelected: (CreditCardEntry) -> Unit
 ) : RecyclerView.ViewHolder(view) {
 
     /**
-     * Binds the view with the provided [CreditCard].
+     * Binds the view with the provided [CreditCardEntry].
      *
-     * @param creditCard The [CreditCard] to display.
+     * @param creditCard The [CreditCardEntry] to display.
      */
-    fun bind(creditCard: CreditCard) {
+    fun bind(creditCard: CreditCardEntry) {
         itemView.findViewById<ImageView>(R.id.credit_card_logo)
             .setImageResource(creditCard.cardType.creditCardIssuerNetwork().icon)
 
@@ -47,7 +47,7 @@ class CreditCardItemViewHolder(
     /**
      * Set the credit card expiry date formatted according to the locale.
      */
-    private fun bindCreditCardExpiryDate(creditCard: CreditCard) {
+    private fun bindCreditCardExpiryDate(creditCard: CreditCardEntry) {
         val dateFormat = SimpleDateFormat(DATE_PATTERN, Locale.getDefault())
 
         val calendar = Calendar.getInstance()

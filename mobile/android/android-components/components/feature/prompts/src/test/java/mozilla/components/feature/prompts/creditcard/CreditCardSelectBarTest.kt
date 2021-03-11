@@ -10,7 +10,7 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.runBlocking
-import mozilla.components.concept.engine.prompt.CreditCard
+import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.feature.prompts.R
 import mozilla.components.feature.prompts.concept.SelectablePromptView
 import mozilla.components.feature.prompts.facts.CreditCardAutofillDialogFacts
@@ -36,7 +36,7 @@ class CreditCardSelectBarTest {
 
     private lateinit var creditCardSelectBar: CreditCardSelectBar
 
-    private val creditCard = CreditCard(
+    private val creditCard = CreditCardEntry(
         guid = "1",
         name = "Banana Apple",
         number = "4111111111111110",
@@ -68,7 +68,7 @@ class CreditCardSelectBarTest {
 
     @Test
     fun `GIVEN a listener WHEN manage credit cards button is clicked THEN onManageOptions is called`() {
-        val listener: SelectablePromptView.Listener<CreditCard> = mock()
+        val listener: SelectablePromptView.Listener<CreditCardEntry> = mock()
 
         assertNull(creditCardSelectBar.listener)
 
@@ -82,7 +82,7 @@ class CreditCardSelectBarTest {
 
     @Test
     fun `GIVEN a listener WHEN a credit card is selected THEN onOptionSelect is called`() = runBlocking {
-        val listener: SelectablePromptView.Listener<CreditCard> = mock()
+        val listener: SelectablePromptView.Listener<CreditCardEntry> = mock()
         creditCardSelectBar.listener = listener
 
         val facts = mutableListOf<Fact>()

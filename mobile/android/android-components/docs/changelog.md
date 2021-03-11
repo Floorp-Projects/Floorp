@@ -20,6 +20,10 @@ permalink: /changelog/
 * **feature-top-sites**
   * Added `providerFilter` to `TopSitesProviderConfig`, allowing the client to filter the provided top sites.
 
+* **concept-storage**:
+  * Added `CreditCardValidationDelegate` which is a delegate that will check against the `CreditCardsAddressesStorage` to determine if a `CreditCard` can be persisted in storage. [#9838](https://github.com/mozilla-mobile/android-components/issues/9838)
+  * Refactors `CreditCard` from `concept-engine` to `CreditCardEntry` in `concept-storage` so that it can validated with the `CreditCardValidationDelegate`. [#9838](https://github.com/mozilla-mobile/android-components/issues/9838)
+
 # 101.0.0
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v100.0.0...v101.0.0)
 * [Milestone](https://github.com/mozilla-mobile/android-components/milestone/148?closed=1)

@@ -21,7 +21,6 @@ import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.Choice
-import mozilla.components.concept.engine.prompt.CreditCard
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication
@@ -41,6 +40,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.Share
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
+import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.concept.storage.LoginValidationDelegate
@@ -143,7 +143,7 @@ class PromptFeature private constructor(
     override val loginExceptionStorage: LoginExceptions? = null,
     private val loginPickerView: SelectablePromptView<Login>? = null,
     private val onManageLogins: () -> Unit = {},
-    private val creditCardPickerView: SelectablePromptView<CreditCard>? = null,
+    private val creditCardPickerView: SelectablePromptView<CreditCardEntry>? = null,
     private val onManageCreditCards: () -> Unit = {},
     private val onSelectCreditCard: () -> Unit = {},
     onNeedToRequestPermissions: OnNeedToRequestPermissions
@@ -181,7 +181,7 @@ class PromptFeature private constructor(
         loginExceptionStorage: LoginExceptions? = null,
         loginPickerView: SelectablePromptView<Login>? = null,
         onManageLogins: () -> Unit = {},
-        creditCardPickerView: SelectablePromptView<CreditCard>? = null,
+        creditCardPickerView: SelectablePromptView<CreditCardEntry>? = null,
         onManageCreditCards: () -> Unit = {},
         onSelectCreditCard: () -> Unit = {},
         onNeedToRequestPermissions: OnNeedToRequestPermissions
@@ -215,7 +215,7 @@ class PromptFeature private constructor(
         loginExceptionStorage: LoginExceptions? = null,
         loginPickerView: SelectablePromptView<Login>? = null,
         onManageLogins: () -> Unit = {},
-        creditCardPickerView: SelectablePromptView<CreditCard>? = null,
+        creditCardPickerView: SelectablePromptView<CreditCardEntry>? = null,
         onManageCreditCards: () -> Unit = {},
         onSelectCreditCard: () -> Unit = {},
         onNeedToRequestPermissions: OnNeedToRequestPermissions

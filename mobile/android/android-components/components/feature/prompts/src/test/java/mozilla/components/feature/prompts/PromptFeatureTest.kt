@@ -31,7 +31,6 @@ import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.prompt.Choice
-import mozilla.components.concept.engine.prompt.CreditCard
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.prompt.PromptRequest.Alert
 import mozilla.components.concept.engine.prompt.PromptRequest.Authentication
@@ -43,6 +42,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.MultipleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.ShareData
+import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.feature.prompts.concept.SelectablePromptView
@@ -410,7 +410,7 @@ class PromptFeatureTest {
 
     @Test
     fun `GIVEN creditCardPickerView is visible WHEN dismissSelectPrompts is called THEN dismissSelectCreditCardRequest returns true`() {
-        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val creditCardPickerView: SelectablePromptView<CreditCardEntry> = mock()
         val feature = spy(
             PromptFeature(
                 mock<Activity>(),
@@ -434,7 +434,7 @@ class PromptFeatureTest {
 
     @Test
     fun `GIVEN creditCardPickerView is not visible WHEN dismissSelectPrompts is called THEN dismissSelectPrompt returns false`() {
-        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val creditCardPickerView: SelectablePromptView<CreditCardEntry> = mock()
         val feature = spy(
             PromptFeature(
                 mock<Activity>(),
@@ -457,7 +457,7 @@ class PromptFeatureTest {
 
     @Test
     fun `GIVEN an active select credit card request WHEN onBackPressed is called THEN dismissSelectPrompts is called`() {
-        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val creditCardPickerView: SelectablePromptView<CreditCardEntry> = mock()
         val feature = spy(
             PromptFeature(
                 mock<Activity>(),
@@ -481,7 +481,7 @@ class PromptFeatureTest {
 
     @Test
     fun `WHEN dismissSelectPrompts is called THEN the active credit card picker should be dismissed`() {
-        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val creditCardPickerView: SelectablePromptView<CreditCardEntry> = mock()
         val feature = spy(
             PromptFeature(
                 mock<Activity>(),
@@ -817,7 +817,7 @@ class PromptFeatureTest {
 
     @Test
     fun `WHEN onActivityResult is called with PIN_REQUEST and RESULT_OK THEN onAuthSuccess) is called`() {
-        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val creditCardPickerView: SelectablePromptView<CreditCardEntry> = mock()
         val feature =
             PromptFeature(
                 activity = mock(),
@@ -836,7 +836,7 @@ class PromptFeatureTest {
 
     @Test
     fun `WHEN onActivityResult is called with PIN_REQUEST and RESULT_CANCELED THEN onAuthFailure is called`() {
-        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val creditCardPickerView: SelectablePromptView<CreditCardEntry> = mock()
         val feature =
             PromptFeature(
                 activity = mock(),
@@ -855,7 +855,7 @@ class PromptFeatureTest {
 
     @Test
     fun `GIVEN user successfully authenticates by biometric prompt WHEN onBiometricResult is called THEN onAuthSuccess is called`() {
-        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val creditCardPickerView: SelectablePromptView<CreditCardEntry> = mock()
         val feature =
             PromptFeature(
                 activity = mock(),
@@ -873,7 +873,7 @@ class PromptFeatureTest {
 
     @Test
     fun `GIVEN user fails to authenticate by biometric prompt WHEN onBiometricResult is called THEN onAuthFailure) is called`() {
-        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val creditCardPickerView: SelectablePromptView<CreditCardEntry> = mock()
         val feature =
             PromptFeature(
                 activity = mock(),
@@ -925,7 +925,7 @@ class PromptFeatureTest {
 
     @Test
     fun `WHEN a credit card is selected THEN confirm the prompt request with the selected credit card`() {
-        val creditCard = CreditCard(
+        val creditCard = CreditCardEntry(
             guid = "id",
             name = "Banana Apple",
             number = "4111111111111110",
@@ -935,7 +935,7 @@ class PromptFeatureTest {
         )
         var onDismissCalled = false
         var onConfirmCalled = false
-        var confirmedCreditCard: CreditCard? = null
+        var confirmedCreditCard: CreditCardEntry? = null
 
         val selectCreditCardRequest = PromptRequest.SelectCreditCard(
             creditCards = listOf(creditCard),
@@ -1393,7 +1393,7 @@ class PromptFeatureTest {
 
     @Test
     fun `WHEN page is refreshed THEN credit card prompt is dismissed`() {
-        val creditCardPickerView: SelectablePromptView<CreditCard> = mock()
+        val creditCardPickerView: SelectablePromptView<CreditCardEntry> = mock()
         val feature =
             PromptFeature(
                 activity = mock(),
@@ -1404,8 +1404,8 @@ class PromptFeatureTest {
             ) { }
         feature.creditCardPicker = creditCardPicker
         val onDismiss: () -> Unit = {}
-        val onConfirm: (CreditCard) -> Unit = {}
-        val creditCard = CreditCard(
+        val onConfirm: (CreditCardEntry) -> Unit = {}
+        val creditCard = CreditCardEntry(
             guid = "1",
             name = "Banana Apple",
             number = "4111111111111110",

@@ -29,6 +29,9 @@ private val re = object {
 
 private const val MAILTO = "mailto:"
 
+// Number of last digits to be shown when credit card number is obfuscated.
+private const val LAST_VISIBLE_DIGITS_COUNT = 4
+
 /**
  * Checks if this String is a URL.
  */
@@ -279,4 +282,11 @@ fun String.getRepresentativeCharacter(): String {
     }
 
     return "?"
+}
+
+/**
+ * Returns the last 4 digits from a formatted credit card number string.
+ */
+fun String.last4Digits(): String {
+    return this.takeLast(LAST_VISIBLE_DIGITS_COUNT)
 }

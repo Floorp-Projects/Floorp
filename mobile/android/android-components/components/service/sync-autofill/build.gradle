@@ -32,6 +32,7 @@ dependencies {
     api project(':lib-dataprotect')
 
     implementation project(':support-utils')
+    implementation project(':support-ktx')
 
     implementation Dependencies.kotlin_stdlib
 

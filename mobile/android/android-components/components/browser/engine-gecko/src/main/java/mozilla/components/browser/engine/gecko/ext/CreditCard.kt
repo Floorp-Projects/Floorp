@@ -4,14 +4,14 @@
 
 package mozilla.components.browser.engine.gecko.ext
 
-import mozilla.components.concept.engine.prompt.CreditCard
+import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.support.utils.creditCardIIN
 import org.mozilla.geckoview.Autocomplete
 
 /**
- * Converts a GeckoView [Autocomplete.CreditCard] to an Android Components [CreditCard].
+ * Converts a GeckoView [Autocomplete.CreditCard] to an Android Components [CreditCardEntry].
  */
-fun Autocomplete.CreditCard.toCreditCard() = CreditCard(
+fun Autocomplete.CreditCard.toCreditCardEntry() = CreditCardEntry(
     guid = guid,
     name = name,
     number = number,
@@ -21,9 +21,9 @@ fun Autocomplete.CreditCard.toCreditCard() = CreditCard(
 )
 
 /**
- * Converts an Android Components [CreditCard] to a GeckoView [Autocomplete.CreditCard].
+ * Converts an Android Components [CreditCardEntry] to a GeckoView [Autocomplete.CreditCard].
  */
-fun CreditCard.toAutocompleteCreditCard() = Autocomplete.CreditCard.Builder()
+fun CreditCardEntry.toAutocompleteCreditCard() = Autocomplete.CreditCard.Builder()
     .guid(guid)
     .name(name)
     .number(number)

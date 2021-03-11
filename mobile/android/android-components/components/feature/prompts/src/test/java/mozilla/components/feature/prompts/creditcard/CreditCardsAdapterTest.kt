@@ -1,7 +1,7 @@
 
 package mozilla.components.feature.prompts.creditcard
 
-import mozilla.components.concept.engine.prompt.CreditCard
+import mozilla.components.concept.storage.CreditCardEntry
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -10,7 +10,7 @@ class CreditCardsAdapterTest {
 
     @Test
     fun testDiffCallback() {
-        val creditCard1 = CreditCard(
+        val creditCard1 = CreditCardEntry(
             guid = "1",
             name = "Banana Apple",
             number = "4111111111111110",
@@ -27,7 +27,7 @@ class CreditCardsAdapterTest {
             CreditCardsAdapter.DiffCallback.areContentsTheSame(creditCard1, creditCard2)
         )
 
-        val creditCard3 = CreditCard(
+        val creditCard3 = CreditCardEntry(
             guid = "2",
             name = "Pineapple Orange",
             number = "4111111111115555",

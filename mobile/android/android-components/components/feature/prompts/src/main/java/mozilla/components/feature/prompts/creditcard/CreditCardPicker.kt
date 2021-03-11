@@ -6,8 +6,8 @@ package mozilla.components.feature.prompts.creditcard
 
 import androidx.annotation.VisibleForTesting
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.prompt.CreditCard
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.feature.prompts.concept.SelectablePromptView
 import mozilla.components.feature.prompts.consumePromptFrom
 import mozilla.components.feature.prompts.facts.emitCreditCardAutofillDismissedFact
@@ -29,11 +29,11 @@ import mozilla.components.support.base.log.logger.Logger
  */
 class CreditCardPicker(
     private val store: BrowserStore,
-    private val creditCardSelectBar: SelectablePromptView<CreditCard>,
+    private val creditCardSelectBar: SelectablePromptView<CreditCardEntry>,
     private val manageCreditCardsCallback: () -> Unit = {},
     private val selectCreditCardCallback: () -> Unit = {},
     private var sessionId: String? = null
-) : SelectablePromptView.Listener<CreditCard> {
+) : SelectablePromptView.Listener<CreditCardEntry> {
 
     init {
         creditCardSelectBar.listener = this
@@ -41,14 +41,14 @@ class CreditCardPicker(
 
     // The selected credit card option to confirm.
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    internal var selectedCreditCard: CreditCard? = null
+    internal var selectedCreditCard: CreditCardEntry? = null
 
     override fun onManageOptions() {
         manageCreditCardsCallback.invoke()
         dismissSelectCreditCardRequest()
     }
 
-    override fun onOptionSelect(option: CreditCard) {
+    override fun onOptionSelect(option: CreditCardEntry) {
         selectedCreditCard = option
         creditCardSelectBar.hidePrompt()
         selectCreditCardCallback.invoke()

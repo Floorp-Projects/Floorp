@@ -278,4 +278,14 @@ class StringTest {
         // IP
         assertEquals("1", "https://192.168.0.1".getRepresentativeCharacter())
     }
+
+    @Test
+    fun `last4Digits returns a string with only last 4 digits `() {
+        assertEquals("8431", "371449635398431".last4Digits())
+        assertEquals("2345", "12345".last4Digits())
+        assertEquals("1234", "1234".last4Digits())
+        assertEquals("123", "123".last4Digits())
+        assertEquals("1", "1".last4Digits())
+        assertEquals("", "".last4Digits())
+    }
 }

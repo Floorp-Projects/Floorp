@@ -4,16 +4,21 @@
 
 package mozilla.components.service.sync.autofill
 
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCard
+import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.CreditCardNumber
+import mozilla.components.concept.storage.CreditCardValidationDelegate
 import mozilla.components.concept.storage.CreditCardsAddressesStorage
 import mozilla.components.concept.storage.CreditCardsAddressesStorageDelegate
+import mozilla.components.concept.storage.ManagedKey
+import mozilla.components.concept.storage.NewCreditCardFields
+import mozilla.components.concept.storage.UpdatableCreditCardFields
+import mozilla.components.support.ktx.kotlin.last4Digits
 
 /**
  * [CreditCardsAddressesStorageDelegate] implementation.
@@ -28,33 +33,67 @@ class GeckoCreditCardsAddressesStorageDelegate(
     private val isCreditCardAutofillEnabled: () -> Boolean = { false }
 ) : CreditCardsAddressesStorageDelegate {
 
-    override suspend fun decrypt(encryptedCardNumber: CreditCardNumber.Encrypted): CreditCardNumber.Plaintext? {
+    override suspend fun getOrGenerateKey(): ManagedKey {
         val crypto = storage.value.getCreditCardCrypto()
-        val key = crypto.getOrGenerateKey()
+        return crypto.getOrGenerateKey()
+    }
+
+    override suspend fun decrypt(
+        key: ManagedKey,
+        encryptedCardNumber: CreditCardNumber.Encrypted
+    ): CreditCardNumber.Plaintext? {
+        val crypto = storage.value.getCreditCardCrypto()
         return crypto.decrypt(key, encryptedCardNumber)
     }
 
-    override fun onAddressesFetch(): Deferred<List<Address>> {
-        return scope.async {
-            storage.value.getAllAddresses()
-        }
+    override suspend fun onAddressesFetch(): List<Address> = withContext(scope.coroutineContext) {
+        storage.value.getAllAddresses()
     }
 
-    override fun onAddressSave(address: Address) {
+    override suspend fun onAddressSave(address: Address) {
         TODO("Not yet implemented")
     }
 
-    override fun onCreditCardsFetch(): Deferred<List<CreditCard>> {
-        if (isCreditCardAutofillEnabled().not()) {
-            return CompletableDeferred(listOf())
+    override suspend fun onCreditCardsFetch(): List<CreditCard> =
+        withContext(scope.coroutineContext) {
+            if (!isCreditCardAutofillEnabled()) {
+                emptyList()
+            } else {
+                storage.value.getAllCreditCards()
+            }
         }
 
-        return scope.async {
-            storage.value.getAllCreditCards()
-        }
-    }
+    override suspend fun onCreditCardSave(creditCard: CreditCardEntry) {
+        val validationDelegate = DefaultCreditCardValidationDelegate(storage)
 
-    override fun onCreditCardSave(creditCard: CreditCard) {
-        TODO("Not yet implemented")
+        scope.launch {
+            when (val result = validationDelegate.shouldCreateOrUpdate(creditCard)) {
+                is CreditCardValidationDelegate.Result.CanBeCreated -> {
+                    storage.value.addCreditCard(
+                        NewCreditCardFields(
+                            billingName = creditCard.name,
+                            plaintextCardNumber = CreditCardNumber.Plaintext(creditCard.number),
+                            cardNumberLast4 = creditCard.number.last4Digits(),
+                            expiryMonth = creditCard.expiryMonth.toLong(),
+                            expiryYear = creditCard.expiryYear.toLong(),
+                            cardType = creditCard.cardType
+                        )
+                    )
+                }
+                is CreditCardValidationDelegate.Result.CanBeUpdated -> {
+                    storage.value.updateCreditCard(
+                        guid = result.foundCreditCard.guid,
+                        creditCardFields = UpdatableCreditCardFields(
+                            billingName = creditCard.name,
+                            cardNumber = CreditCardNumber.Plaintext(creditCard.number),
+                            cardNumberLast4 = creditCard.number.last4Digits(),
+                            expiryMonth = creditCard.expiryMonth.toLong(),
+                            expiryYear = creditCard.expiryYear.toLong(),
+                            cardType = creditCard.cardType
+                        )
+                    )
+                }
+            }
+        }
     }
 }

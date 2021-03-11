@@ -20,6 +20,7 @@ import mozilla.components.concept.engine.prompt.PromptRequest.SingleChoice
 import mozilla.components.concept.engine.prompt.PromptRequest.TextPrompt
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection
 import mozilla.components.concept.engine.prompt.PromptRequest.TimeSelection.Type
+import mozilla.components.concept.storage.CreditCardEntry
 import mozilla.components.concept.storage.Login
 import mozilla.components.concept.storage.LoginEntry
 import mozilla.components.support.test.mock
@@ -271,7 +272,7 @@ class PromptRequestTest {
 
     @Test
     fun `GIVEN a list of credit cards WHEN SelectCreditCard is confirmed or dismissed THEN their respective callback is invoked`() {
-        val creditCard = CreditCard(
+        val creditCard = CreditCardEntry(
             guid = "id",
             name = "Banana Apple",
             number = "4111111111111110",
@@ -281,7 +282,7 @@ class PromptRequestTest {
         )
         var onDismissCalled = false
         var onConfirmCalled = false
-        var confirmedCreditCard: CreditCard? = null
+        var confirmedCreditCard: CreditCardEntry? = null
 
         val selectCreditCardRequest = SelectCreditCard(
             creditCards = listOf(creditCard),

@@ -27,6 +27,8 @@ dependencies {
     // dependency, but it will crash at runtime.
     // Included via 'api' because this module is unusable without coroutines.
     api Dependencies.kotlin_coroutines
+
+    implementation project(':support-ktx')
 }
 
 apply from: '../../../publish.gradle'
