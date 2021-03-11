@@ -1,19 +1,12 @@
-extern crate autocfg;
+extern crate rustc_version;
+use rustc_version::{version, Version};
 
 fn main() {
-    let ac = autocfg::new();
+    // Assert we haven't travelled back in time
+    assert!(version().unwrap().major >= 1);
 
-    // Check for a minimum version for a few features
-    if ac.probe_rustc_version(1, 20) {
-        println!("cargo:rustc-cfg=tuple_ty");
-    }
-    if ac.probe_rustc_version(1, 31) {
-        println!("cargo:rustc-cfg=allow_clippy");
-    }
-    if ac.probe_rustc_version(1, 36) {
-        println!("cargo:rustc-cfg=maybe_uninit");
-    }
-    if ac.probe_rustc_version(1, 40) {
-        println!("cargo:rustc-cfg=doctests");
+    // Check for a minimum version
+    if version().unwrap() >= Version::parse("1.36.0").unwrap() {
+        println!("cargo:rustc-cfg=memoffset_maybe_uninit");
     }
 }

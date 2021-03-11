@@ -1,7 +1,7 @@
 use alloc::boxed::Box;
 use core::fmt;
 use core::marker::PhantomData;
-use core::mem::{self, MaybeUninit};
+use core::mem;
 use core::ptr;
 
 /// Number of words a piece of `Data` can hold.
@@ -23,7 +23,7 @@ pub struct Deferred {
 }
 
 impl fmt::Debug for Deferred {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> Result<(), fmt::Error> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         f.pad("Deferred { .. }")
     }
 }
@@ -36,8 +36,11 @@ impl Deferred {
 
         unsafe {
             if size <= mem::size_of::<Data>() && align <= mem::align_of::<Data>() {
-                let mut data = MaybeUninit::<Data>::uninit();
-                ptr::write(data.as_mut_ptr() as *mut F, f);
+                // TODO(taiki-e): when the minimum supported Rust version is bumped to 1.36+,
+                // replace this with `mem::MaybeUninit`.
+                #[allow(deprecated)]
+                let mut data: Data = mem::uninitialized();
+                ptr::write(&mut data as *mut Data as *mut F, f);
 
                 unsafe fn call<F: FnOnce()>(raw: *mut u8) {
                     let f: F = ptr::read(raw as *mut F);
@@ -46,25 +49,25 @@ impl Deferred {
 
                 Deferred {
                     call: call::<F>,
-                    data: data.assume_init(),
+                    data,
                     _marker: PhantomData,
                 }
             } else {
                 let b: Box<F> = Box::new(f);
-                let mut data = MaybeUninit::<Data>::uninit();
-                ptr::write(data.as_mut_ptr() as *mut Box<F>, b);
+                // TODO(taiki-e): when the minimum supported Rust version is bumped to 1.36+,
+                // replace this with `mem::MaybeUninit`.
+                #[allow(deprecated)]
+                let mut data: Data = mem::uninitialized();
+                ptr::write(&mut data as *mut Data as *mut Box<F>, b);
 
                 unsafe fn call<F: FnOnce()>(raw: *mut u8) {
-                    // It's safe to cast `raw` from `*mut u8` to `*mut Box<F>`, because `raw` is
-                    // originally derived from `*mut Box<F>`.
-                    #[allow(clippy::cast_ptr_alignment)]
                     let b: Box<F> = ptr::read(raw as *mut Box<F>);
                     (*b)();
                 }
 
                 Deferred {
                     call: call::<F>,
-                    data: data.assume_init(),
+                    data,
                     _marker: PhantomData,
                 }
             }

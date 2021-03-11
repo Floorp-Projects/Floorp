@@ -39,9 +39,7 @@ must_use! {
     filter              /** v.par_iter().filter(|_| true); */
     filter_map          /** v.par_iter().filter_map(|x| *x); */
     flat_map            /** v.par_iter().flat_map(|x| *x); */
-    flat_map_iter       /** v.par_iter().flat_map_iter(|x| *x); */
     flatten             /** v.par_iter().flatten(); */
-    flatten_iter        /** v.par_iter().flatten_iter(); */
     fold                /** v.par_iter().fold(|| 0, |x, _| x); */
     fold_with           /** v.par_iter().fold_with(0, |x, _| x); */
     try_fold            /** v.par_iter().try_fold(|| 0, |x, _| Some(x)); */
@@ -54,7 +52,6 @@ must_use! {
     map_with            /** v.par_iter().map_with(0, |_, x| x); */
     map_init            /** v.par_iter().map_init(|| 0, |_, x| x); */
     panic_fuse          /** v.par_iter().panic_fuse(); */
-    positions           /** v.par_iter().positions(|_| true); */
     rev                 /** v.par_iter().rev(); */
     skip                /** v.par_iter().skip(1); */
     take                /** v.par_iter().take(1); */

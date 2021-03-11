@@ -84,7 +84,7 @@ use self::private::Try;
 pub use either::Either;
 use std::cmp::{self, Ordering};
 use std::iter::{Product, Sum};
-use std::ops::{Fn, RangeBounds};
+use std::ops::Fn;
 
 pub mod plumbing;
 
@@ -115,9 +115,7 @@ mod filter_map;
 mod find;
 mod find_first_last;
 mod flat_map;
-mod flat_map_iter;
 mod flatten;
-mod flatten_iter;
 mod fold;
 mod for_each;
 mod from_par_iter;
@@ -133,7 +131,6 @@ mod noop;
 mod once;
 mod panic_fuse;
 mod par_bridge;
-mod positions;
 mod product;
 mod reduce;
 mod repeat;
@@ -161,9 +158,7 @@ pub use self::{
     filter::Filter,
     filter_map::FilterMap,
     flat_map::FlatMap,
-    flat_map_iter::FlatMapIter,
     flatten::Flatten,
-    flatten_iter::FlattenIter,
     fold::{Fold, FoldWith},
     inspect::Inspect,
     interleave::Interleave,
@@ -176,7 +171,6 @@ pub use self::{
     once::{once, Once},
     panic_fuse::PanicFuse,
     par_bridge::{IterBridge, ParallelBridge},
-    positions::Positions,
     repeat::{repeat, repeatn, Repeat, RepeatN},
     rev::Rev,
     skip::Skip,
@@ -825,10 +819,8 @@ pub trait ParallelIterator: Sized + Send {
         FilterMap::new(self, filter_op)
     }
 
-    /// Applies `map_op` to each item of this iterator to get nested parallel iterators,
-    /// producing a new parallel iterator that flattens these back into one.
-    ///
-    /// See also [`flat_map_iter`](#method.flat_map_iter).
+    /// Applies `map_op` to each item of this iterator to get nested iterators,
+    /// producing a new iterator that flattens these back into one.
     ///
     /// # Examples
     ///
@@ -851,56 +843,7 @@ pub trait ParallelIterator: Sized + Send {
         FlatMap::new(self, map_op)
     }
 
-    /// Applies `map_op` to each item of this iterator to get nested serial iterators,
-    /// producing a new parallel iterator that flattens these back into one.
-    ///
-    /// # `flat_map_iter` versus `flat_map`
-    ///
-    /// These two methods are similar but behave slightly differently. With [`flat_map`],
-    /// each of the nested iterators must be a parallel iterator, and they will be further
-    /// split up with nested parallelism. With `flat_map_iter`, each nested iterator is a
-    /// sequential `Iterator`, and we only parallelize _between_ them, while the items
-    /// produced by each nested iterator are processed sequentially.
-    ///
-    /// When choosing between these methods, consider whether nested parallelism suits the
-    /// potential iterators at hand. If there's little computation involved, or its length
-    /// is much less than the outer parallel iterator, then it may perform better to avoid
-    /// the overhead of parallelism, just flattening sequentially with `flat_map_iter`.
-    /// If there is a lot of computation, potentially outweighing the outer parallel
-    /// iterator, then the nested parallelism of `flat_map` may be worthwhile.
-    ///
-    /// [`flat_map`]: #method.flat_map
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rayon::prelude::*;
-    /// use std::cell::RefCell;
-    ///
-    /// let a = [[1, 2], [3, 4], [5, 6], [7, 8]];
-    ///
-    /// let par_iter = a.par_iter().flat_map_iter(|a| {
-    ///     // The serial iterator doesn't have to be thread-safe, just its items.
-    ///     let cell_iter = RefCell::new(a.iter().cloned());
-    ///     std::iter::from_fn(move || cell_iter.borrow_mut().next())
-    /// });
-    ///
-    /// let vec: Vec<_> = par_iter.collect();
-    ///
-    /// assert_eq!(&vec[..], &[1, 2, 3, 4, 5, 6, 7, 8]);
-    /// ```
-    fn flat_map_iter<F, SI>(self, map_op: F) -> FlatMapIter<Self, F>
-    where
-        F: Fn(Self::Item) -> SI + Sync + Send,
-        SI: IntoIterator,
-        SI::Item: Send,
-    {
-        FlatMapIter::new(self, map_op)
-    }
-
-    /// An adaptor that flattens parallel-iterable `Item`s into one large iterator.
-    ///
-    /// See also [`flatten_iter`](#method.flatten_iter).
+    /// An adaptor that flattens iterable `Item`s into one large iterator
     ///
     /// # Examples
     ///
@@ -917,30 +860,6 @@ pub trait ParallelIterator: Sized + Send {
         Self::Item: IntoParallelIterator,
     {
         Flatten::new(self)
-    }
-
-    /// An adaptor that flattens serial-iterable `Item`s into one large iterator.
-    ///
-    /// See also [`flatten`](#method.flatten) and the analagous comparison of
-    /// [`flat_map_iter` versus `flat_map`](#flat_map_iter-versus-flat_map).
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rayon::prelude::*;
-    ///
-    /// let x: Vec<Vec<_>> = vec![vec![1, 2], vec![3, 4]];
-    /// let iters: Vec<_> = x.into_iter().map(Vec::into_iter).collect();
-    /// let y: Vec<_> = iters.into_par_iter().flatten_iter().collect();
-    ///
-    /// assert_eq!(y, vec![1, 2, 3, 4]);
-    /// ```
-    fn flatten_iter(self) -> FlattenIter<Self>
-    where
-        Self::Item: IntoIterator,
-        <Self::Item as IntoIterator>::Item: Send,
-    {
-        FlattenIter::new(self)
     }
 
     /// Reduces the items in the iterator into one item using `op`.
@@ -2690,31 +2609,6 @@ pub trait IndexedParallelIterator: ParallelIterator {
         self.position_any(predicate)
     }
 
-    /// Searches for items in the parallel iterator that match the given
-    /// predicate, and returns their indices.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rayon::prelude::*;
-    ///
-    /// let primes = vec![2, 3, 5, 7, 11, 13, 17, 19, 23, 29];
-    ///
-    /// // Find the positions of primes congruent to 1 modulo 6
-    /// let p1mod6: Vec<_> = primes.par_iter().positions(|&p| p % 6 == 1).collect();
-    /// assert_eq!(p1mod6, [3, 5, 7]); // primes 7, 13, and 19
-    ///
-    /// // Find the positions of primes congruent to 5 modulo 6
-    /// let p5mod6: Vec<_> = primes.par_iter().positions(|&p| p % 6 == 5).collect();
-    /// assert_eq!(p5mod6, [2, 4, 6, 8, 9]); // primes 5, 11, 17, 23, and 29
-    /// ```
-    fn positions<P>(self, predicate: P) -> Positions<Self, P>
-    where
-        P: Fn(Self::Item) -> bool + Sync + Send,
-    {
-        Positions::new(self, predicate)
-    }
-
     /// Produces a new iterator with the elements of this iterator in
     /// reverse order.
     ///
@@ -2949,124 +2843,6 @@ where
     fn par_extend<I>(&mut self, par_iter: I)
     where
         I: IntoParallelIterator<Item = T>;
-}
-
-/// `ParallelDrainFull` creates a parallel iterator that moves all items
-/// from a collection while retaining the original capacity.
-///
-/// Types which are indexable typically implement [`ParallelDrainRange`]
-/// instead, where you can drain fully with `par_drain(..)`.
-///
-/// [`ParallelDrainRange`]: trait.ParallelDrainRange.html
-pub trait ParallelDrainFull {
-    /// The draining parallel iterator type that will be created.
-    type Iter: ParallelIterator<Item = Self::Item>;
-
-    /// The type of item that the parallel iterator will produce.
-    /// This is usually the same as `IntoParallelIterator::Item`.
-    type Item: Send;
-
-    /// Returns a draining parallel iterator over an entire collection.
-    ///
-    /// When the iterator is dropped, all items are removed, even if the
-    /// iterator was not fully consumed. If the iterator is leaked, for example
-    /// using `std::mem::forget`, it is unspecified how many items are removed.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rayon::prelude::*;
-    /// use std::collections::{BinaryHeap, HashSet};
-    ///
-    /// let squares: HashSet<i32> = (0..10).map(|x| x * x).collect();
-    ///
-    /// let mut heap: BinaryHeap<_> = squares.iter().copied().collect();
-    /// assert_eq!(
-    ///     // heaps are drained in arbitrary order
-    ///     heap.par_drain()
-    ///         .inspect(|x| assert!(squares.contains(x)))
-    ///         .count(),
-    ///     squares.len(),
-    /// );
-    /// assert!(heap.is_empty());
-    /// assert!(heap.capacity() >= squares.len());
-    /// ```
-    fn par_drain(self) -> Self::Iter;
-}
-
-/// `ParallelDrainRange` creates a parallel iterator that moves a range of items
-/// from a collection while retaining the original capacity.
-///
-/// Types which are not indexable may implement [`ParallelDrainFull`] instead.
-///
-/// [`ParallelDrainFull`]: trait.ParallelDrainFull.html
-pub trait ParallelDrainRange<Idx = usize> {
-    /// The draining parallel iterator type that will be created.
-    type Iter: ParallelIterator<Item = Self::Item>;
-
-    /// The type of item that the parallel iterator will produce.
-    /// This is usually the same as `IntoParallelIterator::Item`.
-    type Item: Send;
-
-    /// Returns a draining parallel iterator over a range of the collection.
-    ///
-    /// When the iterator is dropped, all items in the range are removed, even
-    /// if the iterator was not fully consumed. If the iterator is leaked, for
-    /// example using `std::mem::forget`, it is unspecified how many items are
-    /// removed.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use rayon::prelude::*;
-    ///
-    /// let squares: Vec<i32> = (0..10).map(|x| x * x).collect();
-    ///
-    /// println!("RangeFull");
-    /// let mut vec = squares.clone();
-    /// assert!(vec.par_drain(..)
-    ///            .eq(squares.par_iter().copied()));
-    /// assert!(vec.is_empty());
-    /// assert!(vec.capacity() >= squares.len());
-    ///
-    /// println!("RangeFrom");
-    /// let mut vec = squares.clone();
-    /// assert!(vec.par_drain(5..)
-    ///            .eq(squares[5..].par_iter().copied()));
-    /// assert_eq!(&vec[..], &squares[..5]);
-    /// assert!(vec.capacity() >= squares.len());
-    ///
-    /// println!("RangeTo");
-    /// let mut vec = squares.clone();
-    /// assert!(vec.par_drain(..5)
-    ///            .eq(squares[..5].par_iter().copied()));
-    /// assert_eq!(&vec[..], &squares[5..]);
-    /// assert!(vec.capacity() >= squares.len());
-    ///
-    /// println!("RangeToInclusive");
-    /// let mut vec = squares.clone();
-    /// assert!(vec.par_drain(..=5)
-    ///            .eq(squares[..=5].par_iter().copied()));
-    /// assert_eq!(&vec[..], &squares[6..]);
-    /// assert!(vec.capacity() >= squares.len());
-    ///
-    /// println!("Range");
-    /// let mut vec = squares.clone();
-    /// assert!(vec.par_drain(3..7)
-    ///            .eq(squares[3..7].par_iter().copied()));
-    /// assert_eq!(&vec[..3], &squares[..3]);
-    /// assert_eq!(&vec[3..], &squares[7..]);
-    /// assert!(vec.capacity() >= squares.len());
-    ///
-    /// println!("RangeInclusive");
-    /// let mut vec = squares.clone();
-    /// assert!(vec.par_drain(3..=7)
-    ///            .eq(squares[3..=7].par_iter().copied()));
-    /// assert_eq!(&vec[..3], &squares[..3]);
-    /// assert_eq!(&vec[3..], &squares[8..]);
-    /// assert!(vec.capacity() >= squares.len());
-    /// ```
-    fn par_drain<R: RangeBounds<Idx>>(self, range: R) -> Self::Iter;
 }
 
 /// We hide the `Try` trait in a private module, as it's only meant to be a
