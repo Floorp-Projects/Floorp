@@ -2002,10 +2002,7 @@ class UrlbarInput {
     // if the caret isn't at the end of the input.
     if (
       !allowAutofill ||
-      this._autofillPlaceholder.length <= value.length ||
-      !this._autofillPlaceholder
-        .toLocaleLowerCase()
-        .startsWith(value.toLocaleLowerCase())
+      !UrlbarUtils.canAutofillURL(this._autofillPlaceholder, value)
     ) {
       this._autofillPlaceholder = "";
     } else if (
