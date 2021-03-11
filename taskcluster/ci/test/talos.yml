@@ -575,7 +575,7 @@ talos-webgl:
             windows10-64-ref-hw-2017/opt: ['mozilla-central']
             (linux|windows10|macos)(?!.*shippable).*: []
             default: ['mozilla-beta', 'trunk']
-    max-run-time: 1800
+    max-run-time: 2100
     mozharness:
         extra-options:
             - --suite=webgl
