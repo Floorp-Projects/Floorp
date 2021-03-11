@@ -62,7 +62,7 @@ etagere = "0.2.4"
 swgl = { path = "../swgl", optional = true }
 
 [dev-dependencies]
-mozangle = "0.3.3"
+mozangle = "0.3.2"
 rand = "0.4"
 
 [target.'cfg(any(target_os = "android", all(unix, not(target_os = "macos"))))'.dependencies]

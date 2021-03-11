@@ -35,9 +35,8 @@ fn validate_shaders() {
                 &|f| webrender::get_unoptimized_shader_source(f, None)
             );
 
-            let full_shader_name = format!("{} {}", shader, config);
-            validate(&vs_validator, &full_shader_name, vs);
-            validate(&fs_validator, &full_shader_name, fs);
+            validate(&vs_validator, shader, vs);
+            validate(&fs_validator, shader, fs);
         }
     }
 }
@@ -50,18 +49,6 @@ fn validate(validator: &ShaderValidator, name: &str, source: String) {
     // Run Angle validator
     match validator.compile_and_translate(&[&source]) {
         Ok(_) => {
-            // Ensure that the shader uses at most 16 varying vectors. This counts the number of
-            // vectors assuming that the driver does not perform additional packing. The spec states
-            // that the driver should pack varyings, however, on some Adreno 3xx devices we have
-            // observed that this is not the case. See bug 1695912.
-            let varying_vectors = validator.get_num_unpacked_varying_vectors();
-            let max_varying_vectors = 16;
-            assert!(
-                varying_vectors <= max_varying_vectors,
-                "Shader {} uses {} varying vectors. Max allowed {}",
-                name, varying_vectors, max_varying_vectors
-            );
-
             println!("Shader translated succesfully: {}", name);
         }
         Err(_) => {

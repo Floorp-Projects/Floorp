@@ -1942,32 +1942,6 @@ fn is_vector(ty: &Type) -> bool {
     }
 }
 
-fn index_vector(ty: &Type) -> Option<TypeKind> {
-    use TypeKind::*;
-    if ty.array_sizes != None {
-        return None;
-    }
-    Some(match ty.kind {
-        Vec2 => Float,
-        Vec3 => Float,
-        Vec4 => Float,
-        DVec2 => Double,
-        DVec3 => Double,
-        DVec4 => Double,
-        BVec2 => Bool,
-        BVec3 => Bool,
-        BVec4 => Bool,
-        IVec2 => Int,
-        IVec3 => Int,
-        IVec4 => Int,
-        UVec2 => UInt,
-        UVec3 => UInt,
-        UVec4 => UInt,
-        _ => return None,
-    })
-
-}
-
 fn index_matrix(ty: &Type) -> Option<TypeKind> {
     use TypeKind::*;
     if ty.array_sizes != None {
@@ -2528,8 +2502,8 @@ fn translate_expression(state: &mut State, e: &syntax::Expr) -> Expr {
         }
         syntax::Expr::Bracket(e, specifier) => {
             let e = Box::new(translate_expression(state, e));
-            let ty = if let Some(ty) = index_vector(&e.ty) {
-                Type::new(ty)
+            let ty = if is_vector(&e.ty) {
+                Type::new(TypeKind::Float)
             } else if let Some(ty) = index_matrix(&e.ty) {
                 Type::new(ty)
             } else {
