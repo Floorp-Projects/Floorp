@@ -15,12 +15,14 @@ import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.android.synthetic.main.component_tabstray2.*
 import kotlinx.android.synthetic.main.component_tabstray2.view.*
+import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.DefaultBrowserTrayInteractor
 import org.mozilla.fenix.tabstray.browser.RemoveTabUseCaseWrapper
 import org.mozilla.fenix.tabstray.browser.SelectTabUseCaseWrapper
+import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsInteractor
 
 class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
@@ -70,7 +72,13 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             removeUseCases
         )
 
-        setupPager(view.context, this, browserTrayInteractor)
+        val syncedTabsTrayInteractor = SyncedTabsInteractor(
+            requireComponents.analytics.metrics,
+            requireActivity() as HomeActivity,
+            this
+        )
+
+        setupPager(view.context, this, browserTrayInteractor, syncedTabsTrayInteractor)
 
         TabLayoutMediator(
             tabLayout = tab_layout,
@@ -109,10 +117,16 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
     private fun setupPager(
         context: Context,
         trayInteractor: TabsTrayInteractor,
-        browserInteractor: BrowserTrayInteractor
+        browserInteractor: BrowserTrayInteractor,
+        syncedTabsTrayInteractor: SyncedTabsInteractor
     ) {
         tabsTray.apply {
-            adapter = TrayPagerAdapter(context, trayInteractor, browserInteractor)
+            adapter = TrayPagerAdapter(
+                context,
+                trayInteractor,
+                browserInteractor,
+                syncedTabsTrayInteractor
+            )
             isUserInputEnabled = false
         }
     }
