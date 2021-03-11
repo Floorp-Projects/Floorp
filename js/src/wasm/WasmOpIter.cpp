@@ -301,6 +301,8 @@ OpKind wasm::Classify(OpBytes op) {
           break;
         case GcOp::StructNewWithRtt:
           WASM_GC_OP(OpKind::StructNewWithRtt);
+        case GcOp::StructNewDefaultWithRtt:
+          WASM_GC_OP(OpKind::StructNewDefaultWithRtt);
         case GcOp::StructGet:
           WASM_GC_OP(OpKind::StructGet);
         case GcOp::StructSet:

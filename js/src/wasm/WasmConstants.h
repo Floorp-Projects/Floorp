@@ -437,6 +437,7 @@ inline bool IsPrefixByte(uint8_t b) { return b >= uint8_t(Op::FirstPrefix); }
 enum class GcOp {
   // Structure operations
   StructNewWithRtt = 0x1,
+  StructNewDefaultWithRtt = 0x2,
   StructGet = 0x03,
   StructSet = 0x06,
 
