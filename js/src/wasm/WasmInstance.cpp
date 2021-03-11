@@ -1347,18 +1347,21 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     for (uint32_t typeIndex = 0; typeIndex < metadata().types.length();
          typeIndex++) {
       const TypeDefWithId& typeDef = metadata().types[typeIndex];
-      if (!typeDef.isFuncType()) {
-        continue;
-      } else if (typeDef.isFuncType()) {
-        const FuncType& funcType = typeDef.funcType();
-        const void* funcTypeId;
-        if (!lockedFuncTypeIdSet->allocateFuncTypeId(cx, funcType,
-                                                     &funcTypeId)) {
-          return false;
+      switch (typeDef.kind()) {
+        case TypeDefKind::Func: {
+          const FuncType& funcType = typeDef.funcType();
+          const void* funcTypeId;
+          if (!lockedFuncTypeIdSet->allocateFuncTypeId(cx, funcType,
+                                                       &funcTypeId)) {
+            return false;
+          }
+          *addressOfTypeId(typeDef.id) = funcTypeId;
+          break;
         }
-        *addressOfTypeId(typeDef.id) = funcTypeId;
-      } else {
-        MOZ_CRASH();
+        case TypeDefKind::Struct:
+          continue;
+        default:
+          MOZ_CRASH();
       }
     }
   }

@@ -710,17 +710,17 @@ TypeIdDesc TypeIdDesc::immediate(const TypeDef& type) {
 }
 
 size_t TypeDef::serializedSize() const {
-  size_t size = sizeof(tag_);
-  switch (tag_) {
-    case TypeDef::IsStructType: {
+  size_t size = sizeof(kind_);
+  switch (kind_) {
+    case TypeDefKind::Struct: {
       size += sizeof(structType_);
       break;
     }
-    case TypeDef::IsFuncType: {
+    case TypeDefKind::Func: {
       size += sizeof(funcType_);
       break;
     }
-    case TypeDef::IsNone: {
+    case TypeDefKind::None: {
       break;
     }
     default:
@@ -730,17 +730,17 @@ size_t TypeDef::serializedSize() const {
 }
 
 uint8_t* TypeDef::serialize(uint8_t* cursor) const {
-  cursor = WriteBytes(cursor, &tag_, sizeof(tag_));
-  switch (tag_) {
-    case TypeDef::IsStructType: {
+  cursor = WriteBytes(cursor, &kind_, sizeof(kind_));
+  switch (kind_) {
+    case TypeDefKind::Struct: {
       cursor = structType_.serialize(cursor);
       break;
     }
-    case TypeDef::IsFuncType: {
+    case TypeDefKind::Func: {
       cursor = funcType_.serialize(cursor);
       break;
     }
-    case TypeDef::IsNone: {
+    case TypeDefKind::None: {
       break;
     }
     default:
@@ -750,17 +750,17 @@ uint8_t* TypeDef::serialize(uint8_t* cursor) const {
 }
 
 const uint8_t* TypeDef::deserialize(const uint8_t* cursor) {
-  cursor = ReadBytes(cursor, &tag_, sizeof(tag_));
-  switch (tag_) {
-    case TypeDef::IsStructType: {
+  cursor = ReadBytes(cursor, &kind_, sizeof(kind_));
+  switch (kind_) {
+    case TypeDefKind::Struct: {
       cursor = structType_.deserialize(cursor);
       break;
     }
-    case TypeDef::IsFuncType: {
+    case TypeDefKind::Func: {
       cursor = funcType_.deserialize(cursor);
       break;
     }
-    case TypeDef::IsNone: {
+    case TypeDefKind::None: {
       break;
     }
     default:
@@ -770,14 +770,14 @@ const uint8_t* TypeDef::deserialize(const uint8_t* cursor) {
 }
 
 size_t TypeDef::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
-  switch (tag_) {
-    case TypeDef::IsStructType: {
+  switch (kind_) {
+    case TypeDefKind::Struct: {
       return structType_.sizeOfExcludingThis(mallocSizeOf);
     }
-    case TypeDef::IsFuncType: {
+    case TypeDefKind::Func: {
       return funcType_.sizeOfExcludingThis(mallocSizeOf);
     }
-    case TypeDef::IsNone: {
+    case TypeDefKind::None: {
       return 0;
     }
     default:
