@@ -53,7 +53,7 @@ h2 {
 }
 
 .perf-toggle-text-label {
-  height: 26px; /* checkbox/radio height + their margin-block */
+  height: 24px; /* checkbox/radio height + their margin-block */
   display: flex;
   align-items: center;
 }

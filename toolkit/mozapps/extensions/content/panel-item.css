@@ -17,15 +17,11 @@
   fill: currentColor;
 }
 
-:host([checked]) button {
-  background-size: 1em;
-}
-
 button {
   background-color: transparent;
   color: inherit;
   background-image: var(--icon);
-  background-position: 16px center;
+  background-position: 14px center;
   background-repeat: no-repeat;
   background-size: 16px;
   border: none;
@@ -39,7 +35,7 @@ button {
 }
 
 button:dir(rtl) {
-  background-position-x: right 16px;
+  background-position-x: right 14px;
 }
 
 :host([badged]) button::after {

@@ -150,7 +150,7 @@ const MESSAGES = () => [
       title: {
         string_id: "cfr-whatsnew-search-shortcuts-header",
       },
-      icon_url: "chrome://global/skin/icons/check.svg",
+      icon_url: "chrome://global/skin/icons/success.svg",
       icon_alt: {
         string_id: "cfr-whatsnew-searchbar-icon-alt-text",
       },
