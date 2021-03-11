@@ -8,30 +8,21 @@ description: Checks handling of non-object option arguments to the Segmenter con
 info: |
     Intl.Segmenter ([ locales [ , options ]])
 
-    5. Else
-        a. Let options be ? ToObject(options).
-features: [Intl.Segmenter]
+features: [Intl.Segmenter,BigInt]
 ---*/
 
-Object.defineProperties(Object.prototype, {
-  "granularity": {
-    value: "word",
-  },
-})
-
 const optionsArguments = [
+  null,
   true,
+  false,
   "test",
   7,
   Symbol(),
-  {},
+  123456789n,
 ];
 
 for (const options of optionsArguments) {
-  const segmenter = new Intl.Segmenter([], options);
-  const resolvedOptions = segmenter.resolvedOptions();
-  assert.sameValue(resolvedOptions.granularity, "word",
-    `options argument ${String(options)} should yield the correct value for "granularity"`);
+  assert.throws(TypeError, function() { new Intl.Segment([], options) })
 }
 
 reportCompare(0, 0);
