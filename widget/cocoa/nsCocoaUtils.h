@@ -28,10 +28,6 @@
 - (CGFloat)backingScaleFactor;
 @end
 
-#if !defined(MAC_OS_X_VERSION_10_8) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8
-enum { NSEventPhaseMayBegin = 0x1 << 5 };
-#endif
-
 class nsIWidget;
 
 namespace mozilla {

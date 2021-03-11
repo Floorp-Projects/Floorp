@@ -28,10 +28,6 @@ namespace widget {
 
 // Key code constants
 enum {
-#if !defined(MAC_OS_X_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
-  kVK_RightCommand = 0x36,  // right command key
-#endif
-
   kVK_PC_PrintScreen = kVK_F13,
   kVK_PC_ScrollLock = kVK_F14,
   kVK_PC_Pause = kVK_F15,

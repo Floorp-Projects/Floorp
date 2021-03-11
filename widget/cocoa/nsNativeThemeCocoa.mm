@@ -147,21 +147,12 @@ static void DrawFocusRingForCellIfNeeded(NSCell* aCell, NSRect aWithFrame, NSVie
 }
 
 static bool FocusIsDrawnByDrawWithFrame(NSCell* aCell) {
-#if defined(MAC_OS_X_VERSION_10_8) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_8
-  // When building with the 10.8 SDK or higher, focus rings don't draw as part
+  // Focus rings don't draw as part
   // of -[NSCell drawWithFrame:inView:] and must be drawn by a separate call
   // to -[NSCell drawFocusRingMaskWithFrame:inView:]; .
   // See the NSButtonCell section under
   // https://developer.apple.com/library/mac/releasenotes/AppKit/RN-AppKitOlderNotes/#X10_8Notes
   return false;
-#else
-  // On 10.10, whether the focus ring is drawn as part of
-  // -[NSCell drawWithFrame:inView:] depends on the cell type.
-  // Radio buttons and checkboxes draw their own focus rings, other cell
-  // types need -[NSCell drawFocusRingMaskWithFrame:inView:].
-  return
-      [aCell isKindOfClass:[RadioButtonCell class]] || [aCell isKindOfClass:[CheckboxCell class]];
-#endif
 }
 
 static void DrawCellIncludingFocusRing(NSCell* aCell, NSRect aWithFrame, NSView* aInView) {

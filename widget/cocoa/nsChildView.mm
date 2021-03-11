@@ -2788,21 +2788,14 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
     return false;
   }
 
-  bool usingElCapitanOrLaterSDK = true;
-#if !defined(MAC_OS_X_VERSION_10_11) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_11
-  usingElCapitanOrLaterSDK = false;
-#endif
+  if (aEvent.phase == NSEventPhaseBegan) {
+    [self beginGestureWithEvent:aEvent];
+    return true;
+  }
 
-  if (usingElCapitanOrLaterSDK) {
-    if (aEvent.phase == NSEventPhaseBegan) {
-      [self beginGestureWithEvent:aEvent];
-      return true;
-    }
-
-    if (aEvent.phase == NSEventPhaseEnded || aEvent.phase == NSEventPhaseCancelled) {
-      [self endGestureWithEvent:aEvent];
-      return true;
-    }
+  if (aEvent.phase == NSEventPhaseEnded || aEvent.phase == NSEventPhaseCancelled) {
+    [self endGestureWithEvent:aEvent];
+    return true;
   }
 
   return false;
