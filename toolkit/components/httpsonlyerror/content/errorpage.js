@@ -42,9 +42,62 @@ function initPage() {
   } else {
     document.getElementById("goBack").remove();
   }
+
+  const isTopLevel = window.top == window;
+  const hasWWWPrefix = pageUrl.href.startsWith("https://www.");
+  if (isTopLevel && !hasWWWPrefix) {
+    // HTTPS-Only generally simply replaces http: with https:;
+    // here we additionally try to add www and see if that allows to upgrade the connection if it is top level
+
+    window.addEventListener("pingSecureWWWLinkSuccess", () => {
+      activateSuggestionBox();
+      displayWWWSuggestion(pageUrl.host);
+    });
+
+    // try to ping secure www link in the AboutHttpsOnlyErrorChild
+    RPMTryPingSecureWWWLink();
+  }
+}
+
+/*  Suggestion Box */
+
+function activateSuggestionBox() {
+  const suggestionBox = document.querySelector(".suggestion-box");
+  suggestionBox.hidden = false;
+}
+
+function displayWWWSuggestion(aURL) {
+  const suggestionBox = document.querySelector(".suggestion-box");
+  const suggestionWWWText = document.createElement("p");
+  const suggestionWWWButton = document.createElement("button");
+  const suggestionButtonContainer = document.createElement("div");
+
+  document.l10n.setAttributes(
+    suggestionWWWText,
+    "about-httpsonly-suggestion-box-www-text",
+    { websiteUrl: aURL }
+  );
+
+  suggestionWWWButton.setAttribute("id", "openWWW");
+  document.l10n.setAttributes(
+    suggestionWWWButton,
+    "about-httpsonly-suggestion-box-www-button",
+    { websiteUrl: aURL }
+  );
+  suggestionWWWButton.addEventListener("click", openSecureWWWButtonClick);
+
+  suggestionButtonContainer.classList.add("button-container");
+
+  suggestionBox.appendChild(suggestionWWWText);
+  suggestionButtonContainer.appendChild(suggestionWWWButton);
+  suggestionBox.appendChild(suggestionButtonContainer);
 }
 
 /*  Button Events  */
+
+function openSecureWWWButtonClick() {
+  RPMOpenSecureWWWLink();
+}
 
 function onOpenInsecureButtonClick() {
   RPMSendAsyncMessage("openInsecure", {
