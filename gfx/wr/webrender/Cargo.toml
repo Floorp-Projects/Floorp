@@ -44,7 +44,7 @@ malloc_size_of_derive = "0.1"
 num-traits = "0.2"
 plane-split = "0.17"
 png = { optional = true, version = "0.16" }
-rayon = "1.5"
+rayon = "1"
 ron = { optional = true, version = "0.6.2" }
 serde = { optional = true, version = "1.0", features = ["serde_derive"] }
 serde_json = { optional = true, version = "1.0" }
