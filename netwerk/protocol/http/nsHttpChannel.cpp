@@ -8117,16 +8117,18 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
     int32_t priority = PRIORITY_NORMAL;
     GetPriority(&priority);
 
+    uint64_t size = 0;
+    GetEncodedBodySize(&size);
+
     nsAutoCString contentType;
     if (mResponseHead) {
       mResponseHead->ContentType(contentType);
     }
     profiler_add_network_marker(
         uri, requestMethod, priority, mChannelId, NetworkLoadType::LOAD_STOP,
-        mLastStatusReported, TimeStamp::Now(), mLogicalOffset,
-        mCacheDisposition, mLoadInfo->GetInnerWindowID(), &mTransactionTimings,
-        nullptr, std::move(mSource),
-        Some(nsDependentCString(contentType.get())));
+        mLastStatusReported, TimeStamp::Now(), size, mCacheDisposition,
+        mLoadInfo->GetInnerWindowID(), &mTransactionTimings, nullptr,
+        std::move(mSource), Some(nsDependentCString(contentType.get())));
   }
 #endif
 
