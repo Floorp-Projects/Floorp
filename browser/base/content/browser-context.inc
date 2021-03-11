@@ -164,11 +164,11 @@
                 data-l10n-id="main-context-menu-image-reload"
                 oncommand="gContextMenu.reloadImage();"/>
       <menuitem id="context-viewimage"
-                data-l10n-id="main-context-menu-image-view"
+                data-l10n-id="main-context-menu-image-view-new-tab"
                 oncommand="gContextMenu.viewMedia(event);"
                 onclick="checkForMiddleClick(this, event);"/>
       <menuitem id="context-viewvideo"
-                data-l10n-id="main-context-menu-video-view"
+                data-l10n-id="main-context-menu-video-view-new-tab"
                 oncommand="gContextMenu.viewMedia(event);"
                 onclick="checkForMiddleClick(this, event);"/>
       <menuitem id="context-saveimage"
