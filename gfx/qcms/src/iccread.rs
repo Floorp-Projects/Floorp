@@ -41,7 +41,6 @@ pub const XYZ_SIGNATURE: u32 = 0x58595A20;
 pub const LAB_SIGNATURE: u32 = 0x4C616220;
 
 /// A color profile
-#[repr(C)]
 #[derive(Default)]
 pub struct Profile {
     pub(crate) class_type: u32,
