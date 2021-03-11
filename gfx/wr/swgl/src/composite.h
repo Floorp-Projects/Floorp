@@ -890,7 +890,7 @@ static void linear_row_yuv(uint32_t* dest, int span, sampler2DRect samplerY,
 
     // If we're sampling the UV planes at half the resolution of the Y plane,
     // then try to use half resolution fast-path.
-    if (yDU >= cDU && yDU <= (4 << (STEP_BITS + 7)) &&
+    if (yDU >= cDU && cDU > 0 && yDU <= (4 << (STEP_BITS + 7)) &&
         cDU <= (2 << (STEP_BITS + 7))) {
       // Ensure that samples don't fall outside of the valid bounds of each
       // planar texture. Step until the initial X coordinates are positive.
