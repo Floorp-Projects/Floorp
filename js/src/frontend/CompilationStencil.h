@@ -133,9 +133,9 @@ struct ScopeContext {
   mozilla::Maybe<EnclosingLexicalBindingKind>
   lookupLexicalBindingInEnclosingScope(TaggedParserAtomIndex name);
 
-  NameLocation searchInDelazificationEnclosingScope(
-      JSContext* cx, CompilationInput& input, ParserAtomsTable& parserAtoms,
-      TaggedParserAtomIndex name, uint8_t hops);
+  NameLocation searchInEnclosingScope(JSContext* cx, CompilationInput& input,
+                                      ParserAtomsTable& parserAtoms,
+                                      TaggedParserAtomIndex name, uint8_t hops);
 
   bool effectiveScopePrivateFieldCacheHas(TaggedParserAtomIndex name);
 

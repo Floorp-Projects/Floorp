@@ -402,11 +402,14 @@ static bool NameIsOnEnvironment(Scope* scope, JSAtom* name) {
 #endif
 
 /* static */
-NameLocation ScopeContext::searchInDelazificationEnclosingScope(
-    JSContext* cx, CompilationInput& input, ParserAtomsTable& parserAtoms,
-    TaggedParserAtomIndex name, uint8_t hops) {
+NameLocation ScopeContext::searchInEnclosingScope(JSContext* cx,
+                                                  CompilationInput& input,
+                                                  ParserAtomsTable& parserAtoms,
+                                                  TaggedParserAtomIndex name,
+                                                  uint8_t hops) {
   MOZ_ASSERT(input.target ==
-             CompilationInput::CompilationTarget::Delazification);
+                 CompilationInput::CompilationTarget::Delazification ||
+             input.target == CompilationInput::CompilationTarget::Eval);
 
   // TODO-Stencil
   //   Here, we convert our name into a JSAtom*, and hard-crash on failure
@@ -461,6 +464,7 @@ NameLocation ScopeContext::searchInDelazificationEnclosingScope(
         }
         break;
 
+      case ScopeKind::StrictEval:
       case ScopeKind::FunctionBodyVar:
       case ScopeKind::Lexical:
       case ScopeKind::NamedLambda:
@@ -514,7 +518,6 @@ NameLocation ScopeContext::searchInDelazificationEnclosingScope(
         break;
 
       case ScopeKind::Eval:
-      case ScopeKind::StrictEval:
         // As an optimization, if the eval doesn't have its own var
         // environment and its immediate enclosing scope is a global
         // scope, all accesses are global.
