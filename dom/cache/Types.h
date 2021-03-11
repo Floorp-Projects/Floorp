@@ -9,7 +9,7 @@
 
 #include <functional>
 #include <stdint.h>
-#include "mozilla/dom/quota/OriginMetadata.h"
+#include "mozilla/dom/quota/CommonMetadata.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"

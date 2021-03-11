@@ -9,8 +9,8 @@
 
 #include "mozilla/InitializedOnce.h"
 #include "mozilla/dom/FlippedOnce.h"
+#include "mozilla/dom/quota/CommonMetadata.h"
 #include "mozilla/dom/quota/DirectoryLock.h"
-#include "mozilla/dom/quota/OriginMetadata.h"
 #include "mozilla/dom/quota/OriginScope.h"
 
 namespace mozilla::dom::quota {

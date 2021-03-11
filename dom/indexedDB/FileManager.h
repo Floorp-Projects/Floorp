@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_indexeddb_filemanager_h__
 #define mozilla_dom_indexeddb_filemanager_h__
 
-#include "mozilla/dom/quota/OriginMetadata.h"
+#include "mozilla/dom/quota/CommonMetadata.h"
 #include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/UsageInfo.h"
 #include "mozilla/InitializedOnce.h"
