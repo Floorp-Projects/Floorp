@@ -550,18 +550,26 @@ class FieldTypeTraits {
 
   static bool isValidTypeCode(TypeCode tc) {
     switch (tc) {
+#ifdef ENABLE_WASM_GC
       case TypeCode::I8:
       case TypeCode::I16:
+#endif
       case TypeCode::I32:
       case TypeCode::I64:
       case TypeCode::F32:
       case TypeCode::F64:
+#ifdef ENABLE_WASM_SIMD
       case TypeCode::V128:
+#endif
       case TypeCode::FuncRef:
       case TypeCode::ExternRef:
+#ifdef ENABLE_WASM_GC
       case TypeCode::EqRef:
       case TypeCode::Rtt:
+#endif
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
       case AbstractReferenceTypeIndexCode:
+#endif
         return true;
       default:
         return false;
@@ -587,12 +595,18 @@ class ValTypeTraits {
       case TypeCode::I64:
       case TypeCode::F32:
       case TypeCode::F64:
+#ifdef ENABLE_WASM_SIMD
       case TypeCode::V128:
+#endif
       case TypeCode::FuncRef:
       case TypeCode::ExternRef:
+#ifdef ENABLE_WASM_GC
       case TypeCode::EqRef:
       case TypeCode::Rtt:
+#endif
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
       case AbstractReferenceTypeIndexCode:
+#endif
         return true;
       default:
         return false;
