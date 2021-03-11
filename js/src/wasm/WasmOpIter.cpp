@@ -309,6 +309,14 @@ OpKind wasm::Classify(OpBytes op) {
           WASM_GC_OP(OpKind::StructNarrow);
         case GcOp::RttCanon:
           WASM_GC_OP(OpKind::RttCanon);
+        case GcOp::RttSub:
+          WASM_GC_OP(OpKind::RttSub);
+        case GcOp::RefTest:
+          WASM_GC_OP(OpKind::RefTest);
+        case GcOp::RefCast:
+          WASM_GC_OP(OpKind::RefCast);
+        case GcOp::BrOnCast:
+          WASM_GC_OP(OpKind::BrOnCast);
       }
       break;
     }

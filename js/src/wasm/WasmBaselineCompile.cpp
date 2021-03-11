@@ -8337,7 +8337,10 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitStructSet();
   [[nodiscard]] bool emitStructNarrow();
   [[nodiscard]] bool emitRttCanon();
-
+  [[nodiscard]] bool emitRttSub();
+  [[nodiscard]] bool emitRefTest();
+  [[nodiscard]] bool emitRefCast();
+  [[nodiscard]] bool emitBrOnCast();
 #ifdef ENABLE_WASM_SIMD
   template <typename SourceType, typename DestType>
   void emitVectorUnop(void (*op)(MacroAssembler& masm, SourceType rs,
@@ -13419,6 +13422,124 @@ bool BaseCompiler::emitRttCanon() {
   return true;
 }
 
+bool BaseCompiler::emitRttSub() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+  Nothing nothing;
+  if (!iter_.readRttSub(&nothing)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  if (!emitInstanceCall(lineOrBytecode, SASigRttSub)) {
+    return false;
+  }
+  return true;
+}
+
+bool BaseCompiler::emitRefTest() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+  Nothing nothing;
+  uint32_t rttDepth;
+  if (!iter_.readRefTest(&nothing, &rttDepth, &nothing)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+  return emitInstanceCall(lineOrBytecode, SASigRefTest);
+}
+
+bool BaseCompiler::emitRefCast() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+  Nothing nothing;
+  uint32_t rttDepth;
+  if (!iter_.readRefCast(&nothing, &rttDepth, &nothing)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  RegPtr rttPtr = popRef();
+  RegPtr refPtr = popRef();
+  RegPtr castedPtr = needRef();
+  moveRef(refPtr, castedPtr);
+  pushRef(castedPtr);
+  pushRef(refPtr);
+  pushRef(rttPtr);
+
+  if (!emitInstanceCall(lineOrBytecode, SASigRefTest)) {
+    return false;
+  }
+
+  RegI32 result = popI32();
+  Label nonZero;
+  masm.branchTest32(Assembler::NonZero, result, result, &nonZero);
+  masm.wasmTrap(Trap::BadCast, bytecodeOffset());
+  masm.bind(&nonZero);
+  freeI32(result);
+
+  return true;
+}
+
+bool BaseCompiler::emitBrOnCast() {
+  MOZ_ASSERT(!hasLatentOp());
+
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+  uint32_t relativeDepth;
+  Nothing unused;
+  uint32_t rttDepth;
+  NothingVector unused_values;
+  ResultType type;
+  if (!iter_.readBrOnCast(&relativeDepth, &unused, &rttDepth, &unused_values,
+                          &type)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  Control& target = controlItem(relativeDepth);
+  target.bceSafeOnExit &= bceSafe_;
+
+  RegPtr rttPtr = popRef();
+  RegPtr refPtr = popRef();
+  RegPtr castedPtr = needRef();
+  moveRef(refPtr, castedPtr);
+  pushRef(castedPtr);
+  pushRef(refPtr);
+  pushRef(rttPtr);
+
+  if (!emitInstanceCall(lineOrBytecode, SASigRefTest)) {
+    return false;
+  }
+
+  BranchState b(&target.label, target.stackHeight, InvertBranch(false), type);
+  if (b.hasBlockResults()) {
+    needResultRegisters(b.resultType);
+  }
+  RegI32 condition = popI32();
+  if (b.hasBlockResults()) {
+    freeResultRegisters(b.resultType);
+  }
+  if (!jumpConditionalWithResults(&b, Assembler::NotEqual, condition,
+                                  Imm32(0))) {
+    return false;
+  }
+  freeI32(condition);
+
+  return true;
+}
+
 #ifdef ENABLE_WASM_SIMD
 
 // Emitter trampolines used by abstracted SIMD operations.  Naming here follows
@@ -15554,6 +15675,14 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitStructNarrow());
           case uint32_t(GcOp::RttCanon):
             CHECK_NEXT(emitRttCanon());
+          case uint32_t(GcOp::RttSub):
+            CHECK_NEXT(emitRttSub());
+          case uint32_t(GcOp::RefTest):
+            CHECK_NEXT(emitRefTest());
+          case uint32_t(GcOp::RefCast):
+            CHECK_NEXT(emitRefCast());
+          case uint32_t(GcOp::BrOnCast):
+            CHECK_NEXT(emitBrOnCast());
           default:
             break;
         }  // switch (op.b1)

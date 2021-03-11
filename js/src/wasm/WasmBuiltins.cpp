@@ -243,6 +243,10 @@ const SymbolicAddressSignature SASigGetLocalExceptionIndex = {
     2,
     {_PTR, _RoN, _END}};
 #endif
+const SymbolicAddressSignature SASigRefTest = {
+    SymbolicAddress::RefTest, _I32, _Infallible, 3, {_PTR, _RoN, _RoN, _END}};
+const SymbolicAddressSignature SASigRttSub = {
+    SymbolicAddress::RttSub, _RoN, _FailOnNullPtr, 2, {_PTR, _RoN, _END}};
 
 }  // namespace wasm
 }  // namespace js
@@ -627,6 +631,8 @@ static void* WasmHandleTrap() {
       return ReportError(cx, JSMSG_WASM_IND_CALL_BAD_SIG);
     case Trap::NullPointerDereference:
       return ReportError(cx, JSMSG_WASM_DEREF_NULL);
+    case Trap::BadCast:
+      return ReportError(cx, JSMSG_WASM_BAD_CAST);
     case Trap::OutOfBounds:
       return ReportError(cx, JSMSG_WASM_OUT_OF_BOUNDS);
     case Trap::UnalignedAccess:
@@ -1197,6 +1203,16 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
           ArgType_General, {ArgType_General, ArgType_General, ArgType_General});
       MOZ_ASSERT(*abiType == ToABIType(SASigStructNarrow));
       return FuncCast(Instance::structNarrow, *abiType);
+    case SymbolicAddress::RefTest:
+      *abiType = MakeABIFunctionType(
+          ArgType_Int32, {ArgType_General, ArgType_General, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigRefTest));
+      return FuncCast(Instance::refTest, *abiType);
+    case SymbolicAddress::RttSub:
+      *abiType = MakeABIFunctionType(ArgType_General,
+                                     {ArgType_General, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigRttSub));
+      return FuncCast(Instance::rttSub, *abiType);
     case SymbolicAddress::InlineTypedObjectClass:
       return (void*)&js::InlineTypedObject::class_;
 
@@ -1339,6 +1355,8 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::ThrowException:
     case SymbolicAddress::GetLocalExceptionIndex:
 #endif
+    case SymbolicAddress::RefTest:
+    case SymbolicAddress::RttSub:
       return true;
     case SymbolicAddress::Limit:
       break;

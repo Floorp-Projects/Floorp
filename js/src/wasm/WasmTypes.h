@@ -515,6 +515,7 @@ class RefType {
   bool isTypeIndex() const { return kind() == RefType::TypeIndex; }
 
   bool isNullable() const { return bool(ptc_.isNullable()); }
+  RefType asNonNullable() const { return RefType(ptc_.asNonNullable()); }
 
   TableRepr tableRepr() const {
     switch (kind()) {
@@ -3309,6 +3310,8 @@ enum class SymbolicAddress {
   TableSet,
   TableSize,
   RefFunc,
+  RefTest,
+  RttSub,
   PreBarrierFiltering,
   PostBarrier,
   PostBarrierFiltering,

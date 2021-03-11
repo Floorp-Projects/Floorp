@@ -849,44 +849,49 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         CHECK(iter.readUnreachable());
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::GcPrefix): {
+        if (!env.gcTypesEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
         switch (op.b1) {
           case uint32_t(GcOp::StructNewWithRtt): {
-            if (!env.gcTypesEnabled()) {
-              return iter.unrecognizedOpcode(&op);
-            }
             uint32_t unusedUint;
             NothingVector unusedArgs;
             CHECK(
                 iter.readStructNewWithRtt(&unusedUint, &nothing, &unusedArgs));
           }
           case uint32_t(GcOp::StructGet): {
-            if (!env.gcTypesEnabled()) {
-              return iter.unrecognizedOpcode(&op);
-            }
             uint32_t unusedUint1, unusedUint2;
             CHECK(iter.readStructGet(&unusedUint1, &unusedUint2, &nothing));
           }
           case uint32_t(GcOp::StructSet): {
-            if (!env.gcTypesEnabled()) {
-              return iter.unrecognizedOpcode(&op);
-            }
             uint32_t unusedUint1, unusedUint2;
             CHECK(iter.readStructSet(&unusedUint1, &unusedUint2, &nothing,
                                      &nothing));
           }
           case uint32_t(GcOp::StructNarrow): {
-            if (!env.gcTypesEnabled()) {
-              return iter.unrecognizedOpcode(&op);
-            }
             ValType unusedTy, unusedTy2;
             CHECK(iter.readStructNarrow(&unusedTy, &unusedTy2, &nothing));
           }
           case uint16_t(GcOp::RttCanon): {
-            if (!env.gcTypesEnabled()) {
-              return iter.unrecognizedOpcode(&op);
-            }
             ValType unusedTy;
             CHECK(iter.readRttCanon(&unusedTy));
+          }
+          case uint16_t(GcOp::RttSub): {
+            CHECK(iter.readRttSub(&nothing));
+          }
+          case uint16_t(GcOp::RefTest): {
+            uint32_t unusedRttDepth;
+            CHECK(iter.readRefTest(&nothing, &unusedRttDepth, &nothing));
+          }
+          case uint16_t(GcOp::RefCast): {
+            uint32_t unusedRttDepth;
+            CHECK(iter.readRefCast(&nothing, &unusedRttDepth, &nothing));
+          }
+          case uint16_t(GcOp::BrOnCast): {
+            uint32_t unusedRelativeDepth;
+            uint32_t unusedRttDepth;
+            CHECK(iter.readBrOnCast(&unusedRelativeDepth, &nothing,
+                                    &unusedRttDepth, &nothings, &unusedType));
           }
           default:
             return iter.unrecognizedOpcode(&op);

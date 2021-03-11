@@ -229,6 +229,8 @@ class Instance {
   static void* throwException(Instance* instance, JSObject* exn);
   static uint32_t getLocalExceptionIndex(Instance* instance, JSObject* exn);
 #endif
+  static int32_t refTest(Instance* instance, void* refPtr, void* rttPtr);
+  static void* rttSub(Instance* instance, void* rttPtr);
 };
 
 using UniqueInstance = UniquePtr<Instance>;

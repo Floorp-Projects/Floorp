@@ -2389,6 +2389,8 @@ typedef int32_t (*Prototype_Int32_GeneralInt32GeneralInt32)(int32_t, int32_t,
 typedef int32_t (*Prototype_Int32_GeneralInt32GeneralInt32Int32)(
     int32_t, int32_t, int32_t, int32_t, int32_t);
 typedef int32_t (*Prototype_Int32_GeneralGeneral)(int32_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralGeneralGeneral)(int32_t, int32_t,
+                                                         int32_t);
 typedef int32_t (*Prototype_Int32_GeneralGeneralInt32Int32)(int32_t, int32_t,
                                                             int32_t, int32_t);
 typedef int32_t (*Prototype_General_GeneralInt32)(int32_t, int32_t);
@@ -2898,6 +2900,14 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
           Prototype_Int32_GeneralGeneral target =
               reinterpret_cast<Prototype_Int32_GeneralGeneral>(external);
           int64_t result = target(arg0, arg1);
+          scratchVolatileRegisters(/* scratchFloat = true */);
+          setCallResult(result);
+          break;
+        }
+        case Args_Int32_GeneralGeneralGeneral: {
+          Prototype_Int32_GeneralGeneralGeneral target =
+              reinterpret_cast<Prototype_Int32_GeneralGeneralGeneral>(external);
+          int64_t result = target(arg0, arg1, arg2);
           scratchVolatileRegisters(/* scratchFloat = true */);
           setCallResult(result);
           break;
