@@ -21,7 +21,7 @@
       "frame": "#f0f0f4",
       "popup": "#fff",
       "popup_text": "#0c0c0d",
-      "popup_border": "#ccc",
+      "popup_border": "transparent",
       "popup_highlight": "#e0e0e6",
       "popup_highlight_text": "#15141a",
       "tab_line": "#0a84ff",
