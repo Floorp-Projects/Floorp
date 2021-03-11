@@ -7,6 +7,10 @@
  * F* version: 15104ff8
  * KreMLin version: 318b7fa8
  */
+
+#ifndef FSTAR_UINT128_MSVC
+#define FSTAR_UINT128_MSVC
+
 #include "kremlin/internal/types.h"
 #include "FStar_UInt128.h"
 #include "FStar_UInt_8_16_32_64.h"
@@ -526,3 +530,8 @@ FStar_UInt128_mul_wide(uint64_t x, uint64_t y)
     return FStar_UInt128_mul_wide_impl(x, y);
 #endif
 }
+
+#undef low
+#undef high
+
+#endif

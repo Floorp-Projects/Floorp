@@ -95,6 +95,12 @@
             'mpi/mpi_arm.c',
           ],
         }],
+        [ 'target_arch=="ppc64le"', {
+          'sources': [
+            'chacha20poly1305-ppc.c',
+            'chacha20-ppc64le.S',
+          ],
+        }]
       ],
     }],
     [ 'OS=="win"', {
