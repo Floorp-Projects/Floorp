@@ -115,8 +115,8 @@ function InitializeListFormat(listFormat, locales, options, supportsTypeAndStyle
     // Steps 4-5.
     if (options === undefined)
         options = std_Object_create(null);
-    else
-        options = ToObject(options);
+    else if (!IsObject(options))
+        ThrowTypeError(JSMSG_OBJECT_REQUIRED, options === null ? "null" : typeof options);
 
     // Step 6.
     var opt = new Record();
