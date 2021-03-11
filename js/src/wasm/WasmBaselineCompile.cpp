@@ -8607,11 +8607,11 @@ class BaseCompiler final : public BaseCompilerInterface {
 #endif
   [[nodiscard]] bool emitStructNewWithRtt();
   [[nodiscard]] bool emitStructNewDefaultWithRtt();
-  [[nodiscard]] bool emitStructGet();
+  [[nodiscard]] bool emitStructGet(FieldExtension extension);
   [[nodiscard]] bool emitStructSet();
   [[nodiscard]] bool emitArrayNewWithRtt();
   [[nodiscard]] bool emitArrayNewDefaultWithRtt();
-  [[nodiscard]] bool emitArrayGet();
+  [[nodiscard]] bool emitArrayGet(FieldExtension extension);
   [[nodiscard]] bool emitArraySet();
   [[nodiscard]] bool emitArrayLen();
   [[nodiscard]] bool emitRttCanon();
@@ -8625,7 +8625,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   RegI32 emitGcArrayGetLength(RegPtr rdata, bool adjustDataPointer);
   void emitGcArrayBoundsCheck(RegI32 index, RegI32 length);
   template <typename T>
-  void emitGcGet(FieldType type, const T& src);
+  void emitGcGet(FieldType type, FieldExtension extension, const T& src);
   template <typename T>
   void emitGcSetScalar(const T& dst, FieldType type, AnyReg value);
   [[nodiscard]] bool emitGcStructSet(RegRef object, RegPtr data,
@@ -13365,39 +13365,54 @@ void BaseCompiler::emitGcArrayBoundsCheck(RegI32 index, RegI32 length) {
 }
 
 template <typename T>
-void BaseCompiler::emitGcGet(FieldType type, const T& src) {
+void BaseCompiler::emitGcGet(FieldType type, FieldExtension extension,
+                             const T& src) {
   switch (type.kind()) {
     case FieldType::I8: {
+      MOZ_ASSERT(extension != FieldExtension::None);
       RegI32 r = needI32();
-      masm.load8ZeroExtend(src, r);
+      if (extension == FieldExtension::Unsigned) {
+        masm.load8ZeroExtend(src, r);
+      } else {
+        masm.load8SignExtend(src, r);
+      }
       pushI32(r);
       break;
     }
     case FieldType::I16: {
+      MOZ_ASSERT(extension != FieldExtension::None);
       RegI32 r = needI32();
-      masm.load16ZeroExtend(src, r);
+      if (extension == FieldExtension::Unsigned) {
+        masm.load16ZeroExtend(src, r);
+      } else {
+        masm.load16SignExtend(src, r);
+      }
       pushI32(r);
       break;
     }
     case FieldType::I32: {
+      MOZ_ASSERT(extension == FieldExtension::None);
       RegI32 r = needI32();
       masm.load32(src, r);
       pushI32(r);
       break;
     }
     case FieldType::I64: {
+      MOZ_ASSERT(extension == FieldExtension::None);
       RegI64 r = needI64();
       masm.load64(src, r);
       pushI64(r);
       break;
     }
     case FieldType::F32: {
+      MOZ_ASSERT(extension == FieldExtension::None);
       RegF32 r = needF32();
       masm.loadFloat32(src, r);
       pushF32(r);
       break;
     }
     case FieldType::F64: {
+      MOZ_ASSERT(extension == FieldExtension::None);
       RegF64 r = needF64();
       masm.loadDouble(src, r);
       pushF64(r);
@@ -13405,6 +13420,7 @@ void BaseCompiler::emitGcGet(FieldType type, const T& src) {
     }
 #ifdef ENABLE_WASM_SIMD
     case FieldType::V128: {
+      MOZ_ASSERT(extension == FieldExtension::None);
       RegV128 r = needV128();
       masm.loadUnalignedSimd128(src, r);
       pushV128(r);
@@ -13412,6 +13428,7 @@ void BaseCompiler::emitGcGet(FieldType type, const T& src) {
     }
 #endif
     case FieldType::Ref: {
+      MOZ_ASSERT(extension == FieldExtension::None);
       RegRef r = needRef();
       masm.loadPtr(src, r);
       pushRef(r);
@@ -13648,11 +13665,11 @@ bool BaseCompiler::emitStructNewDefaultWithRtt() {
   return emitInstanceCall(lineOrBytecode, SASigStructNew);
 }
 
-bool BaseCompiler::emitStructGet() {
+bool BaseCompiler::emitStructGet(FieldExtension extension) {
   uint32_t typeIndex;
   uint32_t fieldIndex;
   Nothing nothing;
-  if (!iter_.readStructGet(&typeIndex, &fieldIndex, &nothing)) {
+  if (!iter_.readStructGet(&typeIndex, &fieldIndex, extension, &nothing)) {
     return false;
   }
 
@@ -13692,7 +13709,7 @@ bool BaseCompiler::emitStructGet() {
   // Load the value
   FieldType type = structType.fields_[fieldIndex].type;
   uint32_t offset = structType.fields_[fieldIndex].offset;
-  emitGcGet(type, Address(rdata, offset));
+  emitGcGet(type, extension, Address(rdata, offset));
 
   freePtr(rdata);
   freeRef(rp);
@@ -13861,10 +13878,10 @@ bool BaseCompiler::emitArrayNewDefaultWithRtt() {
   return emitInstanceCall(lineOrBytecode, SASigArrayNew);
 }
 
-bool BaseCompiler::emitArrayGet() {
+bool BaseCompiler::emitArrayGet(FieldExtension extension) {
   uint32_t typeIndex;
   Nothing nothing;
-  if (!iter_.readArrayGet(&typeIndex, &nothing, &nothing)) {
+  if (!iter_.readArrayGet(&typeIndex, extension, &nothing, &nothing)) {
     return false;
   }
 
@@ -13894,11 +13911,12 @@ bool BaseCompiler::emitArrayGet() {
   // Load the value
   uint32_t shift = arrayType.elementType_.indexingShift();
   if (IsShiftInScaleRange(shift)) {
-    emitGcGet(arrayType.elementType_,
+    emitGcGet(arrayType.elementType_, extension,
               BaseIndex(rdata, index, ShiftToScale(shift), 0));
   } else {
     masm.lshiftPtr(Imm32(shift), index);
-    emitGcGet(arrayType.elementType_, BaseIndex(rdata, index, TimesOne, 0));
+    emitGcGet(arrayType.elementType_, extension,
+              BaseIndex(rdata, index, TimesOne, 0));
   }
 
   freePtr(rdata);
@@ -16261,7 +16279,11 @@ bool BaseCompiler::emitBody() {
           case uint32_t(GcOp::StructNewDefaultWithRtt):
             CHECK_NEXT(emitStructNewDefaultWithRtt());
           case uint32_t(GcOp::StructGet):
-            CHECK_NEXT(emitStructGet());
+            CHECK_NEXT(emitStructGet(FieldExtension::None));
+          case uint32_t(GcOp::StructGetS):
+            CHECK_NEXT(emitStructGet(FieldExtension::Signed));
+          case uint32_t(GcOp::StructGetU):
+            CHECK_NEXT(emitStructGet(FieldExtension::Unsigned));
           case uint32_t(GcOp::StructSet):
             CHECK_NEXT(emitStructSet());
           case uint32_t(GcOp::ArrayNewWithRtt):
@@ -16269,7 +16291,11 @@ bool BaseCompiler::emitBody() {
           case uint32_t(GcOp::ArrayNewDefaultWithRtt):
             CHECK_NEXT(emitArrayNewDefaultWithRtt());
           case uint32_t(GcOp::ArrayGet):
-            CHECK_NEXT(emitArrayGet());
+            CHECK_NEXT(emitArrayGet(FieldExtension::None));
+          case uint32_t(GcOp::ArrayGetS):
+            CHECK_NEXT(emitArrayGet(FieldExtension::Signed));
+          case uint32_t(GcOp::ArrayGetU):
+            CHECK_NEXT(emitArrayGet(FieldExtension::Unsigned));
           case uint32_t(GcOp::ArraySet):
             CHECK_NEXT(emitArraySet());
           case uint32_t(GcOp::ArrayLen):

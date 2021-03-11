@@ -860,6 +860,16 @@ class PackedType : public T {
     }
   }
 
+  bool isValType() const {
+    switch (tc_.typeCode()) {
+      case TypeCode::I8:
+      case TypeCode::I16:
+        return false;
+      default:
+        return true;
+    }
+  }
+
   bool operator==(const PackedType& that) const {
     MOZ_ASSERT(isValid() && that.isValid());
     return tc_ == that.tc_;
