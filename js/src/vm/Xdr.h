@@ -41,8 +41,6 @@ template <typename T>
 using XDRResultT = mozilla::Result<T, JS::TranscodeResult>;
 using XDRResult = XDRResultT<mozilla::Ok>;
 
-using XDRAtomTable = JS::GCVector<PreBarriered<JSAtom*>>;
-
 class XDRBufferBase {
  public:
   explicit XDRBufferBase(JSContext* cx, size_t cursor = 0)
@@ -235,10 +233,6 @@ class XDRState : public XDRCoderBase {
   virtual ScriptSourceObject** scriptSourceObjectOut() {
     MOZ_CRASH("does not have scriptSourceObjectOut.");
   }
-
-  virtual bool hasAtomTable() const { return false; }
-  virtual XDRAtomTable& atomTable() { MOZ_CRASH("does not have atomTable"); }
-  virtual void finishAtomTable() { MOZ_CRASH("does not have atomTable"); }
 
   template <typename T = mozilla::Ok>
   XDRResultT<T> fail(JS::TranscodeResult code) {
@@ -478,20 +472,16 @@ class XDRDecoder : public XDRDecoderBase {
  public:
   XDRDecoder(JSContext* cx, const JS::ReadOnlyCompileOptions* options,
              JS::TranscodeBuffer& buffer, size_t cursor = 0)
-      : XDRDecoderBase(cx, buffer, cursor), options_(options), atomTable_(cx) {
+      : XDRDecoderBase(cx, buffer, cursor), options_(options) {
     MOZ_ASSERT(options);
   }
 
   template <typename RangeType>
   XDRDecoder(JSContext* cx, const JS::ReadOnlyCompileOptions* options,
              const RangeType& range)
-      : XDRDecoderBase(cx, range), options_(options), atomTable_(cx) {
+      : XDRDecoderBase(cx, range), options_(options) {
     MOZ_ASSERT(options);
   }
-
-  bool hasAtomTable() const override { return hasFinishedAtomTable_; }
-  XDRAtomTable& atomTable() override { return atomTable_; }
-  void finishAtomTable() override { hasFinishedAtomTable_ = true; }
 
   bool hasOptions() const override { return true; }
   const JS::ReadOnlyCompileOptions& options() override { return *options_; }
@@ -500,8 +490,6 @@ class XDRDecoder : public XDRDecoderBase {
 
  private:
   const JS::ReadOnlyCompileOptions* options_;
-  XDRAtomTable atomTable_;
-  bool hasFinishedAtomTable_ = false;
 };
 
 class XDROffThreadDecoder : public XDRDecoder {
