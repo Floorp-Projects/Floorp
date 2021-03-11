@@ -2692,11 +2692,21 @@ void MacroAssembler::loadUnalignedSimd128(const Address& src,
   Ldr(ARMFPRegister(dest, 128), toMemOperand(src));
 }
 
+void MacroAssembler::loadUnalignedSimd128(const BaseIndex& address,
+                                          FloatRegister dest) {
+  doBaseIndex(ARMFPRegister(dest, 128), address, vixl::LDR_q);
+}
+
 // Store
 
 void MacroAssembler::storeUnalignedSimd128(FloatRegister src,
                                            const Address& dest) {
   Str(ARMFPRegister(src, 128), toMemOperand(dest));
+}
+
+void MacroAssembler::storeUnalignedSimd128(FloatRegister src,
+                                           const BaseIndex& dest) {
+  doBaseIndex(ARMFPRegister(src, 128), dest, vixl::STR_q);
 }
 
 // Floating point negation

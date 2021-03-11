@@ -1579,59 +1579,6 @@ static inline void CallTraceHook(JSTracer* trc, JSObject* obj) {
   }
 }
 
-template <typename Functor>
-static void VisitTraceListWithFunctor(const Functor& f,
-                                      const uint32_t* traceList,
-                                      uint8_t* memory) {
-  size_t stringCount = *traceList++;
-  size_t objectCount = *traceList++;
-  size_t valueCount = *traceList++;
-  for (size_t i = 0; i < stringCount; i++) {
-    f(reinterpret_cast<JSString**>(memory + *traceList));
-    traceList++;
-  }
-  for (size_t i = 0; i < objectCount; i++) {
-    auto** objp = reinterpret_cast<JSObject**>(memory + *traceList);
-    if (*objp) {
-      f(objp);
-    }
-    traceList++;
-  }
-  for (size_t i = 0; i < valueCount; i++) {
-    f(reinterpret_cast<Value*>(memory + *traceList));
-    traceList++;
-  }
-}
-
-/*
- * Trace TypedObject memory according to the layout specified by |traceList|
- * with optimized paths for GC tracers.
- *
- * I'm not sure how much difference this makes versus calling TraceEdge for each
- * edge; that at least has to dispatch on the tracer kind each time.
- */
-void js::gc::VisitTraceList(JSTracer* trc, JSObject* obj,
-                            const uint32_t* traceList, uint8_t* memory) {
-  if (trc->isMarkingTracer()) {
-    auto* marker = GCMarker::fromTracer(trc);
-    VisitTraceListWithFunctor([=](auto thingp) { DoMarking(marker, *thingp); },
-                              traceList, memory);
-    return;
-  }
-
-  if (trc->isTenuringTracer()) {
-    auto* ttrc = static_cast<TenuringTracer*>(trc);
-    VisitTraceListWithFunctor([=](auto thingp) { ttrc->traverse(thingp); },
-                              traceList, memory);
-    return;
-  }
-
-  VisitTraceListWithFunctor(
-      [=](auto thingp) { TraceEdgeInternal(trc, thingp, "TypedObject edge"); },
-      traceList, memory);
-  return;
-}
-
 /*** Mark-stack Marking *****************************************************/
 
 GCMarker::MarkQueueProgress GCMarker::processMarkQueue() {

@@ -976,13 +976,16 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
   JSContext* cx = TlsContext.get();
   Rooted<RttValue*> rttValue(cx, (RttValue*)structDescr);
   MOZ_ASSERT(rttValue);
-  return TypedObject::createZeroed(cx, rttValue);
+  return TypedObject::createStruct(cx, rttValue);
 }
 
-static const StructType* GetDescrStructType(JSContext* cx,
-                                            HandleRttValue rttValue) {
-  const TypeDef& typeDef = rttValue->getType(cx);
-  return typeDef.isStructType() ? &typeDef.structType() : nullptr;
+/* static */ void* Instance::arrayNew(Instance* instance, uint32_t length,
+                                      void* arrayDescr) {
+  MOZ_ASSERT(SASigArrayNew.failureMode == FailureMode::FailOnNullPtr);
+  JSContext* cx = TlsContext.get();
+  Rooted<RttValue*> rttValue(cx, (RttValue*)arrayDescr);
+  MOZ_ASSERT(rttValue);
+  return TypedObject::createArray(cx, rttValue, length);
 }
 
 #ifdef ENABLE_WASM_EXCEPTIONS
@@ -1314,11 +1317,11 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
       for (uint32_t typeIndex = 0; typeIndex < metadata().types.length();
            typeIndex++) {
         const TypeDefWithId& typeDef = metadata().types[typeIndex];
-        if (!typeDef.isStructType()) {
+        if (!typeDef.isStructType() && !typeDef.isArrayType()) {
           continue;
         }
 #ifndef ENABLE_WASM_GC
-        MOZ_CRASH("Should not have seen any struct types");
+        MOZ_CRASH("Should not have seen any gc types");
 #else
         uint32_t globalTypeIndex = baseIndex + typeIndex;
         Rooted<RttValue*> rttValue(
@@ -1353,6 +1356,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
           break;
         }
         case TypeDefKind::Struct:
+        case TypeDefKind::Array:
           continue;
         default:
           MOZ_CRASH();
@@ -1484,7 +1488,7 @@ void Instance::tracePrivate(JSTracer* trc) {
 #ifdef ENABLE_WASM_GC
   if (hasGcTypes_) {
     for (const TypeDefWithId& typeDef : metadata().types) {
-      if (!typeDef.isStructType()) {
+      if (!typeDef.isStructType() && !typeDef.isArrayType()) {
         continue;
       }
       TraceNullableEdge(trc, ((GCPtrObject*)addressOfTypeId(typeDef.id)),

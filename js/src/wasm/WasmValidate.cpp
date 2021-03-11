@@ -872,6 +872,29 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(iter.readStructSet(&unusedUint1, &unusedUint2, &nothing,
                                      &nothing));
           }
+          case uint32_t(GcOp::ArrayNewWithRtt): {
+            uint32_t unusedUint;
+            CHECK(iter.readArrayNewWithRtt(&unusedUint, &nothing, &nothing,
+                                           &nothing));
+          }
+          case uint32_t(GcOp::ArrayNewDefaultWithRtt): {
+            uint32_t unusedUint;
+            CHECK(iter.readArrayNewDefaultWithRtt(&unusedUint, &nothing,
+                                                  &nothing));
+          }
+          case uint32_t(GcOp::ArrayGet): {
+            uint32_t unusedUint1;
+            CHECK(iter.readArrayGet(&unusedUint1, &nothing, &nothing));
+          }
+          case uint32_t(GcOp::ArraySet): {
+            uint32_t unusedUint1;
+            CHECK(
+                iter.readArraySet(&unusedUint1, &nothing, &nothing, &nothing));
+          }
+          case uint32_t(GcOp::ArrayLen): {
+            uint32_t unusedUint1;
+            CHECK(iter.readArrayLen(&unusedUint1, &nothing));
+          }
           case uint16_t(GcOp::RttCanon): {
             ValType unusedTy;
             CHECK(iter.readRttCanon(&unusedTy));
@@ -1642,7 +1665,7 @@ static bool DecodePreamble(Decoder& d) {
   return true;
 }
 
-enum class TypeState { None, Struct, ForwardStruct, Func };
+enum class TypeState { None, Gc, ForwardGc, Func };
 
 typedef Vector<TypeState, 0, SystemAllocPolicy> TypeStateVector;
 
@@ -1655,13 +1678,13 @@ static bool ValidateTypeState(Decoder& d, TypeStateVector* typeState, T type) {
   uint32_t refTypeIndex = type.refType().typeIndex();
   switch ((*typeState)[refTypeIndex]) {
     case TypeState::None:
-      (*typeState)[refTypeIndex] = TypeState::ForwardStruct;
+      (*typeState)[refTypeIndex] = TypeState::ForwardGc;
       break;
-    case TypeState::Struct:
-    case TypeState::ForwardStruct:
+    case TypeState::Gc:
+    case TypeState::ForwardGc:
       break;
     case TypeState::Func:
-      return d.fail("ref does not reference a struct type");
+      return d.fail("ref does not reference a gc type");
   }
   return true;
 }
@@ -1720,7 +1743,7 @@ static bool DecodeFuncType(Decoder& d, ModuleEnvironment* env,
   }
 
   if ((*typeState)[typeIndex] != TypeState::None) {
-    return d.fail("function type entry referenced as struct");
+    return d.fail("function type entry referenced as gc");
   }
 
   env->types[typeIndex] =
@@ -1737,8 +1760,8 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
   }
 
   if ((*typeState)[typeIndex] != TypeState::None &&
-      (*typeState)[typeIndex] != TypeState::ForwardStruct) {
-    return d.fail("struct type entry referenced as function");
+      (*typeState)[typeIndex] != TypeState::ForwardGc) {
+    return d.fail("gc type entry referenced as function");
   }
 
   uint32_t numFields;
@@ -1782,7 +1805,42 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
   }
 
   env->types[typeIndex] = TypeDef(std::move(structType));
-  (*typeState)[typeIndex] = TypeState::Struct;
+  (*typeState)[typeIndex] = TypeState::Gc;
+
+  return true;
+}
+
+static bool DecodeArrayType(Decoder& d, ModuleEnvironment* env,
+                            TypeStateVector* typeState, uint32_t typeIndex) {
+  if (!env->gcTypesEnabled()) {
+    return d.fail("gc types not enabled");
+  }
+
+  if ((*typeState)[typeIndex] != TypeState::None &&
+      (*typeState)[typeIndex] != TypeState::ForwardGc) {
+    return d.fail("gc type entry referenced as function");
+  }
+
+  FieldType elementType;
+  if (!d.readFieldType(env->types.length(), env->features, &elementType)) {
+    return false;
+  }
+
+  uint8_t flags;
+  if (!d.readFixedU8(&flags)) {
+    return d.fail("expected flag");
+  }
+  if ((flags & ~uint8_t(FieldFlags::AllowedMask)) != 0) {
+    return d.fail("garbage flag bits");
+  }
+  bool isMutable = flags & uint8_t(FieldFlags::Mutable);
+
+  if (!ValidateTypeState(d, typeState, elementType)) {
+    return false;
+  }
+
+  env->types[typeIndex] = TypeDef(ArrayType(elementType, isMutable));
+  (*typeState)[typeIndex] = TypeState::Gc;
 
   return true;
 }
@@ -1828,6 +1886,11 @@ static bool DecodeTypeSection(Decoder& d, ModuleEnvironment* env) {
         break;
       case uint8_t(TypeCode::Struct):
         if (!DecodeStructType(d, env, &typeState, typeIndex)) {
+          return false;
+        }
+        break;
+      case uint8_t(TypeCode::Array):
+        if (!DecodeArrayType(d, env, &typeState, typeIndex)) {
           return false;
         }
         break;
