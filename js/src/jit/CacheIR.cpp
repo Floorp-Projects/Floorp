@@ -617,10 +617,10 @@ static void GuardReceiverProto(CacheIRWriter& writer, JSObject* obj,
 static void TestMatchingReceiver(CacheIRWriter& writer, JSObject* obj,
                                  ObjOperandId objId) {
   if (obj->is<TypedObject>()) {
-    // For now guard on both the shape and TypeDescr. Longer-term the plan is to
-    // fix this by moving the TypeDescr into TypedObjectShape.
+    // For now guard on both the shape and RttValue. Longer-term the plan is to
+    // fix this by moving the RttValue into TypedObjectShape.
     writer.guardShape(objId, obj->shape());
-    writer.guardTypeDescr(objId, &obj->as<TypedObject>().typeDescr());
+    writer.guardRttValue(objId, &obj->as<TypedObject>().rttValue());
   } else if (obj->is<ProxyObject>()) {
     writer.guardShapeForClass(objId, obj->as<ProxyObject>().shape());
   } else {

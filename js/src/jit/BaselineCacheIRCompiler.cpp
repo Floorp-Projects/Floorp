@@ -234,8 +234,8 @@ bool BaselineCacheIRCompiler::emitGuardProto(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitGuardTypeDescr(ObjOperandId objId,
-                                                 uint32_t descrOffset) {
+bool BaselineCacheIRCompiler::emitGuardRttValue(ObjOperandId objId,
+                                                uint32_t descrOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   Register obj = allocator.useRegister(masm, objId);
@@ -249,8 +249,8 @@ bool BaselineCacheIRCompiler::emitGuardTypeDescr(ObjOperandId objId,
 
   Address addr(stubAddress(descrOffset));
   masm.loadPtr(addr, scratch1);
-  masm.branchTestObjTypeDescr(Assembler::NotEqual, obj, scratch1, scratch2, obj,
-                              failure->label());
+  masm.branchTestObjRttValue(Assembler::NotEqual, obj, scratch1, scratch2, obj,
+                             failure->label());
 
   return true;
 }

@@ -23,7 +23,7 @@ class TypedProto : public NativeObject {
   static TypedProto* create(JSContext* cx);
 };
 
-class TypeDescr : public NativeObject {
+class RttValue : public NativeObject {
  public:
   static const JSClass class_;
 
@@ -36,7 +36,7 @@ class TypeDescr : public NativeObject {
     SlotCount = 4,
   };
 
-  static TypeDescr* createFromHandle(JSContext* cx, wasm::TypeHandle handle);
+  static RttValue* createFromHandle(JSContext* cx, wasm::TypeHandle handle);
 
   TypedProto& typedProto() const {
     return getReservedSlot(Slot::Proto).toObject().as<TypedProto>();
@@ -83,12 +83,12 @@ class TypeDescr : public NativeObject {
   static void finalize(JSFreeOp* fop, JSObject* obj);
 };
 
-using HandleTypeDescr = Handle<TypeDescr*>;
+using HandleRttValue = Handle<RttValue*>;
 
 /* Base type for typed objects. */
 class TypedObject : public JSObject {
  protected:
-  GCPtr<TypeDescr*> typeDescr_;
+  GCPtr<RttValue*> rttValue_;
 
   static const ObjectOps objectOps_;
 
@@ -136,9 +136,9 @@ class TypedObject : public JSObject {
     // Typed objects' prototypes can't be modified.
     return staticPrototype()->as<TypedProto>();
   }
-  TypeDescr& typeDescr() const {
-    MOZ_ASSERT(typeDescr_);
-    return *typeDescr_;
+  RttValue& rttValue() const {
+    MOZ_ASSERT(rttValue_);
+    return *rttValue_;
   }
 
   static JS::Result<TypedObject*, JS::OOM> create(JSContext* cx,
@@ -147,7 +147,7 @@ class TypedObject : public JSObject {
                                                   js::HandleShape shape);
 
   uint32_t offset() const;
-  uint32_t size() const { return typeDescr().size(); }
+  uint32_t size() const { return rttValue().size(); }
   uint8_t* typedMem(const JS::AutoRequireNoGC&) const { return typedMem(); }
   uint8_t* typedMem(size_t offset, const JS::AutoRequireNoGC& nogc) const {
     // It seems a bit surprising that one might request an offset
@@ -162,11 +162,11 @@ class TypedObject : public JSObject {
   // Creates a new typed object whose memory is freshly allocated and
   // initialized with zeroes (or, in the case of references, an appropriate
   // default value).
-  static TypedObject* createZeroed(JSContext* cx, HandleTypeDescr typeObj,
+  static TypedObject* createZeroed(JSContext* cx, HandleRttValue typeObj,
                                    gc::InitialHeap heap = gc::DefaultHeap);
 
-  static constexpr size_t offsetOfTypeDescr() {
-    return offsetof(TypedObject, typeDescr_);
+  static constexpr size_t offsetOfRttValue() {
+    return offsetof(TypedObject, rttValue_);
   }
 };
 
@@ -210,11 +210,11 @@ class OutlineTypedObject : public TypedObject {
   // Arguments:
   // - type: type object for resulting object
   static OutlineTypedObject* createUnattached(
-      JSContext* cx, HandleTypeDescr type,
+      JSContext* cx, HandleRttValue type,
       gc::InitialHeap heap = gc::DefaultHeap);
 
  public:
-  static OutlineTypedObject* createZeroed(JSContext* cx, HandleTypeDescr descr,
+  static OutlineTypedObject* createZeroed(JSContext* cx, HandleRttValue rtt,
                                           gc::InitialHeap heap);
 
  private:
@@ -242,11 +242,11 @@ class InlineTypedObject : public TypedObject {
   uint8_t* inlineTypedMem() const { return (uint8_t*)&data_; }
 
  public:
-  static inline gc::AllocKind allocKindForTypeDescriptor(TypeDescr* descr);
+  static inline gc::AllocKind allocKindForRttValue(RttValue* rtt);
 
   static bool canAccommodateSize(size_t size) { return size <= MaxInlineBytes; }
 
-  static bool canAccommodateType(TypeDescr* type) {
+  static bool canAccommodateType(RttValue* type) {
     return type->size() <= MaxInlineBytes;
   }
 
@@ -261,7 +261,7 @@ class InlineTypedObject : public TypedObject {
     return offsetof(InlineTypedObject, data_);
   }
 
-  static InlineTypedObject* create(JSContext* cx, HandleTypeDescr descr,
+  static InlineTypedObject* create(JSContext* cx, HandleRttValue rtt,
                                    gc::InitialHeap heap = gc::DefaultHeap);
 };
 

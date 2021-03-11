@@ -2006,7 +2006,7 @@ bool HasNativeDataPropertyPure(JSContext* cx, JSObject* obj, Value* vp) {
         }
       }
     } else if (obj->is<TypedObject>()) {
-      if (obj->as<TypedObject>().typeDescr().hasProperty(cx, id)) {
+      if (obj->as<TypedObject>().rttValue().hasProperty(cx, id)) {
         vp[1].setBoolean(true);
         return true;
       }
