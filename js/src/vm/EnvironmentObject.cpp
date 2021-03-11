@@ -308,7 +308,8 @@ VarEnvironmentObject* VarEnvironmentObject::create(JSContext* cx,
 
 /* static */
 VarEnvironmentObject* VarEnvironmentObject::createHollowForDebug(
-    JSContext* cx, Handle<VarScope*> scope) {
+    JSContext* cx, Handle<Scope*> scope) {
+  MOZ_ASSERT(scope->is<VarScope>() || scope->kind() == ScopeKind::StrictEval);
   MOZ_ASSERT(!scope->hasEnvironment());
 
   RootedShape shape(cx, EmptyEnvironmentShape<VarEnvironmentObject>(cx));
@@ -1598,18 +1599,20 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
         return true;
       }
 
-      // Currently all vars inside eval var environments are aliased.
+      // Currently all vars inside non-strict eval var environments are aliased.
       if (env->is<VarEnvironmentObject>() &&
-          env->as<VarEnvironmentObject>().isForEval()) {
+          env->as<VarEnvironmentObject>().isForNonStrictEval()) {
         return true;
       }
 
       RootedScope scope(cx, getEnvironmentScope(*env));
       uint32_t firstFrameSlot;
-      if (env->is<LexicalEnvironmentObject>()) {
+      if (scope->is<LexicalScope>()) {
         firstFrameSlot = scope->as<LexicalScope>().firstFrameSlot();
-      } else {
+      } else if (scope->is<VarScope>()) {
         firstFrameSlot = scope->as<VarScope>().firstFrameSlot();
+      } else {
+        firstFrameSlot = scope->as<EvalScope>().firstFrameSlot();
       }
 
       BindingIter bi(scope);
@@ -3086,7 +3089,8 @@ static DebugEnvironmentProxy* GetDebugEnvironmentForMissing(
   MOZ_ASSERT(!ei.hasSyntacticEnvironment() &&
              (ei.scope().is<FunctionScope>() || ei.scope().is<LexicalScope>() ||
               ei.scope().is<WasmInstanceScope>() ||
-              ei.scope().is<WasmFunctionScope>() || ei.scope().is<VarScope>()));
+              ei.scope().is<WasmFunctionScope>() || ei.scope().is<VarScope>() ||
+              ei.scope().kind() == ScopeKind::StrictEval));
 
   if (DebugEnvironmentProxy* debugEnv =
           DebugEnvironments::hasDebugEnvironment(cx, ei)) {
@@ -3159,9 +3163,10 @@ static DebugEnvironmentProxy* GetDebugEnvironmentForMissing(
 
     debugEnv = DebugEnvironmentProxy::create(cx, *callobj, enclosingDebug);
   } else {
-    Rooted<VarScope*> varScope(cx, &ei.scope().as<VarScope>());
-    Rooted<VarEnvironmentObject*> env(
-        cx, VarEnvironmentObject::createHollowForDebug(cx, varScope));
+    Rooted<Scope*> scope(cx, &ei.scope());
+    MOZ_ASSERT(scope->is<VarScope>() || scope->kind() == ScopeKind::StrictEval);
+
+    Rooted<VarEnvironmentObject*> env(cx, VarEnvironmentObject::createHollowForDebug(cx, scope));
     if (!env) {
       return nullptr;
     }
@@ -3207,7 +3212,8 @@ static JSObject* GetDebugEnvironment(JSContext* cx, const EnvironmentIter& ei) {
 
   if (ei.scope().is<FunctionScope>() || ei.scope().is<LexicalScope>() ||
       ei.scope().is<WasmInstanceScope>() ||
-      ei.scope().is<WasmFunctionScope>() || ei.scope().is<VarScope>()) {
+      ei.scope().is<WasmFunctionScope>() || ei.scope().is<VarScope>() ||
+      ei.scope().kind() == ScopeKind::StrictEval) {
     return GetDebugEnvironmentForMissing(cx, ei);
   }
 
