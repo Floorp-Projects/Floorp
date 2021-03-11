@@ -65,6 +65,7 @@ docutils==0.16 \
     #   recommonmark
     #   sphinx
     #   sphinx-js
+    #   sphinx-panels
 fluent.pygments==1.0 \
     --hash=sha256:625c87a8a2362ef304146b161d359dcf652bed2a1ae4869b5607b8e06d117d97 \
     --hash=sha256:b44758f74f87e1aa9d78d8f53363962639c5bf99d88cf3e407d046b5249ec27f
@@ -90,7 +91,14 @@ imagesize==1.2.0 \
 importlib-metadata==2.0.0 \
     --hash=sha256:77a540690e24b0305878c37ffd421785a6f7e53c8b5720d211b211de8d0e95da \
     --hash=sha256:cefa1a2f919b866c5beb7c9f7b0ebb4061f30a8a9bf16d609b000e2dfaceb9c3
-    # via -r requirements.in
+    # via
+    #   -r requirements.in
+    #   jsonschema
+    #   markdown
+importlib-resources==3.0.0 \
+    --hash=sha256:19f745a6eca188b490b1428c8d1d4a0d2368759f32370ea8fb89cad2ab1106c3 \
+    --hash=sha256:d028f66b66c0d5732dae86ba4276999855e162a749c92620a38c1d779ed138a7
+    # via sphinx-panels
 jinja2==2.11.2 \
     --hash=sha256:89aab215427ef59c34ad58735269eb58b1a5808103067f7bb9d5836c651b3bb0 \
     --hash=sha256:f0a4641d3cf955324a89c04f3d94663aa4d638abe8f733ecd3582848e1c37035
@@ -304,6 +312,10 @@ sphinx-markdown-tables==0.0.15 \
     --hash=sha256:24a37662d86ee8bceb7d4f7003df0b25bc52401369d1ddc40d13ae7b58697031 \
     --hash=sha256:c5f423a018aed9447aad1fbbada32c21c7565183aaf2da3c7fdb7bf4dffa3a0b
     # via -r requirements.in
+sphinx-panels==0.5.2 \
+    --hash=sha256:2b2e18448b0494e7a232d6c7dfb9aa3982e7aeb92aeea7d1b146e34e9261d2f1 \
+    --hash=sha256:b7b3faa05f37b7318fd14cd85c4effa1ab905dfc8bed236a63978565ea461ae4
+    # via -r requirements.in
 sphinx-rtd-theme==0.5.1 \
     --hash=sha256:eda689eda0c7301a80cf122dad28b1861e5605cbf455558f3775e1e8200e83a5 \
     --hash=sha256:fa6bebd5ab9a73da8e102509a86f3fcc36dec04a0b52ea80e5a033b2aba00113
@@ -316,6 +328,7 @@ sphinx==3.5.1 \
     #   recommonmark
     #   sphinx-copybutton
     #   sphinx-js
+    #   sphinx-panels
     #   sphinx-rtd-theme
 sphinxcontrib-applehelp==1.0.2 \
     --hash=sha256:806111e5e962be97c29ec4c1e7fe277bfd19e9652fb1a4392105b43e01af885a \
@@ -384,6 +397,7 @@ zipp==3.2.0 \
     # via
     #   -r requirements.in
     #   importlib-metadata
+    #   importlib-resources
 
 # WARNING: The following packages were not pinned, but pip requires them to be
 # pinned when the requirements file includes hashes. Consider using the --allow-unsafe flag.

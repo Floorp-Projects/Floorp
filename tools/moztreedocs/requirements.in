@@ -45,6 +45,7 @@ Sphinx==3.5.1
 sphinx-copybutton==0.3.1
 sphinx-js==3.0.1
 sphinx-markdown-tables==0.0.15
+sphinx-panels==0.5.2
 sphinx-rtd-theme==0.5.1
 sphinxcontrib-applehelp==1.0.2
 sphinxcontrib-devhelp==1.0.2
