@@ -166,6 +166,7 @@ var TestUtils = {
    * instead. setInterval is not promise-safe.
    */
   waitForCondition(condition, msg, interval = 100, maxTries = 50) {
+    let startTime = Cu.now();
     return new Promise((resolve, reject) => {
       let tries = 0;
       async function tryOnce() {
@@ -185,6 +186,11 @@ var TestUtils = {
         }
 
         if (conditionPassed) {
+          ChromeUtils.addProfilerMarker(
+            "TestUtils",
+            { startTime, category: "Test" },
+            `waitForCondition succeeded after ${tries} retries - ${msg}`
+          );
           resolve(conditionPassed);
           return;
         }

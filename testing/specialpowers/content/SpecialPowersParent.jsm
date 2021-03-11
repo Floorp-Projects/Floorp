@@ -721,588 +721,609 @@ class SpecialPowersParent extends JSWindowActorParent {
    **/
   // eslint-disable-next-line complexity
   receiveMessage(aMessage) {
-    ChromeUtils.addProfilerMarker(
-      "SpecialPowers",
-      { category: "Test" },
-      aMessage.name
-    );
+    let startTime = Cu.now();
+    // Try block so we can use a finally statement to add a profiler marker
+    // despite all the return statements.
+    try {
+      // We explicitly return values in the below code so that this function
+      // doesn't trigger a flurry of warnings about "does not always return
+      // a value".
+      switch (aMessage.name) {
+        case "SPToggleMuteAudio":
+          return this._toggleMuteAudio(aMessage.data.mute);
 
-    // We explicitly return values in the below code so that this function
-    // doesn't trigger a flurry of warnings about "does not always return
-    // a value".
-    switch (aMessage.name) {
-      case "SPToggleMuteAudio":
-        return this._toggleMuteAudio(aMessage.data.mute);
-
-      case "Ping":
-        return undefined;
-
-      case "SpecialPowers.Quit":
-        if (
-          !AppConstants.RELEASE_OR_BETA &&
-          !AppConstants.DEBUG &&
-          !AppConstants.MOZ_CODE_COVERAGE &&
-          !AppConstants.ASAN &&
-          !AppConstants.TSAN
-        ) {
-          Cu.exitIfInAutomation();
-        } else {
-          Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
-        }
-        return undefined;
-
-      case "SpecialPowers.Focus":
-        if (this.manager.rootFrameLoader) {
-          this.manager.rootFrameLoader.ownerElement.focus();
-        }
-        return undefined;
-
-      case "SpecialPowers.CreateFiles":
-        return (async () => {
-          let filePaths = [];
-          if (!this._createdFiles) {
-            this._createdFiles = [];
-          }
-          let createdFiles = this._createdFiles;
-
-          let promises = [];
-          aMessage.data.forEach(function(request) {
-            const filePerms = 0o666;
-            let testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
-            if (request.name) {
-              testFile.appendRelativePath(request.name);
-            } else {
-              testFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, filePerms);
-            }
-            let outStream = Cc[
-              "@mozilla.org/network/file-output-stream;1"
-            ].createInstance(Ci.nsIFileOutputStream);
-            outStream.init(
-              testFile,
-              0x02 | 0x08 | 0x20, // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
-              filePerms,
-              0
-            );
-            if (request.data) {
-              outStream.write(request.data, request.data.length);
-            }
-            outStream.close();
-            promises.push(
-              File.createFromFileName(testFile.path, request.options).then(
-                function(file) {
-                  filePaths.push(file);
-                }
-              )
-            );
-            createdFiles.push(testFile);
-          });
-
-          await Promise.all(promises);
-          return filePaths;
-        })().catch(e => {
-          Cu.reportError(e);
-          return Promise.reject(String(e));
-        });
-
-      case "SpecialPowers.RemoveFiles":
-        if (this._createdFiles) {
-          this._createdFiles.forEach(function(testFile) {
-            try {
-              testFile.remove(false);
-            } catch (e) {}
-          });
-          this._createdFiles = null;
-        }
-        return undefined;
-
-      case "Wakeup":
-        return undefined;
-
-      case "EvictAllContentViewers":
-        this.browsingContext.top.sessionHistory.evictAllContentViewers();
-        return undefined;
-
-      case "PushPrefEnv":
-        return this.pushPrefEnv(aMessage.data);
-
-      case "PopPrefEnv":
-        return this.popPrefEnv();
-
-      case "FlushPrefEnv":
-        return this.flushPrefEnv();
-
-      case "PushPermissions":
-        return this.pushPermissions(aMessage.data);
-
-      case "PopPermissions":
-        return this.popPermissions();
-
-      case "FlushPermissions":
-        return this.flushPermissions();
-
-      case "SPPrefService": {
-        let prefs = Services.prefs;
-        let prefType = aMessage.json.prefType.toUpperCase();
-        let { prefName, prefValue, iid, defaultValue } = aMessage.json;
-
-        if (aMessage.json.op == "get") {
-          if (!prefName || !prefType) {
-            throw new SpecialPowersError(
-              "Invalid parameters for get in SPPrefService"
-            );
-          }
-
-          // return null if the pref doesn't exist
-          if (
-            defaultValue === undefined &&
-            prefs.getPrefType(prefName) == prefs.PREF_INVALID
-          ) {
-            return null;
-          }
-          return this._getPref(prefName, prefType, defaultValue, iid);
-        } else if (aMessage.json.op == "set") {
-          if (!prefName || !prefType || prefValue === undefined) {
-            throw new SpecialPowersError(
-              "Invalid parameters for set in SPPrefService"
-            );
-          }
-
-          return this._setPref(prefName, prefType, prefValue, iid);
-        } else if (aMessage.json.op == "clear") {
-          if (!prefName) {
-            throw new SpecialPowersError(
-              "Invalid parameters for clear in SPPrefService"
-            );
-          }
-
-          prefs.clearUserPref(prefName);
-        } else {
-          throw new SpecialPowersError("Invalid operation for SPPrefService");
-        }
-
-        return undefined; // See comment at the beginning of this function.
-      }
-
-      case "SPProcessCrashService": {
-        switch (aMessage.json.op) {
-          case "register-observer":
-            this._addProcessCrashObservers();
-            break;
-          case "unregister-observer":
-            this._removeProcessCrashObservers();
-            break;
-          case "delete-crash-dump-files":
-            return this._deleteCrashDumpFiles(aMessage.json.filenames);
-          case "find-crash-dump-files":
-            return this._findCrashDumpFiles(
-              aMessage.json.crashDumpFilesToIgnore
-            );
-          case "delete-pending-crash-dump-files":
-            return this._deletePendingCrashDumpFiles();
-          default:
-            throw new SpecialPowersError(
-              "Invalid operation for SPProcessCrashService"
-            );
-        }
-        return undefined; // See comment at the beginning of this function.
-      }
-
-      case "SPProcessCrashManagerWait": {
-        let promises = aMessage.json.crashIds.map(crashId => {
-          return Services.crashmanager.ensureCrashIsPresent(crashId);
-        });
-        return Promise.all(promises);
-      }
-
-      case "SPPermissionManager": {
-        let msg = aMessage.data;
-        switch (msg.op) {
-          case "add":
-          case "remove":
-            this._permOp(msg);
-            break;
-          case "has":
-            let hasPerm = Services.perms.testPermissionFromPrincipal(
-              msg.principal,
-              msg.type
-            );
-            return hasPerm == Ci.nsIPermissionManager.ALLOW_ACTION;
-          case "test":
-            let testPerm = Services.perms.testPermissionFromPrincipal(
-              msg.principal,
-              msg.type
-            );
-            return testPerm == msg.value;
-          default:
-            throw new SpecialPowersError(
-              "Invalid operation for SPPermissionManager"
-            );
-        }
-        return undefined; // See comment at the beginning of this function.
-      }
-
-      case "SPSetTestPluginEnabledState": {
-        var plugin = getTestPlugin(aMessage.data.pluginName);
-        if (!plugin) {
+        case "Ping":
           return undefined;
-        }
-        var oldEnabledState = plugin.enabledState;
-        plugin.enabledState = aMessage.data.newEnabledState;
-        return oldEnabledState;
-      }
 
-      case "SPObserverService": {
-        let topic = aMessage.json.observerTopic;
-        switch (aMessage.json.op) {
-          case "notify":
-            let data = aMessage.json.observerData;
-            Services.obs.notifyObservers(null, topic, data);
-            break;
-          case "add":
-            this._registerObservers._add(topic);
-            break;
-          default:
-            throw new SpecialPowersError(
-              "Invalid operation for SPObserverervice"
-            );
-        }
-        return undefined; // See comment at the beginning of this function.
-      }
+        case "SpecialPowers.Quit":
+          if (
+            !AppConstants.RELEASE_OR_BETA &&
+            !AppConstants.DEBUG &&
+            !AppConstants.MOZ_CODE_COVERAGE &&
+            !AppConstants.ASAN &&
+            !AppConstants.TSAN
+          ) {
+            Cu.exitIfInAutomation();
+          } else {
+            Services.startup.quit(Ci.nsIAppStartup.eForceQuit);
+          }
+          return undefined;
 
-      case "SPLoadChromeScript": {
-        let id = aMessage.json.id;
-        let scriptName;
+        case "SpecialPowers.Focus":
+          if (this.manager.rootFrameLoader) {
+            this.manager.rootFrameLoader.ownerElement.focus();
+          }
+          return undefined;
 
-        let jsScript = aMessage.json.function.body;
-        if (aMessage.json.url) {
-          scriptName = aMessage.json.url;
-        } else if (aMessage.json.function) {
-          scriptName =
-            aMessage.json.function.name ||
-            "<loadChromeScript anonymous function>";
-        } else {
-          throw new SpecialPowersError("SPLoadChromeScript: Invalid script");
-        }
-
-        // Setup a chrome sandbox that has access to sendAsyncMessage
-        // and {add,remove}MessageListener in order to communicate with
-        // the mochitest.
-        let sb = new SpecialPowersSandbox(
-          scriptName,
-          data => {
-            this.sendAsyncMessage("Assert", data);
-          },
-          aMessage.data
-        );
-
-        Object.assign(sb.sandbox, {
-          createWindowlessBrowser,
-          sendAsyncMessage: (name, message) => {
-            this.sendAsyncMessage("SPChromeScriptMessage", {
-              id,
-              name,
-              message,
-            });
-          },
-          addMessageListener: (name, listener) => {
-            this._chromeScriptListeners.push({ id, name, listener });
-          },
-          removeMessageListener: (name, listener) => {
-            let index = this._chromeScriptListeners.findIndex(function(obj) {
-              return (
-                obj.id == id && obj.name == name && obj.listener == listener
-              );
-            });
-            if (index >= 0) {
-              this._chromeScriptListeners.splice(index, 1);
+        case "SpecialPowers.CreateFiles":
+          return (async () => {
+            let filePaths = [];
+            if (!this._createdFiles) {
+              this._createdFiles = [];
             }
-          },
-          actorParent: this.manager,
-        });
+            let createdFiles = this._createdFiles;
 
-        // Evaluate the chrome script
-        try {
-          Cu.evalInSandbox(jsScript, sb.sandbox, "1.8", scriptName, 1);
-        } catch (e) {
-          throw new SpecialPowersError(
-            "Error while executing chrome script '" +
-              scriptName +
-              "':\n" +
-              e +
-              "\n" +
-              e.fileName +
-              ":" +
-              e.lineNumber
-          );
-        }
-        return undefined; // See comment at the beginning of this function.
-      }
+            let promises = [];
+            aMessage.data.forEach(function(request) {
+              const filePerms = 0o666;
+              let testFile = Services.dirsvc.get("ProfD", Ci.nsIFile);
+              if (request.name) {
+                testFile.appendRelativePath(request.name);
+              } else {
+                testFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, filePerms);
+              }
+              let outStream = Cc[
+                "@mozilla.org/network/file-output-stream;1"
+              ].createInstance(Ci.nsIFileOutputStream);
+              outStream.init(
+                testFile,
+                0x02 | 0x08 | 0x20, // PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE
+                filePerms,
+                0
+              );
+              if (request.data) {
+                outStream.write(request.data, request.data.length);
+              }
+              outStream.close();
+              promises.push(
+                File.createFromFileName(testFile.path, request.options).then(
+                  function(file) {
+                    filePaths.push(file);
+                  }
+                )
+              );
+              createdFiles.push(testFile);
+            });
 
-      case "SPChromeScriptMessage": {
-        let id = aMessage.json.id;
-        let name = aMessage.json.name;
-        let message = aMessage.json.message;
-        let result;
-        for (let listener of this._chromeScriptListeners) {
-          if (listener.name == name && listener.id == id) {
-            result = listener.listener(message);
+            await Promise.all(promises);
+            return filePaths;
+          })().catch(e => {
+            Cu.reportError(e);
+            return Promise.reject(String(e));
+          });
+
+        case "SpecialPowers.RemoveFiles":
+          if (this._createdFiles) {
+            this._createdFiles.forEach(function(testFile) {
+              try {
+                testFile.remove(false);
+              } catch (e) {}
+            });
+            this._createdFiles = null;
           }
-        }
-        return result;
-      }
+          return undefined;
 
-      case "SPImportInMainProcess": {
-        var message = { hadError: false, errorMessage: null };
-        try {
-          ChromeUtils.import(aMessage.data);
-        } catch (e) {
-          message.hadError = true;
-          message.errorMessage = e.toString();
-        }
-        return message;
-      }
+        case "Wakeup":
+          return undefined;
 
-      case "SPCleanUpSTSData": {
-        let origin = aMessage.data.origin;
-        let flags = aMessage.data.flags;
-        let uri = Services.io.newURI(origin);
-        let sss = Cc["@mozilla.org/ssservice;1"].getService(
-          Ci.nsISiteSecurityService
-        );
-        sss.resetState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, flags);
-        return undefined;
-      }
+        case "EvictAllContentViewers":
+          this.browsingContext.top.sessionHistory.evictAllContentViewers();
+          return undefined;
 
-      case "SPRequestDumpCoverageCounters": {
-        return PerTestCoverageUtils.afterTest();
-      }
+        case "PushPrefEnv":
+          return this.pushPrefEnv(aMessage.data);
 
-      case "SPRequestResetCoverageCounters": {
-        return PerTestCoverageUtils.beforeTest();
-      }
+        case "PopPrefEnv":
+          return this.popPrefEnv();
 
-      case "SPCheckServiceWorkers": {
-        let swm = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
-          Ci.nsIServiceWorkerManager
-        );
-        let regs = swm.getAllRegistrations();
+        case "FlushPrefEnv":
+          return this.flushPrefEnv();
 
-        // XXX This code is shared with specialpowers.js.
-        let workers = new Array(regs.length);
-        for (let i = 0; i < regs.length; ++i) {
-          let { scope, scriptSpec } = regs.queryElementAt(
-            i,
-            Ci.nsIServiceWorkerRegistrationInfo
-          );
-          workers[i] = { scope, scriptSpec };
-        }
-        return { workers };
-      }
+        case "PushPermissions":
+          return this.pushPermissions(aMessage.data);
 
-      case "SPLoadExtension": {
-        let id = aMessage.data.id;
-        let ext = aMessage.data.ext;
-        let extension = ExtensionTestCommon.generate(ext);
+        case "PopPermissions":
+          return this.popPermissions();
 
-        let resultListener = (...args) => {
-          this.sendAsyncMessage("SPExtensionMessage", {
-            id,
-            type: "testResult",
-            args,
-          });
-        };
+        case "FlushPermissions":
+          return this.flushPermissions();
 
-        let messageListener = (...args) => {
-          args.shift();
-          this.sendAsyncMessage("SPExtensionMessage", {
-            id,
-            type: "testMessage",
-            args,
-          });
-        };
+        case "SPPrefService": {
+          let prefs = Services.prefs;
+          let prefType = aMessage.json.prefType.toUpperCase();
+          let { prefName, prefValue, iid, defaultValue } = aMessage.json;
 
-        // Register pass/fail handlers.
-        extension.on("test-result", resultListener);
-        extension.on("test-eq", resultListener);
-        extension.on("test-log", resultListener);
-        extension.on("test-done", resultListener);
+          if (aMessage.json.op == "get") {
+            if (!prefName || !prefType) {
+              throw new SpecialPowersError(
+                "Invalid parameters for get in SPPrefService"
+              );
+            }
 
-        extension.on("test-message", messageListener);
+            // return null if the pref doesn't exist
+            if (
+              defaultValue === undefined &&
+              prefs.getPrefType(prefName) == prefs.PREF_INVALID
+            ) {
+              return null;
+            }
+            return this._getPref(prefName, prefType, defaultValue, iid);
+          } else if (aMessage.json.op == "set") {
+            if (!prefName || !prefType || prefValue === undefined) {
+              throw new SpecialPowersError(
+                "Invalid parameters for set in SPPrefService"
+              );
+            }
 
-        this._extensions.set(id, extension);
-        return undefined;
-      }
+            return this._setPref(prefName, prefType, prefValue, iid);
+          } else if (aMessage.json.op == "clear") {
+            if (!prefName) {
+              throw new SpecialPowersError(
+                "Invalid parameters for clear in SPPrefService"
+              );
+            }
 
-      case "SPStartupExtension": {
-        let id = aMessage.data.id;
-        // This is either an Extension, or (if useAddonManager is set) a MockExtension.
-        let extension = this._extensions.get(id);
-        extension.on("startup", (eventName, ext) => {
-          if (AppConstants.platform === "android") {
-            // We need a way to notify the embedding layer that a new extension
-            // has been installed, so that the java layer can be updated too.
-            Services.obs.notifyObservers(null, "testing-installed-addon", id);
+            prefs.clearUserPref(prefName);
+          } else {
+            throw new SpecialPowersError("Invalid operation for SPPrefService");
           }
-          // ext is always the "real" Extension object, even when "extension"
-          // is a MockExtension.
-          this.sendAsyncMessage("SPExtensionMessage", {
-            id,
-            type: "extensionSetId",
-            args: [ext.id, ext.uuid],
-          });
-        });
 
-        // Make sure the extension passes the packaging checks when
-        // they're run on a bare archive rather than a running instance,
-        // as the add-on manager runs them.
-        let extensionData = new ExtensionData(extension.rootURI);
-        return extensionData
-          .loadManifest()
-          .then(
-            () => {
-              return extensionData.initAllLocales().then(() => {
-                if (extensionData.errors.length) {
-                  return Promise.reject("Extension contains packaging errors");
-                }
-                return undefined;
+          return undefined; // See comment at the beginning of this function.
+        }
+
+        case "SPProcessCrashService": {
+          switch (aMessage.json.op) {
+            case "register-observer":
+              this._addProcessCrashObservers();
+              break;
+            case "unregister-observer":
+              this._removeProcessCrashObservers();
+              break;
+            case "delete-crash-dump-files":
+              return this._deleteCrashDumpFiles(aMessage.json.filenames);
+            case "find-crash-dump-files":
+              return this._findCrashDumpFiles(
+                aMessage.json.crashDumpFilesToIgnore
+              );
+            case "delete-pending-crash-dump-files":
+              return this._deletePendingCrashDumpFiles();
+            default:
+              throw new SpecialPowersError(
+                "Invalid operation for SPProcessCrashService"
+              );
+          }
+          return undefined; // See comment at the beginning of this function.
+        }
+
+        case "SPProcessCrashManagerWait": {
+          let promises = aMessage.json.crashIds.map(crashId => {
+            return Services.crashmanager.ensureCrashIsPresent(crashId);
+          });
+          return Promise.all(promises);
+        }
+
+        case "SPPermissionManager": {
+          let msg = aMessage.data;
+          switch (msg.op) {
+            case "add":
+            case "remove":
+              this._permOp(msg);
+              break;
+            case "has":
+              let hasPerm = Services.perms.testPermissionFromPrincipal(
+                msg.principal,
+                msg.type
+              );
+              return hasPerm == Ci.nsIPermissionManager.ALLOW_ACTION;
+            case "test":
+              let testPerm = Services.perms.testPermissionFromPrincipal(
+                msg.principal,
+                msg.type
+              );
+              return testPerm == msg.value;
+            default:
+              throw new SpecialPowersError(
+                "Invalid operation for SPPermissionManager"
+              );
+          }
+          return undefined; // See comment at the beginning of this function.
+        }
+
+        case "SPSetTestPluginEnabledState": {
+          var plugin = getTestPlugin(aMessage.data.pluginName);
+          if (!plugin) {
+            return undefined;
+          }
+          var oldEnabledState = plugin.enabledState;
+          plugin.enabledState = aMessage.data.newEnabledState;
+          return oldEnabledState;
+        }
+
+        case "SPObserverService": {
+          let topic = aMessage.json.observerTopic;
+          switch (aMessage.json.op) {
+            case "notify":
+              let data = aMessage.json.observerData;
+              Services.obs.notifyObservers(null, topic, data);
+              break;
+            case "add":
+              this._registerObservers._add(topic);
+              break;
+            default:
+              throw new SpecialPowersError(
+                "Invalid operation for SPObserverervice"
+              );
+          }
+          return undefined; // See comment at the beginning of this function.
+        }
+
+        case "SPLoadChromeScript": {
+          let id = aMessage.json.id;
+          let scriptName;
+
+          let jsScript = aMessage.json.function.body;
+          if (aMessage.json.url) {
+            scriptName = aMessage.json.url;
+          } else if (aMessage.json.function) {
+            scriptName =
+              aMessage.json.function.name ||
+              "<loadChromeScript anonymous function>";
+          } else {
+            throw new SpecialPowersError("SPLoadChromeScript: Invalid script");
+          }
+
+          // Setup a chrome sandbox that has access to sendAsyncMessage
+          // and {add,remove}MessageListener in order to communicate with
+          // the mochitest.
+          let sb = new SpecialPowersSandbox(
+            scriptName,
+            data => {
+              this.sendAsyncMessage("Assert", data);
+            },
+            aMessage.data
+          );
+
+          Object.assign(sb.sandbox, {
+            createWindowlessBrowser,
+            sendAsyncMessage: (name, message) => {
+              this.sendAsyncMessage("SPChromeScriptMessage", {
+                id,
+                name,
+                message,
               });
             },
-            () => {
-              // loadManifest() will throw if we're loading an embedded
-              // extension, so don't worry about locale errors in that
-              // case.
-            }
-          )
-          .then(async () => {
-            // browser tests do not call startup in ExtensionXPCShellUtils or MockExtension,
-            // in that case we have an ID here and we need to set the override.
-            if (extension.id) {
-              await ExtensionTestCommon.setIncognitoOverride(extension);
-            }
-            return extension.startup().then(
-              () => {},
-              e => {
-                dump(`Extension startup failed: ${e}\n${e.stack}`);
-                throw e;
+            addMessageListener: (name, listener) => {
+              this._chromeScriptListeners.push({ id, name, listener });
+            },
+            removeMessageListener: (name, listener) => {
+              let index = this._chromeScriptListeners.findIndex(function(obj) {
+                return (
+                  obj.id == id && obj.name == name && obj.listener == listener
+                );
+              });
+              if (index >= 0) {
+                this._chromeScriptListeners.splice(index, 1);
               }
-            );
+            },
+            actorParent: this.manager,
           });
-      }
 
-      case "SPExtensionMessage": {
-        let id = aMessage.data.id;
-        let extension = this._extensions.get(id);
-        extension.testMessage(...aMessage.data.args);
-        return undefined;
-      }
-
-      case "SPExtensionGrantActiveTab": {
-        let { id, tabId } = aMessage.data;
-        let { tabManager } = this._extensions.get(id);
-        tabManager.addActiveTabPermission(tabManager.get(tabId).nativeTab);
-        return undefined;
-      }
-
-      case "SPUnloadExtension": {
-        let id = aMessage.data.id;
-        let extension = this._extensions.get(id);
-        this._extensions.delete(id);
-        return extension.shutdown().then(() => {
-          return extension._uninstallPromise;
-        });
-      }
-
-      case "SetAsDefaultAssertHandler": {
-        defaultAssertHandler = this;
-        return undefined;
-      }
-
-      case "Spawn": {
-        let {
-          browsingContext,
-          task,
-          args,
-          caller,
-          hasHarness,
-          imports,
-        } = aMessage.data;
-
-        let spParent = browsingContext.currentWindowGlobal.getActor(
-          "SpecialPowers"
-        );
-
-        let taskId = nextTaskID++;
-        if (hasHarness) {
-          spParent._taskActors.set(taskId, this);
+          // Evaluate the chrome script
+          try {
+            Cu.evalInSandbox(jsScript, sb.sandbox, "1.8", scriptName, 1);
+          } catch (e) {
+            throw new SpecialPowersError(
+              "Error while executing chrome script '" +
+                scriptName +
+                "':\n" +
+                e +
+                "\n" +
+                e.fileName +
+                ":" +
+                e.lineNumber
+            );
+          }
+          return undefined; // See comment at the beginning of this function.
         }
 
-        return spParent
-          .sendQuery("Spawn", { task, args, caller, taskId, imports })
-          .finally(() => spParent._taskActors.delete(taskId));
-      }
+        case "SPChromeScriptMessage": {
+          let id = aMessage.json.id;
+          let name = aMessage.json.name;
+          let message = aMessage.json.message;
+          let result;
+          for (let listener of this._chromeScriptListeners) {
+            if (listener.name == name && listener.id == id) {
+              result = listener.listener(message);
+            }
+          }
+          return result;
+        }
 
-      case "SpawnChrome": {
-        let { task, args, caller, imports } = aMessage.data;
+        case "SPImportInMainProcess": {
+          var message = { hadError: false, errorMessage: null };
+          try {
+            ChromeUtils.import(aMessage.data);
+          } catch (e) {
+            message.hadError = true;
+            message.errorMessage = e.toString();
+          }
+          return message;
+        }
 
-        return this._spawnChrome(task, args, caller, imports);
-      }
+        case "SPCleanUpSTSData": {
+          let origin = aMessage.data.origin;
+          let flags = aMessage.data.flags;
+          let uri = Services.io.newURI(origin);
+          let sss = Cc["@mozilla.org/ssservice;1"].getService(
+            Ci.nsISiteSecurityService
+          );
+          sss.resetState(Ci.nsISiteSecurityService.HEADER_HSTS, uri, flags);
+          return undefined;
+        }
 
-      case "Snapshot": {
-        let { browsingContext, rect, background } = aMessage.data;
+        case "SPRequestDumpCoverageCounters": {
+          return PerTestCoverageUtils.afterTest();
+        }
 
-        return browsingContext.currentWindowGlobal
-          .drawSnapshot(rect, 1.0, background)
-          .then(async image => {
-            let hiddenFrame = new HiddenFrame();
-            let win = await hiddenFrame.get();
+        case "SPRequestResetCoverageCounters": {
+          return PerTestCoverageUtils.beforeTest();
+        }
 
-            let canvas = win.document.createElement("canvas");
-            canvas.width = image.width;
-            canvas.height = image.height;
+        case "SPCheckServiceWorkers": {
+          let swm = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
+            Ci.nsIServiceWorkerManager
+          );
+          let regs = swm.getAllRegistrations();
 
-            const ctx = canvas.getContext("2d");
-            ctx.drawImage(image, 0, 0);
+          // XXX This code is shared with specialpowers.js.
+          let workers = new Array(regs.length);
+          for (let i = 0; i < regs.length; ++i) {
+            let { scope, scriptSpec } = regs.queryElementAt(
+              i,
+              Ci.nsIServiceWorkerRegistrationInfo
+            );
+            workers[i] = { scope, scriptSpec };
+          }
+          return { workers };
+        }
 
-            let data = ctx.getImageData(0, 0, image.width, image.height);
-            hiddenFrame.destroy();
-            return data;
+        case "SPLoadExtension": {
+          let id = aMessage.data.id;
+          let ext = aMessage.data.ext;
+          let extension = ExtensionTestCommon.generate(ext);
+
+          let resultListener = (...args) => {
+            this.sendAsyncMessage("SPExtensionMessage", {
+              id,
+              type: "testResult",
+              args,
+            });
+          };
+
+          let messageListener = (...args) => {
+            args.shift();
+            this.sendAsyncMessage("SPExtensionMessage", {
+              id,
+              type: "testMessage",
+              args,
+            });
+          };
+
+          // Register pass/fail handlers.
+          extension.on("test-result", resultListener);
+          extension.on("test-eq", resultListener);
+          extension.on("test-log", resultListener);
+          extension.on("test-done", resultListener);
+
+          extension.on("test-message", messageListener);
+
+          this._extensions.set(id, extension);
+          return undefined;
+        }
+
+        case "SPStartupExtension": {
+          let id = aMessage.data.id;
+          // This is either an Extension, or (if useAddonManager is set) a MockExtension.
+          let extension = this._extensions.get(id);
+          extension.on("startup", (eventName, ext) => {
+            if (AppConstants.platform === "android") {
+              // We need a way to notify the embedding layer that a new extension
+              // has been installed, so that the java layer can be updated too.
+              Services.obs.notifyObservers(null, "testing-installed-addon", id);
+            }
+            // ext is always the "real" Extension object, even when "extension"
+            // is a MockExtension.
+            this.sendAsyncMessage("SPExtensionMessage", {
+              id,
+              type: "extensionSetId",
+              args: [ext.id, ext.uuid],
+            });
           });
+
+          // Make sure the extension passes the packaging checks when
+          // they're run on a bare archive rather than a running instance,
+          // as the add-on manager runs them.
+          let extensionData = new ExtensionData(extension.rootURI);
+          return extensionData
+            .loadManifest()
+            .then(
+              () => {
+                return extensionData.initAllLocales().then(() => {
+                  if (extensionData.errors.length) {
+                    return Promise.reject(
+                      "Extension contains packaging errors"
+                    );
+                  }
+                  return undefined;
+                });
+              },
+              () => {
+                // loadManifest() will throw if we're loading an embedded
+                // extension, so don't worry about locale errors in that
+                // case.
+              }
+            )
+            .then(async () => {
+              // browser tests do not call startup in ExtensionXPCShellUtils or MockExtension,
+              // in that case we have an ID here and we need to set the override.
+              if (extension.id) {
+                await ExtensionTestCommon.setIncognitoOverride(extension);
+              }
+              return extension.startup().then(
+                () => {},
+                e => {
+                  dump(`Extension startup failed: ${e}\n${e.stack}`);
+                  throw e;
+                }
+              );
+            });
+        }
+
+        case "SPExtensionMessage": {
+          let id = aMessage.data.id;
+          let extension = this._extensions.get(id);
+          extension.testMessage(...aMessage.data.args);
+          return undefined;
+        }
+
+        case "SPExtensionGrantActiveTab": {
+          let { id, tabId } = aMessage.data;
+          let { tabManager } = this._extensions.get(id);
+          tabManager.addActiveTabPermission(tabManager.get(tabId).nativeTab);
+          return undefined;
+        }
+
+        case "SPUnloadExtension": {
+          let id = aMessage.data.id;
+          let extension = this._extensions.get(id);
+          this._extensions.delete(id);
+          return extension.shutdown().then(() => {
+            return extension._uninstallPromise;
+          });
+        }
+
+        case "SetAsDefaultAssertHandler": {
+          defaultAssertHandler = this;
+          return undefined;
+        }
+
+        case "Spawn": {
+          // Use a different variable for the profiler marker start time
+          // so that a marker isn't added when we return, but instead when
+          // our promise resolves.
+          let spawnStartTime = startTime;
+          startTime = undefined;
+          let {
+            browsingContext,
+            task,
+            args,
+            caller,
+            hasHarness,
+            imports,
+          } = aMessage.data;
+
+          let spParent = browsingContext.currentWindowGlobal.getActor(
+            "SpecialPowers"
+          );
+
+          let taskId = nextTaskID++;
+          if (hasHarness) {
+            spParent._taskActors.set(taskId, this);
+          }
+
+          return spParent
+            .sendQuery("Spawn", { task, args, caller, taskId, imports })
+            .finally(() => {
+              ChromeUtils.addProfilerMarker(
+                "SpecialPowers",
+                { startTime: spawnStartTime, category: "Test" },
+                aMessage.name
+              );
+              return spParent._taskActors.delete(taskId);
+            });
+        }
+
+        case "SpawnChrome": {
+          let { task, args, caller, imports } = aMessage.data;
+
+          return this._spawnChrome(task, args, caller, imports);
+        }
+
+        case "Snapshot": {
+          let { browsingContext, rect, background } = aMessage.data;
+
+          return browsingContext.currentWindowGlobal
+            .drawSnapshot(rect, 1.0, background)
+            .then(async image => {
+              let hiddenFrame = new HiddenFrame();
+              let win = await hiddenFrame.get();
+
+              let canvas = win.document.createElement("canvas");
+              canvas.width = image.width;
+              canvas.height = image.height;
+
+              const ctx = canvas.getContext("2d");
+              ctx.drawImage(image, 0, 0);
+
+              let data = ctx.getImageData(0, 0, image.width, image.height);
+              hiddenFrame.destroy();
+              return data;
+            });
+        }
+
+        case "SecurityState": {
+          let { browsingContext } = aMessage.data;
+          return browsingContext.secureBrowserUI.state;
+        }
+
+        case "ProxiedAssert": {
+          let { taskId, data } = aMessage.data;
+
+          let actor = this._taskActors.get(taskId) || defaultAssertHandler;
+          actor.sendAsyncMessage("Assert", data);
+
+          return undefined;
+        }
+
+        case "SPRemoveAllServiceWorkers": {
+          return ServiceWorkerCleanUp.removeAll();
+        }
+
+        case "SPRemoveServiceWorkerDataForExampleDomain": {
+          return ServiceWorkerCleanUp.removeFromHost("example.com");
+        }
+
+        case "SPGenerateMediaControlKeyTestEvent": {
+          // eslint-disable-next-line no-undef
+          MediaControlService.generateMediaControlKey(aMessage.data.event);
+          return undefined;
+        }
+
+        default:
+          throw new SpecialPowersError(
+            `Unrecognized Special Powers API: ${aMessage.name}`
+          );
       }
-
-      case "SecurityState": {
-        let { browsingContext } = aMessage.data;
-        return browsingContext.secureBrowserUI.state;
-      }
-
-      case "ProxiedAssert": {
-        let { taskId, data } = aMessage.data;
-
-        let actor = this._taskActors.get(taskId) || defaultAssertHandler;
-        actor.sendAsyncMessage("Assert", data);
-
-        return undefined;
-      }
-
-      case "SPRemoveAllServiceWorkers": {
-        return ServiceWorkerCleanUp.removeAll();
-      }
-
-      case "SPRemoveServiceWorkerDataForExampleDomain": {
-        return ServiceWorkerCleanUp.removeFromHost("example.com");
-      }
-
-      case "SPGenerateMediaControlKeyTestEvent": {
-        // eslint-disable-next-line no-undef
-        MediaControlService.generateMediaControlKey(aMessage.data.event);
-        return undefined;
-      }
-
-      default:
-        throw new SpecialPowersError(
-          `Unrecognized Special Powers API: ${aMessage.name}`
+      // This should be unreachable. If it ever becomes reachable, ESLint
+      // will produce an error about inconsistent return values.
+    } finally {
+      if (startTime) {
+        ChromeUtils.addProfilerMarker(
+          "SpecialPowers",
+          { startTime, category: "Test" },
+          aMessage.name
         );
+      }
     }
-    // This should be unreachable. If it ever becomes reachable, ESLint
-    // will produce an error about inconsistent return values.
   }
 }
