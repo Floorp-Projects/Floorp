@@ -369,9 +369,8 @@ bool ParserAtomsTable::addPlaceholder(JSContext* cx) {
   return true;
 }
 
-ParserAtomSpanBuilder::ParserAtomSpanBuilder(JSRuntime* rt,
-                                             ParserAtomSpan& entries)
-    : wellKnownTable_(*rt->commonParserNames), entries_(entries) {}
+ParserAtomSpanBuilder::ParserAtomSpanBuilder(ParserAtomSpan& entries)
+    : entries_(entries) {}
 
 bool ParserAtomSpanBuilder::allocate(JSContext* cx, LifoAlloc& alloc,
                                      size_t count) {
