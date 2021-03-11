@@ -577,7 +577,7 @@ button:disabled {
 
 .close-button {
   -moz-context-properties: fill;
-  background-image: url("chrome://global/skin/reader/close-16.svg");
+  background-image: url("chrome://global/skin/icons/close.svg");
 }
 
 .style-button {

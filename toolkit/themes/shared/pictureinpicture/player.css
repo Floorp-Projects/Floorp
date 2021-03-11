@@ -103,7 +103,7 @@ browser {
 
 #close {
   background-color: var(--close-btn-bg-color);
-  background-image: url("chrome://global/skin/pictureinpicture/close-pip.svg");
+  background-image: url("chrome://global/skin/icons/close.svg");
   position: absolute;
   right: 10px;
   top: 10px;
