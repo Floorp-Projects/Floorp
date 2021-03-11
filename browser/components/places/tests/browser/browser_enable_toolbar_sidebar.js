@@ -10,6 +10,9 @@
 // Cleanup.
 registerCleanupFunction(async () => {
   CustomizableUI.setToolbarVisibility("PersonalToolbar", false);
+  if (CustomizableUI.protonToolbarEnabled) {
+    CustomizableUI.removeWidgetFromArea("library-button");
+  }
   SidebarUI.hide();
 });
 
@@ -18,7 +21,7 @@ async function selectAppMenuView(buttonId, viewId) {
   await BrowserTestUtils.waitForCondition(() => {
     btn = document.getElementById(buttonId);
     return btn;
-  }, "Should have the " + buttonId + "button");
+  }, "Should have the " + buttonId + " button");
   btn.click();
   let view = document.getElementById(viewId);
   let viewPromise = BrowserTestUtils.waitForEvent(view, "ViewShown");
@@ -34,6 +37,10 @@ async function openBookmarkingPanelInLibraryToolbarButton() {
 }
 
 add_task(async function test_enable_toolbar() {
+  if (CustomizableUI.protonToolbarEnabled) {
+    CustomizableUI.addWidgetToArea("library-button", "nav-bar");
+  }
+
   await openBookmarkingPanelInLibraryToolbarButton();
   let toolbar = document.getElementById("PersonalToolbar");
   Assert.ok(toolbar.collapsed, "Bookmarks Toolbar is hidden");

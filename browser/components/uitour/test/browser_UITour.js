@@ -196,7 +196,7 @@ var tests = [
     let highlight = document.getElementById("UITourHighlight");
     is_element_hidden(highlight, "Highlight should initially be hidden");
 
-    gContentAPI.showHighlight("home");
+    gContentAPI.showHighlight("backForward");
     waitForElementToBeVisible(
       highlight,
       check_highlight_size,
