@@ -17990,7 +17990,6 @@ class CGBindingRoot(CGThing):
             (
                 "mozilla/dom/BindingDeclarations.h",
                 "mozilla/dom/Nullable.h",
-                "mozilla/ErrorResult.h",
             ),
             True,
         )
@@ -18236,6 +18235,9 @@ class CGBindingRoot(CGThing):
         bindingHeaders["AtomList.h"] = (
             hasNonEmptyDictionaries or jsImplemented or callbackDescriptors
         )
+
+        if callbackDescriptors:
+            bindingDeclareHeaders["mozilla/ErrorResult.h"] = True
 
         def descriptorClearsPropsInSlots(descriptor):
             if not descriptor.wrapperCache:
@@ -23125,7 +23127,6 @@ class CGEventRoot(CGThing):
             [
                 config.getDescriptor(parent).headerFile,
                 "mozilla/Attributes.h",
-                "mozilla/ErrorResult.h",
                 "mozilla/dom/%sBinding.h" % interfaceName,
                 "mozilla/dom/BindingUtils.h",
             ],
