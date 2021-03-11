@@ -65,9 +65,8 @@ mochitest-plain:
         by-test-platform:
             linux.*64-qr/debug: ['trunk']
             linux.*64-shippable-qr/opt: ['mozilla-central']
-            linux.*64-shippable/.*: ['mozilla-central']
             linux.*64/debug: ['mozilla-central']
-            windows10-64-shippable(-qr)?/opt: ['mozilla-central']
+            windows10-64-shippable-qr/opt: ['mozilla-central']
             default: []
     chunks:
         by-test-platform:
