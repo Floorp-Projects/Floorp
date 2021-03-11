@@ -4515,13 +4515,6 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
                                     nsIFrame* aFrameForBounds = nullptr);
   ~nsDisplayBackgroundImage() override;
 
-  bool RestoreState() override {
-    bool superChanged = nsDisplayImageContainer::RestoreState();
-    bool opacityChanged = (mOpacity != 1.0f);
-    mOpacity = 1.0f;
-    return (superChanged || opacityChanged);
-  }
-
   NS_DISPLAY_DECL_NAME("Background", TYPE_BACKGROUND)
 
   /**
@@ -4561,13 +4554,6 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
                            bool* aSnap) const override;
   mozilla::Maybe<nscolor> IsUniform(
       nsDisplayListBuilder* aBuilder) const override;
-
-  bool CanApplyOpacity() const override { return true; }
-
-  void ApplyOpacity(nsDisplayListBuilder* aBuilder, float aOpacity,
-                    const DisplayItemClipChain* aClip) override {
-    mOpacity = aOpacity;
-  }
 
   /**
    * GetBounds() returns the background painting area.
@@ -4682,7 +4668,6 @@ class nsDisplayBackgroundImage : public nsDisplayImageContainer {
   /* Whether the image should be treated as fixed to the viewport. */
   bool mShouldFixToViewport;
   uint32_t mImageFlags;
-  float mOpacity;
 };
 
 /**
