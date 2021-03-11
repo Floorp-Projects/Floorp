@@ -60,6 +60,9 @@ add_task(async function testAppMenuButtonWrongKey() {
 // Test activation of the Library button from the keyboard.
 // The Library menu should appear and focus should move inside it.
 add_task(async function testLibraryButtonPress() {
+  if (CustomizableUI.protonToolbarEnabled) {
+    CustomizableUI.addWidgetToArea("library-button", "nav-bar");
+  }
   let button = document.getElementById("library-button");
   forceFocus(button);
   EventUtils.synthesizeKey(" ");
@@ -70,6 +73,9 @@ add_task(async function testLibraryButtonPress() {
   let hidden = BrowserTestUtils.waitForEvent(document, "popuphidden", true);
   view.closest("panel").hidePopup();
   await hidden;
+  if (CustomizableUI.protonToolbarEnabled) {
+    CustomizableUI.removeWidgetFromArea("library-button");
+  }
 });
 
 // Test activation of the Developer button from the keyboard.
@@ -196,6 +202,9 @@ add_task(async function testReloadButtonPress() {
 // Test activation of the Sidebars button from the keyboard.
 // This is a toolbarbutton with a command handler.
 add_task(async function testSidebarsButtonPress() {
+  if (CustomizableUI.protonToolbarEnabled) {
+    CustomizableUI.addWidgetToArea("sidebar-button", "nav-bar");
+  }
   let button = document.getElementById("sidebar-button");
   ok(!button.checked, "Sidebars button not checked at start of test");
   let sidebarBox = document.getElementById("sidebar-box");
@@ -216,6 +225,9 @@ add_task(async function testSidebarsButtonPress() {
   await TestUtils.waitForCondition(() => !button.checked);
   ok(true, "Sidebars button not checked after press");
   ok(sidebarBox.hidden, "Sidebar hidden after press");
+  if (CustomizableUI.protonToolbarEnabled) {
+    CustomizableUI.removeWidgetFromArea("sidebar-button");
+  }
 });
 
 // Test activation of the Bookmark this page button from the keyboard.
