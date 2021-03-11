@@ -47,6 +47,8 @@ var UrlbarTokenizer = {
   REGEXP_HAS_PORT: /:\d+$/,
   // Regex matching a percent encoded char at the beginning of a string.
   REGEXP_PERCENT_ENCODED_START: /^(%[0-9a-f]{2}){2,}/i,
+  // Regex matching scheme and colon, plus, if present, two slashes.
+  REGEXP_PREFIX: /^[a-z]+:(?:\/){0,2}/i,
 
   TYPE: {
     TEXT: 1,
