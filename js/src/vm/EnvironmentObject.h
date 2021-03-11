@@ -404,7 +404,7 @@ class VarEnvironmentObject : public EnvironmentObject {
   static VarEnvironmentObject* create(JSContext* cx, HandleScope scope,
                                       AbstractFramePtr frame);
   static VarEnvironmentObject* createHollowForDebug(JSContext* cx,
-                                                    Handle<VarScope*> scope);
+                                                    Handle<Scope*> scope);
 
   Scope& scope() const {
     Value v = getReservedSlot(SCOPE_SLOT);
@@ -415,6 +415,7 @@ class VarEnvironmentObject : public EnvironmentObject {
   }
 
   bool isForEval() const { return scope().is<EvalScope>(); }
+  bool isForNonStrictEval() const { return scope().kind() == ScopeKind::Eval; }
 };
 
 class ModuleEnvironmentObject : public EnvironmentObject {
