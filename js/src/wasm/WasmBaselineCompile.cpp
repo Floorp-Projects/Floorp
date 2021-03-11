@@ -110,6 +110,7 @@
 
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/ScopeExit.h"
 
 #include <algorithm>
 #include <utility>
@@ -8155,6 +8156,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     MOZ_ASSERT(!GeneralRegisterSet::All().hasRegisterIndex(x28.asUnsized()));
     masm.Mov(x28, sp);
 #endif
+    // The prebarrier call preserves all volatile registers
     EmitWasmPreBarrierCall(masm, scratch, scratch, valueAddr);
 
     masm.bind(&skipBarrier);
@@ -8168,11 +8170,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     // The `valueAddr` is a raw pointer to the cell within some GC object or
     // TLS area, and we guarantee that the GC will not run while the
     // postbarrier call is active, so push a uintptr_t value.
-#ifdef JS_64BIT
-    pushI64(RegI64(Register64(valueAddr)));
-#else
-    pushI32(RegI32(valueAddr));
-#endif
+    pushPtr(valueAddr);
     if (!emitInstanceCall(bytecodeOffset, SASigPostBarrier,
                           /*pushReturnedValue=*/false)) {
       return false;
@@ -8180,6 +8178,8 @@ class BaseCompiler final : public BaseCompilerInterface {
     return true;
   }
 
+  // Emits a store to a JS object pointer at the address valueAddr, which is
+  // inside the GC cell `object`. Preserves `object` and `value`.
   [[nodiscard]] bool emitBarrieredStore(const Maybe<RegRef>& object,
                                         RegPtr valueAddr, RegRef value) {
     // TODO/AnyRef-boxing: With boxed immediates and strings, the write
@@ -8196,6 +8196,11 @@ class BaseCompiler final : public BaseCompilerInterface {
     EmitWasmPostBarrierGuard(masm, object, otherScratch, value, &skipBarrier);
     freeRef(otherScratch);
 
+    if (object) {
+      pushRef(*object);
+    }
+    pushRef(value);
+
     // Consumes valueAddr
     if (!emitPostBarrierCall(valueAddr)) {
       return false;
@@ -8203,10 +8208,10 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     // Consume all other operands as they may have been clobbered by the post
     // barrier call
+    popRef(value);
     if (object) {
-      freeRef(*object);
+      popRef(*object);
     }
-    freeRef(value);
 
     masm.bind(&skipBarrier);
     return true;
@@ -8631,8 +8636,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitGcStructSet(RegRef object, RegPtr data,
                                      const StructField& field, AnyReg value);
   [[nodiscard]] bool emitGcArraySet(RegRef object, RegPtr data, RegI32 index,
-                                    RegI32 length, const ArrayType& array,
-                                    AnyReg value, RegPtr scratch);
+                                    const ArrayType& array, AnyReg value);
 
 #ifdef ENABLE_WASM_SIMD
   template <typename SourceType, typename DestType>
@@ -11685,10 +11689,11 @@ bool BaseCompiler::emitSetGlobal() {
                                      valueAddr);
       }
       RegRef rv = popRef();
-      // emitBarrieredStore consumes valueAddr and rv
+      // emitBarrieredStore preserves rv
       if (!emitBarrieredStore(Nothing(), valueAddr, rv)) {
         return false;
       }
+      freeRef(rv);
       break;
     }
 #ifdef ENABLE_WASM_SIMD
@@ -13488,79 +13493,74 @@ bool BaseCompiler::emitGcStructSet(RegRef object, RegPtr data,
     return true;
   }
 
-  // Create temporaries for the valueAddr and object that are not in the
-  // prebarrier register, and can be consumed by the barrier operation
+  // Create temporary for the valueAddr that is not in the prebarrier register
+  // and can be consumed by the barrier operation
   RegPtr valueAddr = RegPtr(PreBarrierReg);
   needPtr(valueAddr);
-  RegRef barrierOwner = needRef();
-
   masm.computeEffectiveAddress(Address(data, field.offset), valueAddr);
-  masm.movePtr(object, barrierOwner);
 
   // Save state for after barriered write
-  pushRef(object);
   pushPtr(data);
 
-  // emitBarrieredStore consumes all of its arguments
-  if (!emitBarrieredStore(Some(barrierOwner), valueAddr, value.ref())) {
+  // emitBarrieredStore preserves object and value
+  if (!emitBarrieredStore(Some(object), valueAddr, value.ref())) {
     return false;
   }
+  freeRef(value.ref());
 
   // Restore state
   popPtr(data);
-  popRef(object);
 
   return true;
 }
 
 bool BaseCompiler::emitGcArraySet(RegRef object, RegPtr data, RegI32 index,
-                                  RegI32 length, const ArrayType& arrayType,
-                                  AnyReg value, RegPtr scratch) {
-  // Try to use an optimal addressing mode
+                                  const ArrayType& arrayType, AnyReg value) {
+  // Try to use a base index store instruction if the field type fits in a
+  // shift immediate. If not we shift the index manually and then unshift
+  // it after the store. We don't use an extra register for this because we
+  // don't have any to spare on x86.
   uint32_t shift = arrayType.elementType_.indexingShift();
   Scale scale;
-  masm.movePtr(index, scratch);
+  bool shiftedIndex = false;
   if (IsShiftInScaleRange(shift)) {
     scale = ShiftToScale(shift);
   } else {
-    masm.lshiftPtr(Imm32(shift), scratch);
+    masm.lshiftPtr(Imm32(shift), index);
     scale = TimesOne;
+    shiftedIndex = true;
   }
+  auto unshiftIndex = mozilla::MakeScopeExit([&] {
+    if (shiftedIndex) {
+      masm.rshiftPtr(Imm32(shift), index);
+    }
+  });
 
   // Easy path if the field is a scalar
   if (!arrayType.elementType_.isReference()) {
-    emitGcSetScalar(BaseIndex(data, scratch, scale, 0), arrayType.elementType_,
+    emitGcSetScalar(BaseIndex(data, index, scale, 0), arrayType.elementType_,
                     value);
     return true;
   }
 
-  // Create temporaries for the valueAddr and owner that are not in the
-  // prebarrier register, and can be consumed by the barrier operation
+  // Create temporaries for valueAddr that is not in the prebarrier register
+  // and can be consumed by the barrier operation
   RegPtr valueAddr = RegPtr(PreBarrierReg);
   needPtr(valueAddr);
-  RegRef barrierOwner = needRef();
-
-  masm.computeEffectiveAddress(BaseIndex(data, scratch, scale, 0), valueAddr);
-  masm.movePtr(object, barrierOwner);
+  masm.computeEffectiveAddress(BaseIndex(data, index, scale, 0), valueAddr);
 
   // Save state for after barriered write
-  pushAny(dupAny(value));
-  pushRef(object);
   pushPtr(data);
   pushI32(index);
-  pushI32(length);
 
-  // emitBarrieredStore consumes all of its arguments
-  if (!emitBarrieredStore(Some(barrierOwner), valueAddr, value.ref())) {
+  // emitBarrieredStore preserves object and value
+  if (!emitBarrieredStore(Some(object), valueAddr, value.ref())) {
     return false;
   }
 
   // Restore state
-  popI32(length);
   popI32(index);
   popPtr(data);
-  popRef(object);
-  popAny(value);
 
   return true;
 }
@@ -13752,7 +13752,10 @@ bool BaseCompiler::emitStructSet() {
 
   // Acquire the data pointer from the object.
   {
-    RegPtr scratch = needPtr();
+    // We don't have a register to spare at this point on x86, so carefully
+    // borrow the `rdata` as a scratch pointer during the instruction sequence
+    // that loads `rdata`.
+    RegPtr scratch = rdata;
     RegPtr clasp = needPtr();
     masm.movePtr(SymbolicAddress::InlineTypedObjectClass, clasp);
     Label join;
@@ -13760,7 +13763,6 @@ bool BaseCompiler::emitStructSet() {
     masm.branchTestObjClass(Assembler::Equal, rp, clasp, scratch, rp,
                             &isInline);
     freePtr(clasp);
-    freePtr(scratch);
     masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfData()), rdata);
     masm.jump(&join);
 
@@ -13820,37 +13822,32 @@ bool BaseCompiler::emitArrayNewWithRtt() {
   // after the array length header
   RegI32 length = emitGcArrayGetLength(rdata, true);
 
-  // Allocate an index loop variable and initialize to zero
-  RegI32 index = needI32();
-  masm.xor32(index, index);
-
-  RegPtr scratch = needPtr();
-
   // Free the barrier reg after we've allocated all registers
   if (arrayType.elementType_.isReference()) {
     freePtr(RegPtr(PreBarrierReg));
   }
 
-  // Skip initialization if length = 0
+  // Perform an initialization loop using `length` as the loop variable,
+  // counting down to zero.
   Label done;
   Label loop;
-  masm.branch32(Assembler::Equal, index, length, &done);
+  // Skip initialization if length = 0
+  masm.branch32(Assembler::Equal, length, Imm32(0), &done);
   masm.bind(&loop);
 
-  // Assign value to array[index]. All registers are preserved
-  if (!emitGcArraySet(rp, rdata, index, length, arrayType, value, scratch)) {
+  // Move to the next element
+  masm.sub32(Imm32(1), length);
+
+  // Assign value to array[length]. All registers are preserved
+  if (!emitGcArraySet(rp, rdata, length, arrayType, value)) {
     return false;
   }
 
-  // Move to next element and loop back if there are still elements to
-  // initialize
-  masm.add32(Imm32(1), index);
-  masm.branch32(Assembler::NotEqual, index, length, &loop);
+  // Loop back if there are still elements to initialize
+  masm.branch32(Assembler::GreaterThan, length, Imm32(0), &loop);
   masm.bind(&done);
 
-  freePtr(scratch);
   freeI32(length);
-  freeI32(index);
   freeAny(value);
   freePtr(rdata);
   pushRef(rp);
@@ -13949,6 +13946,10 @@ bool BaseCompiler::emitArraySet() {
   RegI32 index = popI32();
   RegRef rp = popRef();
 
+  // We run out of registers on x86 with this instruction, so stash `value` on
+  // the stack until it is needed later.
+  pushAny(value);
+
   // Check for null
   emitGcNullCheck(rp);
 
@@ -13959,8 +13960,6 @@ bool BaseCompiler::emitArraySet() {
   // after the array length header
   RegI32 length = emitGcArrayGetLength(rdata, true);
 
-  RegPtr scratch = needPtr();
-
   // Free the barrier reg after we've allocated all registers
   if (arrayType.elementType_.isReference()) {
     freePtr(RegPtr(PreBarrierReg));
@@ -13968,18 +13967,20 @@ bool BaseCompiler::emitArraySet() {
 
   // Bounds check the index
   emitGcArrayBoundsCheck(index, length);
+  freeI32(length);
+
+  // Pull the value out of the stack now that we need it.
+  popAny(value);
 
   // All registers are preserved. This isn't strictly necessary, as we'll just
   // be freeing them all after this is done. But this is needed for repeated
   // assignments used in array.new/new_default.
-  if (!emitGcArraySet(rp, rdata, index, length, arrayType, value, scratch)) {
+  if (!emitGcArraySet(rp, rdata, index, arrayType, value)) {
     return false;
   }
 
-  freePtr(scratch);
   freePtr(rdata);
   freeRef(rp);
-  freeI32(length);
   freeI32(index);
   freeAny(value);
 
