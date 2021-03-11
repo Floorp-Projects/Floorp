@@ -4,7 +4,7 @@ const cacheName = "v1";
 self.addEventListener("install", event => {
   console.log("[SW]:", "Install event");
 
-  event.waitUntil(cacheAssets);
+  event.waitUntil(cacheAssets());
 });
 
 async function cacheAssets() {
