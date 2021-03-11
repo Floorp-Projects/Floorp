@@ -7,7 +7,7 @@ license = "MPL-2.0"
 [dependencies]
 bits_client = { path = "./bits_client" }
 comedy = "0.2.0"
-crossbeam-utils = "0.6.3"
+crossbeam-utils = "0.8"
 libc = "0.2"
 log = "0.4"
 moz_task = { path = "../../../xpcom/rust/moz_task" }
