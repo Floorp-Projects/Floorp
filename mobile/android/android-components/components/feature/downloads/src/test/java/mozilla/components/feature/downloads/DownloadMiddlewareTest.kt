@@ -481,6 +481,8 @@ class DownloadMiddlewareTest {
 
     @Test
     fun `WHEN an action for canceling a download response is received THEN a download response must be canceled`() = runBlockingTest {
+        val response = mock<Response>()
+        val download = DownloadState(id = "downloadID", url = "example.com/5MB.zip", response = response)
         val applicationContext: Context = mock()
         val downloadMiddleware = spy(DownloadMiddleware(
             applicationContext,
@@ -493,12 +495,17 @@ class DownloadMiddlewareTest {
             middleware = listOf(downloadMiddleware)
         )
 
-        store.dispatch(ContentAction.CancelDownloadAction("tabID", "downloadID")).joinBlocking()
+        val tab = createTab("https://www.mozilla.org")
+
+        store.dispatch(TabListAction.AddTabAction(tab, select = true)).joinBlocking()
+        store.dispatch(ContentAction.UpdateDownloadAction(tab.id, download = download)).joinBlocking()
+        store.dispatch(ContentAction.CancelDownloadAction(tab.id, download.id)).joinBlocking()
 
         dispatcher.advanceUntilIdle()
         store.waitUntilIdle()
 
         verify(downloadMiddleware, times(1)).closeDownloadResponse(any(), any())
+        verify(response).close()
     }
 
     @Test

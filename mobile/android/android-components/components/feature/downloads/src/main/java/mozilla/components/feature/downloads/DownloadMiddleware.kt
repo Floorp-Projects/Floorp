@@ -58,6 +58,7 @@ class DownloadMiddleware(
             is DownloadAction.RemoveAllDownloadsAction -> removeDownloads()
             is DownloadAction.UpdateDownloadAction -> updateDownload(action.download, context)
             is DownloadAction.RestoreDownloadsStateAction -> restoreDownloads(context.store)
+            is ContentAction.CancelDownloadAction -> closeDownloadResponse(context.store, action.sessionId)
             is DownloadAction.AddDownloadAction -> {
                 if (!action.download.private && !saveDownload(context.store, action.download)) {
                     // The download was already added before, so we are ignoring this request.
@@ -77,7 +78,6 @@ class DownloadMiddleware(
             is TabListAction.RemoveTabAction -> removePrivateNotifications(context.store, listOf(action.tabId))
             is DownloadAction.AddDownloadAction -> sendDownloadIntent(action.download)
             is DownloadAction.RestoreDownloadStateAction -> sendDownloadIntent(action.download)
-            is ContentAction.CancelDownloadAction -> closeDownloadResponse(context.store, action.sessionId)
         }
     }
 
