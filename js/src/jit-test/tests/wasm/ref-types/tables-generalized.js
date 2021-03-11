@@ -113,7 +113,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
        (table (export "t") 10 externref)
        (elem 0 (i32.const 0) funcref (ref.func $f1)))`)),
                    WebAssembly.CompileError,
-                   /segment's element type must be subtype of table's element type/);
+                   /type mismatch/);
 
 
 // Wasm: Element segments of externref can't target tables of funcref
@@ -123,7 +123,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(
        (table (export "t") 10 funcref)
        (elem 0 (i32.const 0) externref (ref.null extern)))`)),
                    WebAssembly.CompileError,
-                   /segment's element type must be subtype of table's element type/);
+                   /type mismatch/);
 
 // Wasm: table.init on table-of-externref is not allowed when the segment has
 // funcref.

@@ -961,6 +961,12 @@ class Decoder {
   }
 };
 
+// Shared subtyping function across validation.
+
+[[nodiscard]] bool CheckIsSubtypeOf(Decoder& d, const ModuleEnvironment& env,
+                                    size_t opcodeOffset, ValType actual,
+                                    ValType expected, TypeCache* cache);
+
 // The local entries are part of function bodies and thus serialized by both
 // wasm and asm.js and decoded as part of both validation and compilation.
 
