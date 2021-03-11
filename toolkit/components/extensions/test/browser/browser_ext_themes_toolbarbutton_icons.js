@@ -3,15 +3,6 @@
 // This test checks applied WebExtension themes that attempt to change
 // icon color properties
 
-add_task(async function setup_home_button() {
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.addWidgetToArea("home-button", "nav-bar");
-    registerCleanupFunction(() =>
-      CustomizableUI.removeWidgetFromArea("home-button")
-    );
-  }
-});
-
 add_task(async function test_icons_properties() {
   const ICONS_COLOR = "#001b47";
   const ICONS_ATTENTION_COLOR = "#44ba77";

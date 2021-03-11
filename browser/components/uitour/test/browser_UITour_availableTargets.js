@@ -17,7 +17,7 @@ function getExpectedTargets() {
     "backForward",
     "devtools",
     "help",
-    ...(CustomizableUI.protonToolbarEnabled ? [] : ["home"]),
+    "home",
     "library",
     "logins",
     "pageAction-bookmark",

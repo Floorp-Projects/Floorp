@@ -10,18 +10,6 @@ function focus_in_navbar() {
 }
 
 function test() {
-  if (CustomizableUI.protonToolbarEnabled) {
-    // Put the home button in the pre-proton placement to test focus states.
-    CustomizableUI.addWidgetToArea(
-      "home-button",
-      "nav-bar",
-      CustomizableUI.getPlacementOfWidget("stop-reload-button").position + 1
-    );
-    registerCleanupFunction(async function resetToolbar() {
-      await CustomizableUI.reset();
-    });
-  }
-
   waitForExplicitFinish();
 
   tab1 = BrowserTestUtils.addTab(gBrowser, "about:blank", {
