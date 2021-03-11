@@ -178,14 +178,14 @@ assertErrorMessage(() => wasmEvalText(`
  (type $x (func (param i32)))
  (func $f (param (ref null $x)) (unreachable)))
 `),
-WebAssembly.CompileError, /ref does not reference a struct type/);
+WebAssembly.CompileError, /does not reference a gc type/);
 
 assertErrorMessage(() => wasmEvalText(`
 (module
  (type (func (param i32)))
  (func $f (param (ref null 0)) (unreachable)))
 `),
-WebAssembly.CompileError, /does not reference a struct type/);
+WebAssembly.CompileError, /does not reference a gc type/);
 
 // No automatic downcast from eqref
 

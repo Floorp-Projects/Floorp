@@ -237,6 +237,11 @@ const SymbolicAddressSignature SASigGetLocalExceptionIndex = {
     2,
     {_PTR, _RoN, _END}};
 #endif
+const SymbolicAddressSignature SASigArrayNew = {SymbolicAddress::ArrayNew,
+                                                _RoN,
+                                                _FailOnNullPtr,
+                                                3,
+                                                {_PTR, _I32, _RoN, _END}};
 const SymbolicAddressSignature SASigRefTest = {
     SymbolicAddress::RefTest, _I32, _Infallible, 3, {_PTR, _RoN, _RoN, _END}};
 const SymbolicAddressSignature SASigRttSub = {
@@ -1192,6 +1197,11 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
                                      {ArgType_General, ArgType_General});
       MOZ_ASSERT(*abiType == ToABIType(SASigStructNew));
       return FuncCast(Instance::structNew, *abiType);
+    case SymbolicAddress::ArrayNew:
+      *abiType = MakeABIFunctionType(
+          ArgType_General, {ArgType_General, ArgType_Int32, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigArrayNew));
+      return FuncCast(Instance::arrayNew, *abiType);
     case SymbolicAddress::RefTest:
       *abiType = MakeABIFunctionType(
           ArgType_Int32, {ArgType_General, ArgType_General, ArgType_General});
@@ -1343,6 +1353,7 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::ThrowException:
     case SymbolicAddress::GetLocalExceptionIndex:
 #endif
+    case SymbolicAddress::ArrayNew:
     case SymbolicAddress::RefTest:
     case SymbolicAddress::RttSub:
       return true;

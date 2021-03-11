@@ -841,7 +841,8 @@ class Decoder {
                                        RefType type) {
     MOZ_ASSERT(type.isTypeIndex());
 
-    if (features.gcTypes && types[type.typeIndex()].isStructType()) {
+    if (features.gcTypes && (types[type.typeIndex()].isStructType() ||
+                             types[type.typeIndex()].isArrayType())) {
       return true;
     }
     return fail("type index references an invalid type");

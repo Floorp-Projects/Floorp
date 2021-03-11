@@ -181,6 +181,11 @@ enum class OpKind {
   StructNewDefaultWithRtt,
   StructGet,
   StructSet,
+  ArrayNewWithRtt,
+  ArrayNewDefaultWithRtt,
+  ArrayGet,
+  ArraySet,
+  ArrayLen,
   RttCanon,
   RttSub,
   RefTest,
@@ -332,6 +337,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
       uint32_t byteSize, LinearMemoryAddress<Value>* addr);
   [[nodiscard]] bool readBlockType(BlockType* type);
   [[nodiscard]] bool readStructTypeIndex(uint32_t* typeIndex);
+  [[nodiscard]] bool readArrayTypeIndex(uint32_t* typeIndex);
   [[nodiscard]] bool readFieldIndex(uint32_t* fieldIndex,
                                     const StructType& structType);
 
@@ -556,6 +562,15 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                    Value* ptr);
   [[nodiscard]] bool readStructSet(uint32_t* typeIndex, uint32_t* fieldIndex,
                                    Value* ptr, Value* val);
+  [[nodiscard]] bool readArrayNewWithRtt(uint32_t* typeIndex, Value* rtt,
+                                         Value* length, Value* argValue);
+  [[nodiscard]] bool readArrayNewDefaultWithRtt(uint32_t* typeIndex, Value* rtt,
+                                                Value* length);
+  [[nodiscard]] bool readArrayGet(uint32_t* typeIndex, Value* index,
+                                  Value* ptr);
+  [[nodiscard]] bool readArraySet(uint32_t* typeIndex, Value* val, Value* index,
+                                  Value* ptr);
+  [[nodiscard]] bool readArrayLen(uint32_t* typeIndex, Value* ptr);
   [[nodiscard]] bool readRttCanon(ValType* rttType);
   [[nodiscard]] bool readRttSub(Value* parentRtt);
   [[nodiscard]] bool readRefTest(Value* rtt, uint32_t* rttDepth, Value* ref);
@@ -2619,6 +2634,23 @@ inline bool OpIter<Policy>::readStructTypeIndex(uint32_t* typeIndex) {
 }
 
 template <typename Policy>
+inline bool OpIter<Policy>::readArrayTypeIndex(uint32_t* typeIndex) {
+  if (!readVarU32(typeIndex)) {
+    return fail("unable to read type index");
+  }
+
+  if (*typeIndex >= env_.types.length()) {
+    return fail("type index out of range");
+  }
+
+  if (!env_.types.isArrayType(*typeIndex)) {
+    return fail("not an array type");
+  }
+
+  return true;
+}
+
+template <typename Policy>
 inline bool OpIter<Policy>::readFieldIndex(uint32_t* fieldIndex,
                                            const StructType& structType) {
   if (!readVarU32(fieldIndex)) {
@@ -2744,6 +2776,129 @@ inline bool OpIter<Policy>::readStructSet(uint32_t* typeIndex,
 }
 
 template <typename Policy>
+inline bool OpIter<Policy>::readArrayNewWithRtt(uint32_t* typeIndex, Value* rtt,
+                                                Value* length,
+                                                Value* argValue) {
+  MOZ_ASSERT(Classify(op_) == OpKind::ArrayNewWithRtt);
+
+  if (!readArrayTypeIndex(typeIndex)) {
+    return false;
+  }
+
+  const ArrayType& arr = env_.types.arrayType(*typeIndex);
+  const ValType rttType = ValType::fromRtt(*typeIndex, 0);
+
+  if (!popWithType(rttType, rtt)) {
+    return false;
+  }
+
+  if (!popWithType(ValType::I32, length)) {
+    return false;
+  }
+
+  if (!popWithType(arr.elementType_.widenToValType(), argValue)) {
+    return false;
+  }
+
+  return push(RefType::fromTypeIndex(*typeIndex, false));
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readArrayNewDefaultWithRtt(uint32_t* typeIndex,
+                                                       Value* rtt,
+                                                       Value* length) {
+  MOZ_ASSERT(Classify(op_) == OpKind::ArrayNewDefaultWithRtt);
+
+  if (!readArrayTypeIndex(typeIndex)) {
+    return false;
+  }
+
+  const ArrayType& arr = env_.types.arrayType(*typeIndex);
+  const ValType rttType = ValType::fromRtt(*typeIndex, 0);
+
+  if (!popWithType(rttType, rtt)) {
+    return false;
+  }
+
+  if (!popWithType(ValType::I32, length)) {
+    return false;
+  }
+
+  if (!arr.elementType_.isDefaultable()) {
+    return fail("array must be defaultable");
+  }
+
+  return push(RefType::fromTypeIndex(*typeIndex, false));
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readArrayGet(uint32_t* typeIndex, Value* index,
+                                         Value* ptr) {
+  MOZ_ASSERT(Classify(op_) == OpKind::ArrayGet);
+
+  if (!readArrayTypeIndex(typeIndex)) {
+    return false;
+  }
+
+  const ArrayType& arrayType = env_.types.arrayType(*typeIndex);
+
+  if (!popWithType(ValType::I32, index)) {
+    return false;
+  }
+
+  if (!popWithType(RefType::fromTypeIndex(*typeIndex, true), ptr)) {
+    return false;
+  }
+
+  return push(arrayType.elementType_.widenToValType());
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readArraySet(uint32_t* typeIndex, Value* val,
+                                         Value* index, Value* ptr) {
+  MOZ_ASSERT(Classify(op_) == OpKind::ArraySet);
+
+  if (!readArrayTypeIndex(typeIndex)) {
+    return false;
+  }
+
+  const ArrayType& arrayType = env_.types.arrayType(*typeIndex);
+
+  if (!arrayType.isMutable_) {
+    return fail("array is not mutable");
+  }
+
+  if (!popWithType(arrayType.elementType_.widenToValType(), val)) {
+    return false;
+  }
+
+  if (!popWithType(ValType::I32, index)) {
+    return false;
+  }
+
+  if (!popWithType(RefType::fromTypeIndex(*typeIndex, true), ptr)) {
+    return false;
+  }
+
+  return true;
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readArrayLen(uint32_t* typeIndex, Value* ptr) {
+  MOZ_ASSERT(Classify(op_) == OpKind::ArrayLen);
+
+  if (!readArrayTypeIndex(typeIndex)) {
+    return false;
+  }
+
+  if (!popWithType(RefType::fromTypeIndex(*typeIndex, true), ptr)) {
+    return false;
+  }
+
+  return push(ValType::I32);
+}
+
+template <typename Policy>
 inline bool OpIter<Policy>::readRttCanon(ValType* rttType) {
   MOZ_ASSERT(Classify(op_) == OpKind::RttCanon);
 
@@ -2752,7 +2907,7 @@ inline bool OpIter<Policy>::readRttCanon(ValType* rttType) {
     return false;
   }
 
-  if (!env_.types.isStructType(heapType)) {
+  if (!env_.types.isStructType(heapType) && !env_.types.isArrayType(heapType)) {
     return fail("invalid type for rtt");
   }
   *rttType = ValType::fromRtt(heapType.typeIndex(), 0);
@@ -2775,7 +2930,8 @@ inline bool OpIter<Policy>::readRttSub(Value* parentRtt) {
   if (!readHeapType(true, &parentHeapType)) {
     return false;
   }
-  if (!env_.types.isStructType(parentHeapType)) {
+  if (!env_.types.isStructType(parentHeapType) &&
+      !env_.types.isArrayType(parentHeapType)) {
     return fail("invalid type for rtt");
   }
 

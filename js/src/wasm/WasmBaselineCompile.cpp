@@ -3408,6 +3408,32 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] RegI64 needI64Pair() { return ra.needI64Pair(); }
 #endif
 
+  void freeAny(AnyReg r) {
+    switch (r.tag) {
+      case AnyReg::I32:
+        freeI32(r.i32());
+        break;
+      case AnyReg::I64:
+        freeI64(r.i64());
+        break;
+      case AnyReg::REF:
+        freeRef(r.ref());
+        break;
+      case AnyReg::F32:
+        freeF32(r.f32());
+        break;
+      case AnyReg::F64:
+        freeF64(r.f64());
+        break;
+#ifdef ENABLE_WASM_SIMD
+      case AnyReg::V128:
+        freeV128(r.v128());
+        break;
+#endif
+      default:
+        MOZ_CRASH();
+    }
+  }
   void freeI32(RegI32 r) { ra.freeI32(r); }
   void freeI64(RegI64 r) { ra.freeI64(r); }
   void freeRef(RegRef r) { ra.freeRef(r); }
@@ -4270,6 +4296,37 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   // Push the register r onto the stack.
 
+  void pushAny(AnyReg r) {
+    switch (r.tag) {
+      case AnyReg::I32: {
+        pushI32(r.i32());
+        break;
+      }
+      case AnyReg::I64: {
+        pushI64(r.i64());
+        break;
+      }
+      case AnyReg::F32: {
+        pushF32(r.f32());
+        break;
+      }
+      case AnyReg::F64: {
+        pushF64(r.f64());
+        break;
+      }
+#ifdef ENABLE_WASM_SIMD
+      case AnyReg::V128: {
+        pushV128(r.v128());
+        break;
+      }
+#endif
+      case AnyReg::REF: {
+        pushRef(r.ref());
+        break;
+      }
+    }
+  }
+
   void pushI32(RegI32 r) {
     MOZ_ASSERT(!isAvailableI32(r));
     push(Stk(r));
@@ -4356,6 +4413,141 @@ class BaseCompiler final : public BaseCompilerInterface {
     stk_.infallibleEmplaceBack(Stk(Stk::LocalV128, slot));
   }
 #endif
+
+  AnyReg dupAny(AnyReg r) {
+    switch (r.tag) {
+      case AnyReg::I32: {
+        RegI32 x = needI32();
+        moveI32(r.i32(), x);
+        return AnyReg(x);
+      }
+      case AnyReg::I64: {
+        RegI64 x = needI64();
+        moveI64(r.i64(), x);
+        return AnyReg(x);
+      }
+      case AnyReg::F32: {
+        RegF32 x = needF32();
+        moveF32(r.f32(), x);
+        return AnyReg(x);
+      }
+      case AnyReg::F64: {
+        RegF64 x = needF64();
+        moveF64(r.f64(), x);
+        return AnyReg(x);
+      }
+#ifdef ENABLE_WASM_SIMD
+      case AnyReg::V128: {
+        RegV128 x = needV128();
+        moveV128(r.v128(), x);
+        return AnyReg(x);
+      }
+#endif
+      case AnyReg::REF: {
+        RegRef x = needRef();
+        moveRef(r.ref(), x);
+        return AnyReg(x);
+      }
+      default:
+        MOZ_CRASH();
+    }
+  }
+
+  AnyReg popAny(AnyReg specific) {
+    switch (stk_.back().kind()) {
+      case Stk::MemI32:
+      case Stk::LocalI32:
+      case Stk::RegisterI32:
+      case Stk::ConstI32:
+        return AnyReg(popI32(specific.i32()));
+
+      case Stk::MemI64:
+      case Stk::LocalI64:
+      case Stk::RegisterI64:
+      case Stk::ConstI64:
+        return AnyReg(popI64(specific.i64()));
+
+      case Stk::MemF32:
+      case Stk::LocalF32:
+      case Stk::RegisterF32:
+      case Stk::ConstF32:
+        return AnyReg(popF32(specific.f32()));
+
+      case Stk::MemF64:
+      case Stk::LocalF64:
+      case Stk::RegisterF64:
+      case Stk::ConstF64:
+        return AnyReg(popF64(specific.f64()));
+
+#ifdef ENABLE_WASM_SIMD
+      case Stk::MemV128:
+      case Stk::LocalV128:
+      case Stk::RegisterV128:
+      case Stk::ConstV128:
+        return AnyReg(popV128(specific.v128()));
+#endif
+
+      case Stk::MemRef:
+      case Stk::LocalRef:
+      case Stk::RegisterRef:
+      case Stk::ConstRef:
+        return AnyReg(popRef(specific.ref()));
+
+      case Stk::Unknown:
+        MOZ_CRASH();
+
+      default:
+        MOZ_CRASH();
+    }
+  }
+
+  AnyReg popAny() {
+    switch (stk_.back().kind()) {
+      case Stk::MemI32:
+      case Stk::LocalI32:
+      case Stk::RegisterI32:
+      case Stk::ConstI32:
+        return AnyReg(popI32());
+
+      case Stk::MemI64:
+      case Stk::LocalI64:
+      case Stk::RegisterI64:
+      case Stk::ConstI64:
+        return AnyReg(popI64());
+
+      case Stk::MemF32:
+      case Stk::LocalF32:
+      case Stk::RegisterF32:
+      case Stk::ConstF32:
+        return AnyReg(popF32());
+
+      case Stk::MemF64:
+      case Stk::LocalF64:
+      case Stk::RegisterF64:
+      case Stk::ConstF64:
+        return AnyReg(popF64());
+
+#ifdef ENABLE_WASM_SIMD
+      case Stk::MemV128:
+      case Stk::LocalV128:
+      case Stk::RegisterV128:
+      case Stk::ConstV128:
+        return AnyReg(popV128());
+#endif
+
+      case Stk::MemRef:
+      case Stk::LocalRef:
+      case Stk::RegisterRef:
+      case Stk::ConstRef:
+        return AnyReg(popRef());
+
+      case Stk::Unknown:
+        MOZ_CRASH();
+
+      default:
+        MOZ_CRASH();
+    }
+  }
 
   // Call only from other popI32() variants.
   // v must be the stack top.  May pop the CPU stack.
@@ -8004,9 +8196,18 @@ class BaseCompiler final : public BaseCompilerInterface {
     EmitWasmPostBarrierGuard(masm, object, otherScratch, value, &skipBarrier);
     freeRef(otherScratch);
 
+    // Consumes valueAddr
     if (!emitPostBarrierCall(valueAddr)) {
       return false;
     }
+
+    // Consume all other operands as they may have been clobbered by the post
+    // barrier call
+    if (object) {
+      freeRef(*object);
+    }
+    freeRef(value);
+
     masm.bind(&skipBarrier);
     return true;
   }
@@ -8408,11 +8609,33 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitStructNewDefaultWithRtt();
   [[nodiscard]] bool emitStructGet();
   [[nodiscard]] bool emitStructSet();
+  [[nodiscard]] bool emitArrayNewWithRtt();
+  [[nodiscard]] bool emitArrayNewDefaultWithRtt();
+  [[nodiscard]] bool emitArrayGet();
+  [[nodiscard]] bool emitArraySet();
+  [[nodiscard]] bool emitArrayLen();
   [[nodiscard]] bool emitRttCanon();
   [[nodiscard]] bool emitRttSub();
   [[nodiscard]] bool emitRefTest();
   [[nodiscard]] bool emitRefCast();
   [[nodiscard]] bool emitBrOnCast();
+
+  void emitGcNullCheck(RegRef rp);
+  RegRef emitGcArrayGetOwner(RegRef rp);
+  RegPtr emitGcArrayGetData(RegRef rp);
+  RegI32 emitGcArrayGetLength(RegPtr rdata, bool adjustDataPointer);
+  void emitGcArrayBoundsCheck(RegI32 index, RegI32 length);
+  template <typename T>
+  void emitGcGet(FieldType type, const T& src);
+  template <typename T>
+  void emitGcSetScalar(const T& dst, FieldType type, AnyReg value);
+  [[nodiscard]] bool emitGcStructSet(RegRef object, RegRef owner, RegPtr data,
+                                     const StructField& field, AnyReg value);
+  [[nodiscard]] bool emitGcArraySet(RegRef object, RegRef owner, RegPtr data,
+                                    RegI32 index, RegI32 length,
+                                    const ArrayType& array, AnyReg value,
+                                    RegPtr scratch);
+
 #ifdef ENABLE_WASM_SIMD
   template <typename SourceType, typename DestType>
   void emitVectorUnop(void (*op)(MacroAssembler& masm, SourceType rs,
@@ -11464,11 +11687,10 @@ bool BaseCompiler::emitSetGlobal() {
                                      valueAddr);
       }
       RegRef rv = popRef();
-      // emitBarrieredStore consumes valueAddr
+      // emitBarrieredStore consumes valueAddr and rv
       if (!emitBarrieredStore(Nothing(), valueAddr, rv)) {
         return false;
       }
-      freeRef(rv);
       break;
     }
 #ifdef ENABLE_WASM_SIMD
@@ -13109,6 +13331,237 @@ bool BaseCompiler::emitMemOrTableInit(bool isMem) {
 }
 #endif
 
+void BaseCompiler::emitGcNullCheck(RegRef rp) {
+  Label ok;
+  masm.branchTestPtr(Assembler::NonZero, rp, rp, &ok);
+  trap(Trap::NullPointerDereference);
+  masm.bind(&ok);
+}
+
+RegRef BaseCompiler::emitGcArrayGetOwner(RegRef rp) {
+  RegRef rowner = needRef();
+  // An array is always an outline typed object
+  masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfOwner()), rowner);
+  return rowner;
+}
+
+RegPtr BaseCompiler::emitGcArrayGetData(RegRef rp) {
+  RegPtr rdata = needPtr();
+  // An array is always an outline typed object
+  masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfData()), rdata);
+  return rdata;
+}
+
+RegI32 BaseCompiler::emitGcArrayGetLength(RegPtr rdata,
+                                          bool adjustDataPointer) {
+  STATIC_ASSERT_ARRAYLENGTH_IS_U32;
+  RegI32 length = needI32();
+  masm.load32(Address(rdata, OutlineTypedObject::offsetOfArrayLength()),
+              length);
+  if (adjustDataPointer) {
+    masm.addPtr(ImmWord(OutlineTypedObject::offsetOfArrayLength() +
+                        sizeof(OutlineTypedObject::ArrayLength)),
+                rdata);
+  }
+  return length;
+}
+
+void BaseCompiler::emitGcArrayBoundsCheck(RegI32 index, RegI32 length) {
+  Label inBounds;
+  masm.branch32(Assembler::Below, index, length, &inBounds);
+  masm.wasmTrap(Trap::OutOfBounds, bytecodeOffset());
+  masm.bind(&inBounds);
+}
+
+template <typename T>
+void BaseCompiler::emitGcGet(FieldType type, const T& src) {
+  switch (type.kind()) {
+    case FieldType::I8: {
+      RegI32 r = needI32();
+      masm.load8ZeroExtend(src, r);
+      pushI32(r);
+      break;
+    }
+    case FieldType::I16: {
+      RegI32 r = needI32();
+      masm.load16ZeroExtend(src, r);
+      pushI32(r);
+      break;
+    }
+    case FieldType::I32: {
+      RegI32 r = needI32();
+      masm.load32(src, r);
+      pushI32(r);
+      break;
+    }
+    case FieldType::I64: {
+      RegI64 r = needI64();
+      masm.load64(src, r);
+      pushI64(r);
+      break;
+    }
+    case FieldType::F32: {
+      RegF32 r = needF32();
+      masm.loadFloat32(src, r);
+      pushF32(r);
+      break;
+    }
+    case FieldType::F64: {
+      RegF64 r = needF64();
+      masm.loadDouble(src, r);
+      pushF64(r);
+      break;
+    }
+#ifdef ENABLE_WASM_SIMD
+    case FieldType::V128: {
+      RegV128 r = needV128();
+      masm.loadUnalignedSimd128(src, r);
+      pushV128(r);
+      break;
+    }
+#endif
+    case FieldType::Ref: {
+      RegRef r = needRef();
+      masm.loadPtr(src, r);
+      pushRef(r);
+      break;
+    }
+    default: {
+      MOZ_CRASH("Unexpected field type");
+    }
+  }
+}
+
+template <typename T>
+void BaseCompiler::emitGcSetScalar(const T& dst, FieldType type, AnyReg value) {
+  switch (type.kind()) {
+    case FieldType::I8: {
+      masm.store8(value.i32(), dst);
+      break;
+    }
+    case FieldType::I16: {
+      masm.store16(value.i32(), dst);
+      break;
+    }
+    case FieldType::I32: {
+      masm.store32(value.i32(), dst);
+      break;
+    }
+    case FieldType::I64: {
+      masm.store64(value.i64(), dst);
+      break;
+    }
+    case FieldType::F32: {
+      masm.storeFloat32(value.f32(), dst);
+      break;
+    }
+    case FieldType::F64: {
+      masm.storeDouble(value.f64(), dst);
+      break;
+    }
+#ifdef ENABLE_WASM_SIMD
+    case FieldType::V128: {
+      masm.storeUnalignedSimd128(value.v128(), dst);
+      break;
+    }
+#endif
+    default: {
+      MOZ_CRASH("Unexpected field type");
+    }
+  }
+}
+
+bool BaseCompiler::emitGcStructSet(RegRef object, RegRef owner, RegPtr data,
+                                   const StructField& field, AnyReg value) {
+  // Easy path if the field is a scalar
+  if (!field.type.isReference()) {
+    emitGcSetScalar(Address(data, field.offset), field.type, value);
+    freeAny(value);
+    return true;
+  }
+
+  // Create temporaries for the valueAddr and owner that are not in the
+  // prebarrier register, and can be consumed by the barrier operation
+  RegPtr valueAddr = RegPtr(PreBarrierReg);
+  needPtr(valueAddr);
+  RegRef barrierOwner = needRef();
+
+  masm.computeEffectiveAddress(Address(data, field.offset), valueAddr);
+  masm.movePtr(owner, barrierOwner);
+
+  // Save state for after barriered write
+  pushRef(object);
+  pushRef(owner);
+  pushPtr(data);
+
+  // emitBarrieredStore consumes all of its arguments
+  if (!emitBarrieredStore(Some(barrierOwner), valueAddr, value.ref())) {
+    return false;
+  }
+
+  // Restore state
+  popPtr(data);
+  popRef(owner);
+  popRef(object);
+
+  return true;
+}
+
+bool BaseCompiler::emitGcArraySet(RegRef object, RegRef owner, RegPtr data,
+                                  RegI32 index, RegI32 length,
+                                  const ArrayType& arrayType, AnyReg value,
+                                  RegPtr scratch) {
+  // Try to use an optimal addressing mode
+  uint32_t shift = arrayType.elementType_.indexingShift();
+  Scale scale;
+  masm.movePtr(index, scratch);
+  if (IsShiftInScaleRange(shift)) {
+    scale = ShiftToScale(shift);
+  } else {
+    masm.lshiftPtr(Imm32(shift), scratch);
+    scale = TimesOne;
+  }
+
+  // Easy path if the field is a scalar
+  if (!arrayType.elementType_.isReference()) {
+    emitGcSetScalar(BaseIndex(data, scratch, scale, 0), arrayType.elementType_,
+                    value);
+    return true;
+  }
+
+  // Create temporaries for the valueAddr and owner that are not in the
+  // prebarrier register, and can be consumed by the barrier operation
+  RegPtr valueAddr = RegPtr(PreBarrierReg);
+  needPtr(valueAddr);
+  RegRef barrierOwner = needRef();
+
+  masm.computeEffectiveAddress(BaseIndex(data, scratch, scale, 0), valueAddr);
+  masm.movePtr(owner, barrierOwner);
+
+  // Save state for after barriered write
+  pushAny(dupAny(value));
+  pushRef(object);
+  pushRef(owner);
+  pushPtr(data);
+  pushI32(index);
+  pushI32(length);
+
+  // emitBarrieredStore consumes all of its arguments
+  if (!emitBarrieredStore(Some(barrierOwner), valueAddr, value.ref())) {
+    return false;
+  }
+
+  // Restore state
+  popI32(length);
+  popI32(index);
+  popPtr(data);
+  popRef(owner);
+  popRef(object);
+  popAny(value);
+
+  return true;
+}
+
 bool BaseCompiler::emitStructNewWithRtt() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
@@ -13128,8 +13581,7 @@ bool BaseCompiler::emitStructNewWithRtt() {
   // Allocate zeroed storage.  The parameter to StructNew is a rtt value that is
   // guaranteed to be at the top of the stack by validation.
   //
-  // Returns null on OOM.
-
+  // Traps on OOM.
   if (!emitInstanceCall(lineOrBytecode, SASigStructNew)) {
     return false;
   }
@@ -13140,116 +13592,55 @@ bool BaseCompiler::emitStructNewWithRtt() {
   // but to do better we need a bit more machinery to load elements off the
   // stack into registers.
 
-  RegRef rp = popRef();
-  RegRef rdata = rp;
+  // Reserve this register early if we will need it so that it is not taken by
+  // any register used in this function.
+  needPtr(RegPtr(PreBarrierReg));
 
-  if (!structType.isInline_) {
-    rdata = needRef();
+  RegRef rp = popRef();
+  RegRef rowner = needRef();
+  RegPtr rdata = needPtr();
+
+  // Free the barrier reg after we've allocated all registers
+  freePtr(RegPtr(PreBarrierReg));
+
+  // The struct allocated above is guaranteed to have the exact shape of
+  // structType, we don't need to branch on whether it's inline or not.
+  if (InlineTypedObject::canAccommodateSize(structType.size_)) {
+    moveRef(rp, rowner);
+    masm.computeEffectiveAddress(
+        Address(rp, InlineTypedObject::offsetOfDataStart()), rdata);
+  } else {
     masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfData()), rdata);
+    masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfOwner()), rowner);
   }
 
   // Optimization opportunity: when the value being stored is a known
   // zero/null we need store nothing.  This case may be somewhat common
   // because struct.new forces a value to be specified for every field.
 
-  uint32_t fieldNo = structType.fields_.length();
-  while (fieldNo-- > 0) {
-    uint32_t offs = structType.objectBaseFieldOffset(fieldNo);
-    switch (structType.fields_[fieldNo].type.kind()) {
-      case FieldType::I8: {
-        RegI32 r = popI32();
-        masm.store8(r, Address(rdata, offs));
-        freeI32(r);
-        break;
-      }
-      case FieldType::I16: {
-        RegI32 r = popI32();
-        masm.store16(r, Address(rdata, offs));
-        freeI32(r);
-        break;
-      }
-      case FieldType::I32: {
-        RegI32 r = popI32();
-        masm.store32(r, Address(rdata, offs));
-        freeI32(r);
-        break;
-      }
-      case FieldType::I64: {
-        RegI64 r = popI64();
-        masm.store64(r, Address(rdata, offs));
-        freeI64(r);
-        break;
-      }
-      case FieldType::F32: {
-        RegF32 r = popF32();
-        masm.storeFloat32(r, Address(rdata, offs));
-        freeF32(r);
-        break;
-      }
-      case FieldType::F64: {
-        RegF64 r = popF64();
-        masm.storeDouble(r, Address(rdata, offs));
-        freeF64(r);
-        break;
-      }
-      case FieldType::Ref: {
-        RegRef value = popRef();
-        masm.storePtr(value, Address(rdata, offs));
+  uint32_t fieldIndex = structType.fields_.length();
+  while (fieldIndex-- > 0) {
+    const StructField& structField = structType.fields_[fieldIndex];
+    // Reserve the barrier reg if we might need it for this store
+    if (structField.type.isReference()) {
+      needPtr(RegPtr(PreBarrierReg));
+    }
 
-        // A write barrier is needed here for the extremely unlikely case
-        // that the object is allocated in the tenured area - a result of
-        // a GC artifact.
+    AnyReg value = popAny();
 
-        Label skipBarrier;
+    // Free the barrier reg now that we've loaded the value
+    if (structField.type.isReference()) {
+      freePtr(RegPtr(PreBarrierReg));
+    }
 
-        sync();
-
-        RegRef rowner = rp;
-        if (!structType.isInline_) {
-          rowner = needRef();
-          masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfOwner()),
-                       rowner);
-        }
-
-        RegRef otherScratch = needRef();
-        EmitWasmPostBarrierGuard(masm, Some(rowner), otherScratch, value,
-                                 &skipBarrier);
-        freeRef(otherScratch);
-
-        if (!structType.isInline_) {
-          freeRef(rowner);
-        }
-
-        freeRef(value);
-
-        // TODO/AnyRef-boxing: With boxed immediates and strings, the write
-        // barrier is going to have to be more complicated.
-        ASSERT_ANYREF_IS_JSOBJECT;
-
-        pushRef(rp);  // Save rp across the call
-        RegPtr valueAddr = needPtr();
-        masm.computeEffectiveAddress(Address(rdata, offs), valueAddr);
-        if (!emitPostBarrierCall(valueAddr)) {  // Consumes valueAddr
-          return false;
-        }
-        popRef(rp);  // Restore rp
-        if (!structType.isInline_) {
-          masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfData()), rdata);
-        }
-
-        masm.bind(&skipBarrier);
-        break;
-      }
-      default: {
-        MOZ_CRASH("Unexpected field type");
-      }
+    // Consumes value. rp, rowner, and rdata are preserved
+    if (!emitGcStructSet(rp, rowner, rdata, structField, value)) {
+      return false;
     }
   }
 
-  if (!structType.isInline_) {
-    freeRef(rdata);
-  }
-
+  freePtr(rdata);
+  freeRef(rowner);
   pushRef(rp);
 
   return true;
@@ -13271,8 +13662,7 @@ bool BaseCompiler::emitStructNewDefaultWithRtt() {
   // Allocate zeroed storage.  The parameter to StructNew is a rtt value that is
   // guaranteed to be at the top of the stack by validation.
   //
-  // Returns null on OOM.
-
+  // Traps on OOM.
   return emitInstanceCall(lineOrBytecode, SASigStructNew);
 }
 
@@ -13292,73 +13682,37 @@ bool BaseCompiler::emitStructGet() {
 
   RegRef rp = popRef();
 
-  Label ok;
-  masm.branchTestPtr(Assembler::NonZero, rp, rp, &ok);
-  trap(Trap::NullPointerDereference);
-  masm.bind(&ok);
+  // Check for null
+  emitGcNullCheck(rp);
 
+  // Acquire the data pointer from the object
+  RegPtr rdata = needPtr();
   {
     RegPtr scratch = needPtr();
     RegPtr clasp = needPtr();
     masm.movePtr(SymbolicAddress::InlineTypedObjectClass, clasp);
+    Label join;
     Label isInline;
     masm.branchTestObjClass(Assembler::Equal, rp, clasp, scratch, rp,
                             &isInline);
     freePtr(clasp);
     freePtr(scratch);
-    masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfData()), rp);
+
+    masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfData()), rdata);
+    masm.jump(&join);
+
     masm.bind(&isInline);
+    masm.computeEffectiveAddress(
+        Address(rp, InlineTypedObject::offsetOfDataStart()), rdata);
+    masm.bind(&join);
   }
 
-  uint32_t offs = structType.objectBaseFieldOffset(fieldIndex);
-  switch (structType.fields_[fieldIndex].type.kind()) {
-    case FieldType::I8: {
-      RegI32 r = needI32();
-      masm.load8ZeroExtend(Address(rp, offs), r);
-      pushI32(r);
-      break;
-    }
-    case FieldType::I16: {
-      RegI32 r = needI32();
-      masm.load16ZeroExtend(Address(rp, offs), r);
-      pushI32(r);
-      break;
-    }
-    case FieldType::I32: {
-      RegI32 r = needI32();
-      masm.load32(Address(rp, offs), r);
-      pushI32(r);
-      break;
-    }
-    case FieldType::I64: {
-      RegI64 r = needI64();
-      masm.load64(Address(rp, offs), r);
-      pushI64(r);
-      break;
-    }
-    case FieldType::F32: {
-      RegF32 r = needF32();
-      masm.loadFloat32(Address(rp, offs), r);
-      pushF32(r);
-      break;
-    }
-    case FieldType::F64: {
-      RegF64 r = needF64();
-      masm.loadDouble(Address(rp, offs), r);
-      pushF64(r);
-      break;
-    }
-    case FieldType::Ref: {
-      RegRef r = needRef();
-      masm.loadPtr(Address(rp, offs), r);
-      pushRef(r);
-      break;
-    }
-    default: {
-      MOZ_CRASH("Unexpected field type");
-    }
-  }
+  // Load the value
+  FieldType type = structType.fields_[fieldIndex].type;
+  uint32_t offset = structType.fields_[fieldIndex].offset;
+  emitGcGet(type, Address(rdata, offset));
 
+  freePtr(rdata);
   freeRef(rp);
 
   return true;
@@ -13377,119 +13731,295 @@ bool BaseCompiler::emitStructSet() {
   }
 
   const StructType& structType = moduleEnv_.types[typeIndex].structType();
-
-  RegI32 ri;
-  RegI64 rl;
-  RegF32 rf;
-  RegF64 rd;
-  RegRef rr;
+  const StructField& structField = structType.fields_[fieldIndex];
 
   // Reserve this register early if we will need it so that it is not taken by
-  // rr or rp.
-  RegPtr valueAddr;
-  if (structType.fields_[fieldIndex].type.isReference()) {
-    valueAddr = RegPtr(PreBarrierReg);
-    needPtr(valueAddr);
+  // any register used in this function.
+  if (structField.type.isReference()) {
+    needPtr(RegPtr(PreBarrierReg));
   }
 
-  switch (structType.fields_[fieldIndex].type.kind()) {
-    case FieldType::I8:
-    case FieldType::I16:
-      ri = popI32();
-      break;
-    case FieldType::I32:
-      ri = popI32();
-      break;
-    case FieldType::I64:
-      rl = popI64();
-      break;
-    case FieldType::F32:
-      rf = popF32();
-      break;
-    case FieldType::F64:
-      rd = popF64();
-      break;
-    case FieldType::Ref:
-      rr = popRef();
-      break;
-    default:
-      MOZ_CRASH("Unexpected field type");
-  }
-
+  AnyReg value = popAny();
   RegRef rp = popRef();
+  RegRef rowner = needRef();
+  RegPtr rdata = needPtr();
 
-  Label ok;
-  masm.branchTestPtr(Assembler::NonZero, rp, rp, &ok);
-  trap(Trap::NullPointerDereference);
-  masm.bind(&ok);
+  // Free the barrier reg after we've allocated all registers
+  if (structField.type.isReference()) {
+    freePtr(RegPtr(PreBarrierReg));
+  }
 
+  // Check for null
+  emitGcNullCheck(rp);
+
+  // Acquire the data and owner pointer from the object. The owner pointer is
+  // required for the write barrier logic.
   {
     RegPtr scratch = needPtr();
     RegPtr clasp = needPtr();
     masm.movePtr(SymbolicAddress::InlineTypedObjectClass, clasp);
+    Label join;
     Label isInline;
     masm.branchTestObjClass(Assembler::Equal, rp, clasp, scratch, rp,
                             &isInline);
     freePtr(clasp);
     freePtr(scratch);
-    masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfData()), rp);
+    masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfData()), rdata);
+    masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfOwner()), rowner);
+    masm.jump(&join);
+
     masm.bind(&isInline);
+    masm.computeEffectiveAddress(
+        Address(rp, InlineTypedObject::offsetOfDataStart()), rdata);
+    masm.movePtr(rp, rowner);
+    masm.bind(&join);
   }
 
-  uint32_t offs = structType.objectBaseFieldOffset(fieldIndex);
-  switch (structType.fields_[fieldIndex].type.kind()) {
-    case FieldType::I8: {
-      masm.store8(ri, Address(rp, offs));
-      freeI32(ri);
-      break;
-    }
-    case FieldType::I16: {
-      masm.store16(ri, Address(rp, offs));
-      freeI32(ri);
-      break;
-    }
-    case FieldType::I32: {
-      masm.store32(ri, Address(rp, offs));
-      freeI32(ri);
-      break;
-    }
-    case FieldType::I64: {
-      masm.store64(rl, Address(rp, offs));
-      freeI64(rl);
-      break;
-    }
-    case FieldType::F32: {
-      masm.storeFloat32(rf, Address(rp, offs));
-      freeF32(rf);
-      break;
-    }
-    case FieldType::F64: {
-      masm.storeDouble(rd, Address(rp, offs));
-      freeF64(rd);
-      break;
-    }
-    case FieldType::Ref: {
-      masm.computeEffectiveAddress(Address(rp, offs), valueAddr);
-
-      // Bug 1617908.  Ensure that if a TypedObject is not inline, then its
-      // underlying ArrayBuffer also is not inline, or the barrier logic fails.
-      static_assert(InlineTypedObject::MaxInlineBytes >=
-                    ArrayBufferObject::MaxInlineBytes);
-
-      // emitBarrieredStore consumes valueAddr
-      if (!emitBarrieredStore(structType.isInline_ ? Some(rp) : Nothing(),
-                              valueAddr, rr)) {
-        return false;
-      }
-      freeRef(rr);
-      break;
-    }
-    default: {
-      MOZ_CRASH("Unexpected field type");
-    }
+  // Consumes value. rp, rowner, and rdata are preserved
+  if (!emitGcStructSet(rp, rowner, rdata, structField, value)) {
+    return false;
   }
 
+  freePtr(rdata);
+  freeRef(rowner);
   freeRef(rp);
+
+  return true;
+}
+
+bool BaseCompiler::emitArrayNewWithRtt() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+  uint32_t typeIndex;
+  Nothing nothing;
+  if (!iter_.readArrayNewWithRtt(&typeIndex, &nothing, &nothing, &nothing)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  const ArrayType& arrayType = moduleEnv_.types[typeIndex].arrayType();
+
+  // Allocate zeroed storage.  The parameter to ArrayNew is a rtt value and
+  // length that are guaranteed to be at the top of the stack by validation.
+  //
+  // Traps on OOM.
+  if (!emitInstanceCall(lineOrBytecode, SASigArrayNew)) {
+    return false;
+  }
+
+  // Reserve this register early if we will need it so that it is not taken by
+  // any register used in this function.
+  if (arrayType.elementType_.isReference()) {
+    needPtr(RegPtr(PreBarrierReg));
+  }
+
+  RegRef rp = popRef();
+  AnyReg value = popAny();
+
+  // Acquire the owner and data pointers from the object
+  RegPtr rdata = emitGcArrayGetData(rp);
+  RegRef rowner = emitGcArrayGetOwner(rp);
+
+  // Acquire the array length and adjust the data pointer to be immediately
+  // after the array length header
+  RegI32 length = emitGcArrayGetLength(rdata, true);
+
+  // Allocate an index loop variable and initialize to zero
+  RegI32 index = needI32();
+  masm.xor32(index, index);
+
+  RegPtr scratch = needPtr();
+
+  // Free the barrier reg after we've allocated all registers
+  if (arrayType.elementType_.isReference()) {
+    freePtr(RegPtr(PreBarrierReg));
+  }
+
+  // Skip initialization if length = 0
+  Label done;
+  Label loop;
+  masm.branch32(Assembler::Equal, index, length, &done);
+  masm.bind(&loop);
+
+  // Assign value to array[index]. All registers are preserved
+  if (!emitGcArraySet(rp, rowner, rdata, index, length, arrayType, value,
+                      scratch)) {
+    return false;
+  }
+
+  // Move to next element and loop back if there are still elements to
+  // initialize
+  masm.add32(Imm32(1), index);
+  masm.branch32(Assembler::NotEqual, index, length, &loop);
+  masm.bind(&done);
+
+  freePtr(scratch);
+  freeI32(length);
+  freeI32(index);
+  freeAny(value);
+  freePtr(rdata);
+  freeRef(rowner);
+  pushRef(rp);
+
+  return true;
+}
+
+bool BaseCompiler::emitArrayNewDefaultWithRtt() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+  uint32_t typeIndex;
+  Nothing nothing;
+  if (!iter_.readArrayNewDefaultWithRtt(&typeIndex, &nothing, &nothing)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  // Allocate zeroed storage. The parameter to ArrayNew is a rtt value that is
+  // guaranteed to be at the top of the stack by validation.
+  //
+  // Traps on OOM.
+  return emitInstanceCall(lineOrBytecode, SASigArrayNew);
+}
+
+bool BaseCompiler::emitArrayGet() {
+  uint32_t typeIndex;
+  Nothing nothing;
+  if (!iter_.readArrayGet(&typeIndex, &nothing, &nothing)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  const ArrayType& arrayType = moduleEnv_.types[typeIndex].arrayType();
+
+  RegI32 index = popI32();
+  RegRef rp = popRef();
+
+  // Check for null
+  emitGcNullCheck(rp);
+
+  // Acquire the data pointer from the object
+  RegPtr rdata = emitGcArrayGetData(rp);
+
+  // Acquire the array length and adjust the data pointer to be immediately
+  // after the array length header
+  RegI32 length = emitGcArrayGetLength(rdata, true);
+
+  // Bounds check the index
+  emitGcArrayBoundsCheck(index, length);
+  freeI32(length);
+
+  // Load the value
+  uint32_t shift = arrayType.elementType_.indexingShift();
+  if (IsShiftInScaleRange(shift)) {
+    emitGcGet(arrayType.elementType_,
+              BaseIndex(rdata, index, ShiftToScale(shift), 0));
+  } else {
+    masm.lshiftPtr(Imm32(shift), index);
+    emitGcGet(arrayType.elementType_, BaseIndex(rdata, index, TimesOne, 0));
+  }
+
+  freePtr(rdata);
+  freeRef(rp);
+  freeI32(index);
+
+  return true;
+}
+
+bool BaseCompiler::emitArraySet() {
+  uint32_t typeIndex;
+  Nothing nothing;
+  if (!iter_.readArraySet(&typeIndex, &nothing, &nothing, &nothing)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  const ArrayType& arrayType = moduleEnv_.types[typeIndex].arrayType();
+
+  // Reserve this register early if we will need it so that it is not taken by
+  // any register used in this function.
+  if (arrayType.elementType_.isReference()) {
+    needPtr(RegPtr(PreBarrierReg));
+  }
+
+  AnyReg value = popAny();
+  RegI32 index = popI32();
+  RegRef rp = popRef();
+
+  // Check for null
+  emitGcNullCheck(rp);
+
+  // Acquire the owner and data pointers from the object
+  RegRef rowner = emitGcArrayGetOwner(rp);
+  RegPtr rdata = emitGcArrayGetData(rp);
+
+  // Acquire the array length and adjust the data pointer to be immediately
+  // after the array length header
+  RegI32 length = emitGcArrayGetLength(rdata, true);
+
+  RegPtr scratch = needPtr();
+
+  // Free the barrier reg after we've allocated all registers
+  if (arrayType.elementType_.isReference()) {
+    freePtr(RegPtr(PreBarrierReg));
+  }
+
+  // Bounds check the index
+  emitGcArrayBoundsCheck(index, length);
+
+  // All registers are preserved. This isn't strictly necessary, as we'll just
+  // be freeing them all after this is done. But this is needed for repeated
+  // assignments used in array.new/new_default.
+  if (!emitGcArraySet(rp, rowner, rdata, index, length, arrayType, value,
+                      scratch)) {
+    return false;
+  }
+
+  freePtr(scratch);
+  freePtr(rdata);
+  freeRef(rowner);
+  freeRef(rp);
+  freeI32(length);
+  freeI32(index);
+  freeAny(value);
+
+  return true;
+}
+
+bool BaseCompiler::emitArrayLen() {
+  uint32_t typeIndex;
+  Nothing nothing;
+  if (!iter_.readArrayLen(&typeIndex, &nothing)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  RegRef rp = popRef();
+
+  // Check for null
+  emitGcNullCheck(rp);
+
+  // Acquire the data pointer from the object
+  RegPtr rdata = emitGcArrayGetData(rp);
+  freeRef(rp);
+
+  // Acquire the length from the array
+  pushI32(emitGcArrayGetLength(rdata, false));
+  freePtr(rdata);
 
   return true;
 }
@@ -15763,6 +16293,16 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitStructGet());
           case uint32_t(GcOp::StructSet):
             CHECK_NEXT(emitStructSet());
+          case uint32_t(GcOp::ArrayNewWithRtt):
+            CHECK_NEXT(emitArrayNewWithRtt());
+          case uint32_t(GcOp::ArrayNewDefaultWithRtt):
+            CHECK_NEXT(emitArrayNewDefaultWithRtt());
+          case uint32_t(GcOp::ArrayGet):
+            CHECK_NEXT(emitArrayGet());
+          case uint32_t(GcOp::ArraySet):
+            CHECK_NEXT(emitArraySet());
+          case uint32_t(GcOp::ArrayLen):
+            CHECK_NEXT(emitArrayLen());
           case uint32_t(GcOp::RttCanon):
             CHECK_NEXT(emitRttCanon());
           case uint32_t(GcOp::RttSub):
