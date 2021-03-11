@@ -7,24 +7,6 @@
 
 #import <Cocoa/Cocoa.h>
 
-#if !defined(MAC_OS_X_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
-@interface NSButton (NewConstructors)
-@property(nonatomic) BOOL imageHugsTitle;
-+ (NSButton*)buttonWithTitle:(NSString*)title target:(id)target action:(SEL)action;
-@end
-
-@interface NSColor (DisplayP3Colors)
-+ (NSColor*)colorWithDisplayP3Red:(CGFloat)red
-                            green:(CGFloat)green
-                             blue:(CGFloat)blue
-                            alpha:(CGFloat)alpha;
-@end
-
-@interface NSTextField (NewConstructors)
-+ (NSTextField*)labelWithString:(NSString*)stringValue;
-@end
-#endif  // !defined(MAC_OS_X_VERSION_10_12)
-
 #if !defined(MAC_OS_X_VERSION_10_12_2) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12_2
 @interface NSApplication (TouchBarMenu)
 - (IBAction)toggleTouchBarCustomizationPalette:(id)sender;
