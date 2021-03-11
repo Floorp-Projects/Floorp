@@ -14,6 +14,7 @@
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/dom/CancelContentJSOptionsBinding.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
@@ -1192,9 +1193,10 @@ HangMonitoredProcess::TerminatePlugin() {
 }
 
 NS_IMETHODIMP
-HangMonitoredProcess::IsReportForBrowser(nsFrameLoader* aFrameLoader,
-                                         bool* aResult) {
+HangMonitoredProcess::IsReportForBrowserOrChildren(nsFrameLoader* aFrameLoader,
+                                                   bool* aResult) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
 
   if (!mActor) {
     *aResult = false;
@@ -1203,13 +1205,22 @@ HangMonitoredProcess::IsReportForBrowser(nsFrameLoader* aFrameLoader,
 
   NS_ENSURE_STATE(aFrameLoader);
 
-  BrowserParent* tp = BrowserParent::GetFrom(aFrameLoader);
-  if (!tp) {
-    *aResult = false;
-    return NS_OK;
+  AutoTArray<RefPtr<BrowsingContext>, 10> bcs;
+  bcs.AppendElement(aFrameLoader->GetExtantBrowsingContext());
+  while (!bcs.IsEmpty()) {
+    RefPtr<BrowsingContext> bc = bcs[bcs.Length() - 1];
+    bcs.RemoveLastElement();
+    if (!bc) {
+      continue;
+    }
+    if (mContentParent == bc->Canonical()->GetContentParent()) {
+      *aResult = true;
+      return NS_OK;
+    }
+    bc->GetChildren(bcs);
   }
 
-  *aResult = mContentParent == tp->Manager();
+  *aResult = false;
   return NS_OK;
 }
 

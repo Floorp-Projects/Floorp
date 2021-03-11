@@ -106,7 +106,7 @@ TestHangReport.prototype = {
     this._resolver(TEST_ACTION_TERMGLOBAL);
   },
 
-  isReportForBrowser(aFrameLoader) {
+  isReportForBrowserOrChildren(aFrameLoader) {
     if (this._browser) {
       return this._browser.frameLoader === aFrameLoader;
     }
