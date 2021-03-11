@@ -47,6 +47,7 @@
 #  ifndef MOZ_WIDGET_GTK
 #    error "Unknown toolkit"
 #  endif
+#  include "mozilla/WidgetUtilsGtk.h"
 #  include <gdk/gdk.h>
 #  include <gdk/gdkx.h>
 #  include "X11UndefineNone.h"
@@ -76,7 +77,7 @@ static bool IsDisplayLocal() {
   if (NS_WARN_IF(display == nullptr)) {
     return false;
   }
-  if (GDK_IS_X11_DISPLAY(display)) {
+  if (mozilla::widget::GdkIsX11Display(display)) {
     const int xSocketFd = ConnectionNumber(GDK_DISPLAY_XDISPLAY(display));
     if (NS_WARN_IF(xSocketFd < 0)) {
       return false;

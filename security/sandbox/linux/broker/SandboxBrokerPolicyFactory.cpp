@@ -37,11 +37,8 @@
 #endif
 
 #ifdef MOZ_WIDGET_GTK
+#  include "mozilla/WidgetUtilsGtk.h"
 #  include <glib.h>
-#  ifdef MOZ_WAYLAND
-#    include <gdk/gdk.h>
-#    include <gdk/gdkx.h>
-#  endif
 #endif
 
 #include <dirent.h>
@@ -507,13 +504,9 @@ void SandboxBrokerPolicyFactory::InitContentPolicy() {
 #if defined(MOZ_WIDGET_GTK) && defined(MOZ_X11)
     // Allow local X11 connections, for Primus and VirtualGL to contact
     // the secondary X server. No exception for Wayland.
-#  if defined(MOZ_WAYLAND)
-    if (GDK_IS_X11_DISPLAY(gdk_display_get_default())) {
+    if (mozilla::widget::GdkIsX11Display()) {
       policy->AddPrefix(SandboxBroker::MAY_CONNECT, "/tmp/.X11-unix/X");
     }
-#  else
-    policy->AddPrefix(SandboxBroker::MAY_CONNECT, "/tmp/.X11-unix/X");
-#  endif
     if (const auto xauth = PR_GetEnv("XAUTHORITY")) {
       policy->AddPath(rdonly, xauth);
     }
