@@ -54,34 +54,36 @@ class StackType {
   explicit StackType(PackedTypeCode tc) : tc_(tc) {}
 
  public:
-  StackType() : tc_(InvalidPackedTypeCode()) {}
+  StackType() : tc_(PackedTypeCode::invalid()) {}
 
   explicit StackType(const ValType& t) : tc_(t.packed()) {
-    MOZ_ASSERT(IsValid(tc_));
+    MOZ_ASSERT(tc_.isValid());
     MOZ_ASSERT(!isBottom());
   }
 
-  static StackType bottom() { return StackType(PackTypeCode(TypeCode::Limit)); }
+  static StackType bottom() {
+    return StackType(PackedTypeCode::pack(TypeCode::Limit));
+  }
 
   bool isBottom() const {
-    MOZ_ASSERT(IsValid(tc_));
-    return UnpackTypeCodeType(tc_) == TypeCode::Limit;
+    MOZ_ASSERT(tc_.isValid());
+    return tc_.typeCode() == TypeCode::Limit;
   }
 
   ValType valType() const {
-    MOZ_ASSERT(IsValid(tc_));
+    MOZ_ASSERT(tc_.isValid());
     MOZ_ASSERT(!isBottom());
     return ValType(tc_);
   }
 
   ValType asNonNullable() const {
-    MOZ_ASSERT(IsValid(tc_));
+    MOZ_ASSERT(tc_.isValid());
     MOZ_ASSERT(!isBottom());
-    return ValType(RepackTypeCodeAsNonNullable(tc_));
+    return ValType(tc_.asNonNullable());
   }
 
   bool isValidForUntypedSelect() const {
-    MOZ_ASSERT(IsValid(tc_));
+    MOZ_ASSERT(tc_.isValid());
     if (isBottom()) {
       return true;
     }
@@ -100,12 +102,12 @@ class StackType {
   }
 
   bool operator==(const StackType& that) const {
-    MOZ_ASSERT(IsValid(tc_) && IsValid(that.tc_));
+    MOZ_ASSERT(tc_.isValid() && that.tc_.isValid());
     return tc_ == that.tc_;
   }
 
   bool operator!=(const StackType& that) const {
-    MOZ_ASSERT(IsValid(tc_) && IsValid(that.tc_));
+    MOZ_ASSERT(tc_.isValid() && that.tc_.isValid());
     return tc_ != that.tc_;
   }
 };
@@ -175,10 +177,11 @@ enum class OpKind {
   RefFunc,
   RefAsNonNull,
   BrOnNull,
-  StructNew,
+  StructNewWithRtt,
   StructGet,
   StructSet,
   StructNarrow,
+  RttCanon,
 #  ifdef ENABLE_WASM_SIMD
   ExtractLane,
   ReplaceLane,
@@ -535,13 +538,15 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readTableSet(uint32_t* tableIndex, Value* index,
                                   Value* value);
   [[nodiscard]] bool readTableSize(uint32_t* tableIndex);
-  [[nodiscard]] bool readStructNew(uint32_t* typeIndex, ValueVector* argValues);
+  [[nodiscard]] bool readStructNewWithRtt(uint32_t* typeIndex, Value* rtt,
+                                          ValueVector* argValues);
   [[nodiscard]] bool readStructGet(uint32_t* typeIndex, uint32_t* fieldIndex,
                                    Value* ptr);
   [[nodiscard]] bool readStructSet(uint32_t* typeIndex, uint32_t* fieldIndex,
                                    Value* ptr, Value* val);
   [[nodiscard]] bool readStructNarrow(ValType* inputType, ValType* outputType,
                                       Value* ptr);
+  [[nodiscard]] bool readRttCanon(ValType* rttType);
   [[nodiscard]] bool readValType(ValType* type);
   [[nodiscard]] bool readHeapType(bool nullable, RefType* type);
   [[nodiscard]] bool readReferenceType(ValType* type,
@@ -2548,19 +2553,22 @@ inline bool OpIter<Policy>::readFieldIndex(uint32_t* fieldIndex,
   return true;
 }
 
-// Semantics of struct.new, struct.get, struct.set, and struct.narrow documented
-// (for now) on https://github.com/lars-t-hansen/moz-gc-experiments.
-
 template <typename Policy>
-inline bool OpIter<Policy>::readStructNew(uint32_t* typeIndex,
-                                          ValueVector* argValues) {
-  MOZ_ASSERT(Classify(op_) == OpKind::StructNew);
+inline bool OpIter<Policy>::readStructNewWithRtt(uint32_t* typeIndex,
+                                                 Value* rtt,
+                                                 ValueVector* argValues) {
+  MOZ_ASSERT(Classify(op_) == OpKind::StructNewWithRtt);
 
   if (!readStructTypeIndex(typeIndex)) {
     return false;
   }
 
   const StructType& str = env_.types.structType(*typeIndex);
+  const ValType rttType = ValType::fromRtt(*typeIndex, 0);
+
+  if (!popWithType(rttType, rtt)) {
+    return false;
+  }
 
   if (!argValues->resize(str.fields_.length())) {
     return false;
@@ -2669,6 +2677,22 @@ inline bool OpIter<Policy>::readStructNarrow(ValType* inputType,
   }
 
   return push(*outputType);
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readRttCanon(ValType* rttType) {
+  MOZ_ASSERT(Classify(op_) == OpKind::RttCanon);
+
+  RefType heapType;
+  if (!readHeapType(true, &heapType)) {
+    return false;
+  }
+
+  if (!env_.types.isStructType(heapType)) {
+    return fail("invalid type for rtt");
+  }
+  *rttType = ValType::fromRtt(heapType.typeIndex(), 0);
+  return push(*rttType);
 }
 
 #ifdef ENABLE_WASM_SIMD

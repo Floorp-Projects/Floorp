@@ -77,6 +77,9 @@ enum class TypeCode {
   // Type constructor for non-nullable reference types.
   Ref = 0x6b,  // SLEB128(-0x15)
 
+  // Type constructor for rtt types.
+  Rtt = 0x69,  // SLEB128(-0x17)
+
   // Type constructor for function types
   Func = 0x60,  // SLEB128(-0x20)
 
@@ -431,10 +434,13 @@ inline bool IsPrefixByte(uint8_t b) { return b >= uint8_t(Op::FirstPrefix); }
 // Opcodes in the GC opcode space.
 enum class GcOp {
   // Structure operations
-  StructNew = 0x00,
+  StructNewWithRtt = 0x1,
   StructGet = 0x03,
   StructSet = 0x06,
   StructNarrow = 0x07,
+
+  // Rtt operations
+  RttCanon = 0x30,
 
   Limit
 };
@@ -957,6 +963,12 @@ static const unsigned PageMask = ((1u << PageBits) - 1);
 // These limits are agreed upon with other engines for consistency.
 
 static const unsigned MaxTypes = 1000000;
+#ifdef JS_64BIT
+static const unsigned MaxTypeIndex = 1000000;
+#else
+static const unsigned MaxTypeIndex = 15000;
+#endif
+static const unsigned MaxRttDepth = 127;
 static const unsigned MaxFuncs = 1000000;
 static const unsigned MaxTables = 100000;
 static const unsigned MaxImports = 100000;

@@ -2588,6 +2588,7 @@ struct Stk {
       case ValType::F64:
         k = Stk::MemF64;
         break;
+      case ValType::Rtt:
       case ValType::Ref:
         k = Stk::MemRef;
         break;
@@ -3572,6 +3573,7 @@ class BaseCompiler final : public BaseCompilerInterface {
             needF64(RegF64(result.fpr()));
           }
           break;
+        case ValType::Rtt:
         case ValType::Ref:
           needRef(RegPtr(result.gpr()));
           break;
@@ -3634,6 +3636,7 @@ class BaseCompiler final : public BaseCompilerInterface {
             freeF64(RegF64(result.fpr()));
           }
           break;
+        case ValType::Rtt:
         case ValType::Ref:
           freeRef(RegPtr(result.gpr()));
           break;
@@ -3682,6 +3685,7 @@ class BaseCompiler final : public BaseCompilerInterface {
         case ValType::F64:
           MOZ_ASSERT(isAvailableF64(RegF64(result.fpr())));
           break;
+        case ValType::Rtt:
         case ValType::Ref:
           MOZ_ASSERT(isAvailableRef(RegPtr(result.gpr())));
           break;
@@ -4754,6 +4758,7 @@ class BaseCompiler final : public BaseCompilerInterface {
         case ValType::F64:
           popF64(RegF64(result.fpr()));
           break;
+        case ValType::Rtt:
         case ValType::Ref:
           popRef(RegPtr(result.gpr()));
           break;
@@ -4986,6 +4991,7 @@ class BaseCompiler final : public BaseCompilerInterface {
         case ValType::F64:
           pushF64(RegF64(result.fpr()));
           break;
+        case ValType::Rtt:
         case ValType::Ref:
           pushRef(RegPtr(result.gpr()));
           break;
@@ -5505,6 +5511,7 @@ class BaseCompiler final : public BaseCompilerInterface {
         case ValType::F32:
           masm.storeFloat32(RegF32(result.fpr()), dest);
           break;
+        case ValType::Rtt:
         case ValType::Ref: {
           uint32_t flag =
               DebugFrame::hasSpilledRegisterRefResultBitMask(registerResultIdx);
@@ -5557,6 +5564,7 @@ class BaseCompiler final : public BaseCompilerInterface {
         case ValType::F32:
           masm.loadFloat32(src, RegF32(result.fpr()));
           break;
+        case ValType::Rtt:
         case ValType::Ref:
           masm.loadPtr(src, RegPtr(result.gpr()));
           break;
@@ -5903,6 +5911,7 @@ class BaseCompiler final : public BaseCompilerInterface {
         }
         break;
       }
+      case ValType::Rtt:
       case ValType::Ref: {
         ABIArg argLoc = call->abi.next(MIRType::RefOrNull);
         if (argLoc.kind() == ABIArg::Stack) {
@@ -8323,10 +8332,12 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitTableSet();
   [[nodiscard]] bool emitTableSize();
 #endif
-  [[nodiscard]] bool emitStructNew();
+  [[nodiscard]] bool emitStructNewWithRtt();
   [[nodiscard]] bool emitStructGet();
   [[nodiscard]] bool emitStructSet();
   [[nodiscard]] bool emitStructNarrow();
+  [[nodiscard]] bool emitRttCanon();
+
 #ifdef ENABLE_WASM_SIMD
   template <typename SourceType, typename DestType>
   void emitVectorUnop(void (*op)(MacroAssembler& masm, SourceType rs,
@@ -10372,6 +10383,7 @@ bool BaseCompiler::emitCatch() {
 #  endif
       }
       case ValType::Ref:
+      case ValType::Rtt:
         MOZ_CRASH("NYI - no reftype support");
     }
     argOffset += SizeOf(params[i]);
@@ -10551,6 +10563,7 @@ bool BaseCompiler::emitThrow() {
 #  endif
       }
       case ValType::Ref:
+      case ValType::Rtt:
         MOZ_CRASH("NYI - no reftype support");
     }
   }
@@ -11121,6 +11134,7 @@ bool BaseCompiler::emitGetLocal() {
     case ValType::F32:
       pushLocalF32(slot);
       break;
+    case ValType::Rtt:
     case ValType::Ref:
       pushLocalRef(slot);
       break;
@@ -11196,6 +11210,7 @@ bool BaseCompiler::emitSetOrTeeLocal(uint32_t slot) {
       MOZ_CRASH("No SIMD support");
 #endif
     }
+    case ValType::Rtt:
     case ValType::Ref: {
       RegPtr rv = popRef();
       syncLocal(slot);
@@ -13019,12 +13034,13 @@ bool BaseCompiler::emitMemOrTableInit(bool isMem) {
 }
 #endif
 
-bool BaseCompiler::emitStructNew() {
+bool BaseCompiler::emitStructNewWithRtt() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   uint32_t typeIndex;
+  Nothing rtt;
   NothingVector args;
-  if (!iter_.readStructNew(&typeIndex, &args)) {
+  if (!iter_.readStructNewWithRtt(&typeIndex, &rtt, &args)) {
     return false;
   }
 
@@ -13032,17 +13048,12 @@ bool BaseCompiler::emitStructNew() {
     return true;
   }
 
-  // Allocate zeroed storage.  The parameter to StructNew is an index into a
-  // descriptor table that the instance has.
+  const StructType& structType = moduleEnv_.types[typeIndex].structType();
+
+  // Allocate zeroed storage.  The parameter to StructNew is a rtt value that is
+  // guaranteed to be at the top of the stack by validation.
   //
   // Returns null on OOM.
-
-  const StructType& structType = moduleEnv_.types[typeIndex].structType();
-  const TypeIdDesc& structTypeId = moduleEnv_.typeIds[typeIndex];
-  RegPtr rst = needRef();
-  fr.loadTlsPtr(WasmTlsReg);
-  masm.loadWasmGlobalPtr(structTypeId.globalDataOffset(), rst);
-  pushRef(rst);
 
   if (!emitInstanceCall(lineOrBytecode, SASigStructNew)) {
     return false;
@@ -13388,6 +13399,24 @@ bool BaseCompiler::emitStructNarrow() {
 
   pushRef(rp);
   return emitInstanceCall(lineOrBytecode, SASigStructNarrow);
+}
+
+bool BaseCompiler::emitRttCanon() {
+  ValType rttType;
+  if (!iter_.readRttCanon(&rttType)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  const TypeIdDesc& typeId = moduleEnv_.typeIds[rttType.typeIndex()];
+  RegPtr rp = needRef();
+  fr.loadTlsPtr(WasmTlsReg);
+  masm.loadWasmGlobalPtr(typeId.globalDataOffset(), rp);
+  pushRef(rp);
+  return true;
 }
 
 #ifdef ENABLE_WASM_SIMD
@@ -15515,14 +15544,16 @@ bool BaseCompiler::emitBody() {
           return iter_.unrecognizedOpcode(&op);
         }
         switch (op.b1) {
-          case uint32_t(GcOp::StructNew):
-            CHECK_NEXT(emitStructNew());
+          case uint32_t(GcOp::StructNewWithRtt):
+            CHECK_NEXT(emitStructNewWithRtt());
           case uint32_t(GcOp::StructGet):
             CHECK_NEXT(emitStructGet());
           case uint32_t(GcOp::StructSet):
             CHECK_NEXT(emitStructSet());
           case uint32_t(GcOp::StructNarrow):
             CHECK_NEXT(emitStructNarrow());
+          case uint32_t(GcOp::RttCanon):
+            CHECK_NEXT(emitRttCanon());
           default:
             break;
         }  // switch (op.b1)

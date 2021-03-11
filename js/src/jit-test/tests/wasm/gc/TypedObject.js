@@ -7,7 +7,7 @@
                              (type $p (struct (field f64) (field (mut i32))))
 
                              (func (export "mkp") (result eqref)
-                              (struct.new $p (f64.const 1.5) (i32.const 33))))`).exports;
+                              (struct.new_with_rtt $p (f64.const 1.5) (i32.const 33) (rtt.canon $p))))`).exports;
 
     let p = ins.mkp();
     assertEq(p[0], 1.5);
@@ -22,7 +22,7 @@
                              (type $p (struct (field f64)))
 
                              (func (export "mkp") (result eqref)
-                              (struct.new $p (f64.const 1.5))))`).exports;
+                              (struct.new_with_rtt $p (f64.const 1.5) (rtt.canon $p))))`).exports;
 
     let p = ins.mkp();
     assertErrorMessage(() => p[0] = 5.7,
@@ -40,10 +40,10 @@
                              (type $r (struct (field (mut eqref))))
 
                              (func (export "mkp") (result eqref)
-                              (struct.new $p (ref.null $q)))
+                              (struct.new_with_rtt $p (ref.null $q) (rtt.canon $p)))
 
                              (func (export "mkr") (result eqref)
-                              (struct.new $r (ref.null eq))))`).exports;
+                              (struct.new_with_rtt $r (ref.null eq) (rtt.canon $r))))`).exports;
 
     assertEq(ins.mkp().constructor, Object);
     assertEq(ins.mkr().constructor, Object);
@@ -57,10 +57,10 @@
                              (type $p (struct (field (mut (ref null $q))) (field (mut eqref))))
 
                              (func (export "mkq") (result eqref)
-                              (struct.new $q (f64.const 1.5)))
+                              (struct.new_with_rtt $q (f64.const 1.5) (rtt.canon $q)))
 
                              (func (export "mkp") (result eqref)
-                              (struct.new $p (ref.null $q) (ref.null eq))))`).exports;
+                              (struct.new_with_rtt $p (ref.null $q) (ref.null eq) (rtt.canon $p))))`).exports;
     let q = ins.mkq();
     assertEq(typeof q, "object");
     assertEq(q[0], 1.5);
@@ -85,7 +85,7 @@
     let ins = wasmEvalText(`(module
                              (type $p (struct (field (mut i64))))
                              (func (export "mkp") (result eqref)
-                              (struct.new $p (i64.const 0x1234567887654321))))`).exports;
+                              (struct.new_with_rtt $p (i64.const 0x1234567887654321) (rtt.canon $p))))`).exports;
 
     let p = ins.mkp();
     assertEq(typeof p, "object");
@@ -111,9 +111,9 @@
           (func $g (param eqref) (result i32)
            (ref.is_null (struct.narrow eqref (ref null $p) (local.get 0))))
           (func (export "t1") (result i32)
-           (call $f (struct.new $p (i64.const 0))))
+           (call $f (struct.new_with_rtt $p (i64.const 0) (rtt.canon $p))))
           (func (export "t2") (result i32)
-           (call $g (struct.new $q (i32.const 0) (i32.const 0)))))`).exports;
+           (call $g (struct.new_with_rtt $q (i32.const 0) (i32.const 0) (rtt.canon $q)))))`).exports;
     assertEq(ins.t1(), 1);
     assertEq(ins.t2(), 1);
 }

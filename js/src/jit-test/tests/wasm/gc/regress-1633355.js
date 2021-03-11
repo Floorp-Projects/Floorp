@@ -20,7 +20,7 @@ let bin = wasmTextToBinary(`
      )
      (func $make (param $n i32) (result (ref null $wabbit))
        (local $tmp i32)
-       (struct.new $wabbit (local.get $tmp) (ref.null $wabbit) (ref.null $wabbit))
+       (struct.new_with_rtt $wabbit (local.get $tmp) (ref.null $wabbit) (ref.null $wabbit) (rtt.canon $wabbit))
      )
 `);
 let mod = new WebAssembly.Module(bin);
