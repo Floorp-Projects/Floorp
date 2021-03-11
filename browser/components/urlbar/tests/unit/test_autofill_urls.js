@@ -185,6 +185,60 @@ add_task(async function caseInsensitiveFromBookmark() {
   await cleanupPlaces();
 });
 
+// should *not* autofill if the URI fragment does not match with case-sensitive.
+add_task(async function uriFragmentCaseSensitive() {
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "http://example.com/#TEST",
+    },
+  ]);
+  const context = createContext("http://example.com/#t", { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        uri: "http://example.com/#t",
+        title: "http://example.com/#t",
+        heuristic: true,
+      }),
+      makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        uri: "http://example.com/#TEST",
+        title: "test visit for http://example.com/#TEST",
+        tags: [],
+      }),
+    ],
+  });
+
+  await cleanupPlaces();
+});
+
+// should autofill if the URI fragment matches with case-sensitive.
+add_task(async function uriFragmentCaseSensitive() {
+  await PlacesTestUtils.addVisits([
+    {
+      uri: "http://example.com/#TEST",
+    },
+  ]);
+  const context = createContext("http://example.com/#T", { isPrivate: false });
+  await check_results({
+    context,
+    autofilled: "http://example.com/#TEST",
+    completed: "http://example.com/#TEST",
+    matches: [
+      makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
+        uri: "http://example.com/#TEST",
+        title: "example.com/#TEST",
+        heuristic: true,
+      }),
+    ],
+  });
+
+  await cleanupPlaces();
+});
+
 async function testCaseInsensitive() {
   const testData = [
     {

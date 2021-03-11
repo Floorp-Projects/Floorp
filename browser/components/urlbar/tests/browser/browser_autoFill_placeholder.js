@@ -207,6 +207,94 @@ add_task(async function clear_placeholder_for_keyword_or_alias() {
   await cleanUp();
 });
 
+add_task(async function clear_placeholder_for_uri_fragment() {
+  info(
+    "Clear the autofill placeholder if the value has uri fragment that does not match with placeholder"
+  );
+  await PlacesTestUtils.addVisits("https://example.com/#TEST");
+
+  const testData = [
+    {
+      input: "https://example.com/#T",
+      autofilled: "https://example.com/#TEST",
+      invalidInput: "https://example.com/#t",
+    },
+    {
+      input: "example.com/#T",
+      autofilled: "example.com/#TEST",
+      invalidInput: "example.com/#t",
+    },
+    {
+      input: "example.com/#T",
+      autofilled: "example.com/#TEST",
+      invalidInput: "example.com/",
+    },
+  ];
+
+  for (const { input, autofilled, invalidInput } of testData) {
+    // Do an initial search that triggers autofill so that the placeholder has an
+    // initial value.
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: input,
+      fireInputEvent: true,
+    });
+
+    // Autofilled by placeholder.
+    await searchAndCheck(input, autofilled);
+
+    // Not autofilled and clear the placeholder because the URI fragment does
+    // not match.
+    await searchAndCheck(invalidInput, invalidInput);
+
+    // Not autofilled since placeholder is already cleared.
+    await searchAndCheck(input, input);
+  }
+
+  await cleanUp();
+});
+
+add_task(async function clear_placeholder_for_deep_path() {
+  info("Check if not autofill if the value expresses parent directory");
+  await PlacesTestUtils.addVisits("http://example.com/shallow/deep/file");
+
+  const testData = [
+    {
+      input: "example.com/s",
+      autofilled: "example.com/shallow/",
+      invalidInput: "example.com/",
+    },
+    {
+      input: "example.com/shallow/d",
+      autofilled: "example.com/shallow/deep/",
+      invalidInput: "example.com/shallow/",
+    },
+    {
+      input: "example.com/shallow/deep/f",
+      autofilled: "example.com/shallow/deep/file",
+      invalidInput: "example.com/shallow/deep/",
+    },
+  ];
+
+  for (const { input, autofilled, invalidInput } of testData) {
+    // Do an initial search that triggers autofill so that the placeholder has an
+    // initial value.
+    await UrlbarTestUtils.promiseAutocompleteResultPopup({
+      window,
+      value: input,
+      fireInputEvent: true,
+    });
+
+    // Should be autofilled.
+    await searchAndCheck(input, autofilled);
+
+    // Should not be autofilled.
+    await searchAndCheck(invalidInput, invalidInput);
+  }
+
+  await cleanUp();
+});
+
 async function searchAndCheck(
   searchString,
   expectedAutofillValue,

@@ -597,6 +597,11 @@ class ProviderAutofill extends UrlbarProvider {
       case QUERYTYPE.AUTOFILL_URL:
         let url = row.getResultByName("url");
         let strippedURL = row.getResultByName("stripped_url");
+
+        if (!UrlbarUtils.canAutofillURL(url, strippedURL, true)) {
+          return null;
+        }
+
         // We autofill urls to-the-next-slash.
         // http://mozilla.org/foo/bar/baz will be autofilled to:
         //  - http://mozilla.org/f[oo/]
