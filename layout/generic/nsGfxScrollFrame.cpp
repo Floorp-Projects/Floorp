@@ -5162,8 +5162,10 @@ auto ScrollFrameHelper::GetPageLoadingState() -> LoadingState {
   if (ds) {
     nsCOMPtr<nsIContentViewer> cv;
     ds->GetContentViewer(getter_AddRefs(cv));
-    loadCompleted = cv->GetLoadCompleted();
-    stopped = cv->GetIsStopped();
+    if (cv) {
+      loadCompleted = cv->GetLoadCompleted();
+      stopped = cv->GetIsStopped();
+    }
   }
   return loadCompleted
              ? (stopped ? LoadingState::Stopped : LoadingState::Loaded)
