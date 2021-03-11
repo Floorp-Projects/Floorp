@@ -532,14 +532,13 @@ void KeyframeEffect::EnsureBaseStyles(
     EnsureBaseStyle(property, presContext, aComputedValues, baseComputedStyle);
   }
 
-  if (aBaseStylesChanged != nullptr) {
-    for (auto iter = mBaseValues.Iter(); !iter.Done(); iter.Next()) {
-      if (AnimationValue(iter.Data()) !=
-          AnimationValue(previousBaseStyles.Get(iter.Key()))) {
-        *aBaseStylesChanged = true;
-        break;
-      }
-    }
+  if (aBaseStylesChanged != nullptr &&
+      std::any_of(
+          mBaseValues.cbegin(), mBaseValues.cend(), [&](const auto& entry) {
+            return AnimationValue(entry.GetData()) !=
+                   AnimationValue(previousBaseStyles.Get(entry.GetKey()));
+          })) {
+    *aBaseStylesChanged = true;
   }
 }
 
