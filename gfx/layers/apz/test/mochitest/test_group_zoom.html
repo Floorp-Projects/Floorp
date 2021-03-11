@@ -35,6 +35,8 @@ var prefs = [
   // Disable touch resampling so that touch events are processed without delay
   // and we don't zoom more than expected due to overprediction.
   ["android.touch_resampling.enabled", false],
+  // Tests depend on window.visualViewport
+  ["dom.visualviewport.enabled", true],
 ];
 
 // Increase the tap timeouts so the one-touch-pinch gesture is still detected
