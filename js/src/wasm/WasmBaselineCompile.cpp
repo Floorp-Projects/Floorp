@@ -8333,6 +8333,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitTableSize();
 #endif
   [[nodiscard]] bool emitStructNewWithRtt();
+  [[nodiscard]] bool emitStructNewDefaultWithRtt();
   [[nodiscard]] bool emitStructGet();
   [[nodiscard]] bool emitStructSet();
   [[nodiscard]] bool emitRttCanon();
@@ -13170,6 +13171,27 @@ bool BaseCompiler::emitStructNewWithRtt() {
   return true;
 }
 
+bool BaseCompiler::emitStructNewDefaultWithRtt() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+  uint32_t typeIndex;
+  Nothing rtt;
+  if (!iter_.readStructNewDefaultWithRtt(&typeIndex, &rtt)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  // Allocate zeroed storage.  The parameter to StructNew is a rtt value that is
+  // guaranteed to be at the top of the stack by validation.
+  //
+  // Returns null on OOM.
+
+  return emitInstanceCall(lineOrBytecode, SASigStructNew);
+}
+
 bool BaseCompiler::emitStructGet() {
   uint32_t typeIndex;
   uint32_t fieldIndex;
@@ -15625,6 +15647,8 @@ bool BaseCompiler::emitBody() {
         switch (op.b1) {
           case uint32_t(GcOp::StructNewWithRtt):
             CHECK_NEXT(emitStructNewWithRtt());
+          case uint32_t(GcOp::StructNewDefaultWithRtt):
+            CHECK_NEXT(emitStructNewDefaultWithRtt());
           case uint32_t(GcOp::StructGet):
             CHECK_NEXT(emitStructGet());
           case uint32_t(GcOp::StructSet):

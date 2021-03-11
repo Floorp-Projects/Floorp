@@ -177,6 +177,56 @@ assertEq(wasmEvalText(
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          1);
 
+// Can default initialize a struct which zero initializes
+
+{
+  let {makeA, makeB, makeC} = wasmEvalText(`
+  (module
+   (type $a (struct))
+   (type $b (struct (field i32) (field f32)))
+   (type $c (struct (field eqref)))
+
+   (func (export "makeA") (result eqref)
+     rtt.canon $a
+     struct.new_default_with_rtt $a
+   )
+   (func (export "makeB") (result eqref)
+     rtt.canon $b
+     struct.new_default_with_rtt $b
+   )
+   (func (export "makeC") (result eqref)
+     rtt.canon $c
+     struct.new_default_with_rtt $c
+   )
+  )`).exports;
+  let a = makeA();
+
+  let b = makeB();
+  assertEq(b[0], 0);
+  assertEq(b[1], 0);
+
+  let c = makeC();
+  assertEq(c[0], null);
+}
+
+// struct.new_default_with_rtt: valid if all struct fields are defaultable
+
+wasmFailValidateText(`(module
+  (type $a (struct (field (ref $a))))
+  (func
+    rtt.canon $a
+    struct.new_default_with_rtt $a
+  )
+)`, /defaultable/);
+
+wasmFailValidateText(`(module
+  (type $a (struct (field i32) (field i32) (field (ref $a))))
+  (func
+    rtt.canon $a
+    struct.new_default_with_rtt $a
+  )
+)`, /defaultable/);
+
 // Negative tests
 
 // Attempting to mutate immutable field with struct.set

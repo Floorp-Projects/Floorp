@@ -859,6 +859,10 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(
                 iter.readStructNewWithRtt(&unusedUint, &nothing, &unusedArgs));
           }
+          case uint32_t(GcOp::StructNewDefaultWithRtt): {
+            uint32_t unusedUint;
+            CHECK(iter.readStructNewDefaultWithRtt(&unusedUint, &nothing));
+          }
           case uint32_t(GcOp::StructGet): {
             uint32_t unusedUint1, unusedUint2;
             CHECK(iter.readStructGet(&unusedUint1, &unusedUint2, &nothing));
