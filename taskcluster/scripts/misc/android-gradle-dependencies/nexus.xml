@@ -24,37 +24,6 @@
   </routing>
   <repositories>
     <repository>
-      <id>jcenter</id>
-      <name>jcenter</name>
-      <providerRole>org.sonatype.nexus.proxy.repository.Repository</providerRole>
-      <providerHint>maven2</providerHint>
-      <localStatus>IN_SERVICE</localStatus>
-      <notFoundCacheActive>true</notFoundCacheActive>
-      <notFoundCacheTTL>1440</notFoundCacheTTL>
-      <userManaged>true</userManaged>
-      <exposed>true</exposed>
-      <browseable>true</browseable>
-      <writePolicy>READ_ONLY</writePolicy>
-      <indexable>true</indexable>
-      <searchable>true</searchable>
-      <localStorage>
-        <provider>file</provider>
-      </localStorage>
-      <remoteStorage>
-        <url>https://jcenter.bintray.com/</url>
-      </remoteStorage>
-      <externalConfiguration>
-        <repositoryPolicy>RELEASE</repositoryPolicy>
-        <checksumPolicy>STRICT</checksumPolicy>
-        <fileTypeValidation>true</fileTypeValidation>
-        <downloadRemoteIndex>false</downloadRemoteIndex>
-        <artifactMaxAge>-1</artifactMaxAge>
-        <metadataMaxAge>1440</metadataMaxAge>
-        <itemMaxAge>1440</itemMaxAge>
-        <autoBlockActive>true</autoBlockActive>
-      </externalConfiguration>
-    </repository>
-    <repository>
       <id>gradle-plugins</id>
       <name>Gradle Plugins</name>
       <providerRole>org.sonatype.nexus.proxy.repository.Repository</providerRole>
