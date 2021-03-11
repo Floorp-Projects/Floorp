@@ -4740,7 +4740,9 @@ nsresult nsIFrame::SelectByTypeAtPoint(nsPresContext* aPresContext,
   }
 
   ContentOffsets offsets = GetContentOffsetsFromPoint(aPoint, SKIP_HIDDEN);
-  if (!offsets.content) return NS_ERROR_FAILURE;
+  if (!offsets.content) {
+    return NS_ERROR_FAILURE;
+  }
 
   int32_t offset;
   nsIFrame* frame = nsFrameSelection::GetFrameForNodeOffset(
@@ -4823,20 +4825,34 @@ nsresult nsIFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
     }
   }
 
-  // Use peek offset one way then the other:
+  // Search backward for a boundary.
   nsPeekOffsetStruct startpos(aAmountBack, eDirPrevious, baseOffset,
                               nsPoint(0, 0), aJumpLines,
                               true,  // limit on scrolled views
                               false, false, false);
   rv = baseFrame->PeekOffset(&startpos);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  nsPeekOffsetStruct endpos(aAmountForward, eDirNext, aStartPos, nsPoint(0, 0),
-                            aJumpLines,
+  // If the backward search stayed within the same frame, search forward from
+  // that position for the end boundary; but if it crossed out to a sibling or
+  // ancestor, start from the original position.
+  if (startpos.mResultFrame == baseFrame) {
+    baseOffset = startpos.mContentOffset;
+  } else {
+    baseFrame = this;
+    baseOffset = aStartPos;
+  }
+
+  nsPeekOffsetStruct endpos(aAmountForward, eDirNext, baseOffset,
+                            nsPoint(0, 0), aJumpLines,
                             true,  // limit on scrolled views
                             false, false, false);
-  rv = PeekOffset(&endpos);
-  if (NS_FAILED(rv)) return rv;
+  rv = baseFrame->PeekOffset(&endpos);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // Keep frameSelection alive.
   RefPtr<nsFrameSelection> frameSelection = GetFrameSelection();
@@ -4849,13 +4865,17 @@ nsresult nsIFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
       MOZ_KnownLive(startpos.mResultContent) /* bug 1636889 */,
       startpos.mContentOffset, startpos.mContentOffset, focusMode,
       CARET_ASSOCIATE_AFTER);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   rv = frameSelection->HandleClick(
       MOZ_KnownLive(endpos.mResultContent) /* bug 1636889 */,
       endpos.mContentOffset, endpos.mContentOffset,
       nsFrameSelection::FocusMode::kExtendSelection, CARET_ASSOCIATE_BEFORE);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // maintain selection
   return frameSelection->MaintainSelection(aAmountBack);
