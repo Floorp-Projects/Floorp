@@ -619,10 +619,14 @@ def vc_toolchain_search_path(vc_compiler_path, original_path):
 clang_search_path = bootstrap_search_path("clang/bin")
 
 
-@depends(bootstrap_search_path("rustc/bin", when="MOZ_AUTOMATION"), original_path)
+@depends(
+    bootstrap_search_path("rustc/bin", when="MOZ_AUTOMATION"),
+    bootstrap_search_path_order,
+    original_path,
+)
 @imports("os")
 @imports(_from="os", _import="environ")
-def rust_search_path(rust_path, original_path):
+def rust_search_path(rust_path, search_order, original_path):
     result = list(rust_path or original_path)
     # Also add the rustup install directory for cargo/rustc.
     cargo_home = environ.get("CARGO_HOME", "")
@@ -631,7 +635,10 @@ def rust_search_path(rust_path, original_path):
     else:
         cargo_home = os.path.expanduser(os.path.join("~", ".cargo"))
     rustup_path = os.path.join(cargo_home, "bin")
-    result.append(rustup_path)
+    if search_order == "prepend":
+        result.insert(0, rustup_path)
+    else:
+        result.append(rustup_path)
     return result
 
 
