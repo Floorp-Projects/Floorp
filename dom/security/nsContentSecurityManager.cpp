@@ -797,6 +797,12 @@ void nsContentSecurityManager::MeasureUnexpectedPrivilegedLoads(
   if (!StaticPrefs::dom_security_unexpected_system_load_telemetry_enabled()) {
     return;
   }
+  // restricting reported types to script and styles
+  // to be continued in follow-ups of bug 1697163.
+  if (aContentPolicyType != ExtContentPolicyType::TYPE_SCRIPT &&
+      aContentPolicyType != ExtContentPolicyType::TYPE_STYLESHEET) {
+    return;
+  }
   nsAutoCString uriString;
   if (aFinalURI) {
     aFinalURI->GetAsciiSpec(uriString);

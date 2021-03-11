@@ -72,15 +72,15 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
       {// test for cases where finalURI is null, due to a broken nested URI
        // .. like malformed moz-icon URLs
        "moz-icon:blahblah"_ns,
-       ExtContentPolicy::TYPE_IMAGE,
+       ExtContentPolicy::TYPE_STYLESHEET,
        "web"_ns,
-       {"other"_ns, "TYPE_IMAGE"_ns, "web"_ns, "unknown"_ns}},
+       {"other"_ns, "TYPE_STYLESHEET"_ns, "web"_ns, "unknown"_ns}},
       {// we dont report data urls
        // ..and test that we strip of URLs from remoteTypes
        "data://blahblahblah"_ns,
-       ExtContentPolicy::TYPE_DOCUMENT,
+       ExtContentPolicy::TYPE_SCRIPT,
        "webCOOP+COEP=https://data.example"_ns,
-       {"dataurl"_ns, "TYPE_DOCUMENT"_ns, "webCOOP+COEP"_ns, "unknown"_ns}},
+       {"dataurl"_ns, "TYPE_SCRIPT"_ns, "webCOOP+COEP"_ns, "unknown"_ns}},
       {// we only report file URLs on windows, where we can easily sanitize
        "file://c/users/tom/file.txt"_ns,
        ExtContentPolicy::TYPE_SCRIPT,
@@ -96,15 +96,15 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
        }},
       {// test for cases where finalURI is empty
        ""_ns,
-       ExtContentPolicy::TYPE_IMAGE,
+       ExtContentPolicy::TYPE_STYLESHEET,
        "web"_ns,
-       {"other"_ns, "TYPE_IMAGE"_ns, "web"_ns, "unknown"_ns}},
+       {"other"_ns, "TYPE_STYLESHEET"_ns, "web"_ns, "unknown"_ns}},
       {// test for cases where finalURI is null, due to the struct layout, we'll
        // override the URL with nullptr in loop below.
        "URLWillResultInNullPtr"_ns,
-       ExtContentPolicy::TYPE_FONT,
+       ExtContentPolicy::TYPE_SCRIPT,
        "web"_ns,
-       {"other"_ns, "TYPE_FONT"_ns, "web"_ns, "unknown"_ns}},
+       {"other"_ns, "TYPE_SCRIPT"_ns, "web"_ns, "unknown"_ns}},
   };
 
   int i = 0;
