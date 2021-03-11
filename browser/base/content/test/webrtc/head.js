@@ -71,6 +71,8 @@ function whenDelayedStartupFinished(aWindow) {
 }
 
 function promiseIndicatorWindow() {
+  let startTime = performance.now();
+
   // We don't show the legacy indicator window on Mac.
   if (USING_LEGACY_INDICATOR && IS_MAC) {
     return Promise.resolve();
@@ -87,7 +89,13 @@ function promiseIndicatorWindow() {
           }
 
           Services.obs.removeObserver(obs, "domwindowopened");
-          executeSoon(() => resolve(win));
+          executeSoon(() => {
+            ChromeUtils.addProfilerMarker("promiseIndicatorWindow", {
+              startTime,
+              category: "Test",
+            });
+            resolve(win);
+          });
         },
         { once: true }
       );
@@ -356,6 +364,7 @@ function promiseMessage(
   aCount = 1,
   browser = gBrowser.selectedBrowser
 ) {
+  let startTime = performance.now();
   let promise = ContentTask.spawn(browser, [aMessage, aCount], async function([
     expectedMessage,
     expectedCount,
@@ -376,10 +385,18 @@ function promiseMessage(
   if (aAction) {
     aAction();
   }
-  return promise;
+  return promise.then(data => {
+    ChromeUtils.addProfilerMarker(
+      "promiseMessage",
+      { startTime, category: "Test" },
+      data
+    );
+    return data;
+  });
 }
 
 function promisePopupNotificationShown(aName, aAction, aWindow = window) {
+  let startTime = performance.now();
   return new Promise(resolve => {
     // In case the global webrtc indicator has stolen focus (bug 1421724)
     aWindow.focus();
@@ -397,7 +414,14 @@ function promisePopupNotificationShown(aName, aAction, aWindow = window) {
           "notification panel populated"
         );
 
-        executeSoon(resolve);
+        executeSoon(() => {
+          ChromeUtils.addProfilerMarker(
+            "promisePopupNotificationShown",
+            { startTime, category: "Test" },
+            aName
+          );
+          resolve();
+        });
       },
       { once: true }
     );
@@ -447,6 +471,8 @@ function activateSecondaryAction(aAction) {
 }
 
 async function getMediaCaptureState() {
+  let startTime = performance.now();
+
   function gatherBrowsingContexts(aBrowsingContext) {
     let list = [aBrowsingContext];
 
@@ -538,6 +564,10 @@ async function getMediaCaptureState() {
     result.screen = "Browser";
   }
 
+  ChromeUtils.addProfilerMarker("getMediaCaptureState", {
+    startTime,
+    category: "Test",
+  });
   return result;
 }
 
@@ -1043,6 +1073,7 @@ async function runTests(tests, options = {}) {
   gObserveSubFrames = SpecialPowers.useRemoteSubframes ? options.subFrames : {};
 
   for (let testCase of tests) {
+    let startTime = performance.now();
     info(testCase.desc);
     if (
       !testCase.skipObserverVerification &&
@@ -1060,6 +1091,11 @@ async function runTests(tests, options = {}) {
     if (options.cleanup) {
       await options.cleanup();
     }
+    ChromeUtils.addProfilerMarker(
+      "browser-test",
+      { startTime, category: "Test" },
+      testCase.desc
+    );
   }
 
   // Some tests destroy the original tab and leave a new one in its place.
