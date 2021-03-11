@@ -112,7 +112,13 @@ class TargetList extends EventEmitter {
   // Called whenever a new Target front is available.
   // Either because a target was already available as we started calling startListening
   // or if it has just been created
-  async _onTargetAvailable(targetFront, isTargetSwitching = false) {
+  async _onTargetAvailable(targetFront) {
+    // If the new target is a top level target, we are target switching.
+    // Target-switching is only triggered for "local-tab" browsing-context
+    // targets which should always have the topLevelTarget flag initialized
+    // on the server.
+    const isTargetSwitching = targetFront.isTopLevel;
+
     if (this._targets.has(targetFront)) {
       // The top level target front can be reported via listProcesses in the
       // case of the BrowserToolbox. For any other target, log an error if it is
@@ -556,10 +562,8 @@ class TargetList extends EventEmitter {
    *        The new top level target to debug.
    */
   async switchToTarget(newTarget) {
-    newTarget.setIsTopLevel(true);
-
     // Notify about this new target to creation listeners
-    await this._onTargetAvailable(newTarget, true);
+    await this._onTargetAvailable(newTarget);
 
     this.emit("switched-target", newTarget);
   }
