@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Bug 1665057 - Add www button on https-only error page</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+"use strict";
+
+/*
+ * Description of the test:
+ * We send a top-level request to a http-page in https-only mode
+ * The page has a bad certificate and can't be updated so the error page appears
+ * If there is a secure connection possible to www the suggestion-box on the error page
+ * should appear and have a link to that secure www-page
+ * if the original-pagerequest already has a www or there is no secure www connection
+ * the suggestion box should not appear
+ */
+
+SimpleTest.requestFlakyTimeout("We need to wait for the HTTPS-Only error page to appear and for the additional 'www' request to provide a suggestion.");
+SimpleTest.requestLongerTimeout(10);
+
+// path to test servers
+const SJS_PATH = "/tests/dom/security/test/https-only/file_user_suggestion_box.sjs";
+const KICK_OFF_REQUEST_WITH_SUGGESTION = "http://suggestion-example.com" + SJS_PATH;
+const KICK_OFF_REQUEST_WITHOUT_SUGGESTION = "http://no-suggestion-example.com" + SJS_PATH;
+
+// l10n ids to compare html to
+const ERROR_PAGE_L10N_ID = "about-httpsonly-title-alert";
+const SUGGESTION_BOX_L10N_ID = "about-httpsonly-suggestion-box-www-text";
+
+// the error page needs to be build and a background https://www request needs to happen
+// we use 4 seconds to make sure these requests did happen.
+function resolveAfter4Seconds() {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve();
+    }, 4000);
+  });
+}
+
+async function runTests(aMessage) {
+  let errorPageL10nId = "about-httpsonly-title-alert";
+  let suggestionBoxL10nId = "about-httpsonly-suggestion-box-www-text";
+
+  let innerHTML = content.document.body.innerHTML;
+
+  if (aMessage === "with_suggestion") {
+    // test if the page with suggestion shows the error page and the suggestion box
+    ok(innerHTML.includes(errorPageL10nId), "the error page should be shown.");
+    ok(innerHTML.includes(suggestionBoxL10nId), "the suggestion box should be shown.");
+  } else if (aMessage === "without_suggestion") {
+    // test if the page without suggestion shows the error page but not the suggestion box
+    ok(innerHTML.includes(errorPageL10nId), "the error page should be shown.");
+    ok(!innerHTML.includes(suggestionBoxL10nId), "the suggestion box should not be shown.");
+  } else {
+    ok(false, "we should never get here");
+  }
+}
+
+add_task(async function() {
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_only_mode", true],
+    ["dom.security.https_only_mode_send_http_background_request", false],
+    ["dom.security.https_only_mode_error_page_user_suggestions", true],
+  ]});
+  let testWinSuggestion = window.open(KICK_OFF_REQUEST_WITH_SUGGESTION, "_blank");
+  let testWinWithoutSuggestion = window.open(KICK_OFF_REQUEST_WITHOUT_SUGGESTION, "_blank");
+
+  await resolveAfter4Seconds();
+
+  await SpecialPowers.spawn(testWinSuggestion, ["with_suggestion"], runTests);
+  await SpecialPowers.spawn(testWinWithoutSuggestion, ["without_suggestion"], runTests);
+
+  testWinSuggestion.close();
+  testWinWithoutSuggestion.close();
+});
+</script>
+</body>
+</html>

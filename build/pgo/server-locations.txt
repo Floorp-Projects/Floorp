@@ -336,3 +336,10 @@ https://www.mozilla.org:443
 # local-IP origins for password manager tests (Bug 1582499)
 http://10.0.0.0:80                 privileged
 http://192.168.0.0:80              privileged
+
+# testing HTTPS-Only Suggestions on the Error Page (Bug 1665057)
+https://www.suggestion-example.com:443      privileged,cert=bug1665057cert
+http://suggestion-example.com:80            privileged
+https://suggestion-example.com:443          privileged,cert=badCertDomain
+http://no-suggestion-example.com:80         privileged
+https://no-suggestion-example.com:443       privileged,cert=badCertDomain
