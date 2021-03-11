@@ -1293,7 +1293,12 @@ bool EvalScope::prepareForScopeCreation(
     }
   }
 
-  return true;
+  // Strict eval and direct eval in parameter expressions always get their own
+  // var environment even if there are no bindings.
+  bool needsEnvironment = (scopeKind == ScopeKind::StrictEval);
+
+  return updateEnvShapeIfRequired<VarEnvironmentObject>(cx, envShape,
+                                                        needsEnvironment);
 }
 
 /* static */

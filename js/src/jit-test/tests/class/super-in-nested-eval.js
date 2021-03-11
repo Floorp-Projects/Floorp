@@ -10,12 +10,12 @@ class D extends C {
     constructor(depth) {
         var d = depth;
         var callsuper = 'super(depth); super.foo();';
-        var s = "var q; if (d-- > 0) { eval(s) } else { eval(callsuper); }";
+        var s = "if (d-- > 0) { eval(s) } else { eval(callsuper); }";
         eval(s);
     }
 }
 
-const MAX_DEPTH = 250;
+const MAX_DEPTH = 252;
 
 // These values should work.
 var depths = [0, 1, 10, 200, MAX_DEPTH];

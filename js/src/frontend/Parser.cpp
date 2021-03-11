@@ -1153,16 +1153,14 @@ Maybe<EvalScope::ParserData*> NewEvalScopeData(JSContext* cx,
                                                ParseContext* pc) {
   ParserBindingNameVector vars(cx);
 
-  // Treat all bindings as closed over in non-strict eval.
-  bool allBindingsClosedOver = !pc->sc()->strict() || pc->sc()->allBindingsClosedOver();
   for (BindingIter bi = scope.bindings(pc); bi; bi++) {
-    // Eval scopes only contain 'var' bindings.
+    // Eval scopes only contain 'var' bindings. Make all bindings aliased
+    // for now.
     MOZ_ASSERT(bi.kind() == BindingKind::Var);
     bool isTopLevelFunction =
         bi.declarationKind() == DeclarationKind::BodyLevelFunction;
-    bool closedOver = allBindingsClosedOver || bi.closedOver();
 
-    ParserBindingName binding(bi.name(), closedOver, isTopLevelFunction);
+    ParserBindingName binding(bi.name(), true, isTopLevelFunction);
     if (!vars.append(binding)) {
       return Nothing();
     }
@@ -1607,18 +1605,11 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
     return nullptr;
   }
 
-  if (pc_->sc()->strict()) {
-    if (!propagateFreeNamesAndMarkClosedOverBindings(varScope)) {
-      return nullptr;
-    }
-  } else {
-    // For non-strict eval scripts, since all bindings are automatically
-    // considered closed over, we don't need to call propagateFreeNames-
-    // AndMarkClosedOverBindings. However, Annex B.3.3 functions still need to
-    // be marked.
-    if (!varScope.propagateAndMarkAnnexBFunctionBoxes(pc_, this)) {
-      return nullptr;
-    }
+  // For eval scripts, since all bindings are automatically considered
+  // closed over, we don't need to call propagateFreeNamesAndMarkClosed-
+  // OverBindings. However, Annex B.3.3 functions still need to be marked.
+  if (!varScope.propagateAndMarkAnnexBFunctionBoxes(pc_, this)) {
+    return nullptr;
   }
 
   Maybe<EvalScope::ParserData*> bindings = newEvalScopeData(pc_->varScope());
