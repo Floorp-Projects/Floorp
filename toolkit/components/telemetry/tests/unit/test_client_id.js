@@ -77,8 +77,9 @@ add_task(async function test_client_id() {
   // Clear the scalar snapshot from previous tests.
   Services.telemetry.getSnapshotForScalars("main", true);
 
-  // If there is no DRS file, we should get a new client ID.
+  // If there is no DRS file, and no cached id, we should get a new client ID.
   await ClientID._reset();
+  Services.prefs.clearUserPref(PREF_CACHED_CLIENTID);
   await OS.File.remove(drsPath, { ignoreAbsent: true });
   let clientID = await ClientID.getClientID();
   Assert.equal(typeof clientID, "string");
@@ -90,6 +91,7 @@ add_task(async function test_client_id() {
 
   // We should be guarded against invalid DRS json.
   await ClientID._reset();
+  Services.prefs.clearUserPref(PREF_CACHED_CLIENTID);
   await OS.File.writeAtomic(drsPath, "abcd", {
     encoding: "utf-8",
     tmpPath: drsPath + ".tmp",
@@ -102,15 +104,15 @@ add_task(async function test_client_id() {
   // Invalid file means no value to mismatch with pref.
   Assert.ok(!("telemetry.loaded_client_id_doesnt_match_pref" in snapshot));
 
-  // If the DRS data is broken, we should end up with a new client ID.
+  // If the DRS data is broken, we should end up with the cached ID.
+  let oldClientID = clientID;
   for (let [invalidID] of invalidIDs) {
     await ClientID._reset();
     await CommonUtils.writeJSON({ clientID: invalidID }, drsPath);
     clientID = await ClientID.getClientID();
-    Assert.equal(typeof clientID, "string");
-    Assert.ok(uuidRegex.test(clientID));
+    Assert.equal(clientID, oldClientID);
     snapshot = Services.telemetry.getSnapshotForScalars("main", true).parent;
-    Assert.equal(snapshot["telemetry.generated_new_client_id"], true);
+    Assert.ok(!("telemetry.generated_new_client_id" in snapshot));
     Assert.equal(snapshot["telemetry.loaded_client_id_doesnt_match_pref"], 1);
   }
 
@@ -126,6 +128,7 @@ add_task(async function test_client_id() {
 
   // Test that reloading a valid DRS works.
   await ClientID._reset();
+  Services.prefs.clearUserPref(PREF_CACHED_CLIENTID);
   clientID = await ClientID.getClientID();
   Assert.equal(clientID, validClientID);
   // snapshot may be empty if no other scalars are recorded.
