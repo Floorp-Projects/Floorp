@@ -64,7 +64,7 @@
 }
 
 .img.close {
-  mask-image: url(chrome://devtools/content/debugger/images/close.svg);
+  mask-image: url(chrome://devtools/skin/images/close.svg);
 }
 
 .img.disable-pausing {

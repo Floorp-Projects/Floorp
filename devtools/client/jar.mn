@@ -35,7 +35,6 @@ devtools.jar:
     content/debugger/images/breadcrumbs-divider.svg (debugger/images/breadcrumbs-divider.svg)
     content/debugger/images/breakpoint.svg (debugger/images/breakpoint.svg)
     content/debugger/images/case-match.svg (debugger/images/case-match.svg)
-    content/debugger/images/close.svg (debugger/images/close.svg)
     content/debugger/images/column-marker.svg (debugger/images/column-marker.svg)
     content/debugger/images/command-chevron.svg (debugger/images/command-chevron.svg)
     content/debugger/images/disable-pausing.svg (debugger/images/disable-pausing.svg)
