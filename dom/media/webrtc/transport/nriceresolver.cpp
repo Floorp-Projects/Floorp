@@ -92,7 +92,7 @@ nsresult NrIceResolver::Init() {
   sts_thread_ = do_GetService(NS_SOCKETTRANSPORTSERVICE_CONTRACTID, &rv);
   MOZ_ASSERT(NS_SUCCEEDED(rv));
   dns_ = do_GetService(NS_DNSSERVICE_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     MOZ_MTLOG(ML_ERROR, "Could not acquire DNS service");
   }
   return rv;
