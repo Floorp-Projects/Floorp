@@ -206,14 +206,26 @@ class PreferenceExperimentAction extends BaseStudyAction {
    * the server and so we stop seeing them.  This can also happen if
    * the user doesn't match the filter any more.
    */
-  async _finalize() {
+  async _finalize({ noRecipes } = {}) {
     const activeExperiments = await PreferenceExperiments.getAllActive();
+
+    if (noRecipes && this.seenExperimentSlugs.size) {
+      throw new PreferenceExperimentAction.BadNoRecipesArg();
+    }
+
     return Promise.all(
       activeExperiments.map(experiment => {
         if (this.name != experiment.actionName) {
           // Another action is responsible for cleaning this one
           // up. Leave it alone.
           return null;
+        }
+
+        if (noRecipes) {
+          return this._considerTemporaryError({
+            experiment,
+            reason: "no-recipes",
+          });
         }
 
         if (this.seenExperimentSlugs.includes(experiment.slug)) {
@@ -232,7 +244,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
   }
 
   /**
-   * Given that a temporary error has occured for an experiment, check if it
+   * Given that a temporary error has occurred for an experiment, check if it
    * should be temporarily ignored, or if the deadline has passed. If the
    * deadline is passed, the experiment will be ended. If this is the first
    * temporary error, a deadline will be generated. Otherwise, nothing will
@@ -280,3 +292,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
     }
   }
 }
+
+PreferenceExperimentAction.BadNoRecipesArg = class extends Error {
+  message = "noRecipes is true, but some recipes observed";
+};

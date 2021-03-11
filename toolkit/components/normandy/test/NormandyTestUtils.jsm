@@ -49,10 +49,8 @@ const NormandyTestUtils = {
       }
 
       // Generate a slug from userFacingName
-      let {
-        userFacingName = `Test study ${_preferenceStudyFactoryId++}`,
-        slug,
-      } = attrs;
+      let recipeId = _addonStudyFactoryId++;
+      let { userFacingName = `Test study ${recipeId}`, slug } = attrs;
       delete attrs.slug;
       if (userFacingName && !slug) {
         slug = userFacingName.replace(" ", "-").toLowerCase();
@@ -60,7 +58,7 @@ const NormandyTestUtils = {
 
       return Object.assign(
         {
-          recipeId: _addonStudyFactoryId++,
+          recipeId,
           slug,
           userFacingName: "Test study",
           userFacingDescription: "test description",

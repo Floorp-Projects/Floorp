@@ -87,7 +87,7 @@ class ActionsManager {
     }
   }
 
-  async finalize() {
+  async finalize(options) {
     if (this.finalized) {
       throw new Error("ActionsManager has already been finalized");
     }
@@ -95,7 +95,7 @@ class ActionsManager {
 
     // Finalize local actions
     for (const action of Object.values(this.localActions)) {
-      action.finalize();
+      action.finalize(options);
     }
   }
 }
