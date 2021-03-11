@@ -97,9 +97,7 @@ gfxPlatformGtk::gfxPlatformGtk() {
   }
 
   mMaxGenericSubstitutions = UNINITIALIZED_VALUE;
-  mIsX11Display = gfxPlatform::IsHeadless()
-                      ? false
-                      : GDK_IS_X11_DISPLAY(gdk_display_get_default());
+  mIsX11Display = gfxPlatform::IsHeadless() ? false : GdkIsX11Display();
   if (XRE_IsParentProcess()) {
 #ifdef MOZ_X11
     if (mIsX11Display && mozilla::Preferences::GetBool("gfx.xrender.enabled")) {
