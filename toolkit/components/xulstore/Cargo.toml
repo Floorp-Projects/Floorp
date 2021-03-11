@@ -5,7 +5,7 @@ authors = ["nobody@mozilla.org"]
 license = "MPL-2.0"
 
 [dependencies]
-crossbeam-utils = "0.6.3"
+crossbeam-utils = "0.8"
 cstr = "0.2"
 libc = "0.2"
 log = "0.4"
