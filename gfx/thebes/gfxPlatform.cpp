@@ -2132,11 +2132,6 @@ void gfxPlatform::InitializeCMS() {
     if (mode >= 0 && mode < int32_t(CMSMode::AllCount)) {
       gCMSMode = CMSMode(mode);
     }
-
-    bool enableV4 = StaticPrefs::gfx_color_management_enablev4();
-    if (enableV4) {
-      qcms_enable_iccv4();
-    }
   }
 
   gCMSsRGBProfile = qcms_profile_sRGB();
@@ -2197,6 +2192,14 @@ void gfxPlatform::InitializeCMS() {
   gCMSBGRATransform = qcms_transform_create(gCMSsRGBProfile, QCMS_DATA_BGRA_8,
                                             gCMSOutputProfile, QCMS_DATA_BGRA_8,
                                             QCMS_INTENT_PERCEPTUAL);
+
+  // FIXME: We only enable iccv4 after we create the platform profile, to
+  // wallpaper over bug 1697787.
+  //
+  // This should happen ideally right after setting gCMSMode.
+  if (StaticPrefs::gfx_color_management_enablev4()) {
+    qcms_enable_iccv4();
+  }
 
   gCMSInitialized = true;
 }
