@@ -1105,6 +1105,7 @@ Shape* NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj,
     shape->immutableFlags |= Shape::IN_DICTIONARY | Shape::ACCESSOR_SHAPE;
 
     AccessorShape& accShape = shape->asAccessorShape();
+    GetterSetterPreWriteBarrier(&accShape);
     accShape.rawGetter = getter;
     accShape.rawSetter = setter;
     GetterSetterPostWriteBarrier(&accShape);
@@ -1312,13 +1313,23 @@ Shape* NativeObject::replaceWithNewEquivalentShape(JSContext* cx,
 
   if (!newShape) {
     RootedShape oldRoot(cx, oldShape);
-    newShape = (oldShape->isAccessorShape() || accessorShape)
-                   ? Allocate<AccessorShape>(cx)
-                   : Allocate<Shape>(cx);
+    bool allocAccessorShape = accessorShape || oldShape->isAccessorShape();
+    if (allocAccessorShape) {
+      newShape = Allocate<AccessorShape>(cx);
+    } else {
+      newShape = Allocate<Shape>(cx);
+    }
+
     if (!newShape) {
       return nullptr;
     }
-    new (newShape) Shape(oldRoot->base(), ObjectFlags(), 0);
+
+    if (allocAccessorShape) {
+      new (newShape) AccessorShape(oldRoot->base(), ObjectFlags(), 0);
+    } else {
+      new (newShape) Shape(oldRoot->base(), ObjectFlags(), 0);
+    }
+
     oldShape = oldRoot;
   }
 
