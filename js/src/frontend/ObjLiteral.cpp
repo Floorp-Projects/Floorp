@@ -168,7 +168,16 @@ static JSObject* InterpretObjLiteralObj(
     JSContext* cx, const frontend::CompilationAtomCache& atomCache,
     const mozilla::Span<const uint8_t> literalInsns, ObjLiteralFlags flags,
     uint32_t propertyCount) {
-  gc::AllocKind allocKind = gc::GetGCObjectKind(propertyCount);
+  // Use NewObjectGCKind for empty object literals to reserve some fixed slots
+  // for new properties. This improves performance for common patterns such as
+  // |Object.assign({}, ...)|.
+  gc::AllocKind allocKind;
+  if (propertyCount == 0) {
+    allocKind = NewObjectGCKind();
+  } else {
+    allocKind = gc::GetGCObjectKind(propertyCount);
+  }
+
   RootedPlainObject obj(
       cx, NewBuiltinClassInstance<PlainObject>(cx, allocKind, TenuredObject));
   if (!obj) {
