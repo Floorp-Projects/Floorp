@@ -19,10 +19,21 @@ async function run_test() {
 
   let configFile = getUpdateDirFile(FILE_UPDATE_CONFIG_JSON);
 
+  // Test that, if there is no value to migrate, the default value is set.
+  Services.prefs.setBoolPref("app.update.auto.migrated", false);
+  Services.prefs.clearUserPref("app.update.auto");
+  Assert.ok(!configFile.exists(), "Config file should not exist yet");
+  await verifyPref(
+    UpdateUtils.PER_INSTALLATION_PREFS["app.update.auto"].defaultValue
+  );
+
+  debugDump("about to remove config file");
+  configFile.remove(false);
+
   // Test migration of a |false| value
   Services.prefs.setBoolPref("app.update.auto.migrated", false);
   Services.prefs.setBoolPref("app.update.auto", false);
-  Assert.ok(!configFile.exists(), "Config file should not exist yet");
+  Assert.ok(!configFile.exists(), "Config file should have been removed");
   await verifyPref(false);
 
   // Test that migration doesn't happen twice
@@ -33,7 +44,7 @@ async function run_test() {
   // returned, regardless of the pref value.
   debugDump("about to remove config file");
   configFile.remove(false);
-  Assert.ok(!configFile.exists(), "Pref file should have been removed");
+  Assert.ok(!configFile.exists(), "Config file should have been removed");
   let configValue = await UpdateUtils.getAppUpdateAutoEnabled();
   Assert.equal(
     configValue,

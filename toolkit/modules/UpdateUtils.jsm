@@ -672,8 +672,17 @@ function makeMigrationUpdateConfig() {
     }
 
     const prefTypeFns = TYPE_SPECIFIC_PREF_FNS[pref.type];
-    const prefValue = prefTypeFns.getProfilePref(prefName, null);
-    if (prefValue !== null) {
+
+    let prefHasValue = true;
+    let prefValue;
+    try {
+      // Without a second argument, this will throw if the pref has no user
+      // value or default value.
+      prefValue = prefTypeFns.getProfilePref(prefName);
+    } catch (e) {
+      prefHasValue = false;
+    }
+    if (prefHasValue) {
       setConfigValue(config, prefName, prefValue);
     }
   }
