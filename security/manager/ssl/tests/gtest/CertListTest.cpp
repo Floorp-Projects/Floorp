@@ -149,16 +149,22 @@ static nsresult AddCertFromStringToList(
 TEST_F(psm_CertList, TestInvalidSegmenting) {
   nsTArray<RefPtr<nsIX509Cert>> certList;
 
-  nsTArray<nsTArray<uint8_t>> intCerts;
-  nsresult rv = nsNSSCertificate::GetIntermediatesAsDER(certList, intCerts);
+  nsCOMPtr<nsIX509Cert> rootCert;
+  nsTArray<RefPtr<nsIX509Cert>> intCerts;
+  nsCOMPtr<nsIX509Cert> eeCert;
+  nsresult rv = nsNSSCertificate::SegmentCertificateChain(certList, rootCert,
+                                                          intCerts, eeCert);
   ASSERT_EQ(rv, NS_ERROR_INVALID_ARG) << "Empty lists can't be segmented";
 
   rv = AddCertFromStringToList(kCaPem, certList);
   ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
 
   intCerts.Clear();
+  rootCert = nullptr;
+  eeCert = nullptr;
 
-  rv = nsNSSCertificate::GetIntermediatesAsDER(certList, intCerts);
+  rv = nsNSSCertificate::SegmentCertificateChain(certList, rootCert, intCerts,
+                                                 eeCert);
   ASSERT_EQ(rv, NS_ERROR_INVALID_ARG) << "Lists of one can't be segmented";
 }
 
@@ -170,20 +176,40 @@ TEST_F(psm_CertList, TestValidSegmenting) {
   rv = AddCertFromStringToList(kCaSecondIntermediatePem, certList);
   ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
 
-  nsTArray<nsTArray<uint8_t>> intCerts;
+  nsCOMPtr<nsIX509Cert> rootCert;
+  nsTArray<RefPtr<nsIX509Cert>> intCerts;
+  nsCOMPtr<nsIX509Cert> eeCert;
 
-  rv = nsNSSCertificate::GetIntermediatesAsDER(certList, intCerts);
+  rv = nsNSSCertificate::SegmentCertificateChain(certList, rootCert, intCerts,
+                                                 eeCert);
   ASSERT_EQ(rv, NS_OK) << "Should have segmented OK";
+  ASSERT_TRUE(rootCert)
+  << "Root cert should be filled in";
+  ASSERT_TRUE(eeCert)
+  << "End entity cert should be filled in";
   ASSERT_EQ(intCerts.Length(), static_cast<size_t>(0))
       << "There should be no intermediates";
+
+  nsAutoString rootCn;
+  ASSERT_TRUE(NS_SUCCEEDED(rootCert->GetCommonName(rootCn)))
+  << "Getters should work.";
+  ASSERT_TRUE(rootCn.EqualsLiteral("ca-second-intermediate"))
+  << "Second Intermediate CN should match";
 
   rv = AddCertFromStringToList(kCaIntermediatePem, certList);
   ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
 
   intCerts.Clear();
-  rv = nsNSSCertificate::GetIntermediatesAsDER(certList, intCerts);
+  rootCert = nullptr;
+  eeCert = nullptr;
+  rv = nsNSSCertificate::SegmentCertificateChain(certList, rootCert, intCerts,
+                                                 eeCert);
   ASSERT_EQ(rv, NS_OK) << "Should have segmented OK";
 
+  ASSERT_TRUE(rootCert)
+  << "Root cert should be filled in";
+  ASSERT_TRUE(eeCert)
+  << "End entity cert should be filled in";
   ASSERT_EQ(intCerts.Length(), static_cast<size_t>(1))
       << "There should be one intermediate";
 
@@ -191,27 +217,45 @@ TEST_F(psm_CertList, TestValidSegmenting) {
   ASSERT_EQ(rv, NS_OK) << "Should have loaded OK";
 
   intCerts.Clear();
-  rv = nsNSSCertificate::GetIntermediatesAsDER(certList, intCerts);
+  rootCert = nullptr;
+  eeCert = nullptr;
+  rv = nsNSSCertificate::SegmentCertificateChain(certList, rootCert, intCerts,
+                                                 eeCert);
   ASSERT_EQ(rv, NS_OK) << "Should have segmented OK";
 
+  ASSERT_TRUE(rootCert)
+  << "Root cert should be filled in";
+  ASSERT_TRUE(eeCert)
+  << "End entity cert should be filled in";
   ASSERT_EQ(intCerts.Length(), static_cast<size_t>(2))
       << "There should be two intermediates";
 
-  nsTArray<uint8_t> kCaIntermediatePemArray(kCaIntermediatePem,
-                                            strlen(kCaIntermediatePem));
-  nsTArray<uint8_t> kCaSecondIntermediatePemArray(
-      kCaSecondIntermediatePem, strlen(kCaSecondIntermediatePem));
+  ASSERT_TRUE(NS_SUCCEEDED(rootCert->GetCommonName(rootCn)))
+  << "Getters should work.";
+  ASSERT_TRUE(rootCn.EqualsLiteral("ca"))
+  << "Root CN should match";
+
+  nsAutoString eeCn;
+  ASSERT_TRUE(NS_SUCCEEDED(eeCert->GetCommonName(eeCn)))
+  << "Getters should work.";
+  ASSERT_TRUE(eeCn.EqualsLiteral("ee"))
+  << "EE CN should match";
 
   for (size_t i = 0; i < intCerts.Length(); ++i) {
-    const nsTArray<uint8_t>& cert = intCerts[i];
+    nsAutoString cn;
+    const auto& cert = intCerts[i];
+    rv = cert->GetCommonName(cn);
+    if (NS_FAILED(rv)) {
+      break;
+    }
 
     if (i < intCerts.Length() - 1) {
-      if (cert != kCaSecondIntermediatePemArray) {
+      if (!cn.EqualsLiteral("ca-second-intermediate")) {
         rv = NS_ERROR_FAILURE;
         break;
       }
     } else {
-      if (cert != kCaIntermediatePemArray) {
+      if (!cn.EqualsLiteral("ca-intermediate")) {
         rv = NS_ERROR_FAILURE;
         break;
       }
