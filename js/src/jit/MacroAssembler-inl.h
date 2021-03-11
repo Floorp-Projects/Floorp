@@ -583,6 +583,23 @@ void MacroAssembler::branchTestObjClassNoSpectreMitigations(
   branchPtr(cond, clasp, scratch, label);
 }
 
+void MacroAssembler::branchTestObjClass(Condition cond, Register obj,
+                                        Register clasp, Register scratch,
+                                        Register spectreRegToZero,
+                                        Label* label) {
+  MOZ_ASSERT(obj != scratch);
+  MOZ_ASSERT(scratch != spectreRegToZero);
+
+  loadPtr(Address(obj, JSObject::offsetOfShape()), scratch);
+  loadPtr(Address(scratch, Shape::offsetOfBaseShape()), scratch);
+  loadPtr(Address(scratch, BaseShape::offsetOfClasp()), scratch);
+  branchPtr(cond, clasp, scratch, label);
+
+  if (JitOptions.spectreObjectMitigationsMisc) {
+    spectreZeroRegister(cond, scratch, spectreRegToZero);
+  }
+}
+
 void MacroAssembler::branchTestObjShape(Condition cond, Register obj,
                                         const Shape* shape, Register scratch,
                                         Register spectreRegToZero,

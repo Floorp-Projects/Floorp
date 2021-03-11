@@ -1456,6 +1456,8 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
     case SymbolicAddress::GetLocalExceptionIndex:
       return "call to native get the local index of an exn's tag (in wasm)";
 #endif
+    case SymbolicAddress::InlineTypedObjectClass:
+      MOZ_CRASH();
 #if defined(JS_CODEGEN_MIPS32)
     case SymbolicAddress::js_jit_gAtomic64Lock:
       MOZ_CRASH();
