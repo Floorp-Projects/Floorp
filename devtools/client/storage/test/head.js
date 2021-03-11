@@ -178,7 +178,10 @@ var openStoragePanel = async function({ tab, descriptor, hostType } = {}) {
   }
 
   info("Opening the toolbox");
-  toolbox = await gDevTools.showToolbox(descriptor, "storage", hostType);
+  toolbox = await gDevTools.showToolbox(descriptor, {
+    toolId: "storage",
+    hostType,
+  });
   storage = toolbox.getPanel("storage");
   gPanelWindow = storage.panelWindow;
   gUI = storage.UI;

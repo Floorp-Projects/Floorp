@@ -198,12 +198,11 @@ async function openToolbox(descriptorFront) {
   const toolboxOptions = { doc: document };
   appendStatusMessage(`Show toolbox with ${selectedTool} selected`);
 
-  gToolbox = await gDevTools.showToolbox(
-    descriptorFront,
-    selectedTool,
-    Toolbox.HostType.BROWSERTOOLBOX,
-    toolboxOptions
-  );
+  gToolbox = await gDevTools.showToolbox(descriptorFront, {
+    toolId: selectedTool,
+    hostType: Toolbox.HostType.BROWSERTOOLBOX,
+    hostOptions: toolboxOptions,
+  });
 
   bindToolboxHandlers();
   gToolbox.raise();

@@ -16,11 +16,9 @@ async function setupToolboxTest(extensionId) {
   const client = new DevToolsClient(transport);
   await client.connect();
   const addonFront = await client.mainRoot.getAddon({ id: extensionId });
-  const toolbox = await gDevTools.showToolbox(
-    addonFront,
-    null,
-    Toolbox.HostType.WINDOW
-  );
+  const toolbox = await gDevTools.showToolbox(addonFront, {
+    hostType: Toolbox.HostType.WINDOW,
+  });
 
   async function waitFor(condition) {
     while (!condition()) {
