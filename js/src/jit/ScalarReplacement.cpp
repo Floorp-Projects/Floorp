@@ -710,17 +710,6 @@ static bool IsElementEscaped(MDefinition* def, uint32_t arraySize) {
       case MDefinition::Opcode::LoadElement: {
         MOZ_ASSERT(access->toLoadElement()->elements() == def);
 
-        // If we need hole checks, then the array cannot be escaped
-        // as the array might refer to the prototype chain to look
-        // for properties, thus it might do additional side-effects
-        // which are not reflected by the alias set, is we are
-        // bailing on holes.
-        if (access->toLoadElement()->needsHoleCheck()) {
-          JitSpewDef(JitSpew_Escape, "has a load element with a hole check\n",
-                     access);
-          return true;
-        }
-
         // If the index is not a constant then this index can alias
         // all others. We do not handle this case.
         int32_t index;
@@ -741,11 +730,9 @@ static bool IsElementEscaped(MDefinition* def, uint32_t arraySize) {
         MStoreElement* storeElem = access->toStoreElement();
         MOZ_ASSERT(storeElem->elements() == def);
 
-        // If we need hole checks, then the array cannot be escaped
-        // as the array might refer to the prototype chain to look
-        // for properties, thus it might do additional side-effects
-        // which are not reflected by the alias set, is we are
-        // bailing on holes.
+        // StoreElement must bail out if it stores to a hole, in case
+        // there is a setter on the prototype chain. If this StoreElement
+        // might store to a hole, we can't scalar-replace it.
         if (storeElem->needsHoleCheck()) {
           JitSpewDef(JitSpew_Escape, "has a store element with a hole check\n",
                      storeElem);
@@ -806,13 +793,13 @@ static inline bool IsOptimizableArrayInstruction(MInstruction* ins) {
 // changing length, with only access with known constants.
 static bool IsArrayEscaped(MInstruction* ins, MInstruction* newArray) {
   MOZ_ASSERT(ins->type() == MIRType::Object);
-  MOZ_ASSERT(IsOptimizableArrayInstruction(ins));
   MOZ_ASSERT(IsOptimizableArrayInstruction(newArray));
 
   JitSpewDef(JitSpew_Escape, "Check array\n", ins);
   JitSpewIndent spewIndent(JitSpew_Escape);
 
-  if (!newArray->toNewArray()->templateObject()) {
+  JSObject* templateObject = newArray->toNewArray()->templateObject();
+  if (!templateObject) {
     JitSpew(JitSpew_Escape, "No template object defined.");
     return true;
   }
@@ -850,6 +837,50 @@ static bool IsArrayEscaped(MInstruction* ins, MInstruction* newArray) {
 
         break;
       }
+
+      case MDefinition::Opcode::GuardShape: {
+        MGuardShape* guard = def->toGuardShape();
+        if (templateObject->shape() != guard->shape()) {
+          JitSpewDef(JitSpew_Escape, "has a non-matching guard shape\n", guard);
+          return true;
+        }
+        if (IsArrayEscaped(guard, newArray)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+
+        break;
+      }
+
+      case MDefinition::Opcode::GuardToClass: {
+        MGuardToClass* guard = def->toGuardToClass();
+        if (templateObject->getClass() != guard->getClass()) {
+          JitSpewDef(JitSpew_Escape, "has a non-matching class guard\n", guard);
+          return true;
+        }
+        if (IsArrayEscaped(guard, newArray)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+
+        break;
+      }
+
+      case MDefinition::Opcode::Unbox: {
+        if (def->type() != MIRType::Object) {
+          JitSpewDef(JitSpew_Escape, "has an invalid unbox\n", def);
+          return true;
+        }
+        if (IsArrayEscaped(def->toInstruction(), newArray)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
+      case MDefinition::Opcode::PostWriteBarrier:
+      case MDefinition::Opcode::PostWriteElementBarrier:
+        break;
 
       // This instruction is a no-op used to verify that scalar replacement
       // is working as expected in jit-test.
@@ -920,6 +951,11 @@ class ArrayMemoryView : public MDefinitionVisitorDefaultNoop {
   void visitSetInitializedLength(MSetInitializedLength* ins);
   void visitInitializedLength(MInitializedLength* ins);
   void visitArrayLength(MArrayLength* ins);
+  void visitPostWriteBarrier(MPostWriteBarrier* ins);
+  void visitPostWriteElementBarrier(MPostWriteElementBarrier* ins);
+  void visitGuardShape(MGuardShape* ins);
+  void visitGuardToClass(MGuardToClass* ins);
+  void visitUnbox(MUnbox* ins);
 };
 
 const char* ArrayMemoryView::phaseName = "Scalar Replacement of Array";
@@ -1126,7 +1162,14 @@ void ArrayMemoryView::visitLoadElement(MLoadElement* ins) {
   // Replace by the value contained at the index.
   int32_t index;
   MOZ_ALWAYS_TRUE(IndexOf(ins, &index));
-  ins->replaceAllUsesWith(state_->getElement(index));
+
+  // The only way to store a hole value in a new array is with
+  // StoreHoleValueElement, which IsElementEscaped does not allow.
+  // Therefore, we do not have to do a hole check.
+  MDefinition* element = state_->getElement(index);
+  MOZ_ASSERT(element->type() != MIRType::MagicHole);
+
+  ins->replaceAllUsesWith(element);
 
   // Remove original instruction.
   discardInstruction(ins, elements);
@@ -1140,7 +1183,7 @@ void ArrayMemoryView::visitSetInitializedLength(MSetInitializedLength* ins) {
   }
 
   // Replace by the new initialized length.  Note that the argument of
-  // MSetInitalizedLength is the last index and not the initialized length.
+  // MSetInitializedLength is the last index and not the initialized length.
   // To obtain the length, we need to add 1 to it, and thus we need to create
   // a new constant that we register in the ArrayState.
   state_ = BlockState::Copy(alloc_, state_);
@@ -1189,6 +1232,67 @@ void ArrayMemoryView::visitArrayLength(MArrayLength* ins) {
 
   // Remove original instruction.
   discardInstruction(ins, elements);
+}
+
+void ArrayMemoryView::visitPostWriteBarrier(MPostWriteBarrier* ins) {
+  // Skip barriers on other objects.
+  if (ins->object() != arr_) {
+    return;
+  }
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void ArrayMemoryView::visitPostWriteElementBarrier(
+    MPostWriteElementBarrier* ins) {
+  // Skip barriers on other objects.
+  if (ins->object() != arr_) {
+    return;
+  }
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void ArrayMemoryView::visitGuardShape(MGuardShape* ins) {
+  // Skip guards on other objects.
+  if (ins->object() != arr_) {
+    return;
+  }
+
+  // Replace the guard by its object.
+  ins->replaceAllUsesWith(arr_);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void ArrayMemoryView::visitGuardToClass(MGuardToClass* ins) {
+  // Skip guards on other objects.
+  if (ins->object() != arr_) {
+    return;
+  }
+
+  // Replace the guard by its object.
+  ins->replaceAllUsesWith(arr_);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void ArrayMemoryView::visitUnbox(MUnbox* ins) {
+  // Skip unrelated unboxes.
+  if (ins->getOperand(0) != arr_) {
+    return;
+  }
+  MOZ_ASSERT(ins->type() == MIRType::Object);
+
+  // Replace the unbox with the array object.
+  ins->replaceAllUsesWith(arr_);
+
+  // Remove the unbox.
+  ins->block()->discard(ins);
 }
 
 static inline bool IsOptimizableArgumentsInstruction(MInstruction* ins) {

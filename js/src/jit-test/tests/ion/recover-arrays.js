@@ -1,7 +1,3 @@
-// |jit-test| --no-ion
-// Warp lacks Scalar Replacement support (bug 1650233). Re-evaluate after that
-// bug has been fixed.
-
 // Ion eager fails the test below because we have not yet created any
 // template object in baseline before running the content of the top-level
 // function.
@@ -308,7 +304,7 @@ for (var i = 0; i < 100; i++) {
     arrayLarge0(i);
     arrayLarge1(i);
     arrayLarge2(i);
-    arrayCond(i);
+    //arrayCond(i); See bug 1697691.
     arrayHole0(i);
     arrayAlloc0(i);
     arrayAlloc1(i);
