@@ -198,7 +198,7 @@
 
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
-    <string name="search_scan_button">Sken bike</string>
+    <string name="search_scan_button">Kodê bixwîne</string>
     <!-- Button in the search view that lets a user change their search engine -->
     <string name="search_engine_button">Motora lêgerînê</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
@@ -293,7 +293,7 @@
     <!-- Preference shown on banner to sign into account -->
     <string name="preferences_sign_in">Têkeve</string>
     <!-- Preference for changing where the toolbar is positioned -->
-    <string name="preferences_toolbar">Darika amûran</string>
+    <string name="preferences_toolbar">Darikê amûran</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Rûkar</string>
     <!-- Preference for customizing the home screen -->
@@ -471,7 +471,7 @@
     <!-- Header of the Turn on Sync preference view -->
     <string name="preferences_sync">Sync’ê veke</string>
     <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Koda hevcotkirinê ya di Firefoxa Sermaseyê de sken bike</string>
+    <string name="preferences_sync_pair">Koda hevcotkirinê ya di Firefoxa Sermaseyê de bide xwendin</string>
     <!-- Preference for account login -->
     <string name="preferences_sync_sign_in">Têkeve</string>
     <!-- Preference for reconnecting to FxA sync -->
@@ -481,7 +481,7 @@
 
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
-    <string name="pair_instructions_2"><![CDATA[Koda QRê ya di <b> firefox.com/pair </b> de xuya dibe sken bike]]></string>
+    <string name="pair_instructions_2"><![CDATA[Koda QRê ya di <b> firefox.com/pair </b> de xuya dibe, bide xwendin]]></string>
     <!-- Button to open camera for pairing -->
     <string name="pair_open_camera">Kamerayê veke</string>
     <!-- Button to cancel pairing -->
@@ -508,11 +508,11 @@
     <!-- Preferences for using pull to refresh in a webpage -->
     <string name="preference_gestures_website_pull_to_refresh">Ji bo nûkirinê bikişîne</string>
     <!-- Preference for using the dynamic toolbar -->
-    <string name="preference_gestures_dynamic_toolbar">Ji bo veşartina derika amûran, bişemitîne</string>
+    <string name="preference_gestures_dynamic_toolbar">Ji bo darikê amûran veşêrî, bişemitîne</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
-    <string name="preference_gestures_swipe_toolbar_switch_tabs">Ji bo guhertina hilpekînê, darika amûran bi kêlekê ve biherikîne</string>
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Ji bo hilpekînê biguherînî, darikê amûran biherikîne kêlekê</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
-    <string name="preference_gestures_swipe_toolbar_show_tabs">Ji bo vekirina hilpekînan, darika amûran bi jorê ve biherikîne</string>
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Ji bo hilpekînan vekî, darikê amûran biherikîne jorê</string>
 
     <!-- Library -->
     <!-- Option in Library to open Sessions page -->
@@ -528,7 +528,7 @@
     <!-- Option in library to open Desktop Bookmarks "menu" page -->
     <string name="library_desktop_bookmarks_menu">Menûya Favoriyan</string>
     <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
-    <string name="library_desktop_bookmarks_toolbar">Darika Amûran a Favoriyan</string>
+    <string name="library_desktop_bookmarks_toolbar">Darikê Amûran ê Favoriyan</string>
     <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
     <string name="library_desktop_bookmarks_unfiled">Favoriyên din</string>
     <!-- Option in Library to open History page -->
@@ -1201,7 +1201,7 @@
     <!-- text for tracking protection radio button option for standard level of blocking -->
     <string name="onboarding_tracking_protection_standard_button_2">Standard (jixweber)</string>
     <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Hindiktir şopîneran asteng dike. Rûpel dê bi awayê asayî bên barkirin.</string>
+    <string name="onboarding_tracking_protection_standard_button_description_2">Hindiktir şopîneran asteng dike. Rûpel ew ê bi awayê normal vebin.</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
     <string name="onboarding_tracking_protection_strict_button">Tund (tê pêşniyarkirin)</string>
     <!-- text for tracking protection radio button option for strict level of blocking -->
@@ -1213,7 +1213,7 @@
         but it is ok to make this more literally about "choosing a position in a physical space -->
     <string name="onboarding_toolbar_position_header">Aliyê xwe hilbijêre</string>
     <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Darika amûran a jêrîn bi destekî biceribîne an jî wê bibe jorê tu bi kêfa xwe yî.</string>
+    <string name="onboarding_toolbar_position_description">Darikê amûran ê jêrîn bi destekî biceribîne an jî wê bibe jorê tu bi kêfa xwe yî.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Bi nihênî bigere</string>
     <!-- text for the private browsing onboarding card description
@@ -1259,11 +1259,11 @@
     <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
     <string name="sync_sent_tab_error_snackbar_action">DÎSA BICERIBÎNE</string>
     <!-- Title of QR Pairing Fragment -->
-    <string name="sync_scan_code">Kodê sken bike</string>
+    <string name="sync_scan_code">Kodê bide xwendin</string>
     <!-- Instructions on how to access pairing -->
     <string name="sign_in_instructions"><![CDATA[Firefoxê ji ser kombersa xwe veke û here ser rûpela <b>https://firefox.com/pair</b>]]></string>
     <!-- Text shown for sign in pairing when ready -->
-    <string name="sign_in_ready_for_scan">Ji bo skenkirinê amade me</string>
+    <string name="sign_in_ready_for_scan">Aniha kodê bide xwendin</string>
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Bi kameraya xwe têkeve</string>
     <!-- Text shown for settings option for sign with email -->
@@ -1288,7 +1288,7 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Parastina ji şopandinê ya pêşketî</string>
     <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Bêyî ku tu bê şopandin bigere</string>
+    <string name="preference_enhanced_tracking_protection_explanation_title">Bêyî ku tu werî şopandin bigere</string>
     <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation">Bila daneyên te ji te re bimînin. %s te ji gelek şopdarên dilxerab diparêze û nahêle tiştên ku tu li ser înternetê dikî ji aliyê wan ve bên dîtin.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1296,7 +1296,7 @@
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standard (heyî)</string>
     <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Hindiktir şopîneran asteng bike. Rûpel dê asayî vebin.</string>
+    <string name="preference_enhanced_tracking_protection_standard_description_3">Hindiktir şopîneran asteng dike. Rûpel ew ê bi awayê normal vebin.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Bi parastina ji şopandinê ya standard çi tên astengkirin?</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
@@ -1308,7 +1308,7 @@
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom">Taybet</string>
     <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_description_2">Hilbijêre ka kîjan şopîner û skrîpt bên astengkirin.</string>
+    <string name="preference_enhanced_tracking_protection_custom_description_2">Hilbijêre ka kîjan şopdar û skrîpt ew ê bêne astengkirin.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_custom_info_button">Bi parastina ji şopandinê ya taybet çi tên astengkirin?</string>
     <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
@@ -1596,7 +1596,7 @@
     <!-- Second step for the allowing a permission -->
     <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Li <b>Destûr</b>’ê bitikîne]]></string>
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
-    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Eyara <b>%1$s</b>’ê bike VEKIRÎ]]></string>
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Eyara <b>%1$s</b>’yê bike VEKIRÎ]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection">Girêdana ewle</string>
