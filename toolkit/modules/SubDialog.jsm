@@ -221,7 +221,6 @@ SubDialog.prototype = {
 
     let onClosed = () => {
       this._openedURL = null;
-      this._isClosing = false;
 
       this._resolveClosePromise();
 
@@ -252,9 +251,9 @@ SubDialog.prototype = {
     );
 
     // Defer removing the overlay so the frame content window can unload.
-    this._window.setTimeout(() => {
+    Services.tm.dispatchToMainThread(() => {
       this._overlay.remove();
-    }, 0);
+    });
   },
 
   handleEvent(aEvent) {

@@ -9436,33 +9436,84 @@ TabModalPromptBox.prototype = {
 // tab-modal prompts.
 var gDialogBox = {
   _dialog: null,
+  _queued: [],
+
+  // Used to wait for a `close` event from the HTML
+  // dialog. The  event is fired asynchronously, which means
+  // that if we open another dialog immediately after the
+  // previous one, we might be confused into thinking a
+  // `close` event for the old dialog is for the new one.
+  // As they have the same event target, we have no way of
+  // distinguishing them. So we wait for the `close` event
+  // to have happened before allowing another dialog to open.
+  _didCloseHTMLDialog: null,
+  // Whether we managed to open the dialog we tried to open.
+  // Used to avoid waiting for the above callback in case
+  // of an error opening the dialog.
+  _didOpenHTMLDialog: false,
 
   get isOpen() {
     return !!this._dialog;
   },
 
   async open(uri, args) {
+    // If we already have a dialog opened and are trying to open another,
+    // queue the next one to be opened later.
+    if (this.isOpen) {
+      return new Promise((resolve, reject) => {
+        this._queued.push({ resolve, reject, uri, args });
+      });
+    }
+    // Indicate if we should wait for the dialog to close.
+    this._didOpenHTMLDialog = false;
+    let haveClosedPromise = new Promise(resolve => {
+      this._didCloseHTMLDialog = resolve;
+    });
     try {
       await this._open(uri, args);
     } catch (ex) {
       Cu.reportError(ex);
     } finally {
       let dialog = document.getElementById("window-modal-dialog");
-      dialog.close();
+      if (dialog.open) {
+        dialog.close();
+      }
+      // If the dialog was opened successfully, then we can wait for it
+      // to close before trying to open any others.
+      if (this._didOpenHTMLDialog) {
+        await haveClosedPromise;
+      }
       dialog.style.visibility = "hidden";
       dialog.style.height = "0";
       dialog.style.width = "0";
       document.documentElement.removeAttribute("window-modal-open");
       dialog.removeEventListener("dialogopen", this);
+      dialog.removeEventListener("close", this);
       this._updateMenuAndCommandState(true /* to enable */);
       this._dialog = null;
+    }
+    if (this._queued.length) {
+      setTimeout(() => this._openNextDialog(), 0);
     }
     return args;
   },
 
+  _openNextDialog() {
+    if (!this.isOpen) {
+      let { resolve, reject, uri, args } = this._queued.shift();
+      this.open(uri, args).then(resolve, reject);
+    }
+  },
+
   handleEvent(event) {
-    if (event.type == "dialogopen") {
-      this._dialog.focus(true);
+    switch (event.type) {
+      case "dialogopen":
+        this._dialog.focus(true);
+        break;
+      case "close":
+        this._didCloseHTMLDialog();
+        this._dialog.close();
+        break;
     }
   },
 
@@ -9482,6 +9533,7 @@ var gDialogBox = {
     // Call this first so the contents show up and get layout, which is
     // required for SubDialog to work.
     parentElement.showModal();
+    this._didOpenHTMLDialog = true;
 
     // Disable menus and shortcuts.
     this._updateMenuAndCommandState(false /* to disable */);
@@ -9490,6 +9542,7 @@ var gDialogBox = {
     let template = document.getElementById("window-modal-dialog-template")
       .content.firstElementChild;
     parentElement.addEventListener("dialogopen", this);
+    parentElement.addEventListener("close", this);
     this._dialog = new SubDialog({
       template,
       parentElement,
