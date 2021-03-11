@@ -188,6 +188,7 @@ var BrowserTestUtils = {
    * @resolves The new tab.
    */
   openNewForegroundTab(tabbrowser, ...args) {
+    let startTime = Cu.now();
     let options;
     if (
       tabbrowser.ownerGlobal &&
@@ -271,7 +272,14 @@ var BrowserTestUtils = {
         );
       }
     }
-    return Promise.all(promises).then(() => tab);
+    return Promise.all(promises).then(() => {
+      ChromeUtils.addProfilerMarker(
+        "BrowserTestUtils",
+        { startTime, category: "Test" },
+        "openNewForegroundTab"
+      );
+      return tab;
+    });
   },
 
   /**
@@ -355,11 +363,19 @@ var BrowserTestUtils = {
    * @resolves The tab switched to.
    */
   switchTab(tabbrowser, tab) {
+    let startTime = Cu.now();
     let promise = new Promise(resolve => {
       tabbrowser.addEventListener(
         "TabSwitchDone",
         function() {
-          TestUtils.executeSoon(() => resolve(tabbrowser.selectedTab));
+          TestUtils.executeSoon(() => {
+            ChromeUtils.addProfilerMarker(
+              "BrowserTestUtils",
+              { category: "Test", startTime },
+              "switchTab"
+            );
+            resolve(tabbrowser.selectedTab);
+          });
         },
         { once: true }
       );
@@ -408,6 +424,8 @@ var BrowserTestUtils = {
     wantLoad = null,
     maybeErrorPage = false
   ) {
+    let startTime = Cu.now();
+
     // Passing a url as second argument is a common mistake we should prevent.
     if (includeSubFrames && typeof includeSubFrames != "boolean") {
       throw new Error(
@@ -464,6 +482,11 @@ var BrowserTestUtils = {
               return;
             }
 
+            ChromeUtils.addProfilerMarker(
+              "BrowserTestUtils",
+              { startTime, category: "Test" },
+              "browserLoaded: " + internalURL
+            );
             resolve(internalURL);
             break;
           }
@@ -1016,6 +1039,8 @@ var BrowserTestUtils = {
    *         Resolves with the new window once it is loaded.
    */
   async openNewBrowserWindow(options = {}) {
+    let startTime = Cu.now();
+
     let currentWin = BrowserWindowTracker.getTopWindow({ private: false });
     if (!currentWin) {
       throw new Error(
@@ -1049,6 +1074,11 @@ var BrowserTestUtils = {
     );
 
     await Promise.all(promises);
+    ChromeUtils.addProfilerMarker(
+      "BrowserTestUtils",
+      { startTime, category: "Test" },
+      "openNewBrowserWindow"
+    );
 
     return win;
   },
@@ -1199,6 +1229,7 @@ var BrowserTestUtils = {
    * @resolves The Event object.
    */
   waitForEvent(subject, eventName, capture, checkFn, wantsUntrusted) {
+    let startTime = Cu.now();
     return new Promise((resolve, reject) => {
       subject.addEventListener(
         eventName,
@@ -1208,7 +1239,14 @@ var BrowserTestUtils = {
               return;
             }
             subject.removeEventListener(eventName, listener, capture);
-            TestUtils.executeSoon(() => resolve(event));
+            TestUtils.executeSoon(() => {
+              ChromeUtils.addProfilerMarker(
+                "BrowserTestUtils",
+                { startTime, category: "Test" },
+                "waitForEvent: " + eventName
+              );
+              resolve(event);
+            });
           } catch (ex) {
             try {
               subject.removeEventListener(eventName, listener, capture);
@@ -2478,6 +2516,7 @@ var BrowserTestUtils = {
    *        Extra information to pass to the actor.
    */
   async sendQuery(aBrowsingContext, aMessageName, aMessageData) {
+    let startTime = Cu.now();
     if (!aBrowsingContext.currentWindowGlobal) {
       await this.waitForCondition(() => aBrowsingContext.currentWindowGlobal);
     }
@@ -2485,7 +2524,14 @@ var BrowserTestUtils = {
     let actor = aBrowsingContext.currentWindowGlobal.getActor(
       "BrowserTestUtils"
     );
-    return actor.sendQuery(aMessageName, aMessageData);
+    return actor.sendQuery(aMessageName, aMessageData).then(val => {
+      ChromeUtils.addProfilerMarker(
+        "BrowserTestUtils",
+        { startTime, category: "Test" },
+        aMessageName
+      );
+      return val;
+    });
   },
 };
 
