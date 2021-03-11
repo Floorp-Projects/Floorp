@@ -561,9 +561,9 @@ uint32_t BytecodeParser::simulateOp(JSOp op, uint32_t offset,
   uint32_t nuses = GetUseCount(pc);
   uint32_t ndefs = GetDefCount(pc);
 
-  MOZ_ASSERT(stackDepth >= nuses);
+  MOZ_RELEASE_ASSERT(stackDepth >= nuses);
   stackDepth -= nuses;
-  MOZ_ASSERT(stackDepth + ndefs <= maximumStackDepth());
+  MOZ_RELEASE_ASSERT(stackDepth + ndefs <= maximumStackDepth());
 
 #ifdef DEBUG
   if (isStackDump) {
@@ -767,7 +767,8 @@ end:
 bool BytecodeParser::recordBytecode(uint32_t offset,
                                     const OffsetAndDefIndex* offsetStack,
                                     uint32_t stackDepth) {
-  MOZ_ASSERT(offset < script_->length());
+  MOZ_RELEASE_ASSERT(offset < script_->length());
+  MOZ_RELEASE_ASSERT(stackDepth <= maximumStackDepth());
 
   Bytecode*& code = codeArray_[offset];
   if (!code) {
@@ -845,7 +846,7 @@ bool BytecodeParser::parse() {
     // Next bytecode to analyze.
     nextOffset = offset + GetBytecodeLength(pc);
 
-    MOZ_ASSERT(*pc < JSOP_LIMIT);
+    MOZ_RELEASE_ASSERT(*pc < JSOP_LIMIT);
     JSOp op = JSOp(*pc);
 
     if (!code) {
