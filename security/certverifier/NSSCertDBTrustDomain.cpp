@@ -1182,7 +1182,9 @@ static Result CheckForStartComOrWoSign(const UniqueCERTCertList& certChain) {
     if (!node || !node->cert) {
       return Result::FATAL_ERROR_LIBRARY_FAILURE;
     }
-    if (CertDNIsInList(node->cert, StartComAndWoSignDNs)) {
+    nsTArray<uint8_t> certDER(node->cert->derCert.data,
+                              node->cert->derCert.len);
+    if (CertDNIsInList(certDER, StartComAndWoSignDNs)) {
       return Result::ERROR_REVOKED_CERTIFICATE;
     }
   }
@@ -1353,13 +1355,12 @@ Result NSSCertDBTrustDomain::IsChainValid(const DERArray& certArray, Time time,
   // This algorithm only applies if we are verifying in the context of a TLS
   // handshake. To determine this, we check mHostname: If it isn't set, this is
   // not TLS, so don't run the algorithm.
-  if (mHostname && CertDNIsInList(root.get(), RootSymantecDNs)) {
-    rootCert = nullptr;  // Clear the state for Segment...
-    nsTArray<RefPtr<nsIX509Cert>> intCerts;
-    nsCOMPtr<nsIX509Cert> eeCert;
+  nsTArray<uint8_t> rootCertDER(root.get()->derCert.data,
+                                root.get()->derCert.len);
+  if (mHostname && CertDNIsInList(rootCertDER, RootSymantecDNs)) {
+    nsTArray<nsTArray<uint8_t>> intCerts;
 
-    nsrv = nsNSSCertificate::SegmentCertificateChain(nssCertList, rootCert,
-                                                     intCerts, eeCert);
+    nsrv = nsNSSCertificate::GetIntermediatesAsDER(nssCertList, intCerts);
     if (NS_FAILED(nsrv)) {
       // This chain is supposed to be complete, so this is an error.
       return Result::ERROR_ADDITIONAL_POLICY_CONSTRAINT_FAILED;
