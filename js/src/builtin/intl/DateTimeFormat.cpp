@@ -566,7 +566,7 @@ static char16_t HourSymbol(HourCycle hc) {
     case HourCycle::H24:
       return 'k';
   }
-  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected hour cycle");
+  MOZ_CRASH("unexpected hour cycle");
 }
 
 /**

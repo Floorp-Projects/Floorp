@@ -527,7 +527,7 @@ class RefType {
       case RefType::TypeIndex:
         MOZ_CRASH("NYI");
     }
-    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("switch is exhaustive");
+    MOZ_CRASH("switch is exhaustive");
   }
 
   bool operator==(const RefType& that) const { return ptc_ == that.ptc_; }
@@ -984,7 +984,7 @@ static inline jit::MIRType ToMIRType(ValType vt) {
     case ValType::Ref:
       return jit::MIRType::RefOrNull;
   }
-  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("bad type");
+  MOZ_CRASH("bad type");
 }
 
 static inline bool IsNumberType(ValType vt) { return !vt.isReference(); }
