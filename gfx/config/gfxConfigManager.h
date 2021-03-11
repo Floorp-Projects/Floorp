@@ -28,6 +28,7 @@ class gfxConfigManager {
         mFeatureWrSoftware(nullptr),
         mFeatureHwCompositing(nullptr),
         mFeatureD3D11HwAngle(nullptr),
+        mFeatureD3D11Compositing(nullptr),
         mFeatureGPUProcess(nullptr),
         mWrForceEnabled(false),
         mWrForceDisabled(false),
@@ -46,6 +47,7 @@ class gfxConfigManager {
         mScaledResolution(false),
         mDisableHwCompositingNoWr(false),
         mIsNightly(false),
+        mIsEarlyBetaOrEarlier(false),
         mSafeMode(false),
         mIsWin10OrLater(false) {}
 
@@ -72,6 +74,7 @@ class gfxConfigManager {
 
   FeatureState* mFeatureHwCompositing;
   FeatureState* mFeatureD3D11HwAngle;
+  FeatureState* mFeatureD3D11Compositing;
   FeatureState* mFeatureGPUProcess;
 
   /**
@@ -104,6 +107,7 @@ class gfxConfigManager {
   bool mScaledResolution;
   bool mDisableHwCompositingNoWr;
   bool mIsNightly;
+  bool mIsEarlyBetaOrEarlier;
   bool mSafeMode;
   bool mIsWin10OrLater;
 };
