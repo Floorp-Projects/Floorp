@@ -5,17 +5,10 @@
 job-defaults:
     max-run-time: 3600
     suite: talos
-    tier:
-        by-test-platform:
-            windows10-64-ccov.*/.*: 3
-            linux64-ccov.*/.*: 3
-            default: default
+    tier: default
     variants: ['fission']
     fission-tier: 2
-    virtualization:
-        by-test-platform:
-            windows10-64-ccov.*/.*: virtual
-            default: hardware
+    virtualization: hardware
     mozharness:
         script: talos_script.py
         config:
@@ -24,10 +17,6 @@ job-defaults:
                     - talos/mac_config.py
                 windows.*:
                     - talos/windows_config.py
-                windows10-64-ccov-qr/opt:
-                    - talos/windows_vm_config.py
-                linux64-ccov.*/.*:
-                    - talos/linux64_config_taskcluster.py
                 default:
                     - talos/linux_config.py
     test-manifest-loader: null  # don't load tests in the taskgraph
@@ -364,11 +353,7 @@ talos-motionmark:
             (linux|windows|macos)(?!.*shippable).*: []
             default: ['mozilla-central']
     max-run-time: 3600
-    tier:
-        by-test-platform:
-            windows10-64-ccov.*/.*: 3
-            linux64-ccov.*/.*: 3
-            default: 2
+    tier: 2
     mozharness:
         extra-options:
             - --suite=motionmark
@@ -378,11 +363,7 @@ talos-motionmark-profiling:
     try-name: motionmark-prof
     treeherder-symbol: T-Prof(mm)
     max-run-time: 3600
-    tier:
-        by-test-platform:
-            windows10-64-ccov.*/.*: 3
-            linux64-ccov.*/.*: 3
-            default: 2
+    tier: 2
     mozharness:
         extra-options:
             - --suite=motionmark
@@ -563,11 +544,9 @@ talos-webgl:
     treeherder-symbol: T(webgl)
     variants:
         by-test-platform:
-            .*-ccov.*/.*: []
             android.*: []
             windows7-32.*: []
             (linux64|windows10|macos).*-qr.*: ['webgl-ipc', 'webrender-sw']
-            windows10-64-ccov-qr/opt: []
             default: ['webgl-ipc']
     run-on-projects:
         by-test-platform:
@@ -588,7 +567,6 @@ talos-webgl-profiling:
     run-on-projects: []
     variants:
         by-test-platform:
-            .*-ccov.*/.*: []
             android.*: []
             windows7-32.*: []
             default: ['webgl-ipc-profiling']
@@ -617,10 +595,7 @@ talos-xperf:
             windows7-32-shippable(?:-qr)?/.*: []
             windows10-64-shippable(?:-qr)?/.*: ['mozilla-beta', 'trunk']
             default: []
-    tier:
-        by-test-platform:
-            windows10-64-ccov.*/.*: 3
-            default: default
+    tier: default
     mozharness:
         extra-options:
             - --suite=xperf

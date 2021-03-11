@@ -8,7 +8,7 @@ job-defaults:
         linux64.*: build-linux64-shippable/opt
     worker-type:
         by-platform:
-            linux64.*: t-linux-talos
+            linux64.*: t-linux-talos-1804
     worker:
         by-platform:
             linux64.*:
