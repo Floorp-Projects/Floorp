@@ -85,6 +85,7 @@ async function runTests() {
   await SpecialPowers.pushPrefEnv({ set: [
     ["dom.security.https_only_mode", true],
     ["dom.security.https_only_mode_send_http_background_request", true],
+    ["dom.security.https_only_mode_error_page_user_suggestions", false],
   ]});
   let testWin = window.open(EXPECTED_KICK_OFF_REQUEST, "_blank");
   await resolveAfter4Seconds();
@@ -105,6 +106,7 @@ async function runTests() {
   await SpecialPowers.pushPrefEnv({ set: [
     ["dom.security.https_only_mode", true],
     ["dom.security.https_only_mode_send_http_background_request", false],
+    ["dom.security.https_only_mode_error_page_user_suggestions", false],
   ]});
   testWin = window.open(EXPECTED_KICK_OFF_REQUEST, "_blank");
   await resolveAfter4Seconds();

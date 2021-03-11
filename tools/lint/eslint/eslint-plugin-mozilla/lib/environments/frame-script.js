@@ -39,5 +39,7 @@ module.exports = {
     RPMAddToHistogram: false,
     RPMRemoveMessageListener: false,
     RPMGetHttpResponseHeader: false,
+    RPMTryPingSecureWWWLink: false,
+    RPMOpenSecureWWWLink: false,
   },
 };

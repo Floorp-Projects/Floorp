@@ -63,6 +63,9 @@ let RemotePageAccessManager = {
     "about:httpsonlyerror": {
       RPMGetFormatURLPref: ["app.support.baseURL"],
       RPMSendAsyncMessage: ["goBack", "openInsecure"],
+      RPMAddMessageListener: ["WWWReachable"],
+      RPMTryPingSecureWWWLink: ["*"],
+      RPMOpenSecureWWWLink: ["*"],
     },
     "about:certificate": {
       RPMSendQuery: ["getCertificates"],
