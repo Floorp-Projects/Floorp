@@ -178,6 +178,7 @@ enum class OpKind {
   RefAsNonNull,
   BrOnNull,
   StructNewWithRtt,
+  StructNewDefaultWithRtt,
   StructGet,
   StructSet,
   RttCanon,
@@ -549,6 +550,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readTableSize(uint32_t* tableIndex);
   [[nodiscard]] bool readStructNewWithRtt(uint32_t* typeIndex, Value* rtt,
                                           ValueVector* argValues);
+  [[nodiscard]] bool readStructNewDefaultWithRtt(uint32_t* typeIndex,
+                                                 Value* rtt);
   [[nodiscard]] bool readStructGet(uint32_t* typeIndex, uint32_t* fieldIndex,
                                    Value* ptr);
   [[nodiscard]] bool readStructSet(uint32_t* typeIndex, uint32_t* fieldIndex,
@@ -2656,6 +2659,29 @@ inline bool OpIter<Policy>::readStructNewWithRtt(uint32_t* typeIndex,
     if (!popWithType(str.fields_[i].type, &(*argValues)[i])) {
       return false;
     }
+  }
+
+  return push(RefType::fromTypeIndex(*typeIndex, false));
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readStructNewDefaultWithRtt(uint32_t* typeIndex,
+                                                        Value* rtt) {
+  MOZ_ASSERT(Classify(op_) == OpKind::StructNewDefaultWithRtt);
+
+  if (!readStructTypeIndex(typeIndex)) {
+    return false;
+  }
+
+  const StructType& str = env_.types.structType(*typeIndex);
+  const ValType rttType = ValType::fromRtt(*typeIndex, 0);
+
+  if (!popWithType(rttType, rtt)) {
+    return false;
+  }
+
+  if (!str.isDefaultable()) {
+    return fail("struct must be defaultable");
   }
 
   return push(RefType::fromTypeIndex(*typeIndex, false));
