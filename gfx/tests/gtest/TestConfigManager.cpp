@@ -265,7 +265,6 @@ class GfxConfigManager : public ::testing::Test, public gfxConfigManager {
     mFeatureWrPartial = &mFeatures.mWrPartial;
     mFeatureWrOptimizedShaders = &mFeatures.mWrOptimizedShaders;
     mFeatureHwCompositing = &mFeatures.mHwCompositing;
-    mFeatureD3D11HwAngle = &mFeatures.mD3D11HwAngle;
     mFeatureGPUProcess = &mFeatures.mGPUProcess;
     mFeatureWrSoftware = &mFeatures.mWrSoftware;
   }
@@ -274,10 +273,14 @@ class GfxConfigManager : public ::testing::Test, public gfxConfigManager {
     mMockGfxInfo = new MockGfxInfo();
     mGfxInfo = mMockGfxInfo;
 
+    mFeatureD3D11HwAngle = &mFeatures.mD3D11HwAngle;
+    mFeatureD3D11Compositing = &mFeatures.mD3D11Compositing;
+
     // By default, turn everything on. This effectively assumes we are on
     // qualified nightly Windows 10 with DirectComposition support.
     mFeatureHwCompositing->EnableByDefault();
     mFeatureD3D11HwAngle->EnableByDefault();
+    mFeatureD3D11Compositing->EnableByDefault();
     mFeatureGPUProcess->EnableByDefault();
 
     mWrCompositorEnabled.emplace(true);
@@ -289,6 +292,7 @@ class GfxConfigManager : public ::testing::Test, public gfxConfigManager {
     ++mHwStretchingSupport.mBoth;
     mIsWin10OrLater = true;
     mIsNightly = true;
+    mIsEarlyBetaOrEarlier = true;
   }
 
   void TearDown() override {
@@ -301,6 +305,7 @@ class GfxConfigManager : public ::testing::Test, public gfxConfigManager {
     mFeatures.mWrOptimizedShaders.Reset();
     mFeatures.mHwCompositing.Reset();
     mFeatures.mD3D11HwAngle.Reset();
+    mFeatures.mD3D11Compositing.Reset();
     mFeatures.mGPUProcess.Reset();
     mFeatures.mWrSoftware.Reset();
   }
@@ -315,6 +320,7 @@ class GfxConfigManager : public ::testing::Test, public gfxConfigManager {
     FeatureState mWrOptimizedShaders;
     FeatureState mHwCompositing;
     FeatureState mD3D11HwAngle;
+    FeatureState mD3D11Compositing;
     FeatureState mGPUProcess;
     FeatureState mWrSoftware;
   } mFeatures;
@@ -612,7 +618,7 @@ TEST_F(GfxConfigManager, WebRenderQualifiedAndBlocklistAllowQualified) {
 }
 
 TEST_F(GfxConfigManager, WebRenderQualifiedAndBlocklistAllowAlways) {
-  mIsNightly = false;
+  mIsNightly = mIsEarlyBetaOrEarlier = false;
   mMockGfxInfo->mStatusWr = nsIGfxInfo::FEATURE_ALLOW_ALWAYS;
   ConfigureWebRender();
 
@@ -630,7 +636,7 @@ TEST_F(GfxConfigManager, WebRenderQualifiedAndBlocklistAllowAlways) {
 }
 
 TEST_F(GfxConfigManager, WebRenderIntelBatteryNoHwStretchingNotNightly) {
-  mIsNightly = false;
+  mIsNightly = mIsEarlyBetaOrEarlier = false;
   ++mHwStretchingSupport.mNone;
   mScaledResolution = true;
   mMockGfxInfo->mHasBattery.ref() = true;
@@ -670,7 +676,7 @@ TEST_F(GfxConfigManager, WebRenderNvidiaHighMixedRefreshRateNightly) {
 }
 
 TEST_F(GfxConfigManager, WebRenderNvidiaHighMixedRefreshRateNotNightly) {
-  mIsNightly = false;
+  mIsNightly = mIsEarlyBetaOrEarlier = false;
   mMockGfxInfo->mMaxRefreshRate = 120;
   mMockGfxInfo->mHasMixedRefreshRate = true;
   ConfigureWebRender();
@@ -923,6 +929,87 @@ TEST_F(GfxConfigManager, WebRenderForceSoftwareForceEnabledEnvvar) {
   EXPECT_FALSE(mFeatures.mWrOptimizedShaders.IsEnabled());
   EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
   EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
+  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrSoftware.IsEnabled());
+}
+
+TEST_F(GfxConfigManager, WebRenderSoftwareReleaseD3D11Enabled) {
+  mIsNightly = mIsEarlyBetaOrEarlier = false;
+  mMockGfxInfo->mStatusWr = nsIGfxInfo::FEATURE_DENIED;
+  mMockGfxInfo->mStatusWrSoftware = nsIGfxInfo::FEATURE_ALLOW_ALWAYS;
+  ConfigureWebRender();
+
+  EXPECT_FALSE(mFeatures.mWrQualified.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWr.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrCompositor.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrAngle.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrDComp.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrPartial.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
+  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
+  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrSoftware.IsEnabled());
+}
+
+TEST_F(GfxConfigManager, WebRenderSoftwareReleaseD3D11Disabled) {
+  mIsNightly = mIsEarlyBetaOrEarlier = false;
+  mMockGfxInfo->mStatusWr = nsIGfxInfo::FEATURE_DENIED;
+  mMockGfxInfo->mStatusWrSoftware = nsIGfxInfo::FEATURE_ALLOW_ALWAYS;
+  mFeatures.mD3D11Compositing.UserDisable("", ""_ns);
+  ConfigureWebRender();
+
+  EXPECT_FALSE(mFeatures.mWrQualified.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWr.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrCompositor.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrAngle.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrDComp.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
+  EXPECT_TRUE(mFeatures.mGPUProcess.IsEnabled());
+  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrSoftware.IsEnabled());
+}
+
+TEST_F(GfxConfigManager, WebRenderSoftwareReleaseWindowsGPUProcessDisabled) {
+  mIsNightly = mIsEarlyBetaOrEarlier = false;
+  mMockGfxInfo->mStatusWr = nsIGfxInfo::FEATURE_DENIED;
+  mMockGfxInfo->mStatusWrSoftware = nsIGfxInfo::FEATURE_ALLOW_ALWAYS;
+  mFeatures.mGPUProcess.UserDisable("", ""_ns);
+  ConfigureWebRender();
+
+  EXPECT_FALSE(mFeatures.mWrQualified.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWr.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrCompositor.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrAngle.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrDComp.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrPartial.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
+  EXPECT_FALSE(mFeatures.mGPUProcess.IsEnabled());
+  EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrSoftware.IsEnabled());
+}
+
+TEST_F(GfxConfigManager, WebRenderSoftwareReleaseGPUProcessDisabled) {
+  mIsNightly = mIsEarlyBetaOrEarlier = false;
+  mIsWin10OrLater = false;
+  mFeatureD3D11Compositing = nullptr;
+  mMockGfxInfo->mStatusWr = nsIGfxInfo::FEATURE_DENIED;
+  mMockGfxInfo->mStatusWrSoftware = nsIGfxInfo::FEATURE_ALLOW_ALWAYS;
+  mFeatures.mGPUProcess.UserDisable("", ""_ns);
+  ConfigureWebRender();
+
+  EXPECT_FALSE(mFeatures.mWrQualified.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWr.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrCompositor.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrAngle.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrDComp.IsEnabled());
+  EXPECT_TRUE(mFeatures.mWrPartial.IsEnabled());
+  EXPECT_FALSE(mFeatures.mWrOptimizedShaders.IsEnabled());
+  EXPECT_TRUE(mFeatures.mHwCompositing.IsEnabled());
+  EXPECT_FALSE(mFeatures.mGPUProcess.IsEnabled());
   EXPECT_TRUE(mFeatures.mD3D11HwAngle.IsEnabled());
   EXPECT_TRUE(mFeatures.mWrSoftware.IsEnabled());
 }
