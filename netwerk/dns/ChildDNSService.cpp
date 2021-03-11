@@ -40,7 +40,7 @@ already_AddRefed<ChildDNSService> ChildDNSService::GetSingleton() {
                 XRE_IsContentProcess() || XRE_IsSocketProcess());
 
   if (!gChildDNSService) {
-    if (!NS_IsMainThread()) {
+    if (NS_WARN_IF(!NS_IsMainThread())) {
       return nullptr;
     }
     gChildDNSService = new ChildDNSService();
