@@ -681,21 +681,16 @@ class ParserAtomsTable {
 // This doesn't support deduplication.
 // Used while decoding XDR.
 class ParserAtomSpanBuilder {
- private:
-  const WellKnownParserAtoms& wellKnownTable_;
   ParserAtomSpan& entries_;
 
  public:
-  ParserAtomSpanBuilder(JSRuntime* rt, ParserAtomSpan& entries);
+  explicit ParserAtomSpanBuilder(ParserAtomSpan& entries);
 
   bool allocate(JSContext* cx, LifoAlloc& alloc, size_t count);
-  size_t size() const { return entries_.size(); }
 
   void set(ParserAtomIndex index, const ParserAtom* atom) {
     entries_[index] = const_cast<ParserAtom*>(atom);
   }
-
-  const ParserAtom* get(ParserAtomIndex index) const { return entries_[index]; }
 };
 
 template <typename CharT>
