@@ -476,8 +476,10 @@ add_task(async function browseraction_contextmenu_remove_extension() {
       ".customize-context-removeExtension"
     );
     await closeChromeContextMenu(menuId, removeExtension, win);
-    is(promptService._confirmExArgs[1], `Remove ${name}`);
-    is(promptService._confirmExArgs[2], `Remove ${name} from ${brand}?`);
+    is(promptService._confirmExArgs[1], `Remove ${name}?`);
+    if (!Services.prefs.getBoolPref("prompts.windowPromptSubDialog", false)) {
+      is(promptService._confirmExArgs[2], `Remove ${name} from ${brand}?`);
+    }
     is(promptService._confirmExArgs[4], "Remove");
     return menu;
   }
