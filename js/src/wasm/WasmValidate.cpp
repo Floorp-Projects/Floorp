@@ -1646,8 +1646,8 @@ enum class TypeState { None, Struct, ForwardStruct, Func };
 
 typedef Vector<TypeState, 0, SystemAllocPolicy> TypeStateVector;
 
-static bool ValidateTypeState(Decoder& d, TypeStateVector* typeState,
-                              ValType type) {
+template <class T>
+static bool ValidateTypeState(Decoder& d, TypeStateVector* typeState, T type) {
   if (!type.isTypeIndex()) {
     return true;
   }
@@ -1756,7 +1756,8 @@ static bool DecodeStructType(Decoder& d, ModuleEnvironment* env,
   }
 
   for (uint32_t i = 0; i < numFields; i++) {
-    if (!d.readValType(env->types.length(), env->features, &fields[i].type)) {
+    if (!d.readPackedType(env->types.length(), env->features,
+                          &fields[i].type)) {
       return false;
     }
 

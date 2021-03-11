@@ -62,6 +62,9 @@ enum class TypeCode {
   F64 = 0x7c,   // SLEB128(-0x04)
   V128 = 0x7b,  // SLEB128(-0x05)
 
+  I8 = 0x7a,   // SLEB128(-0x06)
+  I16 = 0x79,  // SLEB128(-0x07)
+
   // A function pointer with any signature
   FuncRef = 0x70,  // SLEB128(-0x10)
 
@@ -96,7 +99,7 @@ enum class TypeCode {
 // UnpackTypeCodeTypeAbstracted().  If primitive typecodes are added below any
 // reference typecode then the logic in that function MUST change.
 
-static constexpr TypeCode LowestPrimitiveTypeCode = TypeCode::V128;
+static constexpr TypeCode LowestPrimitiveTypeCode = TypeCode::I16;
 
 // An arbitrary reference type used as the result of
 // UnpackTypeCodeTypeAbstracted() when a value type is a reference.

@@ -317,7 +317,7 @@ const TypeDef& RttValue::getType(JSContext* cx) const {
 }
 
 bool RttValue::lookupProperty(JSContext* cx, jsid id, uint32_t* offset,
-                              ValType* type) {
+                              FieldType* type) {
   const auto& typeDef = getType(cx);
   MOZ_RELEASE_ASSERT(typeDef.isStructType());
   const auto& structType = typeDef.structType();
@@ -393,7 +393,7 @@ bool TypedObject::obj_getProperty(JSContext* cx, HandleObject obj,
   Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());
 
   uint32_t offset;
-  ValType type;
+  FieldType type;
   if (typedObj->rttValue().lookupProperty(cx, id, &offset, &type)) {
     return typedObj->loadValue(cx, offset, type, vp);
   }
@@ -431,7 +431,7 @@ bool TypedObject::obj_getOwnPropertyDescriptor(
   Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());
 
   uint32_t offset;
-  ValType type;
+  FieldType type;
   if (typedObj->rttValue().lookupProperty(cx, id, &offset, &type)) {
     if (!typedObj->loadValue(cx, offset, type, desc.value())) {
       return false;
@@ -480,7 +480,7 @@ bool TypedObject::obj_newEnumerate(JSContext* cx, HandleObject obj,
   return true;
 }
 
-bool TypedObject::loadValue(JSContext* cx, size_t offset, ValType type,
+bool TypedObject::loadValue(JSContext* cx, size_t offset, FieldType type,
                             MutableHandleValue vp) {
   // Temporary hack, (ref T) is not exposable to JS yet but some tests would
   // like to access it so we erase (ref T) with eqref when loading. This is

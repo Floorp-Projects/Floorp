@@ -80,10 +80,10 @@ class RttValue : public NativeObject {
   const wasm::TypeDef& getType(JSContext* cx) const;
 
   [[nodiscard]] bool lookupProperty(JSContext* cx, jsid id, uint32_t* offset,
-                                    wasm::ValType* type);
+                                    wasm::FieldType* type);
   [[nodiscard]] bool hasProperty(JSContext* cx, jsid id) {
     uint32_t offset;
-    wasm::ValType type;
+    wasm::FieldType type;
     return lookupProperty(cx, id, &offset, &type);
   }
   uint32_t propertyCount(JSContext* cx);
@@ -133,7 +133,7 @@ class TypedObject : public JSObject {
                                                HandleId id,
                                                ObjectOpResult& result);
 
-  bool loadValue(JSContext* cx, size_t offset, wasm::ValType type,
+  bool loadValue(JSContext* cx, size_t offset, wasm::FieldType type,
                  MutableHandleValue vp);
 
   uint8_t* typedMem() const;

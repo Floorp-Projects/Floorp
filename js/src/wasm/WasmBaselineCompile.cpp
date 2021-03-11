@@ -13084,31 +13084,43 @@ bool BaseCompiler::emitStructNewWithRtt() {
   while (fieldNo-- > 0) {
     uint32_t offs = structType.objectBaseFieldOffset(fieldNo);
     switch (structType.fields_[fieldNo].type.kind()) {
-      case ValType::I32: {
+      case FieldType::I8: {
+        RegI32 r = popI32();
+        masm.store8(r, Address(rdata, offs));
+        freeI32(r);
+        break;
+      }
+      case FieldType::I16: {
+        RegI32 r = popI32();
+        masm.store16(r, Address(rdata, offs));
+        freeI32(r);
+        break;
+      }
+      case FieldType::I32: {
         RegI32 r = popI32();
         masm.store32(r, Address(rdata, offs));
         freeI32(r);
         break;
       }
-      case ValType::I64: {
+      case FieldType::I64: {
         RegI64 r = popI64();
         masm.store64(r, Address(rdata, offs));
         freeI64(r);
         break;
       }
-      case ValType::F32: {
+      case FieldType::F32: {
         RegF32 r = popF32();
         masm.storeFloat32(r, Address(rdata, offs));
         freeF32(r);
         break;
       }
-      case ValType::F64: {
+      case FieldType::F64: {
         RegF64 r = popF64();
         masm.storeDouble(r, Address(rdata, offs));
         freeF64(r);
         break;
       }
-      case ValType::Ref: {
+      case FieldType::Ref: {
         RegPtr value = popRef();
         masm.storePtr(value, Address(rdata, offs));
 
@@ -13228,31 +13240,43 @@ bool BaseCompiler::emitStructGet() {
 
   uint32_t offs = structType.objectBaseFieldOffset(fieldIndex);
   switch (structType.fields_[fieldIndex].type.kind()) {
-    case ValType::I32: {
+    case FieldType::I8: {
+      RegI32 r = needI32();
+      masm.load8ZeroExtend(Address(rp, offs), r);
+      pushI32(r);
+      break;
+    }
+    case FieldType::I16: {
+      RegI32 r = needI32();
+      masm.load16ZeroExtend(Address(rp, offs), r);
+      pushI32(r);
+      break;
+    }
+    case FieldType::I32: {
       RegI32 r = needI32();
       masm.load32(Address(rp, offs), r);
       pushI32(r);
       break;
     }
-    case ValType::I64: {
+    case FieldType::I64: {
       RegI64 r = needI64();
       masm.load64(Address(rp, offs), r);
       pushI64(r);
       break;
     }
-    case ValType::F32: {
+    case FieldType::F32: {
       RegF32 r = needF32();
       masm.loadFloat32(Address(rp, offs), r);
       pushF32(r);
       break;
     }
-    case ValType::F64: {
+    case FieldType::F64: {
       RegF64 r = needF64();
       masm.loadDouble(Address(rp, offs), r);
       pushF64(r);
       break;
     }
-    case ValType::Ref: {
+    case FieldType::Ref: {
       RegPtr r = needRef();
       masm.loadPtr(Address(rp, offs), r);
       pushRef(r);
@@ -13297,19 +13321,23 @@ bool BaseCompiler::emitStructSet() {
   }
 
   switch (structType.fields_[fieldIndex].type.kind()) {
-    case ValType::I32:
+    case FieldType::I8:
+    case FieldType::I16:
       ri = popI32();
       break;
-    case ValType::I64:
+    case FieldType::I32:
+      ri = popI32();
+      break;
+    case FieldType::I64:
       rl = popI64();
       break;
-    case ValType::F32:
+    case FieldType::F32:
       rf = popF32();
       break;
-    case ValType::F64:
+    case FieldType::F64:
       rd = popF64();
       break;
-    case ValType::Ref:
+    case FieldType::Ref:
       rr = popRef();
       break;
     default:
@@ -13338,27 +13366,37 @@ bool BaseCompiler::emitStructSet() {
 
   uint32_t offs = structType.objectBaseFieldOffset(fieldIndex);
   switch (structType.fields_[fieldIndex].type.kind()) {
-    case ValType::I32: {
+    case FieldType::I8: {
+      masm.store8(ri, Address(rp, offs));
+      freeI32(ri);
+      break;
+    }
+    case FieldType::I16: {
+      masm.store16(ri, Address(rp, offs));
+      freeI32(ri);
+      break;
+    }
+    case FieldType::I32: {
       masm.store32(ri, Address(rp, offs));
       freeI32(ri);
       break;
     }
-    case ValType::I64: {
+    case FieldType::I64: {
       masm.store64(rl, Address(rp, offs));
       freeI64(rl);
       break;
     }
-    case ValType::F32: {
+    case FieldType::F32: {
       masm.storeFloat32(rf, Address(rp, offs));
       freeF32(rf);
       break;
     }
-    case ValType::F64: {
+    case FieldType::F64: {
       masm.storeDouble(rd, Address(rp, offs));
       freeF64(rd);
       break;
     }
-    case ValType::Ref: {
+    case FieldType::Ref: {
       masm.computeEffectiveAddress(Address(rp, offs), valueAddr);
 
       // Bug 1617908.  Ensure that if a TypedObject is not inline, then its

@@ -206,6 +206,20 @@ class wasm::DebugCodegenVal {
 };
 
 template bool wasm::ToWebAssemblyValue<NoDebug>(JSContext* cx, HandleValue val,
+                                                FieldType type, void* loc,
+                                                bool mustWrite64);
+template bool wasm::ToWebAssemblyValue<DebugCodegenVal>(JSContext* cx,
+                                                        HandleValue val,
+                                                        FieldType type,
+                                                        void* loc,
+                                                        bool mustWrite64);
+template bool wasm::ToJSValue<NoDebug>(JSContext* cx, const void* src,
+                                       FieldType type, MutableHandleValue dst);
+template bool wasm::ToJSValue<DebugCodegenVal>(JSContext* cx, const void* src,
+                                               FieldType type,
+                                               MutableHandleValue dst);
+
+template bool wasm::ToWebAssemblyValue<NoDebug>(JSContext* cx, HandleValue val,
                                                 ValType type, void* loc,
                                                 bool mustWrite64);
 template bool wasm::ToWebAssemblyValue<DebugCodegenVal>(JSContext* cx,
@@ -218,6 +232,18 @@ template bool wasm::ToJSValue<DebugCodegenVal>(JSContext* cx, const void* src,
                                                ValType type,
                                                MutableHandleValue dst);
 
+template <typename Debug = NoDebug>
+bool ToWebAssemblyValue_i8(JSContext* cx, HandleValue val, int8_t* loc) {
+  bool ok = ToInt8(cx, val, loc);
+  Debug::print(*loc);
+  return ok;
+}
+template <typename Debug = NoDebug>
+bool ToWebAssemblyValue_i16(JSContext* cx, HandleValue val, int16_t* loc) {
+  bool ok = ToInt16(cx, val, loc);
+  Debug::print(*loc);
+  return ok;
+}
 template <typename Debug = NoDebug>
 bool ToWebAssemblyValue_i32(JSContext* cx, HandleValue val, int32_t* loc,
                             bool mustWrite64) {
@@ -308,22 +334,26 @@ bool ToWebAssemblyValue_funcref(JSContext* cx, HandleValue val, void** loc,
 }
 
 template <typename Debug>
-bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
+bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, FieldType type,
                               void* loc, bool mustWrite64) {
   switch (type.kind()) {
-    case ValType::I32:
+    case FieldType::I8:
+      return ToWebAssemblyValue_i8<Debug>(cx, val, (int8_t*)loc);
+    case FieldType::I16:
+      return ToWebAssemblyValue_i16<Debug>(cx, val, (int16_t*)loc);
+    case FieldType::I32:
       return ToWebAssemblyValue_i32<Debug>(cx, val, (int32_t*)loc, mustWrite64);
-    case ValType::I64:
+    case FieldType::I64:
       return ToWebAssemblyValue_i64<Debug>(cx, val, (int64_t*)loc, mustWrite64);
-    case ValType::F32:
+    case FieldType::F32:
       return ToWebAssemblyValue_f32<Debug>(cx, val, (float*)loc, mustWrite64);
-    case ValType::F64:
+    case FieldType::F64:
       return ToWebAssemblyValue_f64<Debug>(cx, val, (double*)loc, mustWrite64);
-    case ValType::V128:
+    case FieldType::V128:
       break;
-    case ValType::Rtt:
+    case FieldType::Rtt:
       break;
-    case ValType::Ref:
+    case FieldType::Ref:
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
       if (!type.isNullable() && val.isNull()) {
         JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
@@ -352,7 +382,25 @@ bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
                            JSMSG_WASM_BAD_VAL_TYPE);
   return false;
 }
+template <typename Debug>
+bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
+                              void* loc, bool mustWrite64) {
+  return wasm::ToWebAssemblyValue(cx, val, FieldType(type.packed()), loc,
+                                  mustWrite64);
+}
 
+template <typename Debug = NoDebug>
+bool ToJSValue_i8(JSContext* cx, int8_t src, MutableHandleValue dst) {
+  dst.set(Int32Value(src));
+  Debug::print(src);
+  return true;
+}
+template <typename Debug = NoDebug>
+bool ToJSValue_i16(JSContext* cx, int16_t src, MutableHandleValue dst) {
+  dst.set(Int32Value(src));
+  Debug::print(src);
+  return true;
+}
 template <typename Debug = NoDebug>
 bool ToJSValue_i32(JSContext* cx, int32_t src, MutableHandleValue dst) {
   dst.set(Int32Value(src));
@@ -397,26 +445,32 @@ bool ToJSValue_anyref(JSContext* cx, void* src, MutableHandleValue dst) {
 }
 
 template <typename Debug>
-bool wasm::ToJSValue(JSContext* cx, const void* src, ValType type,
+bool wasm::ToJSValue(JSContext* cx, const void* src, FieldType type,
                      MutableHandleValue dst) {
   switch (type.kind()) {
-    case ValType::I32:
+    case FieldType::I8:
+      return ToJSValue_i8<Debug>(cx, *reinterpret_cast<const int8_t*>(src),
+                                 dst);
+    case FieldType::I16:
+      return ToJSValue_i16<Debug>(cx, *reinterpret_cast<const int16_t*>(src),
+                                  dst);
+    case FieldType::I32:
       return ToJSValue_i32<Debug>(cx, *reinterpret_cast<const int32_t*>(src),
                                   dst);
-    case ValType::I64:
+    case FieldType::I64:
       return ToJSValue_i64<Debug>(cx, *reinterpret_cast<const int64_t*>(src),
                                   dst);
-    case ValType::F32:
+    case FieldType::F32:
       return ToJSValue_f32<Debug>(cx, *reinterpret_cast<const float*>(src),
                                   dst);
-    case ValType::F64:
+    case FieldType::F64:
       return ToJSValue_f64<Debug>(cx, *reinterpret_cast<const double*>(src),
                                   dst);
-    case ValType::V128:
+    case FieldType::V128:
       break;
-    case ValType::Rtt:
+    case FieldType::Rtt:
       break;
-    case ValType::Ref:
+    case FieldType::Ref:
       switch (type.refTypeKind()) {
         case RefType::Func:
           return ToJSValue_funcref<Debug>(
@@ -435,6 +489,11 @@ bool wasm::ToJSValue(JSContext* cx, const void* src, ValType type,
   Debug::print(nullptr);
   dst.setUndefined();
   return true;
+}
+template <typename Debug>
+bool wasm::ToJSValue(JSContext* cx, const void* src, ValType type,
+                     MutableHandleValue dst) {
+  return wasm::ToJSValue(cx, src, FieldType(type.packed()), dst);
 }
 
 void AnyRef::trace(JSTracer* trc) {
@@ -842,7 +901,7 @@ class StructLayout {
 
  public:
   // The field adders return the offset of the the field.
-  CheckedInt32 addField(ValType type) {
+  CheckedInt32 addField(FieldType type) {
     uint32_t fieldSize = type.size();
     uint32_t fieldAlignment = type.alignmentInStruct();
 
