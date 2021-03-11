@@ -710,6 +710,9 @@ class BrowserParent final : public PBrowserParent,
                           int32_t aNavigationIndex,
                           nsIURI* aNavigationURI) const;
 
+  // Called when the BrowserParent is being destroyed or entering bfcache.
+  void Deactivated();
+
  protected:
   friend BrowserBridgeParent;
   friend BrowserHost;

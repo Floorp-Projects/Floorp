@@ -18,6 +18,7 @@
 #include "mozilla/PresState.h"
 #include "mozilla/StaticPrefs_fission.h"
 #include "mozilla/Tuple.h"
+#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/CSPMessageUtils.h"
@@ -1357,6 +1358,10 @@ void SessionHistoryEntry::SetFrameLoader(nsFrameLoader* aFrameLoader) {
   MOZ_RELEASE_ASSERT(!aFrameLoader || mozilla::BFCacheInParent());
   SharedInfo()->mFrameLoader = aFrameLoader;
   if (aFrameLoader) {
+    if (BrowserParent* bp = aFrameLoader->GetBrowserParent()) {
+      bp->Deactivated();
+    }
+
     // When a new frameloader is stored, try to evict some older
     // frameloaders. Non-SHIP session history has a similar call in
     // nsDocumentViewer::Show.
