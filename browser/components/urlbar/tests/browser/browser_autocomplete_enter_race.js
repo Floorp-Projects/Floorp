@@ -17,6 +17,8 @@ add_task(async function setup() {
   });
   registerCleanupFunction(async function() {
     await PlacesUtils.bookmarks.remove(bm);
+    await PlacesUtils.keywords.eraseEverything();
+    await PlacesUtils.history.clear();
   });
   await PlacesUtils.keywords.insert({
     keyword: "keyword",
