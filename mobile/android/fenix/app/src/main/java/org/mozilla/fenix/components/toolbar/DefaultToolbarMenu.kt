@@ -407,10 +407,10 @@ class DefaultToolbarMenu(
             onItemTapped.invoke(ToolbarMenu.Item.AddonsManager)
         }
 
-        val syncSignIn = BrowserMenuImageText(
-            context.getString(R.string.sync_sign_in),
-            R.drawable.ic_synced_tabs,
-            primaryTextColor()
+        val syncedTabs = BrowserMenuImageText(
+            label = context.getString(R.string.synced_tabs),
+            imageResource = R.drawable.ic_synced_tabs,
+            iconTintColorResource = primaryTextColor()
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.SyncedTabs)
         }
@@ -439,19 +439,6 @@ class DefaultToolbarMenu(
             iconTintColorResource = primaryTextColor()
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.CustomizeReaderView)
-        }
-
-        val openInApp = BrowserMenuHighlightableItem(
-            label = context.getString(R.string.browser_menu_open_app_link),
-            startImageResource = R.drawable.ic_open_in_app,
-            iconTintColorResource = primaryTextColor(),
-            highlight = BrowserMenuHighlight.LowPriority(
-                label = context.getString(R.string.browser_menu_open_app_link),
-                notificationTint = getColor(context, R.color.whats_new_notification_color)
-            ),
-            isHighlighted = { !context.settings().openInAppOpened }
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.OpenInApp)
         }
 
         val reportSiteIssuePlaceholder = WebExtensionPlaceholderMenuItem(
@@ -508,12 +495,11 @@ class DefaultToolbarMenu(
                 historyItem,
                 downloadsItem,
                 extensionsItem,
-                syncSignIn,
+                syncedTabs,
                 BrowserMenuDivider(),
                 findInPageItem,
                 desktopSiteItem,
                 customizeReaderView.apply { visible = ::shouldShowReaderViewCustomization },
-                openInApp.apply { visible = ::shouldShowOpenInApp },
                 reportSiteIssuePlaceholder,
                 BrowserMenuDivider(),
                 addToHomeScreenItem.apply { visible = ::canAddToHomescreen },
