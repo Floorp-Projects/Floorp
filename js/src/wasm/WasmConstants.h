@@ -439,7 +439,6 @@ enum class GcOp {
   StructNewWithRtt = 0x1,
   StructGet = 0x03,
   StructSet = 0x06,
-  StructNarrow = 0x07,
 
   // Rtt operations
   RttCanon = 0x30,

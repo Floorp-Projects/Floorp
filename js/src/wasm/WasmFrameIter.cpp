@@ -1446,8 +1446,6 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "call to native filtering GC postbarrier (in wasm)";
     case SymbolicAddress::StructNew:
       return "call to native struct.new (in wasm)";
-    case SymbolicAddress::StructNarrow:
-      return "call to native struct.narrow (in wasm)";
 #if defined(ENABLE_WASM_EXCEPTIONS)
     case SymbolicAddress::ExceptionNew:
       return "call to native exception new (in wasm)";
