@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Bug 1691888: Break endless upgrade downgrade loops when using https-only</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+/*
+ * Description of the test:
+ * We perform three tests where our upgrade/downgrade redirect loop detector should break the
+ * endless loop:
+ * Test 1: Meta Refresh
+ * Test 2: JS Redirect
+ * Test 3: 302 redirect
+ */
+
+SimpleTest.requestFlakyTimeout("We need to wait for the HTTPS-Only error page to appear");
+SimpleTest.requestLongerTimeout(10);
+SimpleTest.waitForExplicitFinish();
+
+const REQUEST_URL =
+  "http://example.com/tests/dom/security/test/https-only/file_break_endless_upgrade_downgrade_loop.sjs";
+
+function resolveAfter5Seconds() {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve();
+    }, 5000);
+  });
+}
+
+async function verifyResult(aTestName) {
+  let errorPageL10nId = "about-httpsonly-title-alert";
+  let innerHTML = content.document.body.innerHTML;
+  ok(innerHTML.includes(errorPageL10nId), "the error page should be shown for " + aTestName);
+}
+
+async function runTests() {
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_only_mode", true],
+    ["dom.security.https_only_mode_break_upgrade_downgrade_endless_loop", true],
+  ]});
+
+  // Test 1: Meta Refresh Redirect
+  let winTest1 = window.open(REQUEST_URL + "?test1a", "_blank");
+  // Test 2: JS win.location Redirect
+  let winTest2 = window.open(REQUEST_URL + "?test2a", "_blank");
+  // Test 3: 302 Redirect 
+  let winTest3 = window.open(REQUEST_URL + "?test3a", "_blank");
+
+  // provide enough time for:
+  // the redirects to occur, and the error page to be displayed
+  await resolveAfter5Seconds();
+
+  await SpecialPowers.spawn(winTest1, ["test1"], verifyResult);
+  winTest1.close();
+
+  await SpecialPowers.spawn(winTest2, ["test2"], verifyResult);
+  winTest2.close();
+
+  await SpecialPowers.spawn(winTest3, ["test3"], verifyResult);
+  winTest3.close();
+
+  SimpleTest.finish();
+}
+
+runTests();
+
+</script>
+</body>
+</html>
