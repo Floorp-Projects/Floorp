@@ -44,8 +44,7 @@ class VideoConduitTest : public ::testing::Test {
       : mCall(new MockCall()),
         mCallWrapper(WebRtcCallWrapper::Create(UniquePtr<MockCall>(mCall))),
         mVideoConduit(MakeRefPtr<WebrtcVideoConduit>(
-            WebRtcCallWrapper::Create(UniquePtr<MockCall>(mCall)),
-            GetCurrentSerialEventTarget(), "")) {
+            mCallWrapper, GetCurrentSerialEventTarget(), "")) {
     NSS_NoDB_Init(nullptr);
 
     mVideoConduit->SetLocalSSRCs({42}, {43});
