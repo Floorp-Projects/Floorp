@@ -2656,7 +2656,7 @@ inline bool OpIter<Policy>::readStructNewWithRtt(uint32_t* typeIndex,
   static_assert(MaxStructFields <= INT32_MAX, "Or we iloop below");
 
   for (int32_t i = str.fields_.length() - 1; i >= 0; i--) {
-    if (!popWithType(str.fields_[i].type, &(*argValues)[i])) {
+    if (!popWithType(str.fields_[i].type.widenToValType(), &(*argValues)[i])) {
       return false;
     }
   }
@@ -2707,7 +2707,7 @@ inline bool OpIter<Policy>::readStructGet(uint32_t* typeIndex,
     return false;
   }
 
-  return push(structType.fields_[*fieldIndex].type);
+  return push(structType.fields_[*fieldIndex].type.widenToValType());
 }
 
 template <typename Policy>
@@ -2727,7 +2727,8 @@ inline bool OpIter<Policy>::readStructSet(uint32_t* typeIndex,
     return false;
   }
 
-  if (!popWithType(structType.fields_[*fieldIndex].type, val)) {
+  if (!popWithType(structType.fields_[*fieldIndex].type.widenToValType(),
+                   val)) {
     return false;
   }
 
