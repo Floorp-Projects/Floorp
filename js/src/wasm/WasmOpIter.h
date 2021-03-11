@@ -309,6 +309,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
  private:
   Decoder& d_;
   const ModuleEnvironment& env_;
+  TypeCache cache_;
 
   TypeAndValueStack valueStack_;
   TypeAndValueStack elseParamStack_;
@@ -659,28 +660,8 @@ class MOZ_STACK_CLASS OpIter : private Policy {
 
 template <typename Policy>
 inline bool OpIter<Policy>::checkIsSubtypeOf(ValType actual, ValType expected) {
-  if (env_.types.isSubtypeOf(actual, expected)) {
-    return true;
-  }
-
-  UniqueChars actualText = ToString(actual);
-  if (!actualText) {
-    return false;
-  }
-
-  UniqueChars expectedText = ToString(expected);
-  if (!expectedText) {
-    return false;
-  }
-
-  UniqueChars error(
-      JS_smprintf("type mismatch: expression has type %s but expected %s",
-                  actualText.get(), expectedText.get()));
-  if (!error) {
-    return false;
-  }
-
-  return fail(error.get());
+  return CheckIsSubtypeOf(d_, env_, lastOpcodeOffset(), actual, expected,
+                          &cache_);
 }
 
 template <typename Policy>

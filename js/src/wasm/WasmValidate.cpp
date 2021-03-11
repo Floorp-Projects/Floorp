@@ -450,6 +450,39 @@ bool wasm::DecodeValidatedLocalEntries(Decoder& d, ValTypeVector* locals) {
   return true;
 }
 
+bool wasm::CheckIsSubtypeOf(Decoder& d, const ModuleEnvironment& env,
+                            size_t opcodeOffset, ValType actual,
+                            ValType expected, TypeCache* cache) {
+  switch (env.types.isSubtypeOf(actual, expected, cache)) {
+    case TypeResult::OOM:
+      return false;
+    case TypeResult::True:
+      return true;
+    case TypeResult::False: {
+      UniqueChars actualText = ToString(actual);
+      if (!actualText) {
+        return false;
+      }
+
+      UniqueChars expectedText = ToString(expected);
+      if (!expectedText) {
+        return false;
+      }
+
+      UniqueChars error(
+          JS_smprintf("type mismatch: expression has type %s but expected %s",
+                      actualText.get(), expectedText.get()));
+      if (!error) {
+        return false;
+      }
+
+      return d.fail(opcodeOffset, error.get());
+    }
+    default:
+      MOZ_CRASH();
+  }
+}
+
 // Function body validation.
 
 class NothingVector {
@@ -2532,12 +2565,7 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
       if (!d.readHeapType(env->types, env->features, true, &initType)) {
         return false;
       }
-      if (!expected.isReference() ||
-          !env->types.isRefSubtypeOf(initType, expected.refType())) {
-        return d.fail(
-            "type mismatch: initializer type and expected type don't match");
-      }
-      *init = InitExpr::fromConstant(LitVal(expected, AnyRef::null()));
+      *init = InitExpr::fromConstant(LitVal(initType, AnyRef::null()));
       break;
     }
     case uint16_t(Op::RefFunc): {
@@ -2572,26 +2600,7 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
         return d.fail(
             "initializer expression must reference a global immutable import");
       }
-      if (expected.isReference()) {
-        bool fail = false;
-        if (!globals[i].type().isReference()) {
-          fail = true;
-        } else if ((env->types.isStructType(expected.refType()) ||
-                    env->types.isStructType(globals[i].type().refType())) &&
-                   !env->gcTypesEnabled()) {
-          fail = true;
-        } else if (!env->types.isRefSubtypeOf(globals[i].type().refType(),
-                                              expected.refType())) {
-          fail = true;
-        }
-        if (fail) {
-          return d.fail(
-              "type mismatch: initializer type and expected type don't match");
-        }
-        *init = InitExpr::fromGetGlobal(i, expected);
-      } else {
-        *init = InitExpr::fromGetGlobal(i, globals[i].type());
-      }
+      *init = InitExpr::fromGetGlobal(i, globals[i].type());
       break;
     }
     default: {
@@ -2599,9 +2608,10 @@ static bool DecodeInitializerExpression(Decoder& d, ModuleEnvironment* env,
     }
   }
 
-  if (expected != init->type()) {
-    return d.fail(
-        "type mismatch: initializer type and expected type don't match");
+  TypeCache cache;
+  if (!CheckIsSubtypeOf(d, *env, d.currentOffset(), init->type(), expected,
+                        &cache)) {
+    return false;
   }
 
   OpBytes end;
@@ -3011,9 +3021,10 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
       case ElemSegmentKind::Active:
       case ElemSegmentKind::ActiveWithTableIndex: {
         RefType tblElemType = env->tables[seg->tableIndex].elemType;
-        if (!env->types.isRefSubtypeOf(elemType, tblElemType)) {
-          return d.fail(
-              "segment's element type must be subtype of table's element type");
+        TypeCache cache;
+        if (!CheckIsSubtypeOf(d, *env, d.currentOffset(), ValType(elemType),
+                              ValType(tblElemType), &cache)) {
+          return false;
         }
         break;
       }
@@ -3053,6 +3064,7 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
     // don't really want to generalize that function yet, so instead read the
     // required Ref.Func and End here.
 
+    TypeCache cache;
     for (uint32_t i = 0; i < numElems; i++) {
       bool needIndex = true;
 
@@ -3076,8 +3088,9 @@ static bool DecodeElemSection(Decoder& d, ModuleEnvironment* env) {
           default:
             return d.fail("failed to read initializer operation");
         }
-        if (!env->types.isRefSubtypeOf(initType, elemType)) {
-          return d.fail("initializer type must be subtype of element type");
+        if (!CheckIsSubtypeOf(d, *env, d.currentOffset(), ValType(initType),
+                              ValType(elemType), &cache)) {
+          return false;
         }
       }
 
