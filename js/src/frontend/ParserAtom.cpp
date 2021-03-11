@@ -369,9 +369,6 @@ bool ParserAtomsTable::addPlaceholder(JSContext* cx) {
   return true;
 }
 
-ParserAtomSpanBuilder::ParserAtomSpanBuilder(ParserAtomSpan& entries)
-    : entries_(entries) {}
-
 bool ParserAtomSpanBuilder::allocate(JSContext* cx, LifoAlloc& alloc,
                                      size_t count) {
   if (count >= TaggedParserAtomIndex::IndexLimit) {
