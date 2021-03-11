@@ -8,7 +8,9 @@
 <script>
 function doStuff() {
   var testContext = unescape(location.search.substring(1));
-  window.opener.postMessage({ok: true, desc: testContext + "top navigation should be allowed by a document sandboxed with 'allow-top-navigation'"}, "*");
+  var bc = new BroadcastChannel("test_iframe_sandbox_navigation");
+  bc.postMessage({ok: true, desc: testContext + "top navigation should be allowed by a document sandboxed with 'allow-top-navigation'"});
+  bc.close();
   window.close();
 }
 </script>

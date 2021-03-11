@@ -23,6 +23,8 @@ SimpleTest.requestFlakyTimeout("untriaged");
 // 'allow-same-origin'/other windows to communicate pass/fail back to this main page.
 // it expects to be called with an object like {ok: true/false, desc:
 // <description of the test> which it then forwards to ok()
+var bc = new BroadcastChannel("test_iframe_sandbox_navigation");
+bc.addEventListener("message", receiveMessage);
 window.addEventListener("message", receiveMessage);
 
 var testPassesReceived = 0;
@@ -86,6 +88,8 @@ function finish() {
     for (var i = 0; i < windowsToClose.length; i++) {
       windowsToClose[i].close();
     }
+
+    bc.close();
 
     SimpleTest.finish();
   }

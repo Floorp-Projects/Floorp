@@ -9,9 +9,7 @@
   function doTest() {
     var testContext = location.search.substring(1);
     try {
-      var topsOpener = window.top.opener;
       window.open("file_iframe_sandbox_top_navigation_pass.html?" + testContext, "_top");
-      topsOpener.postMessage({ok: true, desc: unescape(testContext) + "top navigation should be allowed by a document sandboxed with 'allow-top-navigation.'"}, "*");
     } catch(error) {
       window.top.opener.postMessage({ok: false, desc: unescape(testContext) + "error thrown during window.open(..., \"_top\")"}, "*");
       window.top.close();
