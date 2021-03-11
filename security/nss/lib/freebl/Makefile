@@ -298,6 +298,8 @@ ifdef USE_64
     PPC_ABI := $(shell $(CC) -dM -E - < /dev/null | awk '$$2 == "_CALL_ELF" {print $$3}')
     ifeq ($(PPC_ABI),2)
         ASFILES += sha512-p8.s
+        EXTRA_SRCS += chacha20poly1305-ppc.c
+        ASFILES += chacha20-ppc64le.s
     endif
 endif # USE_64
 endif # ppc
@@ -762,6 +764,7 @@ $(OBJDIR)/$(PROG_PREFIX)gcm$(OBJ_SUFFIX): CFLAGS += -mcrypto -maltivec -mvsx
 $(OBJDIR)/$(PROG_PREFIX)rijndael$(OBJ_SUFFIX): CFLAGS += -mcrypto -maltivec -mvsx
 $(OBJDIR)/$(PROG_PREFIX)sha512$(OBJ_SUFFIX): CFLAGS += -mcrypto -maltivec -mvsx \
 					-funroll-loops -fpeel-loops
+$(OBJDIR)/$(PROG_PREFIX)chacha20poly1305-ppc$(OBJ_SUFFIX): CFLAGS += -mcrypto -maltivec -mvsx
 endif
 endif
 

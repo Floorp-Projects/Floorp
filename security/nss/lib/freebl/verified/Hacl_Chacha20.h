@@ -21,13 +21,17 @@
  * SOFTWARE.
  */
 
+#ifndef __Hacl_Chacha20_H
+#define __Hacl_Chacha20_H
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #include "kremlin/internal/types.h"
 #include "kremlin/lowstar_endianness.h"
 #include <string.h>
 #include <stdbool.h>
-
-#ifndef __Hacl_Chacha20_H
-#define __Hacl_Chacha20_H
 
 #include "Hacl_Kremlib.h"
 
@@ -50,6 +54,10 @@ Hacl_Chacha20_chacha20_decrypt(
     uint8_t *key,
     uint8_t *n,
     uint32_t ctr);
+
+#if defined(__cplusplus)
+}
+#endif
 
 #define __Hacl_Chacha20_H_DEFINED
 #endif

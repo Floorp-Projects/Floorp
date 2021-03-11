@@ -2159,6 +2159,36 @@ ChaCha20_Xor(unsigned char *output, const unsigned char *block, unsigned int len
 }
 
 SECStatus
+ChaCha20_InitContext(ChaCha20Context *ctx, const unsigned char *key,
+                     unsigned int keyLen,
+                     const unsigned char *nonce,
+                     unsigned int nonceLen,
+                     PRUint32 ctr)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return SECFailure;
+    return (vector->p_ChaCha20_InitContext)(ctx, key, keyLen, nonce, nonceLen, ctr);
+}
+
+ChaCha20Context *
+ChaCha20_CreateContext(const unsigned char *key, unsigned int keyLen,
+                       const unsigned char *nonce, unsigned int nonceLen,
+                       PRUint32 ctr)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return NULL;
+    return (vector->p_ChaCha20_CreateContext)(key, keyLen, nonce, nonceLen, ctr);
+}
+
+void
+ChaCha20_DestroyContext(ChaCha20Context *ctx, PRBool freeit)
+{
+    if (!vector && PR_SUCCESS != freebl_RunLoaderOnce())
+        return;
+    (vector->p_ChaCha20_DestroyContext)(ctx, freeit);
+}
+
+SECStatus
 ChaCha20Poly1305_InitContext(ChaCha20Poly1305Context *ctx,
                              const unsigned char *key, unsigned int keyLen,
                              unsigned int tagLen)

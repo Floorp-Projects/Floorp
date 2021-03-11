@@ -21,13 +21,17 @@
  * SOFTWARE.
  */
 
+#ifndef __Hacl_Poly1305_32_H
+#define __Hacl_Poly1305_32_H
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #include "kremlin/internal/types.h"
 #include "kremlin/lowstar_endianness.h"
 #include <string.h>
 #include <stdbool.h>
-
-#ifndef __Hacl_Poly1305_32_H
-#define __Hacl_Poly1305_32_H
 
 #include "Hacl_Kremlib.h"
 
@@ -44,6 +48,10 @@ void Hacl_Poly1305_32_poly1305_update(uint64_t *ctx, uint32_t len, uint8_t *text
 void Hacl_Poly1305_32_poly1305_finish(uint8_t *tag, uint8_t *key, uint64_t *ctx);
 
 void Hacl_Poly1305_32_poly1305_mac(uint8_t *tag, uint32_t len, uint8_t *text, uint8_t *key);
+
+#if defined(__cplusplus)
+}
+#endif
 
 #define __Hacl_Poly1305_32_H_DEFINED
 #endif

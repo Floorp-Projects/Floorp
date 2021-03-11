@@ -21,6 +21,7 @@
 #include "secoid.h"
 #include "nssutil.h"
 #include "ecl-curve.h"
+#include "chacha20poly1305.h"
 
 #include "pkcs1_vectors.h"
 
@@ -628,19 +629,20 @@ typedef enum {
     bltestSEED_ECB, /* SEED algorithm      */
     bltestSEED_CBC, /* SEED algorithm      */
 #endif
-    bltestCHACHA20, /* ChaCha20 + Poly1305   */
-    bltestRSA,      /* Public Key Ciphers    */
-    bltestRSA_OAEP, /* . (Public Key Enc.)   */
-    bltestRSA_PSS,  /* . (Public Key Sig.)   */
-    bltestECDSA,    /* . (Public Key Sig.)   */
-    bltestDSA,      /* . (Public Key Sig.)   */
-    bltestMD2,      /* Hash algorithms       */
-    bltestMD5,      /* .             */
-    bltestSHA1,     /* .             */
-    bltestSHA224,   /* .             */
-    bltestSHA256,   /* .             */
-    bltestSHA384,   /* .             */
-    bltestSHA512,   /* .             */
+    bltestCHACHA20_CTR, /* ChaCha20 block cipher */
+    bltestCHACHA20,     /* ChaCha20 + Poly1305   */
+    bltestRSA,          /* Public Key Ciphers    */
+    bltestRSA_OAEP,     /* . (Public Key Enc.)   */
+    bltestRSA_PSS,      /* . (Public Key Sig.)   */
+    bltestECDSA,        /* . (Public Key Sig.)   */
+    bltestDSA,          /* . (Public Key Sig.)   */
+    bltestMD2,          /* Hash algorithms       */
+    bltestMD5,          /* .             */
+    bltestSHA1,         /* .             */
+    bltestSHA224,       /* .             */
+    bltestSHA256,       /* .             */
+    bltestSHA384,       /* .             */
+    bltestSHA512,       /* .             */
     NUMMODES
 } bltestCipherMode;
 
@@ -670,6 +672,7 @@ static char *mode_strings[] =
       "seed_ecb",
       "seed_cbc",
 #endif
+      "chacha20_ctr",
       "chacha20_poly1305",
       "rsa",
       "rsa_oaep",
@@ -800,12 +803,8 @@ struct bltestCipherInfoStr {
 PRBool
 is_symmkeyCipher(bltestCipherMode mode)
 {
-/* change as needed! */
-#ifndef NSS_DISABLE_DEPRECATED_SEED
-    if (mode >= bltestDES_ECB && mode <= bltestSEED_CBC)
-#else
-    if (mode >= bltestDES_ECB && mode <= bltestCAMELLIA_CBC)
-#endif
+    /* change as needed! */
+    if (mode >= bltestDES_ECB && mode <= bltestCHACHA20_CTR)
         return PR_TRUE;
     return PR_FALSE;
 }
@@ -842,6 +841,7 @@ is_singleShotCipher(bltestCipherMode mode)
     switch (mode) {
         case bltestAES_GCM:
         case bltestAES_CTS:
+        case bltestCHACHA20_CTR:
         case bltestCHACHA20:
             return PR_TRUE;
         default:
@@ -897,6 +897,7 @@ cipher_requires_IV(bltestCipherMode mode)
 #ifndef NSS_DISABLE_DEPRECATED_SEED
         case bltestSEED_CBC:
 #endif
+        case bltestCHACHA20_CTR:
         case bltestCHACHA20:
             return PR_TRUE;
         default:
@@ -1148,6 +1149,21 @@ aes_Decrypt(void *cx, unsigned char *output, unsigned int *outputLen,
 {
     return AES_Decrypt((AESContext *)cx, output, outputLen, maxOutputLen,
                        input, inputLen);
+}
+
+SECStatus
+chacha20_Encrypt(void *cx, unsigned char *output, unsigned int *outputLen,
+                 unsigned int maxOutputLen, const unsigned char *input,
+                 unsigned int inputLen)
+{
+    if (maxOutputLen < inputLen) {
+        PORT_SetError(SEC_ERROR_OUTPUT_LEN);
+        return SECFailure;
+    }
+    ChaCha20Context *ctx = cx;
+    *outputLen = inputLen;
+    return ChaCha20_Xor(output, input, inputLen, ctx->key, ctx->nonce,
+                        ctx->counter);
 }
 
 SECStatus
@@ -1654,6 +1670,24 @@ bltest_seed_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
     return SECSuccess;
 }
 #endif /* NSS_DISABLE_DEPRECATED_SEED */
+
+SECStatus
+bltest_chacha20_ctr_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
+{
+    const PRUint32 counter = 1;
+    bltestSymmKeyParams *sk = &cipherInfo->params.sk;
+    cipherInfo->cx = ChaCha20_CreateContext(sk->key.buf.data, sk->key.buf.len,
+                                            sk->iv.buf.data, sk->iv.buf.len,
+                                            counter);
+
+    if (cipherInfo->cx == NULL) {
+        PR_fprintf(PR_STDERR, "ChaCha20_CreateContext() returned NULL\n"
+                              "key must be 32 bytes, iv must be 12 bytes\n");
+        return SECFailure;
+    }
+    cipherInfo->cipher.symmkeyCipher = chacha20_Encrypt;
+    return SECSuccess;
+}
 
 SECStatus
 bltest_chacha20_init(bltestCipherInfo *cipherInfo, PRBool encrypt)
@@ -2316,6 +2350,11 @@ cipherInit(bltestCipherInfo *cipherInfo, PRBool encrypt)
             return bltest_seed_init(cipherInfo, encrypt);
             break;
 #endif /* NSS_DISABLE_DEPRECATED_SEED */
+        case bltestCHACHA20_CTR:
+            outlen = cipherInfo->input.pBuf.len;
+            SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf, outlen);
+            return bltest_chacha20_ctr_init(cipherInfo, encrypt);
+            break;
         case bltestCHACHA20:
             outlen = cipherInfo->input.pBuf.len + (encrypt ? 16 : 0);
             SECITEM_AllocItem(cipherInfo->arena, &cipherInfo->output.buf, outlen);
@@ -2620,6 +2659,9 @@ cipherFinish(bltestCipherInfo *cipherInfo)
             SEED_DestroyContext((SEEDContext *)cipherInfo->cx, PR_TRUE);
             break;
 #endif /* NSS_DISABLE_DEPRECATED_SEED */
+        case bltestCHACHA20_CTR:
+            ChaCha20_DestroyContext((ChaCha20Context *)cipherInfo->cx, PR_TRUE);
+            break;
         case bltestCHACHA20:
             ChaCha20Poly1305_DestroyContext((ChaCha20Poly1305Context *)
                                                 cipherInfo->cx,
@@ -2706,7 +2748,10 @@ getHighUnitBytes(PRInt64 res)
         }
     }
 
-    return PR_smprintf("%d%s", spl[i], marks[i]);
+    if (i == 0)
+        return PR_smprintf("%d%s", spl[i], marks[i]);
+    else
+        return PR_smprintf("%d%s %d%s", spl[i], marks[i], spl[i - 1], marks[i - 1]);
 }
 
 static void
