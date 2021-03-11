@@ -445,12 +445,16 @@ enum class GcOp {
   StructNewWithRtt = 0x1,
   StructNewDefaultWithRtt = 0x2,
   StructGet = 0x03,
+  StructGetS = 0x04,
+  StructGetU = 0x05,
   StructSet = 0x06,
 
   // Array operations
   ArrayNewWithRtt = 0x11,
   ArrayNewDefaultWithRtt = 0x12,
   ArrayGet = 0x13,
+  ArrayGetS = 0x14,
+  ArrayGetU = 0x15,
   ArraySet = 0x16,
   ArrayLen = 0x17,
 
@@ -971,6 +975,8 @@ static const char SourceMappingURLSectionName[] = "sourceMappingURL";
 enum class NameType { Module = 0, Function = 1, Local = 2 };
 
 enum class FieldFlags { Mutable = 0x01, AllowedMask = 0x01 };
+
+enum class FieldExtension { None, Signed, Unsigned };
 
 // The WebAssembly spec hard-codes the virtual page size to be 64KiB and
 // requires the size of linear memory to always be a multiple of 64KiB.
