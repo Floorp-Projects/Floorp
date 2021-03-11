@@ -37,6 +37,7 @@ function waitForTransferComplete() {
   return new Promise(resolve => {
     mockTransferCallback = () => {
       ok(true, "Transfer completed");
+      mockTransferCallback = () => {};
       resolve();
     };
   });
