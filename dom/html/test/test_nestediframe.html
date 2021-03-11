@@ -6,6 +6,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <body>
+  test_nestediframe body
 <script>
 
 SimpleTest.waitForExplicitFinish();
@@ -40,15 +41,15 @@ localStorage.recursion = "" + recursion;
 
 var ifr = document.createElement('iframe');
 ifr.src = location.href.split("#")[0] + "#" + recursion;
-document.body.appendChild(ifr);
 
 ifr.onload = function() {
   reportState("OK " + recursion);
 }
-
 ifr.onerror = function() {
   reportState("KO " + recursion);
 }
+
+document.body.appendChild(ifr);
 
 </script>
 </body>
