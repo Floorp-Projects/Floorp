@@ -1371,6 +1371,9 @@ class AccessorShape : public Shape {
  public:
   /* Get a shape identical to this one, without parent/children information. */
   inline AccessorShape(const StackShape& other, uint32_t nfixed);
+
+  inline AccessorShape(BaseShape* base, ObjectFlags objectFlags,
+                       uint32_t nfixed);
 };
 
 class MOZ_RAII AutoRooterGetterSetter {
