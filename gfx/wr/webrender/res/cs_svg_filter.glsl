@@ -17,7 +17,7 @@ flat varying vec4 vFilterData0;
 flat varying vec4 vFilterData1;
 flat varying float vFloat0;
 flat varying mat4 vColorMat;
-flat varying ivec4 vFuncs;
+flat varying int vFuncs[4];
 
 #define FILTER_BLEND                0
 #define FILTER_FLOOD                1

@@ -1072,21 +1072,6 @@ struct ivec4_scalar {
   friend ivec4_scalar operator&(int32_t a, ivec4_scalar b) {
     return ivec4_scalar{a & b.x, a & b.y, a & b.z, a & b.w};
   }
-
-  int32_t& operator[](int index) {
-    switch (index) {
-      case 0:
-        return x;
-      case 1:
-        return y;
-      case 2:
-        return z;
-      case 3:
-        return w;
-      default:
-        UNREACHABLE;
-    }
-  }
 };
 
 struct ivec4 {
