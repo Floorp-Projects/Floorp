@@ -469,6 +469,11 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
   // Otherwise, if we don't switch target, it is safe to wait for navigate event.
   const onNavigate = target.once("navigate");
 
+  // If the current top-level target follows the window global lifecycle, a
+  // target switch will occur regardless of process changes.
+  const targetFollowsWindowLifecycle =
+    target.targetForm.followWindowGlobalLifeCycle;
+
   // Register panel-specific listeners, which would be useful to wait
   // for panel-specific events.
   const onPanelReloaded = waitForPanelReload(
@@ -503,8 +508,9 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
     info(`→ panel reloaded`);
   }
 
-  // If the tab navigated to another process, expect a target switching
-  if (switchedToAnotherProcess) {
+  // If the tab navigated to another process or if the old target follows the
+  // window lifecycle, expect a target switching.
+  if (switchedToAnotherProcess || targetFollowsWindowLifecycle) {
     info(`Waiting for target switch…`);
     await onTargetSwitched;
     info(`→ switched-target emitted`);
