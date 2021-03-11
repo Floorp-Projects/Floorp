@@ -2815,6 +2815,13 @@
   value: false
   mirror: always
 
+# If true checks for secure www connections when https fails
+# and gives the user suggestions on the error page
+- name: dom.security.https_only_mode_error_page_user_suggestions
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: dom.security.unexpected_system_load_telemetry_enabled
   type: bool
   value: true
