@@ -36,28 +36,26 @@ registerCleanupFunction(async function() {
  * Test the "Share" item in the tab contextmenu on Windows.
  */
 add_task(async function test_contextmenu_share_win() {
-  if (!AppConstants.isPlatformAndVersionAtLeast("win", "6.4")) {
-    Assert.ok(true, "We only expose share on windows 10 and above");
-    return;
-  }
-
   await BrowserTestUtils.withNewTab(TEST_URL, async () => {
     await openTabContextMenu(gBrowser.selectedTab);
 
-    await TestUtils.waitForCondition(() => {
-      let itemCreated = document.querySelector("#context_shareTabURL");
-      return !!itemCreated;
-    }, "Failed to create the Share item.");
-    ok(true, "Got Share item");
-
-    info("Test the correct URL is shared when Share is selected.");
-    let shareItem = document.querySelector("#context_shareTabURL");
     let popup = document.getElementById("tabContextMenu");
     let contextMenuClosedPromise = BrowserTestUtils.waitForPopupEvent(
       popup,
       "hidden"
     );
+    let itemCreated = document.querySelector("#context_shareTabURL");
+    if (!AppConstants.isPlatformAndVersionAtLeast("win", "6.4")) {
+      Assert.ok(!itemCreated, "We only expose share on windows 10 and above");
+      popup.hidePopup();
+      await contextMenuClosedPromise;
+      return;
+    }
 
+    ok(itemCreated, "Got Share item on Windows 10");
+
+    info("Test the correct URL is shared when Share is selected.");
+    let shareItem = document.querySelector("#context_shareTabURL");
     EventUtils.synthesizeMouseAtCenter(shareItem, {});
     await contextMenuClosedPromise;
 
