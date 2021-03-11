@@ -24,9 +24,8 @@
 
 namespace js {
 
-/*
- * Get the GC kind to use for scripted 'new'.
- */
+// Get the GC kind to use for scripted 'new', empty object literals ({}), and
+// the |Object| constructor.
 static inline gc::AllocKind NewObjectGCKind() { return gc::AllocKind::OBJECT4; }
 
 }  // namespace js

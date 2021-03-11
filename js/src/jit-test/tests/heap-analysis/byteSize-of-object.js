@@ -31,7 +31,7 @@ function tByteSize(obj) {
   return size;
 }
 
-assertEq(tByteSize({}),                                 s(16,  24));
+assertEq(tByteSize({}),                                 s(48,  56));
 
 // Try objects with only named properties.
 assertEq(tByteSize({ w: 1 }),                           s(32,  40));
