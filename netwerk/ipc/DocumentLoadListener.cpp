@@ -1570,9 +1570,7 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
 
   // If we're in a preloaded browser, force browsing context replacement to
   // ensure the current process is re-selected.
-  {
-    Element* browserElement = browsingContext->Top()->GetEmbedderElement();
-
+  if (Element* browserElement = browsingContext->Top()->GetEmbedderElement()) {
     nsAutoString isPreloadBrowserStr;
     if (browserElement->GetAttr(kNameSpaceID_None, nsGkAtoms::preloadedState,
                                 isPreloadBrowserStr) &&
@@ -1586,6 +1584,12 @@ bool DocumentLoadListener::MaybeTriggerProcessSwitch(
                                   true);
       }
     }
+  } else {
+    // Note: ContextCanProcessSwitch should return false if the embedder
+    // element is null, but it also runs JS, which has the potential to allow
+    // code to run which may null the embedder element.
+    LOG(("Process Switch Abort: top embedder element disappeared"));
+    return false;
   }
 
   // Update the preferred final process for our load based on the
