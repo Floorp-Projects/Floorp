@@ -270,6 +270,15 @@
       <menuitem id="context-selectall"
                 data-l10n-id="text-action-select-all"
                 command="cmd_selectAll"/>
+      <menuseparator id="context-sep-sendlinktodevice" class="sync-ui-item"
+                hidden="true"/>
+      <menu id="context-sendlinktodevice"
+            class="sync-ui-item"
+            data-l10n-id="main-context-menu-link-send-to-device"
+            hidden="true">
+        <menupopup id="context-sendlinktodevice-popup"
+                   onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, gContextMenu.linkURL, gContextMenu.linkTextStr);"/>
+      </menu>
       <menuseparator id="context-sep-selectall"/>
       <menuitem id="context-keywordfield"
                 data-l10n-id="main-context-menu-keyword"
@@ -280,15 +289,7 @@
       <menuitem id="context-searchselect-private"
                 oncommand="BrowserSearch.loadSearchFromContext(this.searchTerms, true, this.principal, this.csp, event);"
                 onclick="checkForMiddleClick(this, event);"/>
-      <menuseparator id="context-sep-sendlinktodevice" class="sync-ui-item"
-                     hidden="true"/>
-      <menu id="context-sendlinktodevice"
-            class="sync-ui-item"
-            data-l10n-id="main-context-menu-link-send-to-device"
-            hidden="true">
-        <menupopup id="context-sendlinktodevice-popup"
-                   onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, gContextMenu.linkURL, gContextMenu.linkTextStr);"/>
-      </menu>
+
       <menuseparator id="frame-sep"/>
       <menu id="frame" data-l10n-id="main-context-menu-frame">
         <menupopup>

@@ -219,16 +219,16 @@ add_task(async () => {
 
       menu = await getMacAccessible(menu);
       let menuChildren = menu.getAttributeValue("AXChildren");
-      const expectedChildCount = 14 + +hasContainers + +hasInspectA11y;
+      const expectedChildCount = 13 + +hasContainers + +hasInspectA11y;
       is(
         menuChildren.length,
         expectedChildCount,
         `Context menu on link contains ${expectedChildCount} items.`
       );
-      // items at indicies 4, 9, 11 and 13 are the splitters when containers exist
+      // items at indicies 4, 10, and 12 are the splitters when containers exist
       // everything else should be a menu item, otherwise indicies of splitters are
-      // 3, 8, 10, and 12
-      const splitterIndicies = hasContainers ? [4, 9, 11, 13] : [3, 8, 10, 12];
+      // 3, 9, and 11
+      const splitterIndicies = hasContainers ? [4, 10, 12] : [3, 9, 11];
       for (let i = 0; i < menuChildren.length; i++) {
         if (splitterIndicies.includes(i)) {
           is(
