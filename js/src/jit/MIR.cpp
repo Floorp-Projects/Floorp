@@ -5456,7 +5456,7 @@ MGetInlinedArgument* MGetInlinedArgument::New(
 
 MDefinition* MGetInlinedArgument::foldsTo(TempAllocator& alloc) {
   MDefinition* indexDef = SkipUninterestingInstructions(index());
-  if (!indexDef->isConstant()) {
+  if (!indexDef->isConstant() || indexDef->type() != MIRType::Int32) {
     return this;
   }
 
