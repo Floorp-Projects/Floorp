@@ -10730,11 +10730,7 @@
 # correctly when `security.sandbox.content.headless` is enabled.
 - name: widget.remote-look-and-feel
   type: bool
-#ifdef MOZ_WIDGET_GTK
   value: true
-#else
-  value: false
-#endif
   mirror: once
 
 #---------------------------------------------------------------------------
