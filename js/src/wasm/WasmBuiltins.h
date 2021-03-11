@@ -74,7 +74,6 @@ extern const SymbolicAddressSignature SASigPreBarrierFiltering;
 extern const SymbolicAddressSignature SASigPostBarrier;
 extern const SymbolicAddressSignature SASigPostBarrierFiltering;
 extern const SymbolicAddressSignature SASigStructNew;
-extern const SymbolicAddressSignature SASigStructNarrow;
 #ifdef ENABLE_WASM_EXCEPTIONS
 extern const SymbolicAddressSignature SASigExceptionNew;
 extern const SymbolicAddressSignature SASigThrowException;

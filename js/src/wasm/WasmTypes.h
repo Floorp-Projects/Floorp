@@ -3316,7 +3316,6 @@ enum class SymbolicAddress {
   PostBarrier,
   PostBarrierFiltering,
   StructNew,
-  StructNarrow,
 #if defined(ENABLE_WASM_EXCEPTIONS)
   ExceptionNew,
   ThrowException,

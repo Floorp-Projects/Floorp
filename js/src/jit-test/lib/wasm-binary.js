@@ -206,7 +206,6 @@ const TableCopyCode = 0x0e;     // Pending
 const StructNew = 0x00;         // UNOFFICIAL
 const StructGet = 0x03;         // UNOFFICIAL
 const StructSet = 0x06;         // UNOFFICIAL
-const StructNarrow = 0x07;      // UNOFFICIAL
 
 // DefinitionKind
 const FunctionCode     = 0x00;

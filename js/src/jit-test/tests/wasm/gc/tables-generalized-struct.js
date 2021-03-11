@@ -15,7 +15,7 @@
            (func (export "set_null") (param i32)
              (table.set (local.get 0) (ref.null eq)))
            (func (export "set_ref") (param i32) (param eqref)
-             (table.set (local.get 0) (struct.narrow eqref (ref null $dummy) (local.get 1))))
+             (table.set (local.get 0) (ref.cast eq $dummy (local.get 1) (rtt.canon $dummy))))
            (func (export "make_struct") (result eqref)
              (struct.new_with_rtt $dummy (i32.const 37) (rtt.canon $dummy))))`);
     let a = ins.exports.make_struct();

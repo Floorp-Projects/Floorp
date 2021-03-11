@@ -217,12 +217,6 @@ const SymbolicAddressSignature SASigPostBarrierFiltering = {
     {_PTR, _PTR, _END}};
 const SymbolicAddressSignature SASigStructNew = {
     SymbolicAddress::StructNew, _RoN, _FailOnNullPtr, 2, {_PTR, _RoN, _END}};
-const SymbolicAddressSignature SASigStructNarrow = {
-    SymbolicAddress::StructNarrow,
-    _RoN,
-    _Infallible,
-    3,
-    {_PTR, _RoN, _RoN, _END}};
 #ifdef ENABLE_WASM_EXCEPTIONS
 const SymbolicAddressSignature SASigExceptionNew = {
     SymbolicAddress::ExceptionNew,
@@ -1198,11 +1192,6 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
                                      {ArgType_General, ArgType_General});
       MOZ_ASSERT(*abiType == ToABIType(SASigStructNew));
       return FuncCast(Instance::structNew, *abiType);
-    case SymbolicAddress::StructNarrow:
-      *abiType = MakeABIFunctionType(
-          ArgType_General, {ArgType_General, ArgType_General, ArgType_General});
-      MOZ_ASSERT(*abiType == ToABIType(SASigStructNarrow));
-      return FuncCast(Instance::structNarrow, *abiType);
     case SymbolicAddress::RefTest:
       *abiType = MakeABIFunctionType(
           ArgType_Int32, {ArgType_General, ArgType_General, ArgType_General});
@@ -1349,7 +1338,6 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::PostBarrier:
     case SymbolicAddress::PostBarrierFiltering:
     case SymbolicAddress::StructNew:
-    case SymbolicAddress::StructNarrow:
 #ifdef ENABLE_WASM_EXCEPTIONS
     case SymbolicAddress::ExceptionNew:
     case SymbolicAddress::ThrowException:
