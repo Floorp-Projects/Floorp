@@ -798,6 +798,13 @@ class nsContextMenu {
 
     // Copy link location depends on whether we're on a non-mailto link.
     this.showItem("context-copylink", this.onLink && !this.onMailtoLink);
+    let copyLinkSeparator = document.getElementById("context-sep-copylink");
+    // Show "Copy Link" and "Copy" with no divider, and "copy link" and "Send link to Device" with no divider between.
+    // Other cases will show a divider.
+    copyLinkSeparator.toggleAttribute(
+      "ensureHidden",
+      this.onLink && !this.onMailtoLink && !this.onImage
+    );
 
     this.showItem("context-copyvideourl", this.onVideo);
     this.showItem("context-copyaudiourl", this.onAudio);
@@ -1047,6 +1054,7 @@ class nsContextMenu {
 
   // Iterate over the visible items on the menu and its submenus and
   // hide any duplicated separators next to each other.
+  // The attribute "ensureHidden" will override this process and keep a particular separator hidden in special cases.
   showHideSeparators(aPopup) {
     let lastVisibleSeparator = null;
     let count = 0;
@@ -1058,7 +1066,10 @@ class nsContextMenu {
       }
 
       if (menuItem.localName == "menuseparator") {
-        if (!count) {
+        // Individual separators can have the `ensureHidden` attribute added to avoid them
+        // becoming visible. We also set `count` to 0 below because otherwise the
+        // next separator would be made visible, with the same visual effect.
+        if (!count || menuItem.hasAttribute("ensureHidden")) {
           menuItem.hidden = true;
         } else {
           menuItem.hidden = false;
@@ -2104,6 +2115,14 @@ class nsContextMenu {
 
     menuItem.hidden = !showSearchSelect;
     menuItemPrivate.hidden = !showPrivateSearchSelect;
+    let frameSeparator = document.getElementById("frame-sep");
+
+    // Add a divider between "Search X for Y" and "This Frame", and between "Search X for Y" and "Check Spelling",
+    // but no divider in other cases.
+    frameSeparator.toggleAttribute(
+      "ensureHidden",
+      !showSearchSelect && this.inFrame
+    );
     // If we're not showing the menu items, we can skip formatting the labels.
     if (!showSearchSelect) {
       return;
