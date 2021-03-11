@@ -451,6 +451,9 @@ void ChromiumCDMParent::RejectPromise(uint32_t aPromiseId,
   // Note: The MediaKeys rejects all pending DOM promises when it
   // initiates shutdown.
   if (!mCDMCallback || mIsShutdown) {
+    // Suppress the exception as it will not be explicitly handled due to the
+    // early return.
+    aException.SuppressException();
     return;
   }
 
