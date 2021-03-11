@@ -1070,7 +1070,7 @@ JS_PUBLIC_API bool BuildStackString(JSContext* cx, JSPrincipals* principals,
           }
           break;
         case js::StackFormat::Default:
-          MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected value");
+          MOZ_CRASH("Unexpected value");
           break;
       }
 

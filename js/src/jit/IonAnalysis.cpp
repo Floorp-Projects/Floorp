@@ -3169,7 +3169,7 @@ static MathSpace ExtractMathSpace(MDefinition* ins) {
     case TruncateKind::Truncate:
       return MathSpace::Modulo;
   }
-  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unknown TruncateKind");
+  MOZ_CRASH("Unknown TruncateKind");
 }
 
 static bool MonotoneAdd(int32_t lhs, int32_t rhs) {

@@ -753,7 +753,7 @@ OpKind wasm::Classify(OpBytes op) {
       break;
     }
   }
-  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unimplemented opcode");
+  MOZ_CRASH("unimplemented opcode");
 }
 
 #  undef WASM_EXN_OP

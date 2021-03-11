@@ -894,7 +894,7 @@ class Type {
       case Void:
         return isVoid();
     }
-    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected rhs type");
+    MOZ_CRASH("unexpected rhs type");
   }
 
   bool isFixnum() const { return which_ == Fixnum; }
@@ -2300,7 +2300,7 @@ static inline bool IsLiteralInt(const NumLit& lit, uint32_t* u32) {
     case NumLit::OutOfRangeInt:
       return false;
   }
-  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Bad literal type");
+  MOZ_CRASH("Bad literal type");
 }
 
 static inline bool IsLiteralInt(ModuleValidatorShared& m, ParseNode* pn,
@@ -4777,7 +4777,7 @@ static bool IsValidIntMultiplyConstant(ModuleValidator<Unit>& m,
       return false;
   }
 
-  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Bad literal");
+  MOZ_CRASH("Bad literal");
 }
 
 template <typename Unit>

@@ -78,7 +78,7 @@ SharedTable Table::create(JSContext* cx, const TableDesc& desc,
           cx->new_<Table>(cx, desc, maybeObject, std::move(objects)));
     }
   }
-  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("switch is exhaustive");
+  MOZ_CRASH("switch is exhaustive");
 }
 
 void Table::tracePrivate(JSTracer* trc) {
