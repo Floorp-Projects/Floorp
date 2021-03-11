@@ -831,7 +831,24 @@ class PackedType : public T {
         return 0;
     }
   }
-  uint32_t alignmentInStruct() { return size(); }
+  uint32_t alignmentInStruct() const { return size(); }
+  uint32_t indexingShift() const {
+    switch (size()) {
+      case 1:
+        return 0;
+      case 2:
+        return 1;
+      case 4:
+        return 2;
+      case 8:
+        return 3;
+      case 16:
+        return 4;
+      default:
+        MOZ_ASSERT_UNREACHABLE();
+        return 0;
+    }
+  }
 
   PackedType<ValTypeTraits> widenToValType() const {
     switch (tc_.typeCodeAbstracted()) {
@@ -2057,16 +2074,12 @@ class StructType {
  public:
   StructFieldVector fields_;  // Field type, offset, and mutability
   uint32_t size_;             // The size of the type in bytes.
-  bool isInline_;             // True if this is an InlineTypedObject and we
-                   //   interpret the offsets from the object pointer;
-                   //   if false this is an OutlineTypedObject and we
-                   //   interpret everything relative to the pointer to
-                   //   the attached storage.
+
  public:
-  StructType() : fields_(), size_(0), isInline_(true) {}
+  StructType() : fields_(), size_(0) {}
 
   explicit StructType(StructFieldVector&& fields)
-      : fields_(std::move(fields)), size_(0), isInline_(true) {}
+      : fields_(std::move(fields)), size_(0) {}
 
   StructType(StructType&&) = default;
   StructType& operator=(StructType&&) = default;
@@ -2076,7 +2089,6 @@ class StructType {
       return false;
     }
     size_ = src.size_;
-    isInline_ = src.isInline_;
     return true;
   }
 
@@ -2101,11 +2113,6 @@ class StructType {
   }
   [[nodiscard]] bool computeLayout();
 
-  // Get the offset to a field from the base of the struct object. This
-  // is just the field offset for outline typed objects, but includes
-  // the header for inline typed objects.
-  uint32_t objectBaseFieldOffset(uint32_t fieldIndex) const;
-
   bool hasPrefix(const StructType& other) const;
 
   WASM_DECLARE_SERIALIZABLE(StructType)
@@ -2113,6 +2120,42 @@ class StructType {
 
 typedef Vector<StructType, 0, SystemAllocPolicy> StructTypeVector;
 typedef Vector<const StructType*, 0, SystemAllocPolicy> StructTypePtrVector;
+
+// Array type
+
+class ArrayType {
+ public:
+  FieldType elementType_;  // field type
+  bool isMutable_;         // mutability
+
+ public:
+  ArrayType(FieldType elementType, bool isMutable)
+      : elementType_(elementType), isMutable_(isMutable) {}
+
+  ArrayType(const ArrayType&) = default;
+  ArrayType& operator=(const ArrayType&) = default;
+
+  ArrayType(ArrayType&&) = default;
+  ArrayType& operator=(ArrayType&&) = default;
+
+  MOZ_MUST_USE bool clone(const ArrayType& src) {
+    elementType_ = src.elementType_;
+    isMutable_ = src.isMutable_;
+    return true;
+  }
+
+  void renumber(const RenumberMap& map) { elementType_.renumber(map); }
+  void offsetTypeIndex(uint32_t offsetBy) {
+    elementType_.offsetTypeIndex(offsetBy);
+  }
+
+  bool isDefaultable() const { return elementType_.isDefaultable(); }
+
+  WASM_DECLARE_SERIALIZABLE(ArrayType)
+};
+
+typedef Vector<ArrayType, 0, SystemAllocPolicy> ArrayTypeVector;
+typedef Vector<const ArrayType*, 0, SystemAllocPolicy> ArrayTypePtrVector;
 
 // An InitExpr describes a deferred initializer expression, used to initialize
 // a global or a table element offset. Such expressions are created during
@@ -2540,10 +2583,11 @@ typedef Vector<Name, 0, SystemAllocPolicy> NameVector;
 // A tagged container for the various types that can be present in a wasm
 // module's type section.
 
-enum class TypeDefKind {
-  None,
+enum class TypeDefKind : uint8_t {
+  None = 0,
   Func,
   Struct,
+  Array,
 };
 
 class TypeDef {
@@ -2551,6 +2595,7 @@ class TypeDef {
   union {
     FuncType funcType_;
     StructType structType_;
+    ArrayType arrayType_;
   };
 
  public:
@@ -2562,6 +2607,9 @@ class TypeDef {
   explicit TypeDef(StructType&& structType)
       : kind_(TypeDefKind::Struct), structType_(std::move(structType)) {}
 
+  explicit TypeDef(ArrayType&& arrayType)
+      : kind_(TypeDefKind::Array), arrayType_(std::move(arrayType)) {}
+
   TypeDef(TypeDef&& td) : kind_(td.kind_) {
     switch (kind_) {
       case TypeDefKind::Func:
@@ -2569,6 +2617,9 @@ class TypeDef {
         break;
       case TypeDefKind::Struct:
         new (&structType_) StructType(std::move(td.structType_));
+        break;
+      case TypeDefKind::Array:
+        new (&arrayType_) ArrayType(std::move(td.arrayType_));
         break;
       case TypeDefKind::None:
         break;
@@ -2583,6 +2634,9 @@ class TypeDef {
       case TypeDefKind::Struct:
         structType_.~StructType();
         break;
+      case TypeDefKind::Array:
+        arrayType_.~ArrayType();
+        break;
       case TypeDefKind::None:
         break;
     }
@@ -2596,6 +2650,9 @@ class TypeDef {
         break;
       case TypeDefKind::Struct:
         new (&structType_) StructType(std::move(that.structType_));
+        break;
+      case TypeDefKind::Array:
+        new (&arrayType_) ArrayType(std::move(that.arrayType_));
         break;
       case TypeDefKind::None:
         break;
@@ -2614,6 +2671,9 @@ class TypeDef {
       case TypeDefKind::Struct:
         new (&structType_) StructType();
         return structType_.clone(src.structType());
+      case TypeDefKind::Array:
+        new (&arrayType_) ArrayType(src.arrayType());
+        return true;
       case TypeDefKind::None:
         break;
     }
@@ -2628,6 +2688,8 @@ class TypeDef {
   bool isFuncType() const { return kind_ == TypeDefKind::Func; }
 
   bool isStructType() const { return kind_ == TypeDefKind::Struct; }
+
+  bool isArrayType() const { return kind_ == TypeDefKind::Array; }
 
   const FuncType& funcType() const {
     MOZ_ASSERT(isFuncType());
@@ -2649,6 +2711,16 @@ class TypeDef {
     return structType_;
   }
 
+  const ArrayType& arrayType() const {
+    MOZ_ASSERT(isArrayType());
+    return arrayType_;
+  }
+
+  ArrayType& arrayType() {
+    MOZ_ASSERT(isArrayType());
+    return arrayType_;
+  }
+
   void renumber(const RenumberMap& map) {
     switch (kind_) {
       case TypeDefKind::Func:
@@ -2656,6 +2728,9 @@ class TypeDef {
         break;
       case TypeDefKind::Struct:
         structType_.renumber(map);
+        break;
+      case TypeDefKind::Array:
+        arrayType_.renumber(map);
         break;
       case TypeDefKind::None:
         break;
@@ -2668,6 +2743,9 @@ class TypeDef {
         break;
       case TypeDefKind::Struct:
         structType_.offsetTypeIndex(offsetBy);
+        break;
+      case TypeDefKind::Array:
+        arrayType_.offsetTypeIndex(offsetBy);
         break;
       case TypeDefKind::None:
         break;
@@ -2825,7 +2903,24 @@ class TypeContext {
     return structType(t.typeIndex());
   }
 
-  bool isSubtypeOf(ValType one, ValType two) const {
+  // StructType accessors
+
+  bool isArrayType(uint32_t index) const { return types_[index].isArrayType(); }
+  bool isArrayType(RefType t) const {
+    return t.isTypeIndex() && isArrayType(t.typeIndex());
+  }
+
+  ArrayType& arrayType(uint32_t index) { return types_[index].arrayType(); }
+  const ArrayType& arrayType(uint32_t index) const {
+    return types_[index].arrayType();
+  }
+  ArrayType& arrayType(RefType t) { return arrayType(t.typeIndex()); }
+  const ArrayType& arrayType(RefType t) const {
+    return arrayType(t.typeIndex());
+  }
+
+  template <class T>
+  bool isSubtypeOf(T one, T two) const {
     // Anything's a subtype of itself.
     if (one == two) {
       return true;
@@ -2867,9 +2962,17 @@ class TypeContext {
         if (isStructType(one) && two.isEq()) {
           return true;
         }
+        // Arrays are subtypes of EqRef.
+        if (isArrayType(one) && two.isEq()) {
+          return true;
+        }
         // Struct One is a subtype of struct Two if Two is a prefix of One.
         if (isStructType(one) && isStructType(two)) {
           return structType(one).hasPrefix(structType(two));
+        }
+        // Array One may be a subtype of array Two
+        if (isArrayType(one) && isArrayType(two)) {
+          return isArraySubtypeOf(arrayType(one), arrayType(two));
         }
       }
 #  endif
@@ -2878,6 +2981,18 @@ class TypeContext {
 #endif
     return false;
   }
+
+#ifdef ENABLE_WASM_GC
+  bool isArraySubtypeOf(const ArrayType& one, const ArrayType& two) const {
+    // (array (mut X)) </: (array X)
+    if (one.isMutable_ && !two.isMutable_) {
+      return false;
+    }
+
+    // TODO: implement proper subtyping of element type
+    return one.elementType_ == two.elementType_;
+  }
+#endif
 
   size_t sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
     return types_.sizeOfExcludingThis(mallocSizeOf);
@@ -3404,6 +3519,7 @@ enum class SymbolicAddress {
   ThrowException,
   GetLocalExceptionIndex,
 #endif
+  ArrayNew,
   InlineTypedObjectClass,
 #if defined(JS_CODEGEN_MIPS32)
   js_jit_gAtomic64Lock,

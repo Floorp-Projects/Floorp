@@ -86,8 +86,11 @@ enum class TypeCode {
   // Type constructor for function types
   Func = 0x60,  // SLEB128(-0x20)
 
-  // Type constructor for structure types - unofficial
+  // Type constructor for structure types - gc proposal
   Struct = 0x5f,  // SLEB128(-0x21)
+
+  // Type constructor for array types - gc proposal
+  Array = 0x5e,  // SLEB128(-0x22)
 
   // The 'empty' case of blocktype.
   BlockVoid = 0x40,  // SLEB128(-0x40)
@@ -443,6 +446,13 @@ enum class GcOp {
   StructNewDefaultWithRtt = 0x2,
   StructGet = 0x03,
   StructSet = 0x06,
+
+  // Array operations
+  ArrayNewWithRtt = 0x11,
+  ArrayNewDefaultWithRtt = 0x12,
+  ArrayGet = 0x13,
+  ArraySet = 0x16,
+  ArrayLen = 0x17,
 
   // Rtt operations
   RttCanon = 0x30,

@@ -227,6 +227,7 @@ class Instance {
   static void* throwException(Instance* instance, JSObject* exn);
   static uint32_t getLocalExceptionIndex(Instance* instance, JSObject* exn);
 #endif
+  static void* arrayNew(Instance* instance, uint32_t length, void* arrayDescr);
   static int32_t refTest(Instance* instance, void* refPtr, void* rttPtr);
   static void* rttSub(Instance* instance, void* rttPtr);
 };

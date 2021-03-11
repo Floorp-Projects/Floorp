@@ -69,31 +69,25 @@ TypedProto* TypedProto::create(JSContext* cx) {
 }
 
 static const JSClassOps RttValueClassOps = {
-    nullptr,             // addProperty
-    nullptr,             // delProperty
-    nullptr,             // enumerate
-    nullptr,             // newEnumerate
-    nullptr,             // resolve
-    nullptr,             // mayResolve
-    RttValue::finalize,  // finalize
-    nullptr,             // call
-    nullptr,             // hasInstance
-    nullptr,             // construct
-    nullptr,             // trace
+    nullptr,  // addProperty
+    nullptr,  // delProperty
+    nullptr,  // enumerate
+    nullptr,  // newEnumerate
+    nullptr,  // resolve
+    nullptr,  // mayResolve
+    nullptr,  // finalize
+    nullptr,  // call
+    nullptr,  // hasInstance
+    nullptr,  // construct
+    nullptr,  // trace
 };
 
 const JSClass js::RttValue::class_ = {
-    "RttValue",
-    JSCLASS_HAS_RESERVED_SLOTS(RttValue::SlotCount) |
-        JSCLASS_BACKGROUND_FINALIZE,
+    "RttValue", JSCLASS_HAS_RESERVED_SLOTS(RttValue::SlotCount),
     &RttValueClassOps};
-
-static bool CreateTraceList(JSContext* cx, HandleRttValue rtt);
 
 RttValue* RttValue::createFromHandle(JSContext* cx, TypeHandle handle) {
   const TypeDef& type = handle.get(cx->wasm().typeContext.get());
-  MOZ_ASSERT(type.isStructType());
-  const StructType& structType = type.structType();
 
   Rooted<RttValue*> rtt(cx,
                         NewTenuredObjectWithGivenProto<RttValue>(cx, nullptr));
@@ -107,14 +101,17 @@ RttValue* RttValue::createFromHandle(JSContext* cx, TypeHandle handle) {
   }
 
   rtt->initReservedSlot(RttValue::Handle, Int32Value(handle.index()));
-  rtt->initReservedSlot(RttValue::Size, Int32Value(structType.size_));
-  rtt->initReservedSlot(RttValue::Proto, ObjectValue(*proto));
-  rtt->initReservedSlot(RttValue::TraceList, UndefinedValue());
-  rtt->initReservedSlot(RttValue::Parent, NullValue());
-
-  if (!CreateTraceList(cx, rtt)) {
-    return nullptr;
+  rtt->initReservedSlot(RttValue::Kind, Int32Value(uint32_t(type.kind())));
+  if (type.isStructType()) {
+    const StructType& structType = type.structType();
+    rtt->initReservedSlot(RttValue::Size, Int32Value(structType.size_));
+  } else {
+    const ArrayType& arrayType = type.arrayType();
+    rtt->initReservedSlot(RttValue::Size,
+                          Int32Value(arrayType.elementType_.size()));
   }
+  rtt->initReservedSlot(RttValue::Proto, ObjectValue(*proto));
+  rtt->initReservedSlot(RttValue::Parent, NullValue());
 
   if (!cx->zone()->addRttValueObject(cx, rtt)) {
     ReportOutOfMemory(cx);
@@ -138,13 +135,6 @@ RttValue* RttValue::createFromParent(JSContext* cx, HandleRttValue parent) {
  * Typed objects
  */
 
-uint32_t TypedObject::offset() const {
-  if (is<InlineTypedObject>()) {
-    return 0;
-  }
-  return PointerRangeSize(typedMemBase(), typedMem());
-}
-
 uint8_t* TypedObject::typedMem() const {
   if (is<InlineTypedObject>()) {
     return as<InlineTypedObject>().inlineTypedMem();
@@ -152,14 +142,59 @@ uint8_t* TypedObject::typedMem() const {
   return as<OutlineTypedObject>().outOfLineTypedMem();
 }
 
-uint8_t* TypedObject::typedMemBase() const {
-  MOZ_ASSERT(is<OutlineTypedObject>());
+template <typename V>
+void TypedObject::visitReferences(JSContext* cx, V& visitor) {
+  RttValue& rtt = rttValue();
+  const auto& typeDef = rtt.getType(cx);
+  uint8_t* base = typedMem();
 
-  JSObject& owner = as<OutlineTypedObject>().owner();
-  if (owner.is<ArrayBufferObject>()) {
-    return owner.as<ArrayBufferObject>().dataPointer();
+  switch (typeDef.kind()) {
+    case TypeDefKind::Struct: {
+      const auto& structType = typeDef.structType();
+      for (const StructField& field : structType.fields_) {
+        if (field.type.isReference()) {
+          visitor.visitReference(base, field.offset);
+        }
+      }
+      break;
+    }
+    case TypeDefKind::Array: {
+      const auto& arrayType = typeDef.arrayType();
+      MOZ_ASSERT(is<OutlineTypedObject>());
+      if (arrayType.elementType_.isReference()) {
+        uint8_t* elemBase = base + OutlineTypedObject::offsetOfArrayLength() +
+                            sizeof(OutlineTypedObject::ArrayLength);
+        uint32_t length = as<OutlineTypedObject>().arrayLength();
+        for (uint32_t i = 0; i < length; i++) {
+          visitor.visitReference(elemBase, i * arrayType.elementType_.size());
+        }
+      }
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE();
   }
-  return owner.as<InlineTypedObject>().inlineTypedMem();
+}
+
+///////////////////////////////////////////////////////////////////////////
+// Tracing instances
+
+namespace {
+
+class MemoryTracingVisitor {
+  JSTracer* trace_;
+
+ public:
+  explicit MemoryTracingVisitor(JSTracer* trace) : trace_(trace) {}
+
+  void visitReference(uint8_t* base, size_t offset);
+};
+
+}  // namespace
+
+void MemoryTracingVisitor::visitReference(uint8_t* base, size_t offset) {
+  GCPtrObject* objectPtr = reinterpret_cast<js::GCPtrObject*>(base + offset);
+  TraceNullableEdge(trace_, objectPtr, "reference-obj");
 }
 
 /******************************************************************************
@@ -217,7 +252,6 @@ OutlineTypedObject* OutlineTypedObject::createUnattached(JSContext* cx,
 }
 
 void OutlineTypedObject::attach(ArrayBufferObject& buffer) {
-  MOZ_ASSERT(size() <= wasm::ByteLength32(buffer));
   MOZ_ASSERT(buffer.hasTypedObjectViews());
   MOZ_ASSERT(!buffer.isDetached());
 
@@ -225,7 +259,7 @@ void OutlineTypedObject::attach(ArrayBufferObject& buffer) {
 }
 
 /*static*/
-OutlineTypedObject* OutlineTypedObject::createZeroed(JSContext* cx,
+OutlineTypedObject* OutlineTypedObject::createStruct(JSContext* cx,
                                                      HandleRttValue rtt,
                                                      gc::InitialHeap heap) {
   // Create unattached wrapper object.
@@ -242,28 +276,75 @@ OutlineTypedObject* OutlineTypedObject::createZeroed(JSContext* cx,
   if (!buffer) {
     return nullptr;
   }
-  rtt->initInstance(cx, buffer->dataPointer());
   obj->attach(*buffer);
   return obj;
 }
 
 /*static*/
-TypedObject* TypedObject::createZeroed(JSContext* cx, HandleRttValue rtt,
-                                       gc::InitialHeap heap) {
-  // If possible, create an object with inline data.
-  if (InlineTypedObject::canAccommodateType(rtt)) {
-    AutoSetNewObjectMetadata metadata(cx);
-
-    InlineTypedObject* obj = InlineTypedObject::create(cx, rtt, heap);
-    if (!obj) {
-      return nullptr;
-    }
-    JS::AutoCheckCannotGC nogc(cx);
-    rtt->initInstance(cx, obj->inlineTypedMem(nogc));
-    return obj;
+OutlineTypedObject* OutlineTypedObject::createArray(JSContext* cx,
+                                                    HandleRttValue rtt,
+                                                    uint32_t length,
+                                                    gc::InitialHeap heap) {
+  // Create unattached wrapper object.
+  Rooted<OutlineTypedObject*> obj(
+      cx, OutlineTypedObject::createUnattached(cx, rtt, heap));
+  if (!obj) {
+    return nullptr;
   }
 
-  return OutlineTypedObject::createZeroed(cx, rtt, heap);
+  // Allocate and initialize the memory for this instance.
+  size_t totalSize = offsetOfArrayLength() +
+                     sizeof(OutlineTypedObject::ArrayLength) +
+                     (rtt->size() * length);
+  Rooted<ArrayBufferObject*> buffer(cx);
+  buffer = ArrayBufferObject::createForTypedObject(cx, BufferSize(totalSize));
+  if (!buffer) {
+    return nullptr;
+  }
+  obj->attach(*buffer);
+  obj->setArrayLength(length);
+  MOZ_ASSERT(obj->arrayLength() == length);
+  return obj;
+}
+
+/*static*/
+TypedObject* TypedObject::createStruct(JSContext* cx, HandleRttValue rtt,
+                                       gc::InitialHeap heap) {
+  RootedTypedObject typedObj(cx);
+  uint32_t totalSize = rtt->getType(cx).structType().size_;
+
+  // If possible, create an object with inline data.
+  if (InlineTypedObject::canAccommodateSize(totalSize)) {
+    AutoSetNewObjectMetadata metadata(cx);
+    typedObj = InlineTypedObject::createStruct(cx, rtt, heap);
+  } else {
+    typedObj = OutlineTypedObject::createStruct(cx, rtt, heap);
+  }
+
+  if (!typedObj) {
+    return nullptr;
+  }
+
+  // Initialize the values to their defaults
+  typedObj->initDefault();
+
+  return typedObj;
+}
+
+/*static*/
+TypedObject* TypedObject::createArray(JSContext* cx, HandleRttValue rtt,
+                                      uint32_t length, gc::InitialHeap heap) {
+  // Always create arrays outlined
+  RootedTypedObject typedObj(
+      cx, OutlineTypedObject::createArray(cx, rtt, length, heap));
+  if (!typedObj) {
+    return nullptr;
+  }
+
+  // Initialize the values to their defaults
+  typedObj->initDefault();
+
+  return typedObj;
 }
 
 /* static */
@@ -277,8 +358,6 @@ void OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
     return;
   }
   MOZ_ASSERT(typedObj.data_);
-
-  RttValue& rtt = typedObj.rttValue();
 
   // Mark the owner, watching in case it is moved by the tracer.
   JSObject* oldOwner = typedObj.owner_;
@@ -304,48 +383,75 @@ void OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
     }
   }
 
-  if (rtt.hasTraceList()) {
-    gc::VisitTraceList(trc, object, rtt.traceList(), newData);
-    return;
-  }
-
-  rtt.traceInstance(trc, newData);
+  JSContext* cx = trc->runtime()->mainContextFromOwnThread();
+  MemoryTracingVisitor visitor(trc);
+  typedObj.visitReferences(cx, visitor);
 }
 
 const TypeDef& RttValue::getType(JSContext* cx) const {
   return handle().get(cx->wasm().typeContext.get());
 }
 
-bool RttValue::lookupProperty(JSContext* cx, jsid id, uint32_t* offset,
-                              FieldType* type) {
+bool RttValue::lookupProperty(JSContext* cx, HandleTypedObject object, jsid id,
+                              uint32_t* offset, FieldType* type) {
   const auto& typeDef = getType(cx);
-  MOZ_RELEASE_ASSERT(typeDef.isStructType());
-  const auto& structType = typeDef.structType();
-  uint32_t index;
-  if (!IdIsIndex(id, &index)) {
-    return false;
-  }
-  if (index >= structType.fields_.length()) {
-    return false;
-  }
-  const StructField& field = structType.fields_[index];
-  *offset = field.offset;
-  *type = field.type;
-  return true;
-  ;
-}
 
-uint32_t RttValue::propertyCount(JSContext* cx) {
-  const auto& typeDef = getType(cx);
-  MOZ_RELEASE_ASSERT(typeDef.isStructType());
-  return typeDef.structType().fields_.length();
+  switch (typeDef.kind()) {
+    case wasm::TypeDefKind::Struct: {
+      const auto& structType = typeDef.structType();
+      uint32_t index;
+      if (!IdIsIndex(id, &index)) {
+        return false;
+      }
+      if (index >= structType.fields_.length()) {
+        return false;
+      }
+      const StructField& field = structType.fields_[index];
+      *offset = field.offset;
+      *type = field.type;
+      return true;
+    }
+    case wasm::TypeDefKind::Array: {
+      const auto& arrayType = typeDef.arrayType();
+
+      // Special case for property 'length' that loads the length field at the
+      // beginning of the data buffer
+      if (id.isString() &&
+          id.toString() == cx->runtime()->commonNames->length) {
+        STATIC_ASSERT_ARRAYLENGTH_IS_U32;
+        *type = FieldType::I32;
+        *offset = OutlineTypedObject::offsetOfArrayLength();
+        return true;
+      }
+
+      // Normal case of indexed properties for loading array elements
+      uint32_t index;
+      if (!IdIsIndex(id, &index)) {
+        return false;
+      }
+      OutlineTypedObject::ArrayLength arrayLength =
+          object->as<OutlineTypedObject>().arrayLength();
+      if (index >= arrayLength) {
+        return false;
+      }
+      *offset = OutlineTypedObject::offsetOfArrayLength() +
+                sizeof(OutlineTypedObject::ArrayLength) +
+                index * arrayType.elementType_.size();
+      *type = arrayType.elementType_;
+      return true;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE();
+      return false;
+  }
 }
 
 /* static */
 bool TypedObject::obj_lookupProperty(JSContext* cx, HandleObject obj,
                                      HandleId id, MutableHandleObject objp,
                                      MutableHandle<PropertyResult> propp) {
-  if (obj->as<TypedObject>().rttValue().hasProperty(cx, id)) {
+  RootedTypedObject typedObj(cx, &obj->as<TypedObject>());
+  if (typedObj->rttValue().hasProperty(cx, typedObj, id)) {
     propp.setTypedObjectProperty();
     objp.set(obj);
     return true;
@@ -372,8 +478,8 @@ bool TypedObject::obj_defineProperty(JSContext* cx, HandleObject obj,
 
 bool TypedObject::obj_hasProperty(JSContext* cx, HandleObject obj, HandleId id,
                                   bool* foundp) {
-  Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());
-  if (typedObj->rttValue().hasProperty(cx, id)) {
+  RootedTypedObject typedObj(cx, &obj->as<TypedObject>());
+  if (typedObj->rttValue().hasProperty(cx, typedObj, id)) {
     *foundp = true;
     return true;
   }
@@ -394,7 +500,7 @@ bool TypedObject::obj_getProperty(JSContext* cx, HandleObject obj,
 
   uint32_t offset;
   FieldType type;
-  if (typedObj->rttValue().lookupProperty(cx, id, &offset, &type)) {
+  if (typedObj->rttValue().lookupProperty(cx, typedObj, id, &offset, &type)) {
     return typedObj->loadValue(cx, offset, type, vp);
   }
 
@@ -410,9 +516,9 @@ bool TypedObject::obj_getProperty(JSContext* cx, HandleObject obj,
 bool TypedObject::obj_setProperty(JSContext* cx, HandleObject obj, HandleId id,
                                   HandleValue v, HandleValue receiver,
                                   ObjectOpResult& result) {
-  Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());
+  RootedTypedObject typedObj(cx, &obj->as<TypedObject>());
 
-  if (typedObj->rttValue().hasProperty(cx, id)) {
+  if (typedObj->rttValue().hasProperty(cx, typedObj, id)) {
     if (!receiver.isObject() || obj != &receiver.toObject()) {
       return SetPropertyByDefining(cx, id, v, receiver, result);
     }
@@ -432,7 +538,7 @@ bool TypedObject::obj_getOwnPropertyDescriptor(
 
   uint32_t offset;
   FieldType type;
-  if (typedObj->rttValue().lookupProperty(cx, id, &offset, &type)) {
+  if (typedObj->rttValue().lookupProperty(cx, typedObj, id, &offset, &type)) {
     if (!typedObj->loadValue(cx, offset, type, desc.value())) {
       return false;
     }
@@ -447,8 +553,8 @@ bool TypedObject::obj_getOwnPropertyDescriptor(
 
 bool TypedObject::obj_deleteProperty(JSContext* cx, HandleObject obj,
                                      HandleId id, ObjectOpResult& result) {
-  Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());
-  if (typedObj->rttValue().hasProperty(cx, id)) {
+  RootedTypedObject typedObj(cx, &obj->as<TypedObject>());
+  if (typedObj->rttValue().hasProperty(cx, typedObj, id)) {
     return Throw(cx, id, JSMSG_CANT_DELETE);
   }
 
@@ -466,15 +572,37 @@ bool TypedObject::obj_newEnumerate(JSContext* cx, HandleObject obj,
   MOZ_ASSERT(obj->is<TypedObject>());
   Rooted<TypedObject*> typedObj(cx, &obj->as<TypedObject>());
 
-  size_t propertyCount = typedObj->rttValue().propertyCount(cx);
-  if (!properties.reserve(propertyCount)) {
-    return false;
+  const auto& rtt = typedObj->rttValue();
+  const auto& typeDef = rtt.getType(cx);
+
+  size_t indexCount = 0;
+  size_t otherCount = 0;
+  switch (typeDef.kind()) {
+    case wasm::TypeDefKind::Struct: {
+      indexCount = typeDef.structType().fields_.length();
+      break;
+    }
+    case wasm::TypeDefKind::Array: {
+      indexCount = typedObj->as<OutlineTypedObject>().arrayLength();
+      otherCount = 1;
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE();
   }
 
+  if (!properties.reserve(indexCount + otherCount)) {
+    return false;
+  }
   RootedId id(cx);
-  for (size_t index = 0; index < propertyCount; index++) {
+  for (size_t index = 0; index < indexCount; index++) {
     id = INT_TO_JSID(index);
     properties.infallibleAppend(id);
+  }
+
+  if (typeDef.kind() == wasm::TypeDefKind::Array) {
+    properties.infallibleAppend(
+        JS::PropertyKey::fromNonIntAtom(cx->runtime()->commonNames->length));
   }
 
   return true;
@@ -497,13 +625,34 @@ bool TypedObject::loadValue(JSContext* cx, size_t offset, FieldType type,
   return ToJSValue(cx, typedMem() + offset, type, vp);
 }
 
+void TypedObject::initDefault() {
+  RttValue& rtt = rttValue();
+  switch (rtt.kind()) {
+    case TypeDefKind::Struct: {
+      memset(typedMem(), 0, rtt.size());
+      break;
+    }
+    case TypeDefKind::Array: {
+      MOZ_ASSERT(is<OutlineTypedObject>());
+      uint32_t length = as<OutlineTypedObject>().arrayLength();
+      memset(typedMem() + sizeof(uint32_t), 0, rtt.size() * length);
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE();
+  }
+}
+
 /******************************************************************************
  * Inline typed objects
  */
 
 /* static */
-InlineTypedObject* InlineTypedObject::create(JSContext* cx, HandleRttValue rtt,
-                                             gc::InitialHeap heap) {
+InlineTypedObject* InlineTypedObject::createStruct(JSContext* cx,
+                                                   HandleRttValue rtt,
+                                                   gc::InitialHeap heap) {
+  MOZ_ASSERT(rtt->kind() == wasm::TypeDefKind::Struct);
+
   gc::AllocKind allocKind = allocKindForRttValue(rtt);
 
   RootedObject proto(cx, &rtt->typedProto());
@@ -526,14 +675,9 @@ void InlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
 
   TraceEdge(trc, &typedObj.rttValue_, "InlineTypedObject_rttvalue");
 
-  RttValue& rtt = typedObj.rttValue();
-  if (rtt.hasTraceList()) {
-    gc::VisitTraceList(trc, object, typedObj.rttValue().traceList(),
-                       typedObj.inlineTypedMem());
-    return;
-  }
-
-  rtt.traceInstance(trc, typedObj.inlineTypedMem());
+  JSContext* cx = trc->runtime()->mainContextFromOwnThread();
+  MemoryTracingVisitor visitor(trc);
+  typedObj.visitReferences(cx, visitor);
 }
 
 /* static */
@@ -617,160 +761,4 @@ bool TypedObject::isRuntimeSubtype(HandleRttValue rtt) const {
     current = current->parent();
   }
   return false;
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Walking memory
-
-template <typename V>
-static void VisitReferences(JSContext* cx, RttValue& rtt, uint8_t* base,
-                            V& visitor, size_t offset) {
-  const auto& typeDef = rtt.getType(cx);
-
-  if (typeDef.isStructType()) {
-    const auto& structType = typeDef.structType();
-    for (const StructField& field : structType.fields_) {
-      if (field.type.isReference()) {
-        uint32_t fieldOffset = offset + field.offset;
-        visitor.visitReference(base, fieldOffset);
-      }
-    }
-    return;
-  }
-
-  MOZ_ASSERT_UNREACHABLE();
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Initializing instances
-
-namespace {
-
-class MemoryInitVisitor {
- public:
-  void visitReference(uint8_t* base, size_t offset);
-};
-
-}  // namespace
-
-void MemoryInitVisitor::visitReference(uint8_t* base, size_t offset) {
-  js::GCPtrObject* objectPtr =
-      reinterpret_cast<js::GCPtrObject*>(base + offset);
-  objectPtr->init(nullptr);
-}
-
-void RttValue::initInstance(JSContext* cx, uint8_t* mem) {
-  MemoryInitVisitor visitor;
-
-  // Initialize the instance
-  memset(mem, 0, size());
-  VisitReferences(cx, *this, mem, visitor, 0);
-}
-
-///////////////////////////////////////////////////////////////////////////
-// Tracing instances
-
-namespace {
-
-class MemoryTracingVisitor {
-  JSTracer* trace_;
-
- public:
-  explicit MemoryTracingVisitor(JSTracer* trace) : trace_(trace) {}
-
-  void visitReference(uint8_t* base, size_t offset);
-};
-
-}  // namespace
-
-void MemoryTracingVisitor::visitReference(uint8_t* base, size_t offset) {
-  GCPtrObject* objectPtr = reinterpret_cast<js::GCPtrObject*>(base + offset);
-  TraceNullableEdge(trace_, objectPtr, "reference-obj");
-}
-
-void RttValue::traceInstance(JSTracer* trace, uint8_t* mem) {
-  JSContext* cx = trace->runtime()->mainContextFromOwnThread();
-  MemoryTracingVisitor visitor(trace);
-
-  VisitReferences(cx, *this, mem, visitor, 0);
-}
-
-namespace {
-
-struct TraceListVisitor {
-  using OffsetVector = Vector<uint32_t, 0, SystemAllocPolicy>;
-  // TODO/AnyRef-boxing: Once a WasmAnyRef is no longer just a JSObject*
-  // we must revisit this structure.
-  OffsetVector objectOffsets;
-
-  void visitReference(uint8_t* base, size_t offset);
-
-  bool fillList(Vector<uint32_t>& entries);
-};
-
-}  // namespace
-
-void TraceListVisitor::visitReference(uint8_t* base, size_t offset) {
-  MOZ_ASSERT(!base);
-
-  AutoEnterOOMUnsafeRegion oomUnsafe;
-
-  MOZ_ASSERT(offset <= UINT32_MAX);
-  if (!objectOffsets.append(offset)) {
-    oomUnsafe.crash("TraceListVisitor::visitReference");
-  }
-}
-
-bool TraceListVisitor::fillList(Vector<uint32_t>& entries) {
-  return entries.append(0) /* stringOffsets.length() */ &&
-         entries.append(objectOffsets.length()) &&
-         entries.append(0) /* valueOffsets.length() */ &&
-         entries.appendAll(objectOffsets);
-}
-
-static bool CreateTraceList(JSContext* cx, HandleRttValue rtt) {
-  // Trace lists are only used for inline typed objects. We don't use them
-  // for larger objects, both to limit the size of the trace lists and
-  // because tracing outline typed objects is considerably more complicated
-  // than inline ones.
-  if (!InlineTypedObject::canAccommodateType(rtt)) {
-    return true;
-  }
-
-  TraceListVisitor visitor;
-  VisitReferences(cx, *rtt, nullptr, visitor, 0);
-
-  Vector<uint32_t> entries(cx);
-  if (!visitor.fillList(entries)) {
-    return false;
-  }
-
-  // Trace lists aren't necessary for descriptors with no references.
-  MOZ_ASSERT(entries.length() >= 3);
-  if (entries.length() == 3) {
-    MOZ_ASSERT(entries[0] == 0 && entries[1] == 0 && entries[2] == 0);
-    return true;
-  }
-
-  uint32_t* list = cx->pod_malloc<uint32_t>(entries.length());
-  if (!list) {
-    return false;
-  }
-
-  PodCopy(list, entries.begin(), entries.length());
-
-  size_t size = entries.length() * sizeof(uint32_t);
-  InitReservedSlot(rtt, RttValue::TraceList, list, size,
-                   MemoryUse::RttValueTraceList);
-  return true;
-}
-
-/* static */
-void RttValue::finalize(JSFreeOp* fop, JSObject* obj) {
-  RttValue& rtt = obj->as<RttValue>();
-  if (rtt.hasTraceList()) {
-    auto list = const_cast<uint32_t*>(rtt.traceList());
-    size_t size = (3 + list[0] + list[1] + list[2]) * sizeof(uint32_t);
-    fop->free_(obj, list, size, MemoryUse::RttValueTraceList);
-  }
 }

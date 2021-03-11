@@ -945,14 +945,8 @@ bool StructType::computeLayout() {
     return false;
   }
   size_ = size.value();
-  isInline_ = InlineTypedObject::canAccommodateSize(size_);
 
   return true;
-}
-
-uint32_t StructType::objectBaseFieldOffset(uint32_t fieldIndex) const {
-  return fields_[fieldIndex].offset +
-         (isInline_ ? InlineTypedObject::offsetOfDataStart() : 0);
 }
 
 // A simple notion of prefix: types and mutability must match exactly.
@@ -972,20 +966,18 @@ bool StructType::hasPrefix(const StructType& other) const {
 }
 
 size_t StructType::serializedSize() const {
-  return SerializedPodVectorSize(fields_) + sizeof(size_) + sizeof(isInline_);
+  return SerializedPodVectorSize(fields_) + sizeof(size_);
 }
 
 uint8_t* StructType::serialize(uint8_t* cursor) const {
   cursor = SerializePodVector(cursor, fields_);
   cursor = WriteBytes(cursor, &size_, sizeof(size_));
-  cursor = WriteBytes(cursor, &isInline_, sizeof(isInline_));
   return cursor;
 }
 
 const uint8_t* StructType::deserialize(const uint8_t* cursor) {
   (cursor = DeserializePodVector(cursor, &fields_)) &&
-      (cursor = ReadBytes(cursor, &size_, sizeof(size_))) &&
-      (cursor = ReadBytes(cursor, &isInline_, sizeof(isInline_)));
+      (cursor = ReadBytes(cursor, &size_, sizeof(size_)));
   return cursor;
 }
 
