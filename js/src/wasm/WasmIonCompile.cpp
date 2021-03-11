@@ -4936,15 +4936,7 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
         // Gc operations
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::GcPrefix): {
-        switch (op.b1) {
-          case uint32_t(GcOp::StructNewWithRtt):
-          case uint32_t(GcOp::StructGet):
-          case uint32_t(GcOp::StructSet):
-            // Not yet supported
-            return f.iter().unrecognizedOpcode(&op);
-          default:
-            return f.iter().unrecognizedOpcode(&op);
-        }
+        return f.iter().unrecognizedOpcode(&op);
       }
 #endif
 

@@ -559,15 +559,15 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readStructNewDefaultWithRtt(uint32_t* typeIndex,
                                                  Value* rtt);
   [[nodiscard]] bool readStructGet(uint32_t* typeIndex, uint32_t* fieldIndex,
-                                   Value* ptr);
+                                   FieldExtension extension, Value* ptr);
   [[nodiscard]] bool readStructSet(uint32_t* typeIndex, uint32_t* fieldIndex,
                                    Value* ptr, Value* val);
   [[nodiscard]] bool readArrayNewWithRtt(uint32_t* typeIndex, Value* rtt,
                                          Value* length, Value* argValue);
   [[nodiscard]] bool readArrayNewDefaultWithRtt(uint32_t* typeIndex, Value* rtt,
                                                 Value* length);
-  [[nodiscard]] bool readArrayGet(uint32_t* typeIndex, Value* index,
-                                  Value* ptr);
+  [[nodiscard]] bool readArrayGet(uint32_t* typeIndex, FieldExtension extension,
+                                  Value* index, Value* ptr);
   [[nodiscard]] bool readArraySet(uint32_t* typeIndex, Value* val, Value* index,
                                   Value* ptr);
   [[nodiscard]] bool readArrayLen(uint32_t* typeIndex, Value* ptr);
@@ -2721,7 +2721,9 @@ inline bool OpIter<Policy>::readStructNewDefaultWithRtt(uint32_t* typeIndex,
 
 template <typename Policy>
 inline bool OpIter<Policy>::readStructGet(uint32_t* typeIndex,
-                                          uint32_t* fieldIndex, Value* ptr) {
+                                          uint32_t* fieldIndex,
+                                          FieldExtension fieldExtension,
+                                          Value* ptr) {
   MOZ_ASSERT(typeIndex != fieldIndex);
   MOZ_ASSERT(Classify(op_) == OpKind::StructGet);
 
@@ -2739,7 +2741,17 @@ inline bool OpIter<Policy>::readStructGet(uint32_t* typeIndex,
     return false;
   }
 
-  return push(structType.fields_[*fieldIndex].type.widenToValType());
+  FieldType fieldType = structType.fields_[*fieldIndex].type;
+
+  if (fieldType.isValType() && fieldExtension != FieldExtension::None) {
+    return fail("must not specify signedness for unpacked field type");
+  }
+
+  if (!fieldType.isValType() && fieldExtension == FieldExtension::None) {
+    return fail("must specify signedness for packed field type");
+  }
+
+  return push(fieldType.widenToValType());
 }
 
 template <typename Policy>
@@ -2832,7 +2844,8 @@ inline bool OpIter<Policy>::readArrayNewDefaultWithRtt(uint32_t* typeIndex,
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readArrayGet(uint32_t* typeIndex, Value* index,
+inline bool OpIter<Policy>::readArrayGet(uint32_t* typeIndex,
+                                         FieldExtension extension, Value* index,
                                          Value* ptr) {
   MOZ_ASSERT(Classify(op_) == OpKind::ArrayGet);
 
@@ -2850,7 +2863,17 @@ inline bool OpIter<Policy>::readArrayGet(uint32_t* typeIndex, Value* index,
     return false;
   }
 
-  return push(arrayType.elementType_.widenToValType());
+  FieldType fieldType = arrayType.elementType_;
+
+  if (fieldType.isValType() && extension != FieldExtension::None) {
+    return fail("must not specify signedness for unpacked element type");
+  }
+
+  if (!fieldType.isValType() && extension == FieldExtension::None) {
+    return fail("must specify signedness for packed element type");
+  }
+
+  return push(fieldType.widenToValType());
 }
 
 template <typename Policy>
