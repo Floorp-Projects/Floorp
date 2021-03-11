@@ -55,7 +55,6 @@ class ArrayBufferObject;
 class ArrayBufferObjectMaybeShared;
 class JSStringBuilder;
 class SharedArrayRawBuffer;
-class StructTypeDescr;
 class TypedArrayObject;
 class WasmArrayRawBuffer;
 class WasmFunctionScope;

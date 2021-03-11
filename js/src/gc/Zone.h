@@ -269,18 +269,18 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
   js::ZoneOrGCTaskData<js::gc::WeakKeyTable> gcWeakKeys_;
   js::ZoneOrGCTaskData<js::gc::WeakKeyTable> gcNurseryWeakKeys_;
 
-  // Keep track of all TypeDescr and related objects in this compartment.
+  // Keep track of all RttValue and related objects in this compartment.
   // This is used by the GC to trace them all first when compacting, since the
   // TypedObject trace hook may access these objects.
   //
   // There are no barriers here - the set contains only tenured objects so no
   // post-barrier is required, and these are weak references so no pre-barrier
   // is required.
-  using TypeDescrObjectSet =
+  using RttValueObjectSet =
       js::GCHashSet<JSObject*, js::MovableCellHasher<JSObject*>,
                     js::SystemAllocPolicy>;
 
-  js::ZoneData<JS::WeakCache<TypeDescrObjectSet>> typeDescrObjects_;
+  js::ZoneData<JS::WeakCache<RttValueObjectSet>> rttValueObjects_;
 
   js::MainThreadData<js::UniquePtr<js::RegExpZone>> regExps_;
 
@@ -573,11 +573,11 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   js::RegExpZone& regExps() { return *regExps_.ref(); }
 
-  JS::WeakCache<TypeDescrObjectSet>& typeDescrObjects() {
-    return typeDescrObjects_.ref();
+  JS::WeakCache<RttValueObjectSet>& rttValueObjects() {
+    return rttValueObjects_.ref();
   }
 
-  bool addTypeDescrObject(JSContext* cx, HandleObject obj);
+  bool addRttValueObject(JSContext* cx, HandleObject obj);
 
   js::SparseBitmap& markedAtoms() { return markedAtoms_.ref(); }
 

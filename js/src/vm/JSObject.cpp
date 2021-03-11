@@ -3519,12 +3519,12 @@ js::gc::AllocKind JSObject::allocKindForTenure(
   // Inlined typed objects are followed by their data, so make sure we copy
   // it all over to the new object.
   if (is<InlineTypedObject>()) {
-    // Figure out the size of this object, from the prototype's TypeDescr.
+    // Figure out the size of this object, from the prototype's RttValue.
     // The objects we are traversing here are all tenured, so we don't need
     // to check forwarding pointers.
-    TypeDescr& descr = as<InlineTypedObject>().typeDescr();
+    RttValue& descr = as<InlineTypedObject>().rttValue();
     MOZ_ASSERT(!IsInsideNursery(&descr));
-    return InlineTypedObject::allocKindForTypeDescriptor(&descr);
+    return InlineTypedObject::allocKindForRttValue(&descr);
   }
 
   if (is<OutlineTypedObject>()) {

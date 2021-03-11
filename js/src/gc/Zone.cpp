@@ -167,7 +167,7 @@ JS::Zone::Zone(JSRuntime* rt, Kind kind)
       gcWeakKeys_(this, SystemAllocPolicy(), rt->randomHashCodeScrambler()),
       gcNurseryWeakKeys_(this, SystemAllocPolicy(),
                          rt->randomHashCodeScrambler()),
-      typeDescrObjects_(this, this),
+      rttValueObjects_(this, this),
       markedAtoms_(this),
       atomCache_(this),
       externalStringCache_(this),
@@ -595,12 +595,12 @@ void Zone::fixupAfterMovingGC() {
   fixupInitialShapeTable();
 }
 
-bool Zone::addTypeDescrObject(JSContext* cx, HandleObject obj) {
+bool Zone::addRttValueObject(JSContext* cx, HandleObject obj) {
   // Type descriptor objects are always tenured so we don't need post barriers
   // on the set.
   MOZ_ASSERT(!IsInsideNursery(obj));
 
-  if (!typeDescrObjects().put(obj)) {
+  if (!rttValueObjects().put(obj)) {
     ReportOutOfMemory(cx);
     return false;
   }
