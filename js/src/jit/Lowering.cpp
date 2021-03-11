@@ -297,7 +297,17 @@ void LIRGenerator::visitCreateInlinedArgumentsObject(
 }
 
 void LIRGenerator::visitGetInlinedArgument(MGetInlinedArgument* ins) {
-  LAllocation index = useRegisterAtStart(ins->index());
+#if defined(JS_CODEGEN_X64)
+  // On x64, we do not support boxing a typed register in-place without
+  // using a scratch register, so the result register can't be the same
+  // as any of the inputs. Fortunately, x64 has registers to spare.
+  const bool useAtStart = false;
+#else
+  const bool useAtStart = true;
+#endif
+
+  LAllocation index =
+      useAtStart ? useRegisterAtStart(ins->index()) : useRegister(ins->index());
   uint32_t numActuals = ins->numActuals();
   uint32_t numOperands =
       numActuals * BOX_PIECES + LGetInlinedArgument::NumNonArgumentOperands;
@@ -312,9 +322,9 @@ void LIRGenerator::visitGetInlinedArgument(MGetInlinedArgument* ins) {
   for (uint32_t i = 0; i < numActuals; i++) {
     MDefinition* arg = ins->getArg(i);
     uint32_t index = LGetInlinedArgument::ArgIndex(i);
-    lir->setBoxOperand(index, useBoxOrTypedOrConstant(arg,
-                                                      /*useConstant = */ true,
-                                                      /*useAtStart = */ true));
+    lir->setBoxOperand(
+        index, useBoxOrTypedOrConstant(arg,
+                                       /*useConstant = */ true, useAtStart));
   }
   defineBox(lir, ins);
 }
