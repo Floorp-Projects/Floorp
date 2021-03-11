@@ -469,7 +469,7 @@ add_task(async function checkContextMenu() {
   );
 
   info("Check context menu in another button");
-  await openContextMenu(document.getElementById("reload-button"));
+  await openContextMenu(document.getElementById("home-button"));
   is(checkbox.hidden, true, "Auto-hide checkbox is hidden");
   contextMenu.hidePopup();
 
