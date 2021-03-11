@@ -615,6 +615,9 @@ skip script test262/intl402/Intl/getCanonicalLocales/preferred-variant.js
 skip script test262/intl402/Intl/getCanonicalLocales/preferred-grandfathered.js
 skip script test262/intl402/Intl/getCanonicalLocales/canonicalized-tags.js
 
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1696881
+skip script test262/intl402/ListFormat/constructor/constructor/options-getoptionsobject.js
+
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
