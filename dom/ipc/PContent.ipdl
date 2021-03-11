@@ -953,12 +953,6 @@ child:
   async UpdateMediaCodecsSupported(RemoteDecodeIn aLocation, MediaCodecsSupported aSupported);
 
 parent:
-    /**
-     * This is a temporary way to pass index and length through parent process.
-     * Used for testing.
-     */
-    async SessionHistoryUpdate(MaybeDiscardedBrowsingContext aTopContext,
-                               int32_t aIndex, int32_t aLength, nsID aChangeID);
 
     async SynchronizeLayoutHistoryState(MaybeDiscardedBrowsingContext aContext,
                                         nsILayoutHistoryState aState);
