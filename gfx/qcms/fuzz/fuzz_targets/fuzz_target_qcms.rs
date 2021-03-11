@@ -14,7 +14,7 @@ use qcms::c_bindings::{qcms_profile_precache_output_transform, qcms_transform_da
 
 use qcms::DataType::*;
 
- unsafe fn transform(src_profile: *mut qcms_profile, dst_profile: *mut qcms_profile, size: usize)
+ unsafe fn transform(src_profile: *const qcms_profile, dst_profile: *mut qcms_profile, size: usize)
  {
    // qcms supports GRAY and RGB profiles as input, and RGB as output.
  
@@ -79,7 +79,8 @@ use qcms::DataType::*;
    if !qcms_profile_is_bogus(&mut *profile) {
  
      transform(srgb_profile, profile, size);
- 
+     let identity = qcms::Profile::new_XYZD50();
+     transform(&*identity, profile, size);
    }
    qcms_profile_release(profile);
    qcms_profile_release(srgb_profile);
