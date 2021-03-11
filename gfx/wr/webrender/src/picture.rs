@@ -126,7 +126,7 @@ use crate::render_task::{BlurTask, RenderTask, RenderTaskLocation, BlurTaskCache
 use crate::render_task::{StaticRenderTaskSurface, RenderTaskKind};
 use crate::renderer::BlendMode;
 use crate::resource_cache::{ResourceCache, ImageGeneration, ImageRequest};
-use crate::space::SpaceMapper;
+use crate::space::{SpaceMapper, SpaceSnapper};
 use crate::scene::SceneProperties;
 use smallvec::SmallVec;
 use std::{mem, u8, marker, u32};
@@ -6247,8 +6247,23 @@ impl PicturePrimitive {
         if let Some(ref mut raster_config) = self.raster_config {
             let surface = state.current_surface_mut();
             // Inflate the local bounding rect if required by the filter effect.
+            // This inflaction factor is to be applied to the surface itself.
             if self.options.inflate_if_required {
                 surface.rect = raster_config.composite_mode.inflate_picture_rect(surface.rect, surface.scale_factors);
+
+                // The picture's local rect is calculated as the union of the
+                // snapped primitive rects, which should result in a snapped
+                // local rect, unless it was inflated. This is also done during
+                // update visibility when calculating the picture's precise
+                // local rect.
+                let snap_surface_to_raster = SpaceSnapper::new_with_target(
+                    surface.raster_spatial_node_index,
+                    self.spatial_node_index,
+                    surface.device_pixel_scale,
+                    frame_context.spatial_tree,
+                );
+
+                surface.rect = snap_surface_to_raster.snap_rect(&surface.rect);
             }
 
             let mut surface_rect = surface.rect * Scale::new(1.0);
