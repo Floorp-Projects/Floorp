@@ -37,6 +37,11 @@ linux1804-64/opt:
         - web-platform-tests
         - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
+        - talos
+        - linux-talos-flex
+        - raptor-firefox
+        - browsertime
+        - raptor-fetch-firefox
 
 linux1804-64/debug:
     build-platform: linux64/debug
@@ -57,6 +62,17 @@ linux1804-64-shippable/opt:
         - web-platform-tests
         - web-platform-tests-backlog
         - web-platform-tests-wdspec-headless
+        - talos
+        - linux-talos-flex
+        - raptor-chrome
+        - raptor-chromium
+        - raptor-fetch-chromium
+        - raptor-firefox
+        - browsertime
+        - raptor-fetch-firefox
+        - raptor-profiling
+        - raptor-fetch-profiling
+        - talos-profiling
 
 linux1804-64-devedition/opt:
     build-platform: linux64-devedition/opt
@@ -84,6 +100,10 @@ linux1804-64-qr/opt:
         - linux1804-qr-tests
         - mochitest-webgpu
         - web-platform-tests
+        - talos
+        - raptor-firefox
+        - browsertime
+        - raptor-fetch-firefox
 
 linux1804-64-shippable-qr/opt:
     build-platform: linux64-shippable/opt
@@ -92,6 +112,11 @@ linux1804-64-shippable-qr/opt:
         - linux1804-qr-tests
         - mochitest-webgpu
         - web-platform-tests
+        - talos
+        - talos-profiling
+        - raptor-firefox
+        - browsertime
+        - raptor-fetch-firefox
 
 linux1804-64-qr/debug:
     build-platform: linux64/debug
@@ -108,61 +133,11 @@ linux1804-64-asan-qr/opt:
 linux1804-64-ccov/opt:
     build-platform: linux64-ccov/opt
     test-sets:
-        - awsy
         - linux1804-tests
         - linux1804-ccov-tests
         - web-platform-tests
         - ccov-code-coverage-tests
         - mochitest-webgpu
-
-# Linux64 uses Ubuntu 16.04 and is run on hardware
-
-linux64/opt:
-    build-platform: linux64/opt
-    test-sets:
-        - talos
-        - linux-talos-flex
-        - raptor-firefox
-        - browsertime
-        - raptor-fetch-firefox
-
-linux64-shippable/opt:
-    build-platform: linux64-shippable/opt
-    test-sets:
-        - talos
-        - linux-talos-flex
-        - raptor-chrome
-        - raptor-chromium
-        - raptor-fetch-chromium
-        - raptor-firefox
-        - browsertime
-        - raptor-fetch-firefox
-        - raptor-profiling
-        - raptor-fetch-profiling
-        - talos-profiling
-
-# QR builds just run a subset right now.
-linux64-qr/opt:
-    build-platform: linux64/opt
-    test-sets:
-        - talos
-        - raptor-firefox
-        - browsertime
-        - raptor-fetch-firefox
-
-linux64-shippable-qr/opt:
-    build-platform: linux64-shippable/opt
-    test-sets:
-        - talos
-        - talos-profiling
-        - raptor-firefox
-        - browsertime
-        - raptor-fetch-firefox
-
-linux64-ccov/opt:
-    build-platform: linux64-ccov/opt
-    test-sets:
-        - talos
 
 ##
 # Windows platforms (matching /windows.*/)
@@ -226,10 +201,8 @@ windows7-32-qr/opt:
 windows10-64-ccov-qr/opt:
     build-platform: win64-ccov/opt
     test-sets:
-        - awsy
         - desktop-screenshot-capture
         - windows-reftest-gpu
-        - windows-talos
         - windows-tests
         - windows-ccov-tests
         - windows10-tests

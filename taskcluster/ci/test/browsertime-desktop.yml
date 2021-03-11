@@ -16,10 +16,7 @@ job-defaults:
     test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 3
     fission-tier: 3
-    virtualization:
-        by-test-platform:
-            windows10-64-ccov.*/.*: virtual
-            default: hardware
+    virtualization: hardware
     mozharness:
         script: raptor_script.py
         config:
@@ -28,10 +25,6 @@ job-defaults:
                     - raptor/mac_config.py
                 windows.*:
                     - raptor/windows_config.py
-                windows10-64-ccov.*/.*:
-                    - raptor/windows_vm_config.py
-                linux64-ccov.*/.*:
-                    - raptor/linux64_config_taskcluster.py
                 default:
                     - raptor/linux_config.py
         extra-options:
