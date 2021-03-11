@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **browser-menu**
+  * 🌟️ Add initial support for collapsing / expandable browser menus. ExpandableLayout can wrap a menu layout before being used in a PopupWindow and automatically allow the collapse/expand behaviors.
+
 * **browser-toolbar**
 * **feature-session**
   * 🚒️ **Various issues related to the dynamic toolbar and pull to refresh will be fixed with with GeckoView offering more details about how the touch event will be handled.
