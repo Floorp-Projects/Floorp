@@ -391,7 +391,7 @@ var ProcessHangMonitor = {
   findActiveReport(browser) {
     let frameLoader = browser.frameLoader;
     for (let report of this._activeReports.keys()) {
-      if (report.isReportForBrowser(frameLoader)) {
+      if (report.isReportForBrowserOrChildren(frameLoader)) {
         return report;
       }
     }
@@ -404,7 +404,7 @@ var ProcessHangMonitor = {
   findPausedReport(browser) {
     let frameLoader = browser.frameLoader;
     for (let [report] of this._pausedReports) {
-      if (report.isReportForBrowser(frameLoader)) {
+      if (report.isReportForBrowserOrChildren(frameLoader)) {
         return report;
       }
     }
