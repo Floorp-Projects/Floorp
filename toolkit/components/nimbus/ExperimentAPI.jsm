@@ -21,6 +21,10 @@ const MANIFEST = {
         type: "json",
         fallbackPref: "browser.aboutwelcome.screens",
       },
+      design: {
+        type: "string",
+        fallbackPref: "browser.aboutwelcome.design",
+      },
       skipFocus: {
         type: "boolean",
         fallbackPref: "browser.aboutwelcome.skipFocus",
