@@ -170,8 +170,8 @@ ALL_PROCESSES += [
     # AhnLab Internet Security, bug 1311969
     DllBlocklistEntry("nzbrcom.dll", ALL_VERSIONS),
 
-    # K7TotalSecurity, bug 1339083.
-    DllBlocklistEntry("k7pswsen.dll", (15, 2, 2, 95)),
+    # K7TotalSecurity, bug 1339083 and bug 1694489.
+    DllBlocklistEntry("k7pswsen.dll", (15, 2, 2, 102)),
 
     # smci*.dll - goobzo crashware (bug 1339908),
     DllBlocklistEntry("smci32.dll", ALL_VERSIONS),
