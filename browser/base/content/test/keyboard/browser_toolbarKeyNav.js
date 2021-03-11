@@ -11,66 +11,12 @@
 
 const PERMISSIONS_PAGE =
   "https://example.com/browser/browser/base/content/test/permissions/permissions.html";
-const afterUrlBarButton = CustomizableUI.protonToolbarEnabled
-  ? "PanelUI-menu-button"
-  : "library-button";
 
 // The DevEdition has the DevTools button in the toolbar by default. Remove it
 // to prevent branch-specific rules what button should be focused.
 function resetToolbarWithoutDevEditionButtons() {
   CustomizableUI.reset();
   CustomizableUI.removeWidgetFromArea("developer-button");
-}
-
-function maybeAddHomeBesideReload() {
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.addWidgetToArea(
-      "home-button",
-      "nav-bar",
-      CustomizableUI.getPlacementOfWidget("stop-reload-button").position + 1
-    );
-  }
-}
-
-function maybeRemoveHomeButton() {
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.removeWidgetFromArea("home-button");
-  }
-}
-
-function maybeAddOldMenuSideButtons() {
-  if (CustomizableUI.protonToolbarEnabled) {
-    // Make the FxA button visible even though we're signed out.
-    // We'll use oldfxastatus to restore the old state.
-    document.documentElement.setAttribute(
-      "oldfxastatus",
-      document.documentElement.getAttribute("fxastatus")
-    );
-    document.documentElement.setAttribute("fxastatus", "signed_in");
-    // The FxA button is supposed to be last, add these buttons before it.
-    CustomizableUI.addWidgetToArea(
-      "library-button",
-      "nav-bar",
-      CustomizableUI.getWidgetIdsInArea("nav-bar").length - 1
-    );
-    CustomizableUI.addWidgetToArea(
-      "sidebar-button",
-      "nav-bar",
-      CustomizableUI.getWidgetIdsInArea("nav-bar").length - 1
-    );
-  }
-}
-
-function maybeRemoveOldMenuSideButtons() {
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.removeWidgetFromArea("library-button");
-    CustomizableUI.removeWidgetFromArea("sidebar-button");
-    document.documentElement.setAttribute(
-      "fxastatus",
-      document.documentElement.getAttribute("oldfxastatus")
-    );
-    document.documentElement.removeAttribute("oldfxastatus");
-  }
 }
 
 function startFromUrlBar(aWindow = window) {
@@ -126,18 +72,16 @@ add_task(async function setup() {
 });
 
 // Test tab stops with no page loaded.
-add_task(async function testTabStopsNoPageWithHomeButton() {
-  maybeAddHomeBesideReload();
+add_task(async function testTabStopsNoPage() {
   await withNewBlankTab(async function() {
     startFromUrlBar();
     await expectFocusAfterKey("Shift+Tab", "home-button");
     await expectFocusAfterKey("Shift+Tab", "tabbrowser-tabs", true);
     await expectFocusAfterKey("Tab", "home-button");
     await expectFocusAfterKey("Tab", gURLBar.inputField);
-    await expectFocusAfterKey("Tab", afterUrlBarButton);
+    await expectFocusAfterKey("Tab", "library-button");
     await expectFocusAfterKey("Tab", gBrowser.selectedBrowser);
   });
-  maybeRemoveHomeButton();
 });
 
 // Test tab stops with a page loaded.
@@ -155,7 +99,7 @@ add_task(async function testTabStopsPageLoaded() {
     await expectFocusAfterKey("Tab", "tracking-protection-icon-container");
     await expectFocusAfterKey("Tab", gURLBar.inputField);
     await expectFocusAfterKey("Tab", "pageActionButton");
-    await expectFocusAfterKey("Tab", afterUrlBarButton);
+    await expectFocusAfterKey("Tab", "library-button");
     await expectFocusAfterKey("Tab", gBrowser.selectedBrowser);
   });
 });
@@ -186,14 +130,14 @@ add_task(async function testTabStopsWithBookmarksToolbar() {
   await BrowserTestUtils.withNewTab("about:blank", async function() {
     CustomizableUI.setToolbarVisibility("PersonalToolbar", true);
     startFromUrlBar();
-    await expectFocusAfterKey("Tab", afterUrlBarButton);
+    await expectFocusAfterKey("Tab", "library-button");
     await expectFocusAfterKey("Tab", "PersonalToolbar", true);
     await expectFocusAfterKey("Tab", gBrowser.selectedBrowser);
 
     // Make sure the Bookmarks toolbar is no longer tabbable once hidden.
     CustomizableUI.setToolbarVisibility("PersonalToolbar", false);
     startFromUrlBar();
-    await expectFocusAfterKey("Tab", afterUrlBarButton);
+    await expectFocusAfterKey("Tab", "library-button");
     await expectFocusAfterKey("Tab", gBrowser.selectedBrowser);
   });
 });
@@ -208,10 +152,8 @@ add_task(async function testTabStopNoButtons() {
     await expectFocusAfterKey("Shift+Tab", "tabbrowser-tabs", true);
     await expectFocusAfterKey("Tab", gURLBar.inputField);
     resetToolbarWithoutDevEditionButtons();
-    maybeAddHomeBesideReload();
     // Make sure the button is reachable now that it has been re-added.
     await expectFocusAfterKey("Shift+Tab", "home-button", true);
-    maybeRemoveHomeButton();
   });
 });
 
@@ -221,7 +163,6 @@ add_task(async function testTabStopNoButtons() {
 // 2. The overflow menu button can't be reached by right arrow when it isn't
 // visible.
 add_task(async function testArrowsToolbarbuttons() {
-  maybeAddOldMenuSideButtons();
   await BrowserTestUtils.withNewTab("about:blank", async function() {
     startFromUrlBar();
     await expectFocusAfterKey("Tab", "library-button");
@@ -246,7 +187,6 @@ add_task(async function testArrowsToolbarbuttons() {
     await expectFocusAfterKey("ArrowLeft", "sidebar-button");
     await expectFocusAfterKey("ArrowLeft", "library-button");
   });
-  maybeRemoveOldMenuSideButtons();
 });
 
 // Test that right/left arrows move through buttons wihch aren't toolbarbuttons
@@ -298,7 +238,6 @@ add_task(async function testArrowsDisabledButtons() {
 
 // Test that right arrow reaches the overflow menu button when it is visible.
 add_task(async function testArrowsOverflowButton() {
-  maybeAddOldMenuSideButtons();
   await BrowserTestUtils.withNewTab("about:blank", async function() {
     // Move something to the overflow menu to make the button appear.
     CustomizableUI.addWidgetToArea(
@@ -317,7 +256,6 @@ add_task(async function testArrowsOverflowButton() {
     document.getElementById("nav-bar-overflow-button").clientWidth;
     await expectFocusAfterKey("ArrowLeft", "fxa-toolbar-menu-button");
   });
-  maybeRemoveOldMenuSideButtons();
 });
 
 // Test that toolbar keyboard navigation doesn't interfere with PanelMultiView
@@ -325,7 +263,6 @@ add_task(async function testArrowsOverflowButton() {
 // We do this by opening the Library menu and ensuring that pressing left arrow
 // does nothing.
 add_task(async function testArrowsInPanelMultiView() {
-  maybeAddOldMenuSideButtons();
   let button = document.getElementById("library-button");
   forceFocus(button);
   EventUtils.synthesizeKey(" ");
@@ -342,12 +279,10 @@ add_task(async function testArrowsInPanelMultiView() {
   let hidden = BrowserTestUtils.waitForEvent(document, "popuphidden", true);
   view.closest("panel").hidePopup();
   await hidden;
-  maybeRemoveOldMenuSideButtons();
 });
 
 // Test that right/left arrows move in the expected direction for RTL locales.
 add_task(async function testArrowsRtl() {
-  maybeAddOldMenuSideButtons();
   await SpecialPowers.pushPrefEnv({ set: [["intl.l10n.pseudo", "bidi"]] });
   // window.RTL_UI doesn't update in existing windows when this pref is changed,
   // so we need to test in a new window.
@@ -363,7 +298,6 @@ add_task(async function testArrowsRtl() {
   await expectFocusAfterKey("ArrowLeft", "sidebar-button", false, win);
   await BrowserTestUtils.closeWindow(win);
   await SpecialPowers.popPrefEnv();
-  maybeRemoveOldMenuSideButtons();
 });
 
 // Test that right arrow reaches the overflow menu button on the Bookmarks
@@ -396,7 +330,6 @@ registerCleanupFunction(async function() {
 // Test that when a toolbar button opens a panel, closing the panel restores
 // focus to the button which opened it.
 add_task(async function testPanelCloseRestoresFocus() {
-  maybeAddOldMenuSideButtons();
   await withNewBlankTab(async function() {
     // We can't use forceFocus because that removes focusability immediately.
     // Instead, we must let ToolbarKeyboardNavigator handle this properly.
@@ -415,7 +348,6 @@ add_task(async function testPanelCloseRestoresFocus() {
       "Focus restored to Library button after panel closed"
     );
   });
-  maybeRemoveOldMenuSideButtons();
 });
 
 // Test that the arrow key works in the group of the
@@ -445,8 +377,6 @@ add_task(async function testArrowKeyForTPIconContainerandIdentityBox() {
 
 // Test navigation by typed characters.
 add_task(async function testCharacterNavigation() {
-  maybeAddHomeBesideReload();
-  maybeAddOldMenuSideButtons();
   await BrowserTestUtils.withNewTab("https://example.com", async function() {
     await waitUntilReloadEnabled();
     startFromUrlBar();
@@ -471,8 +401,6 @@ add_task(async function testCharacterNavigation() {
     // Pressing s again should find the next button starting with s: Sidebars.
     await expectFocusAfterKey("s", "sidebar-button");
   });
-  maybeRemoveHomeButton();
-  maybeRemoveOldMenuSideButtons();
 });
 
 // Test that toolbar character navigation doesn't trigger in PanelMultiView for
@@ -482,7 +410,6 @@ add_task(async function testCharacterNavigation() {
 // This test should be removed if PanelMultiView implements character
 // navigation.
 add_task(async function testCharacterInPanelMultiView() {
-  maybeAddOldMenuSideButtons();
   let button = document.getElementById("library-button");
   forceFocus(button);
   let view = document.getElementById("appMenu-libraryView");
@@ -495,12 +422,10 @@ add_task(async function testCharacterInPanelMultiView() {
   let hidden = BrowserTestUtils.waitForEvent(document, "popuphidden", true);
   view.closest("panel").hidePopup();
   await hidden;
-  maybeRemoveOldMenuSideButtons();
 });
 
 // Test tab stops after the search bar is added.
 add_task(async function testTabStopsAfterSearchBarAdded() {
-  maybeAddOldMenuSideButtons();
   await SpecialPowers.pushPrefEnv({
     set: [["browser.search.widget.inNavBar", 1]],
   });
@@ -510,5 +435,4 @@ add_task(async function testTabStopsAfterSearchBarAdded() {
     await expectFocusAfterKey("Tab", "library-button");
   });
   await SpecialPowers.popPrefEnv();
-  maybeRemoveOldMenuSideButtons();
 });

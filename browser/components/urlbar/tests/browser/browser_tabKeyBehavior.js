@@ -14,15 +14,6 @@ add_task(async function init() {
   }
 
   registerCleanupFunction(PlacesUtils.history.clear);
-
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.addWidgetToArea("home-button", "nav-bar", 0);
-    CustomizableUI.addWidgetToArea("sidebar-button", "nav-bar");
-    registerCleanupFunction(() => {
-      CustomizableUI.removeWidgetFromArea("home-button");
-      CustomizableUI.removeWidgetFromArea("sidebar-button");
-    });
-  }
 });
 
 add_task(async function tabWithSearchString() {
@@ -344,9 +335,7 @@ async function waitForFocusOnNextFocusableElement(reverse = false) {
   while (
     nextFocusableElement &&
     (!nextFocusableElement.classList.contains("toolbarbutton-1") ||
-      nextFocusableElement.hasAttribute("hidden") ||
-      nextFocusableElement.hasAttribute("disabled") ||
-      BrowserTestUtils.is_hidden(nextFocusableElement))
+      nextFocusableElement.hasAttribute("hidden"))
   ) {
     nextFocusableElement = reverse
       ? nextFocusableElement.previousElementSibling

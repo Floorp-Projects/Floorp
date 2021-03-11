@@ -22,13 +22,6 @@ add_task(async function test_setup() {
     }
     await Services.search.setDefault(originalEngine);
   });
-
-  if (CustomizableUI.protonToolbarEnabled) {
-    CustomizableUI.addWidgetToArea("home-button", "nav-bar");
-    registerCleanupFunction(() =>
-      CustomizableUI.removeWidgetFromArea("home-button")
-    );
-  }
 });
 
 /**

@@ -50,23 +50,13 @@ add_task(async function test_support_separator_properties() {
   );
 
   let panelUIButton = document.querySelector("#PanelUI-button");
-  if (CustomizableUI.protonToolbarEnabled) {
-    Assert.equal(
-      window
-        .getComputedStyle(panelUIButton)
-        .getPropertyValue("border-image-source"),
-      "none",
-      "No vertical separator on app menu"
-    );
-  } else {
-    Assert.ok(
-      window
-        .getComputedStyle(panelUIButton)
-        .getPropertyValue("border-image-source")
-        .includes(`rgb(${hexToRGB(SEPARATOR_VERTICAL_COLOR).join(", ")})`),
-      "Vertical separator color properly set"
-    );
-  }
+  Assert.ok(
+    window
+      .getComputedStyle(panelUIButton)
+      .getPropertyValue("border-image-source")
+      .includes(`rgb(${hexToRGB(SEPARATOR_VERTICAL_COLOR).join(", ")})`),
+    "Vertical separator color properly set"
+  );
 
   let toolbox = document.querySelector("#navigator-toolbox");
   Assert.equal(

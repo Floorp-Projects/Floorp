@@ -20,19 +20,11 @@ add_task(async function test_usage_button_prefs_set() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.download.autohideButton", false]],
   });
-  if (CustomizableUI.protonToolbarEnabled) {
-    // Move the FxA button to the toolbar so it doesn't get auto-hidden.
-    CustomizableUI.addWidgetToArea("fxa-toolbar-menu-button", "TabsToolbar");
-    CustomizableUI.addWidgetToArea("home-button", "nav-bar");
-    CustomizableUI.addWidgetToArea("sidebar-button", "nav-bar");
-    CustomizableUI.addWidgetToArea("library-button", "nav-bar");
-  }
 
-  registerCleanupFunction(async () => {
+  registerCleanupFunction(() => {
     // Clicking on the sidebar button will show the sidebar, so we'll
     // make sure it's hidden when the test ends.
     SidebarUI.hide();
-    await CustomizableUI.reset();
   });
 
   const PREFS_TO_FALSE = Object.values(BUTTONS_TO_TEST).map(prefName => {
@@ -44,7 +36,7 @@ add_task(async function test_usage_button_prefs_set() {
   });
 
   // We open a new tab to ensure the test passes verify on Windows
-  await BrowserTestUtils.withNewTab("about:blank", async () => {
+  await BrowserTestUtils.withNewTab("about:blank", () => {
     for (let buttonID in BUTTONS_TO_TEST) {
       let pref = BUTTONS_TO_TEST[buttonID];
       Assert.ok(
@@ -54,16 +46,7 @@ add_task(async function test_usage_button_prefs_set() {
 
       info(`Clicking on ${buttonID}`);
       let element = document.getElementById(buttonID);
-      if (buttonID != "home-button" && buttonID != "sidebar-button") {
-        let popupShown = BrowserTestUtils.waitForPopupEvent(window, "shown");
-        let popupHidden = BrowserTestUtils.waitForPopupEvent(window, "hidden");
-        EventUtils.synthesizeMouse(element, 5, 5, {}, window);
-        let shownEvent = await popupShown;
-        shownEvent.target.hidePopup();
-        await popupHidden;
-      } else {
-        EventUtils.synthesizeMouse(element, 5, 5, {}, window);
-      }
+      EventUtils.synthesizeMouseAtCenter(element, {}, window);
 
       Assert.ok(
         Services.prefs.getBoolPref(pref),

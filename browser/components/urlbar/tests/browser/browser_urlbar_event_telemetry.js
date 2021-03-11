@@ -578,7 +578,7 @@ const tests = [
     info("Drop something.");
     let promise = BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
     EventUtils.synthesizeDrop(
-      win.document.getElementById("back-button"),
+      win.document.getElementById("home-button"),
       win.gURLBar.inputField,
       [[{ type: "text/plain", data: "www.example.com" }]],
       "copy",
