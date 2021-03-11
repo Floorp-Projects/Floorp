@@ -32,11 +32,10 @@ add_task(async function test_webextension_target_allowSource_on_eager_eval() {
   ok(addonDescriptor, "webextension addon description has been found");
 
   // Open a toolbox window for the addon target.
-  const toolbox = await gDevTools.showToolbox(
-    addonDescriptor,
-    "webconsole",
-    Toolbox.HostType.WINDOW
-  );
+  const toolbox = await gDevTools.showToolbox(addonDescriptor, {
+    toolId: "webconsole",
+    hostType: Toolbox.HostType.WINDOW,
+  });
 
   await toolbox.selectTool("webconsole");
 

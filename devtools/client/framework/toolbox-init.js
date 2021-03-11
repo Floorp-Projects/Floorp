@@ -106,12 +106,11 @@ async function initToolbox(url, host) {
     }
 
     const options = { customIframe: host };
-    const newToolbox = await gDevTools.showToolbox(
-      descriptor,
-      tool,
-      Toolbox.HostType.PAGE,
-      options
-    );
+    const newToolbox = await gDevTools.showToolbox(descriptor, {
+      toolId: tool,
+      hostType: Toolbox.HostType.PAGE,
+      hostOptions: options,
+    });
 
     // TODO: We should use an event from the descriptor instead, in order to
     // attach to it before the toolbox was opened. Otherwise if a target
