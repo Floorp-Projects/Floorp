@@ -5,9 +5,8 @@
 import argparse
 import logging
 import os
+import sys
 from collections import namedtuple
-
-from six import iteritems
 
 from wptrunner.wptmanifest.serializer import serialize
 from wptrunner.wptmanifest.backends import base
@@ -99,8 +98,13 @@ def compile(stream, data_cls_getter=None, **kwargs):
 def get_manifest(manifest_path):
     """Get the ExpectedManifest for a particular manifest path"""
     try:
-        with open(manifest_path) as f:
-            return compile(f, data_cls_getter=data_cls_getter)
+        with open(manifest_path, "rb") as f:
+            try:
+                return compile(f, data_cls_getter=data_cls_getter)
+            except Exception:
+                f.seek(0)
+                sys.stderr.write("Error parsing:\n%s" % f.read().decode("utf8"))
+                raise
     except IOError:
         return None
 
@@ -151,7 +155,7 @@ def compare_test(test, ancestor_manifest, new_manifest):
 
     compare_expected(changes, None, ancestor_manifest, new_manifest)
 
-    for subtest, ancestor_subtest_manifest in iteritems(ancestor_manifest.child_map):
+    for subtest, ancestor_subtest_manifest in ancestor_manifest.child_map.items():
         compare_expected(
             changes,
             subtest,
@@ -159,7 +163,7 @@ def compare_test(test, ancestor_manifest, new_manifest):
             new_manifest.child_map.get(subtest),
         )
 
-    for subtest, subtest_manifest in iteritems(new_manifest.child_map):
+    for subtest, subtest_manifest in new_manifest.child_map.items():
         if subtest not in ancestor_manifest.child_map:
             changes.added.append((subtest, subtest_manifest))
 
@@ -216,7 +220,7 @@ def expected_values_changed(old_expected, new_expected):
 def record_changes(ancestor_manifest, new_manifest):
     changes = Differences()
 
-    for test, test_manifest in iteritems(new_manifest.child_map):
+    for test, test_manifest in new_manifest.child_map.items():
         if test not in ancestor_manifest.child_map:
             changes.added.append((test, test_manifest))
         else:
@@ -227,7 +231,7 @@ def record_changes(ancestor_manifest, new_manifest):
                     TestModified(test, test_manifest, test_differences)
                 )
 
-    for test, test_manifest in iteritems(ancestor_manifest.child_map):
+    for test, test_manifest in ancestor_manifest.child_map.items():
         if test not in new_manifest.child_map:
             changes.deleted.append(test)
 
