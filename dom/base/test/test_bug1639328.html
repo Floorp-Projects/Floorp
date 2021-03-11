@@ -50,6 +50,7 @@ async function checkFrame(frame, shouldThrottle) {
 
 onload = async function() {
   await SimpleTest.promiseFocus(window);
+  await ticks(2);
   is(SpecialPowers.DOMWindowUtils.effectivelyThrottlesFrameRequests, false, "Should not be throttling main page");
   for (let frame of document.querySelectorAll("iframe")) {
     let shouldThrottle = frame.style.display == "none";
