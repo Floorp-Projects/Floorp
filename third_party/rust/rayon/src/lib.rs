@@ -1,4 +1,4 @@
-#![doc(html_root_url = "https://docs.rs/rayon/1.5")]
+#![doc(html_root_url = "https://docs.rs/rayon/1.4")]
 #![deny(missing_debug_implementations)]
 #![deny(missing_docs)]
 #![deny(unreachable_pub)]
@@ -100,7 +100,6 @@ pub mod range_inclusive;
 pub mod result;
 pub mod slice;
 pub mod str;
-pub mod string;
 pub mod vec;
 
 mod math;
