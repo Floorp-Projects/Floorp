@@ -684,7 +684,7 @@ class ParserAtomSpanBuilder {
   ParserAtomSpan& entries_;
 
  public:
-  explicit ParserAtomSpanBuilder(ParserAtomSpan& entries);
+  explicit ParserAtomSpanBuilder(ParserAtomSpan& entries) : entries_(entries) {}
 
   bool allocate(JSContext* cx, LifoAlloc& alloc, size_t count);
 
