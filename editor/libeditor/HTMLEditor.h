@@ -63,6 +63,7 @@ class WhiteSpaceVisibilityKeeper;
 class WSRunScanner;
 class WSScanResult;
 enum class EditSubAction : int32_t;
+enum class SpecifiedStyle : uint8_t;
 struct PropItem;
 template <class T>
 class OwningNonNull;
@@ -1133,9 +1134,12 @@ class HTMLEditor final : public TextEditor,
    *                    Set nullptr if you want to clear all styles.
    * @param aAttribute  Attribute name if aProperty has some styles like
    *                    nsGkAtoms::font.
+   * @param aSpecifiedStyle  Whether the class and style attributes should
+   *                         be preserved or discareded.
    */
-  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditResult ClearStyleAt(
-      const EditorDOMPoint& aPoint, nsAtom* aProperty, nsAtom* aAttribute);
+  [[nodiscard]] MOZ_CAN_RUN_SCRIPT EditResult
+  ClearStyleAt(const EditorDOMPoint& aPoint, nsAtom* aProperty,
+               nsAtom* aAttribute, SpecifiedStyle aSpecifiedStyle);
 
   MOZ_CAN_RUN_SCRIPT nsresult SetPositionToAbsolute(Element& aElement);
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
@@ -4298,9 +4302,13 @@ class HTMLEditor final : public TextEditor,
    * RemoveStyleInside() removes elements which represent aProperty/aAttribute
    * and removes CSS style.  This handles aElement and all its descendants
    * (including leaf text nodes) recursively.
+   *
+   * @param aSpecifiedStyle  Whether the class and style attributes should
+   *                         be preserved or discareded.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  RemoveStyleInside(Element& aElement, nsAtom* aProperty, nsAtom* aAttribute);
+  RemoveStyleInside(Element& aElement, nsAtom* aProperty, nsAtom* aAttribute,
+                    SpecifiedStyle aSpecifiedStyle);
 
   /**
    * CollectEditableLeafTextNodes() collects text nodes in aElement.

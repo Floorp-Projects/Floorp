@@ -6,12 +6,12 @@
 #include "HTMLEditor.h"
 
 #include "HTMLEditUtils.h"
-#include "TypeInState.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/ContentIterator.h"
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorUtils.h"
 #include "mozilla/SelectionState.h"
+#include "mozilla/TypeInState.h"
 #include "mozilla/mozalloc.h"
 #include "mozilla/dom/AncestorIterator.h"
 #include "mozilla/dom/Element.h"
@@ -736,8 +736,9 @@ nsresult HTMLEditor::SetInlinePropertyOnNode(nsIContent& aNode,
 
   OwningNonNull<nsINode> parent = *aNode.GetParentNode();
   if (aNode.IsElement()) {
-    nsresult rv = RemoveStyleInside(MOZ_KnownLive(*aNode.AsElement()),
-                                    &aProperty, aAttribute);
+    nsresult rv =
+        RemoveStyleInside(MOZ_KnownLive(*aNode.AsElement()), &aProperty,
+                          aAttribute, SpecifiedStyle::Preserve);
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::RemoveStyleInside() failed");
       return rv;
@@ -934,7 +935,8 @@ SplitNodeResult HTMLEditor::SplitAncestorStyledInlineElementsAt(
 }
 
 EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
-                                    nsAtom* aProperty, nsAtom* aAttribute) {
+                                    nsAtom* aProperty, nsAtom* aAttribute,
+                                    SpecifiedStyle aSpecifiedStyle) {
   MOZ_ASSERT(IsEditActionDataAvailable());
 
   if (NS_WARN_IF(!aPoint.IsSet())) {
@@ -1087,7 +1089,7 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
     nsresult rv = RemoveStyleInside(
         MOZ_KnownLive(
             *splitResultAtStartOfNextNode.GetPreviousNode()->AsElement()),
-        aProperty, aAttribute);
+        aProperty, aAttribute, aSpecifiedStyle);
     if (NS_FAILED(rv)) {
       NS_WARNING("HTMLEditor::RemoveStyleInside() failed");
       return EditResult(rv);
@@ -1097,7 +1099,8 @@ EditResult HTMLEditor::ClearStyleAt(const EditorDOMPoint& aPoint,
 }
 
 nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
-                                       nsAtom* aAttribute) {
+                                       nsAtom* aAttribute,
+                                       SpecifiedStyle aSpecifiedStyle) {
   // First, handle all descendants.
   RefPtr<nsIContent> child = aElement.GetFirstChild();
   while (child) {
@@ -1107,7 +1110,7 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
     nsCOMPtr<nsIContent> nextSibling = child->GetNextSibling();
     if (child->IsElement()) {
       nsresult rv = RemoveStyleInside(MOZ_KnownLive(*child->AsElement()),
-                                      aProperty, aAttribute);
+                                      aProperty, aAttribute, aSpecifiedStyle);
       if (NS_FAILED(rv)) {
         NS_WARNING("HTMLEditor::RemoveStyleInside() failed");
         return rv;
@@ -1142,7 +1145,7 @@ nsresult HTMLEditor::RemoveStyleInside(Element& aElement, nsAtom* aProperty,
       // If some style rules are specified to aElement, we need to keep them
       // as far as possible.
       // XXX Why don't we clone `id` attribute?
-      if (aProperty &&
+      if (aProperty && aSpecifiedStyle != SpecifiedStyle::Discard &&
           (aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::style) ||
            aElement.HasAttr(kNameSpaceID_None, nsGkAtoms::_class))) {
         // Move `style` attribute and `class` element to span element before
@@ -2024,10 +2027,10 @@ nsresult HTMLEditor::RemoveInlinePropertyInternal(
 
         for (OwningNonNull<nsIContent>& content : arrayOfContents) {
           if (content->IsElement()) {
-            nsresult rv =
-                RemoveStyleInside(MOZ_KnownLive(*content->AsElement()),
-                                  MOZ_KnownLive(style.mProperty),
-                                  MOZ_KnownLive(style.mAttribute));
+            nsresult rv = RemoveStyleInside(
+                MOZ_KnownLive(*content->AsElement()),
+                MOZ_KnownLive(style.mProperty), MOZ_KnownLive(style.mAttribute),
+                SpecifiedStyle::Preserve);
             if (NS_FAILED(rv)) {
               NS_WARNING("HTMLEditor::RemoveStyleInside() failed");
               return rv;

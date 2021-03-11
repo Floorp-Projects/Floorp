@@ -25,6 +25,7 @@
 #include "mozilla/RangeUtils.h"
 #include "mozilla/StaticPrefs_editor.h"  // for StaticPrefs::editor_*
 #include "mozilla/TextComposition.h"
+#include "mozilla/TypeInState.h"  // for SpecifiedStyle
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/AncestorIterator.h"
@@ -4610,8 +4611,9 @@ nsresult HTMLEditor::CreateStyleForInsertText(
     AutoTransactionsConserveSelection dontChangeMySelection(*this);
 
     while (item && pointToPutCaret.GetContainer() != documentRootElement) {
-      EditResult result = ClearStyleAt(
-          pointToPutCaret, MOZ_KnownLive(item->tag), MOZ_KnownLive(item->attr));
+      EditResult result =
+          ClearStyleAt(pointToPutCaret, MOZ_KnownLive(item->tag),
+                       MOZ_KnownLive(item->attr), item->specifiedStyle);
       if (result.Failed()) {
         NS_WARNING("HTMLEditor::ClearStyleAt() failed");
         return result.Rv();
