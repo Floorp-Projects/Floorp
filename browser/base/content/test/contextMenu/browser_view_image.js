@@ -57,17 +57,17 @@ async function test_view_image_works({ page, selector }) {
     self: {
       event: {},
       async loadedPromise() {
-        await BrowserTestUtils.browserLoaded(
-          gBrowser.selectedBrowser,
-          false,
-          url => url.startsWith("blob:")
-        );
-        return gBrowser.selectedBrowser;
+        return BrowserTestUtils.waitForNewTab(
+          gBrowser,
+          url => url.startsWith("blob"),
+          true
+        ).then(t => t.linkedBrowser);
       },
-      async cleanup() {},
+      cleanup(browser) {
+        is(gBrowser.tabs.length, 3, "number of tabs");
+        BrowserTestUtils.removeTab(gBrowser.getTabForBrowser(browser));
+      },
     },
-    // NOTE: If we ever add more tests here, add them above and not below `self`, as it replaces
-    // the test document.
   };
   await BrowserTestUtils.withNewTab(mainURL, async browser => {
     await SpecialPowers.spawn(browser, [], () => {
