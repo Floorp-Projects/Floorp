@@ -205,6 +205,7 @@ class startup_about_home_paint(ts_paint):
 
     url = None
     cycles = 20
+    timeout = 600
     extensions = ["${talos}/startup_test/startup_about_home_paint/addon"]
     tpmanifest = "${talos}/startup_test/startup_about_home_paint/startup_about_home_paint.manifest"
     preferences = {
@@ -277,6 +278,7 @@ class sessionrestore_no_auto_restore(sessionrestore):
     3. Measure the delta between firstPaint and sessionRestored.
     """
 
+    timeout = 300
     preferences = {
         "browser.startup.page": 1,
         "talos.sessionrestore.norestore": True,
@@ -412,6 +414,7 @@ class pdfpaint(PageloaderTest):
 
     tpmanifest = "${talos}/tests/pdfpaint/pdfpaint.manifest"
     tppagecycles = 20
+    timeout = 600
     gecko_profile_entries = 1000000
     pdfpaint = True
     unit = "ms"
@@ -429,6 +432,7 @@ class cpstartup(PageloaderTest):
     extensions = ["${talos}/pageloader", "${talos}/tests/cpstartup/extension"]
     tpmanifest = "${talos}/tests/cpstartup/cpstartup.manifest"
     tppagecycles = 20
+    timeout = 600
     gecko_profile_entries = 1000000
     tploadnocache = True
     unit = "ms"
@@ -453,6 +457,7 @@ class tabpaint(PageloaderTest):
     extensions = ["${talos}/tests/tabpaint", "${talos}/pageloader"]
     tpmanifest = "${talos}/tests/tabpaint/tabpaint.manifest"
     tppagecycles = 20
+    timeout = 600
     gecko_profile_entries = 1000000
     tploadnocache = True
     unit = "ms"
@@ -477,6 +482,7 @@ class tabswitch(PageloaderTest):
     extensions = ["${talos}/tests/tabswitch", "${talos}/pageloader"]
     tpmanifest = "${talos}/tests/tabswitch/tabswitch.manifest"
     tppagecycles = 5
+    timeout = 600
     gecko_profile_entries = 5000000
     tploadnocache = True
     preferences = {
@@ -586,6 +592,7 @@ class glterrain(PageloaderTest):
     tploadnocache = True
     tpmozafterpaint = False
     tpchrome = False
+    timeout = 600
     gecko_profile_interval = 10
     gecko_profile_entries = 2000000
     win_counters = w7_counters = linux_counters = mac_counters = None
@@ -613,6 +620,7 @@ class glvideo(PageloaderTest):
     tploadnocache = True
     tpmozafterpaint = False
     tpchrome = False
+    timeout = 600
     gecko_profile_interval = 2
     gecko_profile_entries = 2000000
     win_counters = w7_counters = linux_counters = mac_counters = None
@@ -900,6 +908,7 @@ class tsvgx(PageloaderTest):
     tppagecycles = 25
     tpmozafterpaint = False
     tpchrome = False
+    timeout = 600
     gecko_profile_interval = 10
     gecko_profile_entries = 1000000
     """ASAP mode"""
@@ -924,6 +933,7 @@ class tsvg_static(PageloaderTest):
     tppagecycles = 25
     tpmozafterpaint = True
     tpchrome = False
+    timeout = 600
     gecko_profile_interval = 1
     gecko_profile_entries = 10000000
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()
@@ -941,6 +951,7 @@ class tsvgr_opacity(PageloaderTest):
     tppagecycles = 25
     tpmozafterpaint = True
     tpchrome = False
+    timeout = 600
     gecko_profile_interval = 1
     gecko_profile_entries = 10000000
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()
@@ -958,6 +969,7 @@ class tscrollx(PageloaderTest):
     tppagecycles = 25
     tpmozafterpaint = False
     tpchrome = False
+    timeout = 600
     gecko_profile_interval = 1
     gecko_profile_entries = 1000000
     """ ASAP mode """
@@ -985,6 +997,7 @@ class a11yr(PageloaderTest):
     tppagecycles = 25
     tpmozafterpaint = True
     tpchrome = False
+    timeout = 600
     preferences = {"dom.send_after_paint_to_content": False}
     unit = "ms"
     alert_threshold = 5.0
@@ -1018,6 +1031,7 @@ class motionmark_webgl(WebkitBenchmark):
     # MotionMark benchmark used by many browser vendors (from webkit)
     tpmanifest = "${talos}/tests/motionmark/webgl.manifest"
     unit = "fps"
+    timeout = 600
 
 
 @register_test()
@@ -1098,6 +1112,7 @@ class displaylist_mutate(PageloaderTest):
     tploadnocache = True
     tpmozafterpaint = False
     tpchrome = False
+    timeout = 600
     gecko_profile_interval = 2
     gecko_profile_entries = 2000000
     win_counters = w7_counters = linux_counters = mac_counters = None
@@ -1124,6 +1139,7 @@ class rasterflood_svg(PageloaderTest):
     tploadnocache = True
     tpmozafterpaint = False
     tpchrome = False
+    timeout = 600
     gecko_profile_interval = 2
     gecko_profile_entries = 2000000
     win_counters = w7_counters = linux_counters = mac_counters = None
@@ -1149,6 +1165,7 @@ class rasterflood_gradient(PageloaderTest):
     tploadnocache = True
     tpmozafterpaint = False
     tpchrome = False
+    timeout = 600
     gecko_profile_interval = 2
     gecko_profile_entries = 2000000
     win_counters = w7_counters = linux_counters = mac_counters = None
