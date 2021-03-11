@@ -309,7 +309,6 @@ uint32_t CountGraphemeClusters(const char16_t* aText, uint32_t aLength) {
 }
 
 uint32_t GetNaked(uint32_t aCh) {
-  MOZ_ASSERT(!IsCombiningDiacritic(aCh), "This character needs to be skipped");
   uint32_t index = aCh >> 8;
   if (index >= MOZ_ARRAY_LENGTH(BASE_CHAR_MAPPING_BLOCK_INDEX)) {
     return aCh;
