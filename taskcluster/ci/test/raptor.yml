@@ -471,7 +471,6 @@ raptor-youtube-playback-av1-sfr-firefox:
     treeherder-symbol: Rap(ytp-av1-sfr)
     run-on-projects:
         by-test-platform:
-            windows10-64-ref-hw-2017/opt: ['mozilla-central']
             (linux|windows|macos)(?!.*shippable).*: []
             default: ['mozilla-central']
     limit-platforms:
@@ -493,7 +492,6 @@ raptor-youtube-playback-h264-sfr-firefox:
     run-on-projects:
         by-test-platform:
             windows7-32.*/opt: []
-            windows10-64-ref-hw-2017/opt: ['mozilla-central']
             (linux|windows10|macos)(?!.*shippable).*: []
             default: ['mozilla-central']
     max-run-time:
@@ -512,7 +510,6 @@ raptor-youtube-playback-hfr-firefox:
     run-on-projects:
         by-test-platform:
             windows7-32.*/opt: []
-            windows10-64-ref-hw-2017/opt: ['mozilla-central']
             (linux|windows10|macos)(?!.*shippable).*: []
             default: ['mozilla-central']
     max-run-time: 3600
@@ -529,7 +526,6 @@ raptor-youtube-playback-vp9-sfr-firefox:
     run-on-projects:
         by-test-platform:
             windows7-32.*/opt: []
-            windows10-64-ref-hw-2017/opt: ['mozilla-central']
             (linux|windows10|macos)(?!.*shippable).*: []
             default: ['mozilla-central']
     max-run-time:
@@ -550,7 +546,6 @@ raptor-youtube-playback-widevine-hfr-firefox:
     run-on-projects:
         by-test-platform:
             windows7-32.*/opt: []
-            windows10-64-ref-hw-2017/opt: ['mozilla-central']
             (linux|windows10|macos)(?!.*shippable).*: []
             default: ['mozilla-central']
     max-run-time:
@@ -569,7 +564,6 @@ raptor-youtube-playback-widevine-h264-sfr-firefox:
     run-on-projects:
         by-test-platform:
             windows7-32.*/opt: []
-            windows10-64-ref-hw-2017/opt: ['mozilla-central']
             (linux|windows10|macos)(?!.*shippable).*: []
             default: ['mozilla-central']
     max-run-time:
@@ -587,7 +581,6 @@ raptor-youtube-playback-widevine-vp9-sfr-firefox:
     treeherder-symbol: Rap(ytp-widevine-vp9-sfr)
     run-on-projects:
         by-test-platform:
-            windows10-64-ref-hw-2017/opt: ['mozilla-central']
             (linux|windows|macos)(?!.*shippable).*: []
             default: ['mozilla-central']
     max-run-time:
