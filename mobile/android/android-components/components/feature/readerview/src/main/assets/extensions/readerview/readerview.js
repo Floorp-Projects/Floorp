@@ -9,7 +9,7 @@ const preservedClasses = [
   "caption",
   "emoji",
   "hidden",
-  "invisble",
+  "invisible",
   "sr-only",
   "visually-hidden",
   "visuallyhidden",
@@ -46,7 +46,7 @@ class ReaderView {
       result,
       {url: new URL(url)},
       {readingTime: this.getReadingTime(result.length, result.language)},
-      {byline: this.getByline()},
+      {byline: this.getByline(result)},
       {dir: this.getTextDirection(result)},
       {title: this.getTitle(result)}
     );
@@ -126,16 +126,20 @@ class ReaderView {
    * @param article a JSONObject representing the article to show.
    */
   createHtmlBody(article) {
+    const safeDir = this.escapeHTML(article.dir);
+    const safeTitle = this.escapeHTML(article.title);
+    const safeByline = this.escapeHTML(article.byline);
+    const safeReadingTime = this.escapeHTML(article.readingTime);
     return `
       <body class="mozac-readerview-body">
-        <div id="mozac-readerview-container" class="container" dir=${article.dir}>
+        <div id="mozac-readerview-container" class="container" dir="${safeDir}">
           <div class="header">
-            <a class="domain" href=${article.url.href}>${article.url.hostname}</a>
+            <a class="domain" href="${article.url.href}">${article.url.hostname}</a>
             <div class="domain-border"></div>
-            <h1>${article.title}</h1>
-            <div class="credits">${article.byline}</div>
+            <h1>${safeTitle}</h1>
+            <div class="credits">${safeByline}</div>
             <div>
-              <div>${article.readingTime}</div>
+              <div>${safeReadingTime}</div>
             </div>
           </div>
           <hr>
@@ -217,56 +221,8 @@ class ReaderView {
     return readingSpeed.get(lang) || readingSpeed.get("en");
    }
 
-   /**
-    * Attempts to find author information in the meta elements of the current page.
-    */
-   getByline() {
-     var metadata = {};
-     var values = {};
-     var metaElements = [...document.getElementsByTagName("meta")];
-
-     // property is a space-separated list of values
-     var propertyPattern = /\s*(dc|dcterm|og|twitter)\s*:\s*(author|creator|description|title|site_name)\s*/gi;
-
-     // name is a single value
-     var namePattern = /^\s*(?:(dc|dcterm|og|twitter|weibo:(article|webpage))\s*[\.:]\s*)?(author|creator|description|title|site_name)\s*$/i;
-
-     // Find description tags.
-     metaElements.forEach((element) => {
-       var elementName = element.getAttribute("name");
-       var elementProperty = element.getAttribute("property");
-       var content = element.getAttribute("content");
-       if (!content) {
-         return;
-       }
-       var matches = null;
-       var name = null;
-
-       if (elementProperty) {
-         matches = elementProperty.match(propertyPattern);
-         if (matches) {
-           for (var i = matches.length - 1; i >= 0; i--) {
-             // Convert to lowercase, and remove any whitespace
-             // so we can match below.
-             name = matches[i].toLowerCase().replace(/\s/g, "");
-             // multiple authors
-             values[name] = content.trim();
-           }
-         }
-       }
-       if (!matches && elementName && namePattern.test(elementName)) {
-         name = elementName;
-         if (content) {
-           // Convert to lowercase, remove any whitespace, and convert dots
-           // to colons so we can match below.
-           name = name.toLowerCase().replace(/\s/g, "").replace(/\./g, ":");
-           values[name] = content.trim();
-         }
-       }
-     });
-
-     let byline = values["dc:creator"] || values["dcterm:creator"] || values["author"] || "";
-     return this.escapeHTML(byline);
+   getByline(article) {
+     return article.byline || "";
    }
 
    /**
@@ -275,7 +231,7 @@ class ReaderView {
     */
    getTextDirection(article) {
      if (article.dir) {
-       return article.dir
+       return article.dir;
      }
 
      if (["ar", "fa", "he", "ug", "ur"].includes(article.language)) {
@@ -286,7 +242,7 @@ class ReaderView {
    }
 
    getTitle(article) {
-     return this.escapeHTML(article.title || "");
+     return article.title || "";
    }
 
    escapeHTML(text) {
@@ -342,7 +298,7 @@ prepareBody();
 
 function connectNativePort() {
   let url = new URL(window.location.href);
-  let articleUrl = decodeURIComponent(url.searchParams.get("url"));
+  let articleUrl = url.searchParams.get("url");
   let id = url.searchParams.get("id");
   let baseUrl = browser.runtime.getURL("/");
 
