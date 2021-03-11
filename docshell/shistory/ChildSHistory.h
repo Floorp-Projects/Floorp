@@ -93,10 +93,6 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
   nsID AddPendingHistoryChange();
   nsID AddPendingHistoryChange(int32_t aIndexDelta, int32_t aLengthDelta);
 
-  // AsyncHistoryLength is for testing.
-  void SetAsyncHistoryLength(bool aEnable, ErrorResult& aRv);
-  bool AsyncHistoryLength() { return mAsyncHistoryLength; }
-
  private:
   virtual ~ChildSHistory() = default;
 
@@ -138,8 +134,6 @@ class ChildSHistory : public nsISupports, public nsWrapperCache {
     int32_t mLengthDelta;
   };
   AutoTArray<PendingSHistoryChange, 2> mPendingSHistoryChanges;
-
-  bool mAsyncHistoryLength = false;
 
   // Needs to start 1 above default epoch in parent
   uint64_t mHistoryEpoch = 1;

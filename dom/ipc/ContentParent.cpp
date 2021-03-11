@@ -7286,24 +7286,6 @@ mozilla::ipc::IPCResult ContentParent::RecvHistoryGo(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryUpdate(
-    const MaybeDiscarded<BrowsingContext>& aContext, const int32_t& aIndex,
-    const int32_t& aLength, const nsID& aChangeID) {
-  if (aContext.IsNullOrDiscarded()) {
-    MOZ_LOG(
-        BrowsingContext::GetLog(), LogLevel::Debug,
-        ("ParentIPC: Trying to send a message to dead or detached context"));
-    return IPC_OK();
-  }
-
-  CanonicalBrowsingContext* context = aContext.get_canonical();
-  context->Group()->EachParent([&](ContentParent* aParent) {
-    Unused << aParent->SendHistoryCommitIndexAndLength(aContext, aIndex,
-                                                       aLength, aChangeID);
-  });
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentParent::RecvSynchronizeLayoutHistoryState(
     const MaybeDiscarded<BrowsingContext>& aContext,
     nsILayoutHistoryState* aState) {

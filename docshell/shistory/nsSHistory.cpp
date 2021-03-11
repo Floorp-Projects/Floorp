@@ -157,8 +157,6 @@ class MOZ_STACK_CLASS SHistoryChangeNotifier {
     if (!aHistory->HasOngoingUpdate()) {
       aHistory->SetHasOngoingUpdate(true);
       mSHistory = aHistory;
-      mInitialIndex = aHistory->Index();
-      mInitialLength = aHistory->Length();
     }
   }
 
@@ -166,11 +164,6 @@ class MOZ_STACK_CLASS SHistoryChangeNotifier {
     if (mSHistory) {
       MOZ_ASSERT(mSHistory->HasOngoingUpdate());
       mSHistory->SetHasOngoingUpdate(false);
-      if (mSHistory->GetBrowsingContext()) {
-        mSHistory->GetBrowsingContext()->SessionHistoryChanged(
-            mSHistory->Index() - mInitialIndex,
-            mSHistory->Length() - mInitialLength);
-      }
 
       if (mozilla::SessionHistoryInParent() &&
           mSHistory->GetBrowsingContext()) {
@@ -182,8 +175,6 @@ class MOZ_STACK_CLASS SHistoryChangeNotifier {
   }
 
   RefPtr<nsSHistory> mSHistory;
-  int32_t mInitialIndex;
-  int32_t mInitialLength;
 };
 
 enum HistCmd { HIST_CMD_GOTOINDEX, HIST_CMD_RELOAD };

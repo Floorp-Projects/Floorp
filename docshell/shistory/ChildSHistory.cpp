@@ -47,38 +47,24 @@ void ChildSHistory::SetIsInProcess(bool aIsInProcess) {
 }
 
 int32_t ChildSHistory::Count() {
-  if (mozilla::SessionHistoryInParent() || mAsyncHistoryLength) {
+  if (mozilla::SessionHistoryInParent()) {
     uint32_t length = mLength;
     for (uint32_t i = 0; i < mPendingSHistoryChanges.Length(); ++i) {
       length += mPendingSHistoryChanges[i].mLengthDelta;
     }
 
-    if (mAsyncHistoryLength) {
-      MOZ_ASSERT(!mozilla::SessionHistoryInParent());
-      // XXX The assertion may be too strong here, but it fires only
-      //    when the pref is enabled.
-      MOZ_ASSERT(mHistory->GetCount() == int32_t(length));
-    }
     return length;
   }
   return mHistory->GetCount();
 }
 
 int32_t ChildSHistory::Index() {
-  if (mozilla::SessionHistoryInParent() || mAsyncHistoryLength) {
+  if (mozilla::SessionHistoryInParent()) {
     uint32_t index = mIndex;
     for (uint32_t i = 0; i < mPendingSHistoryChanges.Length(); ++i) {
       index += mPendingSHistoryChanges[i].mIndexDelta;
     }
 
-    if (mAsyncHistoryLength) {
-      MOZ_ASSERT(!mozilla::SessionHistoryInParent());
-      int32_t realIndex;
-      mHistory->GetIndex(&realIndex);
-      // XXX The assertion may be too strong here, but it fires only
-      //    when the pref is enabled.
-      MOZ_ASSERT(realIndex == int32_t(index));
-    }
     return index;
   }
   int32_t index;
@@ -275,27 +261,6 @@ JSObject* ChildSHistory::WrapObject(JSContext* cx,
 
 nsISupports* ChildSHistory::GetParentObject() const {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
-}
-
-void ChildSHistory::SetAsyncHistoryLength(bool aEnable, ErrorResult& aRv) {
-  if (mozilla::SessionHistoryInParent() || !mHistory) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return;
-  }
-
-  if (mAsyncHistoryLength == aEnable) {
-    return;
-  }
-
-  mAsyncHistoryLength = aEnable;
-  if (mAsyncHistoryLength) {
-    mHistory->GetIndex(&mIndex);
-    mLength = mHistory->GetCount();
-  } else {
-    mIndex = -1;
-    mLength = 0;
-    mPendingSHistoryChanges.Clear();
-  }
 }
 
 }  // namespace dom

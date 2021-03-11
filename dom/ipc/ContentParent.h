@@ -1369,10 +1369,6 @@ class ContentParent final
       uint64_t aHistoryEpoch, bool aRequireUserInteraction,
       HistoryGoResolver&& aResolveRequestedIndex);
 
-  mozilla::ipc::IPCResult RecvSessionHistoryUpdate(
-      const MaybeDiscarded<BrowsingContext>& aContext, const int32_t& aIndex,
-      const int32_t& aLength, const nsID& aChangeID);
-
   mozilla::ipc::IPCResult RecvSynchronizeLayoutHistoryState(
       const MaybeDiscarded<BrowsingContext>& aContext,
       nsILayoutHistoryState* aState);
