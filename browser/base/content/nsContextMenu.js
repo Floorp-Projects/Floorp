@@ -1364,11 +1364,15 @@ class nsContextMenu {
 
   // Change current window to the URL of the image, video, or audio.
   viewMedia(e) {
+    let where = whereToOpenLink(e, false, false);
+    if (where == "current") {
+      where = "tab";
+    }
     let referrerInfo = this.contentData.referrerInfo;
     let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
     if (this.onCanvas) {
       this._canvasToBlobURL(this.targetIdentifier).then(function(blobURL) {
-        openUILink(blobURL, e, {
+        openUILinkIn(blobURL, where, {
           referrerInfo,
           triggeringPrincipal: systemPrincipal,
         });
@@ -1379,7 +1383,9 @@ class nsContextMenu {
         this.principal,
         Ci.nsIScriptSecurityManager.DISALLOW_SCRIPT
       );
-      openUILink(this.mediaURL, e, {
+
+      // Default to opening in a new tab.
+      openUILinkIn(this.mediaURL, where, {
         referrerInfo,
         forceAllowDataURI: true,
         triggeringPrincipal: this.principal,
