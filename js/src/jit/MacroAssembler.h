@@ -1504,6 +1504,10 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                                      Register scratch,
                                                      Label* label);
 
+  inline void branchTestObjClass(Condition cond, Register obj, Register clasp,
+                                 Register scratch, Register spectreRegToZero,
+                                 Label* label);
+
   inline void branchTestObjShape(Condition cond, Register obj,
                                  const Shape* shape, Register scratch,
                                  Register spectreRegToZero, Label* label);
