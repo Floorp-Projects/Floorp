@@ -3,13 +3,10 @@
 
 "use strict";
 
-// Test the TargetList API for service workers when navigating in content tabs.
+// Test the TargetCommand API for service workers when navigating in content tabs.
 // When the top level target navigates, we manually call onTargetAvailable for
 // service workers which now match the page domain. We assert that the callbacks
 // will be called the expected number of times here.
-
-const { TargetList } = require("devtools/shared/resources/target-list");
-const { TYPES } = TargetList;
 
 const COM_PAGE_URL = URL_ROOT_SSL + "test_sw_page.html";
 const COM_WORKER_URL = URL_ROOT_SSL + "test_sw_page_worker.js";
@@ -191,9 +188,9 @@ add_task(async function test_NavigationBetweenTwoDomains_WithDestroy() {
 
 /**
  * In this test we load a service worker in a page prior to starting the
- * TargetList. We start the target list on another page, and then we go back to
+ * TargetCommand. We start the target list on another page, and then we go back to
  * the first page. We want to check that we are correctly notified about the
- * worker that was spawned before TargetList.
+ * worker that was spawned before TargetCommand.
  *
  * Steps:
  * - navigate to .com page
@@ -307,7 +304,8 @@ async function watchServiceWorkerTargets({
 }) {
   info("Create a target list for a tab target");
   const descriptor = await mainRoot.getTab({ tab });
-  const targetList = new TargetList(descriptor);
+  const commands = await descriptor.getCommands();
+  const targetList = commands.targetCommand;
 
   // Enable Service Worker listening.
   targetList.listenForServiceWorkers = true;
@@ -337,7 +335,7 @@ async function watchServiceWorkerTargets({
   };
 
   await targetList.watchTargets(
-    [TYPES.SERVICE_WORKER],
+    [targetList.TYPES.SERVICE_WORKER],
     onAvailable,
     onDestroyed
   );

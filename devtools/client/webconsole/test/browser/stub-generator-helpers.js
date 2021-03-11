@@ -31,9 +31,9 @@ async function createResourceWatcherForDescriptor(descriptor) {
   const {
     ResourceWatcher,
   } = require("devtools/shared/resources/resource-watcher");
-  const { TargetList } = require("devtools/shared/resources/target-list");
 
-  const targetList = new TargetList(descriptor);
+  const commands = await descriptor.getCommands();
+  const targetList = commands.targetCommand;
   await targetList.startListening();
   return new ResourceWatcher(targetList);
 }

@@ -3,10 +3,7 @@
 
 "use strict";
 
-// Test the TargetList API getAllTargets.
-
-const { TargetList } = require("devtools/shared/resources/target-list");
-const { ALL_TYPES, TYPES } = TargetList;
+// Test the TargetCommand API getAllTargets.
 
 const FISSION_TEST_URL = URL_ROOT_SSL + "fission_document.html";
 const CHROME_WORKER_URL = CHROME_URL_ROOT + "test_worker.js";
@@ -33,7 +30,9 @@ add_task(async function() {
 
   info("Create a target list for the main process target");
   const targetDescriptor = await mainRoot.getMainProcess();
-  const targetList = new TargetList(targetDescriptor);
+  const commands = await targetDescriptor.getCommands();
+  const targetList = commands.targetCommand;
+  const { TYPES } = targetList;
   await targetList.startListening();
 
   info("Check getAllTargets will throw when providing invalid arguments");
@@ -81,16 +80,16 @@ add_task(async function() {
     ...processTargets,
     ...frameTargets,
   ];
-  const allTargets = targetList.getAllTargets(ALL_TYPES);
+  const allTargets = targetList.getAllTargets(targetList.ALL_TYPES);
   is(
     allTargets.length,
     allTargetsReference.length,
-    "getAllTargets(TYPES.ALL_TYPES) returned the expected number of targets"
+    "getAllTargets(ALL_TYPES) returned the expected number of targets"
   );
 
   ok(
     allTargets.every(t => allTargetsReference.includes(t)),
-    "getAllTargets(TYPES.ALL_TYPES) returned the expected targets"
+    "getAllTargets(ALL_TYPES) returned the expected targets"
   );
 
   targetList.destroy();

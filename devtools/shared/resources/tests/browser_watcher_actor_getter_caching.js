@@ -5,8 +5,6 @@
 
 // Test that watcher front/actor APIs do not lead to create duplicate actors.
 
-const { TargetList } = require("devtools/shared/resources/target-list");
-
 const TEST_URL = "data:text/html;charset=utf-8,Actor caching test";
 
 add_task(async function() {
@@ -16,7 +14,8 @@ add_task(async function() {
 
   info("Create a target list for a tab target");
   const descriptor = await client.mainRoot.getTab({ tab });
-  const targetList = new TargetList(descriptor);
+  const commands = await descriptor.getCommands();
+  const targetList = commands.targetCommand;
   await targetList.startListening();
 
   const { watcherFront } = targetList;

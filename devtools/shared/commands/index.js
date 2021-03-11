@@ -7,7 +7,9 @@
 // List of all command modules
 // (please try to keep the list alphabetically sorted)
 /*eslint sort-keys: "error"*/
-const Commands = {};
+const Commands = {
+  targetCommand: "devtools/shared/commands/target/target-command",
+};
 
 /**
  * For a given descriptor and its related Targets, already initialized,
@@ -24,7 +26,7 @@ async function createCommandsDictionary(descriptorFront) {
   const dictionary = {};
   for (const name in Commands) {
     loader.lazyGetter(dictionary, name, () => {
-      const Constructor = require(Commands[name])[name];
+      const Constructor = require(Commands[name]);
       return new Constructor({
         // Commands can use other commands
         commands: dictionary,

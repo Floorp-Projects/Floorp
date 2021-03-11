@@ -3,10 +3,7 @@
 
 "use strict";
 
-// Test the TargetList API for service workers in content tabs.
-
-const { TargetList } = require("devtools/shared/resources/target-list");
-const { TYPES } = TargetList;
+// Test the TargetCommand API for service workers in content tabs.
 
 const FISSION_TEST_URL = URL_ROOT_SSL + "fission_document.html";
 
@@ -25,14 +22,20 @@ add_task(async function() {
 
   info("Create a target list for a tab target");
   const descriptor = await client.mainRoot.getTab({ tab });
-  const targetList = new TargetList(descriptor);
+  const commands = await descriptor.getCommands();
+  const targetList = commands.targetCommand;
+  const { TYPES } = targetList;
 
   // Enable Service Worker listening.
   targetList.listenForServiceWorkers = true;
   await targetList.startListening();
 
   const serviceWorkerTargets = targetList.getAllTargets([TYPES.SERVICE_WORKER]);
-  is(serviceWorkerTargets.length, 1, "TargetList has 1 service worker target");
+  is(
+    serviceWorkerTargets.length,
+    1,
+    "TargetCommmand has 1 service worker target"
+  );
 
   info("Check that the onAvailable is done when watchTargets resolves");
   const targets = [];

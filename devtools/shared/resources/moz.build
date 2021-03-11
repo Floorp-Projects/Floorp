@@ -10,7 +10,6 @@ DIRS += [
 
 DevToolsModules(
     "resource-watcher.js",
-    "target-list.js",
 )
 
 if CONFIG["MOZ_BUILD_APP"] != "mobile/android":

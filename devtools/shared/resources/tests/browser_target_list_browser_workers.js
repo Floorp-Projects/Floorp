@@ -3,10 +3,7 @@
 
 "use strict";
 
-// Test the TargetList API around workers
-
-const { TargetList } = require("devtools/shared/resources/target-list");
-const { TYPES } = TargetList;
+// Test the TargetCommand API around workers
 
 const FISSION_TEST_URL = URL_ROOT_SSL + "fission_document.html";
 const WORKER_FILE = "test_worker.js";
@@ -14,7 +11,7 @@ const CHROME_WORKER_URL = CHROME_URL_ROOT + WORKER_FILE;
 const SERVICE_WORKER_URL = URL_ROOT_SSL + "test_service_worker.js";
 
 add_task(async function() {
-  // Enabled fission's pref as the TargetList is almost disabled without it
+  // Enabled fission's pref as the TargetCommand is almost disabled without it
   await pushPref("devtools.browsertoolbox.fission", true);
 
   // Disable the preloaded process as it creates processes intermittently
@@ -25,7 +22,7 @@ add_task(async function() {
   const mainRoot = client.mainRoot;
   const tab = await addTab(FISSION_TEST_URL);
 
-  info("Test TargetList against workers via the parent process target");
+  info("Test TargetCommand against workers via the parent process target");
 
   // Instantiate a worker in the parent process
   // eslint-disable-next-line no-unused-vars
@@ -34,7 +31,9 @@ add_task(async function() {
   const sharedWorker = new SharedWorker(CHROME_WORKER_URL + "#shared-worker");
 
   const targetDescriptor = await mainRoot.getMainProcess();
-  const targetList = new TargetList(targetDescriptor);
+  const commands = await targetDescriptor.getCommands();
+  const targetList = commands.targetCommand;
+  const { TYPES } = targetList;
   await targetList.startListening();
 
   // Very naive sanity check against getAllTargets([workerType])

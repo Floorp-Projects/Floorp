@@ -102,7 +102,7 @@ class WebConsole {
   }
 
   get targetList() {
-    return this.toolbox.targetList;
+    return this.commands.targetCommand;
   }
 
   get resourceWatcher() {
