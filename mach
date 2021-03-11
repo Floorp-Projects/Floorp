@@ -18,7 +18,6 @@ py2commands="
     raptor-test
     telemetry-tests-client
     test
-    wpt-metadata-merge
 "
 
 # Commands that are to be run with the system Python 3 instead of the
