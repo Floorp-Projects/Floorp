@@ -28,6 +28,7 @@ registerCleanupFunction(() => {
  * This happens immediately, without waiting for any sampling to happen or
  * finish. Use stopProfilerAndGetThreads (without "Now") below instead to wait
  * for samples before stopping.
+ * This returns also the full profile in case the caller wants more information.
  *
  * @param {number} contentPid
  * @returns {Promise}
@@ -54,7 +55,7 @@ async function stopProfilerNowAndGetThreads(contentPid) {
     throw new Error("The content thread was not found in the profile.");
   }
 
-  return { parentThread, contentThread };
+  return { parentThread, contentThread, profile };
 }
 
 /**
@@ -70,4 +71,48 @@ async function stopProfilerAndGetThreads(contentPid) {
   await Services.profiler.waitOnePeriodicSampling();
 
   return stopProfilerNowAndGetThreads(contentPid);
+}
+
+/**
+ * This finds a thread with a specific network marker. This is useful to find
+ * the thread for a service worker.
+ *
+ * @param {Object} profile
+ * @param {string} filename
+ * @returns {Object | null} the found thread
+ */
+function findContentThreadWithNetworkMarkerForFilename(profile, filename) {
+  const allThreads = [
+    profile.threads,
+    ...profile.processes.map(process => process.threads),
+  ].flat();
+
+  const thread = allThreads.find(
+    ({ processType, markers }) =>
+      processType === "tab" &&
+      markers.data.some(markerTuple => {
+        const data = markerTuple[markers.schema.data];
+        return (
+          data &&
+          data.type === "Network" &&
+          data.URI &&
+          data.URI.endsWith(filename)
+        );
+      })
+  );
+  return thread || null;
+}
+
+/**
+ * This logs some basic information about the passed thread.
+ *
+ * @param {string} prefix
+ * @param {Object} thread
+ */
+function logInformationForThread(prefix, thread) {
+  const { name, pid, tid, processName, processType } = thread;
+  info(
+    `${prefix}: ` +
+      `name(${name}) pid(${pid}) tid(${tid}) processName(${processName}) processType(${processType})`
+  );
 }
