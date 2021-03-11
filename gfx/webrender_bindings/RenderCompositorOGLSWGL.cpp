@@ -275,6 +275,11 @@ bool RenderCompositorOGLSWGL::MaybeReadback(
   GetGLContext()->fReadPixels(0, 0, aReadbackSize.width, aReadbackSize.height,
                               format, LOCAL_GL_UNSIGNED_BYTE,
                               &aReadbackBuffer[0]);
+
+  if (aNeedsYFlip) {
+    *aNeedsYFlip = true;
+  }
+
   return true;
 }
 
