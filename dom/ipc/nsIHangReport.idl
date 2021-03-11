@@ -71,6 +71,6 @@ interface nsIHangReport : nsISupports
   void endStartingDebugger();
 
   // Inquire whether the report is for a content process loaded by the given
-  // frameloader.
-  bool isReportForBrowser(in FrameLoader aFrameLoader);
+  // frameloader, or any descendents in its BrowsingContext tree.
+  bool isReportForBrowserOrChildren(in FrameLoader aFrameLoader);
 };

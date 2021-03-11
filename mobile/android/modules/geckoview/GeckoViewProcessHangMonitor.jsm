@@ -101,7 +101,7 @@ class GeckoViewProcessHangMonitor extends GeckoViewModule {
   observe(aSubject, aTopic, aData) {
     debug`observe(aTopic=${aTopic})`;
     aSubject.QueryInterface(Ci.nsIHangReport);
-    if (!aSubject.isReportForBrowser(this.browser.frameLoader)) {
+    if (!aSubject.isReportForBrowserOrChildren(this.browser.frameLoader)) {
       return;
     }
 
