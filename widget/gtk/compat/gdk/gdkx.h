@@ -33,10 +33,6 @@ static inline Window gdk_x11_window_get_xid(GdkWindow* window) {
   return (GDK_WINDOW_XWINDOW(window));
 }
 
-#ifndef GDK_IS_X11_DISPLAY
-#  define GDK_IS_X11_DISPLAY(a) (true)
-#endif
-
 #if !GTK_CHECK_VERSION(2, 24, 0)
 #  undef gdk_x11_set_sm_client_id
 static inline void gdk_x11_set_sm_client_id(const gchar* sm_client_id) {
