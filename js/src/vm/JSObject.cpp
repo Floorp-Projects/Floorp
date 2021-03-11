@@ -3603,7 +3603,6 @@ size_t JSObject::sizeOfIncludingThisInNursery() const {
   if (is<NativeObject>()) {
     const NativeObject& native = as<NativeObject>();
 
-    size += native.numFixedSlots() * sizeof(Value);
     size += native.numDynamicSlots() * sizeof(Value);
 
     if (native.hasDynamicElements()) {
