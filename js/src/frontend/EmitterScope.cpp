@@ -705,12 +705,19 @@ bool EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc) {
 
   if (evalsc->strict()) {
     if (evalsc->bindings) {
-      for (ParserBindingIter bi(*evalsc->bindings, true); bi; bi++) {
+      ParserBindingIter bi(*evalsc->bindings, true);
+      for (; bi; bi++) {
+        if (!checkSlotLimits(bce, bi)) {
+          return false;
+        }
+
         NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
         if (!putNameInCache(bce, bi.name(), loc)) {
           return false;
         }
       }
+
+      updateFrameFixedSlots(bce, bi);
     }
   } else {
     // For simplicity, treat all free name lookups in nonstrict eval scripts as
