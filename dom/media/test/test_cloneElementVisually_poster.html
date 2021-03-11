@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test cloneElementVisually</title>
+  <title>Test cloneElementVisually with poster</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="application/javascript" src="https://example.com:443/tests/dom/media/test/cloneElementVisually_helpers.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
@@ -24,8 +24,8 @@
 /* import-globals-from cloneElementVisually_helpers.js */
 
 /**
- * Test that when we start cloning a paused video, the clone displays
- * the first paused frame.
+ * Test that when we clone a video with a poster, the poster does not prevent
+ * the cloned video from displaying properly (as in bug 1532692).
  */
 add_task(async () => {
   await setup();
@@ -35,11 +35,12 @@ add_task(async () => {
   originalVideo.setAttribute("poster", POSTER_URL);
 
   await withNewClone(originalVideo, async clone => {
-    SpecialPowers.wrap(originalVideo).cloneElementVisually(clone);
+    await SpecialPowers.wrap(originalVideo).cloneElementVisually(clone);
+    originalVideo.loop = false;
+    originalVideo.currentTime = originalVideo.duration - 0.1;
+    let endedPromise = waitForEventOnce(originalVideo, "ended");
     await originalVideo.play();
-    await waitForEventOnce(originalVideo, "timeupdate");
-    originalVideo.pause();
-    await waitForEventOnce(originalVideo, "pause");
+    await endedPromise;
 
     ok(await assertVideosMatch(originalVideo, clone),
        "Video with a poster should clone properly.");
