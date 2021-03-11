@@ -115,7 +115,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
   async startQuery(queryContext, addCallback) {
     let instance = this.queryInstance;
     let suggestion = await UrlbarQuickSuggest.query(
-      queryContext.trimmedSearchString
+      queryContext.searchString.trimStart()
     );
     if (!suggestion || instance != this.queryInstance) {
       return;

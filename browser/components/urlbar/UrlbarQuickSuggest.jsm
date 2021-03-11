@@ -239,57 +239,123 @@ class KeywordTree {
     tree.set(RESULT_KEY, id);
   }
 
-  /*
+  /**
    * Get the result for a given phrase.
+   *
+   * @param {string} query
+   *   The query string.
+   * @returns {object}
+   *   The match object: { result, fullKeyword }, where `result` is the matching
+   *   result ID and `fullKeyword` is the suggestion.  If there is no match,
+   *   then `result` will be null and `fullKeyword` will not be defined.
    */
   get(query) {
-    let tree = this.tree;
-    let phrase = query.trim();
-    // The result object for the given phrase.
-    let result = null;
-    // The keyword that matched completed up untill the next space.
-    let fullKeyword = "";
-    // Whether we matched any phrases within an iteration so
-    // we know when to terminate.
-    let matched = false;
-    /*eslint no-labels: ["error", { "allowLoop": true }]*/
-    loop: while (true) {
-      matched = false;
-      for (const [key, child] of tree.entries()) {
-        if (key == RESULT_KEY) {
-          continue;
+    query = query.trimStart();
+    let match = this._getMatch(query, this.tree, "");
+    if (!match) {
+      return { result: null };
+    }
+
+    let result = UrlbarQuickSuggest._results.get(match.resultID);
+    if (!result) {
+      return { result: null };
+    }
+
+    let longerPhrase;
+    let trimmedQuery = query.trim();
+    let queryWords = trimmedQuery.split(" ");
+
+    // We need to determine a suggestion for the result (called `fullKeyword` in
+    // the returned object).  The data doesn't include suggestions, so we'll
+    // need to make our own based on the keyword phrases in the result.  First,
+    // find a decent matching phrase.  We'll use two heuristics:
+    //
+    // (1) Find the first phrase that has more words than the query.  Use its
+    //     first `queryWords.length` words as the suggestion.  e.g., if the
+    //     query is "moz" and `result.keywords` is ["moz", "mozi", "mozil",
+    //     "mozill", "mozilla", "mozilla firefox"], pick "mozilla firefox", pop
+    //     off the "firefox" and use "mozilla" as the suggestion.
+    // (2) If there isn't any phrase with more words, then pick the longest
+    //     phrase.  e.g., pick "mozilla" in the previous example (assuming the
+    //     "mozilla firefox" phrase isn't there).
+    for (let phrase of result.keywords) {
+      if (phrase.startsWith(query)) {
+        let trimmedPhrase = phrase.trim();
+        let phraseWords = trimmedPhrase.split(" ");
+        // As an exception to (1), if the query ends with a space, then look for
+        // phrases with one more word so that the suggestion includes a word
+        // following the space.
+        let extra = query.endsWith(" ") ? 1 : 0;
+        let len = queryWords.length + extra;
+        if (len < phraseWords.length) {
+          // We found a phrase with more words.
+          return {
+            result: match.resultID,
+            fullKeyword: phraseWords.slice(0, len).join(" "),
+          };
         }
-        // We need to check if key starts with phrase because we
-        // may have flattened the key and so .get("hel") will need
-        // to match index "hello", we will only flatten this way if
-        // the result matches.
-        if (!result && (phrase.startsWith(key) || key.startsWith(phrase))) {
-          matched = true;
-          phrase = phrase.slice(key.length);
-          if (!phrase.length) {
-            result = child.get(RESULT_KEY) || null;
-            if (!result) {
-              return { result };
-            }
-          }
+        if (
+          query.length < phrase.length &&
+          (!longerPhrase || longerPhrase.length < trimmedPhrase.length)
+        ) {
+          // We found a longer phrase with the same number of words.
+          longerPhrase = trimmedPhrase;
         }
-        if (result || matched) {
-          fullKeyword += key;
-          // If we find a space or we reach the end of the tree.
-          if (
-            (result && key.includes(" ")) ||
-            (child.size == 1 && child.get(RESULT_KEY))
-          ) {
-            return { result, fullKeyword: fullKeyword.trim() };
-          }
-          tree = child;
-          continue loop;
-        }
-      }
-      if (!result) {
-        return { result };
       }
     }
+    return {
+      result: match.resultID,
+      fullKeyword: longerPhrase || trimmedQuery,
+    };
+  }
+
+  /**
+   * Recursively looks up a match in the tree.
+   *
+   * @param {string} query
+   *   The query string.
+   * @param {Map} node
+   *   The node to start the search at.
+   * @param {string} phrase
+   *   The current phrase key path through the tree.
+   * @returns {object}
+   *   The match object: { resultID }, or null if no match was found.
+   */
+  _getMatch(query, node, phrase) {
+    for (const [key, child] of node.entries()) {
+      if (key == RESULT_KEY) {
+        continue;
+      }
+      let newPhrase = phrase + key;
+      let len = Math.min(newPhrase.length, query.length);
+      if (newPhrase.substring(0, len) == query.substring(0, len)) {
+        // The new phrase is a prefix of the query or vice versa.
+        let resultID = child.get(RESULT_KEY);
+        if (resultID !== undefined) {
+          // This child has a result.  Look it up to see if its keyword phrases
+          // match the query.  If it has a phrase that starts with the query,
+          // then it potentially matches, but we don't want to match when the
+          // query is shorter than every phrase, so also check that the query
+          // starts with some phrase.  For example, if the query is "m" and the
+          // phrases are ["moz", "mozilla"], we don't want to match until the
+          // query is at least "moz".
+          let result = UrlbarQuickSuggest._results.get(resultID);
+          if (
+            result &&
+            result.keywords.some(p => p.startsWith(query)) &&
+            result.keywords.some(p => query.startsWith(p))
+          ) {
+            return { resultID };
+          }
+        }
+        // Recurse into descendants and return any match.
+        let match = this._getMatch(query, child, newPhrase);
+        if (match) {
+          return match;
+        }
+      }
+    }
+    return null;
   }
 
   /*
