@@ -35,26 +35,23 @@ set_config(
     depends_if("--enable-maintenance-service", when=target_is_windows)(lambda _: True),
 )
 
-# Update agent (currently Windows only)
+# Update agent (currently Windows and macOS only)
 # This is an independent task that runs on a schedule to
 # check for, download, and install updates.
 # ==============================================================
 
 option(
-    "--enable-update-agent",
-    when=target_is_windows,
-    default=False,
+    "--disable-update-agent",
+    when=target_is_windows | target_is_osx,
+    default=True,
     help="{Enable|Disable} building update agent",
-)
-
-set_define(
-    "MOZ_UPDATE_AGENT",
-    depends_if("--enable-update-agent", when=target_is_windows)(lambda _: True),
 )
 
 set_config(
     "MOZ_UPDATE_AGENT",
-    depends_if("--enable-update-agent", when=target_is_windows)(lambda _: True),
+    depends_if("--enable-update-agent", when=target_is_windows | target_is_osx)(
+        lambda _: True
+    ),
 )
 
 # Enable or disable the default browser agent, which monitors the user's default
