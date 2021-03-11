@@ -4890,7 +4890,11 @@
 
 - name: gfx.webrender.software.opengl
   type: bool
+#if defined(MOZ_WIDGET_ANDROID)
+  value: true
+#else
   value: false
+#endif
   mirror: once
 
 - name: gfx.webrender.software.d3d11.upload-mode
