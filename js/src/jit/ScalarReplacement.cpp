@@ -1442,7 +1442,7 @@ void ArgumentsReplacer::visitGetArgumentsObjectArg(
     // Inlined frames have direct access to the actual arguments.
     auto* actualArgs = args_->toCreateInlinedArgumentsObject();
     if (ins->argno() < actualArgs->numActuals()) {
-      getArg = actualArgs->getArg(ins->argno())->toInstruction();
+      getArg = actualArgs->getArg(ins->argno());
     } else {
       // Omitted arguments are not mapped to the arguments object, and
       // will always be undefined.
