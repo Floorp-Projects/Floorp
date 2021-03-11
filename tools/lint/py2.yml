@@ -46,6 +46,7 @@ py2:
         - taskcluster/mach_commands.py
         - taskcluster/taskgraph/actions/isolate_test.py
         - taskcluster/test
+        - testing/jsshell
         - testing/performance
         - tools/crashreporter/system-symbols/win/symsrv-fetch.py
         - tools/github-sync
