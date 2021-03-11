@@ -506,6 +506,10 @@ add_task(async function test_history_on_detailview_extension_removed() {
   addonCard.querySelector("[action=remove]").click();
 
   await wait_for_view_load(aManager);
+  await TestUtils.waitForCondition(
+    () => aManager.document.querySelector("addon-list"),
+    "The add-on list should render."
+  );
   is_in_list(aManager, "addons://list/extension", true, false);
 
   const addon = await AddonManager.getAddonByID("test1@tests.mozilla.org");
