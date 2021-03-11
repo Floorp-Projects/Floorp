@@ -79,35 +79,6 @@ extern NSMenu* sApplicationMenu;  // Application menu shared by all menubars
 // defined in nsChildView.mm
 extern BOOL gSomeMenuBarPainted;
 
-#if !defined(MAC_OS_X_VERSION_10_9) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_9
-
-enum NSWindowOcclusionState { NSWindowOcclusionStateVisible = 0x1 << 1 };
-
-@interface NSWindow (OcclusionState)
-- (NSWindowOcclusionState)occlusionState;
-@end
-
-#endif
-
-#if !defined(MAC_OS_X_VERSION_10_10) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_10
-
-enum NSWindowTitleVisibility { NSWindowTitleVisible = 0, NSWindowTitleHidden = 1 };
-
-@interface NSWindow (TitleVisibility)
-- (void)setTitleVisibility:(NSWindowTitleVisibility)visibility;
-- (void)setTitlebarAppearsTransparent:(BOOL)isTitlebarTransparent;
-@end
-
-#endif
-
-#if !defined(MAC_OS_X_VERSION_10_12) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12
-
-@interface NSWindow (AutomaticWindowTabbing)
-+ (void)setAllowsAutomaticWindowTabbing:(BOOL)allow;
-@end
-
-#endif
-
 extern "C" {
 // CGSPrivate.h
 typedef NSInteger CGSConnection;
@@ -2944,24 +2915,6 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
 @interface NSWindow (PrivateSetNeedsDisplayInRectMethod)
 - (void)_setNeedsDisplayInRect:(NSRect)aRect;
 @end
-
-#if !defined(MAC_OS_X_VERSION_10_10) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_10
-
-@interface NSImage (CapInsets)
-- (void)setCapInsets:(NSEdgeInsets)capInsets;
-@end
-
-#endif
-
-#if !defined(MAC_OS_X_VERSION_10_8) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8
-
-@interface NSImage (ImageCreationWithDrawingHandler)
-+ (NSImage*)imageWithSize:(NSSize)size
-                  flipped:(BOOL)drawingHandlerShouldBeCalledWithFlippedContext
-           drawingHandler:(BOOL (^)(NSRect dstRect))drawingHandler;
-@end
-
-#endif
 
 #if !defined(MAC_OS_X_VERSION_10_12_2) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12_2
 @interface NSView (NSTouchBarProvider)

@@ -22,27 +22,6 @@ using namespace mozilla;
 
 #define MAX_NOTIFICATION_NAME_LEN 5000
 
-#if !defined(MAC_OS_X_VERSION_10_8) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8)
-@protocol NSUserNotificationCenterDelegate
-@end
-static NSString* const NSUserNotificationDefaultSoundName = @"DefaultSoundName";
-enum {
-  NSUserNotificationActivationTypeNone = 0,
-  NSUserNotificationActivationTypeContentsClicked = 1,
-  NSUserNotificationActivationTypeActionButtonClicked = 2,
-};
-#endif
-
-#if !defined(MAC_OS_X_VERSION_10_9) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_9)
-enum {
-  NSUserNotificationActivationTypeReplied = 3,
-};
-#endif
-
-#if !defined(MAC_OS_X_VERSION_10_10) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_10)
-enum { NSUserNotificationActivationTypeAdditionalActionClicked = 4 };
-#endif
-
 @protocol FakeNSUserNotification <NSObject>
 @property(copy) NSString* title;
 @property(copy) NSString* subtitle;

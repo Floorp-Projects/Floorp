@@ -13,11 +13,6 @@
 #include "nsString.h"
 #include "mozilla/MacStringHelpers.h"
 
-// Need to cope with us using old versions of the SDK and needing this on 10.10+
-#if !defined(MAC_OS_X_VERSION_10_10) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_10)
-const CFStringRef kCFURLQuarantinePropertiesKey = CFSTR("NSURLQuarantinePropertiesKey");
-#endif
-
 namespace CocoaFileUtils {
 
 nsresult RevealFileInFinder(CFURLRef url) {

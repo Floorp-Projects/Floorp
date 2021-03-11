@@ -18,10 +18,6 @@
 // working.
 @class mozNotificationCenterDelegate;
 
-#if !defined(MAC_OS_X_VERSION_10_8) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8)
-typedef NSInteger NSUserNotificationActivationType;
-#endif
-
 namespace mozilla {
 
 class OSXNotificationInfo;
