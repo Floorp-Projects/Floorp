@@ -624,9 +624,6 @@ XDRResult XDRAtomOrNull(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
 template <XDRMode mode>
 XDRResult XDRAtom(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
 
-template <XDRMode mode>
-XDRResult XDRAtomData(XDRState<mode>* xdr, js::MutableHandleAtom atomp);
-
 } /* namespace js */
 
 #endif /* vm_Xdr_h */
