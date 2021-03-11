@@ -37,6 +37,7 @@
 #include "util/Poison.h"
 #include "vm/BigIntType.h"
 #include "vm/ErrorObject.h"
+#include "wasm/TypedObject.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmStubs.h"
 #include "wasm/WasmTypes.h"
@@ -1196,6 +1197,8 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
           ArgType_General, {ArgType_General, ArgType_General, ArgType_General});
       MOZ_ASSERT(*abiType == ToABIType(SASigStructNarrow));
       return FuncCast(Instance::structNarrow, *abiType);
+    case SymbolicAddress::InlineTypedObjectClass:
+      return (void*)&js::InlineTypedObject::class_;
 
 #if defined(ENABLE_WASM_EXCEPTIONS)
     case SymbolicAddress::ExceptionNew:
@@ -1255,6 +1258,7 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::CoerceInPlace_ToNumber:
     case SymbolicAddress::CoerceInPlace_ToBigInt:
     case SymbolicAddress::BoxValue_Anyref:
+    case SymbolicAddress::InlineTypedObjectClass:
 #if defined(JS_CODEGEN_MIPS32)
     case SymbolicAddress::js_jit_gAtomic64Lock:
 #endif

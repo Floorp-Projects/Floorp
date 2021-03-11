@@ -3170,12 +3170,12 @@ struct WasmTryNote {
 
 WASM_DECLARE_POD_VECTOR(WasmTryNote, WasmTryNoteVector)
 
-// A wasm::SymbolicAddress represents a pointer to a well-known function that is
-// embedded in wasm code. Since wasm code is serialized and later deserialized
-// into a different address space, symbolic addresses must be used for *all*
-// pointers into the address space. The MacroAssembler records a list of all
-// SymbolicAddresses and the offsets of their use in the code for later patching
-// during static linking.
+// A wasm::SymbolicAddress represents a pointer to a well-known function/global
+// that is embedded in wasm code. Since wasm code is serialized and later
+// deserialized into a different address space, symbolic addresses must be used
+// for *all* pointers into the address space. The MacroAssembler records a list
+// of all SymbolicAddresses and the offsets of their use in the code for later
+// patching during static linking.
 
 enum class SymbolicAddress {
   ToInt32,
@@ -3255,6 +3255,7 @@ enum class SymbolicAddress {
   ThrowException,
   GetLocalExceptionIndex,
 #endif
+  InlineTypedObjectClass,
 #if defined(JS_CODEGEN_MIPS32)
   js_jit_gAtomic64Lock,
 #endif

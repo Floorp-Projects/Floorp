@@ -13178,8 +13178,17 @@ bool BaseCompiler::emitStructGet() {
   trap(Trap::NullPointerDereference);
   masm.bind(&ok);
 
-  if (!structType.isInline_) {
+  {
+    RegPtr scratch = needRef();
+    RegPtr clasp = needRef();
+    masm.movePtr(SymbolicAddress::InlineTypedObjectClass, clasp);
+    Label isInline;
+    masm.branchTestObjClass(Assembler::Equal, rp, clasp, scratch, rp,
+                            &isInline);
+    freeRef(clasp);
+    freeRef(scratch);
     masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfData()), rp);
+    masm.bind(&isInline);
   }
 
   uint32_t offs = structType.objectBaseFieldOffset(fieldIndex);
@@ -13279,8 +13288,17 @@ bool BaseCompiler::emitStructSet() {
   trap(Trap::NullPointerDereference);
   masm.bind(&ok);
 
-  if (!structType.isInline_) {
+  {
+    RegPtr scratch = needRef();
+    RegPtr clasp = needRef();
+    masm.movePtr(SymbolicAddress::InlineTypedObjectClass, clasp);
+    Label isInline;
+    masm.branchTestObjClass(Assembler::Equal, rp, clasp, scratch, rp,
+                            &isInline);
+    freeRef(clasp);
+    freeRef(scratch);
     masm.loadPtr(Address(rp, OutlineTypedObject::offsetOfData()), rp);
+    masm.bind(&isInline);
   }
 
   uint32_t offs = structType.objectBaseFieldOffset(fieldIndex);
