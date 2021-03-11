@@ -2397,86 +2397,94 @@ typedef Vector<Name, 0, SystemAllocPolicy> NameVector;
 // A tagged container for the various types that can be present in a wasm
 // module's type section.
 
+enum class TypeDefKind {
+  None,
+  Func,
+  Struct,
+};
+
 class TypeDef {
-  enum { IsFuncType, IsStructType, IsNone } tag_;
+  TypeDefKind kind_;
   union {
     FuncType funcType_;
     StructType structType_;
   };
 
  public:
-  TypeDef() : tag_(IsNone) {}
+  TypeDef() : kind_(TypeDefKind::None) {}
 
   explicit TypeDef(FuncType&& funcType)
-      : tag_(IsFuncType), funcType_(std::move(funcType)) {}
+      : kind_(TypeDefKind::Func), funcType_(std::move(funcType)) {}
 
   explicit TypeDef(StructType&& structType)
-      : tag_(IsStructType), structType_(std::move(structType)) {}
+      : kind_(TypeDefKind::Struct), structType_(std::move(structType)) {}
 
-  TypeDef(TypeDef&& td) : tag_(td.tag_) {
-    switch (tag_) {
-      case IsFuncType:
+  TypeDef(TypeDef&& td) : kind_(td.kind_) {
+    switch (kind_) {
+      case TypeDefKind::Func:
         new (&funcType_) FuncType(std::move(td.funcType_));
         break;
-      case IsStructType:
+      case TypeDefKind::Struct:
         new (&structType_) StructType(std::move(td.structType_));
         break;
-      case IsNone:
+      case TypeDefKind::None:
         break;
     }
   }
 
   ~TypeDef() {
-    switch (tag_) {
-      case IsFuncType:
+    switch (kind_) {
+      case TypeDefKind::Func:
         funcType_.~FuncType();
         break;
-      case IsStructType:
+      case TypeDefKind::Struct:
         structType_.~StructType();
         break;
-      case IsNone:
+      case TypeDefKind::None:
         break;
     }
   }
 
   TypeDef& operator=(TypeDef&& that) {
     MOZ_ASSERT(isNone());
-    switch (that.tag_) {
-      case IsFuncType:
+    switch (that.kind_) {
+      case TypeDefKind::Func:
         new (&funcType_) FuncType(std::move(that.funcType_));
         break;
-      case IsStructType:
+      case TypeDefKind::Struct:
         new (&structType_) StructType(std::move(that.structType_));
         break;
-      case IsNone:
+      case TypeDefKind::None:
         break;
     }
-    tag_ = that.tag_;
+    kind_ = that.kind_;
     return *this;
   }
 
   [[nodiscard]] bool clone(const TypeDef& src) {
     MOZ_ASSERT(isNone());
-    tag_ = src.tag_;
-    switch (src.tag_) {
-      case IsFuncType:
+    kind_ = src.kind_;
+    switch (src.kind_) {
+      case TypeDefKind::Func:
         new (&funcType_) FuncType();
         return funcType_.clone(src.funcType());
-      case IsStructType:
+      case TypeDefKind::Struct:
         new (&structType_) StructType();
         return structType_.clone(src.structType());
-      case IsNone:
+      case TypeDefKind::None:
         break;
     }
     MOZ_ASSERT_UNREACHABLE();
     return false;
   }
 
-  bool isFuncType() const { return tag_ == IsFuncType; }
+  TypeDefKind kind() const { return kind_; }
 
-  bool isNone() const { return tag_ == IsNone; }
+  bool isNone() const { return kind_ == TypeDefKind::None; }
 
-  bool isStructType() const { return tag_ == IsStructType; }
+  bool isFuncType() const { return kind_ == TypeDefKind::Func; }
+
+  bool isStructType() const { return kind_ == TypeDefKind::Struct; }
 
   const FuncType& funcType() const {
     MOZ_ASSERT(isFuncType());
@@ -2499,26 +2507,26 @@ class TypeDef {
   }
 
   void renumber(const RenumberMap& map) {
-    switch (tag_) {
-      case IsFuncType:
+    switch (kind_) {
+      case TypeDefKind::Func:
         funcType_.renumber(map);
         break;
-      case IsStructType:
+      case TypeDefKind::Struct:
         structType_.renumber(map);
         break;
-      case IsNone:
+      case TypeDefKind::None:
         break;
     }
   }
   void offsetTypeIndex(uint32_t offsetBy) {
-    switch (tag_) {
-      case IsFuncType:
+    switch (kind_) {
+      case TypeDefKind::Func:
         funcType_.offsetTypeIndex(offsetBy);
         break;
-      case IsStructType:
+      case TypeDefKind::Struct:
         structType_.offsetTypeIndex(offsetBy);
         break;
-      case IsNone:
+      case TypeDefKind::None:
         break;
     }
   }
