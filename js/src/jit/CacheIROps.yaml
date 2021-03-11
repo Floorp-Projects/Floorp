@@ -225,7 +225,7 @@
     obj: ObjId
     shape: ShapeField
 
-- name: GuardTypeDescr
+- name: GuardRttValue
   shared: false
   transpile: false
   cost_estimate: 1

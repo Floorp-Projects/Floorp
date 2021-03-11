@@ -659,22 +659,22 @@ bool IonCacheIRCompiler::emitGuardShape(ObjOperandId objId,
   return true;
 }
 
-bool IonCacheIRCompiler::emitGuardTypeDescr(ObjOperandId objId,
-                                            uint32_t descrOffset) {
+bool IonCacheIRCompiler::emitGuardRttValue(ObjOperandId objId,
+                                           uint32_t descrOffset) {
   JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
 
   Register obj = allocator.useRegister(masm, objId);
   AutoScratchRegister scratch(allocator, masm);
 
-  TypeDescr* descr = &objectStubField(descrOffset)->as<TypeDescr>();
+  RttValue* rttValue = &objectStubField(descrOffset)->as<RttValue>();
 
   FailurePath* failure;
   if (!addFailurePath(&failure)) {
     return false;
   }
 
-  masm.branchTestObjTypeDescr(Assembler::NotEqual, obj, descr, scratch, obj,
-                              failure->label());
+  masm.branchTestObjRttValue(Assembler::NotEqual, obj, rttValue, scratch, obj,
+                             failure->label());
   return true;
 }
 

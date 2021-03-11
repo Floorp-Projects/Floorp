@@ -965,8 +965,8 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
       reinterpret_cast<JSObject**>(location));
 }
 
-// The typeIndex is an index into the typeDescrs_ table in the instance.
-// That table holds TypeDescr objects.
+// The typeIndex is an index into the rttValues_ table in the instance.
+// That table holds RttValue objects.
 //
 // When we fail to allocate we return a nullptr; the wasm side must check this
 // and propagate it as an error.
@@ -974,14 +974,14 @@ bool Instance::initElems(uint32_t tableIndex, const ElemSegment& seg,
 /* static */ void* Instance::structNew(Instance* instance, void* structDescr) {
   MOZ_ASSERT(SASigStructNew.failureMode == FailureMode::FailOnNullPtr);
   JSContext* cx = TlsContext.get();
-  Rooted<TypeDescr*> typeDescr(cx, (TypeDescr*)structDescr);
-  MOZ_ASSERT(typeDescr);
-  return TypedObject::createZeroed(cx, typeDescr);
+  Rooted<RttValue*> rttValue(cx, (RttValue*)structDescr);
+  MOZ_ASSERT(rttValue);
+  return TypedObject::createZeroed(cx, rttValue);
 }
 
 static const StructType* GetDescrStructType(JSContext* cx,
-                                            HandleTypeDescr typeDescr) {
-  const TypeDef& typeDef = typeDescr->getType(cx);
+                                            HandleRttValue rttValue) {
+  const TypeDef& typeDef = rttValue->getType(cx);
   return typeDef.isStructType() ? &typeDef.structType() : nullptr;
 }
 
@@ -993,7 +993,7 @@ static const StructType* GetDescrStructType(JSContext* cx,
   JSContext* cx = TlsContext.get();
 
   Rooted<TypedObject*> obj(cx);
-  Rooted<TypeDescr*> typeDescr(cx);
+  Rooted<RttValue*> rttValue(cx);
 
   if (maybeNullPtr == nullptr) {
     return maybeNullPtr;
@@ -1001,14 +1001,14 @@ static const StructType* GetDescrStructType(JSContext* cx,
 
   void* nonnullPtr = maybeNullPtr;
   obj = static_cast<TypedObject*>(nonnullPtr);
-  typeDescr = &obj->typeDescr();
+  rttValue = &obj->rttValue();
 
-  const StructType* inputStructType = GetDescrStructType(cx, typeDescr);
+  const StructType* inputStructType = GetDescrStructType(cx, rttValue);
   if (inputStructType == nullptr) {
     return nullptr;
   }
-  Rooted<TypeDescr*> outputTypeDescr(cx, (TypeDescr*)outputStructDescr);
-  const StructType* outputStructType = GetDescrStructType(cx, outputTypeDescr);
+  Rooted<RttValue*> outputRttValue(cx, (RttValue*)outputStructDescr);
+  const StructType* outputStructType = GetDescrStructType(cx, outputRttValue);
   MOZ_ASSERT(outputStructType);
 
   // Now we know that the object was created by the instance, and we know its
@@ -1328,13 +1328,13 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
         MOZ_CRASH("Should not have seen any struct types");
 #else
         uint32_t globalTypeIndex = baseIndex + typeIndex;
-        Rooted<TypeDescr*> typeDescr(
-            cx, TypeDescr::createFromHandle(cx, TypeHandle(globalTypeIndex)));
+        Rooted<RttValue*> rttValue(
+            cx, RttValue::createFromHandle(cx, TypeHandle(globalTypeIndex)));
 
-        if (!typeDescr) {
+        if (!rttValue) {
           return false;
         }
-        *((GCPtrObject*)addressOfTypeId(typeDef.id)) = typeDescr;
+        *((GCPtrObject*)addressOfTypeId(typeDef.id)) = rttValue;
         hasGcTypes_ = true;
 #endif
       }
@@ -1495,7 +1495,7 @@ void Instance::tracePrivate(JSTracer* trc) {
         continue;
       }
       TraceNullableEdge(trc, ((GCPtrObject*)addressOfTypeId(typeDef.id)),
-                        "wasm typedescr");
+                        "wasm rtt value");
     }
   }
 #endif

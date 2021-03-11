@@ -2523,18 +2523,18 @@ static AllocKinds ForegroundUpdateKinds(AllocKinds kinds) {
   return result;
 }
 
-void GCRuntime::updateTypeDescrObjects(MovingTracer* trc, Zone* zone) {
+void GCRuntime::updateRttValueObjects(MovingTracer* trc, Zone* zone) {
   // We need to update each type descriptor object and any objects stored in
   // its reserved slots, since some of these contain array objects that also
   // need to be updated. Do not update any non-reserved slots, since they might
   // point back to unprocessed descriptor objects.
 
-  zone->typeDescrObjects().sweep(nullptr);
+  zone->rttValueObjects().sweep(nullptr);
 
-  for (auto r = zone->typeDescrObjects().all(); !r.empty(); r.popFront()) {
-    TypeDescr* obj = &MaybeForwardedObjectAs<TypeDescr>(r.front());
+  for (auto r = zone->rttValueObjects().all(); !r.empty(); r.popFront()) {
+    RttValue* obj = &MaybeForwardedObjectAs<RttValue>(r.front());
     UpdateCellPointers(trc, obj);
-    for (size_t i = 0; i < TypeDescr::SlotCount; i++) {
+    for (size_t i = 0; i < RttValue::SlotCount; i++) {
       Value value = obj->getSlot(i);
       if (value.isObject()) {
         UpdateCellPointers(trc, &value.toObject());
@@ -2622,9 +2622,9 @@ static constexpr AllocKinds UpdatePhaseThree{AllocKind::FUNCTION,
 void GCRuntime::updateAllCellPointers(MovingTracer* trc, Zone* zone) {
   updateCellPointers(zone, UpdatePhaseOne);
 
-  // UpdatePhaseTwo: Update TypeDescrs before all other objects as typed
+  // UpdatePhaseTwo: Update RttValues before all other objects as typed
   // objects access these objects when we trace them.
-  updateTypeDescrObjects(trc, zone);
+  updateRttValueObjects(trc, zone);
 
   updateCellPointers(zone, UpdatePhaseThree);
 }
@@ -3754,7 +3754,7 @@ void GCRuntime::sweepZones(JSFreeOp* fop, bool destroyingRuntime) {
         zone->arenas.checkEmptyFreeLists();
         zone->sweepCompartments(fop, false, destroyingRuntime);
         MOZ_ASSERT(zone->compartments().empty());
-        MOZ_ASSERT(zone->typeDescrObjects().empty());
+        MOZ_ASSERT(zone->rttValueObjects().empty());
         zone->destroy(fop);
         continue;
       }
