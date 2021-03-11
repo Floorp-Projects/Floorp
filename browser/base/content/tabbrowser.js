@@ -7099,8 +7099,14 @@ var TabContextMenu = {
   },
 
   updateShareURLMenuItem() {
-    // We don't show a "share URL" in Linux, so bail.
-    if (!gProton || AppConstants.platform == "linux") {
+    // We only support "share URL" on macOS and on Windows 10:
+    if (
+      !gProton ||
+      !(
+        AppConstants.platform == "macosx" ||
+        AppConstants.isPlatformAndVersionAtLeast("win", "6.4")
+      )
+    ) {
       return;
     }
 
