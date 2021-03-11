@@ -46,11 +46,6 @@
 
 #include "nsWrapperCacheInlines.h"
 
-// XXX(Bug 1674080) Remove this and let Codegen.py generate it instead when
-// needed.
-#include "mozilla/BasePrincipal.h"
-#include "nsJSPrincipals.h"
-
 class nsGlobalWindowInner;
 class nsGlobalWindowOuter;
 class nsIInterfaceRequestor;
