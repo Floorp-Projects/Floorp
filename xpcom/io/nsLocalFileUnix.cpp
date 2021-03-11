@@ -28,6 +28,10 @@
 #include <ctype.h>
 #include <locale.h>
 
+#if defined(XP_MACOSX)
+#  include <sys/xattr.h>
+#endif
+
 #if defined(HAVE_SYS_QUOTA_H) && defined(HAVE_LINUX_QUOTA_H)
 #  define USE_LINUX_QUOTACTL
 #  include <sys/mount.h>
@@ -908,6 +912,15 @@ nsLocalFile::CopyToNative(nsIFile* aNewParent, const nsACString& aNewName) {
       return NS_OK;
     }
 
+#if defined(XP_MACOSX)
+    bool quarantined = true;
+    if (getxattr(mPath.get(), "com.apple.quarantine", nullptr, 0, 0, 0) == -1) {
+      if (errno == ENOATTR) {
+        quarantined = false;
+      }
+    }
+#endif
+
     PRFileDesc* oldFD;
     rv = OpenNSPRFileDesc(PR_RDONLY, myPerms, &oldFD);
     if (NS_FAILED(rv)) {
@@ -987,6 +1000,13 @@ nsLocalFile::CopyToNative(nsIFile* aNewParent, const nsACString& aNewName) {
               errno);
 #endif
     }
+#if defined(XP_MACOSX)
+    else if (!quarantined) {
+      // If the original file was not in quarantine, lift the quarantine that
+      // file creation added because of LSFileQuarantineEnabled.
+      removexattr(newPathName.get(), "com.apple.quarantine", 0);
+    }
+#endif  // defined(XP_MACOSX)
 
     if (PR_Close(oldFD) < 0) {
       saved_read_close_error = NSRESULT_FOR_ERRNO();
