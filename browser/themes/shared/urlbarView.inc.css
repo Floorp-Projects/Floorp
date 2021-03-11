@@ -32,8 +32,8 @@
   --urlbarView-item-inline-padding: calc(var(--urlbar-icon-padding) / 2 + 3px);
 }
 
-:root:-moz-lwtheme[lwt-toolbar-field-focus-brighttext] {
-  --urlbar-popup-url-color: @lwtPopupBrighttextLinkColor@;
+:root[lwt-toolbar-field-focus-brighttext] {
+  --urlbar-popup-url-color: var(--lwt-popup-brighttext-url-color);
   --urlbar-popup-action-color: #30e60b;
 
   /* Colors copied from in-content button styling */
@@ -48,16 +48,6 @@
   --urlbarView-item-inline-padding: var(--urlbar-icon-padding);
 }
 
-@media not (prefers-contrast) {
-  :root {
-    --autocomplete-popup-highlight-background: #e0e0e6;
-    --autocomplete-popup-highlight-color: black;
-    /* TODO: Bug 1692046: Add override for --autocomplete-popup-highlight-background
-    and --autocomplete-popup-highlight-color in
-    :root[lwt-default-theme-in-dark-mode]. */
-  }
-}
-
 /* Fallback colours for when theme authors don't define
     popup_highlight/popup_highlight_text. */
 :root:-moz-lwtheme {
@@ -66,6 +56,10 @@
 }
 :root[lwt-toolbar-field-brighttext] {
   --autocomplete-popup-highlight-background: rgb(0, 99, 225);
+}
+
+:root[lwt-toolbar-field-focus-brighttext] {
+  --urlbar-popup-action-color: #bfbfc9;
 }
 } /*** END proton ***/
 
@@ -724,8 +718,16 @@
 #PopupSearchAutoComplete {
   background: var(--autocomplete-popup-background);
   color: var(--autocomplete-popup-color);
-  border-color: var(--arrowpanel-border-color);
+  border: 1px solid var(--arrowpanel-border-color);
+  /* Remove the top border since the panel is flush with the input. */
+  border-top-width: 0;
 }
+
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+#PopupSearchAutoComplete {
+  border-width: 0;
+}
+} /*** END !proton ***/
 
 #PopupSearchAutoComplete .autocomplete-richlistitem[selected] {
   background: var(--autocomplete-popup-highlight-background);

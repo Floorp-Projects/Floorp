@@ -6,7 +6,6 @@
 %include addons/extension-controlled.inc.css
 
 %filter substitution
-%define lwtPopupBrighttextLinkColor #74c0ff
 %define themeTransition background-color 0.1s cubic-bezier(.17,.67,.83,.67)
 %define urlbarBreakoutExtend 2px
 
@@ -29,6 +28,8 @@
 
   --urlbar-min-height: 32px;
   --urlbar-icon-padding: 6px; /* (32px - 2px border - 2px padding - 16px icon) / 2 */
+
+  --lwt-popup-brighttext-url-color: #74c0ff;
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
@@ -80,6 +81,7 @@
 
 :root[lwt-toolbar-field-brighttext] {
   --urlbar-box-unfocused-bg-overlay: var(--urlbar-box-bg-overlay);
+  --lwt-popup-brighttext-url-color: #00ddff;
 }
 @media (prefers-contrast) {
   :root {
@@ -107,7 +109,7 @@
 /* Increase contrast of UI links on dark themes */
 
 :root[lwt-popup-brighttext] panel .text-link {
-  color: @lwtPopupBrighttextLinkColor@;
+  color: var(--lwt-popup-brighttext-url-color);
 }
 
 #PersonalToolbar:-moz-lwtheme .text-link,
