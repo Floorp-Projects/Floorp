@@ -80,6 +80,8 @@ extern const SymbolicAddressSignature SASigExceptionNew;
 extern const SymbolicAddressSignature SASigThrowException;
 extern const SymbolicAddressSignature SASigGetLocalExceptionIndex;
 #endif
+extern const SymbolicAddressSignature SASigRefTest;
+extern const SymbolicAddressSignature SASigRttSub;
 
 // A SymbolicAddress that NeedsBuiltinThunk() will call through a thunk to the
 // C++ function. This will be true for all normal calls from normal wasm

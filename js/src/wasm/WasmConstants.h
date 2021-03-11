@@ -136,6 +136,8 @@ enum class Trap {
   IndirectCallBadSig,
   // Dereference null pointer in operation on (Ref T)
   NullPointerDereference,
+  // Failed to cast a (Ref T) in a ref.cast instruction
+  BadCast,
 
   // The internal stack space was exhausted. For compatibility, this throws
   // the same over-recursed error as JS.
@@ -441,6 +443,12 @@ enum class GcOp {
 
   // Rtt operations
   RttCanon = 0x30,
+  RttSub = 0x31,
+
+  // Ref operations
+  RefTest = 0x40,
+  RefCast = 0x41,
+  BrOnCast = 0x42,
 
   Limit
 };

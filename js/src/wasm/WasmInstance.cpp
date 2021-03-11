@@ -1080,6 +1080,35 @@ static const StructType* GetDescrStructType(JSContext* cx,
 }
 #endif
 
+/* static */ int32_t Instance::refTest(Instance* instance, void* refPtr,
+                                       void* rttPtr) {
+  MOZ_ASSERT(SASigRefTest.failureMode == FailureMode::Infallible);
+
+  if (!refPtr) {
+    return 0;
+  }
+
+  JSContext* cx = TlsContext.get();
+
+  ASSERT_ANYREF_IS_JSOBJECT;
+  RootedTypedObject ref(
+      cx, (TypedObject*)AnyRef::fromCompiledCode(refPtr).asJSObject());
+  RootedRttValue rtt(
+      cx, &AnyRef::fromCompiledCode(rttPtr).asJSObject()->as<RttValue>());
+  return int32_t(ref->isRuntimeSubtype(rtt));
+}
+
+/* static */ void* Instance::rttSub(Instance* instance, void* rttPtr) {
+  MOZ_ASSERT(SASigRttSub.failureMode == FailureMode::FailOnNullPtr);
+  JSContext* cx = TlsContext.get();
+
+  ASSERT_ANYREF_IS_JSOBJECT;
+  RootedRttValue parentRtt(
+      cx, &AnyRef::fromCompiledCode(rttPtr).asJSObject()->as<RttValue>());
+  RootedRttValue subRtt(cx, RttValue::createFromParent(cx, parentRtt));
+  return AnyRef::fromJSObject(subRtt.get()).forCompiledCode();
+}
+
 // Note, dst must point into nonmoveable storage that is not in the nursery,
 // this matters for the write barriers.  Furthermore, for pointer types the
 // current value of *dst must be null so that only a post-barrier is required.
