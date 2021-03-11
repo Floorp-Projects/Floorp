@@ -2123,8 +2123,6 @@ class StructType {
   }
   [[nodiscard]] bool computeLayout();
 
-  bool hasPrefix(const StructType& other) const;
-
   WASM_DECLARE_SERIALIZABLE(StructType)
 };
 
@@ -2834,6 +2832,72 @@ typedef Vector<TypeDefWithId, 0, SystemAllocPolicy> TypeDefWithIdVector;
 typedef Vector<const TypeDefWithId*, 0, SystemAllocPolicy>
     TypeDefWithIdPtrVector;
 
+// A type cache maintains a cache of equivalence and subtype relations between
+// wasm types. This is required for the computation of equivalence and subtyping
+// on recursive types.
+//
+// This class is not thread-safe and so must exist separately from TypeContext,
+// which may be shared between multiple threads.
+
+class TypeCache {
+  using TypeIndex = uint32_t;
+  using TypePair = uint64_t;
+  using TypeSet = HashSet<TypePair, DefaultHasher<TypePair>, SystemAllocPolicy>;
+
+  // Generates a hash key for the ordered pair (a, b).
+  static constexpr TypePair makeOrderedPair(TypeIndex a, TypeIndex b) {
+    return (TypePair(a) << 32) | TypePair(b);
+  }
+
+  // Generates a hash key for the unordered pair (a, b).
+  static constexpr TypePair makeUnorderedPair(TypeIndex a, TypeIndex b) {
+    if (a < b) {
+      return (TypePair(a) << 32) | TypePair(b);
+    }
+    return (TypePair(b) << 32) | TypePair(a);
+  }
+
+  TypeSet equivalence_;
+  TypeSet subtype_;
+
+ public:
+  TypeCache() {}
+
+  // Mark `a` as equivalent to `b` in the equivalence cache.
+  [[nodiscard]] bool markEquivalent(TypeIndex a, TypeIndex b) {
+    return equivalence_.put(makeUnorderedPair(a, b));
+  }
+  // Unmark `a` as equivalent to `b` in the equivalence cache
+  void unmarkEquivalent(TypeIndex a, TypeIndex b) {
+    equivalence_.remove(makeUnorderedPair(a, b));
+  }
+
+  // Check if `a` is equivalent to `b` in the equivalence cache
+  bool isEquivalent(TypeIndex a, TypeIndex b) {
+    return equivalence_.has(makeUnorderedPair(a, b));
+  }
+
+  // Mark `a` as a subtype of `b` in the subtype cache
+  [[nodiscard]] bool markSubtypeOf(TypeIndex a, TypeIndex b) {
+    return subtype_.put(makeOrderedPair(a, b));
+  }
+  // Unmark `a` as a subtype of `b` in the subtype cache
+  void unmarkSubtypeOf(TypeIndex a, TypeIndex b) {
+    subtype_.remove(makeOrderedPair(a, b));
+  }
+  // Check if `a` is a subtype of `b` in the subtype cache
+  bool isSubtypeOf(TypeIndex a, TypeIndex b) {
+    return subtype_.has(makeOrderedPair(a, b));
+  }
+};
+
+// The result of an equivalence or subtyping check between types.
+enum class TypeResult {
+  True,
+  False,
+  OOM,
+};
+
 // A type context maintains an index space for TypeDef's that can be used to
 // give ValType's meaning. It is used during compilation for modules, and
 // during runtime for all instances.
@@ -2845,6 +2909,10 @@ class TypeContext {
  public:
   TypeContext(const FeatureArgs& features, TypeDefVector&& types)
       : features_(features), types_(std::move(types)) {}
+
+  size_t sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
+    return types_.sizeOfExcludingThis(mallocSizeOf);
+  }
 
   // Disallow copy, allow move initialization
   TypeContext(const TypeContext&) = delete;
@@ -2929,84 +2997,89 @@ class TypeContext {
     return arrayType(t.typeIndex());
   }
 
+  // Type equivalence
+
   template <class T>
-  bool isSubtypeOf(T one, T two) const {
-    // Anything's a subtype of itself.
+  TypeResult isEquivalent(T one, T two, TypeCache* cache) const {
+    // Anything's equal to itself.
     if (one == two) {
-      return true;
+      return TypeResult::True;
     }
 
-    // A rtt may be a subtype of another rtt
-    if (one.isRtt() && two.isRtt() && one.typeIndex() == two.typeIndex()) {
-      return true;
+    // A reference may be equal to another reference
+    if (one.isReference() && two.isReference()) {
+      return isRefEquivalent(one.refType(), two.refType(), cache);
+    }
+
+#ifdef ENABLE_WASM_GC
+    // An rtt may be a equal to another rtt
+    if (one.isRtt() && two.isRtt()) {
+      return isTypeIndexEquivalent(one.typeIndex(), two.typeIndex(), cache);
+    }
+#endif
+
+    return TypeResult::False;
+  }
+
+  TypeResult isRefEquivalent(RefType one, RefType two, TypeCache* cache) const;
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+  TypeResult isTypeIndexEquivalent(uint32_t one, uint32_t two,
+                                   TypeCache* cache) const;
+#endif
+#ifdef ENABLE_WASM_GC
+  TypeResult isStructEquivalent(uint32_t oneIndex, uint32_t twoIndex,
+                                TypeCache* cache) const;
+  TypeResult isStructFieldEquivalent(const StructField one,
+                                     const StructField two,
+                                     TypeCache* cache) const;
+  TypeResult isArrayEquivalent(uint32_t oneIndex, uint32_t twoIndex,
+                               TypeCache* cache) const;
+  TypeResult isArrayElementEquivalent(const ArrayType& one,
+                                      const ArrayType& two,
+                                      TypeCache* cache) const;
+#endif
+
+  // Subtyping
+
+  template <class T>
+  TypeResult isSubtypeOf(T one, T two, TypeCache* cache) const {
+    // Anything's a subtype of itself.
+    if (one == two) {
+      return TypeResult::True;
     }
 
     // A reference may be a subtype of another reference
-    return one.isReference() && two.isReference() &&
-           isRefSubtypeOf(one.refType(), two.refType());
-  }
-
-  bool isRefSubtypeOf(RefType one, RefType two) const {
-    // Anything's a subtype of itself.
-    if (one == two) {
-      return true;
+    if (one.isReference() && two.isReference()) {
+      return isRefSubtypeOf(one.refType(), two.refType(), cache);
     }
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
-    if (features_.functionReferences) {
-      // A subtype must have the same nullability as the supertype or the
-      // supertype must be nullable.
-      if (!(one.isNullable() == two.isNullable() || two.isNullable())) {
-        return false;
-      }
 
-      // Non type-index reftypes are subtypes if they are equal
-      if (!one.isTypeIndex() && !two.isTypeIndex() &&
-          one.kind() == two.kind()) {
-        return true;
-      }
-
-#  ifdef ENABLE_WASM_GC
-      // gc can only be enabled if function-references is enabled
-      if (features_.gcTypes) {
-        // Structs are subtypes of EqRef.
-        if (isStructType(one) && two.isEq()) {
-          return true;
-        }
-        // Arrays are subtypes of EqRef.
-        if (isArrayType(one) && two.isEq()) {
-          return true;
-        }
-        // Struct One is a subtype of struct Two if Two is a prefix of One.
-        if (isStructType(one) && isStructType(two)) {
-          return structType(one).hasPrefix(structType(two));
-        }
-        // Array One may be a subtype of array Two
-        if (isArrayType(one) && isArrayType(two)) {
-          return isArraySubtypeOf(arrayType(one), arrayType(two));
-        }
-      }
-#  endif
-      return false;
+    // An rtt may be a subtype of another rtt
+#ifdef ENABLE_WASM_GC
+    if (one.isRtt() && two.isRtt()) {
+      return isTypeIndexEquivalent(one.typeIndex(), two.typeIndex(), cache);
     }
 #endif
-    return false;
+
+    return TypeResult::False;
   }
+
+  TypeResult isRefSubtypeOf(RefType one, RefType two, TypeCache* cache) const;
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+  TypeResult isTypeIndexSubtypeOf(uint32_t one, uint32_t two,
+                                  TypeCache* cache) const;
+#endif
 
 #ifdef ENABLE_WASM_GC
-  bool isArraySubtypeOf(const ArrayType& one, const ArrayType& two) const {
-    // (array (mut X)) </: (array X)
-    if (one.isMutable_ && !two.isMutable_) {
-      return false;
-    }
-
-    // TODO: implement proper subtyping of element type
-    return one.elementType_ == two.elementType_;
-  }
+  TypeResult isStructSubtypeOf(uint32_t oneIndex, uint32_t twoIndex,
+                               TypeCache* cache) const;
+  TypeResult isStructFieldSubtypeOf(const StructField one,
+                                    const StructField two,
+                                    TypeCache* cache) const;
+  TypeResult isArraySubtypeOf(uint32_t oneIndex, uint32_t twoIndex,
+                              TypeCache* cache) const;
+  TypeResult isArrayElementSubtypeOf(const ArrayType& one, const ArrayType& two,
+                                     TypeCache* cache) const;
 #endif
-
-  size_t sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const {
-    return types_.sizeOfExcludingThis(mallocSizeOf);
-  }
 };
 
 class TypeHandle {
