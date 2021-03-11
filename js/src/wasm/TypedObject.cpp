@@ -110,6 +110,7 @@ RttValue* RttValue::createFromHandle(JSContext* cx, TypeHandle handle) {
   rtt->initReservedSlot(RttValue::Size, Int32Value(structType.size_));
   rtt->initReservedSlot(RttValue::Proto, ObjectValue(*proto));
   rtt->initReservedSlot(RttValue::TraceList, UndefinedValue());
+  rtt->initReservedSlot(RttValue::Parent, NullValue());
 
   if (!CreateTraceList(cx, rtt)) {
     return nullptr;
@@ -120,6 +121,16 @@ RttValue* RttValue::createFromHandle(JSContext* cx, TypeHandle handle) {
     return nullptr;
   }
 
+  return rtt;
+}
+
+RttValue* RttValue::createFromParent(JSContext* cx, HandleRttValue parent) {
+  wasm::TypeHandle parentHandle = parent->handle();
+  Rooted<RttValue*> rtt(cx, createFromHandle(cx, parentHandle));
+  if (!rtt) {
+    return nullptr;
+  }
+  rtt->setReservedSlot(RttValue::Parent, ObjectValue(*parent.get()));
   return rtt;
 }
 
@@ -302,8 +313,7 @@ void OutlineTypedObject::obj_trace(JSTracer* trc, JSObject* object) {
 }
 
 const TypeDef& RttValue::getType(JSContext* cx) const {
-  TypeHandle handle(uint32_t(getReservedSlot(Slot::Handle).toInt32()));
-  return handle.get(cx->wasm().typeContext.get());
+  return handle().get(cx->wasm().typeContext.get());
 }
 
 bool RttValue::lookupProperty(JSContext* cx, jsid id, uint32_t* offset,
@@ -596,6 +606,17 @@ DEFINE_TYPEDOBJ_CLASS(InlineTypedObject, InlineTypedObject::obj_trace,
   js::gc::gcprobes::CreateObject(tobj);
 
   return tobj;
+}
+
+bool TypedObject::isRuntimeSubtype(HandleRttValue rtt) const {
+  RttValue* current = &rttValue();
+  while (current != nullptr) {
+    if (current == rtt.get()) {
+      return true;
+    }
+    current = current->parent();
+  }
+  return false;
 }
 
 ///////////////////////////////////////////////////////////////////////////

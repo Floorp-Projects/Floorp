@@ -32,30 +32,26 @@ class RttValue : public NativeObject {
     Size = 1,       // Size of type in bytes
     Proto = 2,      // Prototype for instances, if any
     TraceList = 3,  // List of references for use in tracing
+    Parent = 4,     // Parent rtt for runtime casting
     // Maximum number of slots
-    SlotCount = 4,
+    SlotCount = 5,
   };
 
   static RttValue* createFromHandle(JSContext* cx, wasm::TypeHandle handle);
+  static RttValue* createFromParent(JSContext* cx,
+                                    js::Handle<RttValue*> parent);
+
+  wasm::TypeHandle handle() const {
+    return wasm::TypeHandle(uint32_t(getReservedSlot(Slot::Handle).toInt32()));
+  }
+
+  size_t size() const { return getReservedSlot(Slot::Size).toInt32(); }
 
   TypedProto& typedProto() const {
     return getReservedSlot(Slot::Proto).toObject().as<TypedProto>();
   }
 
-  size_t size() const { return getReservedSlot(Slot::Size).toInt32(); }
-
-  const wasm::TypeDef& getType(JSContext* cx) const;
-
-  [[nodiscard]] bool lookupProperty(JSContext* cx, jsid id, uint32_t* offset,
-                                    wasm::ValType* type);
-  [[nodiscard]] bool hasProperty(JSContext* cx, jsid id) {
-    uint32_t offset;
-    wasm::ValType type;
-    return lookupProperty(cx, id, &offset, &type);
-  }
-  uint32_t propertyCount(JSContext* cx);
-
-  // Type descriptors may contain a list of their references for use during
+  // RttValues may contain a list of their references for use during
   // scanning. Typed object trace hooks can use this to call an optimized
   // marking path that doesn't need to dispatch on the tracer kind for each
   // edge. This list is only specified when (a) the descriptor is short enough
@@ -77,6 +73,21 @@ class RttValue : public NativeObject {
         getFixedSlot(Slot::TraceList).toPrivate());
   }
 
+  RttValue* parent() const {
+    return (RttValue*)getReservedSlot(Slot::Parent).toObjectOrNull();
+  }
+
+  const wasm::TypeDef& getType(JSContext* cx) const;
+
+  [[nodiscard]] bool lookupProperty(JSContext* cx, jsid id, uint32_t* offset,
+                                    wasm::ValType* type);
+  [[nodiscard]] bool hasProperty(JSContext* cx, jsid id) {
+    uint32_t offset;
+    wasm::ValType type;
+    return lookupProperty(cx, id, &offset, &type);
+  }
+  uint32_t propertyCount(JSContext* cx);
+
   void initInstance(JSContext* cx, uint8_t* mem);
   void traceInstance(JSTracer* trace, uint8_t* mem);
 
@@ -84,6 +95,7 @@ class RttValue : public NativeObject {
 };
 
 using HandleRttValue = Handle<RttValue*>;
+using RootedRttValue = Rooted<RttValue*>;
 
 /* Base type for typed objects. */
 class TypedObject : public JSObject {
@@ -141,6 +153,8 @@ class TypedObject : public JSObject {
     return *rttValue_;
   }
 
+  MOZ_MUST_USE bool isRuntimeSubtype(js::Handle<RttValue*> rtt) const;
+
   static JS::Result<TypedObject*, JS::OOM> create(JSContext* cx,
                                                   js::gc::AllocKind kind,
                                                   js::gc::InitialHeap heap,
@@ -171,6 +185,7 @@ class TypedObject : public JSObject {
 };
 
 using HandleTypedObject = Handle<TypedObject*>;
+using RootedTypedObject = Rooted<TypedObject*>;
 
 class OutlineTypedObject : public TypedObject {
   // The object which owns the data this object points to. Because this
