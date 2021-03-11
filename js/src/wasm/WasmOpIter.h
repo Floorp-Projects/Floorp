@@ -180,7 +180,6 @@ enum class OpKind {
   StructNewWithRtt,
   StructGet,
   StructSet,
-  StructNarrow,
   RttCanon,
   RttSub,
   RefTest,
@@ -554,8 +553,6 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                    Value* ptr);
   [[nodiscard]] bool readStructSet(uint32_t* typeIndex, uint32_t* fieldIndex,
                                    Value* ptr, Value* val);
-  [[nodiscard]] bool readStructNarrow(ValType* inputType, ValType* outputType,
-                                      Value* ptr);
   [[nodiscard]] bool readRttCanon(ValType* rttType);
   [[nodiscard]] bool readRttSub(Value* parentRtt);
   [[nodiscard]] bool readRefTest(Value* rtt, uint32_t* rttDepth, Value* ref);
@@ -2717,45 +2714,6 @@ inline bool OpIter<Policy>::readStructSet(uint32_t* typeIndex,
   }
 
   return true;
-}
-
-template <typename Policy>
-inline bool OpIter<Policy>::readStructNarrow(ValType* inputType,
-                                             ValType* outputType, Value* ptr) {
-  MOZ_ASSERT(inputType != outputType);
-  MOZ_ASSERT(Classify(op_) == OpKind::StructNarrow);
-
-  if (!readReferenceType(inputType, "struct.narrow")) {
-    return false;
-  }
-
-  if (!readReferenceType(outputType, "struct.narrow")) {
-    return false;
-  }
-
-  if (env_.types.isStructType(inputType->refType())) {
-    if (!env_.types.isStructType(outputType->refType())) {
-      return fail("invalid type combination in struct.narrow");
-    }
-
-    const StructType& inputStruct = env_.types.structType(inputType->refType());
-    const StructType& outputStruct =
-        env_.types.structType(outputType->refType());
-
-    if (!outputStruct.hasPrefix(inputStruct)) {
-      return fail("invalid narrowing operation");
-    }
-  } else if (outputType->isEqRef()) {
-    if (!inputType->isEqRef()) {
-      return fail("invalid type combination in struct.narrow");
-    }
-  }
-
-  if (!popWithType(*inputType, ptr)) {
-    return false;
-  }
-
-  return push(*outputType);
 }
 
 template <typename Policy>

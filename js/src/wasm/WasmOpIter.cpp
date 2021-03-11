@@ -305,8 +305,6 @@ OpKind wasm::Classify(OpBytes op) {
           WASM_GC_OP(OpKind::StructGet);
         case GcOp::StructSet:
           WASM_GC_OP(OpKind::StructSet);
-        case GcOp::StructNarrow:
-          WASM_GC_OP(OpKind::StructNarrow);
         case GcOp::RttCanon:
           WASM_GC_OP(OpKind::RttCanon);
         case GcOp::RttSub:

@@ -4940,7 +4940,6 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(GcOp::StructNewWithRtt):
           case uint32_t(GcOp::StructGet):
           case uint32_t(GcOp::StructSet):
-          case uint32_t(GcOp::StructNarrow):
             // Not yet supported
             return f.iter().unrecognizedOpcode(&op);
           default:

@@ -107,13 +107,19 @@
           (type $p (struct (field i64)))
           (type $q (struct (field i32) (field i32)))
           (func $f (param eqref) (result i32)
-           (ref.is_null (struct.narrow eqref (ref null $q) (local.get 0))))
+           local.get 0
+           rtt.canon $q
+           ref.test eq $q
+          )
           (func $g (param eqref) (result i32)
-           (ref.is_null (struct.narrow eqref (ref null $p) (local.get 0))))
+           local.get 0
+           rtt.canon $p
+           ref.test eq $p
+          )
           (func (export "t1") (result i32)
            (call $f (struct.new_with_rtt $p (i64.const 0) (rtt.canon $p))))
           (func (export "t2") (result i32)
            (call $g (struct.new_with_rtt $q (i32.const 0) (i32.const 0) (rtt.canon $q)))))`).exports;
-    assertEq(ins.t1(), 1);
-    assertEq(ins.t2(), 1);
+    assertEq(ins.t1(), 0);
+    assertEq(ins.t2(), 0);
 }

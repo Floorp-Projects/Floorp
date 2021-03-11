@@ -985,42 +985,6 @@ static const StructType* GetDescrStructType(JSContext* cx,
   return typeDef.isStructType() ? &typeDef.structType() : nullptr;
 }
 
-/* static */ void* Instance::structNarrow(Instance* instance,
-                                          void* outputStructDescr,
-                                          void* maybeNullPtr) {
-  MOZ_ASSERT(SASigStructNarrow.failureMode == FailureMode::Infallible);
-
-  JSContext* cx = TlsContext.get();
-
-  Rooted<TypedObject*> obj(cx);
-  Rooted<RttValue*> rttValue(cx);
-
-  if (maybeNullPtr == nullptr) {
-    return maybeNullPtr;
-  }
-
-  void* nonnullPtr = maybeNullPtr;
-  obj = static_cast<TypedObject*>(nonnullPtr);
-  rttValue = &obj->rttValue();
-
-  const StructType* inputStructType = GetDescrStructType(cx, rttValue);
-  if (inputStructType == nullptr) {
-    return nullptr;
-  }
-  Rooted<RttValue*> outputRttValue(cx, (RttValue*)outputStructDescr);
-  const StructType* outputStructType = GetDescrStructType(cx, outputRttValue);
-  MOZ_ASSERT(outputStructType);
-
-  // Now we know that the object was created by the instance, and we know its
-  // concrete type.  We need to check that its type is an extension of the
-  // type of outputTypeIndex.
-
-  if (!inputStructType->hasPrefix(*outputStructType)) {
-    return nullptr;
-  }
-  return nonnullPtr;
-}
-
 #ifdef ENABLE_WASM_EXCEPTIONS
 /* static */ void* Instance::exceptionNew(Instance* instance, uint32_t exnIndex,
                                           uint32_t nbytes) {

@@ -868,10 +868,6 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(iter.readStructSet(&unusedUint1, &unusedUint2, &nothing,
                                      &nothing));
           }
-          case uint32_t(GcOp::StructNarrow): {
-            ValType unusedTy, unusedTy2;
-            CHECK(iter.readStructNarrow(&unusedTy, &unusedTy2, &nothing));
-          }
           case uint16_t(GcOp::RttCanon): {
             ValType unusedTy;
             CHECK(iter.readRttCanon(&unusedTy));

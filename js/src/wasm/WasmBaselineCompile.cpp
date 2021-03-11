@@ -8335,7 +8335,6 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitStructNewWithRtt();
   [[nodiscard]] bool emitStructGet();
   [[nodiscard]] bool emitStructSet();
-  [[nodiscard]] bool emitStructNarrow();
   [[nodiscard]] bool emitRttCanon();
   [[nodiscard]] bool emitRttSub();
   [[nodiscard]] bool emitRefTest();
@@ -13363,47 +13362,6 @@ bool BaseCompiler::emitStructSet() {
   return true;
 }
 
-bool BaseCompiler::emitStructNarrow() {
-  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
-
-  ValType inputType, outputType;
-  Nothing nothing;
-  if (!iter_.readStructNarrow(&inputType, &outputType, &nothing)) {
-    return false;
-  }
-
-  if (deadCode_) {
-    return true;
-  }
-
-  // struct.narrow validation ensures that these hold.
-
-  MOZ_ASSERT(inputType.isEqRef() ||
-             moduleEnv_.types.isStructType(inputType.refType()));
-  MOZ_ASSERT(outputType.isEqRef() ||
-             moduleEnv_.types.isStructType(outputType.refType()));
-  MOZ_ASSERT_IF(outputType.isEqRef(), inputType.isEqRef());
-
-  // EqRef -> EqRef is a no-op, just leave the value on the stack.
-
-  if (inputType.isEqRef() && outputType.isEqRef()) {
-    return true;
-  }
-
-  RegPtr rp = popRef();
-
-  // Dynamic downcast eqref|(optref T) -> (optref U), leaves rp or null
-  const TypeIdDesc& outputStructTypeId =
-      moduleEnv_.typeIds[outputType.refType().typeIndex()];
-  RegPtr rst = needRef();
-  fr.loadTlsPtr(WasmTlsReg);
-  masm.loadWasmGlobalPtr(outputStructTypeId.globalDataOffset(), rst);
-  pushRef(rst);
-
-  pushRef(rp);
-  return emitInstanceCall(lineOrBytecode, SASigStructNarrow);
-}
-
 bool BaseCompiler::emitRttCanon() {
   ValType rttType;
   if (!iter_.readRttCanon(&rttType)) {
@@ -15671,8 +15629,6 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(emitStructGet());
           case uint32_t(GcOp::StructSet):
             CHECK_NEXT(emitStructSet());
-          case uint32_t(GcOp::StructNarrow):
-            CHECK_NEXT(emitStructNarrow());
           case uint32_t(GcOp::RttCanon):
             CHECK_NEXT(emitRttCanon());
           case uint32_t(GcOp::RttSub):
