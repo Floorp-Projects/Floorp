@@ -14,6 +14,15 @@ const { TabStateFlusher } = ChromeUtils.import(
   "resource:///modules/sessionstore/TabStateFlusher.jsm"
 );
 
+add_task(function addHomeButton() {
+  if (CustomizableUI.protonToolbarEnabled) {
+    CustomizableUI.addWidgetToArea("home-button", "nav-bar");
+    registerCleanupFunction(() =>
+      CustomizableUI.removeWidgetFromArea("home-button")
+    );
+  }
+});
+
 /**
  * Test what happens if loading a URL that should clear the
  * location bar after a parent process URL.
