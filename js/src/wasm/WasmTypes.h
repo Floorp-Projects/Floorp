@@ -685,6 +685,14 @@ class PackedType : public T {
     return PackedType(PackedTypeCode::fromBits(bits));
   }
 
+  static constexpr PackedType hostPtr() {
+#ifdef JS_64BIT
+    return PackedType::I64;
+#else
+    return PackedType::I32;
+#endif
+  }
+
   bool isValid() const {
     if (!tc_.isValid()) {
       return false;
