@@ -34,7 +34,7 @@ class FrameworkGatherer(object):
         self._yaml_path = yaml_path
         self._suite_list = {}
         self._test_list = {}
-        self._urls = {}
+        self._descriptions = {}
         self._manifest_path = ""
         self._manifest = None
         self.script_infos = {}
@@ -130,19 +130,20 @@ class RaptorGatherer(FrameworkGatherer):
         :param str manifest_path: path to the ini file
         :return list: the list of the tests
         """
+        desc_exclusion = ["here", "manifest", "manifest_relpath", "path", "relpath"]
         test_manifest = TestManifest([manifest_path], strict=False)
         test_list = test_manifest.active_tests(exists=False, disabled=False)
         subtests = {}
         for subtest in test_list:
             subtests[subtest["name"]] = subtest["manifest"]
-            self._urls.setdefault(suite_name, []).append(
-                {
-                    "test_name": subtest["name"],
-                    "url": subtest["test_url"],
-                }
-            )
 
-        self._urls[suite_name].sort(key=lambda item: item["test_name"])
+            description = {}
+            for key, value in subtest.items():
+                if key not in desc_exclusion:
+                    description[key] = value
+            self._descriptions.setdefault(suite_name, []).append(description)
+
+        self._descriptions[suite_name].sort(key=lambda item: item["name"])
 
         return subtests
 
@@ -174,19 +175,45 @@ class RaptorGatherer(FrameworkGatherer):
         return self._test_list
 
     def build_test_description(self, title, test_description="", suite_name=""):
-        matcher = set()
-        for suite, val in self._urls.items():
+        matcher = []
+        browsers = [
+            "firefox",
+            "chrome",
+            "chromium",
+            "refbrow",
+            "fennec68",
+            "geckoview",
+            "fenix",
+        ]
+        test_name = [f"{title}-{browser}" for browser in browsers]
+        test_name.append(title)
+
+        for suite, val in self._descriptions.items():
             for test in val:
-                if title in test["test_name"] and suite_name == suite:
-                    matcher.add(test["url"])
-                    break
+                if test["name"] in test_name and suite_name == suite:
+                    matcher.append(test)
 
-        try:
-            url = matcher.pop()
-        except KeyError as e:
-            logger.critical("{}: no url found for test {}".format(e, title))
+        if len(matcher) == 0:
+            logger.critical("No url found for test {}".format(title))
+            raise Exception("No url found for test")
 
-        return ["* `{} ({}) <{}>`__".format(title, test_description, url)]
+        result = f".. dropdown:: {title} ({test_description})\n\n"
+
+        for idx, description in enumerate(matcher):
+            if description["name"] != title:
+                result += f"   {idx+1}. **{description['name']}**\n\n"
+
+            for key in sorted(description.keys()):
+                if key == "name":
+                    continue
+                sub_title = key.replace("_", " ")
+                if key == "test_url":
+                    result += f"   * **{sub_title}**: `<{description[key]}>`__\n"
+                else:
+                    result += f"   * **{sub_title}**: {description[key]}\n"
+            result += "\n"
+
+        return [result]
 
     def build_suite_section(self, title, content):
         return self._build_section_with_header(

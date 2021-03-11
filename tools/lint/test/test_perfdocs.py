@@ -511,10 +511,10 @@ def test_perfdocs_framework_gatherers_urls(logger, structured_logger, perfdocs_s
     # suties the urls are generated correctly for the test under
     # every suite
     for suite, suitetests in fg.get_test_list().items():
-        url = fg._urls.get(suite)
+        url = fg._descriptions.get(suite)
         assert url is not None
-        assert url[0]["test_name"] == "Example"
-        assert url[0]["url"] == "Example_url"
+        assert url[0]["name"] == "Example"
+        assert url[0]["test_url"] == "Example_url"
 
     perfdocs_tree = gn._perfdocs_tree[0]
     yaml_content = read_yaml(
