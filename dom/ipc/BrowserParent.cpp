@@ -600,12 +600,16 @@ void BrowserParent::RemoveWindowListeners() {
   }
 }
 
-void BrowserParent::DestroyInternal() {
+void BrowserParent::Deactivated() {
   UnsetTopLevelWebFocus(this);
   UnsetLastMouseRemoteTarget(this);
   PointerLockManager::ReleaseLockedRemoteTarget(this);
   PointerEventHandler::ReleasePointerCaptureRemoteTarget(this);
   PresShell::ReleaseCapturingRemoteTarget(this);
+}
+
+void BrowserParent::DestroyInternal() {
+  Deactivated();
 
   RemoveWindowListeners();
 
@@ -685,11 +689,7 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
 
   // Even though BrowserParent::Destroy calls this, we need to do it here too in
   // case of a crash.
-  BrowserParent::UnsetTopLevelWebFocus(this);
-  BrowserParent::UnsetLastMouseRemoteTarget(this);
-  PointerLockManager::ReleaseLockedRemoteTarget(this);
-  PointerEventHandler::ReleasePointerCaptureRemoteTarget(this);
-  PresShell::ReleaseCapturingRemoteTarget(this);
+  Deactivated();
 
   if (why == AbnormalShutdown) {
     // dom_reporting_header must also be enabled for the report to be sent.
