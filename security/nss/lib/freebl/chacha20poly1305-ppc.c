@@ -23,6 +23,10 @@
 
 #include "Hacl_Chacha20Poly1305_32.h"
 
+/* Forward declaration from chacha20-ppc64le.S */
+void chacha20vsx(uint32_t len, uint8_t *output, uint8_t *block, uint8_t *k,
+                 uint8_t *nonce, uint32_t ctr);
+
 static inline void
 poly1305_padded_32(uint64_t *ctx, uint32_t len, uint8_t *text)
 {
@@ -157,7 +161,7 @@ poly1305_padded_32(uint64_t *ctx, uint32_t len, uint8_t *text)
         uint8_t *last = blocks + nb * (uint32_t)16U;
         uint64_t e[5U] = { 0U };
         uint8_t tmp[16U] = { 0U };
-        memcpy(tmp, last, rem1 * sizeof(uint8_t));
+        memcpy(tmp, last, rem1 * sizeof(last[0U]));
         uint64_t u0 = load64_le(tmp);
         uint64_t lo = u0;
         uint64_t u = load64_le(tmp + (uint32_t)8U);
@@ -275,7 +279,7 @@ poly1305_padded_32(uint64_t *ctx, uint32_t len, uint8_t *text)
         acc0[4U] = o4;
     }
     uint8_t tmp[16U] = { 0U };
-    memcpy(tmp, rem, r * sizeof(uint8_t));
+    memcpy(tmp, rem, r * sizeof(rem[0U]));
     if (r > (uint32_t)0U) {
         uint64_t *pre = ctx + (uint32_t)5U;
         uint64_t *acc = ctx;
@@ -411,9 +415,7 @@ poly1305_do_32(
     uint64_t ctx[25U] = { 0U };
     uint8_t block[16U] = { 0U };
     Hacl_Poly1305_32_poly1305_init(ctx, k);
-    if (aadlen != (uint32_t)0U) {
-        poly1305_padded_32(ctx, aadlen, aad);
-    }
+    poly1305_padded_32(ctx, aadlen, aad);
     poly1305_padded_32(ctx, mlen, m);
     store64_le(block, (uint64_t)aadlen);
     store64_le(block + (uint32_t)8U, (uint64_t)mlen);
@@ -539,7 +541,7 @@ poly1305_do_32(
 }
 
 void
-Hacl_Chacha20Poly1305_32_aead_encrypt(
+Chacha20Poly1305_vsx_aead_encrypt(
     uint8_t *k,
     uint8_t *n,
     uint32_t aadlen,
@@ -549,15 +551,15 @@ Hacl_Chacha20Poly1305_32_aead_encrypt(
     uint8_t *cipher,
     uint8_t *mac)
 {
-    Hacl_Chacha20_chacha20_encrypt(mlen, cipher, m, k, n, (uint32_t)1U);
+    chacha20vsx(mlen, cipher, m, k, n, (uint32_t)1U);
     uint8_t tmp[64U] = { 0U };
-    Hacl_Chacha20_chacha20_encrypt((uint32_t)64U, tmp, tmp, k, n, (uint32_t)0U);
+    chacha20vsx((uint32_t)64U, tmp, tmp, k, n, (uint32_t)0U);
     uint8_t *key = tmp;
     poly1305_do_32(key, aadlen, aad, mlen, cipher, mac);
 }
 
 uint32_t
-Hacl_Chacha20Poly1305_32_aead_decrypt(
+Chacha20Poly1305_vsx_aead_decrypt(
     uint8_t *k,
     uint8_t *n,
     uint32_t aadlen,
@@ -569,7 +571,7 @@ Hacl_Chacha20Poly1305_32_aead_decrypt(
 {
     uint8_t computed_mac[16U] = { 0U };
     uint8_t tmp[64U] = { 0U };
-    Hacl_Chacha20_chacha20_encrypt((uint32_t)64U, tmp, tmp, k, n, (uint32_t)0U);
+    chacha20vsx((uint32_t)64U, tmp, tmp, k, n, (uint32_t)0U);
     uint8_t *key = tmp;
     poly1305_do_32(key, aadlen, aad, mlen, cipher, computed_mac);
     uint8_t res = (uint8_t)255U;
@@ -579,7 +581,7 @@ Hacl_Chacha20Poly1305_32_aead_decrypt(
     }
     uint8_t z = res;
     if (z == (uint8_t)255U) {
-        Hacl_Chacha20_chacha20_encrypt(mlen, m, cipher, k, n, (uint32_t)1U);
+        chacha20vsx(mlen, m, cipher, k, n, (uint32_t)1U);
         return (uint32_t)0U;
     }
     return (uint32_t)1U;

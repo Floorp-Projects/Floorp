@@ -340,7 +340,7 @@ Hacl_Poly1305_32_poly1305_update(uint64_t *ctx, uint32_t len, uint8_t *text)
         uint8_t *last = text + nb * (uint32_t)16U;
         uint64_t e[5U] = { 0U };
         uint8_t tmp[16U] = { 0U };
-        memcpy(tmp, last, rem * sizeof(last[0U]));
+        memcpy(tmp, last, rem * sizeof(uint8_t));
         uint64_t u0 = load64_le(tmp);
         uint64_t lo = u0;
         uint64_t u = load64_le(tmp + (uint32_t)8U);

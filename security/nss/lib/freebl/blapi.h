@@ -1043,6 +1043,26 @@ Camellia_Decrypt(CamelliaContext *cx, unsigned char *output,
 
 /******************************************/
 /*
+** ChaCha20 block cipher
+*/
+
+extern SECStatus ChaCha20_InitContext(ChaCha20Context *ctx,
+                                      const unsigned char *key,
+                                      unsigned int keyLen,
+                                      const unsigned char *nonce,
+                                      unsigned int nonceLen,
+                                      PRUint32 ctr);
+
+extern ChaCha20Context *ChaCha20_CreateContext(const unsigned char *key,
+                                               unsigned int keyLen,
+                                               const unsigned char *nonce,
+                                               unsigned int nonceLen,
+                                               PRUint32 ctr);
+
+extern void ChaCha20_DestroyContext(ChaCha20Context *ctx, PRBool freeit);
+
+/******************************************/
+/*
 ** ChaCha20+Poly1305 AEAD
 */
 

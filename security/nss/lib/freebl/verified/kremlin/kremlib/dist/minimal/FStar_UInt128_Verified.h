@@ -3,13 +3,12 @@
   Licensed under the Apache 2.0 License.
 */
 
+#ifndef __FStar_UInt128_Verified_H
+#define __FStar_UInt128_Verified_H
 #include <inttypes.h>
 #include <stdbool.h>
 #include "kremlin/internal/types.h"
 #include "kremlin/internal/target.h"
-
-#ifndef __FStar_UInt128_Verified_H
-#define __FStar_UInt128_Verified_H
 
 #include "FStar_UInt_8_16_32_64.h"
 

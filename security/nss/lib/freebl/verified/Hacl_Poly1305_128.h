@@ -21,14 +21,18 @@
  * SOFTWARE.
  */
 
+#ifndef __Hacl_Poly1305_128_H
+#define __Hacl_Poly1305_128_H
+
+#if defined(__cplusplus)
+extern "C" {
+#endif
+
 #include "libintvector.h"
 #include "kremlin/internal/types.h"
 #include "kremlin/lowstar_endianness.h"
 #include <string.h>
 #include <stdbool.h>
-
-#ifndef __Hacl_Poly1305_128_H
-#define __Hacl_Poly1305_128_H
 
 #include "Hacl_Kremlib.h"
 
@@ -61,6 +65,10 @@ Hacl_Poly1305_128_poly1305_finish(
     Lib_IntVector_Intrinsics_vec128 *ctx);
 
 void Hacl_Poly1305_128_poly1305_mac(uint8_t *tag, uint32_t len, uint8_t *text, uint8_t *key);
+
+#if defined(__cplusplus)
+}
+#endif
 
 #define __Hacl_Poly1305_128_H_DEFINED
 #endif

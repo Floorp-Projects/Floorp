@@ -29,9 +29,9 @@ Hacl_Impl_Poly1305_Field32xN_256_load_acc4(Lib_IntVector_Intrinsics_vec256 *acc,
     Lib_IntVector_Intrinsics_vec256 e[5U];
     for (uint32_t _i = 0U; _i < (uint32_t)5U; ++_i)
         e[_i] = Lib_IntVector_Intrinsics_vec256_zero;
-    Lib_IntVector_Intrinsics_vec256 lo = Lib_IntVector_Intrinsics_vec256_load_le(b);
+    Lib_IntVector_Intrinsics_vec256 lo = Lib_IntVector_Intrinsics_vec256_load64_le(b);
     Lib_IntVector_Intrinsics_vec256
-        hi = Lib_IntVector_Intrinsics_vec256_load_le(b + (uint32_t)32U);
+        hi = Lib_IntVector_Intrinsics_vec256_load64_le(b + (uint32_t)32U);
     Lib_IntVector_Intrinsics_vec256
         mask26 = Lib_IntVector_Intrinsics_vec256_load64((uint64_t)0x3ffffffU);
     Lib_IntVector_Intrinsics_vec256 m0 = Lib_IntVector_Intrinsics_vec256_interleave_low128(lo, hi);
@@ -1272,9 +1272,9 @@ Hacl_Poly1305_256_poly1305_update(
             Lib_IntVector_Intrinsics_vec256 e[5U];
             for (uint32_t _i = 0U; _i < (uint32_t)5U; ++_i)
                 e[_i] = Lib_IntVector_Intrinsics_vec256_zero;
-            Lib_IntVector_Intrinsics_vec256 lo = Lib_IntVector_Intrinsics_vec256_load_le(block);
+            Lib_IntVector_Intrinsics_vec256 lo = Lib_IntVector_Intrinsics_vec256_load64_le(block);
             Lib_IntVector_Intrinsics_vec256
-                hi = Lib_IntVector_Intrinsics_vec256_load_le(block + (uint32_t)32U);
+                hi = Lib_IntVector_Intrinsics_vec256_load64_le(block + (uint32_t)32U);
             Lib_IntVector_Intrinsics_vec256
                 mask260 = Lib_IntVector_Intrinsics_vec256_load64((uint64_t)0x3ffffffU);
             Lib_IntVector_Intrinsics_vec256
@@ -1707,7 +1707,7 @@ Hacl_Poly1305_256_poly1305_update(
         for (uint32_t _i = 0U; _i < (uint32_t)5U; ++_i)
             e[_i] = Lib_IntVector_Intrinsics_vec256_zero;
         uint8_t tmp[16U] = { 0U };
-        memcpy(tmp, last, rem * sizeof(last[0U]));
+        memcpy(tmp, last, rem * sizeof(uint8_t));
         uint64_t u0 = load64_le(tmp);
         uint64_t lo = u0;
         uint64_t u = load64_le(tmp + (uint32_t)8U);
