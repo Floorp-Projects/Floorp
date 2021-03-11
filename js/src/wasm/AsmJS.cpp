@@ -162,7 +162,7 @@ struct LitValPOD {
   }
 
   LitVal asLitVal() const {
-    switch (UnpackTypeCodeType(valType_)) {
+    switch (valType_.typeCode()) {
       case TypeCode::I32:
         return LitVal(u.u32_);
       case TypeCode::I64:
@@ -6549,6 +6549,8 @@ static bool ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global,
           MOZ_CRASH("int64");
         case ValType::V128:
           MOZ_CRASH("v128");
+        case ValType::Rtt:
+          MOZ_CRASH("rtt");
         case ValType::F32: {
           float f;
           if (!RoundFloat32(cx, v, &f)) {

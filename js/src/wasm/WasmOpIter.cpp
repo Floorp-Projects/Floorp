@@ -299,14 +299,16 @@ OpKind wasm::Classify(OpBytes op) {
         case GcOp::Limit:
           // Reject Limit for GcPrefix encoding
           break;
-        case GcOp::StructNew:
-          WASM_GC_OP(OpKind::StructNew);
+        case GcOp::StructNewWithRtt:
+          WASM_GC_OP(OpKind::StructNewWithRtt);
         case GcOp::StructGet:
           WASM_GC_OP(OpKind::StructGet);
         case GcOp::StructSet:
           WASM_GC_OP(OpKind::StructSet);
         case GcOp::StructNarrow:
           WASM_GC_OP(OpKind::StructNarrow);
+        case GcOp::RttCanon:
+          WASM_GC_OP(OpKind::RttCanon);
       }
       break;
     }

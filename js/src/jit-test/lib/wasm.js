@@ -388,7 +388,9 @@ if (wasmGcEnabled()) {
     let { newStruct } = wasmEvalText(`
       (module
         (type $s (struct))
-        (func (export "newStruct") (result eqref) struct.new $s)
+        (func (export "newStruct") (result eqref)
+            rtt.canon $s
+            struct.new_with_rtt $s)
       )`).exports;
     WasmNonNullEqrefValues.push(newStruct());
     WasmEqrefValues.push(null, ...WasmNonNullEqrefValues);

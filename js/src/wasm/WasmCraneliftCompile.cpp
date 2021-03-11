@@ -396,7 +396,7 @@ CraneliftModuleEnvironment::CraneliftModuleEnvironment(
 }
 
 TypeCode env_unpack(BD_ValType valType) {
-  return UnpackTypeCodeType(PackedTypeCode(valType.packed));
+  return PackedTypeCode::fromBits(valType.packed).typeCode();
 }
 
 size_t env_num_datas(const CraneliftModuleEnvironment* env) {
@@ -408,7 +408,7 @@ size_t env_num_elems(const CraneliftModuleEnvironment* env) {
 }
 TypeCode env_elem_typecode(const CraneliftModuleEnvironment* env,
                            uint32_t index) {
-  return UnpackTypeCodeType(env->env->elemSegments[index]->elemType.packed());
+  return env->env->elemSegments[index]->elemType.packed().typeCode();
 }
 
 uint32_t env_max_memory(const CraneliftModuleEnvironment* env) {
@@ -690,7 +690,7 @@ BD_ConstantValue global_constantValue(const GlobalDesc* global) {
 }
 
 TypeCode global_type(const GlobalDesc* global) {
-  return UnpackTypeCodeType(global->type().packed());
+  return global->type().packed().typeCode();
 }
 
 size_t global_tlsOffset(const GlobalDesc* global) {
@@ -710,7 +710,7 @@ uint32_t table_maximumLimit(const TableDesc* table) {
   return table->maximumLength.valueOr(UINT32_MAX);
 }
 TypeCode table_elementTypeCode(const TableDesc* table) {
-  return UnpackTypeCodeType(table->elemType.packed());
+  return table->elemType.packed().typeCode();
 }
 
 // Sig

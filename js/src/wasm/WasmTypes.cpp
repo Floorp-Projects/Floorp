@@ -83,6 +83,7 @@ Val::Val(const LitVal& val) {
     case ValType::V128:
       cell_.v128_ = val.v128();
       return;
+    case ValType::Rtt:
     case ValType::Ref:
       cell_.ref_ = val.ref();
       return;
@@ -320,6 +321,8 @@ bool wasm::ToWebAssemblyValue(JSContext* cx, HandleValue val, ValType type,
       return ToWebAssemblyValue_f64<Debug>(cx, val, (double*)loc, mustWrite64);
     case ValType::V128:
       break;
+    case ValType::Rtt:
+      break;
     case ValType::Ref:
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
       if (!type.isNullable() && val.isNull()) {
@@ -410,6 +413,8 @@ bool wasm::ToJSValue(JSContext* cx, const void* src, ValType type,
       return ToJSValue_f64<Debug>(cx, *reinterpret_cast<const double*>(src),
                                   dst);
     case ValType::V128:
+      break;
+    case ValType::Rtt:
       break;
     case ValType::Ref:
       switch (type.refTypeKind()) {
@@ -603,6 +608,8 @@ static bool IsImmediateType(ValType vt) {
           return false;
       }
       break;
+    case ValType::Rtt:
+      return false;
   }
   MOZ_CRASH("bad ValType");
 }
@@ -631,6 +638,8 @@ static unsigned EncodeImmediateType(ValType vt) {
         case RefType::TypeIndex:
           break;
       }
+      break;
+    case ValType::Rtt:
       break;
   }
   MOZ_CRASH("bad ValType");
@@ -1563,6 +1572,8 @@ UniqueChars wasm::ToString(ValType type) {
                            heapType);
       }
       break;
+    case ValType::Rtt:
+      return JS_smprintf("(rtt %d %d)", type.rttDepth(), type.typeIndex());
   }
   return JS_smprintf("%s", literal);
 }

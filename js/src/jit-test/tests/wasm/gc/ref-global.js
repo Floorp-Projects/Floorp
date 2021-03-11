@@ -47,10 +47,10 @@
           (global $glob (mut (ref null $point)) (ref.null $point))
 
           (func (export "init")
-           (global.set $glob (struct.new $point (f64.const 0.5) (f64.const 2.75))))
+           (global.set $glob (struct.new_with_rtt $point (f64.const 0.5) (f64.const 2.75) (rtt.canon $point))))
 
           (func (export "change")
-           (global.set $glob (struct.new $point (f64.const 3.5) (f64.const 37.25))))
+           (global.set $glob (struct.new_with_rtt $point (f64.const 3.5) (f64.const 37.25) (rtt.canon $point))))
 
           (func (export "clear")
            (global.set $glob (ref.null $point)))
