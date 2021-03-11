@@ -235,9 +235,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
     DETACHED = 0b1000,
 
-    // Views of this buffer include only typed objects.
-    TYPED_OBJECT_VIEWS = 0b1'0000,
-
     // This MALLOCED, MAPPED, or EXTERNAL buffer has been prepared for asm.js
     // and cannot henceforth be transferred/detached.  (WASM, USER_OWNED, and
     // INLINE_DATA buffers can't be prepared for asm.js -- although if an
@@ -351,9 +348,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static ArrayBufferObject* createZeroed(JSContext* cx, BufferSize nbytes,
                                          HandleObject proto = nullptr);
 
-  static ArrayBufferObject* createForTypedObject(JSContext* cx,
-                                                 BufferSize nbytes);
-
   // Create an ArrayBufferObject that is safely finalizable and can later be
   // initialize()d to become a real, content-visible ArrayBufferObject.
   static ArrayBufferObject* createEmpty(JSContext* cx);
@@ -466,8 +460,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static BufferContents createMappedContents(int fd, size_t offset,
                                              size_t length);
 
-  bool hasTypedObjectViews() const { return flags() & TYPED_OBJECT_VIEWS; }
-
  protected:
   void setDataPointer(BufferContents contents);
   void setByteLength(BufferSize length);
@@ -476,8 +468,6 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
 
   uint32_t flags() const;
   void setFlags(uint32_t flags);
-
-  void setHasTypedObjectViews() { setFlags(flags() | TYPED_OBJECT_VIEWS); }
 
   void setIsDetached() { setFlags(flags() | DETACHED); }
   void setIsPreparedForAsmJS() {
