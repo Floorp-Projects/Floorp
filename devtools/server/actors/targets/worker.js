@@ -57,7 +57,10 @@ exports.WorkerTargetActor = TargetActorMixin(
         id: this._workerDebuggerData.id,
         type: this._workerDebuggerData.type,
         url: this._workerDebuggerData.url,
-        traits: {},
+        traits: {
+          // See trait description in browsing-context.js
+          supportsTopLevelTargetFlag: false,
+        },
       };
     },
 
