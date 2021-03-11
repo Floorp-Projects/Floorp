@@ -840,10 +840,9 @@ void ScriptDecodeTask::parse(JSContext* cx) {
   }
 
   // The buffer contains JSScript.
-  Rooted<UniquePtr<XDROffThreadDecoder>> decoder(
-      cx, js::MakeUnique<XDROffThreadDecoder>(
-              cx, &options, XDROffThreadDecoder::Type::Single,
-              /* sourceObjectOut = */ &sourceObject.get(), range));
+  auto decoder = js::MakeUnique<XDROffThreadDecoder>(
+      cx, &options, XDROffThreadDecoder::Type::Single,
+      /* sourceObjectOut = */ &sourceObject.get(), range);
   if (!decoder) {
     ReportOutOfMemory(cx);
     return;
@@ -883,10 +882,9 @@ void MultiScriptsDecodeTask::parse(JSContext* cx) {
     RootedScript resultScript(cx);
     Rooted<ScriptSourceObject*> sourceObject(cx);
 
-    Rooted<UniquePtr<XDROffThreadDecoder>> decoder(
-        cx, js::MakeUnique<XDROffThreadDecoder>(
-                cx, &opts, XDROffThreadDecoder::Type::Multi,
-                &sourceObject.get(), source.range));
+    auto decoder = js::MakeUnique<XDROffThreadDecoder>(
+        cx, &opts, XDROffThreadDecoder::Type::Multi, &sourceObject.get(),
+        source.range);
     if (!decoder) {
       ReportOutOfMemory(cx);
       return;

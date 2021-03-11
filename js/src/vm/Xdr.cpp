@@ -424,8 +424,6 @@ XDRResult XDRIncrementalStencilEncoder::linearize(JSContext* cx,
   return Ok();
 }
 
-void XDRDecoder::trace(JSTracer* trc) {}
-
 XDRResult XDRStencilDecoder::codeStencil(
     frontend::CompilationInput& input, frontend::CompilationStencil& stencil) {
 #ifdef DEBUG

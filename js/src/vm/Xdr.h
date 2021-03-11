@@ -486,8 +486,6 @@ class XDRDecoder : public XDRDecoderBase {
   bool hasOptions() const override { return true; }
   const JS::ReadOnlyCompileOptions& options() override { return *options_; }
 
-  void trace(JSTracer* trc);
-
  private:
   const JS::ReadOnlyCompileOptions* options_;
 };
