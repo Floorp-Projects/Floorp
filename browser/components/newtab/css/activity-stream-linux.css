@@ -1772,8 +1772,7 @@ main {
       -moz-context-properties: fill;
       fill: var(--customize-menu-check-fill);
       background: url("chrome://global/skin/icons/check.svg") center no-repeat;
-      background-color: var(--newtab-primary-action-background);
-      background-size: 10px; }
+      background-color: var(--newtab-primary-action-background); }
     .home-section .section .sponsored-checkbox:active + .checkmark {
       fill: rgba(0, 0, 0, 0.15); }
     .home-section .section .selector {
