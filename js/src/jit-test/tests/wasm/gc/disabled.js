@@ -14,7 +14,6 @@ let simpleTests = [
     `(module (import "a" "b" (func (param eqref))))`,
     `(module (import "a" "b" (func (result eqref))))`,
     `(module (type $s (struct)))`,
-    `(module (func (param (ref 0)) (unreachable)))`,
 ];
 
 // Test that use of gc-types fails when gc is disabled.

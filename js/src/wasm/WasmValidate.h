@@ -646,26 +646,32 @@ class Decoder {
       return fail("expected type code");
     }
     switch (code) {
+      case uint8_t(TypeCode::V128): {
 #ifdef ENABLE_WASM_SIMD
-      case uint8_t(TypeCode::V128):
         if (!features.v128) {
           return fail("v128 not enabled");
         }
         *type = T::fromNonRefTypeCode(TypeCode(code));
         return true;
+#else
+        break;
 #endif
-#ifdef ENABLE_WASM_REFTYPES
+      }
       case uint8_t(TypeCode::FuncRef):
-      case uint8_t(TypeCode::ExternRef):
+      case uint8_t(TypeCode::ExternRef): {
+#ifdef ENABLE_WASM_REFTYPES
         if (!features.refTypes) {
           return fail("reference types not enabled");
         }
         *type = RefType::fromTypeCode(TypeCode(code), true);
         return true;
+#else
+        break;
 #endif
-#ifdef ENABLE_WASM_FUNCTION_REFERENCES
+      }
       case uint8_t(TypeCode::Ref):
       case uint8_t(TypeCode::NullableRef): {
+#ifdef ENABLE_WASM_FUNCTION_REFERENCES
         if (!features.functionReferences) {
           return fail("(ref T) types not enabled");
         }
@@ -676,10 +682,12 @@ class Decoder {
         }
         *type = refType;
         return true;
-      }
+#else
+        break;
 #endif
-#ifdef ENABLE_WASM_GC
+      }
       case uint8_t(TypeCode::Rtt): {
+#ifdef ENABLE_WASM_GC
         if (!features.gcTypes) {
           return fail("gc types not enabled");
         }
@@ -700,27 +708,30 @@ class Decoder {
 
         *type = T::fromRtt(heapType.typeIndex(), rttDepth);
         return true;
+#else
+        break;
+#endif
       }
       case uint8_t(TypeCode::EqRef): {
+#ifdef ENABLE_WASM_GC
         if (!features.gcTypes) {
           return fail("gc types not enabled");
         }
         *type = RefType::fromTypeCode(TypeCode(code), true);
         return true;
-      }
+#else
+        break;
 #endif
+      }
       default: {
         if (!T::isValidTypeCode(TypeCode(code))) {
-          return fail("bad type");
+          break;
         }
         *type = T::fromNonRefTypeCode(TypeCode(code));
-
-        if (!features.v128 && *type == T::V128) {
-          return fail("v128 not enabled");
-        }
         return true;
       }
     }
+    return fail("bad type");
   }
   template <class T>
   [[nodiscard]] bool readPackedType(const TypeContext& types,
