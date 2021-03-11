@@ -15,7 +15,7 @@ function checkInvalid(body, errorMessage) {
                        errorMessage);
 }
 
-// General test case for struct.new, struct.get, and struct.set: binary tree
+// General test case for struct.new_with_rtt, struct.get, and struct.set: binary tree
 // manipulation.
 
 {
@@ -42,12 +42,13 @@ function checkInvalid(body, errorMessage) {
                 (local.set $tmp (global.get $k))
                 (global.set $k (i32.add (local.get $tmp) (i32.const 1)))
                 (if (result (ref null $wabbit)) (i32.le_s (local.get $n) (i32.const 2))
-                    (struct.new $wabbit (local.get $tmp) (ref.null $wabbit) (ref.null $wabbit))
+                    (struct.new_with_rtt $wabbit (local.get $tmp) (ref.null $wabbit) (ref.null $wabbit) (rtt.canon $wabbit))
                     (block (result (ref null $wabbit))
-                      (struct.new $wabbit
+                      (struct.new_with_rtt $wabbit
                                   (local.get $tmp)
                                   (call $make (i32.sub (local.get $n) (i32.const 1)))
-                                  (call $make (i32.sub (local.get $n) (i32.const 2)))))))
+                                  (call $make (i32.sub (local.get $n) (i32.const 2)))
+                                  (rtt.canon $wabbit)))))
 
           (func (export "accumulate") (result i32)
                 (call $accum (global.get $g)))
@@ -143,7 +144,7 @@ assertEq(wasmEvalText(
        (struct.narrow (ref null $node) (ref null $node2) (local.get $p)))
       (func (export "test") (result i32)
        (local $n (ref null $node))
-       (local.set $n (struct.new $node2 (i32.const 0) (f32.const 12)))
+       (local.set $n (struct.new_with_rtt $node2 (i32.const 0) (f32.const 12) (rtt.canon $node2)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          1);
 
@@ -157,7 +158,7 @@ assertEq(wasmEvalText(
        (struct.narrow (ref null $node) (ref null $node2) (local.get $p)))
       (func (export "test") (result i32)
        (local $n (ref null $node))
-       (local.set $n (struct.new $node2 (i32.const 0) (f32.const 12)))
+       (local.set $n (struct.new_with_rtt $node2 (i32.const 0) (f32.const 12) (rtt.canon $node2)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          1);
 
@@ -181,7 +182,7 @@ assertEq(wasmEvalText(
 
       (func (export "test") (result i32)
        (local $n (ref null $node))
-       (local.set $n (struct.new $node2a (i32.const 0) (ref.null $node)))
+       (local.set $n (struct.new_with_rtt $node2a (i32.const 0) (ref.null $node) (rtt.canon $node2a)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          1);
 
@@ -197,7 +198,7 @@ assertEq(wasmEvalText(
 
       (func (export "test") (result i32)
        (local $n (ref null $node))
-       (local.set $n (struct.new $node2a (i32.const 0) (ref.null $node2a)))
+       (local.set $n (struct.new_with_rtt $node2a (i32.const 0) (ref.null $node2a) (rtt.canon $node2a)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          0);
 
@@ -213,7 +214,7 @@ assertEq(wasmEvalText(
        (struct.narrow (ref null $node) (ref null $node2) (local.get $p)))
       (func (export "test") (result i32)
        (local $n (ref null $node))
-       (local.set $n (struct.new $node3 (i32.const 0) (f32.const 12) (f64.const 17)))
+       (local.set $n (struct.new_with_rtt $node3 (i32.const 0) (f32.const 12) (f64.const 17) (rtt.canon $node3)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          1);
 
@@ -227,7 +228,7 @@ assertEq(wasmEvalText(
       (func $f (param $p (ref null $node)) (result (ref null $node2))
        (struct.narrow (ref null $node) (ref null $node2) (local.get $p)))
       (func (export "test") (result eqref)
-       (call $f (struct.new $snort (i32.const 0) (f64.const 12)))))`).exports.test(),
+       (call $f (struct.new_with_rtt $snort (i32.const 0) (f64.const 12) (rtt.canon $snort)))))`).exports.test(),
          null);
 
 // struct.narrow: eqref -> struct when the eqref is the right struct;
@@ -240,7 +241,7 @@ assertEq(wasmEvalText(
        (struct.narrow eqref (ref null $node) (local.get $p)))
       (func (export "test") (result i32)
        (local $n (ref null $node))
-       (local.set $n (struct.new $node (i32.const 0)))
+       (local.set $n (struct.new_with_rtt $node (i32.const 0) (rtt.canon $node)))
        (ref.eq (call $f (local.get $n)) (local.get $n))))`).exports.test(),
          1);
 
@@ -251,7 +252,7 @@ assertEq(wasmEvalText(
         `(module
           (type $node (struct (field i32)))
           (func (export "make") (param $n i32) (result eqref)
-           (struct.new $node (local.get $n)))
+           (struct.new_with_rtt $node (local.get $n) (rtt.canon $node)))
           (func (export "coerce") (param $p eqref) (result i32)
            (ref.is_null (struct.narrow eqref (ref null $node) (local.get $p)))))`;
     let mod = new WebAssembly.Module(wasmTextToBinary(txt));

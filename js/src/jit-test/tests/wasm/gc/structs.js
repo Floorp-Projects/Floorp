@@ -59,10 +59,10 @@ var bin = wasmTextToBinary(
       ;; Useful for testing to ensure that the type is not type #0 here.
 
       (func (export "mk_point") (result eqref)
-       (struct.new $point (i32.const 37) (i32.const 42)))
+       (struct.new_with_rtt $point (i32.const 37) (i32.const 42) (rtt.canon $point)))
 
       (func (export "mk_int_node") (param i32) (param externref) (result eqref)
-       (struct.new $int_node (local.get 0) (local.get 1)))
+       (struct.new_with_rtt $int_node (local.get 0) (local.get 1) (rtt.canon $int_node)))
 
       ;; Too big to fit in an InlineTypedObject.
 
@@ -121,7 +121,7 @@ var bin = wasmTextToBinary(
                      (field $az i32)))
 
       (func (export "mk_bigger") (result eqref)
-            (struct.new $bigger
+            (struct.new_with_rtt $bigger
                        (i32.const 0)
                        (i32.const 1)
                        (i32.const 2)
@@ -173,7 +173,8 @@ var bin = wasmTextToBinary(
                        (i32.const 48)
                        (i32.const 49)
                        (i32.const 50)
-                       (i32.const 51)))
+                       (i32.const 51)
+                       (rtt.canon $bigger)))
 
       (type $withfloats (struct
                          (field $f1 f32)
@@ -185,7 +186,7 @@ var bin = wasmTextToBinary(
       (func (export "mk_withfloats")
             (param f32) (param f64) (param externref) (param f32) (param i32)
             (result eqref)
-            (struct.new $withfloats (local.get 0) (local.get 1) (local.get 2) (local.get 3) (local.get 4)))
+            (struct.new_with_rtt $withfloats (local.get 0) (local.get 1) (local.get 2) (local.get 3) (local.get 4) (rtt.canon $withfloats)))
 
      )`)
 
@@ -230,7 +231,7 @@ var stress = wasmTextToBinary(
        (block $exit
         (loop $loop
          (br_if $exit (i32.eqz (local.get $n)))
-         (local.set $list (struct.new $node (local.get $n) (local.get $list)))
+         (local.set $list (struct.new_with_rtt $node (local.get $n) (local.get $list) (rtt.canon $node)))
          (local.set $n (i32.sub (local.get $n) (i32.const 1)))
          (br $loop)))
        (local.get $list)))`);
@@ -275,7 +276,7 @@ assertEq(the_list, null);
                           (i64.const 32))))
 
           (func (export "mk") (result eqref)
-           (struct.new $big (i32.const 0x7aaaaaaa) (i64.const 0x4201020337) (i32.const 0x6bbbbbbb)))
+           (struct.new_with_rtt $big (i32.const 0x7aaaaaaa) (i64.const 0x4201020337) (i32.const 0x6bbbbbbb) (rtt.canon $big)))
 
          )`;
 
@@ -312,7 +313,7 @@ assertEq(the_list, null);
 
           (func (export "make") (result eqref)
            (global.set $g
-            (struct.new $big (i32.const 0x7aaaaaaa) (i64.const 0x4201020337) (i32.const 0x6bbbbbbb)))
+            (struct.new_with_rtt $big (i32.const 0x7aaaaaaa) (i64.const 0x4201020337) (i32.const 0x6bbbbbbb) (rtt.canon $big)))
            (global.get $g))
 
           (func (export "update0") (param $x i32)
@@ -377,7 +378,7 @@ var bin = wasmTextToBinary(
       (global $g (mut (ref null $cons)) (ref.null $cons))
 
       (func (export "push") (param i32)
-       (global.set $g (struct.new $cons (local.get 0) (global.get $g))))
+       (global.set $g (struct.new_with_rtt $cons (local.get 0) (global.get $g) (rtt.canon $cons))))
 
       (func (export "top") (result i32)
        (struct.get $cons 0 (global.get $g)))
@@ -415,7 +416,7 @@ assertErrorMessage(() => ins.pop(),
         `(module
           (type $Node (struct (field i32)))
           (func (export "mk") (result eqref)
-           (struct.new $Node (i32.const 37)))
+           (struct.new_with_rtt $Node (i32.const 37) (rtt.canon $Node)))
           (func (export "f") (param $n eqref) (result eqref)
            (struct.narrow eqref (ref null $Node) (local.get $n))))`).exports;
     var n = ins.mk();
@@ -441,10 +442,10 @@ assertErrorMessage(() => ins.pop(),
            (struct.get $s $y (local.get $p)))
 
           (func (export "testf") (param $n i32) (result i32)
-           (call $f (struct.new $s (local.get $n) (i32.mul (local.get $n) (i32.const 2)))))
+           (call $f (struct.new_with_rtt $s (local.get $n) (i32.mul (local.get $n) (i32.const 2)) (rtt.canon $s))))
 
           (func (export "testg") (param $n i32) (result i32)
-           (call $g (struct.new $s (local.get $n) (i32.mul (local.get $n) (i32.const 2)))))
+           (call $g (struct.new_with_rtt $s (local.get $n) (i32.mul (local.get $n) (i32.const 2)) (rtt.canon $s))))
 
          )`))).exports;
 
@@ -470,7 +471,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
 (module
   (type $r (struct (field i32)))
   (func $f (param f64) (result eqref)
-    (struct.new $r (local.get 0)))
+    (struct.new_with_rtt $r (local.get 0) (rtt.canon $r)))
 )`)),
 WebAssembly.CompileError, /type mismatch/);
 
@@ -480,7 +481,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
 (module
   (type $r (struct (field i32) (field i32)))
   (func $f (result eqref)
-    (struct.new $r (i32.const 0)))
+    (struct.new_with_rtt $r (i32.const 0) (rtt.canon $r)))
 )`)),
 WebAssembly.CompileError, /popping value from empty stack/);
 
@@ -493,7 +494,8 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
     (i32.const 0)
     (i32.const 1)
     (i32.const 2)
-    struct.new $r)
+    (rtt.canon $r)
+    struct.new_with_rtt $r)
 )`)),
 WebAssembly.CompileError, /unused values/);
 
@@ -503,7 +505,7 @@ assertErrorMessage(() => new WebAssembly.Module(wasmTextToBinary(`
 (module
   (type (func (param i32) (result i32)))
   (func $f (result eqref)
-    (struct.new 0))
+    (struct.new_with_rtt 0))
 )`)),
 WebAssembly.CompileError, /not a struct type/);
 
@@ -515,7 +517,7 @@ wasmEvalText(`
    (type $p (struct (field i32)))
    (type $q (struct (field i32)))
    (func $f (result (ref null $p))
-    (struct.new $q (i32.const 0))))
+    (struct.new_with_rtt $q (i32.const 0) (rtt.canon $q))))
 `);
 
 // The field name is optional, so this should work.
@@ -592,7 +594,7 @@ WebAssembly.CompileError, /signature index references non-signature/);
                     (field i32)
                     (field (mut i64))))
           (func (export "make") (result eqref)
-           (struct.new $s (i32.const 37) (i64.const 42))))`).exports;
+           (struct.new_with_rtt $s (i32.const 37) (i64.const 42) (rtt.canon $s))))`).exports;
     let v = ins.make();
     assertErrorMessage(() => v[0] = 12,
                        Error,

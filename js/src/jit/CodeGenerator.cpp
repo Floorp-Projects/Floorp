@@ -15198,6 +15198,7 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
       case wasm::ValType::F64:
         argMir = ToMIRType(sig.args()[i]);
         break;
+      case wasm::ValType::Rtt:
       case wasm::ValType::V128:
         MOZ_CRASH("unexpected argument type when calling from ion to wasm");
       case wasm::ValType::Ref:
@@ -15269,6 +15270,7 @@ void CodeGenerator::emitIonToWasmCallBase(LIonToWasmCallBase<NumDefs>* lir) {
         MOZ_ASSERT(lir->mir()->type() == MIRType::Double);
         MOZ_ASSERT(ToFloatRegister(lir->output()) == ReturnDoubleReg);
         break;
+      case wasm::ValType::Rtt:
       case wasm::ValType::V128:
         MOZ_CRASH("unexpected return type when calling from ion to wasm");
       case wasm::ValType::Ref:

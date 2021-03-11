@@ -5,7 +5,7 @@
 let { exports: { make, ref_eq, ref_eq_for_control } } = wasmEvalText(`(module
     (type $s (struct))
 
-    (func (export "make") (result eqref) struct.new $s)
+    (func (export "make") (result eqref) rtt.canon $s struct.new_with_rtt $s)
 
     (func (export "ref_eq") (param $a eqref) (param $b eqref) (result i32)
         (ref.eq (local.get $a) (local.get $b)))

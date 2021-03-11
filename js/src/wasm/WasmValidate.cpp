@@ -850,13 +850,14 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
 #ifdef ENABLE_WASM_GC
       case uint16_t(Op::GcPrefix): {
         switch (op.b1) {
-          case uint32_t(GcOp::StructNew): {
+          case uint32_t(GcOp::StructNewWithRtt): {
             if (!env.gcTypesEnabled()) {
               return iter.unrecognizedOpcode(&op);
             }
             uint32_t unusedUint;
             NothingVector unusedArgs;
-            CHECK(iter.readStructNew(&unusedUint, &unusedArgs));
+            CHECK(
+                iter.readStructNewWithRtt(&unusedUint, &nothing, &unusedArgs));
           }
           case uint32_t(GcOp::StructGet): {
             if (!env.gcTypesEnabled()) {
@@ -879,6 +880,13 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             }
             ValType unusedTy, unusedTy2;
             CHECK(iter.readStructNarrow(&unusedTy, &unusedTy2, &nothing));
+          }
+          case uint16_t(GcOp::RttCanon): {
+            if (!env.gcTypesEnabled()) {
+              return iter.unrecognizedOpcode(&op);
+            }
+            ValType unusedTy;
+            CHECK(iter.readRttCanon(&unusedTy));
           }
           default:
             return iter.unrecognizedOpcode(&op);

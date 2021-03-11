@@ -4479,6 +4479,7 @@ MDefinition* WarpCacheIRTranspiler::convertWasmArg(MDefinition* arg,
     case wasm::ValType::F64:
       conversion = MToDouble::New(alloc(), arg);
       break;
+    case wasm::ValType::Rtt:
     case wasm::ValType::V128:
       MOZ_CRASH("Unexpected type for Wasm JitEntry");
     case wasm::ValType::Ref:
