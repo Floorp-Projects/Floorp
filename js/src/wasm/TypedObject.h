@@ -163,40 +163,28 @@ using HandleTypedObject = Handle<TypedObject*>;
 using RootedTypedObject = Rooted<TypedObject*>;
 
 class OutlineTypedObject : public TypedObject {
-  // The object which owns the data this object points to. Because this
-  // pointer is managed in tandem with |data|, this is not a GCPtr and
-  // barriers are managed directly.
-  JSObject* owner_;
-
-  // Data pointer to some offset in the owner's contents.
+  // Owned data pointer
   uint8_t* data_;
 
-  void setOwnerAndData(JSObject* owner, uint8_t* data);
-
-  void setData(uint8_t* data) { data_ = data; }
+  static OutlineTypedObject* create(JSContext* cx, HandleRttValue type,
+                                    size_t byteLength,
+                                    gc::InitialHeap heap = gc::DefaultHeap);
 
   void setArrayLength(uint32_t length) { *(uint32_t*)(data_) = length; }
 
  public:
-  static constexpr gc::AllocKind allocKind = gc::AllocKind::OBJECT2;
+  static const JSClass class_;
+
+  static OutlineTypedObject* createStruct(JSContext* cx, HandleRttValue rtt,
+                                          gc::InitialHeap heap);
+  static OutlineTypedObject* createArray(JSContext* cx, HandleRttValue rtt,
+                                         uint32_t length, gc::InitialHeap heap);
 
   // JIT accessors.
-  static constexpr size_t offsetOfData() {
-    return offsetof(OutlineTypedObject, data_);
-  }
-  static constexpr size_t offsetOfOwner() {
-    return offsetof(OutlineTypedObject, owner_);
-  }
+  static size_t offsetOfData() { return offsetof(OutlineTypedObject, data_); }
 
   static constexpr size_t offsetOfArrayLength() { return 0; }
   typedef uint32_t ArrayLength;
-
-  static const JSClass class_;
-
-  JSObject& owner() const {
-    MOZ_ASSERT(owner_);
-    return *owner_;
-  }
 
   uint8_t* outOfLineTypedMem() const { return data_; }
 
@@ -204,30 +192,10 @@ class OutlineTypedObject : public TypedObject {
     return *(ArrayLength*)(data_ + offsetOfArrayLength());
   }
 
- private:
-  // Creates an unattached typed object or handle (depending on the
-  // type parameter T). Note that it is only legal for unattached
-  // handles to escape to the end user; for non-handles, the caller
-  // should always invoke one of the `attach()` methods below.
-  //
-  // Arguments:
-  // - type: type object for resulting object
-  static OutlineTypedObject* createUnattached(
-      JSContext* cx, HandleRttValue type,
-      gc::InitialHeap heap = gc::DefaultHeap);
+  static gc::AllocKind allocKind();
 
- public:
-  static OutlineTypedObject* createStruct(JSContext* cx, HandleRttValue rtt,
-                                          gc::InitialHeap heap);
-  static OutlineTypedObject* createArray(JSContext* cx, HandleRttValue rtt,
-                                         uint32_t length, gc::InitialHeap heap);
-
- private:
-  // This method should only be used when `buffer` is the owner of the memory.
-  void attach(ArrayBufferObject& buffer);
-
- public:
   static void obj_trace(JSTracer* trace, JSObject* object);
+  static void obj_finalize(JSFreeOp* fop, JSObject* object);
 };
 
 // Helper to mark all locations that assume the type of the array length header
