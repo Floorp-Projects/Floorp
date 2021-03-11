@@ -36,11 +36,8 @@ this.FirefoxMonitor = {
   // that creates and returns a string bundle in loadStrings().
   strings: null,
 
-  // This is here for documentation, will be redefined to a pref getter
-  // using XPCOMUtils.defineLazyPreferenceGetter in init().
-  enabled: null,
-
   kEnabledPref: "extensions.fxmonitor.enabled",
+  kProtonPref: "browser.proton.doorhangers.enabled",
 
   // This is here for documentation, will be redefined to a pref getter
   // using XPCOMUtils.defineLazyPreferenceGetter in delayedInit().
@@ -106,20 +103,34 @@ this.FirefoxMonitor = {
   init() {
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
-      "enabled",
+      "monitorEnabled",
       this.kEnabledPref,
-      true,
-      (pref, oldVal, newVal) => {
-        if (newVal) {
-          this.startObserving();
-        } else {
-          this.stopObserving();
-        }
-      }
+      true, // Monitor enabled by default
+      this.observeEnabled.bind(this)
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "protonEnabled",
+      this.kProtonPref,
+      false,
+      this.observeEnabled.bind(this)
     );
 
     if (this.enabled) {
       this.startObserving();
+    }
+  },
+
+  get enabled() {
+    // Suppress Monitor alerts when Proton doorhangers are enabled.
+    return this.monitorEnabled && !this.protonEnabled;
+  },
+
+  observeEnabled() {
+    if (this.enabled) {
+      this.startObserving();
+    } else {
+      this.stopObserving();
     }
   },
 
