@@ -1766,11 +1766,14 @@ bool BytecodeEmitter::emitGetPrivateName(NameNode* name) {
 }
 
 bool BytecodeEmitter::emitGetPrivateName(TaggedParserAtomIndex nameAtom) {
-  // The parser ensures the private name is present on the environment chain.
+  // The parser ensures the private name is present on the environment chain,
+  // but its location can be Dynamic or Global when emitting debugger
+  // eval-in-frame code.
   NameLocation location = lookupName(nameAtom);
   MOZ_ASSERT(location.kind() == NameLocation::Kind::FrameSlot ||
              location.kind() == NameLocation::Kind::EnvironmentCoordinate ||
-             location.kind() == NameLocation::Kind::Dynamic);
+             location.kind() == NameLocation::Kind::Dynamic ||
+             location.kind() == NameLocation::Kind::Global);
 
   return emitGetNameAtLocation(nameAtom, location);
 }
