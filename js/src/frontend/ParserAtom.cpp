@@ -29,38 +29,6 @@ using namespace js;
 using namespace js::frontend;
 
 namespace js {
-
-template <>
-class InflatedChar16Sequence<LittleEndianChars> {
- private:
-  LittleEndianChars chars_;
-  size_t idx_;
-  size_t len_;
-
- public:
-  InflatedChar16Sequence(LittleEndianChars chars, size_t length)
-      : chars_(chars), idx_(0), len_(length) {}
-
-  bool hasMore() { return idx_ < len_; }
-
-  char16_t next() {
-    MOZ_ASSERT(hasMore());
-    return chars_[idx_++];
-  }
-
-  HashNumber computeHash() const {
-    auto copy = *this;
-    HashNumber hash = 0;
-    while (copy.hasMore()) {
-      hash = mozilla::AddToHash(hash, copy.next());
-    }
-    return hash;
-  }
-};
-
-}  // namespace js
-
-namespace js {
 namespace frontend {
 
 JSAtom* GetWellKnownAtom(JSContext* cx, WellKnownAtomId atomId) {
