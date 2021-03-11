@@ -785,6 +785,10 @@ with modules["DOM"]:
     # context.
     errors["NS_ERROR_DOM_BAD_CROSS_ORIGIN_URI"] = FAILURE(1037)
 
+    # The request failed because there are too many recursive iframes or
+    # objects being loaded.
+    errors["NS_ERROR_RECURSIVE_DOCUMENT_LOAD"] = FAILURE(1038)
+
     # May be used to indicate when e.g. setting a property value didn't
     # actually change the value, like for obj.foo = "bar"; obj.foo = "bar";
     # the second assignment throws NS_SUCCESS_DOM_NO_OPERATION.

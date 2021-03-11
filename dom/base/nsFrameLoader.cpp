@@ -141,14 +141,6 @@ typedef ScrollableLayerGuid::ViewID ViewID;
 
 using PrintPreviewResolver = std::function<void(const PrintPreviewResultInfo&)>;
 
-// Bug 136580: Limit to the number of nested content frames that can have the
-//             same URL. This is to stop content that is recursively loading
-//             itself.  Note that "#foo" on the end of URL doesn't affect
-//             whether it's considered identical, but "?foo" or ";foo" are
-//             considered and compared.
-// Limit this to 2, like chromium does.
-#define MAX_SAME_URL_CONTENT_FRAMES 2
-
 // Bug 8065: Limit content frame depth to some reasonable level. This
 // does not count chrome frames when determining depth, nor does it
 // prevent chrome recursion.  Number is fairly arbitrary, but meant to
@@ -2303,8 +2295,6 @@ void nsFrameLoader::GetURL(nsString& aURI, nsIPrincipal** aTriggeringPrincipal,
 }
 
 nsresult nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI) {
-  nsresult rv;
-
   MOZ_ASSERT(!IsRemoteFrame(),
              "Shouldn't call CheckForRecursiveLoad on remote frames.");
 
@@ -2327,46 +2317,6 @@ nsresult nsFrameLoader::CheckForRecursiveLoad(nsIURI* aURI) {
       NS_WARNING("Too many nested content frames so giving up");
 
       return NS_ERROR_UNEXPECTED;  // Too deep, give up!  (silently?)
-    }
-  }
-
-  // Bug 136580: Check for recursive frame loading excluding about:srcdoc URIs.
-  // srcdoc URIs require their contents to be specified inline, so it isn't
-  // possible for undesirable recursion to occur without the aid of a
-  // non-srcdoc URI,  which this method will block normally.
-  // Besides, URI is not enough to guarantee uniqueness of srcdoc documents.
-  nsAutoCString buffer;
-  rv = aURI->GetScheme(buffer);
-  if (NS_SUCCEEDED(rv) && buffer.EqualsLiteral("about")) {
-    rv = aURI->GetPathQueryRef(buffer);
-    if (NS_SUCCEEDED(rv) && buffer.EqualsLiteral("srcdoc")) {
-      // Duplicates allowed up to depth limits
-      return NS_OK;
-    }
-  }
-  int32_t matchCount = 0;
-  for (BrowsingContext* bc = parentBC; bc; bc = bc->GetParent()) {
-    // Check the parent URI with the URI we're loading
-    if (auto* docShell = nsDocShell::Cast(bc->GetDocShell())) {
-      // Does the URI match the one we're about to load?
-      nsCOMPtr<nsIURI> parentURI;
-      docShell->GetCurrentURI(getter_AddRefs(parentURI));
-      if (parentURI) {
-        // Bug 98158/193011: We need to ignore data after the #
-        bool equal;
-        rv = aURI->EqualsExceptRef(parentURI, &equal);
-        NS_ENSURE_SUCCESS(rv, rv);
-
-        if (equal) {
-          matchCount++;
-          if (matchCount >= MAX_SAME_URL_CONTENT_FRAMES) {
-            NS_WARNING(
-                "Too many nested content frames have the same url (recursion?) "
-                "so giving up");
-            return NS_ERROR_UNEXPECTED;
-          }
-        }
-      }
     }
   }
 
