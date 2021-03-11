@@ -460,31 +460,34 @@ DevTools.prototype = {
    *
    * @param {TargetDescriptor} descriptor
    *         The target descriptor the toolbox will debug
-   * @param {string} toolId
-   *        The id of the tool to show
-   * @param {Toolbox.HostType} hostType
-   *        The type of host (bottom, window, left, right)
-   * @param {object} hostOptions
-   *        Options for host specifically
-   * @param {Number} startTime
-   *        Optional, indicates the time at which the user event related to this toolbox
-   *        opening started. This is a `Cu.now()` timing.
-   * @param {string} reason
-   *        Reason the tool was opened
-   * @param {boolean} shouldRaiseToolbox
-   *        Whether we need to raise the toolbox or not.
+   * @param {Object}
+   *        - {String} toolId
+   *          The id of the tool to show
+   *        - {Toolbox.HostType} hostType
+   *          The type of host (bottom, window, left, right)
+   *        - {object} hostOptions
+   *          Options for host specifically
+   *        - {Number} startTime
+   *          Indicates the time at which the user event related to
+   *          this toolbox opening started. This is a `Cu.now()` timing.
+   *        - {string} reason
+   *          Reason the tool was opened
+   *        - {boolean} raise
+   *          Whether we need to raise the toolbox or not.
    *
    * @return {Toolbox} toolbox
    *        The toolbox that was opened
    */
   async showToolbox(
     descriptor,
-    toolId,
-    hostType,
-    hostOptions,
-    startTime,
-    reason = "toolbox_show",
-    shouldRaiseToolbox = true
+    {
+      toolId,
+      hostType,
+      startTime,
+      raise = true,
+      reason = "toolbox_show",
+      hostOptions,
+    } = {}
   ) {
     let toolbox = this._toolboxes.get(descriptor);
 
@@ -499,7 +502,7 @@ DevTools.prototype = {
         await toolbox.selectTool(toolId, reason);
       }
 
-      if (shouldRaiseToolbox) {
+      if (raise) {
         toolbox.raise();
       }
     } else {
@@ -565,15 +568,14 @@ DevTools.prototype = {
     { toolId, hostType, startTime, raise, reason, hostOptions } = {}
   ) {
     const descriptor = await TabDescriptorFactory.createDescriptorForTab(tab);
-    return this.showToolbox(
-      descriptor,
+    return this.showToolbox(descriptor, {
       toolId,
       hostType,
-      hostOptions,
       startTime,
+      raise,
       reason,
-      raise
-    );
+      hostOptions,
+    });
   },
 
   /**

@@ -178,11 +178,10 @@ async function initWorkerDebugger(TAB_URL, WORKER_URL) {
   const { workers } = await listWorkers(target);
   const workerDescriptorFront = findWorker(workers, WORKER_URL);
 
-  const toolbox = await gDevTools.showToolbox(
-    workerDescriptorFront,
-    "jsdebugger",
-    Toolbox.HostType.WINDOW
-  );
+  const toolbox = await gDevTools.showToolbox(workerDescriptorFront, {
+    toolId: "jsdebugger",
+    hostType: Toolbox.HostType.WINDOW,
+  });
 
   const debuggerPanel = toolbox.getCurrentPanel();
 

@@ -379,11 +379,9 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
       try {
         const descriptor = await this._getContentProcessDescriptor(processId);
         // Display a new toolbox in a new window
-        const toolbox = await gDevTools.showToolbox(
-          descriptor,
-          null,
-          Toolbox.HostType.WINDOW
-        );
+        const toolbox = await gDevTools.showToolbox(descriptor, {
+          hostType: Toolbox.HostType.WINDOW,
+        });
 
         // Ensure closing the connection in order to cleanup
         // the devtools client and also the server created in the

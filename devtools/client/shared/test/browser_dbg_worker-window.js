@@ -23,11 +23,10 @@ add_task(async function() {
   const { workers } = await listWorkers(target);
   const workerDescriptorFront = findWorker(workers, WORKER_URL);
 
-  const toolbox = await gDevTools.showToolbox(
-    workerDescriptorFront,
-    "jsdebugger",
-    Toolbox.HostType.WINDOW
-  );
+  const toolbox = await gDevTools.showToolbox(workerDescriptorFront, {
+    toolId: "jsdebugger",
+    hostType: Toolbox.HostType.WINDOW,
+  });
 
   is(toolbox.hostType, "window", "correct host");
 
