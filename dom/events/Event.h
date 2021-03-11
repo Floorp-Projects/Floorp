@@ -23,10 +23,6 @@
 #include "nsStringFwd.h"
 #include "nsWrapperCache.h"
 
-// XXX(Bug 1674080) Remove this and let Codegen.py generate it instead when
-// needed.
-#include "mozilla/HoldDropJSObjects.h"
-
 class PickleIterator;
 class nsCycleCollectionTraversalCallback;
 class nsIContent;
