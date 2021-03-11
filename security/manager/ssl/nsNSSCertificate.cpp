@@ -669,25 +669,35 @@ SECStatus ConstructCERTCertListFromReversedDERArray(
 
 }  // namespace mozilla
 
-nsresult nsNSSCertificate::GetIntermediatesAsDER(
+nsresult nsNSSCertificate::SegmentCertificateChain(
     /* in */ const nsTArray<RefPtr<nsIX509Cert>>& aCertList,
-    /* out */ nsTArray<nsTArray<uint8_t>>& aIntermediates) {
-  if (aCertList.Length() <= 1) {
-    return NS_ERROR_INVALID_ARG;
+    /* out */ nsCOMPtr<nsIX509Cert>& aRoot,
+    /* out */ nsTArray<RefPtr<nsIX509Cert>>& aIntermediates,
+    /* out */ nsCOMPtr<nsIX509Cert>& aEndEntity) {
+  if (aRoot || aEndEntity) {
+    // All passed-in nsCOMPtrs should be empty for the state machine to work
+    return NS_ERROR_UNEXPECTED;
   }
 
   if (!aIntermediates.IsEmpty()) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  for (size_t i = 1; i < aCertList.Length() - 1; ++i) {
+  for (size_t i = 0; i < aCertList.Length(); ++i) {
     const auto& cert = aCertList[i];
-    aIntermediates.AppendElement();
-    nsTArray<uint8_t>& certBytes = aIntermediates.LastElement();
-    nsresult rv = cert->GetRawDER(certBytes);
-    if (NS_FAILED(rv)) {
-      return NS_ERROR_FAILURE;
+    if (!aEndEntity) {
+      aEndEntity = cert;
+    } else if (i == aCertList.Length() - 1) {
+      aRoot = cert;
+    } else {
+      // One of (potentially many) intermediates
+      aIntermediates.AppendElement(cert);
     }
+  }
+
+  if (!aRoot || !aEndEntity) {
+    // No self-signed (or empty) chains allowed
+    return NS_ERROR_INVALID_ARG;
   }
 
   return NS_OK;
