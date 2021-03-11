@@ -69,9 +69,12 @@ async function setupToolboxTest(extensionId) {
     `testNetworkRequestReceived(${JSON.stringify(requests)});`
   );
 
-  const onToolboxClosed = gDevTools.once("toolbox-destroyed");
   await toolbox.destroy();
-  return onToolboxClosed;
+
+  // Because this is an Addon target, the client isn't closed on toolbox close.
+  // (TargetMixin.shouldCloseClient only applies to local tabs)
+  // So that we have to do it manually from this test.
+  await client.close();
 }
 
 add_task(async function test_addon_debugging_netmonitor_panel() {

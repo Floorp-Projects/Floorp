@@ -5,7 +5,6 @@
 "use strict";
 
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
-const { TargetList } = require("devtools/shared/resources/target-list");
 
 /**
  * Client-side NodePicker module.
@@ -149,7 +148,10 @@ class NodePicker extends EventEmitter {
 
     this.emit("picker-starting");
 
-    this.targetList.watchTargets(TargetList.ALL_TYPES, this._onTargetAvailable);
+    this.targetList.watchTargets(
+      this.targetList.ALL_TYPES,
+      this._onTargetAvailable
+    );
 
     this.emit("picker-started");
   }
@@ -166,7 +168,7 @@ class NodePicker extends EventEmitter {
     this.doFocus = false;
 
     this.targetList.unwatchTargets(
-      TargetList.ALL_TYPES,
+      this.targetList.ALL_TYPES,
       this._onTargetAvailable
     );
 

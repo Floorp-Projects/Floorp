@@ -3,9 +3,7 @@
 
 "use strict";
 
-// Test the TargetList API switchToTarget function
-
-const { TargetList } = require("devtools/shared/resources/target-list");
+// Test the TargetCommand API switchToTarget function
 
 add_task(async function() {
   const client = await createLocalClient();
@@ -16,7 +14,7 @@ add_task(async function() {
 });
 
 async function testSwitchToTarget(client) {
-  info("Test TargetList.switchToTarget method");
+  info("Test TargetCommand.switchToTarget method");
 
   const { mainRoot } = client;
   // Create a first target to switch from, a new tab with an iframe
@@ -26,7 +24,9 @@ async function testSwitchToTarget(client) {
   const firstDescriptor = await mainRoot.getTab({ tab: gBrowser.selectedTab });
   const firstTarget = await firstDescriptor.getTarget();
 
-  const targetList = new TargetList(firstTarget.descriptorFront);
+  const commands = await firstDescriptor.getCommands();
+  const targetList = commands.targetCommand;
+  const { TYPES } = targetList;
 
   await targetList.startListening();
 
@@ -48,7 +48,7 @@ async function testSwitchToTarget(client) {
   const onFrameAvailable = ({ targetFront, isTargetSwitching }) => {
     is(
       targetFront.targetType,
-      TargetList.TYPES.FRAME,
+      TYPES.FRAME,
       "We are only notified about frame targets"
     );
     ok(
@@ -73,7 +73,7 @@ async function testSwitchToTarget(client) {
   const onFrameDestroyed = ({ targetFront, isTargetSwitching }) => {
     is(
       targetFront.targetType,
-      TargetList.TYPES.FRAME,
+      TYPES.FRAME,
       "target-destroyed: We are only notified about frame targets"
     );
     ok(
@@ -97,7 +97,7 @@ async function testSwitchToTarget(client) {
     destroyedTargets.push(targetFront);
   };
   await targetList.watchTargets(
-    [TargetList.TYPES.FRAME],
+    [TYPES.FRAME],
     onFrameAvailable,
     onFrameDestroyed
   );

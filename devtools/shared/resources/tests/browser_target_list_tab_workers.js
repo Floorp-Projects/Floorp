@@ -3,10 +3,7 @@
 
 "use strict";
 
-// Test the TargetList API around workers
-
-const { TargetList } = require("devtools/shared/resources/target-list");
-const { TYPES } = TargetList;
+// Test the TargetCommand API around workers
 
 const FISSION_TEST_URL = URL_ROOT_SSL + "fission_document.html";
 const IFRAME_FILE = "fission_iframe.html";
@@ -31,10 +28,10 @@ add_task(async function() {
   await addTab(`${FISSION_TEST_URL}?id=first-untargetted-tab&noServiceWorker`);
   await addTab(`${FISSION_TEST_URL}?id=second-untargetted-tab&noServiceWorker`);
 
-  info("Test TargetList against workers via a tab target");
+  info("Test TargetCommand against workers via a tab target");
   const tab = await addTab(`${FISSION_TEST_URL}?&noServiceWorker`);
 
-  // Create a TargetList for the tab
+  // Create a TargetCommand for the tab
   const descriptor = await mainRoot.getTab({ tab });
   const target = await descriptor.getTarget();
 
@@ -43,7 +40,9 @@ add_task(async function() {
   // It isn't clear if this assertion is meaningful?
   await target.attach();
 
-  const targetList = new TargetList(target.descriptorFront);
+  const commands = await descriptor.getCommands();
+  const targetList = commands.targetCommand;
+  const { TYPES } = targetList;
 
   // Workaround to allow listening for workers in the content toolbox
   // without the fission preferences

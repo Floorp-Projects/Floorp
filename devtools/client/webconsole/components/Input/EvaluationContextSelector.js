@@ -21,7 +21,7 @@ const { l10n } = require("devtools/client/webconsole/utils/messages");
 const targetSelectors = require("devtools/client/framework/reducers/targets");
 
 loader.lazyGetter(this, "TARGET_TYPES", function() {
-  return require("devtools/shared/resources/target-list").TargetList.TYPES;
+  return require("devtools/shared/commands/target/target-command").TYPES;
 });
 
 // Additional Components

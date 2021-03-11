@@ -11,7 +11,6 @@ const {
   getOrientation,
 } = require("devtools/client/responsive/utils/orientation");
 const Constants = require("devtools/client/responsive/constants");
-const { TargetList } = require("devtools/shared/resources/target-list");
 const {
   ResourceWatcher,
 } = require("devtools/shared/resources/resource-watcher");
@@ -391,7 +390,8 @@ class ResponsiveUI {
     // its corresponding target-list.
     const descriptor = await this.client.mainRoot.getTab({ tab: this.tab });
 
-    this.targetList = new TargetList(descriptor);
+    const commands = await descriptor.getCommands();
+    this.targetList = commands.targetCommand;
     this.resourceWatcher = new ResourceWatcher(this.targetList);
 
     await this.targetList.startListening();
