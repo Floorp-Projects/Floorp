@@ -75,7 +75,7 @@ var TaskScheduler = {
    *        Interval at which to run the command, in seconds. Minimum 1800 (30 minutes).
    *
    * @param options
-   *        Optional, as as all of its properties:
+   *        Optional, as are all of its properties:
    *        {
    *          args
    *            Array of arguments to pass on the command line. Does not include the command
@@ -95,7 +95,10 @@ var TaskScheduler = {
    *        }
    * }
    */
-  registerTask(id, command, intervalSeconds, options) {
+  async registerTask(id, command, intervalSeconds, options) {
+    if (typeof id !== "string") {
+      throw new Error("id is not a string");
+    }
     if (!Number.isInteger(intervalSeconds)) {
       throw new Error("Interval is not an integer");
     }
@@ -111,14 +114,14 @@ var TaskScheduler = {
    *
    * @throws NS_ERROR_FILE_NOT_FOUND if the task does not exist.
    */
-  deleteTask(id) {
+  async deleteTask(id) {
     return gImpl.deleteTask(id);
   },
 
   /**
    * Delete all tasks registered by this application.
    */
-  deleteAllTasks() {
+  async deleteAllTasks() {
     return gImpl.deleteAllTasks();
   },
 };
