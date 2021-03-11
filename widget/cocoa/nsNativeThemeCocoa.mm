@@ -100,25 +100,6 @@ void CUIDraw(CUIRendererRef r, CGRect rect, CGContextRef ctx, CFDictionaryRef op
 
 @end
 
-// These two classes don't actually add any behavior over NSButtonCell. Their
-// purpose is to make it easy to distinguish NSCell objects that are used for
-// drawing radio buttons / checkboxes from other cell types.
-// The class names are made up, there are no classes with these names in AppKit.
-// The reason we need them is that calling [cell setButtonType:NSRadioButton]
-// doesn't leave an easy-to-check "marker" on the cell object - there is no
-// -[NSButtonCell buttonType] method.
-@interface RadioButtonCell : NSButtonCell
-@end
-
-@implementation RadioButtonCell
-@end
-
-@interface CheckboxCell : NSButtonCell
-@end
-
-@implementation CheckboxCell
-@end
-
 static void DrawFocusRingForCellIfNeeded(NSCell* aCell, NSRect aWithFrame, NSView* aInView) {
   if ([aCell showsFirstResponder]) {
     CGContextRef cgContext = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
@@ -146,21 +127,9 @@ static void DrawFocusRingForCellIfNeeded(NSCell* aCell, NSRect aWithFrame, NSVie
   }
 }
 
-static bool FocusIsDrawnByDrawWithFrame(NSCell* aCell) {
-  // Focus rings don't draw as part
-  // of -[NSCell drawWithFrame:inView:] and must be drawn by a separate call
-  // to -[NSCell drawFocusRingMaskWithFrame:inView:]; .
-  // See the NSButtonCell section under
-  // https://developer.apple.com/library/mac/releasenotes/AppKit/RN-AppKitOlderNotes/#X10_8Notes
-  return false;
-}
-
 static void DrawCellIncludingFocusRing(NSCell* aCell, NSRect aWithFrame, NSView* aInView) {
   [aCell drawWithFrame:aWithFrame inView:aInView];
-
-  if (!FocusIsDrawnByDrawWithFrame(aCell)) {
-    DrawFocusRingForCellIfNeeded(aCell, aWithFrame, aInView);
-  }
+  DrawFocusRingForCellIfNeeded(aCell, aWithFrame, aInView);
 }
 
 /**
@@ -263,14 +232,6 @@ static void DrawCellIncludingFocusRing(NSCell* aCell, NSRect aWithFrame, NSView*
 
 - (void)drawWithFrame:(NSRect)rect inView:(NSView*)controlView {
   [super drawWithFrame:rect inView:controlView];
-
-  if (FocusIsDrawnByDrawWithFrame(self)) {
-    // For some reason, -[NSSearchFieldCell drawWithFrame:inView] doesn't draw a
-    // focus ring in 64 bit mode, no matter what SDK is used or what OS X version
-    // we're running on. But if FocusIsDrawnByDrawWithFrame(self), then our
-    // caller expects us to draw a focus ring. So we just do that here.
-    DrawFocusRingForCellIfNeeded(self, rect, controlView);
-  }
 }
 
 - (void)drawFocusRingMaskWithFrame:(NSRect)rect inView:(NSView*)controlView {
@@ -444,10 +405,10 @@ nsNativeThemeCocoa::nsNativeThemeCocoa() {
   [mPushButtonCell setButtonType:NSMomentaryPushInButton];
   [mPushButtonCell setHighlightsBy:NSPushInCellMask];
 
-  mRadioButtonCell = [[RadioButtonCell alloc] initTextCell:@""];
+  mRadioButtonCell = [[NSButtonCell alloc] initTextCell:@""];
   [mRadioButtonCell setButtonType:NSRadioButton];
 
-  mCheckboxCell = [[CheckboxCell alloc] initTextCell:@""];
+  mCheckboxCell = [[NSButtonCell alloc] initTextCell:@""];
   [mCheckboxCell setButtonType:NSSwitchButton];
   [mCheckboxCell setAllowsMixedState:YES];
 
