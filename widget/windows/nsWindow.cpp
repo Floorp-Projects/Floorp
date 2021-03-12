@@ -5313,21 +5313,6 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
             }
           }
         }
-
-        // UserInteractionMode, ConvertibleSlateMode, SystemDockMode may cause
-        // @media(pointer) queries to change, which layout needs to know about
-        //
-        // (WM_SETTINGCHANGE will be sent to all top-level windows, so we
-        //  only respond to the hidden top-level window to avoid hammering
-        //  layout with a bunch of NotifyThemeChanged() calls)
-        //
-        if (mWindowType == eWindowType_invisible) {
-          if (!wcscmp(lParamString, L"UserInteractionMode") ||
-              !wcscmp(lParamString, L"ConvertibleSlateMode") ||
-              !wcscmp(lParamString, L"SystemDockMode")) {
-            NotifyThemeChanged(widget::ThemeChangeKind::MediaQueriesOnly);
-          }
-        }
       }
     } break;
 
