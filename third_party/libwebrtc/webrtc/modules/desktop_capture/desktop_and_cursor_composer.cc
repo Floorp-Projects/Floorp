@@ -130,7 +130,11 @@ DesktopFrameWithCursor::~DesktopFrameWithCursor() {
 DesktopAndCursorComposer::DesktopAndCursorComposer(
     DesktopCapturer* desktop_capturer,
     MouseCursorMonitor* mouse_monitor)
+#ifndef USE_X11
+    : DesktopAndCursorComposer(desktop_capturer, mouse_monitor, false) {}
+#else
     : DesktopAndCursorComposer(desktop_capturer, mouse_monitor, true) {}
+#endif
 
 DesktopAndCursorComposer::DesktopAndCursorComposer(
     std::unique_ptr<DesktopCapturer> desktop_capturer,
