@@ -157,7 +157,6 @@
   skin/classic/browser/bookmarks-toolbar.svg          (../shared/icons/bookmarks-toolbar.svg)
   skin/classic/browser/characterEncoding.svg          (../shared/icons/characterEncoding.svg)
   skin/classic/browser/chevron-animation.svg          (../shared/icons/chevron-animation.svg)
-  skin/classic/browser/check-animation.svg            (../shared/icons/check-animation.svg)
   skin/classic/browser/customize.svg                  (../shared/icons/customize.svg)
   skin/classic/browser/developer.svg                  (../shared/icons/developer.svg)
   skin/classic/browser/device-phone.svg               (../shared/icons/device-phone.svg)
@@ -213,6 +212,7 @@
 #endif
   skin/classic/browser/stop.svg                       (../shared/icons/stop.svg)
   skin/classic/browser/stop-to-reload.svg             (../shared/icons/stop-to-reload.svg)
+  skin/classic/browser/success-animation.svg          (../shared/icons/success-animation.svg)
   skin/classic/browser/sync.svg                       (../shared/icons/sync.svg)
   skin/classic/browser/tab.svg                        (../shared/icons/tab.svg)
   skin/classic/browser/tab-12.svg                     (../shared/icons/tab-12.svg)
