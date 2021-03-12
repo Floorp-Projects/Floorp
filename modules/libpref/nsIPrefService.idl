@@ -18,6 +18,30 @@ interface nsIPrefStatsCallback : nsISupports
   void visit(in ACString prefName, in unsigned long accessCount);
 };
 
+[scriptable, uuid(0a2dbc02-2218-4687-b151-33d890676e00)]
+interface nsIPrefObserver : nsISupports
+{
+  /**
+   * Invoked when a string preference is witnessed.  kind will be "Default" or "User".
+   */
+  void onStringPref(in string kind, in string name, in string value, in boolean isSticky, in boolean isLocked);
+
+  /**
+   * Invoked when a integer preference is witnessed.  kind will be "Default" or "User".
+   */
+  void onIntPref(in string kind, in string name, in long value, in boolean isSticky, in boolean isLocked);
+
+  /**
+   * Invoked when a boolean preference is witnessed.  kind will be "Default" or "User".
+   */
+  void onBoolPref(in string kind, in string name, in boolean value, in boolean isSticky, in boolean isLocked);
+
+  /**
+   * Invoked when the prefs parser encounters an error.
+   */
+  void onError(in string message);
+};
+
 /**
  * The nsIPrefService interface is the main entry point into the back end
  * preferences management library. The preference service is directly
@@ -144,6 +168,22 @@ interface nsIPrefService : nsISupports
    * This is not implemented in non-debug builds and will throw an error.
    */
   void resetStats();
+
+  /**
+   * Parse the given bytes, invoking callbacks on the given observer.
+   *
+   * This method does not modify any preferences.
+   *
+   * @param bytes The data to parse.  This data may be UTF-8 encoded, but is not
+   *              required to be so: the prefs parser will determine the encoding
+   *              automatically.
+   * @param observer The observer to invoke callbacks on.  Parsing errors will
+   *                 be reported via the onError callback.
+   * @param pathLabel An optional string with which to label errors.
+   */
+  void parsePrefsFromBuffer(in Array<uint8_t> bytes,
+                            in nsIPrefObserver observer,
+                            [optional] in string pathLabel);
 };
 
 %{C++

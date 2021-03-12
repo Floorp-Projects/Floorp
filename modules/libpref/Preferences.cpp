@@ -3923,6 +3923,71 @@ Preferences::ResetStats() {
 #endif
 }
 
+// We would much prefer to use C++ lambdas, but we cannot convert
+// lambdas that capture (here, the underlying observer) to C pointer
+// to functions.  So, here we are, with icky C callbacks.  Be aware
+// that nothing is thread-safe here because there's a single global
+// `nsIPrefObserver` instance.  Use this from the main thread only.
+nsIPrefObserver* PrefObserver = nullptr;
+
+void HandlePref(const char* aPrefName, PrefType aType, PrefValueKind aKind,
+                PrefValue aValue, bool aIsSticky, bool aIsLocked) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!PrefObserver) {
+    return;
+  }
+
+  const char* kind = aKind == PrefValueKind::Default ? "Default" : "User";
+
+  switch (aType) {
+    case PrefType::String:
+      PrefObserver->OnStringPref(kind, aPrefName, aValue.mStringVal, aIsSticky,
+                                 aIsLocked);
+      break;
+    case PrefType::Int:
+      PrefObserver->OnIntPref(kind, aPrefName, aValue.mIntVal, aIsSticky,
+                              aIsLocked);
+      break;
+    case PrefType::Bool:
+      PrefObserver->OnBoolPref(kind, aPrefName, aValue.mBoolVal, aIsSticky,
+                               aIsLocked);
+      break;
+    default:
+      PrefObserver->OnError("Unexpected pref type.");
+  }
+}
+
+void HandleError(const char* aMsg) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (!PrefObserver) {
+    return;
+  }
+
+  PrefObserver->OnError(aMsg);
+}
+
+NS_IMETHODIMP
+Preferences::ParsePrefsFromBuffer(const nsTArray<uint8_t>& aBytes,
+                                  nsIPrefObserver* aObserver,
+                                  const char* aPathLabel) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // We need a null-terminated buffer.
+  nsTArray<uint8_t> data = aBytes.Clone();
+  data.AppendElement(0);
+
+  // Parsing as default handles both `pref` and `user_pref`.
+  PrefObserver = aObserver;
+  prefs_parser_parse(aPathLabel ? aPathLabel : "<ParsePrefsFromBuffer data>",
+                     PrefValueKind::Default, (const char*)data.Elements(),
+                     data.Length() - 1, HandlePref, HandleError);
+  PrefObserver = nullptr;
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 Preferences::GetDirty(bool* aRetVal) {
   *aRetVal = mDirty;
