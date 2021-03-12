@@ -580,13 +580,13 @@ bool BrowserTabsRemoteAutostart() {
   return gBrowserTabsRemoteAutostart;
 }
 
-}  // namespace mozilla
-
-static bool FissionExperimentEnrolled() {
+bool FissionExperimentEnrolled() {
   MOZ_ASSERT(XRE_IsParentProcess());
   return gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusControl ||
          gFissionExperimentStatus == nsIXULRuntime::eExperimentStatusTreatment;
 }
+
+}  // namespace mozilla
 
 static void FissionExperimentDisqualify() {
   MOZ_ASSERT(XRE_IsParentProcess());
