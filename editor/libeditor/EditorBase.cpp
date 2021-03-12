@@ -1248,7 +1248,7 @@ NS_IMETHODIMP EditorBase::CanCut(bool* aCanCut) {
   if (NS_WARN_IF(!aCanCut)) {
     return NS_ERROR_INVALID_ARG;
   }
-  *aCanCut = AsTextEditor()->IsCutCommandEnabled();
+  *aCanCut = MOZ_KnownLive(AsTextEditor())->IsCutCommandEnabled();
   return NS_OK;
 }
 
@@ -1258,7 +1258,7 @@ NS_IMETHODIMP EditorBase::CanCopy(bool* aCanCopy) {
   if (NS_WARN_IF(!aCanCopy)) {
     return NS_ERROR_INVALID_ARG;
   }
-  *aCanCopy = AsTextEditor()->IsCopyCommandEnabled();
+  *aCanCopy = MOZ_KnownLive(AsTextEditor())->IsCopyCommandEnabled();
   return NS_OK;
 }
 
