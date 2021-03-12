@@ -14,6 +14,12 @@ add_task(async function setup() {
 
   win = await BrowserTestUtils.openNewBrowserWindow();
 
+  // Disable suggestions for this test, so that we are not attempting to hit
+  // the network for suggestions when we don't need them.
+  SpecialPowers.pushPrefEnv({
+    set: [["browser.search.suggest.enabled", false]],
+  });
+
   registerCleanupFunction(async function() {
     await BrowserTestUtils.closeWindow(win);
     gCUITestUtils.removeSearchBar();
