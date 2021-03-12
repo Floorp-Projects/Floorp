@@ -49,7 +49,7 @@ nsresult nsRubyTextFrame::GetFrameName(nsAString& aResult) const {
 /* virtual */
 void nsRubyTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                        const nsDisplayListSet& aLists) {
-  if (IsAutoHidden()) {
+  if (IsCollapsed()) {
     return;
   }
 
@@ -69,7 +69,7 @@ void nsRubyTextFrame::Reflow(nsPresContext* aPresContext,
   // created. There might be other problems if we don't do that.
   nsRubyContentFrame::Reflow(aPresContext, aDesiredSize, aReflowInput, aStatus);
 
-  if (IsAutoHidden()) {
+  if (IsCollapsed()) {
     // Reset the ISize. The BSize is not changed so that it won't
     // affect vertical positioning in unexpected way.
     WritingMode lineWM = aReflowInput.mLineLayout->GetWritingMode();

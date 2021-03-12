@@ -639,7 +639,7 @@ FRAME_STATE_BIT(Inline, 23, NS_INLINE_FRAME_BIDI_VISUAL_IS_LAST)
 FRAME_STATE_GROUP(RubyText, nsRubyTextFrame)
 
 // inherits from nsInlineFrame
-FRAME_STATE_BIT(RubyText, 24, NS_RUBY_TEXT_FRAME_AUTOHIDE)
+FRAME_STATE_BIT(RubyText, 24, NS_RUBY_TEXT_FRAME_COLLAPSED)
 
 // == Frame state bits that apply to ruby text container frames ===============
 
