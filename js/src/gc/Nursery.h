@@ -17,6 +17,7 @@
 #include "gc/Heap.h"
 #include "js/AllocPolicy.h"
 #include "js/Class.h"
+#include "js/GCAPI.h"
 #include "js/HeapAPI.h"
 #include "js/TracingAPI.h"
 #include "js/TypeDecls.h"

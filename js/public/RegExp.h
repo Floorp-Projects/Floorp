@@ -14,8 +14,7 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/RegExpFlags.h"  // JS::RegExpFlags
-#include "js/RootingAPI.h"   // JS::{,Mutable}Handle
-#include "js/Value.h"        // JS::Value
+#include "js/TypeDecls.h"
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSString;

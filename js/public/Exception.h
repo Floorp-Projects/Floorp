@@ -9,9 +9,11 @@
 
 #include "mozilla/Attributes.h"
 
-#include "jspubtd.h"
+#include "jstypes.h"
+
 #include "js/RootingAPI.h"  // JS::{Handle,Rooted}
-#include "js/Value.h"       // JS::Value, JS::Handle<JS::Value>
+#include "js/TypeDecls.h"
+#include "js/Value.h"  // JS::Value, JS::Handle<JS::Value>
 
 namespace JS {
 

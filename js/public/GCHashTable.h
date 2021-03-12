@@ -13,7 +13,9 @@
 #include "js/HashTable.h"
 #include "js/RootingAPI.h"
 #include "js/SweepingAPI.h"
-#include "js/TracingAPI.h"
+#include "js/TypeDecls.h"
+
+class JSTracer;
 
 namespace JS {
 

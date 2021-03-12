@@ -21,6 +21,7 @@
 
 #include "jstypes.h"  // JS_FRIEND_API
 
+#include "js/AllocPolicy.h"
 #include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
 #include "js/String.h"      // JS::GetStringLength
 #include "js/TypeDecls.h"   // JSContext, JS::Latin1Char, JSString

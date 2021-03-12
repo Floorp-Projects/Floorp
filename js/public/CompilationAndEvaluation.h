@@ -8,8 +8,6 @@
 #ifndef js_CompilationAndEvaluation_h
 #define js_CompilationAndEvaluation_h
 
-#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
-
 #include <stddef.h>  // size_t
 #include <stdio.h>   // FILE
 
@@ -24,6 +22,10 @@ struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSFunction;
 class JS_PUBLIC_API JSObject;
 class JS_PUBLIC_API JSScript;
+
+namespace mozilla {
+union Utf8Unit;
+}
 
 namespace JS {
 

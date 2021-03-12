@@ -9,13 +9,18 @@
 
 #include "mozilla/Maybe.h"
 
-#include "jsfriendapi.h"
+#include "jstypes.h"  // for JS_FRIEND_API, JS_FRIEND_DATA
 
 #include "js/Array.h"  // JS::IsArrayAnswer
 #include "js/CallNonGenericMethod.h"
 #include "js/Class.h"
+#include "js/HeapAPI.h"        // for ObjectIsMarkedBlack
+#include "js/Id.h"             // for jsid
 #include "js/Object.h"         // JS::GetClass
+#include "js/RootingAPI.h"     // for Handle, MutableHandle (ptr only)
 #include "js/shadow/Object.h"  // JS::shadow::Object
+#include "js/TypeDecls.h"  // for HandleObject, HandleId, HandleValue, MutableHandleIdVector, MutableHandleValue, MutableHand...
+#include "js/Value.h"  // for Value, AssertValueIsNotGray, UndefinedValue, ObjectOrNullValue
 
 namespace js {
 

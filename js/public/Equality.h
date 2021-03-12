@@ -12,8 +12,7 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/RootingAPI.h"  // JS::Handle
-#include "js/Value.h"       // JS::Value
+#include "js/TypeDecls.h"
 
 struct JS_PUBLIC_API JSContext;
 

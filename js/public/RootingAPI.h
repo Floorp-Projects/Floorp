@@ -28,7 +28,6 @@
 #include "js/Realm.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
-#include "js/Utility.h"
 
 /*
  * [SMDOC] Stack Rooting

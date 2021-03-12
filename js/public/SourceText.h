@@ -50,7 +50,6 @@
 #include "mozilla/Assertions.h"  // MOZ_ASSERT
 #include "mozilla/Attributes.h"  // MOZ_COLD, MOZ_IS_CLASS_INIT
 #include "mozilla/Likely.h"      // MOZ_UNLIKELY
-#include "mozilla/Utf8.h"        // mozilla::Utf8Unit
 
 #include <stddef.h>     // size_t
 #include <stdint.h>     // UINT32_MAX
@@ -58,6 +57,10 @@
 
 #include "js/UniquePtr.h"  // js::UniquePtr
 #include "js/Utility.h"    // JS::FreePolicy
+
+namespace mozilla {
+union Utf8Unit;
+}
 
 namespace JS {
 

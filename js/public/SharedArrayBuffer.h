@@ -13,12 +13,11 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/GCAPI.h"  // JS::AutoRequireNoGC
-
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSObject;
 
 namespace JS {
+class JS_PUBLIC_API AutoRequireNoGC;
 
 // CREATION
 

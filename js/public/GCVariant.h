@@ -142,7 +142,7 @@ class WrappedPtrOperations<mozilla::Variant<Ts...>, Wrapper> {
 
   template <typename T>
   JS::Handle<T> as() const {
-    return Handle<T>::fromMarkedLocation(&variant().template as<T>());
+    return JS::Handle<T>::fromMarkedLocation(&variant().template as<T>());
   }
 
   template <typename Matcher>
