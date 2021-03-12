@@ -141,11 +141,9 @@ nsCocoaWindow::nsCocoaWindow()
       mNumModalDescendents(0),
       mWindowAnimationBehavior(NSWindowAnimationBehaviorDefault),
       mWasShown(false) {
-  if ([NSWindow respondsToSelector:@selector(setAllowsAutomaticWindowTabbing:)]) {
-    // Disable automatic tabbing on 10.12. We need to do this before we
-    // orderFront any of our windows.
-    [NSWindow setAllowsAutomaticWindowTabbing:NO];
-  }
+  // Disable automatic tabbing. We need to do this before we
+  // orderFront any of our windows.
+  [NSWindow setAllowsAutomaticWindowTabbing:NO];
 }
 
 void nsCocoaWindow::DestroyNativeWindow() {
@@ -3071,9 +3069,7 @@ static NSImage* GetMenuMaskImage() {
   if (aValue && !mUseMenuStyle) {
     // Turn on rounded corner masking.
     NSView* effectView = VibrancyManager::CreateEffectView(VibrancyType::MENU, YES);
-    if ([effectView respondsToSelector:@selector(setMaskImage:)]) {
-      [effectView setMaskImage:GetMenuMaskImage()];
-    }
+    [effectView setMaskImage:GetMenuMaskImage()];
     [self swapOutChildViewWrapper:effectView];
     [effectView release];
   } else if (mUseMenuStyle && !aValue) {
@@ -3202,9 +3198,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 
 - (void)setWantsTitleDrawn:(BOOL)aDrawTitle {
   mDrawTitle = aDrawTitle;
-  if ([self respondsToSelector:@selector(setTitleVisibility:)]) {
-    [self setTitleVisibility:mDrawTitle ? NSWindowTitleVisible : NSWindowTitleHidden];
-  }
+  [self setTitleVisibility:mDrawTitle ? NSWindowTitleVisible : NSWindowTitleHidden];
 }
 
 - (BOOL)wantsTitleDrawn {
@@ -3471,10 +3465,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
     mSheetAttachmentPosition = aChildViewRect.size.height;
     mWindowButtonsRect = NSZeroRect;
 
-    if ([self respondsToSelector:@selector(setTitlebarAppearsTransparent:)]) {
-      [self setTitlebarAppearsTransparent:YES];
-    }
-
+    [self setTitlebarAppearsTransparent:YES];
     [self updateTitlebarGradientViewPresence];
   }
   return self;

@@ -87,10 +87,7 @@ static BOOL HasVibrantForeground(VibrancyType aType) {
 
   BOOL isEmphasized = NO;
   self.material = VisualEffectMaterialForVibrancyType(mType, &isEmphasized);
-
-  if (isEmphasized && [self respondsToSelector:@selector(setEmphasized:)]) {
-    [self setEmphasized:YES];
-  }
+  self.emphasized = isEmphasized;
 
   return self;
 }
