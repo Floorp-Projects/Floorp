@@ -97,3 +97,41 @@ add_task(async function test_readPreferences() {
   };
   Assert.deepEqual(prefs, expected, "Filtered prefs read are correct");
 });
+
+add_task(async function test_readTelemetryClientID() {
+  let profileService = Cc["@mozilla.org/toolkit/profile-service;1"].getService(
+    Ci.nsIToolkitProfileService
+  );
+
+  let profilePath = do_get_profile();
+  profilePath.append(`test_readTelemetryClientID`);
+  let profile = profileService.createUniqueProfile(
+    profilePath,
+    "test_readTelemetryClientID"
+  );
+
+  // Before we write any state, we fail to read.
+  await Assert.rejects(
+    BackgroundTasksUtils.withProfileLock(
+      lock => BackgroundTasksUtils.readTelemetryClientID(lock),
+      profile
+    ),
+    /NotFoundError/
+  );
+
+  let expected = {
+    clientID: "9cc75672-6830-4cb6-a7fd-089d6c7ce34c",
+    ecosystemClientID: "752f9d53-73fc-4006-a93c-d3e2e427f238",
+  };
+  let prefsFile = profile.rootDir.clone();
+  prefsFile.append("datareporting");
+  prefsFile.append("state.json");
+  await IOUtils.writeUTF8(prefsFile.path, JSON.stringify(expected));
+
+  // Now we can read the state.
+  let state = await BackgroundTasksUtils.withProfileLock(
+    lock => BackgroundTasksUtils.readTelemetryClientID(lock),
+    profile
+  );
+  Assert.deepEqual(state, expected.clientID, "State read is correct");
+});
