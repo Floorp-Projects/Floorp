@@ -160,8 +160,7 @@ void BrowsingContextGroup::Subscribe(ContentParent* aProcess) {
 
     if (focused || active) {
       Unused << aProcess->SendSetupFocusedAndActive(
-          focused, fm->GetActionIdForFocusedBrowsingContextInChrome(), active,
-          fm->GetActionIdForActiveBrowsingContextInChrome());
+          focused, active, fm->GetActionIdForActiveBrowsingContextInChrome());
     }
   }
 }
