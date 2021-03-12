@@ -259,20 +259,20 @@ assertEq(the_list, null);
 
           (func (export "set") (param eqref)
            (local (ref null $big))
-           (local.set 1 (ref.cast eq $big (local.get 0) rtt.canon $big))
+           (local.set 1 (ref.cast (local.get 0) rtt.canon $big))
            (struct.set $big 1 (local.get 1) (i64.const 0x3333333376544567)))
 
           (func (export "set2") (param $p eqref)
            (struct.set $big 1
-            (ref.cast eq $big (local.get $p) rtt.canon $big)
+            (ref.cast (local.get $p) rtt.canon $big)
             (i64.const 0x3141592653589793)))
 
           (func (export "low") (param $p eqref) (result i32)
-           (i32.wrap/i64 (struct.get $big 1 (ref.cast eq $big (local.get $p) rtt.canon $big))))
+           (i32.wrap/i64 (struct.get $big 1 (ref.cast (local.get $p) rtt.canon $big))))
 
           (func (export "high") (param $p eqref) (result i32)
            (i32.wrap/i64 (i64.shr_u
-                          (struct.get $big 1 (ref.cast eq $big (local.get $p) rtt.canon $big))
+                          (struct.get $big 1 (ref.cast (local.get $p) rtt.canon $big))
                           (i64.const 32))))
 
           (func (export "mk") (result eqref)
@@ -418,7 +418,7 @@ assertErrorMessage(() => ins.pop(),
           (func (export "mk") (result eqref)
            (struct.new_with_rtt $Node (i32.const 37) (rtt.canon $Node)))
           (func (export "f") (param $n eqref) (result eqref)
-           (ref.cast eq $Node (local.get $n) rtt.canon $Node)))`).exports;
+           (ref.cast (local.get $n) rtt.canon $Node)))`).exports;
     var n = ins.mk();
     assertEq(ins.f(n), n);
     assertErrorMessage(() => ins.f(wrapWithProto(n, {})), TypeError, /can only pass a TypedObject/);
