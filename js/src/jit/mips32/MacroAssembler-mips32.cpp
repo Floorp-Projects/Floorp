@@ -2154,10 +2154,10 @@ void MacroAssembler::moveValue(const TypedOrValueRegister& src,
   AnyRegister reg = src.typedReg();
 
   if (!IsFloatingPointType(type)) {
-    mov(ImmWord(MIRTypeToTag(type)), dest.typeReg());
     if (reg.gpr() != dest.payloadReg()) {
       move32(reg.gpr(), dest.payloadReg());
     }
+    mov(ImmWord(MIRTypeToTag(type)), dest.typeReg());
     return;
   }
 
