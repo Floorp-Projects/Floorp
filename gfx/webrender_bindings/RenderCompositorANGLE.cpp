@@ -307,16 +307,16 @@ bool RenderCompositorANGLE::CreateSwapChain(nsACString& aError) {
       mUseTripleBuffering = useTripleBuffering;
     } else if (useFlipSequential) {
       gfxCriticalNoteOnce << "FLIP_SEQUENTIAL is not supported. Fallback";
-
-      if (mWidget->AsWindows()->GetCompositorHwnd()) {
-        // Destroy compositor window.
-        mWidget->AsWindows()->DestroyCompositorWindow();
-        hwnd = mWidget->AsWindows()->GetHwnd();
-      }
     }
   }
 
   if (!mSwapChain) {
+    if (mWidget->AsWindows()->GetCompositorHwnd()) {
+      // Destroy compositor window.
+      mWidget->AsWindows()->DestroyCompositorWindow();
+      hwnd = mWidget->AsWindows()->GetHwnd();
+    }
+
     DXGI_SWAP_CHAIN_DESC swapDesc{};
     swapDesc.BufferDesc.Width = 0;
     swapDesc.BufferDesc.Height = 0;
