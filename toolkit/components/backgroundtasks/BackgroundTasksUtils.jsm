@@ -154,4 +154,37 @@ var BackgroundTasksUtils = {
     log.debug(`readPreferences: parsed prefs from buffer`, prefs);
     return prefs;
   },
+
+  /**
+   * Reads the Telemetry Client ID out of a profile.
+   *
+   * If no `lock` is given, the default profile is locked and the preferences
+   * read from it.  If `lock` is given, read from the given lock's directory.
+   *
+   * @param {nsIProfileLock} [lock] optional lock to use
+   * @returns {string}
+   */
+  async readTelemetryClientID(lock = null) {
+    if (!lock) {
+      return this.withProfileLock(profileLock =>
+        this.readTelemetryClientID(profileLock)
+      );
+    }
+
+    this._throwIfNotLocked(lock);
+
+    let stateFile = lock.directory.clone();
+    stateFile.append("datareporting");
+    stateFile.append("state.json");
+
+    log.info(
+      `readPreferences: will read Telemetry client ID from ${stateFile.path}`
+    );
+
+    // This JSON is always UTF-8.
+    let data = await IOUtils.readUTF8(stateFile.path);
+    let state = JSON.parse(data);
+
+    return state.clientID;
+  },
 };
