@@ -216,11 +216,12 @@ class LoadInfo final : public nsILoadInfo {
       bool aIsPreflight, bool aLoadTriggeredFromExternal,
       bool aServiceWorkerTaintingSynthesized, bool aDocumentHasUserInteracted,
       bool aAllowListFutureDocumentsCreatedFromThisRedirectChain,
-      const nsAString& aCspNonce, bool aSkipContentSniffing,
-      uint32_t aHttpsOnlyStatus, bool aHasValidUserGestureActivation,
-      bool aAllowDeprecatedSystemRequests, bool aIsInDevToolsContext,
-      bool aParserCreatedScript, bool aHasStoragePermission,
-      uint32_t aRequestBlockingReason, nsINode* aLoadingContext,
+      bool aNeedForCheckingAntiTrackingHeuristic, const nsAString& aCspNonce,
+      bool aSkipContentSniffing, uint32_t aHttpsOnlyStatus,
+      bool aHasValidUserGestureActivation, bool aAllowDeprecatedSystemRequests,
+      bool aIsInDevToolsContext, bool aParserCreatedScript,
+      bool aHasStoragePermission, uint32_t aRequestBlockingReason,
+      nsINode* aLoadingContext,
       nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy);
   LoadInfo(const LoadInfo& rhs);
 
@@ -314,6 +315,7 @@ class LoadInfo final : public nsILoadInfo {
   bool mServiceWorkerTaintingSynthesized = false;
   bool mDocumentHasUserInteracted = false;
   bool mAllowListFutureDocumentsCreatedFromThisRedirectChain = false;
+  bool mNeedForCheckingAntiTrackingHeuristic = false;
   nsString mCspNonce;
   bool mSkipContentSniffing = false;
   uint32_t mHttpsOnlyStatus = nsILoadInfo::HTTPS_ONLY_UNINITIALIZED;

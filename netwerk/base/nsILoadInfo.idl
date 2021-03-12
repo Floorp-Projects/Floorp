@@ -1247,6 +1247,12 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean allowListFutureDocumentsCreatedFromThisRedirectChain;
 
   /**
+   * Indicates that we need to check if we should apply the anti-tracking
+   * heuristic after the channel has been classified.
+   */
+  [infallible] attribute boolean needForCheckingAntiTrackingHeuristic;
+
+  /**
    * A snapshot of the nonce at load start time which is used for CSP
    * checks and only set for:
    *  * TYPE_SCRIPT and
