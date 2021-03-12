@@ -54,6 +54,11 @@ var webrtcUI = {
         "privacy.webrtc.legacyGlobalIndicator",
         true
       );
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        "deviceGracePeriodTimeoutMs",
+        "privacy.webrtc.deviceGracePeriodTimeoutMs"
+      );
 
       Services.telemetry.setEventRecordingEnabled("webrtc.ui", true);
     }
