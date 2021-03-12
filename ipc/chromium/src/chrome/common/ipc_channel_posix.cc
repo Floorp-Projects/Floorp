@@ -635,21 +635,21 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
     iov_count++;
 
     // Store remaining segments to write into iovec.
-    while (!iter.Done()) {
+    //
+    // Don't add more than kMaxIOVecSize to the iovec so that we avoid
+    // OS-dependent limits.
+    while (!iter.Done() && iov_count < kMaxIOVecSize) {
       char* data = iter.Data();
       size_t size = iter.RemainingInSegment();
 
-      // Don't add more than kMaxIOVecSize to the iovec so that we avoid
-      // OS-dependent limits.
-      if (iov_count < kMaxIOVecSize) {
-        iov[iov_count].iov_base = data;
-        iov[iov_count].iov_len = size;
-        iov_count++;
-      }
+      iov[iov_count].iov_base = data;
+      iov[iov_count].iov_len = size;
+      iov_count++;
       amt_to_write += size;
       iter.Advance(msg->Buffers(), size);
     }
 
+    const bool intentional_short_write = !iter.Done();
     msgh.msg_iov = iov;
     msgh.msg_iovlen = iov_count;
 
@@ -700,11 +700,13 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
       }
     }
 
-    if (static_cast<size_t>(bytes_written) != amt_to_write) {
+    if (intentional_short_write ||
+        static_cast<size_t>(bytes_written) != amt_to_write) {
       // If write() fails with EAGAIN then bytes_written will be -1.
       if (bytes_written > 0) {
-        MOZ_DIAGNOSTIC_ASSERT(static_cast<size_t>(bytes_written) <
-                              amt_to_write);
+        MOZ_DIAGNOSTIC_ASSERT(intentional_short_write ||
+                              static_cast<size_t>(bytes_written) <
+                                  amt_to_write);
         partial_write_iter_.ref().AdvanceAcrossSegments(msg->Buffers(),
                                                         bytes_written);
         // We should not hit the end of the buffer.
