@@ -184,8 +184,8 @@ inline bool FetchName(JSContext* cx, HandleObject receiver, HandleObject holder,
   return CheckUninitializedLexical(cx, name, vp);
 }
 
-inline bool FetchNameNoGC(JSObject* pobj, PropertyResult prop, Value* vp) {
-  if (prop.isNotFound() || !pobj->is<NativeObject>()) {
+inline bool FetchNameNoGC(NativeObject* pobj, PropertyResult prop, Value* vp) {
+  if (prop.isNotFound()) {
     return false;
   }
 
@@ -194,7 +194,7 @@ inline bool FetchNameNoGC(JSObject* pobj, PropertyResult prop, Value* vp) {
     return false;
   }
 
-  *vp = pobj->as<NativeObject>().getSlot(shape->slot());
+  *vp = pobj->getSlot(shape->slot());
   return !IsUninitializedLexical(*vp);
 }
 
@@ -204,7 +204,7 @@ inline bool GetEnvironmentName(JSContext* cx, HandleObject envChain,
   {
     PropertyResult prop;
     JSObject* obj = nullptr;
-    JSObject* pobj = nullptr;
+    NativeObject* pobj = nullptr;
     if (LookupNameNoGC(cx, name, envChain, &obj, &pobj, &prop)) {
       if (FetchNameNoGC(pobj, prop, vp.address())) {
         return true;

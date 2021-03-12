@@ -40,6 +40,7 @@ class RelocationOverlay;
 /****************************************************************************/
 
 class GlobalObject;
+class NativeObject;
 class NewObjectCache;
 
 enum class IntegrityLevel { Sealed, Frozen };
@@ -823,7 +824,7 @@ extern bool LookupName(JSContext* cx, HandlePropertyName name,
 
 extern bool LookupNameNoGC(JSContext* cx, PropertyName* name,
                            JSObject* scopeChain, JSObject** objp,
-                           JSObject** pobjp, PropertyResult* propp);
+                           NativeObject** pobjp, PropertyResult* propp);
 
 /*
  * Like LookupName except returns the global object if 'name' is not found in
@@ -852,8 +853,8 @@ extern bool LookupNameUnqualified(JSContext* cx, HandlePropertyName name,
 
 namespace js {
 
-bool LookupPropertyPure(JSContext* cx, JSObject* obj, jsid id, JSObject** objp,
-                        PropertyResult* propp);
+bool LookupPropertyPure(JSContext* cx, JSObject* obj, jsid id,
+                        NativeObject** objp, PropertyResult* propp);
 
 bool LookupOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id,
                            PropertyResult* propp);

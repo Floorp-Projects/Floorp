@@ -12,6 +12,8 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 
+#include <type_traits>
+
 #include "gc/Allocator.h"
 #include "gc/GCProbes.h"
 #include "gc/MaybeRooted.h"
@@ -772,7 +774,9 @@ template <AllowGC allowGC,
 static MOZ_ALWAYS_INLINE bool NativeLookupPropertyInline(
     JSContext* cx, typename MaybeRooted<NativeObject*, allowGC>::HandleType obj,
     typename MaybeRooted<jsid, allowGC>::HandleType id,
-    typename MaybeRooted<JSObject*, allowGC>::MutableHandleType objp,
+    typename MaybeRooted<
+        std::conditional_t<allowGC == AllowGC::CanGC, JSObject*, NativeObject*>,
+        allowGC>::MutableHandleType objp,
     typename MaybeRooted<PropertyResult, allowGC>::MutableHandleType propp) {
   /* Search scopes starting with obj and following the prototype link. */
   typename MaybeRooted<NativeObject*, allowGC>::RootType current(cx, obj);
