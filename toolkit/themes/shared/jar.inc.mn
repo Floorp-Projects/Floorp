@@ -55,8 +55,7 @@ toolkit.jar:
 #endif
   skin/classic/global/icons/heart.svg                      (../../shared/icons/heart.svg)
   skin/classic/global/icons/help.svg                       (../../shared/icons/help.svg)
-  skin/classic/global/icons/info.svg                       (../../shared/icons/info.svg)
-  skin/classic/global/icons/info-filled.svg                (../../shared/icons/info-filled.svg)
+  skin/classic/global/icons/info.svg                       (../../shared/incontent-icons/info.svg)
   skin/classic/global/icons/loading.png                    (../../shared/icons/loading.png)
   skin/classic/global/icons/loading@2x.png                 (../../shared/icons/loading@2x.png)
   skin/classic/global/icons/menu-arrow.svg                 (../../shared/icons/menu-arrow.svg)

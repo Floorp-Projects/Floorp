@@ -119,9 +119,7 @@
 }
 
 @item@[verdict="Uncommon"] .downloadBlockedBadge {
-  -moz-context-properties: fill;
-  fill: #00a1f2;
-  background-image: url("chrome://global/skin/icons/info-filled.svg");
+  background-image: url("chrome://browser/skin/info.svg");
 }
 
 .downloadContainer {
