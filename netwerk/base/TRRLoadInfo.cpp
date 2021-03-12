@@ -492,6 +492,16 @@ TRRLoadInfo::SetAllowListFutureDocumentsCreatedFromThisRedirectChain(
 }
 
 NS_IMETHODIMP
+TRRLoadInfo::GetNeedForCheckingAntiTrackingHeuristic(bool* aValue) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+TRRLoadInfo::SetNeedForCheckingAntiTrackingHeuristic(bool aValue) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 TRRLoadInfo::GetCspNonce(nsAString& aCspNonce) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
