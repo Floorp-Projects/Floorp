@@ -30,20 +30,20 @@
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
   :root {
     /* Override some menu color variables for light browser themes. */
-    --menuitem-hover-background-color: #e0e0e6;
+    --menuitem-hover-background-color: #E0E0E6;
     --menuitem-hover-color: black;
     --menu-background-color: #f9f9fb;
     --menu-color: black;
     --menu-disabled-color: rgba(21, 20, 26, 0.4);
-    --menu-border-color: #f0f0f4;
+    --menu-border-color: #E0E0E6;
 
     /* Declare menu colors for dark themes, but don't override anything yet. */
-    --dark-menuitem-hover-background-color: #53535f;
+    --dark-menuitem-hover-background-color: #52525E;
     --dark-menuitem-hover-color: white;
     --dark-menu-background-color: #15141a;
     --dark-menu-color: white;
     --dark-menu-disabled-color: rgba(251, 251, 254, 0.6);
-    --dark-menu-border-color: #5b5b67;
+    --dark-menu-border-color: #52525E;
   }
 
   /* Override the menu color variables for dark browser themes. */
