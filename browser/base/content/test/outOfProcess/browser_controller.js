@@ -1,4 +1,4 @@
-function checkCommandState(testid, undoEnabled, copyEnabled, deleteEnabled) {
+function checkCommandState(testid, undoEnabled, deleteEnabled) {
   is(
     !document.getElementById("cmd_undo").hasAttribute("disabled"),
     undoEnabled,
@@ -6,9 +6,9 @@ function checkCommandState(testid, undoEnabled, copyEnabled, deleteEnabled) {
   );
   is(
     !document.getElementById("cmd_copy").hasAttribute("disabled"),
-    copyEnabled,
+    true,
     testid + " copy"
-  );
+  ); // copy should always be enabled
   is(
     !document.getElementById("cmd_delete").hasAttribute("disabled"),
     deleteEnabled,
@@ -69,9 +69,7 @@ add_task(async function test_controllers_subframes() {
         "root focused"
       );
     });
-    // XXX Currently, Copy is always enabled when the root (not an editor element)
-    // is focused. Possibly that should only be true if a listener is present?
-    checkCommandState("step " + stepNum + " root focused", false, true, false);
+    checkCommandState("step " + stepNum + " root focused", false, false);
 
     // Tab to the textbox.
     await keyAndUpdate("VK_TAB", {}, 1);
@@ -87,16 +85,11 @@ add_task(async function test_controllers_subframes() {
         "input focused"
       );
     });
-    checkCommandState(
-      "step " + stepNum + " input focused",
-      false,
-      false,
-      false
-    );
+    checkCommandState("step " + stepNum + " input focused", false, false);
 
     // Type into the textbox.
     await keyAndUpdate("a", {}, 1);
-    checkCommandState("step " + stepNum + " typed", true, false, false);
+    checkCommandState("step " + stepNum + " typed", true, false);
 
     await SpecialPowers.spawn(browsingContexts[stepNum], [], () => {
       Assert.equal(
@@ -106,13 +99,13 @@ add_task(async function test_controllers_subframes() {
       );
     });
 
-    // Select all text; this causes the Copy and Delete commands to be enabled.
+    // Select all text.
     await keyAndUpdate("a", { accelKey: true }, 1);
     if (AppConstants.platform != "macosx") {
       goUpdateGlobalEditMenuItems(true);
     }
 
-    checkCommandState("step " + stepNum + " selected", true, true, true);
+    checkCommandState("step " + stepNum + " selected", true, true);
 
     // Now make sure that the text is selected.
     await SpecialPowers.spawn(browsingContexts[stepNum], [], () => {
