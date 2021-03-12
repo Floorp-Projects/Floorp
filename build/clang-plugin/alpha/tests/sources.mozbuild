@@ -6,5 +6,6 @@
 
 SOURCES += [
     # 'AlphaTest.cpp',
+    "TestNonStdMove.cpp",
     'TestTempRefPtr.cpp',
 ]
