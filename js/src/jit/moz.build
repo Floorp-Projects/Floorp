@@ -259,5 +259,5 @@ GeneratedFile(
     inputs=["CacheIROps.yaml"],
 )
 
-if CONFIG["FUZZING_INTERFACES"] or CONFIG["FUZZING_JS_FUZZILLI"]:
+if CONFIG["FUZZING_INTERFACES"] and CONFIG["LIBFUZZER"]:
     include("/tools/fuzzing/libfuzzer-config.mozbuild")
