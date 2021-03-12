@@ -1931,7 +1931,7 @@ bool js::LookupName(JSContext* cx, HandlePropertyName name,
 }
 
 bool js::LookupNameNoGC(JSContext* cx, PropertyName* name, JSObject* envChain,
-                        JSObject** objp, JSObject** pobjp,
+                        JSObject** objp, NativeObject** pobjp,
                         PropertyResult* propp) {
   AutoAssertNoPendingException nogc(cx);
 
@@ -2065,7 +2065,7 @@ bool js::HasOwnProperty(JSContext* cx, HandleObject obj, HandleId id,
 }
 
 bool js::LookupPropertyPure(JSContext* cx, JSObject* obj, jsid id,
-                            JSObject** objp, PropertyResult* propp) {
+                            NativeObject** objp, PropertyResult* propp) {
   if (obj->getOpsLookupProperty()) {
     return false;
   }
@@ -2107,7 +2107,7 @@ static inline bool NativeGetPureInline(NativeObject* pobj, jsid id,
 }
 
 bool js::GetPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp) {
-  JSObject* pobj;
+  NativeObject* pobj;
   PropertyResult prop;
   if (!LookupPropertyPure(cx, obj, id, &pobj, &prop)) {
     return false;
@@ -2118,8 +2118,7 @@ bool js::GetPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp) {
     return true;
   }
 
-  return pobj->is<NativeObject>() &&
-         NativeGetPureInline(&pobj->as<NativeObject>(), id, prop, vp, cx);
+  return NativeGetPureInline(pobj, id, prop, vp, cx);
 }
 
 bool js::GetOwnPropertyPure(JSContext* cx, JSObject* obj, jsid id, Value* vp,
@@ -2159,7 +2158,7 @@ static inline bool NativeGetGetterPureInline(PropertyResult prop,
 bool js::GetGetterPure(JSContext* cx, JSObject* obj, jsid id, JSFunction** fp) {
   /* Just like GetPropertyPure, but get getter function, without invoking
    * it. */
-  JSObject* pobj;
+  NativeObject* pobj;
   PropertyResult prop;
   if (!LookupPropertyPure(cx, obj, id, &pobj, &prop)) {
     return false;
