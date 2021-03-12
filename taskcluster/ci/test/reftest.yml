@@ -84,6 +84,7 @@ crashtest-qr:
     chunks: 1
     e10s: true
     run-on-projects: built-projects
+    fission-run-on-projects: []
     max-run-time: 1200
     tier: 2
     virtualization:
@@ -122,6 +123,7 @@ jsreftest:
             android-hw-.*-aarch64(?:-shippable)?/.*: ['mozilla-central', 'release']
             android-hw-.*-api-16(?:-shippable)?/.*: ['mozilla-central', 'release']
             default: built-projects
+    fission-run-on-projects: []
     virtualization:
         by-test-platform:
             windows10-64.*: hardware
@@ -191,6 +193,7 @@ reftest-qr:
     chunks: 2
     e10s: true
     run-on-projects: built-projects
+    fission-run-on-projects: []
     max-run-time: 2400
     mozharness:
         chunked: true
@@ -212,6 +215,7 @@ reftest-gpu:
         by-test-platform:
             windows10.*: []
             default: built-projects
+    fission-run-on-projects: []
     instance-size: default
     virtualization: virtual-with-gpu
     max-run-time: 3600
@@ -230,6 +234,7 @@ reftest-no-accel:
         by-test-platform:
             windows10.*: []
             default: built-projects
+    fission-run-on-projects: []
     chunks:
         by-test-platform:
             macosx.*: 1
