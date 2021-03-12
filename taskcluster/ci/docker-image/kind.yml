@@ -176,3 +176,5 @@ jobs:
     push-to-try:
         symbol: I(push-to-try)
         parent: debian10-base
+    decision:
+        symbol: I(decision)
