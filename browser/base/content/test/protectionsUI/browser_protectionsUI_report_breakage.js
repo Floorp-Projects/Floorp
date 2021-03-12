@@ -378,7 +378,7 @@ async function testReportBreakageSubmit(url, tags, error, hasException) {
     "protections-popup-sendReportView-report-error"
   );
   if (error) {
-    await BrowserTestUtils.waitForCondition(() =>
+    await TestUtils.waitForCondition(() =>
       BrowserTestUtils.is_visible(errorMessage)
     );
     is(
