@@ -4,8 +4,8 @@ buildscript {
     ext.architecture_components_version = '2.1.0'
     ext.support_libraries_version = '1.0.0'
     ext.espresso_version = '3.1.0-alpha4'
-    ext.kotlin_version = '1.3.61'
-    ext.coroutines_version = '1.3.0'
+    ext.kotlin_version = '1.4.30'
+    ext.coroutines_version = '1.4.2'
     ext.mozilla_components_version = '73.0.8'
     // Pinning the last working version of the service-telemetry component until we decide
     // what we want to do with telemetry in the app.
@@ -33,7 +33,6 @@ plugins {
     // other methods involve using undocumented APIs
     // https://docs.gradle.org/current/userguide/plugins.html#plugins_dsl_limitations
     id "io.gitlab.arturbosch.detekt" version "1.0.0.RC6-3"
-    id "org.jetbrains.kotlin.kapt" version "1.2.50"
 }
 
 detekt {
