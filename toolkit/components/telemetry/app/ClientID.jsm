@@ -247,7 +247,11 @@ var ClientIDImpl = {
 
     // Absent or broken state file? Check prefs as last resort.
     if (!hasCurrentClientID) {
-      hasCurrentClientID = this.updateClientID(this.getCachedClientID());
+      const cachedID = this.getCachedClientID();
+      // Calling `updateClientID` with `null` logs an error, which breaks tests.
+      if (cachedID) {
+        hasCurrentClientID = this.updateClientID(cachedID);
+      }
     }
 
     // We're missing one or both IDs from the DRS state file and prefs.
