@@ -1,0 +1,21 @@
+pull_request_rules:
+  - name: Needs landing - Rebase
+    conditions:
+      - status-success=FirefoxCI (pull_request)
+      - label=🛬 needs landing
+      - "#approved-reviews-by>=1"
+      - -draft
+    actions:
+      merge:
+        method: rebase
+        strict: smart
+  - name: Needs landing - Squash
+    conditions:
+      - status-success=FirefoxCI (pull_request)
+      - label=🛬 needs landing (squash)
+      - "#approved-reviews-by>=1"
+      - -draft
+    actions:
+      merge:
+        method: squash
+        strict: smart
