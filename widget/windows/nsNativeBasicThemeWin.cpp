@@ -57,20 +57,6 @@ sRGBColor nsNativeBasicThemeWin::ComputeCheckmarkColor(
       LookAndFeel::GetColor(LookAndFeel::ColorID::TextBackground));
 }
 
-std::pair<sRGBColor, sRGBColor>
-nsNativeBasicThemeWin::ComputeRadioCheckmarkColors(const EventStates& aState) {
-  if (!LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme, 0)) {
-    return nsNativeBasicTheme::ComputeRadioCheckmarkColors(aState);
-  }
-
-  auto [unusedColor, checkColor] =
-      ComputeCheckboxColors(aState, StyleAppearance::Radio);
-  (void)unusedColor;
-  sRGBColor backgroundColor = ComputeCheckmarkColor(aState);
-
-  return std::make_pair(backgroundColor, checkColor);
-}
-
 sRGBColor nsNativeBasicThemeWin::ComputeBorderColor(const EventStates& aState) {
   if (!LookAndFeel::GetInt(LookAndFeel::IntID::UseAccessibilityTheme, 0)) {
     return nsNativeBasicTheme::ComputeBorderColor(aState);
