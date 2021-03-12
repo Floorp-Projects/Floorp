@@ -388,13 +388,6 @@ class WebRTCParent extends JSWindowActorParent {
         allowedDevices.push((activeMic || audioDevices[0]).deviceIndex);
       }
 
-      // Remember on which URIs we found persistent permissions so that we
-      // can remove them if the user clicks 'Stop Sharing'. There's no
-      // other way for the stop sharing code to know the hostnames of frames
-      // using devices until bug 1066082 is fixed.
-      let browser = this.getBrowser();
-      browser.getDevicePermissionOrigins("webrtc").add(aPrincipal.origin);
-
       // If sharingScreen, we're requesting screen-sharing, otherwise camera
       let camNeeded = !!videoDevices.length && !sharingScreen;
       let scrNeeded = !!videoDevices.length && sharingScreen;
@@ -1104,12 +1097,6 @@ function prompt(aActor, aBrowser, aRequest) {
         if (!allowedDevices.length) {
           aActor.denyRequest(aRequest);
           return;
-        }
-
-        if (remember) {
-          // Remember on which URIs we set persistent permissions so that we
-          // can remove them if the user clicks 'Stop Sharing'.
-          aBrowser.getDevicePermissionOrigins("webrtc").add(principal.origin);
         }
 
         let camNeeded = !!videoDevices.length && !sharingScreen;
