@@ -685,18 +685,20 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 @media (prefers-reduced-motion: no-preference) {
 #PanelUI-fxa-menu-syncnow-button[syncstatus="active"] > .toolbarbutton-icon,
 #PanelUI-remotetabs-syncnow[syncstatus="active"] > .toolbarbutton-icon,
-#PanelUI-appMenu-fxa-image-last-synced[syncstatus="active"] {
+.syncNowBtn[syncstatus="active"] {
   animation: syncRotate 0.8s linear infinite;
   -moz-context-properties: fill;
   fill: var(--toolbarbutton-icon-fill-attention);
+  visibility: visible;
 }
 }
 
-#PanelUI-appMenu-fxa-image-last-synced {
+.syncNowBtn {
   -moz-context-properties: fill;
-  fill: var(--panel-description-color);
-  height: 8px;
-  width: 8px;
+  fill: currentColor;
+  height: 16px;
+  width: 16px;
+  list-style-image: url("chrome://browser/skin/sync.svg");
 }
 
 #appMenu-fxa-status {
@@ -799,14 +801,13 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   }
 
   #fxa-manage-account-button > vbox > label,
-  #PanelUI-fxa-menu-syncnow-button > vbox > label,
-  #PanelUI-fxa-menu-syncnow-button > vbox > hbox > label {
+  #PanelUI-fxa-menu-syncnow-button > hbox > label {
     margin-inline-start: 0;
   }
 
-  #PanelUI-appMenu-fxa-image-last-synced {
-    height: 8px;
-    width: 8px;
+  .syncNowBtn {
+    visibility: collapse;
+    -moz-box-ordinal-group: 2;
   }
 
   .PanelUI-remotetabs-clientcontainer > label[itemtype="client"] {
