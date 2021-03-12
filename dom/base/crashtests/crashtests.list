@@ -260,3 +260,4 @@ asserts(0-1) load 1623918.html # May hit an assertion if the <input> element's a
 load 1656925.html
 skip-if(Android) load 1665792.html # Print preview on android doesn't fly
 load 1681729.html
+load 1697525.html
