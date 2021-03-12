@@ -34,6 +34,7 @@ XPIDL_MODULE = "toolkit_backgroundtasks"
 
 EXTRA_JS_MODULES += [
     "BackgroundTasksManager.jsm",
+    "BackgroundTasksUtils.jsm",
 ]
 
 EXTRA_JS_MODULES.backgroundtasks += [
