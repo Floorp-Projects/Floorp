@@ -2680,14 +2680,15 @@ AttachDecision GetNameIRGenerator::tryAttachStub() {
   return AttachDecision::NoAction;
 }
 
-static bool CanAttachGlobalName(
-    JSContext* cx, Handle<GlobalLexicalEnvironmentObject*> globalLexical,
-    HandleId id, MutableHandleNativeObject holder, MutableHandleShape shape) {
+static bool CanAttachGlobalName(JSContext* cx,
+                                GlobalLexicalEnvironmentObject* globalLexical,
+                                JS::PropertyKey id, NativeObject** holder,
+                                Shape** shape) {
   // The property must be found, and it must be found as a normal data property.
   NativeObject* current = globalLexical;
   while (true) {
-    shape.set(current->lookup(cx, id));
-    if (shape) {
+    *shape = current->lookup(cx, id);
+    if (*shape) {
       break;
     }
 
@@ -2708,7 +2709,7 @@ static bool CanAttachGlobalName(
     }
   }
 
-  holder.set(current);
+  *holder = current;
   return true;
 }
 
@@ -2718,11 +2719,10 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameValue(ObjOperandId objId,
     return AttachDecision::NoAction;
   }
 
-  Handle<GlobalLexicalEnvironmentObject*> globalLexical =
-      env_.as<GlobalLexicalEnvironmentObject>();
+  auto* globalLexical = &env_->as<GlobalLexicalEnvironmentObject>();
 
-  RootedNativeObject holder(cx_);
-  RootedShape shape(cx_);
+  NativeObject* holder = nullptr;
+  Shape* shape = nullptr;
   if (!CanAttachGlobalName(cx_, globalLexical, id, &holder, &shape)) {
     return AttachDecision::NoAction;
   }
@@ -2785,8 +2785,8 @@ AttachDecision GetNameIRGenerator::tryAttachGlobalNameGetter(ObjOperandId objId,
       env_.as<GlobalLexicalEnvironmentObject>();
   MOZ_ASSERT(globalLexical->isGlobal());
 
-  RootedNativeObject holder(cx_);
-  RootedShape shape(cx_);
+  NativeObject* holder = nullptr;
+  Shape* shape = nullptr;
   if (!CanAttachGlobalName(cx_, globalLexical, id, &holder, &shape)) {
     return AttachDecision::NoAction;
   }
