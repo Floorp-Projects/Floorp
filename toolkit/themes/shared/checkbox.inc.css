@@ -1,0 +1,72 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html url("http://www.w3.org/1999/xhtml");
+
+@supports -moz-bool-pref("browser.proton.enabled") {
+checkbox {
+  appearance: none;
+  -moz-box-align: center;
+  margin: 4px 2px;
+}
+
+.checkbox-icon {
+  margin-inline-end: 2px;
+}
+
+.checkbox-label {
+  margin: 1px 0;
+}
+
+/* ..... disabled state ..... */
+
+checkbox[disabled="true"] {
+  opacity: 0.4;
+}
+
+/* ::::: checkmark image ::::: */
+
+.checkbox-check {
+  appearance: none;
+  height: 16px;
+  width: 16px;
+  border: 1px solid var(--checkbox-border-color, ThreeDDarkShadow);
+  background-color: var(--checkbox-unchecked-bgcolor, Field);
+  border-radius: 2px;
+  color: FieldText;
+  margin-inline-end: 6px;
+}
+
+checkbox:not([disabled="true"]):hover > .checkbox-check {
+  background-color: var(--checkbox-unchecked-hover-bgcolor, Field);
+}
+
+checkbox:not([disabled="true"]):active > .checkbox-check {
+  background-color: var(--checkbox-unchecked-active-bgcolor, Field);
+}
+
+.checkbox-check[checked] {
+  border-color: var(--checkbox-checked-border-color, transparent);
+  background-color: var(--checkbox-checked-bgcolor, -moz-accent-color);
+  list-style-image: url("chrome://global/skin/icons/check.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+  color: var(--checkbox-checked-color, -moz-accent-color-foreground);
+}
+
+checkbox:not([disabled="true"]):hover > .checkbox-check[checked] {
+  background-color: var(--checkbox-checked-hover-bgcolor, color-mix(in srgb, currentColor 10%, -moz-accent-color));
+}
+
+checkbox:not([disabled="true"]):active > .checkbox-check[checked] {
+  background-color: var(--checkbox-checked-active-bgcolor, color-mix(in srgb, currentColor 20%, -moz-accent-color));
+}
+
+checkbox:not([native]):-moz-focusring > .checkbox-check {
+  outline: 2px solid var(--focus-outline-color, -moz-accent-color);
+  outline-offset: var(--focus-outline-offset, -1px);
+  box-shadow: 0 0 0 4px var(--buttons-box-shadow, rgba(10, 132, 255, 0.3));
+}
+} /** END Proton **/

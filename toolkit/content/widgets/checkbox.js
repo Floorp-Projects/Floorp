@@ -40,9 +40,9 @@
 
     static get inheritedAttributes() {
       return {
-        ".checkbox-check": "disabled,checked",
-        ".checkbox-label": "text=label,accesskey",
-        ".checkbox-icon": "src",
+        ".checkbox-check": "disabled,checked,native",
+        ".checkbox-label": "text=label,accesskey,native",
+        ".checkbox-icon": "src,native",
       };
     }
 

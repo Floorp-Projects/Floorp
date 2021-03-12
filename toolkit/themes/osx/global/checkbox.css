@@ -4,6 +4,49 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+%include ../../shared/checkbox.inc.css
+
+@supports -moz-bool-pref("browser.proton.enabled") {
+checkbox:not([native]):-moz-focusring > .checkbox-check {
+  outline: 2px solid var(--focus-outline-color, -moz-mac-focusring);
+}
+
+checkbox[native] {
+  appearance: auto;
+  -moz-default-appearance: checkbox-container;
+  -moz-box-align: center;
+  margin: 4px 2px;
+}
+
+.checkbox-icon[native] {
+  margin-inline-end: 2px;
+}
+
+.checkbox-label[native] {
+  margin: 1px 0;
+}
+
+/* ..... disabled state ..... */
+
+checkbox[native][disabled="true"] {
+  color: GrayText;
+}
+
+/* ::::: checkmark image ::::: */
+
+.checkbox-check[native] {
+  appearance: auto;
+  -moz-default-appearance: checkbox;
+  margin: 1px 1px 0;
+  /* vertical-align tells native theming where to snap to. However, this doesn't
+   * always work reliably because of bug 503833. */
+  vertical-align: top;
+  width: 1.3em;
+  height: 1.3em;
+}
+} /** END Proton **/
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
 checkbox {
   appearance: auto;
   -moz-default-appearance: checkbox-container;
@@ -37,3 +80,4 @@ checkbox[disabled="true"] {
   width: 1.3em;
   height: 1.3em;
 }
+} /** END not Proton **/
