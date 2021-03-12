@@ -15,7 +15,7 @@ KEY_XRE = "{xre}"
 DEFAULT_DURATION = 100.0
 
 
-class Whitelist:
+class Allowlist:
     # we need to find the root dir of the profile at runtime
     PRE_PROFILE = ""
 
@@ -46,8 +46,8 @@ class Whitelist:
             with open(filename, "r") as fHandle:
                 temp = json.load(fHandle)
 
-            for whitelist_name in temp:
-                self.listmap[whitelist_name.lower()] = temp[whitelist_name]
+            for allowlist_name in temp:
+                self.listmap[allowlist_name.lower()] = temp[allowlist_name]
 
         except IOError as e:
             print("%s: %s" % (e.filename, e.strerror))
@@ -170,7 +170,7 @@ class Whitelist:
             print("TEST-UNEXPECTED-FAIL | %s | %s" % (self.test_name, error_msg))
 
     # Note that we don't store dependent libs in listmap. This makes
-    # save_baseline cleaner. Since a baseline whitelist should not include
+    # save_baseline cleaner. Since a baseline allowlist should not include
     # the dependent_libs, we would need to filter them out if everything was
     # stored in the same dict.
     def load_dependent_libs(self):
