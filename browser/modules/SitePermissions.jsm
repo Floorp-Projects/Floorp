@@ -27,16 +27,18 @@ const TemporaryPermissions = {
   // This is a three level deep map with the following structure:
   //
   // Browser => {
-  //   <baseDomain>: {
+  //   <baseDomain|prePath>: {
   //     <permissionID>: {Number} <timeStamp>
   //   }
   // }
   //
   // Only the top level browser elements are stored via WeakMap. The WeakMap
-  // value is an object with URI baseDomains as keys. The keys of that object
+  // value is an object with URI baseDomains or prePaths as keys. The keys of that object
   // are ids that identify permissions that were set for the specific URI.
   // The final value is an object containing the timestamp of when the permission
   // was set (in order to invalidate after a certain amount of time has passed).
+  // BLOCK permissions are keyed under baseDomain to prevent bypassing the block
+  // (see Bug 1492668). Any other permissions are keyed under URI prePath.
   _stateByBrowser: new WeakMap(),
 
   // Private helper method that bundles some shared behavior for
@@ -75,44 +77,106 @@ const TemporaryPermissions = {
     }
   },
 
+  /**
+   * Generate keys to store temporary permissions under. The strict key is
+   * nsIURI.prePath, non-strict is URI baseDomain.
+   * @param {nsIURI} uri - URI to derive keys from.
+   * @returns {Object} keys - Object containing the generated permission keys.
+   * @returns {string} keys.strict - Key to be used for strict matching.
+   * @returns {string} keys.nonStrict - Key to be used for non-strict matching.
+   * @throws {Error} - Throws if URI is undefined or no valid permission key can
+   * be generated.
+   */
+  _getKeysFromURI(uri) {
+    return { strict: uri.prePath, nonStrict: this._uriToBaseDomain(uri) };
+  },
+
   // Sets a new permission for the specified browser.
   set(browser, id, state) {
-    if (!browser) {
+    if (
+      !browser ||
+      !SitePermissions.isSupportedScheme(browser.currentURI.scheme)
+    ) {
       return;
     }
     if (!this._stateByBrowser.has(browser)) {
       this._stateByBrowser.set(browser, {});
     }
     let entry = this._stateByBrowser.get(browser);
-    let baseDomain = this._uriToBaseDomain(browser.currentURI);
-    if (!entry[baseDomain]) {
-      entry[baseDomain] = {};
+    // We store blocked permissions by baseDomain. Other states by URI prePath.
+    let { strict, nonStrict } = this._getKeysFromURI(browser.currentURI);
+    let setKey;
+    let deleteKey;
+    // Differenciate between block and non-block permissions. If we store a
+    // block permission we need to delete old entries which may be set under URI
+    // prePath before setting the new permission for baseDomain. For non-block
+    // permissions this is swapped.
+    if (state == SitePermissions.BLOCK) {
+      setKey = nonStrict;
+      deleteKey = strict;
+    } else {
+      setKey = strict;
+      deleteKey = nonStrict;
     }
-    entry[baseDomain][id] = { timeStamp: Date.now(), state };
+    if (!entry[setKey]) {
+      entry[setKey] = {};
+    }
+    entry[setKey][id] = { timeStamp: Date.now(), state };
+
+    // If we set a permission state for a prePath we need to reset the old state
+    // which may be set for baseDomain and vice versa. An individual permission
+    // must only ever be keyed by either prePath or baseDomain.
+    let permissions = entry[deleteKey];
+    if (permissions) {
+      delete permissions[id];
+    }
   },
 
   // Removes a permission with the specified id for the specified browser.
   remove(browser, id) {
-    if (!browser || !this._stateByBrowser.has(browser)) {
+    if (
+      !browser ||
+      !SitePermissions.isSupportedScheme(browser.currentURI.scheme) ||
+      !this._stateByBrowser.has(browser)
+    ) {
       return;
     }
     let entry = this._stateByBrowser.get(browser);
-    let baseDomain = this._uriToBaseDomain(browser.currentURI);
-    if (entry[baseDomain]) {
-      delete entry[baseDomain][id];
+    // Permission can be stored by any of the two keys (strict and non-strict).
+    // getKeysFromURI can throw. We let the caller handle the exception.
+    let { strict, nonStrict } = this._getKeysFromURI(browser.currentURI);
+    for (let key of [nonStrict, strict]) {
+      if (entry[key]?.[id] != null) {
+        delete entry[key][id];
+        // Individual permissions can only ever be keyed either strict or
+        // non-strict. If we find the permission via the first key run we can
+        // return early.
+        return;
+      }
     }
   },
 
   // Gets a permission with the specified id for the specified browser.
   get(browser, id) {
-    if (!browser || !browser.currentURI || !this._stateByBrowser.has(browser)) {
+    if (
+      !browser ||
+      !browser.currentURI ||
+      !SitePermissions.isSupportedScheme(browser.currentURI.scheme) ||
+      !this._stateByBrowser.has(browser)
+    ) {
       return null;
     }
     let entry = this._stateByBrowser.get(browser);
-    let baseDomain = this._uriToBaseDomain(browser.currentURI);
-    if (entry[baseDomain]) {
-      let permission = entry[baseDomain][id];
-      return this._get(entry, baseDomain, id, permission);
+
+    let { strict, nonStrict } = this._getKeysFromURI(browser.currentURI);
+    for (let key of [nonStrict, strict]) {
+      if (entry[key]) {
+        let permission = entry[key][id];
+        let result = this._get(entry, key, id, permission);
+        if (result != null) {
+          return result;
+        }
+      }
     }
     return null;
   },
@@ -122,21 +186,28 @@ const TemporaryPermissions = {
   // of the passed browser element will be returned.
   getAll(browser) {
     let permissions = [];
-    if (!this._stateByBrowser.has(browser)) {
+    if (
+      !SitePermissions.isSupportedScheme(browser.currentURI.scheme) ||
+      !this._stateByBrowser.has(browser)
+    ) {
       return permissions;
     }
     let entry = this._stateByBrowser.get(browser);
-    let baseDomain = this._uriToBaseDomain(browser.currentURI);
-    if (entry[baseDomain]) {
-      let timeStamps = entry[baseDomain];
-      for (let id of Object.keys(timeStamps)) {
-        let permission = this._get(entry, baseDomain, id, timeStamps[id]);
-        // _get() returns null when the permission has expired.
-        if (permission) {
-          permissions.push(permission);
+
+    let { strict, nonStrict } = this._getKeysFromURI(browser.currentURI);
+    for (let key of [nonStrict, strict]) {
+      if (entry[key]) {
+        let timeStamps = entry[key];
+        for (let id of Object.keys(timeStamps)) {
+          let permission = this._get(entry, key, id, timeStamps[id]);
+          // _get() returns null when the permission has expired.
+          if (permission) {
+            permissions.push(permission);
+          }
         }
       }
     }
+
     return permissions;
   },
 
@@ -416,9 +487,16 @@ var SitePermissions = {
         "Argument passed as principal is not an instance of Ci.nsIPrincipal"
       );
     }
-    return ["http", "https", "moz-extension", "file"].some(scheme =>
-      principal.schemeIs(scheme)
-    );
+    return this.isSupportedScheme(principal.scheme);
+  },
+
+  /**
+   * Checks whether we support managing permissions for a specific scheme.
+   * @param {string} scheme - Scheme to test.
+   * @returns {boolean} Whether the scheme is supported.
+   */
+  isSupportedScheme(scheme) {
+    return ["http", "https", "moz-extension", "file"].includes(scheme);
   },
 
   /**
@@ -661,20 +739,6 @@ var SitePermissions = {
 
     // Save temporary permissions.
     if (scope == this.SCOPE_TEMPORARY) {
-      // We do not support setting temp ALLOW for security reasons.
-      // In its current state, this permission could be exploited by subframes
-      // on the same page. This is because for BLOCK we ignore the request
-      // principal and only consider the current browser principal, to avoid notification spamming.
-      //
-      // If you ever consider removing this line, you likely want to implement
-      // a more fine-grained TemporaryPermissions that temporarily blocks for the
-      // entire browser, but temporarily allows only for specific frames.
-      if (state != this.BLOCK) {
-        throw new Error(
-          "'Block' is the only permission we can save temporarily on a browser"
-        );
-      }
-
       if (!browser) {
         throw new Error(
           "TEMPORARY scoped permissions require a browser object"
