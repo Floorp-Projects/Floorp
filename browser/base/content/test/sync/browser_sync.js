@@ -39,11 +39,7 @@ add_task(async function test_ui_state_notification_calls_updateAllUI() {
 
 add_task(async function test_navBar_button_visibility() {
   const button = document.getElementById("fxa-toolbar-menu-button");
-  const protonEnabled = Services.prefs.getBoolPref(
-    "browser.proton.toolbar.enabled",
-    false
-  );
-  info("pref browser.proton.toolbar.enabled: " + protonEnabled);
+  info("proton enabled: " + CustomizableUI.protonToolbarEnabled);
 
   ok(button.closest("#nav-bar"), "button is in the #nav-bar");
 
@@ -54,7 +50,7 @@ add_task(async function test_navBar_button_visibility() {
   gSync.updateAllUI(state);
   is(
     BrowserTestUtils.is_visible(button),
-    !protonEnabled,
+    !CustomizableUI.protonToolbarEnabled,
     "Check button visibility with STATUS_NOT_CONFIGURED"
   );
 
