@@ -141,7 +141,7 @@ var gBuiltInInputs = {
   },
   ReaderView: {
     title: "reader-view",
-    image: "chrome://browser/skin/readerMode.svg",
+    image: "chrome://browser/skin/reader-mode.svg",
     type: kInputTypes.BUTTON,
     callback: () => execCommand("View:ReaderView"),
     disabled: true, // Updated when the page is found to be Reader View-able.
