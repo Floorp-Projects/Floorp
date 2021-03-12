@@ -1536,6 +1536,62 @@ TEST(QuotaCommon_CallWithDelayedRetriesIfAccessDenied, FailuresAndSuccess)
   EXPECT_TRUE(res.isOk());
 }
 
+static constexpr auto thisFileRelativeSourceFileName =
+    "dom/quota/test/gtest/TestQuotaCommon.cpp"_ns;
+
+TEST(QuotaCommon_MakeRelativeSourceFileName, ThisDomQuotaFile)
+{
+  const nsCString relativeSourceFilePath{
+      mozilla::dom::quota::detail::MakeRelativeSourceFileName(
+          nsLiteralCString(__FILE__))};
+
+  EXPECT_STREQ(relativeSourceFilePath.get(),
+               thisFileRelativeSourceFileName.get());
+}
+
+static nsCString MakeFullPath(const nsACString& aRelativePath) {
+  nsCString path{mozilla::dom::quota::detail::GetSourceTreeBase()};
+
+  path.Append("/");
+  path.Append(aRelativePath);
+
+  return path;
+}
+
+TEST(QuotaCommon_MakeRelativeSourceFileName, DomIndexedDBFile)
+{
+  static constexpr auto domIndexedDBFileRelativePath =
+      "dom/indexedDB/ActorsParent.cpp"_ns;
+
+  const nsCString relativeSourceFilePath{
+      mozilla::dom::quota::detail::MakeRelativeSourceFileName(
+          MakeFullPath(domIndexedDBFileRelativePath))};
+
+  EXPECT_STREQ(relativeSourceFilePath.get(),
+               domIndexedDBFileRelativePath.get());
+}
+
+TEST(QuotaCommon_MakeRelativeSourceFileName, NonDomFile)
+{
+  static constexpr auto nonDomFileRelativePath =
+      "storage/mozStorageService.cpp"_ns;
+
+  const nsCString relativeSourceFilePath{
+      mozilla::dom::quota::detail::MakeRelativeSourceFileName(
+          MakeFullPath(nonDomFileRelativePath))};
+
+  EXPECT_STREQ(relativeSourceFilePath.get(), nonDomFileRelativePath.get());
+}
+
+TEST(QuotaCommon_MakeRelativeSourceFileName, OtherFile)
+{
+  constexpr auto otherName = "/foo/bar/Test.cpp"_ns;
+  const nsCString relativeSourceFilePath{
+      mozilla::dom::quota::detail::MakeRelativeSourceFileName(otherName)};
+
+  EXPECT_STREQ(relativeSourceFilePath.get(), "Test.cpp");
+}
+
 #ifdef __clang__
 #  pragma clang diagnostic pop
 #endif

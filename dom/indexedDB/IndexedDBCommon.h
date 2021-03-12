@@ -12,31 +12,14 @@
 class JSStructuredCloneData;
 class nsIInputStream;
 
-// IndexedDB equivalents of QM_TRY.
-#define IDB_TRY_GLUE(...) \
-  QM_TRY_META(mozilla::dom::indexedDB, MOZ_UNIQUE_VAR(tryResult), ##__VA_ARGS__)
-#define IDB_TRY(...) IDB_TRY_GLUE(__VA_ARGS__)
-
-// IndexedDB equivalents of QM_TRY_UNWRAP and QM_TRY_INSPECT.
-#define IDB_TRY_ASSIGN_GLUE(accessFunction, ...)                         \
-  QM_TRY_ASSIGN_META(mozilla::dom::indexedDB, MOZ_UNIQUE_VAR(tryResult), \
-                     accessFunction, ##__VA_ARGS__)
-#define IDB_TRY_UNWRAP(...) IDB_TRY_ASSIGN_GLUE(unwrap, __VA_ARGS__)
-#define IDB_TRY_INSPECT(...) IDB_TRY_ASSIGN_GLUE(inspect, __VA_ARGS__)
-
-// IndexedDB equivalents of QM_TRY_RETURN.
-#define IDB_TRY_RETURN_GLUE(...)                                         \
-  QM_TRY_RETURN_META(mozilla::dom::indexedDB, MOZ_UNIQUE_VAR(tryResult), \
-                     ##__VA_ARGS__)
-#define IDB_TRY_RETURN(...) IDB_TRY_RETURN_GLUE(__VA_ARGS__)
-
-// IndexedDB equivalents of QM_FAIL.
-#define IDB_FAIL_GLUE(...) QM_FAIL_META(mozilla::dom::indexedDB, ##__VA_ARGS__)
-#define IDB_FAIL(...) IDB_FAIL_GLUE(__VA_ARGS__)
+// XXX Replace all uses by the QM_* variants and remove these aliases
+#define IDB_TRY QM_TRY
+#define IDB_TRY_UNWRAP QM_TRY_UNWRAP
+#define IDB_TRY_INSPECT QM_TRY_INSPECT
+#define IDB_TRY_RETURN QM_TRY_RETURN
+#define IDB_FAIL QM_FAIL
 
 namespace mozilla::dom::indexedDB {
-
-QM_META_HANDLE_ERROR("IndexedDB"_ns)
 
 static constexpr uint32_t kFileCopyBufferSize = 32768;
 
