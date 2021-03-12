@@ -700,8 +700,9 @@ static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
     return false;
   }
 
-  // The native theme doesn't use system colors backgrounds etc, so spoof some
-  // of the colors with stand-ins to prevent lack of contrast.
+  // The native theme doesn't use system colors backgrounds etc, except when in
+  // high-contrast mode, so spoof some of the colors with stand-ins to prevent
+  // lack of contrast.
   switch (aColor) {
     case ColorID::Buttonface:
     case ColorID::Buttontext:
@@ -714,7 +715,7 @@ static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
 
     case ColorID::Field:
     case ColorID::Fieldtext:
-      return true;
+      return PreferenceSheet::PrefsFor(aDoc).mUseAccessibilityTheme;
 
     default:
       break;
