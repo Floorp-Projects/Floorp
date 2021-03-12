@@ -16,7 +16,8 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/gfx/BaseSize.h"  // for BaseSize
 #include "mozilla/gfx/gfxVars.h"
-#include "mozilla/gfx/Rect.h"  // for Rect, RectTyped
+#include "mozilla/gfx/Rect.h"         // for Rect, RectTyped
+#include "mozilla/layers/APZUtils.h"  // for ShouldUseProgressivePaint
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/LayerMetricsWrapper.h"  // for LayerMetricsWrapper
 #include "mozilla/layers/LayersMessages.h"
@@ -252,8 +253,9 @@ bool ClientTiledPaintedLayer::IsScrollingOnCompositor(
 }
 
 bool ClientTiledPaintedLayer::UseProgressiveDraw() {
-  if (!StaticPrefs::layers_progressive_paint()) {
-    // pref is disabled, so never do progressive
+  if (!apz::ShouldUseProgressivePaint()) {
+    // pref is disabled or platform does not support progressive, so never do
+    // progressive
     return false;
   }
 

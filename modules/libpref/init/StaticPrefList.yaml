@@ -5851,6 +5851,7 @@
   type: RelaxedAtomicBool
   value: false
   mirror: always
+  do_not_use_directly: true
 
 # Copy-on-write canvas.
 - name: layers.shared-buffer-provider.enabled
