@@ -356,9 +356,7 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::F64x2Splat:
         case SimdOp::V128AnyTrue:
         case SimdOp::I8x16AllTrue:
-        case SimdOp::I16x8AnyTrue:
         case SimdOp::I16x8AllTrue:
-        case SimdOp::I32x4AnyTrue:
         case SimdOp::I32x4AllTrue:
         case SimdOp::I64x2AllTrue:
         case SimdOp::I8x16Bitmask:
