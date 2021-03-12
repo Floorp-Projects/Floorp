@@ -1,3 +1,34 @@
+# Release rayon 1.5.0 / rayon-core 1.9.0 (2020-10-21)
+
+- Update crossbeam dependencies.
+- The minimum supported `rustc` is now 1.36.
+
+## Contributors
+
+Thanks to all of the contributors for this release!
+
+- @cuviper
+- @mbrubeck
+- @mrksu
+
+# Release rayon 1.4.1 (2020-09-29)
+
+- The new `flat_map_iter` and `flatten_iter` methods can be used to flatten
+  sequential iterators, which may perform better in cases that don't need the
+  nested parallelism of `flat_map` and `flatten`.
+- The new `par_drain` method is a parallel version of the standard `drain` for
+  collections, removing items while keeping the original capacity. Collections
+  that implement this through `ParallelDrainRange` support draining items from
+  arbitrary index ranges, while `ParallelDrainFull` always drains everything.
+- The new `positions` method finds all items that match the given predicate and
+  returns their indices in a new iterator.
+
+# Release rayon-core 1.8.1 (2020-09-17)
+
+- Fixed an overflow panic on high-contention workloads, for a counter that was
+  meant to simply wrap. This panic only occurred with debug assertions enabled,
+  and was much more likely on 32-bit targets.
+
 # Release rayon 1.4.0 / rayon-core 1.8.0 (2020-08-24)
 
 - Implemented a new thread scheduler, [RFC 5], which uses targeted wakeups for

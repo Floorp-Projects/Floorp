@@ -13,7 +13,7 @@
 [package]
 edition = "2018"
 name = "rayon-core"
-version = "1.8.0"
+version = "1.9.0"
 authors = ["Niko Matsakis <niko@alum.mit.edu>", "Josh Stone <cuviper@gmail.com>"]
 build = "build.rs"
 links = "rayon-core"
@@ -50,13 +50,13 @@ path = "tests/simple_panic.rs"
 name = "scoped_threadpool"
 path = "tests/scoped_threadpool.rs"
 [dependencies.crossbeam-channel]
-version = "0.4.2"
+version = "0.5.0"
 
 [dependencies.crossbeam-deque]
-version = "0.7.2"
+version = "0.8.0"
 
 [dependencies.crossbeam-utils]
-version = "0.7"
+version = "0.8.0"
 
 [dependencies.lazy_static]
 version = "1"
