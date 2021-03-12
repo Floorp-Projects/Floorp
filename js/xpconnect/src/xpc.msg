@@ -50,7 +50,6 @@ XPC_MSG_DEF(NS_ERROR_XPC_NOT_ENOUGH_CHARS_IN_STRING     , "JavaScript String doe
 XPC_MSG_DEF(NS_ERROR_XPC_SECURITY_MANAGER_VETO          , "Security Manager vetoed action")
 XPC_MSG_DEF(NS_ERROR_XPC_INTERFACE_NOT_SCRIPTABLE       , "Failed to build a wrapper because the interface that was not declared [scriptable]")
 XPC_MSG_DEF(NS_ERROR_XPC_INTERFACE_NOT_FROM_NSISUPPORTS , "Failed to build a wrapper because the interface does not inherit from nsISupports")
-XPC_MSG_DEF(NS_ERROR_XPC_CANT_GET_JSOBJECT_OF_DOM_OBJECT, "Cannot get JavaScript object for DOM object")
 XPC_MSG_DEF(NS_ERROR_XPC_CANT_SET_READ_ONLY_CONSTANT    , "Property is a constant and cannot be changed")
 XPC_MSG_DEF(NS_ERROR_XPC_CANT_SET_READ_ONLY_ATTRIBUTE   , "Property is a read only attribute and cannot be changed")
 XPC_MSG_DEF(NS_ERROR_XPC_CANT_SET_READ_ONLY_METHOD      , "Property is an interface method and cannot be changed")
