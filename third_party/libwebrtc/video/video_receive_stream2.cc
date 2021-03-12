@@ -441,6 +441,14 @@ VideoReceiveStream::Stats VideoReceiveStream2::GetStats() const {
     if (rtx_statistician)
       stats.total_bitrate_bps += rtx_statistician->BitrateReceived();
   }
+
+  // Mozilla modification: VideoReceiveStream2 and friends do not surface RTCP
+  // stats at all, and even on the most recent libwebrtc code there does not
+  // seem to be any support for these stats right now. So, we hack this in.
+  rtp_video_stream_receiver_.RemoteRTCPSenderInfo(
+      &stats.rtcp_sender_packets_sent, &stats.rtcp_sender_octets_sent,
+      &stats.rtcp_sender_ntp_timestamp_ms);
+
   return stats;
 }
 
