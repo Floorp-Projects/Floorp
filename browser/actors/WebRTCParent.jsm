@@ -62,13 +62,7 @@ const PIPEWIRE_ID = 0xaffffff;
 
 class WebRTCParent extends JSWindowActorParent {
   didDestroy() {
-    // Media stream tracks end on unload, so call stopRecording() on them early
-    // *before* we go away, to ensure we're working with the right principal.
-    this.stopRecording(this.manager.outerWindowId);
     webrtcUI.forgetStreamsFromBrowserContext(this.browsingContext);
-    // Must clear activePerms here to prevent them from being read by laggard
-    // stopRecording() calls, which due to IPC, may come in *after* navigation.
-    // This is to prevent granting temporary grace periods to the wrong page.
     webrtcUI.activePerms.delete(this.manager.outerWindowId);
   }
 
@@ -153,11 +147,7 @@ class WebRTCParent extends JSWindowActorParent {
         break;
       }
       case "webrtc:StopRecording":
-        this.stopRecording(
-          aMessage.data.windowID,
-          aMessage.data.mediaSource,
-          aMessage.data.rawID
-        );
+        this.stopRecording(aMessage.data);
         break;
       case "webrtc:CancelRequest": {
         let browser = this.getBrowser();
@@ -167,18 +157,14 @@ class WebRTCParent extends JSWindowActorParent {
         }
         break;
       }
-      case "webrtc:UpdateIndicators": {
-        let { data } = aMessage;
-        data.documentURI = this.manager.documentURI?.spec;
-        if (data.windowId) {
-          if (!data.remove) {
-            data.principal = this.browsingContext.top.currentWindowGlobal.documentPrincipal;
-          }
-          webrtcUI.streamAddedOrRemoved(this.browsingContext, data);
+      case "webrtc:UpdateIndicators":
+        aMessage.data.documentURI = this.manager.documentURI?.spec;
+        if (aMessage.data.windowId) {
+          webrtcUI.streamAddedOrRemoved(this.browsingContext, aMessage.data);
         }
-        this.updateIndicators(data);
+
+        this.updateIndicators(aMessage.data);
         break;
-      }
     }
   }
 
@@ -296,89 +282,18 @@ class WebRTCParent extends JSWindowActorParent {
     return true;
   }
 
-  stopRecording(aOuterWindowId, aMediaSource, aRawId) {
-    for (let { browsingContext, state } of webrtcUI._streams) {
-      if (browsingContext == this.browsingContext) {
-        let { principal } = state;
-        for (let { mediaSource, rawId } of state.devices) {
-          if (aRawId && (aRawId != rawId || aMediaSource != mediaSource)) {
-            continue;
-          }
-          // Deactivate this device (no aRawId means all devices).
-          this.deactivateDevicePerm(
-            aOuterWindowId,
-            mediaSource,
-            rawId,
-            principal
-          );
-        }
-      }
-    }
-  }
+  stopRecording(aRequest) {
+    let outerWindowID = this.manager.outerWindowId;
 
-  /**
-   * Add a device record to webrtcUI.activePerms, denoting a device as in use.
-   * Important to call for permission grace periods to work correctly.
-   */
-  activateDevicePerm(aOuterWindowId, aMediaSource, aId) {
-    if (!webrtcUI.activePerms.has(this.manager.outerWindowId)) {
-      webrtcUI.activePerms.set(this.manager.outerWindowId, new Set());
-    }
-    webrtcUI.activePerms
-      .get(this.manager.outerWindowId)
-      .add(aOuterWindowId + aMediaSource + aId);
-  }
-
-  /**
-   * Remove a device record from webrtcUI.activePerms, denoting a device as
-   * no longer in use by the site. Meaning: gUM requests for this device will
-   * no longer be implicitly granted through the webrtcUI.activePerms mechanism.
-   *
-   * However, if webrtcUI.deviceGracePeriodTimeoutMs is defined, the implicit
-   * grant is extended for an additional period of time through SitePermissions.
-   */
-  deactivateDevicePerm(
-    aOuterWindowId,
-    aMediaSource,
-    aId,
-    aPermissionPrincipal
-  ) {
-    if (!webrtcUI.activePerms.has(this.manager.outerWindowId)) {
+    if (!webrtcUI.activePerms.has(outerWindowID)) {
       return;
     }
-    let set = webrtcUI.activePerms.get(this.manager.outerWindowId);
-    set.delete(aOuterWindowId + aMediaSource + aId);
 
-    // Add a permission grace period for camera and microphone only
-    if (
-      (aMediaSource != "camera" && aMediaSource != "microphone") ||
-      !this.browsingContext.top.embedderElement
-    ) {
-      return;
-    }
-    let gracePeriodMs = webrtcUI.deviceGracePeriodTimeoutMs;
-    if (gracePeriodMs > 0) {
-      // A grace period is extended (even past navigation) to this outer window
-      // + origin + deviceId only. This avoids re-prompting without the user
-      // having to persist permission to the site, in a common case of a web
-      // conference asking them for the camera in a lobby page, before
-      // navigating to the actual meeting room page. Does not survive tab close.
-      //
-      // Caution: since navigation causes deactivation, we may be in the middle
-      // of one. We must pass in a principal & URI for SitePermissions to use
-      // instead of browser.currentURI, because the latter may point to a new
-      // page already, and we must not leak permission to unrelated pages.
-      //
-      let permissionName = [aMediaSource, aId].join("^");
-      SitePermissions.setForPrincipal(
-        aPermissionPrincipal,
-        permissionName,
-        SitePermissions.ALLOW,
-        SitePermissions.SCOPE_TEMPORARY,
-        this.browsingContext.top.embedderElement,
-        gracePeriodMs,
-        aPermissionPrincipal.URI
-      );
+    if (!aRequest.rawID) {
+      webrtcUI.activePerms.delete(outerWindowID);
+    } else {
+      let set = webrtcUI.activePerms.get(outerWindowID);
+      set.delete(aRequest.windowID + aRequest.mediaSource + aRequest.rawID);
     }
   }
 
@@ -420,53 +335,36 @@ class WebRTCParent extends JSWindowActorParent {
     // if we're in a cross-origin iframe and permission delegation is not
     // allowed, or when we're handling a potentially insecure third party
     // through a wildcard ("*") allow attribute.
-    let limited =
+    if (
       (aRequest.isThirdPartyOrigin && !aRequest.shouldDelegatePermission) ||
-      aRequest.secondOrigin;
-    if (limited) {
+      aRequest.secondOrigin
+    ) {
       camAllowed = false;
       micAllowed = false;
     }
 
     let activeCamera;
     let activeMic;
-    let browser = this.getBrowser();
 
     // Always prompt for screen sharing
     if (!sharingScreen) {
-      let set = webrtcUI.activePerms.get(this.manager.outerWindowId);
-
       for (let device of videoDevices) {
+        let set = webrtcUI.activePerms.get(this.manager.outerWindowId);
         if (
-          (set &&
-            set.has(aRequest.windowID + device.mediaSource + device.id)) ||
-          (!limited &&
-            SitePermissions.getForPrincipal(
-              aPrincipal,
-              [device.mediaSource, device.id].join("^"),
-              browser
-            ).state == SitePermissions.ALLOW)
+          set &&
+          set.has(aRequest.windowID + device.mediaSource + device.id)
         ) {
-          // We consider a camera active if it is active or was active within a
-          // grace period of milliseconds ago.
           activeCamera = device;
           break;
         }
       }
 
       for (let device of audioDevices) {
+        let set = webrtcUI.activePerms.get(this.manager.outerWindowId);
         if (
-          (set &&
-            set.has(aRequest.windowID + device.mediaSource + device.id)) ||
-          (!limited &&
-            SitePermissions.getForPrincipal(
-              aPrincipal,
-              [device.mediaSource, device.id].join("^"),
-              browser
-            ).state == SitePermissions.ALLOW)
+          set &&
+          set.has(aRequest.windowID + device.mediaSource + device.id)
         ) {
-          // We consider a microphone active if it is active or was active
-          // within a grace period of milliseconds ago.
           activeMic = device;
           break;
         }
@@ -478,20 +376,16 @@ class WebRTCParent extends JSWindowActorParent {
     ) {
       let allowedDevices = [];
       if (videoDevices.length) {
-        let { deviceIndex, mediaSource, id } = activeCamera || videoDevices[0];
-        allowedDevices.push(deviceIndex);
-        perms.addFromPrincipal(
+        allowedDevices.push((activeCamera || videoDevices[0]).deviceIndex);
+        Services.perms.addFromPrincipal(
           aPrincipal,
           "MediaManagerVideo",
-          perms.ALLOW_ACTION,
-          perms.EXPIRE_SESSION
+          Services.perms.ALLOW_ACTION,
+          Services.perms.EXPIRE_SESSION
         );
-        this.activateDevicePerm(aRequest.windowID, mediaSource, id);
       }
       if (audioDevices.length) {
-        let { deviceIndex, mediaSource, id } = activeMic || audioDevices[0];
-        allowedDevices.push(deviceIndex);
-        this.activateDevicePerm(aRequest.windowID, mediaSource, id);
+        allowedDevices.push((activeMic || audioDevices[0]).deviceIndex);
       }
 
       // If sharingScreen, we're requesting screen-sharing, otherwise camera
@@ -1160,10 +1054,18 @@ function prompt(aActor, aBrowser, aRequest) {
               perms.ALLOW_ACTION,
               perms.EXPIRE_SESSION
             );
-            let { mediaSource, id } = videoDevices.find(
-              ({ deviceIndex }) => deviceIndex == videoDeviceIndex
-            );
-            aActor.activateDevicePerm(aRequest.windowID, mediaSource, id);
+            if (!webrtcUI.activePerms.has(aActor.manager.outerWindowId)) {
+              webrtcUI.activePerms.set(aActor.manager.outerWindowId, new Set());
+            }
+
+            for (let device of videoDevices) {
+              if (device.deviceIndex == videoDeviceIndex) {
+                webrtcUI.activePerms
+                  .get(aActor.manager.outerWindowId)
+                  .add(aRequest.windowID + device.mediaSource + device.id);
+                break;
+              }
+            }
             if (remember) {
               SitePermissions.setForPrincipal(
                 principal,
@@ -1181,10 +1083,21 @@ function prompt(aActor, aBrowser, aRequest) {
             let allowMic = audioDeviceIndex != "-1";
             if (allowMic) {
               allowedDevices.push(audioDeviceIndex);
-              let { mediaSource, id } = audioDevices.find(
-                ({ deviceIndex }) => deviceIndex == audioDeviceIndex
-              );
-              aActor.activateDevicePerm(aRequest.windowID, mediaSource, id);
+              if (!webrtcUI.activePerms.has(aActor.manager.outerWindowId)) {
+                webrtcUI.activePerms.set(
+                  aActor.manager.outerWindowId,
+                  new Set()
+                );
+              }
+
+              for (let device of audioDevices) {
+                if (device.deviceIndex == audioDeviceIndex) {
+                  webrtcUI.activePerms
+                    .get(aActor.manager.outerWindowId)
+                    .add(aRequest.windowID + device.mediaSource + device.id);
+                  break;
+                }
+              }
               if (remember) {
                 SitePermissions.setForPrincipal(
                   principal,

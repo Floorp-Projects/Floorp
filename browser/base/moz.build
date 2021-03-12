@@ -62,7 +62,6 @@ BROWSER_CHROME_MANIFESTS += [
     "content/test/touch/browser.ini",
     "content/test/webextensions/browser.ini",
     "content/test/webrtc/browser.ini",
-    "content/test/webrtc/gracePeriod/browser.ini",
     "content/test/webrtc/legacyIndicator/browser.ini",
     "content/test/zoom/browser.ini",
 ]
