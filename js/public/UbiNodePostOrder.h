@@ -8,16 +8,19 @@
 #define js_UbiNodePostOrder_h
 
 #include "mozilla/Attributes.h"
-#include "mozilla/Maybe.h"
 
 #include <utility>
 
-#include "js/AllocPolicy.h"
 #include "js/UbiNode.h"
-#include "js/Utility.h"
 #include "js/Vector.h"
 
+namespace js {
+class SystemAllocPolicy;
+}
+
 namespace JS {
+class AutoCheckCannotGC;
+
 namespace ubi {
 
 /**

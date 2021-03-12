@@ -13,11 +13,7 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/RootingAPI.h"  // JS::Handle
-#include "js/Value.h"       // JS::Value
-
-struct JS_PUBLIC_API JSContext;
-class JS_PUBLIC_API JSObject;
+#include "js/TypeDecls.h"
 
 namespace JS {
 

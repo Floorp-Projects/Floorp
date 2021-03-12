@@ -9,8 +9,6 @@
 #ifndef js_Modules_h
 #define js_Modules_h
 
-#include "mozilla/Utf8.h"  // mozilla::Utf8Unit
-
 #include <stdint.h>  // uint32_t
 
 #include "jstypes.h"  // JS_PUBLIC_API
@@ -28,6 +26,10 @@ namespace JS {
 template <typename UnitT>
 class SourceText;
 }  // namespace JS
+
+namespace mozilla {
+union Utf8Unit;
+}
 
 namespace JS {
 

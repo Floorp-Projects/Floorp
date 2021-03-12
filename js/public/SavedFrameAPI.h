@@ -13,10 +13,7 @@
 
 #include "jstypes.h"  // JS_FRIEND_API, JS_PUBLIC_API
 
-#include "js/RootingAPI.h"  // JS::Handle, JS::MutableHandle
-
-struct JS_PUBLIC_API JSContext;
-class JS_PUBLIC_API JSObject;
+#include "js/TypeDecls.h"
 
 struct JSPrincipals;
 

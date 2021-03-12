@@ -17,6 +17,7 @@
 #include "js/Class.h"
 #include "js/ErrorReport.h"
 #include "js/Exception.h"
+#include "js/GCAPI.h"
 #include "js/HeapAPI.h"
 #include "js/Object.h"           // JS::GetClass
 #include "js/shadow/Function.h"  // JS::shadow::Function

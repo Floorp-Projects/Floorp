@@ -12,8 +12,9 @@
 #include "js/AllocPolicy.h"
 #include "js/GCPolicyAPI.h"
 #include "js/RootingAPI.h"
-#include "js/TracingAPI.h"
-#include "js/Vector.h"
+
+class JSTracer;
+struct JSContext;
 
 namespace JS {
 

@@ -15,6 +15,7 @@
 #include "NamespaceImports.h"
 
 #include "js/OffThreadScriptCompilation.h"
+#include "js/Transcoding.h"
 #include "js/UniquePtr.h"
 #include "threading/LockGuard.h"
 #include "threading/Mutex.h"
@@ -31,6 +32,10 @@ namespace js {
 class AutoLockHelperThreadState;
 struct PromiseHelperTask;
 class SourceCompressionTask;
+
+namespace gc {
+class GCRuntime;
+}
 
 namespace jit {
 class IonCompileTask;

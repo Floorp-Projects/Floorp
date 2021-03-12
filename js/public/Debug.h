@@ -13,8 +13,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 
-#include "jsapi.h"
-#include "jspubtd.h"
+#include <utility>
+
+#include "jstypes.h"
 
 #include "js/GCAPI.h"
 #include "js/RootingAPI.h"

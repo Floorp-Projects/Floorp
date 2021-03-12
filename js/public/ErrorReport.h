@@ -26,15 +26,21 @@
 
 #include "jstypes.h"  // JS_PUBLIC_API
 
-#include "js/AllocPolicy.h"        // js::SystemAllocPolicy
+#include "js/AllocPolicy.h"
 #include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
-#include "js/Exception.h"          // JS::ExceptionStack
 #include "js/RootingAPI.h"         // JS::HandleObject, JS::RootedObject
 #include "js/UniquePtr.h"          // js::UniquePtr
 #include "js/Vector.h"             // js::Vector
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSString;
+
+namespace JS {
+class ExceptionStack;
+}
+namespace js {
+class SystemAllocPolicy;
+}
 
 /**
  * Possible exception types. These types are part of a JSErrorFormatString
