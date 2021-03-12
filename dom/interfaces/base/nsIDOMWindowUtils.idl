@@ -751,6 +751,18 @@ interface nsIDOMWindowUtils : nsISupports {
   void clearNativeTouchSequence([optional] in nsIObserver aObserver);
 
   /**
+   * Send a native event as if the user double tapped the touchpad with two
+   * fingers.
+   * 
+   * Widget support: macOS.
+   * @param aScreenX, aScreenY screen coords of the focus point of this event.
+   * @param aModifierFlags is expected to contain native modifier values.
+   */
+  void sendNativeTouchpadDoubleTap(in long aScreenX,
+                                   in long aScreenY,
+                                   in long aModifierFlags);
+
+  /**
    * Clears the SharedStyleSheetCache.
    */
   void clearSharedStyleSheetCache();

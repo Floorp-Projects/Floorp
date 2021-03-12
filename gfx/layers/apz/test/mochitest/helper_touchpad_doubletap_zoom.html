@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=2100"/>
+  <title>Sanity check for double-tap zooming</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+async function doubleTapOn(element, x, y) {
+  let transformEndPromise = promiseTransformEnd();
+
+  synthesizeNativeTouchpadDoubleTap(element, x, y);
+
+  // Wait for the APZ:TransformEnd to fire
+  await transformEndPromise;
+
+  // Flush state so we can query an accurate resolution
+  await promiseApzRepaintsFlushed();
+}
+
+async function test() {
+  var resolution = getResolution();
+  ok(resolution > 0,
+     "The initial_resolution is " + resolution + ", which is some sane value");
+
+  // Check that double-tapping once zooms in
+  await doubleTapOn(document.getElementById("target"), 10, 10);
+  var prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution > prev_resolution, "The first double-tap has increased the resolution to " + resolution);
+
+  // Check that double-tapping again on the same spot zooms out
+  await doubleTapOn(document.getElementById("target"), 10, 10);
+  prev_resolution = resolution;
+  resolution = getResolution();
+  ok(resolution < prev_resolution, "The second double-tap has decreased the resolution to " + resolution);
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+  </script>
+  <style type="text/css">
+    .box {
+        width: 800px;
+        height: 500px;
+        margin: 0 auto;
+    }
+</style>
+</head>
+<body>
+<div class="box">Text before the div.</div>
+<div id="target" style="margin-left: 100px; width:900px; height: 400px; background-image: linear-gradient(blue,red)"></div>
+<div class="box">Text after the div.</div>
+</body>
+</html>
