@@ -1097,6 +1097,10 @@ BrowserPageActions.bookmark = {
 BrowserPageActions.pinTab = {
   updateState() {
     let action = PageActions.actionForID("pinTab");
+    if (!action) {
+      // This action doesn't exist in Proton.
+      return;
+    }
     let { pinned } = gBrowser.selectedTab;
     let fluentID;
     if (pinned) {
@@ -1200,6 +1204,10 @@ BrowserPageActions.sendToDevice = {
 
   onLocationChange() {
     let action = PageActions.actionForID("sendToDevice");
+    if (!action) {
+      // This action doesn't exist in Proton.
+      return;
+    }
     let browser = gBrowser.selectedBrowser;
     let url = browser.currentURI;
     action.setDisabled(!BrowserUtils.isShareableURL(url), window);
@@ -1227,6 +1235,10 @@ BrowserPageActions.addSearchEngine = {
   },
 
   updateEngines() {
+    if (!this.action) {
+      // This action doesn't exist in Proton.
+      return;
+    }
     // As a slight optimization, if the action isn't in the urlbar, don't do
     // anything here except disable it.  The action's panel nodes are updated
     // when the panel is shown.
