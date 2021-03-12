@@ -47,7 +47,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
 
   constructor() {
     super();
-    this.seenExperimentSlugs = [];
+    this.seenExperimentSlugs = new Set();
   }
 
   async _processRecipe(recipe, suitability) {
@@ -64,7 +64,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
     // Slug might not exist, because if suitability is ARGUMENTS_INVALID, the
     // arguments is not guaranteed to match the schema.
     if (slug) {
-      this.seenExperimentSlugs.push(slug);
+      this.seenExperimentSlugs.add(slug);
 
       try {
         experiment = await PreferenceExperiments.get(slug);
@@ -206,8 +206,13 @@ class PreferenceExperimentAction extends BaseStudyAction {
    * the server and so we stop seeing them.  This can also happen if
    * the user doesn't match the filter any more.
    */
-  async _finalize() {
+  async _finalize({ noRecipes } = {}) {
     const activeExperiments = await PreferenceExperiments.getAllActive();
+
+    if (noRecipes && this.seenExperimentSlugs.size) {
+      throw new PreferenceExperimentAction.BadNoRecipesArg();
+    }
+
     return Promise.all(
       activeExperiments.map(experiment => {
         if (this.name != experiment.actionName) {
@@ -216,7 +221,14 @@ class PreferenceExperimentAction extends BaseStudyAction {
           return null;
         }
 
-        if (this.seenExperimentSlugs.includes(experiment.slug)) {
+        if (noRecipes) {
+          return this._considerTemporaryError({
+            experiment,
+            reason: "no-recipes",
+          });
+        }
+
+        if (this.seenExperimentSlugs.has(experiment.slug)) {
           return null;
         }
 
@@ -232,7 +244,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
   }
 
   /**
-   * Given that a temporary error has occured for an experiment, check if it
+   * Given that a temporary error has occurred for an experiment, check if it
    * should be temporarily ignored, or if the deadline has passed. If the
    * deadline is passed, the experiment will be ended. If this is the first
    * temporary error, a deadline will be generated. Otherwise, nothing will
@@ -280,3 +292,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
     }
   }
 }
+
+PreferenceExperimentAction.BadNoRecipesArg = class extends Error {
+  message = "noRecipes is true, but some recipes observed";
+};
