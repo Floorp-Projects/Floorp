@@ -223,7 +223,16 @@ void ZoomConstraintsClient::RefreshZoomConstraints() {
     mZoomConstraints.mAllowDoubleTapZoom = false;
   }
 
-  if (mZoomConstraints.mAllowDoubleTapZoom) {
+  // On macOS the OS can send us a double tap zoom event from the touchpad and
+  // there are no touch screen macOS devices so we never wait to see if a second
+  // tap is coming so we can always allow double tap zooming on mac. We need
+  // this because otherwise the width check usually disables it.
+  bool allow_double_tap_always = false;
+#ifdef XP_MACOSX
+  allow_double_tap_always =
+      StaticPrefs::apz_mac_enable_double_tap_zoom_touchpad_gesture();
+#endif
+  if (!allow_double_tap_always && mZoomConstraints.mAllowDoubleTapZoom) {
     // If the CSS viewport is narrower than the screen (i.e. width <=
     // device-width) then we disable double-tap-to-zoom behaviour.
     CSSToLayoutDeviceScale scale =
