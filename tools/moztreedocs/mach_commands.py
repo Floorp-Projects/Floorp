@@ -389,7 +389,7 @@ class Documentation(MachCommandBase):
             if handler.metrics_path is not None
         ]
         args.extend([os.path.join(self.topsrcdir, path) for path in set(metrics_paths)])
-        subprocess.check_output(args)
+        subprocess.check_call(args)
 
     def check_jsdoc(self):
         try:
