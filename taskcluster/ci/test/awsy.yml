@@ -22,41 +22,52 @@ job-defaults:
                     - awsy/macosx_config.py
                 default:
                     - awsy/linux_config.py
-    tier: default
-    fission-tier:
-        by-test-platform:
-            linux1804-64(?!-shippable).*: 3
-            windows10-64(-qr)?/opt: 3
-            default: 2
-    run-on-projects:
-        by-test-platform:
-            .*-devedition/.*: []  # don't run on devedition
-            windows7-32.*/opt: []
-            (linux|windows10|mac)(?!.*shippable).*/opt: []
-            default: ['integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
+    tier:
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux1804-64(?!-shippable).*: 3
+                    windows10-64(-qr)?/opt: 3
+                    default: 2
+            default: default
     test-manifest-loader: null  # don't load tests in the taskgraph
-    fission-run-on-projects:
-        by-test-platform:
-            linux1804-64-shippable-qr/opt: ['mozilla-central']
-            windows10-64-shippable-qr/opt: ['mozilla-central']
-            default: []
     python-3: true
 
 
 awsy:
     description: "Are we slim yet"
     treeherder-symbol: SY(sy)
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux1804-64-shippable-qr/opt: ['mozilla-central']
+                    windows10-64-shippable-qr/opt: ['mozilla-central']
+                    default: []
+            default:
+                by-test-platform:
+                    .*-devedition/.*: []  # don't run on devedition
+                    windows7-32.*/opt: []
+                    (linux|windows10|mac)(?!.*shippable).*/opt: []
+                    default: ['integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
 
 awsy-tp6:
     description: "Are we slim yet - tp6 pageset"
     variants: ["fission"]
     treeherder-symbol: SY(sy-tp6)
     run-on-projects:
-        by-test-platform:
-            .*-devedition/.*: []  # don't run on devedition
-            windows7-32.*/opt: []
-            (linux|windows10|mac)(?!.*shippable).*/opt: []
-            default: ['integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux1804-64-shippable-qr/opt: ['mozilla-central']
+                    windows10-64-shippable-qr/opt: ['mozilla-central']
+                    default: []
+            default:
+                by-test-platform:
+                    .*-devedition/.*: []  # don't run on devedition
+                    windows7-32.*/opt: []
+                    (linux|windows10|mac)(?!.*shippable).*/opt: []
+                    default: ['integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
     mozharness:
         extra-options:
             - --tp6
@@ -72,6 +83,19 @@ awsy-dmd:
 awsy-base:
     description: "Are we slim yet - about:blank base case"
     treeherder-symbol: SY(ab)
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux1804-64-shippable-qr/opt: ['mozilla-central']
+                    windows10-64-shippable-qr/opt: ['mozilla-central']
+                    default: []
+            default:
+                by-test-platform:
+                    .*-devedition/.*: []  # don't run on devedition
+                    windows7-32.*/opt: []
+                    (linux|windows10|mac)(?!.*shippable).*/opt: []
+                    default: ['integration', 'mozilla-central', 'mozilla-beta', 'mozilla-release']
     mozharness:
         extra-options:
             - --base
