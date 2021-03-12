@@ -459,8 +459,8 @@ void mozilla::dom::TraceBlackJS(JSTracer* aTrc, bool aIsShutdownGC) {
   nsGlobalWindowOuter::OuterWindowByIdTable* windowsById =
       nsGlobalWindowOuter::GetWindowsTable();
   if (windowsById) {
-    for (const auto& entry : *windowsById) {
-      nsGlobalWindowOuter* window = entry.GetData();
+    for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
+      nsGlobalWindowOuter* window = iter.Data();
       if (!window->IsCleanedUp()) {
         nsGlobalWindowInner* inner = nullptr;
         for (PRCList* win = PR_LIST_HEAD(window); win != window;

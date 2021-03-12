@@ -104,8 +104,8 @@ nsresult ImageTracker::SetLockingState(bool aLocked) {
   if (mLocking == aLocked) return NS_OK;
 
   // Otherwise, iterate over our images and perform the appropriate action.
-  for (const auto& entry : mImages) {
-    imgIRequest* image = entry.GetKey();
+  for (auto iter = mImages.Iter(); !iter.Done(); iter.Next()) {
+    imgIRequest* image = iter.Key();
     if (aLocked) {
       image->LockImage();
     } else {
@@ -124,8 +124,8 @@ void ImageTracker::SetAnimatingState(bool aAnimating) {
   if (mAnimating == aAnimating) return;
 
   // Otherwise, iterate over our images and perform the appropriate action.
-  for (const auto& entry : mImages) {
-    imgIRequest* image = entry.GetKey();
+  for (auto iter = mImages.Iter(); !iter.Done(); iter.Next()) {
+    imgIRequest* image = iter.Key();
     if (aAnimating) {
       image->IncrementAnimationConsumers();
     } else {
@@ -138,8 +138,8 @@ void ImageTracker::SetAnimatingState(bool aAnimating) {
 }
 
 void ImageTracker::RequestDiscardAll() {
-  for (const auto& entry : mImages) {
-    entry.GetKey()->RequestDiscard();
+  for (auto iter = mImages.Iter(); !iter.Done(); iter.Next()) {
+    iter.Key()->RequestDiscard();
   }
 }
 
@@ -153,8 +153,8 @@ void ImageTracker::MediaFeatureValuesChangedAllDocuments(
   // Pull the images out into an array and iterate over them, in case the
   // image notifications do something that ends up modifying the table.
   nsTArray<nsCOMPtr<imgIContainer>> images;
-  for (const auto& entry : mImages) {
-    imgIRequest* req = entry.GetKey();
+  for (auto iter = mImages.Iter(); !iter.Done(); iter.Next()) {
+    imgIRequest* req = iter.Key();
     nsCOMPtr<imgIContainer> image;
     req->GetImage(getter_AddRefs(image));
     if (!image) {

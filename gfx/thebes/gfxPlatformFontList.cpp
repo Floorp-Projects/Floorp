@@ -327,17 +327,17 @@ void gfxPlatformFontList::ApplyWhitelist() {
   }
   AutoTArray<RefPtr<gfxFontFamily>, 128> accepted;
   bool whitelistedFontFound = false;
-  for (const auto& entry : mFontFamilies) {
-    if (entry.GetData()->IsHidden()) {
+  for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+    if (iter.Data()->IsHidden()) {
       // Hidden system fonts are exempt from whitelisting, but don't count
       // towards determining whether we "kept" any (user-visible) fonts
-      accepted.AppendElement(entry.GetData());
+      accepted.AppendElement(iter.Data());
       continue;
     }
-    nsAutoCString fontFamilyName(entry.GetKey());
+    nsAutoCString fontFamilyName(iter.Key());
     ToLowerCase(fontFamilyName);
     if (familyNamesWhitelist.Contains(fontFamilyName)) {
-      accepted.AppendElement(entry.GetData());
+      accepted.AppendElement(iter.Data());
       whitelistedFontFound = true;
     }
   }
@@ -491,13 +491,13 @@ nsresult gfxPlatformFontList::InitFontList() {
   // but not if we're running in Safe Mode.
   if (StaticPrefs::gfx_e10s_font_list_shared_AtStartup() &&
       !gfxPlatform::InSafeMode()) {
-    for (const auto& entry : mFontEntries) {
-      if (!entry.GetData()) {
+    for (auto i = mFontEntries.Iter(); !i.Done(); i.Next()) {
+      if (!i.Data()) {
         continue;
       }
-      entry.GetData()->mShmemCharacterMap = nullptr;
-      entry.GetData()->mShmemFace = nullptr;
-      entry.GetData()->mFamilyName.Truncate();
+      i.Data()->mShmemCharacterMap = nullptr;
+      i.Data()->mShmemFace = nullptr;
+      i.Data()->mFamilyName.Truncate();
     }
     mFontEntries.Clear();
     mShmemCharMaps.Clear();
@@ -678,9 +678,9 @@ gfxFontEntry* gfxPlatformFontList::SearchFamiliesForFaceName(
   // iterate over familes starting with the same letter
   firstChar = ToLowerCase(aFaceName.CharAt(0));
 
-  for (const auto& entry : mFontFamilies) {
-    nsCStringHashKey::KeyType key = entry.GetKey();
-    const RefPtr<gfxFontFamily>& family = entry.GetData();
+  for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+    nsCStringHashKey::KeyType key = iter.Key();
+    RefPtr<gfxFontFamily>& family = iter.Data();
 
     // when filtering, skip names that don't start with the filter character
     if (firstChar && ToLowerCase(key.CharAt(0)) != firstChar) {
@@ -865,8 +865,8 @@ void gfxPlatformFontList::GetFontList(nsAtom* aLangGroup,
   }
 
   MutexAutoLock lock(mFontFamiliesMutex);
-  for (const auto& entry : mFontFamilies) {
-    const RefPtr<gfxFontFamily>& family = entry.GetData();
+  for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+    RefPtr<gfxFontFamily>& family = iter.Data();
     if (!IsVisibleToCSS(*family)) {
       continue;
     }
@@ -883,8 +883,8 @@ void gfxPlatformFontList::GetFontList(nsAtom* aLangGroup,
 
 void gfxPlatformFontList::GetFontFamilyList(
     nsTArray<RefPtr<gfxFontFamily>>& aFamilyArray) {
-  for (const auto& entry : mFontFamilies) {
-    const RefPtr<gfxFontFamily>& family = entry.GetData();
+  for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+    RefPtr<gfxFontFamily>& family = iter.Data();
     aFamilyArray.AppendElement(family);
   }
 }
@@ -1129,8 +1129,8 @@ gfxFont* gfxPlatformFontList::GlobalFontFallback(
   } else {
     // iterate over all font families to find a font that support the
     // character
-    for (const auto& entry : mFontFamilies) {
-      const RefPtr<gfxFontFamily>& family = entry.GetData();
+    for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+      RefPtr<gfxFontFamily>& family = iter.Data();
       if (!IsVisibleToCSS(*family)) {
         continue;
       }
@@ -2222,7 +2222,7 @@ FontFamily gfxPlatformFontList::GetDefaultFont(const gfxFontStyle* aStyle) {
     return FontFamily(SharedFontList()->Families());
   }
   MOZ_RELEASE_ASSERT(mFontFamilies.Count() > 0);
-  return FontFamily(mFontFamilies.ConstIter().Data());
+  return FontFamily(mFontFamilies.Iter().Data());
 }
 
 void gfxPlatformFontList::GetFontFamilyNames(
@@ -2239,8 +2239,8 @@ void gfxPlatformFontList::GetFontFamilyNames(
       }
     }
   } else {
-    for (const auto& entry : mFontFamilies) {
-      const RefPtr<gfxFontFamily>& family = entry.GetData();
+    for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+      RefPtr<gfxFontFamily>& family = iter.Data();
       if (!family->IsHidden()) {
         aFontFamilyNames.AppendElement(family->Name());
       }
@@ -2417,7 +2417,7 @@ void gfxPlatformFontList::ForceGlobalReflow() {
 }
 
 void gfxPlatformFontList::RebuildLocalFonts(bool aForgetLocalFaces) {
-  for (auto it = mUserFontSetList.ConstIter(); !it.Done(); it.Next()) {
+  for (auto it = mUserFontSetList.Iter(); !it.Done(); it.Next()) {
     auto* fontset = it.Get()->GetKey();
     if (aForgetLocalFaces) {
       fontset->ForgetLocalFaces();
@@ -2470,10 +2470,10 @@ void gfxPlatformFontList::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
                                                  FontListSizes* aSizes) const {
   aSizes->mFontListSize +=
       mFontFamilies.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (const auto& entry : mFontFamilies) {
+  for (auto iter = mFontFamilies.ConstIter(); !iter.Done(); iter.Next()) {
     aSizes->mFontListSize +=
-        entry.GetKey().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
-    entry.GetData()->AddSizeOfIncludingThis(aMallocSizeOf, aSizes);
+        iter.Key().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+    iter.Data()->AddSizeOfIncludingThis(aMallocSizeOf, aSizes);
   }
 
   aSizes->mFontListSize +=
@@ -2509,15 +2509,16 @@ void gfxPlatformFontList::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
 
   aSizes->mFontListSize +=
       mSharedCmaps.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (const auto& entry : mSharedCmaps) {
-    aSizes->mCharMapsSize += entry.GetKey()->SizeOfIncludingThis(aMallocSizeOf);
+  for (auto iter = mSharedCmaps.ConstIter(); !iter.Done(); iter.Next()) {
+    aSizes->mCharMapsSize +=
+        iter.Get()->GetKey()->SizeOfIncludingThis(aMallocSizeOf);
   }
 
   aSizes->mFontListSize +=
       mFontEntries.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (const auto& entry : mFontEntries) {
-    if (entry.GetData()) {
-      entry.GetData()->AddSizeOfIncludingThis(aMallocSizeOf, aSizes);
+  for (auto iter = mFontEntries.ConstIter(); !iter.Done(); iter.Next()) {
+    if (iter.Data()) {
+      iter.Data()->AddSizeOfIncludingThis(aMallocSizeOf, aSizes);
     }
   }
 
@@ -2555,8 +2556,8 @@ void gfxPlatformFontList::InitOtherFamilyNamesInternal(
         timedOut = true;
       }
     } else {
-      for (const auto& entry : mFontFamilies) {
-        const RefPtr<gfxFontFamily>& family = entry.GetData();
+      for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+        RefPtr<gfxFontFamily>& family = iter.Data();
         family->ReadOtherFamilyNames(this);
         TimeDuration elapsed = TimeStamp::Now() - start;
         if (elapsed.ToMilliseconds() > OTHERNAMES_TIMEOUT) {
@@ -2589,8 +2590,8 @@ void gfxPlatformFontList::InitOtherFamilyNamesInternal(
         ReadFaceNamesForFamily(&f, false);
       }
     } else {
-      for (const auto& entry : mFontFamilies) {
-        const RefPtr<gfxFontFamily>& family = entry.GetData();
+      for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+        RefPtr<gfxFontFamily>& family = iter.Data();
         family->ReadOtherFamilyNames(this);
       }
     }
