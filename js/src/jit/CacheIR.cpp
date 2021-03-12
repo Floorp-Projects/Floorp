@@ -615,29 +615,12 @@ static void GuardReceiverProto(CacheIRWriter& writer, JSObject* obj,
 
 // Guard that a given object has same class and same OwnProperties (excluding
 // dense elements and dynamic properties).
-static void TestMatchingReceiver(CacheIRWriter& writer, JSObject* obj,
-                                 ObjOperandId objId) {
-  if (obj->is<TypedObject>()) {
-    // For now guard on both the shape and RttValue. Longer-term the plan is to
-    // fix this by moving the RttValue into TypedObjectShape.
-    writer.guardShape(objId, obj->shape());
-    writer.guardRttValue(objId, &obj->as<TypedObject>().rttValue());
-  } else if (obj->is<ProxyObject>()) {
-    writer.guardShapeForClass(objId, obj->as<ProxyObject>().shape());
-  } else {
-    MOZ_ASSERT(obj->is<NativeObject>());
-    writer.guardShapeForOwnProperties(objId,
-                                      obj->as<NativeObject>().lastProperty());
-  }
-}
-
-// Similar to |TestMatchingReceiver|, but specialized for NativeObject.
 static void TestMatchingNativeReceiver(CacheIRWriter& writer, NativeObject* obj,
                                        ObjOperandId objId) {
   writer.guardShapeForOwnProperties(objId, obj->lastProperty());
 }
 
-// Similar to |TestMatchingReceiver|, but specialized for ProxyObject.
+// Similar to |TestMatchingNativeReceiver|, but specialized for ProxyObject.
 static void TestMatchingProxyReceiver(CacheIRWriter& writer, ProxyObject* obj,
                                       ObjOperandId objId) {
   writer.guardShapeForClass(objId, obj->shape());
@@ -826,10 +809,10 @@ static void ShapeGuardProtoChainForCrossCompartmentHolder(
 enum class SlotReadType { Normal, CrossCompartment };
 
 template <SlotReadType MaybeCrossCompartment = SlotReadType::Normal>
-static void EmitReadSlotGuard(CacheIRWriter& writer, JSObject* obj,
-                              JSObject* holder, ObjOperandId objId,
+static void EmitReadSlotGuard(CacheIRWriter& writer, NativeObject* obj,
+                              NativeObject* holder, ObjOperandId objId,
                               Maybe<ObjOperandId>* holderId) {
-  TestMatchingReceiver(writer, obj, objId);
+  TestMatchingNativeReceiver(writer, obj, objId);
 
   if (obj != holder) {
     if (holder) {
@@ -859,8 +842,8 @@ static void EmitReadSlotGuard(CacheIRWriter& writer, JSObject* obj,
 }
 
 template <SlotReadType MaybeCrossCompartment = SlotReadType::Normal>
-static void EmitReadSlotResult(CacheIRWriter& writer, JSObject* obj,
-                               JSObject* holder, Shape* shape,
+static void EmitReadSlotResult(CacheIRWriter& writer, NativeObject* obj,
+                               NativeObject* holder, Shape* shape,
                                ObjOperandId objId) {
   Maybe<ObjOperandId> holderId;
   EmitReadSlotGuard<MaybeCrossCompartment>(writer, obj, holder, objId,
@@ -869,7 +852,7 @@ static void EmitReadSlotResult(CacheIRWriter& writer, JSObject* obj,
   // Slot access.
   if (holder) {
     MOZ_ASSERT(holderId->valid());
-    EmitLoadSlotResult(writer, *holderId, &holder->as<NativeObject>(), shape);
+    EmitLoadSlotResult(writer, *holderId, holder, shape);
   } else {
     MOZ_ASSERT(holderId.isNothing());
     writer.loadUndefinedResult();
@@ -1029,18 +1012,21 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
   switch (type) {
     case CanAttachNone:
       return AttachDecision::NoAction;
-    case CanAttachReadSlot:
+    case CanAttachReadSlot: {
+      auto* nobj = &obj->as<NativeObject>();
+
       if (mode_ == ICState::Mode::Megamorphic) {
         attachMegamorphicNativeSlot(objId, id, holder == nullptr);
         return AttachDecision::Attach;
       }
 
       maybeEmitIdGuard(id);
-      EmitReadSlotResult(writer, obj, holder, shape, objId);
+      EmitReadSlotResult(writer, nobj, holder, shape, objId);
       writer.returnFromIC();
 
       trackAttached("NativeSlot");
       return AttachDecision::Attach;
+    }
     case CanAttachScriptedGetter:
     case CanAttachNativeGetter: {
       auto nobj = obj.as<NativeObject>();
@@ -1226,6 +1212,7 @@ AttachDecision GetPropIRGenerator::tryAttachCrossCompartmentWrapper(
       return AttachDecision::NoAction;
     }
   }
+  auto* unwrappedNative = &unwrapped->as<NativeObject>();
 
   maybeEmitIdGuard(id);
   writer.guardIsProxy(objId);
@@ -1236,11 +1223,11 @@ AttachDecision GetPropIRGenerator::tryAttachCrossCompartmentWrapper(
 
   // If the compartment of the wrapped object is different we should fail.
   writer.guardCompartment(wrapperTargetId, wrappedTargetGlobal,
-                          unwrapped->compartment());
+                          unwrappedNative->compartment());
 
   ObjOperandId unwrappedId = wrapperTargetId;
-  EmitReadSlotResult<SlotReadType::CrossCompartment>(writer, unwrapped, holder,
-                                                     shape, unwrappedId);
+  EmitReadSlotResult<SlotReadType::CrossCompartment>(
+      writer, unwrappedNative, holder, shape, unwrappedId);
   writer.wrapResult();
   writer.returnFromIC();
 
@@ -2137,6 +2124,8 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
     case CanAttachNone:
       return AttachDecision::NoAction;
     case CanAttachReadSlot: {
+      auto* nproto = &proto->as<NativeObject>();
+
       if (val_.isNumber()) {
         writer.guardIsNumber(valId);
       } else {
@@ -2144,8 +2133,8 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
       }
       maybeEmitIdGuard(id);
 
-      ObjOperandId protoId = writer.loadObject(proto);
-      EmitReadSlotResult(writer, proto, holder, shape, protoId);
+      ObjOperandId protoId = writer.loadObject(nproto);
+      EmitReadSlotResult(writer, nproto, holder, shape, protoId);
       writer.returnFromIC();
 
       trackAttached("PrimitiveSlot");
@@ -3205,9 +3194,10 @@ AttachDecision HasPropIRGenerator::tryAttachNamedProp(HandleObject obj,
   if (prop.isNotFound()) {
     return AttachDecision::NoAction;
   }
+  auto* nobj = &obj->as<NativeObject>();
 
   TRY_ATTACH(tryAttachMegamorphic(objId, keyId));
-  TRY_ATTACH(tryAttachNative(obj, objId, key, keyId, prop, holder));
+  TRY_ATTACH(tryAttachNative(nobj, objId, key, keyId, prop, holder));
 
   return AttachDecision::NoAction;
 }
@@ -3226,11 +3216,11 @@ AttachDecision HasPropIRGenerator::tryAttachMegamorphic(ObjOperandId objId,
   return AttachDecision::Attach;
 }
 
-AttachDecision HasPropIRGenerator::tryAttachNative(JSObject* obj,
+AttachDecision HasPropIRGenerator::tryAttachNative(NativeObject* obj,
                                                    ObjOperandId objId, jsid key,
                                                    ValOperandId keyId,
                                                    PropertyResult prop,
-                                                   JSObject* holder) {
+                                                   NativeObject* holder) {
   if (!prop.isNativeProperty()) {
     return AttachDecision::NoAction;
   }
@@ -3441,10 +3431,11 @@ AttachDecision CheckPrivateFieldIRGenerator::tryAttachNative(JSObject* obj,
   if (!obj->is<NativeObject>()) {
     return AttachDecision::NoAction;
   }
+  auto* nobj = &obj->as<NativeObject>();
 
   Maybe<ObjOperandId> tempId;
   emitIdGuard(keyId, idVal_, key);
-  EmitReadSlotGuard(writer, obj, obj, objId, &tempId);
+  EmitReadSlotGuard(writer, nobj, nobj, objId, &tempId);
   writer.loadBooleanResult(hasOwn);
   writer.returnFromIC();
 
