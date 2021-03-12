@@ -43,14 +43,14 @@
 } /*** END proton ***/
 @supports not -moz-bool-pref("browser.proton.toolbar.enabled") {
 :root {
-
   --toolbarbutton-outer-padding: 2px;
   --toolbarbutton-inner-padding: 6px;
 }
 } /** END !proton **/
 
 :root[uidensity=compact] {
-  --toolbarbutton-outer-padding: 1px;
+  --toolbarbutton-outer-padding: 3px;
+  --toolbarbutton-inner-padding: 6px;
   --bookmark-block-padding: 1px;
 }
 
