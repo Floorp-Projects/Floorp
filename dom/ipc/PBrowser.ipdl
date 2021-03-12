@@ -542,6 +542,8 @@ parent:
                                    int32_t aTiltX,
                                    int32_t aTiltY,
                                    uint64_t aObserverId);
+    async SynthesizeNativeTouchpadDoubleTap(LayoutDeviceIntPoint aPoint,
+                                            uint32_t aModifierFlags);
 
     async AccessKeyNotHandled(WidgetKeyboardEvent event);
 

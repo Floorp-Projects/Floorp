@@ -1181,6 +1181,24 @@ nsDOMWindowUtils::SendNativePenInput(uint32_t aPointerId,
 }
 
 NS_IMETHODIMP
+nsDOMWindowUtils::SendNativeTouchpadDoubleTap(int32_t aScreenX,
+                                              int32_t aScreenY,
+                                              int32_t aModifierFlags) {
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (!widget) {
+    return NS_ERROR_FAILURE;
+  }
+
+  MOZ_ASSERT(aModifierFlags >= 0);
+  NS_DispatchToMainThread(NativeInputRunnable::Create(
+      NewRunnableMethod<LayoutDeviceIntPoint, uint32_t>(
+          "nsIWidget::SynthesizeNativeTouchpadDoubleTap", widget,
+          &nsIWidget::SynthesizeNativeTouchpadDoubleTap,
+          LayoutDeviceIntPoint(aScreenX, aScreenY), aModifierFlags)));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDOMWindowUtils::SuppressAnimation(bool aSuppress) {
   nsIWidget* widget = GetWidget();
   if (widget) {

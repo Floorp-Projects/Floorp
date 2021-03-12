@@ -543,6 +543,9 @@ class BrowserParent final : public PBrowserParent,
       const uint32_t& aRotation, const int32_t& aTiltX, const int32_t& aTiltY,
       const uint64_t& aObserverId);
 
+  mozilla::ipc::IPCResult RecvSynthesizeNativeTouchpadDoubleTap(
+      const LayoutDeviceIntPoint& aPoint, const uint32_t& aModifierFlags);
+
   void SendMouseEvent(const nsAString& aType, float aX, float aY,
                       int32_t aButton, int32_t aClickCount, int32_t aModifiers);
 
