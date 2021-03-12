@@ -827,31 +827,3 @@ decorate_task(
     Normandy.defaultPrefsHaveBeenApplied = originalPrefsApplied;
   }
 );
-
-// If no recipes are found on the server, the action manager should be informed of that
-decorate_task(
-  withSpy(ActionsManager.prototype, "finalize"),
-  NormandyTestUtils.withMockRecipeCollection([]),
-  async function testNoRecipes({ finalizeSpy }) {
-    await RecipeRunner.run();
-    Assert.deepEqual(
-      finalizeSpy.args,
-      [[{ noRecipes: true }]],
-      "Action manager should know there were no recipes received"
-    );
-  }
-);
-
-// If some recipes are found on the server, the action manager should be informed of that
-decorate_task(
-  withSpy(ActionsManager.prototype, "finalize"),
-  NormandyTestUtils.withMockRecipeCollection([{ id: 1 }]),
-  async function testSomeRecipes({ finalizeSpy }) {
-    await RecipeRunner.run();
-    Assert.deepEqual(
-      finalizeSpy.args,
-      [[{ noRecipes: false }]],
-      "Action manager should know there were recipes received"
-    );
-  }
-);
