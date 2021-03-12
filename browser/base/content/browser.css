@@ -1637,3 +1637,9 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
 /**
  * End Dialogs
  */
+
+/* Password update/save doorhanger */
+#password-notification-username,
+#password-notification-password {
+  margin-inline-start: 6px;
+}
