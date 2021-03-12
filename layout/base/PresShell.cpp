@@ -6384,7 +6384,10 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
   if (!(aFlags & PaintFlags::PaintComposite)) {
     flags |= PaintFrameFlags::NoComposite;
   }
-  if (aFlags & PaintFlags::PaintSyncDecodeImages) {
+  // We force sync-decode for printing / print-preview (printing already does
+  // this from nsPageSequenceFrame::PrintNextSheet).
+  if (aFlags & PaintFlags::PaintSyncDecodeImages ||
+      mDocument->IsStaticDocument()) {
     flags |= PaintFrameFlags::SyncDecodeImages;
   }
   if (mNextPaintCompressed) {
