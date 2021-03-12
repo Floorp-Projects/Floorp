@@ -337,6 +337,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readLinearMemoryAddressAligned(
       uint32_t byteSize, LinearMemoryAddress<Value>* addr);
   [[nodiscard]] bool readBlockType(BlockType* type);
+  [[nodiscard]] bool readGcTypeIndex(uint32_t* typeIndex);
   [[nodiscard]] bool readStructTypeIndex(uint32_t* typeIndex);
   [[nodiscard]] bool readArrayTypeIndex(uint32_t* typeIndex);
   [[nodiscard]] bool readFieldIndex(uint32_t* fieldIndex,
@@ -350,7 +351,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool popWithType(ValType expected, Value* value);
   [[nodiscard]] bool popWithType(ResultType expected, ValueVector* values);
   [[nodiscard]] bool popWithRefType(Value* value, StackType* type);
-  [[nodiscard]] bool popWithRttType(uint32_t typeIndex, Value* rtt,
+  [[nodiscard]] bool popWithRttType(Value* rtt, uint32_t* rttTypeIndex,
                                     uint32_t* rttDepth);
   [[nodiscard]] bool popThenPushType(ResultType expected, ValueVector* values);
   [[nodiscard]] bool topWithType(ResultType expected, ValueVector* values);
@@ -574,11 +575,13 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readArrayLen(uint32_t* typeIndex, Value* ptr);
   [[nodiscard]] bool readRttCanon(ValType* rttType);
   [[nodiscard]] bool readRttSub(Value* parentRtt);
-  [[nodiscard]] bool readRefTest(Value* rtt, uint32_t* rttDepth, Value* ref);
-  [[nodiscard]] bool readRefCast(Value* rtt, uint32_t* rttDepth, Value* ref);
+  [[nodiscard]] bool readRefTest(Value* rtt, uint32_t* rttTypeIndex,
+                                 uint32_t* rttDepth, Value* ref);
+  [[nodiscard]] bool readRefCast(Value* rtt, uint32_t* rttTypeIndex,
+                                 uint32_t* rttDepth, Value* ref);
   [[nodiscard]] bool readBrOnCast(uint32_t* relativeDepth, Value* rtt,
-                                  uint32_t* rttDepth, ValueVector* values,
-                                  ResultType* types);
+                                  uint32_t* rttTypeIndex, uint32_t* rttDepth,
+                                  ValueVector* values, ResultType* types);
   [[nodiscard]] bool readValType(ValType* type);
   [[nodiscard]] bool readHeapType(bool nullable, RefType* type);
   [[nodiscard]] bool readReferenceType(ValType* type,
@@ -809,19 +812,23 @@ inline bool OpIter<Policy>::popWithRefType(Value* value, StackType* type) {
   return fail(error.get());
 }
 
-// This function pops exactly one value from the stack, checking that it is a
-// rtt type with a specific concrete type, but allowing any depth value.
+// This function pops exactly one value from the stack, checking that it is an
+// rtt type with any type index or depth value.
 template <typename Policy>
-inline bool OpIter<Policy>::popWithRttType(uint32_t typeIndex, Value* rtt,
+inline bool OpIter<Policy>::popWithRttType(Value* rtt, uint32_t* rttTypeIndex,
                                            uint32_t* rttDepth) {
   StackType type;
   if (!popStackType(&type, rtt)) {
     return false;
   }
 
-  if (type.isBottom() ||
-      (type.valType().isRtt() && type.valType().typeIndex() == typeIndex)) {
-    *rttDepth = type.isBottom() ? 0 : type.valType().rttDepth();
+  if (type.isBottom()) {
+    return fail("gc instruction temporarily not allowed in dead code");
+  }
+
+  if (type.valType().isRtt()) {
+    *rttTypeIndex = type.valType().typeIndex();
+    *rttDepth = type.valType().rttDepth();
     return true;
   }
 
@@ -830,9 +837,9 @@ inline bool OpIter<Policy>::popWithRttType(uint32_t typeIndex, Value* rtt,
     return false;
   }
 
-  UniqueChars error(JS_smprintf(
-      "type mismatch: expression has type %s but expected (rtt _ %u)",
-      actualText.get(), typeIndex));
+  UniqueChars error(
+      JS_smprintf("type mismatch: expression has type %s but expected (rtt _)",
+                  actualText.get()));
   if (!error) {
     return false;
   }
@@ -2598,6 +2605,24 @@ inline bool OpIter<Policy>::readTableSize(uint32_t* tableIndex) {
 }
 
 template <typename Policy>
+inline bool OpIter<Policy>::readGcTypeIndex(uint32_t* typeIndex) {
+  if (!readVarU32(typeIndex)) {
+    return fail("unable to read type index");
+  }
+
+  if (*typeIndex >= env_.types.length()) {
+    return fail("type index out of range");
+  }
+
+  if (!env_.types.isStructType(*typeIndex) &&
+      !env_.types.isArrayType(*typeIndex)) {
+    return fail("not a gc type");
+  }
+
+  return true;
+}
+
+template <typename Policy>
 inline bool OpIter<Policy>::readStructTypeIndex(uint32_t* typeIndex) {
   if (!readVarU32(typeIndex)) {
     return fail("unable to read type index");
@@ -2906,15 +2931,12 @@ template <typename Policy>
 inline bool OpIter<Policy>::readRttCanon(ValType* rttType) {
   MOZ_ASSERT(Classify(op_) == OpKind::RttCanon);
 
-  RefType heapType;
-  if (!readHeapType(true, &heapType)) {
+  uint32_t typeIndex;
+  if (!readGcTypeIndex(&typeIndex)) {
     return false;
   }
 
-  if (!env_.types.isStructType(heapType) && !env_.types.isArrayType(heapType)) {
-    return fail("invalid type for rtt");
-  }
-  *rttType = ValType::fromRtt(heapType.typeIndex(), 0);
+  *rttType = ValType::fromRtt(typeIndex, 0);
   return push(*rttType);
 }
 
@@ -2922,104 +2944,49 @@ template <typename Policy>
 inline bool OpIter<Policy>::readRttSub(Value* parentRtt) {
   MOZ_ASSERT(Classify(op_) == OpKind::RttSub);
 
-  uint32_t depth;
-  if (!readVarU32(&depth)) {
-    return false;
-  }
-  if (depth > MaxRttDepth) {
-    return fail("too deep of rtt");
-  }
-
-  RefType parentHeapType;
-  if (!readHeapType(true, &parentHeapType)) {
-    return false;
-  }
-  if (!env_.types.isStructType(parentHeapType) &&
-      !env_.types.isArrayType(parentHeapType)) {
-    return fail("invalid type for rtt");
-  }
-
-  RefType subHeapType;
-  if (!readHeapType(true, &subHeapType)) {
-    return false;
-  }
-  if (!checkIsSubtypeOf(ValType(subHeapType), ValType(parentHeapType))) {
+  uint32_t rttTypeIndex;
+  uint32_t rttDepth;
+  if (!popWithRttType(parentRtt, &rttTypeIndex, &rttDepth)) {
     return false;
   }
 
-  ValType parentRttType = ValType::fromRtt(parentHeapType.typeIndex(), depth);
-  ValType subRttType = ValType::fromRtt(subHeapType.typeIndex(), depth + 1);
-
-  if (!popWithType(parentRttType, parentRtt)) {
-    return false;
+  if (rttDepth >= MaxRttDepth) {
+    return fail("rtt depth is too deep");
   }
-  return push(subRttType);
+  return push(ValType::fromRtt(rttTypeIndex, rttDepth + 1));
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readRefTest(Value* rtt, uint32_t* rttDepth,
-                                        Value* ref) {
+inline bool OpIter<Policy>::readRefTest(Value* rtt, uint32_t* rttTypeIndex,
+                                        uint32_t* rttDepth, Value* ref) {
   MOZ_ASSERT(Classify(op_) == OpKind::RefTest);
 
-  RefType refHeapType;
-  if (!readHeapType(true, &refHeapType)) {
+  if (!popWithRttType(rtt, rttTypeIndex, rttDepth)) {
     return false;
   }
-  if (!checkIsSubtypeOf(ValType(refHeapType),
-                        RefType::fromTypeCode(TypeCode::EqRef, true))) {
-    return fail("invalid type for ref of ref.test");
-  }
-
-  RefType subHeapType;
-  if (!readHeapType(true, &subHeapType)) {
-    return false;
-  }
-  if (!checkIsSubtypeOf(ValType(subHeapType), refHeapType)) {
-    return fail("invalid type for ref of ref.test");
-  }
-
-  if (!popWithRttType(subHeapType.typeIndex(), rtt, rttDepth)) {
-    return false;
-  }
-  if (!popWithType(refHeapType, ref)) {
+  if (!popWithType(RefType::eq(), ref)) {
     return false;
   }
   return push(ValType(ValType::I32));
 }
 
 template <typename Policy>
-inline bool OpIter<Policy>::readRefCast(Value* rtt, uint32_t* rttDepth,
-                                        Value* ref) {
+inline bool OpIter<Policy>::readRefCast(Value* rtt, uint32_t* rttTypeIndex,
+                                        uint32_t* rttDepth, Value* ref) {
   MOZ_ASSERT(Classify(op_) == OpKind::RefCast);
 
-  RefType refHeapType;
-  if (!readHeapType(true, &refHeapType)) {
+  if (!popWithRttType(rtt, rttTypeIndex, rttDepth)) {
     return false;
   }
-  if (!checkIsSubtypeOf(ValType(refHeapType),
-                        RefType::fromTypeCode(TypeCode::EqRef, true))) {
-    return fail("invalid type for ref of ref.cast");
-  }
-
-  RefType subHeapType;
-  if (!readHeapType(true, &subHeapType)) {
+  if (!popWithType(RefType::eq(), ref)) {
     return false;
   }
-  if (!checkIsSubtypeOf(ValType(subHeapType), refHeapType)) {
-    return fail("invalid type for ref of ref.test");
-  }
-
-  if (!popWithRttType(subHeapType.typeIndex(), rtt, rttDepth)) {
-    return false;
-  }
-  if (!popWithType(refHeapType, ref)) {
-    return false;
-  }
-  return push(subHeapType.asNonNullable());
+  return push(RefType::fromTypeIndex(*rttTypeIndex, false));
 }
 
 template <typename Policy>
 inline bool OpIter<Policy>::readBrOnCast(uint32_t* relativeDepth, Value* rtt,
+                                         uint32_t* rttTypeIndex,
                                          uint32_t* rttDepth,
                                          ValueVector* values,
                                          ResultType* types) {
@@ -3029,35 +2996,17 @@ inline bool OpIter<Policy>::readBrOnCast(uint32_t* relativeDepth, Value* rtt,
     return fail("unable to read br_on_cast depth");
   }
 
-  RefType refHeapType;
-  if (!readHeapType(true, &refHeapType)) {
+  if (!popWithRttType(rtt, rttTypeIndex, rttDepth)) {
     return false;
   }
-  if (!checkIsSubtypeOf(ValType(refHeapType),
-                        RefType::fromTypeCode(TypeCode::EqRef, true))) {
-    return fail("invalid type for ref of br_on_cast");
-  }
 
-  RefType subHeapType;
-  if (!readHeapType(true, &subHeapType)) {
-    return false;
-  }
-  if (!checkIsSubtypeOf(ValType(subHeapType), refHeapType)) {
-    return fail("invalid type for ref of ref.test");
-  }
-
-  *types = ResultType::Single(ValType(subHeapType.asNonNullable()));
+  *types =
+      ResultType::Single(ValType(RefType::fromTypeIndex(*rttTypeIndex, false)));
   if (!checkBranchType(*relativeDepth, *types)) {
     return false;
   }
 
-  if (!popWithRttType(subHeapType.typeIndex(), rtt, rttDepth)) {
-    return false;
-  }
-  if (!topWithType(ResultType::Single(ValType(refHeapType)), values)) {
-    return false;
-  }
-  return true;
+  return topWithType(ResultType::Single(ValType(RefType::eq())), values);
 }
 
 #ifdef ENABLE_WASM_SIMD

@@ -14055,8 +14055,9 @@ bool BaseCompiler::emitRefTest() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   Nothing nothing;
+  uint32_t rttTypeIndex;
   uint32_t rttDepth;
-  if (!iter_.readRefTest(&nothing, &rttDepth, &nothing)) {
+  if (!iter_.readRefTest(&nothing, &rttTypeIndex, &rttDepth, &nothing)) {
     return false;
   }
 
@@ -14070,8 +14071,9 @@ bool BaseCompiler::emitRefCast() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   Nothing nothing;
+  uint32_t rttTypeIndex;
   uint32_t rttDepth;
-  if (!iter_.readRefCast(&nothing, &rttDepth, &nothing)) {
+  if (!iter_.readRefCast(&nothing, &rttTypeIndex, &rttDepth, &nothing)) {
     return false;
   }
 
@@ -14107,11 +14109,12 @@ bool BaseCompiler::emitBrOnCast() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
   uint32_t relativeDepth;
   Nothing unused;
-  uint32_t rttDepth;
   NothingVector unused_values;
+  uint32_t rttTypeIndex;
+  uint32_t rttDepth;
   ResultType type;
-  if (!iter_.readBrOnCast(&relativeDepth, &unused, &rttDepth, &unused_values,
-                          &type)) {
+  if (!iter_.readBrOnCast(&relativeDepth, &unused, &rttTypeIndex, &rttDepth,
+                          &unused_values, &type)) {
     return false;
   }
 
