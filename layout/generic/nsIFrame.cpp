@@ -3648,7 +3648,6 @@ void nsIFrame::BuildDisplayListForStackingContext(
       nsPoint toOuterReferenceFrame;
       const nsIFrame* outerReferenceFrame =
           aBuilder->FindReferenceFrameFor(GetParent(), &toOuterReferenceFrame);
-      toOuterReferenceFrame += GetPosition();
 
       buildingDisplayList.SetReferenceFrameAndCurrentOffset(
           outerReferenceFrame, toOuterReferenceFrame);
@@ -4846,8 +4845,8 @@ nsresult nsIFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
     baseOffset = aStartPos;
   }
 
-  nsPeekOffsetStruct endpos(aAmountForward, eDirNext, baseOffset,
-                            nsPoint(0, 0), aJumpLines,
+  nsPeekOffsetStruct endpos(aAmountForward, eDirNext, baseOffset, nsPoint(0, 0),
+                            aJumpLines,
                             true,  // limit on scrolled views
                             false, false, false);
   rv = baseFrame->PeekOffset(&endpos);
