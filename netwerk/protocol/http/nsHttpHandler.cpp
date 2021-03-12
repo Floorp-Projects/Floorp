@@ -757,7 +757,7 @@ nsresult nsHttpHandler::AsyncOnChannelRedirect(
   newChan->GetURI(getter_AddRefs(newURI));
   MOZ_ASSERT(newURI);
 
-  AntiTrackingRedirectHeuristic(oldChan, oldURI, newChan, newURI);
+  PrepareForAntiTrackingRedirectHeuristic(oldChan, oldURI, newChan, newURI);
 
   DynamicFpiRedirectHeuristic(oldChan, oldURI, newChan, newURI);
 
