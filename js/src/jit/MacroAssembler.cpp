@@ -3486,45 +3486,6 @@ void MacroAssembler::loadFunctionName(Register func, Register output,
   bind(&hasName);
 }
 
-void MacroAssembler::branchTestObjRttValue(Condition cond, Register obj,
-                                           Register rttValue, Register scratch,
-                                           Register spectreRegToZero,
-                                           Label* label) {
-  MOZ_ASSERT(obj != scratch);
-  MOZ_ASSERT(obj != rttValue);
-  MOZ_ASSERT(spectreRegToZero != scratch);
-
-  if (JitOptions.spectreObjectMitigationsMisc) {
-    move32(Imm32(0), scratch);
-  }
-
-  branchPtr(cond, Address(obj, TypedObject::offsetOfRttValue()), rttValue,
-            label);
-
-  if (JitOptions.spectreObjectMitigationsMisc) {
-    spectreMovePtr(cond, scratch, spectreRegToZero);
-  }
-}
-
-void MacroAssembler::branchTestObjRttValue(Condition cond, Register obj,
-                                           RttValue* rttValue, Register scratch,
-                                           Register spectreRegToZero,
-                                           Label* label) {
-  MOZ_ASSERT(obj != scratch);
-  MOZ_ASSERT(spectreRegToZero != scratch);
-
-  if (JitOptions.spectreObjectMitigationsMisc) {
-    move32(Imm32(0), scratch);
-  }
-
-  branchPtr(cond, Address(obj, TypedObject::offsetOfRttValue()),
-            ImmGCPtr(rttValue), label);
-
-  if (JitOptions.spectreObjectMitigationsMisc) {
-    spectreMovePtr(cond, scratch, spectreRegToZero);
-  }
-}
-
 void MacroAssembler::branchTestObjCompartment(Condition cond, Register obj,
                                               const Address& compartment,
                                               Register scratch, Label* label) {
