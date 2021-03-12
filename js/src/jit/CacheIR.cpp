@@ -277,8 +277,8 @@ enum class ProxyStubType {
   Generic
 };
 
-static bool IsCacheableDOMProxy(JSObject* obj) {
-  const BaseProxyHandler* handler = obj->as<ProxyObject>().handler();
+static bool IsCacheableDOMProxy(ProxyObject* obj) {
+  const BaseProxyHandler* handler = obj->handler();
   if (handler->family() != GetDOMProxyHandlerFamily()) {
     return false;
   }
@@ -293,12 +293,13 @@ static ProxyStubType GetProxyStubType(JSContext* cx, HandleObject obj,
   if (!obj->is<ProxyObject>()) {
     return ProxyStubType::None;
   }
+  auto proxy = obj.as<ProxyObject>();
 
-  if (!IsCacheableDOMProxy(obj)) {
+  if (!IsCacheableDOMProxy(proxy)) {
     return ProxyStubType::Generic;
   }
 
-  DOMProxyShadowsResult shadows = GetDOMProxyShadowsCheck()(cx, obj, id);
+  DOMProxyShadowsResult shadows = GetDOMProxyShadowsCheck()(cx, proxy, id);
   if (shadows == DOMProxyShadowsResult::ShadowCheckFailed) {
     cx->clearPendingException();
     return ProxyStubType::None;
@@ -1372,9 +1373,8 @@ AttachDecision GetPropIRGenerator::tryAttachXrayCrossCompartmentWrapper(
 }
 
 AttachDecision GetPropIRGenerator::tryAttachGenericProxy(
-    HandleObject obj, ObjOperandId objId, HandleId id, bool handleDOMProxies) {
-  MOZ_ASSERT(obj->is<ProxyObject>());
-
+    Handle<ProxyObject*> obj, ObjOperandId objId, HandleId id,
+    bool handleDOMProxies) {
   writer.guardIsProxy(objId);
 
   if (!handleDOMProxies) {
@@ -1436,11 +1436,11 @@ IntPtrOperandId IRGenerator::guardToIntPtrIndex(const Value& index,
 }
 
 ObjOperandId IRGenerator::guardDOMProxyExpandoObjectAndShape(
-    JSObject* obj, ObjOperandId objId, const Value& expandoVal,
+    ProxyObject* obj, ObjOperandId objId, const Value& expandoVal,
     JSObject* expandoObj) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
-  TestMatchingProxyReceiver(writer, &obj->as<ProxyObject>(), objId);
+  TestMatchingProxyReceiver(writer, obj, objId);
 
   // Shape determines Class, so now it must be a DOM proxy.
   ValOperandId expandoValId;
@@ -1457,7 +1457,7 @@ ObjOperandId IRGenerator::guardDOMProxyExpandoObjectAndShape(
 }
 
 AttachDecision GetPropIRGenerator::tryAttachDOMProxyExpando(
-    HandleObject obj, ObjOperandId objId, HandleId id,
+    Handle<ProxyObject*> obj, ObjOperandId objId, HandleId id,
     ValOperandId receiverId) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
@@ -1510,14 +1510,13 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyExpando(
   return AttachDecision::Attach;
 }
 
-AttachDecision GetPropIRGenerator::tryAttachDOMProxyShadowed(HandleObject obj,
-                                                             ObjOperandId objId,
-                                                             HandleId id) {
+AttachDecision GetPropIRGenerator::tryAttachDOMProxyShadowed(
+    Handle<ProxyObject*> obj, ObjOperandId objId, HandleId id) {
   MOZ_ASSERT(!isSuper());
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
   maybeEmitIdGuard(id);
-  TestMatchingProxyReceiver(writer, &obj->as<ProxyObject>(), objId);
+  TestMatchingProxyReceiver(writer, obj, objId);
   writer.proxyGetResult(objId, id);
   writer.returnFromIC();
 
@@ -1528,7 +1527,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyShadowed(HandleObject obj,
 // Callers are expected to have already guarded on the shape of the
 // object, which guarantees the object is a DOM proxy.
 static void CheckDOMProxyExpandoDoesNotShadow(CacheIRWriter& writer,
-                                              JSObject* obj, jsid id,
+                                              ProxyObject* obj, jsid id,
                                               ObjOperandId objId) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
@@ -1562,7 +1561,7 @@ static void CheckDOMProxyExpandoDoesNotShadow(CacheIRWriter& writer,
 }
 
 AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
-    HandleObject obj, ObjOperandId objId, HandleId id,
+    Handle<ProxyObject*> obj, ObjOperandId objId, HandleId id,
     ValOperandId receiverId) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
@@ -1582,7 +1581,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
   maybeEmitIdGuard(id);
 
   // Guard that our expando object hasn't started shadowing this property.
-  TestMatchingProxyReceiver(writer, &obj->as<ProxyObject>(), objId);
+  TestMatchingProxyReceiver(writer, obj, objId);
   CheckDOMProxyExpandoDoesNotShadow(writer, obj, id, objId);
 
   if (holder) {
@@ -1628,6 +1627,7 @@ AttachDecision GetPropIRGenerator::tryAttachProxy(HandleObject obj,
   if (type == ProxyStubType::None) {
     return AttachDecision::NoAction;
   }
+  auto proxy = obj.as<ProxyObject>();
 
   // The proxy stubs don't currently support |super| access.
   if (isSuper()) {
@@ -1635,23 +1635,24 @@ AttachDecision GetPropIRGenerator::tryAttachProxy(HandleObject obj,
   }
 
   if (mode_ == ICState::Mode::Megamorphic) {
-    return tryAttachGenericProxy(obj, objId, id, /* handleDOMProxies = */ true);
+    return tryAttachGenericProxy(proxy, objId, id,
+                                 /* handleDOMProxies = */ true);
   }
 
   switch (type) {
     case ProxyStubType::None:
       break;
     case ProxyStubType::DOMExpando:
-      TRY_ATTACH(tryAttachDOMProxyExpando(obj, objId, id, receiverId));
+      TRY_ATTACH(tryAttachDOMProxyExpando(proxy, objId, id, receiverId));
       [[fallthrough]];  // Fall through to the generic shadowed case.
     case ProxyStubType::DOMShadowed:
-      return tryAttachDOMProxyShadowed(obj, objId, id);
+      return tryAttachDOMProxyShadowed(proxy, objId, id);
     case ProxyStubType::DOMUnshadowed:
-      TRY_ATTACH(tryAttachDOMProxyUnshadowed(obj, objId, id, receiverId));
-      return tryAttachGenericProxy(obj, objId, id,
+      TRY_ATTACH(tryAttachDOMProxyUnshadowed(proxy, objId, id, receiverId));
+      return tryAttachGenericProxy(proxy, objId, id,
                                    /* handleDOMProxies = */ true);
     case ProxyStubType::Generic:
-      return tryAttachGenericProxy(obj, objId, id,
+      return tryAttachGenericProxy(proxy, objId, id,
                                    /* handleDOMProxies = */ false);
   }
 
@@ -4166,10 +4167,8 @@ AttachDecision SetPropIRGenerator::tryAttachSetTypedArrayElement(
 }
 
 AttachDecision SetPropIRGenerator::tryAttachGenericProxy(
-    HandleObject obj, ObjOperandId objId, HandleId id, ValOperandId rhsId,
-    bool handleDOMProxies) {
-  MOZ_ASSERT(obj->is<ProxyObject>());
-
+    Handle<ProxyObject*> obj, ObjOperandId objId, HandleId id,
+    ValOperandId rhsId, bool handleDOMProxies) {
   writer.guardIsProxy(objId);
 
   if (!handleDOMProxies) {
@@ -4198,11 +4197,12 @@ AttachDecision SetPropIRGenerator::tryAttachGenericProxy(
 }
 
 AttachDecision SetPropIRGenerator::tryAttachDOMProxyShadowed(
-    HandleObject obj, ObjOperandId objId, HandleId id, ValOperandId rhsId) {
+    Handle<ProxyObject*> obj, ObjOperandId objId, HandleId id,
+    ValOperandId rhsId) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
   maybeEmitIdGuard(id);
-  TestMatchingProxyReceiver(writer, &obj->as<ProxyObject>(), objId);
+  TestMatchingProxyReceiver(writer, obj, objId);
   writer.proxySet(objId, id, rhsId, IsStrictSetPC(pc_));
   writer.returnFromIC();
 
@@ -4211,7 +4211,8 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyShadowed(
 }
 
 AttachDecision SetPropIRGenerator::tryAttachDOMProxyUnshadowed(
-    HandleObject obj, ObjOperandId objId, HandleId id, ValOperandId rhsId) {
+    Handle<ProxyObject*> obj, ObjOperandId objId, HandleId id,
+    ValOperandId rhsId) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
   RootedObject proto(cx_, obj->staticPrototype());
@@ -4228,7 +4229,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyUnshadowed(
   maybeEmitIdGuard(id);
 
   // Guard that our expando object hasn't started shadowing this property.
-  TestMatchingProxyReceiver(writer, &obj->as<ProxyObject>(), objId);
+  TestMatchingProxyReceiver(writer, obj, objId);
   CheckDOMProxyExpandoDoesNotShadow(writer, obj, id, objId);
 
   GeneratePrototypeGuards(writer, obj, holder, objId);
@@ -4247,7 +4248,8 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyUnshadowed(
 }
 
 AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
-    HandleObject obj, ObjOperandId objId, HandleId id, ValOperandId rhsId) {
+    Handle<ProxyObject*> obj, ObjOperandId objId, HandleId id,
+    ValOperandId rhsId) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
   RootedValue expandoVal(cx_, GetProxyPrivate(obj));
@@ -4305,9 +4307,10 @@ AttachDecision SetPropIRGenerator::tryAttachProxy(HandleObject obj,
   if (type == ProxyStubType::None) {
     return AttachDecision::NoAction;
   }
+  auto proxy = obj.as<ProxyObject>();
 
   if (mode_ == ICState::Mode::Megamorphic) {
-    return tryAttachGenericProxy(obj, objId, id, rhsId,
+    return tryAttachGenericProxy(proxy, objId, id, rhsId,
                                  /* handleDOMProxies = */ true);
   }
 
@@ -4315,16 +4318,16 @@ AttachDecision SetPropIRGenerator::tryAttachProxy(HandleObject obj,
     case ProxyStubType::None:
       break;
     case ProxyStubType::DOMExpando:
-      TRY_ATTACH(tryAttachDOMProxyExpando(obj, objId, id, rhsId));
+      TRY_ATTACH(tryAttachDOMProxyExpando(proxy, objId, id, rhsId));
       [[fallthrough]];  // Fall through to the generic shadowed case.
     case ProxyStubType::DOMShadowed:
-      return tryAttachDOMProxyShadowed(obj, objId, id, rhsId);
+      return tryAttachDOMProxyShadowed(proxy, objId, id, rhsId);
     case ProxyStubType::DOMUnshadowed:
-      TRY_ATTACH(tryAttachDOMProxyUnshadowed(obj, objId, id, rhsId));
-      return tryAttachGenericProxy(obj, objId, id, rhsId,
+      TRY_ATTACH(tryAttachDOMProxyUnshadowed(proxy, objId, id, rhsId));
+      return tryAttachGenericProxy(proxy, objId, id, rhsId,
                                    /* handleDOMProxies = */ true);
     case ProxyStubType::Generic:
-      return tryAttachGenericProxy(obj, objId, id, rhsId,
+      return tryAttachGenericProxy(proxy, objId, id, rhsId,
                                    /* handleDOMProxies = */ false);
   }
 
