@@ -17,7 +17,6 @@ import androidx.annotation.VisibleForTesting
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.selector.privateTabs
-import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.json.JSONObject
 import org.mozilla.focus.BuildConfig
@@ -265,7 +264,7 @@ object TelemetryWrapper {
 
             val serializer = JSONPingSerializer()
             val storage = FileTelemetryStorage(configuration, serializer)
-            val client = TelemetryClient(HttpURLConnectionClient())
+            val client = TelemetryClient(context.components.client)
             val scheduler = JobSchedulerTelemetryScheduler()
 
             TelemetryHolder.set(Telemetry(configuration, storage, client, scheduler)

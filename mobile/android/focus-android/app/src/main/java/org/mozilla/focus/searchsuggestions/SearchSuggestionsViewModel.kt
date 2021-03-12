@@ -13,6 +13,7 @@ import android.graphics.Typeface
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
+import org.mozilla.focus.ext.components
 
 sealed class State {
     data class Disabled(val givePrompt: Boolean) : State()
@@ -38,7 +39,10 @@ class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(ap
         private set
 
     init {
-        fetcher = SearchSuggestionsFetcher(preferences.getSearchEngine())
+        fetcher = SearchSuggestionsFetcher(
+            preferences.getSearchEngine(),
+            application.applicationContext.components.client
+        )
 
         suggestions = map(fetcher.results) { result ->
             val style = StyleSpan(Typeface.BOLD)
