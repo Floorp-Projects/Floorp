@@ -393,6 +393,10 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``browser.search.suggest.enabled``: The "master switch" for search suggestions everywhere in Firefox (search bar, urlbar, etc.). Defaults to true.
 
+- ``browser.touchmode.auto``: False if the user has overridden the default UI density. Defaults to true.
+
+- ``browser.uidensity``: The current UI density. 0 is normal, 1 is compact, 2 is touch. Defaults to 0.
+
 - ``browser.urlbar.suggest.searches``: True if search suggestions are enabled in the urlbar. Defaults to false.
 
 - ``browser.zoom.full`` (deprecated): True if zoom is enabled for both text and images, that is if "Zoom Text Only" is not enabled. Defaults to true. This preference was collected in Firefox 50 to 52 (`Bug 979323 <https://bugzilla.mozilla.org/show_bug.cgi?id=979323>`_).
