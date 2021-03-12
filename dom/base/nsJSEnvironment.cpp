@@ -92,10 +92,11 @@ using namespace mozilla::dom;
 #  undef CompareString
 #endif
 
+static nsITimer* sGCTimer;
 static nsITimer* sShrinkingGCTimer;
 static StaticRefPtr<IdleTaskRunner> sCCRunner;
 static nsITimer* sFullGCTimer;
-static StaticRefPtr<IdleTaskRunner> sGCRunner;
+static StaticRefPtr<IdleTaskRunner> sInterSliceGCRunner;
 
 static JS::GCSliceCallback sPrevGCSliceCallback;
 
@@ -284,10 +285,11 @@ static TimeDuration GetCollectionTimeDelta() {
 }
 
 static void KillTimers() {
-  nsJSContext::KillGCRunner();
+  nsJSContext::KillGCTimer();
   nsJSContext::KillShrinkingGCTimer();
   nsJSContext::KillCCRunner();
   nsJSContext::KillFullGCTimer();
+  nsJSContext::KillInterSliceGCRunner();
 }
 
 class nsJSEnvironmentObserver final : public nsIObserver {
@@ -1077,6 +1079,8 @@ void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
 
   MOZ_ASSERT_IF(aSliceMillis, aIncremental == IncrementalGC);
 
+  KillGCTimer();
+
   // We use danger::GetJSContext() since AutoJSAPI will assert if the current
   // thread's context is null (such as during shutdown).
   JSContext* cx = danger::GetJSContext();
@@ -1104,9 +1108,6 @@ void nsJSContext::GarbageCollectNow(JS::GCReason aReason,
   }
 
   if (aIncremental == IncrementalGC) {
-    // Incremental GC slices will be triggered by the sGCRunner. If one doesn't
-    // already exist, create it in the GC_SLICE_END callback for the first
-    // slice being executed here.
     JS::StartIncrementalGC(cx, gckind, aReason, aSliceMillis);
   } else {
     JS::NonIncrementalGC(cx, gckind, aReason);
@@ -1548,41 +1549,17 @@ void nsJSContext::EndCycleCollectionCallback(CycleCollectorResults& aResults) {
 }
 
 // static
-bool GCRunnerFired(TimeStamp aDeadline, void* /* aClosure */) {
-  MOZ_ASSERT(!sShuttingDown, "GCRunner still alive during shutdown");
-
-  GCRunnerStep step = sScheduler.GetNextGCRunnerAction(aDeadline);
-  switch (step.mAction) {
-    case GCRunnerAction::None:
-      nsJSContext::KillGCRunner();
-      return false;
-
-    case GCRunnerAction::MajorGC: {
-      // Reconfigure the GCRunner for GC slices.
-      nsIEventTarget* target = mozilla::GetCurrentEventTarget();
-      if (target) {
-        sGCRunner->SetTimer(
-            StaticPrefs::javascript_options_gc_delay_interslice(), target);
-      }
-      sGCRunner->SetMinimumUsefulBudget(
-          sScheduler.mActiveIntersliceGCBudget.ToMilliseconds());
-      break;
-    }
-
-    case GCRunnerAction::GCSlice:
-      break;
-  }
-
-  // Run a GC slice, possibly the first one of a major GC.
-
+bool InterSliceGCRunnerFired(TimeStamp aDeadline, void* aData) {
   MOZ_ASSERT(sScheduler.mActiveIntersliceGCBudget);
   TimeStamp startTimeStamp = TimeStamp::Now();
   TimeDuration budget =
       sScheduler.ComputeInterSliceGCBudget(aDeadline, startTimeStamp);
   TimeDuration duration = sGCUnnotifiedTotalTime;
-  nsJSContext::GarbageCollectNow(step.mReason, nsJSContext::IncrementalGC,
-                                 nsJSContext::NonShrinkingGC,
-                                 budget.ToMilliseconds());
+  uintptr_t reason = reinterpret_cast<uintptr_t>(aData);
+  nsJSContext::GarbageCollectNow(
+      aData ? static_cast<JS::GCReason>(reason) : JS::GCReason::INTER_SLICE_GC,
+      nsJSContext::IncrementalGC, nsJSContext::NonShrinkingGC,
+      budget.ToMilliseconds());
 
   sGCUnnotifiedTotalTime = TimeDuration();
   TimeStamp now = TimeStamp::Now();
@@ -1611,6 +1588,29 @@ bool GCRunnerFired(TimeStamp aDeadline, void* /* aClosure */) {
   // make IdleTaskRunner postpone the next call a bit.
   JSContext* cx = danger::GetJSContext();
   return JS::IncrementalGCHasForegroundWork(cx);
+}
+
+// static
+void GCTimerFired(nsITimer* aTimer, void* aClosure) {
+  nsJSContext::KillGCTimer();
+  if (sShuttingDown) {
+    nsJSContext::KillInterSliceGCRunner();
+    return;
+  }
+
+  if (sInterSliceGCRunner) {
+    return;
+  }
+
+  // Now start the actual GC after initial timer has fired.
+  sInterSliceGCRunner = IdleTaskRunner::Create(
+      [aClosure](TimeStamp aDeadline) {
+        return InterSliceGCRunnerFired(aDeadline, aClosure);
+      },
+      "GCTimerFired::InterSliceGCRunnerFired", 0,
+      StaticPrefs::javascript_options_gc_delay_interslice(),
+      sScheduler.mActiveIntersliceGCBudget.ToMilliseconds(), true,
+      [] { return sShuttingDown; });
 }
 
 // static
@@ -1708,14 +1708,20 @@ void nsJSContext::RunNextCollectorTimer(JS::GCReason aReason,
     return;
   }
 
+  if (sGCTimer) {
+    if (aReason == JS::GCReason::DOM_WINDOW_UTILS) {
+      // Force full GCs when called from reftests so that we collect dead zones
+      // that have not been scheduled for collection.
+      sScheduler.SetNeedsFullGC();
+    }
+    GCTimerFired(nullptr, reinterpret_cast<void*>(aReason));
+    return;
+  }
+
   nsCOMPtr<nsIRunnable> runnable;
-  if (sGCRunner) {
-    // If the GC has already started, we will just run the next slice here and
-    // this call will have no effect (the reason will be ignored, and the
-    // trigger will be cleared at the end of the GC.)
-    sScheduler.SetWantMajorGC(aReason);
-    sGCRunner->SetDeadline(aDeadline);
-    runnable = sGCRunner;
+  if (sInterSliceGCRunner) {
+    sInterSliceGCRunner->SetDeadline(aDeadline);
+    runnable = sInterSliceGCRunner;
   } else {
     // Check the CC timers after the GC timers, because the CC timers won't do
     // anything if a GC is in progress.
@@ -1806,7 +1812,7 @@ void nsJSContext::PokeGC(JS::GCReason aReason, JSObject* aObj,
     sScheduler.SetNeedsFullGC();
   }
 
-  if (sGCRunner) {
+  if (sGCTimer || sInterSliceGCRunner) {
     // There's already a timer for GC'ing, just return
     return;
   }
@@ -1820,20 +1826,12 @@ void nsJSContext::PokeGC(JS::GCReason aReason, JSObject* aObj,
 
   static bool first = true;
 
-  uint32_t delay =
+  NS_NewTimerWithFuncCallback(
+      &sGCTimer, GCTimerFired, reinterpret_cast<void*>(aReason),
       aDelay ? aDelay
              : (first ? StaticPrefs::javascript_options_gc_delay_first()
-                      : StaticPrefs::javascript_options_gc_delay());
-
-  sGCRunner = IdleTaskRunner::Create(
-      [](TimeStamp aDeadline) { return GCRunnerFired(aDeadline, nullptr); },
-      "GCRunnerFired",
-      // Wait for javascript.options.gc_delay, then start looking for idle time
-      // to run the initial GC slice. Wait at most the interslice GC delay
-      // before forcing a run.
-      delay, StaticPrefs::javascript_options_gc_delay_interslice(),
-      sScheduler.mActiveIntersliceGCBudget.ToMilliseconds(), true,
-      [] { return sShuttingDown; });
+                      : StaticPrefs::javascript_options_gc_delay()),
+      nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, "GCTimerFired");
 
   first = false;
 }
@@ -1868,6 +1866,14 @@ void nsJSContext::MaybePokeCC() {
   }
 }
 
+// static
+void nsJSContext::KillGCTimer() {
+  if (sGCTimer) {
+    sGCTimer->Cancel();
+    NS_RELEASE(sGCTimer);
+  }
+}
+
 void nsJSContext::KillFullGCTimer() {
   if (sFullGCTimer) {
     sFullGCTimer->Cancel();
@@ -1875,10 +1881,10 @@ void nsJSContext::KillFullGCTimer() {
   }
 }
 
-void nsJSContext::KillGCRunner() {
-  if (sGCRunner) {
-    sGCRunner->Cancel();
-    sGCRunner = nullptr;
+void nsJSContext::KillInterSliceGCRunner() {
+  if (sInterSliceGCRunner) {
+    sInterSliceGCRunner->Cancel();
+    sInterSliceGCRunner = nullptr;
   }
 }
 
@@ -1935,8 +1941,8 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
       sScheduler.NoteGCEnd();
       sIsCompactingOnUserInactive = false;
 
-      // May need to kill the GC runner
-      nsJSContext::KillGCRunner();
+      // May need to kill the inter-slice GC runner
+      nsJSContext::KillInterSliceGCRunner();
 
       nsJSContext::MaybePokeCC();
 
@@ -1969,19 +1975,17 @@ static void DOMGCSliceCallback(JSContext* aCx, JS::GCProgress aProgress,
           aDesc.lastSliceEnd(aCx) - aDesc.lastSliceStart(aCx);
 
       if (sShuttingDown || aDesc.isComplete_) {
-        nsJSContext::KillGCRunner();
-      } else if (!sGCRunner) {
+        nsJSContext::KillInterSliceGCRunner();
+      } else if (!sInterSliceGCRunner) {
         // If incremental GC wasn't triggered by GCTimerFired, we may not
         // have a runner to ensure all the slices are handled. So, create
         // the runner here.
-        sGCRunner = IdleTaskRunner::Create(
+        sInterSliceGCRunner = IdleTaskRunner::Create(
             [](TimeStamp aDeadline) {
-              return GCRunnerFired(aDeadline, nullptr);
+              return InterSliceGCRunnerFired(aDeadline, nullptr);
             },
-            "GCRunnerFired",
-            // Start immediately looking for idle time, waiting at most the
-            // interslice GC delay before forcing a run.
-            0, StaticPrefs::javascript_options_gc_delay_interslice(),
+            "DOMGCSliceCallback::InterSliceGCRunnerFired", 0,
+            StaticPrefs::javascript_options_gc_delay_interslice(),
             sScheduler.mActiveIntersliceGCBudget.ToMilliseconds(), true,
             [] { return sShuttingDown; });
       }
@@ -2027,7 +2031,7 @@ void nsJSContext::LikelyShortLivingObjectCreated() {
 
 void mozilla::dom::StartupJSEnvironment() {
   // initialize all our statics, so that we can restart XPCOM
-  sShrinkingGCTimer = sFullGCTimer = nullptr;
+  sGCTimer = sShrinkingGCTimer = sFullGCTimer = nullptr;
   sIsInitialized = false;
   sShuttingDown = false;
   new (&sScheduler) CCGCScheduler();  // Reset the scheduler state.
