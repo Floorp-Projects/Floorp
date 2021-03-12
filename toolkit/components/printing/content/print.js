@@ -951,15 +951,17 @@ var PrintEventHandler = {
     };
   },
 
-  getMarginPresets(marginSize, paper) {
+  getMarginPresets(marginSize, paperWrapper) {
     switch (marginSize) {
-      case "minimum":
+      case "minimum": {
+        let marginSource = paperWrapper || this.defaultSettings;
         return {
-          marginTop: paper.unwriteableMarginTop,
-          marginLeft: paper.unwriteableMarginLeft,
-          marginBottom: paper.unwriteableMarginBottom,
-          marginRight: paper.unwriteableMarginRight,
+          marginTop: marginSource.unwriteableMarginTop,
+          marginRight: marginSource.unwriteableMarginRight,
+          marginBottom: marginSource.unwriteableMarginBottom,
+          marginLeft: marginSource.unwriteableMarginLeft,
         };
+      }
       case "none":
         return {
           marginTop: 0,
@@ -983,7 +985,7 @@ var PrintEventHandler = {
             this.settings.marginRight,
         };
       default: {
-        let minimum = this.getMarginPresets("minimum", paper);
+        let minimum = this.getMarginPresets("minimum", paperWrapper);
         return {
           marginTop: !isNaN(minimum.marginTop)
             ? Math.max(minimum.marginTop, this.defaultSettings.marginTop)
