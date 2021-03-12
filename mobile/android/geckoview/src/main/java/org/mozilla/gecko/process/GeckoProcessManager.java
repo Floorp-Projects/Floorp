@@ -709,7 +709,9 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
                 builder.append("; Type: ");
                 builder.append(type.toString());
 
-                result.completeExceptionally(new RuntimeException(builder.toString()));
+                final RuntimeException exception = new RuntimeException(builder.toString(), error);
+                Log.e(LOGTAG, "Could not bind to process", exception);
+                result.completeExceptionally(exception);
             });
     }
 
