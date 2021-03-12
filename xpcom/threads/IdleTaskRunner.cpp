@@ -12,14 +12,14 @@ namespace mozilla {
 
 already_AddRefed<IdleTaskRunner> IdleTaskRunner::Create(
     const CallbackType& aCallback, const char* aRunnableName,
-    uint32_t aMaxDelay, int64_t aMinimumUsefulBudget, bool aRepeating,
-    const MayStopProcessingCallbackType& aMayStopProcessing) {
+    uint32_t aStartDelay, uint32_t aMaxDelay, int64_t aMinimumUsefulBudget,
+    bool aRepeating, const MayStopProcessingCallbackType& aMayStopProcessing) {
   if (aMayStopProcessing && aMayStopProcessing()) {
     return nullptr;
   }
 
   RefPtr<IdleTaskRunner> runner =
-      new IdleTaskRunner(aCallback, aRunnableName, aMaxDelay,
+      new IdleTaskRunner(aCallback, aRunnableName, aStartDelay, aMaxDelay,
                          aMinimumUsefulBudget, aRepeating, aMayStopProcessing);
   runner->Schedule(false);  // Initial scheduling shouldn't use idle dispatch.
   return runner.forget();
@@ -27,11 +27,13 @@ already_AddRefed<IdleTaskRunner> IdleTaskRunner::Create(
 
 IdleTaskRunner::IdleTaskRunner(
     const CallbackType& aCallback, const char* aRunnableName,
-    uint32_t aMaxDelay, int64_t aMinimumUsefulBudget, bool aRepeating,
-    const MayStopProcessingCallbackType& aMayStopProcessing)
+    uint32_t aStartDelay, uint32_t aMaxDelay, int64_t aMinimumUsefulBudget,
+    bool aRepeating, const MayStopProcessingCallbackType& aMayStopProcessing)
     : CancelableIdleRunnable(aRunnableName),
       mCallback(aCallback),
-      mDelay(aMaxDelay),
+      mStartTime(TimeStamp::Now() +
+                 TimeDuration::FromMilliseconds(aStartDelay)),
+      mMaxDelay(aMaxDelay),
       mMinimumUsefulBudget(
           TimeDuration::FromMilliseconds(aMinimumUsefulBudget)),
       mRepeating(aRepeating),
@@ -45,12 +47,15 @@ IdleTaskRunner::Run() {
     return NS_OK;
   }
 
-  // Deadline is null when called from timer.
+  // Deadline is null when called from timer or RunNextCollectorTimer rather
+  // than during idle time.
   TimeStamp now = TimeStamp::Now();
-  bool deadLineWasNull = mDeadline.IsNull();
+  // Note that if called from RunNextCollectorTimer, we may not have reached
+  // mStartTime yet. Pretend we are overdue for idle time.
+  bool overdueForIdle = mDeadline.IsNull();
   bool didRun = false;
   bool allowIdleDispatch = false;
-  if (deadLineWasNull || ((now + mMinimumUsefulBudget) < mDeadline)) {
+  if (overdueForIdle || ((now + mMinimumUsefulBudget) < mDeadline)) {
     CancelTimer();
     didRun = mCallback(mDeadline);
     // If we didn't do meaningful work, don't schedule using immediate
@@ -116,18 +121,28 @@ void IdleTaskRunner::Schedule(bool aAllowIdleDispatch) {
   }
 
   mDeadline = TimeStamp();
+
   TimeStamp now = TimeStamp::Now();
-  TimeStamp hint = nsRefreshDriver::GetIdleDeadlineHint(now);
-  if (hint != now) {
+  bool useRefreshDriver = false;
+  if (now >= mStartTime) {
+    // Detect whther the refresh driver is ticking by checking whether
+    // GetIdleDeadlineHint returns its input parameter.
+    useRefreshDriver = (nsRefreshDriver::GetIdleDeadlineHint(now) != now);
+  } else {
+    NS_WARNING_ASSERTION(!aAllowIdleDispatch,
+                         "early callback, or time went backwards");
+  }
+
+  if (useRefreshDriver) {
     // RefreshDriver is ticking, let it schedule the idle dispatch.
-    nsRefreshDriver::DispatchIdleRunnableAfterTickUnlessExists(this, mDelay);
+    nsRefreshDriver::DispatchIdleRunnableAfterTickUnlessExists(this, mMaxDelay);
     // Ensure we get called at some point, even if RefreshDriver is stopped.
-    SetTimerInternal(mDelay);
+    SetTimerInternal(mMaxDelay);
   } else {
     // RefreshDriver doesn't seem to be running.
     if (aAllowIdleDispatch) {
       nsCOMPtr<nsIRunnable> runnable = this;
-      SetTimerInternal(mDelay);
+      SetTimerInternal(mMaxDelay);
       NS_DispatchToCurrentThreadQueue(runnable.forget(),
                                       EventQueuePriority::Idle);
     } else {
@@ -140,9 +155,15 @@ void IdleTaskRunner::Schedule(bool aAllowIdleDispatch) {
         mScheduleTimer->Cancel();
       }
       // We weren't allowed to do idle dispatch immediately, do it after a
-      // short timeout.
+      // short timeout. (Or wait for our start time if we haven't started yet.)
+      uint32_t waitToSchedule = 16; /* ms */
+      if (now < mStartTime) {
+        // + 1 to round milliseconds up to be sure to wait until after
+        // mStartTime.
+        waitToSchedule = (mStartTime - now).ToMilliseconds() + 1;
+      }
       mScheduleTimer->InitWithNamedFuncCallback(
-          ScheduleTimedOut, this, 16 /* ms */,
+          ScheduleTimedOut, this, waitToSchedule,
           nsITimer::TYPE_ONE_SHOT_LOW_PRIORITY, mName);
     }
   }
