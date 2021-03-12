@@ -393,6 +393,11 @@ nsNativeThemeCocoa::nsNativeThemeCocoa() {
   [mCheckboxCell setButtonType:NSSwitchButton];
   [mCheckboxCell setAllowsMixedState:YES];
 
+  mTextFieldCell = [[NSTextFieldCell alloc] initTextCell:@""];
+  [mTextFieldCell setBezeled:YES];
+  [mTextFieldCell setEditable:YES];
+  [mTextFieldCell setFocusRingType:NSFocusRingTypeExterior];
+
   mSearchFieldCell = [[NSSearchFieldCell alloc] initTextCell:@""];
   [mSearchFieldCell setBezelStyle:NSTextFieldRoundedBezel];
   [mSearchFieldCell setBezeled:YES];
@@ -432,6 +437,7 @@ nsNativeThemeCocoa::~nsNativeThemeCocoa() {
   [mPushButtonCell release];
   [mRadioButtonCell release];
   [mCheckboxCell release];
+  [mTextFieldCell release];
   [mSearchFieldCell release];
   [mToolbarSearchFieldCell release];
   [mDropdownCell release];
@@ -932,19 +938,44 @@ static bool IsInsideToolbar(nsIFrame* aFrame) {
   return false;
 }
 
-nsNativeThemeCocoa::SearchFieldParams nsNativeThemeCocoa::ComputeSearchFieldParams(
+nsNativeThemeCocoa::TextFieldParams nsNativeThemeCocoa::ComputeTextFieldParams(
     nsIFrame* aFrame, EventStates aEventState) {
-  SearchFieldParams params;
+  TextFieldParams params;
   params.insideToolbar = IsInsideToolbar(aFrame);
   params.disabled = IsDisabled(aFrame, aEventState);
-  params.focused = IsFocused(aFrame);
+
+  // See ShouldUnconditionallyDrawFocusRingIfFocused.
+  params.focused = aEventState.HasState(NS_EVENT_STATE_FOCUS);
+  // XUL textboxes set the native appearance on the containing box, while
+  // concrete focus is set on the html:input element within it. We can
+  // though, check the focused attribute of xul textboxes in this case.
+  // On Mac, focus rings are always shown for textboxes, so we do not need
+  // to check the window's focus ring state here
+  if (aFrame->GetContent()->IsXULElement() && IsFocused(aFrame)) {
+    params.focused = true;
+  }
+
   params.rtl = IsFrameRTL(aFrame);
   params.verticalAlignFactor = VerticalAlignFactor(aFrame);
   return params;
 }
 
+void nsNativeThemeCocoa::DrawTextField(CGContextRef cgContext, const HIRect& inBoxRect,
+                                       const TextFieldParams& aParams) {
+  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
+
+  NSTextFieldCell* cell = mTextFieldCell;
+  [cell setEnabled:!aParams.disabled];
+  [cell setShowsFirstResponder:aParams.focused];
+
+  DrawCellWithSnapping(cell, cgContext, inBoxRect, searchFieldSettings, aParams.verticalAlignFactor,
+                       mCellDrawView, aParams.rtl);
+
+  NS_OBJC_END_TRY_IGNORE_BLOCK;
+}
+
 void nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxRect,
-                                         const SearchFieldParams& aParams) {
+                                         const TextFieldParams& aParams) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   NSSearchFieldCell* cell = aParams.insideToolbar ? mToolbarSearchFieldCell : mSearchFieldCell;
@@ -1633,47 +1664,6 @@ void nsNativeThemeCocoa::DrawSpinButton(CGContextRef cgContext, const HIRect& in
   HIThemeDrawButton(&drawRect, &bdi, cgContext, HITHEME_ORIENTATION, NULL);
 
   CGContextRestoreGState(cgContext);
-
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
-}
-
-void nsNativeThemeCocoa::DrawTextBox(CGContextRef cgContext, const HIRect& inBoxRect,
-                                     TextBoxParams aParams) {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
-
-  SetCGContextFillColor(cgContext, sRGBColor(1.0, 1.0, 1.0, 1.0));
-  CGContextFillRect(cgContext, inBoxRect);
-
-#if DRAW_IN_FRAME_DEBUG
-  CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
-  CGContextFillRect(cgContext, inBoxRect);
-#endif
-
-  if (aParams.borderless) {
-    return;
-  }
-
-  HIThemeFrameDrawInfo fdi;
-  fdi.version = 0;
-  fdi.kind = kHIThemeFrameTextFieldSquare;
-
-  // We don't ever set an inactive state for this because it doesn't
-  // look right (see other apps).
-  fdi.state = aParams.disabled ? kThemeStateUnavailable : kThemeStateActive;
-  fdi.isFocused = aParams.focused;
-
-  // HIThemeDrawFrame takes the rect for the content area of the frame, not
-  // the bounding rect for the frame. Here we reduce the size of the rect we
-  // will pass to make it the size of the content.
-  HIRect drawRect = inBoxRect;
-  SInt32 frameOutset = 0;
-  ::GetThemeMetric(kThemeMetricEditTextFrameOutset, &frameOutset);
-  drawRect.origin.x += frameOutset;
-  drawRect.origin.y += frameOutset;
-  drawRect.size.width -= frameOutset * 2;
-  drawRect.size.height -= frameOutset * 2;
-
-  HIThemeDrawFrame(&drawRect, &fdi, cgContext, HITHEME_ORIENTATION);
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
@@ -2570,25 +2560,11 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
       return Some(WidgetInfo::GroupBox());
 
     case StyleAppearance::Textfield:
-    case StyleAppearance::NumberInput: {
-      // See ShouldUnconditionallyDrawFocusRingIfFocused.
-      bool isFocused = eventState.HasState(NS_EVENT_STATE_FOCUS);
-      // XUL textboxes set the native appearance on the containing box, while
-      // concrete focus is set on the html:input element within it. We can
-      // though, check the focused attribute of xul textboxes in this case.
-      // On Mac, focus rings are always shown for textboxes, so we do not need
-      // to check the window's focus ring state here
-      if (aFrame->GetContent()->IsXULElement() && IsFocused(aFrame)) {
-        isFocused = true;
-      }
-
-      bool isDisabled = IsDisabled(aFrame, eventState) || IsReadOnly(aFrame);
-      return Some(
-          WidgetInfo::TextBox(TextBoxParams{isDisabled, isFocused, /* borderless = */ false}));
-    }
+    case StyleAppearance::NumberInput:
+      return Some(WidgetInfo::TextField(ComputeTextFieldParams(aFrame, eventState)));
 
     case StyleAppearance::Searchfield:
-      return Some(WidgetInfo::SearchField(ComputeSearchFieldParams(aFrame, eventState)));
+      return Some(WidgetInfo::SearchField(ComputeTextFieldParams(aFrame, eventState)));
 
     case StyleAppearance::ProgressBar: {
       if (IsIndeterminateProgress(aFrame, eventState)) {
@@ -2917,13 +2893,13 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
           HIThemeDrawGroupBox(&macRect, &gdi, cgContext, HITHEME_ORIENTATION);
           break;
         }
-        case Widget::eTextBox: {
-          TextBoxParams params = aWidgetInfo.Params<TextBoxParams>();
-          DrawTextBox(cgContext, macRect, params);
+        case Widget::eTextField: {
+          TextFieldParams params = aWidgetInfo.Params<TextFieldParams>();
+          DrawTextField(cgContext, macRect, params);
           break;
         }
         case Widget::eSearchField: {
-          SearchFieldParams params = aWidgetInfo.Params<SearchFieldParams>();
+          TextFieldParams params = aWidgetInfo.Params<TextFieldParams>();
           DrawSearchField(cgContext, macRect, params);
           break;
         }
