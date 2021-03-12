@@ -154,42 +154,8 @@ NSPoint nsCocoaUtils::EventLocationForWindow(NSEvent* anEvent, NSWindow* aWindow
   NS_OBJC_END_TRY_BLOCK_RETURN(NSMakePoint(0.0, 0.0));
 }
 
-@interface NSEvent (ScrollPhase)
-// 10.5 and 10.6
-- (long long)_scrollPhase;
-// 10.7 and above
-- (NSEventPhase)phase;
-- (NSEventPhase)momentumPhase;
-@end
-
-NSEventPhase nsCocoaUtils::EventPhase(NSEvent* aEvent) {
-  if ([aEvent respondsToSelector:@selector(phase)]) {
-    return [aEvent phase];
-  }
-  return NSEventPhaseNone;
-}
-
-NSEventPhase nsCocoaUtils::EventMomentumPhase(NSEvent* aEvent) {
-  if ([aEvent respondsToSelector:@selector(momentumPhase)]) {
-    return [aEvent momentumPhase];
-  }
-  if ([aEvent respondsToSelector:@selector(_scrollPhase)]) {
-    switch ([aEvent _scrollPhase]) {
-      case 1:
-        return NSEventPhaseBegan;
-      case 2:
-        return NSEventPhaseChanged;
-      case 3:
-        return NSEventPhaseEnded;
-      default:
-        return NSEventPhaseNone;
-    }
-  }
-  return NSEventPhaseNone;
-}
-
 BOOL nsCocoaUtils::IsMomentumScrollEvent(NSEvent* aEvent) {
-  return [aEvent type] == NSEventTypeScrollWheel && EventMomentumPhase(aEvent) != NSEventPhaseNone;
+  return [aEvent type] == NSEventTypeScrollWheel && [aEvent momentumPhase] != NSEventPhaseNone;
 }
 
 @interface NSEvent (HasPreciseScrollingDeltas)
@@ -243,10 +209,7 @@ void nsCocoaUtils::GetScrollingDeltas(NSEvent* aEvent, CGFloat* aOutDeltaX, CGFl
 }
 
 BOOL nsCocoaUtils::EventHasPhaseInformation(NSEvent* aEvent) {
-  if (![aEvent respondsToSelector:@selector(phase)]) {
-    return NO;
-  }
-  return EventPhase(aEvent) != NSEventPhaseNone || EventMomentumPhase(aEvent) != NSEventPhaseNone;
+  return [aEvent phase] != NSEventPhaseNone || [aEvent momentumPhase] != NSEventPhaseNone;
 }
 
 void nsCocoaUtils::HideOSChromeOnScreen(bool aShouldHide) {
