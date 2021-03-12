@@ -1892,6 +1892,15 @@ mozilla::ipc::IPCResult BrowserParent::RecvSynthesizeNativePenInput(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult BrowserParent::RecvSynthesizeNativeTouchpadDoubleTap(
+    const LayoutDeviceIntPoint& aPoint, const uint32_t& aModifierFlags) {
+  nsCOMPtr<nsIWidget> widget = GetWidget();
+  if (widget) {
+    widget->SynthesizeNativeTouchpadDoubleTap(aPoint, aModifierFlags);
+  }
+  return IPC_OK();
+}
+
 void BrowserParent::SendRealKeyEvent(WidgetKeyboardEvent& aEvent) {
   if (mIsDestroyed || !mIsReadyToHandleInputEvents) {
     return;

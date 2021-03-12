@@ -525,6 +525,15 @@ nsresult PuppetWidget::SynthesizeNativePenInput(
   return NS_OK;
 }
 
+nsresult PuppetWidget::SynthesizeNativeTouchpadDoubleTap(
+    LayoutDeviceIntPoint aPoint, uint32_t aModifierFlags) {
+  if (!mBrowserChild) {
+    return NS_ERROR_FAILURE;
+  }
+  mBrowserChild->SendSynthesizeNativeTouchpadDoubleTap(aPoint, aModifierFlags);
+  return NS_OK;
+}
+
 void PuppetWidget::SetConfirmedTargetAPZC(
     uint64_t aInputBlockId,
     const nsTArray<ScrollableLayerGuid>& aTargets) const {

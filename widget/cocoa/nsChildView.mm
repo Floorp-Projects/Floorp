@@ -114,6 +114,7 @@
 #include "Units.h"
 #include "UnitTransforms.h"
 #include "mozilla/UniquePtrExtensions.h"
+#include "CustomCocoaEvents.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -1040,6 +1041,17 @@ nsresult nsChildView::SynthesizeNativeTouchPoint(
       mSynthesizedTouchInput.get(), PR_IntervalNow(), TimeStamp::Now(), aPointerId, aPointerState,
       pointInWindow, aPointerPressure, aPointerOrientation);
   DispatchTouchInput(inputToDispatch);
+  return NS_OK;
+
+  NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
+}
+
+nsresult nsChildView::SynthesizeNativeTouchpadDoubleTap(mozilla::LayoutDeviceIntPoint aPoint,
+                                                        uint32_t aModifierFlags) {
+  NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
+
+  DispatchDoubleTapGesture(TimeStamp::Now(), aPoint, static_cast<Modifiers>(aModifierFlags));
+
   return NS_OK;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
@@ -2088,6 +2100,34 @@ void nsChildView::DispatchAPZWheelInputEvent(InputData& aEvent, bool aCanTrigger
   }
 }
 
+void nsChildView::DispatchDoubleTapGesture(TimeStamp aEventTimeStamp,
+                                           LayoutDeviceIntPoint aScreenPosition,
+                                           mozilla::Modifiers aModifiers) {
+  if (StaticPrefs::apz_mac_enable_double_tap_zoom_touchpad_gesture()) {
+    PRIntervalTime eventIntervalTime = PR_IntervalNow();
+
+    TapGestureInput event{
+        TapGestureInput::TAPGESTURE_DOUBLE, eventIntervalTime, aEventTimeStamp,
+        ViewAs<ScreenPixel>(aScreenPosition,
+                            PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent),
+        aModifiers};
+
+    DispatchAPZInputEvent(event);
+  } else {
+    // Setup the "double tap" event.
+    WidgetSimpleGestureEvent geckoEvent(true, eTapGesture, this);
+    // do what convertCocoaMouseEvent does basically.
+    geckoEvent.mRefPoint = aScreenPosition;
+    geckoEvent.mModifiers = aModifiers;
+    geckoEvent.mTime = PR_IntervalNow();
+    geckoEvent.mTimeStamp = aEventTimeStamp;
+    geckoEvent.mClickCount = 1;
+
+    // Send the event.
+    DispatchWindowEvent(geckoEvent);
+  }
+}
+
 void nsChildView::LookUpDictionary(const nsAString& aText,
                                    const nsTArray<mozilla::FontRange>& aFontRangeArray,
                                    const bool aIsVertical, const LayoutDeviceIntPoint& aPoint) {
@@ -2724,18 +2764,12 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   if (StaticPrefs::apz_mac_enable_double_tap_zoom_touchpad_gesture()) {
-    PRIntervalTime eventIntervalTime = PR_IntervalNow();
     TimeStamp eventTimeStamp = nsCocoaUtils::GetEventTimeStamp([anEvent timestamp]);
-
     NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(anEvent, [self window]);
-    ScreenPoint position =
-        ViewAs<ScreenPixel>([self convertWindowCoordinatesRoundDown:locationInWindow],
-                            PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
+    LayoutDevicePoint position = [self convertWindowCoordinatesRoundDown:locationInWindow];
 
-    TapGestureInput event{TapGestureInput::TAPGESTURE_DOUBLE, eventIntervalTime, eventTimeStamp,
-                          RoundedToInt(position), nsCocoaUtils::ModifiersForEvent(anEvent)};
-
-    mGeckoChild->DispatchAPZInputEvent(event);
+    mGeckoChild->DispatchDoubleTapGesture(eventTimeStamp, RoundedToInt(position),
+                                          nsCocoaUtils::ModifiersForEvent(anEvent));
   } else {
     // Setup the "double tap" event.
     WidgetSimpleGestureEvent geckoEvent(true, eTapGesture, mGeckoChild);

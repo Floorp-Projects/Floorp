@@ -409,6 +409,9 @@ class nsChildView final : public nsBaseWidget {
                                               uint32_t aPointerOrientation,
                                               nsIObserver* aObserver) override;
 
+  virtual nsresult SynthesizeNativeTouchpadDoubleTap(LayoutDeviceIntPoint aPoint,
+                                                     uint32_t aModifierFlags) override;
+
   // Mac specific methods
 
   virtual bool DispatchWindowEvent(mozilla::WidgetGUIEvent& event);
@@ -483,6 +486,10 @@ class nsChildView final : public nsBaseWidget {
 
   void DispatchAPZWheelInputEvent(mozilla::InputData& aEvent, bool aCanTriggerSwipe);
   nsEventStatus DispatchAPZInputEvent(mozilla::InputData& aEvent);
+
+  void DispatchDoubleTapGesture(mozilla::TimeStamp aEventTimeStamp,
+                                LayoutDeviceIntPoint aScreenPosition,
+                                mozilla::Modifiers aModifiers);
 
   void SwipeFinished();
 
