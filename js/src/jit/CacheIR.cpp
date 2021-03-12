@@ -457,7 +457,7 @@ static bool IsCacheableProtoChain(JSObject* obj, JSObject* holder) {
   return true;
 }
 
-static bool IsCacheableGetPropReadSlot(JSObject* obj, JSObject* holder,
+static bool IsCacheableGetPropReadSlot(NativeObject* obj, NativeObject* holder,
                                        Shape* shape) {
   if (!shape->isDataProperty()) {
     return false;
@@ -477,8 +477,8 @@ enum NativeGetPropCacheability {
   CanAttachScriptedGetter,
 };
 
-static NativeGetPropCacheability IsCacheableGetPropCall(JSObject* obj,
-                                                        JSObject* holder,
+static NativeGetPropCacheability IsCacheableGetPropCall(NativeObject* obj,
+                                                        NativeObject* holder,
                                                         Shape* shape) {
   MOZ_ASSERT(shape);
 
@@ -576,6 +576,7 @@ static NativeGetPropCacheability CanAttachNativeGetProp(
   if (!LookupPropertyPure(cx, obj, id, &baseHolder, &prop)) {
     return CanAttachNone;
   }
+  auto* nobj = &obj->as<NativeObject>();
 
   MOZ_ASSERT(!holder);
 
@@ -584,15 +585,15 @@ static NativeGetPropCacheability CanAttachNativeGetProp(
     holder.set(baseHolder);
     shape.set(prop.shape());
 
-    if (IsCacheableGetPropReadSlot(obj, holder, shape)) {
+    if (IsCacheableGetPropReadSlot(nobj, holder, shape)) {
       return CanAttachReadSlot;
     }
 
-    return IsCacheableGetPropCall(obj, holder, shape);
+    return IsCacheableGetPropCall(nobj, holder, shape);
   }
 
   if (!prop.isFound()) {
-    if (IsCacheableNoProperty(cx, obj, holder, shape, id, pc)) {
+    if (IsCacheableNoProperty(cx, nobj, holder, shape, id, pc)) {
       return CanAttachReadSlot;
     }
   }
@@ -856,8 +857,8 @@ static void EmitReadSlotResult(CacheIRWriter& writer, NativeObject* obj,
 }
 
 static void EmitCallGetterResultNoGuards(JSContext* cx, CacheIRWriter& writer,
-                                         JSObject* obj, JSObject* holder,
-                                         Shape* shape,
+                                         NativeObject* obj,
+                                         NativeObject* holder, Shape* shape,
                                          ValOperandId receiverId) {
   JSFunction* target = &shape->getterValue().toObject().as<JSFunction>();
   bool sameRealm = cx->realm() == target->realm();
@@ -1562,6 +1563,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
   if (canCache == CanAttachNone) {
     return AttachDecision::NoAction;
   }
+  auto* nativeCheckObj = &checkObj->as<NativeObject>();
 
   maybeEmitIdGuard(id);
 
@@ -1589,7 +1591,7 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
       MOZ_ASSERT(canCache == CanAttachNativeGetter ||
                  canCache == CanAttachScriptedGetter);
       MOZ_ASSERT(!isSuper());
-      EmitCallGetterResultNoGuards(cx_, writer, checkObj, holder, shape,
+      EmitCallGetterResultNoGuards(cx_, writer, nativeCheckObj, holder, shape,
                                    receiverId);
     }
   } else {
