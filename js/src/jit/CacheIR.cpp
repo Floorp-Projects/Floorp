@@ -2680,10 +2680,9 @@ AttachDecision GetNameIRGenerator::tryAttachStub() {
   return AttachDecision::NoAction;
 }
 
-bool CanAttachGlobalName(JSContext* cx,
-                         Handle<GlobalLexicalEnvironmentObject*> globalLexical,
-                         HandleId id, MutableHandleNativeObject holder,
-                         MutableHandleShape shape) {
+static bool CanAttachGlobalName(
+    JSContext* cx, Handle<GlobalLexicalEnvironmentObject*> globalLexical,
+    HandleId id, MutableHandleNativeObject holder, MutableHandleShape shape) {
   // The property must be found, and it must be found as a normal data property.
   NativeObject* current = globalLexical;
   while (true) {
@@ -6931,8 +6930,8 @@ AttachDecision CallIRGenerator::tryAttachMathFunction(HandleFunction callee,
   return AttachDecision::Attach;
 }
 
-StringOperandId EmitToStringGuard(CacheIRWriter& writer, ValOperandId id,
-                                  const Value& v) {
+static StringOperandId EmitToStringGuard(CacheIRWriter& writer, ValOperandId id,
+                                         const Value& v) {
   if (v.isString()) {
     return writer.guardToString(id);
   }
