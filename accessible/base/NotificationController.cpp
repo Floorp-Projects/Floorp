@@ -58,10 +58,10 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(NotificationController)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHangingChildDocuments)
-  for (const auto& entry : tmp->mContentInsertions) {
+  for (auto it = tmp->mContentInsertions.ConstIter(); !it.Done(); it.Next()) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mContentInsertions key");
-    cb.NoteXPCOMChild(entry.GetKey());
-    nsTArray<nsCOMPtr<nsIContent>>* list = entry.GetData().get();
+    cb.NoteXPCOMChild(it.Key());
+    nsTArray<nsCOMPtr<nsIContent>>* list = it.UserData();
     for (uint32_t i = 0; i < list->Length(); i++) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mContentInsertions value item");
       cb.NoteXPCOMChild(list->ElementAt(i));
@@ -754,9 +754,9 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   // move the current insertions into a temporary data structure and process
   // them from there. Any insertions queued during processing will get handled
   // in subsequent refresh driver ticks.
-  const auto contentInsertions = std::move(mContentInsertions);
-  for (const auto& entry : contentInsertions) {
-    mDocument->ProcessContentInserted(entry.GetKey(), entry.GetData().get());
+  auto contentInsertions = std::move(mContentInsertions);
+  for (auto iter = contentInsertions.ConstIter(); !iter.Done(); iter.Next()) {
+    mDocument->ProcessContentInserted(iter.Key(), iter.UserData());
     if (!mDocument) {
       return;
     }

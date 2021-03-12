@@ -1497,8 +1497,8 @@ void gfxFcPlatformFontList::ReadSystemFontList(
   // (see https://bugs.freedesktop.org/show_bug.cgi?id=26718), so when using
   // an older version, we manually append it to the unparsed pattern.
   if (FcGetVersion() < 20900) {
-    for (const auto& entry : mFontFamilies) {
-      auto* family = static_cast<gfxFontconfigFontFamily*>(entry.GetWeak());
+    for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+      auto family = static_cast<gfxFontconfigFontFamily*>(iter.Data().get());
       family->AddFacesToFontList([&](FcPattern* aPat, bool aAppFonts) {
         char* s = (char*)FcNameUnparse(aPat);
         nsDependentCString patternStr(s);
@@ -1513,8 +1513,8 @@ void gfxFcPlatformFontList::ReadSystemFontList(
       });
     }
   } else {
-    for (const auto& entry : mFontFamilies) {
-      auto* family = static_cast<gfxFontconfigFontFamily*>(entry.GetWeak());
+    for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+      auto family = static_cast<gfxFontconfigFontFamily*>(iter.Data().get());
       family->AddFacesToFontList([&](FcPattern* aPat, bool aAppFonts) {
         char* s = (char*)FcNameUnparse(aPat);
         nsDependentCString patternStr(s);

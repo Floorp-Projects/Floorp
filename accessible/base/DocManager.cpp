@@ -76,8 +76,8 @@ DocAccessible* DocManager::GetDocAccessible(const PresShell* aPresShell) {
 }
 
 LocalAccessible* DocManager::FindAccessibleInCache(nsINode* aNode) const {
-  for (const auto& entry : mDocAccessibleCache) {
-    DocAccessible* docAccessible = entry.GetData().get();
+  for (auto iter = mDocAccessibleCache.ConstIter(); !iter.Done(); iter.Next()) {
+    DocAccessible* docAccessible = iter.UserData();
     NS_ASSERTION(docAccessible,
                  "No doc accessible for the object in doc accessible cache!");
 
@@ -166,8 +166,8 @@ xpcAccessibleDocument* DocManager::GetXPCDocument(DocAccessibleParent* aDoc) {
 
 #ifdef DEBUG
 bool DocManager::IsProcessingRefreshDriverNotification() const {
-  for (const auto& entry : mDocAccessibleCache) {
-    DocAccessible* docAccessible = entry.GetWeak();
+  for (auto iter = mDocAccessibleCache.ConstIter(); !iter.Done(); iter.Next()) {
+    DocAccessible* docAccessible = iter.UserData();
     NS_ASSERTION(docAccessible,
                  "No doc accessible for the object in doc accessible cache!");
 

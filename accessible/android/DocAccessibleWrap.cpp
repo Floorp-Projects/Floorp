@@ -158,8 +158,9 @@ void DocAccessibleWrap::CacheViewportCallback(nsITimer* aTimer,
   } else if (RefPtr<SessionAccessibility> sessionAcc =
                  SessionAccessibility::GetInstanceFor(docAcc)) {
     nsTArray<AccessibleWrap*> accessibles(inViewAccs.Count());
-    for (const auto& entry : inViewAccs) {
-      accessibles.AppendElement(static_cast<AccessibleWrap*>(entry.GetWeak()));
+    for (auto iter = inViewAccs.Iter(); !iter.Done(); iter.Next()) {
+      accessibles.AppendElement(
+          static_cast<AccessibleWrap*>(iter.Data().get()));
     }
 
     sessionAcc->ReplaceViewportCache(accessibles);

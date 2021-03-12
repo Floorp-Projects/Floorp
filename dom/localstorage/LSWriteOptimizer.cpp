@@ -61,8 +61,8 @@ void LSWriteOptimizerBase::GetSortedWriteInfos(
                                     WriteInfoComparator());
   }
 
-  for (const auto& entry : mWriteInfos) {
-    WriteInfo* writeInfo = entry.GetWeak();
+  for (auto iter = mWriteInfos.ConstIter(); !iter.Done(); iter.Next()) {
+    WriteInfo* writeInfo = iter.UserData();
 
     aWriteInfos.InsertElementSorted(WrapNotNull(writeInfo),
                                     WriteInfoComparator());
