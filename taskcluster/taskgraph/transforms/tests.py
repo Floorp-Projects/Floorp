@@ -208,8 +208,6 @@ TEST_VARIANTS = {
         "filterfn": gv_e10s_filter,
         "suffix": "fis",
         "merge": {
-            # Ensures the default state is to not run anywhere.
-            "fission-run-on-projects": [],
             "mozharness": {
                 "extra-options": [
                     "--enable-fission",
@@ -225,8 +223,6 @@ TEST_VARIANTS = {
             "e10s": True,
         },
         "merge": {
-            # Ensures the default state is to not run anywhere.
-            "fission-run-on-projects": [],
             "mozharness": {
                 "extra-options": [
                     "--setpref=fission.autostart=true",
@@ -243,8 +239,6 @@ TEST_VARIANTS = {
             "e10s": True,
         },
         "merge": {
-            # Ensures the default state is to not run anywhere.
-            "fission-run-on-projects": [],
             "mozharness": {
                 "extra-options": [
                     "--setpref=fission.autostart=true",
@@ -1396,6 +1390,7 @@ def handle_tier(config, tasks):
 def handle_fission_attributes(config, tasks):
     """Handle run_on_projects for fission tasks."""
     for task in tasks:
+
         for attr in ("run-on-projects", "tier"):
             fission_attr = task.pop("fission-{}".format(attr), None)
 
