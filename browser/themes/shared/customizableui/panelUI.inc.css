@@ -391,7 +391,7 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
 #confirmation-hint-checkmark-animation-container[animate] > #confirmation-hint-checkmark-image {
   display: block;
   position: absolute;
-  background-image: url(chrome://browser/skin/check-animation.svg);
+  background-image: url(chrome://browser/skin/success-animation.svg);
   background-repeat: no-repeat;
   min-width: 266px;
   max-width: 266px;
