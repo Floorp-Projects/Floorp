@@ -19,17 +19,21 @@ job-defaults:
         extra-options:
             - --setpref=toolkit.asyncshutdown.log=true
 
-    run-on-projects: built-projects
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux.*64(-qr)?/.*: ['autoland']
+                    linux.*64-shippable(-qr)?/.*: ['mozilla-central']
+                    windows10-64(-qr)?/.*: ['autoland']
+                    windows10-64-shippable(-qr)?/.*: ['mozilla-central']
+                    default: []
+            default: built-projects
     test-manifest-loader: null  # don't load tests in the taskgraph
-    tier: default
-    fission-run-on-projects:
-        by-test-platform:
-            linux.*64(-qr)?/.*: ['autoland']
-            linux.*64-shippable(-qr)?/.*: ['mozilla-central']
-            windows10-64(-qr)?/.*: ['autoland']
-            windows10-64-shippable(-qr)?/.*: ['mozilla-central']
-            default: []
-    fission-tier: 2
+    tier:
+        by-variant:
+            fission: 2
+            default: default
     variants:
         by-test-platform:
             .*-qr/debug: ['fission', 'webrender-sw']
