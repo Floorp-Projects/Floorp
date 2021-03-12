@@ -447,6 +447,12 @@ To see more help for a specific command, run:
         if not hasattr(args, "mach_handler"):
             raise MachError("ArgumentParser result missing mach handler info.")
 
+        context.is_interactive = (
+            args.is_interactive
+            and sys.__stdout__.isatty()
+            and sys.__stderr__.isatty()
+            and not os.environ.get("MOZ_AUTOMATION", None)
+        )
         handler = getattr(args, "mach_handler")
         report_invocation_metrics(context.telemetry, handler.name)
 
@@ -642,6 +648,14 @@ To see more help for a specific command, run:
             help="Prefix log line with interval from last message rather "
             "than relative time. Note that this is NOT execution time "
             "if there are parallel operations.",
+        )
+        global_group.add_argument(
+            "--no-interactive",
+            dest="is_interactive",
+            action="store_false",
+            help="Automatically selects the default option on any "
+            "interactive prompts. If the output is not a terminal, "
+            "then --no-interactive is assumed.",
         )
         suppress_log_by_default = False
         if "INSIDE_EMACS" in os.environ:

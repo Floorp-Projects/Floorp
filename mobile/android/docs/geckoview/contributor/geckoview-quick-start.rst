@@ -55,7 +55,7 @@ argument to automatically accept any license agreements.
 
 .. code:: bash
 
-   ./mach bootstrap [ --no-interactive]
+   ./mach [--no-interactive] bootstrap
 
 -  Choose option \`4. Firefox for Android\` for GeckoView development.
    This will give you a version of Gecko configured for Android that has

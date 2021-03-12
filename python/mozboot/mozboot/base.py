@@ -466,11 +466,30 @@ class BaseBootstrapper(object):
 
         self.run_as_root(command)
 
-    def prompt_int(self, prompt, low, high):
-        """ Prompts the user with prompt and requires an integer between low and high. """
+    def prompt_int(self, prompt, low, high, default=None):
+        """Prompts the user with prompt and requires an integer between low and high.
+
+        If the user doesn't select an option and a default isn't provided, then
+        the lowest option is used. This is because some option must be implicitly
+        selected if mach is invoked with "--no-interactive"
+        """
+        if default is not None:
+            assert isinstance(default, int)
+            assert low <= default <= high
+        else:
+            default = low
+
+        if self.no_interactive:
+            print(prompt)
+            print('Selecting "{}" because context is not interactive.'.format(default))
+            return default
+
         while True:
+            choice = input(prompt)
+            if choice == "" and default is not None:
+                return default
             try:
-                choice = int(input(prompt))
+                choice = int(choice)
                 if low <= choice <= high:
                     return choice
             except ValueError:
@@ -479,17 +498,19 @@ class BaseBootstrapper(object):
 
     def prompt_yesno(self, prompt):
         """ Prompts the user with prompt and requires a yes/no answer."""
-        valid = False
-        while not valid:
+        if self.no_interactive:
+            print(prompt)
+            print('Selecting "Y" because context is not interactive.')
+            return True
+
+        while True:
             choice = input(prompt + " (Yn): ").strip().lower()[:1]
             if choice == "":
-                choice = "y"
-            if choice not in ("y", "n"):
-                print("ERROR! Please enter y or n!")
-            else:
-                valid = True
+                return True
+            elif choice in ("y", "n"):
+                return choice == "y"
 
-        return choice == "y"
+            print("ERROR! Please enter y or n!")
 
     def _ensure_package_manager_updated(self):
         if self.package_manager_updated:
