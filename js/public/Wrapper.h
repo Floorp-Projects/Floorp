@@ -12,6 +12,7 @@
 #include "js/Proxy.h"
 
 namespace js {
+struct CompartmentFilter;
 
 /*
  * Helper for Wrapper::New default options.

@@ -7,14 +7,14 @@
 #ifndef js_ProfilingStack_h
 #define js_ProfilingStack_h
 
-#include <algorithm>
+#include "mozilla/Atomics.h"
+
 #include <stdint.h>
 
 #include "jstypes.h"
 
 #include "js/ProfilingCategory.h"
 #include "js/TypeDecls.h"
-#include "js/Utility.h"
 
 class JS_PUBLIC_API JSTracer;
 class JS_FRIEND_API ProfilingStack;

@@ -12,14 +12,14 @@
 #include <stdint.h>  // uint32_t
 
 #include "jstypes.h"  // JS_PUBLIC_API
-
-#include "js/GCAPI.h"       // JS::AutoRequireNoGC
-#include "js/RootingAPI.h"  // JS::Handle
+#include "js/TypeDecls.h"
 
 struct JS_PUBLIC_API JSContext;
 class JS_PUBLIC_API JSObject;
 
 namespace JS {
+
+class JS_PUBLIC_API AutoRequireNoGC;
 
 // CREATION
 

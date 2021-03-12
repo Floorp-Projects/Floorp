@@ -7,8 +7,9 @@
 #ifndef js_AllocationRecording_h
 #define js_AllocationRecording_h
 
+#include <stdint.h>
+#include "jstypes.h"
 #include "js/TypeDecls.h"
-#include "js/Utility.h"
 
 namespace JS {
 

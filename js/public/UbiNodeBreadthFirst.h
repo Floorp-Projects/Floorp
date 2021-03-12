@@ -7,8 +7,8 @@
 #ifndef js_UbiNodeBreadthFirst_h
 #define js_UbiNodeBreadthFirst_h
 
+#include "js/HashTable.h"
 #include "js/UbiNode.h"
-#include "js/Utility.h"
 #include "js/Vector.h"
 
 namespace JS {
