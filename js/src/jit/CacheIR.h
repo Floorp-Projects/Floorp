@@ -1218,7 +1218,7 @@ class MOZ_RAII IRGenerator {
   ObjOperandId guardDOMProxyExpandoObjectAndShape(ProxyObject* obj,
                                                   ObjOperandId objId,
                                                   const Value& expandoVal,
-                                                  JSObject* expandoObj);
+                                                  NativeObject* expandoObj);
 
   void emitIdGuard(ValOperandId valId, HandleValue idVal, jsid id);
 

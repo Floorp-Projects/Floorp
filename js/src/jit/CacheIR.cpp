@@ -750,15 +750,12 @@ static void GeneratePrototypeHoleGuards(CacheIRWriter& writer,
 // Similar to |TestMatchingReceiver|, but for the holder object (when it
 // differs from the receiver). The holder may also be the expando of the
 // receiver if it exists.
-static void TestMatchingHolder(CacheIRWriter& writer, JSObject* obj,
+static void TestMatchingHolder(CacheIRWriter& writer, NativeObject* obj,
                                ObjOperandId objId) {
   // The GeneratePrototypeGuards + TestMatchingHolder checks only support
   // prototype chains composed of NativeObject (excluding the receiver
   // itself).
-  MOZ_ASSERT(obj->is<NativeObject>());
-
-  writer.guardShapeForOwnProperties(objId,
-                                    obj->as<NativeObject>().lastProperty());
+  writer.guardShapeForOwnProperties(objId, obj->lastProperty());
 }
 
 // Emit a shape guard for all objects on the proto chain. This does NOT include
@@ -786,13 +783,13 @@ static void ShapeGuardProtoChain(CacheIRWriter& writer, NativeObject* obj,
 //
 // This peels off the first layer because it's guarded against obj == holder.
 static void ShapeGuardProtoChainForCrossCompartmentHolder(
-    CacheIRWriter& writer, JSObject* obj, ObjOperandId objId, JSObject* holder,
-    Maybe<ObjOperandId>* holderId) {
+    CacheIRWriter& writer, NativeObject* obj, ObjOperandId objId,
+    NativeObject* holder, Maybe<ObjOperandId>* holderId) {
   MOZ_ASSERT(obj != holder);
   MOZ_ASSERT(holder);
   while (true) {
-    obj = obj->staticPrototype();
-    MOZ_ASSERT(obj);
+    MOZ_ASSERT(obj->staticPrototype());
+    obj = &obj->staticPrototype()->as<NativeObject>();
 
     objId = writer.loadProto(objId);
     if (obj == holder) {
@@ -800,7 +797,7 @@ static void ShapeGuardProtoChainForCrossCompartmentHolder(
       holderId->emplace(objId);
       return;
     } else {
-      writer.guardShapeForOwnProperties(objId, obj->as<NativeObject>().shape());
+      writer.guardShapeForOwnProperties(objId, obj->shape());
     }
   }
 }
@@ -1425,7 +1422,7 @@ IntPtrOperandId IRGenerator::guardToIntPtrIndex(const Value& index,
 
 ObjOperandId IRGenerator::guardDOMProxyExpandoObjectAndShape(
     ProxyObject* obj, ObjOperandId objId, const Value& expandoVal,
-    JSObject* expandoObj) {
+    NativeObject* expandoObj) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
   TestMatchingProxyReceiver(writer, obj, objId);
@@ -1473,25 +1470,25 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyExpando(
   if (!holder) {
     return AttachDecision::NoAction;
   }
+  auto* nativeExpandoObj = &expandoObj->as<NativeObject>();
 
-  MOZ_ASSERT(holder == expandoObj);
+  MOZ_ASSERT(holder == nativeExpandoObj);
 
   maybeEmitIdGuard(id);
-  ObjOperandId expandoObjId =
-      guardDOMProxyExpandoObjectAndShape(obj, objId, expandoVal, expandoObj);
+  ObjOperandId expandoObjId = guardDOMProxyExpandoObjectAndShape(
+      obj, objId, expandoVal, nativeExpandoObj);
 
   if (canCache == CanAttachReadSlot) {
     // Load from the expando's slots.
-    EmitLoadSlotResult(writer, expandoObjId, &expandoObj->as<NativeObject>(),
-                       propShape);
+    EmitLoadSlotResult(writer, expandoObjId, nativeExpandoObj, propShape);
     writer.returnFromIC();
   } else {
     // Call the getter. Note that we pass objId, the DOM proxy, as |this|
     // and not the expando object.
     MOZ_ASSERT(canCache == CanAttachNativeGetter ||
                canCache == CanAttachScriptedGetter);
-    EmitCallGetterResultNoGuards(cx_, writer, expandoObj, expandoObj, propShape,
-                                 receiverId);
+    EmitCallGetterResultNoGuards(cx_, writer, nativeExpandoObj,
+                                 nativeExpandoObj, propShape, receiverId);
   }
 
   trackAttached("DOMProxyExpando");
@@ -4267,11 +4264,12 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
 
   RootedShape propShape(cx_);
   if (CanAttachNativeSetSlot(JSOp(*pc_), expandoObj, id, &propShape)) {
-    maybeEmitIdGuard(id);
-    ObjOperandId expandoObjId =
-        guardDOMProxyExpandoObjectAndShape(obj, objId, expandoVal, expandoObj);
+    auto* nativeExpandoObj = &expandoObj->as<NativeObject>();
 
-    NativeObject* nativeExpandoObj = &expandoObj->as<NativeObject>();
+    maybeEmitIdGuard(id);
+    ObjOperandId expandoObjId = guardDOMProxyExpandoObjectAndShape(
+        obj, objId, expandoVal, nativeExpandoObj);
+
     EmitStoreSlotAndReturn(writer, expandoObjId, nativeExpandoObj, propShape,
                            rhsId);
     trackAttached("DOMProxyExpandoSlot");
@@ -4280,15 +4278,18 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
 
   RootedNativeObject holder(cx_);
   if (CanAttachSetter(cx_, pc_, expandoObj, id, &holder, &propShape)) {
+    auto* nativeExpandoObj = &expandoObj->as<NativeObject>();
+
     // Note that we don't actually use the expandoObjId here after the
     // shape guard. The DOM proxy (objId) is passed to the setter as
     // |this|.
     maybeEmitIdGuard(id);
-    guardDOMProxyExpandoObjectAndShape(obj, objId, expandoVal, expandoObj);
+    guardDOMProxyExpandoObjectAndShape(obj, objId, expandoVal,
+                                       nativeExpandoObj);
 
-    MOZ_ASSERT(holder == expandoObj);
-    EmitCallSetterNoGuards(cx_, writer, expandoObj, expandoObj, propShape,
-                           objId, rhsId);
+    MOZ_ASSERT(holder == nativeExpandoObj);
+    EmitCallSetterNoGuards(cx_, writer, nativeExpandoObj, nativeExpandoObj,
+                           propShape, objId, rhsId);
     trackAttached("DOMProxyExpandoSetter");
     return AttachDecision::Attach;
   }
