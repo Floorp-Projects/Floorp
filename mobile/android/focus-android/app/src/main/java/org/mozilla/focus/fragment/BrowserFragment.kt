@@ -51,6 +51,7 @@ import mozilla.components.feature.contextmenu.ContextMenuFeature
 import mozilla.components.feature.downloads.AbstractFetchDownloadService
 import mozilla.components.feature.downloads.DownloadsFeature
 import mozilla.components.feature.downloads.manager.FetchDownloadManager
+import mozilla.components.feature.downloads.share.ShareDownloadFeature
 import mozilla.components.feature.findinpage.view.FindInPageBar
 import mozilla.components.feature.prompts.PromptFeature
 import mozilla.components.feature.session.FullScreenFeature
@@ -127,6 +128,7 @@ class BrowserFragment :
     private val promptFeature = ViewBoundFeatureWrapper<PromptFeature>()
     private val contextMenuFeature = ViewBoundFeatureWrapper<ContextMenuFeature>()
     private val downloadsFeature = ViewBoundFeatureWrapper<DownloadsFeature>()
+    private val shareDownloadFeature = ViewBoundFeatureWrapper<ShareDownloadFeature>()
 
     private val urlBinding = ViewBoundFeatureWrapper<UrlBinding>()
     private val securityInfoBinding = ViewBoundFeatureWrapper<SecurityInfoBinding>()
@@ -278,6 +280,13 @@ class BrowserFragment :
                 onDownloadStopped = { state, _, status ->
                     showDownloadSnackbar(state, status)
                 }
+        ), this, view)
+
+        shareDownloadFeature.set(ShareDownloadFeature(
+            context = requireContext().applicationContext,
+            httpClient = components.client,
+            store = components.store,
+            tabId = session.id
         ), this, view)
 
         urlBinding.set(
