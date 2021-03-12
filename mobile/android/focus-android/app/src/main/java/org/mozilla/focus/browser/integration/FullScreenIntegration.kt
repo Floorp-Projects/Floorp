@@ -22,12 +22,13 @@ class FullScreenIntegration(
     val store: BrowserStore,
     val sessionManager: SessionManager,
     tabId: String?,
+    sessionUseCases: SessionUseCases,
     private val toolbarView: DisplayToolbar,
     private val statusBar: View
 ) : LifecycleAwareFeature, UserInteractionHandler {
     private val feature = FullScreenFeature(
         store,
-        SessionUseCases(store, sessionManager),
+        sessionUseCases,
         tabId,
         ::viewportFitChanged,
         ::fullScreenChanged

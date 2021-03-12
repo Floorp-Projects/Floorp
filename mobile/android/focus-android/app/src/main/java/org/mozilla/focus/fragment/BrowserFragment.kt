@@ -201,6 +201,7 @@ class BrowserFragment :
             components.store,
             components.sessionManager,
             session.id,
+            components.sessionUseCases,
             toolbarView!!,
             statusBar!!
         ), this, view)
