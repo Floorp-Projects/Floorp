@@ -103,7 +103,7 @@
 }
 
 .img.info {
-  mask-image: url(chrome://devtools/content/debugger/images/info.svg);
+  mask-image: url(chrome://devtools/skin/images/info.svg);
 }
 
 .img.loader {
