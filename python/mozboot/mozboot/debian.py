@@ -20,7 +20,7 @@ Mercurial via the "pip" Python packaging utility. This will likely result
 in files being placed in /usr/local/bin and /usr/local/lib.
 
 How would you like to continue?
-  1. Install a modern Mercurial via pip (recommended)
+  1. Install a modern Mercurial via pip [default]
   2. Install a legacy Mercurial via apt
   3. Do not install Mercurial
 Your choice: """

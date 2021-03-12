@@ -33,25 +33,17 @@ class Bootstrap(MachCommandBase):
         "interactive prompt.",
     )
     @CommandArgument(
-        "--no-interactive",
-        dest="no_interactive",
-        action="store_true",
-        help="Answer yes to any (Y/n) interactive prompts.",
-    )
-    @CommandArgument(
         "--no-system-changes",
         dest="no_system_changes",
         action="store_true",
         help="Only execute actions that leave the system " "configuration alone.",
     )
-    def bootstrap(
-        self, application_choice=None, no_interactive=False, no_system_changes=False
-    ):
+    def bootstrap(self, application_choice=None, no_system_changes=False):
         from mozboot.bootstrap import Bootstrapper
 
         bootstrapper = Bootstrapper(
             choice=application_choice,
-            no_interactive=no_interactive,
+            no_interactive=not self._mach_context.is_interactive,
             no_system_changes=no_system_changes,
             mach_context=self._mach_context,
         )
