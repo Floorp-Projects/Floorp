@@ -724,11 +724,23 @@ void nsNativeBasicTheme::PaintCheckboxControl(DrawTarget& aDrawTarget,
                                               const LayoutDeviceRect& aRect,
                                               const EventStates& aState,
                                               DPIRatio aDpiRatio) {
-  const CSSCoord radius = 2.0f;
   auto [backgroundColor, borderColor] =
       ComputeCheckboxColors(aState, StyleAppearance::Checkbox);
-  PaintRoundedRectWithRadius(aDrawTarget, aRect, backgroundColor, borderColor,
-                             kCheckboxRadioBorderWidth, radius, aDpiRatio);
+  {
+    const CSSCoord radius = 2.0f;
+    CSSCoord borderWidth = kCheckboxRadioBorderWidth;
+    if (backgroundColor == borderColor) {
+      borderWidth = 0.0f;
+    }
+    PaintRoundedRectWithRadius(aDrawTarget, aRect, backgroundColor, borderColor,
+                               borderWidth, radius, aDpiRatio);
+  }
+
+  if (aState.HasState(NS_EVENT_STATE_INDETERMINATE)) {
+    PaintIndeterminateMark(aDrawTarget, aRect, aState);
+  } else if (aState.HasState(NS_EVENT_STATE_CHECKED)) {
+    PaintCheckMark(aDrawTarget, aRect, aState);
+  }
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
     PaintRoundedFocusRect(aDrawTarget, aRect, aDpiRatio, 5.0f, 1.0f);
@@ -878,20 +890,24 @@ void nsNativeBasicTheme::PaintRadioControl(PaintBackendData& aPaintData,
                                            const LayoutDeviceRect& aRect,
                                            const EventStates& aState,
                                            DPIRatio aDpiRatio) {
-  const CSSCoord borderWidth = 2.0f;
   auto [backgroundColor, borderColor] =
       ComputeCheckboxColors(aState, StyleAppearance::Radio);
-
-  PaintStrokedCircle(aPaintData, aRect, backgroundColor, borderColor,
-                     borderWidth, aDpiRatio);
+  {
+    CSSCoord borderWidth = kCheckboxRadioBorderWidth;
+    if (backgroundColor == borderColor) {
+      borderWidth = 0.0f;
+    }
+    PaintStrokedCircle(aPaintData, aRect, backgroundColor, borderColor,
+                       borderWidth, aDpiRatio);
+  }
 
   if (aState.HasState(NS_EVENT_STATE_CHECKED)) {
     LayoutDeviceRect rect(aRect);
-    rect.Deflate(SnapBorderWidth(borderWidth, aDpiRatio));
+    rect.Deflate(SnapBorderWidth(kCheckboxRadioBorderWidth, aDpiRatio));
 
     auto checkColor = ComputeCheckmarkColor(aState);
     PaintStrokedCircle(aPaintData, rect, backgroundColor, checkColor,
-                       borderWidth, aDpiRatio);
+                       kCheckboxRadioBorderWidth, aDpiRatio);
   }
 
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
@@ -1455,11 +1471,6 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
       } else {
         auto rect = CheckBoxRadioRect(devPxRect);
         PaintCheckboxControl(aPaintData, rect, eventState, dpiRatio);
-        if (GetIndeterminate(aFrame)) {
-          PaintIndeterminateMark(aPaintData, rect, eventState);
-        } else if (IsChecked(aFrame)) {
-          PaintCheckMark(aPaintData, rect, eventState);
-        }
       }
       break;
     }
