@@ -636,14 +636,31 @@ var gTests = [
   },
 
   {
-    desc: "Stop Sharing removes persistent permissions",
-    run: async function checkStopSharingRemovesPersistentPermissions() {
+    desc: "Stop Sharing removes permissions",
+    run: async function checkStopSharingRemovesPermissions() {
       async function stopAndCheckPerm(aRequestAudio, aRequestVideo) {
         let uri = gBrowser.selectedBrowser.documentURI;
 
         // Initially set both permissions to 'allow'.
         PermissionTestUtils.add(uri, "microphone", Services.perms.ALLOW_ACTION);
         PermissionTestUtils.add(uri, "camera", Services.perms.ALLOW_ACTION);
+        // Also set device-specific temporary allows.
+        SitePermissions.setForPrincipal(
+          gBrowser.contentPrincipal,
+          "microphone^myDevice",
+          SitePermissions.ALLOW,
+          SitePermissions.SCOPE_TEMPORARY,
+          gBrowser.selectedBrowser,
+          10000000
+        );
+        SitePermissions.setForPrincipal(
+          gBrowser.contentPrincipal,
+          "camera^myDevice2",
+          SitePermissions.ALLOW,
+          SitePermissions.SCOPE_TEMPORARY,
+          gBrowser.selectedBrowser,
+          10000000
+        );
 
         let indicator = promiseIndicatorWindow();
         let observerPromise1 = expectObserverCalled("getUserMedia:request");
@@ -660,49 +677,125 @@ var gTests = [
         await observerPromise3;
 
         await indicator;
-        await checkSharingUI({ video: aRequestVideo, audio: aRequestAudio });
+        await checkSharingUI(
+          { video: aRequestVideo, audio: aRequestAudio },
+          undefined,
+          undefined,
+          {
+            video: { scope: SitePermissions.SCOPE_PERSISTENT },
+            audio: { scope: SitePermissions.SCOPE_PERSISTENT },
+          }
+        );
 
         await stopSharing(aRequestVideo ? "camera" : "microphone");
 
         // Check that permissions have been removed as expected.
-        let audioPerm = PermissionTestUtils.testExactPermission(
-          uri,
-          "microphone"
+        let audioPerm = SitePermissions.getForPrincipal(
+          gBrowser.contentPrincipal,
+          "microphone",
+          gBrowser.selectedBrowser
         );
+        let audioPermDevice = SitePermissions.getForPrincipal(
+          gBrowser.contentPrincipal,
+          "microphone^myDevice",
+          gBrowser.selectedBrowser
+        );
+
         if (aRequestAudio) {
-          is(
+          Assert.deepEqual(
             audioPerm,
-            Services.perms.UNKNOWN_ACTION,
+            {
+              state: SitePermissions.UNKNOWN,
+              scope: SitePermissions.SCOPE_PERSISTENT,
+            },
             "microphone permissions removed"
           );
+          Assert.deepEqual(
+            audioPermDevice,
+            {
+              state: SitePermissions.UNKNOWN,
+              scope: SitePermissions.SCOPE_PERSISTENT,
+            },
+            "microphone device-specific permissions removed"
+          );
         } else {
-          is(
+          Assert.deepEqual(
             audioPerm,
-            Services.perms.ALLOW_ACTION,
+            {
+              state: SitePermissions.ALLOW,
+              scope: SitePermissions.SCOPE_PERSISTENT,
+            },
             "microphone permissions untouched"
+          );
+          Assert.deepEqual(
+            audioPermDevice,
+            {
+              state: SitePermissions.ALLOW,
+              scope: SitePermissions.SCOPE_TEMPORARY,
+            },
+            "microphone device-specific permissions untouched"
           );
         }
 
-        let videoPerm = PermissionTestUtils.testExactPermission(uri, "camera");
+        let videoPerm = SitePermissions.getForPrincipal(
+          gBrowser.contentPrincipal,
+          "camera",
+          gBrowser.selectedBrowser
+        );
+        let videoPermDevice = SitePermissions.getForPrincipal(
+          gBrowser.contentPrincipal,
+          "camera^myDevice2",
+          gBrowser.selectedBrowser
+        );
         if (aRequestVideo) {
-          is(
+          Assert.deepEqual(
             videoPerm,
-            Services.perms.UNKNOWN_ACTION,
+            {
+              state: SitePermissions.UNKNOWN,
+              scope: SitePermissions.SCOPE_PERSISTENT,
+            },
             "camera permissions removed"
           );
+          Assert.deepEqual(
+            videoPermDevice,
+            {
+              state: SitePermissions.UNKNOWN,
+              scope: SitePermissions.SCOPE_PERSISTENT,
+            },
+            "camera device-specific permissions removed"
+          );
         } else {
-          is(
+          Assert.deepEqual(
             videoPerm,
-            Services.perms.ALLOW_ACTION,
+            {
+              state: SitePermissions.ALLOW,
+              scope: SitePermissions.SCOPE_PERSISTENT,
+            },
             "camera permissions untouched"
+          );
+          Assert.deepEqual(
+            videoPermDevice,
+            {
+              state: SitePermissions.ALLOW,
+              scope: SitePermissions.SCOPE_TEMPORARY,
+            },
+            "camera device-specific permissions untouched"
           );
         }
 
         // Cleanup.
         await closeStream(true);
 
-        PermissionTestUtils.remove(uri, "camera");
-        PermissionTestUtils.remove(uri, "microphone");
+        SitePermissions.removeFromPrincipal(
+          gBrowser.contentPrincipal,
+          "camera",
+          gBrowser.selectedBrowser
+        );
+        SitePermissions.removeFromPrincipal(
+          gBrowser.contentPrincipal,
+          "microphone",
+          gBrowser.selectedBrowser
+        );
       }
 
       info("request audio+video, stop sharing resets both");
