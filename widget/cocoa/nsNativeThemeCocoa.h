@@ -128,13 +128,7 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
     bool isMain = false;
   };
 
-  struct TextBoxParams {
-    bool disabled = false;
-    bool focused = false;
-    bool borderless = false;
-  };
-
-  struct SearchFieldParams {
+  struct TextFieldParams {
     float verticalAlignFactor = 0.5f;
     bool insideToolbar = false;
     bool disabled = false;
@@ -201,8 +195,8 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
     eNativeTitlebar,  // UnifiedToolbarParams
     eStatusBar,       // bool
     eGroupBox,
-    eTextBox,             // TextBoxParams
-    eSearchField,         // SearchFieldParams
+    eTextField,           // TextFieldParams
+    eSearchField,         // TextFieldParams
     eProgressBar,         // ProgressParams
     eMeter,               // MeterParams
     eTreeHeaderCell,      // TreeHeaderCellParams
@@ -266,10 +260,10 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
     }
     static WidgetInfo StatusBar(bool aParams) { return WidgetInfo(Widget::eStatusBar, aParams); }
     static WidgetInfo GroupBox() { return WidgetInfo(Widget::eGroupBox, false); }
-    static WidgetInfo TextBox(const TextBoxParams& aParams) {
-      return WidgetInfo(Widget::eTextBox, aParams);
+    static WidgetInfo TextField(const TextFieldParams& aParams) {
+      return WidgetInfo(Widget::eTextField, aParams);
     }
-    static WidgetInfo SearchField(const SearchFieldParams& aParams) {
+    static WidgetInfo SearchField(const TextFieldParams& aParams) {
       return WidgetInfo(Widget::eSearchField, aParams);
     }
     static WidgetInfo ProgressBar(const ProgressParams& aParams) {
@@ -320,8 +314,8 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
 
     mozilla::Variant<mozilla::gfx::sRGBColor, MenuIconParams, MenuItemParams, CheckboxOrRadioParams,
                      ButtonParams, DropdownParams, SpinButtonParams, SegmentParams,
-                     UnifiedToolbarParams, TextBoxParams, SearchFieldParams, ProgressParams,
-                     MeterParams, TreeHeaderCellParams, ScaleParams, ScrollbarParams, bool>
+                     UnifiedToolbarParams, TextFieldParams, ProgressParams, MeterParams,
+                     TreeHeaderCellParams, ScaleParams, ScrollbarParams, bool>
         mVariant;
 
     enum Widget mWidget;
@@ -390,7 +384,7 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
                                        bool aIsChecked);
   SegmentParams ComputeSegmentParams(nsIFrame* aFrame, mozilla::EventStates aEventState,
                                      SegmentType aSegmentType);
-  SearchFieldParams ComputeSearchFieldParams(nsIFrame* aFrame, mozilla::EventStates aEventState);
+  TextFieldParams ComputeTextFieldParams(nsIFrame* aFrame, mozilla::EventStates aEventState);
   ProgressParams ComputeProgressParams(nsIFrame* aFrame, mozilla::EventStates aEventState,
                                        bool aIsHorizontal);
   MeterParams ComputeMeterParams(nsIFrame* aFrame);
@@ -400,7 +394,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
                                                      mozilla::EventStates aEventState);
 
   // HITheme drawing routines
-  void DrawTextBox(CGContextRef context, const HIRect& inBoxRect, TextBoxParams aParams);
   void DrawMeter(CGContextRef context, const HIRect& inBoxRect, const MeterParams& aParams);
   void DrawSegment(CGContextRef cgContext, const HIRect& inBoxRect, const SegmentParams& aParams);
   void DrawSegmentBackground(CGContextRef cgContext, const HIRect& inBoxRect,
@@ -410,7 +403,9 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   void DrawCheckboxOrRadio(CGContextRef cgContext, bool inCheckbox, const HIRect& inBoxRect,
                            const CheckboxOrRadioParams& aParams);
   void DrawSearchField(CGContextRef cgContext, const HIRect& inBoxRect,
-                       const SearchFieldParams& aParams);
+                       const TextFieldParams& aParams);
+  void DrawTextField(CGContextRef cgContext, const HIRect& inBoxRect,
+                     const TextFieldParams& aParams);
   void DrawRoundedBezelPushButton(CGContextRef cgContext, const HIRect& inBoxRect,
                                   ControlParams aControlParams);
   void DrawSquareBezelPushButton(CGContextRef cgContext, const HIRect& inBoxRect,
@@ -459,6 +454,7 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   NSButtonCell* mPushButtonCell;
   NSButtonCell* mRadioButtonCell;
   NSButtonCell* mCheckboxCell;
+  NSTextFieldCell* mTextFieldCell;
   NSSearchFieldCell* mSearchFieldCell;
   NSSearchFieldCell* mToolbarSearchFieldCell;
   NSPopUpButtonCell* mDropdownCell;
