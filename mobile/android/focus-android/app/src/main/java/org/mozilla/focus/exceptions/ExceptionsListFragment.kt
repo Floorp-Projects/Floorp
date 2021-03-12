@@ -117,7 +117,8 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
         removeAllExceptions.setOnClickListener {
             requireComponents.trackingProtectionUseCases.removeAllExceptions()
 
-            TelemetryWrapper.removeAllExceptionDomains()
+            val exceptions = (exceptionList.adapter as DomainListAdapter).selection()
+            TelemetryWrapper.removeAllExceptionDomains(exceptions.count())
 
             @Suppress("DEPRECATION")
             fragmentManager!!.popBackStack()
