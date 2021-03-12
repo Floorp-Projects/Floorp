@@ -15,9 +15,8 @@ flat varying vec4 vUvBounds_U;
 varying vec2 vUv_V;
 flat varying vec4 vUvBounds_V;
 
-flat varying float vCoefficient;
 flat varying mat3 vYuvColorMatrix;
-flat varying vec3 vYuvOffsetVector;
+flat varying vec4 vYuvOffsetVector_Coefficient;
 flat varying int vFormat;
 
 #ifdef SWGL_DRAW_SPAN
@@ -53,10 +52,10 @@ void brush_vs(
     vec2 f = (vi.local_pos - local_rect.p0) / local_rect.size;
 
     YuvPrimitive prim = fetch_yuv_primitive(prim_address);
-    vCoefficient = prim.coefficient;
+    vYuvOffsetVector_Coefficient.w = prim.coefficient;
 
     vYuvColorMatrix = get_yuv_color_matrix(prim.color_space);
-    vYuvOffsetVector = get_yuv_offset_vector(prim.color_space);
+    vYuvOffsetVector_Coefficient.xyz = get_yuv_offset_vector(prim.color_space);
     vFormat = prim.yuv_format;
 
 #ifdef SWGL_DRAW_SPAN
@@ -92,8 +91,8 @@ Fragment brush_fs() {
     vec4 color = sample_yuv(
         vFormat,
         vYuvColorMatrix,
-        vYuvOffsetVector,
-        vCoefficient,
+        vYuvOffsetVector_Coefficient.xyz,
+        vYuvOffsetVector_Coefficient.w,
         vUv_Y,
         vUv_U,
         vUv_V,
