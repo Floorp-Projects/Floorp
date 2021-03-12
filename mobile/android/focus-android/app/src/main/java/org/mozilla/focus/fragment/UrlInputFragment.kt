@@ -61,7 +61,6 @@ import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
-import org.mozilla.focus.utils.createTab
 import org.mozilla.focus.whatsnew.WhatsNew
 import java.util.Objects
 import kotlin.coroutines.CoroutineContext
@@ -436,16 +435,16 @@ class UrlInputFragment :
                 WhatsNew.userViewedWhatsNew(it)
 
                 val url = SupportUtils.getSumoURLForTopic(it, SupportUtils.SumoTopic.WHATS_NEW)
-                val session = createTab(url, source = SessionState.Source.MENU)
-
-                requireComponents.sessionManager.add(session, selected = true)
+                requireComponents.tabsUseCases.addPrivateTab(url, source = SessionState.Source.MENU)
             }
 
             R.id.settings -> (activity as LocaleAwareAppCompatActivity).openPreferences()
 
             R.id.help -> {
-                val session = createTab(SupportUtils.HELP_URL, source = SessionState.Source.MENU)
-                requireComponents.sessionManager.add(session, selected = true)
+                requireComponents.tabsUseCases.addPrivateTab(
+                    SupportUtils.HELP_URL,
+                    source = SessionState.Source.MENU
+                )
             }
 
             else -> throw IllegalStateException("Unhandled view in onClick()")
@@ -760,12 +759,15 @@ class UrlInputFragment :
                 .remove(this)
                 .commit()
         } else {
-            val session = createTab(url, source = SessionState.Source.USER_ENTERED)
-            if (!searchTerms.isNullOrEmpty()) {
-                requireComponents.store.dispatch(ContentAction.UpdateSearchTermsAction(session.id, searchTerms))
-            }
+            val tabId = requireComponents.tabsUseCases.addPrivateTab(
+                url,
+                source = SessionState.Source.USER_ENTERED,
+                selectTab = true
+            )
 
-            requireComponents.sessionManager.add(session, selected = true)
+            if (!searchTerms.isNullOrEmpty()) {
+                requireComponents.store.dispatch(ContentAction.UpdateSearchTermsAction(tabId, searchTerms))
+            }
         }
     }
 

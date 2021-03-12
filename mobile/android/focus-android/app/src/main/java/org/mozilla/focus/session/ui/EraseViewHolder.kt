@@ -31,7 +31,7 @@ class EraseViewHolder(
 
         fragment.animateAndDismiss().addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
-                fragment.requireComponents.sessionManager.removeSessions()
+                fragment.requireComponents.tabsUseCases.removeAllTabs()
             }
         })
     }

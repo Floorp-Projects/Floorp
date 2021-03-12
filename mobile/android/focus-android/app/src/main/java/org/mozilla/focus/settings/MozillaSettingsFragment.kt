@@ -14,7 +14,6 @@ import org.mozilla.focus.ext.components
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.SupportUtils
-import org.mozilla.focus.utils.createTab
 
 class MozillaSettingsFragment : BaseSettingsFragment(),
     SharedPreferences.OnSharedPreferenceChangeListener {
@@ -46,18 +45,27 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
 
         when (preference.key) {
             resources.getString(R.string.pref_key_about) -> run {
-                val session = createTab(LocalizedContent.URL_ABOUT, source = SessionState.Source.MENU)
-                activity.components.sessionManager.add(session, true)
+                activity.components.tabsUseCases.addPrivateTab(
+                    LocalizedContent.URL_ABOUT,
+                    source = SessionState.Source.MENU,
+                    selectTab = true
+                )
                 activity.finish()
             }
             resources.getString(R.string.pref_key_help) -> run {
-                val session = createTab(SupportUtils.HELP_URL, source = SessionState.Source.MENU)
-                activity.components.sessionManager.add(session, true)
+                activity.components.tabsUseCases.addPrivateTab(
+                    SupportUtils.HELP_URL,
+                    source = SessionState.Source.MENU,
+                    selectTab = true
+                )
                 activity.finish()
             }
             resources.getString(R.string.pref_key_rights) -> run {
-                val session = createTab(LocalizedContent.URL_RIGHTS, source = SessionState.Source.MENU)
-                activity.components.sessionManager.add(session, true)
+                activity.components.tabsUseCases.addPrivateTab(
+                    LocalizedContent.URL_RIGHTS,
+                    source = SessionState.Source.MENU,
+                    selectTab = true
+                )
                 activity.finish()
             }
             resources.getString(R.string.pref_key_privacy_notice) -> {
@@ -66,8 +74,11 @@ class MozillaSettingsFragment : BaseSettingsFragment(),
                 else
                     SupportUtils.PRIVACY_NOTICE_URL
 
-                val session = createTab(url, source = SessionState.Source.MENU)
-                activity.components.sessionManager.add(session, true)
+                activity.components.tabsUseCases.addPrivateTab(
+                    url,
+                    source = SessionState.Source.MENU,
+                    selectTab = true
+                )
                 activity.finish()
             }
         }

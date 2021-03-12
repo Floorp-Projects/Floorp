@@ -34,12 +34,11 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.state.SessionState
 import org.mozilla.focus.R
-import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 import org.mozilla.focus.searchsuggestions.State
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
-import org.mozilla.focus.utils.createTab
 import kotlin.coroutines.CoroutineContext
 
 class SearchSuggestionsFragment : Fragment(), CoroutineScope {
@@ -160,8 +159,12 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
             override fun onClick(textView: View) {
                 val context = textView.context
                 val url = SupportUtils.getSumoURLForTopic(context, SupportUtils.SumoTopic.SEARCH_SUGGESTIONS)
-                val session = createTab(url, source = SessionState.Source.MENU)
-                context.components.sessionManager.add(session, selected = true)
+
+                requireComponents.tabsUseCases.addPrivateTab(
+                    url,
+                    source = SessionState.Source.MENU,
+                    selectTab = true
+                )
             }
 
             override fun updateDrawState(ds: TextPaint) {
