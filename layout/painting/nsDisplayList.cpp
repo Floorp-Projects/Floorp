@@ -5404,33 +5404,6 @@ nsDisplayWrapList::nsDisplayWrapList(
   mListPtr = &mList;
   mListPtr->AppendToTop(aList);
   nsDisplayWrapList::UpdateBounds(aBuilder);
-
-  if (!aFrame || !aFrame->IsTransformed()) {
-    return;
-  }
-
-  // If we're a transformed frame, then we need to find out if we're inside
-  // the nsDisplayTransform or outside of it. Frames inside the transform
-  // need mReferenceFrame == mFrame, outside needs the next ancestor
-  // reference frame.
-  // If we're inside the transform, then the nsDisplayItem constructor
-  // will have done the right thing.
-  // If we're outside the transform, then we should have only one child
-  // (since nsDisplayTransform wraps all actual content), and that child
-  // will have the correct reference frame set (since nsDisplayTransform
-  // handles this explictly).
-  nsDisplayItem* i = mListPtr->GetBottom();
-  if (i &&
-      (!i->GetAbove() || i->GetType() == DisplayItemType::TYPE_TRANSFORM) &&
-      i->Frame() == mFrame) {
-    mReferenceFrame = i->ReferenceFrame();
-    mToReferenceFrame = i->ToReferenceFrame();
-  }
-
-  nsRect visible = aBuilder->GetVisibleRect() +
-                   aBuilder->GetCurrentFrameOffsetToReferenceFrame();
-
-  SetBuildingRect(visible);
 }
 
 nsDisplayWrapList::nsDisplayWrapList(nsDisplayListBuilder* aBuilder,
@@ -7346,9 +7319,20 @@ void nsDisplayTransform::SetReferenceFrameToAncestor(
   if (mFrame == aBuilder->RootReferenceFrame()) {
     return;
   }
-  nsIFrame* outerFrame = nsLayoutUtils::GetCrossDocParentFrame(mFrame);
-  mReferenceFrame = aBuilder->FindReferenceFrameFor(outerFrame);
+  // We manually recompute mToReferenceFrame without going through the
+  // builder, since this won't apply the 'additional offset'. Our
+  // children will already be painting with that applied, and we don't
+  // want to include it a second time in our transform. We don't recompute
+  // our visible/building rects, since those should still include the additional
+  // offset.
+  // TODO: Are there are things computed using our ToReferenceFrame that should
+  // have the additional offset applied? Should we instead just manually remove
+  // the offset from our transform instead of this more general value?
+  // Can we instead apply the additional offset to us and not our children, like
+  // we do for all other offsets (and how reference frames are supposed to
+  // work)?
   mToReferenceFrame = mFrame->GetOffsetToCrossDoc(mReferenceFrame);
+
   if (DisplayPortUtils::IsFixedPosFrameInDisplayPort(mFrame)) {
     // This is an odd special case. If we are both IsFixedPosFrameInDisplayPort
     // and transformed that we are our own AGR parent.
@@ -7374,8 +7358,6 @@ void nsDisplayTransform::SetReferenceFrameToAncestor(
       mAnimatedGeometryRoot = mAnimatedGeometryRoot->mParentAGR;
     }
   }
-
-  SetBuildingRect(aBuilder->GetVisibleRect() + mToReferenceFrame);
 }
 
 void nsDisplayTransform::Init(nsDisplayListBuilder* aBuilder,
