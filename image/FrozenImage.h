@@ -33,6 +33,8 @@ class FrozenImage : public ImageWrapper {
   virtual void IncrementAnimationConsumers() override;
   virtual void DecrementAnimationConsumers() override;
 
+  bool IsNonAnimated() const;
+
   NS_IMETHOD GetAnimated(bool* aAnimated) override;
   NS_IMETHOD_(already_AddRefed<SourceSurface>)
   GetFrame(uint32_t aWhichFrame, uint32_t aFlags) override;
