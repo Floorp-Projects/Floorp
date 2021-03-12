@@ -197,7 +197,7 @@ button > hbox > label {
 }
 
 #category-general > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/general.svg");
+  list-style-image: url("chrome://browser/skin/preferences/category-general.svg");
 }
 
 #category-home > .category-icon {
@@ -205,7 +205,7 @@ button > hbox > label {
 }
 
 #category-search > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/search.svg");
+  list-style-image: url("chrome://browser/skin/preferences/category-search.svg");
 }
 
 #category-privacy > .category-icon {
@@ -213,11 +213,11 @@ button > hbox > label {
 }
 
 #category-sync > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/sync.svg");
+  list-style-image: url("chrome://browser/skin/preferences/category-sync.svg");
 }
 
 #category-experimental > .category-icon {
-  list-style-image: url("chrome://browser/skin/preferences/experiments.svg");
+  list-style-image: url("chrome://browser/skin/preferences/category-experiments.svg");
 }
 
 /* All panes */

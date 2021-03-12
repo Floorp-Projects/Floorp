@@ -975,7 +975,7 @@ const CFR_MESSAGES = [
       layout: "icon_and_message",
       text:
         "Update your homepage to search Google while also being able to search your Firefox history and bookmarks.",
-      icon: "chrome://browser/skin/preferences/search.svg",
+      icon: "chrome://global/skin/icons/search-glass.svg",
       buttons: {
         secondary: [
           {
