@@ -12,6 +12,7 @@ job-defaults:
         by-test-platform:
             android-em-7.*: geckoview-androidTest.apk
             default: null
+    fission-run-on-projects: []
     fission-tier: 2
     mozharness:
         script:
