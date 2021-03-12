@@ -31,6 +31,7 @@
 #if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
 @interface NSApplication (NSApplicationAppearance)
 @property(strong) NSAppearance* appearance NS_AVAILABLE_MAC(10_14);
+@property(readonly, strong) NSAppearance* effectiveAppearance NS_AVAILABLE_MAC(10_14);
 @end
 #endif
 
@@ -841,6 +842,16 @@ void nsLookAndFeel::EnsureInit() {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK
 
   nscolor color;
+
+  if (@available(macOS 10.14, *)) {
+    // Make sure NSColor takes our app's current appearance into account.
+    // NSAppearance.currentAppearance is global state that can be changed at will to influence the
+    // behavior of NSColor and probably others.
+    // NSAppearance.currentAppearance does not update automatically if the user switches between
+    // Light Mode and Dark Mode, but NSApp.effectiveAppearance does (unless NSApp.appearance is set
+    // to a non-nil value, which overrides the system appearance).
+    NSAppearance.currentAppearance = NSApp.effectiveAppearance;
+  }
 
   mColorTextSelectBackground = GetColorFromNSColor([NSColor selectedTextBackgroundColor]);
   mColorTextSelectBackgroundDisabled = GetColorFromNSColor([NSColor secondarySelectedControlColor]);
