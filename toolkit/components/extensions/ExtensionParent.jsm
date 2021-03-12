@@ -1555,7 +1555,7 @@ function watchExtensionProxyContextLoad(
 // Manages icon details for toolbar buttons in the |pageAction| and
 // |browserAction| APIs.
 let IconDetails = {
-  DEFAULT_ICON: "chrome://browser/content/extension.svg",
+  DEFAULT_ICON: "chrome://mozapps/skin/extensions/extensionGeneric.svg",
 
   // WeakMap<Extension -> Map<url-string -> Map<iconType-string -> object>>>
   iconCache: new DefaultWeakMap(() => {
@@ -1675,7 +1675,7 @@ let IconDetails = {
   // Returns the appropriate icon URL for the given icons object and the
   // screen resolution of the given window.
   getPreferredIcon(icons, extension = null, size = 16) {
-    const DEFAULT = "chrome://browser/content/extension.svg";
+    const DEFAULT = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 
     let bestSize = null;
     if (icons[size]) {

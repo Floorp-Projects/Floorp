@@ -11,7 +11,6 @@ browser.jar:
 #ifdef XP_WIN
     content/browser/extension-win-panel.css
 #endif
-    content/browser/extension.svg
     content/browser/ext-browser.json
     content/browser/parent/ext-bookmarks.js (parent/ext-bookmarks.js)
     content/browser/parent/ext-browser.js (parent/ext-browser.js)

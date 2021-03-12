@@ -299,7 +299,7 @@ html|*#webRTC-previewVideo {
 }
 
 .popup-notification-icon[popupid="addon-install-confirmation"] {
-  list-style-image: url(chrome://browser/content/extension.svg);
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.svg);
 }
 
 #addon-install-confirmation-notification[warning] .popup-notification-icon[popupid="addon-install-confirmation"] {
