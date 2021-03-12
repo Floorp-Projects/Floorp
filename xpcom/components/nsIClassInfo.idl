@@ -53,8 +53,6 @@ interface nsIClassInfo : nsISupports
     const uint32_t SINGLETON            = 1 << 0;
     const uint32_t THREADSAFE           = 1 << 1;
     const uint32_t MAIN_THREAD_ONLY     = 1 << 2;
-    const uint32_t DOM_OBJECT           = 1 << 3;
-    const uint32_t PLUGIN_OBJECT        = 1 << 4;
     const uint32_t SINGLETON_CLASSINFO  = 1 << 5;
 
     // The high order bit is RESERVED for consumers of these flags.
