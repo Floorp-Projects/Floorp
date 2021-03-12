@@ -492,22 +492,23 @@ function checkSyncNowButtons(syncing, tooltip = null) {
         "button tooltiptext is set to the right value"
       );
     }
+  }
 
-    is(
-      syncButton.hasAttribute("disabled"),
-      syncing,
-      "disabled has the right value"
-    );
+  const syncLabels = document.querySelectorAll(".syncnow-label");
+
+  for (const syncLabel of syncLabels) {
     if (syncing) {
       is(
-        document.l10n.getAttributes(syncButton).id,
-        syncButton.getAttribute("syncinglabel"),
+        syncLabel.value,
+        gSync.fluentStrings.formatValueSync("fxa-toolbar-sync-syncing2"),
         "label is set to the right value"
       );
     } else {
       is(
-        document.l10n.getAttributes(syncButton).id,
-        "appmenuitem-fxa-toolbar-sync-now",
+        syncLabel.value,
+        gSync.fluentStrings.formatValueSync(
+          "appmenuitem-fxa-toolbar-sync-now2"
+        ),
         "label is set to the right value"
       );
     }
