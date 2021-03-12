@@ -365,11 +365,13 @@ class Bootstrapper(object):
             labels = [
                 "%s. %s" % (i, name) for i, name in enumerate(APPLICATIONS.keys(), 1)
             ]
-            prompt = APPLICATION_CHOICE % "\n".join(
-                "  {}".format(label) for label in labels
-            )
+            choices = ["  {} [default]".format(labels[0])]
+            choices += ["  {}".format(label) for label in labels[1:]]
+            prompt = APPLICATION_CHOICE % "\n".join(choices)
             prompt_choice = self.instance.prompt_int(
-                prompt=prompt, low=1, high=len(APPLICATIONS)
+                prompt=prompt,
+                low=1,
+                high=len(APPLICATIONS),
             )
             name, application = list(APPLICATIONS.items())[prompt_choice - 1]
         elif self.choice in APPLICATIONS.keys():
@@ -428,7 +430,6 @@ class Bootstrapper(object):
         # Possibly configure Mercurial, but not if the current checkout or repo
         # type is Git.
         if hg_installed and checkout_type == "hg":
-            configure_hg = False
             if not self.instance.no_interactive:
                 configure_hg = self.instance.prompt_yesno(prompt=CONFIGURE_MERCURIAL)
             else:

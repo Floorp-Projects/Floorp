@@ -23,6 +23,7 @@ class CommandContext(object):
         self.settings = settings
         self.log_manager = log_manager
         self.commands = commands
+        self.is_interactive = None  # Filled in after args are parsed
         self.telemetry = telemetry
         self.command_attrs = {}
 

@@ -285,13 +285,20 @@ def clone(vcs, no_interactive):
 
 
 def bootstrap(srcdir, application_choice, no_interactive, no_system_changes):
-    args = [sys.executable, os.path.join(srcdir, "mach"), "bootstrap"]
+    args = [sys.executable, os.path.join(srcdir, "mach")]
+
+    if no_interactive:
+        # --no-interactive is a global argument, not a command argument,
+        # so it needs to be specified before "bootstrap" is appended.
+        args += ["--no-interactive"]
+
+    args += ["bootstrap"]
+
     if application_choice:
         args += ["--application-choice", application_choice]
-    if no_interactive:
-        args += ["--no-interactive"]
     if no_system_changes:
         args += ["--no-system-changes"]
+
     print("Running `%s`" % " ".join(args))
     return subprocess.call(args, cwd=srcdir)
 

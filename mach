@@ -62,6 +62,7 @@ get_command() {
                 shift 2
             fi
             ;;
+        --no-interactive) shift;;
         --log-interval) shift;;
         --log-no-times) shift;;
         -h) shift;;
