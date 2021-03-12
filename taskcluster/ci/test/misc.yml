@@ -14,8 +14,11 @@ geckoview-junit:
     e10s: true
     target: geckoview-androidTest.apk
     max-run-time: 3600
+    run-on-projects:
+        by-variant:
+            geckoview-fission: ['trunk']
+            default: built-projects
     tier: default
-    fission-run-on-projects: ['trunk']
     mozharness:
         script: android_emulator_unittest.py
         config:
@@ -50,21 +53,23 @@ test-verify:
     allow-software-gl-layers: false
     variants: ["fission"]
     run-on-projects:
-        by-test-platform:
-            # do not run on ccov or asan or shippable
-            .*(-ccov|-asan|-shippable).*: []
-            # linux / windows -qr skipped because they were previously skipped via test-platforms.yml
-            .*(linux|windows)(?!.*(-ccov|-asan|-shippable)).*-qr.*: []
-            # do not run on mozilla-central, beta or release: usually just confirms earlier results
-            default: ['integration']
-    fission-run-on-projects:
-        by-test-platform:
-            # do not run on ccov or asan or shippable
-            .*(-ccov|-asan|-shippable).*: []
-            # we prefer -qr platforms with fission, no need to run on both
-            (?!.*(-ccov|-asan|-shippable))(?!.*-qr).*: []
-            # do not run on mozilla-central, beta or release: usually just confirms earlier results
-            default: ['integration']
+        by-variant:
+            fission:
+                by-test-platform:
+                    # do not run on ccov or asan or shippable
+                    .*(-ccov|-asan|-shippable).*: []
+                    # we prefer -qr platforms with fission, no need to run on both
+                    (?!.*(-ccov|-asan|-shippable))(?!.*-qr).*: []
+                    # do not run on mozilla-central, beta or release: usually just confirms earlier results
+                    default: ['integration']
+            default:
+                by-test-platform:
+                    # do not run on ccov or asan or shippable
+                    .*(-ccov|-asan|-shippable).*: []
+                    # linux / windows -qr skipped because they were previously skipped via test-platforms.yml
+                    .*(linux|windows)(?!.*(-ccov|-asan|-shippable)).*-qr.*: []
+                    # do not run on mozilla-central, beta or release: usually just confirms earlier results
+                    default: ['integration']
     built-projects-only: true
     target:
         by-test-platform:
@@ -73,7 +78,6 @@ test-verify:
     optimization:
         test-verify: ["test-verify"]
     tier: 2
-    fission-tier: 2
     mozharness:
         script:
             by-test-platform:
@@ -132,13 +136,16 @@ test-verify-gpu:
     max-run-time: 10800
     allow-software-gl-layers: false
     run-on-projects:
-        by-test-platform:
-            # do not run on ccov or asan
-            .*-ccov.*/.*: []
-            .*-asan/.*: []
-            .*shippable.*: []
-            # do not run on mozilla-central, beta or release: usually just confirms earlier results
-            default: ['integration']
+        by-variant:
+            fission: ['trunk']
+            default:
+                by-test-platform:
+                    # do not run on ccov or asan
+                    .*-ccov.*/.*: []
+                    .*-asan/.*: []
+                    .*shippable.*: []
+                    # do not run on mozilla-central, beta or release: usually just confirms earlier results
+                    default: ['integration']
     built-projects-only: true
     optimization:
         test-verify: ["test-verify-gpu"]
@@ -173,9 +180,12 @@ test-coverage:
     max-run-time: 10800
     allow-software-gl-layers: false
     run-on-projects:
-        by-test-platform:
-            .*-ccov.*/.*: built-projects
-            default: []
+        by-variant:
+            fission: ['trunk']
+            default:
+                by-test-platform:
+                    .*-ccov.*/.*: built-projects
+                    default: []
     tier: 2
     mozharness:
         script:
@@ -234,10 +244,13 @@ test-coverage-gpu:
     max-run-time: 10800
     allow-software-gl-layers: false
     run-on-projects:
-        by-test-platform:
-            # only run on mozilla-central and try.
-            .*-ccov.*/.*: ['mozilla-central']
-            default: []
+        by-variant:
+            fission: ['trunk']
+            default:
+                by-test-platform:
+                    # only run on mozilla-central and try.
+                    .*-ccov.*/.*: ['mozilla-central']
+                    default: []
     tier:
         by-test-platform:
             windows10-64-asan.*: 3
