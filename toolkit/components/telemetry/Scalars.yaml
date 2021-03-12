@@ -4097,9 +4097,10 @@ pdf.viewer:
     bug_numbers:
       - 1566882
       - 1666979
+      - 1689264
     description: >
       How many times PDF Viewer fallback bar was shown.
-    expires: "88"
+    expires: "92"
     kind: uint
     notification_emails:
       - bdahl@mozilla.com
@@ -4113,9 +4114,10 @@ pdf.viewer:
     bug_numbers:
       - 1566882
       - 1666979
+      - 1689264
     description: >
       How many times PDF Viewer print functionality was used.
-    expires: "88"
+    expires: "92"
     kind: uint
     notification_emails:
       - bdahl@mozilla.com

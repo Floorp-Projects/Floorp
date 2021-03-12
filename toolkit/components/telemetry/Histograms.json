@@ -9932,10 +9932,10 @@
   "PDF_VIEWER_DOCUMENT_VERSION_2": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "expires_in_version": "88",
+    "expires_in_version": "92",
     "alert_emails": ["bdahl@mozilla.com"],
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1566882, 1666979],
+    "bug_numbers": [1566882, 1666979, 1689264],
     "kind": "categorical",
     "labels": ["other", "v1_0", "v1_1", "v1_2", "v1_3", "v1_4", "v1_5", "v1_6", "v1_7", "v1_8", "v1_9", "v2_0", "v2_1", "v2_2", "v2_3"],
     "description": "The PDF document version (1.1, 1.2, etc.)"
@@ -9943,10 +9943,10 @@
   "PDF_VIEWER_DOCUMENT_GENERATOR_2": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "expires_in_version": "88",
+    "expires_in_version": "92",
     "alert_emails": ["bdahl@mozilla.com"],
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1566882, 1666979],
+    "bug_numbers": [1566882, 1666979, 1689264],
     "kind": "categorical",
     "labels": ["acrobat_distiller", "acrobat_pdfwriter", "adobe_livecycle", "adobe_pdf_library", "adobe_photoshop", "ghostscript", "tcpdf", "cairo", "dvipdfm", "dvips", "pdftex", "pdfkit", "itext", "prince", "quarkxpress", "mac_os_x", "microsoft", "openoffice", "oracle", "luradocument", "pdf_xchange", "antenna_house", "aspose_cells", "fpdf", "other"],
     "description": "The PDF document generator"
@@ -9954,10 +9954,10 @@
   "PDF_VIEWER_DOCUMENT_SIZE_KB": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "expires_in_version": "88",
+    "expires_in_version": "92",
     "alert_emails": ["bdahl@mozilla.com"],
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1566882, 1666979],
+    "bug_numbers": [1566882, 1666979, 1689264],
     "kind": "exponential",
     "low": 2,
     "high": 65536,
@@ -9967,10 +9967,10 @@
   "PDF_VIEWER_FONT_TYPES_2": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "expires_in_version": "88",
+    "expires_in_version": "92",
     "alert_emails": ["bdahl@mozilla.com"],
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1566882, 1666979],
+    "bug_numbers": [1566882, 1666979, 1689264],
     "kind": "categorical",
     "labels": ["UNKNOWN", "TYPE1", "TYPE1C", "CIDFONTTYPE0", "CIDFONTTYPE0C", "TRUETYPE", "CIDFONTTYPE2", "TYPE3", "OPENTYPE", "TYPE0", "MMTYPE1"],
     "description": "The PDF document font types used"
@@ -9978,10 +9978,10 @@
   "PDF_VIEWER_EMBED_2": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "expires_in_version": "88",
+    "expires_in_version": "92",
     "alert_emails": ["bdahl@mozilla.com"],
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1566882, 1666979],
+    "bug_numbers": [1566882, 1666979, 1689264],
     "kind": "categorical",
     "labels": ["object_embed", "iframe"],
     "description": "A PDF document was embedded using OBJECT/EMBED and or an IFRAME"
@@ -9989,10 +9989,10 @@
   "PDF_VIEWER_FORM_2": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "expires_in_version": "88",
+    "expires_in_version": "92",
     "alert_emails": ["bdahl@mozilla.com"],
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1566882, 1666979],
+    "bug_numbers": [1566882, 1666979, 1689264],
     "kind": "categorical",
     "labels": ["acroform", "xfa"],
     "description": "If a form was used, its type."
@@ -10000,10 +10000,10 @@
   "PDF_VIEWER_STREAM_TYPES_2": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "expires_in_version": "88",
+    "expires_in_version": "92",
     "alert_emails": ["bdahl@mozilla.com"],
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1566882, 1666979],
+    "bug_numbers": [1566882, 1666979, 1689264],
     "kind": "categorical",
     "labels": ["UNKNOWN", "FLATE", "LZW", "DCT", "JPX", "JBIG", "A85", "AHX", "CCF", "RLX"],
     "description": "The PDF document compression stream types used"
@@ -10023,10 +10023,10 @@
   "PDF_VIEWER_FALLBACK_REASON": {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "expires_in_version": "88",
+    "expires_in_version": "92",
     "alert_emails": ["bdahl@mozilla.com"],
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1630844, 1666979],
+    "bug_numbers": [1630844, 1666979, 1689264],
     "kind": "categorical",
     "labels": ["unknown", "forms", "javaScript", "smask", "shadingPattern", "font", "errorTilingPattern", "errorExtGState", "errorXObject", "errorFontLoadType3", "errorFontState", "errorFontMissing", "errorFontTranslate", "errorColorSpace", "errorOperatorList", "errorFontToUnicode", "errorFontLoadNative", "errorFontGetPath"],
     "description": "The reason the fallback bar was shown."
@@ -10034,10 +10034,10 @@
   "PDF_VIEWER_FALLBACK_ERROR": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
-    "expires_in_version": "88",
+    "expires_in_version": "92",
     "alert_emails": ["bdahl@mozilla.com"],
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1643402, 1666979],
+    "bug_numbers": [1643402, 1666979, 1689264],
     "kind": "categorical",
     "labels": ["unknown", "forms", "javaScript", "smask", "shadingPattern", "font", "errorTilingPattern", "errorExtGState", "errorXObject", "errorFontLoadType3", "errorFontState", "errorFontMissing", "errorFontTranslate", "errorColorSpace", "errorOperatorList", "errorFontToUnicode", "errorFontLoadNative", "errorFontGetPath"],
     "description": "All errors that could trigger the fallback bar, even after the bar is shown."
@@ -10045,10 +10045,10 @@
   "PDF_VIEWER_TAGGED": {
     "record_in_processes": ["content"],
     "products": ["firefox"],
-    "expires_in_version": "88",
+    "expires_in_version": "92",
     "alert_emails": ["bdahl@mozilla.com"],
     "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1673128, 1666979],
+    "bug_numbers": [1673128, 1666979, 1689264],
     "kind": "boolean",
     "description": "If a PDF is tagged."
   },
