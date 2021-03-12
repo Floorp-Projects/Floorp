@@ -263,6 +263,13 @@ if (AppConstants.platform == "android") {
   });
 }
 
+if (AppConstants.MOZ_BACKGROUNDTASKS) {
+  // These utilities are for background tasks, not regular headed browsing.
+  whitelist.push({
+    file: "resource://gre/modules/BackgroundTasksUtils.jsm",
+  });
+}
+
 whitelist = new Set(
   whitelist
     .filter(
