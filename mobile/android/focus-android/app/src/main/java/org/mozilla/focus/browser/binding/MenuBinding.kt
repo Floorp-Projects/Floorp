@@ -11,6 +11,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
+import org.mozilla.focus.ext.ifCustomTab
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.menu.browser.BrowserMenu
 import java.lang.ref.WeakReference
@@ -54,7 +55,7 @@ class MenuBinding(
     }
 
     override fun onClick(view: View) {
-        val menu = BrowserMenu(fragment.requireContext(), fragment, fragment.session.customTabConfig)
+        val menu = BrowserMenu(fragment.requireContext(), fragment, fragment.tab.ifCustomTab()?.config)
         menu.show(menuView)
 
         menuReference = WeakReference(menu)

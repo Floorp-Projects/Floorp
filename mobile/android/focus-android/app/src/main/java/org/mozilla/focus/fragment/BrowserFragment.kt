@@ -34,8 +34,8 @@ import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_browser.*
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
-import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.selector.findTabOrCustomTab
+import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.concept.engine.Engine
@@ -71,7 +71,8 @@ import org.mozilla.focus.browser.binding.UrlBinding
 import org.mozilla.focus.browser.integration.FindInPageIntegration
 import org.mozilla.focus.browser.integration.FullScreenIntegration
 import org.mozilla.focus.downloads.DownloadService
-import org.mozilla.focus.ext.contentState
+import org.mozilla.focus.ext.ifCustomTab
+import org.mozilla.focus.ext.isCustomTab
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
@@ -130,15 +131,25 @@ class BrowserFragment :
 
     var openedFromExternalLink: Boolean = false
 
-    lateinit var session: Session
-        private set
+    /**
+     * The ID of the tab associated with this fragment.
+     */
+    private val tabId: String
+        get() = requireArguments().getString(ARGUMENT_SESSION_UUID)
+            ?: throw IllegalAccessError("No session ID set on fragment")
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+    /**
+     * The tab associated with this fragment.
+     */
+    val tab: SessionState
+        get() = requireComponents.store.state.findTabOrCustomTab(tabId)
+                // Workaround for tab not existing temporarily.
+                ?: mozilla.components.browser.state.state.createTab("about:blank")
 
-        val sessionUUID = arguments!!.getString(ARGUMENT_SESSION_UUID) ?: throw IllegalAccessError("No session exists")
-
-        session = requireComponents.sessionManager.findSessionById(sessionUUID) ?: createTab("about:blank")
+    val session: Session by lazy {
+        requireComponents.sessionManager.findSessionById(tabId)
+            // Workaround for tab not existing temporarily.
+            ?: createTab("about:blank")
     }
 
     override fun onPause() {
@@ -169,8 +180,9 @@ class BrowserFragment :
         val blockIcon = view.findViewById<View>(R.id.block_image) as ImageView
         blockIcon.setImageResource(R.drawable.ic_tracking_protection_disabled)
 
-        if (session.isCustomTabSession()) {
-            initialiseCustomTabUi(view)
+        val customTabConfig = tab.ifCustomTab()?.config
+        if (customTabConfig != null) {
+            initialiseCustomTabUi(view, customTabConfig)
         } else {
             initialiseNormalBrowserUi(view)
         }
@@ -200,7 +212,7 @@ class BrowserFragment :
             requireActivity(),
             components.store,
             components.sessionManager,
-            session.id,
+            tab.id,
             components.sessionUseCases,
             toolbarView!!,
             statusBar!!
@@ -226,13 +238,13 @@ class BrowserFragment :
             components.store,
             components.sessionUseCases.goBack,
             engineView!!,
-            session.id
+            tab.id
         ), this, view)
 
         promptFeature.set(PromptFeature(
             fragment = this,
             store = components.store,
-            customTabId = session.id,
+            customTabId = tab.id,
             fragmentManager = parentFragmentManager,
             onNeedToRequestPermissions = { permissions ->
                 requestPermissions(permissions, REQUEST_CODE_PROMPT_PERMISSIONS)
@@ -261,13 +273,13 @@ class BrowserFragment :
             context = requireContext().applicationContext,
             httpClient = components.client,
             store = components.store,
-            tabId = session.id
+            tabId = tab.id
         ), this, view)
 
         urlBinding.set(
             UrlBinding(
                 components.store,
-                session.id,
+                tab.id,
                 urlView!!
             ),
             owner = this,
@@ -278,7 +290,7 @@ class BrowserFragment :
             MenuBinding(
                 this,
                 components.store,
-                session.id,
+                tab.id,
                 menuView
             ),
             owner = this,
@@ -289,7 +301,7 @@ class BrowserFragment :
             SecurityInfoBinding(
                 this,
                 components.store,
-                session.id,
+                tab.id,
                 securityView!!
             ),
             owner = this,
@@ -299,7 +311,7 @@ class BrowserFragment :
         loadingBinding.set(
             LoadingBinding(
                 components.store,
-                session.id,
+                tab.id,
                 progressView
             ),
             owner = this,
@@ -309,7 +321,7 @@ class BrowserFragment :
         progressBinding.set(
             ProgressBinding(
                 components.store,
-                session.id,
+                tab.id,
                 progressView
             ),
             owner = this,
@@ -337,7 +349,7 @@ class BrowserFragment :
             toolbarButtonBinding.set(
                 ToolbarButtonBinding(
                     components.store,
-                    session.id,
+                    tab.id,
                     forwardButton,
                     backButton,
                     refreshButton,
@@ -386,9 +398,7 @@ class BrowserFragment :
         eraseButton.updateSessionsCount(sessionManager.sessions.size)
     }
 
-    private fun initialiseCustomTabUi(view: View) {
-        val customTabConfig = session.customTabConfig!!
-
+    private fun initialiseCustomTabUi(view: View, customTabConfig: CustomTabConfig) {
         // Unfortunately there's no simpler way to have the FAB only in normal-browser mode.
         // - ViewStub: requires splitting attributes for the FAB between the ViewStub, and actual FAB layout file.
         //             Moreover, the layout behaviour just doesn't work unless you set it programatically.
@@ -444,7 +454,7 @@ class BrowserFragment :
             actionButton.setOnClickListener {
                 try {
                     val intent = Intent()
-                    intent.data = Uri.parse(session.url)
+                    intent.data = Uri.parse(tab.content.url)
 
                     pendingIntent.send(context, 0, intent)
                 } catch (e: PendingIntent.CanceledException) {
@@ -545,10 +555,7 @@ class BrowserFragment :
         erase.show()
         securityInfoBinding.get()?.updateIcon(R.drawable.ic_internet)
         menuBinding.get()?.showMenuButton()
-        urlView?.text = session.let {
-            val contentState = requireComponents.store.contentState(it.id)
-            if (contentState?.isSearch == true) contentState.searchTerms else contentState?.url
-        }
+        urlView?.text = if (tab.content.isSearch) tab.content.searchTerms else tab.content.url
     }
 
     fun crashReporterIsVisible(): Boolean = requireActivity().supportFragmentManager.let {
@@ -605,8 +612,7 @@ class BrowserFragment :
             return
         }
 
-        val tab = requireComponents.store.state.findTabOrCustomTab(session.id)
-        val requestDesktop = tab?.content?.desktopMode ?: false
+        val requestDesktop = tab.content.desktopMode
 
         val addToHomescreenDialogFragment = AddToHomescreenDialogFragment.newInstance(
             url,
@@ -709,7 +715,7 @@ class BrowserFragment :
         } else if (sessionFeature.get()?.onBackPressed() == true) {
             return true
         } else {
-            if (session.source == SessionState.Source.ACTION_VIEW || session.isCustomTabSession()) {
+            if (tab.source == SessionState.Source.ACTION_VIEW || tab.isCustomTab()) {
                 TelemetryWrapper.eraseBackToAppEvent()
 
                 // This session has been started from a VIEW intent. Go back to the previous app
@@ -761,9 +767,9 @@ class BrowserFragment :
     private fun shareCurrentUrl() {
         val shareIntent = Intent(Intent.ACTION_SEND)
         shareIntent.type = "text/plain"
-        shareIntent.putExtra(Intent.EXTRA_TEXT, session.url)
+        shareIntent.putExtra(Intent.EXTRA_TEXT, tab.content.url)
 
-        val title = session.title
+        val title = tab.content.title
         if (title.isNotEmpty()) {
             shareIntent.putExtra(Intent.EXTRA_SUBJECT, title)
         }
@@ -776,11 +782,9 @@ class BrowserFragment :
     @Suppress("ComplexMethod")
     override fun onClick(view: View) {
         when (view.id) {
-            R.id.display_url -> if (
-                    !crashReporterIsVisible() &&
-                    requireComponents.sessionManager.findSessionById(session.id) != null) {
+            R.id.display_url -> if (!crashReporterIsVisible()) {
                 val urlFragment = UrlInputFragment
-                    .createWithSession(session, urlView!!)
+                    .createWithTab(tab.id, urlView!!)
 
                 requireActivity().supportFragmentManager
                     .beginTransaction()
@@ -847,14 +851,14 @@ class BrowserFragment :
             R.id.settings -> (activity as LocaleAwareAppCompatActivity).openPreferences()
 
             R.id.open_default -> {
-                val browsers = Browsers(requireContext(), session.url)
+                val browsers = Browsers(requireContext(), tab.content.url)
 
                 val defaultBrowser = browsers.defaultBrowser
                     ?: throw IllegalStateException("<Open with \$Default> was shown when no default browser is set")
                     // We only add this menu item when a third party default exists, in
                     // BrowserMenuAdapter.initializeMenu()
 
-                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(session.url))
+                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(tab.content.url))
                 intent.setPackage(defaultBrowser.packageName)
                 startActivity(intent)
 
@@ -866,7 +870,7 @@ class BrowserFragment :
             }
 
             R.id.open_select_browser -> {
-                val browsers = Browsers(requireContext(), session.url)
+                val browsers = Browsers(requireContext(), tab.content.url)
 
                 val apps = browsers.installedBrowsers
                 val store = if (browsers.hasFirefoxBrandedBrowserInstalled())
@@ -876,7 +880,7 @@ class BrowserFragment :
 
                 val fragment = OpenWithFragment.newInstance(
                     apps,
-                    session.url,
+                    tab.content.url,
                     store
                 )
                 @Suppress("DEPRECATION")
@@ -906,12 +910,12 @@ class BrowserFragment :
 
             R.id.add_to_homescreen -> {
                 showAddToHomescreenDialog(
-                    session.url, session.title
+                    tab.content.url, tab.content.title
                 )
             }
 
             R.id.report_site_issue -> {
-                val reportUrl = String.format(SupportUtils.REPORT_SITE_ISSUE_URL, session.url)
+                val reportUrl = String.format(SupportUtils.REPORT_SITE_ISSUE_URL, tab.content.url)
                 val session = createTab(reportUrl, source = SessionState.Source.MENU)
                 requireComponents.sessionManager.add(session, selected = true)
 
@@ -919,10 +923,7 @@ class BrowserFragment :
             }
 
             R.id.find_in_page -> {
-                val sessionState = requireComponents.store.state.findTab(session.id)
-                if (sessionState != null) {
-                    findInPageIntegration.get()?.show(sessionState)
-                }
+                findInPageIntegration.get()?.show(tab)
                 TelemetryWrapper.findInPageMenuEvent()
             }
 
@@ -948,7 +949,7 @@ class BrowserFragment :
         }
 
         // Don't show Security Popup if the page is loading
-        if (session.loading) {
+        if (tab.content.loading) {
             return
         }
         val securityPopup = PopupUtils.createSecurityPopup(requireContext(), session)
@@ -970,9 +971,9 @@ class BrowserFragment :
         if (view.id == R.id.display_url) {
             val context = activity ?: return false
 
-            if (session.isCustomTabSession()) {
+            if (tab.isCustomTab()) {
                 val clipBoard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                val uri = Uri.parse(session.url)
+                val uri = Uri.parse(tab.content.url)
                 clipBoard.setPrimaryClip(ClipData.newRawUri("Uri", uri))
                 Toast.makeText(context, getString(R.string.custom_tab_copy_url_action), Toast.LENGTH_SHORT).show()
             }

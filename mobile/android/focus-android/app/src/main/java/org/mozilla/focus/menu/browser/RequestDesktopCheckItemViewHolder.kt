@@ -7,16 +7,12 @@ package org.mozilla.focus.menu.browser
 import android.view.View
 import android.widget.CheckBox
 import android.widget.CompoundButton
-import mozilla.components.browser.state.selector.findTabOrCustomTab
-
+import mozilla.components.support.utils.ThreadUtils
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.UrlUtils
-
-import mozilla.components.support.utils.ThreadUtils
-import org.mozilla.focus.ext.components
-import org.mozilla.focus.ext.requireComponents
 
 internal class RequestDesktopCheckItemViewHolder/* package */(
     itemView: View,
@@ -25,8 +21,7 @@ internal class RequestDesktopCheckItemViewHolder/* package */(
     private val checkbox: CheckBox = itemView.findViewById(R.id.check_menu_item_checkbox)
 
     init {
-        val tab = itemView.context.components.store.state.findTabOrCustomTab(fragment.session.id)
-        checkbox.isChecked = tab?.content?.desktopMode ?: false
+        checkbox.isChecked = fragment.tab.content.desktopMode
         checkbox.setOnCheckedChangeListener(this)
     }
 

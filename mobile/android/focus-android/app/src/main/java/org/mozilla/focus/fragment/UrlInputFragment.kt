@@ -111,10 +111,10 @@ class UrlInputFragment :
         }
 
         @JvmStatic
-        fun createWithSession(session: Session, urlView: View): UrlInputFragment {
+        fun createWithTab(tabId: String, urlView: View): UrlInputFragment {
             val arguments = Bundle()
 
-            arguments.putString(ARGUMENT_SESSION_UUID, session.id)
+            arguments.putString(ARGUMENT_SESSION_UUID, tabId)
             arguments.putString(ARGUMENT_ANIMATION, ANIMATION_BROWSER_SCREEN)
 
             val screenLocation = IntArray(2)
@@ -357,7 +357,7 @@ class UrlInputFragment :
                     ?.beginTransaction()
                     ?.replace(
                             R.id.container,
-                            UrlInputFragment.createWithSession(session!!, urlView),
+                            UrlInputFragment.createWithTab(session!!.id, urlView),
                             UrlInputFragment.FRAGMENT_TAG)
                     ?.commit()
         } else {
