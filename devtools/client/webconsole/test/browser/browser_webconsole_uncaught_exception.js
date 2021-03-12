@@ -55,14 +55,14 @@ add_task(async function() {
   );
 
   // The object inspector now looks like:
-  // {...}
+  // Object { fav: "eggplant" }
   // |  fav: "eggplant"
   // |  <prototype>: Object { ... }
 
   const oiNodes = oi.querySelectorAll(".node");
   is(oiNodes.length, 3, "There is the expected number of nodes in the tree");
 
-  ok(oiNodes[0].textContent.includes(`{\u2026}`));
+  ok(oiNodes[0].textContent.includes(`Object { fav: "eggplant" }`));
   ok(oiNodes[1].textContent.includes(`fav: "eggplant"`));
   ok(oiNodes[2].textContent.includes(`<prototype>: Object { \u2026 }`));
 });

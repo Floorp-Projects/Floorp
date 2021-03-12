@@ -50,7 +50,7 @@ async function testExpandObject(objectMessage) {
 
   oi.querySelector(".arrow").click();
   // The object inspector now looks like:
-  // ▼ {…}
+  // ▼ Object { contentObject: "YAY!", deep: (1) […] }
   // |  contentObject: "YAY!"
   // |  ▶︎ deep: Array [ "yes!" ]
   // |  ▶︎ <prototype>
@@ -59,13 +59,16 @@ async function testExpandObject(objectMessage) {
   const [root, contentObjectProp, deepProp, prototypeProp] = [
     ...oi.querySelectorAll(".node"),
   ];
-  ok(root.textContent.includes(`{…}`));
+
+  ok(
+    root.textContent.includes('Object { contentObject: "YAY!", deep: (1) […] }')
+  );
   ok(contentObjectProp.textContent.includes(`contentObject: "YAY!"`));
   ok(deepProp.textContent.includes(`deep: Array [ "yes!" ]`));
   ok(prototypeProp.textContent.includes(`<prototype>`));
 
   // The object inspector now looks like:
-  // ▼ {…}
+  // ▼ Object { contentObject: "YAY!", deep: (1) […] }
   // |  contentObject: "YAY!"
   // |  ▼︎ deep: (1) […]
   // |  |  0: "yes!"

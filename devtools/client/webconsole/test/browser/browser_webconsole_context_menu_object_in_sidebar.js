@@ -100,7 +100,7 @@ add_task(async function() {
   sidebarText = hud.ui.document.querySelector(".sidebar-contents").textContent;
   is(
     oiNodes[0].textContent,
-    "CustomServerError",
+    "CustomServerError: oh my",
     "First node has expected content"
   );
   ok(

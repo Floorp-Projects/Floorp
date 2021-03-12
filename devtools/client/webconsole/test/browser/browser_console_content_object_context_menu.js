@@ -34,10 +34,11 @@ add_task(async function() {
   const oi = objectMessage.querySelector(".tree");
   oi.querySelector(".arrow").click();
   // The object inspector now looks like:
-  // ▼ {…}
+  // ▼ Object { contentObject: "YAY!", deep: (1) […] }
   // |  contentObject: "YAY!"
   // |  ▶︎ deep: Array [ "hello", "world" ]
   // |  ▶︎ <prototype>
+
   await waitFor(() => oi.querySelectorAll(".node").length === 4);
   ok(true, "The ObjectInspector was expanded");
   oi.scrollIntoView();
@@ -52,7 +53,7 @@ add_task(async function() {
   info("Check that inner object can be copied to clipboard");
   await testCopyObject(
     hud,
-    oi.querySelector(".objectBox-array"),
+    oi.querySelectorAll(".node")[2].querySelector(".objectBox-array"),
     JSON.stringify(["hello", "world"], null, 2)
   );
 });
