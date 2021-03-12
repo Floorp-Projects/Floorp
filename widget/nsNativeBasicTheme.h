@@ -201,8 +201,6 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   virtual std::pair<sRGBColor, sRGBColor> ComputeCheckboxColors(
       const EventStates&, StyleAppearance);
   virtual sRGBColor ComputeCheckmarkColor(const EventStates&);
-  virtual std::pair<sRGBColor, sRGBColor> ComputeRadioCheckmarkColors(
-      const EventStates&);
   virtual sRGBColor ComputeBorderColor(const EventStates&);
 
   virtual std::pair<sRGBColor, sRGBColor> ComputeButtonColors(
