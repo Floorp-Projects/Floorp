@@ -29,13 +29,25 @@ class IdleTaskRunner final : public CancelableIdleRunnable {
   using MayStopProcessingCallbackType = std::function<bool()>;
 
  public:
-  // An IdleTaskRunner will attempt to run in any idle time period large enough
-  // to fit `aMinimumUsefulBudget`. If no such window occurs within `aMaxDelay`
-  // ms, it will stop waiting for idle time and run from a TYPE_ONE_SHOT timer.
+  // An IdleTaskRunner has (up to) three phases:
+  //
+  //  - (duration aStartDelay) waiting to run (aStartDelay can be zero)
+  //
+  //  - (duration aMaxDelay) attempting to find a long enough amount of idle
+  //    time, at least aMinimumUsefulBudget
+  //
+  //  - overdue for idle time, run as soon as possible
+  //
+  // If aRepeating is true, then aStartDelay applies only to the first run; the
+  // second run will attempt to run in the first idle slice that is long
+  // enough.
+  //
+  // All durations are in milliseconds.
+  //
   static already_AddRefed<IdleTaskRunner> Create(
       const CallbackType& aCallback, const char* aRunnableName,
-      uint32_t aMaxDelay, int64_t aMinimumUsefulBudget, bool aRepeating,
-      const MayStopProcessingCallbackType& aMayStopProcessing);
+      uint32_t aStartDelay, uint32_t aMaxDelay, int64_t aMinimumUsefulBudget,
+      bool aRepeating, const MayStopProcessingCallbackType& aMayStopProcessing);
 
   NS_IMETHOD Run() override;
 
@@ -54,8 +66,8 @@ class IdleTaskRunner final : public CancelableIdleRunnable {
  private:
   explicit IdleTaskRunner(
       const CallbackType& aCallback, const char* aRunnableName,
-      uint32_t aMaxDelay, int64_t aMinimumUsefulBudget, bool aRepeating,
-      const MayStopProcessingCallbackType& aMayStopProcessing);
+      uint32_t aStartDelay, uint32_t aMaxDelay, int64_t aMinimumUsefulBudget,
+      bool aRepeating, const MayStopProcessingCallbackType& aMayStopProcessing);
   ~IdleTaskRunner();
   void CancelTimer();
   void SetTimerInternal(uint32_t aDelay);
@@ -64,9 +76,12 @@ class IdleTaskRunner final : public CancelableIdleRunnable {
   nsCOMPtr<nsITimer> mScheduleTimer;
   CallbackType mCallback;
 
+  // Do not run until this time.
+  const mozilla::TimeStamp mStartTime;
+
   // Wait this long for idle time before giving up and running a non-idle
   // callback.
-  uint32_t mDelay;
+  uint32_t mMaxDelay;
 
   // If running during idle time, the expected end of the current idle period.
   // The null timestamp when the run is triggered by aMaxDelay instead of idle.

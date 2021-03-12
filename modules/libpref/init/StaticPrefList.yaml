@@ -6687,8 +6687,8 @@
   value: -1
   mirror: always
 
-# The time in number of frames that we estimate for a refresh driver
-# to be quiescent.
+# If it has been this many frame periods since a refresh, assume that painting
+# is quiescent (will not happen again soon).
 - name: layout.idle_period.required_quiescent_frames
   type: uint32_t
   value: 2
