@@ -1038,17 +1038,38 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   nsPIDOMWindowOuter* GetInProcessParentInternal();
 
  private:
+  template <typename Method, typename... Args>
+  mozilla::CallState CallOnInProcessDescendantsInternal(
+      mozilla::dom::BrowsingContext* aBrowsingContext, bool aChildOnly,
+      Method aMethod, Args&&... aArgs);
+
   // Call the given method on the immediate children of this window.  The
   // CallState returned by the last child method invocation is returned or
   // CallState::Continue if the method returns void.
   template <typename Method, typename... Args>
-  mozilla::CallState CallOnInProcessChildren(Method aMethod, Args&... aArgs);
+  mozilla::CallState CallOnInProcessChildren(Method aMethod, Args&&... aArgs) {
+    MOZ_ASSERT(IsCurrentInnerWindow());
+    return CallOnInProcessDescendantsInternal(GetBrowsingContext(), true,
+                                              aMethod, aArgs...);
+  }
+
+  // Call the given method on the descendant of this window.  The CallState
+  // returned by the last descendant method invocation is returned or
+  // CallState::Continue if the method returns void.
+  template <typename Method, typename... Args>
+  mozilla::CallState CallOnInProcessDescendants(Method aMethod,
+                                                Args&&... aArgs) {
+    MOZ_ASSERT(IsCurrentInnerWindow());
+    return CallOnInProcessDescendantsInternal(GetBrowsingContext(), false,
+                                              aMethod, aArgs...);
+  }
 
   // Helper to convert a void returning child method into an implicit
   // CallState::Continue value.
   template <typename Return, typename Method, typename... Args>
   typename std::enable_if<std::is_void<Return>::value, mozilla::CallState>::type
-  CallChild(nsGlobalWindowInner* aWindow, Method aMethod, Args&... aArgs) {
+  CallDescendant(nsGlobalWindowInner* aWindow, Method aMethod,
+                 Args&&... aArgs) {
     (aWindow->*aMethod)(aArgs...);
     return mozilla::CallState::Continue;
   }
@@ -1057,7 +1078,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   template <typename Return, typename Method, typename... Args>
   typename std::enable_if<std::is_same<Return, mozilla::CallState>::value,
                           mozilla::CallState>::type
-  CallChild(nsGlobalWindowInner* aWindow, Method aMethod, Args&... aArgs) {
+  CallDescendant(nsGlobalWindowInner* aWindow, Method aMethod,
+                 Args&&... aArgs) {
     return (aWindow->*aMethod)(aArgs...);
   }
 

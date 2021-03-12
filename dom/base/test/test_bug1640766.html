@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1640766
+-->
+<head>
+  <title>Test for Bug 1640766</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1640766">Mozilla Bug 1640766</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+</div>
+<pre id="test">
+<script type="application/javascript">
+
+/** Test for Bug 1640766 **/
+
+function waitForMessage(aMsg) {
+  return new Promise((aResolve) => {
+    window.addEventListener("message", function handler(e) {
+      if (e.data != aMsg) {
+        return;
+      }
+
+      info(`receive: ${e.data}`);
+      window.removeEventListener("message", handler);
+      aResolve(e.source);
+    });
+  });
+}
+
+async function testSuspend(aWindow) {
+  let timerRan = false;
+  let timer = aWindow.setTimeout(function() {
+    timerRan = true;
+  }, 0);
+
+  return new Promise((aResolve) => {
+    setTimeout(function() {
+      ok(!timerRan, "timer should not run as the window is suspended");
+      clearTimeout(timer);
+      aResolve();
+    }, 0);
+  });
+}
+
+add_task(async function() {
+  let w = window.open("iframe1_bug1640766.html");
+  let inner = await waitForMessage("ready");
+
+  var utils = SpecialPowers.getDOMWindowUtils(w);
+  utils.enterModalState();
+
+  await testSuspend(w);
+  await testSuspend(inner);
+
+  utils.leaveModalState();
+  w.close();
+});
+
+</script>
+</pre>
+</body>
+</html>
