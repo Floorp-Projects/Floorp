@@ -29,7 +29,6 @@ const statsExpectedByType = {
       "nackCount",
     ],
     localVideoOnly: [
-      "discardedPackets",
       "firCount",
       "pliCount",
       "framesDecoded",
@@ -432,19 +431,6 @@ const pedanticChecks = report => {
         stat.type + ".jitter is sane number for a local only test. value="
         + stat.jitter);
 
-      // packetsDiscarded
-      // special exception for, TODO: Bug 1335967
-      // if (!stat.inner.isRemote && stat.discardedPackets !== undefined) {
-      //   ok(stat.packetsDiscarded < 100, stat.type
-      //     + ".packetsDiscarded is a sane number for a short test. value="
-      //     + stat.packetsDiscarded);
-      // }
-      // if (stat.packetsDiscarded !== undefined) {
-      //   ok(!stat.inner.isRemote,
-      //     stat.type + ".packetsDiscarded is only set when isRemote is "
-      //     + "false");
-      // }
-
       //
       // Optional fields
       //
@@ -462,10 +448,6 @@ const pedanticChecks = report => {
           ok(stat.inner[field] !== undefined, stat.type + " has field " + field
             + " when kind is video");
         });
-        // discardedPackets
-        ok(stat.discardedPackets < 100, stat.type
-          + ".discardedPackets is a sane number for a short test. value="
-          + stat.discardedPackets);
         // framesDecoded
         ok(stat.framesDecoded > 0 && stat.framesDecoded < 1000000, stat.type
           + ".framesDecoded is a sane number for a short test. value="
