@@ -2639,10 +2639,17 @@ nsTArray<RefPtr<dom::RTCStatsPromise>> PeerConnectionImpl::GetSenderStats(
                       aReportBlockData.apply([&](auto& aData) {
                         aPipeline->RtpSendBaseSeq().apply(
                             [&](uint32_t aBaseSeq) {
-                              aRemote.mPacketsReceived.Construct(
-                                  aData.report_block()
-                                      .extended_highest_sequence_number -
-                                  aBaseSeq + 1);
+                              if (aData.report_block()
+                                      .extended_highest_sequence_number <
+                                  aBaseSeq) {
+                                aRemote.mPacketsReceived.Construct(0);
+                              } else {
+                                aRemote.mPacketsReceived.Construct(
+                                    aData.report_block()
+                                        .extended_highest_sequence_number -
+                                    aData.report_block().packets_lost -
+                                    aBaseSeq + 1);
+                              }
                             });
                       });
                     };
