@@ -127,19 +127,11 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
   border-color: var(--theme-splitter-color);
 }
 
-.theme-light .media-rule-label {
-  border-bottom-color: #cddae5; /* Grey */
-}
-
-.theme-dark .media-rule-label {
-  border-bottom-color: #303b47; /* Grey */
-}
-
 .media-rule-label {
   display: flex;
   padding: 4px;
   cursor: pointer;
-  border-bottom: 1px solid;
+  border-bottom: 1px solid var(--theme-splitter-color);
 }
 
 .media-responsive-mode-toggle {
