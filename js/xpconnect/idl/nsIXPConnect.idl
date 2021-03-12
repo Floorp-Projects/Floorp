@@ -126,7 +126,6 @@ interface nsIXPConnect : nsISupports
     *       NS_OK
     *    failure:
     *       NS_ERROR_XPC_BAD_CONVERT_NATIVE
-    *       NS_ERROR_XPC_CANT_GET_JSOBJECT_OF_DOM_OBJECT
     *       NS_ERROR_FAILURE
     */
     JSObjectPtr
