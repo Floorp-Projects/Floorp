@@ -466,6 +466,7 @@ dependencies {
 
     implementation Deps.mozilla_feature_accounts
     implementation Deps.mozilla_feature_app_links
+    implementation Deps.mozilla_feature_autofill
     implementation Deps.mozilla_feature_awesomebar
     implementation Deps.mozilla_feature_contextmenu
     implementation Deps.mozilla_feature_customtabs
