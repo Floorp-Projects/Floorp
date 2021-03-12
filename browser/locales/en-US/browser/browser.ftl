@@ -626,6 +626,11 @@ eme-notifications-drm-content-playing-manage-accesskey = M
 eme-notifications-drm-content-playing-dismiss = Dismiss
 eme-notifications-drm-content-playing-dismiss-accesskey = D
 
+## Password save/update panel
+
+panel-save-update-username = Username
+panel-save-update-password = Password
+
 ## Add-on removal warning
 
 # Variables:
