@@ -466,25 +466,16 @@ class BaseBootstrapper(object):
 
         self.run_as_root(command)
 
-    def prompt_int(self, prompt, low, high, limit=5):
+    def prompt_int(self, prompt, low, high):
         """ Prompts the user with prompt and requires an integer between low and high. """
-        valid = False
-        while not valid and limit > 0:
+        while True:
             try:
                 choice = int(input(prompt))
-                if not low <= choice <= high:
-                    print("ERROR! Please enter a valid option!")
-                    limit -= 1
-                else:
-                    valid = True
+                if low <= choice <= high:
+                    return choice
             except ValueError:
-                print("ERROR! Please enter a valid option!")
-                limit -= 1
-
-        if limit > 0:
-            return choice
-        else:
-            raise Exception("Error! Reached max attempts of entering option.")
+                pass
+            print("ERROR! Please enter a valid option!")
 
     def prompt_yesno(self, prompt):
         """ Prompts the user with prompt and requires a yes/no answer."""
