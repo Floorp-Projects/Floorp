@@ -14,6 +14,7 @@ import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.browser.menu.item.WebExtensionBrowserMenuItem
 import mozilla.components.browser.menu.item.ParentBrowserMenuItem
 import mozilla.components.browser.menu.item.WebExtensionPlaceholderMenuItem
+import mozilla.components.browser.menu.item.WebExtensionPlaceholderMenuItem.Companion.MAIN_EXTENSIONS_MENU_ID
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.WebExtensionState
 import mozilla.components.browser.state.store.BrowserStore
@@ -30,12 +31,14 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class WebExtensionBrowserMenuBuilderTest {
 
+    private val submenuPlaceholderMenuItem = WebExtensionPlaceholderMenuItem(id = MAIN_EXTENSIONS_MENU_ID)
+
     @Test
     fun `WHEN there are no web extension actions THEN add-ons menu item invokes onAddonsManagerTapped`() {
         var isAddonsManagerTapped = false
         val store = BrowserStore()
         val builder = WebExtensionBrowserMenuBuilder(
-            listOf(mockMenuItem(), mockMenuItem()),
+            listOf(mockMenuItem(), submenuPlaceholderMenuItem, mockMenuItem()),
             store = store,
             onAddonsManagerTapped = { isAddonsManagerTapped = true },
             appendExtensionSubMenuAtStart = true
@@ -43,7 +46,7 @@ class WebExtensionBrowserMenuBuilderTest {
 
         val menu = builder.build(testContext)
 
-        val addonsManagerItem = menu.adapter.visibleItems[0] as? BrowserMenuImageText
+        val addonsManagerItem = menu.adapter.visibleItems[1] as? BrowserMenuImageText
         val addonsManagerItemView =
             LayoutInflater.from(testContext).inflate(addonsManagerItem!!.getLayoutResource(), null)
         addonsManagerItem.bind(menu, addonsManagerItemView)
@@ -76,7 +79,7 @@ class WebExtensionBrowserMenuBuilderTest {
 
         var isAddonsManagerTapped = false
         val builder = WebExtensionBrowserMenuBuilder(
-            listOf(mockMenuItem(), mockMenuItem()),
+            listOf(mockMenuItem(), submenuPlaceholderMenuItem, mockMenuItem()),
             store = store,
             onAddonsManagerTapped = { isAddonsManagerTapped = true },
             appendExtensionSubMenuAtStart = true
@@ -84,7 +87,7 @@ class WebExtensionBrowserMenuBuilderTest {
 
         val menu = builder.build(testContext)
 
-        val parentMenuItem = menu.adapter.visibleItems[0] as? ParentBrowserMenuItem
+        val parentMenuItem = menu.adapter.visibleItems[1] as? ParentBrowserMenuItem
         val subMenuItemSize = parentMenuItem!!.subMenu.adapter.visibleItems.size
         assertEquals(6, subMenuItemSize)
         val addOnsManagerMenuItem =
@@ -99,7 +102,7 @@ class WebExtensionBrowserMenuBuilderTest {
     }
 
     @Test
-    fun `web extension submenu is added at the start when appendExtensionSubMenuAtStart is true`() {
+    fun `web extension submenu is added at the top when usingBottomToolbar is true with no placeholde for submenu`() {
         val browserAction = WebExtensionBrowserAction("browser_action", true, mock(), "", 0, 0) {}
         val pageAction = WebExtensionBrowserAction("page_action", true, mock(), "", 0, 0) {}
 
@@ -121,7 +124,7 @@ class WebExtensionBrowserMenuBuilderTest {
         )
 
         val builder = WebExtensionBrowserMenuBuilder(
-            listOf(mockMenuItem(), mockMenuItem()),
+            listOf(mockMenuItem(), mockMenuItem(), mockMenuItem()),
             store = store,
             appendExtensionSubMenuAtStart = true
         )
@@ -135,7 +138,7 @@ class WebExtensionBrowserMenuBuilderTest {
 
         val recyclerAdapter = recyclerView.adapter!!
         assertNotNull(recyclerAdapter)
-        assertEquals(3, recyclerAdapter.itemCount)
+        assertEquals(4, recyclerAdapter.itemCount)
 
         val parentMenuItem = menu.adapter.visibleItems[0] as? ParentBrowserMenuItem
         val subMenuItemSize = parentMenuItem!!.subMenu.adapter.visibleItems.size
@@ -151,7 +154,7 @@ class WebExtensionBrowserMenuBuilderTest {
     }
 
     @Test
-    fun `web extension submenu is added at the end when appendExtensionSubMenuAtStart is false`() {
+    fun `web extension submenu is added at the bottom when usingBottomToolbar is false with no placeholder for submenu `() {
         val browserAction = WebExtensionBrowserAction("browser_action", true, mock(), "", 0, 0) {}
         val pageAction = WebExtensionBrowserAction("page_action", true, mock(), "", 0, 0) {}
 
@@ -174,7 +177,7 @@ class WebExtensionBrowserMenuBuilderTest {
 
         val builder =
             WebExtensionBrowserMenuBuilder(
-                listOf(mockMenuItem(), mockMenuItem()),
+                listOf(mockMenuItem(), mockMenuItem(), mockMenuItem()),
                 store = store,
                 appendExtensionSubMenuAtStart = false
             )
@@ -188,7 +191,7 @@ class WebExtensionBrowserMenuBuilderTest {
 
         val recyclerAdapter = recyclerView.adapter!!
         assertNotNull(recyclerAdapter)
-        assertEquals(3, recyclerAdapter.itemCount)
+        assertEquals(4, recyclerAdapter.itemCount)
 
         val parentMenuItem = menu.adapter.visibleItems[recyclerAdapter.itemCount - 1] as? ParentBrowserMenuItem
         val subMenuItemSize = parentMenuItem!!.subMenu.adapter.visibleItems.size
@@ -236,10 +239,11 @@ class WebExtensionBrowserMenuBuilderTest {
             )
         )
 
-        // 3 items initially on the main menu
+        // 4 items initially on the main menu
         val items = listOf(
-            mockMenuItem(),
             WebExtensionPlaceholderMenuItem(id = promotableWebExtensionId),
+            mockMenuItem(),
+            submenuPlaceholderMenuItem,
             mockMenuItem())
 
         val builder =
@@ -259,18 +263,85 @@ class WebExtensionBrowserMenuBuilderTest {
         val recyclerAdapter = recyclerView.adapter!! as BrowserMenuAdapter
         assertNotNull(recyclerAdapter)
 
-        // main menu should have the 3 initial items, one replaced by web extension plus the extensions menu
+        // main menu should have the 4 initial items, one replaced by web extension one replaced by the extensions menu
         assertEquals(4, recyclerAdapter.itemCount)
 
-        val replacedItem = recyclerAdapter.visibleItems[1]
+        val replacedItem = recyclerAdapter.visibleItems[0]
         // the replaced item should be a WebExtensionBrowserMenuItem
         assertEquals("WebExtensionBrowserMenuItem", replacedItem.javaClass.simpleName)
 
         // the replaced item should have the action title of the WebExtensionBrowserMenuItem
         assertEquals(promotableWebExtensionTitle, (replacedItem as WebExtensionBrowserMenuItem).action.title)
 
-        val parentMenuItem = menu.adapter.visibleItems[recyclerAdapter.itemCount - 1] as? ParentBrowserMenuItem
+        val parentMenuItem = menu.adapter.visibleItems[2] as? ParentBrowserMenuItem
         val subMenuItemSize = parentMenuItem!!.subMenu.adapter.visibleItems.size
+
+        // add-ons should only have one extension, 2 dividers, 1 add-on manager item and 1 back menu item
+        assertEquals(5, subMenuItemSize)
+
+        val backMenuItem = parentMenuItem.subMenu.adapter.visibleItems[subMenuItemSize - 1] as? BackPressMenuItem
+        val subMenuExtItemPageAction = parentMenuItem.subMenu.adapter.visibleItems[2] as? WebExtensionBrowserMenuItem
+        val addOnsManagerMenuItem = parentMenuItem.subMenu.adapter.visibleItems[0] as? BrowserMenuImageText
+
+        assertNotNull(backMenuItem)
+        assertEquals("page_action", subMenuExtItemPageAction!!.action.title)
+        assertNotNull(addOnsManagerMenuItem)
+    }
+
+    @Test
+    fun `GIVEN a placeholder with the id MAIN_EXTENSIONS_MENU_ID WHEN the menu is built THEN the extensions sub-menu is inserted in its place`() {
+        val pageAction = WebExtensionBrowserAction("page_action", true, mock(), "", 0, 0) {}
+
+        val extensions = mapOf(
+            "id" to WebExtensionState(
+                "id",
+                "url",
+                "name",
+                true,
+                browserAction = null,
+                pageAction = pageAction
+            )
+        )
+        val store = BrowserStore(
+            BrowserState(
+                extensions = extensions
+            )
+        )
+
+        // 3 items initially on the main menu
+        val items = listOf(
+            mockMenuItem(),
+            submenuPlaceholderMenuItem,
+            mockMenuItem())
+
+        val builder =
+            WebExtensionBrowserMenuBuilder(
+                items,
+                store = store,
+                appendExtensionSubMenuAtStart = false
+            )
+
+        val menu = builder.build(testContext)
+        val anchor = ImageButton(testContext)
+        val popup = menu.show(anchor)
+
+        val recyclerView: RecyclerView = popup.contentView.findViewById(R.id.mozac_browser_menu_recyclerView)
+        assertNotNull(recyclerView)
+
+        val recyclerAdapter = recyclerView.adapter!! as BrowserMenuAdapter
+        assertNotNull(recyclerAdapter)
+
+        // main menu should have the 3 initial items, one replaced by extensions sub-menu
+        assertEquals(3, recyclerAdapter.itemCount)
+
+        val parentMenuItem = recyclerAdapter.visibleItems[1] as ParentBrowserMenuItem
+        // the replaced item should be a ParentBrowserMenuItem
+        assertEquals("ParentBrowserMenuItem", parentMenuItem.javaClass.simpleName)
+
+        // the replaced item should have the action title of the WebExtensionBrowserMenuItem
+        assertEquals("Extensions", parentMenuItem.label)
+
+        val subMenuItemSize = parentMenuItem.subMenu.adapter.visibleItems.size
 
         // add-ons should only have one extension, 2 dividers, 1 add-on manager item and 1 back menu item
         assertEquals(5, subMenuItemSize)

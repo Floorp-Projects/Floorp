@@ -25,4 +25,8 @@ class WebExtensionPlaceholderMenuItem(
     override fun bind(menu: BrowserMenu, view: View) {
         // no binding, item not visible.
     }
+
+    companion object {
+        const val MAIN_EXTENSIONS_MENU_ID = "mainExtensionsMenu"
+    }
 }

@@ -24,8 +24,10 @@ import mozilla.components.browser.state.store.BrowserStore
  * @param webExtIconTintColorResource Optional ID of color resource to tint the icons of back and
  * add-ons manager menu items.
  * @param onAddonsManagerTapped Callback to be invoked when add-ons manager menu item is selected.
- * @param appendExtensionSubMenuAtStart true if web extension sub menu appear at the top (start) of
- * the menu, false if web extensions appear at the bottom of the menu. Default to false (bottom).
+ * @param appendExtensionSubMenuAtStart Used when the menu does not have a [WebExtensionPlaceholderMenuItem]
+ * to specify the place the extensions sub-menu should be inserted. True if web extension sub menu
+ * appear at the top (start) of the menu, false if web extensions appear at the bottom of the menu.
+ * Default to false (bottom). This is also used to decide the back press menu item placement at top or bottom.
  */
 @Suppress("LongParameterList")
 class WebExtensionBrowserMenuBuilder(
@@ -104,12 +106,22 @@ class WebExtensionBrowserMenuBuilder(
             }
         }
 
-        val menuItems =
+        val mainMenuIndex = finalList.indexOfFirst { browserMenuItem ->
+            (browserMenuItem as? WebExtensionPlaceholderMenuItem)?.id ==
+                WebExtensionPlaceholderMenuItem.MAIN_EXTENSIONS_MENU_ID
+        }
+
+        val menuItems = if (mainMenuIndex != -1) {
+            finalList[mainMenuIndex] = webExtMenuItem
+            finalList
+            // if we do not have a placeholder we should add the extension submenu at top or bottom
+        } else {
             if (appendExtensionSubMenuAtStart) {
                 listOf(webExtMenuItem) + finalList
             } else {
                 finalList + webExtMenuItem
             }
+        }
 
         val adapter = BrowserMenuAdapter(context, menuItems)
         return BrowserMenu(adapter)
