@@ -12,7 +12,7 @@
       return {
         ".popup-notification-icon": "popupid,src=icon,class=iconclass,hasicon",
         ".popup-notification-origin": "value=origin,tooltiptext=origin",
-        ".popup-notification-description": "popupid",
+        ".popup-notification-description": "popupid,id=descriptionid",
         ".popup-notification-description > span:first-of-type":
           "text=label,popupid",
         ".popup-notification-description > b:first-of-type":
