@@ -386,7 +386,7 @@ class IDLUnresolvedIdentifier(IDLObject):
         if name == "__noSuchMethod__":
             raise WebIDLError("__noSuchMethod__ is deprecated", [location])
 
-        if name[:2] == "__" and name != "__content" and not allowDoubleUnderscore:
+        if name[:2] == "__" and not allowDoubleUnderscore:
             raise WebIDLError("Identifiers beginning with __ are reserved", [location])
         if name[0] == "_" and not allowDoubleUnderscore:
             name = name[1:]
