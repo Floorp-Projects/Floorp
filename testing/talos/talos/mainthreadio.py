@@ -8,7 +8,7 @@ from __future__ import absolute_import, print_function
 import os
 import re
 from talos import utils
-from talos import whitelist
+from talos import allowlist
 
 from collections import OrderedDict
 import six
@@ -60,7 +60,7 @@ NAME_SUBSTITUTIONS = OrderedDict(
 
 TUPLE_EVENT_SOURCE_INDEX = 1
 TUPLE_FILENAME_INDEX = 2
-WHITELIST_FILENAME = os.path.join(SCRIPT_DIR, "mtio-whitelist.json")
+ALLOWLIST_FILENAME = os.path.join(SCRIPT_DIR, "mtio-allowlist.json")
 
 
 def parse(logfilename, data):
@@ -155,15 +155,15 @@ def main(argv):
         print("Log parsing failed")
         return 1
 
-    wl = whitelist.Whitelist(
+    wl = allowlist.Allowlist(
         test_name="mainthreadio",
         paths={"{xre}": argv[3]},
         path_substitutions=PATH_SUBSTITUTIONS,
         name_substitutions=NAME_SUBSTITUTIONS,
         event_sources=["PoisonIOInterposer"],
     )
-    if not wl.load(WHITELIST_FILENAME):
-        print("Failed to load whitelist")
+    if not wl.load(ALLOWLIST_FILENAME):
+        print("Failed to load allowlist")
         return 1
 
     wl.filter(data, TUPLE_FILENAME_INDEX)

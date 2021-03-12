@@ -295,11 +295,11 @@ def updateStage(row, stage):
     return stage
 
 
-def loadWhitelist(filename):
+def loadAllowlist(filename):
     if not filename:
         return
     if not os.path.exists(filename):
-        print("Warning: xperf whitelist %s was not found" % filename)
+        print("Warning: xperf allowlist %s was not found" % filename)
         return
     lines = open(filename).readlines()
     # Expand paths
@@ -319,17 +319,17 @@ def loadWhitelist(filename):
     return (files, dirs, recur)
 
 
-def checkWhitelist(filename, whitelist):
-    if not whitelist:
+def checkAllowlist(filename, allowlist):
+    if not allowlist:
         return False
-    if filename in whitelist[0]:
+    if filename in allowlist[0]:
         return True
-    if os.path.dirname(filename) in whitelist[1]:
+    if os.path.dirname(filename) in allowlist[1]:
         return True
     head = filename
     while len(head) > 3:  # Length 3 implies root directory, e.g. C:\
         head, tail = os.path.split(head)
-        if head in whitelist[2]:
+        if head in allowlist[2]:
             return True
     return False
 
@@ -341,7 +341,7 @@ def etlparser(
     approot=None,
     configFile=None,
     outputFile=None,
-    whitelist_file=None,
+    allowlist_file=None,
     error_filename=None,
     all_stages=False,
     all_threads=False,
@@ -393,19 +393,19 @@ def etlparser(
     else:
         print(output)
 
-    whitelist = loadWhitelist(whitelist_file)
+    allowlist = loadAllowlist(allowlist_file)
 
     header = "filename, tid, stage, readcount, readbytes, writecount," " writebytes"
     outFile.write(header + "\n")
 
-    # Filter out stages, threads, and whitelisted files that we're not
+    # Filter out stages, threads, and allowlisted files that we're not
     # interested in
     filekeys = [
         x
         for x in six.iterkeys(files)
         if (all_stages or x[2] == stages[0])
         and (all_threads or x[1].endswith("(main)"))
-        and (all_stages and x[2] != stages[0] or not checkWhitelist(x[0], whitelist))
+        and (all_stages and x[2] != stages[0] or not checkAllowlist(x[0], allowlist))
     ]
     if debug:
         # in debug, we want stages = [startup+normal] and all threads, not just (main)
@@ -417,7 +417,7 @@ def etlparser(
             and (
                 all_stages
                 and x[2] not in [stages[0], stages[1]]
-                or not checkWhitelist(x[0], whitelist)
+                or not checkAllowlist(x[0], allowlist)
             )
         ]
     else:
@@ -444,19 +444,19 @@ def etlparser(
 
     # We still like to have the outputfile to record the raw data, now
     # filter out acceptable files/ranges
-    whitelist_path = None
+    allowlist_path = None
     wl_temp = {}
     dirname = os.path.dirname(__file__)
-    if os.path.exists(os.path.join(dirname, "xperf_whitelist.json")):
-        whitelist_path = os.path.join(dirname, "xperf_whitelist.json")
+    if os.path.exists(os.path.join(dirname, "xperf_allowlist.json")):
+        allowlist_path = os.path.join(dirname, "xperf_allowlist.json")
     elif os.path.exists(os.path.join(dirname, "xtalos")) and os.path.exists(
-        os.path.join(dirname, "xtalos", "xperf_whitelist.json")
+        os.path.join(dirname, "xtalos", "xperf_allowlist.json")
     ):
-        whitelist_path = os.path.join(dirname, "xtalos", "xperf_whitelist.json")
+        allowlist_path = os.path.join(dirname, "xtalos", "xperf_allowlist.json")
 
     wl_temp = {}
-    if whitelist_path:
-        with open(whitelist_path, "r") as fHandle:
+    if allowlist_path:
+        with open(allowlist_path, "r") as fHandle:
             wl_temp = json.load(fHandle)
 
     # Approot is the full path where the application is located at
@@ -582,7 +582,7 @@ def etlparser_from_config(config_file, **kwargs):
         "outputFile": "etl_output.csv",
         "processID": None,
         "approot": None,
-        "whitelist_file": None,
+        "allowlist_file": None,
         "error_filename": None,
         "all_stages": False,
         "all_threads": False,
@@ -628,7 +628,7 @@ def main(args=sys.argv[1:]):
         args.approot,
         args.configFile,
         args.outputFile,
-        args.whitelist_file,
+        args.allowlist_file,
         args.error_filename,
         args.all_stages,
         args.all_threads,
