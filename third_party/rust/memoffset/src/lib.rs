@@ -20,7 +20,11 @@
 
 //! A crate used for calculating offsets of struct members and their spans.
 //!
-//! This functionality currently can not be used in compile time code such as `const` or `const fn` definitions.
+//! Some of the funcationality of the crate makes no sense when used along with structs that
+//! are not `#[repr(C, packed)]`, but it is up to the user to make sure that they are.
+//!
+//! This functionality should work for `const`s but presently doesn't work on `const fn`. Storing a
+//! value in a const and then returning it from a `const fn` should workaround most cases.
 //!
 //! ## Examples
 //! ```
@@ -57,35 +61,15 @@
 //! ```
 
 #![no_std]
-#![cfg_attr(
-    feature = "unstable_const",
-    feature(
-        ptr_offset_from,
-        const_fn,
-        const_ptr_offset_from,
-        const_maybe_uninit_as_ptr,
-        const_raw_ptr_deref,
-    )
-)]
-#![cfg_attr(feature = "unstable_raw", feature(raw_ref_macros))]
-
-#[macro_use]
-#[cfg(doctests)]
-#[cfg(doctest)]
-extern crate doc_comment;
-#[cfg(doctests)]
-#[cfg(doctest)]
-doctest!("../README.md");
 
 // This `use` statement enables the macros to use `$crate::mem`.
 // Doing this enables this crate to function under both std and no-std crates.
 #[doc(hidden)]
 pub use core::mem;
+
 #[doc(hidden)]
 pub use core::ptr;
 
-#[macro_use]
-mod raw_field;
 #[macro_use]
 mod offset_of;
 #[macro_use]
