@@ -8,16 +8,19 @@
            noautofocus="true"
            role="alert"/>
 
-    <popupnotification id="webRTC-shareDevices-notification" hidden="true">
+    <popupnotification id="webRTC-shareDevices-notification" hidden="true" 
+                       descriptionid="webRTC-shareDevices-notification-description">
       <popupnotificationcontent id="webRTC-selectCamera" orient="vertical">
-        <label data-l10n-id="popup-select-camera-device"
+        <label id="webRTC-selectCamera-label"
+               data-l10n-id="popup-select-camera-device"
                control="webRTC-selectCamera-menulist"/>
-        <deck id="webRTC-selectCamera-deck">
-          <menulist id="webRTC-selectCamera-menulist">
+        <html:div class="webRTC-selectDevice-selector-container">
+          <xul:image id="webRTC-selectCamera-icon" class="webRTC-selectDevice-icon" data-l10n-id="popup-select-camera-icon"/>
+          <menulist id="webRTC-selectCamera-menulist" aria-labelledby="webRTC-selectCamera-icon">
             <menupopup id="webRTC-selectCamera-menupopup"/>
           </menulist>
-          <label id="webRTC-selectCamera-label" class="webRTC-selectDevice-label"></label>
-        </deck>
+          <label id="webRTC-selectCamera-single-device-label" class="webRTC-selectDevice-label"></label>
+        </html:div>
       </popupnotificationcontent>
 
       <popupnotificationcontent id="webRTC-selectWindowOrScreen" orient="vertical">
@@ -39,14 +42,16 @@
       </popupnotificationcontent>
 
       <popupnotificationcontent id="webRTC-selectMicrophone" orient="vertical">
-        <label data-l10n-id="popup-select-microphone-device"
+        <label id="webRTC-selectMicrophone-label"
+               data-l10n-id="popup-select-microphone-device"
                control="webRTC-selectMicrophone-menulist"/>
-        <deck id="webRTC-selectMicrophone-deck">
-          <menulist id="webRTC-selectMicrophone-menulist">
+        <html:div class="webRTC-selectDevice-selector-container">
+          <xul:image id="webRTC-selectMicrophone-icon" data-l10n-id="popup-select-microphone-icon" class="webRTC-selectDevice-icon"/>
+          <menulist id="webRTC-selectMicrophone-menulist" aria-labelledby="webRTC-selectMicrophone-icon">
             <menupopup id="webRTC-selectMicrophone-menupopup"/>
           </menulist>
-          <label id="webRTC-selectMicrophone-label" class="webRTC-selectDevice-label"></label>
-        </deck>
+          <label id="webRTC-selectMicrophone-single-device-label" class="webRTC-selectDevice-label"></label>
+        </html:div>
       </popupnotificationcontent>
     </popupnotification>
 
