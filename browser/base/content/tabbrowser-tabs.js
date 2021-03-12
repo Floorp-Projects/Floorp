@@ -1110,16 +1110,18 @@
         }
       }
 
-      if (this._firstTab) {
-        this._firstTab.removeAttribute("first-visible-tab");
-      }
+      this._firstTab?.removeAttribute("first-visible-tab");
       this._firstTab = visibleTabs[0];
       this._firstTab.setAttribute("first-visible-tab", "true");
-      if (this._lastTab) {
-        this._lastTab.removeAttribute("last-visible-tab");
-      }
+      this._lastTab?.removeAttribute("last-visible-tab");
       this._lastTab = visibleTabs[visibleTabs.length - 1];
       this._lastTab.setAttribute("last-visible-tab", "true");
+      this._firstUnpinnedTab?.removeAttribute("first-visible-unpinned-tab");
+      this._firstUnpinnedTab = visibleTabs.find(t => !t.pinned);
+      this._firstUnpinnedTab?.setAttribute(
+        "first-visible-unpinned-tab",
+        "true"
+      );
 
       let hoveredTab = this._hoveredTab;
       if (hoveredTab) {
@@ -1321,6 +1323,8 @@
         tabs.length > numPinned &&
         numPinned > 0;
 
+      this.toggleAttribute("haspinnedtabs", !!numPinned);
+
       if (doPosition) {
         this.setAttribute("positionpinnedtabs", "true");
 
@@ -1330,19 +1334,9 @@
           let arrowScrollbox = this.arrowScrollbox;
           let firstTab = tabs[0];
           let firstTabCS = getComputedStyle(firstTab);
-          let scrollbox = this.arrowScrollbox.shadowRoot.querySelector(
-            `[part="scrollbox"]`
-          );
-          let scrollboxCS = getComputedStyle(scrollbox);
           layoutData = this._pinnedTabsLayoutCache = {
             uiDensity,
-            scrollboxPadding: parseFloat(scrollboxCS.paddingInlineStart),
-            pinnedTabWidth:
-              firstTab.getBoundingClientRect().width +
-              /* Re-use the first tabs margin-inline-end because we remove
-                 the margin-inline-start from the first tab. All tabs
-                 (excluding first and last) should have equal start and end margins. */
-              2 * parseFloat(firstTabCS.marginInlineEnd),
+            pinnedTabWidth: parseFloat(firstTabCS.width),
             scrollButtonWidth: arrowScrollbox._scrollButtonDown.getBoundingClientRect()
               .width,
           };
@@ -1354,11 +1348,7 @@
           width += layoutData.pinnedTabWidth;
           tab.style.setProperty(
             "margin-inline-start",
-            -(
-              width +
-              layoutData.scrollButtonWidth +
-              layoutData.scrollboxPadding
-            ) + "px",
+            -(width + layoutData.scrollButtonWidth) + "px",
             "important"
           );
           tab._pinnedUnscrollable = true;

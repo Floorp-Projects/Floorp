@@ -667,6 +667,7 @@
     _updateTabBarForPinnedTabs() {
       this.tabContainer._unlockTabSizing();
       this.tabContainer._positionPinnedTabs();
+      this.tabContainer._setPositionalAttributes();
       this.tabContainer._updateCloseButtons();
     },
 

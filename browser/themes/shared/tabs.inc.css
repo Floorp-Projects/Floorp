@@ -823,7 +823,8 @@
   background-position: center bottom -6px;
 }
 
-#tabbrowser-tabs:not([positionpinnedtabs]) > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned] + .tabbrowser-tab:not([pinned]) {
+#tabbrowser-tabs[haspinnedtabs]:not([positionpinnedtabs]) > #tabbrowser-arrowscrollbox > .tabbrowser-tab[first-visible-unpinned-tab] {
+  /* Add a gap between the last pinned tab and the first visible tab */
   margin-inline-start: 12px !important; /* .tabbrowser-tab sets margin: 0 !important; */
 }
 } /*** END proton ***/
