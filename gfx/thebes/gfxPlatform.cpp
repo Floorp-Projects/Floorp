@@ -1196,6 +1196,14 @@ bool gfxPlatform::IsHeadless() {
 bool gfxPlatform::UseWebRender() { return gfx::gfxVars::UseWebRender(); }
 
 /* static */
+bool gfxPlatform::DoesFissionForceWebRender() {
+  // Because WebRender doesn't currently support all of the tests that Fission
+  // runs in CI, we only require WebRender for users who both have Fission and
+  // are enrolled in the Fission experiment.
+  return FissionAutostart() && FissionExperimentEnrolled();
+}
+
+/* static */
 bool gfxPlatform::UseRemoteCanvas() {
   return XRE_IsContentProcess() && gfx::gfxVars::RemoteCanvasEnabled();
 }
@@ -3374,7 +3382,8 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
     return true;
   }
 
-  if (StaticPrefs::gfx_webrender_fallback_basic_AtStartup()) {
+  if (StaticPrefs::gfx_webrender_fallback_basic_AtStartup() &&
+      !DoesFissionForceWebRender()) {
     // Fallback from WebRender or Software WebRender to Basic.
     gfxCriticalNote << "Fallback (SW-)WR to Basic";
     if (gfxConfig::IsEnabled(Feature::WEBRENDER_SOFTWARE)) {

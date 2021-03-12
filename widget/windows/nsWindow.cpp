@@ -8554,8 +8554,9 @@ void nsWindow::PickerClosed() {
 }
 
 bool nsWindow::WidgetTypePrefersSoftwareWebRender() const {
-  return (StaticPrefs::gfx_webrender_software_unaccelerated_widget_allow() &&
-          mTransparencyMode == eTransparencyTransparent) ||
+  return (mTransparencyMode == eTransparencyTransparent &&
+          (StaticPrefs::gfx_webrender_software_unaccelerated_widget_allow() ||
+           gfxPlatorm::DoesFissionForceWebRender())) ||
          nsBaseWidget::WidgetTypePrefersSoftwareWebRender();
 }
 
