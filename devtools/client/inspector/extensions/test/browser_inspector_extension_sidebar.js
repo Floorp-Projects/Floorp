@@ -301,9 +301,10 @@ add_task(async function testSidebarDOMNodeHighlighting() {
 
   // Get and verify the DOMNode and the "open inspector"" icon
   // rendered inside the ObjectInspector.
+
   assertObjectInspector(sidebarPanelContent, {
-    expectedDOMNodes: 1,
-    expectedOpenInspectors: 1,
+    expectedDOMNodes: 2,
+    expectedOpenInspectors: 2,
   });
 
   // Test highlight DOMNode on mouseover.

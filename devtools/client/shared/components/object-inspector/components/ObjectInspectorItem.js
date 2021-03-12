@@ -120,9 +120,7 @@ class ObjectInspectorItem extends Component {
       if (depth > 0) {
         repProps.mode = mode === MODE.LONG ? MODE.SHORT : MODE.TINY;
       }
-      if (expanded) {
-        repProps.mode = MODE.TINY;
-      }
+     
 
       if (nodeIsLongString(item)) {
         repProps.member = {
