@@ -3754,14 +3754,14 @@ static bool IsCacheableSetPropCallScripted(NativeObject* obj,
   return setter.hasJitEntry();
 }
 
-static bool CanAttachSetter(JSContext* cx, jsbytecode* pc, HandleObject obj,
-                            HandleId id, MutableHandleNativeObject holder,
-                            MutableHandleShape propShape) {
+static bool CanAttachSetter(JSContext* cx, jsbytecode* pc, JSObject* obj,
+                            JS::PropertyKey id, NativeObject** holder,
+                            Shape** propShape) {
   // Don't attach a setter stub for ops like JSOp::InitElem.
   MOZ_ASSERT(IsPropertySetOp(JSOp(*pc)));
 
   PropertyResult prop;
-  if (!LookupPropertyPure(cx, obj, id, holder.address(), &prop)) {
+  if (!LookupPropertyPure(cx, obj, id, holder, &prop)) {
     return false;
   }
   auto* nobj = &obj->as<NativeObject>();
@@ -3770,9 +3770,9 @@ static bool CanAttachSetter(JSContext* cx, jsbytecode* pc, HandleObject obj,
     return false;
   }
 
-  propShape.set(prop.shape());
-  if (!IsCacheableSetPropCallScripted(nobj, holder, propShape) &&
-      !IsCacheableSetPropCallNative(nobj, holder, propShape)) {
+  *propShape = prop.shape();
+  if (!IsCacheableSetPropCallScripted(nobj, *holder, *propShape) &&
+      !IsCacheableSetPropCallNative(nobj, *holder, *propShape)) {
     return false;
   }
 
@@ -3812,12 +3812,12 @@ AttachDecision SetPropIRGenerator::tryAttachSetter(HandleObject obj,
                                                    ObjOperandId objId,
                                                    HandleId id,
                                                    ValOperandId rhsId) {
-  RootedNativeObject holder(cx_);
-  RootedShape propShape(cx_);
+  NativeObject* holder = nullptr;
+  Shape* propShape = nullptr;
   if (!CanAttachSetter(cx_, pc_, obj, id, &holder, &propShape)) {
     return AttachDecision::NoAction;
   }
-  auto nobj = obj.as<NativeObject>();
+  auto* nobj = &obj->as<NativeObject>();
 
   maybeEmitIdGuard(id);
 
@@ -4200,13 +4200,13 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyUnshadowed(
     ValOperandId rhsId) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
-  RootedObject proto(cx_, obj->staticPrototype());
+  JSObject* proto = obj->staticPrototype();
   if (!proto) {
     return AttachDecision::NoAction;
   }
 
-  RootedNativeObject holder(cx_);
-  RootedShape propShape(cx_);
+  NativeObject* holder = nullptr;
+  Shape* propShape = nullptr;
   if (!CanAttachSetter(cx_, pc_, proto, id, &holder, &propShape)) {
     return AttachDecision::NoAction;
   }
@@ -4265,8 +4265,8 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
     return AttachDecision::Attach;
   }
 
-  RootedNativeObject holder(cx_);
-  if (CanAttachSetter(cx_, pc_, expandoObj, id, &holder, &propShape)) {
+  NativeObject* holder = nullptr;
+  if (CanAttachSetter(cx_, pc_, expandoObj, id, &holder, propShape.address())) {
     auto* nativeExpandoObj = &expandoObj->as<NativeObject>();
 
     // Note that we don't actually use the expandoObjId here after the
