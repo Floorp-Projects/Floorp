@@ -771,17 +771,17 @@ dialog > .sync-engines-list + hbox {
 
 .sync-engine-bookmarks .checkbox-icon,
 .sync-engine-bookmarks.sync-engine-image {
-  list-style-image: url("chrome://browser/skin/preferences/bookmark.svg");
+  list-style-image: url("chrome://browser/skin/bookmark.svg");
 }
 
 .sync-engine-history .checkbox-icon,
 .sync-engine-history.sync-engine-image {
-  list-style-image: url("chrome://browser/skin/preferences/history.svg");
+  list-style-image: url("chrome://browser/skin/history.svg");
 }
 
 .sync-engine-tabs .checkbox-icon,
 .sync-engine-tabs.sync-engine-image {
-  list-style-image: url("chrome://browser/skin/preferences/tab.svg");
+  list-style-image: url("chrome://browser/skin/tab.svg");
 }
 
 .sync-engine-passwords .checkbox-icon,
@@ -791,17 +791,17 @@ dialog > .sync-engines-list + hbox {
 
 .sync-engine-addons .checkbox-icon,
 .sync-engine-addons.sync-engine-image {
-  list-style-image: url("chrome://browser/skin/preferences/extensions.svg");
+  list-style-image: url("chrome://mozapps/skin/extensions/extension.svg");
 }
 
 .sync-engine-prefs .checkbox-icon,
 .sync-engine-prefs.sync-engine-image {
-  list-style-image: url("chrome://browser/skin/preferences/preferences.svg");
+  list-style-image: url("chrome://global/skin/icons/settings.svg");
 }
 
 .sync-engine-addresses .checkbox-icon,
 .sync-engine-addresses.sync-engine-image {
-  list-style-image: url("chrome://browser/skin/preferences/formfill.svg");
+  list-style-image: url("chrome://formautofill/content/formfill-anchor.svg");
 }
 
 .sync-engine-creditcards .checkbox-icon,
