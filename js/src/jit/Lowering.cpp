@@ -297,10 +297,11 @@ void LIRGenerator::visitCreateInlinedArgumentsObject(
 }
 
 void LIRGenerator::visitGetInlinedArgument(MGetInlinedArgument* ins) {
-#if defined(JS_CODEGEN_X64)
-  // On x64, we do not support boxing a typed register in-place without
-  // using a scratch register, so the result register can't be the same
-  // as any of the inputs. Fortunately, x64 has registers to spare.
+#if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_MIPS64)
+  // On some 64-bit architectures, we don't support boxing a typed
+  // register in-place without using a scratch register, so the result
+  // register can't be the same as any of the inputs. Fortunately,
+  // those architectures have registers to spare.
   const bool useAtStart = false;
 #else
   const bool useAtStart = true;
