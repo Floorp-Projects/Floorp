@@ -171,10 +171,34 @@ Channel::ChannelImpl::ChannelImpl(const ChannelId& channel_id, Mode mode,
 Channel::ChannelImpl::ChannelImpl(int fd, Mode mode, Listener* listener)
     : factory_(this) {
   Init(mode, listener);
-  pipe_ = fd;
+  SetPipe(fd);
   waiting_connect_ = (MODE_SERVER == mode);
 
   EnqueueHelloMessage();
+}
+
+void Channel::ChannelImpl::SetPipe(int fd) {
+  pipe_ = fd;
+  pipe_buf_len_ = 0;
+  if (fd >= 0) {
+    int buf_len;
+    socklen_t optlen = sizeof(buf_len);
+    if (getsockopt(fd, SOL_SOCKET, SO_SNDBUF, &buf_len, &optlen) != 0) {
+      CHROMIUM_LOG(WARNING)
+          << "Unable to determine pipe buffer size: " << strerror(errno);
+      return;
+    }
+    CHECK(optlen == sizeof(buf_len));
+    CHECK(buf_len > 0);
+    pipe_buf_len_ = static_cast<unsigned>(buf_len);
+  }
+}
+
+bool Channel::ChannelImpl::PipeBufHasSpaceAfter(size_t already_written) {
+  // If the OS didn't tell us the buffer size for some reason, then
+  // don't apply this limitation on the amount we try to write.
+  return pipe_buf_len_ == 0 ||
+         static_cast<size_t>(pipe_buf_len_) > already_written;
 }
 
 void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
@@ -190,7 +214,7 @@ void Channel::ChannelImpl::Init(Mode mode, Listener* listener) {
   input_buf_ = mozilla::MakeUnique<char[]>(Channel::kReadBufferSize);
   input_cmsg_buf_ = mozilla::MakeUnique<char[]>(kControlBufferSize);
   server_listen_pipe_ = -1;
-  pipe_ = -1;
+  SetPipe(-1);
   client_pipe_ = -1;
   listener_ = listener;
   waiting_connect_ = true;
@@ -231,13 +255,13 @@ bool Channel::ChannelImpl::CreatePipe(Mode mode) {
       return false;
     }
 
-    pipe_ = pipe_fds[0];
+    SetPipe(pipe_fds[0]);
     client_pipe_ = pipe_fds[1];
   } else {
     static mozilla::Atomic<bool> consumed(false);
     CHECK(!consumed.exchange(true))
     << "child process main channel can be created only once";
-    pipe_ = gClientChannelFd;
+    SetPipe(gClientChannelFd);
     waiting_connect_ = false;
   }
 
@@ -636,9 +660,11 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
 
     // Store remaining segments to write into iovec.
     //
-    // Don't add more than kMaxIOVecSize to the iovec so that we avoid
-    // OS-dependent limits.
-    while (!iter.Done() && iov_count < kMaxIOVecSize) {
+    // Don't add more than kMaxIOVecSize iovecs so that we avoid
+    // OS-dependent limits.  Also, stop adding iovecs if we've already
+    // prepared to write at least the full buffer size.
+    while (!iter.Done() && iov_count < kMaxIOVecSize &&
+           PipeBufHasSpaceAfter(amt_to_write)) {
       char* data = iter.Data();
       size_t size = iter.RemainingInSegment();
 
@@ -864,7 +890,7 @@ void Channel::ChannelImpl::Close() {
   write_watcher_.StopWatchingFileDescriptor();
   if (pipe_ != -1) {
     IGNORE_EINTR(close(pipe_));
-    pipe_ = -1;
+    SetPipe(-1);
   }
   if (client_pipe_ != -1) {
     IGNORE_EINTR(close(client_pipe_));

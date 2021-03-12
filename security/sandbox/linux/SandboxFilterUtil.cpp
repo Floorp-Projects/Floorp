@@ -127,8 +127,7 @@ sandbox::bpf_dsl::ResultExpr SandboxPolicyBase::EvaluateSyscall(
 #ifdef __NR_socket
   // If there's no socketcall, then obviously there are separate syscalls.
 #  ifdef __NR_socketcall
-  // This could be memoized, but currently it's called at most once
-  // per process.
+  // This could be memoized....
   int fd = syscall(__NR_socket, AF_LOCAL, SOCK_STREAM, 0);
   if (fd < 0) {
     MOZ_DIAGNOSTIC_ASSERT(errno == ENOSYS);
