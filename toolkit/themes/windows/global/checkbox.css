@@ -8,62 +8,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-%include ../../shared/checkbox.inc.css
-
-@supports -moz-bool-pref("browser.proton.enabled") {
-/* ::::: checkbox ::::: */
-
-checkbox[native] {
-  appearance: auto;
-  -moz-default-appearance: checkbox-container;
-  -moz-box-align: center;
-  margin: 2px 4px;
-  padding-top: 1px;
-  padding-bottom: 1px;
-  padding-inline-start: 4px;
-  padding-inline-end: 2px;
-}
-
-.checkbox-icon[native][src] {
-  margin-inline-end: 2px;
-}
-
-.checkbox-label[native] {
-  margin: 0;
-}
-
-/* ..... focused state ..... */
-
-checkbox[native]:-moz-focusring > .checkbox-label-box {
-  outline: 1px dotted;
-}
-
-/* ..... disabled state ..... */
-
-checkbox[native][disabled="true"] {
-  color: GrayText;
-}
-
-@media (-moz-windows-classic) {
-  checkbox[native][disabled="true"] {
-    color: ThreeDShadow;
-    text-shadow: 1px 1px ThreeDHighlight;
-  }
-}
-
-/* ::::: checkmark image ::::: */
-
-.checkbox-check[native] {
-  appearance: auto;
-  -moz-default-appearance: checkbox;
-  -moz-box-align: center;
-  min-width: 13px;
-  min-height: 13px;
-  margin-inline-end: 3px;
-}
-} /** END Proton **/
-
-@supports not -moz-bool-pref("browser.proton.enabled") {
 /* ::::: checkbox ::::: */
 
 checkbox {
@@ -114,4 +58,3 @@ checkbox[disabled="true"] {
   min-height: 13px;
   margin-inline-end: 3px;
 }
-} /** END not Proton **/
