@@ -122,8 +122,6 @@ void nsLookAndFeel::RefreshImpl() {
   }
   mCaretBlinkTime = -1;
 
-  mCacheValidBits.reset();
-
   mInitialized = false;
 }
 
@@ -606,25 +604,14 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       break;
     }
     case IntID::PrimaryPointerCapabilities: {
-      if (!mCacheValidBits[PrimaryPointerCapabilitiesKind] &&
-          !XRE_IsContentProcess()) {
-        mPrimaryPointerCapabilities = static_cast<int32_t>(
-            widget::WinUtils::GetPrimaryPointerCapabilities());
-        mCacheValidBits[PrimaryPointerCapabilitiesKind] = true;
-      }
-
-      aResult = mPrimaryPointerCapabilities;
+      PointerCapabilities caps =
+          widget::WinUtils::GetPrimaryPointerCapabilities();
+      aResult = static_cast<int32_t>(caps);
       break;
     }
     case IntID::AllPointerCapabilities: {
-      if (!mCacheValidBits[AllPointerCapabilitiesKind] &&
-          !XRE_IsContentProcess()) {
-        mAllPointerCapabilities =
-            static_cast<int32_t>(widget::WinUtils::GetAllPointerCapabilities());
-        mCacheValidBits[AllPointerCapabilitiesKind] = true;
-      }
-
-      aResult = mAllPointerCapabilities;
+      PointerCapabilities caps = widget::WinUtils::GetAllPointerCapabilities();
+      aResult = static_cast<int32_t>(caps);
       break;
     }
     default:
@@ -848,14 +835,6 @@ LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
   lafInt.value() = GetInt(IntID::WindowsThemeIdentifier);
   cache.mInts().AppendElement(lafInt);
 
-  lafInt.id() = IntID::PrimaryPointerCapabilities;
-  lafInt.value() = GetInt(IntID::PrimaryPointerCapabilities);
-  cache.mInts().AppendElement(lafInt);
-
-  lafInt.id() = IntID::AllPointerCapabilities;
-  lafInt.value() = GetInt(IntID::AllPointerCapabilities);
-  cache.mInts().AppendElement(lafInt);
-
   for (size_t i = size_t(LookAndFeel::FontID::MINIMUM);
        i <= size_t(LookAndFeel::FontID::MAXIMUM); ++i) {
     cache.mFonts().AppendElement(GetLookAndFeelFont(LookAndFeel::FontID(i)));
@@ -882,12 +861,6 @@ void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
         break;
       case IntID::WindowsThemeIdentifier:
         mNativeThemeId = entry.value();
-        break;
-      case IntID::PrimaryPointerCapabilities:
-        mPrimaryPointerCapabilities = entry.value();
-        break;
-      case IntID::AllPointerCapabilities:
-        mAllPointerCapabilities = entry.value();
         break;
       default:
         MOZ_ASSERT_UNREACHABLE("Bogus Int ID in cache");
