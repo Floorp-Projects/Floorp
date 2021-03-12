@@ -28,7 +28,7 @@
    type of icon displayed. This rule must be defined before the others in order
    for its list-style-image to be overridden. */
 .notification-anchor-icon {
-  list-style-image: url(chrome://global/skin/icons/info-filled.svg);
+  list-style-image: url(chrome://browser/skin/notification-icons/default-info.svg);
 }
 
 /* INDIVIDUAL NOTIFICATIONS */
