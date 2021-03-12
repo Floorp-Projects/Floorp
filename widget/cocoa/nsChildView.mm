@@ -2865,7 +2865,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   // Only initiate horizontal tracking for gestures that have just begun --
   // otherwise a scroll to one side of the page can have a swipe tacked on
   // to it.
-  NSEventPhase eventPhase = nsCocoaUtils::EventPhase(anEvent);
+  NSEventPhase eventPhase = [anEvent phase];
   if ([anEvent type] != NSEventTypeScrollWheel || eventPhase != NSEventPhaseBegan ||
       ![anEvent hasPreciseScrollingDeltas]) {
     return false;
@@ -3219,7 +3219,7 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 }
 
 static PanGestureInput::PanGestureType PanGestureTypeForEvent(NSEvent* aEvent) {
-  switch (nsCocoaUtils::EventPhase(aEvent)) {
+  switch ([aEvent phase]) {
     case NSEventPhaseMayBegin:
       return PanGestureInput::PANGESTURE_MAYSTART;
     case NSEventPhaseCancelled:
@@ -3231,7 +3231,7 @@ static PanGestureInput::PanGestureType PanGestureTypeForEvent(NSEvent* aEvent) {
     case NSEventPhaseEnded:
       return PanGestureInput::PANGESTURE_END;
     case NSEventPhaseNone:
-      switch (nsCocoaUtils::EventMomentumPhase(aEvent)) {
+      switch ([aEvent momentumPhase]) {
         case NSEventPhaseBegan:
           return PanGestureInput::PANGESTURE_MOMENTUMSTART;
         case NSEventPhaseChanged:
@@ -3263,8 +3263,8 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
     // Starting with 10.12 however, pixel scroll events no longer accumulate
     // deltaX and deltaY; they just report floating point values for every
     // single event. So we need to do our own accumulation.
-    return PanGestureInput::GetIntegerDeltaForEvent(
-        (nsCocoaUtils::EventPhase(aEvent) == NSEventPhaseBegan), [aEvent deltaX], [aEvent deltaY]);
+    return PanGestureInput::GetIntegerDeltaForEvent([aEvent phase] == NSEventPhaseBegan,
+                                                    [aEvent deltaX], [aEvent deltaY]);
   }
 
   // For line scrolls, or pre-10.12, just use the rounded up value of deltaX / deltaY.
@@ -3286,7 +3286,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
     return;
   }
 
-  NSEventPhase phase = nsCocoaUtils::EventPhase(theEvent);
+  NSEventPhase phase = [theEvent phase];
   // Fire eWheelOperationStart/End events when 2 fingers touch/release the
   // touchpad.
   if (phase & NSEventPhaseMayBegin) {
