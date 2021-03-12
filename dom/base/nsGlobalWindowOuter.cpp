@@ -5241,7 +5241,12 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
   if (docToPrint->IsStaticDocument() &&
       (aIsPreview == IsPreview::Yes ||
        StaticPrefs::print_tab_modal_enabled())) {
-    MOZ_DIAGNOSTIC_ASSERT(aForWindowDotPrint == IsForWindowDotPrint::No);
+    if (aForWindowDotPrint == IsForWindowDotPrint::Yes) {
+      aError.ThrowNotSupportedError(
+          "Calling print() from a print preview is unsupported, did you intend "
+          "to call printPreview() instead?");
+      return nullptr;
+    }
     // We're already a print preview window, just reuse our browsing context /
     // content viewer.
     bc = sourceBC;
