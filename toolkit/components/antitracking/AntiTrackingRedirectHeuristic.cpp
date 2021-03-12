@@ -31,91 +31,139 @@ namespace mozilla {
 
 namespace {
 
-bool ShouldRedirectHeuristicApplyETP(nsIChannel* aOldChannel, nsIURI* aOldURI,
-                                     nsIPrincipal* aOldPrincipal,
-                                     nsIChannel* aNewChannel, nsIURI* aNewURI) {
-  nsCOMPtr<nsIClassifiedChannel> classifiedOldChannel =
+// The helper function to check if we need to check the redirect heuristic for
+// ETP later when we know the classification flags of the new channel. This
+// check is from the perspective of the old channel. We don't check for the new
+// channel because the classification flags are not ready yet when we call this
+// function.
+bool ShouldCheckRedirectHeuristicETP(nsIChannel* aOldChannel, nsIURI* aOldURI,
+                                     nsIPrincipal* aOldPrincipal) {
+  nsCOMPtr<nsIClassifiedChannel> oldClassifiedChannel =
       do_QueryInterface(aOldChannel);
-  nsCOMPtr<nsIClassifiedChannel> classifiedNewChannel =
-      do_QueryInterface(aNewChannel);
-  if (!classifiedOldChannel || !classifiedNewChannel) {
-    LOG_SPEC2(("Ignoring redirect for %s to %s because there is not "
-               "nsIClassifiedChannel interface",
-               _spec1, _spec2),
-              aOldURI, aNewURI);
+
+  if (!oldClassifiedChannel) {
+    LOG_SPEC(("Ignoring the redirect from %s because there is no "
+              "nsIClassifiedChannel interface",
+              _spec),
+             aOldURI);
     return false;
   }
 
   nsCOMPtr<nsILoadInfo> oldLoadInfo = aOldChannel->LoadInfo();
   MOZ_ASSERT(oldLoadInfo);
 
-  nsCOMPtr<nsILoadInfo> newLoadInfo = aNewChannel->LoadInfo();
-  MOZ_ASSERT(newLoadInfo);
-
   bool allowedByPreviousRedirect =
       oldLoadInfo->GetAllowListFutureDocumentsCreatedFromThisRedirectChain();
 
-  // We're looking at the first-party classification flags because we're
-  // interested in first-party redirects.
-  uint32_t newClassificationFlags =
-      classifiedNewChannel->GetFirstPartyClassificationFlags();
-
-  if (net::UrlClassifierCommon::IsTrackingClassificationFlag(
-          newClassificationFlags)) {
-    // This is not a tracking -> non-tracking redirect.
-    LOG_SPEC2(("Redirect for %s to %s because it's not tracking to "
-               "non-tracking. Part of a chain of granted redirects: %d",
-               _spec1, _spec2, allowedByPreviousRedirect),
-              aOldURI, aNewURI);
-    newLoadInfo->SetAllowListFutureDocumentsCreatedFromThisRedirectChain(
-        allowedByPreviousRedirect);
-    return false;
-  }
-
-  if (!ContentBlockingUserInteraction::Exists(aOldPrincipal)) {
-    LOG_SPEC2(("Ignoring redirect for %s to %s because no user-interaction on "
-               "tracker",
-               _spec1, _spec2),
-              aOldURI, aNewURI);
-    return false;
-  }
-
   uint32_t oldClassificationFlags =
-      classifiedOldChannel->GetFirstPartyClassificationFlags();
+      oldClassifiedChannel->GetFirstPartyClassificationFlags();
 
+  // We will skip this check if we have granted storage access before so that we
+  // can grant the storage access to the rest of the chain.
   if (!net::UrlClassifierCommon::IsTrackingClassificationFlag(
           oldClassificationFlags) &&
       !allowedByPreviousRedirect) {
     // This is not a tracking -> non-tracking redirect.
-    LOG_SPEC2(
-        ("Redirect for %s to %s because it's not tracking to non-tracking.",
-         _spec1, _spec2),
-        aOldURI, aNewURI);
+    LOG_SPEC(("Ignoring the redirect from %s because it's not tracking to "
+              "non-tracking.",
+              _spec),
+             aOldURI);
     return false;
   }
 
-  return true;
-}
-
-bool ShouldRedirectHeuristicApplyRejectForeign(nsIChannel* aOldChannel,
-                                               nsIURI* aOldURI,
-                                               nsIPrincipal* aOldPrincipal,
-                                               nsIChannel* aNewChannel,
-                                               nsIURI* aNewURI) {
   if (!ContentBlockingUserInteraction::Exists(aOldPrincipal)) {
-    LOG_SPEC2(("Ignoring redirect for %s to %s because no user-interaction on "
-               "tracker",
-               _spec1, _spec2),
-              aOldURI, aNewURI);
+    LOG_SPEC(("Ignoring redirect for %s because no user-interaction on "
+              "tracker",
+              _spec),
+             aOldURI);
     return false;
   }
 
   return true;
 }
 
-bool ShouldRedirectHeuristicApply(nsIChannel* aOldChannel, nsIURI* aOldURI,
-                                  nsIPrincipal* aOldPrincipal,
-                                  nsIChannel* aNewChannel, nsIURI* aNewURI) {
+// The helper function to decide and set the storage access after we know the
+// classification flags of the new channel.
+bool ShouldRedirectHeuristicApplyETP(nsIChannel* aNewChannel, nsIURI* aNewURI) {
+  nsCOMPtr<nsIClassifiedChannel> newClassifiedChannel =
+      do_QueryInterface(aNewChannel);
+
+  if (!aNewChannel) {
+    LOG_SPEC(("Ignoring the redirect to %s because there is no "
+              "nsIClassifiedChannel interface",
+              _spec),
+             aNewURI);
+    return false;
+  }
+
+  // We're looking at the first-party classification flags because we're
+  // interested in first-party redirects.
+  uint32_t newClassificationFlags =
+      newClassifiedChannel->GetFirstPartyClassificationFlags();
+
+  if (net::UrlClassifierCommon::IsTrackingClassificationFlag(
+          newClassificationFlags)) {
+    // This is not a tracking -> non-tracking redirect.
+    LOG_SPEC(("Ignoring the redirect to %s because it's not tracking to "
+              "non-tracking.",
+              _spec),
+             aNewURI);
+    return false;
+  }
+
+  return true;
+}
+
+// The helper function to check if we need to check the redirect heuristic for
+// RejectForeign later from the old channel perspective.
+bool ShouldCheckRedirectHeuristicRejectForeign(nsIChannel* aOldChannel,
+                                               nsIURI* aOldURI,
+                                               nsIPrincipal* aOldPrincipal) {
+  if (!ContentBlockingUserInteraction::Exists(aOldPrincipal)) {
+    LOG_SPEC(("Ignoring redirect from %s because no user-interaction on "
+              "old origin",
+              _spec),
+             aOldURI);
+    return false;
+  }
+
+  return true;
+}
+
+bool ShouldRedirectHeuristicApply(nsIChannel* aNewChannel, nsIURI* aNewURI) {
+  nsCOMPtr<nsILoadInfo> newLoadInfo = aNewChannel->LoadInfo();
+  MOZ_ASSERT(newLoadInfo);
+
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+
+  nsresult rv =
+      newLoadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("Can't obtain the cookieJarSetting from the channel"));
+    return false;
+  }
+
+  uint32_t cookieBehavior = cookieJarSettings->GetCookieBehavior();
+  if (cookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
+      cookieBehavior ==
+          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
+    return ShouldRedirectHeuristicApplyETP(aNewChannel, aNewURI);
+  }
+
+  // We will grant the storage access regardless the new channel is a tracker or
+  // not for RejectForeign.
+  if (cookieBehavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN &&
+      StaticPrefs::network_cookie_rejectForeignWithExceptions_enabled()) {
+    return true;
+  }
+
+  LOG((
+      "Heuristic doesn't apply because the cookieBehavior doesn't require it"));
+  return false;
+}
+
+bool ShouldCheckRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
+                                  nsIPrincipal* aOldPrincipal) {
   nsCOMPtr<nsILoadInfo> oldLoadInfo = aOldChannel->LoadInfo();
   MOZ_ASSERT(oldLoadInfo);
 
@@ -124,7 +172,7 @@ bool ShouldRedirectHeuristicApply(nsIChannel* aOldChannel, nsIURI* aOldURI,
   nsresult rv =
       oldLoadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    LOG(("Can't obtain the principal from the redirect chain"));
+    LOG(("Can't obtain the cookieJarSettings from the old channel"));
     return false;
   }
 
@@ -132,31 +180,31 @@ bool ShouldRedirectHeuristicApply(nsIChannel* aOldChannel, nsIURI* aOldURI,
   if (cookieBehavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
       cookieBehavior ==
           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
-    return ShouldRedirectHeuristicApplyETP(aOldChannel, aOldURI, aOldPrincipal,
-                                           aNewChannel, aNewURI);
+    return ShouldCheckRedirectHeuristicETP(aOldChannel, aOldURI, aOldPrincipal);
   }
 
   if (cookieBehavior == nsICookieService::BEHAVIOR_REJECT_FOREIGN &&
       StaticPrefs::network_cookie_rejectForeignWithExceptions_enabled()) {
-    return ShouldRedirectHeuristicApplyRejectForeign(
-        aOldChannel, aOldURI, aOldPrincipal, aNewChannel, aNewURI);
+    return ShouldCheckRedirectHeuristicRejectForeign(aOldChannel, aOldURI,
+                                                     aOldPrincipal);
   }
 
-  LOG((
-      "Heuristic doesn't apply because the cookieBehavior doesn't require it"));
+  LOG(
+      ("Heuristic doesn't be needed because the cookieBehavior doesn't require "
+       "it"));
   return false;
 }
 
 }  // namespace
 
-void AntiTrackingRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
-                                   nsIChannel* aNewChannel, nsIURI* aNewURI) {
+void PrepareForAntiTrackingRedirectHeuristic(nsIChannel* aOldChannel,
+                                             nsIURI* aOldURI,
+                                             nsIChannel* aNewChannel,
+                                             nsIURI* aNewURI) {
   MOZ_ASSERT(aOldChannel);
   MOZ_ASSERT(aOldURI);
   MOZ_ASSERT(aNewChannel);
   MOZ_ASSERT(aNewURI);
-
-  nsresult rv;
 
   // This heuristic works only on the parent process.
   if (!XRE_IsParentProcess()) {
@@ -177,13 +225,43 @@ void AntiTrackingRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
     return;
   }
 
-  LOG_SPEC(("Checking redirect-heuristic for %s", _spec), aOldURI);
+  LOG_SPEC2(("Preparing redirect-heuristic for the redirect %s -> %s", _spec1,
+             _spec2),
+            aOldURI, aNewURI);
 
   nsCOMPtr<nsILoadInfo> oldLoadInfo = aOldChannel->LoadInfo();
   MOZ_ASSERT(oldLoadInfo);
 
   nsCOMPtr<nsILoadInfo> newLoadInfo = aNewChannel->LoadInfo();
   MOZ_ASSERT(newLoadInfo);
+
+  // We need to clear the flag first because the new loadInfo was cloned from
+  // the old loadInfo.
+  newLoadInfo->SetNeedForCheckingAntiTrackingHeuristic(false);
+
+  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
+  nsresult rv =
+      oldLoadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("Can't get the cookieJarSettings"));
+    return;
+  }
+
+  int32_t behavior = cookieJarSettings->GetCookieBehavior();
+
+  if (!cookieJarSettings->GetRejectThirdPartyContexts()) {
+    LOG(
+        ("Disabled by network.cookie.cookieBehavior pref (%d), bailing out "
+         "early",
+         behavior));
+    return;
+  }
+
+  MOZ_ASSERT(
+      behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
+      behavior ==
+          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN ||
+      net::CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior));
 
   ExtContentPolicyType contentType =
       oldLoadInfo->GetExternalContentPolicyType();
@@ -192,6 +270,10 @@ void AntiTrackingRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
     LOG_SPEC(("Ignoring redirect for %s because it's not a document", _spec),
              aOldURI);
     // We care about document redirects only.
+    return;
+  }
+
+  if (ContentBlockingAllowList::Check(newChannel)) {
     return;
   }
 
@@ -220,8 +302,78 @@ void AntiTrackingRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
     }
   }
 
-  if (!ShouldRedirectHeuristicApply(aOldChannel, aOldURI, oldPrincipal,
-                                    aNewChannel, aNewURI)) {
+  newLoadInfo->SetNeedForCheckingAntiTrackingHeuristic(
+      ShouldCheckRedirectHeuristic(aOldChannel, aOldURI, oldPrincipal));
+}
+
+void FinishAntiTrackingRedirectHeuristic(nsIChannel* aNewChannel,
+                                         nsIURI* aNewURI) {
+  MOZ_ASSERT(aNewChannel);
+  MOZ_ASSERT(aNewURI);
+
+  // This heuristic works only on the parent process.
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+
+  if (!StaticPrefs::privacy_restrict3rdpartystorage_heuristic_redirect()) {
+    return;
+  }
+
+  nsCOMPtr<nsIHttpChannel> newChannel = do_QueryInterface(aNewChannel);
+  if (!newChannel) {
+    return;
+  }
+
+  LOG_SPEC(("Finishing redirect-heuristic for the redirect to %s", _spec),
+           aNewURI);
+
+  nsCOMPtr<nsILoadInfo> newLoadInfo = newChannel->LoadInfo();
+  MOZ_ASSERT(newLoadInfo);
+
+  // Bailing out early if there is no need to do the heuristic.
+  if (!newLoadInfo->GetNeedForCheckingAntiTrackingHeuristic()) {
+    return;
+  }
+
+  if (!ShouldRedirectHeuristicApply(aNewChannel, aNewURI)) {
+    return;
+  }
+
+  nsIScriptSecurityManager* ssm =
+      nsScriptSecurityManager::GetScriptSecurityManager();
+  MOZ_ASSERT(ssm);
+
+  const nsTArray<nsCOMPtr<nsIRedirectHistoryEntry>>& chain =
+      newLoadInfo->RedirectChain();
+
+  if (chain.IsEmpty()) {
+    LOG(("Can't obtain the redirect chain"));
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> oldPrincipal;
+  uint32_t idx =
+      newLoadInfo->GetAllowListFutureDocumentsCreatedFromThisRedirectChain()
+          ? 0
+          : chain.Length() - 1;
+
+  nsresult rv = chain[idx]->GetPrincipal(getter_AddRefs(oldPrincipal));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("Can't obtain the principal from the redirect chain"));
+    return;
+  }
+
+  nsCOMPtr<nsIPrincipal> newPrincipal;
+  rv =
+      ssm->GetChannelResultPrincipal(aNewChannel, getter_AddRefs(newPrincipal));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    LOG(("Can't obtain the principal from the new channel"));
+    return;
+  }
+
+  if (oldPrincipal->Equals(newPrincipal)) {
+    LOG(("No permission needed for same principals."));
     return;
   }
 
@@ -239,35 +391,7 @@ void AntiTrackingRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
     return;
   }
 
-  LOG(("Adding a first-party storage exception for %s...",
-       PromiseFlatCString(newOrigin).get()));
-
-  nsCOMPtr<nsICookieJarSettings> cookieJarSettings;
-  rv = oldLoadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    LOG(("Can't get the cookieJarSettings"));
-    return;
-  }
-
-  int32_t behavior = cookieJarSettings->GetCookieBehavior();
-
-  if (!cookieJarSettings->GetRejectThirdPartyContexts()) {
-    LOG(
-        ("Disabled by network.cookie.cookieBehavior pref (%d), bailing out "
-         "early",
-         behavior));
-    return;
-  }
-
-  MOZ_ASSERT(
-      behavior == nsICookieService::BEHAVIOR_REJECT_TRACKER ||
-      behavior ==
-          nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN ||
-      net::CookieJarSettings::IsRejectThirdPartyWithExceptions(behavior));
-
-  if (ContentBlockingAllowList::Check(newChannel)) {
-    return;
-  }
+  LOG(("Adding a first-party storage exception for %s...", newOrigin.get()));
 
   LOG(("Saving the permission: oldOrigin=%s, grantedOrigin=%s", oldOrigin.get(),
        newOrigin.get()));
@@ -288,14 +412,6 @@ void AntiTrackingRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
     nsContentUtils::ReportToConsoleByWindowID(
         errorText, nsIScriptError::warningFlag, ANTITRACKING_CONSOLE_CATEGORY,
         innerWindowID);
-  }
-
-  nsCOMPtr<nsIPrincipal> newPrincipal;
-  rv =
-      ssm->GetChannelResultPrincipal(aNewChannel, getter_AddRefs(newPrincipal));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    LOG(("Can't obtain the principal from the redirected"));
-    return;
   }
 
   Telemetry::AccumulateCategorical(

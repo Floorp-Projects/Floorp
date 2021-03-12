@@ -55,6 +55,7 @@
 #include "nsThreadUtils.h"
 #include "GeckoProfiler.h"
 #include "nsIConsoleService.h"
+#include "mozilla/AntiTrackingRedirectHeuristic.h"
 #include "mozilla/AntiTrackingUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/BasePrincipal.h"
@@ -6439,6 +6440,13 @@ nsresult nsHttpChannel::AsyncOpenFinal(TimeStamp aTimeStamp) {
   RefPtr<nsHttpChannel> self = this;
   bool willCallback = NS_SUCCEEDED(
       AsyncUrlChannelClassifier::CheckChannel(this, [self]() -> void {
+        nsCOMPtr<nsIURI> uri;
+        self->GetURI(getter_AddRefs(uri));
+        MOZ_ASSERT(uri);
+
+        // Finish the AntiTracking Heuristic before BeginConnect().
+        FinishAntiTrackingRedirectHeuristic(self, uri);
+
         nsresult rv = self->MaybeResolveProxyAndBeginConnect();
         if (NS_FAILED(rv)) {
           // Since this error is thrown asynchronously so that the caller
