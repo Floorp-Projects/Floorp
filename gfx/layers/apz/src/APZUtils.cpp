@@ -7,6 +7,7 @@
 #include "mozilla/layers/APZUtils.h"
 
 #include "mozilla/StaticPrefs_apz.h"
+#include "mozilla/StaticPrefs_layers.h"
 
 namespace mozilla {
 namespace layers {
@@ -94,6 +95,18 @@ bool AboutToCheckerboard(const FrameMetrics& aPaintedMetrics,
   visible = visible.Intersect(aPaintedMetrics.GetScrollableRect());
 
   return !painted.Contains(visible);
+}
+
+bool ShouldUseProgressivePaint() {
+  // The mutexes required for progressive painting pose a security risk
+  // on sandboxed platforms. Additionally, Android is the only platform
+  // that supports progressive painting, so if on a sandboxed platform
+  // or not on Android, we should not use progressive painting.
+#if defined(MOZ_SANDBOX) || !defined(MOZ_WIDGET_ANDROID)
+  return false;
+#else
+  return StaticPrefs::layers_progressive_paint_DoNotUseDirectly();
+#endif
 }
 
 }  // namespace apz
