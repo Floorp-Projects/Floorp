@@ -12,8 +12,22 @@ class nsIURI;
 
 namespace mozilla {
 
-void AntiTrackingRedirectHeuristic(nsIChannel* aOldChannel, nsIURI* aOldURI,
-                                   nsIChannel* aNewChannel, nsIURI* aNewURI);
+// This function will be called when we know we are about to perform a http
+// redirect. It will check if we need to perform the AntiTracking redirect
+// heuristic from the old channel perspective. We cannot know the classification
+// flags of the new channel at the point. So, we will save the result in the
+// loadInfo in order to finish the heuristic once the classification flags is
+// ready.
+void PrepareForAntiTrackingRedirectHeuristic(nsIChannel* aOldChannel,
+                                             nsIURI* aOldURI,
+                                             nsIChannel* aNewChannel,
+                                             nsIURI* aNewURI);
+
+// This function will be called once the classification flags of the new channel
+// is known. It will check and perform the AntiTracking redirect heuristic
+// according to the flags and the result from previous preparation.
+void FinishAntiTrackingRedirectHeuristic(nsIChannel* aNewChannel,
+                                         nsIURI* aNewURI);
 
 }  // namespace mozilla
 
