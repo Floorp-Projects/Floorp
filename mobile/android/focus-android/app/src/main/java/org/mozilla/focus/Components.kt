@@ -34,7 +34,8 @@ import org.mozilla.focus.utils.Settings
  * Helper object for lazily initializing components.
  */
 class Components(
-    context: Context
+    context: Context,
+    private val engineOverride: Engine? = null
 ) {
     val engineDefaultSettings by lazy {
         val settings = Settings.getInstance(context)
@@ -49,7 +50,7 @@ class Components(
     }
 
     val engine: Engine by lazy {
-        EngineProvider.createEngine(context, engineDefaultSettings).apply {
+        engineOverride ?: EngineProvider.createEngine(context, engineDefaultSettings).apply {
             Settings.getInstance(context).setupSafeBrowsing(this)
         }
     }

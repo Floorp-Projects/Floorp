@@ -25,12 +25,12 @@ import org.mozilla.focus.utils.AdjustHelper
 import org.mozilla.focus.utils.AppConstants
 import kotlin.coroutines.CoroutineContext
 
-class FocusApplication : LocaleAwareApplication(), CoroutineScope {
+open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
     private var job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + Dispatchers.Main
 
-    val components: Components by lazy { Components(this) }
+    open val components: Components by lazy { Components(this) }
 
     var visibilityLifeCycleCallback: VisibilityLifeCycleCallback? = null
         private set
