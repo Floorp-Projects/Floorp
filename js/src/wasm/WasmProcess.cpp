@@ -24,6 +24,7 @@
 #include "gc/Memory.h"
 #include "threading/ExclusiveData.h"
 #include "vm/MutexIDs.h"
+#include "vm/Runtime.h"
 #ifdef ENABLE_WASM_CRANELIFT
 #  include "wasm/cranelift/clifapi.h"
 #endif
