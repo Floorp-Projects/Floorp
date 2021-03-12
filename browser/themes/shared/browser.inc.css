@@ -133,9 +133,9 @@
 }
 
 @supports -moz-bool-pref("browser.proton.toolbar.enabled") {
-/*** Adds padding to beginning of toolbar while making that space click the first button ***/
-#nav-bar-customization-target > toolbarbutton:first-child,
-#nav-bar-customization-target > toolbaritem:first-child > toolbarbutton {
+/* Add space to beginning of toolbar and make that space click the first <toolbarbutton> */
+#nav-bar-customization-target > :is(toolbarbutton, toolbaritem):first-child,
+#nav-bar-customization-target > toolbarpaletteitem:first-child > :is(toolbarbutton, toolbaritem) {
   padding-inline-start: var(--toolbar-start-end-padding);
 }
 } /*** END proton ***/
