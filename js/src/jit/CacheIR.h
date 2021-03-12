@@ -27,6 +27,7 @@ enum class JSOp : uint8_t;
 
 namespace js {
 
+class ProxyObject;
 enum class ReferenceType;
 enum class UnaryMathFunction : uint8_t;
 
@@ -1214,7 +1215,7 @@ class MOZ_RAII IRGenerator {
   IntPtrOperandId guardToIntPtrIndex(const Value& index, ValOperandId indexId,
                                      bool supportOOB);
 
-  ObjOperandId guardDOMProxyExpandoObjectAndShape(JSObject* obj,
+  ObjOperandId guardDOMProxyExpandoObjectAndShape(ProxyObject* obj,
                                                   ObjOperandId objId,
                                                   const Value& expandoVal,
                                                   JSObject* expandoObj);
@@ -1270,13 +1271,15 @@ class MOZ_RAII GetPropIRGenerator : public IRGenerator {
                                                   ObjOperandId objId,
                                                   HandleId id);
 
-  AttachDecision tryAttachGenericProxy(HandleObject obj, ObjOperandId objId,
-                                       HandleId id, bool handleDOMProxies);
-  AttachDecision tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objId,
-                                          HandleId id, ValOperandId receiverId);
-  AttachDecision tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId,
-                                           HandleId id);
-  AttachDecision tryAttachDOMProxyUnshadowed(HandleObject obj,
+  AttachDecision tryAttachGenericProxy(Handle<ProxyObject*> obj,
+                                       ObjOperandId objId, HandleId id,
+                                       bool handleDOMProxies);
+  AttachDecision tryAttachDOMProxyExpando(Handle<ProxyObject*> obj,
+                                          ObjOperandId objId, HandleId id,
+                                          ValOperandId receiverId);
+  AttachDecision tryAttachDOMProxyShadowed(Handle<ProxyObject*> obj,
+                                           ObjOperandId objId, HandleId id);
+  AttachDecision tryAttachDOMProxyUnshadowed(Handle<ProxyObject*> obj,
                                              ObjOperandId objId, HandleId id,
                                              ValOperandId receiverId);
   AttachDecision tryAttachProxy(HandleObject obj, ObjOperandId objId,
@@ -1444,16 +1447,19 @@ class MOZ_RAII SetPropIRGenerator : public IRGenerator {
                                                    Int32OperandId indexId,
                                                    ValOperandId rhsId);
 
-  AttachDecision tryAttachGenericProxy(HandleObject obj, ObjOperandId objId,
-                                       HandleId id, ValOperandId rhsId,
+  AttachDecision tryAttachGenericProxy(Handle<ProxyObject*> obj,
+                                       ObjOperandId objId, HandleId id,
+                                       ValOperandId rhsId,
                                        bool handleDOMProxies);
-  AttachDecision tryAttachDOMProxyShadowed(HandleObject obj, ObjOperandId objId,
-                                           HandleId id, ValOperandId rhsId);
-  AttachDecision tryAttachDOMProxyUnshadowed(HandleObject obj,
+  AttachDecision tryAttachDOMProxyShadowed(Handle<ProxyObject*> obj,
+                                           ObjOperandId objId, HandleId id,
+                                           ValOperandId rhsId);
+  AttachDecision tryAttachDOMProxyUnshadowed(Handle<ProxyObject*> obj,
                                              ObjOperandId objId, HandleId id,
                                              ValOperandId rhsId);
-  AttachDecision tryAttachDOMProxyExpando(HandleObject obj, ObjOperandId objId,
-                                          HandleId id, ValOperandId rhsId);
+  AttachDecision tryAttachDOMProxyExpando(Handle<ProxyObject*> obj,
+                                          ObjOperandId objId, HandleId id,
+                                          ValOperandId rhsId);
   AttachDecision tryAttachProxy(HandleObject obj, ObjOperandId objId,
                                 HandleId id, ValOperandId rhsId);
   AttachDecision tryAttachProxyElement(HandleObject obj, ObjOperandId objId,
