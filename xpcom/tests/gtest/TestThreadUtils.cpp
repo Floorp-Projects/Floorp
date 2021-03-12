@@ -798,7 +798,7 @@ TEST(ThreadUtils, IdleTaskRunner)
         cnt1++;
         return true;
       },
-      "runner1", 10, 3, true, nullptr);
+      "runner1", 0, 10, 3, true, nullptr);
 
   // Non-repeating but callback always return false so it's still repeating.
   int cnt2 = 0;
@@ -807,7 +807,7 @@ TEST(ThreadUtils, IdleTaskRunner)
         cnt2++;
         return false;
       },
-      "runner2", 10, 3, false, nullptr);
+      "runner2", 0, 10, 3, false, nullptr);
 
   // Repeating until cnt3 >= 2 by returning 'true' in MayStopProcessing
   // callback. The strategy is to stop repeating as early as possible so that we
@@ -818,7 +818,7 @@ TEST(ThreadUtils, IdleTaskRunner)
         cnt3++;
         return true;
       },
-      "runner3", 10, 3, true, [&cnt3] { return cnt3 >= 2; });
+      "runner3", 0, 10, 3, true, [&cnt3] { return cnt3 >= 2; });
 
   // Non-repeating can callback return true so the callback will
   // be only run once.
@@ -828,7 +828,7 @@ TEST(ThreadUtils, IdleTaskRunner)
         cnt4++;
         return true;
       },
-      "runner4", 10, 3, false, nullptr);
+      "runner4", 0, 10, 3, false, nullptr);
 
   // Firstly we wait until the two repeating tasks reach their limits.
   MOZ_ALWAYS_TRUE(SpinEventLoopUntil([&]() { return cnt1 >= 100; }));
