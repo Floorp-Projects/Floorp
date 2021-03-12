@@ -3316,7 +3316,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
       ViewAs<ScreenPixel>([self convertWindowCoordinatesRoundDown:locationInWindow],
                           PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
 
-  bool usePreciseDeltas = nsCocoaUtils::HasPreciseScrollingDeltas(theEvent) &&
+  bool usePreciseDeltas = [theEvent hasPreciseScrollingDeltas] &&
                           Preferences::GetBool("mousewheel.enable_pixel_scrolling", true);
   bool hasPhaseInformation = nsCocoaUtils::EventHasPhaseInformation(theEvent);
 
@@ -3330,8 +3330,8 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
 
   ScreenPoint preciseDelta;
   if (usePreciseDeltas) {
-    CGFloat pixelDeltaX = 0, pixelDeltaY = 0;
-    nsCocoaUtils::GetScrollingDeltas(theEvent, &pixelDeltaX, &pixelDeltaY);
+    CGFloat pixelDeltaX = [theEvent scrollingDeltaX];
+    CGFloat pixelDeltaY = [theEvent scrollingDeltaY];
     double scale = geckoChildDeathGrip->BackingScaleFactor();
     preciseDelta = ScreenPoint(-pixelDeltaX * scale, -pixelDeltaY * scale);
   }
@@ -3448,7 +3448,7 @@ static gfx::IntPoint GetIntegerDeltaForEvent(NSEvent* aEvent) {
                        toGeckoEvent:(WidgetWheelEvent*)outWheelEvent {
   [self convertCocoaMouseEvent:aMouseEvent toGeckoEvent:outWheelEvent];
 
-  bool usePreciseDeltas = nsCocoaUtils::HasPreciseScrollingDeltas(aMouseEvent) &&
+  bool usePreciseDeltas = [aMouseEvent hasPreciseScrollingDeltas] &&
                           Preferences::GetBool("mousewheel.enable_pixel_scrolling", true);
 
   outWheelEvent->mDeltaMode = usePreciseDeltas ? dom::WheelEvent_Binding::DOM_DELTA_PIXEL

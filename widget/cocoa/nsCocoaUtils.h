@@ -216,13 +216,7 @@ class nsCocoaUtils {
   // the event was originally targeted at is still alive!
   static NSPoint EventLocationForWindow(NSEvent* anEvent, NSWindow* aWindow);
 
-  // Compatibility wrappers for the -[NSEvent phase], -[NSEvent momentumPhase],
-  // -[NSEvent hasPreciseScrollingDeltas] and -[NSEvent scrollingDeltaX/Y] APIs
-  // that became availaible starting with the 10.7 SDK.
-  // All of these can be removed once we drop support for 10.6.
   static BOOL IsMomentumScrollEvent(NSEvent* aEvent);
-  static BOOL HasPreciseScrollingDeltas(NSEvent* aEvent);
-  static void GetScrollingDeltas(NSEvent* aEvent, CGFloat* aOutDeltaX, CGFloat* aOutDeltaY);
   static BOOL EventHasPhaseInformation(NSEvent* aEvent);
 
   // Hides the Menu bar and the Dock. Multiple hide/show requests can be nested.
