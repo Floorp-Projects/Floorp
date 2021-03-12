@@ -224,7 +224,7 @@ class BaseAction {
    * other methods may be called on this method, and all relevant
    * recipes will be assumed to have been seen.
    */
-  async finalize(options) {
+  async finalize() {
     // It's possible that no recipes used this action, so processRecipe()
     // was never called. In that case, we should ensure that we call
     // _preExecute() here.
@@ -237,7 +237,7 @@ class BaseAction {
       }
       case BaseAction.STATE_READY: {
         try {
-          await this._finalize(options);
+          await this._finalize();
           status = Uptake.ACTION_SUCCESS;
         } catch (err) {
           status = Uptake.ACTION_POST_EXECUTION_ERROR;
@@ -284,7 +284,7 @@ class BaseAction {
    * here. It will be executed once after all recipes have been
    * processed.
    */
-  async _finalize(_options = {}) {
+  async _finalize() {
     // Does nothing, may be overridden
   }
 }

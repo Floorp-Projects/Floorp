@@ -342,9 +342,7 @@ var RecipeRunner = {
         }
       }
 
-      await actionsManager.finalize({
-        noRecipes: !recipesAndSignatures.length,
-      });
+      await actionsManager.finalize();
 
       await Uptake.reportRunner(Uptake.RUNNER_SUCCESS);
       Services.obs.notifyObservers(null, "recipe-runner:end");
