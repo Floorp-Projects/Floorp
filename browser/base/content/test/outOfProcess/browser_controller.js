@@ -87,7 +87,12 @@ add_task(async function test_controllers_subframes() {
         "input focused"
       );
     });
-    checkCommandState("step " + stepNum + " input focused", false, false, false);
+    checkCommandState(
+      "step " + stepNum + " input focused",
+      false,
+      false,
+      false
+    );
 
     // Type into the textbox.
     await keyAndUpdate("a", {}, 1);
