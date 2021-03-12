@@ -29,11 +29,16 @@ import androidx.collection.ArraySet;
 import androidx.collection.SimpleArrayMap;
 import android.util.Log;
 
+import java.util.UUID;
+
 
 public final class GeckoProcessManager extends IProcessManager.Stub {
     private static final String LOGTAG = "GeckoProcessManager";
     private static final GeckoProcessManager INSTANCE = new GeckoProcessManager();
     private static final int INVALID_PID = 0;
+
+    // This id univocally identifies the current process manager instance
+    private final String mInstanceId;
 
     public static GeckoProcessManager getInstance() {
         return INSTANCE;
@@ -591,6 +596,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
     private GeckoProcessManager() {
         mConnections = new ConnectionManager();
+        mInstanceId = UUID.randomUUID().toString();
     }
 
     public void preload(final GeckoProcessType... types) {
@@ -754,12 +760,12 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
         final ParcelFileDescriptor crashAnnotationPfd =
                 (crashAnnotationFd >= 0) ? ParcelFileDescriptor.adoptFd(crashAnnotationFd) : null;
 
-        boolean started = false;
+        int started = IChildProcess.STARTED_FAIL;
         RemoteException exception = null;
         final String crashHandler = GeckoAppShell.getCrashHandlerService() != null ?
                 GeckoAppShell.getCrashHandlerService().getName() : null;
         try {
-            started = child.start(this, args, extras, flags, crashHandler,
+            started = child.start(this, mInstanceId, args, extras, flags, crashHandler,
                     prefsPfd, prefMapPfd, ipcPfd, crashPfd, crashAnnotationPfd);
         } catch (final RemoteException e) {
             exception = e;
@@ -779,8 +785,19 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             prefsPfd.detachFd();
         }
 
-        if (started) {
+        if (started == IChildProcess.STARTED_OK) {
             result.complete(connection.getPid());
+            return;
+        } else if (started == IChildProcess.STARTED_BUSY) {
+            // This process is owned by a different runtime, so we can't use
+            // it. Let's try another process.
+            // Note: this strategy is pretty bad, we go through each process in
+            // sequence until one works, the multiple runtime case is test-only
+            // for now, so that's ok. We can improve on this if we eventually
+            // end up needing something fancier.
+            Log.w(LOGTAG, "Trying a different process");
+            start(result, type, args, extras, flags, prefsFd, prefMapFd, ipcFd,
+                    crashFd, crashAnnotationFd, /* isRetry */ false);
             return;
         }
 

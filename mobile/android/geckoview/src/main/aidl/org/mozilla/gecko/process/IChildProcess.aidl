@@ -10,14 +10,25 @@ import android.os.Bundle;
 import android.os.ParcelFileDescriptor;
 
 interface IChildProcess {
+    /** The process started correctly. */
+    const int STARTED_OK = 0;
+    /** An error occurred when trying to start this process. */
+    const int STARTED_FAIL = 1;
+    /** This process is being used elsewhere and cannot start. */
+    const int STARTED_BUSY = 2;
+
     int getPid();
-    boolean start(in IProcessManager procMan, in String[] args, in Bundle extras, int flags,
-                  in String crashHandlerService,
-                  in ParcelFileDescriptor prefsPfd,
-                  in ParcelFileDescriptor prefMapPfd,
-                  in ParcelFileDescriptor ipcPfd,
-                  in ParcelFileDescriptor crashReporterPfd,
-                  in ParcelFileDescriptor crashAnnotationPfd);
+    int start(in IProcessManager procMan,
+              in String mainProcessId,
+              in String[] args,
+              in Bundle extras,
+              int flags,
+              in String crashHandlerService,
+              in ParcelFileDescriptor prefsPfd,
+              in ParcelFileDescriptor prefMapPfd,
+              in ParcelFileDescriptor ipcPfd,
+              in ParcelFileDescriptor crashReporterPfd,
+              in ParcelFileDescriptor crashAnnotationPfd);
 
     void crash();
 }

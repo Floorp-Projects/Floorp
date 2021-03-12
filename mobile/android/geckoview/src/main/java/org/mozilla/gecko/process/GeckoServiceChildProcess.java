@@ -28,6 +28,7 @@ public class GeckoServiceChildProcess extends Service {
     private static final long LOW_MEMORY_ONGOING_RESET_TIME_MS = 10000;
 
     private static IProcessManager sProcessManager;
+    private static String sOwnerProcessId;
 
     private long mLastLowMemoryNotificationTime = 0;
     // Makes sure we don't reuse this process
@@ -67,7 +68,8 @@ public class GeckoServiceChildProcess extends Service {
         }
 
         @Override
-        public boolean start(final IProcessManager procMan,
+        public int start(final IProcessManager procMan,
+                             final String mainProcessId,
                              final String[] args,
                              final Bundle extras,
                              final int flags,
@@ -78,11 +80,17 @@ public class GeckoServiceChildProcess extends Service {
                              final ParcelFileDescriptor crashReporterPfd,
                              final ParcelFileDescriptor crashAnnotationPfd) {
             synchronized (GeckoServiceChildProcess.class) {
+                if (sOwnerProcessId != null && !sOwnerProcessId.equals(mainProcessId)) {
+                    Log.w(LOGTAG, "This process belongs to a different GeckoRuntime owner: "
+                            + sOwnerProcessId + " process: " + mainProcessId);
+                    return IChildProcess.STARTED_BUSY;
+                }
                 if (sProcessManager != null) {
                     Log.e(LOGTAG, "Child process already started");
-                    return false;
+                    return IChildProcess.STARTED_FAIL;
                 }
                 sProcessManager = procMan;
+                sOwnerProcessId = mainProcessId;
             }
 
             final int prefsFd = prefsPfd != null ?
@@ -127,7 +135,7 @@ public class GeckoServiceChildProcess extends Service {
                     }
                 }
             });
-            return true;
+            return IChildProcess.STARTED_OK;
         }
 
         @Override
