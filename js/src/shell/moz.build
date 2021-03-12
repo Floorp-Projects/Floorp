@@ -30,6 +30,9 @@ if CONFIG["FUZZING_INTERFACES"]:
         "static:fuzzer",
     ]
 
+if CONFIG["FUZZING_JS_FUZZILLI"]:
+    OS_LIBS += ["rt"]
+
 DEFINES["EXPORT_JS_API"] = True
 
 LOCAL_INCLUDES += [
