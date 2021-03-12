@@ -423,6 +423,9 @@ var SitePermissions = {
   _permissionsArray: null,
   _defaultPrefBranch: Services.prefs.getBranch("permissions.default."),
 
+  // For testing use only.
+  _temporaryPermissions: TemporaryPermissions,
+
   /**
    * Gets all custom permissions for a given principal.
    * Install addon permission is excluded, check bug 1303108.

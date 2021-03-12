@@ -103,3 +103,49 @@ add_task(async function testTempPermissionMultipleTabs() {
   BrowserTestUtils.removeTab(tab1);
   BrowserTestUtils.removeTab(tab2);
 });
+
+// Test that temp permissions are cleared when closing tabs.
+add_task(async function testTempPermissionOnTabClose() {
+  let origin = "https://example.com/";
+  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+    origin
+  );
+  let id = "geo";
+
+  ok(
+    !SitePermissions._temporaryPermissions._stateByBrowser.size,
+    "Temporary permission map should be empty initially."
+  );
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, origin);
+
+  SitePermissions.setForPrincipal(
+    principal,
+    id,
+    SitePermissions.BLOCK,
+    SitePermissions.SCOPE_TEMPORARY,
+    tab.linkedBrowser
+  );
+
+  Assert.deepEqual(
+    SitePermissions.getForPrincipal(principal, id, tab.linkedBrowser),
+    {
+      state: SitePermissions.BLOCK,
+      scope: SitePermissions.SCOPE_TEMPORARY,
+    }
+  );
+
+  ok(
+    SitePermissions._temporaryPermissions._stateByBrowser.has(
+      tab.linkedBrowser
+    ),
+    "Temporary permission map should have an entry for the browser."
+  );
+
+  BrowserTestUtils.removeTab(tab);
+
+  ok(
+    !SitePermissions._temporaryPermissions._stateByBrowser.size,
+    "Temporary permission map should be empty after closing the tab."
+  );
+});
