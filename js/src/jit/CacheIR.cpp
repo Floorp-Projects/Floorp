@@ -525,7 +525,7 @@ static bool CheckHasNoSuchOwnProperty(JSContext* cx, JSObject* obj, jsid id) {
   if (!obj->is<NativeObject>()) {
     return false;
   }
-  // Don't handle proto chains with resolve hooks.
+  // Don't handle objects with resolve hooks.
   if (ClassMayResolveId(cx->names(), obj->getClass(), id, obj)) {
     return false;
   }
@@ -3272,12 +3272,12 @@ AttachDecision HasPropIRGenerator::tryAttachTypedArray(HandleObject obj,
 }
 
 AttachDecision HasPropIRGenerator::tryAttachSlotDoesNotExist(
-    JSObject* obj, ObjOperandId objId, jsid key, ValOperandId keyId) {
+    NativeObject* obj, ObjOperandId objId, jsid key, ValOperandId keyId) {
   bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
   emitIdGuard(keyId, idVal_, key);
   if (hasOwn) {
-    TestMatchingReceiver(writer, obj, objId);
+    TestMatchingNativeReceiver(writer, obj, objId);
   } else {
     Maybe<ObjOperandId> tempId;
     EmitReadSlotGuard(writer, obj, nullptr, objId, &tempId);
@@ -3307,9 +3307,10 @@ AttachDecision HasPropIRGenerator::tryAttachDoesNotExist(HandleObject obj,
       return AttachDecision::NoAction;
     }
   }
+  auto* nobj = &obj->as<NativeObject>();
 
   TRY_ATTACH(tryAttachMegamorphic(objId, keyId));
-  TRY_ATTACH(tryAttachSlotDoesNotExist(obj, objId, key, keyId));
+  TRY_ATTACH(tryAttachSlotDoesNotExist(nobj, objId, key, keyId));
 
   return AttachDecision::NoAction;
 }
