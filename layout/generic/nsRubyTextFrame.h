@@ -41,8 +41,8 @@ class nsRubyTextFrame final : public nsRubyContentFrame {
                       const ReflowInput& aReflowInput,
                       nsReflowStatus& aStatus) override;
 
-  bool IsAutoHidden() const {
-    return HasAnyStateBits(NS_RUBY_TEXT_FRAME_AUTOHIDE);
+  bool IsCollapsed() const {
+    return HasAnyStateBits(NS_RUBY_TEXT_FRAME_COLLAPSED);
   }
 
  protected:
