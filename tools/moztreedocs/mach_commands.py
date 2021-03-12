@@ -374,7 +374,8 @@ class Documentation(MachCommandBase):
     )
     def generate_telemetry_docs(self):
         args = [
-            "glean_parser",
+            sys.executable,
+            "-m" "glean_parser",
             "translate",
             "-f",
             "markdown",
