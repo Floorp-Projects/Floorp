@@ -555,10 +555,10 @@ static bool IsCacheableNoProperty(JSContext* cx, NativeObject* obj,
 }
 
 static NativeGetPropCacheability CanAttachNativeGetProp(
-    JSContext* cx, HandleObject obj, HandleId id,
-    MutableHandleNativeObject holder, MutableHandleShape shape,
-    jsbytecode* pc) {
+    JSContext* cx, JSObject* obj, JS::PropertyKey id, NativeObject** holder,
+    Shape** shape, jsbytecode* pc) {
   MOZ_ASSERT(JSID_IS_STRING(id) || JSID_IS_SYMBOL(id));
+  MOZ_ASSERT(!*holder);
 
   // The lookup needs to be universally pure, otherwise we risk calling hooks
   // out of turn. We don't mind doing this even when purity isn't required,
@@ -571,22 +571,20 @@ static NativeGetPropCacheability CanAttachNativeGetProp(
   }
   auto* nobj = &obj->as<NativeObject>();
 
-  MOZ_ASSERT(!holder);
-
   if (prop.isNativeProperty()) {
     MOZ_ASSERT(baseHolder);
-    holder.set(baseHolder);
-    shape.set(prop.shape());
+    *holder = baseHolder;
+    *shape = prop.shape();
 
-    if (IsCacheableGetPropReadSlot(nobj, holder, shape)) {
+    if (IsCacheableGetPropReadSlot(nobj, *holder, *shape)) {
       return CanAttachReadSlot;
     }
 
-    return IsCacheableGetPropCall(nobj, holder, shape);
+    return IsCacheableGetPropCall(nobj, *holder, *shape);
   }
 
   if (!prop.isFound()) {
-    if (IsCacheableNoProperty(cx, nobj, holder, shape, id, pc)) {
+    if (IsCacheableNoProperty(cx, nobj, *holder, *shape, id, pc)) {
       return CanAttachReadSlot;
     }
   }
@@ -997,8 +995,8 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
   RootedShape shape(cx_);
   RootedNativeObject holder(cx_);
 
-  NativeGetPropCacheability type =
-      CanAttachNativeGetProp(cx_, obj, id, &holder, &shape, pc_);
+  NativeGetPropCacheability type = CanAttachNativeGetProp(
+      cx_, obj, id, holder.address(), shape.address(), pc_);
   switch (type) {
     case CanAttachNone:
       return AttachDecision::NoAction;
@@ -1099,9 +1097,9 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
   }
 
   // Now try to do the lookup on the Window (the current global).
-  Handle<GlobalObject*> windowObj = cx_->global();
-  RootedShape shape(cx_);
-  RootedNativeObject holder(cx_);
+  GlobalObject* windowObj = cx_->global();
+  NativeObject* holder = nullptr;
+  Shape* shape = nullptr;
   NativeGetPropCacheability type =
       CanAttachNativeGetProp(cx_, windowObj, id, &holder, &shape, pc_);
   switch (type) {
@@ -1188,8 +1186,8 @@ AttachDecision GetPropIRGenerator::tryAttachCrossCompartmentWrapper(
     return AttachDecision::NoAction;
   }
 
-  RootedShape shape(cx_);
-  RootedNativeObject holder(cx_);
+  NativeObject* holder = nullptr;
+  Shape* shape = nullptr;
 
   // Enter realm of target to prevent failing compartment assertions when doing
   // the lookup.
@@ -1454,8 +1452,8 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyExpando(
   }
 
   // Try to do the lookup on the expando object.
-  RootedNativeObject holder(cx_);
-  RootedShape propShape(cx_);
+  NativeObject* holder = nullptr;
+  Shape* propShape = nullptr;
   NativeGetPropCacheability canCache =
       CanAttachNativeGetProp(cx_, expandoObj, id, &holder, &propShape, pc_);
   if (canCache == CanAttachNone) {
@@ -1549,8 +1547,8 @@ AttachDecision GetPropIRGenerator::tryAttachDOMProxyUnshadowed(
     return AttachDecision::NoAction;
   }
 
-  RootedNativeObject holder(cx_);
-  RootedShape shape(cx_);
+  NativeObject* holder = nullptr;
+  Shape* shape = nullptr;
   NativeGetPropCacheability canCache =
       CanAttachNativeGetProp(cx_, checkObj, id, &holder, &shape, pc_);
   if (canCache == CanAttachNone) {
@@ -1702,8 +1700,8 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArray(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  RootedShape shape(cx_);
-  RootedNativeObject holder(cx_);
+  NativeObject* holder = nullptr;
+  Shape* shape = nullptr;
   NativeGetPropCacheability type =
       CanAttachNativeGetProp(cx_, obj, id, &holder, &shape, pc_);
   if (type != CanAttachNativeGetter) {
@@ -1785,8 +1783,8 @@ AttachDecision GetPropIRGenerator::tryAttachDataView(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  RootedShape shape(cx_);
-  RootedNativeObject holder(cx_);
+  NativeObject* holder = nullptr;
+  Shape* shape = nullptr;
   NativeGetPropCacheability type =
       CanAttachNativeGetProp(cx_, obj, id, &holder, &shape, pc_);
   if (type != CanAttachNativeGetter) {
@@ -1849,8 +1847,8 @@ AttachDecision GetPropIRGenerator::tryAttachArrayBufferMaybeShared(
     return AttachDecision::NoAction;
   }
 
-  RootedShape shape(cx_);
-  RootedNativeObject holder(cx_);
+  NativeObject* holder = nullptr;
+  Shape* shape = nullptr;
   NativeGetPropCacheability type =
       CanAttachNativeGetProp(cx_, obj, id, &holder, &shape, pc_);
   if (type != CanAttachNativeGetter) {
@@ -1900,8 +1898,8 @@ AttachDecision GetPropIRGenerator::tryAttachRegExp(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  RootedShape shape(cx_);
-  RootedNativeObject holder(cx_);
+  NativeObject* holder = nullptr;
+  Shape* shape = nullptr;
   NativeGetPropCacheability type =
       CanAttachNativeGetProp(cx_, obj, id, &holder, &shape, pc_);
   if (type != CanAttachNativeGetter) {
@@ -2107,8 +2105,8 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
     return AttachDecision::NoAction;
   }
 
-  RootedShape shape(cx_);
-  RootedNativeObject holder(cx_);
+  NativeObject* holder = nullptr;
+  Shape* shape = nullptr;
   NativeGetPropCacheability type =
       CanAttachNativeGetProp(cx_, proto, id, &holder, &shape, pc_);
   switch (type) {
