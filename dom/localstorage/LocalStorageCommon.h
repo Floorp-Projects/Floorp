@@ -189,29 +189,12 @@
  * interface.
  */
 
-// LocalStorage equivalents of QM_TRY.
-#define LS_TRY_GLUE(...)                                             \
-  QM_TRY_META(mozilla::dom::localstorage, MOZ_UNIQUE_VAR(tryResult), \
-              ##__VA_ARGS__)
-#define LS_TRY(...) LS_TRY_GLUE(__VA_ARGS__)
-
-// LocalStorage equivalents of QM_TRY_UNWRAP and QM_TRY_INSPECT.
-#define LS_TRY_ASSIGN_GLUE(accessFunction, ...)                             \
-  QM_TRY_ASSIGN_META(mozilla::dom::localstorage, MOZ_UNIQUE_VAR(tryResult), \
-                     accessFunction, ##__VA_ARGS__)
-#define LS_TRY_UNWRAP(...) LS_TRY_ASSIGN_GLUE(unwrap, __VA_ARGS__)
-#define LS_TRY_INSPECT(...) LS_TRY_ASSIGN_GLUE(inspect, __VA_ARGS__)
-
-// LocalStorage equivalents of QM_TRY_RETURN.
-#define LS_TRY_RETURN_GLUE(...)                                             \
-  QM_TRY_RETURN_META(mozilla::dom::localstorage, MOZ_UNIQUE_VAR(tryResult), \
-                     ##__VA_ARGS__)
-#define LS_TRY_RETURN(...) LS_TRY_RETURN_GLUE(__VA_ARGS__)
-
-// LocalStorage equivalents of QM_FAIL.
-#define LS_FAIL_GLUE(...) \
-  QM_FAIL_META(mozilla::dom::localstorage, ##__VA_ARGS__)
-#define LS_FAIL(...) LS_FAIL_GLUE(__VA_ARGS__)
+// XXX Replace all uses by the QM_* variants and remove these aliases
+#define LS_TRY QM_TRY
+#define LS_TRY_UNWRAP QM_TRY_UNWRAP
+#define LS_TRY_INSPECT QM_TRY_INSPECT
+#define LS_TRY_RETURN QM_TRY_RETURN
+#define LS_FAIL QM_FAIL
 
 namespace mozilla {
 
@@ -273,12 +256,6 @@ Result<std::pair<nsCString, nsCString>, nsresult> GenerateOriginKey2(
     const mozilla::ipc::PrincipalInfo& aPrincipalInfo);
 
 LogModule* GetLocalStorageLogger();
-
-namespace localstorage {
-
-QM_META_HANDLE_ERROR("LocalStorage"_ns)
-
-}  // namespace localstorage
 
 }  // namespace dom
 }  // namespace mozilla
