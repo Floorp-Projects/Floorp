@@ -12,7 +12,7 @@ pub enum ValType<'a> {
     F64,
     V128,
     Ref(RefType<'a>),
-    Rtt(u32, ast::Index<'a>),
+    Rtt(Option<u32>, ast::Index<'a>),
 }
 
 impl<'a> Parse<'a> for ValType<'a> {
@@ -79,12 +79,11 @@ pub enum HeapType<'a> {
     /// A reference to any reference value: anyref. This is part of the GC
     /// proposal.
     Any,
-    /// A reference to an exception: exnref. This is part of the exception
-    /// handling proposal.
-    Exn,
     /// A reference that has an identity that can be compared: eqref. This is
     /// part of the GC proposal.
     Eq,
+    /// A reference to a GC object. This is part of the GC proposal.
+    Data,
     /// An unboxed 31-bit integer: i31ref. This may be going away if there is no common
     /// supertype of all reference types. Part of the GC proposal.
     I31,
@@ -105,12 +104,12 @@ impl<'a> Parse<'a> for HeapType<'a> {
         } else if l.peek::<kw::r#any>() {
             parser.parse::<kw::r#any>()?;
             Ok(HeapType::Any)
-        } else if l.peek::<kw::exn>() {
-            parser.parse::<kw::exn>()?;
-            Ok(HeapType::Exn)
         } else if l.peek::<kw::eq>() {
             parser.parse::<kw::eq>()?;
             Ok(HeapType::Eq)
+        } else if l.peek::<kw::data>() {
+            parser.parse::<kw::data>()?;
+            Ok(HeapType::Data)
         } else if l.peek::<kw::i31>() {
             parser.parse::<kw::i31>()?;
             Ok(HeapType::I31)
@@ -127,8 +126,8 @@ impl<'a> Peek for HeapType<'a> {
         kw::func::peek(cursor)
             || kw::r#extern::peek(cursor)
             || kw::any::peek(cursor)
-            || kw::exn::peek(cursor)
             || kw::eq::peek(cursor)
+            || kw::data::peek(cursor)
             || kw::i31::peek(cursor)
             || (ast::LParen::peek(cursor) && kw::r#type::peek2(cursor))
     }
@@ -170,19 +169,19 @@ impl<'a> RefType<'a> {
         }
     }
 
-    /// An `exnref` as an abbreviation for `(ref null exn)`.
-    pub fn exn() -> Self {
-        RefType {
-            nullable: true,
-            heap: HeapType::Exn,
-        }
-    }
-
     /// An `eqref` as an abbreviation for `(ref null eq)`.
     pub fn eq() -> Self {
         RefType {
             nullable: true,
             heap: HeapType::Eq,
+        }
+    }
+
+    /// An `dataref` as an abbreviation for `(ref null data)`.
+    pub fn data() -> Self {
+        RefType {
+            nullable: true,
+            heap: HeapType::Data,
         }
     }
 
@@ -210,12 +209,12 @@ impl<'a> Parse<'a> for RefType<'a> {
         } else if l.peek::<kw::anyref>() {
             parser.parse::<kw::anyref>()?;
             Ok(RefType::any())
-        } else if l.peek::<kw::exnref>() {
-            parser.parse::<kw::exnref>()?;
-            Ok(RefType::exn())
         } else if l.peek::<kw::eqref>() {
             parser.parse::<kw::eqref>()?;
             Ok(RefType::eq())
+        } else if l.peek::<kw::dataref>() {
+            parser.parse::<kw::dataref>()?;
+            Ok(RefType::data())
         } else if l.peek::<kw::i31ref>() {
             parser.parse::<kw::i31ref>()?;
             Ok(RefType::i31())
@@ -251,8 +250,8 @@ impl<'a> Peek for RefType<'a> {
             || /* legacy */ kw::anyfunc::peek(cursor)
             || kw::externref::peek(cursor)
             || kw::anyref::peek(cursor)
-            || kw::exnref::peek(cursor)
             || kw::eqref::peek(cursor)
+            || kw::dataref::peek(cursor)
             || kw::i31ref::peek(cursor)
             || (ast::LParen::peek(cursor) && kw::r#ref::peek2(cursor))
     }

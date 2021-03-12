@@ -67,22 +67,14 @@ impl<'a> Expander<'a> {
         match field {
             ModuleField::Alias(a) => {
                 let id = gensym::fill(a.span, &mut a.id);
-                match &mut a.kind {
-                    AliasKind::InstanceExport {
-                        instance,
-                        export,
-                        kind,
-                    } => {
+                match &mut a.source {
+                    AliasSource::InstanceExport { instance, export } => {
                         self.expand(instance);
                         self.instances
-                            .insert((*instance.unwrap_index(), export, *kind), id.into());
+                            .insert((*instance.unwrap_index(), export, a.kind), id.into());
                     }
-                    AliasKind::Outer {
-                        module,
-                        index,
-                        kind,
-                    } => {
-                        self.parents.insert((*module, *index, *kind), id.into());
+                    AliasSource::Outer { module, index } => {
+                        self.parents.insert((*module, *index, a.kind), id.into());
                     }
                 }
             }
@@ -231,11 +223,11 @@ impl<'a> Expander<'a> {
                             span,
                             id: Some(id),
                             name: None,
-                            kind: AliasKind::Outer {
+                            source: AliasSource::Outer {
                                 module: *module,
                                 index: *idx,
-                                kind: (*kind).into(),
                             },
+                            kind: (*kind).into(),
                         }));
                         *v.insert(Index::Id(id))
                     }
@@ -265,8 +257,8 @@ impl<'a> Expander<'a> {
                                 span,
                                 id: Some(id),
                                 name: None,
-                                kind: AliasKind::InstanceExport {
-                                    kind,
+                                kind,
+                                source: AliasSource::InstanceExport {
                                     instance: ItemRef::Item {
                                         kind: kw::instance(span),
                                         idx: cur,
