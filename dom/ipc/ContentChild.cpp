@@ -3819,7 +3819,7 @@ mozilla::ipc::IPCResult ContentChild::RecvClearFocus(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvSetFocusedBrowsingContext(
-    const MaybeDiscarded<BrowsingContext>& aContext, uint64_t aActionId) {
+    const MaybeDiscarded<BrowsingContext>& aContext) {
   if (aContext.IsNullOrDiscarded()) {
     MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
             ("ChildIPC: Trying to send a message to dead or detached context"));
@@ -3828,7 +3828,7 @@ mozilla::ipc::IPCResult ContentChild::RecvSetFocusedBrowsingContext(
 
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
-    fm->SetFocusedBrowsingContextFromOtherProcess(aContext.get(), aActionId);
+    fm->SetFocusedBrowsingContextFromOtherProcess(aContext.get());
   }
   return IPC_OK();
 }
@@ -3939,18 +3939,17 @@ mozilla::ipc::IPCResult ContentChild::RecvBlurToChild(
 
 mozilla::ipc::IPCResult ContentChild::RecvSetupFocusedAndActive(
     const MaybeDiscarded<BrowsingContext>& aFocusedBrowsingContext,
-    uint64_t aActionIdForFocused,
     const MaybeDiscarded<BrowsingContext>& aActiveBrowsingContext,
-    uint64_t aActionIdForActive) {
+    uint64_t aActionId) {
   nsFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm) {
     if (!aActiveBrowsingContext.IsNullOrDiscarded()) {
       fm->SetActiveBrowsingContextFromOtherProcess(aActiveBrowsingContext.get(),
-                                                   aActionIdForActive);
+                                                   aActionId);
     }
     if (!aFocusedBrowsingContext.IsNullOrDiscarded()) {
       fm->SetFocusedBrowsingContextFromOtherProcess(
-          aFocusedBrowsingContext.get(), aActionIdForFocused);
+          aFocusedBrowsingContext.get());
     }
   }
   return IPC_OK();
@@ -3964,18 +3963,6 @@ mozilla::ipc::IPCResult ContentChild::RecvReviseActiveBrowsingContext(
   if (fm && !aActiveBrowsingContext.IsNullOrDiscarded()) {
     fm->ReviseActiveBrowsingContext(aOldActionId, aActiveBrowsingContext.get(),
                                     aNewActionId);
-  }
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvReviseFocusedBrowsingContext(
-    uint64_t aOldActionId,
-    const MaybeDiscarded<BrowsingContext>& aFocusedBrowsingContext,
-    uint64_t aNewActionId) {
-  nsFocusManager* fm = nsFocusManager::GetFocusManager();
-  if (fm && !aFocusedBrowsingContext.IsNullOrDiscarded()) {
-    fm->ReviseFocusedBrowsingContext(
-        aOldActionId, aFocusedBrowsingContext.get(), aNewActionId);
   }
   return IPC_OK();
 }
