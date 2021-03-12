@@ -224,7 +224,7 @@
 }
 
 .content-blocking-reload-desc-container > .content-blocking-info-image {
-  list-style-image: url(chrome://global/skin/icons/identity-icon.svg);
+  list-style-image: url(chrome://global/skin/icons/info.svg);
   margin-inline-end: 12px;
   margin-top: 0.4em;
   flex-shrink: 0;
