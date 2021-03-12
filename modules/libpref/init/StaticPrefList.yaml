@@ -278,6 +278,11 @@
   value: true
   mirror: always
 
+- name: apz.mac.enable_double_tap_zoom_touchpad_gesture
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: apz.allow_immediate_handoff
   type: RelaxedAtomicBool
   value: false
