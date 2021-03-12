@@ -10,6 +10,7 @@ import android.os.Build.VERSION.SDK_INT
 import android.os.StrictMode
 import android.util.Log.INFO
 import androidx.annotation.CallSuper
+import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.getSystemService
 import androidx.work.Configuration.Builder
@@ -23,7 +24,10 @@ import mozilla.appservices.Megazord
 import mozilla.components.browser.state.action.SystemAction
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.concept.base.crash.Breadcrumb
+import mozilla.components.concept.engine.webextension.WebExtension
+import mozilla.components.concept.engine.webextension.isUnsupported
 import mozilla.components.concept.push.PushProcessor
+import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
 import mozilla.components.feature.addons.update.GlobalAddonDependencyProvider
 import mozilla.components.lib.crash.CrashReporter
 import mozilla.components.service.glean.Glean
@@ -447,12 +451,27 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                 },
                 onExtensionsLoaded = { extensions ->
                     components.addonUpdater.registerForFutureUpdates(extensions)
-                    components.supportedAddonsChecker.registerForChecks()
+                    subscribeForNewAddonsIfNeeded(components.supportedAddonsChecker, extensions)
                 },
                 onUpdatePermissionRequest = components.addonUpdater::onUpdatePermissionRequest
             )
         } catch (e: UnsupportedOperationException) {
             Logger.error("Failed to initialize web extension support", e)
+        }
+    }
+
+    @VisibleForTesting
+    internal fun subscribeForNewAddonsIfNeeded(
+        checker: DefaultSupportedAddonsChecker,
+        installedExtensions: List<WebExtension>
+    ) {
+        val hasUnsupportedAddons = installedExtensions.any { it.isUnsupported() }
+        if (hasUnsupportedAddons) {
+            checker.registerForChecks()
+        } else {
+            // As checks are a persistent subscriptions, we have to make sure
+            // we remove any previous subscriptions.
+            checker.unregisterForChecks()
         }
     }
 
