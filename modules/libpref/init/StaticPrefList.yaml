@@ -3502,7 +3502,7 @@
   type: RelaxedAtomicBool
   value: true
   mirror: always
- 
+
 - name: dom.workers.testing.enabled
   type: RelaxedAtomicBool
   value: false
@@ -6192,7 +6192,7 @@
 # Is the image-set() function enabled?
 - name: layout.css.image-set.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
