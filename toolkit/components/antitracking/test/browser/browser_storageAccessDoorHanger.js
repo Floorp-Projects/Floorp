@@ -228,8 +228,8 @@ async function testDoorHanger(
     );
     gPermissionPanel._identityPermissionBox.click();
     await permissionPopupPromise;
-    let permissionItem = document.getElementById(
-      `permission-popup-permission-label-3rdPartyStorage^https://tracking.example.org`
+    let permissionItem = document.querySelector(
+      ".permission-popup-permission-item-3rdPartyStorage"
     );
     ok(permissionItem, "Permission item exists");
     ok(

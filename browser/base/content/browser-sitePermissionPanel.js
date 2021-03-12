@@ -372,6 +372,8 @@ var gPermissionPanel = {
     this._permissionList
       .querySelectorAll(permissionItemSelector)
       .forEach(e => e.remove());
+    // Used by _createPermissionItem to build unique IDs.
+    this._permissionLabelIndex = 0;
 
     let permissions = SitePermissions.getAllPermissionDetailsForBrowser(
       gBrowser.selectedBrowser
@@ -415,12 +417,14 @@ var gPermissionPanel = {
         if (webrtcState[id]) {
           let found = false;
           for (let permission of permissions) {
-            if (permission.id != id) {
+            let [permId] = permission.id.split(
+              SitePermissions.PERM_KEY_DELIMITER
+            );
+            if (permId != id) {
               continue;
             }
             found = true;
             permission.sharingState = webrtcState[id];
-            break;
           }
           if (!found) {
             // If the permission item we were looking for doesn't exist,
@@ -461,9 +465,16 @@ var gPermissionPanel = {
         if (permContainer) {
           anchor.appendChild(permContainer);
         }
+      } else if (["camera", "screen", "microphone"].includes(id)) {
+        item = this._createWebRTCPermissionItem(permission, id, key);
+        if (!item) {
+          continue;
+        }
+        anchor.appendChild(item);
       } else {
         item = this._createPermissionItem({
           permission,
+          idNoSuffix: id,
           isContainer: id == "geo" || id == "xr",
           nowrapLabel: id == "3rdPartyStorage",
         });
@@ -524,9 +535,13 @@ var gPermissionPanel = {
     showStateLabel = true,
     idNoSuffix = permission.id,
     nowrapLabel = false,
+    clearCallback = () => {},
   }) {
     let container = document.createXULElement("hbox");
-    container.setAttribute("class", "permission-popup-permission-item");
+    container.classList.add(
+      "permission-popup-permission-item",
+      `permission-popup-permission-item-${idNoSuffix}`
+    );
     container.setAttribute("align", "center");
     container.setAttribute("role", "group");
 
@@ -552,7 +567,7 @@ var gPermissionPanel = {
     let nameLabel = document.createXULElement("label");
     nameLabel.setAttribute("flex", "1");
     nameLabel.setAttribute("class", "permission-popup-permission-label");
-    let label = SitePermissions.getPermissionLabel(idNoSuffix);
+    let label = SitePermissions.getPermissionLabel(permission.id);
     if (label === null) {
       return null;
     }
@@ -563,7 +578,11 @@ var gPermissionPanel = {
     } else {
       nameLabel.textContent = label;
     }
-    let nameLabelId = "permission-popup-permission-label-" + idNoSuffix;
+    // idNoSuffix is not unique for double-keyed permissions. Adding an index to
+    // ensure IDs are unique.
+    // permission.id is unique but may not be a valid HTML ID.
+    let nameLabelId = `permission-popup-permission-label-${idNoSuffix}-${this
+      ._permissionLabelIndex++}`;
     nameLabel.setAttribute("id", nameLabelId);
 
     let isPolicyPermission = [
@@ -612,7 +631,7 @@ var gPermissionPanel = {
       menulist.addEventListener("command", () => {
         SitePermissions.setForPrincipal(
           gBrowser.contentPrincipal,
-          idNoSuffix,
+          permission.id,
           menulist.selectedItem.value
         );
       });
@@ -651,7 +670,12 @@ var gPermissionPanel = {
       block.setAttribute("class", "permission-popup-permission-item-container");
 
       if (permClearButton) {
-        let button = this._createPermissionClearButton(permission, block);
+        let button = this._createPermissionClearButton({
+          permission,
+          container: block,
+          idNoSuffix,
+          clearCallback,
+        });
         container.appendChild(button);
       }
 
@@ -660,7 +684,12 @@ var gPermissionPanel = {
     }
 
     if (permClearButton) {
-      let button = this._createPermissionClearButton(permission, container);
+      let button = this._createPermissionClearButton({
+        permission,
+        container,
+        idNoSuffix,
+        clearCallback,
+      });
       container.appendChild(button);
     }
 
@@ -671,7 +700,8 @@ var gPermissionPanel = {
     let label = document.createXULElement("label");
     label.setAttribute("flex", "1");
     label.setAttribute("class", "permission-popup-permission-state-label");
-    let labelId = "permission-popup-permission-state-label-" + idNoSuffix;
+    let labelId = `permission-popup-permission-state-label-${idNoSuffix}-${this
+      ._permissionLabelIndex++}`;
     label.setAttribute("id", labelId);
     let { state, scope } = aPermission;
     // If the user did not permanently allow this device but it is currently
@@ -698,11 +728,12 @@ var gPermissionPanel = {
     }
   },
 
-  _createPermissionClearButton(
-    aPermission,
+  _createPermissionClearButton({
+    permission,
     container,
-    clearCallback = () => {}
-  ) {
+    idNoSuffix = permission.id,
+    clearCallback = () => {},
+  }) {
     let button = document.createXULElement("button");
     button.setAttribute("class", "permission-popup-permission-remove-button");
     let tooltiptext = gNavigatorBundle.getString("permissions.remove.tooltip");
@@ -710,42 +741,24 @@ var gPermissionPanel = {
     button.addEventListener("command", () => {
       let browser = gBrowser.selectedBrowser;
       container.remove();
-      if (aPermission.sharingState) {
-        if (aPermission.id === "xr") {
-          let origins = browser.getDevicePermissionOrigins(aPermission.id);
-          for (let origin of origins) {
-            let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-              origin
-            );
-            this._removePermPersistentAllow(principal, aPermission.id);
-          }
-          origins.clear();
-        } else if (
-          ["camera", "microphone", "screen"].includes(aPermission.id)
-        ) {
-          let windowId = this._sharingState.webRTC.windowId;
-          if (aPermission.id == "screen") {
-            windowId = "screen:" + windowId;
-          } else {
-            // It's not possible to stop sharing one of camera/microphone
-            // without the other.
-            for (let id of ["camera", "microphone"]) {
-              if (this._sharingState.webRTC[id]) {
-                this._removePermPersistentAllow(gBrowser.contentPrincipal, id);
-              }
-            }
-          }
-
-          let bc = this._sharingState.webRTC.browsingContext;
-          bc.currentWindowGlobal
-            .getActor("WebRTC")
-            .sendAsyncMessage("webrtc:StopSharing", windowId);
-          webrtcUI.forgetActivePermissionsFromBrowser(gBrowser.selectedBrowser);
+      // For XR permissions we need to keep track of all origins which may have
+      // started XR sharing. This is necessary, because XR does not use
+      // permission delegation and permissions can be granted for sub-frames. We
+      // need to keep track of which origins we need to revoke the permission
+      // for.
+      if (permission.sharingState && idNoSuffix === "xr") {
+        let origins = browser.getDevicePermissionOrigins(idNoSuffix);
+        for (let origin of origins) {
+          let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
+            origin
+          );
+          this._removePermPersistentAllow(principal, permission.id);
         }
+        origins.clear();
       }
       SitePermissions.removeFromPrincipal(
         gBrowser.contentPrincipal,
-        aPermission.id,
+        permission.id,
         browser
       );
 
@@ -754,9 +767,9 @@ var gPermissionPanel = {
         this._permissionPopupMainView
       ).descriptionHeightWorkaround();
 
-      if (aPermission.id === "geo") {
+      if (idNoSuffix === "geo") {
         gBrowser.updateBrowserSharing(browser, { geo: false });
-      } else if (aPermission.id === "xr") {
+      } else if (idNoSuffix === "xr") {
         gBrowser.updateBrowserSharing(browser, { xr: false });
       }
 
@@ -834,6 +847,52 @@ var gPermissionPanel = {
     geoContainer.appendChild(indicator);
   },
 
+  /**
+   * Create a permission item for a WebRTC permission. May return null if there
+   * already is a suitable permission item for this device type.
+   * @param {Object} permission - Permission object.
+   * @param {string} id - Permission ID without suffix.
+   * @param {string} [key] - Secondary permission key.
+   * @returns {xul:hbox|null} - Element for permission or null if permission
+   * should be skipped.
+   */
+  _createWebRTCPermissionItem(permission, id, key) {
+    if (id != "camera" && id != "microphone" && id != "screen") {
+      throw new Error("Invalid permission id for WebRTC permission item.");
+    }
+    // Only show WebRTC device-specific ALLOW permissions. Since we only show
+    // one permission item per device type, we don't support showing mixed
+    // states where one devices is allowed and another one blocked.
+    if (key && permission.state != SitePermissions.ALLOW) {
+      return null;
+    }
+    // Check if there is already an item for this permission. Multiple
+    // permissions with the same id can be set, but with different keys.
+    let item = document.querySelector(
+      `.permission-popup-permission-item-${id}`
+    );
+
+    if (key) {
+      // We have a double keyed permission. If there is already an item it will
+      // have ownership of all permissions with this WebRTC permission id.
+      if (item) {
+        return null;
+      }
+    } else if (item) {
+      // If we have a single-key (not device specific) webRTC permission it
+      // overrides any existing (device specific) permission items.
+      item.remove();
+    }
+
+    return this._createPermissionItem({
+      permission,
+      idNoSuffix: id,
+      clearCallback: () => {
+        webrtcUI.clearPermissionsAndStopSharing([id], gBrowser.selectedTab);
+      },
+    });
+  },
+
   _createProtocolHandlerPermissionItem(permission, key) {
     let container = document.getElementById(
       "permission-popup-open-protocol-handler-container"
@@ -876,13 +935,17 @@ var gPermissionPanel = {
     item.appendChild(text);
     item.appendChild(stateLabel);
 
-    let button = this._createPermissionClearButton(permission, item, () => {
-      // When we're clearing the last open-protocol-handler permission, clean up
-      // the empty container.
-      // (<= 1 because the heading item is also a child of the container)
-      if (container.childElementCount <= 1) {
-        container.remove();
-      }
+    let button = this._createPermissionClearButton({
+      permission,
+      container: item,
+      clearCallback: () => {
+        // When we're clearing the last open-protocol-handler permission, clean up
+        // the empty container.
+        // (<= 1 because the heading item is also a child of the container)
+        if (container.childElementCount <= 1) {
+          container.remove();
+        }
+      },
     });
     item.appendChild(button);
 

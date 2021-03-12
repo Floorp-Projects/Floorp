@@ -114,7 +114,10 @@ var gTests = [
       );
 
       await indicator;
-      await checkSharingUI({ video: true, audio: true });
+      await checkSharingUI({ video: true, audio: true }, undefined, undefined, {
+        video: { scope: SitePermissions.SCOPE_PERSISTENT },
+        audio: { scope: SitePermissions.SCOPE_PERSISTENT },
+      });
 
       let uri = Services.io.newURI("https://example.com/");
       is(

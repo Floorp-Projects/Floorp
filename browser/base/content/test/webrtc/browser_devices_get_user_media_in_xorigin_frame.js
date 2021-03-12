@@ -72,7 +72,10 @@ async function promptNoDelegate(aThirdPartyOrgin, audio = true, video = true) {
     `expected camera to be ${video ? "" : "not"} shared`
   );
   await indicator;
-  await checkSharingUI({ audio, video });
+  await checkSharingUI({ audio, video }, undefined, undefined, {
+    video: { scope: SitePermissions.SCOPE_PERSISTENT },
+    audio: { scope: SitePermissions.SCOPE_PERSISTENT },
+  });
 
   // Cleanup.
   await closeStream(false, "frame4");
@@ -144,7 +147,9 @@ async function promptNoDelegateScreenSharing(aThirdPartyOrgin) {
   );
 
   await indicator;
-  await checkSharingUI({ screen: "Screen" });
+  await checkSharingUI({ screen: "Screen" }, undefined, undefined, {
+    screen: { scope: SitePermissions.SCOPE_PERSISTENT },
+  });
   await closeStream(false, "frame4");
 
   PermissionTestUtils.remove(uri, "screen");
@@ -728,7 +733,10 @@ var gTests = [
         "expected camera and microphone to be shared"
       );
       await indicator;
-      await checkSharingUI({ audio: true, video: true });
+      await checkSharingUI({ audio: true, video: true }, undefined, undefined, {
+        audio: { scope: SitePermissions.SCOPE_PERSISTENT },
+        video: { scope: SitePermissions.SCOPE_PERSISTENT },
+      });
       await closeStream(true);
 
       // Check that we get a prompt.
