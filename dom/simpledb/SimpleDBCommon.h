@@ -8,40 +8,18 @@
 #define mozilla_dom_simpledb_SimpledbCommon_h
 
 #include "mozilla/dom/quota/QuotaCommon.h"
-#include "nsLiteralString.h"
 
-// SimpleDB equivalents of QM_TRY.
-#define SDB_TRY_GLUE(...) \
-  QM_TRY_META(mozilla::dom::simpledb, MOZ_UNIQUE_VAR(tryResult), ##__VA_ARGS__)
-#define SDB_TRY(...) SDB_TRY_GLUE(__VA_ARGS__)
-
-// SimpleDB equivalents of QM_TRY_UNWRAP and QM_TRY_INSPECT.
-#define SDB_TRY_ASSIGN_GLUE(accessFunction, ...)                        \
-  QM_TRY_ASSIGN_META(mozilla::dom::simpledb, MOZ_UNIQUE_VAR(tryResult), \
-                     accessFunction, ##__VA_ARGS__)
-#define SDB_TRY_UNWRAP(...) SDB_TRY_ASSIGN_GLUE(unwrap, __VA_ARGS__)
-#define SDB_TRY_INSPECT(...) SDB_TRY_ASSIGN_GLUE(inspect, __VA_ARGS__)
-
-// SimpleDB equivalents of QM_TRY_RETURN.
-#define SDB_TRY_RETURN_GLUE(...)                                        \
-  QM_TRY_RETURN_META(mozilla::dom::simpledb, MOZ_UNIQUE_VAR(tryResult), \
-                     ##__VA_ARGS__)
-#define SDB_TRY_RETURN(...) SDB_TRY_RETURN_GLUE(__VA_ARGS__)
-
-// SimpleDB equivalents of QM_FAIL.
-#define SDB_FAIL_GLUE(...) QM_FAIL_META(mozilla::dom::simpledb, ##__VA_ARGS__)
-#define SDB_FAIL(...) SDB_FAIL_GLUE(__VA_ARGS__)
+// XXX Replace all uses by the QM_* variants and remove these aliases
+#define SDB_TRY QM_TRY
+#define SDB_TRY_UNWRAP QM_TRY_UNWRAP
+#define SDB_TRY_INSPECT QM_TRY_INSPECT
+#define SDB_TRY_RETURN QM_TRY_RETURN
+#define SDB_FAIL QM_FAIL
 
 namespace mozilla {
 namespace dom {
 
 extern const char* kPrefSimpleDBEnabled;
-
-namespace simpledb {
-
-QM_META_HANDLE_ERROR("SimpleDB"_ns)
-
-}  // namespace simpledb
 
 }  // namespace dom
 }  // namespace mozilla

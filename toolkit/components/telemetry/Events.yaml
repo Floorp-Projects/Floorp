@@ -2656,7 +2656,6 @@ dom.quota.try:
     record_in_processes: ["main", "content"]
     extra_keys:
       context: The context in which the error occurred, e.g. during a storage initialization. Telemetry events are only emitted for selected contexts.
-      module: The module (quota manager or one of its clients) where the error occured.
       result: Optionally, the name of the error that occurred.
       seq: Sequence number.
       source_file: The name of the source code file where the error occurred.
