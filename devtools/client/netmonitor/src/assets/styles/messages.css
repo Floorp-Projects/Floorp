@@ -150,7 +150,7 @@
   width: 12px;
   height: 12px;
   margin-inline-end: 8px;
-  background-image: url(chrome://devtools/skin/icons/info.svg);
+  background-image: url(chrome://global/skin/icons/info.svg);
   background-repeat: no-repeat;
   -moz-context-properties: fill;
   fill: inherit;
