@@ -651,7 +651,7 @@ def current_firefox_checkout(env, hg=None):
     )
 
 
-def update_git_tools(git, root_state_dir, top_src_dir):
+def update_git_tools(git, root_state_dir):
     """Update git tools, hooks and extensions"""
     # Ensure git-cinnabar is up to date.
     cinnabar_dir = os.path.join(root_state_dir, "git-cinnabar")
@@ -717,7 +717,7 @@ def configure_git(git, cinnabar, root_state_dir, top_src_dir):
             [git, "config", "core.untrackedCache", "true"], cwd=top_src_dir
         )
 
-    cinnabar_dir = update_git_tools(git, root_state_dir, top_src_dir)
+    cinnabar_dir = update_git_tools(git, root_state_dir)
 
     if not cinnabar:
         print(ADD_GIT_CINNABAR_PATH.format(cinnabar_dir))
