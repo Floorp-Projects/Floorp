@@ -1024,7 +1024,8 @@ nsDependentCSubstring MakeRelativeSourceFileName(const nsACString& aSourceFile);
 }  // namespace detail
 
 void LogError(const nsACString& aExpr, const nsACString& aSourceFile,
-              int32_t aSourceLine, Maybe<nsresult> aRv);
+              int32_t aSourceLine, Maybe<nsresult> aRv,
+              bool aIsWarning = false);
 
 #ifdef DEBUG
 Result<bool, nsresult> WarnIfFileIsUnknown(nsIFile& aFile,
