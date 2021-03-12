@@ -23,7 +23,6 @@ import org.mozilla.focus.telemetry.TelemetrySessionObserver
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AdjustHelper
 import org.mozilla.focus.utils.AppConstants
-import org.mozilla.focus.utils.StethoWrapper
 import kotlin.coroutines.CoroutineContext
 
 class FocusApplication : LocaleAwareApplication(), CoroutineScope {
@@ -43,8 +42,6 @@ class FocusApplication : LocaleAwareApplication(), CoroutineScope {
         CrashReporterWrapper.init(this)
 
         if (isMainProcess()) {
-            StethoWrapper.init(this)
-
             PreferenceManager.setDefaultValues(this, R.xml.settings, false)
 
             TelemetryWrapper.init(this)
