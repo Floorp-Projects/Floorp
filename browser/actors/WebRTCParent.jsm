@@ -700,7 +700,7 @@ function prompt(aActor, aBrowser, aRequest) {
         return true;
       }
 
-      function listDevices(menupopup, devices, label, deck) {
+      function listDevices(menupopup, devices, labelID) {
         while (menupopup.lastChild) {
           menupopup.removeChild(menupopup.lastChild);
         }
@@ -716,20 +716,24 @@ function prompt(aActor, aBrowser, aRequest) {
           addDeviceToList(menupopup, device.name, device.deviceIndex);
         }
 
+        let label = doc.getElementById(labelID);
         if (devices.length == 1) {
           label.value = devices[0].name;
-          deck.selectedIndex = 1;
+          label.hidden = false;
+          menulist.hidden = true;
         } else {
-          deck.selectedIndex = 0;
+          label.hidden = true;
+          menulist.hidden = false;
         }
       }
+
+      let notificationElement = doc.getElementById(
+        "webRTC-shareDevices-notification"
+      );
 
       function checkDisabledWindowMenuItem() {
         let list = doc.getElementById("webRTC-selectWindow-menulist");
         let item = list.selectedItem;
-        let notificationElement = doc.getElementById(
-          "webRTC-shareDevices-notification"
-        );
         if (!item || item.hasAttribute("disabled")) {
           notificationElement.setAttribute("invalidselection", "true");
         } else {
@@ -989,23 +993,37 @@ function prompt(aActor, aBrowser, aRequest) {
       let micMenupopup = doc.getElementById(
         "webRTC-selectMicrophone-menupopup"
       );
+      let describedByIDs = ["webRTC-shareDevices-notification-description"];
+      let describedBySuffix = gProtonDoorhangersEnabled ? "icon" : "label";
+
       if (sharingScreen) {
         listScreenShareDevices(windowMenupopup, videoDevices);
         checkDisabledWindowMenuItem();
       } else {
-        let label = doc.getElementById("webRTC-selectCamera-label");
-        let deck = doc.getElementById("webRTC-selectCamera-deck");
-        listDevices(camMenupopup, videoDevices, label, deck);
-        doc
-          .getElementById("webRTC-shareDevices-notification")
-          .removeAttribute("invalidselection");
+        let labelID = "webRTC-selectCamera-single-device-label";
+        listDevices(camMenupopup, videoDevices, labelID);
+        notificationElement.removeAttribute("invalidselection");
+        if (videoDevices.length == 1) {
+          describedByIDs.push("webRTC-selectCamera-" + describedBySuffix);
+          describedByIDs.push(labelID);
+        }
       }
 
       if (!sharingAudio) {
-        let label = doc.getElementById("webRTC-selectMicrophone-label");
-        let deck = doc.getElementById("webRTC-selectMicrophone-deck");
-        listDevices(micMenupopup, audioDevices, label, deck);
+        let labelID = "webRTC-selectMicrophone-single-device-label";
+        listDevices(micMenupopup, audioDevices, labelID);
+        if (audioDevices.length == 1) {
+          describedByIDs.push("webRTC-selectMicrophone-" + describedBySuffix);
+          describedByIDs.push(labelID);
+        }
       }
+
+      // PopupNotifications knows to clear the aria-describedby attribute
+      // when hiding, so we don't have to worry about cleaning it up ourselves.
+      chromeDoc.defaultView.PopupNotifications.panel.setAttribute(
+        "aria-describedby",
+        describedByIDs.join(" ")
+      );
 
       this.mainAction.callback = async function(aState) {
         let remember = false;

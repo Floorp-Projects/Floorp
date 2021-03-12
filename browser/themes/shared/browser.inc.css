@@ -822,6 +822,42 @@ menupopup::part(drop-indicator) {
   font-weight: 600;
 }
 
+.webRTC-selectDevice-selector-container {
+  display: flex;
+  align-items: center;
+}
+
+.webRTC-selectDevice-selector-container > menulist {
+  flex: 1;
+}
+
+@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
+#webRTC-selectCamera-icon,
+#webRTC-selectMicrophone-icon {
+  display: none;
+}
+} /** END not Proton **/
+
+@supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
+#webRTC-selectCamera-label,
+#webRTC-selectMicrophone-label {
+  display: none;
+}
+
+.webRTC-selectDevice-icon {
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+#webRTC-selectCamera-icon {
+  list-style-image: url("chrome://browser/skin/notification-icons/camera.svg");
+}
+
+#webRTC-selectMicrophone-icon {
+  list-style-image: url("chrome://browser/skin/notification-icons/microphone.svg");
+}
+} /** END Proton **/
+
 #tab-notification-deck {
   display: flex;
 }

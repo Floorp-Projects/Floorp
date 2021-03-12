@@ -377,9 +377,13 @@ bookmarks-toolbar-empty-message = For quick access, place your bookmarks here on
 popup-select-camera-device =
     .value = Camera:
     .accesskey = C
+popup-select-camera-icon =
+    .tooltiptext = Camera
 popup-select-microphone-device =
     .value = Microphone:
     .accesskey = M
+popup-select-microphone-icon =
+    .tooltiptext = Microphone
 popup-all-windows-shared = All visible windows on your screen will be shared.
 
 popup-screen-sharing-block =

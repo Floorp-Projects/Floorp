@@ -1694,6 +1694,11 @@ PopupNotifications.prototype = {
       return;
     }
 
+    // It's possible that a popupnotification set `aria-describedby` on the
+    // panel element in its eventCallback function. If so, we'll clear that out
+    // before showing the next notification.
+    this.panel.removeAttribute("aria-describedby");
+
     // We may have removed the "noautofocus" attribute before showing the panel
     // if the notification specified it wants to autofocus on first show.
     // When the panel is closed, we have to restore the attribute to its default

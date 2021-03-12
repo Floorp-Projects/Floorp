@@ -766,54 +766,49 @@ async function reloadAndAssertClosedStreams() {
 function checkDeviceSelectors(aAudio, aVideo, aScreen, aWindow = window) {
   let document = aWindow.document;
   let micSelector = document.getElementById("webRTC-selectMicrophone");
-  let micDeck = document.getElementById("webRTC-selectMicrophone-deck");
-  let micLabel = document.getElementById("webRTC-selectMicrophone-label");
   if (aAudio) {
     ok(!micSelector.hidden, "microphone selector visible");
     let micSelectorList = document.getElementById(
       "webRTC-selectMicrophone-menulist"
     );
-    // If there's only 1 device listed, the deck should show the label instead.
+    let micLabel = document.getElementById(
+      "webRTC-selectMicrophone-single-device-label"
+    );
+    // If there's only 1 device listed, then we should show the label instead of
+    // the menulist.
     if (micSelectorList.itemCount == 1) {
-      is(micDeck.selectedIndex, "1", "Should be showing the microphone label.");
+      ok(micSelectorList.hidden, "Selector list should be hidden.");
+      ok(!micLabel.hidden, "Selector label should not be hidden.");
       is(
         micLabel.value,
         micSelectorList.selectedItem.getAttribute("label"),
         "Label should be showing the lone device label."
       );
     } else {
-      is(
-        micDeck.selectedIndex,
-        "0",
-        "Should be showing the microphone menulist."
-      );
+      ok(!micSelectorList.hidden, "Selector list should not be hidden.");
+      ok(micLabel.hidden, "Selector label should be hidden.");
     }
   } else {
     ok(micSelector.hidden, "microphone selector hidden");
   }
 
   let cameraSelector = document.getElementById("webRTC-selectCamera");
-  let cameraDeck = document.getElementById("webRTC-selectCamera-deck");
-  let cameraLabel = document.getElementById("webRTC-selectCamera-label");
   if (aVideo) {
     ok(!cameraSelector.hidden, "camera selector visible");
     let cameraSelectorList = document.getElementById(
       "webRTC-selectCamera-menulist"
     );
-    // If there's only 1 device listed, the deck should show the label instead.
+    let cameraLabel = document.getElementById(
+      "webRTC-selectCamera-single-device-label"
+    );
+    // If there's only 1 device listed, then we should show the label instead of
+    // the menulist.
     if (cameraSelectorList.itemCount == 1) {
-      is(cameraDeck.selectedIndex, "1", "Should be showing the camera label.");
-      is(
-        cameraLabel.value,
-        cameraSelectorList.selectedItem.getAttribute("label"),
-        "Label should be showing the lone device label."
-      );
+      ok(cameraSelectorList.hidden, "Selector list should be hidden.");
+      ok(!cameraLabel.hidden, "Selector label should not be hidden.");
     } else {
-      is(
-        cameraDeck.selectedIndex,
-        "0",
-        "Should be showing the camera menulist."
-      );
+      ok(!cameraSelectorList.hidden, "Selector list should not be hidden.");
+      ok(cameraLabel.hidden, "Selector label should be hidden.");
     }
   } else {
     ok(cameraSelector.hidden, "camera selector hidden");
