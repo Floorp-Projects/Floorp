@@ -76,10 +76,11 @@ const TemporaryPermissions = {
   },
 
   // Sets a new permission for the specified browser.
-  set(browser, id, state, expireTimeMS, expireCallback) {
+  set(browser, id, state, expireTimeMS, browserURI, expireCallback) {
     if (
       !browser ||
-      !SitePermissions.isSupportedScheme(browser.currentURI.scheme)
+      !browserURI ||
+      !SitePermissions.isSupportedScheme(browserURI.scheme)
     ) {
       return;
     }
@@ -90,7 +91,7 @@ const TemporaryPermissions = {
     }
     let { uriToPerm } = entry;
     // We store blocked permissions by baseDomain. Other states by URI prePath.
-    let { strict, nonStrict } = this._getKeysFromURI(browser.currentURI);
+    let { strict, nonStrict } = this._getKeysFromURI(browserURI);
     let setKey;
     let deleteKey;
     // Differenciate between block and non-block permissions. If we store a
@@ -741,6 +742,9 @@ var SitePermissions = {
    *        This needs to be provided if the scope is SCOPE_TEMPORARY!
    * @param {number} expireTimeMS (optional) If setting a temporary permission,
    *        how many milliseconds it should be valid for.
+   * @param {nsIURI} browserURI (optional) Pass a custom URI for the
+   *        temporary permission scope. This defaults to the current URI of the
+   *        browser.
    */
   setForPrincipal(
     principal,
@@ -748,7 +752,8 @@ var SitePermissions = {
     state,
     scope = this.SCOPE_PERSISTENT,
     browser = null,
-    expireTimeMS = SitePermissions.temporaryPermissionExpireTime
+    expireTimeMS = SitePermissions.temporaryPermissionExpireTime,
+    browserURI = browser?.currentURI
   ) {
     if (!principal && !browser) {
       throw new Error(
@@ -795,6 +800,7 @@ var SitePermissions = {
         permissionID,
         state,
         expireTimeMS,
+        browserURI,
         // On permission expiry
         origBrowser => {
           if (!origBrowser.ownerGlobal) {
