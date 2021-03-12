@@ -100,7 +100,8 @@ bool nsNativeBasicThemeCocoa::PaintScrollbarThumb(
     DrawTarget& aDt, const LayoutDeviceRect& aRect, bool aHorizontal,
     nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
-    DPIRatio aDpiRatio) {
+    UseSystemColors, DPIRatio aDpiRatio) {
+  // TODO: Maybe respect the UseSystemColors setting?
   DoPaintScrollbarThumb(aDt, aRect, aHorizontal, aFrame, aStyle, aElementState,
                         aDocumentState, aDpiRatio);
   return true;
@@ -110,7 +111,8 @@ bool nsNativeBasicThemeCocoa::PaintScrollbarThumb(
     WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
     bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
     const EventStates& aElementState, const EventStates& aDocumentState,
-    DPIRatio aDpiRatio) {
+    UseSystemColors, DPIRatio aDpiRatio) {
+  // TODO: Maybe respect the UseSystemColors setting?
   DoPaintScrollbarThumb(aWrData, aRect, aHorizontal, aFrame, aStyle,
                         aElementState, aDocumentState, aDpiRatio);
   return true;
@@ -136,7 +138,8 @@ void nsNativeBasicThemeCocoa::DoPaintScrollbarTrack(
 bool nsNativeBasicThemeCocoa::PaintScrollbarTrack(
     DrawTarget& aDt, const LayoutDeviceRect& aRect, bool aHorizontal,
     nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aDocumentState, DPIRatio aDpiRatio) {
+    const EventStates& aDocumentState, UseSystemColors, DPIRatio aDpiRatio) {
+  // TODO: Maybe respect the UseSystemColors setting?
   DoPaintScrollbarTrack(aDt, aRect, aHorizontal, aFrame, aStyle, aDocumentState,
                         aDpiRatio);
   return true;
@@ -145,7 +148,8 @@ bool nsNativeBasicThemeCocoa::PaintScrollbarTrack(
 bool nsNativeBasicThemeCocoa::PaintScrollbarTrack(
     WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
     bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aDocumentState, DPIRatio aDpiRatio) {
+    const EventStates& aDocumentState, UseSystemColors, DPIRatio aDpiRatio) {
+  // TODO: Maybe respect the UseSystemColors setting?
   DoPaintScrollbarTrack(aWrData, aRect, aHorizontal, aFrame, aStyle,
                         aDocumentState, aDpiRatio);
   return true;
@@ -171,7 +175,8 @@ void nsNativeBasicThemeCocoa::DoPaintScrollCorner(
 bool nsNativeBasicThemeCocoa::PaintScrollCorner(
     DrawTarget& aDt, const LayoutDeviceRect& aRect, nsIFrame* aFrame,
     const ComputedStyle& aStyle, const EventStates& aDocumentState,
-    DPIRatio aDpiRatio) {
+    UseSystemColors, DPIRatio aDpiRatio) {
+  // TODO: Maybe respect the UseSystemColors setting?
   DoPaintScrollCorner(aDt, aRect, aFrame, aStyle, aDocumentState, aDpiRatio);
   return true;
 }
@@ -179,7 +184,8 @@ bool nsNativeBasicThemeCocoa::PaintScrollCorner(
 bool nsNativeBasicThemeCocoa::PaintScrollCorner(
     WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
     nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aDocumentState, DPIRatio aDpiRatio) {
+    const EventStates& aDocumentState, UseSystemColors, DPIRatio aDpiRatio) {
+  // TODO: Maybe respect the UseSystemColors setting?
   DoPaintScrollCorner(aWrData, aRect, aFrame, aStyle, aDocumentState,
                       aDpiRatio);
   return true;
