@@ -572,7 +572,7 @@ static NativeGetPropCacheability CanAttachNativeGetProp(
   // out of turn. We don't mind doing this even when purity isn't required,
   // because we only miss out on shape hashification, which is only a temporary
   // perf cost. The limits were arbitrarily set, anyways.
-  JSObject* baseHolder = nullptr;
+  NativeObject* baseHolder = nullptr;
   PropertyResult prop;
   if (!LookupPropertyPure(cx, obj, id, &baseHolder, &prop)) {
     return CanAttachNone;
@@ -582,7 +582,7 @@ static NativeGetPropCacheability CanAttachNativeGetProp(
 
   if (prop.isNativeProperty()) {
     MOZ_ASSERT(baseHolder);
-    holder.set(&baseHolder->as<NativeObject>());
+    holder.set(baseHolder);
     shape.set(prop.shape());
 
     if (IsCacheableGetPropReadSlot(obj, holder, shape)) {
@@ -1960,7 +1960,7 @@ AttachDecision GetPropIRGenerator::tryAttachFunction(HandleObject obj,
     return AttachDecision::NoAction;
   }
 
-  JSObject* holder = nullptr;
+  NativeObject* holder = nullptr;
   PropertyResult prop;
   // If this property exists already, don't attach the stub.
   if (LookupPropertyPure(cx_, obj, id, &holder, &prop)) {
@@ -3183,7 +3183,7 @@ AttachDecision HasPropIRGenerator::tryAttachNamedProp(HandleObject obj,
                                                       ValOperandId keyId) {
   bool hasOwn = (cacheKind_ == CacheKind::HasOwn);
 
-  JSObject* holder = nullptr;
+  NativeObject* holder = nullptr;
   PropertyResult prop;
 
   if (hasOwn) {
@@ -3191,7 +3191,7 @@ AttachDecision HasPropIRGenerator::tryAttachNamedProp(HandleObject obj,
       return AttachDecision::NoAction;
     }
 
-    holder = obj;
+    holder = &obj->as<NativeObject>();
   } else {
     if (!LookupPropertyPure(cx_, obj, key, &holder, &prop)) {
       return AttachDecision::NoAction;
@@ -3773,7 +3773,7 @@ static bool IsCacheableSetPropCallScripted(JSObject* obj, JSObject* holder,
 }
 
 static bool CanAttachSetter(JSContext* cx, jsbytecode* pc, HandleObject obj,
-                            HandleId id, MutableHandleObject holder,
+                            HandleId id, MutableHandleNativeObject holder,
                             MutableHandleShape propShape) {
   // Don't attach a setter stub for ops like JSOp::InitElem.
   MOZ_ASSERT(IsPropertySetOp(JSOp(*pc)));
@@ -3829,7 +3829,7 @@ AttachDecision SetPropIRGenerator::tryAttachSetter(HandleObject obj,
                                                    ObjOperandId objId,
                                                    HandleId id,
                                                    ValOperandId rhsId) {
-  RootedObject holder(cx_);
+  RootedNativeObject holder(cx_);
   RootedShape propShape(cx_);
   if (!CanAttachSetter(cx_, pc_, obj, id, &holder, &propShape)) {
     return AttachDecision::NoAction;
@@ -4220,7 +4220,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyUnshadowed(
     return AttachDecision::NoAction;
   }
 
-  RootedObject holder(cx_);
+  RootedNativeObject holder(cx_);
   RootedShape propShape(cx_);
   if (!CanAttachSetter(cx_, pc_, proto, id, &holder, &propShape)) {
     return AttachDecision::NoAction;
@@ -4278,7 +4278,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
     return AttachDecision::Attach;
   }
 
-  RootedObject holder(cx_);
+  RootedNativeObject holder(cx_);
   if (CanAttachSetter(cx_, pc_, expandoObj, id, &holder, &propShape)) {
     // Note that we don't actually use the expandoObjId here after the
     // shape guard. The DOM proxy (objId) is passed to the setter as
@@ -4622,7 +4622,7 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
   // hasInstance hook will not change without the need to guard on the actual
   // property value.
   PropertyResult hasInstanceProp;
-  JSObject* hasInstanceHolder = nullptr;
+  NativeObject* hasInstanceHolder = nullptr;
   jsid hasInstanceID = SYMBOL_TO_JSID(cx_->wellKnownSymbols().hasInstance);
   if (!LookupPropertyPure(cx_, fun, hasInstanceID, &hasInstanceHolder,
                           &hasInstanceProp) ||
