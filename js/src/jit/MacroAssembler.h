@@ -216,7 +216,6 @@ struct ExpandoAndGeneration;
 namespace js {
 
 class TypedArrayObject;
-class RttValue;
 
 namespace wasm {
 class CalleeDesc;
@@ -1527,13 +1526,6 @@ class MacroAssembler : public MacroAssemblerSpecific {
   // TODO: audit/fix callers to be Spectre safe.
   inline void branchTestObjShapeUnsafe(Condition cond, Register obj,
                                        Register shape, Label* label);
-
-  void branchTestObjRttValue(Condition cond, Register obj, Register rttValue,
-                             Register scratch, Register spectreRegToZero,
-                             Label* label);
-  void branchTestObjRttValue(Condition cond, Register obj, RttValue* rttValue,
-                             Register scratch, Register spectreRegToZero,
-                             Label* label);
 
   void branchTestObjCompartment(Condition cond, Register obj,
                                 const Address& compartment, Register scratch,

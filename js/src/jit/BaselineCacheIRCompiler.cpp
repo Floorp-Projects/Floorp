@@ -234,27 +234,6 @@ bool BaselineCacheIRCompiler::emitGuardProto(ObjOperandId objId,
   return true;
 }
 
-bool BaselineCacheIRCompiler::emitGuardRttValue(ObjOperandId objId,
-                                                uint32_t descrOffset) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-
-  Register obj = allocator.useRegister(masm, objId);
-  AutoScratchRegister scratch1(allocator, masm);
-  AutoScratchRegister scratch2(allocator, masm);
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  Address addr(stubAddress(descrOffset));
-  masm.loadPtr(addr, scratch1);
-  masm.branchTestObjRttValue(Assembler::NotEqual, obj, scratch1, scratch2, obj,
-                             failure->label());
-
-  return true;
-}
-
 bool BaselineCacheIRCompiler::emitGuardCompartment(ObjOperandId objId,
                                                    uint32_t globalOffset,
                                                    uint32_t compartmentOffset) {

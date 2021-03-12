@@ -225,14 +225,6 @@
     obj: ObjId
     shape: ShapeField
 
-- name: GuardRttValue
-  shared: false
-  transpile: false
-  cost_estimate: 1
-  args:
-    obj: ObjId
-    descr: ObjectField
-
 - name: GuardProto
   shared: false
   transpile: true
