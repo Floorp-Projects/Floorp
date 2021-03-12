@@ -902,14 +902,14 @@ static void EmitCallGetterResultNoGuards(JSContext* cx, CacheIRWriter& writer,
   }
 }
 
-static void EmitCallGetterResultGuards(CacheIRWriter& writer, JSObject* obj,
-                                       JSObject* holder, Shape* shape,
+static void EmitCallGetterResultGuards(CacheIRWriter& writer, NativeObject* obj,
+                                       NativeObject* holder, Shape* shape,
                                        ObjOperandId objId, ICState::Mode mode) {
   // Use the megamorphic guard if we're in megamorphic mode, except if |obj|
   // is a Window as GuardHasGetterSetter doesn't support this yet (Window may
   // require outerizing).
   if (mode == ICState::Mode::Specialized || IsWindow(obj)) {
-    TestMatchingReceiver(writer, obj, objId);
+    TestMatchingNativeReceiver(writer, obj, objId);
 
     if (obj != holder) {
       GeneratePrototypeGuards(writer, obj, holder, objId);
@@ -924,9 +924,9 @@ static void EmitCallGetterResultGuards(CacheIRWriter& writer, JSObject* obj,
 }
 
 static void EmitCallGetterResult(JSContext* cx, CacheIRWriter& writer,
-                                 JSObject* obj, JSObject* holder, Shape* shape,
-                                 ObjOperandId objId, ValOperandId receiverId,
-                                 ICState::Mode mode) {
+                                 NativeObject* obj, NativeObject* holder,
+                                 Shape* shape, ObjOperandId objId,
+                                 ValOperandId receiverId, ICState::Mode mode) {
   EmitCallGetterResultGuards(writer, obj, holder, shape, objId, mode);
   EmitCallGetterResultNoGuards(cx, writer, obj, holder, shape, receiverId);
 }
@@ -989,7 +989,7 @@ static void EmitCallDOMGetterResultNoGuards(CacheIRWriter& writer, Shape* shape,
 }
 
 static void EmitCallDOMGetterResult(JSContext* cx, CacheIRWriter& writer,
-                                    JSObject* obj, JSObject* holder,
+                                    NativeObject* obj, NativeObject* holder,
                                     Shape* shape, ObjOperandId objId) {
   // Note: this relies on EmitCallGetterResultGuards emitting a shape guard
   // for specialized stubs.
@@ -1043,17 +1043,19 @@ AttachDecision GetPropIRGenerator::tryAttachNative(HandleObject obj,
       return AttachDecision::Attach;
     case CanAttachScriptedGetter:
     case CanAttachNativeGetter: {
+      auto nobj = obj.as<NativeObject>();
+
       maybeEmitIdGuard(id);
 
-      if (!isSuper() &&
-          CanAttachDOMGetterSetter(cx_, JSJitInfo::Getter, obj, shape, mode_)) {
-        EmitCallDOMGetterResult(cx_, writer, obj, holder, shape, objId);
+      if (!isSuper() && CanAttachDOMGetterSetter(cx_, JSJitInfo::Getter, nobj,
+                                                 shape, mode_)) {
+        EmitCallDOMGetterResult(cx_, writer, nobj, holder, shape, objId);
 
         trackAttached("DOMGetter");
         return AttachDecision::Attach;
       }
 
-      EmitCallGetterResult(cx_, writer, obj, holder, shape, objId, receiverId,
+      EmitCallGetterResult(cx_, writer, nobj, holder, shape, objId, receiverId,
                            mode_);
 
       trackAttached("NativeGetter");
@@ -1750,7 +1752,7 @@ AttachDecision GetPropIRGenerator::tryAttachTypedArray(HandleObject obj,
   maybeEmitIdGuard(id);
   // Emit all the normal guards for calling this native, but specialize
   // callNativeGetterResult.
-  EmitCallGetterResultGuards(writer, obj, holder, shape, objId, mode_);
+  EmitCallGetterResultGuards(writer, tarr, holder, shape, objId, mode_);
   if (isLength) {
     if (tarr->length().get() <= INT32_MAX) {
       writer.loadArrayBufferViewLengthInt32Result(objId);
@@ -1827,7 +1829,7 @@ AttachDecision GetPropIRGenerator::tryAttachDataView(HandleObject obj,
   maybeEmitIdGuard(id);
   // Emit all the normal guards for calling this native, but specialize
   // callNativeGetterResult.
-  EmitCallGetterResultGuards(writer, obj, holder, shape, objId, mode_);
+  EmitCallGetterResultGuards(writer, dv, holder, shape, objId, mode_);
   writer.guardHasAttachedArrayBuffer(objId);
   if (isByteOffset) {
     if (dv->byteOffset().get() <= INT32_MAX) {
@@ -1891,7 +1893,7 @@ AttachDecision GetPropIRGenerator::tryAttachArrayBufferMaybeShared(
   maybeEmitIdGuard(id);
   // Emit all the normal guards for calling this native, but specialize
   // callNativeGetterResult.
-  EmitCallGetterResultGuards(writer, obj, holder, shape, objId, mode_);
+  EmitCallGetterResultGuards(writer, buf, holder, shape, objId, mode_);
   if (buf->byteLength().get() <= INT32_MAX) {
     writer.loadArrayBufferByteLengthInt32Result(objId);
   } else {
@@ -1909,6 +1911,7 @@ AttachDecision GetPropIRGenerator::tryAttachRegExp(HandleObject obj,
   if (!obj->is<RegExpObject>()) {
     return AttachDecision::NoAction;
   }
+  auto* regExp = &obj->as<RegExpObject>();
 
   if (mode_ != ICState::Mode::Specialized) {
     return AttachDecision::NoAction;
@@ -1936,7 +1939,7 @@ AttachDecision GetPropIRGenerator::tryAttachRegExp(HandleObject obj,
   maybeEmitIdGuard(id);
   // Emit all the normal guards for calling this native, but specialize
   // callNativeGetterResult.
-  EmitCallGetterResultGuards(writer, obj, holder, shape, objId, mode_);
+  EmitCallGetterResultGuards(writer, regExp, holder, shape, objId, mode_);
 
   writer.regExpFlagResult(objId, flags.value());
   writer.returnFromIC();
@@ -2150,6 +2153,8 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
     }
     case CanAttachScriptedGetter:
     case CanAttachNativeGetter: {
+      auto* nproto = &proto->as<NativeObject>();
+
       if (val_.isNumber()) {
         writer.guardIsNumber(valId);
       } else {
@@ -2157,8 +2162,8 @@ AttachDecision GetPropIRGenerator::tryAttachPrimitive(ValOperandId valId,
       }
       maybeEmitIdGuard(id);
 
-      ObjOperandId protoId = writer.loadObject(proto);
-      EmitCallGetterResult(cx_, writer, proto, holder, shape, protoId, valId,
+      ObjOperandId protoId = writer.loadObject(nproto);
+      EmitCallGetterResult(cx_, writer, nproto, holder, shape, protoId, valId,
                            mode_);
 
       trackAttached("PrimitiveGetter");
