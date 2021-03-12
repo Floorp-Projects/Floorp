@@ -68,7 +68,7 @@
                 oncommand="gContextMenu.openLinkInTab(event);"/>
 
       <menu id="context-openlinkinusercontext-menu"
-            data-l10n-id="main-context-menu-open-link-container-tab"
+            data-l10n-id="main-context-menu-open-link-container"
             hidden="true">
         <menupopup oncommand="gContextMenu.openLinkInTab(event);"
                    onpopupshowing="return gContextMenu.createContainerMenu(event);" />
