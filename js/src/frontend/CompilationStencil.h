@@ -846,11 +846,11 @@ struct CompilationGCOutput {
   //
   // If the top level script isn't a function, the item at TopLevelIndex is
   // nullptr.
-  JS::GCVector<JSFunction*, 0, js::SystemAllocPolicy> functions;
+  JS::GCVector<JSFunction*, 1, js::SystemAllocPolicy> functions;
 
   // References to scopes are controlled via AbstractScopePtr, which holds onto
   // an index (and CompilationStencil reference).
-  JS::GCVector<js::Scope*, 0, js::SystemAllocPolicy> scopes;
+  JS::GCVector<js::Scope*, 1, js::SystemAllocPolicy> scopes;
 
   // The result ScriptSourceObject. This is unused in delazifying parses.
   ScriptSourceObject* sourceObject = nullptr;
