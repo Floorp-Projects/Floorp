@@ -196,7 +196,6 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   static DPIRatio GetDPIRatio(nsIFrame*, StyleAppearance);
   static bool IsDateTimeResetButton(nsIFrame*);
   static bool IsColorPickerButton(nsIFrame*);
-  static LayoutDeviceRect FixAspectRatio(const LayoutDeviceRect&);
 
   virtual std::pair<sRGBColor, sRGBColor> ComputeCheckboxColors(
       const EventStates&, StyleAppearance);

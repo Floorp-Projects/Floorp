@@ -202,26 +202,13 @@ bool nsNativeBasicTheme::IsColorPickerButton(nsIFrame* aFrame) {
   return colorPickerButton;
 }
 
-/* static */
-LayoutDeviceRect nsNativeBasicTheme::FixAspectRatio(
-    const LayoutDeviceRect& aRect) {
-  // Checkbox and radio need to preserve aspect-ratio for compat.
-  LayoutDeviceRect rect(aRect);
-  if (rect.width == rect.height) {
-    return rect;
-  }
-
-  if (rect.width > rect.height) {
-    auto diff = rect.width - rect.height;
-    rect.width = rect.height;
-    rect.x += diff / 2;
-  } else {
-    auto diff = rect.height - rect.width;
-    rect.height = rect.width;
-    rect.y += diff / 2;
-  }
-
-  return rect;
+// Checkbox and radio need to preserve aspect-ratio for compat. We also snap the
+// size to exact device pixels to avoid snapping disorting the circles.
+static LayoutDeviceRect CheckBoxRadioRect(const LayoutDeviceRect& aRect) {
+  // Place a square rect in the center of aRect.
+  auto size = std::trunc(std::min(aRect.width, aRect.height));
+  auto position = aRect.Center() - LayoutDevicePoint(size * 0.5, size * 0.5);
+  return LayoutDeviceRect(position, LayoutDeviceSize(size, size));
 }
 
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
@@ -1457,7 +1444,7 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
 
   switch (aAppearance) {
     case StyleAppearance::Radio: {
-      auto rect = FixAspectRatio(devPxRect);
+      auto rect = CheckBoxRadioRect(devPxRect);
       PaintRadioControl(aPaintData, rect, eventState, dpiRatio);
       break;
     }
@@ -1466,7 +1453,7 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
         // TODO: Need to figure out how to best draw this using WR.
         return false;
       } else {
-        auto rect = FixAspectRatio(devPxRect);
+        auto rect = CheckBoxRadioRect(devPxRect);
         PaintCheckboxControl(aPaintData, rect, eventState, dpiRatio);
         if (GetIndeterminate(aFrame)) {
           PaintIndeterminateMark(aPaintData, rect, eventState);
