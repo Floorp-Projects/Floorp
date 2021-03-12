@@ -11,9 +11,8 @@
 # will likely look very different (and much more reasonable)
 
 [package]
-edition = "2018"
 name = "crossbeam-epoch"
-version = "0.9.1"
+version = "0.8.0"
 authors = ["The Crossbeam Project Developers"]
 description = "Epoch-based garbage collection"
 homepage = "https://github.com/crossbeam-rs/crossbeam/tree/master/crossbeam-epoch"
@@ -21,34 +20,33 @@ documentation = "https://docs.rs/crossbeam-epoch"
 readme = "README.md"
 keywords = ["lock-free", "rcu", "atomic", "garbage"]
 categories = ["concurrency", "memory-management", "no-std"]
-license = "MIT OR Apache-2.0"
+license = "MIT/Apache-2.0"
 repository = "https://github.com/crossbeam-rs/crossbeam"
 [dependencies.cfg-if]
-version = "1"
-
-[dependencies.const_fn]
-version = "0.4"
+version = "0.1.2"
 
 [dependencies.crossbeam-utils]
-version = "0.8"
+version = "0.7"
 default-features = false
 
 [dependencies.lazy_static]
-version = "1.4.0"
+version = "1"
 optional = true
 
 [dependencies.memoffset]
-version = "0.6"
+version = "0.5"
 
 [dependencies.scopeguard]
-version = "1.1.0"
+version = "1"
 default-features = false
 [dev-dependencies.rand]
-version = "0.7.3"
+version = "0.6"
+[build-dependencies.autocfg]
+version = "0.1.6"
 
 [features]
-alloc = []
+alloc = ["crossbeam-utils/alloc"]
 default = ["std"]
 nightly = ["crossbeam-utils/nightly"]
 sanitize = []
-std = ["alloc", "crossbeam-utils/std", "lazy_static"]
+std = ["crossbeam-utils/std", "lazy_static"]

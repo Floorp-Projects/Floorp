@@ -12,11 +12,11 @@
 ///
 /// handle.pin().flush();
 /// ```
+use alloc::sync::Arc;
 use core::fmt;
 
-use crate::alloc::sync::Arc;
-use crate::guard::Guard;
-use crate::internal::{Global, Local};
+use guard::Guard;
+use internal::{Global, Local};
 
 /// An epoch-based garbage collector.
 pub struct Collector {
@@ -26,18 +26,12 @@ pub struct Collector {
 unsafe impl Send for Collector {}
 unsafe impl Sync for Collector {}
 
-impl Default for Collector {
-    fn default() -> Self {
-        Self {
-            global: Arc::new(Global::new()),
-        }
-    }
-}
-
 impl Collector {
     /// Creates a new collector.
     pub fn new() -> Self {
-        Self::default()
+        Collector {
+            global: Arc::new(Global::new()),
+        }
     }
 
     /// Registers a new handle for the collector.
@@ -56,7 +50,7 @@ impl Clone for Collector {
 }
 
 impl fmt::Debug for Collector {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.pad("Collector { .. }")
     }
 }
@@ -104,7 +98,7 @@ impl Drop for LocalHandle {
 }
 
 impl fmt::Debug for LocalHandle {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         f.pad("LocalHandle { .. }")
     }
 }
@@ -116,7 +110,7 @@ mod tests {
 
     use crossbeam_utils::thread;
 
-    use crate::{Collector, Owned};
+    use {Collector, Owned};
 
     const NUM_THREADS: usize = 8;
 
@@ -383,7 +377,7 @@ mod tests {
             let ptr = v.as_mut_ptr() as usize;
             let len = v.len();
             guard.defer_unchecked(move || {
-                drop(Vec::from_raw_parts(ptr as *const i32 as *mut i32, len, len));
+                drop(Vec::from_raw_parts(ptr as *const u8 as *mut u8, len, len));
                 DESTROYS.fetch_add(len, Ordering::Relaxed);
             });
             guard.flush();

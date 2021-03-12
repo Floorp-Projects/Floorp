@@ -4,9 +4,8 @@
 //! is registered in the default collector.  If initialized, the thread's participant will get
 //! destructed on thread exit, which in turn unregisters the thread.
 
-use crate::collector::{Collector, LocalHandle};
-use crate::guard::Guard;
-use lazy_static::lazy_static;
+use collector::{Collector, LocalHandle};
+use guard::Guard;
 
 lazy_static! {
     /// The global data for the default garbage collector.
@@ -71,7 +70,6 @@ mod tests {
                 super::pin();
                 // At thread exit, `HANDLE` gets dropped first and `FOO` second.
             });
-        })
-        .unwrap();
+        }).unwrap();
     }
 }
