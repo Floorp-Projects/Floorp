@@ -330,7 +330,7 @@ CustomElementRegistry::RunCustomElementCreationCallback::Run() {
                                                                   &elements);
   MOZ_ASSERT(elements, "There should be a list");
 
-  for (auto iter = elements->Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = elements->ConstIter(); !iter.Done(); iter.Next()) {
     nsCOMPtr<Element> elem = do_QueryReferent(iter.Get()->GetKey());
     if (!elem) {
       continue;
@@ -563,7 +563,7 @@ CandidateFinder::CandidateFinder(
     Document* aDoc)
     : mDoc(aDoc), mCandidates(aCandidates.Count()) {
   MOZ_ASSERT(mDoc);
-  for (auto iter = aCandidates.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = aCandidates.ConstIter(); !iter.Done(); iter.Next()) {
     nsCOMPtr<Element> elem = do_QueryReferent(iter.Get()->GetKey());
     if (!elem) {
       continue;
@@ -1286,8 +1286,8 @@ already_AddRefed<nsISupports> CustomElementRegistry::CallGetCustomInterface(
 }
 
 void CustomElementRegistry::TraceDefinitions(JSTracer* aTrc) {
-  for (auto iter = mCustomDefinitions.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<CustomElementDefinition>& definition = iter.Data();
+  for (const auto& entry : mCustomDefinitions) {
+    const RefPtr<CustomElementDefinition>& definition = entry.GetData();
     if (definition && definition->mConstructor) {
       mozilla::TraceScriptHolder(definition->mConstructor, aTrc);
     }
