@@ -52,7 +52,7 @@ exports[`ObjectInspector - entries calls ObjectFront.enumEntries when expected 4
 
 exports[`ObjectInspector - entries renders Object with entries as expected 1`] = `
 "
-▼ Map(2)
+▼ Map { Symbol(\\"a\\") → \\"value-a\\", Symbol(\\"b\\") → \\"value-b\\" }
 |    size: 2
 |  ▼ <entries>
 |  |  ▼ 0: \\"key-0\\" → \\"value-0\\"
@@ -88,7 +88,7 @@ exports[`ObjectInspector - entries renders Object with entries as expected 1`] =
 |  |  ▼ 10: \\"key-10\\" → \\"value-10\\"
 |  |  |    <key>: \\"key-10\\"
 |  |  |    <value>: \\"value-10\\"
-|  ▼ <prototype>: {…}
+|  ▼ <prototype>: Object { … }
 |  |    <prototype>: Object {  }
 "
 `;

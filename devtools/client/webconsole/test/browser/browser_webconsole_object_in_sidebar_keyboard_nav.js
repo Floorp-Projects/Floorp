@@ -13,7 +13,6 @@ const TEST_URI = `data:text/html;charset=utf8,
       c: Array.from({length: 100}, (_, i) => i)
     });
   </script>`;
-const { ELLIPSIS } = require("devtools/shared/l10n");
 
 add_task(async function() {
   // Should be removed when sidebar work is complete
@@ -80,7 +79,7 @@ add_task(async function() {
   await waitFor(() =>
     sidebarContents
       .querySelector(".tree-node")
-      .textContent.includes(`(3) [${ELLIPSIS}]`)
+      .textContent.includes("Array(3) [ 4, 5, 6 ]")
   );
   ok(
     sidebarContents.querySelector(".tree-node").classList.contains("focused"),
