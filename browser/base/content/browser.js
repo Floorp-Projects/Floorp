@@ -3539,7 +3539,7 @@ function BrowserReloadWithFlags(reloadFlags) {
   // This is done here because we only want to reset
   // permissions on user reload.
   for (let tab of unchangedRemoteness) {
-    SitePermissions.clearTemporaryPermissions(tab.linkedBrowser);
+    SitePermissions.clearTemporaryBlockPermissions(tab.linkedBrowser);
     // Also reset DOS mitigations for the basic auth prompt on reload.
     delete tab.linkedBrowser.authPromptAbuseCounter;
   }

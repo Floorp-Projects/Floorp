@@ -240,21 +240,54 @@ const TemporaryPermissions = {
   // Clears all permissions for the specified browser.
   // Unlike other methods, this does NOT clear only for
   // the currentURI but the whole browser state.
-  clear(browser) {
-    let entry = this._stateByBrowser.get(browser);
-    this._stateByBrowser.delete(browser);
 
+  /**
+   * Clear temporary permissions for the specified browser. Unlike other
+   * methods, this does NOT clear only for the currentURI but the whole browser
+   * state.
+   * @param {Browser} browser - Browser to clear permissions for.
+   * @param {Number} [filterState] - Only clear permissions with the given state
+   * value. Defaults to all permissions.
+   */
+  clear(browser, filterState = null) {
+    let entry = this._stateByBrowser.get(browser);
     if (!entry?.uriToPerm) {
       return;
     }
-    Object.values(entry.uriToPerm).forEach(permissions => {
-      Object.values(permissions).forEach(({ expireTimeout }) => {
-        if (!expireTimeout) {
-          return;
+
+    let { uriToPerm } = entry;
+    Object.entries(uriToPerm).forEach(([uriKey, permissions]) => {
+      Object.entries(permissions).forEach(
+        ([permId, { state, expireTimeout }]) => {
+          // We need to explicitly check for null or undefined here, because the
+          // permission state may be 0.
+          if (filterState != null) {
+            if (state != filterState) {
+              // Skip permission entry if it doesn't match the filter.
+              return;
+            }
+            delete permissions[permId];
+          }
+          // For the clear-all case we remove the entire browser entry, so we
+          // only need to clear the timeouts.
+          if (!expireTimeout) {
+            return;
+          }
+          clearTimeout(expireTimeout);
         }
-        clearTimeout(expireTimeout);
-      });
+      );
+      // If there are no more permissions, remove the entry from the URI map.
+      if (filterState != null && !Object.keys(permissions).length) {
+        delete uriToPerm[uriKey];
+      }
     });
+
+    // We're either clearing all permissions or only the permissions with state
+    // == filterState. If we have a filter, we can only clean up the browser if
+    // there are no permission entries left in the map.
+    if (filterState == null || !Object.keys(uriToPerm).length) {
+      this._stateByBrowser.delete(browser);
+    }
   },
 
   // Copies the temporary permission state of one browser
@@ -866,13 +899,13 @@ var SitePermissions = {
   },
 
   /**
-   * Clears all permissions that were temporarily saved.
+   * Clears all block permissions that were temporarily saved.
    *
    * @param {Browser} browser
    *        The browser object to clear.
    */
-  clearTemporaryPermissions(browser) {
-    TemporaryPermissions.clear(browser);
+  clearTemporaryBlockPermissions(browser) {
+    TemporaryPermissions.clear(browser, SitePermissions.BLOCK);
   },
 
   /**
