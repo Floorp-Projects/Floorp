@@ -386,19 +386,20 @@ const pedanticChecks = report => {
 
       // nackCount
       if (stat.nackCount) {
-        ok(stat.nackCount >= 0, stat.type + ".nackCount is sane.");
+          ok(stat.nackCount >= 0,
+              `${stat.type}.nackCount is sane (${stat.kind}).`);
       }
 
       if (!isRemote && stat.inner.kind == "video") {
         // firCount
         ok(stat.firCount >= 0 && stat.firCount < 100,
-          stat.type + ".firCount is a sane number for a short test. value="
-          + stat.firCount);
+            `${stat.type}.firCount is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.firCount}`);
 
         // pliCount
         ok(stat.pliCount >= 0 && stat.pliCount < 200,
-          stat.type + ".pliCount is a sane number for a short test. value="
-          + stat.pliCount);
+            `${stat.type}.pliCount is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.pliCount}`);
       }
     }
 
@@ -410,26 +411,26 @@ const pedanticChecks = report => {
       // packetsReceived
       ok(stat.packetsReceived >= 0
         && stat.packetsReceived < 10 ** 5,
-        stat.type + ".packetsReceived is a sane number for a short test. value="
-        + stat.packetsReceived);
+         `${stat.type}.packetsReceived is a sane number for a short ` +
+          `${stat.kind} test. value=${stat.packetsReceived}`);
 
       // bytesReceived
       ok(stat.bytesReceived >= 0
         && stat.bytesReceived < 10 ** 9, // Not a magic number, just a guess
-        stat.type + ".bytesReceived is a sane number for a short test. value="
-        + stat.bytesReceived);
+          `${stat.type}.bytesReceived is a sane number for a short ` +
+          `${stat.kind} test. value=${stat.bytesReceived}`);
 
       // packetsLost
       ok(stat.packetsLost < 100,
-        stat.type + ".packetsLost is a sane number for a short test. value="
-        + stat.packetsLost);
+          `${stat.type}.packetsLost is a sane number for a short ` +
+          `${stat.kind} test. value=${stat.packetsLost}`);
 
       // This should be much lower for audio, TODO: Bug 1330575
       let expectedJitter = stat.kind == "video" ? 0.5 : 1;
       // jitter
       ok(stat.jitter < expectedJitter,
-        stat.type + ".jitter is sane number for a local only test. value="
-        + stat.jitter);
+          `${stat.type}.jitter is sane number for a ${stat.kind} ` +
+          `local only test. value=${stat.jitter}`);
 
       //
       // Optional fields
@@ -449,27 +450,27 @@ const pedanticChecks = report => {
             + " when kind is video");
         });
         // framesDecoded
-        ok(stat.framesDecoded > 0 && stat.framesDecoded < 1000000, stat.type
-          + ".framesDecoded is a sane number for a short test. value="
-          + stat.framesDecoded);
+        ok(stat.framesDecoded > 0 && stat.framesDecoded < 1000000,
+            `${stat.type}.framesDecoded is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.framesDecoded}`);
       }
     } else if (stat.type == "remote-inbound-rtp") {
       // roundTripTime
-      ok(stat.roundTripTime >= 0, stat.type + ".roundTripTime is sane with" +
-          "value of:" + stat.roundTripTime);
+        ok(stat.roundTripTime >= 0, `${stat.type}.roundTripTime is sane with` +
+            `value of: ${stat.roundTripTime} (${stat.kind})`);
       //
       // Required fields
       //
 
       // packetsLost
       ok(stat.packetsLost < 100,
-        stat.type + ".packetsLost is a sane number for a short test. value="
-        + stat.packetsLost);
+          `${stat.type}.packetsLost is a sane number for a short ` +
+          `${stat.kind} test. value=${stat.packetsLost}`);
 
       // jitter
         ok(stat.jitter >= 0,
-        stat.type + ".jitter is sane number. value="
-        + stat.jitter);
+            `${stat.type}.jitter is sane number (${stat.kind}). ` +
+            `value=${stat.jitter}`);
 
       //
       // Optional fields
@@ -479,8 +480,9 @@ const pedanticChecks = report => {
       if (stat.packetsReceived) {
         ok(stat.packetsReceived >= 0
           && stat.packetsReceived < 10 ** 5,
-          stat.type + ".packetsReceived is a sane number for a short test. value="
-          + stat.packetsReceived);
+          `${stat.type}.packetsReceived is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.packetsReceived}`);
+
       }
 
     } else if (stat.type == "outbound-rtp") {
@@ -490,13 +492,13 @@ const pedanticChecks = report => {
 
       // packetsSent
       ok(stat.packetsSent > 0 && stat.packetsSent < 10000,
-        stat.type + ".packetsSent is a sane number for a short test. value="
-        + stat.packetsSent);
+          `${stat.type}.packetsSent is a sane number for a short ` +
+          `${stat.kind} test. value=${stat.packetsSent}`);
 
       // bytesSent
-      ok(stat.bytesSent, stat.type + ".bytesSent has a value."
-        + " Value not expected to be sane, bug 1339104. value="
-        + stat.bytesSent);
+      ok(stat.bytesSent > 0 && stat.bytesSent < 300000,
+          `${stat.type}.bytesSent is a sane number for a short ` +
+          `${stat.kind} test. value=${stat.bytesSent}`);
 
       //
       // Optional fields
@@ -507,24 +509,25 @@ const pedanticChecks = report => {
       //
       if (stat.inner.kind != "video") {
         expectations.localVideoOnly.forEach(field => {
-            ok(stat[field] === undefined, stat.type + " does not have field "
-              + field + " when kind is not 'video'");
+            ok(stat[field] === undefined, `${stat.type} does not have field ` +
+                `${field} when kind is not 'video'`);
         });
       } else {
         expectations.localVideoOnly.forEach(field => {
-          ok(stat.inner[field] !== undefined, stat.type + " has field " + field
-            + " when kind is video and isRemote is false");
+            ok(stat.inner[field] !== undefined, `${stat.type} has field ` +
+                `${field} when kind is video and isRemote is false`);
         });
 
         // framesEncoded
-        ok(stat.framesEncoded >= 0 && stat.framesEncoded < 100000, stat.type
-          + ".framesEncoded is a sane number for a short test. value="
-          + stat.framesEncoded);
+        ok(stat.framesEncoded >= 0 && stat.framesEncoded < 100000,
+            `${stat.type}.framesEncoded is a sane number for a short ` +
+            `${stat.kind} test. value=${stat.framesEncoded}`);
 
         // qpSum
         // techinically optional but should be supported for all of our codecs (on the encode side, see bug 1519590)
         ok(stat.qpSum >= 0,
-          `${stat.type} qpSum is a sane number. value=${stat.qpSum}`);
+            `${stat.type} qpSum is a sane number (${stat.kind}). ` +
+            `value=${stat.qpSum}`);
       }
     } else if (stat.type == "remote-outbound-rtp") {
       //
@@ -533,16 +536,16 @@ const pedanticChecks = report => {
 
       // packetsSent
       ok(stat.packetsSent > 0 && stat.packetsSent < 10000,
-        stat.type + ".packetsSent is a sane number for a short test. value="
-        + stat.packetsSent);
+         `${stat.type}.packetsSent is a sane number for a short ` +
+          `${stat.kind} test. value=${stat.packetsSent}`);
 
       // bytesSent
-      ok(stat.bytesSent, stat.type + ".bytesSent has a value."
-        + " Value not expected to be sane, bug 1339104. value="
-        + stat.bytesSent);
+      ok(stat.bytesSent > 0 && stat.bytesSent < 300000,
+         `${stat.type}.bytesSent is a sane number for a short ` +
+          `${stat.kind} test. value=${stat.bytesSent}`);
 
       ok(stat.remoteTimestamp !== undefined, `${stat.type}.remoteTimestamp `
-	+ ` is not undefined`);
+          + ` is not undefined (${stat.kind})`);
 
     } else if (stat.type == "candidate-pair") {
       info("candidate-pair is: " + JSON.stringify(stat));
@@ -552,33 +555,33 @@ const pedanticChecks = report => {
 
       // transportId
       ok(stat.transportId,
-        stat.type + ".transportId has a value. value="
-        + stat.transportId);
+          `${stat.type}.transportId has a value. value=`
+          + `${stat.transportId} (${stat.kind})`);
 
       // localCandidateId
       ok(stat.localCandidateId,
-        stat.type + ".localCandidateId has a value. value="
-        + stat.localCandidateId);
+          `${stat.type}.localCandidateId has a value. value=`
+          + `${stat.localCandidateId} (${stat.kind})`);
 
       // remoteCandidateId
       ok(stat.remoteCandidateId,
-        stat.type + ".remoteCandidateId has a value. value="
-        + stat.remoteCandidateId);
+          `${stat.type}.remoteCandidateId has a value. value=` +
+          `${stat.remoteCandidateId} (${stat.kind})`);
 
       // priority
       ok(stat.priority,
-        stat.type + ".priority has a value. value="
-        + stat.priority);
+          `${stat.type}.priority has a value. value=` +
+          `${stat.priority} (${stat.kind})`);
 
       // readable
       ok(stat.readable,
-        stat.type + ".readable is true. value="
-        + stat.readable);
+          `${stat.type}.readable is true. value=${stat.readable} ` +
+          `(${stat.kind})`);
 
       // writable
       ok(stat.writable,
-        stat.type + ".writable is true. value="
-        + stat.writable);
+          `${stat.type}.writable is true. value=${stat.writable} ` +
+          `(${stat.kind})`);
 
       // state
       if (stat.state == "succeeded" &&
@@ -587,47 +590,47 @@ const pedanticChecks = report => {
         info("candidate-pair state is succeeded and selected is true");
         // nominated
         ok(stat.nominated,
-          stat.type + ".nominated is true. value="
-          + stat.nominated);
+            `${stat.type}.nominated is true. value=${stat.nominated} ` +
+            `(${stat.kind})`);
 
         // bytesSent
         ok(stat.bytesSent > 5000,
-          stat.type + ".bytesSent is a sane number (>5,000) for a short test. value="
-          + stat.bytesSent);
+            `${stat.type}.bytesSent is a sane number (>5,000) for a short ` +
+            `${stat.kind} test. value=${stat.bytesSent}`);
 
         // bytesReceived
         ok(stat.bytesReceived > 5000,
-          stat.type + ".bytesReceived is a sane number (>5,000) for a short test. value="
-          + stat.bytesReceived);
+            `${stat.type}.bytesReceived is a sane number (>5,000) for a short ` +
+            `${stat.kind} test. value=${stat.bytesReceived}`);
 
         // lastPacketSentTimestamp
         ok(stat.lastPacketSentTimestamp,
-          stat.type + ".lastPacketSentTimestamp has a value. value="
-          + stat.lastPacketSentTimestamp);
+            `${stat.type}.lastPacketSentTimestamp has a value. value=` +
+            `${stat.lastPacketSentTimestamp} (${stat.kind})`);
 
         // lastPacketReceivedTimestamp
         ok(stat.lastPacketReceivedTimestamp,
-          stat.type + ".lastPacketReceivedTimestamp has a value. value="
-          + stat.lastPacketReceivedTimestamp);
+            `${stat.type}.lastPacketReceivedTimestamp has a value. value=` +
+            `${stat.lastPacketReceivedTimestamp} (${stat.kind})`);
 
       } else {
         info("candidate-pair is _not_ both state == succeeded and selected");
         // nominated
         ok(stat.nominated !== undefined,
-          stat.type + ".nominated exists. value="
-          + stat.nominated);
+            `${stat.type}.nominated exists. value=${stat.nominated} ` +
+            `(${stat.kind})`);
         ok(stat.bytesSent !== undefined,
-          stat.type + ".bytesSent exists. value="
-          + stat.bytesSent);
+            `${stat.type}.bytesSent exists. value=${stat.bytesSent} ` +
+            `(${stat.kind})`);
         ok(stat.bytesReceived !== undefined,
-          stat.type + ".bytesReceived exists. value="
-          + stat.bytesReceived);
+            `${stat.type}.bytesReceived exists. value=${stat.bytesReceived} ` +
+            `(${stat.kind})`);
         ok(stat.lastPacketSentTimestamp !== undefined,
-          stat.type + ".lastPacketSentTimestamp exists. value="
-          + stat.lastPacketSentTimestamp);
+            `${stat.type}.lastPacketSentTimestamp exists. value=` +
+            `${stat.lastPacketSentTimestamp} (${stat.kind})`);
         ok(stat.lastPacketReceivedTimestamp !== undefined,
-          stat.type + ".lastPacketReceivedTimestamp exists. value="
-          + stat.lastPacketReceivedTimestamp);
+            `${stat.type}.lastPacketReceivedTimestamp exists. value=` +
+            `${stat.lastPacketReceivedTimestamp} (${stat.kind})`);
       }
 
 
@@ -638,45 +641,50 @@ const pedanticChecks = report => {
       ok(stat.selected === undefined ||
          ((stat.state == "succeeded" && stat.selected) ||
           !stat.selected),
-        stat.type + ".selected is undefined, true when state is succeeded, "
-        + "or false. value="
-        + stat.selected);
+          `${stat.type}.selected is undefined, true when state is succeeded, ` +
+          `or false. value=${stat.selected} (${stat.kind})`);
 
     } else if (stat.type == "local-candidate" || stat.type == "remote-candidate") {
       info(`candidate is ${JSON.stringify(stat)}`);
 
       // address
-      ok(stat.address, `${stat.type} has address. value=${stat.address}`);
+      ok(stat.address, `${stat.type} has address. value=${stat.address} ` +
+          `(${stat.kind})`);
 
       // protocol
-      ok(stat.protocol, `${stat.type} has protocol. value=${stat.protocol}`);
+      ok(stat.protocol, `${stat.type} has protocol. value=${stat.protocol} ` +
+          `(${stat.kind})`);
 
       // port
-      ok(stat.port >= 0, `${stat.type} has port >= 0. value=${stat.port}`);
-      ok(stat.port <= 65535, `${stat.type} has port <= 65535. value=${stat.port}`);
+      ok(stat.port >= 0, `${stat.type} has port >= 0. value=${stat.port} ` +
+          `(${stat.kind})`);
+      ok(stat.port <= 65535, `${stat.type} has port <= 65535. value=${stat.port} ` +
+          `(${stat.kind})`);
 
       // candidateType
-      ok(stat.candidateType, `${stat.type} has candidateType. value=${stat.candidateType}`);
+      ok(stat.candidateType, `${stat.type} has candidateType. value=${stat.candidateType} ` +
+          `(${stat.kind})`);
 
       // priority
       ok(stat.priority > 0 && stat.priority < (2**32 - 1),
-         `${stat.type} has priority between 1 and 2^32 - 1 inc. ` +
-         `value=${stat.priority}`);
+          `${stat.type} has priority between 1 and 2^32 - 1 inc. ` +
+          `value=${stat.priority} (${stat.kind})`);
 
       // relayProtocol
       if (stat.type == "local-candidate" && stat.candidateType == "relay") {
         ok(stat.relayProtocol,
-          `relay ${stat.type} has relayProtocol. value=${stat.relayProtocol}`);
+          `relay ${stat.type} has relayProtocol. value=${stat.relayProtocol} ` +
+          `(${stat.kind})`);
       } else {
         is(stat.relayProtocol, undefined,
           `relayProtocol is undefined for candidates that are not relay and ` +
-          `local. value=${stat.relayProtocol}`);
+          `local. value=${stat.relayProtocol} (${stat.kind})`);
       }
 
       // proxied
       if (stat.proxied) {
         ok(stat.proxied == "proxied" || stat.proxied == "non-proxied",
-           `${stat.type} has proxied. value=${stat.proxied}`);
+          `${stat.type} has proxied. value=${stat.proxied} (${stat.kind})`);
       }
     }
 
@@ -684,8 +692,8 @@ const pedanticChecks = report => {
     // Ensure everything was tested
     //
     [...expectations.expected, ...expectations.optional].forEach(field => {
-      ok(Object.keys(tested).includes(field), stat.type + "." + field
-        + " was tested.");
+        ok(Object.keys(tested).includes(field),
+            `${stat.type}.${field} was tested.`);
     });
   });
 }
