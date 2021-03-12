@@ -22,8 +22,6 @@ class nsNativeBasicThemeWin : public nsNativeBasicTheme {
   std::pair<sRGBColor, sRGBColor> ComputeCheckboxColors(
       const EventStates& aState, StyleAppearance aAppearance) override;
   sRGBColor ComputeCheckmarkColor(const EventStates& aState) override;
-  std::pair<sRGBColor, sRGBColor> ComputeRadioCheckmarkColors(
-      const EventStates& aState) override;
   sRGBColor ComputeBorderColor(const EventStates& aState) override;
   std::pair<sRGBColor, sRGBColor> ComputeButtonColors(
       const EventStates& aState, nsIFrame* aFrame = nullptr) override;

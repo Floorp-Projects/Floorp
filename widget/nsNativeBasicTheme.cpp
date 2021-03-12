@@ -274,14 +274,6 @@ sRGBColor nsNativeBasicTheme::ComputeCheckmarkColor(const EventStates& aState) {
   return sAccentColorForeground;
 }
 
-std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRadioCheckmarkColors(
-    const EventStates& aState) {
-  auto [unusedColor, checkColor] =
-      ComputeCheckboxColors(aState, StyleAppearance::Radio);
-  Unused << unusedColor;
-  return std::make_pair(ComputeCheckmarkColor(aState), checkColor);
-}
-
 sRGBColor nsNativeBasicTheme::ComputeBorderColor(const EventStates& aState) {
   bool isDisabled = aState.HasState(NS_EVENT_STATE_DISABLED);
   bool isActive =
@@ -906,25 +898,18 @@ void nsNativeBasicTheme::PaintRadioControl(PaintBackendData& aPaintData,
   PaintStrokedCircle(aPaintData, aRect, backgroundColor, borderColor,
                      borderWidth, aDpiRatio);
 
+  if (aState.HasState(NS_EVENT_STATE_CHECKED)) {
+    LayoutDeviceRect rect(aRect);
+    rect.Deflate(SnapBorderWidth(borderWidth, aDpiRatio));
+
+    auto checkColor = ComputeCheckmarkColor(aState);
+    PaintStrokedCircle(aPaintData, rect, backgroundColor, checkColor,
+                       borderWidth, aDpiRatio);
+  }
+
   if (aState.HasState(NS_EVENT_STATE_FOCUSRING)) {
     PaintRoundedFocusRect(aPaintData, aRect, aDpiRatio, 5.0f, 1.0f);
   }
-}
-
-template <typename PaintBackendData>
-void nsNativeBasicTheme::PaintRadioCheckmark(PaintBackendData& aPaintData,
-                                             const LayoutDeviceRect& aRect,
-                                             const EventStates& aState,
-                                             DPIRatio aDpiRatio) {
-  const CSSCoord borderWidth = 2.0f;
-  const float scale = ScaleToFillRect(aRect, kCheckboxRadioBorderBoxSize);
-  auto [backgroundColor, checkColor] = ComputeRadioCheckmarkColors(aState);
-
-  LayoutDeviceRect rect(aRect);
-  rect.Deflate(borderWidth * scale);
-
-  PaintStrokedCircle(aPaintData, rect, checkColor, backgroundColor, borderWidth,
-                     aDpiRatio);
 }
 
 template <typename PaintBackendData>
@@ -1474,9 +1459,6 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
     case StyleAppearance::Radio: {
       auto rect = FixAspectRatio(devPxRect);
       PaintRadioControl(aPaintData, rect, eventState, dpiRatio);
-      if (IsSelected(aFrame)) {
-        PaintRadioCheckmark(aPaintData, rect, eventState, dpiRatio);
-      }
       break;
     }
     case StyleAppearance::Checkbox: {
