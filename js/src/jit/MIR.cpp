@@ -4440,8 +4440,6 @@ MDefinition* MWasmReduceSimd128::foldsTo(TempAllocator& alloc) {
     int32_t i32Result = 0;
     switch (simdOp()) {
       case wasm::SimdOp::V128AnyTrue:
-      case wasm::SimdOp::I16x8AnyTrue:
-      case wasm::SimdOp::I32x4AnyTrue:
         i32Result = !c.isZeroBits();
         break;
       case wasm::SimdOp::I8x16AllTrue:

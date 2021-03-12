@@ -768,12 +768,9 @@ def default_wasm_simd(jit_enabled, simulator, target):
         return
 
     if simulator:
-        if simulator[0] == "arm64":
-            return True
-        else:
-            return
+        return
 
-    if target.cpu in ("x86_64", "x86", "aarch64"):
+    if target.cpu in ("x86_64", "x86"):
         return True
 
 
@@ -793,15 +790,12 @@ def wasm_simd(value, jit_enabled, simulator, target):
         return
 
     if simulator:
-        if simulator[0] == "arm64":
-            return True
-        else:
-            return
+        return
 
-    if target.cpu in ("x86_64", "x86", "aarch64"):
+    if target.cpu in ("x86_64", "x86"):
         return True
 
-    die("--enable-wasm-simd only possible when targeting the x86_64/x86/arm64 jits")
+    die("--enable-wasm-simd only possible when targeting the x86_64/x86 jits")
 
 
 set_config("ENABLE_WASM_SIMD", wasm_simd)

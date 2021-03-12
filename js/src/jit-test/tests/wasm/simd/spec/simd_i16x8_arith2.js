@@ -1974,14 +1974,6 @@ assertEq(thrown, true)
 assertEq(saved instanceof SyntaxError, true)
 var thrown = false;
 var saved;
-try { wasmTextToBinary(`
-(module 
-(memory 1) (func (result v128) (i64x2.abs (v128.const i16x8 -1 -1 -1 -1 -1 -1 -1 -1))))
-`) } catch (e) { thrown = true; saved = e; }
-assertEq(thrown, true)
-assertEq(saved instanceof SyntaxError, true)
-var thrown = false;
-var saved;
 var bin = wasmTextToBinary(`
 ( module ( func ( result v128 ) ( i16x8.min_s ( i32.const 0 ) ( f32.const 0.0 ) ) ) )
 `);

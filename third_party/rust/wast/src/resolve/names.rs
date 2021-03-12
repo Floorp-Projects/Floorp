@@ -126,7 +126,7 @@ impl<'a> Resolver<'a> {
             ModuleField::Elem(e) => self.elems.register(e.id, "elem")?,
             ModuleField::Data(d) => self.datas.register(d.id, "data")?,
             ModuleField::Event(e) => self.events.register(e.id, "event")?,
-            ModuleField::Alias(a) => match a.item_kind() {
+            ModuleField::Alias(a) => match a.kind {
                 ExportKind::Func => self.funcs.register(a.id, "func")?,
                 ExportKind::Table => self.tables.register(a.id, "table")?,
                 ExportKind::Memory => self.memories.register(a.id, "memory")?,
@@ -310,15 +310,11 @@ impl<'a> Resolver<'a> {
             }
 
             ModuleField::Alias(a) => {
-                match &mut a.kind {
-                    AliasKind::InstanceExport { instance, .. } => {
+                match &mut a.source {
+                    AliasSource::InstanceExport { instance, .. } => {
                         self.resolve_item_ref(instance)?;
                     }
-                    AliasKind::Outer {
-                        module,
-                        index,
-                        kind,
-                    } => {
+                    AliasSource::Outer { module, index } => {
                         match (index, module) {
                             // If both indices are numeric then don't try to
                             // resolve anything since we could fail to walk up
@@ -328,7 +324,7 @@ impl<'a> Resolver<'a> {
                             (index, module) => {
                                 parents
                                     .resolve(module)?
-                                    .resolve(index, Ns::from_export(kind))?;
+                                    .resolve(index, Ns::from_export(&a.kind))?;
                             }
                         }
                     }
@@ -784,10 +780,8 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
                 self.resolver.resolve(i, Ns::Event)?;
             }
 
-            BrOnCast(b) => {
-                self.resolve_label(&mut b.label)?;
-                self.resolver.resolve_heaptype(&mut b.val)?;
-                self.resolver.resolve_heaptype(&mut b.rtt)?;
+            BrOnCast(l) | BrOnFunc(l) | BrOnData(l) | BrOnI31(l) => {
+                self.resolve_label(l)?;
             }
 
             Select(s) => {
@@ -810,25 +804,16 @@ impl<'a, 'b> ExprResolver<'a, 'b> {
             | ArrayLen(i) => {
                 self.resolver.resolve(i, Ns::Type)?;
             }
-            RTTCanon(t) => {
-                self.resolver.resolve_heaptype(t)?;
+            RTTCanon(i) => {
+                self.resolver.resolve(i, Ns::Type)?;
             }
-            RTTSub(s) => {
-                self.resolver.resolve_heaptype(&mut s.input_rtt)?;
-                self.resolver.resolve_heaptype(&mut s.output_rtt)?;
-            }
-            RefTest(t) | RefCast(t) => {
-                self.resolver.resolve_heaptype(&mut t.val)?;
-                self.resolver.resolve_heaptype(&mut t.rtt)?;
+            RTTSub(i) => {
+                self.resolver.resolve(i, Ns::Type)?;
             }
 
             StructSet(s) | StructGet(s) | StructGetS(s) | StructGetU(s) => {
                 self.resolver.resolve(&mut s.r#struct, Ns::Type)?;
                 self.resolver.fields.resolve(&mut s.field, "field")?;
-            }
-            StructNarrow(s) => {
-                self.resolver.resolve_valtype(&mut s.from)?;
-                self.resolver.resolve_valtype(&mut s.to)?;
             }
 
             RefNull(ty) => self.resolver.resolve_heaptype(ty)?,

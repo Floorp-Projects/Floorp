@@ -350,13 +350,13 @@ pub mod kw {
     custom_keyword!(catch_all);
     custom_keyword!(code);
     custom_keyword!(data);
+    custom_keyword!(dataref);
     custom_keyword!(declare);
+    custom_keyword!(delegate);
     custom_keyword!(r#do = "do");
     custom_keyword!(elem);
     custom_keyword!(end);
     custom_keyword!(event);
-    custom_keyword!(exn);
-    custom_keyword!(exnref);
     custom_keyword!(export);
     custom_keyword!(r#extern = "extern");
     custom_keyword!(externref);

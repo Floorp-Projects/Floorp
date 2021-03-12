@@ -84,10 +84,12 @@ enum If<'a> {
 enum Try<'a> {
     /// Next thing to parse is the `do` block.
     Do(Instruction<'a>),
-    /// Next thing to parse is `catch`/`catch_all`, or `unwind`.
-    CatchOrUnwind,
+    /// Next thing to parse is `catch`/`catch_all`, `unwind`, or `delegate`.
+    CatchUnwindOrDelegate,
     /// Next thing to parse is a `catch` block or `catch_all`.
     Catch,
+    /// Finished parsing like the `End` case, but does not push `end` opcode.
+    Delegate,
     /// This `try` statement has finished parsing and if anything remains it's a
     /// syntax error.
     End,
@@ -193,15 +195,16 @@ impl<'a> ExpressionParser<'a> {
 
                     // Both `do` and `catch` are required in a `try` statement, so
                     // we will signal those errors here. Otherwise, terminate with
-                    // an `end` instruction.
+                    // an `end` or `delegate` instruction.
                     Level::Try(Try::Do(_)) => {
                         return Err(parser.error("previous `try` had no `do`"));
                     }
-                    Level::Try(Try::CatchOrUnwind) => {
+                    Level::Try(Try::CatchUnwindOrDelegate) => {
                         return Err(
-                            parser.error("previous `try` had no `catch`, `catch_all`, or `unwind`")
+                            parser.error("previous `try` had no `catch`, `catch_all`, `unwind`, or `delegate`")
                         );
                     }
+                    Level::Try(Try::Delegate) => {}
                     Level::Try(_) => {
                         self.instrs.push(Instruction::End(None));
                     }
@@ -332,7 +335,7 @@ impl<'a> ExpressionParser<'a> {
             if parser.parse::<Option<kw::r#do>>()?.is_some() {
                 // The state is advanced here only if the parse succeeds in
                 // order to strictly require the keyword.
-                *i = Try::CatchOrUnwind;
+                *i = Try::CatchUnwindOrDelegate;
                 self.stack.push(Level::TryArm);
                 return Ok(true);
             }
@@ -343,7 +346,7 @@ impl<'a> ExpressionParser<'a> {
         }
 
         // After a try's `do`, there are several possible kinds of handlers.
-        if let Try::CatchOrUnwind = i {
+        if let Try::CatchUnwindOrDelegate = i {
             // `catch` may be followed by more `catch`s or `catch_all`.
             if parser.parse::<Option<kw::catch>>()?.is_some() {
                 let evt = parser.parse::<ast::Index<'a>>()?;
@@ -365,6 +368,16 @@ impl<'a> ExpressionParser<'a> {
                 *i = Try::End;
                 self.stack.push(Level::TryArm);
                 return Ok(true);
+            }
+            // `delegate` has an index, and also ends the block like `end`.
+            if parser.parse::<Option<kw::delegate>>()?.is_some() {
+                let depth = parser.parse::<ast::Index<'a>>()?;
+                self.instrs.push(Instruction::Delegate(depth));
+                *i = Try::Delegate;
+                match self.paren(parser)? {
+                    Paren::Left | Paren::None => { return Ok(false) }
+                    Paren::Right => { return Ok(true) }
+                }
             }
             return Ok(false);
         }
@@ -591,9 +604,6 @@ instructions! {
         StructGetU(StructAccess<'a>) : [0xfb, 0x05] : "struct.get_u",
         StructSet(StructAccess<'a>) : [0xfb, 0x06] : "struct.set",
 
-        // gc proposal (moz specific, will be removed)
-        StructNarrow(StructNarrow<'a>) : [0xfb, 0x07] : "struct.narrow",
-
         // gc proposal: array
         ArrayNewWithRtt(ast::Index<'a>) : [0xfb, 0x11] : "array.new_with_rtt",
         ArrayNewDefaultWithRtt(ast::Index<'a>) : [0xfb, 0x12] : "array.new_default_with_rtt",
@@ -608,12 +618,23 @@ instructions! {
         I31GetS : [0xfb, 0x21] : "i31.get_s",
         I31GetU : [0xfb, 0x22] : "i31.get_u",
 
-        // gc proposal, rtt/casting
-        RTTCanon(HeapType<'a>) : [0xfb, 0x30] : "rtt.canon",
-        RTTSub(RTTSub<'a>) : [0xfb, 0x31] : "rtt.sub",
-        RefTest(RefTest<'a>) : [0xfb, 0x40] : "ref.test",
-        RefCast(RefTest<'a>) : [0xfb, 0x41] : "ref.cast",
-        BrOnCast(BrOnCast<'a>) : [0xfb, 0x42] : "br_on_cast",
+        // gc proposal, rtt casting
+        RTTCanon(ast::Index<'a>) : [0xfb, 0x30] : "rtt.canon",
+        RTTSub(ast::Index<'a>) : [0xfb, 0x31] : "rtt.sub",
+        RefTest : [0xfb, 0x40] : "ref.test",
+        RefCast : [0xfb, 0x41] : "ref.cast",
+        BrOnCast(ast::Index<'a>) : [0xfb, 0x42] : "br_on_cast",
+
+        // gc proposal, heap casting
+        RefIsFunc : [0xfb, 0x50] : "ref.is_func",
+        RefIsData : [0xfb, 0x51] : "ref.is_data",
+        RefIsI31 : [0xfb, 0x52] : "ref.is_i31",
+        RefAsFunc : [0xfb, 0x58] : "ref.as_func",
+        RefAsData : [0xfb, 0x59] : "ref.as_data",
+        RefAsI31 : [0xfb, 0x5a] : "ref.as_i31",
+        BrOnFunc(ast::Index<'a>) : [0xfb, 0x60] : "br_on_func",
+        BrOnData(ast::Index<'a>) : [0xfb, 0x61] : "br_on_data",
+        BrOnI31(ast::Index<'a>) : [0xfb, 0x62] : "br_on_i31",
 
         I32Const(i32) : [0x41] : "i32.const",
         I64Const(i64) : [0x42] : "i64.const",
@@ -936,30 +957,34 @@ instructions! {
         V128Or : [0xfd, 0x50] : "v128.or",
         V128Xor : [0xfd, 0x51] : "v128.xor",
         V128Bitselect : [0xfd, 0x52] : "v128.bitselect",
+        V128AnyTrue : [0xfd, 0x53] : "v128.any_true",
 
-        F64x2ConvertLowI32x4S : [0xfd, 0x53] : "f64x2.convert_low_i32x4_s",
-        F64x2ConvertLowI32x4U : [0xfd, 0x54] : "f64x2.convert_low_i32x4_u",
-        I32x4TruncSatF64x2SZero : [0xfd, 0x55] : "i32x4.trunc_sat_f64x2_s_zero",
-        I32x4TruncSatF64x2UZero : [0xfd, 0x56] : "i32x4.trunc_sat_f64x2_u_zero",
-        F32x4DemoteF64x2Zero : [0xfd, 0x57] : "f32x4.demote_f64x2_zero",
+        V128Load8Lane(LoadOrStoreLane<1>) : [0xfd, 0x54] : "v128.load8_lane",
+        V128Load16Lane(LoadOrStoreLane<2>) : [0xfd, 0x55] : "v128.load16_lane",
+        V128Load32Lane(LoadOrStoreLane<4>) : [0xfd, 0x56] : "v128.load32_lane",
+        V128Load64Lane(LoadOrStoreLane<8>): [0xfd, 0x57] : "v128.load64_lane",
+        V128Store8Lane(LoadOrStoreLane<1>) : [0xfd, 0x58] : "v128.store8_lane",
+        V128Store16Lane(LoadOrStoreLane<2>) : [0xfd, 0x59] : "v128.store16_lane",
+        V128Store32Lane(LoadOrStoreLane<4>) : [0xfd, 0x5a] : "v128.store32_lane",
+        V128Store64Lane(LoadOrStoreLane<8>) : [0xfd, 0x5b] : "v128.store64_lane",
 
-        V128Load8Lane(LoadOrStoreLane<1>) : [0xfd, 0x58] : "v128.load8_lane",
-        V128Load16Lane(LoadOrStoreLane<2>) : [0xfd, 0x59] : "v128.load16_lane",
-        V128Load32Lane(LoadOrStoreLane<4>) : [0xfd, 0x5a] : "v128.load32_lane",
-        V128Load64Lane(LoadOrStoreLane<8>): [0xfd, 0x5b] : "v128.load64_lane",
-        V128Store8Lane(LoadOrStoreLane<1>) : [0xfd, 0x5c] : "v128.store8_lane",
-        V128Store16Lane(LoadOrStoreLane<2>) : [0xfd, 0x5d] : "v128.store16_lane",
-        V128Store32Lane(LoadOrStoreLane<4>) : [0xfd, 0x5e] : "v128.store32_lane",
-        V128Store64Lane(LoadOrStoreLane<8>) : [0xfd, 0x5f] : "v128.store64_lane",
+        V128Load32Zero(MemArg<4>) : [0xfd, 0x5c] : "v128.load32_zero",
+        V128Load64Zero(MemArg<8>) : [0xfd, 0x5d] : "v128.load64_zero",
+
+        F32x4DemoteF64x2Zero : [0xfd, 0x5e] : "f32x4.demote_f64x2_zero",
+        F64x2PromoteLowF32x4 : [0xfd, 0x5f] : "f64x2.promote_low_f32x4",
 
         I8x16Abs : [0xfd, 0x60] : "i8x16.abs",
         I8x16Neg : [0xfd, 0x61] : "i8x16.neg",
-        V128AnyTrue : [0xfd, 0x62] : "v128.any_true",
+        I8x16Popcnt : [0xfd, 0x62] : "i8x16.popcnt",
         I8x16AllTrue : [0xfd, 0x63] : "i8x16.all_true",
         I8x16Bitmask : [0xfd, 0x64] : "i8x16.bitmask",
         I8x16NarrowI16x8S : [0xfd, 0x65] : "i8x16.narrow_i16x8_s",
         I8x16NarrowI16x8U : [0xfd, 0x66] : "i8x16.narrow_i16x8_u",
-        F64x2PromoteLowF32x4 : [0xfd, 0x69] : "f64x2.promote_low_f32x4",
+        F32x4Ceil : [0xfd, 0x67] : "f32x4.ceil",
+        F32x4Floor : [0xfd, 0x68] : "f32x4.floor",
+        F32x4Trunc : [0xfd, 0x69] : "f32x4.trunc",
+        F32x4Nearest : [0xfd, 0x6a] : "f32x4.nearest",
         I8x16Shl : [0xfd, 0x6b] : "i8x16.shl",
         I8x16ShrS : [0xfd, 0x6c] : "i8x16.shr_s",
         I8x16ShrU : [0xfd, 0x6d] : "i8x16.shr_u",
@@ -969,14 +994,22 @@ instructions! {
         I8x16Sub : [0xfd, 0x71] : "i8x16.sub",
         I8x16SubSatS : [0xfd, 0x72] : "i8x16.sub_sat_s",
         I8x16SubSatU : [0xfd, 0x73] : "i8x16.sub_sat_u",
+        F64x2Ceil : [0xfd, 0x74] : "f64x2.ceil",
+        F64x2Floor : [0xfd, 0x75] : "f64x2.floor",
         I8x16MinS : [0xfd, 0x76] : "i8x16.min_s",
         I8x16MinU : [0xfd, 0x77] : "i8x16.min_u",
         I8x16MaxS : [0xfd, 0x78] : "i8x16.max_s",
         I8x16MaxU : [0xfd, 0x79] : "i8x16.max_u",
+        F64x2Trunc : [0xfd, 0x7a] : "f64x2.trunc",
         I8x16AvgrU : [0xfd, 0x7b] : "i8x16.avgr_u",
+        I16x8ExtAddPairwiseI8x16S : [0xfd, 0x7c] : "i16x8.extadd_pairwise_i8x16_s",
+        I16x8ExtAddPairwiseI8x16U : [0xfd, 0x7d] : "i16x8.extadd_pairwise_i8x16_u",
+        I32x4ExtAddPairwiseI16x8S : [0xfd, 0x7e] : "i32x4.extadd_pairwise_i16x8_s",
+        I32x4ExtAddPairwiseI16x8U : [0xfd, 0x7f] : "i32x4.extadd_pairwise_i16x8_u",
 
         I16x8Abs : [0xfd, 0x80] : "i16x8.abs",
         I16x8Neg : [0xfd, 0x81] : "i16x8.neg",
+        I16x8Q15MulrSatS : [0xfd, 0x82] : "i16x8.q15mulr_sat_s",
         I16x8AllTrue : [0xfd, 0x83] : "i16x8.all_true",
         I16x8Bitmask : [0xfd, 0x84] : "i16x8.bitmask",
         I16x8NarrowI32x4S : [0xfd, 0x85] : "i16x8.narrow_i32x4_s",
@@ -994,14 +1027,14 @@ instructions! {
         I16x8Sub : [0xfd, 0x91] : "i16x8.sub",
         I16x8SubSatS : [0xfd, 0x92] : "i16x8.sub_sat_s",
         I16x8SubSatU : [0xfd, 0x93] : "i16x8.sub_sat_u",
+        F64x2Nearest : [0xfd, 0x94] : "f64x2.nearest",
         I16x8Mul : [0xfd, 0x95] : "i16x8.mul",
         I16x8MinS : [0xfd, 0x96] : "i16x8.min_s",
         I16x8MinU : [0xfd, 0x97] : "i16x8.min_u",
         I16x8MaxS : [0xfd, 0x98] : "i16x8.max_s",
         I16x8MaxU : [0xfd, 0x99] : "i16x8.max_u",
-        I16x8ExtMulLowI8x16S : [0xfd, 0x9a] : "i16x8.extmul_low_i8x16_s",
         I16x8AvgrU : [0xfd, 0x9b] : "i16x8.avgr_u",
-        I16x8Q15MulrSatS : [0xfd, 0x9c] : "i16x8.q15mulr_sat_s",
+        I16x8ExtMulLowI8x16S : [0xfd, 0x9c] : "i16x8.extmul_low_i8x16_s",
         I16x8ExtMulHighI8x16S : [0xfd, 0x9d] : "i16x8.extmul_high_i8x16_s",
         I16x8ExtMulLowI8x16U : [0xfd, 0x9e] : "i16x8.extmul_low_i8x16_u",
         I16x8ExtMulHighI8x16U : [0xfd, 0x9f] : "i16x8.extmul_high_i8x16_u",
@@ -1025,39 +1058,35 @@ instructions! {
         I32x4MaxS : [0xfd, 0xb8] : "i32x4.max_s",
         I32x4MaxU : [0xfd, 0xb9] : "i32x4.max_u",
         I32x4DotI16x8S : [0xfd, 0xba] : "i32x4.dot_i16x8_s",
-        I32x4ExtMulLowI16x8S : [0xfd, 0xbb] : "i32x4.extmul_low_i16x8_s",
+        I32x4ExtMulLowI16x8S : [0xfd, 0xbc] : "i32x4.extmul_low_i16x8_s",
         I32x4ExtMulHighI16x8S : [0xfd, 0xbd] : "i32x4.extmul_high_i16x8_s",
         I32x4ExtMulLowI16x8U : [0xfd, 0xbe] : "i32x4.extmul_low_i16x8_u",
         I32x4ExtMulHighI16x8U : [0xfd, 0xbf] : "i32x4.extmul_high_i16x8_u",
 
-        I64x2Eq : [0xfd, 0xc0] : "i64x2.eq",
+        I64x2Abs : [0xfd, 0xc0] : "i64x2.abs",
         I64x2Neg : [0xfd, 0xc1] : "i64x2.neg",
-        I64x2Shl : [0xfd, 0xcb] : "i64x2.shl",
+        I64x2AllTrue : [0xfd, 0xc3] : "i64x2.all_true",
         I64x2Bitmask : [0xfd, 0xc4] : "i64x2.bitmask",
         I64x2WidenLowI32x4S : [0xfd, 0xc7] : "i64x2.widen_low_i32x4_s",
         I64x2WidenHighI32x4S : [0xfd, 0xc8] : "i64x2.widen_high_i32x4_s",
         I64x2WidenLowI32x4U : [0xfd, 0xc9] : "i64x2.widen_low_i32x4_u",
         I64x2WidenHighI32x4U : [0xfd, 0xca] : "i64x2.widen_high_i32x4_u",
+        I64x2Shl : [0xfd, 0xcb] : "i64x2.shl",
         I64x2ShrS : [0xfd, 0xcc] : "i64x2.shr_s",
         I64x2ShrU : [0xfd, 0xcd] : "i64x2.shr_u",
         I64x2Add : [0xfd, 0xce] : "i64x2.add",
-        I64x2AllTrue : [0xfd, 0xcf] : "i64x2.all_true",
-        I64x2Ne : [0xfd, 0xd0] : "i64x2.ne",
         I64x2Sub : [0xfd, 0xd1] : "i64x2.sub",
-        I64x2ExtMulLowI32x4S : [0xfd, 0xd2] : "i64x2.extmul_low_i32x4_s",
-        I64x2ExtMulHighI32x4S : [0xfd, 0xd3] : "i64x2.extmul_high_i32x4_s",
         I64x2Mul : [0xfd, 0xd5] : "i64x2.mul",
-        I64x2ExtMulLowI32x4U : [0xfd, 0xd6] : "i64x2.extmul_low_i32x4_u",
-        I64x2ExtMulHighI32x4U : [0xfd, 0xd7] : "i64x2.extmul_high_i32x4_u",
-
-        F32x4Ceil : [0xfd, 0xd8] : "f32x4.ceil",
-        F32x4Floor : [0xfd, 0xd9] : "f32x4.floor",
-        F32x4Trunc : [0xfd, 0xda] : "f32x4.trunc",
-        F32x4Nearest : [0xfd, 0xdb] : "f32x4.nearest",
-        F64x2Ceil : [0xfd, 0xdc] : "f64x2.ceil",
-        F64x2Floor : [0xfd, 0xdd] : "f64x2.floor",
-        F64x2Trunc : [0xfd, 0xde] : "f64x2.trunc",
-        F64x2Nearest : [0xfd, 0xdf] : "f64x2.nearest",
+        I64x2Eq : [0xfd, 0xd6] : "i64x2.eq",
+        I64x2Ne : [0xfd, 0xd7] : "i64x2.ne",
+        I64x2LtS : [0xfd, 0xd8] : "i64x2.lt_s",
+        I64x2GtS : [0xfd, 0xd9] : "i64x2.gt_s",
+        I64x2LeS : [0xfd, 0xda] : "i64x2.le_s",
+        I64x2GeS : [0xfd, 0xdb] : "i64x2.ge_s",
+        I64x2ExtMulLowI32x4S : [0xfd, 0xdc] : "i64x2.extmul_low_i32x4_s",
+        I64x2ExtMulHighI32x4S : [0xfd, 0xdd] : "i64x2.extmul_high_i32x4_s",
+        I64x2ExtMulLowI32x4U : [0xfd, 0xde] : "i64x2.extmul_low_i32x4_u",
+        I64x2ExtMulHighI32x4U : [0xfd, 0xdf] : "i64x2.extmul_high_i32x4_u",
 
         F32x4Abs : [0xfd, 0xe0] : "f32x4.abs",
         F32x4Neg : [0xfd, 0xe1] : "f32x4.neg",
@@ -1088,16 +1117,19 @@ instructions! {
         F32x4ConvertI32x4S : [0xfd, 0xfa] : "f32x4.convert_i32x4_s",
         F32x4ConvertI32x4U : [0xfd, 0xfb] : "f32x4.convert_i32x4_u",
 
-        V128Load32Zero(MemArg<4>) : [0xfd, 0xfc] : "v128.load32_zero",
-        V128Load64Zero(MemArg<8>) : [0xfd, 0xfd] : "v128.load64_zero",
+        I32x4TruncSatF64x2SZero : [0xfd, 0xfc] : "i32x4.trunc_sat_f64x2_s_zero",
+        I32x4TruncSatF64x2UZero : [0xfd, 0xfd] : "i32x4.trunc_sat_f64x2_u_zero",
+        F64x2ConvertLowI32x4S : [0xfd, 0xfe] : "f64x2.convert_low_i32x4_s",
+        F64x2ConvertLowI32x4U : [0xfd, 0xff] : "f64x2.convert_low_i32x4_u",
 
         // Exception handling proposal
-        CatchAll : [0x05] : "catch_all", // Reuses the else opcode.
         Try(BlockType<'a>) : [0x06] : "try",
         Catch(ast::Index<'a>) : [0x07] : "catch",
         Throw(ast::Index<'a>) : [0x08] : "throw",
         Rethrow(ast::Index<'a>) : [0x09] : "rethrow",
         Unwind : [0x0a] : "unwind",
+        Delegate(ast::Index<'a>) : [0x18] : "delegate",
+        CatchAll : [0x19] : "catch_all",
     }
 }
 
@@ -1463,24 +1495,6 @@ impl<'a> Parse<'a> for StructAccess<'a> {
     }
 }
 
-/// Extra data associated with the `struct.narrow` instruction
-#[derive(Debug)]
-pub struct StructNarrow<'a> {
-    /// The type of the struct we're casting from
-    pub from: ast::ValType<'a>,
-    /// The type of the struct we're casting to
-    pub to: ast::ValType<'a>,
-}
-
-impl<'a> Parse<'a> for StructNarrow<'a> {
-    fn parse(parser: Parser<'a>) -> Result<Self> {
-        Ok(StructNarrow {
-            from: parser.parse()?,
-            to: parser.parse()?,
-        })
-    }
-}
-
 /// Different ways to specify a `v128.const` instruction
 #[derive(Debug)]
 #[rustfmt::skip]
@@ -1702,77 +1716,5 @@ impl<'a> Parse<'a> for SelectTypes<'a> {
             tys = Some(list);
         }
         Ok(SelectTypes { tys })
-    }
-}
-
-/// Payload of the `br_on_exn` instruction
-#[derive(Debug)]
-#[allow(missing_docs)]
-pub struct BrOnExn<'a> {
-    pub label: ast::Index<'a>,
-    pub exn: ast::Index<'a>,
-}
-
-impl<'a> Parse<'a> for BrOnExn<'a> {
-    fn parse(parser: Parser<'a>) -> Result<Self> {
-        let label = parser.parse()?;
-        let exn = parser.parse()?;
-        Ok(BrOnExn { label, exn })
-    }
-}
-
-/// Payload of the `br_on_cast` instruction
-#[derive(Debug)]
-#[allow(missing_docs)]
-pub struct BrOnCast<'a> {
-    pub label: ast::Index<'a>,
-    pub val: HeapType<'a>,
-    pub rtt: HeapType<'a>,
-}
-
-impl<'a> Parse<'a> for BrOnCast<'a> {
-    fn parse(parser: Parser<'a>) -> Result<Self> {
-        let label = parser.parse()?;
-        let val = parser.parse()?;
-        let rtt = parser.parse()?;
-        Ok(BrOnCast { label, val, rtt })
-    }
-}
-
-/// Payload of the `rtt.sub` instruction
-#[derive(Debug)]
-#[allow(missing_docs)]
-pub struct RTTSub<'a> {
-    pub depth: u32,
-    pub input_rtt: HeapType<'a>,
-    pub output_rtt: HeapType<'a>,
-}
-
-impl<'a> Parse<'a> for RTTSub<'a> {
-    fn parse(parser: Parser<'a>) -> Result<Self> {
-        let depth = parser.parse()?;
-        let input_rtt = parser.parse()?;
-        let output_rtt = parser.parse()?;
-        Ok(RTTSub {
-            depth,
-            input_rtt,
-            output_rtt,
-        })
-    }
-}
-
-/// Payload of the `ref.test/cast` instruction
-#[derive(Debug)]
-#[allow(missing_docs)]
-pub struct RefTest<'a> {
-    pub val: HeapType<'a>,
-    pub rtt: HeapType<'a>,
-}
-
-impl<'a> Parse<'a> for RefTest<'a> {
-    fn parse(parser: Parser<'a>) -> Result<Self> {
-        let val = parser.parse()?;
-        let rtt = parser.parse()?;
-        Ok(RefTest { val, rtt })
     }
 }

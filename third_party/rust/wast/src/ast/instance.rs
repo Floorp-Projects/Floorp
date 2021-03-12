@@ -61,7 +61,7 @@ impl<'a> Parse<'a> for Instance<'a> {
                 let module = p.parse::<ast::IndexOrRef<_>>()?.0;
                 let mut args = Vec::new();
                 while !p.is_empty() {
-                    args.push(p.parse()?);
+                    args.push(p.parens(|p| p.parse())?);
                 }
                 Ok(InstanceKind::Inline { module, args })
             })?
@@ -78,6 +78,7 @@ impl<'a> Parse<'a> for Instance<'a> {
 
 impl<'a> Parse<'a> for InstanceArg<'a> {
     fn parse(parser: Parser<'a>) -> Result<Self> {
+        parser.parse::<kw::import>()?;
         Ok(InstanceArg {
             name: parser.parse()?,
             index: parser.parse()?,
