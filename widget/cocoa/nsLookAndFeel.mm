@@ -15,6 +15,7 @@
 #include "nsCSSColorUtils.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
 
 #import <Cocoa/Cocoa.h>
@@ -26,6 +27,14 @@
 @interface NSWorkspace (AvailableSinceSierra)
 @property(readonly) BOOL accessibilityDisplayShouldReduceMotion;
 @end
+
+#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
+@interface NSApplication (NSApplicationAppearance)
+@property(strong) NSAppearance* appearance NS_AVAILABLE_MAC(10_14);
+@end
+#endif
+
+static void RegisterRespectSystemAppearancePrefListenerOnce();
 
 nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache)
     : nsXPLookAndFeel(),
@@ -73,6 +82,7 @@ nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache)
   if (aCache) {
     DoSetCache(*aCache);
   }
+  RegisterRespectSystemAppearancePrefListenerOnce();
 }
 
 nsLookAndFeel::~nsLookAndFeel() {}
@@ -888,4 +898,39 @@ void nsLookAndFeel::EnsureInit() {
   RecordTelemetry();
 
   NS_OBJC_END_TRY_IGNORE_BLOCK
+}
+
+static void RespectSystemAppearancePrefChanged(const char* aPref, void* UserInfo) {
+  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
+  MOZ_RELEASE_ASSERT(NS_IsMainThread());
+
+  if (@available(macOS 10.14, *)) {
+    if (StaticPrefs::widget_macos_respect_system_appearance()) {
+      // nil means "no override".
+      NSApp.appearance = nil;
+    } else {
+      // Override with aqua.
+      NSApp.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+    }
+  }
+
+  // Send a notification that ChildView reacts to. This will cause it to call ThemeChanged and
+  // invalidate LookAndFeel colors.
+  [[NSDistributedNotificationCenter defaultCenter]
+      postNotificationName:@"AppleInterfaceThemeChangedNotification"
+                    object:nil
+                  userInfo:nil
+        deliverImmediately:YES];
+}
+
+static void RegisterRespectSystemAppearancePrefListenerOnce() {
+  static bool sRegistered = false;
+  if (sRegistered || !XRE_IsParentProcess()) {
+    return;
+  }
+
+  sRegistered = true;
+  Preferences::RegisterCallbackAndCall(
+      &RespectSystemAppearancePrefChanged,
+      nsDependentCString(StaticPrefs::GetPrefName_widget_macos_respect_system_appearance()));
 }
