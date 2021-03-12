@@ -1499,9 +1499,9 @@ class MOZ_RAII HasPropIRGenerator : public IRGenerator {
   AttachDecision tryAttachNamedProp(HandleObject obj, ObjOperandId objId,
                                     HandleId key, ValOperandId keyId);
   AttachDecision tryAttachMegamorphic(ObjOperandId objId, ValOperandId keyId);
-  AttachDecision tryAttachNative(JSObject* obj, ObjOperandId objId, jsid key,
-                                 ValOperandId keyId, PropertyResult prop,
-                                 JSObject* holder);
+  AttachDecision tryAttachNative(NativeObject* obj, ObjOperandId objId,
+                                 jsid key, ValOperandId keyId,
+                                 PropertyResult prop, NativeObject* holder);
   AttachDecision tryAttachSlotDoesNotExist(NativeObject* obj,
                                            ObjOperandId objId, jsid key,
                                            ValOperandId keyId);
