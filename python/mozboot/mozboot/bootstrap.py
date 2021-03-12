@@ -13,6 +13,7 @@ import sys
 import subprocess
 import time
 from distutils.version import LooseVersion
+from mozboot.util import get_mach_virtualenv_binary
 from mozfile import which
 
 # NOTE: This script is intended to be run with a vanilla Python install.  We
@@ -331,6 +332,16 @@ class Bootstrapper(object):
             return self.mach_context.settings.build.telemetry
         # We can't prompt the user.
         if self.instance.no_interactive:
+            return False
+        mach_python = get_mach_virtualenv_binary()
+        proc = subprocess.run(
+            [mach_python, "-c", "import glean"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+        )
+        # If we couldn't install glean in the mach environment, we can't
+        # enable telemetry.
+        if proc.returncode != 0:
             return False
         choice = self.instance.prompt_yesno(prompt=TELEMETRY_OPT_IN_PROMPT)
         if choice:
