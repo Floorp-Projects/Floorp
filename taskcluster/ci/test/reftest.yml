@@ -11,13 +11,10 @@ job-defaults:
             android-hw-.*: geckoview-androidTest.apk
             default: null
     variants: ['fission']
-    fission-tier: 2
-    run-on-projects:
-        by-test-platform:
-            android-hw-.*-qr/debug: ['mozilla-central']
-            android-hw-.*-qr/opt: ['mozilla-central', 'autoland']
-            windows10-aarch64/.*: []  # Specific repos enabled below
-            default: built-projects
+    tier:
+        by-variant:
+            fission: 2
+            default: default
     test-manifest-loader: null  # don't load tests in the taskgraph
     mozharness:
         script:
@@ -57,25 +54,29 @@ crashtest:
             default: 1
     e10s: true
     run-on-projects:
-        by-test-platform:
-            windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
-            default: built-projects
+        by-variant:
+            fission:
+                by-test-platform:
+                    (windows10|linux1804)-64-qr/opt: ['autoland']
+                    (windows10|linux1804)-64-shippable-qr/opt: ['mozilla-central']
+                    (windows10|linux1804)-64-qr/debug: ['trunk']
+                    default: []
+            default:
+                by-test-platform:
+                    windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+                    default: built-projects
     max-run-time: 3600
     tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            android-hw-.*-qr/.*: 2
-            default: default
-    fission-tier:
-        by-test-platform:
-            linux1804-64-qr/debug: 1
-            default: 2
-    fission-run-on-projects:
-        by-test-platform:
-            (windows10|linux1804)-64-qr/opt: ['autoland']
-            (windows10|linux1804)-64-shippable-qr/opt: ['mozilla-central']
-            (windows10|linux1804)-64-qr/debug: ['trunk']
-            default: []
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux1804-64-qr/debug: 1
+                    default: 2
+            default:
+                by-test-platform:
+                    windows10-aarch64.*: 2
+                    android-hw-.*-qr/.*: 2
+                    default: default
 
 crashtest-qr:
     description: "Crashtest Webrender run"
@@ -83,8 +84,10 @@ crashtest-qr:
     treeherder-symbol: R(C)
     chunks: 1
     e10s: true
-    run-on-projects: built-projects
-    fission-run-on-projects: []
+    run-on-projects:
+        by-variant:
+            fission: []
+            default: built-projects
     max-run-time: 1200
     tier: 2
     virtualization:
@@ -117,13 +120,14 @@ jsreftest:
             macosx.*64-ccov.*/.*: 7200
             linux.*64-ccov.*/.*: 7200
             default: 3600
-    tier: default
     run-on-projects:
-        by-test-platform:
-            android-hw-.*-aarch64(?:-shippable)?/.*: ['mozilla-central', 'release']
-            android-hw-.*-api-16(?:-shippable)?/.*: ['mozilla-central', 'release']
-            default: built-projects
-    fission-run-on-projects: []
+        by-variant:
+            fission: []
+            default:
+                by-test-platform:
+                    android-hw-.*-aarch64(?:-shippable)?/.*: ['mozilla-central', 'release']
+                    android-hw-.*-api-16(?:-shippable)?/.*: ['mozilla-central', 'release']
+                    default: built-projects
     virtualization:
         by-test-platform:
             windows10-64.*: hardware
@@ -156,9 +160,15 @@ reftest:
             default: 8
     e10s: true
     run-on-projects:
-        by-test-platform:
-            windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
-            default: built-projects
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux1804-64-qr/debug: ['trunk']
+                    default: []
+            default:
+                by-test-platform:
+                    windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+                    default: built-projects
     max-run-time:
         by-test-platform:
             windows7-32-mingwclang/debug: 5400
@@ -174,26 +184,26 @@ reftest:
                 windows10-64.*/opt: false
                 default: true
     tier:
-        by-test-platform:
-            windows10-aarch64.*: 2
-            android-hw-.*-qr/.*: 2
-            default: default
-    fission-tier:
-        by-test-platform:
-            linux1804-64-qr/debug: 1
-            default: 2
-    fission-run-on-projects:
-        by-test-platform:
-            linux1804-64-qr/debug: ['trunk']
-            default: []
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux1804-64-qr/debug: 1
+                    default: 2
+            default:
+                by-test-platform:
+                    windows10-aarch64.*: 2
+                    android-hw-.*-qr/.*: 2
+                    default: default
 
 reftest-qr:
     description: "Reftest webrender run"
     treeherder-symbol: R(R)
     chunks: 2
     e10s: true
-    run-on-projects: built-projects
-    fission-run-on-projects: []
+    run-on-projects:
+        by-variant:
+            fission: []
+            default: built-projects
     max-run-time: 2400
     mozharness:
         chunked: true
@@ -212,16 +222,17 @@ reftest-gpu:
             windows.*/opt: 2
             default: 4
     run-on-projects:
-        by-test-platform:
-            windows10.*: []
-            default: built-projects
-    fission-run-on-projects: []
+        by-variant:
+            fission: []
+            default:
+                by-test-platform:
+                    windows10.*: []
+                    default: built-projects
     instance-size: default
     virtualization: virtual-with-gpu
     max-run-time: 3600
     mozharness:
         chunked: true
-    tier: default
 
 reftest-no-accel:
     description: "Reftest not accelerated run"
@@ -231,10 +242,12 @@ reftest-no-accel:
             windows10-64.*: hardware
             default: virtual-with-gpu
     run-on-projects:
-        by-test-platform:
-            windows10.*: []
-            default: built-projects
-    fission-run-on-projects: []
+        by-variant:
+            fission: []
+            default:
+                by-test-platform:
+                    windows10.*: []
+                    default: built-projects
     chunks:
         by-test-platform:
             macosx.*: 1
