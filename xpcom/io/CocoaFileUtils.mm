@@ -187,19 +187,15 @@ void AddOriginMetadataToFile(const CFStringRef filePath, const CFURLRef sourceUR
 }
 
 // Can be called off of the main thread.
-static CFStringRef GetQuarantinePropKey() { return kCFURLQuarantinePropertiesKey; }
-
-// Can be called off of the main thread.
 static CFMutableDictionaryRef CreateQuarantineDictionary(const CFURLRef aFileURL,
                                                          const bool aCreateProps) {
-  // The properties key changed in 10.10:
   CFDictionaryRef quarantineProps = NULL;
   if (aCreateProps) {
     quarantineProps = ::CFDictionaryCreate(NULL, NULL, NULL, 0, &kCFTypeDictionaryKeyCallBacks,
                                            &kCFTypeDictionaryValueCallBacks);
   } else {
-    Boolean success =
-        ::CFURLCopyResourcePropertyForKey(aFileURL, GetQuarantinePropKey(), &quarantineProps, NULL);
+    Boolean success = ::CFURLCopyResourcePropertyForKey(aFileURL, kCFURLQuarantinePropertiesKey,
+                                                        &quarantineProps, NULL);
     // If there aren't any quarantine properties then the user probably
     // set up an exclusion and we don't need to add metadata.
     if (!success || !quarantineProps) {
@@ -250,7 +246,8 @@ void AddQuarantineMetadataToFile(const CFStringRef filePath, const CFURLRef sour
   }
 
   // Set quarantine properties on file.
-  ::CFURLSetResourcePropertyForKey(fileURL, GetQuarantinePropKey(), mutQuarantineProps, NULL);
+  ::CFURLSetResourcePropertyForKey(fileURL, kCFURLQuarantinePropertiesKey, mutQuarantineProps,
+                                   NULL);
 
   ::CFRelease(fileURL);
   ::CFRelease(mutQuarantineProps);
