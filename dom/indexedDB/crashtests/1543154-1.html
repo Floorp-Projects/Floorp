@@ -1,0 +1,11 @@
+<script>
+  window.addEventListener('load', () => {
+    let a = document.createElementNS('http://www.w3.org/1999/xhtml', 'frame')
+    document.documentElement.appendChild(a)
+    let b = a.contentWindow.indexedDB
+    while (document.documentElement.lastElementChild) {
+      document.documentElement.removeChild(document.documentElement.lastElementChild)
+    }
+    b.open('', { })
+  })
+</script>
