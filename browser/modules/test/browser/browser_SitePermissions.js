@@ -8,27 +8,6 @@ const { SitePermissions } = ChromeUtils.import(
   "resource:///modules/SitePermissions.jsm"
 );
 
-// This asserts that SitePermissions.set can not save ALLOW permissions
-// temporarily on a tab.
-add_task(async function testTempAllowThrows() {
-  let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
-    "https://example.com"
-  );
-  let id = "notifications";
-
-  await BrowserTestUtils.withNewTab(principal.spec, function(browser) {
-    Assert.throws(function() {
-      SitePermissions.setForPrincipal(
-        principal,
-        id,
-        SitePermissions.ALLOW,
-        SitePermissions.SCOPE_TEMPORARY,
-        browser
-      );
-    }, /'Block' is the only permission we can save temporarily on a browser/);
-  });
-});
-
 // This tests the SitePermissions.getAllPermissionDetailsForBrowser function.
 add_task(async function testGetAllPermissionDetailsForBrowser() {
   let principal = Services.scriptSecurityManager.createContentPrincipalFromOrigin(
