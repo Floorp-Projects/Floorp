@@ -61,7 +61,7 @@ class WebExtensionNestedMenuCandidateTest {
         assertEquals(6, candidate.subMenuItems!!.size)
 
         assertEquals(
-            "Add-ons Manager",
+            "Extensions Manager",
             (candidate.subMenuItems!![0] as TextMenuCandidate).text
         )
         assertEquals(
@@ -92,7 +92,7 @@ class WebExtensionNestedMenuCandidateTest {
             candidate.subMenuItems!![4]
         )
         assertEquals(
-            "Add-ons",
+            "Extensions",
             (candidate.subMenuItems!![5] as NestedMenuCandidate).text
         )
     }
@@ -143,7 +143,7 @@ class WebExtensionNestedMenuCandidateTest {
         assertEquals(6, candidate.subMenuItems!!.size)
 
         assertEquals(
-            "Add-ons",
+            "Extensions",
             (candidate.subMenuItems!![0] as NestedMenuCandidate).text
         )
         assertNull((candidate.subMenuItems!![0] as NestedMenuCandidate).subMenuItems)
@@ -173,7 +173,7 @@ class WebExtensionNestedMenuCandidateTest {
             candidate.subMenuItems!![4]
         )
         assertEquals(
-            "Add-ons Manager",
+            "Extensions Manager",
             (candidate.subMenuItems!![5] as TextMenuCandidate).text
         )
     }

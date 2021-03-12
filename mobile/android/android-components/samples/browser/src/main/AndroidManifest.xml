@@ -50,37 +50,37 @@
         <activity
                 android:theme="@style/Theme.AppCompat.Light"
                 android:name=".addons.AddonsActivity"
-                android:label="@string/mozac_feature_addons_addons"
+                android:label="@string/mozac_feature_addons_addons2"
                 android:parentActivityName=".BrowserActivity" />
 
         <activity
                 android:theme="@style/Theme.AppCompat.Light"
                 android:name=".addons.AddonDetailsActivity"
-                android:label="@string/mozac_feature_addons_addons" />
+                android:label="@string/mozac_feature_addons_addons2" />
 
         <activity android:name=".addons.InstalledAddonDetailsActivity"
-                android:label="@string/mozac_feature_addons_addons"
+                android:label="@string/mozac_feature_addons_addons2"
                 android:parentActivityName=".addons.AddonsActivity"
                 android:theme="@style/Theme.AppCompat.Light" />
 
         <activity
                 android:name=".addons.PermissionsDetailsActivity"
-                android:label="@string/mozac_feature_addons_addons"
+                android:label="@string/mozac_feature_addons_addons2"
                 android:theme="@style/Theme.AppCompat.Light" />
 
         <activity
             android:name=".addons.AddonSettingsActivity"
-            android:label="@string/mozac_feature_addons_addons"
+            android:label="@string/mozac_feature_addons_addons2"
             android:theme="@style/Theme.AppCompat.Light" />
 
         <activity
             android:name=".addons.NotYetSupportedAddonActivity"
-            android:label="@string/mozac_feature_addons_addons"
+            android:label="@string/mozac_feature_addons_addons2"
             android:theme="@style/Theme.AppCompat.Light" />
 
         <activity
             android:name=".addons.WebExtensionActionPopupActivity"
-            android:label="@string/mozac_feature_addons_addons"
+            android:label="@string/mozac_feature_addons_addons2"
             android:theme="@style/Theme.AppCompat.Light" />
 
         <activity

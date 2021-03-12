@@ -23,7 +23,7 @@ private fun createBackMenuItem(
     @ColorInt webExtIconTintColor: Int?
 ) = NestedMenuCandidate(
     id = R.drawable.mozac_ic_back,
-    text = context.getString(R.string.mozac_feature_addons_addons),
+    text = context.getString(R.string.mozac_feature_addons_addons2),
     start = DrawableMenuIcon(
         context,
         R.drawable.mozac_ic_back,
@@ -37,7 +37,7 @@ private fun createAddonsManagerItem(
     @ColorInt webExtIconTintColor: Int?,
     onAddonsManagerTapped: () -> Unit
 ) = TextMenuCandidate(
-    text = context.getString(R.string.mozac_feature_addons_addons_manager),
+    text = context.getString(R.string.mozac_feature_addons_addons_manager2),
     start = DrawableMenuIcon(
         context,
         R.drawable.mozac_ic_extensions,
@@ -134,15 +134,15 @@ fun BrowserState.createWebExtensionMenuCandidate(
         }
 
         NestedMenuCandidate(
-            id = R.string.mozac_feature_addons_addons,
-            text = context.getString(R.string.mozac_feature_addons_addons),
+            id = R.string.mozac_feature_addons_addons2,
+            text = context.getString(R.string.mozac_feature_addons_addons2),
             start = addonsManagerItem.start,
             subMenuItems = listOf(firstItem, DividerMenuCandidate()) +
                 items + listOf(DividerMenuCandidate(), lastItem)
         )
     } else {
         addonsManagerItem.copy(
-            text = context.getString(R.string.mozac_feature_addons_addons)
+            text = context.getString(R.string.mozac_feature_addons_addons2)
         )
     }
 }

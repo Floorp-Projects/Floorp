@@ -8,7 +8,7 @@
     <!-- Content description (not visible, for screen readers etc.): Indicates the overflow menu has a highlight -->
     <string name="mozac_browser_menu_highlighted">Highlighted</string>
     <!-- Label for add-ons submenu section -->
-    <string name="mozac_browser_menu_addons">Add-ons</string>
+    <string name="mozac_browser_menu_addons2">Extensions</string>
     <!-- Label for add-ons sub menu item for add-ons manager -->
-    <string name="mozac_browser_menu_addons_manager">Add-ons Manager</string>
+    <string name="mozac_browser_menu_addons_manager2">Extensions Manager</string>
 </resources>
