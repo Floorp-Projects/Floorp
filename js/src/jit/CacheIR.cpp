@@ -3587,18 +3587,14 @@ static Shape* LookupShapeForSetSlot(JSOp op, NativeObject* obj, jsid id) {
   return shape;
 }
 
-static bool CanAttachNativeSetSlot(JSOp op, HandleObject obj, HandleId id,
-                                   MutableHandleShape propShape) {
+static bool CanAttachNativeSetSlot(JSOp op, JSObject* obj, JS::PropertyKey id,
+                                   Shape** propShape) {
   if (!obj->is<NativeObject>()) {
     return false;
   }
 
-  propShape.set(LookupShapeForSetSlot(op, &obj->as<NativeObject>(), id));
-  if (!propShape) {
-    return false;
-  }
-
-  return true;
+  *propShape = LookupShapeForSetSlot(op, &obj->as<NativeObject>(), id);
+  return *propShape;
 }
 
 // There is no need to guard on the shape. Global lexical bindings are
@@ -3624,7 +3620,7 @@ AttachDecision SetPropIRGenerator::tryAttachNativeSetSlot(HandleObject obj,
                                                           ObjOperandId objId,
                                                           HandleId id,
                                                           ValOperandId rhsId) {
-  RootedShape propShape(cx_);
+  Shape* propShape = nullptr;
   if (!CanAttachNativeSetSlot(JSOp(*pc_), obj, id, &propShape)) {
     return AttachDecision::NoAction;
   }
@@ -4238,8 +4234,8 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
     ValOperandId rhsId) {
   MOZ_ASSERT(IsCacheableDOMProxy(obj));
 
-  RootedValue expandoVal(cx_, GetProxyPrivate(obj));
-  RootedObject expandoObj(cx_);
+  Value expandoVal = GetProxyPrivate(obj);
+  JSObject* expandoObj;
   if (expandoVal.isObject()) {
     expandoObj = &expandoVal.toObject();
   } else {
@@ -4251,7 +4247,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
     expandoObj = &expandoAndGeneration->expando.toObject();
   }
 
-  RootedShape propShape(cx_);
+  Shape* propShape = nullptr;
   if (CanAttachNativeSetSlot(JSOp(*pc_), expandoObj, id, &propShape)) {
     auto* nativeExpandoObj = &expandoObj->as<NativeObject>();
 
@@ -4266,7 +4262,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyExpando(
   }
 
   NativeObject* holder = nullptr;
-  if (CanAttachSetter(cx_, pc_, expandoObj, id, &holder, propShape.address())) {
+  if (CanAttachSetter(cx_, pc_, expandoObj, id, &holder, &propShape)) {
     auto* nativeExpandoObj = &expandoObj->as<NativeObject>();
 
     // Note that we don't actually use the expandoObjId here after the
@@ -4385,9 +4381,9 @@ AttachDecision SetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
   }
 
   // Now try to do the set on the Window (the current global).
-  Handle<GlobalObject*> windowObj = cx_->global();
+  GlobalObject* windowObj = cx_->global();
 
-  RootedShape propShape(cx_);
+  Shape* propShape = nullptr;
   if (!CanAttachNativeSetSlot(JSOp(*pc_), windowObj, id, &propShape)) {
     return AttachDecision::NoAction;
   }
