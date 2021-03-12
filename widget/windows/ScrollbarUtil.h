@@ -22,9 +22,6 @@ class ScrollbarUtil {
   static mozilla::ComputedStyle* GetCustomScrollbarStyle(
       nsIFrame* aFrame, bool* aDarkScrollbar = nullptr);
 
-  static nscolor GetScrollbarButtonColor(nscolor aTrackColor,
-                                         mozilla::EventStates aStates);
-  static nscolor GetScrollbarArrowColor(nscolor aButtonColor);
   static nscolor GetScrollbarTrackColor(nsIFrame* aFrame);
   static nscolor GetScrollbarThumbColor(nsIFrame* aFrame,
                                         mozilla::EventStates aEventStates);
