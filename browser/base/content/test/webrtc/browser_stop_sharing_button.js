@@ -131,7 +131,10 @@ add_task(async function test_keep_permissions() {
     await stopSharingPromise;
 
     // Ensure that we're still sharing the other streams.
-    await checkSharingUI({ audio: true, video: true });
+    await checkSharingUI({ audio: true, video: true }, undefined, undefined, {
+      audio: { scope: SitePermissions.SCOPE_PERSISTENT },
+      video: { scope: SitePermissions.SCOPE_PERSISTENT },
+    });
 
     // Ensure that the "display-share" section of the indicator is now hidden
     Assert.ok(

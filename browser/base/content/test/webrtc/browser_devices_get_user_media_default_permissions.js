@@ -98,7 +98,9 @@ var gTests = [
 
       await Promise.all(promises);
       await indicator;
-      await checkSharingUI({ video: true });
+      await checkSharingUI({ video: true }, undefined, undefined, {
+        video: { scope: SitePermissions.SCOPE_PERSISTENT },
+      });
       await closeStream();
 
       PermissionTestUtils.remove(browser.currentURI, "camera");
@@ -193,7 +195,9 @@ var gTests = [
 
       await Promise.all(promises);
       await indicator;
-      await checkSharingUI({ audio: true });
+      await checkSharingUI({ audio: true }, undefined, undefined, {
+        audio: { scope: SitePermissions.SCOPE_PERSISTENT },
+      });
       await closeStream();
 
       PermissionTestUtils.remove(browser.currentURI, "microphone");
