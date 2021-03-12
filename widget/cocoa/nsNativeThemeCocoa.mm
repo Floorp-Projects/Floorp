@@ -84,7 +84,9 @@ void CUIDraw(CUIRendererRef r, CGRect rect, CGContextRef ctx, CFDictionaryRef op
 // There's no need to pass the actual NSView that we're drawing into to
 // drawWithFrame:inView:. What's more, doing so even causes unnecessary
 // invalidations as soon as we draw a focusring!
-@interface CellDrawView : NSView
+// This class needs to be an NSControl so that NSTextFieldCell (and
+// NSSearchFieldCell, which is a subclass of NSTextFieldCell) draws a focus ring.
+@interface CellDrawView : NSControl
 
 @end
 
@@ -222,31 +224,10 @@ static void DrawCellIncludingFocusRing(NSCell* aCell, NSRect aWithFrame, NSView*
 
 @end
 
-@interface SearchFieldCellWithFocusRing : NSSearchFieldCell {
-}
+@interface MOZToolbarSearchFieldCell : NSSearchFieldCell
 @end
 
-// Workaround for Bug 542048
-// On 64-bit, NSSearchFieldCells don't draw focus rings.
-@implementation SearchFieldCellWithFocusRing
-
-- (void)drawWithFrame:(NSRect)rect inView:(NSView*)controlView {
-  [super drawWithFrame:rect inView:controlView];
-}
-
-- (void)drawFocusRingMaskWithFrame:(NSRect)rect inView:(NSView*)controlView {
-  // By default this draws nothing. I don't know why.
-  // We just draw the search field again. It's a great mask shape for its own
-  // focus ring.
-  [super drawWithFrame:rect inView:controlView];
-}
-
-@end
-
-@interface ToolbarSearchFieldCellWithFocusRing : SearchFieldCellWithFocusRing
-@end
-
-@implementation ToolbarSearchFieldCellWithFocusRing
+@implementation MOZToolbarSearchFieldCell
 
 - (BOOL)_isToolbarMode {
   // This function is called during -[NSSearchFieldCell drawWithFrame:inView:].
@@ -412,13 +393,13 @@ nsNativeThemeCocoa::nsNativeThemeCocoa() {
   [mCheckboxCell setButtonType:NSSwitchButton];
   [mCheckboxCell setAllowsMixedState:YES];
 
-  mSearchFieldCell = [[SearchFieldCellWithFocusRing alloc] initTextCell:@""];
+  mSearchFieldCell = [[NSSearchFieldCell alloc] initTextCell:@""];
   [mSearchFieldCell setBezelStyle:NSTextFieldRoundedBezel];
   [mSearchFieldCell setBezeled:YES];
   [mSearchFieldCell setEditable:YES];
   [mSearchFieldCell setFocusRingType:NSFocusRingTypeExterior];
 
-  mToolbarSearchFieldCell = [[ToolbarSearchFieldCellWithFocusRing alloc] initTextCell:@""];
+  mToolbarSearchFieldCell = [[MOZToolbarSearchFieldCell alloc] initTextCell:@""];
   [mToolbarSearchFieldCell setBezelStyle:NSTextFieldRoundedBezel];
   [mToolbarSearchFieldCell setBezeled:YES];
   [mToolbarSearchFieldCell setEditable:YES];
