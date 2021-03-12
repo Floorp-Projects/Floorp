@@ -26,7 +26,7 @@
 }
 
 .statistics-panel .splitter {
-  border-color: rgba(0,0,0,0.2);
+  border-color: var(--theme-splitter-color);
   cursor: default;
   pointer-events: none;
   height: 100%;

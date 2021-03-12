@@ -118,7 +118,7 @@
 }
 
 .table-chart-totals {
-  border-top: 1px solid var(--theme-text-color-alt); /* Grey foreground text */
+  border-top: 1px solid var(--theme-splitter-color);
 }
 
 .table-chart-summary-label {
