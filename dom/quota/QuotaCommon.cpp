@@ -349,7 +349,8 @@ nsDependentCSubstring MakeRelativeSourceFileName(
 }  // namespace detail
 
 void LogError(const nsACString& aExpr, const nsACString& aSourceFile,
-              int32_t aSourceLine, Maybe<nsresult> aRv) {
+              const int32_t aSourceLine, const Maybe<nsresult> aRv,
+              const bool aIsWarning) {
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
   nsAutoCString extraInfosString;
 
@@ -412,7 +413,7 @@ void LogError(const nsACString& aExpr, const nsACString& aSourceFile,
     // match locations across versions, but they might be large.
     auto extra = Some([&] {
       auto res = CopyableTArray<EventExtraEntry>{};
-      res.SetCapacity(5);
+      res.SetCapacity(6);
       // TODO We could still fill the module field, based on the source
       // directory, but we probably don't need to.
       // res.AppendElement(EventExtraEntry{"module"_ns, aModule});
@@ -422,6 +423,8 @@ void LogError(const nsACString& aExpr, const nsACString& aSourceFile,
           EventExtraEntry{"source_line"_ns, IntToCString(aSourceLine)});
       res.AppendElement(EventExtraEntry{
           "context"_ns, nsPromiseFlatCString{*contextIt->second}});
+      res.AppendElement(EventExtraEntry{
+          "severity"_ns, aIsWarning ? "WARNING"_ns : "ERROR"_ns});
 
       if (!rvName.IsEmpty()) {
         res.AppendElement(EventExtraEntry{"result"_ns, nsCString{rvName}});

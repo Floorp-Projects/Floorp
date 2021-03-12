@@ -2658,6 +2658,7 @@ dom.quota.try:
       context: The context in which the error occurred, e.g. during a storage initialization. Telemetry events are only emitted for selected contexts.
       result: Optionally, the name of the error that occurred.
       seq: Sequence number.
+      severity: One of WARNING or ERROR.
       source_file: The name of the source code file where the error occurred.
       source_line: The line within source_file where the error occurred.
 
