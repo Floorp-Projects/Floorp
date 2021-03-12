@@ -17,7 +17,7 @@ flat varying vec4 vFilterData0;
 flat varying vec4 vFilterData1;
 flat varying float vFloat0;
 flat varying mat4 vColorMat;
-flat varying int vFuncs[4];
+flat varying ivec4 vFuncs;
 
 #define FILTER_BLEND                0
 #define FILTER_FLOOD                1
@@ -110,10 +110,10 @@ void main(void) {
     // https://github.com/servo/webrender/wiki/Driver-issues#bug-1505871---assignment-to-varying-flat-arrays-inside-switch-statement-of-vertex-shader-suspected-miscompile-on-windows
     // default: just to satisfy angle_shader_validation.rs which needs one
     // default: for every switch, even in comments.
-    vFuncs[0] = (aFilterGenericInt >> 12) & 0xf; // R
-    vFuncs[1] = (aFilterGenericInt >> 8)  & 0xf; // G
-    vFuncs[2] = (aFilterGenericInt >> 4)  & 0xf; // B
-    vFuncs[3] = (aFilterGenericInt)       & 0xf; // A
+    vFuncs.r = (aFilterGenericInt >> 12) & 0xf; // R
+    vFuncs.g = (aFilterGenericInt >> 8)  & 0xf; // G
+    vFuncs.b = (aFilterGenericInt >> 4)  & 0xf; // B
+    vFuncs.a = (aFilterGenericInt)       & 0xf; // A
 
     switch (aFilterKind) {
         case FILTER_BLEND:
@@ -427,8 +427,10 @@ vec4 ComponentTransfer(vec4 colora) {
     vec4 texel;
     int k;
 
+    // Dynamically indexing a vector is buggy on some devices, so use a temporary array.
+    int[4] funcs = int[4](vFuncs.r, vFuncs.g, vFuncs.b, vFuncs.a);
     for (int i = 0; i < 4; i++) {
-        switch (vFuncs[i]) {
+        switch (funcs[i]) {
             case COMPONENT_TRANSFER_IDENTITY:
                 break;
             case COMPONENT_TRANSFER_TABLE:
