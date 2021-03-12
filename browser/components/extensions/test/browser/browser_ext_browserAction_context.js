@@ -563,7 +563,7 @@ add_task(async function testPropertyRemoval() {
     },
 
     getTests: function(tabs, windows) {
-      let defaultIcon = "chrome://browser/content/extension.svg";
+      let defaultIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
       let details = [
         {
           icon: browser.runtime.getURL("default.png"),
