@@ -957,18 +957,24 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             CHECK(iter.readRttSub(&nothing));
           }
           case uint16_t(GcOp::RefTest): {
+            uint32_t unusedRttTypeIndex;
             uint32_t unusedRttDepth;
-            CHECK(iter.readRefTest(&nothing, &unusedRttDepth, &nothing));
+            CHECK(iter.readRefTest(&nothing, &unusedRttTypeIndex,
+                                   &unusedRttDepth, &nothing));
           }
           case uint16_t(GcOp::RefCast): {
+            uint32_t unusedRttTypeIndex;
             uint32_t unusedRttDepth;
-            CHECK(iter.readRefCast(&nothing, &unusedRttDepth, &nothing));
+            CHECK(iter.readRefCast(&nothing, &unusedRttTypeIndex,
+                                   &unusedRttDepth, &nothing));
           }
           case uint16_t(GcOp::BrOnCast): {
             uint32_t unusedRelativeDepth;
+            uint32_t unusedRttTypeIndex;
             uint32_t unusedRttDepth;
             CHECK(iter.readBrOnCast(&unusedRelativeDepth, &nothing,
-                                    &unusedRttDepth, &nothings, &unusedType));
+                                    &unusedRttTypeIndex, &unusedRttDepth,
+                                    &nothings, &unusedType));
           }
           default:
             return iter.unrecognizedOpcode(&op);

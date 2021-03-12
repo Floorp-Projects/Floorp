@@ -129,7 +129,7 @@ assertErrorMessage(() => wasmEvalText(
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
       (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (ref.cast $node $node2 (local.get $p) rtt.canon $node2))
+       (ref.cast (local.get $p) rtt.canon $node2))
       (func (export "test") (result eqref)
        (call $f (ref.null $node))))`).exports.test(),
          WebAssembly.RuntimeError,
@@ -142,7 +142,7 @@ assertEq(wasmEvalText(
       (type $node (struct (field i32)))
       (type $node2 (struct (field i32) (field f32)))
       (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (ref.cast $node $node2 (local.get $p) rtt.canon $node2))
+       (ref.cast (local.get $p) rtt.canon $node2))
       (func (export "test") (result i32)
        (local $n (ref null $node))
        (local.set $n (struct.new_with_rtt $node2 (i32.const 0) (f32.const 12) (rtt.canon $node2)))
@@ -156,7 +156,7 @@ assertEq(wasmEvalText(
       (type $node (struct (field (mut i32))))
       (type $node2 (struct (field (mut i32)) (field f32)))
       (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (ref.cast $node $node2 (local.get $p) rtt.canon $node2))
+       (ref.cast (local.get $p) rtt.canon $node2))
       (func (export "test") (result i32)
        (local $n (ref null $node))
        (local.set $n (struct.new_with_rtt $node2 (i32.const 0) (f32.const 12) (rtt.canon $node2)))
@@ -170,7 +170,7 @@ assertEq(wasmEvalText(
     `(module
       (type $node (struct (field i32)))
       (func $f (param $p eqref) (result (ref null $node))
-       (ref.cast eq $node (local.get $p) rtt.canon $node))
+       (ref.cast (local.get $p) rtt.canon $node))
       (func (export "test") (result i32)
        (local $n (ref null $node))
        (local.set $n (struct.new_with_rtt $node (i32.const 0) (rtt.canon $node)))
@@ -290,38 +290,6 @@ assertErrorMessage(() => wasmEvalText(
        (struct.set $node 0 (local.get $p) (i32.const 0))))`),
                    WebAssembly.CompileError,
                    /expression has type.*but expected.*/);
-
-// Base pointer is of unrelated type to stated type in ref.cast
-
-assertErrorMessage(() => wasmEvalText(
-    `(module
-      (type $node (struct (field i32)))
-      (type $node2 (struct (field i32) (field f32)))
-      (type $snort (struct (field f64)))
-      (func $f (param $p (ref null $snort)) (result (ref null $node2))
-       (ref.cast $node $node2 (local.get 0) rtt.canon $node2)))`),
-                   WebAssembly.CompileError,
-                   /expression has type.*but expected.*/);
-
-// source and target types are compatible except for mutability
-
-assertErrorMessage(() => wasmEvalText(
-    `(module
-      (type $node (struct (field i32)))
-      (type $node2 (struct (field (mut i32)) (field f32)))
-      (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (ref.cast $node $node2 (local.get 0) rtt.canon $node2)))`),
-                   WebAssembly.CompileError,
-                   /invalid type/);
-
-assertErrorMessage(() => wasmEvalText(
-    `(module
-      (type $node (struct (field (mut i32))))
-      (type $node2 (struct (field i32) (field f32)))
-      (func $f (param $p (ref null $node)) (result (ref null $node2))
-       (ref.cast $node $node2 (local.get 0) rtt.canon $node2)))`),
-                   WebAssembly.CompileError,
-                   /invalid type/);
 
 // Null pointer dereference in struct.get
 

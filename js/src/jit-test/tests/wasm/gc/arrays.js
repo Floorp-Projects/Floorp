@@ -49,7 +49,7 @@ for (let [valtype, def, nondef] of GENERAL_TESTS) {
     (func (export "get") (param eqref i32) (result ${valtype})
       local.get 0
       rtt.canon $a
-      ref.cast eq $a
+      ref.cast
       local.get 1
       array.get $a
     )
@@ -58,7 +58,7 @@ for (let [valtype, def, nondef] of GENERAL_TESTS) {
     (func (export "set") (param eqref i32 ${valtype})
       local.get 0
       rtt.canon $a
-      ref.cast eq $a
+      ref.cast
       local.get 1
       local.get 2
       array.set $a
@@ -68,7 +68,7 @@ for (let [valtype, def, nondef] of GENERAL_TESTS) {
     (func (export "len") (param eqref) (result i32)
       local.get 0
       rtt.canon $a
-      ref.cast eq $a
+      ref.cast
       array.len $a
     )
   )`).exports;
@@ -138,7 +138,7 @@ for (let [fieldtype, max] of [
     (func (export "getS") (param eqref i32) (result i32)
       local.get 0
       rtt.canon $a
-      ref.cast eq $a
+      ref.cast
       local.get 1
       array.get_s $a
     )
@@ -147,7 +147,7 @@ for (let [fieldtype, max] of [
     (func (export "getU") (param eqref i32) (result i32)
       local.get 0
       rtt.canon $a
-      ref.cast eq $a
+      ref.cast
       local.get 1
       array.get_u $a
     )
@@ -156,7 +156,7 @@ for (let [fieldtype, max] of [
     (func (export "set") (param eqref i32 i32)
       local.get 0
       rtt.canon $a
-      ref.cast eq $a
+      ref.cast
       local.get 1
       local.get 2
       array.set $a

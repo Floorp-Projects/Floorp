@@ -109,12 +109,12 @@
           (func $f (param eqref) (result i32)
            local.get 0
            rtt.canon $q
-           ref.test eq $q
+           ref.test
           )
           (func $g (param eqref) (result i32)
            local.get 0
            rtt.canon $p
-           ref.test eq $p
+           ref.test
           )
           (func (export "t1") (result i32)
            (call $f (struct.new_with_rtt $p (i64.const 0) (rtt.canon $p))))
