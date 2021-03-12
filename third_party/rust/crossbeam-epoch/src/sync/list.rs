@@ -1,12 +1,12 @@
 //! Lock-free intrusive linked list.
 //!
 //! Ideas from Michael.  High Performance Dynamic Lock-Free Hash Tables and List-Based Sets.  SPAA
-//! 2002.  http://dl.acm.org/citation.cfm?id=564870.564881
+//! 2002.  <http://dl.acm.org/citation.cfm?id=564870.564881>
 
 use core::marker::PhantomData;
 use core::sync::atomic::Ordering::{Acquire, Relaxed, Release};
 
-use {unprotected, Atomic, Guard, Shared};
+use crate::{unprotected, Atomic, Guard, Shared};
 
 /// An entry in a linked list.
 ///
@@ -66,7 +66,7 @@ pub struct Entry {
 ///
 pub trait IsElement<T> {
     /// Returns a reference to this element's `Entry`.
-    fn entry_of(&T) -> &Entry;
+    fn entry_of(_: &T) -> &Entry;
 
     /// Given a reference to an element's entry, returns that element.
     ///
@@ -80,7 +80,7 @@ pub trait IsElement<T> {
     ///
     /// The caller has to guarantee that the `Entry` is called with was retrieved from an instance
     /// of the element type (`T`).
-    unsafe fn element_of(&Entry) -> &T;
+    unsafe fn element_of(_: &Entry) -> &T;
 
     /// The function that is called when an entry is unlinked from list.
     ///
@@ -88,7 +88,7 @@ pub trait IsElement<T> {
     ///
     /// The caller has to guarantee that the `Entry` is called with was retrieved from an instance
     /// of the element type (`T`).
-    unsafe fn finalize(&Entry, &Guard);
+    unsafe fn finalize(_: &Entry, _: &Guard);
 }
 
 /// A lock-free, intrusive linked list of type `T`.
@@ -102,7 +102,7 @@ pub struct List<T, C: IsElement<T> = T> {
 }
 
 /// An iterator used for retrieving values from the list.
-pub struct Iter<'g, T: 'g, C: IsElement<T>> {
+pub struct Iter<'g, T, C: IsElement<T>> {
     /// The guard that protects the iteration.
     guard: &'g Guard,
 
@@ -218,7 +218,7 @@ impl<T, C: IsElement<T>> List<T, C> {
 impl<T, C: IsElement<T>> Drop for List<T, C> {
     fn drop(&mut self) {
         unsafe {
-            let guard = &unprotected();
+            let guard = unprotected();
             let mut curr = self.head.load(Relaxed, guard);
             while let Some(c) = curr.as_ref() {
                 let succ = c.next.load(Relaxed, guard);
@@ -243,35 +243,44 @@ impl<'g, T: 'g, C: IsElement<T>> Iterator for Iter<'g, T, C> {
                 // This entry was removed. Try unlinking it from the list.
                 let succ = succ.with_tag(0);
 
-                // The tag should never be zero, because removing a node after a logically deleted
+                // The tag should always be zero, because removing a node after a logically deleted
                 // node leaves the list in an invalid state.
                 debug_assert!(self.curr.tag() == 0);
 
-                match self
+                // Try to unlink `curr` from the list, and get the new value of `self.pred`.
+                let succ = match self
                     .pred
                     .compare_and_set(self.curr, succ, Acquire, self.guard)
                 {
                     Ok(_) => {
-                        // We succeeded in unlinking this element from the list, so we have to
-                        // schedule deallocation. Deferred drop is okay, because `list.delete()`
-                        // can only be called if `T: 'static`.
+                        // We succeeded in unlinking `curr`, so we have to schedule
+                        // deallocation. Deferred drop is okay, because `list.delete()` can only be
+                        // called if `T: 'static`.
                         unsafe {
                             C::finalize(self.curr.deref(), self.guard);
                         }
 
-                        // Move over the removed by only advancing `curr`, not `pred`.
-                        self.curr = succ;
-                        continue;
+                        // `succ` is the new value of `self.pred`.
+                        succ
                     }
-                    Err(_) => {
-                        // A concurrent thread modified the predecessor node. Since it might've
-                        // been deleted, we need to restart from `head`.
-                        self.pred = self.head;
-                        self.curr = self.head.load(Acquire, self.guard);
+                    Err(e) => {
+                        // `e.current` is the current value of `self.pred`.
+                        e.current
+                    }
+                };
 
-                        return Some(Err(IterError::Stalled));
-                    }
+                // If the predecessor node is already marked as deleted, we need to restart from
+                // `head`.
+                if succ.tag() != 0 {
+                    self.pred = self.head;
+                    self.curr = self.head.load(Acquire, self.guard);
+
+                    return Some(Err(IterError::Stalled));
                 }
+
+                // Move over the removed by only advancing `curr`, not `pred`.
+                self.curr = succ;
+                continue;
             }
 
             // Move one step forward.
@@ -289,9 +298,9 @@ impl<'g, T: 'g, C: IsElement<T>> Iterator for Iter<'g, T, C> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::{Collector, Owned};
     use crossbeam_utils::thread;
     use std::sync::Barrier;
-    use {Collector, Owned};
 
     impl IsElement<Entry> for Entry {
         fn entry_of(entry: &Entry) -> &Entry {

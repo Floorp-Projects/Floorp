@@ -1,3 +1,14 @@
+# Version 0.8.0
+
+- Bump the minimum supported Rust version to 1.36.
+- Add `Worker::len()` and `Injector::len()` methods.
+- Add `std` (enabled by default) feature for forward compatibility.
+
+# Version 0.7.3
+
+- Stop stealing from the same deque. (#448)
+- Fix unsoundness issues by adopting `MaybeUninit`. (#458)
+
 # Version 0.7.2
 
 - Bump `crossbeam-epoch` to `0.8`.
