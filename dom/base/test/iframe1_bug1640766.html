@@ -1,0 +1,20 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Iframe 1 for Bug 1640766</title>
+</head>
+<body>
+<div>Iframe 1</div>
+<script type="application/javascript">
+if (parent == window) {
+  let iframe = document.createElement("iframe");
+  iframe.src = "http://example.org/tests/dom/base/test/iframe2_bug1640766.html";
+  document.body.appendChild(iframe);
+} else {
+  window.onload = function() {
+    top.opener.postMessage("ready", "*");
+  };
+}
+</script>
+</body>
+</html>
