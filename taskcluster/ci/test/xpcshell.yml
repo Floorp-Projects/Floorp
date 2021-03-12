@@ -12,8 +12,6 @@ job-defaults:
         by-test-platform:
             android-em-7.*: geckoview-androidTest.apk
             default: null
-    fission-run-on-projects: []
-    fission-tier: 2
     mozharness:
         script:
             by-test-platform:
@@ -45,10 +43,13 @@ xpcshell:
     description: "xpcshell test run"
     treeherder-symbol: X(X)
     run-on-projects:
-        by-test-platform:
-            .*-tsan/opt: ['trunk']
-            windows10-64-asan/opt: []  # No XPCShell on ASAN yet
-            default: built-projects
+        by-variant:
+            fission: []
+            default:
+                by-test-platform:
+                    .*-tsan/opt: ['trunk']
+                    windows10-64-asan/opt: []  # No XPCShell on ASAN yet
+                    default: built-projects
     chunks:
         by-test-platform:
             .*-ccov.*/.*: 6
@@ -69,9 +70,12 @@ xpcshell:
             default: 2700
     allow-software-gl-layers: false
     tier:
-        by-test-platform:
-            windows10-64-asan.*: 3
-            default: default
+        by-variant:
+            fission: 2
+            default:
+                by-test-platform:
+                    windows10-64-asan.*: 3
+                    default: default
     fetches:
         toolchain:
             by-test-platform:
@@ -102,7 +106,10 @@ xpcshell:
 xpcshell-apple-silicon:
     description: "xpcshell apple silicon specific failures test run"
     treeherder-symbol: X-f(AS)
-    run-on-projects: ["mozilla-central"]
+    run-on-projects:
+        by-variant:
+            fission: []
+            default: ["mozilla-central"]
     chunks: 2
     max-run-time: 2700
     allow-software-gl-layers: false
