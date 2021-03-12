@@ -796,3 +796,52 @@ decorate_task(
     }
   }
 );
+
+// If no recipes are received, it should be considered a temporary error
+decorate_task(
+  withStudiesEnabled(),
+  PreferenceExperiments.withMockExperiments([
+    NormandyTestUtils.factories.preferenceStudyFactory({ expired: false }),
+  ]),
+  withSpy(PreferenceExperiments, "stop"),
+  withStub(PreferenceExperimentAction.prototype, "_considerTemporaryError"),
+  async function testNoRecipes({
+    stopSpy,
+    _considerTemporaryErrorStub,
+    prefExperiments: [experiment],
+  }) {
+    let action = new PreferenceExperimentAction();
+    await action.finalize({ noRecipes: true });
+
+    Assert.deepEqual(stopSpy.args, [], "Stop should not be called");
+    Assert.deepEqual(
+      _considerTemporaryErrorStub.args,
+      [[{ experiment, reason: "no-recipes" }]],
+      "The experiment should accumulate a temporary error"
+    );
+  }
+);
+
+// If recipes are received, but the flag that none were received is set, an error should be thrown
+decorate_task(
+  withStudiesEnabled(),
+  PreferenceExperiments.withMockExperiments([
+    NormandyTestUtils.factories.preferenceStudyFactory({ expired: false }),
+  ]),
+  withSpy(PreferenceExperiments, "stop"),
+  withStub(PreferenceExperimentAction.prototype, "_considerTemporaryError"),
+  async function testNoRecipes({
+    stopSpy,
+    _considerTemporaryErrorStub,
+    prefExperiments: [experiment],
+  }) {
+    const action = new PreferenceExperimentAction();
+    const recipe = prefExperimentRecipeFactory({ slug: experiment.slug });
+    await action.processRecipe(recipe, BaseAction.suitability.FILTER_MISMATCH);
+    await action.finalize({ noRecipes: true });
+    ok(
+      action.lastError instanceof PreferenceExperimentAction.BadNoRecipesArg,
+      "An error should be logged since some recipes were received"
+    );
+  }
+);
