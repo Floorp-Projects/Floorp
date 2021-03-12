@@ -5,25 +5,10 @@
 @media not (prefers-contrast) {
   @supports -moz-bool-pref("browser.proton.enabled") {
   :root:not(:-moz-lwtheme) {
-    --buttons-primary-button-bgcolor: rgb(0,97,224);
     --buttons-secondary-bgcolor: rgb(240,240,244);
     --buttons-secondary-hover-bgcolor: rgb(224,224,230);
     --buttons-secondary-active-bgcolor: rgb(207,207,216);
     --buttons-secondary-color: rgb(91,91,102);
-    --buttons-box-shadow: transparent;
-
-    --focus-outline-color: var(--buttons-primary-button-bgcolor);
-    --focus-outline-offset: 2px;
-
-    --checkbox-border-color: rgb(143,143,157);
-    --checkbox-unchecked-bgcolor: rgb(240,240,244);
-    --checkbox-unchecked-hover-bgcolor: rgb(224,224,230);
-    --checkbox-unchecked-active-bgcolor: rgb(207,207,216);
-    --checkbox-checked-border-color: rgb(0,97,224);
-    --checkbox-checked-bgcolor: rgb(0,97,224);
-    --checkbox-checked-color: rgb(251,251,254);
-    --checkbox-checked-hover-bgcolor: rgb(2,80,187);
-    --checkbox-checked-active-bgcolor: rgb(5,62,148);
   }
   } /** END Proton **/
 
