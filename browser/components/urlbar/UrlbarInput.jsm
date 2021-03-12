@@ -2391,7 +2391,7 @@ class UrlbarInput {
         browser.currentURI &&
         url === browser.currentURI.spec
       ) {
-        this.window.SitePermissions.clearTemporaryPermissions(browser);
+        this.window.SitePermissions.clearTemporaryBlockPermissions(browser);
       }
     }
 

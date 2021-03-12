@@ -77,7 +77,7 @@ add_task(async function testTemporaryPermissionTabURLs() {
         );
       }
 
-      SitePermissions.clearTemporaryPermissions(browser);
+      SitePermissions.clearTemporaryBlockPermissions(browser);
     }
 
     for (let principal of different) {
@@ -126,7 +126,7 @@ add_task(async function testTemporaryPermissionTabURLs() {
         }
       }
 
-      SitePermissions.clearTemporaryPermissions(browser);
+      SitePermissions.clearTemporaryBlockPermissions(browser);
     }
   });
 });

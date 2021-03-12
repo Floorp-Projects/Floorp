@@ -4361,7 +4361,7 @@
       let browser = this.getBrowserForTab(aTab);
       // Reset temporary permissions on the current tab. This is done here
       // because we only want to reset permissions on user reload.
-      SitePermissions.clearTemporaryPermissions(browser);
+      SitePermissions.clearTemporaryBlockPermissions(browser);
       // Also reset DOS mitigations for the basic auth prompt on reload.
       delete browser.authPromptAbuseCounter;
       gIdentityHandler.hidePopup();
