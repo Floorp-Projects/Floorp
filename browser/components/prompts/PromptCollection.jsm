@@ -80,7 +80,7 @@ class PromptCollection {
     try {
       title = this.stringBundles.dom.GetStringFromName("OnBeforeUnloadTitle");
       message = this.stringBundles.dom.GetStringFromName(
-        "OnBeforeUnloadMessage"
+        "OnBeforeUnloadMessage2"
       );
       leaveLabel = this.stringBundles.dom.GetStringFromName(
         "OnBeforeUnloadLeaveButton"
