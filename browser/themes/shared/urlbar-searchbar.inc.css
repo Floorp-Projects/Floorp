@@ -894,7 +894,7 @@
 /* Reader mode icon */
 
 #reader-mode-button {
-  list-style-image: url(chrome://browser/skin/readerMode.svg);
+  list-style-image: url(chrome://browser/skin/reader-mode.svg);
 }
 
 #reader-mode-button[readeractive] {
