@@ -114,12 +114,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocAccessible,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mNotificationController)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mVirtualCursor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildDocuments)
-  for (auto hashesIter = tmp->mDependentIDsHashes.Iter(); !hashesIter.Done();
-       hashesIter.Next()) {
-    auto dependentIDsHash = hashesIter.UserData();
-    for (auto providersIter = dependentIDsHash->Iter(); !providersIter.Done();
-         providersIter.Next()) {
-      AttrRelProviders* providers = providersIter.UserData();
+  for (const auto& hashEntry : tmp->mDependentIDsHashes) {
+    for (const auto& providerEntry : *hashEntry.GetData()) {
+      AttrRelProviders* providers = providerEntry.GetData().get();
       for (int32_t provIdx = providers->Length() - 1; provIdx >= 0; provIdx--) {
         NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
             cb, "content of dependent ids hash entry of document accessible");
@@ -132,8 +129,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocAccessible,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAccessibleCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchorJumpElm)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mInvalidationList)
-  for (auto it = tmp->mARIAOwnsHash.ConstIter(); !it.Done(); it.Next()) {
-    nsTArray<RefPtr<LocalAccessible>>* ar = it.UserData();
+  for (const auto& arEntry : tmp->mARIAOwnsHash) {
+    nsTArray<RefPtr<LocalAccessible>>* ar = arEntry.GetData().get();
     for (uint32_t i = 0; i < ar->Length(); i++) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mARIAOwnsHash entry item");
       cb.NoteXPCOMChild(ar->ElementAt(i));

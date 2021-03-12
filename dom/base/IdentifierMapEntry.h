@@ -118,7 +118,7 @@ class IdentifierMapEntry : public PLDHashEntryHdr {
    * Returns the element if we know the element associated with this
    * id. Otherwise returns null.
    */
-  Element* GetIdElement() { return mIdContentList->SafeElementAt(0); }
+  Element* GetIdElement() const { return mIdContentList->SafeElementAt(0); }
 
   /**
    * Returns the list of all elements associated with this id.
@@ -146,7 +146,7 @@ class IdentifierMapEntry : public PLDHashEntryHdr {
    * GetIdElement(true) if non-null.
    */
   void SetImageElement(Element* aElement);
-  bool HasIdElementExposedAsHTMLDocumentProperty();
+  bool HasIdElementExposedAsHTMLDocumentProperty() const;
 
   bool HasContentChangeCallback() { return mChangeCallbacks != nullptr; }
   void AddContentChangeCallback(IDTargetObserver aCallback, void* aData,

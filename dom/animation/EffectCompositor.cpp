@@ -52,9 +52,9 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(EffectCompositor)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EffectCompositor)
-  for (auto& elementSet : tmp->mElementsToRestyle) {
-    for (auto iter = elementSet.Iter(); !iter.Done(); iter.Next()) {
-      CycleCollectionNoteChild(cb, iter.Key().mElement,
+  for (const auto& elementSet : tmp->mElementsToRestyle) {
+    for (const auto& element : elementSet) {
+      CycleCollectionNoteChild(cb, element.GetKey().mElement,
                                "EffectCompositor::mElementsToRestyle[]",
                                cb.Flags());
     }
@@ -836,7 +836,7 @@ bool EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
       (aFlags & ServoTraversalFlags::FlushThrottledAnimations);
 
   using ElementsToRestyleIterType =
-      nsTHashMap<PseudoElementHashEntry, bool>::Iterator;
+      nsTHashMap<PseudoElementHashEntry, bool>::ConstIterator;
   auto getNeededRestyleTarget =
       [&](const ElementsToRestyleIterType& aIter) -> NonOwningAnimationTarget {
     NonOwningAnimationTarget returnTarget;
@@ -878,7 +878,7 @@ bool EffectCompositor::PreTraverseInSubtree(ServoTraversalFlags aFlags,
   for (size_t i = 0; i < kCascadeLevelCount; ++i) {
     CascadeLevel cascadeLevel = CascadeLevel(i);
     auto& elementSet = mElementsToRestyle[cascadeLevel];
-    for (auto iter = elementSet.Iter(); !iter.Done(); iter.Next()) {
+    for (auto iter = elementSet.ConstIter(); !iter.Done(); iter.Next()) {
       const NonOwningAnimationTarget& target = getNeededRestyleTarget(iter);
       if (!target.mElement) {
         continue;

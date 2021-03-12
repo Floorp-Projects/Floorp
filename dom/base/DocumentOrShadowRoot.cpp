@@ -812,8 +812,8 @@ void DocumentOrShadowRoot::Traverse(DocumentOrShadowRoot* tmp,
     iter.Get()->Traverse(&cb);
   }
 
-  for (auto iter = tmp->mRadioGroups.Iter(); !iter.Done(); iter.Next()) {
-    nsRadioGroupStruct* radioGroup = iter.UserData();
+  for (const auto& entry : tmp->mRadioGroups) {
+    nsRadioGroupStruct* radioGroup = entry.GetWeak();
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
         cb, "mRadioGroups entry->mSelectedRadioButton");
     cb.NoteXPCOMChild(ToSupports(radioGroup->mSelectedRadioButton));
