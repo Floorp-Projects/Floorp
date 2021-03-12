@@ -7,10 +7,10 @@
 #ifndef mozilla_dom_quota_IPCStreamCipherStrategy_h
 #define mozilla_dom_quota_IPCStreamCipherStrategy_h
 
-#include "mozilla/dom/quota/DummyCipherStrategy.h"
+#include "mozilla/dom/quota/NSSCipherStrategy.h"
 
 namespace mozilla::dom::quota {
-using IPCStreamCipherStrategy = DummyCipherStrategy;
+using IPCStreamCipherStrategy = NSSCipherStrategy;
 }
 
 #endif
