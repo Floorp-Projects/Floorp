@@ -441,33 +441,29 @@ AttachDecision GetPropIRGenerator::tryAttachStub() {
   return AttachDecision::NoAction;
 }
 
-static bool IsCacheableProtoChain(JSObject* obj, JSObject* holder) {
+#ifdef DEBUG
+// Any property lookups performed when trying to attach ICs must be pure, i.e.
+// must use LookupPropertyPure() or similar functions. Pure lookups are
+// guaranteed to never modify the prototype chain. This ensures that the holder
+// object can always be found on the prototype chain.
+static bool IsCacheableProtoChain(NativeObject* obj, NativeObject* holder) {
   while (obj != holder) {
-    /*
-     * We cannot assume that we find the holder object on the prototype
-     * chain and must check for null proto. The prototype chain can be
-     * altered during the lookupProperty call.
-     */
     JSObject* proto = obj->staticPrototype();
     if (!proto || !proto->is<NativeObject>()) {
       return false;
     }
-    obj = proto;
+    obj = &proto->as<NativeObject>();
   }
   return true;
 }
+#endif
 
 static bool IsCacheableGetPropReadSlot(NativeObject* obj, NativeObject* holder,
                                        Shape* shape) {
-  if (!shape->isDataProperty()) {
-    return false;
-  }
+  MOZ_ASSERT(shape);
+  MOZ_ASSERT(IsCacheableProtoChain(obj, holder));
 
-  if (!IsCacheableProtoChain(obj, holder)) {
-    return false;
-  }
-
-  return true;
+  return shape->isDataProperty();
 }
 
 enum NativeGetPropCacheability {
@@ -481,10 +477,7 @@ static NativeGetPropCacheability IsCacheableGetPropCall(NativeObject* obj,
                                                         NativeObject* holder,
                                                         Shape* shape) {
   MOZ_ASSERT(shape);
-
-  if (!IsCacheableProtoChain(obj, holder)) {
-    return CanAttachNone;
-  }
+  MOZ_ASSERT(IsCacheableProtoChain(obj, holder));
 
   if (!shape->hasGetterValue() || !shape->getterValue().isObject()) {
     return CanAttachNone;
@@ -3221,11 +3214,9 @@ AttachDecision HasPropIRGenerator::tryAttachNative(NativeObject* obj,
                                                    ValOperandId keyId,
                                                    PropertyResult prop,
                                                    NativeObject* holder) {
-  if (!prop.isNativeProperty()) {
-    return AttachDecision::NoAction;
-  }
+  MOZ_ASSERT(IsCacheableProtoChain(obj, holder));
 
-  if (!IsCacheableProtoChain(obj, holder)) {
+  if (!prop.isNativeProperty()) {
     return AttachDecision::NoAction;
   }
 
@@ -3711,10 +3702,7 @@ void SetPropIRGenerator::trackAttached(const char* name) {
 static bool IsCacheableSetPropCallNative(NativeObject* obj,
                                          NativeObject* holder, Shape* shape) {
   MOZ_ASSERT(shape);
-
-  if (!IsCacheableProtoChain(obj, holder)) {
-    return false;
-  }
+  MOZ_ASSERT(IsCacheableProtoChain(obj, holder));
 
   if (!shape->hasSetterValue()) {
     return false;
@@ -3743,10 +3731,7 @@ static bool IsCacheableSetPropCallNative(NativeObject* obj,
 static bool IsCacheableSetPropCallScripted(NativeObject* obj,
                                            NativeObject* holder, Shape* shape) {
   MOZ_ASSERT(shape);
-
-  if (!IsCacheableProtoChain(obj, holder)) {
-    return false;
-  }
+  MOZ_ASSERT(IsCacheableProtoChain(obj, holder));
 
   if (IsWindow(obj)) {
     return false;
@@ -4649,10 +4634,7 @@ AttachDecision InstanceOfIRGenerator::tryAttachStub() {
   MOZ_ASSERT(!hasInstanceProp.shape()->configurable());
   MOZ_ASSERT(!hasInstanceProp.shape()->writable());
 
-  if (!IsCacheableProtoChain(fun, hasInstanceHolder)) {
-    trackAttached(IRGenerator::NotAttached);
-    return AttachDecision::NoAction;
-  }
+  MOZ_ASSERT(IsCacheableProtoChain(fun, hasInstanceHolder));
 
   // Ensure that the function's prototype slot is the same.
   Shape* shape = fun->lookupPure(cx_->names().prototype);
