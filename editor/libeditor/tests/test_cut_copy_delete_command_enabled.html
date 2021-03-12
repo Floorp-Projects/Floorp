@@ -24,41 +24,182 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1067255
 
       function doTest() {
         var text = $("text-field");
+        var textWithHandlers = $("text-field-2");
         var password = $("password-field");
+        var passwordWithHandlers = $("password-field-2");
+        var textWithParentHandlers = $("text-field-3");
+        var passwordWithParentHandlers = $("password-field-3");
+        var textarea1 = $("text-area-1");
+        var textarea2 = $("text-area-2");
+        var textarea3 = $("text-area-3");
 
         var editor1 = SpecialPowers.wrap(text).editor;
         var editor2 = SpecialPowers.wrap(password).editor;
+        var editor3 = SpecialPowers.wrap(textWithHandlers).editor;
+        var editor4 = SpecialPowers.wrap(passwordWithHandlers).editor;
+        var editor5 = SpecialPowers.wrap(textWithParentHandlers).editor;
+        var editor6 = SpecialPowers.wrap(passwordWithParentHandlers).editor;
+        var editor7 = SpecialPowers.wrap(textarea1).editor;
+        var editor8 = SpecialPowers.wrap(textarea2).editor;
+        var editor9 = SpecialPowers.wrap(textarea3).editor;
 
         text.focus();
+
+        ok(!editor1.canCopy(),
+           "nsIEditor.canCopy() should return false in <input type=text> with no selection");
+        ok(!editor1.canCut(),
+           "nsIEditor.canCut() should return false in <input type=text> with no selection");
+        ok(!SpecialPowers.isCommandEnabled(window, "cmd_copy"),
+           "cmd_copy command should be disabled in <input type=text> with no selection");
+        ok(!SpecialPowers.isCommandEnabled(window, "cmd_cut"),
+           "cmd_cut command should be disabled in <input type=text> with no selection");
+        ok(!SpecialPowers.isCommandEnabled(window, "cmd_delete"),
+           "cmd_delete command should be disabled in <input type=text> with no selection");
+
         text.select();
 
         ok(editor1.canCopy(),
-           "nsIEditor.canCopy() should return true in <input type=text>");
+           "nsIEditor.canCopy() should return true in <input type=text> with selection");
         ok(editor1.canCut(),
-           "nsIEditor.canCut() should return true in <input type=text>");
+           "nsIEditor.canCut() should return true in <input type=text> with selection");
         ok(SpecialPowers.isCommandEnabled(window, "cmd_copy"),
-           "cmd_copy command should be enabled in <input type=text>");
+           "cmd_copy command should be enabled in <input type=text> with selection");
         ok(SpecialPowers.isCommandEnabled(window, "cmd_cut"),
-           "cmd_cut command should be enabled in <input type=text>");
+           "cmd_cut command should be enabled in <input type=text> with selection");
         ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
-           "cmd_delete command should be enabled in <input type=text>");
+           "cmd_delete command should be enabled in <input type=text> with selection");
 
         password.focus();
-        password.select();
+
+        ok(!editor2.canCopy(),
+           "nsIEditor.canCopy() should return false in <input type=password> with no selection");
+        ok(!editor2.canCut(),
+           "nsIEditor.canCut() should return false in <input type=password> with no selection");
+        ok(!SpecialPowers.isCommandEnabled(window, "cmd_copy"),
+           "cmd_copy command should be disabled in <input type=password> with no selection");
+        ok(!SpecialPowers.isCommandEnabled(window, "cmd_cut"),
+           "cmd_cut command should be disabled in <input type=password> with no selection");
+        ok(!SpecialPowers.isCommandEnabled(window, "cmd_delete"),
+           "cmd_delete command should be disabled in <input type=password> with no selection");
 
         // Copy and cut commands don't do anything on password fields by default,
-        // but webpages can hook up event handlers to the event, and thus, we have to
-        // always keep the cut and copy event enabled in HTML/XHTML documents.
-        ok(editor2.canCopy(),
-           "nsIEditor.canCopy() should return true in <input type=password>");
-        ok(editor2.canCut(),
-           "nsIEditor.canCut() should return true in <input type=password>");
-        ok(SpecialPowers.isCommandEnabled(window, "cmd_copy"),
-           "cmd_copy command should be enabled in <input type=password>");
-        ok(SpecialPowers.isCommandEnabled(window, "cmd_cut"),
-           "cmd_cut command should be enabled in <input type=password>");
+        // so they remain disabled even when there is a selection...
+        password.select();
+
+        ok(!editor2.canCopy(),
+           "nsIEditor.canCopy() should return false in <input type=password> with selection");
+        ok(!editor2.canCut(),
+           "nsIEditor.canCut() should return false in <input type=password> with selection");
+        ok(!SpecialPowers.isCommandEnabled(window, "cmd_copy"),
+           "cmd_copy command should be disabled in <input type=password> with selection");
+        ok(!SpecialPowers.isCommandEnabled(window, "cmd_cut"),
+           "cmd_cut command should be disabled in <input type=password> with selection");
+        // Delete, on the other hand, does apply to password fields.
         ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
-           "cmd_delete command should be enabled in <input type=password>");
+           "cmd_delete command should be enabled in <input type=password with selection>");
+
+        // ...but webpages can hook up event handlers to cut/copy events, so we have to
+        // keep the cut and copy commands enabled if event handlers are attached,
+        // for both regular edit fields and password fields (even when there's no
+        // selection, as we don't know what the handler might want to do).
+        textWithHandlers.focus();
+
+        ok(editor3.canCopy(),
+           "nsIEditor.canCopy() should return true in <input type=text> with event handler");
+        ok(editor3.canCut(),
+           "nsIEditor.canCut() should return true in <input type=text> with event handler");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_copy"),
+           "cmd_copy command should be enabled in <input type=text> with event handler");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_cut"),
+           "cmd_cut command should be enabled in <input type=text> with event handler");
+
+        passwordWithHandlers.focus();
+
+        ok(editor4.canCopy(),
+           "nsIEditor.canCopy() should return true in <input type=password> with event handler");
+        ok(editor4.canCut(),
+           "nsIEditor.canCut() should return true in <input type=password> with event handler");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_copy"),
+           "cmd_copy command should be enabled in <input type=password> with event handler");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_cut"),
+           "cmd_cut command should be enabled in <input type=password> with event handler");
+
+        // Also check that the commands are enabled if there's a handler on a parent element.
+        textWithParentHandlers.focus();
+
+        ok(editor5.canCopy(),
+           "nsIEditor.canCopy() should return true in <input type=text> with event handler on an ancestor");
+        ok(editor5.canCut(),
+           "nsIEditor.canCut() should return true in <input type=text> with event handler on an ancestor");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_copy"),
+           "cmd_copy command should be enabled in <input type=text> with event handler on an ancestor");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_cut"),
+           "cmd_cut command should be enabled in <input type=text> with event handler on an ancestor");
+
+        passwordWithParentHandlers.focus();
+
+        ok(editor6.canCopy(),
+           "nsIEditor.canCopy() should return true in <input type=password> with event handler on an ancestor");
+        ok(editor6.canCut(),
+           "nsIEditor.canCut() should return true in <input type=password> with event handler on an ancestor");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_copy"),
+           "cmd_copy command should be enabled in <input type=password> with event handler on an ancestor");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_cut"),
+           "cmd_cut command should be enabled in <input type=password> with event handler on an ancestor");
+
+        // TEXTAREA tests
+
+        textarea1.focus();
+
+        ok(!editor7.canCopy(),
+           "nsIEditor.canCopy() should return false in <textarea> with no selection");
+        ok(!editor7.canCut(),
+           "nsIEditor.canCut() should return false in <textarea> with no selection");
+        ok(!SpecialPowers.isCommandEnabled(window, "cmd_copy"),
+           "cmd_copy command should be disabled in <textarea> with no selection");
+        ok(!SpecialPowers.isCommandEnabled(window, "cmd_cut"),
+           "cmd_cut command should be disabled in <textarea> with no selection");
+        ok(!SpecialPowers.isCommandEnabled(window, "cmd_delete"),
+           "cmd_delete command should be disabled in <textarea> with no selection");
+
+        textarea1.select();
+
+        ok(editor7.canCopy(),
+           "nsIEditor.canCopy() should return true in <textarea> with selection");
+        ok(editor7.canCut(),
+           "nsIEditor.canCut() should return true in <textarea> with selection");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_copy"),
+           "cmd_copy command should be enabled in <textarea> with selection");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_cut"),
+           "cmd_cut command should be enabled in <textarea> with selection");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_delete"),
+           "cmd_delete command should be enabled in <textarea> with selection");
+
+        textarea2.focus();
+
+        ok(!editor8.canCopy(),
+           "nsIEditor.canCopy() should return false in <textarea> with only a 'cut' handler");
+        ok(editor8.canCut(),
+           "nsIEditor.canCut() should return true in <textarea> with only a 'cut' handler");
+        ok(!SpecialPowers.isCommandEnabled(window, "cmd_copy"),
+           "cmd_copy command should be disabled in <textarea> with only a 'cut' handler");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_cut"),
+           "cmd_cut command should be enabled in <textarea> with only a 'cut' handler");
+        ok(!SpecialPowers.isCommandEnabled(window, "cmd_delete"),
+           "cmd_delete command should be disabled in <textarea> with only a 'cut' handler");
+
+        textarea3.focus();
+
+        ok(editor9.canCopy(),
+           "nsIEditor.canCopy() should return true in <textarea> with only a 'copy' handler on ancestor");
+        ok(!editor9.canCut(),
+           "nsIEditor.canCut() should return false in <textarea> with only a 'copy' handler on ancestor");
+        ok(SpecialPowers.isCommandEnabled(window, "cmd_copy"),
+           "cmd_copy command should be enabled in <textarea> with only a 'copy' handler on ancestor");
+        ok(!SpecialPowers.isCommandEnabled(window, "cmd_cut"),
+           "cmd_cut command should be disabled in <textarea> with only a 'copy' handler on ancestor");
+        ok(!SpecialPowers.isCommandEnabled(window, "cmd_delete"),
+           "cmd_delete command should be disabled in <textarea> with only a 'copy' handler on ancestor");
 
         SimpleTest.finish();
       }
@@ -67,5 +208,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1067255
 
   <input type="text" value="Gonzo says hi" id="text-field" />
   <input type="password" value="Jan also" id="password-field" />
+  <input type="text" value="Hi says Gonzo" id="text-field-2" oncut="cut()" oncopy="copy()" ondelete="delete()"/>
+  <input type="password" value="Also Jan" id="password-field-2" oncut="cut()" oncopy="copy()" ondelete="delete()"/>
+  <div oncut="cut()">
+    <ul oncopy="copy()">
+      <li><input type="text" value="Hi again" id="text-field-3"/></li>
+      <li><input type="password" value="And again, hi" id="password-field-3"/></li>
+    </ul>
+  </div>
+  <textarea id="text-area-1">textarea</textarea>
+  <textarea oncut="cut()" id="text-area-2">textarea with cut handler</textarea>
+  <div oncopy="copy()">
+    <blockquote>
+      <p><textarea id="text-area-3">textarea with copy handler on parent</textarea></p>
+    </blockquote>
+  </div>
 </body>
 </html>
