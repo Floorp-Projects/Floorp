@@ -540,8 +540,8 @@ static bool CheckHasNoSuchProperty(JSContext* cx, JSObject* obj, jsid id) {
   return true;
 }
 
-static bool IsCacheableNoProperty(JSContext* cx, JSObject* obj,
-                                  JSObject* holder, Shape* shape, jsid id,
+static bool IsCacheableNoProperty(JSContext* cx, NativeObject* obj,
+                                  NativeObject* holder, Shape* shape, jsid id,
                                   jsbytecode* pc) {
   MOZ_ASSERT(!shape);
   MOZ_ASSERT(!holder);
@@ -619,7 +619,7 @@ static void TestMatchingProxyReceiver(CacheIRWriter& writer, ProxyObject* obj,
   writer.guardShapeForClass(objId, obj->shape());
 }
 
-static bool ProtoChainSupportsTeleporting(JSObject* obj, JSObject* holder) {
+static bool ProtoChainSupportsTeleporting(JSObject* obj, NativeObject* holder) {
   // The receiver should already have been handled since its checks are always
   // required.
   MOZ_ASSERT(obj->isUsedAsPrototype());
@@ -638,7 +638,7 @@ static bool ProtoChainSupportsTeleporting(JSObject* obj, JSObject* holder) {
 }
 
 static void GeneratePrototypeGuards(CacheIRWriter& writer, JSObject* obj,
-                                    JSObject* holder, ObjOperandId objId) {
+                                    NativeObject* holder, ObjOperandId objId) {
   // Assuming target property is on |holder|, generate appropriate guards to
   // ensure |holder| is still on the prototype chain of |obj| and we haven't
   // introduced any shadowing definitions.
@@ -943,7 +943,7 @@ static bool CanAttachDOMCall(JSContext* cx, JSJitInfo::OpType type,
 }
 
 static bool CanAttachDOMGetterSetter(JSContext* cx, JSJitInfo::OpType type,
-                                     JSObject* obj, HandleShape shape,
+                                     NativeObject* obj, HandleShape shape,
                                      ICState::Mode mode) {
   MOZ_ASSERT(type == JSJitInfo::Getter || type == JSJitInfo::Setter);
 
