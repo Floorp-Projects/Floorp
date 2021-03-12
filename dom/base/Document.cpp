@@ -695,7 +695,7 @@ void IdentifierMapEntry::RemoveNameElement(Element* aElement) {
   }
 }
 
-bool IdentifierMapEntry::HasIdElementExposedAsHTMLDocumentProperty() const {
+bool IdentifierMapEntry::HasIdElementExposedAsHTMLDocumentProperty() {
   Element* idElement = GetIdElement();
   return idElement &&
          nsGenericHTMLElement::ShouldExposeIdAsHTMLDocumentProperty(idElement);
@@ -859,8 +859,8 @@ void ExternalResourceMap::Traverse(
     nsCycleCollectionTraversalCallback* aCallback) const {
   // mPendingLoads will get cleared out as the requests complete, so
   // no need to worry about those here.
-  for (const auto& entry : mMap) {
-    ExternalResourceMap::ExternalResource* resource = entry.GetWeak();
+  for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
+    ExternalResourceMap::ExternalResource* resource = iter.UserData();
 
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback,
                                        "mExternalResourceMap.mMap entry"
@@ -880,8 +880,8 @@ void ExternalResourceMap::Traverse(
 }
 
 void ExternalResourceMap::HideViewers() {
-  for (const auto& entry : mMap) {
-    nsCOMPtr<nsIContentViewer> viewer = entry.GetData()->mViewer;
+  for (auto iter = mMap.Iter(); !iter.Done(); iter.Next()) {
+    nsCOMPtr<nsIContentViewer> viewer = iter.UserData()->mViewer;
     if (viewer) {
       viewer->Hide();
     }
@@ -889,8 +889,8 @@ void ExternalResourceMap::HideViewers() {
 }
 
 void ExternalResourceMap::ShowViewers() {
-  for (const auto& entry : mMap) {
-    nsCOMPtr<nsIContentViewer> viewer = entry.GetData()->mViewer;
+  for (auto iter = mMap.Iter(); !iter.Done(); iter.Next()) {
+    nsCOMPtr<nsIContentViewer> viewer = iter.UserData()->mViewer;
     if (viewer) {
       viewer->Show();
     }
@@ -2444,10 +2444,10 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
   }
 
   // XXX: This should be not needed once bug 1569185 lands.
-  for (const auto& entry : tmp->mL10nProtoElements) {
+  for (auto it = tmp->mL10nProtoElements.ConstIter(); !it.Done(); it.Next()) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mL10nProtoElements key");
-    cb.NoteXPCOMChild(entry.GetKey());
-    CycleCollectionNoteChild(cb, entry.GetWeak(), "mL10nProtoElements value");
+    cb.NoteXPCOMChild(it.Key());
+    CycleCollectionNoteChild(cb, it.UserData(), "mL10nProtoElements value");
   }
 
   for (size_t i = 0; i < tmp->mPendingFrameStaticClones.Length(); ++i) {
@@ -8124,8 +8124,7 @@ already_AddRefed<Attr> Document::CreateAttributeNS(
 }
 
 void Document::ResolveScheduledSVGPresAttrs() {
-  for (auto iter = mLazySVGPresElements.ConstIter(); !iter.Done();
-       iter.Next()) {
+  for (auto iter = mLazySVGPresElements.Iter(); !iter.Done(); iter.Next()) {
     SVGElement* svg = iter.Get()->GetKey();
     svg->UpdateContentDeclarationBlock();
   }
@@ -15285,8 +15284,7 @@ void Document::ScheduleIntersectionObserverNotification() {
 void Document::NotifyIntersectionObservers() {
   nsTArray<RefPtr<DOMIntersectionObserver>> observers(
       mIntersectionObservers.Count());
-  for (auto iter = mIntersectionObservers.ConstIter(); !iter.Done();
-       iter.Next()) {
+  for (auto iter = mIntersectionObservers.Iter(); !iter.Done(); iter.Next()) {
     DOMIntersectionObserver* observer = iter.Get()->GetKey();
     observers.AppendElement(observer);
   }
@@ -16775,7 +16773,7 @@ void Document::DoCacheAllKnownLangPrefs() {
   data->GetFontPrefsForLang(nsGkAtoms::x_math);
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1362599#c12
   data->GetFontPrefsForLang(nsGkAtoms::Unicode);
-  for (auto iter = mLanguagesUsed.ConstIter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mLanguagesUsed.Iter(); !iter.Done(); iter.Next()) {
     data->GetFontPrefsForLang(iter.Get()->GetKey());
   }
   mMayNeedFontPrefsUpdate = false;

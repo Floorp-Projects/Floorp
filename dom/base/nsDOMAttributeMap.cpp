@@ -54,8 +54,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDOMAttributeMap)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsDOMAttributeMap)
-  for (const auto& entry : tmp->mAttributeCache) {
-    cb.NoteXPCOMChild(static_cast<nsINode*>(entry.GetWeak()));
+  for (auto iter = tmp->mAttributeCache.Iter(); !iter.Done(); iter.Next()) {
+    cb.NoteXPCOMChild(static_cast<nsINode*>(iter.Data().get()));
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContent)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -97,8 +97,8 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMAttributeMap)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMAttributeMap)
 
 nsresult nsDOMAttributeMap::SetOwnerDocument(Document* aDocument) {
-  for (const auto& entry : mAttributeCache) {
-    nsresult rv = entry.GetData()->SetOwnerDocument(aDocument);
+  for (auto iter = mAttributeCache.Iter(); !iter.Done(); iter.Next()) {
+    nsresult rv = iter.Data()->SetOwnerDocument(aDocument);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   }
   return NS_OK;
@@ -388,8 +388,8 @@ size_t nsDOMAttributeMap::SizeOfIncludingThis(
   size_t n = aMallocSizeOf(this);
 
   n += mAttributeCache.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (const auto& entry : mAttributeCache) {
-    n += aMallocSizeOf(entry.GetWeak());
+  for (auto iter = mAttributeCache.ConstIter(); !iter.Done(); iter.Next()) {
+    n += aMallocSizeOf(iter.Data().get());
   }
 
   // NB: mContent is non-owning and thus not counted.

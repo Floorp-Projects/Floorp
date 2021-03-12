@@ -1184,8 +1184,9 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   // NOTE: Chrome Only
   void DisconnectAndClearGroupMessageManagers() {
     MOZ_RELEASE_ASSERT(IsChromeWindow());
-    for (const auto& entry : mChromeFields.mGroupMessageManagers) {
-      mozilla::dom::ChromeMessageBroadcaster* mm = entry.GetWeak();
+    for (auto iter = mChromeFields.mGroupMessageManagers.Iter(); !iter.Done();
+         iter.Next()) {
+      mozilla::dom::ChromeMessageBroadcaster* mm = iter.UserData();
       if (mm) {
         mm->Disconnect();
       }
