@@ -87,6 +87,11 @@ else:
         "vm/StructuredClone.cpp",
     ]
 
+if CONFIG["FUZZING_JS_FUZZILLI"]:
+    # When building for Fuzzilli, we instrument everything with standard
+    # trace-pc instrumentation.
+    include("/tools/fuzzing/libfuzzer-config.mozbuild")
+
 CONFIGURE_SUBST_FILES += [
     "devtools/rootAnalysis/Makefile",
 ]
