@@ -1939,6 +1939,12 @@ nsEventStatus nsChildView::DispatchAPZInputEvent(InputData& aEvent) {
     PinchGestureInput& pinchEvent = aEvent.AsPinchGestureInput();
     WidgetWheelEvent wheelEvent = pinchEvent.ToWidgetEvent(this);
     ProcessUntransformedAPZEvent(&wheelEvent, result);
+  } else if (aEvent.mInputType == TAPGESTURE_INPUT) {
+    TapGestureInput& tapEvent = aEvent.AsTapGestureInput();
+    WidgetSimpleGestureEvent gestureEvent = tapEvent.ToWidgetEvent(this);
+    ProcessUntransformedAPZEvent(&gestureEvent, result);
+  } else {
+    MOZ_ASSERT_UNREACHABLE();
   }
 
   return result.GetStatus();
@@ -2717,13 +2723,28 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
-  // Setup the "double tap" event.
-  WidgetSimpleGestureEvent geckoEvent(true, eTapGesture, mGeckoChild);
-  [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
-  geckoEvent.mClickCount = 1;
+  if (StaticPrefs::apz_mac_enable_double_tap_zoom_touchpad_gesture()) {
+    PRIntervalTime eventIntervalTime = PR_IntervalNow();
+    TimeStamp eventTimeStamp = nsCocoaUtils::GetEventTimeStamp([anEvent timestamp]);
 
-  // Send the event.
-  mGeckoChild->DispatchWindowEvent(geckoEvent);
+    NSPoint locationInWindow = nsCocoaUtils::EventLocationForWindow(anEvent, [self window]);
+    ScreenPoint position =
+        ViewAs<ScreenPixel>([self convertWindowCoordinatesRoundDown:locationInWindow],
+                            PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
+
+    TapGestureInput event{TapGestureInput::TAPGESTURE_DOUBLE, eventIntervalTime, eventTimeStamp,
+                          RoundedToInt(position), nsCocoaUtils::ModifiersForEvent(anEvent)};
+
+    mGeckoChild->DispatchAPZInputEvent(event);
+  } else {
+    // Setup the "double tap" event.
+    WidgetSimpleGestureEvent geckoEvent(true, eTapGesture, mGeckoChild);
+    [self convertCocoaMouseEvent:anEvent toGeckoEvent:&geckoEvent];
+    geckoEvent.mClickCount = 1;
+
+    // Send the event.
+    mGeckoChild->DispatchWindowEvent(geckoEvent);
+  }
 
   // Clear the gesture state
   mGestureState = eGestureState_None;

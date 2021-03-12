@@ -671,6 +671,23 @@ bool TapGestureInput::TransformToLocal(
   return true;
 }
 
+WidgetSimpleGestureEvent TapGestureInput::ToWidgetEvent(
+    nsIWidget* aWidget) const {
+  WidgetSimpleGestureEvent event(true, eTapGesture, aWidget);
+
+  event.mTime = mTime;
+  event.mTimeStamp = mTimeStamp;
+  event.mLayersId = mLayersId;
+  event.mRefPoint = ViewAs<LayoutDevicePixel>(
+      mPoint,
+      PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent);
+  event.mButtons = 0;
+  event.mClickCount = 1;
+  event.mModifiers = modifiers;
+
+  return event;
+}
+
 ScrollWheelInput::ScrollWheelInput()
     : InputData(SCROLLWHEEL_INPUT),
       mDeltaType(SCROLLDELTA_LINE),
