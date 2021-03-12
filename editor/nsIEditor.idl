@@ -328,7 +328,6 @@ interface nsIEditor  : nsISupports
    * HTML/XHTML document.
    * FYI: Current user in script is only BlueGriffon.
    */
-  [can_run_script]
   boolean canCut();
 
   /** copy the currently selected text, putting it into the OS clipboard
@@ -345,7 +344,6 @@ interface nsIEditor  : nsISupports
    * HTML/XHTML document.
    * FYI: Current user in script is only BlueGriffon.
    */
-  [can_run_script]
   boolean canCopy();
 
   /** paste the text in the OS clipboard at the cursor position, replacing
