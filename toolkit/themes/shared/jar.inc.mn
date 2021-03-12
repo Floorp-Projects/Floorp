@@ -69,7 +69,6 @@ toolkit.jar:
   skin/classic/global/icons/undo.svg                       (../../shared/icons/undo.svg)
   skin/classic/global/pictureinpicture/pause.svg           (../../shared/pictureinpicture/pause.svg)
   skin/classic/global/pictureinpicture/play.svg            (../../shared/pictureinpicture/play.svg)
-  skin/classic/global/icons/identity-icon.svg              (../../shared/icons/identity-icon.svg)
   skin/classic/global/icons/resizer.svg                    (../../shared/icons/resizer.svg)
   skin/classic/global/icons/search-glass.svg               (../../shared/icons/search-glass.svg)
   skin/classic/global/icons/settings.svg                   (../../shared/icons/settings.svg)
