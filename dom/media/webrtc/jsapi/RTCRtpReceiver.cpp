@@ -377,8 +377,8 @@ nsTArray<RefPtr<RTCStatsPromise>> RTCRtpReceiver::GetStatsInternal() {
                   RTCInboundRtpStreamStats local;
                   constructCommonInboundRtpStats(local);
                   local.mJitter.Construct(
-                      double(videoStats->rtp_stats.jitter) /
-                      (webrtc::kVideoPayloadTypeFrequency / 1000));
+                      static_cast<double>(videoStats->rtp_stats.jitter) /
+                      webrtc::kVideoPayloadTypeFrequency);
                   local.mPacketsLost.Construct(
                       videoStats->rtp_stats.packets_lost);
                   local.mPacketsReceived.Construct(
