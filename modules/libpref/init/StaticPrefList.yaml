@@ -1705,6 +1705,12 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
+# Only intended for fuzzing purposes, this will break mozPrintCallback, etc.
+- name: dom.window_print.fuzzing.block_while_printing
+  type: bool
+  value: false
+  mirror: always
+
 - name: dom.element.transform-getters.enabled
   type: bool
   value: false
