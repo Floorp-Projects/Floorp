@@ -80,19 +80,10 @@ var gTests = [
       });
       await observerPromise;
 
+      // Revoke screen block (only). Don't over-revoke ahead of remaining steps.
       SitePermissions.removeFromPrincipal(
         null,
         "screen",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "camera",
-        gBrowser.selectedBrowser
-      );
-      SitePermissions.removeFromPrincipal(
-        null,
-        "microphone",
         gBrowser.selectedBrowser
       );
 
