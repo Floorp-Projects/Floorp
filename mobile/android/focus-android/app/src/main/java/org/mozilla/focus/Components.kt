@@ -15,6 +15,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.DefaultSettings
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
+import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.downloads.DownloadMiddleware
 import mozilla.components.feature.downloads.DownloadsUseCases
@@ -80,6 +81,8 @@ class Components(
     val contextMenuUseCases: ContextMenuUseCases by lazy { ContextMenuUseCases(store) }
 
     val downloadsUseCases: DownloadsUseCases by lazy { DownloadsUseCases(store) }
+
+    val appLinksUseCases: AppLinksUseCases by lazy { AppLinksUseCases(context.applicationContext) }
 
     val sessionManager by lazy {
         SessionManager(engine, store)

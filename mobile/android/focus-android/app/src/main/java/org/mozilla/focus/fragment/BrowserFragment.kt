@@ -213,6 +213,9 @@ class BrowserFragment :
                     components.tabsUseCases,
                     components.contextMenuUseCases,
                     view
+            ) + ContextMenuCandidate.createOpenInExternalAppCandidate(
+                requireContext(),
+                components.appLinksUseCases
             ),
             engineView!!,
             requireComponents.contextMenuUseCases

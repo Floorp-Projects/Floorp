@@ -165,6 +165,7 @@ dependencies {
     implementation "org.mozilla.components:browser-state:$mozilla_components_version"
     implementation "org.mozilla.components:concept-engine:$mozilla_components_version"
     implementation "org.mozilla.components:concept-fetch:$mozilla_components_version"
+    implementation "org.mozilla.components:feature-app-links:$mozilla_components_version"
     implementation "org.mozilla.components:feature-customtabs:$mozilla_components_version"
     implementation "org.mozilla.components:feature-contextmenu:$mozilla_components_version"
     implementation "org.mozilla.components:feature-downloads:$mozilla_components_version"
