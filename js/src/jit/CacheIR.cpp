@@ -3708,8 +3708,8 @@ void SetPropIRGenerator::trackAttached(const char* name) {
 #endif
 }
 
-static bool IsCacheableSetPropCallNative(JSObject* obj, JSObject* holder,
-                                         Shape* shape) {
+static bool IsCacheableSetPropCallNative(NativeObject* obj,
+                                         NativeObject* holder, Shape* shape) {
   MOZ_ASSERT(shape);
 
   if (!IsCacheableProtoChain(obj, holder)) {
@@ -3740,8 +3740,8 @@ static bool IsCacheableSetPropCallNative(JSObject* obj, JSObject* holder,
   return !IsWindow(obj);
 }
 
-static bool IsCacheableSetPropCallScripted(JSObject* obj, JSObject* holder,
-                                           Shape* shape) {
+static bool IsCacheableSetPropCallScripted(NativeObject* obj,
+                                           NativeObject* holder, Shape* shape) {
   MOZ_ASSERT(shape);
 
   if (!IsCacheableProtoChain(obj, holder)) {
@@ -3779,14 +3779,15 @@ static bool CanAttachSetter(JSContext* cx, jsbytecode* pc, HandleObject obj,
   if (!LookupPropertyPure(cx, obj, id, holder.address(), &prop)) {
     return false;
   }
+  auto* nobj = &obj->as<NativeObject>();
 
   if (!prop.isNativeProperty()) {
     return false;
   }
 
   propShape.set(prop.shape());
-  if (!IsCacheableSetPropCallScripted(obj, holder, propShape) &&
-      !IsCacheableSetPropCallNative(obj, holder, propShape)) {
+  if (!IsCacheableSetPropCallScripted(nobj, holder, propShape) &&
+      !IsCacheableSetPropCallNative(nobj, holder, propShape)) {
     return false;
   }
 
@@ -3794,7 +3795,7 @@ static bool CanAttachSetter(JSContext* cx, jsbytecode* pc, HandleObject obj,
 }
 
 static void EmitCallSetterNoGuards(JSContext* cx, CacheIRWriter& writer,
-                                   JSObject* obj, JSObject* holder,
+                                   NativeObject* obj, NativeObject* holder,
                                    Shape* shape, ObjOperandId objId,
                                    ValOperandId rhsId) {
   JSFunction* target = &shape->setterValue().toObject().as<JSFunction>();
@@ -4224,6 +4225,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyUnshadowed(
   if (!CanAttachSetter(cx_, pc_, proto, id, &holder, &propShape)) {
     return AttachDecision::NoAction;
   }
+  auto* nproto = &proto->as<NativeObject>();
 
   maybeEmitIdGuard(id);
 
@@ -4240,7 +4242,7 @@ AttachDecision SetPropIRGenerator::tryAttachDOMProxyUnshadowed(
   // EmitCallSetterNoGuards expects |obj| to be the object the property is
   // on to do some checks. Since we actually looked at proto, and no extra
   // guards will be generated, we can just pass that instead.
-  EmitCallSetterNoGuards(cx_, writer, proto, holder, propShape, objId, rhsId);
+  EmitCallSetterNoGuards(cx_, writer, nproto, holder, propShape, objId, rhsId);
 
   trackAttached("DOMProxyUnshadowed");
   return AttachDecision::Attach;
