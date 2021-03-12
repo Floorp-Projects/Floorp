@@ -11,7 +11,6 @@ import android.view.WindowManager
 import androidx.annotation.RequiresApi
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.store.BrowserStore
-import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.support.base.feature.LifecycleAwareFeature
@@ -24,7 +23,6 @@ class FullScreenIntegration(
     val sessionManager: SessionManager,
     tabId: String?,
     private val toolbarView: DisplayToolbar,
-    private val engineView: EngineView,
     private val statusBar: View
 ) : LifecycleAwareFeature, UserInteractionHandler {
     private val feature = FullScreenFeature(
@@ -45,21 +43,13 @@ class FullScreenIntegration(
 
     private fun fullScreenChanged(enabled: Boolean) {
         if (enabled) {
-            toolbarView.visibility = View.GONE
-
             toolbarView.setExpanded(false, true)
             statusBar.visibility = View.GONE
 
-            engineView.setDynamicToolbarMaxHeight(0)
-
             switchToImmersiveMode()
         } else {
-            toolbarView.visibility = View.VISIBLE
-
             toolbarView.setExpanded(true, true)
             statusBar.visibility = View.VISIBLE
-
-            engineView.setDynamicToolbarMaxHeight(toolbarView.measuredHeight)
 
             exitImmersiveModeIfNeeded()
         }

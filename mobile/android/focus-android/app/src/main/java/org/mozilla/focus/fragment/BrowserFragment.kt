@@ -71,7 +71,6 @@ import org.mozilla.focus.browser.binding.UrlBinding
 import org.mozilla.focus.browser.integration.FindInPageIntegration
 import org.mozilla.focus.browser.integration.FullScreenIntegration
 import org.mozilla.focus.downloads.DownloadService
-import org.mozilla.focus.ext.components
 import org.mozilla.focus.ext.contentState
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
@@ -203,7 +202,6 @@ class BrowserFragment :
             components.sessionManager,
             session.id,
             toolbarView!!,
-            engineView!!,
             statusBar!!
         ), this, view)
 
