@@ -179,7 +179,7 @@ p {
 .banner-body {
   margin: auto;
   width: max-content;
-  background-image: url("chrome://browser/skin/preferences/general.svg");
+  background-image: url("chrome://global/skin/icons/settings.svg");
   background-position: left 0 top 50px;
   background-repeat: no-repeat;
   background-size: 32px;
