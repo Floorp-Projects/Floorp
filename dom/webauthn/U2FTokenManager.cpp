@@ -467,8 +467,12 @@ void U2FTokenManager::MaybeAbortSign(const uint64_t& aTransactionId,
 }
 
 void U2FTokenManager::Cancel(PWebAuthnTransactionParent* aParent,
-                             const uint64_t& aTransactionId) {
-  if (mTransactionParent != aParent || mLastTransactionId != aTransactionId) {
+                             const Tainted<uint64_t>& aTransactionId) {
+  // The last transaction ID also suffers from the issue described in Bug
+  // 1696159. A content process could cancel another content processes
+  // transaction by guessing the last transaction ID.
+  if (mTransactionParent != aParent ||
+      !MOZ_IS_VALID(aTransactionId, mLastTransactionId == aTransactionId)) {
     return;
   }
 

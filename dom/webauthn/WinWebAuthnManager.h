@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/U2FTokenTransport.h"
 #include "mozilla/dom/PWebAuthnTransaction.h"
+#include "mozilla/Tainting.h"
 
 namespace mozilla {
 namespace dom {
@@ -25,7 +26,7 @@ class WinWebAuthnManager final {
             const uint64_t& aTransactionId,
             const WebAuthnGetAssertionInfo& aTransactionInfo);
   void Cancel(PWebAuthnTransactionParent* aTransactionParent,
-              const uint64_t& aTransactionId);
+              const Tainted<uint64_t>& aTransactionId);
   void MaybeClearTransaction(PWebAuthnTransactionParent* aParent);
   static void Initialize();
   static bool IsUserVerifyingPlatformAuthenticatorAvailable();
