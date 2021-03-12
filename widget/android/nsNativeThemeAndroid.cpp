@@ -449,116 +449,6 @@ static void PaintRangeInputBackground(DrawTarget* aDrawTarget,
                           ColorPattern(ToDeviceColor(sButtonActiveColor)));
 }
 
-static void PaintScrollbarthumbHorizontal(DrawTarget* aDrawTarget,
-                                          const Rect& aRect,
-                                          const EventStates& aState) {
-  sRGBColor thumbColor = sScrollbarThumbColor;
-  if (aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE)) {
-    thumbColor = sScrollbarThumbColorActive;
-  } else if (aState.HasState(NS_EVENT_STATE_HOVER)) {
-    thumbColor = sScrollbarThumbColorHover;
-  }
-  aDrawTarget->FillRect(aRect, ColorPattern(ToDeviceColor(thumbColor)));
-}
-
-static void PaintScrollbarthumbVertical(DrawTarget* aDrawTarget,
-                                        const Rect& aRect,
-                                        const EventStates& aState) {
-  sRGBColor thumbColor = sScrollbarThumbColor;
-  if (aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE)) {
-    thumbColor = sScrollbarThumbColorActive;
-  } else if (aState.HasState(NS_EVENT_STATE_HOVER)) {
-    thumbColor = sScrollbarThumbColorHover;
-  }
-  aDrawTarget->FillRect(aRect, ColorPattern(ToDeviceColor(thumbColor)));
-}
-
-static void PaintScrollbarHorizontal(DrawTarget* aDrawTarget,
-                                     const Rect& aRect) {
-  aDrawTarget->FillRect(aRect, ColorPattern(ToDeviceColor(sScrollbarColor)));
-  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
-  builder->MoveTo(Point(aRect.x, aRect.y));
-  builder->LineTo(Point(aRect.x + aRect.width, aRect.y));
-  RefPtr<Path> path = builder->Finish();
-  aDrawTarget->Stroke(path, ColorPattern(ToDeviceColor(sScrollbarBorderColor)));
-}
-
-static void PaintScrollbarVerticalAndCorner(DrawTarget* aDrawTarget,
-                                            const Rect& aRect, uint32_t aDpi) {
-  aDrawTarget->FillRect(aRect, ColorPattern(ToDeviceColor(sScrollbarColor)));
-  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
-  builder->MoveTo(Point(aRect.x, aRect.y));
-  builder->LineTo(Point(aRect.x, aRect.y + aRect.height));
-  RefPtr<Path> path = builder->Finish();
-  aDrawTarget->Stroke(path, ColorPattern(ToDeviceColor(sScrollbarBorderColor)),
-                      StrokeOptions(1.0f * aDpi));
-}
-
-static void PaintScrollbarbutton(DrawTarget* aDrawTarget,
-                                 StyleAppearance aAppearance, const Rect& aRect,
-                                 const EventStates& aState, uint32_t aDpi) {
-  bool isActive =
-      aState.HasAllStates(NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE);
-  bool isHovered = aState.HasState(NS_EVENT_STATE_HOVER);
-
-  aDrawTarget->FillRect(
-      aRect, ColorPattern(ToDeviceColor(isActive ? sScrollbarButtonActiveColor
-                                        : isHovered ? sScrollbarButtonHoverColor
-                                                    : sScrollbarColor)));
-
-  // Start with Up arrow.
-  int32_t arrowPolygonX[] = {3, 0, -3};
-  int32_t arrowPolygonY[] = {2, -1, 2};
-  const int32_t arrowNumPoints = ArrayLength(arrowPolygonX);
-  const int32_t arrowSize = 14;
-
-  switch (aAppearance) {
-    case StyleAppearance::ScrollbarbuttonUp:
-      break;
-    case StyleAppearance::ScrollbarbuttonDown:
-      for (int32_t i = 0; i < arrowNumPoints; i++) {
-        arrowPolygonY[i] *= -1;
-      }
-      break;
-    case StyleAppearance::ScrollbarbuttonLeft:
-      for (int32_t i = 0; i < arrowNumPoints; i++) {
-        int32_t temp = arrowPolygonX[i];
-        arrowPolygonX[i] = arrowPolygonY[i];
-        arrowPolygonY[i] = temp;
-      }
-      break;
-    case StyleAppearance::ScrollbarbuttonRight:
-      for (int32_t i = 0; i < arrowNumPoints; i++) {
-        int32_t temp = arrowPolygonX[i];
-        arrowPolygonX[i] = arrowPolygonY[i] * -1;
-        arrowPolygonY[i] = temp;
-      }
-      break;
-    default:
-      return;
-  }
-
-  PaintArrow(aDrawTarget, aRect, arrowPolygonX, arrowPolygonY, arrowNumPoints,
-             arrowSize,
-             isActive    ? sScrollbarArrowColorActive
-             : isHovered ? sScrollbarArrowColorHover
-                         : sScrollbarArrowColor,
-             aDpi);
-
-  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
-  builder->MoveTo(Point(aRect.x, aRect.y));
-  if (aAppearance == StyleAppearance::ScrollbarbuttonUp ||
-      aAppearance == StyleAppearance::ScrollbarbuttonDown) {
-    builder->LineTo(Point(aRect.x, aRect.y + aRect.height));
-  } else {
-    builder->LineTo(Point(aRect.x + aRect.width, aRect.y));
-  }
-
-  RefPtr<Path> path = builder->Finish();
-  aDrawTarget->Stroke(path, ColorPattern(ToDeviceColor(sScrollbarBorderColor)),
-                      StrokeOptions(1.0f * aDpi));
-}
-
 static void PaintButton(nsIFrame* aFrame, DrawTarget* aDrawTarget,
                         const Rect& aRect, const EventStates& aState,
                         uint32_t aDpi) {
@@ -657,25 +547,6 @@ nsNativeThemeAndroid::DrawWidgetBackground(gfxContext* aContext,
       // FixAspectRatio here? For now let authors tweak, it's a custom pseudo so
       // it doesn't probably have much compat impact if at all.
       PaintRangeThumb(dt, devPxRect, eventState, dpi);
-      break;
-    case StyleAppearance::ScrollbarthumbHorizontal:
-      PaintScrollbarthumbHorizontal(dt, devPxRect, eventState);
-      break;
-    case StyleAppearance::ScrollbarthumbVertical:
-      PaintScrollbarthumbVertical(dt, devPxRect, eventState);
-      break;
-    case StyleAppearance::ScrollbarHorizontal:
-      PaintScrollbarHorizontal(dt, devPxRect);
-      break;
-    case StyleAppearance::ScrollbarVertical:
-    case StyleAppearance::Scrollcorner:
-      PaintScrollbarVerticalAndCorner(dt, devPxRect, dpi);
-      break;
-    case StyleAppearance::ScrollbarbuttonUp:
-    case StyleAppearance::ScrollbarbuttonDown:
-    case StyleAppearance::ScrollbarbuttonLeft:
-    case StyleAppearance::ScrollbarbuttonRight:
-      PaintScrollbarbutton(dt, aAppearance, devPxRect, eventState, dpi);
       break;
     case StyleAppearance::Button:
       PaintButton(aFrame, dt, devPxRect, eventState, dpi);
@@ -880,8 +751,6 @@ bool nsNativeThemeAndroid::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::ScrollbarbuttonDown:
     case StyleAppearance::ScrollbarbuttonLeft:
     case StyleAppearance::ScrollbarbuttonRight:
-    case StyleAppearance::ScrollbarthumbHorizontal:
-    case StyleAppearance::ScrollbarthumbVertical:
     case StyleAppearance::ScrollbarHorizontal:
     case StyleAppearance::ScrollbarVertical:
     case StyleAppearance::Scrollcorner:

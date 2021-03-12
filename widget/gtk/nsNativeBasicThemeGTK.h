@@ -13,70 +13,33 @@ class nsNativeBasicThemeGTK : public nsNativeBasicTheme {
  public:
   nsNativeBasicThemeGTK() = default;
 
-  NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame* aFrame,
-                                  StyleAppearance aAppearance,
+  NS_IMETHOD GetMinimumWidgetSize(nsPresContext* aPresContext, nsIFrame*,
+                                  StyleAppearance,
                                   mozilla::LayoutDeviceIntSize* aResult,
                                   bool* aIsOverridable) override;
 
-  nsITheme::Transparency GetWidgetTransparency(
-      nsIFrame* aFrame, StyleAppearance aAppearance) override;
-  bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect& aRect,
-                           bool aHorizontal, nsIFrame* aFrame,
+  nsITheme::Transparency GetWidgetTransparency(nsIFrame*,
+                                               StyleAppearance) override;
+  bool PaintScrollbarThumb(DrawTarget&, const LayoutDeviceRect&,
+                           bool aHorizontal, nsIFrame*,
                            const ComputedStyle& aStyle,
                            const EventStates& aElementState,
-                           const EventStates& aDocumentState,
-                           DPIRatio aDpiRatio) override;
-  bool PaintScrollbarThumb(WebRenderBackendData&, const LayoutDeviceRect& aRect,
-                           bool aHorizontal, nsIFrame* aFrame,
+                           const EventStates& aDocumentState, UseSystemColors,
+                           DPIRatio) override;
+  bool PaintScrollbarThumb(WebRenderBackendData&, const LayoutDeviceRect&,
+                           bool aHorizontal, nsIFrame*,
                            const ComputedStyle& aStyle,
                            const EventStates& aElementState,
-                           const EventStates& aDocumentState,
-                           DPIRatio aDpiRatio) override;
+                           const EventStates& aDocumentState, UseSystemColors,
+                           DPIRatio) override;
   template <typename PaintBackendData>
-  bool DoPaintScrollbarThumb(PaintBackendData&, const LayoutDeviceRect& aRect,
-                             bool aHorizontal, nsIFrame* aFrame,
-                             const ComputedStyle& aStyle,
+  bool DoPaintScrollbarThumb(PaintBackendData&, const LayoutDeviceRect&,
+                             bool aHorizontal, nsIFrame*, const ComputedStyle&,
                              const EventStates& aElementState,
-                             const EventStates& aDocumentState,
-                             DPIRatio aDpiRatio);
-
-  bool PaintScrollbar(DrawTarget&, const LayoutDeviceRect& aRect,
-                      bool aHorizontal, nsIFrame* aFrame,
-                      const ComputedStyle& aStyle,
-                      const EventStates& aDocumentState,
-                      DPIRatio aDpiRatio) override;
-  bool PaintScrollbar(WebRenderBackendData&, const LayoutDeviceRect& aRect,
-                      bool aHorizontal, nsIFrame* aFrame,
-                      const ComputedStyle& aStyle,
-                      const EventStates& aDocumentState,
-                      DPIRatio aDpiRatio) override;
-  template <typename PaintBackendData>
-  bool DoPaintScrollbar(PaintBackendData&, const LayoutDeviceRect& aRect,
-                        bool aHorizontal, nsIFrame* aFrame,
-                        const ComputedStyle& aStyle,
-                        const EventStates& aDocumentState, DPIRatio aDpiRatio);
-
-  bool PaintScrollCorner(DrawTarget&, const LayoutDeviceRect& aRect,
-                         nsIFrame* aFrame, const ComputedStyle& aStyle,
-                         const EventStates& aDocumentState,
-                         DPIRatio aDpiRatio) override;
-  bool PaintScrollCorner(WebRenderBackendData&, const LayoutDeviceRect& aRect,
-                         nsIFrame* aFrame, const ComputedStyle& aStyle,
-                         const EventStates& aDocumentState,
-                         DPIRatio aDpiRatio) override;
-  template <typename PaintBackendData>
-  bool DoPaintScrollCorner(PaintBackendData&, const LayoutDeviceRect& aRect,
-                           nsIFrame* aFrame, const ComputedStyle& aStyle,
-                           const EventStates& aDocumentState,
-                           DPIRatio aDpiRatio);
+                             const EventStates& aDocumentState, UseSystemColors,
+                             DPIRatio);
 
   bool ThemeSupportsScrollbarButtons() override;
-  sRGBColor ComputeScrollbarThumbColor(
-      nsIFrame*, const ComputedStyle&, const EventStates& aElementState,
-      const EventStates& aDocumentState) override;
-  std::pair<sRGBColor, sRGBColor> ComputeScrollbarColors(
-      nsIFrame*, const ComputedStyle&,
-      const EventStates& aDocumentState) override;
   ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
                                    Overlay) override;
 

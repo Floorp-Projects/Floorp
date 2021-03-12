@@ -54,69 +54,6 @@ ComputedStyle* ScrollbarUtil::GetCustomScrollbarStyle(nsIFrame* aFrame,
 }
 
 /*static*/
-nscolor ScrollbarUtil::GetScrollbarButtonColor(nscolor aTrackColor,
-                                               EventStates aStates) {
-  // See numbers in GetScrollbarArrowColor.
-  // This function is written based on ratios between values listed there.
-
-  bool isActive = aStates.HasState(NS_EVENT_STATE_ACTIVE);
-  bool isHover = aStates.HasState(NS_EVENT_STATE_HOVER);
-  if (!isActive && !isHover) {
-    return aTrackColor;
-  }
-  float luminance = RelativeLuminanceUtils::Compute(aTrackColor);
-  if (isActive) {
-    if (luminance >= 0.18f) {
-      luminance *= 0.134f;
-    } else {
-      luminance /= 0.134f;
-      luminance = std::min(luminance, 1.0f);
-    }
-  } else {
-    if (luminance >= 0.18f) {
-      luminance *= 0.805f;
-    } else {
-      luminance /= 0.805f;
-    }
-  }
-  return RelativeLuminanceUtils::Adjust(aTrackColor, luminance);
-}
-
-/*static*/
-nscolor ScrollbarUtil::GetScrollbarArrowColor(nscolor aButtonColor) {
-  // In Windows 10 scrollbar, there are several gray colors used:
-  //
-  // State  | Background (lum) | Arrow   | Contrast
-  // -------+------------------+---------+---------
-  // Normal | Gray 240 (87.1%) | Gray 96 |     5.5
-  // Hover  | Gray 218 (70.1%) | Black   |    15.0
-  // Active | Gray 96  (11.7%) | White   |     6.3
-  //
-  // Contrast value is computed based on the definition in
-  // https://www.w3.org/TR/WCAG20/#contrast-ratiodef
-  //
-  // This function is written based on these values.
-
-  float luminance = RelativeLuminanceUtils::Compute(aButtonColor);
-  // Color with luminance larger than 0.72 has contrast ratio over 4.6
-  // to color with luminance of gray 96, so this value is chosen for
-  // this range. It is the luminance of gray 221.
-  if (luminance >= 0.72) {
-    // ComputeRelativeLuminanceFromComponents(96). That function cannot
-    // be constexpr because of std::pow.
-    const float GRAY96_LUMINANCE = 0.117f;
-    return RelativeLuminanceUtils::Adjust(aButtonColor, GRAY96_LUMINANCE);
-  }
-  // The contrast ratio of a color to black equals that to white when its
-  // luminance is around 0.18, with a contrast ratio ~4.6 to both sides,
-  // thus the value below. It's the lumanince of gray 118.
-  if (luminance >= 0.18) {
-    return NS_RGBA(0, 0, 0, NS_GET_A(aButtonColor));
-  }
-  return NS_RGBA(255, 255, 255, NS_GET_A(aButtonColor));
-}
-
-/*static*/
 nscolor ScrollbarUtil::GetScrollbarTrackColor(nsIFrame* aFrame) {
   bool darkScrollbar = false;
   ComputedStyle* style = GetCustomScrollbarStyle(aFrame, &darkScrollbar);
