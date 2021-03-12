@@ -924,7 +924,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   }
 
   void callNativeFunction(ObjOperandId calleeId, Int32OperandId argc, JSOp op,
-                          HandleFunction calleeFunc, CallFlags flags) {
+                          JSFunction* calleeFunc, CallFlags flags) {
     // Some native functions can be implemented faster if we know that
     // the return value is ignored.
     bool ignoresReturnValue =
@@ -952,7 +952,7 @@ class MOZ_RAII CacheIRWriter : public JS::CustomAutoRooter {
   }
 
   void callDOMFunction(ObjOperandId calleeId, Int32OperandId argc,
-                       ObjOperandId thisObjId, HandleFunction calleeFunc,
+                       ObjOperandId thisObjId, JSFunction* calleeFunc,
                        CallFlags flags) {
 #ifdef JS_SIMULATOR
     void* rawPtr = JS_FUNC_TO_DATA_PTR(void*, calleeFunc->native());
@@ -1220,7 +1220,7 @@ class MOZ_RAII IRGenerator {
                                                   const Value& expandoVal,
                                                   NativeObject* expandoObj);
 
-  void emitIdGuard(ValOperandId valId, HandleValue idVal, jsid id);
+  void emitIdGuard(ValOperandId valId, const Value& idVal, jsid id);
 
   OperandId emitNumericGuard(ValOperandId valId, Scalar::Type type);
 
@@ -1611,8 +1611,8 @@ class MOZ_RAII CallIRGenerator : public IRGenerator {
   ScriptedThisResult getThisForScripted(HandleFunction calleeFunc,
                                         MutableHandleObject result);
 
-  void emitNativeCalleeGuard(HandleFunction callee);
-  void emitCalleeGuard(ObjOperandId calleeId, HandleFunction callee);
+  void emitNativeCalleeGuard(JSFunction* callee);
+  void emitCalleeGuard(ObjOperandId calleeId, JSFunction* callee);
 
   bool canAttachAtomicsReadWriteModify();
 
