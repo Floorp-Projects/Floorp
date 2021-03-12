@@ -12,17 +12,17 @@ with Files("PeerIdentity.*"):
     BUG_COMPONENT = ("Core", "WebRTC: Signaling")
 
 with Files("common/**"):
-    BUG_COMPONENT = ("CORE", "WebRTC: Signaling")
+    BUG_COMPONENT = ("Core", "WebRTC: Signaling")
 with Files("jsep/**"):
-    BUG_COMPONENT = ("CORE", "WebRTC: Signaling")
+    BUG_COMPONENT = ("Core", "WebRTC: Signaling")
 with Files("libwebrtcglue/**"):
-    BUG_COMPONENT = ("CORE", "WebRTC: Signaling")
+    BUG_COMPONENT = ("Core", "WebRTC: Signaling")
 with Files("transportbridge/**"):
-    BUG_COMPONENT = ("CORE", "WebRTC: Signaling")
+    BUG_COMPONENT = ("Core", "WebRTC: Signaling")
 with Files("jsapi/**"):
-    BUG_COMPONENT = ("CORE", "WebRTC: Signaling")
+    BUG_COMPONENT = ("Core", "WebRTC: Signaling")
 with Files("sdp/**"):
-    BUG_COMPONENT = ("CORE", "WebRTC: Signaling")
+    BUG_COMPONENT = ("Core", "WebRTC: Signaling")
 
 EXPORTS += [
     "CubebDeviceEnumerator.h",
