@@ -35,7 +35,7 @@
 
 :root[uidensity=compact] #urlbar-container,
 :root[uidensity=compact] #search-container {
-  padding-block: 5px;
+  padding-block: 4px;
 }
 
 #urlbar,
@@ -623,12 +623,17 @@
   border-radius: var(--toolbarbutton-border-radius);
 }
 
+:root[uidensity=compact] .urlbar-icon {
+  margin-inline: 1px;
+}
+
 @supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
 .urlbar-icon {
   width: calc(var(--urlbar-min-height) - 2px);
   /* The 0.5px solves a rounding problem where the
     icon hover may not touch the borders */
   height: calc(var(--urlbar-min-height) - 2px + 0.5px);
+  margin-inline: 0;
 }
 
 .urlbar-icon,
