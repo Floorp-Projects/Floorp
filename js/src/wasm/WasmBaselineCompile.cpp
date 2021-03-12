@@ -140,6 +140,7 @@
 #endif
 #include "js/ScalarType.h"  // js::Scalar::Type
 #include "util/Memory.h"
+#include "wasm/TypedObject.h"
 #include "wasm/WasmGC.h"
 #include "wasm/WasmGenerator.h"
 #include "wasm/WasmInstance.h"

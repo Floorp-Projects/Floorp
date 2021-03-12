@@ -27,6 +27,7 @@
 #include "util/Memory.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/Warnings.h"  // js:WarnNumberASCII
+#include "wasm/TypedObject.h"
 #include "wasm/WasmBaselineCompile.h"
 #include "wasm/WasmInstance.h"
 #include "wasm/WasmJS.h"
