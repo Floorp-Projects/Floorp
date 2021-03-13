@@ -10,9 +10,15 @@
 %define urlbarBreakoutExtend 2px
 
 :root {
+  --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
+  --toolbar-bgimage: var(--toolbar-non-lwt-bgimage);
+  --toolbar-color: var(--toolbar-non-lwt-textcolor);
   /* Note: Setting this to 0 (without px) breaks CSS calculations for OSX. */
   --space-above-tabbar: 0px;
   --tabs-navbar-shadow-size: 1px;
+
+  --panelui-subview-transition-duration: 150ms;
+
   --short-notification-background: #0250BB;
   --short-notification-gradient: #9059FF;
 
@@ -29,6 +35,9 @@
   --urlbar-min-height: 32px;
   --urlbar-icon-padding: 6px; /* (32px - 2px border - 2px padding - 16px icon) / 2 */
 
+  --lwt-additional-images: none;
+  --lwt-background-alignment: right top;
+  --lwt-background-tiling: no-repeat;
   --lwt-popup-brighttext-url-color: #74c0ff;
 }
 
@@ -61,6 +70,14 @@
   --urlbar-icon-padding: 7px; /* (32px - 2px border - 16px icon) / 2 */
 }
 } /*** END !proton ***/
+
+:root:-moz-lwtheme {
+  --toolbar-bgcolor: rgba(255,255,255,.4);
+  --toolbar-bgimage: none;
+  --toolbar-color: var(--lwt-text-color, inherit);
+
+  color: var(--lwt-text-color);
+}
 
 @supports -moz-bool-pref("browser.proton.enabled") {
 :root {
