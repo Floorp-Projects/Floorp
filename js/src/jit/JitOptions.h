@@ -113,7 +113,8 @@ struct DefaultJitOptions {
   // measure the effectiveness of each mitigation with various proof of
   // concept.
   bool spectreIndexMasking;
-  bool spectreObjectMitigations;
+  bool spectreObjectMitigationsBarriers;
+  bool spectreObjectMitigationsMisc;
   bool spectreStringMitigations;
   bool spectreValueMasking;
   bool spectreJitToCxxCalls;
