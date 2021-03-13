@@ -178,7 +178,7 @@ html, body, #app, #memory-tool {
   display: flex;
   flex-direction: column;
   color: var(--theme-body-color);
-  border-bottom: 1px solid rgba(128,128,128,0.15);
+  border-bottom: 1px solid var(--theme-splitter-color);
   padding: 8px;
   cursor: default;
 }

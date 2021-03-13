@@ -1,5 +1,5 @@
-FROM          ubuntu:16.04
-MAINTAINER    Dustin Mitchell <dustin@mozilla.com>
+FROM          ubuntu:18.04
+MAINTAINER    Andrew Halberstadt <ahal@mozilla.com>
 
 # Add worker user
 RUN mkdir /builds && \

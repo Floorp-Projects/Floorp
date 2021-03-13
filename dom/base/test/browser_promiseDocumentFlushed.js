@@ -167,8 +167,9 @@ add_task(async function test_resolved_in_window_close() {
 
   await win.promiseDocumentFlushed(() => {});
 
-  let docShell = win.docShell;
-  docShell.contentViewer.pausePainting();
+  // Use advanceTimeAndRefresh to pause paints in the window:
+  let utils = win.windowUtils;
+  utils.advanceTimeAndRefresh(0);
 
   win.gNavToolbox.style.padding = "5px";
 

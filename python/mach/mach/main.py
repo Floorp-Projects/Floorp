@@ -352,7 +352,7 @@ To see more help for a specific command, run:
                 topsrcdir = self.populate_context_handler("topdir")
                 sentry = register_sentry(argv, self.settings, topsrcdir)
             else:
-                sentry = register_sentry(argv, self.settings)
+                sentry = NoopErrorReporter()
 
             if sys.version_info < (3, 0):
                 if stdin.encoding is None:

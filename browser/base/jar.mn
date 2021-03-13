@@ -60,8 +60,6 @@ browser.jar:
         content/browser/browser-thumbnails.js               (content/browser-thumbnails.js)
         content/browser/browser-graphics-utils.js           (content/browser-graphics-utils.js)
         content/browser/browser-webrtc.js                   (content/browser-webrtc.js)
-        content/browser/browser-fxaSignout.xhtml            (content/browser-fxaSignout.xhtml)
-        content/browser/browser-fxaSignout.js               (content/browser-fxaSignout.js)
         content/browser/tab-content.js                      (content/tab-content.js)
         content/browser/defaultthemes/1.header.jpg          (content/defaultthemes/1.header.jpg)
         content/browser/defaultthemes/1.icon.jpg            (content/defaultthemes/1.icon.jpg)

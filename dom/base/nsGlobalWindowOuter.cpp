@@ -5361,11 +5361,21 @@ Nullable<WindowProxyHolder> nsGlobalWindowOuter::Print(
   // When using window.print() with the new UI, we usually want to block until
   // the print dialog is hidden. But we can't really do that if we have print
   // callbacks, because we are inside a sync operation, and we want to run
-  // microtasks / etc that the print callbacks may create.
+  // microtasks / etc that the print callbacks may create. It is really awkward
+  // to have this subtle behavior difference...
   //
-  // It is really awkward to have this subtle behavior difference...
-  if (aIsPreview == IsPreview::Yes &&
-      aForWindowDotPrint == IsForWindowDotPrint::Yes && !hasPrintCallbacks) {
+  // We also want to do this for fuzzing, so that they can test window.print().
+  const bool shouldBlock = [&] {
+    if (aForWindowDotPrint == IsForWindowDotPrint::No) {
+      return false;
+    }
+    if (aIsPreview == IsPreview::Yes) {
+      return !hasPrintCallbacks;
+    }
+    return StaticPrefs::dom_window_print_fuzzing_block_while_printing();
+  }();
+
+  if (shouldBlock) {
     SpinEventLoopUntil([&] { return bc->IsDiscarded(); });
   }
 

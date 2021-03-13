@@ -198,6 +198,14 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     this.stopTrackingMouseOverVideos();
     Services.prefs.removeObserver(TOGGLE_ENABLED_PREF, this.observerFunction);
     Services.cpmm.sharedData.removeEventListener("change", this);
+
+    // remove the observer on the <video> element
+    let state = this.docState;
+    if (state?.intersectionObserver) {
+      state.intersectionObserver.disconnect();
+    }
+    // ensure we don't access the state
+    this.isDestroyed = true;
   }
 
   observe(subject, topic, data) {
@@ -225,7 +233,12 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
    * and returns it.
    */
   get docState() {
+    if (this.isDestroyed || !this.document) {
+      return false;
+    }
+
     let state = this.weakDocStates.get(this.document);
+
     if (!state) {
       state = {
         // A reference to the IntersectionObserver that's monitoring for videos
@@ -416,6 +429,9 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     // still alive and referrable from the WeakSet because the
     // IntersectionObserverEntry holds a strong reference to the video.
     let state = this.docState;
+    if (!state) {
+      return;
+    }
     let oldVisibleVideosCount = state.visibleVideosCount;
     for (let entry of entries) {
       let video = entry.target;
@@ -826,7 +842,7 @@ class PictureInPictureToggleChild extends JSWindowActorChild {
     let oldOverVideo = this.getWeakOverVideo();
     let shadowRoot = video.openOrClosedShadowRoot;
 
-    if (video != oldOverVideo) {
+    if (shadowRoot.firstChild && video != oldOverVideo) {
       if (video.getTransformToViewport().a == -1) {
         shadowRoot.firstChild.setAttribute("flipped", true);
       } else {
