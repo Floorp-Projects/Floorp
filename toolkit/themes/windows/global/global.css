@@ -33,17 +33,19 @@
     --menuitem-hover-background-color: #E0E0E6;
     --menuitem-hover-color: black;
     --menu-background-color: #f9f9fb;
-    --menu-color: black;
+    --menu-color: #15141a;
     --menu-disabled-color: rgba(21, 20, 26, 0.4);
     --menu-border-color: #E0E0E6;
+    --menu-icon-color: #5b5b66;
 
     /* Declare menu colors for dark themes, but don't override anything yet. */
     --dark-menuitem-hover-background-color: #52525E;
     --dark-menuitem-hover-color: white;
     --dark-menu-background-color: #15141a;
-    --dark-menu-color: white;
+    --dark-menu-color: #fbfbfe;
     --dark-menu-disabled-color: rgba(251, 251, 254, 0.6);
     --dark-menu-border-color: #52525E;
+    --dark-menu-icon-color: #fbfbfe;
   }
 
   /* Override the menu color variables for dark browser themes. */
@@ -54,6 +56,7 @@
     --menu-color: var(--dark-menu-color);
     --menu-disabled-color: var(--dark-menu-disabled-color);
     --menu-border-color: var(--dark-menu-border-color);
+    --menu-icon-color: var(--dark-menu-icon-color);
   }
 
   /* We also need to override these color variables in situations where
@@ -68,6 +71,7 @@
       --menu-color: var(--dark-menu-color);
       --menu-disabled-color: var(--dark-menu-disabled-color);
       --menu-border-color: var(--dark-menu-border-color);
+      --menu-icon-color: var(--dark-menu-icon-color);
     }
   }
 }
