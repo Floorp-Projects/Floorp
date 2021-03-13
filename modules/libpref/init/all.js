@@ -1212,14 +1212,12 @@ pref("javascript.options.dump_stack_on_debuggee_would_run", false);
 // Spectre security vulnerability mitigations.
 #if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
   pref("javascript.options.spectre.index_masking", false);
-  pref("javascript.options.spectre.object_mitigations.barriers", false);
   pref("javascript.options.spectre.object_mitigations.misc", false);
   pref("javascript.options.spectre.string_mitigations", false);
   pref("javascript.options.spectre.value_masking", false);
   pref("javascript.options.spectre.jit_to_C++_calls", false);
 #else
   pref("javascript.options.spectre.index_masking", true);
-  pref("javascript.options.spectre.object_mitigations.barriers", true);
   pref("javascript.options.spectre.object_mitigations.misc", true);
   pref("javascript.options.spectre.string_mitigations", true);
   pref("javascript.options.spectre.value_masking", true);
