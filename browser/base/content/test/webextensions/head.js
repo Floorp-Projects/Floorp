@@ -182,7 +182,13 @@ function triggerPageOptionsAction(win, action) {
 }
 
 function isDefaultIcon(icon) {
-  return icon == "chrome://mozapps/skin/extensions/extensionGeneric.svg";
+  // These are basically the same icon, but code within webextensions
+  // generates references to the former and generic add-ons manager code
+  // generates referces to the latter.
+  return (
+    icon == "chrome://browser/content/extension.svg" ||
+    icon == "chrome://mozapps/skin/extensions/extensionGeneric.svg"
+  );
 }
 
 /**
