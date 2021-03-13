@@ -17,28 +17,10 @@ body {
   text-rendering: optimizeLegibility;
   min-height: 95px;
   min-width: 95px;
-
-  /* variables */
-  --panelui-subview-transition-duration: 150ms;
-  --lwt-additional-images: none;
-  --lwt-background-alignment: right top;
-  --lwt-background-tiling: no-repeat;
-
-  --toolbar-bgcolor: var(--toolbar-non-lwt-bgcolor);
-  --toolbar-bgimage: var(--toolbar-non-lwt-bgimage);
-  --toolbar-color: var(--toolbar-non-lwt-textcolor);
 }
 
 :root:-moz-locale-dir(rtl) {
   direction: rtl;
-}
-
-:root:-moz-lwtheme {
-  --toolbar-bgcolor: rgba(255,255,255,.4);
-  --toolbar-bgimage: none;
-  --toolbar-color: var(--lwt-text-color, inherit);
-
-  color: var(--lwt-text-color);
 }
 
 :root:not([chromehidden~="toolbar"]) {
