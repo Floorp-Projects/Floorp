@@ -204,15 +204,19 @@
 /*** Button icons ***/
 
 .downloadIconCancel > .button-box > .button-icon {
-  list-style-image: url("chrome://browser/skin/panel-icon-cancel.svg");
+  list-style-image: url("chrome://global/skin/icons/close.svg");
 }
 
 .downloadIconShow > .button-box > .button-icon {
-  list-style-image: url("chrome://global/skin/icons/findFile.svg");
+%ifdef XP_MACOSX
+  list-style-image: url("chrome://global/skin/icons/search-glass.svg");
+%else
+  list-style-image: url("chrome://global/skin/icons/folder.svg");
+%endif
 }
 
 .downloadIconRetry > .button-box > .button-icon {
-  list-style-image: url("chrome://browser/skin/panel-icon-retry.svg");
+  list-style-image: url("chrome://browser/skin/reload.svg");
 }
 
 .downloadIconSubviewArrow > .button-box > .button-icon {
