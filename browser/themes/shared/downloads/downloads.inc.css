@@ -204,15 +204,15 @@
 /*** Button icons ***/
 
 .downloadIconCancel > .button-box > .button-icon {
-  list-style-image: url("chrome://browser/skin/stop.svg");
+  list-style-image: url("chrome://browser/skin/panel-icon-cancel.svg");
 }
 
 .downloadIconShow > .button-box > .button-icon {
-  list-style-image: url("chrome://global/skin/icons/find-file-in-folder.svg");
+  list-style-image: url("chrome://global/skin/icons/findFile.svg");
 }
 
 .downloadIconRetry > .button-box > .button-icon {
-  list-style-image: url("chrome://browser/skin/reload.svg");
+  list-style-image: url("chrome://browser/skin/panel-icon-retry.svg");
 }
 
 .downloadIconSubviewArrow > .button-box > .button-icon {
