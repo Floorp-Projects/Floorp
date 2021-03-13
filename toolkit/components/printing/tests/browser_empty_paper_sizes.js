@@ -21,7 +21,7 @@ add_task(async function testSanityCheckPaperList() {
     helper.addMockPrinter({ name: mockPrinterName, paperList });
     await helper.startPrint();
     await helper.dispatchSettingsChange({ printerName: mockPrinterName });
-    await helper.awaitAnimationFrame();
+    await helper.waitForSettingsEvent();
 
     is(
       helper.settings.printerName,
@@ -62,7 +62,7 @@ add_task(async function testEmptyPaperListGetsFallbackPaperSizes() {
     );
 
     await helper.dispatchSettingsChange({ printerName: mockPrinterName });
-    await helper.awaitAnimationFrame();
+    await helper.waitForSettingsEvent();
 
     is(
       helper.settings.printerName,

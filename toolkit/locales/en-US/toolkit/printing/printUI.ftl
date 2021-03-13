@@ -68,14 +68,19 @@ printui-margins-default = Default
 printui-margins-min = Minimum
 printui-margins-none = None
 printui-margins-custom-inches = Custom (inches)
+printui-margins-custom-mm = Custom (mm)
 printui-margins-custom-top = Top
 printui-margins-custom-top-inches = Top (inches)
+printui-margins-custom-top-mm = Top (mm)
 printui-margins-custom-bottom = Bottom
 printui-margins-custom-bottom-inches = Bottom (inches)
+printui-margins-custom-bottom-mm = Bottom (mm)
 printui-margins-custom-left = Left
 printui-margins-custom-left-inches = Left (inches)
+printui-margins-custom-left-mm = Left (mm)
 printui-margins-custom-right = Right
 printui-margins-custom-right-inches = Right (inches)
+printui-margins-custom-right-mm = Right (mm)
 
 printui-system-dialog-link = Print using the system dialog…
 
