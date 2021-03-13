@@ -323,7 +323,7 @@ addon-card[expanded] .update-postponed-bar + .addon-card-message {
 }
 
 .addon-badge-private-browsing-allowed {
-  background-image: url("chrome://browser/skin/private-browsing.svg");
+  background-image: url("chrome://browser/skin/indicator-private-browsing.svg");
 }
 
 .addon-badge-recommended {
