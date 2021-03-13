@@ -308,7 +308,9 @@ menupopup::part(drop-indicator) {
 }
 
 .accessibility-indicator {
-  background-image: url("chrome://browser/skin/accessibility.svg");
+  -moz-context-properties: fill;
+  fill: #00C8D7;
+  background-image: url("chrome://browser/skin/indicator-accessibility.svg");
   -moz-user-focus: normal;
   /* Clear default button styling */
   appearance: none;
@@ -319,12 +321,12 @@ menupopup::part(drop-indicator) {
 }
 
 .accessibility-indicator:is(:hover, :active, :focus, :-moz-focusring) {
-  background-image: url("chrome://browser/skin/accessibility-active.svg");
+  fill: #008ea4;
   outline: 0;
 }
 
 .private-browsing-indicator {
-  background-image: url("chrome://browser/skin/private-browsing.svg");
+  background-image: url("chrome://browser/skin/indicator-private-browsing.svg");
 }
 
 :root:not([accessibilitymode]) .accessibility-indicator,

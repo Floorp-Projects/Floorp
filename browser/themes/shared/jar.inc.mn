@@ -143,8 +143,6 @@
   skin/classic/browser/fxa/monitor.svg                         (../shared/fxa/monitor.svg)
   skin/classic/browser/fxa/add-device.svg                      (../shared/fxa/add-device.svg)
 
-  skin/classic/browser/accessibility.svg              (../shared/icons/accessibility.svg)
-  skin/classic/browser/accessibility-active.svg       (../shared/icons/accessibility-active.svg)
   skin/classic/browser/back.svg                       (../shared/icons/back.svg)
   skin/classic/browser/back-12.svg                    (../shared/icons/back-12.svg)
   skin/classic/browser/bookmark.svg                   (../shared/icons/bookmark.svg)
@@ -175,6 +173,8 @@
 #ifndef MOZ_WIDGET_GTK
   skin/classic/browser/import-export.svg              (../shared/icons/import-export.svg)
 #endif
+  skin/classic/browser/indicator-accessibility.svg    (../shared/icons/indicator-accessibility.svg)
+  skin/classic/browser/indicator-private-browsing.svg (../shared/icons/indicator-private-browsing.svg)
   skin/classic/browser/library.svg                    (../shared/icons/library.svg)
   skin/classic/browser/library-bookmark-animation.svg (../shared/icons/library-bookmark-animation.svg)
   skin/classic/browser/link.svg                       (../shared/icons/link.svg)
@@ -191,7 +191,6 @@
   skin/classic/browser/pin-tab.svg                    (../shared/icons/pin-tab.svg)
   skin/classic/browser/pocket.svg                     (../shared/icons/pocket.svg)
   skin/classic/browser/pocket-outline.svg             (../shared/icons/pocket-outline.svg)
-  skin/classic/browser/private-browsing.svg           (../shared/icons/private-browsing.svg)
   skin/classic/browser/privateBrowsing.svg            (../shared/icons/privateBrowsing.svg)
   skin/classic/browser/reader-mode.svg                (../shared/icons/reader-mode.svg)
   skin/classic/browser/restore-session.svg            (../shared/icons/restore-session.svg)
@@ -275,4 +274,3 @@
   skin/classic/browser/places/tree-icons.css                   (../shared/places/tree-icons.css)
   skin/classic/browser/privatebrowsing/aboutPrivateBrowsing.css (../shared/privatebrowsing/aboutPrivateBrowsing.css)
   skin/classic/browser/privatebrowsing/favicon.svg             (../shared/privatebrowsing/favicon.svg)
-  skin/classic/browser/privatebrowsing/private-browsing.svg    (../shared/privatebrowsing/private-browsing.svg)

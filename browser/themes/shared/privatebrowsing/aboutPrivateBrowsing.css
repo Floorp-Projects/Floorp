@@ -208,7 +208,7 @@ p {
 
 .info {
   background-color: rgba(0, 0, 0, 0.2);
-  background-image: url("chrome://browser/skin/privatebrowsing/private-browsing.svg");
+  background-image: url("chrome://browser/skin/indicator-private-browsing.svg");
   background-position: left 32px top 20px;
   background-repeat: no-repeat;
   background-size: 32px;
