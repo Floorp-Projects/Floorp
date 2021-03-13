@@ -29,11 +29,13 @@
         ${background}
         <hbox class="tab-loading-burst"/>
         <hbox class="tab-content" align="center">
-          <hbox class="tab-throbber" layer="true"/>
-          <hbox class="tab-icon-pending"/>
-          <image class="tab-icon-image" validate="never" role="presentation"/>
-          <image class="tab-sharing-icon-overlay" role="presentation"/>
-          <image class="tab-icon-overlay" role="presentation"/>
+          <stack class="tab-icon-stack">
+            <hbox class="tab-throbber" layer="true"/>
+            <hbox class="tab-icon-pending"/>
+            <image class="tab-icon-image" validate="never" role="presentation"/>
+            <image class="tab-sharing-icon-overlay" role="presentation"/>
+            <image class="tab-icon-overlay" role="presentation"/>
+          </stack>
           <hbox class="tab-label-container"
                 onoverflow="this.setAttribute('textoverflow', 'true');"
                 onunderflow="this.removeAttribute('textoverflow');"
@@ -46,14 +48,14 @@
                 onunderflow="this.removeAttribute('textoverflow');"
                 align="start"
                 flex="1">
-            <hbox class="tab-icon-sound">
-              <image class="tab-icon-sound-image" role="presentation"/>
+            <label class="tab-text tab-label" role="presentation"/>
+            <hbox class="tab-secondary-label">
               <label class="tab-icon-sound-label tab-icon-sound-playing-label" data-l10n-id="browser-tab-audio-playing2" role="presentation"/>
               <label class="tab-icon-sound-label tab-icon-sound-muted-label" data-l10n-id="browser-tab-audio-muted2" role="presentation"/>
               <label class="tab-icon-sound-label tab-icon-sound-blocked-label" data-l10n-id="browser-tab-audio-blocked" role="presentation"/>
               <label class="tab-icon-sound-label tab-icon-sound-pip-label" data-l10n-id="browser-tab-audio-pip" role="presentation"/>
+              <label class="tab-icon-sound-label tab-icon-sound-tooltip-label" role="presentation"/>
             </hbox>
-            <label class="tab-text tab-label" role="presentation"/>
           </vbox>
           <image class="tab-close-button close-icon" role="presentation"/>
         </hbox>
@@ -103,6 +105,8 @@
         ".tab-loading-burst": "pinned,bursting,notselectedsinceload",
         ".tab-content":
           "pinned,selected=visuallyselected,titlechanged,attention",
+        ".tab-icon-stack":
+          "sharing,pictureinpicture,crashed,busy,soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected,activemedia-blocked",
         ".tab-throbber":
           "fadein,pinned,busy,progress,selected=visuallyselected",
         ".tab-icon-pending":
@@ -111,7 +115,7 @@
           "src=image,triggeringprincipal=iconloadingprincipal,requestcontextid,fadein,pinned,selected=visuallyselected,busy,crashed,sharing,pictureinpicture",
         ".tab-sharing-icon-overlay": "sharing,selected=visuallyselected,pinned",
         ".tab-icon-overlay":
-          "pictureinpicture,crashed,busy,soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected,activemedia-blocked",
+          "sharing,pictureinpicture,crashed,busy,soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected,activemedia-blocked",
         ".tab-label-container":
           "pinned,selected=visuallyselected,labeldirection",
         ".tab-label-container.proton":
@@ -122,7 +126,7 @@
           "text=label,accesskey,fadein,pinned,selected=visuallyselected,attention",
         ".tab-icon-sound":
           "soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected,activemedia-blocked,pictureinpicture",
-        ".tab-label-container.proton .tab-icon-sound":
+        ".tab-label-container.proton .tab-secondary-label":
           "soundplaying,soundplaying-scheduledremoval,pinned,muted,blocked,selected=visuallyselected,activemedia-blocked,pictureinpicture",
         ".tab-close-button": "fadein,pinned,selected=visuallyselected",
       };
@@ -270,9 +274,7 @@
     }
 
     get soundPlayingIcon() {
-      return gProtonTabs
-        ? this.querySelector(".tab-label-container.proton > .tab-icon-sound")
-        : this.querySelector(".tab-icon-sound");
+      return gProtonTabs ? null : this.querySelector(".tab-icon-sound");
     }
 
     get overlayIcon() {
@@ -299,12 +301,6 @@
       return this.querySelector(".tab-close-button");
     }
 
-    _isEventForTabSoundIcon(event) {
-      return gProtonTabs
-        ? event.target.closest(".tab-icon-sound")
-        : event.target.classList.contains("tab-icon-sound");
-    }
-
     updateLastAccessed(aDate) {
       this._lastAccessed = this.selected ? Infinity : aDate || Date.now();
     }
@@ -313,12 +309,33 @@
       if (event.target.classList.contains("tab-close-button")) {
         this.mOverCloseButton = true;
       }
+      if (gProtonTabs && this._overPlayingIcon) {
+        const selectedTabs = gBrowser.selectedTabs;
+        const contextTabInSelection = selectedTabs.includes(this);
+        const affectedTabsLength = contextTabInSelection
+          ? selectedTabs.length
+          : 1;
+        let stringID;
+        if (this.hasAttribute("activemedia-blocked")) {
+          stringID = "browser-tab-unblock";
+        } else {
+          stringID = this.linkedBrowser.audioMuted
+            ? "browser-tab-unmute"
+            : "browser-tab-mute";
+        }
+        this.setSecondaryTabTooltipLabel(stringID, {
+          count: affectedTabsLength,
+        });
+      }
       this._mouseenter();
     }
 
     on_mouseout(event) {
       if (event.target.classList.contains("tab-close-button")) {
         this.mOverCloseButton = false;
+      }
+      if (gProtonTabs && event.target == this.overlayIcon) {
+        this.setSecondaryTabTooltipLabel(null);
       }
       this._mouseleave();
     }
@@ -350,8 +367,7 @@
         this.style.MozUserFocus = "ignore";
       } else if (
         event.target.classList.contains("tab-close-button") ||
-        (this._isEventForTabSoundIcon(event) &&
-          !event.target.className.includes("tab-icon-sound-pip-label")) ||
+        event.target.classList.contains("tab-icon-sound") ||
         event.target.classList.contains("tab-icon-overlay")
       ) {
         eventMaySelectTab = false;
@@ -417,7 +433,7 @@
       if (
         gBrowser.multiSelectedTabsCount > 0 &&
         !event.target.classList.contains("tab-close-button") &&
-        !this._isEventForTabSoundIcon(event) &&
+        !event.target.classList.contains("tab-icon-sound") &&
         !event.target.classList.contains("tab-icon-overlay")
       ) {
         // Tabs were previously multi-selected and user clicks on a tab
@@ -426,14 +442,17 @@
       }
 
       if (
-        this._isEventForTabSoundIcon(event) ||
+        event.target.classList.contains("tab-icon-sound") ||
         (event.target.classList.contains("tab-icon-overlay") &&
           (this.soundPlaying || this.muted || this.activeMediaBlocked))
       ) {
         if (this.multiselected) {
           gBrowser.toggleMuteAudioOnMultiSelectedTabs(this);
         } else {
-          if (this._isEventForTabSoundIcon(event) && this.pictureinpicture) {
+          if (
+            event.target.classList.contains("tab-icon-sound") &&
+            this.pictureinpicture
+          ) {
             // When Picture-in-Picture is open, we repurpose '.tab-icon-sound' as
             // an inert Picture-in-Picture indicator, and expose the '.tab-icon-overlay'
             // as the mechanism for muting the tab, so we don't need to handle clicks on
@@ -476,7 +495,7 @@
         this._selectedOnFirstMouseDown &&
         this.selected &&
         !(
-          this._isEventForTabSoundIcon(event) ||
+          event.target.classList.contains("tab-icon-sound") ||
           event.target.classList.contains("tab-icon-overlay")
         )
       ) {
@@ -561,6 +580,26 @@
       if (this.linkedPanel && !this.selected) {
         this.linkedBrowser.unselectedTabHover(false);
         this.cancelUnselectedTabHoverTimer();
+      }
+    }
+
+    setSecondaryTabTooltipLabel(l10nID, l10nArgs) {
+      this.querySelector(".tab-secondary-label").toggleAttribute(
+        "showtooltip",
+        l10nID
+      );
+
+      const tooltipEl = this.querySelector(".tab-icon-sound-tooltip-label");
+
+      if (l10nArgs) {
+        tooltipEl.setAttribute("data-l10n-args", JSON.stringify(l10nArgs));
+      } else {
+        tooltipEl.removeAttribute("data-l10n-args");
+      }
+      if (l10nID) {
+        tooltipEl.setAttribute("data-l10n-id", l10nID);
+      } else {
+        tooltipEl.removeAttribute("data-l10n-id");
       }
     }
 

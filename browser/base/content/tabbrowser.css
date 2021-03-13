@@ -18,6 +18,29 @@
   display: none;
 }
 
+@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+:root[uidensity="compact"] .tab-secondary-label,
+.tab-secondary-label:not([soundplaying], [muted], [activemedia-blocked], [pictureinpicture]),
+.tab-secondary-label:not([activemedia-blocked]) > .tab-icon-sound-blocked-label,
+.tab-secondary-label[muted][activemedia-blocked] > .tab-icon-sound-blocked-label,
+.tab-secondary-label[activemedia-blocked] > .tab-icon-sound-playing-label,
+.tab-secondary-label[muted] > .tab-icon-sound-playing-label,
+.tab-secondary-label[pictureinpicture] > .tab-icon-sound-playing-label,
+.tab-secondary-label[pictureinpicture] > .tab-icon-sound-muted-label,
+.tab-secondary-label:not([pictureinpicture]) > .tab-icon-sound-pip-label,
+.tab-secondary-label:not([muted]) > .tab-icon-sound-muted-label,
+.tab-secondary-label:not([showtooltip]) > .tab-icon-sound-tooltip-label,
+.tab-secondary-label[showtooltip] > .tab-icon-sound-label:not(.tab-icon-sound-tooltip-label) {
+  display: none;
+}
+
+.tab-sharing-icon-overlay[sharing]:not([selected]),
+.tab-icon-overlay:is([soundplaying], [muted], [activemedia-blocked], [pictureinpicture], [crashed]) {
+  display: revert;
+}
+} /* end proton */
+
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 .tab-icon-sound:not([activemedia-blocked]) > .tab-icon-sound-blocked-label,
 .tab-icon-sound[muted][activemedia-blocked] > .tab-icon-sound-blocked-label,
 .tab-icon-sound[activemedia-blocked] > .tab-icon-sound-playing-label,
@@ -37,6 +60,7 @@
 .tab-icon-overlay[crashed] {
   display: -moz-box;
 }
+} /* end !proton */
 
 .tab-label {
   white-space: nowrap;
