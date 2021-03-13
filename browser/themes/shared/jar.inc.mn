@@ -53,7 +53,6 @@
   skin/classic/browser/drm-icon.svg                            (../shared/drm-icon.svg)
   skin/classic/browser/fullscreen/insecure.svg                 (../shared/fullscreen/insecure.svg)
   skin/classic/browser/fullscreen/secure.svg                   (../shared/fullscreen/secure.svg)
-  skin/classic/browser/fxaSignout.css                          (../shared/fxaSignout.css)
   skin/classic/browser/permissions.svg                         (../shared/identity-block/permissions.svg)
   skin/classic/browser/connection-secure.svg                   (../shared/identity-block/connection-secure.svg)
   skin/classic/browser/newInstall.css                          (../shared/newInstall.css)
