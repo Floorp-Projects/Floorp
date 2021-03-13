@@ -207,13 +207,14 @@ class WebRTCChild extends JSWindowActorChild {
 }
 
 function getActorForWindow(window) {
-  let windowGlobal = window.windowGlobalChild;
   try {
+    let windowGlobal = window.windowGlobalChild;
     if (windowGlobal) {
       return windowGlobal.getActor("WebRTC");
     }
   } catch (ex) {
-    // There might not be an actor for a parent process chrome URL.
+    // There might not be an actor for a parent process chrome URL,
+    // and we may not even be allowed to access its windowGlobalChild.
   }
 
   return null;
