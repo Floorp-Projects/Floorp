@@ -58,6 +58,9 @@ async function test() {
   };
 
   document.addEventListener("wheel", onWheel, { passive: false });
+  // Give APZ a chance to become aware of the listener, so it knows
+  // to queue events while it waits for a content response.
+  await promiseApzFlushedRepaints();
   // Do not use `await` because calling preventDefault() means
   // the APZ:TransformEnd notification will never be sent.
   pinchZoomInWithTouchpad(641, 465);
