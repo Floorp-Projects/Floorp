@@ -271,6 +271,9 @@
       <menuitem id="context-selectall"
                 data-l10n-id="text-action-select-all"
                 command="cmd_selectAll"/>
+      <menuitem id="context-print-selection"
+                data-l10n-id="main-context-menu-print-selection"
+                oncommand="gContextMenu.printSelection();"/>
       <menuseparator id="context-sep-sendlinktodevice" class="sync-ui-item"
                 hidden="true"/>
       <menu id="context-sendlinktodevice"
@@ -332,9 +335,6 @@
 #endif
         </menupopup>
       </menu>
-      <menuitem id="context-print-selection"
-                data-l10n-id="main-context-menu-print-selection"
-                oncommand="gContextMenu.printSelection();"/>
       <menuseparator id="context-sep-screenshots"/>
       <menuitem id="context-take-screenshot"
                 data-l10n-id="main-context-menu-take-screenshot"
