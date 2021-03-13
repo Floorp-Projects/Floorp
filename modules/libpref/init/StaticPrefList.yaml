@@ -5397,44 +5397,44 @@
 
 # Use better error message when accessing property of null or undefined.
 - name: javascript.options.property_error_message_fix
-  type: RelaxedAtomicBool
+  type: bool
   value: @IS_NIGHTLY_OR_DEV_EDITION@
   mirror: always
 
 # Support for weak references in JavaScript (WeakRef and FinalizationRegistry).
 - name: javascript.options.weakrefs
-  type: RelaxedAtomicBool
+  type: bool
   value: true
   mirror: always
 
 # Whether to expose the FinalizationRegistry.prototype.cleanupSome method.
 - name: javascript.options.experimental.weakrefs.expose_cleanupSome
-  type: RelaxedAtomicBool
+  type: bool
   value: false
   mirror: always
 
 #ifdef NIGHTLY_BUILD
   # Experimental support for Iterator Helpers in JavaScript.
 -   name: javascript.options.experimental.iterator_helpers
-    type: RelaxedAtomicBool
+    type: bool
     value: false
     mirror: always
 
   # Experimental support for Private Fields in JavaScript.
 -   name: javascript.options.experimental.private_fields
-    type: RelaxedAtomicBool
+    type: bool
     value: false
     mirror: always
 
   # Experimental support for Private Methods in JavaScript.
 -   name: javascript.options.experimental.private_methods
-    type: RelaxedAtomicBool
+    type: bool
     value: false
     mirror: always
 
   # Experimental support for Top-level Await in JavaScript.
 -   name: javascript.options.experimental.top_level_await
-    type: RelaxedAtomicBool
+    type: bool
     value: false
     mirror: always
 #endif  // NIGHTLY_BUILD
