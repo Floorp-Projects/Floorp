@@ -682,20 +682,6 @@ class PresShell final : public nsStubDocumentObserver,
   bool IsPaintingSuppressed() const { return mPaintingSuppressed; }
 
   /**
-   * Pause painting by freezing the refresh driver of this and all parent
-   * presentations. This may not have the desired effect if this pres shell
-   * has its own refresh driver.
-   */
-  void PausePainting();
-
-  /**
-   * Resume painting by thawing the refresh driver of this and all parent
-   * presentations. This may not have the desired effect if this pres shell
-   * has its own refresh driver.
-   */
-  void ResumePainting();
-
-  /**
    * Unsuppress painting.
    */
   void UnsuppressPainting();
@@ -3079,8 +3065,6 @@ class PresShell final : public nsStubDocumentObserver,
   bool mFontSizeInflationForceEnabled : 1;
   bool mFontSizeInflationDisabledInMasterProcess : 1;
   bool mFontSizeInflationEnabled : 1;
-
-  bool mPaintingIsFrozen : 1;
 
   // If a document belongs to an invisible DocShell, this flag must be set
   // to true, so we can avoid any paint calls for widget related to this

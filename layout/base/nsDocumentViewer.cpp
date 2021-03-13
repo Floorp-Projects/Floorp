@@ -2690,28 +2690,6 @@ nsDocumentViewer::SetHintCharset(const Encoding* aEncoding) {
   CallChildren(childFn);
 }
 
-NS_IMETHODIMP
-nsDocumentViewer::PausePainting() {
-  CallChildren([](nsDocumentViewer* aChild) { aChild->PausePainting(); });
-
-  if (PresShell* presShell = GetPresShell()) {
-    presShell->PausePainting();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::ResumePainting() {
-  CallChildren([](nsDocumentViewer* aChild) { aChild->ResumePainting(); });
-
-  if (PresShell* presShell = GetPresShell()) {
-    presShell->ResumePainting();
-  }
-
-  return NS_OK;
-}
-
 nsresult nsDocumentViewer::GetContentSizeInternal(int32_t* aWidth,
                                                   int32_t* aHeight,
                                                   nscoord aMaxWidth,
