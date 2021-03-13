@@ -2078,6 +2078,59 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   display: none !important;
 }
 
+.subviewbutton.download {
+  -moz-box-align: start;
+  min-height: 48px;
+  padding-inline-start: 8px;
+}
+
+.subviewbutton.download > .toolbarbutton-icon,
+.subviewbutton.download > .toolbarbutton-text > label {
+  margin: 4px 0 0;
+}
+
+.subviewbutton.download > .toolbarbutton-icon {
+  width: 32px;
+  height: 32px;
+}
+
+.subviewbutton.download > .toolbarbutton-text > .status-text {
+  color: var(--panel-description-color);
+  font-size: .9em;
+}
+
+.subviewbutton.download > .action-button {
+  appearance: none; /* To avoid native Windows hover styling */
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 1;
+%ifdef XP_MACOSX
+  list-style-image: url("chrome://global/skin/icons/search-glass.svg");
+%else
+  list-style-image: url("chrome://browser/skin/folder.svg");
+%endif
+  /* Measurement to vertically center this button: 1 line of text minus half of 4px top margin. */
+  margin: calc(1em - 2px) 0 0;
+  padding: 4px;
+}
+
+.subviewbutton.download[canRetry] > .action-button {
+  list-style-image: url("chrome://browser/skin/reload.svg");
+}
+
+.subviewbutton.download:not([canShow], [canRetry]) > .action-button {
+  fill: currentColor;
+  fill-opacity: 0.4;
+}
+
+.subviewbutton.download:is([canShow],[canRetry]) > .action-button@buttonStateHoverOrFocus@ {
+  background-color: var(--arrowpanel-dimmed-further);
+}
+
+.subviewbutton.download:is([canShow],[canRetry]) > .action-button@buttonStateActive@ {
+  background-color: var(--arrowpanel-dimmed-even-further);
+}
+
 /* What's New panel */
 #customizationui-widget-multiview #PanelUI-whatsNew {
   max-width: @menuPanelWidth@;
