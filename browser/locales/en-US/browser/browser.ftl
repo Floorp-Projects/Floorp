@@ -364,6 +364,28 @@ browser-tab-audio-blocked = AUTOPLAY BLOCKED
 # This label should be written in all capital letters if your locale supports them.
 browser-tab-audio-pip = PICTURE-IN-PICTURE
 
+## These labels should be written in all capital letters if your locale supports them.
+## Variables:
+##  $count (number): number of affected tabs
+
+browser-tab-mute =
+    { $count ->
+        [1] MUTE TAB
+       *[other] MUTE { $count } TABS
+    }
+
+browser-tab-unmute =
+    { $count ->
+        [1] UNMUTE TAB
+       *[other] UNMUTE { $count } TABS
+    }
+
+browser-tab-unblock =
+    { $count ->
+        [1] PLAY TAB
+       *[other] PLAY { $count } TABS
+    }
+
 ## Bookmarks toolbar items
 
 browser-import-button2 =
