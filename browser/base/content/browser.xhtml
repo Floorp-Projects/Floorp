@@ -1384,12 +1384,18 @@
                            <observes element="sidebar-box" attribute="positionend"/>
             </toolbarbutton>
             <toolbarbutton id="PanelUI-remotetabs-syncnow"
-                           data-l10n-id="appmenuitem-fxa-toolbar-sync-now"
-                           syncinglabel="fxa-toolbar-sync-syncing-tabs"
-                           class="syncNowBtn subviewbutton subviewbutton-iconic"
+                           align="center"
+                           class="subviewbutton subviewbutton-iconic"
                            oncommand="gSync.doSync();"
                            onmouseover="gSync.refreshSyncButtonsTooltip();"
-                           closemenu="none"/>
+                           closemenu="none">
+              <hbox flex="1">
+                <image class="syncNowBtn"/>
+                <label class="syncnow-label"
+                       data-l10n-id="appmenuitem-fxa-toolbar-sync-now2"
+                       crop="end"/>
+              </hbox>
+            </toolbarbutton>
             <toolbarseparator id="PanelUI-remotetabs-separator"/>
           </vbox>
           <deck id="PanelUI-remotetabs-deck">
@@ -1517,18 +1523,15 @@
                        align="center"
                        class="subviewbutton subviewbutton-iconic"
                        oncommand="gSync.doSyncFromFxaMenu(this);"
+                       onmouseover="gSync.refreshSyncButtonsTooltip();"
                        closemenu="none">
-          <vbox flex="1">
-            <label id="PanelUI-fxa-menu-syncnow-label"
+          <hbox flex="1">
+            <image id="PanelUI-appMenu-fxa-image-last-synced"
+                   class="syncNowBtn"/>
+            <label class="syncnow-label"
+                   data-l10n-id="appmenuitem-fxa-toolbar-sync-now2"
                    crop="end"/>
-            <hbox>
-              <label id="PanelUI-appMenu-fxa-label-last-synced"
-                     crop="end"/>
-              <image id="PanelUI-appMenu-fxa-image-last-synced"
-                     class="syncNowBtn"
-                     syncinglabel="fxa-toolbar-sync-syncing-tabs"/>
-            </hbox>
-          </vbox>
+          </hbox>
         </toolbarbutton>
         <toolbarbutton id="PanelUI-fxa-menu-setup-sync-button"
                         class="subviewbutton subviewbutton-iconic"

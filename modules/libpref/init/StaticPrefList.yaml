@@ -1705,6 +1705,12 @@
   value: @IS_NOT_ANDROID@
   mirror: always
 
+# Only intended for fuzzing purposes, this will break mozPrintCallback, etc.
+- name: dom.window_print.fuzzing.block_while_printing
+  type: bool
+  value: false
+  mirror: always
+
 - name: dom.element.transform-getters.enabled
   type: bool
   value: false
@@ -3502,7 +3508,7 @@
   type: RelaxedAtomicBool
   value: true
   mirror: always
- 
+
 - name: dom.workers.testing.enabled
   type: RelaxedAtomicBool
   value: false
@@ -6192,7 +6198,7 @@
 # Is the image-set() function enabled?
 - name: layout.css.image-set.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
   rust: true
 
@@ -10678,6 +10684,13 @@
   type: RelaxedAtomicBool
   value: false
   mirror: always
+
+#ifdef XP_MACOSX
+- name: widget.macos.respect-system-appearance
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+#endif
 
 # Whether to allow gtk dark themes in content.
 - name: widget.content.allow-gtk-dark-theme

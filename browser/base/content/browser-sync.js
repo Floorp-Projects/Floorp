@@ -353,7 +353,7 @@ var gSync = {
   get fluentStrings() {
     delete this.fluentStrings;
     return (this.fluentStrings = new Localization(
-      ["branding/brand.ftl", "browser/appmenu.ftl"],
+      ["branding/brand.ftl", "browser/appmenu.ftl", "browser/sync.ftl"],
       true
     ));
   },
@@ -844,15 +844,6 @@ var gSync = {
       "defaultLabel"
     );
 
-    const syncNowLabel = PanelMultiView.getViewNode(
-      document,
-      "PanelUI-fxa-menu-syncnow-label"
-    );
-    const lastSyncedLabel = PanelMultiView.getViewNode(
-      document,
-      "PanelUI-appMenu-fxa-label-last-synced"
-    );
-
     if (PanelUI.protonAppMenuEnabled) {
       // TODO: sign out button icon is still showing despite removing class
       let toolbarbuttons = fxaMenuPanel.querySelectorAll("toolbarbutton");
@@ -913,20 +904,6 @@ var gSync = {
       if (state.syncEnabled) {
         syncNowButtonEl.removeAttribute("hidden");
         syncSetupButtonEl.hidden = true;
-        document.l10n.setAttributes(
-          syncNowLabel,
-          "appmenuitem-fxa-toolbar-sync-now"
-        );
-        let lastSyncDate = this.formatLastSyncDate(state.lastSync);
-        if (lastSyncDate) {
-          document.l10n.setAttributes(
-            lastSyncedLabel,
-            "appmenu-fxa-last-sync",
-            {
-              time: lastSyncDate,
-            }
-          );
-        }
       }
 
       headerTitle = this.fluentStrings.formatValueSync(
@@ -1615,10 +1592,16 @@ var gSync = {
     clearTimeout(this._syncAnimationTimer);
     this._syncStartTime = Date.now();
 
+    let syncingLabel = this.fluentStrings.formatValueSync(
+      "fxa-toolbar-sync-syncing2"
+    );
+
+    document.querySelectorAll(".syncnow-label").forEach(el => {
+      el.value = syncingLabel;
+    });
+
     document.querySelectorAll(".syncNowBtn").forEach(el => {
       el.setAttribute("syncstatus", "active");
-      el.setAttribute("disabled", "true");
-      document.l10n.setAttributes(el, el.getAttribute("syncinglabel"));
     });
 
     document
@@ -1626,8 +1609,6 @@ var gSync = {
       .content.querySelectorAll(".syncNowBtn")
       .forEach(el => {
         el.setAttribute("syncstatus", "active");
-        el.setAttribute("disabled", "true");
-        document.l10n.setAttributes(el, el.getAttribute("syncinglabel"));
       });
   },
 
@@ -1636,10 +1617,16 @@ var gSync = {
       return;
     }
 
+    let syncingLabel = this.fluentStrings.formatValueSync(
+      "appmenuitem-fxa-toolbar-sync-now2"
+    );
+
+    document.querySelectorAll(".syncnow-label").forEach(el => {
+      el.value = syncingLabel;
+    });
+
     document.querySelectorAll(".syncNowBtn").forEach(el => {
       el.removeAttribute("syncstatus");
-      el.removeAttribute("disabled");
-      document.l10n.setAttributes(el, "appmenuitem-fxa-toolbar-sync-now");
     });
 
     document
@@ -1647,8 +1634,6 @@ var gSync = {
       .content.querySelectorAll(".syncNowBtn")
       .forEach(el => {
         el.removeAttribute("syncstatus");
-        el.removeAttribute("disabled");
-        document.l10n.setAttributes(el, "appmenuitem-fxa-toolbar-sync-now");
       });
 
     Services.obs.notifyObservers(null, "test:browser-sync:activity-stop");
@@ -1697,15 +1682,39 @@ var gSync = {
   async _confirmFxaAndSyncDisconnect() {
     let options = {
       userConfirmedDisconnect: false,
+      deleteLocalData: false,
     };
 
-    window.openDialog(
-      "chrome://browser/content/browser-fxaSignout.xhtml",
-      "_blank",
-      "chrome,modal,centerscreen,resizable=no",
-      { hideDeleteDataOption: !UIState.get().syncEnabled },
-      options
+    let [title, body, button, checkbox] = await document.l10n.formatValues([
+      { id: "fxa-signout-dialog2-title" },
+      { id: "fxa-signout-dialog-body" },
+      { id: "fxa-signout-dialog2-button" },
+      { id: "fxa-signout-dialog2-checkbox" },
+    ]);
+
+    const flags =
+      Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0 +
+      Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1;
+
+    if (!UIState.get().syncEnabled) {
+      checkbox = null;
+    }
+
+    const result = await Services.prompt.asyncConfirmEx(
+      window.browsingContext,
+      Services.prompt.MODAL_TYPE_INTERNAL_WINDOW,
+      title,
+      body,
+      flags,
+      button,
+      null,
+      null,
+      checkbox,
+      false
     );
+    const propBag = result.QueryInterface(Ci.nsIPropertyBag2);
+    options.userConfirmedDisconnect = propBag.get("buttonNumClicked") == 0;
+    options.deleteLocalData = propBag.get("checked");
 
     return options;
   },
@@ -1870,24 +1879,18 @@ var gSync = {
       }
     }
 
-    document.querySelectorAll(".syncNowBtn").forEach(el => {
+    let syncNowBtns = [
+      "PanelUI-remotetabs-syncnow",
+      "PanelUI-fxa-menu-syncnow-button",
+    ];
+    syncNowBtns.forEach(id => {
+      let el = PanelMultiView.getViewNode(document, id);
       if (tooltiptext) {
         el.setAttribute("tooltiptext", tooltiptext);
       } else {
         el.removeAttribute("tooltiptext");
       }
     });
-
-    document
-      .getElementById("appMenu-viewCache")
-      .content.querySelectorAll(".syncNowBtn")
-      .forEach(el => {
-        if (tooltiptext) {
-          el.setAttribute("tooltiptext", tooltiptext);
-        } else {
-          el.removeAttribute("tooltiptext");
-        }
-      });
   },
 
   get relativeTimeFormat() {
@@ -1899,24 +1902,17 @@ var gSync = {
   },
 
   formatLastSyncDate(date) {
-    const lastSyncedImage = PanelMultiView.getViewNode(
-      document,
-      "PanelUI-appMenu-fxa-image-last-synced"
-    );
     if (!date) {
-      lastSyncedImage.hidden = true;
       // Date can be null before the first sync!
       return null;
     }
     try {
-      lastSyncedImage.hidden = false;
       let adjustedDate = new Date(Date.now() - 1000);
       let relativeDateStr = this.relativeTimeFormat.formatBestUnit(
         date < adjustedDate ? date : adjustedDate
       );
       return relativeDateStr;
     } catch (ex) {
-      lastSyncedImage.hidden = true;
       // shouldn't happen, but one client having an invalid date shouldn't
       // break the entire feature.
       this.log.warn("failed to format lastSync time", date, ex);

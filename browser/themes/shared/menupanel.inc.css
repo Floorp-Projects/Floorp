@@ -110,9 +110,7 @@
   list-style-image: url("chrome://browser/skin/tab.svg");
 }
 
-#PanelUI-fxa-menu-syncnow-button,
-#PanelUI-fxa-menu-setup-sync-button,
-#PanelUI-remotetabs-syncnow {
+#PanelUI-fxa-menu-setup-sync-button {
   list-style-image: url("chrome://browser/skin/sync.svg");
 }
 
@@ -174,10 +172,6 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button,
 #appMenu-library-downloads-button {
   list-style-image: url("chrome://browser/skin/downloads/download-icons.svg#arrow-with-bar");
 }
-
-#appMenu-library-downloads-show-button {
-  list-style-image: url("chrome://browser/skin/folder.svg");
-}
 } /** END not Proton **/
 
 @supports -moz-bool-pref("browser.proton.enabled") {
@@ -199,9 +193,5 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button,
 
 #appMenu-fullscreen-button2[checked] {
   list-style-image: url(chrome://browser/skin/fullscreen-exit.svg);
-}
-
-#PanelUI-appMenu-fxa-image-last-synced {
-  list-style-image: url("chrome://browser/skin/sync.svg");
 }
 } /** END Proton **/

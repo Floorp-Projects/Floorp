@@ -1,4 +1,5 @@
 const PRINT_DOCUMENT_URI = "chrome://global/content/print.html";
+const DEFAULT_PRINTER_NAME = "Mozilla Save to PDF";
 const { MockFilePicker } = SpecialPowers;
 
 let pickerMocked = false;
@@ -78,13 +79,18 @@ class PrintHelper {
         name: "Regular Size",
         width: 612,
         height: 792,
-        unwriteableMargin: {
-          marginTop: 0.1,
-          marginBottom: 0.1,
-          marginLeft: 0.1,
-          marginRight: 0.1,
-          QueryInterface: ChromeUtils.generateQI([Ci.nsIPaperMargin]),
-        },
+        unwriteableMargin: Promise.resolve(
+          Object.assign(
+            {
+              top: 0.1,
+              bottom: 0.1,
+              left: 0.1,
+              right: 0.1,
+              QueryInterface: ChromeUtils.generateQI([Ci.nsIPaperMargin]),
+            },
+            paperProperties.unwriteableMargin
+          )
+        ),
         QueryInterface: ChromeUtils.generateQI([Ci.nsIPaper]),
       },
       paperProperties
@@ -237,18 +243,45 @@ class PrintHelper {
     }
     let {
       name = "Mock Printer",
-      paperList = [],
+      paperList,
       printerInfoPromise = Promise.resolve(),
+      paperSizeUnit = Ci.nsIPrintSettings.kPaperSizeInches,
+      paperId,
     } = opts;
     let PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
       Ci.nsIPrintSettingsService
     );
+    // Use the fallbackPaperList as the default for mock printers
+    if (!paperList) {
+      info("addMockPrinter, using the fallbackPaperList");
+      paperList = Cc["@mozilla.org/gfx/printerlist;1"].createInstance(
+        Ci.nsIPrinterList
+      ).fallbackPaperList;
+    }
 
     let defaultSettings = PSSVC.newPrintSettings;
     defaultSettings.printerName = name;
     defaultSettings.toFileName = "";
     defaultSettings.outputFormat = Ci.nsIPrintSettings.kOutputFormatNative;
     defaultSettings.printToFile = false;
+    defaultSettings.paperSizeUnit = paperSizeUnit;
+    if (paperId) {
+      defaultSettings.paperId = paperId;
+    }
+
+    if (
+      defaultSettings.paperId &&
+      Array.from(paperList).find(p => p.id == defaultSettings.paperId)
+    ) {
+      info(
+        `addMockPrinter, using paperId: ${defaultSettings.paperId} from the paperList`
+      );
+    } else if (paperList.length) {
+      defaultSettings.paperId = paperList[0].id;
+      info(
+        `addMockPrinter, corrected default paperId setting value: ${defaultSettings.paperId}`
+      );
+    }
 
     let printer = {
       name,

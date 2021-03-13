@@ -70,6 +70,8 @@ TEST(TestDllBlocklist, AllowDllByVersion)
   EXPECT_TRUE(!!::GetModuleHandleW(kLeafName.get()));
 }
 
+// RedirectToNoOpEntryPoint needs the launcher process.
+#if defined(MOZ_LAUNCHER_PROCESS)
 TEST(TestDllBlocklist, NoOpEntryPoint)
 {
   // DllMain of this dll has MOZ_RELEASE_ASSERT.  This test makes sure we load
@@ -79,17 +81,18 @@ TEST(TestDllBlocklist, NoOpEntryPoint)
 
   nsModuleHandle hDll(::LoadLibraryW(dllPath.get()));
 
-#if defined(MOZ_ASAN)
+#  if defined(MOZ_ASAN)
   // With ASAN, the test uses mozglue's blocklist where
   // REDIRECT_TO_NOOP_ENTRYPOINT is ignored.  So LoadLibraryW
   // is expected to fail.
   EXPECT_TRUE(!hDll);
   EXPECT_TRUE(!::GetModuleHandleW(kLeafName.get()));
-#else
+#  else
   EXPECT_TRUE(!!hDll);
   EXPECT_TRUE(!!::GetModuleHandleW(kLeafName.get()));
-#endif
+#  endif
 }
+#endif  // defined(MOZ_LAUNCHER_PROCESS)
 
 #define DLL_BLOCKLIST_ENTRY(name, ...) {name, __VA_ARGS__},
 #define DLL_BLOCKLIST_STRING_TYPE const char*

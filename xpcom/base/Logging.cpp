@@ -357,6 +357,7 @@ class LogModuleManager {
     bool isMarkers = false;
     int32_t rotate = 0;
     int32_t maxSize = 0;
+    bool prependHeader = false;
     const char* modules = PR_GetEnv("MOZ_LOG");
     if (!modules || !modules[0]) {
       modules = PR_GetEnv("MOZ_LOG_MODULES");
@@ -378,9 +379,10 @@ class LogModuleManager {
     // Need to capture `this` since `sLogModuleManager` is not set until after
     // initialization is complete.
     NSPRLogModulesParser(
-        modules, [this, &shouldAppend, &addTimestamp, &isSync, &isRaw, &rotate,
-                  &maxSize, &isMarkers](const char* aName, LogLevel aLevel,
-                                        int32_t aValue) mutable {
+        modules,
+        [this, &shouldAppend, &addTimestamp, &isSync, &isRaw, &rotate, &maxSize,
+         &prependHeader, &isMarkers](const char* aName, LogLevel aLevel,
+                                     int32_t aValue) mutable {
           if (strcmp(aName, "append") == 0) {
             shouldAppend = true;
           } else if (strcmp(aName, "timestamp") == 0) {
@@ -393,6 +395,8 @@ class LogModuleManager {
             rotate = (aValue << 20) / kRotateFilesNumber;
           } else if (strcmp(aName, "maxsize") == 0) {
             maxSize = aValue << 20;
+          } else if (strcmp(aName, "prependheader") == 0) {
+            prependHeader = true;
           } else if (strcmp(aName, "profilermarkers") == 0) {
             isMarkers = true;
           } else {
@@ -425,6 +429,12 @@ class LogModuleManager {
       maxSize = 0;
     }
 
+    if (rotate > 0 && prependHeader) {
+      NS_WARNING(
+          "MOZ_LOG: when you rotate the log, you cannot use prependheader!");
+      prependHeader = false;
+    }
+
     const char* logFile = PR_GetEnv("MOZ_LOG_FILE");
     if (!logFile || !logFile[0]) {
       logFile = PR_GetEnv("NSPR_LOG_FILE");
@@ -448,6 +458,13 @@ class LogModuleManager {
 
       mOutFile = OpenFile(shouldAppend, mOutFileNum, maxSize);
       mSetFromEnv = true;
+    }
+
+    if (prependHeader && XRE_IsParentProcess()) {
+      va_list va;
+      empty_va(&va);
+      Print("Logger", LogLevel::Info, nullptr, "\n***\n\n", "Opening log\n",
+            va);
     }
   }
 
@@ -544,11 +561,12 @@ class LogModuleManager {
 
   void Print(const char* aName, LogLevel aLevel, const char* aFmt,
              va_list aArgs) MOZ_FORMAT_PRINTF(4, 0) {
-    Print(aName, aLevel, nullptr, aFmt, aArgs);
+    Print(aName, aLevel, nullptr, "", aFmt, aArgs);
   }
 
   void Print(const char* aName, LogLevel aLevel, const TimeStamp* aStart,
-             const char* aFmt, va_list aArgs) MOZ_FORMAT_PRINTF(5, 0) {
+             const char* aPrepend, const char* aFmt, va_list aArgs)
+      MOZ_FORMAT_PRINTF(6, 0) {
     AutoSuspendLateWriteChecks suspendLateWriteChecks;
     long pid = static_cast<long>(base::GetCurrentProcId());
     const size_t kBuffSize = 1024;
@@ -646,12 +664,12 @@ class LogModuleManager {
 
     if (!mAddTimestamp && !aStart) {
       if (!mIsRaw) {
-        fprintf_stderr(out, "[%s %ld: %s]: %s/%s %s%s",
+        fprintf_stderr(out, "%s[%s %ld: %s]: %s/%s %s%s", aPrepend,
                        nsDebugImpl::GetMultiprocessMode(), pid,
                        currentThreadName, ToLogStr(aLevel), aName, buffToWrite,
                        newline);
       } else {
-        fprintf_stderr(out, "%s%s", buffToWrite, newline);
+        fprintf_stderr(out, "%s%s%s", aPrepend, buffToWrite, newline);
       }
     } else {
       if (aStart) {
@@ -669,22 +687,24 @@ class LogModuleManager {
         // Ignore that the start time might be in a different day
         fprintf_stderr(
             out,
-            "%04d-%02d-%02d %02d:%02d:%02d.%06d -> %02d:%02d:%02d.%06d UTC "
+            "%s%04d-%02d-%02d %02d:%02d:%02d.%06d -> %02d:%02d:%02d.%06d UTC "
             "(%.1gms)- [%s %ld: %s]: %s/%s %s%s",
-            now.tm_year, now.tm_month + 1, start.tm_mday, start.tm_hour,
-            start.tm_min, start.tm_sec, start.tm_usec, now.tm_hour, now.tm_min,
-            now.tm_sec, now.tm_usec, duration.ToMilliseconds(),
-            nsDebugImpl::GetMultiprocessMode(), pid, currentThreadName,
-            ToLogStr(aLevel), aName, buffToWrite, newline);
+            aPrepend, now.tm_year, now.tm_month + 1, start.tm_mday,
+            start.tm_hour, start.tm_min, start.tm_sec, start.tm_usec,
+            now.tm_hour, now.tm_min, now.tm_sec, now.tm_usec,
+            duration.ToMilliseconds(), nsDebugImpl::GetMultiprocessMode(), pid,
+            currentThreadName, ToLogStr(aLevel), aName, buffToWrite, newline);
       } else {
         PRExplodedTime now;
         PR_ExplodeTime(PR_Now(), PR_GMTParameters, &now);
-        fprintf_stderr(
-            out,
-            "%04d-%02d-%02d %02d:%02d:%02d.%06d UTC - [%s %ld: %s]: %s/%s %s%s",
-            now.tm_year, now.tm_month + 1, now.tm_mday, now.tm_hour, now.tm_min,
-            now.tm_sec, now.tm_usec, nsDebugImpl::GetMultiprocessMode(), pid,
-            currentThreadName, ToLogStr(aLevel), aName, buffToWrite, newline);
+        fprintf_stderr(out,
+                       "%s%04d-%02d-%02d %02d:%02d:%02d.%06d UTC - [%s %ld: "
+                       "%s]: %s/%s %s%s",
+                       aPrepend, now.tm_year, now.tm_month + 1, now.tm_mday,
+                       now.tm_hour, now.tm_min, now.tm_sec, now.tm_usec,
+                       nsDebugImpl::GetMultiprocessMode(), pid,
+                       currentThreadName, ToLogStr(aLevel), aName, buffToWrite,
+                       newline);
       }
     }
 
@@ -839,7 +859,7 @@ void LogModule::Printv(LogLevel aLevel, const TimeStamp* aStart,
   MOZ_ASSERT(sLogModuleManager != nullptr);
 
   // Forward to LogModule manager w/ level and name
-  sLogModuleManager->Print(Name(), aLevel, aStart, aFmt, aArgs);
+  sLogModuleManager->Print(Name(), aLevel, aStart, "", aFmt, aArgs);
 }
 
 }  // namespace mozilla

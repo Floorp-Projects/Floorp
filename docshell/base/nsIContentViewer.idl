@@ -288,18 +288,6 @@ interface nsIContentViewer : nsISupports
   void getContentSizeConstrained(in long maxWidth, in long maxHeight,
                                  out long width, out long height);
 
-  /**
-   * Instruct the refresh driver to discontinue painting until further
-   * notice.
-   */
-  void pausePainting();
-
-  /**
-   * Instruct the refresh driver to resume painting after a previous call to
-   * pausePainting().
-   */
-  void resumePainting();
-
   [noscript, notxpcom] Encoding getHintCharset();
   [noscript, notxpcom] void setHintCharset(in Encoding aEncoding);
 };

@@ -44,9 +44,7 @@ appmenuitem-fullscreen =
 
 ## Firefox Account toolbar button and Sync panel in App menu.
 
-appmenuitem-fxa-toolbar-sync-now =
-    .label = Sync Now
-    .value = Sync Now
+appmenuitem-fxa-toolbar-sync-now2 = Sync Now
 appmenuitem-fxa-manage-account = Manage Account
 appmenu-fxa-header =
     .title = { -fxaccount-brand-name }

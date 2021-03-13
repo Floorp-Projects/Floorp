@@ -836,7 +836,6 @@ PresShell::PresShell(Document* aDocument)
       mFontSizeInflationForceEnabled(false),
       mFontSizeInflationDisabledInMasterProcess(false),
       mFontSizeInflationEnabled(false),
-      mPaintingIsFrozen(false),
       mIsNeverPainting(false),
       mResolutionUpdated(false),
       mResolutionUpdatedByApz(false),
@@ -904,13 +903,6 @@ PresShell::~PresShell() {
   NS_ASSERTION(mFirstCallbackEventRequest == nullptr &&
                    mLastCallbackEventRequest == nullptr,
                "post-reflow queues not empty.  This means we're leaking");
-
-  // Verify that if painting was frozen, but we're being removed from the tree,
-  // that we now re-enable painting on our refresh driver, since it may need to
-  // be re-used by another presentation.
-  if (mPaintingIsFrozen) {
-    mPresContext->RefreshDriver()->Thaw();
-  }
 
   MOZ_ASSERT(mAllocatedPointers.IsEmpty(),
              "Some pres arena objects were not freed");
@@ -6384,7 +6376,10 @@ void PresShell::Paint(nsView* aViewToPaint, const nsRegion& aDirtyRegion,
   if (!(aFlags & PaintFlags::PaintComposite)) {
     flags |= PaintFrameFlags::NoComposite;
   }
-  if (aFlags & PaintFlags::PaintSyncDecodeImages) {
+  // We force sync-decode for printing / print-preview (printing already does
+  // this from nsPageSequenceFrame::PrintNextSheet).
+  if (aFlags & PaintFlags::PaintSyncDecodeImages ||
+      mDocument->IsStaticDocument()) {
     flags |= PaintFrameFlags::SyncDecodeImages;
   }
   if (mNextPaintCompressed) {
@@ -11374,22 +11369,6 @@ bool PresShell::DetermineFontSizeInflationState() {
   }
 
   return true;
-}
-
-void PresShell::PausePainting() {
-  if (GetPresContext()->RefreshDriver()->GetPresContext() != GetPresContext())
-    return;
-
-  mPaintingIsFrozen = true;
-  GetPresContext()->RefreshDriver()->Freeze();
-}
-
-void PresShell::ResumePainting() {
-  if (GetPresContext()->RefreshDriver()->GetPresContext() != GetPresContext())
-    return;
-
-  mPaintingIsFrozen = false;
-  GetPresContext()->RefreshDriver()->Thaw();
 }
 
 void PresShell::SyncWindowProperties(nsView* aView) {

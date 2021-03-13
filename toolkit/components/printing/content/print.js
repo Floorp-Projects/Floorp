@@ -24,6 +24,7 @@ const PDF_JS_URI = "resource://pdf.js/web/viewer.html";
 const INPUT_DELAY_MS = Cu.isInAutomation ? 100 : 500;
 const MM_PER_POINT = 25.4 / 72;
 const INCHES_PER_POINT = 1 / 72;
+const INCHES_PER_MM = 1 / 25.4;
 const ourBrowser = window.docShell.chromeEventHandler;
 const PSSVC = Cc["@mozilla.org/gfx/printsettings-service;1"].getService(
   Ci.nsIPrintSettingsService
@@ -499,6 +500,10 @@ var PrintEventHandler = {
         paperSizeUnit = PrintEventHandler.settings.kPaperSizeMillimeters;
       } else {
         paperId = this.viewSettings.paperId;
+        logger.debug(
+          "No paperId or matchedPaper, get a new default from viewSettings:",
+          paperId
+        );
         paperWidth = this.viewSettings.paperWidth;
         paperHeight = this.viewSettings.paperHeight;
         paperSizeUnit = this.viewSettings.paperSizeUnit;
@@ -2276,6 +2281,8 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
     this._customLeftMargin = this.querySelector("#custom-margin-left");
     this._customRightMargin = this.querySelector("#custom-margin-right");
     this._marginError = this.querySelector("#error-invalid-margin");
+    this._sizeUnit = null;
+    this._toInchesMultiplier = 1;
   }
 
   get templateId() {
@@ -2284,10 +2291,10 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
 
   updateCustomMargins() {
     let newMargins = {
-      marginTop: this._customTopMargin.value,
-      marginBottom: this._customBottomMargin.value,
-      marginLeft: this._customLeftMargin.value,
-      marginRight: this._customRightMargin.value,
+      marginTop: this.toInchValue(this._customTopMargin.value),
+      marginBottom: this.toInchValue(this._customBottomMargin.value),
+      marginLeft: this.toInchValue(this._customLeftMargin.value),
+      marginRight: this.toInchValue(this._customRightMargin.value),
     };
 
     this.dispatchSettingsChange({
@@ -2298,12 +2305,12 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
   }
 
   updateMaxValues() {
-    this._customTopMargin.max =
-      this._maxHeight - this._customBottomMargin.value;
-    this._customBottomMargin.max =
-      this._maxHeight - this._customTopMargin.value;
-    this._customLeftMargin.max = this._maxWidth - this._customRightMargin.value;
-    this._customRightMargin.max = this._maxWidth - this._customLeftMargin.value;
+    let maxWidth = this.toCurrentUnitValue(this._maxWidth);
+    let maxHeight = this.toCurrentUnitValue(this._maxHeight);
+    this._customTopMargin.max = maxHeight - this._customBottomMargin.value;
+    this._customBottomMargin.max = maxHeight - this._customTopMargin.value;
+    this._customLeftMargin.max = maxWidth - this._customRightMargin.value;
+    this._customRightMargin.max = maxWidth - this._customLeftMargin.value;
   }
 
   formatMargin(target) {
@@ -2315,23 +2322,41 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
     }
   }
 
+  toCurrentUnitValue(val) {
+    if (typeof val == "string") {
+      val = parseFloat(val);
+    }
+    return val / this._toInchesMultiplier;
+  }
+
+  toInchValue(val) {
+    if (typeof val == "string") {
+      val = parseFloat(val);
+    }
+    return val * this._toInchesMultiplier;
+  }
+
   setAllMarginValues(settings) {
-    this._customTopMargin.value = parseFloat(
+    this._customTopMargin.value = this.toCurrentUnitValue(
       settings.customMargins.marginTop
     ).toFixed(2);
-    this._customBottomMargin.value = parseFloat(
+    this._customBottomMargin.value = this.toCurrentUnitValue(
       settings.customMargins.marginBottom
     ).toFixed(2);
-    this._customLeftMargin.value = parseFloat(
+    this._customLeftMargin.value = this.toCurrentUnitValue(
       settings.customMargins.marginLeft
     ).toFixed(2);
-    this._customRightMargin.value = parseFloat(
+    this._customRightMargin.value = this.toCurrentUnitValue(
       settings.customMargins.marginRight
     ).toFixed(2);
   }
 
   update(settings) {
     // Re-evaluate which margin options should be enabled whenever the printer or paper changes
+    this._toInchesMultiplier =
+      settings.paperSizeUnit == settings.kPaperSizeMillimeters
+        ? INCHES_PER_MM
+        : 1;
     if (
       settings.paperId !== this._paperId ||
       settings.printerName !== this._printerName ||
@@ -2345,17 +2370,23 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
       this._printerName = settings.printerName;
       this._orientation = settings.orientation;
 
+      // Paper dimensions are in the paperSizeUnit. As the margin values are in inches
+      // we'll normalize to that when storing max dimensions
       let height =
         this._orientation == 0 ? settings.paperHeight : settings.paperWidth;
       let width =
         this._orientation == 0 ? settings.paperWidth : settings.paperHeight;
+      let heightInches =
+        Math.round(this._toInchesMultiplier * height * 100) / 100;
+      let widthInches =
+        Math.round(this._toInchesMultiplier * width * 100) / 100;
 
       this._maxHeight =
-        height -
+        heightInches -
         settings.unwriteableMarginTop -
         settings.unwriteableMarginBottom;
       this._maxWidth =
-        width -
+        widthInches -
         settings.unwriteableMarginLeft -
         settings.unwriteableMarginRight;
 
@@ -2366,6 +2397,16 @@ class MarginsPicker extends PrintUIControlMixin(HTMLElement) {
       this.updateMaxValues();
       this.dispatchEvent(new Event("revalidate", { bubbles: true }));
       this._marginError.hidden = true;
+    }
+
+    if (settings.paperSizeUnit !== this._sizeUnit) {
+      this._sizeUnit = settings.paperSizeUnit;
+      let unitStr =
+        this._sizeUnit == settings.kPaperSizeMillimeters ? "mm" : "inches";
+      for (let elem of this.querySelectorAll("[data-unit-prefix-l10n-id]")) {
+        let l10nId = elem.getAttribute("data-unit-prefix-l10n-id") + unitStr;
+        elem.setAttribute("data-l10n-id", l10nId);
+      }
     }
 
     // We need to ensure we don't override the value if the value should be custom.

@@ -193,6 +193,9 @@ var tests = [
       );
       done();
     }
+    if (CustomizableUI.protonToolbarEnabled) {
+      CustomizableUI.addWidgetToArea("home-button", "nav-bar");
+    }
     let highlight = document.getElementById("UITourHighlight");
     is_element_hidden(highlight, "Highlight should initially be hidden");
 
@@ -202,6 +205,9 @@ var tests = [
       check_highlight_size,
       "Highlight should be shown after showHighlight()"
     );
+    if (CustomizableUI.protonToolbarEnabled) {
+      CustomizableUI.removeWidgetFromArea("home-button");
+    }
   },
   function test_highlight_addons_auto_open_close(done) {
     let highlight = document.getElementById("UITourHighlight");

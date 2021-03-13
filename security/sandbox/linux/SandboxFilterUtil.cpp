@@ -70,7 +70,6 @@ sandbox::bpf_dsl::ResultExpr SandboxPolicyBase::EvaluateSyscall(
 #define DISPATCH_SOCKETCALL(sysnum, socketnum) \
   case sysnum:                                 \
     return EvaluateSocketCall(socketnum, true).valueOr(InvalidSyscall())
-#ifdef __NR_socket
       DISPATCH_SOCKETCALL(__NR_socket,      SYS_SOCKET);
       DISPATCH_SOCKETCALL(__NR_bind,        SYS_BIND);
       DISPATCH_SOCKETCALL(__NR_connect,     SYS_CONNECT);
@@ -95,7 +94,6 @@ sandbox::bpf_dsl::ResultExpr SandboxPolicyBase::EvaluateSyscall(
       DISPATCH_SOCKETCALL(__NR_accept4,     SYS_ACCEPT4);
       DISPATCH_SOCKETCALL(__NR_recvmmsg,    SYS_RECVMMSG);
       DISPATCH_SOCKETCALL(__NR_sendmmsg,    SYS_SENDMMSG);
-#endif  // __NR_socket
 #undef DISPATCH_SOCKETCALL
 #ifndef __NR_socketcall
 #ifndef ANDROID
@@ -124,22 +122,21 @@ sandbox::bpf_dsl::ResultExpr SandboxPolicyBase::EvaluateSyscall(
 }
 
 /* static */ bool SandboxPolicyBase::HasSeparateSocketCalls() {
-#ifdef __NR_socket
-  // If there's no socketcall, then obviously there are separate syscalls.
-#  ifdef __NR_socketcall
-  // This could be memoized, but currently it's called at most once
-  // per process.
-  int fd = syscall(__NR_socket, AF_LOCAL, SOCK_STREAM, 0);
-  if (fd < 0) {
-    MOZ_DIAGNOSTIC_ASSERT(errno == ENOSYS);
-    return false;
-  }
-  close(fd);
-#  endif  // __NR_socketcall
+#ifdef __NR_socketcall
+  // If we have both syscalls, dynamically detect (and cache).
+  static const bool kCache = [] {
+    int fd = syscall(__NR_socket, AF_LOCAL, SOCK_STREAM, 0);
+    if (fd < 0) {
+      MOZ_DIAGNOSTIC_ASSERT(errno == ENOSYS);
+      return false;
+    }
+    close(fd);
+    return true;
+  }();
+  return kCache;
+#else  // no socketcall; must be separate syscalls
   return true;
-#else   // ifndef __NR_socket
-  return false;
-#endif  // __NR_socket
+#endif
 }
 
 }  // namespace mozilla
