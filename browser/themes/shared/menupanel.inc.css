@@ -172,10 +172,6 @@ toolbarpaletteitem[place="palette"] > #bookmarks-menu-button,
 #appMenu-library-downloads-button {
   list-style-image: url("chrome://browser/skin/downloads/download-icons.svg#arrow-with-bar");
 }
-
-#appMenu-library-downloads-show-button {
-  list-style-image: url("chrome://browser/skin/folder.svg");
-}
 } /** END not Proton **/
 
 @supports -moz-bool-pref("browser.proton.enabled") {

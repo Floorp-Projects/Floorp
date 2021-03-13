@@ -103,7 +103,6 @@
   skin/classic/browser/tracking-protection-animation.svg        (../shared/identity-block/tracking-protection-animation.svg)
   skin/classic/browser/tracking-protection-animation-brighttext.svg (../shared/identity-block/tracking-protection-animation-brighttext.svg)
   skin/classic/browser/panel-icon-cancel.svg                   (../shared/panel-icon-cancel.svg)
-  skin/classic/browser/panel-icon-retry.svg                    (../shared/panel-icon-retry.svg)
   skin/classic/browser/toolbar-drag-indicator.svg              (../shared/toolbar-drag-indicator.svg)
 
   skin/classic/browser/protections/resolved-breach.svg         (../shared/protections/resolved-breach.svg)
@@ -167,7 +166,6 @@
   skin/classic/browser/edit-copy.svg                  (../shared/icons/edit-copy.svg)
   skin/classic/browser/edit-cut.svg                   (../shared/icons/edit-cut.svg)
   skin/classic/browser/edit-paste.svg                 (../shared/icons/edit-paste.svg)
-  skin/classic/browser/folder.svg                     (../shared/icons/folder.svg)
   skin/classic/browser/forget.svg                     (../shared/icons/forget.svg)
   skin/classic/browser/forward.svg                    (../shared/icons/forward.svg)
   skin/classic/browser/fullscreen.svg                 (../shared/icons/fullscreen.svg)
