@@ -100,3 +100,4 @@ fuzzy(0-1,0-2) fuzzy-if(asyncPan&&!layersGPUAccelerated,0-102,0-2420) fuzzy-if(g
 == propagated-overflow-style-2e.html propagated-overflow-style-2-ref.html
 
 fuzzy-if(Android,54-54,8-8) == xul-scrollbar-iterate.html xul-scrollbar-iterate-ref.html
+== scrollbars-area-in-iframe.html scrollbars-area-in-iframe-ref.html
