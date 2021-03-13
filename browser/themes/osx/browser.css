@@ -53,7 +53,7 @@
 #navigator-toolbox:not(:-moz-lwtheme) {
   background-color: #f0f0f4;
 }
-} /* END proton */
+} /*** END proton ***/
 
 #navigator-toolbox:not(:-moz-lwtheme):-moz-window-inactive {
   --tabs-border-color: rgba(0,0,0,.05);
