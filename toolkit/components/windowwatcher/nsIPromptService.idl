@@ -277,6 +277,9 @@ interface nsIPromptService : nsISupports
   const unsigned long MODAL_TYPE_CONTENT = 1;
   const unsigned long MODAL_TYPE_TAB = 2;
   const unsigned long MODAL_TYPE_WINDOW = 3;
+  // Like MODAL_TYPE_WINDOW, but shown inside a parent window (with similar
+  // styles as _TAB and _CONTENT types) rather than as a new window:
+  const unsigned long MODAL_TYPE_INTERNAL_WINDOW = 4;
 
   /**
    * Puts up a dialog with up to 3 buttons and an optional, labeled checkbox.

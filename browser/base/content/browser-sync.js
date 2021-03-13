@@ -1682,15 +1682,39 @@ var gSync = {
   async _confirmFxaAndSyncDisconnect() {
     let options = {
       userConfirmedDisconnect: false,
+      deleteLocalData: false,
     };
 
-    window.openDialog(
-      "chrome://browser/content/browser-fxaSignout.xhtml",
-      "_blank",
-      "chrome,modal,centerscreen,resizable=no",
-      { hideDeleteDataOption: !UIState.get().syncEnabled },
-      options
+    let [title, body, button, checkbox] = await document.l10n.formatValues([
+      { id: "fxa-signout-dialog2-title" },
+      { id: "fxa-signout-dialog-body" },
+      { id: "fxa-signout-dialog2-button" },
+      { id: "fxa-signout-dialog2-checkbox" },
+    ]);
+
+    const flags =
+      Services.prompt.BUTTON_TITLE_IS_STRING * Services.prompt.BUTTON_POS_0 +
+      Services.prompt.BUTTON_TITLE_CANCEL * Services.prompt.BUTTON_POS_1;
+
+    if (!UIState.get().syncEnabled) {
+      checkbox = null;
+    }
+
+    const result = await Services.prompt.asyncConfirmEx(
+      window.browsingContext,
+      Services.prompt.MODAL_TYPE_INTERNAL_WINDOW,
+      title,
+      body,
+      flags,
+      button,
+      null,
+      null,
+      checkbox,
+      false
     );
+    const propBag = result.QueryInterface(Ci.nsIPropertyBag2);
+    options.userConfirmedDisconnect = propBag.get("buttonNumClicked") == 0;
+    options.deleteLocalData = propBag.get("checked");
 
     return options;
   },
