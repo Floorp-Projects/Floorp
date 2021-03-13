@@ -260,7 +260,17 @@ var PageActions = {
       this._nonBuiltInActions.splice(index, 0, action);
     }
 
-    if (this._persistedActions.ids.includes(action.id)) {
+    let isNew = !this._persistedActions.ids.includes(action.id);
+    if (isNew) {
+      // The action is new.  Store it in the persisted actions.
+      this._persistedActions.ids.push(action.id);
+    }
+
+    if (UrlbarPrefs.get(PROTON_PREF)) {
+      // Actions are always pinned to the urlbar in Proton except for panel
+      // separators.
+      action._pinnedToUrlbar = !action.__isSeparator;
+    } else if (!isNew) {
       // The action has been seen before.  Override its pinnedToUrlbar value
       // with the persisted value.  Set the private version of that property
       // so that onActionToggledPinnedToUrlbar isn't called, which happens when
@@ -268,11 +278,8 @@ var PageActions = {
       action._pinnedToUrlbar = this._persistedActions.idsInUrlbar.includes(
         action.id
       );
-    } else {
-      // The action is new.  Store it in the persisted actions.
-      this._persistedActions.ids.push(action.id);
-      this._updateIDsPinnedToUrlbarForAction(action);
     }
+    this._updateIDsPinnedToUrlbarForAction(action);
   },
 
   _updateIDsPinnedToUrlbarForAction(action) {
@@ -363,10 +370,29 @@ var PageActions = {
   },
 
   _loadPersistedActions() {
+    let actions;
     try {
       let json = Services.prefs.getStringPref(PREF_PERSISTED_ACTIONS);
-      this._persistedActions = this._migratePersistedActions(JSON.parse(json));
+      actions = this._migratePersistedActions(JSON.parse(json));
     } catch (ex) {}
+
+    // Handle migrating to and from Proton.  We want to gracefully handle
+    // downgrades from Proton, and since Proton is controlled by a pref, we also
+    // don't want to assume that a downgrade is possible only by downgrading the
+    // app.  That makes it hard to use the normal migration approach of creating
+    // a new persisted actions version, so we handle Proton migration specially.
+    // We try-catch it separately from the earlier _migratePersistedActions call
+    // because it should not be short-circuited when the pref load or usual
+    // migration fails.
+    try {
+      actions = this._migratePersistedActionsProton(actions);
+    } catch (ex) {}
+
+    // If `actions` is still not defined, then this._persistedActions will
+    // remain its default value.
+    if (actions) {
+      this._persistedActions = actions;
+    }
   },
 
   _purgeUnregisteredPersistedActions() {
@@ -413,6 +439,55 @@ var PageActions = {
       ids,
       idsInUrlbar: actions.idsInUrlbar,
     };
+  },
+
+  _migratePersistedActionsProton(actions) {
+    if (UrlbarPrefs.get(PROTON_PREF)) {
+      if (actions?.idsInUrlbarPreProton) {
+        // continue with Proton
+      } else if (actions) {
+        // upgrade to Proton
+        actions.idsInUrlbarPreProton = [...(actions.idsInUrlbar || [])];
+      } else {
+        // new profile with Proton
+        actions = {
+          ids: [],
+          idsInUrlbar: [],
+          idsInUrlbarPreProton: [],
+          version: PERSISTED_ACTIONS_CURRENT_VERSION,
+        };
+      }
+    } else if (actions?.idsInUrlbarPreProton) {
+      // downgrade from Proton
+      // actions.ids will not include any pre-Proton built-in (or non-built-in)
+      // actions in idsInUrlbarPreProton, so add them back.
+      for (let id of actions.idsInUrlbarPreProton) {
+        if (!actions.ids.includes(id)) {
+          actions.ids.push(id);
+        }
+      }
+      actions.idsInUrlbar = actions.idsInUrlbarPreProton;
+      delete actions.idsInUrlbarPreProton;
+      // If idsInUrlbarPreProton was empty, we don't know whether it's because
+      // the user is coming from a profile where Proton was always enabled or
+      // one where they upgraded to Proton.  In the first case, we don't want
+      // them to end up without the default pinned actions, so pin them.  That
+      // means we'll get the second case wrong if the user unpinned all actions,
+      // but no big deal.
+      if (!actions.idsInUrlbar.length) {
+        actions.idsInUrlbar = ["pocket", ACTION_ID_BOOKMARK];
+      }
+    } else if (actions) {
+      // continue without Proton
+    } else {
+      // new profile without Proton
+      actions = {
+        ids: [],
+        idsInUrlbar: [],
+        version: PERSISTED_ACTIONS_CURRENT_VERSION,
+      };
+    }
+    return actions;
   },
 
   // This keeps track of all actions, even those that are not currently
