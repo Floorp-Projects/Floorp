@@ -76,12 +76,13 @@
   margin: 0;
   border: none;
   color: inherit;
-  padding: 0 18px;
+  padding: 0 12px;
 }
 
 .downloadButton > .button-box {
   appearance: none;
-  padding: 2px !important;
+  padding: 8px !important;
+  border-radius: 4px;
 }
 
 .downloadButton > .button-box > .button-icon {
@@ -97,37 +98,25 @@
 }
 
 .downloadButton:hover > .button-box {
-  background-color: graytext;
-  color: Field;
-  border-radius: 50%;
+  background-color: color-mix(in srgb, currentColor 15%, transparent);
 }
 
 .downloadButton:hover:active > .button-box {
-  background-color: FieldText;
-}
-
-@itemFocused@ > .downloadButton:hover > .button-box {
-  background-color: HighlightText;
-  color: Highlight;
-}
-
-@itemFocused@ > .downloadButton:hover:active > .button-box {
-  background-color: Field;
-  color: FieldText;
+  background-color: color-mix(in srgb, currentColor 30%, transparent);
 }
 
 /*** Button icons ***/
 
 .downloadIconCancel > .button-box > .button-icon {
-  list-style-image: url("chrome://browser/skin/panel-icon-cancel.svg");
+  list-style-image: url("chrome://browser/skin/stop.svg");
 }
 
 .downloadIconShow > .button-box > .button-icon {
-  list-style-image: url("chrome://global/skin/icons/findFile.svg");
+  list-style-image: url("chrome://global/skin/icons/find-file-in-folder.svg");
 }
 
 .downloadIconRetry > .button-box > .button-icon {
-  list-style-image: url("chrome://browser/skin/panel-icon-retry.svg");
+  list-style-image: url("chrome://browser/skin/reload.svg");
 }
 
 /*** Progressmeter ***/
