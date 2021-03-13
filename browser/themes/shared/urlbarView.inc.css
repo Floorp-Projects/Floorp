@@ -118,6 +118,10 @@
   padding-block: 3px;
 }
 
+:root[uidensity=compact] .urlbarView-row {
+  padding-block: 2px;
+}
+
 .urlbarView-row-inner {
   display: flex;
   flex-wrap: nowrap;
