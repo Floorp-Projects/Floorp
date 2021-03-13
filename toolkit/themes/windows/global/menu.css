@@ -39,6 +39,7 @@ menucaption {
   menu > .menu-iconic-text,
   menuitem > .menu-iconic-text {
     appearance: none;
+    margin-inline-start: 0 !important; /* need !important to override the other !important below... */
   }
 }
 }
@@ -149,12 +150,14 @@ menucaption {
     appearance: none;
     list-style-image: url("chrome://global/skin/icons/menu-arrow.svg");
     -moz-context-properties: fill;
-    fill: currentColor;
-    margin-inline-end: 1.5em;
+    fill: var(--menu-icon-color);
+    margin-inline-end: 8px;
   }
 
   .menu-right > image {
-    width: 1em;
+    /* Do not make this smaller than the size of the svg, but upscale for
+     * people with large fonts. */
+    width: max(1em, 16px);
   }
 
   .menu-right:-moz-locale-dir(rtl) {
@@ -340,11 +343,23 @@ menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
 
 @supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+  menupopup[needsgutter] menu:not([icon]),
+  menupopup[needsgutter] menuitem:not([checked="true"]):not([icon]) {
+    padding-inline-start: 36px;
+  }
+
   /* For Windows 10, checkbox and radio button menu items need the default
      appearance disabled so they pick up our custom styles instead. */
   menuitem[type="checkbox"],
-  menuitem[type="radio"] {
+  menuitem[type="checkbox"] > .menu-iconic-left ,
+  menuitem[type="radio"],
+  menuitem[type="radio"] > .menu-iconic-left {
     appearance: none;
+    min-width: unset;
+  }
+
+  menuitem[checked="true"] {
+    padding-inline-start: 8px;
   }
 
   /* We need to do something to override the default style for selected
@@ -354,8 +369,12 @@ menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
   menuitem[checked="true"] > .menu-iconic-left {
     appearance: none !important;
     -moz-context-properties: fill;
-    fill: currentColor;
+    fill: var(--menu-icon-color);
     list-style-image: url("chrome://global/skin/icons/check.svg");
+    width: 20px;
+    height: 20px;
+    padding: 2px;
+    margin-inline-end: 8px;
   }
   menuitem[checked="true"] > .menu-iconic-left > .menu-iconic-icon {
     display: initial;

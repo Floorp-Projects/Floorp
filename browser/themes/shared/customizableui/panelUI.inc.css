@@ -1389,7 +1389,7 @@ panelview .toolbarbutton-1,
 
 .subviewbutton[shortcut]::after {
   content: attr(shortcut);
-  float: inline-end;
+  display: -moz-box;
   color: var(--panel-shortcut-color);
 }
 
@@ -1399,48 +1399,30 @@ panelview .toolbarbutton-1,
   content: url(chrome://global/skin/icons/menu-arrow.svg);
   fill: currentColor;
   fill-opacity: 0.6;
-  float: inline-end;
-  transform: translateY(1px);
+  display: -moz-box;
+}
+
+.widget-overflow-list .subviewbutton-nav:-moz-locale-dir(rtl)::after,
+.PanelUI-subView .subviewbutton-nav:-moz-locale-dir(rtl)::after {
+  scale: -1 1;
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
 .widget-overflow-list .subviewbutton-nav::after,
 .PanelUI-subView .subviewbutton-nav::after {
   content: url(chrome://browser/skin/customizableui/menu-arrow.svg);
+  translate: 0 1px;
 }
 } /* END not Proton */
 
 .PanelUI-subView .subviewbutton-nav-down::after {
-  transform: translateY(1px) rotate(90deg);
-}
-
-.widget-overflow-list .subviewbutton-nav:-moz-locale-dir(rtl)::after,
-.PanelUI-subView .subviewbutton-nav:-moz-locale-dir(rtl)::after {
-  transform: scaleX(-1) translateY(1px);
+  rotate: 90deg;
 }
 
 .subviewbutton[shortcut]::after,
 .widget-overflow-list .subviewbutton-nav::after,
 .PanelUI-subView .subviewbutton-nav::after {
   margin-inline-start: 10px;
-}
-
-.subviewbutton[type="highlight-bookmark"]::after {
-  content: url("chrome://browser/skin/bookmark-hollow.svg");
-}
-
-.subviewbutton[type="highlight-history"]::after {
-  content: url("chrome://browser/skin/history.svg");
-}
-
-.subviewbutton[type="highlight-bookmark"]::after,
-.subviewbutton[type="highlight-history"]::after {
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: 0.4;
-  float: inline-end;
-  /* Centers the icon and resizes it to 12px square. */
-  transform: translateY(2px) scale(.75);
 }
 
 .subviewbutton[checked="true"] {
@@ -1455,7 +1437,7 @@ panelview .toolbarbutton-1,
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
-  float: inline-end;
+  display: -moz-box;
   height: 12px;
   width: 12px;
 }
