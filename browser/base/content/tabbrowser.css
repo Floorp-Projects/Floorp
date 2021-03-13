@@ -38,7 +38,7 @@
 .tab-icon-overlay:is([soundplaying], [muted], [activemedia-blocked], [pictureinpicture], [crashed]) {
   display: revert;
 }
-} /* end proton */
+} /*** END proton ***/
 
 @supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 .tab-icon-sound:not([activemedia-blocked]) > .tab-icon-sound-blocked-label,
@@ -60,7 +60,7 @@
 .tab-icon-overlay[crashed] {
   display: -moz-box;
 }
-} /* end !proton */
+} /*** END !proton ***/
 
 .tab-label {
   white-space: nowrap;
