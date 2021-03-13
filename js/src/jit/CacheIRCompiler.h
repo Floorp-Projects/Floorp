@@ -766,7 +766,7 @@ class MOZ_RAII CacheIRCompiler {
     // (1) mitigations are enabled and (2) the object is used by other
     // instructions (if the object is *not* used by other instructions,
     // zeroing its register is pointless).
-    return JitOptions.spectreObjectMitigationsMisc &&
+    return JitOptions.spectreObjectMitigations &&
            !allocator.isDeadAfterInstruction(objId);
   }
 
