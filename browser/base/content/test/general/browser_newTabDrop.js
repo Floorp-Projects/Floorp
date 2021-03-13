@@ -193,8 +193,8 @@ async function drop(dragData, expectedURLs) {
 
   // Since synthesizeDrop triggers the srcElement, need to use another button
   // that should be visible.
-  let dragSrcElement = document.getElementById("sidebar-button");
-  ok(dragSrcElement, "Sidebar button exists");
+  let dragSrcElement = document.getElementById("back-button");
+  ok(dragSrcElement, "Back button exists");
   let newTabButton = document.getElementById(
     gBrowser.tabContainer.hasAttribute("overflow")
       ? "new-tab-button"

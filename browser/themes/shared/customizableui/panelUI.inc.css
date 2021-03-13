@@ -391,7 +391,7 @@ panelmultiview[transitioning] > .panel-viewcontainer > .panel-viewstack > panelv
 #confirmation-hint-checkmark-animation-container[animate] > #confirmation-hint-checkmark-image {
   display: block;
   position: absolute;
-  background-image: url(chrome://browser/skin/check-animation.svg);
+  background-image: url(chrome://browser/skin/success-animation.svg);
   background-repeat: no-repeat;
   min-width: 266px;
   max-width: 266px;
@@ -685,18 +685,20 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 @media (prefers-reduced-motion: no-preference) {
 #PanelUI-fxa-menu-syncnow-button[syncstatus="active"] > .toolbarbutton-icon,
 #PanelUI-remotetabs-syncnow[syncstatus="active"] > .toolbarbutton-icon,
-#PanelUI-appMenu-fxa-image-last-synced[syncstatus="active"] {
+.syncNowBtn[syncstatus="active"] {
   animation: syncRotate 0.8s linear infinite;
   -moz-context-properties: fill;
   fill: var(--toolbarbutton-icon-fill-attention);
+  visibility: visible;
 }
 }
 
-#PanelUI-appMenu-fxa-image-last-synced {
+.syncNowBtn {
   -moz-context-properties: fill;
-  fill: var(--panel-description-color);
-  height: 8px;
-  width: 8px;
+  fill: currentColor;
+  height: 16px;
+  width: 16px;
+  list-style-image: url("chrome://browser/skin/sync.svg");
 }
 
 #appMenu-fxa-status {
@@ -799,14 +801,13 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   }
 
   #fxa-manage-account-button > vbox > label,
-  #PanelUI-fxa-menu-syncnow-button > vbox > label,
-  #PanelUI-fxa-menu-syncnow-button > vbox > hbox > label {
+  #PanelUI-fxa-menu-syncnow-button > hbox > label {
     margin-inline-start: 0;
   }
 
-  #PanelUI-appMenu-fxa-image-last-synced {
-    height: 8px;
-    width: 8px;
+  .syncNowBtn {
+    visibility: collapse;
+    -moz-box-ordinal-group: 2;
   }
 
   .PanelUI-remotetabs-clientcontainer > label[itemtype="client"] {
@@ -1388,7 +1389,7 @@ panelview .toolbarbutton-1,
 
 .subviewbutton[shortcut]::after {
   content: attr(shortcut);
-  float: inline-end;
+  display: -moz-box;
   color: var(--panel-shortcut-color);
 }
 
@@ -1398,48 +1399,30 @@ panelview .toolbarbutton-1,
   content: url(chrome://global/skin/icons/menu-arrow.svg);
   fill: currentColor;
   fill-opacity: 0.6;
-  float: inline-end;
-  transform: translateY(1px);
+  display: -moz-box;
+}
+
+.widget-overflow-list .subviewbutton-nav:-moz-locale-dir(rtl)::after,
+.PanelUI-subView .subviewbutton-nav:-moz-locale-dir(rtl)::after {
+  scale: -1 1;
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
 .widget-overflow-list .subviewbutton-nav::after,
 .PanelUI-subView .subviewbutton-nav::after {
   content: url(chrome://browser/skin/customizableui/menu-arrow.svg);
+  translate: 0 1px;
 }
 } /* END not Proton */
 
 .PanelUI-subView .subviewbutton-nav-down::after {
-  transform: translateY(1px) rotate(90deg);
-}
-
-.widget-overflow-list .subviewbutton-nav:-moz-locale-dir(rtl)::after,
-.PanelUI-subView .subviewbutton-nav:-moz-locale-dir(rtl)::after {
-  transform: scaleX(-1) translateY(1px);
+  rotate: 90deg;
 }
 
 .subviewbutton[shortcut]::after,
 .widget-overflow-list .subviewbutton-nav::after,
 .PanelUI-subView .subviewbutton-nav::after {
   margin-inline-start: 10px;
-}
-
-.subviewbutton[type="highlight-bookmark"]::after {
-  content: url("chrome://browser/skin/bookmark-hollow.svg");
-}
-
-.subviewbutton[type="highlight-history"]::after {
-  content: url("chrome://browser/skin/history.svg");
-}
-
-.subviewbutton[type="highlight-bookmark"]::after,
-.subviewbutton[type="highlight-history"]::after {
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: 0.4;
-  float: inline-end;
-  /* Centers the icon and resizes it to 12px square. */
-  transform: translateY(2px) scale(.75);
 }
 
 .subviewbutton[checked="true"] {
@@ -1454,7 +1437,7 @@ panelview .toolbarbutton-1,
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
-  float: inline-end;
+  display: -moz-box;
   height: 12px;
   width: 12px;
 }
@@ -2093,59 +2076,6 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
   /* !important to override .cui-widget-panel .toolbarbutton-text
    * selector further down. */
   display: none !important;
-}
-
-.subviewbutton.download {
-  -moz-box-align: start;
-  min-height: 48px;
-  padding-inline-start: 8px;
-}
-
-.subviewbutton.download > .toolbarbutton-icon,
-.subviewbutton.download > .toolbarbutton-text > label {
-  margin: 4px 0 0;
-}
-
-.subviewbutton.download > .toolbarbutton-icon {
-  width: 32px;
-  height: 32px;
-}
-
-.subviewbutton.download > .toolbarbutton-text > .status-text {
-  color: var(--panel-description-color);
-  font-size: .9em;
-}
-
-.subviewbutton.download > .action-button {
-  appearance: none; /* To avoid native Windows hover styling */
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: 1;
-%ifdef XP_MACOSX
-  list-style-image: url("chrome://global/skin/icons/search-glass.svg");
-%else
-  list-style-image: url("chrome://browser/skin/folder.svg");
-%endif
-  /* Measurement to vertically center this button: 1 line of text minus half of 4px top margin. */
-  margin: calc(1em - 2px) 0 0;
-  padding: 4px;
-}
-
-.subviewbutton.download[canRetry] > .action-button {
-  list-style-image: url("chrome://browser/skin/reload.svg");
-}
-
-.subviewbutton.download:not([canShow], [canRetry]) > .action-button {
-  fill: currentColor;
-  fill-opacity: 0.4;
-}
-
-.subviewbutton.download:is([canShow],[canRetry]) > .action-button@buttonStateHoverOrFocus@ {
-  background-color: var(--arrowpanel-dimmed-further);
-}
-
-.subviewbutton.download:is([canShow],[canRetry]) > .action-button@buttonStateActive@ {
-  background-color: var(--arrowpanel-dimmed-even-further);
 }
 
 /* What's New panel */

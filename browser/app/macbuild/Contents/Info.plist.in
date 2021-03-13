@@ -243,7 +243,7 @@
   <key>NSSupportsAutomaticGraphicsSwitching</key>
   <true/>
   <key>NSRequiresAquaSystemAppearance</key>
-  <true/>
+  <false/>
   <key>NSPrincipalClass</key>
   <string>GeckoNSApplication</string>
 	<key>SMPrivilegedExecutables</key>

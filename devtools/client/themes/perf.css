@@ -155,7 +155,7 @@ a.perf-photon-button:focus {
 
 .perf-presets-hr {
   width: 100%;
-  border: 1px solid var(--grey-30);
+  border: 1px solid var(--theme-splitter-color);
   border-left: 0;
   border-right: 0;
   border-bottom: 0;

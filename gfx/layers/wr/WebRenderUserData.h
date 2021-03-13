@@ -195,6 +195,7 @@ class WebRenderFallbackData : public WebRenderUserData {
   WebRenderFallbackData* AsFallbackData() override { return this; }
   UserDataType GetType() override { return UserDataType::eFallback; }
   static UserDataType Type() { return UserDataType::eFallback; }
+  nsDisplayItemGeometry* GetGeometry() override { return mGeometry.get(); }
 
   void SetInvalid(bool aInvalid) { mInvalid = aInvalid; }
   bool IsInvalid() { return mInvalid; }

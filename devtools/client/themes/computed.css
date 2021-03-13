@@ -181,7 +181,7 @@
   padding: 2px;
   overflow-x: hidden;
   border-style: dotted;
-  border-color: rgba(128,128,128,0.4);
+  border-color: var(--theme-splitter-color);
   border-width: 1px 1px 0 1px;
 }
 

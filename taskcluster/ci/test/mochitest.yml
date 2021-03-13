@@ -63,11 +63,11 @@ mochitest-plain:
             default: ['fission']
     fission-run-on-projects:
         by-test-platform:
-            linux.*64-qr/debug: ['trunk']
-            linux.*64-shippable-qr/opt: ['mozilla-central']
+            (linux.*64|macosx.*64|windows10-64)-qr/debug: ['autoland', 'mozilla-central']
+            (linux.*64|macosx.*64|windows10-64)-qr/opt: ['autoland']
+            (linux.*64|macosx.*64|windows10-64)-shippable-qr/opt: ['autoland', 'mozilla-central']
             linux.*64-asan/opt: ['autoland', 'mozilla-central']
             linux.*64/debug: ['mozilla-central']
-            windows10-64-shippable-qr/opt: ['mozilla-central']
             default: []
     chunks:
         by-test-platform:

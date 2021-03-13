@@ -43,15 +43,29 @@ FrozenImage::GetFrameAtSize(const IntSize& aSize, uint32_t aWhichFrame,
   return InnerImage()->GetFrameAtSize(aSize, FRAME_FIRST, aFlags);
 }
 
+bool FrozenImage::IsNonAnimated() const {
+  // We usually don't create frozen images for non-animated images, but it might
+  // happen if we don't have enough data at the time of the creation to
+  // determine whether the image is actually animated.
+  bool animated = false;
+  return NS_SUCCEEDED(InnerImage()->GetAnimated(&animated)) && !animated;
+}
+
 NS_IMETHODIMP_(bool)
 FrozenImage::IsImageContainerAvailable(LayerManager* aManager,
                                        uint32_t aFlags) {
+  if (IsNonAnimated()) {
+    return InnerImage()->IsImageContainerAvailable(aManager, aFlags);
+  }
   return false;
 }
 
 NS_IMETHODIMP_(already_AddRefed<ImageContainer>)
 FrozenImage::GetImageContainer(layers::LayerManager* aManager,
                                uint32_t aFlags) {
+  if (IsNonAnimated()) {
+    return InnerImage()->GetImageContainer(aManager, aFlags);
+  }
   // XXX(seth): GetImageContainer does not currently support anything but the
   // current frame. We work around this by always returning null, but if it ever
   // turns out that FrozenImage is widely used on codepaths that can actually
@@ -64,6 +78,10 @@ NS_IMETHODIMP_(bool)
 FrozenImage::IsImageContainerAvailableAtSize(LayerManager* aManager,
                                              const IntSize& aSize,
                                              uint32_t aFlags) {
+  if (IsNonAnimated()) {
+    return InnerImage()->IsImageContainerAvailableAtSize(aManager, aSize,
+                                                         aFlags);
+  }
   return false;
 }
 
@@ -73,6 +91,11 @@ FrozenImage::GetImageContainerAtSize(layers::LayerManager* aManager,
                                      const Maybe<SVGImageContext>& aSVGContext,
                                      uint32_t aFlags,
                                      layers::ImageContainer** aOutContainer) {
+  if (IsNonAnimated()) {
+    return InnerImage()->GetImageContainerAtSize(aManager, aSize, aSVGContext,
+                                                 aFlags, aOutContainer);
+  }
+
   // XXX(seth): GetImageContainer does not currently support anything but the
   // current frame. We work around this by always returning null, but if it ever
   // turns out that FrozenImage is widely used on codepaths that can actually

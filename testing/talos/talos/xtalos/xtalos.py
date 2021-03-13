@@ -112,11 +112,11 @@ class XtalosOptions(argparse.ArgumentParser):
 
         self.add_argument(
             "-w",
-            "--whitelist-file",
-            dest="whitelist_file",
-            help="Name of whitelist file",
+            "--allowlist-file",
+            dest="allowlist_file",
+            help="Name of allowlist file",
         )
-        defaults["whitelist_file"] = None
+        defaults["allowlist_file"] = None
 
         self.add_argument(
             "-i",
