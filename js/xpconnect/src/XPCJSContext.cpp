@@ -836,10 +836,6 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
 
   bool offthreadIonCompilation =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "ion.offthread_compilation");
-  bool useBaselineEager = Preferences::GetBool(
-      JS_OPTIONS_DOT_STR "baselinejit.unsafe_eager_compilation");
-  bool useIonEager =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "ion.unsafe_eager_compilation");
 #ifdef DEBUG
   bool fullJitDebugChecks =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "jit.full_debug_checks");
@@ -896,9 +892,9 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
       cx, JSJITCOMPILER_BASELINE_INTERPRETER_WARMUP_TRIGGER,
       baselineInterpThreshold);
   JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_WARMUP_TRIGGER,
-                                useBaselineEager ? 0 : baselineThreshold);
+                                baselineThreshold);
   JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_ION_NORMAL_WARMUP_TRIGGER,
-                                useIonEager ? 0 : normalIonThreshold);
+                                normalIonThreshold);
   JS_SetGlobalJitCompilerOption(cx,
                                 JSJITCOMPILER_ION_FREQUENT_BAILOUT_THRESHOLD,
                                 ionFrequentBailoutThreshold);
