@@ -3961,7 +3961,7 @@ void LIRGenerator::visitGuardNoDenseElements(MGuardNoDenseElements* ins) {
 void LIRGenerator::visitGuardShape(MGuardShape* ins) {
   MOZ_ASSERT(ins->object()->type() == MIRType::Object);
 
-  if (JitOptions.spectreObjectMitigationsMisc) {
+  if (JitOptions.spectreObjectMitigations) {
     auto* lir =
         new (alloc()) LGuardShape(useRegisterAtStart(ins->object()), temp());
     assignSnapshot(lir, ins->bailoutKind());
