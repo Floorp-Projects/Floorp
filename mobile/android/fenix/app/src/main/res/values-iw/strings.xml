@@ -502,6 +502,8 @@
     <string name="preference_light_theme">בהיר</string>
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">כהה</string>
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">הוגדר על־ידי מצב חיסכון בסוללה</string>
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">שימוש בערכת הנושא של המכשיר</string>
 
@@ -623,6 +625,8 @@
     <string name="tab_tray_menu_item_close">סגירת כל הלשוניות</string>
     <!-- Shortcut action to open new tab -->
     <string name="tab_tray_menu_open_new_tab">לשונית חדשה</string>
+    <!-- Shortcut action to open the home screen -->
+    <string name="tab_tray_menu_home">הביתה</string>
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">החלפת מצב לשונית</string>
     <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
@@ -1480,6 +1484,8 @@
     <string name="preferences_passwords_saved_logins_username">שם משתמש</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">ססמה</string>
+    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
+    <string name="preferences_passwords_saved_logins_enter_pin">להכניס את הקוד שלך מחדש</string>
     <!-- Message displayed in security prompt to access saved logins -->
     <string name="preferences_passwords_saved_logins_enter_pin_description">יש לבטל את הנעילה כדי להציג את הכניסות השמורות שלך</string>
     <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
@@ -1518,12 +1524,18 @@
     <string name="logins_biometric_prompt_message">יש לבטל את הנעילה כדי להציג את הכניסות השמורות שלך</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">שמירה מאובטחת של הכניסות והססמאות שלך</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">ניתן להגדיר תבנית נעילת מכשיר, קוד או ססמה כדי להגן על פרטי הגישה והססמאות שלך מפני גורמים בלתי מהימנים שמחזיקים במכשיר שלך.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">מאוחר יותר</string>
 
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">להגדיר כעת</string>
     <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
     <string name="logins_biometric_prompt_message_pin">שחרור נעילת המכשיר שלך</string>
 
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">התמקדות על כל האתרים</string>
     <!-- Summary for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom_summary">יש להפעיל כדי לאפשר צביטה והתקרבות, אפילו באתרים שמונעים את תנועות האצבעות האלו.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
