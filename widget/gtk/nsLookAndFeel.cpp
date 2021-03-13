@@ -1315,7 +1315,7 @@ void nsLookAndFeel::EnsureInit() {
     mAccentColorForeground = mTextSelectedText;
     if (RelativeLuminanceUtils::Compute(mAccentColor) >
         RelativeLuminanceUtils::Compute(mAccentColorForeground)) {
-      std::exchange(mAccentColor, mAccentColorForeground);
+      std::swap(mAccentColor, mAccentColorForeground);
     }
   }
 
