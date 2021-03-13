@@ -46,13 +46,13 @@ toolkit.jar:
   skin/classic/global/icons/document.svg                   (../../shared/icons/document.svg)
   skin/classic/global/icons/edit.svg                       (../../shared/icons/edit.svg)
   skin/classic/global/icons/error.svg                      (../../shared/icons/error.svg)
+#ifndef XP_MACOSX
+  skin/classic/global/icons/find-file-in-folder.svg        (../../shared/icons/folder.svg)
+#else
+  skin/classic/global/icons/find-file-in-folder.svg        (../../shared/icons/search-glass.svg)
+#endif
   skin/classic/global/icons/find-previous-arrow.svg        (../../shared/icons/find-previous-arrow.svg)
   skin/classic/global/icons/find-next-arrow.svg            (../../shared/icons/find-next-arrow.svg)
-#ifndef XP_MACOSX
-  skin/classic/global/icons/findFile.svg                   (../../shared/icons/folder.svg)
-#else
-  skin/classic/global/icons/findFile.svg                   (../../shared/icons/magnifier.svg)
-#endif
   skin/classic/global/icons/heart.svg                      (../../shared/icons/heart.svg)
   skin/classic/global/icons/help.svg                       (../../shared/icons/help.svg)
   skin/classic/global/icons/info.svg                       (../../shared/icons/info.svg)
