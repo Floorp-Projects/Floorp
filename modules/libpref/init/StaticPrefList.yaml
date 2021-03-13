@@ -5312,73 +5312,6 @@
 # Prefs starting with "javascript."
 #---------------------------------------------------------------------------
 
-# The JavaScript JIT compilers. These are read once on startup so a browser may
-# need to be restarted if toggling them. In general each subsequent JIT depends
-# on the ones before it being enabled.
-- name: javascript.options.blinterp
-  type: bool
-  value: true
-  mirror: once
-
-- name: javascript.options.baselinejit
-  type: bool
-  value: true
-  mirror: once
-
-- name: javascript.options.ion
-  type: bool
-  value: true
-  mirror: once
-
-# The irregexp JIT for regex evaluation.
-- name: javascript.options.native_regexp
-  type: bool
-  value: true
-  mirror: once
-
-# "Warm-up" thresholds at which we attempt to compile a script/function with
-# the next JIT tier.
-#
-# NOTE: These must match JitOptions defaults.
-- name: javascript.options.blinterp.threshold
-  type: int32_t
-  value: 10
-  mirror: once
-
-- name: javascript.options.baselinejit.threshold
-  type: int32_t
-  value: 100
-  mirror: once
-
-- name: javascript.options.ion.threshold
-  type: int32_t
-  value: 1500
-  mirror: once
-
-# Enable off-main-thread Warp compilation.
-- name: javascript.options.ion.offthread_compilation
-  type: bool
-  value: true
-  mirror: once
-
-#ifdef DEBUG
-  # Enable extra correctness checks in the JITs that are slow and only available
-  # in debug builds.
--   name: javascript.options.jit.full_debug_checks
-    type: bool
-    value: false
-    mirror: once
-#endif
-
-# Heuristic threshold for Warp/Ion to decide that too many bailouts are
-# happening and an IonScript should be discarded.
-#
-# NOTE: This must match JitOptions defaults.
-- name: javascript.options.ion.frequent_bailout_threshold
-  type: int32_t
-  value: 10
-  mirror: once
-
 - name: javascript.options.compact_on_user_inactive
   type: bool
   value: true
@@ -5397,47 +5330,47 @@
 
 # Use better error message when accessing property of null or undefined.
 - name: javascript.options.property_error_message_fix
-  type: bool
+  type: RelaxedAtomicBool
   value: @IS_NIGHTLY_OR_DEV_EDITION@
   mirror: always
 
 # Support for weak references in JavaScript (WeakRef and FinalizationRegistry).
 - name: javascript.options.weakrefs
-  type: bool
+  type: RelaxedAtomicBool
   value: true
   mirror: always
 
 # Whether to expose the FinalizationRegistry.prototype.cleanupSome method.
 - name: javascript.options.experimental.weakrefs.expose_cleanupSome
-  type: bool
+  type: RelaxedAtomicBool
   value: false
   mirror: always
 
 #ifdef NIGHTLY_BUILD
   # Experimental support for Iterator Helpers in JavaScript.
--   name: javascript.options.experimental.iterator_helpers
-    type: bool
-    value: false
-    mirror: always
+- name: javascript.options.experimental.iterator_helpers
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
 
   # Experimental support for Private Fields in JavaScript.
--   name: javascript.options.experimental.private_fields
-    type: bool
-    value: false
-    mirror: always
+- name: javascript.options.experimental.private_fields
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
 
   # Experimental support for Private Methods in JavaScript.
--   name: javascript.options.experimental.private_methods
-    type: bool
-    value: false
-    mirror: always
+- name: javascript.options.experimental.private_methods
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
 
   # Experimental support for Top-level Await in JavaScript.
--   name: javascript.options.experimental.top_level_await
-    type: bool
-    value: false
-    mirror: always
-#endif  // NIGHTLY_BUILD
+- name: javascript.options.experimental.top_level_await
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+#endif
 
 # The amount of time we wait between a request to GC (due to leaving a page) and doing the actual GC, in ms.
 - name: javascript.options.gc_delay
@@ -5521,60 +5454,31 @@
   mirror: always
 
 #if defined(ENABLE_WASM_SIMD)
--   name: javascript.options.wasm_simd
-    type: bool
-    value: @IS_NIGHTLY_BUILD@
-    mirror: always
-#endif  // defined(ENABLE_WASM_SIMD)
-
-#if defined(ENABLE_WASM_SIMD_WORMHOLE) && defined(EARLY_BETA_OR_EARLIER)
-  # This is x64-only and it would break unified macOS builds if
-  # it were in all.js.  The feature rides the trains but not the
-  # pref to control it; in late beta and release, it is only
-  # available to privileged content.
--   name: javascript.options.wasm_simd_wormhole
-    type: bool
-    value: false
-    mirror: always
+- name: javascript.options.wasm_simd
+  type: bool
+  #if defined(NIGHTLY_BUILD)
+  value: true
+  #else
+  value: false
+  #endif
+  mirror: always
 #endif
 
-# Experimental support for ArrayBuffers larger than 2 GB.
-- name: javascript.options.large_arraybuffers
+#if defined(ENABLE_WASM_SIMD_WORMHOLE) && defined(EARLY_BETA_OR_EARLIER)
+# This is x64-only and it would break unified macOS builds if
+# it were in all.js.  The feature rides the trains but not the
+# pref to control it; in late beta and release, it is only
+# available to privileged content.
+- name: javascript.options.wasm_simd_wormhole
   type: bool
   value: false
-  mirror: once
+  mirror: always
+#endif
 
-#if !defined(JS_CODEGEN_MIPS32) && !defined(JS_CODEGEN_MIPS64)
-  # Spectre security vulnerability mitigations for the JS JITs.
-  #
-  # NOTE: The MIPS backends do not support these mitigations (and generally
-  #       do not need them). In that case, leave the pref unlisted with its
-  #       default value of false.
--   name: javascript.options.spectre.index_masking
-    type: bool
-    value: true
-    mirror: once
-
--   name: javascript.options.spectre.object_mitigations
-    type: bool
-    value: true
-    mirror: once
-
--   name: javascript.options.spectre.string_mitigations
-    type: bool
-    value: true
-    mirror: once
-
--   name: javascript.options.spectre.value_masking
-    type: bool
-    value: true
-    mirror: once
-
--   name: javascript.options.spectre.jit_to_cxx_calls
-    type: bool
-    value: true
-    mirror: once
-#endif  // !defined(JS_CODEGEN_MIPSXX)
+- name: javascript.options.large_arraybuffers
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
 
 #---------------------------------------------------------------------------
 # Prefs starting with "layers."

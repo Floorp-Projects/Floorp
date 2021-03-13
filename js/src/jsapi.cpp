@@ -5293,8 +5293,11 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
     case JSJITCOMPILER_SPECTRE_INDEX_MASKING:
       jit::JitOptions.spectreIndexMasking = !!value;
       break;
-    case JSJITCOMPILER_SPECTRE_OBJECT_MITIGATIONS:
-      jit::JitOptions.spectreObjectMitigations = !!value;
+    case JSJITCOMPILER_SPECTRE_OBJECT_MITIGATIONS_BARRIERS:
+      jit::JitOptions.spectreObjectMitigationsBarriers = !!value;
+      break;
+    case JSJITCOMPILER_SPECTRE_OBJECT_MITIGATIONS_MISC:
+      jit::JitOptions.spectreObjectMitigationsMisc = !!value;
       break;
     case JSJITCOMPILER_SPECTRE_STRING_MITIGATIONS:
       jit::JitOptions.spectreStringMitigations = !!value;

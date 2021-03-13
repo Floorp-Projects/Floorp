@@ -1090,6 +1090,17 @@ pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.coalesce_mouse_move",       true);
 
 pref("javascript.enabled",                  true);
+pref("javascript.options.blinterp",         true);
+// Duplicated in JitOptions - ensure both match.
+pref("javascript.options.blinterp.threshold", 10);
+pref("javascript.options.baselinejit",      true);
+// Duplicated in JitOptions - ensure both match.
+pref("javascript.options.baselinejit.threshold", 100);
+pref("javascript.options.ion",              true);
+// Duplicated in JitOptions - ensure both match.
+pref("javascript.options.ion.threshold",    1500);
+// Duplicated in JitOptions - ensure both match.
+pref("javascript.options.ion.frequent_bailout_threshold", 10);
 pref("javascript.options.asmjs",                  true);
 pref("javascript.options.wasm",                   true);
 pref("javascript.options.wasm_trustedprincipals", true);
@@ -1103,6 +1114,7 @@ pref("javascript.options.wasm_baselinejit",       true);
 #ifdef ENABLE_WASM_MULTI_VALUE
   pref("javascript.options.wasm_multi_value",     true);
 #endif
+pref("javascript.options.native_regexp",    true);
 pref("javascript.options.parallel_parsing", true);
 pref("javascript.options.source_pragmas",    true);
 
@@ -1112,6 +1124,10 @@ pref("javascript.options.asyncstack", true);
 pref("javascript.options.asyncstack_capture_debuggee_only", true);
 
 pref("javascript.options.throw_on_asmjs_validation_failure", false);
+pref("javascript.options.ion.offthread_compilation", true);
+#ifdef DEBUG
+  pref("javascript.options.jit.full_debug_checks", false);
+#endif
 // This preference instructs the JS engine to discard the
 // source of any privileged JS after compilation. This saves
 // memory, but makes things like Function.prototype.toSource()
@@ -1192,6 +1208,23 @@ pref("javascript.options.shared_memory", true);
 
 pref("javascript.options.throw_on_debuggee_would_run", false);
 pref("javascript.options.dump_stack_on_debuggee_would_run", false);
+
+// Spectre security vulnerability mitigations.
+#if defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+  pref("javascript.options.spectre.index_masking", false);
+  pref("javascript.options.spectre.object_mitigations.barriers", false);
+  pref("javascript.options.spectre.object_mitigations.misc", false);
+  pref("javascript.options.spectre.string_mitigations", false);
+  pref("javascript.options.spectre.value_masking", false);
+  pref("javascript.options.spectre.jit_to_C++_calls", false);
+#else
+  pref("javascript.options.spectre.index_masking", true);
+  pref("javascript.options.spectre.object_mitigations.barriers", true);
+  pref("javascript.options.spectre.object_mitigations.misc", true);
+  pref("javascript.options.spectre.string_mitigations", true);
+  pref("javascript.options.spectre.value_masking", true);
+  pref("javascript.options.spectre.jit_to_C++_calls", true);
+#endif
 
 // Dynamic module import.
 pref("javascript.options.dynamicImport", true);

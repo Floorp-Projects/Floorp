@@ -2640,10 +2640,11 @@ extern JS_PUBLIC_API void JS_SetOffthreadIonCompilationEnabled(JSContext* cx,
   Register(NATIVE_REGEXP_ENABLE, "native_regexp.enable") \
   Register(SIMULATOR_ALWAYS_INTERRUPT, "simulator.always-interrupt")      \
   Register(SPECTRE_INDEX_MASKING, "spectre.index-masking") \
-  Register(SPECTRE_OBJECT_MITIGATIONS, "spectre.object-mitigations") \
+  Register(SPECTRE_OBJECT_MITIGATIONS_BARRIERS, "spectre.object-mitigations.barriers") \
+  Register(SPECTRE_OBJECT_MITIGATIONS_MISC, "spectre.object-mitigations.misc") \
   Register(SPECTRE_STRING_MITIGATIONS, "spectre.string-mitigations") \
   Register(SPECTRE_VALUE_MASKING, "spectre.value-masking") \
-  Register(SPECTRE_JIT_TO_CXX_CALLS, "spectre.jit-to-cxx-calls") \
+  Register(SPECTRE_JIT_TO_CXX_CALLS, "spectre.jit-to-C++-calls") \
   Register(WASM_FOLD_OFFSETS, "wasm.fold-offsets") \
   Register(WASM_DELAY_TIER2, "wasm.delay-tier2") \
   Register(WASM_JIT_BASELINE, "wasm.baseline") \
