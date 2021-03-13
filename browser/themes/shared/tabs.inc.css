@@ -208,39 +208,40 @@
 }
 
 @supports not -moz-bool-pref("browser.proton.tabs.enabled") {
-.tab-throbber,
-.tab-icon-pending,
-.tab-icon-image,
+.tab-icon-stack,
 .tab-icon-sound,
-.tab-sharing-icon-overlay,
 .tab-close-button {
   margin-top: 1px;
 }
 } /*** END !proton ***/
 
-.tab-throbber,
+/* Width/height & margins apply on tab icon stack children */
 .tab-throbber-tabslist,
+.tab-throbber,
 .tab-icon-pending,
 .tab-icon-image,
-.tab-sharing-icon-overlay {
+.tab-sharing-icon-overlay,
+.tab-icon-overlay {
   height: 16px;
   width: 16px;
 }
 
 @supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 .tab-throbber:not([pinned]),
-.tab-sharing-icon-overlay:not([pinned]),
 .tab-icon-pending:not([pinned]),
-.tab-icon-image:not([pinned]) {
+.tab-icon-image:not([pinned]),
+.tab-sharing-icon-overlay:not([pinned]),
+.tab-icon-overlay:not([pinned], [sharing]) {
   margin-inline-end: 6px;
 }
 } /*** END !proton ***/
 
 @supports -moz-bool-pref("browser.proton.tabs.enabled") {
 .tab-throbber:not([pinned]),
-.tab-sharing-icon-overlay:not([pinned]),
 .tab-icon-pending:not([pinned]),
-.tab-icon-image:not([pinned]) {
+.tab-icon-image:not([pinned]),
+.tab-sharing-icon-overlay:not([pinned]),
+.tab-icon-overlay:not([pinned]) {
   margin-inline-end: 5.5px;
 }
 } /*** END proton ***/
@@ -345,15 +346,9 @@
 }
 
 .tab-sharing-icon-overlay {
-  /* 16px of the icon + 6px of margin-inline-end of .tab-icon-image */
-  margin-inline-start: -22px;
   position: relative;
   -moz-context-properties: fill;
   fill: rgb(224, 41, 29);
-}
-
-.tab-sharing-icon-overlay[pinned] {
-  margin-inline-start: -16px;
 }
 
 .tab-sharing-icon-overlay[sharing="camera"] {
@@ -371,44 +366,92 @@
 .tab-icon-overlay {
   width: 16px;
   height: 16px;
-  margin-top: -8px;
-  margin-inline: -15px -1px;
   position: relative;
 }
 
-.tab-icon-overlay[pinned] {
-  margin-inline: -6px -10px;
+.tab-icon-overlay:not([crashed]):is([pinned], [sharing]) {
+  top: -4.5px;
+  inset-inline-end: -9px;
+  z-index: 1; /* Overlay tab title */
 }
 
-.tab-icon-overlay[crashed] {
-  list-style-image: url("chrome://browser/skin/tabbrowser/crashed.svg");
+@supports -moz-bool-pref("browser.proton.tabs.enabled") and
+          (not -moz-bool-pref("browser.proton.tabs.audio-tab-area")) and
+          (not -moz-bool-pref("browser.proton.tabs.audio-tab")) {
+#navigator-toolbox:not(:hover) .tab-icon-overlay:not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]),
+#navigator-toolbox:hover .tab-icon-stack:not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]) > :not(.tab-icon-overlay) {
+  opacity: 0;
 }
+} /*** END proton ***/
 
-.tab-icon-overlay[soundplaying],
+
+@supports -moz-bool-pref("browser.proton.tabs.enabled") and
+          -moz-bool-pref("browser.proton.tabs.audio-tab-area") and
+          (not -moz-bool-pref("browser.proton.tabs.audio-tab")) {
+#TabsToolbar:not(:hover) .tab-icon-overlay:not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]),
+#TabsToolbar:hover .tab-icon-stack:not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]) > :not(.tab-icon-overlay) {
+  opacity: 0;
+}
+} /*** END proton ***/
+
+@supports -moz-bool-pref("browser.proton.tabs.enabled") and
+          (not -moz-bool-pref("browser.proton.tabs.audio-tab-area")) and
+          -moz-bool-pref("browser.proton.tabs.audio-tab") {
+.tabbrowser-tab:not(:hover) .tab-icon-overlay:not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]),
+.tabbrowser-tab:hover .tab-icon-stack:not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]) > :not(.tab-icon-overlay) {
+  opacity: 0;
+}
+} /*** END proton ***/
+
+.tab-icon-overlay[soundplaying]:not([crashed]),
 .tab-icon-overlay[muted]:not([crashed]),
 .tab-icon-overlay[activemedia-blocked]:not([crashed]) {
   border-radius: 10px;
-  -moz-context-properties: fill;
+  -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
 }
 
-.tab-icon-overlay[soundplaying]:hover,
-.tab-icon-overlay[muted]:not([crashed]):hover,
-.tab-icon-overlay[activemedia-blocked]:not([crashed]):hover {
+.tab-icon-overlay:is([pinned], [sharing]):not([crashed])[soundplaying]:hover,
+.tab-icon-overlay:is([pinned], [sharing]):not([crashed])[muted]:hover,
+.tab-icon-overlay:is([pinned], [sharing]):not([crashed])[activemedia-blocked]:hover {
   background-color: white;
   color: black;
 }
+
+@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+.tab-icon-overlay:not([pinned], [sharing], [crashed])[soundplaying],
+.tab-icon-overlay:not([pinned], [sharing], [crashed])[muted],
+.tab-icon-overlay:not([pinned], [sharing], [crashed])[activemedia-blocked] {
+  border-radius: 2px;
+  fill-opacity: 0.75;
+}
+.tab-icon-overlay:not([pinned], [sharing], [crashed])[soundplaying]:hover,
+.tab-icon-overlay:not([pinned], [sharing], [crashed])[muted]:hover,
+.tab-icon-overlay:not([pinned], [sharing], [crashed])[activemedia-blocked]:hover {
+  background-color: color-mix(in srgb, currentColor 15%, transparent);
+  fill-opacity: 0.95;
+}
+.tab-icon-overlay:not([pinned], [sharing], [crashed])[soundplaying]:hover:active,
+.tab-icon-overlay:not([pinned], [sharing], [crashed])[muted]:hover:active,
+.tab-icon-overlay:not([pinned], [sharing], [crashed])[activemedia-blocked]:hover:active {
+  background-color: color-mix(in srgb, currentColor 30%, transparent);
+}
+} /*** END proton ***/
 
 .tab-icon-overlay[soundplaying] {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-playing-small.svg");
 }
 
-.tab-icon-overlay[muted]:not([crashed]) {
+.tab-icon-overlay[muted] {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-muted-small.svg");
 }
 
-.tab-icon-overlay[activemedia-blocked]:not([crashed]) {
+.tab-icon-overlay[activemedia-blocked] {
   list-style-image: url("chrome://browser/skin/tabbrowser/tab-audio-blocked-small.svg");
+}
+
+.tab-icon-overlay[crashed] {
+  list-style-image: url("chrome://browser/skin/tabbrowser/crashed.svg");
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -512,27 +555,16 @@
   display: none;
 }
 
-.tab-icon-sound {
-  -moz-box-align: center;
+.tab-secondary-label {
   font-size: .75em;
+  opacity: .8;
 }
 
-.tab-icon-sound-image,
 .tab-icon-sound-label {
   /* Set height back to equivalent of parent's 1em based
      on the .tab-icon-sound having a reduced font-size */
   height: 1.3333em;
-}
-
-.tab-icon-sound-image {
-  padding: 0;
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
-
-.tab-icon-sound-label {
   margin: 0;
-  padding-inline-start: 3px;
 }
 } /*** END proton ***/
 
@@ -546,19 +578,6 @@
 .tab-icon-sound[muted] {
   list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-muted.svg);
 }
-} /*** END !proton ***/
-
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
-.tab-icon-sound[soundplaying],
-.tab-icon-sound[muted],
-.tab-icon-sound[activemedia-blocked] {
-  list-style-image: url(chrome://browser/skin/tabbrowser/proton-tab-audio-playing.svg);
-}
-
-.tab-icon-sound[muted] {
-  list-style-image: url(chrome://browser/skin/tabbrowser/proton-tab-audio-muted.svg);
-}
-} /*** END proton ***/
 
 .tab-icon-sound[activemedia-blocked] {
   list-style-image: url(chrome://browser/skin/tabbrowser/tab-audio-blocked.svg);
@@ -588,8 +607,6 @@
 :root[lwtheme-image] .tab-icon-sound:-moz-lwtheme-brighttext[activemedia-blocked] {
   filter: drop-shadow(1px 1px 1px black);
 }
-
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 .tab-icon-sound[soundplaying]:not(:hover),
 .tab-icon-sound[muted]:not(:hover),
 .tab-icon-sound[activemedia-blocked]:not(:hover) {
@@ -604,12 +621,7 @@
 } /*** END !proton ***/
 
 @supports -moz-bool-pref("browser.proton.tabs.enabled") {
-.tab-icon-sound:is([soundplaying], [muted], [activemedia-blocked], [pictureinpicture]) > .tab-icon-sound-image:not(:hover),
-.tab-icon-sound:is([soundplaying], [muted], [activemedia-blocked], [pictureinpicture]) > .tab-icon-sound-label:not(:hover) {
-  opacity: .8;
-}
-
-.tab-icon-sound[soundplaying-scheduledremoval]:not([muted]) > .tab-icon-sound-image:not(:hover),
+.tab-secondary-label[soundplaying-scheduledremoval]:not([muted]):not(:hover),
 .tab-icon-overlay[soundplaying-scheduledremoval]:not([muted], :hover) {
   transition: opacity .3s linear var(--soundplaying-removal-delay);
   opacity: 0;

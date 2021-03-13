@@ -232,8 +232,6 @@
   skin/classic/browser/tabbrowser/loading.svg                  (../shared/tabbrowser/loading.svg)
   skin/classic/browser/tabbrowser/loading-burst.svg            (../shared/tabbrowser/loading-burst.svg)
   skin/classic/browser/tabbrowser/pendingpaint.png             (../shared/tabbrowser/pendingpaint.png)
-  skin/classic/browser/tabbrowser/proton-tab-audio-playing.svg (../shared/tabbrowser/proton-tab-audio-playing.svg)
-  skin/classic/browser/tabbrowser/proton-tab-audio-muted.svg   (../shared/tabbrowser/proton-tab-audio-muted.svg)
   skin/classic/browser/tabbrowser/tab-audio-playing.svg        (../shared/tabbrowser/tab-audio-playing.svg)
   skin/classic/browser/tabbrowser/tab-audio-playing-small.svg  (../shared/tabbrowser/tab-audio-playing-small.svg)
   skin/classic/browser/tabbrowser/tab-audio-muted.svg          (../shared/tabbrowser/tab-audio-muted.svg)
