@@ -1202,7 +1202,7 @@ var snapshotFormatters = {
 
     const iconUp = "chrome://global/skin/icons/arrow-up-12.svg";
     const iconDown = "chrome://global/skin/icons/arrow-dropdown-12.svg";
-    const iconFolder = "chrome://global/skin/icons/findFile.svg";
+    const iconFolder = "chrome://global/skin/icons/find-file-in-folder.svg";
     const iconUnsigned =
       "chrome://global/skin/icons/connection-mixed-active-loaded.svg";
     const outerTHead = $("third-party-modules-thead");
