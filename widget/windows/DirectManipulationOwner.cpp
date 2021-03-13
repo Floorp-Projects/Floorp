@@ -220,7 +220,11 @@ void DManipEventHandler::TransitionToState(State aNewState) {
       MOZ_ASSERT(aNewState == State::eNone);
       // ePinching -> eNone: PinchEnd. ePinching should only transition to
       // eNone.
-      SendPinch(Phase::eEnd, 0.f);
+      // Only send a pinch end if we sent a pinch start.
+      if (!mShouldSendPinchStart) {
+        SendPinch(Phase::eEnd, 0.f);
+      }
+      mShouldSendPinchStart = false;
       break;
     }
     case State::eNone: {
@@ -325,10 +329,11 @@ DManipEventHandler::OnContentUpdated(IDirectManipulationViewport* viewport,
   } else if (mState == State::ePinching) {
     if (mShouldSendPinchStart) {
       updateLastScale = SendPinch(Phase::eStart, scale);
-      // If we get here our current scale is not fuzzy equal to the previous
-      // scale, so SendPinch should return true.
-      MOZ_ASSERT(updateLastScale);
-      mShouldSendPinchStart = false;
+      // Only clear mShouldSendPinchStart if we actually sent the event
+      // (updateLastScale tells us if we sent an event).
+      if (updateLastScale) {
+        mShouldSendPinchStart = false;
+      }
     } else {
       updateLastScale = SendPinch(Phase::eMiddle, scale);
     }
