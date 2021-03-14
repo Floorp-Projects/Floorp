@@ -171,7 +171,7 @@ function checkInvalidWhenValueMissing(element)
   select.add(option, null);
   select.add(new Option("bar"), null);
   option.selected = true;
-  checkSufferingFromBeingMissing(select);
+  checkNotSufferingFromBeingMissing(select);
 
   select.remove(0);
   select.remove(0);
