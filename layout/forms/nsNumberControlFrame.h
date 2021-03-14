@@ -104,7 +104,6 @@ class nsNumberControlFrame final : public nsTextControlFrame {
  private:
   // See nsNumberControlFrame::CreateAnonymousContent for a description of
   // these.
-  nsCOMPtr<Element> mOuterWrapper;
   nsCOMPtr<Element> mSpinBox;
   nsCOMPtr<Element> mSpinUp;
   nsCOMPtr<Element> mSpinDown;
