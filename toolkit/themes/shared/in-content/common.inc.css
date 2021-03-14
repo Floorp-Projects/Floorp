@@ -711,11 +711,11 @@ xul|*.radio-check[selected] {
 }
 
 html|input[type="radio"]:checked {
-  background-image: url("chrome://global/skin/in-content/radio.svg");
+  background-image: url("chrome://global/skin/icons/radio.svg");
 }
 
 xul|*.radio-check[selected] {
-  list-style-image: url("chrome://global/skin/in-content/radio.svg");
+  list-style-image: url("chrome://global/skin/icons/radio.svg");
 }
 
 html|input[type="radio"]:enabled:checked:hover,
@@ -1018,7 +1018,7 @@ xul|treecolpicker {
 }
 
 xul|treecol[sortDirection]:not([hideheader="true"]) > xul|*.treecol-sortdirection {
-  list-style-image: url("chrome://global/skin/in-content/dropdown.svg");
+  list-style-image: url("chrome://global/skin/icons/sort-arrow.svg");
   -moz-context-properties: fill;
   fill: currentColor;
   width: 18px;
