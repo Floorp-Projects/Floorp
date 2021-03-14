@@ -337,37 +337,8 @@ function testValidateExnPayload() {
   wasmInvalid(invalid1, /event index out of range/);
 }
 
-// Exception types with reference types are not supported yet.
-function testValidateExnWithRef() {
-  invalid0 = `(module
-                (event $exn (param externref))
-                (func try nop catch $exn drop end))`;
-  error0 = /exception with reference types not supported/;
-
-  invalid1 = `(module
-                (event $exn (param externref))
-                (func (param externref) (local.get 0) (throw $exn)))`;
-  error1 = /exception with reference types not supported/;
-
-  invalid2 = `(module
-                (event $exn (param funcref))
-                (func try nop catch $exn drop end))`;
-  error2 = /exception with reference types not supported/;
-
-  invalid3 = `(module
-                (event $exn (param funcref))
-                (func (param funcref) (local.get 0) (throw $exn)))`;
-  error3 = /exception with reference types not supported/;
-
-  wasmFailValidateText(invalid0, error0);
-  wasmFailValidateText(invalid1, error1);
-  wasmFailValidateText(invalid2, error2);
-  wasmFailValidateText(invalid3, error3);
-}
-
 testValidateDecode();
 testValidateThrow();
 testValidateTryCatch();
 testValidateCatch();
 testValidateExnPayload();
-testValidateExnWithRef();
