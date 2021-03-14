@@ -1495,10 +1495,6 @@ bool HTMLSelectElement::IsValueMissing() const {
       continue;
     }
 
-    if (IsOptionDisabled(option)) {
-      continue;
-    }
-
     return false;
   }
 
