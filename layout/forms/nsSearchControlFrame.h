@@ -63,7 +63,6 @@ class nsSearchControlFrame final : public nsTextControlFrame {
 
  private:
   // See nsSearchControlFrame::CreateAnonymousContent of a description of these
-  RefPtr<Element> mOuterWrapper;
   RefPtr<Element> mClearButton;
 };
 
