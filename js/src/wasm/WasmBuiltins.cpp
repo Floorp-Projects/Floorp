@@ -236,6 +236,12 @@ const SymbolicAddressSignature SASigGetLocalExceptionIndex = {
     _Infallible,
     2,
     {_PTR, _RoN, _END}};
+const SymbolicAddressSignature SASigPushRefIntoExn = {
+    SymbolicAddress::PushRefIntoExn,
+    _I32,
+    _FailOnNegI32,
+    3,
+    {_PTR, _RoN, _RoN, _END}};
 #endif
 const SymbolicAddressSignature SASigArrayNew = {SymbolicAddress::ArrayNew,
                                                 _RoN,
@@ -1231,6 +1237,11 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
                                      {ArgType_General, ArgType_General});
       MOZ_ASSERT(*abiType == ToABIType(SASigGetLocalExceptionIndex));
       return FuncCast(Instance::getLocalExceptionIndex, *abiType);
+    case SymbolicAddress::PushRefIntoExn:
+      *abiType = MakeABIFunctionType(
+          ArgType_Int32, {ArgType_General, ArgType_General, ArgType_General});
+      MOZ_ASSERT(*abiType == ToABIType(SASigPushRefIntoExn));
+      return FuncCast(Instance::pushRefIntoExn, *abiType);
 #endif
 
 #if defined(JS_CODEGEN_MIPS32)
@@ -1352,6 +1363,7 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::ExceptionNew:
     case SymbolicAddress::ThrowException:
     case SymbolicAddress::GetLocalExceptionIndex:
+    case SymbolicAddress::PushRefIntoExn:
 #endif
     case SymbolicAddress::ArrayNew:
     case SymbolicAddress::RefTest:

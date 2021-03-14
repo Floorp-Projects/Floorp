@@ -225,6 +225,8 @@ class Instance {
                             uint32_t nbytes);
   static void* throwException(Instance* instance, JSObject* exn);
   static uint32_t getLocalExceptionIndex(Instance* instance, JSObject* exn);
+  static int32_t pushRefIntoExn(Instance* instance, JSObject* exn,
+                                JSObject* ref);
 #endif
   static void* arrayNew(Instance* instance, uint32_t length, void* arrayDescr);
   static int32_t refTest(Instance* instance, void* refPtr, void* rttPtr);

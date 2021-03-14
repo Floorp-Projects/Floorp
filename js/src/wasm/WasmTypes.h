@@ -3615,6 +3615,7 @@ enum class SymbolicAddress {
   ExceptionNew,
   ThrowException,
   GetLocalExceptionIndex,
+  PushRefIntoExn,
 #endif
   ArrayNew,
   InlineTypedObjectClass,

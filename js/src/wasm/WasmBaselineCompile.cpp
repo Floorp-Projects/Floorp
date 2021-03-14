@@ -10632,6 +10632,13 @@ bool BaseCompiler::emitCatch() {
   // Extract the arguments in the exception package and push them.
   const ResultType params = moduleEnv_.events[eventIndex].resultType();
 
+  uint32_t refCount = 0;
+  for (uint32_t i = 0; i < params.length(); i++) {
+    if (params[i].isReference()) {
+      refCount++;
+    }
+  }
+
   const uint32_t dataOffset =
       NativeObject::getFixedSlotOffset(ArrayBufferObject::DATA_SLOT);
 
@@ -10639,57 +10646,92 @@ bool BaseCompiler::emitCatch() {
   // is live in this register.
   RegRef exn = RegRef(WasmExceptionReg);
   needRef(exn);
-  RegRef scratch = needRef();
+  RegRef values = needRef();
+  RegRef refs = needRef();
 
   masm.unboxObject(Address(exn, WasmRuntimeExceptionObject::offsetOfValues()),
-                   scratch);
+                   values);
+  masm.unboxObject(Address(exn, WasmRuntimeExceptionObject::offsetOfRefs()),
+                   refs);
+
+#  ifdef DEBUG
+  Label ok;
+  RegI32 scratch = needI32();
+  masm.load32(Address(refs, NativeObject::offsetOfFixedElements() +
+                                ObjectElements::offsetOfLength()),
+              scratch);
+  masm.branch32(Assembler::Equal, scratch, Imm32(refCount), &ok);
+  masm.assumeUnreachable("Array length should be equal to exn ref count.");
+  masm.bind(&ok);
+  freeI32(scratch);
+#  endif
+  masm.loadPtr(Address(refs, NativeObject::offsetOfElements()), refs);
+
   freeRef(exn);
 
-  masm.loadPtr(Address(scratch, dataOffset), scratch);
+  masm.loadPtr(Address(values, dataOffset), values);
   size_t argOffset = 0;
+  // The ref values have been pushed into the ArrayObject in a stacklike
+  // fashion so we need to load them starting from the last element.
+  int32_t refIndex = refCount - 1;
   for (uint32_t i = 0; i < params.length(); i++) {
     switch (params[i].kind()) {
       case ValType::I32: {
         RegI32 reg = needI32();
-        masm.load32(Address(scratch, argOffset), reg);
+        masm.load32(Address(values, argOffset), reg);
         pushI32(reg);
         break;
       }
       case ValType::I64: {
         RegI64 reg = needI64();
-        masm.load64(Address(scratch, argOffset), reg);
+        masm.load64(Address(values, argOffset), reg);
         pushI64(reg);
         break;
       }
       case ValType::F32: {
         RegF32 reg = needF32();
-        masm.loadFloat32(Address(scratch, argOffset), reg);
+        masm.loadFloat32(Address(values, argOffset), reg);
         pushF32(reg);
         break;
       }
       case ValType::F64: {
         RegF64 reg = needF64();
-        masm.loadDouble(Address(scratch, argOffset), reg);
+        masm.loadDouble(Address(values, argOffset), reg);
         pushF64(reg);
         break;
       }
       case ValType::V128: {
 #  ifdef ENABLE_WASM_SIMD
         RegV128 reg = needV128();
-        masm.loadUnalignedSimd128(Address(scratch, argOffset), reg);
+        masm.loadUnalignedSimd128(Address(values, argOffset), reg);
         pushV128(reg);
         break;
 #  else
         MOZ_CRASH("No SIMD support");
 #  endif
       }
-      case ValType::Ref:
       case ValType::Rtt:
-        MOZ_CRASH("NYI - no reftype support");
+      case ValType::Ref: {
+        // TODO/AnyRef-boxing: With boxed immediates and strings, this may need
+        // to handle other kinds of values.
+        ASSERT_ANYREF_IS_JSOBJECT;
+
+        RegRef reg = needRef();
+        NativeObject::elementsSizeMustNotOverflow();
+        uint32_t offset = refIndex * sizeof(Value);
+        masm.unboxObjectOrNull(Address(refs, offset), reg);
+        pushRef(reg);
+        refIndex--;
+        break;
+      }
     }
-    argOffset += SizeOf(params[i]);
+    if (!params[i].isReference()) {
+      argOffset += SizeOf(params[i]);
+    }
   }
-  freeRef(scratch);
+  MOZ_ASSERT(refIndex == -1);
+  freeRef(values);
+  freeRef(refs);
 
   return true;
 }
@@ -10805,7 +10847,9 @@ bool BaseCompiler::emitThrow() {
   // Measure space we need for all the args to put in the exception.
   uint32_t exnBytes = 0;
   for (size_t i = 0; i < params.length(); i++) {
-    exnBytes += SizeOf(params[i]);
+    if (!params[i].isReference()) {
+      exnBytes += SizeOf(params[i]);
+    }
   }
 
   // Create the new exception object that we will throw.
@@ -10821,13 +10865,15 @@ bool BaseCompiler::emitThrow() {
   const uint32_t dataOffset =
       NativeObject::getFixedSlotOffset(ArrayBufferObject::DATA_SLOT);
 
-  masm.unboxObject(Address(exn, WasmRuntimeExceptionObject::offsetOfValues()),
-                   scratch);
+  Address exnValuesAddress(exn, WasmRuntimeExceptionObject::offsetOfValues());
+  masm.unboxObject(exnValuesAddress, scratch);
   masm.loadPtr(Address(scratch, dataOffset), scratch);
 
   size_t argOffset = exnBytes;
   for (int32_t i = params.length() - 1; i >= 0; i--) {
-    argOffset -= SizeOf(params[i]);
+    if (!params[i].isReference()) {
+      argOffset -= SizeOf(params[i]);
+    }
     switch (params[i].kind()) {
       case ValType::I32: {
         RegI32 reg = popI32();
@@ -10863,11 +10909,37 @@ bool BaseCompiler::emitThrow() {
         MOZ_CRASH("No SIMD support");
 #  endif
       }
-      case ValType::Ref:
       case ValType::Rtt:
-        MOZ_CRASH("NYI - no reftype support");
+      case ValType::Ref: {
+        RegRef refArg = popRef();
+
+        // Keep exn on the stack to preserve it across the call.
+        RegRef tmp = needRef();
+        moveRef(exn, tmp);
+        pushRef(tmp);
+
+        // Arguments to the instance call start here.
+        pushRef(exn);
+        pushRef(refArg);
+
+        if (!emitInstanceCall(lineOrBytecode, SASigPushRefIntoExn)) {
+          return false;
+        }
+
+        // The call result is checked by the instance call failure handling,
+        // so we do not need to use the result here.
+        freeI32(popI32());
+
+        exn = popRef();
+
+        // Restore scratch register contents that got clobbered.
+        masm.unboxObject(exnValuesAddress, scratch);
+        masm.loadPtr(Address(scratch, dataOffset), scratch);
+        break;
+      }
     }
   }
+  MOZ_ASSERT(argOffset == 0);
   freeRef(scratch);
 
   return throwFrom(exn, lineOrBytecode);
