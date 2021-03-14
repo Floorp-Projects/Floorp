@@ -21,7 +21,6 @@
   --in-content-item-hover: rgba(69, 161, 255, 0.2); /* blue 40 a20 */
   --in-content-item-selected: #0a84ff;
   --in-content-border-highlight: #0a84ff;
-  --in-content-border-focus: #0a84ff;
   --in-content-border-hover: var(--grey-90-a50);
   --in-content-border-active: var(--blue-50);
   --in-content-border-active-shadow: var(--blue-50-a30);

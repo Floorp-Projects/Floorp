@@ -713,7 +713,10 @@ add_task(async function test_combined_name_fields() {
     let borderColor = "rgb(0, 255, 0)";
     let borderColorFocused = "rgb(0, 0, 255)";
     doc.body.style.setProperty("--in-content-box-border-color", borderColor);
-    doc.body.style.setProperty("--in-content-border-focus", borderColorFocused);
+    doc.body.style.setProperty(
+      "--in-content-border-active",
+      borderColorFocused
+    );
 
     givenNameField.focus();
     checkNameFieldBorders(borderColor, borderColorFocused);
