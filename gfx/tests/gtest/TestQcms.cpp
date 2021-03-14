@@ -194,8 +194,6 @@ class GfxQcms_ProfilePairBase : public ::testing::Test {
         mStorageType(QCMS_DATA_RGB_8),
         mPrecache(false) {}
 
-  void TransformPrecache();
-
   void SetUp() override {
     // XXX: This means that we can't have qcms v2 unit test
     //      without changing the qcms API.
@@ -333,19 +331,6 @@ class GfxQcms_ProfilePairBase : public ::testing::Test {
   bool mPrecache;
 };
 
-void GfxQcms_ProfilePairBase::TransformPrecache() {
-  // Produce reference using interpolation and the lookup tables.
-  ASSERT_FALSE(mPrecache);
-  ASSERT_TRUE(SetBuffers(QCMS_DATA_RGB_8));
-  ASSERT_TRUE(SetTransform(QCMS_DATA_RGB_8));
-  ProduceRef(qcms_transform_data_rgb_out_lut);
-
-  // Produce output using lut and precaching.
-  PrecacheOutput();
-  ASSERT_TRUE(SetTransform(QCMS_DATA_RGB_8));
-  EXPECT_TRUE(ProduceVerifyOutput(qcms_transform_data_rgb_out_lut_precache));
-}
-
 class GfxQcms_sRGB_To_sRGB : public GfxQcms_ProfilePairBase {
  protected:
   void SetUp() override {
@@ -372,12 +357,6 @@ class GfxQcms_sRGB_To_ThinkpadW540 : public GfxQcms_ProfilePairBase {
     mOutProfile = qcms_profile_from_path("lcms_thinkpad_w540.icc");
   }
 };
-
-TEST_F(GfxQcms_sRGB_To_sRGB, TransformPrecache) {
-  // TODO(aosmond): This doesn't pass for the non-identity transform. Should
-  // they produce the same results?
-  GfxQcms_ProfilePairBase::TransformPrecache();
-}
 
 TEST_F(GfxQcms_sRGB_To_sRGB, TransformIdentity) {
   PrecacheOutput();
