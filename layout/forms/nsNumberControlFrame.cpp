@@ -43,7 +43,7 @@ nsNumberControlFrame::nsNumberControlFrame(ComputedStyle* aStyle,
 
 void nsNumberControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
                                        PostDestroyData& aPostDestroyData) {
-  aPostDestroyData.AddAnonymousContent(mSpinBox.forget());
+  aPostDestroyData.AddAnonymousContent(mOuterWrapper.forget());
   nsTextControlFrame::DestroyFrom(aDestructRoot, aPostDestroyData);
 }
 
@@ -53,34 +53,53 @@ nsresult nsNumberControlFrame::CreateAnonymousContent(
   // follows:
   //
   // input
-  //   div    - spin box wrapping up/down arrow buttons
-  //     div  - spin up (up arrow button)
-  //     div  - spin down (down arrow button)
-  //   div    - editor root
-  //   div    - placeholder
-  //   div    - preview div
+  //   div      - outer wrapper with "display:flex" by default
+  //     div    - editor root
+  //     div    - spin box wrapping up/down arrow buttons
+  //       div  - spin up (up arrow button)
+  //       div  - spin down (down arrow button)
+  //   div      - placeholder
+  //   div      - preview div
   //
   // If you change this, be careful to change the destruction order in
   // nsNumberControlFrame::DestroyFrom.
 
-  // The author has elected to hide the spinner by setting this
-  // -moz-appearance. We will reframe if it changes.
-  if (StyleDisplay()->EffectiveAppearance() != StyleAppearance::Textfield) {
-    // Create the ::-moz-number-spin-box pseudo-element:
-    mSpinBox = MakeAnonElement(PseudoStyleType::mozNumberSpinBox);
+  // Create the anonymous outer wrapper:
+  mOuterWrapper = MakeAnonElement(PseudoStyleType::mozComplexControlWrapper);
 
-    // Create the ::-moz-number-spin-up pseudo-element:
-    mSpinUp = MakeAnonElement(PseudoStyleType::mozNumberSpinUp, mSpinBox);
+  // We want to do this now, rather than on the caller, so that the
+  // AppendChildTo calls below know that they are anonymous already. This is
+  // important for the NODE_IS_EDITABLE flag handling, for example.
+  mOuterWrapper->SetIsNativeAnonymousRoot();
 
-    // Create the ::-moz-number-spin-down pseudo-element:
-    mSpinDown = MakeAnonElement(PseudoStyleType::mozNumberSpinDown, mSpinBox);
+  aElements.AppendElement(mOuterWrapper);
 
-    // It's important that this goes first, so that reflow can know our size for
-    // the rest of the children.
-    aElements.AppendElement(mSpinBox);
+  nsTArray<ContentInfo> nestedContent;
+  nsTextControlFrame::CreateAnonymousContent(nestedContent);
+  for (auto& content : nestedContent) {
+    // The root goes inside the container.
+    if (content.mContent == mRootNode) {
+      mOuterWrapper->AppendChildTo(content.mContent, false);
+    } else {
+      // The rest (placeholder and preview), directly under us.
+      aElements.AppendElement(std::move(content));
+    }
   }
 
-  nsTextControlFrame::CreateAnonymousContent(aElements);
+  if (StyleDisplay()->EffectiveAppearance() == StyleAppearance::Textfield) {
+    // The author has elected to hide the spinner by setting this
+    // -moz-appearance. We will reframe if it changes.
+    return NS_OK;
+  }
+
+  // Create the ::-moz-number-spin-box pseudo-element:
+  mSpinBox = MakeAnonElement(PseudoStyleType::mozNumberSpinBox, mOuterWrapper);
+
+  // Create the ::-moz-number-spin-up pseudo-element:
+  mSpinUp = MakeAnonElement(PseudoStyleType::mozNumberSpinUp, mSpinBox);
+
+  // Create the ::-moz-number-spin-down pseudo-element:
+  mSpinDown = MakeAnonElement(PseudoStyleType::mozNumberSpinDown, mSpinBox);
 
   return NS_OK;
 }
@@ -212,10 +231,15 @@ bool nsNumberControlFrame::ShouldUseNativeStyleForSpinner() const {
 
 void nsNumberControlFrame::AppendAnonymousContentTo(
     nsTArray<nsIContent*>& aElements, uint32_t aFilter) {
-  if (mSpinBox) {
-    aElements.AppendElement(mSpinBox);
+  if (mOuterWrapper) {
+    aElements.AppendElement(mOuterWrapper);
   }
-  nsTextControlFrame::AppendAnonymousContentTo(aElements, aFilter);
+  if (mPlaceholderDiv) {
+    aElements.AppendElement(mPlaceholderDiv);
+  }
+  if (mPreviewDiv) {
+    aElements.AppendElement(mPreviewDiv);
+  }
 }
 
 #ifdef ACCESSIBILITY

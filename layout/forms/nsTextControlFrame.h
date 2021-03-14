@@ -202,8 +202,7 @@ class nsTextControlFrame : public nsContainerFrame,
   void ReflowTextControlChild(nsIFrame* aFrame, nsPresContext* aPresContext,
                               const ReflowInput& aReflowInput,
                               nsReflowStatus& aStatus,
-                              ReflowOutput& aParentDesiredSize,
-                              nscoord& aButtonBoxISize);
+                              ReflowOutput& aParentDesiredSize);
 
   void ComputeBaseline(const ReflowInput&, ReflowOutput&);
 

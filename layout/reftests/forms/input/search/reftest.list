@@ -1,5 +1,3 @@
 == 1.html ref.html
 == 2.html ref.html
 != 3.html ref.html
-pref(layout.forms.input-type-search.enabled,true) == search-basic.html ref.html
-pref(layout.forms.input-type-search.enabled,true) != search-with-value.html text-with-value.html
