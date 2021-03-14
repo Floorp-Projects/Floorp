@@ -78,6 +78,7 @@ extern const SymbolicAddressSignature SASigStructNew;
 extern const SymbolicAddressSignature SASigExceptionNew;
 extern const SymbolicAddressSignature SASigThrowException;
 extern const SymbolicAddressSignature SASigGetLocalExceptionIndex;
+extern const SymbolicAddressSignature SASigPushRefIntoExn;
 #endif
 extern const SymbolicAddressSignature SASigArrayNew;
 extern const SymbolicAddressSignature SASigRefTest;

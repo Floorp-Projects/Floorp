@@ -518,6 +518,7 @@ class WasmExceptionObject : public NativeObject {
 class WasmRuntimeExceptionObject : public NativeObject {
   static const unsigned TAG_SLOT = 0;
   static const unsigned VALUES_SLOT = 1;
+  static const unsigned REFS_SLOT = 2;
 
   static const JSClassOps classOps_;
   static const ClassSpec classSpec_;
@@ -525,7 +526,7 @@ class WasmRuntimeExceptionObject : public NativeObject {
   static void trace(JSTracer* trc, JSObject* obj);
 
  public:
-  static const unsigned RESERVED_SLOTS = 2;
+  static const unsigned RESERVED_SLOTS = 3;
   static const JSClass class_;
   static const JSClass& protoClass_;
   static const JSPropertySpec properties[];
@@ -535,13 +536,19 @@ class WasmRuntimeExceptionObject : public NativeObject {
 
   static WasmRuntimeExceptionObject* create(JSContext* cx,
                                             wasm::SharedExceptionTag tag,
-                                            Handle<ArrayBufferObject*> values);
+                                            Handle<ArrayBufferObject*> values,
+                                            HandleArrayObject refs);
   bool isNewborn() const;
 
   wasm::ExceptionTag& tag() const;
+  ArrayObject& refs() const;
 
   static size_t offsetOfValues() {
     return NativeObject::getFixedSlotOffset(VALUES_SLOT);
+  }
+
+  static size_t offsetOfRefs() {
+    return NativeObject::getFixedSlotOffset(REFS_SLOT);
   }
 };
 

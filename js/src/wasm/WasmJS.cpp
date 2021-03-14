@@ -3815,8 +3815,8 @@ bool WasmRuntimeExceptionObject::construct(JSContext* cx, unsigned argc,
 
 /* static */
 WasmRuntimeExceptionObject* WasmRuntimeExceptionObject::create(
-    JSContext* cx, wasm::SharedExceptionTag tag,
-    HandleArrayBufferObject values) {
+    JSContext* cx, wasm::SharedExceptionTag tag, HandleArrayBufferObject values,
+    HandleArrayObject refs) {
   RootedObject proto(
       cx, &cx->global()->getPrototype(JSProto_WasmRuntimeException).toObject());
 
@@ -3832,6 +3832,7 @@ WasmRuntimeExceptionObject* WasmRuntimeExceptionObject::create(
                    MemoryUse::WasmRuntimeExceptionTag);
 
   obj->initFixedSlot(VALUES_SLOT, ObjectValue(*values));
+  obj->initFixedSlot(REFS_SLOT, ObjectValue(*refs));
 
   MOZ_ASSERT(!obj->isNewborn());
 
@@ -3840,7 +3841,7 @@ WasmRuntimeExceptionObject* WasmRuntimeExceptionObject::create(
 
 bool WasmRuntimeExceptionObject::isNewborn() const {
   MOZ_ASSERT(is<WasmRuntimeExceptionObject>());
-  return getReservedSlot(VALUES_SLOT).isUndefined();
+  return getReservedSlot(REFS_SLOT).isUndefined();
 }
 
 const JSPropertySpec WasmRuntimeExceptionObject::properties[] = {
@@ -3854,6 +3855,10 @@ const JSFunctionSpec WasmRuntimeExceptionObject::static_methods[] = {JS_FS_END};
 
 ExceptionTag& WasmRuntimeExceptionObject::tag() const {
   return *(ExceptionTag*)getReservedSlot(TAG_SLOT).toPrivate();
+}
+
+ArrayObject& WasmRuntimeExceptionObject::refs() const {
+  return getReservedSlot(REFS_SLOT).toObject().as<ArrayObject>();
 }
 
 // ============================================================================
