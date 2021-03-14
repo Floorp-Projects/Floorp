@@ -104,6 +104,7 @@ browser {
 #close {
   background-color: var(--close-btn-bg-color);
   background-image: url("chrome://global/skin/icons/close.svg");
+  background-size: cover;
   position: absolute;
   right: 10px;
   top: 10px;
