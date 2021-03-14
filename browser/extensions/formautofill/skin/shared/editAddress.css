@@ -43,7 +43,7 @@ dialog:not([subdialog]) .editAddressForm {
 /* When there is focus within any of the name fields, the border of the inputs
  * should be the focused color, except for inner ones which get overriden below. */
 #name-container:focus-within input {
-  border-color: var(--in-content-border-focus);
+  border-color: var(--in-content-border-active);
 }
 
 /* Invalid name fields should show the error outline instead of the focus border */
