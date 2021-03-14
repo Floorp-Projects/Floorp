@@ -149,7 +149,13 @@ void nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot,
 
   // If we're a subclass like nsNumberControlFrame, then it owns the root of the
   // anonymous subtree where mRootNode is.
-  aPostDestroyData.AddAnonymousContent(mRootNode.forget());
+  if (mClass == kClassID) {
+    aPostDestroyData.AddAnonymousContent(mRootNode.forget());
+  } else {
+    MOZ_ASSERT(!mRootNode || !mRootNode->IsRootOfNativeAnonymousSubtree());
+    mRootNode = nullptr;
+  }
+
   aPostDestroyData.AddAnonymousContent(mPlaceholderDiv.forget());
   aPostDestroyData.AddAnonymousContent(mPreviewDiv.forget());
 
@@ -630,10 +636,9 @@ void nsTextControlFrame::Reflow(nsPresContext* aPresContext,
   aDesiredSize.SetOverflowAreasToDesiredBounds();
   // perform reflow on all kids
   nsIFrame* kid = mFrames.FirstChild();
-  nscoord buttonBoxISize = 0;
   while (kid) {
     ReflowTextControlChild(kid, aPresContext, aReflowInput, aStatus,
-                           aDesiredSize, buttonBoxISize);
+                           aDesiredSize);
     kid = kid->GetNextSibling();
   }
 
@@ -647,74 +652,37 @@ void nsTextControlFrame::Reflow(nsPresContext* aPresContext,
 void nsTextControlFrame::ReflowTextControlChild(
     nsIFrame* aKid, nsPresContext* aPresContext,
     const ReflowInput& aReflowInput, nsReflowStatus& aStatus,
-    ReflowOutput& aParentDesiredSize, nscoord& aButtonBoxISize) {
-  const WritingMode outerWM = aReflowInput.GetWritingMode();
+    ReflowOutput& aParentDesiredSize) {
   // compute available size and frame offsets for child
-  const WritingMode wm = aKid->GetWritingMode();
+  WritingMode wm = aKid->GetWritingMode();
   LogicalSize availSize = aReflowInput.ComputedSizeWithPadding(wm);
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
 
-  const bool isButtonBox =
-      aKid->Style()->GetPseudoType() == PseudoStyleType::mozNumberSpinBox ||
-      aKid->Style()->GetPseudoType() == PseudoStyleType::mozSearchClearButton;
-
   ReflowInput kidReflowInput(aPresContext, aReflowInput, aKid, availSize,
                              Nothing(), ReflowInput::InitFlag::CallerWillInit);
-
   // Override padding with our computed padding in case we got it from theming
-  // or percentage, if we're not the button box.
-  auto overridePadding =
-      isButtonBox ? Nothing() : Some(aReflowInput.ComputedLogicalPadding(wm));
-  kidReflowInput.Init(aPresContext, Nothing(), Nothing(), overridePadding);
+  // or percentage.
+  kidReflowInput.Init(aPresContext, Nothing(), Nothing(),
+                      Some(aReflowInput.ComputedLogicalPadding(wm)));
 
-  LogicalPoint position(wm);
-  const auto& bp = aReflowInput.ComputedLogicalBorderPadding(outerWM);
+  // Set computed width and computed height for the child
+  kidReflowInput.SetComputedWidth(aReflowInput.ComputedWidth());
+  kidReflowInput.SetComputedHeight(aReflowInput.ComputedHeight());
 
-  if (!isButtonBox) {
-    MOZ_ASSERT(wm == outerWM,
-               "Shouldn't have to care about orthogonal "
-               "writing-modes and such inside the control, "
-               "except for the number spin-box which forces "
-               "horizontal-tb");
-
-    // Offset the frame by the size of the parent's border
-    const auto& padding = aReflowInput.ComputedLogicalPadding(wm);
-    position.B(wm) = bp.BStart(wm) - padding.BStart(wm);
-    position.I(wm) = bp.IStart(wm) - padding.IStart(wm);
-
-    // Set computed width and computed height for the child (the button box is
-    // the only exception, which has an auto size).
-    kidReflowInput.SetComputedISize(
-        std::max(0, aReflowInput.ComputedISize() - aButtonBoxISize));
-    kidReflowInput.SetComputedBSize(aReflowInput.ComputedBSize());
-  }
+  // Offset the frame by the size of the parent's border
+  nscoord xOffset = aReflowInput.ComputedPhysicalBorderPadding().left -
+                    aReflowInput.ComputedPhysicalPadding().left;
+  nscoord yOffset = aReflowInput.ComputedPhysicalBorderPadding().top -
+                    aReflowInput.ComputedPhysicalPadding().top;
 
   // reflow the child
   ReflowOutput desiredSize(aReflowInput);
-  const nsSize containerSize =
-      aReflowInput.ComputedSizeWithBorderPadding(outerWM).GetPhysicalSize(
-          outerWM);
-  ReflowChild(aKid, aPresContext, desiredSize, kidReflowInput, wm, position,
-              containerSize, ReflowChildFlags::Default, aStatus);
-
-  if (isButtonBox) {
-    auto size = desiredSize.Size(outerWM);
-    // Center button in the block axis of our content box. We do this
-    // computation in terms of outerWM for simplicity.
-    position = LogicalPoint(outerWM);
-    position.B(outerWM) =
-        bp.BStart(outerWM) +
-        (aReflowInput.ComputedBSize() - size.BSize(outerWM)) / 2;
-    // Align to the inline-end of the content box.
-    position.I(outerWM) =
-        bp.IStart(outerWM) + aReflowInput.ComputedISize() - size.ISize(outerWM);
-    position = position.ConvertTo(wm, outerWM, containerSize);
-    aButtonBoxISize = size.ISize(outerWM);
-  }
+  ReflowChild(aKid, aPresContext, desiredSize, kidReflowInput, xOffset, yOffset,
+              ReflowChildFlags::Default, aStatus);
 
   // place the child
-  FinishReflowChild(aKid, aPresContext, desiredSize, &kidReflowInput, wm,
-                    position, containerSize, ReflowChildFlags::Default);
+  FinishReflowChild(aKid, aPresContext, desiredSize, &kidReflowInput, xOffset,
+                    yOffset, ReflowChildFlags::Default);
 
   // consider the overflow
   aParentDesiredSize.mOverflowAreas.UnionWith(desiredSize.mOverflowAreas);
