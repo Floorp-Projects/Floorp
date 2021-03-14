@@ -44,11 +44,14 @@ toolbar[brighttext] {
 #back-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #forward-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #reload-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#reload-button:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image,
+#stop-button:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image,
 #nav-bar-overflow-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
+#nav-bar-overflow-button:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image,
 #PlacesChevron:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #panic-button:-moz-locale-dir(rtl) > .toolbarbutton-icon,
 #PanelUI-menu-button:-moz-locale-dir(rtl) > .toolbarbutton-badge-stack > .toolbarbutton-icon {
-  transform: scaleX(-1);
+  scale: -1 1;
 }
 
 #back-button {
@@ -82,30 +85,12 @@ toolbar[brighttext] {
   }
 }
 
-@keyframes reload-to-stop-rtl {
-  from {
-    transform: scaleX(-1) translateX(0);
-  }
-  to {
-    transform: scaleX(-1) translateX(-450px);
-  }
-}
-
 @keyframes stop-to-reload {
   from {
     transform: translateX(0);
   }
   to {
     transform: translateX(-450px);
-  }
-}
-
-@keyframes stop-to-reload-rtl {
-  from {
-    transform: scaleX(-1) translateX(0);
-  }
-  to {
-    transform: scaleX(-1) translateX(-450px);
   }
 }
 
@@ -133,10 +118,6 @@ toolbar[brighttext] {
   animation-name: reload-to-stop;
 }
 
-#stop-reload-button[animate] > #reload-button:not([displaystop]):-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  animation-name: reload-to-stop-rtl;
-}
-
 #reload-button:not([displaystop]) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   animation-timing-function: steps(25);
   animation-duration: 417ms;
@@ -151,29 +132,14 @@ toolbar[brighttext] {
   animation-name: stop-to-reload;
 }
 
-#stop-reload-button[animate] > #reload-button[displaystop] + #stop-button:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  animation-name: stop-to-reload-rtl;
-}
-
 #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   animation-timing-function: steps(25);
   animation-duration: 417ms;
 }
 
-#reload-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  transform: translateX(-450px);
-}
-
-#reload-button:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  transform: scaleX(-1) translateX(-450px);
-}
-
+#reload-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image,
 #reload-button[displaystop] + #stop-button > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   transform: translateX(-450px);
-}
-
-#reload-button[displaystop] + #stop-button:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  transform: scaleX(-1) translateX(-450px);
 }
 
 #reload-button {
@@ -338,21 +304,6 @@ toolbar[brighttext] {
   }
 }
 
-@keyframes overflow-animation-rtl {
-  from {
-    transform: scaleX(-1) translateX(0);
-  }
-  50% {
-    fill: var(--toolbarbutton-icon-fill-attention);
-    fill-opacity: 1;
-  }
-  to {
-    transform: scaleX(-1) translateX(-1260px);
-    fill: var(--toolbarbutton-icon-fill-attention);
-    fill-opacity: 1;
-  }
-}
-
 /* The animation is supposed to show the blue fill color for 520ms, then the
    fade to the toolbarbutton-fill color for the remaining 210ms. Thus with an
    animation-duration of 730ms, 71% is the point where we start the fade out. */
@@ -391,18 +342,10 @@ toolbar[brighttext] {
   width: 1278px;
 }
 
-#nav-bar-overflow-button[animate]:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  animation-name: overflow-animation-rtl;
-}
-
 #nav-bar-overflow-button[animate][fade] > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
   animation-name: overflow-fade;
   animation-timing-function: ease-out;
   animation-duration: 730ms;
-}
-
-#nav-bar-overflow-button[animate][fade]:-moz-locale-dir(rtl) > .toolbarbutton-animatable-box > .toolbarbutton-animatable-image {
-  transform: scaleX(-1);
 }
 
 #email-link-button {

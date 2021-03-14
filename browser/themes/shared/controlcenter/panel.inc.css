@@ -512,12 +512,12 @@ description#identity-popup-content-verifier,
   content: url(chrome://browser/skin/back-12.svg);
   -moz-context-properties: fill, fill-opacity;
   fill-opacity: .6;
-  transform: scaleX(-1) translateY(1px);
+  transform: translateY(1px);
   float: inline-end;
 }
 
-.protections-popup-category:-moz-locale-dir(rtl)::after {
-  transform: scaleX(1) translateY(1px);
+.protections-popup-category:-moz-locale-dir(ltr)::after {
+  scale: -1 1;
 }
 
 /* This subview could get filled with a lot of trackers, set a maximum size

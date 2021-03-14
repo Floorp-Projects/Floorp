@@ -690,15 +690,6 @@
     }
   }
 
-  @keyframes bookmark-animation-rtl {
-    from {
-      transform: scaleX(-1) translateX(0);
-    }
-    to {
-      transform: scaleX(-1) translateX(-627px);
-    }
-  }
-
   #star-button-box {
     position: relative;
   }
@@ -755,7 +746,7 @@
   }
 
   #star-button[starred][animate]:-moz-locale-dir(rtl) + #star-button-animatable-box > #star-button-animatable-image {
-    animation-name: bookmark-animation-rtl;
+    scale: -1 1;
   }
 }
 

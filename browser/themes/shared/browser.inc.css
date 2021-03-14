@@ -480,12 +480,12 @@ menupopup::part(drop-indicator) {
   content: url(chrome://browser/skin/back-12.svg);
   -moz-context-properties: fill;
   fill: currentColor;
-  transform: scaleX(-1) translateY(2px);
+  transform: translateY(2px);
   float: inline-end;
 }
 
-#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"]:-moz-locale-dir(rtl) .popup-notification-button.popup-notification-primary-button:after {
-  transform: scaleX(1) translateY(2px);
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"]:-moz-locale-dir(ltr) .popup-notification-button.popup-notification-primary-button:after {
+  scale: -1 1;
 }
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .popup-notification-button.popup-notification-primary-button:hover {
