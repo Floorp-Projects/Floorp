@@ -891,16 +891,38 @@ input[type=number] {
   -moz-default-appearance: number-input;
 }
 
+input:is([type=number], [type=search])::-moz-complex-control-wrapper {
+  /* Prevent styling that would change the type of frame we construct. */
+  display: flex;
+  float: none !important;
+  position: static !important;
+  block-size: 100%;
+  /* The align-self: center bit below allows the editor to be potentially
+   * bigger than us. Clip it to match other text fields. */
+  overflow: clip;
+}
+
+input:is([type=number], [type=search])::-moz-text-control-editing-root {
+  display: block; /* Flex items must be block-level. Normally we do fixup in
+                     the style system to ensure this, but that fixup is disabled
+                     inside of form controls. So, we hardcode display here. */
+  flex: 1;
+  min-inline-size: 0;
+  /* This makes it overflow into the flex container padding if needed, instead
+   * of getting squashed or pushed down by it */
+  align-self: center;
+  /* This prevents double-applying the padding, which our flex container gets
+   * via the override in nsTextControlFrame::ReflowTextControlChild */
+  padding: 0;
+}
+
 input[type=number]::-moz-number-spin-box {
   writing-mode: horizontal-tb;
   display: flex;
   flex-direction: column;
-  width: max-content;
 %ifdef XP_WIN
   /* The Window's Theme's spin buttons have a very narrow minimum width, so
    * make it something reasonable:
-   *
-   * TODO(emilio): Make this affect only when the non-native theme is disabled.
    */
   width: 16px;
 %endif
