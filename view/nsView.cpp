@@ -148,7 +148,6 @@ void nsView::DestroyWidget() {
     }
 
     mWindow = nullptr;
-    ZeroDimensions();
   }
 }
 
@@ -381,12 +380,6 @@ void nsView::SetDimensions(const nsRect& aRect, bool aPaint,
   if (aResizeWidget) {
     ResetWidgetBounds(false, false);
   }
-}
-
-void nsView::ZeroDimensions() {
-  mPosX = 0;
-  mPosY = 0;
-  mDimBounds = {};
 }
 
 void nsView::NotifyEffectiveVisibilityChanged(bool aEffectivelyVisible) {
@@ -705,7 +698,6 @@ nsresult nsView::DetachFromTopLevelWidget() {
 
   mPreviousWindow = mWindow;
   mWindow = nullptr;
-  ZeroDimensions();
 
   mWidgetIsTopLevel = false;
 
@@ -730,7 +722,6 @@ void nsView::AssertNoWindow() {
     mWindow->SetWidgetListener(nullptr);
     mWindow->Destroy();
     mWindow = nullptr;
-    ZeroDimensions();
   }
 }
 
