@@ -502,12 +502,6 @@ class nsView final : public nsIWidgetListener {
                      bool aResizeWidget = true);
 
   /**
-   * Reset dimensions. To be used after destroying our widget to ensure stale
-   * dimensions will not be referenced after creating a new widget.
-   */
-  void ZeroDimensions();
-
-  /**
    * Called to indicate that the visibility of a view has been
    * changed.
    * @param visibility new visibility state

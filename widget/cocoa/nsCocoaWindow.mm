@@ -262,49 +262,7 @@ static bool UseNativePopupWindows() {
 #endif /* MOZ_USE_NATIVE_POPUP_WINDOWS */
 }
 
-DesktopToLayoutDeviceScale ParentBackingScaleFactor(nsIWidget* aParent, NSView* aParentView) {
-  if (aParent) {
-    return aParent->GetDesktopToDeviceScale();
-  }
-  NSWindow* parentWindow = [aParentView window];
-  if (parentWindow) {
-    return DesktopToLayoutDeviceScale([parentWindow backingScaleFactor]);
-  }
-  return DesktopToLayoutDeviceScale(1.0);
-}
-
-// Returns the screen rectangle for the given widget.
-// Child widgets are positioned relative to this rectangle.
-// Exactly one of the arguments must be non-null.
-static DesktopRect GetWidgetScreenRectForChildren(nsIWidget* aWidget, NSView* aView) {
-  if (aWidget) {
-    mozilla::DesktopToLayoutDeviceScale scale = aWidget->GetDesktopToDeviceScale();
-    if (aWidget->WindowType() == eWindowType_child) {
-      return aWidget->GetScreenBounds() / scale;
-    }
-    return aWidget->GetClientBounds() / scale;
-  }
-
-  MOZ_RELEASE_ASSERT(aView);
-
-  // 1. Transform the view rect into window coords.
-  // The returned rect is in "origin bottom-left" coordinates.
-  NSRect rectInWindowCoordinatesOBL = [aView convertRect:[aView bounds] toView:nil];
-
-  // 2. Turn the window-coord rect into screen coords, still origin bottom-left.
-  NSRect rectInScreenCoordinatesOBL =
-      [[aView window] convertRectToScreen:rectInWindowCoordinatesOBL];
-
-  // 3. Convert the NSRect to a DesktopRect. This will convert to coordinates
-  // with the origin in the top left corner of the primary screen.
-  return DesktopRect(nsCocoaUtils::CocoaRectToGeckoRect(rectInScreenCoordinatesOBL));
-}
-
 // aRect here is specified in desktop pixels
-//
-// For child windows (where either aParent or aNativeParent is non-null),
-// aRect.{x,y} are offsets from the origin of the parent window and not an
-// absolute position.
 nsresult nsCocoaWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                                const DesktopIntRect& aRect, nsWidgetInitData* aInitData) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
@@ -312,6 +270,9 @@ nsresult nsCocoaWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   // Because the hidden window is created outside of an event loop,
   // we have to provide an autorelease pool (see bug 559075).
   nsAutoreleasePool localPool;
+
+  DesktopIntRect newBounds = aRect;
+  FitRectToVisibleAreaForScreen(newBounds, nullptr);
 
   // Set defaults which can be overriden from aInitData in BaseCreate
   mWindowType = eWindowType_toplevel;
@@ -329,29 +290,16 @@ nsresult nsCocoaWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   // Applications that use native popups don't want us to create popup windows.
   if ((mWindowType == eWindowType_popup) && UseNativePopupWindows()) return NS_OK;
 
-  // If we have a parent widget, the new widget will be offset from the
-  // parent widget by aRect.{x,y}. Otherwise, we'll use aRect for the
-  // new widget coordinates.
-  DesktopIntPoint parentOrigin;
-
-  // Do we have a parent widget?
-  if (aParent || aNativeParent) {
-    DesktopRect parentDesktopRect = GetWidgetScreenRectForChildren(aParent, (NSView*)aNativeParent);
-    parentOrigin = gfx::RoundedToInt(parentDesktopRect.TopLeft());
-  }
-
-  DesktopIntRect widgetRect = aRect + parentOrigin;
-
   nsresult rv =
-      CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(widgetRect), mBorderStyle, false);
+      CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(newBounds), mBorderStyle, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mWindowType == eWindowType_popup) {
     SetWindowMouseTransparent(aInitData->mMouseTransparent);
 
-    // now we can convert widgetRect to device pixels for the window we created,
+    // now we can convert newBounds to device pixels for the window we created,
     // as the child view expects a rect expressed in the dev pix of its parent
-    LayoutDeviceIntRect devRect = RoundedToInt(widgetRect * GetDesktopToDeviceScale());
+    LayoutDeviceIntRect devRect = RoundedToInt(newBounds * GetDesktopToDeviceScale());
     return CreatePopupContentView(devRect, aInitData);
   }
 
@@ -364,9 +312,7 @@ nsresult nsCocoaWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
 nsresult nsCocoaWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                                const LayoutDeviceIntRect& aRect, nsWidgetInitData* aInitData) {
-  DesktopToLayoutDeviceScale desktopToDevScale =
-      ParentBackingScaleFactor(aParent, (NSView*)aNativeParent);
-  DesktopIntRect desktopRect = RoundedToInt(aRect / desktopToDevScale);
+  DesktopIntRect desktopRect = RoundedToInt(aRect / GetDesktopToDeviceScale());
   return Create(aParent, aNativeParent, desktopRect, aInitData);
 }
 
@@ -1822,6 +1768,7 @@ CGFloat nsCocoaWindow::BackingScaleFactor() {
 }
 
 void nsCocoaWindow::BackingScaleFactorChanged() {
+  CGFloat oldScale = mBackingScaleFactor;
   CGFloat newScale = GetBackingScaleFactor(mWindow);
 
   // ignore notification if it hasn't really changed (or maybe we have
@@ -1855,6 +1802,23 @@ void nsCocoaWindow::BackingScaleFactorChanged() {
     presShell->BackingScaleFactorChanged();
   }
   mWidgetListener->UIResolutionChanged();
+
+  if ((mWindowType == eWindowType_popup) && (mBackingScaleFactor == 2.0)) {
+    // Recalculate the size and y-origin for the popup now that the backing
+    // scale factor has changed. After creating the popup window NSWindow,
+    // setting the frame when the menu is moved into the correct location
+    // causes the backing scale factor to change if the window is not on the
+    // menu bar display. Update the dimensions and y-origin here so that the
+    // frame is correct for the following ::Show(). Only do this when the
+    // scale factor changes from 1.0 to 2.0. When the scale factor changes
+    // from 2.0 to 1.0, the view will resize the widget before it is shown.
+    NSRect frame = [mWindow frame];
+    CGFloat previousYOrigin = frame.origin.y + frame.size.height;
+    frame.size.width = mBounds.Width() * (oldScale / newScale);
+    frame.size.height = mBounds.Height() * (oldScale / newScale);
+    frame.origin.y = previousYOrigin - frame.size.height;
+    [mWindow setFrame:frame display:NO animate:NO];
+  }
 }
 
 int32_t nsCocoaWindow::RoundsWidgetCoordinatesTo() {
