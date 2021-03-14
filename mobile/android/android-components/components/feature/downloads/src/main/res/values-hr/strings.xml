@@ -43,4 +43,6 @@
     <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">Završi radnju koristeći</string>
     <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">Nije moguće otvoriti %1$s</string>
+    <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
+    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">Za preuzimanje datoteka potrebna je dozvola za pristup datotekama i medijima. Idi u postavke sustava Android, odaberi dozvole i odaberi &quot;Dopusti&quot;.</string>
 </resources>

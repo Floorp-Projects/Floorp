@@ -11,5 +11,5 @@
     <!-- Browser menu button to close tab. Closes the current session when pressed. -->
     <string name="mozac_close_tab">Hilpekînê bigire</string>
     <!-- Content description of the tab counter toolbar button -->
-    <string name="mozac_tab_counter_content_description">Bişkoka darika amûran a jimarkera hilpekînan.</string>
+    <string name="mozac_tab_counter_content_description">Bişkoka darikê amûran a jimarkera hilpekînan.</string>
 </resources>

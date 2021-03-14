@@ -3,11 +3,11 @@
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">Sazkariyên nihêniyê bixwîne û biguherîne</string>
     <!-- Description for all_urls add-on permission. -->
-    <string name="mozac_feature_addons_permissions_all_urls_description">Ji bo hemû malperan xwe bigihîne daneyên xwe</string>
+    <string name="mozac_feature_addons_permissions_all_urls_description">Ji bo hemû malperan xwe bigihîne daneyên te</string>
     <!-- Description for giving an add-on access to users's data on one site. %1$s  will be replaced by the DNS host name for which a web extension is requesting access (e.g., www.mozilla.org). -->
     <string name="mozac_feature_addons_permissions_one_site_description">Ji bo %1$s’ê xwe bigihîne daneyên xwe</string>
     <!-- Description for giving an add-on access to users's data in multiple sites in the domain %1$s. %1$s will be replaced by the DNS domain for which a web extension is requesting access (e.g., mozilla.org). -->
-    <string name="mozac_feature_addons_permissions_sites_in_domain_description">Ji bo malperên di domaîna %1$s’ê de xwe bigihîne daneyên xwe</string>
+    <string name="mozac_feature_addons_permissions_sites_in_domain_description">Xwe bigihîne daneyên malperên te yên aîdî domaîna %1$s’ê</string>
     <!-- When an add-on requires access to more than 4 sites, for example the add-on requires access for 5 sites. We will show the first 4 sites in individual entries, as in mozac_feature_addons_permissions_one_site_description,
      then we will show another collapsed entry saying "Access your data on 1 other site". This entry it's for the singular case, when the add-on is only accessing one extra site. -->
     <string name="mozac_feature_addons_permissions_one_extra_site_description" tools:ignore="PluralsCandidate">Li ser malpereke din xwe bigihîne daneyên xwe</string>
@@ -35,11 +35,11 @@
     <!-- Description for browser_data permission. -->
     <string name="mozac_feature_addons_permissions_browser_data_description">Paqijkirina raboriya gerînê, kûkî û daneyên têkildar</string>
     <!-- Description for clipboard_read permission. -->
-    <string name="mozac_feature_addons_permissions_clipboard_read_description">Wergirtina daneyan ji panoyê</string>
+    <string name="mozac_feature_addons_permissions_clipboard_read_description">Daneyan ji panoyê bistîne</string>
     <!-- Description for clipboard_write permission. -->
-    <string name="mozac_feature_addons_permissions_clipboard_write_description">Şandina daneyan li panoyê</string>
+    <string name="mozac_feature_addons_permissions_clipboard_write_description">Daneyan bişîne panoyê</string>
     <!-- Description for downloads permission. -->
-    <string name="mozac_feature_addons_permissions_downloads_description">Daxistina dosyeyan, xwendin û gihertina raboriya gerokê</string>
+    <string name="mozac_feature_addons_permissions_downloads_description">Dosyeyan daxîne, raboriya gerokê bixwîne û biguherîne</string>
     <!-- Description for downloads_open permission. -->
     <string name="mozac_feature_addons_permissions_downloads_open_description">Vekirina dosyeyên li cîhaza te barkirî</string>
     <!-- Description for find permission. -->
@@ -53,7 +53,7 @@
     <!-- Description for native_messaging permission. -->
     <string name="mozac_feature_addons_permissions_native_messaging_description">Şandina/stendina peyaman bi sepanên din ên Ji bilî vê</string>
     <!-- Description for notifications permission. -->
-    <string name="mozac_feature_addons_permissions_notifications_description">Nîşandana danezanan ji bo te</string>
+    <string name="mozac_feature_addons_permissions_notifications_description">Danezanan ji te re nîşan bide</string>
     <!-- Description for pkcs11 permission. -->
     <string name="mozac_feature_addons_permissions_pkcs11_description">Dabînkirina xizmetên rastandinê ji bo nasnameya krîptografîkî</string>
     <!-- Description for proxy permission. -->
@@ -95,7 +95,7 @@
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the installed section. -->
     <string name="mozac_feature_addons_installed_section">Sazkirî</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the recommended section. -->
-    <string name="mozac_feature_addons_recommended_section">Yên pêşniyarkirî</string>
+    <string name="mozac_feature_addons_recommended_section">Yên pêşniyar</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet supported section. -->
     <string name="mozac_feature_addons_unsupported_section">Hîn nayê piştgirîkirin</string>
     <!-- This is displayed in a page where the user can see the installed and recommended(not installed yet) add-ons, this string indicates the not yet available section. -->
