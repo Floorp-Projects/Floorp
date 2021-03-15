@@ -16,6 +16,7 @@ import {
   isMapScopesEnabled,
   getThreadContext,
   getLastExpandedScopes,
+  getIsCurrentThreadPaused,
 } from "../../selectors";
 import { getScopes } from "../../utils/pause/scopes";
 import { getScopeItemPath } from "../../utils/pause/scopes/utils";
@@ -46,12 +47,12 @@ class Scopes extends PureComponent {
 
   componentWillReceiveProps(nextProps) {
     const {
-      cx,
       selectedFrame,
       originalFrameScopes,
       generatedFrameScopes,
+      isPaused,
     } = this.props;
-    const isPausedChanged = cx.isPaused !== nextProps.cx.isPaused;
+    const isPausedChanged = isPaused !== nextProps.isPaused;
     const selectedFrameChanged = selectedFrame !== nextProps.selectedFrame;
     const originalFrameScopesChanged =
       originalFrameScopes !== nextProps.originalFrameScopes;
@@ -219,7 +220,7 @@ class Scopes extends PureComponent {
     }
 
     let stateText = L10N.getStr("scopes.notPaused");
-    if (cx.isPaused) {
+    if (this.props.isPaused) {
       if (isLoading) {
         stateText = L10N.getStr("loadingText");
       } else {
@@ -271,6 +272,7 @@ const mapStateToProps = state => {
     originalFrameScopes,
     generatedFrameScopes,
     expandedScopes: getLastExpandedScopes(state, cx.thread),
+    isPaused: getIsCurrentThreadPaused(state),
   };
 };
 

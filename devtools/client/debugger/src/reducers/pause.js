@@ -22,9 +22,14 @@ export function initialPauseState(thread = "UnknownThread") {
     cx: {
       navigateCounter: 0,
     },
+    // This `threadcx` is the `cx` variable we pass around in components and actions.
+    // This is pulled via getThreadContext().
+    // This stores information about the currently selected thread and its paused state.
     threadcx: {
       navigateCounter: 0,
       thread,
+      // This isPaused attribute is redundant with per-thread state,
+      // where we check for "frames" being defined to know when one particular thread is paused or running.
       isPaused: false,
       pauseCounter: 0,
     },
@@ -379,6 +384,10 @@ export function getCurrentThread(state) {
 
 export function getIsPaused(state, thread) {
   return !!getThreadPauseState(state.pause, thread).frames;
+}
+
+export function getIsCurrentThreadPaused(state) {
+  return getThreadContext(state).isPaused;
 }
 
 export function isEvaluatingExpression(state, thread) {

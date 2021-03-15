@@ -14,6 +14,7 @@ import {
   getCurrentThread,
   isTopFrameSelected,
   getThreadContext,
+  getIsCurrentThreadPaused,
 } from "../../selectors";
 import { formatKeyShortcut } from "../../utils/text";
 import actions from "../../actions";
@@ -109,37 +110,35 @@ class CommandBar extends Component {
     e.preventDefault();
     e.stopPropagation();
     if (action === "resume") {
-      this.props.cx.isPaused
-        ? this.props.resume(cx)
-        : this.props.breakOnNext(cx);
+      this.props.isPaused ? this.props.resume() : this.props.breakOnNext(cx);
     } else {
       this.props[action](cx);
     }
   }
 
   renderStepButtons() {
-    const { cx, topFrameSelected } = this.props;
-    const className = cx.isPaused ? "active" : "disabled";
-    const isDisabled = !cx.isPaused;
+    const { isPaused, topFrameSelected } = this.props;
+    const className = isPaused ? "active" : "disabled";
+    const isDisabled = !isPaused;
 
     return [
       this.renderPauseButton(),
       debugBtn(
-        () => this.props.stepOver(cx),
+        () => this.props.stepOver(),
         "stepOver",
         className,
         L10N.getFormatStr("stepOverTooltip", formatKey("stepOver")),
         isDisabled
       ),
       debugBtn(
-        () => this.props.stepIn(cx),
+        () => this.props.stepIn(),
         "stepIn",
         className,
         L10N.getFormatStr("stepInTooltip", formatKey("stepIn")),
         isDisabled || (features.frameStep && !topFrameSelected)
       ),
       debugBtn(
-        () => this.props.stepOut(cx),
+        () => this.props.stepOut(),
         "stepOut",
         className,
         L10N.getFormatStr("stepOutTooltip", formatKey("stepOut")),
@@ -149,13 +148,13 @@ class CommandBar extends Component {
   }
 
   resume() {
-    this.props.resume(this.props.cx);
+    this.props.resume();
   }
 
   renderPauseButton() {
     const { cx, breakOnNext, isWaitingOnBreak } = this.props;
 
-    if (cx.isPaused) {
+    if (this.props.isPaused) {
       return debugBtn(
         () => this.resume(),
         "resume",
@@ -297,6 +296,7 @@ const mapStateToProps = state => ({
   skipPausing: getSkipPausing(state),
   topFrameSelected: isTopFrameSelected(state, getCurrentThread(state)),
   javascriptEnabled: state.ui.javascriptEnabled,
+  isPaused: getIsCurrentThreadPaused(state),
 });
 
 export default connect(mapStateToProps, {

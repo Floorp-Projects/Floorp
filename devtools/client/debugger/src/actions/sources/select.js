@@ -33,6 +33,7 @@ import {
   getSelectedLocation,
   getSelectedSource,
   canPrettyPrintSource,
+  getIsCurrentThreadPaused,
 } from "../../selectors";
 
 export const setSelectedLocation = (cx, source, location) => ({
@@ -159,7 +160,7 @@ export function selectLocation(cx, location, { keepContext = true } = {}) {
     await dispatch(setSymbols({ cx, source: loadedSource }));
     dispatch(setInScopeLines(cx));
 
-    if (cx.isPaused) {
+    if (getIsCurrentThreadPaused(getState())) {
       await dispatch(mapDisplayNames(cx));
     }
 
