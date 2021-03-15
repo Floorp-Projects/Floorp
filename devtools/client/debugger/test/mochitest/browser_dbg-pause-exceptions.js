@@ -23,7 +23,6 @@ add_task(async function() {
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
   await resume(dbg);
-  await waitForActive(dbg);
 
   log("2.b Test throwing the same uncaught exception pauses again");
   await togglePauseOnExceptions(dbg, true, true);
@@ -31,7 +30,6 @@ add_task(async function() {
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
   await resume(dbg);
-  await waitForActive(dbg);
 
   log("3. Test pausing on a caught Error");
   caughtException();
