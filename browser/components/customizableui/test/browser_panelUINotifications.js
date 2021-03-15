@@ -128,10 +128,10 @@ add_task(async function testSecondaryActionWorkflow() {
     );
 
     await gCUITestUtils.openMainMenu();
-    isnot(
+    is(
       PanelUI.menuButton.getAttribute("badge-status"),
       "update-manual",
-      "Badge is hidden on PanelUI button."
+      "Badge is displaying on PanelUI button."
     );
     let menuItem = PanelUI.mainView.querySelector(".panel-banner-item");
     is(
@@ -190,10 +190,10 @@ add_task(async function testDownloadingBadge() {
     );
 
     await gCUITestUtils.openMainMenu();
-    isnot(
+    is(
       PanelUI.menuButton.getAttribute("badge-status"),
       "update-downloading",
-      "Downloading badge is hidden on PanelUI button."
+      "Downloading badge is displaying on PanelUI button."
     );
     let menuItem = PanelUI.mainView.querySelector(".panel-banner-item");
     is(
@@ -287,10 +287,10 @@ add_task(async function testInteractionWithBadges() {
     );
 
     await gCUITestUtils.openMainMenu();
-    isnot(
+    is(
       PanelUI.menuButton.getAttribute("badge-status"),
       "update-manual",
-      "Badge is hidden on PanelUI button."
+      "Badge is displaying on PanelUI button."
     );
     let menuItem = PanelUI.mainView.querySelector(".panel-banner-item");
     is(
@@ -538,10 +538,10 @@ add_task(async function testMultipleNonBadges() {
     );
 
     await gCUITestUtils.openMainMenu();
-    isnot(
+    is(
       PanelUI.menuButton.getAttribute("badge-status"),
       "update-restart",
-      "update-restart badge is hidden on PanelUI button."
+      "update-restart badge is displaying on PanelUI button."
     );
     let menuItem = PanelUI.mainView.querySelector(".panel-banner-item");
     is(
@@ -569,10 +569,10 @@ add_task(async function testMultipleNonBadges() {
     );
 
     await gCUITestUtils.openMainMenu();
-    isnot(
+    is(
       PanelUI.menuButton.getAttribute("badge-status"),
       "update-manual",
-      "update-manual badge is hidden on PanelUI button."
+      "update-manual badge is displaying on PanelUI button."
     );
     is(
       menuItem.label,
