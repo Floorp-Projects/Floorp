@@ -508,8 +508,6 @@ class FirefoxLauncher implements ProductLauncher {
       'geo.wifi.scan': false,
       // No hang monitor
       'hangmonitor.timeout': 0,
-      // Show chrome errors and warnings in the error console
-      'javascript.options.showInConsole': true,
 
       // Disable download and usage of OpenH264: and Widevine plugins
       'media.gmp-manager.updateEnabled': false,
