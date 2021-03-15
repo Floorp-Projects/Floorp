@@ -33,9 +33,7 @@ async function testCase(dbg, { name, steps }) {
 
   is(formatSteps(locations), formatSteps(steps), name);
 
-  const onResumed = waitForActive(dbg);
   await resume(dbg);
-  await onResumed;
 }
 
 add_task(async function test() {
