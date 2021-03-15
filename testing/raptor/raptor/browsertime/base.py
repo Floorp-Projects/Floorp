@@ -298,6 +298,12 @@ class Browsertime(Perftest):
             ] = self.results_handler.result_dir_for_test(test)
             self._init_gecko_profiling(test)
             browsertime_options.append("--firefox.geckoProfiler")
+            browsertime_options.extend(
+                [
+                    "--firefox.geckoProfilerParams.features",
+                    "js,leaf,stackwalk,cpu,threads",
+                ]
+            )
 
             for option, browser_time_option in (
                 ("gecko_profile_interval", "--firefox.geckoProfilerParams.interval"),
