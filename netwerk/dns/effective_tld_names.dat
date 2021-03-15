@@ -10876,6 +10876,10 @@ of.je
 // Submitted by Tibor Halter <thalter@boomla.com>
 boomla.net
 
+// Boutir : https://www.boutir.com
+// Submitted by Eric Ng Ka Ka <ngkaka@boutir.com>
+boutir.com
+
 // Boxfuse : https://boxfuse.com
 // Submitted by Axel Fontaine <axel@boxfuse.com>
 boxfuse.io
@@ -10898,6 +10902,10 @@ browsersafetymark.io
 uk0.bigv.io
 dh.bytemark.co.uk
 vm.bytemark.co.uk
+
+// Caf.js Labs LLC : https://www.cafjs.com
+// Submitted by Antonio Lain <antlai@cafjs.com>
+cafjs.com
 
 // callidomus : https://www.callidomus.com/
 // Submitted by Marcus Popp <admin@callidomus.com>
@@ -12993,6 +13001,11 @@ byen.site
 // pubtls.org: https://www.pubtls.org
 // Submitted by Kor Nielsen <kor@pubtls.org>
 pubtls.org
+
+// PythonAnywhere LLP: https://www.pythonanywhere.com
+// Submitted by Giles Thomas <giles@pythonanywhere.com>
+*.pythonanywhere.com
+*.eu.pythonanywhere.com
 
 // QOTO, Org.
 // Submitted by Jeffrey Phillips Freeman <jeffrey.freeman@qoto.org>
