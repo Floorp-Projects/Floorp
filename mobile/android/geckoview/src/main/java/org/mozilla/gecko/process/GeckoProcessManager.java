@@ -764,10 +764,11 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
 
         int started = IChildProcess.STARTED_FAIL;
         RemoteException exception = null;
+        final String userSerialNumber = System.getenv("MOZ_ANDROID_USER_SERIAL_NUMBER");
         final String crashHandler = GeckoAppShell.getCrashHandlerService() != null ?
                 GeckoAppShell.getCrashHandlerService().getName() : null;
         try {
-            started = child.start(this, mInstanceId, args, extras, flags, crashHandler,
+            started = child.start(this, mInstanceId, args, extras, flags, userSerialNumber, crashHandler,
                     prefsPfd, prefMapPfd, ipcPfd, crashPfd, crashAnnotationPfd);
         } catch (final RemoteException e) {
             exception = e;

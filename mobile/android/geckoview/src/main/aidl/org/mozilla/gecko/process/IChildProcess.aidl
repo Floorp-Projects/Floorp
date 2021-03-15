@@ -23,6 +23,7 @@ interface IChildProcess {
               in String[] args,
               in Bundle extras,
               int flags,
+              in String userSerialNumber,
               in String crashHandlerService,
               in ParcelFileDescriptor prefsPfd,
               in ParcelFileDescriptor prefMapPfd,
