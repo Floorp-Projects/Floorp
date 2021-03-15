@@ -154,6 +154,7 @@ public class GeckoThread extends Thread {
         public Bundle extras;
         public int flags;
         public Map<String, Object> prefs;
+        public String userSerialNumber;
 
         public int prefsFd;
         public int prefMapFd;
@@ -415,6 +416,10 @@ public class GeckoThread extends Thread {
             env.add(0, "MOZ_CRASHREPORTER=1");
         }
 
+        if (mInitInfo.userSerialNumber != null) {
+            env.add(0, "MOZ_ANDROID_USER_SERIAL_NUMBER=" + mInitInfo.userSerialNumber);
+        }
+
         // Very early -- before we load mozglue -- wait for Java debuggers.  This allows to connect
         // a dual/hybrid debugger as well, allowing to debug child processes -- including the
         // mozglue loading process.
@@ -427,7 +432,10 @@ public class GeckoThread extends Thread {
         GeckoLoader.loadMozGlue(context);
         setState(State.MOZGLUE_READY);
 
-        GeckoLoader.setupGeckoEnvironment(context, context.getFilesDir().getPath(), env, mInitInfo.prefs);
+        final boolean isChildProcess = isChildProcess();
+
+        GeckoLoader.setupGeckoEnvironment(context, isChildProcess,
+                                          context.getFilesDir().getPath(), env, mInitInfo.prefs);
 
         initGeckoEnvironment();
 
@@ -445,7 +453,7 @@ public class GeckoThread extends Thread {
 
         Log.w(LOGTAG, "zerdatime " + SystemClock.elapsedRealtime() + " - runGecko");
 
-        final String[] args = isChildProcess() ? mInitInfo.args : getMainProcessArgs();
+        final String[] args = isChildProcess ? mInitInfo.args : getMainProcessArgs();
 
         if ((mInitInfo.flags & FLAG_DEBUGGING) != 0) {
             Log.i(LOGTAG, "RunGecko - args = " + TextUtils.join(" ", args));

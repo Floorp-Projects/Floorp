@@ -113,6 +113,7 @@ public final class GeckoLoader {
 
     @SuppressWarnings("deprecation") // for Build.CPU_ABI
     public synchronized static void setupGeckoEnvironment(final Context context,
+                                                          final boolean isChildProcess,
                                                           final String profilePath,
                                                           final Collection<String> env,
                                                           final Map<String, Object> prefs) {
@@ -120,19 +121,38 @@ public final class GeckoLoader {
             putenv(e);
         }
 
-        try {
-            final File dataDir = new File(context.getApplicationInfo().dataDir);
-            putenv("MOZ_ANDROID_DATA_DIR=" + dataDir.getCanonicalPath());
-        } catch (final java.io.IOException e) {
-            Log.e(LOGTAG, "Failed to resolve app data directory");
-        }
-
         putenv("MOZ_ANDROID_PACKAGE_NAME=" + context.getPackageName());
 
-        setupDownloadEnvironment(context);
+        if (!isChildProcess) {
+            setupDownloadEnvironment(context);
 
-        // profile home path
-        putenv("HOME=" + profilePath);
+            // profile home path
+            putenv("HOME=" + profilePath);
+
+            // setup the downloads path
+            File f = Environment.getDownloadCacheDirectory();
+            putenv("EXTERNAL_STORAGE=" + f.getPath());
+
+            // setup the app-specific cache path
+            f = context.getCacheDir();
+            putenv("CACHE_DIRECTORY=" + f.getPath());
+
+            f = context.getExternalFilesDir(null);
+            if (f != null) {
+                putenv("PUBLIC_STORAGE=" + f.getPath());
+            }
+
+            if (Build.VERSION.SDK_INT >= 17) {
+                android.os.UserManager um = (android.os.UserManager)context.getSystemService(Context.USER_SERVICE);
+                if (um != null) {
+                    putenv("MOZ_ANDROID_USER_SERIAL_NUMBER=" + um.getSerialNumberForUser(android.os.Process.myUserHandle()));
+                } else {
+                    Log.d(LOGTAG, "Unable to obtain user manager service on a device with SDK version " + Build.VERSION.SDK_INT);
+                }
+            }
+
+            setupInitialPrefs(prefs);
+        }
 
         // setup the tmp path
         File f = getTmpDir(context);
@@ -140,28 +160,6 @@ public final class GeckoLoader {
             f.mkdirs();
         }
         putenv("TMPDIR=" + f.getPath());
-
-        // setup the downloads path
-        f = Environment.getDownloadCacheDirectory();
-        putenv("EXTERNAL_STORAGE=" + f.getPath());
-
-        // setup the app-specific cache path
-        f = context.getCacheDir();
-        putenv("CACHE_DIRECTORY=" + f.getPath());
-
-        f = context.getExternalFilesDir(null);
-        if (f != null) {
-            putenv("PUBLIC_STORAGE=" + f.getPath());
-        }
-
-        if (Build.VERSION.SDK_INT >= 17) {
-            android.os.UserManager um = (android.os.UserManager)context.getSystemService(Context.USER_SERVICE);
-            if (um != null) {
-                putenv("MOZ_ANDROID_USER_SERIAL_NUMBER=" + um.getSerialNumberForUser(android.os.Process.myUserHandle()));
-            } else {
-                Log.d(LOGTAG, "Unable to obtain user manager service on a device with SDK version " + Build.VERSION.SDK_INT);
-            }
-        }
 
         putenv("LANG=" + Locale.getDefault().toString());
 
@@ -173,8 +171,6 @@ public final class GeckoLoader {
 
         putenv("MOZ_ANDROID_DEVICE_SDK_VERSION=" + Build.VERSION.SDK_INT);
         putenv("MOZ_ANDROID_CPU_ABI=" + Build.CPU_ABI);
-
-        setupInitialPrefs(prefs);
 
         // env from extras could have reset out linker flags; set them again.
         loadLibsSetupLocked(context);
