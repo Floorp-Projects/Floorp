@@ -618,8 +618,14 @@ class WebSocketServer(object):
         ]
         env = dict(os.environ)
         env["PYTHONPATH"] = os.pathsep.join(sys.path)
-        # start the process
-        self._process = mozprocess.ProcessHandler(cmd, cwd=SCRIPT_DIR, env=env)
+        # Start the process. Ignore stderr so that exceptions from the server
+        # are not treated as failures when parsing the test log.
+        self._process = mozprocess.ProcessHandler(
+            cmd,
+            cwd=SCRIPT_DIR,
+            env=env,
+            processStderrLine=lambda _: None,
+        )
         self._process.run()
         pid = self._process.pid
         self._log.info("runtests.py | Websocket server pid: %d" % pid)
