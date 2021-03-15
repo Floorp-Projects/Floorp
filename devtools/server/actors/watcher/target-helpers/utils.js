@@ -28,10 +28,7 @@ function shouldNotifyWindowGlobal(
   if (!windowGlobal) {
     return false;
   }
-  // Ignore extension for now as attaching to them is special.
-  if (browsingContext.currentRemoteType == "extension") {
-    return false;
-  }
+
   // Ignore globals running in the parent process for now as they won't be in a distinct process anyway.
   // And JSWindowActor will most likely only be created if we toggle includeChrome
   // on the JSWindowActor registration.
