@@ -7370,22 +7370,6 @@ corroborate:
     record_in_processes:
       - main
 
-privacy.feature:
-  first_party_isolation_enabled:
-    bug_numbers:
-      - 1631676
-    description: >
-      The value of preference "privacy.firstparty.isolate"
-    expires: "never"
-    kind: boolean
-    notification_emails:
-      - gachen@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-
 # NOTE: Please don't add new definitions below this point. Consider adding
 # them earlier in the file and leave the telemetry.test category as the last
 # one for readability.
