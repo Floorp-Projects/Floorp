@@ -94,6 +94,7 @@ class ActorReadyGeckoProfilerInterface {
       features: options.features || [
         "js",
         "stackwalk",
+        "cpu",
         "responsiveness",
         "threads",
         "leaf",
