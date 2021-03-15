@@ -2147,10 +2147,15 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 }
 
 #PanelUI-whatsNew .panelMenu-toggleWhatsNew-checkbox {
-  background-color: var(--arrowpanel-dimmed);
   border-top: 1px solid var(--panel-separator-color);
-  padding-inline-start: 18px;
+  padding-inline-start: 16px;
   min-height: 41px;
+}
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+#PanelUI-whatsNew .panelMenu-toggleWhatsNew-checkbox {
+  background-color: var(--arrowpanel-dimmed);
+  padding-inline-start: 18px;
 }
 
 #PanelUI-whatsNew .panelMenu-toggleWhatsNew-checkbox:hover {
@@ -2203,6 +2208,7 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 #PanelUI-whatsNew .checkbox-icon {
   display: none;
 }
+} /*** END !proton ***/
 
 #PanelUI-whatsNew .whatsNew-message {
   cursor: pointer;

@@ -40,11 +40,11 @@ checkbox[disabled="true"] {
 }
 
 checkbox:not([disabled="true"]):hover > .checkbox-check {
-  background-color: var(--checkbox-unchecked-hover-bgcolor, Field);
+  background-color: var(--checkbox-unchecked-hover-bgcolor, color-mix(in srgb, -moz-accent-color 4%, Field));
 }
 
-checkbox:not([disabled="true"]):active > .checkbox-check {
-  background-color: var(--checkbox-unchecked-active-bgcolor, Field);
+checkbox:not([disabled="true"]):hover:active > .checkbox-check {
+  background-color: var(--checkbox-unchecked-active-bgcolor, color-mix(in srgb, -moz-accent-color 8%, Field));
 }
 
 .checkbox-check[checked] {
@@ -57,11 +57,11 @@ checkbox:not([disabled="true"]):active > .checkbox-check {
 }
 
 checkbox:not([disabled="true"]):hover > .checkbox-check[checked] {
-  background-color: var(--checkbox-checked-hover-bgcolor, color-mix(in srgb, currentColor 10%, -moz-accent-color));
+  background-color: var(--checkbox-checked-hover-bgcolor, color-mix(in srgb, currentColor 12.5%, -moz-accent-color));
 }
 
-checkbox:not([disabled="true"]):active > .checkbox-check[checked] {
-  background-color: var(--checkbox-checked-active-bgcolor, color-mix(in srgb, currentColor 20%, -moz-accent-color));
+checkbox:not([disabled="true"]):hover:active > .checkbox-check[checked] {
+  background-color: var(--checkbox-checked-active-bgcolor, color-mix(in srgb, currentColor 25%, -moz-accent-color));
 }
 
 checkbox:not([native]):-moz-focusring > .checkbox-check {
