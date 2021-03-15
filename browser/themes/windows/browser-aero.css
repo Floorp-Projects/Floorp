@@ -53,7 +53,7 @@
             border-top: 1px solid rgba(0,0,0,.7);
           }
           :root[sizemode=normal][tabsintitlebar][always-use-accent-color-for-window-border]:not(:-moz-window-inactive) {
-            border-top-color: -moz-win-accentcolor;
+            border-top-color: -moz-accent-color;
           }
           :root[tabsintitlebar]:not(:-moz-lwtheme) {
             background-color: hsl(235,33%,19%);
@@ -63,12 +63,12 @@
 
         @media (-moz-windows-accent-color-in-titlebar) {
           :root[sizemode=normal][tabsintitlebar] {
-            border-top: 1px solid -moz-win-accentcolor;
+            border-top: 1px solid -moz-accent-color;
           }
           :root[tabsintitlebar]:not(:-moz-window-inactive, :-moz-lwtheme),
           :root[tabsintitlebar]:not(:-moz-window-inactive)[lwt-default-theme-in-dark-mode] {
-            background-color: -moz-win-accentcolor;
-            color: -moz-win-accentcolortext;
+            background-color: -moz-accent-color;
+            color: -moz-accent-color-foreground;
           }
           :root[tabsintitlebar][lwt-default-theme-in-dark-mode] #titlebar {
             --lwt-toolbarbutton-icon-fill: currentColor;

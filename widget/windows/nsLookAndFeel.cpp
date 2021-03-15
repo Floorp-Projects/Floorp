@@ -228,7 +228,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       idx = COLOR_GRAYTEXT;
       break;
     case ColorID::Highlight:
-    case ColorID::MozAccentColor:
     case ColorID::MozHtmlCellhighlight:
     case ColorID::MozMenuhover:
       idx = COLOR_HIGHLIGHT;
@@ -247,7 +246,6 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       }
       // Fall through
     case ColorID::Highlighttext:
-    case ColorID::MozAccentColorForeground:
     case ColorID::MozHtmlCellhighlighttext:
       idx = COLOR_HIGHLIGHTTEXT;
       break;
@@ -314,19 +312,19 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
     case ColorID::MozCellhighlight:
       idx = COLOR_3DFACE;
       break;
-    case ColorID::MozWinAccentcolor:
+    case ColorID::MozAccentColor:
       if (mHasColorAccent) {
         aColor = mColorAccent;
       } else {
         // Seems to be the default color (hardcoded because of bug 1065998)
-        aColor = NS_RGB(158, 158, 158);
+        aColor = NS_RGB(0, 120, 215);
       }
       return NS_OK;
-    case ColorID::MozWinAccentcolortext:
+    case ColorID::MozAccentColorForeground:
       if (mHasColorAccentText) {
         aColor = mColorAccentText;
       } else {
-        aColor = NS_RGB(0, 0, 0);
+        aColor = NS_RGB(255, 255, 255);
       }
       return NS_OK;
     case ColorID::MozWinMediatext:
