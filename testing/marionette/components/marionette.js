@@ -241,9 +241,6 @@ const RECOMMENDED_PREFS = new Map([
   // Do not scan Wifi
   ["geo.wifi.scan", false],
 
-  // Show chrome errors and warnings in the error console
-  ["javascript.options.showInConsole", true],
-
   // Do not prompt with long usernames or passwords in URLs
   ["network.http.phishy-userpass-length", 255],
 

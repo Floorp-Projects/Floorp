@@ -120,9 +120,6 @@ lazy_static! {
         // that may cause unexpected test timeouts.
         ("idle.lastDailyNotification", Pref::new(-1)),
 
-        // Show chrome errors and warnings in the error console
-        ("javascript.options.showInConsole", Pref::new(true)),
-
         // Disable download and usage of OpenH264, and Widevine plugins
         ("media.gmp-manager.updateEnabled", Pref::new(false)),
 
