@@ -552,3 +552,49 @@ assertSame(get(memF64, 0, 2), [NaN, 0]);
 set(memF32, 4, [Infinity, -Infinity, 0, 0])
 ins.exports.f64x2_protomote_f32x4();
 assertSame(get(memF64, 0, 2), [Infinity, -Infinity]);
+
+
+// i16x8.extadd_pairwise_i8x16_{s,u} / i32x4.extadd_pairwise_i16x8_{s,u}
+
+var ins = wasmEvalText(`
+  (module
+    (memory (export "mem") 1 1)
+    (func (export "i16x8_extadd_pairwise_i8x16_s")
+      (v128.store (i32.const 0) (i16x8.extadd_pairwise_i8x16_s (v128.load (i32.const 16)) )))
+    (func (export "i16x8_extadd_pairwise_i8x16_u")
+      (v128.store (i32.const 0) (i16x8.extadd_pairwise_i8x16_u (v128.load (i32.const 16)) )))
+
+    (func (export "i32x4_extadd_pairwise_i16x8_s")
+      (v128.store (i32.const 0) (i32x4.extadd_pairwise_i16x8_s (v128.load (i32.const 16)) )))
+    (func (export "i32x4_extadd_pairwise_i16x8_u")
+      (v128.store (i32.const 0) (i32x4.extadd_pairwise_i16x8_u (v128.load (i32.const 16)) )))
+  )`);
+
+var mem8 = new Int8Array(ins.exports.mem.buffer);
+var memU8 = new Uint8Array(ins.exports.mem.buffer);
+var mem16 = new Int16Array(ins.exports.mem.buffer);
+var memU16 = new Uint16Array(ins.exports.mem.buffer);
+var mem32 = new Int32Array(ins.exports.mem.buffer);
+var memU32 = new Uint32Array(ins.exports.mem.buffer);
+
+set(mem8, 16, [0, 0, 1, 1, 2, -2, 0, 42, 1, -101, 101, -1, 127, 125, -1, -2]);
+ins.exports.i16x8_extadd_pairwise_i8x16_s();
+assertSame(get(mem16, 0, 8), [0, 2, 0, 42, -100, 100, 252, -3]);
+
+set(memU8, 16, [0, 0, 1, 1, 2, 255, 0, 42, 0, 255, 254, 0, 127, 125, 255, 255]);
+ins.exports.i16x8_extadd_pairwise_i8x16_u();
+assertSame(get(memU16, 0, 8), [0, 2, 257, 42, 255, 254, 252, 510]);
+
+set(mem16, 8, [0, 0, 1, 1, 2, -2, -1, -2]);
+ins.exports.i32x4_extadd_pairwise_i16x8_s();
+assertSame(get(mem32, 0, 4), [0, 2, 0, -3]);
+set(mem16, 8, [0, 42, 1, -32760, 32766, -1, 32761, 32762]);
+ins.exports.i32x4_extadd_pairwise_i16x8_s();
+assertSame(get(mem32, 0, 4), [42, -32759, 32765, 65523]);
+
+set(memU16, 8, [0, 0, 1, 1, 2, 65535, 65535, 65535]);
+ins.exports.i32x4_extadd_pairwise_i16x8_u();
+assertSame(get(memU32, 0, 4), [0, 2, 65537, 131070]);
+set(memU16, 8, [0, 42, 0, 65535, 65534, 0, 32768, 32765]);
+ins.exports.i32x4_extadd_pairwise_i16x8_u();
+assertSame(get(memU32, 0, 4), [42, 65535, 65534, 65533]);

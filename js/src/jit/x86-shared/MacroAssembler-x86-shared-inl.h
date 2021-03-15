@@ -2582,6 +2582,47 @@ void MacroAssembler::mulFloat64x2(const SimdConstant& rhs,
                 &MacroAssembler::vmulpdSimd128);
 }
 
+// Pairwise add
+
+void MacroAssembler::extAddPairwiseInt8x16(FloatRegister src,
+                                           FloatRegister dest) {
+  ScratchSimd128Scope scratch(*this);
+  if (dest == src) {
+    moveSimd128(src, scratch);
+    src = scratch;
+  }
+  loadConstantSimd128Int(SimdConstant::SplatX16(1), dest);
+  vpmaddubsw(src, dest, dest);
+}
+
+void MacroAssembler::unsignedExtAddPairwiseInt8x16(FloatRegister src,
+                                                   FloatRegister dest) {
+  ScratchSimd128Scope scratch(*this);
+  moveSimd128(src, dest);
+  loadConstantSimd128Int(SimdConstant::SplatX16(1), scratch);
+  vpmaddubsw(scratch, dest, dest);
+}
+
+void MacroAssembler::extAddPairwiseInt16x8(FloatRegister src,
+                                           FloatRegister dest) {
+  ScratchSimd128Scope scratch(*this);
+  moveSimd128(src, dest);
+  loadConstantSimd128Int(SimdConstant::SplatX8(1), scratch);
+  vpmaddwd(Operand(scratch), dest, dest);
+}
+
+void MacroAssembler::unsignedExtAddPairwiseInt16x8(FloatRegister src,
+                                                   FloatRegister dest) {
+  ScratchSimd128Scope scratch(*this);
+  moveSimd128(src, dest);
+  loadConstantSimd128Int(SimdConstant::SplatX8(0x8000), scratch);
+  vpxor(scratch, dest, dest);
+  loadConstantSimd128Int(SimdConstant::SplatX8(1), scratch);
+  vpmaddwd(Operand(scratch), dest, dest);
+  loadConstantSimd128Int(SimdConstant::SplatX4(0x00010000), scratch);
+  vpaddd(Operand(scratch), dest, dest);
+}
+
 // Floating square root
 
 void MacroAssembler::sqrtFloat32x4(FloatRegister src, FloatRegister dest) {

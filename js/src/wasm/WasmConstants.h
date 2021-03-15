@@ -601,10 +601,10 @@ enum class SimdOp {
   I8x16MaxU = 0x79,
   F64x2Trunc = 0x7a,
   I8x16AvgrU = 0x7b,
-  // Unused = 0x7c
-  // Unused = 0x7d
-  // Unused = 0x7e
-  // Unused = 0x7f
+  I16x8ExtAddPairwiseI8x16S = 0x7c,
+  I16x8ExtAddPairwiseI8x16U = 0x7d,
+  I32x4ExtAddPairwiseI16x8S = 0x7e,
+  I32x4ExtAddPairwiseI16x8U = 0x7f,
   I16x8Abs = 0x80,
   I16x8Neg = 0x81,
   I16x8Q15MulrSatS = 0x82,
