@@ -315,7 +315,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   template <typename PaintBackendData>
   void PaintProgress(nsIFrame*, PaintBackendData&, const LayoutDeviceRect&,
                      const EventStates&, UseSystemColors, DPIRatio,
-                     bool aIsMeter, bool aBar);
+                     bool aIsMeter);
   template <typename PaintBackendData>
   void PaintButton(nsIFrame*, PaintBackendData&, const LayoutDeviceRect&,
                    const EventStates&, UseSystemColors, DPIRatio);
