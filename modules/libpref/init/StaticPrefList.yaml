@@ -8968,6 +8968,12 @@
   value: true
   mirror: always
 
+# Whether to check for DNS resolvers
+- name: network.notify.resolvers
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # Whether to use the rust implemented DefaultURI for unknown scheme types
 - name: network.url.useDefaultURI
   type: RelaxedAtomicBool
