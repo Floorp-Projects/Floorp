@@ -515,9 +515,9 @@ sealed class Event {
             get() = providerName
     }
 
-    data class SearchAdClicked(val providerName: String) : Event() {
+    data class SearchAdClicked(val keyName: String) : Event() {
         val label: String
-            get() = providerName
+            get() = keyName
     }
 
     data class SearchInContent(val keyName: String) : Event() {

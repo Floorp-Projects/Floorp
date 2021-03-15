@@ -14,16 +14,23 @@ function collectLinks(urls) {
     }
 }
 
-function sendLinks() {
+function sendLinks(cookies) {
     let urls = [];
     collectLinks(urls);
 
     let message = {
      'url': document.location.href,
-     'urls': urls
+     'urls': urls,
+     'cookies': cookies
     };
     browser.runtime.sendNativeMessage("MozacBrowserAds", message);
 }
+
+function notify(message) {
+   sendLinks(message.cookies);
+}
+
+browser.runtime.onMessage.addListener(notify);
 
 const events = ["pageshow", "load", "unload"];
 var timeout;
@@ -31,11 +38,15 @@ var timeout;
 const eventLogger = event => {
   switch (event.type) {
     case "load":
-        timeout = setTimeout(sendLinks, ADLINK_CHECK_TIMEOUT_MS);
+        timeout = setTimeout(() => {
+            browser.runtime.sendMessage({ "checkCookies": true });
+        }, ADLINK_CHECK_TIMEOUT_MS)
         break;
     case "pageshow":
         if (event.persisted) {
-          timeout = setTimeout(sendLinks, ADLINK_CHECK_TIMEOUT_MS);
+          timeout = setTimeout(() => {
+              browser.runtime.sendMessage({ "checkCookies": true });
+          }, ADLINK_CHECK_TIMEOUT_MS)
         }
         break;
     case "unload":

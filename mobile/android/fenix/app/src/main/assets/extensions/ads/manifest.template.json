@@ -19,9 +19,20 @@
       "run_at": "document_end"
     }
   ],
+  "background": {
+    "scripts": ["adsBackground.js"]
+  },
   "permissions": [
     "geckoViewAddons",
     "nativeMessaging",
-    "nativeMessagingFromContent"
+    "nativeMessagingFromContent",
+    "geckoViewAddons",
+    "nativeMessaging",
+    "nativeMessagingFromContent",
+    "webNavigation",
+    "webRequest",
+    "webRequestBlocking",
+    "cookies",
+    "*://*/*"
   ]
 }

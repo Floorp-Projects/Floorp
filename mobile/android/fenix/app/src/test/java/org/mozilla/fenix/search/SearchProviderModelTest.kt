@@ -29,13 +29,13 @@ class SearchProviderModelTest {
     fun `test search provider contains ads`() {
         val ad = "https://www.bing.com/aclick"
         val nonAd = "https://www.bing.com/notanad"
-        assertTrue(testSearchProvider.containsAds(listOf(ad, nonAd)))
+        assertTrue(testSearchProvider.containsAdLinks(listOf(ad, nonAd)))
     }
 
     @Test
     fun `test search provider does not contain ads`() {
         val nonAd1 = "https://www.yahoo.com/notanad"
         val nonAd2 = "https://www.google.com/"
-        assertFalse(testSearchProvider.containsAds(listOf(nonAd1, nonAd2)))
+        assertFalse(testSearchProvider.containsAdLinks(listOf(nonAd1, nonAd2)))
     }
 }
