@@ -9,66 +9,62 @@
   max-width: 60em;
 }
 
-table {
-  width: 100%;
-  padding-bottom: 2em;
-}
-
-.float-end {
-  float: inline-end;
-}
 .hidden {
   display: none;
 }
-.table-title-container {
-  align-items: center;
-  display: flex;
-  justify-content: space-between;
-}
-.wide-button {
-  display: block;
-  min-height: 32px;
-  padding-inline: 30px;
-}
-.submitting {
-  background-image: url(chrome://global/skin/icons/loading.png);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 16px;
-}
-.submitting .submit-crash-button-label {
-  display: none;
-}
-.failed-to-submit {
-  color: #ca8695;
-}
 
-a.button-as-link {
-  appearance: none;
-  min-height: 30px;
-  color: var(--in-content-text-color) !important;
-  border: 1px solid var(--in-content-box-border-color) !important;
-  border-radius: 2px;
-  background-color: var(--in-content-page-background);
-  line-height: 30px;
-  margin: 4px 8px;
-  /* Ensure font-size isn't overridden by widget styling (e.g. in forms.css) */
-  font-size: 1em;
-}
-a.button-as-link:hover {
-  background-color: var(--in-content-box-background-hover) !important;
-  text-decoration: none;
-}
-h2.lighter-font-weight {
-  font-weight: lighter;
+/* Table layout */
+
+table {
+  width: 100%;
+  padding-bottom: 2em;
+  border-collapse: collapse;
 }
 
 th {
   text-align: start;
 }
 
+th, td {
+  border-bottom: 1px solid var(--in-content-border-color);
+}
+
+th,
+#submitted td {
+  /* Unsubmitted table already gets spacing from button */
+  padding-block: 10px;
+}
+
+.submit-button,
+.crash-link {
+  float: inline-end;
+}
+
+/* Other elements */
+
+.table-title-container {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.submitting {
+  background-image: url(chrome://global/skin/icons/loading.png);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+}
+
 @media (min-resolution: 1.1dppx) {
   .submitting {
     background-image: url(chrome://global/skin/icons/loading@2x.png);
   }
+}
+
+.submitting .submit-crash-button-label {
+  display: none;
+}
+
+.failed-to-submit {
+  color: #ca8695;
 }
