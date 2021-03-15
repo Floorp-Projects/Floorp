@@ -168,6 +168,17 @@ nsNetworkLinkService::GetDnsSuffixList(nsTArray<nsCString>& aDnsSuffixList) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNetworkLinkService::GetResolvers(nsTArray<RefPtr<nsINetAddr>>& aResolvers) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNetworkLinkService::GetNativeResolvers(
+    nsTArray<mozilla::net::NetAddr>& aResolvers) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 #ifndef SA_SIZE
 #  define SA_SIZE(sa)                                 \
     ((!(sa) || ((struct sockaddr*)(sa))->sa_len == 0) \
