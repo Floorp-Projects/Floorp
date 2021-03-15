@@ -2430,7 +2430,7 @@ static ReturnAbortOnError ProfileLockedDialog(nsIFile* aProfileDir,
     if (aUnlocker) {
       int32_t button;
 #ifdef MOZ_WIDGET_ANDROID
-      java::GeckoAppShell::KillAnyZombies();
+      // On Android we always kill the process if the lock is still being held
       button = 0;
 #else
       const uint32_t flags = (nsIPromptService::BUTTON_TITLE_IS_STRING *
@@ -2457,15 +2457,8 @@ static ReturnAbortOnError ProfileLockedDialog(nsIFile* aProfileDir,
         return LaunchChild(false, true);
       }
     } else {
-#ifdef MOZ_WIDGET_ANDROID
-      if (java::GeckoAppShell::UnlockProfile()) {
-        return NS_LockProfilePath(aProfileDir, aProfileLocalDir, nullptr,
-                                  aResult);
-      }
-#else
       rv = ps->Alert(nullptr, killTitle.get(), killMessage.get());
       NS_ENSURE_SUCCESS_LOG(rv, rv);
-#endif
     }
 
     return NS_ERROR_ABORT;

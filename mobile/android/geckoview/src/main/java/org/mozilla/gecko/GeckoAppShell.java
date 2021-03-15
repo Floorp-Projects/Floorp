@@ -5,10 +5,7 @@
 
 package org.mozilla.gecko;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
-import java.io.InputStreamReader;
 import java.net.Proxy;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
@@ -21,7 +18,6 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.HardwareCodecCapabilityUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.InputDeviceUtils;
-import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.ProxySelector;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.BuildConfig;
@@ -1069,94 +1065,6 @@ public class GeckoAppShell {
     }
 
     @WrapForJNI(calledFrom = "gecko")
-    public static void killAnyZombies() {
-        GeckoProcessesVisitor visitor = new GeckoProcessesVisitor() {
-            @Override
-            public boolean callback(final int pid) {
-                if (pid != android.os.Process.myPid())
-                    android.os.Process.killProcess(pid);
-                return true;
-            }
-        };
-
-        EnumerateGeckoProcesses(visitor);
-    }
-
-    interface GeckoProcessesVisitor {
-        boolean callback(int pid);
-    }
-
-    private static void EnumerateGeckoProcesses(final GeckoProcessesVisitor visiter) {
-        int pidColumn = -1;
-        int userColumn = -1;
-
-        Process ps = null;
-        InputStreamReader inputStreamReader = null;
-        BufferedReader in = null;
-        try {
-            // run ps and parse its output
-            ps = Runtime.getRuntime().exec("ps");
-            inputStreamReader = new InputStreamReader(ps.getInputStream());
-            in = new BufferedReader(inputStreamReader, 2048);
-
-            String headerOutput = in.readLine();
-
-            // figure out the column offsets.  We only care about the pid and user fields
-            StringTokenizer st = new StringTokenizer(headerOutput);
-
-            int tokenSoFar = 0;
-            while (st.hasMoreTokens()) {
-                String next = st.nextToken();
-                if (next.equalsIgnoreCase("PID"))
-                    pidColumn = tokenSoFar;
-                else if (next.equalsIgnoreCase("USER"))
-                    userColumn = tokenSoFar;
-                tokenSoFar++;
-            }
-
-            // alright, the rest are process entries.
-            String psOutput = null;
-            while ((psOutput = in.readLine()) != null) {
-                String[] split = psOutput.split("\\s+");
-                if (split.length <= pidColumn || split.length <= userColumn)
-                    continue;
-                int uid = android.os.Process.getUidForName(split[userColumn]);
-                if (uid == android.os.Process.myUid() &&
-                    !split[split.length - 1].equalsIgnoreCase("ps")) {
-                    int pid = Integer.parseInt(split[pidColumn]);
-                    boolean keepGoing = visiter.callback(pid);
-                    if (keepGoing == false)
-                        break;
-                }
-            }
-        } catch (Exception e) {
-            Log.w(LOGTAG, "Failed to enumerate Gecko processes.",  e);
-        } finally {
-            IOUtils.safeStreamClose(in);
-            IOUtils.safeStreamClose(inputStreamReader);
-            if (ps != null) {
-                ps.destroy();
-            }
-        }
-    }
-
-    public static String getAppNameByPID(final int pid) {
-        BufferedReader cmdlineReader = null;
-        String path = "/proc/" + pid + "/cmdline";
-        try {
-            File cmdlineFile = new File(path);
-            if (!cmdlineFile.exists())
-                return "";
-            cmdlineReader = new BufferedReader(new FileReader(cmdlineFile));
-            return cmdlineReader.readLine().trim();
-        } catch (Exception ex) {
-            return "";
-        } finally {
-            IOUtils.safeStreamClose(cmdlineReader);
-        }
-    }
-
-    @WrapForJNI(calledFrom = "gecko")
     private static byte[] getIconForExtension(final String aExt, final int iconSize) {
         try {
             int resolvedIconSize = iconSize;
@@ -1451,9 +1359,6 @@ public class GeckoAppShell {
 
     @WrapForJNI(calledFrom = "gecko")
     private static boolean unlockProfile() {
-        // Try to kill any zombie Fennec's that might be running
-        GeckoAppShell.killAnyZombies();
-
         // Then force unlock this profile
         final GeckoProfile profile = GeckoThread.getActiveProfile();
         if (profile != null) {

@@ -25,6 +25,9 @@ UNIFIED_SOURCES += ["nsProfileLock.cpp"]
 if CONFIG["OS_ARCH"] == "WINNT":
     UNIFIED_SOURCES += ["ProfileUnlockerWin.cpp"]
 
+if CONFIG["OS_TARGET"] == "Android":
+    UNIFIED_SOURCES += ["ProfileUnlockerAndroid.cpp"]
+
 UNIFIED_SOURCES += ["nsToolkitProfileService.cpp"]
 
 LOCAL_INCLUDES += [
