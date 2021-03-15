@@ -5424,29 +5424,29 @@
 
 #ifdef NIGHTLY_BUILD
   # Experimental support for Iterator Helpers in JavaScript.
-- name: javascript.options.experimental.iterator_helpers
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
+-   name: javascript.options.experimental.iterator_helpers
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 
   # Experimental support for Private Fields in JavaScript.
-- name: javascript.options.experimental.private_fields
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
+-   name: javascript.options.experimental.private_fields
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 
   # Experimental support for Private Methods in JavaScript.
-- name: javascript.options.experimental.private_methods
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
+-   name: javascript.options.experimental.private_methods
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
 
   # Experimental support for Top-level Await in JavaScript.
-- name: javascript.options.experimental.top_level_await
-  type: RelaxedAtomicBool
-  value: false
-  mirror: always
-#endif
+-   name: javascript.options.experimental.top_level_await
+    type: RelaxedAtomicBool
+    value: false
+    mirror: always
+#endif  // NIGHTLY_BUILD
 
 # The amount of time we wait between a request to GC (due to leaving a page) and doing the actual GC, in ms.
 - name: javascript.options.gc_delay
@@ -5530,25 +5530,21 @@
   mirror: always
 
 #if defined(ENABLE_WASM_SIMD)
-- name: javascript.options.wasm_simd
-  type: bool
-  #if defined(NIGHTLY_BUILD)
-  value: true
-  #else
-  value: false
-  #endif
-  mirror: always
-#endif
+-   name: javascript.options.wasm_simd
+    type: bool
+    value: @IS_NIGHTLY_BUILD@
+    mirror: always
+#endif  // defined(ENABLE_WASM_SIMD)
 
 #if defined(ENABLE_WASM_SIMD_WORMHOLE) && defined(EARLY_BETA_OR_EARLIER)
-# This is x64-only and it would break unified macOS builds if
-# it were in all.js.  The feature rides the trains but not the
-# pref to control it; in late beta and release, it is only
-# available to privileged content.
-- name: javascript.options.wasm_simd_wormhole
-  type: bool
-  value: false
-  mirror: always
+  # This is x64-only and it would break unified macOS builds if
+  # it were in all.js.  The feature rides the trains but not the
+  # pref to control it; in late beta and release, it is only
+  # available to privileged content.
+-   name: javascript.options.wasm_simd_wormhole
+    type: bool
+    value: false
+    mirror: always
 #endif
 
 # Experimental support for ArrayBuffers larger than 2 GB.
