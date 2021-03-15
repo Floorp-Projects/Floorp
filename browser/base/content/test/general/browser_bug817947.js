@@ -11,12 +11,21 @@ add_task(async () => {
   });
 
   let tab = await preparePendingTab();
+
+  let deferredTab = PromiseUtils.defer();
+
   let win = gBrowser.replaceTabWithWindow(tab);
-  await new Promise(resolve => whenDelayedStartupFinished(win, resolve));
+  win.addEventListener(
+    "before-initial-tab-adopted",
+    async () => {
+      let [newTab] = win.gBrowser.tabs;
+      await BrowserTestUtils.browserLoaded(newTab.linkedBrowser);
+      deferredTab.resolve(newTab);
+    },
+    { once: true }
+  );
 
-  let [newTab] = win.gBrowser.tabs;
-  await BrowserTestUtils.browserLoaded(newTab.linkedBrowser);
-
+  let newTab = await deferredTab.promise;
   is(newTab.linkedBrowser.currentURI.spec, URL, "correct url should be loaded");
   ok(!newTab.hasAttribute("pending"), "tab should not be pending");
 
