@@ -355,7 +355,7 @@ function connectNativePort() {
  */
 function prepareBody() {
   let url = new URL(window.location.href);
-  let colorScheme = decodeURIComponent(url.searchParams.get("colorScheme"));
+  let colorScheme = url.searchParams.get("colorScheme");
   let body = document.createElement("body");
   body.classList.add("mozac-readerview-body");
   body.classList.add(colorScheme);
