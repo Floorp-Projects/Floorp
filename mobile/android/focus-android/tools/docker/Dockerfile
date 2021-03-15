@@ -70,3 +70,10 @@ RUN ./gradlew assembleFocusAarch64Debug \
 # to schedule the rest of the Taskcluster tasks. Please upgrade to taskcluster>=5 once
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1460015 is fixed
 RUN pip install 'taskcluster>=4,<5'
+
+# Install Google Cloud SDK for using Firebase Test Lab
+RUN cd /opt && curl --location --retry 5 --output gcloud.tar.gz https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-331.0.0-linux-x86_64.tar.gz \
+  && tar -xvf /opt/gcloud.tar.gz \
+  && rm -f gcloud.tar.gz \
+  && /opt/google-cloud-sdk/install.sh --quiet \
+  && /opt/google-cloud-sdk/bin/gcloud --quiet components update
