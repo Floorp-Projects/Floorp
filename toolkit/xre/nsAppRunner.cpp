@@ -4459,8 +4459,6 @@ int XREMain::XRE_mainStartup(bool* aExitFlag) {
         PR_fprintf(PR_STDERR, "Error: cannot open display: %s\n", display_name);
         return 1;
       }
-      gdk_display_manager_set_default_display(gdk_display_manager_get(),
-                                              mGdkDisplay);
       if (saveDisplayArg) {
         if (GdkIsX11Display(mGdkDisplay)) {
           SaveWordToEnv("DISPLAY", nsDependentCString(display_name));
