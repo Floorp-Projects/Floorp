@@ -298,11 +298,6 @@ AudioMixer::Source::AudioFrameInfo AudioReceiveStream::GetAudioFrameWithInfo(
   return audio_frame_info;
 }
 
-void AudioReceiveStream::InsertAudioLevelForContributingSource(
-    const RtpPacketInfos& packet_infos) {
-  source_tracker_.OnFrameDelivered(packet_infos);
-}
-
 int AudioReceiveStream::Ssrc() const {
   return config_.rtp.remote_ssrc;
 }

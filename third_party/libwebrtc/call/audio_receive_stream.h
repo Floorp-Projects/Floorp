@@ -200,9 +200,6 @@ class AudioReceiveStream {
 
   virtual std::vector<RtpSource> GetSources() const = 0;
 
-  virtual void InsertAudioLevelForContributingSource(
-      const RtpPacketInfos& packet_infos) = 0;
-
  protected:
   virtual ~AudioReceiveStream() {}
 };

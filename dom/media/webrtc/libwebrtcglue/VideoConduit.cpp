@@ -868,37 +868,6 @@ webrtc::Call::Stats WebrtcVideoConduit::GetCallStats() const {
   return mCall->Call()->GetStats();
 }
 
-void WebrtcVideoConduit::GetRtpSources(
-    nsTArray<dom::RTCRtpSourceEntry>& outSources) {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto current = TaskQueueWrapper::MainAsCurrent();
-  std::vector<webrtc::RtpSource> sources = mRecvStream->GetSources();
-  outSources.Clear();
-  for (const auto& source : sources) {
-    MOZ_ASSERT(!source.audio_level(), "Video cannot have an audio level");
-    dom::RTCRtpSourceEntry domEntry;
-    domEntry.mSource = source.source_id();
-    switch (source.source_type()) {
-      case webrtc::RtpSourceType::SSRC:
-        domEntry.mSourceType = dom::RTCRtpSourceEntryType::Synchronization;
-        break;
-      case webrtc::RtpSourceType::CSRC:
-        domEntry.mSourceType = dom::RTCRtpSourceEntryType::Contributing;
-        break;
-      default:
-        MOZ_CRASH("Unexpected RTCRtpSourceEntryType");
-    }
-    // Fix up timestamp to be consistent with JS time. We assume that
-    // source.timestamp_ms() was not terribly long ago, and so clock drift
-    // between thje libwebrtc clock and our JS clock is not that significant.
-    double ago = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds() -
-                 source.timestamp_ms();
-    domEntry.mTimestamp = GetNow() - ago;
-    domEntry.mRtpTimestamp = source.rtp_timestamp();
-    outSources.AppendElement(std::move(domEntry));
-  }
-}
-
 MediaConduitErrorCode WebrtcVideoConduit::InitMain() {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1414,6 +1383,7 @@ MediaConduitErrorCode WebrtcVideoConduit::SendVideoFrame(
 
   mVideoBroadcaster.OnFrame(webrtc::VideoFrame(
       buffer, frame.timestamp(), frame.render_time_ms(), frame.rotation()));
+
   return kMediaConduitNoError;
 }
 
@@ -1563,6 +1533,22 @@ MediaConduitErrorCode WebrtcVideoConduit::StartReceiving() {
   MutexAutoLock lock(mMutex);
 
   return StartReceivingLocked();
+}
+
+void WebrtcVideoConduit::OnFrameDelivered() {
+  // Spec says to "queue a task" to update contributing/synchronization source
+  // stats; that's what we're doing here.
+  NS_DispatchToMainThread(
+      media::NewRunnableFrom([this, self = RefPtr<WebrtcVideoConduit>(this)]() {
+        auto current = TaskQueueWrapper::MainAsCurrent();
+        std::vector<webrtc::RtpSource> sources;
+        if (mRecvStream) {
+          sources = mRecvStream->GetSources();
+        }
+        UpdateRtpSources(sources);
+        return NS_OK;
+      }),
+      NS_DISPATCH_NORMAL);
 }
 
 MediaConduitErrorCode WebrtcVideoConduit::StopTransmittingLocked() {

@@ -105,6 +105,8 @@ class WebrtcVideoConduit
   MediaConduitErrorCode StopReceiving() override;
   MediaConduitErrorCode StartReceiving() override;
 
+  void OnFrameDelivered() override;
+
   MediaConduitErrorCode StopTransmittingLocked();
   MediaConduitErrorCode StartTransmittingLocked();
   MediaConduitErrorCode StopReceivingLocked();
@@ -244,7 +246,6 @@ class WebrtcVideoConduit
   Maybe<webrtc::VideoSendStream::Stats> GetSenderStats() const override;
   webrtc::Call::Stats GetCallStats() const override;
 
-  void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) override;
   bool AddFrameHistory(dom::Sequence<dom::RTCVideoFrameHistoryInternal>*
                            outHistories) const override;
 
