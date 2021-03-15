@@ -9,6 +9,8 @@
 
 [Exposed=(Window,Worker)]
 interface AbortSignal : EventTarget {
+  [NewObject] static AbortSignal abort();
+
   readonly attribute boolean aborted;
 
   attribute EventHandler onabort;
