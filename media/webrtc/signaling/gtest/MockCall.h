@@ -66,9 +66,6 @@ class MockAudioReceiveStream : public webrtc::AudioReceiveStream {
   bool SetBaseMinimumPlayoutDelayMs(int delay_ms) override { return false; }
   int GetBaseMinimumPlayoutDelayMs() const override { return 0; }
 
-  void InsertAudioLevelForContributingSource(
-      const RtpPacketInfos& packet_infos) override {}
-
   virtual ~MockAudioReceiveStream() {}
 
   AudioReceiveStream::Stats mStats;

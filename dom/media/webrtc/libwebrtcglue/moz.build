@@ -19,6 +19,7 @@ LOCAL_INCLUDES += [
 UNIFIED_SOURCES += [
     "AudioConduit.cpp",
     "GmpVideoCodec.cpp",
+    "MediaConduitInterface.cpp",
     "MediaDataCodec.cpp",
     "TaskQueueWrapper.cpp",
     "VideoConduit.cpp",

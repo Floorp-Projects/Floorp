@@ -405,6 +405,8 @@ class MediaPipelineReceiveVideo : public MediaPipelineReceive {
 
   void OnRtpPacketReceived() override;
 
+  void OnFrameDelivered();
+
  private:
   class PipelineRenderer;
   friend class PipelineRenderer;

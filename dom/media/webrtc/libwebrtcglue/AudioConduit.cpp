@@ -5,7 +5,6 @@
 #include "AudioConduit.h"
 
 #include "common/browser_logging/CSFLog.h"
-#include "mozilla/dom/RTCRtpSourcesBinding.h"
 #include "mozilla/media/MediaUtils.h"
 #include "mozilla/Telemetry.h"
 #include "transport/runnable_utils.h"
@@ -213,68 +212,6 @@ void WebrtcAudioConduit::SetRtcpEventObserver(
     mozilla::RtcpEventObserver* observer) {
   MOZ_ASSERT(NS_IsMainThread());
   mRtcpEventObserver = observer;
-}
-
-void WebrtcAudioConduit::GetRtpSources(
-    nsTArray<dom::RTCRtpSourceEntry>& outSources) {
-  MOZ_ASSERT(NS_IsMainThread());
-  outSources.Clear();
-  if (!mRecvStream) {
-    return;
-  }
-  auto current = TaskQueueWrapper::MainAsCurrent();
-  std::vector<webrtc::RtpSource> sources = mRecvStream->GetSources();
-  for (const auto& source : sources) {
-    dom::RTCRtpSourceEntry domEntry;
-    domEntry.mSource = source.source_id();
-    switch (source.source_type()) {
-      case webrtc::RtpSourceType::SSRC:
-        domEntry.mSourceType = dom::RTCRtpSourceEntryType::Synchronization;
-        break;
-      case webrtc::RtpSourceType::CSRC:
-        domEntry.mSourceType = dom::RTCRtpSourceEntryType::Contributing;
-        break;
-      default:
-        MOZ_CRASH("Unexpected RTCRtpSourceEntryType");
-    }
-    // Fix up timestamp to be consistent with JS time. We assume that
-    // source.timestamp_ms() was not terribly long ago, and so clock drift
-    // between thje libwebrtc clock and our JS clock is not that significant.
-    double ago = webrtc::Clock::GetRealTimeClock()->TimeInMilliseconds() -
-                 source.timestamp_ms();
-    domEntry.mTimestamp = GetNow() - ago;
-    domEntry.mRtpTimestamp = source.rtp_timestamp();
-    if (source.audio_level()) {
-      if (*source.audio_level() == 127) {
-        // Spec indicates that a value of 127 should be set to 0
-        domEntry.mAudioLevel.Construct(0);
-      } else {
-        // All other values are calculated as 10^(-rfc_level/20)
-        domEntry.mAudioLevel.Construct(
-            std::pow(10, -*source.audio_level() / 20.0));
-      }
-    }
-    outSources.AppendElement(std::move(domEntry));
-  }
-}
-
-void WebrtcAudioConduit::InsertAudioLevelForContributingSource(
-    const uint32_t aCsrcSource, const int64_t aTimestamp,
-    const uint32_t aRtpTimestamp, const bool aHasAudioLevel,
-    const uint8_t aAudioLevel) {
-  MOZ_ASSERT(NS_IsMainThread());
-  auto current = TaskQueueWrapper::MainAsCurrent();
-
-  if (!mRecvStream) {
-    return;
-  }
-
-  webrtc::RtpPacketInfos infos({webrtc::RtpPacketInfo(
-      mRecvSSRC, {aCsrcSource}, aRtpTimestamp,
-      aHasAudioLevel ? absl::optional<uint8_t>(aAudioLevel) : absl::nullopt,
-      absl::nullopt, aTimestamp)});
-
-  mRecvStream->InsertAudioLevelForContributingSource(infos);
 }
 
 // AudioSessionConduit Implementation
@@ -552,6 +489,20 @@ MediaConduitErrorCode WebrtcAudioConduit::GetAudioFrame(
   }
 
   mMutex.Unlock();
+
+  // Spec says to "queue a task" to update contributing/synchronization source
+  // stats; that's what we're doing here.
+  NS_DispatchToMainThread(
+      media::NewRunnableFrom([this, self = RefPtr<WebrtcAudioConduit>(this)]() {
+        auto current = TaskQueueWrapper::MainAsCurrent();
+        std::vector<webrtc::RtpSource> sources;
+        if (mRecvStream) {
+          sources = mRecvStream->GetSources();
+        }
+        UpdateRtpSources(sources);
+        return NS_OK;
+      }),
+      NS_DISPATCH_NORMAL);
 
   CSFLogDebug(LOGTAG, "%s Got %zu channels of %zu samples", __FUNCTION__,
               frame->num_channels(), frame->samples_per_channel());
