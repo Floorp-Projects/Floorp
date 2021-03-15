@@ -5459,12 +5459,11 @@
 #endif
 
 #if defined(MOZ_AARCH64)
-# Cranelift->Ion transition.  Temporary switch, the value 'true' is correct for
-# SM developers.  When we land Phase 1 of the transition, the value of this will
-# change to 'false'.  When we land Phase 2, this switch will disappear altogether.
+# Cranelift->Ion transition.  Temporary switch.  When we land Phase 2
+# of the transition, this switch will disappear altogether.
 - name: javascript.options.wasm_force_ion
   type: bool
-  value: true
+  value: false
   mirror: always
 #endif
 

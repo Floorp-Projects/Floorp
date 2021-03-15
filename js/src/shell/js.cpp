@@ -592,11 +592,9 @@ bool shell::enableSharedMemory = SHARED_MEMORY_DEFAULT;
 bool shell::enableWasmBaseline = false;
 bool shell::enableWasmOptimizing = false;
 #ifdef JS_CODEGEN_ARM64
-// Cranelift->Ion transition.  The right value for development is 'true'; when
-// we land for phase 1, we flip this to 'false'; when we land for phase 2, we
-// remove this flag.  Also see the reading of the flag wasm-force-cranelift
-// below; that becomes wasm-force-ion for phase 1.
-bool shell::forceWasmIon = true;
+// Cranelift->Ion transition.  The right value for fuzzing-but-not-enabled is
+// 'false'; when we land for phase 2, we remove this flag.
+bool shell::forceWasmIon = false;
 #endif
 bool shell::enableWasmReftypes = true;
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
@@ -10960,7 +10958,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
   } else if (commandLineRequestedWasmCranelift) {
     forceWasmIon = false;
   } else {
-    forceWasmIon = !op.getBoolOption("wasm-force-cranelift");
+    forceWasmIon = op.getBoolOption("wasm-force-ion");
   }
 #endif
 
@@ -11934,11 +11932,11 @@ int main(int argc, char** argv, char** envp) {
       !op.addBoolOption('\0', "wasm-exceptions", "No-op") ||
 #endif
 #ifdef JS_CODEGEN_ARM64
-      // Cranelift->Ion transition.  This becomes wasm-force-ion at Phase 1 of
-      // the landing and then disappears at Phase 2.  See sundry comments above.
+      // Cranelift->Ion transition.  This disappears at Phase 2 of the landing.
+      // See sundry comments above.
       !op.addBoolOption(
-          '\0', "wasm-force-cranelift",
-          "Temporary: Force Cranelift in builds with both Cranelift and Ion") ||
+          '\0', "wasm-force-ion",
+          "Temporary: Force Ion in builds with both Cranelift and Ion") ||
 #endif
       !op.addBoolOption('\0', "no-native-regexp",
                         "Disable native regexp compilation") ||
