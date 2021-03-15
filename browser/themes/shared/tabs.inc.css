@@ -744,6 +744,12 @@
   opacity: .1;
 }
 
+@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+.tab-background[multiselected=true]:not([selected=true]) > .tab-background-inner {
+  border-radius: var(--proton-tab-radius);
+}
+} /*** END proton ***/
+
 .tab-line[multiselected],
 .tab-line[selected=true] {
   background-color: var(--tab-line-color);
