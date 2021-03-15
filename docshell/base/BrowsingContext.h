@@ -948,8 +948,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // volume of all media elements.
   void DidSet(FieldIndex<IDX_Muted>);
 
-  bool CanSet(FieldIndex<IDX_OverrideDPPX>, const float& aValue,
-              ContentParent* aSource);
+  CanSetResult CanSet(FieldIndex<IDX_OverrideDPPX>, const float& aValue,
+                      ContentParent* aSource);
   void DidSet(FieldIndex<IDX_OverrideDPPX>, float aOldValue);
 
   bool CanSet(FieldIndex<IDX_EmbedderInnerWindowId>, const uint64_t& aValue,
@@ -973,12 +973,13 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   void DidSet(FieldIndex<IDX_AncestorLoading>);
 
   void DidSet(FieldIndex<IDX_PlatformOverride>);
-  bool CanSet(FieldIndex<IDX_PlatformOverride>,
-              const nsString& aPlatformOverride, ContentParent* aSource);
+  CanSetResult CanSet(FieldIndex<IDX_PlatformOverride>,
+                      const nsString& aPlatformOverride,
+                      ContentParent* aSource);
 
   void DidSet(FieldIndex<IDX_UserAgentOverride>);
-  bool CanSet(FieldIndex<IDX_UserAgentOverride>, const nsString& aUserAgent,
-              ContentParent* aSource);
+  CanSetResult CanSet(FieldIndex<IDX_UserAgentOverride>,
+                      const nsString& aUserAgent, ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_OrientationLock>,
               const mozilla::hal::ScreenOrientation& aOrientationLock,
               ContentParent* aSource);
@@ -989,11 +990,12 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_MessageManagerGroup>,
               const nsString& aMessageManagerGroup, ContentParent* aSource);
 
-  bool CanSet(FieldIndex<IDX_AllowContentRetargeting>,
-              const bool& aAllowContentRetargeting, ContentParent* aSource);
-  bool CanSet(FieldIndex<IDX_AllowContentRetargetingOnChildren>,
-              const bool& aAllowContentRetargetingOnChildren,
-              ContentParent* aSource);
+  CanSetResult CanSet(FieldIndex<IDX_AllowContentRetargeting>,
+                      const bool& aAllowContentRetargeting,
+                      ContentParent* aSource);
+  CanSetResult CanSet(FieldIndex<IDX_AllowContentRetargetingOnChildren>,
+                      const bool& aAllowContentRetargetingOnChildren,
+                      ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_AllowPlugins>, const bool& aAllowPlugins,
               ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_FullscreenAllowedByOwner>, const bool&,
@@ -1001,8 +1003,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_WatchedByDevToolsInternal>,
               const bool& aWatchedByDevToolsInternal, ContentParent* aSource);
 
-  bool CanSet(FieldIndex<IDX_DefaultLoadFlags>,
-              const uint32_t& aDefaultLoadFlags, ContentParent* aSource);
+  CanSetResult CanSet(FieldIndex<IDX_DefaultLoadFlags>,
+                      const uint32_t& aDefaultLoadFlags,
+                      ContentParent* aSource);
   void DidSet(FieldIndex<IDX_DefaultLoadFlags>);
 
   bool CanSet(FieldIndex<IDX_UseGlobalHistory>, const bool& aUseGlobalHistory,
@@ -1047,6 +1050,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   // process. Deprecated. New code that might use this should generally be moved
   // to WindowContext or be settable only by the parent process.
   bool LegacyCheckOnlyOwningProcessCanSet(ContentParent* aSource);
+
+  CanSetResult LegacyRevertIfNotOwningOrParentProcess(ContentParent* aSource);
 
   // True if the process attempting to set field is the same as the embedder's
   // process.
