@@ -51,7 +51,6 @@ pub struct ModularTransform {
     output_gamma_lut_g_length: usize,
     output_gamma_lut_b_length: usize,
     transform_module_fn: TransformModuleFn,
-    next_transform: Option<Box<ModularTransform>>,
 }
 pub type TransformModuleFn = Option<fn(_: &ModularTransform, _: &[f32], _: &mut [f32]) -> ()>;
 
@@ -511,43 +510,10 @@ fn transform_module_matrix(transform: &ModularTransform, src: &[f32], dest: &mut
 fn modular_transform_alloc() -> Box<ModularTransform> {
     Box::new(Default::default())
 }
-fn modular_transform_release(mut t: Option<Box<ModularTransform>>) {
-    // destroy a list of transforms non-recursively
-    let mut next_transform;
-    while let Some(mut transform) = t {
-        next_transform = std::mem::replace(&mut transform.next_transform, None);
-        t = next_transform
-    }
-}
-/* Set transform to be the next element in the linked list. */
-fn append_transform(
-    transform: Option<Box<ModularTransform>>,
-    mut next_transform: &mut Option<Box<ModularTransform>>,
-) -> &mut Option<Box<ModularTransform>> {
-    *next_transform = transform;
-    while next_transform.is_some() {
-        next_transform = &mut next_transform.as_mut().unwrap().next_transform;
-    }
-    next_transform
-}
-/* reverse the transformation list (used by mBA) */
-fn reverse_transform(
-    mut transform: Option<Box<ModularTransform>>,
-) -> Option<Box<ModularTransform>> {
-    let mut prev_transform = None;
-    while transform.is_some() {
-        let next_transform = std::mem::replace(
-            &mut transform.as_mut().unwrap().next_transform,
-            prev_transform,
-        );
-        prev_transform = transform;
-        transform = next_transform
-    }
-    prev_transform
-}
-fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Box<ModularTransform>> {
-    let mut first_transform = None;
-    let mut next_transform = &mut first_transform;
+
+fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Vec<Box<ModularTransform>>> {
+
+    let mut transforms = Vec::new();
     let mut transform;
     if lut.a_curves[0].is_some() {
         let clut_length: usize;
@@ -561,7 +527,6 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Box<ModularTransform
         transform.input_clut_table[1] = build_input_gamma_table(lut.a_curves[1].as_deref());
         transform.input_clut_table[2] = build_input_gamma_table(lut.a_curves[2].as_deref());
         transform.transform_module_fn = Some(transform_module_gamma_table);
-        next_transform = append_transform(Some(transform), next_transform);
 
         if lut.num_grid_points[0] as i32 != lut.num_grid_points[1] as i32
             || lut.num_grid_points[1] as i32 != lut.num_grid_points[2] as i32
@@ -569,6 +534,7 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Box<ModularTransform
             //XXX: We don't currently support clut that are not squared!
             return None;
         }
+        transforms.push(transform);
 
         // Prepare CLUT
         transform = modular_transform_alloc();
@@ -578,7 +544,7 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Box<ModularTransform
         transform.clut = lut.clut_table.clone();
         transform.grid_size = lut.num_grid_points[0] as u16;
         transform.transform_module_fn = Some(transform_module_clut_only);
-        next_transform = append_transform(Some(transform), next_transform);
+        transforms.push(transform);
     }
 
     if lut.m_curves[0].is_some() {
@@ -590,7 +556,7 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Box<ModularTransform
         transform.input_clut_table[1] = build_input_gamma_table(lut.m_curves[1].as_deref());
         transform.input_clut_table[2] = build_input_gamma_table(lut.m_curves[2].as_deref());
         transform.transform_module_fn = Some(transform_module_gamma_table);
-        next_transform = append_transform(Some(transform), next_transform);
+        transforms.push(transform);
 
         // Prepare Matrix
         transform = modular_transform_alloc();
@@ -602,7 +568,7 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Box<ModularTransform
         transform.ty = s15Fixed16Number_to_float(lut.e13);
         transform.tz = s15Fixed16Number_to_float(lut.e23);
         transform.transform_module_fn = Some(transform_module_matrix_translate);
-        next_transform = append_transform(Some(transform), next_transform);
+        transforms.push(transform);
     }
 
     if lut.b_curves[0].is_some() {
@@ -612,7 +578,7 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Box<ModularTransform
         transform.input_clut_table[1] = build_input_gamma_table(lut.b_curves[1].as_deref());
         transform.input_clut_table[2] = build_input_gamma_table(lut.b_curves[2].as_deref());
         transform.transform_module_fn = Some(transform_module_gamma_table);
-        append_transform(Some(transform), next_transform);
+        transforms.push(transform);
     } else {
         // B curve is mandatory
         return None;
@@ -621,14 +587,13 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Box<ModularTransform
     if lut.reversed {
         // mBA are identical to mAB except that the transformation order
         // is reversed
-        first_transform = reverse_transform(first_transform)
+        transforms.reverse();
     }
-    first_transform
+    Some(transforms)
 }
 
-fn modular_transform_create_lut(lut: &lutType) -> Option<Box<ModularTransform>> {
-    let mut first_transform = None;
-    let mut next_transform = &mut first_transform;
+fn modular_transform_create_lut(lut: &lutType) -> Option<Vec<Box<ModularTransform>>> {
+    let mut transforms = Vec::new();
 
     let clut_length: usize;
     let mut transform = modular_transform_alloc();
@@ -636,7 +601,8 @@ fn modular_transform_create_lut(lut: &lutType) -> Option<Box<ModularTransform>> 
     transform.matrix = build_lut_matrix(Some(lut));
     if !transform.matrix.invalid {
         transform.transform_module_fn = Some(transform_module_matrix);
-        next_transform = append_transform(Some(transform), next_transform);
+        transforms.push(transform);
+
         // Prepare input curves
         transform = modular_transform_alloc();
         transform.input_clut_table[0] =
@@ -671,32 +637,30 @@ fn modular_transform_create_lut(lut: &lutType) -> Option<Box<ModularTransform>> 
                 .to_vec(),
         );
         transform.transform_module_fn = Some(transform_module_clut);
-        append_transform(Some(transform), next_transform);
-        return first_transform;
+        transforms.push(transform);
+        return Some(transforms);
     }
-    modular_transform_release(first_transform);
     None
 }
 
-fn modular_transform_create_input(input: &Profile) -> Option<Box<ModularTransform>> {
-    let mut first_transform = None;
-    let mut next_transform = &mut first_transform;
+fn modular_transform_create_input(input: &Profile) -> Option<Vec<Box<ModularTransform>>> {
+    let mut transforms = Vec::new();
     if input.A2B0.is_some() {
         let lut_transform = modular_transform_create_lut(input.A2B0.as_deref().unwrap());
-        if lut_transform.is_none() {
-            return None;
+        if let Some(lut_transform) = lut_transform {
+            transforms.extend(lut_transform);
         } else {
-            append_transform(lut_transform, next_transform);
+            return None;
         }
     } else if input.mAB.is_some()
         && (*input.mAB.as_deref().unwrap()).num_in_channels == 3
         && (*input.mAB.as_deref().unwrap()).num_out_channels == 3
     {
         let mAB_transform = modular_transform_create_mAB(input.mAB.as_deref().unwrap());
-        if mAB_transform.is_none() {
-            return None;
+        if let Some(mAB_transform) = mAB_transform {
+            transforms.extend(mAB_transform);
         } else {
-            append_transform(mAB_transform, next_transform);
+            return None;
         }
     } else {
         let mut transform = modular_transform_alloc();
@@ -708,12 +672,11 @@ fn modular_transform_create_input(input: &Profile) -> Option<Box<ModularTransfor
             || transform.input_clut_table[1].is_none()
             || transform.input_clut_table[2].is_none()
         {
-            append_transform(Some(transform), next_transform);
             return None;
         } else {
-            next_transform = append_transform(Some(transform), next_transform);
-            transform = modular_transform_alloc();
+            transforms.push(transform);
 
+            transform = modular_transform_alloc();
             transform.matrix.m[0][0] = 1. / 1.999_969_5;
             transform.matrix.m[0][1] = 0.0;
             transform.matrix.m[0][2] = 0.0;
@@ -725,35 +688,34 @@ fn modular_transform_create_input(input: &Profile) -> Option<Box<ModularTransfor
             transform.matrix.m[2][2] = 1. / 1.999_969_5;
             transform.matrix.invalid = false;
             transform.transform_module_fn = Some(transform_module_matrix);
-            next_transform = append_transform(Some(transform), next_transform);
+            transforms.push(transform);
 
             transform = modular_transform_alloc();
             transform.matrix = build_colorant_matrix(input);
             transform.transform_module_fn = Some(transform_module_matrix);
-            append_transform(Some(transform), next_transform);
+            transforms.push(transform);
         }
     }
-    first_transform
+    Some(transforms)
 }
-fn modular_transform_create_output(out: &Profile) -> Option<Box<ModularTransform>> {
-    let mut first_transform = None;
-    let mut next_transform = &mut first_transform;
+fn modular_transform_create_output(out: &Profile) -> Option<Vec<Box<ModularTransform>>> {
+    let mut transforms = Vec::new();
     if let Some(B2A0) = &out.B2A0 {
         let lut_transform = modular_transform_create_lut(B2A0);
-        if lut_transform.is_none() {
-            return None;
+        if let Some(lut_transform) = lut_transform {
+            transforms.extend(lut_transform);
         } else {
-            append_transform(lut_transform, next_transform);
+            return None;
         }
     } else if out.mBA.is_some()
         && (*out.mBA.as_deref().unwrap()).num_in_channels == 3
         && (*out.mBA.as_deref().unwrap()).num_out_channels == 3
     {
-        let lut_transform_0 = modular_transform_create_mAB(out.mBA.as_deref().unwrap());
-        if lut_transform_0.is_none() {
-            return None;
+        let lut_transform = modular_transform_create_mAB(out.mBA.as_deref().unwrap());
+        if let Some(lut_transform) = lut_transform {
+            transforms.extend(lut_transform)
         } else {
-            append_transform(lut_transform_0, next_transform);
+            return None;
         }
     } else if let (Some(redTRC), Some(greenTRC), Some(blueTRC)) =
         (&out.redTRC, &out.greenTRC, &out.blueTRC)
@@ -761,7 +723,7 @@ fn modular_transform_create_output(out: &Profile) -> Option<Box<ModularTransform
         let mut transform = modular_transform_alloc();
         transform.matrix = build_colorant_matrix(out).invert();
         transform.transform_module_fn = Some(transform_module_matrix);
-        next_transform = append_transform(Some(transform), next_transform);
+        transforms.push(transform);
 
         transform = modular_transform_alloc();
         transform.matrix.m[0][0] = 1.999_969_5;
@@ -775,19 +737,19 @@ fn modular_transform_create_output(out: &Profile) -> Option<Box<ModularTransform
         transform.matrix.m[2][2] = 1.999_969_5;
         transform.matrix.invalid = false;
         transform.transform_module_fn = Some(transform_module_matrix);
-        next_transform = append_transform(Some(transform), next_transform);
+        transforms.push(transform);
 
         transform = modular_transform_alloc();
         transform.output_gamma_lut_r = Some(build_output_lut(redTRC));
         transform.output_gamma_lut_g = Some(build_output_lut(greenTRC));
         transform.output_gamma_lut_b = Some(build_output_lut(blueTRC));
         transform.transform_module_fn = Some(transform_module_gamma_lut);
-        append_transform(Some(transform), next_transform);
+        transforms.push(transform);
     } else {
         debug_assert!(false, "Unsupported output profile workflow.");
         return None;
     }
-    first_transform
+    Some(transforms)
 }
 /* Not Completed
 // Simplify the transformation chain to an equivalent transformation chain
@@ -840,13 +802,15 @@ remove_next:
     return transform;
 }
 */
-fn modular_transform_create(input: &Profile, output: &Profile) -> Option<Box<ModularTransform>> {
-    let mut first_transform = None;
-    let mut next_transform = &mut first_transform;
+fn modular_transform_create(input: &Profile, output: &Profile) -> Option<Vec<Box<ModularTransform>>> {
+    let mut transforms = Vec::new();
     if input.color_space == RGB_SIGNATURE {
         let rgb_to_pcs = modular_transform_create_input(input);
-        rgb_to_pcs.as_ref()?;
-        next_transform = append_transform(rgb_to_pcs, next_transform);
+        if let Some(rgb_to_pcs) = rgb_to_pcs {
+            transforms.extend(rgb_to_pcs);
+        } else {
+            return None;
+        }
     } else {
         debug_assert!(false, "input color space not supported");
         return None;
@@ -855,7 +819,7 @@ fn modular_transform_create(input: &Profile, output: &Profile) -> Option<Box<Mod
     if input.pcs == LAB_SIGNATURE && output.pcs == XYZ_SIGNATURE {
         let mut lab_to_pcs = modular_transform_alloc();
         lab_to_pcs.transform_module_fn = Some(transform_module_LAB_to_XYZ);
-        next_transform = append_transform(Some(lab_to_pcs), next_transform);
+        transforms.push(lab_to_pcs);
     }
 
     // This does not improve accuracy in practice, something is wrong here.
@@ -872,38 +836,38 @@ fn modular_transform_create(input: &Profile, output: &Profile) -> Option<Box<Mod
     if input.pcs == XYZ_SIGNATURE && output.pcs == LAB_SIGNATURE {
         let mut pcs_to_lab = modular_transform_alloc();
         pcs_to_lab.transform_module_fn = Some(transform_module_XYZ_to_LAB);
-        next_transform = append_transform(Some(pcs_to_lab), next_transform);
+        transforms.push(pcs_to_lab);
     }
 
     if output.color_space == RGB_SIGNATURE {
         let pcs_to_rgb = modular_transform_create_output(output);
-        pcs_to_rgb.as_ref()?;
-        append_transform(pcs_to_rgb, next_transform);
+        if let Some(pcs_to_rgb) = pcs_to_rgb {
+            transforms.extend(pcs_to_rgb);
+        } else {
+            return None;
+        }
     } else {
         debug_assert!(false, "output color space not supported");
     }
 
     // Not Completed
     //return qcms_modular_transform_reduce(first_transform);
-    first_transform
+    Some(transforms)
 }
 fn modular_transform_data(
-    mut transform: Option<&ModularTransform>,
+    transforms: Vec<Box<ModularTransform>>,
     mut src: Vec<f32>,
     mut dest: Vec<f32>,
     _len: usize,
 ) -> Option<Vec<f32>> {
-    while transform.is_some() {
+    for transform in transforms {
         // Keep swaping src/dest when performing a transform to use less memory.
-        let _transform_fn: TransformModuleFn = transform.unwrap().transform_module_fn;
         transform
-            .unwrap()
             .transform_module_fn
             .expect("non-null function pointer")(
-            transform.as_ref().unwrap(), &src, &mut dest
+            &transform, &src, &mut dest
         );
         std::mem::swap(&mut src, &mut dest);
-        transform = transform.unwrap().next_transform.as_deref();
     }
     // The results end up in the src buffer because of the switching
     Some(src)
@@ -917,9 +881,8 @@ pub fn chain_transform(
     lutSize: usize,
 ) -> Option<Vec<f32>> {
     let transform_list = modular_transform_create(input, output);
-    if transform_list.is_some() {
-        let lut = modular_transform_data(transform_list.as_deref(), src, dest, lutSize / 3);
-        modular_transform_release(transform_list);
+    if let Some(transform_list) = transform_list {
+        let lut = modular_transform_data(transform_list, src, dest, lutSize / 3);
         return lut;
     }
     None
