@@ -285,7 +285,6 @@ const browsingContextTargetPrototype = {
 
     // A map of actor names to actor instances provided by extensions.
     this._extraActors = {};
-    this._exited = false;
     this._sourcesManager = null;
 
     // Map of DOM stylesheets to StyleSheetActors
@@ -341,10 +340,6 @@ const browsingContextTargetPrototype = {
     return true;
   },
 
-  get exited() {
-    return this._exited;
-  },
-
   get attached() {
     return !!this._attached;
   },
@@ -363,7 +358,7 @@ const browsingContextTargetPrototype = {
    * Try to locate the console actor if it exists.
    */
   get _consoleActor() {
-    if (this.exited || this.isDestroyed()) {
+    if (this.isDestroyed()) {
       return null;
     }
     const form = this.form();
@@ -546,7 +541,10 @@ const browsingContextTargetPrototype = {
   },
 
   form() {
-    assert(!this.exited, "form() shouldn't be called on exited browser actor.");
+    assert(
+      !this.isDestroyed(),
+      "form() shouldn't be called on destroyed browser actor."
+    );
     assert(this.actorID, "Actor should have an actorID.");
 
     const response = {
@@ -600,20 +598,9 @@ const browsingContextTargetPrototype = {
    * Called when the actor is removed from the connection.
    */
   destroy() {
-    this.exit();
-    Actor.prototype.destroy.call(this);
-    TargetActorRegistry.unregisterTargetActor(this);
-    Resources.unwatchAllTargetResources(this);
-  },
-
-  /**
-   * Called by the root actor when the underlying browsing context is closed.
-   */
-  exit() {
-    if (this.exited) {
+    if (this.isDestroyed()) {
       return;
     }
-
     // Tell the thread actor that the browsing context is closed, so that it may terminate
     // instead of resuming the debuggee script.
     if (this._attached) {
@@ -622,12 +609,12 @@ const browsingContextTargetPrototype = {
     }
 
     this._detach();
-
     this.docShell = null;
-
     this._extraActors = null;
 
-    this._exited = true;
+    Actor.prototype.destroy.call(this);
+    TargetActorRegistry.unregisterTargetActor(this);
+    Resources.unwatchAllTargetResources(this);
   },
 
   /**
@@ -685,7 +672,7 @@ const browsingContextTargetPrototype = {
   _watchDocshells() {
     // If for some unexpected reason, the actor is immediately destroyed,
     // avoid registering leaking observer listener.
-    if (this.exited) {
+    if (this.isDestroyed()) {
       return;
     }
 
@@ -892,7 +879,7 @@ const browsingContextTargetPrototype = {
         // document is destroyed, and there is no other top level docshell,
         // we detach the actor to unregister all listeners and prevent any
         // exception.
-        this.exit();
+        this.destroy();
       }
       return;
     }
@@ -1087,9 +1074,9 @@ const browsingContextTargetPrototype = {
   // Protocol Request Handlers
 
   attach(request) {
-    if (this.exited) {
+    if (this.isDestroyed()) {
       throw {
-        error: "exited",
+        error: "destroyed",
       };
     }
 
@@ -1630,7 +1617,10 @@ const browsingContextTargetPrototype = {
    *
    */
   createStyleSheetActor(styleSheet) {
-    assert(!this.exited, "Target must not be exited to create a sheet actor.");
+    assert(
+      !this.isDestroyed(),
+      "Target must not be destroyed to create a sheet actor."
+    );
     if (this._styleSheetActors.has(styleSheet)) {
       return this._styleSheetActors.get(styleSheet);
     }
