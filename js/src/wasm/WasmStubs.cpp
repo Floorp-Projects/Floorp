@@ -587,9 +587,16 @@ static const unsigned WasmPushSize = sizeof(void*);
 static const unsigned FramePushedBeforeAlign =
     NonVolatileRegsPushSize + NumExtraPushed * WasmPushSize;
 
-static void AssertExpectedSP(const MacroAssembler& masm) {
+static void AssertExpectedSP(MacroAssembler& masm) {
 #ifdef JS_CODEGEN_ARM64
   MOZ_ASSERT(sp.Is(masm.GetStackPointer64()));
+#  ifdef DEBUG
+  // Since we're asserting that SP is the currently active stack pointer,
+  // let's also in effect assert that PSP is dead -- by setting it to 1, so as
+  // to cause to cause any attempts to use it to segfault in an easily
+  // identifiable way.
+  masm.asVIXL().Mov(PseudoStackPointer64, 1);
+#  endif
 #endif
 }
 
@@ -624,6 +631,7 @@ static void MoveSPForJitABI(MacroAssembler& masm) {
 static void CallFuncExport(MacroAssembler& masm, const FuncExport& fe,
                            const Maybe<ImmPtr>& funcPtr) {
   MOZ_ASSERT(fe.hasEagerStubs() == !funcPtr);
+  MoveSPForJitABI(masm);
   if (funcPtr) {
     masm.call(*funcPtr);
   } else {
@@ -1383,8 +1391,13 @@ static bool GenerateJitEntry(MacroAssembler& masm, size_t funcExportIndex,
 
   MOZ_ASSERT(masm.framePushed() == 0);
 #ifdef JS_CODEGEN_ARM64
+  AssertExpectedSP(masm);
   masm.loadPtr(Address(sp, 0), lr);
   masm.addToStackPtr(Imm32(8));
+  // Copy SP into PSP to enforce return-point invariants (SP == PSP).
+  // `addToStackPtr` won't sync them because SP is the active pointer here.
+  // For the same reason, we can't use initPseudoStackPtr to do the sync, so
+  // we have to do it "by hand".  Omitting this causes many tests to segfault.
   masm.moveStackPtrTo(PseudoStackPointer);
   masm.abiret();
 #else
@@ -1618,9 +1631,10 @@ void wasm::GenerateDirectCallFromJit(MacroAssembler& masm, const FuncExport& fe,
   void* callee = codeTier.segment().base() + codeRange.funcUncheckedCallEntry();
 
   masm.assertStackAlignment(WasmStackAlignment);
+  MoveSPForJitABI(masm);
   masm.callJit(ImmPtr(callee));
 #ifdef JS_CODEGEN_ARM64
-  // WASM does not use the emulated stack pointer, so reinitialize it as it
+  // WASM does not always keep PSP in sync with SP.  So reinitialize it as it
   // might be clobbered either by WASM or by any C++ calls within.
   masm.initPseudoStackPtr();
 #endif
@@ -2323,10 +2337,14 @@ static bool GenerateImportJitExit(MacroAssembler& masm, const FuncImport& fi,
   AssertStackAlignment(masm, JitStackAlignment,
                        sizeOfRetAddr + frameAlignExtra);
 #ifdef JS_CODEGEN_ARM64
-  // Conform to JIT ABI.
+  AssertExpectedSP(masm);
+  // Conform to JIT ABI.  Note this doesn't update PSP since SP is the active
+  // pointer.
   masm.addToStackPtr(Imm32(8));
+  // Manually resync PSP.  Omitting this causes eg tests/wasm/import-export.js
+  // to segfault.
+  masm.moveStackPtrTo(PseudoStackPointer);
 #endif
-  MoveSPForJitABI(masm);
   masm.callJitNoProfiler(callee);
 #ifdef JS_CODEGEN_ARM64
   // Conform to platform conventions - align the SP.
@@ -2673,7 +2691,7 @@ static const LiveRegisterSet RegsToPreserve(
 // PushRegsInMask and lengty comment in Architecture-arm64.h.
 static const LiveRegisterSet RegsToPreserve(
     GeneralRegisterSet(Registers::AllMask &
-                       ~((Registers::SetType(1) << Registers::StackPointer) |
+                       ~((Registers::SetType(1) << RealStackPointer.code()) |
                          (Registers::SetType(1) << Registers::lr))),
     FloatRegisterSet(FloatRegisters::AllDoubleMask));
 #elif defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)

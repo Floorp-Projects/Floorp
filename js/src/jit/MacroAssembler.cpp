@@ -2972,6 +2972,8 @@ void MacroAssembler::callWithABINoProfiler(void* fun, MoveOp::Type result,
     Address flagAddr(ReturnReg, JSContext::offsetOfInUnsafeCallWithABI());
     store32(Imm32(1), flagAddr);
     pop(ReturnReg);
+    // On arm64, SP may be < PSP now (that's OK).
+    // eg testcase: tests/bug1375074.js
   }
 #endif
 
@@ -2989,6 +2991,8 @@ void MacroAssembler::callWithABINoProfiler(void* fun, MoveOp::Type result,
     assumeUnreachable("callWithABI: callee did not use AutoUnsafeCallWithABI");
     bind(&ok);
     pop(ReturnReg);
+    // On arm64, SP may be < PSP now (that's OK).
+    // eg testcase: tests/bug1375074.js
   }
 #endif
 }
