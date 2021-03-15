@@ -46,6 +46,10 @@ Tickler::~Tickler() {
 }
 
 nsresult Tickler::Init() {
+  if (!XRE_IsParentProcess()) {
+    return NS_ERROR_FAILURE;
+  }
+
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mTimer);
   MOZ_ASSERT(!mActive);
