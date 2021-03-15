@@ -4482,7 +4482,7 @@ void AsyncPanZoomController::ApplyAsyncTestAttributes(
       // mSampledState.front(). We can even save/restore that SampledAPZCState
       // instance in the AutoApplyAsyncTestAttributes instead of Metrics().
       Metrics().ZoomBy(mTestAsyncZoom.scale);
-      ScrollBy(mTestAsyncScrollOffset);
+      ScrollByAndClamp(mTestAsyncScrollOffset);
       ResampleCompositedAsyncTransform(aProofOfLock);
     }
   }
