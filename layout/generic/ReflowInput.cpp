@@ -1749,9 +1749,9 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
                            computedSize.ISize(cbwm) - margin.IStartEnd(cbwm) -
                            borderPadding.IStartEnd(cbwm);
     }
-  } else {
+  } else if (!mFrame->HasIntrinsicKeywordForBSize() ||
+             !wm.IsOrthogonalTo(cbwm)) {
     // Neither 'inline-start' nor 'inline-end' is 'auto'.
-
     if (wm.IsOrthogonalTo(cbwm)) {
       // For orthogonal blocks, we need to handle the case where the block had
       // unconstrained block-size, which mapped to unconstrained inline-size
@@ -1814,7 +1814,8 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
                            borderPadding.BStartEnd(cbwm) -
                            computedSize.BSize(cbwm) - offsets.BStart(cbwm);
     }
-  } else {
+  } else if (!mFrame->HasIntrinsicKeywordForBSize() ||
+             wm.IsOrthogonalTo(cbwm)) {
     // Neither block-start nor -end is 'auto'.
     nscoord autoBSize = cbSize.BSize(cbwm) - margin.BStartEnd(cbwm) -
                         borderPadding.BStartEnd(cbwm) - offsets.BStartEnd(cbwm);
@@ -1824,8 +1825,8 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
 
     // |autoBSize| is in the writing mode of the containing block, so if |wm|
     // and |cbwm| are orthogonal, |autoBSize| is |autoBSizeInCBWM|. After
-    // converting its writing mode into |wm|, it is |autoISizeInWM|, instead of
-    // |autoBSizeInWM|, so it shouldn't be the input of
+    // converting its writing mode into |wm|, it is |autoISizeInWM|, instead
+    // of |autoBSizeInWM|, so it shouldn't be the input of
     // IsInlineSizeComputableByBlockSizeAndAspectRatio() because we assume
     // its input should be the block-size of the current block.
     // That's why we have to check the orthogonal for |wm| and |cbwm| first.
@@ -1839,8 +1840,8 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
     // nsIFrame::ComputeSize.)
     if (computedSize.BSize(cbwm) == NS_UNCONSTRAINEDSIZE ||
         needsComputeInlineSizeByAspectRatio) {
-      // We handle the unconstrained block-size in current block's writing mode
-      // 'wm'.
+      // We handle the unconstrained block-size in current block's writing
+      // mode 'wm'.
       LogicalSize computedSizeInWM =
           CalculateAbsoluteSizeWithResolvedAutoBlockSize(
               autoBSize, needsComputeInlineSizeByAspectRatio,

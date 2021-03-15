@@ -654,6 +654,57 @@ void nsAbsoluteContainingBlock::ResolveSizeDependentOffsets(
   }
 }
 
+void nsAbsoluteContainingBlock::ResolveAutoMarginsAfterLayout(
+    ReflowInput& aKidReflowInput, const LogicalSize* aLogicalCBSize,
+    const LogicalSize& aKidSize, LogicalMargin& aMargin,
+    LogicalMargin& aOffsets) {
+  MOZ_ASSERT(aKidReflowInput.mFrame->HasIntrinsicKeywordForBSize());
+
+  WritingMode wm = aKidReflowInput.GetWritingMode();
+  WritingMode outerWM = aKidReflowInput.mParentReflowInput->GetWritingMode();
+
+  const LogicalSize kidSizeInWM = aKidSize.ConvertTo(wm, outerWM);
+  LogicalMargin marginInWM = aMargin.ConvertTo(wm, outerWM);
+  LogicalMargin offsetsInWM = aOffsets.ConvertTo(wm, outerWM);
+
+  // No need to substract border sizes because aKidSize has it included
+  // already
+  nscoord availMarginSpace = aLogicalCBSize->BSize(wm) - kidSizeInWM.BSize(wm) -
+                             offsetsInWM.BStartEnd(wm) -
+                             marginInWM.BStartEnd(wm);
+
+  if (availMarginSpace < 0) {
+    availMarginSpace = 0;
+  }
+
+  const auto& styleMargin = aKidReflowInput.mStyleMargin;
+  if (wm.IsOrthogonalTo(outerWM)) {
+    ReflowInput::ComputeAbsPosInlineAutoMargin(
+        availMarginSpace, outerWM,
+        styleMargin->mMargin.GetIStart(outerWM).IsAuto(),
+        styleMargin->mMargin.GetIEnd(outerWM).IsAuto(), aMargin, aOffsets);
+  } else {
+    ReflowInput::ComputeAbsPosBlockAutoMargin(
+        availMarginSpace, outerWM,
+        styleMargin->mMargin.GetBStart(outerWM).IsAuto(),
+        styleMargin->mMargin.GetBEnd(outerWM).IsAuto(), aMargin, aOffsets);
+  }
+
+  aKidReflowInput.SetComputedLogicalMargin(outerWM, aMargin);
+  aKidReflowInput.SetComputedLogicalOffsets(outerWM, aOffsets);
+
+  nsMargin* propValue =
+      aKidReflowInput.mFrame->GetProperty(nsIFrame::UsedMarginProperty());
+  // InitOffsets should've created a UsedMarginProperty for us, if any margin is
+  // auto.
+  MOZ_ASSERT_IF(styleMargin->HasInlineAxisAuto(outerWM) ||
+                    styleMargin->HasBlockAxisAuto(outerWM),
+                propValue);
+  if (propValue) {
+    *propValue = aMargin.GetPhysicalMargin(outerWM);
+  }
+}
+
 // XXX Optimize the case where it's a resize reflow and the absolutely
 // positioned child has the exact same size and position and skip the
 // reflow...
@@ -779,6 +830,11 @@ void nsAbsoluteContainingBlock::ReflowAbsoluteFrame(
   // then compute it now that we know the dimensions.
   ResolveSizeDependentOffsets(aPresContext, kidReflowInput, kidSize, margin,
                               &offsets, &logicalCBSize);
+
+  if (kidReflowInput.mFrame->HasIntrinsicKeywordForBSize()) {
+    ResolveAutoMarginsAfterLayout(kidReflowInput, &logicalCBSize, kidSize,
+                                  margin, offsets);
+  }
 
   // Position the child relative to our padding edge
   LogicalRect rect(
