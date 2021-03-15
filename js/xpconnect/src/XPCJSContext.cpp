@@ -833,12 +833,6 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
   bool disableWasmHugeMemory = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "wasm_disable_huge_memory", false);
 
-  bool useBaselineInterp = Preferences::GetBool(JS_OPTIONS_DOT_STR "blinterp");
-  bool useBaselineJit = Preferences::GetBool(JS_OPTIONS_DOT_STR "baselinejit");
-  bool useIon = Preferences::GetBool(JS_OPTIONS_DOT_STR "ion");
-  bool useNativeRegExp =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "native_regexp");
-
   bool offthreadIonCompilation =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "ion.offthread_compilation");
 #ifdef DEBUG
@@ -866,27 +860,40 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
   bool spectreJitToCxxCalls =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "spectre.jit_to_C++_calls");
 
+  bool safeMode = false;
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {
-    bool safeMode = false;
     xr->GetInSafeMode(&safeMode);
-    if (safeMode) {
-      useBaselineJit = false;
-      useIon = false;
-      useJitForTrustedPrincipals = false;
-      useNativeRegExp = false;
-    }
   }
 
-  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_INTERPRETER_ENABLE,
-                                useBaselineInterp);
-  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_ENABLE,
-                                useBaselineJit);
-  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_ION_ENABLE, useIon);
-  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_JIT_TRUSTEDPRINCIPALS_ENABLE,
-                                useJitForTrustedPrincipals);
-  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_NATIVE_REGEXP_ENABLE,
-                                useNativeRegExp);
+  // NOTE: Baseline Interpreter is still used in safe-mode. This gives a big
+  //       perf gain and is our simplest JIT so we make a tradeoff.
+  JS_SetGlobalJitCompilerOption(
+      cx, JSJITCOMPILER_BASELINE_INTERPRETER_ENABLE,
+      StaticPrefs::javascript_options_blinterp_DoNotUseDirectly());
+
+  // Disable most JITs in Safe-Mode.
+  if (safeMode) {
+    JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_ENABLE, false);
+    JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_ION_ENABLE, false);
+    JS_SetGlobalJitCompilerOption(
+        cx, JSJITCOMPILER_JIT_TRUSTEDPRINCIPALS_ENABLE, false);
+    JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_NATIVE_REGEXP_ENABLE,
+                                  false);
+  } else {
+    JS_SetGlobalJitCompilerOption(
+        cx, JSJITCOMPILER_BASELINE_ENABLE,
+        StaticPrefs::javascript_options_baselinejit_DoNotUseDirectly());
+    JS_SetGlobalJitCompilerOption(
+        cx, JSJITCOMPILER_ION_ENABLE,
+        StaticPrefs::javascript_options_ion_DoNotUseDirectly());
+    JS_SetGlobalJitCompilerOption(cx,
+                                  JSJITCOMPILER_JIT_TRUSTEDPRINCIPALS_ENABLE,
+                                  useJitForTrustedPrincipals);
+    JS_SetGlobalJitCompilerOption(
+        cx, JSJITCOMPILER_NATIVE_REGEXP_ENABLE,
+        StaticPrefs::javascript_options_native_regexp_DoNotUseDirectly());
+  }
 
   JS_SetOffthreadIonCompilationEnabled(cx, offthreadIonCompilation);
 
