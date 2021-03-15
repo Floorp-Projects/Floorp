@@ -1640,6 +1640,9 @@ bool nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup) {
       }
 
       // only allow popups in visible frames
+      // TODO: This visibility check should be replaced with a check of
+      // bc->IsActive(). It is okay for now since this is only called
+      // in the parent process. Bug 1698533.
       bool visible;
       baseWin->GetVisibility(&visible);
       if (!visible) {
@@ -1647,20 +1650,11 @@ bool nsXULPopupManager::MayShowPopup(nsMenuPopupFrame* aPopup) {
       }
     }
   } else {
-    // only allow popups in visible frames
-    bool visible;
-    baseWin->GetVisibility(&visible);
-    if (!visible) {
-      return false;
-    }
-
     nsFocusManager* fm = nsFocusManager::GetFocusManager();
     BrowsingContext* bc = docShell->GetBrowsingContext();
-    if (!fm || !bc) {
-      return false;
-    }
-
-    if (fm->GetActiveBrowsingContext() != bc->Top()) {
+    if (!fm || !bc || fm->GetActiveBrowsingContext() != bc->Top()) {
+      // fm->GetActiveBrowsingContext() == bc->Top() would imply bc->IsActive(),
+      // so we don't bother checking/early returning for !bc->IsActive().
       return false;
     }
   }
