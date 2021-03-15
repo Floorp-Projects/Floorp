@@ -725,6 +725,7 @@ impl SwCompositeThread {
         // in the middle of queuing compositing jobs until we're actually waiting for
         // composition.
         self.job_count.store(1, Ordering::SeqCst);
+        self.current_job.store(ptr::null_mut(), Ordering::SeqCst);
     }
 
     /// Lock the thread for access to the job queue.
@@ -795,6 +796,7 @@ impl SwCompositeThread {
                 // more jobs to become available in a new frame. Otherwise,
                 // return immediately.
                 0 => {
+                    self.current_job.store(ptr::null_mut(), Ordering::SeqCst);
                     self.jobs_available.notify_all();
                     if !wait {
                         return None;
