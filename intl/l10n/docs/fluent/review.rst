@@ -231,6 +231,35 @@ it’s a standard plural, you should use the :js:`one` category for singular.
 Also make sure to always pass the variable to these messages as a number, not
 as a string.
 
+Access Keys
+===========
+
+The following is a simple potential example of an access key:
+
+.. code-block:: fluent
+
+  example-menu-item =
+      .label = Menu Item
+      .accesskey = M
+
+Access keys are used in menus in order to help provide easy keyboard shortcut access. They
+are useful for both power users, and for users who have accessibility needs. It is
+helpful to first read the `Access keys`__ guide in the Windows Developer documentation,
+as it outlines the best practices for Windows applications.
+
+__ https://docs.microsoft.com/en-us/windows/uwp/design/input/access-keys
+
+There are some differences between operating systems. Linux mostly follows the same
+practices as Windows. However, macOS in general does not have good support for accesskeys,
+especially in menus.
+
+When choosing an access key, it's important that it's unique relative to the current level
+of UI. It's preferable to avoid letters with descending parts, such as :code:`g`,
+:code:`j`, :code:`p`, and :code:`q` as these will not be underlined nicely in Windows or
+Linux. Other problematic characters are ones which are narrow, such as :code:`l`,
+:code:`i` and :code:`I`. The underline may not be as visible as other letters in
+sans-serif fonts.
+
 Linter
 ======
 
