@@ -470,8 +470,6 @@ pref("devtools.console.stdout.chrome", true);
 pref("device.camera.enabled", true);
 pref("media.realtime_decoder.enabled", true);
 
-pref("javascript.options.showInConsole", true);
-
 pref("full-screen-api.enabled", true);
 
 pref("direct-texture.force.enabled", false);
