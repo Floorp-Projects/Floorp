@@ -3648,6 +3648,7 @@ void nsIFrame::BuildDisplayListForStackingContext(
       nsPoint toOuterReferenceFrame;
       const nsIFrame* outerReferenceFrame =
           aBuilder->FindReferenceFrameFor(GetParent(), &toOuterReferenceFrame);
+      toOuterReferenceFrame += GetPosition();
 
       buildingDisplayList.SetReferenceFrameAndCurrentOffset(
           outerReferenceFrame, toOuterReferenceFrame);
