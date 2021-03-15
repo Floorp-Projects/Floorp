@@ -630,6 +630,7 @@ void WebRenderLayerManager::ClearCachedResources(Layer* aSubtree) {
 
 void WebRenderLayerManager::WrUpdated() {
   ClearAsyncAnimations();
+  mStateManager.mAsyncResourceUpdates.reset();
   mWebRenderCommandBuilder.ClearCachedResources();
   DiscardLocalImages();
   mDisplayItemCache.Clear();
