@@ -903,14 +903,6 @@ input[type=number]::-moz-number-spin-box {
   display: flex;
   flex-direction: column;
   width: max-content;
-%ifdef XP_WIN
-  /* The Window's Theme's spin buttons have a very narrow minimum width, so
-   * make it something reasonable:
-   *
-   * TODO(emilio): Make this affect only when the non-native theme is disabled.
-   */
-  width: 16px;
-%endif
   /* If the spin-box has auto height, it ends up enlarging the default height
    * of the control, so we limit it to 1em here. The height doesn't affect
    * the rendering of the spinner-buttons; it's only for layout purposes.
@@ -924,6 +916,16 @@ input[type=number]::-moz-number-spin-box {
   align-self: center;
   justify-content: center;
 }
+
+%ifdef XP_WIN
+@media not (-moz-non-native-content-theme) {
+  input[type=number]::-moz-number-spin-box {
+    /* The Window's Theme's spin buttons have a very narrow minimum width, so
+     * make it something reasonable. */
+    width: 16px;
+  }
+}
+%endif
 
 input[type=number]::-moz-number-spin-up {
   writing-mode: horizontal-tb;
