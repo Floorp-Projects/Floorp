@@ -42,8 +42,7 @@ class NeqoHttp3Conn final {
   }
 
   bool ProcessOutput(nsACString* aRemoteAddr, uint16_t* aPort,
-                         nsTArray<uint8_t>& aData, uint64_t* aTimeout)
-  {
+                     nsTArray<uint8_t>& aData, uint64_t* aTimeout) {
     aData.TruncateLength(0);
     return neqo_http3conn_process_output(this, aRemoteAddr, aPort, &aData,
                                          aTimeout);

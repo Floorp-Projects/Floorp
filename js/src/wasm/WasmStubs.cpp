@@ -2852,7 +2852,8 @@ static bool GenerateThrowStub(MacroAssembler& masm, Label* throwLabel,
   masm.loadPtr(Address(ReturnReg, offsetof(ResumeFromException, target)),
                scratch);
   // Now it's safe to reload stackPointer.
-  masm.loadStackPtr(Address(ReturnReg, offsetof(ResumeFromException, stackPointer)));
+  masm.loadStackPtr(
+      Address(ReturnReg, offsetof(ResumeFromException, stackPointer)));
   // This move must come after the SP is reloaded because WasmExceptionReg may
   // alias ReturnReg.
   masm.movePtr(obj, WasmExceptionReg);
