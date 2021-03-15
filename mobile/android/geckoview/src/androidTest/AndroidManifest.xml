@@ -43,6 +43,10 @@
                 android:exported="false"
                 android:process=":gecko">
         </service>
+
+        <!-- This is needed for ProfileLockedTest -->
+        <service android:name=".TestProfileLockService$p0" android:enabled="true" android:exported="false" android:process=":profiletest0" />
+        <service android:name=".TestProfileLockService$p1" android:enabled="true" android:exported="false" android:process=":profiletest1" />
     </application>
 
 </manifest>
