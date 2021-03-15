@@ -18,6 +18,7 @@
 #include "mozilla/SHA1.h"
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
+#include "mozilla/net/DNS.h"
 
 namespace mozilla {
 namespace net {
@@ -54,6 +55,7 @@ class NetlinkService : public nsIRunnable {
   void GetNetworkID(nsACString& aNetworkID);
   void GetIsLinkUp(bool* aIsUp);
   nsresult GetDnsSuffixList(nsTArray<nsCString>& aDnsSuffixList);
+  nsresult GetResolvers(nsTArray<NetAddr>& aResolvers);
 
  private:
   void EnqueueGenMsg(uint16_t aMsgType, uint8_t aFamily);
@@ -77,7 +79,7 @@ class NetlinkService : public nsIRunnable {
                                 nsTArray<NetlinkNeighbor*>& aGwNeighbors);
   bool CalculateIDForFamily(uint8_t aFamily, mozilla::SHA1Sum* aSHA1);
   void CalculateNetworkID();
-  void ComputeDNSSuffixList();
+  void ExtractDNSProperties();
 
   nsCOMPtr<nsIThread> mThread;
 
@@ -109,6 +111,7 @@ class NetlinkService : public nsIRunnable {
 
   nsCString mNetworkId;
   nsTArray<nsCString> mDNSSuffixList;
+  nsTArray<NetAddr> mDNSResolvers;
 
   class LinkInfo {
    public:
