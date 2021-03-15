@@ -2,7 +2,6 @@
 
 * [Getting started](getting-started/README.md)
   * [Get a Bugzilla account](getting-started/bugzilla.md)
-  * [Get and build the code](getting-started/build.md)
   * [Create a development profile](getting-started/development-profiles.md)
 * [Contributing](./contributing.md)
   * [Find bugs to work on](./contributing/find-bugs.md)
@@ -63,4 +62,3 @@
     * [Registering A New Actor](backend/actor-registration.md)
     * [Actor Best Practices](backend/actor-best-practices.md)
 * [Preferences](preferences.md)
-* [About this documentation](about-documentation.md)
