@@ -1,6 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * https://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
+
+// Test adding engines through the Address Bar context menu.
 
 const { PromptTestUtils } = ChromeUtils.import(
   "resource://testing-common/PromptTestUtils.jsm"
