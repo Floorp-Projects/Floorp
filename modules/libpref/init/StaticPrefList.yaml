@@ -9770,14 +9770,18 @@
   mirror: always
   do_not_use_directly: true # Consumers should use SandboxSettings to ask.
 
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
-  # Whether win32k is disabled for content processes.
-  # true means win32k system calls are not permitted.
--   name: security.sandbox.content.win32k-disable
-    type: RelaxedAtomicBool
-    value: false
-    mirror: always
 
+# Whether win32k is disabled for content processes.
+# true means win32k system calls are not permitted.
+# (This cannot be put behind the XP_WIN and MOZ_SANDBOX guards because
+#  "Nightly Experiments" has no way to filter options based on OS or other
+#  CPP defines, and it fails if the pref doesn't exist)
+- name: security.sandbox.content.win32k-disable
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
+#if defined(XP_WIN) && defined(MOZ_SANDBOX)
   # Note: win32k is currently _not_ disabled for GMP due to intermittent test
   # failures, where the GMP process fails very early. See bug 1449348.
 -   name: security.sandbox.gmp.win32k-disable
