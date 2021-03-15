@@ -234,7 +234,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
                          aState.HasState(NS_EVENT_STATE_INDETERMINATE);
 
   if (bool(aUseSystemColors)) {
-    sRGBColor backgroundColor = SystemColor(StyleSystemColor::TextBackground);
+    sRGBColor backgroundColor = SystemColor(StyleSystemColor::Buttonface);
     sRGBColor borderColor = SystemColor(StyleSystemColor::Buttontext);
     if (isDisabled) {
       borderColor = SystemColor(StyleSystemColor::Graytext);
@@ -242,7 +242,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
         backgroundColor = borderColor;
       }
     } else if (isChecked || isIndeterminate) {
-      backgroundColor = SystemColor(StyleSystemColor::Highlight);
+      backgroundColor = borderColor = SystemColor(StyleSystemColor::Highlight);
     }
     return {backgroundColor, borderColor};
   }
@@ -280,7 +280,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
 sRGBColor nsNativeBasicTheme::ComputeCheckmarkColor(
     const EventStates& aState, UseSystemColors aUseSystemColors) {
   if (bool(aUseSystemColors)) {
-    return SystemColor(StyleSystemColor::TextBackground);
+    return SystemColor(StyleSystemColor::Highlighttext);
   }
   if (aState.HasState(NS_EVENT_STATE_DISABLED)) {
     return sColorWhiteAlpha50;
@@ -411,7 +411,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeTrackColors(
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeRangeThumbColors(
     const EventStates& aState, UseSystemColors aUseSystemColors) {
   if (bool(aUseSystemColors)) {
-    return SystemColorPair(StyleSystemColor::Highlight,
+    return SystemColorPair(StyleSystemColor::Highlighttext,
                            StyleSystemColor::Highlight);
   }
 
@@ -450,7 +450,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeProgressColors(
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeProgressTrackColors(
     UseSystemColors aUseSystemColors) {
   if (bool(aUseSystemColors)) {
-    return SystemColorPair(StyleSystemColor::TextBackground,
+    return SystemColorPair(StyleSystemColor::Buttonface,
                            StyleSystemColor::Buttontext);
   }
   return std::make_pair(sColorGrey10, sColorGrey40);
