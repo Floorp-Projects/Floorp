@@ -532,6 +532,10 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::F64x2ConvertLowI32x4U:
         case SimdOp::I32x4TruncSatF64x2SZero:
         case SimdOp::I32x4TruncSatF64x2UZero:
+        case SimdOp::I16x8ExtAddPairwiseI8x16S:
+        case SimdOp::I16x8ExtAddPairwiseI8x16U:
+        case SimdOp::I32x4ExtAddPairwiseI16x8S:
+        case SimdOp::I32x4ExtAddPairwiseI16x8U:
           WASM_SIMD_OP(OpKind::Unary);
         case SimdOp::I8x16Shl:
         case SimdOp::I8x16ShrS:

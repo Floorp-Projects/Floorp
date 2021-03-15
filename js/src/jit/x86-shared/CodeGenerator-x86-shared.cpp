@@ -3393,6 +3393,18 @@ void CodeGenerator::visitWasmUnarySimd128(LWasmUnarySimd128* ins) {
       masm.unsignedTruncSatFloat64x2ToInt32x4(src, dest,
                                               ToFloatRegister(ins->temp()));
       break;
+    case wasm::SimdOp::I16x8ExtAddPairwiseI8x16S:
+      masm.extAddPairwiseInt8x16(src, dest);
+      break;
+    case wasm::SimdOp::I16x8ExtAddPairwiseI8x16U:
+      masm.unsignedExtAddPairwiseInt8x16(src, dest);
+      break;
+    case wasm::SimdOp::I32x4ExtAddPairwiseI16x8S:
+      masm.extAddPairwiseInt16x8(src, dest);
+      break;
+    case wasm::SimdOp::I32x4ExtAddPairwiseI16x8U:
+      masm.unsignedExtAddPairwiseInt16x8(src, dest);
+      break;
     default:
       MOZ_CRASH("Unary SimdOp not implemented");
   }

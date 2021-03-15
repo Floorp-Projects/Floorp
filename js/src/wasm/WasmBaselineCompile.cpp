@@ -14622,6 +14622,24 @@ static void NotV128(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
   masm.bitwiseNotSimd128(rs, rd);
 }
 
+static void ExtAddPairwiseI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.extAddPairwiseInt8x16(rs, rsd);
+}
+
+static void ExtAddPairwiseUI8x16(MacroAssembler& masm, RegV128 rs,
+                                 RegV128 rsd) {
+  masm.unsignedExtAddPairwiseInt8x16(rs, rsd);
+}
+
+static void ExtAddPairwiseI16x8(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
+  masm.extAddPairwiseInt16x8(rs, rsd);
+}
+
+static void ExtAddPairwiseUI16x8(MacroAssembler& masm, RegV128 rs,
+                                 RegV128 rsd) {
+  masm.unsignedExtAddPairwiseInt16x8(rs, rsd);
+}
+
 #  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
 static void ShiftLeftI8x16(MacroAssembler& masm, RegI32 rs, RegV128 rsd,
                            RegI32 temp1, RegV128 temp2) {
@@ -16802,6 +16820,14 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorUnary(TruncF64x2));
           case uint32_t(SimdOp::F64x2Nearest):
             CHECK_NEXT(dispatchVectorUnary(NearestF64x2));
+          case uint32_t(SimdOp::I16x8ExtAddPairwiseI8x16S):
+            CHECK_NEXT(dispatchVectorUnary(ExtAddPairwiseI8x16));
+          case uint32_t(SimdOp::I16x8ExtAddPairwiseI8x16U):
+            CHECK_NEXT(dispatchVectorUnary(ExtAddPairwiseUI8x16));
+          case uint32_t(SimdOp::I32x4ExtAddPairwiseI16x8S):
+            CHECK_NEXT(dispatchVectorUnary(ExtAddPairwiseI16x8));
+          case uint32_t(SimdOp::I32x4ExtAddPairwiseI16x8U):
+            CHECK_NEXT(dispatchVectorUnary(ExtAddPairwiseUI16x8));
           case uint32_t(SimdOp::I8x16Shl):
             CHECK_NEXT(dispatchVectorVariableShift(ShiftLeftI8x16));
           case uint32_t(SimdOp::I8x16ShrS):

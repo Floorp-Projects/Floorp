@@ -5126,6 +5126,10 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           case uint32_t(SimdOp::F64x2ConvertLowI32x4U):
           case uint32_t(SimdOp::I32x4TruncSatF64x2SZero):
           case uint32_t(SimdOp::I32x4TruncSatF64x2UZero):
+          case uint32_t(SimdOp::I16x8ExtAddPairwiseI8x16S):
+          case uint32_t(SimdOp::I16x8ExtAddPairwiseI8x16U):
+          case uint32_t(SimdOp::I32x4ExtAddPairwiseI16x8S):
+          case uint32_t(SimdOp::I32x4ExtAddPairwiseI16x8U):
             CHECK(EmitUnarySimd128(f, SimdOp(op.b1)));
           case uint32_t(SimdOp::V128AnyTrue):
           case uint32_t(SimdOp::I8x16AllTrue):
