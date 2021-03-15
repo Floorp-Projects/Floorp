@@ -15,6 +15,9 @@ permalink: /changelog/
 * **feature-downloads**:
   * 🚒 Bug fixed [issue #9964](https://github.com/mozilla-mobile/android-components/issues/9964) - Downloads notification strings are not localized.
 
+* **service-nimbus**
+  * Added `getExperimentBranches` method to `Nimbus` for retrieving a list of experiment branches for a given experiment. [issue #9895](https://github.com/mozilla-mobile/android-components/issues/9895)
+
 # 74.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v73.0.0...v74.0.0)

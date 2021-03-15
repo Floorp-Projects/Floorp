@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@file:Suppress("TooManyFunctions")
+
 package mozilla.components.service.nimbus
 
 import android.content.Context
@@ -26,6 +28,7 @@ import mozilla.components.support.base.utils.NamedThreadFactory
 import mozilla.components.support.locale.getLocaleTag
 import org.mozilla.experiments.nimbus.AppContext
 import org.mozilla.experiments.nimbus.AvailableRandomizationUnits
+import org.mozilla.experiments.nimbus.Branch
 import org.mozilla.experiments.nimbus.EnrolledExperiment
 import org.mozilla.experiments.nimbus.EnrollmentChangeEvent
 import org.mozilla.experiments.nimbus.EnrollmentChangeEventType
@@ -62,6 +65,15 @@ interface NimbusApi : Observable<NimbusApi.Observer> {
      */
     @AnyThread
     fun getExperimentBranch(experimentId: String): String? = null
+
+    /**
+     * Get the list of experiment branches for the given experiment
+     *
+     * @param experimentId The string experiment-id or "slug" for which to retrieve the branch
+     *
+     * @return A list of [Branch]s
+     */
+    fun getExperimentBranches(experimentId: String): List<Branch>? = listOf()
 
     /**
      * Refreshes the experiments from the endpoint. Should be called at least once after
@@ -277,6 +289,11 @@ class Nimbus(
     override fun getExperimentBranch(experimentId: String): String? {
         recordExposure(experimentId)
         return nimbus.getExperimentBranch(experimentId)
+    }
+
+    @WorkerThread
+    override fun getExperimentBranches(experimentId: String): List<Branch>? = withCatchAll {
+        nimbus.getExperimentBranches(experimentId)
     }
 
     override fun updateExperiments() {
