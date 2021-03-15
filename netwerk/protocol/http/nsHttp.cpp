@@ -30,7 +30,7 @@ namespace net {
 
 const uint32_t kHttp3VersionCount = 4;
 const nsCString kHttp3Versions[] = {"h3-27"_ns, "h3-28"_ns, "h3-29"_ns,
-                                    "h3-30"_ns};
+                                    "h3-30"_ns, "h3-31"_ns, "h3-32"_ns};
 
 // define storage for all atoms
 namespace nsHttp {
