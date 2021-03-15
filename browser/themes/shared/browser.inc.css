@@ -149,7 +149,7 @@
   border-bottom-style: none;
 }
 
-@supports -moz-bool-pref("browser.proton.toolbar.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 /* Add space to beginning of toolbar and make that space click the first <toolbarbutton> */
 #nav-bar-customization-target > :is(toolbarbutton, toolbaritem):first-child,
 #nav-bar-customization-target > toolbarpaletteitem:first-child > :is(toolbarbutton, toolbaritem) {
@@ -172,13 +172,13 @@
   max-height: 4em;
 }
 
-@supports not -moz-bool-pref("browser.proton.toolbar.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 #PersonalToolbar {
   padding: 2px 6px;
 }
 } /*** END !proton ***/
 
-@supports -moz-bool-pref("browser.proton.toolbar.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 #PersonalToolbar {
   padding-inline: 6px;
 }

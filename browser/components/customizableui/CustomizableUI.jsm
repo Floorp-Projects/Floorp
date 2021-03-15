@@ -48,7 +48,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "gProtonToolbarEnabled",
-  "browser.proton.toolbar.enabled",
+  "browser.proton.enabled",
   false
 );
 
