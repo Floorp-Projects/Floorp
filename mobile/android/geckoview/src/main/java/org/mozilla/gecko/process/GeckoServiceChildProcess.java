@@ -73,6 +73,7 @@ public class GeckoServiceChildProcess extends Service {
                              final String[] args,
                              final Bundle extras,
                              final int flags,
+                             final String userSerialNumber,
                              final String crashHandlerService,
                              final ParcelFileDescriptor prefsPfd,
                              final ParcelFileDescriptor prefMapPfd,
@@ -129,6 +130,7 @@ public class GeckoServiceChildProcess extends Service {
                     info.ipcFd = ipcFd;
                     info.crashFd = crashReporterFd;
                     info.crashAnnotationFd = crashAnnotationFd;
+                    info.userSerialNumber = userSerialNumber;
 
                     if (GeckoThread.init(info)) {
                         GeckoThread.launch();
