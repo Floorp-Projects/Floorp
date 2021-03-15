@@ -21,7 +21,7 @@ function isNodeVisible(node) {
 
 var Readerable = {
   get isEnabledForParseOnLoad() {
-    return this.isEnabled || this.isForceEnabled;
+    return this.isEnabled;
   },
 
   /**
@@ -83,10 +83,4 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "isEnabled",
   "reader.parse-on-load.enabled",
   true
-);
-XPCOMUtils.defineLazyPreferenceGetter(
-  Readerable,
-  "isForceEnabled",
-  "reader.parse-on-load.force-enabled",
-  false
 );
