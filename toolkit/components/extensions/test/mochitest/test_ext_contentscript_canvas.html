@@ -4,6 +4,7 @@
   <title>Test content script access to canvas drawWindow()</title>
   <script src="/tests/SimpleTest/SimpleTest.js"></script>
   <script src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script src="head.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 </head>
 <script>
@@ -51,6 +52,8 @@ add_task(async function test_drawWindow() {
     files
   });
 
+  consoleMonitor.start([{ message: /Use of drawWindow [\w\s]+ is deprecated. Use tabs.captureTab/ }]);
+
   await first.startup();
   await second.startup();
 
@@ -65,6 +68,7 @@ add_task(async function test_drawWindow() {
   win.close();
   await first.unload();
   await second.unload();
+  await consoleMonitor.finished();
 });
 
 add_task(async function test_tainted_canvas() {
