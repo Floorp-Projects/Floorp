@@ -874,11 +874,21 @@ void IMEStateManager::OnEditorDestroying(EditorBase& aEditorBase) {
 
 void IMEStateManager::OnReFocus(nsPresContext* aPresContext,
                                 nsIContent& aContent) {
-  MOZ_LOG(
-      sISMLog, LogLevel::Info,
-      ("OnReFocus(aPresContext=0x%p, aContent=0x%p)", aPresContext, &aContent));
+  MOZ_LOG(sISMLog, LogLevel::Info,
+          ("OnReFocus(aPresContext=0x%p, aContent=0x%p), "
+           "sActiveIMEContentObserver=0x%p, sContent=0x%p",
+           aPresContext, &aContent, sActiveIMEContentObserver.get(),
+           sContent.get()));
 
   if (NS_WARN_IF(!sWidget) || NS_WARN_IF(sWidget->Destroyed())) {
+    return;
+  }
+
+  if (!sActiveIMEContentObserver ||
+      !sActiveIMEContentObserver->IsManaging(aPresContext, &aContent)) {
+    MOZ_LOG(sISMLog, LogLevel::Debug,
+            ("  OnReFocus(), there is no valid IMEContentObserver, so we don't "
+             "manage this. Ignore this"));
     return;
   }
 
@@ -1048,6 +1058,10 @@ void IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
       return;
     }
   }
+
+  // XXX Update sContent when aContent is focused content?
+  NS_ASSERTION(sContent.get() == aContent,
+               "sContent and aContent are mismatched.");
 
   if (createTextStateManager) {
     // XXX In this case, it might not be enough safe to notify IME of anything.
