@@ -67,10 +67,6 @@ class LIRGeneratorNone : public LIRGeneratorShared {
                                MDefinition*) {
     MOZ_CRASH();
   }
-  void lowerForCompareI64AndBranch(MTest*, MCompare*, JSOp, MDefinition*,
-                                   MDefinition*, MBasicBlock*, MBasicBlock*) {
-    MOZ_CRASH();
-  }
 
   void lowerConstantDouble(double, MInstruction*) { MOZ_CRASH(); }
   void lowerConstantFloat32(float, MInstruction*) { MOZ_CRASH(); }

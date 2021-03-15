@@ -409,8 +409,6 @@ class InterpreterFrameInfo : public FrameInfo {
     // sp := sp + reg * sizeof(Value)
     Register spReg = AsRegister(masm.getStackPointer());
     masm.computeEffectiveAddress(BaseValueIndex(spReg, reg), spReg);
-    // On arm64, SP may be < PSP now (that's OK).
-    // eg testcase: tests/arguments/strict-args-generator-flushstack.js
   }
 
   void popValue(ValueOperand dest) { masm.popValue(dest); }
