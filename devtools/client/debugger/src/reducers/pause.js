@@ -12,7 +12,6 @@
 import { isGeneratedId } from "devtools-source-map";
 import { prefs } from "../utils/prefs";
 import { getSelectedSourceId } from "./sources";
-import { getSelectedFrame } from "../selectors/pause";
 
 // Pause state associated with an individual thread.
 
@@ -57,7 +56,6 @@ const createInitialPauseState = () => ({
   ...resumedPauseState,
   isWaitingOnBreak: false,
   command: null,
-  lastCommand: null,
   previousLocation: null,
   expandedScopes: new Set(),
   lastExpandedScopes: [],
@@ -229,7 +227,6 @@ function update(state = initialPauseState(), action) {
         return updateThreadState({
           ...resumedPauseState,
           command: action.command,
-          lastCommand: action.command,
           previousLocation: getPauseLocation(threadState(), action),
         });
       }
@@ -248,7 +245,6 @@ function update(state = initialPauseState(), action) {
       }
       return updateThreadState({
         ...resumedPauseState,
-        wasStepping: !!action.wasStepping,
         expandedScopes: new Set(),
         lastExpandedScopes: [...threadState().expandedScopes],
       });
@@ -371,10 +367,6 @@ export function getPauseCommand(state, thread) {
   return getThreadPauseState(state.pause, thread).command;
 }
 
-export function wasStepping(state, thread) {
-  return getThreadPauseState(state.pause, thread).wasStepping;
-}
-
 export function isStepping(state, thread) {
   return ["stepIn", "stepOver", "stepOut"].includes(
     getPauseCommand(state, thread)
@@ -387,10 +379,6 @@ export function getCurrentThread(state) {
 
 export function getIsPaused(state, thread) {
   return !!getThreadPauseState(state.pause, thread).frames;
-}
-
-export function getPreviousPauseFrameLocation(state, thread) {
-  return getThreadPauseState(state.pause, thread).previousLocation;
 }
 
 export function isEvaluatingExpression(state, thread) {
@@ -570,25 +558,6 @@ export function getSelectedInlinePreviews(state) {
   }
 
   return getInlinePreviews(state, thread, frameId);
-}
-
-export function getInlinePreviewExpression(
-  state,
-  thread,
-  frameId,
-  line,
-  expression
-) {
-  const previews = getThreadPauseState(state.pause, thread).inlinePreview[
-    getGeneratedFrameId(frameId)
-  ];
-  return previews?.[line]?.[expression];
-}
-
-// NOTE: currently only used for chrome
-export function getChromeScopes(state, thread) {
-  const frame = getSelectedFrame(state, thread);
-  return frame?.scopeChain;
 }
 
 export function getLastExpandedScopes(state, thread) {
