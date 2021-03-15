@@ -1109,6 +1109,10 @@ void nsWindow::ApplySizeConstraints(void) {
 
     uint32_t hints = 0;
     if (mSizeConstraints.mMinSize != LayoutDeviceIntSize(0, 0)) {
+      if (!mIsX11Display) {
+        gtk_widget_set_size_request(GTK_WIDGET(mContainer), geometry.min_width,
+                                    geometry.min_height);
+      }
       AddCSDDecorationSize(&geometry.min_width, &geometry.min_height);
       hints |= GDK_HINT_MIN_SIZE;
       LOG(("nsWindow::ApplySizeConstraints [%p] min size %d %d\n", (void*)this,
@@ -1130,10 +1134,6 @@ void nsWindow::ApplySizeConstraints(void) {
 
     gtk_window_set_geometry_hints(GTK_WINDOW(mShell), nullptr, &geometry,
                                   GdkWindowHints(hints));
-    if (!mIsX11Display) {
-      gtk_widget_set_size_request(GTK_WIDGET(mContainer), geometry.min_width,
-                                  geometry.min_height);
-    }
   }
 }
 
