@@ -16,7 +16,6 @@ import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.ktx.android.content.isMainProcess
 import org.mozilla.focus.locale.LocaleAwareApplication
-import org.mozilla.focus.session.NotificationSessionObserver
 import org.mozilla.focus.session.VisibilityLifeCycleCallback
 import org.mozilla.focus.telemetry.CrashReporterWrapper
 import org.mozilla.focus.telemetry.TelemetrySessionObserver
@@ -62,8 +61,6 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
             registerActivityLifecycleCallbacks(visibilityLifeCycleCallback)
 
             components.sessionManager.apply {
-                @Suppress("DEPRECATION")
-                register(NotificationSessionObserver(this@FocusApplication))
                 @Suppress("DEPRECATION")
                 register(TelemetrySessionObserver(components.store))
             }

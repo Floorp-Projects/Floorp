@@ -26,6 +26,7 @@ import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.focus.components.EngineProvider
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.LocalizedContentInterceptor
+import org.mozilla.focus.notification.PrivateNotificationMiddleware
 import org.mozilla.focus.search.BingSearchEngineFilter
 import org.mozilla.focus.search.CustomSearchEngineProvider
 import org.mozilla.focus.search.HiddenSearchEngineFilter
@@ -65,6 +66,7 @@ class Components(
     val store by lazy {
         BrowserStore(
             middleware = listOf(
+                PrivateNotificationMiddleware(context),
                 DownloadMiddleware(context, DownloadService::class.java)
             ) + EngineMiddleware.create(engine, ::findSessionById)
         )
