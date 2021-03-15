@@ -138,7 +138,7 @@ class TabDrawerRobot {
 
     fun snackBarButtonClick(expectedText: String) {
         mDevice.findObject(
-            UiSelector().resourceId("org.mozilla.fenix.debug:id/snackbar_btn")
+            UiSelector().resourceId("$packageName:id/snackbar_btn")
         ).waitForExists(waitingTime)
         onView(allOf(withId(R.id.snackbar_btn), withText(expectedText))).check(
             matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE))

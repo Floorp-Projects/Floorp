@@ -150,7 +150,7 @@ class HomeScreenRobot {
     fun confirmDeleteCollection() {
         onView(allOf(withText("DELETE"))).click()
         mDevice.waitNotNull(
-            findObject(By.res("org.mozilla.fenix.debug:id/no_collections_header")),
+            findObject(By.res("$packageName:id/no_collections_header")),
             waitingTime
         )
     }

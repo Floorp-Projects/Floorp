@@ -35,6 +35,12 @@ gcloud:
 
   test-targets:
    - class org.mozilla.fenix.ui.NavigationToolbarTest#visitURLTest
+   - class org.mozilla.fenix.ui.HistoryTest#visitedUrlHistoryTest
+   - class org.mozilla.fenix.ui.SmokeTest#openMainMenuSettingsItemTest
+   - class org.mozilla.fenix.ui.SmokeTest#toggleSearchSuggestions
+   - class org.mozilla.fenix.ui.SmokeTest#deleteCollectionTest
+   - class org.mozilla.fenix.ui.SmokeTest#noHistoryInPrivateBrowsingTest
+   - class org.mozilla.fenix.ui.NoNetworkAccessStartupTests#noNetworkConnectionStartupTest
 
   device:
    - model: Pixel2
