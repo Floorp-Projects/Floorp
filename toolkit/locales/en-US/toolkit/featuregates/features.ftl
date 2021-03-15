@@ -78,6 +78,11 @@ experimental-features-webrtc-global-mute-toggles =
     .label = WebRTC Global Mute Toggles
 experimental-features-webrtc-global-mute-toggles-description = Add controls to the WebRTC global sharing indicator that allow users to globally mute their microphone and camera feeds.
 
+# Win32k Lockdown
+experimental-features-win32k-lockdown =
+    .label = Win32k Lockdown
+experimental-features-win32k-lockdown-description = Disable use of Win32k APIs in browser tabs. Provides an increase in security but may currently be unstable or glitchy. (Windows only)
+
 # JS JIT Warp project
 experimental-features-js-warp =
     .label = JavaScript JIT: Warp
