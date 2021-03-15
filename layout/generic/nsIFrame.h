@@ -3054,6 +3054,13 @@ class nsIFrame : public nsQueryFrame {
   //
   bool HasView() const { return !!(mState & NS_FRAME_HAS_VIEW); }
 
+  // Returns true iff this frame's computed block-size property is one of the
+  // intrinsic-sizing keywords.
+  bool HasIntrinsicKeywordForBSize() const {
+    const auto& bSize = StylePosition()->BSize(GetWritingMode());
+    return bSize.IsMozFitContent() || bSize.IsMinContent() ||
+           bSize.IsMaxContent();
+  }
   /**
    * Helper method to create a view for a frame.  Only used by a few sub-classes
    * that need a view.
