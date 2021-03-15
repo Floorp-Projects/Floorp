@@ -5361,6 +5361,23 @@
   mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 
+# Enable off-main-thread Warp compilation.
+- name: javascript.options.ion.offthread_compilation
+  type: bool
+  value: true
+  mirror: always  # LoadStartupJSPrefs
+  do_not_use_directly: true
+
+#ifdef DEBUG
+  # Enable extra correctness checks in the JITs that are slow and only available
+  # in debug builds.
+-   name: javascript.options.jit.full_debug_checks
+    type: bool
+    value: false
+    mirror: always  # LoadStartupJSPrefs
+    do_not_use_directly: true
+#endif
+
 # Heuristic threshold for Warp/Ion to decide that too many bailouts are
 # happening and an IonScript should be discarded.
 #
@@ -5534,10 +5551,12 @@
   mirror: always
 #endif
 
+# Experimental support for ArrayBuffers larger than 2 GB.
 - name: javascript.options.large_arraybuffers
-  type: RelaxedAtomicBool
+  type: bool
   value: false
-  mirror: always
+  mirror: always  # LoadStartupJSPrefs
+  do_not_use_directly: true
 
 #---------------------------------------------------------------------------
 # Prefs starting with "layers."
