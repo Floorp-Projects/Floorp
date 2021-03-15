@@ -390,7 +390,7 @@ function assertHighlightLocation(dbg, source, line) {
  * @static
  */
 function isPaused(dbg) {
-  return dbg.selectors.getIsPaused(dbg.selectors.getCurrentThread());
+  return dbg.selectors.getIsCurrentThreadPaused();
 }
 
 // Make sure the debugger is paused at a certain source ID and line.
@@ -1038,10 +1038,7 @@ async function togglePauseOnExceptions(
 }
 
 function waitForActive(dbg) {
-  const {
-    selectors: { getIsPaused, getCurrentThread },
-  } = dbg;
-  return waitForState(dbg, state => !getIsPaused(getCurrentThread()), "active");
+  return waitForState(dbg, state => !dbg.selectors.getIsCurrentThreadPaused());
 }
 
 // Helpers
