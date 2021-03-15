@@ -25,11 +25,11 @@ SimpleTest.waitForExplicitFinish();
 const REQUEST_URL =
   "http://example.com/tests/dom/security/test/https-only/file_break_endless_upgrade_downgrade_loop.sjs";
 
-function resolveAfter5Seconds() {
+function resolveAfter6Seconds() {
   return new Promise(resolve => {
     setTimeout(() => {
       resolve();
-    }, 5000);
+    }, 6000);
   });
 }
 
@@ -54,7 +54,7 @@ async function runTests() {
 
   // provide enough time for:
   // the redirects to occur, and the error page to be displayed
-  await resolveAfter5Seconds();
+  await resolveAfter6Seconds();
 
   await SpecialPowers.spawn(winTest1, ["test1"], verifyResult);
   winTest1.close();
