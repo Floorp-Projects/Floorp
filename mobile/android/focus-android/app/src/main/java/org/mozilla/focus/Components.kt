@@ -30,6 +30,7 @@ import org.mozilla.focus.notification.PrivateNotificationMiddleware
 import org.mozilla.focus.search.BingSearchEngineFilter
 import org.mozilla.focus.search.CustomSearchEngineProvider
 import org.mozilla.focus.search.HiddenSearchEngineFilter
+import org.mozilla.focus.telemetry.TelemetryMiddleware
 import org.mozilla.focus.utils.Settings
 
 /**
@@ -67,6 +68,7 @@ class Components(
         BrowserStore(
             middleware = listOf(
                 PrivateNotificationMiddleware(context),
+                TelemetryMiddleware(),
                 DownloadMiddleware(context, DownloadService::class.java)
             ) + EngineMiddleware.create(engine, ::findSessionById)
         )

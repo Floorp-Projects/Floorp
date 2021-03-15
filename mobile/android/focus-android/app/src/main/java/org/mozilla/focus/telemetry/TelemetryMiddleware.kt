@@ -4,25 +4,40 @@
 
 package org.mozilla.focus.telemetry
 
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.action.BrowserAction
+import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabConfig
+import mozilla.components.browser.state.state.CustomTabSessionState
 import mozilla.components.browser.state.state.SessionState
-import mozilla.components.browser.state.store.BrowserStore
-import org.mozilla.focus.ext.contentState
+import mozilla.components.lib.state.Middleware
+import mozilla.components.lib.state.MiddlewareContext
 
-class TelemetrySessionObserver(private val store: BrowserStore) : SessionManager.Observer {
-    override fun onSessionAdded(session: Session) {
-        when (session.source) {
+class TelemetryMiddleware : Middleware<BrowserState, BrowserAction> {
+    override fun invoke(
+        context: MiddlewareContext<BrowserState, BrowserAction>,
+        next: (BrowserAction) -> Unit,
+        action: BrowserAction
+    ) {
+        next(action)
+
+        when (action) {
+            is TabListAction.AddTabAction -> collectTelemetry(action.tab)
+            is TabListAction.AddMultipleTabsAction -> action.tabs.forEach { collectTelemetry(it) }
+        }
+    }
+
+    private fun collectTelemetry(tab: SessionState) {
+        when (tab.source) {
             SessionState.Source.ACTION_VIEW -> TelemetryWrapper.browseIntentEvent()
             SessionState.Source.ACTION_SEND -> {
-                val contentState = store.contentState(session.id)
-                TelemetryWrapper.shareIntentEvent(contentState?.searchTerms?.isNotEmpty() == true)
+                TelemetryWrapper.shareIntentEvent(tab.content.searchTerms.isNotEmpty())
             }
             SessionState.Source.TEXT_SELECTION -> TelemetryWrapper.textSelectionIntentEvent()
             SessionState.Source.HOME_SCREEN -> TelemetryWrapper.openHomescreenShortcutEvent()
-            SessionState.Source.CUSTOM_TAB -> TelemetryWrapper.customTabsIntentEvent(
-                    generateOptions(session.customTabConfig!!))
+            SessionState.Source.CUSTOM_TAB -> if (tab is CustomTabSessionState) {
+                TelemetryWrapper.customTabsIntentEvent(generateOptions(tab.config))
+            }
             else -> {
                 // For other session types we create events at the place where we create the sessions.
             }

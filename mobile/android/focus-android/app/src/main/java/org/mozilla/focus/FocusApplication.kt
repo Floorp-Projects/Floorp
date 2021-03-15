@@ -18,7 +18,6 @@ import mozilla.components.support.ktx.android.content.isMainProcess
 import org.mozilla.focus.locale.LocaleAwareApplication
 import org.mozilla.focus.session.VisibilityLifeCycleCallback
 import org.mozilla.focus.telemetry.CrashReporterWrapper
-import org.mozilla.focus.telemetry.TelemetrySessionObserver
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AdjustHelper
 import org.mozilla.focus.utils.AppConstants
@@ -59,11 +58,6 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
 
             visibilityLifeCycleCallback = VisibilityLifeCycleCallback(this@FocusApplication)
             registerActivityLifecycleCallbacks(visibilityLifeCycleCallback)
-
-            components.sessionManager.apply {
-                @Suppress("DEPRECATION")
-                register(TelemetrySessionObserver(components.store))
-            }
 
             components.engine.warmUp()
         }
