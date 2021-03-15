@@ -44,7 +44,6 @@ pub struct ModularTransform {
     clut: Option<Vec<f32>>,
     grid_size: u16,
     output_clut_table: [Option<Vec<f32>>; 3],
-    output_clut_table_length: u16,
     output_gamma_lut_r: Option<Vec<u16>>,
     output_gamma_lut_g: Option<Vec<u16>>,
     output_gamma_lut_b: Option<Vec<u16>>,
@@ -671,7 +670,6 @@ fn modular_transform_create_lut(lut: &lutType) -> Option<Box<ModularTransform>> 
                 ..lut.num_output_table_entries as usize * 3]
                 .to_vec(),
         );
-        transform.output_clut_table_length = lut.num_output_table_entries;
         transform.transform_module_fn = Some(transform_module_clut);
         append_transform(Some(transform), next_transform);
         return first_transform;
