@@ -1409,6 +1409,38 @@ var gSync = {
       }
       addTargetDevice(target.id, target.name, type, lastModified);
     }
+
+    if (targets.length > 1) {
+      // "Send to All Devices" menu item
+      const separator = createDeviceNodeFn();
+      separator.classList.add("sync-menuitem");
+      fragment.appendChild(separator);
+      const allDevicesLabel = this.fxaStrings.GetStringFromName(
+        "sendToAllDevices.menuitem"
+      );
+      addTargetDevice("", allDevicesLabel, "");
+
+      // "Manage devices" menu item
+      const manageDevicesLabel = this.fxaStrings.GetStringFromName(
+        "manageDevices.menuitem"
+      );
+      // We piggyback on the createDeviceNodeFn implementation,
+      // it's a big disgusting.
+      const targetDevice = createDeviceNodeFn(
+        null,
+        manageDevicesLabel,
+        null,
+        null
+      );
+      targetDevice.addEventListener(
+        "command",
+        () => gSync.openDevicesManagementPage("sendtab"),
+        true
+      );
+      targetDevice.classList.add("sync-menuitem", "sendtab-target");
+      targetDevice.setAttribute("label", manageDevicesLabel);
+      fragment.appendChild(targetDevice);
+    }
   },
 
   _appendSendTabSingleDevice(fragment, createDeviceNodeFn) {
