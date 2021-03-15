@@ -39,6 +39,8 @@ class AbortSignal final : public DOMEventTargetHelper,
 
   IMPL_EVENT_HANDLER(abort);
 
+  static already_AddRefed<AbortSignal> Abort(GlobalObject& aGlobal);
+
   // AbortSignalImpl
   void SignalAbort() override;
 
