@@ -6,6 +6,7 @@ import {
   getSelectedFrame,
   getThreadContext,
   getCurrentThread,
+  getIsCurrentThreadPaused,
 } from "../../selectors";
 import { PROMISE } from "../utils/middleware/promise";
 import { evaluateExpressions } from "../expressions";
@@ -48,20 +49,21 @@ export function selectThread(cx, thread) {
  * @memberof actions/pause
  * @static
  */
-export function command(cx, type) {
+export function command(type) {
   return async ({ dispatch, getState, client }) => {
     if (!type) {
       return;
     }
+    // For now, all commands are by default against the currently selected thread
+    const thread = getCurrentThread(getState());
 
-    const frame = features.frameStep && getSelectedFrame(getState(), cx.thread);
+    const frame = features.frameStep && getSelectedFrame(getState(), thread);
 
     return dispatch({
       type: "COMMAND",
       command: type,
-      cx,
-      thread: cx.thread,
-      [PROMISE]: client[type](cx.thread, frame?.id),
+      thread,
+      [PROMISE]: client[type](thread, frame?.id),
     });
   };
 }
@@ -72,10 +74,10 @@ export function command(cx, type) {
  * @static
  * @returns {Function} {@link command}
  */
-export function stepIn(cx) {
+export function stepIn() {
   return ({ dispatch, getState }) => {
-    if (cx.isPaused) {
-      return dispatch(command(cx, "stepIn"));
+    if (getIsCurrentThreadPaused(getState())) {
+      return dispatch(command("stepIn"));
     }
   };
 }
@@ -86,10 +88,10 @@ export function stepIn(cx) {
  * @static
  * @returns {Function} {@link command}
  */
-export function stepOver(cx) {
+export function stepOver() {
   return ({ dispatch, getState }) => {
-    if (cx.isPaused) {
-      return dispatch(command(cx, "stepOver"));
+    if (getIsCurrentThreadPaused(getState())) {
+      return dispatch(command("stepOver"));
     }
   };
 }
@@ -100,10 +102,10 @@ export function stepOver(cx) {
  * @static
  * @returns {Function} {@link command}
  */
-export function stepOut(cx) {
+export function stepOut() {
   return ({ dispatch, getState }) => {
-    if (cx.isPaused) {
-      return dispatch(command(cx, "stepOut"));
+    if (getIsCurrentThreadPaused(getState())) {
+      return dispatch(command("stepOut"));
     }
   };
 }
@@ -114,11 +116,11 @@ export function stepOut(cx) {
  * @static
  * @returns {Function} {@link command}
  */
-export function resume(cx) {
+export function resume() {
   return ({ dispatch, getState }) => {
-    if (cx.isPaused) {
+    if (getIsCurrentThreadPaused(getState())) {
       recordEvent("continue");
-      return dispatch(command(cx, "resume"));
+      return dispatch(command("resume"));
     }
   };
 }
@@ -130,11 +132,10 @@ export function resume(cx) {
  */
 export function restart(cx, frame) {
   return async ({ dispatch, getState, client }) => {
-    if (cx.isPaused) {
+    if (getIsCurrentThreadPaused(getState())) {
       return dispatch({
         type: "COMMAND",
         command: "restart",
-        cx,
         thread: cx.thread,
         [PROMISE]: client.restart(cx.thread, frame.id),
       });

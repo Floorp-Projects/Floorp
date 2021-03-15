@@ -10,8 +10,7 @@ import { getSourceLocationFromMouseEvent } from "../../utils/editor";
 import { isPretty } from "../../utils/source";
 import {
   getPrettySource,
-  getIsPaused,
-  getCurrentThread,
+  getIsCurrentThreadPaused,
   getThreadContext,
   isSourceWithMap,
 } from "../../selectors";
@@ -68,7 +67,7 @@ class EditorMenu extends Component {
 
 const mapStateToProps = (state, props) => ({
   cx: getThreadContext(state),
-  isPaused: getIsPaused(state, getCurrentThread(state)),
+  isPaused: getIsCurrentThreadPaused(state),
   hasMappedLocation:
     (props.selectedSource.isOriginal ||
       isSourceWithMap(state, props.selectedSource.id) ||

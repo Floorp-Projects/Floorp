@@ -12,6 +12,7 @@ import {
   getThreadContext,
   getCurrentThread,
   getHighlightedCalls,
+  getIsCurrentThreadPaused,
 } from "../../../selectors";
 import actions from "../../../actions";
 
@@ -63,7 +64,7 @@ class Preview extends PureComponent {
     }
 
     if (
-      cx.isPaused &&
+      this.props.isPaused &&
       !this.state.selecting &&
       highlightedCalls === null &&
       !isTargetException
@@ -73,21 +74,21 @@ class Preview extends PureComponent {
   };
 
   onMouseUp = () => {
-    if (this.props.cx.isPaused) {
+    if (this.props.isPaused) {
       this.setState({ selecting: false });
       return true;
     }
   };
 
   onMouseDown = () => {
-    if (this.props.cx.isPaused) {
+    if (this.props.isPaused) {
       this.setState({ selecting: true });
       return true;
     }
   };
 
   onScroll = () => {
-    if (this.props.cx.isPaused) {
+    if (this.props.isPaused) {
       this.props.clearPreview(this.props.cx);
     }
   };
@@ -114,6 +115,7 @@ const mapStateToProps = state => {
     highlightedCalls: getHighlightedCalls(state, thread),
     cx: getThreadContext(state),
     preview: getPreview(state),
+    isPaused: getIsCurrentThreadPaused(state),
   };
 };
 
