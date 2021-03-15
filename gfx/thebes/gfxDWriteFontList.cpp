@@ -1528,9 +1528,9 @@ void gfxDWriteFontList::InitSharedFontListForPlatform() {
       TimeStamp start2 = TimeStamp::Now();
       AppendFamiliesFromCollection(mBundledFonts, families);
       TimeStamp end2 = TimeStamp::Now();
-      Telemetry::Accumulate(Telemetry::FONTLIST_BUNDLEDFONTS_ACTIVATE,
-                            (end1 - start1).ToMilliseconds() +
-                            (end2 - start2).ToMilliseconds());
+      Telemetry::Accumulate(
+          Telemetry::FONTLIST_BUNDLEDFONTS_ACTIVATE,
+          (end1 - start1).ToMilliseconds() + (end2 - start2).ToMilliseconds());
     }
 #endif
     SharedFontList()->SetFamilyNames(families);
