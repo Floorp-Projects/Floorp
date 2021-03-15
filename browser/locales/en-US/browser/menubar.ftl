@@ -271,6 +271,17 @@ menu-settings =
             [windows] S
            *[other] n
         }
+menu-preferences =
+    .label =
+        { PLATFORM() ->
+            [windows] Options
+           *[other] Preferences
+        }
+    .accesskey =
+        { PLATFORM() ->
+            [windows] O
+           *[other] n
+        }
 menu-tools-layout-debugger =
     .label = Layout Debugger
     .accesskey = L
