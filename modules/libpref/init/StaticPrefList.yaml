@@ -5339,6 +5339,38 @@
   mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 
+# "Warm-up" thresholds at which we attempt to compile a script/function with
+# the next JIT tier.
+#
+# NOTE: These must match JitOptions defaults.
+- name: javascript.options.blinterp.threshold
+  type: int32_t
+  value: 10
+  mirror: always  # LoadStartupJSPrefs
+  do_not_use_directly: true
+
+- name: javascript.options.baselinejit.threshold
+  type: int32_t
+  value: 100
+  mirror: always  # LoadStartupJSPrefs
+  do_not_use_directly: true
+
+- name: javascript.options.ion.threshold
+  type: int32_t
+  value: 1500
+  mirror: always  # LoadStartupJSPrefs
+  do_not_use_directly: true
+
+# Heuristic threshold for Warp/Ion to decide that too many bailouts are
+# happening and an IonScript should be discarded.
+#
+# NOTE: This must match JitOptions defaults.
+- name: javascript.options.ion.frequent_bailout_threshold
+  type: int32_t
+  value: 10
+  mirror: always  # LoadStartupJSPrefs
+  do_not_use_directly: true
+
 - name: javascript.options.compact_on_user_inactive
   type: bool
   value: true
