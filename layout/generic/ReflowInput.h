@@ -853,6 +853,26 @@ struct ReflowInput : public SizeComputationInput {
                              aContainerSize);
   }
 
+  // Resolve any block-axis 'auto' margins (if any) for an absolutely positioned
+  // frame. aMargin and aOffsets are both outparams (though we only touch
+  // aOffsets if the position is overconstrained)
+  static void ComputeAbsPosBlockAutoMargin(nscoord aAvailMarginSpace,
+                                           WritingMode aContainingBlockWM,
+                                           bool aIsMarginBStartAuto,
+                                           bool aIsMarginBEndAuto,
+                                           LogicalMargin& aMargin,
+                                           LogicalMargin& aOffsets);
+
+  // Resolve any inline-axis 'auto' margins (if any) for an absolutely
+  // positioned frame. aMargin and aOffsets are both outparams (though we only
+  // touch aOffsets if the position is overconstrained)
+  static void ComputeAbsPosInlineAutoMargin(nscoord aAvailMarginSpace,
+                                            WritingMode aContainingBlockWM,
+                                            bool aIsMarginIStartAuto,
+                                            bool aIsMarginIEndAuto,
+                                            LogicalMargin& aMargin,
+                                            LogicalMargin& aOffsets);
+
 #ifdef DEBUG
   // Reflow trace methods.  Defined in nsFrame.cpp so they have access
   // to the display-reflow infrastructure.
