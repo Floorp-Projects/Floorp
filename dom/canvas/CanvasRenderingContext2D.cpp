@@ -4789,6 +4789,7 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
                                           double aX, double aY, double aW,
                                           double aH, const nsACString& aBgColor,
                                           uint32_t aFlags,
+                                          nsIPrincipal& aSubjectPrincipal,
                                           ErrorResult& aError) {
   if (int32_t(aW) == 0 || int32_t(aH) == 0) {
     return;
@@ -4799,6 +4800,12 @@ void CanvasRenderingContext2D::DrawWindow(nsGlobalWindowInner& aWindow,
   if (!Factory::CheckSurfaceSize(IntSize(int32_t(aW), int32_t(aH)), 0xffff)) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
+  }
+
+  Document* doc = aWindow.GetExtantDoc();
+  if (doc && aSubjectPrincipal.GetIsAddonOrExpandedAddonPrincipal()) {
+    doc->WarnOnceAbout(
+        DeprecatedOperations::eDrawWindowCanvasRenderingContext2D);
   }
 
   // Flush layout updates

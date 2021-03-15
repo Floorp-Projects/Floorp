@@ -390,6 +390,7 @@ class CanvasRenderingContext2D final : public nsICanvasRenderingContextInternal,
 
   void DrawWindow(nsGlobalWindowInner& aWindow, double aX, double aY, double aW,
                   double aH, const nsACString& aBgColor, uint32_t aFlags,
+                  nsIPrincipal& aSubjectPrincipal,
                   mozilla::ErrorResult& aError);
 
   // Eventually this should be deprecated. Keeping for now to keep the binding
