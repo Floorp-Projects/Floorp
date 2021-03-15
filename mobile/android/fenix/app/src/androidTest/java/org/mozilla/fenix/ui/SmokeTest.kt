@@ -406,7 +406,7 @@ class SmokeTest {
         }.goBackToHomeScreen {}
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(trackingPage.url) {}
+        }.openTrackingProtectionTestPage(trackingPage.url, true) {}
 
         enhancedTrackingProtection {
             dismissTrackingOnboarding()
@@ -630,7 +630,7 @@ class SmokeTest {
             IdlingRegistry.getInstance().unregister(addonsListIdlingResource!!)
         }.goBack {
         }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(trackingProtectionPage.url) {}
+        }.openTrackingProtectionTestPage(trackingProtectionPage.url, true) {}
         enhancedTrackingProtection {
             verifyEnhancedTrackingProtectionNotice()
         }.closeNotificationPopup {}

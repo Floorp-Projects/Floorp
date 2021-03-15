@@ -83,7 +83,7 @@ class StrictEnhancedTrackingProtectionTest {
             TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(trackingProtectionTest.url) {}
+        }.openTrackingProtectionTestPage(trackingProtectionTest.url, true) {}
 
         enhancedTrackingProtection {
             verifyEnhancedTrackingProtectionNotice()
@@ -96,7 +96,7 @@ class StrictEnhancedTrackingProtectionTest {
             TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(trackingProtectionTest.url) {}
+        }.openTrackingProtectionTestPage(trackingProtectionTest.url, true) {}
 
         enhancedTrackingProtection {
             verifyEnhancedTrackingProtectionNotice()
@@ -113,7 +113,7 @@ class StrictEnhancedTrackingProtectionTest {
             TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(trackingProtectionTest.url) {}
+        }.openTrackingProtectionTestPage(trackingProtectionTest.url, true) {}
 
         enhancedTrackingProtection {
             verifyEnhancedTrackingProtectionNotice()
@@ -133,7 +133,7 @@ class StrictEnhancedTrackingProtectionTest {
             TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(trackingProtectionTest.url) {}
+        }.openTrackingProtectionTestPage(trackingProtectionTest.url, true) {}
 
         enhancedTrackingProtection {
             verifyEnhancedTrackingProtectionNotice()
@@ -164,7 +164,7 @@ class StrictEnhancedTrackingProtectionTest {
             TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(trackingProtectionTest.url) {}
+        }.openTrackingProtectionTestPage(trackingProtectionTest.url, true) {}
 
         enhancedTrackingProtection {
             verifyEnhancedTrackingProtectionNotice()
@@ -196,7 +196,7 @@ class StrictEnhancedTrackingProtectionTest {
             TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
 
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(trackingProtectionTest.url) {}
+        }.openTrackingProtectionTestPage(trackingProtectionTest.url, true) {}
 
         enhancedTrackingProtection {
             verifyEnhancedTrackingProtectionNotice()
