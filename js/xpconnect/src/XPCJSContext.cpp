@@ -833,13 +833,6 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
   bool disableWasmHugeMemory = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "wasm_disable_huge_memory", false);
 
-  bool offthreadIonCompilation =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "ion.offthread_compilation");
-#ifdef DEBUG
-  bool fullJitDebugChecks =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "jit.full_debug_checks");
-#endif
-
   bool spectreIndexMasking =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "spectre.index_masking");
   bool spectreObjectMitigations =
@@ -886,7 +879,9 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
         StaticPrefs::javascript_options_native_regexp_DoNotUseDirectly());
   }
 
-  JS_SetOffthreadIonCompilationEnabled(cx, offthreadIonCompilation);
+  JS_SetOffthreadIonCompilationEnabled(
+      cx,
+      StaticPrefs::javascript_options_ion_offthread_compilation_DoNotUseDirectly());
 
   JS_SetGlobalJitCompilerOption(
       cx, JSJITCOMPILER_BASELINE_INTERPRETER_WARMUP_TRIGGER,
@@ -903,8 +898,9 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
           javascript_options_ion_frequent_bailout_threshold_DoNotUseDirectly());
 
 #ifdef DEBUG
-  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_FULL_DEBUG_CHECKS,
-                                fullJitDebugChecks);
+  JS_SetGlobalJitCompilerOption(
+      cx, JSJITCOMPILER_FULL_DEBUG_CHECKS,
+      StaticPrefs::javascript_options_jit_full_debug_checks_DoNotUseDirectly());
 #endif
 
   JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_SPECTRE_INDEX_MASKING,
@@ -917,13 +913,14 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
                                 spectreValueMasking);
   JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_SPECTRE_JIT_TO_CXX_CALLS,
                                 spectreJitToCxxCalls);
+
   if (disableWasmHugeMemory) {
     bool disabledHugeMemory = JS::DisableWasmHugeMemory();
     MOZ_RELEASE_ASSERT(disabledHugeMemory);
   }
 
   JS::SetLargeArrayBuffersEnabled(
-      StaticPrefs::javascript_options_large_arraybuffers());
+      StaticPrefs::javascript_options_large_arraybuffers_DoNotUseDirectly());
 }
 
 static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
