@@ -1294,7 +1294,6 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame,
   }
 }
 
-// TODO: Indeterminate state.
 template <typename PaintBackendData>
 void nsNativeBasicTheme::PaintProgress(nsIFrame* aFrame,
                                        PaintBackendData& aPaintData,
@@ -1320,34 +1319,6 @@ void nsNativeBasicTheme::PaintProgress(nsIFrame* aFrame,
     rect.width = thickness;
   }
 
-  // This is the progress chunk, clip it to the right amount.
-  LayoutDeviceRect clipRect = rect;
-  double position = [&] {
-    if (aIsMeter) {
-      auto* meter = dom::HTMLMeterElement::FromNode(aFrame->GetContent());
-      if (!meter) {
-        return 0.0;
-      }
-      return meter->Value() / meter->Max();
-    }
-    auto* progress = dom::HTMLProgressElement::FromNode(aFrame->GetContent());
-    if (!progress) {
-      return 0.0;
-    }
-    return progress->Value() / progress->Max();
-  }();
-  if (isHorizontal) {
-    double clipWidth = rect.width * position;
-    clipRect.width = clipWidth;
-    if (IsFrameRTL(aFrame)) {
-      clipRect.x += rect.width - clipWidth;
-    }
-  } else {
-    double clipHeight = rect.height * position;
-    clipRect.height = clipHeight;
-    clipRect.y += rect.height - clipHeight;
-  }
-
   {
     // Paint the track, unclipped.
     auto [backgroundColor, borderColor] =
@@ -1357,14 +1328,69 @@ void nsNativeBasicTheme::PaintProgress(nsIFrame* aFrame,
                                borderColor, borderWidth, radius, aDpiRatio);
   }
 
-  {
-    // Now paint the chunk, clipped if needed.
-    auto [backgroundColor, borderColor] =
-        aIsMeter ? ComputeMeterchunkColors(aState, aUseSystemColors)
-                 : ComputeProgressColors(aUseSystemColors);
-    PaintRoundedRectWithRadius(aPaintData, rect, clipRect, backgroundColor,
-                               borderColor, borderWidth, radius, aDpiRatio);
+  // Now paint the chunk, clipped as needed.
+  LayoutDeviceRect clipRect = rect;
+  if (aState.HasState(NS_EVENT_STATE_INDETERMINATE)) {
+    // For indeterminate progress, we paint an animated chunk of 1/3 of the
+    // progress size.
+    //
+    // Animation speed and math borrowed from GTK.
+    const LayoutDeviceCoord size = isHorizontal ? rect.width : rect.height;
+    const LayoutDeviceCoord barSize = size * 0.3333f;
+    const LayoutDeviceCoord travel = 2.0f * (size - barSize);
+
+    // Period equals to travel / pixelsPerMillisecond where pixelsPerMillisecond
+    // equals progressSize / 1000.0.  This is equivalent to 1600.
+    const unsigned kPeriod = 1600;
+
+    const int t = PR_IntervalToMilliseconds(PR_IntervalNow()) % kPeriod;
+    const LayoutDeviceCoord dx = travel * float(t) / float(kPeriod);
+    if (isHorizontal) {
+      rect.width = barSize;
+      rect.x += (dx < travel * .5f) ? dx : travel - dx;
+    } else {
+      rect.height = barSize;
+      rect.y += (dx < travel * .5f) ? dx : travel - dx;
+    }
+    clipRect = rect;
+    // Queue the next frame if needed.
+    if (!QueueAnimatedContentForRefresh(aFrame->GetContent(), 60)) {
+      NS_WARNING("Couldn't refresh indeterminate <progress>");
+    }
+  } else {
+    // This is the progress chunk, clip it to the right amount.
+    double position = [&] {
+      if (aIsMeter) {
+        auto* meter = dom::HTMLMeterElement::FromNode(aFrame->GetContent());
+        if (!meter) {
+          return 0.0;
+        }
+        return meter->Value() / meter->Max();
+      }
+      auto* progress = dom::HTMLProgressElement::FromNode(aFrame->GetContent());
+      if (!progress) {
+        return 0.0;
+      }
+      return progress->Value() / progress->Max();
+    }();
+    if (isHorizontal) {
+      double clipWidth = rect.width * position;
+      clipRect.width = clipWidth;
+      if (IsFrameRTL(aFrame)) {
+        clipRect.x += rect.width - clipWidth;
+      }
+    } else {
+      double clipHeight = rect.height * position;
+      clipRect.height = clipHeight;
+      clipRect.y += rect.height - clipHeight;
+    }
   }
+
+  auto [backgroundColor, borderColor] =
+      aIsMeter ? ComputeMeterchunkColors(aState, aUseSystemColors)
+               : ComputeProgressColors(aUseSystemColors);
+  PaintRoundedRectWithRadius(aPaintData, rect, clipRect, backgroundColor,
+                             borderColor, borderWidth, radius, aDpiRatio);
 }
 
 template <typename PaintBackendData>
