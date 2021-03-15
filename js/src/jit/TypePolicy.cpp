@@ -549,20 +549,20 @@ template bool NoFloatPolicy<3>::staticAdjustInputs(TempAllocator& alloc,
                                                    MInstruction* def);
 
 template <unsigned FirstOp>
-bool NoFloatPolicyAfter<FirstOp>::adjustInputs(TempAllocator& alloc,
-                                               MInstruction* def) const {
+bool NoFloatPolicyAfter<FirstOp>::staticAdjustInputs(TempAllocator& alloc,
+                                                     MInstruction* def) {
   for (size_t op = FirstOp, e = def->numOperands(); op < e; op++) {
     EnsureOperandNotFloat32(alloc, def, op);
   }
   return true;
 }
 
-template bool NoFloatPolicyAfter<0>::adjustInputs(TempAllocator& alloc,
-                                                  MInstruction* def) const;
-template bool NoFloatPolicyAfter<1>::adjustInputs(TempAllocator& alloc,
-                                                  MInstruction* def) const;
-template bool NoFloatPolicyAfter<2>::adjustInputs(TempAllocator& alloc,
-                                                  MInstruction* def) const;
+template bool NoFloatPolicyAfter<0>::staticAdjustInputs(TempAllocator& alloc,
+                                                        MInstruction* def);
+template bool NoFloatPolicyAfter<1>::staticAdjustInputs(TempAllocator& alloc,
+                                                        MInstruction* def);
+template bool NoFloatPolicyAfter<2>::staticAdjustInputs(TempAllocator& alloc,
+                                                        MInstruction* def);
 
 template <unsigned Op>
 bool BoxPolicy<Op>::staticAdjustInputs(TempAllocator& alloc,
@@ -1068,6 +1068,7 @@ bool ClampPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins) const {
   _(MixPolicy<ObjectPolicy<0>, BoxPolicy<2>, ObjectPolicy<3>>)                \
   _(MixPolicy<BoxExceptPolicy<0, MIRType::Object>, ObjectPolicy<1>>)          \
   _(MixPolicy<UnboxedInt32Policy<0>, BigIntPolicy<1>>)                        \
+  _(MixPolicy<UnboxedInt32Policy<0>, NoFloatPolicyAfter<1>>)                  \
   _(NoFloatPolicy<0>)                                                         \
   _(NoFloatPolicy<1>)                                                         \
   _(NoFloatPolicy<2>)                                                         \

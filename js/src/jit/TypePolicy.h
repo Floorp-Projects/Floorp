@@ -333,8 +333,12 @@ class NoFloatPolicyAfter final : public TypePolicy {
  public:
   constexpr NoFloatPolicyAfter() = default;
   EMPTY_DATA_;
+  [[nodiscard]] static bool staticAdjustInputs(TempAllocator& alloc,
+                                               MInstruction* def);
   [[nodiscard]] bool adjustInputs(TempAllocator& alloc,
-                                  MInstruction* ins) const override;
+                                  MInstruction* ins) const override {
+    return staticAdjustInputs(alloc, ins);
+  }
 };
 
 // Box objects or strings as an input to a ToDouble instruction.
