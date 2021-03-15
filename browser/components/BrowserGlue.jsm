@@ -1633,26 +1633,6 @@ BrowserGlue.prototype = {
     }
   },
 
-  _collectFirstPartyIsolationTelemetry() {
-    let update = aIsFirstPartyIsolated => {
-      Services.telemetry.scalarSet(
-        "privacy.feature.first_party_isolation_enabled",
-        aIsFirstPartyIsolated
-      );
-    };
-
-    XPCOMUtils.defineLazyPreferenceGetter(
-      this,
-      "_firstPartyIsolated",
-      "privacy.firstparty.isolate",
-      false,
-      (_data, _previous, latest) => {
-        update(latest);
-      }
-    );
-    update(this._firstPartyIsolated);
-  },
-
   // the first browser window has finished initializing
   _onFirstWindowLoaded: function BG__onFirstWindowLoaded(aWindow) {
     AboutNewTab.init();
@@ -1746,8 +1726,6 @@ BrowserGlue.prototype = {
     this._firstWindowLoaded();
 
     this._collectStartupConditionsTelemetry();
-
-    this._collectFirstPartyIsolationTelemetry();
 
     if (!this._placesTelemetryGathered && TelemetryUtils.isTelemetryEnabled) {
       this._placesTelemetryGathered = true;
