@@ -3139,8 +3139,9 @@ class MCreateInlinedArgumentsObject : public MVariadicInstruction,
   bool canRecoverOnBailout() const override { return true; }
 };
 
-class MGetInlinedArgument : public MVariadicInstruction,
-                            public UnboxedInt32Policy<0>::Data {
+class MGetInlinedArgument
+    : public MVariadicInstruction,
+      public MixPolicy<UnboxedInt32Policy<0>, NoFloatPolicyAfter<1>>::Data {
   MGetInlinedArgument() : MVariadicInstruction(classOpcode) {
     setResultType(MIRType::Value);
   }
