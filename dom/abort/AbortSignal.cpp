@@ -84,6 +84,12 @@ JSObject* AbortSignal::WrapObject(JSContext* aCx,
   return AbortSignal_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+already_AddRefed<AbortSignal> AbortSignal::Abort(GlobalObject& aGlobal) {
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
+  RefPtr<AbortSignal> abortSignal = new AbortSignal(global, true);
+  return abortSignal.forget();
+}
+
 // https://dom.spec.whatwg.org/#abortsignal-signal-abort
 void AbortSignal::SignalAbort() {
   // Steps 1-4.
