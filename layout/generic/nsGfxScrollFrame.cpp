@@ -3423,6 +3423,15 @@ void ScrollFrameHelper::AppendScrollPartsTo(nsDisplayListBuilder* aBuilder,
           aBuilder, scrollParts[i],
           visible + mOuter->GetOffsetTo(scrollParts[i]),
           dirty + mOuter->GetOffsetTo(scrollParts[i]));
+      if (scrollParts[i]->IsTransformed()) {
+        nsPoint toOuterReferenceFrame;
+        const nsIFrame* outerReferenceFrame = aBuilder->FindReferenceFrameFor(
+            scrollParts[i]->GetParent(), &toOuterReferenceFrame);
+        toOuterReferenceFrame += scrollParts[i]->GetPosition();
+
+        buildingForChild.SetReferenceFrameAndCurrentOffset(
+            outerReferenceFrame, toOuterReferenceFrame);
+      }
       nsDisplayListBuilder::AutoCurrentScrollbarInfoSetter infoSetter(
           aBuilder, scrollTargetId, scrollDirection, createLayer);
 
