@@ -12,7 +12,7 @@ ChromeUtils.defineModuleGetter(
 const kPrefHomePage = "browser.startup.homepage";
 const kPrefExtensionControlled =
   "browser.startup.homepage_override.extensionControlled";
-const kPrefProtonToolbarEnabled = "browser.proton.enabled";
+const kPrefProtonToolbarEnabled = "browser.proton.toolbar.enabled";
 const kPrefHomeButtonRemoved = "browser.engagement.home-button.has-removed";
 const kHomeButtonId = "home-button";
 const kUrlbarWidgetId = "urlbar-container";

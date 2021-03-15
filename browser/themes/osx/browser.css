@@ -205,7 +205,7 @@
   border: none;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@supports not -moz-bool-pref("browser.proton.toolbar.enabled") {
 /* On Mac, native buttons keep their full opacity when they become disabled
  * and only the glyph or text on top of them becomes less opaque. */
 :root:not([customizing]) #back-button[disabled="true"] {

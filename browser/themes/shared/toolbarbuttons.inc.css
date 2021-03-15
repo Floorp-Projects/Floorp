@@ -41,13 +41,14 @@
   --toolbarbutton-focus-outline: var(--focus-outline);
 }
 } /*** END proton ***/
+
 :root[uidensity=compact] {
   --toolbarbutton-outer-padding: 3px;
   --toolbarbutton-inner-padding: 6px;
   --bookmark-block-padding: 1px;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@supports not -moz-bool-pref("browser.proton.toolbar.enabled") {
 :root {
   --toolbarbutton-outer-padding: 2px;
   --toolbarbutton-inner-padding: 6px;
@@ -146,7 +147,7 @@ toolbar .toolbarbutton-1 {
   -moz-box-pack: center;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@supports not -moz-bool-pref("browser.proton.toolbar.enabled") {
 :root:not([uidensity=compact]) #PanelUI-button {
   padding-inline-start: 5px;
 }
@@ -155,7 +156,7 @@ toolbar .toolbarbutton-1 {
   padding-inline-end: 5px;
 }
 } /*** END !proton ***/
-@supports -moz-bool-pref("browser.proton.enabled") {
+@supports -moz-bool-pref("browser.proton.toolbar.enabled") {
 /*** Adds padding to end of toolbar while making that space click the first button ***/
 #PanelUI-menu-button {
   padding-inline-end: var(--toolbar-start-end-padding);
@@ -289,7 +290,7 @@ toolbar .toolbarbutton-1:-moz-focusring {
   outline: none;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@supports not -moz-bool-pref("browser.proton.toolbar.enabled") {
 :root:not([uidensity=compact]) #back-button {
   padding-block: 3px;
   padding-inline: 3px 0;
@@ -365,7 +366,7 @@ toolbar .toolbarbutton-1:-moz-focusring {
 
 /* ::::: bookmark buttons ::::: */
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@supports not -moz-bool-pref("browser.proton.toolbar.enabled") {
   #PersonalToolbar .toolbarbutton-1,
   #personal-toolbar-empty-description,
   toolbarbutton.bookmark-item:not(.subviewbutton) {
@@ -407,7 +408,7 @@ toolbar .toolbarbutton-1:-moz-focusring {
   }
 } /** END !proton **/
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@supports -moz-bool-pref("browser.proton.toolbar.enabled") {
   #PersonalToolbar .toolbarbutton-1,
   #personal-toolbar-empty-description,
   toolbarbutton.bookmark-item:not(.subviewbutton) {

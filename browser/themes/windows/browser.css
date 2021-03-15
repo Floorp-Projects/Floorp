@@ -28,7 +28,7 @@
   --chrome-content-separator-color: ThreeDShadow;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@supports not -moz-bool-pref("browser.proton.toolbar.enabled") {
 :root {
   --toolbarbutton-border-radius: 2px;
 }
