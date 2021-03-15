@@ -649,6 +649,7 @@ class FunctionCompiler {
     return ins;
   }
 
+#if defined(JS_CODEGEN_ARM)
   MDefinition* truncateWithTls(MDefinition* op, TruncFlags flags) {
     if (inDeadCode()) {
       return nullptr;
@@ -658,6 +659,7 @@ class FunctionCompiler {
     curBlock_->add(ins);
     return ins;
   }
+#endif
 
   MDefinition* compare(MDefinition* lhs, MDefinition* rhs, JSOp op,
                        MCompare::CompareType type) {

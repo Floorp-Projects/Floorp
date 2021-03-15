@@ -274,6 +274,99 @@ class LUMod : public LBinaryMath<0> {
   MMod* mir() { return mir_->toMod(); }
 };
 
+class LInt64ToFloatingPoint : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(Int64ToFloatingPoint);
+
+  explicit LInt64ToFloatingPoint(const LInt64Allocation& in)
+      : LInstructionHelper(classOpcode) {
+    setInt64Operand(0, in);
+  }
+
+  MInt64ToFloatingPoint* mir() const { return mir_->toInt64ToFloatingPoint(); }
+};
+
+class LWasmTruncateToInt64 : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(WasmTruncateToInt64);
+
+  explicit LWasmTruncateToInt64(const LAllocation& in)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, in);
+  }
+
+  MWasmTruncateToInt64* mir() const { return mir_->toWasmTruncateToInt64(); }
+};
+
+class LDivOrModI64 : public LBinaryMath<0> {
+ public:
+  LIR_HEADER(DivOrModI64)
+
+  LDivOrModI64(const LAllocation& lhs, const LAllocation& rhs)
+      : LBinaryMath(classOpcode) {
+    setOperand(0, lhs);
+    setOperand(1, rhs);
+  }
+
+  MBinaryArithInstruction* mir() const {
+    MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+    return static_cast<MBinaryArithInstruction*>(mir_);
+  }
+
+  bool canBeDivideByZero() const {
+    if (mir_->isMod()) {
+      return mir_->toMod()->canBeDivideByZero();
+    }
+    return mir_->toDiv()->canBeDivideByZero();
+  }
+  bool canBeNegativeOverflow() const {
+    if (mir_->isMod()) {
+      return mir_->toMod()->canBeNegativeDividend();
+    }
+    return mir_->toDiv()->canBeNegativeOverflow();
+  }
+  wasm::BytecodeOffset bytecodeOffset() const {
+    MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+    if (mir_->isMod()) {
+      return mir_->toMod()->bytecodeOffset();
+    }
+    return mir_->toDiv()->bytecodeOffset();
+  }
+};
+
+class LUDivOrModI64 : public LBinaryMath<0> {
+ public:
+  LIR_HEADER(UDivOrModI64);
+
+  LUDivOrModI64(const LAllocation& lhs, const LAllocation& rhs)
+      : LBinaryMath(classOpcode) {
+    setOperand(0, lhs);
+    setOperand(1, rhs);
+  }
+
+  const char* extraName() const {
+    return mir()->isTruncated() ? "Truncated" : nullptr;
+  }
+
+  MBinaryArithInstruction* mir() const {
+    MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+    return static_cast<MBinaryArithInstruction*>(mir_);
+  }
+  bool canBeDivideByZero() const {
+    if (mir_->isMod()) {
+      return mir_->toMod()->canBeDivideByZero();
+    }
+    return mir_->toDiv()->canBeDivideByZero();
+  }
+  wasm::BytecodeOffset bytecodeOffset() const {
+    MOZ_ASSERT(mir_->isDiv() || mir_->isMod());
+    if (mir_->isMod()) {
+      return mir_->toMod()->bytecodeOffset();
+    }
+    return mir_->toDiv()->bytecodeOffset();
+  }
+};
+
 }  // namespace jit
 }  // namespace js
 
