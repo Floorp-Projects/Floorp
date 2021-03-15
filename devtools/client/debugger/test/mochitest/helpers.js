@@ -758,10 +758,12 @@ async function stepOut(dbg) {
  * @return {Promise}
  * @static
  */
-function resume(dbg) {
+async function resume(dbg) {
   const pauseLine = getVisibleSelectedFrameLine(dbg);
   info(`Resuming from ${pauseLine}`);
-  return dbg.actions.resume(getThreadContext(dbg));
+  const onResumed = waitForActive(dbg);
+  await dbg.actions.resume(getThreadContext(dbg));
+  await onResumed;
 }
 
 function deleteExpression(dbg, input) {
