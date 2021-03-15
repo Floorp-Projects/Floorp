@@ -216,6 +216,11 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">เรียนรู้เพิ่มเติม</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">ค้นหา %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">ค้นหาโดยตรงจากแถบที่อยู่</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">เปิดแท็บ Firefox ใหม่</string>
