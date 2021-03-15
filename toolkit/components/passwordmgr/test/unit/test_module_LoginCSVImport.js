@@ -38,10 +38,11 @@ Services.prefs.setBoolPref(
  */
 async function setupCsv(csvLines, extension) {
   // Cleanup state.
-  TTU.getAndClearHistogram("PWMGR_IMPORT_LOGINS_FROM_FILE_CATEGORICAL");
-  TTU.getAndClearHistogram("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
-  TTU.getAndClearHistogram("PWMGR_IMPORT_LOGINS_FROM_FILE_JANK_MS");
+  TTU.getAndClearKeyedHistogram("FX_MIGRATION_LOGINS_QUANTITY");
+  TTU.getAndClearKeyedHistogram("FX_MIGRATION_LOGINS_IMPORT_MS");
+  TTU.getAndClearKeyedHistogram("FX_MIGRATION_LOGINS_JANK_MS");
   Services.logins.removeAllUserFacingLogins();
+
   let tmpFile = await LoginTestUtils.file.setupCsvFileWithLines(
     csvLines,
     extension

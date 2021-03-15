@@ -7903,18 +7903,6 @@
     "keyed": true,
     "description": "How long it took to import logins (passwords) from another browser, keyed by the name of the browser. The time for users to unlock Keychain on macOS is included in this time."
   },
-  "PWMGR_IMPORT_LOGINS_FROM_FILE_MS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "bug_numbers": [1688653],
-    "alert_emails": ["sfoster@mozilla.com", "passwords-dev@mozilla.org"],
-    "expires_in_version": "99",
-    "kind": "exponential",
-    "n_buckets": 70,
-    "high": 100000,
-    "releaseChannelCollection": "opt-out",
-    "description": "How long it took to import logins (passwords) from a CSV/TSV file. The time for users to unlock Keychain on macOS is included in this time."
-  },
   "FX_MIGRATION_BOOKMARKS_JANK_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox"],
@@ -7953,18 +7941,6 @@
     "releaseChannelCollection": "opt-out",
     "keyed": true,
     "description": "Accumulated timer delay (variance between when the timer was expected to fire and when it actually fired) in milliseconds as an indicator for decreased main-thread responsiveness while importing logins / passwords from another browser, keyed by the name of the browser (see gAvailableMigratorKeys in MigrationUtils.jsm). The import is happening on a background thread and should ideally not affect the UI noticeably. The time with the blocking Keychain dialog on macOS can skew this data."
-  },
-  "PWMGR_IMPORT_LOGINS_FROM_FILE_JANK_MS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "bug_numbers": [1338522, 1584261, 1643431, 1678204],
-    "alert_emails": ["sfoster@mozilla.com", "passwords-dev@mozilla.org"],
-    "expires_in_version": "99",
-    "kind": "exponential",
-    "n_buckets": 20,
-    "high": 60000,
-    "releaseChannelCollection": "opt-out",
-    "description": "Accumulated timer delay (variance between when the timer was expected to fire and when it actually fired) in milliseconds as an indicator for decreased main-thread responsiveness while importing logins / passwords from a CSV/TSV file. The import is happening on a background thread and should ideally not affect the UI noticeably. The time with the blocking Keychain dialog on macOS can skew this data."
   },
   "FX_MIGRATION_BOOKMARKS_ROOTS": {
     "record_in_processes": ["main"],
@@ -8016,17 +7992,6 @@
     "releaseChannelCollection": "opt-out",
     "keyed": true,
     "description": "How many logins (passwords) we imported from another browser, keyed by the name of the browser."
-  },
-  "PWMGR_IMPORT_LOGINS_FROM_FILE_CATEGORICAL": {
-    "record_in_processes": ["main"],
-    "products": ["firefox"],
-    "bug_numbers": [1688653],
-    "alert_emails": ["sfoster@mozilla.com", "passwords-dev@mozilla.org"],
-    "expires_in_version": "99",
-    "kind": "categorical",
-    "labels": ["added", "modified", "error", "no_change"],
-    "description": "How many logins (passwords) we imported from a CSV/TSV file.",
-    "releaseChannelCollection": "opt-out",
   },
   "FX_STARTUP_MIGRATION_BROWSER_COUNT": {
     "record_in_processes": ["main"],
