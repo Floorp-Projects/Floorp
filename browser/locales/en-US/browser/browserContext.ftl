@@ -101,8 +101,8 @@ main-context-menu-open-link-new-tab =
     .label = Open Link in New Tab
     .accesskey = T
 
-main-context-menu-open-link-container =
-    .label = Open Link in New Container
+main-context-menu-open-link-container-tab =
+    .label = Open Link in New Container Tab
     .accesskey = w
 
 main-context-menu-open-link-new-window =
