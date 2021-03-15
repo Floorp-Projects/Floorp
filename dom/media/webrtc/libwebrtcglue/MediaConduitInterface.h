@@ -7,6 +7,8 @@
 
 #include <vector>
 #include <set>
+#include <functional>
+#include <map>
 
 #include "CodecConfig.h"
 #include "ImageContainer.h"
@@ -19,6 +21,8 @@
 #include "VideoTypes.h"
 #include "WebrtcVideoCodecFactory.h"
 #include "RtcpEventObserver.h"
+#include "nsTArray.h"
+#include "mozilla/dom/RTCRtpSourcesBinding.h"
 
 // libwebrtc includes
 #include "api/video/builtin_video_bitrate_allocator_factory.h"
@@ -225,8 +229,6 @@ class MediaSessionConduit {
 
   virtual void SetSyncGroup(const std::string& group) = 0;
 
-  virtual void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) = 0;
-
   virtual bool HasCodecPluginID(uint64_t aPluginID) = 0;
 
   virtual void DeliverPacket(rtc::CopyOnWriteBuffer packet,
@@ -242,6 +244,51 @@ class MediaSessionConduit {
   virtual webrtc::Call::Stats GetCallStats() const = 0;
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaSessionConduit)
+
+  void UpdateRtpSources(const std::vector<webrtc::RtpSource>& aSources);
+  void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) const;
+
+  // test-only: inserts fake CSRCs and audio level data
+  void InsertAudioLevelForContributingSource(const uint32_t aCsrcSource,
+                                             const int64_t aTimestamp,
+                                             const uint32_t aRtpTimestamp,
+                                             const bool aHasAudioLevel,
+                                             const uint8_t aAudioLevel);
+
+ private:
+  // Accessed only on main thread. This exists for a couple of reasons:
+  // 1. The webrtc spec says that source stats are updated using a queued task;
+  //    libwebrtc's internal representation of these stats is updated without
+  //    any task queueing, which means we need a mainthread-only cache.
+  // 2. libwebrtc uses its own clock that is not consistent with the one we
+  // need to use for stats (the so-called JS timestamps), which means we need
+  // to adjust the timestamps.  Since timestamp adjustment is inexact and will
+  // not necessarily yield exactly the same result if performed again later, we
+  // need to avoid performing it more than once for each entry, which means we
+  // need to remember both the JS timestamp (in dom::RTCRtpSourceEntry) and the
+  // libwebrtc timestamp (in SourceKey::mLibwebrtcTimestamp).
+  class SourceKey {
+   public:
+    explicit SourceKey(const webrtc::RtpSource& aSource)
+        : SourceKey(aSource.timestamp_ms(), aSource.source_id()) {}
+
+    SourceKey(uint32_t aTimestamp, uint32_t aSrc)
+        : mLibwebrtcTimestamp(aTimestamp), mSrc(aSrc) {}
+
+    // TODO: Once we support = default for this in our toolchain, do so
+    auto operator>(const SourceKey& aRhs) const {
+      if (mLibwebrtcTimestamp == aRhs.mLibwebrtcTimestamp) {
+        return mSrc > aRhs.mSrc;
+      }
+      return mLibwebrtcTimestamp > aRhs.mLibwebrtcTimestamp;
+    }
+
+   private:
+    uint32_t mLibwebrtcTimestamp;
+    uint32_t mSrc;
+  };
+  std::map<SourceKey, dom::RTCRtpSourceEntry, std::greater<SourceKey>>
+      mSourcesCache;
 };
 
 // Wrap the webrtc.org Call class adding mozilla add/ref support.
@@ -530,6 +577,8 @@ class VideoSessionConduit : public MediaSessionConduit {
 
   virtual bool AddFrameHistory(
       dom::Sequence<dom::RTCVideoFrameHistoryInternal>* outHistories) const = 0;
+
+  virtual void OnFrameDelivered() = 0;
 
  protected:
   /* RTCP feedback settings, for unit testing purposes */

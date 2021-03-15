@@ -8,7 +8,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/TimeStamp.h"
-#include "nsTArray.h"
 
 #include "MediaConduitInterface.h"
 #include "common/MediaEngineWrapper.h"
@@ -189,15 +188,6 @@ class WebrtcAudioConduit : public AudioSessionConduit,
 
   bool InsertDTMFTone(int channel, int eventCode, bool outOfBand, int lengthMs,
                       int attenuationDb) override;
-
-  void GetRtpSources(nsTArray<dom::RTCRtpSourceEntry>& outSources) override;
-
-  // test-only: inserts fake CSRCs and audio level data
-  void InsertAudioLevelForContributingSource(const uint32_t aCsrcSource,
-                                             const int64_t aTimestamp,
-                                             const uint32_t aRtpTimestamp,
-                                             const bool aHasAudioLevel,
-                                             const uint8_t aAudioLevel);
 
   bool IsSamplingFreqSupported(int freq) const override;
 
