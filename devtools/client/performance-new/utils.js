@@ -322,6 +322,13 @@ const featureDescriptions = [
     recommended: true,
   },
   {
+    name: "CPU Utilization",
+    value: "cpu",
+    title:
+      "Record how much CPU has been used between samples by each profiled thread.",
+    recommended: true,
+  },
+  {
     name: "Java",
     value: "java",
     title: "Profile Java code",
@@ -410,15 +417,6 @@ const featureDescriptions = [
     name: "Audio Callback Tracing",
     value: "audiocallbacktracing",
     title: "Trace real-time audio callbacks.",
-  },
-  {
-    name: "CPU Utilization",
-    value: "cpu",
-    title:
-      "CPU utilization by threads. To view graphs, in about:config set " +
-      "devtools.performance.recording.ui-base-url to " +
-      "https://deploy-preview-3098--perf-html.netlify.app",
-    experimental: true,
   },
 ];
 
