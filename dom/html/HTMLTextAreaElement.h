@@ -91,9 +91,6 @@ class HTMLTextAreaElement final : public TextControlElement,
   MOZ_CAN_RUN_SCRIPT virtual void UnbindFromFrame(
       nsTextControlFrame* aFrame) override;
   MOZ_CAN_RUN_SCRIPT virtual nsresult CreateEditor() override;
-  virtual void UpdateOverlayTextVisibility(bool aNotify) override;
-  virtual bool GetPlaceholderVisibility() override;
-  virtual bool GetPreviewVisibility() override;
   virtual void SetPreviewValue(const nsAString& aValue) override;
   virtual void GetPreviewValue(nsAString& aValue) override;
   virtual void EnablePreview() override;

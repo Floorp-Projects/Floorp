@@ -120,10 +120,9 @@ nsresult HTMLTextAreaElement::Clone(dom::NodeInfo* aNodeInfo,
     GetValueInternal(value, true);
 
     // SetValueInternal handles setting mValueChanged for us
-    if (NS_WARN_IF(NS_FAILED(
-            rv = it->SetValueInternal(
-                value, ValueSetterOption::
-                           UpdateOverlayTextVisibilityAndInvalidateFrame)))) {
+    if (NS_WARN_IF(
+            NS_FAILED(rv = it->SetValueInternal(
+                          value, {ValueSetterOption::SetValueChanged})))) {
       return rv;
     }
   }
@@ -236,16 +235,6 @@ nsresult HTMLTextAreaElement::CreateEditor() {
   return mState->PrepareEditor();
 }
 
-void HTMLTextAreaElement::UpdateOverlayTextVisibility(bool aNotify) {
-  MOZ_ASSERT(mState);
-  mState->UpdateOverlayTextVisibility(aNotify);
-}
-
-bool HTMLTextAreaElement::GetPlaceholderVisibility() {
-  MOZ_ASSERT(mState);
-  return mState->GetPlaceholderVisibility();
-}
-
 void HTMLTextAreaElement::SetPreviewValue(const nsAString& aValue) {
   MOZ_ASSERT(mState);
   mState->SetPreviewText(aValue, true);
@@ -269,21 +258,14 @@ void HTMLTextAreaElement::EnablePreview() {
 
 bool HTMLTextAreaElement::IsPreviewEnabled() { return mIsPreviewEnabled; }
 
-bool HTMLTextAreaElement::GetPreviewVisibility() {
-  MOZ_ASSERT(mState);
-  return mState->GetPreviewVisibility();
-}
-
 nsresult HTMLTextAreaElement::SetValueInternal(
     const nsAString& aValue, const ValueSetterOptions& aOptions) {
   MOZ_ASSERT(mState);
 
   // Need to set the value changed flag here if our value has in fact changed
-  // (i.e. if ValueSetterOption::UpdateOverlayTextVisibilityAndInvalidateFrame
-  // is in aOptions), so that nsTextControlFrame::UpdateValueDisplay retrieves
-  // the correct value if needed.
-  if (aOptions.contains(
-          ValueSetterOption::UpdateOverlayTextVisibilityAndInvalidateFrame)) {
+  // (i.e. if ValueSetterOption::SetValueChanged is in aOptions), so that
+  // retrieves the correct value if needed.
+  if (aOptions.contains(ValueSetterOption::SetValueChanged)) {
     SetValueChanged(true);
   }
 
@@ -307,9 +289,9 @@ void HTMLTextAreaElement::SetValue(const nsAString& aValue,
   GetValueInternal(currentValue, true);
 
   nsresult rv = SetValueInternal(
-      aValue, {ValueSetterOption::ByContentAPI,
-               ValueSetterOption::UpdateOverlayTextVisibilityAndInvalidateFrame,
-               ValueSetterOption::MoveCursorToEndIfValueChanged});
+      aValue,
+      {ValueSetterOption::ByContentAPI, ValueSetterOption::SetValueChanged,
+       ValueSetterOption::MoveCursorToEndIfValueChanged});
   if (NS_WARN_IF(NS_FAILED(rv))) {
     aError.Throw(rv);
     return;
@@ -322,10 +304,9 @@ void HTMLTextAreaElement::SetValue(const nsAString& aValue,
 
 void HTMLTextAreaElement::SetUserInput(const nsAString& aValue,
                                        nsIPrincipal& aSubjectPrincipal) {
-  SetValueInternal(
-      aValue, {ValueSetterOption::BySetUserInputAPI,
-               ValueSetterOption::UpdateOverlayTextVisibilityAndInvalidateFrame,
-               ValueSetterOption::MoveCursorToEndIfValueChanged});
+  SetValueInternal(aValue, {ValueSetterOption::BySetUserInputAPI,
+                            ValueSetterOption::SetValueChanged,
+                            ValueSetterOption::MoveCursorToEndIfValueChanged});
 }
 
 nsresult HTMLTextAreaElement::SetValueChanged(bool aValueChanged) {
@@ -660,10 +641,8 @@ void HTMLTextAreaElement::GetValueFromSetRangeText(nsAString& aValue) {
 
 nsresult HTMLTextAreaElement::SetValueFromSetRangeText(
     const nsAString& aValue) {
-  return SetValueInternal(
-      aValue,
-      {ValueSetterOption::ByContentAPI,
-       ValueSetterOption::UpdateOverlayTextVisibilityAndInvalidateFrame});
+  return SetValueInternal(aValue, {ValueSetterOption::ByContentAPI,
+                                   ValueSetterOption::SetValueChanged});
 }
 
 nsresult HTMLTextAreaElement::Reset() {

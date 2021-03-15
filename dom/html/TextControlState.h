@@ -183,8 +183,9 @@ class TextControlState final : public SupportsWeakPtr {
     // The value is changed by changing value attribute of the element or
     // something like setRangeText().
     ByContentAPI,
-    // Whether the value change should be notified to the frame/contet nor not.
-    UpdateOverlayTextVisibilityAndInvalidateFrame,
+    // Whether SetValueChanged should be called as a result of this value
+    // change.
+    SetValueChanged,
     // Whether to move the cursor to end of the value (in the case when we have
     // cached selection offsets), in the case when the value has changed.  If
     // this is not set and MoveCursorToBeginSetSelectionDirectionForward
@@ -266,15 +267,9 @@ class TextControlState final : public SupportsWeakPtr {
   }
   int32_t GetRows() { return mTextCtrlElement->GetRows(); }
 
-  void UpdateOverlayTextVisibility(bool aNotify);
-
-  // placeholder methods
-  bool GetPlaceholderVisibility() { return mPlaceholderVisibility; }
-
   // preview methods
   void SetPreviewText(const nsAString& aValue, bool aNotify);
   void GetPreviewText(nsAString& aValue);
-  bool GetPreviewVisibility() { return mPreviewVisibility; }
 
   struct SelectionProperties {
    public:
@@ -416,8 +411,6 @@ class TextControlState final : public SupportsWeakPtr {
 
   MOZ_CAN_RUN_SCRIPT void UnlinkInternal();
 
-  void ValueWasChanged();
-
   MOZ_CAN_RUN_SCRIPT void DestroyEditor();
   MOZ_CAN_RUN_SCRIPT void Clear();
 
@@ -473,8 +466,6 @@ class TextControlState final : public SupportsWeakPtr {
   bool mValueTransferInProgress;  // Whether a value is being transferred to the
                                   // frame
   bool mSelectionCached;          // Whether mSelectionProperties is valid
-  bool mPlaceholderVisibility;
-  bool mPreviewVisibility;
 
   /**
    * For avoiding allocation cost of the instance, we should reuse instances

@@ -19,6 +19,7 @@ class nsTextControlFrame;
 namespace mozilla {
 class TextControlElement;
 class TextControlState;
+class TextEditor;
 
 namespace dom {
 class Selection;
@@ -39,7 +40,7 @@ class TextInputListener final : public nsIDOMEventListener,
    * aFrame is an optional pointer to our frame, if not passed the method will
    * use mFrame to compute it lazily.
    */
-  void HandleValueChanged(nsTextControlFrame* aFrame = nullptr);
+  void HandleValueChanged();
 
   /**
    * OnEditActionHandled() is called when the editor handles each edit action.
