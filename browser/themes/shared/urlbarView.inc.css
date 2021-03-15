@@ -7,6 +7,7 @@
 %filter substitution
 %define urlbarViewPadding 4px
 %define urlbarViewFaviconWidth 16px
+%define urlbarViewIconMarginEnd (var(--urlbar-icon-padding) + var(--identity-box-margin-inline))
 
 %include ../shared/urlbar/dynamicResults.inc.css
 
@@ -147,6 +148,7 @@
   padding-block-start: 18px;
   /* Compensating for the 16px bottom margin on the tip elements. */
   padding-block-end: calc(18px - 16px);
+  padding-inline-end: calc(@urlbarViewIconMarginEnd@);
 }
 
 .urlbarView-row-inner,
@@ -259,7 +261,7 @@
 .urlbarView-favicon {
   width: @urlbarViewFaviconWidth@;
   height: @urlbarViewFaviconWidth@;
-  margin-inline-end: calc(var(--urlbar-icon-padding) + var(--identity-box-margin-inline));
+  margin-inline-end: calc(@urlbarViewIconMarginEnd@);
   background-repeat: no-repeat;
   background-size: contain;
   object-fit: contain;
@@ -440,6 +442,7 @@
   text-align: center;
   flex-basis: initial;
   flex-shrink: 0;
+  margin-inline-end: 4px;
 }
 
 @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
