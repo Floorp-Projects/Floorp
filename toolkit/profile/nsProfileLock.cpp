@@ -7,6 +7,8 @@
 #include "nsCOMPtr.h"
 #include "nsQueryObject.h"
 #include "nsString.h"
+#include "nsPrintfCString.h"
+#include "nsDebug.h"
 
 #if defined(XP_WIN)
 #  include "ProfileUnlockerWin.h"
@@ -15,6 +17,10 @@
 #if defined(XP_MACOSX)
 #  include <Carbon/Carbon.h>
 #  include <CoreFoundation/CoreFoundation.h>
+#endif
+
+#if defined(MOZ_WIDGET_ANDROID)
+#  include "ProfileUnlockerAndroid.h"
 #endif
 
 #ifdef XP_UNIX
@@ -182,7 +188,8 @@ void nsProfileLock::FatalSignalHandler(int signo
   _exit(signo);
 }
 
-nsresult nsProfileLock::LockWithFcntl(nsIFile* aLockFile) {
+nsresult nsProfileLock::LockWithFcntl(nsIFile* aLockFile,
+                                      nsIProfileUnlocker** aUnlocker) {
   nsresult rv = NS_OK;
 
   nsAutoCString lockFilePath;
@@ -211,6 +218,14 @@ nsresult nsProfileLock::LockWithFcntl(nsIFile* aLockFile) {
       mLockFileDesc = -1;
       rv = NS_ERROR_FAILURE;
     } else if (fcntl(mLockFileDesc, F_SETLK, &lock) == -1) {
+#  ifdef MOZ_WIDGET_ANDROID
+      MOZ_ASSERT(aUnlocker);
+      RefPtr<mozilla::ProfileUnlockerAndroid> unlocker(
+          new mozilla::ProfileUnlockerAndroid(testlock.l_pid));
+      nsCOMPtr<nsIProfileUnlocker> unlockerInterface(do_QueryObject(unlocker));
+      unlockerInterface.forget(aUnlocker);
+#  endif
+
       close(mLockFileDesc);
       mLockFileDesc = -1;
 
@@ -479,7 +494,7 @@ nsresult nsProfileLock::Lock(nsIFile* aProfileDir,
 
   // First, try locking using fcntl. It is more reliable on
   // a local machine, but may not be supported by an NFS server.
-  rv = LockWithFcntl(lockFile);
+  rv = LockWithFcntl(lockFile, aUnlocker);
   if (NS_SUCCEEDED(rv)) {
     // Check to see whether there is a symlink lock held by an older
     // Firefox build, and also place our own symlink lock --- but
