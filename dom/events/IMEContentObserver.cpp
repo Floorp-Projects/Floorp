@@ -163,6 +163,10 @@ void IMEContentObserver::Init(nsIWidget& aWidget, nsPresContext& aPresContext,
   mIMENotificationRequests = &mWidget->IMENotificationRequestsRef();
 
   if (!InitWithEditor(aPresContext, aContent, aEditorBase)) {
+    MOZ_LOG(sIMECOLog, LogLevel::Debug,
+            ("0x%p IMEContentObserver::Init() FAILED, due to InitWithEditor() "
+             "failure",
+             this));
     Clear();
     return;
   }
