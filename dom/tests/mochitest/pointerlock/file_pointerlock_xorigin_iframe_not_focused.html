@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<!--https://bugzilla.mozilla.org/show_bug.cgi?id=1662587-->
+<head>
+<title>Bug 1662587</title>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="pointerlock_utils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<style>
+#target {
+  width: 50px;
+  height: 50px;
+  background-color: green;
+}
+iframe {
+  width: 400px;
+  height: 300px;
+  border: 1px solid blue;
+}
+</style>
+</head>
+<body>
+<a target="_blank"href="https://bugzilla.mozilla.org/show_bug.cgi?id=1698611">Mozilla Bug 1698611</a>
+<div id="target"></div>
+<iframe src="https://example.com/tests/dom/tests/mochitest/pointerlock/iframe_differentDOM.html"></iframe>
+
+<pre id="test">
+<script type="text/javascript">
+/**
+ * Test for Bug 1698611
+ */
+SimpleTest.waitForExplicitFinish();
+
+async function requestPointerLock(aWin) {
+  await SpecialPowers.spawn(aWin, [], async () => {
+    info("request pointer lock in xorigin iframe");
+    SpecialPowers.wrap(content.document).notifyUserGestureActivation();
+    content.document.body.requestPointerLock();
+    await new Promise((aResolve) => {
+      let handler = function(aEvent) {
+        is(aEvent.type, 'pointerlockchange', `got ${aEvent.type}`);
+        content.document.onpointerlockchange = null;
+        content.document.onpointerlockerror = null;
+        aResolve();
+      };
+      content.document.onpointerlockchange = handler;
+      content.document.onpointerlockerror = handler;
+    });
+  });
+}
+
+async function exitPointerLock(aWin) {
+  await SpecialPowers.spawn(aWin, [], async () => {
+    info("exit pointer lock in xorigin iframe");
+    if (content.document.pointerLockElement) {
+      content.document.exitPointerLock();
+      await new Promise((aResolve) => {
+        content.document.addEventListener("pointerlockchange", (aEvent) => {
+          ok(true, `got ${aEvent.type}`);
+          aResolve();
+        }, { once: true });
+      });
+    }
+    is(content.document.pointerLockElement, null, "pointer unlocked");
+  });
+}
+
+function waitForEvent(aWin, aEvent) {
+  return SpecialPowers.spawn(aWin, [aEvent], async (aEvent) => {
+    info(`wait for ${aEvent} event`);
+    return new Promise((aResolve) => {
+      content.document.addEventListener(aEvent, function(e) {
+        aResolve();
+      }, { once: true });
+    });
+  });
+}
+
+async function start() {
+  info("Put the focus on top-level document");
+  await SimpleTest.promiseFocus(window);
+
+  let iframe = document.querySelector("iframe");
+  let win = iframe.contentWindow;
+  await requestPointerLock(win);
+
+  let promise = waitForEvent(win, "mousemove");
+  let div = document.querySelector("div");
+  synthesizeMouseAtCenter(div, { type: "mousemove" });
+  await promise;
+
+  await exitPointerLock(win);
+  SimpleTest.finish();
+}
+</script>
+</pre>
+</body>
+</html>
