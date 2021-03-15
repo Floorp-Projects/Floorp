@@ -210,20 +210,20 @@ bool EmitterScope::internEmptyGlobalScopeAsBody(BytecodeEmitter* bce) {
       &scopeIndex_);
 }
 
-bool EmitterScope::internScopeCreationData(BytecodeEmitter* bce,
-                                           ScopeIndex scopeIndex) {
+bool EmitterScope::internScopeStencil(BytecodeEmitter* bce,
+                                      ScopeIndex scopeIndex) {
   ScopeStencil& scope = bce->compilationState.scopeData[scopeIndex.index];
   hasEnvironment_ = scope.hasEnvironment();
   return bce->perScriptData().gcThingList().append(scopeIndex, &scopeIndex_);
 }
 
-bool EmitterScope::internBodyScopeCreationData(BytecodeEmitter* bce,
-                                               ScopeIndex scopeIndex) {
+bool EmitterScope::internBodyScopeStencil(BytecodeEmitter* bce,
+                                          ScopeIndex scopeIndex) {
   MOZ_ASSERT(bce->bodyScopeIndex == ScopeNote::NoScopeIndex,
              "There can be only one body scope");
   bce->bodyScopeIndex =
       GCThingIndex(bce->perScriptData().gcThingList().length());
-  return internScopeCreationData(bce, scopeIndex);
+  return internScopeStencil(bce, scopeIndex);
 }
 
 bool EmitterScope::appendScopeNote(BytecodeEmitter* bce) {
@@ -362,7 +362,7 @@ bool EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind,
           enclosingScopeIndex(bce), &scopeIndex)) {
     return false;
   }
-  if (!internScopeCreationData(bce, scopeIndex)) {
+  if (!internScopeStencil(bce, scopeIndex)) {
     return false;
   }
 
@@ -422,7 +422,7 @@ bool EmitterScope::enterNamedLambda(BytecodeEmitter* bce, FunctionBox* funbox) {
           enclosingScopeIndex(bce), &scopeIndex)) {
     return false;
   }
-  if (!internScopeCreationData(bce, scopeIndex)) {
+  if (!internScopeStencil(bce, scopeIndex)) {
     return false;
   }
 
@@ -523,7 +523,7 @@ bool EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox) {
           funbox->isArrow(), enclosingScopeIndex(bce), &scopeIndex)) {
     return false;
   }
-  if (!internBodyScopeCreationData(bce, scopeIndex)) {
+  if (!internBodyScopeStencil(bce, scopeIndex)) {
     return false;
   }
 
@@ -594,7 +594,7 @@ bool EmitterScope::enterFunctionExtraBodyVar(BytecodeEmitter* bce,
           enclosingScopeIndex(bce), &scopeIndex)) {
     return false;
   }
-  if (!internScopeCreationData(bce, scopeIndex)) {
+  if (!internScopeStencil(bce, scopeIndex)) {
     return false;
   }
 
@@ -646,7 +646,7 @@ bool EmitterScope::enterGlobal(BytecodeEmitter* bce,
                                           globalsc->bindings, &scopeIndex)) {
     return false;
   }
-  if (!internBodyScopeCreationData(bce, scopeIndex)) {
+  if (!internBodyScopeStencil(bce, scopeIndex)) {
     return false;
   }
 
@@ -702,7 +702,7 @@ bool EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc) {
           enclosingScopeIndex(bce), &scopeIndex)) {
     return false;
   }
-  if (!internBodyScopeCreationData(bce, scopeIndex)) {
+  if (!internBodyScopeStencil(bce, scopeIndex)) {
     return false;
   }
 
@@ -786,7 +786,7 @@ bool EmitterScope::enterModule(BytecodeEmitter* bce,
           enclosingScopeIndex(bce), &scopeIndex)) {
     return false;
   }
-  if (!internBodyScopeCreationData(bce, scopeIndex)) {
+  if (!internBodyScopeStencil(bce, scopeIndex)) {
     return false;
   }
 
@@ -810,7 +810,7 @@ bool EmitterScope::enterWith(BytecodeEmitter* bce) {
     return false;
   }
 
-  if (!internScopeCreationData(bce, scopeIndex)) {
+  if (!internScopeStencil(bce, scopeIndex)) {
     return false;
   }
 

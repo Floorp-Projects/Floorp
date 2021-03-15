@@ -90,11 +90,10 @@ class EmitterScope : public Nestable<EmitterScope> {
 
   [[nodiscard]] bool internEmptyGlobalScopeAsBody(BytecodeEmitter* bce);
 
-  [[nodiscard]] bool internScopeCreationData(BytecodeEmitter* bce,
-                                             ScopeIndex index);
+  [[nodiscard]] bool internScopeStencil(BytecodeEmitter* bce, ScopeIndex index);
 
-  [[nodiscard]] bool internBodyScopeCreationData(BytecodeEmitter* bce,
-                                                 ScopeIndex index);
+  [[nodiscard]] bool internBodyScopeStencil(BytecodeEmitter* bce,
+                                            ScopeIndex index);
   [[nodiscard]] bool appendScopeNote(BytecodeEmitter* bce);
 
   [[nodiscard]] bool clearFrameSlotRange(BytecodeEmitter* bce, JSOp opcode,
