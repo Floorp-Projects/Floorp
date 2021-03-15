@@ -649,7 +649,6 @@ class FunctionCompiler {
     return ins;
   }
 
-#if defined(JS_CODEGEN_ARM)
   MDefinition* truncateWithTls(MDefinition* op, TruncFlags flags) {
     if (inDeadCode()) {
       return nullptr;
@@ -659,7 +658,6 @@ class FunctionCompiler {
     curBlock_->add(ins);
     return ins;
   }
-#endif
 
   MDefinition* compare(MDefinition* lhs, MDefinition* rhs, JSOp op,
                        MCompare::CompareType type) {
@@ -5560,9 +5558,6 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
   JitContext jitContext(&alloc);
   MOZ_ASSERT(IsCompilingWasm());
   WasmMacroAssembler masm(alloc, moduleEnv);
-#if defined(JS_CODEGEN_ARM64)
-  masm.SetStackPointer64(PseudoStackPointer64);
-#endif
 
   // Swap in already-allocated empty vectors to avoid malloc/free.
   MOZ_ASSERT(code->empty());
@@ -5678,7 +5673,7 @@ bool wasm::IonCompileFunctions(const ModuleEnvironment& moduleEnv,
 bool js::wasm::IonPlatformSupport() {
 #if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_X86) ||    \
     defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_MIPS32) || \
-    defined(JS_CODEGEN_MIPS64) || defined(JS_CODEGEN_ARM64)
+    defined(JS_CODEGEN_MIPS64)
   return true;
 #else
   return false;

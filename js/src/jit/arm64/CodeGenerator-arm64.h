@@ -13,12 +13,8 @@
 namespace js {
 namespace jit {
 
-class CodeGeneratorARM64;
 class OutOfLineBailout;
 class OutOfLineTableSwitch;
-
-using OutOfLineWasmTruncateCheck =
-    OutOfLineWasmTruncateCheckBase<CodeGeneratorARM64>;
 
 class CodeGeneratorARM64 : public CodeGeneratorShared {
   friend class MoveResolverARM64;
@@ -109,7 +105,6 @@ class CodeGeneratorARM64 : public CodeGeneratorShared {
  public:
   void visitOutOfLineBailout(OutOfLineBailout* ool);
   void visitOutOfLineTableSwitch(OutOfLineTableSwitch* ool);
-  void visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool);
 };
 
 typedef CodeGeneratorARM64 CodeGeneratorSpecific;

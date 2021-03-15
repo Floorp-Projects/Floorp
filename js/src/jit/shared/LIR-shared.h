@@ -565,12 +565,10 @@ class LWasmReinterpret : public LWasmReinterpretBase<1, 1> {
 
 class LWasmReinterpretFromI64 : public LWasmReinterpretBase<1, INT64_PIECES> {
  public:
-  static const size_t Input = 0;
-
   LIR_HEADER(WasmReinterpretFromI64);
   explicit LWasmReinterpretFromI64(const LInt64Allocation& input)
       : LWasmReinterpretBase(classOpcode) {
-    setInt64Operand(Input, input);
+    setInt64Operand(0, input);
   }
 };
 

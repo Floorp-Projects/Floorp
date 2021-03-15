@@ -788,7 +788,10 @@ void LIRGenerator::visitTest(MTest* test) {
     if (comp->compareType() == MCompare::Compare_Int64 ||
         comp->compareType() == MCompare::Compare_UInt64) {
       JSOp op = ReorderComparison(comp->jsop(), &left, &right);
-      lowerForCompareI64AndBranch(test, comp, op, left, right, ifTrue, ifFalse);
+      LCompareI64AndBranch* lir = new (alloc())
+          LCompareI64AndBranch(comp, op, useInt64Register(left),
+                               useInt64OrConstant(right), ifTrue, ifFalse);
+      add(lir, test);
       return;
     }
 
@@ -5922,17 +5925,9 @@ void LIRGenerator::visitWasmSelect(MWasmSelect* ins) {
   }
 
   if (ins->type() == MIRType::Int64) {
-#if defined(JS_CODEGEN_ARM64)
-    // arm64 needs all three arguments forced into registers, but for x86, it
-    // may be beneficial to be more relaxed.  Hence special-case arm64.
-    auto* lir = new (alloc()) LWasmSelectI64(
-        useInt64RegisterAtStart(ins->trueExpr()),
-        useInt64Register(ins->falseExpr()), useRegister(ins->condExpr()));
-#else
     auto* lir = new (alloc()) LWasmSelectI64(
         useInt64RegisterAtStart(ins->trueExpr()), useInt64(ins->falseExpr()),
         useRegister(ins->condExpr()));
-#endif
 
     defineInt64ReuseInput(lir, ins, LWasmSelectI64::TrueExprIndex);
     return;
