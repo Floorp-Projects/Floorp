@@ -459,8 +459,7 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeProgressTrackColors(
 std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeMeterchunkColors(
     const EventStates& aMeterState, UseSystemColors aUseSystemColors) {
   if (bool(aUseSystemColors)) {
-    return SystemColorPair(StyleSystemColor::TextBackground,
-                           StyleSystemColor::TextForeground);
+    return ComputeProgressColors(aUseSystemColors);
   }
   sRGBColor borderColor = sColorMeterGreen20;
   sRGBColor chunkColor = sColorMeterGreen10;
@@ -474,15 +473,6 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeMeterchunkColors(
   }
 
   return std::make_pair(chunkColor, borderColor);
-}
-
-std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeMeterTrackColors(
-    UseSystemColors aUseSystemColors) {
-  if (bool(aUseSystemColors)) {
-    return SystemColorPair(StyleSystemColor::TextBackground,
-                           StyleSystemColor::TextForeground);
-  }
-  return std::make_pair(sColorGrey10, sColorGrey40);
 }
 
 sRGBColor nsNativeBasicTheme::ComputeMenulistArrowButtonColor(
@@ -1322,8 +1312,7 @@ void nsNativeBasicTheme::PaintProgress(nsIFrame* aFrame,
   {
     // Paint the track, unclipped.
     auto [backgroundColor, borderColor] =
-        aIsMeter ? ComputeMeterTrackColors(aUseSystemColors)
-                 : ComputeProgressTrackColors(aUseSystemColors);
+        ComputeProgressTrackColors(aUseSystemColors);
     PaintRoundedRectWithRadius(aPaintData, rect, rect, backgroundColor,
                                borderColor, borderWidth, radius, aDpiRatio);
   }
