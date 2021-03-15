@@ -2789,6 +2789,28 @@ void MacroAssembler::mulFloat64x2(FloatRegister rhs, FloatRegister lhsDest) {
   Fmul(Simd2D(lhsDest), Simd2D(lhsDest), Simd2D(rhs));
 }
 
+// Pairwise add
+
+void MacroAssembler::extAddPairwiseInt8x16(FloatRegister src,
+                                           FloatRegister dest) {
+  Saddlp(Simd8H(dest), Simd16B(src));
+}
+
+void MacroAssembler::unsignedExtAddPairwiseInt8x16(FloatRegister src,
+                                                   FloatRegister dest) {
+  Uaddlp(Simd8H(dest), Simd16B(src));
+}
+
+void MacroAssembler::extAddPairwiseInt16x8(FloatRegister src,
+                                           FloatRegister dest) {
+  Saddlp(Simd4S(dest), Simd8H(src));
+}
+
+void MacroAssembler::unsignedExtAddPairwiseInt16x8(FloatRegister src,
+                                                   FloatRegister dest) {
+  Uaddlp(Simd4S(dest), Simd8H(src));
+}
+
 // Floating square root
 
 void MacroAssembler::sqrtFloat32x4(FloatRegister src, FloatRegister dest) {
