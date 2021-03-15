@@ -904,6 +904,80 @@ void ReflowInput::ApplyRelativePositioning(nsIFrame* aFrame,
   }
 }
 
+// static
+void ReflowInput::ComputeAbsPosInlineAutoMargin(nscoord aAvailMarginSpace,
+                                                WritingMode aContainingBlockWM,
+                                                bool aIsMarginIStartAuto,
+                                                bool aIsMarginIEndAuto,
+                                                LogicalMargin& aMargin,
+                                                LogicalMargin& aOffsets) {
+  if (aIsMarginIStartAuto) {
+    if (aIsMarginIEndAuto) {
+      if (aAvailMarginSpace < 0) {
+        // Note that this case is different from the neither-'auto'
+        // case below, where the spec says to ignore 'left'/'right'.
+        // Ignore the specified value for 'margin-right'.
+        aMargin.IEnd(aContainingBlockWM) = aAvailMarginSpace;
+      } else {
+        // Both 'margin-left' and 'margin-right' are 'auto', so they get
+        // equal values
+        aMargin.IStart(aContainingBlockWM) = aAvailMarginSpace / 2;
+        aMargin.IEnd(aContainingBlockWM) =
+            aAvailMarginSpace - aMargin.IStart(aContainingBlockWM);
+      }
+    } else {
+      // Just 'margin-left' is 'auto'
+      aMargin.IStart(aContainingBlockWM) = aAvailMarginSpace;
+    }
+  } else {
+    if (aIsMarginIEndAuto) {
+      // Just 'margin-right' is 'auto'
+      aMargin.IEnd(aContainingBlockWM) = aAvailMarginSpace;
+    } else {
+      // We're over-constrained so use the direction of the containing
+      // block to dictate which value to ignore.  (And note that the
+      // spec says to ignore 'left' or 'right' rather than
+      // 'margin-left' or 'margin-right'.)
+      // Note that this case is different from the both-'auto' case
+      // above, where the spec says to ignore
+      // 'margin-left'/'margin-right'.
+      // Ignore the specified value for 'right'.
+      aOffsets.IEnd(aContainingBlockWM) += aAvailMarginSpace;
+    }
+  }
+}
+
+// static
+void ReflowInput::ComputeAbsPosBlockAutoMargin(nscoord aAvailMarginSpace,
+                                               WritingMode aContainingBlockWM,
+                                               bool aIsMarginBStartAuto,
+                                               bool aIsMarginBEndAuto,
+                                               LogicalMargin& aMargin,
+                                               LogicalMargin& aOffsets) {
+  if (aIsMarginBStartAuto) {
+    if (aIsMarginBEndAuto) {
+      // Both 'margin-top' and 'margin-bottom' are 'auto', so they get
+      // equal values
+      aMargin.BStart(aContainingBlockWM) = aAvailMarginSpace / 2;
+      aMargin.BEnd(aContainingBlockWM) =
+          aAvailMarginSpace - aMargin.BStart(aContainingBlockWM);
+    } else {
+      // Just margin-block-start is 'auto'
+      aMargin.BStart(aContainingBlockWM) = aAvailMarginSpace;
+    }
+  } else {
+    if (aIsMarginBEndAuto) {
+      // Just margin-block-end is 'auto'
+      aMargin.BEnd(aContainingBlockWM) = aAvailMarginSpace;
+    } else {
+      // We're over-constrained so ignore the specified value for
+      // block-end.  (And note that the spec says to ignore 'bottom'
+      // rather than 'margin-bottom'.)
+      aOffsets.BEnd(aContainingBlockWM) += aAvailMarginSpace;
+    }
+  }
+}
+
 void ReflowInput::ApplyRelativePositioning(
     nsIFrame* aFrame, mozilla::WritingMode aWritingMode,
     const mozilla::LogicalMargin& aComputedOffsets,
@@ -1716,40 +1790,8 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
         borderPadding.IStartEnd(cbwm) - computedSize.ISize(cbwm);
     marginIStartIsAuto = mStyleMargin->mMargin.GetIStart(cbwm).IsAuto();
     marginIEndIsAuto = mStyleMargin->mMargin.GetIEnd(cbwm).IsAuto();
-
-    if (marginIStartIsAuto) {
-      if (marginIEndIsAuto) {
-        if (availMarginSpace < 0) {
-          // Note that this case is different from the neither-'auto'
-          // case below, where the spec says to ignore 'left'/'right'.
-          // Ignore the specified value for 'margin-right'.
-          margin.IEnd(cbwm) = availMarginSpace;
-        } else {
-          // Both 'margin-left' and 'margin-right' are 'auto', so they get
-          // equal values
-          margin.IStart(cbwm) = availMarginSpace / 2;
-          margin.IEnd(cbwm) = availMarginSpace - margin.IStart(cbwm);
-        }
-      } else {
-        // Just 'margin-left' is 'auto'
-        margin.IStart(cbwm) = availMarginSpace;
-      }
-    } else {
-      if (marginIEndIsAuto) {
-        // Just 'margin-right' is 'auto'
-        margin.IEnd(cbwm) = availMarginSpace;
-      } else {
-        // We're over-constrained so use the direction of the containing
-        // block to dictate which value to ignore.  (And note that the
-        // spec says to ignore 'left' or 'right' rather than
-        // 'margin-left' or 'margin-right'.)
-        // Note that this case is different from the both-'auto' case
-        // above, where the spec says to ignore
-        // 'margin-left'/'margin-right'.
-        // Ignore the specified value for 'right'.
-        offsets.IEnd(cbwm) += availMarginSpace;
-      }
-    }
+    ComputeAbsPosInlineAutoMargin(availMarginSpace, cbwm, marginIStartIsAuto,
+                                  marginIEndIsAuto, margin, offsets);
   }
 
   bool bSizeIsAuto =
@@ -1814,27 +1856,8 @@ void ReflowInput::InitAbsoluteConstraints(nsPresContext* aPresContext,
     marginBStartIsAuto = mStyleMargin->mMargin.GetBStart(cbwm).IsAuto();
     marginBEndIsAuto = mStyleMargin->mMargin.GetBEnd(cbwm).IsAuto();
 
-    if (marginBStartIsAuto) {
-      if (marginBEndIsAuto) {
-        // Both 'margin-top' and 'margin-bottom' are 'auto', so they get
-        // equal values
-        margin.BStart(cbwm) = availMarginSpace / 2;
-        margin.BEnd(cbwm) = availMarginSpace - margin.BStart(cbwm);
-      } else {
-        // Just margin-block-start is 'auto'
-        margin.BStart(cbwm) = availMarginSpace;
-      }
-    } else {
-      if (marginBEndIsAuto) {
-        // Just margin-block-end is 'auto'
-        margin.BEnd(cbwm) = availMarginSpace;
-      } else {
-        // We're over-constrained so ignore the specified value for
-        // block-end.  (And note that the spec says to ignore 'bottom'
-        // rather than 'margin-bottom'.)
-        offsets.BEnd(cbwm) += availMarginSpace;
-      }
-    }
+    ComputeAbsPosBlockAutoMargin(availMarginSpace, cbwm, marginBStartIsAuto,
+                                 marginBEndIsAuto, margin, offsets);
   }
   ComputedBSize() = computedSize.ConvertTo(wm, cbwm).BSize(wm);
   ComputedISize() = computedSize.ConvertTo(wm, cbwm).ISize(wm);
