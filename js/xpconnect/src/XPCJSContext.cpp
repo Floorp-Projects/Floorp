@@ -833,17 +833,6 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
   bool disableWasmHugeMemory = Preferences::GetBool(
       JS_OPTIONS_DOT_STR "wasm_disable_huge_memory", false);
 
-  bool spectreIndexMasking =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "spectre.index_masking");
-  bool spectreObjectMitigations =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "spectre.object_mitigations");
-  bool spectreStringMitigations =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "spectre.string_mitigations");
-  bool spectreValueMasking =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "spectre.value_masking");
-  bool spectreJitToCxxCalls =
-      Preferences::GetBool(JS_OPTIONS_DOT_STR "spectre.jit_to_C++_calls");
-
   bool safeMode = false;
   nsCOMPtr<nsIXULRuntime> xr = do_GetService("@mozilla.org/xre/runtime;1");
   if (xr) {
@@ -880,8 +869,8 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
   }
 
   JS_SetOffthreadIonCompilationEnabled(
-      cx,
-      StaticPrefs::javascript_options_ion_offthread_compilation_DoNotUseDirectly());
+      cx, StaticPrefs::
+              javascript_options_ion_offthread_compilation_DoNotUseDirectly());
 
   JS_SetGlobalJitCompilerOption(
       cx, JSJITCOMPILER_BASELINE_INTERPRETER_WARMUP_TRIGGER,
@@ -903,16 +892,26 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
       StaticPrefs::javascript_options_jit_full_debug_checks_DoNotUseDirectly());
 #endif
 
-  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_SPECTRE_INDEX_MASKING,
-                                spectreIndexMasking);
-  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_SPECTRE_OBJECT_MITIGATIONS,
-                                spectreObjectMitigations);
-  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_SPECTRE_STRING_MITIGATIONS,
-                                spectreStringMitigations);
-  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_SPECTRE_VALUE_MASKING,
-                                spectreValueMasking);
-  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_SPECTRE_JIT_TO_CXX_CALLS,
-                                spectreJitToCxxCalls);
+#if !defined(JS_CODEGEN_MIPS32) && !defined(JS_CODEGEN_MIPS64)
+  JS_SetGlobalJitCompilerOption(
+      cx, JSJITCOMPILER_SPECTRE_INDEX_MASKING,
+      StaticPrefs::javascript_options_spectre_index_masking_DoNotUseDirectly());
+  JS_SetGlobalJitCompilerOption(
+      cx, JSJITCOMPILER_SPECTRE_OBJECT_MITIGATIONS,
+      StaticPrefs::
+          javascript_options_spectre_object_mitigations_DoNotUseDirectly());
+  JS_SetGlobalJitCompilerOption(
+      cx, JSJITCOMPILER_SPECTRE_STRING_MITIGATIONS,
+      StaticPrefs::
+          javascript_options_spectre_string_mitigations_DoNotUseDirectly());
+  JS_SetGlobalJitCompilerOption(
+      cx, JSJITCOMPILER_SPECTRE_VALUE_MASKING,
+      StaticPrefs::javascript_options_spectre_value_masking_DoNotUseDirectly());
+  JS_SetGlobalJitCompilerOption(
+      cx, JSJITCOMPILER_SPECTRE_JIT_TO_CXX_CALLS,
+      StaticPrefs::
+          javascript_options_spectre_jit_to_cxx_calls_DoNotUseDirectly());
+#endif
 
   if (disableWasmHugeMemory) {
     bool disabledHugeMemory = JS::DisableWasmHugeMemory();
