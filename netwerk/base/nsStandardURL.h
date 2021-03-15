@@ -300,7 +300,6 @@ class nsStandardURL : public nsIFileURL,
   // global objects.
   static StaticRefPtr<nsIIDNService> gIDN;
   static const char gHostLimitDigits[];
-  static bool gInitialized;
 
  public:
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
