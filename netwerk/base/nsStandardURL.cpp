@@ -54,10 +54,8 @@ static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 // can be safely used on other threads.
 StaticRefPtr<nsIIDNService> nsStandardURL::gIDN;
 
-// This value will only be updated on the main thread once. Worker threads
-// may race when reading this values, but that's OK because in the worst
-// case we will just dispatch a noop runnable to the main thread.
-bool nsStandardURL::gInitialized = false;
+// This value will only be updated on the main thread once.
+static Atomic<bool, Relaxed> gInitialized{false};
 
 const char nsStandardURL::gHostLimitDigits[] = {'/', '\\', '?', '#', 0};
 
