@@ -22,14 +22,19 @@ namespace js {
 namespace jit {
 
 // AArch64 has 32 64-bit integer registers, x0 though x31.
-//  x31 is special and functions as both the stack pointer and a zero register.
+//
+//  x31 (or, more accurately, the integer register with encoding 31, since
+//  there is no x31 per se) is special and functions as both the stack pointer
+//  and a zero register.
+//
 //  The bottom 32 bits of each of the X registers is accessible as w0 through
-//  w31. The program counter is no longer accessible as a register.
+//  w31. The program counter is not accessible as a register.
+//
 // SIMD and scalar floating-point registers share a register bank.
 //  32 bit float registers are s0 through s31.
 //  64 bit double registers are d0 through d31.
 //  128 bit SIMD registers are v0 through v31.
-// e.g., s0 is the bottom 32 bits of d0, which is the bottom 64 bits of v0.
+//  e.g., s0 is the bottom 32 bits of d0, which is the bottom 64 bits of v0.
 
 // AArch64 Calling Convention:
 //  x0 - x7: arguments and return value
@@ -128,11 +133,6 @@ class Registers {
   typedef uint8_t Code;
   typedef uint32_t Encoding;
   typedef uint32_t SetType;
-
-  // If SP is used as the base register for a memory load or store, then the
-  // value of the stack pointer prior to adding any offset must be quadword (16
-  // byte) aligned, or else a stack aligment exception will be generated.
-  static const Code StackPointer = sp;
 
   static const Code Invalid = 0xFF;
 

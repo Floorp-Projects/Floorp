@@ -162,14 +162,16 @@ void MacroAssemblerCompat::loadPrivate(const Address& src, Register dest) {
 
 void MacroAssemblerCompat::handleFailureWithHandlerTail(
     Label* profilerExitTail) {
+  // Fail rather than silently create wrong code.
+  MOZ_RELEASE_ASSERT(GetStackPointer64().Is(PseudoStackPointer64));
+
   // Reserve space for exception information.
   int64_t size = (sizeof(ResumeFromException) + 7) & ~7;
-  Sub(GetStackPointer64(), GetStackPointer64(), Operand(size));
-  if (!GetStackPointer64().Is(sp)) {
-    Mov(sp, GetStackPointer64());
-  }
+  Sub(PseudoStackPointer64, PseudoStackPointer64, Operand(size));
+  syncStackPtr();
 
-  Mov(x0, GetStackPointer64());
+  MOZ_ASSERT(!x0.Is(PseudoStackPointer64));
+  Mov(x0, PseudoStackPointer64);
 
   // Call the handler.
   using Fn = void (*)(ResumeFromException * rfe);
@@ -186,10 +188,10 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(
   Label wasm;
   Label wasmCatch;
 
-  MOZ_ASSERT(
-      GetStackPointer64().Is(x28));  // Lets the code below be a little cleaner.
+  // Check the `asMasm` calls above didn't mess with the StackPointer identity.
+  MOZ_ASSERT(GetStackPointer64().Is(PseudoStackPointer64));
 
-  loadPtr(Address(r28, offsetof(ResumeFromException, kind)), r0);
+  loadPtr(Address(PseudoStackPointer, offsetof(ResumeFromException, kind)), r0);
   asMasm().branch32(Assembler::Equal, r0,
                     Imm32(ResumeFromException::RESUME_ENTRY_FRAME),
                     &entryFrame);
@@ -212,16 +214,34 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(
   // and return from the entry frame.
   bind(&entryFrame);
   moveValue(MagicValue(JS_ION_ERROR), JSReturnOperand);
-  loadPtr(Address(r28, offsetof(ResumeFromException, stackPointer)), r28);
+  loadPtr(
+      Address(PseudoStackPointer, offsetof(ResumeFromException, stackPointer)),
+      PseudoStackPointer);
+
+  // `retn` does indeed sync the stack pointer, but before doing that it reads
+  // from the stack.  Consequently, if we remove this call to syncStackPointer
+  // then we take on the requirement to prove that the immediately preceding
+  // loadPtr produces a value for PSP which maintains the SP <= PSP invariant.
+  // That's a proof burden we don't want to take on.  In general it would be
+  // good to move (at some time in the future, not now) to a world where
+  // *every* assignment to PSP or SP is followed immediately by a copy into
+  // the other register.  That would make all required correctness proofs
+  // trivial in the sense that it requires only local inspection of code
+  // immediately following (dominated by) any such assignment.
+  syncStackPtr();
   retn(Imm32(1 * sizeof(void*)));  // Pop from stack and return.
 
   // If we found a catch handler, this must be a baseline frame. Restore state
   // and jump to the catch block.
   bind(&catch_);
-  loadPtr(Address(r28, offsetof(ResumeFromException, target)), r0);
-  loadPtr(Address(r28, offsetof(ResumeFromException, framePointer)),
-          BaselineFrameReg);
-  loadPtr(Address(r28, offsetof(ResumeFromException, stackPointer)), r28);
+  loadPtr(Address(PseudoStackPointer, offsetof(ResumeFromException, target)),
+          r0);
+  loadPtr(
+      Address(PseudoStackPointer, offsetof(ResumeFromException, framePointer)),
+      BaselineFrameReg);
+  loadPtr(
+      Address(PseudoStackPointer, offsetof(ResumeFromException, stackPointer)),
+      PseudoStackPointer);
   syncStackPtr();
   Br(x0);
 
@@ -230,15 +250,15 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(
   // and the exception.
   bind(&finally);
   ARMRegister exception = x1;
-  Ldr(exception, MemOperand(GetStackPointer64(),
+  Ldr(exception, MemOperand(PseudoStackPointer64,
                             offsetof(ResumeFromException, exception)));
   Ldr(x0,
-      MemOperand(GetStackPointer64(), offsetof(ResumeFromException, target)));
+      MemOperand(PseudoStackPointer64, offsetof(ResumeFromException, target)));
   Ldr(ARMRegister(BaselineFrameReg, 64),
-      MemOperand(GetStackPointer64(),
+      MemOperand(PseudoStackPointer64,
                  offsetof(ResumeFromException, framePointer)));
-  Ldr(GetStackPointer64(),
-      MemOperand(GetStackPointer64(),
+  Ldr(PseudoStackPointer64,
+      MemOperand(PseudoStackPointer64,
                  offsetof(ResumeFromException, stackPointer)));
   syncStackPtr();
   pushValue(BooleanValue(true));
@@ -247,13 +267,20 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(
 
   // Only used in debug mode. Return BaselineFrame->returnValue() to the caller.
   bind(&return_);
-  loadPtr(Address(r28, offsetof(ResumeFromException, framePointer)),
-          BaselineFrameReg);
-  loadPtr(Address(r28, offsetof(ResumeFromException, stackPointer)), r28);
+  loadPtr(
+      Address(PseudoStackPointer, offsetof(ResumeFromException, framePointer)),
+      BaselineFrameReg);
+  loadPtr(
+      Address(PseudoStackPointer, offsetof(ResumeFromException, stackPointer)),
+      PseudoStackPointer);
+  // See comment further up beginning "`retn` does indeed sync the stack
+  // pointer".  That comment applies here too.
+  syncStackPtr();
   loadValue(
       Address(BaselineFrameReg, BaselineFrame::reverseOffsetOfReturnValue()),
       JSReturnOperand);
-  movePtr(BaselineFrameReg, r28);
+  movePtr(BaselineFrameReg, PseudoStackPointer);
+  syncStackPtr();
   vixl::MacroAssembler::Pop(ARMRegister(BaselineFrameReg, 64));
 
   // If profiling is enabled, then update the lastProfilingFrame to refer to
@@ -275,10 +302,10 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(
   // If we are bailing out to baseline to handle an exception, jump to the
   // bailout tail stub. Load 1 (true) in x0 (ReturnReg) to indicate success.
   bind(&bailout);
-  Ldr(x2, MemOperand(GetStackPointer64(),
+  Ldr(x2, MemOperand(PseudoStackPointer64,
                      offsetof(ResumeFromException, bailoutInfo)));
   Ldr(x1,
-      MemOperand(GetStackPointer64(), offsetof(ResumeFromException, target)));
+      MemOperand(PseudoStackPointer64, offsetof(ResumeFromException, target)));
   Mov(x0, 1);
   Br(x1);
 
@@ -286,20 +313,28 @@ void MacroAssemblerCompat::handleFailureWithHandlerTail(
   // FP; SP is pointing to the unwound return address to the wasm entry, so
   // we can just ret().
   bind(&wasm);
-  Ldr(x29, MemOperand(GetStackPointer64(),
+  Ldr(x29, MemOperand(PseudoStackPointer64,
                       offsetof(ResumeFromException, framePointer)));
-  Ldr(x28, MemOperand(GetStackPointer64(),
-                      offsetof(ResumeFromException, stackPointer)));
+  Ldr(PseudoStackPointer64,
+      MemOperand(PseudoStackPointer64,
+                 offsetof(ResumeFromException, stackPointer)));
   syncStackPtr();
   ret();
 
   // Found a wasm catch handler, restore state and jump to it.
   bind(&wasmCatch);
-  loadPtr(Address(r28, offsetof(ResumeFromException, target)), r0);
-  loadPtr(Address(r28, offsetof(ResumeFromException, framePointer)), r29);
-  loadPtr(Address(r28, offsetof(ResumeFromException, stackPointer)), r28);
+  loadPtr(Address(PseudoStackPointer, offsetof(ResumeFromException, target)),
+          r0);
+  loadPtr(
+      Address(PseudoStackPointer, offsetof(ResumeFromException, framePointer)),
+      r29);
+  loadPtr(
+      Address(PseudoStackPointer, offsetof(ResumeFromException, stackPointer)),
+      PseudoStackPointer);
   syncStackPtr();
   Br(x0);
+
+  MOZ_ASSERT(GetStackPointer64().Is(PseudoStackPointer64));
 }
 
 void MacroAssemblerCompat::profilerEnterFrame(Register framePtr,
@@ -1007,20 +1042,24 @@ void MacroAssembler::Pop(const ValueOperand& val) {
 // Simple call functions.
 
 CodeOffset MacroAssembler::call(Register reg) {
+  // This sync has been observed (and is expected) to be necessary.
+  // eg testcase: tests/debug/bug1107525.js
   syncStackPtr();
   Blr(ARMRegister(reg, 64));
   return CodeOffset(currentOffset());
 }
 
 CodeOffset MacroAssembler::call(Label* label) {
+  // This sync has been observed (and is expected) to be necessary.
+  // eg testcase: tests/basic/testBug504520Harder.js
   syncStackPtr();
   Bl(label);
   return CodeOffset(currentOffset());
 }
 
-void MacroAssembler::call(ImmWord imm) { call(ImmPtr((void*)imm.value)); }
-
 void MacroAssembler::call(ImmPtr imm) {
+  // This sync has been observed (and is expected) to be necessary.
+  // eg testcase: asm.js/testTimeout5.js
   syncStackPtr();
   vixl::UseScratchRegisterScope temps(this);
   MOZ_ASSERT(temps.IsAvailable(ScratchReg64));  // ip0
@@ -1029,25 +1068,34 @@ void MacroAssembler::call(ImmPtr imm) {
   Blr(ScratchReg64);
 }
 
+void MacroAssembler::call(ImmWord imm) { call(ImmPtr((void*)imm.value)); }
+
 CodeOffset MacroAssembler::call(wasm::SymbolicAddress imm) {
   vixl::UseScratchRegisterScope temps(this);
   const Register scratch = temps.AcquireX().asUnsized();
+  // This sync is believed to be necessary, although no case in jit-test/tests
+  // has been observed to cause SP != PSP here.
   syncStackPtr();
   movePtr(imm, scratch);
-  return call(scratch);
+  Blr(ARMRegister(scratch, 64));
+  return CodeOffset(currentOffset());
 }
 
 void MacroAssembler::call(const Address& addr) {
   vixl::UseScratchRegisterScope temps(this);
   const Register scratch = temps.AcquireX().asUnsized();
+  // This sync has been observed (and is expected) to be necessary.
+  // eg testcase: tests/backup-point-bug1315634.js
   syncStackPtr();
   loadPtr(addr, scratch);
-  call(scratch);
+  Blr(ARMRegister(scratch, 64));
 }
 
 void MacroAssembler::call(JitCode* c) {
   vixl::UseScratchRegisterScope temps(this);
   const ARMRegister scratch64 = temps.AcquireX();
+  // This sync has been observed (and is expected) to be necessary.
+  // eg testcase: arrays/new-array-undefined-undefined-more-args-2.js
   syncStackPtr();
   BufferOffset off = immPool64(scratch64, uint64_t(c->raw()));
   addPendingJump(off, ImmPtr(c->raw()), RelocationKind::JITCODE);
@@ -1055,6 +1103,15 @@ void MacroAssembler::call(JitCode* c) {
 }
 
 CodeOffset MacroAssembler::callWithPatch() {
+  // This needs to sync.  Wasm goes through this one for intramodule calls.
+  //
+  // In other cases, wasm goes through masm.wasmCallImport(),
+  // masm.wasmCallBuiltinInstanceMethod, masm.wasmCallIndirect, all of which
+  // sync.
+  //
+  // This sync is believed to be necessary, although no case in jit-test/tests
+  // has been observed to cause SP != PSP here.
+  syncStackPtr();
   bl(0, LabelDoc());
   return CodeOffset(currentOffset());
 }
@@ -1145,41 +1202,56 @@ void MacroAssembler::popReturnAddress() {
 // ABI function calls.
 
 void MacroAssembler::setupUnalignedABICall(Register scratch) {
+  // Because wasm operates without the need for dynamic alignment of SP, it is
+  // implied that this routine should never be called when generating wasm.
+  MOZ_ASSERT(!IsCompilingWasm());
+
+  // The following won't work for SP -- needs slightly different logic.
+  MOZ_RELEASE_ASSERT(GetStackPointer64().Is(PseudoStackPointer64));
+
   setupNativeABICall();
   dynamicAlignment_ = true;
 
   int64_t alignment = ~(int64_t(ABIStackAlignment) - 1);
   ARMRegister scratch64(scratch, 64);
+  MOZ_ASSERT(!scratch64.Is(PseudoStackPointer64));
 
   // Always save LR -- Baseline ICs assume that LR isn't modified.
   push(lr);
 
-  // Unhandled for sp -- needs slightly different logic.
-  MOZ_ASSERT(!GetStackPointer64().Is(sp));
-
-  // Remember the stack address on entry.
-  Mov(scratch64, GetStackPointer64());
+  // Remember the stack address on entry.  This is reloaded in callWithABIPost
+  // below.
+  Mov(scratch64, PseudoStackPointer64);
 
   // Make alignment, including the effective push of the previous sp.
-  Sub(GetStackPointer64(), GetStackPointer64(), Operand(8));
-  And(GetStackPointer64(), GetStackPointer64(), Operand(alignment));
-
-  // If the PseudoStackPointer is used, sp must be <= psp before a write is
-  // valid.
+  Sub(PseudoStackPointer64, PseudoStackPointer64, Operand(8));
+  And(PseudoStackPointer64, PseudoStackPointer64, Operand(alignment));
   syncStackPtr();
 
-  // Store previous sp to the top of the stack, aligned.
-  Str(scratch64, MemOperand(GetStackPointer64(), 0));
+  // Store previous sp to the top of the stack, aligned.  This is also
+  // reloaded in callWithABIPost.
+  Str(scratch64, MemOperand(PseudoStackPointer64, 0));
 }
 
 void MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm) {
+  // wasm operates without the need for dynamic alignment of SP.
+  MOZ_ASSERT(!(dynamicAlignment_ && callFromWasm));
+
   MOZ_ASSERT(inCall_);
   uint32_t stackForCall = abiArgs_.stackBytesConsumedSoFar();
 
-  // ARM64 /really/ wants the stack to always be aligned.  Since we're already
-  // tracking it getting it aligned for an abi call is pretty easy.
-  MOZ_ASSERT(dynamicAlignment_);
-  stackForCall += ComputeByteAlignment(stackForCall, StackAlignment);
+  // ARM64 *really* wants SP to always be 16-aligned, so ensure this now.
+  if (dynamicAlignment_) {
+    stackForCall += ComputeByteAlignment(stackForCall, StackAlignment);
+  } else {
+    // This can happen when we attach out-of-line stubs for rare cases.  For
+    // example CodeGenerator::visitWasmTruncateToInt32 adds an out-of-line
+    // chunk.
+    uint32_t alignmentAtPrologue = callFromWasm ? sizeof(wasm::Frame) : 0;
+    stackForCall += ComputeByteAlignment(
+        stackForCall + framePushed() + alignmentAtPrologue, ABIStackAlignment);
+  }
+
   *stackAdjust = stackForCall;
   reserveStack(*stackAdjust);
   {
@@ -1192,30 +1264,49 @@ void MacroAssembler::callWithABIPre(uint32_t* stackAdjust, bool callFromWasm) {
     emitter.finish();
   }
 
-  // Call boundaries communicate stack via sp.
+  // Call boundaries communicate stack via SP.
+  // (jseward, 2021Mar03) This sync may well be redundant, given that all of
+  // the MacroAssembler::call methods generate a sync before the call.
+  // Removing it does not cause any failures for all of jit-tests.
   syncStackPtr();
 }
 
 void MacroAssembler::callWithABIPost(uint32_t stackAdjust, MoveOp::Type result,
                                      bool callFromWasm) {
-  // Call boundaries communicate stack via sp.
-  if (!GetStackPointer64().Is(sp)) {
-    Mov(GetStackPointer64(), sp);
-  }
+  // wasm operates without the need for dynamic alignment of SP.
+  MOZ_ASSERT(!(dynamicAlignment_ && callFromWasm));
+
+  // Call boundaries communicate stack via SP, so we must resync PSP now.
+  initPseudoStackPtr();
 
   freeStack(stackAdjust);
 
-  // Restore the stack pointer from entry.
   if (dynamicAlignment_) {
+    // This then-clause makes more sense if you first read
+    // setupUnalignedABICall above.
+    //
+    // Restore the stack pointer from entry.  The stack pointer will have been
+    // saved by setupUnalignedABICall.  This is fragile in that it assumes
+    // that uses of this routine (callWithABIPost) with `dynamicAlignment_ ==
+    // true` are preceded by matching calls to setupUnalignedABICall.  But
+    // there's nothing that enforce that mechanically.  If we really want to
+    // enforce this, we could add a debug-only CallWithABIState enum to the
+    // MacroAssembler and assert that setupUnalignedABICall updates it before
+    // we get here, then reset it to its initial state.
     Ldr(GetStackPointer64(), MemOperand(GetStackPointer64(), 0));
+    syncStackPtr();
+
+    // Restore LR.  This restores LR to the value stored by
+    // setupUnalignedABICall, which should have been called just before
+    // callWithABIPre.  This is, per the above comment, also fragile.
+    pop(lr);
+
+    // SP may be < PSP now.  That is expected from the behaviour of `pop`.  It
+    // is not clear why the following `syncStackPtr` is necessary, but it is:
+    // without it, the following test segfaults:
+    // tests/backup-point-bug1315634.js
+    syncStackPtr();
   }
-
-  // Restore LR.
-  pop(lr);
-
-  // TODO: This one shouldn't be necessary -- check that callers
-  // aren't enforcing the ABI themselves!
-  syncStackPtr();
 
   // If the ABI's return regs are where ION is expecting them, then
   // no other work needs to be done.
@@ -1752,7 +1843,7 @@ void MacroAssembler::enterFakeExitFrameForWasm(Register cxreg, Register scratch,
 
   linkExitFrame(cxreg, scratch);
 
-  MOZ_ASSERT(sp.Is(GetStackPointer64()));
+  MOZ_RELEASE_ASSERT(sp.Is(GetStackPointer64()));
 
   const ARMRegister tmp(scratch, 64);
 
@@ -1760,6 +1851,16 @@ void MacroAssembler::enterFakeExitFrameForWasm(Register cxreg, Register scratch,
   const ARMRegister tmp2 = temps.AcquireX();
 
   Sub(sp, sp, 8);
+
+  // Despite the above assertion, it is possible for control to flow from here
+  // to the code generated by
+  // MacroAssemblerCompat::handleFailureWithHandlerTail without any
+  // intervening assignment to PSP.  But handleFailureWithHandlerTail assumes
+  // that PSP is the active stack pointer.  Hence the following is necessary
+  // for safety.  Note we can't use initPseudoStackPtr here as that would
+  // generate no instructions.
+  Mov(PseudoStackPointer64, sp);
+
   Mov(tmp, sp);  // SP may be unaligned, can't use it for memory op
   Mov(tmp2, int32_t(type));
   Str(tmp2, vixl::MemOperand(tmp, 0));
