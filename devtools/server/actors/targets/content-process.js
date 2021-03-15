@@ -98,10 +98,6 @@ const ContentProcessTargetActor = TargetActorMixin(
       return true;
     },
 
-    get exited() {
-      return !this._contextPool;
-    },
-
     get url() {
       return undefined;
     },
