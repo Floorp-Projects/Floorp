@@ -901,13 +901,15 @@ class UrlbarView {
    * @param {UrlbarResult} result The result we'd like to apply.
    * @param {number} firstSearchSuggestionIndex Index of the first search suggestion.
    * @param {number} lastSearchSuggestionIndex Index of the last search suggestion.
+   * @param {UrlbarQueryContext} queryContext The current context.
    * @returns {boolean} Whether the row can be updated to this result.
    */
   _rowCanUpdateToResult(
     rowIndex,
     result,
     firstSearchSuggestionIndex,
-    lastSearchSuggestionIndex
+    lastSearchSuggestionIndex,
+    queryContext
   ) {
     // The heuristic result must always be current, thus it's always compatible.
     if (result.heuristic) {
@@ -917,10 +919,10 @@ class UrlbarView {
     // Don't reuse the final row if the result has a different suggested index
     // since it sticks to the same spot in the view, making any flicker very
     // noticeable.  This should apply to every row, but we want to avoid bug
-    // 1697517.
+    // 1697517, so for now we use this narrow fix.
     if (
       result.suggestedIndex !== row.result.suggestedIndex &&
-      rowIndex == this._rows.children.length - 1
+      rowIndex == queryContext.maxResults - 1
     ) {
       return false;
     }
@@ -983,7 +985,8 @@ class UrlbarView {
           rowIndex,
           result,
           firstSearchSuggestionIndex,
-          lastSearchSuggestionIndex
+          lastSearchSuggestionIndex,
+          queryContext
         )
       ) {
         this._updateRow(row, result);
