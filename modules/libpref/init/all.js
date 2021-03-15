@@ -1090,13 +1090,10 @@ pref("dom.event.contextmenu.enabled",       true);
 pref("dom.event.coalesce_mouse_move",       true);
 
 pref("javascript.enabled",                  true);
-pref("javascript.options.blinterp",         true);
 // Duplicated in JitOptions - ensure both match.
 pref("javascript.options.blinterp.threshold", 10);
-pref("javascript.options.baselinejit",      true);
 // Duplicated in JitOptions - ensure both match.
 pref("javascript.options.baselinejit.threshold", 100);
-pref("javascript.options.ion",              true);
 // Duplicated in JitOptions - ensure both match.
 pref("javascript.options.ion.threshold",    1500);
 // Duplicated in JitOptions - ensure both match.
@@ -1114,7 +1111,6 @@ pref("javascript.options.wasm_baselinejit",       true);
 #ifdef ENABLE_WASM_MULTI_VALUE
   pref("javascript.options.wasm_multi_value",     true);
 #endif
-pref("javascript.options.native_regexp",    true);
 pref("javascript.options.parallel_parsing", true);
 pref("javascript.options.source_pragmas",    true);
 
