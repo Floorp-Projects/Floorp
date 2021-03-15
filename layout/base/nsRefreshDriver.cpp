@@ -1709,16 +1709,14 @@ static void GetProfileTimelineSubDocShells(nsDocShell* aRootDocShell,
   }
 
   bc->PostOrderWalk([&](BrowsingContext* aContext) {
+    if (!aContext->IsActive()) {
+      return;
+    }
+
     nsDocShell* shell = nsDocShell::Cast(aContext->GetDocShell());
     if (!shell || !shell->GetRecordProfileTimelineMarkers()) {
       // This process isn't painting OOP iframes so we ignore
       // docshells that are OOP.
-      return;
-    }
-
-    bool isVisible = false;
-    shell->GetVisibility(&isVisible);
-    if (!isVisible) {
       return;
     }
 
