@@ -570,10 +570,6 @@
 
 /* URL bar and page action buttons */
 
-#page-action-buttons {
-  -moz-box-align: center;
-}
-
 @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
 #pageActionSeparator {
   /* Just remove this element once Proton is released */
@@ -630,9 +626,7 @@
 @supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
 .urlbar-icon {
   width: calc(var(--urlbar-min-height) - 2px);
-  /* The 0.5px solves a rounding problem where the
-    icon hover may not touch the borders */
-  height: calc(var(--urlbar-min-height) - 2px + 0.5px);
+  height: calc(var(--urlbar-min-height) - 2px);
   margin-inline: 0;
 }
 
