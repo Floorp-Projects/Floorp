@@ -381,7 +381,7 @@ async function startGeckoProfiling() {
   await ext.geckoProfiler.start({
     bufferSize: geckoEntries,
     interval: geckoInterval,
-    features: ["js", "leaf", "stackwalk", "threads", "responsiveness"],
+    features: ["js", "leaf", "stackwalk", "cpu", "threads", "responsiveness"],
     threads: geckoThreads.split(","),
   });
 }
