@@ -20,15 +20,16 @@
 
     <div id="reportListUnsubmitted" class="hidden">
       <div class="table-title-container">
-        <h2 class="lighter-font-weight" data-l10n-id="crashes-unsubmitted-label"></h2>
-        <button id="submitAllUnsubmittedReports" class="submit-button wide-button" data-l10n-id="submit-all-button-label"></button>
-        <button id="clearUnsubmittedReports" class="wide-button" data-l10n-id="delete-button-label"></button>
+        <h2 data-l10n-id="crashes-unsubmitted-label"></h2>
+        <button id="submitAllUnsubmittedReports" class="submit-button" data-l10n-id="submit-all-button-label"></button>
+        <button id="clearUnsubmittedReports" data-l10n-id="delete-button-label"></button>
       </div>
       <table>
         <thead>
           <tr>
             <th data-l10n-id="id-heading"></th>
             <th data-l10n-id="date-crashed-heading"></th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="unsubmitted"></tbody>
@@ -37,14 +38,15 @@
 
     <div id="reportListSubmitted" class="hidden">
       <div class="table-title-container">
-        <h2 class="lighter-font-weight" data-l10n-id="crashes-submitted-label"></h2>
-        <button id="clearSubmittedReports" class="wide-button" data-l10n-id="delete-button-label"></button>
+        <h2 data-l10n-id="crashes-submitted-label"></h2>
+        <button id="clearSubmittedReports" data-l10n-id="delete-button-label"></button>
       </div>
       <table>
         <thead>
           <tr>
             <th data-l10n-id="id-heading"></th>
             <th data-l10n-id="date-submitted-heading"></th>
+            <th></th>
           </tr>
         </thead>
         <tbody id="submitted"></tbody>
@@ -56,17 +58,17 @@
     <tr>
       <td class="crash-id"></td>
       <td></td>
-      <td class="float-end"></td>
+      <td></td>
     </tr>
   </template>
 
   <template id="crashSubmitButton">
-    <button class="submit-button wide-button">
+    <button class="submit-button">
       <span class="submit-crash-button-label" data-l10n-id="submit-crash-button-label"></span>
     </button>
   </template>
 
   <template id="viewCrashLink">
-    <a class="crash-link button-as-link wide-button" data-l10n-id="view-crash-button-label"></a>
+    <a class="crash-link" data-l10n-id="view-crash-button-label"></a>
   </template>
 </html>
