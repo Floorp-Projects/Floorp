@@ -21,7 +21,7 @@ logger = PerfDocLogger()
 frameworks = {
     "raptor": RaptorGatherer,
     "mozperftest": MozperftestGatherer,
-    "Talos": TalosGatherer,
+    "talos": TalosGatherer,
 }
 
 
