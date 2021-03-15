@@ -378,11 +378,11 @@ export function getCurrentThread(state) {
 }
 
 export function getIsPaused(state, thread) {
-  return !!getThreadPauseState(state.pause, thread).frames;
+  return getThreadPauseState(state.pause, thread).isPaused;
 }
 
 export function getIsCurrentThreadPaused(state) {
-  return getThreadPauseState(state.pause, getCurrentThread(state)).isPaused;
+  return getIsPaused(state, getCurrentThread(state));
 }
 
 export function isEvaluatingExpression(state, thread) {
