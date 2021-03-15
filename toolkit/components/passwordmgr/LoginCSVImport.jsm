@@ -68,6 +68,10 @@ class ImportFailedException extends Error {
  * Provides an object that has a method to import login-related data CSV files
  */
 class LoginCSVImport {
+  static get MIGRATION_HISTOGRAM_KEY() {
+    return "login_csv";
+  }
+
   /**
    * Returns a map that has the csv column name as key and the value the field name.
    *
@@ -130,7 +134,10 @@ class LoginCSVImport {
    * @returns {Object[]} An array of rows where each is mapped to a row in the CSV and it's import information.
    */
   static async importFromCSV(filePath) {
-    TelemetryStopwatch.start("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
+    TelemetryStopwatch.startKeyed(
+      "FX_MIGRATION_LOGINS_IMPORT_MS",
+      LoginCSVImport.MIGRATION_HISTOGRAM_KEY
+    );
     let responsivenessMonitor = new ResponsivenessMonitor();
     let csvColumnToFieldMap = LoginCSVImport._getCSVColumnToFieldMap();
     let csvFieldToColumnMap = new Map();
@@ -138,7 +145,10 @@ class LoginCSVImport {
     try {
       csvString = await OS.File.read(filePath, { encoding: "utf-8" });
     } catch (ex) {
-      TelemetryStopwatch.cancel("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
+      TelemetryStopwatch.cancelKeyed(
+        "FX_MIGRATION_LOGINS_IMPORT_MS",
+        LoginCSVImport.MIGRATION_HISTOGRAM_KEY
+      );
       Cu.reportError(ex);
       throw new ImportFailedException(
         ImportFailedErrorType.FILE_PERMISSIONS_ERROR
@@ -163,7 +173,10 @@ class LoginCSVImport {
           if (!csvFieldToColumnMap.has(fieldName)) {
             csvFieldToColumnMap.set(fieldName, columnName);
           } else {
-            TelemetryStopwatch.cancel("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
+            TelemetryStopwatch.cancelKeyed(
+              "FX_MIGRATION_LOGINS_IMPORT_MS",
+              LoginCSVImport.MIGRATION_HISTOGRAM_KEY
+            );
             throw new ImportFailedException(
               ImportFailedErrorType.CONFLICTING_VALUES_ERROR
             );
@@ -172,7 +185,10 @@ class LoginCSVImport {
       }
     }
     if (csvFieldToColumnMap.size === 0) {
-      TelemetryStopwatch.cancel("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
+      TelemetryStopwatch.cancelKeyed(
+        "FX_MIGRATION_LOGINS_IMPORT_MS",
+        LoginCSVImport.MIGRATION_HISTOGRAM_KEY
+      );
       throw new ImportFailedException(ImportFailedErrorType.FILE_FORMAT_ERROR);
     }
     if (
@@ -184,7 +200,10 @@ class LoginCSVImport {
       // The username *value* can be empty but we require a username column to
       // ensure that we don't import logins without their usernames due to the
       // username column not being recognized.
-      TelemetryStopwatch.cancel("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
+      TelemetryStopwatch.cancelKeyed(
+        "FX_MIGRATION_LOGINS_IMPORT_MS",
+        LoginCSVImport.MIGRATION_HISTOGRAM_KEY
+      );
       throw new ImportFailedException(ImportFailedErrorType.FILE_FORMAT_ERROR);
     }
 
@@ -205,18 +224,17 @@ class LoginCSVImport {
 
     // Record quantity, jank, and duration telemetry.
     try {
-      let histogram = Services.telemetry.getHistogramById(
-        "PWMGR_IMPORT_LOGINS_FROM_FILE_CATEGORICAL"
-      );
-      histogram.add("added", report.added);
-      histogram.add("modified", report.modified);
-      histogram.add("error", report.error);
-      histogram.add("no_change", report.no_change);
+      Services.telemetry
+        .getKeyedHistogramById("FX_MIGRATION_LOGINS_QUANTITY")
+        .add(LoginCSVImport.MIGRATION_HISTOGRAM_KEY, report.length);
       let accumulatedDelay = responsivenessMonitor.finish();
       Services.telemetry
-        .getHistogramById("PWMGR_IMPORT_LOGINS_FROM_FILE_JANK_MS")
-        .add(accumulatedDelay);
-      TelemetryStopwatch.finish("PWMGR_IMPORT_LOGINS_FROM_FILE_MS");
+        .getKeyedHistogramById("FX_MIGRATION_LOGINS_JANK_MS")
+        .add(LoginCSVImport.MIGRATION_HISTOGRAM_KEY, accumulatedDelay);
+      TelemetryStopwatch.finishKeyed(
+        "FX_MIGRATION_LOGINS_IMPORT_MS",
+        LoginCSVImport.MIGRATION_HISTOGRAM_KEY
+      );
     } catch (ex) {
       Cu.reportError(ex);
     }
