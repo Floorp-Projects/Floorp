@@ -1,7 +1,7 @@
 {
   "data": [
     {
-      "schema": 1615427883303,
+      "schema": 1615730374162,
       "derHash": "Jv1MQ2fkY9OccXlq5AEOUzgNyTvBMvsBnWcYpoc+gfQ=",
       "subject": "CN=SHECA RSA Organization Validation Server CA G3,O=UniTrust,C=CN",
       "subjectDN": "MFkxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDE3MDUGA1UEAwwuU0hFQ0EgUlNBIE9yZ2FuaXphdGlvbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
@@ -16,10 +16,190 @@
       "pubKeyHash": "0JA1q1ctk/4J8qS0t+GhJaG5egVDq9SB33oMY7SMpfs=",
       "crlite_enrolled": false,
       "id": "10ec0271-99d5-4c06-a20d-1c03ccf7d780",
-      "last_modified": 1615471113194
+      "last_modified": 1615795147334
     },
     {
-      "schema": 1615470716499,
+      "schema": 1615708697267,
+      "derHash": "SUKtBEEhiuwi2sQXrEmdfeTFTsvT0zXzSl+LBo9ubJY=",
+      "subject": "CN=Actalis Extended Validation Server CA G1,O=Actalis S.p.A./03358520967,L=Milano,ST=Milano,C=IT",
+      "subjectDN": "MIGHMQswCQYDVQQGEwJJVDEPMA0GA1UECAwGTWlsYW5vMQ8wDQYDVQQHDAZNaWxhbm8xIzAhBgNVBAoMGkFjdGFsaXMgUy5wLkEuLzAzMzU4NTIwOTY3MTEwLwYDVQQDDChBY3RhbGlzIEV4dGVuZGVkIFZhbGlkYXRpb24gU2VydmVyIENBIEcx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "9dca42b206384547c8a9ebe8126b177b165c1f506a22d83e63775bee433d5029",
+        "size": 2243,
+        "filename": "iiRAhRCKHfD_Hl73m_3kvrRJsjFUTTQ3Xaw6E8qVac4=.pem",
+        "location": "security-state-staging/intermediates/0bd6f9b1-1826-400c-9fc8-549c1432ff92.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "iiRAhRCKHfD/Hl73m/3kvrRJsjFUTTQ3Xaw6E8qVac4=",
+      "crlite_enrolled": false,
+      "id": "d9a1301f-ca8e-47e1-b6ae-ce1d56900f3c",
+      "last_modified": 1615730373204
+    },
+    {
+      "schema": 1615669079468,
+      "derHash": "fPdfAGzP+Now1uoqL3xQ0ER6olE/9KSje/KSRwu6jIU=",
+      "subject": "CN=FujiSSL Public Certification Authority - G1,O=Nijimo\\, Inc.,C=JP",
+      "subjectDN": "MFoxCzAJBgNVBAYTAkpQMRUwEwYDVQQKEwxOaWppbW8sIEluYy4xNDAyBgNVBAMTK0Z1amlTU0wgUHVibGljIENlcnRpZmljYXRpb24gQXV0aG9yaXR5IC0gRzE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "cbb38aed230419e776913b69c50f5489e2883ea7de0a1c182db31c687d9a5917",
+        "size": 1626,
+        "filename": "QrPwZsEgVVVbnQwEikJnQTnAiO0XvqNOi9gKQj7Xt4Q=.pem",
+        "location": "security-state-staging/intermediates/4c7aeb8b-1028-40e6-ae83-98ccf972fed1.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "QrPwZsEgVVVbnQwEikJnQTnAiO0XvqNOi9gKQj7Xt4Q=",
+      "crlite_enrolled": false,
+      "id": "fd898cc0-617c-40fc-bcda-7dbae1c4d2f6",
+      "last_modified": 1615708696284
+    },
+    {
+      "schema": 1615665290340,
+      "derHash": "JvettyHMLT4m3wY6b+KHOYlLGEcGDDUdxvUxHFffC18=",
+      "subject": "CN=Harokopio University CA R1,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
+      "subjectDN": "MHgxCzAJBgNVBAYTAkdSMUQwQgYDVQQKEztIZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2ggSW5zdGl0dXRpb25zIENlcnQuIEF1dGhvcml0eTEjMCEGA1UEAxMaSGFyb2tvcGlvIFVuaXZlcnNpdHkgQ0EgUjE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "ccd570a34a408c3d9950fe8245b6ff99b392ed051e6c6f122cbdde6504c3ace8",
+        "size": 2775,
+        "filename": "1hHFX5m3nX4IdanFE39sr-FVsRg1eVo-ThXvmiegp7I=.pem",
+        "location": "security-state-staging/intermediates/26d83014-13ad-4aaf-bb81-c5ccf0d84b8f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "1hHFX5m3nX4IdanFE39sr+FVsRg1eVo+ThXvmiegp7I=",
+      "crlite_enrolled": false,
+      "id": "eb62a4c8-57f3-4b43-8e57-468c5167b998",
+      "last_modified": 1615665497160
+    },
+    {
+      "schema": 1615665289873,
+      "derHash": "C4ljPxIvdYIZUK4n4LrdQNSbtQ8Msbde5PRmKs5Ms9g=",
+      "subject": "CN=Technological Educational Institute of Western Greece CA R1,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
+      "subjectDN": "MIGZMQswCQYDVQQGEwJHUjFEMEIGA1UEChM7SGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJlc2VhcmNoIEluc3RpdHV0aW9ucyBDZXJ0LiBBdXRob3JpdHkxRDBCBgNVBAMTO1RlY2hub2xvZ2ljYWwgRWR1Y2F0aW9uYWwgSW5zdGl0dXRlIG9mIFdlc3Rlcm4gR3JlZWNlIENBIFIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "6b2621f4beca525c73d84d105cae967fc6e60b1891b8e1fa27ca77db44af4b03",
+        "size": 3328,
+        "filename": "UHwj56cjJKum0BUjKMff1Ap3nL75-poJyKuT3GJwRPk=.pem",
+        "location": "security-state-staging/intermediates/373afb06-661d-473a-a10f-6a6aebce7329.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "UHwj56cjJKum0BUjKMff1Ap3nL75+poJyKuT3GJwRPk=",
+      "crlite_enrolled": false,
+      "id": "499fdfe8-b022-4f00-be06-1ca69b9bed81",
+      "last_modified": 1615665497141
+    },
+    {
+      "schema": 1615665130340,
+      "derHash": "/SlUprx/R91EP2Fk2EVCRbsM/pz1Ws4327NbjkiVp9k=",
+      "subject": "CN=Technological Educational Institute of Epirus CA R3,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
+      "subjectDN": "MIGRMQswCQYDVQQGEwJHUjFEMEIGA1UEChM7SGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJlc2VhcmNoIEluc3RpdHV0aW9ucyBDZXJ0LiBBdXRob3JpdHkxPDA6BgNVBAMTM1RlY2hub2xvZ2ljYWwgRWR1Y2F0aW9uYWwgSW5zdGl0dXRlIG9mIEVwaXJ1cyBDQSBSMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "07d4a4f42a6b9ef902616f6cfdec34ca084df85bd976efb4a8616d348399e7bb",
+        "size": 2560,
+        "filename": "ifNtHuGOosnfWP8xv-35qett4I3b7lw-i4hIbE8TRKQ=.pem",
+        "location": "security-state-staging/intermediates/0f1b2b90-4637-4be3-bd8d-91309ae76311.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ifNtHuGOosnfWP8xv+35qett4I3b7lw+i4hIbE8TRKQ=",
+      "crlite_enrolled": false,
+      "id": "8be4d98d-02d0-4fe3-a367-4e9a1c9ccab2",
+      "last_modified": 1615665497121
+    },
+    {
+      "schema": 1615665480420,
+      "derHash": "JvettyHMLT4m3wY6b+KHOYlLGEcGDDUdxvUxHFffC18=",
+      "subject": "CN=Harokopio University CA R1,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
+      "subjectDN": "MHgxCzAJBgNVBAYTAkdSMUQwQgYDVQQKEztIZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2ggSW5zdGl0dXRpb25zIENlcnQuIEF1dGhvcml0eTEjMCEGA1UEAxMaSGFyb2tvcGlvIFVuaXZlcnNpdHkgQ0EgUjE=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "ccd570a34a408c3d9950fe8245b6ff99b392ed051e6c6f122cbdde6504c3ace8",
+        "size": 2775,
+        "filename": "1hHFX5m3nX4IdanFE39sr-FVsRg1eVo-ThXvmiegp7I=.pem",
+        "location": "security-state-staging/intermediates/b71946ce-7c34-48ca-9443-f7032eceaa65.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "1hHFX5m3nX4IdanFE39sr+FVsRg1eVo+ThXvmiegp7I=",
+      "crlite_enrolled": false,
+      "id": "82b32bc8-df75-4e28-8339-34dc55ee161a",
+      "last_modified": 1615665497102
+    },
+    {
+      "schema": 1615665290839,
+      "derHash": "C4ljPxIvdYIZUK4n4LrdQNSbtQ8Msbde5PRmKs5Ms9g=",
+      "subject": "CN=Technological Educational Institute of Western Greece CA R1,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
+      "subjectDN": "MIGZMQswCQYDVQQGEwJHUjFEMEIGA1UEChM7SGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJlc2VhcmNoIEluc3RpdHV0aW9ucyBDZXJ0LiBBdXRob3JpdHkxRDBCBgNVBAMTO1RlY2hub2xvZ2ljYWwgRWR1Y2F0aW9uYWwgSW5zdGl0dXRlIG9mIFdlc3Rlcm4gR3JlZWNlIENBIFIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "6b2621f4beca525c73d84d105cae967fc6e60b1891b8e1fa27ca77db44af4b03",
+        "size": 3328,
+        "filename": "UHwj56cjJKum0BUjKMff1Ap3nL75-poJyKuT3GJwRPk=.pem",
+        "location": "security-state-staging/intermediates/a99fd041-95b4-41fe-ab61-f04682d3258f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "UHwj56cjJKum0BUjKMff1Ap3nL75+poJyKuT3GJwRPk=",
+      "crlite_enrolled": false,
+      "id": "c0e7b9ce-afca-4112-ad99-97467ee48220",
+      "last_modified": 1615665497083
+    },
+    {
+      "schema": 1615665479834,
+      "derHash": "/SlUprx/R91EP2Fk2EVCRbsM/pz1Ws4327NbjkiVp9k=",
+      "subject": "CN=Technological Educational Institute of Epirus CA R3,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
+      "subjectDN": "MIGRMQswCQYDVQQGEwJHUjFEMEIGA1UEChM7SGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJlc2VhcmNoIEluc3RpdHV0aW9ucyBDZXJ0LiBBdXRob3JpdHkxPDA6BgNVBAMTM1RlY2hub2xvZ2ljYWwgRWR1Y2F0aW9uYWwgSW5zdGl0dXRlIG9mIEVwaXJ1cyBDQSBSMw==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "07d4a4f42a6b9ef902616f6cfdec34ca084df85bd976efb4a8616d348399e7bb",
+        "size": 2560,
+        "filename": "ifNtHuGOosnfWP8xv-35qett4I3b7lw-i4hIbE8TRKQ=.pem",
+        "location": "security-state-staging/intermediates/c9c94676-4570-41b8-b6e4-fecfa22afb7f.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "ifNtHuGOosnfWP8xv+35qett4I3b7lw+i4hIbE8TRKQ=",
+      "crlite_enrolled": false,
+      "id": "64cfc0d7-4b67-4c53-9573-5cf5e7d5f019",
+      "last_modified": 1615665497063
+    },
+    {
+      "schema": 1615471114148,
+      "derHash": "3JmT3DOnH9lYCHh9GaS1VwTmAdV+vOrMiALHi1w29cc=",
+      "subject": "CN=Greek Universities Network TLS RSA SubCA R1,O=Hellenic Academic and Research Institutions CA,C=GR",
+      "subjectDN": "MHwxCzAJBgNVBAYTAkdSMTcwNQYDVQQKDC5IZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2ggSW5zdGl0dXRpb25zIENBMTQwMgYDVQQDDCtHcmVlayBVbml2ZXJzaXRpZXMgTmV0d29yayBUTFMgUlNBIFN1YkNBIFIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "1cd78e7decfefeda51df3217ba844a88ad64445b6510e5a6e1ac6c3eaba92119",
+        "size": 2800,
+        "filename": "-Wo-2quCv6ywG-coso5aG2NSMQ-PKhucBmfbix2syuA=.pem",
+        "location": "security-state-staging/intermediates/2bcd1932-4c5f-489b-a06a-6b6a69d145c3.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "+Wo+2quCv6ywG+coso5aG2NSMQ+PKhucBmfbix2syuA=",
+      "crlite_enrolled": true,
+      "id": "966d5c7e-cccf-455d-9117-9d4a01afcbcd",
+      "last_modified": 1615514286409
+    },
+    {
+      "schema": 1615513842171,
+      "derHash": "3JmT3DOnH9lYCHh9GaS1VwTmAdV+vOrMiALHi1w29cc=",
+      "subject": "CN=Greek Universities Network TLS RSA SubCA R1,O=Hellenic Academic and Research Institutions CA,C=GR",
+      "subjectDN": "MHwxCzAJBgNVBAYTAkdSMTcwNQYDVQQKDC5IZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2ggSW5zdGl0dXRpb25zIENBMTQwMgYDVQQDDCtHcmVlayBVbml2ZXJzaXRpZXMgTmV0d29yayBUTFMgUlNBIFN1YkNBIFIx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "1cd78e7decfefeda51df3217ba844a88ad64445b6510e5a6e1ac6c3eaba92119",
+        "size": 2800,
+        "filename": "-Wo-2quCv6ywG-coso5aG2NSMQ-PKhucBmfbix2syuA=.pem",
+        "location": "security-state-staging/intermediates/fb380b5f-9645-4f52-94bb-c2fdaed2fe63.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "+Wo+2quCv6ywG+coso5aG2NSMQ+PKhucBmfbix2syuA=",
+      "crlite_enrolled": true,
+      "id": "8d61fb14-23e2-4b00-85e8-f77fbc0f0677",
+      "last_modified": 1615514286390
+    },
+    {
+      "schema": 1615513841617,
       "derHash": "ClUqZfIv+CDn7D1Du/iLAqvDS9JH4MNQWJG2NC8WpfI=",
       "subject": "CN=SHECA RSA Domain Validation Server CA G3,O=UniTrust,C=CN",
       "subjectDN": "MFMxCzAJBgNVBAYTAkNOMREwDwYDVQQKDAhVbmlUcnVzdDExMC8GA1UEAwwoU0hFQ0EgUlNBIERvbWFpbiBWYWxpZGF0aW9uIFNlcnZlciBDQSBHMw==",
@@ -32,9 +212,9 @@
         "mimetype": "application/x-pem-file"
       },
       "pubKeyHash": "N6OrM0KKQgR1zORoDKkLLFEKAYCmS/84dpbLl/qNOnU=",
-      "crlite_enrolled": false,
+      "crlite_enrolled": true,
       "id": "4b6a2421-1677-41c0-8103-bc13fb7e09f9",
-      "last_modified": 1615471113175
+      "last_modified": 1615514286370
     },
     {
       "schema": 1615384714874,
@@ -1063,24 +1243,6 @@
       "last_modified": 1613660250296
     },
     {
-      "schema": 1613659812936,
-      "derHash": "/SlUprx/R91EP2Fk2EVCRbsM/pz1Ws4327NbjkiVp9k=",
-      "subject": "CN=Technological Educational Institute of Epirus CA R3,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
-      "subjectDN": "MIGRMQswCQYDVQQGEwJHUjFEMEIGA1UEChM7SGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJlc2VhcmNoIEluc3RpdHV0aW9ucyBDZXJ0LiBBdXRob3JpdHkxPDA6BgNVBAMTM1RlY2hub2xvZ2ljYWwgRWR1Y2F0aW9uYWwgSW5zdGl0dXRlIG9mIEVwaXJ1cyBDQSBSMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "07d4a4f42a6b9ef902616f6cfdec34ca084df85bd976efb4a8616d348399e7bb",
-        "size": 2560,
-        "filename": "ifNtHuGOosnfWP8xv-35qett4I3b7lw-i4hIbE8TRKQ=.pem",
-        "location": "security-state-staging/intermediates/c9c94676-4570-41b8-b6e4-fecfa22afb7f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "ifNtHuGOosnfWP8xv+35qett4I3b7lw+i4hIbE8TRKQ=",
-      "crlite_enrolled": true,
-      "id": "64cfc0d7-4b67-4c53-9573-5cf5e7d5f019",
-      "last_modified": 1613660250285
-    },
-    {
       "schema": 1613659814432,
       "derHash": "2rP6DW6CEAb+cJrhIXarovOXcGzJxx9cHA0JgETa69w=",
       "subject": "CN=HARICA QWAC RSA SubCA R1,OU=Hellenic Academic and Research Institutions CA,O=Greek Universities Network (GUnet),L=Athens,C=GR",
@@ -1423,42 +1585,6 @@
       "last_modified": 1613660250079
     },
     {
-      "schema": 1613659842267,
-      "derHash": "C4ljPxIvdYIZUK4n4LrdQNSbtQ8Msbde5PRmKs5Ms9g=",
-      "subject": "CN=Technological Educational Institute of Western Greece CA R1,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
-      "subjectDN": "MIGZMQswCQYDVQQGEwJHUjFEMEIGA1UEChM7SGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJlc2VhcmNoIEluc3RpdHV0aW9ucyBDZXJ0LiBBdXRob3JpdHkxRDBCBgNVBAMTO1RlY2hub2xvZ2ljYWwgRWR1Y2F0aW9uYWwgSW5zdGl0dXRlIG9mIFdlc3Rlcm4gR3JlZWNlIENBIFIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "6b2621f4beca525c73d84d105cae967fc6e60b1891b8e1fa27ca77db44af4b03",
-        "size": 3328,
-        "filename": "UHwj56cjJKum0BUjKMff1Ap3nL75-poJyKuT3GJwRPk=.pem",
-        "location": "security-state-staging/intermediates/a99fd041-95b4-41fe-ab61-f04682d3258f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "UHwj56cjJKum0BUjKMff1Ap3nL75+poJyKuT3GJwRPk=",
-      "crlite_enrolled": true,
-      "id": "c0e7b9ce-afca-4112-ad99-97467ee48220",
-      "last_modified": 1613660250067
-    },
-    {
-      "schema": 1613659843935,
-      "derHash": "3JmT3DOnH9lYCHh9GaS1VwTmAdV+vOrMiALHi1w29cc=",
-      "subject": "CN=Greek Universities Network TLS RSA SubCA R1,O=Hellenic Academic and Research Institutions CA,C=GR",
-      "subjectDN": "MHwxCzAJBgNVBAYTAkdSMTcwNQYDVQQKDC5IZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2ggSW5zdGl0dXRpb25zIENBMTQwMgYDVQQDDCtHcmVlayBVbml2ZXJzaXRpZXMgTmV0d29yayBUTFMgUlNBIFN1YkNBIFIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "1cd78e7decfefeda51df3217ba844a88ad64445b6510e5a6e1ac6c3eaba92119",
-        "size": 2800,
-        "filename": "-Wo-2quCv6ywG-coso5aG2NSMQ-PKhucBmfbix2syuA=.pem",
-        "location": "security-state-staging/intermediates/fb380b5f-9645-4f52-94bb-c2fdaed2fe63.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "+Wo+2quCv6ywG+coso5aG2NSMQ+PKhucBmfbix2syuA=",
-      "crlite_enrolled": false,
-      "id": "8d61fb14-23e2-4b00-85e8-f77fbc0f0677",
-      "last_modified": 1613660250056
-    },
-    {
       "schema": 1613659845444,
       "derHash": "yXO+rKZUSUUeXEExVw0F5y800q3r2U2y5R6aVE4eAQE=",
       "subject": "CN=University of the Peloponnese CA R2,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
@@ -1475,24 +1601,6 @@
       "crlite_enrolled": true,
       "id": "f77456f8-3de1-4c3f-99c2-3ae683b03411",
       "last_modified": 1613660250045
-    },
-    {
-      "schema": 1613659847401,
-      "derHash": "JvettyHMLT4m3wY6b+KHOYlLGEcGDDUdxvUxHFffC18=",
-      "subject": "CN=Harokopio University CA R1,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
-      "subjectDN": "MHgxCzAJBgNVBAYTAkdSMUQwQgYDVQQKEztIZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2ggSW5zdGl0dXRpb25zIENlcnQuIEF1dGhvcml0eTEjMCEGA1UEAxMaSGFyb2tvcGlvIFVuaXZlcnNpdHkgQ0EgUjE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "ccd570a34a408c3d9950fe8245b6ff99b392ed051e6c6f122cbdde6504c3ace8",
-        "size": 2775,
-        "filename": "1hHFX5m3nX4IdanFE39sr-FVsRg1eVo-ThXvmiegp7I=.pem",
-        "location": "security-state-staging/intermediates/b71946ce-7c34-48ca-9443-f7032eceaa65.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "1hHFX5m3nX4IdanFE39sr+FVsRg1eVo+ThXvmiegp7I=",
-      "crlite_enrolled": true,
-      "id": "82b32bc8-df75-4e28-8339-34dc55ee161a",
-      "last_modified": 1613660250029
     },
     {
       "schema": 1613659849005,
@@ -1927,24 +2035,6 @@
       "last_modified": 1613656687048
     },
     {
-      "schema": 1613656180341,
-      "derHash": "/SlUprx/R91EP2Fk2EVCRbsM/pz1Ws4327NbjkiVp9k=",
-      "subject": "CN=Technological Educational Institute of Epirus CA R3,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
-      "subjectDN": "MIGRMQswCQYDVQQGEwJHUjFEMEIGA1UEChM7SGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJlc2VhcmNoIEluc3RpdHV0aW9ucyBDZXJ0LiBBdXRob3JpdHkxPDA6BgNVBAMTM1RlY2hub2xvZ2ljYWwgRWR1Y2F0aW9uYWwgSW5zdGl0dXRlIG9mIEVwaXJ1cyBDQSBSMw==",
-      "whitelist": false,
-      "attachment": {
-        "hash": "07d4a4f42a6b9ef902616f6cfdec34ca084df85bd976efb4a8616d348399e7bb",
-        "size": 2560,
-        "filename": "ifNtHuGOosnfWP8xv-35qett4I3b7lw-i4hIbE8TRKQ=.pem",
-        "location": "security-state-staging/intermediates/0f1b2b90-4637-4be3-bd8d-91309ae76311.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "ifNtHuGOosnfWP8xv+35qett4I3b7lw+i4hIbE8TRKQ=",
-      "crlite_enrolled": true,
-      "id": "8be4d98d-02d0-4fe3-a367-4e9a1c9ccab2",
-      "last_modified": 1613656687037
-    },
-    {
       "schema": 1613656181810,
       "derHash": "wWH1qt5A+8lyPwiS3pY9TRBAVWGmvcaacnmPkYvtGc0=",
       "subject": "CN=GRnet SSL RSA SubCA R2,O=Greek Research and Technology Network,L=Athens,C=GR",
@@ -1961,24 +2051,6 @@
       "crlite_enrolled": false,
       "id": "7a639f1a-ca02-4b6e-ae58-21957c325955",
       "last_modified": 1613656687026
-    },
-    {
-      "schema": 1613656183394,
-      "derHash": "C4ljPxIvdYIZUK4n4LrdQNSbtQ8Msbde5PRmKs5Ms9g=",
-      "subject": "CN=Technological Educational Institute of Western Greece CA R1,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
-      "subjectDN": "MIGZMQswCQYDVQQGEwJHUjFEMEIGA1UEChM7SGVsbGVuaWMgQWNhZGVtaWMgYW5kIFJlc2VhcmNoIEluc3RpdHV0aW9ucyBDZXJ0LiBBdXRob3JpdHkxRDBCBgNVBAMTO1RlY2hub2xvZ2ljYWwgRWR1Y2F0aW9uYWwgSW5zdGl0dXRlIG9mIFdlc3Rlcm4gR3JlZWNlIENBIFIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "6b2621f4beca525c73d84d105cae967fc6e60b1891b8e1fa27ca77db44af4b03",
-        "size": 3328,
-        "filename": "UHwj56cjJKum0BUjKMff1Ap3nL75-poJyKuT3GJwRPk=.pem",
-        "location": "security-state-staging/intermediates/373afb06-661d-473a-a10f-6a6aebce7329.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "UHwj56cjJKum0BUjKMff1Ap3nL75+poJyKuT3GJwRPk=",
-      "crlite_enrolled": true,
-      "id": "499fdfe8-b022-4f00-be06-1ca69b9bed81",
-      "last_modified": 1613656687015
     },
     {
       "schema": 1613656184901,
@@ -2539,24 +2611,6 @@
       "last_modified": 1613656686689
     },
     {
-      "schema": 1613656231031,
-      "derHash": "JvettyHMLT4m3wY6b+KHOYlLGEcGDDUdxvUxHFffC18=",
-      "subject": "CN=Harokopio University CA R1,O=Hellenic Academic and Research Institutions Cert. Authority,C=GR",
-      "subjectDN": "MHgxCzAJBgNVBAYTAkdSMUQwQgYDVQQKEztIZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2ggSW5zdGl0dXRpb25zIENlcnQuIEF1dGhvcml0eTEjMCEGA1UEAxMaSGFyb2tvcGlvIFVuaXZlcnNpdHkgQ0EgUjE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "ccd570a34a408c3d9950fe8245b6ff99b392ed051e6c6f122cbdde6504c3ace8",
-        "size": 2775,
-        "filename": "1hHFX5m3nX4IdanFE39sr-FVsRg1eVo-ThXvmiegp7I=.pem",
-        "location": "security-state-staging/intermediates/26d83014-13ad-4aaf-bb81-c5ccf0d84b8f.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "1hHFX5m3nX4IdanFE39sr+FVsRg1eVo+ThXvmiegp7I=",
-      "crlite_enrolled": true,
-      "id": "eb62a4c8-57f3-4b43-8e57-468c5167b998",
-      "last_modified": 1613656686679
-    },
-    {
       "schema": 1613656232453,
       "derHash": "8AQ+n++zeup5TmkEN9wjnWvSxcoPtYoSJEVVoaiioBo=",
       "subject": "CN=Panteion Univ. of Social and Political Sciences TLS RSA SubCA R1,O=Hellenic Academic and Research Institutions CA,C=GR",
@@ -3005,24 +3059,6 @@
       "crlite_enrolled": false,
       "id": "314c236f-c19b-45e0-aacd-18997f4b4563",
       "last_modified": 1613656686415
-    },
-    {
-      "schema": 1613656268969,
-      "derHash": "3JmT3DOnH9lYCHh9GaS1VwTmAdV+vOrMiALHi1w29cc=",
-      "subject": "CN=Greek Universities Network TLS RSA SubCA R1,O=Hellenic Academic and Research Institutions CA,C=GR",
-      "subjectDN": "MHwxCzAJBgNVBAYTAkdSMTcwNQYDVQQKDC5IZWxsZW5pYyBBY2FkZW1pYyBhbmQgUmVzZWFyY2ggSW5zdGl0dXRpb25zIENBMTQwMgYDVQQDDCtHcmVlayBVbml2ZXJzaXRpZXMgTmV0d29yayBUTFMgUlNBIFN1YkNBIFIx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "1cd78e7decfefeda51df3217ba844a88ad64445b6510e5a6e1ac6c3eaba92119",
-        "size": 2800,
-        "filename": "-Wo-2quCv6ywG-coso5aG2NSMQ-PKhucBmfbix2syuA=.pem",
-        "location": "security-state-staging/intermediates/2bcd1932-4c5f-489b-a06a-6b6a69d145c3.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "+Wo+2quCv6ywG+coso5aG2NSMQ+PKhucBmfbix2syuA=",
-      "crlite_enrolled": false,
-      "id": "966d5c7e-cccf-455d-9117-9d4a01afcbcd",
-      "last_modified": 1613656686404
     },
     {
       "schema": 1613656270417,
@@ -37027,24 +37063,6 @@
       "last_modified": 1562025244801
     },
     {
-      "schema": 1562025239559,
-      "derHash": "fPdfAGzP+Now1uoqL3xQ0ER6olE/9KSje/KSRwu6jIU=",
-      "subject": "CN=FujiSSL Public Certification Authority - G1,O=Nijimo\\, Inc.,C=JP",
-      "subjectDN": "MFoxCzAJBgNVBAYTAkpQMRUwEwYDVQQKEwxOaWppbW8sIEluYy4xNDAyBgNVBAMTK0Z1amlTU0wgUHVibGljIENlcnRpZmljYXRpb24gQXV0aG9yaXR5IC0gRzE=",
-      "whitelist": false,
-      "attachment": {
-        "hash": "cbb38aed230419e776913b69c50f5489e2883ea7de0a1c182db31c687d9a5917",
-        "size": 1626,
-        "filename": "QrPwZsEgVVVbnQwEikJnQTnAiO0XvqNOi9gKQj7Xt4Q=.pem",
-        "location": "security-state-staging/intermediates/4c7aeb8b-1028-40e6-ae83-98ccf972fed1.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "QrPwZsEgVVVbnQwEikJnQTnAiO0XvqNOi9gKQj7Xt4Q=",
-      "crlite_enrolled": true,
-      "id": "fd898cc0-617c-40fc-bcda-7dbae1c4d2f6",
-      "last_modified": 1562025240312
-    },
-    {
       "schema": 1562025237334,
       "derHash": "YvT7eFosKeEJ3xAx70hMJERrkkoHQATp44PKZH+OsLo=",
       "subject": "CN=Fuji Xerox Endorsement CA - G2,O=Fuji Xerox,C=JP",
@@ -42803,24 +42821,6 @@
       "crlite_enrolled": false,
       "id": "df4be940-d330-4c3a-9923-bafa52a3e054",
       "last_modified": 1562024722717
-    },
-    {
-      "schema": 1562024721169,
-      "derHash": "SUKtBEEhiuwi2sQXrEmdfeTFTsvT0zXzSl+LBo9ubJY=",
-      "subject": "CN=Actalis Extended Validation Server CA G1,O=Actalis S.p.A./03358520967,L=Milano,ST=Milano,C=IT",
-      "subjectDN": "MIGHMQswCQYDVQQGEwJJVDEPMA0GA1UECAwGTWlsYW5vMQ8wDQYDVQQHDAZNaWxhbm8xIzAhBgNVBAoMGkFjdGFsaXMgUy5wLkEuLzAzMzU4NTIwOTY3MTEwLwYDVQQDDChBY3RhbGlzIEV4dGVuZGVkIFZhbGlkYXRpb24gU2VydmVyIENBIEcx",
-      "whitelist": false,
-      "attachment": {
-        "hash": "9dca42b206384547c8a9ebe8126b177b165c1f506a22d83e63775bee433d5029",
-        "size": 2243,
-        "filename": "iiRAhRCKHfD_Hl73m_3kvrRJsjFUTTQ3Xaw6E8qVac4=.pem",
-        "location": "security-state-staging/intermediates/0bd6f9b1-1826-400c-9fc8-549c1432ff92.pem",
-        "mimetype": "application/x-pem-file"
-      },
-      "pubKeyHash": "iiRAhRCKHfD/Hl73m/3kvrRJsjFUTTQ3Xaw6E8qVac4=",
-      "crlite_enrolled": true,
-      "id": "d9a1301f-ca8e-47e1-b6ae-ce1d56900f3c",
-      "last_modified": 1562024721910
     },
     {
       "schema": 1562024719663,
