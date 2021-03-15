@@ -5304,7 +5304,40 @@
 
 #---------------------------------------------------------------------------
 # Prefs starting with "javascript."
+#
+# NOTE: SpiderMonkey starts up before `mirror: once` preferences are sealed and
+#       we cannot use them (Bug 1698311). Instead, we use `mirror: always`
+#       prefs but mark as `do_not_use_directly` and `LoadStartupJSPrefs` will
+#       mirror them into SpiderMonkey.
 #---------------------------------------------------------------------------
+
+# The JavaScript JIT compilers. These are read once on startup so a browser may
+# need to be restarted if toggling them. In general each subsequent JIT depends
+# on the ones before it being enabled.
+- name: javascript.options.blinterp
+  type: bool
+  value: true
+  mirror: always  # LoadStartupJSPrefs
+  do_not_use_directly: true
+
+- name: javascript.options.baselinejit
+  type: bool
+  value: true
+  mirror: always  # LoadStartupJSPrefs
+  do_not_use_directly: true
+
+- name: javascript.options.ion
+  type: bool
+  value: true
+  mirror: always  # LoadStartupJSPrefs
+  do_not_use_directly: true
+
+# The irregexp JIT for regex evaluation.
+- name: javascript.options.native_regexp
+  type: bool
+  value: true
+  mirror: always  # LoadStartupJSPrefs
+  do_not_use_directly: true
 
 - name: javascript.options.compact_on_user_inactive
   type: bool
