@@ -153,6 +153,17 @@ nsAndroidNetworkLinkService::GetDnsSuffixList(
 }
 
 NS_IMETHODIMP
+nsAndroidNetworkLinkService::GetResolvers(nsTArray<RefPtr<nsINetAddr>>& aResolvers) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsAndroidNetworkLinkService::GetNativeResolvers(
+    nsTArray<mozilla::net::NetAddr>& aResolvers) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 nsAndroidNetworkLinkService::GetPlatformDNSIndications(
     uint32_t* aPlatformDNSIndications) {
   return NS_ERROR_NOT_IMPLEMENTED;
