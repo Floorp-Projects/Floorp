@@ -4928,9 +4928,8 @@ nsDocShell::GetVisibility(bool* aVisibility) {
     }
 
     nsIFrame* frame = view ? view->GetFrame() : nullptr;
-    if (frame &&
-        !frame->IsVisibleConsideringAncestors(
-            nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY)) {
+    if (frame && !frame->IsVisibleConsideringAncestors(
+                     nsIFrame::VISIBILITY_CROSS_CHROME_CONTENT_BOUNDARY)) {
       return NS_OK;
     }
 

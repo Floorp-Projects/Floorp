@@ -69,8 +69,8 @@ class ScrollbarDrawingMac final {
 
   using ScrollCornerRects = Array<FillRect, 7>;
   static bool GetScrollCornerRects(const gfx::Rect& aRect,
-                                   const ScrollbarParams& aParams,
-                                   float aScale, ScrollCornerRects&);
+                                   const ScrollbarParams& aParams, float aScale,
+                                   ScrollCornerRects&);
 };
 
 }  // namespace widget

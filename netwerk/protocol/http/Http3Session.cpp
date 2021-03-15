@@ -610,8 +610,8 @@ nsresult Http3Session::ProcessOutput(nsIUDPSocket* socket) {
     nsAutoCString remoteAddrStr;
     uint16_t port = 0;
     uint64_t timeout = 0;
-    if (!mHttp3Connection->ProcessOutput(&remoteAddrStr, &port,
-                                         packetToSend, &timeout)) {
+    if (!mHttp3Connection->ProcessOutput(&remoteAddrStr, &port, packetToSend,
+                                         &timeout)) {
       SetupTimer(timeout);
       break;
     }

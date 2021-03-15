@@ -131,8 +131,9 @@ class MOZ_STACK_CLASS CallInfo {
     setThis(thisVal);
 
     MOZ_ASSERT(numActuals <= ArgumentsObject::MaxInlinedArgs);
-    static_assert(ArgumentsObject::MaxInlinedArgs <= decltype(args_)::InlineLength,
-                  "Actual arguments can be infallibly stored inline");
+    static_assert(
+        ArgumentsObject::MaxInlinedArgs <= decltype(args_)::InlineLength,
+        "Actual arguments can be infallibly stored inline");
     MOZ_ALWAYS_TRUE(args_.reserve(numActuals));
   }
 
