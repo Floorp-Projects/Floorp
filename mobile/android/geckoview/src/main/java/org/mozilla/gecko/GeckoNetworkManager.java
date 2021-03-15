@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko;
 
-import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
@@ -26,7 +25,6 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import android.telephony.TelephonyManager;
 import android.text.format.Formatter;
 import android.util.Log;
 
@@ -94,14 +92,12 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
 
     private GeckoNetworkManager() {
         EventDispatcher.getInstance().registerUiThreadListener(this,
-                "Wifi:Enable",
                 "Wifi:GetIPAddress");
     }
 
     private void onDestroy() {
         handleManagerEvent(ManagerEvent.stop);
         EventDispatcher.getInstance().unregisterUiThreadListener(this,
-                "Wifi:Enable",
                 "Wifi:GetIPAddress");
     }
 
@@ -420,24 +416,6 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
                               final EventCallback callback) {
         final Context applicationContext = GeckoAppShell.getApplicationContext();
         switch (event) {
-            case "Wifi:Enable":
-                final WifiManager mgr = (WifiManager)
-                        applicationContext.getSystemService(Context.WIFI_SERVICE);
-                if (mgr == null) {
-                    return;
-                }
-
-                if (!mgr.isWifiEnabled()) {
-                    mgr.setWifiEnabled(true);
-                    break;
-                }
-
-                // If Wifi is enabled, maybe you need to select a network
-                Intent intent = new Intent(android.provider.Settings.ACTION_WIFI_SETTINGS);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                applicationContext.startActivity(intent);
-                break;
-
             case "Wifi:GetIPAddress":
                 getWifiIPAddress(callback);
                 break;
@@ -465,50 +443,5 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
             return;
         }
         callback.sendSuccess(Formatter.formatIpAddress(ip));
-    }
-
-    private static int getNetworkOperator(final InfoType type, final Context context) {
-        if (null == context) {
-            return -1;
-        }
-
-        TelephonyManager tel = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        if (tel == null) {
-            Log.e(LOGTAG, "Telephony service does not exist");
-            return -1;
-        }
-
-        String networkOperator = tel.getNetworkOperator();
-        if (networkOperator == null || networkOperator.length() <= 3) {
-            return -1;
-        }
-
-        if (type == InfoType.MNC) {
-            return Integer.parseInt(networkOperator.substring(3));
-        }
-
-        if (type == InfoType.MCC) {
-            return Integer.parseInt(networkOperator.substring(0, 3));
-        }
-
-        return -1;
-    }
-
-    /**
-     * These are called from JavaScript ctypes. Avoid letting ProGuard delete them.
-     *
-     * Note that these methods must only be called after GeckoAppShell has been
-     * initialized: they depend on access to the context.
-     *
-     * Not part of the state machine flow.
-     */
-    @JNITarget
-    public static int getMCC() {
-        return getNetworkOperator(InfoType.MCC, GeckoAppShell.getApplicationContext());
-    }
-
-    @JNITarget
-    public static int getMNC() {
-        return getNetworkOperator(InfoType.MNC, GeckoAppShell.getApplicationContext());
     }
 }
