@@ -19,6 +19,7 @@
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/SHA1.h"
+#include "mozilla/net/DNS.h"
 
 class nsNotifyAddrListener : public nsINetworkLinkService,
                              public nsIRunnable,
@@ -66,6 +67,7 @@ class nsNotifyAddrListener : public nsINetworkLinkService,
   mozilla::Mutex mMutex;
   nsCString mNetworkId;
   nsTArray<nsCString> mDnsSuffixList;
+  nsTArray<mozilla::net::NetAddr> mDNSResolvers;
 
   HANDLE mCheckEvent;
 
