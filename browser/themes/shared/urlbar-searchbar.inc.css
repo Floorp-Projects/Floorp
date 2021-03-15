@@ -45,7 +45,7 @@
   color: FieldText;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@supports not -moz-bool-pref("browser.proton.toolbar.enabled") {
 #urlbar-container,
 #search-container {
   padding-block: 3px;
