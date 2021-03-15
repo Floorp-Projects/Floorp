@@ -10,6 +10,7 @@ apt-get install -y --force-yes --no-install-recommends \
     python \
     sudo \
     python3 \
+    python3-distutils-extra \
     python3-yaml \
     python-psutil \
     python3-psutil
