@@ -840,15 +840,6 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
       Preferences::GetBool(JS_OPTIONS_DOT_STR "jit.full_debug_checks");
 #endif
 
-  int32_t baselineInterpThreshold =
-      Preferences::GetInt(JS_OPTIONS_DOT_STR "blinterp.threshold", -1);
-  int32_t baselineThreshold =
-      Preferences::GetInt(JS_OPTIONS_DOT_STR "baselinejit.threshold", -1);
-  int32_t normalIonThreshold =
-      Preferences::GetInt(JS_OPTIONS_DOT_STR "ion.threshold", -1);
-  int32_t ionFrequentBailoutThreshold = Preferences::GetInt(
-      JS_OPTIONS_DOT_STR "ion.frequent_bailout_threshold", -1);
-
   bool spectreIndexMasking =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "spectre.index_masking");
   bool spectreObjectMitigations =
@@ -899,14 +890,17 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
 
   JS_SetGlobalJitCompilerOption(
       cx, JSJITCOMPILER_BASELINE_INTERPRETER_WARMUP_TRIGGER,
-      baselineInterpThreshold);
-  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_BASELINE_WARMUP_TRIGGER,
-                                baselineThreshold);
-  JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_ION_NORMAL_WARMUP_TRIGGER,
-                                normalIonThreshold);
-  JS_SetGlobalJitCompilerOption(cx,
-                                JSJITCOMPILER_ION_FREQUENT_BAILOUT_THRESHOLD,
-                                ionFrequentBailoutThreshold);
+      StaticPrefs::javascript_options_blinterp_threshold_DoNotUseDirectly());
+  JS_SetGlobalJitCompilerOption(
+      cx, JSJITCOMPILER_BASELINE_WARMUP_TRIGGER,
+      StaticPrefs::javascript_options_baselinejit_threshold_DoNotUseDirectly());
+  JS_SetGlobalJitCompilerOption(
+      cx, JSJITCOMPILER_ION_NORMAL_WARMUP_TRIGGER,
+      StaticPrefs::javascript_options_ion_threshold_DoNotUseDirectly());
+  JS_SetGlobalJitCompilerOption(
+      cx, JSJITCOMPILER_ION_FREQUENT_BAILOUT_THRESHOLD,
+      StaticPrefs::
+          javascript_options_ion_frequent_bailout_threshold_DoNotUseDirectly());
 
 #ifdef DEBUG
   JS_SetGlobalJitCompilerOption(cx, JSJITCOMPILER_FULL_DEBUG_CHECKS,
