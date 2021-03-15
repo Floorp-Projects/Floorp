@@ -229,8 +229,6 @@ const char nsXPLookAndFeel::sColorPrefs[][41] = {
     "ui.-moz-mac-tooltip",
     "ui.-moz-accent-color",
     "ui.-moz-accent-color-foreground",
-    "ui.-moz-win-accentcolor",
-    "ui.-moz-win-accentcolortext",
     "ui.-moz-win-mediatext",
     "ui.-moz-win-communicationstext",
     "ui.-moz-nativehyperlinktext",
@@ -660,8 +658,6 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID) {
     COLOR(MozMacActiveSourceListSelection, 0x0a, 0x64, 0xdc)
     COLOR(MozMacTooltip, 0xf7, 0xf7, 0xf7)
     // Seems to be the default color (hardcoded because of bug 1065998)
-    COLOR(MozWinAccentcolor, 0x9E, 0x9E, 0x9E)
-    COLOR(MozWinAccentcolortext, 0x00, 0x00, 0x00)
     COLOR(MozWinMediatext, 0xFF, 0xFF, 0xFF)
     COLOR(MozWinCommunicationstext, 0xFF, 0xFF, 0xFF)
     COLOR(MozNativehyperlinktext, 0x00, 0x66, 0xCC)
