@@ -1,4 +1,4 @@
-FROM          ubuntu:18.04
+FROM          ubuntu:bionic-20200112
 MAINTAINER    Andrew Halberstadt <ahal@mozilla.com>
 
 # Add worker user
