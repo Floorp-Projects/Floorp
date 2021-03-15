@@ -33,7 +33,7 @@ job-defaults:
     treeherder:
         symbol: SUT
         kind: test
-        tier: 3
+        tier: 1
 
 jobs:
     linux32:
@@ -49,8 +49,9 @@ jobs:
         worker-type: b-linux
         worker:
             docker-image: {in-tree: ubuntu1804-test}
+        shipping-product: firefox
         attributes:
-            build_platform: linux32
+            build_platform: linux-shippable
         treeherder:
             platform: linux-shippable/opt
 
@@ -67,8 +68,9 @@ jobs:
         worker-type: b-linux
         worker:
             docker-image: {in-tree: ubuntu1804-test}
+        shipping-product: firefox
         attributes:
-            build_platform: linux64
+            build_platform: linux64-shippable
         treeherder:
             platform: linux64-shippable/opt
 
@@ -83,8 +85,9 @@ jobs:
             upstream_artifact: target.dmg
             binary: Contents/MacOS/firefox
         worker-type: t-osx-1014
+        shipping-product: firefox
         attributes:
-            build_platform: macosx64
+            build_platform: macosx64-shippable
         treeherder:
             platform: macosx64-shippable/opt
 
@@ -99,8 +102,9 @@ jobs:
             upstream_artifact: target.installer.exe
             binary: core/firefox.exe
         worker-type: t-win10-64-source
+        shipping-product: firefox
         attributes:
-            build_platform: win32
+            build_platform: win32-shippable
         treeherder:
             platform: windows2012-32-shippable/opt
 
@@ -115,7 +119,8 @@ jobs:
             upstream_artifact: target.installer.exe
             binary: core/firefox.exe
         worker-type: t-win10-64-source
+        shipping-product: firefox
         attributes:
-            build_platform: win64
+            build_platform: win64-shippable
         treeherder:
             platform: windows2012-64-shippable/opt
