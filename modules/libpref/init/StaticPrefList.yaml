@@ -5558,6 +5558,43 @@
   mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 
+#if !defined(JS_CODEGEN_MIPS32) && !defined(JS_CODEGEN_MIPS64)
+  # Spectre security vulnerability mitigations for the JS JITs.
+  #
+  # NOTE: The MIPS backends do not support these mitigations (and generally
+  #       do not need them). In that case, leave the pref unlisted with its
+  #       default value of false.
+-   name: javascript.options.spectre.index_masking
+    type: bool
+    value: true
+    mirror: always  # LoadStartupJSPrefs
+    do_not_use_directly: true
+
+-   name: javascript.options.spectre.object_mitigations
+    type: bool
+    value: true
+    mirror: always  # LoadStartupJSPrefs
+    do_not_use_directly: true
+
+-   name: javascript.options.spectre.string_mitigations
+    type: bool
+    value: true
+    mirror: always  # LoadStartupJSPrefs
+    do_not_use_directly: true
+
+-   name: javascript.options.spectre.value_masking
+    type: bool
+    value: true
+    mirror: always  # LoadStartupJSPrefs
+    do_not_use_directly: true
+
+-   name: javascript.options.spectre.jit_to_cxx_calls
+    type: bool
+    value: true
+    mirror: always  # LoadStartupJSPrefs
+    do_not_use_directly: true
+#endif  // !defined(JS_CODEGEN_MIPSXX)
+
 #---------------------------------------------------------------------------
 # Prefs starting with "layers."
 #---------------------------------------------------------------------------
