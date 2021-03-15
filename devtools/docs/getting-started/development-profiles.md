@@ -8,11 +8,26 @@ Many of these changes are achieved by modifying preferences in `about:config`, a
 
 (If you're curious, here's more information about [about:config](https://support.mozilla.org/en-US/kb/about-config-editor-firefox))
 
+## Default profile
+
+The following command line expression will run Firefox using a default profile. It'll create the default profile if there isn't one already.
+
+
+```
+./mach run
+```
+
+## Using temporary profile
+
+The following command line expression will run Firefox using a temporary profile which is discarded when you close the browser. It also means that any preferences we set will not persist.
+
+```
+./mach run --temp-profile
+```
+
 ## Create a permanent profile
 
-We were using a temporary profile in the previous step, [building DevTools](./build.md). The contents of this profile are deleted each time the browser is closed, which means any preferences we set will not persist.
-
-The solution is to create a permanent profile:
+Create a permanent profile can be done as follows:
 
 ```
 ./mach run -P development

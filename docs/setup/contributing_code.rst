@@ -40,8 +40,6 @@ involved a little easier:
    few lines, but they're a great way to learn about setting up your
    development environment, navigating Bugzilla, and making
    contributions to the Mozilla codebase.
--  Visit `firefox-dev.tools <http://firefox-dev.tools>`_ - we list
-   Firefox Developer Tools bugs for new contributors.
 -  `Student Projects <https://bugzil.la/kw:student-project>`_ - are
    larger projects, such as might be suitable for a university student
    for credit. Of course, if you are not a student, feel free to fix one
@@ -181,7 +179,7 @@ to the project. We'll be integrating some information from these pages
 soon, but until then you may find them interesting in their current
 form:
 
--  `A guide to learning the Firefox 
+-  `A guide to learning the Firefox
    codebase <http://www.joshmatthews.net/blog/2010/03/getting-involve-with-mozilla/>`_
 -  `A beginner's guide to SpiderMonkey, Mozilla's Javascript
    engine <https://wiki.mozilla.org/JavaScript:New_to_SpiderMonkey>`_
