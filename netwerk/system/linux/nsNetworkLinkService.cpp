@@ -9,6 +9,7 @@
 #include "nsNetworkLinkService.h"
 #include "nsString.h"
 #include "mozilla/Logging.h"
+#include "nsNetAddr.h"
 
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Services.h"
@@ -63,8 +64,30 @@ nsNetworkLinkService::GetDnsSuffixList(nsTArray<nsCString>& aDnsSuffixList) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  mNetlinkSvc->GetDnsSuffixList(aDnsSuffixList);
+  return mNetlinkSvc->GetDnsSuffixList(aDnsSuffixList);
+}
+
+NS_IMETHODIMP
+nsNetworkLinkService::GetResolvers(nsTArray<RefPtr<nsINetAddr>>& aResolvers) {
+  nsTArray<mozilla::net::NetAddr> addresses;
+  nsresult rv = GetNativeResolvers(addresses);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  for (const auto& addr : addresses) {
+    aResolvers.AppendElement(MakeRefPtr<nsNetAddr>(&addr));
+  }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNetworkLinkService::GetNativeResolvers(
+    nsTArray<mozilla::net::NetAddr>& aResolvers) {
+  if (!mNetlinkSvc) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  return mNetlinkSvc->GetResolvers(aResolvers);
 }
 
 NS_IMETHODIMP

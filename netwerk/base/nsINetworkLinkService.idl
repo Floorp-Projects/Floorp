@@ -6,6 +6,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsISupports.idl"
+interface nsINetAddr;
+
+%{ C++
+#include "nsTArrayForwardDeclare.h"
+namespace mozilla {
+namespace net {
+union NetAddr;
+}
+}
+%}
+native NetAddr(mozilla::net::NetAddr);
 
 /**
  * Network link status monitoring service.
@@ -54,6 +65,17 @@ interface nsINetworkLinkService : nsISupports
    * The list of DNS suffixes for the currently active network interfaces.
    */
   readonly attribute Array<ACString> dnsSuffixList;
+
+  /**
+   * The IPs of the DNS resolvers currently used by the platform.
+   */
+  [noscript] readonly attribute Array<NetAddr> nativeResolvers;
+
+  /**
+   * Same as previous - returns the IPs of DNS resolvers but this time as
+   * XPCOM objects usable by extensions.
+   */
+  readonly attribute Array<nsINetAddr> resolvers;
 
   const unsigned long NONE_DETECTED = 0;
   const unsigned long VPN_DETECTED = 1 << 0;

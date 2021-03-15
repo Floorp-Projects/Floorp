@@ -1686,27 +1686,85 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
   return retval;
 }
 
-void NetlinkService::ComputeDNSSuffixList() {
+void NetlinkService::ExtractDNSProperties() {
   MOZ_ASSERT(!NS_IsMainThread(), "Must not be called on the main thread");
   nsTArray<nsCString> suffixList;
+  nsTArray<NetAddr> resolvers;
 #if defined(HAVE_RES_NINIT)
-  struct __res_state res {};
-  if (res_ninit(&res) == 0) {
+  [&]() {
+    struct __res_state res{};
+    int ret = res_ninit(&res);
+    if (ret != 0) {
+      LOG(("Call to res_ninit failed: %d", ret));
+      return;
+    }
+
+    // Get DNS suffixes
     for (int i = 0; i < MAXDNSRCH; i++) {
       if (!res.dnsrch[i]) {
         break;
       }
       suffixList.AppendElement(nsCString(res.dnsrch[i]));
     }
+
+    // Get DNS resolvers
+    // Chromium's dns_config_service_posix.cc is the origin of this code
+    // Initially, glibc stores IPv6 in |_ext.nsaddrs| and IPv4 in |nsaddr_list|.
+    // In res_send.c:res_nsend, it merges |nsaddr_list| into |nsaddrs|,
+    // but we have to combine the two arrays ourselves.
+    for (int i = 0; i < res.nscount; ++i) {
+      const struct sockaddr* addr = nullptr;
+      size_t addr_len = 0;
+      if (res.nsaddr_list[i].sin_family) {  // The indicator used by res_nsend.
+        addr = reinterpret_cast<const struct sockaddr*>(&res.nsaddr_list[i]);
+        addr_len = sizeof res.nsaddr_list[i];
+      } else if (res._u._ext.nsaddrs[i]) {
+        addr = reinterpret_cast<const struct sockaddr*>(res._u._ext.nsaddrs[i]);
+        addr_len = sizeof *res._u._ext.nsaddrs[i];
+      } else {
+        LOG(("Bad ext struct"));
+        return;
+      }
+      const socklen_t kSockaddrInSize = sizeof(struct sockaddr_in);
+      const socklen_t kSockaddrIn6Size = sizeof(struct sockaddr_in6);
+
+      if ((addr->sa_family == AF_INET && addr_len < kSockaddrInSize) ||
+          (addr->sa_family == AF_INET6 && addr_len < kSockaddrIn6Size)) {
+        LOG(("Bad address size"));
+        return;
+      }
+
+      NetAddr ip;
+      if (addr->sa_family == AF_INET) {
+        const struct sockaddr_in* sin = (const struct sockaddr_in*)addr;
+        ip.inet.family = AF_INET;
+        ip.inet.ip = sin->sin_addr.s_addr;
+        ip.inet.port = sin->sin_port;
+      } else if (addr->sa_family == AF_INET6) {
+        const struct sockaddr_in6* sin6 = (const struct sockaddr_in6*)addr;
+        ip.inet6.family = AF_INET6;
+        memcpy(&ip.inet6.ip.u8, &sin6->sin6_addr, sizeof(ip.inet6.ip.u8));
+        ip.inet6.port = sin6->sin6_port;
+      } else {
+        MOZ_ASSERT_UNREACHABLE("Unexpected sa_family");
+        return;
+      }
+
+      resolvers.AppendElement(ip);
+    }
+
     res_nclose(&res);
-  }
+  }();
+
 #endif
   RefPtr<NetlinkServiceListener> listener;
   {
     MutexAutoLock lock(mMutex);
     listener = mListener;
     mDNSSuffixList = std::move(suffixList);
+    mDNSResolvers = std::move(resolvers);
   }
+
   if (listener) {
     listener->OnDnsSuffixListUpdated();
   }
@@ -1755,7 +1813,7 @@ void NetlinkService::CalculateNetworkID() {
   SHA1Sum sha1;
 
   UpdateLinkStatus();
-  ComputeDNSSuffixList();
+  ExtractDNSProperties();
 
   bool idChanged = false;
   bool found4 = CalculateIDForFamily(AF_INET, &sha1);
@@ -1835,6 +1893,16 @@ nsresult NetlinkService::GetDnsSuffixList(nsTArray<nsCString>& aDnsSuffixList) {
 #if defined(HAVE_RES_NINIT)
   MutexAutoLock lock(mMutex);
   aDnsSuffixList = mDNSSuffixList.Clone();
+  return NS_OK;
+#else
+  return NS_ERROR_NOT_IMPLEMENTED;
+#endif
+}
+
+nsresult NetlinkService::GetResolvers(nsTArray<NetAddr>& aResolvers) {
+#if defined(HAVE_RES_NINIT)
+  MutexAutoLock lock(mMutex);
+  aResolvers = mDNSResolvers.Clone();
   return NS_OK;
 #else
   return NS_ERROR_NOT_IMPLEMENTED;
