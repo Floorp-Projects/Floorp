@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1692052
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1692052</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+  SimpleTest.expectAssertions(0, 6); // 6 times runs
+  SimpleTest.waitForExplicitFinish();
+
+  window.onload = function() {
+    window.open("file_bug1692052.html?c=0");
+    ok(true, "Test window is opened");
+  }
+
+  function finishTests() {
+    ok(true, "Test window doesn't crash");
+    SimpleTest.finish();
+  }
+
+  </script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1692052">Mozilla Bug 1692052</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>
