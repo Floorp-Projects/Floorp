@@ -1093,11 +1093,9 @@ nsresult HTMLInputElement::Clone(dom::NodeInfo* aNodeInfo,
         nsAutoString value;
         GetNonFileValueInternal(value);
         // SetValueInternal handles setting the VALUE_CHANGED bit for us
-        if (NS_WARN_IF(NS_FAILED(
-                rv = it->SetValueInternal(
-                    value,
-                    {ValueSetterOption::
-                         UpdateOverlayTextVisibilityAndInvalidateFrame})))) {
+        if (NS_WARN_IF(
+                NS_FAILED(rv = it->SetValueInternal(
+                              value, {ValueSetterOption::SetValueChanged})))) {
           return rv;
         }
       }
@@ -1616,8 +1614,7 @@ void HTMLInputElement::SetValue(const nsAString& aValue, CallerType aCallerType,
       // get the unsanitized value?
       nsresult rv = SetValueInternal(
           aValue, SanitizesOnValueGetter() ? nullptr : &currentValue,
-          {ValueSetterOption::ByContentAPI,
-           ValueSetterOption::UpdateOverlayTextVisibilityAndInvalidateFrame,
+          {ValueSetterOption::ByContentAPI, ValueSetterOption::SetValueChanged,
            ValueSetterOption::MoveCursorToEndIfValueChanged});
       if (NS_FAILED(rv)) {
         aRv.Throw(rv);
@@ -1630,8 +1627,7 @@ void HTMLInputElement::SetValue(const nsAString& aValue, CallerType aCallerType,
     } else {
       nsresult rv = SetValueInternal(
           aValue,
-          {ValueSetterOption::ByContentAPI,
-           ValueSetterOption::UpdateOverlayTextVisibilityAndInvalidateFrame,
+          {ValueSetterOption::ByContentAPI, ValueSetterOption::SetValueChanged,
            ValueSetterOption::MoveCursorToEndIfValueChanged});
       if (NS_FAILED(rv)) {
         aRv.Throw(rv);
@@ -2246,9 +2242,9 @@ void HTMLInputElement::SetUserInput(const nsAString& aValue,
       GetValueMode() == VALUE_MODE_VALUE && IsSingleLineTextControl(false);
 
   nsresult rv = SetValueInternal(
-      aValue, {ValueSetterOption::BySetUserInputAPI,
-               ValueSetterOption::UpdateOverlayTextVisibilityAndInvalidateFrame,
-               ValueSetterOption::MoveCursorToEndIfValueChanged});
+      aValue,
+      {ValueSetterOption::BySetUserInputAPI, ValueSetterOption::SetValueChanged,
+       ValueSetterOption::MoveCursorToEndIfValueChanged});
   NS_ENSURE_SUCCESS_VOID(rv);
 
   if (!isInputEventDispatchedByTextControlState) {
@@ -2335,22 +2331,6 @@ nsresult HTMLInputElement::CreateEditor() {
   return NS_ERROR_FAILURE;
 }
 
-void HTMLInputElement::UpdateOverlayTextVisibility(bool aNotify) {
-  TextControlState* state = GetEditorState();
-  if (state) {
-    state->UpdateOverlayTextVisibility(aNotify);
-  }
-}
-
-bool HTMLInputElement::GetPlaceholderVisibility() {
-  TextControlState* state = GetEditorState();
-  if (!state) {
-    return false;
-  }
-
-  return state->GetPlaceholderVisibility();
-}
-
 void HTMLInputElement::SetPreviewValue(const nsAString& aValue) {
   TextControlState* state = GetEditorState();
   if (state) {
@@ -2377,15 +2357,6 @@ void HTMLInputElement::EnablePreview() {
 }
 
 bool HTMLInputElement::IsPreviewEnabled() { return mIsPreviewEnabled; }
-
-bool HTMLInputElement::GetPreviewVisibility() {
-  TextControlState* state = GetEditorState();
-  if (!state) {
-    return false;
-  }
-
-  return state->GetPreviewVisibility();
-}
 
 void HTMLInputElement::GetDisplayFileName(nsAString& aValue) const {
   MOZ_ASSERT(mFileData);
@@ -2667,8 +2638,8 @@ nsresult HTMLInputElement::SetValueInternal(
       }
       // else DoneCreatingElement calls us again once mDoneCreating is true
 
-      const bool setValueChanged = aOptions.contains(
-          ValueSetterOption::UpdateOverlayTextVisibilityAndInvalidateFrame);
+      const bool setValueChanged =
+          aOptions.contains(ValueSetterOption::SetValueChanged);
       if (setValueChanged) {
         SetValueChanged(true);
       }
@@ -3381,10 +3352,8 @@ void HTMLInputElement::CancelRangeThumbDrag(bool aIsForUserEvent) {
     mInputType->ConvertNumberToString(mRangeThumbDragStartValue, val);
     // TODO: What should we do if SetValueInternal fails?  (The allocation
     // is small, so we should be fine here.)
-    SetValueInternal(
-        val,
-        {ValueSetterOption::BySetUserInputAPI,
-         ValueSetterOption::UpdateOverlayTextVisibilityAndInvalidateFrame});
+    SetValueInternal(val, {ValueSetterOption::BySetUserInputAPI,
+                           ValueSetterOption::SetValueChanged});
     nsRangeFrame* frame = do_QueryFrame(GetPrimaryFrame());
     if (frame) {
       frame->UpdateForValueChange();
@@ -3404,9 +3373,8 @@ void HTMLInputElement::SetValueOfRangeForUserEvent(Decimal aValue) {
   mInputType->ConvertNumberToString(aValue, val);
   // TODO: What should we do if SetValueInternal fails?  (The allocation
   // is small, so we should be fine here.)
-  SetValueInternal(
-      val, {ValueSetterOption::BySetUserInputAPI,
-            ValueSetterOption::UpdateOverlayTextVisibilityAndInvalidateFrame});
+  SetValueInternal(val, {ValueSetterOption::BySetUserInputAPI,
+                         ValueSetterOption::SetValueChanged});
   nsRangeFrame* frame = do_QueryFrame(GetPrimaryFrame());
   if (frame) {
     frame->UpdateForValueChange();
@@ -3496,10 +3464,8 @@ void HTMLInputElement::StepNumberControlForUserEvent(int32_t aDirection) {
   mInputType->ConvertNumberToString(newValue, newVal);
   // TODO: What should we do if SetValueInternal fails?  (The allocation
   // is small, so we should be fine here.)
-  SetValueInternal(
-      newVal,
-      {ValueSetterOption::BySetUserInputAPI,
-       ValueSetterOption::UpdateOverlayTextVisibilityAndInvalidateFrame});
+  SetValueInternal(newVal, {ValueSetterOption::BySetUserInputAPI,
+                            ValueSetterOption::SetValueChanged});
 }
 
 static bool SelectTextFieldOnFocus() {
@@ -5452,10 +5418,8 @@ void HTMLInputElement::GetValueFromSetRangeText(nsAString& aValue) {
 }
 
 nsresult HTMLInputElement::SetValueFromSetRangeText(const nsAString& aValue) {
-  return SetValueInternal(
-      aValue,
-      {ValueSetterOption::ByContentAPI,
-       ValueSetterOption::UpdateOverlayTextVisibilityAndInvalidateFrame});
+  return SetValueInternal(aValue, {ValueSetterOption::ByContentAPI,
+                                   ValueSetterOption::SetValueChanged});
 }
 
 Nullable<uint32_t> HTMLInputElement::GetSelectionStart(ErrorResult& aRv) {
@@ -6040,9 +6004,8 @@ bool HTMLInputElement::RestoreState(PresState* aState) {
         // TODO: What should we do if SetValueInternal fails?  (The allocation
         // may potentially be big, but most likely we've failed to allocate
         // before the type change.)
-        SetValueInternal(
-            inputState.get_TextContentData().value(),
-            ValueSetterOption::UpdateOverlayTextVisibilityAndInvalidateFrame);
+        SetValueInternal(inputState.get_TextContentData().value(),
+                         ValueSetterOption::SetValueChanged);
         if (inputState.get_TextContentData().lastValueChangeWasInteractive()) {
           mLastValueChangeWasInteractive = true;
           UpdateState(true);

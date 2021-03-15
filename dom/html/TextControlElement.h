@@ -174,22 +174,6 @@ class TextControlElement : public nsGenericHTMLFormElementWithState {
    */
   virtual void InitializeKeyboardEventListeners() = 0;
 
-  /**
-   * Update the visibility of both the placholder and preview text based on the
-   * element's state.
-   */
-  virtual void UpdateOverlayTextVisibility(bool aNotify) = 0;
-
-  /**
-   * Returns the current expected placeholder visibility state.
-   */
-  virtual bool GetPlaceholderVisibility() = 0;
-
-  /**
-   * Returns the current expected preview visibility state.
-   */
-  virtual bool GetPreviewVisibility() = 0;
-
   enum class ValueChangeKind {
     Internal,
     Script,

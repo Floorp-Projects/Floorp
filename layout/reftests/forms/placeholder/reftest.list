@@ -34,4 +34,3 @@ needs-focus == placeholder-10.html placeholder-visible-ref.html
 needs-focus == placeholder-21.html placeholder-blank-ref.html
 needs-focus == placeholder-22.html placeholder-blank-ref.html
 == placeholder-rtl.html placeholder-rtl-ref.html
-pref(dom.placeholder.show_on_focus,false) needs-focus == placeholder-focus-pref.html placeholder-blank-ref.html

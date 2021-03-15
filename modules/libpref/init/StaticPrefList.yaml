@@ -2447,12 +2447,6 @@
   value: false
   mirror: always
 
-# Whether we should show the placeholder when the element is focused but empty.
-- name: dom.placeholder.show_on_focus
-  type: bool
-  value: true
-  mirror: always
-
 # Is support for Element.requestPointerLock enabled?
 # This is added for accessibility purpose. When user has no way to exit
 # pointer lock (e.g. no keyboard available), they can use this pref to
