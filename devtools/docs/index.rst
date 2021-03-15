@@ -12,7 +12,6 @@ Getting Started
 
    Getting Started <getting-started/README.md>
    Get a Bugzilla account <getting-started/bugzilla.md>
-   Get and build the code <getting-started/build.md>
    Create a development profile <getting-started/development-profiles.md>
 
 
@@ -108,11 +107,3 @@ Preferences
    :maxdepth: 1
 
    Preferences <preferences.md>
-
-
-About this documentation
-========================
-.. toctree::
-   :maxdepth: 1
-
-   About this documentation <about-documentation.md>
