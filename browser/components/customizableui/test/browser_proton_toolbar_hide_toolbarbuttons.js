@@ -15,7 +15,7 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/HomePage.jsm"
 );
 
-const kPrefProtonToolbarEnabled = "browser.proton.enabled";
+const kPrefProtonToolbarEnabled = "browser.proton.toolbar.enabled";
 const kPrefProtonToolbarVersion = "browser.proton.toolbar.version";
 const kPrefHomeButtonUsed = "browser.engagement.home-button.has-used";
 const kPrefLibraryButtonUsed = "browser.engagement.library-button.has-used";
