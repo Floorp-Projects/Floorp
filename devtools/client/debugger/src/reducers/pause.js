@@ -28,9 +28,6 @@ export function initialPauseState(thread = "UnknownThread") {
     threadcx: {
       navigateCounter: 0,
       thread,
-      // This isPaused attribute is redundant with per-thread state,
-      // where we check for "frames" being defined to know when one particular thread is paused or running.
-      isPaused: false,
       pauseCounter: 0,
     },
     previewLocation: null,
@@ -44,6 +41,7 @@ export function initialPauseState(thread = "UnknownThread") {
 }
 
 const resumedPauseState = {
+  isPaused: false,
   frames: null,
   framesLoading: false,
   frameScopes: {
@@ -102,7 +100,6 @@ function update(state = initialPauseState(), action) {
         threadcx: {
           ...state.threadcx,
           thread: action.thread,
-          isPaused: !!threadState().frames,
           pauseCounter: state.threadcx.pauseCounter + 1,
         },
       };
@@ -118,12 +115,12 @@ function update(state = initialPauseState(), action) {
           ...state.threadcx,
           pauseCounter: state.threadcx.pauseCounter + 1,
           thread,
-          isPaused: true,
         },
       };
       return updateThreadState({
         isWaitingOnBreak: false,
         selectedFrameId: frame ? frame.id : undefined,
+        isPaused: true,
         frames: frame ? [frame] : undefined,
         framesLoading: true,
         frameScopes: { ...resumedPauseState.frameScopes },
@@ -244,7 +241,6 @@ function update(state = initialPauseState(), action) {
           threadcx: {
             ...state.threadcx,
             pauseCounter: state.threadcx.pauseCounter + 1,
-            isPaused: false,
           },
         };
       }
@@ -271,7 +267,6 @@ function update(state = initialPauseState(), action) {
           navigateCounter,
           thread: action.mainThread.actor,
           pauseCounter: 0,
-          isPaused: false,
         },
         threads: {
           [action.mainThread.actor]: {
@@ -387,7 +382,7 @@ export function getIsPaused(state, thread) {
 }
 
 export function getIsCurrentThreadPaused(state) {
-  return getThreadContext(state).isPaused;
+  return getThreadPauseState(state.pause, getCurrentThread(state)).isPaused;
 }
 
 export function isEvaluatingExpression(state, thread) {
