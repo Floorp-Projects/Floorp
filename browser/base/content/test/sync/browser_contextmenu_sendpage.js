@@ -42,7 +42,13 @@ add_task(async function test_page_contextmenu() {
     false,
     "Send tab to device is enabled"
   );
-  checkPopup([{ label: "Bar" }, { label: "Foo" }]);
+  checkPopup([
+    { label: "Bar" },
+    { label: "Foo" },
+    "----",
+    { label: "Send to All Devices" },
+    { label: "Manage Devices..." },
+  ]);
   await hideContentContextMenu();
 
   sandbox.restore();
