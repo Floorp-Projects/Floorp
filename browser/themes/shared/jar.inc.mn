@@ -101,7 +101,6 @@
   skin/classic/browser/tracking-protection-disabled.svg        (../shared/identity-block/tracking-protection-disabled.svg)
   skin/classic/browser/tracking-protection-animation.svg        (../shared/identity-block/tracking-protection-animation.svg)
   skin/classic/browser/tracking-protection-animation-brighttext.svg (../shared/identity-block/tracking-protection-animation-brighttext.svg)
-  skin/classic/browser/panel-icon-cancel.svg                   (../shared/panel-icon-cancel.svg)
   skin/classic/browser/toolbar-drag-indicator.svg              (../shared/toolbar-drag-indicator.svg)
 
   skin/classic/browser/protections/resolved-breach.svg         (../shared/protections/resolved-breach.svg)
