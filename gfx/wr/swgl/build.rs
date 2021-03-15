@@ -135,9 +135,15 @@ fn main() {
     println!("cargo:rerun-if-changed=src/texture.h");
     println!("cargo:rerun-if-changed=src/vector_type.h");
     println!("cargo:rerun-if-changed=src/gl.cc");
-    cc::Build::new()
-        .cpp(true)
-        .file("src/gl.cc")
+    let mut build = cc::Build::new();
+    build.cpp(true);
+
+    // SWGL relies heavily on inlining for performance so override -Oz with -O2
+    if build.get_compiler().args().contains(&std::ffi::OsString::from("-Oz")) {
+        build.flag("-O2");
+    }
+
+    build.file("src/gl.cc")
         .flag("-std=c++17")
         .flag("-UMOZILLA_CONFIG_H")
         .flag("-fno-exceptions")
