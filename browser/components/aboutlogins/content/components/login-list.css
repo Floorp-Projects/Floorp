@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 :host {
-  --in-content-box-background-hover: var(--in-content-page-background);
   border-inline-end: 1px solid var(--in-content-box-border-color);
   background-color: var(--in-content-box-background);
   display: flex;
@@ -119,11 +118,11 @@ ol {
 }
 
 .login-list-item:hover {
-  background-color: var(--in-content-box-background-hover);
+  background-color: var(--in-content-page-background);
 }
 
 .login-list-item:hover:active {
-  background-color: var(--in-content-box-background-active);
+  background-color: var(--in-content-button-background-active);
 }
 
 .login-list-item.keyboard-selected {
@@ -133,7 +132,7 @@ ol {
 
 .login-list-item.selected {
   border-inline-start-color: var(--in-content-border-highlight);
-  background-color: var(--in-content-box-background-hover);
+  background-color: var(--in-content-page-background);
 }
 
 .login-list-item.selected .title {
