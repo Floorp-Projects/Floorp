@@ -1004,7 +1004,6 @@ var SessionStoreInternal = {
       this._sHistoryChanges = false;
       this._permanentKey = browser.permanentKey;
       if (browser.currentURI && browser.ownerGlobal) {
-        this._lastKnownUri = browser.currentURI.displaySpec;
         this._lastKnownBody = browser.ownerGlobal.document.body;
       }
     }
@@ -1038,7 +1037,6 @@ var SessionStoreInternal = {
         }
         this._fromIdx = index;
         if (browser.currentURI && browser.ownerGlobal) {
-          this._lastKnownUri = browser.currentURI.displaySpec;
           this._lastKnownBody = browser.ownerGlobal.document.body;
         }
       },
@@ -1048,10 +1046,10 @@ var SessionStoreInternal = {
 
         if (bc?.sessionHistory) {
           bc.sessionHistory.removeSHistoryListener(this);
-          SessionStoreInternal._browserSHistoryListener.delete(
-            this._permanentKey
-          );
         }
+        SessionStoreInternal._browserSHistoryListener.delete(
+          this._permanentKey
+        );
       },
 
       OnHistoryNewEntry(newURI, oldIndex) {
@@ -1267,12 +1265,9 @@ var SessionStoreInternal = {
           // No shistory changes needed.
           listener._sHistoryChanges = false;
         } else if (aBrowsingContext.sessionHistory) {
-          let uri = aBrowser.currentURI
-            ? aBrowser.currentURI.displaySpec
-            : listener._lastKnownUri;
-          let body = aBrowser.ownerGlobal
-            ? aBrowser.ownerGlobal.document.body
-            : listener._lastKnownBody;
+          let uri = aBrowsingContext.currentURI?.displaySpec;
+          let body =
+            aBrowser.ownerGlobal?.document.body ?? listener._lastKnownBody;
           // If aData.sHistoryNeeded we need to collect all session
           // history entries, because with SHIP this indicates that we
           // either saw 'DOMTitleChanged' in
