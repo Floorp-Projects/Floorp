@@ -839,7 +839,7 @@ description#identity-popup-content-verifier,
   margin: 0;
   width: 16px;
   height: 16px;
-  list-style-image: url(chrome://browser/skin/panel-icon-cancel.svg);
+  list-style-image: url(chrome://global/skin/icons/close.svg);
   -moz-context-properties: fill;
   fill: currentColor;
 }
