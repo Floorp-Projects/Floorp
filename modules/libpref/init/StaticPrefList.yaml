@@ -5440,7 +5440,7 @@
 
 - name: javascript.options.wasm_optimizingjit
   type: bool
-#if defined(MOZ_AARCH64) && !defined(NIGHTLY_BUILD)
+#if defined(MOZ_AARCH64) && !defined(ENABLE_WASM_CRANELIFT)
   value: false
 #else
   value: true
@@ -5455,15 +5455,6 @@
   #else
   value: false
   #endif
-  mirror: always
-#endif
-
-#if defined(MOZ_AARCH64)
-# Cranelift->Ion transition.  Temporary switch.  When we land Phase 2
-# of the transition, this switch will disappear altogether.
-- name: javascript.options.wasm_force_ion
-  type: bool
-  value: false
   mirror: always
 #endif
 

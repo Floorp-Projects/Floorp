@@ -426,13 +426,8 @@ static void GenerateCallablePrologue(MacroAssembler& masm, uint32_t* entry) {
   }
 #elif defined(JS_CODEGEN_ARM64)
   {
-    // We do not use the PseudoStackPointer.  However, we may be called in a
-    // context -- compilation using Ion -- in which the PseudoStackPointer is
-    // in use.  Rather than risk confusion in the uses of `masm` here, let's
-    // just switch in the real SP, do what we need to do, and restore the
-    // existing setting afterwards.
-    const vixl::Register stashedSPreg = masm.GetStackPointer64();
-    masm.SetStackPointer64(vixl::sp);
+    // We do not use the PseudoStackPointer.
+    MOZ_ASSERT(masm.GetStackPointer64().code() == sp.code());
 
     AutoForbidPoolsAndNops afp(&masm,
                                /* number of instructions in scope = */ 4);
@@ -447,9 +442,6 @@ static void GenerateCallablePrologue(MacroAssembler& masm, uint32_t* entry) {
     MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - *entry);
     masm.Mov(ARMRegister(FramePointer, 64), sp);
     MOZ_ASSERT_IF(!masm.oom(), SetFP == masm.currentOffset() - *entry);
-
-    // And restore the SP-reg setting, per comment above.
-    masm.SetStackPointer64(stashedSPreg);
   }
 #else
   {
@@ -499,11 +491,10 @@ static void GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed,
 
 #elif defined(JS_CODEGEN_ARM64)
 
-  // See comment at equivalent place in |GenerateCallablePrologue| above.
-  const vixl::Register stashedSPreg = masm.GetStackPointer64();
-  masm.SetStackPointer64(vixl::sp);
+  // We do not use the PseudoStackPointer.
+  MOZ_ASSERT(masm.GetStackPointer64().code() == sp.code());
 
-  AutoForbidPoolsAndNops afp(&masm, /* number of instructions in scope = */ 5);
+  AutoForbidPoolsAndNops afp(&masm, /* number of instructions in scope = */ 4);
 
   masm.Ldr(ARMRegister(FramePointer, 64),
            MemOperand(sp, Frame::callerFPOffset()));
@@ -513,17 +504,7 @@ static void GenerateCallableEpilogue(MacroAssembler& masm, unsigned framePushed,
   *ret = masm.currentOffset();
 
   masm.Add(sp, sp, sizeof(Frame));
-
-  // Reinitialise PSP from SP. This is less than elegant because the prologue
-  // operates on the raw stack pointer SP and does not keep the PSP in sync.
-  // We can't use initPseudoStackPtr here because we just set up masm to not
-  // use it.  Hence we have to do it "by hand".
-  masm.Mov(PseudoStackPointer64, vixl::sp);
-
   masm.Ret(ARMRegister(lr, 64));
-
-  // See comment at equivalent place in |GenerateCallablePrologue| above.
-  masm.SetStackPointer64(stashedSPreg);
 
 #else
   // Forbid pools for the same reason as described in GenerateCallablePrologue.
@@ -634,14 +615,6 @@ void wasm::GenerateFunctionPrologue(MacroAssembler& masm,
   masm.nopAlign(CodeAlignment);
   GenerateCallablePrologue(masm, &offsets->uncheckedCallEntry);
   masm.bind(&functionBody);
-#ifdef JS_CODEGEN_ARM64
-  // GenerateCallablePrologue creates a prologue which operates on the raw
-  // stack pointer and does not keep the PSP in sync.  So we have to resync it
-  // here.  But we can't use initPseudoStackPtr here because masm may not be
-  // set up to use it, depending on which compiler is in use.  Hence do it
-  // "manually".
-  masm.Mov(PseudoStackPointer64, vixl::sp);
-#endif
 
   // See comment block in WasmCompile.cpp for an explanation tiering.
   if (tier1FuncIndex) {

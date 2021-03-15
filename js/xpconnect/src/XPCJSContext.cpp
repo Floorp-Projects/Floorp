@@ -937,10 +937,6 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_trustedprincipals");
   bool useWasmOptimizing =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_optimizingjit");
-#ifdef JS_CODEGEN_ARM64
-  // Cranelift->Ion transition.  When we land for phase 2, this goes away.
-  bool forceWasmIon = Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_force_ion");
-#endif
   bool useWasmBaseline =
       Preferences::GetBool(JS_OPTIONS_DOT_STR "wasm_baselinejit");
   bool useWasmReftypes =
@@ -1039,9 +1035,7 @@ static void ReloadPrefsCallback(const char* pref, void* aXpccx) {
       .setWasm(useWasm)
       .setWasmForTrustedPrinciples(useWasmTrustedPrincipals)
 #ifdef ENABLE_WASM_CRANELIFT
-      // Cranelift->Ion transition
-      .setWasmCranelift(useWasmOptimizing && !forceWasmIon)
-      .setWasmIon(useWasmOptimizing && forceWasmIon)
+      .setWasmCranelift(useWasmOptimizing)
 #else
       .setWasmIon(useWasmOptimizing)
 #endif

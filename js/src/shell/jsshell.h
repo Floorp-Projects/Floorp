@@ -112,10 +112,6 @@ extern bool enableWasm;
 extern bool enableSharedMemory;
 extern bool enableWasmBaseline;
 extern bool enableWasmOptimizing;
-#ifdef JS_CODEGEN_ARM64
-// Cranelift->Ion transition
-extern bool forceWasmIon;
-#endif
 extern bool enableWasmReftypes;
 #ifdef ENABLE_WASM_FUNCTION_REFERENCES
 extern bool enableWasmFunctionReferences;
