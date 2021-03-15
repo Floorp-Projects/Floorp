@@ -27,7 +27,7 @@ const kExtensionControllerPref =
 const kHomePageIgnoreListId = "homepage-urls";
 const kWidgetId = "home-button";
 const kWidgetRemovedPref = "browser.engagement.home-button.has-removed";
-const kProtonToolbarEnabledPref = "browser.proton.toolbar.enabled";
+const kProtonToolbarEnabledPref = "browser.proton.enabled";
 
 function getHomepagePref(useDefault) {
   let homePage;

@@ -68,7 +68,7 @@
 
 } /*** END proton ***/
 
-@supports not -moz-bool-pref("browser.proton.toolbar.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 :root:not([uidensity=compact], [chromehidden~="toolbar"]) #PanelUI-button {
   margin-inline-start: 3px;
   border-inline-start: 1px solid;
@@ -933,7 +933,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 }
 
 /* Hide the FxA toolbar button when its in the nav-bar, until in use */
-@supports -moz-bool-pref("browser.proton.toolbar.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
   :root[fxastatus="not_configured"] #nav-bar-customization-target > #fxa-toolbar-menu-button {
     display: none;
   }
