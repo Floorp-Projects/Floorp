@@ -58,7 +58,7 @@ with Files("Console.jsm"):
     BUG_COMPONENT = ("DevTools", "Console")
 
 with Files("DateTimePicker*.jsm"):
-    BUG_COMPONENT = ("Core", "Layout: Form Controls ")
+    BUG_COMPONENT = ("Core", "Layout: Form Controls")
 
 with Files("DeferredTask.jsm"):
     BUG_COMPONENT = ("Toolkit", "Async Tooling")
