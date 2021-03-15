@@ -161,17 +161,6 @@ void ReadAheadFile(pathstr_t aFilePath, const size_t aOffset = 0,
 void ReadAhead(filedesc_t aFd, const size_t aOffset = 0,
                const size_t aCount = SIZE_MAX);
 
-#if defined(XP_UNIX)
-#  define MOZ_TEMP_FAILURE_RETRY(exp)        \
-    (__extension__({                         \
-      typeof(exp) _rc;                       \
-      do {                                   \
-        _rc = (exp);                         \
-      } while (_rc == -1 && errno == EINTR); \
-      _rc;                                   \
-    }))
-#endif
-
 }  // namespace mozilla
 
 #endif
