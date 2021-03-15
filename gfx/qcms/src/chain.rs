@@ -40,15 +40,10 @@ pub struct ModularTransform {
     tx: f32,
     ty: f32,
     tz: f32,
-    input_clut_table_r: Option<Vec<f32>>,
-    input_clut_table_g: Option<Vec<f32>>,
-    input_clut_table_b: Option<Vec<f32>>,
-    input_clut_table_length: u16,
+    input_clut_table: [Option<Vec<f32>>; 3],
     clut: Option<Vec<f32>>,
     grid_size: u16,
-    output_clut_table_r: Option<Vec<f32>>,
-    output_clut_table_g: Option<Vec<f32>>,
-    output_clut_table_b: Option<Vec<f32>>,
+    output_clut_table: [Option<Vec<f32>>; 3],
     output_clut_table_length: u16,
     output_gamma_lut_r: Option<Vec<u16>>,
     output_gamma_lut_g: Option<Vec<u16>>,
@@ -237,9 +232,9 @@ fn transform_module_clut(transform: &ModularTransform, src: &[f32], dest: &mut [
     let b_table = &transform.clut.as_ref().unwrap()[2..];
     let CLU = |table: &[f32], x, y, z| table[((x * len + y * x_len + z * xy_len) * 3) as usize];
 
-    let input_clut_table_r = transform.input_clut_table_r.as_ref().unwrap();
-    let input_clut_table_g = transform.input_clut_table_g.as_ref().unwrap();
-    let input_clut_table_b = transform.input_clut_table_b.as_ref().unwrap();
+    let input_clut_table_r = transform.input_clut_table[0].as_ref().unwrap();
+    let input_clut_table_g = transform.input_clut_table[1].as_ref().unwrap();
+    let input_clut_table_b = transform.input_clut_table[2].as_ref().unwrap();
     for (dest, src) in dest.chunks_exact_mut(3).zip(src.chunks_exact(3)) {
         debug_assert!(transform.grid_size as i32 >= 1);
         let device_r: f32 = src[0];
@@ -282,11 +277,11 @@ fn transform_module_clut(transform: &ModularTransform, src: &[f32], dest: &mut [
         let b_y2: f32 = lerp(b_x3, b_x4, y_d);
         let clut_b: f32 = lerp(b_y1, b_y2, z_d);
         let pcs_r: f32 =
-            lut_interp_linear_float(clut_r, &transform.output_clut_table_r.as_ref().unwrap());
+            lut_interp_linear_float(clut_r, &transform.output_clut_table[0].as_ref().unwrap());
         let pcs_g: f32 =
-            lut_interp_linear_float(clut_g, &transform.output_clut_table_g.as_ref().unwrap());
+            lut_interp_linear_float(clut_g, &transform.output_clut_table[1].as_ref().unwrap());
         let pcs_b: f32 =
-            lut_interp_linear_float(clut_b, &transform.output_clut_table_b.as_ref().unwrap());
+            lut_interp_linear_float(clut_b, &transform.output_clut_table[2].as_ref().unwrap());
         dest[0] = clamp_float(pcs_r);
         dest[1] = clamp_float(pcs_g);
         dest[2] = clamp_float(pcs_b);
@@ -421,9 +416,9 @@ fn transform_module_gamma_table(transform: &ModularTransform, src: &[f32], dest:
     let mut out_r: f32;
     let mut out_g: f32;
     let mut out_b: f32;
-    let input_clut_table_r = transform.input_clut_table_r.as_ref().unwrap();
-    let input_clut_table_g = transform.input_clut_table_g.as_ref().unwrap();
-    let input_clut_table_b = transform.input_clut_table_b.as_ref().unwrap();
+    let input_clut_table_r = transform.input_clut_table[0].as_ref().unwrap();
+    let input_clut_table_g = transform.input_clut_table[1].as_ref().unwrap();
+    let input_clut_table_b = transform.input_clut_table[2].as_ref().unwrap();
 
     for (dest, src) in dest.chunks_exact_mut(3).zip(src.chunks_exact(3)) {
         let in_r: f32 = src[0];
@@ -563,9 +558,9 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Box<ModularTransform
 
         // Prepare A curve.
         transform = modular_transform_alloc();
-        transform.input_clut_table_r = build_input_gamma_table(lut.a_curves[0].as_deref());
-        transform.input_clut_table_g = build_input_gamma_table(lut.a_curves[1].as_deref());
-        transform.input_clut_table_b = build_input_gamma_table(lut.a_curves[2].as_deref());
+        transform.input_clut_table[0] = build_input_gamma_table(lut.a_curves[0].as_deref());
+        transform.input_clut_table[1] = build_input_gamma_table(lut.a_curves[1].as_deref());
+        transform.input_clut_table[2] = build_input_gamma_table(lut.a_curves[2].as_deref());
         transform.transform_module_fn = Some(transform_module_gamma_table);
         next_transform = append_transform(Some(transform), next_transform);
 
@@ -592,9 +587,9 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Box<ModularTransform
 
         // Prepare M curve
         transform = modular_transform_alloc();
-        transform.input_clut_table_r = build_input_gamma_table(lut.m_curves[0].as_deref());
-        transform.input_clut_table_g = build_input_gamma_table(lut.m_curves[1].as_deref());
-        transform.input_clut_table_b = build_input_gamma_table(lut.m_curves[2].as_deref());
+        transform.input_clut_table[0] = build_input_gamma_table(lut.m_curves[0].as_deref());
+        transform.input_clut_table[1] = build_input_gamma_table(lut.m_curves[1].as_deref());
+        transform.input_clut_table[2] = build_input_gamma_table(lut.m_curves[2].as_deref());
         transform.transform_module_fn = Some(transform_module_gamma_table);
         next_transform = append_transform(Some(transform), next_transform);
 
@@ -614,9 +609,9 @@ fn modular_transform_create_mAB(lut: &lutmABType) -> Option<Box<ModularTransform
     if lut.b_curves[0].is_some() {
         // Prepare B curve
         transform = modular_transform_alloc();
-        transform.input_clut_table_r = build_input_gamma_table(lut.b_curves[0].as_deref());
-        transform.input_clut_table_g = build_input_gamma_table(lut.b_curves[1].as_deref());
-        transform.input_clut_table_b = build_input_gamma_table(lut.b_curves[2].as_deref());
+        transform.input_clut_table[0] = build_input_gamma_table(lut.b_curves[0].as_deref());
+        transform.input_clut_table[1] = build_input_gamma_table(lut.b_curves[1].as_deref());
+        transform.input_clut_table[2] = build_input_gamma_table(lut.b_curves[2].as_deref());
         transform.transform_module_fn = Some(transform_module_gamma_table);
         append_transform(Some(transform), next_transform);
     } else {
@@ -636,11 +631,7 @@ fn modular_transform_create_lut(lut: &lutType) -> Option<Box<ModularTransform>> 
     let mut first_transform = None;
     let mut next_transform = &mut first_transform;
 
-    let _in_curve_len: usize;
     let clut_length: usize;
-    let _out_curve_len: usize;
-    let _in_curves: *mut f32;
-    let _out_curves: *mut f32;
     let mut transform = modular_transform_alloc();
 
     transform.matrix = build_lut_matrix(Some(lut));
@@ -649,19 +640,18 @@ fn modular_transform_create_lut(lut: &lutType) -> Option<Box<ModularTransform>> 
         next_transform = append_transform(Some(transform), next_transform);
         // Prepare input curves
         transform = modular_transform_alloc();
-        transform.input_clut_table_r =
+        transform.input_clut_table[0] =
             Some(lut.input_table[0..lut.num_input_table_entries as usize].to_vec());
-        transform.input_clut_table_g = Some(
+        transform.input_clut_table[1] = Some(
             lut.input_table
                 [lut.num_input_table_entries as usize..lut.num_input_table_entries as usize * 2]
                 .to_vec(),
         );
-        transform.input_clut_table_b = Some(
+        transform.input_clut_table[2] = Some(
             lut.input_table[lut.num_input_table_entries as usize * 2
                 ..lut.num_input_table_entries as usize * 3]
                 .to_vec(),
         );
-        transform.input_clut_table_length = lut.num_input_table_entries;
         // Prepare table
         clut_length = (lut.num_clut_grid_points as usize).pow(3) * 3;
         assert_eq!(clut_length, lut.clut_table.len());
@@ -669,14 +659,14 @@ fn modular_transform_create_lut(lut: &lutType) -> Option<Box<ModularTransform>> 
 
         transform.grid_size = lut.num_clut_grid_points as u16;
         // Prepare output curves
-        transform.output_clut_table_r =
+        transform.output_clut_table[0] =
             Some(lut.output_table[0..lut.num_output_table_entries as usize].to_vec());
-        transform.output_clut_table_g = Some(
+        transform.output_clut_table[1] = Some(
             lut.output_table
                 [lut.num_output_table_entries as usize..lut.num_output_table_entries as usize * 2]
                 .to_vec(),
         );
-        transform.output_clut_table_b = Some(
+        transform.output_clut_table[2] = Some(
             lut.output_table[lut.num_output_table_entries as usize * 2
                 ..lut.num_output_table_entries as usize * 3]
                 .to_vec(),
@@ -712,13 +702,13 @@ fn modular_transform_create_input(input: &Profile) -> Option<Box<ModularTransfor
         }
     } else {
         let mut transform = modular_transform_alloc();
-        transform.input_clut_table_r = build_input_gamma_table(input.redTRC.as_deref());
-        transform.input_clut_table_g = build_input_gamma_table(input.greenTRC.as_deref());
-        transform.input_clut_table_b = build_input_gamma_table(input.blueTRC.as_deref());
+        transform.input_clut_table[0] = build_input_gamma_table(input.redTRC.as_deref());
+        transform.input_clut_table[1] = build_input_gamma_table(input.greenTRC.as_deref());
+        transform.input_clut_table[2] = build_input_gamma_table(input.blueTRC.as_deref());
         transform.transform_module_fn = Some(transform_module_gamma_table);
-        if transform.input_clut_table_r.is_none()
-            || transform.input_clut_table_g.is_none()
-            || transform.input_clut_table_b.is_none()
+        if transform.input_clut_table[0].is_none()
+            || transform.input_clut_table[1].is_none()
+            || transform.input_clut_table[2].is_none()
         {
             append_transform(Some(transform), next_transform);
             return None;
