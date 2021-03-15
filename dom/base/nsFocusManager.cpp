@@ -2104,21 +2104,6 @@ Element* nsFocusManager::FlushAndCheckIfFocusable(Element* aElement,
     }
   }
 
-  // if this is a child frame content node, check if it is visible and
-  // call the content node's IsFocusable method instead of the frame's
-  // IsFocusable method. This skips checking the style system and ensures that
-  // offscreen browsers can still be focused.
-  Document* subdoc = doc->GetSubDocumentFor(aElement);
-  if (subdoc && IsWindowVisible(subdoc->GetWindow())) {
-    const nsStyleUI* ui = frame->StyleUI();
-    int32_t tabIndex = (ui->mUserFocus == StyleUserFocus::Ignore ||
-                        ui->mUserFocus == StyleUserFocus::None)
-                           ? -1
-                           : 0;
-    return aElement->IsFocusable(&tabIndex, aFlags & FLAG_BYMOUSE) ? aElement
-                                                                   : nullptr;
-  }
-
   return frame->IsFocusable(aFlags & FLAG_BYMOUSE) ? aElement : nullptr;
 }
 
