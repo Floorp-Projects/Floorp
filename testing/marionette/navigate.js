@@ -17,7 +17,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
   Log: "chrome://marionette/content/log.js",
   modal: "chrome://marionette/content/modal.js",
-  PageLoadStrategy: "chrome://marionette/content/session.js",
+  PageLoadStrategy: "chrome://marionette/content/capabilities.js",
   TimedPromise: "chrome://marionette/content/sync.js",
   truncate: "chrome://marionette/content/format.js",
 });
@@ -210,7 +210,7 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
   } = options;
 
   const chromeWindow = browsingContextFn().topChromeWindow;
-  const pageLoadStrategy = driver.currentSession.pageLoadStrategy;
+  const pageLoadStrategy = driver.capabilities.get("pageLoadStrategy");
 
   // Return immediately if no load event is expected
   if (!loadEventExpected || pageLoadStrategy === PageLoadStrategy.None) {
@@ -371,7 +371,7 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
       }
     },
     {
-      timeout: driver.currentSession.timeouts.pageLoad,
+      timeout: driver.timeouts.pageLoad,
     }
   ).finally(() => {
     // Clean-up all registered listeners and timers
