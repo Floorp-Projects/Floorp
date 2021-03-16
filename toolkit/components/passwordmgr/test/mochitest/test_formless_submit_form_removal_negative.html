@@ -27,7 +27,7 @@ function submissionProcessed(...args) {
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["signon.formlessCapture.enabled", true],
+      ["signon.formRemovalCapture.enabled", true],
     ],
   });
 

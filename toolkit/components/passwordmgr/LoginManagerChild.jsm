@@ -355,7 +355,10 @@ const observer = {
 
         // Infer form submission only when there has been an user interaction on the form
         // or the formless password field.
-        if (!alreadyModified || !alreadyModifiedFormLessField) {
+        if (
+          LoginHelper.formRemovalCaptureEnabled &&
+          (!alreadyModified || !alreadyModifiedFormLessField)
+        ) {
           ownerDocument.setNotifyFetchSuccess(true);
         }
 

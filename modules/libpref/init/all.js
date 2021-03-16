@@ -3664,6 +3664,7 @@ pref("signon.autofillForms.http",           false);
 pref("signon.autologin.proxy",              false);
 pref("signon.capture.inputChanges.enabled", true);
 pref("signon.formlessCapture.enabled",      true);
+pref("signon.formRemovalCapture.enabled",   true);
 pref("signon.generation.available",               true);
 pref("signon.backup.enabled",               true);
 pref("signon.generation.confidenceThreshold",     "0.75");

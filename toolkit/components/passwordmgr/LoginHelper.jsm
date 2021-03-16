@@ -362,6 +362,7 @@ this.LoginHelper = {
   enabled: null,
   storageEnabled: null,
   formlessCaptureEnabled: null,
+  formRemovalCaptureEnabled: null,
   generationAvailable: null,
   generationConfidenceThreshold: null,
   generationEnabled: null,
@@ -401,6 +402,9 @@ this.LoginHelper = {
     );
     this.formlessCaptureEnabled = Services.prefs.getBoolPref(
       "signon.formlessCapture.enabled"
+    );
+    this.formRemovalCaptureEnabled = Services.prefs.getBoolPref(
+      "signon.formRemovalCapture.enabled"
     );
     this.generationAvailable = Services.prefs.getBoolPref(
       "signon.generation.available"
