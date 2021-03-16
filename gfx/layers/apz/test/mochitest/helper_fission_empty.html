@@ -21,7 +21,7 @@ async function loaded() {
   window.dispatchEvent(new Event("FissionTestHelper:Init"));
   // Wait a couple of animation frames before sending the load, to ensure that
   // this OOPIF's layer tree has been sent to the compositor. We use this
-  // instead of things like flushApzRepaints and/or waitForAllPaints because
+  // instead of things like promiseApzRepaintsFlushed and/or promiseAllPaintsDone because
   // this page is running without SpecialPowers and I couldn't figure out a good
   // way to get a hold of a things like Services.obs or DOMWindowUtils easily.
   await promiseFrame();
