@@ -107,6 +107,7 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
   }
 
 #define CSS_PROP_LIST_EXCLUDE_INTERNAL
+#define CSS_PROP_LIST_EXCLUDE_NOT_IN_STYLE
 #define CSS_PROP_LONGHAND(name_, id_, method_, ...) CSS_PROP(id_, method_)
 #define CSS_PROP_SHORTHAND(name_, id_, method_, ...) CSS_PROP(id_, method_)
 #define CSS_PROP_ALIAS(name_, aliasid_, id_, method_, ...) \
@@ -116,6 +117,7 @@ class nsDOMCSSDeclaration : public nsICSSDeclaration {
 #undef CSS_PROP_SHORTHAND
 #undef CSS_PROP_LONGHAND
 #undef CSS_PROP_LIST_EXCLUDE_INTERNAL
+#undef CSS_PROP_LIST_EXCLUDE_NOT_IN_STYLE
 #undef CSS_PROP
 #undef CSS_PROP_PUBLIC_OR_PRIVATE
 
