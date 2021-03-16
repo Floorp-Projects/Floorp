@@ -8942,7 +8942,7 @@
 # global mode is TRR-only (no fallback).
 - name: network.trr.wait-for-confirmation
   type: RelaxedAtomicBool
-  value: false
+  value: true
   mirror: always
 
 # Use GET (rather than POST)
