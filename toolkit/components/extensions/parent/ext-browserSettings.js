@@ -8,16 +8,6 @@
 
 ChromeUtils.defineModuleGetter(
   this,
-  "AppConstants",
-  "resource://gre/modules/AppConstants.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "AboutNewTab",
   "resource:///modules/AboutNewTab.jsm"
 );

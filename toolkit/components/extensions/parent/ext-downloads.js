@@ -6,11 +6,6 @@
 
 ChromeUtils.defineModuleGetter(
   this,
-  "AppConstants",
-  "resource://gre/modules/AppConstants.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "Downloads",
   "resource://gre/modules/Downloads.jsm"
 );

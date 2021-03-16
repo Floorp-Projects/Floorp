@@ -19,11 +19,6 @@ ChromeUtils.defineModuleGetter(
   "ExtensionTelemetry",
   "resource://gre/modules/ExtensionTelemetry.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
 
 // Wrap a storage operation in a TelemetryStopWatch.
 async function measureOp(telemetryMetric, extension, fn) {
