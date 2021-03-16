@@ -42,4 +42,6 @@
     <string name="mozac_feature_downloads_third_party_app_chooser_dialog_title">ਇਸ ਨਾਲ ਕਾਰਵਾਈ ਪੂਰੀ ਕਰੋ</string>
     <!-- Message that appears when trying to download with an external app fails. %1$s will be replaced with the name the external app. -->--&gt;
     <string name="mozac_feature_downloads_unable_to_open_third_party_app">%1$s ਨੂੰ ਖੋਲ੍ਹਣ ਵਿੱਚ ਅਸਮਰੱਥ</string>
+    <!-- Text for the info dialog when write to storage permissions have been denied but user tries to download a file. -->
+    <string name="mozac_feature_downloads_write_external_storage_permissions_needed_message">ਫਾਇਲਾਂ ਡਾਊਨਲੋਡ ਕਰਨ ਲਈ ਫਾਇਲਾਂ ਤੇ ਮੀਡੀਆ ਇਜਾਜ਼ਤ ਪਹੁੰਚ ਦੀ ਲੋੜ ਹੈ। Android ਸੈਟਿੰਗਾਂ ਉੱਤੇ ਜਾਓ, ਇਜਾਜ਼ਤਾਂ ਨੂੰ ਛੂਹੋ ਅਤੇ ਮਨਜ਼ੂਰੀ ਨੂੰ ਛੂਹੋ।</string>
 </resources>
