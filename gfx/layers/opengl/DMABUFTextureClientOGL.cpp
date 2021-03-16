@@ -51,8 +51,7 @@ TextureData* DMABUFTextureData::CreateSimilar(
 }
 
 bool DMABUFTextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
-  mSurface->Serialize(aOutDescriptor);
-  return true;
+  return mSurface->Serialize(aOutDescriptor);
 }
 
 void DMABUFTextureData::FillInfo(TextureData::Info& aInfo) const {
