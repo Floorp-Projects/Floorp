@@ -606,6 +606,11 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
     onViewShowing(aEvent) {
       let panelview = aEvent.target;
       let doc = panelview.ownerDocument;
+
+      let syncNowBtn = panelview.querySelector(".syncnow-label");
+      let l10nId = syncNowBtn.getAttribute("sync-now-data-l10n-id");
+      syncNowBtn.setAttribute("data-l10n-id", l10nId);
+
       let SyncedTabsPanelList = doc.defaultView.SyncedTabsPanelList;
       panelview.syncedTabsPanelList = new SyncedTabsPanelList(
         panelview,
