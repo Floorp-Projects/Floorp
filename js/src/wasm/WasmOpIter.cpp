@@ -515,6 +515,7 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::F64x2Neg:
         case SimdOp::F64x2Sqrt:
         case SimdOp::V128Not:
+        case SimdOp::I8x16Popcnt:
         case SimdOp::I8x16Abs:
         case SimdOp::I16x8Abs:
         case SimdOp::I32x4Abs:

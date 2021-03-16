@@ -452,6 +452,22 @@ assertSame(get(mem32, 8, 8), [
 ]);
 
 
+// i8x16.popcnt
+
+var ins = wasmEvalText(`
+  (module
+    (memory (export "mem") 1 1)
+    (func (export "i8x16_popcnt")
+      (v128.store (i32.const 0) (i8x16.popcnt (v128.load (i32.const 16)) )))
+  )`);
+
+var mem8 = new Int8Array(ins.exports.mem.buffer);
+
+set(mem8, 16, [0, 1, 2, 4, 8, 0x10, 0x20, 0x40, 0x80, 3, -1, 0xF0, 0x11, 0xFE, 0x0F, 0xE]);
+ins.exports.i8x16_popcnt();
+assertSame(get(mem8, 0, 16), [0,1,1,1,1,1,1,1,1,2,8,4,2,7,4,3]);
+
+
 /// Double-precision conversion instructions.
 /// f64x2.convert_low_i32x4_{u,s} / i32x4.trunc_sat_f64x2_{u,s}_zero
 /// f32x4.demote_f64x2_zero / f64x2.promote_low_f32x4
