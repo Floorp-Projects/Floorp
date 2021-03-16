@@ -715,7 +715,8 @@ static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
 
     case ColorID::Field:
     case ColorID::Fieldtext:
-      return !PreferenceSheet::PrefsFor(aDoc).mUseAccessibilityTheme;
+      return !PreferenceSheet::PrefsFor(aDoc)
+                  .NonNativeThemeShouldUseSystemColors();
 
     default:
       break;
