@@ -1,0 +1,20 @@
+<!-- Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Test pause on exceptions in remote frame</title>
+  </head>
+  <body>
+    <h2>Test pause on exceptions in remote frame (Child frame)</h2>
+    <script type="text/javascript">
+      try {
+        adf();
+      } catch (err) {
+        console.error(err);
+      }
+      adf();
+    </script>
+  </body>
+</html>

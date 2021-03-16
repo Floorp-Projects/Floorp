@@ -4,7 +4,7 @@
 
 import * as firefox from "./client/firefox";
 
-import { asyncStore, verifyPrefSchema } from "./utils/prefs";
+import { asyncStore, verifyPrefSchema, prefs } from "./utils/prefs";
 import { setupHelper } from "./utils/dbg";
 
 import {
@@ -36,6 +36,14 @@ function syncXHRBreakpoints() {
       }
     });
   });
+}
+
+function setPauseOnExceptions() {
+  const { pauseOnExceptions, pauseOnCaughtException } = prefs;
+  firefox.clientCommands.pauseOnExceptions(
+    pauseOnExceptions,
+    pauseOnCaughtException
+  );
 }
 
 async function loadInitialState() {
@@ -87,6 +95,8 @@ export async function bootstrap({
 
   await syncBreakpoints();
   syncXHRBreakpoints();
+  await setPauseOnExceptions();
+
   setupHelper({
     store,
     actions,

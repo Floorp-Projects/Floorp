@@ -1,4 +1,3 @@
-/* eslint-disable mozilla/reject-some-requires */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -12,7 +11,6 @@ const {
   WatchedDataHelpers,
 } = require("devtools/server/actors/watcher/WatchedDataHelpers.jsm");
 const { STATES: THREAD_STATES } = require("devtools/server/actors/thread");
-
 const {
   RESOURCES,
   BREAKPOINTS,
