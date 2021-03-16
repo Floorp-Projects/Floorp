@@ -9,11 +9,6 @@ xul|tabs {
   position: static;
 }
 
-xul|tab[visuallyselected] {
-  color: inherit !important;
-  text-shadow: none;
-}
-
 xul|button[dlgtype="help"] {
   appearance: none;
   width: auto;
@@ -47,7 +42,7 @@ xul|*.text-link:-moz-focusring {
 
 xul|checkbox:-moz-focusring > .checkbox-check,
 xul|radio[focused="true"] > .radio-check,
-xul|tab:-moz-focusring > .tab-middle > .tab-text {
+xul|tab:-moz-focusring > .tab-middle {
   outline: 2px solid var(--in-content-focus-outline-color);
   /* offset outline to align with 1px border-width set for buttons/menulists above. */
   outline-offset: var(--in-content-focus-outline-offset);

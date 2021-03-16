@@ -716,8 +716,8 @@ button.tab-button:hover:active {
 }
 
 button.tab-button[selected] {
-  border-top-color: var(--in-content-border-highlight);
-  color: var(--in-content-category-text-selected) !important;
+  border-top-color: currentColor;
+  color: var(--in-content-accent-color) !important;
 }
 
 button.tab-button:-moz-focusring {
