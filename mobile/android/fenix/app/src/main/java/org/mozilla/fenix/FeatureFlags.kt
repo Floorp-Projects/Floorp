@@ -17,7 +17,7 @@ object FeatureFlags {
     /**
      * Enables the Nimbus experiments library.
      */
-    val nimbusExperiments = Config.channel.isNightlyOrDebug
+    val nimbusExperiments = Config.channel.isNightlyOrDebug || Config.channel.isBeta
 
     /**
      * Enables the Addresses autofill feature.
