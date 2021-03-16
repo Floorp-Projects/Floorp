@@ -34,6 +34,8 @@ fuzzy-if(!nativeThemePref,0-1,0-1) == number-significant-fractional-digits.html 
 
 # focus
 fuzzy-if(skiaContent,0-2,0-5) needs-focus == focus-handling.html focus-handling-ref.html
+== spinner-overflow.html spinner-overflow-ref.html
+== spinner-overflow-vertical.html spinner-overflow-vertical-ref.html
 
 # select
 fuzzy-if(skiaContent,0-1,0-1) == number-selected.html number-selected-ref.html

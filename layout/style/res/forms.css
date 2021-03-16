@@ -903,18 +903,12 @@ input[type=number]::-moz-number-spin-box {
   display: flex;
   flex-direction: column;
   width: max-content;
-  /* If the spin-box has auto height, it ends up enlarging the default height
-   * of the control, so we limit it to 1em here. The height doesn't affect
-   * the rendering of the spinner-buttons; it's only for layout purposes.
-   *
-   * This is a temporary hack until we implement better positioning for the
-   * spin-box in vertical mode; it works OK at default size but less well
-   * if the font-size is made substantially larger or smaller. (Bug 1175074.)
-   */
-  height: 1em;
-  max-height: 1em;
   align-self: center;
   justify-content: center;
+  /* Don't allow the spin buttons to create overflow */
+  max-height: 100%;
+  max-width: 100%;
+  overflow: clip;
 }
 
 %ifdef XP_WIN
@@ -973,7 +967,8 @@ input[type=search]::-moz-search-clear-button {
   cursor: default;
   width: 1em;
   height: 1em;
-  max-height: 1em;
+  max-height: 100%;
+  max-width: 100%;
   margin-inline-start: 1px;
   align-self: center;
   background-image: url(chrome://global/skin/icons/searchfield-cancel.svg);
