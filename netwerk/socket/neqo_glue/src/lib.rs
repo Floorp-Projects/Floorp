@@ -92,8 +92,7 @@ impl NeqoHttp3Conn {
             local,
             remote,
             ConnectionParameters::default()
-                .quic_version(quic_version)
-                .disable_preferred_address(),
+                .quic_version(quic_version),
             &http3_settings,
         ) {
             Ok(c) => c,
