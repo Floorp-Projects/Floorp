@@ -22,11 +22,6 @@
 
 ChromeUtils.defineModuleGetter(
   this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "TalosParentProfiler",
   "resource://talos-powers/TalosParentProfiler.jsm"
 );

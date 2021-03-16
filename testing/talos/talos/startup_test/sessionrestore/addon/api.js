@@ -6,13 +6,10 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
+/* globals Services, XPCOMUtils */
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   StartupPerformance: "resource:///modules/sessionstore/StartupPerformance.jsm",

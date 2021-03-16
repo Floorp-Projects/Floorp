@@ -1,14 +1,6 @@
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
-XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
-});
-
-/* globals ExtensionAPI */
+/* globals ExtensionAPI, Services, XPCOMUtils */
 
 const PREFIX = "tresize@mozilla.org";
 
