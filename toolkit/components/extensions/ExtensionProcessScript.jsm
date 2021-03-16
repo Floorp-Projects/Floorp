@@ -76,8 +76,6 @@ class ExtensionGlobal {
     this.frameData = null;
 
     MessageChannel.addListener(global, "Extension:DetectLanguage", this);
-    MessageChannel.addListener(global, "WebNavigation:GetFrame", this);
-    MessageChannel.addListener(global, "WebNavigation:GetAllFrames", this);
   }
 
   get messageFilterStrict() {

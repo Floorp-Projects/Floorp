@@ -1182,24 +1182,10 @@ var ExtensionContent = {
     }
   },
 
-  handleWebNavigationGetFrame(global, { frameId }) {
-    return WebNavigationFrames.getFrame(global.docShell, frameId);
-  },
-
-  handleWebNavigationGetAllFrames(global) {
-    return WebNavigationFrames.getAllFrames(global.docShell);
-  },
-
-  async receiveMessage(global, name, target, data, recipient) {
-    switch (name) {
-      case "Extension:DetectLanguage":
-        return this.handleDetectLanguage(global, target);
-      case "WebNavigation:GetFrame":
-        return this.handleWebNavigationGetFrame(global, data.options);
-      case "WebNavigation:GetAllFrames":
-        return this.handleWebNavigationGetAllFrames(global);
+  async receiveMessage(global, name, target) {
+    if (name === "Extension:DetectLanguage") {
+      return this.handleDetectLanguage(global, target);
     }
-    return null;
   },
 
   // Helpers
