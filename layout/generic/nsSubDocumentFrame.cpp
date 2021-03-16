@@ -1068,7 +1068,7 @@ static void EndSwapDocShellsForViews(nsView* aSibling) {
     }
     nsIFrame* frame = aSibling->GetFrame();
     if (frame) {
-      nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(frame);
+      nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrameInProcess(frame);
       if (parent->HasAnyStateBits(NS_FRAME_IN_POPUP)) {
         nsIFrame::AddInPopupStateBitToDescendants(frame);
       } else {
@@ -1079,7 +1079,7 @@ static void EndSwapDocShellsForViews(nsView* aSibling) {
                !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT |
                                         NS_FRAME_IS_NONDISPLAY)) {
           parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
-          parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
+          parent = nsLayoutUtils::GetCrossDocParentFrameInProcess(parent);
         }
       }
     }
