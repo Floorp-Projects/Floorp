@@ -1,0 +1,62 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+@supports -moz-bool-pref("browser.proton.enabled") {
+:host(:not([native])) {
+  appearance: none;
+  background-color: var(--buttons-secondary-bgcolor, ButtonFace);
+  color: var(--buttons-secondary-color, ButtonText);
+  border-radius: 4px;
+  padding: 4px 8px 4px 12px;
+  margin: 5px 2px 3px;
+}
+
+:host(:not([native])[size="medium"]) {
+  padding: 6px 10px 6px 16px;
+}
+
+:host(:not([native])[size="large"]) {
+  padding: 8px 12px 8px 16px;
+}
+
+:host(:not([native]):hover) {
+  background-color: var(--buttons-secondary-hover-bgcolor, color-mix(in srgb, currentColor 10%, ButtonFace));
+}
+
+:host(:not([native]):hover:active) {
+  background-color: var(--buttons-secondary-active-bgcolor, color-mix(in srgb, currentColor 20%, ButtonFace));
+}
+
+:host(:not([native]):-moz-focusring) {
+  outline: 2px solid var(--focus-outline-color, -moz-accent-color);
+  outline-offset: var(--focus-outline-offset, -1px);
+  box-shadow: 0 0 0 4px var(--buttons-box-shadow, rgba(10, 132, 255, 0.3));
+}
+
+#label-box:not([native]) {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  font-weight: 600;
+}
+
+dropmarker:not([native]) {
+  display: -moz-box;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+}
+
+dropmarker:not([native])::part(icon) {
+  list-style-image: url(chrome://global/skin/icons/arrow-dropdown-16.svg);
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+#highlightable-label:not([highlightable="true"]),
+#label[highlightable="true"] {
+  display: none;
+}
+} /** END Proton **/
