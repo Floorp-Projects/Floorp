@@ -16,6 +16,13 @@ panic = "abort"
 [profile.dev]
 panic = "abort"
 
+# optimizing glsl more makes a big difference in swgl build times
+[profile.dev.package.glsl]
+opt-level = 2
+
+[profile.release.package.glsl]
+opt-level = 2
+
 # Running wrench on android built with master cargo-apk results in a crash
 # due to a mismatched version of android_glue (a dependency of winit).
 # Override it to use a suitable version of android_glue.
