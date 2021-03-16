@@ -269,7 +269,8 @@ void BlockingResourceBase::Acquire() {
   MOZ_ASSERT(IsAcquired());
 
   if (!mFirstSeen) {
-    mFirstSeen = mAcquired;
+    mFirstSeen = mAcquired.map(
+        [](AcquisitionState::ValueType& state) { return state.Clone(); });
   }
 #  endif
 }
@@ -423,10 +424,9 @@ nsresult ReentrantMonitor::Wait(PRIntervalTime aInterval) {
 
   // save monitor state and reset it to empty
   int32_t savedEntryCount = mEntryCount;
-  AcquisitionState savedAcquisitionState = GetAcquisitionState();
+  AcquisitionState savedAcquisitionState = TakeAcquisitionState();
   BlockingResourceBase* savedChainPrev = mChainPrev;
   mEntryCount = 0;
-  ClearAcquisitionState();
   mChainPrev = 0;
 
   nsresult rv;
@@ -441,7 +441,7 @@ nsresult ReentrantMonitor::Wait(PRIntervalTime aInterval) {
 
   // restore saved state
   mEntryCount = savedEntryCount;
-  SetAcquisitionState(savedAcquisitionState);
+  SetAcquisitionState(std::move(savedAcquisitionState));
   mChainPrev = savedChainPrev;
 
   return rv;
@@ -513,10 +513,9 @@ CVStatus OffTheBooksCondVar::Wait(TimeDuration aDuration) {
   AssertCurrentThreadOwnsMutex();
 
   // save mutex state and reset to empty
-  AcquisitionState savedAcquisitionState = mLock->GetAcquisitionState();
+  AcquisitionState savedAcquisitionState = mLock->TakeAcquisitionState();
   BlockingResourceBase* savedChainPrev = mLock->mChainPrev;
   PRThread* savedOwningThread = mLock->mOwningThread;
-  mLock->ClearAcquisitionState();
   mLock->mChainPrev = 0;
   mLock->mOwningThread = nullptr;
 
@@ -530,7 +529,7 @@ CVStatus OffTheBooksCondVar::Wait(TimeDuration aDuration) {
   }
 
   // restore saved state
-  mLock->SetAcquisitionState(savedAcquisitionState);
+  mLock->SetAcquisitionState(std::move(savedAcquisitionState));
   mLock->mChainPrev = savedChainPrev;
   mLock->mOwningThread = savedOwningThread;
 
