@@ -13,6 +13,7 @@ marionette.jar:
   content/actors/MarionetteReftestChild.jsm (actors/MarionetteReftestChild.jsm)
   content/actors/MarionetteReftestParent.jsm (actors/MarionetteReftestParent.jsm)
   content/addon.js (addon.js)
+  content/appinfo.js (appinfo.js)
   content/assert.js (assert.js)
   content/atom.js (atom.js)
   content/browser.js (browser.js)
