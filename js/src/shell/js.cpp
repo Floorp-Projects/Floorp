@@ -12383,6 +12383,12 @@ int main(int argc, char** argv, char** envp) {
   }
 
   size_t nurseryBytes = op.getIntOption("nursery-size") * 1024L * 1024L;
+  if (nurseryBytes == 0) {
+    fprintf(stderr, "Error: --nursery-size parameter must be non-zero.\n");
+    fprintf(stderr,
+            "The nursery can be disabled by passing the --no-ggc option.\n");
+    return EXIT_FAILURE;
+  }
   JS_SetGCParameter(cx, JSGC_MAX_NURSERY_BYTES, nurseryBytes);
 
   auto destroyCx = MakeScopeExit([cx] { JS_DestroyContext(cx); });
