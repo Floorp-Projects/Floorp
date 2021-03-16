@@ -4,13 +4,14 @@
 
 "use strict";
 
+/* globals Services */
+
 const { E10SUtils } = ChromeUtils.import(
   "resource://gre/modules/E10SUtils.jsm"
 );
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 function linkColorFrameScript() {
   addMessageListener("HistoryDelegateTest:GetLinkColor", function onMessage(
