@@ -6,10 +6,6 @@
 
 /* global ExtensionAPI, Services, XPCOMUtils */
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  Services: "resource://gre/modules/Services.jsm",
-});
-
 this.systemManufacturer = class extends ExtensionAPI {
   getAPI(context) {
     return {
