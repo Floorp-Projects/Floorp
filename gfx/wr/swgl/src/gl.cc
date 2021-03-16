@@ -2094,9 +2094,11 @@ static void clear_buffer(Texture& t, T value, IntRect bb, int skip_start = 0,
   skip_end = max(skip_end, skip_start);
   assert(sizeof(T) == t.bpp());
   size_t stride = t.stride();
-  // When clearing multiple full-width rows, collapse them into a single
-  // large "row" to avoid redundant setup from clearing each row individually.
-  if (bb.width() == t.width && bb.height() > 1 && skip_start >= skip_end) {
+  // When clearing multiple full-width rows, collapse them into a single large
+  // "row" to avoid redundant setup from clearing each row individually. Note
+  // that we can only safely do this if the stride is tightly packed.
+  if (bb.width() == t.width && bb.height() > 1 && skip_start >= skip_end &&
+      (t.should_free() || stride == t.width * sizeof(T))) {
     bb.x1 += (stride / sizeof(T)) * (bb.height() - 1);
     bb.y1 = bb.y0 + 1;
   }
