@@ -75,3 +75,8 @@ export const normalizeToKebabCase = string => {
 
   return kebabString;
 };
+
+export const b64ToPEM = string => {
+  let wrapped = string.match(/.{1,64}/g).join("\r\n");
+  return `-----BEGIN CERTIFICATE-----\r\n${wrapped}\r\n-----END CERTIFICATE-----\r\n`;
+};
