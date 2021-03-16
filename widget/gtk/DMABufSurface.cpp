@@ -79,7 +79,9 @@ void DMABufSurface::GlobalRefRelease() {
     // EAGAIN means the refcount is already zero. It happens when we release
     // last reference to the surface.
     if (errno != EAGAIN) {
-      NS_WARNING("Failed to unref dmabuf global ref count!");
+      NS_WARNING(nsPrintfCString("Failed to unref dmabuf global ref count: %s",
+                                 strerror(errno))
+                     .get());
     }
   }
 }
@@ -88,7 +90,9 @@ void DMABufSurface::GlobalRefAdd() {
   MOZ_ASSERT(mGlobalRefCountFd);
   uint64_t counter = 1;
   if (write(mGlobalRefCountFd, &counter, sizeof(counter)) != sizeof(counter)) {
-    NS_WARNING("Failed to ref dmabuf global ref count!");
+    NS_WARNING(nsPrintfCString("Failed to ref dmabuf global ref count: %s",
+                               strerror(errno))
+                   .get());
   }
 }
 
@@ -96,7 +100,9 @@ void DMABufSurface::GlobalRefCountCreate() {
   MOZ_ASSERT(!mGlobalRefCountFd);
   mGlobalRefCountFd = eventfd(0, EFD_CLOEXEC | EFD_NONBLOCK | EFD_SEMAPHORE);
   if (mGlobalRefCountFd < 0) {
-    NS_WARNING("Failed to create dmabuf global ref count!");
+    NS_WARNING(nsPrintfCString("Failed to create dmabuf global ref count: %s",
+                               strerror(errno))
+                   .get());
     mGlobalRefCountFd = 0;
     return;
   }
@@ -117,18 +123,18 @@ void DMABufSurface::GlobalRefCountDelete() {
 }
 
 void DMABufSurface::ReleaseDMABuf() {
+  LOGDMABUF(("DMABufSurfaceYUV::ReleaseDMABuf() UID %d", mUID));
   for (int i = 0; i < mBufferPlaneCount; i++) {
     Unmap(i);
-
-    if (mDmabufFds[i] >= 0) {
-      close(mDmabufFds[i]);
-      mDmabufFds[i] = -1;
-    }
   }
 
-  if (mGbmBufferObject[0]) {
-    nsGbmLib::Destroy(mGbmBufferObject[0]);
-    mGbmBufferObject[0] = nullptr;
+  CloseFileDescriptors(/* aForceClose */ true);
+
+  for (int i = 0; i < mBufferPlaneCount; i++) {
+    if (mGbmBufferObject[i]) {
+      nsGbmLib::Destroy(mGbmBufferObject[i]);
+      mGbmBufferObject[i] = nullptr;
+    }
   }
 }
 
@@ -145,7 +151,8 @@ DMABufSurface::DMABufSurface(SurfaceType aSurfaceType)
       mSyncFd(-1),
       mSync(0),
       mGlobalRefCountFd(0),
-      mUID(gNewSurfaceUID++) {
+      mUID(gNewSurfaceUID++),
+      mSurfaceLock("DMABufSurface") {
   for (auto& slot : mDmabufFds) {
     slot = -1;
   }
@@ -254,6 +261,24 @@ bool DMABufSurface::FenceImportFromFd() {
   return true;
 }
 
+bool DMABufSurface::OpenFileDescriptors() {
+  for (int i = 0; i < mBufferPlaneCount; i++) {
+    if (!OpenFileDescriptorForPlane(i)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// We can safely close DMABuf file descriptors only when we have a valid
+// GbmBufferObject. When we don't have a valid GbmBufferObject and a DMABuf
+// file descriptor is closed, whole surface is released.
+void DMABufSurface::CloseFileDescriptors(bool aForceClose) {
+  for (int i = 0; i < DMABUF_BUFFER_PLANES; i++) {
+    CloseFileDescriptorForPlane(i, aForceClose);
+  }
+}
+
 DMABufSurfaceRGBA::DMABufSurfaceRGBA()
     : DMABufSurface(SURFACE_RGBA),
       mSurfaceFlags(0),
@@ -265,6 +290,39 @@ DMABufSurfaceRGBA::DMABufSurfaceRGBA()
       mGbmBufferFlags(0) {}
 
 DMABufSurfaceRGBA::~DMABufSurfaceRGBA() { ReleaseSurface(); }
+
+bool DMABufSurfaceRGBA::OpenFileDescriptorForPlane(int aPlane) {
+  if (mDmabufFds[aPlane] >= 0) {
+    return true;
+  }
+  if (mBufferPlaneCount == 1) {
+    MOZ_ASSERT(aPlane == 0, "DMABuf: wrong surface plane!");
+    mDmabufFds[0] = nsGbmLib::GetFd(mGbmBufferObject[0]);
+  } else {
+    uint32_t handle =
+        nsGbmLib::GetHandleForPlane(mGbmBufferObject[0], aPlane).u32;
+    int ret = nsGbmLib::DrmPrimeHandleToFD(GetDMABufDevice()->GetGbmDeviceFd(),
+                                           handle, 0, &mDmabufFds[aPlane]);
+    if (ret < 0) {
+      mDmabufFds[aPlane] = -1;
+    }
+  }
+
+  if (mDmabufFds[aPlane] < 0) {
+    CloseFileDescriptors();
+    return false;
+  }
+
+  return true;
+}
+
+void DMABufSurfaceRGBA::CloseFileDescriptorForPlane(int aPlane,
+                                                    bool aForceClose = false) {
+  if ((aForceClose || mGbmBufferObject[0]) && mDmabufFds[aPlane] >= 0) {
+    close(mDmabufFds[aPlane]);
+    mDmabufFds[aPlane] = -1;
+  }
+}
 
 bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
                                int aDMABufSurfaceFlags) {
@@ -312,37 +370,25 @@ bool DMABufSurfaceRGBA::Create(int aWidth, int aHeight,
   if (mBufferModifier != DRM_FORMAT_MOD_INVALID) {
     mBufferPlaneCount = nsGbmLib::GetPlaneCount(mGbmBufferObject[0]);
     if (mBufferPlaneCount > DMABUF_BUFFER_PLANES) {
-      NS_WARNING("There's too many dmabuf planes!");
+      LOGDMABUF(("    There's too many dmabuf planes!"));
       ReleaseSurface();
       return false;
     }
 
     for (int i = 0; i < mBufferPlaneCount; i++) {
-      uint32_t handle = nsGbmLib::GetHandleForPlane(mGbmBufferObject[0], i).u32;
-      int ret = nsGbmLib::DrmPrimeHandleToFD(
-          GetDMABufDevice()->GetGbmDeviceFd(), handle, 0, &mDmabufFds[i]);
-      if (ret < 0 || mDmabufFds[i] < 0) {
-        ReleaseSurface();
-        return false;
-      }
       mStrides[i] = nsGbmLib::GetStrideForPlane(mGbmBufferObject[0], i);
       mOffsets[i] = nsGbmLib::GetOffset(mGbmBufferObject[0], i);
     }
   } else {
     mBufferPlaneCount = 1;
     mStrides[0] = nsGbmLib::GetStride(mGbmBufferObject[0]);
-    mDmabufFds[0] = nsGbmLib::GetFd(mGbmBufferObject[0]);
-    if (mDmabufFds[0] < 0) {
-      ReleaseSurface();
-      return false;
-    }
   }
 
   LOGDMABUF(("    Success\n"));
   return true;
 }
 
-void DMABufSurfaceRGBA::ImportSurfaceDescriptor(
+bool DMABufSurfaceRGBA::ImportSurfaceDescriptor(
     const SurfaceDescriptor& aDesc) {
   const SurfaceDescriptorDMABuf& desc = aDesc.get_SurfaceDescriptorDMABuf();
 
@@ -359,26 +405,39 @@ void DMABufSurfaceRGBA::ImportSurfaceDescriptor(
   MOZ_RELEASE_ASSERT(mBufferPlaneCount <= DMABUF_BUFFER_PLANES);
   mUID = desc.uid();
 
+  LOGDMABUF(
+      ("DMABufSurfaceRGBA::ImportSurfaceDescriptor() UID %d size %d x %d\n",
+       mUID, mWidth, mHeight));
+
   for (int i = 0; i < mBufferPlaneCount; i++) {
     mDmabufFds[i] = desc.fds()[i].ClonePlatformHandle().release();
+    if (mDmabufFds[i] < 0) {
+      LOGDMABUF(
+          ("    failed to get DMABuf file descriptor: %s", strerror(errno)));
+      return false;
+    }
     mStrides[i] = desc.strides()[i];
     mOffsets[i] = desc.offsets()[i];
   }
 
   if (desc.fence().Length() > 0) {
     mSyncFd = desc.fence()[0].ClonePlatformHandle().release();
+    if (mSyncFd < 0) {
+      LOGDMABUF(
+          ("    failed to get GL fence file descriptor: %s", strerror(errno)));
+      return false;
+    }
   }
 
   if (desc.refCount().Length() > 0) {
     GlobalRefCountImport(desc.refCount()[0].ClonePlatformHandle().release());
   }
 
-  LOGDMABUF(("DMABufSurfaceRGBA::Import() UID %d\n", mUID));
+  return true;
 }
 
 bool DMABufSurfaceRGBA::Create(const SurfaceDescriptor& aDesc) {
-  ImportSurfaceDescriptor(aDesc);
-  return true;
+  return ImportSurfaceDescriptor(aDesc);
 }
 
 bool DMABufSurfaceRGBA::Serialize(
@@ -395,6 +454,11 @@ bool DMABufSurfaceRGBA::Serialize(
 
   LOGDMABUF(("DMABufSurfaceRGBA::Serialize() UID %d\n", mUID));
 
+  MutexAutoLock lockFD(mSurfaceLock);
+  if (!OpenFileDescriptors()) {
+    return false;
+  }
+
   width.AppendElement(mWidth);
   height.AppendElement(mHeight);
   format.AppendElement(mGmbFormat->mFormat);
@@ -403,6 +467,8 @@ bool DMABufSurfaceRGBA::Serialize(
     strides.AppendElement(mStrides[i]);
     offsets.AppendElement(mOffsets[i]);
   }
+
+  CloseFileDescriptors();
 
   if (mSync) {
     fenceFDs.AppendElement(ipc::FileDescriptor(mSyncFd));
@@ -450,6 +516,11 @@ bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
       attribs.AppendElement(mBufferModifier >> 32);                         \
     }                                                                       \
   }
+
+  MutexAutoLock lockFD(mSurfaceLock);
+  if (!OpenFileDescriptors()) {
+    return false;
+  }
   ADD_PLANE_ATTRIBS(0);
   if (mBufferPlaneCount > 1) ADD_PLANE_ATTRIBS(1);
   if (mBufferPlaneCount > 2) ADD_PLANE_ATTRIBS(2);
@@ -464,9 +535,11 @@ bool DMABufSurfaceRGBA::CreateTexture(GLContext* aGLContext, int aPlane) {
       egl->fCreateImage(LOCAL_EGL_NO_CONTEXT, LOCAL_EGL_LINUX_DMA_BUF_EXT,
                         nullptr, attribs.Elements());
   if (mEGLImage == LOCAL_EGL_NO_IMAGE) {
-    NS_WARNING("EGLImageKHR creation failed");
+    LOGDMABUF(("EGLImageKHR creation failed"));
     return false;
   }
+
+  CloseFileDescriptors();
 
   aGLContext->MakeCurrent();
   aGLContext->fGenTextures(1, &mTexture);
@@ -535,7 +608,8 @@ static void SyncDmaBuf(int aFd, uint64_t aFlags) {
     if (ret == -1 && errno == EINTR) {
       continue;
     } else if (ret == -1) {
-      LOGDMABUF(("Failed to synchronize DMA buffer: %s", strerror(errno)));
+      LOGDMABUF(
+          ("Failed to synchronize DMA buffer: %s FD %d", strerror(errno), aFd));
       break;
     } else {
       break;
@@ -570,7 +644,11 @@ void* DMABufSurface::MapInternal(uint32_t aX, uint32_t aY, uint32_t aWidth,
     *aStride = mMappedRegionStride[aPlane];
   }
 
-  SyncDmaBuf(mDmabufFds[aPlane], DMA_BUF_SYNC_START);
+  MutexAutoLock lockFD(mSurfaceLock);
+  if (OpenFileDescriptorForPlane(aPlane)) {
+    SyncDmaBuf(mDmabufFds[aPlane], DMA_BUF_SYNC_START);
+    CloseFileDescriptorForPlane(aPlane);
+  }
 
   return mMappedRegion[aPlane];
 }
@@ -597,8 +675,12 @@ void* DMABufSurfaceRGBA::Map(uint32_t* aStride) {
 
 void DMABufSurface::Unmap(int aPlane) {
   if (mMappedRegion[aPlane]) {
-    LOGDMABUF(("DMABufSurfaceRGBA::Unmap() UID %d plane %d\n", mUID, aPlane));
-    SyncDmaBuf(mDmabufFds[aPlane], DMA_BUF_SYNC_END);
+    LOGDMABUF(("DMABufSurface::Unmap() UID %d plane %d\n", mUID, aPlane));
+    MutexAutoLock lockFD(mSurfaceLock);
+    if (OpenFileDescriptorForPlane(aPlane)) {
+      SyncDmaBuf(mDmabufFds[aPlane], DMA_BUF_SYNC_END);
+      CloseFileDescriptorForPlane(aPlane);
+    }
     nsGbmLib::Unmap(mGbmBufferObject[aPlane], mMappedRegionData[aPlane]);
     mMappedRegion[aPlane] = nullptr;
     mMappedRegionData[aPlane] = nullptr;
@@ -682,6 +764,8 @@ already_AddRefed<DMABufSurfaceRGBA> DMABufSurfaceRGBA::CreateDMABufSurface(
 already_AddRefed<DMABufSurfaceYUV> DMABufSurfaceYUV::CreateYUVSurface(
     const VADRMPRIMESurfaceDescriptor& aDesc) {
   RefPtr<DMABufSurfaceYUV> surf = new DMABufSurfaceYUV();
+  LOGDMABUF(("DMABufSurfaceYUV::CreateYUVSurface() UID %d from desc\n",
+             surf->GetUID()));
   if (!surf->UpdateYUVData(aDesc)) {
     return nullptr;
   }
@@ -691,6 +775,8 @@ already_AddRefed<DMABufSurfaceYUV> DMABufSurfaceYUV::CreateYUVSurface(
 already_AddRefed<DMABufSurfaceYUV> DMABufSurfaceYUV::CreateYUVSurface(
     int aWidth, int aHeight, void** aPixelData, int* aLineSizes) {
   RefPtr<DMABufSurfaceYUV> surf = new DMABufSurfaceYUV();
+  LOGDMABUF(("DMABufSurfaceYUV::CreateYUVSurface() UID %d %d x %d\n",
+             surf->GetUID(), aWidth, aHeight));
   if (!surf->Create(aWidth, aHeight, aPixelData, aLineSizes)) {
     return nullptr;
   }
@@ -710,13 +796,35 @@ DMABufSurfaceYUV::DMABufSurfaceYUV()
 
 DMABufSurfaceYUV::~DMABufSurfaceYUV() { ReleaseSurface(); }
 
+bool DMABufSurfaceYUV::OpenFileDescriptorForPlane(int aPlane) {
+  if (mDmabufFds[aPlane] >= 0) {
+    return true;
+  }
+  mDmabufFds[aPlane] = nsGbmLib::GetFd(mGbmBufferObject[aPlane]);
+  if (mDmabufFds[aPlane] < 0) {
+    CloseFileDescriptors();
+    return false;
+  }
+  return true;
+}
+
+void DMABufSurfaceYUV::CloseFileDescriptorForPlane(int aPlane,
+                                                   bool aForceClose = false) {
+  if ((aForceClose || mGbmBufferObject[aPlane]) && mDmabufFds[aPlane] >= 0) {
+    close(mDmabufFds[aPlane]);
+    mDmabufFds[aPlane] = -1;
+  }
+}
+
 bool DMABufSurfaceYUV::UpdateYUVData(const VADRMPRIMESurfaceDescriptor& aDesc) {
   if (aDesc.num_layers > DMABUF_BUFFER_PLANES ||
       aDesc.num_objects > DMABUF_BUFFER_PLANES) {
     return false;
   }
+
+  LOGDMABUF(("DMABufSurfaceYUV::UpdateYUVData() UID %d", mUID));
   if (mDmabufFds[0] >= 0) {
-    NS_WARNING("DMABufSurfaceYUV is already created!");
+    LOGDMABUF(("    Already created!"));
     return false;
   }
   if (aDesc.fourcc == VA_FOURCC_NV12) {
@@ -724,11 +832,8 @@ bool DMABufSurfaceYUV::UpdateYUVData(const VADRMPRIMESurfaceDescriptor& aDesc) {
   } else if (aDesc.fourcc == VA_FOURCC_YV12) {
     mSurfaceType = SURFACE_YUV420;
   } else {
-    NS_WARNING(
-        nsPrintfCString(
-            "UpdateYUVData(): Can't import surface data of 0x%x format\n",
-            aDesc.fourcc)
-            .get());
+    LOGDMABUF(("UpdateYUVData(): Can't import surface data of 0x%x format",
+               aDesc.fourcc));
     return false;
   }
 
@@ -747,6 +852,9 @@ bool DMABufSurfaceYUV::UpdateYUVData(const VADRMPRIMESurfaceDescriptor& aDesc) {
     mStrides[i] = aDesc.layers[i].pitch[0];
     mWidth[i] = aDesc.width >> i;
     mHeight[i] = aDesc.height >> i;
+
+    LOGDMABUF(("    plane %d size %d x %x format %x", i, mWidth[i], mHeight[i],
+               mDrmFormats[i]));
   }
 
   return true;
@@ -754,6 +862,9 @@ bool DMABufSurfaceYUV::UpdateYUVData(const VADRMPRIMESurfaceDescriptor& aDesc) {
 
 bool DMABufSurfaceYUV::CreateYUVPlane(int aPlane, int aWidth, int aHeight,
                                       int aDrmFormat) {
+  LOGDMABUF(("DMABufSurfaceYUV::CreateYUVPlane() UID %d size %d x %d", mUID,
+             aWidth, aHeight));
+
   mWidth[aPlane] = aWidth;
   mHeight[aPlane] = aHeight;
   mDrmFormats[aPlane] = aDrmFormat;
@@ -762,18 +873,20 @@ bool DMABufSurfaceYUV::CreateYUVPlane(int aPlane, int aWidth, int aHeight,
       nsGbmLib::Create(GetDMABufDevice()->GetGbmDevice(), aWidth, aHeight,
                        aDrmFormat, GBM_BO_USE_LINEAR);
   if (!mGbmBufferObject[aPlane]) {
-    NS_WARNING("Failed to create GbmBufferObject!");
+    LOGDMABUF(("    Failed to create GbmBufferObject: %s", strerror(errno)));
     return false;
   }
 
   mStrides[aPlane] = nsGbmLib::GetStride(mGbmBufferObject[aPlane]);
-  mDmabufFds[aPlane] = nsGbmLib::GetFd(mGbmBufferObject[aPlane]);
+  mDmabufFds[aPlane] = -1;
 
   return true;
 }
 
 void DMABufSurfaceYUV::UpdateYUVPlane(int aPlane, void* aPixelData,
                                       int aLineSize) {
+  LOGDMABUF(
+      ("DMABufSurfaceYUV::UpdateYUVPlane() UID %d plane %d", mUID, aPlane));
   if (aLineSize == mWidth[aPlane] &&
       (int)mMappedRegionStride[aPlane] == mWidth[aPlane]) {
     memcpy(mMappedRegion[aPlane], aPixelData, aLineSize * mHeight[aPlane]);
@@ -789,13 +902,14 @@ void DMABufSurfaceYUV::UpdateYUVPlane(int aPlane, void* aPixelData,
 }
 
 bool DMABufSurfaceYUV::UpdateYUVData(void** aPixelData, int* aLineSizes) {
+  LOGDMABUF(("DMABufSurfaceYUV::UpdateYUVData() UID %d", mUID));
   if (mSurfaceType != SURFACE_YUV420) {
-    NS_WARNING("UpdateYUVData can upload YUV420 surface type only!");
+    LOGDMABUF(("    UpdateYUVData can upload YUV420 surface type only!"));
     return false;
   }
 
   if (mBufferPlaneCount != 3) {
-    NS_WARNING("DMABufSurfaceYUV planes does not match!");
+    LOGDMABUF(("    DMABufSurfaceYUV planes does not match!"));
     return false;
   }
 
@@ -809,11 +923,11 @@ bool DMABufSurfaceYUV::UpdateYUVData(void** aPixelData, int* aLineSizes) {
   for (int i = 0; i < mBufferPlaneCount; i++) {
     MapInternal(0, 0, mWidth[i], mHeight[i], nullptr, GBM_BO_TRANSFER_WRITE, i);
     if (!mMappedRegion[i]) {
-      NS_WARNING("DMABufSurfaceYUV plane can't be mapped!");
+      LOGDMABUF(("    DMABufSurfaceYUV plane can't be mapped!"));
       return false;
     }
     if ((int)mMappedRegionStride[i] < mWidth[i]) {
-      NS_WARNING("DMABufSurfaceYUV plane size stride does not match!");
+      LOGDMABUF(("    DMABufSurfaceYUV plane size stride does not match!"));
       return false;
     }
   }
@@ -828,6 +942,9 @@ bool DMABufSurfaceYUV::UpdateYUVData(void** aPixelData, int* aLineSizes) {
 
 bool DMABufSurfaceYUV::Create(int aWidth, int aHeight, void** aPixelData,
                               int* aLineSizes) {
+  LOGDMABUF(("DMABufSurfaceYUV::Create() UID %d size %d x %d", mUID, aWidth,
+             aHeight));
+
   mSurfaceType = SURFACE_YUV420;
   mBufferPlaneCount = 3;
 
@@ -847,11 +964,10 @@ bool DMABufSurfaceYUV::Create(int aWidth, int aHeight, void** aPixelData,
 }
 
 bool DMABufSurfaceYUV::Create(const SurfaceDescriptor& aDesc) {
-  ImportSurfaceDescriptor(aDesc);
-  return true;
+  return ImportSurfaceDescriptor(aDesc);
 }
 
-void DMABufSurfaceYUV::ImportSurfaceDescriptor(
+bool DMABufSurfaceYUV::ImportSurfaceDescriptor(
     const SurfaceDescriptorDMABuf& aDesc) {
   mBufferPlaneCount = aDesc.fds().Length();
   mSurfaceType = (mBufferPlaneCount == 2) ? SURFACE_NV12 : SURFACE_YUV420;
@@ -859,23 +975,39 @@ void DMABufSurfaceYUV::ImportSurfaceDescriptor(
   mColorSpace = aDesc.yUVColorSpace();
   mUID = aDesc.uid();
 
+  LOGDMABUF(("DMABufSurfaceYUV::ImportSurfaceDescriptor() UID %d", mUID));
+
   MOZ_RELEASE_ASSERT(mBufferPlaneCount <= DMABUF_BUFFER_PLANES);
   for (int i = 0; i < mBufferPlaneCount; i++) {
     mDmabufFds[i] = aDesc.fds()[i].ClonePlatformHandle().release();
+    if (mDmabufFds[i] < 0) {
+      LOGDMABUF(("    failed to get DMABuf plane file descriptor: %s",
+                 strerror(errno)));
+      return false;
+    }
     mWidth[i] = aDesc.width()[i];
     mHeight[i] = aDesc.height()[i];
     mDrmFormats[i] = aDesc.format()[i];
     mStrides[i] = aDesc.strides()[i];
     mOffsets[i] = aDesc.offsets()[i];
+    LOGDMABUF(("    plane %d fd %d size %d x %d format %x", i, mDmabufFds[i],
+               mWidth[i], mHeight[i], mDrmFormats[i]));
   }
 
   if (aDesc.fence().Length() > 0) {
     mSyncFd = aDesc.fence()[0].ClonePlatformHandle().release();
+    if (mSyncFd < 0) {
+      LOGDMABUF(
+          ("    failed to get GL fence file descriptor: %s", strerror(errno)));
+      return false;
+    }
   }
 
   if (aDesc.refCount().Length() > 0) {
     GlobalRefCountImport(aDesc.refCount()[0].ClonePlatformHandle().release());
   }
+
+  return true;
 }
 
 bool DMABufSurfaceYUV::Serialize(
@@ -889,6 +1021,13 @@ bool DMABufSurfaceYUV::Serialize(
   AutoTArray<ipc::FileDescriptor, 1> fenceFDs;
   AutoTArray<ipc::FileDescriptor, 1> refCountFDs;
 
+  LOGDMABUF(("DMABufSurfaceYUV::Serialize() UID %d", mUID));
+
+  MutexAutoLock lockFD(mSurfaceLock);
+  if (!OpenFileDescriptors()) {
+    return false;
+  }
+
   for (int i = 0; i < mBufferPlaneCount; i++) {
     width.AppendElement(mWidth[i]);
     height.AppendElement(mHeight[i]);
@@ -897,6 +1036,8 @@ bool DMABufSurfaceYUV::Serialize(
     strides.AppendElement(mStrides[i]);
     offsets.AppendElement(mOffsets[i]);
   }
+
+  CloseFileDescriptors();
 
   if (mSync) {
     fenceFDs.AppendElement(ipc::FileDescriptor(mSyncFd));
@@ -913,12 +1054,19 @@ bool DMABufSurfaceYUV::Serialize(
 }
 
 bool DMABufSurfaceYUV::CreateTexture(GLContext* aGLContext, int aPlane) {
+  LOGDMABUF(
+      ("DMABufSurfaceYUV::CreateTexture() UID %d plane %d", mUID, aPlane));
   MOZ_ASSERT(!mEGLImage[aPlane] && !mTexture[aPlane],
              "EGLImage/Texture is already created!");
 
   if (!aGLContext) return false;
   const auto& gle = gl::GLContextEGL::Cast(aGLContext);
   const auto& egl = gle->mEgl;
+
+  MutexAutoLock lockFD(mSurfaceLock);
+  if (!OpenFileDescriptorForPlane(aPlane)) {
+    return false;
+  }
 
   nsTArray<EGLint> attribs;
   attribs.AppendElement(LOCAL_EGL_WIDTH);
@@ -941,8 +1089,11 @@ bool DMABufSurfaceYUV::CreateTexture(GLContext* aGLContext, int aPlane) {
   mEGLImage[aPlane] =
       egl->fCreateImage(LOCAL_EGL_NO_CONTEXT, LOCAL_EGL_LINUX_DMA_BUF_EXT,
                         nullptr, attribs.Elements());
+
+  CloseFileDescriptorForPlane(aPlane);
+
   if (mEGLImage[aPlane] == LOCAL_EGL_NO_IMAGE) {
-    NS_WARNING("EGLImageKHR creation failed");
+    LOGDMABUF(("    EGLImageKHR creation failed"));
     return false;
   }
 
@@ -963,6 +1114,8 @@ bool DMABufSurfaceYUV::CreateTexture(GLContext* aGLContext, int aPlane) {
 }
 
 void DMABufSurfaceYUV::ReleaseTextures() {
+  LOGDMABUF(("DMABufSurfaceYUV::ReleaseTextures() UID %d", mUID));
+
   FenceDelete();
 
   bool textureActive = false;
@@ -1021,6 +1174,7 @@ uint32_t DMABufSurfaceYUV::GetTextureCount() {
 }
 
 void DMABufSurfaceYUV::ReleaseSurface() {
+  LOGDMABUF(("DMABufSurfaceYUV::ReleaseSurface() UID %d", mUID));
   ReleaseTextures();
   ReleaseDMABuf();
 }
