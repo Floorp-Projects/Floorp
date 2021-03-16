@@ -135,7 +135,7 @@ function getIframeBrowsingContext(window, iframeNumber = 0) {
  * Set input values via setUserInput to emulate user input
  * and distinguish them from declarative or script-assigned values
  */
-function setUserInputValues(parentNode, selectorValues) {
+function setUserInputValues(parentNode, selectorValues, userInput = true) {
   for (let [selector, newValue] of Object.entries(selectorValues)) {
     info(`setUserInputValues, selector: ${selector}`);
     try {
@@ -144,7 +144,11 @@ function setUserInputValues(parentNode, selectorValues) {
         // we don't get an input event if the new value == the old
         field.value += "#";
       }
-      field.setUserInput(newValue);
+      if (userInput) {
+        field.setUserInput(newValue);
+      } else {
+        field.value = newValue;
+      }
     } catch (ex) {
       info(ex.message);
       info(ex.stack);
