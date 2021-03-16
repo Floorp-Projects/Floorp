@@ -125,6 +125,19 @@ var FormSubmitListener = {
   },
 };
 
+/**
+ * A generator function which iterates over a docShell tree, given a root docShell.
+ *
+ * @param   {nsIDocShell} docShell - the root docShell object
+ * @returns {Iterator<nsIDocShell>}
+ */
+function iterateDocShellTree(docShell) {
+  return docShell.getAllDocShellsInSubtree(
+    docShell.typeContent,
+    docShell.ENUMERATE_FORWARDS
+  );
+}
+
 var WebProgressListener = {
   init: function() {
     // This WeakMap (DOMWindow -> nsIURI) keeps track of the pathname and hash
@@ -132,9 +145,7 @@ var WebProgressListener = {
     this.previousURIMap = new WeakMap();
 
     // Populate the above previousURIMap by iterating over the docShells tree.
-    for (let currentDocShell of WebNavigationFrames.iterateDocShellTree(
-      docShell
-    )) {
+    for (let currentDocShell of iterateDocShellTree(docShell)) {
       let win = currentDocShell.domWindow;
       let { currentURI } = currentDocShell.QueryInterface(Ci.nsIWebNavigation);
 

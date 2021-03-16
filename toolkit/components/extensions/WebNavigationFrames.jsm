@@ -21,19 +21,6 @@ const EXPORTED_SYMBOLS = ["WebNavigationFrames"];
  */
 
 /**
- * A generator function which iterates over a docShell tree, given a root docShell.
- *
- * @param   {nsIDocShell} docShell - the root docShell object
- * @returns {Iterator<nsIDocShell>}
- */
-function iterateDocShellTree(docShell) {
-  return docShell.getAllDocShellsInSubtree(
-    docShell.typeContent,
-    docShell.ENUMERATE_FORWARDS
-  );
-}
-
-/**
  * Returns the frame ID of the given window. If the window is the
  * top-level content window, its frame ID is 0. Otherwise, its frame ID
  * is its outer window ID.
@@ -62,50 +49,24 @@ function getParentFrameId(bc) {
 }
 
 /**
- * Convert a docShell object into its internal FrameDetail representation.
- *
- * @param    {nsIDocShell} docShell - the docShell object to be converted into a FrameDetail JSON object.
- * @returns  {FrameDetail} the FrameDetail JSON object which represents the docShell.
+ * Convert a BrowsingContext into internal FrameDetail json.
+ * @param {BrowsingContext} bc
+ * @returns {FrameDetail}
  */
-function convertDocShellToFrameDetail(docShell) {
-  let { browsingContext, domWindow: window } = docShell;
-
+function getFrameDetail(bc) {
   return {
-    frameId: getFrameId(browsingContext),
-    parentFrameId: getParentFrameId(browsingContext),
-    url: window.location.href,
+    frameId: getFrameId(bc),
+    parentFrameId: getParentFrameId(bc),
+    url: bc.currentURI?.spec,
   };
 }
 
-/**
- * Search for a frame starting from the passed root docShell and
- * convert it to its related frame detail representation.
- *
- * @param  {number}      frameId - the frame ID of the frame to retrieve, as
- *                                 described in getFrameId.
- * @param   {nsIDocShell} rootDocShell - the root docShell object
- * @returns {nsIDocShell?} the docShell with the given frameId, or null
- *                         if no match.
- */
-function findDocShell(frameId, rootDocShell) {
-  for (let docShell of iterateDocShellTree(rootDocShell)) {
-    if (frameId == getFrameId(docShell.browsingContext)) {
-      return docShell;
-    }
-  }
-
-  return null;
-}
-
 var WebNavigationFrames = {
-  iterateDocShellTree,
-
-  findDocShell,
-
-  getFrame(docShell, frameId) {
-    let result = findDocShell(frameId, docShell);
-    if (result) {
-      return convertDocShellToFrameDetail(result);
+  getFrame(bc, frameId) {
+    // frameId 0 means the top-level frame; anything else is a child frame.
+    let frame = BrowsingContext.get(frameId || bc.id);
+    if (frame && frame.top === bc) {
+      return getFrameDetail(frame);
     }
     return null;
   },
@@ -113,10 +74,15 @@ var WebNavigationFrames = {
   getFrameId,
   getParentFrameId,
 
-  getAllFrames(docShell) {
-    return Array.from(
-      iterateDocShellTree(docShell),
-      convertDocShellToFrameDetail
-    );
+  getAllFrames(bc) {
+    let frames = [];
+
+    // Recursively walk the BC tree, find all frames.
+    function visit(bc) {
+      frames.push(bc);
+      bc.children.forEach(visit);
+    }
+    visit(bc);
+    return frames.map(getFrameDetail);
   },
 };
