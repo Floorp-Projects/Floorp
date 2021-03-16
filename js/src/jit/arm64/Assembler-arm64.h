@@ -99,8 +99,252 @@ static constexpr Register ZeroRegister{Registers::sp};
 static constexpr ARMRegister ZeroRegister64 = {Registers::sp, 64};
 static constexpr ARMRegister ZeroRegister32 = {Registers::sp, 32};
 
-// StackPointer is intentionally undefined on ARM64 to prevent misuse:
-//  using sp as a base register is only valid if sp % 16 == 0.
+// [SMDOC] AArch64 Stack Pointer and Pseudo Stack Pointer conventions
+//
+//                               ================
+//
+// Stack pointer (SP), PseudoStackPointer (PSP), and RealStackPointer:
+//
+// The ARM64 real SP has a constraint: it must be 16-byte aligned whenever it
+// is used as the base pointer for a memory access.  (SP+offset need not be
+// 16-byte aligned, but the SP value itself must be.)  The SP register may
+// take on unaligned values but may not be used for a memory access while it
+// is unaligned.
+//
+// Stack-alignment checking can be enabled or disabled by a control register;
+// however that register cannot be modified by user space.  We have to assume
+// stack alignment checking is enabled, and that does usually appear to be the
+// case.  See the ARM Architecture Reference Manual, "D1.8.2 SP alignment
+// checking", for further details.
+//
+// A second constraint is forced upon us by the ARM64 ABI.  This requires that
+// all accesses to the stack must be at or above SP.  Accesses below SP are
+// strictly forbidden, presumably because the kernel might use that area of
+// memory for its own purposes -- in particular, signal delivery -- and hence
+// it may get trashed at any time.
+//
+// Note this doesn't mean that accesses to the stack must be based off
+// register SP.  Only that the effective addresses must be >= SP, regardless
+// of how the address is formed.
+//
+// In order to allow word-wise pushes and pops, some of our ARM64 jits
+// (JS-Baseline, JS-Ion, and Wasm-Ion, but not Wasm-Baseline or
+// Wasm-Cranelift) dedicate x28 to be used as a PseudoStackPointer (PSP).
+// Initially the PSP will have the same value as the SP.  Code can, if it
+// wants, push a single word by subtracting 8 from the PSP, doing SP := PSP,
+// then storing the value at PSP+0.  Given other constraints on the alignment
+// of the SP at function call boundaries, this works out OK, at the cost of
+// the two extra instructions per push / pop.
+//
+// This is all a bit messy, and is probably not robustly adhered to.  However,
+// the following appear to be the intended, and mostly implemented, current
+// invariants:
+//
+// (1) PSP is "primary", SP is "secondary".  Most stack refs are
+//     PSP-relative. SP-relative is rare and (obviously) only done when we
+//     know that SP is aligned.
+//
+// (2) At all times, the relationship SP <= PSP is maintained.  The fact that
+//     SP may validly be less than PSP means that pushes on the stack force
+//     the two values to become equal, by copying PSP into SP.  However, pops
+//     behave differently: PSP moves back up and SP stays the same, since that
+//     doesn't break the SP <= PSP invariant.
+//
+// (3) However, immediately before a call instruction, SP and PSP must be the
+//     same.  To enforce this, PSP is copied into SP by the arm64-specific
+//     MacroAssembler::call routines.
+//
+// (4) Also, after a function has returned, it is expected that SP holds the
+//     "primary" value.  How exactly this is implemented remains not entirely
+//     clear and merits further investigation.  The following points are
+//     believed to be relevant:
+//
+//     - For calls to functions observing the system AArch64 ABI, PSP (x28) is
+//       callee-saved.  That, combined with (3) above, implies SP == PSP
+//       immediately after the call returns.
+//
+//     - JIT-generated routines return using MacroAssemblerCompat::retn, and
+//       that copies PSP into SP (bizarrely; this would make more sense if it
+//       copied SP into PSP); but in any case, the point is that they are the
+//       same at the point that the return instruction executes.
+//
+//     - MacroAssembler::callWithABIPost copies PSP into SP after the return
+//       of a call requiring dynamic alignment.
+//
+//     Given the above, it is unclear exactly where in the return sequence it
+//     is expected that SP == PSP, and also whether it is the callee or caller
+//     that is expected to enforce it.
+//
+// In general it would be nice to be able to move (at some time in the future,
+// not now) to a world where *every* assignment to PSP or SP is followed
+// immediately by a copy into the other register.  That would make all
+// required correctness proofs trivial in the sense that it would require only
+// local inspection of code immediately following (dominated by) any such
+// assignment.  For the moment, however, this is a guideline, not a hard
+// requirement.
+//
+//                               ================
+//
+// Mechanics of keeping the stack pointers in sync:
+//
+// The following two methods require that the masm's SP has been set to the PSP
+// with MacroAssembler::SetStackPointer64(PseudoStackPointer64), or they will be
+// no-ops.  The setup is performed manually by the jits after creating the masm.
+//
+// * MacroAssembler::syncStackPtr() performs SP := PSP, presumably after PSP has
+//   been updated, so SP needs to move too.  This is used pretty liberally
+//   throughout the code base.
+//
+// * MacroAssembler::initPseudoStackPtr() performs PSP := SP.  This can be used
+//   after calls to non-ABI compliant code; it's not used much.
+//
+// In the ARM64 assembler there is a function Instruction::IsStackPtrSync() that
+// recognizes the instruction emitted by syncStackPtr(), and this is used to
+// skip that instruction a few places, should it be present, in the JS JIT where
+// code is generated to deal with toggled calls.
+//
+// In various places there are calls to MacroAssembler::syncStackPtr() which
+// appear to be redundant.  Investigation shows that they often are redundant,
+// but not always.  Finding and removing such redundancies would be quite some
+// work, so we live for now with the occasional redundant update.  Perusal of
+// the Cortex-A55 and -A72 optimization guides shows no evidence that such
+// assignments are any more expensive than assignments between vanilla integer
+// registers, so the costs of such redundant updates are assumed to be small.
+//
+// Invariants on the PSP at function call boundaries:
+//
+// It *appears* that the following invariants exist:
+//
+// * On entry to JIT code, PSP == SP, ie the stack pointer is transmitted via
+//   both registers.
+//
+// * On entry to C++ code, PSP == SP.  Certainly it appears that all calls
+//   created by the MacroAssembler::call(..) routines perform 'syncStackPtr'
+//   immediately before the call, and all ABI calls are routed through the
+//   MacroAssembler::call layer.
+//
+// * The stubs generated by WasmStubs.cpp assume that, on entry, SP is the
+//   active stack pointer and that PSP is dead.
+//
+// * The PSP is non-volatile (callee-saved).  Along a normal return path from
+//   JIT code, simply having PSP == SP on exit is correct, since the exit SP is
+//   the same as the entry SP by the JIT ABI.
+//
+// * Call-outs to non-JIT C++ code do not need to set up the PSP (it won't be
+//   used), and will not need to restore the PSP on return because x28 is
+//   non-volatile in the ARM64 ABI.
+//
+//                               ================
+//
+// Future cleanups to the SP-vs-PSP machinery:
+//
+// Currently we have somewhat unclear invariants, which are not obviously
+// always enforced, and which may require complex non-local reasoning.
+// Auditing the code to ensure that the invariants always hold, whilst not
+// generating duplicate syncs, is close to impossible.  A future rework to
+// tidy this might be as follows.  (This suggestion pertains the the entire
+// JIT complex: all of the JS compilers, wasm compilers, stub generators,
+// regexp compilers, etc).
+//
+// Currently we have that, in JIT-generated code, PSP is "primary" and SP is
+// "secondary", meaning that PSP has the "real" stack pointer value and SP is
+// updated whenever PSP acquires a lower value, so as to ensure that SP <= PSP.
+// An exception to this scheme is the stubs code generated by WasmStubs.cpp,
+// which assumes that SP is "primary" and PSP is dead.
+//
+// It might give us an easier incremental path to eventually removing PSP
+// entirely if we switched to having SP always be the primary.  That is:
+//
+// (1) SP is primary, PSP is secondary
+// (2) After any assignment to SP, it is copied into PSP
+// (3) All (non-frame-pointer-based) stack accesses are PSP-relative
+//     (as at present)
+//
+// This would have the effect that:
+//
+// * It would reinstate the invariant that on all targets, the "real" SP value
+//   is in the ABI-and-or-hardware-mandated stack pointer register.
+//
+// * It would give us a simple story about calls and returns:
+//   - for calls to non-JIT generated code (viz, C++ etc), we need no extra
+//     copies, because PSP (x28) is callee-saved
+//   - for calls to JIT-generated code, we need no extra copies, because of (2)
+//     above
+//
+// * We could incrementally migrate those parts of the code generator where we
+//   know that SP is 16-aligned, to use SP- rather than PSP-relative accesses
+//
+// * The consistent use of (2) would remove the requirement to have to perform
+//   path-dependent reasoning (for paths in the generated code, not in the
+//   compiler) when reading/understanding the code.
+//
+// * x28 would become free for use by stubs and the baseline compiler without
+//   having to worry about interoperating with code that expects x28 to hold a
+//   valid PSP.
+//
+// One might ask what mechanical checks we can add to ensure correctness, rather
+// than having to verify these invariants by hand indefinitely.  Maybe some
+// combination of:
+//
+// * In debug builds, compiling-in assert(SP == PSP) at critical places.  This
+//   can be done using the existing `assertStackPtrsSynced` function.
+//
+// * In debug builds, scanning sections of generated code to ensure no
+//   SP-relative stack accesses have been created -- for some sections, at
+//   least every assignment to SP is immediately followed by a copy to x28.
+//   This would also facilitate detection of duplicate syncs.
+//
+//                               ================
+//
+// Other investigative notes, for the code base at present:
+//
+// * Some disassembly dumps suggest that we sync the stack pointer too often.
+//   This could be the result of various pieces of code working at cross
+//   purposes when syncing the stack pointer, or of not paying attention to the
+//   precise invariants.
+//
+// * As documented in RegExpNativeMacroAssembler.cpp, function
+//   SMRegExpMacroAssembler::createStackFrame:
+//
+//   // ARM64 communicates stack address via SP, but uses a pseudo-sp (PSP) for
+//   // addressing.  The register we use for PSP may however also be used by
+//   // calling code, and it is nonvolatile, so save it.  Do this as a special
+//   // case first because the generic save/restore code needs the PSP to be
+//   // initialized already.
+//
+//   and also in function SMRegExpMacroAssembler::exitHandler:
+//
+//   // Restore the saved value of the PSP register, this value is whatever the
+//   // caller had saved in it, not any actual SP value, and it must not be
+//   // overwritten subsequently.
+//
+//   The original source for these comments was a patch for bug 1445907.
+//
+// * MacroAssembler-arm64.h has an interesting comment in the retn()
+//   function:
+//
+//   syncStackPtr();  // SP is always used to transmit the stack between calls.
+//
+//   Same comment at abiret() in that file, and in MacroAssembler-arm64.cpp,
+//   at callWithABIPre and callWithABIPost.
+//
+// * In Trampoline-arm64.cpp function JitRuntime::generateVMWrapper we find
+//
+//   // SP is used to transfer stack across call boundaries.
+//   masm.initPseudoStackPtr();
+//
+//   after the return point of a callWithVMWrapper.  The only reasonable
+//   conclusion from all those (assuming they are right) is that SP == PSP.
+//
+// * Wasm-Baseline does not use the PSP, but as Wasm-Ion code requires SP==PSP
+//   and tiered code can have Baseline->Ion calls, Baseline will set PSP=SP
+//   before a call to wasm code.  When the optimized tier is created by
+//   Cranelift this is not necessary.
+//
+//                               ================
+
+// StackPointer is intentionally undefined on ARM64 to prevent misuse: using
+// sp as a base register is only valid if sp % 16 == 0.
 static constexpr Register RealStackPointer{Registers::sp};
 
 static constexpr Register PseudoStackPointer{Registers::x28};
