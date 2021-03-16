@@ -63,9 +63,9 @@ class SharedStyleSheetCache final : public nsIMemoryReporter {
   //
   // TODO(emilio): Maybe try to merge this with the lookup? Most consumers could
   // have a data there already.
-  MOZ_MUST_USE bool CoalesceLoad(const SheetLoadDataHashKey&,
-                                 css::SheetLoadData& aNewLoad,
-                                 css::Loader::SheetState aExistingLoadState);
+  [[nodiscard]] bool CoalesceLoad(const SheetLoadDataHashKey&,
+                                  css::SheetLoadData& aNewLoad,
+                                  css::Loader::SheetState aExistingLoadState);
 
   size_t SizeOfIncludingThis(MallocSizeOf) const;
 
