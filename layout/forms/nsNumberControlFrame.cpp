@@ -188,28 +188,6 @@ bool nsNumberControlFrame::SpinnerDownButtonIsDepressed() const {
       ->NumberSpinnerDownButtonIsDepressed();
 }
 
-#define STYLES_DISABLING_NATIVE_THEMING \
-  NS_AUTHOR_SPECIFIED_BORDER_OR_BACKGROUND | NS_AUTHOR_SPECIFIED_PADDING
-
-bool nsNumberControlFrame::ShouldUseNativeStyleForSpinner() const {
-  MOZ_ASSERT(mSpinUp && mSpinDown,
-             "We should not be called when we have no spinner");
-
-  nsIFrame* spinUpFrame = mSpinUp->GetPrimaryFrame();
-  nsIFrame* spinDownFrame = mSpinDown->GetPrimaryFrame();
-
-  return spinUpFrame &&
-         spinUpFrame->StyleDisplay()->EffectiveAppearance() ==
-             StyleAppearance::SpinnerUpbutton &&
-         !PresContext()->HasAuthorSpecifiedRules(
-             spinUpFrame, STYLES_DISABLING_NATIVE_THEMING) &&
-         spinDownFrame &&
-         spinDownFrame->StyleDisplay()->EffectiveAppearance() ==
-             StyleAppearance::SpinnerDownbutton &&
-         !PresContext()->HasAuthorSpecifiedRules(
-             spinDownFrame, STYLES_DISABLING_NATIVE_THEMING);
-}
-
 void nsNumberControlFrame::AppendAnonymousContentTo(
     nsTArray<nsIContent*>& aElements, uint32_t aFilter) {
   if (mSpinBox) {
