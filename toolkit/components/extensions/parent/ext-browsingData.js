@@ -4,13 +4,8 @@
 
 "use strict";
 
-var { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
-
 XPCOMUtils.defineLazyModuleGetters(this, {
   LoginHelper: "resource://gre/modules/LoginHelper.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   ServiceWorkerCleanUp: "resource://gre/modules/ServiceWorkerCleanUp.jsm",
   // This helper contains the platform-specific bits of browsingData.

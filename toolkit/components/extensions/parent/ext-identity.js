@@ -6,12 +6,6 @@
 
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
-
 XPCOMUtils.defineLazyGlobalGetters(this, ["XMLHttpRequest", "ChannelWrapper"]);
 
 var { promiseDocumentLoaded } = ExtensionUtils;
