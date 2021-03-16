@@ -284,6 +284,16 @@ class MinidumpThread : public MinidumpObject {
   // GetMemory may return NULL even if the MinidumpThread is valid,
   // if the thread memory cannot be read.
   virtual MinidumpMemoryRegion* GetMemory();
+  // Corresponds to win32's GetLastError function, which records the last
+  // error value set by the OS for this thread. A more useful error message
+  // can be produced by passing this value to FormatMessage:
+  //
+  // https://docs.microsoft.com/windows/win32/debug/retrieving-the-last-error-code
+  //
+  // The value may also be looked up in Microsoft's System Error Codes listing:
+  //
+  // https://docs.microsoft.com/windows/win32/debug/system-error-codes
+  virtual uint32_t GetLastError();
   // GetContext may return NULL even if the MinidumpThread is valid.
   virtual MinidumpContext* GetContext();
 
