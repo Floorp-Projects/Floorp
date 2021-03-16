@@ -5167,7 +5167,8 @@ void nsGlobalWindowOuter::PrintOuter(ErrorResult& aError) {
     return aError.ThrowNotSupportedError("Dialogs not enabled for this window");
   }
 
-  if (ShouldPromptToBlockDialogs() && !ConfirmDialogIfNeeded()) {
+  if (!StaticPrefs::print_tab_modal_enabled() && ShouldPromptToBlockDialogs() &&
+      !ConfirmDialogIfNeeded()) {
     return aError.ThrowNotAllowedError("Prompt was canceled by the user");
   }
 
