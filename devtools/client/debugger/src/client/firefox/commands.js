@@ -324,18 +324,26 @@ async function getFrameScopes(frame) {
   return frameFront.getEnvironment();
 }
 
-function pauseOnExceptions(
+async function pauseOnExceptions(
   shouldPauseOnExceptions,
   shouldPauseOnCaughtExceptions
 ) {
-  return forEachThread(thread =>
-    thread.pauseOnExceptions(
-      shouldPauseOnExceptions,
-      // Providing opposite value because server
-      // uses "shouldIgnoreCaughtExceptions"
-      !shouldPauseOnCaughtExceptions
-    )
-  );
+  if (targetList.hasTargetWatcherSupport("thread-configuration")) {
+    const threadConfigurationActor = await targetList.watcherFront.getThreadConfigurationActor();
+    await threadConfigurationActor.updateConfiguration({
+      pauseOnExceptions: shouldPauseOnExceptions,
+      ignoreCaughtExceptions: !shouldPauseOnCaughtExceptions,
+    });
+  } else {
+    return forEachThread(thread =>
+      thread.pauseOnExceptions(
+        shouldPauseOnExceptions,
+        // Providing opposite value because server
+        // uses "shouldIgnoreCaughtExceptions"
+        !shouldPauseOnCaughtExceptions
+      )
+    );
+  }
 }
 
 async function blackBox(sourceActor, isBlackBoxed, range) {
