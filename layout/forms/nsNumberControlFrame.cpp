@@ -111,24 +111,20 @@ nsNumberControlFrame* nsNumberControlFrame::GetNumberControlFrameForTextField(
 nsNumberControlFrame* nsNumberControlFrame::GetNumberControlFrameForSpinButton(
     nsIFrame* aFrame) {
   // If aFrame is a spin button for an <input type=number> then we expect the
-  // frame of its mContent's great-grandparent to be that input's frame. We
-  // have to check for this via the content tree because we don't know whether
-  // extra frames will be wrapped around any of the elements between aFrame and
-  // the nsNumberControlFrame that we're looking for (e.g. flex wrappers).
+  // frame of the NAC root parent to be that input's frame. We have to check for
+  // this via the content tree because we don't know whether extra frames will
+  // be wrapped around any of the elements between aFrame and the
+  // nsNumberControlFrame that we're looking for (e.g. flex wrappers).
   nsIContent* content = aFrame->GetContent();
-  if (content->IsInNativeAnonymousSubtree() && content->GetParent() &&
-      content->GetParent()->GetParent() &&
-      content->GetParent()->GetParent()->GetParent()) {
-    nsIContent* greatgrandparent =
-        content->GetParent()->GetParent()->GetParent();
-    if (greatgrandparent->IsHTMLElement(nsGkAtoms::input) &&
-        greatgrandparent->AsElement()->AttrValueIs(
-            kNameSpaceID_None, nsGkAtoms::type, nsGkAtoms::number,
-            eCaseMatters)) {
-      return do_QueryFrame(greatgrandparent->GetPrimaryFrame());
-    }
+  auto* nacHost = content->GetClosestNativeAnonymousSubtreeRootParent();
+  if (!nacHost) {
+    return nullptr;
   }
-  return nullptr;
+  auto* input = HTMLInputElement::FromNode(nacHost);
+  if (!input || input->ControlType() != NS_FORM_INPUT_NUMBER) {
+    return nullptr;
+  }
+  return do_QueryFrame(input->GetPrimaryFrame());
 }
 
 int32_t nsNumberControlFrame::GetSpinButtonForPointerEvent(
