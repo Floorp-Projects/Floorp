@@ -688,6 +688,10 @@ bool nsLayoutUtils::AsyncPanZoomEnabled(const nsIFrame* aFrame) {
 
 bool nsLayoutUtils::AllowZoomingForDocument(
     const mozilla::dom::Document* aDocument) {
+  if (aDocument->GetPresShell() &&
+      !aDocument->GetPresShell()->AsyncPanZoomEnabled()) {
+    return false;
+  }
   // True if we allow zooming for all documents on this platform, or if we are
   // in RDM and handling meta viewports, which force zoom under some
   // circumstances.
