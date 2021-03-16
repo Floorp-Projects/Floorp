@@ -9,18 +9,10 @@
   --toolbarbutton-outer-padding: 2px;
   --toolbarbutton-inner-padding: 8px;
 
-  /* These hover and active colors should work on both light and dark
-     backgrounds. We'll later set colors that cater for light and dark
-     backgrounds specifically when we can detect them. */
-  --toolbarbutton-hover-background: var(--lwt-toolbarbutton-hover-background, hsla(0,0%,70%,.4));
-  --toolbarbutton-active-background: var(--lwt-toolbarbutton-active-background, hsla(0,0%,70%,.6));
+  --toolbarbutton-hover-background: var(--buttons-secondary-hover-bgcolor);
+  --toolbarbutton-active-background: var(--buttons-secondary-active-bgcolor);
 
-  --backbutton-background: hsla(0,100%,100%,.8);
-  --backbutton-hover-background: var(--backbutton-background);
-  --backbutton-active-background: var(--toolbarbutton-active-background);
-  --backbutton-border-color: hsla(240,5%,5%,.3);
-
-  --toolbarseparator-color: var(--lwt-toolbar-vertical-separator, rgba(0,0,0,.3));
+  --toolbarseparator-color: color-mix(in srgb, currentColor 20%, transparent);
 
   --bookmark-block-padding: 4px;
 
@@ -33,6 +25,23 @@
 @supports not -moz-bool-pref("browser.proton.enabled") {
 :root {
   --toolbarbutton-focus-outline: 2px solid currentColor;
+
+  --toolbarbutton-hover-background: color-mix(in srgb, currentColor 10%, transparent);
+  --toolbarbutton-active-background: color-mix(in srgb, currentColor 15%, transparent);
+
+  --backbutton-background: hsla(0,100%,100%,.5);
+  --backbutton-hover-background: var(--backbutton-background);
+  --backbutton-active-background: var(--toolbarbutton-active-background);
+  --backbutton-border-color: hsla(240,5%,5%,.3);
+}
+
+:root:-moz-lwtheme {
+  --toolbarbutton-hover-background: color-mix(in srgb, currentColor 15%, transparent);
+  --toolbarbutton-active-background: color-mix(in srgb, currentColor 30%, transparent);
+
+  --backbutton-background: var(--toolbarbutton-hover-background);
+  --backbutton-hover-background: var(--toolbarbutton-active-background);
+  --backbutton-active-background: color-mix(in srgb, currentColor 20%, transparent);
 }
 } /*** END !proton ***/
 
@@ -69,26 +78,6 @@
   --toolbarbutton-inner-padding: calc((var(--tab-min-height) - 16px) / 2);
 }
 } /*** END proton ***/
-
-/* We use :-moz-lwtheme-* for toolbarbuttons that aren't inside a toolbar, and
-   [brighttext] to cater for OS themes where :-moz-lwtheme-* doesn't apply. */
-:root:-moz-lwtheme-darktext,
-toolbar:not([brighttext]) {
-  --toolbarbutton-hover-background: var(--lwt-toolbarbutton-hover-background, hsla(240,5%,5%,.1));
-  --toolbarbutton-active-background: var(--lwt-toolbarbutton-active-background, hsla(240,5%,5%,.15));
-}
-
-:root:-moz-lwtheme-brighttext,
-toolbar[brighttext] {
-  --toolbarbutton-hover-background: var(--lwt-toolbarbutton-hover-background, hsla(0,0%,70%,.4));
-  --toolbarbutton-active-background: var(--lwt-toolbarbutton-active-background, hsla(0,0%,70%,.6));
-
-  --backbutton-background: var(--toolbarbutton-hover-background);
-  --backbutton-hover-background: var(--toolbarbutton-active-background);
-  --backbutton-active-background: hsla(0,0%,100%,.4);
-
-  --toolbarseparator-color: var(--lwt-toolbar-vertical-separator, rgba(255,255,255,.3));
-}
 
 /* ::::: primary toolbar buttons ::::: */
 
