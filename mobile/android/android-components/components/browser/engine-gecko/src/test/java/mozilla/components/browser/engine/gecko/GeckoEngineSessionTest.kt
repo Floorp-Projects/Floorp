@@ -1171,7 +1171,7 @@ class GeckoEngineSessionTest {
     }
 
     @Test
-    fun `WHEN updating content blocking with a policy SCRIPTS_AND_SUB_RESOURCES useForPrivateSessions being in privateMode THEN useTrackingProtection should be true`() {
+    fun `WHEN update content blocking with a policy SCRIPTS_AND_SUB_RESOURCES useForPrivateSessions being in privateMode THEN useTrackingProtection should be true`() {
         val geckoSetting = mock<GeckoSessionSettings>()
         val geckoSession = mock<GeckoSession>()
 

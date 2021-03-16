@@ -12,6 +12,7 @@ import android.view.View
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.browser.engine.gecko.GeckoEngineView.Companion.DARK_COVER
 import mozilla.components.browser.engine.gecko.selection.GeckoSelectionActionDelegate
+import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import mozilla.components.support.test.argumentCaptor
@@ -32,7 +33,6 @@ import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.MockSelection
 import org.robolectric.Robolectric.buildActivity
-import java.lang.IllegalStateException
 
 @RunWith(AndroidJUnit4::class)
 class GeckoEngineViewTest {
@@ -276,5 +276,53 @@ class GeckoEngineViewTest {
         val selectionWthEmptyText: GeckoSession.SelectionActionDelegate.Selection = MockSelection(bundle)
         whenever(engineView.currentSelection?.selection).thenReturn(selectionWthEmptyText)
         assertFalse(engineView.canClearSelection())
+    }
+
+    @Test
+    fun `currentInputResult should default to EngineView#InputResult#INPUT_RESULT_UNHANDLED`() {
+        val engineView = GeckoEngineView(context)
+
+        assertEquals(EngineView.InputResult.INPUT_RESULT_UNHANDLED, engineView.lastInputResult)
+    }
+
+    @Test
+    fun `getInputResult should do a 1-1 mapping of the values received from GeckoView and cache the result`() {
+        val engineView = GeckoEngineView(context)
+        engineView.geckoView = mock()
+
+        whenever(engineView.geckoView.inputResult).thenReturn(0)
+        assertEquals(EngineView.InputResult.INPUT_RESULT_UNHANDLED, engineView.getInputResult())
+        assertEquals(EngineView.InputResult.INPUT_RESULT_UNHANDLED, engineView.lastInputResult)
+
+        whenever(engineView.geckoView.inputResult).thenReturn(1)
+        assertEquals(EngineView.InputResult.INPUT_RESULT_HANDLED, engineView.getInputResult())
+        assertEquals(EngineView.InputResult.INPUT_RESULT_HANDLED, engineView.lastInputResult)
+
+        whenever(engineView.geckoView.inputResult).thenReturn(2)
+        assertEquals(EngineView.InputResult.INPUT_RESULT_HANDLED_CONTENT, engineView.getInputResult())
+        assertEquals(EngineView.InputResult.INPUT_RESULT_HANDLED_CONTENT, engineView.lastInputResult)
+    }
+
+    @Test
+    fun `INPUT_RESULD_IGNORED should be ignored`() {
+        val engineView = GeckoEngineView(context)
+        engineView.geckoView = mock()
+
+        whenever(engineView.geckoView.inputResult).thenReturn(1)
+        assertEquals(EngineView.InputResult.INPUT_RESULT_HANDLED, engineView.getInputResult())
+        assertEquals(EngineView.InputResult.INPUT_RESULT_HANDLED, engineView.lastInputResult)
+
+        whenever(engineView.geckoView.inputResult).thenReturn(3)
+        assertEquals(EngineView.InputResult.INPUT_RESULT_HANDLED, engineView.getInputResult())
+        assertEquals(EngineView.InputResult.INPUT_RESULT_HANDLED, engineView.lastInputResult)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `Values other than 0, 1, 2, 3 received as input results from GeckoView should throw`() {
+        val engineView = GeckoEngineView(context)
+        engineView.geckoView = mock()
+
+        whenever(engineView.geckoView.inputResult).thenReturn(4)
+        engineView.getInputResult()
     }
 }

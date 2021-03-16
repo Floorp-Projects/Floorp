@@ -10,6 +10,7 @@ import mozilla.components.browser.engine.gecko.GeckoEngineSession
 import mozilla.components.browser.engine.gecko.await
 import mozilla.components.concept.engine.mediasession.MediaSession
 import org.mozilla.geckoview.GeckoSession
+import org.mozilla.geckoview.Image.ImageProcessingException
 import org.mozilla.geckoview.MediaSession as GeckoViewMediaSession
 
 private const val ARTWORK_RETRIEVE_TIMEOUT = 1000L
@@ -51,7 +52,7 @@ internal class GeckoMediaSessionDelegate(
                     }
 
                     bitmap
-                } catch (e: IllegalArgumentException) {
+                } catch (e: ImageProcessingException) {
                     null
                 }
             }
