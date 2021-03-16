@@ -12,6 +12,8 @@ ok(SpecialPowers.getBoolPref('dom.webgpu.enabled'), 'Pref should be enabled.');
 
 const func = async function() {
   const adapter = await navigator.gpu.requestAdapter();
+  const limits = adapter.limits;
+  const features = adapter.features;
   const device = await adapter.requestDevice();
   ok(device !== undefined, 'device !== undefined');
 };

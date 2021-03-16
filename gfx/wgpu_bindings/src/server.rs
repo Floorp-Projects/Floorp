@@ -3,8 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::{
-    cow_label, identity::IdentityRecyclerFactory, ByteBuf, CommandEncoderAction, DeviceAction,
-    DropAction, QueueWriteAction, RawString, ShaderModuleSource, TextureAction,
+    cow_label, identity::IdentityRecyclerFactory, AdapterInformation, ByteBuf,
+    CommandEncoderAction, DeviceAction, DropAction, QueueWriteAction, RawString,
+    ShaderModuleSource, TextureAction,
 };
 
 use wgc::{gfx_select, id};
@@ -111,6 +112,30 @@ pub unsafe extern "C" fn wgpu_server_instance_request_adapter(
             -1
         }
     }
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wgpu_server_adapter_pack_info(
+    global: &Global,
+    self_id: Option<id::AdapterId>,
+    byte_buf: &mut ByteBuf,
+) {
+    let mut data = Vec::new();
+    match self_id {
+        Some(id) => {
+            let info = AdapterInformation {
+                id,
+                //inner: gfx_select!(self_id => global.adapter_get_info(self_id)).unwrap(),
+                limits: gfx_select!(id => global.adapter_limits(id)).unwrap(),
+                features: gfx_select!(id => global.adapter_features(id)).unwrap(),
+            };
+            bincode::serialize_into(&mut data, &info).unwrap();
+        }
+        None => {
+            bincode::serialize_into(&mut data, &0u64).unwrap();
+        }
+    }
+    *byte_buf = ByteBuf::from_vec(data);
 }
 
 #[no_mangle]

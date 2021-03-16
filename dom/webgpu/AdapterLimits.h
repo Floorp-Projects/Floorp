@@ -41,8 +41,9 @@ class AdapterLimits final : public nsWrapperCache, public ChildOf<Adapter> {
   uint32_t MaxVertexAttributes() const;
   uint32_t MaxVertexBufferArrayStride() const;
 
- private:
   AdapterLimits(Adapter* const aParent, const ffi::WGPULimits& aLimits);
+
+ private:
   ~AdapterLimits();
   void Cleanup() {}
 };

@@ -10,6 +10,7 @@
 #include "nsIGlobalObject.h"
 #include "ipc/WebGPUChild.h"
 #include "ipc/WebGPUTypes.h"
+#include "mozilla/webgpu/ffi/wgpu.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 
@@ -60,9 +61,11 @@ already_AddRefed<dom::Promise> Instance::RequestAdapter(
 
   mBridge->InstanceRequestAdapter(aOptions)->Then(
       GetMainThreadSerialEventTarget(), __func__,
-      [promise, instance](RawId id) {
-        MOZ_ASSERT(id != 0);
-        RefPtr<Adapter> adapter = new Adapter(instance, id);
+      [promise, instance](ipc::ByteBuf aInfoBuf) {
+        ffi::WGPUAdapterInformation info = {};
+        ffi::wgpu_client_adapter_extract_info(ToFFI(&aInfoBuf), &info);
+        MOZ_ASSERT(info.id != 0);
+        RefPtr<Adapter> adapter = new Adapter(instance, info);
         promise->MaybeResolve(adapter);
       },
       [promise](const Maybe<ipc::ResponseRejectReason>& aRv) {

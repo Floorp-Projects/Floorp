@@ -37,7 +37,7 @@ WebGPUChild::~WebGPUChild() {
   }
 }
 
-RefPtr<RawIdPromise> WebGPUChild::InstanceRequestAdapter(
+RefPtr<AdapterPromise> WebGPUChild::InstanceRequestAdapter(
     const dom::GPURequestAdapterOptions& aOptions) {
   const int max_ids = 10;
   RawId ids[max_ids] = {0};
@@ -52,12 +52,18 @@ RefPtr<RawIdPromise> WebGPUChild::InstanceRequestAdapter(
   return SendInstanceRequestAdapter(aOptions, sharedIds)
       ->Then(
           GetCurrentSerialEventTarget(), __func__,
-          [](const RawId& aId) {
-            return aId == 0 ? RawIdPromise::CreateAndReject(Nothing(), __func__)
-                            : RawIdPromise::CreateAndResolve(aId, __func__);
+          [](ipc::ByteBuf&& aInfoBuf) {
+            // Ideally, we'd just send an empty ByteBuf, but the IPC code
+            // complains if the capacity is zero...
+            // So for the case where an adapter wasn't found, we just
+            // transfer a single 0u64 in this buffer.
+            return aInfoBuf.mLen > sizeof(uint64_t)
+                       ? AdapterPromise::CreateAndResolve(std::move(aInfoBuf),
+                                                          __func__)
+                       : AdapterPromise::CreateAndReject(Nothing(), __func__);
           },
           [](const ipc::ResponseRejectReason& aReason) {
-            return RawIdPromise::CreateAndReject(Some(aReason), __func__);
+            return AdapterPromise::CreateAndReject(Some(aReason), __func__);
           });
 }
 
