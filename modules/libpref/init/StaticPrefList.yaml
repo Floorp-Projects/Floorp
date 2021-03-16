@@ -10823,6 +10823,12 @@
   mirror: always
 
 #ifdef MOZ_WAYLAND
+# Whether to override the DMABuf blocklist.
+- name: widget.dmabuf.force-enabled
+  type: bool
+  value: false
+  mirror: once
+
 #ifdef NIGHTLY_BUILD
 # Keep those pref hidden on non-nightly builds to avoid people accidentally
 # turning it on.

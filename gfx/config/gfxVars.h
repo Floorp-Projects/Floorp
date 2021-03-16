@@ -75,7 +75,8 @@ class gfxVarReceiver;
   _(UseAHardwareBufferContent, bool, false)                        \
   _(UseAHardwareBufferSharedSurface, bool, false)                  \
   _(UseEGL, bool, false)                                           \
-  _(DrmRenderDevice, nsCString, nsCString())
+  _(DrmRenderDevice, nsCString, nsCString())                       \
+  _(UseDMABuf, bool, false)
 
 /* Add new entries above this line. */
 
