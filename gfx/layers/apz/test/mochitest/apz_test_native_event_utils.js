@@ -399,34 +399,11 @@ function synthesizeNativeWheelAndWaitForObserver(
   return synthesizeNativeWheel(aElement, aX, aY, aDeltaX, aDeltaY, observer);
 }
 
-// Synthesizes a native mousewheel event and invokes the callback once the
+// Synthesizes a native mousewheel event and resolve the returned promise once the
 // wheel event is dispatched to |aTarget|'s containing window. If the event
 // targets content in a subdocument, |aTarget| should be inside the
 // subdocument (or the subdocument's window). See synthesizeNativeWheel for
 // details on the other parameters.
-function synthesizeNativeWheelAndWaitForWheelEvent(
-  aTarget,
-  aX,
-  aY,
-  aDeltaX,
-  aDeltaY,
-  aCallback
-) {
-  let p = promiseNativeWheelAndWaitForWheelEvent(
-    aTarget,
-    aX,
-    aY,
-    aDeltaX,
-    aDeltaY
-  );
-  if (aCallback) {
-    p.then(aCallback);
-  }
-  return true;
-}
-
-// Same as synthesizeNativeWheelAndWaitForWheelEvent, except returns a promise
-// instead of taking a callback
 function promiseNativeWheelAndWaitForWheelEvent(
   aTarget,
   aX,
