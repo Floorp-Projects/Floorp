@@ -990,8 +990,8 @@ nsIFrame* nsLayoutUtils::GetFloatFromPlaceholder(nsIFrame* aFrame) {
 }
 
 // static
-nsIFrame* nsLayoutUtils::GetCrossDocParentFrame(const nsIFrame* aFrame,
-                                                nsPoint* aExtraOffset) {
+nsIFrame* nsLayoutUtils::GetCrossDocParentFrameInProcess(
+    const nsIFrame* aFrame, nsPoint* aCrossDocOffset) {
   nsIFrame* p = aFrame->GetParent();
   if (p) {
     return p;
@@ -1011,13 +1011,19 @@ nsIFrame* nsLayoutUtils::GetCrossDocParentFrame(const nsIFrame* aFrame,
   }
 
   p = v->GetFrame();
-  if (p && aExtraOffset) {
+  if (p && aCrossDocOffset) {
     nsSubDocumentFrame* subdocumentFrame = do_QueryFrame(p);
     MOZ_ASSERT(subdocumentFrame);
-    *aExtraOffset += subdocumentFrame->GetExtraOffset();
+    *aCrossDocOffset += subdocumentFrame->GetExtraOffset();
   }
 
   return p;
+}
+
+// static
+nsIFrame* nsLayoutUtils::GetCrossDocParentFrame(const nsIFrame* aFrame,
+                                                nsPoint* aCrossDocOffset) {
+  return GetCrossDocParentFrameInProcess(aFrame, aCrossDocOffset);
 }
 
 // static
