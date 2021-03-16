@@ -24,7 +24,7 @@ use crate::gpu_types::{BrushFlags};
 use crate::internal_types::{FastHashMap, PlaneSplitAnchor};
 use crate::picture::{PicturePrimitive, SliceId, TileCacheLogger, ClusterFlags, SurfaceRenderTasks};
 use crate::picture::{PrimitiveList, PrimitiveCluster, SurfaceIndex, TileCacheInstance};
-use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientCacheKey, GradientStopKey, CachedGradientSegment};
+use crate::prim_store::gradient::{GRADIENT_FP_STOPS, FastLinearGradientCacheKey, GradientStopKey, CachedGradientSegment};
 use crate::prim_store::gradient::LinearGradientPrimitive;
 use crate::prim_store::line_dec::MAX_LINE_DECORATION_RESOLUTION;
 use crate::prim_store::*;
@@ -780,7 +780,7 @@ fn prepare_interned_prim_for_render(
                             segment_stops[i] = stops[first_stop + i];
                         }
 
-                        let cache_key = GradientCacheKey {
+                        let cache_key = FastLinearGradientCacheKey {
                             orientation,
                             start_stop_point: VectorKey {
                                 x: segment_start_point,
@@ -822,7 +822,7 @@ fn prepare_interned_prim_for_render(
                                     render_task: frame_state.resource_cache.request_render_task(
                                         RenderTaskCacheKey {
                                             size: task_size,
-                                            kind: RenderTaskCacheKeyKind::Gradient(cache_key),
+                                            kind: RenderTaskCacheKeyKind::FastLinearGradient(cache_key),
                                         },
                                         frame_state.gpu_cache,
                                         frame_state.rg_builder,

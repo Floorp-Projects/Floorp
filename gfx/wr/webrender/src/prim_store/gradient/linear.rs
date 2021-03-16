@@ -74,7 +74,7 @@ impl InternDebug for LinearGradientKey {}
 #[derive(Clone, Debug, Hash, MallocSizeOf, PartialEq, Eq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct GradientCacheKey {
+pub struct FastLinearGradientCacheKey {
     pub orientation: LineOrientation,
     pub start_stop_point: VectorKey,
     pub stops: [GradientStopKey; GRADIENT_FP_STOPS],
