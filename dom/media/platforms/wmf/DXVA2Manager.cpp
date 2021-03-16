@@ -602,7 +602,7 @@ class D3D11DXVA2Manager : public DXVA2Manager {
   UINT mDeviceManagerToken = 0;
   RefPtr<IMFMediaType> mInputType;
   GUID mInputSubType;
-  gfx::YUVColorSpace mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
+  gfx::YUVColorSpace mYUVColorSpace;
   gfx::ColorRange mColorRange = gfx::ColorRange::LIMITED;
 };
 

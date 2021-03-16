@@ -81,13 +81,19 @@ already_AddRefed<IDirect3DSurface9> DXGID3D9TextureData::GetD3D9Surface()
 }
 
 bool DXGID3D9TextureData::Serialize(SurfaceDescriptor& aOutDescriptor) {
+  SurfaceDescriptorD3D10 desc((WindowsHandle)(mHandle), mFormat, GetSize(),
+                              gfx::YUVColorSpace::Identity,
+                              gfx::ColorRange::FULL);
   // In reality, with D3D9 we will only ever deal with RGBA textures.
   bool isYUV = mFormat == SurfaceFormat::NV12 ||
                mFormat == SurfaceFormat::P010 || mFormat == SurfaceFormat::P016;
-  aOutDescriptor = SurfaceDescriptorD3D10(
-      (WindowsHandle)(mHandle), mFormat, GetSize(),
-      isYUV ? gfx::YUVColorSpace::BT601 : gfx::YUVColorSpace::UNKNOWN,
-      gfx::ColorRange::LIMITED);
+  if (isYUV) {
+    gfxCriticalError() << "Unexpected YUV format for DXGID3D9TextureData: "
+                       << mFormat;
+    desc.yUVColorSpace() = gfx::YUVColorSpace::BT601;
+    desc.colorRange() = gfx::ColorRange::LIMITED;
+  }
+  aOutDescriptor = desc;
   return true;
 }
 
