@@ -29,13 +29,8 @@
 
 #urlbar-container,
 #search-container {
-  padding-block: 8px;
-  margin-inline: @urlbarMarginInline@;
-}
-
-:root[uidensity=compact] #urlbar-container,
-:root[uidensity=compact] #search-container {
   padding-block: 4px;
+  margin-inline: @urlbarMarginInline@;
 }
 
 #urlbar,
