@@ -5,7 +5,7 @@
 package org.mozilla.focus.settings
 
 import mozilla.components.concept.fetch.Client
-import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
+import mozilla.components.lib.fetch.okhttp.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.Assert.assertFalse
@@ -25,7 +25,7 @@ class SearchEngineValidationTest {
 
     @Before
     fun setup() {
-        client = HttpURLConnectionClient()
+        client = OkHttpClient()
     }
 
     @Test

@@ -206,7 +206,7 @@ dependencies {
 
     androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.11.0'
     testImplementation 'com.squareup.okhttp3:mockwebserver:3.11.0'
-    testImplementation "org.mozilla.components:lib-fetch-httpurlconnection:$mozilla_components_version"
+    testImplementation "org.mozilla.components:lib-fetch-okhttp:$mozilla_components_version"
 
     androidTestImplementation "tools.fastlane:screengrab:2.0.0", {
         exclude group: 'com.android.support', module: 'support-annotations'

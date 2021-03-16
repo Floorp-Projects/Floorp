@@ -16,6 +16,9 @@ import mozilla.components.concept.engine.EngineSessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.Settings
 import mozilla.components.concept.engine.utils.EngineVersion
+import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.Request
+import mozilla.components.concept.fetch.Response
 import org.json.JSONObject
 
 /**
@@ -24,7 +27,7 @@ import org.json.JSONObject
  */
 class TestFocusApplication : FocusApplication() {
     override val components: Components by lazy {
-        Components(this, engineOverride = FakeEngine())
+        Components(this, engineOverride = FakeEngine(), clientOverride = FakeClient())
     }
 }
 
@@ -65,5 +68,11 @@ class FakeEngineSessionState : EngineSessionState {
     override fun writeTo(writer: JsonWriter) {
         writer.beginObject()
         writer.endObject()
+    }
+}
+
+class FakeClient : Client() {
+    override fun fetch(request: Request): Response {
+        throw UnsupportedOperationException()
     }
 }
