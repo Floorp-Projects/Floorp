@@ -31,7 +31,7 @@
         // Scroll diff
         var dx = 0;
         var dy = -10; // Negative to scroll down
-        synthesizeNativeWheelAndWaitForWheelEvent(scrollDiv, x, y, dx, dy);
+        synthesizeNativeWheel(scrollDiv, x, y, dx, dy);
         window.requestAnimationFrame(sendScrollEvent);
       } else {
         // Locally, with silk and apz + e10s, retina 15" mbp usually get ~1.0 - 1.5
