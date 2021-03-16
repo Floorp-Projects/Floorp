@@ -275,3 +275,48 @@ add_task(async function testWebNavigationGetFrameOnDiscardedTab() {
 
   await extension.unload();
 });
+
+add_task(async function testWebNavigationCrossOriginFrames() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["webNavigation"],
+    },
+    async background() {
+      let url =
+        "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest/file_contains_iframe.html";
+      let tab = await browser.tabs.create({ url });
+
+      await new Promise(resolve => {
+        browser.webNavigation.onCompleted.addListener(details => {
+          if (details.tabId === tab.id && details.frameId === 0) {
+            resolve();
+          }
+        });
+      });
+
+      let frames = await browser.webNavigation.getAllFrames({ tabId: tab.id });
+      browser.test.assertEq(frames[0].url, url, "Top is from mochi.test");
+
+      await browser.tabs.remove(tab.id);
+      browser.test.sendMessage("webNavigation.CrossOriginFrames", frames);
+    },
+  });
+
+  await extension.startup();
+
+  let frames = await extension.awaitMessage("webNavigation.CrossOriginFrames");
+  is(frames.length, 2, "getAllFrames() returns both frames.");
+
+  is(frames[0].frameId, 0, "Top frame has correct frameId.");
+  is(frames[0].parentFrameId, -1, "Top parentFrameId is correct.");
+
+  ok(frames[1].frameId > 0, "Cross-origin iframe has non-zero frameId.");
+  is(frames[1].parentFrameId, 0, "Iframe parentFrameId is correct.");
+  is(
+    frames[1].url,
+    "http://example.org/tests/toolkit/components/extensions/test/mochitest/file_contains_img.html",
+    "Irame is from example.org"
+  );
+
+  await extension.unload();
+});
