@@ -24,6 +24,7 @@ import mozilla.components.concept.menu.candidate.TextStyle
  * @param label The visible label of this menu item.
  * @param textSize: The size of the label.
  * @param textColorResource: The color resource to apply to the text.
+ * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
  * @param listener Callback to be invoked when this menu item is clicked.
  */
 class SimpleBrowserMenuItem(
@@ -31,6 +32,7 @@ class SimpleBrowserMenuItem(
     private val textSize: Float = NO_ID.toFloat(),
     @ColorRes
     private val textColorResource: Int = NO_ID,
+    override val isCollapsingMenuLimit: Boolean = false,
     private val listener: (() -> Unit)? = null
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }

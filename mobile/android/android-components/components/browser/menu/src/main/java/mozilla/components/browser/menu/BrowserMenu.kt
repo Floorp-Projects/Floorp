@@ -5,12 +5,12 @@
 package mozilla.components.browser.menu
 
 import android.graphics.Color
-import android.graphics.Rect
 import android.graphics.drawable.ColorDrawable
 import android.os.Build
 import android.view.Gravity
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.WindowManager
 import android.view.accessibility.AccessibilityNodeInfo
 import android.widget.PopupWindow
@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.browser.menu.BrowserMenu.Orientation.DOWN
 import mozilla.components.browser.menu.BrowserMenu.Orientation.UP
 import mozilla.components.browser.menu.view.DynamicWidthRecyclerView
+import mozilla.components.browser.menu.view.ExpandableLayout
 import mozilla.components.concept.menu.MenuStyle
 import mozilla.components.support.ktx.android.view.isRTL
 import mozilla.components.support.ktx.android.view.onNextGlobalLayout
@@ -37,6 +38,8 @@ open class BrowserMenu internal constructor(
     private var menuList: RecyclerView? = null
     internal var currAnchor: View? = null
     internal var isShown = false
+    @VisibleForTesting
+    internal lateinit var menuPositioningData: MenuPositioningData
 
     /**
      * @param anchor the view on which to pin the popup window.
@@ -45,7 +48,7 @@ open class BrowserMenu internal constructor(
      * @param endOfMenuAlwaysVisible when is set to true makes sure the bottom of the menu is always visible otherwise,
      *  the top of the menu is always visible.
      */
-    @Suppress("InflateParams", "ComplexMethod")
+    @Suppress("InflateParams", "ComplexMethod", "LongParameterList")
     open fun show(
         anchor: View,
         orientation: Orientation = DOWN,
@@ -53,14 +56,12 @@ open class BrowserMenu internal constructor(
         endOfMenuAlwaysVisible: Boolean = false,
         onDismiss: () -> Unit = {}
     ): PopupWindow {
-        val view = LayoutInflater.from(anchor.context).inflate(R.layout.mozac_browser_menu, null)
+        var view = LayoutInflater.from(anchor.context).inflate(R.layout.mozac_browser_menu, null)
 
         adapter.menu = this
 
         menuList = view.findViewById<DynamicWidthRecyclerView>(R.id.mozac_browser_menu_recyclerView).apply {
-            layoutManager = LinearLayoutManager(anchor.context, RecyclerView.VERTICAL, false).also {
-                setEndOfMenuAlwaysVisibleCompact(endOfMenuAlwaysVisible, it)
-            }
+            layoutManager = LinearLayoutManager(anchor.context, RecyclerView.VERTICAL, false)
             adapter = this@BrowserMenu.adapter
             minWidth = style?.minWidth ?: resources.getDimensionPixelSize(R.dimen.mozac_browser_menu_width_min)
             maxWidth = style?.maxWidth ?: resources.getDimensionPixelSize(R.dimen.mozac_browser_menu_width_max)
@@ -71,7 +72,10 @@ open class BrowserMenu internal constructor(
         }
 
         menuList?.accessibilityDelegate = object : View.AccessibilityDelegate() {
-            override fun onInitializeAccessibilityNodeInfo(host: View?, info: AccessibilityNodeInfo?) {
+            override fun onInitializeAccessibilityNodeInfo(
+                host: View?,
+                info: AccessibilityNodeInfo?
+            ) {
                 super.onInitializeAccessibilityNodeInfo(host, info)
                 info?.collectionInfo = AccessibilityNodeInfo.CollectionInfo.obtain(
                     adapter.interactiveCount, 0, false
@@ -79,11 +83,16 @@ open class BrowserMenu internal constructor(
             }
         }
 
-        return PopupWindow(
-            view,
-            WindowManager.LayoutParams.WRAP_CONTENT,
-            WindowManager.LayoutParams.WRAP_CONTENT
-        ).apply {
+        // Data needed to infer whether to show a collapsed menu
+        // And then to properly place it.
+        menuPositioningData = inferMenuPositioningData(
+            view as ViewGroup,
+            anchor,
+            MenuPositioningData(askedOrientation = orientation)
+        )
+
+        view = configureExpandableMenu(view, endOfMenuAlwaysVisible)
+        return getNewPopupWindow(view).apply {
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             isFocusable = true
             elevation = view.resources.getDimension(R.dimen.mozac_browser_menu_elevation)
@@ -95,7 +104,7 @@ open class BrowserMenu internal constructor(
                 onDismiss()
             }
 
-            displayPopup(view, anchor, orientation).also {
+            displayPopup(menuPositioningData).also {
                 anchor.addOnAttachStateChangeListener(this@BrowserMenu)
                 currAnchor = anchor
             }
@@ -103,6 +112,54 @@ open class BrowserMenu internal constructor(
             currentPopup = it
             isShown = true
         }
+    }
+
+    @VisibleForTesting
+    internal fun configureExpandableMenu(
+        view: ViewGroup,
+        endOfMenuAlwaysVisible: Boolean
+    ): ViewGroup {
+        if (menuPositioningData.inferredMenuPlacement is BrowserMenuPlacement.AnchoredToBottom.Dropdown ||
+            menuPositioningData.inferredMenuPlacement is BrowserMenuPlacement.AnchoredToBottom.ManualAnchoring) {
+
+            val collapsingMenuIndexLimit = adapter.visibleItems.indexOfFirst { it.isCollapsingMenuLimit }
+            if (collapsingMenuIndexLimit > 0) {
+                return ExpandableLayout.wrapContentInExpandableView(
+                    view,
+                    collapsingMenuIndexLimit
+                ) { dismiss() }
+            }
+        }
+
+        // When showing an expandable bottom menu it should always be scrolled to the top (default in LayoutManager).
+        // Otherwise try showing the bottom of the menu when not enough space to fit it on the screen.
+        menuList?.let { list ->
+            list.setEndOfMenuAlwaysVisibleCompact(
+                endOfMenuAlwaysVisible, list.layoutManager as LinearLayoutManager
+            )
+        }
+        return view
+    }
+
+    @VisibleForTesting
+    internal fun getNewPopupWindow(view: ViewGroup): PopupWindow {
+        // If the menu is expandable we need to give it all the possible space to expand.
+        // Also, by setting MATCH_PARENT, expanding the menu will not expand the Window
+        // of the PopupWindow which for a bottom anchored menu means glitchy animations.
+        val popupHeight = if (view is ExpandableLayout) {
+            WindowManager.LayoutParams.MATCH_PARENT
+        } else {
+
+            // Otherwise wrap the menu. Allowing it to be as big as the parent would result in
+            // layout issues if the menu is smaller than the available screen estate.
+            WindowManager.LayoutParams.WRAP_CONTENT
+        }
+
+        return PopupWindow(
+            view,
+            WindowManager.LayoutParams.WRAP_CONTENT,
+            popupHeight
+        )
     }
 
     private fun RecyclerView.setEndOfMenuAlwaysVisibleCompact(
@@ -172,114 +229,48 @@ open class BrowserMenu internal constructor(
 }
 
 @VisibleForTesting
-internal fun PopupWindow.displayPopup(
-    containerView: View,
-    anchor: View,
-    preferredOrientation: BrowserMenu.Orientation
-) {
-    // Measure menu
-    val spec = View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED)
-    containerView.measure(spec, spec)
-
-    val (availableHeightToTop, availableHeightToBottom) = getMaxAvailableHeightToTopAndBottom(anchor)
-    val containerHeight = containerView.measuredHeight
-
-    val fitsUp = availableHeightToTop >= containerHeight
-    val fitsDown = availableHeightToBottom >= containerHeight
-
+internal fun PopupWindow.displayPopup(currentData: MenuPositioningData) {
     // Try to use the preferred orientation, if doesn't fit fallback to the best fit.
-    when {
-        preferredOrientation == DOWN && fitsDown -> {
-            showPopupWithDownOrientation(anchor)
-        }
-        preferredOrientation == UP && fitsUp -> {
-            showPopupWithUpOrientation(anchor, availableHeightToBottom, containerHeight)
-        }
-        else -> {
-            showPopupWhereBestFits(
-                anchor,
-                fitsUp,
-                fitsDown,
-                availableHeightToTop,
-                availableHeightToBottom,
-                containerHeight
-            )
-        }
+    when (currentData.inferredMenuPlacement) {
+        is BrowserMenuPlacement.AnchoredToTop.Dropdown -> showPopupWithDownOrientation(currentData)
+        is BrowserMenuPlacement.AnchoredToBottom.Dropdown -> showPopupWithUpOrientation(currentData)
+
+        is BrowserMenuPlacement.AnchoredToTop.ManualAnchoring,
+        is BrowserMenuPlacement.AnchoredToBottom.ManualAnchoring -> showAtAnchorLocation(currentData)
     }
 }
 
-@Suppress("LongParameterList")
-private fun PopupWindow.showPopupWhereBestFits(
-    anchor: View,
-    fitsUp: Boolean,
-    fitsDown: Boolean,
-    availableHeightToTop: Int,
-    availableHeightToBottom: Int,
-    containerHeight: Int
-) {
-    // We don't have enough space to show the menu UP neither DOWN.
-    // Let's just show the popup at the location of the anchor.
-    if (!fitsUp && !fitsDown) {
-        showAtAnchorLocation(anchor, availableHeightToTop < availableHeightToBottom)
-    } else {
-        if (fitsDown) {
-            showPopupWithDownOrientation(anchor)
-        } else {
-            showPopupWithUpOrientation(anchor, availableHeightToBottom, containerHeight)
-        }
-    }
-}
-
-private fun PopupWindow.showPopupWithUpOrientation(anchor: View, availableHeightToBottom: Int, containerHeight: Int) {
+@VisibleForTesting
+internal fun PopupWindow.showPopupWithUpOrientation(menuPositioningData: MenuPositioningData) {
+    val anchor = menuPositioningData.inferredMenuPlacement!!.anchor
     val xOffset = if (anchor.isRTL) -anchor.width else 0
-    animationStyle = R.style.Mozac_Browser_Menu_Animation_OverflowMenuBottom
+    animationStyle = menuPositioningData.inferredMenuPlacement.animation
 
     // Positioning the menu above and overlapping the anchor.
-    val yOffset = if (availableHeightToBottom < 0) {
+    val yOffset = if (menuPositioningData.availableHeightToBottom < 0) {
         // The anchor is partially below of the bottom of the screen, let's make the menu completely visible.
-        availableHeightToBottom - containerHeight
+        menuPositioningData.availableHeightToBottom - menuPositioningData.containerViewHeight
     } else {
-        -containerHeight
+        -menuPositioningData.containerViewHeight
     }
     showAsDropDown(anchor, xOffset, yOffset)
 }
 
-private fun PopupWindow.showPopupWithDownOrientation(anchor: View) {
+private fun PopupWindow.showPopupWithDownOrientation(menuPositioningData: MenuPositioningData) {
+    val anchor = menuPositioningData.inferredMenuPlacement!!.anchor
     val xOffset = if (anchor.isRTL) -anchor.width else 0
-    animationStyle = R.style.Mozac_Browser_Menu_Animation_OverflowMenuTop
+    animationStyle = menuPositioningData.inferredMenuPlacement.animation
     // Menu should overlay the anchor.
     showAsDropDown(anchor, xOffset, -anchor.height)
 }
 
-private fun PopupWindow.showAtAnchorLocation(anchor: View, isCloserToTop: Boolean) {
+private fun PopupWindow.showAtAnchorLocation(menuPositioningData: MenuPositioningData) {
+    val anchor = menuPositioningData.inferredMenuPlacement!!.anchor
     val anchorPosition = IntArray(2)
-
-    // Apply the best fit animation style based on positioning
-    animationStyle = if (isCloserToTop) {
-        R.style.Mozac_Browser_Menu_Animation_OverflowMenuTop
-    } else {
-        R.style.Mozac_Browser_Menu_Animation_OverflowMenuBottom
-    }
+    animationStyle = menuPositioningData.inferredMenuPlacement.animation
 
     anchor.getLocationOnScreen(anchorPosition)
     val (x, y) = anchorPosition
     PopupWindowCompat.setOverlapAnchor(this, true)
     showAtLocation(anchor, Gravity.START or Gravity.TOP, x, y)
-}
-
-private fun getMaxAvailableHeightToTopAndBottom(anchor: View): Pair<Int, Int> {
-    val anchorPosition = IntArray(2)
-    val displayFrame = Rect()
-
-    val appView = anchor.rootView
-    appView.getWindowVisibleDisplayFrame(displayFrame)
-
-    anchor.getLocationOnScreen(anchorPosition)
-
-    val bottomEdge = displayFrame.bottom
-
-    val distanceToBottom = bottomEdge - (anchorPosition[1] + anchor.height)
-    val distanceToTop = anchorPosition[1] - displayFrame.top
-
-    return distanceToTop to distanceToBottom
 }

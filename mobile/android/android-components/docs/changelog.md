@@ -13,7 +13,7 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
 * **browser-menu**
-  * 🌟️ Add initial support for collapsing / expandable browser menus. ExpandableLayout can wrap a menu layout before being used in a PopupWindow and automatically allow the collapse/expand behaviors.
+  * 🌟️ BrowserMenu support a bottom collapsed/expandable layout through a new ExpandableLayout that will wrap a menu layout before being used in a PopupWindow and automatically allow the collapse/expand behaviors.
 
 * **browser-toolbar**
 * **feature-session**
