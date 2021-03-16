@@ -277,6 +277,12 @@ class nsRange final : public mozilla::dom::AbstractRange,
   nsRange(const nsRange&);
   nsRange& operator=(const nsRange&);
 
+  template <typename SPT, typename SRT, typename EPT, typename ERT>
+  static void AssertIfMismatchRootAndRangeBoundaries(
+      const mozilla::RangeBoundaryBase<SPT, SRT>& aStartBoundary,
+      const mozilla::RangeBoundaryBase<EPT, ERT>& aEndBoundary,
+      const nsINode* aRootNode, bool aNotInsertedYet = false);
+
   /**
    * Cut or delete the range's contents.
    *
