@@ -1654,20 +1654,19 @@ const uint32_t HTTP3_TELEMETRY_TRANSPORT_CRYPTO_UNKNOWN = 18;
 const uint32_t HTTP3_TELEMETRY_CRYPTO_ERROR = 19;
 
 uint64_t GetCryptoAlertCode(nsCString& key, uint64_t error) {
-  uint64_t cryptoErrorCode = error - 0x100;
-  if (cryptoErrorCode < 100) {
+  if (error < 100) {
     key.Append("_a"_ns);
-    return cryptoErrorCode;
+    return error;
   }
-  if (cryptoErrorCode < 200) {
-    cryptoErrorCode -= 100;
+  if (error < 200) {
+    error -= 100;
     key.Append("_b"_ns);
-    return cryptoErrorCode;
+    return error;
   }
-  if (cryptoErrorCode < 256) {
-    cryptoErrorCode -= 200;
+  if (error < 256) {
+    error -= 200;
     key.Append("_c"_ns);
-    return cryptoErrorCode;
+    return error;
   }
   return HTTP3_TELEMETRY_TRANSPORT_CRYPTO_UNKNOWN;
 }
@@ -1680,7 +1679,7 @@ uint64_t GetTransportErrorCodeForTelemetry(nsCString& key, uint64_t error) {
     return HTTP3_TELEMETRY_TRANSPORT_UNKNOWN;
   }
 
-  return GetCryptoAlertCode(key, error);
+  return GetCryptoAlertCode(key, error - 0x100);
 }
 
 // Http3 error codes are 0x100-0x110.
