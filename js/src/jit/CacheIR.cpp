@@ -1141,11 +1141,19 @@ AttachDecision GetPropIRGenerator::tryAttachWindowProxy(HandleObject obj,
       maybeEmitIdGuard(id);
       ObjOperandId windowObjId =
           GuardAndLoadWindowProxyWindow(writer, objId, windowObj);
-      ValOperandId receiverId = writer.boxObject(windowObjId);
-      EmitCallGetterResult(cx_, writer, windowObj, holder, shape, windowObjId,
-                           receiverId, mode_);
 
-      trackAttached("WindowProxyGetter");
+      if (CanAttachDOMGetterSetter(cx_, JSJitInfo::Getter, windowObj, shape,
+                                   mode_)) {
+        EmitCallDOMGetterResult(cx_, writer, windowObj, holder, shape,
+                                windowObjId);
+        trackAttached("WindowProxyDOMGetter");
+      } else {
+        ValOperandId receiverId = writer.boxObject(windowObjId);
+        EmitCallGetterResult(cx_, writer, windowObj, holder, shape, windowObjId,
+                             receiverId, mode_);
+        trackAttached("WindowProxyGetter");
+      }
+
       return AttachDecision::Attach;
     }
 
