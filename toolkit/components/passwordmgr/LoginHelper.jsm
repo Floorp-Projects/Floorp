@@ -1207,16 +1207,19 @@ this.LoginHelper = {
    *
    * @param {Element} element
    *                  the field we want to check.
+   * @param {Object} options
+   * @param {bool} [options.ignoreConnect] - Whether to ignore checking isConnected
+   *                                         of the element.
    *
    * @returns {Boolean} true if the field can
    *                    be treated as a password input
    */
-  isPasswordFieldType(element) {
+  isPasswordFieldType(element, { ignoreConnect = false } = {}) {
     if (ChromeUtils.getClassName(element) !== "HTMLInputElement") {
       return false;
     }
 
-    if (!element.isConnected) {
+    if (!element.isConnected && !ignoreConnect) {
       // If the element isn't connected then it isn't visible to the user so
       // shouldn't be considered. It must have been connected in the past.
       return false;
@@ -1242,16 +1245,19 @@ this.LoginHelper = {
    *
    * @param {Element} element
    *                  the field we want to check.
+   * @param {Object} options
+   * @param {bool} [options.ignoreConnect] - Whether to ignore checking isConnected
+   *                                         of the element.
    *
    * @returns {Boolean} true if the field type is one
    *                    of the username types.
    */
-  isUsernameFieldType(element) {
+  isUsernameFieldType(element, { ignoreConnect = false } = {}) {
     if (ChromeUtils.getClassName(element) !== "HTMLInputElement") {
       return false;
     }
 
-    if (!element.isConnected) {
+    if (!element.isConnected && !ignoreConnect) {
       // If the element isn't connected then it isn't visible to the user so
       // shouldn't be considered. It must have been connected in the past.
       return false;
