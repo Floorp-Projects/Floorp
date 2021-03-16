@@ -129,34 +129,34 @@ const SymbolicAddressSignature SASigWaitI64 = {SymbolicAddress::WaitI64,
                                                {_PTR, _I32, _I64, _I64, _END}};
 const SymbolicAddressSignature SASigWake = {
     SymbolicAddress::Wake, _I32, _FailOnNegI32, 3, {_PTR, _I32, _I32, _END}};
-const SymbolicAddressSignature SASigMemCopy = {
-    SymbolicAddress::MemCopy,
+const SymbolicAddressSignature SASigMemCopy32 = {
+    SymbolicAddress::MemCopy32,
     _VOID,
     _FailOnNegI32,
     5,
     {_PTR, _I32, _I32, _I32, _PTR, _END}};
-const SymbolicAddressSignature SASigMemCopyShared = {
-    SymbolicAddress::MemCopyShared,
+const SymbolicAddressSignature SASigMemCopyShared32 = {
+    SymbolicAddress::MemCopyShared32,
     _VOID,
     _FailOnNegI32,
     5,
     {_PTR, _I32, _I32, _I32, _PTR, _END}};
 const SymbolicAddressSignature SASigDataDrop = {
     SymbolicAddress::DataDrop, _VOID, _FailOnNegI32, 2, {_PTR, _I32, _END}};
-const SymbolicAddressSignature SASigMemFill = {
-    SymbolicAddress::MemFill,
+const SymbolicAddressSignature SASigMemFill32 = {
+    SymbolicAddress::MemFill32,
     _VOID,
     _FailOnNegI32,
     5,
     {_PTR, _I32, _I32, _I32, _PTR, _END}};
-const SymbolicAddressSignature SASigMemFillShared = {
-    SymbolicAddress::MemFillShared,
+const SymbolicAddressSignature SASigMemFillShared32 = {
+    SymbolicAddress::MemFillShared32,
     _VOID,
     _FailOnNegI32,
     5,
     {_PTR, _I32, _I32, _I32, _PTR, _END}};
-const SymbolicAddressSignature SASigMemInit = {
-    SymbolicAddress::MemInit,
+const SymbolicAddressSignature SASigMemInit32 = {
+    SymbolicAddress::MemInit32,
     _VOID,
     _FailOnNegI32,
     5,
@@ -1098,41 +1098,41 @@ void* wasm::AddressOf(SymbolicAddress imm, ABIFunctionType* abiType) {
           ArgType_Int32, {ArgType_General, ArgType_Int32, ArgType_Int32});
       MOZ_ASSERT(*abiType == ToABIType(SASigWake));
       return FuncCast(Instance::wake, *abiType);
-    case SymbolicAddress::MemCopy:
+    case SymbolicAddress::MemCopy32:
       *abiType = MakeABIFunctionType(
           ArgType_Int32, {ArgType_General, ArgType_Int32, ArgType_Int32,
                           ArgType_Int32, ArgType_General});
-      MOZ_ASSERT(*abiType == ToABIType(SASigMemCopy));
-      return FuncCast(Instance::memCopy, *abiType);
-    case SymbolicAddress::MemCopyShared:
+      MOZ_ASSERT(*abiType == ToABIType(SASigMemCopy32));
+      return FuncCast(Instance::memCopy32, *abiType);
+    case SymbolicAddress::MemCopyShared32:
       *abiType = MakeABIFunctionType(
           ArgType_Int32, {ArgType_General, ArgType_Int32, ArgType_Int32,
                           ArgType_Int32, ArgType_General});
-      MOZ_ASSERT(*abiType == ToABIType(SASigMemCopyShared));
-      return FuncCast(Instance::memCopyShared, *abiType);
+      MOZ_ASSERT(*abiType == ToABIType(SASigMemCopyShared32));
+      return FuncCast(Instance::memCopyShared32, *abiType);
     case SymbolicAddress::DataDrop:
       *abiType =
           MakeABIFunctionType(ArgType_Int32, {ArgType_General, ArgType_Int32});
       MOZ_ASSERT(*abiType == ToABIType(SASigDataDrop));
       return FuncCast(Instance::dataDrop, *abiType);
-    case SymbolicAddress::MemFill:
+    case SymbolicAddress::MemFill32:
       *abiType = MakeABIFunctionType(
           ArgType_Int32, {ArgType_General, ArgType_Int32, ArgType_Int32,
                           ArgType_Int32, ArgType_General});
-      MOZ_ASSERT(*abiType == ToABIType(SASigMemFill));
-      return FuncCast(Instance::memFill, *abiType);
-    case SymbolicAddress::MemFillShared:
+      MOZ_ASSERT(*abiType == ToABIType(SASigMemFill32));
+      return FuncCast(Instance::memFill32, *abiType);
+    case SymbolicAddress::MemFillShared32:
       *abiType = MakeABIFunctionType(
           ArgType_Int32, {ArgType_General, ArgType_Int32, ArgType_Int32,
                           ArgType_Int32, ArgType_General});
-      MOZ_ASSERT(*abiType == ToABIType(SASigMemFillShared));
-      return FuncCast(Instance::memFillShared, *abiType);
-    case SymbolicAddress::MemInit:
+      MOZ_ASSERT(*abiType == ToABIType(SASigMemFillShared32));
+      return FuncCast(Instance::memFillShared32, *abiType);
+    case SymbolicAddress::MemInit32:
       *abiType = MakeABIFunctionType(
           ArgType_Int32, {ArgType_General, ArgType_Int32, ArgType_Int32,
                           ArgType_Int32, ArgType_Int32});
-      MOZ_ASSERT(*abiType == ToABIType(SASigMemInit));
-      return FuncCast(Instance::memInit, *abiType);
+      MOZ_ASSERT(*abiType == ToABIType(SASigMemInit32));
+      return FuncCast(Instance::memInit32, *abiType);
     case SymbolicAddress::TableCopy:
       *abiType = MakeABIFunctionType(
           ArgType_Int32, {ArgType_General, ArgType_Int32, ArgType_Int32,
@@ -1340,12 +1340,12 @@ bool wasm::NeedsBuiltinThunk(SymbolicAddress sym) {
     case SymbolicAddress::Wake:
     case SymbolicAddress::CoerceInPlace_JitEntry:
     case SymbolicAddress::ReportV128JSCall:
-    case SymbolicAddress::MemCopy:
-    case SymbolicAddress::MemCopyShared:
+    case SymbolicAddress::MemCopy32:
+    case SymbolicAddress::MemCopyShared32:
     case SymbolicAddress::DataDrop:
-    case SymbolicAddress::MemFill:
-    case SymbolicAddress::MemFillShared:
-    case SymbolicAddress::MemInit:
+    case SymbolicAddress::MemFill32:
+    case SymbolicAddress::MemFillShared32:
+    case SymbolicAddress::MemInit32:
     case SymbolicAddress::TableCopy:
     case SymbolicAddress::ElemDrop:
     case SymbolicAddress::TableFill:

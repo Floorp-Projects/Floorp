@@ -51,17 +51,17 @@ static inline SymbolicAddress ToSymbolicAddress(BD_SymbolicAddress bd) {
     case BD_SymbolicAddress::MemorySize:
       return SymbolicAddress::MemorySize;
     case BD_SymbolicAddress::MemoryCopy:
-      return SymbolicAddress::MemCopy;
+      return SymbolicAddress::MemCopy32;
     case BD_SymbolicAddress::MemoryCopyShared:
-      return SymbolicAddress::MemCopyShared;
+      return SymbolicAddress::MemCopyShared32;
     case BD_SymbolicAddress::DataDrop:
       return SymbolicAddress::DataDrop;
     case BD_SymbolicAddress::MemoryFill:
-      return SymbolicAddress::MemFill;
+      return SymbolicAddress::MemFill32;
     case BD_SymbolicAddress::MemoryFillShared:
-      return SymbolicAddress::MemFillShared;
+      return SymbolicAddress::MemFillShared32;
     case BD_SymbolicAddress::MemoryInit:
-      return SymbolicAddress::MemInit;
+      return SymbolicAddress::MemInit32;
     case BD_SymbolicAddress::TableCopy:
       return SymbolicAddress::TableCopy;
     case BD_SymbolicAddress::ElemDrop:

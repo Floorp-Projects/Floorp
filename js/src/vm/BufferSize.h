@@ -16,12 +16,6 @@ class BufferSize {
   explicit BufferSize(size_t size) : size_(size) {}
 
   size_t get() const { return size_; }
-
-  uint32_t getWasmUint32() const {
-    // Exact test on max heap size for the time being: 64K-2 pages
-    MOZ_ASSERT(size_ <= UINT32_MAX - 65536 * 2 + 1);
-    return size_;
-  }
 };
 
 }  // namespace js

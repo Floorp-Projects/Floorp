@@ -12901,9 +12901,10 @@ bool BaseCompiler::emitMemCopy() {
 
 bool BaseCompiler::emitMemCopyCall(uint32_t lineOrBytecode) {
   pushHeapBase();
-  if (!emitInstanceCall(lineOrBytecode,
-                        usesSharedMemory() ? SASigMemCopyShared : SASigMemCopy,
-                        /*pushReturnedValue=*/false)) {
+  if (!emitInstanceCall(
+          lineOrBytecode,
+          usesSharedMemory() ? SASigMemCopyShared32 : SASigMemCopy32,
+          /*pushReturnedValue=*/false)) {
     return false;
   }
 
@@ -13160,7 +13161,8 @@ bool BaseCompiler::emitMemFill() {
 bool BaseCompiler::emitMemFillCall(uint32_t lineOrBytecode) {
   pushHeapBase();
   return emitInstanceCall(
-      lineOrBytecode, usesSharedMemory() ? SASigMemFillShared : SASigMemFill,
+      lineOrBytecode,
+      usesSharedMemory() ? SASigMemFillShared32 : SASigMemFill32,
       /*pushReturnedValue=*/false);
 }
 
@@ -13299,7 +13301,7 @@ bool BaseCompiler::emitMemOrTableInit(bool isMem) {
 
   pushI32(int32_t(segIndex));
   if (isMem) {
-    if (!emitInstanceCall(lineOrBytecode, SASigMemInit,
+    if (!emitInstanceCall(lineOrBytecode, SASigMemInit32,
                           /*pushReturnedValue=*/false)) {
       return false;
     }

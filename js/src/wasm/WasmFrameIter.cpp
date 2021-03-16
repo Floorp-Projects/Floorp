@@ -1410,15 +1410,15 @@ static const char* ThunkedNativeToDescription(SymbolicAddress func) {
       return "out-of-line coercion for jit entry arguments (in wasm)";
     case SymbolicAddress::ReportV128JSCall:
       return "jit call to v128 wasm function";
-    case SymbolicAddress::MemCopy:
-    case SymbolicAddress::MemCopyShared:
+    case SymbolicAddress::MemCopy32:
+    case SymbolicAddress::MemCopyShared32:
       return "call to native memory.copy function";
     case SymbolicAddress::DataDrop:
       return "call to native data.drop function";
-    case SymbolicAddress::MemFill:
-    case SymbolicAddress::MemFillShared:
+    case SymbolicAddress::MemFill32:
+    case SymbolicAddress::MemFillShared32:
       return "call to native memory.fill function";
-    case SymbolicAddress::MemInit:
+    case SymbolicAddress::MemInit32:
       return "call to native memory.init function";
     case SymbolicAddress::TableCopy:
       return "call to native table.copy function";

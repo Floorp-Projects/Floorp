@@ -163,6 +163,16 @@ bool ExceptionsAvailable(JSContext* cx);
 
 size_t MaxMemory32Pages();
 
+#ifdef JS_64BIT
+static inline size_t MaxMemory32BoundsCheckLimit() {
+  return UINT32_MAX - 2 * PageSize + 1;
+}
+#else
+static inline size_t MaxMemory32BoundsCheckLimit() {
+  return size_t(INT32_MAX) + 1;
+}
+#endif
+
 static inline size_t MaxMemory32Bytes() {
   return MaxMemory32Pages() * PageSize;
 }
