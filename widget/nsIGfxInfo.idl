@@ -175,8 +175,10 @@ interface nsIGfxInfo : nsISupports
   const long FEATURE_WEBRENDER_OPTIMIZED_SHADERS = 33;
   /* Whether we prefer EGL over GLX with X11, starting in 88. */
   const long FEATURE_X11_EGL = 34;
+  /* Whether DMABUF is supported, starting in 88. */
+  const long FEATURE_DMABUF = 35;
   /* the maximum feature value. */
-  const long FEATURE_MAX_VALUE = FEATURE_X11_EGL;
+  const long FEATURE_MAX_VALUE = FEATURE_DMABUF;
 
   /*
    * A set of return values from GetFeatureStatus
