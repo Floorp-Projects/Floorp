@@ -14,16 +14,6 @@ ChromeUtils.defineModuleGetter(
   "TelemetryUtils",
   "resource://gre/modules/TelemetryUtils.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionUtils",
-  "resource://gre/modules/ExtensionUtils.jsm"
-);
 
 const SCALAR_TYPES = {
   count: Ci.nsITelemetry.SCALAR_TYPE_COUNT,
