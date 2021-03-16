@@ -10,7 +10,6 @@ DIRS += [
 
 DevToolsModules(
     "create-store.js",
-    "non-react-subscriber.js",
     "subscriber.js",
     "visibility-handler-connect.js",
 )
