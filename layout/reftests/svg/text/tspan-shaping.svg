@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+  <!-- any font with an "fi" ligature will do, try a few likely names: -->
+  <text x="0" y="50" style="font: 50px Calibri, DejaVu Serif, FreeSerif, Times, serif">
+    <tspan x="20" dy="0">off</tspan><tspan x="20" dy="50">ice</tspan>
+  </text>
+</svg>

@@ -1926,6 +1926,14 @@ bool BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1,
       return false;
     }
 
+    // We inhibit cross-element-boundary shaping if we're in SVG content,
+    // as there are too many things SVG might be doing (like applying per-
+    // element positioning) that wouldn't make sense with shaping across
+    // the boundary.
+    if (SVGUtils::IsInSVGTextSubtree(ancestor)) {
+      return false;
+    }
+
     // Map inline-end and inline-start to physical sides for checking presence
     // of non-zero margin/border/padding.
     Side side1 = wm.PhysicalSide(eLogicalSideIEnd);
