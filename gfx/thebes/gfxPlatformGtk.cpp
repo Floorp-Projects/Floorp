@@ -60,7 +60,7 @@
 #  include <gdk/gdkwayland.h>
 #  include "mozilla/widget/nsWaylandDisplay.h"
 #  include "mozilla/widget/DMABufLibWrapper.h"
-#  include "mozilla/StaticPrefs_media.h"
+#  include "mozilla/StaticPrefs_widget.h"
 #endif
 
 #define GDK_PIXMAP_SIZE_MAX 32767
@@ -106,14 +106,13 @@ gfxPlatformGtk::gfxPlatformGtk() {
 #endif
 
     InitX11EGLConfig();
-
     if (IsWaylandDisplay() || gfxConfig::IsEnabled(Feature::X11_EGL)) {
       gfxVars::SetUseEGL(true);
+    }
 
-      nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
-      nsAutoCString drmRenderDevice;
-      gfxInfo->GetDrmRenderDevice(drmRenderDevice);
-      gfxVars::SetDrmRenderDevice(drmRenderDevice);
+    InitDmabufConfig();
+    if (gfxConfig::IsEnabled(Feature::DMABUF)) {
+      gfxVars::SetUseDMABuf(true);
     }
   }
 
@@ -121,7 +120,7 @@ gfxPlatformGtk::gfxPlatformGtk() {
 
 #ifdef MOZ_WAYLAND
   mUseWebGLDmabufBackend =
-      gfxVars::UseEGL() && GetDMABufDevice()->IsDMABufWebGLEnabled();
+      gfxVars::UseDMABuf() && GetDMABufDevice()->IsDMABufWebGLEnabled();
 #endif
 
   gPlatformFTLibrary = Factory::NewFTLibrary();
@@ -177,6 +176,49 @@ void gfxPlatformGtk::InitX11EGLConfig() {
 #else
   feature.DisableByDefault(FeatureStatus::Unavailable, "X11 support missing",
                            "FEATURE_FAILURE_NO_X11"_ns);
+#endif
+}
+
+void gfxPlatformGtk::InitDmabufConfig() {
+  FeatureState& feature = gfxConfig::GetFeature(Feature::DMABUF);
+#ifdef MOZ_WAYLAND
+  feature.EnableByDefault();
+
+  if (StaticPrefs::widget_dmabuf_force_enabled_AtStartup()) {
+    feature.UserForceEnable("Force enabled by pref");
+  }
+
+  nsCString failureId;
+  int32_t status;
+  nsCOMPtr<nsIGfxInfo> gfxInfo = components::GfxInfo::Service();
+  if (NS_FAILED(gfxInfo->GetFeatureStatus(nsIGfxInfo::FEATURE_DMABUF, failureId,
+                                          &status))) {
+    feature.Disable(FeatureStatus::BlockedNoGfxInfo, "gfxInfo is broken",
+                    "FEATURE_FAILURE_NO_GFX_INFO"_ns);
+  } else if (status != nsIGfxInfo::FEATURE_STATUS_OK) {
+    feature.Disable(FeatureStatus::Blocklisted, "Blocklisted by gfxInfo",
+                    failureId);
+  }
+
+  if (!gfxVars::UseEGL()) {
+    feature.ForceDisable(FeatureStatus::Unavailable, "Requires EGL",
+                         "FEATURE_FAILURE_REQUIRES_EGL"_ns);
+  }
+
+  if (feature.IsEnabled()) {
+    nsAutoCString drmRenderDevice;
+    gfxInfo->GetDrmRenderDevice(drmRenderDevice);
+    gfxVars::SetDrmRenderDevice(drmRenderDevice);
+
+    if (!GetDMABufDevice()->Configure(failureId)) {
+      feature.ForceDisable(FeatureStatus::Failed, "Failed to configure",
+                           failureId);
+    }
+  }
+#else
+  feature.DisableByDefault(FeatureStatus::Unavailable,
+                           "Wayland support missing",
+                           "FEATURE_FAILURE_NO_WAYLAND"_ns);
 #endif
 }
 
