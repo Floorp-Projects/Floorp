@@ -62,6 +62,11 @@ using namespace mozilla::layers;
 
 static Atomic<int> gNewSurfaceUID(1);
 
+// Use static lock to protect all map/unmap operation on dmabuf.
+// This is a workaround for MESA bug
+// https://gitlab.freedesktop.org/mesa/mesa/-/issues/4422
+static mozilla::StaticMutex gMESAMapLock;
+
 bool DMABufSurface::IsGlobalRefSet() const {
   if (!mGlobalRefCountFd) {
     return false;
@@ -631,6 +636,8 @@ void* DMABufSurface::MapInternal(uint32_t aX, uint32_t aY, uint32_t aWidth,
        "%d\n",
        mUID, aPlane, aX, aY, aWidth, aHeight));
 
+  StaticMutexAutoLock lockMesa(gMESAMapLock);
+
   mMappedRegionStride[aPlane] = 0;
   mMappedRegionData[aPlane] = nullptr;
   mMappedRegion[aPlane] = nsGbmLib::Map(
@@ -676,6 +683,7 @@ void* DMABufSurfaceRGBA::Map(uint32_t* aStride) {
 void DMABufSurface::Unmap(int aPlane) {
   if (mMappedRegion[aPlane]) {
     LOGDMABUF(("DMABufSurface::Unmap() UID %d plane %d\n", mUID, aPlane));
+    StaticMutexAutoLock lockMesa(gMESAMapLock);
     MutexAutoLock lockFD(mSurfaceLock);
     if (OpenFileDescriptorForPlane(aPlane)) {
       SyncDmaBuf(mDmabufFds[aPlane], DMA_BUF_SYNC_END);
