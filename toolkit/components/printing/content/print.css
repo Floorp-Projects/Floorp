@@ -292,6 +292,7 @@ input[type="number"].photon-number::-moz-number-spin-down {
   background-position: center;
   -moz-context-properties: fill;
   fill: currentColor;
+  appearance: none;
 }
 
 input[type="number"].photon-number::-moz-number-spin-up {
