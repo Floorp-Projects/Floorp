@@ -33,10 +33,26 @@ Try to file a specific bug for each backward compatibility code you are removing
 
 ### Setup
 
+We will run the remote debugging smoke tests twice. Once to exercise backward compatibility, and once without backward compatibility (same version). The tests to run are the same in both cases (see Tests section).
+
+You can use either desktop or mobile versions of Firefox as the server. Mobile is preferable as some codepaths are specific to Firefox mobile, but if you don't have access to an Android device, using a Desktop server is a decent alternative.
+
+Instructions to setup remote debugging for Firefox mobile: https://developer.mozilla.org/en-US/docs/Tools/about:debugging#connecting_to_a_remote_device.
+Instructions to setup remote debugging for Firefox desktop: https://gist.github.com/juliandescottes/b0d3d83154d9ea8a84db5d32aa35d2c1.
+
+#### Backward compatibility test
+
 - Start the current Nightly (release XX) as Client
 - Prepare Firefox (release XX -1) as the Server. Either
-  https://play.google.com/store/apps/details?id=org.mozilla.firefox_beta (mobile beta)
-  Desktop Beta or DevEdition (follow https://gist.github.com/juliandescottes/b0d3d83154d9ea8a84db5d32aa35d2c1 if you need help to launch it as a Debugger Server)
+  https://play.google.com/store/apps/details?id=org.mozilla.firefox_beta (mobile beta) or
+  Desktop Beta or DevEdition
+
+#### Same version test
+
+- Start the current Nightly (release XX) as Client
+- Prepare Firefox (also for release XX) as the Server. Either
+  https://play.google.com/store/apps/details?id=org.mozilla.fenix (mobile nightly)
+  or Desktop Nightly
 
 ### Tests
 
