@@ -125,10 +125,6 @@ this.GeckoDriver = function(server) {
   // top-most chrome window
   this.mainFrame = null;
 
-  // current browsing contexts for chrome and content
-  this.chromeBrowsingContext = null;
-  this.contentBrowsingContext = null;
-
   // Use content context by default
   this.context = Context.Content;
 
@@ -296,9 +292,9 @@ GeckoDriver.prototype.getBrowsingContext = function(options = {}) {
 
   let browsingContext = null;
   if (context === Context.Chrome) {
-    browsingContext = this.chromeBrowsingContext;
+    browsingContext = this.currentSession.chromeBrowsingContext;
   } else {
-    browsingContext = this.contentBrowsingContext;
+    browsingContext = this.currentSession.contentBrowsingContext;
   }
 
   if (browsingContext && parent) {
@@ -614,12 +610,12 @@ GeckoDriver.prototype.newSession = async function(cmd) {
   }
 
   if (this.mainFrame) {
-    this.chromeBrowsingContext = this.mainFrame.browsingContext;
+    this.currentSession.chromeBrowsingContext = this.mainFrame.browsingContext;
     this.mainFrame.focus();
   }
 
   if (this.curBrowser.tab) {
-    this.contentBrowsingContext = this.curBrowser.contentBrowser.browsingContext;
+    this.currentSession.contentBrowsingContext = this.curBrowser.contentBrowser.browsingContext;
     this.curBrowser.contentBrowser.focus();
   }
 
@@ -650,15 +646,16 @@ GeckoDriver.prototype.observe = function(subject, topic, data) {
       // the top-level one to not automatically switch away from the currently
       // selected frame.
       if (
-        subject.browserId == this.contentBrowsingContext?.browserId &&
+        subject.browserId ==
+          this.currentSession.contentBrowsingContext?.browserId &&
         !subject.parent &&
-        !this.contentBrowsingContext?.parent
+        !this.currentSession.contentBrowsingContext?.parent
       ) {
         logger.trace(
           "Remoteness change detected. Set new top-level browsing context " +
             `to ${subject.id}`
         );
-        this.contentBrowsingContext = subject;
+        this.currentSession.contentBrowsingContext = subject;
 
         // Manually update the stored browsing context id.
         // Switching to browserId instead of browsingContext.id would make
@@ -930,7 +927,7 @@ GeckoDriver.prototype.navigateTo = async function(cmd) {
   }
 
   // Switch to the top-level browsing context before navigating
-  this.contentBrowsingContext = browsingContext;
+  this.currentSession.contentBrowsingContext = browsingContext;
 
   const loadEventExpected = navigate.isLoadEventExpected(
     this._getCurrentURL(),
@@ -1093,7 +1090,7 @@ GeckoDriver.prototype.refresh = async function() {
   await this._handleUserPrompts();
 
   // Switch to the top-level browsing context before navigating
-  this.contentBrowsingContext = browsingContext;
+  this.currentSession.contentBrowsingContext = browsingContext;
 
   await navigate.waitForNavigationCompleted(this, () => {
     navigate.refresh(browsingContext);
@@ -1412,10 +1409,10 @@ GeckoDriver.prototype.setWindowHandle = async function(
     this.addBrowser(winProperties.win);
     this.mainFrame = winProperties.win;
 
-    this.chromeBrowsingContext = this.mainFrame.browsingContext;
+    this.currentSession.chromeBrowsingContext = this.mainFrame.browsingContext;
 
     if (!winProperties.hasTabBrowser) {
-      this.contentBrowsingContext = null;
+      this.currentSession.contentBrowsingContext = null;
     } else {
       const tabBrowser = browser.getTabBrowser(winProperties.win);
 
@@ -1425,7 +1422,8 @@ GeckoDriver.prototype.setWindowHandle = async function(
         ? tabBrowser.selectedBrowser
         : tabBrowser;
 
-      this.contentBrowsingContext = contentBrowser.browsingContext;
+      this.currentSession.contentBrowsingContext =
+        contentBrowser.browsingContext;
       this.registerBrowser(contentBrowser);
     }
   } else {
@@ -1443,8 +1441,9 @@ GeckoDriver.prototype.setWindowHandle = async function(
       );
     }
 
-    this.chromeBrowsingContext = this.mainFrame.browsingContext;
-    this.contentBrowsingContext = tab?.linkedBrowser.browsingContext;
+    this.currentSession.chromeBrowsingContext = this.mainFrame.browsingContext;
+    this.currentSession.contentBrowsingContext =
+      tab?.linkedBrowser.browsingContext;
   }
 
   if (focus) {
@@ -1469,7 +1468,7 @@ GeckoDriver.prototype.switchToParentFrame = async function() {
 
   browsingContext = assert.open(browsingContext?.parent);
 
-  this.contentBrowsingContext = browsingContext;
+  this.currentSession.contentBrowsingContext = browsingContext;
 };
 
 /**
@@ -1509,7 +1508,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
     byFrame || id
   );
 
-  this.contentBrowsingContext = browsingContext;
+  this.currentSession.contentBrowsingContext = browsingContext;
 };
 
 GeckoDriver.prototype.getTimeouts = function() {
@@ -2282,7 +2281,7 @@ GeckoDriver.prototype.close = async function() {
   }
 
   await this.curBrowser.closeTab();
-  this.contentBrowsingContext = null;
+  this.currentSession.contentBrowsingContext = null;
 
   return this.windowHandles.map(String);
 };
@@ -2319,8 +2318,8 @@ GeckoDriver.prototype.closeChromeWindow = async function() {
   }
 
   await this.curBrowser.closeWindow();
-  this.chromeBrowsingContext = null;
-  this.contentBrowsingContext = null;
+  this.currentSession.chromeBrowsingContext = null;
+  this.currentSession.contentBrowsingContext = null;
 
   return this.chromeWindowHandles.map(String);
 };
@@ -2332,10 +2331,8 @@ GeckoDriver.prototype.deleteSession = function() {
   unregisterCommandsActor();
   unregisterEventsActor();
 
-  // reset to the top-most frame, and clear browsing context references
+  // reset to the top-most frame
   this.mainFrame = null;
-  this.chromeBrowsingContext = null;
-  this.contentBrowsingContext = null;
 
   if (this.dialogObserver) {
     this.dialogObserver.cleanup();
