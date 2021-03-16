@@ -67,6 +67,7 @@
 #include "mozilla/dom/VsyncChild.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/RestyleManager.h"
+#include "mozilla/TaskController.h"
 #include "Layers.h"
 #include "imgIContainer.h"
 #include "mozilla/dom/ScriptSettings.h"
@@ -1888,44 +1889,30 @@ void nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime) {
   }
 }
 
-struct RunnableWithDelay {
-  nsCOMPtr<nsIRunnable> mRunnable;
-  uint32_t mDelay;
-};
+static AutoTArray<RefPtr<Task>, 8>* sPendingIdleTasks = nullptr;
 
-static AutoTArray<RunnableWithDelay, 8>* sPendingIdleRunnables = nullptr;
-
-void nsRefreshDriver::DispatchIdleRunnableAfterTickUnlessExists(
-    nsIRunnable* aRunnable, uint32_t aDelay) {
-  if (!sPendingIdleRunnables) {
-    sPendingIdleRunnables = new AutoTArray<RunnableWithDelay, 8>();
+void nsRefreshDriver::DispatchIdleTaskAfterTickUnlessExists(Task* aTask) {
+  if (!sPendingIdleTasks) {
+    sPendingIdleTasks = new AutoTArray<RefPtr<Task>, 8>();
   } else {
-    for (uint32_t i = 0; i < sPendingIdleRunnables->Length(); ++i) {
-      if ((*sPendingIdleRunnables)[i].mRunnable == aRunnable) {
-        return;
-      }
+    if (sPendingIdleTasks->Contains(aTask)) {
+      return;
     }
   }
 
-  RunnableWithDelay rwd = {aRunnable, aDelay};
-  sPendingIdleRunnables->AppendElement(rwd);
+  sPendingIdleTasks->AppendElement(aTask);
 }
 
-void nsRefreshDriver::CancelIdleRunnable(nsIRunnable* aRunnable) {
-  if (!sPendingIdleRunnables) {
+void nsRefreshDriver::CancelIdleTask(Task* aTask) {
+  if (!sPendingIdleTasks) {
     return;
   }
 
-  for (uint32_t i = 0; i < sPendingIdleRunnables->Length(); ++i) {
-    if ((*sPendingIdleRunnables)[i].mRunnable == aRunnable) {
-      sPendingIdleRunnables->RemoveElementAt(i);
-      break;
-    }
-  }
+  sPendingIdleTasks->RemoveElement(aTask);
 
-  if (sPendingIdleRunnables->IsEmpty()) {
-    delete sPendingIdleRunnables;
-    sPendingIdleRunnables = nullptr;
+  if (sPendingIdleTasks->IsEmpty()) {
+    delete sPendingIdleTasks;
+    sPendingIdleTasks = nullptr;
   }
 }
 
@@ -2284,7 +2271,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   }
 
   double phasePaint = 0.0;
-  bool dispatchRunnablesAfterTick = false;
+  bool dispatchTasksAfterTick = false;
   if (mViewManagerFlushIsPending) {
     AutoRecordPhase paintRecord(&phasePaint);
     nsCString transactionId;
@@ -2353,7 +2340,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
                                       MarkerTracingType::END);
     }
 
-    dispatchRunnablesAfterTick = true;
+    dispatchTasksAfterTick = true;
     mHasScheduleFlush = false;
   } else {
     // No paint happened, discard composition payloads.
@@ -2408,15 +2395,13 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     ScheduleViewManagerFlush();
   }
 
-  if (dispatchRunnablesAfterTick && sPendingIdleRunnables) {
-    AutoTArray<RunnableWithDelay, 8>* runnables = sPendingIdleRunnables;
-    sPendingIdleRunnables = nullptr;
-    for (RunnableWithDelay& runnableWithDelay : *runnables) {
-      NS_DispatchToCurrentThreadQueue(runnableWithDelay.mRunnable.forget(),
-                                      runnableWithDelay.mDelay,
-                                      EventQueuePriority::Idle);
+  if (dispatchTasksAfterTick && sPendingIdleTasks) {
+    AutoTArray<RefPtr<Task>, 8>* tasks = sPendingIdleTasks;
+    sPendingIdleTasks = nullptr;
+    for (RefPtr<Task>& taskWithDelay : *tasks) {
+      TaskController::Get()->AddTask(taskWithDelay.forget());
     }
-    delete runnables;
+    delete tasks;
   }
 }
 

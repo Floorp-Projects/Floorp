@@ -45,7 +45,7 @@ class PendingFullscreenEvent;
 class PresShell;
 class RefreshDriverTimer;
 class Runnable;
-
+class Task;
 }  // namespace mozilla
 
 class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
@@ -362,9 +362,8 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
    */
   static mozilla::Maybe<mozilla::TimeStamp> GetNextTickHint();
 
-  static void DispatchIdleRunnableAfterTickUnlessExists(nsIRunnable* aRunnable,
-                                                        uint32_t aDelay);
-  static void CancelIdleRunnable(nsIRunnable* aRunnable);
+  static void DispatchIdleTaskAfterTickUnlessExists(mozilla::Task* aTask);
+  static void CancelIdleTask(mozilla::Task* aTask);
 
   void NotifyDOMContentLoaded();
 
