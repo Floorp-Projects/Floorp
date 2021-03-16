@@ -52,7 +52,12 @@ def record_cherry_picks(dir_in_gecko, merge_base_origin):
     )
     merge_base_readable = (
         run_checked(
-            "git", "show", "-s", "--format=commit %H %cd", merge_base, stdout=subprocess.PIPE
+            "git",
+            "show",
+            "-s",
+            "--format=commit %H %cd",
+            merge_base,
+            stdout=subprocess.PIPE,
         )
         .stdout.decode()
         .strip()
@@ -81,7 +86,7 @@ def record_cherry_picks(dir_in_gecko, merge_base_origin):
         moz_yaml_contents = f.readlines()
     with open(moz_yaml_file, "wb") as f:
         for line in moz_yaml_contents:
-            prefix = line[0:line.index(": ") + 2].encode()
+            prefix = line[0 : line.index(": ") + 2].encode()
             if "branch: " in line:
                 f.write(prefix + base_merge_base_from.encode() + b"\n")
             elif "release: " in line:
@@ -90,4 +95,3 @@ def record_cherry_picks(dir_in_gecko, merge_base_origin):
                 f.write(prefix + merge_base.encode() + b"\n")
             else:
                 f.write(line.encode())
-
