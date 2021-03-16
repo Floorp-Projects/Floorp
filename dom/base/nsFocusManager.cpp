@@ -1993,15 +1993,8 @@ bool nsFocusManager::IsWindowVisible(nsPIDOMWindowOuter* aWindow) {
     return false;
   }
 
-  nsCOMPtr<nsIDocShell> docShell = aWindow->GetDocShell();
-  nsCOMPtr<nsIBaseWindow> baseWin(do_QueryInterface(docShell));
-  if (!baseWin) {
-    return false;
-  }
-
-  bool visible = false;
-  baseWin->GetVisibility(&visible);
-  return visible;
+  BrowsingContext* bc = aWindow->GetBrowsingContext();
+  return bc && bc->IsActive();
 }
 
 bool nsFocusManager::IsNonFocusableRoot(nsIContent* aContent) {
