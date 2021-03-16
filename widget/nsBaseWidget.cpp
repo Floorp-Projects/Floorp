@@ -1223,7 +1223,8 @@ already_AddRefed<LayerManager> nsBaseWidget::CreateCompositorSession(
     bool supportsAcceleration = WidgetTypeSupportsAcceleration();
     bool enableWR;
     bool enableSWWR;
-    if (supportsAcceleration) {
+    if (supportsAcceleration ||
+        StaticPrefs::gfx_webrender_unaccelerated_widget_force()) {
       enableWR = gfx::gfxVars::UseWebRender();
       enableSWWR = gfx::gfxVars::UseSoftwareWebRender();
     } else if (WidgetTypePrefersSoftwareWebRender()) {
