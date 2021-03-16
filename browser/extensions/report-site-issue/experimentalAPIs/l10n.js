@@ -4,9 +4,7 @@
 
 "use strict";
 
-/* global ExtensionAPI, XPCOMUtils */
-
-var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+/* global ExtensionAPI, Services, XPCOMUtils */
 
 XPCOMUtils.defineLazyGetter(this, "l10nStrings", function() {
   return Services.strings.createBundle(
