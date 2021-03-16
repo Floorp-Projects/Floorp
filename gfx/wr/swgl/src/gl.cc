@@ -2094,11 +2094,9 @@ static void clear_buffer(Texture& t, T value, IntRect bb, int skip_start = 0,
   skip_end = max(skip_end, skip_start);
   assert(sizeof(T) == t.bpp());
   size_t stride = t.stride();
-  // When clearing multiple full-width rows, collapse them into a single large
-  // "row" to avoid redundant setup from clearing each row individually. Note
-  // that we can only safely do this if the stride is tightly packed.
-  if (bb.width() == t.width && bb.height() > 1 && skip_start >= skip_end &&
-      (t.should_free() || stride == t.width * sizeof(T))) {
+  // When clearing multiple full-width rows, collapse them into a single
+  // large "row" to avoid redundant setup from clearing each row individually.
+  if (bb.width() == t.width && bb.height() > 1 && skip_start >= skip_end) {
     bb.x1 += (stride / sizeof(T)) * (bb.height() - 1);
     bb.y1 = bb.y0 + 1;
   }
@@ -2379,25 +2377,25 @@ void ClearTexSubImage(GLuint texture, GLint level, GLint xoffset, GLint yoffset,
       break;
   }
 
-    switch (t.internal_format) {
-      case GL_RGBA8:
-        // Clear color needs to swizzle to BGRA.
-        request_clear<uint32_t>(t,
-                                (color & 0xFF00FF00) |
-                                    ((color << 16) & 0xFF0000) |
-                                    ((color >> 16) & 0xFF),
-                                scissor);
-        break;
-      case GL_R8:
-        request_clear<uint8_t>(t, uint8_t(color & 0xFF), scissor);
-        break;
-      case GL_RG8:
-        request_clear<uint16_t>(t, uint16_t(color & 0xFFFF), scissor);
-        break;
-      default:
-        assert(false);
-        break;
-    }
+  switch (t.internal_format) {
+    case GL_RGBA8:
+      // Clear color needs to swizzle to BGRA.
+      request_clear<uint32_t>(t,
+                              (color & 0xFF00FF00) |
+                                  ((color << 16) & 0xFF0000) |
+                                  ((color >> 16) & 0xFF),
+                              scissor);
+      break;
+    case GL_R8:
+      request_clear<uint8_t>(t, uint8_t(color & 0xFF), scissor);
+      break;
+    case GL_RG8:
+      request_clear<uint16_t>(t, uint16_t(color & 0xFFFF), scissor);
+      break;
+    default:
+      assert(false);
+      break;
+  }
 }
 
 void ClearTexImage(GLuint texture, GLint level, GLenum format, GLenum type,

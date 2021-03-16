@@ -184,10 +184,6 @@ void RenderCompositorSWGL::CommitMappedBuffer(bool aDirty) {
     mDirtyRegion.SetEmpty();
     return;
   }
-  if (aDirty) {
-    // Force the default framebuffer to resolve if there are any delayed clears.
-    wr_swgl_get_color_buffer(mContext, 0, true, nullptr, nullptr, nullptr);
-  }
   // Clear out the old framebuffer in case something tries to access it after
   // the frame.
   wr_swgl_init_default_framebuffer(mContext, 0, 0, 0, 0, 0, nullptr);
