@@ -15,10 +15,13 @@ job-defaults:
             linux.*64/debug: ['fission']
             linux.*64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
-    fission-tier:
-        by-test-platform:
-            linux.*64.*-qr/debug: 1
-            default: 2
+    tier:
+        by-variant:
+            fission(-xorigin)?:
+                by-test-platform:
+                    linux.*64.*-qr/debug: 1
+                    default: 2
+            default: default
     mozharness:
         script:
             by-test-platform:
@@ -46,7 +49,6 @@ mochitest-plain:
     treeherder-symbol: M()
     schedules-component: mochitest-plain
     loopback-video: true
-    tier: default
     virtualization:
         by-test-platform:
             windows10-64.*: hardware
@@ -58,17 +60,19 @@ mochitest-plain:
             linux1804-64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
     run-on-projects:
-        by-test-platform:
-            .*-tsan/opt: ['trunk']
-            default: built-projects
-    fission-run-on-projects:
-        by-test-platform:
-            (linux.*64|macosx.*64|windows10-64)-qr/debug: ['autoland', 'mozilla-central']
-            (linux.*64|macosx.*64|windows10-64)-qr/opt: ['autoland']
-            (linux.*64|macosx.*64|windows10-64)-shippable-qr/opt: ['autoland', 'mozilla-central']
-            linux.*64-asan/opt: ['autoland', 'mozilla-central']
-            linux.*64/debug: ['mozilla-central']
-            default: []
+        by-variant:
+            fission(-xorigin)?:
+                by-test-platform:
+                    (linux.*64|macosx.*64|windows10-64)-qr/debug: ['autoland', 'mozilla-central']
+                    (linux.*64|macosx.*64|windows10-64)-qr/opt: ['autoland']
+                    (linux.*64|macosx.*64|windows10-64)-shippable-qr/opt: ['autoland', 'mozilla-central']
+                    linux.*64-asan/opt: ['autoland', 'mozilla-central']
+                    linux.*64/debug: ['mozilla-central']
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan/opt: ['trunk']
+                    default: built-projects
     chunks:
         by-test-platform:
             android-em-7.*: 4
@@ -104,7 +108,6 @@ mochitest-a11y:
     schedules-component: mochitest-a11y
     test-manifest-loader: default  # ensure we don't run with manifest-scheduling
     loopback-video: true
-    tier: default
     e10s: false
     run-on-projects: built-projects
     mozharness:
@@ -124,20 +127,24 @@ mochitest-browser-chrome:
             windows10-64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
     run-on-projects:
-        by-test-platform:
-            .*-tsan/opt: ['trunk']
-            default: built-projects
-    fission-run-on-projects:
-        by-test-platform:
-            linux.*64(-qr)?/debug: ['trunk']
-            linux.*64-shippable(-qr)?/opt: ['mozilla-central']
-            windows10-64-shippable(-qr)?/opt: ['mozilla-central']
-            default: []
-    tier: default
-    fission-tier:
-        by-test-platform:
-            linux.*64/debug: 1
-            default: 2
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux.*64(-qr)?/debug: ['trunk']
+                    linux.*64-shippable(-qr)?/opt: ['mozilla-central']
+                    windows10-64-shippable(-qr)?/opt: ['mozilla-central']
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan/opt: ['trunk']
+                    default: built-projects
+    tier:
+        by-variant:
+            fission(-xorigin)?:
+                by-test-platform:
+                    linux.*64/debug: 1
+                    default: 2
+            default: default
     chunks:
         by-test-platform:
             linux.*/debug: 16
@@ -198,15 +205,16 @@ browser-screenshots:
     loopback-video: true
     test-manifest-loader: null  # don't load tests in the taskgraph
     run-on-projects:
-        by-test-platform:
-            windows7-32(?:-shippable)(?:-qr)?/opt: ['mozilla-central']
-            windows10-64(?:-shippable)(?:-qr)?/opt: ['mozilla-central']
-            (?:windows10-64|windows7-32|linux1804-64|macosx1014-64)(?:-qr)?/opt: ['integration']
-            linux1804-64-(?:shippable)(?:-qr)?/opt: ['mozilla-central']
-            macosx.*64-shippable/opt: ['mozilla-central']
-            default: []
-    fission-run-on-projects: []
-    fission-tier: 2
+        by-variant:
+            fission: []
+            default:
+                by-test-platform:
+                    windows7-32(?:-shippable)(?:-qr)?/opt: ['mozilla-central']
+                    windows10-64(?:-shippable)(?:-qr)?/opt: ['mozilla-central']
+                    (?:windows10-64|windows7-32|linux1804-64|macosx1014-64)(?:-qr)?/opt: ['integration']
+                    linux1804-64-(?:shippable)(?:-qr)?/opt: ['mozilla-central']
+                    macosx.*64-shippable/opt: ['mozilla-central']
+                    default: []
     max-run-time: 3600
     mozharness:
         mochitest-flavor: browser
@@ -217,7 +225,6 @@ mochitest-chrome:
     treeherder-symbol: M(c)
     schedules-component: mochitest-chrome
     loopback-video: true
-    tier: default
     run-on-projects:
         by-test-platform:
             .*-tsan/opt: ['trunk']
@@ -253,22 +260,26 @@ mochitest-devtools-chrome:
             linux.*64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
     run-on-projects:
-        by-test-platform:
-            .*-tsan/opt: ['trunk']
-            default: built-projects
-    fission-run-on-projects:
-        by-test-platform:
-            linux.*64(-qr)?/debug: ['trunk']
-            linux.*64-shippable(-qr)?/opt: ['trunk']
-            windows10-64-shippable(-qr)?/opt: ['trunk']
-            default: []
-    tier: default
-    fission-tier:
-        by-test-platform:
-            linux.*64(-qr)?/debug: 1
-            linux.*64-shippable(-qr)?/opt: 1
-            windows10-64-shippable(-qr)?/opt: 1
-            default: 2
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux.*64(-qr)?/debug: ['trunk']
+                    linux.*64-shippable(-qr)?/opt: ['trunk']
+                    windows10-64-shippable(-qr)?/opt: ['trunk']
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan/opt: ['trunk']
+                    default: built-projects
+    tier:
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux.*64(-qr)?/debug: 1
+                    linux.*64-shippable(-qr)?/opt: 1
+                    windows10-64-shippable(-qr)?/opt: 1
+                    default: 2
+            default: default
     max-run-time:
         by-test-platform:
             windows10-64-ccov.*/.*: 10800
@@ -302,17 +313,21 @@ mochitest-plain-gpu:
     schedules-component: mochitest-plain
     loopback-video: true
     run-on-projects:
-        by-test-platform:
-            .*-tsan/opt: ['trunk']
-            default: built-projects
-    fission-run-on-projects: []
-    fission-tier: 2
-    tier: default
+        by-variant:
+            fission: []
+            default:
+                by-test-platform:
+                    .*-tsan/opt: ['trunk']
+                    default: built-projects
     virtualization:
         by-test-platform:
             windows10-64.*: hardware
             default: virtual-with-gpu
     e10s: true
+    tier:
+        by-variant:
+            fission: 2
+            default: default
     mozharness:
         mochitest-flavor: plain
         extra-options:
@@ -333,19 +348,23 @@ mochitest-chrome-gpu:
         name: mochitest-chrome-gpu
     treeherder-symbol: M(gpu-c)
     loopback-video: true
-    fission-run-on-projects: []
-    fission-tier: 2
-    tier: default
     virtualization:
         by-test-platform:
             windows10-64.*: hardware
             default: virtual-with-gpu
     e10s: true
     run-on-projects:
-        by-test-platform:
-            .*-tsan/opt: ['trunk']
-            android.*/.*: []
-            default: built-projects
+        by-variant:
+            fission: []
+            default:
+                by-test-platform:
+                    .*-tsan/opt: ['trunk']
+                    android.*/.*: []
+                    default: built-projects
+    tier:
+        by-variant:
+            fission: 2
+            default: default
     mozharness:
         mochitest-flavor: chrome
         extra-options:
@@ -371,21 +390,23 @@ mochitest-media:
             linux.*64-tsan/opt: 7200
             default: 5400
     run-on-projects:
-        by-test-platform:
-            .*-tsan/opt: ['trunk']
-            android-hw-.*(?<!-shippable)(-qr)?/opt: ['autoland']
-            android-hw-.*-api-16(-qr)?/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
-            android-hw-.*-api-16-shippable(-qr)?/opt: ['trunk', 'mozilla-beta', 'mozilla-release']
-            windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
-            default: built-projects
-    fission-run-on-projects:
-        by-test-platform:
-            linux.*64-qr/debug: ['trunk']
-            linux.*64-shippable-qr/opt: ['mozilla-central']
-            linux.*64-shippable/.*: ['mozilla-central']
-            linux.*64/debug: ['mozilla-central']
-            windows10-64-shippable(-qr)?/opt: ['mozilla-central']
-            default: []
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux.*64-qr/debug: ['trunk']
+                    linux.*64-shippable-qr/opt: ['mozilla-central']
+                    linux.*64-shippable/.*: ['mozilla-central']
+                    linux.*64/debug: ['mozilla-central']
+                    windows10-64-shippable(-qr)?/opt: ['mozilla-central']
+                    default: []
+            default:
+                by-test-platform:
+                    .*-tsan/opt: ['trunk']
+                    android-hw-.*(?<!-shippable)(-qr)?/opt: ['autoland']
+                    android-hw-.*-api-16(-qr)?/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
+                    android-hw-.*-api-16-shippable(-qr)?/opt: ['trunk', 'mozilla-beta', 'mozilla-release']
+                    windows10-aarch64/.*: ['mozilla-central', 'mozilla-beta', 'mozilla-release']
+                    default: built-projects
     variants:
         by-test-platform:
             .*-ccov.*/.*: []
@@ -418,11 +439,17 @@ mochitest-media:
         extra-options:
             - --setpref=webgl.out-of-process=false
     tier:
-        by-test-platform:
-            android-em.*: 1
-            windows10-aarch64.*: 2
-            android-hw.*: 1
-            default: default
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux.*64.*-qr/debug: 1
+                    default: 2
+            default:
+                by-test-platform:
+                    android-em.*: 1
+                    windows10-aarch64.*: 2
+                    android-hw.*: 1
+                    default: default
 
 mochitest-media-apple-silicon:
     description: "Mochitest failures on apple silicon media run"
@@ -460,15 +487,17 @@ mochitest-plain-headless:
     max-run-time: 5400
     allow-software-gl-layers: false
     tier: 2
-    run-on-projects: ['mozilla-central']
-    fission-run-on-projects:
-        by-test-platform:
-            linux.*64-qr/debug: ['trunk']
-            linux.*64-shippable-qr/opt: ['mozilla-central']
-            linux.*64-shippable/.*: ['mozilla-central']
-            linux.*64/debug: ['mozilla-central']
-            windows10-64-shippable(-qr)?/opt: ['mozilla-central']
-            default: []
+    run-on-projects:
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux.*64-qr/debug: ['trunk']
+                    linux.*64-shippable-qr/opt: ['mozilla-central']
+                    linux.*64-shippable/.*: ['mozilla-central']
+                    linux.*64/debug: ['mozilla-central']
+                    windows10-64-shippable(-qr)?/opt: ['mozilla-central']
+                    default: []
+            default: ['mozilla-central']
     mozharness:
         mochitest-flavor: plain
         chunked: true
@@ -509,7 +538,6 @@ mochitest-webgl1-core:
     e10s: true
     test-manifest-loader: null  # don't load tests in the taskgraph
     loopback-video: true
-    tier: default
     max-run-time:
         by-test-platform:
             macosx.*64-ccov.*/.*: 7200
@@ -545,7 +573,6 @@ mochitest-webgl1-ext:
     e10s: true
     test-manifest-loader: null  # don't load tests in the taskgraph
     loopback-video: true
-    tier: default
     max-run-time: 2700
     run-on-projects:
         by-test-platform:
@@ -579,7 +606,6 @@ mochitest-webgl2-core:
     e10s: true
     test-manifest-loader: null  # don't load tests in the taskgraph
     loopback-video: true
-    tier: default
     max-run-time: 1800
     run-on-projects:
         by-test-platform:
@@ -608,7 +634,6 @@ mochitest-webgl2-ext:
     e10s: true
     test-manifest-loader: null  # don't load tests in the taskgraph
     loopback-video: true
-    tier: default
     max-run-time: 2700
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
@@ -633,7 +658,6 @@ mochitest-webgl2-deqp:
     chunks: 4
     e10s: true
     loopback-video: true
-    tier: default
     max-run-time: 1800
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
@@ -654,20 +678,21 @@ mochitest-webgpu:
     e10s: true
     loopback-video: true
     run-on-projects:
-        by-test-platform:
-            .*mingw.*: ["release"]
-            .*shippable.*: ["mozilla-central"]
-            (!-shippable).*-qr.*: ["trunk"]
-            default: []
-    fission-run-on-projects:
-        by-test-platform:
-            linux.*64-qr/debug: ['trunk']
-            linux.*64-shippable-qr/opt: ['mozilla-central']
-            linux.*64-shippable/.*: ['mozilla-central']
-            linux.*64/debug: ['mozilla-central']
-            windows10-64-shippable(-qr)?/opt: ['mozilla-central']
-            default: []
-    tier: default
+        by-variant:
+            fission:
+                by-test-platform:
+                    linux.*64-qr/debug: ['trunk']
+                    linux.*64-shippable-qr/opt: ['mozilla-central']
+                    linux.*64-shippable/.*: ['mozilla-central']
+                    linux.*64/debug: ['mozilla-central']
+                    windows10-64-shippable(-qr)?/opt: ['mozilla-central']
+                    default: []
+            default:
+                by-test-platform:
+                    .*mingw.*: ["release"]
+                    .*shippable.*: ["mozilla-central"]
+                    (!-shippable).*-qr.*: ["trunk"]
+                    default: []
     max-run-time:
         by-test-platform:
             macosx.*64-ccov.*/.*: 7200
@@ -684,12 +709,17 @@ mochitest-remote:
     treeherder-symbol: M(remote)
     loopback-video: true
     run-on-projects:
-        by-test-platform:
-            .*-tsan/opt: ['trunk']
-            default: built-projects
-    # Bug 1600054: Remote Agent not Fission compatible
-    fission-run-on-projects: []
-    fission-tier: 2
+        by-variant:
+            # Bug 1600054: Remote Agent not Fission compatible
+            fission: []
+            default:
+                by-test-platform:
+                    .*-tsan/opt: ['trunk']
+                    default: built-projects
+    tier:
+        by-variant:
+            fission: 2
+            default: default
     max-run-time: 5400
     mozharness:
         mochitest-flavor: browser
