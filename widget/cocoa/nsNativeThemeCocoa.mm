@@ -2722,11 +2722,6 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
 void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget& aDrawTarget,
                                       const gfx::Rect& aWidgetRect, const gfx::Rect& aDirtyRect,
                                       float aScale) {
-  AutoRestoreTransform autoRestoreTransform(&aDrawTarget);
-
-  gfx::Rect dirtyRect = aDirtyRect;
-  aDrawTarget.SetTransform(aDrawTarget.GetTransform().PreScale(aScale, aScale));
-
   const Widget widget = aWidgetInfo.Widget();
 
   // Some widgets render using DrawTarget, and some using CGContext.
@@ -2774,9 +2769,13 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
       break;
     }
     default: {
+      AutoRestoreTransform autoRestoreTransform(&aDrawTarget);
       gfx::Rect widgetRect = aWidgetRect;
+      gfx::Rect dirtyRect = aDirtyRect;
+
       dirtyRect.Scale(1.0f / aScale);
       widgetRect.Scale(1.0f / aScale);
+      aDrawTarget.SetTransform(aDrawTarget.GetTransform().PreScale(aScale, aScale));
 
       // The remaining widgets require a CGContext.
       CGRect macRect =
