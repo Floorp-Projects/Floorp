@@ -1295,6 +1295,7 @@ void LIRGenerator::visitWasmUnarySimd128(MWasmUnarySimd128* ins) {
     case wasm::SimdOp::I32x4TruncUSatF32x4:
     case wasm::SimdOp::I32x4TruncSatF64x2SZero:
     case wasm::SimdOp::I32x4TruncSatF64x2UZero:
+    case wasm::SimdOp::I8x16Popcnt:
       tempReg = tempSimd128();
       // Prefer src == dest to avoid an unconditional src->dest move.
       useAtStart = true;

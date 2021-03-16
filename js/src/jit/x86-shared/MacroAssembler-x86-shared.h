@@ -547,6 +547,8 @@ class MacroAssemblerX86Shared : public Assembler {
   void selectSimd128(FloatRegister mask, FloatRegister onTrue,
                      FloatRegister onFalse, FloatRegister temp,
                      FloatRegister output);
+  void popcntInt8x16(FloatRegister src, FloatRegister temp,
+                     FloatRegister output);
 
   // SIMD inline methods private to the implementation, that appear to be used.
 
