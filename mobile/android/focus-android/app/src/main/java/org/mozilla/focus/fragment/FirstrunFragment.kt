@@ -7,17 +7,16 @@ package org.mozilla.focus.fragment
 import android.content.Context
 import android.graphics.drawable.TransitionDrawable
 import android.os.Bundle
-import com.google.android.material.tabs.TabLayout
-import androidx.fragment.app.Fragment
-import androidx.viewpager.widget.ViewPager
 import android.transition.TransitionInflater
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.fragment.app.Fragment
 import androidx.preference.PreferenceManager
+import androidx.viewpager.widget.ViewPager
+import com.google.android.material.tabs.TabLayout
 import mozilla.components.browser.session.Session
 import org.mozilla.focus.R
-import org.mozilla.focus.ext.components
 import org.mozilla.focus.firstrun.FirstrunPagerAdapter
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.StatusBarUtils
@@ -110,15 +109,12 @@ class FirstrunFragment : Fragment(), View.OnClickListener {
             .putBoolean(FIRSTRUN_PREF, true)
             .apply()
 
-        val sessionUUID = arguments!!.getString(ARGUMENT_SESSION_UUID)
-        val sessionManager = requireContext().components.sessionManager
+        val sessionUUID = requireArguments().getString(ARGUMENT_SESSION_UUID)
 
-        val fragment: Fragment
-        fragment = if (sessionUUID == null) {
+        val fragment: Fragment = if (sessionUUID == null) {
             UrlInputFragment.createWithoutSession()
         } else {
-            val session = sessionManager.findSessionById(sessionUUID)
-            BrowserFragment.createForSession(session!!)
+            BrowserFragment.createForTab(sessionUUID)
         }
 
         val fragmentTag =

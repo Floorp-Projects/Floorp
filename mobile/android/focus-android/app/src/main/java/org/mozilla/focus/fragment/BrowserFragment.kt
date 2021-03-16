@@ -1004,12 +1004,14 @@ class BrowserFragment :
 
         @JvmStatic
         fun createForSession(session: Session): BrowserFragment {
-            val arguments = Bundle()
-            arguments.putString(ARGUMENT_SESSION_UUID, session.id)
+            return createForTab(session.id)
+        }
 
+        fun createForTab(tabId: String): BrowserFragment {
             val fragment = BrowserFragment()
-            fragment.arguments = arguments
-
+            fragment.arguments = Bundle().apply {
+                putString(ARGUMENT_SESSION_UUID, tabId)
+            }
             return fragment
         }
     }

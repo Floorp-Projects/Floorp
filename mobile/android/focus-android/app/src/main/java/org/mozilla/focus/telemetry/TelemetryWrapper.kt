@@ -16,6 +16,7 @@ import androidx.annotation.CheckResult
 import androidx.annotation.VisibleForTesting
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.runBlocking
+import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.json.JSONObject
@@ -313,14 +314,12 @@ object TelemetryWrapper {
     private fun withSessionCounts(event: TelemetryEvent): TelemetryEvent {
         val context = TelemetryHolder.get().configuration.context
 
-        val sessionManager = context.components.sessionManager
-        val sessions = sessionManager.sessions
-        val selectedSession = sessionManager.selectedSession
+        val state = context.components.store.state
+        val privateTabs = state.privateTabs
+        val positionOfSelectedTab = privateTabs.indexOfFirst { tab -> tab.id == state.selectedTabId }
 
-        val positionOfSelectedSession = sessions.indexOf(selectedSession)
-
-        event.extra(Extra.SELECTED, positionOfSelectedSession.toString())
-        event.extra(Extra.TOTAL, sessions.size.toString())
+        event.extra(Extra.SELECTED, positionOfSelectedTab.toString())
+        event.extra(Extra.TOTAL, privateTabs.size.toString())
 
         return event
     }

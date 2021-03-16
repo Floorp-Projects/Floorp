@@ -80,8 +80,11 @@ object SupportUtils {
     }
 
     fun openDefaultBrowserSumoPage(context: Context) {
-        val session = createTab(SupportUtils.DEFAULT_BROWSER_URL, source = SessionState.Source.MENU)
-        context.components.sessionManager.add(session, selected = true)
+        context.components.tabsUseCases.addPrivateTab(
+                DEFAULT_BROWSER_URL,
+                source = SessionState.Source.MENU,
+                selectTab = true
+        )
 
         if (context is Activity) {
             context.finish()

@@ -35,14 +35,14 @@ import mozilla.components.browser.domains.CustomDomains
 import mozilla.components.browser.domains.autocomplete.CustomDomainsProvider
 import mozilla.components.browser.domains.autocomplete.DomainAutocompleteResult
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.SessionState
+import mozilla.components.browser.state.state.TabSessionState
 import mozilla.components.support.utils.ThreadUtils
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
 import org.mozilla.focus.R
-import org.mozilla.focus.ext.contentState
 import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
@@ -62,7 +62,6 @@ import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
 import org.mozilla.focus.whatsnew.WhatsNew
-import java.util.Objects
 import kotlin.coroutines.CoroutineContext
 
 class FocusCrashException : Exception()
@@ -157,10 +156,10 @@ class UrlInputFragment :
     @Volatile
     private var isAnimating: Boolean = false
 
-    private var session: Session? = null
+    private var tab: TabSessionState? = null
 
     private val isOverlay: Boolean
-        get() = session != null
+        get() = tab != null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -172,7 +171,7 @@ class UrlInputFragment :
 
         // Get session from session manager if there's a session UUID in the fragment's arguments
         arguments?.getString(ARGUMENT_SESSION_UUID)?.let { id ->
-            session = requireComponents.sessionManager.findSessionById(id)
+            tab = requireComponents.store.state.findTab(id)
         }
     }
 
@@ -324,16 +323,15 @@ class UrlInputFragment :
         val isDDG: Boolean =
             Settings.getInstance(requireContext()).defaultSearchEngineName == duckDuckGo
 
-        session?.let {
-            val contentState = requireComponents.store.contentState(it.id)
+        tab?.let { tab ->
             urlView?.setText(
-                if (contentState?.isSearch == true &&
+                if (tab.content.isSearch &&
                     !isDDG &&
                     Features.SEARCH_TERMS_OR_URL
                 ) {
-                    contentState.searchTerms
+                    tab.content.searchTerms
                 } else {
-                    it.url
+                    tab.content.url
                 }
             )
 
@@ -355,17 +353,17 @@ class UrlInputFragment :
             activity?.supportFragmentManager
                     ?.beginTransaction()
                     ?.replace(
-                            R.id.container,
-                            UrlInputFragment.createWithTab(session!!.id, urlView),
-                            UrlInputFragment.FRAGMENT_TAG)
+                        R.id.container,
+                        createWithTab(tab!!.id, urlView),
+                        FRAGMENT_TAG)
                     ?.commit()
         } else {
             activity?.supportFragmentManager
                     ?.beginTransaction()
                     ?.replace(
-                            R.id.container,
-                            UrlInputFragment.createWithBackground(),
-                            UrlInputFragment.FRAGMENT_TAG)
+                        R.id.container,
+                        createWithBackground(),
+                        FRAGMENT_TAG)
                     ?.commit()
         }
     }
@@ -485,7 +483,7 @@ class UrlInputFragment :
                         else
                             R.string.preference_autocomplete_duplicate_url_error
 
-                ViewUtils.showBrandedSnackbar(Objects.requireNonNull<View>(view), messageId, 0)
+                ViewUtils.showBrandedSnackbar(requireView(), messageId, 0)
                 animateAndDismiss()
             }
         }
@@ -608,7 +606,7 @@ class UrlInputFragment :
             val screenLocation = IntArray(2)
             urlView?.getLocationOnScreen(screenLocation)
 
-            val leftDelta = arguments!!.getInt(ARGUMENT_X) - screenLocation[0] - urlView.paddingLeft
+            val leftDelta = requireArguments().getInt(ARGUMENT_X) - screenLocation[0] - urlView.paddingLeft
 
             if (!reverse) {
                 urlView?.pivotX = 0f
@@ -745,15 +743,15 @@ class UrlInputFragment :
 
     private fun openUrl(url: String, searchTerms: String?) {
         if (!searchTerms.isNullOrEmpty()) {
-            session?.let {
+            tab?.let {
                 requireComponents.store.dispatch(ContentAction.UpdateSearchTermsAction(it.id, searchTerms))
             }
         }
 
         val fragmentManager = requireActivity().supportFragmentManager
 
-        if (session != null) {
-            requireComponents.sessionUseCases.loadUrl(url, session?.id)
+        if (tab != null) {
+            requireComponents.sessionUseCases.loadUrl(url, tab?.id)
 
             fragmentManager.beginTransaction()
                 .remove(this)

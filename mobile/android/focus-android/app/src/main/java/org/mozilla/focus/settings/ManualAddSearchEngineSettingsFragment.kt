@@ -18,7 +18,7 @@ import androidx.annotation.VisibleForTesting
 import androidx.annotation.WorkerThread
 import com.google.android.material.snackbar.Snackbar
 import org.mozilla.focus.R
-import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.search.CustomSearchEngineStore
 import org.mozilla.focus.search.ManualAddSearchEnginePreference
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -26,7 +26,6 @@ import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.focus.utils.ViewUtils
-import org.mozilla.focus.utils.createTab
 import java.io.IOException
 import java.lang.ref.WeakReference
 import java.net.HttpURLConnection
@@ -84,11 +83,10 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         val openLearnMore = {
-            val session = createTab(
-                SupportUtils.getSumoURLForTopic(requireContext(), SupportUtils.SumoTopic.ADD_SEARCH_ENGINE)
+            requireComponents.tabsUseCases.addPrivateTab(
+                SupportUtils.getSumoURLForTopic(requireContext(), SupportUtils.SumoTopic.ADD_SEARCH_ENGINE),
+                selectTab = true
             )
-
-            components?.sessionManager?.add(session, selected = true)
 
             TelemetryWrapper.addSearchEngineLearnMoreEvent()
 
@@ -96,8 +94,8 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
         }
 
         val saveSearchEngine = {
-            val engineName = view!!.findViewById<EditText>(R.id.edit_engine_name).text.toString()
-            val searchQuery = view!!.findViewById<EditText>(R.id.edit_search_string).text.toString()
+            val engineName = requireView().findViewById<EditText>(R.id.edit_engine_name).text.toString()
+            val searchQuery = requireView().findViewById<EditText>(R.id.edit_search_string).text.toString()
 
             val pref = findManualAddSearchEnginePreference(R.string.pref_key_manual_add_search_engine)
             val engineValid = pref.validateEngineNameAndShowError(engineName)

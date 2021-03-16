@@ -15,7 +15,7 @@ class EraseAndOpenShortcutActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        components.sessionManager.removeSessions()
+        components.tabsUseCases.removeAllTabs()
 
         TelemetryWrapper.eraseAndOpenShortcutEvent()
 
