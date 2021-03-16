@@ -206,3 +206,46 @@ string ``experiments.name`` in the ``permissions``` property in its
 ``manifest.json`` file.  In this case, the string name must be replace by
 the name of the API from the extension that defined it (e.g., ``apiname``
 in the example above.
+
+Globals available in the API scripts global
+-------------------------------------------
+
+The API scripts aren't loaded as an JSM and so:
+
+- they are not fully isolated from each other (and they are going to be
+  lazy loaded when the extension does use them for the first time) and
+  be executed in a per-process shared global scope)
+- the experimental APIs embedded in privileged extensions are executed
+  in a per-extension global (separate from the one used for the built-in APIs)
+
+The global scope where the API scripts are executed is pre-populated with
+some useful globals:
+
+- ``AppConstants``
+- ``console``
+- ``CC``, ``Ci``, ``Cr`` and ``Cu``
+- ``ChromeWorker``
+- ``extensions``, ``ExtensionAPI``, ``ExtensionCommon`` and ``ExtensionUtils``
+- ``global``
+- ``MatchGlob``, ``MatchPattern`` and ``MatchPatternSet``
+- ``Services``
+- ``StructuredCloneHolder``
+- ``XPCOMUtils``
+
+For a more complete and updated list of the globals available by default in
+all API scripts look to the following source:
+
+- `SchemaAPIManager _createExtGlobal method <https://searchfox.org/mozilla-central/search?q=symbol:SchemaAPIManager%23_createExtGlobal&redirect=false>`_
+- Only available in the parent Firefox process:
+  `toolkit/components/extensions/parent/ext-toolkit.js <https://searchfox.org/mozilla-central/source/toolkit/components/extensions/parent/ext-toolkit.js>`_
+- Only available in the child Firefox process:
+  `toolkit/components/extensions/child/ext-toolkit.js <https://searchfox.org/mozilla-central/source/toolkit/components/extensions/child/ext-toolkit.js>`_
+- Only available in the Desktop builds:
+  `browser/components/extensions/parent/ext-browser.js <https://searchfox.org/mozilla-central/source/browser/components/extensions/parent/ext-browser.js>`_
+- Only available in the Android builds:
+  `mobile/android/components/extensions/ext-android.js <https://searchfox.org/mozilla-central/source/mobile/android/components/extensions/ext-android.js>`_ 
+
+.. warning::
+   The extension API authors should never redefine these globals to avoid introducing potential
+   conflicts between API scripts (e.g. see `Bug 1697404 comment 3 <https://bugzilla.mozilla.org/show_bug.cgi?id=1697404#c3>`_
+   and `Bug 1697404 comment 4 <https://bugzilla.mozilla.org/show_bug.cgi?id=1697404#c4>`_).
