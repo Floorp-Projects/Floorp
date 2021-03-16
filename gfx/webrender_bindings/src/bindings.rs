@@ -1500,22 +1500,27 @@ pub extern "C" fn wr_window_new(
 ) -> bool {
     assert!(unsafe { is_in_render_thread() });
 
+    let native_gl = if gl_context == ptr::null_mut() {
+        None
+    } else if unsafe { is_glcontext_gles(gl_context) } {
+        unsafe { Some(gl::GlesFns::load_with(|symbol| get_proc_address(gl_context, symbol))) }
+    } else {
+        unsafe { Some(gl::GlFns::load_with(|symbol| get_proc_address(gl_context, symbol))) }
+    };
+
     let software = swgl_context != ptr::null_mut();
     let (gl, sw_gl) = if software {
         let ctx = swgl::Context::from(swgl_context);
         ctx.make_current();
         (Rc::new(ctx) as Rc<dyn gl::Gl>, Some(ctx))
     } else {
-        let gl = unsafe {
-            if gl_context == ptr::null_mut() {
-                panic!("Native GL context required when not using SWGL!");
-            } else if is_glcontext_gles(gl_context) {
-                gl::GlesFns::load_with(|symbol| get_proc_address(gl_context, symbol))
-            } else {
-                gl::GlFns::load_with(|symbol| get_proc_address(gl_context, symbol))
-            }
-        };
-        (gl, None)
+        (
+            native_gl
+                .as_ref()
+                .expect("Native GL context required when not using SWGL!")
+                .clone(),
+            None,
+        )
     };
 
     let version = gl.get_string(gl::VERSION);
@@ -1560,6 +1565,7 @@ pub extern "C" fn wr_window_new(
             max_update_rects: 1,
             compositor: Box::new(SwCompositor::new(
                 sw_gl.unwrap(),
+                native_gl,
                 Box::new(WrCompositor(compositor)),
                 use_native_compositor,
             )),
