@@ -140,6 +140,15 @@ class DMABufSurface {
   void* MapInternal(uint32_t aX, uint32_t aY, uint32_t aWidth, uint32_t aHeight,
                     uint32_t* aStride, int aGbmFlags, int aPlane = 0);
 
+  // We want to keep number of opened file descriptors low so open/close
+  // DMABuf file handles only when we need them, i.e. when DMABuf is exported
+  // to another process or to EGL.
+  virtual bool OpenFileDescriptorForPlane(int aPlane) = 0;
+  virtual void CloseFileDescriptorForPlane(int aPlane,
+                                           bool aForceClose = false) = 0;
+  bool OpenFileDescriptors();
+  void CloseFileDescriptors(bool aForceClose = false);
+
   virtual ~DMABufSurface();
 
   SurfaceType mSurfaceType;
@@ -162,6 +171,7 @@ class DMABufSurface {
 
   int mGlobalRefCountFd;
   uint32_t mUID;
+  mozilla::Mutex mSurfaceLock;
 };
 
 class DMABufSurfaceRGBA : public DMABufSurface {
@@ -215,7 +225,10 @@ class DMABufSurfaceRGBA : public DMABufSurface {
   bool Create(int aWidth, int aHeight, int aDMABufSurfaceFlags);
   bool Create(const mozilla::layers::SurfaceDescriptor& aDesc);
 
-  void ImportSurfaceDescriptor(const mozilla::layers::SurfaceDescriptor& aDesc);
+  bool ImportSurfaceDescriptor(const mozilla::layers::SurfaceDescriptor& aDesc);
+
+  bool OpenFileDescriptorForPlane(int aPlane);
+  void CloseFileDescriptorForPlane(int aPlane, bool aForceClose);
 
  private:
   int mSurfaceFlags;
@@ -277,8 +290,11 @@ class DMABufSurfaceYUV : public DMABufSurface {
   bool CreateYUVPlane(int aPlane, int aWidth, int aHeight, int aDrmFormat);
   void UpdateYUVPlane(int aPlane, void* aPixelData, int aLineSize);
 
-  void ImportSurfaceDescriptor(
+  bool ImportSurfaceDescriptor(
       const mozilla::layers::SurfaceDescriptorDMABuf& aDesc);
+
+  bool OpenFileDescriptorForPlane(int aPlane);
+  void CloseFileDescriptorForPlane(int aPlane, bool aForceClose);
 
   int mWidth[DMABUF_BUFFER_PLANES];
   int mHeight[DMABUF_BUFFER_PLANES];
