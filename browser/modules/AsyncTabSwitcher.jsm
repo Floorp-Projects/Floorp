@@ -476,9 +476,9 @@ class AsyncTabSwitcher {
             this.noteMakingTabVisibleWithoutLayers();
           }
 
+          this.maybeActivateDocShell(this.requestedTab);
           this.tabbrowser._adjustFocusAfterTabSwitch(showTab);
           this.window.gURLBar.afterTabSwitchFocusChange();
-          this.maybeActivateDocShell(this.requestedTab);
         }
       }
 
@@ -538,14 +538,13 @@ class AsyncTabSwitcher {
     // the loaded state, but the DocShell is still not yet active, we
     // should activate it.
     let browser = tab.linkedBrowser;
-    let state = this.getTabState(tab);
     let canCheckDocShellState =
       !browser.mDestroyed &&
       (browser.docShell || browser.frameLoader.remoteTab);
     if (
       tab == this.requestedTab &&
       canCheckDocShellState &&
-      state == this.STATE_LOADED &&
+      !this.warmingTabs.has(tab) &&
       !browser.docShellIsActive &&
       !this.minimizedOrFullyOccluded
     ) {
