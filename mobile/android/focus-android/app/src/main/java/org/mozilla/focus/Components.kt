@@ -17,11 +17,13 @@ import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.fetch.Client
 import mozilla.components.feature.app.links.AppLinksUseCases
 import mozilla.components.feature.contextmenu.ContextMenuUseCases
+import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.downloads.DownloadMiddleware
 import mozilla.components.feature.downloads.DownloadsUseCases
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.SettingsUseCases
 import mozilla.components.feature.session.TrackingProtectionUseCases
+import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.focus.components.EngineProvider
 import org.mozilla.focus.downloads.DownloadService
@@ -81,6 +83,11 @@ class Components(
         return sessionManager.findSessionById(tabId)
     }
 
+    /**
+     * The [CustomTabsServiceStore] holds global custom tabs related data.
+     */
+    val customTabsStore by lazy { CustomTabsServiceStore() }
+
     val sessionUseCases: SessionUseCases by lazy { SessionUseCases(store, sessionManager) }
 
     val tabsUseCases: TabsUseCases by lazy { TabsUseCases(store, sessionManager) }
@@ -90,6 +97,8 @@ class Components(
     val downloadsUseCases: DownloadsUseCases by lazy { DownloadsUseCases(store) }
 
     val appLinksUseCases: AppLinksUseCases by lazy { AppLinksUseCases(context.applicationContext) }
+
+    val customTabsUseCases: CustomTabsUseCases by lazy { CustomTabsUseCases(sessionManager, sessionUseCases.loadUrl) }
 
     val sessionManager by lazy {
         SessionManager(engine, store)

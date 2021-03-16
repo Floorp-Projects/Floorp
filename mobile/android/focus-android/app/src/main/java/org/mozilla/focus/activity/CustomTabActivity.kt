@@ -6,6 +6,9 @@ package org.mozilla.focus.activity
 
 import android.os.Bundle
 import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.selector.findTabOrCustomTab
+import mozilla.components.browser.state.state.CustomTabSessionState
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.ext.components
 
@@ -15,12 +18,15 @@ import org.mozilla.focus.ext.components
 class CustomTabActivity : MainActivity() {
     private lateinit var customTabId: String
 
-    private val customTabSession: Session by lazy {
-        components.sessionManager.findSessionById(customTabId)
+    private val customTabSession: SessionState by lazy {
+        components.store.state.findTabOrCustomTab(customTabId)
             ?: throw IllegalAccessError("No session wiht id $customTabId")
     }
 
-    override val currentSessionForActivity: Session by lazy { customTabSession }
+    // TODO remove this session manager usage when cleaning up MainActivity
+    override val currentSessionForActivity: Session by lazy {
+        components.sessionManager.findSessionById(customTabId)!!
+    }
 
     override val isCustomTabMode: Boolean = true
 
@@ -35,10 +41,10 @@ class CustomTabActivity : MainActivity() {
     override fun onPause() {
         super.onPause()
 
-        if (isFinishing && customTabSession.isCustomTabSession()) {
+        if (isFinishing && customTabSession is CustomTabSessionState) {
             // This may not be a custom tab session anymore ("open in firefox focus"). So only remove it if this
             // activity is finishing and this is still a custom tab session.
-            components.sessionManager.remove(customTabSession)
+            components.customTabsUseCases.remove(customTabSession.id)
         }
     }
     companion object {
