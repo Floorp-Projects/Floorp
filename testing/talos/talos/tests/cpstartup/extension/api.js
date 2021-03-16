@@ -20,11 +20,6 @@ ChromeUtils.defineModuleGetter(
   "TalosParentProfiler",
   "resource://talos-powers/TalosParentProfiler.jsm"
 );
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
 
 const PREALLOCATED_PREF = "dom.ipc.processPrelaunch.enabled";
 const MESSAGES = ["CPStartup:Go", "Content:BrowserChildReady"];
