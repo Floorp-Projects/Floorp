@@ -22,6 +22,9 @@
 using namespace mozilla::gfx;
 
 namespace mozilla {
+
+Maybe<gfx::YUVColorSpace> GetColorSpace(const Dav1dPicture&, LazyLogModule&);
+
 namespace image {
 
 using Telemetry::LABELS_AVIF_AOM_DECODE_ERROR;
@@ -34,14 +37,11 @@ static LazyLogModule sAVIFLog("AVIFDecoder");
 
 static const LABELS_AVIF_BIT_DEPTH gColorDepthLabel[] = {
     LABELS_AVIF_BIT_DEPTH::color_8, LABELS_AVIF_BIT_DEPTH::color_10,
-    LABELS_AVIF_BIT_DEPTH::color_12, LABELS_AVIF_BIT_DEPTH::color_16,
-    LABELS_AVIF_BIT_DEPTH::unknown};
+    LABELS_AVIF_BIT_DEPTH::color_12, LABELS_AVIF_BIT_DEPTH::color_16};
 
-static const LABELS_AVIF_YUV_COLOR_SPACE gColorSpaceLabel[static_cast<size_t>(
-    gfx::YUVColorSpace::_NUM_COLORSPACE)] = {
+static const LABELS_AVIF_YUV_COLOR_SPACE gColorSpaceLabel[] = {
     LABELS_AVIF_YUV_COLOR_SPACE::BT601, LABELS_AVIF_YUV_COLOR_SPACE::BT709,
-    LABELS_AVIF_YUV_COLOR_SPACE::BT2020, LABELS_AVIF_YUV_COLOR_SPACE::identity,
-    LABELS_AVIF_YUV_COLOR_SPACE::unknown};
+    LABELS_AVIF_YUV_COLOR_SPACE::BT2020, LABELS_AVIF_YUV_COLOR_SPACE::identity};
 
 class AVIFParser {
  public:
@@ -629,49 +629,12 @@ layers::PlanarYCbCrAData Dav1dDecoder::Dav1dPictureToYCbCrAData(
   data.mStereoMode = StereoMode::MONO;
   data.mColorDepth = ColorDepthForBitDepth(aPicture->p.bpc);
 
-  switch (aPicture->seq_hdr->mtrx) {
-    case DAV1D_MC_BT601:
-      data.mYUVColorSpace = gfx::YUVColorSpace::BT601;
-      break;
-    case DAV1D_MC_BT709:
-      data.mYUVColorSpace = gfx::YUVColorSpace::BT709;
-      break;
-    case DAV1D_MC_BT2020_NCL:
-      data.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
-      break;
-    case DAV1D_MC_BT2020_CL:
-      data.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
-      break;
-    case DAV1D_MC_IDENTITY:
-      data.mYUVColorSpace = gfx::YUVColorSpace::Identity;
-      break;
-    case DAV1D_MC_CHROMAT_NCL:
-    case DAV1D_MC_CHROMAT_CL:
-    case DAV1D_MC_UNKNOWN:  // MIAF specific
-      switch (aPicture->seq_hdr->pri) {
-        case DAV1D_COLOR_PRI_BT601:
-          data.mYUVColorSpace = gfx::YUVColorSpace::BT601;
-          break;
-        case DAV1D_COLOR_PRI_BT709:
-          data.mYUVColorSpace = gfx::YUVColorSpace::BT709;
-          break;
-        case DAV1D_COLOR_PRI_BT2020:
-          data.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
-          break;
-        default:
-          data.mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
-          break;
-      }
-      break;
-    default:
-      MOZ_LOG(sAVIFLog, LogLevel::Debug,
-              ("unsupported color matrix value: %u", aPicture->seq_hdr->mtrx));
-      data.mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
-  }
-  if (data.mYUVColorSpace == gfx::YUVColorSpace::UNKNOWN) {
+  auto colorSpace = GetColorSpace(*aPicture, sAVIFLog);
+  if (!colorSpace) {
     // MIAF specific: UNKNOWN color space should be treated as BT601
-    data.mYUVColorSpace = gfx::YUVColorSpace::BT601;
+    colorSpace = Some(gfx::YUVColorSpace::BT601);
   }
+  data.mYUVColorSpace = *colorSpace;
 
   data.mColorRange = aPicture->seq_hdr->color_range ? gfx::ColorRange::FULL
                                                     : gfx::ColorRange::LIMITED;
@@ -726,50 +689,50 @@ layers::PlanarYCbCrAData AOMDecoder::AOMImageToYCbCrAData(
   data.mStereoMode = StereoMode::MONO;
   data.mColorDepth = ColorDepthForBitDepth(aImage->bit_depth);
 
+  Maybe<gfx::YUVColorSpace> colorSpace;
   switch (aImage->mc) {
     case AOM_CICP_MC_BT_601:
-      data.mYUVColorSpace = gfx::YUVColorSpace::BT601;
+      colorSpace = Some(gfx::YUVColorSpace::BT601);
       break;
     case AOM_CICP_MC_BT_709:
-      data.mYUVColorSpace = gfx::YUVColorSpace::BT709;
+      colorSpace = Some(gfx::YUVColorSpace::BT709);
       break;
     case AOM_CICP_MC_BT_2020_NCL:
-      data.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
+      colorSpace = Some(gfx::YUVColorSpace::BT2020);
       break;
     case AOM_CICP_MC_BT_2020_CL:
-      data.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
+      colorSpace = Some(gfx::YUVColorSpace::BT2020);
       break;
     case AOM_CICP_MC_IDENTITY:
-      data.mYUVColorSpace = gfx::YUVColorSpace::Identity;
+      colorSpace = Some(gfx::YUVColorSpace::Identity);
       break;
     case AOM_CICP_MC_CHROMAT_NCL:
     case AOM_CICP_MC_CHROMAT_CL:
     case AOM_CICP_MC_UNSPECIFIED:  // MIAF specific
       switch (aImage->cp) {
         case AOM_CICP_CP_BT_601:
-          data.mYUVColorSpace = gfx::YUVColorSpace::BT601;
+          colorSpace = Some(gfx::YUVColorSpace::BT601);
           break;
         case AOM_CICP_CP_BT_709:
-          data.mYUVColorSpace = gfx::YUVColorSpace::BT709;
+          colorSpace = Some(gfx::YUVColorSpace::BT709);
           break;
         case AOM_CICP_CP_BT_2020:
-          data.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
+          colorSpace = Some(gfx::YUVColorSpace::BT2020);
           break;
         default:
-          data.mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
           break;
       }
       break;
     default:
       MOZ_LOG(sAVIFLog, LogLevel::Debug,
               ("unsupported aom_matrix_coefficients value: %u", aImage->mc));
-      data.mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
+      break;
   }
-
-  if (data.mYUVColorSpace == gfx::YUVColorSpace::UNKNOWN) {
+  if (!colorSpace) {
     // MIAF specific: UNKNOWN color space should be treated as BT601
-    data.mYUVColorSpace = gfx::YUVColorSpace::BT601;
+    colorSpace = Some(gfx::YUVColorSpace::BT601);
   }
+  data.mYUVColorSpace = *colorSpace;
 
   switch (aImage->range) {
     case AOM_CR_STUDIO_RANGE:

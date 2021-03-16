@@ -143,7 +143,7 @@ SharedSurface_ANGLEShareHandle::ToSurfaceDescriptor() {
   const auto format = gfx::SurfaceFormat::B8G8R8A8;
   return Some(layers::SurfaceDescriptorD3D10(
       (WindowsHandle)mShareHandle, format, mDesc.size,
-      gfx::YUVColorSpace::UNKNOWN, gfx::ColorRange::FULL));
+      gfx::YUVColorSpace::Identity, gfx::ColorRange::FULL));
 }
 
 class ScopedLockTexture final {
