@@ -31,6 +31,12 @@ let data = [
   // test bug 1697678.
   { term: "test10", keywords: ["kids sn", "kids sneakers"] },
   { term: "test11", keywords: ["ki", "kin", "kind", "kindl", "kindle"] },
+
+  // test12 and test13 must be in the following order to test bug 1698534.
+  // Searching for "websi" should match test12 because search strings must match
+  // keywords exactly, no prefix matching.
+  { term: "test12", keywords: ["websi"] },
+  { term: "test13", keywords: ["webs", "websit"] },
 ];
 
 function basicChecks(tree) {
@@ -45,8 +51,7 @@ function basicChecks(tree) {
   Assert.equal(tree.get("hel").fullKeyword, "helzo");
   Assert.equal(tree.get("helzo").result, "helzo foo");
   Assert.equal(tree.get("helzo").fullKeyword, "helzo");
-  Assert.equal(tree.get("helzo ").result, "helzo foo");
-  Assert.equal(tree.get("helzo ").fullKeyword, "helzo foo");
+  Assert.equal(tree.get("helzo ").result, null);
   Assert.equal(tree.get("helzo foo").result, "helzo foo");
   Assert.equal(tree.get("helzo b").result, "helzo bar");
   Assert.equal(tree.get("helzo b").fullKeyword, "helzo bar");
@@ -65,14 +70,10 @@ function basicChecks(tree) {
   Assert.equal(tree.get("aaa").fullKeyword, "aaab222");
   Assert.equal(tree.get("aaab").result, "test2");
   Assert.equal(tree.get("aaab").fullKeyword, "aaab222");
-  Assert.equal(tree.get("aaab1").result, "test1");
-  Assert.equal(tree.get("aaab1").fullKeyword, "aaab111");
-  Assert.equal(tree.get("aaab2").result, "test2");
-  Assert.equal(tree.get("aaab2").fullKeyword, "aaab222");
-  Assert.equal(tree.get("aaa1").result, "test1");
-  Assert.equal(tree.get("aaa1").fullKeyword, "aaa111");
-  Assert.equal(tree.get("aaa2").result, "test2");
-  Assert.equal(tree.get("aaa2").fullKeyword, "aaa222");
+  Assert.equal(tree.get("aaab1").result, null);
+  Assert.equal(tree.get("aaab2").result, null);
+  Assert.equal(tree.get("aaa1").result, null);
+  Assert.equal(tree.get("aaa2").result, null);
 
   Assert.equal(tree.get("ki").result, "test11");
   Assert.equal(tree.get("ki").fullKeyword, "kindle");
@@ -86,6 +87,15 @@ function basicChecks(tree) {
   Assert.equal(tree.get("kids s").result, null);
   Assert.equal(tree.get("kids sn").result, "test10");
   Assert.equal(tree.get("kids sn").fullKeyword, "kids sneakers");
+
+  Assert.equal(tree.get("web").result, null);
+  Assert.equal(tree.get("webs").result, "test13");
+  Assert.equal(tree.get("webs").fullKeyword, "websit");
+  Assert.equal(tree.get("websi").result, "test12");
+  Assert.equal(tree.get("websi").fullKeyword, "websi");
+  Assert.equal(tree.get("websit").result, "test13");
+  Assert.equal(tree.get("websit").fullKeyword, "websit");
+  Assert.equal(tree.get("website").result, null);
 }
 
 function createTree() {
@@ -141,9 +151,16 @@ add_task(async function test_flatten() {
         },
       },
       test: {
-        "1": { "0": { "^": "test10" }, "1": { "^": "test11" }, "^": "test1" },
+        "1": {
+          "0": { "^": "test10" },
+          "1": { "^": "test11" },
+          "2": { "^": "test12" },
+          "3": { "^": "test13" },
+          "^": "test1",
+        },
         "2": { "^": "test2" },
       },
+      web: { s: { i: { "^": "test12", t: { "^": "test13" } }, "^": "test13" } },
     },
     tree.toJSONObject()
   );
