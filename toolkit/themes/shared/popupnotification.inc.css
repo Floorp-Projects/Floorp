@@ -110,18 +110,44 @@
 
 /** PopupNotifications **/
 @supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
-.panel-footer.popup-notification-button-container {
+.panel-footer {
   justify-content: flex-end;
   margin-inline: 16px;
   margin-bottom: 16px;
 }
 
-.panel-footer > .popup-notification-button {
+.panel-footer.panel-footer-menulike {
+  margin-inline: 8px;
+  margin-bottom: 6px;
+  border-top: 1px solid var(--panel-separator-color);
+}
+
+.panel-footer > button {
+  appearance: none;
   border: 0;
   border-radius: 4px;
   padding: 8px 16px;
   font-weight: 600;
-  margin-inline-start: 8px;
+  min-width: 0;
+  margin-inline: 8px 0;
+}
+
+.panel-footer.panel-footer-menulike > button {
+  font-weight: unset;
+  padding: 8px;
+  margin: 4px 0 0;
+}
+
+.panel-footer.panel-footer-menulike > button:hover:active {
+  color: inherit;
+}
+
+.panel-footer.panel-footer-menulike > button > .button-box {
+  display: inline;
+}
+
+.panel-footer.panel-footer-menulike > button > .button-box > .button-text {
+  margin-inline: 0;
 }
 
 .panel-footer > .popup-notification-dropmarker {
@@ -135,17 +161,42 @@
   border-color: transparent;
 }
 
-.panel-footer > .popup-notification-button:not([disabled]) {
+.panel-footer > button {
   color: var(--buttons-secondary-color);
-  background-color: var(--buttons-secondary-bgcolor, var(--arrowpanel-dimmed));
 }
 
-.panel-footer > .popup-notification-button:not([disabled]):hover {
-  background-color: var(--buttons-secondary-hover-bgcolor, var(--arrowpanel-dimmed-further));
+.panel-footer:not(.panel-footer-menulike) > button {
+  background-color: var(--buttons-secondary-bgcolor, color-mix(in srgb, currentColor 13%, transparent));
 }
 
-.panel-footer > .popup-notification-button:not([disabled]):hover:active {
-  background-color: var(--buttons-secondary-active-bgcolor, var(--arrowpanel-dimmed-even-further));
+.panel-footer:not(.panel-footer-menulike) > button[disabled] {
+  opacity: 0.4;
+}
+
+.panel-footer > button:not([disabled]):hover {
+  background-color: var(--buttons-secondary-hover-bgcolor, color-mix(in srgb, currentColor 17%, transparent));
+}
+
+.panel-footer > button:not([disabled]):hover:active {
+  /**
+   * We override the colour here because on macOS, buttons default to
+   * having :hover:active buttons have color -moz-mac-buttonactivetext
+   */
+  color: var(--buttons-secondary-color);
+  background-color: var(--buttons-secondary-active-bgcolor, color-mix(in srgb, currentColor 30%, transparent));
+}
+
+.panel-footer > button:not([disabled])[default] {
+  color: var(--buttons-primary-button-color, -moz-accent-color-foreground) !important;
+  background-color: var(--buttons-primary-button-bgcolor, -moz-accent-color);
+}
+
+.panel-footer > button:not([disabled])[default]:hover {
+  background-color: var(--buttons-primary-button-hover-bgcolor, color-mix(in srgb, black 10%, -moz-accent-color));
+}
+
+.panel-footer > button:not([disabled])[default]:hover:active {
+  background-color: var(--buttons-primary-button-active-bgcolor, color-mix(in srgb, black 20%, -moz-accent-color));
 }
 
 .popup-notification-button,

@@ -133,7 +133,6 @@ xul|label[disabled="true"] {
 .panel-footer {
   background-color: var(--arrowpanel-dimmed);
 }
-} /** END not Proton **/
 
 .panel-footer > xul|button {
   appearance: none;
@@ -180,3 +179,4 @@ xul|label[disabled="true"] {
 .panel-footer > xul|button > .button-box {
   padding: 0;
 }
+} /** END not Proton **/
