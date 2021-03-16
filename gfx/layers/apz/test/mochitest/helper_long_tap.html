@@ -58,7 +58,7 @@ function recordEvent(e) {
     if (eventsFired == 7) {
       removeMouseEventListeners(target);
       dump("Finished waiting for events, doing an APZ flush to see if any more unexpected events come through...\n");
-      flushApzRepaints(function() {
+      promiseApzRepaintsFlushed().then(function() {
         dump("Done APZ flush, ending test...\n");
         subtestDone();
       });
@@ -82,7 +82,7 @@ function recordEvent(e) {
       removeMouseEventListeners(target);
       synthesizeNativeTouch(target, 5, 5, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, function() {
         dump("Finished synthesizing touch-end, doing an APZ flush to see if any more unexpected events come through...\n");
-        flushApzRepaints(function() {
+        promiseApzRepaintsFlushed().then(function() {
           dump("Done APZ flush, ending test...\n");
           subtestDone();
         });
