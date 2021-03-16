@@ -724,6 +724,16 @@ function prompt(aActor, aBrowser, aRequest) {
         accessKey: stringBundle.getString("getUserMedia.block.accesskey"),
         callback(aState) {
           aActor.denyRequest(aRequest);
+
+          // Denying a camera / microphone prompt means we set a temporary or
+          // persistent permission block. There may still be active grace period
+          // permissions at this point. We need to remove them.
+          clearTemporaryGrants(
+            notification.browser,
+            videoDevices.length && !sharingScreen,
+            audioDevices.length
+          );
+
           let scope = SitePermissions.SCOPE_TEMPORARY;
           if (aState && aState.checkboxChecked) {
             scope = SitePermissions.SCOPE_PERSISTENT;
@@ -1377,4 +1387,34 @@ function removePrompt(aBrowser, aCallId) {
   if (notification && notification.callID == aCallId) {
     notification.remove();
   }
+}
+
+/**
+ * Clears temporary permission grants used for WebRTC device grace periods.
+ * @param browser - Browser element to clear permissions for.
+ * @param {boolean} clearCamera - Clear camera grants.
+ * @param {boolean} clearMicrophone - Clear microphone grants.
+ */
+function clearTemporaryGrants(browser, clearCamera, clearMicrophone) {
+  if (!clearCamera && !clearMicrophone) {
+    // Nothing to clear.
+    return;
+  }
+  let perms = SitePermissions.getAllForBrowser(browser);
+  perms
+    .filter(perm => {
+      let [id, key] = perm.id.split(SitePermissions.PERM_KEY_DELIMITER);
+      // We only want to clear WebRTC grace periods. These are temporary, device
+      // specifc (double-keyed) microphone or camera permissions.
+      return (
+        key &&
+        perm.state == SitePermissions.ALLOW &&
+        perm.scope == SitePermissions.SCOPE_TEMPORARY &&
+        ((clearCamera && id == "camera") ||
+          (clearMicrophone && id == "microphone"))
+      );
+    })
+    .forEach(perm =>
+      SitePermissions.removeFromPrincipal(null, perm.id, browser)
+    );
 }
