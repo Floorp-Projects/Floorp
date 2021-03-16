@@ -157,7 +157,6 @@ html|img#editBookmarkPanelFavicon[src] {
   display: flex;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
 .editBookmarkPanelBottomButton {
   flex: 1;
 }
@@ -165,4 +164,3 @@ html|img#editBookmarkPanelFavicon[src] {
 .editBookmarkPanelBottomButton:not(:last-child) {
   border-inline-end: 1px solid var(--panel-separator-color);
 }
-} /** END not Proton **/
