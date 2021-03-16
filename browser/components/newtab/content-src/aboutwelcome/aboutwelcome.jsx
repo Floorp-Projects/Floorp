@@ -7,8 +7,6 @@ import ReactDOM from "react-dom";
 import { MultiStageAboutWelcome } from "./components/MultiStageAboutWelcome";
 import { ReturnToAMO } from "./components/ReturnToAMO";
 
-import { DEFAULT_WELCOME_CONTENT } from "../lib/aboutwelcome-utils";
-
 class AboutWelcome extends React.PureComponent {
   constructor(props) {
     super(props);
@@ -81,8 +79,6 @@ class AboutWelcome extends React.PureComponent {
   }
 }
 
-AboutWelcome.defaultProps = DEFAULT_WELCOME_CONTENT;
-
 // Computes messageId and UTMTerm info used in telemetry
 function ComputeTelemetryInfo(welcomeContent, experimentId, branchId) {
   let messageId =
@@ -105,36 +101,27 @@ function ComputeTelemetryInfo(welcomeContent, experimentId, branchId) {
 }
 
 async function retrieveRenderContent() {
-  // Check for featureConfig and retrieve content
-  const featureConfig = await window.AWGetFeatureConfig();
-  let aboutWelcomeProps;
-
-  if (!featureConfig.screens) {
-    const attribution = await window.AWGetAttributionData();
-    aboutWelcomeProps = {
-      template: attribution.template,
-      ...attribution.extraProps,
-    };
-  } else {
-    // If screens is defined then we have multi stage AW content to show
-    aboutWelcomeProps = featureConfig.screens ? featureConfig : {};
-  }
-
-  // Set design if exists in featureConfig
-  if (featureConfig.design && !aboutWelcomeProps?.design) {
-    aboutWelcomeProps = { ...aboutWelcomeProps, design: featureConfig.design };
-  }
+  // Feature config includes:
+  // user prefs
+  // experiment data
+  // attribution data
+  // defaults
+  let featureConfig = await window.AWGetFeatureConfig();
 
   let { messageId, UTMTerm } = ComputeTelemetryInfo(
-    aboutWelcomeProps,
+    featureConfig,
     featureConfig.slug,
     featureConfig.branch && featureConfig.branch.slug
   );
-  return { aboutWelcomeProps, messageId, UTMTerm };
+  return { featureConfig, messageId, UTMTerm };
 }
 
 async function mount() {
-  let { aboutWelcomeProps, messageId, UTMTerm } = await retrieveRenderContent();
+  let {
+    featureConfig: aboutWelcomeProps,
+    messageId,
+    UTMTerm,
+  } = await retrieveRenderContent();
   ReactDOM.render(
     <AboutWelcome
       messageId={messageId}
