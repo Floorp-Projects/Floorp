@@ -106,10 +106,8 @@ CoalescedMouseMoveFlusher::CoalescedMouseMoveFlusher(
 CoalescedMouseMoveFlusher::~CoalescedMouseMoveFlusher() { RemoveObserver(); }
 
 nsRefreshDriver* CoalescedMouseMoveFlusher::GetRefreshDriver() {
-  PresShell* presShell = mBrowserChild->GetTopLevelPresShell();
-  if (!presShell || !presShell->GetPresContext() ||
-      !presShell->GetPresContext()->RefreshDriver()) {
-    return nullptr;
+  if (PresShell* presShell = mBrowserChild->GetTopLevelPresShell()) {
+    return presShell->GetRefreshDriver();
   }
-  return presShell->GetPresContext()->RefreshDriver();
+  return nullptr;
 }
