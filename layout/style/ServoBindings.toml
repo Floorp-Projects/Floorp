@@ -392,8 +392,7 @@ opaque-types = [
     "nsTObserverArray",  # <- Inherits from nsAutoTObserverArray<T, 0>
     "nsTHashtable",  # <- Inheriting from inner typedefs that clang
                      #    doesn't expose properly.
-    "nsBaseHashtable", "nsRefPtrHashtable", "nsDataHashtable", "nsClassHashtable",  # <- Ditto
-    "nsInterfaceHashtable",  # <- Ditto
+    "nsBaseHashtable", "nsRefCountedHashtable", "nsClassHashtable",  # <- Ditto
     "mozilla::dom::Document_SelectorCache",  # <- Inherits from nsExpirationTracker<.., 4>
     "nsPIDOMWindow",  # <- Takes the vtable from a template parameter, and we can't
                       #    generate it conditionally.
