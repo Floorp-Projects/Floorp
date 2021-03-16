@@ -350,7 +350,8 @@ Instance::callImport_general(Instance* instance, int32_t funcImportIndex,
   // write tests for cross-realm calls.
   MOZ_ASSERT(TlsContext.get()->realm() == instance->realm());
 
-  uint32_t byteLength = instance->memory()->volatileMemoryLength32();
+  uint32_t byteLength =
+      instance->memory()->volatileMemoryLength().getWasmUint32();
   MOZ_ASSERT(byteLength % wasm::PageSize == 0);
   return byteLength / wasm::PageSize;
 }
@@ -372,7 +373,8 @@ static int32_t PerformWait(Instance* instance, uint32_t byteOffset, T value,
     return -1;
   }
 
-  if (byteOffset + sizeof(T) > instance->memory()->volatileMemoryLength32()) {
+  if (byteOffset + sizeof(T) >
+      instance->memory()->volatileMemoryLength().getWasmUint32()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
@@ -427,7 +429,8 @@ static int32_t PerformWait(Instance* instance, uint32_t byteOffset, T value,
     return -1;
   }
 
-  if (byteOffset >= instance->memory()->volatileMemoryLength32()) {
+  if (byteOffset >=
+      instance->memory()->volatileMemoryLength().getWasmUint32()) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_WASM_OUT_OF_BOUNDS);
     return -1;
@@ -475,7 +478,7 @@ inline int32_t WasmMemoryCopy(T memBase, uint32_t memLen,
   MOZ_ASSERT(SASigMemCopy.failureMode == FailureMode::FailOnNegI32);
 
   const WasmArrayRawBuffer* rawBuf = WasmArrayRawBuffer::fromDataPtr(memBase);
-  uint32_t memLen = ByteLength32(rawBuf);
+  uint32_t memLen = rawBuf->byteLength().getWasmUint32();
 
   return WasmMemoryCopy(memBase, memLen, dstByteOffset, srcByteOffset, len,
                         memmove);
@@ -492,7 +495,7 @@ inline int32_t WasmMemoryCopy(T memBase, uint32_t memLen,
 
   const SharedArrayRawBuffer* rawBuf =
       SharedArrayRawBuffer::fromDataPtr(memBase);
-  uint32_t memLen = VolatileByteLength32(rawBuf);
+  uint32_t memLen = rawBuf->volatileByteLength().getWasmUint32();
 
   return WasmMemoryCopy<SharedMem<uint8_t*>, RacyMemMove>(
       SharedMem<uint8_t*>::shared(memBase), memLen, dstByteOffset,
@@ -542,7 +545,7 @@ inline int32_t WasmMemoryFill(T memBase, uint32_t memLen, uint32_t byteOffset,
   MOZ_ASSERT(SASigMemFill.failureMode == FailureMode::FailOnNegI32);
 
   const WasmArrayRawBuffer* rawBuf = WasmArrayRawBuffer::fromDataPtr(memBase);
-  uint32_t memLen = ByteLength32(rawBuf);
+  uint32_t memLen = rawBuf->byteLength().getWasmUint32();
 
   return WasmMemoryFill(memBase, memLen, byteOffset, value, len, memset);
 }
@@ -555,7 +558,7 @@ inline int32_t WasmMemoryFill(T memBase, uint32_t memLen, uint32_t byteOffset,
 
   const SharedArrayRawBuffer* rawBuf =
       SharedArrayRawBuffer::fromDataPtr(memBase);
-  uint32_t memLen = VolatileByteLength32(rawBuf);
+  uint32_t memLen = rawBuf->volatileByteLength().getWasmUint32();
 
   return WasmMemoryFill(SharedMem<uint8_t*>::shared(memBase), memLen,
                         byteOffset, value, len,
@@ -586,7 +589,7 @@ inline int32_t WasmMemoryFill(T memBase, uint32_t memLen, uint32_t byteOffset,
   const uint32_t segLen = seg.bytes.length();
 
   WasmMemoryObject* mem = instance->memory();
-  const uint32_t memLen = mem->volatileMemoryLength32();
+  const uint32_t memLen = mem->volatileMemoryLength().getWasmUint32();
 
   // We are proposing to copy
   //
@@ -1210,7 +1213,8 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
 
   tlsData()->memoryBase =
       memory_ ? memory_->buffer().dataPointerEither().unwrap() : nullptr;
-  tlsData()->boundsCheckLimit32 = memory_ ? memory_->boundsCheckLimit32() : 0;
+  tlsData()->boundsCheckLimit32 =
+      memory_ ? memory_->boundsCheckLimit().getWasmUint32() : 0;
   tlsData()->instance = this;
   tlsData()->realm = realm_;
   tlsData()->cx = cx;
@@ -1456,7 +1460,7 @@ bool Instance::memoryAccessInGuardRegion(uint8_t* addr,
   }
 
   size_t lastByteOffset = addr - base + (numBytes - 1);
-  return lastByteOffset >= memory()->volatileMemoryLength32() &&
+  return lastByteOffset >= memory()->volatileMemoryLength().getWasmUint32() &&
          lastByteOffset < memoryMappedSize();
 }
 
@@ -1472,7 +1476,7 @@ bool Instance::memoryAccessInBounds(uint8_t* addr, unsigned numBytes) const {
     return false;
   }
 
-  uint32_t length = memory()->volatileMemoryLength32();
+  uint32_t length = memory()->volatileMemoryLength().getWasmUint32();
   if (addr >= base + length) {
     return false;
   }
@@ -2063,7 +2067,7 @@ void Instance::onMovingGrowMemory() {
 
   ArrayBufferObject& buffer = memory_->buffer().as<ArrayBufferObject>();
   tlsData()->memoryBase = buffer.dataPointer();
-  tlsData()->boundsCheckLimit32 = memory_->boundsCheckLimit32();
+  tlsData()->boundsCheckLimit32 = memory_->boundsCheckLimit().getWasmUint32();
 }
 
 void Instance::onMovingGrowTable(const Table* theTable) {

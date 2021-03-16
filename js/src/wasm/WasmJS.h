@@ -34,7 +34,8 @@
 #include "js/RootingAPI.h"     // MovableCellHasher
 #include "js/SweepingAPI.h"    // JS::WeakCache
 #include "js/TypeDecls.h"  // HandleValue, HandleObject, MutableHandleObject, MutableHandleFunction
-#include "js/Vector.h"        // JS::Vector
+#include "js/Vector.h"  // JS::Vector
+#include "vm/BufferSize.h"
 #include "vm/JSFunction.h"    // JSFunction
 #include "vm/NativeObject.h"  // NativeObject
 #include "wasm/WasmTypes.h"   // MutableHandleWasmInstanceObject, wasm::*
@@ -56,10 +57,8 @@ class ArrayBufferObjectMaybeShared;
 class JSStringBuilder;
 class SharedArrayRawBuffer;
 class TypedArrayObject;
-class WasmArrayRawBuffer;
 class WasmFunctionScope;
 class WasmInstanceScope;
-class SharedArrayRawBuffer;
 
 namespace wasm {
 
@@ -162,6 +161,12 @@ void ReportSimdAnalysis(const char* data);
 // options can support try/catch, throw, rethrow, and branch_on_exn (evolving).
 bool ExceptionsAvailable(JSContext* cx);
 
+size_t MaxMemory32Pages();
+
+static inline size_t MaxMemory32Bytes() {
+  return MaxMemory32Pages() * PageSize;
+}
+
 // Compiles the given binary wasm module given the ArrayBufferObject
 // and links the module's imports with the given import object.
 
@@ -203,17 +208,6 @@ WasmInstanceObject* ExportedFunctionToInstanceObject(JSFunction* fun);
 uint32_t ExportedFunctionToFuncIndex(JSFunction* fun);
 
 bool IsSharedWasmMemoryObject(JSObject* obj);
-
-// Abstractions that clarify that we are working on a 32-bit memory and check
-// that the buffer length does not exceed that's memory's fixed limits.
-//
-// Once the larger ArrayBuffers are stable these may become accessors on the
-// objects themselves: wasmByteLength32() etc.
-uint32_t ByteLength32(Handle<ArrayBufferObjectMaybeShared*> buffer);
-uint32_t ByteLength32(const ArrayBufferObjectMaybeShared& buffer);
-uint32_t ByteLength32(const WasmArrayRawBuffer* buffer);
-uint32_t ByteLength32(const ArrayBufferObject& buffer);
-uint32_t VolatileByteLength32(const SharedArrayRawBuffer* buffer);
 
 }  // namespace wasm
 
@@ -407,21 +401,21 @@ class WasmMemoryObject : public NativeObject {
   // `buffer()` returns the current buffer object always.  If the buffer
   // represents shared memory then `buffer().byteLength()` never changes, and
   // in particular it may be a smaller value than that returned from
-  // `volatileMemoryLength32()` below.
+  // `volatileMemoryLength()` below.
   //
   // Generally, you do not want to call `buffer().byteLength()`, but to call
-  // `volatileMemoryLength32()`, instead.
+  // `volatileMemoryLength()`, instead.
   ArrayBufferObjectMaybeShared& buffer() const;
 
   // The current length of the memory.  In the case of shared memory, the
   // length can change at any time.  Also note that this will acquire a lock
   // for shared memory, so do not call this from a signal handler.
-  uint32_t volatileMemoryLength32() const;
+  js::BufferSize volatileMemoryLength() const;
 
   bool isShared() const;
   bool isHuge() const;
   bool movingGrowable() const;
-  uint32_t boundsCheckLimit32() const;
+  js::BufferSize boundsCheckLimit() const;
 
   // If isShared() is true then obtain the underlying buffer object.
   SharedArrayRawBuffer* sharedArrayRawBuffer() const;
