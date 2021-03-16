@@ -17,6 +17,7 @@ COPY topsrcdir/taskcluster/docker/recipes/hgrc /etc/mercurial/hgrc.d/mozilla.rc
 ADD topsrcdir/taskcluster/docker/recipes/install-mercurial.sh /setup/install-mercurial.sh
 
 ADD setup.sh /setup/setup.sh
+ADD requirements.txt /setup/requirements.txt
 
 RUN cd /setup && ./setup.sh
 
