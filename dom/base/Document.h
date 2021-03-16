@@ -3774,6 +3774,14 @@ class Document : public nsINode,
   // Getter for PermissionDelegateHandler. Performs lazy initialization.
   PermissionDelegateHandler* GetPermissionDelegateHandler();
 
+  // Notify the document that a fetch or a XHR request has completed
+  // succesfully in this document. This is used by the password manager to infer
+  // whether a form is submitted.
+  void NotifyFetchOrXHRSuccess();
+
+  // Set whether NotifyFetchOrXHRSuccess should dispatch an event.
+  void SetNotifyFetchSuccess(bool aShouldNotify);
+
   /**
    * Localization
    *
@@ -5189,6 +5197,9 @@ class Document : public nsINode,
 
   // Scope preloads per document.  This is used by speculative loading as well.
   PreloadService mPreloadService;
+
+  // See NotifyFetchOrXHRSuccess and SetNotifyFetchSuccess.
+  bool mShouldNotifyFetchSuccess;
 
   // Accumulate JS telemetry collected
   void AccumulateJSTelemetry();

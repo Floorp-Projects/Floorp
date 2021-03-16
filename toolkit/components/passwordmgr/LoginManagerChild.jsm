@@ -337,6 +337,10 @@ const observer = {
           }
         }
         docState.fieldModificationsByRootElement.set(formLikeRoot, true);
+        if (!alreadyModified) {
+          // Only infer form submission when there is an user interaction.
+          ownerDocument.setNotifyFetchSuccess(true);
+        }
 
         if (
           // When the password field value is cleared or entirely replaced we don't treat it as
@@ -657,6 +661,14 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
 
     switch (event.type) {
+      case "DOMDocFetchSuccess": {
+        if (this.shouldIgnoreLoginManagerEvent(event)) {
+          break;
+        }
+
+        this.onDOMDocFetchSuccess(event);
+        break;
+      }
       case "DOMFormBeforeSubmit": {
         if (this.shouldIgnoreLoginManagerEvent(event)) {
           break;
@@ -746,6 +758,20 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     } catch (ex) {
       // Ignore NS_ERROR_FAILURE if the progress listener was already added
     }
+  }
+
+  /**
+   * Infer a form is submitted when the form is removed after a successful
+   * fetch or XHR request.
+   */
+  onDOMDocFetchSuccess(event) {
+    let document = event.target;
+
+    // TODO: Register mutation observer to watch for DOM Tree change.
+    // This will be implemented in the next patch
+
+    // Observers have been setted up, removed the listener.
+    document.setNotifyFetchSuccess(false);
   }
 
   onDOMFormBeforeSubmit(event) {

@@ -626,13 +626,23 @@ void MainThreadFetchResolver::OnResponseAvailableInternal(
   AssertIsOnMainThread();
 
   if (aResponse->Type() != ResponseType::Error) {
+    nsCOMPtr<nsIGlobalObject> go = mPromise->GetParentObject();
+    nsCOMPtr<nsPIDOMWindowInner> inner = do_QueryInterface(go);
+
+    // Notify the document when a fetch completes successfully. This is
+    // used by the password manager as a hint to observe DOM mutations.
+    // Call this prior to setting state to Complete so we can set up the
+    // observer before mutations occurs.
+    Document* doc = inner ? inner->GetExtantDoc() : nullptr;
+    if (doc) {
+      doc->NotifyFetchOrXHRSuccess();
+    }
+
     if (mFetchObserver) {
       mFetchObserver->SetState(FetchState::Complete);
     }
 
-    nsCOMPtr<nsIGlobalObject> go = mPromise->GetParentObject();
     mResponse = new Response(go, aResponse, mSignalImpl);
-    nsCOMPtr<nsPIDOMWindowInner> inner = do_QueryInterface(go);
     BrowsingContext* bc = inner ? inner->GetBrowsingContext() : nullptr;
     bc = bc ? bc->Top() : nullptr;
     if (bc && bc->IsLoading()) {

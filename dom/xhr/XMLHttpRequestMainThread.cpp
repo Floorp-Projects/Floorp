@@ -2360,6 +2360,17 @@ void XMLHttpRequestMainThread::ChangeStateToDoneInternal() {
     mProgressSinceLastProgressEvent = false;
   }
 
+  // Notify the document when an XHR request completes successfully.
+  // This is used by the password manager as a hint to observe DOM mutations.
+  // Call this prior to changing state to DONE to ensure we set up the
+  // observer before mutations occur.
+  if (mErrorLoad == ErrorType::eOK) {
+    Document* doc = GetDocumentIfCurrent();
+    if (doc) {
+      doc->NotifyFetchOrXHRSuccess();
+    }
+  }
+
   // Per spec, fire readystatechange=4/done before final error events.
   ChangeState(XMLHttpRequest_Binding::DONE, true);
 
