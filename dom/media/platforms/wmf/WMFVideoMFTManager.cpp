@@ -116,9 +116,7 @@ WMFVideoMFTManager::WMFVideoMFTManager(
       mImageSize(aConfig.mImage),
       mDecodedImageSize(aConfig.mImage),
       mVideoStride(0),
-      mColorSpace(aConfig.mColorSpace != gfx::YUVColorSpace::UNKNOWN
-                      ? Some(aConfig.mColorSpace)
-                      : Nothing()),
+      mColorSpace(aConfig.mColorSpace),
       mColorRange(aConfig.mColorRange),
       mImageContainer(aImageContainer),
       mKnowsCompositor(aKnowsCompositor),
@@ -476,7 +474,7 @@ WMFVideoMFTManager::Input(MediaRawData* aSample) {
     // The colorspace definition is found in the H264 SPS NAL, available out of
     // band, while for VP9 it's only available within the VP9 bytestream.
     // The info would have been updated by the MediaChangeMonitor.
-    mColorSpace = Some(aSample->mTrackInfo->GetAsVideoInfo()->mColorSpace);
+    mColorSpace = aSample->mTrackInfo->GetAsVideoInfo()->mColorSpace;
     mColorRange = aSample->mTrackInfo->GetAsVideoInfo()->mColorRange;
   }
   mLastDuration = aSample->mDuration;

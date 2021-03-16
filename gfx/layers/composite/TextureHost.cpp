@@ -1021,7 +1021,7 @@ gfx::YUVColorSpace BufferTextureHost::GetYUVColorSpace() const {
     const YCbCrDescriptor& desc = mDescriptor.get_YCbCrDescriptor();
     return desc.yUVColorSpace();
   }
-  return gfx::YUVColorSpace::UNKNOWN;
+  return gfx::YUVColorSpace::Identity;
 }
 
 gfx::ColorDepth BufferTextureHost::GetColorDepth() const {

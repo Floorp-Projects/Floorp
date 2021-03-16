@@ -90,7 +90,7 @@ class VPXDecoder : public MediaDataDecoder,
         case 5:
           return gfx::YUVColorSpace::BT2020;
         default:
-          return gfx::YUVColorSpace::UNKNOWN;
+          return gfx::YUVColorSpace::Default;
       }
     }
 

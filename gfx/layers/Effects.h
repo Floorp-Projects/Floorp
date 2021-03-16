@@ -245,7 +245,6 @@ inline already_AddRefed<TexturedEffect> CreateTexturedEffect(
 
   switch (aHost->GetReadFormat()) {
     case gfx::SurfaceFormat::YUV:
-      MOZ_ASSERT(aHost->GetYUVColorSpace() != gfx::YUVColorSpace::UNKNOWN);
       result = new EffectYCbCr(aSource, aHost->GetYUVColorSpace(),
                                aHost->GetColorRange(), aHost->GetColorDepth(),
                                aSamplingFilter);
