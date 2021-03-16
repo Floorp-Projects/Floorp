@@ -27,8 +27,8 @@ class DMABUFTextureHostOGL : public TextureHost {
   void SetTextureSourceProvider(TextureSourceProvider* aProvider) override;
 
   bool Lock() override;
-
   void Unlock() override;
+  bool IsValid() override { return !!mSurface; }
 
   gfx::SurfaceFormat GetFormat() const override;
 
