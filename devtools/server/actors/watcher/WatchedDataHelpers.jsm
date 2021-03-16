@@ -17,6 +17,7 @@ const SUPPORTED_DATA = {
   XHR_BREAKPOINTS: "xhr-breakpoints",
   RESOURCES: "resources",
   TARGET_CONFIGURATION: "target-configuration",
+  THREAD_CONFIGURATION: "thread-configuration",
   TARGETS: "targets",
 };
 
@@ -57,6 +58,10 @@ const DATA_KEY_FUNCTION = {
   [SUPPORTED_DATA.TARGET_CONFIGURATION]: function({ key }) {
     // Configuration data entries are { key, value } objects, `key` can be used
     // as the unique identifier for the entry.
+    return key;
+  },
+  [SUPPORTED_DATA.THREAD_CONFIGURATION]: function({ key }) {
+    // See target configuration comment
     return key;
   },
   [SUPPORTED_DATA.XHR_BREAKPOINTS]: function({ path, method }) {
