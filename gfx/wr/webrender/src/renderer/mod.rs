@@ -211,8 +211,8 @@ const GPU_TAG_CACHE_LINE_DECORATION: GpuProfileTag = GpuProfileTag {
     label: "C_LineDecoration",
     color: debug_colors::YELLOWGREEN,
 };
-const GPU_TAG_CACHE_GRADIENT: GpuProfileTag = GpuProfileTag {
-    label: "C_Gradient",
+const GPU_TAG_CACHE_FAST_LINEAR_GRADIENT: GpuProfileTag = GpuProfileTag {
+    label: "C_FastLinearGradient",
     color: debug_colors::BROWN,
 };
 const GPU_TAG_SETUP_TARGET: GpuProfileTag = GpuProfileTag {
@@ -3966,7 +3966,7 @@ impl Renderer {
 
         // Draw any gradients for this target.
         if !target.fast_linear_gradients.is_empty() {
-            let _timer = self.gpu_profiler.start_timer(GPU_TAG_CACHE_GRADIENT);
+            let _timer = self.gpu_profiler.start_timer(GPU_TAG_CACHE_FAST_LINEAR_GRADIENT);
 
             self.set_blend(false, FramebufferKind::Other);
 
