@@ -66,6 +66,13 @@ const watcherSpecPrototype = {
         configuration: RetVal("target-configuration"),
       },
     },
+
+    getThreadConfigurationActor: {
+      request: {},
+      response: {
+        configuration: RetVal("thread-configuration"),
+      },
+    },
   },
 
   events: {
