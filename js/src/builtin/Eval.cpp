@@ -215,10 +215,10 @@ enum EvalType { DIRECT_EVAL, INDIRECT_EVAL };
 //
 // Common code implementing direct and indirect eval.
 //
-// Evaluate call.argv[2], if it is a string, in the context of the given calling
+// Evaluate v, if it is a string, in the context of the given calling
 // frame, with the provided scope chain, with the semantics of either a direct
 // or indirect eval (see ES5 10.4.2).  If this is an indirect eval, env
-// must be a global object.
+// must be the global lexical environment.
 //
 // On success, store the completion value in call.rval and return true.
 static bool EvalKernel(JSContext* cx, HandleValue v, EvalType evalType,
