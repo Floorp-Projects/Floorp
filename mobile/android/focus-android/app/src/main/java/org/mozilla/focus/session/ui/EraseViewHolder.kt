@@ -15,7 +15,7 @@ import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
 class EraseViewHolder(
-    private val fragment: SessionsSheetFragment,
+    private val fragment: TabSheetFragment,
     itemView: View
 ) : RecyclerView.ViewHolder(itemView), View.OnClickListener {
 

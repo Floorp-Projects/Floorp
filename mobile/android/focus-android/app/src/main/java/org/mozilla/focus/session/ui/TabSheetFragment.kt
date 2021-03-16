@@ -14,19 +14,25 @@ import android.view.View
 import android.view.ViewAnimationUtils
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
+import mozilla.components.browser.state.selector.privateTabs
+import mozilla.components.lib.state.ext.flowScoped
 
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
-import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.locale.LocaleAwareFragment
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.OneShotOnPreDrawListener
 
-class SessionsSheetFragment : LocaleAwareFragment(), View.OnClickListener {
+class TabSheetFragment : LocaleAwareFragment(), View.OnClickListener {
 
     private lateinit var backgroundView: View
     private lateinit var cardView: View
     private var isAnimating: Boolean = false
+
+    private var scope: CoroutineScope? = null
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val view = inflater.inflate(R.layout.fragment_sessionssheet, container, false)
@@ -40,11 +46,13 @@ class SessionsSheetFragment : LocaleAwareFragment(), View.OnClickListener {
             true
         }
 
-        val sessionManager = requireComponents.sessionManager
+        val store = view.context.components.store
 
-        val sessionsAdapter = SessionsAdapter(this, sessionManager.sessions)
-        @Suppress("DEPRECATION")
-        sessionManager.register(sessionsAdapter, owner = this)
+        val sessionsAdapter = TabsAdapter(this, store.state.privateTabs)
+
+        scope = store.flowScoped(owner = this) { flow ->
+            sessionsAdapter.onFlow(flow)
+        }
 
         view.findViewById<RecyclerView>(R.id.sessions).let {
             it.layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
@@ -52,6 +60,11 @@ class SessionsSheetFragment : LocaleAwareFragment(), View.OnClickListener {
         }
 
         return view
+    }
+
+    override fun onDestroyView() {
+        scope?.cancel()
+        super.onDestroyView()
     }
 
     @Suppress("ComplexMethod")
@@ -101,7 +114,7 @@ class SessionsSheetFragment : LocaleAwareFragment(), View.OnClickListener {
         animator.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
                 val activity = activity as MainActivity?
-                activity?.supportFragmentManager?.beginTransaction()?.remove(this@SessionsSheetFragment)?.commit()
+                activity?.supportFragmentManager?.beginTransaction()?.remove(this@TabSheetFragment)?.commit()
             }
         })
 

@@ -25,7 +25,7 @@ import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.fragment.UrlInputFragment
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.session.IntentProcessor
-import org.mozilla.focus.session.ui.SessionsSheetFragment
+import org.mozilla.focus.session.ui.TabSheetFragment
 import org.mozilla.focus.shortcut.HomeScreen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.Settings
@@ -282,7 +282,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         val fragmentManager = supportFragmentManager
 
         val sessionsSheetFragment = fragmentManager.findFragmentByTag(
-            SessionsSheetFragment.FRAGMENT_TAG) as SessionsSheetFragment?
+            TabSheetFragment.FRAGMENT_TAG) as TabSheetFragment?
         if (sessionsSheetFragment != null &&
                 sessionsSheetFragment.isVisible &&
                 sessionsSheetFragment.onBackPressed()) {

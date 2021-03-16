@@ -6,40 +6,39 @@ package org.mozilla.focus.session.ui
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
-import androidx.recyclerview.widget.RecyclerView
 import android.view.View
 import android.widget.TextView
-import mozilla.components.browser.session.Session
+import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.browser.state.state.TabSessionState
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.beautifyUrl
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import java.lang.ref.WeakReference
 
-class SessionViewHolder internal constructor(
-    private val fragment: SessionsSheetFragment,
+class TabViewHolder internal constructor(
+    private val fragment: TabSheetFragment,
     private val textView: TextView
 ) : RecyclerView.ViewHolder(textView), View.OnClickListener {
     companion object {
-        @JvmField
-        internal val LAYOUT_ID = R.layout.item_session
+        internal const val LAYOUT_ID = R.layout.item_session
     }
 
-    private var sessionReference: WeakReference<Session> = WeakReference<Session>(null)
+    private var tabReference: WeakReference<TabSessionState> = WeakReference<TabSessionState>(null)
 
     init {
         textView.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_link, 0, 0, 0)
         textView.setOnClickListener(this)
     }
 
-    fun bind(session: Session) {
-        this.sessionReference = WeakReference(session)
+    fun bind(tab: TabSessionState) {
+        this.tabReference = WeakReference(tab)
 
-        updateTitle(session)
+        updateTitle(tab)
 
-        val isCurrentSession = fragment.requireComponents.sessionManager.selectedSession == session
+        val isSelected = fragment.requireComponents.store.state.selectedTabId == tab.id
 
-        updateTextBackgroundColor(isCurrentSession)
+        updateTextBackgroundColor(isSelected)
     }
 
     private fun updateTextBackgroundColor(isCurrentSession: Boolean) {
@@ -51,21 +50,21 @@ class SessionViewHolder internal constructor(
         textView.setBackgroundResource(drawable)
     }
 
-    private fun updateTitle(session: Session) {
+    private fun updateTitle(tab: TabSessionState) {
         textView.text =
-            if (session.title.isEmpty()) session.url.beautifyUrl()
-            else session.title
+            if (tab.content.title.isEmpty()) tab.content.url.beautifyUrl()
+            else tab.content.title
     }
 
     override fun onClick(view: View) {
-        val session = sessionReference.get() ?: return
-        selectSession(session)
+        val tab = tabReference.get() ?: return
+        selectSession(tab)
     }
 
-    private fun selectSession(session: Session) {
+    private fun selectSession(tab: TabSessionState) {
         fragment.animateAndDismiss().addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
-                fragment.requireComponents.sessionManager.select(session)
+                fragment.requireComponents.tabsUseCases.selectTab(tab.id)
 
                 TelemetryWrapper.switchTabInTabsTrayEvent()
             }

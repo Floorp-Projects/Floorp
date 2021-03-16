@@ -8,17 +8,20 @@ import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.TextView
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
-import org.mozilla.focus.ext.requireComponents
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import mozilla.components.browser.state.selector.privateTabs
+import mozilla.components.browser.state.state.BrowserState
+import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifAnyChanged
 
 /**
- * Adapter implementation to show a list of active browsing sessions and an "erase" button at the end.
+ * Adapter implementation to show a list of active tabs and an "erase" button at the end.
  */
-class SessionsAdapter internal constructor(
-    private val fragment: SessionsSheetFragment,
-    private var sessions: List<Session> = emptyList()
-) : RecyclerView.Adapter<RecyclerView.ViewHolder>(), SessionManager.Observer {
+class TabsAdapter internal constructor(
+    private val fragment: TabSheetFragment,
+    private var tabs: List<TabSessionState> = emptyList()
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         val inflater = LayoutInflater.from(parent.context)
 
@@ -27,9 +30,9 @@ class SessionsAdapter internal constructor(
                 fragment,
                 inflater.inflate(EraseViewHolder.LAYOUT_ID, parent, false)
             )
-            SessionViewHolder.LAYOUT_ID -> SessionViewHolder(
+            TabViewHolder.LAYOUT_ID -> TabViewHolder(
                 fragment,
-                inflater.inflate(SessionViewHolder.LAYOUT_ID, parent, false) as TextView
+                inflater.inflate(TabViewHolder.LAYOUT_ID, parent, false) as TextView
             )
             else -> throw IllegalStateException("Unknown viewType")
         }
@@ -38,7 +41,7 @@ class SessionsAdapter internal constructor(
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         when (holder.itemViewType) {
             EraseViewHolder.LAYOUT_ID -> { /* Nothing to do */ }
-            SessionViewHolder.LAYOUT_ID -> (holder as SessionViewHolder).bind(sessions[position])
+            TabViewHolder.LAYOUT_ID -> (holder as TabViewHolder).bind(tabs[position])
             else -> throw IllegalStateException("Unknown viewType")
         }
     }
@@ -47,36 +50,25 @@ class SessionsAdapter internal constructor(
         return if (isErasePosition(position)) {
             EraseViewHolder.LAYOUT_ID
         } else {
-            SessionViewHolder.LAYOUT_ID
+            TabViewHolder.LAYOUT_ID
         }
     }
 
     private fun isErasePosition(position: Int): Boolean {
-        return position == sessions.size
+        return position == tabs.size
     }
 
     override fun getItemCount(): Int {
-        return sessions.size + 1
+        return tabs.size + 1
     }
 
-    override fun onSessionAdded(session: Session) {
-        onUpdate(fragment.requireComponents.sessionManager.sessions)
+    suspend fun onFlow(flow: Flow<BrowserState>) {
+        flow.ifAnyChanged { state -> arrayOf(state.privateTabs.size, state.selectedTabId) }
+            .collect { state -> onUpdate(state.privateTabs) }
     }
 
-    override fun onSessionRemoved(session: Session) {
-        onUpdate(fragment.requireComponents.sessionManager.sessions)
-    }
-
-    override fun onSessionSelected(session: Session) {
-        onUpdate(fragment.requireComponents.sessionManager.sessions)
-    }
-
-    override fun onAllSessionsRemoved() {
-        onUpdate(fragment.requireComponents.sessionManager.sessions)
-    }
-
-    private fun onUpdate(sessions: List<Session>) {
-        this.sessions = sessions
+    private fun onUpdate(tabs: List<TabSessionState>) {
+        this.tabs = tabs
         notifyDataSetChanged()
     }
 }
