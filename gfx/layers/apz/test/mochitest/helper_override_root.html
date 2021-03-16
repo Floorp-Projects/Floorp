@@ -9,37 +9,37 @@
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-// Add a non-passive listener on the document, so that we have a document-level
-// APZ-aware listener, and the entire document is put in the dispatch-to-content
-// region
-document.addEventListener("wheel", function(e) {
-    dump("Wheel listener running...\n");
+async function test() {
+  let wheelEventPromise = new Promise(resolve => {
+    // Add a non-passive listener on the document, so that we have a document-level
+    // APZ-aware listener, and the entire document is put in the dispatch-to-content
+    // region
+    document.addEventListener("wheel", function(e) {
+      // spin for 2 seconds to give APZ time to scroll, if the event region override
+      // is broken and it decides not to wait for the main thread. Note that it's
+      // possible the APZ controller thread is busy for whatever reason so APZ
+      // may not scroll. That might cause this test to only fail intermittently
+      // instead of consistently if the behaviour being tested regresses.
+      var now = Date.now();
+      while (Date.now() - now < 2000);
 
-    // spin for 2 seconds to give APZ time to scroll, if the event region override
-    // is broken and it decides not to wait for the main thread. Note that it's
-    // possible the APZ controller thread is busy for whatever reason so APZ
-    // may not scroll. That might cause this test to only fail intermittently
-    // instead of consistently if the behaviour being tested regresses.
-    var now = Date.now();
-    while (Date.now() - now < 2000);
+      // Cancel the scroll. If this works then we know APZ waited for this listener
+      // to run.
+      e.preventDefault();
+      resolve()
+    }, { passive: false });
+  });
 
-    // Cancel the scroll. If this works then we know APZ waited for this listener
-    // to run.
-    e.preventDefault();
+  // Ensure APZ gets a paint with the d-t-c region
+  await promiseApzFlushedRepaints();
 
-    setTimeout(function() {
-        flushApzRepaints(checkScroll);
-    }, 0);
-}, { passive: false });
-
-function scrollPage() {
   synthesizeNativeWheel(document.body, 100, 100, 0, -50);
   dump("Finished native wheel, waiting for listener to run...\n");
-}
 
-function checkScroll() {
+  await wheelEventPromise;
+  await promiseApzRepaintsFlushed();
+
   is(window.scrollY, 0, "check that the window didn't scroll");
-  subtestDone();
 }
 
 if (window.top != window) {
@@ -50,7 +50,9 @@ if (window.top != window) {
     window.ok = window.top.ok;
 }
 
-waitUntilApzStable().then(scrollPage);
+waitUntilApzStable()
+  .then(test)
+  .then(subtestDone);
 
   </script>
 </head>
