@@ -22,9 +22,11 @@ flat varying vec4 vUVBounds_y;
 flat varying vec4 vUVBounds_u;
 flat varying vec4 vUVBounds_v;
 #else
-flat varying vec4 vColor;
 varying vec2 vUv;
+#ifndef WR_FEATURE_FAST_PATH
+flat varying vec4 vColor;
 flat varying vec4 vUVBounds;
+#endif
 #endif
 
 #ifdef WR_VERTEX_SHADER
@@ -98,25 +100,30 @@ void main(void) {
         vUVBounds_v
     );
 #else
-    vUv = mix(aUvRect0.xy, aUvRect0.zw, uv);
+    uv = mix(aUvRect0.xy, aUvRect0.zw, uv);
     // flip_y might have the UV rect "upside down", make sure
     // clamp works correctly:
-    vUVBounds = vec4(aUvRect0.x, min(aUvRect0.y, aUvRect0.w),
-                     aUvRect0.z, max(aUvRect0.y, aUvRect0.w));
+    vec4 uvBounds = vec4(aUvRect0.x, min(aUvRect0.y, aUvRect0.w),
+                         aUvRect0.z, max(aUvRect0.y, aUvRect0.w));
     int rescale_uv = int(aParams.y);
     if (rescale_uv == 1)
     {
         // using an atlas, so UVs are in pixels, and need to be
         // normalized and clamped.
         vec2 texture_size = TEX_SIZE_YUV(sColor0);
-        vUVBounds += vec4(0.5, 0.5, -0.5, -0.5);
+        uvBounds += vec4(0.5, 0.5, -0.5, -0.5);
     #ifndef WR_FEATURE_TEXTURE_RECT
-        vUv /= texture_size;
-        vUVBounds /= texture_size.xyxy;
+        uv /= texture_size;
+        uvBounds /= texture_size.xyxy;
     #endif
     }
+
+    vUv = uv;
+#ifndef WR_FEATURE_FAST_PATH
+    vUVBounds = uvBounds;
     // Pass through color
     vColor = aColor;
+#endif
 #endif
 
     gl_Position = uTransform * vec4(clipped_world_pos, aParams.x /* z_id */, 1.0);
@@ -139,14 +146,19 @@ void main(void) {
         vUVBounds_v
     );
 #else
-    // The color is just the texture sample modulated by a supplied color
-    vec2 uv = clamp(vUv.xy, vUVBounds.xy, vUVBounds.zw);
-#   if defined(WR_FEATURE_TEXTURE_EXTERNAL) || defined(WR_FEATURE_TEXTURE_2D) || defined(WR_FEATURE_TEXTURE_RECT)
+    // The color is just the texture sample modulated by a supplied color.
+    // In the fast path we avoid clamping the UV coordinates and modulating by the color.
+#ifdef WR_FEATURE_FAST_PATH
+    vec2 uv = vUv;
+#else
+    vec2 uv = clamp(vUv, vUVBounds.xy, vUVBounds.zw);
+#endif
     vec4 texel = TEX_SAMPLE(sColor0, uv);
-#   else
-    vec4 texel = textureLod(sColor0, vec3(uv, 0.0), 0.0);
-#   endif
+#ifdef WR_FEATURE_FAST_PATH
+    vec4 color = texel;
+#else
     vec4 color = vColor * texel;
+#endif
 #endif
     write_output(color);
 }
@@ -168,10 +180,21 @@ void swgl_drawSpanRGBA8() {
                                     vYuvColorSpace, vRescaleFactor);
     }
 #else
-    if (vColor != vec4(1.0)) {
-        swgl_commitTextureColorRGBA8(sColor0, vUv, vUVBounds, vColor);
+#ifdef WR_FEATURE_FAST_PATH
+    vec4 color = vec4(1.0);
+#ifdef WR_FEATURE_TEXTURE_RECT
+    vec4 uvBounds = vec4(vec2(0.0), vec2(textureSize(sColor0)));
+#else
+    vec4 uvBounds = vec4(0.0, 0.0, 1.0, 1.0);
+#endif
+#else
+    vec4 color = vColor;
+    vec4 uvBounds = vUVBounds;
+#endif
+    if (color != vec4(1.0)) {
+        swgl_commitTextureColorRGBA8(sColor0, vUv, uvBounds, color);
     } else {
-        swgl_commitTextureRGBA8(sColor0, vUv, vUVBounds);
+        swgl_commitTextureRGBA8(sColor0, vUv, uvBounds);
     }
 #endif
 }

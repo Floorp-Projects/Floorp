@@ -55,7 +55,7 @@ use crate::batch::{AlphaBatchContainer, BatchKind, BatchFeatures, BatchTextures,
 #[cfg(any(feature = "capture", feature = "replay"))]
 use crate::capture::{CaptureConfig, ExternalCaptureImage, PlainExternalImage};
 use crate::composite::{CompositeState, CompositeTileSurface, CompositeTile, ResolvedExternalSurface, CompositorSurfaceTransform};
-use crate::composite::{CompositorKind, Compositor, NativeTileId, CompositeSurfaceFormat, ResolvedExternalSurfaceColorData};
+use crate::composite::{CompositorKind, Compositor, NativeTileId, CompositeFeatures, CompositeSurfaceFormat, ResolvedExternalSurfaceColorData};
 use crate::composite::{CompositorConfig, NativeSurfaceOperationDetails, NativeSurfaceId, NativeSurfaceOperation};
 use crate::c_str;
 use crate::debug_colors;
@@ -3090,6 +3090,7 @@ impl Renderer {
                         .get_composite_shader(
                             CompositeSurfaceFormat::Yuv,
                             surface.image_buffer_kind,
+                            CompositeFeatures::empty(),
                         ).bind(
                             &mut self.device,
                             &projection,
@@ -3133,6 +3134,7 @@ impl Renderer {
                         .get_composite_shader(
                             CompositeSurfaceFormat::Rgba,
                             surface.image_buffer_kind,
+                            CompositeFeatures::empty(),
                         ).bind(
                             &mut self.device,
                             &projection,
@@ -3183,20 +3185,25 @@ impl Renderer {
         partial_present_mode: Option<PartialPresentMode>,
         stats: &mut RendererStats,
     ) {
+        let mut current_shader_params = (
+            CompositeSurfaceFormat::Rgba,
+            ImageBufferKind::Texture2D,
+            CompositeFeatures::empty(),
+        );
+        let mut current_textures = BatchTextures::empty();
+        let mut instances = Vec::new();
+
         self.shaders
             .borrow_mut()
             .get_composite_shader(
-                CompositeSurfaceFormat::Rgba,
-                ImageBufferKind::Texture2D,
+                current_shader_params.0,
+                current_shader_params.1,
+                current_shader_params.2,
             ).bind(
                 &mut self.device,
                 projection,
                 &mut self.renderer_errors
             );
-
-        let mut current_shader_params = (CompositeSurfaceFormat::Rgba, ImageBufferKind::Texture2D);
-        let mut current_textures = BatchTextures::empty();
-        let mut instances = Vec::new();
 
         for tile in tiles_iter {
             // Determine a clip rect to apply to this tile, depending on what
@@ -3227,41 +3234,51 @@ impl Renderer {
                 CompositeTileSurface::Color { color } => {
                     let dummy = TextureSource::Dummy;
                     let image_buffer_kind = dummy.image_buffer_kind();
+                    let instance = CompositeInstance::new(
+                        tile.rect,
+                        clip_rect,
+                        color.premultiplied(),
+                        tile.z_id,
+                    );
+                    let features = instance.get_rgb_features();
                     (
-                        CompositeInstance::new(
-                            tile.rect,
-                            clip_rect,
-                            color.premultiplied(),
-                            tile.z_id,
-                        ),
+                        instance,
                         BatchTextures::composite_rgb(dummy),
-                        (CompositeSurfaceFormat::Rgba, image_buffer_kind),
+                        (CompositeSurfaceFormat::Rgba, image_buffer_kind, features),
                     )
                 }
                 CompositeTileSurface::Clear => {
                     let dummy = TextureSource::Dummy;
                     let image_buffer_kind = dummy.image_buffer_kind();
+                    let instance = CompositeInstance::new(
+                        tile.rect,
+                        clip_rect,
+                        PremultipliedColorF::BLACK,
+                        tile.z_id,
+                    );
+                    let features = instance.get_rgb_features();
                     (
-                        CompositeInstance::new(
-                            tile.rect,
-                            clip_rect,
-                            PremultipliedColorF::BLACK,
-                            tile.z_id,
-                        ),
+                        instance,
                         BatchTextures::composite_rgb(dummy),
-                        (CompositeSurfaceFormat::Rgba, image_buffer_kind),
+                        (CompositeSurfaceFormat::Rgba, image_buffer_kind, features),
                     )
                 }
                 CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::TextureCache { texture } } => {
+                    let instance = CompositeInstance::new(
+                        tile.rect,
+                        clip_rect,
+                        PremultipliedColorF::WHITE,
+                        tile.z_id,
+                    );
+                    let features = instance.get_rgb_features();
                     (
-                        CompositeInstance::new(
-                            tile.rect,
-                            clip_rect,
-                            PremultipliedColorF::WHITE,
-                            tile.z_id,
-                        ),
+                        instance,
                         BatchTextures::composite_rgb(texture),
-                        (CompositeSurfaceFormat::Rgba, ImageBufferKind::Texture2D),
+                        (
+                            CompositeSurfaceFormat::Rgba,
+                            ImageBufferKind::Texture2D,
+                            features,
+                        ),
                     )
                 }
                 CompositeTileSurface::ExternalSurface { external_surface_index } => {
@@ -3297,7 +3314,7 @@ impl Renderer {
                                     uv_rects,
                                 ),
                                 textures,
-                                (CompositeSurfaceFormat::Yuv, surface.image_buffer_kind),
+                                (CompositeSurfaceFormat::Yuv, surface.image_buffer_kind, CompositeFeatures::empty()),
                             )
                         },
                         ResolvedExternalSurfaceColorData::Rgb{ ref plane, flip_y, .. } => {
@@ -3308,17 +3325,18 @@ impl Renderer {
                                 uv_rect.uv0.y = uv_rect.uv1.y;
                                 uv_rect.uv1.y = y;
                             }
-
+                            let instance = CompositeInstance::new_rgb(
+                                tile.rect,
+                                clip_rect,
+                                PremultipliedColorF::WHITE,
+                                tile.z_id,
+                                uv_rect,
+                            );
+                            let features = instance.get_rgb_features();
                             (
-                                CompositeInstance::new_rgb(
-                                    tile.rect,
-                                    clip_rect,
-                                    PremultipliedColorF::WHITE,
-                                    tile.z_id,
-                                    uv_rect,
-                                ),
+                                instance,
                                 BatchTextures::composite_rgb(plane.texture),
-                                (CompositeSurfaceFormat::Rgba, surface.image_buffer_kind),
+                                (CompositeSurfaceFormat::Rgba, surface.image_buffer_kind, features),
                             )
                         },
                     }
@@ -3347,7 +3365,7 @@ impl Renderer {
             if shader_params != current_shader_params {
                 self.shaders
                     .borrow_mut()
-                    .get_composite_shader(shader_params.0, shader_params.1)
+                    .get_composite_shader(shader_params.0, shader_params.1, shader_params.2)
                     .bind(
                         &mut self.device,
                         projection,

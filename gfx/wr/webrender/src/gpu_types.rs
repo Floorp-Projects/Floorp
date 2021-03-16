@@ -4,6 +4,7 @@
 
 use api::{AlphaType, PremultipliedColorF, YuvFormat, YuvColorSpace};
 use api::units::*;
+use crate::composite::CompositeFeatures;
 use crate::segment::EdgeAaSegmentMask;
 use crate::spatial_tree::{SpatialTree, ROOT_SPATIAL_NODE_INDEX, SpatialNodeIndex};
 use crate::gpu_cache::{GpuCacheAddress, GpuDataRequest};
@@ -230,6 +231,11 @@ pub struct PrimitiveInstanceData {
     data: [i32; 4],
 }
 
+/// Specifies that an RGB CompositeInstance's UV coordinates are normalized.
+const UV_TYPE_NORMALIZED: u32 = 0;
+/// Specifies that an RGB CompositeInstance's UV coordinates are not normalized.
+const UV_TYPE_UNNORMALIZED: u32 = 1;
+
 /// Vertex format for picture cache composite shader.
 /// When editing the members, update desc::COMPOSITE
 /// so its list of instance_attributes matches:
@@ -267,7 +273,7 @@ impl CompositeInstance {
             clip_rect,
             color,
             z_id: z_id.0 as f32,
-            color_space_or_uv_type: pack_as_float(0u32),
+            color_space_or_uv_type: pack_as_float(UV_TYPE_NORMALIZED),
             yuv_format: 0.0,
             yuv_rescale: 0.0,
             uv_rects: [uv, uv, uv],
@@ -286,7 +292,7 @@ impl CompositeInstance {
             clip_rect,
             color,
             z_id: z_id.0 as f32,
-            color_space_or_uv_type: pack_as_float(1u32),
+            color_space_or_uv_type: pack_as_float(UV_TYPE_UNNORMALIZED),
             yuv_format: 0.0,
             yuv_rescale: 0.0,
             uv_rects: [uv_rect, uv_rect, uv_rect],
@@ -312,6 +318,26 @@ impl CompositeInstance {
             yuv_rescale,
             uv_rects,
         }
+    }
+
+    // Returns the CompositeFeatures that can be used to composite
+    // this RGB instance.
+    pub fn get_rgb_features(&self) -> CompositeFeatures {
+        let mut features = CompositeFeatures::empty();
+
+        // If the UV rect covers the entire texture then we can avoid UV clamping.
+        // We should try harder to determine this for unnormalized UVs too.
+        if self.color_space_or_uv_type == pack_as_float(UV_TYPE_NORMALIZED)
+            && self.uv_rects[0] == TexelRect::new(0.0, 0.0, 1.0, 1.0)
+        {
+            features |= CompositeFeatures::NO_UV_CLAMP;
+        }
+
+        if self.color == PremultipliedColorF::WHITE {
+            features |= CompositeFeatures::NO_COLOR_MODULATION
+        }
+
+        features
     }
 }
 
