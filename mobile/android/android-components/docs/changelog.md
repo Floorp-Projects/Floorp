@@ -14,6 +14,7 @@ permalink: /changelog/
 
 * **browser-menu**
   * 🌟️ BrowserMenu support a bottom collapsed/expandable layout through a new ExpandableLayout that will wrap a menu layout before being used in a PopupWindow and automatically allow the collapse/expand behaviors.
+  * To use this set `isCollapsingMenuLimit = true` for any menu item of a bottom anchored menu.
 
 * **browser-toolbar**
 * **feature-session**

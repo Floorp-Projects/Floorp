@@ -43,8 +43,10 @@ internal fun TextView.setColorResource(@ColorRes textColorResource: Int) {
  * @param imageResource ID of a drawable resource to be shown as icon.
  * @param iconTintColorResource Optional ID of color resource to tint the icon.
  * @param textColorResource Optional ID of color resource to tint the text.
+ * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
  * @param listener Callback to be invoked when this menu item is clicked.
  */
+@Suppress("LongParameterList")
 open class BrowserMenuImageText(
     private val label: String,
     @DrawableRes
@@ -53,6 +55,7 @@ open class BrowserMenuImageText(
     private val iconTintColorResource: Int = NO_ID,
     @ColorRes
     private val textColorResource: Int = NO_ID,
+    override val isCollapsingMenuLimit: Boolean = false,
     private val listener: () -> Unit = {}
 ) : BrowserMenuItem {
 

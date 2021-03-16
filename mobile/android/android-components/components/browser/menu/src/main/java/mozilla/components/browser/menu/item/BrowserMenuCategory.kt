@@ -27,14 +27,17 @@ import mozilla.components.concept.menu.candidate.TypefaceStyle
  * @param textColorResource: The color resource to apply to the text.
  * @param textStyle: The style to apply to the text.
  * @param textAlignment The alignment of text
+ * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
  */
+@Suppress("LongParameterList")
 class BrowserMenuCategory(
     internal val label: String,
     private val textSize: Float = NO_ID.toFloat(),
     @ColorRes
     private val textColorResource: Int = NO_ID,
     @TypefaceStyle private val textStyle: Int = Typeface.BOLD,
-    @TextAlignment private val textAlignment: Int = View.TEXT_ALIGNMENT_VIEW_START
+    @TextAlignment private val textAlignment: Int = View.TEXT_ALIGNMENT_VIEW_START,
+    override val isCollapsingMenuLimit: Boolean = false
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
 

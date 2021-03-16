@@ -31,15 +31,18 @@ private val defaultHighlight = BrowserMenuHighlightableItem.Highlight(0, 0, 0, 0
  * @param startImageResource ID of a drawable resource to be shown as a leftmost icon.
  * @param iconTintColorResource Optional ID of color resource to tint the icon.
  * @param textColorResource Optional ID of color resource to tint the text.
+ * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
  * @param highlight Highlight object representing how the menu item will be displayed when highlighted.
  * @param isHighlighted Whether or not to display the highlight
  * @param listener Callback to be invoked when this menu item is clicked.
  */
+@Suppress("LongParameterList")
 class BrowserMenuHighlightableItem(
     private val label: String,
     @DrawableRes private val startImageResource: Int,
     @ColorRes private val iconTintColorResource: Int = NO_ID,
     @ColorRes private val textColorResource: Int = NO_ID,
+    override val isCollapsingMenuLimit: Boolean = false,
     override val highlight: BrowserMenuHighlight,
     override val isHighlighted: () -> Boolean = { true },
     private val listener: () -> Unit = {}
@@ -48,6 +51,7 @@ class BrowserMenuHighlightableItem(
     startImageResource,
     iconTintColorResource,
     textColorResource,
+    isCollapsingMenuLimit,
     listener
 ), HighlightableMenuItem {
 
@@ -61,6 +65,7 @@ class BrowserMenuHighlightableItem(
         iconTintColorResource: Int = NO_ID,
         @ColorRes
         textColorResource: Int = NO_ID,
+        isCollapsingMenuLimit: Boolean = false,
         highlight: Highlight? = null,
         listener: () -> Unit = {}
     ) : this(
@@ -68,6 +73,7 @@ class BrowserMenuHighlightableItem(
         imageResource,
         iconTintColorResource,
         textColorResource,
+        isCollapsingMenuLimit,
         highlight ?: defaultHighlight,
         { highlight != null },
         listener

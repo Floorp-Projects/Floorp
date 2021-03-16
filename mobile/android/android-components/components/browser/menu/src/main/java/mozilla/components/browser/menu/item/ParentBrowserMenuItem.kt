@@ -41,8 +41,9 @@ class ParentBrowserMenuItem(
     @ColorRes
     private val textColorResource: Int = NO_ID,
     internal val subMenu: BrowserMenu,
+    override val isCollapsingMenuLimit: Boolean = false,
     endOfMenuAlwaysVisible: Boolean = false
-) : AbstractParentBrowserMenuItem(subMenu, endOfMenuAlwaysVisible) {
+) : AbstractParentBrowserMenuItem(subMenu, isCollapsingMenuLimit, endOfMenuAlwaysVisible) {
 
     override var visible: () -> Boolean = { true }
     override fun getLayoutResource() = R.layout.mozac_browser_menu_item_image_text

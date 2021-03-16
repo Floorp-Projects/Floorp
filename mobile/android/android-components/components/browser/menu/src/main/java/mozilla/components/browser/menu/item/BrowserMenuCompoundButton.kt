@@ -19,12 +19,14 @@ import java.lang.reflect.Modifier.PRIVATE
  * satisfy [BrowserMenuItem.getLayoutResource] which contains a [View] that inherits from [CompoundButton].
  *
  * @param label The visible label of this menu item.
+ * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
  * @param initialState The initial value the checkbox should have.
  * @param listener Callback to be invoked when this menu item is checked.
  */
 abstract class BrowserMenuCompoundButton(
     @VisibleForTesting(otherwise = PRIVATE)
     val label: String,
+    override val isCollapsingMenuLimit: Boolean = false,
     private val initialState: () -> Boolean = { false },
     private val listener: (Boolean) -> Unit
 ) : BrowserMenuItem {

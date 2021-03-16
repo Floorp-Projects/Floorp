@@ -12,14 +12,16 @@ import mozilla.components.concept.menu.candidate.CompoundMenuCandidate
  * A simple browser menu switch.
  *
  * @param label The visible label of this menu item.
+ * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
  * @param initialState The initial value the checkbox should have.
  * @param listener Callback to be invoked when this menu item is checked.
  */
 class BrowserMenuSwitch(
     label: String,
+    override val isCollapsingMenuLimit: Boolean = false,
     initialState: () -> Boolean = { false },
     listener: (Boolean) -> Unit
-) : BrowserMenuCompoundButton(label, initialState, listener) {
+) : BrowserMenuCompoundButton(label, isCollapsingMenuLimit, initialState, listener) {
     override fun getLayoutResource(): Int = R.layout.mozac_browser_menu_item_switch
 
     override fun asCandidate(context: Context) = super.asCandidate(context).copy(

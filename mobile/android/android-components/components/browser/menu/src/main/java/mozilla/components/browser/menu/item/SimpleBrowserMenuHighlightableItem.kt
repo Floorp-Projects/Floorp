@@ -36,6 +36,7 @@ class SimpleBrowserMenuHighlightableItem(
     @ColorRes private val textColorResource: Int = NO_ID,
     private val textSize: Float = NO_ID.toFloat(),
     @ColorInt val backgroundTint: Int,
+    override val isCollapsingMenuLimit: Boolean = false,
     var isHighlighted: () -> Boolean = { true },
     private val listener: () -> Unit = {}
 ) : BrowserMenuItem {

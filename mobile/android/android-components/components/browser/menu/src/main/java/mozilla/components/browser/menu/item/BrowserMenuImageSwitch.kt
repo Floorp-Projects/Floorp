@@ -20,6 +20,7 @@ import java.lang.reflect.Modifier
  *
  * @param imageResource ID of a drawable resource to be shown as icon.
  * @param label The visible label of this menu item.
+ * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
  * @param initialState The initial value the checkbox should have.
  * @param listener Callback to be invoked when this menu item is checked.
  */
@@ -28,9 +29,10 @@ class BrowserMenuImageSwitch(
     @DrawableRes
     val imageResource: Int,
     label: String,
+    override val isCollapsingMenuLimit: Boolean = false,
     initialState: () -> Boolean = { false },
     listener: (Boolean) -> Unit
-) : BrowserMenuCompoundButton(label, initialState, listener) {
+) : BrowserMenuCompoundButton(label, isCollapsingMenuLimit, initialState, listener) {
     override fun getLayoutResource(): Int = R.layout.mozac_browser_menu_item_image_switch
 
     override fun bind(menu: BrowserMenu, view: View) {

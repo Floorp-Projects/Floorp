@@ -24,19 +24,22 @@ import mozilla.components.concept.menu.candidate.LowPriorityHighlightEffect
  * A browser menu switch that can show a highlighted icon.
  *
  * @param label The visible label of this menu item.
+ * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
  * @param initialState The initial value the checkbox should have.
  * @param listener Callback to be invoked when this menu item is checked.
  */
+@Suppress("LongParameterList")
 class BrowserMenuHighlightableSwitch(
     label: String,
     @DrawableRes private val startImageResource: Int,
     @ColorRes private val iconTintColorResource: Int = NO_ID,
     @ColorRes private val textColorResource: Int = NO_ID,
+    override val isCollapsingMenuLimit: Boolean = false,
     override val highlight: BrowserMenuHighlight.LowPriority,
     override val isHighlighted: () -> Boolean = { true },
     initialState: () -> Boolean = { false },
     listener: (Boolean) -> Unit
-) : BrowserMenuCompoundButton(label, initialState, listener), HighlightableMenuItem {
+) : BrowserMenuCompoundButton(label, isCollapsingMenuLimit, initialState, listener), HighlightableMenuItem {
 
     private var wasHighlighted = false
 

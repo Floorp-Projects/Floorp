@@ -26,9 +26,13 @@ import mozilla.components.support.ktx.android.content.res.resolveAttribute
 
 /**
  * A toolbar of buttons to show inside the browser menu.
+ *
+ * @param items buttons that will be shown in a horizontal layout
+ * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
  */
 class BrowserMenuItemToolbar(
-    private val items: List<Button>
+    private val items: List<Button>,
+    override val isCollapsingMenuLimit: Boolean = false
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
 

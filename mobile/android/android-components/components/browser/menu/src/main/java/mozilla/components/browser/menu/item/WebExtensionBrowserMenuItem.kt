@@ -29,11 +29,13 @@ import mozilla.components.support.base.log.Log
  *
  * @param action the [Action] to display.
  * @param listener a callback to be invoked when this menu item is clicked.
+ * @param isCollapsingMenuLimit Whether this menu item can serve as the limit of a collapsing menu.
  */
 class WebExtensionBrowserMenuItem(
     internal var action: Action,
     internal val listener: () -> Unit,
-    internal val id: String = ""
+    internal val id: String = "",
+    override val isCollapsingMenuLimit: Boolean = false
 ) : BrowserMenuItem {
     override var visible: () -> Boolean = { true }
 

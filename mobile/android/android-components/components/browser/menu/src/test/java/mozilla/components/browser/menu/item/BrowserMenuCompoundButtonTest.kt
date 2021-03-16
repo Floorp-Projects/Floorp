@@ -118,7 +118,7 @@ class BrowserMenuCompoundButtonTest {
         label: String,
         initialState: () -> Boolean = { false },
         listener: (Boolean) -> Unit
-    ) : BrowserMenuCompoundButton(label, initialState, listener) {
+    ) : BrowserMenuCompoundButton(label, false, initialState, listener) {
         override fun getLayoutResource(): Int = R.layout.mozac_browser_menu_item_simple
     }
 }

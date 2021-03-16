@@ -41,9 +41,12 @@ class BrowserMenuImageTextCheckboxButton(
     @ColorRes internal val tintColorResource: Int = NO_ID,
     private val primaryLabel: String,
     private val secondaryLabel: String,
+    override val isCollapsingMenuLimit: Boolean = false,
     val isInPrimaryState: () -> Boolean = { true },
     private val onCheckedChangedListener: (Boolean) -> Unit
-) : BrowserMenuImageText(label, imageResource, iconTintColorResource, textColorResource, labelListener) {
+) : BrowserMenuImageText(
+    label, imageResource, iconTintColorResource, textColorResource, isCollapsingMenuLimit, labelListener
+) {
     override var visible: () -> Boolean = { true }
     override fun getLayoutResource(): Int = R.layout.mozac_browser_menu_item_image_text_checkbox_button
 
