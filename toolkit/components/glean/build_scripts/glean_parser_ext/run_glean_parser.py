@@ -53,8 +53,10 @@ def parse(args):
     if util.report_validation_errors(all_objs):
         sys.exit(1)
 
-    if lint.lint_metrics(all_objs.value, options):
-        # Treat Warnings as Errors in FOG
+    nits = lint.lint_metrics(all_objs.value, options)
+    if nits is not None and any(nit.check_name != "EXPIRED" for nit in nits):
+        # Treat Warnings as Errors in FOG.
+        # But don't fail the whole build on expired metrics (it blocks testing).
         sys.exit(1)
 
     return all_objs.value, options
