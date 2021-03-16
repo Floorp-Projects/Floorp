@@ -33,5 +33,6 @@ apt-get install -y --no-install-recommends \
 apt-get clean
 
 . install-mercurial.sh
+pip install -r requirements.txt
 
 rm -rf /setup
