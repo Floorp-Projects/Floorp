@@ -3079,10 +3079,15 @@ void MacroAssembler::nearestFloat64x2(FloatRegister src, FloatRegister dest) {
 
 void MacroAssemblerCompat::addToStackPtr(Register src) {
   Add(GetStackPointer64(), GetStackPointer64(), ARMRegister(src, 64));
+  // Given that required invariant SP <= PSP, this is probably pointless,
+  // since it gives PSP a larger value.
+  syncStackPtr();
 }
 
 void MacroAssemblerCompat::addToStackPtr(Imm32 imm) {
   Add(GetStackPointer64(), GetStackPointer64(), Operand(imm.value));
+  // As above, probably pointless.
+  syncStackPtr();
 }
 
 void MacroAssemblerCompat::addToStackPtr(const Address& src) {
@@ -3090,6 +3095,8 @@ void MacroAssemblerCompat::addToStackPtr(const Address& src) {
   const ARMRegister scratch = temps.AcquireX();
   Ldr(scratch, toMemOperand(src));
   Add(GetStackPointer64(), GetStackPointer64(), scratch);
+  // As above, probably pointless.
+  syncStackPtr();
 }
 
 void MacroAssemblerCompat::addStackPtrTo(Register dest) {
