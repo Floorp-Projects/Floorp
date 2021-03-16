@@ -2247,13 +2247,21 @@ void InitDefaultFramebuffer(int x, int y, int width, int height, int stride,
   depthtex.offset = IntPoint(x, y);
 }
 
-void ResolveFramebuffer(GLuint fbo) {
+void* GetColorBuffer(GLuint fbo, GLboolean flush, int32_t* width,
+                     int32_t* height, int32_t* stride) {
   Framebuffer* fb = ctx->framebuffers.find(fbo);
   if (!fb || !fb->color_attachment) {
-    return;
+    return nullptr;
   }
   Texture& colortex = ctx->textures[fb->color_attachment];
-  prepare_texture(colortex);
+  if (flush) {
+    prepare_texture(colortex);
+  }
+  assert(colortex.offset == IntPoint(0, 0));
+  *width = colortex.width;
+  *height = colortex.height;
+  *stride = colortex.stride();
+  return colortex.buf ? colortex.sample_ptr(0, 0) : nullptr;
 }
 
 void SetTextureBuffer(GLuint texid, GLenum internal_format, GLsizei width,
