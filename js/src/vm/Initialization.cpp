@@ -157,7 +157,11 @@ JS_PUBLIC_API const char* JS::detail::InitWithFailureDiagnostic(
   js::oom::InitLargeAllocLimit();
 #endif
 
-  js::gDisablePoisoning = bool(getenv("JSGC_DISABLE_POISONING"));
+#if defined(JS_GC_ALLOW_EXTRA_POISONING)
+  if (getenv("JSGC_EXTRA_POISONING")) {
+    js::gExtraPoisoningEnabled = true;
+  }
+#endif
 
   js::InitMallocAllocator();
 

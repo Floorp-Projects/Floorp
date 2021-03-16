@@ -114,9 +114,6 @@ class Benchmark(object):
         # Update the environment variables
         env = os.environ.copy()
 
-        # disable "GC poisoning" Bug# 1499043
-        env["JSGC_DISABLE_POISONING"] = "1"
-
         process_args = {
             "cmd": self.command,
             "cwd": self.path,
