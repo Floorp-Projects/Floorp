@@ -131,7 +131,7 @@ ol {
 }
 
 .login-list-item.selected {
-  border-inline-start-color: var(--in-content-border-highlight);
+  border-inline-start-color: var(--in-content-accent-color);
   background-color: var(--in-content-page-background);
 }
 
