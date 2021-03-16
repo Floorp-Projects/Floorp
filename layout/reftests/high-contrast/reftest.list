@@ -85,3 +85,5 @@ test-pref(browser.display.document_color_use,0) == forced-colors-002.html prefer
 # boolean context
 == forced-colors-001.html prefers-contrast-black-ref.html
 test-pref(browser.display.document_color_use,0) != forced-colors-001.html prefers-contrast-black-ref.html
+
+!= system-colors.html system-colors-notref.html
