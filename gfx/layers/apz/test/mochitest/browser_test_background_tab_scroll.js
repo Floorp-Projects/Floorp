@@ -30,30 +30,26 @@ add_task(async function test_main() {
   // was set by the scroll to the #scrolltarget anchor), and so will not
   // accept APZ's scroll position updates.
   let contentScrollFunction = async function() {
-    return new Promise(resolve => {
-      content.window.wrappedJSObject.synthesizeNativeWheelAndWaitForWheelEvent(
-        content.window,
-        100,
-        100,
-        0,
-        200,
-        () => {
-          // Advance some/all frames of the APZ wheel animation
-          let utils = content.window.SpecialPowers.getDOMWindowUtils(
-            content.window
-          );
-          for (var i = 0; i < 10; i++) {
-            utils.advanceTimeAndRefresh(16);
-          }
-          utils.restoreNormalRefresh();
-          // Flush pending APZ repaints, then read the main-thread scroll
-          // position
-          content.window.wrappedJSObject.flushApzRepaints(() => {
-            resolve(content.window.scrollY);
-          }, content.window);
-        }
-      );
-    });
+    await content.window.wrappedJSObject.promiseNativeWheelAndWaitForWheelEvent(
+      content.window,
+      100,
+      100,
+      0,
+      200
+    );
+
+    // Advance some/all frames of the APZ wheel animation
+    let utils = content.window.SpecialPowers.getDOMWindowUtils(content.window);
+    for (var i = 0; i < 10; i++) {
+      utils.advanceTimeAndRefresh(16);
+    }
+    utils.restoreNormalRefresh();
+    // Flush pending APZ repaints, then read the main-thread scroll
+    // position
+    await content.window.wrappedJSObject.promiseApzRepaintsFlushed(
+      content.window
+    );
+    return content.window.scrollY;
   };
   scrollPos = await ContentTask.spawn(browser, null, contentScrollFunction);
 
