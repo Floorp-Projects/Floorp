@@ -19,11 +19,11 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
 
   accessibility: "chrome://marionette/content/accessibility.js",
   allowAllCerts: "chrome://marionette/content/cert.js",
-  AppInfo: "chrome://marionette/content/appinfo.js",
   assert: "chrome://marionette/content/assert.js",
   clearActionInputState:
     "chrome://marionette/content/actors/MarionetteCommandsChild.jsm",
@@ -34,12 +34,32 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
+XPCOMUtils.defineLazyGetter(
+  this,
+  "isAndroid",
+  () => AppConstants.platform === "android"
+);
+
 XPCOMUtils.defineLazyServiceGetter(
   this,
   "uuidGen",
   "@mozilla.org/uuid-generator;1",
   "nsIUUIDGenerator"
 );
+
+XPCOMUtils.defineLazyGetter(this, "appinfo", () => {
+  // Enable testing this module, as Services.appinfo.* is not available
+  // in xpcshell tests.
+  const appinfo = { name: "<missing>", version: "<missing>" };
+  try {
+    appinfo.name = Services.appinfo.name.toLowerCase();
+  } catch (e) {}
+  try {
+    appinfo.version = Services.appinfo.version;
+  } catch (e) {}
+
+  return appinfo;
+});
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
@@ -516,29 +536,29 @@ class Capabilities extends Map {
     super([
       // webdriver
       ["browserName", getWebDriverBrowserName()],
-      ["browserVersion", AppInfo.version],
+      ["browserVersion", appinfo.version],
       ["platformName", getWebDriverPlatformName()],
       ["platformVersion", Services.sysinfo.getProperty("version")],
       ["acceptInsecureCerts", false],
       ["pageLoadStrategy", PageLoadStrategy.Normal],
       ["proxy", new Proxy()],
-      ["setWindowRect", !AppInfo.isAndroid],
+      ["setWindowRect", !isAndroid],
       ["timeouts", new Timeouts()],
       ["strictFileInteractability", false],
       ["unhandledPromptBehavior", UnhandledPromptBehavior.DismissAndNotify],
 
       // features
-      ["rotatable", AppInfo.isAndroid],
+      ["rotatable", appinfo.name == "B2G"],
 
       // proprietary
       ["moz:accessibilityChecks", false],
-      ["moz:buildID", AppInfo.appBuildID],
+      ["moz:buildID", Services.appinfo.appBuildID],
       ["moz:debuggerAddress", remoteAgent?.debuggerAddress || null],
       [
         "moz:headless",
         Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfo).isHeadless,
       ],
-      ["moz:processID", AppInfo.processID],
+      ["moz:processID", Services.appinfo.processID],
       ["moz:profile", maybeProfile()],
       [
         "moz:shutdownTimeout",
@@ -626,11 +646,11 @@ class Capabilities extends Map {
 
         case "setWindowRect":
           assert.boolean(v, pprint`Expected ${k} to be boolean, got ${v}`);
-          if (!AppInfo.isAndroid && !v) {
+          if (!isAndroid && !v) {
             throw new error.InvalidArgumentError(
               "setWindowRect cannot be disabled"
             );
-          } else if (AppInfo.isAndroid && v) {
+          } else if (isAndroid && v) {
             throw new error.InvalidArgumentError(
               "setWindowRect is only supported on desktop"
             );
@@ -688,17 +708,17 @@ this.UnhandledPromptBehavior = UnhandledPromptBehavior;
 function getWebDriverBrowserName() {
   // Similar to chromedriver which reports "chrome" as browser name for all
   // WebView apps, we will report "firefox" for all GeckoView apps.
-  if (AppInfo.isAndroid) {
+  if (isAndroid) {
     return "firefox";
   }
 
-  return AppInfo.name?.toLowerCase();
+  return appinfo.name;
 }
 
 function getWebDriverPlatformName() {
   let name = Services.sysinfo.getProperty("name");
 
-  if (AppInfo.isAndroid) {
+  if (isAndroid) {
     return "android";
   }
 
