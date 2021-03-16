@@ -66,6 +66,13 @@ opt-level = 1
 [profile.release.build-override]
 opt-level = 1
 
+# optimizing glsl more makes a big difference in swgl build times
+[profile.dev.package.glsl]
+opt-level = 2
+
+[profile.release.package.glsl]
+opt-level = 2
+
 [patch.crates-io]
 chardetng = { git = "https://github.com/hsivonen/chardetng", rev="fd4ed671ef495af4dcda4c4cba3ef8d426db8af1" }
 chardetng_c = { git = "https://github.com/hsivonen/chardetng_c", rev="ed8a4c6f900a90d4dbc1d64b856e61490a1c3570" }
