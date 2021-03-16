@@ -9136,7 +9136,7 @@
 # Whether to use HTTPS RR as AltSvc
 - name: network.dns.use_https_rr_as_altsvc
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # Whether to check for NAT64 using the system resolver
