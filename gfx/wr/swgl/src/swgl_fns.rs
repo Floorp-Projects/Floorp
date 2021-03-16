@@ -235,7 +235,13 @@ extern "C" {
         stride: i32,
         buf: *mut c_void,
     );
-    fn ResolveFramebuffer(fbo: GLuint);
+    fn GetColorBuffer(
+        fbo: GLuint,
+        flush: GLboolean,
+        width: *mut i32,
+        height: *mut i32,
+        stride: *mut i32,
+    ) -> *mut c_void;
     fn SetTextureBuffer(
         tex: GLuint,
         internal_format: GLenum,
@@ -351,9 +357,19 @@ impl Context {
         }
     }
 
-    pub fn resolve_framebuffer(&self, fbo: GLuint) {
+    pub fn get_color_buffer(&self, fbo: GLuint, flush: bool) -> (*mut c_void, i32, i32, i32) {
         unsafe {
-            ResolveFramebuffer(fbo);
+            let mut width: i32 = 0;
+            let mut height: i32 = 0;
+            let mut stride: i32 = 0;
+            let data_ptr = GetColorBuffer(
+                fbo,
+                flush as GLboolean,
+                &mut width,
+                &mut height,
+                &mut stride,
+            );
+            (data_ptr, width, height, stride)
         }
     }
 
