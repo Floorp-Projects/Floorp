@@ -15,7 +15,7 @@ body {
 }
 
 #reportBox {
-  background-color: var(--in-content-box-background-hover);
+  background-color: var(--in-content-box-info-background);
   margin: 24px 0;
   padding: 14px;
   border: 1px solid var(--in-content-box-border-color);

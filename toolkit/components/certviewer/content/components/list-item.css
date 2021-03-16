@@ -12,7 +12,7 @@
 }
 
 :host(:hover) {
-  background-color: var(--in-content-box-background-hover);
+  background-color: var(--in-content-item-hover);
   border-inline-color: var(--in-content-box-border-color);
   cursor: pointer;
 }
