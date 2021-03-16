@@ -6752,7 +6752,7 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
   buffer.set(&bufferObj->as<ArrayBufferObject>());
 
   // Do not assume the buffer's length fits within the wasm heap limit, so do
-  // not call ByteLength32().
+  // not call getWasmUint32()
   size_t memoryLength = buffer->byteLength().get();
 
   if (!IsValidAsmJSHeapLength(memoryLength)) {
@@ -6779,6 +6779,21 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
                                 "by const heap accesses).",
                                 uint64_t(memoryLength),
                                 metadata.minMemoryLength));
+    if (!msg) {
+      return false;
+    }
+    return LinkFail(cx, msg.get());
+  }
+
+  // ArrayBuffer lengths in SpiderMonkey used to be restricted to <= INT32_MAX,
+  // but that has since been relaxed for the benefit of wasm.  We keep the old
+  // limit for asm.js so as to avoid having to worry about whether the asm.js
+  // implementation is safe for larger heaps.
+  if (memoryLength >= INT32_MAX) {
+    UniqueChars msg(
+        JS_smprintf("ArrayBuffer byteLength 0x%" PRIx64
+                    " is too large for asm.js (implementation limit).",
+                    uint64_t(memoryLength)));
     if (!msg) {
       return false;
     }
@@ -7279,7 +7294,7 @@ bool js::IsValidAsmJSHeapLength(size_t length) {
   }
 
   // The heap length is limited by what wasm can handle.
-  if (length > MaxMemory32Bytes) {
+  if (length > MaxMemory32Bytes()) {
     return false;
   }
 

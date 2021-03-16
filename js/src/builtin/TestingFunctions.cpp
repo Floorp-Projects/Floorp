@@ -1467,6 +1467,13 @@ static bool WasmLoadedFromCache(JSContext* cx, unsigned argc, Value* vp) {
   return WasmReturnFlag(cx, argc, vp, Flag::Deserialized);
 }
 
+static bool LargeArrayBufferEnabled(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  args.rval().setBoolean(ArrayBufferObject::maxBufferByteLength() >
+                         ArrayBufferObject::MaxByteLengthForSmallBuffer);
+  return true;
+}
+
 static bool IsLazyFunction(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
   if (args.length() != 1) {
@@ -7013,6 +7020,10 @@ gc::ZealModeHelpText),
 "wasmLoadedFromCache(module)",
 "  Returns a boolean indicating whether a given module was deserialized directly from a\n"
 "  cache (as opposed to compiled from bytecode)."),
+
+    JS_FN_HELP("largeArrayBufferEnabled", LargeArrayBufferEnabled, 0, 0,
+"largeArrayBufferEnabled()",
+"  Returns true if array buffers larger than 2GB can be allocated."),
 
     JS_FN_HELP("isLazyFunction", IsLazyFunction, 1, 0,
 "isLazyFunction(fun)",

@@ -4,9 +4,9 @@
 
 #include "jsapi-tests/tests.h"
 
-static const unsigned BufferSize = 20;
+static const unsigned BufSize = 20;
 static unsigned FinalizeCalls = 0;
-static JSFinalizeStatus StatusBuffer[BufferSize];
+static JSFinalizeStatus StatusBuffer[BufSize];
 
 BEGIN_TEST(testGCFinalizeCallback) {
   JS_SetGCParameter(cx, JSGC_INCREMENTAL_GC_ENABLED, true);
@@ -155,13 +155,13 @@ virtual void uninit() override {
 }
 
 bool checkSingleGroup() {
-  CHECK(FinalizeCalls < BufferSize);
+  CHECK(FinalizeCalls < BufSize);
   CHECK(FinalizeCalls == 4);
   return true;
 }
 
 bool checkMultipleGroups() {
-  CHECK(FinalizeCalls < BufferSize);
+  CHECK(FinalizeCalls < BufSize);
   CHECK(FinalizeCalls % 3 == 1);
   CHECK((FinalizeCalls - 1) / 3 > 1);
   return true;
@@ -187,7 +187,7 @@ bool checkFinalizeStatus() {
 
 static void FinalizeCallback(JSFreeOp* fop, JSFinalizeStatus status,
                              void* data) {
-  if (FinalizeCalls < BufferSize) {
+  if (FinalizeCalls < BufSize) {
     StatusBuffer[FinalizeCalls] = status;
   }
   ++FinalizeCalls;

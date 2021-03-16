@@ -16,10 +16,10 @@
 #include "gc/ZoneAllocator.h"
 #include "js/ArrayBuffer.h"
 #include "js/GCHashTable.h"
+#include "vm/BufferSize.h"
 #include "vm/JSObject.h"
 #include "vm/Runtime.h"
 #include "vm/SharedMem.h"
-#include "wasm/WasmTypes.h"
 
 namespace js {
 
@@ -108,16 +108,6 @@ class ArrayBufferObjectMaybeShared;
 mozilla::Maybe<uint64_t> WasmArrayBufferMaxSize(
     const ArrayBufferObjectMaybeShared* buf);
 size_t WasmArrayBufferMappedSize(const ArrayBufferObjectMaybeShared* buf);
-
-// Class wrapping an ArrayBuffer or ArrayBufferView byte offset or length.
-class BufferSize {
-  size_t size_ = 0;
-
- public:
-  explicit BufferSize(size_t size) : size_(size) {}
-
-  size_t get() const { return size_; }
-};
 
 class ArrayBufferObjectMaybeShared : public NativeObject {
  public:
@@ -496,9 +486,13 @@ using RootedArrayBufferObject = Rooted<ArrayBufferObject*>;
 using HandleArrayBufferObject = Handle<ArrayBufferObject*>;
 using MutableHandleArrayBufferObject = MutableHandle<ArrayBufferObject*>;
 
-bool CreateWasmBuffer(JSContext* cx, wasm::MemoryKind memKind,
-                      const wasm::Limits& memory,
-                      MutableHandleArrayBufferObjectMaybeShared buffer);
+// Create a buffer for a 32-bit wasm memory.  Arguments of the Limits structure
+// are broken out in order to avoid having this file depending on WasmTypes.h,
+// as that creates a circularity through WasmJS.h.
+bool CreateWasmBuffer32(JSContext* cx, uint64_t initialSize,
+                        const mozilla::Maybe<uint64_t>& maxSize,
+                        bool sharedMemory,
+                        MutableHandleArrayBufferObjectMaybeShared buffer);
 
 // Per-compartment table that manages the relationship between array buffers
 // and the views that use their storage.
