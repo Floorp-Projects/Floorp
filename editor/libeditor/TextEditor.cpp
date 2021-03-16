@@ -1246,7 +1246,7 @@ bool TextEditor::CheckForClipboardCommandListener(
 
   RefPtr<EventTarget> et = GetDOMEventTarget();
   while (et) {
-    EventListenerManager* elm = et->GetOrCreateListenerManager();
+    EventListenerManager* elm = et->GetExistingListenerManager();
     if (elm && elm->HasListenersFor(aCommand)) {
       return true;
     }
