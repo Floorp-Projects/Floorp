@@ -9,25 +9,24 @@
   <script src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-function scrollOuter() {
-  var transformEnd = function() {
-    SpecialPowers.Services.obs.removeObserver(transformEnd, "APZ:TransformEnd");
-    dump("Transform complete; flushing repaints...\n");
-    flushApzRepaints(checkScroll);
-  };
-  SpecialPowers.Services.obs.addObserver(transformEnd, "APZ:TransformEnd");
+async function test() {
+  let transformEndPromise = promiseTransformEnd();
 
   synthesizeNativeTouchDrag(document.getElementById("outer"), 10, 100, 0, -50);
   dump("Finished native drag, waiting for transform-end observer...\n");
-}
 
-function checkScroll() {
+  await transformEndPromise;
+
+  dump("Transform complete; flushing repaints...\n");
+  await promiseApzRepaintsFlushed();
+
   var outerScroll = document.getElementById("outer").scrollTop;
   is(outerScroll, 50, "check that the div scrolled");
-  subtestDone();
 }
 
-waitUntilApzStable().then(scrollOuter);
+waitUntilApzStable()
+  .then(test)
+  .then(subtestDone);
 
   </script>
 </head>
