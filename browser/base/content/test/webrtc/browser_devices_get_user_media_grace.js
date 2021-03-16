@@ -323,6 +323,47 @@ var gTests = [
       perms.removeFromPrincipal(null, "microphone", gBrowser.selectedBrowser);
     },
   },
+
+  {
+    desc: "getUserMedia camera+mic grace period cleared on permission block",
+    run: async function checkAudioVideoGraceEndsNewTab(browser) {
+      await SpecialPowers.pushPrefEnv({
+        set: [["privacy.webrtc.deviceGracePeriodTimeoutMs", 10000]],
+      });
+      info("Set up longer camera grace period.");
+      await prompt(false, true);
+      await allow(false, true);
+      await closeStream();
+
+      info("Request both to get prompted so we can block both.");
+      await prompt(true, true);
+      await deny();
+      // Clear the temporary deny so we can prompt again.
+      perms.removeFromPrincipal(null, "camera", gBrowser.selectedBrowser);
+      perms.removeFromPrincipal(null, "microphone", gBrowser.selectedBrowser);
+
+      info("Revoking permission clears camera grace period.");
+      await prompt(false, true);
+      await deny();
+      perms.removeFromPrincipal(null, "camera", gBrowser.selectedBrowser);
+
+      info("Set up longer microphone grace period.");
+      await prompt(true, false);
+      await allow(true, false);
+      await closeStream();
+
+      info("Request both to get prompted so we can block both.");
+      await prompt(true, true);
+      await deny();
+      perms.removeFromPrincipal(null, "camera", gBrowser.selectedBrowser);
+      perms.removeFromPrincipal(null, "microphone", gBrowser.selectedBrowser);
+
+      info("Revoking permission clears microphone grace period.");
+      await prompt(true, false);
+      await deny();
+      perms.removeFromPrincipal(null, "microphone", gBrowser.selectedBrowser);
+    },
+  },
 ];
 
 add_task(async function test() {
