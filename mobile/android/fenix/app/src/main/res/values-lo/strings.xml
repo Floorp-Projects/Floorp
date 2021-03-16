@@ -19,10 +19,37 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">ແທັບສ່ວນຕົວຂອງທ່ານຈະຖືກສະແດງຢູ່ບ່ອນນີ້.</string>
 
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">Baidu</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">ເປີດ 1 ແຖບ. ແຕະເພື່ອປ່ຽນແທັບ.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
     <string name="open_tab_tray_plural">ເປີດ %1$s ແຖບ. ແຕະເພື່ອປ່ຽນແທັບ.</string>
+
+    <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
+    <string name="tab_tray_multi_select_title">ເລືອກ %1$d ແລ້ວ</string>
+    <!-- Label of button in create collection dialog for creating a new collection  -->
+    <string name="tab_tray_add_new_collection">ເພີ່ມການເກັບສະສົມໃຫມ່</string>
+    <!-- Label of editable text in create collection dialog for naming a new collection  -->
+    <string name="tab_tray_add_new_collection_name">ຊື່</string>
+    <!-- Label of button in save to collection dialog for selecting a current collection  -->
+    <string name="tab_tray_select_collection">ເລືອກການເກັບສະສົມ</string>
+    <!-- Content description for close button while in multiselect mode in tab tray -->
+    <string name="tab_tray_close_multiselect_content_description">ອອກຈາກໂຫມດ multiselect</string>
+    <!-- Content description for save to collection button while in multiselect mode in tab tray -->
+    <string name="tab_tray_collection_button_multiselect_content_description">ບັນທຶກແທັບທີ່ເລືອກແລ້ວໄປໄວ້ທີ່ການເກັບສະສົມ</string>
+    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
+    <string name="tab_tray_item_selected_multiselect_content_description">ເລືອກ %1$s ແລ້ວ</string>
+    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
+    <string name="tab_tray_item_unselected_multiselect_content_description">ບໍ່ເລືອກ %1$s</string>
+    <!-- Content description announcement when exiting multiselect mode in tab tray -->
+    <string name="tab_tray_exit_multiselect_content_description">ອອກຈາກໂຫມດ multiselect</string>
+    <!-- Content description announcement when entering multiselect mode in tab tray -->
+    <string name="tab_tray_enter_multiselect_content_description">ເຂົ້າສູ່ໂຫມດ multiselect ແລ້ວ, ເລືອກແທັບເພື່ອບັນທຶກໄປໄວ້ທີ່ການເກັບສະສົມ</string>
+    <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
+    <string name="tab_tray_multiselect_selected_content_description">ເລືອກແລ້ວ</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s ແມ່ນຜະລິດຂື້ນໂດຍ Mozilla.</string>
@@ -42,13 +69,30 @@
     <!-- Text for the negative button -->
     <string name="cfr_neg_button_text">ບໍ່, ຂອບໃຈ</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">ເຂົ້າ Firefox ໄດ້ໄວຂຶ້ນ. ເພີ່ມ widget ໃສ່ໜ້າຈໍຫລັກຂອງທ່ານ.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">ເພີ່ມ widget</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">ບໍ່ແມ່ນຕອນນີ້</string>
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
+    <string name="open_in_app_cfr_info_message">ທ່ານສາມາດຕັ້ງໃຫ້ Firefox ເປີດລີ້ງນີ້ໃນແອັບໂດຍອັດຕະໂນມັດ.</string>
+    <!-- Text for the positive action button -->
+    <string name="open_in_app_cfr_positive_button_text">ໄປທີ່ການຕັ້ງຄ່າ</string>
+    <!-- Text for the negative action button -->
+    <string name="open_in_app_cfr_negative_button_text">ຍົກເລີກ</string>
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">ຕ້ອງການເຂົ້ານຳໃຊ້ກ້ອງ. ໄປທີ່ການຕັ້ງຄ່າ Android ແຕະໃສ່ ສິດ ແລະ ແຕະໃສ່ ອະນຸຍາດ</string>
+    <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
+    <string name="camera_permissions_needed_positive_button_text">ໄປທີ່ການຕັ້ງຄ່າ</string>
+    <!-- Text for the negative action button to dismiss the dialog. -->
+    <string name="camera_permissions_needed_negative_button_text">ຍົກເລີກ</string>
+
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_close_tabs_banner_positive_button_text">ເບິງການຕັ້ງຄ່າ</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_close_tabs_banner_negative_button_text">ຍົກເລີກ</string>
+
+    <!-- Text for the positive action button to go to Settings for auto close tabs. -->
+    <string name="tab_tray_grid_view_banner_positive_button_text">ໄປທີ່ການຕັ້ງຄ່າ</string>
+    <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
+    <string name="tab_tray_grid_view_banner_negative_button_text">ຍົກເລີກ</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -77,6 +121,8 @@
     <string name="browser_menu_edit_bookmark">ແກ້ໄຂບຸກມາກ</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Add-ons</string>
+    <!-- Browser menu button that opens the addon extensions manager -->
+    <string name="browser_menu_extensions">ເອັກສເທນຊັນສ</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">ບໍ່ມີ add-ons ຢູ່ທີ່ນີ້</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -95,12 +141,12 @@
     <string name="browser_menu_install_on_homescreen">ຕິດຕັ້ງ</string>
     <!-- Menu option on the toolbar that takes you to synced tabs page-->
     <string name="synced_tabs">ແທັບທີ່ Sync ແລ້ວ</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Resync</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">ຄົ້ນຫາໃນຫນ້ານີ້</string>
     <!-- Browser menu button that creates a private tab -->
     <string name="browser_menu_private_tab">ແທັບສ່ວນຕົວ</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">ແທັບໃຫມ່</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">ບັນທຶກໄປໄວ້ບ່ອນເກັບສະສົມ</string>
     <!-- Browser menu button that open a share menu to share the current site -->
@@ -125,6 +171,8 @@
     <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
     <string name="browser_menu_read_appearance">ຮູບ​ຮ່າງ</string>
 
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">ແກ້ໄຂມຸມມອງຜູ້ອ່ານ</string>
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">ບໍ່​ສາ​ມາດ​​ເຊື່ອມ​ຕໍ່ໄດ້ ເນື່ອງຈາກບໍ່ຮູ້ຈັກຮູບແບບ URL</string>
@@ -142,8 +190,12 @@
     <!-- Search Fragment -->
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">ສະແກນ</string>
+    <!-- Button in the search view that lets a user change their search engine -->
+    <string name="search_engine_button">ເຄື່ອງມືການຄົ້ນຫາ</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">ການຕັ້ງຄ່າຂອງເຄື່ອງມືຄົ້ນຫາ</string>
+    <!-- Header displayed when selecting a shortcut search engine -->
+    <string name="search_engines_search_with">ຄັ້ງນີ້ ຄົ້ນຫາດ້ວຍ:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">ເຕີມລີ້ງຈາກຄິບບອດ</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -157,7 +209,14 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">ຮຽນຮູ້ເພີ່ມເຕີມ</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">ຄົ້ນຫາ %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">ຄົ້ນຫາໂດຍກົງຈາກແທັບທີ່ຢູ່</string>
+
     <!-- Search Widget -->
+    <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
+    <string name="search_widget_content_description">ເປີດແທັບ Firefox ໃໝ່</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">ຄົ້ນຫາ</string>
     <!-- Text preview for larger sized widgets -->
@@ -212,6 +271,8 @@
     <string name="preferences_open_links_in_a_private_tab">ເປີດລີ້ງໃນແທັບສ່ວນຕົວ</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
     <string name="preferences_allow_screenshots_in_private_mode">ອະນຸຍາດໃຫ້ຖ່າຍຫນ້າຈໍໃນໂຫມດການທ່ອງເວັບແບບສ່ວນຕົວ</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">ຖ້າຫາກວ່າໄດ້ອະນຸຍາດແລ້ວ, ແທັບສ່ວນໂຕຈະສະແດງໃຫ້ເຫັນເມື່ອເປີດຫລາຍແອັບ</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">ເພີ່ມທາງລັດການທ່ອງເວັບແບບສ່ວນຕົວ</string>
     <!-- Preference for accessibility -->
@@ -230,6 +291,8 @@
     <string name="preferences_toolbar">ແຖບເຄື່ອງມື</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">ຊຸດປັບແຕ່ງ</string>
+    <!-- Preference for customizing the home screen -->
+    <string name="preferences_home">ຫນ້າທຳອິດ</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">ການປັບແຕ່ງ</string>
     <!-- Preference description for banner about signing in -->
@@ -252,6 +315,8 @@
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">ການດີບັກທາງໄກຜ່ານທາງ USB</string>
 
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines">ສະແດງເຄື່ອງມືການຄົ້ນຫາ</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">ສະແດງຜົນການແນະນຳການຄົ້ນຫາ</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -264,12 +329,24 @@
     <string name="preferences_search_browsing_history">ຄົ້ນຫາປະຫວັດການທ່ອງເວັບ</string>
     <!-- Preference title for switch preference to suggest bookmarks when searching -->
     <string name="preferences_search_bookmarks">ຄົ້ນຫາບຸກມາກ</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">ຄົ້ນຫາແທັບທີ່ sync ແລ້ວ</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">ການຕັ້ງ​ຄ່າ​ບັນ​ຊີ</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">ເປີດລີ້ງໃນແອັບ</string>
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Add-ons</string>
+
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">ການແຈ້ງເຕືອນ</string>
+
+    <!-- Button caption to confirm the add-on collection configuration -->
+    <string name="customize_addon_collection_ok">ໂອເຄ</string>
+    <!-- Button caption to abort the add-on collection configuration -->
+    <string name="customize_addon_collection_cancel">ຍົກເລີກ</string>
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">ຊື່ການເກັບສະສົມ</string>
 
     <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
@@ -352,6 +429,8 @@
     <string name="preferences_marketing_data">ຂໍ້ມູນດ້ານການຕະຫຼາດ</string>
     <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
     <string name="preferences_marketing_data_description">ແບ່ງປັນຂໍ້ມູນກ່ຽວກັບຟິວເຈີທີ່ທ່ານໃຊ້ຢູ່ໃນ %1$s ກັບ Leanplum ຊຶ່ງເປັນຜູ້ໃຫ້ບໍລິການດ້ານການຕະລາດມືຖືຂອງພວກເຮົາ.</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">ການສຶກສາ</string>
     <!-- Title for experiments preferences -->
     <string name="preference_experiments">ການທົດລອງ</string>
     <!-- Summary for experiments preferences -->
@@ -422,6 +501,10 @@
     <string name="library_desktop_bookmarks_unfiled">ບຸກມາກອື່ນໆ</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">ປະຫວັດການໃຊ້ງານ</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">ແທັບໃຫມ່</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">ຄົ້ນຫາໃນຫນ້ານີ້</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">ແທັບ Synced</string>
     <!-- Option in Library to open Reading List -->
@@ -434,6 +517,46 @@
     <string name="content_description_history_menu">ເມນູລາຍການປະຫວັດການໃຊ້ງານ</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">ປິດ</string>
+
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">ແທັບທີ່ຫາກໍ່ປິດໄປມື້ກີ້ນີ້</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">ສະແດງປະຫວັດການໃຊ້ງານທັງຫມົດ</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">ແທັບ %d</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">ແທັບ %d</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">ບໍ່ມີແທັບທີ່ຫາກໍ່ປິດໄປມື້ກີ້ນີ້</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">ແທັບ</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">ເບິງແທັບ</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">ລາຍການ</string>
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">ປິດແທັບ</string>
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">ດ້ວຍ​ຕົນ​ເອງ</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">ຫຼັງຈາກມື້ໜຶ່ງ</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">ຫຼັງຈາກໜຶ່ງອາທິດ</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">ຫຼັງຈາກໜຶ່ງເດືອນ</string>
+
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">ປິດດ້ວຍຕົນເອງ</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">ປິດຫຼັງຈາກມື້ໜຶ່ງ</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">ປິດຫຼັງຈາກໜຶ່ງອາທິດ</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">ປິດຫຼັງຈາກໜຶ່ງເດືອນ</string>
 
     <!-- Sessions -->
     <!-- Title for the list of tabs -->
@@ -452,8 +575,14 @@
     <string name="tab_tray_title">ເປີດແທັບ</string>
     <!-- Text shown in the menu for saving tabs to a collection -->
     <string name="tab_tray_menu_item_save">ບັນທຶກໄປໄວ້ບ່ອນເກັບສະສົມ</string>
+    <!-- Text shown in the menu for the collection selector -->
+    <string name="tab_tray_menu_select">ເລືອກ</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">ແບ່ງປັນແທັບທັງໝົດ</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">ແທັບທີ່ຫາກໍ່ປິດໄປມື້ກີ້ນີ້</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">ການຕັ້ງຄ່າແທັບ</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">ປິດແທັບທັງຫມົດ</string>
     <!-- Shortcut action to open new tab -->
@@ -462,8 +591,18 @@
     <string name="tab_tray_menu_home">ໄປຫນ້າທຳອິດ</string>
     <!-- Shortcut action to toggle private mode -->
     <string name="tab_tray_menu_toggle">ຮູບແບບການສະຫຼັບແທັບ</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">ບຸກມາກ</string>
+    <!-- Text shown in the multiselect menu for closing selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_close">ປິດ</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">ແບ່ງປັນແທັບທີ່ເລືອກໄວ້</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">ເລືອກເມນູແທັບແລ້ວ</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">ລຶບແຖບອອກຈາກບ່ອນເກັບສະສົມ</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">ເລືອກແທັບ</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">ປິດແທັບ</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -497,11 +636,20 @@
     <string name="collection_rename">ປ່ຽນຊື່ບ່ອນເກັບສະສົມ</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">ເປີດແທັບ</string>
-    <!-- Text for the menu button to remove a top site -->
-    <string name="remove_top_site">ລຶບ</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">ຊື່ການເກັບສະສົມ</string>
+	<!-- Text for the menu button to rename a top site -->
+	<string name="rename_top_site">ປ່ຽນ​ຊື່</string>
+	<!-- Text for the menu button to remove a top site -->
+	<string name="remove_top_site">ລຶບ</string>
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">ລຶບອອກຈາກປະຫວັດການນຳໃຊ້</string>
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (ໂຫມດສ່ວນຕົວ)</string>
+
+    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
+    <string name="tab_tray_save_to_collection">ບັນທຶກ</string>
 
     <!-- History -->
     <!-- Text for the button to clear all history -->
@@ -532,6 +680,10 @@
     <!-- Text for the button to clear selected history items. The first parameter
         is a digit showing the number of items you have selected -->
     <string name="history_delete_some">ລຶບໄອເທັມ %1$d</string>
+    <!-- Text for the header that groups the history for today -->
+    <string name="history_today">ມື້ນີ້</string>
+    <!-- Text for the header that groups the history for yesterday -->
+    <string name="history_yesterday">ມື້ວານ</string>
     <!-- Text for the header that groups the history for last 24 hours -->
     <string name="history_24_hours">24 ຊົ່ວໂມງທີ່ຜ່ານມາ</string>
     <!-- Text for the header that groups the history the past 7 days -->
@@ -542,6 +694,25 @@
     <string name="history_older">ເກົ່າກວ່າ</string>
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">ບໍ່ມີປະຫວັດການໃຊ້ງານຢູ່ນີ້</string>
+
+
+    <!-- Downloads -->
+    <!-- Text for the button to clear all downloads -->
+    <string name="download_delete_all">ລົບການດາວໂຫລດ</string>
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">ລຶບການດາວໂຫລດແລ້ວ</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">ລຶບ %1$s ແລ້ວ</string>
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message_1">ບໍ່ມີໄຟລທີ່ໄດ້ດາວໂຫລດມາ</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">ເລືອກ %1$d ແລ້ວ</string>
+    <!-- History overflow menu open in new tab button -->
+    <string name="download_menu_open">ເປີດ</string>
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">ລຶບ</string>
+
 
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
@@ -675,16 +846,16 @@
     <string name="tracking_protection_on">ເປີດ</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">ປິດ</string>
-    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">ອະນຸຍາດໃຫ້ເປີດສຽງ ແລະ ວີດີໂອ</string>
 
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">ບັອກສຽງ ແລະ ວິດີໂອໃນການນໍາໃຊ້ຂໍ້ມູນອິນເຕີເນັດໃນໂທລະສັບມືຖືເທົ່ານັ້ນ</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">ສຽງ ແລະ ວິດີໂອຈະເປີດໃນ Wi-Fi</string>
-    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">ບັອກສຽງເທົ່ານັ້ນ</string>
-    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">ບັອກສຽງ ແລະ ວີດີໂອ</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">ເປີດ</string>
@@ -696,10 +867,6 @@
     <string name="collections_header">ການສະສົມ</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
     <string name="collection_menu_button_content_description">ເມນູການສະສົມ</string>
-    <!-- No Open Tabs Message Header -->
-    <string name="no_collections_header1">ເກັບກຳສິ່ງທີ່ສຳຄັນສຳລັບທ່ານ</string>
-    <!-- Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">ເອົາການຄົ້ນຫາ, ເວັບໄຊທ ແລະ ແທັບທີ່ຄ້າຍຄືກັນມາໄວ້ໃນກຸ່ມດຽວກັນ ເພື່ອເຮັດໃຫ້ສາມາດເຂົ້າໄດ້ງ່າຍໃນພາຍຫລັງ.</string>
     <!-- Title for the "select tabs" step of the collection creator -->
     <string name="create_collection_select_tabs">ເລືອກແທັບ</string>
     <!-- Title for the "select collection" step of the collection creator -->
@@ -938,15 +1105,6 @@
     <string name="onboarding_whats_new_description">ມີຄຳຖາມກ່ຽວກັບການອອກແບບ %s ຄືນໃຫມ່ບໍ່? ຕ້ອງການຢາກຮູ້ຈັກວ່າມີຫຍັງປ່ຽນແປງແດ່ບໍ່?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">ພົບຄຳຕອບໄດ້ທີ່ນີ້</string>
-    <!-- text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">ຮັບຜົນປະໂຫຍດສູງສຸດຈາກ %s.</string>
-
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">ທ່ານໄດ້ລົງຊື່ເຂົ້າໃຊ້ດ້ວຍຖານະ %s ໃນ Firefox  ໃນໂທລະສັບເຄື່ອງນີ້. ທ່ານຕ້ອງການຈະລົງຊື່ເຂົ້າໃຊ້ດ້ວຍບັນຊີນີ້ບໍ່?</string>
-
     <!-- text for the automatic sign-in button while signing in is in process -->
     <string name="onboarding_firefox_account_signing_in">ກຳລັງລົງຊື່ເຂົ້າໃຊ້…</string>
     <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
@@ -1135,13 +1293,15 @@
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">ບັກທຶກການລັອກອິນໄວ້</string>
 
-    <!-- DEPRECATED STRINGS -->
-    <!-- Button in the search view that lets a user search by using a shortcut -->
-    <string name="search_shortcuts_button">ທາງລັດ</string>
-    <!-- DEPRECATED: Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with">ຄົ້ນຫາດ້ວຍ</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_shortcuts_search_with_2">ຄັ້ງນີ້ ຄົ້ນຫາດ້ວຍ:</string>
-    <!-- Preference title for switch preference to show search shortcuts -->
-    <string name="preferences_show_search_shortcuts">ສະແດງທາງລັດການຄົ້ນຫາ</string>
+    <!-- Deprecated: text for the firefox account onboarding card header
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_firefox_account_header">ຮັບຜົນປະໂຫຍດສູງສຸດຈາກ %s.</string>
+
+    <!-- Deprecated: No Open Tabs Message Header -->
+    <string name="no_collections_header1">ເກັບກຳສິ່ງທີ່ສຳຄັນສຳລັບທ່ານ</string>
+    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description1">ເອົາການຄົ້ນຫາ, ເວັບໄຊທ ແລະ ແທັບທີ່ຄ້າຍຄືກັນມາໄວ້ໃນກຸ່ມດຽວກັນ ເພື່ອເຮັດໃຫ້ສາມາດເຂົ້າໄດ້ງ່າຍໃນພາຍຫລັງ.</string>
+    <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
+    <string name="onboarding_firefox_account_auto_signin_header_2">ທ່ານໄດ້ລົງຊື່ເຂົ້າໃຊ້ດ້ວຍຖານະ %s ໃນ Firefox  ໃນໂທລະສັບເຄື່ອງນີ້. ທ່ານຕ້ອງການຈະລົງຊື່ເຂົ້າໃຊ້ດ້ວຍບັນຊີນີ້ບໍ່?</string>
+
     </resources>
