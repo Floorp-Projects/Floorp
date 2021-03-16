@@ -493,8 +493,8 @@
                           appmenu-data-l10n-id="appmenu-help-feedback-page"/>
                 <menuitem id="helpSafeMode"
                           oncommand="safeModeRestart();"
-                          data-l10n-id="menu-help-enter-troubleshoot-mode"
-                          appmenu-data-l10n-id="appmenu-help-enter-troubleshoot-mode"/>
+                          data-l10n-id="menu-help-enter-troubleshoot-mode2"
+                          appmenu-data-l10n-id="appmenu-help-enter-troubleshoot-mode2"/>
                 <menuitem id="troubleShooting"
                           oncommand="openTroubleshootingPage()"
                           onclick="checkForMiddleClick(this, event);"
