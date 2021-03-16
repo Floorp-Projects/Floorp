@@ -288,11 +288,6 @@ partial interface Navigator {
 };
 
 partial interface Navigator {
-  [Throws, Pref="dom.presentation.enabled", SameObject]
-  readonly attribute Presentation? presentation;
-};
-
-partial interface Navigator {
   [NewObject, Func="mozilla::dom::TCPSocket::ShouldTCPSocketExist"]
   readonly attribute LegacyMozTCPSocket mozTCPSocket;
 };

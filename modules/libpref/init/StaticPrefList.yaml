@@ -2473,39 +2473,6 @@
   value: false
   mirror: always
 
-# Presentation API
-- name: dom.presentation.enabled
-  type: bool
-#if defined(ANDROID)
-  value: @IS_NOT_RELEASE_OR_BETA@
-#else
-  value: false
-#endif
-  mirror: always
-
-- name: dom.presentation.controller.enabled
-  type: bool
-#if defined(ANDROID)
-  value: @IS_NOT_RELEASE_OR_BETA@
-#else
-  value: false
-#endif
-  mirror: always
-
-- name: dom.presentation.receiver.enabled
-  type: bool
-#if defined(ANDROID)
-  value: @IS_NOT_RELEASE_OR_BETA@
-#else
-  value: false
-#endif
-  mirror: always
-
-- name: dom.presentation.testing.simulate-receiver
-  type: bool
-  value: false
-  mirror: always
-
 # This currently only affects XHTML. For XUL the cache is always allowed.
 - name: dom.prototype_document_cache.enabled
   type: bool

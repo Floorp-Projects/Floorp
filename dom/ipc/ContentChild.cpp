@@ -248,8 +248,6 @@
 
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/MediaControllerBinding.h"
-#include "mozilla/dom/PPresentationChild.h"
-#include "mozilla/dom/PresentationIPCService.h"
 #include "mozilla/ipc/IPCStreamAlloc.h"
 #include "mozilla/ipc/IPCStreamDestination.h"
 #include "mozilla/ipc/IPCStreamSource.h"
@@ -1797,45 +1795,6 @@ bool ContentChild::DeallocPRemoteSpellcheckEngineChild(
     PRemoteSpellcheckEngineChild* child) {
   delete child;
   return true;
-}
-
-PPresentationChild* ContentChild::AllocPPresentationChild() {
-  MOZ_CRASH("We should never be manually allocating PPresentationChild actors");
-  return nullptr;
-}
-
-bool ContentChild::DeallocPPresentationChild(PPresentationChild* aActor) {
-  delete aActor;
-  return true;
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvNotifyPresentationReceiverLaunched(
-    PBrowserChild* aIframe, const nsString& aSessionId) {
-  nsCOMPtr<nsIDocShell> docShell =
-      do_GetInterface(static_cast<BrowserChild*>(aIframe)->WebNavigation());
-  NS_WARNING_ASSERTION(docShell, "WebNavigation failed");
-
-  nsCOMPtr<nsIPresentationService> service =
-      do_GetService(PRESENTATION_SERVICE_CONTRACTID);
-  NS_WARNING_ASSERTION(service, "presentation service is missing");
-
-  Unused << NS_WARN_IF(
-      NS_FAILED(static_cast<PresentationIPCService*>(service.get())
-                    ->MonitorResponderLoading(aSessionId, docShell)));
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentChild::RecvNotifyPresentationReceiverCleanUp(
-    const nsString& aSessionId) {
-  nsCOMPtr<nsIPresentationService> service =
-      do_GetService(PRESENTATION_SERVICE_CONTRACTID);
-  NS_WARNING_ASSERTION(service, "presentation service is missing");
-
-  Unused << NS_WARN_IF(NS_FAILED(service->UntrackSessionInfo(
-      aSessionId, nsIPresentationService::ROLE_RECEIVER)));
-
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvNotifyEmptyHTTPCache() {

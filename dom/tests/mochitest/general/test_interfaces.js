@@ -887,62 +887,6 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "PopupBlockedEvent", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "Presentation",
-    insecureContext: true,
-    desktop: false,
-    release: false,
-  },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "PresentationAvailability",
-    insecureContext: true,
-    desktop: false,
-    release: false,
-  },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "PresentationConnection",
-    insecureContext: true,
-    desktop: false,
-    release: false,
-  },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "PresentationConnectionAvailableEvent",
-    insecureContext: true,
-    desktop: false,
-    release: false,
-  },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "PresentationConnectionCloseEvent",
-    insecureContext: true,
-    desktop: false,
-    release: false,
-  },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "PresentationConnectionList",
-    insecureContext: true,
-    desktop: false,
-    release: false,
-  },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "PresentationReceiver",
-    insecureContext: true,
-    desktop: false,
-    release: false,
-  },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
-  {
-    name: "PresentationRequest",
-    insecureContext: true,
-    desktop: false,
-    release: false,
-  },
-  // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "ProcessingInstruction", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "ProgressEvent", insecureContext: true },
