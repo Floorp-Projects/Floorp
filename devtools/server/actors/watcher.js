@@ -51,6 +51,12 @@ loader.lazyRequireGetter(
   "devtools/server/actors/target-configuration",
   true
 );
+loader.lazyRequireGetter(
+  this,
+  "ThreadConfigurationActor",
+  "devtools/server/actors/thread-configuration",
+  true
+);
 
 exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   /**
@@ -171,6 +177,12 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
         // When removing this trait, consumers should still check that the Watcher is
         // available.
         "target-configuration": true,
+        // @backward-compat { version 88 } Starting with FF88, if the watcher is
+        // supported, the ThreadConfiguration actor can be used to maintain thread configuration
+        // options.
+        // When removing this trait, consumers should still check that the Watcher is
+        // available.
+        "thread-configuration": true,
         // @backward-compat { version 88 } Watcher now supports setting the XHR via
         // the BreakpointListActor.
         // When removing this trait, consumers should still check that the Watcher is
@@ -492,16 +504,29 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   },
 
   /**
-   * Returns the configuration actor.
+   * Returns the target configuration actor.
    *
    * @return {Object} actor
    *        The configuration actor.
    */
   getTargetConfigurationActor() {
-    if (!this._configurationListActor) {
-      this._configurationListActor = new TargetConfigurationActor(this);
+    if (!this._targetConfigurationListActor) {
+      this._targetConfigurationListActor = new TargetConfigurationActor(this);
     }
-    return this._configurationListActor;
+    return this._targetConfigurationListActor;
+  },
+
+  /**
+   * Returns the thread configuration actor.
+   *
+   * @return {Object} actor
+   *        The configuration actor.
+   */
+  getThreadConfigurationActor() {
+    if (!this._threadConfigurationListActor) {
+      this._threadConfigurationListActor = new ThreadConfigurationActor(this);
+    }
+    return this._threadConfigurationListActor;
   },
 
   /**

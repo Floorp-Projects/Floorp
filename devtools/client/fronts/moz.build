@@ -53,6 +53,7 @@ DevToolsModules(
     "style-sheets.js",
     "symbol-iterator.js",
     "target-configuration.js",
+    "thread-configuration.js",
     "thread.js",
     "walker.js",
     "watcher.js",

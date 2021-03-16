@@ -59,6 +59,7 @@ DevToolsModules(
     "symbol-iterator.js",
     "symbol.js",
     "target-configuration.js",
+    "thread-configuration.js",
     "thread.js",
     "timeline.js",
     "walker.js",

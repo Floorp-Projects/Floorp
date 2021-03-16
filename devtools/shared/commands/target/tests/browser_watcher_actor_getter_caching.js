@@ -44,6 +44,15 @@ add_task(async function() {
     "target-configuration"
   );
 
+  info(
+    "Check that getThreadConfigurationActor does not create duplicate actors"
+  );
+  testActorGetter(
+    watcherFront,
+    () => watcherFront.getThreadConfigurationActor(),
+    "thread-configuration"
+  );
+
   targetList.destroy();
   await client.waitForRequestsToSettle();
   await client.close();
