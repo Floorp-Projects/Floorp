@@ -3497,7 +3497,7 @@ bool js::CheckLexicalNameConflict(
   return true;
 }
 
-static MOZ_MUST_USE bool CheckVarNameConflict(
+[[nodiscard]] static bool CheckVarNameConflict(
     JSContext* cx, Handle<LexicalEnvironmentObject*> lexicalEnv,
     HandlePropertyName name) {
   if (Shape* shape = lexicalEnv->lookup(cx, name)) {
@@ -3781,9 +3781,9 @@ bool js::CheckGlobalDeclarationConflicts(
   return true;
 }
 
-static MOZ_MUST_USE bool CheckVarNameConflictsInEnv(JSContext* cx,
-                                                    HandleScript script,
-                                                    HandleObject obj) {
+[[nodiscard]] static bool CheckVarNameConflictsInEnv(JSContext* cx,
+                                                     HandleScript script,
+                                                     HandleObject obj) {
   Rooted<LexicalEnvironmentObject*> env(cx);
 
   if (obj->is<LexicalEnvironmentObject>()) {

@@ -148,7 +148,7 @@ class TypedObject : public JSObject {
     return *rttValue_;
   }
 
-  MOZ_MUST_USE bool isRuntimeSubtype(js::Handle<RttValue*> rtt) const;
+  [[nodiscard]] bool isRuntimeSubtype(js::Handle<RttValue*> rtt) const;
 
   static constexpr size_t offsetOfRttValue() {
     return offsetof(TypedObject, rttValue_);
