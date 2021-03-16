@@ -192,7 +192,7 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter-params:5.3.1"
     testImplementation "junit:junit:4.12"
     testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.3.1"
-    testImplementation "org.robolectric:robolectric:4.3" // required to support api level 28
+    testImplementation "org.robolectric:robolectric:4.4" // required to support api level 28
     testImplementation 'org.mockito:mockito-core:2.24.5'
     testImplementation "androidx.arch.core:core-testing:${architecture_components_version}"
 
