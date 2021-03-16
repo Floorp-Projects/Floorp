@@ -51,6 +51,7 @@ add_task(async function test_support_separator_properties() {
 
   let panelUIButton = document.querySelector("#PanelUI-button");
   if (CustomizableUI.protonToolbarEnabled) {
+    // XXX: This should test bookmark item toolbar separators instead
     Assert.equal(
       window
         .getComputedStyle(panelUIButton)
