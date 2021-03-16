@@ -2,19 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals browser, AppConstants, Services, ExtensionAPI */
+/* globals browser, AppConstants, Services, ExtensionAPI, ExtensionCommon */
 
 "use strict";
-
-ChromeUtils.defineModuleGetter(this, "AppConstants",
-                               "resource://gre/modules/AppConstants.jsm");
-ChromeUtils.defineModuleGetter(this, "Services",
-                               "resource://gre/modules/Services.jsm");
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionCommon",
-  "resource://gre/modules/ExtensionCommon.jsm"
-);
 
 const TOPIC = "contextmenu-screenshot";
 
