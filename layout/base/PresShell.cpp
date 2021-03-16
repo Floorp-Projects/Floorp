@@ -1934,8 +1934,15 @@ nsresult PresShell::Initialize() {
       // Initialize the timer.
 
       // Default to PAINTLOCK_EVENT_DELAY if we can't get the pref value.
-      int32_t delay = Preferences::GetInt("nglayout.initialpaint.delay",
-                                          PAINTLOCK_EVENT_DELAY);
+      Document* doc = mDocument->GetDisplayDocument()
+                          ? mDocument->GetDisplayDocument()
+                          : mDocument.get();
+      int32_t delay = Preferences::GetInt(
+          !doc->GetBrowsingContext() ||
+                  doc->GetBrowsingContext()->Top()->IsInProcess()
+              ? "nglayout.initialpaint.delay"
+              : "nglayout.initialpaint.delay_in_oopif",
+          PAINTLOCK_EVENT_DELAY);
 
       mPaintSuppressionTimer->SetTarget(
           mDocument->EventTargetFor(TaskCategory::Other));
