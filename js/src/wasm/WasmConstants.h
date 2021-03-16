@@ -1020,15 +1020,6 @@ static const unsigned MaxParams = 1000;
 static const unsigned MaxResults = 1000;
 static const unsigned MaxStructFields = 1000;
 static const unsigned MaxMemory32LimitField = 65536;
-#ifdef JS_64BIT
-// FIXME (large ArrayBuffer): This should be upped to UINT32_MAX / PageSize
-// initially, then to (size_t(UINT32_MAX) + 1) / PageSize subsequently, see the
-// companion FIXME in WasmMemoryObject::grow() for additional information.
-static const unsigned MaxMemory32Pages = INT32_MAX / PageSize;
-#else
-static const unsigned MaxMemory32Pages = INT32_MAX / PageSize;
-#endif
-static const size_t MaxMemory32Bytes = size_t(MaxMemory32Pages) * PageSize;
 static const unsigned MaxStringBytes = 100000;
 static const unsigned MaxModuleBytes = 1024 * 1024 * 1024;
 static const unsigned MaxFunctionBytes = 7654321;

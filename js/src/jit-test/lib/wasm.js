@@ -3,6 +3,13 @@ if (!wasmIsSupported())
 
 load(libdir + "asserts.js");
 
+// 65534 allocated pages is our current upper limit for reasons having to do
+// with avoiding arithmetic overflow.  Eventually this will become 65536.
+
+var PageSizeInBytes = 65536;
+var MaxBytesIn32BitMemory = largeArrayBufferEnabled() ? 65534*PageSizeInBytes : 0x7FFF_FFFF;
+var MaxPagesIn32BitMemory = Math.floor(MaxBytesIn32BitMemory / PageSizeInBytes);
+
 // "options" is an extension to facilitate the SIMD wormhole
 
 function wasmEvalText(str, imports, options) {

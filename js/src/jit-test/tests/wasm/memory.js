@@ -266,7 +266,7 @@ for (var foldOffsets = 0; foldOffsets <= 1; foldOffsets++) {
         }
 
         // Ensure wrapping doesn't apply.
-        offset = 0x7fffffff; // maximum allowed offset that doesn't always throw.
+        offset = 0x7fffffff;
         for (let index of [0, 1, 2, 3, 0x7fffffff, 0x80000000, 0x80000001]) {
             if (align < 2) {
                 testLoadOOB('i32', '8_s', index, offset, align);

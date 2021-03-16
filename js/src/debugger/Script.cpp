@@ -43,6 +43,7 @@
 #include "vm/StringType.h"            // for NameToId, PropertyName, JSAtom
 #include "wasm/WasmDebug.h"           // for ExprLoc, DebugState
 #include "wasm/WasmInstance.h"        // for Instance
+#include "wasm/WasmJS.h"              // for WasmInstanceObject
 #include "wasm/WasmTypes.h"           // for Bytes
 
 #include "vm/BytecodeUtil-inl.h"  // for BytecodeRangeWithPosition
