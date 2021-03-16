@@ -11,6 +11,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.os.Binder
 import android.os.Bundle
+import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.browser.customtabs.CustomTabsIntent.EXTRA_NAVIGATION_BAR_COLOR
 import androidx.browser.customtabs.TrustedWebUtils
@@ -64,7 +65,9 @@ class CustomTabConfigHelperTest {
     @Test
     fun createFromIntentWithToolbarColor() {
         val builder = CustomTabsIntent.Builder()
-        builder.setToolbarColor(Color.BLACK)
+        val customTabColorSchemeBuilder = CustomTabColorSchemeParams.Builder()
+        customTabColorSchemeBuilder.setToolbarColor(Color.BLACK)
+        builder.setDefaultColorSchemeParams(customTabColorSchemeBuilder.build())
 
         val customTabConfig = createCustomTabConfigFromIntent(builder.build().intent, testContext.resources)
         assertEquals(Color.BLACK, customTabConfig.toolbarColor)
@@ -139,7 +142,7 @@ class CustomTabConfigHelperTest {
     @Test
     fun createFromIntentWithUrlbarHiding() {
         val builder = CustomTabsIntent.Builder()
-        builder.enableUrlBarHiding()
+        builder.setUrlBarHidingEnabled(true)
 
         val customTabConfig = createCustomTabConfigFromIntent(builder.build().intent, testContext.resources)
         assertTrue(customTabConfig.enableUrlbarHiding)
@@ -148,10 +151,19 @@ class CustomTabConfigHelperTest {
     @Test
     fun createFromIntentWithShareMenuItem() {
         val builder = CustomTabsIntent.Builder()
-        builder.addDefaultShareMenuItem()
+        builder.setShareState(CustomTabsIntent.SHARE_STATE_ON)
 
         val customTabConfig = createCustomTabConfigFromIntent(builder.build().intent, testContext.resources)
         assertTrue(customTabConfig.showShareMenuItem)
+    }
+
+    @Test
+    fun createFromIntentWithShareState() {
+        val builder = CustomTabsIntent.Builder()
+        builder.setShareState(CustomTabsIntent.SHARE_STATE_ON)
+
+        val extraShareState = builder.build().intent.getIntExtra(CustomTabsIntent.EXTRA_SHARE_STATE, 5)
+        assertEquals(CustomTabsIntent.SHARE_STATE_ON, extraShareState)
     }
 
     @Test

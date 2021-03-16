@@ -9,6 +9,7 @@ import android.content.ActivityNotFoundException
 import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import androidx.annotation.VisibleForTesting.PRIVATE
+import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.net.toUri
 import kotlinx.coroutines.CoroutineScope
@@ -46,12 +47,21 @@ class CustomTabWindowFeature(
     @VisibleForTesting(otherwise = PRIVATE)
     internal fun configToIntent(config: CustomTabConfig?): CustomTabsIntent {
         val intent = CustomTabsIntent.Builder().apply {
+
             setInstantAppsEnabled(false)
-            config?.toolbarColor?.let { setToolbarColor(it) }
-            config?.navigationBarColor?.let { setNavigationBarColor(it) }
-            if (config?.enableUrlbarHiding == true) enableUrlBarHiding()
+
+            val customTabColorSchemeBuilder = CustomTabColorSchemeParams.Builder()
+            config?.toolbarColor?.let {
+                customTabColorSchemeBuilder.setToolbarColor(it)
+            }
+            config?.navigationBarColor?.let {
+                customTabColorSchemeBuilder.setNavigationBarColor(it)
+            }
+            setDefaultColorSchemeParams(customTabColorSchemeBuilder.build())
+
+            if (config?.enableUrlbarHiding == true) setUrlBarHidingEnabled(true)
             config?.closeButtonIcon?.let { setCloseButtonIcon(it) }
-            if (config?.showShareMenuItem == true) addDefaultShareMenuItem()
+            if (config?.showShareMenuItem == true) setShareState(CustomTabsIntent.SHARE_STATE_ON)
             config?.titleVisible?.let { setShowTitle(it) }
             config?.actionButtonConfig?.apply { setActionButton(icon, description, pendingIntent, tint) }
             config?.menuItems?.forEach { addMenuItem(it.name, it.pendingIntent) }

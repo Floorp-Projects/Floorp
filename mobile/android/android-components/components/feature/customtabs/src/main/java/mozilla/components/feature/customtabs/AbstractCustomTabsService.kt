@@ -83,14 +83,14 @@ abstract class AbstractCustomTabsService : CustomTabsService() {
 
     override fun mayLaunchUrl(
         sessionToken: CustomTabsSessionToken,
-        url: Uri,
+        url: Uri?,
         extras: Bundle?,
         otherLikelyBundles: List<Bundle>?
     ): Boolean {
         logger.debug("Opening speculative connections")
 
         // Most likely URL for a future navigation: Open a speculative connection.
-        engine.speculativeConnect(url.toString())
+        url?.let { engine.speculativeConnect(it.toString()) }
 
         // A list of other likely URLs. Let's open a speculative connection for them up to a limit.
         otherLikelyBundles?.take(MAX_SPECULATIVE_URLS)?.forEach { bundle ->
