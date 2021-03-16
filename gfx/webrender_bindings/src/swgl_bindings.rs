@@ -5,7 +5,6 @@
 use gleam::gl::Gl;
 
 use std::os::raw::c_void;
-use std::ptr;
 
 #[no_mangle]
 pub extern "C" fn wr_swgl_create_context() -> *mut c_void {
@@ -38,30 +37,6 @@ pub extern "C" fn wr_swgl_init_default_framebuffer(
     buf: *mut c_void,
 ) {
     swgl::Context::from(ctx).init_default_framebuffer(x, y, width, height, stride, buf);
-}
-
-#[no_mangle]
-pub extern "C" fn wr_swgl_get_color_buffer(
-    ctx: *mut c_void,
-    fbo: u32,
-    flush: bool,
-    width_ptr: *mut i32,
-    height_ptr: *mut i32,
-    stride_ptr: *mut i32,
-) -> *mut c_void {
-    let (buf, width, height, stride) = swgl::Context::from(ctx).get_color_buffer(fbo, flush);
-    unsafe {
-        if width_ptr != ptr::null_mut() {
-            *width_ptr = width;
-        }
-        if height_ptr != ptr::null_mut() {
-            *height_ptr = height;
-        }
-        if stride_ptr != ptr::null_mut() {
-            *stride_ptr = stride;
-        }
-    }
-    buf
 }
 
 #[no_mangle]
