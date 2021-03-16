@@ -269,6 +269,7 @@ class SmokeTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
+            expandMenu()
         }.addToFirefoxHome {
             verifySnackBarText("Added to top sites!")
         }.openTabDrawer {
@@ -287,12 +288,14 @@ class SmokeTest {
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(website.url) {
         }.openThreeDotMenu {
+            expandMenu()
         }.openAddToHomeScreen {
             clickCancelShortcutButton()
         }
 
         browserScreen {
         }.openThreeDotMenu {
+            expandMenu()
         }.openAddToHomeScreen {
             verifyShortcutNameField("Test_Page_1")
             addShortcutName("Test Page")
@@ -310,6 +313,7 @@ class SmokeTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
+            expandMenu()
         }.openSaveToCollection {
             verifyCollectionNameTextField()
         }

@@ -69,6 +69,10 @@ class ThreeDotMenuMainRobot {
     fun verifyShareButton() = assertShareButton()
     fun verifyReaderViewAppearance(visible: Boolean) = assertReaderViewAppearanceButton(visible)
 
+    fun expandMenu() {
+        onView(withId(R.id.mozac_browser_menu_menuView)).perform(swipeUp())
+    }
+
     fun clickShareButton() {
         shareButton().click()
         mDevice.waitNotNull(Until.findObject(By.text("ALL ACTIONS")), waitingTime)

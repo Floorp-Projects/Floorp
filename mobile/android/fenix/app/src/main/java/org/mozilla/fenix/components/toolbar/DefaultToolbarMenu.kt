@@ -456,7 +456,8 @@ open class DefaultToolbarMenu(
     val addToHomeScreenItem = BrowserMenuImageText(
         label = context.getString(R.string.browser_menu_add_to_homescreen),
         imageResource = R.drawable.ic_add_to_homescreen,
-        iconTintColorResource = primaryTextColor()
+        iconTintColorResource = primaryTextColor(),
+        isCollapsingMenuLimit = true
     ) {
         onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen)
     }

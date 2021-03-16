@@ -319,6 +319,7 @@ class SettingsPrivacyTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.openThreeDotMenu {
+            expandMenu()
         }.openAddToHomeScreen {
             addShortcutName(pageShortcutName)
             clickAddShortcutButton()
