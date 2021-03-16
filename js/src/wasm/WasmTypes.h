@@ -2160,7 +2160,7 @@ class ArrayType {
   ArrayType(ArrayType&&) = default;
   ArrayType& operator=(ArrayType&&) = default;
 
-  MOZ_MUST_USE bool clone(const ArrayType& src) {
+  [[nodiscard]] bool clone(const ArrayType& src) {
     elementType_ = src.elementType_;
     isMutable_ = src.isMutable_;
     return true;
