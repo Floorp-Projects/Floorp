@@ -49,6 +49,7 @@ class RecordedTextureData final : public TextureData {
   gfx::SurfaceFormat mFormat;
   RefPtr<gfx::DrawTarget> mDT;
   RefPtr<gfx::SourceSurface> mSnapshot;
+  OpenMode mLockedMode;
 };
 
 }  // namespace layers

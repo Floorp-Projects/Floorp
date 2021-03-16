@@ -51,6 +51,7 @@ bool RecordedTextureData::Lock(OpenMode aMode) {
 
     // We lock the TextureData when we create it to get the remote DrawTarget.
     mCanvasChild->OnTextureWriteLock();
+    mLockedMode = aMode;
     return true;
   }
 
@@ -59,11 +60,19 @@ bool RecordedTextureData::Lock(OpenMode aMode) {
     mCanvasChild->OnTextureWriteLock();
     mSnapshot = nullptr;
   }
+  mLockedMode = aMode;
   return true;
 }
 
 void RecordedTextureData::Unlock() {
+  if ((mLockedMode & OpenMode::OPEN_WRITE) &&
+      mCanvasChild->ShouldCacheDataSurface()) {
+    mSnapshot = mDT->Snapshot();
+    mDT->DetachAllSnapshots();
+  }
+
   mCanvasChild->RecordEvent(RecordedTextureUnlock(mTextureId));
+  mLockedMode = OpenMode::OPEN_NONE;
 }
 
 already_AddRefed<gfx::DrawTarget> RecordedTextureData::BorrowDrawTarget() {
@@ -73,8 +82,11 @@ already_AddRefed<gfx::DrawTarget> RecordedTextureData::BorrowDrawTarget() {
 already_AddRefed<gfx::SourceSurface> RecordedTextureData::BorrowSnapshot() {
   MOZ_ASSERT(mDT);
 
-  mSnapshot = mDT->Snapshot();
-  return mCanvasChild->WrapSurface(mSnapshot);
+  if (mSnapshot) {
+    return mCanvasChild->WrapSurface(mSnapshot);
+  }
+
+  return mCanvasChild->WrapSurface(mDT->Snapshot());
 }
 
 void RecordedTextureData::Deallocate(LayersIPCChannel* aAllocator) {}
