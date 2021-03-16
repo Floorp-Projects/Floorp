@@ -9,6 +9,7 @@
 
 #include <stdint.h>
 #include "mozilla/widget/nsWaylandDisplay.h"
+#include "mozilla/StaticMutex.h"
 #include "mozilla/widget/va_drmcommon.h"
 #include "GLTypes.h"
 
