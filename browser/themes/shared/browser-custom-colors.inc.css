@@ -6,6 +6,9 @@
   @supports -moz-bool-pref("browser.proton.enabled") {
   :root:not(:-moz-lwtheme) {
     --buttons-primary-button-bgcolor: rgb(0,97,224);
+    --buttons-primary-button-hover-bgcolor: rgb(2,80,187);
+    --buttons-primary-button-active-bgcolor: rgb(5,62,148);
+    --buttons-primary-color: rgb(251,251,254);
     --buttons-secondary-bgcolor: rgb(240,240,244);
     --buttons-secondary-hover-bgcolor: rgb(224,224,230);
     --buttons-secondary-active-bgcolor: rgb(207,207,216);
