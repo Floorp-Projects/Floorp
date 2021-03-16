@@ -1450,7 +1450,8 @@ Document::Document(const char* aContentType)
       mNextFormNumber(0),
       mNextControlNumber(0),
       mPreloadService(this),
-      mShouldNotifyFetchSuccess(false) {
+      mShouldNotifyFetchSuccess(false),
+      mShouldNotifyFormOrPasswordRemoved(false) {
   MOZ_LOG(gDocumentLeakPRLog, LogLevel::Debug, ("DOCUMENT %p created", this));
 
   SetIsInDocument();
@@ -5517,6 +5518,10 @@ void Document::NotifyFetchOrXHRSuccess() {
 
 void Document::SetNotifyFetchSuccess(bool aShouldNotify) {
   mShouldNotifyFetchSuccess = aShouldNotify;
+}
+
+void Document::SetNotifyFormOrPasswordRemoved(bool aShouldNotify) {
+  mShouldNotifyFormOrPasswordRemoved = aShouldNotify;
 }
 
 void Document::TearingDownEditor() {

@@ -636,6 +636,13 @@ class HTMLFormElement final : public nsGenericHTMLElement,
   bool IsSubmitting() const;
 
   NotNull<const Encoding*> GetSubmitEncoding();
+
+  /**
+   * Fire an event when the form is removed from the DOM tree. This is now only
+   * used by the password manager.
+   */
+  void MaybeFireFormRemoved();
+
   ~HTMLFormElement();
 };
 

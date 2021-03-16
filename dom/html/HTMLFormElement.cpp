@@ -438,6 +438,8 @@ static void CollectOrphans(nsINode* aRemovalRoot,
 }
 
 void HTMLFormElement::UnbindFromTree(bool aNullParent) {
+  MaybeFireFormRemoved();
+
   // Note, this is explicitly using uncomposed doc, since we count
   // only forms in document.
   RefPtr<Document> oldDocument = GetUncomposedDoc();
@@ -2414,6 +2416,28 @@ bool HTMLFormElement::IsSubmitting() const {
                  mCurrentLoadId &&
                  mTargetContext->IsLoadingIdentifier(*mCurrentLoadId);
   return loading;
+}
+
+void HTMLFormElement::MaybeFireFormRemoved() {
+  // We want this event to be fired only when the form is removed from the DOM
+  // tree, not when it is released (ex, tab is closed). So don't fire an event
+  // when the form doesn't have a docshell.
+  Document* doc = GetComposedDoc();
+  nsIDocShell* container = doc ? doc->GetDocShell() : nullptr;
+  if (!container) {
+    return;
+  }
+
+  // Right now, only the password manager listens to the event and only listen
+  // to it under certain circumstances. So don't fire this event unless
+  // necessary.
+  if (!doc->ShouldNotifyFormOrPasswordRemoved()) {
+    return;
+  }
+
+  RefPtr<AsyncEventDispatcher> asyncDispatcher = new AsyncEventDispatcher(
+      this, u"DOMFormRemoved"_ns, CanBubble::eNo, ChromeOnlyDispatch::eYes);
+  asyncDispatcher->RunDOMEventWhenSafe();
 }
 
 }  // namespace mozilla::dom
