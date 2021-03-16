@@ -333,18 +333,9 @@ class KeywordTree {
         let resultID = child.get(RESULT_KEY);
         if (resultID !== undefined) {
           // This child has a result.  Look it up to see if its keyword phrases
-          // match the query.  If it has a phrase that starts with the query,
-          // then it potentially matches, but we don't want to match when the
-          // query is shorter than every phrase, so also check that the query
-          // starts with some phrase.  For example, if the query is "m" and the
-          // phrases are ["moz", "mozilla"], we don't want to match until the
-          // query is at least "moz".
+          // match the query.
           let result = UrlbarQuickSuggest._results.get(resultID);
-          if (
-            result &&
-            result.keywords.some(p => p.startsWith(query)) &&
-            result.keywords.some(p => query.startsWith(p))
-          ) {
+          if (result?.keywords.includes(query)) {
             return { resultID };
           }
         }
