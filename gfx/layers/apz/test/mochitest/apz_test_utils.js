@@ -266,13 +266,6 @@ function promiseApzRepaintsFlushed(aWindow = window) {
   });
 }
 
-function flushApzRepaints(aCallback, aWindow = window) {
-  if (!aCallback) {
-    throw new Error("A callback must be provided!");
-  }
-  promiseApzRepaintsFlushed(aWindow).then(aCallback);
-}
-
 // Flush repaints, APZ pending repaints, and any repaints resulting from that
 // flush. This is particularly useful if the test needs to reach some sort of
 // "idle" state in terms of repaints. Usually just waiting for all paints

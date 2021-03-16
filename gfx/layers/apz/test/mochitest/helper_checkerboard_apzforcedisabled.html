@@ -58,7 +58,7 @@ async function test() {
   window.scrollBy({top: 500, left: 0, behavior: 'auto'});
   is(window.scrollY, 500, "document got scrolled instantly");
 
-  // Note that at this point we must NOT call flushApzRepaints, because
+  // Note that at this point we must NOT call promiseApzRepaintsFlushed, because
   // otherwise APZCCallbackHelper::NotifyFlushComplete will trigger a repaint
   // (for unrelated reasons), and the repaint will clear the checkerboard
   // state. We do, however, want to wait for a "steady state" here that
