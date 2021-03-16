@@ -4788,7 +4788,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 #endif
   }
 
-  MOZ_MUST_USE RegPtr popPtr() {
+  [[nodiscard]] RegPtr popPtr() {
 #ifdef JS_64BIT
     return RegPtr(popI64().reg);
 #else
