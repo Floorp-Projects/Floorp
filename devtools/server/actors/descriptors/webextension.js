@@ -122,6 +122,14 @@ const WebExtensionDescriptorActor = protocol.ActorClassWithSpec(
         { addonId: this.addonId }
       );
 
+      // connectToFrame may resolve to a null form,
+      // in case the browser element is destroyed before it is fully connected to it.
+      if (!this._form) {
+        throw new Error(
+          "browser element destroyed while connecting to it: " + this.addon.name
+        );
+      }
+
       this._childActorID = this._form.actor;
 
       // Exit the proxy child actor if the child actor has been destroyed.
