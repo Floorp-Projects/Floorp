@@ -229,9 +229,9 @@ function getLastContentDisplayportFor(elementId) {
 }
 
 // Return a promise that is resolved on the next rAF callback
-function promiseFrame() {
+function promiseFrame(aWindow = window) {
   return new Promise(resolve => {
-    window.requestAnimationFrame(resolve);
+    aWindow.requestAnimationFrame(resolve);
   });
 }
 
@@ -1145,18 +1145,12 @@ function assertNotCheckerboarded(utils, scrollerId, msgPrefix) {
   utils.restoreNormalRefresh();
 }
 
-function waitToClearOutAnyPotentialScrolls(aWindow) {
-  return new Promise(resolve => {
-    aWindow.requestAnimationFrame(() => {
-      aWindow.requestAnimationFrame(() => {
-        flushApzRepaints(() => {
-          aWindow.requestAnimationFrame(() => {
-            aWindow.requestAnimationFrame(resolve);
-          });
-        }, aWindow);
-      });
-    });
-  });
+async function waitToClearOutAnyPotentialScrolls(aWindow) {
+  await promiseFrame(aWindow);
+  await promiseFrame(aWindow);
+  await promiseApzRepaintsFlushed(aWindow);
+  await promiseFrame(aWindow);
+  await promiseFrame(aWindow);
 }
 
 function waitForScrollEvent(target) {
