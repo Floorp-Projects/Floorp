@@ -15,10 +15,6 @@ job-defaults:
             linux.*64/debug: ['fission']
             linux.*64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
-    run-on-projects:
-        by-test-platform:
-            .*-tsan/opt: ['trunk']
-            default: built-projects
     fission-tier:
         by-test-platform:
             linux.*64.*-qr/debug: 1
@@ -61,6 +57,10 @@ mochitest-plain:
             linux1804-64/debug: ['fission-xorigin']
             linux1804-64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
+    run-on-projects:
+        by-test-platform:
+            .*-tsan/opt: ['trunk']
+            default: built-projects
     fission-run-on-projects:
         by-test-platform:
             (linux.*64|macosx.*64|windows10-64)-qr/debug: ['autoland', 'mozilla-central']
@@ -123,6 +123,10 @@ mochitest-browser-chrome:
             linux.*64-qr/debug: ['webrender-sw', 'fission']
             windows10-64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
+    run-on-projects:
+        by-test-platform:
+            .*-tsan/opt: ['trunk']
+            default: built-projects
     fission-run-on-projects:
         by-test-platform:
             linux.*64(-qr)?/debug: ['trunk']
@@ -214,6 +218,10 @@ mochitest-chrome:
     schedules-component: mochitest-chrome
     loopback-video: true
     tier: default
+    run-on-projects:
+        by-test-platform:
+            .*-tsan/opt: ['trunk']
+            default: built-projects
     chunks:
         by-test-platform:
             .*(-ccov|-qr).*/.*: 3
@@ -244,6 +252,10 @@ mochitest-devtools-chrome:
             linux.*64(-shippable)?/opt: ['fission', 'a11y-checks']
             linux.*64-qr/debug: ['webrender-sw', 'fission']
             default: ['fission']
+    run-on-projects:
+        by-test-platform:
+            .*-tsan/opt: ['trunk']
+            default: built-projects
     fission-run-on-projects:
         by-test-platform:
             linux.*64(-qr)?/debug: ['trunk']
@@ -289,6 +301,10 @@ mochitest-plain-gpu:
     treeherder-symbol: M(gpu)
     schedules-component: mochitest-plain
     loopback-video: true
+    run-on-projects:
+        by-test-platform:
+            .*-tsan/opt: ['trunk']
+            default: built-projects
     fission-run-on-projects: []
     fission-tier: 2
     tier: default
@@ -667,6 +683,10 @@ mochitest-remote:
         name: mochitest-remote
     treeherder-symbol: M(remote)
     loopback-video: true
+    run-on-projects:
+        by-test-platform:
+            .*-tsan/opt: ['trunk']
+            default: built-projects
     # Bug 1600054: Remote Agent not Fission compatible
     fission-run-on-projects: []
     fission-tier: 2
