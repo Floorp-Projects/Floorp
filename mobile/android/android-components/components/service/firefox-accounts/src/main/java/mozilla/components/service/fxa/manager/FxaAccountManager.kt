@@ -298,7 +298,7 @@ open class FxaAccountManager(
                     maybeUpdateSyncAuthInfoCache()
 
                     // Access to syncManager is guarded by `this`.
-                    synchronized(this) {
+                    synchronized(this@FxaAccountManager) {
                         checkNotNull(syncManager == null) {
                             "Sync is not configured. Construct this class with a 'syncConfig' or use 'setSyncConfig'"
                         }
