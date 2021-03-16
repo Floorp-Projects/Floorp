@@ -520,6 +520,10 @@ var gSync = {
   },
 
   onFxAPanelViewShowing(panelview) {
+    let syncNowBtn = panelview.querySelector(".syncnow-label");
+    let l10nId = syncNowBtn.getAttribute("sync-now-data-l10n-id");
+    syncNowBtn.setAttribute("data-l10n-id", l10nId);
+
     panelview.syncedTabsPanelList = new SyncedTabsPanelList(
       panelview,
       PanelMultiView.getViewNode(document, "PanelUI-fxa-remotetabs-deck"),
@@ -1624,12 +1628,9 @@ var gSync = {
     clearTimeout(this._syncAnimationTimer);
     this._syncStartTime = Date.now();
 
-    let syncingLabel = this.fluentStrings.formatValueSync(
-      "fxa-toolbar-sync-syncing2"
-    );
-
     document.querySelectorAll(".syncnow-label").forEach(el => {
-      el.value = syncingLabel;
+      let l10nId = el.getAttribute("syncing-data-l10n-id");
+      el.setAttribute("data-l10n-id", l10nId);
     });
 
     document.querySelectorAll(".syncNowBtn").forEach(el => {
@@ -1649,12 +1650,9 @@ var gSync = {
       return;
     }
 
-    let syncingLabel = this.fluentStrings.formatValueSync(
-      "appmenuitem-fxa-toolbar-sync-now2"
-    );
-
     document.querySelectorAll(".syncnow-label").forEach(el => {
-      el.value = syncingLabel;
+      let l10nId = el.getAttribute("sync-now-data-l10n-id");
+      el.setAttribute("data-l10n-id", l10nId);
     });
 
     document.querySelectorAll(".syncNowBtn").forEach(el => {
