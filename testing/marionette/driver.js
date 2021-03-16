@@ -15,18 +15,13 @@ const { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
 
-  accessibility: "chrome://marionette/content/accessibility.js",
   Addon: "chrome://marionette/content/addon.js",
-  allowAllCerts: "chrome://marionette/content/cert.js",
   assert: "chrome://marionette/content/assert.js",
   atom: "chrome://marionette/content/atom.js",
   browser: "chrome://marionette/content/browser.js",
-  Capabilities: "chrome://marionette/content/capabilities.js",
   capture: "chrome://marionette/content/capture.js",
   clearElementIdCache:
     "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
-  clearActionInputState:
-    "chrome://marionette/content/actors/MarionetteCommandsChild.jsm",
   Context: "chrome://marionette/content/browser.js",
   cookie: "chrome://marionette/content/cookie.js",
   DebounceCallback: "chrome://marionette/content/sync.js",
@@ -50,8 +45,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   registerEventsActor:
     "chrome://marionette/content/actors/MarionetteEventsParent.jsm",
   TimedPromise: "chrome://marionette/content/sync.js",
-  Timeouts: "chrome://marionette/content/capabilities.js",
-  UnhandledPromptBehavior: "chrome://marionette/content/capabilities.js",
+  Timeouts: "chrome://marionette/content/session.js",
+  UnhandledPromptBehavior: "chrome://marionette/content/session.js",
   unregisterCommandsActor:
     "chrome://marionette/content/actors/MarionetteCommandsParent.jsm",
   unregisterEventsActor:
@@ -59,6 +54,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   waitForEvent: "chrome://marionette/content/sync.js",
   waitForLoadEvent: "chrome://marionette/content/sync.js",
   waitForObserverTopic: "chrome://marionette/content/sync.js",
+  WebDriverSession: "chrome://marionette/content/session.js",
   WebElement: "chrome://marionette/content/element.js",
   WebElementEventTarget: "chrome://marionette/content/dom.js",
   WindowState: "chrome://marionette/content/browser.js",
@@ -113,9 +109,12 @@ const globalMessageManager = Services.mm;
 this.GeckoDriver = function(server) {
   this.appId = Services.appinfo.ID;
   this.appName = Services.appinfo.name.toLowerCase();
+
   this._server = server;
 
-  this.sessionID = null;
+  // WebDriver Session
+  this.currentSession = null;
+
   this.browsers = {};
 
   // Maps permanentKey to browsing context id: WeakMap.<Object, number>
@@ -133,18 +132,10 @@ this.GeckoDriver = function(server) {
   // Use content context by default
   this.context = Context.Content;
 
-  this.capabilities = new Capabilities();
-
   // used for modal dialogs or tab modal alerts
   this.dialog = null;
   this.dialogObserver = null;
 };
-
-Object.defineProperty(GeckoDriver.prototype, "a11yChecks", {
-  get() {
-    return this.capabilities.get("moz:accessibilityChecks");
-  },
-});
 
 /**
  * The current context decides if commands are executed in chrome- or
@@ -185,28 +176,6 @@ Object.defineProperty(GeckoDriver.prototype, "title", {
   get() {
     const browsingContext = this.getBrowsingContext({ top: true });
     return browsingContext.currentWindowGlobal.documentTitle;
-  },
-});
-
-Object.defineProperty(GeckoDriver.prototype, "proxy", {
-  get() {
-    return this.capabilities.get("proxy");
-  },
-});
-
-Object.defineProperty(GeckoDriver.prototype, "secureTLS", {
-  get() {
-    return !this.capabilities.get("acceptInsecureCerts");
-  },
-});
-
-Object.defineProperty(GeckoDriver.prototype, "timeouts", {
-  get() {
-    return this.capabilities.get("timeouts");
-  },
-
-  set(newTimeouts) {
-    this.capabilities.set("timeouts", newTimeouts);
   },
 });
 
@@ -553,9 +522,6 @@ GeckoDriver.prototype.registerBrowser = function(browserElement) {
  *     {"capabilities": {"acceptInsecureCerts": true}}
  * </code></pre>
  *
- * @param {string=} sessionId
- *     Normally a unique ID is given to a new session, however this can
- *     be overriden by providing this field.
  * @param {Object.<string, *>=} capabilities
  *     JSON Object containing any of the recognised capabilities listed
  *     above.
@@ -567,32 +533,11 @@ GeckoDriver.prototype.registerBrowser = function(browserElement) {
  *     If, for whatever reason, a session could not be created.
  */
 GeckoDriver.prototype.newSession = async function(cmd) {
-  if (this.sessionID) {
+  if (this.currentSession) {
     throw new error.SessionNotCreatedError("Maximum number of active sessions");
   }
-  this.sessionID = WebElement.generateUUID();
 
-  try {
-    this.capabilities = Capabilities.fromJSON(cmd.parameters);
-
-    if (!this.secureTLS) {
-      logger.warn("TLS certificate errors will be ignored for this session");
-      allowAllCerts.enable();
-    }
-
-    if (this.proxy.init()) {
-      logger.info("Proxy settings initialised: " + JSON.stringify(this.proxy));
-    }
-  } catch (e) {
-    throw new error.SessionNotCreatedError(e);
-  }
-
-  // If we are testing accessibility with marionette, start a11y service in
-  // chrome first. This will ensure that we do not have any content-only
-  // services hanging around.
-  if (this.a11yChecks && accessibility.service) {
-    logger.info("Preemptively starting accessibility service in Chrome");
-  }
+  this.currentSession = new WebDriverSession(cmd.parameters);
 
   registerCommandsActor();
   registerEventsActor();
@@ -688,8 +633,8 @@ GeckoDriver.prototype.newSession = async function(cmd) {
   this.dialog = modal.findModalDialogs(this.curBrowser);
 
   return {
-    sessionId: this.sessionID,
-    capabilities: this.capabilities,
+    sessionId: this.currentSession.id,
+    capabilities: this.currentSession.capabilities,
   };
 };
 
@@ -736,7 +681,7 @@ GeckoDriver.prototype.observe = function(subject, topic, data) {
  * numerical or string.
  */
 GeckoDriver.prototype.getSessionCapabilities = function() {
-  return { capabilities: this.capabilities };
+  return { capabilities: this.currentSession.capabilities };
 };
 
 /**
@@ -931,7 +876,7 @@ GeckoDriver.prototype.execute_ = async function(
   assert.number(line, pprint`Expected line to be a number: ${line}`);
 
   let opts = {
-    timeout: this.timeouts.script,
+    timeout: this.currentSession.timeouts.script,
     sandboxName,
     newSandbox,
     file,
@@ -1568,7 +1513,7 @@ GeckoDriver.prototype.switchToFrame = async function(cmd) {
 };
 
 GeckoDriver.prototype.getTimeouts = function() {
-  return this.timeouts;
+  return this.currentSession.timeouts;
 };
 
 /**
@@ -1584,8 +1529,11 @@ GeckoDriver.prototype.getTimeouts = function() {
  */
 GeckoDriver.prototype.setTimeouts = function(cmd) {
   // merge with existing timeouts
-  let merged = Object.assign(this.timeouts.toJSON(), cmd.parameters);
-  this.timeouts = Timeouts.fromJSON(merged);
+  let merged = Object.assign(
+    this.currentSession.timeouts.toJSON(),
+    cmd.parameters
+  );
+  this.currentSession.timeouts = Timeouts.fromJSON(merged);
 };
 
 /** Single tap. */
@@ -1595,7 +1543,12 @@ GeckoDriver.prototype.singleTap = async function(cmd) {
   let { id, x, y } = cmd.parameters;
   let webEl = WebElement.fromUUID(id, this.context);
 
-  await this.getActor().singleTap(webEl, x, y, this.capabilities);
+  await this.getActor().singleTap(
+    webEl,
+    x,
+    y,
+    this.currentSession.capabilities
+  );
 };
 
 /**
@@ -1617,7 +1570,10 @@ GeckoDriver.prototype.performActions = async function(cmd) {
 
   const actions = cmd.parameters.actions;
 
-  await this.getActor().performActions(actions, this.capabilities);
+  await this.getActor().performActions(
+    actions,
+    this.currentSession.capabilities
+  );
 };
 
 /**
@@ -1667,7 +1623,7 @@ GeckoDriver.prototype.findElement = async function(cmd) {
 
   let opts = {
     startNode,
-    timeout: this.timeouts.implicit,
+    timeout: this.currentSession.timeouts.implicit,
     all: false,
   };
 
@@ -1702,7 +1658,7 @@ GeckoDriver.prototype.findElements = async function(cmd) {
 
   let opts = {
     startNode,
-    timeout: this.timeouts.implicit,
+    timeout: this.currentSession.timeouts.implicit,
     all: true,
   };
 
@@ -1768,7 +1724,7 @@ GeckoDriver.prototype.clickElement = async function(cmd) {
 
   await navigate.waitForNavigationCompleted(
     this,
-    () => actor.clickElement(webEl, this.capabilities),
+    () => actor.clickElement(webEl, this.currentSession.capabilities),
     {
       loadEventExpected,
       // The click might trigger a navigation, so don't count on it.
@@ -1921,7 +1877,10 @@ GeckoDriver.prototype.isElementDisplayed = async function(cmd) {
   let id = assert.string(cmd.parameters.id);
   let webEl = WebElement.fromUUID(id, this.context);
 
-  return this.getActor().isElementDisplayed(webEl, this.capabilities);
+  return this.getActor().isElementDisplayed(
+    webEl,
+    this.currentSession.capabilities
+  );
 };
 
 /**
@@ -1980,7 +1939,10 @@ GeckoDriver.prototype.isElementEnabled = async function(cmd) {
   let id = assert.string(cmd.parameters.id);
   let webEl = WebElement.fromUUID(id, this.context);
 
-  return this.getActor().isElementEnabled(webEl, this.capabilities);
+  return this.getActor().isElementEnabled(
+    webEl,
+    this.currentSession.capabilities
+  );
 };
 
 /**
@@ -2008,7 +1970,10 @@ GeckoDriver.prototype.isElementSelected = async function(cmd) {
   let id = assert.string(cmd.parameters.id);
   let webEl = WebElement.fromUUID(id, this.context);
 
-  return this.getActor().isElementSelected(webEl, this.capabilities);
+  return this.getActor().isElementSelected(
+    webEl,
+    this.currentSession.capabilities
+  );
 };
 
 /**
@@ -2056,7 +2021,11 @@ GeckoDriver.prototype.sendKeysToElement = async function(cmd) {
   let text = assert.string(cmd.parameters.text);
   let webEl = WebElement.fromUUID(id, this.context);
 
-  return this.getActor().sendKeysToElement(webEl, text, this.capabilities);
+  return this.getActor().sendKeysToElement(
+    webEl,
+    text,
+    this.currentSession.capabilities
+  );
 };
 
 /**
@@ -2358,7 +2327,6 @@ GeckoDriver.prototype.closeChromeWindow = async function() {
 
 /** Delete Marionette session. */
 GeckoDriver.prototype.deleteSession = function() {
-  clearActionInputState();
   clearElementIdCache();
 
   unregisterCommandsActor();
@@ -2378,10 +2346,8 @@ GeckoDriver.prototype.deleteSession = function() {
     Services.obs.removeObserver(this, "browsing-context-attached");
   } catch (e) {}
 
-  allowAllCerts.disable();
-
-  this.sessionID = null;
-  this.capabilities = new Capabilities();
+  this.currentSession.destroy();
+  this.currentSession = null;
 };
 
 /**
@@ -2765,7 +2731,7 @@ GeckoDriver.prototype._handleUserPrompts = async function() {
 
   let { textContent } = this.dialog.ui.infoBody;
 
-  let behavior = this.capabilities.get("unhandledPromptBehavior");
+  const behavior = this.currentSession.unhandledPromptBehavior;
   switch (behavior) {
     case UnhandledPromptBehavior.Accept:
       await this.acceptDialog();
