@@ -4,14 +4,14 @@
 
 "use strict";
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
 const { Preferences } = ChromeUtils.import(
   "resource://gre/modules/Preferences.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-const { AppInfo } = ChromeUtils.import(
-  "chrome://marionette/content/appinfo.js"
-);
 const { error } = ChromeUtils.import("chrome://marionette/content/error.js");
 const {
   Capabilities,
@@ -457,7 +457,7 @@ add_test(function test_Capabilities_ctor() {
   equal(false, caps.get("acceptInsecureCerts"));
   ok(caps.get("timeouts") instanceof Timeouts);
   ok(caps.get("proxy") instanceof Proxy);
-  equal(caps.get("setWindowRect"), !AppInfo.isAndroid);
+  equal(caps.get("setWindowRect"), AppConstants.platform !== "android");
   equal(caps.get("strictFileInteractability"), false);
 
   ok(caps.has("rotatable"));
@@ -554,7 +554,7 @@ add_test(function test_Capabilities_fromJSON() {
   caps = fromJSON({ timeouts: timeoutsConfig });
   equal(123, caps.get("timeouts").implicit);
 
-  if (AppInfo.isAndroid) {
+  if (AppConstants.platform !== "android") {
     caps = fromJSON({ setWindowRect: true });
     equal(true, caps.get("setWindowRect"));
     Assert.throws(

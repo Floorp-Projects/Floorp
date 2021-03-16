@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
 
-  AppInfo: "chrome://marionette/content/appinfo.js",
   assert: "chrome://marionette/content/assert.js",
   capture: "chrome://marionette/content/capture.js",
   error: "chrome://marionette/content/error.js",
@@ -74,8 +73,8 @@ reftest.Runner = class {
     this.isPrint = null;
     this.windowUtils = null;
     this.lastURL = null;
-    this.useRemoteTabs = AppInfo.browserTabsRemoteAutostart;
-    this.useRemoteSubframes = AppInfo.fissionAutostart;
+    this.useRemoteTabs = Services.appinfo.browserTabsRemoteAutostart;
+    this.useRemoteSubframes = Services.appinfo.fissionAutostart;
   }
 
   /**
@@ -149,7 +148,7 @@ reftest.Runner = class {
     }
 
     let reftestWin;
-    if (AppInfo.isAndroid) {
+    if (Services.appinfo.OS == "Android") {
       logger.debug("Using current window");
       reftestWin = this.parentWindow;
       await navigate.waitForNavigationCompleted(this.driver, () => {
@@ -199,7 +198,7 @@ reftest.Runner = class {
 
   setupWindow(reftestWin, width, height) {
     let browser;
-    if (AppInfo.isAndroid) {
+    if (Services.appinfo.OS === "Android") {
       browser = reftestWin.document.getElementsByTagName("browser")[0];
       browser.setAttribute("remote", "false");
     } else {
@@ -217,7 +216,7 @@ min-width: ${width}px; min-height: ${height}px;
 max-width: ${width}px; max-height: ${height}px`;
     browser.setAttribute("style", windowStyle);
 
-    if (!AppInfo.isAndroid) {
+    if (Services.appinfo.OS !== "Android") {
       let doc = reftestWin.document.documentElement;
       while (doc.firstChild) {
         doc.firstChild.remove();
@@ -613,7 +612,7 @@ max-width: ${width}px; max-height: ${height}px`;
 
   updateBrowserRemotenessByURL(browser, url) {
     // We don't use remote tabs on Android.
-    if (AppInfo.isAndroid) {
+    if (Services.appinfo.OS === "Android") {
       return;
     }
     let oa = E10SUtils.predictOriginAttributes({ browser });
