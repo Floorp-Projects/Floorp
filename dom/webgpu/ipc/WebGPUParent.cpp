@@ -224,11 +224,15 @@ ipc::IPCResult WebGPUParent::RecvInstanceRequestAdapter(
   int8_t index = ffi::wgpu_server_instance_request_adapter(
       mContext, &options, aTargetIds.Elements(), aTargetIds.Length(),
       error.ToFFI());
+
+  ByteBuf infoByteBuf;
+  // Rust side expects an `Option`, so 0 maps to `None`.
+  uint64_t adapterId = 0;
   if (index >= 0) {
-    resolver(aTargetIds[index]);
-  } else {
-    resolver(0);
+    adapterId = aTargetIds[index];
   }
+  ffi::wgpu_server_adapter_pack_info(mContext, adapterId, ToFFI(&infoByteBuf));
+  resolver(std::move(infoByteBuf));
   error.CheckAndForward(this, 0);
 
   // free the unused IDs

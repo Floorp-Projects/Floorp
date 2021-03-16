@@ -18,8 +18,9 @@ class AdapterFeatures final : public nsWrapperCache, public ChildOf<Adapter> {
   GPU_DECL_CYCLE_COLLECTION(AdapterFeatures)
   GPU_DECL_JS_WRAP(AdapterFeatures)
 
- private:
   explicit AdapterFeatures(Adapter* const aParent);
+
+ private:
   ~AdapterFeatures() = default;
   void Cleanup() {}
 };
