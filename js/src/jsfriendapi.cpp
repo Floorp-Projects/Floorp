@@ -612,8 +612,8 @@ extern JS_FRIEND_API bool JS::ForceLexicalInitialization(JSContext* cx,
 }
 
 extern JS_FRIEND_API int JS::IsGCPoisoning() {
-#ifdef JS_GC_POISONING
-  return !js::gDisablePoisoning;
+#ifdef JS_GC_ALLOW_EXTRA_POISONING
+  return js::gExtraPoisoningEnabled;
 #else
   return false;
 #endif
