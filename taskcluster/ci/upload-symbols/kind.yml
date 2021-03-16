@@ -24,6 +24,7 @@ not-for-build-platforms:
     - linux-geckodriver/opt
     - linux64-geckodriver/opt
     - macosx64-geckodriver/opt
+    - macosx64-aarch64-geckodriver/opt
     - win32-geckodriver/opt
     - win64-geckodriver/opt
 

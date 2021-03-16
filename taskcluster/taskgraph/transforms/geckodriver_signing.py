@@ -68,7 +68,7 @@ def make_signing_description(config, jobs):
 
         scopes = [signing_cert_scope]
 
-        platform = build_platform.split("-")[0]
+        platform = build_platform.rsplit("-", 1)[0]
 
         task = {
             "label": job["label"],

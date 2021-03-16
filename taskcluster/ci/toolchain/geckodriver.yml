@@ -66,6 +66,22 @@ macosx64-geckodriver:
             - linux64-rust-macos
             - macosx64-sdk-10.12
 
+macosx64-aarch64-geckodriver:
+    treeherder:
+        symbol: TM(gd)
+        platform: macosx64-aarch64/opt
+    run:
+        arguments: ['aarch64-apple-darwin']
+    attributes:
+        build_platform: macosx64-aarch64-geckodriver
+    fetches:
+        toolchain:
+            - linux64-cctools-port
+            - linux64-clang
+            - linux64-llvm-dsymutil
+            - linux64-rust-macos
+            - macosx64-sdk-11.0
+
 win32-geckodriver:
     treeherder:
         symbol: TW32(gd)
