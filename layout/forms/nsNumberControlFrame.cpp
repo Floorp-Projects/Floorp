@@ -86,28 +86,6 @@ nsresult nsNumberControlFrame::CreateAnonymousContent(
 }
 
 /* static */
-nsNumberControlFrame* nsNumberControlFrame::GetNumberControlFrameForTextField(
-    nsIFrame* aFrame) {
-  // If aFrame is the anon text field for an <input type=number> then we expect
-  // the frame of its mContent's grandparent to be that input's frame. We
-  // have to check for this via the content tree because we don't know whether
-  // extra frames will be wrapped around any of the elements between aFrame and
-  // the nsNumberControlFrame that we're looking for (e.g. flex wrappers).
-  nsIContent* content = aFrame->GetContent();
-  if (content->IsInNativeAnonymousSubtree() && content->GetParent() &&
-      content->GetParent()->GetParent()) {
-    nsIContent* grandparent = content->GetParent()->GetParent();
-    if (grandparent->IsHTMLElement(nsGkAtoms::input) &&
-        grandparent->AsElement()->AttrValueIs(
-            kNameSpaceID_None, nsGkAtoms::type, nsGkAtoms::number,
-            eCaseMatters)) {
-      return do_QueryFrame(grandparent->GetPrimaryFrame());
-    }
-  }
-  return nullptr;
-}
-
-/* static */
 nsNumberControlFrame* nsNumberControlFrame::GetNumberControlFrameForSpinButton(
     nsIFrame* aFrame) {
   // If aFrame is a spin button for an <input type=number> then we expect the
