@@ -18,6 +18,8 @@ DMABUFTextureHostOGL::DMABUFTextureHostOGL(TextureFlags aFlags,
     : TextureHost(aFlags) {
   MOZ_COUNT_CTOR(DMABUFTextureHostOGL);
 
+  // DMABufSurface::CreateDMABufSurface() can fail, for instance when we're run
+  // out of file descriptors.
   mSurface =
       DMABufSurface::CreateDMABufSurface(aDesc.get_SurfaceDescriptorDMABuf());
 }
@@ -28,7 +30,9 @@ DMABUFTextureHostOGL::~DMABUFTextureHostOGL() {
 
 GLTextureSource* DMABUFTextureHostOGL::CreateTextureSourceForPlane(
     size_t aPlane) {
-  MOZ_ASSERT(mSurface);
+  if (!mSurface) {
+    return nullptr;
+  }
 
   if (!mSurface->GetTexture(aPlane)) {
     if (!mSurface->CreateTexture(gl(), aPlane)) {
@@ -104,7 +108,7 @@ gfx::ColorRange DMABUFTextureHostOGL::GetColorRange() const {
 }
 
 uint32_t DMABUFTextureHostOGL::NumSubTextures() {
-  return mSurface->GetTextureCount();
+  return mSurface ? mSurface->GetTextureCount() : 0;
 }
 
 gfx::IntSize DMABUFTextureHostOGL::GetSize() const {
@@ -120,6 +124,9 @@ gl::GLContext* DMABUFTextureHostOGL::gl() const {
 
 void DMABUFTextureHostOGL::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
+  if (!mSurface) {
+    return;
+  }
   RefPtr<wr::RenderTextureHost> texture =
       new wr::RenderDMABUFTextureHost(mSurface);
   wr::RenderThread::Get()->RegisterExternalImage(wr::AsUint64(aExternalImageId),
@@ -129,7 +136,9 @@ void DMABUFTextureHostOGL::CreateRenderTexture(
 void DMABUFTextureHostOGL::PushResourceUpdates(
     wr::TransactionBuilder& aResources, ResourceUpdateOp aOp,
     const Range<wr::ImageKey>& aImageKeys, const wr::ExternalImageId& aExtID) {
-  MOZ_ASSERT(mSurface);
+  if (!mSurface) {
+    return;
+  }
 
   auto method = aOp == TextureHost::ADD_IMAGE
                     ? &wr::TransactionBuilder::AddExternalImage
@@ -186,6 +195,9 @@ void DMABUFTextureHostOGL::PushDisplayItems(
     wr::DisplayListBuilder& aBuilder, const wr::LayoutRect& aBounds,
     const wr::LayoutRect& aClip, wr::ImageRendering aFilter,
     const Range<wr::ImageKey>& aImageKeys, PushDisplayItemFlagSet aFlags) {
+  if (!mSurface) {
+    return;
+  }
   bool preferCompositorSurface =
       aFlags.contains(PushDisplayItemFlag::PREFER_COMPOSITOR_SURFACE);
   switch (mSurface->GetFormat()) {
