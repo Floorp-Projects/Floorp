@@ -284,6 +284,7 @@ let JSWINDOWACTORS = {
     child: {
       moduleURI: "resource://gre/modules/LoginManagerChild.jsm",
       events: {
+        DOMDocFetchSuccess: {},
         DOMFormBeforeSubmit: {},
         DOMFormHasPassword: {},
         DOMInputPasswordAdded: {},

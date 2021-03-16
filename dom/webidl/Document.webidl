@@ -699,3 +699,10 @@ partial interface Document {
   [ChromeOnly, Pure]
   readonly attribute nsIPermissionDelegateHandler permDelegateHandler;
 };
+
+// Extension to set whether the document notifies an event when a fetch or
+// XHR completes successfully.
+partial interface Document {
+  [ChromeOnly]
+  void setNotifyFetchSuccess(boolean aShouldNotify);
+};
