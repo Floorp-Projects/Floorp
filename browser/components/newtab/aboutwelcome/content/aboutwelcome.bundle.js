@@ -102,13 +102,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var react_dom__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(react_dom__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var _components_MultiStageAboutWelcome__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(3);
 /* harmony import */ var _components_ReturnToAMO__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(9);
-/* harmony import */ var _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(7);
 function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
 
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 
 
 
@@ -189,9 +187,8 @@ class AboutWelcome extends react__WEBPACK_IMPORTED_MODULE_0___default.a.PureComp
     });
   }
 
-}
+} // Computes messageId and UTMTerm info used in telemetry
 
-AboutWelcome.defaultProps = _lib_aboutwelcome_utils__WEBPACK_IMPORTED_MODULE_4__["DEFAULT_WELCOME_CONTENT"]; // Computes messageId and UTMTerm info used in telemetry
 
 function ComputeTelemetryInfo(welcomeContent, experimentId, branchId) {
   let messageId = welcomeContent.template === "return_to_amo" ? "RTAMO_DEFAULT_WELCOME" : "DEFAULT_ABOUTWELCOME";
@@ -212,36 +209,18 @@ function ComputeTelemetryInfo(welcomeContent, experimentId, branchId) {
 }
 
 async function retrieveRenderContent() {
-  var _aboutWelcomeProps;
-
-  // Check for featureConfig and retrieve content
-  const featureConfig = await window.AWGetFeatureConfig();
-  let aboutWelcomeProps;
-
-  if (!featureConfig.screens) {
-    const attribution = await window.AWGetAttributionData();
-    aboutWelcomeProps = {
-      template: attribution.template,
-      ...attribution.extraProps
-    };
-  } else {
-    // If screens is defined then we have multi stage AW content to show
-    aboutWelcomeProps = featureConfig.screens ? featureConfig : {};
-  } // Set design if exists in featureConfig
-
-
-  if (featureConfig.design && !((_aboutWelcomeProps = aboutWelcomeProps) !== null && _aboutWelcomeProps !== void 0 && _aboutWelcomeProps.design)) {
-    aboutWelcomeProps = { ...aboutWelcomeProps,
-      design: featureConfig.design
-    };
-  }
-
+  // Feature config includes:
+  // user prefs
+  // experiment data
+  // attribution data
+  // defaults
+  let featureConfig = await window.AWGetFeatureConfig();
   let {
     messageId,
     UTMTerm
-  } = ComputeTelemetryInfo(aboutWelcomeProps, featureConfig.slug, featureConfig.branch && featureConfig.branch.slug);
+  } = ComputeTelemetryInfo(featureConfig, featureConfig.slug, featureConfig.branch && featureConfig.branch.slug);
   return {
-    aboutWelcomeProps,
+    featureConfig,
     messageId,
     UTMTerm
   };
@@ -249,7 +228,7 @@ async function retrieveRenderContent() {
 
 async function mount() {
   let {
-    aboutWelcomeProps,
+    featureConfig: aboutWelcomeProps,
     messageId,
     UTMTerm
   } = await retrieveRenderContent();
@@ -880,7 +859,6 @@ const HelpText = props => {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "AboutWelcomeUtils", function() { return AboutWelcomeUtils; });
 /* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_RTAMO_CONTENT", function() { return DEFAULT_RTAMO_CONTENT; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "DEFAULT_WELCOME_CONTENT", function() { return DEFAULT_WELCOME_CONTENT; });
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -984,172 +962,6 @@ const DEFAULT_RTAMO_CONTENT = {
       }
     }
   }
-};
-const DEFAULT_WELCOME_CONTENT = {
-  template: "multistage",
-  screens: [{
-    id: "AW_SET_DEFAULT",
-    order: 0,
-    content: {
-      zap: true,
-      title: {
-        string_id: "onboarding-multistage-set-default-header"
-      },
-      subtitle: {
-        string_id: "onboarding-multistage-set-default-subtitle"
-      },
-      primary_button: {
-        label: {
-          string_id: "onboarding-multistage-set-default-primary-button-label"
-        },
-        action: {
-          navigate: true,
-          type: "SET_DEFAULT_BROWSER"
-        }
-      },
-      secondary_button: {
-        label: {
-          string_id: "onboarding-multistage-set-default-secondary-button-label"
-        },
-        action: {
-          navigate: true
-        }
-      },
-      secondary_button_top: {
-        text: {
-          string_id: "onboarding-multistage-welcome-secondary-button-text"
-        },
-        label: {
-          string_id: "onboarding-multistage-welcome-secondary-button-label"
-        },
-        action: {
-          data: {
-            entrypoint: "activity-stream-firstrun"
-          },
-          type: "SHOW_FIREFOX_ACCOUNTS",
-          addFlowParams: true
-        }
-      }
-    }
-  }, {
-    id: "AW_IMPORT_SETTINGS",
-    order: 1,
-    content: {
-      zap: true,
-      help_text: {
-        text: {
-          string_id: "onboarding-import-sites-disclaimer"
-        }
-      },
-      title: {
-        string_id: "onboarding-multistage-import-header"
-      },
-      subtitle: {
-        string_id: "onboarding-multistage-import-subtitle"
-      },
-      tiles: {
-        type: "topsites",
-        showTitles: true
-      },
-      primary_button: {
-        label: {
-          string_id: "onboarding-multistage-import-primary-button-label"
-        },
-        action: {
-          type: "SHOW_MIGRATION_WIZARD",
-          navigate: true
-        }
-      },
-      secondary_button: {
-        label: {
-          string_id: "onboarding-multistage-import-secondary-button-label"
-        },
-        action: {
-          navigate: true
-        }
-      }
-    }
-  }, {
-    id: "AW_CHOOSE_THEME",
-    order: 2,
-    content: {
-      zap: true,
-      title: {
-        string_id: "onboarding-multistage-theme-header"
-      },
-      subtitle: {
-        string_id: "onboarding-multistage-theme-subtitle"
-      },
-      tiles: {
-        type: "theme",
-        action: {
-          theme: "<event>"
-        },
-        data: [{
-          theme: "automatic",
-          label: {
-            string_id: "onboarding-multistage-theme-label-automatic"
-          },
-          tooltip: {
-            string_id: "onboarding-multistage-theme-tooltip-automatic-2"
-          },
-          description: {
-            string_id: "onboarding-multistage-theme-description-automatic-2"
-          }
-        }, {
-          theme: "light",
-          label: {
-            string_id: "onboarding-multistage-theme-label-light"
-          },
-          tooltip: {
-            string_id: "onboarding-multistage-theme-tooltip-light-2"
-          },
-          description: {
-            string_id: "onboarding-multistage-theme-description-light"
-          }
-        }, {
-          theme: "dark",
-          label: {
-            string_id: "onboarding-multistage-theme-label-dark"
-          },
-          tooltip: {
-            string_id: "onboarding-multistage-theme-tooltip-dark-2"
-          },
-          description: {
-            string_id: "onboarding-multistage-theme-description-dark"
-          }
-        }, {
-          theme: "alpenglow",
-          label: {
-            string_id: "onboarding-multistage-theme-label-alpenglow"
-          },
-          tooltip: {
-            string_id: "onboarding-multistage-theme-tooltip-alpenglow-2"
-          },
-          description: {
-            string_id: "onboarding-multistage-theme-description-alpenglow"
-          }
-        }]
-      },
-      primary_button: {
-        label: {
-          string_id: "onboarding-multistage-theme-primary-button-label2"
-        },
-        action: {
-          navigate: true
-        }
-      },
-      secondary_button: {
-        label: {
-          string_id: "onboarding-multistage-theme-secondary-button-label"
-        },
-        action: {
-          theme: "automatic",
-          navigate: true
-        }
-      }
-    }
-  }]
 };
 
 /***/ }),

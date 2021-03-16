@@ -5,10 +5,10 @@ import {
 } from "content-src/aboutwelcome/components/MultiStageAboutWelcome";
 import React from "react";
 import { shallow, mount } from "enzyme";
-import {
-  DEFAULT_WELCOME_CONTENT,
-  AboutWelcomeUtils,
-} from "content-src/lib/aboutwelcome-utils";
+import { AboutWelcomeDefaults } from "aboutwelcome/lib/AboutWelcomeDefaults.jsm";
+import { AboutWelcomeUtils } from "content-src/lib/aboutwelcome-utils";
+
+const DEFAULT_WELCOME_CONTENT = AboutWelcomeDefaults.getDefaults();
 
 describe("MultiStageAboutWelcome module", () => {
   let globals;

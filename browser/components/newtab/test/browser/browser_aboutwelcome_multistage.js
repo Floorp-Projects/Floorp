@@ -847,15 +847,15 @@ add_task(async function test_AWMultistage_Import() {
   );
 });
 
-add_task(async function test_onContentMessage() {
+add_task(async function test_updatesPrefOnAWOpen() {
   Services.prefs.setBoolPref(DID_SEE_ABOUT_WELCOME_PREF, false);
   await setAboutWelcomePref(true);
 
   await openAboutWelcome();
-  Assert.equal(
-    Services.prefs.getBoolPref(DID_SEE_ABOUT_WELCOME_PREF, false),
-    true,
-    "Pref was set"
+  await BrowserTestUtils.waitForCondition(
+    () =>
+      Services.prefs.getBoolPref(DID_SEE_ABOUT_WELCOME_PREF, false) === true,
+    "Updated pref to seen AW"
   );
   Services.prefs.clearUserPref(DID_SEE_ABOUT_WELCOME_PREF);
 });
