@@ -20,7 +20,8 @@
   --in-content-box-info-background: var(--grey-20);
   --in-content-item-hover: rgba(69, 161, 255, 0.2); /* blue 40 a20 */
   --in-content-item-selected: #0a84ff;
-  --in-content-border-highlight: #0a84ff;
+  --in-content-accent-color: #0a84ff;
+  --in-content-accent-color-active: #0060df;
   --in-content-border-hover: var(--grey-90-a50);
   --in-content-border-active: var(--blue-50);
   --in-content-border-active-shadow: var(--blue-50-a30);
@@ -28,13 +29,6 @@
   --in-content-border-invalid-shadow: var(--red-50-a30);
   --in-content-border-color: #d7d7db;
   --in-content-category-outline-focus: 1px dotted #0a84ff;
-  --in-content-category-text-selected: #0a84ff;
-  --in-content-category-text-selected-active: #0060df;
-  --in-content-category-background-hover: rgba(12,12,13,0.1);
-  --in-content-category-background-active: rgba(12,12,13,0.15);
-  --in-content-category-background-selected-hover: rgba(12,12,13,0.15);
-  --in-content-category-background-selected-active: rgba(12,12,13,0.2);
-  --in-content-tab-color: #424f5a;
   --in-content-link-color: var(--blue-60);
   --in-content-link-color-hover: var(--blue-70);
   --in-content-link-color-active: var(--blue-80);
@@ -52,7 +46,7 @@
    * to make the thicker outline corners look smooth */
   --in-content-focus-outline-radius: 6px;
   --in-content-focus-outline-offset: 2px;
-  --in-content-focus-outline-color: var(--in-content-primary-button-background);
+  --in-content-focus-outline-color: #0061e0;
   --in-content-button-box-shadow: transparent;
 
   /* Note: 1px smaller than we want because we have a 1px transparent border. */
@@ -161,24 +155,17 @@
     --in-content-button-background-hover: rgba(249,249,250,0.15);
     --in-content-button-background-active: rgba(249,249,250,0.2);
 
-    --in-content-category-background-hover: rgba(249,249,250,0.1);
-    --in-content-category-background-active: rgba(249,249,250,0.15);
-    --in-content-category-background-selected-hover: rgba(249,249,250,0.15);
-    --in-content-category-background-selected-active: rgba(249,249,250,0.2);
-
     --in-content-table-background: #202023;
     --in-content-table-border-dark-color: rgba(249,249,250,0.2);
     --in-content-table-header-background: #002b57;
     --in-content-dialog-header-background: rgba(249,249,250,0.05);
 
-    --in-content-category-text-selected: var(--blue-40);
-    --in-content-category-text-selected-active: var(--blue-50);
+    --in-content-accent-color: var(--blue-40);
+    --in-content-accent-color-active: var(--blue-50);
     --in-content-link-color: var(--blue-40);
     --in-content-link-color-hover: var(--blue-50);
     --in-content-link-color-active: var(--blue-60);
     --in-content-link-color-visited: var(--blue-40);
-
-    --in-content-tab-color: var(--in-content-page-color);
 
     --card-outline-color: var(--grey-60);
 
@@ -236,30 +223,31 @@ xul|tabpanels {
 }
 
 xul|tabs {
-  margin-bottom: 15px;
-  border-block: 1px solid var(--in-content-box-border-color);
-  background-color: var(--in-content-page-background);
-  color: var(--in-content-tab-color);
+  margin-bottom: 10px;
+  border-block: 1px solid var(--in-content-border-color);
+  background-color: transparent;
+  color: inherit;
 }
 
 xul|tab {
   appearance: none;
   margin-top: 0;
-  padding: 4px 20px 0 !important;
+  padding: 2px 20px 0 !important;
   min-height: 44px;
   color: inherit;
-  background-color: var(--in-content-page-background);
-  border-bottom: 4px solid transparent;
+  background-color: transparent;
+  border-bottom: 2px solid transparent;
   transition: background-color 50ms ease 0s;
 }
 
 xul|tab:hover {
-  background-color: var(--in-content-box-background-hover);
+  border-bottom-color: var(--in-content-border-color);
+  background-color: var(--in-content-button-background-hover);
 }
 
 xul|tab[selected] {
-  background-color: var(--in-content-box-background-hover);
-  border-bottom-color: var(--in-content-border-highlight);
+  color: var(--in-content-accent-color) !important; /* override macOS tabbox.css */
+  border-bottom-color: currentColor;
 }
 
 /* html buttons */
@@ -799,29 +787,38 @@ html|*#categories > html|*.category:dir(rtl) {
 }
 
 #categories > .category:hover {
-  background-color: var(--in-content-category-background-hover);
+  background-color: var(--in-content-button-background-hover);
+  border-radius: 4px;
+}
+
+#categories > .category:hover:active {
+  background-color: var(--in-content-button-background-active);
+}
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+#categories > .category:hover {
+  background-color: var(--in-content-button-background);
   border-radius: 2px;
 }
 
 #categories > .category:hover:active {
-  background-color: var(--in-content-category-background-active);
+  background-color: var(--in-content-button-background-hover);
 }
+} /*** END !proton ***/
 
 #categories > .category[selected],
 #categories > .category.selected {
-  color: var(--in-content-category-text-selected) !important;
-  background-color: transparent;
+  color: var(--in-content-accent-color) !important;
 }
 
-#categories > .category[selected]:hover,
-#categories > .category.selected:hover {
-  background-color: var(--in-content-category-background-selected-hover);
+#categories > .category[selected]:not(:hover) {
+  /* override richlistitem selected style while letting hover style above apply */
+  background-color: transparent;
 }
 
 #categories > .category[selected]:hover:active,
 #categories > .category.selected:hover:active {
-  color: var(--in-content-category-text-selected-active) !important;
-  background-color: var(--in-content-category-background-selected-active);
+  color: var(--in-content-accent-color-active) !important;
 }
 
 #categories[keyboard-navigation="true"]:-moz-focusring > .category[current] {
@@ -1160,12 +1157,22 @@ xul|*.sidebar-footer-link {
 }
 
 .sidebar-footer-link:hover {
-  background-color: var(--in-content-category-background-hover);
+  background-color: var(--in-content-button-background-hover);
 }
 
 .sidebar-footer-link:hover:active:not([disabled]) {
-  background-color: var(--in-content-category-background-active);
+  background-color: var(--in-content-button-background-active);
 }
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+.sidebar-footer-link:hover {
+  background-color: var(--in-content-button-background);
+}
+
+.sidebar-footer-link:hover:active:not([disabled]) {
+  background-color: var(--in-content-button-background-hover);
+}
+} /*** END !proton ***/
 
 .sidebar-footer-link:-moz-focusring {
   outline: var(--in-content-category-outline-focus);
