@@ -847,27 +847,36 @@ void nsRange::AssertIfMismatchRootAndRangeBoundaries(
     const RangeBoundaryBase<EPT, ERT>& aEndBoundary, const nsINode* aRootNode,
     bool aNotInsertedYet /* = false */) {
 #ifdef DEBUG
-  if (aRootNode) {
-    if (!aNotInsertedYet) {
-      MOZ_ASSERT(
-          aStartBoundary.Container()->IsInclusiveDescendantOf(aRootNode));
-      MOZ_ASSERT(aEndBoundary.Container()->IsInclusiveDescendantOf(aRootNode));
-      MOZ_ASSERT(aRootNode ==
-                 RangeUtils::ComputeRootNode(aStartBoundary.Container()));
-      MOZ_ASSERT(aRootNode ==
-                 RangeUtils::ComputeRootNode(aEndBoundary.Container()));
-    }
-    if (!aStartBoundary.Container()->IsContent() ||
-        !aEndBoundary.Container()->IsContent() ||
-        aRootNode != RangeUtils::ComputeRootNode(aStartBoundary.Container()) ||
-        aRootNode != RangeUtils::ComputeRootNode(aEndBoundary.Container())) {
-      MOZ_ASSERT(!aRootNode->GetParentNode());
-      MOZ_ASSERT(aRootNode->IsDocument() || aRootNode->IsAttr() ||
-                 aRootNode->IsDocumentFragment() ||
-                 /*For backward compatibility*/
-                 aRootNode->IsContent());
-    }
+  if (!aRootNode) {
+    MOZ_ASSERT(!aStartBoundary.IsSet());
+    MOZ_ASSERT(!aEndBoundary.IsSet());
+    return;
   }
+
+  MOZ_ASSERT(aStartBoundary.IsSet());
+  MOZ_ASSERT(aEndBoundary.IsSet());
+  if (!aNotInsertedYet) {
+    // Compute temporary root for given range boundaries.  If a range in native
+    // anonymous subtree is being removed, tempRoot may return the fragment's
+    // root content, but it shouldn't be used for new root node because the node
+    // may be bound to the root element again.
+    nsINode* tempRoot = RangeUtils::ComputeRootNode(aStartBoundary.Container());
+    // The new range should be in the temporary root node at least.
+    MOZ_ASSERT(tempRoot ==
+               RangeUtils::ComputeRootNode(aEndBoundary.Container()));
+    MOZ_ASSERT(aStartBoundary.Container()->IsInclusiveDescendantOf(tempRoot));
+    MOZ_ASSERT(aEndBoundary.Container()->IsInclusiveDescendantOf(tempRoot));
+    // If the new range is not disconnected or not in native anonymous subtree,
+    // the temporary root must be same as the new root node.  Otherwise,
+    // aRootNode should be the parent of root of the NAC (e.g., `<input>` if the
+    // range is in NAC under `<input>`), but tempRoot is now root content node
+    // of the disconnected subtree (e.g., `<div>` element in `<input>` element).
+    const bool tempRootIsDisconnectedNAC =
+        tempRoot->IsInNativeAnonymousSubtree() && !tempRoot->GetParentNode();
+    MOZ_ASSERT_IF(!tempRootIsDisconnectedNAC, tempRoot == aRootNode);
+  }
+  MOZ_ASSERT(aRootNode->IsDocument() || aRootNode->IsAttr() ||
+             aRootNode->IsDocumentFragment() || aRootNode->IsContent());
 #endif  // #ifdef DEBUG
 }
 
