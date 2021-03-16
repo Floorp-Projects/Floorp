@@ -25,12 +25,50 @@ already_AddRefed<IdleTaskRunner> IdleTaskRunner::Create(
   return runner.forget();
 }
 
+class IdleTaskRunnerTask : public Task {
+ public:
+  explicit IdleTaskRunnerTask(IdleTaskRunner* aRunner)
+      : Task(true, EventQueuePriority::Idle), mRunner(aRunner) {
+    SetManager(TaskController::Get()->GetIdleTaskManager());
+  }
+
+  bool Run() override {
+    if (mRunner) {
+      // IdleTaskRunner::Run can actually trigger the destruction of the
+      // IdleTaskRunner. Make sure it doesn't get destroyed before the method
+      // finished.
+      RefPtr<IdleTaskRunner> runner(mRunner);
+      runner->Run();
+    }
+    return true;
+  }
+
+  void SetIdleDeadline(TimeStamp aDeadline) override {
+    if (mRunner) {
+      mRunner->SetIdleDeadline(aDeadline);
+    }
+  }
+
+  void Cancel() { mRunner = nullptr; }
+
+  bool GetName(nsACString& aName) override {
+    if (mRunner) {
+      aName.Assign(mRunner->GetName());
+    } else {
+      aName.Assign("ExpiredIdleTaskRunner");
+    }
+    return true;
+  }
+
+ private:
+  IdleTaskRunner* mRunner;
+};
+
 IdleTaskRunner::IdleTaskRunner(
     const CallbackType& aCallback, const char* aRunnableName,
     uint32_t aStartDelay, uint32_t aMaxDelay, int64_t aMinimumUsefulBudget,
     bool aRepeating, const MayStopProcessingCallbackType& aMayStopProcessing)
-    : CancelableIdleRunnable(aRunnableName),
-      mCallback(aCallback),
+    : mCallback(aCallback),
       mStartTime(TimeStamp::Now() +
                  TimeDuration::FromMilliseconds(aStartDelay)),
       mMaxDelay(aMaxDelay),
@@ -41,20 +79,31 @@ IdleTaskRunner::IdleTaskRunner(
       mMayStopProcessing(aMayStopProcessing),
       mName(aRunnableName) {}
 
-NS_IMETHODIMP
-IdleTaskRunner::Run() {
+void IdleTaskRunner::Run() {
   if (!mCallback) {
-    return NS_OK;
+    return;
   }
 
   // Deadline is null when called from timer or RunNextCollectorTimer rather
   // than during idle time.
   TimeStamp now = TimeStamp::Now();
+
   // Note that if called from RunNextCollectorTimer, we may not have reached
   // mStartTime yet. Pretend we are overdue for idle time.
   bool overdueForIdle = mDeadline.IsNull();
   bool didRun = false;
   bool allowIdleDispatch = false;
+
+  if (mTask) {
+    // If we find ourselves here we should usually be running from this task,
+    // but there are exceptions. In any case we're doing the work now and don't
+    // need our task going forward unless we're re-scheduled.
+    nsRefreshDriver::CancelIdleTask(mTask);
+    // Extra safety, make sure a task can never have a dangling ptr.
+    mTask->Cancel();
+    mTask = nullptr;
+  }
+
   if (overdueForIdle || ((now + mMinimumUsefulBudget) < mDeadline)) {
     CancelTimer();
     didRun = mCallback(mDeadline);
@@ -71,16 +120,14 @@ IdleTaskRunner::Run() {
   } else {
     mCallback = nullptr;
   }
-
-  return NS_OK;
 }
 
 static void TimedOut(nsITimer* aTimer, void* aClosure) {
-  RefPtr<IdleTaskRunner> runnable = static_cast<IdleTaskRunner*>(aClosure);
-  runnable->Run();
+  RefPtr<IdleTaskRunner> runner = static_cast<IdleTaskRunner*>(aClosure);
+  runner->Run();
 }
 
-void IdleTaskRunner::SetDeadline(mozilla::TimeStamp aDeadline) {
+void IdleTaskRunner::SetIdleDeadline(mozilla::TimeStamp aDeadline) {
   mDeadline = aDeadline;
 }
 
@@ -97,12 +144,11 @@ void IdleTaskRunner::SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) {
   SetTimerInternal(aDelay);
 }
 
-nsresult IdleTaskRunner::Cancel() {
+void IdleTaskRunner::Cancel() {
   CancelTimer();
   mTimer = nullptr;
   mScheduleTimer = nullptr;
   mCallback = nullptr;
-  return NS_OK;
 }
 
 static void ScheduleTimedOut(nsITimer* aTimer, void* aClosure) {
@@ -134,17 +180,25 @@ void IdleTaskRunner::Schedule(bool aAllowIdleDispatch) {
   }
 
   if (useRefreshDriver) {
-    // RefreshDriver is ticking, let it schedule the idle dispatch.
-    nsRefreshDriver::DispatchIdleRunnableAfterTickUnlessExists(this, mMaxDelay);
+    if (!mTask) {
+      // If a task was already scheduled, no point rescheduling.
+      mTask = new IdleTaskRunnerTask(this);
+      // RefreshDriver is ticking, let it schedule the idle dispatch.
+      nsRefreshDriver::DispatchIdleTaskAfterTickUnlessExists(mTask);
+    }
     // Ensure we get called at some point, even if RefreshDriver is stopped.
     SetTimerInternal(mMaxDelay);
   } else {
     // RefreshDriver doesn't seem to be running.
     if (aAllowIdleDispatch) {
-      nsCOMPtr<nsIRunnable> runnable = this;
       SetTimerInternal(mMaxDelay);
-      NS_DispatchToCurrentThreadQueue(runnable.forget(),
-                                      EventQueuePriority::Idle);
+      if (!mTask) {
+        // If we have mTask we've already scheduled one, and the refresh driver
+        // shouldn't be running if we hit this code path.
+        mTask = new IdleTaskRunnerTask(this);
+        RefPtr<Task> task(mTask);
+        TaskController::Get()->AddTask(task.forget());
+      }
     } else {
       if (!mScheduleTimer) {
         mScheduleTimer = NS_NewTimer();
@@ -172,7 +226,11 @@ void IdleTaskRunner::Schedule(bool aAllowIdleDispatch) {
 IdleTaskRunner::~IdleTaskRunner() { CancelTimer(); }
 
 void IdleTaskRunner::CancelTimer() {
-  nsRefreshDriver::CancelIdleRunnable(this);
+  if (mTask) {
+    nsRefreshDriver::CancelIdleTask(mTask);
+    mTask->Cancel();
+    mTask = nullptr;
+  }
   if (mTimer) {
     mTimer->Cancel();
   }
