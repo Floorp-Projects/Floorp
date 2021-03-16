@@ -40,7 +40,7 @@ button > .button-box {
 
 .info-box-content {
   align-items: center;
-  background: var(--in-content-box-background-hover);
+  background: var(--in-content-box-info-background);
   border: 1px solid var(--in-content-border-color);
   display: inline-flex;
   padding: 10px 15px;
