@@ -7,6 +7,7 @@ const { Certificate } = pkijs.pkijs;
 import {
   b64urltodec,
   b64urltohex,
+  b64ToPEM,
   getObjPath,
   hash,
   hashify,
@@ -476,10 +477,9 @@ export const parse = async certificate => {
   x509 = x509.toJSON();
 
   // convert the cert to PEM
-  const certBTOA = window
-    .btoa(String.fromCharCode.apply(null, new Uint8Array(certificate)))
-    .match(/.{1,64}/g)
-    .join("\r\n");
+  const certPEM = b64ToPEM(
+    window.btoa(String.fromCharCode.apply(null, new Uint8Array(certificate)))
+  );
 
   // get which extensions are critical
   const criticalExtensions = [];
@@ -535,9 +535,7 @@ export const parse = async certificate => {
     },
     files: {
       der: undefined, // TODO: implement!
-      pem: encodeURI(
-        `-----BEGIN CERTIFICATE-----\r\n${certBTOA}\r\n-----END CERTIFICATE-----\r\n`
-      ),
+      pem: encodeURI(certPEM),
     },
     fingerprint: {
       sha1: await hash("SHA-1", certificate),
