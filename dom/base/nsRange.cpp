@@ -542,6 +542,11 @@ void nsRange::CharacterDataChanged(nsIContent* aContent,
     DoSetRange(newStart, newEnd, newRoot ? newRoot : mRoot.get(),
                !newEnd.Container()->GetParentNode() ||
                    !newStart.Container()->GetParentNode());
+  } else {
+    nsRange::AssertIfMismatchRootAndRangeBoundaries(
+        mStart, mEnd, mRoot,
+        (mStart.IsSet() && !mStart.Container()->GetParentNode()) ||
+            (mEnd.IsSet() && !mEnd.Container()->GetParentNode()));
   }
 }
 
@@ -577,6 +582,8 @@ void nsRange::ContentAppended(nsIContent* aFirstNewContent) {
       mNextEndRef = nullptr;
     }
     DoSetRange(mStart, mEnd, mRoot, true);
+  } else {
+    nsRange::AssertIfMismatchRootAndRangeBoundaries(mStart, mEnd, mRoot);
   }
 }
 
@@ -626,6 +633,8 @@ void nsRange::ContentInserted(nsIContent* aChild) {
 
   if (updateBoundaries) {
     DoSetRange(newStart, newEnd, mRoot);
+  } else {
+    nsRange::AssertIfMismatchRootAndRangeBoundaries(mStart, mEnd, mRoot);
   }
 }
 
@@ -679,6 +688,8 @@ void nsRange::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling) {
   if (newStart.IsSet() || newEnd.IsSet()) {
     DoSetRange(newStart.IsSet() ? newStart : mStart.AsRaw(),
                newEnd.IsSet() ? newEnd : mEnd.AsRaw(), mRoot);
+  } else {
+    nsRange::AssertIfMismatchRootAndRangeBoundaries(mStart, mEnd, mRoot);
   }
 
   MOZ_ASSERT(mStart.Ref() != aChild);
@@ -829,21 +840,12 @@ void nsRange::NotifySelectionListenersAfterRangeSet() {
  * Private helper routines
  ******************************************************/
 
-// It's important that all setting of the range start/end points
-// go through this function, which will do all the right voodoo
-// for content notification of range ownership.
-// Calling DoSetRange with either parent argument null will collapse
-// the range to have both endpoints point to the other node
+// static
 template <typename SPT, typename SRT, typename EPT, typename ERT>
-void nsRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
-                         const RangeBoundaryBase<EPT, ERT>& aEndBoundary,
-                         nsINode* aRootNode,
-                         bool aNotInsertedYet /* = false */) {
-  mIsPositioned = aStartBoundary.IsSetAndValid() &&
-                  aEndBoundary.IsSetAndValid() && aRootNode;
-  MOZ_ASSERT_IF(!mIsPositioned, !aStartBoundary.IsSet());
-  MOZ_ASSERT_IF(!mIsPositioned, !aEndBoundary.IsSet());
-  MOZ_ASSERT_IF(!mIsPositioned, !aRootNode);
+void nsRange::AssertIfMismatchRootAndRangeBoundaries(
+    const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
+    const RangeBoundaryBase<EPT, ERT>& aEndBoundary, const nsINode* aRootNode,
+    bool aNotInsertedYet /* = false */) {
 #ifdef DEBUG
   if (aRootNode) {
     if (!aNotInsertedYet) {
@@ -867,6 +869,26 @@ void nsRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
     }
   }
 #endif  // #ifdef DEBUG
+}
+
+// It's important that all setting of the range start/end points
+// go through this function, which will do all the right voodoo
+// for content notification of range ownership.
+// Calling DoSetRange with either parent argument null will collapse
+// the range to have both endpoints point to the other node
+template <typename SPT, typename SRT, typename EPT, typename ERT>
+void nsRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
+                         const RangeBoundaryBase<EPT, ERT>& aEndBoundary,
+                         nsINode* aRootNode,
+                         bool aNotInsertedYet /* = false */) {
+  mIsPositioned = aStartBoundary.IsSetAndValid() &&
+                  aEndBoundary.IsSetAndValid() && aRootNode;
+  MOZ_ASSERT_IF(!mIsPositioned, !aStartBoundary.IsSet());
+  MOZ_ASSERT_IF(!mIsPositioned, !aEndBoundary.IsSet());
+  MOZ_ASSERT_IF(!mIsPositioned, !aRootNode);
+
+  nsRange::AssertIfMismatchRootAndRangeBoundaries(aStartBoundary, aEndBoundary,
+                                                  aRootNode, aNotInsertedYet);
 
   if (mRoot != aRootNode) {
     if (mRoot) {
