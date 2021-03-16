@@ -54,23 +54,26 @@ assert.acyclic = function(obj, msg = "", err = error.JavaScriptError) {
 };
 
 /**
- * Asserts that Marionette has an active session.
+ * Asserts that Marionette has a session.
  *
- * @param {WebDriverSession} session
- *     WebDriver session instance.
+ * @param {GeckoDriver} driver
+ *     Marionette driver instance.
  * @param {string=} msg
  *     Custom error message.
  *
+ * @return {string}
+ *     Current session's ID.
+ *
  * @throws {InvalidSessionIDError}
- *     If session does not exist, or has an invalid id.
+ *     If <var>driver</var> does not have a session ID.
  */
-assert.session = function(session, msg = "") {
-  msg = msg || "WebDriver session does not exist, or is not active";
+assert.session = function(driver, msg = "") {
   assert.that(
-    session => session && typeof session.id == "string",
+    sessionID => sessionID,
     msg,
     error.InvalidSessionIDError
-  )(session);
+  )(driver.sessionID);
+  return driver.sessionID;
 };
 
 /**
