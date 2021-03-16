@@ -631,25 +631,48 @@
 /* Tab Overflow */
 #tabbrowser-arrowscrollbox:not([scrolledtostart])::part(overflow-start-indicator),
 #tabbrowser-arrowscrollbox:not([scrolledtoend])::part(overflow-end-indicator) {
+  width: 7px; /* The width is the sum of the inline margins */
+  background-image: radial-gradient(ellipse at bottom,
+                                    rgba(0,0,0,0.1) 0%,
+                                    rgba(0,0,0,0.1) 7.6%,
+                                    rgba(0,0,0,0) 87.5%);
+  background-repeat: no-repeat;
+  background-position: -3px;
+  border-left: .5px solid rgba(255,255,255,.2);
+  pointer-events: none;
+  position: relative;
+  z-index: 3; /* the selected tab's z-index + 1 */
+  border-bottom: .5px solid transparent;
+}
+
+#tabbrowser-arrowscrollbox:not([scrolledtostart])::part(overflow-start-indicator) {
+  margin-inline: -.5px -6.5px;
+}
+
+#tabbrowser-arrowscrollbox:not([scrolledtoend])::part(overflow-end-indicator) {
+  margin-inline: -6.5px -.5px;
+}
+
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+#tabbrowser-arrowscrollbox:not([scrolledtostart])::part(overflow-start-indicator),
+#tabbrowser-arrowscrollbox:not([scrolledtoend])::part(overflow-end-indicator) {
   width: 18px;
   background-image: url(chrome://browser/skin/tabbrowser/tab-overflow-indicator.png);
   background-size: 17px 100%;
-  background-repeat: no-repeat;
   border-left: 1px solid;
   border-image: linear-gradient(rgba(255,255,255,.2),
                                 rgba(255,255,255,.2) calc(100% - 1px - var(--tabs-navbar-shadow-size)),
                                 transparent calc(100% - 1px - var(--tabs-navbar-shadow-size)));
   border-image-slice: 1;
-  pointer-events: none;
-  position: relative;
-  z-index: 3; /* the selected tab's z-index + 1 */
 }
+} /*** END !proton ***/
 
 #tabbrowser-arrowscrollbox:-moz-locale-dir(rtl)::part(overflow-start-indicator),
 #tabbrowser-arrowscrollbox:-moz-locale-dir(ltr)::part(overflow-end-indicator) {
   transform: scaleX(-1);
 }
 
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 #tabbrowser-arrowscrollbox:not([scrolledtostart])::part(overflow-start-indicator) {
   margin-inline: -1px -17px;
 }
@@ -657,6 +680,7 @@
 #tabbrowser-arrowscrollbox:not([scrolledtoend])::part(overflow-end-indicator) {
   margin-inline: -17px -1px;
 }
+} /*** END !proton ***/
 
 #tabbrowser-arrowscrollbox[scrolledtostart]::part(overflow-start-indicator),
 #tabbrowser-arrowscrollbox[scrolledtoend]::part(overflow-end-indicator) {
