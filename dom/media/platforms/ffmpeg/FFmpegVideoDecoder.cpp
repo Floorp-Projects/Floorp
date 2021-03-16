@@ -789,14 +789,19 @@ MediaResult FFmpegVideoDecoder<LIBAV_VER>::CreateImageDMABuf(
   if (!surfaceWrapper) {
     if (mVAAPIDeviceContext) {
       surface = DMABufSurfaceYUV::CreateYUVSurface(vaDesc);
+      if (!surface) {
+        return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                           RESULT_DETAIL("Unable to import DMA Buf surface"));
+      }
     } else {
       surface = DMABufSurfaceYUV::CreateYUVSurface(
           mFrame->width, mFrame->height, (void**)mFrame->data,
           mFrame->linesize);
-    }
-    if (!surface) {
-      return MediaResult(NS_ERROR_OUT_OF_MEMORY,
-                         RESULT_DETAIL("Unable to get DMABufSurfaceYUV"));
+      if (!surface) {
+        mUseDMABufSurfaces = false;
+        return MediaResult(NS_ERROR_OUT_OF_MEMORY,
+                           RESULT_DETAIL("Unable to create DMABufSurfaceYUV"));
+      }
     }
 
     FFMPEG_LOG("Created new DMABufSurface UID = %d", surface->GetUID());
