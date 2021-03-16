@@ -6751,8 +6751,6 @@ static bool CheckBuffer(JSContext* cx, const AsmJSMetadata& metadata,
 
   buffer.set(&bufferObj->as<ArrayBufferObject>());
 
-  // Do not assume the buffer's length fits within the wasm heap limit, so do
-  // not call getWasmUint32()
   size_t memoryLength = buffer->byteLength().get();
 
   if (!IsValidAsmJSHeapLength(memoryLength)) {

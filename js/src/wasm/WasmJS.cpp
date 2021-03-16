@@ -2477,10 +2477,10 @@ bool WasmMemoryObject::bufferGetterImpl(JSContext* cx, const CallArgs& args) {
   RootedArrayBufferObjectMaybeShared buffer(cx, &memoryObj->buffer());
 
   if (memoryObj->isShared()) {
-    uint32_t memoryLength = memoryObj->volatileMemoryLength().getWasmUint32();
-    MOZ_ASSERT(memoryLength >= buffer->byteLength().getWasmUint32());
+    size_t memoryLength = memoryObj->volatileMemoryLength().get();
+    MOZ_ASSERT(memoryLength >= buffer->byteLength().get());
 
-    if (memoryLength > buffer->byteLength().getWasmUint32()) {
+    if (memoryLength > buffer->byteLength().get()) {
       RootedSharedArrayBufferObject newBuffer(
           cx,
           SharedArrayBufferObject::New(cx, memoryObj->sharedArrayRawBuffer(),
@@ -2582,7 +2582,7 @@ bool WasmMemoryObject::typeImpl(JSContext* cx, const CallArgs& args) {
   }
 
   uint32_t minimumPages = mozilla::AssertedCast<uint32_t>(
-      memoryObj->volatileMemoryLength().getWasmUint32() / wasm::PageSize);
+      memoryObj->volatileMemoryLength().get() / wasm::PageSize);
   if (!props.append(IdValuePair(NameToId(cx->names().minimum),
                                 Int32Value(minimumPages)))) {
     return false;
@@ -2671,7 +2671,9 @@ BufferSize WasmMemoryObject::boundsCheckLimit() const {
   MOZ_ASSERT(mappedSize % wasm::PageSize == 0);
   MOZ_ASSERT(mappedSize >= wasm::GuardSize);
   MOZ_ASSERT(wasm::IsValidBoundsCheckImmediate(mappedSize - wasm::GuardSize));
-  return BufferSize(mappedSize - wasm::GuardSize);
+  size_t limit = mappedSize - wasm::GuardSize;
+  MOZ_ASSERT(limit <= MaxMemory32BoundsCheckLimit());
+  return BufferSize(limit);
 }
 
 bool WasmMemoryObject::addMovingGrowObserver(JSContext* cx,
@@ -2697,9 +2699,8 @@ uint32_t WasmMemoryObject::growShared(HandleWasmMemoryObject memory,
   SharedArrayRawBuffer* rawBuf = memory->sharedArrayRawBuffer();
   SharedArrayRawBuffer::Lock lock(rawBuf);
 
-  MOZ_ASSERT(rawBuf->volatileByteLength().getWasmUint32() % PageSize == 0);
-  uint32_t oldNumPages =
-      rawBuf->volatileByteLength().getWasmUint32() / PageSize;
+  MOZ_ASSERT(rawBuf->volatileByteLength().get() % PageSize == 0);
+  uint32_t oldNumPages = rawBuf->volatileByteLength().get() / PageSize;
 
   CheckedInt<uint32_t> newSize = oldNumPages;
   newSize += delta;
@@ -2737,8 +2738,8 @@ uint32_t WasmMemoryObject::grow(HandleWasmMemoryObject memory, uint32_t delta,
 
   RootedArrayBufferObject oldBuf(cx, &memory->buffer().as<ArrayBufferObject>());
 
-  MOZ_ASSERT(oldBuf->byteLength().getWasmUint32() % PageSize == 0);
-  uint32_t oldNumPages = oldBuf->byteLength().getWasmUint32() / PageSize;
+  MOZ_ASSERT(oldBuf->byteLength().get() % PageSize == 0);
+  uint32_t oldNumPages = oldBuf->byteLength().get() / PageSize;
 
   // TODO (large ArrayBuffer): This does not allow 65536 pages.  See more
   // information at the definition of MaxMemory32Bytes().

@@ -186,19 +186,20 @@ class Instance {
   static int32_t wait_i64(Instance* instance, uint32_t byteOffset,
                           int64_t value, int64_t timeout);
   static int32_t wake(Instance* instance, uint32_t byteOffset, int32_t count);
-  static int32_t memCopy(Instance* instance, uint32_t destByteOffset,
-                         uint32_t srcByteOffset, uint32_t len,
-                         uint8_t* memBase);
-  static int32_t memCopyShared(Instance* instance, uint32_t destByteOffset,
-                               uint32_t srcByteOffset, uint32_t len,
-                               uint8_t* memBase);
+  static int32_t memCopy32(Instance* instance, uint32_t destByteOffset,
+                           uint32_t srcByteOffset, uint32_t len,
+                           uint8_t* memBase);
+  static int32_t memCopyShared32(Instance* instance, uint32_t destByteOffset,
+                                 uint32_t srcByteOffset, uint32_t len,
+                                 uint8_t* memBase);
   static int32_t dataDrop(Instance* instance, uint32_t segIndex);
-  static int32_t memFill(Instance* instance, uint32_t byteOffset,
-                         uint32_t value, uint32_t len, uint8_t* memBase);
-  static int32_t memFillShared(Instance* instance, uint32_t byteOffset,
-                               uint32_t value, uint32_t len, uint8_t* memBase);
-  static int32_t memInit(Instance* instance, uint32_t dstOffset,
-                         uint32_t srcOffset, uint32_t len, uint32_t segIndex);
+  static int32_t memFill32(Instance* instance, uint32_t byteOffset,
+                           uint32_t value, uint32_t len, uint8_t* memBase);
+  static int32_t memFillShared32(Instance* instance, uint32_t byteOffset,
+                                 uint32_t value, uint32_t len,
+                                 uint8_t* memBase);
+  static int32_t memInit32(Instance* instance, uint32_t dstOffset,
+                           uint32_t srcOffset, uint32_t len, uint32_t segIndex);
   static int32_t tableCopy(Instance* instance, uint32_t dstOffset,
                            uint32_t srcOffset, uint32_t len,
                            uint32_t dstTableIndex, uint32_t srcTableIndex);
