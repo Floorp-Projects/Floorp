@@ -16,7 +16,12 @@ const {
 } = WatchedDataHelpers;
 
 // List of options supported by this thread configuration actor.
-const SUPPORTED_OPTIONS = {};
+const SUPPORTED_OPTIONS = {
+  // Enable pausing on exceptions.
+  pauseOnExceptions: true,
+  // Disable pausing on caught exceptions.
+  ignoreCaughtExceptions: true,
+};
 
 /**
  * This actor manages the configuration options which apply to thread actor for all the targets.
