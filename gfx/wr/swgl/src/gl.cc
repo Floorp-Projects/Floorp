@@ -2258,10 +2258,25 @@ void* GetColorBuffer(GLuint fbo, GLboolean flush, int32_t* width,
     prepare_texture(colortex);
   }
   assert(colortex.offset == IntPoint(0, 0));
-  *width = colortex.width;
-  *height = colortex.height;
-  *stride = colortex.stride();
+  if (width) {
+    *width = colortex.width;
+  }
+  if (height) {
+    *height = colortex.height;
+  }
+  if (stride) {
+    *stride = colortex.stride();
+  }
   return colortex.buf ? colortex.sample_ptr(0, 0) : nullptr;
+}
+
+void ResolveFramebuffer(GLuint fbo) {
+  Framebuffer* fb = ctx->framebuffers.find(fbo);
+  if (!fb || !fb->color_attachment) {
+    return;
+  }
+  Texture& colortex = ctx->textures[fb->color_attachment];
+  prepare_texture(colortex);
 }
 
 void SetTextureBuffer(GLuint texid, GLenum internal_format, GLsizei width,
