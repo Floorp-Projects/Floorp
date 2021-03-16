@@ -15,7 +15,7 @@
   --in-content-box-background: #fff;
   --in-content-box-background-odd: rgba(12, 12, 13, 0.05); /* grey 90 a05 */
   --in-content-box-border-color: var(--grey-90-a30);
-  --in-content-box-info-background: var(--grey-20);
+  --in-content-box-info-background: #f0f0f4;
   --in-content-item-hover: rgba(69, 161, 255, 0.2); /* blue 40 a20 */
   --in-content-item-selected: #0a84ff;
   --in-content-accent-color: #0a84ff;
@@ -111,6 +111,7 @@
 @supports not -moz-bool-pref("browser.proton.enabled") {
 :root {
   --in-content-page-background: #f9f9fa;
+  --in-content-box-info-background: var(--grey-20);
   --in-content-button-background: var(--grey-90-a10);
   --in-content-button-background-hover: var(--grey-90-a20);
   --in-content-button-background-active: var(--grey-90-a30);
