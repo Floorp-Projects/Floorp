@@ -15,6 +15,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   shortURL: "resource://activity-stream/lib/ShortURL.jsm",
   TippyTopProvider: "resource://activity-stream/lib/TippyTopProvider.jsm",
+  AboutWelcomeDefaults:
+    "resource://activity-stream/aboutwelcome/lib/AboutWelcomeDefaults.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "log", () => {
@@ -156,10 +158,6 @@ class AboutWelcomeChild extends JSWindowActorChild {
       defineAs: "AWGetFeatureConfig",
     });
 
-    Cu.exportFunction(this.AWGetAttributionData.bind(this), window, {
-      defineAs: "AWGetAttributionData",
-    });
-
     Cu.exportFunction(this.AWGetFxAMetricsFlowURI.bind(this), window, {
       defineAs: "AWGetFxAMetricsFlowURI",
     });
@@ -216,79 +214,15 @@ class AboutWelcomeChild extends JSWindowActorChild {
     );
   }
 
-  async getAddonInfo(attrbObj) {
-    let { content, source } = attrbObj;
-    try {
-      if (!content || source !== "addons.mozilla.org") {
-        return null;
-      }
-      // Attribution data can be double encoded
-      while (content.includes("%")) {
-        try {
-          const result = decodeURIComponent(content);
-          if (result === content) {
-            break;
-          }
-          content = result;
-        } catch (e) {
-          break;
-        }
-      }
-      return await this.sendQuery("AWPage:GET_ADDON_FROM_REPOSITORY", content);
-    } catch (e) {
-      Cu.reportError(
-        "Failed to get the latest add-on version for Return to AMO"
-      );
-      return null;
-    }
-  }
-
-  hasAMOAttribution(attributionData) {
-    return (
-      attributionData &&
-      attributionData.campaign === "non-fx-button" &&
-      attributionData.source === "addons.mozilla.org"
-    );
-  }
-
-  async formatAttributionData(attribution) {
-    let result = {};
-    if (this.hasAMOAttribution(attribution)) {
-      let extraProps = await this.getAddonInfo(attribution);
-      if (extraProps) {
-        result = {
-          template: "return_to_amo",
-          extraProps,
-        };
-      }
-    }
-    return result;
-  }
-
-  async getAttributionData() {
-    return Cu.cloneInto(
-      await this.formatAttributionData(
-        await this.sendQuery("AWPage:GET_ATTRIBUTION_DATA")
-      ),
-      this.contentWindow
-    );
-  }
-
-  AWGetAttributionData() {
-    return this.wrapPromise(this.getAttributionData());
-  }
-
   /**
    * Send initial data to page including experiment information
    */
-  AWGetFeatureConfig() {
-    // Note that we specifically don't wait for `ready` so if
-    // about:welcome loads outside of the "FirstStartup" scenario this will likely not be ready
+  async getAWContent() {
     let experimentMetadata =
       ExperimentAPI.getExperimentMetaData({
         featureId: "aboutwelcome",
       }) || {};
-    let featureConfig = aboutWelcomeFeature.getValue({ defaultValue: {} });
+    let featureConfig = aboutWelcomeFeature.getValue() || {};
 
     if (experimentMetadata?.slug) {
       log.debug(
@@ -296,16 +230,33 @@ class AboutWelcomeChild extends JSWindowActorChild {
       );
     } else {
       log.debug("Loading about:welcome without experiment");
+      let attributionData = await this.sendQuery("AWPage:GET_ATTRIBUTION_DATA");
+      if (attributionData) {
+        log.debug("Loading about:welcome with attribution data");
+        featureConfig = { ...attributionData, ...featureConfig };
+      } else {
+        log.debug("Loading about:welcome with default data");
+        let defaults = AboutWelcomeDefaults.getDefaults();
+        // FeatureConfig (from prefs or experiments) has higher precendence
+        // to defaults. But the `screens` property isn't defined we shouldn't
+        // override the default with `null`
+        let screens = featureConfig.screens || defaults.screens;
+        featureConfig = {
+          ...defaults,
+          ...featureConfig,
+          screens,
+        };
+      }
     }
+
     return Cu.cloneInto(
-      {
-        // All experimentation right now is using the multistage template
-        template: "multistage",
-        ...experimentMetadata,
-        ...featureConfig,
-      },
+      { ...experimentMetadata, ...featureConfig },
       this.contentWindow
     );
+  }
+
+  AWGetFeatureConfig() {
+    return this.wrapPromise(this.getAWContent());
   }
 
   AWGetFxAMetricsFlowURI() {
