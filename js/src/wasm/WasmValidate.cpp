@@ -974,7 +974,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
             uint32_t unusedRttDepth;
             CHECK(iter.readBrOnCast(&unusedRelativeDepth, &nothing,
                                     &unusedRttTypeIndex, &unusedRttDepth,
-                                    &nothings, &unusedType));
+                                    &unusedType, &nothings));
           }
           default:
             return iter.unrecognizedOpcode(&op);

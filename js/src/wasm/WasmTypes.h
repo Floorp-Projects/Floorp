@@ -1899,6 +1899,22 @@ class ResultType {
     }
   }
 
+  [[nodiscard]] bool cloneToVector(ValTypeVector* out) {
+    MOZ_ASSERT(out->empty());
+    switch (kind()) {
+      case EmptyKind:
+        return true;
+      case SingleKind:
+        return out->append(singleValType());
+#ifdef ENABLE_WASM_MULTI_VALUE
+      case VectorKind:
+        return out->appendAll(values());
+#endif
+      default:
+        MOZ_CRASH("bad resulttype");
+    }
+  }
+
   bool empty() const { return kind() == EmptyKind; }
 
   size_t length() const {
