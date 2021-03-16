@@ -1718,10 +1718,10 @@ void nsJSContext::RunNextCollectorTimer(JS::GCReason aReason,
     return;
   }
 
-  nsCOMPtr<nsIRunnable> runnable;
+  RefPtr<IdleTaskRunner> runner;
   if (sInterSliceGCRunner) {
-    sInterSliceGCRunner->SetDeadline(aDeadline);
-    runnable = sInterSliceGCRunner;
+    sInterSliceGCRunner->SetIdleDeadline(aDeadline);
+    runner = sInterSliceGCRunner;
   } else {
     // Check the CC timers after the GC timers, because the CC timers won't do
     // anything if a GC is in progress.
@@ -1730,13 +1730,13 @@ void nsJSContext::RunNextCollectorTimer(JS::GCReason aReason,
         "Don't check the CC timers if the CC is locked out during an iGC.");
 
     if (sCCRunner) {
-      sCCRunner->SetDeadline(aDeadline);
-      runnable = sCCRunner;
+      sCCRunner->SetIdleDeadline(aDeadline);
+      runner = sCCRunner;
     }
   }
 
-  if (runnable) {
-    runnable->Run();
+  if (runner) {
+    runner->Run();
   }
 }
 

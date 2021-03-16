@@ -9,17 +9,22 @@
 
 #include "mozilla/TimeStamp.h"
 #include "mozilla/TaskCategory.h"
+#include "mozilla/TaskController.h"
 #include "nsThreadUtils.h"
 #include <functional>
 
 namespace mozilla {
 
+class IdleTaskRunnerTask;
+
 // A general purpose repeating callback runner (it can be configured to a
 // one-time runner, too.) If it is running repeatedly, one has to either
 // explicitly Cancel() the runner or have MayStopProcessing() callback return
 // true to completely remove the runner.
-class IdleTaskRunner final : public CancelableIdleRunnable {
+class IdleTaskRunner {
  public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(IdleTaskRunner)
+
   // Return true if some meaningful work was done.
   using CallbackType = std::function<bool(TimeStamp aDeadline)>;
 
@@ -49,19 +54,22 @@ class IdleTaskRunner final : public CancelableIdleRunnable {
       uint32_t aStartDelay, uint32_t aMaxDelay, int64_t aMinimumUsefulBudget,
       bool aRepeating, const MayStopProcessingCallbackType& aMayStopProcessing);
 
-  NS_IMETHOD Run() override;
+  void Run();
 
   // (Used by the task triggering code.) Record the end of the current idle
   // period, or null if not running during idle time.
-  void SetDeadline(mozilla::TimeStamp aDeadline) override;
+  void SetIdleDeadline(mozilla::TimeStamp aDeadline);
 
-  void SetTimer(uint32_t aDelay, nsIEventTarget* aTarget) override;
+  void SetTimer(uint32_t aDelay, nsIEventTarget* aTarget);
 
   // Update the minimum idle time that this callback would be invoked for.
   void SetMinimumUsefulBudget(int64_t aMinimumUsefulBudget);
 
-  nsresult Cancel() override;
+  void Cancel();
+
   void Schedule(bool aAllowIdleDispatch);
+
+  const char* GetName() { return mName; }
 
  private:
   explicit IdleTaskRunner(
@@ -94,6 +102,7 @@ class IdleTaskRunner final : public CancelableIdleRunnable {
   bool mTimerActive;
   MayStopProcessingCallbackType mMayStopProcessing;
   const char* mName;
+  RefPtr<IdleTaskRunnerTask> mTask;
 };
 
 }  // end of namespace mozilla.
