@@ -6123,8 +6123,9 @@ void ContentParent::TransmitBlobURLsForPrincipal(nsIPrincipal* aPrincipal) {
             return false;
           }
 
-          registrations.AppendElement(BlobURLRegistrationData(
-              nsCString(aURI), ipcBlob, aPrincipal, aAgentClusterId, aRevoked));
+          registrations.AppendElement(
+              BlobURLRegistrationData(nsCString(aURI), ipcBlob, aBlobPrincipal,
+                                      aAgentClusterId, aRevoked));
 
           rv = TransmitPermissionsForPrincipal(aPrincipal);
           Unused << NS_WARN_IF(NS_FAILED(rv));
