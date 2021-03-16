@@ -14,10 +14,9 @@
 #define ProfilerMarkersPrerequisites_h
 
 #include "mozilla/BaseProfilerMarkersPrerequisites.h"
+#include "mozilla/ProfilerState.h"
 
 #ifdef MOZ_GECKO_PROFILER
-
-#  include "mozilla/ProfilerState.h"
 
 namespace geckoprofiler::markers {
 

@@ -13,13 +13,6 @@
 #ifndef ProfilerState_h
 #define ProfilerState_h
 
-#ifdef MOZ_GECKO_PROFILER
-
-#  include "mozilla/Atomics.h"
-#  include "mozilla/Maybe.h"
-
-#  include <stdint.h>
-
 //---------------------------------------------------------------------------
 // Profiler features
 //---------------------------------------------------------------------------
@@ -29,82 +22,98 @@
 // values are used internally only and so can be changed without consequence.
 // Any changes to this list should also be applied to the feature list in
 // toolkit/components/extensions/schemas/geckoProfiler.json.
-#  define PROFILER_FOR_EACH_FEATURE(MACRO)                                     \
-    MACRO(0, "java", Java, "Profile Java code, Android only")                  \
-                                                                               \
-    MACRO(1, "js", JS,                                                         \
-          "Get the JS engine to expose the JS stack to the profiler")          \
-                                                                               \
-    /* The DevTools profiler doesn't want the native addresses. */             \
-    MACRO(2, "leaf", Leaf, "Include the C++ leaf node if not stackwalking")    \
-                                                                               \
-    MACRO(3, "mainthreadio", MainThreadIO, "Add main thread file I/O")         \
-                                                                               \
-    MACRO(4, "fileio", FileIO,                                                 \
-          "Add file I/O from all profiled threads, implies mainthreadio")      \
-                                                                               \
-    MACRO(5, "fileioall", FileIOAll,                                           \
-          "Add file I/O from all threads, implies fileio")                     \
-                                                                               \
-    MACRO(6, "noiostacks", NoIOStacks,                                         \
-          "File I/O markers do not capture stacks, to reduce overhead")        \
-                                                                               \
-    MACRO(7, "screenshots", Screenshots,                                       \
-          "Take a snapshot of the window on every composition")                \
-                                                                               \
-    MACRO(8, "seqstyle", SequentialStyle,                                      \
-          "Disable parallel traversal in styling")                             \
-                                                                               \
-    MACRO(9, "stackwalk", StackWalk,                                           \
-          "Walk the C++ stack, not available on all platforms")                \
-                                                                               \
-    MACRO(10, "tasktracer", TaskTracer,                                        \
-          "Start profiling with feature TaskTracer")                           \
-                                                                               \
-    MACRO(11, "threads", Threads, "Profile the registered secondary threads")  \
-                                                                               \
-    MACRO(12, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
-                                                                               \
-    MACRO(13, "jsallocations", JSAllocations,                                  \
-          "Have the JavaScript engine track allocations")                      \
-                                                                               \
-    MACRO(14, "nostacksampling", NoStackSampling,                              \
-          "Disable all stack sampling: Cancels \"js\", \"leaf\", "             \
-          "\"stackwalk\" and labels")                                          \
-                                                                               \
-    MACRO(15, "preferencereads", PreferenceReads,                              \
-          "Track when preferences are read")                                   \
-                                                                               \
-    MACRO(16, "nativeallocations", NativeAllocations,                          \
-          "Collect the stacks from a smaller subset of all native "            \
-          "allocations, biasing towards collecting larger allocations")        \
-                                                                               \
-    MACRO(17, "ipcmessages", IPCMessages,                                      \
-          "Have the IPC layer track cross-process messages")                   \
-                                                                               \
-    MACRO(18, "audiocallbacktracing", AudioCallbackTracing,                    \
-          "Audio callback tracing")                                            \
-                                                                               \
-    MACRO(19, "cpu", CPUUtilization, "CPU utilization")
+#define PROFILER_FOR_EACH_FEATURE(MACRO)                                     \
+  MACRO(0, "java", Java, "Profile Java code, Android only")                  \
+                                                                             \
+  MACRO(1, "js", JS,                                                         \
+        "Get the JS engine to expose the JS stack to the profiler")          \
+                                                                             \
+  /* The DevTools profiler doesn't want the native addresses. */             \
+  MACRO(2, "leaf", Leaf, "Include the C++ leaf node if not stackwalking")    \
+                                                                             \
+  MACRO(3, "mainthreadio", MainThreadIO, "Add main thread file I/O")         \
+                                                                             \
+  MACRO(4, "fileio", FileIO,                                                 \
+        "Add file I/O from all profiled threads, implies mainthreadio")      \
+                                                                             \
+  MACRO(5, "fileioall", FileIOAll,                                           \
+        "Add file I/O from all threads, implies fileio")                     \
+                                                                             \
+  MACRO(6, "noiostacks", NoIOStacks,                                         \
+        "File I/O markers do not capture stacks, to reduce overhead")        \
+                                                                             \
+  MACRO(7, "screenshots", Screenshots,                                       \
+        "Take a snapshot of the window on every composition")                \
+                                                                             \
+  MACRO(8, "seqstyle", SequentialStyle,                                      \
+        "Disable parallel traversal in styling")                             \
+                                                                             \
+  MACRO(9, "stackwalk", StackWalk,                                           \
+        "Walk the C++ stack, not available on all platforms")                \
+                                                                             \
+  MACRO(10, "tasktracer", TaskTracer,                                        \
+        "Start profiling with feature TaskTracer")                           \
+                                                                             \
+  MACRO(11, "threads", Threads, "Profile the registered secondary threads")  \
+                                                                             \
+  MACRO(12, "jstracer", JSTracer, "Enable tracing of the JavaScript engine") \
+                                                                             \
+  MACRO(13, "jsallocations", JSAllocations,                                  \
+        "Have the JavaScript engine track allocations")                      \
+                                                                             \
+  MACRO(14, "nostacksampling", NoStackSampling,                              \
+        "Disable all stack sampling: Cancels \"js\", \"leaf\", "             \
+        "\"stackwalk\" and labels")                                          \
+                                                                             \
+  MACRO(15, "preferencereads", PreferenceReads,                              \
+        "Track when preferences are read")                                   \
+                                                                             \
+  MACRO(16, "nativeallocations", NativeAllocations,                          \
+        "Collect the stacks from a smaller subset of all native "            \
+        "allocations, biasing towards collecting larger allocations")        \
+                                                                             \
+  MACRO(17, "ipcmessages", IPCMessages,                                      \
+        "Have the IPC layer track cross-process messages")                   \
+                                                                             \
+  MACRO(18, "audiocallbacktracing", AudioCallbackTracing,                    \
+        "Audio callback tracing")                                            \
+                                                                             \
+  MACRO(19, "cpu", CPUUtilization, "CPU utilization")
 
 struct ProfilerFeature {
-#  define DECLARE(n_, str_, Name_, desc_)                     \
-    static constexpr uint32_t Name_ = (1u << n_);             \
-    static constexpr bool Has##Name_(uint32_t aFeatures) {    \
-      return aFeatures & Name_;                               \
-    }                                                         \
-    static constexpr void Set##Name_(uint32_t& aFeatures) {   \
-      aFeatures |= Name_;                                     \
-    }                                                         \
-    static constexpr void Clear##Name_(uint32_t& aFeatures) { \
-      aFeatures &= ~Name_;                                    \
-    }
+#define DECLARE(n_, str_, Name_, desc_)                     \
+  static constexpr uint32_t Name_ = (1u << n_);             \
+  static constexpr bool Has##Name_(uint32_t aFeatures) {    \
+    return aFeatures & Name_;                               \
+  }                                                         \
+  static constexpr void Set##Name_(uint32_t& aFeatures) {   \
+    aFeatures |= Name_;                                     \
+  }                                                         \
+  static constexpr void Clear##Name_(uint32_t& aFeatures) { \
+    aFeatures &= ~Name_;                                    \
+  }
 
   // Define a bitfield constant, a getter, and two setters for each feature.
   PROFILER_FOR_EACH_FEATURE(DECLARE)
 
-#  undef DECLARE
+#undef DECLARE
 };
+
+#ifndef MOZ_GECKO_PROFILER
+
+inline bool profiler_is_active() { return false; }
+inline bool profiler_can_accept_markers() { return false; }
+inline bool profiler_thread_is_being_profiled() { return false; }
+inline bool profiler_is_active_and_thread_is_registered() { return false; }
+inline bool profiler_feature_active(uint32_t aFeature) { return false; }
+bool profiler_is_locked_on_current_thread() { return false; }
+
+#else  // !MOZ_GECKO_PROFILER
+
+#  include "mozilla/Atomics.h"
+#  include "mozilla/Maybe.h"
+
+#  include <stdint.h>
 
 namespace mozilla {
 namespace profiler {
@@ -308,6 +317,6 @@ inline bool profiler_is_main_thread() {
 // deadlock.
 bool profiler_is_locked_on_current_thread();
 
-#endif  // !MOZ_GECKO_PROFILER
+#endif  // MOZ_GECKO_PROFILER
 
 #endif  // ProfilerState_h
