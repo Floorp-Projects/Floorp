@@ -58,7 +58,7 @@ add_task(async function test_evaluate_custom_context() {
   );
 });
 
-add_task(async function test_evaluate_active_experiments() {
+add_task(async function test_evaluate_active_experiments_isFirstStartup() {
   const result = await RemoteSettingsExperimentLoader.evaluateJexl(
     "isFirstStartup",
     FAKE_CONTEXT
@@ -70,9 +70,11 @@ add_task(async function test_evaluate_active_experiments() {
   );
 });
 
-add_task(async function test_evaluate_active_experiments() {
+add_task(async function test_evaluate_active_experiments_activeExperiments() {
   // Add an experiment to active experiments
   const slug = "foo" + Date.now();
+  // Init the store before we use it
+  await ExperimentManager.onStartup();
   ExperimentManager.store.addExperiment(ExperimentFakes.experiment(slug));
   registerCleanupFunction(() => {
     ExperimentManager.store._deleteForTests(slug);
