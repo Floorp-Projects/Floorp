@@ -21,12 +21,6 @@ let loadPromise = new Promise(resolve => {
 });
 
 add_task(async function setup() {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["signon.formlessCapture.enabled", true],
-    ],
-  });
-
   info("Waiting for page and frame loads");
   await loadPromise;
 
