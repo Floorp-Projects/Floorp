@@ -677,7 +677,7 @@ static bool CreateSpecificWasmBuffer32(
     // Note MaxMemory32LimitField*PageSize == UINT32_MAX+1 == 4GB, as you would
     // expect for a 32-bit memory.
     //
-    // Note that this must correspond with MaxMemory32Bytes().
+    // Note that this will correspond with MaxMemory32BoundsCheckLimit().
     if (!useHugeMemory &&
         clampedMaxSize.value() >= (UINT32_MAX - wasm::PageSize)) {
       uint64_t clamp = (wasm::MaxMemory32LimitField - 2) * wasm::PageSize;
