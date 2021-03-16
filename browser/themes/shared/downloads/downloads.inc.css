@@ -54,9 +54,11 @@
   padding-inline-end: 59px;
 }
 
+@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
 #downloadsHistory {
   padding-inline: 14px;
 }
+} /** END not Proton **/
 
 @item@ > toolbarseparator {
   margin: 10px 0;
