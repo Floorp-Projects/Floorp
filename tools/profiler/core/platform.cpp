@@ -1686,26 +1686,15 @@ struct AutoWalkJSStack {
   }
 };
 
-// Merges the profiling stack, native stack, and JS stack, outputting the
-// details to aCollector.
-static void MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
-                        const RegisteredThread& aRegisteredThread,
-                        const Registers& aRegs, const NativeStack& aNativeStack,
-                        ProfilerStackCollector& aCollector,
-                        JsFrameBuffer aJsFrames) {
-  // WARNING: this function runs within the profiler's "critical section".
-  // WARNING: this function might be called while the profiler is inactive, and
-  //          cannot rely on ActivePS.
-
-  const ProfilingStack& profilingStack =
-      aRegisteredThread.RacyRegisteredThread().ProfilingStack();
-  const js::ProfilingStackFrame* profilingStackFrames = profilingStack.frames;
-  uint32_t profilingStackFrameCount = profilingStack.stackSize();
+// Make a copy of the JS stack into a JSFrame array. This is necessary since,
+// like the native stack, the JS stack is iterated youngest-to-oldest and we
+// need to iterate oldest-to-youngest when adding frames to aInfo.
+static uint32_t ExtractJsFrames(bool aIsSynchronous,
+                                const RegisteredThread& aRegisteredThread,
+                                const Registers& aRegs,
+                                ProfilerStackCollector& aCollector,
+                                JsFrameBuffer aJsFrames) {
   JSContext* context = aRegisteredThread.GetJSContext();
-
-  // Make a copy of the JS stack into a JSFrame array. This is necessary since,
-  // like the native stack, the JS stack is iterated youngest-to-oldest and we
-  // need to iterate oldest-to-youngest when adding frames to aInfo.
 
   // Non-periodic sampling passes Nothing() as the buffer write position to
   // ProfilingFrameIterator to avoid incorrectly resetting the buffer position
@@ -1750,6 +1739,29 @@ static void MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
       }
     }
   }
+
+  return jsCount;
+}
+
+// Merges the profiling stack, native stack, and JS stack, outputting the
+// details to aCollector.
+static void MergeStacks(uint32_t aFeatures, bool aIsSynchronous,
+                        const RegisteredThread& aRegisteredThread,
+                        const Registers& aRegs, const NativeStack& aNativeStack,
+                        ProfilerStackCollector& aCollector,
+                        JsFrameBuffer aJsFrames) {
+  // WARNING: this function runs within the profiler's "critical section".
+  // WARNING: this function might be called while the profiler is inactive, and
+  //          cannot rely on ActivePS.
+
+  const ProfilingStack& profilingStack =
+      aRegisteredThread.RacyRegisteredThread().ProfilingStack();
+  const js::ProfilingStackFrame* profilingStackFrames = profilingStack.frames;
+  uint32_t profilingStackFrameCount = profilingStack.stackSize();
+  JSContext* context = aRegisteredThread.GetJSContext();
+
+  const uint32_t jsCount = ExtractJsFrames(aIsSynchronous, aRegisteredThread,
+                                           aRegs, aCollector, aJsFrames);
 
   // While the profiling stack array is ordered oldest-to-youngest, the JS and
   // native arrays are ordered youngest-to-oldest. We must add frames to aInfo
