@@ -4,6 +4,62 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+%include ../../shared/menulist.inc.css
+
+@supports -moz-bool-pref("browser.proton.enabled") {
+label {
+  margin: 0 3px !important;
+}
+
+:host([native]) {
+  appearance: auto;
+  -moz-default-appearance: menulist;
+  margin: 2px 4px;
+  color: FieldText;
+  text-shadow: none;
+}
+
+:host([native][disabled="true"]) {
+  background-color: -moz-Dialog;
+  color: GrayText;
+}
+
+/* Label box */
+
+#label-box[native] {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
+:host([native]:not([open="true"]):focus) > #label-box {
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+:host([native]:not([open="true"]):-moz-focusring) > #label-box {
+  outline: 1px dotted;
+}
+
+
+@media (-moz-windows-default-theme) {
+  #label-box[native] {
+    background-color: transparent !important;
+    color: inherit !important;
+  }
+
+  image[native],
+  label[native] {
+    margin-block: -1px !important;
+  }
+
+  dropmarker[native] {
+    margin-top: -2px;
+    margin-inline: 3px -3px;
+  }
+}
+} /** END Proton **/
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
 :host {
   appearance: auto;
   -moz-default-appearance: menulist;
@@ -60,3 +116,4 @@ label {
     margin-inline: 3px -3px;
   }
 }
+} /** END not Proton **/
