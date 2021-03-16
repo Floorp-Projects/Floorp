@@ -164,7 +164,7 @@ body:not(.neterror) #advancedButton {
 
 #certificateErrorDebugInformation {
   display: none;
-  background-color: var(--in-content-box-background-hover) !important;
+  background-color: var(--in-content-box-info-background) !important;
   border-top: 1px solid var(--in-content-border-color);
   width: 100%;
   padding: 1em 17.5%;
