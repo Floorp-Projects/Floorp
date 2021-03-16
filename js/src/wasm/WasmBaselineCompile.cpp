@@ -14879,6 +14879,17 @@ static void WidenHighUI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
   masm.unsignedWidenHighInt32x4(rs, rd);
 }
 
+#  if defined(JS_CODEGEN_ARM64)
+static void PopcntI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.popcntInt8x16(rs, rd);
+}
+#  else
+static void PopcntI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rd,
+                        RegV128 temp) {
+  masm.popcntInt8x16(rs, rd, temp);
+}
+#  endif  // JS_CODEGEN_ARM64
+
 static void AbsI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
   masm.absInt8x16(rs, rd);
 }
@@ -16814,6 +16825,8 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorUnary(SqrtF64x2));
           case uint32_t(SimdOp::V128Not):
             CHECK_NEXT(dispatchVectorUnary(NotV128));
+          case uint32_t(SimdOp::I8x16Popcnt):
+            CHECK_NEXT(dispatchVectorUnary(PopcntI8x16));
           case uint32_t(SimdOp::I8x16Abs):
             CHECK_NEXT(dispatchVectorUnary(AbsI8x16));
           case uint32_t(SimdOp::I16x8Abs):
