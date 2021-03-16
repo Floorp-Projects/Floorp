@@ -46,7 +46,7 @@
    * to make the thicker outline corners look smooth */
   --in-content-focus-outline-radius: 6px;
   --in-content-focus-outline-offset: 2px;
-  --in-content-focus-outline-color: #0061e0;
+  --in-content-focus-outline-color: var(--in-content-primary-button-background);
   --in-content-button-box-shadow: transparent;
 
   /* Note: 1px smaller than we want because we have a 1px transparent border. */
