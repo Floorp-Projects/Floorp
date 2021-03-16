@@ -19,17 +19,23 @@ Services.scriptloader.loadSubScript(
 );
 
 add_task(async function() {
-  const tab = await addTab(`${TEST_URI_COM}?no-mutation`);
+  // Start with a page without much activity so the toolbox gets initialized safely
+  const tab = await addTab(`data:text/html,<meta charset=utf8>`);
 
   // Select the debugger so there will be more activity
   const toolbox = await openToolboxForTab(tab, "jsdebugger");
   const inspector = await toolbox.selectTool("inspector");
 
-  info("Navigate to a different origin");
+  info("Navigate to the ORG test page");
+  await navigateTo(TEST_URI_ORG);
+
+  info("And then navigate to a different origin");
   await navigateTo(TEST_URI_COM);
 
-  info("Navigate backward and forward multiple times, with different delays");
-  await navigateBackAndForth(tab);
+  info(
+    "Navigate backward and forward multiple times between the two origins, with different delays"
+  );
+  await navigateBackAndForth(TEST_URI_ORG, TEST_URI_COM);
 
   // Navigate one last time to a document with less activity so we don't have to deal
   // with pending promises when we destroy the toolbox
@@ -40,7 +46,8 @@ add_task(async function() {
 });
 
 add_task(async function() {
-  const tab = await addTab(`data:text/html,<meta charset=utf8>`);
+  const DATA_URL = `data:text/html,<meta charset=utf8>`;
+  const tab = await addTab(DATA_URL);
 
   // Select the debugger so there will be more activity
   const toolbox = await openToolboxForTab(tab, "jsdebugger");
@@ -50,8 +57,10 @@ add_task(async function() {
   await navigateTo(TEST_URI_COM);
 
   info("Then navigate back, and forth immediatly");
-  tab.linkedBrowser.goBack();
-  tab.linkedBrowser.goForward();
+  // We can't call goBack and right away goForward as goForward and even the call to navigateTo
+  // a bit later might be ignored. So we wait at least for the location to change.
+  await safelyGoBack(DATA_URL);
+  await safelyGoForward(TEST_URI_COM);
 
   // Navigate one last time to a document with less activity so we don't have to deal
   // with pending promises when we destroy the toolbox
@@ -93,15 +102,36 @@ async function checkToolboxState(toolbox) {
   );
 }
 
-async function navigateBackAndForth(tab) {
+async function navigateBackAndForth(
+  expectedUrlAfterBackwardNavigation,
+  expectedUrlAfterForwardNavigation
+) {
   const delays = [100, 0, 500];
   for (const delay of delays) {
     // For each delays, do 3 back/forth navigations
     for (let i = 0; i < 3; i++) {
-      tab.linkedBrowser.goBack();
+      await safelyGoBack(expectedUrlAfterBackwardNavigation);
       await wait(delay);
-      tab.linkedBrowser.goForward();
+      await safelyGoForward(expectedUrlAfterForwardNavigation);
       await wait(delay);
     }
   }
+}
+
+async function safelyGoBack(expectedUrl) {
+  const onLocationChange = BrowserTestUtils.waitForLocationChange(
+    gBrowser,
+    expectedUrl
+  );
+  gBrowser.goBack();
+  await onLocationChange;
+}
+
+async function safelyGoForward(expectedUrl) {
+  const onLocationChange = BrowserTestUtils.waitForLocationChange(
+    gBrowser,
+    expectedUrl
+  );
+  gBrowser.goForward();
+  await onLocationChange;
 }
