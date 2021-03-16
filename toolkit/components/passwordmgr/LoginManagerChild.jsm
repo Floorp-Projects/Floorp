@@ -337,8 +337,21 @@ const observer = {
           }
         }
         docState.fieldModificationsByRootElement.set(formLikeRoot, true);
-        if (!alreadyModified) {
-          // Only infer form submission when there is an user interaction.
+        // Keep track of the modified formless password field to trigger form submission
+        // when it is removed from DOM.
+        let alreadyModifiedFormLessField = true;
+        if (ChromeUtils.getClassName(formLikeRoot) !== "HTMLFormElement") {
+          alreadyModifiedFormLessField = docState.formlessModifiedPasswordFields.has(
+            field
+          );
+          if (!alreadyModifiedFormLessField) {
+            docState.formlessModifiedPasswordFields.add(field);
+          }
+        }
+
+        // Infer form submission only when there has been an user interaction on the form
+        // or the formless password field.
+        if (!alreadyModified || !alreadyModifiedFormLessField) {
           ownerDocument.setNotifyFetchSuccess(true);
         }
 
@@ -687,6 +700,14 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         InsecurePasswordUtils.reportInsecurePasswords(formLike);
         break;
       }
+      case "DOMFormRemoved":
+      case "DOMInputPasswordRemoved": {
+        if (this.shouldIgnoreLoginManagerEvent(event)) {
+          break;
+        }
+        this.onDOMFormRemoved(event);
+        break;
+      }
       case "DOMInputPasswordAdded": {
         if (this.shouldIgnoreLoginManagerEvent(event)) {
           break;
@@ -761,17 +782,108 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
   }
 
   /**
-   * Infer a form is submitted when the form is removed after a successful
-   * fetch or XHR request.
+   * This method sets up form removal listener for form and password fields that
+   * users have interacted with.
    */
   onDOMDocFetchSuccess(event) {
     let document = event.target;
+    let docState = this.stateForDocument(document);
+    let weakModificationsRootElements = ChromeUtils.nondeterministicGetWeakMapKeys(
+      docState.fieldModificationsByRootElement
+    );
 
-    // TODO: Register mutation observer to watch for DOM Tree change.
-    // This will be implemented in the next patch
+    log(
+      "onDOMDocFetchSuccess: modificationsByRootElement approx size:",
+      weakModificationsRootElements.length,
+      "document:",
+      document
+    );
+    // Start to listen to form/password removed event after receiving a fetch/xhr
+    // complete event.
+    document.setNotifyFormOrPasswordRemoved(true);
+    this.docShell.chromeEventHandler.addEventListener(
+      "DOMFormRemoved",
+      this,
+      true
+    );
+    this.docShell.chromeEventHandler.addEventListener(
+      "DOMInputPasswordRemoved",
+      this,
+      true
+    );
+
+    for (let rootElement of weakModificationsRootElements) {
+      if (ChromeUtils.getClassName(rootElement) === "HTMLFormElement") {
+        // If we create formLike when it is removed, we might not have the
+        // right elements at that point, so create formLike object now.
+        let formLike = LoginFormFactory.createFromForm(rootElement);
+        docState.formLikeByObservedNode.set(rootElement, formLike);
+      }
+    }
+
+    let weakFormlessModifiedPasswordFields = ChromeUtils.nondeterministicGetWeakSetKeys(
+      docState.formlessModifiedPasswordFields
+    );
+
+    log(
+      "onDOMDocFetchSuccess: formlessModifiedPasswordFields approx size:",
+      weakFormlessModifiedPasswordFields.length,
+      "document:",
+      document
+    );
+    for (let passwordField of weakFormlessModifiedPasswordFields) {
+      let formLike = LoginFormFactory.createFromField(passwordField);
+      // force elements lazy getter being called.
+      if (formLike.elements.length) {
+        docState.formLikeByObservedNode.set(passwordField, formLike);
+      }
+    }
 
     // Observers have been setted up, removed the listener.
     document.setNotifyFetchSuccess(false);
+  }
+
+  /*
+   * Trigger capture when a form/formless password is removed from DOM.
+   * This method is used to capture logins for cases where form submit events
+   * are not used.
+   *
+   * The heuristic works as follow:
+   * 1. Set up 'DOMDocFetchSuccess' event listener when users have interacted
+   *    with a form (by calling setNotifyFetchSuccess)
+   * 2. After receiving `DOMDocFetchSuccess`, set up form removal event listener
+   *    (see onDOMDocFetchSuccess)
+   * 3. When a form is removed, onDOMFormRemoved triggers the login capture
+   *    code.
+   */
+  onDOMFormRemoved(event) {
+    let document = event.composedTarget.ownerDocument;
+    let docState = this.stateForDocument(document);
+
+    let formLike = docState.formLikeByObservedNode.get(event.target);
+    if (!formLike) {
+      return;
+    }
+
+    log("form is removed");
+    this._onFormSubmit(formLike);
+
+    docState.formLikeByObservedNode.delete(event.target);
+    let weakObserveredNodes = ChromeUtils.nondeterministicGetWeakMapKeys(
+      docState.formLikeByObservedNode
+    );
+
+    if (!weakObserveredNodes.length) {
+      document.setNotifyFormOrPasswordRemoved(false);
+      this.docShell.chromeEventHandler.removeEventListener(
+        "DOMFormRemoved",
+        this
+      );
+      this.docShell.chromeEventHandler.removeEventListener(
+        "DOMInputPasswordRemoved",
+        this
+      );
+    }
   }
 
   onDOMFormBeforeSubmit(event) {
@@ -1025,6 +1137,18 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
          * Anything entered into an <input> that we think might be a password
          */
         possiblePasswords: new Set(),
+
+        /**
+         * Keeps track of the formLike of nodes (form or formless password field)
+         * that we are watching when they are removed from DOM.
+         */
+        formLikeByObservedNode: new WeakMap(),
+
+        /**
+         * Keeps track of all formless password fields that have been
+         * updated by the user.
+         */
+        formlessModifiedPasswordFields: new WeakFieldSet(),
       };
       this._loginFormStateByDocument.set(document, loginFormState);
     }
