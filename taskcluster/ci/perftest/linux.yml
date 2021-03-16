@@ -111,9 +111,8 @@ livesites:
         - [g-image, netwerk/test/perf/perftest_http3_google_image.js]
         - [g-search, netwerk/test/perf/perftest_http3_google_search.js]
         - [lq-fetch, netwerk/test/perf/perftest_http3_lucasquicfetch.js]
-        # broken: bug 1695871
-        # - [ytw, netwerk/test/perf/perftest_http3_youtube_watch.js]
-        # - [ytw-scroll, netwerk/test/perf/perftest_http3_youtube_watch_scroll.js]
+        - [ytw, netwerk/test/perf/perftest_http3_youtube_watch.js]
+        - [ytw-scroll, netwerk/test/perf/perftest_http3_youtube_watch_scroll.js]
     perftest-metrics:
         by-perftest:
             cloudflare:
@@ -129,9 +128,8 @@ livesites:
             g-image: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, imagesPerSecond, imageLoadTime]
             g-search: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint]
             lq-fetch: [navigationTiming, pageTimings, resources, timeToContentfulPaint, resourceLoadTime, imagesLoaded, imagesMissed]
-            # broken: bug 1695871
-            # ytw: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, droppedFrames, decodedFrames]
-            # ytw-scroll: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, droppedFrames, decodedFrames]
+            ytw: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, droppedFrames, decodedFrames]
+            ytw-scroll: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint, droppedFrames, decodedFrames]
             default: [navigationTiming, pageTimings, resources, firstPaint, timeToContentfulPaint]
     # Leave this here so people know this exists when looking
     # for examples
@@ -166,11 +164,10 @@ livesites:
                 - ["60s", browsertime.waitTime=60000]
             lq-fetch:
                 - [null, "browsertime.waitTime=1000,browsertime.cycles=5"]
-            # broken: bug 1695871
-            # ytw:
-            #     - [null, browsertime.waitTime=20000]
-            # ytw-scroll:
-            #     - [null, browsertime.waitTime=20000]
+            ytw:
+                - [null, browsertime.waitTime=20000]
+            ytw-scroll:
+                - [null, browsertime.waitTime=20000]
             default:
                 - [null, browsertime.waitTime=1000]
     run:
