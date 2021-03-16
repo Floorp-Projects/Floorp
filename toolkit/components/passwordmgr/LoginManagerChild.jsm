@@ -20,6 +20,10 @@ const PASSWORD_INPUT_ADDED_COALESCING_THRESHOLD_MS = 1;
 const AUTOCOMPLETE_AFTER_RIGHT_CLICK_THRESHOLD_MS = 400;
 const AUTOFILL_STATE = "autofill";
 
+const SUBMIT_FORM_SUBMIT = 1;
+const SUBMIT_PAGE_NAVIGATION = 2;
+const SUBMIT_FORM_IS_REMOVED = 3;
+
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
@@ -866,7 +870,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     }
 
     log("form is removed");
-    this._onFormSubmit(formLike);
+    this._onFormSubmit(formLike, SUBMIT_FORM_IS_REMOVED);
 
     docState.formLikeByObservedNode.delete(event.target);
     let weakObserveredNodes = ChromeUtils.nondeterministicGetWeakMapKeys(
@@ -895,7 +899,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
     // can grab form data before it might be modified (see bug 257781).
     log("notified before form submission");
     let formLike = LoginFormFactory.createFromForm(event.target);
-    this._onFormSubmit(formLike);
+    this._onFormSubmit(formLike, SUBMIT_FORM_SUBMIT);
   }
 
   onDocumentVisibilityChange(event) {
@@ -1381,7 +1385,11 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
    */
   _getPasswordFields(
     form,
-    { fieldOverrideRecipe = null, minPasswordLength = 0 } = {}
+    {
+      fieldOverrideRecipe = null,
+      minPasswordLength = 0,
+      ignoreConnect = false,
+    } = {}
   ) {
     // Locate the password fields in the form.
     let pwFields = [];
@@ -1390,7 +1398,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       if (
         ChromeUtils.getClassName(element) !== "HTMLInputElement" ||
         !element.hasBeenTypePassword ||
-        !element.isConnected
+        (!element.isConnected && !ignoreConnect)
       ) {
         continue;
       }
@@ -1458,6 +1466,9 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
    * @param {LoginForm} form
    * @param {bool} isSubmission
    * @param {Set} recipes
+   * @param {Object} options
+   * @param {bool} [options.ignoreConnect] - Whether to ignore checking isConnected
+   *                                         of the element.
    * @return {Object} {usernameField, newPasswordField, oldPasswordField, confirmPasswordField}
    *
    * usernameField may be null.
@@ -1471,7 +1482,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
    * this method will only return a non-null usernameField if the
    * LoginForm has a password field.
    */
-  _getFormFields(form, isSubmission, recipes) {
+  _getFormFields(form, isSubmission, recipes, { ignoreConnect = false } = {}) {
     let usernameField = null;
     let newPasswordField = null;
     let oldPasswordField = null;
@@ -1522,6 +1533,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       pwFields = this._getPasswordFields(form, {
         fieldOverrideRecipe,
         minPasswordLength: isSubmission ? minSubmitPasswordLength : 0,
+        ignoreConnect,
       });
     }
 
@@ -1537,7 +1549,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
 
       for (let i = pwFields[0].index - 1; i >= 0; i--) {
         let element = form.elements[i];
-        if (!LoginHelper.isUsernameFieldType(element)) {
+        if (!LoginHelper.isUsernameFieldType(element, { ignoreConnect })) {
           continue;
         }
 
@@ -1743,7 +1755,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       }
 
       let formLike = LoginFormFactory.getForRootElement(formRoot);
-      this._onFormSubmit(formLike);
+      this._onFormSubmit(formLike, SUBMIT_PAGE_NAVIGATION);
     }
   }
 
@@ -1755,7 +1767,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
    *
    * @param {LoginForm} form
    */
-  _onFormSubmit(form) {
+  _onFormSubmit(form, reason) {
     log("_onFormSubmit", form);
 
     this._maybeSendFormInteractionMessage(
@@ -1764,6 +1776,9 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
       {
         targetField: null,
         isSubmission: true,
+        // When this is trigger by inferring from form removal, the form is not
+        // connected anymore, skip checking isConnected in this case.
+        ignoreConnect: reason == SUBMIT_FORM_IS_REMOVED,
       }
     );
   }
@@ -1784,7 +1799,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
   _maybeSendFormInteractionMessage(
     form,
     messageName,
-    { targetField, isSubmission, triggeredByFillingGenerated }
+    { targetField, isSubmission, triggeredByFillingGenerated, ignoreConnect }
   ) {
     let doc = form.ownerDocument;
     let win = doc.defaultView;
@@ -1830,7 +1845,7 @@ this.LoginManagerChild = class LoginManagerChild extends JSWindowActorChild {
         newPasswordField,
         oldPasswordField,
         confirmPasswordField,
-      } = this._getFormFields(form, true, recipes);
+      } = this._getFormFields(form, true, recipes, { ignoreConnect });
 
       // It's possible the field triggering this message isn't one of those found by _getFormFields' heuristics
       if (
