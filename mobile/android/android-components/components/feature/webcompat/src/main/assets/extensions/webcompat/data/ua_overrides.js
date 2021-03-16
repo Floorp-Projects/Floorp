@@ -453,18 +453,19 @@ const AVAILABLE_UA_OVERRIDES = [
   },
   {
     /*
-     * Bug 1622081 - UA override for m2.bmo.com
+     * Bug 1697324 - Update the override for mobile2.bmo.com
+     * Previously Bug 1622081 - UA override for mobile2.bmo.com
      * Webcompat issue #45019 - https://webcompat.com/issues/45019
      *
-     * Unless the UA string contains "Chrome", m2.bmo.com will
+     * Unless the UA string contains "Chrome", mobile2.bmo.com will
      * display a modal saying the browser is out-of-date.
      */
-    id: "bug1622081",
+    id: "bug1697324",
     platform: "android",
-    domain: "m2.bmo.com",
-    bug: "1622081",
+    domain: "mobile2.bmo.com",
+    bug: "1697324",
     config: {
-      matches: ["*://m2.bmo.com/*"],
+      matches: ["*://mobile2.bmo.com/*"],
       uaTransformer: originalUA => {
         return originalUA + " Chrome";
       },
@@ -612,6 +613,28 @@ const AVAILABLE_UA_OVERRIDES = [
       matches: ["*://*.vh1.com/*"],
       uaTransformer: () => {
         return UAHelpers.getDeviceAppropriateChromeUA();
+      },
+    },
+  },
+  {
+    /*
+     * Bug 1693827 - Add UA override for www.spectrum.net/voice/
+     * Webcompat issue https://bugzilla.mozilla.org/show_bug.cgi?id=1546167
+     *
+     * The site is not allowing Firefox users to download
+     * voice messages based on UA detection. Chrome UA is required.
+     */
+    id: "bug1693827",
+    platform: "desktop",
+    domain: "spectrum.net",
+    bug: "1693827",
+    config: {
+      matches: ["*://*.spectrum.net/voice/*"],
+      uaTransformer: originalUA => {
+        return (
+          UAHelpers.getPrefix(originalUA) +
+          " AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.4389.90 Safari/537.36"
+        );
       },
     },
   },

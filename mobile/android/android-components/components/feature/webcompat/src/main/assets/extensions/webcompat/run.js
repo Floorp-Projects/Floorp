@@ -6,11 +6,10 @@
 
 /* globals AboutCompatBroker, AVAILABLE_INJECTIONS, AVAILABLE_SHIMS,
            AVAILABLE_PIP_OVERRIDES, AVAILABLE_UA_OVERRIDES, CUSTOM_FUNCTIONS,
-           Injections, PictureInPictureOverrides, Shims, UAOverrides */
+           Injections, Shims, UAOverrides */
 
 const injections = new Injections(AVAILABLE_INJECTIONS, CUSTOM_FUNCTIONS);
 const uaOverrides = new UAOverrides(AVAILABLE_UA_OVERRIDES);
-const pipOverrides = new PictureInPictureOverrides(AVAILABLE_PIP_OVERRIDES);
 const shims = new Shims(AVAILABLE_SHIMS);
 
 const aboutCompatBroker = new AboutCompatBroker({
@@ -21,4 +20,3 @@ const aboutCompatBroker = new AboutCompatBroker({
 aboutCompatBroker.bootup();
 injections.bootup();
 uaOverrides.bootup();
-pipOverrides.bootup();

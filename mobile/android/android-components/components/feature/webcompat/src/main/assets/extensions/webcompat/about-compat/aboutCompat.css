@@ -13,65 +13,19 @@
   table {
     width: 100%;
     padding-bottom: 2em;
+    border-spacing: 0;
   }
 
-  .hidden {
-    display: none;
+  td {
+    border-bottom: 1px solid var(--in-content-border-color);
   }
 
-  .table-title-container {
-    align-items: center;
-    display: flex;
-    justify-content: space-between;
-  }
-
-  .wide-button {
-    display: block;
-    min-height: 32px;
-    padding-inline: 30px;
-  }
-
-  .submitting {
-    background-image: url(chrome://global/skin/icons/loading.png);
-    background-position: center;
-    background-repeat: no-repeat;
-    background-size: 16px;
-  }
-
-  .submitting .submit-crash-button-label {
-    display: none;
-  }
-
-  .failed-to-submit {
-    color: #ca8695;
-  }
-
-  a.button-as-link {
-    appearance: none;
-    min-height: 30px;
-    color: var(--in-content-text-color) !important;
-    border: 1px solid var(--in-content-box-border-color) !important;
-    border-radius: 2px;
-    background-color: var(--in-content-page-background);
-    line-height: 30px;
-    margin: 4px 8px;
-    /* Ensure font-size isn't overridden by widget styling (e.g. in forms.css) */
-    font-size: 1em;
-  }
-
-  a.button-as-link:hover {
-    background-color: var(--in-content-box-background-hover) !important;
-    text-decoration: none;
-  }
-
-  h2.lighter-font-weight {
-    font-weight: lighter;
-  }
-
-  th {
-    text-align: start;
+  td:last-child > button {
+    float: inline-end;
   }
 }
+
+/* Mobile UI where common.css is not loaded */
 
 @media (any-pointer: coarse), (any-pointer: none) {
   * {
@@ -79,22 +33,40 @@
     padding: 0;
   }
 
-  html {
-    font-family: sans-serif;
+  :root {
+    --background-color: #fff;
+    --text-color: #0c0c0d;
+    --border-color: #e1e1e2;
+    --button-background-color: #f5f5f5;
+    --selected-tab-text-color: #0061e0;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --background-color: #292833;
+      --text-color: #f9f9fa;
+      --border-color: rgba(255, 255, 255, 0.15);
+      --button-background-color: rgba(0, 0, 0, 0.15);
+      --selected-tab-text-color: #00ddff;
+    }
+  }
+
+  body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    font: message-box;
     font-size: 14px;
     -moz-text-size-adjust: none;
-    background-color: #f5f5f5;
   }
 
   table,
   tr,
   p {
     display: block;
-    background: #fff;
   }
 
   table {
-    border-top: 2px solid #0a84ff;
+    border-top: 2px solid var(--border-color);
     margin-top: -2px;
     position: absolute;
     width: 100%;
@@ -104,12 +76,12 @@
 
   tr {
     position: relative;
-    border-bottom: 1px solid #d7d9db;
+    border-bottom: 1px solid var(--border-color);
     padding: 1em;
   }
 
   a {
-    color: #000;
+    color: inherit;
     font-size: 94%;
   }
 
@@ -119,23 +91,16 @@
     z-index: 2;
     display: inline-block;
     text-align: left;
-    padding: 1em;
     font-weight: bold;
-    border-top-left-radius: 3px;
-    border-top-right-radius: 3px;
-    border: 1px solid #d7d9db;
-    border-bottom: 0;
-    margin-bottom: 2px;
-    background: #f5f5f5;
-    color: #363b40;
+    border-block: 2px solid transparent;
     font-size: 1em;
     font-weight: bold;
     padding: 1em;
   }
 
   .tab.active {
-    border-bottom-color: #fff;
-    background: #fff;
+    color: var(--selected-tab-text-color);
+    border-bottom-color: currentColor;
     margin-bottom: 0;
     padding-bottom: calc(1em + 2px);
   }
@@ -169,16 +134,17 @@
   }
 
   button {
-    background: #e8e8e7;
+    background: var(--button-background-color);
+    color: inherit;
     position: absolute;
     top: 0;
     bottom: 0;
     inset-inline-end: 0;
     width: 6em;
     border: 0;
-    border-inline-start: 1px solid #d7d9db;
+    border-inline-start: 1px solid var(--border-color);
+    font-weight: 600;
     appearance: none;
-    color: #000;
   }
 
   button::-moz-focus-inner {

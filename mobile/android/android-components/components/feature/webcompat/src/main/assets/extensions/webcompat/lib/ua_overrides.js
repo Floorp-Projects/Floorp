@@ -52,22 +52,12 @@ class UAOverrides {
       return;
     }
 
-    const { blocks, matches, telemetryKey, uaTransformer } = override.config;
+    const { blocks, matches, uaTransformer } = override.config;
     const listener = details => {
-      // We set the "used" telemetry key if the user would have had the
-      // override applied, regardless of whether it is actually applied.
-      if (!details.frameId && override.shouldSendDetailedTelemetry) {
-        // For now, we only care about Telemetry on Fennec, where telemetry
-        // is sent in Java code (as part of the core ping). That code must
-        // be aware of each key we send, which we send as a SharedPreference.
-        browser.sharedPreferences.setBoolPref(`${telemetryKey}Used`, true);
-      }
-
       // Don't actually override the UA for an experiment if the user is not
       // part of the experiment (unless they force-enabed the override).
       if (
         !override.config.experiment ||
-        override.experimentActive ||
         override.permanentPrefEnabled === true
       ) {
         for (const header of details.requestHeaders) {
@@ -111,27 +101,11 @@ class UAOverrides {
     }
     this._activeListeners.set(override, listeners);
     override.active = true;
-
-    // If telemetry is being collected, note the addon version.
-    if (telemetryKey) {
-      const { version } = browser.runtime.getManifest();
-      browser.sharedPreferences.setCharPref(`${telemetryKey}Version`, version);
-    }
-
-    // If collecting detailed telemetry on the override, note that it was activated.
-    if (override.shouldSendDetailedTelemetry) {
-      browser.sharedPreferences.setBoolPref(`${telemetryKey}Ready`, true);
-    }
   }
 
   onOverrideConfigChanged(override) {
     // Check whether the override should be hidden from about:compat.
     override.hidden = override.config.hidden;
-
-    // Also hide if the override is in an experiment the user is not part of.
-    if (override.config.experiment && !override.experimentActive) {
-      override.hidden = true;
-    }
 
     // Setting the override's permanent pref overrules whether it is hidden.
     if (override.permanentPrefEnabled !== undefined) {
@@ -146,21 +120,10 @@ class UAOverrides {
       shouldBeActive = false;
     }
 
-    // Only send detailed telemetry if the user is actively in an experiment or
-    // has opted into an experimental feature.
-    override.shouldSendDetailedTelemetry =
-      override.config.telemetryKey &&
-      (override.experimentActive || override.permanentPrefEnabled);
-
     // Overrides gated behind an experiment the user is not part of do not
     // have to be activated, unless they are gathering telemetry, or the
     // user has force-enabled them with their permanent pref.
-    if (
-      override.config.experiment &&
-      !override.experimentActive &&
-      !override.config.telemetryKey &&
-      override.permanentPrefEnabled !== true
-    ) {
+    if (override.config.experiment && override.permanentPrefEnabled !== true) {
       shouldBeActive = false;
     }
 
@@ -188,24 +151,6 @@ class UAOverrides {
       if (platformMatches.includes(override.platform)) {
         override.availableOnPlatform = true;
         override.currentPlatform = platformInfo.os;
-
-        // Note whether the user is actively in the override's experiment (if any).
-        override.experimentActive = false;
-        const experiment = override.config.experiment;
-        if (experiment) {
-          // We expect the definition to have either one string for 'experiment'
-          // (just one branch) or an array of strings (multiple branches). So
-          // here we turn the string case into a one-element array for the loop.
-          const branches = Array.isArray(experiment)
-            ? experiment
-            : [experiment];
-          for (const branch of branches) {
-            if (await browser.experiments.isActive(branch)) {
-              override.experimentActive = true;
-              break;
-            }
-          }
-        }
 
         // If there is a specific about:config preference governing
         // this override, monitor its state.
