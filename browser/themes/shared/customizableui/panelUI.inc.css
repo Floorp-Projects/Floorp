@@ -74,20 +74,11 @@
   border-inline-start: 1px solid;
   border-image: linear-gradient(
     transparent 4px,
-    var(--lwt-toolbar-vertical-separator, rgba(0,0,0,.1)) 4px,
-    var(--lwt-toolbar-vertical-separator, rgba(0,0,0,.1)) calc(100% - 4px),
+    var(--toolbarseparator-color) 4px,
+    var(--toolbarseparator-color) calc(100% - 4px),
     transparent calc(100% - 4px)
   );
   border-image-slice: 1;
-}
-
-:root:not([uidensity=compact], [chromehidden~="toolbar"]) #nav-bar[brighttext] > #PanelUI-button {
-  border-image-source: linear-gradient(
-    transparent 4px,
-    var(--lwt-toolbar-vertical-separator, rgba(255,255,255,.2)) 4px,
-    var(--lwt-toolbar-vertical-separator, rgba(255,255,255,.2)) calc(100% - 4px),
-    transparent calc(100% - 4px)
-  );
 }
 } /*** END !proton ***/
 

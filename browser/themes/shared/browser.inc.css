@@ -22,15 +22,15 @@
   --short-notification-background: #0250BB;
   --short-notification-gradient: #9059FF;
 
-  --buttons-secondary-bgcolor: hsla(0,0%,80%,.3);
-  --buttons-secondary-hover-bgcolor: hsla(0,0%,80%,.5);
-  --buttons-secondary-active-bgcolor: hsla(0,0%,80%,.8);
+  --buttons-secondary-bgcolor: color-mix(in srgb, currentColor 13%, transparent);
+  --buttons-secondary-hover-bgcolor: color-mix(in srgb, currentColor 17%, transparent);
+  --buttons-secondary-active-bgcolor: color-mix(in srgb, currentColor 30%, transparent);
   --buttons-secondary-color: currentColor;
 
   --identity-box-margin-inline: 4px;
   --identity-box-label-opacity: .8;
-  --urlbar-box-bg-overlay: hsla(0,0%,70%,.2);
-  --urlbar-box-unfocused-bg-overlay: hsla(0,0%,100%,.7);
+  --urlbar-box-bg-overlay: var(--buttons-secondary-bgcolor);
+  --urlbar-box-unfocused-bg-overlay: var(--buttons-secondary-bgcolor);
 
   --urlbar-min-height: 32px;
   --urlbar-icon-padding: 6px; /* (32px - 2px border - 2px padding - 16px icon) / 2 */
@@ -47,9 +47,7 @@
     --identity-box-margin-inline: 3px;
     --identity-box-label-opacity: .6;
   }
-}
-
-/*** END !proton ***/
+} /*** END !proton ***/
 
 :root[uidensity=compact] {
   --urlbar-min-height: 26px;

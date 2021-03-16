@@ -77,7 +77,7 @@ const ThemeVariableMap = [
     },
   ],
   [
-    "--lwt-toolbar-vertical-separator",
+    "--toolbarseparator-color",
     {
       lwtProperty: "toolbar_vertical_separator",
     },
@@ -101,13 +101,13 @@ const ThemeVariableMap = [
     },
   ],
   [
-    "--lwt-toolbarbutton-hover-background",
+    "--toolbarbutton-hover-background",
     {
       lwtProperty: "button_background_hover",
     },
   ],
   [
-    "--lwt-toolbarbutton-active-background",
+    "--toolbarbutton-active-background",
     {
       lwtProperty: "button_background_active",
     },
