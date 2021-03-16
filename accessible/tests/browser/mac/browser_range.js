@@ -12,6 +12,7 @@ loadScripts(
 );
 
 /**
+ * Verify that the value of a slider input can be incremented/decremented
  * Test input[type=range]
  */
 addAccessibleTask(
@@ -50,10 +51,32 @@ addAccessibleTask(
 );
 
 /**
+ * Verify that the value of a slider input can be set directly
  * Test input[type=range]
  */
 addAccessibleTask(
-  `<input type="number" value="11" id="number">`,
+  `<input id="range" type="range" min="1" max="100" value="1" step="10">`,
+  async (browser, accDoc) => {
+    let nextValue = "21";
+    let range = getNativeInterface(accDoc, "range");
+    is(range.getAttributeValue("AXRole"), "AXSlider", "Correct AXSlider role");
+    is(range.getAttributeValue("AXValue"), "1", "Correct initial value");
+
+    ok(range.isAttributeSettable("AXValue"), "Range AXValue is settable.");
+
+    let evt = waitForMacEvent("AXValueChanged");
+    range.setAttributeValue("AXValue", nextValue);
+    await evt;
+    is(range.getAttributeValue("AXValue"), nextValue, "Correct updated value");
+  }
+);
+
+/**
+ * Verify that the value of a number input can be incremented/decremented
+ * Test input[type=number]
+ */
+addAccessibleTask(
+  `<input type="number" value="11" id="number" step=".05">`,
   async (browser, accDoc) => {
     let number = getNativeInterface(accDoc, "number");
     is(
@@ -70,7 +93,7 @@ addAccessibleTask(
     let evt = waitForMacEvent("AXValueChanged");
     number.performAction("AXIncrement");
     await evt;
-    is(number.getAttributeValue("AXValue"), "12", "Correct increment value");
+    is(number.getAttributeValue("AXValue"), "11.05", "Correct increment value");
 
     evt = waitForMacEvent("AXValueChanged");
     number.performAction("AXDecrement");
@@ -88,5 +111,30 @@ addAccessibleTask(
       "42",
       "Correct value from content change"
     );
+  }
+);
+
+/**
+ * Verify that the value of a number input can be set directly
+ * Test input[type=number]
+ */
+addAccessibleTask(
+  `<input type="number" value="11" id="number">`,
+  async (browser, accDoc) => {
+    let nextValue = "21";
+    let number = getNativeInterface(accDoc, "number");
+    is(
+      number.getAttributeValue("AXRole"),
+      "AXIncrementor",
+      "Correct AXIncrementor role"
+    );
+    is(number.getAttributeValue("AXValue"), "11", "Correct initial value");
+
+    ok(number.isAttributeSettable("AXValue"), "Range AXValue is settable.");
+
+    let evt = waitForMacEvent("AXValueChanged");
+    number.setAttributeValue("AXValue", nextValue);
+    await evt;
+    is(number.getAttributeValue("AXValue"), nextValue, "Correct updated value");
   }
 );
