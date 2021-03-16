@@ -1092,24 +1092,11 @@ PersistentStoragePermissionPrompt.prototype = {
     let learnMoreURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") +
       "storage-permissions";
-    let options = {
+    return {
       learnMoreURL,
       displayURI: false,
       name: this.getPrincipalName(),
-      checkbox: {
-        show:
-          !this.principal.schemeIs("file") &&
-          !PrivateBrowsingUtils.isWindowPrivate(this.browser.ownerGlobal),
-      },
     };
-
-    if (options.checkbox.show) {
-      options.checkbox.label = gBrowserBundle.GetStringFromName(
-        "persistentStorage.remember"
-      );
-    }
-
-    return options;
   },
 
   get notificationID() {
