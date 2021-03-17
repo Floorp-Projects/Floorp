@@ -3,11 +3,16 @@
   <head>
     <meta charset="utf-8">
     <title>Simple webconsole test page</title>
+    <style>
+      p {
+        color: bled;
+      }
+    </style>
   </head>
   <body>
     <p>Simple webconsole test page</p>
     <script>
-      /* exported doLogs, stringLog */
+      /* exported doLogs, stringLog, throwError */
       "use strict";
 
       function doLogs(num) {
@@ -19,6 +24,10 @@
 
       function stringLog() {
         console.log("stringLog");
+      }
+
+      function throwError(errorMessage) {
+        throw errorMessage;
       }
     </script>
   </body>

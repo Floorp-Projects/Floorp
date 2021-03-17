@@ -5,6 +5,7 @@
 
 const {
   types,
+  Arg,
   Option,
   RetVal,
   generateActorSpec,
@@ -39,6 +40,18 @@ const contentProcessTargetSpec = generateActorSpec({
     tabDetached: {
       type: "tabDetached",
       from: Option(0, "string"),
+    },
+    "resource-available-form": {
+      type: "resource-available-form",
+      resources: Arg(0, "array:json"),
+    },
+    "resource-destroyed-form": {
+      type: "resource-destroyed-form",
+      resources: Arg(0, "array:json"),
+    },
+    "resource-updated-form": {
+      type: "resource-updated-form",
+      resources: Arg(0, "array:json"),
     },
   },
 });
