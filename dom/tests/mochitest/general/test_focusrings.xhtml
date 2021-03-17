@@ -27,7 +27,11 @@ function snapShot(element) {
 
 function initTest()
 {
-  SpecialPowers.pushPrefEnv({"set": [['accessibility.tabfocus', 7]]}, runTest);
+  SpecialPowers.pushPrefEnv({
+    "set": [
+      ['accessibility.mouse_focuses_formcontrol', false],
+    ]
+  }, runTest);
 }
 
 function runTest()
@@ -179,7 +183,7 @@ function testHTMLElements(list, isMac, expectedNoRingsOnWin)
   }
 }
 
-SimpleTest.waitForFocus(runTest);
+SimpleTest.waitForFocus(initTest);
 
 ]]>
 </script>

@@ -19,13 +19,7 @@ var result = "";
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
   synthesizeMouseAtCenter(document.getElementById("button"), { });
-  if (/Mac/.test(navigator.platform)) {
-    // Buttons don't focus when clicked on Mac.
-    is(result, "", "Focus button then input");
-  }
-  else {
-    is(result, "(focus button)(blur button)(focus input)", "Focus button then input");
-  }
+  is(result, "(focus button)(blur button)(focus input)", "Focus button then input");
   SimpleTest.finish();
 });
 </script>
