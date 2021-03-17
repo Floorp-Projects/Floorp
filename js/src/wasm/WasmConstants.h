@@ -693,10 +693,10 @@ enum class SimdOp {
   I64x2Mul = 0xd5,
   I64x2Eq = 0xd6,
   I64x2Ne = 0xd7,
-  // Unused = 0xd8
-  // Unused = 0xd9
-  // Unused = 0xda
-  // Unused = 0xdb
+  I64x2LtS = 0xd8,
+  I64x2GtS = 0xd9,
+  I64x2LeS = 0xda,
+  I64x2GeS = 0xdb,
   I64x2ExtMulLowSI32x4 = 0xdc,
   I64x2ExtMulHighSI32x4 = 0xdd,
   I64x2ExtMulLowUI32x4 = 0xde,

@@ -2633,10 +2633,17 @@ class MacroAssembler : public MacroAssemblerSpecific {
                                      FloatRegister temp1, FloatRegister temp2)
       DEFINED_ON(x86_shared);
 
-  // On x86_shared, limited to !=, ==
+  inline void compareForEqualityInt64x2(Assembler::Condition cond,
+                                        FloatRegister rhs,
+                                        FloatRegister lhsDest)
+      DEFINED_ON(x86_shared);
+
+  inline void compareForOrderingInt64x2(
+      Assembler::Condition cond, FloatRegister rhs, FloatRegister lhsDest,
+      FloatRegister temp1, FloatRegister temp2) DEFINED_ON(x86_shared);
+
   inline void compareInt64x2(Assembler::Condition cond, FloatRegister rhs,
-                             FloatRegister lhsDest)
-      DEFINED_ON(x86_shared, arm64);
+                             FloatRegister lhsDest) DEFINED_ON(arm64);
 
   inline void compareFloat32x4(Assembler::Condition cond, FloatRegister rhs,
                                FloatRegister lhsDest)

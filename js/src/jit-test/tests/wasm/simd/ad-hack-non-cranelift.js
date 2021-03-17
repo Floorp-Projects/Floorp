@@ -270,6 +270,67 @@ ins.exports.i64_ne();
 assertSame(get(mem64, 0, 2), [0n, -1n]);
 
 
+// i64x2.lt, i64x2.gt, i64x2.le, and i64.ge
+
+var ins = wasmEvalText(`
+  (module
+    (memory (export "mem") 1 1)
+    (func (export "i64_lt_s")
+      (v128.store (i32.const 0)
+        (i64x2.lt_s (v128.load (i32.const 16)) (v128.load (i32.const 32))) ))
+    (func (export "i64_gt_s")
+      (v128.store (i32.const 0)
+        (i64x2.gt_s (v128.load (i32.const 16)) (v128.load (i32.const 32))) ))
+    (func (export "i64_le_s")
+      (v128.store (i32.const 0)
+        (i64x2.le_s (v128.load (i32.const 16)) (v128.load (i32.const 32))) ))
+    (func (export "i64_ge_s")
+      (v128.store (i32.const 0)
+        (i64x2.ge_s (v128.load (i32.const 16)) (v128.load (i32.const 32))) )) )`);
+
+var mem64 = new BigInt64Array(ins.exports.mem.buffer);
+
+set(mem64, 2, [0n, 1n, 1n, 0n]);
+ins.exports.i64_lt_s();
+assertSame(get(mem64, 0, 2), [-1n, 0n]);
+ins.exports.i64_gt_s();
+assertSame(get(mem64, 0, 2), [0n, -1n]);
+ins.exports.i64_le_s();
+assertSame(get(mem64, 0, 2), [-1n, 0n]);
+ins.exports.i64_ge_s();
+assertSame(get(mem64, 0, 2), [0n, -1n]);
+
+set(mem64, 2, [0n, -1n, -1n, 0n]);
+ins.exports.i64_lt_s();
+assertSame(get(mem64, 0, 2), [0n, -1n]);
+ins.exports.i64_gt_s();
+assertSame(get(mem64, 0, 2), [-1n, 0n]);
+ins.exports.i64_le_s();
+assertSame(get(mem64, 0, 2), [0n, -1n]);
+ins.exports.i64_ge_s();
+assertSame(get(mem64, 0, 2), [-1n, 0n]);
+
+set(mem64, 2, [-2n, 2n, -1n, 1n]);
+ins.exports.i64_lt_s();
+assertSame(get(mem64, 0, 2), [-1n, 0n]);
+ins.exports.i64_gt_s();
+assertSame(get(mem64, 0, 2), [0n, -1n]);
+ins.exports.i64_le_s();
+assertSame(get(mem64, 0, 2), [-1n, 0n]);
+ins.exports.i64_ge_s();
+assertSame(get(mem64, 0, 2), [0n, -1n]);
+
+set(mem64, 2, [-2n, 1n, -2n, 1n]);
+ins.exports.i64_lt_s();
+assertSame(get(mem64, 0, 2), [0n, 0n]);
+ins.exports.i64_gt_s();
+assertSame(get(mem64, 0, 2), [0n, 0n]);
+ins.exports.i64_le_s();
+assertSame(get(mem64, 0, 2), [-1n, -1n]);
+ins.exports.i64_ge_s();
+assertSame(get(mem64, 0, 2), [-1n, -1n]);
+
+
 function wasmCompile(text) {
   return new WebAssembly.Instance(new WebAssembly.Module(wasmTextToBinary(text)))
 }

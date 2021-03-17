@@ -2528,10 +2528,26 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
                                   temp2);
       break;
     case wasm::SimdOp::I64x2Eq:
-      masm.compareInt64x2(Assembler::Equal, rhs, lhsDest);
+      masm.compareForEqualityInt64x2(Assembler::Equal, rhs, lhsDest);
       break;
     case wasm::SimdOp::I64x2Ne:
-      masm.compareInt64x2(Assembler::NotEqual, rhs, lhsDest);
+      masm.compareForEqualityInt64x2(Assembler::NotEqual, rhs, lhsDest);
+      break;
+    case wasm::SimdOp::I64x2LtS:
+      masm.compareForOrderingInt64x2(Assembler::LessThan, rhs, lhsDest, temp1,
+                                     temp2);
+      break;
+    case wasm::SimdOp::I64x2GtS:
+      masm.compareForOrderingInt64x2(Assembler::GreaterThan, rhs, lhsDest,
+                                     temp1, temp2);
+      break;
+    case wasm::SimdOp::I64x2LeS:
+      masm.compareForOrderingInt64x2(Assembler::LessThanOrEqual, rhs, lhsDest,
+                                     temp1, temp2);
+      break;
+    case wasm::SimdOp::I64x2GeS:
+      masm.compareForOrderingInt64x2(Assembler::GreaterThanOrEqual, rhs,
+                                     lhsDest, temp1, temp2);
       break;
     case wasm::SimdOp::F32x4Eq:
       masm.compareFloat32x4(Assembler::Equal, rhs, lhsDest);
