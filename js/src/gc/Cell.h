@@ -55,7 +55,6 @@ class StoreBuffer;
 class TenuredCell;
 
 extern void PerformIncrementalBarrier(TenuredCell* cell);
-extern void PerformIncrementalBarrierDuringFlattening(JSString* str);
 extern void UnmarkGrayGCThingRecursively(TenuredCell* cell);
 
 // Like gc::MarkColor but allows the possibility of the cell being unmarked.
@@ -142,9 +141,17 @@ struct Cell {
   // compacting GC and is now a RelocationOverlay.
   static constexpr uintptr_t FORWARD_BIT = Bit(0);
 
-  // Bits 1 and 2 are currently unused.
+  // Indicates whether the cell header has been temporarily replaced by calling
+  // setTemporaryGCUnsafeData(). This is currently only used during rope
+  // flattening.
+  static constexpr uintptr_t TEMP_DATA_BIT = Bit(1);
+
+  // For use by derived cell classes. This is currently only used during rope
+  // flattening.
+  static constexpr uintptr_t USER_BIT = Bit(2);
 
   bool isForwarded() const { return header_ & FORWARD_BIT; }
+  bool hasTempHeaderData() const { return header_ & TEMP_DATA_BIT; }
   uintptr_t flags() const { return header_ & RESERVED_MASK; }
 
   MOZ_ALWAYS_INLINE bool isTenured() const { return !IsInsideNursery(this); }
@@ -641,17 +648,21 @@ class alignas(gc::CellAlignBytes) CellWithLengthAndFlags : public Cell {
 #endif
   }
 
-  // Sub classes can store temporary data in the flags word. This is not GC safe
+  // Subclasses can store temporary data in the flags word. This is not GC safe
   // and users must ensure flags/length are never checked (including by asserts)
   // while this data is stored. Use of this method is strongly discouraged!
-  void setTemporaryGCUnsafeData(uintptr_t data) { header_ = data; }
+  void setTemporaryGCUnsafeData(uintptr_t data) {
+    MOZ_ASSERT((data & TEMP_DATA_BIT) == 0);
+    header_ = data | TEMP_DATA_BIT;
+  }
 
-  // To get back the data, values to safely re-initialize clobbered flags
-  // must be provided.
+  // To get back the data, values to safely re-initialize clobbered length and
+  // flags must be provided.
   uintptr_t unsetTemporaryGCUnsafeData(uint32_t len, uint32_t flags) {
+    MOZ_ASSERT(hasTempHeaderData());
     uintptr_t data = header_;
     setHeaderLengthAndFlags(len, flags);
-    return data;
+    return data & ~TEMP_DATA_BIT;
   }
 
  public:
