@@ -594,7 +594,7 @@ struct AssertionConditionType {
 #define MOZ_ALWAYS_TRUE(expr)              \
   do {                                     \
     if (MOZ_LIKELY(expr)) {                \
-      /* Silence MOZ_MUST_USE. */          \
+      /* Silence [[nodiscard]]. */         \
     } else {                               \
       MOZ_DIAGNOSTIC_ASSERT(false, #expr); \
     }                                      \

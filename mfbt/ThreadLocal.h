@@ -170,7 +170,7 @@ class ThreadLocalNativeStorage {
 template <typename T, template <typename U> class Storage>
 class ThreadLocal : public Storage<T> {
  public:
-  MOZ_MUST_USE inline bool init();
+  [[nodiscard]] inline bool init();
 
   void infallibleInit() {
     MOZ_RELEASE_ASSERT(init(), "Infallible TLS initialization failed");

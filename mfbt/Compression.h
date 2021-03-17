@@ -81,10 +81,10 @@ class LZ4 {
    *   buffer (necessarily <= aMaxOutputSize)
    * @return true on success, false on failure
    */
-  static MFBT_API MOZ_MUST_USE bool decompress(const char* aSource,
-                                               size_t aInputSize, char* aDest,
-                                               size_t aMaxOutputSize,
-                                               size_t* aOutputSize);
+  [[nodiscard]] static MFBT_API bool decompress(const char* aSource,
+                                                size_t aInputSize, char* aDest,
+                                                size_t aMaxOutputSize,
+                                                size_t* aOutputSize);
 
   /**
    * If the source stream is malformed, the function will stop decoding
@@ -105,11 +105,11 @@ class LZ4 {
    *   buffer (necessarily <= aMaxOutputSize)
    * @return true on success, false on failure
    */
-  static MFBT_API MOZ_MUST_USE bool decompressPartial(const char* aSource,
-                                                      size_t aInputSize,
-                                                      char* aDest,
-                                                      size_t aMaxOutputSize,
-                                                      size_t* aOutputSize);
+  [[nodiscard]] static MFBT_API bool decompressPartial(const char* aSource,
+                                                       size_t aInputSize,
+                                                       char* aDest,
+                                                       size_t aMaxOutputSize,
+                                                       size_t* aOutputSize);
 
   /*
    * Provides the maximum size that LZ4 may output in a "worst case"

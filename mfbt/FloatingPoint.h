@@ -633,8 +633,7 @@ static MOZ_ALWAYS_INLINE bool FuzzyEqualsMultiplicative(
  * representable (even though the bit patterns of double precision NaNs can't
  * all be exactly represented in single precision).
  */
-MOZ_MUST_USE
-extern MFBT_API bool IsFloat32Representable(double aValue);
+[[nodiscard]] extern MFBT_API bool IsFloat32Representable(double aValue);
 
 } /* namespace mozilla */
 

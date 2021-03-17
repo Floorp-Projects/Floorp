@@ -156,7 +156,7 @@ class SegmentedVector : private AllocPolicy {
   // Returns false if the allocation failed. (If you are using an infallible
   // allocation policy, use InfallibleAppend() instead.)
   template <typename U>
-  MOZ_MUST_USE bool Append(U&& aU) {
+  [[nodiscard]] bool Append(U&& aU) {
     Segment* last = mSegments.getLast();
     if (!last || last->Length() == kSegmentCapacity) {
       last = this->template pod_malloc<Segment>(1);

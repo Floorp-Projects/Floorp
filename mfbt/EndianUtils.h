@@ -280,42 +280,42 @@ template <Endianness ThisEndian>
 class Endian : private EndianUtils {
  protected:
   /** Read a uint16_t in ThisEndian endianness from |aPtr| and return it. */
-  static MOZ_MUST_USE uint16_t readUint16(const void* aPtr) {
+  [[nodiscard]] static uint16_t readUint16(const void* aPtr) {
     return read<uint16_t>(aPtr);
   }
 
   /** Read a uint32_t in ThisEndian endianness from |aPtr| and return it. */
-  static MOZ_MUST_USE uint32_t readUint32(const void* aPtr) {
+  [[nodiscard]] static uint32_t readUint32(const void* aPtr) {
     return read<uint32_t>(aPtr);
   }
 
   /** Read a uint64_t in ThisEndian endianness from |aPtr| and return it. */
-  static MOZ_MUST_USE uint64_t readUint64(const void* aPtr) {
+  [[nodiscard]] static uint64_t readUint64(const void* aPtr) {
     return read<uint64_t>(aPtr);
   }
 
   /** Read a uintptr_t in ThisEndian endianness from |aPtr| and return it. */
-  static MOZ_MUST_USE uintptr_t readUintptr(const void* aPtr) {
+  [[nodiscard]] static uintptr_t readUintptr(const void* aPtr) {
     return read<uintptr_t>(aPtr);
   }
 
   /** Read an int16_t in ThisEndian endianness from |aPtr| and return it. */
-  static MOZ_MUST_USE int16_t readInt16(const void* aPtr) {
+  [[nodiscard]] static int16_t readInt16(const void* aPtr) {
     return read<int16_t>(aPtr);
   }
 
   /** Read an int32_t in ThisEndian endianness from |aPtr| and return it. */
-  static MOZ_MUST_USE int32_t readInt32(const void* aPtr) {
+  [[nodiscard]] static int32_t readInt32(const void* aPtr) {
     return read<uint32_t>(aPtr);
   }
 
   /** Read an int64_t in ThisEndian endianness from |aPtr| and return it. */
-  static MOZ_MUST_USE int64_t readInt64(const void* aPtr) {
+  [[nodiscard]] static int64_t readInt64(const void* aPtr) {
     return read<int64_t>(aPtr);
   }
 
   /** Read an intptr_t in ThisEndian endianness from |aPtr| and return it. */
-  static MOZ_MUST_USE intptr_t readIntptr(const void* aPtr) {
+  [[nodiscard]] static intptr_t readIntptr(const void* aPtr) {
     return read<intptr_t>(aPtr);
   }
 
@@ -353,7 +353,7 @@ class Endian : private EndianUtils {
    * format for transmission.
    */
   template <typename T>
-  MOZ_MUST_USE static T swapToLittleEndian(T aValue) {
+  [[nodiscard]] static T swapToLittleEndian(T aValue) {
     return maybeSwap<ThisEndian, Little>(aValue);
   }
 
@@ -382,7 +382,7 @@ class Endian : private EndianUtils {
    * Converts a value of type T to big-endian format.
    */
   template <typename T>
-  MOZ_MUST_USE static T swapToBigEndian(T aValue) {
+  [[nodiscard]] static T swapToBigEndian(T aValue) {
     return maybeSwap<ThisEndian, Big>(aValue);
   }
 
@@ -413,7 +413,7 @@ class Endian : private EndianUtils {
    */
 
   template <typename T>
-  MOZ_MUST_USE static T swapToNetworkOrder(T aValue) {
+  [[nodiscard]] static T swapToNetworkOrder(T aValue) {
     return swapToBigEndian(aValue);
   }
 
@@ -432,7 +432,7 @@ class Endian : private EndianUtils {
    * Converts a value of type T from little-endian format.
    */
   template <typename T>
-  MOZ_MUST_USE static T swapFromLittleEndian(T aValue) {
+  [[nodiscard]] static T swapFromLittleEndian(T aValue) {
     return maybeSwap<Little, ThisEndian>(aValue);
   }
 
@@ -461,7 +461,7 @@ class Endian : private EndianUtils {
    * Converts a value of type T from big-endian format.
    */
   template <typename T>
-  MOZ_MUST_USE static T swapFromBigEndian(T aValue) {
+  [[nodiscard]] static T swapFromBigEndian(T aValue) {
     return maybeSwap<Big, ThisEndian>(aValue);
   }
 
@@ -491,7 +491,7 @@ class Endian : private EndianUtils {
    * in network code.
    */
   template <typename T>
-  MOZ_MUST_USE static T swapFromNetworkOrder(T aValue) {
+  [[nodiscard]] static T swapFromNetworkOrder(T aValue) {
     return swapFromBigEndian(aValue);
   }
 

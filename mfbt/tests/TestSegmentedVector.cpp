@@ -36,7 +36,7 @@ class InfallibleAllocPolicy {
 };
 
 // We want to test Append(), which is fallible and marked with
-// MOZ_MUST_USE. But we're using an infallible alloc policy, and so
+// [[nodiscard]]. But we're using an infallible alloc policy, and so
 // don't really need to check the result. Casting to |void| works with clang
 // but not GCC, so we instead use this dummy variable which works with both
 // compilers.
