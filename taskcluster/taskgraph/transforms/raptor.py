@@ -8,7 +8,6 @@ from copy import deepcopy
 from six import text_type
 
 from voluptuous import (
-    Any,
     Optional,
     Required,
     Extra,
@@ -30,18 +29,12 @@ raptor_description_schema = Schema(
         Optional("raptor-subtests"): optionally_keyed_by("app", "test-platform", list),
         Optional("activity"): optionally_keyed_by("app", text_type),
         Optional("binary-path"): optionally_keyed_by("app", text_type),
-        Optional("pageload"): optionally_keyed_by(
-            "test-platform",
-            "app",
-            Any("cold", "warm", "both"),
-        ),
         # Configs defined in the 'test_description_schema'.
         Optional("max-run-time"): optionally_keyed_by(
             "app", test_description_schema["max-run-time"]
         ),
         Optional("run-on-projects"): optionally_keyed_by(
             "app",
-            "pageload",
             "test-name",
             "raptor-test",
             "subtest",
@@ -49,7 +42,6 @@ raptor_description_schema = Schema(
         ),
         Optional("fission-run-on-projects"): optionally_keyed_by(
             "app",
-            "pageload",
             "test-name",
             "raptor-test",
             "subtest",
@@ -58,7 +50,6 @@ raptor_description_schema = Schema(
         ),
         Optional("webrender-run-on-projects"): optionally_keyed_by(
             "app",
-            "pageload",
             "test-name",
             "raptor-test",
             "subtest",
@@ -95,7 +86,6 @@ transforms.add_validate(raptor_description_schema)
 @transforms.add
 def set_defaults(config, tests):
     for test in tests:
-        test.setdefault("pageload", None)
         test.setdefault("run-visual-metrics", False)
         yield test
 
@@ -122,12 +112,7 @@ def split_apps(config, tests):
             atest["app"] = app
             atest["description"] += " on {}".format(app.capitalize())
 
-            name = atest["test-name"]
-            if name.endswith("-cold"):
-                name = atest["test-name"][: -len("-cold")] + suffix + "-cold"
-            else:
-                name += suffix
-
+            name = atest["test-name"] + suffix
             atest["test-name"] = name
             atest["try-name"] = name
 
@@ -146,21 +131,8 @@ def handle_keyed_by_prereqs(config, tests):
     these keyed-by options might have keyed-by fields
     as well.
     """
-    fields = ["raptor-subtests", "pageload"]
     for test in tests:
-        for field in fields:
-            resolve_keyed_by(test, field, item_name=test["test-name"])
-
-        # We need to make the split immediately so that we can split
-        # task configurations by pageload type, the `both` condition is
-        # the same as not having a by-pageload split.
-        if test["pageload"] == "both":
-            test["pageload"] = "cold"
-
-            warmtest = deepcopy(test)
-            warmtest["pageload"] = "warm"
-            yield warmtest
-
+        resolve_keyed_by(test, "raptor-subtests", item_name=test["test-name"])
         yield test
 
 
@@ -215,44 +187,6 @@ def handle_keyed_by(config, tests):
 
 
 @transforms.add
-def split_pageload(config, tests):
-    # Split test by pageload type (cold, warm)
-    for test in tests:
-        mozharness = test.setdefault("mozharness", {})
-        extra_options = mozharness.setdefault("extra-options", [])
-
-        pageload = test.pop("pageload", None)
-
-        if not pageload or "--chimera" in extra_options:
-            yield test
-            continue
-
-        if pageload in ("warm", "both"):
-            # make a deepcopy if 'both', otherwise use the test object itself
-            warmtest = deepcopy(test) if pageload == "both" else test
-
-            warmtest["warm"] = True
-            group, symbol = split_symbol(warmtest["treeherder-symbol"])
-            symbol += "-w"
-            warmtest["treeherder-symbol"] = join_symbol(group, symbol)
-            yield warmtest
-
-        if pageload in ("cold", "both"):
-            assert "subtest" in test
-
-            test["description"] += " using cold pageload"
-            test["cold"] = True
-            test["max-run-time"] = 3000
-            test["test-name"] += "-cold"
-            test["try-name"] += "-cold"
-
-            group, symbol = split_symbol(test["treeherder-symbol"])
-            symbol += "-c"
-            test["treeherder-symbol"] = join_symbol(group, symbol)
-            yield test
-
-
-@transforms.add
 def split_page_load_by_url(config, tests):
     for test in tests:
         # `chunk-number` and 'subtest' only exists when the task had a
@@ -285,15 +219,8 @@ def split_page_load_by_url(config, tests):
         test["try-name"] += "-{}".format(subtest)
 
         # Set treeherder symbol and description
-        group, symbol = split_symbol(test["treeherder-symbol"])
-
-        symbol = subtest_symbol
-        if test.get("cold"):
-            symbol += "-c"
-        elif test.pop("warm", False):
-            symbol += "-w"
-
-        test["treeherder-symbol"] = join_symbol(group, symbol)
+        group, _ = split_symbol(test["treeherder-symbol"])
+        test["treeherder-symbol"] = join_symbol(group, subtest_symbol)
         test["description"] += " on {}".format(subtest)
 
         yield test
@@ -327,9 +254,6 @@ def add_extra_options(config, tests):
 
         if "app" in test:
             extra_options.append("--app={}".format(test.pop("app")))
-
-        if test.pop("cold", False) is True:
-            extra_options.append("--cold")
 
         if "activity" in test:
             extra_options.append("--activity={}".format(test.pop("activity")))
