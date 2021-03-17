@@ -5052,8 +5052,8 @@ void Datastore::ConnectionClosedCallback() {
     QuotaManager* quotaManager = QuotaManager::Get();
     MOZ_ASSERT(quotaManager);
 
-    quotaManager->ResetUsageForClient(PERSISTENCE_TYPE_DEFAULT, mOriginMetadata,
-                                      mozilla::dom::quota::Client::LS);
+    quotaManager->ResetUsageForClient(
+        ClientMetadata{mOriginMetadata, mozilla::dom::quota::Client::LS});
   }
 
   mConnection = nullptr;
