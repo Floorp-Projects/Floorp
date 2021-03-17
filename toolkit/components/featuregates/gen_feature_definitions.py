@@ -86,7 +86,7 @@ class FeatureGateException(Exception):
     def __repr__(self):
         # Turn "FeatureGateExcept(<message>,)" into "FeatureGateException(<message>, filename=<filename>)"
         original = super(FeatureGateException, self).__repr__()
-        return original[:-1] + " filename={!r})".format(self.filename)
+        return original[:-1] + ", filename={!r})".format(self.filename)
 
 
 def process_files(filenames):
