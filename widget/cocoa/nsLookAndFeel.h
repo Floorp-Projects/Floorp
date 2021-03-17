@@ -84,7 +84,10 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   nscolor mColorCellHighlight;
   nscolor mColorEvenTreeRow;
   nscolor mColorOddTreeRow;
-  nscolor mColorActiveSourceListSelection;
+  nscolor mColorMenuFontSmoothingBg;
+  nscolor mColorSourceListFontSmoothingBg;
+  nscolor mColorSourceListSelectionFontSmoothingBg;
+  nscolor mColorActiveSourceListSelectionFontSmoothingBg;
 
   bool mInitialized;
 

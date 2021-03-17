@@ -28,10 +28,19 @@
 @property(readonly) BOOL accessibilityDisplayShouldReduceMotion;
 @end
 
+#if !defined(MAC_OS_X_VERSION_10_13) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_13
+using NSAppearanceName = NSString*;
+#endif
+
 #if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
 @interface NSApplication (NSApplicationAppearance)
 @property(strong) NSAppearance* appearance NS_AVAILABLE_MAC(10_14);
 @property(readonly, strong) NSAppearance* effectiveAppearance NS_AVAILABLE_MAC(10_14);
+@end
+
+@interface NSAppearance (NSAppearance1014)
+- (NSAppearanceName)bestMatchFromAppearancesWithNames:(NSArray<NSAppearanceName>*)appearances
+    NS_AVAILABLE_MAC(10_14);
 @end
 #endif
 
@@ -78,7 +87,10 @@ nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache)
       mColorCellHighlight(0),
       mColorEvenTreeRow(0),
       mColorOddTreeRow(0),
-      mColorActiveSourceListSelection(0),
+      mColorMenuFontSmoothingBg(0),
+      mColorSourceListFontSmoothingBg(0),
+      mColorSourceListSelectionFontSmoothingBg(0),
+      mColorActiveSourceListSelectionFontSmoothingBg(0),
       mInitialized(false) {
   if (aCache) {
     DoSetCache(*aCache);
@@ -392,29 +404,31 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
     // The following colors are supposed to be used as font-smoothing background
     // colors, in the chrome-only -moz-font-smoothing-background-color property.
     // This property is used for text on "vibrant" -moz-appearances.
-    // The colors have been obtained from the system on 10.12.6 using the
-    // program at https://bugzilla.mozilla.org/attachment.cgi?id=8907533 .
+    // The colors have been obtained from the system on 10.14 using the
+    // program at https://bugzilla.mozilla.org/attachment.cgi?id=9208594 .
     // We could obtain them at runtime, but doing so may be expensive and
     // requires the use of the private API
     // -[NSVisualEffectView fontSmoothingBackgroundColor].
     case ColorID::MozMacVibrantTitlebarLight:
-    case ColorID::MozMacSourceList:
-    case ColorID::MozMacTooltip:
-      aColor = NS_RGB(0xf7, 0xf7, 0xf7);
+      aColor = NS_RGB(0xe6, 0xe6, 0xe6);
       break;
     case ColorID::MozMacVibrantTitlebarDark:
       aColor = NS_RGB(0x28, 0x28, 0x28);
       break;
+    case ColorID::MozMacTooltip:
     case ColorID::MozMacMenupopup:
     case ColorID::MozMacMenuitem:
-      aColor = NS_RGB(0xe6, 0xe6, 0xe6);
+      aColor = mColorMenuFontSmoothingBg;
+      break;
+    case ColorID::MozMacSourceList:
+      aColor = mColorSourceListFontSmoothingBg;
       break;
     case ColorID::MozMacSourceListSelection:
-      aColor = NS_RGB(0xc8, 0xc8, 0xc8);
+      aColor = mColorSourceListSelectionFontSmoothingBg;
       break;
     case ColorID::MozMacActiveMenuitem:
     case ColorID::MozMacActiveSourceListSelection:
-      aColor = mColorActiveSourceListSelection;
+      aColor = mColorActiveSourceListSelectionFontSmoothingBg;
       break;
     default:
       NS_WARNING("Someone asked nsILookAndFeel for a color I don't know about");
@@ -708,6 +722,9 @@ mozilla::widget::LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
       ColorID::MozCellhighlight,
       ColorID::MozEventreerow,
       ColorID::MozOddtreerow,
+      ColorID::MozMacMenupopup,
+      ColorID::MozMacSourceList,
+      ColorID::MozMacSourceListSelection,
       ColorID::MozMacActiveMenuitem,
   };
 
@@ -819,8 +836,14 @@ void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
           return mColorEvenTreeRow;
         case ColorID::MozOddtreerow:
           return mColorOddTreeRow;
+        case ColorID::MozMacMenupopup:
+          return mColorMenuFontSmoothingBg;
+        case ColorID::MozMacSourceList:
+          return mColorSourceListFontSmoothingBg;
+        case ColorID::MozMacSourceListSelection:
+          return mColorSourceListSelectionFontSmoothingBg;
         case ColorID::MozMacActiveMenuitem:
-          return mColorActiveSourceListSelection;
+          return mColorActiveSourceListSelectionFontSmoothingBg;
         default:
           MOZ_ASSERT_UNREACHABLE("Unknown color in the cache");
           return mColorOddTreeRow;
@@ -841,6 +864,8 @@ void nsLookAndFeel::EnsureInit() {
 
   nscolor color;
 
+  bool appearanceIsDark = false;
+
   if (@available(macOS 10.14, *)) {
     // Make sure NSColor takes our app's current appearance into account.
     // NSAppearance.currentAppearance is global state that can be changed at will to influence the
@@ -849,6 +874,11 @@ void nsLookAndFeel::EnsureInit() {
     // Light Mode and Dark Mode, but NSApp.effectiveAppearance does (unless NSApp.appearance is set
     // to a non-nil value, which overrides the system appearance).
     NSAppearance.currentAppearance = NSApp.effectiveAppearance;
+
+    // Check if the current appearance is dark.
+    NSAppearanceName aquaOrDarkAqua = [NSApp.effectiveAppearance
+        bestMatchFromAppearancesWithNames:@[ NSAppearanceNameAqua, @"NSAppearanceNameDarkAqua" ]];
+    appearanceIsDark = [aquaOrDarkAqua isEqualToString:@"NSAppearanceNameDarkAqua"];
   }
 
   mColorTextSelectBackground = GetColorFromNSColor([NSColor selectedTextBackgroundColor]);
@@ -900,9 +930,12 @@ void nsLookAndFeel::EnsureInit() {
   mColorOddTreeRow =
       GetColorFromNSColor([[NSColor controlAlternatingRowBackgroundColors] objectAtIndex:1]);
 
-  color = [NSColor currentControlTint];
-  mColorActiveSourceListSelection =
-      (color == NSGraphiteControlTint) ? NS_RGB(0xa0, 0xa0, 0xa0) : NS_RGB(0x0a, 0x64, 0xdc);
+  bool isLight = !appearanceIsDark;
+  mColorMenuFontSmoothingBg = isLight ? NS_RGB(0xf6, 0xf6, 0xf6) : NS_RGB(0x28, 0x28, 0x28);
+  mColorSourceListFontSmoothingBg = isLight ? NS_RGB(0xf6, 0xf6, 0xf6) : NS_RGB(0x2d, 0x2d, 0x2d);
+  mColorSourceListSelectionFontSmoothingBg =
+      isLight ? NS_RGB(0xd3, 0xd3, 0xd3) : NS_RGB(0x2d, 0x2d, 0x2d);
+  mColorActiveSourceListSelectionFontSmoothingBg = GetColorFromNSColor(ControlAccentColor());
 
   RecordTelemetry();
 
