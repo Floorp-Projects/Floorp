@@ -20,6 +20,8 @@ const {
 const {
   TYPES: { ERROR_MESSAGE },
 } = require("devtools/server/actors/resources/index");
+const Targets = require("devtools/server/actors/targets/index");
+
 const { MESSAGE_CATEGORY } = require("devtools/shared/constants");
 
 const PLATFORM_SPECIFIC_CATEGORIES = [
@@ -44,10 +46,31 @@ class ErrorMessageWatcher extends nsIConsoleListenerWatcher {
     }
 
     if (this.isProcessTarget(targetActor)) {
-      // Process targets can still receive error messages that are cloned from
-      // content processes (when "devtools.browsertoolbox.fission" is false).
-      // In such case, we don't want to display cached messages from private windows.
-      return !isCachedMessage || !message.isFromPrivateWindow;
+      // Don't want to display cached messages from private windows.
+      const isCachedFromPrivateWindow =
+        isCachedMessage && message.isFromPrivateWindow;
+      if (isCachedFromPrivateWindow) {
+        return false;
+      }
+
+      // `ContentChild` forwards all errors to the parent process (via IPC) all errors up
+      // the parent process and sets a `isForwardedFromContentProcess` property on them.
+      // Ignore these forwarded messages as the original ones will be logged either in a
+      // content process target (if window-less message) or frame target (if related to a window)
+      if (message.isForwardedFromContentProcess) {
+        return false;
+      }
+
+      // Ignore all messages related to a given window for content process targets
+      // These messages will be handled by Watchers instantiated for the related frame targets
+      if (
+        targetActor.targetType == Targets.TYPES.PROCESS &&
+        message.innerWindowID
+      ) {
+        return false;
+      }
+
+      return true;
     }
 
     if (!message.innerWindowID) {
