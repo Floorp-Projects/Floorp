@@ -81,7 +81,7 @@
 
 .searchbar-engine-one-off-item:not([selected]):hover,
 .addengine-item:hover {
-  background-color: var(--arrowpanel-dimmed-further);
+  background-color: var(--arrowpanel-dimmed);
   color: inherit;
 }
 
