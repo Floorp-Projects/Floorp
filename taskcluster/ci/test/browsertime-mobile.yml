@@ -137,19 +137,11 @@ browsertime-tp6m:
                     chrome-m: []
                     fennec: []
                     geckoview:
-                        by-pageload:
-                            cold:
-                                by-test-platform:
-                                    &android-cold-settings
-                                    android-hw-g5-7-0-arm7-api-16-shippable/opt: ['trunk', 'mozilla-beta']
-                                    android-hw-p2-8-0-android-aarch64-shippable/opt: ['trunk', 'mozilla-beta']
-                                    default: []
-                            warm:
-                                by-test-platform:
-                                    &android-warm-settings
-                                    android-hw-g5-7-0-arm7-api-16-shippable/opt: ['mozilla-central']
-                                    android-hw-p2-8-0-android-aarch64-shippable/opt: ['mozilla-central']
-                                    default: []
+                        &sheriffed-platforms
+                        by-test-platform:
+                            android-hw-g5-7-0-arm7-api-16-shippable/opt: ['trunk', 'mozilla-beta']
+                            android-hw-p2-8-0-android-aarch64-shippable/opt: ['trunk', 'mozilla-beta']
+                            default: []
                     default:
                         by-test-platform:
                             android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central"]
@@ -160,77 +152,28 @@ browsertime-tp6m:
                     chrome-m: []
                     refbrow: []
                     fennec: []
-                    geckoview:
-                        by-pageload:
-                            cold:
-                                by-test-platform: *android-cold-settings
-                            warm:
-                                by-test-platform: *android-warm-settings
+                    geckoview: *sheriffed-platforms
                     default:
                         by-test-platform:
                             android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central", "try"]
                             default: []
             default:
-                by-pageload:
-                    cold:
-                        by-app:
-                            geckoview:
-                                by-test-platform: *android-cold-settings
-                            default: []
-                    warm:
-                        by-app:
-                            geckoview:
-                                by-test-platform: *android-warm-settings
-                            default: []
+                by-app:
+                    geckoview: *sheriffed-platforms
+                    default: []
     run-on-projects:
         by-app:
             geckoview:
                 by-subtest:
-                    allrecipes:
-                        by-pageload:
-                            cold:
-                                by-test-platform: *android-cold-settings
-                            warm:
-                                by-test-platform: *android-warm-settings
-                    amazon-search:
-                        by-pageload:
-                            cold:
-                                by-test-platform: *android-cold-settings
-                            warm:
-                                by-test-platform: *android-warm-settings
-                    espn:
-                        by-pageload:
-                            cold:
-                                by-test-platform: *android-cold-settings
-                            warm:
-                                by-test-platform: *android-warm-settings
-                    facebook:
-                        by-pageload:
-                            cold:
-                                by-test-platform: *android-cold-settings
-                            warm:
-                                by-test-platform: *android-warm-settings
-                    google:
-                        by-pageload:
-                            cold:
-                                by-test-platform: *android-cold-settings
-                            warm:
-                                by-test-platform: *android-warm-settings
-                    microsoft-support:
-                        by-pageload:
-                            cold:
-                                by-test-platform: *android-cold-settings
-                            warm:
-                                by-test-platform: *android-warm-settings
-                    youtube-watch:
-                        by-pageload:
-                            cold:
-                                by-test-platform: *android-cold-settings
-                            warm:
-                                by-test-platform: *android-warm-settings
+                    allrecipes: *sheriffed-platforms
+                    amazon-search: *sheriffed-platforms
+                    espn: *sheriffed-platforms
+                    facebook: *sheriffed-platforms
+                    google: *sheriffed-platforms
+                    microsoft-support: *sheriffed-platforms
+                    youtube-watch: *sheriffed-platforms
                     default: []
             default: []
-    pageload: cold
     run-visual-metrics: true
     treeherder-symbol: Btime(tp6m)
     mozharness:
@@ -345,7 +288,6 @@ browsertime-tp6m-live:
                     android-hw-p2-8-0-android-aarch64-shippable/opt: ["autoland"]
                     default: []
             default: []
-    pageload: cold
     run-visual-metrics: true
     treeherder-symbol: Btime-live(tp6m)
     mozharness:
@@ -358,14 +300,13 @@ browsertime-tp6m-profiling:
     raptor-test: tp6m
     raptor-subtests: ["amazon", "youtube"]
     apps: ["geckoview"]
-    pageload: cold
     treeherder-symbol: Btime-Prof(tp6m)
     mozharness:
         script: raptor_script.py
         config:
             - raptor/android_hw_config.py
         extra-options:
-            - --browsertime
+            - --chimera
             - --gecko-profile
 
 browsertime-speedometer-mobile:

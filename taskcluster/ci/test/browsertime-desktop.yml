@@ -85,7 +85,6 @@ browsertime-tp6:
         by-app:
             firefox: ['fission']
             default: []
-    pageload: cold
     fission-tier: 2
     fission-run-on-projects:
         by-test-platform:
@@ -182,7 +181,6 @@ browsertime-tp6-live:
     tier: 2
     apps: ["firefox"]
     variants: []
-    pageload: cold
     treeherder-symbol: Btime-live(tp6)
     run-on-projects:
         by-test-platform:
@@ -199,9 +197,9 @@ browsertime-tp6-profiling:
     raptor-test: tp6
     raptor-subtests: ['amazon']
     apps: ['firefox']
-    pageload: 'both'
     treeherder-symbol: Btime-Prof(tp6)
     max-run-time: 4000
     mozharness:
         extra-options:
+            - --chimera
             - --gecko-profile
