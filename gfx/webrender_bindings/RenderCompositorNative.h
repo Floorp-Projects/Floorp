@@ -46,6 +46,8 @@ class RenderCompositorNative : public RenderCompositor {
   bool ShouldUseNativeCompositor() override;
   uint32_t GetMaxUpdateRects() override;
 
+  bool SurfaceOriginIsTopLeft() override { return true; }
+
   // Does the readback for the ShouldUseNativeCompositor() case.
   bool MaybeReadback(const gfx::IntSize& aReadbackSize,
                      const wr::ImageFormat& aReadbackFormat,
