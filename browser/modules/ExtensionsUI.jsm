@@ -394,23 +394,11 @@ var ExtensionsUI = {
           while (list.firstChild) {
             list.firstChild.remove();
           }
-          let singleEntryEl = doc.getElementById(
-            "addon-webext-perm-single-entry"
-          );
-          singleEntryEl.textContent = "";
-          singleEntryEl.hidden = true;
-          list.hidden = true;
 
-          if (strings.msgs.length === 1) {
-            singleEntryEl.textContent = strings.msgs[0];
-            singleEntryEl.hidden = false;
-          } else if (strings.msgs.length) {
-            for (let msg of strings.msgs) {
-              let item = doc.createElementNS(HTML_NS, "li");
-              item.textContent = msg;
-              list.appendChild(item);
-            }
-            list.hidden = false;
+          for (let msg of strings.msgs) {
+            let item = doc.createElementNS(HTML_NS, "li");
+            item.textContent = msg;
+            list.appendChild(item);
           }
         } else if (topic == "swapping") {
           return true;
