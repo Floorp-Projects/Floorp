@@ -2683,8 +2683,8 @@ bool BrowsingContext::LegacyCheckOnlyOwningProcessCanSet(
   return true;
 }
 
-auto BrowsingContext::LegacyRevertIfNotOwningOrParentProcess(ContentParent* aSource)
-    -> CanSetResult {
+auto BrowsingContext::LegacyRevertIfNotOwningOrParentProcess(
+    ContentParent* aSource) -> CanSetResult {
   if (aSource) {
     MOZ_ASSERT(XRE_IsParentProcess());
 
@@ -3166,6 +3166,11 @@ bool BrowsingContext::CanSet(FieldIndex<IDX_PendingInitialization>,
   // Can only be cleared from `true` to `false`, and should only ever be set on
   // the toplevel BrowsingContext.
   return IsTop() && GetPendingInitialization() && !aNewValue;
+}
+
+bool BrowsingContext::CanSet(FieldIndex<IDX_HasRestoreData>, bool aNewValue,
+                             ContentParent* aSource) {
+  return IsTop();
 }
 
 bool BrowsingContext::IsPopupAllowed() {
