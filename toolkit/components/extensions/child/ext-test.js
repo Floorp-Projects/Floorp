@@ -23,7 +23,6 @@ XPCOMUtils.defineLazyGetter(this, "isXpcshell", function() {
  *        - a regular expression, it must match the error message.
  *        - a function, it is called with the error object and its
  *          return value is returned.
- *        - null, the function always returns true.
  * @param {BaseContext} context
  *
  * @returns {boolean}
@@ -37,9 +36,6 @@ const errorMatches = (error, expectedError, context) => {
   ) {
     Cu.reportError("Error object belongs to the wrong scope.");
     return false;
-  }
-  if (expectedError === null) {
-    return true;
   }
 
   if (typeof expectedError === "function") {
