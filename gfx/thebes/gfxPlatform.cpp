@@ -3180,7 +3180,11 @@ void gfxPlatform::GetDisplayInfo(mozilla::widget::InfoObject& aObj) {
     }
   }
 
-  GetPlatformDisplayInfo(aObj);
+  // Platform display info is only currently used for about:support and getting
+  // it might fail in a child process anyway.
+  if (XRE_IsParentProcess()) {
+    GetPlatformDisplayInfo(aObj);
+  }
 }
 
 class FrameStatsComparator {
