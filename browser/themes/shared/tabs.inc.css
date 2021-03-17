@@ -4,6 +4,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
+%filter substitution
+%define tabIndicatorReplacesIcon :not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked])
+
 :root {
   --tab-min-height: 33px;
   --inline-tab-padding: 9px;
@@ -375,30 +378,9 @@
   z-index: 1; /* Overlay tab title */
 }
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") and
-          (not -moz-bool-pref("browser.proton.tabs.audio-tab-area")) and
-          (not -moz-bool-pref("browser.proton.tabs.audio-tab")) {
-#navigator-toolbox:not(:hover) .tab-icon-overlay:not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]),
-#navigator-toolbox:hover .tab-icon-stack:not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]) > :not(.tab-icon-overlay) {
-  opacity: 0;
-}
-} /*** END proton ***/
-
-
-@supports -moz-bool-pref("browser.proton.tabs.enabled") and
-          -moz-bool-pref("browser.proton.tabs.audio-tab-area") and
-          (not -moz-bool-pref("browser.proton.tabs.audio-tab")) {
-#TabsToolbar:not(:hover) .tab-icon-overlay:not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]),
-#TabsToolbar:hover .tab-icon-stack:not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]) > :not(.tab-icon-overlay) {
-  opacity: 0;
-}
-} /*** END proton ***/
-
-@supports -moz-bool-pref("browser.proton.tabs.enabled") and
-          (not -moz-bool-pref("browser.proton.tabs.audio-tab-area")) and
-          -moz-bool-pref("browser.proton.tabs.audio-tab") {
-.tabbrowser-tab:not(:hover) .tab-icon-overlay:not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]),
-.tabbrowser-tab:hover .tab-icon-stack:not([pinned], [sharing], [crashed]):is([soundplaying], [muted], [activemedia-blocked]) > :not(.tab-icon-overlay) {
+@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+#toolbar-menubar:not(:hover) + #TabsToolbar:not(:hover) .tab-icon-overlay@tabIndicatorReplacesIcon@,
+:is(#toolbar-menubar:hover + #TabsToolbar, #TabsToolbar:hover) .tab-icon-stack@tabIndicatorReplacesIcon@ > :not(.tab-icon-overlay) {
   opacity: 0;
 }
 } /*** END proton ***/
@@ -419,21 +401,15 @@
 }
 
 @supports -moz-bool-pref("browser.proton.tabs.enabled") {
-.tab-icon-overlay:not([pinned], [sharing], [crashed])[soundplaying],
-.tab-icon-overlay:not([pinned], [sharing], [crashed])[muted],
-.tab-icon-overlay:not([pinned], [sharing], [crashed])[activemedia-blocked] {
+.tab-icon-overlay@tabIndicatorReplacesIcon@ {
   border-radius: 2px;
   fill-opacity: 0.75;
 }
-.tab-icon-overlay:not([pinned], [sharing], [crashed])[soundplaying]:hover,
-.tab-icon-overlay:not([pinned], [sharing], [crashed])[muted]:hover,
-.tab-icon-overlay:not([pinned], [sharing], [crashed])[activemedia-blocked]:hover {
+.tab-icon-overlay@tabIndicatorReplacesIcon@:hover {
   background-color: color-mix(in srgb, currentColor 15%, transparent);
   fill-opacity: 0.95;
 }
-.tab-icon-overlay:not([pinned], [sharing], [crashed])[soundplaying]:hover:active,
-.tab-icon-overlay:not([pinned], [sharing], [crashed])[muted]:hover:active,
-.tab-icon-overlay:not([pinned], [sharing], [crashed])[activemedia-blocked]:hover:active {
+.tab-icon-overlay@tabIndicatorReplacesIcon@:hover:active {
   background-color: color-mix(in srgb, currentColor 30%, transparent);
 }
 } /*** END proton ***/
