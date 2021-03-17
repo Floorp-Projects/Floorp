@@ -686,7 +686,7 @@ function test_storage_sync_requires_real_id() {
   async function testFn() {
     async function background() {
       const EXCEPTION_MESSAGE =
-        "The storage API is not available with a temporary addon ID. " +
+        "The storage API will not work with a temporary addon ID. " +
         "Please add an explicit addon ID to your manifest. " +
         "For more information see https://mzl.la/3lPk1aE.";
 

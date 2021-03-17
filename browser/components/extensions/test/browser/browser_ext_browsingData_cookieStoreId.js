@@ -28,6 +28,7 @@ add_task(async function test_remove_unsupported() {
               [dataType]: true,
             }
           ),
+          `Firefox does not support clearing ${dataType} with 'cookieStoreId'.`,
           `Should reject for unsupported dataType: ${dataType}`
         );
       }
@@ -68,6 +69,7 @@ add_task(async function test_invalid_id() {
       ]) {
         await browser.test.assertRejects(
           browser.browsingData.remove({ cookieStoreId }, { cookies: true }),
+          `Invalid cookieStoreId: ${cookieStoreId}`,
           `Should reject invalid cookieStoreId: ${cookieStoreId}`
         );
       }
