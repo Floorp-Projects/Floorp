@@ -57,6 +57,13 @@ add_task(async function test_browser_settings() {
     let listeners = new Set([]);
     browser.test.onMessage.addListener(async (msg, apiName, value) => {
       let apiObj = browser.browserSettings[apiName];
+      if (msg == "get") {
+        browser.test.sendMessage("settingData", await apiObj.get({}));
+        return;
+      }
+
+      // set and setNoOp
+
       // Don't add more than one listner per apiName.  We leave the
       // listener to ensure we do not get more calls than we expect.
       if (!listeners.has(apiName)) {
@@ -207,12 +214,11 @@ add_task(async function test_browser_settings() {
     });
   }
 
-  await testSetting("ftpProtocolEnabled", false, {
-    "network.ftp.enabled": false,
-  });
-  await testSetting("ftpProtocolEnabled", true, {
-    "network.ftp.enabled": true,
-  });
+  // Bug 1699222 When the pref is removed, the API needs to be updated to always
+  // return false.  At that time it should be deprecated as well.
+  extension.sendMessage("get", "ftpProtocolEnabled");
+  let data = await extension.awaitMessage("settingData");
+  equal(data.value, Services.prefs.getBoolPref("network.ftp.enabled"));
 
   await testSetting("newTabPosition", "afterCurrent", {
     "browser.tabs.insertRelatedAfterCurrent": false,

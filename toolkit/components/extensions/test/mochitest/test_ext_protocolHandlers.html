@@ -17,45 +17,70 @@
 /* global addMessageListener, sendAsyncMessage */
 
 function protocolChromeScript() {
-  addMessageListener("setup", () => {
+  addMessageListener("setup", protocol => {
     let data = {};
-    const protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
-                        .getService(Ci.nsIExternalProtocolService);
-    let protoInfo = protoSvc.getProtocolHandlerInfo("ext+foo");
-    data.preferredAction = protoInfo.preferredAction === protoInfo.useHelperApp;
+    const protoSvc = Cc[
+      "@mozilla.org/uriloader/external-protocol-service;1"
+    ].getService(Ci.nsIExternalProtocolService);
+    let protoInfo = protoSvc.getProtocolHandlerInfo(protocol);
+    data.preferredAction = protoInfo.preferredAction == protoInfo.useHelperApp;
 
     let handlers = protoInfo.possibleApplicationHandlers;
     data.handlers = handlers.length;
 
     let handler = handlers.queryElementAt(0, Ci.nsIHandlerApp);
     data.isWebHandler = handler instanceof Ci.nsIWebHandlerApp;
-    data.uriTemplate =  handler.uriTemplate;
+    data.uriTemplate = handler.uriTemplate;
 
     // ext+ protocols should be set as default when there is only one
-    data.preferredApplicationHandler = protoInfo.preferredApplicationHandler == handler;
+    data.preferredApplicationHandler =
+      protoInfo.preferredApplicationHandler == handler;
     data.alwaysAskBeforeHandling = protoInfo.alwaysAskBeforeHandling;
-    const handlerSvc = Cc["@mozilla.org/uriloader/handler-service;1"]
-                          .getService(Ci.nsIHandlerService);
+    const handlerSvc = Cc[
+      "@mozilla.org/uriloader/handler-service;1"
+    ].getService(Ci.nsIHandlerService);
     handlerSvc.store(protoInfo);
 
     sendAsyncMessage("handlerData", data);
   });
+  addMessageListener("setPreferredAction", data => {
+    let { protocol, template } = data;
+    const protoSvc = Cc[
+      "@mozilla.org/uriloader/external-protocol-service;1"
+    ].getService(Ci.nsIExternalProtocolService);
+    let protoInfo = protoSvc.getProtocolHandlerInfo(protocol);
+
+    for (let handler of protoInfo.possibleApplicationHandlers.enumerate()) {
+      if (handler.uriTemplate.startsWith(template)) {
+        protoInfo.preferredApplicationHandler = handler;
+        protoInfo.preferredAction = protoInfo.useHelperApp;
+        protoInfo.alwaysAskBeforeHandling = false;
+      }
+    }
+    const handlerSvc = Cc[
+      "@mozilla.org/uriloader/handler-service;1"
+    ].getService(Ci.nsIHandlerService);
+    handlerSvc.store(protoInfo);
+    sendAsyncMessage("set");
+  });
 }
 
 add_task(async function test_protocolHandler() {
-  await SpecialPowers.pushPrefEnv({set: [
-    ["extensions.allowPrivateBrowsingByDefault", false],
-    // Disabling the external protocol permission prompt. We don't need it
-    // for this test.
-    ["security.external_protocol_requires_permission", false],
-  ]});
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["extensions.allowPrivateBrowsingByDefault", false],
+      // Disabling the external protocol permission prompt. We don't need it
+      // for this test.
+      ["security.external_protocol_requires_permission", false],
+    ],
+  });
   let extensionData = {
     manifest: {
-      "protocol_handlers": [
+      protocol_handlers: [
         {
-          "protocol": "ext+foo",
-          "name": "a foo protocol handler",
-          "uriTemplate": "foo.html?val=%s",
+          protocol: "ext+foo",
+          name: "a foo protocol handler",
+          uriTemplate: "foo.html?val=%s",
         },
       ],
     },
@@ -63,7 +88,7 @@ add_task(async function test_protocolHandler() {
     background() {
       browser.test.onMessage.addListener(async (msg, arg) => {
         if (msg == "open") {
-          let tab = await browser.tabs.create({url: arg});
+          let tab = await browser.tabs.create({ url: arg });
           browser.test.sendMessage("opened", tab.id);
         } else if (msg == "close") {
           await browser.tabs.remove(arg);
@@ -92,9 +117,12 @@ add_task(async function test_protocolHandler() {
       browser.test.onMessage.addListener(async (msg, arg) => {
         if (msg == "open") {
           let win = await browser.windows.create({ url: arg, incognito: true });
-          browser.test.sendMessage("opened", { windowId: win.id, tabId: win.tabs[0].id });
-        } else if(msg == "nav") {
-          await browser.tabs.update(arg.tabId, { url: arg.url })
+          browser.test.sendMessage("opened", {
+            windowId: win.id,
+            tabId: win.tabs[0].id,
+          });
+        } else if (msg == "nav") {
+          await browser.tabs.update(arg.tabId, { url: arg.url });
           browser.test.sendMessage("navigated");
         } else if (msg == "close") {
           await browser.windows.remove(arg);
@@ -115,9 +143,12 @@ add_task(async function test_protocolHandler() {
   let chromeScript = SpecialPowers.loadChromeScript(protocolChromeScript);
 
   let msg = chromeScript.promiseOneMessage("handlerData");
-  chromeScript.sendAsyncMessage("setup");
+  chromeScript.sendAsyncMessage("setup", "ext+foo");
   let data = await msg;
-  ok(data.preferredAction, "using a helper application is the preferred action");
+  ok(
+    data.preferredAction,
+    "using a helper application is the preferred action"
+  );
   ok(data.preferredApplicationHandler, "handler was set as default handler");
   is(data.handlers, 1, "one handler is set");
   ok(!data.alwaysAskBeforeHandling, "will not show dialog");
@@ -136,19 +167,22 @@ add_task(async function test_protocolHandler() {
 
   // Test the protocol in a private window, watch for the
   // console error.
-  consoleMonitor.start([{message: /NS_ERROR_FILE_NOT_FOUND/}]);
+  consoleMonitor.start([{ message: /NS_ERROR_FILE_NOT_FOUND/ }]);
 
   // Expect the chooser window to be open, close it.
   chromeScript = SpecialPowers.loadChromeScript(async () => {
-    const CONTENT_HANDLING_URL = "chrome://mozapps/content/handling/appChooser.xhtml";
-    const {BrowserTestUtils} = ChromeUtils.import("resource://testing-common/BrowserTestUtils.jsm");
+    const CONTENT_HANDLING_URL =
+      "chrome://mozapps/content/handling/appChooser.xhtml";
+    const { BrowserTestUtils } = ChromeUtils.import(
+      "resource://testing-common/BrowserTestUtils.jsm"
+    );
 
     let windowOpen = BrowserTestUtils.domWindowOpenedAndLoaded();
 
     sendAsyncMessage("listenWindow");
 
     let window = await windowOpen;
-    let gBrowser = window.gBrowser
+    let gBrowser = window.gBrowser;
     let tabDialogBox = gBrowser.getTabDialogBox(gBrowser.selectedBrowser);
     let dialogStack = tabDialogBox.getTabDialogManager()._dialogStack;
 
@@ -168,8 +202,12 @@ add_task(async function test_protocolHandler() {
 
     let { dialog } = event.detail;
 
-    let entry =  dialog._frame.contentDocument.getElementById("items").firstChild;
-    sendAsyncMessage("handling", {name: entry.getAttribute("name"), disabled: entry.disabled});
+    let entry = dialog._frame.contentDocument.getElementById("items")
+      .firstChild;
+    sendAsyncMessage("handling", {
+      name: entry.getAttribute("name"),
+      disabled: entry.disabled,
+    });
 
     dialog.close();
   });
@@ -178,17 +216,17 @@ add_task(async function test_protocolHandler() {
   await chromeScript.promiseOneMessage("listenWindow");
 
   let listenDialog = chromeScript.promiseOneMessage("listenDialog");
-  let windowOpen =  pb_extension.awaitMessage("opened");
+  let windowOpen = pb_extension.awaitMessage("opened");
 
   pb_extension.sendMessage("open", "ext+foo:test");
 
   // Wait for chrome script to attach dialog listener
   await listenDialog;
-  let {tabId, windowId} = await windowOpen;
+  let { tabId, windowId } = await windowOpen;
 
   let testData = chromeScript.promiseOneMessage("handling");
   let navPromise = pb_extension.awaitMessage("navigated");
-  pb_extension.sendMessage("nav", {url: "ext+foo:test", tabId});
+  pb_extension.sendMessage("nav", { url: "ext+foo:test", tabId });
   await navPromise;
   await consoleMonitor.finished();
   let entry = await testData;
@@ -205,10 +243,14 @@ add_task(async function test_protocolHandler() {
   await extension.unload();
   chromeScript = SpecialPowers.loadChromeScript(() => {
     addMessageListener("setup", () => {
-      const protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
-                         .getService(Ci.nsIExternalProtocolService);
+      const protoSvc = Cc[
+        "@mozilla.org/uriloader/external-protocol-service;1"
+      ].getService(Ci.nsIExternalProtocolService);
       let protoInfo = protoSvc.getProtocolHandlerInfo("ext+foo");
-      sendAsyncMessage("preferredApplicationHandler", !protoInfo.preferredApplicationHandler);
+      sendAsyncMessage(
+        "preferredApplicationHandler",
+        !protoInfo.preferredApplicationHandler
+      );
       let handlers = protoInfo.possibleApplicationHandlers;
 
       sendAsyncMessage("handlerData", {
@@ -229,16 +271,16 @@ add_task(async function test_protocolHandler() {
 add_task(async function test_protocolHandler_two() {
   let extensionData = {
     manifest: {
-      "protocol_handlers": [
+      protocol_handlers: [
         {
-          "protocol": "ext+foo",
-          "name": "a foo protocol handler",
-          "uriTemplate": "foo.html?val=%s",
+          protocol: "ext+foo",
+          name: "a foo protocol handler",
+          uriTemplate: "foo.html?val=%s",
         },
         {
-          "protocol": "ext+foo",
-          "name": "another foo protocol handler",
-          "uriTemplate": "foo2.html?val=%s",
+          protocol: "ext+foo",
+          name: "another foo protocol handler",
+          uriTemplate: "foo2.html?val=%s",
         },
       ],
     },
@@ -254,9 +296,12 @@ add_task(async function test_protocolHandler_two() {
   let chromeScript = SpecialPowers.loadChromeScript(protocolChromeScript);
 
   let msg = chromeScript.promiseOneMessage("handlerData");
-  chromeScript.sendAsyncMessage("setup");
+  chromeScript.sendAsyncMessage("setup", "ext+foo");
   let data = await msg;
-  ok(data.preferredAction, "using a helper application is the preferred action");
+  ok(
+    data.preferredAction,
+    "using a helper application is the preferred action"
+  );
   ok(data.preferredApplicationHandler, "preferred handler is set");
   is(data.handlers, 2, "two handlers are set");
   ok(data.alwaysAskBeforeHandling, "will show dialog");
@@ -268,11 +313,11 @@ add_task(async function test_protocolHandler_two() {
 add_task(async function test_protocolHandler_https_target() {
   let extensionData = {
     manifest: {
-      "protocol_handlers": [
+      protocol_handlers: [
         {
-          "protocol": "ext+foo",
-          "name": "http target",
-          "uriTemplate": "https://example.com/foo.html?val=%s",
+          protocol: "ext+foo",
+          name: "http target",
+          uriTemplate: "https://example.com/foo.html?val=%s",
         },
       ],
     },
@@ -287,11 +332,11 @@ add_task(async function test_protocolHandler_https_target() {
 add_task(async function test_protocolHandler_http_target() {
   let extensionData = {
     manifest: {
-      "protocol_handlers": [
+      protocol_handlers: [
         {
-          "protocol": "ext+foo",
-          "name": "http target",
-          "uriTemplate": "http://example.com/foo.html?val=%s",
+          protocol: "ext+foo",
+          name: "http target",
+          uriTemplate: "http://example.com/foo.html?val=%s",
         },
       ],
     },
@@ -306,22 +351,26 @@ add_task(async function test_protocolHandler_http_target() {
 add_task(async function test_protocolHandler_restricted_protocol() {
   let extensionData = {
     manifest: {
-      "protocol_handlers": [
+      protocol_handlers: [
         {
-          "protocol": "http",
-          "name": "take over the http protocol",
-          "uriTemplate": "http.html?val=%s",
+          protocol: "http",
+          name: "take over the http protocol",
+          uriTemplate: "http.html?val=%s",
         },
       ],
     },
   };
 
-  consoleMonitor.start([{message: /processing protocol_handlers\.0\.protocol/}]);
+  consoleMonitor.start([
+    { message: /processing protocol_handlers\.0\.protocol/ },
+  ]);
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  await Assert.rejects(extension.startup(),
-                       /startup failed/,
-                       "unable to register restricted handler protocol");
+  await Assert.rejects(
+    extension.startup(),
+    /startup failed/,
+    "unable to register restricted handler protocol"
+  );
 
   await consoleMonitor.finished();
 });
@@ -329,22 +378,26 @@ add_task(async function test_protocolHandler_restricted_protocol() {
 add_task(async function test_protocolHandler_restricted_uriTemplate() {
   let extensionData = {
     manifest: {
-      "protocol_handlers": [
+      protocol_handlers: [
         {
-          "protocol": "ext+foo",
-          "name": "take over the http protocol",
-          "uriTemplate": "ftp://example.com/file.txt",
+          protocol: "ext+foo",
+          name: "take over the http protocol",
+          uriTemplate: "ftp://example.com/file.txt",
         },
       ],
     },
   };
 
-  consoleMonitor.start([{message: /processing protocol_handlers\.0\.uriTemplate/}]);
+  consoleMonitor.start([
+    { message: /processing protocol_handlers\.0\.uriTemplate/ },
+  ]);
 
   let extension = ExtensionTestUtils.loadExtension(extensionData);
-  await Assert.rejects(extension.startup(),
-                       /startup failed/,
-                       "unable to register restricted handler uriTemplate");
+  await Assert.rejects(
+    extension.startup(),
+    /startup failed/,
+    "unable to register restricted handler uriTemplate"
+  );
 
   await consoleMonitor.finished();
 });
@@ -352,16 +405,16 @@ add_task(async function test_protocolHandler_restricted_uriTemplate() {
 add_task(async function test_protocolHandler_duplicate() {
   let extensionData = {
     manifest: {
-      "protocol_handlers": [
+      protocol_handlers: [
         {
-          "protocol": "ext+foo",
-          "name": "foo protocol",
-          "uriTemplate": "foo.html?val=%s",
+          protocol: "ext+foo",
+          name: "foo protocol",
+          uriTemplate: "foo.html?val=%s",
         },
         {
-          "protocol": "ext+foo",
-          "name": "foo protocol",
-          "uriTemplate": "foo.html?val=%s",
+          protocol: "ext+foo",
+          name: "foo protocol",
+          uriTemplate: "foo.html?val=%s",
         },
       ],
     },
@@ -373,8 +426,9 @@ add_task(async function test_protocolHandler_duplicate() {
   // Get the count of handlers installed.
   let chromeScript = SpecialPowers.loadChromeScript(() => {
     addMessageListener("setup", () => {
-      const protoSvc = Cc["@mozilla.org/uriloader/external-protocol-service;1"]
-                         .getService(Ci.nsIExternalProtocolService);
+      const protoSvc = Cc[
+        "@mozilla.org/uriloader/external-protocol-service;1"
+      ].getService(Ci.nsIExternalProtocolService);
       let protoInfo = protoSvc.getProtocolHandlerInfo("ext+foo");
       let handlers = protoInfo.possibleApplicationHandlers;
       sendAsyncMessage("handlerData", handlers.length);
@@ -386,6 +440,83 @@ add_task(async function test_protocolHandler_duplicate() {
   let data = await msg;
   is(data, 1, "cannot re-register the same handler config");
   chromeScript.destroy();
+  await extension.unload();
+});
+
+// Test that a protocol handler will work if ftp is enabled
+add_task(async function test_ftp_protocolHandler() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["network.ftp.enabled", false],
+      // Disabling the external protocol permission prompt. We don't need it
+      // for this test.
+      ["security.external_protocol_requires_permission", false],
+    ],
+  });
+  let extensionData = {
+    manifest: {
+      protocol_handlers: [
+        {
+          protocol: "ftp",
+          name: "an ftp protocol handler",
+          uriTemplate: "ftp.html?val=%s",
+        },
+      ],
+    },
+
+    async background() {
+      let url = "ftp://example.com/file.txt";
+      browser.test.onMessage.addListener(async () => {
+        await browser.tabs.create({ url });
+      });
+    },
+
+    files: {
+      "ftp.js": function() {
+        browser.test.sendMessage("test-query", location.search);
+      },
+      "ftp.html": `<!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <script src="ftp.js"><\/script>
+          </head>
+        </html>`,
+    },
+  };
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  await extension.startup();
+  const handlerUrl = `moz-extension://${extension.uuid}/ftp.html`;
+
+  let chromeScript = SpecialPowers.loadChromeScript(protocolChromeScript);
+
+  // Set the preferredAction to this extension as ftp will default to system.  If
+  // we didn't bypass the dialog for this test, the user would get asked in this case.
+  let msg = chromeScript.promiseOneMessage("set");
+  chromeScript.sendAsyncMessage("setPreferredAction", {
+    protocol: "ftp",
+    template: handlerUrl,
+  });
+  await msg;
+
+  msg = chromeScript.promiseOneMessage("handlerData");
+  chromeScript.sendAsyncMessage("setup", "ftp");
+  let data = await msg;
+  ok(
+    data.preferredAction,
+    "using a helper application is the preferred action"
+  );
+  ok(data.preferredApplicationHandler, "handler was set as default handler");
+  is(data.handlers, 1, "one handler is set");
+  ok(!data.alwaysAskBeforeHandling, "will not show dialog");
+  ok(data.isWebHandler, "the handler is a web handler");
+  is(data.uriTemplate, `${handlerUrl}?val=%s`, "correct url template");
+
+  chromeScript.destroy();
+
+  extension.sendMessage("run");
+  let query = await extension.awaitMessage("test-query");
+  is(query, "?val=ftp%3A%2F%2Fexample.com%2Ffile.txt", "test query ok");
   await extension.unload();
 });
 </script>
