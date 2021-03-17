@@ -464,6 +464,9 @@ class RefTest(object):
         prefs["widget.disable-dark-scrollbar"] = True
         prefs["reftest.isCoverageBuild"] = mozinfo.info.get("ccov", False)
 
+        # config specific flags
+        prefs["sandbox.apple_silicon"] = mozinfo.info.get("apple_silicon", False)
+
         # Set tests to run or manifests to parse.
         if tests:
             testlist = os.path.join(profile.profile, "reftests.json")
