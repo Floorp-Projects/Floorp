@@ -2281,11 +2281,20 @@ void MacroAssembler::unsignedCompareInt32x4(Assembler::Condition cond,
                                                   lhsDest, temp1, temp2);
 }
 
-void MacroAssembler::compareInt64x2(Assembler::Condition cond,
-                                    FloatRegister rhs, FloatRegister lhsDest) {
-  MOZ_ASSERT(cond == Assembler::Condition::Equal ||
-             cond == Assembler::Condition::NotEqual);
-  MacroAssemblerX86Shared::compareInt64x2(lhsDest, Operand(rhs), cond, lhsDest);
+void MacroAssembler::compareForEqualityInt64x2(Assembler::Condition cond,
+                                               FloatRegister rhs,
+                                               FloatRegister lhsDest) {
+  MacroAssemblerX86Shared::compareForEqualityInt64x2(lhsDest, Operand(rhs),
+                                                     cond, lhsDest);
+}
+
+void MacroAssembler::compareForOrderingInt64x2(Assembler::Condition cond,
+                                               FloatRegister rhs,
+                                               FloatRegister lhsDest,
+                                               FloatRegister temp1,
+                                               FloatRegister temp2) {
+  MacroAssemblerX86Shared::compareForOrderingInt64x2(
+      lhsDest, Operand(rhs), cond, temp1, temp2, lhsDest);
 }
 
 void MacroAssembler::compareFloat32x4(Assembler::Condition cond,
