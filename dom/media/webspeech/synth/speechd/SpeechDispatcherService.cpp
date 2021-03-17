@@ -415,14 +415,14 @@ void SpeechDispatcherService::Setup() {
 
 void SpeechDispatcherService::RegisterVoices() {
   RefPtr<nsSynthVoiceRegistry> registry = nsSynthVoiceRegistry::GetInstance();
-  for (auto iter = mVoices.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<SpeechDispatcherVoice>& voice = iter.Data();
+  for (const auto& entry : mVoices) {
+    const RefPtr<SpeechDispatcherVoice>& voice = entry.GetData();
 
     // This service can only speak one utterance at a time, so we set
     // aQueuesUtterances to true in order to track global state and schedule
     // access to this service.
     DebugOnly<nsresult> rv =
-        registry->AddVoice(this, iter.Key(), voice->mName, voice->mLanguage,
+        registry->AddVoice(this, entry.GetKey(), voice->mName, voice->mLanguage,
                            voice->mName.EqualsLiteral("default"), true);
 
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Failed to add voice");

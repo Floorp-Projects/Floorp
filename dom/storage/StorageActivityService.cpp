@@ -259,10 +259,10 @@ StorageActivityService::GetActiveOrigins(PRTime aFrom, PRTime aTo,
     return rv;
   }
 
-  for (auto iter = mActivities.Iter(); !iter.Done(); iter.Next()) {
-    if (iter.UserData() >= aFrom && iter.UserData() <= aTo) {
+  for (const auto& activityEntry : mActivities) {
+    if (activityEntry.GetData() >= aFrom && activityEntry.GetData() <= aTo) {
       RefPtr<BasePrincipal> principal =
-          BasePrincipal::CreateContentPrincipal(iter.Key());
+          BasePrincipal::CreateContentPrincipal(activityEntry.GetKey());
       MOZ_ASSERT(principal);
 
       rv = devices->AppendElement(principal);

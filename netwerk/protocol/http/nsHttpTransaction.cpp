@@ -1715,9 +1715,9 @@ void nsHttpTransaction::Close(nsresult reason) {
     mChunkedDecoder = nullptr;
   }
 
-  for (auto iter = mEchRetryCounterMap.ConstIter(); !iter.Done(); iter.Next()) {
-    Telemetry::Accumulate(static_cast<Telemetry::HistogramID>(iter.Key()),
-                          iter.UserData());
+  for (const auto& entry : mEchRetryCounterMap) {
+    Telemetry::Accumulate(static_cast<Telemetry::HistogramID>(entry.GetKey()),
+                          entry.GetData());
   }
 
   // closing this pipe triggers the channel's OnStopRequest method.

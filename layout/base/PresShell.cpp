@@ -1459,7 +1459,7 @@ void PresShell::Destroy() {
     mAutoWeakFrames->Clear(this);
   }
   nsTArray<WeakFrame*> toRemove(mWeakFrames.Count());
-  for (auto iter = mWeakFrames.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mWeakFrames.ConstIter(); !iter.Done(); iter.Next()) {
     toRemove.AppendElement(iter.Get()->GetKey());
   }
   for (WeakFrame* weakFrame : toRemove) {
@@ -2673,7 +2673,7 @@ void PresShell::PostPendingScrollAnchorSelection(
 }
 
 void PresShell::FlushPendingScrollAnchorSelections() {
-  for (auto iter = mPendingScrollAnchorSelection.Iter(); !iter.Done();
+  for (auto iter = mPendingScrollAnchorSelection.ConstIter(); !iter.Done();
        iter.Next()) {
     nsIScrollableFrame* scroll = iter.Get()->GetKey();
     scroll->Anchor()->SelectAnchor();
@@ -2687,7 +2687,7 @@ void PresShell::PostPendingScrollAnchorAdjustment(
 }
 
 void PresShell::FlushPendingScrollAnchorAdjustments() {
-  for (auto iter = mPendingScrollAnchorAdjustment.Iter(); !iter.Done();
+  for (auto iter = mPendingScrollAnchorAdjustment.ConstIter(); !iter.Done();
        iter.Next()) {
     nsIScrollableFrame* scroll = iter.Get()->GetKey();
     scroll->Anchor()->ApplyAdjustments();
@@ -3076,7 +3076,7 @@ void PresShell::ClearFrameRefs(nsIFrame* aFrame) {
   }
 
   AutoTArray<WeakFrame*, 4> toRemove;
-  for (auto iter = mWeakFrames.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mWeakFrames.ConstIter(); !iter.Done(); iter.Next()) {
     WeakFrame* weakFrame = iter.Get()->GetKey();
     if (weakFrame->GetFrame() == aFrame) {
       toRemove.AppendElement(weakFrame);
@@ -5833,7 +5833,7 @@ void PresShell::MarkFramesInListApproximatelyVisible(
 void PresShell::DecApproximateVisibleCount(
     VisibleFrames& aFrames, const Maybe<OnNonvisible>& aNonvisibleAction
     /* = Nothing() */) {
-  for (auto iter = aFrames.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = aFrames.ConstIter(); !iter.Done(); iter.Next()) {
     nsIFrame* frame = iter.Get()->GetKey();
     // Decrement the frame's visible count if we're still tracking its
     // visibility. (We may not be, if the frame disabled visibility tracking
@@ -9662,9 +9662,9 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   bool interrupted = mPresContext->HasPendingInterrupt();
   if (interrupted) {
     // Make sure target gets reflowed again.
-    for (auto iter = mFramesToDirty.Iter(); !iter.Done(); iter.Next()) {
+    for (auto iter = mFramesToDirty.ConstIter(); !iter.Done(); iter.Next()) {
       // Mark frames dirty until target frame.
-      nsPtrHashKey<nsIFrame>* p = iter.Get();
+      const nsPtrHashKey<nsIFrame>* p = iter.Get();
       for (nsIFrame* f = p->GetKey(); f && !f->IsSubtreeDirty();
            f = f->GetParent()) {
         f->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
@@ -10628,8 +10628,8 @@ void ReflowCountMgr::DoGrandTotals() {
     printf("-");
   }
   printf("\n");
-  for (auto iter = mCounts.Iter(); !iter.Done(); iter.Next()) {
-    iter.Data()->DisplayTotals(iter.Key());
+  for (const auto& entry : mCounts) {
+    entry.GetData()->DisplayTotals(entry.GetKey());
   }
 }
 
@@ -10671,7 +10671,7 @@ void ReflowCountMgr::DoIndiTotalsTree() {
     printf("------------------------------------------------\n");
     printf("-- Individual Counts of Frames not in Root Tree\n");
     printf("------------------------------------------------\n");
-    for (auto iter = mIndiFrameCounts.Iter(); !iter.Done(); iter.Next()) {
+    for (auto iter = mIndiFrameCounts.ConstIter(); !iter.Done(); iter.Next()) {
       IndiReflowCounter* counter = iter.UserData();
       if (!counter->mHasBeenOutput) {
         char* name = ToNewCString(counter->mName);
@@ -10702,8 +10702,8 @@ void ReflowCountMgr::DoGrandHTMLTotals() {
   }
   fprintf(mFD, "</tr>\n");
 
-  for (auto iter = mCounts.Iter(); !iter.Done(); iter.Next()) {
-    iter.Data()->DisplayHTMLTotals(iter.Key());
+  for (const auto& entry : mCounts) {
+    entry.GetData()->DisplayHTMLTotals(entry.GetKey());
   }
 }
 
@@ -10753,7 +10753,7 @@ void ReflowCountMgr::DisplayHTMLTotals(const char* aStr) {
 
 //------------------------------------------------------------------
 void ReflowCountMgr::ClearTotals() {
-  for (auto iter = mCounts.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mCounts.ConstIter(); !iter.Done(); iter.Next()) {
     iter.Data()->ClearTotals();
   }
 }
@@ -10781,12 +10781,12 @@ void ReflowCountMgr::DisplayDiffsInTotals() {
     ClearGrandTotals();
   }
 
-  for (auto iter = mCounts.Iter(); !iter.Done(); iter.Next()) {
+  for (const auto& entry : mCounts) {
     if (mCycledOnce) {
-      iter.Data()->CalcDiffInTotals();
-      iter.Data()->DisplayDiffTotals(iter.Key());
+      entry.GetData()->CalcDiffInTotals();
+      entry.GetData()->DisplayDiffTotals(entry.GetKey());
     }
-    iter.Data()->SetTotalsCache();
+    entry.GetData()->SetTotalsCache();
   }
 
   mCycledOnce = true;
@@ -11003,7 +11003,7 @@ nsresult PresShell::UpdateImageLockingState() {
   if (locked) {
     // Request decodes for visible image frames; we want to start decoding as
     // quickly as possible when we get foregrounded to minimize flashing.
-    for (auto iter = mApproximatelyVisibleFrames.Iter(); !iter.Done();
+    for (auto iter = mApproximatelyVisibleFrames.ConstIter(); !iter.Done();
          iter.Next()) {
       nsImageFrame* imageFrame = do_QueryFrame(iter.Get()->GetKey());
       if (imageFrame) {

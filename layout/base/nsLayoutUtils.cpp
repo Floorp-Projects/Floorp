@@ -2953,9 +2953,9 @@ void PrintHitTestInfoStats(nsDisplayList* aList) {
 // respective remote browsers.
 static void ApplyEffectsUpdates(
     const nsTHashMap<nsPtrHashKey<RemoteBrowser>, EffectsInfo>& aUpdates) {
-  for (auto iter = aUpdates.ConstIter(); !iter.Done(); iter.Next()) {
-    auto browser = iter.Key();
-    auto update = iter.Data();
+  for (const auto& entry : aUpdates) {
+    auto* browser = entry.GetKey();
+    const auto& update = entry.GetData();
     browser->UpdateEffects(update);
   }
 }

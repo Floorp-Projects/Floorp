@@ -420,13 +420,13 @@ nsresult UntrustedModulesDataSerializer::AddSingleData(
     const UntrustedModulesData& aData) {
   // Serialize each entry in the modules hashtable out to the "modules" array
   // and store the indices in |mIndexMap|
-  for (auto iter = aData.mModules.ConstIter(); !iter.Done(); iter.Next()) {
-    if (!mIndexMap.WithEntryHandle(iter.Key(), [&](auto&& addPtr) {
+  for (const auto& entry : aData.mModules) {
+    if (!mIndexMap.WithEntryHandle(entry.GetKey(), [&](auto&& addPtr) {
           if (!addPtr) {
             addPtr.Insert(mCurModulesArrayIdx);
 
             JS::RootedValue jsModule(mCx);
-            if (!SerializeModule(mCx, &jsModule, iter.Data(), mFlags) ||
+            if (!SerializeModule(mCx, &jsModule, entry.GetData(), mFlags) ||
                 !JS_DefineElement(mCx, mModulesArray, mCurModulesArrayIdx,
                                   jsModule, JSPROP_ENUMERATE)) {
               return false;

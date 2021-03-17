@@ -189,9 +189,9 @@ nsresult nsStreamConverterService::FindConverter(
 
   // Create a corresponding color table for each vertex in the graph.
   BFSHashTable lBFSTable;
-  for (auto iter = mAdjacencyList.Iter(); !iter.Done(); iter.Next()) {
-    const nsACString& key = iter.Key();
-    MOZ_ASSERT(iter.UserData(), "no data in the table iteration");
+  for (const auto& entry : mAdjacencyList) {
+    const nsACString& key = entry.GetKey();
+    MOZ_ASSERT(entry.GetWeak(), "no data in the table iteration");
     lBFSTable.InsertOrUpdate(key, mozilla::MakeUnique<BFSTableData>(key));
   }
 

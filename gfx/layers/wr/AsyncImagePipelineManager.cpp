@@ -344,9 +344,9 @@ void AsyncImagePipelineManager::ApplyAsyncImagesOfImageBridge(
 
   // We use a pipeline with a very small display list for each video element.
   // Update each of them if needed.
-  for (auto iter = mAsyncImagePipelines.Iter(); !iter.Done(); iter.Next()) {
-    wr::PipelineId pipelineId = wr::AsPipelineId(iter.Key());
-    AsyncImagePipeline* pipeline = iter.UserData();
+  for (const auto& entry : mAsyncImagePipelines) {
+    wr::PipelineId pipelineId = wr::AsPipelineId(entry.GetKey());
+    AsyncImagePipeline* pipeline = entry.GetWeak();
 
 #ifdef XP_WIN
     if (isChanged) {

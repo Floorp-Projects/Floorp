@@ -320,20 +320,21 @@ WrAnimations CompositorAnimationStorage::CollectWebRenderAnimations() const {
 
   WrAnimations animations;
 
-  for (auto iter = mAnimatedValues.ConstIter(); !iter.Done(); iter.Next()) {
-    AnimatedValue* value = iter.UserData();
+  for (const auto& animatedValueEntry : mAnimatedValues) {
+    AnimatedValue* value = animatedValueEntry.GetWeak();
     value->Value().match(
         [&](const AnimationTransform& aTransform) {
           animations.mTransformArrays.AppendElement(wr::ToWrTransformProperty(
-              iter.Key(), aTransform.mFrameTransform));
+              animatedValueEntry.GetKey(), aTransform.mFrameTransform));
         },
         [&](const float& aOpacity) {
           animations.mOpacityArrays.AppendElement(
-              wr::ToWrOpacityProperty(iter.Key(), aOpacity));
+              wr::ToWrOpacityProperty(animatedValueEntry.GetKey(), aOpacity));
         },
         [&](const nscolor& aColor) {
           animations.mColorArrays.AppendElement(wr::ToWrColorProperty(
-              iter.Key(), ToDeviceColor(gfx::sRGBColor::FromABGR(aColor))));
+              animatedValueEntry.GetKey(),
+              ToDeviceColor(gfx::sRGBColor::FromABGR(aColor))));
         });
   }
 

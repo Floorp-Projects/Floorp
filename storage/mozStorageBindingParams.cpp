@@ -150,8 +150,8 @@ already_AddRefed<mozIStorageError> AsyncBindingParams::bind(
 
   nsCOMPtr<mozIStorageError> err;
 
-  for (auto iter = mNamedParameters.Iter(); !iter.Done(); iter.Next()) {
-    const nsACString& key = iter.Key();
+  for (const auto& entry : mNamedParameters) {
+    const nsACString& key = entry.GetKey();
 
     // We do not accept any forms of names other than ":name", but we need to
     // add the colon for SQLite.
@@ -171,7 +171,7 @@ already_AddRefed<mozIStorageError> AsyncBindingParams::bind(
     // can't cram aValue into mParameters using ReplaceObjectAt so that
     // we can freeload off of the BindingParams::Bind implementation.
     int rc = variantToSQLiteT(BindingColumnData(aStatement, oneIdx - 1),
-                              iter.UserData());
+                              entry.GetWeak());
     if (rc != SQLITE_OK) {
       // We had an error while trying to bind.  Now we need to create an error
       // object with the right message.  Note that we special case

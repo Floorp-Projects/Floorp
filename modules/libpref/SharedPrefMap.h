@@ -676,9 +676,9 @@ class MOZ_RAII SharedPrefMapBuilder {
       }
 
       size_t defaultsOffset = UserCount();
-      for (auto iter = mDefaultEntries.ConstIter(); !iter.Done(); iter.Next()) {
-        const auto& entry = iter.Data();
-        buffer[defaultsOffset + entry.mIndex] = entry.mDefaultValue;
+      for (const auto& entry : mDefaultEntries) {
+        const auto& data = entry.GetData();
+        buffer[defaultsOffset + data.mIndex] = data.mDefaultValue;
       }
     }
 

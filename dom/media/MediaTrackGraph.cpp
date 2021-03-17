@@ -685,9 +685,9 @@ void MediaTrackGraphImpl::CloseAudioInputImpl(
   MOZ_ASSERT(OnGraphThread());
   // It is possible to not know the ID here, find it first.
   if (aID.isNothing()) {
-    for (auto iter = mInputDeviceUsers.Iter(); !iter.Done(); iter.Next()) {
-      if (iter.Data().Contains(aListener)) {
-        aID = Some(iter.Key());
+    for (const auto& entry : mInputDeviceUsers) {
+      if (entry.GetData().Contains(aListener)) {
+        aID = Some(entry.GetKey());
       }
     }
     MOZ_ASSERT(aID.isSome(), "Closing an audio input that was not opened.");

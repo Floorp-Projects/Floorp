@@ -111,7 +111,8 @@ uint32_t SessionStorageCache::Length(DataSetType aDataSetType) {
 void SessionStorageCache::Key(DataSetType aDataSetType, uint32_t aIndex,
                               nsAString& aResult) {
   aResult.SetIsVoid(true);
-  for (auto iter = Set(aDataSetType)->mKeys.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = Set(aDataSetType)->mKeys.ConstIter(); !iter.Done();
+       iter.Next()) {
     if (aIndex == 0) {
       aResult = iter.Key();
       return;
@@ -132,7 +133,8 @@ void SessionStorageCache::GetItem(DataSetType aDataSetType,
 
 void SessionStorageCache::GetKeys(DataSetType aDataSetType,
                                   nsTArray<nsString>& aKeys) {
-  for (auto iter = Set(aDataSetType)->mKeys.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = Set(aDataSetType)->mKeys.ConstIter(); !iter.Done();
+       iter.Next()) {
     aKeys.AppendElement(iter.Key());
   }
 }
@@ -223,15 +225,19 @@ already_AddRefed<SessionStorageCache> SessionStorageCache::Clone() const {
   RefPtr<SessionStorageCache> cache = new SessionStorageCache();
 
   cache->mDefaultSet.mOriginQuotaUsage = mDefaultSet.mOriginQuotaUsage;
-  for (auto iter = mDefaultSet.mKeys.ConstIter(); !iter.Done(); iter.Next()) {
-    cache->mDefaultSet.mKeys.InsertOrUpdate(iter.Key(), iter.Data());
-    cache->mDefaultSet.mWriteOptimizer.InsertItem(iter.Key(), iter.Data());
+  for (const auto& keyEntry : mDefaultSet.mKeys) {
+    cache->mDefaultSet.mKeys.InsertOrUpdate(keyEntry.GetKey(),
+                                            keyEntry.GetData());
+    cache->mDefaultSet.mWriteOptimizer.InsertItem(keyEntry.GetKey(),
+                                                  keyEntry.GetData());
   }
 
   cache->mSessionSet.mOriginQuotaUsage = mSessionSet.mOriginQuotaUsage;
-  for (auto iter = mSessionSet.mKeys.ConstIter(); !iter.Done(); iter.Next()) {
-    cache->mSessionSet.mKeys.InsertOrUpdate(iter.Key(), iter.Data());
-    cache->mSessionSet.mWriteOptimizer.InsertItem(iter.Key(), iter.Data());
+  for (const auto& keyEntry : mSessionSet.mKeys) {
+    cache->mSessionSet.mKeys.InsertOrUpdate(keyEntry.GetKey(),
+                                            keyEntry.GetData());
+    cache->mSessionSet.mWriteOptimizer.InsertItem(keyEntry.GetKey(),
+                                                  keyEntry.GetData());
   }
 
   return cache.forget();
@@ -240,11 +246,8 @@ already_AddRefed<SessionStorageCache> SessionStorageCache::Clone() const {
 nsTArray<SSSetItemInfo> SessionStorageCache::SerializeData(
     DataSetType aDataSetType) {
   nsTArray<SSSetItemInfo> data;
-  for (auto iter = Set(aDataSetType)->mKeys.Iter(); !iter.Done(); iter.Next()) {
-    SSSetItemInfo keyValuePair;
-    keyValuePair.key() = iter.Key();
-    keyValuePair.value() = iter.Data();
-    data.EmplaceBack(std::move(keyValuePair));
+  for (const auto& keyEntry : Set(aDataSetType)->mKeys) {
+    data.EmplaceBack(nsString{keyEntry.GetKey()}, keyEntry.GetData());
   }
   return data;
 }

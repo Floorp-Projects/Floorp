@@ -297,9 +297,9 @@ void SandboxBroker::Policy::FixRecursivePermissions() {
     SANDBOX_LOG_ERROR("fixing recursive policy entries");
   }
 
-  for (auto iter = oldMap.ConstIter(); !iter.Done(); iter.Next()) {
-    const nsACString& path = iter.Key();
-    const int& localPerms = iter.Data();
+  for (const auto& entry : oldMap) {
+    const nsACString& path = entry.GetKey();
+    const int& localPerms = entry.GetData();
     int inheritedPerms = 0;
 
     nsAutoCString ancestor(path);
@@ -359,9 +359,9 @@ int SandboxBroker::Policy::Lookup(const nsACString& aPath) const {
   // directory permission. We'll have to check the entire
   // whitelist for the best match (slower).
   int allPerms = 0;
-  for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
-    const nsACString& whiteListPath = iter.Key();
-    const int& perms = iter.Data();
+  for (const auto& entry : mMap) {
+    const nsACString& whiteListPath = entry.GetKey();
+    const int& perms = entry.GetData();
 
     if (!(perms & RECURSIVE)) continue;
 

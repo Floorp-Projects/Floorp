@@ -2219,9 +2219,9 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
    * for refresh events.
    */
 
-  for (auto iter = mStartTable.Iter(); !iter.Done(); iter.Next()) {
-    const uint32_t& delay = iter.Key();
-    ImageStartData* data = iter.UserData();
+  for (const auto& entry : mStartTable) {
+    const uint32_t& delay = entry.GetKey();
+    ImageStartData* data = entry.GetWeak();
 
     if (data->mStartTime) {
       TimeStamp& start = *data->mStartTime;
@@ -2255,8 +2255,8 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     // images to refresh, and then we refresh each image in that array.
     nsCOMArray<imgIContainer> imagesToRefresh(mRequests.Count());
 
-    for (auto iter = mRequests.Iter(); !iter.Done(); iter.Next()) {
-      nsISupportsHashKey* entry = iter.Get();
+    for (auto iter = mRequests.ConstIter(); !iter.Done(); iter.Next()) {
+      const nsISupportsHashKey* entry = iter.Get();
       auto req = static_cast<imgIRequest*>(entry->GetKey());
       MOZ_ASSERT(req, "Unable to retrieve the image request");
       nsCOMPtr<imgIContainer> image;
@@ -2407,7 +2407,7 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
 
 void nsRefreshDriver::BeginRefreshingImages(RequestTable& aEntries,
                                             mozilla::TimeStamp aDesired) {
-  for (auto iter = aEntries.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = aEntries.ConstIter(); !iter.Done(); iter.Next()) {
     auto req = static_cast<imgIRequest*>(iter.Get()->GetKey());
     MOZ_ASSERT(req, "Unable to retrieve the image request");
 

@@ -1449,6 +1449,8 @@ void gfxFontEntry::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
   if (mFeatureInputs) {
     aSizes->mFontTableCacheSize +=
         mFeatureInputs->ShallowSizeOfIncludingThis(aMallocSizeOf);
+    // XXX Can't this simply be
+    // aSizes->mFontTableCacheSize += 8192 * mFeatureInputs->Count();
     for (auto iter = mFeatureInputs->ConstIter(); !iter.Done(); iter.Next()) {
       // There's no API to get the real size of an hb_set, so we'll use
       // an approximation based on knowledge of the implementation.

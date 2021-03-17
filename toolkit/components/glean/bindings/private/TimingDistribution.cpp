@@ -62,9 +62,9 @@ GleanTimingDistribution::TestGetValue(const nsACString& aPingName,
       return NS_ERROR_FAILURE;
     }
     auto& data = result.ref().values;
-    for (auto iter = data.ConstIter(); !iter.Done(); iter.Next()) {
-      const uint64_t bucket = iter.Key();
-      const uint64_t count = iter.UserData();
+    for (const auto& entry : data) {
+      const uint64_t bucket = entry.GetKey();
+      const uint64_t count = entry.GetData();
       if (!JS_DefineProperty(aCx, valuesObj,
                              nsPrintfCString("%" PRIu64, bucket).get(),
                              static_cast<double>(count), JSPROP_ENUMERATE)) {

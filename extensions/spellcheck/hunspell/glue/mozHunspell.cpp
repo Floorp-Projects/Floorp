@@ -216,7 +216,7 @@ NS_IMETHODIMP mozHunspell::SetPersonalDictionary(
 NS_IMETHODIMP mozHunspell::GetDictionaryList(
     nsTArray<nsCString>& aDictionaries) {
   MOZ_ASSERT(aDictionaries.IsEmpty());
-  for (auto iter = mDictionaries.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mDictionaries.ConstIter(); !iter.Done(); iter.Next()) {
     aDictionaries.AppendElement(NS_ConvertUTF16toUTF8(iter.Key()));
   }
 
@@ -276,8 +276,9 @@ void mozHunspell::LoadDictionaryList(bool aNotifyChildProcesses) {
     LoadDictionariesFromDir(mDynamicDirectories[i]);
   }
 
-  for (auto iter = mDynamicDictionaries.Iter(); !iter.Done(); iter.Next()) {
-    mDictionaries.InsertOrUpdate(iter.Key(), iter.Data());
+  for (const auto& dictionaryEntry : mDynamicDictionaries) {
+    mDictionaries.InsertOrUpdate(dictionaryEntry.GetKey(),
+                                 dictionaryEntry.GetData());
   }
 
   DictionariesChanged(aNotifyChildProcesses);

@@ -1105,9 +1105,9 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   static void UpdateAncestorState(nsIContent* aStartNode,
                                   nsIContent* aStopBefore, EventStates aState,
                                   bool aAddState);
-  static void ResetLastOverForContent(const uint32_t& aIdx,
-                                      RefPtr<OverOutElementsWrapper>& aChunk,
-                                      nsIContent* aClosure);
+  static void ResetLastOverForContent(
+      const uint32_t& aIdx, const RefPtr<OverOutElementsWrapper>& aChunk,
+      nsIContent* aClosure);
 
   /**
    * Update the attribute mLastRefPoint of the mouse event. It should be

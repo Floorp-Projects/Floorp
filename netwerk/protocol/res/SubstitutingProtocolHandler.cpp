@@ -236,15 +236,16 @@ void SubstitutingProtocolHandler::ConstructInternal() {
 nsresult SubstitutingProtocolHandler::CollectSubstitutions(
     nsTArray<SubstitutionMapping>& aMappings) {
   AutoReadLock lock(mSubstitutionsLock);
-  for (auto iter = mSubstitutions.ConstIter(); !iter.Done(); iter.Next()) {
-    const SubstitutionEntry& entry = iter.Data();
+  for (const auto& substitutionEntry : mSubstitutions) {
+    const SubstitutionEntry& entry = substitutionEntry.GetData();
     nsCOMPtr<nsIURI> uri = entry.baseURI;
     SerializedURI serialized;
     if (uri) {
       nsresult rv = uri->GetSpec(serialized.spec);
       NS_ENSURE_SUCCESS(rv, rv);
     }
-    SubstitutionMapping substitution = {mScheme, nsCString(iter.Key()),
+    SubstitutionMapping substitution = {mScheme,
+                                        nsCString(substitutionEntry.GetKey()),
                                         serialized, entry.flags};
     aMappings.AppendElement(substitution);
   }

@@ -861,7 +861,7 @@ void nsHostResolver::Shutdown() {
       mIdleTaskCV.NotifyAll();
     }
 
-    for (auto iter = mRecordDB.Iter(); !iter.Done(); iter.Next()) {
+    for (auto iter = mRecordDB.ConstIter(); !iter.Done(); iter.Next()) {
       iter.UserData()->Cancel();
     }
     // empty host database
@@ -2305,10 +2305,10 @@ nsresult nsHostResolver::Create(uint32_t maxCacheEntries,
 
 void nsHostResolver::GetDNSCacheEntries(nsTArray<DNSCacheEntries>* args) {
   MutexAutoLock lock(mLock);
-  for (auto iter = mRecordDB.Iter(); !iter.Done(); iter.Next()) {
+  for (const auto& recordEntry : mRecordDB) {
     // We don't pay attention to address literals, only resolved domains.
     // Also require a host.
-    nsHostRecord* rec = iter.UserData();
+    nsHostRecord* rec = recordEntry.GetWeak();
     MOZ_ASSERT(rec, "rec should never be null here!");
 
     if (!rec) {
@@ -2347,7 +2347,7 @@ void nsHostResolver::GetDNSCacheEntries(nsTArray<DNSCacheEntries>* args) {
       info.TRR = addrRec->addr_info->IsTRROrODoH();
     }
 
-    info.originAttributesSuffix = iter.Key().originSuffix;
+    info.originAttributesSuffix = recordEntry.GetKey().originSuffix;
 
     args->AppendElement(std::move(info));
   }
