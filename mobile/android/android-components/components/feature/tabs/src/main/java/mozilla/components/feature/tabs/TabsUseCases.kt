@@ -10,6 +10,7 @@ import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.storage.RecoverableBrowserState
 import mozilla.components.browser.session.storage.SessionStorage
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.action.EngineAction
 import mozilla.components.browser.state.action.RestoreCompleteAction
 import mozilla.components.browser.state.action.UndoAction
@@ -203,6 +204,7 @@ class TabsUseCases(
          * @param parentId the id of the parent tab to use for the newly created tab.
          * @param flags the [LoadUrlFlags] to use when loading the provided URL.
          * @param engineSession (optional) engine session to use for this tab.
+         * @param searchTerms (optional) search terms that were used to create this tab.
          * @return The ID of the created tab.
          */
         @Suppress("LongParameterList")
@@ -213,7 +215,8 @@ class TabsUseCases(
             parentId: String? = null,
             flags: LoadUrlFlags = LoadUrlFlags.none(),
             engineSession: EngineSession? = null,
-            source: Source = Source.NEW_TAB
+            source: Source = Source.NEW_TAB,
+            searchTerms: String? = null
         ): String {
             val session = Session(url, true, source)
 
@@ -227,6 +230,13 @@ class TabsUseCases(
                     session.id,
                     url,
                     flags
+                ))
+            }
+
+            if (searchTerms != null) {
+                store.dispatch(ContentAction.UpdateSearchTermsAction(
+                    session.id,
+                    searchTerms
                 ))
             }
 
