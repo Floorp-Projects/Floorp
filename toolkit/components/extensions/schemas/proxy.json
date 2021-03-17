@@ -48,7 +48,8 @@
           "ftp": {
             "type": "string",
             "optional": true,
-            "description": "The address of the ftp proxy, can include a port."
+            "deprecated": true,
+            "description": "The address of the ftp proxy, can include a port.  Deprecated since Firefox 88."
           },
           "ssl": {
             "type": "string",
