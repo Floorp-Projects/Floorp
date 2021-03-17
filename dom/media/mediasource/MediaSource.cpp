@@ -213,18 +213,21 @@ double MediaSource::Duration() {
 
 void MediaSource::SetDuration(double aDuration, ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
-  MSE_API("SetDuration(aDuration=%f, ErrorResult)", aDuration);
   if (aDuration < 0 || IsNaN(aDuration)) {
     nsPrintfCString error("Invalid duration value %f", aDuration);
+    MSE_API("SetDuration(aDuration=%f, invalid value)", aDuration);
     aRv.ThrowTypeError(error);
     return;
   }
   if (mReadyState != MediaSourceReadyState::Open ||
       mSourceBuffers->AnyUpdating()) {
+    MSE_API("SetDuration(aDuration=%f, invalid state)", aDuration);
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
   DurationChange(aDuration, aRv);
+  MSE_API("SetDuration(aDuration=%f, errorCode=%d)", aDuration,
+          aRv.ErrorCodeAsInt());
 }
 
 void MediaSource::SetDuration(double aDuration) {
