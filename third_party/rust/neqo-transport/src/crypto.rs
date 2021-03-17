@@ -25,6 +25,7 @@ use crate::packet::{PacketBuilder, PacketNumber, QuicVersion};
 use crate::recovery::RecoveryToken;
 use crate::recv_stream::RxStreamOrderer;
 use crate::send_stream::TxBuffer;
+use crate::stats::FrameStats;
 use crate::tparams::{TpZeroRttChecker, TransportParameters, TransportParametersHandler};
 use crate::tracking::PNSpace;
 use crate::{Error, Res};
@@ -54,7 +55,12 @@ pub struct Crypto {
 type TpHandler = Rc<RefCell<TransportParametersHandler>>;
 
 impl Crypto {
-    pub fn new(mut agent: Agent, protocols: &[impl AsRef<str>], tphandler: TpHandler) -> Res<Self> {
+    pub fn new(
+        version: QuicVersion,
+        mut agent: Agent,
+        protocols: &[impl AsRef<str>],
+        tphandler: TpHandler,
+    ) -> Res<Self> {
         agent.set_version_range(TLS_VERSION_1_3, TLS_VERSION_1_3)?;
         agent.set_ciphers(&[
             TLS_AES_128_GCM_SHA256,
@@ -68,7 +74,16 @@ impl Crypto {
         if let Agent::Client(c) = &mut agent {
             c.enable_0rtt()?;
         }
-        agent.extension_handler(0xffa5, tphandler)?;
+        let extension = match version {
+            QuicVersion::Version1 => 0x39,
+            QuicVersion::Draft27
+            | QuicVersion::Draft28
+            | QuicVersion::Draft29
+            | QuicVersion::Draft30
+            | QuicVersion::Draft31
+            | QuicVersion::Draft32 => 0xffa5,
+        };
+        agent.extension_handler(extension, tphandler)?;
         Ok(Self {
             tls: agent,
             streams: Default::default(),
@@ -225,6 +240,16 @@ impl Crypto {
         Ok(())
     }
 
+    pub fn write_frame(
+        &mut self,
+        space: PNSpace,
+        builder: &mut PacketBuilder,
+        tokens: &mut Vec<RecoveryToken>,
+        stats: &mut FrameStats,
+    ) -> Res<()> {
+        self.streams.write_frame(space, builder, tokens, stats)
+    }
+
     pub fn acked(&mut self, token: &CryptoRecoveryToken) {
         qinfo!(
             "Acked crypto frame space={} offset={} length={}",
@@ -358,7 +383,10 @@ impl CryptoDxState {
         label: &str,
         dcid: &[u8],
     ) -> Self {
-        qtrace!("new_initial for {:?}", quic_version);
+        const INITIAL_SALT_V1: &[u8] = &[
+            0x38, 0x76, 0x2c, 0xf7, 0xf5, 0x59, 0x34, 0xb3, 0x4d, 0x17, 0x9a, 0xe6, 0xa4, 0xc8,
+            0x0c, 0xad, 0xcc, 0xbb, 0x7f, 0x0a,
+        ];
         const INITIAL_SALT_27: &[u8] = &[
             0xc3, 0xee, 0xf7, 0x12, 0xc7, 0x2e, 0xbb, 0x5a, 0x11, 0xa7, 0xd2, 0x43, 0x2b, 0xb4,
             0x63, 0x65, 0xbe, 0xf9, 0xf5, 0x02,
@@ -367,7 +395,9 @@ impl CryptoDxState {
             0xaf, 0xbf, 0xec, 0x28, 0x99, 0x93, 0xd2, 0x4c, 0x9e, 0x97, 0x86, 0xf1, 0x9c, 0x61,
             0x11, 0xe0, 0x43, 0x90, 0xa8, 0x99,
         ];
+        qtrace!("new_initial for {:?}", quic_version);
         let salt = match quic_version {
+            QuicVersion::Version1 => INITIAL_SALT_V1,
             QuicVersion::Draft27 | QuicVersion::Draft28 => INITIAL_SALT_27,
             QuicVersion::Draft29
             | QuicVersion::Draft30
@@ -549,7 +579,10 @@ impl CryptoDxState {
             hex(body)
         );
         // The numbers in `Self::limit` assume a maximum packet size of 2^11.
-        assert!(body.len() <= 2048);
+        if body.len() > 2048 {
+            debug_assert!(false);
+            return Err(Error::InternalError(12));
+        }
         self.invoked()?;
 
         let size = body.len() + MAX_AUTH_TAG;
@@ -1149,7 +1182,7 @@ impl CryptoStreams {
                     *self = Self::ApplicationData {
                         application: mem::take(application),
                     };
-                } else if matches!(self, Self::Initial {..}) {
+                } else if matches!(self, Self::Initial { .. }) {
                     panic!("Discarding handshake before initial discarded");
                 }
             }
@@ -1241,14 +1274,16 @@ impl CryptoStreams {
         &mut self,
         space: PNSpace,
         builder: &mut PacketBuilder,
-    ) -> Res<Option<RecoveryToken>> {
+        tokens: &mut Vec<RecoveryToken>,
+        stats: &mut FrameStats,
+    ) -> Res<()> {
         let cs = self.get_mut(space).unwrap();
         if let Some((offset, data)) = cs.tx.next_bytes() {
             let mut header_len = 1 + Encoder::varint_len(offset) + 1;
 
             // Don't bother if there isn't room for the header and some data.
             if builder.remaining() < header_len + 1 {
-                return Ok(None);
+                return Ok(());
             }
             // Calculate length of data based on the minimum of:
             // - available data
@@ -1268,14 +1303,14 @@ impl CryptoStreams {
             cs.tx.mark_as_sent(offset, length);
 
             qdebug!("CRYPTO for {} offset={}, len={}", space, offset, length);
-            Ok(Some(RecoveryToken::Crypto(CryptoRecoveryToken {
+            tokens.push(RecoveryToken::Crypto(CryptoRecoveryToken {
                 space,
                 offset,
                 length,
-            })))
-        } else {
-            Ok(None)
+            }));
+            stats.crypto += 1;
         }
+        Ok(())
     }
 }
 

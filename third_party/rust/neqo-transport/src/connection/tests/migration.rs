@@ -17,7 +17,7 @@ use neqo_common::Datagram;
 use std::cell::RefCell;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use std::rc::Rc;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use test_fixture::{self, addr, fixture_init, now};
 
 /// This should be a valid-seeming transport parameter.
@@ -74,6 +74,14 @@ fn assert_v6_path(dgram: &Datagram, padded: bool) {
     }
 }
 
+/// As these tests use a new path, that path often has a non-zero RTT.
+/// Pacing can be a problem when testing that path.  This skips time forward.
+fn skip_pacing(c: &mut Connection, now: Instant) -> Instant {
+    let pacing = c.process_output(now).callback();
+    assert_ne!(pacing, Duration::new(0, 0));
+    now + pacing
+}
+
 #[test]
 fn rebinding_port() {
     let mut client = default_client();
@@ -101,18 +109,19 @@ fn path_forwarding_attack() {
     let mut client = default_client();
     let mut server = default_server();
     connect_force_idle(&mut client, &mut server);
+    let mut now = now();
 
-    let dgram = send_something(&mut client, now());
+    let dgram = send_something(&mut client, now);
     let dgram = change_path(&dgram, addr_v4());
-    server.process_input(dgram, now());
+    server.process_input(dgram, now);
 
     // The server now probes the new (primary) path.
-    let new_probe = server.process_output(now()).dgram().unwrap();
+    let new_probe = server.process_output(now).dgram().unwrap();
     assert_eq!(server.stats().frame_tx.path_challenge, 1);
     assert_v4_path(&new_probe, false); // Can't be padded.
 
     // The server also probes the old path.
-    let old_probe = server.process_output(now()).dgram().unwrap();
+    let old_probe = server.process_output(now).dgram().unwrap();
     assert_eq!(server.stats().frame_tx.path_challenge, 2);
     assert_v6_path(&old_probe, true);
 
@@ -120,56 +129,57 @@ fn path_forwarding_attack() {
     // now constrained by the amplification limit.
     let stream_id = server.stream_create(StreamType::UniDi).unwrap();
     server.stream_close_send(stream_id).unwrap();
-    assert!(server.process_output(now()).dgram().is_none());
+    assert!(server.process_output(now).dgram().is_none());
 
     // The client should respond to the challenge on the new path.
     // The server couldn't pad, so the client is also amplification limited.
-    let new_resp = client.process(Some(new_probe), now()).dgram().unwrap();
+    let new_resp = client.process(Some(new_probe), now).dgram().unwrap();
     assert_eq!(client.stats().frame_rx.path_challenge, 1);
     assert_eq!(client.stats().frame_tx.path_challenge, 1);
     assert_eq!(client.stats().frame_tx.path_response, 1);
     assert_v4_path(&new_resp, false);
 
     // The client also responds to probes on the old path.
-    let old_resp = client.process(Some(old_probe), now()).dgram().unwrap();
+    let old_resp = client.process(Some(old_probe), now).dgram().unwrap();
     assert_eq!(client.stats().frame_rx.path_challenge, 2);
     assert_eq!(client.stats().frame_tx.path_challenge, 1);
     assert_eq!(client.stats().frame_tx.path_response, 2);
     assert_v6_path(&old_resp, true);
 
     // But the client still sends data on the old path.
-    let client_data1 = send_something(&mut client, now());
+    let client_data1 = send_something(&mut client, now);
     assert_v6_path(&client_data1, false); // Just data.
 
     // Receiving the PATH_RESPONSE from the client opens the amplification
     // limit enough for the server to respond.
     // This is padded because it includes PATH_CHALLENGE.
-    let server_data1 = server.process(Some(new_resp), now()).dgram().unwrap();
+    let server_data1 = server.process(Some(new_resp), now).dgram().unwrap();
     assert_v4_path(&server_data1, true);
     assert_eq!(server.stats().frame_tx.path_challenge, 3);
 
     // The client responds to this probe on the new path.
-    client.process_input(server_data1, now());
+    client.process_input(server_data1, now);
     let stream_before = client.stats().frame_tx.stream;
-    let padded_resp = send_something(&mut client, now());
+    let padded_resp = send_something(&mut client, now);
     assert_eq!(stream_before, client.stats().frame_tx.stream);
     assert_v4_path(&padded_resp, true); // This is padded!
 
     // But new data from the client stays on the old path.
-    let client_data2 = client.process_output(now()).dgram().unwrap();
+    let client_data2 = client.process_output(now).dgram().unwrap();
     assert_v6_path(&client_data2, false);
 
     // The server keeps sending on the new path.
-    let server_data2 = send_something(&mut server, now());
+    now = skip_pacing(&mut server, now);
+    let server_data2 = send_something(&mut server, now);
     assert_v4_path(&server_data2, false);
 
     // Until new data is received from the client on the old path.
-    server.process_input(client_data2, now());
+    server.process_input(client_data2, now);
     // The server sends a probe on the "old" path.
-    let server_data3 = send_something(&mut server, now());
+    let server_data3 = send_something(&mut server, now);
     assert_v4_path(&server_data3, true);
     // But switches data transmission to the "new" path.
-    let server_data4 = server.process_output(now()).dgram().unwrap();
+    let server_data4 = server.process_output(now).dgram().unwrap();
     assert_v6_path(&server_data4, false);
 }
 
@@ -178,35 +188,37 @@ fn migrate_immediate() {
     let mut client = default_client();
     let mut server = default_server();
     connect_force_idle(&mut client, &mut server);
+    let mut now = now();
 
     client
-        .migrate(Some(addr_v4()), Some(addr_v4()), true, now())
+        .migrate(Some(addr_v4()), Some(addr_v4()), true, now)
         .unwrap();
 
-    let client1 = send_something(&mut client, now());
+    let client1 = send_something(&mut client, now);
     assert_v4_path(&client1, true); // Contains PATH_CHALLENGE.
-    let client2 = send_something(&mut client, now());
+    let client2 = send_something(&mut client, now);
     assert_v4_path(&client2, false); // Doesn't.
 
-    let server_delayed = send_something(&mut server, now());
+    let server_delayed = send_something(&mut server, now);
 
     // The server accepts the first packet and migrates (but probes).
-    let server1 = server.process(Some(client1), now()).dgram().unwrap();
+    let server1 = server.process(Some(client1), now).dgram().unwrap();
     assert_v4_path(&server1, true);
-    let server2 = server.process_output(now()).dgram().unwrap();
+    let server2 = server.process_output(now).dgram().unwrap();
     assert_v6_path(&server2, true);
 
     // The second packet has no real effect, it just elicits an ACK.
     let all_before = server.stats().frame_tx.all;
     let ack_before = server.stats().frame_tx.ack;
-    let server3 = server.process(Some(client2), now()).dgram();
+    let server3 = server.process(Some(client2), now).dgram();
     assert!(server3.is_some());
     assert_eq!(server.stats().frame_tx.all, all_before + 1);
     assert_eq!(server.stats().frame_tx.ack, ack_before + 1);
 
     // Receiving a packet sent by the server before migration doesn't change path.
-    client.process_input(server_delayed, now());
-    let client3 = send_something(&mut client, now());
+    client.process_input(server_delayed, now);
+    now = skip_pacing(&mut client, now);
+    let client3 = send_something(&mut client, now);
     assert_v4_path(&client3, false);
 }
 
@@ -391,7 +403,11 @@ fn migration(mut client: Connection) {
     let client_confirmation = client.process_output(now).dgram().unwrap();
     assert_v4_path(&client_confirmation, false);
 
-    let server_confirmation = send_something(&mut server, now);
+    // The server has now sent 2 packets, so it is blocked on the pacer.  Wait.
+    let server_pacing = server.process_output(now).callback();
+    assert_ne!(server_pacing, Duration::new(0, 0));
+    // ... then confirm that the server sends on the new path still.
+    let server_confirmation = send_something(&mut server, now + server_pacing);
     assert_v4_path(&server_confirmation, false);
 }
 
@@ -411,6 +427,7 @@ fn migration_client_empty_cid() {
         addr(),
         addr(),
         ConnectionParameters::default(),
+        now(),
     )
     .unwrap();
     migration(client);
@@ -470,6 +487,7 @@ fn preferred_address(hs_client: SocketAddr, hs_server: SocketAddr, preferred: So
         hs_client,
         hs_server,
         ConnectionParameters::default(),
+        now(),
     )
     .unwrap();
     let spa = if preferred.ip().is_ipv6() {
