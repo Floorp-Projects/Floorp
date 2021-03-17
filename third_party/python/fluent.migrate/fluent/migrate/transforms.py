@@ -418,9 +418,17 @@ class REPLACE(LegacySource):
     """
 
     def __init__(
-        self, path, key, replacements,
-        normalize_printf=False, **kwargs
+        self, path, key, replacements, **kwargs
     ):
+        # We default normalize_printf to False except for .properties files.
+        # We still allow the caller to override the default value.
+        normalize_printf = False
+        if 'normalize_printf' in kwargs:
+            normalize_printf = kwargs['normalize_printf']
+            del kwargs['normalize_printf']
+        elif path.endswith('.properties'):
+            normalize_printf = True
+
         super(REPLACE, self).__init__(path, key, **kwargs)
         self.replacements = replacements
         self.normalize_printf = normalize_printf

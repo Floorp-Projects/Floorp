@@ -87,9 +87,8 @@ ecdsa==0.15 \
 esprima==4.0.1 \
     --hash=sha256:08db1a876d3c2910db9cfaeb83108193af5411fc3a3a66ebefacd390d21323ee
     # via -r requirements-mach-vendor-python.in
-fluent.migrate==0.10 \
-    --hash=sha256:532322b53c895142cf7c1702f95b54b9d3d128fb92eab38f6e8c8a80c447d8c2 \
-    --hash=sha256:ee1b4d827cff6d1df7f9b6a4b3eb78a75f1dd425e2e71b2013fd0dd411167b3e
+fluent.migrate==0.11 \
+    --hash=sha256:3b93fdba9cbc8702d160367ba3a0d5c120707fdde752af35aecf516ce80ed252
     # via -r requirements-mach-vendor-python.in
 fluent.syntax==0.18.1 \
     --hash=sha256:0e63679fa4f1b3042565220a5127b4bab842424f07d6a13c12299e3b3835486a \
