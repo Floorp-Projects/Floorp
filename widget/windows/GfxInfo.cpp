@@ -1852,7 +1852,9 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
                                 DRIVER_COMPARISON_IGNORED, V(0, 0, 0, 0),
                                 "FEATURE_ROLLOUT_EARLY_BETA_SOFTWARE_WR");
 #  endif
+#endif
 
+#if defined(_M_X64) || defined(__amd64__)
     if (mozilla::supports_avx2()) {
       APPEND_TO_DRIVER_BLOCKLIST2_EXT(
           OperatingSystem::Windows, ScreenSizeStatus::Small, BatteryStatus::All,
