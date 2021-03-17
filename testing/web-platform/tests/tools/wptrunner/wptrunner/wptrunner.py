@@ -201,6 +201,7 @@ def run_tests(config, test_paths, product, **kwargs):
         skipped_tests = 0
         test_total = 0
         unexpected_total = 0
+        unexpected_pass_total = 0
 
         if len(test_loader.test_ids) == 0 and kwargs["test_list"]:
             logger.critical("Unable to find any tests at the path(s):")
@@ -255,6 +256,7 @@ def run_tests(config, test_paths, product, **kwargs):
 
                 test_count = 0
                 unexpected_count = 0
+                unexpected_pass_count = 0
 
                 tests = []
                 for test_type in test_loader.test_types:
@@ -345,10 +347,13 @@ def run_tests(config, test_paths, product, **kwargs):
                             raise
                         test_count += manager_group.test_count()
                         unexpected_count += manager_group.unexpected_count()
+                        unexpected_pass_count += manager_group.unexpected_pass_count()
                 recording.set(["after-end"])
                 test_total += test_count
                 unexpected_total += unexpected_count
-                logger.info("Got %i unexpected results" % unexpected_count)
+                unexpected_pass_total += unexpected_pass_count
+                logger.info("Got %i unexpected results, with %i unexpected passes" %
+                            (unexpected_count, unexpected_pass_count))
                 logger.suite_end()
                 if repeat_until_unexpected and unexpected_total > 0:
                     break
@@ -368,6 +373,13 @@ def run_tests(config, test_paths, product, **kwargs):
 
     if unexpected_total and not kwargs["fail_on_unexpected"]:
         logger.info("Tolerating %s unexpected results" % unexpected_total)
+        return True
+
+    all_unexpected_passed = (unexpected_total and
+                             unexpected_total == unexpected_pass_total)
+    if all_unexpected_passed and not kwargs["fail_on_unexpected_pass"]:
+        logger.info("Tolerating %i unexpected results because they all PASS" %
+                    unexpected_pass_total)
         return True
 
     return unexpected_total == 0
