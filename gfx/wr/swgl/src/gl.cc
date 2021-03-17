@@ -1158,6 +1158,8 @@ const char* GetString(GLenum name) {
       return "Software WebRender";
     case GL_VERSION:
       return "3.2";
+    case GL_SHADING_LANGUAGE_VERSION:
+      return "1.50";
     default:
       debugf("unhandled glGetString parameter %x\n", name);
       assert(false);
