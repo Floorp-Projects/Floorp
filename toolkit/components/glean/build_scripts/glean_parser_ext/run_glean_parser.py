@@ -6,13 +6,11 @@
 
 import cpp
 import js
-import os
 import re
 import rust
 import sys
 
 from glean_parser import lint, parser, util
-from mozbuild.util import FileAvoidWrite
 from pathlib import Path
 
 
@@ -69,17 +67,21 @@ DEPS_LEN = 13
 
 
 def main(output_fd, *args):
-    [cpp_h, js_h] = args[-2:]
-    args = args[DEPS_LEN:-2]
+    args = args[DEPS_LEN:]
     all_objs, options = parse(args)
-
-    header_path = Path(os.environ["OBJDIR"]) / "toolkit" / "components" / "glean"
-
     rust.output_rust(all_objs, output_fd, options)
-    with FileAvoidWrite(header_path / cpp_h) as cpp_fd:
-        cpp.output_cpp(all_objs, cpp_fd, options)
-    with FileAvoidWrite(header_path / js_h) as js_fd:
-        js.output_js(all_objs, js_fd, options)
+
+
+def cpp_metrics(output_fd, *args):
+    args = args[DEPS_LEN:]
+    all_objs, options = parse(args)
+    cpp.output_cpp(all_objs, output_fd, options)
+
+
+def js_metrics(output_fd, *args):
+    args = args[DEPS_LEN:]
+    all_objs, options = parse(args)
+    js.output_js(all_objs, output_fd, options)
 
 
 if __name__ == "__main__":
