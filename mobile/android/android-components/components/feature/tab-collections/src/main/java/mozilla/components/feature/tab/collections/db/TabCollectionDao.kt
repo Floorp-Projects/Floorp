@@ -48,6 +48,15 @@ internal interface TabCollectionDao {
     )
     fun getTabCollections(): Flow<List<TabCollectionWithTabs>>
 
+    @Query(
+        """
+        SELECT *
+        FROM tab_collections
+        ORDER BY created_at DESC
+    """
+    )
+    suspend fun getTabCollectionsList(): List<TabCollectionWithTabs>
+
     @Query("SELECT COUNT(*) FROM tab_collections")
     fun countTabCollections(): Int
 }

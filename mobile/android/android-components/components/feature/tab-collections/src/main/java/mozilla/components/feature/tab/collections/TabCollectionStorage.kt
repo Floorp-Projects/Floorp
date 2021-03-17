@@ -23,6 +23,7 @@ import java.util.UUID
 /**
  * A storage implementation that saves snapshots of tabs / sessions in named collections.
  */
+@Suppress("TooManyFunctions")
 class TabCollectionStorage(
     context: Context,
     private val reader: BrowserStateReader = BrowserStateReader(),
@@ -113,6 +114,15 @@ class TabCollectionStorage(
     fun getCollections(): Flow<List<TabCollection>> {
         return database.value.tabCollectionDao().getTabCollections().map { list ->
             list.map { entity -> TabCollectionAdapter(entity) }
+        }
+    }
+
+    /**
+    * Returns all [TabCollection] instances as a list.
+    */
+    suspend fun getCollectionsList(): List<TabCollection> {
+        return database.value.tabCollectionDao().getTabCollectionsList().map { e ->
+            TabCollectionAdapter(e)
         }
     }
 

@@ -285,6 +285,90 @@ class TabCollectionStorageTest {
             assertEquals("https://www.firefox.com", tabs[0].url)
             assertEquals("Firefox", tabs[0].title)
         }
+
+        with(collections[4]) {
+            assertEquals("Articles", title)
+            assertEquals(1, tabs.size)
+
+            assertEquals("https://www.mozilla.org", tabs[0].url)
+            assertEquals("Mozilla", tabs[0].title)
+        }
+    }
+
+    @Test
+    @Suppress("ComplexMethod")
+    fun testGettingCollectionsList() = runBlocking {
+        storage.createCollection(
+            "Articles", listOf(
+            createTab("https://www.mozilla.org", title = "Mozilla")
+            )
+        )
+        storage.createCollection(
+            "Recipes", listOf(
+            createTab("https://www.firefox.com", title = "Firefox")
+            )
+        )
+        storage.createCollection(
+            "Books", listOf(
+            createTab("https://www.youtube.com", title = "YouTube"),
+            createTab("https://www.amazon.com", title = "Amazon")
+            )
+        )
+        storage.createCollection(
+            "News", listOf(
+            createTab("https://www.google.com", title = "Google"),
+            createTab("https://www.facebook.com", title = "Facebook")
+            )
+        )
+        storage.createCollection(
+            "Blogs", listOf(
+            createTab("https://www.wikipedia.org", title = "Wikipedia")
+            )
+        )
+
+        val collections = storage.getCollectionsList()
+        assertEquals(5, collections.size)
+
+        with(collections[0]) {
+            assertEquals("Blogs", title)
+            assertEquals(1, tabs.size)
+            assertEquals("https://www.wikipedia.org", tabs[0].url)
+            assertEquals("Wikipedia", tabs[0].title)
+        }
+
+        with(collections[1]) {
+            assertEquals("News", title)
+            assertEquals(2, tabs.size)
+            assertEquals("https://www.facebook.com", tabs[0].url)
+            assertEquals("Facebook", tabs[0].title)
+            assertEquals("https://www.google.com", tabs[1].url)
+            assertEquals("Google", tabs[1].title)
+        }
+
+        with(collections[2]) {
+            assertEquals("Books", title)
+            assertEquals(2, tabs.size)
+            assertEquals("https://www.amazon.com", tabs[0].url)
+            assertEquals("Amazon", tabs[0].title)
+            assertEquals("https://www.youtube.com", tabs[1].url)
+            assertEquals("YouTube", tabs[1].title)
+        }
+
+        with(collections[3]) {
+            assertEquals("Recipes", title)
+            assertEquals(1, tabs.size)
+
+            assertEquals("https://www.firefox.com", tabs[0].url)
+            assertEquals("Firefox", tabs[0].title)
+        }
+
+        with(collections[4]) {
+            assertEquals("Articles", title)
+            assertEquals(1, tabs.size)
+
+            assertEquals("https://www.mozilla.org", tabs[0].url)
+            assertEquals("Mozilla", tabs[0].title)
+        }
     }
 
     @Test
