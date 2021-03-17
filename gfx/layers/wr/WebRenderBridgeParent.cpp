@@ -1199,6 +1199,8 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvSetDisplayList(
     for (const auto& op : aToDestroy) {
       DestroyActor(op);
     }
+    wr::IpcResourceUpdateQueue::ReleaseShmems(this, aDisplayList.mSmallShmems);
+    wr::IpcResourceUpdateQueue::ReleaseShmems(this, aDisplayList.mLargeShmems);
     return IPC_OK();
   }
 
@@ -1335,6 +1337,12 @@ mozilla::ipc::IPCResult WebRenderBridgeParent::RecvEmptyTransaction(
   if (mDestroyed) {
     for (const auto& op : aToDestroy) {
       DestroyActor(op);
+    }
+    if (aTransactionData) {
+      wr::IpcResourceUpdateQueue::ReleaseShmems(this,
+                                                aTransactionData->mSmallShmems);
+      wr::IpcResourceUpdateQueue::ReleaseShmems(this,
+                                                aTransactionData->mLargeShmems);
     }
     return IPC_OK();
   }
