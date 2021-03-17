@@ -31,15 +31,26 @@ add_test(function test_acyclic() {
 });
 
 add_test(function test_session() {
-  assert.session({ sessionID: "foo" });
-  for (let typ of [null, undefined, ""]) {
-    Assert.throws(
-      () => assert.session({ sessionId: typ }),
-      /InvalidSessionIDError/
-    );
+  assert.session({ id: "foo" });
+
+  const invalidTypes = [
+    null,
+    undefined,
+    [],
+    {},
+    { id: undefined },
+    { id: null },
+    { id: true },
+    { id: 1 },
+    { id: [] },
+    { id: {} },
+  ];
+
+  for (const invalidType of invalidTypes) {
+    Assert.throws(() => assert.session(invalidType), /InvalidSessionIDError/);
   }
 
-  Assert.throws(() => assert.session({ sessionId: null }, "custom"), /custom/);
+  Assert.throws(() => assert.session({ id: null }, "custom"), /custom/);
 
   run_next_test();
 });
