@@ -576,6 +576,8 @@ function BuildConditionSandbox(aURL) {
     var osxmatch = /Mac OS X (\d+).(\d+)$/.exec(hh.oscpu);
     sandbox.OSX = osxmatch ? parseInt(osxmatch[1]) * 100 + parseInt(osxmatch[2]) : undefined;
 
+    // config specific prefs
+    sandbox.appleSilicon = prefs.getBoolPref("sandbox.apple_silicon", false);
     // Plugins are no longer supported.  Don't try to use TestPlugin.
     sandbox.haveTestPlugin = false;
 
