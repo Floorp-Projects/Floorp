@@ -234,6 +234,17 @@ mozilla::ipc::IPCResult GMPChild::RecvPreloadLibs(const nsCString& aLibs) {
         if (libHandle) {
           mLibHandles.AppendElement(libHandle);
         } else {
+          // TODO(bug 1698718): remove the logging once we've identified
+          // the cause of the load failure.
+          const char* error = dlerror();
+          if (error) {
+            // We should always have an error, but gracefully handle just in
+            // case.
+            nsAutoCString nsError{error};
+            CrashReporter::AppendAppNotesToCrashReport(nsError);
+          }
+          // End bug 1698718 logging.
+
           MOZ_CRASH("Couldn't load lib needed by NSS");
         }
       }
