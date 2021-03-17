@@ -216,8 +216,7 @@ void StackTrace::Fill() {
 
   PNT_TIB pTib = reinterpret_cast<PNT_TIB>(NtCurrentTeb());
   void* stackEnd = static_cast<void*>(pTib->StackBase);
-  FramePointerStackWalk(StackWalkCallback, /* aSkipFrames = */ 0, kMaxFrames,
-                        this, fp, stackEnd);
+  FramePointerStackWalk(StackWalkCallback, kMaxFrames, this, fp, stackEnd);
 #elif defined(XP_MACOSX)
   // This avoids MozStackWalk(), which has become unusably slow on Mac due to
   // changes in libunwind.
@@ -231,8 +230,7 @@ void StackTrace::Fill() {
       "movq (%%rbp), %0\n\t"
       : "=r"(fp));
   void* stackEnd = pthread_get_stackaddr_np(pthread_self());
-  FramePointerStackWalk(StackWalkCallback, /* skipFrames = */ 0, kMaxFrames,
-                        this, fp, stackEnd);
+  FramePointerStackWalk(StackWalkCallback, kMaxFrames, this, fp, stackEnd);
 #else
   MozStackWalk(StackWalkCallback, /* aSkipFrames = */ 0, kMaxFrames, this);
 #endif

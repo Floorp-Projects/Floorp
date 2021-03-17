@@ -643,8 +643,7 @@ static uint32_t gGCStackTraceTableWhenSizeExceeds = 4 * 1024;
 
     PNT_TIB pTib = reinterpret_cast<PNT_TIB>(NtCurrentTeb());
     void* stackEnd = static_cast<void*>(pTib->StackBase);
-    FramePointerStackWalk(StackWalkCallback, /* skipFrames = */ 0, MaxFrames,
-                          &tmp, fp, stackEnd);
+    FramePointerStackWalk(StackWalkCallback, MaxFrames, &tmp, fp, stackEnd);
 #elif defined(XP_MACOSX)
     // This avoids MozStackWalk(), which has become unusably slow on Mac due to
     // changes in libunwind.
@@ -662,8 +661,7 @@ static uint32_t gGCStackTraceTableWhenSizeExceeds = 4 * 1024;
     asm("ldr %0, [x29]\n\t" : "=r"(fp));
 #  endif
     void* stackEnd = pthread_get_stackaddr_np(pthread_self());
-    FramePointerStackWalk(StackWalkCallback, /* skipFrames = */ 0, MaxFrames,
-                          &tmp, fp, stackEnd);
+    FramePointerStackWalk(StackWalkCallback, MaxFrames, &tmp, fp, stackEnd);
 #else
 #  if defined(XP_WIN) && defined(_M_X64)
     int skipFrames = 1;
