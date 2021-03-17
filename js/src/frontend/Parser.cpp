@@ -1154,7 +1154,8 @@ Maybe<EvalScope::ParserData*> NewEvalScopeData(JSContext* cx,
   ParserBindingNameVector vars(cx);
 
   // Treat all bindings as closed over in non-strict eval.
-  bool allBindingsClosedOver = !pc->sc()->strict() || pc->sc()->allBindingsClosedOver();
+  bool allBindingsClosedOver =
+      !pc->sc()->strict() || pc->sc()->allBindingsClosedOver();
   for (BindingIter bi = scope.bindings(pc); bi; bi++) {
     // Eval scopes only contain 'var' bindings.
     MOZ_ASSERT(bi.kind() == BindingKind::Var);
