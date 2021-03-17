@@ -350,7 +350,7 @@
 /* Urlbar search mode indicator */
 #urlbar-search-mode-indicator {
   display: none;
-  background-color: var(--urlbar-box-bgcolor);
+  background-color: var(--urlbar-box-bg-overlay);
   margin-inline-end: 8px;
   align-items: center;
   border-radius: var(--toolbarbutton-border-radius);
