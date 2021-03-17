@@ -121,18 +121,10 @@ void SessionStoreUtils::ForEachNonDynamicChildFrame(
       return;
     }
 
-    if (context->CreatedDynamically()) {
-      continue;
+    if (!context->CreatedDynamically()) {
+      int32_t childOffset = context->ChildOffset();
+      aCallback.Call(WindowProxyHolder(context.forget()), childOffset);
     }
-
-    nsCOMPtr<nsIDocShell> childDocShell(do_QueryInterface(item));
-    if (!childDocShell) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return;
-    }
-
-    int32_t childOffset = childDocShell->GetChildOffset();
-    aCallback.Call(WindowProxyHolder(context.forget()), childOffset);
   }
 }
 

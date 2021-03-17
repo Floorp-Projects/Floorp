@@ -201,6 +201,8 @@ interface BrowsingContext {
 
   // Resets the location change rate limit. Used for testing.
   void resetLocationChangeRateLimit();
+
+  readonly attribute long childOffset;
 };
 
 BrowsingContext includes LoadContextMixin;
