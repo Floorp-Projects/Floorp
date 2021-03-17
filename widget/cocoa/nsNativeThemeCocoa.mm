@@ -2256,8 +2256,6 @@ void nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect
 
 static const sRGBColor kMultilineTextFieldTopBorderColor(0.4510, 0.4510, 0.4510, 1.0);
 static const sRGBColor kMultilineTextFieldSidesAndBottomBorderColor(0.6, 0.6, 0.6, 1.0);
-static const sRGBColor kListboxTopBorderColor(0.557, 0.557, 0.557, 1.0);
-static const sRGBColor kListBoxSidesAndBottomBorderColor(0.745, 0.745, 0.745, 1.0);
 
 void nsNativeThemeCocoa::DrawMultilineTextField(CGContextRef cgContext, const CGRect& inBoxRect,
                                                 bool aIsFocused) {
@@ -2889,19 +2887,18 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
           break;
         }
         case Widget::eListBox: {
-          // We have to draw this by hand because kHIThemeFrameListBox drawing
-          // is buggy on 10.5, see bug 579259.
-          SetCGContextFillColor(cgContext, sRGBColor(1.0, 1.0, 1.0, 1.0));
+          // Fill the content with the control color.
+          NSAppearance.currentAppearance = GetAppAppearance();
+          CGContextSetFillColorWithColor(cgContext, [NSColor.controlColor CGColor]);
           CGContextFillRect(cgContext, macRect);
-
-          float x = macRect.origin.x, y = macRect.origin.y;
-          float w = macRect.size.width, h = macRect.size.height;
-          SetCGContextFillColor(cgContext, kListboxTopBorderColor);
-          CGContextFillRect(cgContext, CGRectMake(x, y, w, 1));
-          SetCGContextFillColor(cgContext, kListBoxSidesAndBottomBorderColor);
-          CGContextFillRect(cgContext, CGRectMake(x, y + 1, 1, h - 1));
-          CGContextFillRect(cgContext, CGRectMake(x + w - 1, y + 1, 1, h - 1));
-          CGContextFillRect(cgContext, CGRectMake(x + 1, y + h - 1, w - 2, 1));
+          // Draw the frame using kCUIWidgetScrollViewFrame. This is what NSScrollView uses in
+          // -[NSScrollView drawRect:] if you give it a borderType of NSBezelBorder.
+          RenderWithCoreUI(
+              macRect, cgContext, @{
+                @"widget" : @"kCUIWidgetScrollViewFrame",
+                @"kCUIIsFlippedKey" : @YES,
+                @"kCUIVariantMetal" : @NO,
+              });
           break;
         }
         case Widget::eActiveSourceListSelection:
@@ -3039,31 +3036,7 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
       return true;
     }
 
-    case StyleAppearance::Listbox: {
-      // White background
-      aBuilder.PushRect(bounds, bounds, true,
-                        wr::ToColorF(ToDeviceColor(sRGBColor::OpaqueWhite())));
-
-      wr::BorderSide side[4] = {
-          wr::ToBorderSide(ToDeviceColor(kListboxTopBorderColor), StyleBorderStyle::Solid),
-          wr::ToBorderSide(ToDeviceColor(kListBoxSidesAndBottomBorderColor),
-                           StyleBorderStyle::Solid),
-          wr::ToBorderSide(ToDeviceColor(kListBoxSidesAndBottomBorderColor),
-                           StyleBorderStyle::Solid),
-          wr::ToBorderSide(ToDeviceColor(kListBoxSidesAndBottomBorderColor),
-                           StyleBorderStyle::Solid),
-      };
-
-      wr::BorderRadius borderRadius = wr::EmptyBorderRadius();
-      float borderWidth = presContext->CSSPixelsToDevPixels(1.0f);
-      wr::LayoutSideOffsets borderWidths =
-          wr::ToBorderWidths(borderWidth, borderWidth, borderWidth, borderWidth);
-
-      mozilla::Range<const wr::BorderSide> wrsides(side, 4);
-      aBuilder.PushBorder(bounds, bounds, true, borderWidths, wrsides, borderRadius);
-      return true;
-    }
-
+    case StyleAppearance::Listbox:
     case StyleAppearance::Tab:
     case StyleAppearance::Tabpanels:
     case StyleAppearance::Resizer:
