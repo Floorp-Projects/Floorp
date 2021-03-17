@@ -17,7 +17,8 @@
 #include "nsNativeTheme.h"
 #include "ScrollbarDrawingMac.h"
 
-@class CellDrawView;
+@class MOZCellDrawWindow;
+@class MOZCellDrawView;
 @class NSProgressBarCell;
 class nsDeviceContext;
 struct SegmentedControlRenderSettings;
@@ -459,7 +460,8 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   NSComboBoxCell* mComboBoxCell;
   NSProgressBarCell* mProgressBarCell;
   NSLevelIndicatorCell* mMeterBarCell;
-  CellDrawView* mCellDrawView;
+  MOZCellDrawWindow* mCellDrawWindow = nil;
+  MOZCellDrawView* mCellDrawView;
 };
 
 #endif  // nsNativeThemeCocoa_h_
