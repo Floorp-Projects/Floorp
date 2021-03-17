@@ -290,8 +290,8 @@ This can be obtained by calling :python:`REPLACE` with
 .. attention::
 
   To avoid any issues :python:`normalize_printf=True` should always be used when
-  replacing :js:`printf` arguments.
-
+  replacing :js:`printf` arguments. This is the default behaviour when working
+  with .properties files.
 
 .. note::
 
