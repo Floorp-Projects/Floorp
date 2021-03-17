@@ -252,14 +252,6 @@ static void DrawCellIncludingFocusRing(NSCell* aCell, NSRect aWithFrame, NSView*
 @implementation MOZToolbarSearchFieldCell
 
 - (BOOL)_isToolbarMode {
-  // This function is called during -[NSSearchFieldCell drawWithFrame:inView:].
-  // On earlier macOS versions, returning YES from it selects the style
-  // that's appropriate for search fields inside toolbars. On Big Sur,
-  // returning YES causes the search field to be drawn incorrectly, with
-  // the toolbar gradient appearing as the field background.
-  if (nsCocoaFeatures::OnBigSurOrLater()) {
-    return NO;
-  }
   return YES;
 }
 
