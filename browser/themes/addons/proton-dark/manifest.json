@@ -28,18 +28,36 @@
       "toolbar_bottom_separator": "hsl(240, 5%, 5%)",
       "toolbar_field": "rgb(28,27,34)",
       "toolbar_field_border": "transparent",
-      "toolbar_field_text": "rgb(249, 249, 250)",
+      "toolbar_field_text": "rgb(251,251,254)",
       "toolbar_field_focus": "rgb(66,65,77)",
       "toolbar_field_separator": "rgb(82,82,94)",
       "ntp_background": "#2A2A2E",
       "ntp_text": "rgb(249, 249, 250)",
       "sidebar": "#38383D",
       "sidebar_text": "rgb(249, 249, 250)",
-      "sidebar_border": "rgba(255, 255, 255, 0.1)"
+      "sidebar_border": "rgba(255, 255, 255, 0.1)",
+      "buttons_secondary": "rgb(43,42,51)",
+      "buttons_secondary_hover": "rgb(82,82,94)",
+      "buttons_secondary_active": "rgb(91,91,102)"
+    },
+    "properties": {
+      "panel_hover": "color-mix(in srgb, currentColor 9%, transparent)",
+      "panel_active": "color-mix(in srgb, currentColor 14%, transparent)",
+      "panel_active_darker": "color-mix(in srgb, currentColor 25%, transparent)"
     }
   },
 
   "theme_experiment": {
-    "stylesheet": "experiment.css"
+    "stylesheet": "experiment.css",
+    "colors": {
+      "buttons_secondary": "--buttons-secondary-bgcolor",
+      "buttons_secondary_hover": "--buttons-secondary-hover-bgcolor",
+      "buttons_secondary_active": "--buttons-secondary-active-bgcolor"
+    },
+    "properties": {
+      "panel_hover": "--arrowpanel-dimmed",
+      "panel_active": "--arrowpanel-dimmed-further",
+      "panel_active_darker": "--arrowpanel-dimmed-even-further"
+    }
   }
 }

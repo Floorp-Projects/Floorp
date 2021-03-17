@@ -20,7 +20,7 @@
       "icons": "rgb(24, 25, 26, 0.7)",
       "frame": "#f0f0f4",
       "popup": "#fff",
-      "popup_text": "#0c0c0d",
+      "popup_text": "rgb(21,20,26)",
       "popup_border": "transparent",
       "popup_highlight": "#e0e0e6",
       "popup_highlight_text": "#15141a",
@@ -29,20 +29,41 @@
       "toolbar_top_separator": "transparent",
       "toolbar_bottom_separator": "#ccc",
       "toolbar_field": "#f0f0f4",
-      "toolbar_field_text": "rgb(24, 25, 26)",
+      "toolbar_field_text": "rgb(21,20,26)",
       "toolbar_field_border": "transparent",
       "toolbar_field_focus": "white",
       "toolbar_field_separator": "rgb(240,240,244)",
       "ntp_background": "#F9F9FA",
       "ntp_text": "rgb(12, 12, 13)",
-      "popup_action_color": "rgb(21,20,26)"
+      "popup_action_color": "rgb(21,20,26)",
+      "buttons_secondary": "rgb(240,240,244)",
+      "buttons_secondary_hover": "rgb(224,224,230)",
+      "buttons_secondary_active": "rgb(207,207,216)",
+      "panel_hover": "rgb(224,224,230)",
+      "panel_active": "rgb(207,207,21)",
+      "panel_active_darker": "rgb(191,191,201)",
+      "urlbar_result_hover": "rgb(240,240,244)"
+    },
+    "properties": {
+      "panel_hover": "color-mix(in srgb, currentColor 12%, transparent)",
+      "panel_active": "color-mix(in srgb, currentColor 20%, transparent)",
+      "panel_active_darker": "color-mix(in srgb, currentColor 27%, transparent)"
     }
   },
 
   "theme_experiment": {
     "stylesheet": "experiment.css",
     "colors": {
-      "popup_action_color": "--urlbar-popup-action-color"
+      "popup_action_color": "--urlbar-popup-action-color",
+      "buttons_secondary": "--buttons-secondary-bgcolor",
+      "buttons_secondary_hover": "--buttons-secondary-hover-bgcolor",
+      "buttons_secondary_active": "--buttons-secondary-active-bgcolor",
+      "urlbar_result_hover": "--urlbar-result-hover-bgcolor"
+    },
+    "properties": {
+      "panel_hover": "--arrowpanel-dimmed",
+      "panel_active": "-arrowpanel-dimmed-further",
+      "panel_active_darker": "--arrowpanel-dimmed-even-further"
     }
   }
 }
