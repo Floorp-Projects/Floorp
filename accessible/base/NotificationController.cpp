@@ -654,8 +654,8 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   }
 
   // Process rendered text change notifications.
-  for (auto iter = mTextHash.Iter(); !iter.Done(); iter.Next()) {
-    nsCOMPtrHashKey<nsIContent>* entry = iter.Get();
+  for (auto iter = mTextHash.ConstIter(); !iter.Done(); iter.Next()) {
+    const nsCOMPtrHashKey<nsIContent>* entry = iter.Get();
     nsIContent* textNode = entry->GetKey();
     LocalAccessible* textAcc = mDocument->GetAccessible(textNode);
 

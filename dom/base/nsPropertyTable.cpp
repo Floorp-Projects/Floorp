@@ -111,7 +111,8 @@ void nsPropertyTable::Enumerate(nsPropertyOwner aObject,
 
 void nsPropertyTable::EnumerateAll(NSPropertyFunc aCallBack, void* aData) {
   for (PropertyList* prop = mPropertyList; prop; prop = prop->mNext) {
-    for (auto iter = prop->mObjectValueMap.Iter(); !iter.Done(); iter.Next()) {
+    for (auto iter = prop->mObjectValueMap.ConstIter(); !iter.Done();
+         iter.Next()) {
       auto entry = static_cast<PropertyListMapEntry*>(iter.Get());
       aCallBack(const_cast<void*>(entry->key), prop->mName, entry->value,
                 aData);
@@ -233,7 +234,7 @@ nsPropertyTable::PropertyList::~PropertyList() = default;
 void nsPropertyTable::PropertyList::Destroy() {
   // Enumerate any remaining object/value pairs and destroy the value object.
   if (mDtorFunc) {
-    for (auto iter = mObjectValueMap.Iter(); !iter.Done(); iter.Next()) {
+    for (auto iter = mObjectValueMap.ConstIter(); !iter.Done(); iter.Next()) {
       auto entry = static_cast<PropertyListMapEntry*>(iter.Get());
       mDtorFunc(const_cast<void*>(entry->key), mName, entry->value, mDtorData);
     }
