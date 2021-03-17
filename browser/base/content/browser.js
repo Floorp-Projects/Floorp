@@ -4305,9 +4305,8 @@ const BrowserSearch = {
    *        The principal to use for a new window or tab.
    * @param csp
    *        The content security policy to use for a new window or tab.
-   * @param flipLoadInBackground [optional]
-   *        If a modifier/middle mouse button is used:
-   *        Flip preference to load search in background tab.
+   * @param inBackground [optional]
+   *        Set to true for the tab to be loaded in the background, default false.
    * @param engine [optional]
    *        The search engine to use for the search.
    * @param tab [optional]
@@ -4323,7 +4322,7 @@ const BrowserSearch = {
     purpose,
     triggeringPrincipal,
     csp,
-    flipLoadInBackground = false,
+    inBackground = false,
     engine = null,
     tab = null
   ) {
@@ -4349,14 +4348,10 @@ const BrowserSearch = {
       return null;
     }
 
-    let inBackground = Services.prefs.getBoolPref(
-      "browser.search.context.loadInBackground"
-    );
-
     openLinkIn(submission.uri.spec, where || "current", {
       private: usePrivate && !PrivateBrowsingUtils.isWindowPrivate(window),
       postData: submission.postData,
-      inBackground: flipLoadInBackground ? !inBackground : inBackground,
+      inBackground,
       relatedToCurrent: true,
       triggeringPrincipal,
       csp,
@@ -4388,7 +4383,12 @@ const BrowserSearch = {
     if (usePrivate && !PrivateBrowsingUtils.isWindowPrivate(window)) {
       where = "window";
     }
-    let flipLoadInBackground = event.button == 1 || event.ctrlKey;
+    let inBackground = Services.prefs.getBoolPref(
+      "browser.search.context.loadInBackground"
+    );
+    if (event.button == 1 || event.ctrlKey) {
+      inBackground = !inBackground;
+    }
 
     let { engine, url } = await BrowserSearch._loadSearch(
       terms,
@@ -4399,7 +4399,7 @@ const BrowserSearch = {
         triggeringPrincipal.originAttributes
       ),
       csp,
-      flipLoadInBackground
+      inBackground
     );
 
     if (engine) {
