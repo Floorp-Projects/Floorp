@@ -39,18 +39,6 @@
       ]
     }
   ],
-  "page_action": {
-    "browser_style": true,
-    "default_icon" : {
-      "32": "icons/icon-v2.svg"
-    },
-    "default_title": "__MSG_screenshots-context-menu__",
-    "show_matches": ["<all_urls>", "about:reader*"],
-    "pinned": false
-  },
-  "icons": {
-    "32": "icons/icon-v2.svg"
-  },
   "web_accessible_resources": [
     "blank.html",
     "icons/cancel.svg",

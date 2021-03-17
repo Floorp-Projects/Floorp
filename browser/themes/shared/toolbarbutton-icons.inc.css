@@ -179,6 +179,10 @@ toolbar[brighttext] {
   list-style-image: url("chrome://browser/skin/open.svg");
 }
 
+#screenshot-button {
+  list-style-image: url("chrome://browser/skin/screenshot.svg");
+}
+
 #save-page-button {
   list-style-image: url("chrome://browser/skin/save.svg");
 }

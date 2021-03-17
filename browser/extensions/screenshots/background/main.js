@@ -39,16 +39,15 @@ this.main = (function() {
     }
   }
 
-  function setIconActive(active, tabId) {
-    const path = active ? "icons/icon-highlight-32-v2.svg" : "icons/icon-v2.svg";
-    browser.pageAction.setIcon({tabId, path});
+  function setIconActive(active) {
+    browser.experiments.screenshots.setIcon(active);
   }
 
   function toggleSelector(tab) {
     return analytics.refreshTelemetryPref()
       .then(() => selectorLoader.toggle(tab.id))
       .then(active => {
-        setIconActive(active, tab.id);
+        setIconActive(active);
         return active;
       })
       .catch((error) => {
@@ -241,7 +240,7 @@ this.main = (function() {
   });
 
   communication.register("closeSelector", (sender) => {
-    setIconActive(false, sender.tab.id);
+    setIconActive(false);
   });
 
   communication.register("abortStartShot", () => {

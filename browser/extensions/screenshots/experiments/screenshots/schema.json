@@ -23,6 +23,18 @@
         "description": "Returns the value of the 'extensions.screenshots.upload-disabled' preference",
         "parameters": [],
         "async": true
+      },
+      {
+        "name": "setIcon",
+        "type": "function",
+        "description": "Disables or enables the screenshot toolbar button",
+        "parameters": [
+          {
+            "name": "isActive",
+            "type": "boolean"
+          }
+        ],
+        "async": false
       }
     ],
     "events": [
@@ -30,7 +42,12 @@
         "name": "onScreenshotCommand",
         "type": "function",
         "description": "Fired when the command event for the Screenshots menuitem is fired.",
-        "parameters": []
+        "parameters": [
+          {
+            "name": "isContextMenuClick",
+            "type": "boolean"
+          }
+        ]
       }
     ]
   }
