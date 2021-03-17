@@ -1193,10 +1193,6 @@ class nsDocShell final : public nsDocLoader,
   int32_t mPreviousEntryIndex;
   int32_t mLoadedEntryIndex;
 
-  // Offset in the parent's child list.
-  // -1 if the docshell is added dynamically to the parent shell.
-  int32_t mChildOffset;
-
   BusyFlags mBusyFlags;
   AppType mAppType;
   uint32_t mLoadType;

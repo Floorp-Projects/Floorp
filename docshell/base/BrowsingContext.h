@@ -678,6 +678,7 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     bool mUseRemoteTabs = false;
     bool mUseRemoteSubframes = false;
     bool mCreatedDynamically = false;
+    int32_t mChildOffset = 0;
     int32_t mSessionHistoryIndex = -1;
     int32_t mSessionHistoryCount = 0;
     OriginAttributes mOriginAttributes;
@@ -715,6 +716,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   }
 
   bool CreatedDynamically() const { return mCreatedDynamically; }
+
+  int32_t ChildOffset() const { return mChildOffset; }
 
   const OriginAttributes& OriginAttributesRef() { return mOriginAttributes; }
   nsresult SetOriginAttributes(const OriginAttributes& aAttrs);
@@ -1133,6 +1136,10 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   // True if this BrowsingContext is for a frame that was added dynamically.
   bool mCreatedDynamically : 1;
+
+  // The original offset of this context in its container. This property is -1
+  // if this BrowsingContext is for a frame that was added dynamically.
+  int32_t mChildOffset;
 
   // The start time of user gesture, this is only available if the browsing
   // context is in process.
