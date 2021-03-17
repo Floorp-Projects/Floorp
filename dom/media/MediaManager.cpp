@@ -2262,7 +2262,7 @@ void MediaManager::DeviceListChanged() {
               // mActiveWindows and will assert-crash since the iterator is
               // active and the table is being enumerated.
               nsTArray<RefPtr<GetUserMediaWindowListener>> stopListeners;
-              for (auto iter = mActiveWindows.Iter(); !iter.Done();
+              for (auto iter = mActiveWindows.ConstIter(); !iter.Done();
                    iter.Next()) {
                 stopListeners.AppendElement(iter.UserData());
               }
@@ -3299,7 +3299,7 @@ void MediaManager::OnCameraMute(bool aMute) {
   mCamerasMuted = aMute;
   // This is safe since we're on main-thread, and the windowlist can only
   // be added to from the main-thread
-  for (auto iter = mActiveWindows.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mActiveWindows.ConstIter(); !iter.Done(); iter.Next()) {
     iter.UserData()->MuteOrUnmuteCameras(aMute);
   }
 }
@@ -3310,7 +3310,7 @@ void MediaManager::OnMicrophoneMute(bool aMute) {
   mMicrophonesMuted = aMute;
   // This is safe since we're on main-thread, and the windowlist can only
   // be added to from the main-thread
-  for (auto iter = mActiveWindows.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mActiveWindows.ConstIter(); !iter.Done(); iter.Next()) {
     iter.UserData()->MuteOrUnmuteMicrophones(aMute);
   }
 }
@@ -3508,7 +3508,8 @@ void MediaManager::Shutdown() {
     // listeners first.
     nsTArray<RefPtr<GetUserMediaWindowListener>> listeners(
         GetActiveWindows()->Count());
-    for (auto iter = GetActiveWindows()->Iter(); !iter.Done(); iter.Next()) {
+    for (auto iter = GetActiveWindows()->ConstIter(); !iter.Done();
+         iter.Next()) {
       listeners.AppendElement(iter.UserData());
     }
     for (auto& listener : listeners) {
@@ -3811,9 +3812,9 @@ nsresult MediaManager::GetActiveMediaCaptureWindows(nsIArray** aArray) {
 
   nsCOMPtr<nsIMutableArray> array = nsArray::Create();
 
-  for (auto iter = mActiveWindows.Iter(); !iter.Done(); iter.Next()) {
-    const uint64_t& id = iter.Key();
-    RefPtr<GetUserMediaWindowListener> winListener = iter.UserData();
+  for (const auto& entry : mActiveWindows) {
+    const uint64_t& id = entry.GetKey();
+    RefPtr<GetUserMediaWindowListener> winListener = entry.GetData();
     if (!winListener) {
       continue;
     }

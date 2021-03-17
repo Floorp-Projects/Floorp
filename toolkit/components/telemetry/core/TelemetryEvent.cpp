@@ -1247,8 +1247,8 @@ nsresult TelemetryEvent::CreateSnapshots(uint32_t aDataset, bool aClear,
     auto snapshotter = [aDataset, &locker, &processEvents, &leftovers, aClear,
                         optional_argc,
                         aEventLimit](EventRecordsMapType& aProcessStorage) {
-      for (auto iter = aProcessStorage.Iter(); !iter.Done(); iter.Next()) {
-        const EventRecordArray* eventStorage = iter.UserData();
+      for (const auto& entry : aProcessStorage) {
+        const EventRecordArray* eventStorage = entry.GetWeak();
         EventRecordArray events;
         EventRecordArray leftoverEvents;
 
@@ -1267,12 +1267,11 @@ nsresult TelemetryEvent::CreateSnapshots(uint32_t aDataset, bool aClear,
         }
 
         if (events.Length()) {
-          const char* processName = GetNameForProcessID(ProcessID(iter.Key()));
-          processEvents.AppendElement(
-              std::make_pair(processName, std::move(events)));
+          const char* processName =
+              GetNameForProcessID(ProcessID(entry.GetKey()));
+          processEvents.EmplaceBack(processName, std::move(events));
           if (leftoverEvents.Length()) {
-            leftovers.AppendElement(
-                std::make_pair(iter.Key(), std::move(leftoverEvents)));
+            leftovers.EmplaceBack(entry.GetKey(), std::move(leftoverEvents));
           }
         }
       }
@@ -1355,7 +1354,7 @@ size_t TelemetryEvent::SizeOfIncludingThis(
 
   auto getSizeOfRecords = [aMallocSizeOf](auto& storageMap) {
     size_t partial = storageMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
-    for (auto iter = storageMap.Iter(); !iter.Done(); iter.Next()) {
+    for (auto iter = storageMap.ConstIter(); !iter.Done(); iter.Next()) {
       EventRecordArray* eventRecords = iter.UserData();
       partial += eventRecords->ShallowSizeOfIncludingThis(aMallocSizeOf);
 

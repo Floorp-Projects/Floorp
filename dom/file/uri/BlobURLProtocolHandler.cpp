@@ -189,23 +189,23 @@ class BlobURLsReporter final : public nsIMemoryReporter {
 
     // Determine number of URLs per mozilla::dom::BlobImpl, to handle the case
     // where it's > 1.
-    for (auto iter = gDataTable->Iter(); !iter.Done(); iter.Next()) {
-      if (iter.UserData()->mObjectType != mozilla::dom::DataInfo::eBlobImpl) {
+    for (const auto& entry : *gDataTable) {
+      if (entry.GetWeak()->mObjectType != mozilla::dom::DataInfo::eBlobImpl) {
         continue;
       }
 
-      mozilla::dom::BlobImpl* blobImpl = iter.UserData()->mBlobImpl;
+      mozilla::dom::BlobImpl* blobImpl = entry.GetWeak()->mBlobImpl;
       MOZ_ASSERT(blobImpl);
 
       refCounts.LookupOrInsert(blobImpl, 0) += 1;
     }
 
-    for (auto iter = gDataTable->Iter(); !iter.Done(); iter.Next()) {
-      nsCStringHashKey::KeyType key = iter.Key();
-      mozilla::dom::DataInfo* info = iter.UserData();
+    for (const auto& entry : *gDataTable) {
+      nsCStringHashKey::KeyType key = entry.GetKey();
+      mozilla::dom::DataInfo* info = entry.GetWeak();
 
-      if (iter.UserData()->mObjectType == mozilla::dom::DataInfo::eBlobImpl) {
-        mozilla::dom::BlobImpl* blobImpl = iter.UserData()->mBlobImpl;
+      if (entry.GetWeak()->mObjectType == mozilla::dom::DataInfo::eBlobImpl) {
+        mozilla::dom::BlobImpl* blobImpl = entry.GetWeak()->mBlobImpl;
         MOZ_ASSERT(blobImpl);
 
         constexpr auto desc =
@@ -606,8 +606,8 @@ bool BlobURLProtocolHandler::ForEachBlobURL(
     return false;
   }
 
-  for (auto iter = gDataTable->ConstIter(); !iter.Done(); iter.Next()) {
-    mozilla::dom::DataInfo* info = iter.UserData();
+  for (const auto& entry : *gDataTable) {
+    mozilla::dom::DataInfo* info = entry.GetWeak();
     MOZ_ASSERT(info);
 
     if (info->mObjectType != mozilla::dom::DataInfo::eBlobImpl) {
@@ -616,7 +616,7 @@ bool BlobURLProtocolHandler::ForEachBlobURL(
 
     MOZ_ASSERT(info->mBlobImpl);
     if (!aCb(info->mBlobImpl, info->mPrincipal, info->mAgentClusterId,
-             iter.Key(), info->mRevoked)) {
+             entry.GetKey(), info->mRevoked)) {
       return false;
     }
   }

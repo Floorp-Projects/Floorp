@@ -492,20 +492,20 @@ void SessionStorageManager::ClearStorages(
     }
   }
 
-  for (auto iter1 = mOATable.Iter(); !iter1.Done(); iter1.Next()) {
+  for (const auto& oaEntry : mOATable) {
     OriginAttributes oa;
-    DebugOnly<bool> ok = oa.PopulateFromSuffix(iter1.Key());
+    DebugOnly<bool> ok = oa.PopulateFromSuffix(oaEntry.GetKey());
     MOZ_ASSERT(ok);
     if (!aPattern.Matches(oa)) {
       // This table doesn't match the given origin attributes pattern
       continue;
     }
 
-    OriginKeyHashTable* table = iter1.UserData();
-    for (auto iter2 = table->Iter(); !iter2.Done(); iter2.Next()) {
+    OriginKeyHashTable* table = oaEntry.GetWeak();
+    for (const auto& originKeyEntry : *table) {
       if (aOriginScope.IsEmpty() ||
-          StringBeginsWith(iter2.Key(), aOriginScope)) {
-        const auto cache = iter2.Data()->mCache;
+          StringBeginsWith(originKeyEntry.GetKey(), aOriginScope)) {
+        const auto cache = originKeyEntry.GetData()->mCache;
         if (aType == eAll) {
           cache->Clear(SessionStorageCache::eDefaultSetType, false);
           cache->Clear(SessionStorageCache::eSessionSetType, false);
@@ -516,8 +516,8 @@ void SessionStorageManager::ClearStorages(
 
         if (CanLoadData()) {
           MOZ_ASSERT(ActorExists());
-          CheckpointDataInternal(nsCString{iter1.Key()}, nsCString{iter2.Key()},
-                                 *cache);
+          CheckpointDataInternal(nsCString{oaEntry.GetKey()},
+                                 nsCString{originKeyEntry.GetKey()}, *cache);
         }
       }
     }

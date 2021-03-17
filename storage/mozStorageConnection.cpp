@@ -999,7 +999,7 @@ nsresult Connection::databaseElementExists(
 bool Connection::findFunctionByInstance(mozIStorageFunction* aInstance) {
   sharedDBMutex.assertCurrentThreadOwns();
 
-  for (auto iter = mFunctions.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mFunctions.ConstIter(); !iter.Done(); iter.Next()) {
     if (iter.UserData().function == aInstance) {
       return true;
     }
@@ -1687,9 +1687,9 @@ nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
 
   // Copy any functions that have been added to this connection.
   SQLiteMutexAutoLock lockedScope(sharedDBMutex);
-  for (auto iter = mFunctions.Iter(); !iter.Done(); iter.Next()) {
-    const nsACString& key = iter.Key();
-    Connection::FunctionInfo data = iter.UserData();
+  for (const auto& entry : mFunctions) {
+    const nsACString& key = entry.GetKey();
+    Connection::FunctionInfo data = entry.GetData();
 
     rv = aClone->CreateFunction(key, data.numArgs, data.function);
     if (NS_FAILED(rv)) {

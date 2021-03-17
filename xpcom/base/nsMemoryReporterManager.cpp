@@ -1884,15 +1884,15 @@ nsMemoryReporterManager::GetReportsForThisProcessExtended(
   {
     mozilla::MutexAutoLock autoLock(mMutex);
 
-    for (auto iter = mStrongReporters->Iter(); !iter.Done(); iter.Next()) {
-      DispatchReporter(iter.Key(), iter.Data(), aHandleReport,
+    for (const auto& entry : *mStrongReporters) {
+      DispatchReporter(entry.GetKey(), entry.GetData(), aHandleReport,
                        aHandleReportData, aAnonymize);
     }
 
-    for (auto iter = mWeakReporters->Iter(); !iter.Done(); iter.Next()) {
-      nsCOMPtr<nsIMemoryReporter> reporter = iter.Key();
-      DispatchReporter(reporter, iter.Data(), aHandleReport, aHandleReportData,
-                       aAnonymize);
+    for (const auto& entry : *mWeakReporters) {
+      nsCOMPtr<nsIMemoryReporter> reporter = entry.GetKey();
+      DispatchReporter(reporter, entry.GetData(), aHandleReport,
+                       aHandleReportData, aAnonymize);
     }
   }
 

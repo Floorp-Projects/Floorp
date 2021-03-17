@@ -36,8 +36,8 @@ void TextureSourceProvider::ReadUnlockTextures() {
       texture->ReadUnlock();
     }
   }
-  for (auto it = texturesIdsToUnlockByPid.ConstIter(); !it.Done(); it.Next()) {
-    TextureSync::SetTexturesUnlocked(it.Key(), *it.UserData());
+  for (const auto& entry : texturesIdsToUnlockByPid) {
+    TextureSync::SetTexturesUnlocked(entry.GetKey(), *entry.GetWeak());
   }
 #else
   for (auto& texture : mUnlockAfterComposition) {

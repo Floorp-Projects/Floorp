@@ -457,8 +457,8 @@ void OggDemuxer::FillTags(TrackInfo* aInfo, UniquePtr<MetadataTags>&& aTags) {
     return;
   }
   UniquePtr<MetadataTags> tags(std::move(aTags));
-  for (auto iter = tags->Iter(); !iter.Done(); iter.Next()) {
-    aInfo->mTags.AppendElement(MetadataTag(iter.Key(), iter.Data()));
+  for (const auto& entry : *tags) {
+    aInfo->mTags.AppendElement(MetadataTag(entry.GetKey(), entry.GetData()));
   }
 }
 

@@ -170,14 +170,14 @@ nsresult VariableLengthPrefixSet::SetPrefixes(PrefixStringMap& aPrefixMap) {
   }
 
   // 5~32 bytes prefixes are stored in mVLPrefixSet.
-  for (auto iter = aPrefixMap.ConstIter(); !iter.Done(); iter.Next()) {
+  for (const auto& entry : aPrefixMap) {
     // Skip 4bytes prefixes because it is already stored in mFixedPrefixSet.
-    if (iter.Key() == PREFIX_SIZE_FIXED) {
+    if (entry.GetKey() == PREFIX_SIZE_FIXED) {
       continue;
     }
 
-    mVLPrefixSet.InsertOrUpdate(iter.Key(),
-                                MakeUnique<nsCString>(*iter.Data()));
+    mVLPrefixSet.InsertOrUpdate(entry.GetKey(),
+                                MakeUnique<nsCString>(*entry.GetData()));
   }
 
   return NS_OK;
@@ -208,8 +208,9 @@ nsresult VariableLengthPrefixSet::GetPrefixes(PrefixStringMap& aPrefixMap) {
   }
 
   // Copy variable-length prefix set
-  for (auto iter = mVLPrefixSet.ConstIter(); !iter.Done(); iter.Next()) {
-    aPrefixMap.InsertOrUpdate(iter.Key(), MakeUnique<nsCString>(*iter.Data()));
+  for (const auto& entry : mVLPrefixSet) {
+    aPrefixMap.InsertOrUpdate(entry.GetKey(),
+                              MakeUnique<nsCString>(*entry.GetData()));
   }
 
   return NS_OK;
@@ -273,9 +274,9 @@ nsresult VariableLengthPrefixSet::Matches(uint32_t aPrefix,
     return NS_OK;
   }
 
-  for (auto iter = mVLPrefixSet.ConstIter(); !iter.Done(); iter.Next()) {
-    if (BinarySearch(aFullHash, *iter.Data(), iter.Key())) {
-      *aLength = iter.Key();
+  for (const auto& entry : mVLPrefixSet) {
+    if (BinarySearch(aFullHash, *entry.GetData(), entry.GetKey())) {
+      *aLength = entry.GetKey();
       MOZ_ASSERT(*aLength > 4);
       return NS_OK;
     }
@@ -405,10 +406,10 @@ nsresult VariableLengthPrefixSet::WritePrefixes(
   NS_ENSURE_TRUE(written == writelen, NS_ERROR_FAILURE);
 
   // Store PrefixSize, Length of Prefix String and then Prefix String
-  for (auto iter = mVLPrefixSet.ConstIter(); !iter.Done(); iter.Next()) {
-    const nsCString& vlPrefixes = *iter.Data();
+  for (const auto& entry : mVLPrefixSet) {
+    const nsCString& vlPrefixes = *entry.GetData();
 
-    uint8_t prefixSize = iter.Key();
+    uint8_t prefixSize = entry.GetKey();
     writelen = sizeof(uint8_t);
     rv = out->Write(reinterpret_cast<char*>(&prefixSize), writelen, &written);
     NS_ENSURE_SUCCESS(rv, rv);

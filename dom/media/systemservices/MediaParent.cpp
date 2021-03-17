@@ -290,9 +290,9 @@ class OriginKeyStore : public nsISupports {
       if (count != versionBuffer.Length()) {
         return NS_ERROR_UNEXPECTED;
       }
-      for (auto iter = mKeys.Iter(); !iter.Done(); iter.Next()) {
-        const nsACString& origin = iter.Key();
-        OriginKey* originKey = iter.UserData();
+      for (const auto& entry : mKeys) {
+        const nsACString& origin = entry.GetKey();
+        OriginKey* originKey = entry.GetWeak();
 
         if (!originKey->mSecondsStamp) {
           continue;  // don't write temporal ones

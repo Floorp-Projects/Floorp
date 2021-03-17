@@ -149,9 +149,9 @@ TEST(FOG, TestCppMemoryDistWorks)
   // Sum is in bytes, test_only::do_you_remember is in megabytes. So
   // multiplication ahoy!
   ASSERT_EQ(data.sum, 24UL * 1024 * 1024);
-  for (auto iter = data.values.Iter(); !iter.Done(); iter.Next()) {
-    const uint64_t bucket = iter.Key();
-    const uint64_t count = iter.UserData();
+  for (const auto& entry : data.values) {
+    const uint64_t bucket = entry.GetKey();
+    const uint64_t count = entry.GetData();
     ASSERT_TRUE(count == 0 ||
                 (count == 1 && (bucket == 17520006 || bucket == 7053950)))
     << "Only two occupied buckets";
@@ -210,7 +210,7 @@ TEST(FOG, TestCppTimingDistWorks)
 
   // We also can't guarantee the buckets, but we can guarantee two samples.
   uint64_t sampleCount = 0;
-  for (auto iter = data.values.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = data.values.ConstIter(); !iter.Done(); iter.Next()) {
     sampleCount += iter.UserData();
   }
   ASSERT_EQ(sampleCount, (uint64_t)2);

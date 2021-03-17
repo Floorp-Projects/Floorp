@@ -616,11 +616,10 @@ bool nsHTMLDocument::ResolveName(JSContext* aCx, const nsAString& aName,
 }
 
 void nsHTMLDocument::GetSupportedNames(nsTArray<nsString>& aNames) {
-  for (auto iter = mIdentifierMap.Iter(); !iter.Done(); iter.Next()) {
-    IdentifierMapEntry* entry = iter.Get();
-    if (entry->HasNameElement() ||
-        entry->HasIdElementExposedAsHTMLDocumentProperty()) {
-      aNames.AppendElement(entry->GetKeyAsString());
+  for (const auto& entry : mIdentifierMap) {
+    if (entry.HasNameElement() ||
+        entry.HasIdElementExposedAsHTMLDocumentProperty()) {
+      aNames.AppendElement(entry.GetKeyAsString());
     }
   }
 }

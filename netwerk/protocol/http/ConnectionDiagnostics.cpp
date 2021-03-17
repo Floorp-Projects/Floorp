@@ -47,7 +47,7 @@ void nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, ARefBase*) {
   mLogData.AppendPrintf("mNumActiveConns = %d\n", mNumActiveConns);
   mLogData.AppendPrintf("mNumIdleConns = %d\n", mNumIdleConns);
 
-  for (auto iter = mCT.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mCT.ConstIter(); !iter.Done(); iter.Next()) {
     RefPtr<ConnectionEntry> ent = iter.Data();
 
     mLogData.AppendPrintf(
@@ -100,12 +100,13 @@ void ConnectionEntry::PrintDiagnostics(nsCString& log,
 
 void PendingTransactionQueue::PrintDiagnostics(nsCString& log) {
   uint32_t i = 0;
-  for (auto it = mPendingTransactionTable.Iter(); !it.Done(); it.Next()) {
-    log.AppendPrintf(
-        "   :: Pending Transactions with Window ID = %" PRIu64 "\n", it.Key());
-    for (uint32_t j = 0; j < it.UserData()->Length(); ++j) {
+  for (const auto& entry : mPendingTransactionTable) {
+    log.AppendPrintf("   :: Pending Transactions with Window ID = %" PRIu64
+                     "\n",
+                     entry.GetKey());
+    for (uint32_t j = 0; j < entry.GetData()->Length(); ++j) {
       log.AppendPrintf("     ::: Pending Transaction #%u\n", i);
-      it.UserData()->ElementAt(j)->PrintDiagnostics(log);
+      entry.GetData()->ElementAt(j)->PrintDiagnostics(log);
       ++i;
     }
   }

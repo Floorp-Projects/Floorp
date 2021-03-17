@@ -624,8 +624,8 @@ void GamepadManager::StopHaptics() {
     return;
   }
 
-  for (auto iter = mGamepads.Iter(); !iter.Done(); iter.Next()) {
-    const GamepadHandle handle = iter.UserData()->GetHandle();
+  for (const auto& entry : mGamepads) {
+    const GamepadHandle handle = entry.GetWeak()->GetHandle();
     if (handle.GetKind() == GamepadHandleKind::VR) {
       if (gfx::VRManagerChild::IsCreated()) {
         gfx::VRManagerChild* vm = gfx::VRManagerChild::Get();

@@ -395,8 +395,8 @@ BrowsingContextGroup* BrowsingContextGroup::GetChromeGroup() {
 
 void BrowsingContextGroup::GetDocGroups(nsTArray<DocGroup*>& aDocGroups) {
   MOZ_ASSERT(NS_IsMainThread());
-  for (auto iter = mDocGroups.ConstIter(); !iter.Done(); iter.Next()) {
-    aDocGroups.AppendElement(iter.Data());
+  for (const auto& entry : mDocGroups) {
+    aDocGroups.AppendElement(entry.GetData());
   }
 }
 

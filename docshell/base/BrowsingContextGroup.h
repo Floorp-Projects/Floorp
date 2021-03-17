@@ -140,8 +140,6 @@ class BrowsingContextGroup final : public nsWrapperCache {
   // Called by Document when a Document needs to be removed to a DocGroup.
   void RemoveDocument(const nsACString& aKey, Document* aDocument);
 
-  auto DocGroups() const { return mDocGroups.ConstIter(); }
-
   mozilla::ThrottledEventQueue* GetTimerEventQueue() const {
     return mTimerEventQueue;
   }

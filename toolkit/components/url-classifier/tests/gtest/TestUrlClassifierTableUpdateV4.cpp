@@ -114,9 +114,9 @@ static void GenerateUpdateData(bool fullUpdate, PrefixStringMap& add,
   RefPtr<TableUpdateV4> tableUpdate = new TableUpdateV4(GTEST_TABLE);
   tableUpdate->SetFullUpdate(fullUpdate);
 
-  for (auto iter = add.ConstIter(); !iter.Done(); iter.Next()) {
-    nsCString* pstring = iter.UserData();
-    tableUpdate->NewPrefixes(iter.Key(), *pstring);
+  for (const auto& entry : add) {
+    nsCString* pstring = entry.GetWeak();
+    tableUpdate->NewPrefixes(entry.GetKey(), *pstring);
   }
 
   if (removal) {
@@ -150,9 +150,9 @@ static void VerifyPrefixSet(PrefixStringMap& expected) {
   PrefixStringMap prefixesInFile;
   lookup->GetPrefixes(prefixesInFile);
 
-  for (auto iter = expected.ConstIter(); !iter.Done(); iter.Next()) {
-    nsCString* expectedPrefix = iter.UserData();
-    nsCString* resultPrefix = prefixesInFile.Get(iter.Key());
+  for (const auto& entry : expected) {
+    nsCString* expectedPrefix = entry.GetWeak();
+    nsCString* resultPrefix = prefixesInFile.Get(entry.GetKey());
 
     ASSERT_TRUE(*resultPrefix == *expectedPrefix);
   }

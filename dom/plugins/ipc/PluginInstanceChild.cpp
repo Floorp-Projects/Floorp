@@ -3685,10 +3685,9 @@ void PluginInstanceChild::ClearAllSurfaces() {
 }
 
 static void InvalidateObjects(nsTHashtable<DeletingObjectEntry>& aEntries) {
-  for (auto iter = aEntries.Iter(); !iter.Done(); iter.Next()) {
-    DeletingObjectEntry* e = iter.Get();
-    NPObject* o = e->GetKey();
-    if (!e->mDeleted && o->_class && o->_class->invalidate) {
+  for (const auto& e : aEntries) {
+    NPObject* o = e.GetKey();
+    if (!e.mDeleted && o->_class && o->_class->invalidate) {
       o->_class->invalidate(o);
     }
   }

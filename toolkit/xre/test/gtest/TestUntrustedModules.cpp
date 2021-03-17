@@ -405,12 +405,11 @@ TEST_F(UntrustedModulesFixture, Backup) {
   backupSvc->SettleAllStagingData();
   EXPECT_TRUE(backupSvc->Ref(BackupType::Staging).IsEmpty());
 
-  for (auto iter = backupSvc->Ref(BackupType::Settled).ConstIter();
-       !iter.Done(); iter.Next()) {
-    const RefPtr<UntrustedModulesDataContainer>& container = iter.Data();
+  for (const auto& entry : backupSvc->Ref(BackupType::Settled)) {
+    const RefPtr<UntrustedModulesDataContainer>& container = entry.GetData();
     EXPECT_TRUE(!!container);
     const UntrustedModulesData& data = container->mData;
-    EXPECT_EQ(iter.Key(), ProcessHashKey(data.mProcessType, data.mPid));
+    EXPECT_EQ(entry.GetKey(), ProcessHashKey(data.mProcessType, data.mPid));
     ValidateUntrustedModules(data);
   }
 }

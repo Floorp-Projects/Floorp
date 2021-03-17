@@ -312,13 +312,13 @@ void UntrustedModulesData::AddNewLoads(
     Vector<Telemetry::ProcessedStack>&& aStacks) {
   MOZ_ASSERT(aEvents.length() == aStacks.length());
 
-  for (auto iter = aModules.ConstIter(); !iter.Done(); iter.Next()) {
-    if (iter.Data()->IsTrusted()) {
+  for (const auto& entry : aModules) {
+    if (entry.GetData()->IsTrusted()) {
       // Filter out trusted module records
       continue;
     }
 
-    Unused << mModules.LookupOrInsert(iter.Key(), iter.Data());
+    Unused << mModules.LookupOrInsert(entry.GetKey(), entry.GetData());
   }
 
   // This constant matches the maximum in Telemetry::CombinedStacks

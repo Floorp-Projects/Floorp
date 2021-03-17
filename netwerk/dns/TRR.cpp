@@ -672,24 +672,25 @@ void TRR::SaveAdditionalRecords(
     return;
   }
   nsresult rv;
-  for (auto iter = aRecords.ConstIter(); !iter.Done(); iter.Next()) {
-    if (iter.Data() && iter.Data()->mAddresses.IsEmpty()) {
+  for (const auto& recordEntry : aRecords) {
+    if (recordEntry.GetData() && recordEntry.GetData()->mAddresses.IsEmpty()) {
       // no point in adding empty records.
       continue;
     }
     RefPtr<nsHostRecord> hostRecord;
     rv = mHostResolver->GetHostRecord(
-        iter.Key(), EmptyCString(), nsIDNSService::RESOLVE_TYPE_DEFAULT,
-        mRec->flags, AF_UNSPEC, mRec->pb, mRec->originSuffix,
-        getter_AddRefs(hostRecord));
+        recordEntry.GetKey(), EmptyCString(),
+        nsIDNSService::RESOLVE_TYPE_DEFAULT, mRec->flags, AF_UNSPEC, mRec->pb,
+        mRec->originSuffix, getter_AddRefs(hostRecord));
     if (NS_FAILED(rv)) {
       LOG(("Failed to get host record for additional record %s",
-           nsCString(iter.Key()).get()));
+           nsCString(recordEntry.GetKey()).get()));
       continue;
     }
-    RefPtr<AddrInfo> ai(new AddrInfo(iter.Key(), ResolverType(), TRRTYPE_A,
-                                     std::move(iter.Data()->mAddresses),
-                                     iter.Data()->mTtl));
+    RefPtr<AddrInfo> ai(
+        new AddrInfo(recordEntry.GetKey(), ResolverType(), TRRTYPE_A,
+                     std::move(recordEntry.GetData()->mAddresses),
+                     recordEntry.GetData()->mTtl));
     mHostResolver->MaybeRenewHostRecord(hostRecord);
 
     // Since we're not actually calling NameLookup for this record, we need
@@ -699,7 +700,8 @@ void TRR::SaveAdditionalRecords(
     hostRecord->mEffectiveTRRMode = mRec->mEffectiveTRRMode;
     RefPtr<AddrHostRecord> addrRec = do_QueryObject(hostRecord);
     addrRec->mTrrStart = TimeStamp::Now();
-    LOG(("Completing lookup for additional: %s", nsCString(iter.Key()).get()));
+    LOG(("Completing lookup for additional: %s",
+         nsCString(recordEntry.GetKey()).get()));
     (void)mHostResolver->CompleteLookup(hostRecord, NS_OK, ai, mPB,
                                         mOriginSuffix, TRRSkippedReason::TRR_OK,
                                         this);
