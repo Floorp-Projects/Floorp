@@ -46,10 +46,7 @@ impl State {
 
     #[must_use]
     pub fn closed(&self) -> bool {
-        matches!(
-            self,
-            Self::Closing { .. } | Self::Draining { .. } | Self::Closed(_)
-        )
+        matches!(self, Self::Closing { .. } | Self::Draining { .. } | Self::Closed(_))
     }
 }
 

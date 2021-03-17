@@ -1,10 +1,9 @@
 [package]
 name = "neqo-common"
-version = "0.4.22"
+version = "0.4.21"
 authors = ["Bobby Holley <bobbyholley@gmail.com>"]
 edition = "2018"
 license = "MIT/Apache-2.0"
-build = "build.rs"
 
 [dependencies]
 log = {version = "0.4.0", default-features = false}

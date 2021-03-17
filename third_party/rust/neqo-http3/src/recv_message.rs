@@ -106,8 +106,9 @@ impl RecvMessage {
             RecvMessageState::WaitingForResponseHeaders {..} => {
                 if header_block.is_empty() {
                     return Err(Error::HttpGeneralProtocolStream);
-                }
+                } else {
                     self.state = RecvMessageState::DecodingHeaders { header_block, fin };
+                }
              }
             RecvMessageState::WaitingForData { ..} => {
                 // TODO implement trailers, for now just ignore them.
@@ -267,9 +268,7 @@ impl RecvMessage {
                             if matches!(self.state, RecvMessageState::Closed) {
                                 break Ok(());
                             }
-                            if fin
-                                && !matches!(self.state, RecvMessageState::DecodingHeaders { .. })
-                            {
+                            if fin && !matches!(self.state, RecvMessageState::DecodingHeaders{..}) {
                                 break self.set_state_to_close_pending(post_readable_event);
                             }
                         }
@@ -335,7 +334,7 @@ impl RecvMessage {
                 if let Some((_name, value)) = status {
                     #[allow(clippy::map_err_ignore, clippy::unknown_clippy_lints)]
                     let status_code = value.parse::<i32>().map_err(|_| Error::InvalidHeader)?;
-                    Ok((100..200).contains(&status_code))
+                    Ok(status_code >= 100 && status_code < 200)
                 } else {
                     Err(Error::InvalidHeader)
                 }

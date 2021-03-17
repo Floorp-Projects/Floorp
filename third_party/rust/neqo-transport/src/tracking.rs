@@ -137,7 +137,6 @@ pub struct SentPacket {
     pub pn: PacketNumber,
     ack_eliciting: bool,
     pub time_sent: Instant,
-    primary_path: bool,
     pub tokens: Vec<RecoveryToken>,
 
     time_declared_lost: Option<Instant>,
@@ -161,7 +160,6 @@ impl SentPacket {
             pn,
             time_sent,
             ack_eliciting,
-            primary_path: true,
             tokens,
             time_declared_lost: None,
             pto: false,
@@ -172,17 +170,6 @@ impl SentPacket {
     /// Returns `true` if the packet will elicit an ACK.
     pub fn ack_eliciting(&self) -> bool {
         self.ack_eliciting
-    }
-
-    /// Returns `true` if the packet was sent on the primary path.
-    pub fn on_primary_path(&self) -> bool {
-        self.primary_path
-    }
-
-    /// Clears the flag that had this packet on the primary path.
-    /// Used when migrating to clear out state.
-    pub fn clear_primary_path(&mut self) {
-        self.primary_path = false;
     }
 
     /// Whether the packet has been declared lost.
@@ -197,12 +184,7 @@ impl SentPacket {
     /// Note that this should count packets that contain only ACK and PADDING,
     /// but we don't send PADDING, so we don't track that.
     pub fn cc_outstanding(&self) -> bool {
-        self.ack_eliciting() && self.on_primary_path() && !self.lost()
-    }
-
-    /// Whether the packet should be tracked as in-flight.
-    pub fn cc_in_flight(&self) -> bool {
-        self.ack_eliciting() && self.on_primary_path()
+        self.ack_eliciting() && !self.lost()
     }
 
     /// Declare the packet as lost.  Returns `true` if this is the first time.
@@ -520,16 +502,15 @@ impl RecvdPackets {
         &mut self,
         now: Instant,
         builder: &mut PacketBuilder,
-        tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) {
+    ) -> Option<RecoveryToken> {
         // The worst possible ACK frame, assuming only one range.
         // Note that this assumes one byte for the type and count of extra ranges.
         const LONGEST_ACK_HEADER: usize = 1 + 8 + 8 + 1 + 8;
 
         // Check that we aren't delaying ACKs.
         if !self.ack_now(now) {
-            return;
+            return None;
         }
 
         // Drop extra ACK ranges to fit the available space.  Do this based on
@@ -542,7 +523,7 @@ impl RecvdPackets {
             // Apply a hard maximum to keep plenty of space for other stuff.
             min(1 + (avail / 16), MAX_ACKS_PER_FRAME)
         } else {
-            return;
+            return None;
         };
 
         let ranges = self
@@ -557,7 +538,7 @@ impl RecvdPackets {
         let mut iter = ranges.iter();
         let first = match iter.next() {
             Some(v) => v,
-            None => return, // Nothing to send.
+            None => return None, // Nothing to send.
         };
         builder.encode_varint(first.largest);
         stats.largest_acknowledged = first.largest;
@@ -584,10 +565,10 @@ impl RecvdPackets {
         self.ack_time = None;
         self.pkts_since_last_ack = 0;
 
-        tokens.push(RecoveryToken::Ack(AckToken {
+        Some(RecoveryToken::Ack(AckToken {
             space: self.space,
             ranges,
-        }));
+        }))
     }
 }
 
@@ -655,16 +636,16 @@ impl AckTracker {
         pn_space: PNSpace,
         now: Instant,
         builder: &mut PacketBuilder,
-        tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
-    ) -> Res<()> {
-        if let Some(space) = self.get_mut(pn_space) {
-            space.write_frame(now, builder, tokens, stats);
-            if builder.len() > builder.limit() {
-                return Err(Error::InternalError(24));
-            }
+    ) -> Res<Option<RecoveryToken>> {
+        let res = self
+            .get_mut(pn_space)
+            .and_then(|space| space.write_frame(now, builder, stats));
+
+        if builder.len() > builder.limit() {
+            return Err(Error::InternalError(24));
         }
-        Ok(())
+        Ok(res)
     }
 }
 
@@ -874,19 +855,15 @@ mod tests {
             .set_received(*NOW, 0, true);
         // The reference time for `ack_time` has to be in the past or we filter out the timer.
         assert!(tracker.ack_time(*NOW - Duration::from_millis(1)).is_some());
-
-        let mut tokens = Vec::new();
-        let mut stats = FrameStats::default();
-        tracker
+        let token = tracker
             .write_frame(
                 PNSpace::Initial,
                 *NOW,
                 &mut builder,
-                &mut tokens,
-                &mut stats,
+                &mut FrameStats::default(),
             )
             .unwrap();
-        assert_eq!(stats.ack, 1);
+        assert!(token.is_some());
 
         // Mark another packet as received so we have cause to send another ACK in that space.
         tracker
@@ -900,18 +877,17 @@ mod tests {
 
         assert!(tracker.get_mut(PNSpace::Initial).is_none());
         assert!(tracker.ack_time(*NOW - Duration::from_millis(1)).is_none());
-        tracker
+        assert!(tracker
             .write_frame(
                 PNSpace::Initial,
                 *NOW,
                 &mut builder,
-                &mut tokens,
-                &mut stats,
+                &mut FrameStats::default()
             )
-            .unwrap();
-        assert_eq!(stats.ack, 1);
-        if let RecoveryToken::Ack(tok) = &tokens[0] {
-            tracker.acked(tok); // Should be a noop.
+            .unwrap()
+            .is_none());
+        if let RecoveryToken::Ack(tok) = token.unwrap() {
+            tracker.acked(&tok); // Should be a noop.
         } else {
             panic!("not an ACK token");
         }
@@ -929,17 +905,15 @@ mod tests {
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         builder.set_limit(10);
 
-        let mut stats = FrameStats::default();
-        tracker
+        let token = tracker
             .write_frame(
                 PNSpace::Initial,
                 *NOW,
                 &mut builder,
-                &mut Vec::new(),
-                &mut stats,
+                &mut FrameStats::default(),
             )
             .unwrap();
-        assert_eq!(stats.ack, 0);
+        assert!(token.is_none());
         assert_eq!(builder.len(), 1); // Only the short packet header has been added.
     }
 
@@ -959,17 +933,15 @@ mod tests {
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         builder.set_limit(32);
 
-        let mut stats = FrameStats::default();
-        tracker
+        let token = tracker
             .write_frame(
                 PNSpace::Initial,
                 *NOW,
                 &mut builder,
-                &mut Vec::new(),
-                &mut stats,
+                &mut FrameStats::default(),
             )
             .unwrap();
-        assert_eq!(stats.ack, 1);
+        assert!(token.is_some());
 
         let mut dec = builder.as_decoder();
         let _ = dec.decode_byte().unwrap(); // Skip the short header.

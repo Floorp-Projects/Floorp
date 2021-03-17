@@ -94,7 +94,6 @@ impl NeqoHttp3Conn {
             ConnectionParameters::default()
                 .quic_version(quic_version),
             &http3_settings,
-            Instant::now(),
         ) {
             Ok(c) => c,
             Err(_) => return Err(NS_ERROR_INVALID_ARG),

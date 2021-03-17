@@ -290,10 +290,12 @@ impl LiteralReader {
                         self.state = LiteralReaderState::Done;
                         if self.use_huffman {
                             break Ok(decode_huffman(&self.literal)?);
+                        } else {
+                            break Ok(mem::replace(&mut self.literal, Vec::new()));
                         }
-                        break Ok(mem::replace(&mut self.literal, Vec::new()));
+                    } else {
+                        break Err(Error::NeedMoreData);
                     }
-                    break Err(Error::NeedMoreData);
                 }
                 LiteralReaderState::Done => {
                     panic!("Should not call read() in this state.");
