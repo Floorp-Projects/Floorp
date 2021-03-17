@@ -40,6 +40,16 @@ onboarding-multistage-set-default-primary-button-label = Make Default
 onboarding-multistage-set-default-secondary-button-label = Not now
 
 # The <span data-l10n-name="zap"></span> in this string allows a "zap" underline style to be
+# automatically added to the text inside it. { -brand-short-name } should stay inside the span.
+onboarding-multistage-pin-default-header = Start by making <span data-l10n-name="zap">{ -brand-short-name }</span> a click away
+onboarding-multistage-pin-default-subtitle = Fast, safe, and private browsing every time you use the web.
+# The "settings" here refers to "Windows 10 Settings App" and not the browser's
+onboarding-multistage-pin-default-waiting-subtitle = Choose { -brand-short-name } under Web browser when your settings open
+# The "settings" here refers to "Windows 10 Settings App" and not the browser's
+onboarding-multistage-pin-default-help-text = This will pin { -brand-short-name } to taskbar and open settings
+onboarding-multistage-pin-default-primary-button-label = Make { -brand-short-name } My Primary Browser
+
+# The <span data-l10n-name="zap"></span> in this string allows a "zap" underline style to be
 # automatically added to the text inside it. "more" should stay inside the span.
 onboarding-multistage-import-header = Import your passwords, <br/>bookmarks, and <span data-l10n-name="zap">more</span>
 onboarding-multistage-import-subtitle = Coming from another browser? It’s easy to bring everything to { -brand-short-name }.
