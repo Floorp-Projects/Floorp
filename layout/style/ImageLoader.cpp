@@ -568,7 +568,7 @@ static void InvalidateImages(nsIFrame* aFrame, imgIRequest* aRequest,
     nsIFrame* f = aFrame;
     while (f && !f->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
       SVGObserverUtils::InvalidateDirectRenderingObservers(f);
-      f = nsLayoutUtils::GetCrossDocParentFrame(f);
+      f = nsLayoutUtils::GetCrossDocParentFrameInProcess(f);
     }
   }
 
