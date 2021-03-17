@@ -19,6 +19,7 @@ add_task(async function test_clickInsecureFieldWarning() {
       let popup = document.getElementById("PopupAutoComplete");
       ok(popup, "Got popup");
       await openACPopup(popup, browser, "#form-basic-username");
+      await new Promise(requestAnimationFrame);
 
       let warningItem = popup.querySelector(`[type="insecureWarning"]`);
       ok(warningItem, "Got warning richlistitem");
