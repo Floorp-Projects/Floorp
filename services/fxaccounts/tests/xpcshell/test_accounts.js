@@ -20,6 +20,7 @@ const {
   ONLOGIN_NOTIFICATION,
   ONLOGOUT_NOTIFICATION,
   ONVERIFIED_NOTIFICATION,
+  DEPRECATED_SCOPE_ECOSYSTEM_TELEMETRY,
 } = ChromeUtils.import("resource://gre/modules/FxAccountsCommon.js");
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
@@ -156,18 +157,12 @@ function MockFxAccountsClient() {
   this.getScopedKeyData = function(sessionToken, client_id, scopes) {
     Assert.ok(sessionToken);
     Assert.equal(client_id, FX_OAUTH_CLIENT_ID);
-    Assert.equal(scopes, SCOPE_OLD_SYNC + " " + SCOPE_ECOSYSTEM_TELEMETRY);
+    Assert.equal(scopes, SCOPE_OLD_SYNC);
     return new Promise(resolve => {
       do_timeout(50, () => {
         resolve({
           "https://identity.mozilla.com/apps/oldsync": {
             identifier: "https://identity.mozilla.com/apps/oldsync",
-            keyRotationSecret:
-              "0000000000000000000000000000000000000000000000000000000000000000",
-            keyRotationTimestamp: 1234567890123,
-          },
-          "https://identity.mozilla.com/ids/ecosystem_telemetry": {
-            identifier: "https://identity.mozilla.com/ids/ecosystem_telemetry",
             keyRotationSecret:
               "0000000000000000000000000000000000000000000000000000000000000000",
             keyRotationTimestamp: 1234567890123,
@@ -828,7 +823,6 @@ add_test(function test_getKeyForScope() {
       Assert.equal(!!user2.kXCS, false);
       Assert.equal(!!user2.kExtSync, false);
       Assert.equal(!!user2.kExtKbHash, false);
-      Assert.equal(!!user2.ecosystemUserId, false);
       // And we still have a key-fetch token and unwrapBKey to use
       Assert.equal(!!user2.keyFetchToken, true);
       Assert.equal(!!user2.unwrapBKey, true);
@@ -843,7 +837,6 @@ add_test(function test_getKeyForScope() {
           Assert.notEqual(null, user3.kXCS);
           Assert.notEqual(null, user3.kExtSync);
           Assert.notEqual(null, user3.kExtKbHash);
-          Assert.notEqual(null, user3.ecosystemUserId);
           Assert.equal(user3.keyFetchToken, undefined);
           Assert.equal(user3.unwrapBKey, undefined);
           run_next_test();
@@ -874,11 +867,6 @@ add_task(async function test_getKeyForScope_kb_migration() {
         "DW_ll5GwX6SJ5GPqJVAuMUP2t6kDqhUulc2cbt26xbTcaKGQl-9l29FHAQ7kUiJETma4s9fIpEHrt909zgFang",
       kty: "oct",
     },
-    "https://identity.mozilla.com/ids/ecosystem_telemetry": {
-      kid: "1234567890-ruhbB-qilFS-9bwxlCe4Qw",
-      k: "niMTzlPWb01A2nkO4SkEAUalO7FiQ61yq69X6b8V08Y",
-      kty: "oct",
-    },
     "sync:addon_storage": {
       kid: "1234567890123-pBOR6B6JulbJr3BxKVOqIU4Cq_WAjFp4ApLn5NRVARE",
       k:
@@ -902,10 +890,6 @@ add_task(async function test_getKeyForScope_kb_migration() {
     newUser.kExtKbHash,
     "a41391e81e89ba56c9af70712953aa214e02abf5808c5a780292e7e4d4550111"
   );
-  Assert.equal(
-    newUser.ecosystemUserId,
-    "9e2313ce53d66f4d40da790ee129040146a53bb16243ad72abaf57e9bf15d3c6"
-  );
 });
 
 add_task(async function test_getKeyForScope_scopedKeys_migration() {
@@ -918,7 +902,6 @@ add_task(async function test_getKeyForScope_scopedKeys_migration() {
   user.kXCS = MOCK_ACCOUNT_KEYS.kXCS;
   user.kExtSync = MOCK_ACCOUNT_KEYS.kExtSync;
   user.kExtKbHash = MOCK_ACCOUNT_KEYS.kExtKbHash;
-  Assert.equal(user.ecosystemUserId, null);
   Assert.equal(user.scopedKeys, null);
 
   await fxa.setSignedInUser(user);
@@ -926,18 +909,46 @@ add_task(async function test_getKeyForScope_scopedKeys_migration() {
   let newUser = await fxa._internal.getUserAccountData();
   Assert.equal(newUser.kA, null);
   Assert.equal(newUser.kB, null);
-  // It should have correctly formatted the corresponding scoped keys,
-  // but failed to magic the ecosystem-telemetry key out of nowhere.
+  // It should have correctly formatted the corresponding scoped keys.
   const expectedScopedKeys = { ...MOCK_ACCOUNT_KEYS.scopedKeys };
-  delete expectedScopedKeys[SCOPE_ECOSYSTEM_TELEMETRY];
   Assert.deepEqual(newUser.scopedKeys, expectedScopedKeys);
   // And left the existing key fields unchanged.
   Assert.equal(newUser.kSync, user.kSync);
   Assert.equal(newUser.kXCS, user.kXCS);
   Assert.equal(newUser.kExtSync, user.kExtSync);
   Assert.equal(newUser.kExtKbHash, user.kExtKbHash);
-  Assert.equal(user.ecosystemUserId, null);
 });
+
+add_task(
+  async function test_getKeyForScope_scopedKeys_migration_removes_deprecated_scoped_keys() {
+    let fxa = new MockFxAccounts();
+    let user = getTestUser("eusebius");
+
+    const EXTRA_SCOPE = "an unknown, but non-deprecated scope";
+    user.verified = true;
+    user.ecosystemUserId = "ecoUserId";
+    user.ecosystemAnonId = "ecoAnonId";
+    user.scopedKeys = {
+      ...MOCK_ACCOUNT_KEYS.scopedKeys,
+      [DEPRECATED_SCOPE_ECOSYSTEM_TELEMETRY]:
+        MOCK_ACCOUNT_KEYS.scopedKeys[SCOPE_OLD_SYNC],
+      [EXTRA_SCOPE]: MOCK_ACCOUNT_KEYS.scopedKeys[SCOPE_OLD_SYNC],
+    };
+
+    await fxa.setSignedInUser(user);
+    await fxa.keys.getKeyForScope(SCOPE_OLD_SYNC);
+    let newUser = await fxa._internal.getUserAccountData();
+    // It should have removed the deprecated ecosystem_telemetry key,
+    // but left the other keys intact.
+    const expectedScopedKeys = {
+      ...MOCK_ACCOUNT_KEYS.scopedKeys,
+      [EXTRA_SCOPE]: MOCK_ACCOUNT_KEYS.scopedKeys[SCOPE_OLD_SYNC],
+    };
+    Assert.deepEqual(newUser.scopedKeys, expectedScopedKeys);
+    Assert.equal(newUser.ecosystemUserId, null);
+    Assert.equal(newUser.ecosystemAnonId, null);
+  }
+);
 
 add_task(async function test_getKeyForScope_nonexistent_account() {
   let fxa = new MockFxAccounts();
