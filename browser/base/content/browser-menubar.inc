@@ -414,8 +414,12 @@
                         hidden="true"
                         oncommand="gSync.openSignInAgainPage('menubar');" data-l10n-id="menu-tools-fxa-re-auth"/>
               <menuseparator id="devToolsSeparator"/>
-              <menu id="webDeveloperMenu" data-l10n-id="menu-tools-web-developer">
+              <menu id="webDeveloperMenu" data-l10n-id="menu-tools-browser-tools">
                 <menupopup id="menuWebDeveloperPopup">
+                  <menuitem id="menu_taskManager"
+                            oncommand="switchToTabHavingURI('about:performance', true)"
+                            onclick="checkForMiddleClick(this, event);"
+                            data-l10n-id="menu-tools-task-manager"/>
                   <menuitem id="menu_pageSource"
                             key="key_viewSource"
                             command="View:PageSource" data-l10n-id="menu-tools-page-source"/>
@@ -500,11 +504,6 @@
                           onclick="checkForMiddleClick(this, event);"
                           data-l10n-id="menu-help-more-troubleshooting-info"
                           appmenu-data-l10n-id="appmenu-help-more-troubleshooting-info"/>
-                <menuitem id="help_taskManager"
-                          oncommand="switchToTabHavingURI('about:performance', true)"
-                          onclick="checkForMiddleClick(this, event);"
-                          data-l10n-id="menu-help-taskmanager"
-                          appmenu-data-l10n-id="appmenu-help-taskmanager"/>
                 <menuitem id="help_reportSiteIssue"
                           oncommand="ReportSiteIssue();"
                           data-l10n-id="menu-help-report-site-issue"

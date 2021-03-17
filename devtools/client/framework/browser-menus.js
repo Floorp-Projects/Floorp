@@ -13,6 +13,7 @@
  */
 
 const { Cu } = require("chrome");
+const Services = require("Services");
 const { LocalizationHelper } = require("devtools/shared/l10n");
 const MENUS_L10N = new LocalizationHelper(
   "devtools/client/locales/menus.properties"
@@ -266,14 +267,25 @@ function addTopLevelItems(doc) {
   const menu = doc.getElementById("menuWebDeveloperPopup");
   menu.appendChild(menuItems);
 
-  // There is still "Page Source" menuitem hardcoded into browser.xhtml. Instead
-  // of manually inserting everything around it, move it to the expected
-  // position.
+  // There is still "Page Source" and "Task Manager" menuitems hardcoded
+  // into browser.xhtml. Instead of manually inserting everything around it,
+  // move them to the expected position.
   const pageSourceMenu = doc.getElementById("menu_pageSource");
   const extensionsForDevelopersMenu = doc.getElementById(
     "extensionsForDevelopers"
   );
   menu.insertBefore(pageSourceMenu, extensionsForDevelopersMenu);
+
+  const taskManagerMenu = doc.getElementById("menu_taskManager");
+  if (Services.prefs.getBoolPref("browser.proton.enabled", false)) {
+    const remoteDebuggingMenu = doc.getElementById(
+      "menu_devtools_remotedebugging"
+    );
+    menu.insertBefore(taskManagerMenu, remoteDebuggingMenu);
+  } else {
+    // When proton is preffed off, this is in the "more" section instead.
+    taskManagerMenu.hidden = true;
+  }
 }
 
 /**
