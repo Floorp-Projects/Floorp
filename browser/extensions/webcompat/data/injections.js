@@ -246,17 +246,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1622062",
-    platform: "android",
-    domain: "$.detectSwipe fix",
-    bug: "1622062",
-    data: {
-      urls: ["https://eu.stemwijzer.nl/public/js/votematch.vendors.js"],
-      types: ["script"],
-    },
-    customFunc: "detectSwipeFix",
-  },
-  {
     id: "bug1644830",
     platform: "desktop",
     domain: "usps.com",
@@ -310,20 +299,6 @@ const AVAILABLE_INJECTIONS = [
       css: [
         {
           file: "injections/css/bug1653075-livescience.com-scrollbar-width.css",
-        },
-      ],
-    },
-  },
-  {
-    id: "bug1654865",
-    platform: "android",
-    domain: "sports.ndtv.com",
-    bug: "1654865",
-    contentScripts: {
-      matches: ["*://sports.ndtv.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1654865-sports.ndtv.com-float-fix.css",
         },
       ],
     },
@@ -439,6 +414,20 @@ const AVAILABLE_INJECTIONS = [
       css: [
         {
           file: "injections/css/bug1690091-binance.com-page-overflow.css",
+        },
+      ],
+    },
+  },
+  {
+    id: "bug1694470",
+    platform: "android",
+    domain: "m.myvidster.com",
+    bug: "1694470",
+    contentScripts: {
+      matches: ["https://m.myvidster.com/*"],
+      css: [
+        {
+          file: "injections/css/bug1694470-myvidster.com-content-not-shown.css",
         },
       ],
     },
