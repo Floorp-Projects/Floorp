@@ -2206,54 +2206,6 @@ static bool ToolbarCanBeUnified(const gfx::Rect& aRect, NSWindow* aWindow) {
          aRect.YMost() <= unifiedToolbarHeight;
 }
 
-// By default, kCUIWidgetWindowFrame drawing draws rounded corners in the
-// upper corners. Depending on the context type, it fills the background in
-// the corners with black or leaves it transparent. Unfortunately, this corner
-// rounding interacts poorly with the window corner masking we apply during
-// titlebar drawing and results in small remnants of the corner background
-// appearing at the rounded edge.
-// So we draw square corners.
-static void DrawNativeTitlebarToolbarWithSquareCorners(CGContextRef aContext, const CGRect& aRect,
-                                                       CGFloat aUnifiedHeight, BOOL aIsMain,
-                                                       BOOL aIsFlipped) {
-  // We extend the draw rect horizontally and clip away the rounded corners.
-  const CGFloat extendHorizontal = 10;
-  CGRect drawRect = CGRectInset(aRect, -extendHorizontal, 0);
-  CGContextSaveGState(aContext);
-  CGContextClipToRect(aContext, aRect);
-
-  RenderWithCoreUI(
-      drawRect, aContext,
-      [NSDictionary
-          dictionaryWithObjectsAndKeys:@"kCUIWidgetWindowFrame", @"widget", @"regularwin",
-                                       @"windowtype", (aIsMain ? @"normal" : @"inactive"), @"state",
-                                       [NSNumber numberWithDouble:aUnifiedHeight],
-                                       @"kCUIWindowFrameUnifiedTitleBarHeightKey",
-                                       [NSNumber numberWithBool:YES],
-                                       @"kCUIWindowFrameDrawTitleSeparatorKey",
-                                       [NSNumber numberWithBool:aIsFlipped], @"is.flipped", nil]);
-
-  CGContextRestoreGState(aContext);
-}
-
-void nsNativeThemeCocoa::DrawUnifiedToolbar(CGContextRef cgContext, const HIRect& inBoxRect,
-                                            const UnifiedToolbarParams& aParams) {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
-
-  CGContextSaveGState(cgContext);
-  CGContextClipToRect(cgContext, inBoxRect);
-
-  CGFloat titlebarHeight = aParams.unifiedHeight - inBoxRect.size.height;
-  CGRect drawRect = CGRectMake(inBoxRect.origin.x, inBoxRect.origin.y - titlebarHeight,
-                               inBoxRect.size.width, inBoxRect.size.height + titlebarHeight);
-  DrawNativeTitlebarToolbarWithSquareCorners(cgContext, drawRect, aParams.unifiedHeight,
-                                             aParams.isMain, YES);
-
-  CGContextRestoreGState(cgContext);
-
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
-}
-
 void nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inBoxRect,
                                        bool aIsMain) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
@@ -2284,18 +2236,6 @@ void nsNativeThemeCocoa::DrawStatusBar(CGContextRef cgContext, const HIRect& inB
   CGContextRestoreGState(cgContext);
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
-}
-
-void nsNativeThemeCocoa::DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
-                                            CGFloat aUnifiedHeight, BOOL aIsMain, BOOL aIsFlipped) {
-  CGFloat unifiedHeight = std::max(aUnifiedHeight, aTitlebarRect.size.height);
-  DrawNativeTitlebarToolbarWithSquareCorners(aContext, aTitlebarRect, unifiedHeight, aIsMain,
-                                             aIsFlipped);
-}
-
-void nsNativeThemeCocoa::DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
-                                            const UnifiedToolbarParams& aParams) {
-  DrawNativeTitlebar(aContext, aTitlebarRect, aParams.unifiedHeight, aParams.isMain, YES);
 }
 
 static void RenderResizer(CGContextRef cgContext, const HIRect& aRenderRect, void* aData) {
@@ -2560,20 +2500,16 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
       NSWindow* win = NativeWindowForFrame(aFrame);
       bool isMain = [win isMainWindow];
       if (ToolbarCanBeUnified(nativeWidgetRect, win)) {
-        float unifiedHeight =
-            std::max(float([(ToolbarWindow*)win unifiedToolbarHeight]), nativeWidgetRect.Height());
-        return Some(WidgetInfo::UnifiedToolbar(UnifiedToolbarParams{unifiedHeight, isMain}));
+        // Unified toolbars are drawn similar to vibrancy; we communicate their extents via the
+        // theme geometry mechanism and then place native views under Gecko's rendering. So Gecko
+        // just needs to be transparent in the place where the toolbar should be visible.
+        return Nothing();
       }
       return Some(WidgetInfo::Toolbar(isMain));
     }
 
     case StyleAppearance::MozWindowTitlebar: {
-      NSWindow* win = NativeWindowForFrame(aFrame);
-      bool isMain = [win isMainWindow];
-      float unifiedToolbarHeight = [win isKindOfClass:[ToolbarWindow class]]
-                                       ? [(ToolbarWindow*)win unifiedToolbarHeight]
-                                       : nativeWidgetRect.Height();
-      return Some(WidgetInfo::NativeTitlebar(UnifiedToolbarParams{unifiedToolbarHeight, isMain}));
+      return Nothing();
     }
 
     case StyleAppearance::Statusbar:
@@ -2906,19 +2842,9 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
           HIThemeDrawSeparator(&macRect, &sdi, cgContext, HITHEME_ORIENTATION);
           break;
         }
-        case Widget::eUnifiedToolbar: {
-          UnifiedToolbarParams params = aWidgetInfo.Params<UnifiedToolbarParams>();
-          DrawUnifiedToolbar(cgContext, macRect, params);
-          break;
-        }
         case Widget::eToolbar: {
           bool isMain = aWidgetInfo.Params<bool>();
           DrawToolbar(cgContext, macRect, isMain);
-          break;
-        }
-        case Widget::eNativeTitlebar: {
-          UnifiedToolbarParams params = aWidgetInfo.Params<UnifiedToolbarParams>();
-          DrawNativeTitlebar(cgContext, macRect, params);
           break;
         }
         case Widget::eStatusBar: {
@@ -3849,6 +3775,7 @@ nsITheme::Transparency nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFram
     case StyleAppearance::Menupopup:
     case StyleAppearance::Tooltip:
     case StyleAppearance::Dialog:
+    case StyleAppearance::Toolbar:
       return eTransparent;
 
     case StyleAppearance::ScrollbarHorizontal:
@@ -3869,9 +3796,6 @@ nsITheme::Transparency nsNativeThemeCocoa::GetWidgetTransparency(nsIFrame* aFram
     case StyleAppearance::Statusbar:
       // Knowing that scrollbars and statusbars are opaque improves
       // performance, because we create layers for them.
-      return eOpaque;
-
-    case StyleAppearance::Toolbar:
       return eOpaque;
 
     default:
