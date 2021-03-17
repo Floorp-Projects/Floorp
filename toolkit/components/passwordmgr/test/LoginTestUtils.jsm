@@ -20,6 +20,8 @@ const { TestUtils } = ChromeUtils.import(
   "resource://testing-common/TestUtils.jsm"
 );
 
+const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
+
 const { FileTestUtils } = ChromeUtils.import(
   "resource://testing-common/FileTestUtils.jsm"
 );
@@ -571,6 +573,9 @@ LoginTestUtils.telemetry = {
     category = "pwmgr",
     method = undefined
   ) {
+    // The test is already unreliable (see bug 1627419 and 1605494) and relied on
+    // the implicit 100ms initial timer of waitForCondition that bug 1596165 removed.
+    await new Promise(resolve => setTimeout(resolve, 100));
     let events = await TestUtils.waitForCondition(() => {
       let events = Services.telemetry.snapshotEvents(
         Ci.nsITelemetry.DATASET_PRERELEASE_CHANNELS,
