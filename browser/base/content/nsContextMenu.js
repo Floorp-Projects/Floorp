@@ -327,12 +327,12 @@ class nsContextMenu {
     this.initMiscItems();
     this.initSpellingItems();
     this.initSaveItems();
+    this.initSyncItems();
     this.initClipboardItems();
     this.initMediaPlayerItems();
     this.initLeaveDOMFullScreenItems();
     this.initClickToPlayItems();
     this.initPasswordManagerItems();
-    this.initSyncItems();
     this.initViewSourceItems();
     this.initScreenshotItem();
 
@@ -803,7 +803,7 @@ class nsContextMenu {
     // Other cases will show a divider.
     copyLinkSeparator.toggleAttribute(
       "ensureHidden",
-      this.onLink && !this.onMailtoLink && !this.onImage
+      this.onLink && !this.onMailtoLink && !this.onImage && this.syncItemsShown
     );
 
     this.showItem("context-copyvideourl", this.onVideo);
@@ -1016,7 +1016,7 @@ class nsContextMenu {
   }
 
   initSyncItems() {
-    gSync.updateContentContextMenu(this);
+    this.syncItemsShown = gSync.updateContentContextMenu(this);
   }
 
   initViewSourceItems() {
