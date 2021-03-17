@@ -489,6 +489,7 @@ void BrowsingContext::CreateFromIPC(BrowsingContext::IPCInitializer&& aInit,
 
   context->mWindowless = aInit.mWindowless;
   context->mCreatedDynamically = aInit.mCreatedDynamically;
+  context->mChildOffset = aInit.mChildOffset;
   if (context->GetHasSessionHistory()) {
     context->CreateChildSHistory();
     if (mozilla::SessionHistoryInParent()) {
@@ -528,7 +529,8 @@ BrowsingContext::BrowsingContext(WindowContext* aParentWindow,
       mEmbeddedByThisProcess(false),
       mUseRemoteTabs(false),
       mUseRemoteSubframes(false),
-      mCreatedDynamically(false) {
+      mCreatedDynamically(false),
+      mChildOffset(0) {
   MOZ_RELEASE_ASSERT(!mParentWindow || mParentWindow->Group() == mGroup);
   MOZ_RELEASE_ASSERT(mBrowsingContextId != 0);
   MOZ_RELEASE_ASSERT(mGroup);
@@ -717,7 +719,8 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
       MOZ_DIAGNOSTIC_ASSERT(!GetParent()->IsDiscarded(),
                             "local attach call in discarded bc");
     }
-
+    mChildOffset =
+        mCreatedDynamically ? -1 : mParentWindow->Children().Length();
     mParentWindow->AppendChildBrowsingContext(this);
   } else {
     mGroup->Toplevels().AppendElement(this);
@@ -2369,6 +2372,7 @@ BrowsingContext::IPCInitializer BrowsingContext::GetIPCInitializer() {
   init.mUseRemoteTabs = mUseRemoteTabs;
   init.mUseRemoteSubframes = mUseRemoteSubframes;
   init.mCreatedDynamically = mCreatedDynamically;
+  init.mChildOffset = mChildOffset;
   init.mOriginAttributes = mOriginAttributes;
   if (mChildSessionHistory && mozilla::SessionHistoryInParent()) {
     init.mSessionHistoryIndex = mChildSessionHistory->Index();
@@ -3387,6 +3391,7 @@ void IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Write(
   WriteIPDLParam(aMessage, aActor, aInit.mUseRemoteTabs);
   WriteIPDLParam(aMessage, aActor, aInit.mUseRemoteSubframes);
   WriteIPDLParam(aMessage, aActor, aInit.mCreatedDynamically);
+  WriteIPDLParam(aMessage, aActor, aInit.mChildOffset);
   WriteIPDLParam(aMessage, aActor, aInit.mOriginAttributes);
   WriteIPDLParam(aMessage, aActor, aInit.mRequestContextId);
   WriteIPDLParam(aMessage, aActor, aInit.mSessionHistoryIndex);
@@ -3406,6 +3411,7 @@ bool IPDLParamTraits<dom::BrowsingContext::IPCInitializer>::Read(
                      &aInit->mUseRemoteSubframes) ||
       !ReadIPDLParam(aMessage, aIterator, aActor,
                      &aInit->mCreatedDynamically) ||
+      !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mChildOffset) ||
       !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mOriginAttributes) ||
       !ReadIPDLParam(aMessage, aIterator, aActor, &aInit->mRequestContextId) ||
       !ReadIPDLParam(aMessage, aIterator, aActor,

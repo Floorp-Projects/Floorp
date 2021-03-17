@@ -451,12 +451,6 @@ interface nsIDocShell : nsIDocShellTreeItem
   readonly attribute nsIChannel currentDocumentChannel;
 
   /**
-   * The original offset of this child in its container. This property is -1 for
-   * dynamically added docShells.
-   */
-  [notxpcom,nostdcall] attribute long childOffset;
-
-  /**
    * Find out whether the docshell is currently in the middle of a page
    * transition. This is set just before the pagehide/unload events fire.
    */
