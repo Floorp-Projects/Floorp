@@ -40,7 +40,7 @@ from mozboot.opensuse import OpenSUSEBootstrapper
 from mozboot.debian import DebianBootstrapper
 from mozboot.freebsd import FreeBSDBootstrapper
 from mozboot.gentoo import GentooBootstrapper
-from mozboot.osx import OSXBootstrapper
+from mozboot.osx import OSXBootstrapper, OSXBootstrapperLight
 from mozboot.openbsd import OpenBSDBootstrapper
 from mozboot.archlinux import ArchlinuxBootstrapper
 from mozboot.solus import SolusBootstrapper
@@ -256,8 +256,10 @@ class Bootstrapper(object):
         elif sys.platform.startswith("darwin"):
             # TODO Support Darwin platforms that aren't OS X.
             osx_version = platform.mac_ver()[0]
-
-            cls = OSXBootstrapper
+            if platform.machine() == "arm64":
+                cls = OSXBootstrapperLight
+            else:
+                cls = OSXBootstrapper
             args["version"] = osx_version
 
         elif sys.platform.startswith("openbsd"):
@@ -355,6 +357,11 @@ class Bootstrapper(object):
 
     def check_code_submission(self, checkout_root):
         if self.instance.no_interactive or which("moz-phab"):
+            return
+
+        # Skip moz-phab install until bug 1696357 is fixed and makes it to a moz-phab
+        # release.
+        if sys.platform.startswith("darwin") and platform.machine() == "arm64":
             return
 
         if not self.instance.prompt_yesno("Will you be submitting commits to Mozilla?"):
