@@ -472,7 +472,7 @@ toolbar[brighttext] #panic-button[open] {
 /* ----- BOOKMARK BUTTONS ----- */
 
 .bookmark-item {
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
+  list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
   -moz-context-properties: fill;
   fill: currentColor;
 }
