@@ -3974,25 +3974,15 @@ impl<'a> PictureUpdateState<'a> {
             self,
             frame_context,
         ) {
-            for cluster in &prim_list.clusters {
-                if !cluster.flags.contains(ClusterFlags::IS_PICTURE) {
-                    continue;
-                }
-                for prim_instance in &prim_list.prim_instances[cluster.prim_range()] {
-                    let child_pic_index = match prim_instance.kind {
-                        PrimitiveInstanceKind::Picture { pic_index, .. } => pic_index,
-                        _ => unreachable!(),
-                    };
-
-                    self.update(
-                        child_pic_index,
-                        picture_primitives,
-                        frame_context,
-                        gpu_cache,
-                        clip_store,
-                        data_stores,
-                    );
-                }
+            for child_pic_index in &prim_list.child_pictures {
+                self.update(
+                    *child_pic_index,
+                    picture_primitives,
+                    frame_context,
+                    gpu_cache,
+                    clip_store,
+                    data_stores,
+                );
             }
 
             picture_primitives[pic_index.0].post_update(
@@ -4268,16 +4258,14 @@ bitflags! {
     /// A set of flags describing why a picture may need a backing surface.
     #[cfg_attr(feature = "capture", derive(Serialize))]
     pub struct ClusterFlags: u32 {
-        /// This cluster is a picture
-        const IS_PICTURE = 1;
         /// Whether this cluster is visible when the position node is a backface.
-        const IS_BACKFACE_VISIBLE = 2;
+        const IS_BACKFACE_VISIBLE = 1;
         /// This flag is set during the first pass picture traversal, depending on whether
         /// the cluster is visible or not. It's read during the second pass when primitives
         /// consult their owning clusters to see if the primitive itself is visible.
-        const IS_VISIBLE = 4;
+        const IS_VISIBLE = 2;
         /// Is a backdrop-filter cluster that requires special handling during post_update.
-        const IS_BACKDROP_FILTER = 8;
+        const IS_BACKDROP_FILTER = 4;
     }
 }
 
@@ -4352,6 +4340,7 @@ pub struct PrimitiveList {
     /// List of primitives grouped into clusters.
     pub clusters: Vec<PrimitiveCluster>,
     pub prim_instances: Vec<PrimitiveInstance>,
+    pub child_pictures: Vec<PictureIndex>,
 }
 
 impl PrimitiveList {
@@ -4363,6 +4352,7 @@ impl PrimitiveList {
         PrimitiveList {
             clusters: Vec::new(),
             prim_instances: Vec::new(),
+            child_pictures: Vec::new(),
         }
     }
 
@@ -4379,8 +4369,8 @@ impl PrimitiveList {
         // Pictures are always put into a new cluster, to make it faster to
         // iterate all pictures in a given primitive list.
         match prim_instance.kind {
-            PrimitiveInstanceKind::Picture { .. } => {
-                flags.insert(ClusterFlags::IS_PICTURE);
+            PrimitiveInstanceKind::Picture { pic_index, .. } => {
+                self.child_pictures.push(pic_index);
             }
             PrimitiveInstanceKind::Backdrop { .. } => {
                 flags.insert(ClusterFlags::IS_BACKDROP_FILTER);
@@ -4559,17 +4549,8 @@ impl PicturePrimitive {
         pt.add_item(format!("raster_config: {:?}", self.raster_config));
         pt.add_item(format!("requested_composite_mode: {:?}", self.requested_composite_mode));
 
-        for cluster in &self.prim_list.clusters {
-            if !cluster.flags.contains(ClusterFlags::IS_PICTURE) {
-                continue;
-            }
-            for instance in &self.prim_list.prim_instances[cluster.prim_range()] {
-                let index = match instance.kind {
-                    PrimitiveInstanceKind::Picture { pic_index, .. } => pic_index,
-                    _ => unreachable!(),
-                };
-                pictures[index.0].print(pictures, index, pt);
-            }
+        for child_pic_index in &self.prim_list.child_pictures {
+            pictures[child_pic_index.0].print(pictures, *child_pic_index, pt);
         }
 
         pt.end_level();
