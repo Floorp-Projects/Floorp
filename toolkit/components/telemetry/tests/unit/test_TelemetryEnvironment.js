@@ -7,38 +7,17 @@ const { AddonManager, AddonManagerPrivate } = ChromeUtils.import(
 const { TelemetryEnvironment } = ChromeUtils.import(
   "resource://gre/modules/TelemetryEnvironment.jsm"
 );
-const { Preferences } = ChromeUtils.import(
-  "resource://gre/modules/Preferences.jsm"
-);
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
-);
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 const { ContentTaskUtils } = ChromeUtils.import(
   "resource://testing-common/ContentTaskUtils.jsm"
 );
-const { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-const { MockRegistrar } = ChromeUtils.import(
-  "resource://testing-common/MockRegistrar.jsm"
-);
-const { FileUtils } = ChromeUtils.import(
-  "resource://gre/modules/FileUtils.jsm"
-);
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { SearchTestUtils } = ChromeUtils.import(
   "resource://testing-common/SearchTestUtils.jsm"
 );
-
-// AttributionCode is only needed for Firefox
-ChromeUtils.defineModuleGetter(
-  this,
-  "AttributionCode",
-  "resource:///modules/AttributionCode.jsm"
+const { TelemetryEnvironmentTesting } = ChromeUtils.import(
+  "resource://testing-common/TelemetryEnvironmentTesting.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
@@ -47,15 +26,9 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/ExtensionXPCShellUtils.jsm"
 );
 
-SearchTestUtils.init(this);
-
 async function installXPIFromURL(url) {
   let install = await AddonManager.getInstallForURL(url);
   return install.install();
-}
-
-function promiseNextTick() {
-  return new Promise(resolve => executeSoon(resolve));
 }
 
 // The webserver hosting the addons.
@@ -65,161 +38,7 @@ var gHttpRoot = null;
 // The URL of the data directory, on the webserver.
 var gDataRoot = null;
 
-const PLATFORM_VERSION = "1.9.2";
-const APP_VERSION = "1";
-const APP_ID = "xpcshell@tests.mozilla.org";
-const APP_NAME = "XPCShell";
-
-const DISTRIBUTION_ID = "distributor-id";
-const DISTRIBUTION_VERSION = "4.5.6b";
-const DISTRIBUTOR_NAME = "Some Distributor";
-const DISTRIBUTOR_CHANNEL = "A Channel";
-const PARTNER_NAME = "test";
-const PARTNER_ID = "NicePartner-ID-3785";
-const DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC =
-  "distribution-customization-complete";
-
-const GFX_VENDOR_ID = "0xabcd";
-const GFX_DEVICE_ID = "0x1234";
-
-// The profile reset date, in milliseconds (Today)
-const PROFILE_RESET_DATE_MS = Date.now();
-// The profile creation date, in milliseconds (Yesterday).
-const PROFILE_FIRST_USE_MS = PROFILE_RESET_DATE_MS - MILLISECONDS_PER_DAY;
-const PROFILE_CREATION_DATE_MS = PROFILE_FIRST_USE_MS - MILLISECONDS_PER_DAY;
-
-const FLASH_PLUGIN_NAME = "Shockwave Flash";
-const FLASH_PLUGIN_DESC = "A mock flash plugin";
-const FLASH_PLUGIN_VERSION = "\u201c1.1.1.1\u201d";
-const PLUGIN_MIME_TYPE1 = "application/x-shockwave-flash";
-const PLUGIN_MIME_TYPE2 = "text/plain";
-
-const PLUGIN2_NAME = "Quicktime";
-const PLUGIN2_DESC = "A mock Quicktime plugin";
-const PLUGIN2_VERSION = "2.3";
-
 const PLUGIN_UPDATED_TOPIC = "plugins-list-updated";
-
-// system add-ons are enabled at startup, so record date when the test starts
-const SYSTEM_ADDON_INSTALL_DATE = Date.now();
-
-const EXPECTED_HDD_FIELDS = ["profile", "binary", "system"];
-
-// Valid attribution code to write so that settings.attribution can be tested.
-const ATTRIBUTION_CODE = "source%3Dgoogle.com";
-
-const pluginHost = Cc["@mozilla.org/plugin/host;1"].getService(
-  Ci.nsIPluginHost
-);
-
-/**
- * Used to mock plugin tags in our fake plugin host.
- */
-function PluginTag(aName, aDescription, aVersion, aEnabled) {
-  this.pluginTag = pluginHost.createFakePlugin({
-    handlerURI: "resource://fake-plugin/${Math.random()}.xhtml",
-    mimeEntries: this.mimeTypes.map(type => ({ type })),
-    name: aName,
-    description: aDescription,
-    fileName: `${aName}.so`,
-    version: aVersion,
-  });
-  this.name = aName;
-  this.description = aDescription;
-  this.version = aVersion;
-  this.disabled = !aEnabled;
-}
-
-PluginTag.prototype = {
-  name: null,
-  description: null,
-  version: null,
-  filename: null,
-  fullpath: null,
-  blocklisted: false,
-  clicktoplay: true,
-
-  get disabled() {
-    return this.pluginTag.enabledState == Ci.nsIPluginTag.STATE_DISABLED;
-  },
-  set disabled(val) {
-    this.pluginTag.enabledState =
-      Ci.nsIPluginTag[val ? "STATE_DISABLED" : "STATE_CLICKTOPLAY"];
-  },
-
-  mimeTypes: [PLUGIN_MIME_TYPE1, PLUGIN_MIME_TYPE2],
-
-  getMimeTypes() {
-    return this.mimeTypes;
-  },
-};
-
-// A container for the plugins handled by the fake plugin host.
-var gInstalledPlugins = [
-  new PluginTag("Java", "A mock Java plugin", "1.0", false /* Disabled */),
-  new PluginTag(
-    FLASH_PLUGIN_NAME,
-    FLASH_PLUGIN_DESC,
-    FLASH_PLUGIN_VERSION,
-    true
-  ),
-];
-
-// A fake plugin host for testing plugin telemetry environment.
-var PluginHost = {
-  getPluginTags() {
-    return gInstalledPlugins.map(plugin => plugin.pluginTag);
-  },
-
-  QueryInterface: ChromeUtils.generateQI(["nsIPluginHost"]),
-};
-
-function registerFakePluginHost() {
-  MockRegistrar.register("@mozilla.org/plugin/host;1", PluginHost);
-}
-
-var SysInfo = {
-  overrides: {},
-
-  getProperty(name) {
-    // Assert.ok(false, "Mock SysInfo: " + name + ", " + JSON.stringify(this.overrides));
-    if (name in this.overrides) {
-      return this.overrides[name];
-    }
-
-    return this._genuine.QueryInterface(Ci.nsIPropertyBag).getProperty(name);
-  },
-
-  getPropertyAsACString(name) {
-    return this.get(name);
-  },
-
-  getPropertyAsUint32(name) {
-    return this.get(name);
-  },
-
-  get(name) {
-    return this._genuine.QueryInterface(Ci.nsIPropertyBag2).get(name);
-  },
-
-  get diskInfo() {
-    return this._genuine.QueryInterface(Ci.nsISystemInfo).diskInfo;
-  },
-
-  get osInfo() {
-    return this._genuine.QueryInterface(Ci.nsISystemInfo).osInfo;
-  },
-
-  get processInfo() {
-    return this._genuine.QueryInterface(Ci.nsISystemInfo).processInfo;
-  },
-
-  QueryInterface: ChromeUtils.generateQI(["nsIPropertyBag2", "nsISystemInfo"]),
-};
-
-function registerFakeSysInfo() {
-  MockRegistrar.register("@mozilla.org/system-info;1", SysInfo);
-}
 
 function MockAddonWrapper(aAddon) {
   this.addon = aAddon;
@@ -320,750 +139,9 @@ function createMockAddonProvider(aName) {
   return mockProvider;
 }
 
-function spoofGfxAdapter() {
-  try {
-    let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfoDebug);
-    gfxInfo.fireTestProcess();
-    gfxInfo.spoofVendorID(GFX_VENDOR_ID);
-    gfxInfo.spoofDeviceID(GFX_DEVICE_ID);
-  } catch (x) {
-    // If we can't test gfxInfo, that's fine, we'll note it later.
-  }
-}
-
-function spoofProfileReset() {
-  return CommonUtils.writeJSON(
-    {
-      created: PROFILE_CREATION_DATE_MS,
-      reset: PROFILE_RESET_DATE_MS,
-      firstUse: PROFILE_FIRST_USE_MS,
-    },
-    OS.Path.join(OS.Constants.Path.profileDir, "times.json")
-  );
-}
-
-function spoofPartnerInfo() {
-  let prefsToSpoof = {};
-  prefsToSpoof["distribution.id"] = DISTRIBUTION_ID;
-  prefsToSpoof["distribution.version"] = DISTRIBUTION_VERSION;
-  prefsToSpoof["app.distributor"] = DISTRIBUTOR_NAME;
-  prefsToSpoof["app.distributor.channel"] = DISTRIBUTOR_CHANNEL;
-  prefsToSpoof["app.partner.test"] = PARTNER_NAME;
-  prefsToSpoof["mozilla.partner.id"] = PARTNER_ID;
-
-  // Spoof the preferences.
-  for (let pref in prefsToSpoof) {
-    Preferences.set(pref, prefsToSpoof[pref]);
-  }
-}
-
-async function spoofAttributionData() {
-  if (gIsWindows || gIsMac) {
-    AttributionCode._clearCache();
-    await AttributionCode.writeAttributionFile(ATTRIBUTION_CODE);
-  }
-}
-
-function cleanupAttributionData() {
-  if (gIsWindows || gIsMac) {
-    AttributionCode.attributionFile.remove(false);
-    AttributionCode._clearCache();
-  }
-}
-
-/**
- * Check that a value is a string and not empty.
- *
- * @param aValue The variable to check.
- * @return True if |aValue| has type "string" and is not empty, False otherwise.
- */
-function checkString(aValue) {
-  return typeof aValue == "string" && aValue != "";
-}
-
-/**
- * If value is non-null, check if it's a valid string.
- *
- * @param aValue The variable to check.
- * @return True if it's null or a valid string, false if it's non-null and an invalid
- *         string.
- */
-function checkNullOrString(aValue) {
-  if (aValue) {
-    return checkString(aValue);
-  } else if (aValue === null) {
-    return true;
-  }
-
-  return false;
-}
-
-/**
- * If value is non-null, check if it's a boolean.
- *
- * @param aValue The variable to check.
- * @return True if it's null or a valid boolean, false if it's non-null and an invalid
- *         boolean.
- */
-function checkNullOrBool(aValue) {
-  return aValue === null || typeof aValue == "boolean";
-}
-
-function checkBuildSection(data) {
-  const expectedInfo = {
-    applicationId: APP_ID,
-    applicationName: APP_NAME,
-    buildId: gAppInfo.appBuildID,
-    version: APP_VERSION,
-    vendor: "Mozilla",
-    platformVersion: PLATFORM_VERSION,
-    xpcomAbi: "noarch-spidermonkey",
-  };
-
-  Assert.ok("build" in data, "There must be a build section in Environment.");
-
-  for (let f in expectedInfo) {
-    Assert.ok(checkString(data.build[f]), f + " must be a valid string.");
-    Assert.equal(
-      data.build[f],
-      expectedInfo[f],
-      f + " must have the correct value."
-    );
-  }
-
-  // Make sure architecture is in the environment.
-  Assert.ok(checkString(data.build.architecture));
-
-  Assert.equal(
-    data.build.updaterAvailable,
-    AppConstants.MOZ_UPDATER,
-    "build.updaterAvailable must equal AppConstants.MOZ_UPDATER"
-  );
-}
-
-function checkSettingsSection(data) {
-  const EXPECTED_FIELDS_TYPES = {
-    blocklistEnabled: "boolean",
-    e10sEnabled: "boolean",
-    e10sMultiProcesses: "number",
-    fissionEnabled: "boolean",
-    intl: "object",
-    locale: "string",
-    telemetryEnabled: "boolean",
-    update: "object",
-    userPrefs: "object",
-  };
-
-  Assert.ok(
-    "settings" in data,
-    "There must be a settings section in Environment."
-  );
-
-  for (let f in EXPECTED_FIELDS_TYPES) {
-    Assert.equal(
-      typeof data.settings[f],
-      EXPECTED_FIELDS_TYPES[f],
-      f + " must have the correct type."
-    );
-  }
-
-  // This property is not always present, but when it is, it must be a number.
-  if ("launcherProcessState" in data.settings) {
-    Assert.equal(typeof data.settings.launcherProcessState, "number");
-  }
-
-  // Check "addonCompatibilityCheckEnabled" separately.
-  Assert.equal(
-    data.settings.addonCompatibilityCheckEnabled,
-    AddonManager.checkCompatibility
-  );
-
-  // Check "isDefaultBrowser" separately, as it is not available on Android an can either be
-  // null or boolean on other platforms.
-  if (gIsAndroid) {
-    Assert.ok(
-      !("isDefaultBrowser" in data.settings),
-      "Must not be available on Android."
-    );
-  } else if ("isDefaultBrowser" in data.settings) {
-    // isDefaultBrowser might not be available in the payload, since it's
-    // gathered after the session was restored.
-    Assert.ok(checkNullOrBool(data.settings.isDefaultBrowser));
-  }
-
-  // Check "channel" separately, as it can either be null or string.
-  let update = data.settings.update;
-  Assert.ok(checkNullOrString(update.channel));
-  Assert.equal(typeof update.enabled, "boolean");
-  Assert.equal(typeof update.autoDownload, "boolean");
-
-  // Check "defaultSearchEngine" separately, as it can either be undefined or string.
-  if ("defaultSearchEngine" in data.settings) {
-    checkString(data.settings.defaultSearchEngine);
-    Assert.equal(typeof data.settings.defaultSearchEngineData, "object");
-  }
-
-  if ("defaultPrivateSearchEngineData" in data.settings) {
-    Assert.equal(typeof data.settings.defaultPrivateSearchEngineData, "object");
-  }
-
-  if ((gIsWindows || gIsMac) && AppConstants.MOZ_BUILD_APP == "browser") {
-    Assert.equal(typeof data.settings.attribution, "object");
-    Assert.equal(data.settings.attribution.source, "google.com");
-  }
-
-  checkIntlSettings(data.settings);
-}
-
-function checkIntlSettings({ intl }) {
-  let fields = [
-    "requestedLocales",
-    "availableLocales",
-    "appLocales",
-    "acceptLanguages",
-  ];
-
-  for (let field of fields) {
-    Assert.ok(Array.isArray(intl[field]), `${field} is an array`);
-  }
-
-  // These fields may be null if they aren't ready yet. This is mostly to deal
-  // with test failures on Android, but they aren't guaranteed to exist.
-  let optionalFields = ["systemLocales", "regionalPrefsLocales"];
-
-  for (let field of optionalFields) {
-    let isArray = Array.isArray(intl[field]);
-    let isNull = intl[field] === null;
-    Assert.ok(isArray || isNull, `${field} is an array or null`);
-  }
-}
-
-function checkProfileSection(data) {
-  Assert.ok(
-    "profile" in data,
-    "There must be a profile section in Environment."
-  );
-  Assert.equal(
-    data.profile.creationDate,
-    truncateToDays(PROFILE_CREATION_DATE_MS)
-  );
-  Assert.equal(data.profile.resetDate, truncateToDays(PROFILE_RESET_DATE_MS));
-  Assert.equal(data.profile.firstUseDate, truncateToDays(PROFILE_FIRST_USE_MS));
-}
-
-function checkPartnerSection(data, isInitial) {
-  const EXPECTED_FIELDS = {
-    distributionId: DISTRIBUTION_ID,
-    distributionVersion: DISTRIBUTION_VERSION,
-    partnerId: PARTNER_ID,
-    distributor: DISTRIBUTOR_NAME,
-    distributorChannel: DISTRIBUTOR_CHANNEL,
-  };
-
-  Assert.ok(
-    "partner" in data,
-    "There must be a partner section in Environment."
-  );
-
-  for (let f in EXPECTED_FIELDS) {
-    let expected = isInitial ? null : EXPECTED_FIELDS[f];
-    Assert.strictEqual(
-      data.partner[f],
-      expected,
-      f + " must have the correct value."
-    );
-  }
-
-  // Check that "partnerNames" exists and contains the correct element.
-  Assert.ok(Array.isArray(data.partner.partnerNames));
-  if (isInitial) {
-    Assert.equal(data.partner.partnerNames.length, 0);
-  } else {
-    Assert.ok(data.partner.partnerNames.includes(PARTNER_NAME));
-  }
-}
-
-function checkGfxAdapter(data) {
-  const EXPECTED_ADAPTER_FIELDS_TYPES = {
-    description: "string",
-    vendorID: "string",
-    deviceID: "string",
-    subsysID: "string",
-    RAM: "number",
-    driver: "string",
-    driverVendor: "string",
-    driverVersion: "string",
-    driverDate: "string",
-    GPUActive: "boolean",
-  };
-
-  for (let f in EXPECTED_ADAPTER_FIELDS_TYPES) {
-    Assert.ok(f in data, f + " must be available.");
-
-    if (data[f]) {
-      // Since we have a non-null value, check if it has the correct type.
-      Assert.equal(
-        typeof data[f],
-        EXPECTED_ADAPTER_FIELDS_TYPES[f],
-        f + " must have the correct type."
-      );
-    }
-  }
-}
-
-function checkSystemSection(data, assertProcessData) {
-  const EXPECTED_FIELDS = [
-    "memoryMB",
-    "cpu",
-    "os",
-    "hdd",
-    "gfx",
-    "appleModelId",
-  ];
-
-  Assert.ok("system" in data, "There must be a system section in Environment.");
-
-  // Make sure we have all the top level sections and fields.
-  for (let f of EXPECTED_FIELDS) {
-    Assert.ok(f in data.system, f + " must be available.");
-  }
-
-  Assert.ok(
-    Number.isFinite(data.system.memoryMB),
-    "MemoryMB must be a number."
-  );
-
-  if (assertProcessData) {
-    if (gIsWindows || gIsMac || gIsLinux) {
-      let EXTRA_CPU_FIELDS = [
-        "cores",
-        "model",
-        "family",
-        "stepping",
-        "l2cacheKB",
-        "l3cacheKB",
-        "speedMHz",
-        "vendor",
-      ];
-
-      for (let f of EXTRA_CPU_FIELDS) {
-        // Note this is testing TelemetryEnvironment.js only, not that the
-        // values are valid - null is the fallback.
-        Assert.ok(f in data.system.cpu, f + " must be available under cpu.");
-      }
-
-      if (gIsWindows) {
-        Assert.equal(
-          typeof data.system.isWow64,
-          "boolean",
-          "isWow64 must be available on Windows and have the correct type."
-        );
-        Assert.equal(
-          typeof data.system.isWowARM64,
-          "boolean",
-          "isWowARM64 must be available on Windows and have the correct type."
-        );
-        Assert.ok(
-          "virtualMaxMB" in data.system,
-          "virtualMaxMB must be available."
-        );
-        Assert.ok(
-          Number.isFinite(data.system.virtualMaxMB),
-          "virtualMaxMB must be a number."
-        );
-
-        for (let f of [
-          "count",
-          "model",
-          "family",
-          "stepping",
-          "l2cacheKB",
-          "l3cacheKB",
-          "speedMHz",
-        ]) {
-          Assert.ok(
-            Number.isFinite(data.system.cpu[f]),
-            f + " must be a number if non null."
-          );
-        }
-      }
-
-      // These should be numbers if they are not null
-      for (let f of [
-        "count",
-        "model",
-        "family",
-        "stepping",
-        "l2cacheKB",
-        "l3cacheKB",
-        "speedMHz",
-      ]) {
-        Assert.ok(
-          !(f in data.system.cpu) ||
-            data.system.cpu[f] === null ||
-            Number.isFinite(data.system.cpu[f]),
-          f + " must be a number if non null."
-        );
-      }
-
-      // We insist these are available
-      for (let f of ["cores"]) {
-        Assert.ok(
-          !(f in data.system.cpu) || Number.isFinite(data.system.cpu[f]),
-          f + " must be a number if non null."
-        );
-      }
-    }
-  }
-
-  let cpuData = data.system.cpu;
-
-  Assert.ok(
-    Array.isArray(cpuData.extensions),
-    "CPU extensions must be available."
-  );
-
-  let osData = data.system.os;
-  Assert.ok(checkNullOrString(osData.name));
-  Assert.ok(checkNullOrString(osData.version));
-  Assert.ok(checkNullOrString(osData.locale));
-
-  // Service pack is only available on Windows.
-  if (gIsWindows) {
-    Assert.ok(
-      Number.isFinite(osData.servicePackMajor),
-      "ServicePackMajor must be a number."
-    );
-    Assert.ok(
-      Number.isFinite(osData.servicePackMinor),
-      "ServicePackMinor must be a number."
-    );
-    if ("windowsBuildNumber" in osData) {
-      // This might not be available on all Windows platforms.
-      Assert.ok(
-        Number.isFinite(osData.windowsBuildNumber),
-        "windowsBuildNumber must be a number."
-      );
-    }
-    if ("windowsUBR" in osData) {
-      // This might not be available on all Windows platforms.
-      Assert.ok(
-        osData.windowsUBR === null || Number.isFinite(osData.windowsUBR),
-        "windowsUBR must be null or a number."
-      );
-    }
-  } else if (gIsAndroid) {
-    Assert.ok(checkNullOrString(osData.kernelVersion));
-  }
-
-  for (let disk of EXPECTED_HDD_FIELDS) {
-    Assert.ok(checkNullOrString(data.system.hdd[disk].model));
-    Assert.ok(checkNullOrString(data.system.hdd[disk].revision));
-    Assert.ok(checkNullOrString(data.system.hdd[disk].type));
-  }
-
-  let gfxData = data.system.gfx;
-  Assert.ok("D2DEnabled" in gfxData);
-  Assert.ok("DWriteEnabled" in gfxData);
-  Assert.ok("Headless" in gfxData);
-  Assert.ok("EmbeddedInFirefoxReality" in gfxData);
-  // DWriteVersion is disabled due to main thread jank and will be enabled
-  // again as part of bug 1154500.
-  // Assert.ok("DWriteVersion" in gfxData);
-  if (gIsWindows) {
-    Assert.equal(typeof gfxData.D2DEnabled, "boolean");
-    Assert.equal(typeof gfxData.DWriteEnabled, "boolean");
-    Assert.equal(typeof gfxData.EmbeddedInFirefoxReality, "boolean");
-    // As above, will be enabled again as part of bug 1154500.
-    // Assert.ok(checkString(gfxData.DWriteVersion));
-  }
-
-  Assert.ok("adapters" in gfxData);
-  Assert.ok(
-    !!gfxData.adapters.length,
-    "There must be at least one GFX adapter."
-  );
-  for (let adapter of gfxData.adapters) {
-    checkGfxAdapter(adapter);
-  }
-  Assert.equal(typeof gfxData.adapters[0].GPUActive, "boolean");
-  Assert.ok(
-    gfxData.adapters[0].GPUActive,
-    "The first GFX adapter must be active."
-  );
-
-  Assert.ok(Array.isArray(gfxData.monitors));
-  if (gIsWindows || gIsMac || gIsLinux) {
-    Assert.ok(gfxData.monitors.length >= 1, "There is at least one monitor.");
-    Assert.equal(typeof gfxData.monitors[0].screenWidth, "number");
-    Assert.equal(typeof gfxData.monitors[0].screenHeight, "number");
-    if (gIsWindows) {
-      Assert.equal(typeof gfxData.monitors[0].refreshRate, "number");
-      Assert.equal(typeof gfxData.monitors[0].pseudoDisplay, "boolean");
-    }
-    if (gIsMac) {
-      Assert.equal(typeof gfxData.monitors[0].scale, "number");
-    }
-  }
-
-  Assert.equal(typeof gfxData.features, "object");
-  Assert.equal(typeof gfxData.features.compositor, "string");
-
-  Assert.equal(typeof gfxData.features.gpuProcess, "object");
-  Assert.equal(typeof gfxData.features.gpuProcess.status, "string");
-
-  try {
-    // If we've not got nsIGfxInfoDebug, then this will throw and stop us doing
-    // this test.
-    let gfxInfo = Cc["@mozilla.org/gfx/info;1"].getService(Ci.nsIGfxInfoDebug);
-
-    if (gIsWindows || gIsMac) {
-      Assert.equal(GFX_VENDOR_ID, gfxData.adapters[0].vendorID);
-      Assert.equal(GFX_DEVICE_ID, gfxData.adapters[0].deviceID);
-    }
-
-    let features = gfxInfo.getFeatures();
-    Assert.equal(features.compositor, gfxData.features.compositor);
-    Assert.equal(
-      features.gpuProcess.status,
-      gfxData.features.gpuProcess.status
-    );
-    Assert.equal(features.opengl, gfxData.features.opengl);
-    Assert.equal(features.webgl, gfxData.features.webgl);
-  } catch (e) {}
-
-  if (gIsMac) {
-    Assert.ok(checkString(data.system.appleModelId));
-  } else {
-    Assert.ok(checkNullOrString(data.system.appleModelId));
-  }
-
-  // This feature is only available on Windows 8+
-  if (AppConstants.isPlatformAndVersionAtLeast("win", "6.2")) {
-    Assert.ok("sec" in data.system, "sec must be available under data.system");
-
-    let SEC_FIELDS = ["antivirus", "antispyware", "firewall"];
-    for (let f of SEC_FIELDS) {
-      Assert.ok(
-        f in data.system.sec,
-        f + " must be available under data.system.sec"
-      );
-
-      let value = data.system.sec[f];
-      // value is null on Windows Server
-      Assert.ok(
-        value === null || Array.isArray(value),
-        f + " must be either null or an array"
-      );
-      if (Array.isArray(value)) {
-        for (let product of value) {
-          Assert.equal(
-            typeof product,
-            "string",
-            "Each element of " + f + " must be a string"
-          );
-        }
-      }
-    }
-  }
-}
-
-function checkActiveAddon(data, partialRecord) {
-  let signedState = "number";
-  // system add-ons have an undefined signState
-  if (data.isSystem) {
-    signedState = "undefined";
-  }
-
-  const EXPECTED_ADDON_FIELDS_TYPES = {
-    version: "string",
-    scope: "number",
-    type: "string",
-    updateDay: "number",
-    isSystem: "boolean",
-    isWebExtension: "boolean",
-    multiprocessCompatible: "boolean",
-  };
-
-  const FULL_ADDON_FIELD_TYPES = {
-    blocklisted: "boolean",
-    name: "string",
-    userDisabled: "boolean",
-    appDisabled: "boolean",
-    foreignInstall: "boolean",
-    hasBinaryComponents: "boolean",
-    installDay: "number",
-    signedState,
-  };
-
-  let fields = EXPECTED_ADDON_FIELDS_TYPES;
-  if (!partialRecord) {
-    fields = Object.assign({}, fields, FULL_ADDON_FIELD_TYPES);
-  }
-
-  for (let [name, type] of Object.entries(fields)) {
-    Assert.ok(name in data, name + " must be available.");
-    Assert.equal(
-      typeof data[name],
-      type,
-      name + " must have the correct type."
-    );
-  }
-
-  if (!partialRecord) {
-    // We check "description" separately, as it can be null.
-    Assert.ok(checkNullOrString(data.description));
-  }
-}
-
-function checkPlugin(data) {
-  const EXPECTED_PLUGIN_FIELDS_TYPES = {
-    name: "string",
-    version: "string",
-    description: "string",
-    blocklisted: "boolean",
-    disabled: "boolean",
-    clicktoplay: "boolean",
-    updateDay: "number",
-  };
-
-  for (let f in EXPECTED_PLUGIN_FIELDS_TYPES) {
-    Assert.ok(f in data, f + " must be available.");
-    Assert.equal(
-      typeof data[f],
-      EXPECTED_PLUGIN_FIELDS_TYPES[f],
-      f + " must have the correct type."
-    );
-  }
-
-  Assert.ok(Array.isArray(data.mimeTypes));
-  for (let type of data.mimeTypes) {
-    Assert.ok(checkString(type));
-  }
-}
-
-function checkTheme(data) {
-  const EXPECTED_THEME_FIELDS_TYPES = {
-    id: "string",
-    blocklisted: "boolean",
-    name: "string",
-    userDisabled: "boolean",
-    appDisabled: "boolean",
-    version: "string",
-    scope: "number",
-    foreignInstall: "boolean",
-    installDay: "number",
-    updateDay: "number",
-  };
-
-  for (let f in EXPECTED_THEME_FIELDS_TYPES) {
-    Assert.ok(f in data, f + " must be available.");
-    Assert.equal(
-      typeof data[f],
-      EXPECTED_THEME_FIELDS_TYPES[f],
-      f + " must have the correct type."
-    );
-  }
-
-  // We check "description" separately, as it can be null.
-  Assert.ok(checkNullOrString(data.description));
-}
-
-function checkActiveGMPlugin(data) {
-  // GMP plugin version defaults to null until GMPDownloader runs to update it.
-  if (data.version) {
-    Assert.equal(typeof data.version, "string");
-  }
-  Assert.equal(typeof data.userDisabled, "boolean");
-  Assert.equal(typeof data.applyBackgroundUpdates, "number");
-}
-
-function checkAddonsSection(data, expectBrokenAddons, partialAddonsRecords) {
-  const EXPECTED_FIELDS = [
-    "activeAddons",
-    "theme",
-    "activePlugins",
-    "activeGMPlugins",
-  ];
-
-  Assert.ok(
-    "addons" in data,
-    "There must be an addons section in Environment."
-  );
-  for (let f of EXPECTED_FIELDS) {
-    Assert.ok(f in data.addons, f + " must be available.");
-  }
-
-  // Check the active addons, if available.
-  if (!expectBrokenAddons) {
-    let activeAddons = data.addons.activeAddons;
-    for (let addon in activeAddons) {
-      checkActiveAddon(activeAddons[addon], partialAddonsRecords);
-    }
-  }
-
-  // Check "theme" structure.
-  if (Object.keys(data.addons.theme).length !== 0) {
-    checkTheme(data.addons.theme);
-  }
-
-  // Check the active plugins.
-  Assert.ok(Array.isArray(data.addons.activePlugins));
-  for (let plugin of data.addons.activePlugins) {
-    checkPlugin(plugin);
-  }
-
-  // Check active GMPlugins
-  let activeGMPlugins = data.addons.activeGMPlugins;
-  for (let gmPlugin in activeGMPlugins) {
-    checkActiveGMPlugin(activeGMPlugins[gmPlugin]);
-  }
-}
-
-function checkExperimentsSection(data) {
-  // We don't expect the experiments section to be always available.
-  let experiments = data.experiments || {};
-  if (!Object.keys(experiments).length) {
-    return;
-  }
-
-  for (let id in experiments) {
-    Assert.ok(checkString(id), id + " must be a valid string.");
-
-    // Check that we have valid experiment info.
-    let experimentData = experiments[id];
-    Assert.ok(
-      "branch" in experimentData,
-      "The experiment must have branch data."
-    );
-    Assert.ok(
-      checkString(experimentData.branch),
-      "The experiment data must be valid."
-    );
-    if ("type" in experimentData) {
-      Assert.ok(checkString(experimentData.type));
-    }
-  }
-}
-
-function checkEnvironmentData(data, options = {}) {
-  const {
-    isInitial = false,
-    expectBrokenAddons = false,
-    assertProcessData = false,
-  } = options;
-
-  checkBuildSection(data);
-  checkSettingsSection(data);
-  checkProfileSection(data);
-  checkPartnerSection(data, isInitial);
-  checkSystemSection(data, assertProcessData);
-  checkAddonsSection(data, expectBrokenAddons);
-}
-
 add_task(async function setup() {
-  registerFakeSysInfo();
-  spoofGfxAdapter();
+  TelemetryEnvironmentTesting.registerFakeSysInfo();
+  TelemetryEnvironmentTesting.spoofGfxAdapter();
   do_get_profile();
 
   // We need to ensure FOG is initialized, otherwise we will panic trying to get test values.
@@ -1081,6 +159,8 @@ add_task(async function setup() {
   system_addon.lastModifiedTime = SYSTEM_ADDON_INSTALL_DATE;
   await loadAddonManager(APP_ID, APP_NAME, APP_VERSION, PLATFORM_VERSION);
 
+  TelemetryEnvironmentTesting.init(gAppInfo);
+
   // The test runs in a fresh profile so starting the AddonManager causes
   // the addons database to be created (as does setting new theme).
   // For test_addonsStartup below, we want to test a "warm" startup where
@@ -1095,7 +175,7 @@ add_task(async function setup() {
   Services.prefs.clearUserPref("services.settings.default_bucket");
 
   // Register a fake plugin host for consistent flash version data.
-  registerFakePluginHost();
+  TelemetryEnvironmentTesting.registerFakePluginHost();
 
   // Setup a webserver to serve Addons, Plugins, etc.
   gHttpServer = new HttpServer();
@@ -1109,11 +189,11 @@ add_task(async function setup() {
   // Create the attribution data file, so that settings.attribution will exist.
   // The attribution functionality only exists in Firefox.
   if (AppConstants.MOZ_BUILD_APP == "browser") {
-    spoofAttributionData();
-    registerCleanupFunction(cleanupAttributionData);
+    TelemetryEnvironmentTesting.spoofAttributionData();
+    registerCleanupFunction(TelemetryEnvironmentTesting.cleanupAttributionData);
   }
 
-  await spoofProfileReset();
+  await TelemetryEnvironmentTesting.spoofProfileReset();
   await TelemetryEnvironment.delayedInit();
   await SearchTestUtils.useTestEngines("data", "search-extensions");
 });
@@ -1129,7 +209,7 @@ add_task(async function test_checkEnvironment() {
   );
 
   let data = TelemetryEnvironment.currentEnvironment;
-  checkAddonsSection(data, false, true);
+  TelemetryEnvironmentTesting.checkAddonsSection(data, false, true);
 
   // Check that settings.intl is lazily loaded.
   Assert.equal(
@@ -1151,13 +231,17 @@ add_task(async function test_checkEnvironment() {
   fakeIntlReady();
 
   let environmentData = await initPromise;
-  checkEnvironmentData(environmentData, { isInitial: true });
+  TelemetryEnvironmentTesting.checkEnvironmentData(environmentData, {
+    isInitial: true,
+  });
 
-  spoofPartnerInfo();
+  TelemetryEnvironmentTesting.spoofPartnerInfo();
   Services.obs.notifyObservers(null, DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC);
 
   environmentData = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(environmentData, { assertProcessData: true });
+  TelemetryEnvironmentTesting.checkEnvironmentData(environmentData, {
+    assertProcessData: true,
+  });
 });
 
 add_task(async function test_prefWatchPolicies() {
@@ -1425,13 +509,12 @@ add_task(async function test_pluginsWatch_Add() {
     1
   );
 
-  let newPlugin = new PluginTag(
+  TelemetryEnvironmentTesting.addPlugin(
     PLUGIN2_NAME,
     PLUGIN2_DESC,
     PLUGIN2_VERSION,
     true
   );
-  gInstalledPlugins.push(newPlugin);
 
   let receivedNotifications = 0;
   let callback = (reason, data) => {
@@ -1467,12 +550,7 @@ add_task(async function test_pluginsWatch_Remove() {
     2
   );
 
-  // Find the test plugin.
-  let plugin = gInstalledPlugins.find(p => p.name == PLUGIN2_NAME);
-  Assert.ok(plugin, "The test plugin must exist.");
-
-  // Remove it from the PluginHost.
-  gInstalledPlugins = gInstalledPlugins.filter(p => p != plugin);
+  TelemetryEnvironmentTesting.removePlugin(PLUGIN2_NAME);
 
   let receivedNotifications = 0;
   let callback = () => {
@@ -1599,9 +677,9 @@ add_task(async function test_addonsAndPlugins() {
   };
 
   const EXPECTED_PLUGIN_DATA = {
-    name: FLASH_PLUGIN_NAME,
-    version: FLASH_PLUGIN_VERSION,
-    description: FLASH_PLUGIN_DESC,
+    name: TelemetryEnvironmentTesting.FLASH_PLUGIN_NAME,
+    version: TelemetryEnvironmentTesting.FLASH_PLUGIN_VERSION,
+    description: TelemetryEnvironmentTesting.FLASH_PLUGIN_DESC,
     blocklisted: false,
     disabled: false,
     clicktoplay: true,
@@ -1641,7 +719,7 @@ add_task(async function test_addonsAndPlugins() {
   TelemetryEnvironment.unregisterChangeListener("test_WebExtension");
 
   let data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
+  TelemetryEnvironmentTesting.checkEnvironmentData(data);
 
   // Check addon data.
   Assert.ok(
@@ -1703,8 +781,16 @@ add_task(async function test_addonsAndPlugins() {
   }
 
   // Check plugin mime types.
-  Assert.ok(targetPlugin.mimeTypes.find(m => m == PLUGIN_MIME_TYPE1));
-  Assert.ok(targetPlugin.mimeTypes.find(m => m == PLUGIN_MIME_TYPE2));
+  Assert.ok(
+    targetPlugin.mimeTypes.find(
+      m => m == TelemetryEnvironmentTesting.PLUGIN_MIME_TYPE1
+    )
+  );
+  Assert.ok(
+    targetPlugin.mimeTypes.find(
+      m => m == TelemetryEnvironmentTesting.PLUGIN_MIME_TYPE2
+    )
+  );
   Assert.ok(!targetPlugin.mimeTypes.find(m => m == "Not There."));
 
   // Uninstall the addon.
@@ -1748,7 +834,7 @@ add_task(async function test_signedAddon() {
   TelemetryEnvironment.unregisterChangeListener("test_signedAddon");
 
   let data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
+  TelemetryEnvironmentTesting.checkEnvironmentData(data);
 
   // Check addon data.
   Assert.ok(
@@ -1784,7 +870,7 @@ add_task(async function test_addonsFieldsLimit() {
   TelemetryEnvironment.unregisterChangeListener("test_longFieldsAddon");
 
   let data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
+  TelemetryEnvironmentTesting.checkEnvironmentData(data);
 
   // Check that the addon is available and that the string fields are limited.
   Assert.ok(
@@ -1886,7 +972,9 @@ add_task(async function test_collectionWithbrokenAddonData() {
   // Check that the new environment contains the Social addon installed with the broken
   // manifest and the rest of the data.
   let data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data, { expectBrokenAddons: true });
+  TelemetryEnvironmentTesting.checkEnvironmentData(data, {
+    expectBrokenAddons: true,
+  });
 
   let activeAddons = data.addons.activeAddons;
   Assert.ok(
@@ -1913,298 +1001,6 @@ add_task(async function test_collectionWithbrokenAddonData() {
   await addon.uninstall();
 });
 
-async function checkDefaultSearch(privateOn, reInitSearchService) {
-  // Start off with separate default engine for private browsing turned off.
-  Preferences.set(
-    "browser.search.separatePrivateDefault.ui.enabled",
-    privateOn
-  );
-  Preferences.set("browser.search.separatePrivateDefault", privateOn);
-
-  let data = await TelemetryEnvironment.testCleanRestart().onInitialized();
-  checkEnvironmentData(data);
-  Assert.ok(!("defaultSearchEngine" in data.settings));
-  Assert.ok(!("defaultSearchEngineData" in data.settings));
-  Assert.ok(!("defaultPrivateSearchEngine" in data.settings));
-  Assert.ok(!("defaultPrivateSearchEngineData" in data.settings));
-
-  // Load the engines definitions from a xpcshell data: that's needed so that
-  // the search provider reports an engine identifier.
-
-  // Initialize the search service.
-  if (reInitSearchService) {
-    Services.search.wrappedJSObject.reset();
-  }
-  await Services.search.init();
-  await promiseNextTick();
-
-  // Our default engine from the JAR file has an identifier. Check if it is correctly
-  // reported.
-  data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
-  Assert.equal(data.settings.defaultSearchEngine, "telemetrySearchIdentifier");
-  let expectedSearchEngineData = {
-    name: "telemetrySearchIdentifier",
-    loadPath:
-      "[other]addEngineWithDetails:telemetrySearchIdentifier@search.mozilla.org",
-    origin: "default",
-    submissionURL:
-      "https://ar.wikipedia.org/wiki/%D8%AE%D8%A7%D8%B5:%D8%A8%D8%AD%D8%AB?search=&sourceId=Mozilla-search",
-  };
-  Assert.deepEqual(
-    data.settings.defaultSearchEngineData,
-    expectedSearchEngineData
-  );
-  if (privateOn) {
-    Assert.equal(
-      data.settings.defaultPrivateSearchEngine,
-      "telemetrySearchIdentifier"
-    );
-    Assert.deepEqual(
-      data.settings.defaultPrivateSearchEngineData,
-      expectedSearchEngineData,
-      "Should have the correct data for the private search engine"
-    );
-  } else {
-    Assert.ok(
-      !("defaultPrivateSearchEngine" in data.settings),
-      "Should not have private name recorded as the pref for separate is off"
-    );
-    Assert.ok(
-      !("defaultPrivateSearchEngineData" in data.settings),
-      "Should not have private data recorded as the pref for separate is off"
-    );
-  }
-
-  // Add a new search engine (this will have no engine identifier).
-  const SEARCH_ENGINE_ID = "telemetry_default";
-  const SEARCH_ENGINE_URL = `http://www.example.org/${
-    privateOn ? "private" : ""
-  }?search={searchTerms}`;
-  await Services.search.addEngineWithDetails(SEARCH_ENGINE_ID, {
-    method: "get",
-    template: SEARCH_ENGINE_URL,
-  });
-
-  // Register a new change listener and then wait for the search engine change to be notified.
-  let deferred = PromiseUtils.defer();
-  TelemetryEnvironment.registerChangeListener(
-    "testWatch_SearchDefault",
-    deferred.resolve
-  );
-  if (privateOn) {
-    // As we had no default and no search engines, the normal mode engine will
-    // assume the same as the added engine. To ensure the telemetry is different
-    // we enforce a different default here.
-    const engine = await Services.search.getEngineByName(
-      "telemetrySearchIdentifier"
-    );
-    engine.hidden = false;
-    await Services.search.setDefault(engine);
-    await Services.search.setDefaultPrivate(
-      Services.search.getEngineByName(SEARCH_ENGINE_ID)
-    );
-  } else {
-    await Services.search.setDefault(
-      Services.search.getEngineByName(SEARCH_ENGINE_ID)
-    );
-  }
-  await deferred.promise;
-
-  data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
-
-  const EXPECTED_SEARCH_ENGINE = "other-" + SEARCH_ENGINE_ID;
-  const EXPECTED_SEARCH_ENGINE_DATA = {
-    name: "telemetry_default",
-    loadPath: "[other]addEngineWithDetails:telemetry_default@test.engine",
-    origin: "verified",
-  };
-  if (privateOn) {
-    Assert.equal(
-      data.settings.defaultSearchEngine,
-      "telemetrySearchIdentifier"
-    );
-    Assert.deepEqual(
-      data.settings.defaultSearchEngineData,
-      expectedSearchEngineData
-    );
-    Assert.equal(
-      data.settings.defaultPrivateSearchEngine,
-      EXPECTED_SEARCH_ENGINE
-    );
-    Assert.deepEqual(
-      data.settings.defaultPrivateSearchEngineData,
-      EXPECTED_SEARCH_ENGINE_DATA
-    );
-  } else {
-    Assert.equal(data.settings.defaultSearchEngine, EXPECTED_SEARCH_ENGINE);
-    Assert.deepEqual(
-      data.settings.defaultSearchEngineData,
-      EXPECTED_SEARCH_ENGINE_DATA
-    );
-  }
-  TelemetryEnvironment.unregisterChangeListener("testWatch_SearchDefault");
-}
-
-add_task(async function test_defaultSearchEngine() {
-  await checkDefaultSearch(false);
-
-  // Cleanly install an engine from an xml file, and check if origin is
-  // recorded as "verified".
-  let promise = new Promise(resolve => {
-    TelemetryEnvironment.registerChangeListener(
-      "testWatch_SearchDefault",
-      resolve
-    );
-  });
-  let engine = await new Promise((resolve, reject) => {
-    Services.obs.addObserver(function obs(obsSubject, obsTopic, obsData) {
-      try {
-        let searchEngine = obsSubject.QueryInterface(Ci.nsISearchEngine);
-        info("Observed " + obsData + " for " + searchEngine.name);
-        if (
-          obsData != "engine-added" ||
-          searchEngine.name != "engine-telemetry"
-        ) {
-          return;
-        }
-
-        Services.obs.removeObserver(obs, "browser-search-engine-modified");
-        resolve(searchEngine);
-      } catch (ex) {
-        reject(ex);
-      }
-    }, "browser-search-engine-modified");
-    Services.search.addOpenSearchEngine(gDataRoot + "/engine.xml", null);
-  });
-  await Services.search.setDefault(engine);
-  await promise;
-  TelemetryEnvironment.unregisterChangeListener("testWatch_SearchDefault");
-  let data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
-  Assert.deepEqual(data.settings.defaultSearchEngineData, {
-    name: "engine-telemetry",
-    loadPath: "[http]localhost/engine-telemetry.xml",
-    origin: "verified",
-  });
-
-  // Now break this engine's load path hash.
-  promise = new Promise(resolve => {
-    TelemetryEnvironment.registerChangeListener(
-      "testWatch_SearchDefault",
-      resolve
-    );
-  });
-  engine.wrappedJSObject.setAttr("loadPathHash", "broken");
-  Services.obs.notifyObservers(
-    null,
-    "browser-search-engine-modified",
-    "engine-default"
-  );
-  await promise;
-  TelemetryEnvironment.unregisterChangeListener("testWatch_SearchDefault");
-  data = TelemetryEnvironment.currentEnvironment;
-  Assert.equal(data.settings.defaultSearchEngineData.origin, "invalid");
-  await Services.search.removeEngine(engine);
-
-  const SEARCH_ENGINE_ID = "telemetry_default";
-  const EXPECTED_SEARCH_ENGINE = "other-" + SEARCH_ENGINE_ID;
-  // Work around bug 1165341: Intentionally set the default engine.
-  await Services.search.setDefault(
-    Services.search.getEngineByName(SEARCH_ENGINE_ID)
-  );
-
-  // Double-check the default for the next part of the test.
-  data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
-  Assert.equal(data.settings.defaultSearchEngine, EXPECTED_SEARCH_ENGINE);
-
-  // Define and reset the test preference.
-  const PREF_TEST = "toolkit.telemetry.test.pref1";
-  const PREFS_TO_WATCH = new Map([
-    [PREF_TEST, { what: TelemetryEnvironment.RECORD_PREF_STATE }],
-  ]);
-  Preferences.reset(PREF_TEST);
-
-  // Watch the test preference.
-  await TelemetryEnvironment.testWatchPreferences(PREFS_TO_WATCH);
-  let deferred = PromiseUtils.defer();
-  TelemetryEnvironment.registerChangeListener(
-    "testSearchEngine_pref",
-    deferred.resolve
-  );
-  // Trigger an environment change.
-  Preferences.set(PREF_TEST, 1);
-  await deferred.promise;
-  TelemetryEnvironment.unregisterChangeListener("testSearchEngine_pref");
-
-  // Check that the search engine information is correctly retained when prefs change.
-  data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
-  Assert.equal(data.settings.defaultSearchEngine, EXPECTED_SEARCH_ENGINE);
-});
-
-add_task(async function test_defaultPrivateSearchEngine() {
-  await checkDefaultSearch(true, true);
-});
-
-add_task(async function test_defaultSearchEngine_paramsChanged() {
-  let extension = await SearchTestUtils.installSearchExtension({
-    name: "TestEngine",
-    search_url: "https://www.google.com/fake1",
-  });
-
-  let promise = new Promise(resolve => {
-    TelemetryEnvironment.registerChangeListener(
-      "testWatch_SearchDefault",
-      resolve
-    );
-  });
-  let engine = Services.search.getEngineByName("TestEngine");
-  await Services.search.setDefault(engine);
-  await promise;
-
-  let data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
-  Assert.deepEqual(data.settings.defaultSearchEngineData, {
-    name: "TestEngine",
-    loadPath: "[other]addEngineWithDetails:testengine@tests.mozilla.org",
-    origin: "verified",
-    submissionURL: "https://www.google.com/fake1?q=",
-  });
-
-  promise = new Promise(resolve => {
-    TelemetryEnvironment.registerChangeListener(
-      "testWatch_SearchDefault",
-      resolve
-    );
-  });
-
-  engine.wrappedJSObject._updateFromManifest(
-    extension.id,
-    extension.baseURI,
-    SearchTestUtils.createEngineManifest({
-      name: "TestEngine",
-      version: "1.2",
-      search_url: "https://www.google.com/fake2",
-    })
-  );
-
-  await promise;
-
-  data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
-  Assert.deepEqual(data.settings.defaultSearchEngineData, {
-    name: "TestEngine",
-    loadPath: "[other]addEngineWithDetails:testengine@tests.mozilla.org",
-    origin: "verified",
-    submissionURL: "https://www.google.com/fake2?q=",
-  });
-
-  await extension.unload();
-});
-
 add_task(
   { skip_if: () => AppConstants.MOZ_APP_NAME == "thunderbird" },
   async function test_delayed_defaultBrowser() {
@@ -2215,7 +1011,7 @@ add_task(
     await TelemetryEnvironment.testCleanRestart().onInitialized();
 
     let environmentData = TelemetryEnvironment.currentEnvironment;
-    checkEnvironmentData(environmentData);
+    TelemetryEnvironmentTesting.checkEnvironmentData(environmentData);
     Assert.equal(
       environmentData.settings.isDefaultBrowser,
       null,
@@ -2225,7 +1021,7 @@ add_task(
     Services.obs.notifyObservers(null, "sessionstore-windows-restored");
 
     environmentData = TelemetryEnvironment.currentEnvironment;
-    checkEnvironmentData(environmentData);
+    TelemetryEnvironmentTesting.checkEnvironmentData(environmentData);
     Assert.ok(
       "isDefaultBrowser" in environmentData.settings,
       "isDefaultBrowser must be available after the session is restored."
@@ -2257,7 +1053,7 @@ add_task(
 
     // Check that the data is still available.
     environmentData = TelemetryEnvironment.currentEnvironment;
-    checkEnvironmentData(environmentData);
+    TelemetryEnvironmentTesting.checkEnvironmentData(environmentData);
     Assert.ok(
       "isDefaultBrowser" in environmentData.settings,
       "isDefaultBrowser must still be available after a pref is flipped."
@@ -2268,15 +1064,15 @@ add_task(
 add_task(async function test_osstrings() {
   // First test that numbers in sysinfo properties are converted to string fields
   // in system.os.
-  SysInfo.overrides = {
+  TelemetryEnvironmentTesting.setSysInfoOverrides({
     version: 1,
     name: 2,
     kernel_version: 3,
-  };
+  });
 
   await TelemetryEnvironment.testCleanRestart().onInitialized();
   let data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
+  TelemetryEnvironmentTesting.checkEnvironmentData(data);
 
   Assert.equal(data.system.os.version, "1");
   Assert.equal(data.system.os.name, "2");
@@ -2285,15 +1081,15 @@ add_task(async function test_osstrings() {
   }
 
   // Check that null values are also handled.
-  SysInfo.overrides = {
+  TelemetryEnvironmentTesting.setSysInfoOverrides({
     version: null,
     name: null,
     kernel_version: null,
-  };
+  });
 
   await TelemetryEnvironment.testCleanRestart().onInitialized();
   data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
+  TelemetryEnvironmentTesting.checkEnvironmentData(data);
 
   Assert.equal(data.system.os.version, null);
   Assert.equal(data.system.os.name, null);
@@ -2302,7 +1098,7 @@ add_task(async function test_osstrings() {
   }
 
   // Clean up.
-  SysInfo.overrides = {};
+  TelemetryEnvironmentTesting.setSysInfoOverrides({});
   await TelemetryEnvironment.testCleanRestart().onInitialized();
 });
 
@@ -2331,7 +1127,7 @@ add_task(async function test_experimentsAPI() {
   // Clean the environment and check that it's reporting the correct info.
   await TelemetryEnvironment.testCleanRestart().onInitialized();
   let data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
+  TelemetryEnvironmentTesting.checkEnvironmentData(data);
 
   // We don't expect the experiments section to be there if no annotation
   // happened.
@@ -2352,7 +1148,7 @@ add_task(async function test_experimentsAPI() {
   let eventEnvironmentData = await deferred.promise;
 
   // Check that the old environment does not contain the experiments.
-  checkEnvironmentData(eventEnvironmentData);
+  TelemetryEnvironmentTesting.checkEnvironmentData(eventEnvironmentData);
   Assert.ok(
     !("experiments" in eventEnvironmentData),
     "No experiments section must be reported in the old environment."
@@ -2360,7 +1156,7 @@ add_task(async function test_experimentsAPI() {
 
   // Check that the current environment contains the right experiment.
   data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
+  TelemetryEnvironmentTesting.checkEnvironmentData(data);
   checkExperiment(data, EXPERIMENT1, EXPERIMENT1_BRANCH);
 
   TelemetryEnvironment.unregisterChangeListener("test_experimentsAPI");
@@ -2378,7 +1174,7 @@ add_task(async function test_experimentsAPI() {
 
   // Check that the current environment contains both the experiment.
   data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
+  TelemetryEnvironmentTesting.checkEnvironmentData(data);
   checkExperiment(data, EXPERIMENT1, EXPERIMENT1_BRANCH);
   checkExperiment(data, EXPERIMENT2, EXPERIMENT2_BRANCH);
 
@@ -2420,7 +1216,7 @@ add_task(async function test_experimentsAPI() {
 
   // Check that the current environment contains just the second experiment.
   data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
+  TelemetryEnvironmentTesting.checkEnvironmentData(data);
   Assert.ok(
     !(EXPERIMENT1 in data),
     "The current environment must not contain the removed experiment annotation."
@@ -2454,7 +1250,7 @@ add_task(async function test_experimentsAPI_limits() {
   // Clean the environment and check that it's reporting the correct info.
   await TelemetryEnvironment.testCleanRestart().onInitialized();
   let data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
+  TelemetryEnvironmentTesting.checkEnvironmentData(data);
 
   // We don't expect the experiments section to be there if no annotation
   // happened.
@@ -2474,7 +1270,7 @@ add_task(async function test_experimentsAPI_limits() {
   // Check that the current environment contains the truncated values
   // for the experiment data.
   data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
+  TelemetryEnvironmentTesting.checkEnvironmentData(data);
   Assert.ok(
     "experiments" in data,
     "The environment must contain an experiments section."
@@ -2516,10 +1312,10 @@ if (gIsWindows) {
     );
     await TelemetryEnvironment.delayedInit();
     data = TelemetryEnvironment.currentEnvironment;
-    for (let k of EXPECTED_HDD_FIELDS) {
-      checkString(data.system.hdd[k].model);
-      checkString(data.system.hdd[k].revision);
-      checkString(data.system.hdd[k].type);
+    for (let k of TelemetryEnvironmentTesting.EXPECTED_HDD_FIELDS) {
+      TelemetryEnvironmentTesting.checkString(data.system.hdd[k].model);
+      TelemetryEnvironmentTesting.checkString(data.system.hdd[k].revision);
+      TelemetryEnvironmentTesting.checkString(data.system.hdd[k].type);
     }
   });
 
@@ -2558,7 +1354,7 @@ if (gIsWindows) {
       );
     }
     Assert.ok(
-      checkString(data.system.cpu.vendor),
+      TelemetryEnvironmentTesting.checkString(data.system.cpu.vendor),
       "vendor must be a valid string."
     );
   });
@@ -2702,7 +1498,7 @@ add_task(async function test_environmentDidntChange() {
   // Clean the environment and check that it's reporting the correct info.
   await TelemetryEnvironment.testCleanRestart().onInitialized();
   let data = TelemetryEnvironment.currentEnvironment;
-  checkEnvironmentData(data);
+  TelemetryEnvironmentTesting.checkEnvironmentData(data);
 
   const LISTENER_NAME = "test_environmentDidntChange";
   TelemetryEnvironment.registerChangeListener(LISTENER_NAME, () => {

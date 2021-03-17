@@ -60,10 +60,6 @@ const PING_FORMAT_VERSION = 4;
 const DELETION_REQUEST_PING_TYPE = "deletion-request";
 const TEST_PING_TYPE = "test-ping-type";
 
-const PLATFORM_VERSION = "1.9.2";
-const APP_VERSION = "1";
-const APP_NAME = "XPCShell";
-
 var gClientID = null;
 
 XPCOMUtils.defineLazyGetter(this, "DATAREPORTING_PATH", async function() {

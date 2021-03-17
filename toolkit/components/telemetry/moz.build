@@ -124,6 +124,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
 
 TESTING_JS_MODULES += [
     "tests/unit/TelemetryArchiveTesting.jsm",
+    "tests/unit/TelemetryEnvironmentTesting.jsm",
 ]
 
 PYTHON_UNITTEST_MANIFESTS += [
