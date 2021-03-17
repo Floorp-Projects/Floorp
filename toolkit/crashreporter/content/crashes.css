@@ -18,7 +18,7 @@
 table {
   width: 100%;
   padding-bottom: 2em;
-  border-collapse: collapse;
+  border-spacing: 0;
 }
 
 th {
