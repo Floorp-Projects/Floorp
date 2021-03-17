@@ -1203,6 +1203,7 @@ class Connection final : public CachingDatabaseConnection {
   nsCOMPtr<nsITimer> mFlushTimer;
   UniquePtr<ArchivedOriginScope> mArchivedOriginScope;
   ConnectionWriteOptimizer mWriteOptimizer;
+  // XXX Consider changing this to ClientMetadata.
   const OriginMetadata mOriginMetadata;
   nsString mDirectoryPath;
   /**

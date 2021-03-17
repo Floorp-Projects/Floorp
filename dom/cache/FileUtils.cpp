@@ -533,8 +533,8 @@ void DecreaseUsageForQuotaInfo(const QuotaInfo& aQuotaInfo,
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_DIAGNOSTIC_ASSERT(quotaManager);
 
-  quotaManager->DecreaseUsageForOrigin(PERSISTENCE_TYPE_DEFAULT, aQuotaInfo,
-                                       Client::DOMCACHE, aUpdatingSize);
+  quotaManager->DecreaseUsageForClient(
+      quota::ClientMetadata{aQuotaInfo, Client::DOMCACHE}, aUpdatingSize);
 }
 
 bool DirectoryPaddingFileExists(nsIFile& aBaseDir,
