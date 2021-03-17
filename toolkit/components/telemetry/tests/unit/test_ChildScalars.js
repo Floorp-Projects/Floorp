@@ -18,11 +18,6 @@ const { ContentTaskUtils } = ChromeUtils.import(
 
 const MESSAGE_CHILD_TEST_DONE = "ChildTest:Done";
 
-const PLATFORM_VERSION = "1.9.2";
-const APP_VERSION = "1";
-const APP_ID = "xpcshell@tests.mozilla.org";
-const APP_NAME = "XPCShell";
-
 const UINT_SCALAR = "telemetry.test.unsigned_int_kind";
 const KEYED_UINT_SCALAR = "telemetry.test.keyed_unsigned_int";
 const KEYED_BOOL_SCALAR = "telemetry.test.keyed_boolean_kind";

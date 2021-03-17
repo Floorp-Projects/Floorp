@@ -13,11 +13,6 @@ const { ContentTaskUtils } = ChromeUtils.import(
 
 const MESSAGE_CHILD_TEST_DONE = "ChildTest:Done";
 
-const PLATFORM_VERSION = "1.9.2";
-const APP_VERSION = "1";
-const APP_ID = "xpcshell@tests.mozilla.org";
-const APP_NAME = "XPCShell";
-
 function run_child_test() {
   // Setup histograms with some fixed values.
   let flagHist = Telemetry.getHistogramById("TELEMETRY_TEST_FLAG");
