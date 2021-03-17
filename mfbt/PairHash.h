@@ -23,13 +23,13 @@ namespace mozilla {
  * where type T and U both support AddToHash.
  */
 template <typename U, typename V>
-MOZ_MUST_USE inline HashNumber HashPair(const std::pair<U, V>& pair) {
+[[nodiscard]] inline HashNumber HashPair(const std::pair<U, V>& pair) {
   // Pair hash combines the hash of each member
   return HashGeneric(pair.first, pair.second);
 }
 
 template <typename U, typename V>
-MOZ_MUST_USE inline HashNumber HashCompactPair(const CompactPair<U, V>& pair) {
+[[nodiscard]] inline HashNumber HashCompactPair(const CompactPair<U, V>& pair) {
   // Pair hash combines the hash of each member
   return HashGeneric(pair.first(), pair.second());
 }
