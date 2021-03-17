@@ -176,10 +176,10 @@ var webrtcUI = {
           window: state.window,
         };
         let browser = aStream.topBrowsingContext.embedderElement;
-        let browserWindow = browser.ownerGlobal;
-        let tab =
-          browserWindow.gBrowser &&
-          browserWindow.gBrowser.getTabForBrowser(browser);
+        // browser can be null when we are in the process of closing a tab
+        // and our stream list hasn't been updated yet.
+        // gBrowser will be null if a stream is used outside a tabbrowser window.
+        let tab = browser?.ownerGlobal.gBrowser?.getTabForBrowser(browser);
         return {
           uri: state.documentURI,
           tab,
