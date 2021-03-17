@@ -677,9 +677,9 @@ void MacroAssemblerX86Shared::unsignedCompareInt32x4(
   }
 }
 
-void MacroAssemblerX86Shared::compareInt64x2(FloatRegister lhs, Operand rhs,
-                                             Assembler::Condition cond,
-                                             FloatRegister output) {
+void MacroAssemblerX86Shared::compareForEqualityInt64x2(
+    FloatRegister lhs, Operand rhs, Assembler::Condition cond,
+    FloatRegister output) {
   static const SimdConstant allOnes = SimdConstant::SplatX4(-1);
   switch (cond) {
     case Assembler::Condition::Equal:
@@ -687,6 +687,69 @@ void MacroAssemblerX86Shared::compareInt64x2(FloatRegister lhs, Operand rhs,
       break;
     case Assembler::Condition::NotEqual:
       vpcmpeqq(rhs, lhs, lhs);
+      asMasm().bitwiseXorSimd128(allOnes, lhs);
+      break;
+    default:
+      MOZ_CRASH("unexpected condition op");
+  }
+}
+
+void MacroAssemblerX86Shared::compareForOrderingInt64x2(
+    FloatRegister lhs, Operand rhs, Assembler::Condition cond,
+    FloatRegister temp1, FloatRegister temp2, FloatRegister output) {
+  static const SimdConstant allOnes = SimdConstant::SplatX4(-1);
+  // The pseudo code is for (e.g. > comparison):
+  //  __m128i pcmpgtq_sse2 (__m128i a, __m128i b) {
+  //      __m128i r = _mm_and_si128(_mm_cmpeq_epi32(a, b), _mm_sub_epi64(b,
+  //      a)); r = _mm_or_si128(r, _mm_cmpgt_epi32(a, b)); return
+  //      _mm_shuffle_epi32(r, _MM_SHUFFLE(3,3,1,1));
+  //  }
+  // Credits to https://stackoverflow.com/a/65175746
+  switch (cond) {
+    case Assembler::Condition::GreaterThan:
+      vmovdqa(rhs, temp1);
+      vmovdqa(Operand(lhs), temp2);
+      vpsubq(Operand(lhs), temp1, temp1);
+      vpcmpeqd(rhs, temp2, temp2);
+      vandpd(temp2, temp1, temp1);
+      asMasm().moveSimd128(lhs, output);
+      vpcmpgtd(rhs, output, output);
+      vpor(Operand(temp1), output, output);
+      vpshufd(MacroAssembler::ComputeShuffleMask(1, 1, 3, 3), output, output);
+      break;
+    case Assembler::Condition::LessThan:
+      vmovdqa(rhs, temp1);
+      vmovdqa(Operand(lhs), temp2);
+      vpcmpgtd(Operand(lhs), temp1, temp1);
+      vpcmpeqd(Operand(rhs), temp2, temp2);
+      asMasm().moveSimd128(lhs, output);
+      vpsubq(rhs, output, output);
+      vandpd(temp2, output, output);
+      vpor(Operand(temp1), output, output);
+      vpshufd(MacroAssembler::ComputeShuffleMask(1, 1, 3, 3), output, output);
+      break;
+    case Assembler::Condition::GreaterThanOrEqual:
+      vmovdqa(rhs, temp1);
+      vmovdqa(Operand(lhs), temp2);
+      vpcmpgtd(Operand(lhs), temp1, temp1);
+      vpcmpeqd(Operand(rhs), temp2, temp2);
+      asMasm().moveSimd128(lhs, output);
+      vpsubq(rhs, output, output);
+      vandpd(temp2, output, output);
+      vpor(Operand(temp1), output, output);
+      vpshufd(MacroAssembler::ComputeShuffleMask(1, 1, 3, 3), output, output);
+      asMasm().bitwiseXorSimd128(allOnes, lhs);
+      break;
+    case Assembler::Condition::LessThanOrEqual:
+      vmovdqa(rhs, temp1);
+      vmovdqa(Operand(lhs), temp2);
+      vpsubq(Operand(lhs), temp1, temp1);
+      vpcmpeqd(rhs, temp2, temp2);
+      vandpd(temp2, temp1, temp1);
+      asMasm().moveSimd128(lhs, output);
+      vpcmpgtd(rhs, output, output);
+      vpor(Operand(temp1), output, output);
+      vpshufd(MacroAssembler::ComputeShuffleMask(1, 1, 3, 3), output, output);
       asMasm().bitwiseXorSimd128(allOnes, lhs);
       break;
     default:

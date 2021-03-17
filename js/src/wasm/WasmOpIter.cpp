@@ -403,6 +403,10 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::I32x4GeU:
         case SimdOp::I64x2Eq:
         case SimdOp::I64x2Ne:
+        case SimdOp::I64x2LtS:
+        case SimdOp::I64x2GtS:
+        case SimdOp::I64x2LeS:
+        case SimdOp::I64x2GeS:
         case SimdOp::F32x4Eq:
         case SimdOp::F32x4Ne:
         case SimdOp::F32x4Lt:
