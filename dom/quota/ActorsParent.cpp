@@ -3844,15 +3844,15 @@ void QuotaManager::InitQuotaForOrigin(
       /* aDirectoryExists */ true));
 }
 
-void QuotaManager::EnsureQuotaForOrigin(PersistenceType aPersistenceType,
-                                        const OriginMetadata& aOriginMetadata) {
+void QuotaManager::EnsureQuotaForOrigin(const OriginMetadata& aOriginMetadata) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
+  MOZ_ASSERT(IsBestEffortPersistenceType(aOriginMetadata.mPersistenceType));
 
   MutexAutoLock lock(mQuotaMutex);
 
   RefPtr<GroupInfo> groupInfo = LockedGetOrCreateGroupInfo(
-      aPersistenceType, aOriginMetadata.mSuffix, aOriginMetadata.mGroup);
+      aOriginMetadata.mPersistenceType, aOriginMetadata.mSuffix,
+      aOriginMetadata.mGroup);
 
   RefPtr<OriginInfo> originInfo =
       groupInfo->LockedGetOriginInfo(aOriginMetadata.mOrigin);

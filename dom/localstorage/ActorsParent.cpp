@@ -6805,8 +6805,7 @@ nsresult PrepareDatastoreOp::DatabaseWork() {
                       quotaManager->GetDirectoryForOrigin(
                           PERSISTENCE_TYPE_DEFAULT, Origin()));
 
-        quotaManager->EnsureQuotaForOrigin(PERSISTENCE_TYPE_DEFAULT,
-                                           mOriginMetadata);
+        quotaManager->EnsureQuotaForOrigin(mOriginMetadata);
 
         return directoryEntry;
       }()));
