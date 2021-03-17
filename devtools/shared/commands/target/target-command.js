@@ -218,6 +218,16 @@ class TargetCommand extends EventEmitter {
   }
 
   hasTargetWatcherSupport(type) {
+    // If the top level target is a parent process, we're in the browser console or browser toolbox.
+    // In such case, if the browser toolbox fission pref is disabled, we don't want to use watchers
+    // (even if traits on the server are enabled).
+    if (
+      this.targetFront.isParentProcess &&
+      !Services.prefs.getBoolPref(BROWSERTOOLBOX_FISSION_ENABLED, false)
+    ) {
+      return false;
+    }
+
     return !!this.watcherFront?.traits[type];
   }
 
