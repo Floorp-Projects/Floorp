@@ -338,6 +338,13 @@ class MediaManager final : public nsIMediaManagerService,
   void RemoveMediaDevicesCallback(uint64_t aWindowID);
   void DeviceListChanged();
 
+  // Returns the number of incomplete tasks associated with this window,
+  // including the newly added task.
+  size_t AddTaskAndGetCount(uint64_t aWindowID, const nsAString& aCallID,
+                            RefPtr<GetUserMediaTask> aTask);
+  // Finds the task corresponding to aCallID and removes it from tracking.
+  RefPtr<GetUserMediaTask> TakeGetUserMediaTask(const nsAString& aCallID);
+
   MOZ_DEFINE_MALLOC_SIZE_OF(MallocSizeOf);
 
   struct nsStringHasher {
