@@ -114,7 +114,7 @@ SpanningCellSorter::Item* SpanningCellSorter::GetNext(int32_t* aColSpan) {
       if (mHashTable.EntryCount() > 0) {
         HashTableEntry** sh = new HashTableEntry*[mHashTable.EntryCount()];
         int32_t j = 0;
-        for (auto iter = mHashTable.Iter(); !iter.Done(); iter.Next()) {
+        for (auto iter = mHashTable.ConstIter(); !iter.Done(); iter.Next()) {
           sh[j++] = static_cast<HashTableEntry*>(iter.Get());
         }
         NS_QuickSort(sh, mHashTable.EntryCount(), sizeof(sh[0]), SortArray,

@@ -146,7 +146,7 @@ void nsHTMLStyleSheet::DropMappedAttributes(nsMappedAttributes* aMapped) {
 }
 
 void nsHTMLStyleSheet::CalculateMappedServoDeclarations() {
-  for (auto iter = mMappedAttrTable.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mMappedAttrTable.ConstIter(); !iter.Done(); iter.Next()) {
     MappedAttrTableEntry* attr = static_cast<MappedAttrTableEntry*>(iter.Get());
     if (attr->mAttributes->GetServoStyle()) {
       // Only handle cases which haven't been filled in already

@@ -865,7 +865,7 @@ static void TakeAndAddModifiedAndFramesWithPropsFromRootFrame(
   MOZ_ASSERT(aRootFrame);
 
   if (RetainedDisplayListData* data = GetRetainedDisplayListData(aRootFrame)) {
-    for (auto it = data->Iterator(); !it.Done(); it.Next()) {
+    for (auto it = data->ConstIterator(); !it.Done(); it.Next()) {
       nsIFrame* frame = it.Key();
       const RetainedDisplayListData::FrameFlags& flags = it.Data();
 
