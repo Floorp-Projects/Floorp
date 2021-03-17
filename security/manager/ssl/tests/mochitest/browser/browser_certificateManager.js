@@ -13,6 +13,9 @@ async function checkServerCertificates(win, expectedValues = []) {
       expectedValues.length
     );
   }, `Expected to have ${expectedValues.length} but got ${win.document.getElementById("serverList").itemChildren.length}`);
+  // The strings we will get from the DOM are localized with Fluent,
+  // so they will only be available after the next refresh driver tick.
+  await new Promise(win.requestAnimationFrame);
 
   let labels = win.document
     .getElementById("serverList")
