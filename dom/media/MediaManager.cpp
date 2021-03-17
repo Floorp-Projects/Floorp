@@ -1450,19 +1450,12 @@ class GetUserMediaTask final {
   }
 
  public:
-  nsresult Denied(MediaMgrError::Name aName,
-                  const nsCString& aMessage = ""_ns) {
+  void Denied(MediaMgrError::Name aName, const nsCString& aMessage = ""_ns) {
+    MOZ_ASSERT(NS_IsMainThread());
+    mHolder.Reject(MakeRefPtr<MediaMgrError>(aName, aMessage), __func__);
     // We add a disabled listener to the StreamListeners array until accepted
     // If this was the only active MediaStream, remove the window from the list.
-    if (NS_IsMainThread()) {
-      mHolder.Reject(MakeRefPtr<MediaMgrError>(aName, aMessage), __func__);
-      // Should happen *after* error runs for consistency, but may not matter
-      mSourceListener->Stop();
-    } else {
-      // This will re-check the window being alive on main-thread
-      Fail(aName, aMessage);
-    }
-    return NS_OK;
+    mSourceListener->Stop();
   }
 
   const MediaStreamConstraints& GetConstraints() { return mConstraints; }
@@ -3715,7 +3708,8 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
     }
 
     if (sHasShutdown) {
-      return task->Denied(MediaMgrError::Name::AbortError, "In shutdown"_ns);
+      task->Denied(MediaMgrError::Name::AbortError, "In shutdown"_ns);
+      return NS_OK;
     }
     task->Allowed();
     return NS_OK;
