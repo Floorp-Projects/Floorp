@@ -113,33 +113,26 @@ DevToolsClient.prototype = {
    *         Resolves after the underlying transport is closed.
    */
   close() {
-    const promise = new Promise(resolve => {
-      // Disable detach event notifications, because event handlers will be in a
-      // cleared scope by the time they run.
-      this._eventsEnabled = false;
+    if (this._closed) {
+      return Promise.resolve();
+    }
+    if (this._closePromise) {
+      return this._closePromise;
+    }
+    // Immediately set the destroy promise,
+    // as the following code is fully synchronous and can be reentrant.
+    this._closePromise = this.once("closed");
 
-      const cleanup = () => {
-        if (this._transport) {
-          this._transport.close();
-        }
-        this._transport = null;
-      };
+    // Disable detach event notifications, because event handlers will be in a
+    // cleared scope by the time they run.
+    this._eventsEnabled = false;
 
-      // If the connection is already closed,
-      // there is no need to detach client
-      // as we won't be able to send any message.
-      if (this._closed) {
-        cleanup();
-        resolve();
-        return;
-      }
+    if (this._transport) {
+      this._transport.close();
+      this._transport = null;
+    }
 
-      this.once("closed", resolve);
-
-      cleanup();
-    });
-
-    return promise;
+    return this._closePromise;
   },
 
   /**
