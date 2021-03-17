@@ -379,26 +379,6 @@ class ResourceWatcher {
     // Clear the map of legacy listeners for this target.
     this._existingLegacyListeners.set(targetFront, []);
 
-    // Remove pending events associated with this target
-    for (const watcherEntry of this._watchers) {
-      watcherEntry.pendingEvents = watcherEntry.pendingEvents.filter(
-        ({ callbackType, updates }) => {
-          updates = updates.filter(update => {
-            if (callbackType !== "available" && callbackType !== "updated") {
-              return true;
-            }
-
-            const resource =
-              callbackType == "available" ? update : update.resource;
-            return resource.targetFront !== targetFront;
-          });
-
-          // Filter out pendingEvents who don't have any updates
-          return updates.length > 0;
-        }
-      );
-    }
-
     //TODO: Is there a point in doing anything else?
     //
     // We could remove the available/destroyed event, but as the target is destroyed
@@ -426,10 +406,6 @@ class ResourceWatcher {
 
       if (watcherFront) {
         targetFront = await this._getTargetForWatcherResource(resource);
-      }
-
-      if (targetFront && targetFront.isDestroyedOrBeingDestroyed()) {
-        continue;
       }
 
       // isAlreadyExistingResource indicates that the resources already existed before
@@ -517,11 +493,7 @@ class ResourceWatcher {
           cachedResource.resourceId === resourceId
       );
 
-      if (
-        !existingResource ||
-        (existingResource.targetFront &&
-          existingResource.targetFront.isDestroyedOrBeingDestroyed())
-      ) {
+      if (!existingResource) {
         continue;
       }
 
