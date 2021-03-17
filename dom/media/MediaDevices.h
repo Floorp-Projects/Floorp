@@ -23,6 +23,7 @@ class Promise;
 struct MediaStreamConstraints;
 struct DisplayMediaStreamConstraints;
 struct MediaTrackSupportedConstraints;
+struct AudioOutputOptions;
 
 #define MOZILLA_DOM_MEDIADEVICES_IMPLEMENTATION_IID  \
   {                                                  \
@@ -54,6 +55,10 @@ class MediaDevices final : public DOMEventTargetHelper {
 
   already_AddRefed<Promise> GetDisplayMedia(
       const DisplayMediaStreamConstraints& aConstraints, CallerType aCallerType,
+      ErrorResult& aRv);
+
+  already_AddRefed<Promise> SelectAudioOutput(
+      const AudioOutputOptions& aOptions, CallerType aCallerType,
       ErrorResult& aRv);
 
   // Called when MediaManager encountered a change in its device lists.

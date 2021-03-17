@@ -28,3 +28,13 @@ interface MediaDevices : EventTarget {
   [SecureContext, Pref="media.getdisplaymedia.enabled", Throws, NeedsCallerType, UseCounter]
   Promise<MediaStream> getDisplayMedia(optional DisplayMediaStreamConstraints constraints = {});
 };
+
+// https://w3c.github.io/mediacapture-output/#audiooutputoptions-dictionary
+dictionary AudioOutputOptions {
+  DOMString deviceId = "";
+};
+// https://w3c.github.io/mediacapture-output/#mediadevices-extensions
+partial interface MediaDevices {
+  [SecureContext, Pref="media.setsinkid.enabled", Throws, NeedsCallerType]
+  Promise<MediaDeviceInfo> selectAudioOutput(optional AudioOutputOptions options = {});
+};
