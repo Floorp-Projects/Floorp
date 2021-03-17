@@ -289,6 +289,9 @@ bool VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
     return false;
   }
 
+  MOZ_ASSERT(aBuffer.mYUVColorSpace != gfx::YUVColorSpace::UNKNOWN,
+             "We must know the colorframe at this point");
+
   PlanarYCbCrData data = ConstructPlanarYCbCrData(aInfo, aBuffer, aPicture);
 
   aVideoImage->SetDelayedConversion(true);
@@ -316,6 +319,9 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
   if (!ValidateBufferAndPicture(aBuffer, aPicture)) {
     return nullptr;
   }
+
+  MOZ_ASSERT(aBuffer.mYUVColorSpace != gfx::YUVColorSpace::UNKNOWN,
+             "We must know the colorframe at this point");
 
   RefPtr<VideoData> v(new VideoData(aOffset, aTime, aDuration, aKeyframe,
                                     aTimecode, aInfo.mDisplay, 0));

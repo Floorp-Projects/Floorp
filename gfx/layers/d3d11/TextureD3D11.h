@@ -119,14 +119,14 @@ class D3D11TextureData final : public TextureData {
   // Hold on to the DrawTarget because it is expensive to create one each
   // ::Lock.
   RefPtr<gfx::DrawTarget> mDrawTarget;
-  const gfx::IntSize mSize;
-  const gfx::SurfaceFormat mFormat;
-  gfx::YUVColorSpace mYUVColorSpace = gfx::YUVColorSpace::Identity;
+  gfx::IntSize mSize;
+  gfx::SurfaceFormat mFormat;
+  gfx::YUVColorSpace mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
   gfx::ColorRange mColorRange = gfx::ColorRange::LIMITED;
-  bool mNeedsClear = false;
-  bool mNeedsClearWhite = false;
-  const bool mHasSynchronization;
-  const bool mIsForOutOfBandContent;
+  bool mNeedsClear;
+  bool mNeedsClearWhite;
+  bool mHasSynchronization;
+  bool mIsForOutOfBandContent;
 
   RefPtr<ID3D11Texture2D> mTexture;
   const TextureAllocationFlags mAllocationFlags;

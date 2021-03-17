@@ -94,7 +94,7 @@ gfx::SurfaceFormat DMABUFTextureHostOGL::GetFormat() const {
 
 gfx::YUVColorSpace DMABUFTextureHostOGL::GetYUVColorSpace() const {
   if (!mSurface) {
-    return gfx::YUVColorSpace::Identity;
+    return gfx::YUVColorSpace::UNKNOWN;
   }
   return mSurface->GetYUVColorSpace();
 }

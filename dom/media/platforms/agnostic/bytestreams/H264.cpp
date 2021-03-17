@@ -303,7 +303,9 @@ gfx::YUVColorSpace SPSData::ColorSpace() const {
     case GUESS_BT2020:
       return gfx::YUVColorSpace::BT2020;
     default:
-      MOZ_CRASH("not possible to get here but makes compiler happy");
+      MOZ_ASSERT_UNREACHABLE(
+          "not possible to get here but makes compiler happy");
+      return gfx::YUVColorSpace::UNKNOWN;
   }
 }
 
