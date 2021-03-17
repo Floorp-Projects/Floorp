@@ -52,7 +52,7 @@ fn process_imports(shader_dir: &str, shader: &str, included: &mut HashSet<String
 }
 
 fn translate_shader(shader_key: &str, shader_dir: &str) {
-    let mut imported = String::from("#define SWGL 1\n");
+    let mut imported = String::from("#define SWGL 1\n#define __VERSION__ 150\n");
     let _ = write!(imported, "#define WR_MAX_VERTEX_TEXTURE_WIDTH {}U\n",
                    webrender_build::MAX_VERTEX_TEXTURE_WIDTH);
 
@@ -74,9 +74,9 @@ fn translate_shader(shader_key: &str, shader_dir: &str) {
 
     let mut build = cc::Build::new();
     if build.get_compiler().is_like_msvc() {
-        build.flag("/EP");
+        build.flag("/EP").flag("/u");
     } else {
-        build.flag("-xc").flag("-P");
+        build.flag("-xc").flag("-P").flag("-undef");
     }
     build.file(&imp_name);
     let vs = build.clone()
