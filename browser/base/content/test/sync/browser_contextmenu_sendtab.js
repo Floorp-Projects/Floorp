@@ -111,8 +111,8 @@ add_task(async function test_tab_contextmenu_unconfigured() {
   updateTabContextMenu(testTab);
   is(
     document.getElementById("context_sendTabToDevice").hidden,
-    false,
-    "Send tab to device is shown"
+    true,
+    "Send tab to device is hidden"
   );
   is(
     document.getElementById("context_sendTabToDevice").disabled,
@@ -129,8 +129,8 @@ add_task(async function test_tab_contextmenu_not_sendable() {
   updateTabContextMenu(testTab);
   is(
     document.getElementById("context_sendTabToDevice").hidden,
-    false,
-    "Send tab to device is shown"
+    true,
+    "Send tab to device is hidden"
   );
   is(
     document.getElementById("context_sendTabToDevice").disabled,
@@ -147,8 +147,8 @@ add_task(async function test_tab_contextmenu_not_synced_yet() {
   updateTabContextMenu(testTab);
   is(
     document.getElementById("context_sendTabToDevice").hidden,
-    false,
-    "Send tab to device is shown"
+    true,
+    "Send tab to device is hidden"
   );
   is(
     document.getElementById("context_sendTabToDevice").disabled,
@@ -165,8 +165,8 @@ add_task(async function test_tab_contextmenu_sync_not_ready_configured() {
   updateTabContextMenu(testTab);
   is(
     document.getElementById("context_sendTabToDevice").hidden,
-    false,
-    "Send tab to device is shown"
+    true,
+    "Send tab to device is hidden"
   );
   is(
     document.getElementById("context_sendTabToDevice").disabled,
@@ -186,8 +186,8 @@ add_task(async function test_tab_contextmenu_sync_not_ready_other_state() {
   updateTabContextMenu(testTab);
   is(
     document.getElementById("context_sendTabToDevice").hidden,
-    false,
-    "Send tab to device is shown"
+    true,
+    "Send tab to device is hidden"
   );
   is(
     document.getElementById("context_sendTabToDevice").disabled,
