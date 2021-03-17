@@ -142,6 +142,34 @@ browsertime-benchmark:
         - [motionmark-animometer, mm-a]
         - [motionmark-htmlsuite, mm-h]
         - [stylebench, sb]
+    tier:
+        by-app:
+            firefox:
+                by-subtest:
+                    motionmark-animometer: 1
+                    default:
+                        by-test-platform:
+                            windows10-64-ref-hw-2017/opt: 2
+                            windows10-64-ccov.*/.*: 3
+                            linux64-ccov.*/.*: 3
+                            default: 2
+            default: 2
+    fission-run-on-projects:
+        by-test-platform:
+            (linux|windows|macos)(?!.*shippable).*: []
+            windows7.*shippable.*: []
+            windows10.*shippable[^-qr].*: []
+            default: ["mozilla-central"]
+    run-on-projects:
+        by-app:
+            firefox:
+                by-test-platform:
+                    (linux|windows|macos)(?!.*shippable).*: []
+                    linux.*shippable.*: ["trunk", "mozilla-beta"]
+                    macos.*shippable.*: ["trunk", "mozilla-beta"]
+                    windows10.*shippable.*: ["trunk", "mozilla-beta"]
+                    default: []
+            default: []
     variants: ["fission"]
     apps: ["firefox"]
     treeherder-symbol: Btime()
