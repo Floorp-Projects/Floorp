@@ -27,6 +27,11 @@
   --buttons-secondary-active-bgcolor: color-mix(in srgb, currentColor 30%, transparent);
   --buttons-secondary-color: currentColor;
 
+  --buttons-destructive-bgcolor: #e22850;
+  --buttons-destructive-hover-bgcolor: #c50042;
+  --buttons-destructive-active-bgcolor: #810220;
+  --buttons-destructive-color: #fbfbfe;
+
   --identity-box-margin-inline: 4px;
   --identity-box-label-opacity: .8;
   --urlbar-box-bg-overlay: var(--buttons-secondary-bgcolor);
