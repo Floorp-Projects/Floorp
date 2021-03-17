@@ -106,7 +106,7 @@ inline bool profiler_can_accept_markers() { return false; }
 inline bool profiler_thread_is_being_profiled() { return false; }
 inline bool profiler_is_active_and_thread_is_registered() { return false; }
 inline bool profiler_feature_active(uint32_t aFeature) { return false; }
-bool profiler_is_locked_on_current_thread() { return false; }
+inline bool profiler_is_locked_on_current_thread() { return false; }
 
 #else  // !MOZ_GECKO_PROFILER
 
