@@ -1364,6 +1364,8 @@ class GetUserMediaTask final {
             const nsString& aConstraint = u""_ns) {
     mHolder.Reject(MakeRefPtr<MediaMgrError>(aName, aMessage, aConstraint),
                    __func__);
+    // We add a disabled listener to the StreamListeners array until accepted
+    // If this was the only active MediaStream, remove the window from the list.
     NS_DispatchToMainThread(NewRunnableMethod(
         "SourceListener::Stop", mSourceListener, &SourceListener::Stop));
   }
@@ -1452,10 +1454,7 @@ class GetUserMediaTask final {
  public:
   void Denied(MediaMgrError::Name aName, const nsCString& aMessage = ""_ns) {
     MOZ_ASSERT(NS_IsMainThread());
-    mHolder.Reject(MakeRefPtr<MediaMgrError>(aName, aMessage), __func__);
-    // We add a disabled listener to the StreamListeners array until accepted
-    // If this was the only active MediaStream, remove the window from the list.
-    mSourceListener->Stop();
+    Fail(aName, aMessage);
   }
 
   const MediaStreamConstraints& GetConstraints() { return mConstraints; }
