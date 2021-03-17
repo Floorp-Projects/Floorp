@@ -30,7 +30,7 @@ add_task(async function() {
   let nextRightElement = () => elementFromPoint(right(scrollbox) + 1);
   let firstScrollable = () => gBrowser.tabs[gBrowser._numPinnedTabs];
   let waitForNextFrame = async function() {
-    await window.promiseDocumentFlushed(() => {});
+    await new Promise(requestAnimationFrame);
     await new Promise(resolve => Services.tm.dispatchToMainThread(resolve));
   };
 
