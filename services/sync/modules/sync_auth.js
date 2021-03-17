@@ -4,7 +4,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["BrowserIDManager", "AuthenticationError"];
+var EXPORTED_SYMBOLS = ["SyncAuthManager", "AuthenticationError"];
 
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
@@ -57,7 +57,7 @@ ChromeUtils.defineModuleGetter(
 );
 
 XPCOMUtils.defineLazyGetter(this, "log", function() {
-  let log = Log.repository.getLogger("Sync.BrowserIDManager");
+  let log = Log.repository.getLogger("Sync.SyncAuthManager");
   log.manageLevelFromPref("services.sync.log.logger.identity");
   return log;
 });
@@ -66,12 +66,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "IGNORE_CACHED_AUTH_CREDENTIALS",
   "services.sync.debug.ignoreCachedAuthCredentials"
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "USE_OAUTH_FOR_SYNC_TOKEN",
-  "identity.sync.useOAuthForSyncToken"
 );
 
 // FxAccountsCommon.js doesn't use a "namespace", so create one here.
@@ -109,7 +103,13 @@ AuthenticationError.prototype = {
   },
 };
 
-function BrowserIDManager() {
+// The `SyncAuthManager` coordinates access authorization to the Sync server.
+// Its job is essentially to get us from having a signed-in Firefox Accounts user,
+// to knowing the user's sync storage node and having the necessary short-lived
+// credentials in order to access it.
+//
+
+function SyncAuthManager() {
   // NOTE: _fxaService and _tokenServerClient are replaced with mocks by
   // the test suite.
   this._fxaService = fxAccounts;
@@ -128,7 +128,7 @@ function BrowserIDManager() {
   }
 }
 
-this.BrowserIDManager.prototype = {
+this.SyncAuthManager.prototype = {
   _fxaService: null,
   _tokenServerClient: null,
   // https://docs.services.mozilla.com/token/apis.html
@@ -408,15 +408,12 @@ this.BrowserIDManager.prototype = {
       throw new Error("Can't fetch a token as we can't get keys");
     }
 
-    // Do the assertion/certificate/token dance, with a retry.
+    // Do the token dance, with a retry in case of transient auth failure.
+    // We need to prove that we know the sync key in order to get a token
+    // from the tokenserver.
     let getToken = async key => {
       this._log.info("Getting a sync token from", this._tokenServerUrl);
-      let token;
-      if (USE_OAUTH_FOR_SYNC_TOKEN) {
-        token = await this._fetchTokenUsingOAuth(key);
-      } else {
-        token = await this._fetchTokenUsingBrowserID(key);
-      }
+      let token = await this._fetchTokenUsingOAuth(key);
       this._log.trace("Successfully got a token");
       return token;
     };
@@ -455,6 +452,7 @@ this.BrowserIDManager.prototype = {
       return token;
     } catch (caughtErr) {
       let err = caughtErr; // The error we will rethrow.
+
       // TODO: unify these errors - we need to handle errors thrown by
       // both tokenserverclient and hawkclient.
       // A tokenserver error thrown based on a bad response.
@@ -469,8 +467,8 @@ this.BrowserIDManager.prototype = {
       }
 
       // TODO: write tests to make sure that different auth error cases are handled here
-      // properly: auth error getting assertion, auth error getting token (invalid generation
-      // and client-state error)
+      // properly: auth error getting oauth token, auth error getting sync token (invalid
+      // generation or client-state error)
       if (err instanceof AuthenticationError) {
         this._log.error("Authentication error in _fetchTokenForUser", err);
         // set it to the "fatal" LOGIN_FAILED_LOGIN_REJECTED reason.
@@ -486,7 +484,7 @@ this.BrowserIDManager.prototype = {
   },
 
   /**
-   * Fetches an OAuth token using the OLD_SYNC scope and exchanges it
+   * Generates an OAuth access_token using the OLD_SYNC scope and exchanges it
    * for a TokenServer token.
    *
    * @returns {Promise}
@@ -502,46 +500,13 @@ this.BrowserIDManager.prototype = {
     };
 
     return this._tokenServerClient
-      .getTokenFromOAuthToken(this._tokenServerUrl, accessToken, headers)
+      .getTokenUsingOAuth(this._tokenServerUrl, accessToken, headers)
       .catch(async err => {
         if (err.response && err.response.status === 401) {
           // remove the cached token if we cannot authorize with it.
           // we have to do this here because we know which `token` to remove
           // from cache.
-          console.log("REMOVE CACHED", accessToken);
           await fxa.removeCachedOAuthToken({ token: accessToken });
-        }
-
-        // continue the error chain, so other handlers can deal with the error.
-        throw err;
-      });
-  },
-
-  /**
-   * Exchanges a BrowserID assertion for a TokenServer token.
-   *
-   * This is a legacy access method that we're in the process of deprecating;
-   * if you have a choice you should use `_fetchTokenUsingOAuth` above.
-   *
-   * @returns {Promise}
-   * @private
-   */
-  async _fetchTokenUsingBrowserID(key) {
-    this._log.debug("Getting a token using BrowserID");
-    const fxa = this._fxaService;
-    const audience = Services.io.newURI(this._tokenServerUrl).prePath;
-    const assertion = await fxa._internal.getAssertion(audience);
-    const headers = {
-      "X-Client-State": fxa._internal.keys.kidAsHex(key),
-    };
-    return this._tokenServerClient
-      .getTokenFromBrowserIDAssertion(this._tokenServerUrl, assertion, headers)
-      .catch(async err => {
-        if (err.response && err.response.status === 401) {
-          this._log.warn(
-            "Token server returned 401, refreshing certificate and retrying token fetch"
-          );
-          await fxa._internal.invalidateCertificate();
         }
 
         // continue the error chain, so other handlers can deal with the error.

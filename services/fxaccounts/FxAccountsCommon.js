@@ -62,18 +62,7 @@ exports.FXACCOUNTS_PERMISSION = "firefox-accounts";
 exports.DATA_FORMAT_VERSION = 1;
 exports.DEFAULT_STORAGE_FILENAME = "signedInUser.json";
 
-// Token life times.
-// Having this parameter be short has limited security value and can cause
-// spurious authentication values if the client's clock is skewed and
-// we fail to adjust. See Bug 983256.
-exports.ASSERTION_LIFETIME = 1000 * 3600 * 24 * 365 * 25; // 25 years
-// This is a time period we want to guarantee that the assertion will be
-// valid after we generate it (e.g., the signed cert won't expire in this
-// period).
-exports.ASSERTION_USE_PERIOD = 1000 * 60 * 5; // 5 minutes
-exports.CERT_LIFETIME = 1000 * 3600 * 6; // 6 hours
 exports.OAUTH_TOKEN_FOR_SYNC_LIFETIME_SECONDS = 3600 * 6; // 6 hours
-exports.KEY_LIFETIME = 1000 * 3600 * 12; // 12 hours
 
 // After we start polling for account verification, we stop polling when this
 // many milliseconds have elapsed.
@@ -309,12 +298,8 @@ exports.FXA_PWDMGR_SECURE_FIELDS = new Set([
   ...exports.LEGACY_DERIVED_KEYS_NAMES,
   "keyFetchToken",
   "unwrapBKey",
-  "assertion",
   "scopedKeys",
 ]);
-
-// Fields we keep in memory and don't persist anywhere.
-exports.FXA_PWDMGR_MEMORY_FIELDS = new Set(["cert", "keyPair"]);
 
 // A whitelist of fields that remain in storage when the user needs to
 // reauthenticate. All other fields will be removed.
