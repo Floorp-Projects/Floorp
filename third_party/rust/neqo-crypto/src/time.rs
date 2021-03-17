@@ -120,7 +120,8 @@ impl TryInto<PRTime> for Time {
         // TODO(mt) use checked_duration_since when that is available.
         let delta = self.t.duration_since(base.instant);
         if let Ok(d) = PRTime::try_from(delta.as_micros()) {
-            d.checked_add(base.prtime).ok_or(Error::TimeTravelError)
+            d.checked_add(base.prtime)
+                .map_or(Err(Error::TimeTravelError), Ok)
         } else {
             Err(Error::TimeTravelError)
         }

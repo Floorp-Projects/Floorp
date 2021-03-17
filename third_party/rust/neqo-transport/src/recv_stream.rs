@@ -12,89 +12,23 @@ use std::cmp::max;
 use std::collections::BTreeMap;
 use std::convert::TryFrom;
 use std::mem;
+use std::ops::Bound::{Included, Unbounded};
 use std::rc::Rc;
 
 use smallvec::SmallVec;
 
 use crate::events::ConnectionEvents;
-use crate::fc::ReceiverFlowControl;
 use crate::flow_mgr::FlowMgr;
-use crate::frame::{write_varint_frame, FRAME_TYPE_STOP_SENDING};
-use crate::packet::PacketBuilder;
-use crate::recovery::RecoveryToken;
-use crate::send_stream::SendStreams;
-use crate::stats::FrameStats;
 use crate::stream_id::StreamId;
 use crate::{AppError, Error, Res};
-use neqo_common::{qtrace, Role};
+use neqo_common::qtrace;
 
 const RX_STREAM_DATA_WINDOW: u64 = 0x10_0000; // 1MiB
 
 // Export as usize for consistency with SEND_BUFFER_SIZE
 pub const RECV_BUFFER_SIZE: usize = RX_STREAM_DATA_WINDOW as usize;
 
-#[derive(Debug, Default)]
-pub(crate) struct RecvStreams(BTreeMap<StreamId, RecvStream>);
-
-impl RecvStreams {
-    pub fn write_frames(
-        &mut self,
-        builder: &mut PacketBuilder,
-        tokens: &mut Vec<RecoveryToken>,
-        stats: &mut FrameStats,
-    ) -> Res<()> {
-        for stream in self.0.values_mut() {
-            stream.write_frame(builder, tokens, stats)?;
-            if builder.remaining() < 2 {
-                return Ok(());
-            }
-        }
-        Ok(())
-    }
-
-    pub fn insert(&mut self, id: StreamId, stream: RecvStream) {
-        self.0.insert(id, stream);
-    }
-
-    pub fn get_mut(&mut self, id: StreamId) -> Res<&mut RecvStream> {
-        self.0.get_mut(&id).ok_or(Error::InvalidStreamId)
-    }
-
-    pub fn clear(&mut self) {
-        self.0.clear();
-    }
-
-    pub fn clear_terminal(&mut self, send_streams: &SendStreams, role: Role) -> (u64, u64) {
-        let recv_to_remove = self
-            .0
-            .iter()
-            .filter_map(|(id, stream)| {
-                // Remove all streams for which the receiving is done (or aborted).
-                // But only if they are unidirectional, or we have finished sending.
-                if stream.is_terminal() && (id.is_uni() || !send_streams.exists(*id)) {
-                    Some(*id)
-                } else {
-                    None
-                }
-            })
-            .collect::<Vec<_>>();
-
-        let mut removed_bidi = 0;
-        let mut removed_uni = 0;
-        for id in &recv_to_remove {
-            self.0.remove(&id);
-            if id.is_remote_initiated(role) {
-                if id.is_bidi() {
-                    removed_bidi += 1;
-                } else {
-                    removed_uni += 1;
-                }
-            }
-        }
-
-        (removed_bidi, removed_uni)
-    }
-}
+pub(crate) type RecvStreams = BTreeMap<StreamId, RecvStream>;
 
 /// Holds data not yet read by application. Orders and dedupes data ranges
 /// from incoming STREAM frames.
@@ -135,8 +69,10 @@ impl RxStreamOrderer {
             return;
         }
 
-        let extend = if let Some((&prev_start, prev_vec)) =
-            self.data_ranges.range_mut(..=new_start).next_back()
+        let extend = if let Some((&prev_start, prev_vec)) = self
+            .data_ranges
+            .range_mut((Unbounded, Included(new_start)))
+            .next_back()
         {
             let prev_end = prev_start + u64::try_from(prev_vec.len()).unwrap();
             if new_end > prev_end {
@@ -214,7 +150,7 @@ impl RxStreamOrderer {
             if extend {
                 let (_, buf) = self
                     .data_ranges
-                    .range_mut(..=new_start)
+                    .range_mut((Unbounded, Included(new_start)))
                     .next_back()
                     .unwrap();
                 buf.extend_from_slice(to_add);
@@ -334,8 +270,9 @@ impl RxStreamOrderer {
 // Because a dead_code warning is easier than clippy::unused_self, see https://github.com/rust-lang/rust/issues/68408
 enum RecvStreamState {
     Recv {
-        fc: ReceiverFlowControl<StreamId>,
         recv_buf: RxStreamOrderer,
+        max_bytes: u64, // Maximum size of recv_buf
+        max_stream_data: u64,
     },
     SizeKnown {
         recv_buf: RxStreamOrderer,
@@ -345,19 +282,16 @@ enum RecvStreamState {
         recv_buf: RxStreamOrderer,
     },
     DataRead,
-    AbortReading {
-        frame_needed: bool,
-        err: AppError,
-    },
     ResetRecvd,
     // Defined by spec but we don't use it: ResetRead
 }
 
 impl RecvStreamState {
-    fn new(max_bytes: u64, stream_id: StreamId) -> Self {
+    fn new(max_bytes: u64) -> Self {
         Self::Recv {
-            fc: ReceiverFlowControl::new(stream_id, max_bytes),
             recv_buf: RxStreamOrderer::new(),
+            max_bytes,
+            max_stream_data: max_bytes,
         }
     }
 
@@ -367,7 +301,6 @@ impl RecvStreamState {
             Self::SizeKnown { .. } => "SizeKnown",
             Self::DataRecvd { .. } => "DataRecvd",
             Self::DataRead => "DataRead",
-            Self::AbortReading { .. } => "AbortReading",
             Self::ResetRecvd => "ResetRecvd",
         }
     }
@@ -377,13 +310,22 @@ impl RecvStreamState {
             Self::Recv { recv_buf, .. }
             | Self::SizeKnown { recv_buf, .. }
             | Self::DataRecvd { recv_buf } => Some(recv_buf),
-            Self::DataRead | Self::AbortReading { .. } | Self::ResetRecvd => None,
+            Self::DataRead | Self::ResetRecvd => None,
         }
     }
 
     fn final_size(&self) -> Option<u64> {
         match self {
             Self::SizeKnown { final_size, .. } => Some(*final_size),
+            _ => None,
+        }
+    }
+
+    fn max_stream_data(&self) -> Option<u64> {
+        match self {
+            Self::Recv {
+                max_stream_data, ..
+            } => Some(*max_stream_data),
             _ => None,
         }
     }
@@ -407,7 +349,7 @@ impl RecvStream {
     ) -> Self {
         Self {
             stream_id,
-            state: RecvStreamState::new(max_stream_data, stream_id),
+            state: RecvStreamState::new(max_stream_data),
             flow_mgr,
             conn_events,
         }
@@ -424,6 +366,12 @@ impl RecvStream {
             self.state.name(),
             new_state.name()
         );
+
+        if let RecvStreamState::Recv { .. } = &self.state {
+            self.flow_mgr
+                .borrow_mut()
+                .clear_max_stream_data(self.stream_id)
+        }
 
         if let RecvStreamState::DataRead = new_state {
             self.conn_events.recv_stream_complete(self.stream_id);
@@ -446,9 +394,13 @@ impl RecvStream {
         }
 
         match &mut self.state {
-            RecvStreamState::Recv { recv_buf, fc, .. } => {
-                if !fc.check_allowed(new_end) {
-                    qtrace!("Stream RX window exceeded: {}", new_end);
+            RecvStreamState::Recv {
+                recv_buf,
+                max_stream_data,
+                ..
+            } => {
+                if new_end > *max_stream_data {
+                    qtrace!("Stream RX window {} exceeded: {}", max_stream_data, new_end);
                     return Err(Error::FlowControlError);
                 }
 
@@ -484,7 +436,6 @@ impl RecvStream {
             }
             RecvStreamState::DataRecvd { .. }
             | RecvStreamState::DataRead
-            | RecvStreamState::AbortReading { .. }
             | RecvStreamState::ResetRecvd => {
                 qtrace!("data received when we are in state {}", self.state.name())
             }
@@ -499,9 +450,7 @@ impl RecvStream {
 
     pub fn reset(&mut self, application_error_code: AppError) {
         match self.state {
-            RecvStreamState::Recv { .. }
-            | RecvStreamState::SizeKnown { .. }
-            | RecvStreamState::AbortReading { .. } => {
+            RecvStreamState::Recv { .. } | RecvStreamState::SizeKnown { .. } => {
                 self.conn_events
                     .recv_stream_reset(self.stream_id, application_error_code);
                 self.set_state(RecvStreamState::ResetRecvd);
@@ -515,18 +464,29 @@ impl RecvStream {
     /// If we should tell the sender they have more credit, return an offset
     pub fn maybe_send_flowc_update(&mut self) {
         // Only ever needed if actively receiving and not in SizeKnown state
-        if let RecvStreamState::Recv { fc, recv_buf } = &mut self.state {
-            fc.retired(recv_buf.retired());
+        if let RecvStreamState::Recv {
+            max_bytes,
+            max_stream_data,
+            recv_buf,
+        } = &mut self.state
+        {
+            // Algo: send an update if app has consumed more than half
+            // the data in the current window
+            // TODO(agrover@mozilla.com): This algo is not great but
+            // should prevent Silly Window Syndrome. Spec refers to using
+            // highest seen offset somehow? RTT maybe?
+            let maybe_new_max = recv_buf.retired() + *max_bytes;
+            if maybe_new_max > (*max_bytes / 2) + *max_stream_data {
+                *max_stream_data = maybe_new_max;
+                self.flow_mgr
+                    .borrow_mut()
+                    .max_stream_data(self.stream_id, maybe_new_max)
+            }
         }
     }
 
-    /// Send a flow control update.
-    /// This is used when a peer declares that they are blocked.
-    /// This sends `MAX_STREAM_DATA` if there is any increase possible.
-    pub fn send_flowc_update(&mut self) {
-        if let RecvStreamState::Recv { fc, .. } = &mut self.state {
-            fc.send_flowc_update();
-        }
+    pub fn max_stream_data(&self) -> Option<u64> {
+        self.state.max_stream_data()
     }
 
     pub fn is_terminal(&self) -> bool {
@@ -561,9 +521,7 @@ impl RecvStream {
                 }
                 Ok((bytes_read, fin_read))
             }
-            RecvStreamState::DataRead
-            | RecvStreamState::AbortReading { .. }
-            | RecvStreamState::ResetRecvd => Err(Error::NoMoreData),
+            RecvStreamState::DataRead | RecvStreamState::ResetRecvd => Err(Error::NoMoreData),
         };
         self.maybe_send_flowc_update();
         res
@@ -573,74 +531,13 @@ impl RecvStream {
         qtrace!("stop_sending called when in state {}", self.state.name());
         match &self.state {
             RecvStreamState::Recv { .. } | RecvStreamState::SizeKnown { .. } => {
-                self.set_state(RecvStreamState::AbortReading {
-                    frame_needed: true,
-                    err,
-                })
+                self.set_state(RecvStreamState::ResetRecvd);
+                self.flow_mgr.borrow_mut().stop_sending(self.stream_id, err)
             }
             RecvStreamState::DataRecvd { .. } => self.set_state(RecvStreamState::DataRead),
-            RecvStreamState::DataRead
-            | RecvStreamState::AbortReading { .. }
-            | RecvStreamState::ResetRecvd => {
+            RecvStreamState::DataRead | RecvStreamState::ResetRecvd => {
                 // Already in terminal state
             }
-        }
-    }
-
-    /// Maybe write a `MAX_STREAM_DATA` frame.
-    pub fn write_frame(
-        &mut self,
-        builder: &mut PacketBuilder,
-        tokens: &mut Vec<RecoveryToken>,
-        stats: &mut FrameStats,
-    ) -> Res<()> {
-        match &mut self.state {
-            // Maybe send MAX_STREAM_DATA
-            RecvStreamState::Recv { fc, .. } => fc.write_frames(builder, tokens, stats)?,
-            // Maybe send STOP_SENDING
-            RecvStreamState::AbortReading { frame_needed, err } => {
-                if *frame_needed
-                    && write_varint_frame(
-                        builder,
-                        &[FRAME_TYPE_STOP_SENDING, self.stream_id.as_u64(), *err],
-                    )?
-                {
-                    tokens.push(RecoveryToken::StopSending {
-                        stream_id: self.stream_id,
-                    });
-                    stats.stop_sending += 1;
-                    *frame_needed = false;
-                }
-            }
-            _ => {}
-        }
-        Ok(())
-    }
-
-    pub fn max_stream_data_lost(&mut self, maximum_data: u64) {
-        if let RecvStreamState::Recv { fc, .. } = &mut self.state {
-            fc.lost(maximum_data);
-        }
-    }
-
-    pub fn stop_sending_lost(&mut self) {
-        if let RecvStreamState::AbortReading { frame_needed, .. } = &mut self.state {
-            *frame_needed = true;
-        }
-    }
-
-    pub fn stop_sending_acked(&mut self) {
-        if let RecvStreamState::AbortReading { .. } = &mut self.state {
-            self.set_state(RecvStreamState::ResetRecvd);
-        }
-    }
-
-    #[cfg(test)]
-    pub fn has_frames_to_write(&self) -> bool {
-        if let RecvStreamState::Recv { fc, .. } = &self.state {
-            fc.max_data_needed().is_some()
-        } else {
-            false
         }
     }
 }
@@ -648,7 +545,7 @@ impl RecvStream {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use neqo_common::Encoder;
+    use crate::frame::Frame;
     use std::ops::Range;
 
     fn recv_ranges(ranges: &[Range<u64>], available: usize) {
@@ -1083,26 +980,23 @@ mod tests {
         let mut buf = vec![0u8; RECV_BUFFER_SIZE + 100]; // Make it overlarge
 
         s.maybe_send_flowc_update();
-        assert!(!s.has_frames_to_write());
+        assert_eq!(s.flow_mgr.borrow().peek(), None);
         s.inbound_stream_frame(false, 0, &frame1).unwrap();
         s.maybe_send_flowc_update();
-        assert!(!s.has_frames_to_write());
+        assert_eq!(s.flow_mgr.borrow().peek(), None);
         assert_eq!(s.read(&mut buf).unwrap(), (RECV_BUFFER_SIZE, false));
         assert_eq!(s.data_ready(), false);
         s.maybe_send_flowc_update();
 
         // flow msg generated!
-        assert!(s.has_frames_to_write());
+        assert!(s.flow_mgr.borrow().peek().is_some());
 
         // consume it
-        let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
-        let mut token = Vec::new();
-        s.write_frame(&mut builder, &mut token, &mut FrameStats::default())
-            .unwrap();
+        s.flow_mgr.borrow_mut().next().unwrap();
 
         // it should be gone
         s.maybe_send_flowc_update();
-        assert!(!s.has_frames_to_write());
+        assert_eq!(s.flow_mgr.borrow().peek(), None);
     }
 
     #[test]
@@ -1119,7 +1013,7 @@ mod tests {
         );
 
         s.maybe_send_flowc_update();
-        assert!(!s.has_frames_to_write());
+        assert_eq!(s.flow_mgr.borrow().peek(), None);
         s.inbound_stream_frame(false, 0, &frame1).unwrap();
         s.inbound_stream_frame(false, RX_STREAM_DATA_WINDOW, &[1; 1])
             .unwrap_err();
@@ -1175,11 +1069,42 @@ mod tests {
         );
 
         s.inbound_stream_frame(false, 0, &frame1).unwrap();
-        let mut buf = [0; RECV_BUFFER_SIZE];
-        s.read(&mut buf).unwrap();
-        assert!(s.has_frames_to_write());
+        flow_mgr.borrow_mut().max_stream_data(stream_id, 100);
+        assert!(matches!(s.flow_mgr.borrow().peek().unwrap(), Frame::MaxStreamData{..}));
         s.inbound_stream_frame(true, RX_STREAM_DATA_WINDOW, &[])
             .unwrap();
-        assert!(!s.has_frames_to_write());
+        assert!(matches!(s.flow_mgr.borrow().peek(), None));
+    }
+
+    #[test]
+    fn resend_flowc_if_lost() {
+        let flow_mgr = Rc::new(RefCell::new(FlowMgr::default()));
+        let conn_events = ConnectionEvents::default();
+
+        let frame1 = &[0; RECV_BUFFER_SIZE];
+        let stream_id = StreamId::from(67);
+        let mut s = RecvStream::new(
+            stream_id,
+            RX_STREAM_DATA_WINDOW,
+            Rc::clone(&flow_mgr),
+            conn_events,
+        );
+
+        // A flow control update is queued
+        s.inbound_stream_frame(false, 0, frame1).unwrap();
+        flow_mgr.borrow_mut().max_stream_data(stream_id, 100);
+        // Generates frame
+        assert!(matches!(
+            s.flow_mgr.borrow_mut().next().unwrap(),
+            Frame::MaxStreamData { .. }
+        ));
+        // Nothing else queued
+        assert!(matches!(s.flow_mgr.borrow().peek(), None));
+        // Asking for another one won't get you one
+        s.maybe_send_flowc_update();
+        assert!(matches!(s.flow_mgr.borrow().peek(), None));
+        // But if lost, another frame is generated
+        flow_mgr.borrow_mut().max_stream_data(stream_id, 100);
+        assert!(matches!(s.flow_mgr.borrow_mut().next().unwrap(), Frame::MaxStreamData{..}));
     }
 }

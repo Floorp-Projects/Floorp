@@ -7,128 +7,27 @@
 // Buffering data to send until it is acked.
 
 use std::cell::RefCell;
-use std::cmp::{max, min, Ordering};
+use std::cmp::{max, min};
 use std::collections::{BTreeMap, VecDeque};
-use std::convert::TryFrom;
+use std::convert::{TryFrom, TryInto};
 use std::mem;
-use std::ops::Add;
 use std::rc::Rc;
 
 use indexmap::IndexMap;
 use smallvec::SmallVec;
 
-use neqo_common::{qdebug, qerror, qinfo, qtrace, Encoder, Role};
+use neqo_common::{qdebug, qerror, qinfo, qtrace, Encoder};
 
 use crate::events::ConnectionEvents;
-use crate::fc::SenderFlowControl;
-use crate::frame::{write_varint_frame, Frame, FRAME_TYPE_RESET_STREAM};
+use crate::flow_mgr::FlowMgr;
+use crate::frame::Frame;
 use crate::packet::PacketBuilder;
 use crate::recovery::RecoveryToken;
 use crate::stats::FrameStats;
 use crate::stream_id::StreamId;
-use crate::tparams::{self, TransportParameters};
 use crate::{AppError, Error, Res};
 
 pub const SEND_BUFFER_SIZE: usize = 0x10_0000; // 1 MiB
-
-/// The priority that is assigned to sending data for the stream.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum TransmissionPriority {
-    /// This stream is more important than the functioning of the connection.
-    /// Don't use this priority unless the stream really is that important.
-    /// A stream at this priority can starve out other connection functions,
-    /// including flow control, which could be very bad.
-    Critical,
-    /// The stream is very important.  Stream data will be written ahead of
-    /// some of the less critical connection functions, like path validation,
-    /// connection ID management, and session tickets.
-    Important,
-    /// High priority streams are important, but not enough to disrupt
-    /// connection operation.  They go ahead of session tickets though.
-    High,
-    /// The default priority.
-    Normal,
-    /// Low priority streams get sent last.
-    Low,
-}
-
-impl Default for TransmissionPriority {
-    fn default() -> Self {
-        Self::Normal
-    }
-}
-
-impl PartialOrd for TransmissionPriority {
-    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for TransmissionPriority {
-    fn cmp(&self, other: &Self) -> Ordering {
-        if self == other {
-            return Ordering::Equal;
-        }
-        match (self, other) {
-            (Self::Critical, _) => Ordering::Greater,
-            (_, Self::Critical) => Ordering::Less,
-            (Self::Important, _) => Ordering::Greater,
-            (_, Self::Important) => Ordering::Less,
-            (Self::High, _) => Ordering::Greater,
-            (_, Self::High) => Ordering::Less,
-            (Self::Normal, _) => Ordering::Greater,
-            (_, Self::Normal) => Ordering::Less,
-            _ => unreachable!(),
-        }
-    }
-}
-
-impl Add<RetransmissionPriority> for TransmissionPriority {
-    type Output = Self;
-    fn add(self, rhs: RetransmissionPriority) -> Self::Output {
-        match rhs {
-            RetransmissionPriority::Fixed(fixed) => fixed,
-            RetransmissionPriority::Same => self,
-            RetransmissionPriority::Higher => match self {
-                Self::Critical => Self::Critical,
-                Self::Important | Self::High => Self::Important,
-                Self::Normal => Self::High,
-                Self::Low => Self::Normal,
-            },
-            RetransmissionPriority::MuchHigher => match self {
-                Self::Critical | Self::Important => Self::Critical,
-                Self::High | Self::Normal => Self::Important,
-                Self::Low => Self::High,
-            },
-        }
-    }
-}
-
-/// If data is lost, this determines the priority that applies to retransmissions
-/// of that data.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum RetransmissionPriority {
-    /// Prioritize retransmission at a fixed priority.
-    /// With this, it is possible to prioritize retransmissions lower than transmissions.
-    /// Doing that can create a deadlock with flow control which might cause the connection
-    /// to stall unless new data stops arriving fast enough that retransmissions can complete.
-    Fixed(TransmissionPriority),
-    /// Don't increase priority for retransmission.  This is probably not a good idea
-    /// as it could mean starving flow control.
-    Same,
-    /// Increase the priority of retransmissions (the default).
-    /// Retransmissions of `Critical` or `Important` aren't elevated at all.
-    Higher,
-    /// Increase the priority of retransmissions a lot.
-    /// This is useful for streams that are particularly exposed to head-of-line blocking.
-    MuchHigher,
-}
-
-impl Default for RetransmissionPriority {
-    fn default() -> Self {
-        Self::Higher
-    }
-}
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 enum RangeState {
@@ -465,6 +364,10 @@ impl TxBuffer {
         self.ranges.unmark_sent();
     }
 
+    fn data_limit(&self) -> u64 {
+        self.buffered() as u64 + self.retired
+    }
+
     fn buffered(&self) -> usize {
         self.send_buf.len()
     }
@@ -473,66 +376,71 @@ impl TxBuffer {
         SEND_BUFFER_SIZE - self.buffered()
     }
 
-    fn used(&self) -> u64 {
-        self.retired + u64::try_from(self.buffered()).unwrap()
+    pub fn highest_sent(&self) -> u64 {
+        self.ranges.highest_offset()
     }
 }
 
 /// QUIC sending stream states, based on -transport 3.1.
-#[derive(Debug)]
-pub(crate) enum SendStreamState {
-    Ready {
-        fc: SenderFlowControl<StreamId>,
-        conn_fc: Rc<RefCell<SenderFlowControl<()>>>,
-    },
+#[derive(Debug, PartialEq)]
+enum SendStreamState {
+    Ready,
     Send {
-        fc: SenderFlowControl<StreamId>,
-        conn_fc: Rc<RefCell<SenderFlowControl<()>>>,
         send_buf: TxBuffer,
     },
-    // Note: `DataSent` is entered when the stream is closed, not when all data has been
-    // sent for the first time.
     DataSent {
         send_buf: TxBuffer,
+        final_size: u64,
         fin_sent: bool,
         fin_acked: bool,
     },
-    DataRecvd,
-    ResetSent {
-        err: AppError,
+    DataRecvd {
         final_size: u64,
-        priority: Option<TransmissionPriority>,
     },
+    ResetSent,
     ResetRecvd,
 }
 
 impl SendStreamState {
-    fn tx_buf_mut(&mut self) -> Option<&mut TxBuffer> {
+    fn tx_buf(&self) -> Option<&TxBuffer> {
         match self {
-            Self::Send { send_buf, .. } | Self::DataSent { send_buf, .. } => Some(send_buf),
-            Self::Ready { .. }
-            | Self::DataRecvd { .. }
-            | Self::ResetSent { .. }
-            | Self::ResetRecvd => None,
+            Self::Send { send_buf } | Self::DataSent { send_buf, .. } => Some(send_buf),
+            Self::Ready | Self::DataRecvd { .. } | Self::ResetSent | Self::ResetRecvd => None,
         }
     }
 
-    fn tx_avail(&self) -> usize {
+    fn tx_buf_mut(&mut self) -> Option<&mut TxBuffer> {
+        match self {
+            Self::Send { send_buf } | Self::DataSent { send_buf, .. } => Some(send_buf),
+            Self::Ready | Self::DataRecvd { .. } | Self::ResetSent | Self::ResetRecvd => None,
+        }
+    }
+
+    fn tx_avail(&self) -> u64 {
         match self {
             // In Ready, TxBuffer not yet allocated but size is known
-            Self::Ready { .. } => SEND_BUFFER_SIZE,
-            Self::Send { send_buf, .. } | Self::DataSent { send_buf, .. } => send_buf.avail(),
-            Self::DataRecvd { .. } | Self::ResetSent { .. } | Self::ResetRecvd => 0,
+            Self::Ready => SEND_BUFFER_SIZE.try_into().unwrap(),
+            Self::Send { send_buf } | Self::DataSent { send_buf, .. } => {
+                send_buf.avail().try_into().unwrap()
+            }
+            Self::DataRecvd { .. } | Self::ResetSent | Self::ResetRecvd => 0,
+        }
+    }
+
+    fn final_size(&self) -> Option<u64> {
+        match self {
+            Self::DataSent { final_size, .. } | Self::DataRecvd { final_size } => Some(*final_size),
+            Self::Ready | Self::Send { .. } | Self::ResetSent | Self::ResetRecvd => None,
         }
     }
 
     fn name(&self) -> &str {
         match self {
-            Self::Ready { .. } => "Ready",
+            Self::Ready => "Ready",
             Self::Send { .. } => "Send",
             Self::DataSent { .. } => "DataSent",
             Self::DataRecvd { .. } => "DataRecvd",
-            Self::ResetSent { .. } => "ResetSent",
+            Self::ResetSent => "ResetSent",
             Self::ResetRecvd => "ResetRecvd",
         }
     }
@@ -547,30 +455,25 @@ impl SendStreamState {
 #[derive(Debug)]
 pub struct SendStream {
     stream_id: StreamId,
+    max_stream_data: u64,
     state: SendStreamState,
+    flow_mgr: Rc<RefCell<FlowMgr>>,
     conn_events: ConnectionEvents,
-    priority: TransmissionPriority,
-    retransmission_priority: RetransmissionPriority,
-    retransmission_offset: u64,
 }
 
 impl SendStream {
     pub fn new(
         stream_id: StreamId,
         max_stream_data: u64,
-        conn_fc: Rc<RefCell<SenderFlowControl<()>>>,
+        flow_mgr: Rc<RefCell<FlowMgr>>,
         conn_events: ConnectionEvents,
     ) -> Self {
         let ss = Self {
             stream_id,
-            state: SendStreamState::Ready {
-                fc: SenderFlowControl::new(stream_id, max_stream_data),
-                conn_fc,
-            },
+            max_stream_data,
+            state: SendStreamState::Ready,
+            flow_mgr,
             conn_events,
-            priority: TransmissionPriority::default(),
-            retransmission_priority: RetransmissionPriority::default(),
-            retransmission_offset: 0,
         };
         if ss.avail() > 0 {
             ss.conn_events.send_stream_writable(stream_id);
@@ -578,69 +481,30 @@ impl SendStream {
         ss
     }
 
-    pub fn set_priority(
-        &mut self,
-        transmission: TransmissionPriority,
-        retransmission: RetransmissionPriority,
-    ) {
-        self.priority = transmission;
-        self.retransmission_priority = retransmission;
-    }
-
-    /// If all data has been buffered or written, how much was sent.
-    pub fn final_size(&self) -> Option<u64> {
-        match &self.state {
-            SendStreamState::DataSent { send_buf, .. } => Some(send_buf.used()),
-            SendStreamState::ResetSent { final_size, .. } => Some(*final_size),
-            _ => None,
-        }
-    }
-
     /// Return the next range to be sent, if any.
-    /// If this is a retransmission, cut off what is sent at the retransmission
-    /// offset.
-    fn next_bytes(&mut self, retransmission_only: bool) -> Option<(u64, &[u8])> {
+    pub fn next_bytes(&mut self) -> Option<(u64, &[u8])> {
         match self.state {
-            SendStreamState::Send { ref send_buf, .. } => {
-                send_buf.next_bytes().and_then(|(offset, slice)| {
-                    if retransmission_only {
-                        qtrace!(
-                            [self],
-                            "next_bytes apply retransmission limit at {}",
-                            self.retransmission_offset
-                        );
-                        if self.retransmission_offset > offset {
-                            let len = min(
-                                usize::try_from(self.retransmission_offset - offset).unwrap(),
-                                slice.len(),
-                            );
-                            Some((offset, &slice[..len]))
-                        } else {
-                            None
-                        }
-                    } else {
-                        Some((offset, slice))
-                    }
-                })
-            }
+            SendStreamState::Send { ref send_buf } => send_buf.next_bytes(),
             SendStreamState::DataSent {
                 ref send_buf,
                 fin_sent,
+                final_size,
                 ..
             } => {
                 let bytes = send_buf.next_bytes();
                 if bytes.is_some() {
+                    // Must be a resend
                     bytes
                 } else if fin_sent {
                     None
                 } else {
                     // Send empty stream frame with fin set
-                    Some((send_buf.used(), &[]))
+                    Some((final_size, &[]))
                 }
             }
-            SendStreamState::Ready { .. }
+            SendStreamState::Ready
             | SendStreamState::DataRecvd { .. }
-            | SendStreamState::ResetSent { .. }
+            | SendStreamState::ResetSent
             | SendStreamState::ResetRecvd => None,
         }
     }
@@ -672,25 +536,10 @@ impl SendStream {
         (length, false)
     }
 
-    /// Maybe write a `STREAM` frame.
-    fn write_stream_frame(
-        &mut self,
-        priority: TransmissionPriority,
-        builder: &mut PacketBuilder,
-        tokens: &mut Vec<RecoveryToken>,
-        stats: &mut FrameStats,
-    ) -> Res<()> {
-        let retransmission = if priority == self.priority {
-            false
-        } else if priority == self.priority + self.retransmission_priority {
-            true
-        } else {
-            return Ok(());
-        };
-
+    pub fn write_frame(&mut self, builder: &mut PacketBuilder) -> Res<Option<RecoveryToken>> {
         let id = self.stream_id;
         let final_size = self.final_size();
-        if let Some((offset, data)) = self.next_bytes(retransmission) {
+        if let Some((offset, data)) = self.next_bytes() {
             let overhead = 1 // Frame type
                 + Encoder::varint_len(id.as_u64())
                 + if offset > 0 {
@@ -699,15 +548,15 @@ impl SendStream {
                     0
                 };
             if overhead > builder.remaining() {
-                qtrace!([self], "write_frame no space for header");
-                return Ok(());
+                qtrace!("SendStream::write_frame no space for header");
+                return Ok(None);
             }
 
             let (length, fill) = Self::length_and_fill(data.len(), builder.remaining() - overhead);
             let fin = final_size.map_or(false, |fs| fs == offset + u64::try_from(length).unwrap());
             if length == 0 && !fin {
-                qtrace!([self], "write_frame no data, no fin");
-                return Ok(());
+                qtrace!("SendStream::write_frame no data, no fin");
+                return Ok(None);
             }
 
             // Write the stream out.
@@ -727,111 +576,14 @@ impl SendStream {
             }
 
             self.mark_as_sent(offset, length, fin);
-            tokens.push(RecoveryToken::Stream(StreamRecoveryToken {
+            Ok(Some(RecoveryToken::Stream(StreamRecoveryToken {
                 id,
                 offset,
                 length,
                 fin,
-            }));
-            stats.stream += 1;
-        }
-        Ok(())
-    }
-
-    pub fn reset_acked(&mut self) {
-        match self.state {
-            SendStreamState::Ready { .. }
-            | SendStreamState::Send { .. }
-            | SendStreamState::DataSent { .. }
-            | SendStreamState::DataRecvd { .. } => {
-                qtrace!([self], "Reset acked while in {} state?", self.state.name())
-            }
-            SendStreamState::ResetSent { .. } => self.state.transition(SendStreamState::ResetRecvd),
-            SendStreamState::ResetRecvd => qtrace!([self], "already in ResetRecvd state"),
-        };
-    }
-
-    pub fn reset_lost(&mut self) {
-        match self.state {
-            SendStreamState::ResetSent {
-                ref mut priority, ..
-            } => {
-                *priority = Some(self.priority + self.retransmission_priority);
-            }
-            SendStreamState::ResetRecvd => (),
-            _ => unreachable!(),
-        }
-    }
-
-    /// Maybe write a `RESET_STREAM` frame.
-    pub fn write_reset_frame(
-        &mut self,
-        p: TransmissionPriority,
-        builder: &mut PacketBuilder,
-        tokens: &mut Vec<RecoveryToken>,
-        stats: &mut FrameStats,
-    ) -> Res<bool> {
-        if let SendStreamState::ResetSent {
-            final_size,
-            err,
-            ref mut priority,
-        } = self.state
-        {
-            if *priority != Some(p) {
-                return Ok(false);
-            }
-            if write_varint_frame(
-                builder,
-                &[
-                    FRAME_TYPE_RESET_STREAM,
-                    self.stream_id.as_u64(),
-                    err,
-                    final_size,
-                ],
-            )? {
-                tokens.push(RecoveryToken::ResetStream {
-                    stream_id: self.stream_id,
-                });
-                stats.reset_stream += 1;
-                *priority = None;
-                Ok(true)
-            } else {
-                Ok(false)
-            }
+            })))
         } else {
-            Ok(false)
-        }
-    }
-
-    pub fn blocked_lost(&mut self, limit: u64) {
-        if let SendStreamState::Ready { fc, .. } | SendStreamState::Send { fc, .. } =
-            &mut self.state
-        {
-            fc.lost(limit);
-        } else {
-            qtrace!([self], "Ignoring lost STREAM_DATA_BLOCKED({})", limit);
-        }
-    }
-
-    /// Maybe write a `STREAM_DATA_BLOCKED` frame.
-    pub fn write_blocked_frame(
-        &mut self,
-        priority: TransmissionPriority,
-        builder: &mut PacketBuilder,
-        tokens: &mut Vec<RecoveryToken>,
-        stats: &mut FrameStats,
-    ) -> Res<()> {
-        // Send STREAM_DATA_BLOCKED at normal priority always.
-        if priority == self.priority {
-            if let SendStreamState::Ready { fc, .. } | SendStreamState::Send { fc, .. } =
-                &mut self.state
-            {
-                fc.write_frames(builder, tokens, stats)
-            } else {
-                Ok(())
-            }
-        } else {
-            Ok(())
+            Ok(None)
         }
     }
 
@@ -850,9 +602,7 @@ impl SendStream {
 
     pub fn mark_as_acked(&mut self, offset: u64, len: usize, fin: bool) {
         match self.state {
-            SendStreamState::Send {
-                ref mut send_buf, ..
-            } => {
+            SendStreamState::Send { ref mut send_buf } => {
                 send_buf.mark_as_acked(offset, len);
                 if self.avail() > 0 {
                     self.conn_events.send_stream_writable(self.stream_id)
@@ -860,6 +610,7 @@ impl SendStream {
             }
             SendStreamState::DataSent {
                 ref mut send_buf,
+                final_size,
                 ref mut fin_acked,
                 ..
             } => {
@@ -869,27 +620,15 @@ impl SendStream {
                 }
                 if *fin_acked && send_buf.buffered() == 0 {
                     self.conn_events.send_stream_complete(self.stream_id);
-                    self.state.transition(SendStreamState::DataRecvd);
+                    self.state
+                        .transition(SendStreamState::DataRecvd { final_size });
                 }
             }
-            _ => qtrace!(
-                [self],
-                "mark_as_acked called from state {}",
-                self.state.name()
-            ),
+            _ => qtrace!("mark_as_acked called from state {}", self.state.name()),
         }
     }
 
     pub fn mark_as_lost(&mut self, offset: u64, len: usize, fin: bool) {
-        self.retransmission_offset = max(
-            self.retransmission_offset,
-            offset + u64::try_from(len).unwrap(),
-        );
-        qtrace!(
-            [self],
-            "mark_as_lost retransmission offset={}",
-            self.retransmission_offset
-        );
         if let Some(buf) = self.state.tx_buf_mut() {
             buf.mark_as_lost(offset, len);
         }
@@ -906,38 +645,59 @@ impl SendStream {
         }
     }
 
+    pub fn final_size(&self) -> Option<u64> {
+        self.state.final_size()
+    }
+
+    /// Stream credit available
+    pub fn credit_avail(&self) -> u64 {
+        if self.state == SendStreamState::Ready {
+            self.max_stream_data
+        } else {
+            self.state
+                .tx_buf()
+                .map_or(0, |tx| self.max_stream_data - tx.data_limit())
+        }
+    }
+
     /// Bytes sendable on stream. Constrained by stream credit available,
     /// connection credit available, and space in the tx buffer.
     pub fn avail(&self) -> usize {
-        if let SendStreamState::Ready { fc, conn_fc } | SendStreamState::Send { fc, conn_fc, .. } =
-            &self.state
-        {
-            min(
-                min(fc.available(), conn_fc.borrow().available()),
-                self.state.tx_avail(),
-            )
-        } else {
-            0
+        min(
+            min(self.state.tx_avail(), self.credit_avail()),
+            self.flow_mgr.borrow().conn_credit_avail(),
+        )
+        .try_into()
+        .unwrap()
+    }
+
+    pub fn max_stream_data(&self) -> u64 {
+        self.max_stream_data
+    }
+
+    pub fn set_max_stream_data(&mut self, value: u64) {
+        let stream_was_blocked = self.avail() == 0;
+        self.max_stream_data = max(self.max_stream_data, value);
+        if stream_was_blocked && self.avail() > 0 {
+            self.conn_events.send_stream_writable(self.stream_id)
         }
     }
 
-    pub fn set_max_stream_data(&mut self, limit: u64) {
-        if let SendStreamState::Ready { fc, .. } | SendStreamState::Send { fc, .. } =
-            &mut self.state
-        {
-            let stream_was_blocked = fc.available() == 0;
-            fc.update(limit);
-            if stream_was_blocked && self.avail() > 0 {
-                self.conn_events.send_stream_writable(self.stream_id)
+    pub fn reset_acked(&mut self) {
+        match self.state {
+            SendStreamState::Ready
+            | SendStreamState::Send { .. }
+            | SendStreamState::DataSent { .. }
+            | SendStreamState::DataRecvd { .. } => {
+                qtrace!("Reset acked while in {} state?", self.state.name())
             }
-        }
+            SendStreamState::ResetSent => self.state.transition(SendStreamState::ResetRecvd),
+            SendStreamState::ResetRecvd => qtrace!("already in ResetRecvd state"),
+        };
     }
 
     pub fn is_terminal(&self) -> bool {
-        matches!(
-            self.state,
-            SendStreamState::DataRecvd { .. } | SendStreamState::ResetRecvd
-        )
+        matches!(self.state, SendStreamState::DataRecvd { .. } | SendStreamState::ResetRecvd)
     }
 
     pub fn send(&mut self, buf: &[u8]) -> Res<usize> {
@@ -948,37 +708,31 @@ impl SendStream {
         self.send_internal(buf, true)
     }
 
-    fn send_blocked_if_space_needed(&mut self, needed_space: usize) {
-        if let SendStreamState::Ready { fc, conn_fc } | SendStreamState::Send { fc, conn_fc, .. } =
-            &mut self.state
-        {
-            if fc.available() <= needed_space {
-                fc.blocked();
-            }
+    fn send_blocked_if_space_needed(&mut self, needed_space: u64) {
+        if self.credit_avail() <= needed_space {
+            self.flow_mgr
+                .borrow_mut()
+                .stream_data_blocked(self.stream_id, self.max_stream_data);
+        }
 
-            if conn_fc.borrow().available() <= needed_space {
-                conn_fc.borrow_mut().blocked();
-            }
+        if self.flow_mgr.borrow().conn_credit_avail() <= needed_space {
+            self.flow_mgr.borrow_mut().data_blocked();
         }
     }
 
     fn send_internal(&mut self, buf: &[u8], atomic: bool) -> Res<usize> {
         if buf.is_empty() {
-            qerror!([self], "zero-length send on stream");
+            qerror!("zero-length send on stream {}", self.stream_id.as_u64());
             return Err(Error::InvalidInput);
         }
 
-        if let SendStreamState::Ready { fc, conn_fc } = &mut self.state {
-            let owned_fc = mem::replace(fc, SenderFlowControl::new(self.stream_id, 0));
-            let owned_conn_fc = Rc::clone(conn_fc);
+        if let SendStreamState::Ready = self.state {
             self.state.transition(SendStreamState::Send {
-                fc: owned_fc,
-                conn_fc: owned_conn_fc,
                 send_buf: TxBuffer::new(),
             });
         }
 
-        if !matches!(self.state, SendStreamState::Send { .. }) {
+        if !matches!(self.state, SendStreamState::Send{..}) {
             return Err(Error::FinalSizeError);
         }
 
@@ -986,7 +740,7 @@ impl SendStream {
             return Ok(0);
         } else if self.avail() < buf.len() {
             if atomic {
-                self.send_blocked_if_space_needed(buf.len());
+                self.send_blocked_if_space_needed(buf.len() as u64);
                 return Ok(0);
             } else {
                 &buf[..self.avail()]
@@ -995,79 +749,75 @@ impl SendStream {
             buf
         };
 
-        match &mut self.state {
-            SendStreamState::Ready { .. } => unreachable!(),
-            SendStreamState::Send {
-                fc,
-                conn_fc,
-                send_buf,
-            } => {
-                let sent = send_buf.send(buf);
-                fc.consume(sent);
-                conn_fc.borrow_mut().consume(sent);
-                Ok(sent)
-            }
-            _ => Err(Error::FinalSizeError),
-        }
+        let sent = match &mut self.state {
+            SendStreamState::Ready => unreachable!(),
+            SendStreamState::Send { send_buf } => send_buf.send(buf),
+            _ => return Err(Error::FinalSizeError),
+        };
+
+        self.flow_mgr
+            .borrow_mut()
+            .conn_increase_credit_used(sent as u64);
+
+        Ok(sent)
     }
 
     pub fn close(&mut self) {
         match &mut self.state {
-            SendStreamState::Ready { .. } => {
+            SendStreamState::Ready => {
                 self.state.transition(SendStreamState::DataSent {
                     send_buf: TxBuffer::new(),
+                    final_size: 0,
                     fin_sent: false,
                     fin_acked: false,
                 });
             }
-            SendStreamState::Send { send_buf, .. } => {
+            SendStreamState::Send { send_buf } => {
+                let final_size = send_buf.retired + send_buf.buffered() as u64;
                 let owned_buf = mem::replace(send_buf, TxBuffer::new());
                 self.state.transition(SendStreamState::DataSent {
                     send_buf: owned_buf,
+                    final_size,
                     fin_sent: false,
                     fin_acked: false,
                 });
             }
-            SendStreamState::DataSent { .. } => qtrace!([self], "already in DataSent state"),
-            SendStreamState::DataRecvd { .. } => qtrace!([self], "already in DataRecvd state"),
-            SendStreamState::ResetSent { .. } => qtrace!([self], "already in ResetSent state"),
-            SendStreamState::ResetRecvd => qtrace!([self], "already in ResetRecvd state"),
+            SendStreamState::DataSent { .. } => qtrace!("already in DataSent state"),
+            SendStreamState::DataRecvd { .. } => qtrace!("already in DataRecvd state"),
+            SendStreamState::ResetSent => qtrace!("already in ResetSent state"),
+            SendStreamState::ResetRecvd => qtrace!("already in ResetRecvd state"),
         }
     }
 
     pub fn reset(&mut self, err: AppError) {
         match &self.state {
-            SendStreamState::Ready { fc, .. } | SendStreamState::Send { fc, .. } => {
-                let final_size = fc.used();
-                self.state.transition(SendStreamState::ResetSent {
-                    err,
-                    final_size,
-                    priority: Some(self.priority),
-                });
+            SendStreamState::Ready => {
+                self.flow_mgr
+                    .borrow_mut()
+                    .stream_reset(self.stream_id, err, 0);
+
+                self.state.transition(SendStreamState::ResetSent);
             }
-            SendStreamState::DataSent { send_buf, .. } => {
-                let final_size = send_buf.used();
-                self.state.transition(SendStreamState::ResetSent {
+            SendStreamState::Send { send_buf } => {
+                self.flow_mgr.borrow_mut().stream_reset(
+                    self.stream_id,
                     err,
-                    final_size,
-                    priority: Some(self.priority),
-                });
+                    send_buf.highest_sent(),
+                );
+
+                self.state.transition(SendStreamState::ResetSent);
             }
-            SendStreamState::DataRecvd { .. } => qtrace!([self], "already in DataRecvd state"),
-            SendStreamState::ResetSent { .. } => qtrace!([self], "already in ResetSent state"),
-            SendStreamState::ResetRecvd => qtrace!([self], "already in ResetRecvd state"),
+            SendStreamState::DataSent { final_size, .. } => {
+                self.flow_mgr
+                    .borrow_mut()
+                    .stream_reset(self.stream_id, err, *final_size);
+
+                self.state.transition(SendStreamState::ResetSent);
+            }
+            SendStreamState::DataRecvd { .. } => qtrace!("already in DataRecvd state"),
+            SendStreamState::ResetSent => qtrace!("already in ResetSent state"),
+            SendStreamState::ResetRecvd => qtrace!("already in ResetRecvd state"),
         };
-    }
-
-    #[cfg(test)]
-    pub(crate) fn state(&mut self) -> &mut SendStreamState {
-        &mut self.state
-    }
-}
-
-impl ::std::fmt::Display for SendStream {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        write!(f, "SendStream {}", self.stream_id)
     }
 }
 
@@ -1109,18 +859,6 @@ impl SendStreams {
         }
     }
 
-    pub fn reset_lost(&mut self, stream_id: StreamId) {
-        if let Some(ss) = self.0.get_mut(&stream_id) {
-            ss.reset_lost();
-        }
-    }
-
-    pub fn blocked_lost(&mut self, stream_id: StreamId, limit: u64) {
-        if let Some(ss) = self.0.get_mut(&stream_id) {
-            ss.blocked_lost(limit);
-        }
-    }
-
     pub fn clear(&mut self) {
         self.0.clear()
     }
@@ -1131,31 +869,17 @@ impl SendStreams {
 
     pub(crate) fn write_frames(
         &mut self,
-        priority: TransmissionPriority,
         builder: &mut PacketBuilder,
         tokens: &mut Vec<RecoveryToken>,
         stats: &mut FrameStats,
     ) -> Res<()> {
-        qtrace!("write STREAM frames at priority {:?}", priority);
-        for stream in self.0.values_mut() {
-            if !stream.write_reset_frame(priority, builder, tokens, stats)? {
-                stream.write_blocked_frame(priority, builder, tokens, stats)?;
-                stream.write_stream_frame(priority, builder, tokens, stats)?;
+        for (_, stream) in self {
+            if let Some(t) = stream.write_frame(builder)? {
+                tokens.push(t);
+                stats.stream += 1;
             }
         }
         Ok(())
-    }
-
-    pub fn update_initial_limit(&mut self, remote: &TransportParameters) {
-        for (id, ss) in self.0.iter_mut() {
-            let limit = if id.is_bidi() {
-                assert!(!id.is_remote_initiated(Role::Client));
-                remote.get_integer(tparams::INITIAL_MAX_STREAM_DATA_BIDI_REMOTE)
-            } else {
-                remote.get_integer(tparams::INITIAL_MAX_STREAM_DATA_UNI)
-            };
-            ss.set_max_stream_data(limit);
-        }
     }
 }
 
@@ -1182,10 +906,6 @@ mod tests {
 
     use crate::events::ConnectionEvent;
     use neqo_common::{event::Provider, hex_with_len, qtrace};
-
-    fn connection_fc(limit: u64) -> Rc<RefCell<SenderFlowControl<()>>> {
-        Rc::new(RefCell::new(SenderFlowControl::new((), limit)))
-    }
 
     #[test]
     fn test_mark_range() {
@@ -1449,19 +1169,16 @@ mod tests {
 
     #[test]
     fn test_stream_tx() {
-        let conn_fc = connection_fc(4096);
+        let flow_mgr = Rc::new(RefCell::new(FlowMgr::default()));
+        flow_mgr.borrow_mut().conn_increase_max_credit(4096);
         let conn_events = ConnectionEvents::default();
 
-        let mut s = SendStream::new(4.into(), 1024, Rc::clone(&conn_fc), conn_events);
+        let mut s = SendStream::new(4.into(), 1024, Rc::clone(&flow_mgr), conn_events);
 
         let res = s.send(&[4; 100]).unwrap();
         assert_eq!(res, 100);
         s.mark_as_sent(0, 50, false);
-        if let SendStreamState::Send { fc, .. } = s.state() {
-            assert_eq!(fc.used(), 100);
-        } else {
-            panic!("unexpected stream state");
-        }
+        assert_eq!(s.state.tx_buf().unwrap().data_limit(), 100);
 
         // Should hit stream flow control limit before filling up send buffer
         let res = s.send(&[4; SEND_BUFFER_SIZE]).unwrap();
@@ -1478,7 +1195,9 @@ mod tests {
         assert_eq!(res, 3072);
 
         // should now hit the tx buffer size
-        conn_fc.borrow_mut().update(SEND_BUFFER_SIZE as u64);
+        flow_mgr
+            .borrow_mut()
+            .conn_increase_max_credit(SEND_BUFFER_SIZE as u64);
         let res = s.send(&[4; SEND_BUFFER_SIZE + 100]).unwrap();
         assert_eq!(res, SEND_BUFFER_SIZE - 4096);
 
@@ -1504,10 +1223,11 @@ mod tests {
 
     #[test]
     fn send_stream_writable_event_gen() {
-        let conn_fc = connection_fc(2);
+        let flow_mgr = Rc::new(RefCell::new(FlowMgr::default()));
+        flow_mgr.borrow_mut().conn_increase_max_credit(2);
         let mut conn_events = ConnectionEvents::default();
 
-        let mut s = SendStream::new(4.into(), 0, Rc::clone(&conn_fc), conn_events.clone());
+        let mut s = SendStream::new(4.into(), 0, Rc::clone(&flow_mgr), conn_events.clone());
 
         // Stream is initially blocked (conn:2, stream:0)
         // and will not accept data.
@@ -1518,10 +1238,7 @@ mod tests {
         s.set_max_stream_data(2);
         let evts = conn_events.events().collect::<Vec<_>>();
         assert_eq!(evts.len(), 1);
-        assert!(matches!(
-            evts[0],
-            ConnectionEvent::SendStreamWritable { .. }
-        ));
+        assert!(matches!(evts[0], ConnectionEvent::SendStreamWritable{..}));
         assert_eq!(s.send(b"hello").unwrap(), 2);
 
         // increasing to (conn:2, stream:4) will not generate an event or allow
@@ -1534,7 +1251,7 @@ mod tests {
         // Increasing conn max (conn:4, stream:4) will unblock but not emit
         // event b/c that happens in Connection::emit_frame() (tested in
         // connection.rs)
-        assert_eq!(conn_fc.borrow_mut().update(4), true);
+        assert_eq!(flow_mgr.borrow_mut().conn_increase_max_credit(4), true);
         let evts = conn_events.events().collect::<Vec<_>>();
         assert_eq!(evts.len(), 0);
         assert_eq!(s.avail(), 2);
@@ -1546,7 +1263,9 @@ mod tests {
         assert_eq!(evts.len(), 0);
 
         // No event because happens in emit_frame()
-        conn_fc.borrow_mut().update(1_000_000_000);
+        flow_mgr
+            .borrow_mut()
+            .conn_increase_max_credit(1_000_000_000);
         let evts = conn_events.events().collect::<Vec<_>>();
         assert_eq!(evts.len(), 0);
 
@@ -1568,28 +1287,27 @@ mod tests {
 
     #[test]
     fn send_stream_writable_event_new_stream() {
-        let conn_fc = connection_fc(2);
+        let flow_mgr = Rc::new(RefCell::new(FlowMgr::default()));
+        flow_mgr.borrow_mut().conn_increase_max_credit(2);
         let mut conn_events = ConnectionEvents::default();
 
-        let _s = SendStream::new(4.into(), 100, conn_fc, conn_events.clone());
+        let _s = SendStream::new(4.into(), 100, flow_mgr, conn_events.clone());
 
         // Creating a new stream with conn and stream credits should result in
         // an event.
         let evts = conn_events.events().collect::<Vec<_>>();
         assert_eq!(evts.len(), 1);
-        assert!(matches!(
-            evts[0],
-            ConnectionEvent::SendStreamWritable { .. }
-        ));
+        assert!(matches!(evts[0], ConnectionEvent::SendStreamWritable{..}));
     }
 
     #[test]
     // Verify lost frames handle fin properly
     fn send_stream_get_frame_data() {
-        let conn_fc = connection_fc(100);
+        let flow_mgr = Rc::new(RefCell::new(FlowMgr::default()));
+        flow_mgr.borrow_mut().conn_increase_max_credit(100);
         let conn_events = ConnectionEvents::default();
 
-        let mut s = SendStream::new(0.into(), 100, conn_fc, conn_events);
+        let mut s = SendStream::new(0.into(), 100, flow_mgr, conn_events);
         s.send(&[0; 10]).unwrap();
         s.close();
 
@@ -1602,13 +1320,8 @@ mod tests {
         // Write a small frame: no fin.
         let written = builder.len();
         builder.set_limit(written + 6);
-        ss.write_frames(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut FrameStats::default(),
-        )
-        .unwrap();
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         assert_eq!(builder.len(), written + 6);
         assert_eq!(tokens.len(), 1);
         let f1_token = tokens.remove(0);
@@ -1617,13 +1330,8 @@ mod tests {
         // Write the rest: fin.
         let written = builder.len();
         builder.set_limit(written + 200);
-        ss.write_frames(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut FrameStats::default(),
-        )
-        .unwrap();
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         assert_eq!(builder.len(), written + 10);
         assert_eq!(tokens.len(), 1);
         let f2_token = tokens.remove(0);
@@ -1631,13 +1339,8 @@ mod tests {
 
         // Should be no more data to frame.
         let written = builder.len();
-        ss.write_frames(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut FrameStats::default(),
-        )
-        .unwrap();
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         assert_eq!(builder.len(), written);
         assert!(tokens.is_empty());
 
@@ -1651,13 +1354,8 @@ mod tests {
         // Next frame should not set fin even though stream has fin but frame
         // does not include end of stream
         let written = builder.len();
-        ss.write_frames(
-            TransmissionPriority::default() + RetransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut FrameStats::default(),
-        )
-        .unwrap();
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         assert_eq!(builder.len(), written + 7); // Needs a length this time.
         assert_eq!(tokens.len(), 1);
         let f4_token = tokens.remove(0);
@@ -1672,13 +1370,8 @@ mod tests {
 
         // Next frame should set fin because it includes end of stream
         let written = builder.len();
-        ss.write_frames(
-            TransmissionPriority::default() + RetransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut FrameStats::default(),
-        )
-        .unwrap();
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         assert_eq!(builder.len(), written + 10);
         assert_eq!(tokens.len(), 1);
         let f5_token = tokens.remove(0);
@@ -1689,10 +1382,11 @@ mod tests {
     #[allow(clippy::cognitive_complexity)]
     // Verify lost frames handle fin properly with zero length fin
     fn send_stream_get_frame_zerolength_fin() {
-        let conn_fc = connection_fc(100);
+        let flow_mgr = Rc::new(RefCell::new(FlowMgr::default()));
+        flow_mgr.borrow_mut().conn_increase_max_credit(100);
         let conn_events = ConnectionEvents::default();
 
-        let mut s = SendStream::new(0.into(), 100, conn_fc, conn_events);
+        let mut s = SendStream::new(0.into(), 100, flow_mgr, conn_events);
         s.send(&[0; 10]).unwrap();
 
         let mut ss = SendStreams::default();
@@ -1700,37 +1394,22 @@ mod tests {
 
         let mut tokens = Vec::new();
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
-        ss.write_frames(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut FrameStats::default(),
-        )
-        .unwrap();
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         let f1_token = tokens.remove(0);
         assert!(matches!(&f1_token, RecoveryToken::Stream(x) if x.offset == 0));
         assert!(matches!(&f1_token, RecoveryToken::Stream(x) if x.length == 10));
         assert!(matches!(&f1_token, RecoveryToken::Stream(x) if !x.fin));
 
         // Should be no more data to frame
-        ss.write_frames(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut FrameStats::default(),
-        )
-        .unwrap();
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         assert!(tokens.is_empty());
 
         ss.get_mut(StreamId::from(0)).unwrap().close();
 
-        ss.write_frames(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut FrameStats::default(),
-        )
-        .unwrap();
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         let f2_token = tokens.remove(0);
         assert!(matches!(&f2_token, RecoveryToken::Stream(x) if x.offset == 10));
         assert!(matches!(&f2_token, RecoveryToken::Stream(x) if x.length == 0));
@@ -1744,13 +1423,8 @@ mod tests {
         }
 
         // Next frame should set fin
-        ss.write_frames(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut FrameStats::default(),
-        )
-        .unwrap();
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         let f3_token = tokens.remove(0);
         assert!(matches!(&f3_token, RecoveryToken::Stream(x) if x.offset == 10));
         assert!(matches!(&f3_token, RecoveryToken::Stream(x) if x.length == 0));
@@ -1764,13 +1438,8 @@ mod tests {
         }
 
         // Next frame should set fin and include all data
-        ss.write_frames(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut FrameStats::default(),
-        )
-        .unwrap();
+        ss.write_frames(&mut builder, &mut tokens, &mut FrameStats::default())
+            .unwrap();
         let f4_token = tokens.remove(0);
         assert!(matches!(&f4_token, RecoveryToken::Stream(x) if x.offset == 0));
         assert!(matches!(&f4_token, RecoveryToken::Stream(x) if x.length == 10));
@@ -1778,115 +1447,73 @@ mod tests {
     }
 
     #[test]
-    fn data_blocked() {
-        let conn_fc = connection_fc(5);
+    fn send_atomic() {
+        let flow_mgr = Rc::new(RefCell::new(FlowMgr::default()));
+        flow_mgr.borrow_mut().conn_increase_max_credit(5);
         let conn_events = ConnectionEvents::default();
 
         let stream_id = StreamId::from(4);
-        let mut s = SendStream::new(stream_id, 2, Rc::clone(&conn_fc), conn_events);
-
-        // Only two bytes can be sent due to the stream limit.
-        assert_eq!(s.send(b"abc").unwrap(), 2);
-        assert_eq!(s.next_bytes(false), Some((0, &b"ab"[..])));
-
-        // This doesn't report blocking yet.
-        let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
-        let mut tokens = Vec::new();
-        let mut stats = FrameStats::default();
-        s.write_blocked_frame(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut stats,
-        )
-        .unwrap();
-        assert_eq!(stats.stream_data_blocked, 0);
-
-        // Blocking is reported after sending the last available credit.
-        s.mark_as_sent(0, 2, false);
-        s.write_blocked_frame(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut stats,
-        )
-        .unwrap();
-        assert_eq!(stats.stream_data_blocked, 1);
-
-        // Now increase the stream limit and test the connection limit.
-        s.set_max_stream_data(10);
-
-        assert_eq!(s.send(b"abcd").unwrap(), 3);
-        assert_eq!(s.next_bytes(false), Some((2, &b"abc"[..])));
-        // DATA_BLOCKED is not sent yet.
-        conn_fc
-            .borrow_mut()
-            .write_frames(&mut builder, &mut tokens, &mut stats)
-            .unwrap();
-        assert_eq!(stats.data_blocked, 0);
-
-        // DATA_BLOCKED is queued once bytes using all credit are sent.
-        s.mark_as_sent(2, 3, false);
-        conn_fc
-            .borrow_mut()
-            .write_frames(&mut builder, &mut tokens, &mut stats)
-            .unwrap();
-        assert_eq!(stats.data_blocked, 1);
-    }
-
-    #[test]
-    fn data_blocked_atomic() {
-        let conn_fc = connection_fc(5);
-        let conn_events = ConnectionEvents::default();
-
-        let stream_id = StreamId::from(4);
-        let mut s = SendStream::new(stream_id, 2, Rc::clone(&conn_fc), conn_events);
+        let mut s = SendStream::new(stream_id, 0, Rc::clone(&flow_mgr), conn_events);
+        s.set_max_stream_data(2);
 
         // Stream is initially blocked (conn:5, stream:2)
         // and will not accept atomic write of 3 bytes.
         assert_eq!(s.send_atomic(b"abc").unwrap(), 0);
 
-        // Assert that STREAM_DATA_BLOCKED is sent.
-        let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
-        let mut tokens = Vec::new();
-        let mut stats = FrameStats::default();
-        s.write_blocked_frame(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut stats,
-        )
-        .unwrap();
-        assert_eq!(stats.stream_data_blocked, 1);
+        // assert that STREAM_DATA_BLOCKED is sent.
+        assert_eq!(
+            flow_mgr.borrow_mut().next().unwrap(),
+            Frame::StreamDataBlocked {
+                stream_id,
+                stream_data_limit: 0x2
+            }
+        );
 
-        // Assert that a non-atomic write works.
+        // assert non-atomic write works
         assert_eq!(s.send(b"abc").unwrap(), 2);
-        assert_eq!(s.next_bytes(false), Some((0, &b"ab"[..])));
+        assert_eq!(s.next_bytes(), Some((0, &b"ab"[..])));
+        // STREAM_DATA_BLOCKED is not sent yet.
+        assert!(flow_mgr.borrow_mut().next().is_none());
+
+        // STREAM_DATA_BLOCKED is queued once bytes using all credit are sent.
         s.mark_as_sent(0, 2, false);
+        assert_eq!(
+            flow_mgr.borrow_mut().next().unwrap(),
+            Frame::StreamDataBlocked {
+                stream_id,
+                stream_data_limit: 0x2
+            }
+        );
 
-        // Set limits to (conn:5, stream:10).
+        // increasing to (conn:5, stream:10)
         s.set_max_stream_data(10);
-
-        // An atomic write of 4 bytes exceeds the remaining limit of 3.
+        // will not accept atomic write of 4 bytes.
         assert_eq!(s.send_atomic(b"abcd").unwrap(), 0);
 
-        // Assert that DATA_BLOCKED is sent.
-        conn_fc
-            .borrow_mut()
-            .write_frames(&mut builder, &mut tokens, &mut stats)
-            .unwrap();
-        assert_eq!(stats.data_blocked, 1);
+        // assert that STREAM_DATA_BLOCKED is sent.
+        assert_eq!(
+            flow_mgr.borrow_mut().next().unwrap(),
+            Frame::DataBlocked { data_limit: 0x5 }
+        );
 
-        // Check that a non-atomic write works.
+        // assert non-atomic write works
         assert_eq!(s.send(b"abcd").unwrap(), 3);
-        assert_eq!(s.next_bytes(false), Some((2, &b"abc"[..])));
+        assert_eq!(s.next_bytes(), Some((2, &b"abc"[..])));
+        // DATA_BLOCKED is not sent yet.
+        assert!(flow_mgr.borrow_mut().next().is_none());
+
+        // DATA_BLOCKED is queued once bytes using all credit are sent.
         s.mark_as_sent(2, 3, false);
+        assert_eq!(
+            flow_mgr.borrow_mut().next().unwrap(),
+            Frame::DataBlocked { data_limit: 0x5 }
+        );
 
-        // Increase limits to (conn:15, stream:15).
+        // increasing to (conn:15, stream:15)
         s.set_max_stream_data(15);
-        conn_fc.borrow_mut().update(15);
+        flow_mgr.borrow_mut().conn_increase_max_credit(15);
 
-        // Check that atomic writing right up to the limit works.
+        // assert that atomic writing 10 byte works
         assert_eq!(s.send_atomic(b"abcdefghij").unwrap(), 10);
     }
 
@@ -1895,10 +1522,11 @@ mod tests {
         const MESSAGE: &[u8] = b"hello";
         let len_u64 = u64::try_from(MESSAGE.len()).unwrap();
 
-        let conn_fc = connection_fc(len_u64);
+        let flow_mgr = Rc::new(RefCell::new(FlowMgr::default()));
+        flow_mgr.borrow_mut().conn_increase_max_credit(len_u64);
         let conn_events = ConnectionEvents::default();
 
-        let mut s = SendStream::new(StreamId::new(100), 0, conn_fc, conn_events);
+        let mut s = SendStream::new(StreamId::new(100), 0, Rc::clone(&flow_mgr), conn_events);
         s.set_max_stream_data(len_u64);
 
         // Send all the data, then the fin.
@@ -1918,11 +1546,12 @@ mod tests {
         const MESSAGE: &[u8] = b"hello";
         let len_u64 = u64::try_from(MESSAGE.len()).unwrap();
 
-        let conn_fc = connection_fc(len_u64);
+        let mut flow_mgr = FlowMgr::default();
+        flow_mgr.conn_increase_max_credit(len_u64);
         let conn_events = ConnectionEvents::default();
 
         let id = StreamId::new(100);
-        let mut s = SendStream::new(id, 0, conn_fc, conn_events);
+        let mut s = SendStream::new(id, 0, Rc::new(RefCell::new(flow_mgr)), conn_events);
         s.set_max_stream_data(len_u64);
 
         // Send all the data, then the fin.
@@ -1937,16 +1566,7 @@ mod tests {
 
         // No frame should be sent here.
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
-        let mut tokens = Vec::new();
-        let mut stats = FrameStats::default();
-        s.write_stream_frame(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut stats,
-        )
-        .unwrap();
-        assert_eq!(stats.stream, 0);
+        assert!(s.write_frame(&mut builder).unwrap().is_none());
     }
 
     /// Create a `SendStream` and force it into a state where it believes that
@@ -1954,25 +1574,20 @@ mod tests {
     fn stream_with_sent(stream: u64, offset: usize) -> SendStream {
         const MAX_VARINT: u64 = (1 << 62) - 1;
 
-        let conn_fc = connection_fc(MAX_VARINT);
+        let mut flow_mgr = FlowMgr::default();
+        flow_mgr.conn_increase_max_credit(MAX_VARINT);
+
         let mut s = SendStream::new(
             StreamId::from(stream),
             MAX_VARINT,
-            conn_fc,
+            Rc::new(RefCell::new(flow_mgr)),
             ConnectionEvents::default(),
         );
 
         let mut send_buf = TxBuffer::new();
         send_buf.retired = u64::try_from(offset).unwrap();
         send_buf.ranges.mark_range(0, offset, RangeState::Acked);
-        let mut fc = SenderFlowControl::new(StreamId::from(stream), MAX_VARINT);
-        fc.consume(offset);
-        let conn_fc = Rc::new(RefCell::new(SenderFlowControl::new((), MAX_VARINT)));
-        s.state = SendStreamState::Send {
-            fc,
-            conn_fc,
-            send_buf,
-        };
+        s.state = SendStreamState::Send { send_buf };
         s
     }
 
@@ -1991,18 +1606,9 @@ mod tests {
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         let header_len = builder.len();
         builder.set_limit(header_len + space);
-
-        let mut tokens = Vec::new();
-        let mut stats = FrameStats::default();
-        s.write_stream_frame(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut stats,
-        )
-        .unwrap();
+        let token = s.write_frame(&mut builder).unwrap();
         qtrace!("STREAM frame: {}", hex_with_len(&builder[header_len..]));
-        stats.stream > 0
+        token.is_some()
     }
 
     fn frame_sent(offset: usize, len: usize, fin: bool, space: usize) -> bool {
@@ -2094,16 +1700,8 @@ mod tests {
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         let header_len = builder.len();
         builder.set_limit(header_len + DATA16384.len() + 2);
-        let mut tokens = Vec::new();
-        let mut stats = FrameStats::default();
-        s.write_stream_frame(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut stats,
-        )
-        .unwrap();
-        assert_eq!(stats.stream, 1);
+        let token = s.write_frame(&mut builder).unwrap();
+        assert!(token.is_some());
         // Expect STREAM + FIN only.
         assert_eq!(&builder[header_len..header_len + 2], &[0b1001, 0]);
         assert_eq!(&builder[header_len + 2..], DATA16384);
@@ -2117,14 +1715,8 @@ mod tests {
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         let header_len = builder.len();
         builder.set_limit(header_len + DATA16384.len() + 3);
-        s.write_stream_frame(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut stats,
-        )
-        .unwrap();
-        assert_eq!(stats.stream, 2);
+        let token = s.write_frame(&mut builder).unwrap();
+        assert!(token.is_some());
         // Expect STREAM + LEN + FIN.
         assert_eq!(
             &builder[header_len..header_len + 4],
@@ -2149,16 +1741,8 @@ mod tests {
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         let header_len = builder.len();
         builder.set_limit(header_len + 66);
-        let mut tokens = Vec::new();
-        let mut stats = FrameStats::default();
-        s.write_stream_frame(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut stats,
-        )
-        .unwrap();
-        assert_eq!(stats.stream, 1);
+        let token = s.write_frame(&mut builder).unwrap();
+        assert!(token.is_some());
         // Expect STREAM + FIN only.
         assert_eq!(&builder[header_len..header_len + 2], &[0b1001, 0]);
         assert_eq!(&builder[header_len + 2..], DATA64);
@@ -2168,14 +1752,8 @@ mod tests {
         let mut builder = PacketBuilder::short(Encoder::new(), false, &[]);
         let header_len = builder.len();
         builder.set_limit(header_len + 67);
-        s.write_stream_frame(
-            TransmissionPriority::default(),
-            &mut builder,
-            &mut tokens,
-            &mut stats,
-        )
-        .unwrap();
-        assert_eq!(stats.stream, 2);
+        let token = s.write_frame(&mut builder).unwrap();
+        assert!(token.is_some());
         // Expect STREAM + LEN, not FIN.
         assert_eq!(&builder[header_len..header_len + 3], &[0b1010, 0, 63]);
         assert_eq!(&builder[header_len + 3..], &DATA64[..63]);

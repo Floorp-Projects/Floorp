@@ -316,8 +316,9 @@ impl<'a> HeaderDecoder<'a> {
             if req_insert_cnt > max_value {
                 if req_insert_cnt < full_range {
                     return Err(Error::DecompressionFailed);
+                } else {
+                    req_insert_cnt -= full_range;
                 }
-                req_insert_cnt -= full_range;
             }
             Ok(req_insert_cnt)
         }

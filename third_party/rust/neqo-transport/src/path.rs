@@ -10,25 +10,20 @@
 use std::cell::RefCell;
 use std::convert::TryFrom;
 use std::fmt::{self, Display};
-use std::mem;
 use std::net::{IpAddr, SocketAddr};
 use std::rc::Rc;
 use std::time::{Duration, Instant};
 
-use crate::cc::CongestionControlAlgorithm;
 use crate::cid::{ConnectionId, ConnectionIdRef, RemoteConnectionIdEntry};
 use crate::frame::{
     FRAME_TYPE_PATH_CHALLENGE, FRAME_TYPE_PATH_RESPONSE, FRAME_TYPE_RETIRE_CONNECTION_ID,
 };
 use crate::packet::PacketBuilder;
 use crate::recovery::RecoveryToken;
-use crate::rtt::RttEstimate;
-use crate::sender::PacketSender;
 use crate::stats::FrameStats;
-use crate::tracking::{PNSpace, SentPacket};
 use crate::{Error, Res};
 
-use neqo_common::{hex, qdebug, qinfo, qlog::NeqoQlog, qtrace, Datagram, Encoder};
+use neqo_common::{hex, qdebug, qinfo, qtrace, Datagram, Encoder};
 use neqo_crypto::random;
 
 /// This is the MTU that we assume when using IPv6.
@@ -66,21 +61,12 @@ pub struct Paths {
 
     /// Connection IDs that need to be retired.
     to_retire: Vec<u64>,
-
-    /// QLog handler.
-    qlog: NeqoQlog,
 }
 
 impl Paths {
     /// Find the path for the given addresses.
     /// This might be a temporary path.
-    pub fn find_path(
-        &self,
-        local: SocketAddr,
-        remote: SocketAddr,
-        cc: CongestionControlAlgorithm,
-        now: Instant,
-    ) -> PathRef {
+    pub fn find_path(&self, local: SocketAddr, remote: SocketAddr) -> PathRef {
         self.paths
             .iter()
             .find_map(|p| {
@@ -90,26 +76,14 @@ impl Paths {
                     None
                 }
             })
-            .unwrap_or_else(|| {
-                let mut p = Path::temporary(local, remote, cc, self.qlog.clone(), now);
-                if let Some(primary) = self.primary.as_ref() {
-                    p.set_initial_rtt(primary.borrow().rtt().estimate());
-                }
-                Rc::new(RefCell::new(p))
-            })
+            .unwrap_or_else(|| Rc::new(RefCell::new(Path::temporary(local, remote))))
     }
 
     /// Find the path, but allow for rebinding.  That matches the pair of addresses
     /// to paths that match the remote address only based on IP addres, not port.
     /// We use this when the other side migrates to skip address validation and
     /// creating a new path.
-    pub fn find_path_with_rebinding(
-        &self,
-        local: SocketAddr,
-        remote: SocketAddr,
-        cc: CongestionControlAlgorithm,
-        now: Instant,
-    ) -> PathRef {
+    pub fn find_path_with_rebinding(&self, local: SocketAddr, remote: SocketAddr) -> PathRef {
         self.paths
             .iter()
             .find_map(|p| {
@@ -128,15 +102,7 @@ impl Paths {
                     }
                 })
             })
-            .unwrap_or_else(|| {
-                Rc::new(RefCell::new(Path::temporary(
-                    local,
-                    remote,
-                    cc,
-                    self.qlog.clone(),
-                    now,
-                )))
-            })
+            .unwrap_or_else(|| Rc::new(RefCell::new(Path::temporary(local, remote))))
     }
 
     /// Get a reference to the primary path.  This will assert if there is no primary
@@ -222,18 +188,15 @@ impl Paths {
     /// is forcibly marked as valid and the path is used immediately.
     /// Otherwise, migration will occur after probing succeeds.
     /// The path is always probed and will be abandoned if probing fails.
-    /// Returns `true` if the path was migrated.
-    pub fn migrate(&mut self, path: &PathRef, force: bool, now: Instant) -> bool {
+    pub fn migrate(&mut self, path: &PathRef, force: bool, now: Instant) {
         debug_assert!(!self.is_temporary(path));
         if force || path.borrow().is_valid() {
             path.borrow_mut().set_valid(now);
-            mem::drop(self.select_primary(path));
-            self.migration_target = None;
+            let _ = self.select_primary(path);
         } else {
             self.migration_target = Some(Rc::clone(path));
         }
         path.borrow_mut().probe();
-        self.migration_target.is_none()
     }
 
     /// Process elapsed time for active paths.
@@ -269,7 +232,7 @@ impl Paths {
                 // Need a clone as `fallback` is borrowed from `self`.
                 let path = Rc::clone(fallback);
                 qinfo!([path.borrow()], "Failing over after primary path failed");
-                mem::drop(self.select_primary(&path));
+                let _ = self.select_primary(&path);
                 true
             } else {
                 false
@@ -326,11 +289,7 @@ impl Paths {
     }
 
     /// A `PATH_RESPONSE` was received.
-    /// Returns `true` if migration occurred.
-    #[must_use]
-    pub fn path_response(&mut self, response: [u8; 8], now: Instant) -> bool {
-        // TODO(mt) consider recording an RTT measurement here as we don't train
-        // RTT for non-primary paths.
+    pub fn path_response(&mut self, response: [u8; 8], now: Instant) {
         for p in &self.paths {
             if p.borrow_mut().path_response(response, now) {
                 // The response was accepted.  If this path is one we intend
@@ -341,13 +300,11 @@ impl Paths {
                     .map_or(false, |target| Rc::ptr_eq(target, p))
                 {
                     let primary = self.migration_target.take();
-                    mem::drop(self.select_primary(&primary.unwrap()));
-                    return true;
+                    let _ = self.select_primary(&primary.unwrap());
                 }
                 break;
             }
         }
-        false
     }
 
     /// Write out any `RETIRE_CONNECTION_ID` frames that are outstanding.
@@ -379,26 +336,6 @@ impl Paths {
 
     pub fn acked_retire_cid(&mut self, acked: u64) {
         self.to_retire.retain(|&seqno| seqno != acked);
-    }
-
-    /// Get an estimate of the RTT on the primary path.
-    #[cfg(test)]
-    pub fn rtt(&self) -> Duration {
-        // Rather than have this fail when there is no active path,
-        // make a new RTT esimate and interrogate that.
-        // That is more expensive, but it should be rare and breaking encapsulation
-        // is worse, especially as this is only used in tests.
-        self.primary_fallible()
-            .map_or(RttEstimate::default().estimate(), |p| {
-                p.borrow().rtt().estimate()
-            })
-    }
-
-    pub fn set_qlog(&mut self, qlog: NeqoQlog) {
-        for p in &mut self.paths {
-            p.borrow_mut().set_qlog(qlog.clone());
-        }
-        self.qlog = qlog;
     }
 }
 
@@ -462,11 +399,6 @@ pub struct Path {
     /// A path challenge was received and PATH_RESPONSE has not been sent.
     challenge: Option<[u8; 8]>,
 
-    /// The round trip time estimate for this path.
-    rtt: RttEstimate,
-    /// A packet sender for the path, which includes congestion control and a pacer.
-    sender: PacketSender,
-
     /// The number of bytes received on this path.
     /// Note that this value might saturate on a long-lived connection,
     /// but we only use it before the path is validated.
@@ -478,15 +410,7 @@ pub struct Path {
 impl Path {
     /// Create a path from addresses and a remote connection ID.
     /// This is used for migration and for new datagrams.
-    pub fn temporary(
-        local: SocketAddr,
-        remote: SocketAddr,
-        cc: CongestionControlAlgorithm,
-        qlog: NeqoQlog,
-        now: Instant,
-    ) -> Self {
-        let mut sender = PacketSender::new(cc, Self::mtu_by_addr(remote.ip()), now);
-        sender.set_qlog(qlog);
+    pub fn temporary(local: SocketAddr, remote: SocketAddr) -> Self {
         Self {
             local,
             remote,
@@ -496,8 +420,6 @@ impl Path {
             state: ProbeState::ProbeNeeded { probe_count: 0 },
             validated: None,
             challenge: None,
-            rtt: RttEstimate::default(),
-            sender,
             received_bytes: 0,
             sent_bytes: 0,
         }
@@ -516,7 +438,7 @@ impl Path {
     /// By adding a remote connection ID, we make the path permanent
     /// and one that we will later send packets on.
     /// If `local_cid` is `None`, the existing value will be kept.
-    pub(crate) fn make_permanent(
+    fn make_permanent(
         &mut self,
         local_cid: Option<ConnectionId>,
         remote_cid: RemoteConnectionIdEntry,
@@ -543,13 +465,9 @@ impl Path {
     }
 
     /// Set whether this path is primary.
-    pub(crate) fn set_primary(&mut self, primary: bool) {
+    fn set_primary(&mut self, primary: bool) {
         qtrace!([self], "Make primary {}", primary);
-        debug_assert!(self.remote_cid.is_some());
         self.primary = primary;
-        if !primary {
-            self.sender.discard_in_flight();
-        }
     }
 
     /// Set the current path as valid.  This updates the time that the path was
@@ -568,16 +486,12 @@ impl Path {
         }
     }
 
-    fn mtu_by_addr(addr: IpAddr) -> usize {
-        match addr {
+    /// Get the path MTU.  This is currently a fixed value.
+    pub fn mtu(&self) -> usize {
+        match self.local.ip() {
             IpAddr::V4(_) => PATH_MTU_V4,
             IpAddr::V6(_) => PATH_MTU_V6,
         }
-    }
-
-    /// Get the path MTU.  This is currently fixed based on IP version.
-    pub fn mtu(&self) -> usize {
-        Self::mtu_by_addr(self.remote.ip())
     }
 
     /// Get the first local connection ID.
@@ -781,31 +695,6 @@ impl Path {
         }
     }
 
-    /// Get the RTT estimator for this path.
-    pub fn rtt(&self) -> &RttEstimate {
-        &self.rtt
-    }
-
-    /// Mutably borrow the RTT estimator for this path.
-    pub fn rtt_mut(&mut self) -> &mut RttEstimate {
-        &mut self.rtt
-    }
-
-    /// Read-only access to the owned sender.
-    pub fn sender(&self) -> &PacketSender {
-        &self.sender
-    }
-
-    /// Pass on RTT configuration: the maximum acknowledgment delay of the peer.
-    pub fn set_max_ack_delay(&mut self, mad: Duration) {
-        self.rtt.set_max_ack_delay(mad);
-    }
-
-    /// Initialize the RTT for the path based on an existing estimate.
-    pub fn set_initial_rtt(&mut self, rtt: Duration) {
-        self.rtt.set_initial(rtt);
-    }
-
     /// Record received bytes for the path.
     pub fn add_received(&mut self, count: usize) {
         self.received_bytes = self.received_bytes.saturating_add(count);
@@ -814,42 +703,6 @@ impl Path {
     /// Record sent bytes for the path.
     pub fn add_sent(&mut self, count: usize) {
         self.sent_bytes = self.sent_bytes.saturating_add(count);
-    }
-
-    /// Record a packet as having been sent on this path.
-    pub fn packet_sent(&mut self, sent: &mut SentPacket) {
-        if !self.is_primary() {
-            sent.clear_primary_path();
-        }
-        self.sender.on_packet_sent(sent, self.rtt.estimate());
-    }
-
-    /// Discard a packet that previously might have been in-flight.
-    pub fn discard_packet(&mut self, sent: &SentPacket) {
-        self.sender.discard(sent);
-    }
-
-    /// Record packets as acknowledged with the sender.
-    pub fn on_packets_acked(&mut self, acked_pkts: &[SentPacket], now: Instant) {
-        debug_assert!(self.is_primary());
-        self.sender
-            .on_packets_acked(acked_pkts, self.rtt.minimum(), now);
-    }
-
-    /// Record packets as lost with the sender.
-    pub fn on_packets_lost(
-        &mut self,
-        prev_largest_acked_sent: Option<Instant>,
-        space: PNSpace,
-        lost_packets: &[SentPacket],
-    ) {
-        debug_assert!(self.is_primary());
-        self.sender.on_packets_lost(
-            self.rtt.first_sample_time(),
-            prev_largest_acked_sent,
-            self.rtt.pto(space), // Important: the base PTO, not adjusted.
-            lost_packets,
-        )
     }
 
     /// Get the number of bytes that can be written to this path.
@@ -872,11 +725,6 @@ impl Path {
                     budget.saturating_sub(self.sent_bytes)
                 })
         }
-    }
-
-    /// Update the `NeqoQLog` instance.
-    pub fn set_qlog(&mut self, qlog: NeqoQlog) {
-        self.sender.set_qlog(qlog);
     }
 }
 
