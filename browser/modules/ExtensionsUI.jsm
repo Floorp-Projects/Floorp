@@ -507,14 +507,10 @@ var ExtensionsUI = {
 
   async showInstallNotification(target, addon) {
     let { window } = getTabBrowser(target);
-
-    let brandBundle = window.document.getElementById("bundle_brand");
-    let appName = brandBundle.getString("brandShortName");
     let bundle = window.gNavigatorBundle;
 
-    let message = bundle.getFormattedString("addonPostInstall.message1", [
+    let message = bundle.getFormattedString("addonPostInstall.message2", [
       "<>",
-      appName,
     ]);
     const permissionName = "internal:privateBrowsingAllowed";
     const { permissions } = await ExtensionPermissions.get(addon.id);
