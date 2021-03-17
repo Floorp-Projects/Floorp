@@ -1470,11 +1470,6 @@ class GetUserMediaTask final {
     return NS_OK;
   }
 
-  nsresult SetContraints(const MediaStreamConstraints& aConstraints) {
-    mConstraints = aConstraints;
-    return NS_OK;
-  }
-
   const MediaStreamConstraints& GetConstraints() { return mConstraints; }
 
   nsresult SetAudioDevice(RefPtr<MediaDevice> aAudioDevice) {
@@ -1506,7 +1501,7 @@ class GetUserMediaTask final {
  private:
   void PrepareDOMStream();
 
-  MediaStreamConstraints mConstraints;
+  const MediaStreamConstraints mConstraints;
 
   MozPromiseHolder<MediaManager::StreamPromise> mHolder;
   uint64_t mWindowID;
