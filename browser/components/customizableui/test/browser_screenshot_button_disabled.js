@@ -7,7 +7,10 @@
 add_task(async function testScreenshotButtonPrefDisabled() {
   info("Test the Screenshots widget not available");
 
-  Assert.ok(Services.prefs.getBoolPref("extensions.screenshots.disabled"), "Sceenshots feature is disabled");
+  Assert.ok(
+    Services.prefs.getBoolPref("extensions.screenshots.disabled"),
+    "Sceenshots feature is disabled"
+  );
 
   CustomizableUI.addWidgetToArea(
     "screenshot-button",
