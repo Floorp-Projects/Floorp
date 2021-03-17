@@ -818,6 +818,13 @@ static void commit_solid_span(uint8_t* buf, WideR8 r, int len) {
 template <>
 ALWAYS_INLINE void commit_solid_span<false>(uint8_t* buf, WideR8 r, int len) {
   PackedR8 p = pack(r);
+  if (uintptr_t(buf) & 3) {
+    int align = 4 - (uintptr_t(buf) & 3);
+    align = min(align, len);
+    partial_store_span(buf, p, align);
+    buf += align;
+    len -= align;
+  }
   fill_n((uint32_t*)buf, len / 4, bit_cast<uint32_t>(p));
   buf += len & ~3;
   len &= 3;
