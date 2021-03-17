@@ -1998,9 +1998,9 @@ void nsWindow::Move(double aX, double aY) {
       if (WinUtils::LogToPhysFactor(mWnd) != oldScale) {
         ChangedDPI();
       }
-    }
 
-    SetThemeRegion();
+      SetThemeRegion();
+    }
 
     ResizeDirectManipulationViewport();
   }
