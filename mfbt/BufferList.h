@@ -306,7 +306,7 @@ class BufferList : private AllocPolicy {
 
   // Copies aSize bytes from aData into the BufferList. The storage for these
   // bytes may be split across multiple buffers. Size() is increased by aSize.
-  inline MOZ_MUST_USE bool WriteBytes(const char* aData, size_t aSize);
+  [[nodiscard]] inline bool WriteBytes(const char* aData, size_t aSize);
 
   // Allocates a buffer of at most |aMaxBytes| bytes and, if successful, returns
   // that buffer, and places its size in |aSize|. If unsuccessful, returns null
@@ -398,8 +398,8 @@ class BufferList : private AllocPolicy {
 };
 
 template <typename AllocPolicy>
-MOZ_MUST_USE bool BufferList<AllocPolicy>::WriteBytes(const char* aData,
-                                                      size_t aSize) {
+[[nodiscard]] bool BufferList<AllocPolicy>::WriteBytes(const char* aData,
+                                                       size_t aSize) {
   MOZ_RELEASE_ASSERT(mOwning);
   MOZ_RELEASE_ASSERT(mStandardCapacity);
 

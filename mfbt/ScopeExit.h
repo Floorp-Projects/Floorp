@@ -116,7 +116,7 @@ class MOZ_STACK_CLASS ScopeExit {
 };
 
 template <typename ExitFunction>
-MOZ_MUST_USE ScopeExit<ExitFunction> MakeScopeExit(
+[[nodiscard]] ScopeExit<ExitFunction> MakeScopeExit(
     ExitFunction&& exitFunction) {
   return ScopeExit<ExitFunction>(std::move(exitFunction));
 }
