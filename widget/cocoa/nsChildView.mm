@@ -2597,7 +2597,8 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
       bool shouldRollup = true;
 
       // check to see if scroll/zoom events should roll up the popup
-      if ([theEvent type] == NSEventTypeScrollWheel || [theEvent type] == NSEventTypeMagnify) {
+      if ([theEvent type] == NSEventTypeScrollWheel || [theEvent type] == NSEventTypeMagnify ||
+          [theEvent type] == NSEventTypeSmartMagnify) {
         shouldRollup = rollupListener->ShouldRollupOnMouseWheelEvent();
         // consume scroll events that aren't over the popup
         // unless the popup is an arrow panel
@@ -2758,6 +2759,10 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   if (!anEvent || !mGeckoChild || [self beginOrEndGestureForEventPhase:anEvent]) {
+    return;
+  }
+
+  if ([self maybeRollup:anEvent]) {
     return;
   }
 
