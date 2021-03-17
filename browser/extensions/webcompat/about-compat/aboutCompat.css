@@ -45,8 +45,8 @@
     :root {
       --background-color: #292833;
       --text-color: #f9f9fa;
-      --border-color: rgba(255,255,255,0.15);
-      --button-background-color: rgba(0,0,0,0.15);
+      --border-color: rgba(255, 255, 255, 0.15);
+      --button-background-color: rgba(0, 0, 0, 0.15);
       --selected-tab-text-color: #00ddff;
     }
   }
