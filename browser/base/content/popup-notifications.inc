@@ -16,7 +16,7 @@
                control="webRTC-selectCamera-menulist"/>
         <html:div class="webRTC-selectDevice-selector-container">
           <xul:image id="webRTC-selectCamera-icon" class="webRTC-selectDevice-icon" data-l10n-id="popup-select-camera-icon"/>
-          <menulist id="webRTC-selectCamera-menulist" aria-labelledby="webRTC-selectCamera-icon">
+          <menulist id="webRTC-selectCamera-menulist" aria-labelledby="webRTC-selectCamera-icon" size="large">
             <menupopup id="webRTC-selectCamera-menupopup"/>
           </menulist>
           <label id="webRTC-selectCamera-single-device-label" class="webRTC-selectDevice-label"></label>
@@ -27,7 +27,8 @@
         <label id="webRTC-selectWindow-label"
                control="webRTC-selectWindow-menulist"/>
         <menulist id="webRTC-selectWindow-menulist"
-                  oncommand="webrtcUI.updateWarningLabel(this);">
+                  oncommand="webrtcUI.updateWarningLabel(this);"
+                  size="large">
           <menupopup id="webRTC-selectWindow-menupopup"/>
         </menulist>
         <description id="webRTC-all-windows-shared" hidden="true" data-l10n-id="popup-all-windows-shared"></description>
@@ -47,7 +48,7 @@
                control="webRTC-selectMicrophone-menulist"/>
         <html:div class="webRTC-selectDevice-selector-container">
           <xul:image id="webRTC-selectMicrophone-icon" data-l10n-id="popup-select-microphone-icon" class="webRTC-selectDevice-icon"/>
-          <menulist id="webRTC-selectMicrophone-menulist" aria-labelledby="webRTC-selectMicrophone-icon">
+          <menulist id="webRTC-selectMicrophone-menulist" aria-labelledby="webRTC-selectMicrophone-icon" size="large">
             <menupopup id="webRTC-selectMicrophone-menupopup"/>
           </menulist>
           <label id="webRTC-selectMicrophone-single-device-label" class="webRTC-selectDevice-label"></label>
