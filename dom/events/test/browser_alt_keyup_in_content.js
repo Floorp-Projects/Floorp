@@ -105,6 +105,7 @@ add_task(async function runTests() {
           return false;
         }, `${aTest.description}: Waiting the window is activated`);
       });
+      let startTime = performance.now();
       info(`Start to test: ${aTest.description}...`);
 
       async function ensureMenubarInactive() {
@@ -190,6 +191,15 @@ add_task(async function runTests() {
                 { capture: true }
               );
             });
+
+            let menubarActivatedPromise;
+            if (aTest.expectMenubarActive) {
+              menubarActivatedPromise = BrowserTestUtils.waitForEvent(
+                menubar,
+                "DOMMenuBarActive"
+              );
+            }
+
             EventUtils.synthesizeKey("KEY_Alt", {}, window);
             info(
               `${aTest.description}: Waiting keyup events of Alt in chrome...`
@@ -209,6 +219,7 @@ add_task(async function runTests() {
             }
 
             if (aTest.expectMenubarActive) {
+              await menubarActivatedPromise;
               ok(
                 menubarActivated,
                 `${aTest.description}: Menubar should've been activated by the synthesized Alt key press`
@@ -232,6 +243,11 @@ add_task(async function runTests() {
       } finally {
         await ensureMenubarInactive();
         info(`End testing: ${aTest.description}`);
+        ChromeUtils.addProfilerMarker(
+          "browser-test",
+          { startTime, category: "Test" },
+          aTest.description
+        );
       }
     }
 
