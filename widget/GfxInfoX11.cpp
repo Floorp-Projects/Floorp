@@ -819,8 +819,7 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 #  endif
 #endif
 
-#if defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || \
-    defined(__i386) || defined(__amd64__)
+#if defined(_M_X64) || defined(__amd64__)
     // Initial Linux release population for SW-WR.
     if (mozilla::supports_avx2()) {
       APPEND_TO_DRIVER_BLOCKLIST_EXT(
