@@ -74,6 +74,12 @@ void CUIDraw(CUIRendererRef r, CGRect rect, CGContextRef ctx, CFDictionaryRef op
 }
 @end
 
+#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
+@interface NSApplication (NSApplicationAppearance)
+@property(readonly, strong) NSAppearance* effectiveAppearance NS_AVAILABLE_MAC(10_14);
+@end
+#endif
+
 // This is the window for our MOZCellDrawView. When an NSCell is drawn, some NSCell implementations
 // look at the draw view's window to determine whether the cell should draw with the active look.
 @interface MOZCellDrawWindow : NSWindow
@@ -772,13 +778,11 @@ static void DrawCellWithSnapping(NSCell* cell, CGContextRef cgContext, const HIR
 + (CUIRendererRef)coreUIRenderer;
 @end
 
-static id GetAquaAppearance() {
-  Class NSAppearanceClass = NSClassFromString(@"NSAppearance");
-  if (NSAppearanceClass && [NSAppearanceClass respondsToSelector:@selector(appearanceNamed:)]) {
-    return [NSAppearanceClass performSelector:@selector(appearanceNamed:)
-                                   withObject:@"NSAppearanceNameAqua"];
+static id GetAppAppearance() {
+  if (@available(macOS 10.14, *)) {
+    return NSApp.effectiveAppearance;
   }
-  return nil;
+  return [NSAppearance appearanceNamed:NSAppearanceNameAqua];
 }
 
 @interface NSObject (NSAppearanceCoreUIRendering)
@@ -787,7 +791,7 @@ static id GetAquaAppearance() {
 
 static void RenderWithCoreUI(CGRect aRect, CGContextRef cgContext, NSDictionary* aOptions,
                              bool aSkipAreaCheck = false) {
-  id appearance = GetAquaAppearance();
+  NSAppearance* appearance = GetAppAppearance();
 
   if (!aSkipAreaCheck && aRect.size.width * aRect.size.height > BITMAP_MAX_AREA) {
     return;
