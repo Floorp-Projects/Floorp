@@ -1406,15 +1406,6 @@ void nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, const HIRect& inBoxR
                         ToThemeDrawState(controlParams), adornment, controlParams);
       return;
     }
-    case ButtonType::eRegularBevelButton:
-    case ButtonType::eDefaultBevelButton: {
-      ThemeButtonAdornment adornment = aParams.button == ButtonType::eDefaultBevelButton
-                                           ? kThemeAdornmentDefault
-                                           : kThemeAdornmentNone;
-      DrawHIThemeButton(cgContext, inBoxRect, kThemeMediumBevelButton, kThemeButtonOff,
-                        ToThemeDrawState(controlParams), adornment, controlParams);
-      return;
-    }
     case ButtonType::eRoundedBezelPushButton:
       DrawRoundedBezelPushButton(cgContext, inBoxRect, controlParams);
       return;
