@@ -12,8 +12,8 @@ const { RESTRequest } = ChromeUtils.import(
 );
 const { Service } = ChromeUtils.import("resource://services-sync/service.js");
 const { Status } = ChromeUtils.import("resource://services-sync/status.js");
-const { BrowserIDManager } = ChromeUtils.import(
-  "resource://services-sync/browserid_identity.js"
+const { SyncAuthManager } = ChromeUtils.import(
+  "resource://services-sync/sync_auth.js"
 );
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
@@ -24,8 +24,8 @@ add_task(async function setup() {
   // add-ons engine.
   await Service.engineManager.clear();
 
-  // Setup the FxA identity manager and cluster manager.
-  Status.__authManager = Service.identity = new BrowserIDManager();
+  // Setup the sync auth manager.
+  Status.__authManager = Service.identity = new SyncAuthManager();
 });
 
 // API-compatible with SyncServer handler. Bind `handler` to something to use
@@ -66,25 +66,7 @@ function prepareServer(cbAfterTokenFetch) {
   let numReassigns = 0;
   return configureIdentity(config).then(() => {
     Service.identity._tokenServerClient = {
-      getTokenFromBrowserIDAssertion(uri, assertion) {
-        return new Promise(res => {
-          // Build a new URL with trailing zeros for the SYNC_VERSION part - this
-          // will still be seen as equivalent by the test server, but different
-          // by sync itself.
-          numReassigns += 1;
-          let trailingZeros = new Array(numReassigns + 1).join("0");
-          let token = config.fxaccount.token;
-          token.endpoint = server.baseURI + "1.1" + trailingZeros + "/johndoe";
-          token.uid = config.username;
-          _(`test server saw token fetch - endpoint now ${token.endpoint}`);
-          numTokenRequests += 1;
-          res(token);
-          if (cbAfterTokenFetch) {
-            cbAfterTokenFetch();
-          }
-        });
-      },
-      getTokenFromOAuthToken() {
+      getTokenUsingOAuth() {
         return new Promise(res => {
           // Build a new URL with trailing zeros for the SYNC_VERSION part - this
           // will still be seen as equivalent by the test server, but different

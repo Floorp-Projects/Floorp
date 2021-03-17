@@ -695,7 +695,7 @@ RESTResponse.prototype = {
  *        (Object) An auth token of the form {id: (string), key: (string)}
  *        from which the MAC Authentication header for this request will be
  *        derived. A token as obtained from
- *        TokenServerClient.getTokenFromBrowserIDAssertion is accepted.
+ *        TokenServerClient.getTokenUsingOAuth is accepted.
  * @param extra
  *        (Object) Optional extra parameters. Valid keys are: nonce_bytes, ts,
  *        nonce, and ext. See CrytoUtils.computeHTTPMACSHA1 for information on
