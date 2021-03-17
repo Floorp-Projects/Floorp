@@ -40,10 +40,10 @@ appmenu-update-other-instance =
     .secondarybuttonaccesskey = N
 appmenu-update-other-instance-message = A new { -brand-shorter-name } update is available, but it can’t be installed because another copy of { -brand-shorter-name } is running. Close it to continue the update, or choose to update anyway (the other copy may not work correctly until you restart it).
 
-appmenu-addon-private-browsing-installed =
-    .buttonlabel = Okay, Got It
+appmenu-addon-private-browsing-installed2 =
+    .buttonlabel = Okay
     .buttonaccesskey = O
-appmenu-addon-post-install-message = Manage your add-ons by clicking <image data-l10n-name='addon-install-icon'></image> in the <image data-l10n-name='addon-menu-icon'></image> menu.
+appmenu-addon-post-install-message2 = Manage your extensions and themes through the application menu.
 appmenu-addon-post-install-incognito-checkbox =
     .label = Allow this extension to run in Private Windows
     .accesskey = A
