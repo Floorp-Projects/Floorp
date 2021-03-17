@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **browser-menu**:
+  * 🚒 Bug fixed [issue #](https://github.com/mozilla-mobile/android-components/issues/9922) - The browser menu will have it's dynamic width calculated only once, before the first layout.
+
 * **browser-menu**
   * 🌟️ BrowserMenu support a bottom collapsed/expandable layout through a new ExpandableLayout that will wrap a menu layout before being used in a PopupWindow and automatically allow the collapse/expand behaviors.
   * To use this set `isCollapsingMenuLimit = true` for any menu item of a bottom anchored menu.

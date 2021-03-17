@@ -11,6 +11,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
@@ -184,6 +185,34 @@ class DynamicWidthRecyclerViewTest {
         dynamicRecyclerView.setReconciledDimensions(childrenWidth, 100)
 
         verify(dynamicRecyclerView).callSetMeasuredDimension(materialMaxWidth, 100)
+    }
+
+    @Test
+    fun `maxWidthOfAllChildren can only be initialized once with a positive value`() {
+        val dynamicRecyclerView = DynamicWidthRecyclerView(testContext)
+
+        assertEquals(0, dynamicRecyclerView.maxWidthOfAllChildren)
+
+        dynamicRecyclerView.maxWidthOfAllChildren = 42
+        assertEquals(42, dynamicRecyclerView.maxWidthOfAllChildren)
+
+        dynamicRecyclerView.maxWidthOfAllChildren = 24
+        assertEquals(42, dynamicRecyclerView.maxWidthOfAllChildren)
+    }
+
+    @Test
+    fun `onMeasure will call setReconciledDimensions with maxWidthOfAllChildren`() {
+        val dynamicRecyclerView = spy(DynamicWidthRecyclerView(testContext))
+        doReturn(100).`when`(dynamicRecyclerView).measuredHeight
+        doReturn(100).`when`(dynamicRecyclerView).measuredWidth
+        doReturn(100).`when`(dynamicRecyclerView).height
+        dynamicRecyclerView.maxWidthOfAllChildren = 42
+        dynamicRecyclerView.minWidth = 10
+        dynamicRecyclerView.maxWidth = Int.MAX_VALUE
+
+        dynamicRecyclerView.measure(0, 0)
+
+        verify(dynamicRecyclerView).setReconciledDimensions(42, 100)
     }
 
     private fun buildRecyclerView(layoutWidth: Int): DynamicWidthRecyclerView {
