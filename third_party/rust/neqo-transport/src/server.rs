@@ -39,12 +39,7 @@ pub enum InitialResult {
 /// MIN_INITIAL_PACKET_SIZE is the smallest packet that can be used to establish
 /// a new connection across all QUIC versions this server supports.
 const MIN_INITIAL_PACKET_SIZE: usize = 1200;
-/// The size of timer buckets.  This is higher than the actual timer granularity
-/// as this depends on there being some distribution of events.
-const TIMER_GRANULARITY: Duration = Duration::from_millis(4);
-/// The number of buckets in the timer.  As mentioned in the definition of `Timer`,
-/// the granularity and capacity need to multiply to be larger than the largest
-/// delay that might be used.  That's the idle timeout (currently 30s).
+const TIMER_GRANULARITY: Duration = Duration::from_millis(10);
 const TIMER_CAPACITY: usize = 16384;
 
 type StateRef = Rc<RefCell<ServerConnectionState>>;
@@ -615,11 +610,11 @@ pub struct ActiveConnectionRef {
 }
 
 impl ActiveConnectionRef {
-    pub fn borrow(&self) -> impl Deref<Target = Connection> + '_ {
+    pub fn borrow<'a>(&'a self) -> impl Deref<Target = Connection> + 'a {
         std::cell::Ref::map(self.c.borrow(), |c| &c.c)
     }
 
-    pub fn borrow_mut(&mut self) -> impl DerefMut<Target = Connection> + '_ {
+    pub fn borrow_mut<'a>(&'a mut self) -> impl DerefMut<Target = Connection> + 'a {
         std::cell::RefMut::map(self.c.borrow_mut(), |c| &mut c.c)
     }
 
