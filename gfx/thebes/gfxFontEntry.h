@@ -934,6 +934,8 @@ class gfxFontFamily {
     }
   }
 
+  virtual bool IsSingleFaceFamily() const { return false; }
+
   bool IsBadUnderlineFamily() const { return mIsBadUnderlineFamily; }
   bool CheckForFallbackFaces() const { return mCheckForFallbackFaces; }
 
