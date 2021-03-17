@@ -88,7 +88,7 @@ this.ContentSearchUIController = (function() {
       if (engine.iconData) {
         icon = this._getFaviconURIFromIconData(engine.iconData);
       } else {
-        icon = "chrome://mozapps/skin/places/defaultFavicon.svg";
+        icon = "chrome://global/skin/icons/defaultFavicon.svg";
       }
       this._defaultEngine = {
         name: engine.name,

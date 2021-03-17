@@ -5,7 +5,7 @@
 .searchbar-engine-image {
   width: 16px;
   height: 16px;
-  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.svg");
+  list-style-image: url("chrome://global/skin/icons/defaultFavicon.svg");
   -moz-context-properties: fill;
   fill: currentColor;
 }

@@ -49,7 +49,7 @@ ContentSearchHandoffUIController.prototype = {
     } else if (engine.iconData) {
       this._engineIcon = this._getFaviconURIFromIconData(engine.iconData);
     } else {
-      this._engineIcon = "chrome://mozapps/skin/places/defaultFavicon.svg";
+      this._engineIcon = "chrome://global/skin/icons/defaultFavicon.svg";
     }
 
     document.body.style.setProperty(

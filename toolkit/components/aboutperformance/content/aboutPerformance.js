@@ -350,7 +350,7 @@ var State = {
 
       let type = "other";
       let name = `${host} (${id})`;
-      let image = "chrome://mozapps/skin/places/defaultFavicon.svg";
+      let image = "chrome://global/skin/icons/defaultFavicon.svg";
       let found = tabFinder.get(parseInt(id));
       if (found) {
         if (found.tabbrowser) {
