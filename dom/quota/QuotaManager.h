@@ -140,11 +140,9 @@ class QuotaManager final : public BackgroundThreadObject {
    * has tallied origin usage by calling each of the QuotaClient InitOrigin
    * methods.
    */
-  void InitQuotaForOrigin(PersistenceType aPersistenceType,
-                          const OriginMetadata& aOriginMetadata,
+  void InitQuotaForOrigin(const FullOriginMetadata& aFullOriginMetadata,
                           const ClientUsageArray& aClientUsages,
-                          uint64_t aUsageBytes, int64_t aAccessTime,
-                          bool aPersisted);
+                          uint64_t aUsageBytes);
 
   /**
    * For use in special-cases like LSNG where we need to be able to know that

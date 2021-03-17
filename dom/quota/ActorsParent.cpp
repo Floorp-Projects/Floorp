@@ -3826,22 +3826,21 @@ void QuotaManager::Shutdown() {
   }
 }
 
-void QuotaManager::InitQuotaForOrigin(PersistenceType aPersistenceType,
-                                      const OriginMetadata& aOriginMetadata,
-                                      const ClientUsageArray& aClientUsages,
-                                      uint64_t aUsageBytes, int64_t aAccessTime,
-                                      bool aPersisted) {
+void QuotaManager::InitQuotaForOrigin(
+    const FullOriginMetadata& aFullOriginMetadata,
+    const ClientUsageArray& aClientUsages, uint64_t aUsageBytes) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
+  MOZ_ASSERT(IsBestEffortPersistenceType(aFullOriginMetadata.mPersistenceType));
 
   MutexAutoLock lock(mQuotaMutex);
 
   RefPtr<GroupInfo> groupInfo = LockedGetOrCreateGroupInfo(
-      aPersistenceType, aOriginMetadata.mSuffix, aOriginMetadata.mGroup);
+      aFullOriginMetadata.mPersistenceType, aFullOriginMetadata.mSuffix,
+      aFullOriginMetadata.mGroup);
 
   groupInfo->LockedAddOriginInfo(MakeNotNull<RefPtr<OriginInfo>>(
-      groupInfo, aOriginMetadata.mOrigin, aClientUsages, aUsageBytes,
-      aAccessTime, aPersisted,
+      groupInfo, aFullOriginMetadata.mOrigin, aClientUsages, aUsageBytes,
+      aFullOriginMetadata.mLastAccessTime, aFullOriginMetadata.mPersisted,
       /* aDirectoryExists */ true));
 }
 
@@ -4160,10 +4159,7 @@ nsresult QuotaManager::LoadQuota() {
                                     fullOriginMetadata.mLastAccessTime,
                                     fullOriginMetadata.mPersisted, directory));
           } else {
-            InitQuotaForOrigin(fullOriginMetadata.mPersistenceType,
-                               fullOriginMetadata, clientUsages, usage,
-                               fullOriginMetadata.mLastAccessTime,
-                               fullOriginMetadata.mPersisted);
+            InitQuotaForOrigin(fullOriginMetadata, clientUsages, usage);
           }
 
           return Ok{};
@@ -4698,6 +4694,9 @@ nsresult QuotaManager::InitializeRepository(PersistenceType aPersistenceType) {
                             auto metadata,
                             LoadFullOriginMetadataWithRestore(childDirectory));
 
+                        MOZ_ASSERT(metadata.mPersistenceType ==
+                                   aPersistenceType);
+
                         // FIXME(tt): The check for origin name consistency can
                         // be removed once we have an upgrade to traverse origin
                         // directories and check through the directory metadata
@@ -4981,8 +4980,9 @@ nsresult QuotaManager::InitializeOrigin(PersistenceType aPersistenceType,
 
     QM_TRY(OkIf(usage.isValid()), NS_ERROR_FAILURE);
 
-    InitQuotaForOrigin(aPersistenceType, aOriginMetadata, clientUsages,
-                       usage.value(), aAccessTime, aPersisted);
+    InitQuotaForOrigin(
+        FullOriginMetadata{aOriginMetadata, aPersisted, aAccessTime},
+        clientUsages, usage.value());
   }
 
   return NS_OK;
@@ -6082,6 +6082,7 @@ Result<std::pair<nsCOMPtr<nsIFile>, bool>, nsresult>
 QuotaManager::EnsurePersistentOriginIsInitialized(
     const OriginMetadata& aOriginMetadata) {
   AssertIsOnIOThread();
+  MOZ_ASSERT(aOriginMetadata.mPersistenceType == PERSISTENCE_TYPE_PERSISTENT);
   MOZ_DIAGNOSTIC_ASSERT(mStorageConnection);
 
   auto res = [&aOriginMetadata, this]()
