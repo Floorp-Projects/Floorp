@@ -44,7 +44,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   enum class ButtonType : uint8_t {
     eRegularPushButton,
     eDefaultPushButton,
-    eRoundedBezelPushButton,
     eSquareBezelPushButton,
     eArrowButton,
     eHelpButton,
@@ -405,8 +404,8 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
                        const TextFieldParams& aParams);
   void DrawTextField(CGContextRef cgContext, const HIRect& inBoxRect,
                      const TextFieldParams& aParams);
-  void DrawRoundedBezelPushButton(CGContextRef cgContext, const HIRect& inBoxRect,
-                                  ButtonType aButtonType, ControlParams aControlParams);
+  void DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect, ButtonType aButtonType,
+                      ControlParams aControlParams);
   void DrawSquareBezelPushButton(CGContextRef cgContext, const HIRect& inBoxRect,
                                  ControlParams aControlParams);
   void DrawHelpButton(CGContextRef cgContext, const HIRect& inBoxRect,

@@ -1240,9 +1240,8 @@ static const CellRenderSettings pushButtonSettings = {{
 // we switch over to doing square buttons which looks fine at any size.
 #define DO_SQUARE_BUTTON_HEIGHT 26
 
-void nsNativeThemeCocoa::DrawRoundedBezelPushButton(CGContextRef cgContext, const HIRect& inBoxRect,
-                                                    ButtonType aButtonType,
-                                                    ControlParams aControlParams) {
+void nsNativeThemeCocoa::DrawPushButton(CGContextRef cgContext, const HIRect& inBoxRect,
+                                        ButtonType aButtonType, ControlParams aControlParams) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   ApplyControlParamsToNSCell(aControlParams, mPushButtonCell);
@@ -1446,8 +1445,7 @@ void nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, const HIRect& inBoxR
   switch (aParams.button) {
     case ButtonType::eRegularPushButton:
     case ButtonType::eDefaultPushButton:
-    case ButtonType::eRoundedBezelPushButton:
-      DrawRoundedBezelPushButton(cgContext, inBoxRect, aParams.button, controlParams);
+      DrawPushButton(cgContext, inBoxRect, aParams.button, controlParams);
       return;
     case ButtonType::eSquareBezelPushButton:
       DrawSquareBezelPushButton(cgContext, inBoxRect, controlParams);
@@ -2485,8 +2483,8 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
         return Some(WidgetInfo::Button(ButtonParams{ComputeControlParams(aFrame, eventState),
                                                     ButtonType::eSquareBezelPushButton}));
       }
-      return Some(WidgetInfo::Button(ButtonParams{ComputeControlParams(aFrame, eventState),
-                                                  ButtonType::eRoundedBezelPushButton}));
+      return Some(WidgetInfo::Button(
+          ButtonParams{ComputeControlParams(aFrame, eventState), ButtonType::eRegularPushButton}));
 
     case StyleAppearance::FocusOutline:
       return Some(WidgetInfo::FocusOutline());
