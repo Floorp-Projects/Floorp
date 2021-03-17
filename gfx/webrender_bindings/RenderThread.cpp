@@ -143,7 +143,7 @@ void RenderThread::ShutDownTask(layers::SynchronousTask* aTask) {
   layers::SharedSurfacesParent::Shutdown();
 
   ClearAllBlobImageResources();
-  ClearSharedGL();
+  ClearSingletonGL();
   ClearSharedSurfacePool();
 }
 
@@ -764,7 +764,7 @@ RenderTextureHost* RenderThread::GetRenderTexture(
 
 void RenderThread::InitDeviceTask() {
   MOZ_ASSERT(IsInRenderThread());
-  MOZ_ASSERT(!mSharedGL);
+  MOZ_ASSERT(!mSingletonGL);
 
   if (gfx::gfxVars::UseSoftwareWebRender()) {
     // Ensure we don't instantiate any shared GL context when SW-WR is used.
@@ -772,13 +772,13 @@ void RenderThread::InitDeviceTask() {
   }
 
   nsAutoCString err;
-  mSharedGL = CreateGLContext(err);
+  mSingletonGL = CreateGLContext(err);
   if (gfx::gfxVars::UseWebRenderProgramBinaryDisk()) {
     mProgramCache = MakeUnique<WebRenderProgramCache>(ThreadPool().Raw());
   }
   // Query the shared GL context to force the
   // lazy initialization to happen now.
-  SharedGL();
+  SingletonGL();
 }
 
 #ifndef XP_WIN
@@ -898,35 +898,35 @@ bool RenderThread::IsHandlingWebRenderError() {
   return mHandlingWebRenderError;
 }
 
-gl::GLContext* RenderThread::SharedGL() {
+gl::GLContext* RenderThread::SingletonGL() {
   nsAutoCString err;
-  auto gl = SharedGL(err);
+  auto gl = SingletonGL(err);
   if (!err.IsEmpty()) {
     gfxCriticalNote << err.get();
   }
   return gl;
 }
 
-gl::GLContext* RenderThread::SharedGL(nsACString& aError) {
+gl::GLContext* RenderThread::SingletonGL(nsACString& aError) {
   MOZ_ASSERT(IsInRenderThread());
-  if (!mSharedGL) {
-    mSharedGL = CreateGLContext(aError);
+  if (!mSingletonGL) {
+    mSingletonGL = CreateGLContext(aError);
     mShaders = nullptr;
   }
-  if (mSharedGL && !mShaders) {
-    mShaders = MakeUnique<WebRenderShaders>(mSharedGL, mProgramCache.get());
+  if (mSingletonGL && !mShaders) {
+    mShaders = MakeUnique<WebRenderShaders>(mSingletonGL, mProgramCache.get());
   }
 
-  return mSharedGL.get();
+  return mSingletonGL.get();
 }
 
-void RenderThread::ClearSharedGL() {
+void RenderThread::ClearSingletonGL() {
   MOZ_ASSERT(IsInRenderThread());
   if (mSurfacePool) {
-    mSurfacePool->DestroyGLResourcesForContext(mSharedGL);
+    mSurfacePool->DestroyGLResourcesForContext(mSingletonGL);
   }
   mShaders = nullptr;
-  mSharedGL = nullptr;
+  mSingletonGL = nullptr;
 }
 
 RefPtr<layers::SurfacePool> RenderThread::SharedSurfacePool() {

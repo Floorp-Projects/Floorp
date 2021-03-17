@@ -417,7 +417,7 @@ void RenderCompositorNative::AddSurface(
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorNativeOGL::Create(
     RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
-  RefPtr<gl::GLContext> gl = RenderThread::Get()->SharedGL();
+  RefPtr<gl::GLContext> gl = RenderThread::Get()->SingletonGL();
   if (!gl) {
     gl = gl::GLContextProvider::CreateForCompositorWidget(
         aWidget, /* aWebRender */ true, /* aForceAccelerated */ true);

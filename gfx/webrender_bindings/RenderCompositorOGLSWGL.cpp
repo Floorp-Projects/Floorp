@@ -42,9 +42,9 @@ UniquePtr<RenderCompositor> RenderCompositorOGLSWGL::Create(
 
   RefPtr<Compositor> compositor;
 #ifdef MOZ_WIDGET_ANDROID
-  RefPtr<gl::GLContext> context = RenderThread::Get()->SharedGL();
+  RefPtr<gl::GLContext> context = RenderThread::Get()->SingletonGL();
   if (!context) {
-    gfxCriticalNote << "SharedGL does not exist for SWGL";
+    gfxCriticalNote << "SingletonGL does not exist for SWGL";
     return nullptr;
   }
   nsCString log;

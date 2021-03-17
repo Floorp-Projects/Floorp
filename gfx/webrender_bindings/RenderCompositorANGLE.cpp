@@ -44,7 +44,7 @@ namespace wr {
 /* static */
 UniquePtr<RenderCompositor> RenderCompositorANGLE::Create(
     RefPtr<widget::CompositorWidget>&& aWidget, nsACString& aError) {
-  const auto& gl = RenderThread::Get()->SharedGL(aError);
+  const auto& gl = RenderThread::Get()->SingletonGL(aError);
   if (!gl) {
     if (aError.IsEmpty()) {
       aError.Assign("RcANGLE(no shared GL)"_ns);
@@ -80,7 +80,7 @@ RenderCompositorANGLE::~RenderCompositorANGLE() {
 }
 
 ID3D11Device* RenderCompositorANGLE::GetDeviceOfEGLDisplay(nsACString& aError) {
-  const auto& gl = RenderThread::Get()->SharedGL(aError);
+  const auto& gl = RenderThread::Get()->SingletonGL(aError);
   if (!gl) {
     if (aError.IsEmpty()) {
       aError.Assign("RcANGLE(no shared GL in get device)"_ns);
@@ -127,7 +127,7 @@ bool RenderCompositorANGLE::ShutdownEGLLibraryIfNecessary(nsACString& aError) {
   if ((!displayDevice || device.get() != displayDevice) &&
       RenderThread::Get()->RendererCount() == 0) {
     // Shutdown GLLibraryEGL for updating EGLDisplay.
-    RenderThread::Get()->ClearSharedGL();
+    RenderThread::Get()->ClearSingletonGL();
   }
   return true;
 }
@@ -147,7 +147,7 @@ bool RenderCompositorANGLE::Initialize(nsACString& aError) {
     aError.Append("(Shutdown EGL)"_ns);
     return false;
   }
-  const auto gl = RenderThread::Get()->SharedGL(aError);
+  const auto gl = RenderThread::Get()->SingletonGL(aError);
   if (!gl) {
     if (aError.IsEmpty()) {
       aError.Assign("RcANGLE(no shared GL post maybe shutdown)"_ns);
@@ -697,7 +697,7 @@ bool RenderCompositorANGLE::CreateEGLSurface() {
 
   const auto buffer = reinterpret_cast<EGLClientBuffer>(backBuf.get());
 
-  const auto gl = RenderThread::Get()->SharedGL();
+  const auto gl = RenderThread::Get()->SingletonGL();
   const auto& gle = gl::GLContextEGL::Cast(gl);
   const auto& egl = gle->mEgl;
   const EGLSurface surface = egl->fCreatePbufferFromClientBuffer(

@@ -48,7 +48,9 @@ class RenderCompositorANGLE : public RenderCompositor {
   bool Resume() override;
   void Update() override;
 
-  gl::GLContext* gl() const override { return RenderThread::Get()->SharedGL(); }
+  gl::GLContext* gl() const override {
+    return RenderThread::Get()->SingletonGL();
+  }
 
   bool MakeCurrent() override;
 
