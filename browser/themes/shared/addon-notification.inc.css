@@ -19,12 +19,7 @@ html|*.addon-webext-perm-list {
   padding-inline-start: 10px;
 }
 
-.addon-webext-perm-single-entry {
-  margin-top: 11px;
-}
-
-.addon-webext-perm-text,
-.addon-webext-perm-single-entry {
+.addon-webext-perm-text {
   margin-inline-start: 0;
 }
 
