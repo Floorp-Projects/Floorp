@@ -4,8 +4,8 @@
 const { FxAccounts } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
-const { BrowserIDManager } = ChromeUtils.import(
-  "resource://services-sync/browserid_identity.js"
+const { SyncAuthManager } = ChromeUtils.import(
+  "resource://services-sync/sync_auth.js"
 );
 const { SyncScheduler } = ChromeUtils.import(
   "resource://services-sync/policies.js"
@@ -666,7 +666,7 @@ add_task(async function test_no_autoconnect_during_wizard() {
 
 add_task(async function test_no_autoconnect_status_not_ok() {
   let server = await sync_httpd_setup();
-  Status.__authManager = Service.identity = new BrowserIDManager();
+  Status.__authManager = Service.identity = new SyncAuthManager();
 
   // Ensure we don't actually try to sync (or log in for that matter).
   function onLoginStart() {
