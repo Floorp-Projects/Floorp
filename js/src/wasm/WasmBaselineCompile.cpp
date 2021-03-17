@@ -14119,6 +14119,8 @@ bool BaseCompiler::emitRttSub() {
     return true;
   }
 
+  // rttSub builtin has same signature as rtt.sub instruction, stack is
+  // guaranteed to be in the right condition due to validation.
   if (!emitInstanceCall(lineOrBytecode, SASigRttSub)) {
     return false;
   }
@@ -14138,6 +14140,9 @@ bool BaseCompiler::emitRefTest() {
   if (deadCode_) {
     return true;
   }
+
+  // refTest builtin has same signature as ref.test instruction, stack is
+  // guaranteed to be in the right condition due to validation.
   return emitInstanceCall(lineOrBytecode, SASigRefTest);
 }
 
@@ -14157,16 +14162,20 @@ bool BaseCompiler::emitRefCast() {
 
   RegRef rttPtr = popRef();
   RegRef refPtr = popRef();
+
+  // 1. duplicate and shuffle from [ref, rtt] to [ref, ref, rtt]
   RegRef castedPtr = needRef();
   moveRef(refPtr, castedPtr);
   pushRef(castedPtr);
   pushRef(refPtr);
   pushRef(rttPtr);
 
+  // 2. ref.test : [ref, rtt] -> [i32]
   if (!emitInstanceCall(lineOrBytecode, SASigRefTest)) {
     return false;
   }
 
+  // 3. trap if result is zero, leaving [ref] as result
   RegI32 result = popI32();
   Label nonZero;
   masm.branchTest32(Assembler::NonZero, result, result, &nonZero);
@@ -14186,9 +14195,9 @@ bool BaseCompiler::emitBrOnCast() {
   NothingVector unused_values;
   uint32_t rttTypeIndex;
   uint32_t rttDepth;
-  ResultType type;
+  ResultType branchTargetType;
   if (!iter_.readBrOnCast(&relativeDepth, &unused, &rttTypeIndex, &rttDepth,
-                          &unused_values, &type)) {
+                          &branchTargetType, &unused_values)) {
     return false;
   }
 
@@ -14201,17 +14210,22 @@ bool BaseCompiler::emitBrOnCast() {
 
   RegRef rttPtr = popRef();
   RegRef refPtr = popRef();
+
+  // 1. duplicate and shuffle from [T*, ref, rtt] to [T*, ref, ref, rtt]
   RegRef castedPtr = needRef();
   moveRef(refPtr, castedPtr);
   pushRef(castedPtr);
   pushRef(refPtr);
   pushRef(rttPtr);
 
+  // 2. ref.test : [ref, rtt] -> [i32]
   if (!emitInstanceCall(lineOrBytecode, SASigRefTest)) {
     return false;
   }
 
-  BranchState b(&target.label, target.stackHeight, InvertBranch(false), type);
+  // 3. br_if $l : [T*, ref, i32] -> [T*, ref]
+  BranchState b(&target.label, target.stackHeight, InvertBranch(false),
+                branchTargetType);
   if (b.hasBlockResults()) {
     needResultRegisters(b.resultType);
   }
@@ -14864,6 +14878,17 @@ static void WidenLowUI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
 static void WidenHighUI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
   masm.unsignedWidenHighInt32x4(rs, rd);
 }
+
+#  if defined(JS_CODEGEN_ARM64)
+static void PopcntI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.popcntInt8x16(rs, rd);
+}
+#  else
+static void PopcntI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rd,
+                        RegV128 temp) {
+  masm.popcntInt8x16(rs, rd, temp);
+}
+#  endif  // JS_CODEGEN_ARM64
 
 static void AbsI8x16(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
   masm.absInt8x16(rs, rd);
@@ -16800,6 +16825,8 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorUnary(SqrtF64x2));
           case uint32_t(SimdOp::V128Not):
             CHECK_NEXT(dispatchVectorUnary(NotV128));
+          case uint32_t(SimdOp::I8x16Popcnt):
+            CHECK_NEXT(dispatchVectorUnary(PopcntI8x16));
           case uint32_t(SimdOp::I8x16Abs):
             CHECK_NEXT(dispatchVectorUnary(AbsI8x16));
           case uint32_t(SimdOp::I16x8Abs):

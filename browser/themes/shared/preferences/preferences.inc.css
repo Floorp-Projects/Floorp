@@ -5,16 +5,6 @@
 %endif
 @namespace html "http://www.w3.org/1999/xhtml";
 
-:root {
-  --in-content-warning-container: var(--grey-20);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --in-content-warning-container: var(--grey-90-a30);
-  }
-}
-
 #preferences-root {
   text-rendering: optimizeLegibility;
 }
@@ -247,7 +237,7 @@ button > hbox > label {
 .info-panel,
 .extension-controlled {
   margin-block: 18px !important;
-  background: var(--in-content-warning-container);
+  background: var(--in-content-box-info-background);
   border-radius: 5px;
   padding-inline-end: 10px;
 }
@@ -888,7 +878,7 @@ image.update-throbber {
 }
 
 #policies-container {
-  background-color: var(--in-content-warning-container);
+  background-color: var(--in-content-box-info-background);
   padding: 0 8px;
   margin-inline-end: 16px;
   border-radius: 2px;
@@ -1068,7 +1058,7 @@ menulist[indicator=true] > menupopup menuitem[indicator=true]:not([image]) > .me
 }
 
 .updateSettingCrossUserWarningContainer {
-  background: var(--in-content-warning-container);
+  background: var(--in-content-box-info-background);
   border-radius: 5px;
   padding: 2px 8px 8px;
   margin-block-end: 17px;

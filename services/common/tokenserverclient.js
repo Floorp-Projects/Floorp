@@ -74,12 +74,6 @@ TokenServerClientNetworkError.prototype._toStringFields = function() {
  * server. The type of error is strongly enumerated and is stored in the
  * `cause` property. This property can have the following string values:
  *
- *   conditions-required -- The server is requesting that the client
- *     agree to service conditions before it can obtain a token. The
- *     conditions that must be presented to the user and agreed to are in
- *     the `urls` mapping on the instance. Keys of this mapping are
- *     identifiers. Values are string URLs.
- *
  *   invalid-credentials -- A token could not be obtained because
  *     the credentials presented by the client were invalid.
  *
@@ -126,15 +120,10 @@ TokenServerClientServerError.prototype._toStringFields = function() {
  *
  * http://docs.services.mozilla.com/token/index.html
  *
- * The Token Server supports obtaining tokens for arbitrary apps by
- * constructing URI paths of the form <app>/<app_version>. However, the service
- * discovery mechanism emphasizes the use of full URIs and tries to not force
- * the client to manipulate URIs. This client currently enforces this practice
- * by not implementing an API which would perform URI manipulation.
- *
- * If you are tempted to implement this API in the future, consider this your
- * warning that you may be doing it wrong and that you should store full URIs
- * instead.
+ * The Token Server was designed to support obtaining tokens for arbitrary apps by
+ * constructing URI paths of the form <app>/<app_version>. In practice this was
+ * never used and it only supports an <app> value of `sync`, and the API presented
+ * here reflects that.
  *
  * Areas to Improve:
  *
@@ -155,7 +144,7 @@ TokenServerClient.prototype = {
   _log: null,
 
   /**
-   * Obtain a token from a BrowserID assertion against a specific URL.
+   * Obtain a token from a provided OAuth token against a specific URL.
    *
    * This asynchronously obtains the token.
    * It returns a Promise that resolves or rejects:
@@ -179,66 +168,20 @@ TokenServerClient.prototype = {
    *       uid      (string) user ID for requested service.
    *       duration (string) the validity duration of the issued token.
    *
-   * Terms of Service Acceptance
-   * ---------------------------
-   *
-   * Some services require users to accept terms of service before they can
-   * obtain a token. If a service requires ToS acceptance, the error passed
-   * to the callback will be a `TokenServerClientServerError` with the
-   * `cause` property set to "conditions-required". The `urls` property of that
-   * instance will be a map of string keys to string URL values. The user-agent
-   * should prompt the user to accept the content at these URLs.
-   *
-   * Clients signify acceptance of the terms of service by sending a token
-   * request with additional metadata. This is controlled by the
-   * `conditionsAccepted` argument to this function. Clients only need to set
-   * this flag once per service and the server remembers acceptance. If
-   * the conditions for the service change, the server may request
-   * clients agree to terms again. Therefore, clients should always be
-   * prepared to handle a conditions required response.
-   *
-   * Clients should not blindly send acceptance to conditions. Instead, clients
-   * should set `conditionsAccepted` if and only if the server asks for
-   * acceptance, the conditions are displayed to the user, and the user agrees
-   * to them.
-   *
    * Example Usage
    * -------------
    *
    *   let client = new TokenServerClient();
-   *   let assertion = getBrowserIDAssertionFromSomewhere();
+   *   let access_token = getOAuthAccessTokenFromSomewhere();
    *   let url = "https://token.services.mozilla.com/1.0/sync/2.0";
    *
    *   try {
-   *     const result = await client.getTokenFromBrowserIDAssertion(url, assertion);
+   *     const result = await client.getTokenUsingOAuth(url, access_token);
    *     let {id, key, uid, endpoint, duration} = result;
    *     // Do stuff with data and carry on.
    *   } catch (error) {
    *     // Handle errors.
    *   }
-   *
-   * @param  url
-   *         (string) URL to fetch token from.
-   * @param  assertion
-   *         (string) BrowserID assertion to exchange token for.
-   * @param  addHeaders
-   *         (object) Extra headers for the request.
-   */
-  async getTokenFromBrowserIDAssertion(url, assertion, addHeaders = {}) {
-    this._log.debug("Beginning BID assertion exchange: " + url);
-
-    if (!assertion) {
-      throw new TokenServerClientError("assertion argument is not valid.");
-    }
-
-    return this._tokenServerExchangeRequest(
-      url,
-      `BrowserID ${assertion}`,
-      addHeaders
-    );
-  },
-
-  /**
    * Obtain a token from a provided OAuth token against a specific URL.
    *
    * @param  url
@@ -248,7 +191,7 @@ TokenServerClient.prototype = {
    * @param  addHeaders
    *         (object) Extra headers for the request.
    */
-  async getTokenFromOAuthToken(url, oauthToken, addHeaders = {}) {
+  async getTokenUsingOAuth(url, oauthToken, addHeaders = {}) {
     this._log.debug("Beginning OAuth token exchange: " + url);
 
     if (!oauthToken) {
@@ -377,26 +320,6 @@ TokenServerClient.prototype = {
         // invalid-generation.
         error.message = "Authentication failed.";
         error.cause = result.status;
-      } else if (response.status == 403) {
-        // 403 should represent a "condition acceptance needed" response.
-        //
-        // The extra validation of "urls" is important. We don't want to signal
-        // conditions required unless we are absolutely sure that is what the
-        // server is asking for.
-        if (!("urls" in result)) {
-          this._log.warn("403 response without proper fields!");
-          this._log.warn("Response body: " + response.body);
-
-          error.message = "Missing JSON fields.";
-          error.cause = "malformed-response";
-        } else if (typeof result.urls != "object") {
-          error.message = "urls field is not a map.";
-          error.cause = "malformed-response";
-        } else {
-          error.message = "Conditions must be accepted.";
-          error.cause = "conditions-required";
-          error.urls = result.urls;
-        }
       } else if (response.status == 404) {
         error.message = "Unknown service.";
         error.cause = "unknown-service";

@@ -1,15 +1,7 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
+/* globals ExtensionAPI, Services, XPCOMUtils */
 
-/* globals ExtensionAPI */
 this.damp = class extends ExtensionAPI {
   getAPI(context) {
     return {

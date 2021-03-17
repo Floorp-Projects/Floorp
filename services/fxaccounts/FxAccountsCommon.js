@@ -62,18 +62,7 @@ exports.FXACCOUNTS_PERMISSION = "firefox-accounts";
 exports.DATA_FORMAT_VERSION = 1;
 exports.DEFAULT_STORAGE_FILENAME = "signedInUser.json";
 
-// Token life times.
-// Having this parameter be short has limited security value and can cause
-// spurious authentication values if the client's clock is skewed and
-// we fail to adjust. See Bug 983256.
-exports.ASSERTION_LIFETIME = 1000 * 3600 * 24 * 365 * 25; // 25 years
-// This is a time period we want to guarantee that the assertion will be
-// valid after we generate it (e.g., the signed cert won't expire in this
-// period).
-exports.ASSERTION_USE_PERIOD = 1000 * 60 * 5; // 5 minutes
-exports.CERT_LIFETIME = 1000 * 3600 * 6; // 6 hours
 exports.OAUTH_TOKEN_FOR_SYNC_LIFETIME_SECONDS = 3600 * 6; // 6 hours
-exports.KEY_LIFETIME = 1000 * 3600 * 12; // 12 hours
 
 // After we start polling for account verification, we stop polling when this
 // many milliseconds have elapsed.
@@ -113,12 +102,17 @@ exports.FX_OAUTH_CLIENT_ID = "5882386c6d801776";
 exports.SCOPE_PROFILE = "profile";
 exports.SCOPE_PROFILE_WRITE = "profile:write";
 exports.SCOPE_OLD_SYNC = "https://identity.mozilla.com/apps/oldsync";
-exports.SCOPE_ECOSYSTEM_TELEMETRY =
-  "https://identity.mozilla.com/ids/ecosystem_telemetry";
 // This scope and its associated key material are used by the old Kinto webextension
 // storage backend. We plan to remove that at some point (ref Bug 1637465) and when
 // we do, all uses of this legacy scope can be removed.
 exports.LEGACY_SCOPE_WEBEXT_SYNC = "sync:addon_storage";
+// This scope was previously used to calculate a telemetry tracking identifier for
+// the account, but that system has since been decommissioned. It's here entirely
+// so that we can remove the corresponding key from storage if present. We should
+// be safe to remove it after some sensible period of time has elapsed to allow
+// most clients to update; ref Bug 1697596.
+exports.DEPRECATED_SCOPE_ECOSYSTEM_TELEMETRY =
+  "https://identity.mozilla.com/ids/ecosystem_telemetry";
 
 // OAuth metadata for other Firefox-related services that we might need to know about
 // in order to provide an enhanced user experience.
@@ -293,8 +287,6 @@ exports.FXA_PWDMGR_PLAINTEXT_FIELDS = new Set([
   "authAt",
   "sessionToken",
   "uid",
-  "ecosystemAnonId",
-  "ecosystemUserId",
   "oauthTokens",
   "profile",
   "device",
@@ -306,12 +298,8 @@ exports.FXA_PWDMGR_SECURE_FIELDS = new Set([
   ...exports.LEGACY_DERIVED_KEYS_NAMES,
   "keyFetchToken",
   "unwrapBKey",
-  "assertion",
   "scopedKeys",
 ]);
-
-// Fields we keep in memory and don't persist anywhere.
-exports.FXA_PWDMGR_MEMORY_FIELDS = new Set(["cert", "keyPair"]);
 
 // A whitelist of fields that remain in storage when the user needs to
 // reauthenticate. All other fields will be removed.

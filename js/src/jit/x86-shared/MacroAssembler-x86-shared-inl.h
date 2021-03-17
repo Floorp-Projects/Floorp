@@ -2206,6 +2206,13 @@ void MacroAssembler::bitwiseSelectSimd128(FloatRegister mask,
   MacroAssemblerX86Shared::selectSimd128(mask, onTrue, onFalse, temp, dest);
 }
 
+// Population count
+
+void MacroAssembler::popcntInt8x16(FloatRegister src, FloatRegister dest,
+                                   FloatRegister temp) {
+  MacroAssemblerX86Shared::popcntInt8x16(src, temp, dest);
+}
+
 // Comparisons (integer and floating-point)
 
 void MacroAssembler::compareInt8x16(Assembler::Condition cond,

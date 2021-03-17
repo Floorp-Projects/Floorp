@@ -37,7 +37,7 @@ use crate::device::{
 use crate::gpu_types::{ZBufferId, CompositeInstance};
 use crate::batch::BatchTextures;
 use crate::texture_pack::{GuillotineAllocator, FreeRectSlice};
-use crate::composite::CompositeSurfaceFormat;
+use crate::composite::{CompositeFeatures, CompositeSurfaceFormat};
 use crate::profiler;
 use crate::render_api::MemoryReport;
 
@@ -512,6 +512,7 @@ fn copy_from_staging_to_cache_using_draw_calls(
                 .get_composite_shader(
                     CompositeSurfaceFormat::Rgba,
                     ImageBufferKind::Texture2D,
+                    CompositeFeatures::empty(),
                 ).bind(
                     &mut renderer.device,
                     &projection,

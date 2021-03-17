@@ -2544,6 +2544,12 @@ void MacroAssembler::bitwiseSelectSimd128(FloatRegister onTrue,
   Bsl(Simd16B(maskDest), Simd16B(onTrue), Simd16B(onFalse));
 }
 
+// Population count
+
+void MacroAssembler::popcntInt8x16(FloatRegister src, FloatRegister dest) {
+  Cnt(Simd16B(dest), Simd16B(src));
+}
+
 // Any lane true, ie, any bit set
 
 void MacroAssembler::anyTrueSimd128(FloatRegister src, Register dest_) {

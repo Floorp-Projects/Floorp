@@ -5,8 +5,8 @@ const { Observers } = ChromeUtils.import(
   "resource://services-common/observers.js"
 );
 const { Resource } = ChromeUtils.import("resource://services-sync/resource.js");
-const { BrowserIDManager } = ChromeUtils.import(
-  "resource://services-sync/browserid_identity.js"
+const { SyncAuthManager } = ChromeUtils.import(
+  "resource://services-sync/sync_auth.js"
 );
 
 var logger;
@@ -328,9 +328,9 @@ add_task(async function test_get_protected_fail() {
 add_task(async function test_get_protected_success() {
   _("GET a password protected resource");
   let identityConfig = makeIdentityConfig();
-  let browseridManager = new BrowserIDManager();
-  configureFxAccountIdentity(browseridManager, identityConfig);
-  let auth = browseridManager.getResourceAuthenticator();
+  let syncAuthManager = new SyncAuthManager();
+  configureFxAccountIdentity(syncAuthManager, identityConfig);
+  let auth = syncAuthManager.getResourceAuthenticator();
   let res3 = new Resource(server.baseURI + "/protected");
   res3.authenticator = auth;
   Assert.equal(res3.authenticator, auth);

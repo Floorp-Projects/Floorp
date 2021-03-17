@@ -661,7 +661,12 @@ void nsTextControlFrame::ReflowTextControlChild(
   // or percentage, if we're not the button box.
   auto overridePadding =
       isButtonBox ? Nothing() : Some(aReflowInput.ComputedLogicalPadding(wm));
-  kidReflowInput.Init(aPresContext, Nothing(), Nothing(), overridePadding);
+  // We want to let our button box fill the frame in the block axis, up to the
+  // edge of the control's border. So, we use the control's padding-box as the
+  // containing block size for our button box.
+  auto overrideCBSize =
+      isButtonBox ? Some(aReflowInput.ComputedSizeWithPadding(wm)) : Nothing();
+  kidReflowInput.Init(aPresContext, overrideCBSize, Nothing(), overridePadding);
 
   LogicalPoint position(wm);
   const auto& bp = aReflowInput.ComputedLogicalBorderPadding(outerWM);

@@ -15,6 +15,7 @@ const {
   RESOURCES,
   BREAKPOINTS,
   TARGET_CONFIGURATION,
+  THREAD_CONFIGURATION,
   XHR_BREAKPOINTS,
 } = WatchedDataHelpers.SUPPORTED_DATA;
 
@@ -73,6 +74,25 @@ module.exports = function(targetType, targetActorSpec, implementation) {
           }
           this.updateTargetConfiguration(options);
         }
+      } else if (type == THREAD_CONFIGURATION) {
+        if (typeof this.attach == "function") {
+          this.attach();
+        }
+
+        const threadOptions = {};
+
+        for (const { key, value } of entries) {
+          threadOptions[key] = value;
+        }
+
+        if (
+          !this.targetType.endsWith("worker") &&
+          this.threadActor.state == THREAD_STATES.DETACHED
+        ) {
+          await this.threadActor.attach(threadOptions);
+        } else {
+          await this.threadActor.reconfigure(threadOptions);
+        }
       } else if (type == XHR_BREAKPOINTS) {
         // Breakpoints require the target to be attached,
         // mostly to have the thread actor instantiated
@@ -85,7 +105,7 @@ module.exports = function(targetType, targetActorSpec, implementation) {
         // The thread actor has to be initialized in order to correctly
         // retrieve the stack trace when hitting an XHR
         if (
-          this.threadActor.state == "detached" &&
+          this.threadActor.state == THREAD_STATES.DETACHED &&
           !this.targetType.endsWith("worker")
         ) {
           await this.threadActor.attach();
@@ -106,7 +126,7 @@ module.exports = function(targetType, targetActorSpec, implementation) {
         for (const { location } of entries) {
           this.threadActor.removeBreakpoint(location);
         }
-      } else if (type == TARGET_CONFIGURATION) {
+      } else if (type == TARGET_CONFIGURATION || type == THREAD_CONFIGURATION) {
         // configuration data entries are always added/updated, never removed.
       } else if (type == XHR_BREAKPOINTS) {
         for (const { path, method } of entries) {

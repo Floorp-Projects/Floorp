@@ -13,7 +13,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
-  AddonRepository: "resource://gre/modules/addons/AddonRepository.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   MigrationUtils: "resource:///modules/MigrationUtils.jsm",
   OS: "resource://gre/modules/osfile.jsm",
@@ -21,7 +20,8 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://messaging-system/lib/SpecialMessageActions.jsm",
   AboutWelcomeTelemetry:
     "resource://activity-stream/aboutwelcome/lib/AboutWelcomeTelemetry.jsm",
-  AttributionCode: "resource:///modules/AttributionCode.jsm",
+  AboutWelcomeDefaults:
+    "resource://activity-stream/aboutwelcome/lib/AboutWelcomeDefaults.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   Region: "resource://gre/modules/Region.jsm",
 });
@@ -224,8 +224,6 @@ class AboutWelcomeParent extends JSWindowActorParent {
         break;
       case "AWPage:FXA_METRICS_FLOW_URI":
         return FxAccounts.config.promiseMetricsFlowURI("aboutwelcome");
-      case "AWPage:GET_ATTRIBUTION_DATA":
-        return AttributionCode.getAttrDataAsync();
       case "AWPage:IMPORTABLE_SITES":
         return getImportableSites();
       case "AWPage:TELEMETRY_EVENT":
@@ -235,16 +233,9 @@ class AboutWelcomeParent extends JSWindowActorParent {
         this.AboutWelcomeObserver.terminateReason =
           AWTerminate.ADDRESS_BAR_NAVIGATED;
         break;
-      case "AWPage:GET_ADDON_FROM_REPOSITORY":
-        const [addonInfo] = await AddonRepository.getAddonsByIDs([data]);
-        if (addonInfo.sourceURI.scheme !== "https") {
-          return null;
-        }
-        return {
-          name: addonInfo.name,
-          url: addonInfo.sourceURI.spec,
-          iconURL: addonInfo.icons["64"] || addonInfo.icons["32"],
-        };
+      case "AWPage:GET_ATTRIBUTION_DATA":
+        let attributionData = await AboutWelcomeDefaults.getAttributionContent();
+        return attributionData;
       case "AWPage:SELECT_THEME":
         return AddonManager.getAddonByID(
           LIGHT_WEIGHT_THEMES[data]

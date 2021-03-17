@@ -370,26 +370,6 @@ add_task(async function checkEverythingReadSecure() {
   Assert.equal(accountData.kXCS, "kXCS");
 });
 
-add_task(async function checkMemoryFieldsNotReturnedByDefault() {
-  let sm = new FxAccountsStorageManager();
-  sm.plainStorage = new MockedPlainStorage({
-    uid: "uid",
-    email: "someone@somewhere.com",
-  });
-  sm.secureStorage = new MockedSecureStorage({ kXCS: "kXCS" });
-  await sm.initialize();
-
-  // keyPair is a memory field.
-  await sm.updateAccountData({ keyPair: "the keypair value" });
-  let accountData = await sm.getAccountData();
-
-  // Requesting everything should *not* return in memory fields.
-  Assert.strictEqual(accountData.keyPair, undefined);
-  // But requesting them specifically does get them.
-  accountData = await sm.getAccountData("keyPair");
-  Assert.strictEqual(accountData.keyPair, "the keypair value");
-});
-
 add_task(async function checkExplicitGet() {
   let sm = new FxAccountsStorageManager();
   sm.plainStorage = new MockedPlainStorage({

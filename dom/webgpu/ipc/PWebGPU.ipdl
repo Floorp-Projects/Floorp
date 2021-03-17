@@ -35,7 +35,7 @@ parent:
   async CommandEncoderAction(RawId selfId, RawId aDeviceId, ByteBuf buf);
   async BumpImplicitBindGroupLayout(RawId pipelineId, bool isCompute, uint32_t index, RawId assignId);
 
-  async InstanceRequestAdapter(GPURequestAdapterOptions options, RawId[] ids) returns (RawId adapterId);
+  async InstanceRequestAdapter(GPURequestAdapterOptions options, RawId[] ids) returns (ByteBuf byteBuf);
   async AdapterRequestDevice(RawId selfId, ByteBuf buf, RawId newId);
   async AdapterDestroy(RawId selfId);
   async BufferReturnShmem(RawId selfId, Shmem shmem);

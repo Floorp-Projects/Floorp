@@ -25,9 +25,13 @@
 #include "js/Value.h"
 #include "util/DiagnosticAssertions.h"
 
-/* Enable poisoning in crash-diagnostics and zeal builds. */
+/*
+ * Allow extra GC poisoning to be enabled in crash-diagnostics and zeal
+ * builds. Except in debug builds, this must be enabled by setting the
+ * JSGC_EXTRA_POISONING environment variable.
+ */
 #if defined(JS_CRASH_DIAGNOSTICS) || defined(JS_GC_ZEAL)
-#  define JS_GC_POISONING 1
+#  define JS_GC_ALLOW_EXTRA_POISONING 1
 #endif
 
 namespace mozilla {
@@ -182,16 +186,17 @@ static inline void AlwaysPoison(void* ptr, uint8_t value, size_t num,
   SetMemCheckKind(ptr, num, kind);
 }
 
-// JSGC_DISABLE_POISONING environment variable
-extern bool gDisablePoisoning;
+#if defined(JS_GC_ALLOW_EXTRA_POISONING)
+extern bool gExtraPoisoningEnabled;
+#endif
 
-// Poison a region of memory in debug and nightly builds (plus builds where GC
-// zeal is configured). Can be disabled by setting the JSGC_DISABLE_POISONING
-// environment variable.
+// Conditionally poison a region of memory in debug builds and nightly builds
+// when enabled by setting the JSGC_EXTRA_POISONING environment variable. Used
+// by the GC in places where poisoning has a performance impact.
 static inline void Poison(void* ptr, uint8_t value, size_t num,
                           MemCheckKind kind) {
-#if defined(JS_GC_POISONING)
-  if (!js::gDisablePoisoning) {
+#if defined(JS_GC_ALLOW_EXTRA_POISONING)
+  if (js::gExtraPoisoningEnabled) {
     PoisonImpl(ptr, value, num);
   }
 #endif
@@ -199,7 +204,7 @@ static inline void Poison(void* ptr, uint8_t value, size_t num,
 }
 
 // Poison a region of memory in debug builds. Can be disabled by setting the
-// JSGC_DISABLE_POISONING environment variable.
+// JSGC_EXTRA_POISONING environment variable.
 static inline void DebugOnlyPoison(void* ptr, uint8_t value, size_t num,
                                    MemCheckKind kind) {
 #if defined(DEBUG)

@@ -4149,15 +4149,6 @@ pref("snav.enabled", false);
 // Wakelock is disabled by default.
 pref("dom.wakelock.enabled", false);
 
-// Presentation Device
-pref("dom.presentation.tcp_server.debug", false);
-pref("dom.presentation.discovery.enabled", false);
-pref("dom.presentation.discovery.timeout_ms", 10000);
-pref("dom.presentation.discoverable", false);
-pref("dom.presentation.discoverable.encrypted", true);
-pref("dom.presentation.discoverable.retry_ms", 5000);
-pref("dom.presentation.session_transport.data_channel.enable", false);
-
 #ifdef XP_MACOSX
   #if !defined(RELEASE_OR_BETA) || defined(DEBUG)
     // In non-release builds we crash by default on insecure text input (when a

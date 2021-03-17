@@ -58,6 +58,15 @@ impl ByteBuf {
     }
 }
 
+#[repr(C)]
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct AdapterInformation {
+    id: id::AdapterId,
+    //inner: wgt::AdapterInfo, //TODO: not C-friendly
+    limits: wgt::Limits,
+    features: wgt::Features,
+}
+
 #[derive(serde::Serialize, serde::Deserialize)]
 enum ShaderModuleSource<'a> {
     SpirV(Cow<'a, [u32]>),

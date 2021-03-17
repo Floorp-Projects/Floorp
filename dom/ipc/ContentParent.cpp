@@ -107,10 +107,8 @@
 #include "mozilla/dom/Notification.h"
 #include "mozilla/dom/PContentPermissionRequestParent.h"
 #include "mozilla/dom/PCycleCollectWithLogsParent.h"
-#include "mozilla/dom/PPresentationParent.h"
 #include "mozilla/dom/ParentProcessMessageManager.h"
 #include "mozilla/dom/Permissions.h"
-#include "mozilla/dom/PresentationParent.h"
 #include "mozilla/dom/ProcessMessageManager.h"
 #include "mozilla/dom/PushNotifier.h"
 #include "mozilla/dom/ServiceWorkerManager.h"
@@ -4378,25 +4376,6 @@ bool ContentParent::DeallocPBenchmarkStorageParent(
   return true;
 }
 
-PPresentationParent* ContentParent::AllocPPresentationParent() {
-  RefPtr<PresentationParent> actor = new PresentationParent();
-  return actor.forget().take();
-}
-
-bool ContentParent::DeallocPPresentationParent(PPresentationParent* aActor) {
-  RefPtr<PresentationParent> actor =
-      dont_AddRef(static_cast<PresentationParent*>(aActor));
-  return true;
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvPPresentationConstructor(
-    PPresentationParent* aActor) {
-  if (!static_cast<PresentationParent*>(aActor)->Init(mChildID)) {
-    return IPC_FAIL_NO_REASON(this);
-  }
-  return IPC_OK();
-}
-
 #ifdef MOZ_WEBSPEECH
 PSpeechSynthesisParent* ContentParent::AllocPSpeechSynthesisParent() {
   return new mozilla::dom::SpeechSynthesisParent();
@@ -6144,8 +6123,9 @@ void ContentParent::TransmitBlobURLsForPrincipal(nsIPrincipal* aPrincipal) {
             return false;
           }
 
-          registrations.AppendElement(BlobURLRegistrationData(
-              nsCString(aURI), ipcBlob, aPrincipal, aAgentClusterId, aRevoked));
+          registrations.AppendElement(
+              BlobURLRegistrationData(nsCString(aURI), ipcBlob, aBlobPrincipal,
+                                      aAgentClusterId, aRevoked));
 
           rv = TransmitPermissionsForPrincipal(aPrincipal);
           Unused << NS_WARN_IF(NS_FAILED(rv));

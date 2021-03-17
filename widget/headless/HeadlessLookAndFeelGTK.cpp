@@ -118,6 +118,14 @@ nsresult HeadlessLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
     case ColorID::WindowForeground:
       aColor = NS_RGB(0x00, 0x00, 0x00);
       break;
+    case ColorID::Highlight:
+    case ColorID::MozAccentColor:
+      aColor = NS_RGB(53, 132, 228);
+      break;
+    case ColorID::Highlighttext:
+    case ColorID::MozAccentColorForeground:
+      aColor = NS_RGB(0xff, 0xff, 0xff);
+      break;
     default:
       aColor = GetStandinForNativeColor(aID);
       break;

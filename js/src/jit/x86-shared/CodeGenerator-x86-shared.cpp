@@ -3341,6 +3341,9 @@ void CodeGenerator::visitWasmUnarySimd128(LWasmUnarySimd128* ins) {
     case wasm::SimdOp::V128Not:
       masm.bitwiseNotSimd128(src, dest);
       break;
+    case wasm::SimdOp::I8x16Popcnt:
+      masm.popcntInt8x16(src, dest, ToFloatRegister(ins->temp()));
+      break;
     case wasm::SimdOp::I8x16Abs:
       masm.absInt8x16(src, dest);
       break;

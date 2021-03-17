@@ -1572,6 +1572,66 @@ MinidumpMemoryRegion* MinidumpThread::GetMemory() {
   return memory_;
 }
 
+uint32_t MinidumpThread::GetLastError() {
+  if (!valid_) {
+    BPLOG(ERROR) << "Cannot retrieve GetLastError() from an invalid thread";
+    return 0;
+  }
+
+  if (!thread_.teb) {
+    BPLOG(ERROR) << "Cannot retrieve GetLastError() without a valid TEB pointer";
+    return 0;
+  }
+
+  auto memory = minidump_->GetMemoryList();
+  if (!memory) {
+    BPLOG(ERROR) << "Cannot retrieve GetLastError() without a valid memory list";
+    return 0;
+  }
+
+  auto context = GetContext();
+  if (!context) {
+    BPLOG(ERROR) << "Cannot retrieve GetLastError()'s without a valid context";
+    return 0;
+  }
+
+  uint64_t pointer_width = 0;
+  switch (context_->GetContextCPU()) {
+    case MD_CONTEXT_X86:
+      pointer_width = 4;
+      break;
+    case MD_CONTEXT_AMD64:
+    case MD_CONTEXT_ARM64:
+      pointer_width = 8;
+      break;
+    default:
+      BPLOG(ERROR) << "GetLastError() isn't implemented for this CPU type yet";
+      return 0;
+  }
+
+  auto region = memory->GetMemoryRegionForAddress(thread_.teb);
+  if (!region) {
+    BPLOG(ERROR) << "GetLastError()'s memory isn't mapped in this minidump";
+    return 0;
+  }
+
+  // The TEB is opaque but we know the value we want lives at this offset
+  // from reverse engineering.
+  uint64_t offset = pointer_width * 13;
+  uint32_t error = 0;
+  if (!region->GetMemoryAtAddress(thread_.teb + offset, &error)) {
+    BPLOG(ERROR) << "GetLastError()'s memory isn't mapped in this minidump";
+    return 0;
+  }
+
+  if (minidump_->swap()) {
+    Swap(&error);
+  }
+
+  return error;
+}
+
+
 
 MinidumpContext* MinidumpThread::GetContext() {
   if (!valid_) {

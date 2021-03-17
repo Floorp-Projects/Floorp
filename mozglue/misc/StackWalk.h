@@ -57,7 +57,6 @@ MFBT_API void MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
  * the caller of MozStackWalk to main (or above).
  *
  * @param aCallback    Same as for MozStackWalk().
- * @param aSkipFrames  Same as for MozStackWalk().
  * @param aMaxFrames   Same as for MozStackWalk().
  * @param aClosure     Same as for MozStackWalk().
  * @param aThread      The handle of the thread whose stack is to be walked.
@@ -67,9 +66,8 @@ MFBT_API void MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
  *                     null, the CONTEXT will be re-obtained.
  */
 MFBT_API void MozStackWalkThread(MozWalkStackCallback aCallback,
-                                 uint32_t aSkipFrames, uint32_t aMaxFrames,
-                                 void* aClosure, HANDLE aThread,
-                                 CONTEXT* aContext);
+                                 uint32_t aMaxFrames, void* aClosure,
+                                 HANDLE aThread, CONTEXT* aContext);
 
 #else
 
@@ -164,9 +162,8 @@ MFBT_API void MozFormatCodeAddressDetails(
 namespace mozilla {
 
 MFBT_API void FramePointerStackWalk(MozWalkStackCallback aCallback,
-                                    uint32_t aSkipFrames, uint32_t aMaxFrames,
-                                    void* aClosure, void** aBp,
-                                    void* aStackEnd);
+                                    uint32_t aMaxFrames, void* aClosure,
+                                    void** aBp, void* aStackEnd);
 
 #if defined(XP_LINUX) || defined(XP_FREEBSD)
 MFBT_API void DemangleSymbol(const char* aSymbol, char* aBuffer, int aBufLen);

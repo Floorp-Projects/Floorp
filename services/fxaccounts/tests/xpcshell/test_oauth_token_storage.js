@@ -122,7 +122,6 @@ async function createMockFxA() {
   let credentials = {
     email: "foo@example.com",
     uid: "1234@lcip.org",
-    assertion: "foobar",
     sessionToken: "dead",
     kSync: "beef",
     kXCS: "cafe",

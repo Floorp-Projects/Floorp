@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { normalizeToKebabCase } from "../utils.js";
+import { b64ToPEM, normalizeToKebabCase } from "../utils.js";
 
 export class InfoItem extends HTMLElement {
   constructor(item) {
@@ -157,11 +157,7 @@ export class InfoItem extends HTMLElement {
     let certArray = url.searchParams.getAll("cert");
     let encodedCertArray = [];
     for (let i = 0; i < certArray.length; i++) {
-      encodedCertArray.push(
-        encodeURI(
-          `-----BEGIN CERTIFICATE-----\r\n${certArray[i]}\r\n-----END CERTIFICATE-----\r\n`
-        )
-      );
+      encodedCertArray.push(encodeURI(b64ToPEM(certArray[i])));
     }
     encodedCertArray = encodedCertArray.join("");
 

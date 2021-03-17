@@ -2547,7 +2547,7 @@ class nsDisplayTreeBody final : public nsPaintedDisplayItem {
 #ifdef XP_MACOSX
 static bool IsInSourceList(nsIFrame* aFrame) {
   for (nsIFrame* frame = aFrame; frame;
-       frame = nsLayoutUtils::GetCrossDocParentFrame(frame)) {
+       frame = nsLayoutUtils::GetCrossDocParentFrameInProcess(frame)) {
     if (frame->StyleDisplay()->EffectiveAppearance() ==
         StyleAppearance::MozMacSourceList) {
       return true;

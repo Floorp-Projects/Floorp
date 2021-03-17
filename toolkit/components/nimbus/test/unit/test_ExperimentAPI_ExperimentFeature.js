@@ -37,6 +37,11 @@ async function setupForExperimentFeature() {
   return { sandbox, manager };
 }
 
+function setDefaultBranch(pref, value) {
+  let branch = Services.prefs.getDefaultBranch("");
+  branch.setStringPref(pref, value);
+}
+
 const TEST_FALLBACK_PREF = "testprefbranch.config";
 const FAKE_FEATURE_MANIFEST = {
   enabledFallbackPref: "testprefbranch.enabled",
@@ -106,14 +111,6 @@ add_task(async function test_ExperimentFeature_getValue() {
 
   const featureInstance = new ExperimentFeature("foo", FAKE_FEATURE_MANIFEST);
 
-  Services.prefs.clearUserPref("testprefbranch.value");
-
-  Assert.deepEqual(
-    featureInstance.getValue({ defaultValue: { hello: 1 } }),
-    { hello: 1 },
-    "should return the defaultValue if no fallback pref is set"
-  );
-
   Services.prefs.setStringPref(TEST_FALLBACK_PREF, `{"bar": 123}`);
 
   Assert.deepEqual(
@@ -145,7 +142,7 @@ add_task(
 
     manager.store.addExperiment(expected);
 
-    Services.prefs.setStringPref(TEST_FALLBACK_PREF, `{"bar": 123}`);
+    setDefaultBranch(TEST_FALLBACK_PREF, `{"bar": 123}`);
 
     Assert.deepEqual(
       featureInstance.getValue(),

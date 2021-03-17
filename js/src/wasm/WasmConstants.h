@@ -575,7 +575,7 @@ enum class SimdOp {
   F64x2PromoteLowF32x4 = 0x5f,
   I8x16Abs = 0x60,
   I8x16Neg = 0x61,
-  // Unused = 0x62
+  I8x16Popcnt = 0x62,
   I8x16AllTrue = 0x63,
   I8x16Bitmask = 0x64,
   I8x16NarrowSI16x8 = 0x65,

@@ -9067,31 +9067,6 @@ void nsContentUtils::GetPresentationURL(nsIDocShell* aDocShell,
                                         nsAString& aPresentationUrl) {
   MOZ_ASSERT(aDocShell);
 
-  // Simulate receiver context for web platform test
-  if (StaticPrefs::dom_presentation_testing_simulate_receiver()) {
-    RefPtr<Document> doc;
-
-    nsCOMPtr<nsPIDOMWindowOuter> docShellWin =
-        do_QueryInterface(aDocShell->GetScriptGlobalObject());
-    if (docShellWin) {
-      doc = docShellWin->GetExtantDoc();
-    }
-
-    if (NS_WARN_IF(!doc)) {
-      return;
-    }
-
-    nsCOMPtr<nsIURI> uri = doc->GetDocumentURI();
-    if (NS_WARN_IF(!uri)) {
-      return;
-    }
-
-    nsAutoCString uriStr;
-    uri->GetSpec(uriStr);
-    CopyUTF8toUTF16(uriStr, aPresentationUrl);
-    return;
-  }
-
   if (XRE_IsContentProcess()) {
     nsCOMPtr<nsIDocShellTreeItem> sameTypeRoot;
     aDocShell->GetInProcessSameTypeRootTreeItem(getter_AddRefs(sameTypeRoot));

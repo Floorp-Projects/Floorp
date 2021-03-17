@@ -67,8 +67,10 @@ class CallStack {
 
   // Set the TID associated with this call stack.
   void set_tid(uint32_t tid) { tid_ = tid; }
+  void set_last_error(uint32_t last_error) { last_error_ = last_error; }
 
   uint32_t tid() const { return tid_; }
+  uint32_t last_error() const { return last_error_; }
 
  private:
   // Stackwalker is responsible for building the frames_ vector.
@@ -80,6 +82,8 @@ class CallStack {
   // The TID associated with this call stack. Default to 0 if it's not
   // available.
   uint32_t tid_;
+  // The last error the OS set for this thread (win32's GetLastError())
+  uint32_t last_error_;
 };
 
 }  // namespace google_breakpad

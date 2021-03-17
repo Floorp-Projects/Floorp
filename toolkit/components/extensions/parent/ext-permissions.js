@@ -6,7 +6,6 @@
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   ExtensionPermissions: "resource://gre/modules/ExtensionPermissions.jsm",
-  Services: "resource://gre/modules/Services.jsm",
 });
 
 var { ExtensionError } = ExtensionUtils;

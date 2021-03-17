@@ -26,6 +26,9 @@ class AdapterLimits;
 class Device;
 class Instance;
 class WebGPUChild;
+namespace ffi {
+struct WGPUAdapterInformation;
+}  // namespace ffi
 
 class Adapter final : public ObjectBase, public ChildOf<Instance> {
  public:
@@ -40,11 +43,11 @@ class Adapter final : public ObjectBase, public ChildOf<Instance> {
 
   const RawId mId;
   const nsString mName;
-  RefPtr<AdapterFeatures> mFeatures;
-  RefPtr<AdapterLimits> mLimits;
+  const RefPtr<AdapterFeatures> mFeatures;
+  const RefPtr<AdapterLimits> mLimits;
 
  public:
-  Adapter(Instance* const aParent, RawId aId);
+  Adapter(Instance* const aParent, const ffi::WGPUAdapterInformation& aInfo);
   void GetName(nsString& out) const { out = mName; }
   const RefPtr<AdapterFeatures>& Features() const;
   const RefPtr<AdapterLimits>& Limits() const;

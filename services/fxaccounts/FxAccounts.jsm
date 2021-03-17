@@ -20,24 +20,17 @@ const { FxAccountsStorageManager } = ChromeUtils.import(
   "resource://gre/modules/FxAccountsStorage.jsm"
 );
 const {
-  ASSERTION_LIFETIME,
-  ASSERTION_USE_PERIOD,
-  CERT_LIFETIME,
   ERRNO_INVALID_AUTH_TOKEN,
-  ERRNO_INVALID_FXA_ASSERTION,
   ERROR_AUTH_ERROR,
   ERROR_INVALID_PARAMETER,
   ERROR_NO_ACCOUNT,
-  ERROR_OFFLINE,
   ERROR_TO_GENERAL_ERROR_CLASS,
   ERROR_UNKNOWN,
   ERROR_UNVERIFIED_ACCOUNT,
-  FXA_PWDMGR_MEMORY_FIELDS,
   FXA_PWDMGR_PLAINTEXT_FIELDS,
   FXA_PWDMGR_REAUTH_WHITELIST,
   FXA_PWDMGR_SECURE_FIELDS,
   FX_OAUTH_CLIENT_ID,
-  KEY_LIFETIME,
   ON_ACCOUNT_STATE_CHANGE_NOTIFICATION,
   ONLOGIN_NOTIFICATION,
   ONLOGOUT_NOTIFICATION,
@@ -61,20 +54,8 @@ ChromeUtils.defineModuleGetter(
 
 ChromeUtils.defineModuleGetter(
   this,
-  "FxAccountsOAuthGrantClient",
-  "resource://gre/modules/FxAccountsOAuthGrantClient.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
   "FxAccountsConfig",
   "resource://gre/modules/FxAccountsConfig.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "jwcrypto",
-  "resource://services-crypto/jwcrypto.jsm"
 );
 
 ChromeUtils.defineModuleGetter(
@@ -116,12 +97,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "FXA_ENABLED",
   "identity.fxaccounts.enabled",
   true
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "USE_SESSION_TOKENS_FOR_OAUTH",
-  "identity.fxaccounts.useSessionTokensForOAuth"
 );
 
 // An AccountState object holds all state related to one specific account.
@@ -763,14 +738,6 @@ FxAccountsInternal.prototype = {
           ChromeUtils.import("resource://services-sync/main.js", scope);
           return scope.Weave.Service.promiseInitialized;
         },
-        // Telemetry, so ecosystem telemetry doesn't miss logouts.
-        async () => {
-          const { EcosystemTelemetry } = ChromeUtils.import(
-            "resource://gre/modules/EcosystemTelemetry.jsm",
-            {}
-          );
-          await EcosystemTelemetry.prepareForFxANotification();
-        },
       ];
     }
 
@@ -842,15 +809,6 @@ FxAccountsInternal.prototype = {
     return this._fxAccountsClient;
   },
 
-  get fxAccountsOAuthGrantClient() {
-    if (!this._fxAccountsOAuthGrantClient) {
-      this._fxAccountsOAuthGrantClient = new FxAccountsOAuthGrantClient({
-        client_id: FX_OAUTH_CLIENT_ID,
-      });
-    }
-    return this._fxAccountsOAuthGrantClient;
-  },
-
   // The profile object used to fetch the actual user profile.
   _profile: null,
   get profile() {
@@ -914,7 +872,7 @@ FxAccountsInternal.prototype = {
 
   /**
    * Return the current time in milliseconds as an integer.  Allows tests to
-   * manipulate the date to simulate certificate expiration.
+   * manipulate the date to simulate token expiration.
    */
   now() {
     return this.fxAccountsClient.now();
@@ -1032,31 +990,6 @@ FxAccountsInternal.prototype = {
         throw new Error("The specified credentials have no uid");
       }
       return currentAccountState.updateUserAccountData(credentials);
-    });
-  },
-
-  /**
-   * returns a promise that fires with the assertion.  Throws if there is no
-   * verified signed-in user or no local sessionToken.
-   */
-  getAssertion: function getAssertion(audience) {
-    return this._getAssertion(audience);
-  },
-
-  // getAssertion() is "public" so screws with our mock story. This
-  // implementation method *can* be (and is) mocked by tests.
-  _getAssertion(audience) {
-    log.debug("enter getAssertion()");
-    return this.withSessionToken(async (_, currentState) => {
-      let { keyPair, certificate } = await this.getKeypairAndCertificate(
-        currentState
-      );
-      return this.getAssertionFromCert(
-        await currentState.getUserAccountData(),
-        keyPair,
-        certificate,
-        audience
-      );
     });
   },
 
@@ -1178,152 +1111,6 @@ FxAccountsInternal.prototype = {
     } catch (err) {
       log.error("Error during destruction of oauth tokens during signout", err);
     }
-  },
-
-  async getAssertionFromCert(data, keyPair, cert, audience) {
-    log.debug("getAssertionFromCert");
-    let options = {
-      duration: ASSERTION_LIFETIME,
-      localtimeOffsetMsec: this.localtimeOffsetMsec,
-      now: this.now(),
-    };
-    let currentState = this.currentAccountState;
-    // "audience" should look like "http://123done.org".
-    // The generated assertion will expire in two minutes.
-    let assertion = await new Promise((resolve, reject) => {
-      jwcrypto.generateAssertion(
-        cert,
-        keyPair,
-        audience,
-        options,
-        (err, signed) => {
-          if (err) {
-            log.error("getAssertionFromCert: " + err);
-            reject(err);
-          } else {
-            log.debug("getAssertionFromCert returning signed: " + !!signed);
-            if (logPII) {
-              log.debug("getAssertionFromCert returning signed: " + signed);
-            }
-            resolve(signed);
-          }
-        }
-      );
-    });
-    return currentState.resolve(assertion);
-  },
-
-  getCertificateSigned(sessionToken, serializedPublicKey, lifetime) {
-    log.debug(
-      "getCertificateSigned: " + !!sessionToken + " " + !!serializedPublicKey
-    );
-    if (logPII) {
-      log.debug(
-        "getCertificateSigned: " + sessionToken + " " + serializedPublicKey
-      );
-    }
-    return this.fxAccountsClient.signCertificate(
-      sessionToken,
-      JSON.parse(serializedPublicKey),
-      lifetime
-    );
-  },
-
-  /**
-   * returns a promise that fires with {keyPair, certificate}.
-   */
-  async getKeypairAndCertificate(currentState) {
-    // If the debugging pref to ignore cached authentication credentials is set for Sync,
-    // then don't use any cached key pair/certificate, i.e., generate a new
-    // one and get it signed.
-    // The purpose of this pref is to expedite any auth errors as the result of a
-    // expired or revoked FxA session token, e.g., from resetting or changing the FxA
-    // password.
-    let ignoreCachedAuthCredentials = Services.prefs.getBoolPref(
-      "services.sync.debug.ignoreCachedAuthCredentials",
-      false
-    );
-    let mustBeValidUntil = this.now() + ASSERTION_USE_PERIOD;
-    let accountData = await currentState.getUserAccountData([
-      "cert",
-      "keyPair",
-      "sessionToken",
-    ]);
-
-    let keyPairValid =
-      !ignoreCachedAuthCredentials &&
-      accountData.keyPair &&
-      accountData.keyPair.validUntil > mustBeValidUntil;
-    let certValid =
-      !ignoreCachedAuthCredentials &&
-      accountData.cert &&
-      accountData.cert.validUntil > mustBeValidUntil;
-    // TODO: get the lifetime from the cert's .exp field
-    if (keyPairValid && certValid) {
-      log.debug(
-        "getKeypairAndCertificate: already have keyPair and certificate"
-      );
-      return {
-        keyPair: accountData.keyPair.rawKeyPair,
-        certificate: accountData.cert.rawCert,
-      };
-    }
-    // We are definately going to generate a new cert, either because it has
-    // already expired, or the keyPair has - and a new keyPair means we must
-    // generate a new cert.
-
-    // A keyPair has a longer lifetime than a cert, so it's possible we will
-    // have a valid keypair but an expired cert, which means we can skip
-    // keypair generation.
-    // Either way, the cert will require hitting the network, so bail now if
-    // we know that's going to fail.
-    if (Services.io.offline) {
-      throw new Error(ERROR_OFFLINE);
-    }
-
-    let keyPair;
-    if (keyPairValid) {
-      keyPair = accountData.keyPair;
-    } else {
-      let keyWillBeValidUntil = this.now() + KEY_LIFETIME;
-      keyPair = await new Promise((resolve, reject) => {
-        jwcrypto.generateKeyPair("DS160", (err, kp) => {
-          if (err) {
-            reject(err);
-            return;
-          }
-          log.debug("got keyPair");
-          resolve({
-            rawKeyPair: kp,
-            validUntil: keyWillBeValidUntil,
-          });
-        });
-      });
-    }
-
-    // and generate the cert.
-    let certWillBeValidUntil = this.now() + CERT_LIFETIME;
-    let certificate = await this.getCertificateSigned(
-      accountData.sessionToken,
-      keyPair.rawKeyPair.serializedPublicKey,
-      CERT_LIFETIME
-    );
-    log.debug("getCertificate got a new one: " + !!certificate);
-    if (certificate) {
-      // Cache both keypair and cert.
-      let toUpdate = {
-        keyPair,
-        cert: {
-          rawCert: certificate,
-          validUntil: certWillBeValidUntil,
-        },
-      };
-      await currentState.updateUserAccountData(toUpdate);
-    }
-    return {
-      keyPair: keyPair.rawKeyPair,
-      certificate,
-    };
   },
 
   getUserAccountData(fieldNames = null) {
@@ -1520,65 +1307,24 @@ FxAccountsInternal.prototype = {
 
   /**
    * Does the actual fetch of an oauth token for getOAuthToken()
-   * @param scopeString
-   * @param ttl
-   * @returns {Promise<string>}
-   * @private
-   */
-  async _doTokenFetch(scopeString, ttl) {
-    // Ideally, we would auth this call directly with our `sessionToken`
-    // using the `_doTokenFetchWithSessionToken` method rather than going
-    // via a BrowserID assertion. Before we can do so we need to resolve some
-    // data-volume processing issues in the server-side FxA metrics pipeline.
-    let token;
-    let oAuthURL = this.fxAccountsOAuthGrantClient.serverURL.href;
-    let assertion = await this.getAssertion(oAuthURL);
-    try {
-      let result = await this.fxAccountsOAuthGrantClient.getTokenFromAssertion(
-        assertion,
-        scopeString,
-        ttl
-      );
-      token = result.access_token;
-    } catch (err) {
-      // If we get a 401 fetching the token it may be that our certificate
-      // needs to be regenerated.
-      if (err.code !== 401 || err.errno !== ERRNO_INVALID_FXA_ASSERTION) {
-        throw err;
-      }
-      log.warn(
-        "OAuth server returned 401, refreshing certificate and retrying token fetch"
-      );
-      await this.invalidateCertificate();
-      assertion = await this.getAssertion(oAuthURL);
-      let result = await this.fxAccountsOAuthGrantClient.getTokenFromAssertion(
-        assertion,
-        scopeString,
-        ttl
-      );
-      token = result.access_token;
-    }
-    return token;
-  },
-
-  /**
-   * Does the actual fetch of an oauth token for getOAuthToken()
    * using the account session token.
+   *
+   * It's split out into a separate method so that we can easily
+   * stash in-flight calls in a cache.
+   *
    * @param {String} scopeString
    * @param {Number} ttl
    * @returns {Promise<string>}
    * @private
    */
-  async _doTokenFetchWithSessionToken(scopeString, ttl) {
-    return this.withSessionToken(async sessionToken => {
-      const result = await this.fxAccountsClient.accessTokenWithSessionToken(
-        sessionToken,
-        FX_OAUTH_CLIENT_ID,
-        scopeString,
-        ttl
-      );
-      return result.access_token;
-    });
+  async _doTokenFetchWithSessionToken(sessionToken, scopeString, ttl) {
+    const result = await this.fxAccountsClient.accessTokenWithSessionToken(
+      sessionToken,
+      FX_OAUTH_CLIENT_ID,
+      scopeString,
+      ttl
+    );
+    return result.access_token;
   },
 
   getOAuthToken(options = {}) {
@@ -1597,7 +1343,7 @@ FxAccountsInternal.prototype = {
       );
     }
 
-    return this.withVerifiedAccountState(async currentState => {
+    return this.withSessionToken(async (sessionToken, currentState) => {
       // Early exit for a cached token.
       let cached = currentState.getCachedToken(scope);
       if (cached) {
@@ -1616,13 +1362,14 @@ FxAccountsInternal.prototype = {
         log.debug("getOAuthToken has an in-flight request for this scope");
         return maybeInFlight;
       }
-      let fetchFunction = this._doTokenFetch.bind(this);
-      if (USE_SESSION_TOKENS_FOR_OAUTH) {
-        fetchFunction = this._doTokenFetchWithSessionToken.bind(this);
-      }
+
       // We need to start a new fetch and stick the promise in our in-flight map
       // and remove it when it resolves.
-      let promise = fetchFunction(scopeString, options.ttl)
+      let promise = this._doTokenFetchWithSessionToken(
+        sessionToken,
+        scopeString,
+        options.ttl
+      )
         .then(token => {
           // As a sanity check, ensure something else hasn't raced getting a token
           // of the same scope. If something has we just make noise rather than
@@ -1675,16 +1422,6 @@ FxAccountsInternal.prototype = {
           log.warn("FxA failed to revoke a cached token", err);
         });
       }
-    });
-  },
-
-  /**
-   * Invalidate the FxA certificate, so that it will be refreshed from the server
-   * the next time it is needed.
-   */
-  invalidateCertificate() {
-    return this.withCurrentAccountState(async currentState => {
-      await currentState.updateUserAccountData({ cert: null });
     });
   },
 
@@ -1815,7 +1552,6 @@ FxAccountsInternal.prototype = {
     };
     FXA_PWDMGR_PLAINTEXT_FIELDS.forEach(clearField);
     FXA_PWDMGR_SECURE_FIELDS.forEach(clearField);
-    FXA_PWDMGR_MEMORY_FIELDS.forEach(clearField);
 
     return state.updateUserAccountData(updateData);
   },

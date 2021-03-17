@@ -1593,7 +1593,7 @@ auto nsNativeBasicTheme::ShouldUseSystemColors(const dom::Document& aDoc)
   // TODO: Do we really want to use system colors even when the page can
   // override the high contrast theme? (mUseDocumentColors = true?).
   return UseSystemColors(
-      PreferenceSheet::PrefsFor(aDoc).mUseAccessibilityTheme);
+      PreferenceSheet::PrefsFor(aDoc).NonNativeThemeShouldUseSystemColors());
 }
 
 template <typename PaintBackendData>

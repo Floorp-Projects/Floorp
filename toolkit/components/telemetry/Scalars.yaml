@@ -92,7 +92,7 @@ a11y:
     expires: "62"
     kind: boolean
     notification_emails:
-      - yzenevich@mozilla.com
+      - accessibility@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -2773,7 +2773,7 @@ devtools.tool:
     keyed: true
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
-      - yzenevich@mozilla.com
+      - accessibility@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -2794,7 +2794,7 @@ devtools.accessibility:
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
-      - yzenevich@mozilla.com
+      - accessibility@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -2813,7 +2813,7 @@ devtools.accessibility:
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
-      - yzenevich@mozilla.com
+      - accessibility@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -2833,7 +2833,7 @@ devtools.accessibility:
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
-      - yzenevich@mozilla.com
+      - accessibility@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -2855,7 +2855,7 @@ devtools.accessibility:
     keyed: true
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
-      - yzenevich@mozilla.com
+      - accessibility@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -2875,7 +2875,7 @@ devtools.accessibility:
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
-      - yzenevich@mozilla.com
+      - accessibility@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -2894,7 +2894,7 @@ devtools.accessibility:
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
-      - yzenevich@mozilla.com
+      - accessibility@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -2915,7 +2915,7 @@ devtools.accessibility:
     keyed: true
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
-      - yzenevich@mozilla.com
+      - accessibility@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -2936,7 +2936,7 @@ devtools.accessibility:
     keyed: true
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
-      - yzenevich@mozilla.com
+      - accessibility@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -2957,8 +2957,7 @@ devtools.accessibility:
     keyed: true
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
-      - yzenevich@mozilla.com
-      - mislam@mozilla.com
+      - accessibility@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -2976,7 +2975,7 @@ devtools.accessibility:
     kind: uint
     notification_emails:
       - dev-developer-tools@lists.mozilla.org
-      - yzenevich@mozilla.com
+      - accessibility@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'

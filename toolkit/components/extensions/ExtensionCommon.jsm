@@ -1767,6 +1767,7 @@ class SchemaAPIManager extends EventEmitter {
       MatchGlob,
       MatchPattern,
       MatchPatternSet,
+      Services,
       StructuredCloneHolder,
       XPCOMUtils,
       extensions: this,

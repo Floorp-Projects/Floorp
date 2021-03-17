@@ -36,8 +36,8 @@ def run_checked(*args, **kwargs):
 
 def record_cherry_picks(dir_in_gecko, merge_base_origin):
     # merge_base_origin is not always 'origin'!
-    merge_base_from = Path(dir_in_gecko, "MERGE_BASE").read_text().split("\n")[0]
-    merge_base_from = merge_base_origin + "/" + merge_base_from
+    base_merge_base_from = Path(dir_in_gecko, "MERGE_BASE").read_text().split("\n")[0]
+    merge_base_from = merge_base_origin + "/" + base_merge_base_from
 
     assert "/" in merge_base_from, "Please specify a reference tip from a remote."
     log_path = Path(dir_in_gecko, "cherry_picks.txt")
@@ -46,6 +46,18 @@ def record_cherry_picks(dir_in_gecko, merge_base_origin):
     merge_base = (
         run_checked(
             "git", "merge-base", "HEAD", merge_base_from, stdout=subprocess.PIPE
+        )
+        .stdout.decode()
+        .strip()
+    )
+    merge_base_readable = (
+        run_checked(
+            "git",
+            "show",
+            "-s",
+            "--format=commit %H %cd",
+            merge_base,
+            stdout=subprocess.PIPE,
         )
         .stdout.decode()
         .strip()
@@ -65,3 +77,21 @@ def record_cherry_picks(dir_in_gecko, merge_base_origin):
         f.write(b"\nMerge base from: " + merge_base_from.encode())
         f.write(b"\n\n")
         f.write(mb_info)
+
+    # The below supports only a single commit-alert task. If/when we add another task, this
+    # will need to be improved.
+    print_now("Updating moz.yaml")
+    moz_yaml_file = Path(dir_in_gecko, "moz.yaml")
+    with open(moz_yaml_file, "r") as f:
+        moz_yaml_contents = f.readlines()
+    with open(moz_yaml_file, "wb") as f:
+        for line in moz_yaml_contents:
+            prefix = line[0 : line.index(": ") + 2].encode()
+            if "branch: " in line:
+                f.write(prefix + base_merge_base_from.encode() + b"\n")
+            elif "release: " in line:
+                f.write(prefix + merge_base_readable.encode() + b"\n")
+            elif "revision: " in line:
+                f.write(prefix + merge_base.encode() + b"\n")
+            else:
+                f.write(line.encode())

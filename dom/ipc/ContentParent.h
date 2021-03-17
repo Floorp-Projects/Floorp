@@ -1015,13 +1015,6 @@ class ContentParent final
 
   bool DeallocPBenchmarkStorageParent(PBenchmarkStorageParent* aActor);
 
-  PPresentationParent* AllocPPresentationParent();
-
-  bool DeallocPPresentationParent(PPresentationParent* aActor);
-
-  virtual mozilla::ipc::IPCResult RecvPPresentationConstructor(
-      PPresentationParent* aActor) override;
-
 #ifdef MOZ_WEBSPEECH
   PSpeechSynthesisParent* AllocPSpeechSynthesisParent();
   bool DeallocPSpeechSynthesisParent(PSpeechSynthesisParent* aActor);
