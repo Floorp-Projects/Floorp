@@ -3865,25 +3865,25 @@ void QuotaManager::EnsureQuotaForOrigin(const OriginMetadata& aOriginMetadata) {
   }
 }
 
-void QuotaManager::NoteOriginDirectoryCreated(
-    PersistenceType aPersistenceType, const OriginMetadata& aOriginMetadata,
-    bool aPersisted, int64_t& aTimestamp) {
+int64_t QuotaManager::NoteOriginDirectoryCreated(
+    const OriginMetadata& aOriginMetadata, bool aPersisted) {
   AssertIsOnIOThread();
-  MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
+  MOZ_ASSERT(IsBestEffortPersistenceType(aOriginMetadata.mPersistenceType));
 
   int64_t timestamp;
 
   MutexAutoLock lock(mQuotaMutex);
 
   RefPtr<GroupInfo> groupInfo = LockedGetOrCreateGroupInfo(
-      aPersistenceType, aOriginMetadata.mSuffix, aOriginMetadata.mGroup);
+      aOriginMetadata.mPersistenceType, aOriginMetadata.mSuffix,
+      aOriginMetadata.mGroup);
 
   RefPtr<OriginInfo> originInfo =
       groupInfo->LockedGetOriginInfo(aOriginMetadata.mOrigin);
   if (originInfo) {
+    timestamp = originInfo->LockedAccessTime();
     originInfo->mPersisted = aPersisted;
     originInfo->mDirectoryExists = true;
-    timestamp = originInfo->LockedAccessTime();
   } else {
     timestamp = PR_Now();
     groupInfo->LockedAddOriginInfo(MakeNotNull<RefPtr<OriginInfo>>(
@@ -3892,7 +3892,7 @@ void QuotaManager::NoteOriginDirectoryCreated(
         /* aAccessTime */ timestamp, aPersisted, /* aDirectoryExists */ true));
   }
 
-  aTimestamp = timestamp;
+  return timestamp;
 }
 
 void QuotaManager::DecreaseUsageForOrigin(PersistenceType aPersistenceType,
@@ -6161,9 +6161,8 @@ QuotaManager::EnsureTemporaryOriginIsInitialized(
     QM_TRY_INSPECT(const bool& created, EnsureOriginDirectory(*directory));
 
     if (created) {
-      int64_t timestamp;
-      NoteOriginDirectoryCreated(aPersistenceType, aOriginMetadata,
-                                 /* aPersisted */ false, timestamp);
+      const int64_t timestamp =
+          NoteOriginDirectoryCreated(aOriginMetadata, /* aPersisted */ false);
 
       // Only creating .metadata-v2 to reduce IO.
       QM_TRY(CreateDirectoryMetadata2(*directory, timestamp,
@@ -9323,9 +9322,8 @@ nsresult PersistOp::DoDirectoryWork(QuotaManager& aQuotaManager) {
     // Origin directory has been successfully created.
     // Create OriginInfo too if temporary storage was already initialized.
     if (aQuotaManager.IsTemporaryStorageInitialized()) {
-      aQuotaManager.NoteOriginDirectoryCreated(
-          mPersistenceType.Value(), originMetadata,
-          /* aPersisted */ true, timestamp);
+      timestamp = aQuotaManager.NoteOriginDirectoryCreated(
+          originMetadata, /* aPersisted */ true);
     } else {
       timestamp = PR_Now();
     }
