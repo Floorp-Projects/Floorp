@@ -3326,17 +3326,25 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 - (void)_maskCorners:(NSUInteger)aFlags clipRect:(NSRect)aRect;
 @end
 
-@implementation TitlebarGradientView
+@implementation MOZTitlebarView
 
-- (void)drawRect:(NSRect)aRect {
-  CGContextRef ctx = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
-  ToolbarWindow* window = (ToolbarWindow*)[self window];
-  nsNativeThemeCocoa::DrawNativeTitlebar(ctx, NSRectToCGRect([self bounds]),
-                                         [window unifiedToolbarHeight], [window isMainWindow], NO);
-}
+- (instancetype)initWithFrame:(NSRect)aFrame {
+  self = [super initWithFrame:aFrame];
 
-- (BOOL)isOpaque {
-  return YES;
+  self.material = NSVisualEffectMaterialTitlebar;
+  self.blendingMode = NSVisualEffectBlendingModeWithinWindow;
+
+  // Add a separator line at the bottom of the titlebar. NSBoxSeparator isn't a perfect match for
+  // a native titlebar separator, but it's better than nothing.
+  // We really want the appearance that _NSTitlebarDecorationView creates with the help of CoreUI,
+  // but there's no public API for that.
+  NSBox* separatorLine = [[NSBox alloc] initWithFrame:NSMakeRect(0, 0, aFrame.size.width, 1)];
+  separatorLine.autoresizingMask = NSViewWidthSizable | NSViewMaxYMargin;
+  separatorLine.boxType = NSBoxSeparator;
+  [self addSubview:separatorLine];
+  [separatorLine release];
+
+  return self;
 }
 
 - (BOOL)mouseDownCanMoveWindow {
@@ -3367,7 +3375,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 //  - separate titlebar mode, with support for unified toolbars: In this mode,
 //    the Gecko ChildView does not extend into the titlebar. However, this
 //    window's content view (which is the ChildView's superview) *does* extend
-//    into the titlebar. Moreover, in this mode, we place a TitlebarGradientView
+//    into the titlebar. Moreover, in this mode, we place a MOZTitlebarView
 //    in the content view, as a sibling of the ChildView.
 //
 // The "separate titlebar mode" supports the "unified toolbar" look:
@@ -3385,7 +3393,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 //    titlebar height, to -[ToolbarWindow setUnifiedToolbarHeight:].
 //
 // The actual drawing of the gradient happens in two parts: The titlebar part
-// (i.e. the top 22 pixels of the gradient) is drawn by the TitlebarGradientView,
+// (i.e. the top 22 pixels of the gradient) is drawn by the MOZTitlebarView,
 // which is a subview of the window's content view and a sibling of the ChildView.
 // The rest of the gradient is drawn by Gecko into the ChildView, as part of the
 // -moz-appearance rendering of the toolbar.
@@ -3424,13 +3432,13 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
                                styleMask:aStyle
                                  backing:aBufferingType
                                    defer:aFlag])) {
-    mTitlebarGradientView = nil;
+    mTitlebarView = nil;
     mUnifiedToolbarHeight = 22.0f;
     mSheetAttachmentPosition = aChildViewRect.size.height;
     mWindowButtonsRect = NSZeroRect;
 
     [self setTitlebarAppearsTransparent:YES];
-    [self updateTitlebarGradientViewPresence];
+    [self updateTitlebarView];
   }
   return self;
 
@@ -3438,29 +3446,31 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 }
 
 - (void)dealloc {
-  [mTitlebarGradientView release];
+  [mTitlebarView release];
   [super dealloc];
 }
 
 - (NSArray<NSView*>*)contentViewContents {
   NSMutableArray<NSView*>* contents = [[[self contentView] subviews] mutableCopy];
-  if (mTitlebarGradientView) {
+  if (mTitlebarView) {
     // Do not include the titlebar gradient view in the returned array.
-    [contents removeObject:mTitlebarGradientView];
+    [contents removeObject:mTitlebarView];
   }
   return [contents autorelease];
 }
 
-- (void)updateTitlebarGradientViewPresence {
-  BOOL needTitlebarView = ![self drawsContentsIntoWindowFrame];
-  if (needTitlebarView && !mTitlebarGradientView) {
-    mTitlebarGradientView = [[TitlebarGradientView alloc] initWithFrame:[self titlebarRect]];
-    mTitlebarGradientView.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
-    [self.contentView addSubview:mTitlebarGradientView positioned:NSWindowBelow relativeTo:nil];
-  } else if (!needTitlebarView && mTitlebarGradientView) {
-    [mTitlebarGradientView removeFromSuperview];
-    [mTitlebarGradientView release];
-    mTitlebarGradientView = nil;
+- (void)updateTitlebarView {
+  BOOL needTitlebarView = ![self drawsContentsIntoWindowFrame] || mUnifiedToolbarHeight > 0;
+  if (needTitlebarView && !mTitlebarView) {
+    mTitlebarView = [[MOZTitlebarView alloc] initWithFrame:[self unifiedToolbarRect]];
+    mTitlebarView.autoresizingMask = NSViewWidthSizable | NSViewMinYMargin;
+    [self.contentView addSubview:mTitlebarView positioned:NSWindowBelow relativeTo:nil];
+  } else if (needTitlebarView && mTitlebarView) {
+    mTitlebarView.frame = [self unifiedToolbarRect];
+  } else if (!needTitlebarView && mTitlebarView) {
+    [mTitlebarView removeFromSuperview];
+    [mTitlebarView release];
+    mTitlebarView = nil;
   }
 }
 
@@ -3470,13 +3480,19 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 }
 
 - (void)setTitlebarNeedsDisplay {
-  [mTitlebarGradientView setNeedsDisplay:YES];
+  [mTitlebarView setNeedsDisplay:YES];
 }
 
 - (NSRect)titlebarRect {
   CGFloat titlebarHeight = [self titlebarHeight];
   return NSMakeRect(0, [self frame].size.height - titlebarHeight, [self frame].size.width,
                     titlebarHeight);
+}
+
+// In window contentView coordinates (origin bottom left)
+- (NSRect)unifiedToolbarRect {
+  return NSMakeRect(0, [self frame].size.height - mUnifiedToolbarHeight, [self frame].size.width,
+                    mUnifiedToolbarHeight);
 }
 
 // Returns the unified height of titlebar + toolbar.
@@ -3501,9 +3517,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 
   mUnifiedToolbarHeight = aHeight;
 
-  if (![self drawsContentsIntoWindowFrame]) {
-    [self setTitlebarNeedsDisplay];
-  }
+  [self updateTitlebarView];
 }
 
 // Extending the content area into the title bar works by resizing the
@@ -3531,7 +3545,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
     ChildViewMouseTracker::ResendLastMouseMoveEvent();
   }
 
-  [self updateTitlebarGradientViewPresence];
+  [self updateTitlebarView];
 }
 
 - (void)setWantsTitleDrawn:(BOOL)aDrawTitle {

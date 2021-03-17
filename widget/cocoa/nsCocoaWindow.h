@@ -87,7 +87,7 @@ typedef struct _nsCocoaWindowList {
 // "contents" of this window. All views in the returned array are subviews of
 // this window's content view. However, the array may not include all of the
 // content view's subviews; concretely, the ToolbarWindow implementation will
-// exclude its TitlebarGradientView from the array that is returned here.
+// exclude its MOZTitlebarView from the array that is returned here.
 // In the vast majority of cases, the array will only have a single element:
 // this window's mainChildView.
 - (NSArray<NSView*>*)contentViewContents;
@@ -171,16 +171,16 @@ typedef struct _nsCocoaWindowList {
 - (void)sendToplevelDeactivateEvents;
 @end
 
-@interface TitlebarGradientView : NSView
+@interface MOZTitlebarView : NSVisualEffectView
 @end
 
 // NSWindow subclass for handling windows with toolbars.
 @interface ToolbarWindow : BaseWindow {
-  // This window's titlebar gradient view, if present.
-  // Will be nil if drawsContentsIntoWindowFrame is YES.
+  // This window's titlebar view, if present.
+  // Will be nil if the window has neither a titlebar nor a unified toolbar.
   // This view is a subview of the window's content view and gets created and
-  // destroyed by updateTitlebarGradientViewPresence.
-  TitlebarGradientView* mTitlebarGradientView;  // [STRONG]
+  // destroyed by updateTitlebarView.
+  MOZTitlebarView* mTitlebarView;  // [STRONG]
 
   CGFloat mUnifiedToolbarHeight;
   CGFloat mSheetAttachmentPosition;
