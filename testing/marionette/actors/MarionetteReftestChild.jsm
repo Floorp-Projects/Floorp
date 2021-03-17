@@ -53,6 +53,9 @@ class MarionetteReftestChild extends JSWindowActorChild {
 
     let result;
     switch (name) {
+      case "MarionetteReftestParent:flushRendering":
+        result = await this.flushRendering();
+        break;
       case "MarionetteReftestParent:reftestWait":
         result = await this.reftestWait(data);
         break;
@@ -191,7 +194,12 @@ class MarionetteReftestChild extends JSWindowActorChild {
       }
 
       for (let i = 0; i < win.frames.length; ++i) {
-        flushWindow(win.frames[i]);
+        // Skip remote frames, flushRendering will be called on their individual
+        // MarionetteReftest actor via _recursiveFlushRendering performed from
+        // the topmost MarionetteReftest actor.
+        if (!Cu.isRemoteProxy(win.frames[i])) {
+          flushWindow(win.frames[i]);
+        }
       }
     }
     flushWindow(this.document.defaultView);
