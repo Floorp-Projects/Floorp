@@ -651,11 +651,10 @@ JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
   JSString* str = this;
   CharT* pos;
 
-  // JSString::setFlattenData() is used to store a tagged pointer to the
-  // parent node. The tag indicates what to do when we return to the parent.
-  static const uintptr_t Tag_Mask = 0x3;
-  static const uintptr_t Tag_FinishNode = 0x0;
-  static const uintptr_t Tag_VisitRightChild = 0x1;
+  // JSString::setFlattenData() is used to store a tagged pointer to the parent
+  // node. These flags indicates what to do when we return to the parent.
+  static constexpr uintptr_t Flag_FinishNode = 0;
+  static constexpr uintptr_t Flag_VisitRightChild = Cell::USER_BIT;
 
   AutoCheckCannotGC nogc;
 
@@ -704,19 +703,19 @@ JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
       MOZ_ASSERT(str->isRope());
       while (str != leftMostRope) {
         if (b == WithIncrementalBarrier) {
-          gc::PreWriteBarrierDuringFlattening(str->d.s.u2.left);
-          gc::PreWriteBarrierDuringFlattening(str->d.s.u3.right);
+          gc::PreWriteBarrier(str->d.s.u2.left);
+          gc::PreWriteBarrier(str->d.s.u3.right);
         }
         JSString* child = str->d.s.u2.left;
         // 'child' will be post-barriered during the later traversal.
         MOZ_ASSERT(child->isRope());
         str->setNonInlineChars(wholeChars);
-        child->setFlattenData(uintptr_t(str) | Tag_VisitRightChild);
+        child->setFlattenData(str, Flag_VisitRightChild);
         str = child;
       }
       if (b == WithIncrementalBarrier) {
-        gc::PreWriteBarrierDuringFlattening(str->d.s.u2.left);
-        gc::PreWriteBarrierDuringFlattening(str->d.s.u3.right);
+        gc::PreWriteBarrier(str->d.s.u2.left);
+        gc::PreWriteBarrier(str->d.s.u3.right);
       }
       str->setNonInlineChars(wholeChars);
       uint32_t left_len = left.length();
@@ -763,15 +762,15 @@ JSLinearString* JSRope::flattenInternal(JSContext* maybecx) {
   pos = wholeChars;
 first_visit_node : {
   if (b == WithIncrementalBarrier) {
-    gc::PreWriteBarrierDuringFlattening(str->d.s.u2.left);
-    gc::PreWriteBarrierDuringFlattening(str->d.s.u3.right);
+    gc::PreWriteBarrier(str->d.s.u2.left);
+    gc::PreWriteBarrier(str->d.s.u3.right);
   }
 
   JSString& left = *str->d.s.u2.left;
   str->setNonInlineChars(pos);
   if (left.isRope()) {
     /* Return to this node when 'left' done, then goto visit_right_child. */
-    left.setFlattenData(uintptr_t(str) | Tag_VisitRightChild);
+    left.setFlattenData(str, Flag_VisitRightChild);
     str = &left;
     goto first_visit_node;
   }
@@ -782,7 +781,7 @@ visit_right_child : {
   JSString& right = *str->d.s.u3.right;
   if (right.isRope()) {
     /* Return to this node when 'right' done, then goto finish_node. */
-    right.setFlattenData(uintptr_t(str) | Tag_FinishNode);
+    right.setFlattenData(str, Flag_FinishNode);
     str = &right;
     goto first_visit_node;
   }
@@ -808,13 +807,14 @@ finish_node : {
 
     return &this->asLinear();
   }
-  uintptr_t flattenData;
+  JSString* parent;
+  uintptr_t flattenFlags;
   uint32_t len = pos - str->nonInlineCharsRaw<CharT>();
   if constexpr (std::is_same_v<CharT, char16_t>) {
-    flattenData = str->unsetFlattenData(len, INIT_DEPENDENT_FLAGS);
+    parent = str->unsetFlattenData(len, INIT_DEPENDENT_FLAGS, &flattenFlags);
   } else {
-    flattenData =
-        str->unsetFlattenData(len, INIT_DEPENDENT_FLAGS | LATIN1_CHARS_BIT);
+    parent = str->unsetFlattenData(len, INIT_DEPENDENT_FLAGS | LATIN1_CHARS_BIT,
+                                   &flattenFlags);
   }
   str->d.s.u3.base = (JSLinearString*)this; /* will be true on exit */
 
@@ -831,11 +831,11 @@ finish_node : {
     bufferIfNursery->putWholeCell(str);
   }
 
-  str = (JSString*)(flattenData & ~Tag_Mask);
-  if ((flattenData & Tag_Mask) == Tag_VisitRightChild) {
+  str = parent;
+  if (flattenFlags == Flag_VisitRightChild) {
     goto visit_right_child;
   }
-  MOZ_ASSERT((flattenData & Tag_Mask) == Tag_FinishNode);
+  MOZ_ASSERT(flattenFlags == Flag_FinishNode);
   goto finish_node;
 }
 }

@@ -405,11 +405,17 @@ class JSString : public js::gc::CellWithLengthAndFlags {
 #endif
   }
 
- protected:
-  void setFlattenData(uintptr_t data) { setTemporaryGCUnsafeData(data); }
+  void setFlattenData(JSString* parent, uintptr_t flags) {
+    MOZ_ASSERT((uintptr_t(parent) & RESERVED_MASK) == 0);
+    MOZ_ASSERT((flags & ~RESERVED_MASK) == 0);
+    setTemporaryGCUnsafeData(uintptr_t(parent) | flags);
+  }
 
-  uintptr_t unsetFlattenData(uint32_t len, uint32_t flags) {
-    return unsetTemporaryGCUnsafeData(len, flags);
+  JSString* unsetFlattenData(uint32_t len, uint32_t newFlags,
+                             uintptr_t* oldFlagsOut) {
+    uintptr_t data = unsetTemporaryGCUnsafeData(len, newFlags);
+    *oldFlagsOut = data & RESERVED_MASK;
+    return reinterpret_cast<JSString*>(data & ~RESERVED_MASK);
   }
 
   // Get correct non-inline chars enum arm for given type
@@ -591,6 +597,8 @@ class JSString : public js::gc::CellWithLengthAndFlags {
    */
   mozilla::Maybe<mozilla::Tuple<size_t, size_t>> encodeUTF8Partial(
       const JS::AutoRequireNoGC& nogc, mozilla::Span<char> buffer) const;
+
+  bool isBeingFlattened() const { return hasTempHeaderData(); }
 
  private:
   // To help avoid writing Spectre-unsafe code, we only allow MacroAssembler
