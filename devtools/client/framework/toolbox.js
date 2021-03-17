@@ -3800,7 +3800,7 @@ Toolbox.prototype = {
 
     // Finish all outstanding tasks (which means finish destroying panels and
     // then destroying the host, successfully or not) before destroying the
-    // target.
+    // target descriptor.
     const onceDestroyed = new Promise(resolve => {
       resolve(
         settleAll(outstanding)
@@ -3836,7 +3836,7 @@ Toolbox.prototype = {
             // will lead to destroy frame targets which can temporarily make
             // some fronts unresponsive and block the cleanup.
             this.commands.targetCommand.destroy();
-            return this.target.destroy();
+            return this.descriptorFront.destroy();
           }, console.error)
           .then(() => {
             this.emit("destroyed");
