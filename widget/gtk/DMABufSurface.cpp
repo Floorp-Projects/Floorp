@@ -805,8 +805,18 @@ DMABufSurfaceYUV::DMABufSurfaceYUV()
 DMABufSurfaceYUV::~DMABufSurfaceYUV() { ReleaseSurface(); }
 
 bool DMABufSurfaceYUV::OpenFileDescriptorForPlane(int aPlane) {
+  // The fd is already opened, no need to reopen.
+  // This can happen when we import dmabuf surface from VA-API decoder,
+  // mGbmBufferObject is null and we don't close
+  // file descriptors for surface as they are our only reference to it.
   if (mDmabufFds[aPlane] >= 0) {
     return true;
+  }
+  if (mGbmBufferObject[aPlane] == nullptr) {
+    NS_WARNING(
+        "DMABufSurfaceYUV::OpenFileDescriptorForPlane: Missing "
+        "mGbmBufferObject object!");
+    return false;
   }
   mDmabufFds[aPlane] = nsGbmLib::GetFd(mGbmBufferObject[aPlane]);
   if (mDmabufFds[aPlane] < 0) {
