@@ -189,13 +189,9 @@ this.test = class extends ExtensionAPI {
           // Wrap in a native promise for consistency.
           promise = Promise.resolve(promise);
 
-          if (msg) {
-            msg = `: ${msg}`;
-          }
-
           return promise.then(
             result => {
-              assertTrue(false, `Promise resolved, expected rejection${msg}`);
+              assertTrue(false, `Promise resolved, expected rejection: ${msg}`);
             },
             error => {
               let errorMessage = toSource(error && error.message);
@@ -204,21 +200,17 @@ this.test = class extends ExtensionAPI {
                 errorMatches(error, expectedError, context),
                 `Promise rejected, expecting rejection to match ${toSource(
                   expectedError
-                )}, got ${errorMessage}${msg}`
+                )}, got ${errorMessage}: ${msg}`
               );
             }
           );
         },
 
         assertThrows(func, expectedError, msg) {
-          if (msg) {
-            msg = `: ${msg}`;
-          }
-
           try {
             func();
 
-            assertTrue(false, `Function did not throw, expected error${msg}`);
+            assertTrue(false, `Function did not throw, expected error: ${msg}`);
           } catch (error) {
             let errorMessage = toSource(error && error.message);
 
@@ -226,7 +218,7 @@ this.test = class extends ExtensionAPI {
               errorMatches(error, expectedError, context),
               `Function threw, expecting error to match ${toSource(
                 expectedError
-              )}, got ${errorMessage}${msg}`
+              )}, got ${errorMessage}: ${msg}`
             );
           }
         },
