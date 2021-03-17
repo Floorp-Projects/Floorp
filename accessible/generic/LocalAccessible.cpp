@@ -354,7 +354,7 @@ uint64_t LocalAccessible::VisibilityState() const {
     }
 
     if (!parentFrame) {
-      parentFrame = nsLayoutUtils::GetCrossDocParentFrame(curFrame);
+      parentFrame = nsLayoutUtils::GetCrossDocParentFrameInProcess(curFrame);
       // Even if we couldn't find the parent frame, it might mean we are in an
       // out-of-process iframe, try to see if |frame| is scrolled out in an
       // scrollable frame in a cross-process ancestor document.
