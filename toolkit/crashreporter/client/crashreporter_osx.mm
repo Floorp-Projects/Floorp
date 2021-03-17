@@ -189,12 +189,14 @@ static bool RestartApplication() {
 }
 
 - (void)showReportInfo {
-  NSDictionary* boldAttr =
-      [NSDictionary dictionaryWithObject:[NSFont boldSystemFontOfSize:[NSFont smallSystemFontSize]]
-                                  forKey:NSFontAttributeName];
-  NSDictionary* normalAttr =
-      [NSDictionary dictionaryWithObject:[NSFont systemFontOfSize:[NSFont smallSystemFontSize]]
-                                  forKey:NSFontAttributeName];
+  NSDictionary* boldAttr = @{
+    NSFontAttributeName : [NSFont boldSystemFontOfSize:[NSFont smallSystemFontSize]],
+    NSForegroundColorAttributeName : NSColor.textColor,
+  };
+  NSDictionary* normalAttr = @{
+    NSFontAttributeName : [NSFont systemFontOfSize:[NSFont smallSystemFontSize]],
+    NSForegroundColorAttributeName : NSColor.textColor,
+  };
 
   [mViewReportTextView setString:@""];
   for (Json::ValueConstIterator iter = gQueryParameters.begin(); iter != gQueryParameters.end();
