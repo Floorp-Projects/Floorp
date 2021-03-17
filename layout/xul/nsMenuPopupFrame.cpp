@@ -52,7 +52,6 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/StaticPrefs_xul.h"
-#include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/KeyboardEvent.h"
@@ -1340,22 +1339,6 @@ nsRect nsMenuPopupFrame::ComputeAnchorRect(nsPresContext* aRootPresContext,
       PresContext()->AppUnitsPerDevPixel());
 }
 
-static void NotifyPositionUpdatedForRemoteContents(nsIContent* aContent) {
-  for (nsIContent* content = aContent->GetFirstChild(); content;
-       content = content->GetNextSibling()) {
-    if (content->IsXULElement(nsGkAtoms::browser) &&
-        content->AsElement()->AttrValueIs(kNameSpaceID_None, nsGkAtoms::remote,
-                                          nsGkAtoms::_true, eIgnoreCase)) {
-      if (dom::BrowserParent* browserParent =
-              dom::BrowserParent::GetFrom(content)) {
-        browserParent->NotifyPositionUpdatedForContentsInPopup();
-      }
-    } else {
-      NotifyPositionUpdatedForRemoteContents(content);
-    }
-  }
-}
-
 nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
                                             bool aIsMove, bool aSizedToPopup) {
   if (!mShouldAutoPosition) return NS_OK;
@@ -1710,14 +1693,6 @@ nsresult nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame,
       mPendingPositionedEvent =
           nsXULPopupPositionedEvent::DispatchIfNeeded(mContent);
     }
-  }
-
-  // In the case this popup has remote contents having OOP iframes, it's
-  // possible that OOP iframe's nsSubDocumentFrame has been already reflowed
-  // thus, we will never have a chance to tell this parent browser's position
-  // update to the OOP documents without notifying it explicitly.
-  if (HasRemoteContent()) {
-    NotifyPositionUpdatedForRemoteContents(mContent);
   }
 
   return NS_OK;
