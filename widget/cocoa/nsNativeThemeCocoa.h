@@ -43,8 +43,6 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   enum class ButtonType : uint8_t {
     eRegularPushButton,
     eDefaultPushButton,
-    eRegularBevelButton,
-    eDefaultBevelButton,
     eRoundedBezelPushButton,
     eSquareBezelPushButton,
     eArrowButton,
