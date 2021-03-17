@@ -4,6 +4,7 @@
 
 interface nsIDocShell;
 interface nsISupports;
+interface nsISessionStoreRestoreData;
 
 /**
  * A callback passed to SessionStoreUtils.forEachNonDynamicChildFrame().
@@ -122,6 +123,11 @@ namespace SessionStoreUtils {
    *        {"https://example.com^userContextId=1": {"key": "value", "my_number": "123"}}
    */
    void restoreSessionStorage(nsIDocShell docShell, record<DOMString, record<DOMString, DOMString>> data);
+
+   nsISessionStoreRestoreData constructSessionStoreRestoreData();
+
+   boolean setRestoreData(CanonicalBrowsingContext browsingContext,
+                          nsISessionStoreRestoreData? data);
 };
 
 [GenerateConversionToJS, GenerateInit]

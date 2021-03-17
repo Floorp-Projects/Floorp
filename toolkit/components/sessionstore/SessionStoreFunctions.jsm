@@ -10,6 +10,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   SessionStore: "resource:///modules/sessionstore/SessionStore.jsm",
 });
 
+function RestoreTabContentComplete(aBrowser) {
+  SessionStore.restoreTabContentComplete(aBrowser, {});
+}
+
 function UpdateSessionStore(
   aBrowser,
   aBrowsingContext,
@@ -30,7 +34,7 @@ function UpdateSessionStore(
   );
 }
 
-var EXPORTED_SYMBOLS = ["UpdateSessionStore"];
+var EXPORTED_SYMBOLS = ["RestoreTabContentComplete", "UpdateSessionStore"];
 
 var SessionStoreFuncInternal = {
   // form data which is waiting to be updated

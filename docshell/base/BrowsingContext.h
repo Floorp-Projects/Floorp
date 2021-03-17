@@ -198,7 +198,8 @@ enum class ExplicitActiveStatus : uint8_t {
   /* The number of entries added to the session history because of this       \
    * browsing context. */                                                     \
   FIELD(HistoryEntryCount, uint32_t)                                          \
-  FIELD(IsInBFCache, bool)
+  FIELD(IsInBFCache, bool)                                                    \
+  FIELD(HasRestoreData, bool)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -1026,6 +1027,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_HasMainMediaController>, bool aNewValue,
               ContentParent* aSource);
   void DidSet(FieldIndex<IDX_HasMainMediaController>, bool aOldValue);
+
+  bool CanSet(FieldIndex<IDX_HasRestoreData>, bool aNewValue,
+              ContentParent* aSource);
 
   template <size_t I, typename T>
   bool CanSet(FieldIndex<I>, const T&, ContentParent*) {
