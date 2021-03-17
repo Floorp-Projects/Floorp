@@ -5,35 +5,21 @@ ChromeUtils.import("resource://gre/modules/TelemetryController.jsm", this);
 ChromeUtils.import("resource://gre/modules/TelemetryUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/Services.jsm", this);
 ChromeUtils.import("resource://gre/modules/PromiseUtils.jsm", this);
-ChromeUtils.import("resource://gre/modules/FileUtils.jsm", this);
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm", this);
-ChromeUtils.import("resource://testing-common/httpd.js", this);
-var { AppConstants } = ChromeUtils.import(
-  "resource://gre/modules/AppConstants.jsm"
-);
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "AddonTestUtils",
-  "resource://testing-common/AddonTestUtils.jsm"
-);
-ChromeUtils.defineModuleGetter(this, "OS", "resource://gre/modules/osfile.jsm");
-ChromeUtils.defineModuleGetter(
-  this,
-  "TelemetrySend",
-  "resource://gre/modules/TelemetrySend.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "TelemetryStorage",
-  "resource://gre/modules/TelemetryStorage.jsm"
-);
-ChromeUtils.defineModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
-ChromeUtils.defineModuleGetter(
-  this,
-  "NetUtil",
-  "resource://gre/modules/NetUtil.jsm"
-);
+XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonTestUtils: "resource://testing-common/AddonTestUtils.jsm",
+  AppConstants: "resource://gre/modules/AppConstants.jsm",
+  FileUtils: "resource://gre/modules/FileUtils.jsm",
+  Log: "resource://gre/modules/Log.jsm",
+  HttpServer: "resource://testing-common/httpd.js",
+  NetUtil: "resource://gre/modules/NetUtil.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  Preferences: "resource://gre/modules/Preferences.jsm",
+  PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
+  TelemetrySend: "resource://gre/modules/TelemetrySend.jsm",
+  TelemetryStorage: "resource://gre/modules/TelemetryStorage.jsm",
+});
 
 const gIsWindows = AppConstants.platform == "win";
 const gIsMac = AppConstants.platform == "macosx";
@@ -585,3 +571,18 @@ fakeMidnightPingFuzzingDelay(0);
 
 // Avoid using the directory service, which is not registered in some tests.
 fakeUninstallPingPath();
+
+const PLATFORM_VERSION = "1.9.2";
+const APP_VERSION = "1";
+const APP_ID = "xpcshell@tests.mozilla.org";
+const APP_NAME = "XPCShell";
+
+const DISTRIBUTION_CUSTOMIZATION_COMPLETE_TOPIC =
+  "distribution-customization-complete";
+
+const PLUGIN2_NAME = "Quicktime";
+const PLUGIN2_DESC = "A mock Quicktime plugin";
+const PLUGIN2_VERSION = "2.3";
+//
+// system add-ons are enabled at startup, so record date when the test starts
+const SYSTEM_ADDON_INSTALL_DATE = Date.now();
