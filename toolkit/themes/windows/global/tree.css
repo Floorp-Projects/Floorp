@@ -38,12 +38,4 @@ treecol[sortDirection="descending"]:not([hideheader="true"]) > .treecol-sortdire
     border-bottom-color: ThreeDHighlight;
     border-inline-start-color: ThreeDShadow;
   }
-
-  treecol[sortDirection="ascending"]:not([hideheader="true"]) > .treecol-sortdirection {
-    list-style-image: url("chrome://global/skin/tree/sort-asc-classic.png");
-  }
-
-  treecol[sortDirection="descending"]:not([hideheader="true"]) > .treecol-sortdirection {
-    list-style-image: url("chrome://global/skin/tree/sort-dsc-classic.png");
-  }
 }
