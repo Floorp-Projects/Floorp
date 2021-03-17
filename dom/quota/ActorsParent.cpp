@@ -4067,24 +4067,24 @@ nsresult QuotaManager::LoadQuota() {
               PersistenceTypeFromInt32(repositoryId, fallible);
           QM_TRY(OkIf(maybePersistenceType.isSome()), Err(NS_ERROR_FAILURE));
 
-          OriginMetadata originMetadata;
+          FullOriginMetadata fullOriginMetadata;
 
-          originMetadata.mPersistenceType = maybePersistenceType.value();
+          fullOriginMetadata.mPersistenceType = maybePersistenceType.value();
 
           QM_TRY_UNWRAP(
-              originMetadata.mSuffix,
+              fullOriginMetadata.mSuffix,
               MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 1));
 
           QM_TRY_UNWRAP(
-              originMetadata.mGroup,
+              fullOriginMetadata.mGroup,
               MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 2));
 
           QM_TRY_UNWRAP(
-              originMetadata.mOrigin,
+              fullOriginMetadata.mOrigin,
               MOZ_TO_RESULT_INVOKE_TYPED(nsCString, stmt, GetUTF8String, 3));
 
           QM_TRY_INSPECT(const bool& updated,
-                         MaybeUpdateGroupForOrigin(originMetadata));
+                         MaybeUpdateGroupForOrigin(fullOriginMetadata));
 
           Unused << updated;
 
@@ -4105,18 +4105,18 @@ nsresult QuotaManager::LoadQuota() {
 
           QM_TRY_INSPECT(const int64_t& usage,
                          MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 5));
-          QM_TRY_INSPECT(const int64_t& lastAccessTime,
-                         MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 6));
+          QM_TRY_UNWRAP(fullOriginMetadata.mLastAccessTime,
+                        MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 6));
           QM_TRY_INSPECT(const int64_t& accessed,
                          MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 7));
-          QM_TRY_INSPECT(const int64_t& persisted,
-                         MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 8));
+          QM_TRY_UNWRAP(fullOriginMetadata.mPersisted,
+                        MOZ_TO_RESULT_INVOKE(stmt, GetInt32, 8));
 
           if (accessed) {
             QM_TRY_INSPECT(
                 const auto& directory,
-                GetDirectoryForOrigin(originMetadata.mPersistenceType,
-                                      originMetadata.mOrigin));
+                GetDirectoryForOrigin(fullOriginMetadata.mPersistenceType,
+                                      fullOriginMetadata.mOrigin));
 
             QM_TRY_INSPECT(const bool& exists,
                            MOZ_TO_RESULT_INVOKE(directory, Exists));
@@ -4135,31 +4135,35 @@ nsresult QuotaManager::LoadQuota() {
             QM_TRY_INSPECT(const auto& metadata,
                            LoadFullOriginMetadataWithRestore(directory));
 
-            QM_TRY(OkIf(lastAccessTime == metadata.mLastAccessTime),
+            QM_TRY(OkIf(fullOriginMetadata.mLastAccessTime ==
+                        metadata.mLastAccessTime),
                    Err(NS_ERROR_FAILURE));
 
-            QM_TRY(OkIf(persisted == metadata.mPersisted),
+            QM_TRY(OkIf(fullOriginMetadata.mPersisted == metadata.mPersisted),
                    Err(NS_ERROR_FAILURE));
 
-            QM_TRY(OkIf(originMetadata.mPersistenceType ==
+            QM_TRY(OkIf(fullOriginMetadata.mPersistenceType ==
                         metadata.mPersistenceType),
                    Err(NS_ERROR_FAILURE));
 
-            QM_TRY(OkIf(originMetadata.mSuffix == metadata.mSuffix),
+            QM_TRY(OkIf(fullOriginMetadata.mSuffix == metadata.mSuffix),
                    Err(NS_ERROR_FAILURE));
 
-            QM_TRY(OkIf(originMetadata.mGroup == metadata.mGroup),
+            QM_TRY(OkIf(fullOriginMetadata.mGroup == metadata.mGroup),
                    Err(NS_ERROR_FAILURE));
 
-            QM_TRY(OkIf(originMetadata.mOrigin == metadata.mOrigin),
+            QM_TRY(OkIf(fullOriginMetadata.mOrigin == metadata.mOrigin),
                    Err(NS_ERROR_FAILURE));
 
-            QM_TRY(InitializeOrigin(originMetadata.mPersistenceType,
-                                    originMetadata, lastAccessTime, persisted,
-                                    directory));
+            QM_TRY(InitializeOrigin(fullOriginMetadata.mPersistenceType,
+                                    fullOriginMetadata,
+                                    fullOriginMetadata.mLastAccessTime,
+                                    fullOriginMetadata.mPersisted, directory));
           } else {
-            InitQuotaForOrigin(originMetadata.mPersistenceType, originMetadata,
-                               clientUsages, usage, lastAccessTime, persisted);
+            InitQuotaForOrigin(fullOriginMetadata.mPersistenceType,
+                               fullOriginMetadata, clientUsages, usage,
+                               fullOriginMetadata.mLastAccessTime,
+                               fullOriginMetadata.mPersisted);
           }
 
           return Ok{};
