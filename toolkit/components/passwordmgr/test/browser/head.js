@@ -660,6 +660,7 @@ async function fillGeneratedPasswordFromOpenACPopup(
   let popup = browser.ownerDocument.getElementById("PopupAutoComplete");
   let item;
 
+  await new Promise(requestAnimationFrame);
   await TestUtils.waitForCondition(() => {
     item = popup.querySelector(`[originaltype="generatedPassword"]`);
     return item && !EventUtils.isHidden(item);
