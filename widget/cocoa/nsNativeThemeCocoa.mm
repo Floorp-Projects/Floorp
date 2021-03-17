@@ -1133,11 +1133,6 @@ nsNativeThemeCocoa::MenuItemParams nsNativeThemeCocoa::ComputeMenuItemParams(
   return params;
 }
 
-static void SetCGContextFillColor(CGContextRef cgContext, const sRGBColor& aColor) {
-  DeviceColor color = ToDeviceColor(aColor);
-  CGContextSetRGBFillColor(cgContext, color.r, color.g, color.b, color.a);
-}
-
 void nsNativeThemeCocoa::DrawMenuItem(CGContextRef cgContext, const CGRect& inBoxRect,
                                       const MenuItemParams& aParams) {
   if (aParams.checked) {
@@ -2254,35 +2249,22 @@ void nsNativeThemeCocoa::DrawResizer(CGContextRef cgContext, const HIRect& aRect
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
-static const sRGBColor kMultilineTextFieldTopBorderColor(0.4510, 0.4510, 0.4510, 1.0);
-static const sRGBColor kMultilineTextFieldSidesAndBottomBorderColor(0.6, 0.6, 0.6, 1.0);
-
 void nsNativeThemeCocoa::DrawMultilineTextField(CGContextRef cgContext, const CGRect& inBoxRect,
                                                 bool aIsFocused) {
-  SetCGContextFillColor(cgContext, sRGBColor(1.0, 1.0, 1.0, 1.0));
+  mTextFieldCell.enabled = YES;
+  mTextFieldCell.showsFirstResponder = aIsFocused;
 
-  CGContextFillRect(cgContext, inBoxRect);
-
-  float x = inBoxRect.origin.x, y = inBoxRect.origin.y;
-  float w = inBoxRect.size.width, h = inBoxRect.size.height;
-  SetCGContextFillColor(cgContext, kMultilineTextFieldTopBorderColor);
-  CGContextFillRect(cgContext, CGRectMake(x, y, w, 1));
-  SetCGContextFillColor(cgContext, kMultilineTextFieldSidesAndBottomBorderColor);
-  CGContextFillRect(cgContext, CGRectMake(x, y + 1, 1, h - 1));
-  CGContextFillRect(cgContext, CGRectMake(x + w - 1, y + 1, 1, h - 1));
-  CGContextFillRect(cgContext, CGRectMake(x + 1, y + h - 1, w - 2, 1));
-
-  if (aIsFocused) {
-    NSGraphicsContext* savedContext = [NSGraphicsContext currentContext];
-    [NSGraphicsContext
-        setCurrentContext:[NSGraphicsContext graphicsContextWithGraphicsPort:cgContext
-                                                                     flipped:YES]];
-    CGContextSaveGState(cgContext);
-    NSSetFocusRingStyle(NSFocusRingOnly);
-    NSRectFill(NSRectFromCGRect(inBoxRect));
-    CGContextRestoreGState(cgContext);
-    [NSGraphicsContext setCurrentContext:savedContext];
+  if (mCellDrawWindow) {
+    mCellDrawWindow.cellsShouldLookActive = YES;
   }
+
+  // DrawCellIncludingFocusRing draws into the current NSGraphicsContext, so do the usual
+  // save+restore dance.
+  NSGraphicsContext* savedContext = NSGraphicsContext.currentContext;
+  NSGraphicsContext.currentContext = [NSGraphicsContext graphicsContextWithCGContext:cgContext
+                                                                             flipped:YES];
+  DrawCellIncludingFocusRing(mTextFieldCell, inBoxRect, mCellDrawView);
+  NSGraphicsContext.currentContext = savedContext;
 }
 
 void nsNativeThemeCocoa::DrawSourceListSelection(CGContextRef aContext, const CGRect& aRect,
@@ -2933,12 +2915,6 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
     const mozilla::layers::StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager, nsIFrame* aFrame,
     StyleAppearance aAppearance, const nsRect& aRect) {
-  nsPresContext* presContext = aFrame->PresContext();
-  wr::LayoutRect bounds =
-      wr::ToLayoutRect(LayoutDeviceRect::FromAppUnits(aRect, presContext->AppUnitsPerDevPixel()));
-
-  EventStates eventState = GetContentState(aFrame, aAppearance);
-
   // This list needs to stay consistent with the list in DrawWidgetBackground.
   // For every switch case in DrawWidgetBackground, there are three choices:
   //  - If the case in DrawWidgetBackground draws nothing for the given widget
@@ -3003,39 +2979,7 @@ bool nsNativeThemeCocoa::CreateWebRenderCommandsForWidget(
       return false;
     }
 
-    case StyleAppearance::Textarea: {
-      if (eventState.HasState(NS_EVENT_STATE_FOCUS)) {
-        // We can't draw the focus ring using webrender, so fall back to regular
-        // drawing if we're focused.
-        return false;
-      }
-
-      // White background
-      aBuilder.PushRect(bounds, bounds, true,
-                        wr::ToColorF(ToDeviceColor(sRGBColor::OpaqueWhite())));
-
-      wr::BorderSide side[4] = {
-          wr::ToBorderSide(ToDeviceColor(kMultilineTextFieldTopBorderColor),
-                           StyleBorderStyle::Solid),
-          wr::ToBorderSide(ToDeviceColor(kMultilineTextFieldSidesAndBottomBorderColor),
-                           StyleBorderStyle::Solid),
-          wr::ToBorderSide(ToDeviceColor(kMultilineTextFieldSidesAndBottomBorderColor),
-                           StyleBorderStyle::Solid),
-          wr::ToBorderSide(ToDeviceColor(kMultilineTextFieldSidesAndBottomBorderColor),
-                           StyleBorderStyle::Solid),
-      };
-
-      wr::BorderRadius borderRadius = wr::EmptyBorderRadius();
-      float borderWidth = presContext->CSSPixelsToDevPixels(1.0f);
-      wr::LayoutSideOffsets borderWidths =
-          wr::ToBorderWidths(borderWidth, borderWidth, borderWidth, borderWidth);
-
-      mozilla::Range<const wr::BorderSide> wrsides(side, 4);
-      aBuilder.PushBorder(bounds, bounds, true, borderWidths, wrsides, borderRadius);
-
-      return true;
-    }
-
+    case StyleAppearance::Textarea:
     case StyleAppearance::Listbox:
     case StyleAppearance::Tab:
     case StyleAppearance::Tabpanels:
