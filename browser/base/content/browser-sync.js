@@ -380,6 +380,20 @@ var gSync = {
     return UIState.get().status == UIState.STATUS_SIGNED_IN;
   },
 
+  shouldHideSendContextMenuItems(enabled) {
+    const state = UIState.get();
+    // Only show the "Send..." context menu items when sending would be possible
+    if (
+      enabled &&
+      state.status == UIState.STATUS_SIGNED_IN &&
+      state.syncEnabled &&
+      this.getSendTabTargets().length
+    ) {
+      return false;
+    }
+    return true;
+  },
+
   getSendTabTargets() {
     // If sync is not enabled, then there's no point looking for sync clients.
     // If sync is simply not ready or hasn't yet synced the clients engine, we
@@ -1566,27 +1580,33 @@ var gSync = {
       }
     }
     const enabled = !this.sendTabConfiguredAndLoading && hasASendableURI;
+    const hideItems = this.shouldHideSendContextMenuItems(enabled);
 
     let sendTabsToDevice = document.getElementById("context_sendTabToDevice");
     sendTabsToDevice.disabled = !enabled;
 
-    let tabCount = aTargetTab.multiselected
-      ? gBrowser.multiSelectedTabsCount
-      : 1;
-    sendTabsToDevice.label = PluralForm.get(
-      tabCount,
-      gNavigatorBundle.getString("sendTabsToDevice.label")
-    ).replace("#1", tabCount.toLocaleString());
-    sendTabsToDevice.accessKey = gNavigatorBundle.getString(
-      "sendTabsToDevice.accesskey"
-    );
+    if (hideItems || !hasASendableURI) {
+      sendTabsToDevice.hidden = true;
+    } else {
+      let tabCount = aTargetTab.multiselected
+        ? gBrowser.multiSelectedTabsCount
+        : 1;
+      sendTabsToDevice.label = PluralForm.get(
+        tabCount,
+        gNavigatorBundle.getString("sendTabsToDevice.label")
+      ).replace("#1", tabCount.toLocaleString());
+      sendTabsToDevice.accessKey = gNavigatorBundle.getString(
+        "sendTabsToDevice.accesskey"
+      );
+      sendTabsToDevice.hidden = false;
+    }
   },
 
   // "Send Page to Device" and "Send Link to Device" menu items
   updateContentContextMenu(contextMenu) {
     if (!this.FXA_ENABLED) {
       // These items are hidden by default. No need to do anything.
-      return;
+      return false;
     }
     // showSendLink and showSendPage are mutually exclusive
     const showSendLink =
@@ -1603,24 +1623,34 @@ var gSync = {
         contextMenu.onTextInput
       );
 
-    contextMenu.showItem("context-sendpagetodevice", showSendPage);
-    contextMenu.showItem("context-sendlinktodevice", showSendLink);
-
-    if (!showSendLink && !showSendPage) {
-      return;
-    }
-
     const targetURI = showSendLink
       ? contextMenu.getLinkURI()
       : contextMenu.browser.currentURI;
     const enabled =
       !this.sendTabConfiguredAndLoading &&
       BrowserUtils.isShareableURL(targetURI);
+    const hideItems = this.shouldHideSendContextMenuItems(enabled);
+
+    contextMenu.showItem(
+      "context-sendpagetodevice",
+      !hideItems && showSendPage
+    );
+    contextMenu.showItem(
+      "context-sendlinktodevice",
+      !hideItems && showSendLink
+    );
+
+    if (!showSendLink && !showSendPage) {
+      return false;
+    }
+
     contextMenu.setItemAttr(
       showSendPage ? "context-sendpagetodevice" : "context-sendlinktodevice",
       "disabled",
       !enabled || null
     );
+    // return true if context menu items are visible
+    return !hideItems && (showSendPage || showSendLink);
   },
 
   // Functions called by observers
