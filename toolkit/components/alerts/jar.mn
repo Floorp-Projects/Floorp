@@ -3,6 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
-  content/global/alerts/alert.css (resources/content/alert.css)
-  content/global/alerts/alert.xhtml (resources/content/alert.xhtml)
-  content/global/alerts/alert.js  (resources/content/alert.js)
+  content/global/alerts/alert.css (alert.css)
+  content/global/alerts/alert.xhtml (alert.xhtml)
+  content/global/alerts/alert.js  (alert.js)
