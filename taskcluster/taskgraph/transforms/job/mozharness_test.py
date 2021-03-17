@@ -322,6 +322,7 @@ def mozharness_test_on_generic_worker(config, job, taskdesc):
     elif is_bitbar:
         env.update(
             {
+                "LANG": "en_US.UTF-8",
                 "MOZHARNESS_CONFIG": " ".join(mozharness["config"]),
                 "MOZHARNESS_SCRIPT": mozharness["script"],
                 "MOZHARNESS_URL": {

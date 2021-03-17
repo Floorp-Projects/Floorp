@@ -34,6 +34,7 @@ job-defaults:
                     - mac-chromium
                 default:
                     - linux64-chromium
+    python-3: true
 
 raptor-speedometer-chromium:
     description: "Raptor Speedometer on Chromium"

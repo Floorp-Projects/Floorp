@@ -22,6 +22,7 @@ job-defaults:
         script: raptor_script.py
         config:
             - raptor/android_hw_config.py
+    python-3: true
 
 raptor-scn-cpu-memory-idle-refbrow:
     description: "Raptor idle-browser cpu/memory on Reference Browser"

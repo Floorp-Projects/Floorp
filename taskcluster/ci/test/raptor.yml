@@ -96,6 +96,7 @@ job-defaults:
                         default:
                             - linux64-chromium
                 default: []
+    python-3: true
 
 raptor-speedometer-firefox:
     description: "Raptor Speedometer on Firefox"

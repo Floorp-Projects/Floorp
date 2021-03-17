@@ -19,11 +19,11 @@ LOG = get_proxy_logger("profiler")
 
 if six.PY2:
     # Import for Python 2
-    from cStringIO import StringIO
+    from cStringIO import StringIO as sio
     from urllib2 import urlopen
 else:
     # Import for Python 3
-    from io import StringIO
+    from io import BytesIO as sio
     from urllib.request import urlopen
 
     # Symbolication is broken when using type 'str' in python 2.7, so we use 'basestring'.
@@ -167,7 +167,7 @@ class ProfileSymbolicator:
         )
         try:
             io = urlopen(symbol_zip_url, None, 30)
-            with zipfile.ZipFile(StringIO(io.read())) as zf:
+            with zipfile.ZipFile(sio(io.read())) as zf:
                 self.integrate_symbol_zip(zf)
             self._create_file_if_not_exists(self._marker_file(symbol_zip_url))
         except IOError:
@@ -196,7 +196,9 @@ class ProfileSymbolicator:
 
     def _marker_file(self, symbol_zip_url):
         marker_dir = os.path.join(self.options["symbolPaths"]["FIREFOX"], ".markers")
-        return os.path.join(marker_dir, hashlib.sha1(symbol_zip_url).hexdigest())
+        return os.path.join(
+            marker_dir, hashlib.sha1(symbol_zip_url.encode("utf-8")).hexdigest()
+        )
 
     def have_integrated(self, symbol_zip_url):
         return os.path.isfile(self._marker_file(symbol_zip_url))
