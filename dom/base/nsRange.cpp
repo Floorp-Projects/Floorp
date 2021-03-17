@@ -542,6 +542,11 @@ void nsRange::CharacterDataChanged(nsIContent* aContent,
     DoSetRange(newStart, newEnd, newRoot ? newRoot : mRoot.get(),
                !newEnd.Container()->GetParentNode() ||
                    !newStart.Container()->GetParentNode());
+  } else {
+    nsRange::AssertIfMismatchRootAndRangeBoundaries(
+        mStart, mEnd, mRoot,
+        (mStart.IsSet() && !mStart.Container()->GetParentNode()) ||
+            (mEnd.IsSet() && !mEnd.Container()->GetParentNode()));
   }
 }
 
@@ -577,6 +582,8 @@ void nsRange::ContentAppended(nsIContent* aFirstNewContent) {
       mNextEndRef = nullptr;
     }
     DoSetRange(mStart, mEnd, mRoot, true);
+  } else {
+    nsRange::AssertIfMismatchRootAndRangeBoundaries(mStart, mEnd, mRoot);
   }
 }
 
@@ -626,6 +633,8 @@ void nsRange::ContentInserted(nsIContent* aChild) {
 
   if (updateBoundaries) {
     DoSetRange(newStart, newEnd, mRoot);
+  } else {
+    nsRange::AssertIfMismatchRootAndRangeBoundaries(mStart, mEnd, mRoot);
   }
 }
 
@@ -679,6 +688,8 @@ void nsRange::ContentRemoved(nsIContent* aChild, nsIContent* aPreviousSibling) {
   if (newStart.IsSet() || newEnd.IsSet()) {
     DoSetRange(newStart.IsSet() ? newStart : mStart.AsRaw(),
                newEnd.IsSet() ? newEnd : mEnd.AsRaw(), mRoot);
+  } else {
+    nsRange::AssertIfMismatchRootAndRangeBoundaries(mStart, mEnd, mRoot);
   }
 
   MOZ_ASSERT(mStart.Ref() != aChild);
@@ -829,6 +840,46 @@ void nsRange::NotifySelectionListenersAfterRangeSet() {
  * Private helper routines
  ******************************************************/
 
+// static
+template <typename SPT, typename SRT, typename EPT, typename ERT>
+void nsRange::AssertIfMismatchRootAndRangeBoundaries(
+    const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
+    const RangeBoundaryBase<EPT, ERT>& aEndBoundary, const nsINode* aRootNode,
+    bool aNotInsertedYet /* = false */) {
+#ifdef DEBUG
+  if (!aRootNode) {
+    MOZ_ASSERT(!aStartBoundary.IsSet());
+    MOZ_ASSERT(!aEndBoundary.IsSet());
+    return;
+  }
+
+  MOZ_ASSERT(aStartBoundary.IsSet());
+  MOZ_ASSERT(aEndBoundary.IsSet());
+  if (!aNotInsertedYet) {
+    // Compute temporary root for given range boundaries.  If a range in native
+    // anonymous subtree is being removed, tempRoot may return the fragment's
+    // root content, but it shouldn't be used for new root node because the node
+    // may be bound to the root element again.
+    nsINode* tempRoot = RangeUtils::ComputeRootNode(aStartBoundary.Container());
+    // The new range should be in the temporary root node at least.
+    MOZ_ASSERT(tempRoot ==
+               RangeUtils::ComputeRootNode(aEndBoundary.Container()));
+    MOZ_ASSERT(aStartBoundary.Container()->IsInclusiveDescendantOf(tempRoot));
+    MOZ_ASSERT(aEndBoundary.Container()->IsInclusiveDescendantOf(tempRoot));
+    // If the new range is not disconnected or not in native anonymous subtree,
+    // the temporary root must be same as the new root node.  Otherwise,
+    // aRootNode should be the parent of root of the NAC (e.g., `<input>` if the
+    // range is in NAC under `<input>`), but tempRoot is now root content node
+    // of the disconnected subtree (e.g., `<div>` element in `<input>` element).
+    const bool tempRootIsDisconnectedNAC =
+        tempRoot->IsInNativeAnonymousSubtree() && !tempRoot->GetParentNode();
+    MOZ_ASSERT_IF(!tempRootIsDisconnectedNAC, tempRoot == aRootNode);
+  }
+  MOZ_ASSERT(aRootNode->IsDocument() || aRootNode->IsAttr() ||
+             aRootNode->IsDocumentFragment() || aRootNode->IsContent());
+#endif  // #ifdef DEBUG
+}
+
 // It's important that all setting of the range start/end points
 // go through this function, which will do all the right voodoo
 // for content notification of range ownership.
@@ -841,32 +892,12 @@ void nsRange::DoSetRange(const RangeBoundaryBase<SPT, SRT>& aStartBoundary,
                          bool aNotInsertedYet /* = false */) {
   mIsPositioned = aStartBoundary.IsSetAndValid() &&
                   aEndBoundary.IsSetAndValid() && aRootNode;
-  MOZ_ASSERT(mIsPositioned || (!aStartBoundary.IsSet() &&
-                               !aEndBoundary.IsSet() && !aRootNode),
-             "Set all or none");
+  MOZ_ASSERT_IF(!mIsPositioned, !aStartBoundary.IsSet());
+  MOZ_ASSERT_IF(!mIsPositioned, !aEndBoundary.IsSet());
+  MOZ_ASSERT_IF(!mIsPositioned, !aRootNode);
 
-  MOZ_ASSERT(
-      !aRootNode || aNotInsertedYet ||
-          (aStartBoundary.Container()->IsInclusiveDescendantOf(aRootNode) &&
-           aEndBoundary.Container()->IsInclusiveDescendantOf(aRootNode) &&
-           aRootNode ==
-               RangeUtils::ComputeRootNode(aStartBoundary.Container()) &&
-           aRootNode == RangeUtils::ComputeRootNode(aEndBoundary.Container())),
-      "Wrong root");
-
-  MOZ_ASSERT(!aRootNode ||
-                 (aStartBoundary.Container()->IsContent() &&
-                  aEndBoundary.Container()->IsContent() &&
-                  aRootNode ==
-                      RangeUtils::ComputeRootNode(aStartBoundary.Container()) &&
-                  aRootNode ==
-                      RangeUtils::ComputeRootNode(aEndBoundary.Container())) ||
-                 (!aRootNode->GetParentNode() &&
-                  (aRootNode->IsDocument() || aRootNode->IsAttr() ||
-                   aRootNode->IsDocumentFragment() ||
-                   /*For backward compatibility*/
-                   aRootNode->IsContent())),
-             "Bad root");
+  nsRange::AssertIfMismatchRootAndRangeBoundaries(aStartBoundary, aEndBoundary,
+                                                  aRootNode, aNotInsertedYet);
 
   if (mRoot != aRootNode) {
     if (mRoot) {

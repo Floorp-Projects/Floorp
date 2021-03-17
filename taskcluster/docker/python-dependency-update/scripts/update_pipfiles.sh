@@ -114,8 +114,6 @@ fi
 
 clone_repo
 
-${PIP} install pip-tools
-
 requirements_basefile="$(basename "${REQUIREMENTS_FILE}")"
 requirements_dir="$(dirname "${REQUIREMENTS_FILE}")"
 update_requirements "${requirements_dir}" "${requirements_basefile}"

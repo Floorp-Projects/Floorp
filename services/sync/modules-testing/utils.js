@@ -150,7 +150,6 @@ var makeIdentityConfig = function(overrides) {
     // fxaccount specific credentials.
     fxaccount: {
       user: {
-        assertion: "assertion",
         email: "foo",
         kSync: "a".repeat(128),
         kXCS: "b".repeat(32),
@@ -214,10 +213,8 @@ var makeFxAccountsInternalMock = function(config) {
       let accountState = new AccountState(storageManager);
       return accountState;
     },
-    _getAssertion(audience) {
-      return Promise.resolve(config.fxaccount.user.assertion);
-    },
     getOAuthToken: () => Promise.resolve("some-access-token"),
+    _destroyOAuthToken: () => Promise.resolve(),
     keys: {
       getScopedKeys: () =>
         Promise.resolve({
@@ -264,16 +261,7 @@ var configureFxAccountIdentity = function(
 
   let mockTSC = {
     // TokenServerClient
-    async getTokenFromBrowserIDAssertion(uri, assertion) {
-      Assert.equal(
-        uri,
-        Services.prefs.getStringPref("identity.sync.tokenserver.uri")
-      );
-      Assert.equal(assertion, config.fxaccount.user.assertion);
-      config.fxaccount.token.uid = config.username;
-      return config.fxaccount.token;
-    },
-    async getTokenFromOAuthToken(url, oauthToken) {
+    async getTokenUsingOAuth(url, oauthToken) {
       Assert.equal(
         url,
         Services.prefs.getStringPref("identity.sync.tokenserver.uri")
@@ -285,7 +273,7 @@ var configureFxAccountIdentity = function(
   };
   authService._fxaService = fxa;
   authService._tokenServerClient = mockTSC;
-  // Set the "account" of the browserId manager to be the "email" of the
+  // Set the "account" of the sync auth manager to be the "email" of the
   // logged in user of the mockFXA service.
   authService._signedInUser = config.fxaccount.user;
   authService._account = config.fxaccount.user.email;

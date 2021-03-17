@@ -613,65 +613,6 @@ add_task(async function test_accountKeys() {
   await promiseStopServer(server);
 });
 
-add_task(async function test_signCertificate() {
-  let certSignMessage = JSON.stringify({ cert: { bar: "baz" } });
-  let errorMessage = JSON.stringify({
-    code: 400,
-    errno: 102,
-    error: "doesn't exist",
-  });
-  let tries = 0;
-
-  let server = httpd_setup({
-    "/certificate/sign": function(request, response) {
-      Assert.ok(request.hasHeader("Authorization"));
-      Assert.ok(request.queryString.startsWith("service="));
-
-      if (tries === 0) {
-        tries += 1;
-        let body = CommonUtils.readBytesFromInputStream(
-          request.bodyInputStream
-        );
-        let jsonBody = JSON.parse(body);
-        Assert.equal(JSON.parse(jsonBody.publicKey).foo, "bar");
-        Assert.equal(jsonBody.duration, 600);
-        response.setStatusLine(request.httpVersion, 200, "OK");
-        response.bodyOutputStream.write(
-          certSignMessage,
-          certSignMessage.length
-        );
-        return;
-      }
-
-      // Second attempt, trigger error
-      response.setStatusLine(request.httpVersion, 400, "Bad request");
-      response.bodyOutputStream.write(errorMessage, errorMessage.length);
-    },
-  });
-
-  let client = new FxAccountsClient(server.baseURI);
-  let result = await client.signCertificate(
-    FAKE_SESSION_TOKEN,
-    JSON.stringify({ foo: "bar" }),
-    600
-  );
-  Assert.equal("baz", result.bar);
-
-  // Account doesn't exist
-  try {
-    result = await client.signCertificate(
-      "bogus",
-      JSON.stringify({ foo: "bar" }),
-      600
-    );
-    do_throw("Expected to catch an exception");
-  } catch (expectedError) {
-    Assert.equal(102, expectedError.errno);
-  }
-
-  await promiseStopServer(server);
-});
-
 add_task(async function test_accessTokenWithSessionToken() {
   let server = httpd_setup({
     "/oauth/token": function(request, response) {

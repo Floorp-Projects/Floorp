@@ -150,10 +150,10 @@ class nsDMABufDevice {
   void ResetFormatsModifiers();
   void AddFormatModifier(bool aHasAlpha, int aFormat, uint32_t mModifierHi,
                          uint32_t mModifierLo);
+  bool Configure(nsACString& aFailureId);
 
  private:
   bool IsDMABufEnabled();
-  bool Configure();
 
   void* mRegistry;
 
@@ -162,6 +162,7 @@ class nsDMABufDevice {
 
   gbm_device* mGbmDevice;
   int mGbmFd;
+  bool mInitialized;
 };
 
 nsDMABufDevice* GetDMABufDevice();

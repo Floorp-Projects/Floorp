@@ -4,7 +4,7 @@
 
 use api::ImageBufferKind;
 use crate::batch::{BatchKey, BatchKind, BrushBatchKind, BatchFeatures};
-use crate::composite::CompositeSurfaceFormat;
+use crate::composite::{CompositeFeatures, CompositeSurfaceFormat};
 use crate::device::{Device, Program, ShaderError};
 use euclid::default::Transform3D;
 use crate::glyph_rasterizer::GlyphFormat;
@@ -591,6 +591,9 @@ pub struct Shaders {
     // shaders with WR_FEATURE flags on or off based on the type of image
     // buffer we're sourcing from (see IMAGE_BUFFER_KINDS).
     pub composite_rgba: Vec<Option<LazilyCompiledShader>>,
+    // A faster set of rgba composite shaders that do not support UV clamping
+    // or color modulation.
+    pub composite_rgba_fast_path: Vec<Option<LazilyCompiledShader>>,
     // The same set of composite shaders but with WR_FEATURE_YUV added.
     pub composite_yuv: Vec<Option<LazilyCompiledShader>>,
 }
@@ -892,24 +895,29 @@ impl Shaders {
         // All yuv_image configuration.
         let mut yuv_features = Vec::new();
         let mut rgba_features = Vec::new();
+        let mut fast_path_features = Vec::new();
         let yuv_shader_num = IMAGE_BUFFER_KINDS.len();
         let mut brush_yuv_image = Vec::new();
         let mut composite_yuv = Vec::new();
         let mut composite_rgba = Vec::new();
+        let mut composite_rgba_fast_path = Vec::new();
         // PrimitiveShader is not clonable. Use push() to initialize the vec.
         for _ in 0 .. yuv_shader_num {
             brush_yuv_image.push(None);
             composite_yuv.push(None);
             composite_rgba.push(None);
+            composite_rgba_fast_path.push(None);
         }
         for image_buffer_kind in &IMAGE_BUFFER_KINDS {
             if has_platform_support(*image_buffer_kind, &gl_type) {
                 yuv_features.push("YUV");
+                fast_path_features.push("FAST_PATH");
 
                 let feature_string = get_feature_string(*image_buffer_kind);
                 if feature_string != "" {
                     yuv_features.push(feature_string);
                     rgba_features.push(feature_string);
+                    fast_path_features.push(feature_string);
                 }
 
                 let brush_shader = BrushShader::new(
@@ -940,15 +948,26 @@ impl Shaders {
                     &shader_list,
                 )?;
 
+                let composite_rgba_fast_path_shader = LazilyCompiledShader::new(
+                    ShaderKind::Composite,
+                    "composite",
+                    &fast_path_features,
+                    device,
+                    options.precache_flags,
+                    &shader_list,
+                )?;
+
                 let index = Self::get_compositing_shader_index(
                     *image_buffer_kind,
                 );
                 brush_yuv_image[index] = Some(brush_shader);
                 composite_yuv[index] = Some(composite_yuv_shader);
                 composite_rgba[index] = Some(composite_rgba_shader);
+                composite_rgba_fast_path[index] = Some(composite_rgba_fast_path_shader);
 
                 yuv_features.clear();
-                rgba_features.clear()
+                rgba_features.clear();
+                fast_path_features.clear();
             }
         }
 
@@ -1017,6 +1036,7 @@ impl Shaders {
             ps_split_composite,
             ps_clear,
             composite_rgba,
+            composite_rgba_fast_path,
             composite_yuv,
         })
     }
@@ -1029,13 +1049,23 @@ impl Shaders {
         &mut self,
         format: CompositeSurfaceFormat,
         buffer_kind: ImageBufferKind,
+        features: CompositeFeatures,
     ) -> &mut LazilyCompiledShader {
         match format {
             CompositeSurfaceFormat::Rgba => {
-                let shader_index = Self::get_compositing_shader_index(buffer_kind);
-                self.composite_rgba[shader_index]
-                    .as_mut()
-                    .expect("bug: unsupported rgba shader requested")
+                if features.contains(CompositeFeatures::NO_UV_CLAMP)
+                    && features.contains(CompositeFeatures::NO_COLOR_MODULATION)
+                {
+                    let shader_index = Self::get_compositing_shader_index(buffer_kind);
+                    self.composite_rgba_fast_path[shader_index]
+                        .as_mut()
+                        .expect("bug: unsupported rgba fast path shader requested")
+                } else {
+                    let shader_index = Self::get_compositing_shader_index(buffer_kind);
+                    self.composite_rgba[shader_index]
+                        .as_mut()
+                        .expect("bug: unsupported rgba shader requested")
+                }
             }
             CompositeSurfaceFormat::Yuv => {
                 let shader_index = Self::get_compositing_shader_index(buffer_kind);
@@ -1197,6 +1227,11 @@ impl Shaders {
         self.ps_clear.deinit(device);
 
         for shader in self.composite_rgba {
+            if let Some(shader) = shader {
+                shader.deinit(device);
+            }
+        }
+        for shader in self.composite_rgba_fast_path {
             if let Some(shader) = shader {
                 shader.deinit(device);
             }

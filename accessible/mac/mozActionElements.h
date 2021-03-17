@@ -70,6 +70,9 @@
 @interface mozIncrementableAccessible : mozAccessible
 
 // override
+- (void)moxSetValue:(id)value;
+
+// override
 - (void)moxPerformIncrement;
 
 // override

@@ -86,49 +86,23 @@ nsresult nsNumberControlFrame::CreateAnonymousContent(
 }
 
 /* static */
-nsNumberControlFrame* nsNumberControlFrame::GetNumberControlFrameForTextField(
-    nsIFrame* aFrame) {
-  // If aFrame is the anon text field for an <input type=number> then we expect
-  // the frame of its mContent's grandparent to be that input's frame. We
-  // have to check for this via the content tree because we don't know whether
-  // extra frames will be wrapped around any of the elements between aFrame and
-  // the nsNumberControlFrame that we're looking for (e.g. flex wrappers).
-  nsIContent* content = aFrame->GetContent();
-  if (content->IsInNativeAnonymousSubtree() && content->GetParent() &&
-      content->GetParent()->GetParent()) {
-    nsIContent* grandparent = content->GetParent()->GetParent();
-    if (grandparent->IsHTMLElement(nsGkAtoms::input) &&
-        grandparent->AsElement()->AttrValueIs(
-            kNameSpaceID_None, nsGkAtoms::type, nsGkAtoms::number,
-            eCaseMatters)) {
-      return do_QueryFrame(grandparent->GetPrimaryFrame());
-    }
-  }
-  return nullptr;
-}
-
-/* static */
 nsNumberControlFrame* nsNumberControlFrame::GetNumberControlFrameForSpinButton(
     nsIFrame* aFrame) {
   // If aFrame is a spin button for an <input type=number> then we expect the
-  // frame of its mContent's great-grandparent to be that input's frame. We
-  // have to check for this via the content tree because we don't know whether
-  // extra frames will be wrapped around any of the elements between aFrame and
-  // the nsNumberControlFrame that we're looking for (e.g. flex wrappers).
+  // frame of the NAC root parent to be that input's frame. We have to check for
+  // this via the content tree because we don't know whether extra frames will
+  // be wrapped around any of the elements between aFrame and the
+  // nsNumberControlFrame that we're looking for (e.g. flex wrappers).
   nsIContent* content = aFrame->GetContent();
-  if (content->IsInNativeAnonymousSubtree() && content->GetParent() &&
-      content->GetParent()->GetParent() &&
-      content->GetParent()->GetParent()->GetParent()) {
-    nsIContent* greatgrandparent =
-        content->GetParent()->GetParent()->GetParent();
-    if (greatgrandparent->IsHTMLElement(nsGkAtoms::input) &&
-        greatgrandparent->AsElement()->AttrValueIs(
-            kNameSpaceID_None, nsGkAtoms::type, nsGkAtoms::number,
-            eCaseMatters)) {
-      return do_QueryFrame(greatgrandparent->GetPrimaryFrame());
-    }
+  auto* nacHost = content->GetClosestNativeAnonymousSubtreeRootParent();
+  if (!nacHost) {
+    return nullptr;
   }
-  return nullptr;
+  auto* input = HTMLInputElement::FromNode(nacHost);
+  if (!input || input->ControlType() != NS_FORM_INPUT_NUMBER) {
+    return nullptr;
+  }
+  return do_QueryFrame(input->GetPrimaryFrame());
 }
 
 int32_t nsNumberControlFrame::GetSpinButtonForPointerEvent(
@@ -186,28 +160,6 @@ bool nsNumberControlFrame::SpinnerUpButtonIsDepressed() const {
 bool nsNumberControlFrame::SpinnerDownButtonIsDepressed() const {
   return HTMLInputElement::FromNode(mContent)
       ->NumberSpinnerDownButtonIsDepressed();
-}
-
-#define STYLES_DISABLING_NATIVE_THEMING \
-  NS_AUTHOR_SPECIFIED_BORDER_OR_BACKGROUND | NS_AUTHOR_SPECIFIED_PADDING
-
-bool nsNumberControlFrame::ShouldUseNativeStyleForSpinner() const {
-  MOZ_ASSERT(mSpinUp && mSpinDown,
-             "We should not be called when we have no spinner");
-
-  nsIFrame* spinUpFrame = mSpinUp->GetPrimaryFrame();
-  nsIFrame* spinDownFrame = mSpinDown->GetPrimaryFrame();
-
-  return spinUpFrame &&
-         spinUpFrame->StyleDisplay()->EffectiveAppearance() ==
-             StyleAppearance::SpinnerUpbutton &&
-         !PresContext()->HasAuthorSpecifiedRules(
-             spinUpFrame, STYLES_DISABLING_NATIVE_THEMING) &&
-         spinDownFrame &&
-         spinDownFrame->StyleDisplay()->EffectiveAppearance() ==
-             StyleAppearance::SpinnerDownbutton &&
-         !PresContext()->HasAuthorSpecifiedRules(
-             spinDownFrame, STYLES_DISABLING_NATIVE_THEMING);
 }
 
 void nsNumberControlFrame::AppendAnonymousContentTo(

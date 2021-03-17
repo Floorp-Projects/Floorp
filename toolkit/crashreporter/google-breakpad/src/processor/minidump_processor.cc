@@ -306,6 +306,7 @@ ProcessResult MinidumpProcessor::Process(
       BPLOG(ERROR) << "No stackwalker for " << thread_string;
     }
     stack->set_tid(thread_id);
+    stack->set_last_error(thread->GetLastError());
     process_state->threads_.push_back(stack.release());
     process_state->thread_memory_regions_.push_back(thread_memory);
   }

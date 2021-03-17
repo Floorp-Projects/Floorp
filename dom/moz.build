@@ -113,8 +113,6 @@ DIRS += [
 if CONFIG["OS_ARCH"] == "WINNT":
     DIRS += ["plugins/ipc/hangui"]
 
-DIRS += ["presentation"]
-
 TEST_DIRS += [
     "tests",
     "imptests",

@@ -20,11 +20,6 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
   "DevToolsShim",
   "chrome://devtools-startup/content/DevToolsShim.jsm"
 );

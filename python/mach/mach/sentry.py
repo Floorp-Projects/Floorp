@@ -111,21 +111,39 @@ def _patch_absolute_paths(sentry_event, topsrcdir):
         else:
             return value
 
-    for (needle, replacement) in (
+    for (target_path, replacement) in (
         (get_state_dir(), "<statedir>"),
         (topsrcdir, "<topsrcdir>"),
         (expanduser("~"), "~"),
+    ):
         # Sentry converts "vars" to their "representations". When paths are in local
         # variables on Windows, "C:\Users\MozillaUser\Desktop" becomes
         # "'C:\\Users\\MozillaUser\\Desktop'". To still catch this case, we "repr"
         # the home directory and scrub the beginning and end quotes, then
         # find-and-replace on that.
-        (repr(expanduser("~"))[1:-1], "~"),
-    ):
-        if needle is None:
-            continue  # topsrcdir isn't always defined
-        needle_regex = re.compile(re.escape(needle), re.IGNORECASE)
-        sentry_event = recursive_patch(sentry_event, needle_regex, replacement)
+        repr_path = repr(target_path)[1:-1]
+
+        for target in (target_path, repr_path):
+            # Paths in the Sentry event aren't consistent:
+            # * On *nix, they're mostly forward slashes.
+            # * On Windows, they're mostly backslashes.
+            # * On Windows, `.extra."sys.argv"` uses forward slashes.
+            # * The Python variables in-scope captured by the Sentry report may be
+            #   inconsistent, even for a single path. For example, on
+            #   Windows, Mach calculates the state_dir as "C:\Users\<user>/.mozbuild".
+            #
+            # To resolve this, we have our path-patching match
+            # both forward slashes and backslashes. This is done by dynamically
+            # replacing each "/" and "\" with the regex "[\/\\]" (match both).
+            slash_regex = re.compile(r"[\/\\]")
+            # The regex module parses string backslash escapes before compiling the
+            # regex, so we need to add more backslashes:
+            # "[\\/\\\\]" => [\/\\] => match "/" and "\"
+            target = slash_regex.sub(r"[\\/\\\\]", target)
+
+            # Compile the regex and patch the event.
+            needle_regex = re.compile(target, re.IGNORECASE)
+            sentry_event = recursive_patch(sentry_event, needle_regex, replacement)
     return sentry_event
 
 

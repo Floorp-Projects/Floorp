@@ -4,19 +4,7 @@
 
 "use strict";
 
-/* global ExtensionAPI */
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
-
-ChromeUtils.defineModuleGetter(
-  this,
-  "ExtensionCommon",
-  "resource://gre/modules/ExtensionCommon.jsm"
-);
+/* global ExtensionAPI, ExtensionCommon, Services */
 
 const TOPIC = "report-site-issue";
 

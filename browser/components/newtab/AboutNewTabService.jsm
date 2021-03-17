@@ -448,7 +448,12 @@ class BaseAboutNewTabService {
      * This is calculated in the same way the default URL is.
      */
 
-    if (awExperimentFeature.isEnabled({ defaultValue: true })) {
+    if (
+      awExperimentFeature.isEnabled({
+        defaultValue: true,
+        sendExposureEvent: true,
+      })
+    ) {
       return ABOUT_WELCOME_URL;
     }
     return this.defaultURL;

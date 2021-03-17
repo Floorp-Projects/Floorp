@@ -75,7 +75,6 @@ namespace network {
 class Connection;
 }  // namespace network
 
-class Presentation;
 class LegacyMozTCPSocket;
 class VRDisplay;
 class VRServiceTest;
@@ -193,8 +192,6 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   already_AddRefed<Promise> RequestMIDIAccess(const MIDIOptions& aOptions,
                                               ErrorResult& aRv);
 
-  Presentation* GetPresentation(ErrorResult& aRv);
-
   bool SendBeacon(const nsAString& aUrl, const Nullable<fetch::BodyInit>& aData,
                   ErrorResult& aRv);
 
@@ -282,7 +279,6 @@ class Navigator final : public nsISupports, public nsWrapperCache {
   RefPtr<MediaDevices> mMediaDevices;
   RefPtr<ServiceWorkerContainer> mServiceWorkerContainer;
   nsCOMPtr<nsPIDOMWindowInner> mWindow;
-  RefPtr<Presentation> mPresentation;
   RefPtr<GamepadServiceTest> mGamepadServiceTest;
   nsTArray<RefPtr<Promise>> mVRGetDisplaysPromises;
   RefPtr<VRServiceTest> mVRServiceTest;

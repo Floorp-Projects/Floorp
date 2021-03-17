@@ -324,6 +324,11 @@ const Types = (exports.__TypesForTests = [
     front: "devtools/client/fronts/thread",
   },
   {
+    types: ["thread-configuration"],
+    spec: "devtools/shared/specs/thread-configuration",
+    front: "devtools/client/fronts/thread-configuration",
+  },
+  {
     types: ["domwalker"],
     spec: "devtools/shared/specs/walker",
     front: "devtools/client/fronts/walker",

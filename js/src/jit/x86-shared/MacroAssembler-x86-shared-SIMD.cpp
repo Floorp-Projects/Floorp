@@ -1359,3 +1359,20 @@ void MacroAssemblerX86Shared::unsignedTruncSatFloat64x2ToInt32x4(
   vaddpd(Operand(temp), dest, dest);
   vshufps(0x88, scratch, dest, dest);
 }
+
+void MacroAssemblerX86Shared::popcntInt8x16(FloatRegister src,
+                                            FloatRegister temp,
+                                            FloatRegister output) {
+  ScratchSimd128Scope scratch(asMasm());
+  asMasm().loadConstantSimd128Float(SimdConstant::SplatX16(0x0f), scratch);
+  asMasm().moveSimd128Int(src, temp);
+  vpand(scratch, temp, temp);
+  vpandn(src, scratch, scratch);
+  int8_t counts[] = {0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3, 4};
+  asMasm().loadConstantSimd128(SimdConstant::CreateX16(counts), output);
+  vpsrlw(Imm32(4), scratch, scratch);
+  vpshufb(temp, output, output);
+  asMasm().loadConstantSimd128(SimdConstant::CreateX16(counts), temp);
+  vpshufb(scratch, temp, temp);
+  vpaddb(Operand(temp), output, output);
+}

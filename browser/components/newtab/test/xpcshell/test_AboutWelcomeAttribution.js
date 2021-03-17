@@ -4,10 +4,16 @@
 
 "use strict";
 
-const { AboutWelcomeChild } = ChromeUtils.import(
-  "resource:///actors/AboutWelcomeChild.jsm"
+const { AboutWelcomeDefaults } = ChromeUtils.import(
+  "resource://activity-stream/aboutwelcome/lib/AboutWelcomeDefaults.jsm"
 );
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
+const { AttributionCode } = ChromeUtils.import(
+  "resource:///modules/AttributionCode.jsm"
+);
+const { AddonRepository } = ChromeUtils.import(
+  "resource://gre/modules/addons/AddonRepository.jsm"
+);
 
 const TEST_ATTRIBUTION_DATA = {
   source: "addons.mozilla.org",
@@ -17,22 +23,32 @@ const TEST_ATTRIBUTION_DATA = {
 };
 
 add_task(async function test_handleAddonInfoNotFound() {
-  let AWChild = new AboutWelcomeChild();
-  const stub = sinon.stub(AWChild, "getAddonInfo").resolves(null);
-  let result = await AWChild.formatAttributionData(TEST_ATTRIBUTION_DATA);
+  let sandbox = sinon.createSandbox();
+  const stub = sandbox.stub(AttributionCode, "getAttrDataAsync").resolves(null);
+  let result = await AboutWelcomeDefaults.getAttributionContent();
   equal(stub.callCount, 1, "Call was made");
-  equal(result.template, undefined, "No template returned");
+  equal(result, null, "No data is returned");
+
+  sandbox.restore();
 });
 
 add_task(async function test_formatAttributionData() {
-  let AWChild = new AboutWelcomeChild();
+  let sandbox = sinon.createSandbox();
   const TEST_ADDON_INFO = {
+    sourceURI: { scheme: "https", spec: "https://test.xpi" },
     name: "Test Add-on",
-    url: "https://test.xpi",
-    iconURL: "http://test.svg",
+    icons: { "64": "http://test.svg" },
   };
-  sinon.stub(AWChild, "getAddonInfo").resolves(TEST_ADDON_INFO);
-  let result = await AWChild.formatAttributionData(TEST_ATTRIBUTION_DATA);
+  sandbox
+    .stub(AttributionCode, "getAttrDataAsync")
+    .resolves(TEST_ATTRIBUTION_DATA);
+  sandbox.stub(AddonRepository, "getAddonsByIDs").resolves([TEST_ADDON_INFO]);
+  let result = await AboutWelcomeDefaults.getAttributionContent(
+    TEST_ATTRIBUTION_DATA
+  );
+  equal(AddonRepository.getAddonsByIDs.callCount, 1, "Retrieve addon content");
   equal(result.template, "return_to_amo", "RTAMO template returned");
-  equal(result.extraProps, TEST_ADDON_INFO, "AddonInfo returned");
+  equal(result.name, TEST_ADDON_INFO.name, "AddonInfo returned");
+
+  sandbox.restore();
 });

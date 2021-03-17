@@ -90,11 +90,17 @@ impl fmt::Display for DeviceError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
             DeviceError::Adb(ref message) => message.fmt(f),
+            DeviceError::FromInt(ref int) => int.fmt(f),
+            DeviceError::InvalidStorage => write!(f, "Invalid storage"),
+            DeviceError::Io(ref error) => error.fmt(f),
+            DeviceError::MissingPackage => write!(f, "Missing package"),
             DeviceError::MultipleDevices => write!(f, "Multiple Android devices online"),
+            DeviceError::ParseInt(ref error) => error.fmt(f),
             DeviceError::UnknownDevice(ref serial) => {
                 write!(f, "Unknown Android device with serial '{}'", serial)
             }
-            _ => self.to_string().fmt(f),
+            DeviceError::Utf8(ref error) => error.fmt(f),
+            DeviceError::WalkDir(ref error) => error.fmt(f),
         }
     }
 }

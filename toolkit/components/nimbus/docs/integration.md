@@ -67,8 +67,7 @@ Defaults values inline:
 ```jsx
 feature.isEnabled({ defaultValue: true });
 
-// Default values work here too
-const { skipFocus } = feature.getValue({ defaultValue: { skipFocus: false } });
+const { skipFocus } = feature.getValue() || {};
 ```
 
 Listen to changes:

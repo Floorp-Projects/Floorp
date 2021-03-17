@@ -19,8 +19,13 @@ namespace webgpu {
 GPU_IMPL_CYCLE_COLLECTION(Adapter, mParent, mBridge)
 GPU_IMPL_JS_WRAP(Adapter)
 
-Adapter::Adapter(Instance* const aParent, RawId aId)
-    : ChildOf(aParent), mBridge(aParent->mBridge), mId(aId) {}
+Adapter::Adapter(Instance* const aParent,
+                 const ffi::WGPUAdapterInformation& aInfo)
+    : ChildOf(aParent),
+      mBridge(aParent->mBridge),
+      mId(aInfo.id),
+      mFeatures(new AdapterFeatures(this)),
+      mLimits(new AdapterLimits(this, aInfo.limits)) {}
 
 Adapter::~Adapter() { Cleanup(); }
 

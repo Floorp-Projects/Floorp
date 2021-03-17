@@ -103,6 +103,16 @@ class WatcherFront extends FrontClassWithSpec(watcherSpec) {
   }
 
   /**
+   * Memoized getter for the "thread-configuration" actor
+   */
+  async getThreadConfigurationActor() {
+    if (!this._threadConfigurationActor) {
+      this._threadConfigurationActor = await super.getThreadConfigurationActor();
+    }
+    return this._threadConfigurationActor;
+  }
+
+  /**
    * For a given BrowsingContext ID, return the already existing BrowsingContextTargetFront
    */
   async getBrowsingContextTarget(id) {
