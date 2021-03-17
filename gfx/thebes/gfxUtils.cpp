@@ -1128,6 +1128,9 @@ const float kIdentityNarrowYCbCrToRGB_RowMajor[16] = {
       return rec2020;
     case gfx::YUVColorSpace::Identity:
       return identity;
+    default:  // YUVColorSpace::UNKNOWN
+      MOZ_ASSERT(false, "unknown aYUVColorSpace");
+      return rec601;
   }
 }
 
@@ -1152,6 +1155,9 @@ const float kIdentityNarrowYCbCrToRGB_RowMajor[16] = {
       return rec2020;
     case YUVColorSpace::Identity:
       return identity;
+    default:  // YUVColorSpace::UNKNOWN
+      MOZ_ASSERT(false, "unknown aYUVColorSpace");
+      return rec601;
   }
 }
 
@@ -1179,6 +1185,9 @@ const float kIdentityNarrowYCbCrToRGB_RowMajor[16] = {
       return rec2020;
     case YUVColorSpace::Identity:
       return identity;
+    default:  // YUVColorSpace::UNKNOWN
+      MOZ_ASSERT(false, "unknown aYUVColorSpace");
+      return rec601;
   }
 }
 

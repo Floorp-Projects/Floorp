@@ -47,7 +47,7 @@ class RenderAndroidSurfaceTextureHost final : public RenderTextureHostSWGL {
                 PlaneInfo& aPlaneInfo) override;
   void UnmapPlanes() override;
   gfx::YUVColorSpace GetYUVColorSpace() const override {
-    return gfx::YUVColorSpace::Default;
+    return gfx::YUVColorSpace::UNKNOWN;
   }
 
   RenderAndroidSurfaceTextureHost* AsRenderAndroidSurfaceTextureHost()

@@ -200,10 +200,10 @@ enum class YUVColorSpace : uint8_t {
   BT601,
   BT709,
   BT2020,
-  Identity,  // Todo: s/YUVColorSpace/ColorSpace/, s/Identity/SRGB/
-  Default = BT709,
-  _First = BT601,
-  _Last = Identity,
+  Identity,  // aka RGB
+  // This represents the unknown format and is a valid value.
+  UNKNOWN,
+  _NUM_COLORSPACE
 };
 
 enum class ColorDepth : uint8_t {
@@ -211,16 +211,10 @@ enum class ColorDepth : uint8_t {
   COLOR_10,
   COLOR_12,
   COLOR_16,
-  _First = COLOR_8,
-  _Last = COLOR_16,
+  UNKNOWN
 };
 
-enum class ColorRange : uint8_t {
-  LIMITED,
-  FULL,
-  _First = LIMITED,
-  _Last = FULL,
-};
+enum class ColorRange : uint8_t { LIMITED, FULL, UNKNOWN };
 
 static inline SurfaceFormat SurfaceFormatForColorDepth(ColorDepth aColorDepth) {
   SurfaceFormat format = SurfaceFormat::A8;
@@ -232,6 +226,8 @@ static inline SurfaceFormat SurfaceFormatForColorDepth(ColorDepth aColorDepth) {
     case ColorDepth::COLOR_16:
       format = SurfaceFormat::A16;
       break;
+    case ColorDepth::UNKNOWN:
+      MOZ_ASSERT_UNREACHABLE("invalid color depth value");
   }
   return format;
 }
@@ -250,6 +246,8 @@ static inline uint32_t BitDepthForColorDepth(ColorDepth aColorDepth) {
     case ColorDepth::COLOR_16:
       depth = 16;
       break;
+    case ColorDepth::UNKNOWN:
+      MOZ_ASSERT_UNREACHABLE("invalid color depth value");
   }
   return depth;
 }
@@ -268,6 +266,8 @@ static inline ColorDepth ColorDepthForBitDepth(uint8_t aBitDepth) {
     case 16:
       depth = ColorDepth::COLOR_16;
       break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("invalid color depth value");
   }
   return depth;
 }
@@ -287,6 +287,8 @@ static inline uint32_t RescalingFactorForColorDepth(ColorDepth aColorDepth) {
       break;
     case ColorDepth::COLOR_16:
       break;
+    case ColorDepth::UNKNOWN:
+      MOZ_ASSERT_UNREACHABLE("invalid color depth value");
   }
   return factor;
 }
