@@ -147,7 +147,10 @@ class LegacyServiceWorkersWatcher extends LegacyWorkersWatcher {
     for (const target of allServiceWorkerTargets) {
       const isRegisteredBefore = this.targetList.isTargetRegistered(target);
       if (shouldDestroy && isRegisteredBefore) {
-        this.onTargetDestroyed(target);
+        // Instruct the target command to notify about the worker target destruction
+        // but do not destroy the front as we want to keep using it.
+        // We will notify about it again via onTargetAvailable.
+        this.onTargetDestroyed(target, { shouldDestroyTargetFront: false });
       }
 
       // Note: we call isTargetRegistered again because calls to
