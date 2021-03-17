@@ -29,7 +29,6 @@ import mozilla.components.lib.jexl.value.JexlValue
  *
  * This mapping could be moved inside [Evaluator].
  */
-@SuppressWarnings("TooManyFunctions")
 internal object EvaluatorHandlers {
 
     internal fun evaluateWith(evaluator: Evaluator, node: AstNode): JexlValue = when (node) {

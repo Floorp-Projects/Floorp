@@ -16,7 +16,7 @@ import kotlin.math.min
 /**
  * This class provides access to a centralized registry of all active sessions.
  */
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("LargeClass")
 class LegacySessionManager(
     val engine: Engine,
     delegate: DeprecatedObserverRegistry<SessionManager.Observer> = DeprecatedObserverRegistry()

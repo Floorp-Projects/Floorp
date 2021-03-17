@@ -24,7 +24,6 @@ import java.util.WeakHashMap
  *
  * ObserverRegistry is thread-safe.
  */
-@Suppress("TooManyFunctions")
 open class ObserverRegistry<T> : Observable<T> {
     private val observers = mutableSetOf<T>()
     private val lifecycleObservers = WeakHashMap<T, LifecycleBoundObserver<T>>()

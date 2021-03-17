@@ -20,7 +20,6 @@ import org.json.JSONObject
  * @property supportActions whether or not browser and page actions are handled when
  * received from the web extension
  */
-@Suppress("TooManyFunctions")
 abstract class WebExtension(
     val id: String,
     val url: String,

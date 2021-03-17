@@ -22,7 +22,6 @@ import org.json.JSONObject
 /**
  * Entry point for interacting with the engine implementation.
  */
-@Suppress("TooManyFunctions")
 interface Engine : WebExtensionRuntime, DataCleanable {
 
     /**

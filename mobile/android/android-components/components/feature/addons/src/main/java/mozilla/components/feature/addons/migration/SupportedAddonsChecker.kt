@@ -66,7 +66,7 @@ interface SupportedAddonsChecker {
  * @param onNotificationClickIntent (Optional) Indicates which intent should be passed to the notification
  * when new supported add-ons are available.
  */
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("LargeClass")
 class DefaultSupportedAddonsChecker(
     private val applicationContext: Context,
     private val frequency: Frequency = Frequency(1, TimeUnit.DAYS),

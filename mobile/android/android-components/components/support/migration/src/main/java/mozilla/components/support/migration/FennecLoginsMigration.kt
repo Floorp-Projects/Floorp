@@ -123,7 +123,7 @@ internal data class FennecLoginRecords(
     val totalRecordsDetected: Int
 )
 
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("LargeClass")
 internal object FennecLoginsMigration {
     const val DEFAULT_MASTER_PASSWORD = ""
     private const val EXPECTED_DB_VERSION = 6

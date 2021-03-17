@@ -9,7 +9,6 @@ import android.view.View
 import androidx.annotation.RequiresApi
 
 @RequiresApi(Build.VERSION_CODES.O)
-@Suppress("TooManyFunctions")
 internal class ParsedStructureBuilder<ViewNode, AutofillId>(
     private val navigator: AutofillNodeNavigator<ViewNode, AutofillId>
 ) {

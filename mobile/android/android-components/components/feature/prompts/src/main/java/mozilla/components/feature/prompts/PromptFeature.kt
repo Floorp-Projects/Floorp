@@ -114,7 +114,7 @@ internal const val FRAGMENT_TAG = "mozac_feature_prompt_dialog"
  * need to be requested before a prompt (e.g. a file picker) can be displayed.
  * Once the request is completed, [onPermissionsResult] needs to be invoked.
  */
-@Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
+@Suppress("LargeClass", "LongParameterList")
 class PromptFeature private constructor(
     private val container: PromptContainer,
     private val store: BrowserStore,

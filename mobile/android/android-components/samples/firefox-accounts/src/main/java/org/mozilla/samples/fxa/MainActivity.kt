@@ -30,7 +30,6 @@ import mozilla.components.support.rusthttp.RustHttpConfig
 import mozilla.components.support.rustlog.RustLog
 import kotlin.coroutines.CoroutineContext
 
-@Suppress("TooManyFunctions")
 open class MainActivity : AppCompatActivity(), LoginFragment.OnLoginCompleteListener, CoroutineScope {
     private lateinit var account: FirefoxAccount
     private var scopesWithoutKeys: Set<String> = setOf("profile")

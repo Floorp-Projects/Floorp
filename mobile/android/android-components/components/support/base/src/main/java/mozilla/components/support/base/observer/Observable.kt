@@ -19,7 +19,6 @@ import androidx.lifecycle.LifecycleOwner
  *     }
  * </code>
  */
-@Suppress("TooManyFunctions")
 interface Observable<T> {
     /**
      * Registers an observer to get notified about changes.
@@ -115,7 +114,6 @@ interface Observable<T> {
  * in each component separately.
  */
 @Deprecated(OBSERVER_DEPRECATION_MESSAGE)
-@Suppress("TooManyFunctions")
 interface DeprecatedObservable<T> : Observable<T> {
 
     @Deprecated(OBSERVER_DEPRECATION_MESSAGE)

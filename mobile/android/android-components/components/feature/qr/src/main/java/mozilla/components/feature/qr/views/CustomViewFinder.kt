@@ -33,7 +33,7 @@ import kotlin.math.roundToInt
 /**
  * A [View] that shows a ViewFinder positioned in center of the camera view and draws an Overlay
  */
-@Suppress("LargeClass", "TooManyFunctions")
+@Suppress("LargeClass")
 class CustomViewFinder @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null

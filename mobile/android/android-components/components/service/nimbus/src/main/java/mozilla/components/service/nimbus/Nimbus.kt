@@ -180,7 +180,7 @@ private val loggingErrorReporter: ErrorReporter = { e: Throwable ->
 /**
  * A implementation of the [NimbusApi] interface backed by the Nimbus SDK.
  */
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("LargeClass")
 class Nimbus(
     private val context: Context,
     server: NimbusServerSettings?,

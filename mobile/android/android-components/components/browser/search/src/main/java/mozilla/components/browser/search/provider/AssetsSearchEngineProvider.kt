@@ -33,7 +33,7 @@ import org.json.JSONObject
  * Optionally <code>additionalIdentifiers</code> to be loaded can be specified. A search engine
  * identifier corresponds to the search plugin XML file name (e.g. duckduckgo -> duckduckgo.xml).
  */
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("LargeClass")
 class AssetsSearchEngineProvider(
     private val localizationProvider: SearchLocalizationProvider,
     private val filters: List<SearchEngineFilter> = emptyList(),

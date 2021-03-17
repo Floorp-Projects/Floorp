@@ -51,7 +51,7 @@ import mozilla.components.ui.tabcounter.TabCounter
 /**
  * This sample application shows how to use and customize the browser-toolbar component.
  */
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("LargeClass")
 class ToolbarActivity : AppCompatActivity() {
     private val shippedDomainsProvider = ShippedDomainsProvider()
     private val customDomainsProvider = CustomDomainsProvider()

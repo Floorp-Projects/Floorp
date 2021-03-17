@@ -21,7 +21,6 @@ import org.json.JSONObject
 /**
  * Implementation of the [BookmarksStorage] which is backed by a Rust Places lib via [PlacesApi].
  */
-@Suppress("TooManyFunctions")
 open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), BookmarksStorage, SyncableStore {
 
     override val logger = Logger("PlacesBookmarksStorage")

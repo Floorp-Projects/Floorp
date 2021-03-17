@@ -25,7 +25,6 @@ typealias ViewHolderProvider = (ViewGroup) -> TabViewHolder
  * @param viewHolderProvider a function that creates a `TabViewHolder`.
  * @param delegate TabsTray.Observer registry to allow `TabsAdapter` to conform to `Observable<TabsTray.Observer>`.
  */
-@Suppress("TooManyFunctions")
 open class TabsAdapter(
     thumbnailLoader: ImageLoader? = null,
     private val viewHolderProvider: ViewHolderProvider = { parent ->

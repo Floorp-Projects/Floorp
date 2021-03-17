@@ -65,7 +65,7 @@ import mozilla.components.concept.toolbar.Toolbar
  * Progress (optional):
  *     A horizontal progress bar showing the loading progress (at the top or bottom of the toolbar).
  */
-@Suppress("LargeClass", "TooManyFunctions")
+@Suppress("LargeClass")
 class DisplayToolbar internal constructor(
     private val context: Context,
     private val toolbar: BrowserToolbar,

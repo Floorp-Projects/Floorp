@@ -24,7 +24,6 @@ import kotlin.coroutines.CoroutineContext
 /**
  * This class provides access to a centralized registry of search engines.
  */
-@Suppress("TooManyFunctions")
 class SearchEngineManager(
     private val providers: List<SearchEngineProvider> = listOf(
             AssetsSearchEngineProvider(LocaleSearchLocalizationProvider())),

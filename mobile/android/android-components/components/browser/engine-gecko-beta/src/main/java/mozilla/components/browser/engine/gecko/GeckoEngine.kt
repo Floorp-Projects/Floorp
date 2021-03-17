@@ -65,7 +65,7 @@ import java.lang.ref.WeakReference
 /**
  * Gecko-based implementation of Engine interface.
  */
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("LargeClass")
 class GeckoEngine(
     context: Context,
     private val defaultSettings: Settings? = null,

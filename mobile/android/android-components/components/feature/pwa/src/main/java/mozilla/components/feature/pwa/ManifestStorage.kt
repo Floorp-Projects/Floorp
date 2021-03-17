@@ -19,7 +19,6 @@ import mozilla.components.feature.pwa.db.ManifestEntity
  * @param activeThresholdMs a timeout in milliseconds after which the storage will consider a manifest
  *                      as unused. By default this is [ACTIVE_THRESHOLD_MS].
  */
-@Suppress("TooManyFunctions")
 class ManifestStorage(context: Context, private val activeThresholdMs: Long = ACTIVE_THRESHOLD_MS) {
 
     @VisibleForTesting

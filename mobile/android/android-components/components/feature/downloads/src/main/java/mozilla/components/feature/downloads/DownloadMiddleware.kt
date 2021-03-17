@@ -35,7 +35,7 @@ import kotlin.coroutines.CoroutineContext
  * purpose is to react to global download state changes (e.g. of [BrowserState.downloads])
  * and notify the download service, as needed.
  */
-@Suppress("ComplexMethod", "TooManyFunctions")
+@Suppress("ComplexMethod")
 class DownloadMiddleware(
     private val applicationContext: Context,
     private val downloadServiceClass: Class<*>,

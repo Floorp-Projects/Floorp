@@ -31,7 +31,6 @@ import org.mozilla.geckoview.WebExtension.Action as GeckoNativeWebExtensionActio
  * Gecko-based implementation of [WebExtension], wrapping the native web
  * extension object provided by GeckoView.
  */
-@Suppress("TooManyFunctions")
 class GeckoWebExtension(
     val nativeExtension: GeckoNativeWebExtension,
     val runtime: GeckoRuntime

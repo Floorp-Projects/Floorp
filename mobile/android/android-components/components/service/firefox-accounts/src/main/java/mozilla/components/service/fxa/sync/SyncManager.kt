@@ -106,7 +106,6 @@ internal interface SyncDispatcher : Closeable, Observable<SyncStatusObserver> {
  * A base sync manager implementation.
  * @param syncConfig A [SyncConfig] object describing how sync should behave.
  */
-@SuppressWarnings("TooManyFunctions")
 internal abstract class SyncManager(
     private val syncConfig: SyncConfig
 ) {

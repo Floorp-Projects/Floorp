@@ -34,7 +34,7 @@ import kotlin.properties.Delegates
 /**
  * Value type that represents the state of a browser session. Changes can be observed.
  */
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("LongParameterList")
 class Session(
     initialUrl: String,
     val private: Boolean = false,

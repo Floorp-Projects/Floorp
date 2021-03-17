@@ -26,7 +26,6 @@ private const val DEFAULT_VALUE = 0
 /**
  * A customizable "Find in page" bar implementing [FindInPageView].
  */
-@Suppress("TooManyFunctions")
 class FindInPageBar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,

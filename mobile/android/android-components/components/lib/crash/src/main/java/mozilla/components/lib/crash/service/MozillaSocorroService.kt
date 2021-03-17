@@ -75,7 +75,7 @@ private const val FILE_REGEX = "([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}
  * @param versionCode The version code of the application.
  * @param releaseChannel The release channel of the application.
  */
-@Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
+@Suppress("LargeClass", "LongParameterList")
 class MozillaSocorroService(
     private val applicationContext: Context,
     private val appName: String,

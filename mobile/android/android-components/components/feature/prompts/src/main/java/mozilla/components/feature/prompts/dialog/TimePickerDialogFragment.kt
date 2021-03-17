@@ -42,7 +42,6 @@ private const val KEY_SELECTION_TYPE = "KEY_SELECTION_TYPE"
 /**
  * [DialogFragment][androidx.fragment.app.DialogFragment] implementation to display date picker with a native dialog.
  */
-@Suppress("TooManyFunctions")
 internal class TimePickerDialogFragment : PromptDialogFragment(), DatePicker.OnDateChangedListener,
     TimePicker.OnTimeChangedListener, TimePickerDialog.OnTimeSetListener,
     DatePickerDialog.OnDateSetListener, DialogInterface.OnClickListener,

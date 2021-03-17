@@ -25,7 +25,6 @@ const val AUTOCOMPLETE_SOURCE_NAME = "memoryHistory"
 /**
  * An in-memory implementation of [mozilla.components.concept.storage.HistoryStorage].
  */
-@SuppressWarnings("TooManyFunctions")
 class InMemoryHistoryStorage : HistoryStorage {
     @VisibleForTesting
     internal var pages: HashMap<String, MutableList<Visit>> = linkedMapOf()

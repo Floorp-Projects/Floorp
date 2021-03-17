@@ -33,7 +33,7 @@ import mozilla.components.feature.downloads.AbstractFetchDownloadService.Compani
 import mozilla.components.feature.downloads.AbstractFetchDownloadService.DownloadJobState
 import kotlin.random.Random
 
-@Suppress("LargeClass", "TooManyFunctions")
+@Suppress("LargeClass")
 internal object DownloadNotification {
 
     private const val NOTIFICATION_CHANNEL_ID = "mozac.feature.downloads.generic"

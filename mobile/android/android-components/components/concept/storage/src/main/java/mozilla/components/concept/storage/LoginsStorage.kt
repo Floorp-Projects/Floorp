@@ -10,7 +10,6 @@ import org.json.JSONObject
 /**
  * An interface describing a storage layer for logins/passwords.
  */
-@SuppressWarnings("TooManyFunctions")
 interface LoginsStorage : AutoCloseable {
     /**
      * Deletes all login records. These deletions will be synced to the server on the next call to sync.

@@ -47,7 +47,6 @@ typealias onReaderViewStatusChange = (available: Boolean, active: Boolean) -> Un
  * loaded or refreshed, on any navigation (back or forward), and when the
  * selected session changes.
  */
-@Suppress("TooManyFunctions")
 class ReaderViewFeature(
     private val context: Context,
     private val engine: Engine,

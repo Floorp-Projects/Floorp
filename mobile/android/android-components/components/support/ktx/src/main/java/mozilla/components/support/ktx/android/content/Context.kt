@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@file:Suppress("TooManyFunctions")
-
 package mozilla.components.support.ktx.android.content
 
 import android.app.ActivityManager
@@ -178,7 +176,6 @@ fun Context.shareMedia(
  * @param subject of the intent [EXTRA_TEXT]
  * @return true it is able to share email false otherwise.
  */
-@SuppressWarnings("TooManyFunctions")
 fun Context.email(
     address: String,
     subject: String = getString(R.string.mozac_support_ktx_share_dialog_title)

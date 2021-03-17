@@ -62,7 +62,7 @@ import mozilla.components.support.utils.Browsers
  * @property shouldForwardToThirdParties Indicates if downloads should be forward to third party apps,
  * if there are multiple apps a chooser dialog will shown.
  */
-@Suppress("TooManyFunctions", "LongParameterList", "LargeClass")
+@Suppress("LongParameterList", "LargeClass")
 class DownloadsFeature(
     private val applicationContext: Context,
     private val store: BrowserStore,

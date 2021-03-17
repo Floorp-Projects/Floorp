@@ -13,7 +13,6 @@ import mozilla.components.concept.engine.selection.SelectionActionDelegate
 /**
  * View component that renders web content.
  */
-@Suppress("TooManyFunctions")
 interface EngineView {
 
     /**

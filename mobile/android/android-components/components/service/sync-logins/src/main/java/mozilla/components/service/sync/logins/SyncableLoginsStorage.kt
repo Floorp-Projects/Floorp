@@ -111,7 +111,6 @@ typealias RequestFailedException = mozilla.appservices.logins.RequestFailedExcep
  * Synchronization support is provided both directly (via [sync]) when only syncing this storage layer,
  * or via [getHandle] when syncing multiple stores. Use the latter in conjunction with [FxaAccountManager].
  */
-@SuppressWarnings("TooManyFunctions")
 class SyncableLoginsStorage(
     private val context: Context,
     private val key: String

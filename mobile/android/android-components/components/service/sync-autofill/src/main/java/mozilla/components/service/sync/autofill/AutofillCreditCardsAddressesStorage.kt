@@ -23,7 +23,6 @@ const val AUTOFILL_DB_NAME = "autofill.sqlite"
  * An implementation of [CreditCardsAddressesStorage] back by the application-services' `autofill`
  * library.
  */
-@SuppressWarnings("TooManyFunctions")
 class AutofillCreditCardsAddressesStorage(
     context: Context
 ) : CreditCardsAddressesStorage, AutoCloseable {

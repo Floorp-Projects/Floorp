@@ -24,7 +24,6 @@ import org.mozilla.geckoview.GeckoSession
 /**
  * Gecko-based EngineView implementation.
  */
-@Suppress("TooManyFunctions")
 class GeckoEngineView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,

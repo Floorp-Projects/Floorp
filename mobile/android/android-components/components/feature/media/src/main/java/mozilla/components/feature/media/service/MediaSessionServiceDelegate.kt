@@ -42,7 +42,6 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
  *
  * The implementation was moved from [AbstractMediaSessionService] to this delegate for better testability.
  */
-@Suppress("TooManyFunctions")
 internal class MediaSessionServiceDelegate(
     private val context: Context,
     private val service: AbstractMediaSessionService,

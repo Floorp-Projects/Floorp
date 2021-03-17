@@ -9,7 +9,6 @@ import kotlinx.coroutines.Deferred
 /**
  * An interface which defines read/write methods for credit card and address data.
  */
-@SuppressWarnings("TooManyFunctions")
 interface CreditCardsAddressesStorage {
 
     /**

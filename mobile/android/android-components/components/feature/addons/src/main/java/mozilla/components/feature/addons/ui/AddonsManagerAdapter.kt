@@ -54,7 +54,7 @@ private const val VIEW_HOLDER_TYPE_ADDON = 2
  * @property style Indicates how items should look like.
  * @property excludedAddonIDs The list of add-on IDs to be excluded from the recommended section.
  */
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("LargeClass")
 class AddonsManagerAdapter(
     private val addonCollectionProvider: AddonCollectionProvider,
     private val addonsManagerDelegate: AddonsManagerAdapterDelegate,

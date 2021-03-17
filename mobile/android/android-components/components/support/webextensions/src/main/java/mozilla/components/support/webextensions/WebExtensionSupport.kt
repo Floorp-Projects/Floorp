@@ -57,7 +57,6 @@ typealias onUpdatePermissionRequest = (
  * is completed and the [WebExtensionRuntime] (engine) has direct access to the
  * [BrowserStore]: https://github.com/orgs/mozilla-mobile/projects/31
  */
-@Suppress("TooManyFunctions")
 object WebExtensionSupport {
     private val logger = Logger("mozac-webextensions")
     private var onUpdatePermissionRequest: ((

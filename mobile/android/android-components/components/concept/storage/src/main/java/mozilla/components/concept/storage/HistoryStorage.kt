@@ -7,7 +7,6 @@ package mozilla.components.concept.storage
 /**
  * An interface which defines read/write methods for history data.
  */
-@SuppressWarnings("TooManyFunctions")
 interface HistoryStorage : Storage {
     /**
      * Records a visit to a page.

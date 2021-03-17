@@ -43,7 +43,6 @@ data class MigratingAccountInfo(
 /**
  * Facilitates testing consumers of FirefoxAccount.
  */
-@SuppressWarnings("TooManyFunctions")
 interface OAuthAccount : AutoCloseable {
 
     /**

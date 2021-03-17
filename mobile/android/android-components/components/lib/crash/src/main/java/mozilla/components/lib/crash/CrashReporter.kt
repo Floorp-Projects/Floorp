@@ -58,7 +58,7 @@ import mozilla.components.support.base.log.logger.Logger
  *                            happened. This gives the app the opportunity to show an in-app confirmation UI before
  *                            sending a crash report. See component README for details.
  */
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("LongParameterList")
 class CrashReporter(
     context: Context,
     private val services: List<CrashReporterService> = emptyList(),

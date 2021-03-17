@@ -29,8 +29,6 @@ import mozilla.components.concept.engine.EngineView
  * Based on:
  * https://github.com/takahirom/webview-in-coordinatorlayout
  */
-
-@Suppress("TooManyFunctions")
 class NestedWebView(context: Context) : WebView(context), NestedScrollingChild {
 
     @VisibleForTesting

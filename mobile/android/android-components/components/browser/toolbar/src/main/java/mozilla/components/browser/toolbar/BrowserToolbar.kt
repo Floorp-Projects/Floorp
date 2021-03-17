@@ -59,7 +59,6 @@ const val MAX_URI_LENGTH = 25000
  *  +----------------+ +----------------+
  * ```
  */
-@Suppress("TooManyFunctions")
 class BrowserToolbar @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,

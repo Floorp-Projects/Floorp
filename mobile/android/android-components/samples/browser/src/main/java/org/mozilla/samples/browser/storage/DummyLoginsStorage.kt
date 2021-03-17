@@ -13,7 +13,6 @@ import java.util.UUID
  * A dummy [LoginsStorage] that returns a fixed set of fake logins. Currently sample browser does
  * not use an actual login storage backend.
  */
-@Suppress("TooManyFunctions")
 class DummyLoginsStorage : LoginsStorage {
     // A list of fake logins for testing purposes.
     private val logins = mutableListOf(

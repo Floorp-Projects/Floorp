@@ -7,7 +7,6 @@ package mozilla.components.lib.jexl.lexer
 /**
  * Helper class for reading a string character by character with the ability to "peek" at upcoming characters.
  */
-@Suppress("TooManyFunctions")
 internal class LexerInput(private val value: String) {
     private var position: Int = 0
     private var mark: Int = 0

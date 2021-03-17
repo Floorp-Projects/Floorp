@@ -11,7 +11,6 @@ import mozilla.components.concept.engine.EngineSession
  * extensions e.g. an extension was installed, or an extension wants to open
  * a new tab.
  */
-@Suppress("TooManyFunctions")
 interface WebExtensionDelegate {
 
     /**

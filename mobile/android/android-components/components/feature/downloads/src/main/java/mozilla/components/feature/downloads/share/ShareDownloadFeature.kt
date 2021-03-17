@@ -83,7 +83,6 @@ internal var cacheDirName = "mozac_share_cache"
  *  @param store a reference to the application's [BrowserStore]
  * param Coroutine dispatcher used for the cleanup of old cached files. Defaults to IO.
 */
-@Suppress("TooManyFunctions")
 class ShareDownloadFeature(
     private val context: Context,
     private val httpClient: Client,

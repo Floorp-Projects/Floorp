@@ -151,7 +151,7 @@ interface AddonUpdater {
  * @param frequency (Optional) indicates how often updates should be performed, defaults
  * to one day.
  */
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("LargeClass")
 class DefaultAddonUpdater(
     private val applicationContext: Context,
     private val frequency: Frequency = Frequency(1, TimeUnit.DAYS)

@@ -33,7 +33,7 @@ import mozilla.components.support.base.observer.DeprecatedObservable
 /**
  * This class provides access to a centralized registry of all active sessions.
  */
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("LargeClass")
 class SessionManager(
     val engine: Engine,
     private val store: BrowserStore? = null,

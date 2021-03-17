@@ -32,7 +32,6 @@ const val AUTOCOMPLETE_SOURCE_NAME = "placesHistory"
 /**
  * Implementation of the [HistoryStorage] which is backed by a Rust Places lib via [PlacesApi].
  */
-@SuppressWarnings("TooManyFunctions")
 open class PlacesHistoryStorage(
     context: Context,
     crashReporter: CrashReporting? = null

@@ -61,7 +61,6 @@ internal interface Connection : Closeable {
 /**
  * A singleton implementation of the [Connection] interface backed by the Rust Places library.
  */
-@Suppress("TooManyFunctions")
 internal object RustPlacesConnection : Connection {
     @GuardedBy("this")
     private var api: PlacesApi? = null

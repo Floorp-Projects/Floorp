@@ -50,7 +50,7 @@ private const val AUTOCOMPLETE_QUERY_THREADS = 3
  * - actions: Optional action icons injected by other components (e.g. barcode scanner)
  * - exit: Button that switches back to display mode or invoke an app-defined callback.
  */
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("LargeClass")
 class EditToolbar internal constructor(
     context: Context,
     private val toolbar: BrowserToolbar,

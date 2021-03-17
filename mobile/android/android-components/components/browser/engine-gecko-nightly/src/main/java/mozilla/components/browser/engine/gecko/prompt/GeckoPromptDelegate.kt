@@ -54,7 +54,6 @@ typealias AC_FILE_FACING_MODE = PromptRequest.File.FacingMode
 /**
  * Gecko-based PromptDelegate implementation.
  */
-@Suppress("TooManyFunctions")
 internal class GeckoPromptDelegate(private val geckoEngineSession: GeckoEngineSession) :
     PromptDelegate {
 

@@ -23,7 +23,6 @@ import java.util.UUID
 /**
  * A storage implementation that saves snapshots of tabs / sessions in named collections.
  */
-@Suppress("TooManyFunctions")
 class TabCollectionStorage(
     context: Context,
     private val reader: BrowserStateReader = BrowserStateReader(),

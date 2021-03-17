@@ -25,7 +25,6 @@ import mozilla.components.support.base.log.logger.Logger
  * [Middleware] responsible for delegating calls to the appropriate [EngineSession] instance for
  * actions like [EngineAction.LoadUrlAction].
  */
-@Suppress("TooManyFunctions")
 internal class EngineDelegateMiddleware(
     private val engine: Engine,
     private val sessionLookup: (String) -> Session?,

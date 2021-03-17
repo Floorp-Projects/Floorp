@@ -7,7 +7,6 @@ package mozilla.components.concept.engine
 /**
  * Contract to indicate how objects with the ability to clear data should behave.
  */
-@Suppress("TooManyFunctions")
 interface DataCleanable {
     /**
      * Clears browsing data stored.

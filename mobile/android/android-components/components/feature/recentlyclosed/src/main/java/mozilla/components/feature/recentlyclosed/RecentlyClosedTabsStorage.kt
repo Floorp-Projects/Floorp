@@ -24,7 +24,6 @@ import java.io.File
 /**
  * A storage implementation that saves snapshots of recently closed tabs / sessions.
  */
-@Suppress("TooManyFunctions")
 internal class RecentlyClosedTabsStorage(
     context: Context,
     private val engine: Engine,

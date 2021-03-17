@@ -70,7 +70,7 @@ import kotlin.coroutines.CoroutineContext
  * @param connection An implementation of [PushConnection] to communicate with any native layer.
  * @param crashReporter An optional instance of a [CrashReporting].
  */
-@Suppress("TooManyFunctions", "LargeClass", "LongParameterList")
+@Suppress("LargeClass", "LongParameterList")
 class AutoPushFeature(
     private val context: Context,
     private val service: PushService,

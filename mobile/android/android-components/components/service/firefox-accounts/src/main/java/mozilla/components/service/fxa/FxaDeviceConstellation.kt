@@ -38,7 +38,6 @@ internal sealed class FxaDeviceConstellationException : Exception() {
 /**
  * Provides an implementation of [DeviceConstellation] backed by a [FirefoxAccount].
  */
-@SuppressWarnings("TooManyFunctions")
 class FxaDeviceConstellation(
     private val account: FirefoxAccount,
     private val scope: CoroutineScope,

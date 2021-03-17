@@ -33,7 +33,6 @@ import java.util.concurrent.CancellationException
 /**
  * Fragment use for managing add-ons.
  */
-@Suppress("TooManyFunctions")
 class AddonsFragment : Fragment(), AddonsManagerAdapterDelegate {
     private lateinit var recyclerView: RecyclerView
     private val scope = CoroutineScope(Dispatchers.IO)

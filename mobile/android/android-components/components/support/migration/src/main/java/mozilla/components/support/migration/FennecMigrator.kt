@@ -219,7 +219,7 @@ sealed class FennecMigratorException(cause: Exception) : Exception(cause) {
  * @param bookmarksStorage An optional instance of [PlacesBookmarksStorage] used to store migrated bookmarks data.
  * @param coroutineContext An instance of [CoroutineContext] used for executing async migration tasks.
  */
-@Suppress("LargeClass", "TooManyFunctions", "LongParameterList")
+@Suppress("LargeClass", "LongParameterList")
 class FennecMigrator private constructor(
     private val context: Context,
     private val crashReporter: CrashReporting,
@@ -245,7 +245,6 @@ class FennecMigrator private constructor(
     /**
      * Data migration builder. Allows configuring which migrations to run, their versions and relative order.
      */
-    @Suppress("TooManyFunctions")
     class Builder(private val context: Context, private val crashReporter: CrashReporting) {
         private var historyStorage: Lazy<PlacesHistoryStorage>? = null
         private var bookmarksStorage: Lazy<PlacesBookmarksStorage>? = null

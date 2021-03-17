@@ -83,7 +83,7 @@ import kotlin.math.min
  * https://github.com/googlesamples/android-Camera2Basic
  * https://github.com/kismkof/camera2basic
  */
-@Suppress("TooManyFunctions", "LargeClass")
+@Suppress("LargeClass")
 class QrFragment : Fragment() {
     private val logger = Logger("mozac-qr")
     @VisibleForTesting

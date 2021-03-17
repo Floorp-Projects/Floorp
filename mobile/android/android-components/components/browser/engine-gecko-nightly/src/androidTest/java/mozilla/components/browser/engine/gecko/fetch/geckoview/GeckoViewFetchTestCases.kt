@@ -13,7 +13,6 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @MediumTest
-@Suppress("TooManyFunctions")
 class GeckoViewFetchTestCases : mozilla.components.tooling.fetch.tests.FetchTestCases() {
     override fun createNewClient(): Client = GeckoViewFetchClient(ApplicationProvider.getApplicationContext())
 

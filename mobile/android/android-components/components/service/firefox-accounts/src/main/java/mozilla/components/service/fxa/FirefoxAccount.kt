@@ -24,7 +24,6 @@ typealias PersistCallback = mozilla.appservices.fxaclient.PersistedFirefoxAccoun
 /**
  * FirefoxAccount represents the authentication state of a client.
  */
-@Suppress("TooManyFunctions")
 class FirefoxAccount internal constructor(
     private val inner: InternalFxAcct,
     crashReporter: CrashReporting? = null

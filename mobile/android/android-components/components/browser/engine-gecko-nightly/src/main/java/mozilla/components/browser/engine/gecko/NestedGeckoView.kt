@@ -26,7 +26,7 @@ import org.mozilla.geckoview.PanZoomController.INPUT_RESULT_UNHANDLED
  * https://github.com/takahirom/webview-in-coordinatorlayout
  */
 
-@Suppress("TooManyFunctions", "ClickableViewAccessibility")
+@Suppress("ClickableViewAccessibility")
 open class NestedGeckoView(context: Context) : GeckoView(context), NestedScrollingChild {
 
     @VisibleForTesting

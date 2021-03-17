@@ -38,7 +38,6 @@ enum class ToolbarPosition {
  * - On showing a [Snackbar] position it above the [BrowserToolbar].
  * - Snap the [BrowserToolbar] to be hidden or visible when the user stops scrolling.
  */
-@Suppress("TooManyFunctions")
 class BrowserToolbarBehavior(
     val context: Context?,
     attrs: AttributeSet?,

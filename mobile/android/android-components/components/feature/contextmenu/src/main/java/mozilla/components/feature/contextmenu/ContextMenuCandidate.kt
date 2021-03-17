@@ -31,7 +31,6 @@ import mozilla.components.support.ktx.kotlin.takeOrReplace
  * will be displayed in the context menu.
  * @property action The action to be invoked once the user selects this item.
  */
-@Suppress("TooManyFunctions")
 data class ContextMenuCandidate(
     val id: String,
     val label: String,
