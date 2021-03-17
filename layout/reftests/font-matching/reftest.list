@@ -163,5 +163,10 @@ random-if(/^Windows\x20NT\x206\.1/.test(http.oscpu)) == descriptor-ranges.html d
 # Test that prefs font fallback respects the CSS generic from content (bug 1687426)
 skip-if(Android) == fallback-respects-generic-1.html fallback-respects-generic-1-ref.html # fonts present on Android are too unpredictable for easy testing
 
+# Japanese monospace font on macOS is Osaka-mono
+# Disabled because Osaka-Mono isn't available on automation.
+# skip-if(!cocoaWidget) == osaka-mono.html osaka-mono-ref.html
+# skip-if(!cocoaWidget) != osaka-mono-exists.html osaka-mono-exists-ref.html
+
 # Reset default prefs.
 defaults
