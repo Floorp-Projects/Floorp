@@ -399,13 +399,9 @@ class DefaultToolbarMenu(
             onItemTapped.invoke(ToolbarMenu.Item.Downloads)
         }
 
-        val extensionsItem = BrowserMenuImageText(
-            context.getString(R.string.browser_menu_extensions),
-            R.drawable.ic_addons_extensions,
-            primaryTextColor()
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.AddonsManager)
-        }
+        val extensionsItem = WebExtensionPlaceholderMenuItem(
+            id = WebExtensionPlaceholderMenuItem.MAIN_EXTENSIONS_MENU_ID
+        )
 
         val syncedTabs = BrowserMenuImageText(
             label = context.getString(R.string.synced_tabs),
