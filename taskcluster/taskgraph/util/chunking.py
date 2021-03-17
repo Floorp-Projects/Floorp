@@ -22,7 +22,7 @@ from moztest.resolve import (
 )
 
 from taskgraph import GECKO
-from taskgraph.util.bugbug import BugbugTimeoutException, push_schedules
+from taskgraph.util.bugbug import BugbugTimeoutException, CT_LOW, push_schedules
 
 logger = logging.getLogger(__name__)
 here = os.path.abspath(os.path.dirname(__file__))
@@ -219,7 +219,7 @@ class BugbugLoader(DefaultLoader):
     """Load manifests using metadata from the TestResolver, and then
     filter them based on a query to bugbug."""
 
-    CONFIDENCE_THRESHOLD = 0.5
+    CONFIDENCE_THRESHOLD = CT_LOW
 
     def __init__(self, *args, **kwargs):
         super(BugbugLoader, self).__init__(*args, **kwargs)
