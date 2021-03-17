@@ -4213,6 +4213,86 @@ perf.startup:
       - perf-android-fe@mozilla.com
       - mcomella@mozilla.com
     expires: "2021-08-11"
+  home_activity_on_start:
+    type: timing_distribution
+    time_unit: millisecond
+    description: |
+      The duration of `HomeActivity.onStart`. This may encapsulate
+      `HomeFragment` or `BrowserFragment` creation, depending on the code path,
+      so we expect this to take varying amounts of time. As such, this probe may
+      not be easy to interpret directly but we believe collecting it may give us
+      more information about different patterns we might see in performance
+      data.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18426
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18558#issue-596791848
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - perf-android-fe@mozilla.com
+      - mcomella@mozilla.com
+    expires: "2021-08-11"
+  home_fragment_on_create_view:
+    type: timing_distribution
+    time_unit: millisecond
+    description: |
+      The duration of `HomeFragment.onCreateView`.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18426
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18558#issue-596791848
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - perf-android-fe@mozilla.com
+      - mcomella@mozilla.com
+    expires: "2021-08-11"
+  home_fragment_on_view_created:
+    type: timing_distribution
+    time_unit: millisecond
+    description: |
+      The duration of `HomeFragment.onViewCreated`.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18426
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18558#issue-596791848
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - perf-android-fe@mozilla.com
+      - mcomella@mozilla.com
+    expires: "2021-08-11"
+  base_bfragment_on_create_view:
+    type: timing_distribution
+    time_unit: millisecond
+    description: |
+      The duration of `BaseBrowserFragment.onCreateView`.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18426
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18558#issue-596791848
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - perf-android-fe@mozilla.com
+      - mcomella@mozilla.com
+    expires: "2021-08-11"
+  base_bfragment_on_view_created:
+    type: timing_distribution
+    time_unit: millisecond
+    description: |
+      The duration of `BaseBrowserFragment.onViewCreated`.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18426
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18558#issue-596791848
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - perf-android-fe@mozilla.com
+      - mcomella@mozilla.com
+    expires: "2021-08-11"
 
 perf.awesomebar:
   history_suggestions:

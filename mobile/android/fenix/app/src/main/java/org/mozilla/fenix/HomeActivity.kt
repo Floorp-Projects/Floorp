@@ -325,7 +325,7 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         }
     }
 
-    override fun onStart() {
+    override fun onStart() = PerfStartup.homeActivityOnStart.measureNoInline {
         super.onStart()
 
         // Diagnostic breadcrumb for "Display already aquired" crash:

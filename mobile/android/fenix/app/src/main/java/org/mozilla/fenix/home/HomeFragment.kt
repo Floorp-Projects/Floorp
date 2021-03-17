@@ -85,6 +85,7 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
 import mozilla.components.ui.tabcounter.TabCounterMenu
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.Config
+import org.mozilla.fenix.GleanMetrics.PerfStartup
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.BrowserAnimator.Companion.getToolbarNavOptions
@@ -101,6 +102,7 @@ import org.mozilla.fenix.components.toolbar.FenixTabCounterMenu
 import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideToolbar
+import org.mozilla.fenix.ext.measureNoInline
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.requireComponents
@@ -193,7 +195,7 @@ class HomeFragment : Fragment() {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
+    ): View? = PerfStartup.homeFragmentOnCreateView.measureNoInline {
         val view = inflater.inflate(R.layout.fragment_home, container, false)
         val activity = activity as HomeActivity
         val components = requireComponents
@@ -274,7 +276,7 @@ class HomeFragment : Fragment() {
         appBarLayout = view.homeAppBar
 
         activity.themeManager.applyStatusBarTheme(activity)
-        return view
+        view
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -356,7 +358,8 @@ class HomeFragment : Fragment() {
     }
 
     @Suppress("LongMethod", "ComplexMethod")
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) =
+            PerfStartup.homeFragmentOnViewCreated.measureNoInline { // weird indent so we don't have to break blame.
         super.onViewCreated(view, savedInstanceState)
 
         observeSearchEngineChanges()

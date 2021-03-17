@@ -129,6 +129,8 @@ import mozilla.components.feature.session.behavior.EngineViewBrowserToolbarBehav
 import mozilla.components.feature.webauthn.WebAuthnFeature
 import mozilla.components.support.base.feature.ActivityResultHandler
 import mozilla.components.support.ktx.android.view.enterToImmersiveMode
+import org.mozilla.fenix.GleanMetrics.PerfStartup
+import org.mozilla.fenix.ext.measureNoInline
 import mozilla.components.feature.session.behavior.ToolbarPosition as MozacToolbarPosition
 
 /**
@@ -197,7 +199,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View {
+    ): View = PerfStartup.baseBfragmentOnCreateView.measureNoInline {
         customTabSessionId = requireArguments().getString(EXTRA_SESSION_ID)
 
         // Diagnostic breadcrumb for "Display already aquired" crash:
@@ -220,10 +222,11 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
             )
         }
 
-        return view
+        view
     }
 
-    final override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    final override fun onViewCreated(view: View, savedInstanceState: Bundle?) =
+            PerfStartup.baseBfragmentOnViewCreated.measureNoInline { // weird indentation to avoid breaking blame.
         initializeUI(view)
 
         if (customTabSessionId == null) {
@@ -240,6 +243,7 @@ abstract class BaseBrowserFragment : Fragment(), UserInteractionHandler, Activit
         }
 
         requireContext().accessibilityManager.addAccessibilityStateChangeListener(this)
+        Unit
     }
 
     private fun initializeUI(view: View) {
