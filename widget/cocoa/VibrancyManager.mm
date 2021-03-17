@@ -10,6 +10,12 @@
 #include "nsCocoaFeatures.h"
 #import <objc/message.h>
 
+#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
+enum {
+  NSVisualEffectMaterialToolTip NS_ENUM_AVAILABLE_MAC(10_14) = 17,
+};
+#endif
+
 using namespace mozilla;
 
 @interface MOZVibrantView : NSVisualEffectView {
@@ -52,6 +58,15 @@ static NSVisualEffectState VisualEffectStateForVibrancyType(VibrancyType aType) 
 static NSVisualEffectMaterial VisualEffectMaterialForVibrancyType(VibrancyType aType,
                                                                   BOOL* aOutIsEmphasized) {
   switch (aType) {
+    case VibrancyType::TITLEBAR_LIGHT:
+    case VibrancyType::TITLEBAR_DARK:
+      return NSVisualEffectMaterialTitlebar;
+    case VibrancyType::TOOLTIP:
+      if (@available(macOS 10.14, *)) {
+        return (NSVisualEffectMaterial)NSVisualEffectMaterialToolTip;
+      } else {
+        return NSVisualEffectMaterialMenu;
+      }
     case VibrancyType::MENU:
       return NSVisualEffectMaterialMenu;
     case VibrancyType::SOURCE_LIST:
@@ -62,8 +77,6 @@ static NSVisualEffectMaterial VisualEffectMaterialForVibrancyType(VibrancyType a
     case VibrancyType::ACTIVE_SOURCE_LIST_SELECTION:
       *aOutIsEmphasized = YES;
       return NSVisualEffectMaterialSelection;
-    default:
-      return NSVisualEffectMaterialAppearanceBased;
   }
 }
 
