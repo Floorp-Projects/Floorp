@@ -412,8 +412,8 @@ RefPtr<ClientOpPromise> ClientManagerService::MatchAll(
 
   RefPtr<PromiseListHolder> promiseList = new PromiseListHolder();
 
-  for (auto iter = mSourceTable.Iter(); !iter.Done(); iter.Next()) {
-    ClientSourceParent* source = iter.UserData();
+  for (const auto& entry : mSourceTable) {
+    ClientSourceParent* source = entry.GetWeak();
     MOZ_DIAGNOSTIC_ASSERT(source);
 
     if (source->IsFrozen() || !source->ExecutionReady()) {
@@ -508,8 +508,8 @@ RefPtr<ClientOpPromise> ClientManagerService::Claim(
 
   RefPtr<PromiseListHolder> promiseList = new PromiseListHolder();
 
-  for (auto iter = mSourceTable.Iter(); !iter.Done(); iter.Next()) {
-    ClientSourceParent* source = iter.UserData();
+  for (const auto& entry : mSourceTable) {
+    ClientSourceParent* source = entry.GetWeak();
     MOZ_DIAGNOSTIC_ASSERT(source);
 
     if (source->IsFrozen()) {

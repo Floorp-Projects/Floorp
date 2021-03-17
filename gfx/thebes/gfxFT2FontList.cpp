@@ -703,7 +703,7 @@ class FontNameCache {
   size_t EntryCount() const { return mMap.EntryCount(); }
 
   void DropStaleEntries() {
-    for (auto iter = mMap.Iter(); !iter.Done(); iter.Next()) {
+    for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
       auto entry = static_cast<FNCMapEntry*>(iter.Get());
       if (!entry->mFileExists) {
         iter.Remove();
@@ -718,7 +718,7 @@ class FontNameCache {
 
     LOG(("Writing FontNameCache:"));
     nsAutoCString buf;
-    for (auto iter = mMap.Iter(); !iter.Done(); iter.Next()) {
+    for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
       auto entry = static_cast<FNCMapEntry*>(iter.Get());
       MOZ_ASSERT(entry->mFileExists);
       buf.Append(entry->mFilename);
@@ -1371,7 +1371,7 @@ void gfxFT2FontList::AppendFacesFromOmnijarEntry(nsZipArchive* aArchive,
 // if aSortFaces is true this will sort faces to give priority to "standard"
 // font files.
 static void FinalizeFamilyMemberList(nsCStringHashKey::KeyType aKey,
-                                     RefPtr<gfxFontFamily>& aFamily,
+                                     const RefPtr<gfxFontFamily>& aFamily,
                                      bool aSortFaces) {
   gfxFontFamily* family = aFamily.get();
 
@@ -1615,8 +1615,8 @@ void gfxFT2FontList::AppendFaceFromFontListEntry(const FontListEntry& aFLE,
 }
 
 void gfxFT2FontList::ReadSystemFontList(nsTArray<FontListEntry>* aList) {
-  for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
-    auto family = static_cast<FT2FontFamily*>(iter.Data().get());
+  for (const auto& entry : mFontFamilies) {
+    auto family = static_cast<FT2FontFamily*>(entry.GetData().get());
     family->AddFacesToFontList(aList);
   }
 }
@@ -1643,9 +1643,9 @@ nsresult gfxFT2FontList::InitFontListForPlatform() {
 
     // Finalize the families by sorting faces into standard order
     // and marking "simple" families.
-    for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
-      nsCStringHashKey::KeyType key = iter.Key();
-      RefPtr<gfxFontFamily>& family = iter.Data();
+    for (const auto& entry : mFontFamilies) {
+      nsCStringHashKey::KeyType key = entry.GetKey();
+      const RefPtr<gfxFontFamily>& family = entry.GetData();
       FinalizeFamilyMemberList(key, family, /* aSortFaces */ true);
     }
 
@@ -1663,9 +1663,9 @@ nsresult gfxFT2FontList::InitFontListForPlatform() {
 
   // We don't need to sort faces (because they were already sorted by the
   // chrome process, so we just maintain the existing order)
-  for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
-    nsCStringHashKey::KeyType key = iter.Key();
-    RefPtr<gfxFontFamily>& family = iter.Data();
+  for (const auto& entry : mFontFamilies) {
+    nsCStringHashKey::KeyType key = entry.GetKey();
+    const RefPtr<gfxFontFamily>& family = entry.GetData();
     FinalizeFamilyMemberList(key, family, /* aSortFaces */ false);
   }
 
@@ -1728,10 +1728,10 @@ gfxFontEntry* gfxFT2FontList::LookupLocalFont(const nsACString& aFontName,
   // walk over list of names
   FT2FontEntry* fontEntry = nullptr;
 
-  for (auto iter = mFontFamilies.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mFontFamilies.ConstIter(); !iter.Done(); iter.Next()) {
     // Check family name, based on the assumption that the
     // first part of the full name is the family name
-    RefPtr<gfxFontFamily>& fontFamily = iter.Data();
+    const RefPtr<gfxFontFamily>& fontFamily = iter.Data();
 
     // does the family name match up to the length of the family name?
     const nsCString& family = fontFamily->Name();

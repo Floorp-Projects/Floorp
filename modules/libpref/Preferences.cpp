@@ -2696,8 +2696,8 @@ size_t nsPrefBranch::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   n += mPrefRoot.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 
   n += mObservers.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (auto iter = mObservers.ConstIter(); !iter.Done(); iter.Next()) {
-    const PrefCallback* data = iter.UserData();
+  for (const auto& entry : mObservers) {
+    const PrefCallback* data = entry.GetWeak();
     n += data->SizeOfIncludingThis(aMallocSizeOf);
   }
 
@@ -3190,8 +3190,8 @@ PreferenceServiceReporter::CollectReports(
   // Count of the number of referents for each preference.
   nsTHashMap<nsCStringHashKey, uint32_t> prefCounter;
 
-  for (auto iter = rootBranch->mObservers.Iter(); !iter.Done(); iter.Next()) {
-    auto callback = iter.UserData();
+  for (const auto& entry : rootBranch->mObservers) {
+    auto* callback = entry.GetWeak();
 
     if (callback->IsWeak()) {
       nsCOMPtr<nsIObserver> callbackRef = do_QueryReferent(callback->mWeakRef);
@@ -3903,8 +3903,8 @@ Preferences::GetDefaultBranch(const char* aPrefRoot, nsIPrefBranch** aRetVal) {
 NS_IMETHODIMP
 Preferences::ReadStats(nsIPrefStatsCallback* aCallback) {
 #ifdef ACCESS_COUNTS
-  for (auto iter = gAccessCounts->Iter(); !iter.Done(); iter.Next()) {
-    aCallback->Visit(iter.Key(), iter.Data());
+  for (const auto& entry : *gAccessCounts) {
+    aCallback->Visit(entry.GetKey(), entry.GetData());
   }
 
   return NS_OK;

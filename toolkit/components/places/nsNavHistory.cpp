@@ -1896,8 +1896,9 @@ nsresult nsNavHistory::GetQueryResults(
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  for (auto iter = addParams.Iter(); !iter.Done(); iter.Next()) {
-    nsresult rv = statement->BindUTF8StringByName(iter.Key(), iter.Data());
+  for (const auto& entry : addParams) {
+    nsresult rv =
+        statement->BindUTF8StringByName(entry.GetKey(), entry.GetData());
     if (NS_FAILED(rv)) {
       break;
     }
@@ -2088,8 +2089,9 @@ nsNavHistory::AsyncExecuteLegacyQuery(nsINavHistoryQuery* aQuery,
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  for (auto iter = addParams.Iter(); !iter.Done(); iter.Next()) {
-    nsresult rv = statement->BindUTF8StringByName(iter.Key(), iter.Data());
+  for (const auto& entry : addParams) {
+    nsresult rv =
+        statement->BindUTF8StringByName(entry.GetKey(), entry.GetData());
     if (NS_FAILED(rv)) {
       break;
     }

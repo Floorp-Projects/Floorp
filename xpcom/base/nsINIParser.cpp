@@ -168,7 +168,7 @@ nsresult nsINIParser::GetString(const char* aSection, const char* aKey,
 }
 
 nsresult nsINIParser::GetSections(INISectionCallback aCB, void* aClosure) {
-  for (auto iter = mSections.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mSections.ConstIter(); !iter.Done(); iter.Next()) {
     if (!aCB(iter.Key(), aClosure)) {
       break;
     }
@@ -294,9 +294,9 @@ nsresult nsINIParser::RenameSection(const char* aSection,
 nsresult nsINIParser::WriteToFile(nsIFile* aFile) {
   nsCString buffer;
 
-  for (auto iter = mSections.Iter(); !iter.Done(); iter.Next()) {
-    buffer.AppendPrintf("[%s]\n", iter.Key());
-    INIValue* val = iter.UserData();
+  for (const auto& entry : mSections) {
+    buffer.AppendPrintf("[%s]\n", entry.GetKey());
+    INIValue* val = entry.GetWeak();
     while (val) {
       buffer.AppendPrintf("%s=%s\n", val->key, val->value);
       val = val->next.get();

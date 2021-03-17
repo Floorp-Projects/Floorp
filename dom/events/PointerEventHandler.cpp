@@ -182,10 +182,10 @@ void PointerEventHandler::ReleasePointerCaptureById(uint32_t aPointerId) {
 
 /* static */
 void PointerEventHandler::ReleaseAllPointerCapture() {
-  for (auto iter = sPointerCaptureList->Iter(); !iter.Done(); iter.Next()) {
-    PointerCaptureInfo* data = iter.UserData();
+  for (const auto& entry : *sPointerCaptureList) {
+    PointerCaptureInfo* data = entry.GetWeak();
     if (data && data->mPendingElement) {
-      ReleasePointerCaptureById(iter.Key());
+      ReleasePointerCaptureById(entry.GetKey());
     }
   }
 }
@@ -444,11 +444,11 @@ Element* PointerEventHandler::GetPointerCapturingElement(
 void PointerEventHandler::ReleaseIfCaptureByDescendant(nsIContent* aContent) {
   // We should check that aChild does not contain pointer capturing elements.
   // If it does we should release the pointer capture for the elements.
-  for (auto iter = sPointerCaptureList->Iter(); !iter.Done(); iter.Next()) {
-    PointerCaptureInfo* data = iter.UserData();
+  for (const auto& entry : *sPointerCaptureList) {
+    PointerCaptureInfo* data = entry.GetWeak();
     if (data && data->mPendingElement &&
         data->mPendingElement->IsInclusiveDescendantOf(aContent)) {
-      ReleasePointerCaptureById(iter.Key());
+      ReleasePointerCaptureById(entry.GetKey());
     }
   }
 }

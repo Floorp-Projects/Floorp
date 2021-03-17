@@ -512,19 +512,19 @@ nsresult LookupCacheV4::LoadMetadata(nsACString& aState, nsACString& aSHA256) {
 }
 
 VLPrefixSet::VLPrefixSet(const PrefixStringMap& aMap) : mCount(0) {
-  for (auto iter = aMap.ConstIter(); !iter.Done(); iter.Next()) {
-    uint32_t size = iter.Key();
-    MOZ_ASSERT(iter.Data()->Length() % size == 0,
+  for (const auto& entry : aMap) {
+    uint32_t size = entry.GetKey();
+    MOZ_ASSERT(entry.GetData()->Length() % size == 0,
                "PrefixString must be a multiple of the prefix size.");
-    mMap.InsertOrUpdate(size, MakeUnique<PrefixString>(*iter.Data(), size));
-    mCount += iter.Data()->Length() / size;
+    mMap.InsertOrUpdate(size, MakeUnique<PrefixString>(*entry.GetData(), size));
+    mCount += entry.GetData()->Length() / size;
   }
 }
 
 void VLPrefixSet::Merge(PrefixStringMap& aPrefixMap) {
-  for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
-    nsCString* prefixString = aPrefixMap.GetOrInsertNew(iter.Key());
-    PrefixString* str = iter.UserData();
+  for (const auto& entry : mMap) {
+    nsCString* prefixString = aPrefixMap.GetOrInsertNew(entry.GetKey());
+    PrefixString* str = entry.GetWeak();
 
     nsAutoCString remainingString;
     str->getRemainingString(remainingString);
@@ -537,8 +537,8 @@ void VLPrefixSet::Merge(PrefixStringMap& aPrefixMap) {
 
 bool VLPrefixSet::GetSmallestPrefix(nsACString& aOutString) const {
   PrefixString* pick = nullptr;
-  for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
-    PrefixString* str = iter.UserData();
+  for (const auto& entry : mMap) {
+    PrefixString* str = entry.GetWeak();
 
     if (str->remaining() <= 0) {
       continue;
@@ -546,7 +546,7 @@ bool VLPrefixSet::GetSmallestPrefix(nsACString& aOutString) const {
 
     if (aOutString.IsEmpty()) {
       str->getPrefix(aOutString);
-      MOZ_ASSERT(aOutString.Length() == iter.Key());
+      MOZ_ASSERT(aOutString.Length() == entry.GetKey());
       pick = str;
       continue;
     }
@@ -555,7 +555,7 @@ bool VLPrefixSet::GetSmallestPrefix(nsACString& aOutString) const {
     str->getPrefix(cur);
     if (!cur.IsEmpty() && cur < aOutString) {
       aOutString.Assign(cur);
-      MOZ_ASSERT(aOutString.Length() == iter.Key());
+      MOZ_ASSERT(aOutString.Length() == entry.GetKey());
       pick = str;
     }
   }

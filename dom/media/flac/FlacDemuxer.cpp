@@ -662,8 +662,8 @@ UniquePtr<TrackInfo> FlacTrackDemuxer::GetInfo() const {
     UniquePtr<TrackInfo> info = mParser->Info().Clone();
     UniquePtr<MetadataTags> tags(mParser->GetTags());
     if (tags) {
-      for (auto iter = tags->Iter(); !iter.Done(); iter.Next()) {
-        info->mTags.AppendElement(MetadataTag(iter.Key(), iter.Data()));
+      for (const auto& entry : *tags) {
+        info->mTags.AppendElement(MetadataTag(entry.GetKey(), entry.GetData()));
       }
     }
     return info;

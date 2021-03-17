@@ -511,22 +511,22 @@ class ChannelCountReporter final : public nsIMemoryReporter {
     if (!sChannelCounts) {
       return NS_OK;
     }
-    for (auto iter = sChannelCounts->Iter(); !iter.Done(); iter.Next()) {
-      nsPrintfCString pathNow("ipc-channels/%s", iter.Key());
-      nsPrintfCString pathMax("ipc-channels-peak/%s", iter.Key());
+    for (const auto& entry : *sChannelCounts) {
+      nsPrintfCString pathNow("ipc-channels/%s", entry.GetKey());
+      nsPrintfCString pathMax("ipc-channels-peak/%s", entry.GetKey());
       nsPrintfCString descNow(
           "Number of IPC channels for"
           " top-level actor type %s",
-          iter.Key());
+          entry.GetKey());
       nsPrintfCString descMax(
           "Peak number of IPC channels for"
           " top-level actor type %s",
-          iter.Key());
+          entry.GetKey());
 
       aHandleReport->Callback(""_ns, pathNow, KIND_OTHER, UNITS_COUNT,
-                              iter.Data().mNow, descNow, aData);
+                              entry.GetData().mNow, descNow, aData);
       aHandleReport->Callback(""_ns, pathMax, KIND_OTHER, UNITS_COUNT,
-                              iter.Data().mMax, descMax, aData);
+                              entry.GetData().mMax, descMax, aData);
     }
     return NS_OK;
   }

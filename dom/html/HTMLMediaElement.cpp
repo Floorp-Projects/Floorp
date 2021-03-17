@@ -3358,12 +3358,12 @@ void HTMLMediaElement::MozGetMetadata(JSContext* cx,
     return;
   }
   if (mTags) {
-    for (auto iter = mTags->ConstIter(); !iter.Done(); iter.Next()) {
+    for (const auto& entry : *mTags) {
       nsString wideValue;
-      CopyUTF8toUTF16(iter.UserData(), wideValue);
+      CopyUTF8toUTF16(entry.GetData(), wideValue);
       JS::Rooted<JSString*> string(cx,
                                    JS_NewUCStringCopyZ(cx, wideValue.Data()));
-      if (!string || !JS_DefineProperty(cx, tags, iter.Key().Data(), string,
+      if (!string || !JS_DefineProperty(cx, tags, entry.GetKey().Data(), string,
                                         JSPROP_ENUMERATE)) {
         NS_WARNING("couldn't create metadata object!");
         aRv.Throw(NS_ERROR_FAILURE);
@@ -3963,15 +3963,14 @@ static unsigned MediaElementTableCount(HTMLMediaElement* aElement,
   }
   uint32_t uriCount = 0;
   uint32_t otherCount = 0;
-  for (auto it = gElementTable->ConstIter(); !it.Done(); it.Next()) {
-    const MediaElementSetForURI* entry = it.Get();
+  for (const auto& entry : *gElementTable) {
     uint32_t count = 0;
-    for (const auto& elem : entry->mElements) {
+    for (const auto& elem : entry.mElements) {
       if (elem == aElement) {
         count++;
       }
     }
-    if (URISafeEquals(aURI, entry->GetKey())) {
+    if (URISafeEquals(aURI, entry.GetKey())) {
       uriCount = count;
     } else {
       otherCount += count;

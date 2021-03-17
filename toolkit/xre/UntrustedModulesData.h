@@ -337,10 +337,10 @@ struct ParamTraits<mozilla::ModulesMap> {
   static void Write(Message* aMsg, const paramType& aParam) {
     aMsg->WriteUInt32(aParam.Count());
 
-    for (auto iter = aParam.ConstIter(); !iter.Done(); iter.Next()) {
-      MOZ_RELEASE_ASSERT(iter.Data());
-      WriteParam(aMsg, iter.Key());
-      WriteParam(aMsg, *(iter.Data()));
+    for (const auto& entry : aParam) {
+      MOZ_RELEASE_ASSERT(entry.GetData());
+      WriteParam(aMsg, entry.GetKey());
+      WriteParam(aMsg, *(entry.GetData()));
     }
   }
 

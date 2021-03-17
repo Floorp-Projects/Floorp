@@ -292,20 +292,20 @@ void gfxFontCache::DestroyFont(gfxFont* aFont) {
 void gfxFontCache::WordCacheExpirationTimerCallback(nsITimer* aTimer,
                                                     void* aCache) {
   gfxFontCache* cache = static_cast<gfxFontCache*>(aCache);
-  for (auto it = cache->mFonts.Iter(); !it.Done(); it.Next()) {
-    it.Get()->mFont->AgeCachedWords();
+  for (const auto& entry : cache->mFonts) {
+    entry.mFont->AgeCachedWords();
   }
 }
 
 void gfxFontCache::FlushShapedWordCaches() {
-  for (auto it = mFonts.Iter(); !it.Done(); it.Next()) {
-    it.Get()->mFont->ClearCachedWords();
+  for (const auto& entry : mFonts) {
+    entry.mFont->ClearCachedWords();
   }
 }
 
 void gfxFontCache::NotifyGlyphsChanged() {
-  for (auto it = mFonts.Iter(); !it.Done(); it.Next()) {
-    it.Get()->mFont->NotifyGlyphsChanged();
+  for (const auto& entry : mFonts) {
+    entry.mFont->NotifyGlyphsChanged();
   }
 }
 
@@ -314,8 +314,8 @@ void gfxFontCache::AddSizeOfExcludingThis(MallocSizeOf aMallocSizeOf,
   // TODO: add the overhead of the expiration tracker (generation arrays)
 
   aSizes->mFontInstances += mFonts.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (auto iter = mFonts.ConstIter(); !iter.Done(); iter.Next()) {
-    iter.Get()->mFont->AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
+  for (const auto& entry : mFonts) {
+    entry.mFont->AddSizeOfExcludingThis(aMallocSizeOf, aSizes);
   }
 }
 

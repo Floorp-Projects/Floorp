@@ -2203,11 +2203,11 @@ size_t Loader::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   n += mObservers.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
   n += mInlineSheets.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (auto iter = mInlineSheets.ConstIter(); !iter.Done(); iter.Next()) {
-    n += iter.Key().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  for (const auto& entry : mInlineSheets) {
+    n += entry.GetKey().SizeOfExcludingThisIfUnshared(aMallocSizeOf);
     // If the sheet has a parent, then its parent will report it so we don't
     // have to worry about it here.
-    const StyleSheet* sheet = iter.UserData();
+    const StyleSheet* sheet = entry.GetWeak();
     MOZ_ASSERT(!sheet->GetParentSheet(),
                "How did an @import rule end up here?");
     if (!sheet->GetOwnerNode()) {

@@ -118,22 +118,22 @@ class imgMemoryReporter final : public nsIMemoryReporter {
     nsTArray<ImageMemoryCounter> uncached;
 
     for (uint32_t i = 0; i < mKnownLoaders.Length(); i++) {
-      for (auto iter = mKnownLoaders[i]->mChromeCache.Iter(); !iter.Done();
+      for (auto iter = mKnownLoaders[i]->mChromeCache.ConstIter(); !iter.Done();
            iter.Next()) {
         imgCacheEntry* entry = iter.UserData();
         RefPtr<imgRequest> req = entry->GetRequest();
         RecordCounterForRequest(req, &chrome, !entry->HasNoProxies());
       }
-      for (auto iter = mKnownLoaders[i]->mCache.Iter(); !iter.Done();
+      for (auto iter = mKnownLoaders[i]->mCache.ConstIter(); !iter.Done();
            iter.Next()) {
         imgCacheEntry* entry = iter.UserData();
         RefPtr<imgRequest> req = entry->GetRequest();
         RecordCounterForRequest(req, &content, !entry->HasNoProxies());
       }
       MutexAutoLock lock(mKnownLoaders[i]->mUncachedImagesMutex);
-      for (auto iter = mKnownLoaders[i]->mUncachedImages.Iter(); !iter.Done();
-           iter.Next()) {
-        nsPtrHashKey<imgRequest>* entry = iter.Get();
+      for (auto iter = mKnownLoaders[i]->mUncachedImages.ConstIter();
+           !iter.Done(); iter.Next()) {
+        const nsPtrHashKey<imgRequest>* entry = iter.Get();
         RefPtr<imgRequest> req = entry->GetKey();
         RecordCounterForRequest(req, &uncached, req->HasConsumers());
       }
@@ -166,7 +166,8 @@ class imgMemoryReporter final : public nsIMemoryReporter {
     size_t n = 0;
     for (uint32_t i = 0; i < imgLoader::sMemReporter->mKnownLoaders.Length();
          i++) {
-      for (auto iter = imgLoader::sMemReporter->mKnownLoaders[i]->mCache.Iter();
+      for (auto iter =
+               imgLoader::sMemReporter->mKnownLoaders[i]->mCache.ConstIter();
            !iter.Done(); iter.Next()) {
         imgCacheEntry* entry = iter.UserData();
         if (entry->HasNoProxies()) {
@@ -1238,8 +1239,8 @@ imgLoader::~imgLoader() {
     // If there are any of our imgRequest's left they are in the uncached
     // images set, so clear their pointer to us.
     MutexAutoLock lock(mUncachedImagesMutex);
-    for (auto iter = mUncachedImages.Iter(); !iter.Done(); iter.Next()) {
-      nsPtrHashKey<imgRequest>* entry = iter.Get();
+    for (auto iter = mUncachedImages.ConstIter(); !iter.Done(); iter.Next()) {
+      const nsPtrHashKey<imgRequest>* entry = iter.Get();
       RefPtr<imgRequest> req = entry->GetKey();
       req->ClearLoader();
     }
@@ -1381,8 +1382,8 @@ imgLoader::RemoveEntriesFromPrincipal(nsIPrincipal* aPrincipal) {
   AutoTArray<RefPtr<imgCacheEntry>, 128> entriesToBeRemoved;
 
   imgCacheTable& cache = GetCache(aPrincipal->IsSystemPrincipal());
-  for (auto iter = cache.Iter(); !iter.Done(); iter.Next()) {
-    auto& key = iter.Key();
+  for (const auto& entry : cache) {
+    const auto& key = entry.GetKey();
 
     if (key.OriginAttributesRef() !=
         BasePrincipal::Cast(aPrincipal)->OriginAttributesRef()) {
@@ -1396,7 +1397,7 @@ imgLoader::RemoveEntriesFromPrincipal(nsIPrincipal* aPrincipal) {
     }
 
     if (imageOrigin == origin) {
-      entriesToBeRemoved.AppendElement(iter.Data());
+      entriesToBeRemoved.AppendElement(entry.GetData());
     }
   }
 
@@ -1467,10 +1468,10 @@ imgLoader::ClearCacheForControlledDocument(Document* aDoc) {
   MOZ_ASSERT(aDoc);
   AutoTArray<RefPtr<imgCacheEntry>, 128> entriesToBeRemoved;
   imgCacheTable& cache = GetCache(false);
-  for (auto iter = cache.Iter(); !iter.Done(); iter.Next()) {
-    auto& key = iter.Key();
+  for (const auto& entry : cache) {
+    const auto& key = entry.GetKey();
     if (key.ControlledDocument() == aDoc) {
-      entriesToBeRemoved.AppendElement(iter.Data());
+      entriesToBeRemoved.AppendElement(entry.GetData());
     }
   }
   for (auto& entry : entriesToBeRemoved) {
@@ -2036,8 +2037,8 @@ nsresult imgLoader::EvictEntries(imgCacheTable& aCacheToClear) {
   // We have to make a temporary, since RemoveFromCache removes the element
   // from the queue, invalidating iterators.
   nsTArray<RefPtr<imgCacheEntry> > entries;
-  for (auto iter = aCacheToClear.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<imgCacheEntry>& data = iter.Data();
+  for (auto iter = aCacheToClear.ConstIter(); !iter.Done(); iter.Next()) {
+    const RefPtr<imgCacheEntry>& data = iter.Data();
     entries.AppendElement(data);
   }
 

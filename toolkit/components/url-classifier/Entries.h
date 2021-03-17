@@ -341,8 +341,8 @@ struct CachedFullHashResponse {
         fullHashes.Count() != aOther.fullHashes.Count()) {
       return false;
     }
-    for (auto iter = fullHashes.ConstIter(); !iter.Done(); iter.Next()) {
-      if (iter.Data() != aOther.fullHashes.Get(iter.Key())) {
+    for (const auto& entry : fullHashes) {
+      if (entry.GetData() != aOther.fullHashes.Get(entry.GetKey())) {
         return false;
       }
     }
@@ -355,9 +355,9 @@ typedef nsClassHashtable<nsUint32HashKey, CachedFullHashResponse>
 
 template <class T>
 void CopyClassHashTable(const T& aSource, T& aDestination) {
-  for (auto iter = aSource.ConstIter(); !iter.Done(); iter.Next()) {
-    auto value = aDestination.GetOrInsertNew(iter.Key());
-    *value = *(iter.Data());
+  for (const auto& entry : aSource) {
+    auto value = aDestination.GetOrInsertNew(entry.GetKey());
+    *value = *(entry.GetData());
   }
 }
 

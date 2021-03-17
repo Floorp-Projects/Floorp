@@ -2270,12 +2270,12 @@ void CacheFile::NotifyListenersAboutOutputRemoval() {
   }
 
   // Fail all update listeners
-  for (auto iter = mChunks.Iter(); !iter.Done(); iter.Next()) {
-    const RefPtr<CacheFileChunk>& chunk = iter.Data();
+  for (const auto& entry : mChunks) {
+    const RefPtr<CacheFileChunk>& chunk = entry.GetData();
     LOG(
         ("CacheFile::NotifyListenersAboutOutputRemoval() - fail2 "
          "[this=%p, idx=%u]",
-         this, iter.Key()));
+         this, entry.GetKey()));
 
     if (chunk->IsReady()) {
       chunk->NotifyUpdateListeners();

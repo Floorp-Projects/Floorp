@@ -141,8 +141,8 @@ size_t CookieStorage::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
 
 void CookieStorage::GetCookies(nsTArray<RefPtr<nsICookie>>& aCookies) const {
   aCookies.SetCapacity(mCookieCount);
-  for (auto iter = mHostTable.ConstIter(); !iter.Done(); iter.Next()) {
-    const CookieEntry::ArrayType& cookies = iter.Get()->GetCookies();
+  for (const auto& entry : mHostTable) {
+    const CookieEntry::ArrayType& cookies = entry.GetCookies();
     for (CookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
       aCookies.AppendElement(cookies[i]);
     }
@@ -152,8 +152,8 @@ void CookieStorage::GetCookies(nsTArray<RefPtr<nsICookie>>& aCookies) const {
 void CookieStorage::GetSessionCookies(
     nsTArray<RefPtr<nsICookie>>& aCookies) const {
   aCookies.SetCapacity(mCookieCount);
-  for (auto iter = mHostTable.ConstIter(); !iter.Done(); iter.Next()) {
-    const CookieEntry::ArrayType& cookies = iter.Get()->GetCookies();
+  for (const auto& entry : mHostTable) {
+    const CookieEntry::ArrayType& cookies = entry.GetCookies();
     for (CookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
       Cookie* cookie = cookies[i];
       // Filter out non-session cookies.
@@ -236,8 +236,8 @@ uint32_t CookieStorage::CountCookiesFromHost(const nsACString& aBaseDomain,
 void CookieStorage::GetAll(nsTArray<RefPtr<nsICookie>>& aResult) const {
   aResult.SetCapacity(mCookieCount);
 
-  for (auto iter = mHostTable.ConstIter(); !iter.Done(); iter.Next()) {
-    const CookieEntry::ArrayType& cookies = iter.Get()->GetCookies();
+  for (const auto& entry : mHostTable) {
+    const CookieEntry::ArrayType& cookies = entry.GetCookies();
     for (CookieEntry::IndexType i = 0; i < cookies.Length(); ++i) {
       aResult.AppendElement(cookies[i]);
     }
