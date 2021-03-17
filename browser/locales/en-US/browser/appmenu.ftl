@@ -149,8 +149,6 @@ appmenu-get-help =
 appmenu-help-more-troubleshooting-info =
     .label = More Troubleshooting Information
     .accesskey = T
-appmenu-help-taskmanager =
-    .label = Task Manager
 appmenu-help-report-site-issue =
     .label = Report Site Issue…
 appmenu-help-feedback-page =
@@ -181,5 +179,7 @@ appmenu-help-not-deceptive =
 
 appmenu-customizetoolbar =
     .label = Customize Toolbar…
+appmenu-taskmanager =
+    .label = Task Manager
 
 appmenu-developer-tools-subheader = Browser Tools
