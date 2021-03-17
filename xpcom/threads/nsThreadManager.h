@@ -9,6 +9,7 @@
 
 #include "nsIThreadManager.h"
 #include "nsThread.h"
+#include "mozilla/ShutdownPhase.h"
 
 class nsIRunnable;
 class nsIEventTarget;
@@ -28,8 +29,6 @@ class nsThreadManager : public nsIThreadManager {
   NS_DECL_NSITHREADMANAGER
 
   static nsThreadManager& get();
-
-  static void InitializeShutdownObserver();
 
   nsresult Init();
 
@@ -82,9 +81,10 @@ class nsThreadManager : public nsIThreadManager {
  private:
   nsThreadManager();
 
-  nsresult SpinEventLoopUntilInternal(const nsACString& aVeryGoodReasonToDoThis,
-                                      nsINestedEventLoopCondition* aCondition,
-                                      bool aCheckingShutdown);
+  nsresult SpinEventLoopUntilInternal(
+      const nsACString& aVeryGoodReasonToDoThis,
+      nsINestedEventLoopCondition* aCondition,
+      mozilla::ShutdownPhase aCheckingShutdownPhase);
 
   static void ReleaseThread(void* aData);
 

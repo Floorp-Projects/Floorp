@@ -277,8 +277,6 @@ nsresult nsLayoutStatics::Initialize() {
     mozilla::dom::RemoteWorkerService::Initialize();
   }
 
-  nsThreadManager::InitializeShutdownObserver();
-
   mozilla::Fuzzyfox::Start();
 
   ClearSiteData::Initialize();
