@@ -7,5 +7,12 @@ plugins {
 }
 
 repositories {
-    jcenter()
+    if (project.hasProperty("centralRepo")) {
+        maven {
+            name "MavenCentral"
+            url project.property("centralRepo")
+        }
+    } else {
+        mavenCentral()
+    }
 }
