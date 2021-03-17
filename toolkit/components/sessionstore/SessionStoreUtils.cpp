@@ -29,11 +29,13 @@
 #include "nsIDocShell.h"
 #include "nsIFormControl.h"
 #include "nsIScrollableFrame.h"
+#include "nsISHistory.h"
 #include "nsPresContext.h"
 #include "nsPrintfCString.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::dom::sessionstore;
 
 namespace {
 
@@ -274,11 +276,15 @@ static void CollectCurrentScrollPosition(JSContext* aCx, Document& aDocument,
 void SessionStoreUtils::RestoreScrollPosition(const GlobalObject& aGlobal,
                                               nsGlobalWindowInner& aWindow,
                                               const CollectedData& aData) {
-  if (!aData.mScroll.WasPassed()) {
-    return;
+  if (aData.mScroll.WasPassed()) {
+    RestoreScrollPosition(aWindow, aData.mScroll.Value());
   }
+}
 
-  nsCCharSeparatedTokenizer tokenizer(aData.mScroll.Value(), ',');
+/* static */
+void SessionStoreUtils::RestoreScrollPosition(
+    nsGlobalWindowInner& aWindow, const nsCString& aScrollPosition) {
+  nsCCharSeparatedTokenizer tokenizer(aScrollPosition, ',');
   nsAutoCString token(tokenizer.nextToken());
   int pos_X = atoi(token.get());
   token = tokenizer.nextToken();
@@ -802,7 +808,6 @@ static void SetElementAsBool(Element* aElement, bool aValue) {
 MOZ_CAN_RUN_SCRIPT
 static void SetElementAsFiles(HTMLInputElement* aElement,
                               const CollectedFileListValue& aValue) {
-  nsTArray<nsString> fileList;
   IgnoredErrorResult rv;
   aElement->MozSetFileNameArray(aValue.mFileList, rv);
   if (rv.Failed()) {
@@ -927,7 +932,7 @@ static void SetElementAsObject(JSContext* aCx, Element* aElement,
 }
 
 MOZ_CAN_RUN_SCRIPT
-static void SetRestoreData(JSContext* aCx, Element* aElement,
+static void SetSessionData(JSContext* aCx, Element* aElement,
                            JS::MutableHandle<JS::Value> aObject) {
   nsAutoString data;
   if (nsContentUtils::StringifyJSON(aCx, aObject, data)) {
@@ -938,12 +943,11 @@ static void SetRestoreData(JSContext* aCx, Element* aElement,
 }
 
 MOZ_CAN_RUN_SCRIPT
-static void SetInnerHTML(Document& aDocument, const CollectedData& aData) {
+static void SetInnerHTML(Document& aDocument, const nsString& aInnerHTML) {
   RefPtr<Element> bodyElement = aDocument.GetBody();
   if (aDocument.HasFlag(NODE_IS_EDITABLE) && bodyElement) {
     IgnoredErrorResult rv;
-    bodyElement->SetInnerHTML(aData.mInnerHTML.Value(),
-                              aDocument.NodePrincipal(), rv);
+    bodyElement->SetInnerHTML(aInnerHTML, aDocument.NodePrincipal(), rv);
     if (!rv.Failed()) {
       nsContentUtils::DispatchInputEvent(bodyElement);
     }
@@ -978,7 +982,7 @@ class FormDataParseContext : public txIParseContext {
   bool mIsCaseInsensitive;
 };
 
-static Element* FindNodeByXPath(JSContext* aCx, Document& aDocument,
+static Element* FindNodeByXPath(Document& aDocument,
                                 const nsAString& aExpression) {
   FormDataParseContext parsingContext(aDocument.IsHTMLDocument());
   IgnoredErrorResult rv;
@@ -989,7 +993,7 @@ static Element* FindNodeByXPath(JSContext* aCx, Document& aDocument,
     return nullptr;
   }
   RefPtr<XPathResult> result = expression->Evaluate(
-      aCx, aDocument, XPathResult::FIRST_ORDERED_NODE_TYPE, nullptr, rv);
+      aDocument, XPathResult::FIRST_ORDERED_NODE_TYPE, nullptr, rv);
   if (rv.Failed()) {
     return nullptr;
   }
@@ -1012,7 +1016,7 @@ bool SessionStoreUtils::RestoreFormData(const GlobalObject& aGlobal,
     return false;
   }
   if (aData.mInnerHTML.WasPassed()) {
-    SetInnerHTML(aDocument, aData);
+    SetInnerHTML(aDocument, aData.mInnerHTML.Value());
   }
   if (aData.mId.WasPassed()) {
     for (auto& entry : aData.mId.Value().Entries()) {
@@ -1030,13 +1034,11 @@ bool SessionStoreUtils::RestoreFormData(const GlobalObject& aGlobal,
         // cf. bug 467409
         JSContext* cx = aGlobal.Context();
         if (entry.mKey.EqualsLiteral("sessionData")) {
-          nsAutoCString url;
-          Unused << aDocument.GetDocumentURI()->GetSpecIgnoringRef(url);
           if (url.EqualsLiteral("about:sessionrestore") ||
               url.EqualsLiteral("about:welcomeback")) {
             JS::Rooted<JS::Value> object(
                 cx, JS::ObjectValue(*entry.mValue.GetAsObject()));
-            SetRestoreData(cx, node, &object);
+            SetSessionData(cx, node, &object);
             continue;
           }
         }
@@ -1048,8 +1050,7 @@ bool SessionStoreUtils::RestoreFormData(const GlobalObject& aGlobal,
   }
   if (aData.mXpath.WasPassed()) {
     for (auto& entry : aData.mXpath.Value().Entries()) {
-      RefPtr<Element> node =
-          FindNodeByXPath(aGlobal.Context(), aDocument, entry.mKey);
+      RefPtr<Element> node = FindNodeByXPath(aDocument, entry.mKey);
       if (node == nullptr) {
         continue;
       }
@@ -1064,6 +1065,74 @@ bool SessionStoreUtils::RestoreFormData(const GlobalObject& aGlobal,
       }
     }
   }
+  return true;
+}
+
+MOZ_CAN_RUN_SCRIPT
+void RestoreFormEntry(Element* aNode, FormEntryValue aValue) {
+  using Type = sessionstore::FormEntryValue::Type;
+  switch (aValue.type()) {
+    case Type::TCheckbox:
+      SetElementAsBool(aNode, aValue.get_Checkbox().value());
+      break;
+    case Type::TTextField:
+      SetElementAsString(aNode, aValue.get_TextField().value());
+      break;
+    case Type::TFileList: {
+      if (RefPtr<HTMLInputElement> input = HTMLInputElement::FromNode(aNode);
+          input && input->ControlType() == NS_FORM_INPUT_FILE) {
+        CollectedFileListValue value;
+        value.mFileList = std::move(aValue.get_FileList().valueList());
+        SetElementAsFiles(input, value);
+      }
+      break;
+    }
+    case Type::TSingleSelect:
+    case Type::TMultipleSelect: {
+      if (RefPtr<HTMLSelectElement> select =
+              HTMLSelectElement::FromNode(aNode)) {
+        if (!select->Multiple()) {
+          CollectedNonMultipleSelectValue value;
+          value.mSelectedIndex = aValue.get_SingleSelect().index();
+          value.mValue = aValue.get_SingleSelect().value();
+          SetElementAsSelect(select, value);
+        } else {
+          SetElementAsMultiSelect(select,
+                                  aValue.get_MultipleSelect().valueList());
+        }
+      }
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE();
+  }
+}
+
+MOZ_CAN_RUN_SCRIPT
+/* static */
+bool SessionStoreUtils::RestoreFormData(
+    Document& aDocument, const nsCString& aFormUrl, const nsString& aInnerHTML,
+    const nsTArray<SessionStoreRestoreData::Entry>& aEntries) {
+  // FIXME: Bug 1698878 - We should do this check in the parent instead.
+  nsAutoCString url;
+  Unused << aDocument.GetDocumentURI()->GetSpecIgnoringRef(url);
+  if (!aFormUrl.Equals(url)) {
+    return false;
+  }
+
+  if (!aInnerHTML.IsEmpty()) {
+    SetInnerHTML(aDocument, aInnerHTML);
+  }
+
+  for (const auto& entry : aEntries) {
+    RefPtr<Element> node = entry.mIsXPath
+                               ? FindNodeByXPath(aDocument, entry.mData.id())
+                               : aDocument.GetElementById(entry.mData.id());
+    if (node) {
+      RestoreFormEntry(node, entry.mData.value());
+    }
+  }
+
   return true;
 }
 
@@ -1355,4 +1424,44 @@ static void CollectFrameTreeData(JSContext* aCx,
   if (boolVal.Length() != 0) {
     ret.mBoolVal.Construct(std::move(boolVal));
   }
+}
+
+/* static */
+MOZ_CAN_RUN_SCRIPT
+already_AddRefed<nsISessionStoreRestoreData>
+SessionStoreUtils::ConstructSessionStoreRestoreData(
+    const GlobalObject& aGlobal) {
+  nsCOMPtr<nsISessionStoreRestoreData> data = new SessionStoreRestoreData();
+  return data.forget();
+}
+
+/* static */
+MOZ_CAN_RUN_SCRIPT
+bool SessionStoreUtils::SetRestoreData(const GlobalObject& aGlobal,
+                                       CanonicalBrowsingContext& aContext,
+                                       nsISessionStoreRestoreData* aData) {
+  if (!mozilla::SessionHistoryInParent()) {
+    MOZ_CRASH("why were we called?");
+  }
+
+  MOZ_DIAGNOSTIC_ASSERT(aContext.IsTop());
+
+  if (nsCOMPtr<SessionStoreRestoreData> data = do_QueryInterface(aData);
+      data && !data->IsEmpty()) {
+    aContext.SetRestoreData(data);
+    if (nsISHistory* shistory = aContext.GetSessionHistory()) {
+      shistory->ReloadCurrentEntry();
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/* static */
+nsresult SessionStoreUtils::CallRestoreTabContentComplete(Element* aBrowser) {
+  nsCOMPtr<nsISessionStoreFunctions> funcs =
+      do_ImportModule("resource://gre/modules/SessionStoreFunctions.jsm");
+  NS_ENSURE_TRUE(funcs, NS_ERROR_FAILURE);
+  return funcs->RestoreTabContentComplete(aBrowser);
 }

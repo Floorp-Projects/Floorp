@@ -16,4 +16,6 @@ interface nsISessionStoreFunctions : nsISupports {
     in Element aBrowser, in BrowsingContext aBrowsingContext,
     in uint32_t aFlushId, in boolean aIsFinal, in uint32_t aEpoch,
     in jsval aData, in boolean aCollectSHistory);
+
+  void RestoreTabContentComplete(in Element aBrowser);
 };
