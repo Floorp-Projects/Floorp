@@ -34,8 +34,8 @@
 
   --identity-box-margin-inline: 4px;
   --identity-box-label-opacity: .8;
-  --urlbar-box-bg-overlay: var(--buttons-secondary-bgcolor);
-  --urlbar-box-unfocused-bg-overlay: var(--buttons-secondary-bgcolor);
+  --urlbar-box-bgcolor: var(--buttons-secondary-bgcolor);
+  --urlbar-box-unfocused-bgcolor: var(--buttons-secondary-bgcolor);
 
   --urlbar-min-height: 32px;
   --urlbar-icon-padding: 6px; /* (32px - 2px border - 2px padding - 16px icon) / 2 */
@@ -100,13 +100,7 @@
 }
 
 :root[lwt-toolbar-field-brighttext] {
-  --urlbar-box-unfocused-bg-overlay: var(--urlbar-box-bg-overlay);
   --lwt-popup-brighttext-url-color: #00ddff;
-}
-@media (prefers-contrast) {
-  :root {
-    --urlbar-box-unfocused-bg-overlay: var(--urlbar-box-bg-overlay)
-  }
 }
 } /*** END proton ***/
 
