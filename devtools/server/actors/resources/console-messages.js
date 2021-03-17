@@ -8,6 +8,7 @@ const {
   TYPES: { CONSOLE_MESSAGE },
 } = require("devtools/server/actors/resources/index");
 const { WebConsoleUtils } = require("devtools/server/actors/webconsole/utils");
+const Targets = require("devtools/server/actors/targets/index");
 
 const consoleAPIListenerModule = isWorker
   ? "devtools/server/actors/webconsole/worker-listeners"
@@ -56,13 +57,24 @@ class ConsoleMessageWatcher {
       ]);
     };
 
-    // Create the consoleAPIListener
-    // (and apply the filtering options defined in the target actor).
-    const listener = new ConsoleAPIListener(
-      targetActor.isRootActor ? null : targetActor.window,
-      onConsoleAPICall,
-      targetActor.consoleAPIListenerOptions
-    );
+    const isTargetActorContentProcess =
+      targetActor.targetType === Targets.TYPES.PROCESS;
+
+    // Only consider messages from a given window for all FRAME targets (this includes
+    // WebExt and ParentProcess which inherits from BrowsingContextTargetActor)
+    // But ParentProcess should be ignored as we want all messages emitted directly from
+    // that process (window and window-less).
+    // To do that we pass a null window and ConsoleAPIListener will catch everything.
+    const window =
+      targetActor.targetType === Targets.TYPES.FRAME &&
+      targetActor.typeName != "parentProcessTarget"
+        ? targetActor.window
+        : null;
+
+    const listener = new ConsoleAPIListener(window, onConsoleAPICall, {
+      excludeMessagesBoundToWindow: isTargetActorContentProcess,
+      ...(targetActor.consoleAPIListenerOptions || {}),
+    });
     this.listener = listener;
     listener.init();
 

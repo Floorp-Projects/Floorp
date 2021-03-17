@@ -33,6 +33,12 @@ class PlatformMessageWatcher extends nsIConsoleListenerWatcher {
       return false;
     }
 
+    // Ignore message that were forwarded from the content process to the parent process,
+    // since we're getting those directly from the content process.
+    if (message.isForwardedFromContentProcess) {
+      return false;
+    }
+
     return true;
   }
 
