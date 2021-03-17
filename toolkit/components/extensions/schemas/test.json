@@ -163,8 +163,7 @@
           },
           {
             "name": "expectedError",
-            "$ref": "ExpectedError",
-            "optional": true
+            "$ref": "ExpectedError"
           },
           {
             "name": "message",
