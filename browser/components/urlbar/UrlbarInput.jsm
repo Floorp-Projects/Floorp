@@ -3560,12 +3560,10 @@ class AddSearchEngineHelper {
     // Since the contextual menu is not opened often, compared to the urlbar
     // results panel, we update it just before showing it, instead of spending
     // time on every page load.
-    contextMenu.addEventListener("popupshowing", event => {
-      // Ignore sub-menus.
-      if (event.target == event.currentTarget) {
-        this._refreshContextMenu();
-      }
-    });
+    contextMenu.addEventListener(
+      "popupshowing",
+      this._onContextMenu.bind(this)
+    );
 
     XPCOMUtils.defineLazyGetter(this, "_bundle", () =>
       Services.strings.createBundle("chrome://browser/locale/search.properties")
@@ -3707,6 +3705,13 @@ class AddSearchEngineHelper {
         curElt.insertAdjacentElement("afterend", elt);
       }
       curElt = elt;
+    }
+  }
+
+  _onContextMenu(event) {
+    // Ignore sub-menus.
+    if (event.target == event.currentTarget) {
+      this._refreshContextMenu();
     }
   }
 

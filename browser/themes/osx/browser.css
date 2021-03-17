@@ -254,6 +254,14 @@
   line-height: 1.745em;
 }
 
+/* Move the margin to the parent element to properly position the ::after badge */
+moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left > .menu-iconic-icon {
+  margin-inline: 0;
+}
+moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
+  margin-inline: 0 5px;
+}
+
 %include ../shared/identity-block/identity-block.inc.css
 %include ../shared/notification-icons.inc.css
 %include ../shared/addon-notification.inc.css
