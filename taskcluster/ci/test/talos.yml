@@ -39,7 +39,7 @@ job-defaults:
             talos-.*-profiling: []
             default:
                 by-test-platform:
-                    (linux64|windows10-64|macosx1014-64)-shippable-qr/opt: ['mozilla-central']
+                    (linux64|windows10-64|macosx1015-64)-shippable-qr/opt: ['mozilla-central']
                     default: []
 
 talos-bcv:
