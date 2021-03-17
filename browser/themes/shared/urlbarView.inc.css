@@ -45,12 +45,10 @@
 
 @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
 :root {
-  --urlbar-popup-action-color: #005e5e;
   --urlbarView-item-inline-padding: var(--urlbar-icon-padding);
 }
 
-/* Fallback colours for when theme authors don't define
-    popup_highlight/popup_highlight_text. */
+/* Fallback colours for when theme authors don't define lwtheme variables. */
 :root:-moz-lwtheme {
   --autocomplete-popup-highlight-background: rgb(0, 99, 255);
   --autocomplete-popup-highlight-color: white;
@@ -123,6 +121,13 @@
   padding-block: 2px;
 }
 
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+:root:not([uidensity=compact]) .urlbarView-row:not([type=tip], [type=dynamic]) {
+  min-height: 32px;
+  padding-block: 4px;
+}
+} /*** END proton ***/
+
 .urlbarView-row-inner {
   display: flex;
   flex-wrap: nowrap;
@@ -158,6 +163,13 @@
   align-items: end;
   justify-content: start;
 }
+
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+.urlbarView-row-inner,
+.urlbarView-no-wrap {
+  align-items: center;
+}
+} /*** END proton ***/
 
 .urlbarView-no-wrap {
   flex-grow: 0;
@@ -315,6 +327,7 @@
   height: 12px;
   margin-bottom: -4px;
   margin-inline-start: 8px;
+  align-self: end;
   background-repeat: no-repeat;
   background-size: contain;
   -moz-context-properties: fill, stroke;
@@ -625,9 +638,10 @@
 
 @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
 #urlbar .search-one-offs:not([hidden]) {
-  padding-block: 12px;
+  padding-block: 10px;
+  border-top-color: var(--urlbar-separator-color);
 }
-}
+} /*** END proton ***/
 
 .urlbarView[noresults] > .search-one-offs {
   border-top: none;

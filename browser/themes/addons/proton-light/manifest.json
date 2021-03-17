@@ -31,13 +31,18 @@
       "toolbar_field": "#f0f0f4",
       "toolbar_field_text": "rgb(24, 25, 26)",
       "toolbar_field_border": "transparent",
-      "toolbar_field_focus": "#fff",
+      "toolbar_field_focus": "white",
+      "toolbar_field_separator": "rgb(240,240,244)",
       "ntp_background": "#F9F9FA",
-      "ntp_text": "rgb(12, 12, 13)"
+      "ntp_text": "rgb(12, 12, 13)",
+      "popup_action_color": "rgb(21,20,26)"
     }
   },
 
   "theme_experiment": {
-    "stylesheet": "experiment.css"
+    "stylesheet": "experiment.css",
+    "colors": {
+      "popup_action_color": "--urlbar-popup-action-color"
+    }
   }
 }

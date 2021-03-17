@@ -32,6 +32,8 @@
 
   @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
   :root:not(:-moz-lwtheme) {
+    --urlbar-popup-action-color: #15141a;
+    --urlbar-separator-color: rgb(240,240,244);
     --toolbar-field-border-color: transparent;
     --arrowpanel-border-color: transparent;
     --autocomplete-popup-highlight-background: #e0e0e6;
