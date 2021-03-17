@@ -51,6 +51,7 @@ add_task(async function testPrintMultiple() {
     assertExpectedPrintPage(helper);
 
     // Make sure we clean up, ideally this would be handled by the helper.
+    await TestUtils.waitForTick();
     await helper.closeDialog();
   });
 });
