@@ -1708,10 +1708,8 @@ void nsChildView::UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeo
 static Maybe<VibrancyType> ThemeGeometryTypeToVibrancyType(
     nsITheme::ThemeGeometryType aThemeGeometryType) {
   switch (aThemeGeometryType) {
-    case eThemeGeometryTypeVibrancyLight:
     case eThemeGeometryTypeVibrantTitlebarLight:
       return Some(VibrancyType::LIGHT);
-    case eThemeGeometryTypeVibrancyDark:
     case eThemeGeometryTypeVibrantTitlebarDark:
       return Some(VibrancyType::DARK);
     case eThemeGeometryTypeTooltip:

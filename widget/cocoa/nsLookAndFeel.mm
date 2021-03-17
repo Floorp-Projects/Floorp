@@ -397,13 +397,11 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
     // We could obtain them at runtime, but doing so may be expensive and
     // requires the use of the private API
     // -[NSVisualEffectView fontSmoothingBackgroundColor].
-    case ColorID::MozMacVibrancyLight:
     case ColorID::MozMacVibrantTitlebarLight:
     case ColorID::MozMacSourceList:
     case ColorID::MozMacTooltip:
       aColor = NS_RGB(0xf7, 0xf7, 0xf7);
       break;
-    case ColorID::MozMacVibrancyDark:
     case ColorID::MozMacVibrantTitlebarDark:
       aColor = NS_RGB(0x28, 0x28, 0x28);
       break;
