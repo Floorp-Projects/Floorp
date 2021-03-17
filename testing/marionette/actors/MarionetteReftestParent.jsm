@@ -29,6 +29,12 @@ class MarionetteReftestParent extends JSWindowActorParent {
           useRemote,
         }
       );
+
+      if (isCorrectUrl) {
+        // Trigger flush rendering for all remote frames.
+        await this._flushRenderingInSubtree();
+      }
+
       return isCorrectUrl;
     } catch (e) {
       if (e.name === "AbortError") {
@@ -40,5 +46,40 @@ class MarionetteReftestParent extends JSWindowActorParent {
       // Other errors should not be swallowed.
       throw e;
     }
+  }
+
+  /**
+   * Call flushRendering on all browsing contexts in the subtree.
+   * Each actor will flush rendering in all the same process frames.
+   */
+  async _flushRenderingInSubtree() {
+    const browsingContext = this.manager.browsingContext;
+    const contexts = browsingContext.getAllBrowsingContextsInSubtree();
+
+    await Promise.all(
+      contexts.map(async context => {
+        if (context === browsingContext) {
+          // Skip the top browsing context, for which flushRendering is
+          // already performed via the initial reftestWait call.
+          return;
+        }
+
+        const windowGlobal = context.currentWindowGlobal;
+        if (!windowGlobal) {
+          // Bail out if there is no window attached to the current context.
+          return;
+        }
+
+        if (!windowGlobal.isProcessRoot) {
+          // Bail out if this window global is not a process root.
+          // MarionetteReftestChild::flushRendering will flush all same process
+          // frames, so we only need to call flushRendering on process roots.
+          return;
+        }
+
+        const reftestActor = windowGlobal.getActor("MarionetteReftest");
+        await reftestActor.sendQuery("MarionetteReftestParent:flushRendering");
+      })
+    );
   }
 }
