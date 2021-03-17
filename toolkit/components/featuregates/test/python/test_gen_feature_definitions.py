@@ -127,7 +127,7 @@ class TestProcessFiles(unittest.TestCase):
                 "type": "boolean",
                 "bugNumbers": [1479127],
                 "isPublic": {"default": False},
-                "defaultValue": {"default": False},
+                "defaultValue": {"default": None},
             },
         }
 
@@ -216,7 +216,7 @@ class ExpandFeatureTests(unittest.TestCase):
         feature = minimal_definition(type="boolean")
         assert "default-value" not in feature
         assert "defaultValue" not in feature
-        assert expand_feature(feature)["defaultValue"] == {"default": False}
+        assert expand_feature(feature)["defaultValue"] == {"default": None}
 
     def test_default_value_override_constant(self):
         feature = minimal_definition(type="boolean", default_value=True)
@@ -297,7 +297,7 @@ class MainTests(unittest.TestCase):
                 u"type": u"boolean",
                 u"bugNumbers": [1479127],
                 u"isPublic": {u"default": False},
-                u"defaultValue": {u"default": False},
+                u"defaultValue": {u"default": None},
             },
         }
 
