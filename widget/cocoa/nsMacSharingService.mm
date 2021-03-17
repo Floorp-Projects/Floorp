@@ -101,12 +101,15 @@ nsresult nsMacSharingService::GetSharingProviders(const nsAString& aPageUrl, JSC
                                                   JS::MutableHandleValue aResult) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
-  JS::Rooted<JSObject*> array(aCx, JS::NewArrayObject(aCx, 0));
   NSURL* url = [NSURL URLWithString:nsCocoaUtils::ToNSString(aPageUrl)];
+  if (!url) {
+    // aPageUrl is not a valid URL.
+    return NS_ERROR_FAILURE;
+  }
 
-  NSArray* sharingService =
-      [NSSharingService sharingServicesForItems:[NSArray arrayWithObject:url]];
+  NSArray* sharingService = [NSSharingService sharingServicesForItems:@[ url ]];
   int32_t serviceCount = 0;
+  JS::Rooted<JSObject*> array(aCx, JS::NewArrayObject(aCx, 0));
 
   for (NSSharingService* currentService in sharingService) {
     if (ShouldIgnoreProvider([currentService name])) {

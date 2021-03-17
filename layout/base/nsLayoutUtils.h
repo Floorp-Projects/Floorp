@@ -445,11 +445,22 @@ class nsLayoutUtils {
    * Get the parent of aFrame. If aFrame is the root frame for a document,
    * and the document has a parent document in the same view hierarchy, then
    * we try to return the subdocumentframe in the parent document.
-   * @param aExtraOffset [in/out] if non-null, then as we cross documents
+   * @param aCrossDocOffset [in/out] if non-null, then as we cross documents
    * an extra offset may be required and it will be added to aCrossDocOffset.
    * Be careful dealing with this extra offset as it is in app units of the
    * parent document, which may have a different app units per dev pixel ratio
    * than the child document.
+   * Note that, while this function crosses document boundaries, it (naturally)
+   * cannot cross process boundaries.
+   */
+  static nsIFrame* GetCrossDocParentFrameInProcess(
+      const nsIFrame* aFrame, nsPoint* aCrossDocOffset = nullptr);
+
+  /**
+   * Does the same thing as GetCrossDocParentFrameInProcess().
+   * The purpose of having two functions is to more easily track which call
+   * sites have been audited to consider out-of-process iframes (bug 1599913).
+   * Once all call sites have been audited, this function can be removed.
    */
   static nsIFrame* GetCrossDocParentFrame(const nsIFrame* aFrame,
                                           nsPoint* aCrossDocOffset = nullptr);

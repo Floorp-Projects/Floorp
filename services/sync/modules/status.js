@@ -17,8 +17,8 @@ const {
   SYNC_SUCCEEDED,
 } = ChromeUtils.import("resource://services-sync/constants.js");
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const { BrowserIDManager } = ChromeUtils.import(
-  "resource://services-sync/browserid_identity.js"
+const { SyncAuthManager } = ChromeUtils.import(
+  "resource://services-sync/sync_auth.js"
 );
 
 var Status = {
@@ -30,7 +30,7 @@ var Status = {
     if (this.__authManager) {
       return this.__authManager;
     }
-    this.__authManager = new BrowserIDManager();
+    this.__authManager = new SyncAuthManager();
     return this.__authManager;
   },
 

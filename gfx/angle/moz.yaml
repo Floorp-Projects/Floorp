@@ -1,0 +1,32 @@
+schema: 1
+
+bugzilla:
+  product: Core
+  component: Graphics
+
+origin:
+  name: angle
+
+  description: ANGLE - Almost Native Graphics Layer Engine
+
+  url: https://chromium.googlesource.com/angle/angle
+
+  # Note that while the vendoring information here, including revision,
+  # release, and upstream repo locations refer to the third party upstream,
+  # Angle is vendored from a mozilla git repository that pulls from
+  # upstream and mainntains local patches there.
+  release: commit f9e59ad078552424ca165644f4da3b4e2687c3dc Thu Nov 12 13:10:14 2020 +0000
+  revision: f9e59ad078552424ca165644f4da3b4e2687c3dc
+
+  license: BSD-3-Clause
+
+updatebot:
+    maintainer-phab: tjr
+    maintainer-bz: tom@mozilla.com
+    tasks:
+      - type: commit-alert
+        enabled: True
+        branch: chromium/4324
+
+vendoring:
+  url: https://chromium.googlesource.com/angle/angle

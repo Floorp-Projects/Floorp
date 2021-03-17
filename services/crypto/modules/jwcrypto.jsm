@@ -7,41 +7,11 @@
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(
-  this,
-  "IdentityCryptoService",
-  "@mozilla.org/identity/crypto-service;1",
-  "nsIIdentityCryptoService"
-);
 XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
 
 const EXPORTED_SYMBOLS = ["jwcrypto"];
 
-const PREF_LOG_LEVEL = "services.crypto.jwcrypto.log.level";
-XPCOMUtils.defineLazyGetter(this, "log", function() {
-  const log = Log.repository.getLogger("Services.Crypto.jwcrypto");
-  // Default log level is "Error", but consumers can change this with the pref
-  // "services.crypto.jwcrypto.log.level".
-  log.level = Log.Level.Error;
-  const appender = new Log.DumpAppender();
-  log.addAppender(appender);
-  try {
-    const level =
-      Services.prefs.getPrefType(PREF_LOG_LEVEL) ==
-        Ci.nsIPrefBranch.PREF_STRING &&
-      Services.prefs.getCharPref(PREF_LOG_LEVEL);
-    log.level = Log.Level[level] || Log.Level.Error;
-  } catch (e) {
-    log.error(e);
-  }
-
-  return log;
-});
-
-const ASSERTION_DEFAULT_DURATION_MS = 1000 * 60 * 2; // 2 minutes default assertion lifetime
 const ECDH_PARAMS = {
   name: "ECDH",
   namedCurve: "P-256",
@@ -199,125 +169,6 @@ class JWCrypto {
       bundle
     );
     return new Uint8Array(decrypted);
-  }
-
-  generateKeyPair(aAlgorithmName, aCallback) {
-    log.debug("generating");
-    log.debug("Generate key pair; alg = " + aAlgorithmName);
-
-    IdentityCryptoService.generateKeyPair(aAlgorithmName, (rv, aKeyPair) => {
-      if (!Components.isSuccessCode(rv)) {
-        return aCallback("key generation failed");
-      }
-
-      let publicKey;
-
-      switch (aKeyPair.keyType) {
-        case "RS256":
-          publicKey = {
-            algorithm: "RS",
-            exponent: aKeyPair.hexRSAPublicKeyExponent,
-            modulus: aKeyPair.hexRSAPublicKeyModulus,
-          };
-          break;
-
-        case "DS160":
-          publicKey = {
-            algorithm: "DS",
-            y: aKeyPair.hexDSAPublicValue,
-            p: aKeyPair.hexDSAPrime,
-            q: aKeyPair.hexDSASubPrime,
-            g: aKeyPair.hexDSAGenerator,
-          };
-          break;
-
-        default:
-          return aCallback("unknown key type");
-      }
-
-      const keyWrapper = {
-        serializedPublicKey: JSON.stringify(publicKey),
-        _kp: aKeyPair,
-      };
-
-      return aCallback(null, keyWrapper);
-    });
-  }
-
-  /**
-   * Generate an assertion and return it through the provided callback.
-   *
-   * @param aCert
-   *        Identity certificate
-   *
-   * @param aKeyPair
-   *        KeyPair object
-   *
-   * @param aAudience
-   *        Audience of the assertion
-   *
-   * @param aOptions (optional)
-   *        Can include:
-   *        {
-   *          localtimeOffsetMsec: <clock offset in milliseconds>,
-   *          now: <current date in milliseconds>
-   *          duration: <validity duration for this assertion in milliseconds>
-   *        }
-   *
-   *        localtimeOffsetMsec is the number of milliseconds that need to be
-   *        added to the local clock time to make it concur with the server.
-   *        For example, if the local clock is two minutes fast, the offset in
-   *        milliseconds would be -120000.
-   *
-   * @param aCallback
-   *        Function to invoke with resulting assertion.  Assertion
-   *        will be string or null on failure.
-   */
-  generateAssertion(aCert, aKeyPair, aAudience, aOptions, aCallback) {
-    if (typeof aOptions == "function") {
-      aCallback = aOptions;
-      aOptions = {};
-    }
-
-    // for now, we hack the algorithm name
-    // XXX bug 769851
-    const header = { alg: "DS128" };
-    const headerBytes = IdentityCryptoService.base64UrlEncode(
-      JSON.stringify(header)
-    );
-
-    function getExpiration(
-      duration = ASSERTION_DEFAULT_DURATION_MS,
-      localtimeOffsetMsec = 0,
-      now = Date.now()
-    ) {
-      return now + localtimeOffsetMsec + duration;
-    }
-
-    const payload = {
-      exp: getExpiration(
-        aOptions.duration,
-        aOptions.localtimeOffsetMsec,
-        aOptions.now
-      ),
-      aud: aAudience,
-    };
-    const payloadBytes = IdentityCryptoService.base64UrlEncode(
-      JSON.stringify(payload)
-    );
-
-    log.debug("payload", { payload, payloadBytes });
-    const message = headerBytes + "." + payloadBytes;
-    aKeyPair._kp.sign(message, (rv, signature) => {
-      if (!Components.isSuccessCode(rv)) {
-        log.error("signer.sign failed");
-        aCallback("Sign failed");
-        return;
-      }
-      log.debug("signer.sign: success");
-      const signedAssertion = message + "." + signature;
-      aCallback(null, aCert + "~" + signedAssertion);
-    });
   }
 }
 

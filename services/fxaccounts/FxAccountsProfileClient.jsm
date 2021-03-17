@@ -232,27 +232,6 @@ FxAccountsProfileClient.prototype = {
     log.debug("FxAccountsProfileClient: Requested profile");
     return this._createRequest("/profile", "GET", etag);
   },
-
-  /**
-   * Write an ecosystemAnonId value to the user's profile data on the server.
-   *
-   * This should be used only if the user's profile data does not already contain an
-   * ecosytemAnonId field, and it will reject with a "412 Precondition Failed" if there
-   * is one already present on the server.
-   *
-   * @param {String} [ecosystemAnonId]
-   *        The generated ecosystemAnonId value to store on the server.
-   * @return Promise
-   *         Resolves: {body: Object} Successful response from the '/ecosystem_anon_id' endpoint.
-   *         Rejects: {FxAccountsProfileClientError} profile client error.
-   */
-  setEcosystemAnonId(ecosystemAnonId) {
-    log.debug("FxAccountsProfileClient: Setting ecosystemAnonId");
-    // This uses `If-None-Match: "*"` to prevent two concurrent clients from setting a value.
-    return this._createRequest("/ecosystem_anon_id", "POST", "*", {
-      ecosystemAnonId,
-    });
-  },
 };
 
 /**

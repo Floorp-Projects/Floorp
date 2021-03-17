@@ -263,16 +263,6 @@ class ContentChild final : public PContentChild,
 
   bool DeallocPBenchmarkStorageChild(PBenchmarkStorageChild* aActor);
 
-  PPresentationChild* AllocPPresentationChild();
-
-  bool DeallocPPresentationChild(PPresentationChild* aActor);
-
-  mozilla::ipc::IPCResult RecvNotifyPresentationReceiverLaunched(
-      PBrowserChild* aIframe, const nsString& aSessionId);
-
-  mozilla::ipc::IPCResult RecvNotifyPresentationReceiverCleanUp(
-      const nsString& aSessionId);
-
   mozilla::ipc::IPCResult RecvNotifyEmptyHTTPCache();
 
 #ifdef MOZ_WEBSPEECH

@@ -1056,9 +1056,6 @@ class Raptor(
         env["SCRIPTSPATH"] = scripts_path
         env["EXTERNALTOOLSPATH"] = external_tools_path
 
-        # disable "GC poisoning" Bug# 1499043
-        env["JSGC_DISABLE_POISONING"] = "1"
-
         # Needed to load unsigned Raptor WebExt on release builds
         if self.is_release_build:
             env["MOZ_DISABLE_NONLOCAL_CONNECTIONS"] = "1"

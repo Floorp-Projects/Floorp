@@ -18,8 +18,6 @@ add_task(async function test_authenticated_request() {
 
   let message = "Great Success!";
 
-  // TODO: We use a preset key here, but use getTokenFromBrowserIDAssertion()
-  // from TokenServerClient to get a real one when possible. (Bug 745800)
   let id = "eyJleHBpcmVzIjogMTM2NTAxMDg5OC4x";
   let key = "qTZf4ZFpAMpMoeSsX3zVRjiqmNs=";
   let method = "GET";

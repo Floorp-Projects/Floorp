@@ -184,7 +184,6 @@ class GeckoViewNavigation extends GeckoViewModule {
         navFlags |= Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_LOAD_URI_DELEGATE;
 
         let triggeringPrincipal, referrerInfo, csp;
-        let parsedUri;
         if (referrerSessionId) {
           const referrerWindow = Services.ww.getWindowByName(
             referrerSessionId,
@@ -202,30 +201,19 @@ class GeckoViewNavigation extends GeckoViewModule {
             true,
             referrerWindow.browser.documentURI
           );
-        } else {
-          try {
-            // External apps are treated like web pages, so they should not get
-            // a privileged principal.
-            const isExternal =
-              navFlags & Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
-            parsedUri = Services.io.newURI(uri);
-            if (
-              !isExternal &&
-              (parsedUri.schemeIs("about") ||
-                parsedUri.schemeIs("data") ||
-                parsedUri.schemeIs("file") ||
-                parsedUri.schemeIs("resource") ||
-                parsedUri.schemeIs("moz-extension"))
-            ) {
-              // Only allow privileged loading for certain URIs.
-              triggeringPrincipal = Services.scriptSecurityManager.createContentPrincipal(
-                parsedUri,
-                {}
-              );
-            }
-          } catch (ignored) {}
-
+        } else if (referrerUri) {
           referrerInfo = createReferrerInfo(referrerUri);
+        } else {
+          // External apps are treated like web pages, so they should not get
+          // a privileged principal.
+          const isExternal =
+            navFlags & Ci.nsIWebNavigation.LOAD_FLAGS_FROM_EXTERNAL;
+          if (!isExternal) {
+            // Always use the system principal as the triggering principal
+            // for user-initiated (ie. no referrer session and not external)
+            // loads. See discussion in bug 1573860.
+            triggeringPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+          }
         }
 
         if (!triggeringPrincipal) {
@@ -269,7 +257,7 @@ class GeckoViewNavigation extends GeckoViewModule {
         // referring session, the referrerInfo is null.
         //
         // csp is only present if we have a referring document, null otherwise.
-        this.browser.loadURI(parsedUri ? parsedUri.spec : uri, {
+        this.browser.loadURI(uri, {
           flags: navFlags,
           referrerInfo,
           triggeringPrincipal,

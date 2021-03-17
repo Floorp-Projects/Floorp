@@ -720,6 +720,10 @@ size_t JSScript::numAlwaysLiveFixedSlots() const {
   if (bodyScope()->is<js::ModuleScope>()) {
     return bodyScope()->as<js::ModuleScope>().nextFrameSlot();
   }
+  if (bodyScope()->is<js::EvalScope>() &&
+      bodyScope()->kind() == ScopeKind::StrictEval) {
+    return bodyScope()->as<js::EvalScope>().nextFrameSlot();
+  }
   return 0;
 }
 

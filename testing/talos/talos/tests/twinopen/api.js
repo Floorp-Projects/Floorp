@@ -1,19 +1,11 @@
 "use strict";
 
-ChromeUtils.defineModuleGetter(
-  this,
-  "Services",
-  "resource://gre/modules/Services.jsm"
-);
+/* globals AppConstants, Services */
+
 ChromeUtils.defineModuleGetter(
   this,
   "TalosParentProfiler",
   "resource://talos-powers/TalosParentProfiler.jsm"
-);
-ChromeUtils.defineModuleGetter(
-  this,
-  "AppConstants",
-  "resource://gre/modules/AppConstants.jsm"
 );
 
 var OPENER_DELAY = 1000; // ms delay between tests

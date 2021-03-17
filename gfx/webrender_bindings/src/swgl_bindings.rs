@@ -40,6 +40,11 @@ pub extern "C" fn wr_swgl_init_default_framebuffer(
 }
 
 #[no_mangle]
+pub extern "C" fn wr_swgl_resolve_framebuffer(ctx: *mut c_void, fbo: u32) {
+    swgl::Context::from(ctx).resolve_framebuffer(fbo);
+}
+
+#[no_mangle]
 pub extern "C" fn wr_swgl_gen_texture(ctx: *mut c_void) -> u32 {
     swgl::Context::from(ctx).gen_textures(1)[0]
 }

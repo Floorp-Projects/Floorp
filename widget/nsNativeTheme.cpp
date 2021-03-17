@@ -46,9 +46,13 @@ NS_IMPL_ISUPPORTS(nsNativeTheme, nsITimerCallback, nsINamed)
   bool isXULCheckboxRadio = (aAppearance == StyleAppearance::Checkbox ||
                              aAppearance == StyleAppearance::Radio) &&
                             aFrame->GetContent()->IsXULElement();
-  if (isXULCheckboxRadio) aFrame = aFrame->GetParent();
+  if (isXULCheckboxRadio) {
+    aFrame = aFrame->GetParent();
+  }
 
-  if (!aFrame->GetContent()) return EventStates();
+  if (!aFrame->GetContent()) {
+    return EventStates();
+  }
 
   nsIContent* frameContent = aFrame->GetContent();
   EventStates flags;
@@ -261,15 +265,6 @@ bool nsNativeTheme::IsWidgetStyled(nsPresContext* aPresContext,
                                                    : aFrame);
     if (rangeFrame) {
       return !rangeFrame->ShouldUseNativeStyle();
-    }
-  }
-
-  if (aAppearance == StyleAppearance::SpinnerUpbutton ||
-      aAppearance == StyleAppearance::SpinnerDownbutton) {
-    nsNumberControlFrame* numberControlFrame =
-        nsNumberControlFrame::GetNumberControlFrameForSpinButton(aFrame);
-    if (numberControlFrame) {
-      return !numberControlFrame->ShouldUseNativeStyleForSpinner();
     }
   }
 

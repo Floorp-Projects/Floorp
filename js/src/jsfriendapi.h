@@ -152,8 +152,8 @@ extern JS_FRIEND_API bool ForceLexicalInitialization(JSContext* cx,
 
 /**
  * Whether we are poisoning unused/released data for error detection. Governed
- * by the JS_GC_POISONING #ifdef as well as the $JSGC_DISABLE_POISONING
- * environment variable.
+ * by the JS_GC_ALLOW_EXTRA_POISONING #ifdef as well as the
+ * $JSGC_EXTRA_POISONING environment variable.
  */
 extern JS_FRIEND_API int IsGCPoisoning();
 

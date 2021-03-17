@@ -23,7 +23,8 @@ struct WGPUClient;
 struct WGPUTextureViewDescriptor;
 }  // namespace ffi
 
-typedef MozPromise<RawId, Maybe<ipc::ResponseRejectReason>, true> RawIdPromise;
+typedef MozPromise<ipc::ByteBuf, Maybe<ipc::ResponseRejectReason>, true>
+    AdapterPromise;
 
 ffi::WGPUByteBuf* ToFFI(ipc::ByteBuf* x);
 
@@ -39,7 +40,7 @@ class WebGPUChild final : public PWebGPUChild, public SupportsWeakPtr {
 
   bool IsOpen() const { return mIPCOpen; }
 
-  RefPtr<RawIdPromise> InstanceRequestAdapter(
+  RefPtr<AdapterPromise> InstanceRequestAdapter(
       const dom::GPURequestAdapterOptions& aOptions);
   Maybe<RawId> AdapterRequestDevice(RawId aSelfId,
                                     const dom::GPUDeviceDescriptor& aDesc);

@@ -9,6 +9,9 @@ const { ExperimentFakes } = ChromeUtils.import(
 const { FxAccounts } = ChromeUtils.import(
   "resource://gre/modules/FxAccounts.jsm"
 );
+const { TelemetryTestUtils } = ChromeUtils.import(
+  "resource://testing-common/TelemetryTestUtils.jsm"
+);
 
 const SEPARATE_ABOUT_WELCOME_PREF = "browser.aboutwelcome.enabled";
 const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF = "browser.aboutwelcome.screens";
@@ -272,6 +275,7 @@ add_task(async function test_multistage_zeroOnboarding_experimentAPI() {
  * Test the multistage welcome UI using ExperimentAPI
  */
 add_task(async function test_multistage_aboutwelcome_experimentAPI() {
+  const sandbox = sinon.createSandbox();
   await setAboutWelcomePref(true);
 
   let {
@@ -299,6 +303,9 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
   await enrollmentPromise;
   ExperimentAPI._store._syncToChildren({ flush: true });
 
+  sandbox.spy(ExperimentAPI, "recordExposureEvent");
+
+  Services.telemetry.clearScalars();
   let tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
     "about:welcome",
@@ -308,7 +315,6 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
   const browser = tab.linkedBrowser;
 
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
-  const sandbox = sinon.createSandbox();
   // Stub AboutWelcomeParent Content Message Handler
   sandbox.spy(aboutWelcomeActor, "onContentMessage");
   registerCleanupFunction(() => {
@@ -387,6 +393,20 @@ add_task(async function test_multistage_aboutwelcome_experimentAPI() {
     ["body.activity-stream"],
     // Unexpected selectors:
     ["div.onboardingContainer"]
+  );
+
+  Assert.ok(
+    ExperimentAPI.recordExposureEvent.called,
+    "Called for exposure event"
+  );
+
+  const scalars = TelemetryTestUtils.getProcessScalars("parent", true, true);
+  TelemetryTestUtils.assertKeyedScalar(
+    scalars,
+    "telemetry.event_counts",
+    "normandy#expose#nimbus_experiment",
+    // AboutNewTabService.welcomeURL seems to be called multiple times in the process of opening about:welcome, multiple pings get recoreded
+    2
   );
 
   await doExperimentCleanup();
@@ -827,15 +847,15 @@ add_task(async function test_AWMultistage_Import() {
   );
 });
 
-add_task(async function test_onContentMessage() {
+add_task(async function test_updatesPrefOnAWOpen() {
   Services.prefs.setBoolPref(DID_SEE_ABOUT_WELCOME_PREF, false);
   await setAboutWelcomePref(true);
 
   await openAboutWelcome();
-  Assert.equal(
-    Services.prefs.getBoolPref(DID_SEE_ABOUT_WELCOME_PREF, false),
-    true,
-    "Pref was set"
+  await BrowserTestUtils.waitForCondition(
+    () =>
+      Services.prefs.getBoolPref(DID_SEE_ABOUT_WELCOME_PREF, false) === true,
+    "Updated pref to seen AW"
   );
   Services.prefs.clearUserPref(DID_SEE_ABOUT_WELCOME_PREF);
 });

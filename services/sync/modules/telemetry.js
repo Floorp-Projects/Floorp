@@ -22,7 +22,7 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   Async: "resource://services-common/async.js",
-  AuthenticationError: "resource://services-sync/browserid_identity.js",
+  AuthenticationError: "resource://services-sync/sync_auth.js",
   fxAccounts: "resource://gre/modules/FxAccounts.jsm",
   FxAccounts: "resource://gre/modules/FxAccounts.jsm",
   Log: "resource://gre/modules/Log.jsm",

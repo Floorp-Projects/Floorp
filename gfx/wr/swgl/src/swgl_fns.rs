@@ -242,6 +242,7 @@ extern "C" {
         height: *mut i32,
         stride: *mut i32,
     ) -> *mut c_void;
+    fn ResolveFramebuffer(fbo: GLuint);
     fn SetTextureBuffer(
         tex: GLuint,
         internal_format: GLenum,
@@ -370,6 +371,12 @@ impl Context {
                 &mut stride,
             );
             (data_ptr, width, height, stride)
+        }
+    }
+
+    pub fn resolve_framebuffer(&self, fbo: GLuint) {
+        unsafe {
+            ResolveFramebuffer(fbo);
         }
     }
 

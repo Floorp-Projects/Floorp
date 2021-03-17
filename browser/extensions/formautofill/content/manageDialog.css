@@ -26,7 +26,7 @@ fieldset > legend {
   width: 100%;
   padding: 0.4em 0.7em;
   color: #808080;
-  background-color: var(--in-content-box-background-hover);
+  background-color: var(--in-content-box-info-background);
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px 2px 0 0;
   user-select: none;

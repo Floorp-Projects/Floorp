@@ -1903,6 +1903,7 @@ dependencies = [
  "copyless",
  "foreign-types",
  "fxhash",
+ "gfx-auxil",
  "gfx-hal",
  "log",
  "metal",
@@ -1911,6 +1912,7 @@ dependencies = [
  "parking_lot",
  "range-alloc",
  "raw-window-handle",
+ "spirv_cross",
  "storage-map",
 ]
 

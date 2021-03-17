@@ -67,13 +67,6 @@ class nsNumberControlFrame final : public nsTextControlFrame {
 #endif
 
   /**
-   * If the frame is the frame for an nsNumberControlFrame's anonymous text
-   * field, returns the nsNumberControlFrame. Else returns nullptr.
-   */
-  static nsNumberControlFrame* GetNumberControlFrameForTextField(
-      nsIFrame* aFrame);
-
-  /**
    * If the frame is the frame for an nsNumberControlFrame's up or down spin
    * button, returns the nsNumberControlFrame. Else returns nullptr.
    */
