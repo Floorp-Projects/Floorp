@@ -22,6 +22,16 @@ SimpleTest.finish = function finish() {
 <script src="../testcommon.js"></script>
 <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
 <style>
+@keyframes background-position {
+  0% {
+    background-position: -25px center;
+  }
+
+  40%,
+  100% {
+    background-position: 36px center;
+  }
+}
 @keyframes opacity {
   from { opacity: 1; }
   to { opacity: 0; }
@@ -2006,6 +2016,26 @@ waitForAllPaints(() => {
 
     is(markers.length, 0, 'Creating animations should not flush styles');
 
+    await ensureElementRemoval(div);
+  });
+
+  add_task(async function out_of_view_background_position() {
+    const div = addDiv(null, {
+      style: `
+        background-image: linear-gradient(90deg, rgb(224, 224, 224), rgb(241, 241, 241) 30%, rgb(224, 224, 224) 60%);
+        background-size: 80px;
+        animation: background-position 100s infinite;
+        transform: translateY(-400px);
+      `,
+    })
+
+    const animation = div.getAnimations()[0];
+
+    await waitForAnimationReadyToRestyle(animation);
+
+    const markers = await observeStyling(5);
+
+    is(markers.length, 0, 'background-position animations can be throttled');
     await ensureElementRemoval(div);
   });
 

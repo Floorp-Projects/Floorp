@@ -432,7 +432,7 @@ static_assert(!(nsChangeHint_Hints_AlwaysHandledForDescendants &
       nsChangeHint_UpdateContainingBlock | nsChangeHint_UpdateOverflow |    \
       nsChangeHint_UpdatePostTransformOverflow |                            \
       nsChangeHint_UpdateTransformLayer | nsChangeHint_UpdateUsesOpacity |  \
-      nsChangeHint_VisibilityChange)
+      nsChangeHint_UpdateBackgroundPosition | nsChangeHint_VisibilityChange)
 
 // Change hints for added or removed transform style.
 //
