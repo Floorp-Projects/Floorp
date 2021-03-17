@@ -10,6 +10,7 @@ use super::{
     maybe_authenticate, send_something, AT_LEAST_PTO,
 };
 use crate::packet::PacketBuilder;
+use crate::stats::FrameStats;
 use crate::tparams::{self, TransportParameter};
 use crate::tracking::PNSpace;
 use crate::StreamType;
@@ -250,18 +251,30 @@ fn idle_caching() {
     let ping_before_s = server.stats().frame_rx.ping;
     server.process_input(dgram.unwrap(), middle);
     assert_eq!(server.stats().frame_rx.ping, ping_before_s + 1);
-    let crypto = server
+    let mut tokens = Vec::new();
+    server
         .crypto
         .streams
-        .write_frame(PNSpace::Initial, &mut builder)
+        .write_frame(
+            PNSpace::Initial,
+            &mut builder,
+            &mut tokens,
+            &mut FrameStats::default(),
+        )
         .unwrap();
-    assert!(crypto.is_some());
-    let crypto = server
+    assert_eq!(tokens.len(), 1);
+    tokens.clear();
+    server
         .crypto
         .streams
-        .write_frame(PNSpace::Initial, &mut builder)
+        .write_frame(
+            PNSpace::Initial,
+            &mut builder,
+            &mut tokens,
+            &mut FrameStats::default(),
+        )
         .unwrap();
-    assert!(crypto.is_none());
+    assert!(tokens.is_empty());
     let dgram = server.process_output(middle).dgram();
 
     // Now only allow the Initial packet from the server through;

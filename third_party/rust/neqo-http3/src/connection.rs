@@ -54,7 +54,10 @@ pub enum Http3State {
 impl Http3State {
     #[must_use]
     pub fn active(&self) -> bool {
-        matches!(self, Http3State::Connected | Http3State::GoingAway(_) | Http3State::ZeroRtt)
+        matches!(
+            self,
+            Http3State::Connected | Http3State::GoingAway(_) | Http3State::ZeroRtt
+        )
     }
 }
 
@@ -398,7 +401,7 @@ impl Http3Connection {
                 Ok(true)
             }
             State::Closing { error, .. } | State::Draining { error, .. } => {
-                if matches!(self.state, Http3State::Closing(_)| Http3State::Closed(_)) {
+                if matches!(self.state, Http3State::Closing(_) | Http3State::Closed(_)) {
                     Ok(false)
                 } else {
                     self.state = Http3State::Closing(error.clone());
@@ -569,7 +572,10 @@ impl Http3Connection {
     fn handle_control_frame(&mut self, f: HFrame) -> Res<Option<HFrame>> {
         qinfo!([self], "Handle a control frame {:?}", f);
         if !matches!(f, HFrame::Settings { .. })
-            && !matches!(self.settings_state, Http3RemoteSettingsState::Received{..})
+            && !matches!(
+                self.settings_state,
+                Http3RemoteSettingsState::Received { .. }
+            )
         {
             return Err(Error::HttpMissingSettings);
         }

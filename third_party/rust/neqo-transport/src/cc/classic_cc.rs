@@ -246,7 +246,7 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
             return;
         }
 
-        for pkt in lost_packets.iter().filter(|pkt| pkt.ack_eliciting()) {
+        for pkt in lost_packets.iter().filter(|pkt| pkt.cc_in_flight()) {
             assert!(self.bytes_in_flight >= pkt.size);
             self.bytes_in_flight -= pkt.size;
         }
@@ -278,6 +278,14 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
         }
     }
 
+    fn discard_in_flight(&mut self) {
+        self.bytes_in_flight = 0;
+        qlog::metrics_updated(
+            &mut self.qlog,
+            &[QlogMetric::BytesInFlight(self.bytes_in_flight)],
+        );
+    }
+
     fn on_packet_sent(&mut self, pkt: &SentPacket) {
         // Record the recovery time and exit any transient state.
         if self.state.transient() {
@@ -285,7 +293,7 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
             self.state.update();
         }
 
-        if !pkt.ack_eliciting() {
+        if !pkt.cc_in_flight() {
             return;
         }
 
@@ -304,7 +312,6 @@ impl<T: WindowAdjustment> CongestionControl for ClassicCongestionControl<T> {
     }
 
     /// Whether a packet can be sent immediately as a result of entering recovery.
-    #[must_use]
     fn recovery_packet(&self) -> bool {
         self.state == State::RecoveryStart
     }
@@ -399,7 +406,7 @@ impl<T: WindowAdjustment> ClassicCongestionControl<T> {
                 start = None;
             }
             last_pn = p.pn;
-            if !p.ack_eliciting() {
+            if !p.cc_in_flight() {
                 // Not interesting, keep looking.
                 continue;
             }
@@ -482,10 +489,11 @@ mod tests {
     };
     use crate::cc::cubic::{Cubic, CUBIC_BETA_USIZE_DIVISOR, CUBIC_BETA_USIZE_QUOTIENT};
     use crate::cc::new_reno::NewReno;
-    use crate::cc::{CongestionControl, CWND_INITIAL_PKTS, MAX_DATAGRAM_SIZE};
+    use crate::cc::{
+        CongestionControl, CongestionControlAlgorithm, CWND_INITIAL_PKTS, MAX_DATAGRAM_SIZE,
+    };
     use crate::packet::{PacketNumber, PacketType};
     use crate::tracking::SentPacket;
-    use crate::CongestionControlAlgorithm;
     use std::convert::TryFrom;
     use std::time::{Duration, Instant};
     use test_fixture::now;

@@ -283,15 +283,27 @@ mod tests {
     }
 
     fn assert_connected(hconn: &mut Http3Server) {
-        let connected =
-            |e| matches!(e, Http3ServerEvent::StateChange{ state: Http3State::Connected, ..} );
+        let connected = |e| {
+            matches!(
+                e,
+                Http3ServerEvent::StateChange {
+                    state: Http3State::Connected,
+                    ..
+                }
+            )
+        };
         assert!(hconn.events().any(connected));
     }
 
     fn assert_not_closed(hconn: &mut Http3Server) {
         let closed = |e| {
-            matches!(e,
-            Http3ServerEvent::StateChange{ state: Http3State::Closing(..), .. })
+            matches!(
+                e,
+                Http3ServerEvent::StateChange {
+                    state: Http3State::Closing(..),
+                    ..
+                }
+            )
         };
         assert!(!hconn.events().any(closed));
     }

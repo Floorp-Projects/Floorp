@@ -764,9 +764,8 @@ mod tests {
         enc.encode_vvec_with(|enc_inner| {
             enc_inner.encode(&[0xa5; 65]);
         });
-        let mut v: Vec<u8> = enc.into();
-        let _ = v.split_off(3);
-        assert_eq!(v, vec![0x40, 0x41, 0xa5]);
+        let v: Vec<u8> = enc.into();
+        assert_eq!(&v[..3], &[0x40, 0x41, 0xa5]);
     }
 
     // Test that Deref to &[u8] works for Encoder.

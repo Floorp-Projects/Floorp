@@ -10,7 +10,6 @@
 
 use crate::cc::{
     ClassicCongestionControl, CongestionControl, CongestionControlAlgorithm, Cubic, NewReno,
-    MAX_DATAGRAM_SIZE,
 };
 use crate::pace::Pacer;
 use crate::tracking::SentPacket;
@@ -25,22 +24,18 @@ pub const PACING_BURST_SIZE: usize = 2;
 #[derive(Debug)]
 pub struct PacketSender {
     cc: Box<dyn CongestionControl>,
-    pacer: Option<Pacer>,
+    pacer: Pacer,
 }
 
 impl Display for PacketSender {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "{}", self.cc)?;
-        if let Some(p) = &self.pacer {
-            write!(f, " {}", p)?;
-        }
-        Ok(())
+        write!(f, "{} {}", self.cc, self.pacer)
     }
 }
 
 impl PacketSender {
     #[must_use]
-    pub fn new(alg: CongestionControlAlgorithm) -> Self {
+    pub fn new(alg: CongestionControlAlgorithm, mtu: usize, now: Instant) -> Self {
         Self {
             cc: match alg {
                 CongestionControlAlgorithm::NewReno => {
@@ -50,7 +45,7 @@ impl PacketSender {
                     Box::new(ClassicCongestionControl::new(Cubic::default()))
                 }
             },
-            pacer: None,
+            pacer: Pacer::new(now, mtu * PACING_BURST_SIZE, mtu),
         }
     }
 
@@ -69,7 +64,6 @@ impl PacketSender {
         self.cc.cwnd_avail()
     }
 
-    // Multi-packet version of OnPacketAckedCC
     pub fn on_packets_acked(&mut self, acked_pkts: &[SentPacket], min_rtt: Duration, now: Instant) {
         self.cc.on_packets_acked(acked_pkts, min_rtt, now);
     }
@@ -93,28 +87,23 @@ impl PacketSender {
         self.cc.discard(pkt);
     }
 
-    pub fn on_packet_sent(&mut self, pkt: &SentPacket, rtt: Duration) {
-        self.pacer
-            .as_mut()
-            .unwrap()
-            .spend(pkt.time_sent, rtt, self.cc.cwnd(), pkt.size);
-        self.cc.on_packet_sent(pkt);
+    /// When we migrate, the congestion controller for the previously active path drops
+    /// all bytes in flight.
+    pub fn discard_in_flight(&mut self) {
+        self.cc.discard_in_flight();
     }
 
-    pub fn start_pacer(&mut self, now: Instant) {
-        // Start the pacer with a small burst size.
-        self.pacer = Some(Pacer::new(
-            now,
-            MAX_DATAGRAM_SIZE * PACING_BURST_SIZE,
-            MAX_DATAGRAM_SIZE,
-        ));
+    pub fn on_packet_sent(&mut self, pkt: &SentPacket, rtt: Duration) {
+        self.pacer
+            .spend(pkt.time_sent, rtt, self.cc.cwnd(), pkt.size);
+        self.cc.on_packet_sent(pkt);
     }
 
     #[must_use]
     pub fn next_paced(&self, rtt: Duration) -> Option<Instant> {
         // Only pace if there are bytes in flight.
         if self.cc.bytes_in_flight() > 0 {
-            Some(self.pacer.as_ref().unwrap().next(rtt, self.cc.cwnd()))
+            Some(self.pacer.next(rtt, self.cc.cwnd()))
         } else {
             None
         }
