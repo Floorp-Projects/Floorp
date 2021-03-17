@@ -37,6 +37,7 @@
 #include "mozilla/EditAction.h"
 #include "mozilla/EditorSpellCheck.h"
 #include "mozilla/EditorUtils.h"
+#include "mozilla/Logging.h"
 #include "mozilla/RangeUtils.h"
 #include "mozilla/Services.h"
 #include "mozilla/TextEditor.h"
@@ -64,6 +65,7 @@
 #include "nsIObserverService.h"
 #include "prtime.h"
 
+using mozilla::LogLevel;
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
@@ -87,6 +89,8 @@ using namespace mozilla::ipc;
 // must always be followed by ENDED.
 #define INLINESPELL_STARTED_TOPIC "inlineSpellChecker-spellCheck-started"
 #define INLINESPELL_ENDED_TOPIC "inlineSpellChecker-spellCheck-ended"
+
+static mozilla::LazyLogModule sInlineSpellCheckerLog("InlineSpellChecker");
 
 static const char kMaxSpellCheckSelectionSize[] =
     "extensions.spellcheck.inline.max-misspellings";
@@ -254,6 +258,9 @@ nsresult mozInlineSpellStatus::InitForSelection() {
 //    a change operation over the given range.
 
 nsresult mozInlineSpellStatus::InitForRange(nsRange* aRange) {
+  MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Debug,
+          ("%s: range=%p", __FUNCTION__, aRange));
+
   mOp = eOpChange;
   mRange = aRange;
   return NS_OK;
@@ -1122,6 +1129,8 @@ bool mozInlineSpellChecker::ShouldSpellCheckNode(TextEditor* aTextEditor,
 
 nsresult mozInlineSpellChecker::ScheduleSpellCheck(
     UniquePtr<mozInlineSpellStatus>&& aStatus) {
+  MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Debug, ("%s", __FUNCTION__));
+
   if (mFullSpellCheckScheduled) {
     // Just ignore this; we're going to spell-check everything anyway
     return NS_OK;
@@ -1243,6 +1252,8 @@ nsresult mozInlineSpellChecker::DoSpellCheckSelection(
 nsresult mozInlineSpellChecker::DoSpellCheck(
     mozInlineSpellWordUtil& aWordUtil, Selection* aSpellCheckSelection,
     const UniquePtr<mozInlineSpellStatus>& aStatus, bool* aDoneChecking) {
+  MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Debug, ("%s", __FUNCTION__));
+
   *aDoneChecking = true;
 
   if (NS_WARN_IF(!mSpellCheck)) {
@@ -1354,6 +1365,9 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
       // likewise, if this word is inside new text, we won't bother testing
       if (!aStatus->mCreatedRange || !aStatus->mCreatedRange->IsPointInRange(
                                          *beginNode, beginOffset, erv)) {
+        MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Debug,
+                ("%s: removing ranges for some interval.", __FUNCTION__));
+
         nsTArray<RefPtr<nsRange>> ranges;
         aSpellCheckSelection->GetRangesForInterval(
             *beginNode, beginOffset, *endNode, endOffset, true, ranges, erv);
@@ -1489,6 +1503,8 @@ void mozInlineSpellChecker::CheckCurrentWordsNoSuggest(
 
 nsresult mozInlineSpellChecker::ResumeCheck(
     UniquePtr<mozInlineSpellStatus>&& aStatus) {
+  MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Debug, ("%s", __FUNCTION__));
+
   // Observers should be notified that spell check has ended only after spell
   // check is done below, but since there are many early returns in this method
   // and the number of pending spell checks must be decremented regardless of
@@ -1522,6 +1538,9 @@ nsresult mozInlineSpellChecker::ResumeCheck(
   nsAutoCString currentDictionary;
   rv = mSpellCheck->GetCurrentDictionary(currentDictionary);
   if (NS_FAILED(rv)) {
+    MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Debug,
+            ("%s: no active dictionary.", __FUNCTION__));
+
     // no active dictionary
     int32_t count = spellCheckSelection->RangeCount();
     for (int32_t index = count - 1; index >= 0; index--) {
@@ -1608,6 +1627,8 @@ nsresult mozInlineSpellChecker::CleanupRangesInSelection(
 
 nsresult mozInlineSpellChecker::RemoveRange(Selection* aSpellCheckSelection,
                                             nsRange* aRange) {
+  MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Debug, ("%s", __FUNCTION__));
+
   NS_ENSURE_ARG_POINTER(aSpellCheckSelection);
   NS_ENSURE_ARG_POINTER(aRange);
 
