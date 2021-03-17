@@ -108,8 +108,12 @@ async function searchInSearchbar(inputText) {
   sb.focus();
   sb.value = inputText;
   sb.textbox.controller.startSearch(inputText);
-  // Wait for the popup to show.
-  await BrowserTestUtils.waitForEvent(sb.textbox.popup, "popupshown");
+  // Wait for the popup to be shown and built.
+  let popup = sb.textbox.popup;
+  await Promise.all([
+    BrowserTestUtils.waitForEvent(popup, "popupshown"),
+    BrowserTestUtils.waitForEvent(popup.oneOffButtons, "rebuild"),
+  ]);
   // And then for the search to complete.
   await BrowserTestUtils.waitForCondition(
     () =>
