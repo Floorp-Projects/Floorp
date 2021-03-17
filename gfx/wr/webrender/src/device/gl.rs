@@ -1171,7 +1171,6 @@ pub enum DrawTarget {
         offset: DeviceIntPoint,
         external_fbo_id: u32,
         dimensions: DeviceIntSize,
-        surface_origin_is_top_left: bool,
     },
 }
 
@@ -1233,13 +1232,7 @@ impl DrawTarget {
                     fb_rect.origin.x += rect.origin.x;
                 }
             }
-            DrawTarget::NativeSurface { surface_origin_is_top_left, .. } => {
-                if !surface_origin_is_top_left {
-                    let dimensions = self.dimensions();
-                    fb_rect.origin.y = dimensions.height - fb_rect.origin.y - fb_rect.size.height;
-                }
-            }
-            DrawTarget::Texture { .. } | DrawTarget::External { .. } => (),
+            DrawTarget::Texture { .. } | DrawTarget::External { .. } | DrawTarget::NativeSurface { .. } => (),
         }
         fb_rect
     }
@@ -1247,8 +1240,7 @@ impl DrawTarget {
     pub fn surface_origin_is_top_left(&self) -> bool {
         match *self {
             DrawTarget::Default { surface_origin_is_top_left, .. } => surface_origin_is_top_left,
-            DrawTarget::NativeSurface { surface_origin_is_top_left, .. } => surface_origin_is_top_left,
-            DrawTarget::Texture { .. } | DrawTarget::External { .. } => true,
+            DrawTarget::Texture { .. } | DrawTarget::External { .. } | DrawTarget::NativeSurface { .. } => true,
         }
     }
 
@@ -1269,7 +1261,7 @@ impl DrawTarget {
                         .unwrap_or_else(FramebufferIntRect::zero)
                 }
                 DrawTarget::NativeSurface { offset, .. } => {
-                    self.to_framebuffer_rect(scissor_rect.translate(offset.to_vector()))
+                    device_rect_as_framebuffer_rect(&scissor_rect.translate(offset.to_vector()))
                 }
                 DrawTarget::Texture { .. } | DrawTarget::External { .. } => {
                     device_rect_as_framebuffer_rect(&scissor_rect)

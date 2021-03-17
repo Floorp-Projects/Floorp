@@ -1985,7 +1985,6 @@ impl Renderer {
                     offset: surface_info.origin,
                     external_fbo_id: surface_info.fbo_id,
                     dimensions: surface_size,
-                    surface_origin_is_top_left: self.device.surface_origin_is_top_left(),
                 };
                 self.device.bind_draw_target(draw_target);
 
@@ -3069,7 +3068,6 @@ impl Renderer {
                 offset: surface_info.origin,
                 external_fbo_id: surface_info.fbo_id,
                 dimensions: surface_size,
-                surface_origin_is_top_left: self.device.surface_origin_is_top_left(),
             };
             self.device.bind_draw_target(draw_target);
 
@@ -4436,20 +4434,6 @@ impl Renderer {
                                 offset: surface_info.origin,
                                 external_fbo_id: surface_info.fbo_id,
                                 dimensions: size,
-                                surface_origin_is_top_left: self.device.surface_origin_is_top_left(),
-                            }
-                        }
-                    };
-
-                    let (bottom, top) = match picture_target.surface {
-                        ResolvedSurfaceTexture::TextureCache { .. } => {
-                            (0.0, draw_target.dimensions().height as f32)
-                        }
-                        ResolvedSurfaceTexture::Native { .. } => {
-                            if self.device.surface_origin_is_top_left() {
-                              (0.0, draw_target.dimensions().height as f32)
-                            } else {
-                              (draw_target.dimensions().height as f32, 0.0)
                             }
                         }
                     };
@@ -4457,8 +4441,8 @@ impl Renderer {
                     let projection = Transform3D::ortho(
                         0.0,
                         draw_target.dimensions().width as f32,
-                        bottom,
-                        top,
+                        0.0,
+                        draw_target.dimensions().height as f32,
                         self.device.ortho_near_plane(),
                         self.device.ortho_far_plane(),
                     );
