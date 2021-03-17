@@ -50,7 +50,13 @@ struct FullOriginMetadata : OriginMetadata {
   bool mPersisted;
   int64_t mLastAccessTime;
 
-  // XXX Only default construction is needed for now.
+  FullOriginMetadata() = default;
+
+  FullOriginMetadata(OriginMetadata aOriginMetadata, bool aPersisted,
+                     int64_t aLastAccessTime)
+      : OriginMetadata(std::move(aOriginMetadata)),
+        mPersisted(aPersisted),
+        mLastAccessTime(aLastAccessTime) {}
 };
 
 }  // namespace mozilla::dom::quota
