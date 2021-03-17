@@ -221,7 +221,7 @@ function assertActivatedPageActionPanelHidden() {
 
 function promiseOpenPageActionPanel() {
   let dwu = window.windowUtils;
-  return BrowserTestUtils.waitForCondition(() => {
+  return TestUtils.waitForCondition(() => {
     // Wait for the main page action button to become visible.  It's hidden for
     // some URIs, so depending on when this is called, it may not yet be quite
     // visible.  It's up to the caller to make sure it will be visible.
@@ -303,12 +303,13 @@ function promisePageActionViewShown() {
   });
 }
 
-function promisePageActionViewChildrenVisible(panelViewNode) {
+async function promisePageActionViewChildrenVisible(panelViewNode) {
   info(
     "promisePageActionViewChildrenVisible waiting for a child node to be visible"
   );
+  await new Promise(requestAnimationFrame);
   let dwu = window.windowUtils;
-  return BrowserTestUtils.waitForCondition(() => {
+  return TestUtils.waitForCondition(() => {
     let bodyNode = panelViewNode.firstElementChild;
     for (let childNode of bodyNode.children) {
       let bounds = dwu.getBoundsWithoutFlushing(childNode);
