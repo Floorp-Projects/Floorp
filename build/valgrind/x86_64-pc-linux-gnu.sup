@@ -1006,3 +1006,14 @@
    fun:_ZN9selectors6parser14parse_selector17h*
    fun:_ZN9selectors6parser24SelectorList$LT$Impl$GT$16parse_with_state17h*
 }
+
+{
+   bug 1632735
+   Memcheck:Cond
+   fun:_ZN9selectors6parser25parse_one_simple_selector17h*
+   fun:_ZN9selectors6parser14parse_selector17h*
+   fun:_ZN9selectors6parser29parse_functional_pseudo_class17h*
+   fun:_ZN9selectors6parser25parse_one_simple_selector17*
+   fun:_ZN9selectors6parser14parse_selector17h*
+   fun:_ZN9selectors6parser24SelectorList$LT$Impl$GT$16parse_with_state17h*
+}
