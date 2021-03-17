@@ -11,9 +11,14 @@ const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
 
 async function getResultText(element) {
   await initAccessibilityService();
-  await BrowserTestUtils.waitForCondition(() =>
-    accService.getAccessibleFor(element)
-  );
+
+  // Text localized with Fluent will only be available after the next refresh.
+  // requestAnimationFrame resolves at the beginning of the refresh driver tick
+  // at a time when accessible events haven't been processed yet.
+  // waitForTick puts us at the end of the event queue.
+  await new Promise(requestAnimationFrame);
+  await TestUtils.waitForTick();
+
   let accessible = accService.getAccessibleFor(element);
   return accessible.name;
 }
