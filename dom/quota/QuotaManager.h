@@ -171,9 +171,7 @@ class QuotaManager final : public BackgroundThreadObject {
   void DecreaseUsageForClient(const ClientMetadata& aClientMetadata,
                               int64_t aSize);
 
-  void ResetUsageForClient(PersistenceType aPersistenceType,
-                           const OriginMetadata& aOriginMetadata,
-                           Client::Type aClientType);
+  void ResetUsageForClient(const ClientMetadata& aClientMetadata);
 
   UsageInfo GetUsageForClient(PersistenceType aPersistenceType,
                               const OriginMetadata& aOriginMetadata,
