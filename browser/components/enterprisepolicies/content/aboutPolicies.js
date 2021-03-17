@@ -291,6 +291,7 @@ function generateDocumentation() {
     Certificates: "CertificatesDescription",
     SanitizeOnShutdown: "SanitizeOnShutdown2",
     Permissions: "Permissions2",
+    BackgroundAppUpdate: "BackgroundAppUpdate2",
   };
 
   for (let policyName in schema.properties) {
