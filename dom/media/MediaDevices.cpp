@@ -284,6 +284,13 @@ already_AddRefed<Promise> MediaDevices::GetDisplayMedia(
   return p.forget();
 }
 
+already_AddRefed<Promise> MediaDevices::SelectAudioOutput(
+    const AudioOutputOptions& aOptions, CallerType aCallerType,
+    ErrorResult& aRv) {
+  aRv.ThrowNotSupportedError("Under implementation");
+  return nullptr;
+}
+
 NS_IMPL_ADDREF_INHERITED(MediaDevices, DOMEventTargetHelper)
 NS_IMPL_RELEASE_INHERITED(MediaDevices, DOMEventTargetHelper)
 NS_INTERFACE_MAP_BEGIN(MediaDevices)
