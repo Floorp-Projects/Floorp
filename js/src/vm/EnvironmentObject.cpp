@@ -3166,7 +3166,8 @@ static DebugEnvironmentProxy* GetDebugEnvironmentForMissing(
     Rooted<Scope*> scope(cx, &ei.scope());
     MOZ_ASSERT(scope->is<VarScope>() || scope->kind() == ScopeKind::StrictEval);
 
-    Rooted<VarEnvironmentObject*> env(cx, VarEnvironmentObject::createHollowForDebug(cx, scope));
+    Rooted<VarEnvironmentObject*> env(
+        cx, VarEnvironmentObject::createHollowForDebug(cx, scope));
     if (!env) {
       return nullptr;
     }
