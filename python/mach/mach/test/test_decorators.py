@@ -53,16 +53,23 @@ def test_register_command_with_metrics_path(registrar):
     metrics_mock = Mock()
     context.telemetry.metrics.return_value = metrics_mock
 
-    @CommandProvider(metrics_path=metrics_path)
+    @CommandProvider
     class CommandFoo(MachCommandBase):
-        @Command("cmd_foo", category="testing")
+        @Command("cmd_foo", category="testing", metrics_path=metrics_path)
         def run_foo(self):
+            assert self.metrics == metrics_mock
+
+        @SubCommand("cmd_foo", "sub_foo", metrics_path=metrics_path + "2")
+        def run_subfoo(self):
             assert self.metrics == metrics_mock
 
     registrar.dispatch("cmd_foo", context)
 
     context.telemetry.metrics.assert_called_with(metrics_path)
     assert context.handler.metrics_path == metrics_path
+
+    registrar.dispatch("cmd_foo", context, subcommand="sub_foo")
+    assert context.handler.metrics_path == metrics_path + "2"
 
 
 def test_register_command_sets_up_class_at_runtime(registrar):

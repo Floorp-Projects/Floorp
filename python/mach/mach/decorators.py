@@ -114,104 +114,83 @@ class _MachCommand(object):
         return self
 
 
-def CommandProvider(_cls=None, metrics_path=None):
-    def finalize(cls):
-        if not issubclass(cls, MachCommandBase):
-            raise MachError(
-                "Mach command provider class %s must be a subclass of "
-                "mozbuild.base.MachComandBase" % cls.__name__
-            )
-
-        seen_commands = set()
-
-        # We scan __dict__ because we only care about the classes' own attributes,
-        # not inherited ones. If we did inherited attributes, we could potentially
-        # define commands multiple times. We also sort keys so commands defined in
-        # the same class are grouped in a sane order.
-        command_methods = sorted(
-            [
-                (name, value._mach_command)
-                for name, value in cls.__dict__.items()
-                if hasattr(value, "_mach_command")
-            ]
+def CommandProvider(cls):
+    if not issubclass(cls, MachCommandBase):
+        raise MachError(
+            "Mach command provider class %s must be a subclass of "
+            "mozbuild.base.MachComandBase" % cls.__name__
         )
 
-        for method, command in command_methods:
-            # Ignore subcommands for now: we handle them later.
-            if command.subcommand:
-                continue
+    seen_commands = set()
 
-            seen_commands.add(command.name)
+    # We scan __dict__ because we only care about the classes' own attributes,
+    # not inherited ones. If we did inherited attributes, we could potentially
+    # define commands multiple times. We also sort keys so commands defined in
+    # the same class are grouped in a sane order.
+    command_methods = sorted(
+        [
+            (name, value._mach_command)
+            for name, value in cls.__dict__.items()
+            if hasattr(value, "_mach_command")
+        ]
+    )
 
-            if not command.conditions and Registrar.require_conditions:
-                continue
+    for method, command in command_methods:
+        # Ignore subcommands for now: we handle them later.
+        if command.subcommand:
+            continue
 
-            msg = (
-                "Mach command '%s' implemented incorrectly. "
-                + "Conditions argument must take a list "
-                + "of functions. Found %s instead."
-            )
+        seen_commands.add(command.name)
 
-            if not isinstance(command.conditions, collections.Iterable):
-                msg = msg % (command.name, type(command.conditions))
+        if not command.conditions and Registrar.require_conditions:
+            continue
+
+        msg = (
+            "Mach command '%s' implemented incorrectly. "
+            + "Conditions argument must take a list "
+            + "of functions. Found %s instead."
+        )
+
+        if not isinstance(command.conditions, collections.Iterable):
+            msg = msg % (command.name, type(command.conditions))
+            raise MachError(msg)
+
+        for c in command.conditions:
+            if not hasattr(c, "__call__"):
+                msg = msg % (command.name, type(c))
                 raise MachError(msg)
 
-            for c in command.conditions:
-                if not hasattr(c, "__call__"):
-                    msg = msg % (command.name, type(c))
-                    raise MachError(msg)
+        command.cls = cls
+        command.method = method
 
-            command.cls = cls
-            command.metrics_path = metrics_path
-            command.method = method
+        Registrar.register_command_handler(command)
 
-            Registrar.register_command_handler(command)
+    # Now do another pass to get sub-commands. We do this in two passes so
+    # we can check the parent command existence without having to hold
+    # state and reconcile after traversal.
+    for method, command in command_methods:
+        # It is a regular command.
+        if not command.subcommand:
+            continue
 
-        # Now do another pass to get sub-commands. We do this in two passes so
-        # we can check the parent command existence without having to hold
-        # state and reconcile after traversal.
-        for method, command in command_methods:
-            # It is a regular command.
-            if not command.subcommand:
-                continue
+        if command.name not in seen_commands:
+            raise MachError(
+                "Command referenced by sub-command does not exist: %s" % command.name
+            )
 
-            if command.name not in seen_commands:
-                raise MachError(
-                    "Command referenced by sub-command does not "
-                    "exist: %s" % command.name
-                )
+        if command.name not in Registrar.command_handlers:
+            continue
 
-            if command.name not in Registrar.command_handlers:
-                continue
+        command.cls = cls
+        command.method = method
+        parent = Registrar.command_handlers[command.name]
 
-            command.cls = cls
-            command.metrics_path = metrics_path
-            command.method = method
-            parent = Registrar.command_handlers[command.name]
+        if command.subcommand in parent.subcommand_handlers:
+            raise MachError("sub-command already defined: %s" % command.subcommand)
 
-            if command.subcommand in parent.subcommand_handlers:
-                raise MachError("sub-command already defined: %s" % command.subcommand)
+        parent.subcommand_handlers[command.subcommand] = command
 
-            parent.subcommand_handlers[command.subcommand] = command
-
-        return cls
-
-    if _cls:
-        # The CommandProvider was used without parameters, e.g.:
-        #
-        # @CommandProvider
-        # class Example:
-        #     ...
-        # Invoke finalize() immediately
-        return finalize(_cls)
-    else:
-        # The CommandProvider was used with parameters, e.g.:
-        #
-        # @CommandProvider(metrics_path='...')
-        # class Example:
-        #     ...
-        # Return a callback which will be parameterized with the decorated class
-        return finalize
+    return cls
 
 
 class Command(object):
@@ -236,8 +215,9 @@ class Command(object):
             pass
     """
 
-    def __init__(self, name, **kwargs):
+    def __init__(self, name, metrics_path=None, **kwargs):
         self._mach_command = _MachCommand(name=name, **kwargs)
+        self._mach_command.metrics_path = metrics_path
 
     def __call__(self, func):
         if not hasattr(func, "_mach_command"):
@@ -268,12 +248,16 @@ class SubCommand(object):
 
     global_order = 0
 
-    def __init__(self, command, subcommand, description=None, parser=None):
+    def __init__(
+        self, command, subcommand, description=None, parser=None, metrics_path=None
+    ):
         self._mach_command = _MachCommand(
             name=command, subcommand=subcommand, description=description, parser=parser
         )
         self._mach_command.decl_order = SubCommand.global_order
         SubCommand.global_order += 1
+
+        self._mach_command.metrics_path = metrics_path
 
     def __call__(self, func):
         if not hasattr(func, "_mach_command"):
