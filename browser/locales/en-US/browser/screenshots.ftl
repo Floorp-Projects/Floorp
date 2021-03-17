@@ -2,7 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-screenshots-context-menu = Take a Screenshot
+screenshot-toolbarbutton =
+  .label = Screenshot
+  .tooltiptext = Take a screenshot
 
 screenshots-my-shots-button = My Shots
 screenshots-instructions = Drag or click on the page to select a region. Press ESC to cancel.

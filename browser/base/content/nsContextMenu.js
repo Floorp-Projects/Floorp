@@ -1279,7 +1279,7 @@ class nsContextMenu {
   }
 
   takeScreenshot() {
-    Services.obs.notifyObservers(null, "contextmenu-screenshot");
+    Services.obs.notifyObservers(null, "menuitem-screenshot", true);
   }
 
   // View Partial Source
