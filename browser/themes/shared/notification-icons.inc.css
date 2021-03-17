@@ -313,7 +313,7 @@ html|*#webRTC-previewVideo {
 /* OFFLINE APPS */
 
 .popup-notification-icon[popupid="offline-app-usage"] {
-  list-style-image: url(chrome://global/skin/icons/question-64.png);
+  list-style-image: url(chrome://global/skin/icons/help.svg);
 }
 
 /* PLUGINS */
