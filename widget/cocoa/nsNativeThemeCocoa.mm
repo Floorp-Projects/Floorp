@@ -1241,11 +1241,13 @@ static const CellRenderSettings pushButtonSettings = {{
 #define DO_SQUARE_BUTTON_HEIGHT 26
 
 void nsNativeThemeCocoa::DrawRoundedBezelPushButton(CGContextRef cgContext, const HIRect& inBoxRect,
+                                                    ButtonType aButtonType,
                                                     ControlParams aControlParams) {
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
 
   ApplyControlParamsToNSCell(aControlParams, mPushButtonCell);
   [mPushButtonCell setBezelStyle:NSRoundedBezelStyle];
+  mPushButtonCell.keyEquivalent = aButtonType == ButtonType::eDefaultPushButton ? @"\r" : @"";
 
   if (mCellDrawWindow) {
     mCellDrawWindow.cellsShouldLookActive = aControlParams.insideActiveWindow;
@@ -1427,11 +1429,6 @@ void nsNativeThemeCocoa::DrawHIThemeButton(CGContextRef cgContext, const HIRect&
     bdi.adornment |= kThemeAdornmentFocus;
   }
 
-  if ((aAdornment & kThemeAdornmentDefault) && !aParams.disabled) {
-    bdi.animation.time.start = 0;
-    bdi.animation.time.current = CFAbsoluteTimeGetCurrent();
-  }
-
   RenderTransformedHIThemeControl(cgContext, aRect, RenderButton, &bdi, aParams.rtl);
 
 #if DRAW_IN_FRAME_DEBUG
@@ -1448,31 +1445,9 @@ void nsNativeThemeCocoa::DrawButton(CGContextRef cgContext, const HIRect& inBoxR
 
   switch (aParams.button) {
     case ButtonType::eRegularPushButton:
-    case ButtonType::eDefaultPushButton: {
-      ThemeButtonAdornment adornment = aParams.button == ButtonType::eDefaultPushButton
-                                           ? kThemeAdornmentDefault
-                                           : kThemeAdornmentNone;
-      HIRect drawFrame = inBoxRect;
-      drawFrame.size.height -= 2;
-      if (inBoxRect.size.height >= pushButtonSettings.naturalSizes[regularControlSize].height) {
-        DrawHIThemeButton(cgContext, drawFrame, kThemePushButton, kThemeButtonOff,
-                          ToThemeDrawState(controlParams), adornment, controlParams);
-        return;
-      }
-      if (inBoxRect.size.height >= pushButtonSettings.naturalSizes[smallControlSize].height) {
-        drawFrame.origin.y -= 1;
-        drawFrame.origin.x += 1;
-        drawFrame.size.width -= 2;
-        DrawHIThemeButton(cgContext, drawFrame, kThemePushButtonSmall, kThemeButtonOff,
-                          ToThemeDrawState(controlParams), adornment, controlParams);
-        return;
-      }
-      DrawHIThemeButton(cgContext, drawFrame, kThemePushButtonMini, kThemeButtonOff,
-                        ToThemeDrawState(controlParams), adornment, controlParams);
-      return;
-    }
+    case ButtonType::eDefaultPushButton:
     case ButtonType::eRoundedBezelPushButton:
-      DrawRoundedBezelPushButton(cgContext, inBoxRect, controlParams);
+      DrawRoundedBezelPushButton(cgContext, inBoxRect, aParams.button, controlParams);
       return;
     case ButtonType::eSquareBezelPushButton:
       DrawSquareBezelPushButton(cgContext, inBoxRect, controlParams);
