@@ -12,8 +12,6 @@ enum MacThemeGeometryType {
   eThemeGeometryTypeWindowButtons,
   eThemeGeometryTypeMenu,
   eThemeGeometryTypeHighlightedMenuItem,
-  eThemeGeometryTypeVibrancyLight,
-  eThemeGeometryTypeVibrancyDark,
   eThemeGeometryTypeVibrantTitlebarLight,
   eThemeGeometryTypeVibrantTitlebarDark,
   eThemeGeometryTypeTooltip,
