@@ -1,4 +1,4 @@
-// |jit-test| skip-if: !largeArrayBufferEnabled(); --large-arraybuffers
+// |jit-test| skip-if: !largeArrayBufferEnabled(); --large-arraybuffers; allow-oom
 
 var pagesz = PageSizeInBytes;
 var pages_limit = MaxPagesIn32BitMemory;
