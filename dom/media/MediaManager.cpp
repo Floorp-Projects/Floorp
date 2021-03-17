@@ -2275,6 +2275,33 @@ void MediaManager::DeviceListChanged() {
           [](RefPtr<MediaMgrError>&& reason) {});
 }
 
+size_t MediaManager::AddTaskAndGetCount(uint64_t aWindowID,
+                                        const nsAString& aCallID,
+                                        RefPtr<GetUserMediaTask> aTask) {
+  // Store the task w/callbacks.
+  mActiveCallbacks.InsertOrUpdate(aCallID, std::move(aTask));
+
+  // Add a WindowID cross-reference so OnNavigation can tear things down
+  nsTArray<nsString>* const array = mCallIds.GetOrInsertNew(aWindowID);
+  array->AppendElement(aCallID);
+
+  return array->Length();
+}
+
+RefPtr<GetUserMediaTask> MediaManager::TakeGetUserMediaTask(
+    const nsAString& aCallID) {
+  RefPtr<GetUserMediaTask> task;
+  mActiveCallbacks.Remove(aCallID, getter_AddRefs(task));
+  if (!task) {
+    return nullptr;
+  }
+  nsTArray<nsString>* array;
+  mCallIds.Get(task->GetWindowID(), &array);
+  MOZ_ASSERT(array);
+  array->RemoveElement(aCallID);
+  return task;
+}
+
 nsresult MediaManager::GenerateUUID(nsAString& aResult) {
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
@@ -2771,14 +2798,8 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
                 prefs, principalInfo, isChrome, std::move(devices),
                 focusSource);
 
-            // Store the task w/callbacks.
-            self->mActiveCallbacks.InsertOrUpdate(callID, std::move(task));
-
-            // Add a WindowID cross-reference so OnNavigation can tear
-            // things down
-            nsTArray<nsString>* const array =
-                self->mCallIds.GetOrInsertNew(windowID);
-            array->AppendElement(callID);
+            size_t taskCount =
+                self->AddTaskAndGetCount(windowID, callID, std::move(task));
 
             nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
             if (!askPermission) {
@@ -2788,7 +2809,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
               auto req = MakeRefPtr<GetUserMediaRequest>(
                   window, callID, c, isSecure, isHandlingUserInput);
               if (!Preferences::GetBool("media.navigator.permission.force") &&
-                  array->Length() > 1) {
+                  taskCount > 1) {
                 // there is at least 1 pending gUM request
                 // For the scarySources test case, always send the
                 // request
@@ -3650,17 +3671,10 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
   } else if (!strcmp(aTopic, "getUserMedia:privileged:allow") ||
              !strcmp(aTopic, "getUserMedia:response:allow")) {
     nsString key(aData);
-    RefPtr<GetUserMediaTask> task;
-    mActiveCallbacks.Remove(key, getter_AddRefs(task));
+    RefPtr<GetUserMediaTask> task = TakeGetUserMediaTask(key);
     if (!task) {
       return NS_OK;
     }
-
-    nsTArray<nsString>* array;
-    if (!mCallIds.Get(task->GetWindowID(), &array)) {
-      return NS_OK;
-    }
-    array->RemoveElement(key);
 
     if (aSubject) {
       // A particular device or devices were chosen by the user.
@@ -3715,15 +3729,9 @@ nsresult MediaManager::Observe(nsISupports* aSubject, const char* aTopic,
 
   } else if (IsGUMResponseNoAccess(aTopic, gumNoAccessError)) {
     nsString key(aData);
-    RefPtr<GetUserMediaTask> task;
-    mActiveCallbacks.Remove(key, getter_AddRefs(task));
+    RefPtr<GetUserMediaTask> task = TakeGetUserMediaTask(key);
     if (task) {
       task->Denied(gumNoAccessError);
-      nsTArray<nsString>* array;
-      if (!mCallIds.Get(task->GetWindowID(), &array)) {
-        return NS_OK;
-      }
-      array->RemoveElement(key);
       SendPendingGUMRequest();
     }
     return NS_OK;
