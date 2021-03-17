@@ -103,6 +103,7 @@ raptor-speedometer-firefox:
     variants: ["fission"]
     try-name: raptor-speedometer-firefox
     treeherder-symbol: Rap(sp)
+    run-on-projects: []
     mozharness:
         extra-options:
             - --test=raptor-speedometer
@@ -111,6 +112,7 @@ raptor-speedometer-firefox-profiling:
     description: "Raptor Speedometer on Firefox with Gecko Profiling"
     try-name: raptor-speedometer-firefox-profiling
     treeherder-symbol: Rap-Prof(sp)
+    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -122,6 +124,7 @@ raptor-stylebench-firefox:
     variants: ["fission"]
     try-name: raptor-stylebench-firefox
     treeherder-symbol: Rap(sb)
+    run-on-projects: []
     mozharness:
         extra-options:
             - --test=raptor-stylebench
@@ -130,6 +133,7 @@ raptor-stylebench-firefox-profiling:
     description: "Raptor StyleBench on Firefox with Gecko Profiling"
     try-name: raptor-stylebench-firefox-profiling
     treeherder-symbol: Rap-Prof(sb)
+    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -141,6 +145,7 @@ raptor-motionmark-htmlsuite-firefox:
     variants: ["fission"]
     try-name: raptor-motionmark-htmlsuite-firefox
     treeherder-symbol: Rap(mm-h)
+    run-on-projects: []
     mozharness:
         extra-options:
             - --test=raptor-motionmark-htmlsuite
@@ -149,6 +154,7 @@ raptor-motionmark-htmlsuite-firefox-profiling:
     description: "Raptor MotionMark HtmlSuite on Firefox with Gecko Profiling"
     try-name: raptor-motionmark-htmlsuite-firefox-profiling
     treeherder-symbol: Rap-Prof(mm-h)
+    run-on-projects: []
     mozharness:
         extra-options:
             - --test=raptor-motionmark-htmlsuite
@@ -159,6 +165,7 @@ raptor-motionmark-animometer-firefox:
     variants: ["fission"]
     try-name: raptor-motionmark-animometer-firefox
     treeherder-symbol: Rap(mm-a)
+    run-on-projects: []
     tier: 1
     mozharness:
         extra-options:
@@ -168,6 +175,7 @@ raptor-motionmark-animometer-firefox-profiling:
     description: "Raptor MotionMark Animometer on Firefox with Gecko Profiling"
     try-name: raptor-motionmark-animometer-firefox-profiling
     treeherder-symbol: Rap-Prof(mm-a)
+    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -584,6 +592,7 @@ raptor-ares6-firefox:
     variants: ["fission"]
     try-name: raptor-ares6-firefox
     treeherder-symbol: Rap(ares6)
+    run-on-projects: []
     max-run-time: 2500
     mozharness:
         extra-options:
@@ -593,6 +602,7 @@ raptor-ares6-firefox-profiling:
     description: "Raptor Ares6 on Firefox with Gecko Profiling"
     try-name: raptor-ares6-firefox-profiling
     treeherder-symbol: Rap-Prof(ares6)
+    run-on-projects: []
     max-run-time: 2500
     tier: 3
     mozharness:
