@@ -12,7 +12,6 @@ INDENT TABS: encoding/legacy*/*
 
 TRAILING WHITESPACE: html/canvas/tools/current-work-canvas.xhtml
 TRAILING WHITESPACE: conformance-checkers/*
-TRAILING WHITESPACE: content-security-policy/*
 TRAILING WHITESPACE: WebIDL/valid/*
 
 ## File types that should never be checked ##
@@ -95,6 +94,7 @@ TRAILING WHITESPACE: server-timing/resources/parsing/*
 TRAILING WHITESPACE: webvtt/parsing/file-parsing/support/*.vtt
 TRAILING WHITESPACE: webvtt/parsing/file-parsing/tests/support/*.vtt
 TRAILING WHITESPACE: xhr/resources/headers-some-are-empty.asis
+TRAILING WHITESPACE: content-security-policy/support/manifest.json
 
 # Intentional use of print statements
 PRINT STATEMENT: dom/nodes/Document-createElement-namespace-tests/generate.py
