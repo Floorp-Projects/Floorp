@@ -59,7 +59,7 @@ struct RetainedDisplayListData {
   /**
    * Returns an iterator to the underlying frame storage.
    */
-  auto Iterator() { return mFrames.Iter(); }
+  auto ConstIterator() { return mFrames.ConstIter(); }
 
   /**
    * Returns the count of modified frames in this RetainedDisplayListData.
