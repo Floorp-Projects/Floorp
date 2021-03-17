@@ -154,8 +154,7 @@ class QuotaManager final : public BackgroundThreadObject {
    * different client has usages for the origin (and there's no need to add
    * LSNG's 0 usage to the QuotaObject).
    */
-  void EnsureQuotaForOrigin(PersistenceType aPersistenceType,
-                            const OriginMetadata& aOriginMetadata);
+  void EnsureQuotaForOrigin(const OriginMetadata& aOriginMetadata);
 
   /**
    * For use when creating an origin directory. It's possible that origin usage
