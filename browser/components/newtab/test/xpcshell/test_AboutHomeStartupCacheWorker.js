@@ -124,7 +124,7 @@ add_task(async function setup() {
     let feed = AboutNewTab.activityStream.store.feeds.get(
       "feeds.discoverystreamfeed"
     );
-    return feed.loaded;
+    return feed?.loaded;
   });
 });
 
