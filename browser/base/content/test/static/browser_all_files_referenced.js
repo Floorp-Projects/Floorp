@@ -222,9 +222,6 @@ var whitelist = [
       "chrome://browser/content/aboutlogins/components/import-details-row.js",
   },
 
-  // Referenced from the screenshots webextension
-  { file: "resource://app/localization/en-US/browser/screenshots.ftl" },
-
   // services/fxaccounts/RustFxAccount.js
   { file: "resource://gre/modules/RustFxAccount.js" },
 
