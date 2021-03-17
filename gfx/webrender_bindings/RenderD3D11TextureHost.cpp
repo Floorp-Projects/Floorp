@@ -50,8 +50,8 @@ ID3D11Texture2D* RenderDXGITextureHost::GetD3D11Texture2DWithGL() {
   }
 
   if (!mGL) {
-    // SharedGL is always used on Windows with ANGLE.
-    mGL = RenderThread::Get()->SharedGL();
+    // SingletonGL is always used on Windows with ANGLE.
+    mGL = RenderThread::Get()->SingletonGL();
   }
 
   if (!EnsureD3D11Texture2DWithGL()) {
