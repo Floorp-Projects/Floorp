@@ -72,6 +72,10 @@ scheme host and port.""")
                         default=True,
                         dest="fail_on_unexpected",
                         help="Exit with status code 0 when test expectations are violated")
+    parser.add_argument("--no-fail-on-unexpected-pass", action="store_false",
+                        default=True,
+                        dest="fail_on_unexpected_pass",
+                        help="Exit with status code 0 when all unexpected results are PASS")
 
     mode_group = parser.add_argument_group("Mode")
     mode_group.add_argument("--list-test-groups", action="store_true",
