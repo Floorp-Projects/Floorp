@@ -548,7 +548,7 @@
     <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
     <string name="library_desktop_bookmarks_toolbar">북마크 도구모음</string>
     <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
-    <string name="library_desktop_bookmarks_unfiled">다른 북마크</string>
+    <string name="library_desktop_bookmarks_unfiled">기타 북마크</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">기록</string>
     <!-- Option in Library to open a new tab -->
