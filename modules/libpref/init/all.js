@@ -337,11 +337,7 @@ pref("browser.triple_click_selects_paragraph", true);
 pref("pdfjs.renderInteractiveForms", true);
 
 // Enable JavaScript support in the PDF viewer.
-#ifdef NIGHTLY_BUILD
-  pref("pdfjs.enableScripting", true);
-#else
-  pref("pdfjs.enableScripting", false);
-#endif
+pref("pdfjs.enableScripting", true);
 
 // Disable support for MathML
 pref("mathml.disabled",    false);
