@@ -161,10 +161,11 @@ class QuotaManager final : public BackgroundThreadObject {
    * is already being tracked due to a call to EnsureQuotaForOrigin, and in that
    * case we need to update the existing OriginInfo rather than create a new
    * one.
+   *
+   * @return last access time of the origin.
    */
-  void NoteOriginDirectoryCreated(PersistenceType aPersistenceType,
-                                  const OriginMetadata& aOriginMetadata,
-                                  bool aPersisted, int64_t& aTimestamp);
+  int64_t NoteOriginDirectoryCreated(const OriginMetadata& aOriginMetadata,
+                                     bool aPersisted);
 
   // XXX clients can use QuotaObject instead of calling this method directly.
   void DecreaseUsageForOrigin(PersistenceType aPersistenceType,
