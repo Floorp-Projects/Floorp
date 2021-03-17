@@ -27,17 +27,26 @@
     --checkbox-checked-color: rgb(251,251,254);
     --checkbox-checked-hover-bgcolor: rgb(2,80,187);
     --checkbox-checked-active-bgcolor: rgb(5,62,148);
+
+    --default-arrowpanel-background: #fff;
+    --default-arrowpanel-color: rgb(21,20,26);
+
+    --arrowpanel-dimmed: color-mix(in srgb, currentColor 12%, transparent);
+    --arrowpanel-dimmed-further: color-mix(in srgb, currentColor 20%, transparent);
+    --arrowpanel-dimmed-even-further: color-mix(in srgb, currentColor 27%, transparent);
   }
   } /** END Proton **/
 
   @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
   :root:not(:-moz-lwtheme) {
-    --urlbar-popup-action-color: #15141a;
+    --urlbar-popup-action-color: rgb(21,20,26);
     --urlbar-separator-color: rgb(240,240,244);
     --toolbar-field-border-color: transparent;
     --arrowpanel-border-color: transparent;
-    --autocomplete-popup-highlight-background: #e0e0e6;
-    --autocomplete-popup-highlight-color: black;
+
+    --autocomplete-popup-highlight-background: var(--arrowpanel-dimmed);
+    --autocomplete-popup-highlight-color: rgb(21,20,26);
+    --urlbar-result-hover-bgcolor: rgb(240,240,244);
   }
   } /** END Proton **/
 }

@@ -17,6 +17,7 @@
   --autocomplete-popup-highlight-background: Highlight;
   --autocomplete-popup-highlight-color: HighlightText;
 
+  --urlbar-result-hover-bgcolor: var(--arrowpanel-dimmed);
   --urlbar-popup-url-color: hsl(210, 77%, 47%);
   --urlbar-popup-action-color: hsl(178, 100%, 28%);
 
@@ -258,12 +259,12 @@
 
 .urlbarView-row:not([type=tip], [type=dynamic], [has-help]):hover > .urlbarView-row-inner,
 .urlbarView-row[has-help] > .urlbarView-row-inner:not([selected]):hover {
-  background: var(--arrowpanel-dimmed);
+  background-color: var(--urlbar-result-hover-bgcolor);
 }
 
 .urlbarView-row:not([type=tip], [type=dynamic])[selected] > .urlbarView-row-inner,
 .urlbarView-row-inner[selected] {
-  background: var(--autocomplete-popup-highlight-background);
+  background-color: var(--autocomplete-popup-highlight-background);
   color: var(--autocomplete-popup-highlight-color);
   fill-opacity: 1;
 }

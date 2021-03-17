@@ -17,7 +17,7 @@
 }
 
 .urlbarView-row[dynamicType=onboardTabToSearch]:hover > .urlbarView-row-inner {
-  background: var(--arrowpanel-dimmed);
+  background-color: var(--arrowpanel-dimmed);
 }
 
 .urlbarView-row[dynamicType=onboardTabToSearch] > .urlbarView-row-inner[selected] {
