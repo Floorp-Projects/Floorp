@@ -44,6 +44,7 @@ toolkit.jar:
   skin/classic/global/icons/columnpicker.svg               (../../shared/icons/columnpicker.svg)
   skin/classic/global/icons/critical.svg                   (../../shared/icons/critical.svg)
   skin/classic/global/icons/delete.svg                     (../../shared/icons/delete.svg)
+  skin/classic/global/icons/defaultFavicon.svg             (../../shared/icons/defaultFavicon.svg)
   skin/classic/global/icons/document.svg                   (../../shared/icons/document.svg)
   skin/classic/global/icons/edit.svg                       (../../shared/icons/edit.svg)
   skin/classic/global/icons/error.svg                      (../../shared/icons/error.svg)
@@ -127,9 +128,6 @@ toolkit.jar:
   skin/classic/global/media/error.png                      (../../shared/media/error.png)
   skin/classic/global/media/throbber.png                   (../../shared/media/throbber.png)
   skin/classic/global/media/stalled.png                    (../../shared/media/stalled.png)
-#ifdef MOZ_PLACES
-  skin/classic/mozapps/places/defaultFavicon.svg           (../../shared/places/defaultFavicon.svg)
-#endif
   skin/classic/global/plugins/plugin.svg                    (../../shared/plugins/plugin.svg)
   skin/classic/global/plugins/plugin-blocked.svg            (../../shared/plugins/plugin-blocked.svg)
   skin/classic/global/pictureinpicture/player.css           (../../shared/pictureinpicture/player.css)
