@@ -87,9 +87,6 @@ const ProcessTargetResources = augmentResourceDictionary({
   [TYPES.CONSOLE_MESSAGE]: {
     path: "devtools/server/actors/resources/console-messages",
   },
-  [TYPES.CSS_MESSAGE]: {
-    path: "devtools/server/actors/resources/css-messages",
-  },
   [TYPES.ERROR_MESSAGE]: {
     path: "devtools/server/actors/resources/error-messages",
   },
