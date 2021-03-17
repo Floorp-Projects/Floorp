@@ -25,6 +25,12 @@
   --toolbar-field-focus-border-color: var(--focus-outline-color);
   --urlbar-container-padding: 1px;
 }
+
+@media not (prefers-contrast) {
+  :root {
+    --toolbar-field-focus-border-color: color-mix(in srgb, var(--focus-outline-color) 50%, transparent);
+  }
+}
 } /*** END proton ***/
 
 #urlbar-container,
