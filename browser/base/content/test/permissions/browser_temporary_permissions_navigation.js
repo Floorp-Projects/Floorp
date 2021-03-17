@@ -12,8 +12,6 @@ add_task(async function testTempPermissionOnReload() {
   let id = "geo";
 
   await BrowserTestUtils.withNewTab(origin, async function(browser) {
-    let reloadButton = document.getElementById("reload-button");
-
     SitePermissions.setForPrincipal(
       principal,
       id,
@@ -35,9 +33,6 @@ add_task(async function testTempPermissionOnReload() {
     );
 
     await reloaded;
-    await TestUtils.waitForCondition(() => {
-      return !reloadButton.disabled;
-    });
 
     Assert.deepEqual(SitePermissions.getForPrincipal(principal, id, browser), {
       state: SitePermissions.BLOCK,
@@ -47,7 +42,7 @@ add_task(async function testTempPermissionOnReload() {
     reloaded = BrowserTestUtils.browserLoaded(browser, false, origin);
 
     // Reload as a user (should remove the temp permission).
-    EventUtils.synthesizeMouseAtCenter(reloadButton, {});
+    BrowserReload();
 
     await reloaded;
 
