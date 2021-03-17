@@ -6,6 +6,7 @@
 // Test the TargetCommand API with all possible descriptors
 
 const TEST_URL = "https://example.org/document-builder.sjs?html=org";
+const SECOND_TEST_URL = "https://example.com/document-builder.sjs?html=org";
 const CHROME_WORKER_URL = CHROME_URL_ROOT + "test_worker.js";
 
 add_task(async function() {
@@ -20,7 +21,8 @@ add_task(async function() {
   const client = await createLocalClient();
   const mainRoot = client.mainRoot;
 
-  await testTab(mainRoot);
+  await testLocalTab(mainRoot);
+  await testRemoteTab(mainRoot);
   await testParentProcess(mainRoot);
   await testContentProcess(mainRoot);
   await testWorker(mainRoot);
@@ -55,8 +57,8 @@ async function testParentProcess(rootFront) {
   await waitForAllTargetsToBeAttached(targetList);
 }
 
-async function testTab(rootFront) {
-  info("Test TargetCommand against tab descriptor");
+async function testLocalTab(rootFront) {
+  info("Test TargetCommand against local tab descriptor (via getTab({ tab }))");
 
   const tab = await addTab(TEST_URL);
   const descriptor = await rootFront.getTab({ tab });
@@ -76,6 +78,56 @@ async function testTab(rootFront) {
     "the tab target is of frame type"
   );
   is(targetFront.isTopLevel, true, "This is flagged as top level");
+
+  targetList.destroy();
+
+  BrowserTestUtils.removeTab(tab);
+}
+
+async function testRemoteTab(rootFront) {
+  info(
+    "Test TargetCommand against remote tab descriptor (via getTab({ outerWindowID }))"
+  );
+
+  const tab = await addTab(TEST_URL);
+  const descriptor = await rootFront.getTab({
+    outerWindowID: tab.linkedBrowser.outerWindowID,
+  });
+  const commands = await descriptor.getCommands();
+  const targetList = commands.targetCommand;
+  await targetList.startListening();
+
+  const targets = await targetList.getAllTargets(targetList.ALL_TYPES);
+  is(targets.length, 1, "Got a unique target");
+  const targetFront = targets[0];
+  is(
+    targetFront,
+    targetList.targetFront,
+    "TargetCommand top target is the same as the first target"
+  );
+  is(
+    targetFront.targetType,
+    targetList.TYPES.FRAME,
+    "the tab target is of frame type"
+  );
+  is(targetFront.isTopLevel, true, "This is flagged as top level");
+
+  const browser = tab.linkedBrowser;
+  const onLoaded = BrowserTestUtils.browserLoaded(browser);
+  await BrowserTestUtils.loadURI(browser, SECOND_TEST_URL);
+  await onLoaded;
+
+  if (isFissionEnabled()) {
+    info("With fission, cross process switching destroy everything");
+    ok(targetFront.isDestroyed(), "Top level target is destroyed");
+    ok(descriptor.isDestroyed(), "Descriptor is also destroyed");
+  } else {
+    is(
+      targetList.targetFront,
+      targetFront,
+      "Without fission, the top target stays the same"
+    );
+  }
 
   targetList.destroy();
 
