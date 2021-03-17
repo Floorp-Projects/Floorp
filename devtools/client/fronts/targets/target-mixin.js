@@ -45,12 +45,6 @@ function TargetMixin(parentClass) {
 
       this.threadFront = null;
 
-      // This flag will be set to true from:
-      // - TabDescriptorFront getTarget(), for local tab targets
-      // - descriptorFromURL(), for local targets (about:debugging)
-      // - initToolbox(), for some test-only targets
-      this.shouldCloseClient = false;
-
       this._client = client;
 
       // Cache of already created targed-scoped fronts
@@ -636,18 +630,13 @@ function TargetMixin(parentClass) {
 
       this.threadFront = null;
 
-      if (this.shouldCloseClient) {
-        try {
-          await this._client.close();
-        } catch (e) {
-          // Ignore any errors while closing, since there is not much that can be done
-          // at this point.
-          console.warn("Error while closing client:", e);
-        }
+      // This event should be emitted before calling super.destroy(), because
+      // super.destroy() will remove all event listeners attached to this front.
+      this.emit("target-destroyed");
 
-        // Not all targets supports attach/detach. For example content process doesn't.
-        // Also ensure that the front is still active before trying to do the request.
-      } else if (this.detach && !this.isDestroyed()) {
+      // Not all targets supports attach/detach. For example content process doesn't.
+      // Also ensure that the front is still active before trying to do the request.
+      if (this.detach && !this.isDestroyed()) {
         // The client was handed to us, so we are not responsible for closing
         // it. We just need to detach from the tab, if already attached.
         // |detach| may fail if the connection is already dead, so proceed with
@@ -658,10 +647,6 @@ function TargetMixin(parentClass) {
           this.logDetachError(e);
         }
       }
-
-      // This event should be emitted before calling super.destroy(), because
-      // super.destroy() will remove all event listeners attached to this front.
-      this.emit("target-destroyed");
 
       // Do that very last in order to let a chance to dispatch `detach` requests.
       super.destroy();

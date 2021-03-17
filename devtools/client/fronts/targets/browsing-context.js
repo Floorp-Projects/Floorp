@@ -127,6 +127,16 @@ class BrowsingContextTargetFront extends TargetMixin(
     // Remove listeners set in attach
     this.off("tabNavigated", this._onTabNavigated);
     this.off("frameUpdate", this._onFrameUpdate);
+
+    // Detach will destroy the target actor, but the server won't emit any
+    // target-destroyed-form in such manual, client side destruction.
+    // So that we have to manually destroy the associated front on the client
+    //
+    // If detach was called by TargetFrontMixin.destroy, avoid recalling it from it
+    // as it would do an async infinite loop which would never resolve.
+    if (!this.isDestroyedOrBeingDestroyed()) {
+      await this.destroy();
+    }
   }
 
   destroy() {
