@@ -92,12 +92,6 @@ html|*#print-preview-pageNumber {
   margin: 0 4px;
 }
 
-/* XXX(ntim): this might not be useful now that lwthemes no longer set backgrounds on :root */
-
-:root:-moz-lwtheme {
-  appearance: none;
-}
-
 /* Separators */
 
 xul|separator:not([orient="vertical"]) {
