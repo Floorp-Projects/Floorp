@@ -6,7 +6,7 @@
 
 "use strict";
 
-const TOPIC = "contextmenu-screenshot";
+const TOPIC = "menuitem-screenshot";
 
 this.screenshots = class extends ExtensionAPI {
   getAPI(context) {
@@ -40,15 +40,18 @@ this.screenshots = class extends ExtensionAPI {
           isUploadDisabled() {
             return Services.prefs.getBoolPref("extensions.screenshots.upload-disabled", false);
           },
+          setIcon: (isActive) => {
+            Services.obs.notifyObservers(null, "toggle-screenshot-disable", isActive);
+          },
           onScreenshotCommand: new EventManager({
             context,
             name: "experiments.screenshots.onScreenshotCommand",
             register: fire => {
-              let observer = () => {
-                fire.sync();
+              let observer = (subject, topic, data) => {
+                let isContexMenuClick = data;
+                fire.sync(isContexMenuClick);
               };
               Services.obs.addObserver(observer, TOPIC);
-
               return () => {
                 Services.obs.removeObserver(observer, TOPIC);
               };

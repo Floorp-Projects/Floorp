@@ -54,21 +54,13 @@ this.startBackground = (function() {
     "background/main.js",
   ];
 
-  browser.pageAction.onClicked.addListener(tab => {
-    loadIfNecessary().then(() => {
-      main.onClicked(tab);
-    }).catch(error => {
-      console.error("Error loading Screenshots:", error);
-    });
-  });
-
-  browser.experiments.screenshots.onScreenshotCommand.addListener(async () => {
+  browser.experiments.screenshots.onScreenshotCommand.addListener(async (isContextMenuClick) => {
     try {
       let [[tab]] = await Promise.all([
         browser.tabs.query({currentWindow: true, active: true}),
         loadIfNecessary(),
       ]);
-      main.onClickedContextMenu(tab);
+      isContextMenuClick ? main.onClickedContextMenu(tab) : main.onClicked(tab);
     } catch (error) {
       console.error("Error loading Screenshots:", error);
     }

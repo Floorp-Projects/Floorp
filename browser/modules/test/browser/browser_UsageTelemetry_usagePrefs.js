@@ -107,10 +107,6 @@ add_task(async function test_usage_pageAction_buttons() {
     return;
   }
 
-  await SpecialPowers.pushPrefEnv({
-    set: [["extensions.screenshots.disabled", false]],
-  });
-
   const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
   const sandbox = sinon.createSandbox();
   registerCleanupFunction(sandbox.restore);
@@ -129,7 +125,6 @@ add_task(async function test_usage_pageAction_buttons() {
       "pageAction-panel-copyURL",
       "pageAction-panel-emailLink",
       "pageAction-panel-pinTab",
-      "pageAction-panel-screenshots_mozilla_org",
     ];
     if (
       AppConstants.platform == "macosx" ||
