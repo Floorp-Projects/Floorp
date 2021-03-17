@@ -29,7 +29,7 @@ preference = "dom.forms.inputmode"
 type = "boolean"
 bug-numbers = [1205133]
 is-public = {default = false, nightly = true}
-default-value = {default = true, android = true, release = false, beta = false}
+default-value = {default = false, nightly = true, android = true}
 
 [css-constructable-stylesheets]
 title = "experimental-features-css-constructable-stylesheets"
