@@ -763,14 +763,6 @@ FxAccountsInternal.prototype = {
           ChromeUtils.import("resource://services-sync/main.js", scope);
           return scope.Weave.Service.promiseInitialized;
         },
-        // Telemetry, so ecosystem telemetry doesn't miss logouts.
-        async () => {
-          const { EcosystemTelemetry } = ChromeUtils.import(
-            "resource://gre/modules/EcosystemTelemetry.jsm",
-            {}
-          );
-          await EcosystemTelemetry.prepareForFxANotification();
-        },
       ];
     }
 

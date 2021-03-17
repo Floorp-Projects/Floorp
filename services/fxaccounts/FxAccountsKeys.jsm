@@ -17,8 +17,8 @@ const { CryptoUtils } = ChromeUtils.import(
 const {
   LEGACY_DERIVED_KEYS_NAMES,
   SCOPE_OLD_SYNC,
-  SCOPE_ECOSYSTEM_TELEMETRY,
   LEGACY_SCOPE_WEBEXT_SYNC,
+  DEPRECATED_SCOPE_ECOSYSTEM_TELEMETRY,
   FX_OAUTH_CLIENT_ID,
   log,
   logPII,
@@ -28,6 +28,10 @@ const {
 // We will, if necessary, migrate storage for those keys so that it's associated with
 // these scopes.
 const LEGACY_DERIVED_KEY_SCOPES = [SCOPE_OLD_SYNC, LEGACY_SCOPE_WEBEXT_SYNC];
+
+// These are scopes that we used to store, but are no longer using,
+// and hence should be deleted from storage if present.
+const DEPRECATED_KEY_SCOPES = [DEPRECATED_SCOPE_ECOSYSTEM_TELEMETRY];
 
 /**
  * Utilities for working with key material linked to the user's account.
@@ -184,7 +188,6 @@ class FxAccountsKeys {
    *          kXCS: A key hash of kB for the X-Client-State header
    *          kExtSync: An encryption key for WebExtensions syncing
    *          kExtKbHash: A key hash of kB for WebExtensions syncing
-   *          ecosystemUserId: A derived key used for Account EcosystemTelemetry
    *          verified: email verification status
    *        }
    * @throws If there is no user signed in.
@@ -200,6 +203,9 @@ class FxAccountsKeys {
         if (userData.scopedKeys) {
           if (
             LEGACY_DERIVED_KEY_SCOPES.every(scope =>
+              userData.scopedKeys.hasOwnProperty(scope)
+            ) &&
+            !DEPRECATED_KEY_SCOPES.some(scope =>
               userData.scopedKeys.hasOwnProperty(scope)
             )
           ) {
@@ -237,6 +243,30 @@ class FxAccountsKeys {
    *
    */
   async _migrateOrFetchKeys(currentState, userData) {
+    // Bug 1697596 - delete any deprecated scoped keys from storage.
+    // If any of the deprecated keys are present, then we know that we've
+    // previously applied all the other migrations below, otherwise there
+    // would not be any `scopedKeys` field.
+    if (userData.scopedKeys) {
+      const toRemove = DEPRECATED_KEY_SCOPES.filter(scope =>
+        userData.scopedKeys.hasOwnProperty(scope)
+      );
+      if (toRemove.length > 0) {
+        for (const scope of toRemove) {
+          delete userData.scopedKeys[scope];
+        }
+        await currentState.updateUserAccountData({
+          scopedKeys: userData.scopedKeys,
+          // Prior to deprecating SCOPE_ECOSYSTEM_TELEMETRY, this file had some
+          // special code to store it as a top-level user data field. So, this
+          // file also gets to delete it as part of the deprecation.
+          ecosystemUserId: null,
+          ecosystemAnonId: null,
+        });
+        userData = await currentState.getUserAccountData();
+        return userData;
+      }
+    }
     // Bug 1661407 - migrate from legacy storage of keys as top-level account
     // data fields, to storing them as scoped keys in the `scopedKeys` object.
     if (
@@ -290,7 +320,7 @@ class FxAccountsKeys {
   /**
    * Fetch keys from the server, unwrap them, and derive required sub-keys.
    *
-   * Once the user's email is verified, we can request the root key `kB` from the
+   * Once the user's email is verified, we can resquest the root key `kB` from the
    * FxA server, unwrap it using the client-side secret `unwrapBKey`, and then
    * derive all the sub-keys required for operation of the browser.
    */
@@ -394,7 +424,7 @@ class FxAccountsKeys {
     // Hard-coded list of scopes that we know about.
     // This list will probably grow in future.
     // Note that LEGACY_SCOPE_WEBEXT_SYNC is not in this list, it gets special-case handling below.
-    const scopes = [SCOPE_OLD_SYNC, SCOPE_ECOSYSTEM_TELEMETRY].join(" ");
+    const scopes = [SCOPE_OLD_SYNC].join(" ");
     const scopedKeysMetadata = await this._fxai.fxAccountsClient.getScopedKeyData(
       sessionToken,
       FX_OAUTH_CLIENT_ID,
@@ -455,12 +485,6 @@ class FxAccountsKeys {
       kExtKbHash: scopedKeys[LEGACY_SCOPE_WEBEXT_SYNC]
         ? this.kidAsHex(scopedKeys[LEGACY_SCOPE_WEBEXT_SYNC])
         : CommonUtils.bytesAsHex(await this._deriveWebExtKbHash(uid, kBbytes)),
-      // The `ecosystemUserId` is derived from `kB` but is used more like an identifier
-      // than a key. We unpack it into the top-level user account data so that it can be
-      // stored in plaintext storage, and used for telemetry even when passwords are locked.
-      ecosystemUserId: scopedKeys[SCOPE_ECOSYSTEM_TELEMETRY]
-        ? CommonUtils.base64urlToHex(scopedKeys[SCOPE_ECOSYSTEM_TELEMETRY].k)
-        : null,
     };
   }
 
