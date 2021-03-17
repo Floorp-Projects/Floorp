@@ -30,8 +30,7 @@ async function testDevToolsServerInitialized() {
     "By default, the DevToolsServer isn't initialized not in content process"
   );
 
-  const descriptor = await TabDescriptorFactory.createDescriptorForTab(tab);
-  const target = await descriptor.getTarget();
+  const descriptor = await createDescriptorForTabAndInitTarget(tab);
 
   ok(
     DevToolsServer.initialized,
@@ -43,19 +42,19 @@ async function testDevToolsServerInitialized() {
     "Creating the target will initialize the DevToolsServer in content process"
   );
 
-  await target.destroy();
+  await descriptor.destroy();
 
   // Disconnecting the client will remove all connections from both server,
   // in parent and content process. But only the one in the content process will be
   // destroyed.
   ok(
     DevToolsServer.initialized,
-    "Destroying the target doesn't destroy the DevToolsServer in the parent process"
+    "Destroying the descriptor doesn't destroy the DevToolsServer in the parent process"
   );
   await assertServerInitialized(
     browser,
     false,
-    "But destroying the target ends up destroying the DevToolsServer in the content" +
+    "But destroying the descriptor ends up destroying the DevToolsServer in the content" +
       " process"
   );
 
@@ -73,8 +72,7 @@ async function testDevToolsServerKeepAlive() {
     "Server not started in content process"
   );
 
-  const descriptor = await TabDescriptorFactory.createDescriptorForTab(tab);
-  const target = await descriptor.getTarget();
+  const descriptor = await createDescriptorForTabAndInitTarget(tab);
 
   await assertServerInitialized(
     browser,
@@ -85,8 +83,8 @@ async function testDevToolsServerKeepAlive() {
   info("Set DevToolsServer.keepAlive to true in the content process");
   await setContentServerKeepAlive(browser, true);
 
-  info("Destroy the target, the content server should be kept alive");
-  await target.destroy();
+  info("Destroy the descriptor, the content server should be kept alive");
+  await descriptor.destroy();
 
   await assertServerInitialized(
     browser,
@@ -97,11 +95,10 @@ async function testDevToolsServerKeepAlive() {
   info("Set DevToolsServer.keepAlive back to false");
   await setContentServerKeepAlive(browser, false);
 
-  info("Create and destroy a target again");
-  const newDescriptor = await TabDescriptorFactory.createDescriptorForTab(tab);
-  const newTarget = await newDescriptor.getTarget();
+  info("Create and destroy a descriptor again");
+  const newDescriptor = await createDescriptorForTabAndInitTarget(tab);
 
-  await newTarget.destroy();
+  await newDescriptor.destroy();
 
   await assertServerInitialized(
     browser,
@@ -132,4 +129,12 @@ async function setContentServerKeepAlive(browser, keepAlive, message) {
     const { DevToolsServer } = require("devtools/server/devtools-server");
     DevToolsServer.keepAlive = _keepAlive;
   });
+}
+
+async function createDescriptorForTabAndInitTarget(tab) {
+  const descriptor = await TabDescriptorFactory.createDescriptorForTab(tab);
+  // Force spawning the target as that's what creates a DevToolsServer in content processes.
+  // Only creating the descriptor will only spawn actors in the parent process.
+  await descriptor.getTarget();
+  return descriptor;
 }
