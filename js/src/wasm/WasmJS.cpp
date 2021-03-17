@@ -740,7 +740,7 @@ static bool DescribeScriptedCaller(JSContext* cx, ScriptedCaller* caller,
 
 static bool ParseCompileOptions(JSContext* cx, HandleValue maybeOptions,
                                 FeatureOptions* options) {
-  if (WasmSimdWormholeFlag(cx)) {
+  if (SimdWormholeAvailable(cx)) {
     if (maybeOptions.isObject()) {
       RootedValue wormholeVal(cx);
       RootedObject obj(cx, &maybeOptions.toObject());
