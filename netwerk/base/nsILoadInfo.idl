@@ -542,6 +542,11 @@ interface nsILoadInfo : nsISupports
   [infallible] attribute boolean hasStoragePermission;
 
   /**
+   * True if the load was triggered by a meta refresh.
+   */
+  [infallible] attribute boolean isMetaRefresh;
+
+  /**
    * If forceInheritPrincipal is true, the data coming from the channel should
    * inherit its principal, even when the data is loaded over http:// or another
    * protocol that would normally use a URI-based principal.

@@ -298,6 +298,8 @@ struct DocShellLoadStateInit
   bool TryToReplaceWithSessionHistoryLoad;
 
   LoadingSessionHistoryInfo? loadingSessionHistoryInfo;
+
+  bool IsMetaRefresh;
 };
 
 struct TimedChannelInfo
