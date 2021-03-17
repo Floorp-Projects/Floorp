@@ -602,12 +602,6 @@ class CompileFlags(TargetCompileFlags):
                 ),
                 ("CXXFLAGS", "CFLAGS"),
             ),
-            ("DSO", context.config.substs.get("DSO_CFLAGS"), ("CXXFLAGS", "CFLAGS")),
-            (
-                "DSO_PIC",
-                context.config.substs.get("DSO_PIC_CFLAGS"),
-                ("CXXFLAGS", "CFLAGS"),
-            ),
             ("RTL", None, ("CXXFLAGS", "CFLAGS")),
             (
                 "OS_COMPILE_CFLAGS",
@@ -716,16 +710,6 @@ class WasmFlags(TargetCompileFlags):
                         )
                     )
                 ),
-                ("WASM_CXXFLAGS", "WASM_CFLAGS"),
-            ),
-            (
-                "DSO",
-                context.config.substs.get("DSO_CFLAGS"),
-                ("WASM_CXXFLAGS", "WASM_CFLAGS"),
-            ),
-            (
-                "DSO_PIC",
-                context.config.substs.get("DSO_PIC_CFLAGS"),
                 ("WASM_CXXFLAGS", "WASM_CFLAGS"),
             ),
             ("RTL", None, ("WASM_CXXFLAGS", "WASM_CFLAGS")),
