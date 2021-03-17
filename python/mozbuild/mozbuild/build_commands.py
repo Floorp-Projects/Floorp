@@ -28,11 +28,16 @@ OF THE TREE CAN RESULT IN BAD TREE STATE. USE AT YOUR OWN RISK.
 """.strip()
 
 
-@CommandProvider(metrics_path=MOZBUILD_METRICS_PATH)
+@CommandProvider
 class Build(MachCommandBase):
     """Interface to build the tree."""
 
-    @Command("build", category="build", description="Build the tree.")
+    @Command(
+        "build",
+        category="build",
+        description="Build the tree.",
+        metrics_path=MOZBUILD_METRICS_PATH,
+    )
     @CommandArgument(
         "--jobs",
         "-j",
@@ -158,6 +163,7 @@ class Build(MachCommandBase):
         "configure",
         category="build",
         description="Configure the tree (run configure and config.status).",
+        metrics_path=MOZBUILD_METRICS_PATH,
     )
     @CommandArgument(
         "options", default=None, nargs=argparse.REMAINDER, help="Configure options"
