@@ -9,6 +9,7 @@
 #include "GeckoProfiler.h"
 #include "HandlerServiceChild.h"
 #include "nsXPLookAndFeel.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/BackgroundHangMonitor.h"
 #include "mozilla/BenchmarkStorageChild.h"
@@ -2837,6 +2838,10 @@ void ContentChild::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure) {
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvShutdown() {
+  // Signal the ongoing shutdown to AppShutdown, this
+  // will make abort nested SpinEventLoopUntilOrQuit loops
+  AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownConfirmed);
+
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
     os->NotifyObservers(ToSupports(this), "content-child-will-shutdown",

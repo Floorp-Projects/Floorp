@@ -103,7 +103,7 @@ typedef LinkedList<ShutdownObserver> ShutdownList;
 extern Array<StaticAutoPtr<ShutdownList>,
              static_cast<size_t>(ShutdownPhase::ShutdownPhase_Length)>
     sShutdownObservers;
-extern ShutdownPhase sCurrentShutdownPhase;
+extern ShutdownPhase sCurrentClearOnShutdownPhase;
 
 }  // namespace ClearOnShutdown_Internal
 
@@ -134,7 +134,7 @@ inline void RunOnShutdown(
 inline bool PastShutdownPhase(ShutdownPhase aPhase) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  return size_t(ClearOnShutdown_Internal::sCurrentShutdownPhase) >=
+  return size_t(ClearOnShutdown_Internal::sCurrentClearOnShutdownPhase) >=
          size_t(aPhase);
 }
 

@@ -12,7 +12,7 @@ namespace ClearOnShutdown_Internal {
 Array<StaticAutoPtr<ShutdownList>,
       static_cast<size_t>(ShutdownPhase::ShutdownPhase_Length)>
     sShutdownObservers;
-ShutdownPhase sCurrentShutdownPhase = ShutdownPhase::NotInShutdown;
+ShutdownPhase sCurrentClearOnShutdownPhase = ShutdownPhase::NotInShutdown;
 
 void InsertIntoShutdownList(ShutdownObserver* aObserver, ShutdownPhase aPhase) {
   // Adding a ClearOnShutdown for a "past" phase is an error.
@@ -42,7 +42,7 @@ void KillClearOnShutdown(ShutdownPhase aPhase) {
 
   // Set the phase before notifying observers to make sure that they can't run
   // any code which isn't allowed to run after the start of this phase.
-  sCurrentShutdownPhase = aPhase;
+  sCurrentClearOnShutdownPhase = aPhase;
 
   // It's impossible to add an entry for a "past" phase; this is blocked in
   // ClearOnShutdown, but clear them out anyways in case there are phases

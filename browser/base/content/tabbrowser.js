@@ -3477,7 +3477,7 @@
         Promise.all(beforeUnloadPromises).then(() => {
           done = true;
         });
-        Services.tm.spinEventLoopUntilOrShutdown(
+        Services.tm.spinEventLoopUntilOrQuit(
           "tabbrowser.js:removeTabs",
           () => done || window.closed
         );
