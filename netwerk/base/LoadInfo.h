@@ -220,8 +220,8 @@ class LoadInfo final : public nsILoadInfo {
       bool aSkipContentSniffing, uint32_t aHttpsOnlyStatus,
       bool aHasValidUserGestureActivation, bool aAllowDeprecatedSystemRequests,
       bool aIsInDevToolsContext, bool aParserCreatedScript,
-      bool aHasStoragePermission, uint32_t aRequestBlockingReason,
-      nsINode* aLoadingContext,
+      bool aHasStoragePermission, bool aIsMetaRefresh,
+      uint32_t aRequestBlockingReason, nsINode* aLoadingContext,
       nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy);
   LoadInfo(const LoadInfo& rhs);
 
@@ -324,6 +324,7 @@ class LoadInfo final : public nsILoadInfo {
   bool mIsInDevToolsContext = false;
   bool mParserCreatedScript = false;
   bool mHasStoragePermission = false;
+  bool mIsMetaRefresh = false;
 
   // Is true if this load was triggered by processing the attributes of the
   // browsing context container.

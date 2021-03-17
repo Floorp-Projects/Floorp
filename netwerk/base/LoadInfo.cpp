@@ -588,6 +588,7 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mIsInDevToolsContext(rhs.mIsInDevToolsContext),
       mParserCreatedScript(rhs.mParserCreatedScript),
       mHasStoragePermission(rhs.mHasStoragePermission),
+      mIsMetaRefresh(rhs.mIsMetaRefresh),
       mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes),
       mLoadingEmbedderPolicy(rhs.mLoadingEmbedderPolicy) {}
 
@@ -627,8 +628,8 @@ LoadInfo::LoadInfo(
     bool aSkipContentSniffing, uint32_t aHttpsOnlyStatus,
     bool aHasValidUserGestureActivation, bool aAllowDeprecatedSystemRequests,
     bool aIsInDevToolsContext, bool aParserCreatedScript,
-    bool aHasStoragePermission, uint32_t aRequestBlockingReason,
-    nsINode* aLoadingContext,
+    bool aHasStoragePermission, bool aIsMetaRefresh,
+    uint32_t aRequestBlockingReason, nsINode* aLoadingContext,
     nsILoadInfo::CrossOriginEmbedderPolicy aLoadingEmbedderPolicy)
     : mLoadingPrincipal(aLoadingPrincipal),
       mTriggeringPrincipal(aTriggeringPrincipal),
@@ -694,6 +695,7 @@ LoadInfo::LoadInfo(
       mIsInDevToolsContext(aIsInDevToolsContext),
       mParserCreatedScript(aParserCreatedScript),
       mHasStoragePermission(aHasStoragePermission),
+      mIsMetaRefresh(aIsMetaRefresh),
       mIsFromProcessingFrameAttributes(false),
       mLoadingEmbedderPolicy(aLoadingEmbedderPolicy) {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
@@ -1017,6 +1019,18 @@ LoadInfo::GetHasStoragePermission(bool* aHasStoragePermission) {
 NS_IMETHODIMP
 LoadInfo::SetHasStoragePermission(bool aHasStoragePermission) {
   mHasStoragePermission = aHasStoragePermission;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetIsMetaRefresh(bool* aIsMetaRefresh) {
+  *aIsMetaRefresh = mIsMetaRefresh;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetIsMetaRefresh(bool aIsMetaRefresh) {
+  mIsMetaRefresh = aIsMetaRefresh;
   return NS_OK;
 }
 

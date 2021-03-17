@@ -5313,6 +5313,7 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
   loadState->SetResultPrincipalURI(aURI);
   loadState->SetResultPrincipalURIIsSome(true);
   loadState->SetKeepResultPrincipalURIIfSet(true);
+  loadState->SetIsMetaRefresh(aMetaRefresh);
 
   // Set the triggering pricipal to aPrincipal if available, or current
   // document's principal otherwise.
@@ -10413,6 +10414,7 @@ nsresult nsDocShell::DoURILoad(nsDocShellLoadState* aLoadState,
     loadInfo->SetHasValidUserGestureActivation(true);
   }
   loadInfo->SetTriggeringSandboxFlags(aLoadState->TriggeringSandboxFlags());
+  loadInfo->SetIsMetaRefresh(aLoadState->IsMetaRefresh());
 
   uint32_t cacheKey = 0;
   if (aCacheKey) {
