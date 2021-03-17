@@ -55,6 +55,88 @@ this bootstrap again.
 """
 
 
+def ensure_command_line_tools():
+    # We need either the command line tools or Xcode (one is sufficient).
+    # Python 3, required to run this code, is not installed by default on macos
+    # as of writing (macos <= 11.x).
+    # There are at least 5 different ways to obtain it:
+    # - macports
+    # - homebrew
+    # - command line tools
+    # - Xcode
+    # - python.org
+    # The first two require to install the command line tools.
+    # So only in the last case we may not have command line tools or xcode
+    # available.
+    # When the command line tools are installed, `xcode-select --print-path`
+    # prints their path.
+    # When Xcode is installed, `xcode-select --print-path` prints its path.
+    # When neither is installed, `xcode-select --print-path` prints an error
+    # to stderr and nothing to stdout.
+    # So in the rare case where we detect neither the command line tools or
+    # Xcode is installed, we trigger an intall of the command line tools
+    # (via `xcode-select --install`).
+    proc = subprocess.run(
+        ["xcode-select", "--print-path"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.DEVNULL,
+    )
+    if not proc.stdout:
+        subprocess.run(["xcode-select", "--install"], check=True)
+        # xcode-select --install triggers a separate process to be started by
+        # launchd, and tracking its successful outcome would require something
+        # like figuring its pid and using kqueue to get a notification when it
+        # finishes. Considering how unlikely it is that someone would end up
+        # here in the first place, we just bail out.
+        print("Please follow the command line tools installer instructions")
+        print("and rerun `./mach bootstrap` when it's finished.")
+        sys.exit(1)
+
+
+class OSXBootstrapperLight(BaseBootstrapper):
+    def __init__(self, version, **kwargs):
+        BaseBootstrapper.__init__(self, **kwargs)
+
+    def install_system_packages(self):
+        ensure_command_line_tools()
+
+        if platform.machine() == "arm64":
+            # If Rosetta is installed, running `arch -x86_64 command` will
+            # run the command as x86_64, if it's a universal binary. System
+            # binaries are, so we use one: cat. With stdin set to /dev/null,
+            # it returns immediately without an error. In case of error, it
+            # means Rosetta is not installed.
+            proc = subprocess.run(
+                ["arch", "-x86_64", "cat"],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+            if proc.returncode != 0:
+                print("Installing Rosetta")
+                subprocess.check_call(["softwareupdate", "--install-rosetta"])
+
+    # All the installs below are assumed to be handled by mach configure/build by
+    # default, which is true for arm64.
+    def install_browser_packages(self, mozconfig_builder):
+        pass
+
+    def install_browser_artifact_mode_packages(self, mozconfig_builder):
+        pass
+
+    def ensure_node_packages(self, state_dir, checkout_root):
+        pass
+
+    def ensure_stylo_packages(self, state_dir, checkout_root):
+        pass
+
+    def ensure_clang_static_analysis_package(self, state_dir, checkout_root):
+        pass
+
+    def ensure_nasm_packages(self, state_dir, checkout_root):
+        pass
+
+
 class OSXBootstrapper(BaseBootstrapper):
 
     INSTALL_PYTHON_GUIDANCE = (
@@ -71,17 +153,10 @@ class OSXBootstrapper(BaseBootstrapper):
         if self.os_version < StrictVersion("10.6"):
             raise Exception("OS X 10.6 or above is required.")
 
-        if platform.machine() == "arm64":
-            print(
-                "Bootstrap is not supported on Apple Silicon yet.\n"
-                "Please see instructions at https://bit.ly/36bUmEx in the meanwhile"
-            )
-            sys.exit(1)
-
         self.minor_version = version.split(".")[1]
 
     def install_system_packages(self):
-        self.ensure_command_line_tools()
+        ensure_command_line_tools()
 
         self.ensure_homebrew_installed()
         _, hg_modern, _ = self.is_mercurial_modern()
@@ -120,43 +195,6 @@ class OSXBootstrapper(BaseBootstrapper):
         from mozboot import android
 
         return android.generate_mozconfig("macosx", artifact_mode=artifact_mode)
-
-    def ensure_command_line_tools(self):
-        # We need either the command line tools or Xcode (one is sufficient).
-        # Python 3, required to run this code, is not installed by default on macos
-        # as of writing (macos <= 11.x).
-        # There are at least 5 different ways to obtain it:
-        # - macports
-        # - homebrew
-        # - command line tools
-        # - Xcode
-        # - python.org
-        # The first two require to install the command line tools.
-        # So only in the last case we may not have command line tools or xcode
-        # available.
-        # When the command line tools are installed, `xcode-select --print-path`
-        # prints their path.
-        # When Xcode is installed, `xcode-select --print-path` prints its path.
-        # When neither is installed, `xcode-select --print-path` prints an error
-        # to stderr and nothing to stdout.
-        # So in the rare case where we detect neither the command line tools or
-        # Xcode is installed, we trigger an intall of the command line tools
-        # (via `xcode-select --install`).
-        proc = subprocess.run(
-            ["xcode-select", "--print-path"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-        )
-        if not proc.stdout:
-            subprocess.run(["xcode-select", "--install"], check=True)
-            # xcode-select --install triggers a separate process to be started by
-            # launchd, and tracking its successful outcome would require something
-            # like figuring its pid and using kqueue to get a notification when it
-            # finishes. Considering how unlikely it is that someone would end up
-            # here in the first place, we just bail out.
-            print("Please follow the command line tools installer instructions")
-            print("and rerun `./mach bootstrap` when it's finished.")
-            sys.exit(1)
 
     def _ensure_homebrew_found(self):
         self.brew = which("brew")
