@@ -369,6 +369,10 @@ toolbar[brighttext] {
   fill: rgb(213, 32, 20);
 }
 
+toolbar[brighttext] #panic-button[open] {
+  fill: #ff848b;
+}
+
 #library-button {
   list-style-image: url("chrome://browser/skin/library.svg");
 }
