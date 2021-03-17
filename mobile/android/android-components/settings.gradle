@@ -6,7 +6,14 @@ import org.yaml.snakeyaml.Yaml
 
 buildscript {
     repositories {
-        jcenter()
+        if (hasProperty("centralRepo")) {
+            maven {
+                name "MavenCentral"
+                url property("centralRepo")
+            }
+        } else {
+            mavenCentral()
+        }
     }
 
     dependencies {
