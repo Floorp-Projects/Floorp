@@ -2326,6 +2326,10 @@ GeckoDriver.prototype.closeChromeWindow = async function() {
 
 /** Delete Marionette session. */
 GeckoDriver.prototype.deleteSession = function() {
+  if (!this.currentSession) {
+    return;
+  }
+
   clearElementIdCache();
 
   unregisterCommandsActor();
@@ -2339,9 +2343,7 @@ GeckoDriver.prototype.deleteSession = function() {
     this.dialogObserver = null;
   }
 
-  try {
-    Services.obs.removeObserver(this, "browsing-context-attached");
-  } catch (e) {}
+  Services.obs.removeObserver(this, "browsing-context-attached");
 
   this.currentSession.destroy();
   this.currentSession = null;
