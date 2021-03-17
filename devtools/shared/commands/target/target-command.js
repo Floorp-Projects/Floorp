@@ -581,7 +581,11 @@ class TargetCommand extends EventEmitter {
    */
   async onLocalTabRemotenessChange(targetFront) {
     // Wait for the target to be destroyed so that TabDescriptorFactory clears its memoized descriptor for this tab
-    await targetFront.once("target-destroyed");
+    // TabDescriptor may emit the event with a null targetFront, interpret that as if the previous target
+    // has already been destroyed
+    if (targetFront) {
+      await targetFront.once("target-destroyed");
+    }
 
     // Fetch the new target from the descriptor.
     const newTarget = await this.descriptorFront.getTarget();
