@@ -56,7 +56,7 @@ class CustomTabsUseCases(
          */
         operator fun invoke(customTabId: String): Boolean {
             val session = sessionManager.findSessionById(customTabId)
-            if (session != null) {
+            if (session?.customTabConfig != null) {
                 sessionManager.remove(session)
                 return true
             }
