@@ -130,10 +130,7 @@ class Front extends Pool {
         `${this.actorID} (${this.typeName}) can't manage ${front.actorID}
         (${front.typeName}) since it has a different parentFront ${
           front.parentFront
-            ? front.parentFront.actordID +
-              "(" +
-              front.parentFront.typeName +
-              ")"
+            ? front.parentFront.actorID + "(" + front.parentFront.typeName + ")"
             : "<no parentFront>"
         }`
       );
