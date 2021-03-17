@@ -1796,8 +1796,8 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
       static_cast<uint8_t>(aVideoInputEnumType),
       static_cast<uint8_t>(aAudioInputEnumType));
 
-  auto holder = MakeUnique<MozPromiseHolder<MgrPromise>>();
-  RefPtr<MgrPromise> promise = holder->Ensure(__func__);
+  MozPromiseHolder<MgrPromise> holder;
+  RefPtr<MgrPromise> promise = holder.Ensure(__func__);
 
   bool hasVideo = aVideoInputType != MediaSourceEnum::Other;
   bool hasAudio = aAudioInputType != MediaSourceEnum::Other;
@@ -1828,7 +1828,7 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
                                        videoLoopDev, audioLoopDev, hasVideo,
                                        hasAudio, hasAudioOutput,
                                        fakeDeviceRequested, realDeviceRequested,
-                                       aOutDevices]() {
+                                       aOutDevices]() mutable {
     // Only enumerate what's asked for, and only fake cams and mics.
     RefPtr<MediaEngine> fakeBackend, realBackend;
     if (fakeDeviceRequested) {
@@ -1914,7 +1914,7 @@ RefPtr<MediaManager::MgrPromise> MediaManager::EnumerateRawDevices(
       GuessVideoDeviceGroupIDs(*aOutDevices, audios);
     }
 
-    holder->Resolve(false, __func__);
+    holder.Resolve(false, __func__);
   });
 
   if (realDeviceRequested && aForceNoPermRequest &&
@@ -2762,7 +2762,7 @@ RefPtr<MediaManager::StreamPromise> MediaManager::GetUserMedia(
             // refactoring. MediaManager allows
             // "neither-resolve-nor-reject" semantics, so we cannot
             // use MozPromiseHolder here.
-            auto holder = MozPromiseHolder<StreamPromise>();
+            MozPromiseHolder<StreamPromise> holder;
             RefPtr<StreamPromise> p = holder.Ensure(__func__);
 
             // Pass callbacks and listeners along to GetUserMediaTask.
