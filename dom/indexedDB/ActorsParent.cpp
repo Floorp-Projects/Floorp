@@ -2195,6 +2195,7 @@ class Database final
   RefPtr<DatabaseConnection> mConnection;
   const PrincipalInfo mPrincipalInfo;
   const Maybe<ContentParentId> mOptionalContentParentId;
+  // XXX Consider changing this to ClientMetadata.
   const quota::OriginMetadata mOriginMetadata;
   const nsCString mId;
   const nsString mFilePath;
@@ -5765,8 +5766,8 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
   if (fileSize.value() > 0) {
     MOZ_ASSERT(aQuotaManager);
 
-    aQuotaManager->DecreaseUsageForOrigin(aPersistenceType, aOriginMetadata,
-                                          Client::IDB, fileSize.value());
+    aQuotaManager->DecreaseUsageForClient(
+        ClientMetadata{aOriginMetadata, Client::IDB}, fileSize.value());
   }
 
   return NS_OK;
@@ -5878,8 +5879,8 @@ Result<Ok, nsresult> DeleteFileManagerDirectory(
           });
 
   if (usageValue) {
-    aQuotaManager->DecreaseUsageForOrigin(aPersistenceType, aOriginMetadata,
-                                          Client::IDB, usageValue);
+    aQuotaManager->DecreaseUsageForClient(
+        ClientMetadata{aOriginMetadata, Client::IDB}, usageValue);
   }
 
   return res;

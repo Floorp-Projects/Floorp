@@ -3895,29 +3895,28 @@ int64_t QuotaManager::NoteOriginDirectoryCreated(
   return timestamp;
 }
 
-void QuotaManager::DecreaseUsageForOrigin(PersistenceType aPersistenceType,
-                                          const OriginMetadata& aOriginMetadata,
-                                          Client::Type aClientType,
+void QuotaManager::DecreaseUsageForClient(const ClientMetadata& aClientMetadata,
                                           int64_t aSize) {
   MOZ_ASSERT(!NS_IsMainThread());
-  MOZ_ASSERT(aPersistenceType != PERSISTENCE_TYPE_PERSISTENT);
+  MOZ_ASSERT(IsBestEffortPersistenceType(aClientMetadata.mPersistenceType));
 
   MutexAutoLock lock(mQuotaMutex);
 
   GroupInfoPair* pair;
-  if (!mGroupInfoPairs.Get(aOriginMetadata.mGroup, &pair)) {
+  if (!mGroupInfoPairs.Get(aClientMetadata.mGroup, &pair)) {
     return;
   }
 
-  RefPtr<GroupInfo> groupInfo = pair->LockedGetGroupInfo(aPersistenceType);
+  RefPtr<GroupInfo> groupInfo =
+      pair->LockedGetGroupInfo(aClientMetadata.mPersistenceType);
   if (!groupInfo) {
     return;
   }
 
   RefPtr<OriginInfo> originInfo =
-      groupInfo->LockedGetOriginInfo(aOriginMetadata.mOrigin);
+      groupInfo->LockedGetOriginInfo(aClientMetadata.mOrigin);
   if (originInfo) {
-    originInfo->LockedDecreaseUsage(aClientType, aSize);
+    originInfo->LockedDecreaseUsage(aClientMetadata.mClientType, aSize);
   }
 }
 
