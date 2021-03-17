@@ -23,7 +23,7 @@ using namespace mozilla;
 
 static NSAppearance* AppearanceForVibrancyType(VibrancyType aType) {
   switch (aType) {
-    case VibrancyType::LIGHT:
+    case VibrancyType::TITLEBAR_LIGHT:
     case VibrancyType::TOOLTIP:
     case VibrancyType::MENU:
     case VibrancyType::HIGHLIGHTED_MENUITEM:
@@ -31,7 +31,7 @@ static NSAppearance* AppearanceForVibrancyType(VibrancyType aType) {
     case VibrancyType::SOURCE_LIST_SELECTION:
     case VibrancyType::ACTIVE_SOURCE_LIST_SELECTION:
       return [NSAppearance appearanceNamed:@"NSAppearanceNameVibrantLight"];
-    case VibrancyType::DARK:
+    case VibrancyType::TITLEBAR_DARK:
       return [NSAppearance appearanceNamed:@"NSAppearanceNameVibrantDark"];
   }
 }
