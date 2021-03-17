@@ -119,12 +119,12 @@ interface nsIThreadManager : nsISupports
 
   /**
    * Similar to the previous method, but the spinning of the event loop
-   * terminates when the shutting down starts.
+   * terminates when the quit application shutting down starts.
    *
    * C++ code should not use this function, instead preferring
    * mozilla::SpinEventLoopUntil.
    */
-  void spinEventLoopUntilOrShutdown(in ACString aVeryGoodReasonToDoThis, in nsINestedEventLoopCondition condition);
+  void spinEventLoopUntilOrQuit(in ACString aVeryGoodReasonToDoThis, in nsINestedEventLoopCondition condition);
 
   /**
    * Spin the current thread's event loop until there are no more pending

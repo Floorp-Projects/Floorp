@@ -1706,7 +1706,7 @@
         // The permitUnload() promise will, alas, not call its resolution
         // callbacks after the browser window the promise lives in has closed,
         // so we have to check for that case explicitly.
-        Services.tm.spinEventLoopUntilOrShutdown(
+        Services.tm.spinEventLoopUntilOrQuit(
           "browser-custom-element.js:permitUnload",
           () => window.closed || success !== undefined
         );

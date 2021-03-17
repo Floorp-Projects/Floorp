@@ -12,6 +12,7 @@
 #include "nsTArray.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/AbstractThread.h"
+#include "mozilla/AppShutdown.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/EventQueue.h"
 #include "mozilla/InputTaskManager.h"
@@ -258,93 +259,11 @@ NS_IMPL_CLASSINFO(nsThreadManager, nullptr,
 NS_IMPL_QUERY_INTERFACE_CI(nsThreadManager, nsIThreadManager)
 NS_IMPL_CI_INTERFACE_GETTER(nsThreadManager, nsIThreadManager)
 
-namespace {
-
-// Simple observer to monitor the beginning of the shutdown.
-class ShutdownObserveHelper final : public nsIObserver,
-                                    public nsSupportsWeakReference {
- public:
-  NS_DECL_ISUPPORTS
-
-  static nsresult Create(ShutdownObserveHelper** aObserver) {
-    MOZ_ASSERT(aObserver);
-
-    RefPtr<ShutdownObserveHelper> observer = new ShutdownObserveHelper();
-
-    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-    if (NS_WARN_IF(!obs)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsresult rv =
-        obs->AddObserver(observer, NS_XPCOM_SHUTDOWN_OBSERVER_ID, true);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = obs->AddObserver(observer, "content-child-will-shutdown", true);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    observer.forget(aObserver);
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  Observe(nsISupports* aSubject, const char* aTopic,
-          const char16_t* aData) override {
-    if (!strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) ||
-        !strcmp(aTopic, "content-child-will-shutdown")) {
-      mShuttingDown = true;
-      return NS_OK;
-    }
-
-    return NS_OK;
-  }
-
-  bool ShuttingDown() const { return mShuttingDown; }
-
- private:
-  explicit ShutdownObserveHelper() : mShuttingDown(false) {}
-
-  ~ShutdownObserveHelper() = default;
-
-  bool mShuttingDown;
-};
-
-NS_INTERFACE_MAP_BEGIN(ShutdownObserveHelper)
-  NS_INTERFACE_MAP_ENTRY(nsIObserver)
-  NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIObserver)
-NS_INTERFACE_MAP_END
-
-NS_IMPL_ADDREF(ShutdownObserveHelper)
-NS_IMPL_RELEASE(ShutdownObserveHelper)
-
-StaticRefPtr<ShutdownObserveHelper> gShutdownObserveHelper;
-
-}  // namespace
-
 //-----------------------------------------------------------------------------
 
 /*static*/ nsThreadManager& nsThreadManager::get() {
   static nsThreadManager sInstance;
   return sInstance;
-}
-
-/* static */
-void nsThreadManager::InitializeShutdownObserver() {
-  MOZ_ASSERT(!gShutdownObserveHelper);
-
-  RefPtr<ShutdownObserveHelper> observer;
-  nsresult rv = ShutdownObserveHelper::Create(getter_AddRefs(observer));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return;
-  }
-
-  gShutdownObserveHelper = observer;
-  ClearOnShutdown(&gShutdownObserveHelper);
 }
 
 nsThreadManager::nsThreadManager()
@@ -701,14 +620,16 @@ nsThreadManager::GetCurrentThread(nsIThread** aResult) {
 NS_IMETHODIMP
 nsThreadManager::SpinEventLoopUntil(const nsACString& aVeryGoodReasonToDoThis,
                                     nsINestedEventLoopCondition* aCondition) {
-  return SpinEventLoopUntilInternal(aVeryGoodReasonToDoThis, aCondition, false);
+  return SpinEventLoopUntilInternal(aVeryGoodReasonToDoThis, aCondition,
+                                    ShutdownPhase::NotInShutdown);
 }
 
 NS_IMETHODIMP
-nsThreadManager::SpinEventLoopUntilOrShutdown(
+nsThreadManager::SpinEventLoopUntilOrQuit(
     const nsACString& aVeryGoodReasonToDoThis,
     nsINestedEventLoopCondition* aCondition) {
-  return SpinEventLoopUntilInternal(aVeryGoodReasonToDoThis, aCondition, true);
+  return SpinEventLoopUntilInternal(aVeryGoodReasonToDoThis, aCondition,
+                                    ShutdownPhase::AppShutdownConfirmed);
 }
 
 struct MOZ_STACK_CLASS AutoNestedEventLoopAnnotation {
@@ -752,7 +673,8 @@ AutoNestedEventLoopAnnotation* AutoNestedEventLoopAnnotation::sCurrent =
 
 nsresult nsThreadManager::SpinEventLoopUntilInternal(
     const nsACString& aVeryGoodReasonToDoThis,
-    nsINestedEventLoopCondition* aCondition, bool aCheckingShutdown) {
+    nsINestedEventLoopCondition* aCondition,
+    ShutdownPhase aCheckingShutdownPhase) {
   AutoNestedEventLoopAnnotation annotation(aVeryGoodReasonToDoThis);
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING_NONSENSITIVE(
       "nsThreadManager::SpinEventLoop", OTHER, aVeryGoodReasonToDoThis);
@@ -763,17 +685,20 @@ nsresult nsThreadManager::SpinEventLoopUntilInternal(
   nsCOMPtr<nsINestedEventLoopCondition> condition(aCondition);
   nsresult rv = NS_OK;
 
-  // Nothing to do if already shutting down. Note that gShutdownObserveHelper is
-  // nullified on shutdown.
-  if (aCheckingShutdown &&
-      (!gShutdownObserveHelper || gShutdownObserveHelper->ShuttingDown())) {
+  bool checkingShutdown =
+      (aCheckingShutdownPhase > ShutdownPhase::NotInShutdown);
+
+  // Nothing to do if already shutting down.
+  if (checkingShutdown &&
+      AppShutdown::GetCurrentShutdownPhase() >= aCheckingShutdownPhase) {
     return NS_OK;
   }
 
   if (!mozilla::SpinEventLoopUntil([&]() -> bool {
-        // Shutting down is started.
-        if (aCheckingShutdown && (!gShutdownObserveHelper ||
-                                  gShutdownObserveHelper->ShuttingDown())) {
+        // Check if shutting down reached our limits.
+        if (checkingShutdown &&
+            AppShutdown::GetCurrentShutdownPhase() >= aCheckingShutdownPhase) {
+          // This will make us return with NS_OK.
           return true;
         }
 
