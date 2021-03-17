@@ -384,6 +384,4 @@ if CONFIG["CC_TYPE"] in ("clang", "gcc"):
         "-Wno-error=shadow",
     ]
 
-CXXFLAGS += ["-Werror=switch"]
-
 FINAL_LIBRARY = "xul"

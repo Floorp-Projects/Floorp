@@ -84,7 +84,7 @@ class DMABufSurface {
   virtual DMABufSurfaceYUV* GetAsDMABufSurfaceYUV() { return nullptr; }
 
   virtual mozilla::gfx::YUVColorSpace GetYUVColorSpace() {
-    return mozilla::gfx::YUVColorSpace::Default;
+    return mozilla::gfx::YUVColorSpace::UNKNOWN;
   };
   virtual bool IsFullRange() { return false; };
 
@@ -301,8 +301,7 @@ class DMABufSurfaceYUV : public DMABufSurface {
   int mHeight[DMABUF_BUFFER_PLANES];
   EGLImageKHR mEGLImage[DMABUF_BUFFER_PLANES];
   GLuint mTexture[DMABUF_BUFFER_PLANES];
-  mozilla::gfx::YUVColorSpace mColorSpace =
-      mozilla::gfx::YUVColorSpace::Default;
+  mozilla::gfx::YUVColorSpace mColorSpace;
 };
 
 #endif

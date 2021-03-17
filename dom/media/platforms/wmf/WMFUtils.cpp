@@ -65,22 +65,21 @@ GetDefaultStride(IMFMediaType* aType, uint32_t aWidth, uint32_t* aOutStride) {
   return hr;
 }
 
-Maybe<gfx::YUVColorSpace> GetYUVColorSpace(IMFMediaType* aType) {
+gfx::YUVColorSpace GetYUVColorSpace(IMFMediaType* aType) {
   UINT32 yuvColorMatrix;
   HRESULT hr = aType->GetUINT32(MF_MT_YUV_MATRIX, &yuvColorMatrix);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), {});
+  NS_ENSURE_TRUE(SUCCEEDED(hr), gfx::YUVColorSpace::UNKNOWN);
 
   switch (yuvColorMatrix) {
     case MFVideoTransferMatrix_BT2020_10:
     case MFVideoTransferMatrix_BT2020_12:
-      return Some(gfx::YUVColorSpace::BT2020);
+      return gfx::YUVColorSpace::BT2020;
     case MFVideoTransferMatrix_BT709:
-      return Some(gfx::YUVColorSpace::BT709);
+      return gfx::YUVColorSpace::BT709;
     case MFVideoTransferMatrix_BT601:
-      return Some(gfx::YUVColorSpace::BT601);
+      return gfx::YUVColorSpace::BT601;
     default:
-      MOZ_ASSERT_UNREACHABLE("Unhandled MFVideoTransferMatrix_?");
-      return {};
+      return gfx::YUVColorSpace::UNKNOWN;
   }
 }
 

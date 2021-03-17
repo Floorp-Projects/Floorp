@@ -792,7 +792,11 @@ already_AddRefed<DMABufSurfaceYUV> DMABufSurfaceYUV::CreateYUVSurface(
 }
 
 DMABufSurfaceYUV::DMABufSurfaceYUV()
-    : DMABufSurface(SURFACE_NV12), mWidth(), mHeight(), mTexture() {
+    : DMABufSurface(SURFACE_NV12),
+      mWidth(),
+      mHeight(),
+      mTexture(),
+      mColorSpace(mozilla::gfx::YUVColorSpace::UNKNOWN) {
   for (int i = 0; i < DMABUF_BUFFER_PLANES; i++) {
     mEGLImage[i] = LOCAL_EGL_NO_IMAGE;
   }
