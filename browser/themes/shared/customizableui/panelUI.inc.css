@@ -1513,7 +1513,7 @@ panelmultiview .toolbaritem-combined-buttons > spacer.after-label {
 
 #appMenu-zoomReset-button > .toolbarbutton-text,
 #appMenu-zoomReset-button2 > .toolbarbutton-text {
-  min-width: calc(3ch + 8px);
+  min-width: calc(4ch + 8px);
   text-align: center;
 }
 
@@ -1732,11 +1732,8 @@ toolbarpaletteitem[place="menu-panel"] > toolbaritem {
 }
 
 #zoom-controls[cui-areatype="toolbar"] > #zoom-reset-button > .toolbarbutton-text {
-%ifdef XP_MACOSX
-  min-width: 6ch;
-%else
-  min-width: 7ch;
-%endif
+  /* 4 chars max, but `ch` is the width of the `0` glyph, so account for larger glyphs by adding 1ch */
+  min-width: calc(5ch + var(--toolbarbutton-inner-padding) * 2);
 }
 
 .toolbaritem-combined-buttons@inAnyPanel@ > separator {
