@@ -4,6 +4,8 @@
 
 use crate::net::PingUploader;
 
+use std::path::PathBuf;
+
 /// The default server pings are sent to.
 pub(crate) const DEFAULT_GLEAN_ENDPOINT: &str = "https://incoming.telemetry.mozilla.org";
 
@@ -15,7 +17,7 @@ pub struct Configuration {
     /// Whether upload should be enabled.
     pub upload_enabled: bool,
     /// Path to a directory to store all data in.
-    pub data_path: String,
+    pub data_path: PathBuf,
     /// The application ID (will be sanitized during initialization).
     pub application_id: String,
     /// The maximum number of events to store before sending a ping containing events.

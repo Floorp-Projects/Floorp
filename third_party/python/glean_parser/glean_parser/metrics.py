@@ -56,6 +56,8 @@ class Metric:
         gecko_datapoint: str = "",
         no_lint: Optional[List[str]] = None,
         data_sensitivity: Optional[List[str]] = None,
+        defined_in: Optional[Dict] = None,
+        telemetry_mirror: Optional[str] = None,
         _config: Dict[str, Any] = None,
         _validated: bool = False,
     ):
@@ -88,13 +90,16 @@ class Metric:
             self.data_sensitivity = [
                 getattr(DataSensitivity, x) for x in data_sensitivity
             ]
+        self.defined_in = defined_in
+        if telemetry_mirror is not None:
+            self.telemetry_mirror = telemetry_mirror
 
         # _validated indicates whether this metric has already been jsonschema
         # validated (but not any of the Python-level validation).
         if not _validated:
             data = {
                 "$schema": parser.METRICS_ID,
-                self.category: {self.name: self.serialize()},
+                self.category: {self.name: self._serialize_input()},
             }  # type: Dict[str, util.JSONType]
             for error in parser.validate(data):
                 raise ValueError(error)
@@ -146,6 +151,7 @@ class Metric:
         return cls.metric_types[metric_type](
             category=category,
             name=name,
+            defined_in=getattr(metric_info, "defined_in", None),
             _validated=validated,
             _config=config,
             **metric_info,
@@ -167,6 +173,11 @@ class Metric:
         del d["name"]
         del d["category"]
         return d
+
+    def _serialize_input(self) -> Dict[str, util.JSONType]:
+        d = self.serialize()
+        modified_dict = util.remove_output_params(d, "defined_in")
+        return modified_dict
 
     def identifier(self) -> str:
         """
@@ -351,6 +362,14 @@ class LabeledString(Labeled, String):
 
 class LabeledCounter(Labeled, Counter):
     typename = "labeled_counter"
+
+
+class Rate(Metric):
+    typename = "rate"
+
+    def __init__(self, *args, **kwargs):
+        self.denominator_metric = kwargs.pop("denominator_metric", None)
+        super().__init__(*args, **kwargs)
 
 
 ObjectTree = Dict[str, Dict[str, Union[Metric, pings.Ping]]]

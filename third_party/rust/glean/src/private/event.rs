@@ -8,7 +8,7 @@ use std::{collections::HashMap, marker::PhantomData, sync::Arc};
 use glean_core::metrics::MetricType;
 use glean_core::traits;
 
-use crate::{dispatcher, ErrorType, RecordedEvent};
+use crate::{ErrorType, RecordedEvent};
 
 pub use glean_core::traits::NoExtraKeys;
 
@@ -41,6 +41,15 @@ impl<K: traits::ExtraKeys> EventMetric<K> {
             extra_keys: PhantomData,
         }
     }
+
+    /// Record a new event with a provided timestamp.
+    ///
+    /// It's the caller's responsibility to ensure the timestamp comes from the same clock source.
+    /// Use [`glean::get_timestamp_ms`](crate::get_timestamp_ms) to get a valid timestamp.
+    pub fn record_with_time(&self, timestamp: u64, extra: HashMap<i32, String>) {
+        let metric = Arc::clone(&self.inner);
+        crate::launch_with_glean(move |glean| metric.record(glean, timestamp, Some(extra)));
+    }
 }
 
 #[inherent(pub)]
@@ -48,15 +57,14 @@ impl<K: traits::ExtraKeys> traits::Event for EventMetric<K> {
     type Extra = K;
 
     fn record<M: Into<Option<HashMap<<Self as traits::Event>::Extra, String>>>>(&self, extra: M) {
-        const NANOS_PER_MILLI: u64 = 1_000_000;
-        let now = time::precise_time_ns() / NANOS_PER_MILLI;
+        let now = crate::get_timestamp_ms();
 
         // Translate from [ExtraKey -> String] to a [Int -> String] map
         let extra = extra
             .into()
             .map(|h| h.into_iter().map(|(k, v)| (k.index(), v)).collect());
         let metric = Arc::clone(&self.inner);
-        dispatcher::launch(move || crate::with_glean(|glean| metric.record(glean, now, extra)));
+        crate::launch_with_glean(move |glean| metric.record(glean, now, extra));
     }
 
     fn test_get_value<'a, S: Into<Option<&'a str>>>(

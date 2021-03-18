@@ -166,7 +166,7 @@ def output_swift(
         fd.write(
             template.render(
                 categories=categories,
-                extra_args=util.extra_metric_args,
+                extra_args=util.metric_args,
                 namespace=namespace,
                 glean_namespace=glean_namespace,
                 allow_reserved=options.get("allow_reserved", False),

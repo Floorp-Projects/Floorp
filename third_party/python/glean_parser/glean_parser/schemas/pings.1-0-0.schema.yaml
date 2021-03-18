@@ -33,7 +33,7 @@ propertyNames:
   allOf:
     - anyOf:
         - $ref: "#/definitions/kebab_case"
-        - enum: ['$schema']
+        - enum: ['$schema', 'no_lint']
     - not:
         enum: ['all-pings']
 
@@ -41,6 +41,14 @@ properties:
   $schema:
     type: string
     format: url
+
+  no_lint:
+    title: Lint checks to skip globally
+    description: |
+      This parameter lists any lint checks to skip for this whole file.
+    type: array
+    items:
+      type: string
 
 additionalProperties:
   type: object
@@ -101,7 +109,7 @@ additionalProperties:
       minItems: 1
       items:
         anyOf:
-          - type: integer
+          - type: integer  # Keep supporting integer for backward-compat
           - type: string
             format: uri
 
@@ -129,6 +137,14 @@ additionalProperties:
         type: string
         maxLength: 30
       additionalProperties:
+        type: string
+
+    no_lint:
+      title: Lint checks to skip
+      description: |
+        This parameter lists any lint checks to skip for this metric only.
+      type: array
+      items:
         type: string
 
   required:

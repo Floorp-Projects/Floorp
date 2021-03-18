@@ -36,7 +36,7 @@ pub(crate) fn new_glean(
     clear_stores: bool,
 ) -> tempfile::TempDir {
     let dir = tempfile::tempdir().unwrap();
-    let tmpname = dir.path().display().to_string();
+    let tmpname = dir.path().to_path_buf();
 
     let cfg = match configuration {
         Some(c) => c,
