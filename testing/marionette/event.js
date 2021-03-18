@@ -8,12 +8,12 @@
 
 const EXPORTED_SYMBOLS = ["event"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppInfo: "chrome://marionette/content/appinfo.js",
   element: "chrome://marionette/content/element.js",
 });
 
@@ -102,7 +102,7 @@ event.parseModifiers_ = function(modifiers) {
     mval |= Ci.nsIDOMWindowUtils.MODIFIER_META;
   }
   if (modifiers.accelKey) {
-    if (Services.appinfo.OS === "Darwin") {
+    if (AppInfo.isMac) {
       mval |= Ci.nsIDOMWindowUtils.MODIFIER_META;
     } else {
       mval |= Ci.nsIDOMWindowUtils.MODIFIER_CONTROL;
@@ -556,7 +556,7 @@ function emulateToActivateModifiers_(TIP, keyEvent, win) {
       { key: "Shift", attr: "shiftKey" },
       { key: "Symbol", attr: "symbolKey" },
       {
-        key: Services.appinfo.OS === "Darwin" ? "Meta" : "Control",
+        key: AppInfo.isMac ? "Meta" : "Control",
         attr: "accelKey",
       },
     ],
