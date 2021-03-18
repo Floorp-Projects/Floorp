@@ -1741,7 +1741,12 @@ class HighlightersOverlay {
    */
   async _onResourceAvailable(resources) {
     for (const resource of resources) {
-      if (resource.resourceType !== this.resourceWatcher.TYPES.ROOT_NODE) {
+      if (
+        resource.resourceType !== this.resourceWatcher.TYPES.ROOT_NODE ||
+        // It might happen that the ROOT_NODE resource (which is a Front) is already
+        // destroyed, and in such case we want to ignore it.
+        resource.isDestroyed()
+      ) {
         // Only handle root-node resources.
         // Note that we could replace this with DOCUMENT_EVENT resources, since
         // the actual root-node resource is not used here.
