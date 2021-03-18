@@ -528,11 +528,8 @@ bool HTMLImageElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
     *aTabIndex = (sTabFocusModel & eTabFocus_formElementsMask) ? tabIndex : -1;
   }
 
-  *aIsFocusable =
-#ifdef XP_MACOSX
-      (!aWithMouse || nsFocusManager::sMouseFocusesFormControl) &&
-#endif
-      (tabIndex >= 0 || GetTabIndexAttrValue().isSome());
+  *aIsFocusable = IsFormControlDefaultFocusable(aWithMouse) &&
+                  (tabIndex >= 0 || GetTabIndexAttrValue().isSome());
 
   return false;
 }

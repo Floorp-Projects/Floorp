@@ -281,7 +281,8 @@ function mouseWillTriggerFocus(element)
     return false;
   }
 
-  if (navigator.platform.indexOf("Mac") != 0) {
+  if (SpecialPowers.getIntPref("accessibility.mouse_focuses_formcontrol") == 1) {
+    // This is a chrome document, so we'll only trigger focus with the mouse if the value of the pref is 1.
     return true;
   }
 

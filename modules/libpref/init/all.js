@@ -720,7 +720,6 @@ pref("accessibility.force_disabled", 0);
 pref("focusmanager.testmode", false);
 
 pref("accessibility.usetexttospeech", "");
-pref("accessibility.mouse_focuses_formcontrol", true);
 
 // Type Ahead Find
 pref("accessibility.typeaheadfind", true);
