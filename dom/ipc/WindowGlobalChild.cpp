@@ -17,7 +17,6 @@
 #include "mozilla/dom/BrowserBridgeChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/SecurityPolicyViolationEvent.h"
-#include "mozilla/dom/SessionStoreRestoreData.h"
 #include "mozilla/dom/WindowGlobalActorsBinding.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/WindowContext.h"
@@ -563,13 +562,6 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvResetScalingZoom() {
 mozilla::ipc::IPCResult WindowGlobalChild::RecvSetContainerFeaturePolicy(
     dom::FeaturePolicy* aContainerFeaturePolicy) {
   mContainerFeaturePolicy = aContainerFeaturePolicy;
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult WindowGlobalChild::RecvRestoreTabContent(
-    dom::SessionStoreRestoreData* aData, RestoreTabContentResolver&& aResolve) {
-  aData->RestoreInto(BrowsingContext());
-  aResolve(true);
   return IPC_OK();
 }
 
