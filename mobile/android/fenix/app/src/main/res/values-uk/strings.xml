@@ -88,14 +88,14 @@
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">Перейти до налаштувань</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
-    <string name="camera_permissions_needed_negative_button_text">Закрити</string>
+    <string name="camera_permissions_needed_negative_button_text">Відхилити</string>
 
     <!-- Text for the banner message to tell users about our auto close feature. -->
     <string name="tab_tray_close_tabs_banner_message">Налаштуйте автоматичне закривання відкритих вкладок, які не переглядалися попереднього дня, тижня чи місяця.</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_close_tabs_banner_positive_button_text">Перейти до параметрів</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_close_tabs_banner_negative_button_text">Закрити</string>
+    <string name="tab_tray_close_tabs_banner_negative_button_text">Відхилити</string>
 
     <!-- Text for the banner message to tell users about our grid view feature. -->
     <string name="tab_tray_grid_view_banner_message">Змініть вигляд відкритих вкладок. Перейдіть до налаштувань і виберіть подання вкладок сіткою.</string>
@@ -567,7 +567,7 @@
     <string name="recently_closed_show_full_history">Показати всю історію</string>
     <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
     %d is a placeholder for the number of tabs selected. -->
-    <string name="recently_closed_tabs">%d вкладок</string>
+    <string name="recently_closed_tabs">Вкладок: %d</string>
     <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
     %d is a placeholder for the number of tabs selected. -->
     <string name="recently_closed_tab">%d вкладка</string>
@@ -1422,7 +1422,7 @@
     <!-- Content description of the tab counter toolbar button when one tab is open -->
     <string name="tab_counter_content_description_one_tab">1 вкладка</string>
     <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string name="tab_counter_content_description_multi_tab">%d вкладок</string>
+    <string name="tab_counter_content_description_multi_tab">Вкладок: %d</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->

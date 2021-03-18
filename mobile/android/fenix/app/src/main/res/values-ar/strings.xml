@@ -222,6 +222,11 @@
     <!-- Search suggestion onboarding hint Learn more link text -->
     <string name="search_suggestions_onboarding_learn_more_link">اطّلع على المزيد</string>
 
+    <!-- Search engine suggestion title text. The first parameter is the name of teh suggested engine-->
+    <string name="search_engine_suggestions_title">ابحث عن %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">ابحث مباشرة من شريط العنوان</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. Firefox is intentionally hardcoded.-->
     <string name="search_widget_content_description">افتح في لسان Firefox جديد</string>
@@ -536,6 +541,10 @@
     <string name="library_desktop_bookmarks_unfiled">العلامات الأخرى</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">التأريخ</string>
+    <!-- Option in Library to open a new tab -->
+    <string name="library_new_tab">لسان جديد</string>
+    <!-- Option in Library to find text in page -->
+    <string name="library_find_in_page">ابحث في الصفحة</string>
     <!-- Option in Library to open Synced Tabs page -->
     <string name="library_synced_tabs">الألسنة المُزامنة</string>
     <!-- Option in Library to open Reading List -->
@@ -891,14 +900,20 @@
     <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">اسمح بالصوت والڤِديو</string>
 
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">اسمح بالصوت والڤِديو</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">احجب الصوت والڤديو على بيانات الشبكة في المحمول فقط</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">سيعمل الصوت والڤديو على الشبكة اللاسلكية</string>
     <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">احجب الصوت فقط</string>
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">احجب الصوت فقط</string>
     <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">احجب الصوت والڤِديو</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">احجب الصوت والڤِديو</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">مفعّل</string>
     <!-- Summary of delete browsing data on quit preference if it is set to off -->
@@ -1343,8 +1358,12 @@
     <string name="etp_cryptominers_description">امنع السكربتات الخبيثة من الوصول إلى جهازك لتعدين العملات رقميًا.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">مسجّلات البصمات</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">يُوقف جمع البيانات الفريدة التي تُحدّد جهازك عن غيره والتي يمكن استعمالها لأغراض التعقّب.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">المحتوى الذي يتعقّبك</string>
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">يُوقف تحميل الإعلانات والڤِديوهات وغيرها من محتويات خارجية تحتوي على برمجيات تعقّب. قد يؤثّر هذا على سلوك بعض المواقع.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
     <string name="etp_onboarding_cfr_message">متى ما رأيت الدرع بنفسجيًا اعرف أنّ %s حجب المتعقّبات في أحد المواقع. اضغط لتفاصيل أكثر.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->

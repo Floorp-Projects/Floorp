@@ -617,8 +617,12 @@
     <string name="tab_tray_multiselect_menu_item_close">Затваряне</string>
     <!-- Content description for tabs tray multiselect share button -->
     <string name="tab_tray_multiselect_share_content_description">Споделяне на избраните раздели</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">Меню избрани раздели</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Премахване на раздела от спъсъка</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">Избиране на раздели</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">Затваряне на раздел</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
@@ -652,7 +656,9 @@
     <string name="collection_rename">Преименуване на списък</string>
     <!-- Text for the button to open tabs of the selected collection -->
     <string name="collection_open_tabs">Отваряне на раздели</string>
-    <!-- Text for the menu button to rename a top site -->
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">Наименование на списък</string>
+	<!-- Text for the menu button to rename a top site -->
 	<string name="rename_top_site">Преименуване</string>
 	<!-- Text for the menu button to remove a top site -->
 	<string name="remove_top_site">Премахване</string>
@@ -860,7 +866,7 @@
     <string name="tracking_protection_on">Включено</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Изключено</string>
-    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Разрешаване на звук и видео</string>
 
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
@@ -960,10 +966,36 @@
     <string name="notification_pbm_action_open">Отваряне</string>
     <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
     <string name="notification_pbm_action_delete_and_open">Изчистване и отваряне</string>
+    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_powered_by_channel_name">С подкрепата на</string>
+    <!-- Text shown in snackbar when user deletes a tab -->
+    <string name="snackbar_tab_deleted">Разделът е изтрит</string>
+    <!-- Text shown in snackbar when user deletes all tabs -->
+    <string name="snackbar_tabs_deleted">Разделите са изтрити</string>
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">Разделът е затворен</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">Разделите са затворени</string>
+    <!-- Text shown in snackbar when user closes tabs -->
+    <string name="snackbar_message_tabs_closed">Разделите са затворени!</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">Поверителният раздел е затворен</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">Поверителните раздели са затворени</string>
+    <!-- Text shown in snackbar when user deletes all private tabs -->
+    <string name="snackbar_private_tabs_deleted">Поверителните раздели са затворени</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">ОТМЕНЯНЕ</string>
+    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_undo">Отменяне</string>
+    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
+    <string name="a11y_dialog_deleted_confirm">Потвърждаване</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Разрешете %1$s да отвори %2$s</string>
 
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">Наистина ли искате да изтриете %1$s?</string>
     <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
     <string name="delete_tab_and_collection_dialog_title">Изтриване на %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
@@ -981,10 +1013,14 @@
     <!-- Title for Accessibility Text Size Scaling Preference -->
     <string name="preference_accessibility_font_size_title">Размер на шрифт</string>
 
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">Изтриване на данни от разглеждане</string>
     <!-- Title for the tabs item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_tabs_title_2">Отворени раздели</string>
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d раздела</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_data_title">История на разглеждане и данни от страници</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d адреса</string>
@@ -995,21 +1031,38 @@
     <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d страници</string>
     <!-- Title for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies">Бисквитки</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">Ще бъдете отписани от повечето страници</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files">Буферирани изображения и файлове</string>
     <!-- Subtitle for the cached images and files item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cached_files_subtitle">Освобождава място за съхранение</string>
     <!-- Title for the site permissions item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_site_permissions">Права на страницата</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">Изтегляния</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">Изтриване на данни от разглеждане</string>
     <!-- Title for the Delete browsing data on quit preference -->
-    <string name="preferences_delete_browsing_data_on_quit">Изтриване на история на разглеждане и изход</string>
+    <string name="preferences_delete_browsing_data_on_quit">Изтриване на история при изход</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit">Автоматично изтрива историята на разглеждане, при избор на „Изход“ от главното меню</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">Автоматично изтрива историята на разглеждане, при избор на \&quot;Изход\&quot; от главното меню</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Изход</string>
 
+    <!-- Dialog message to the user asking to delete browsing data. -->
+    <string name="delete_browsing_data_prompt_message">Това ще изтрие цялата история на разглеждане.</string>
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s ще изтрие избраните данни от историята на разглеждане.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_cancel">Отказ</string>
     <!-- Text for the allow button for the data deletion dialog -->
     <string name="delete_browsing_data_prompt_allow">Изтриване</string>
+
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">Историята е изчистена</string>
 
     <!-- text for firefox preview moving tip button  -->
     <string name="tip_firefox_preview_moved_button_preview_installed">Преминете към новият Nightly</string>
@@ -1103,6 +1156,8 @@
     <!-- Title of QR Pairing Fragment -->
     <string name="sync_scan_code">Сканиране на код</string>
 
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">Изключване</string>
     <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
     <string name="sign_out_cancel">Отказ</string>
 
@@ -1187,12 +1242,23 @@
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Връщане назад</string>
 
+    <!-- About page Your rights link text -->
+    <string name="about_your_rights">Вашите права</string>
+    <!-- About page link text to open open source licenses screen -->
+    <string name="about_open_source_licenses">Използвани библиотеки с отворен код</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">Какво е новото във %s</string>
     <!-- Open source licenses page title
     The first parameter is the app name -->
     <string name="open_source_licenses_title">%s | библиотеки с отворен код</string>
 
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">Пренасочващи проследявания</string>
+
     <!-- About page link text to open support link -->
     <string name="about_support">Поддръжка</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">Сривове</string>
     <!-- About page link text to open privacy notice link -->
     <string name="about_privacy_notice">Политика на поверителност</string>
     <!-- About page link text to open know your rights link -->
@@ -1283,6 +1349,28 @@
     <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
     <string name="logins_insecure_connection_warning_learn_more">Научете повече</string>
 
+    <!-- Positive confirmation that Fenix should save the new or updated login -->
+    <string name="logins_doorhanger_save_confirmation">Запазване</string>
+    <!-- Negative confirmation that Fenix should not save the new or updated login -->
+    <string name="logins_doorhanger_save_dont_save">Без запазване</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">Паролата е копирана в системния буфер</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">Потребителското име е копирано в системния буфер</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">Копиране на парола</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">Копиране на потребителско име</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">Отваряне препратката в четеца</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">Показване на парола</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">Скриване на парола</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">Отключете, за да видите запазените регистрации</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">Защитете вашите данни за вход</string>
     <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
     <string name="saved_logins_menu_dropdown_chevron_icon_content_description">Меню за сортиране на регистрации</string>
 
@@ -1343,6 +1431,10 @@
     <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
     <string name="migration_text_passwords">Пароли</string>
 
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">Изтриване</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">Изтриване</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Редактиране</string>
     <!--  The error message in edit login view when password field is blank. -->
