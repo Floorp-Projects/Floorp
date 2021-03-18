@@ -714,7 +714,7 @@ add_task(async function test_combined_name_fields() {
     let borderColorFocused = "rgb(0, 0, 255)";
     doc.body.style.setProperty("--in-content-box-border-color", borderColor);
     doc.body.style.setProperty(
-      "--in-content-focus-outline-color",
+      "--in-content-border-active",
       borderColorFocused
     );
 
