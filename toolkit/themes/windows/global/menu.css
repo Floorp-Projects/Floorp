@@ -149,8 +149,9 @@ menucaption {
   .menu-right {
     appearance: none;
     list-style-image: url("chrome://global/skin/icons/menu-arrow.svg");
-    -moz-context-properties: fill;
-    fill: var(--menu-icon-color);
+    -moz-context-properties: fill, fill-opacity;
+    fill: currentColor;
+    fill-opacity: var(--menu-icon-opacity);
     margin-inline-end: 8px;
   }
 
@@ -368,8 +369,9 @@ menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
      insert a generic checkmark icon for both types. */
   menuitem[checked="true"] > .menu-iconic-left {
     appearance: none !important;
-    -moz-context-properties: fill;
-    fill: var(--menu-icon-color);
+    -moz-context-properties: fill, fill-opacity;
+    fill: currentColor;
+    fill-opacity: var(--menu-icon-opacity);
     list-style-image: url("chrome://global/skin/icons/check.svg");
     width: 20px;
     height: 20px;
