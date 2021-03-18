@@ -32,14 +32,14 @@ class nsMenuItemIconX final : public mozilla::widget::IconLoader::Listener {
   // be no icon, in which case it clears any existing icon but still succeeds.
   nsresult SetupIcon();
 
-  // GetIconURI fails if the item should not have any icon.
-  nsresult GetIconURI(nsIURI** aIconURI);
-
   // Implements this method for mozilla::widget::IconLoader::Listener.
   // Called once the icon load is complete.
   nsresult OnComplete(imgIContainer* aImage) override;
 
  protected:
+  // GetIconURI returns null if the item should not have any icon.
+  already_AddRefed<nsIURI> GetIconURI();
+
   nsCOMPtr<nsIContent> mContent;  // always non-null
   nsMenuObjectX* mMenuObject;     // [weak]
   nsIntRect mImageRegionRect;
