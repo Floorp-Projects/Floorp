@@ -139,6 +139,18 @@
   color: var(--toolbar-color);
 }
 
+@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+/* Add a fog for background tabs to be visible on Windows 7 glass window background */
+@media (-moz-os-version: windows-win7) {
+  @media (-moz-windows-default-theme) {
+    #TabsToolbar:not(:-moz-lwtheme) {
+      background-image: radial-gradient(ellipse at bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.5) 80%, transparent);
+    }
+  }
+}
+} /*** END proton ***/
+
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 /*
  * Windows 7 draws the chrome background color as the tab background
  * instead of in the tabs toolbar.
@@ -184,6 +196,7 @@
     }
   }
 }
+} /*** END !proton ***/
 
 @media (-moz-windows-compositor: 0),
        (-moz-windows-default-theme: 0) {
