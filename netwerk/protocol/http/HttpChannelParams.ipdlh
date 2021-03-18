@@ -51,6 +51,7 @@ struct HttpChannelOnStartRequestArgs
   bool shouldWaitForOnStartRequestSent;
   nsCString cookie;
   bool dataFromSocketProcess;
+  bool hasHTTPSRR;
 };
 
 } // namespace ipc

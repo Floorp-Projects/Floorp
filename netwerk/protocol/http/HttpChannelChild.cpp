@@ -452,6 +452,7 @@ void HttpChannelChild::OnStartRequest(
   SetApplyConversion(aArgs.applyConversion());
 
   StoreAfterOnStartRequestBegun(true);
+  StoreHasHTTPSRR(aArgs.hasHTTPSRR());
 
   AutoEventEnqueuer ensureSerialDispatch(mEventQ);
 
