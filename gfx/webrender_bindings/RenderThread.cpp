@@ -1125,7 +1125,7 @@ static already_AddRefed<gl::GLContext> CreateGLContext(nsACString& aError) {
 #elif defined(MOZ_WIDGET_ANDROID)
   gl = CreateGLContextEGL();
 #elif defined(MOZ_WAYLAND)
-  if (mozilla::widget::GdkIsWaylandDisplay()) {
+  if (gfx::gfxVars::UseEGL()) {
     gl = CreateGLContextEGL();
   }
 #elif XP_MACOSX
