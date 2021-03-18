@@ -55,7 +55,7 @@ static inline const char* get_precision_string (unsigned p)
 static const int tex_sampler_type_count = 7;
 // [glsl_sampler_dim]
 static const char* tex_sampler_dim_name[tex_sampler_type_count] = {
-	"1D", "2D", "3D", "Cube", "Rect", "Buf", "External",
+	"1D", "2D", "3D", "Cube", "Rect", "Buf", "2D", /* samplerExternal uses texture2D */
 };
 static int tex_sampler_dim_size[tex_sampler_type_count] = {
 	1, 2, 3, 3, 2, 2, 2,
@@ -272,6 +272,8 @@ _mesa_print_ir_glsl(exec_list *instructions,
 			str.asprintf_append ("#extension GL_KHR_blend_equation_advanced : enable\n");
 		if (state->EXT_blend_func_extended_enable)
 			str.asprintf_append ("#extension GL_EXT_blend_func_extended : enable\n");
+		if (state->OES_EGL_image_external_enable)
+			str.asprintf_append ("#extension GL_OES_EGL_image_external : enable\n");
 		if (state->OES_EGL_image_external_essl3_enable)
 			str.asprintf_append ("#extension GL_OES_EGL_image_external_essl3 : enable\n");
 		if (state->ARB_shader_storage_buffer_object_enable)
