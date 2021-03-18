@@ -6,7 +6,7 @@ use std::collections::HashMap;
 
 use inherent::inherent;
 
-use super::{CommonMetricData, Instant, MetricId, RecordedEvent};
+use super::{CommonMetricData, MetricId, RecordedEvent};
 
 use crate::ipc::{need_ipc, with_ipc_payload};
 
@@ -50,6 +50,18 @@ impl<K: 'static + ExtraKeys + Send + Sync> EventMetric<K> {
             EventMetric::Child(_) => panic!("Can't get a child metric from a child metric"),
         }
     }
+
+    pub(crate) fn record_with_time(&self, timestamp: u64, extra: HashMap<i32, String>) {
+        match self {
+            EventMetric::Parent { inner, .. } => {
+                inner.record_with_time(timestamp, extra);
+            }
+            EventMetric::Child(_) => {
+                // TODO: Instrument this error
+                log::error!("Can't record an event with a timestamp from a child metric");
+            }
+        }
+    }
 }
 
 #[inherent(pub)]
@@ -62,13 +74,14 @@ impl<K: 'static + ExtraKeys + Send + Sync> Event for EventMetric<K> {
                 inner.record(extra);
             }
             EventMetric::Child(c) => {
+                let now = glean::get_timestamp_ms();
                 let extra = extra.into().map(|hash_map| {
                     hash_map
                         .iter()
                         .map(|(k, v)| (k.index(), v.clone()))
                         .collect()
                 });
-                let now = Instant::now();
+                let extra = extra.unwrap_or_else(HashMap::new);
                 with_ipc_payload(move |payload| {
                     if let Some(v) = payload.events.get_mut(&c.0) {
                         v.push((now, extra));
