@@ -40,6 +40,20 @@ xul|*.text-link:-moz-focusring {
   box-shadow: none;
 }
 
+xul|checkbox:-moz-focusring > .checkbox-check,
+xul|radio[focused="true"] > .radio-check,
+xul|tab:-moz-focusring > .tab-middle {
+  outline: 2px solid var(--in-content-focus-outline-color);
+  /* offset outline to align with 1px border-width set for buttons/menulists above. */
+  outline-offset: var(--in-content-focus-outline-offset);
+  -moz-outline-radius: var(--in-content-focus-outline-radius);
+  box-shadow: 0 0 0 4px var(--in-content-button-box-shadow);
+}
+
+xul|radio[focused="true"] > .radio-check {
+  -moz-outline-radius: 100%;
+}
+
 xul|search-textbox::part(search-sign) {
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
