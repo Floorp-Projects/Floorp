@@ -53,7 +53,7 @@ class ABIArgIterBase;
 
 // This is a widespread header, so lets keep out the core wasm impl types.
 
-typedef GCVector<JSFunction*, 0, SystemAllocPolicy> JSFunctionVector;
+using JSFunctionVector = GCVector<JSFunction*, 0, SystemAllocPolicy>;
 
 class WasmMemoryObject;
 using GCPtrWasmMemoryObject = GCPtr<WasmMemoryObject*>;
@@ -73,19 +73,19 @@ using HandleWasmInstanceObject = Handle<WasmInstanceObject*>;
 using MutableHandleWasmInstanceObject = MutableHandle<WasmInstanceObject*>;
 
 class WasmTableObject;
-typedef GCVector<WasmTableObject*, 0, SystemAllocPolicy> WasmTableObjectVector;
+using WasmTableObjectVector = GCVector<WasmTableObject*, 0, SystemAllocPolicy>;
 using RootedWasmTableObject = Rooted<WasmTableObject*>;
 using HandleWasmTableObject = Handle<WasmTableObject*>;
 using MutableHandleWasmTableObject = MutableHandle<WasmTableObject*>;
 
 class WasmGlobalObject;
-typedef GCVector<WasmGlobalObject*, 0, SystemAllocPolicy>
-    WasmGlobalObjectVector;
+using WasmGlobalObjectVector =
+    GCVector<WasmGlobalObject*, 0, SystemAllocPolicy>;
 using RootedWasmGlobalObject = Rooted<WasmGlobalObject*>;
 
 class WasmExceptionObject;
-typedef GCVector<WasmExceptionObject*, 0, SystemAllocPolicy>
-    WasmExceptionObjectVector;
+using WasmExceptionObjectVector =
+    GCVector<WasmExceptionObject*, 0, SystemAllocPolicy>;
 using RootedWasmExceptionObject = Rooted<WasmExceptionObject*>;
 
 class WasmRuntimeExceptionObject;
@@ -115,16 +115,16 @@ class Table;
 // Uint32Vector has initial size 8 on the basis that the dominant use cases
 // (line numbers and control stacks) tend to have a small but nonzero number
 // of elements.
-typedef Vector<uint32_t, 8, SystemAllocPolicy> Uint32Vector;
+using Uint32Vector = Vector<uint32_t, 8, SystemAllocPolicy>;
 
-typedef Vector<uint8_t, 0, SystemAllocPolicy> Bytes;
+using Bytes = Vector<uint8_t, 0, SystemAllocPolicy>;
 using UniqueBytes = UniquePtr<Bytes>;
 using UniqueConstBytes = UniquePtr<const Bytes>;
-typedef Vector<char, 0, SystemAllocPolicy> UTF8Bytes;
-typedef Vector<Instance*, 0, SystemAllocPolicy> InstanceVector;
-typedef Vector<UniqueChars, 0, SystemAllocPolicy> UniqueCharsVector;
-typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy>
-    RenumberMap;
+using UTF8Bytes = Vector<char, 0, SystemAllocPolicy>;
+using InstanceVector = Vector<Instance*, 0, SystemAllocPolicy>;
+using UniqueCharsVector = Vector<UniqueChars, 0, SystemAllocPolicy>;
+using RenumberMap =
+    HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy>;
 
 // Bit set as the lowest bit of a frame pointer, used in two different mutually
 // exclusive situations:
@@ -942,7 +942,7 @@ static_assert(sizeof(V128) == 16, "Invariant");
 // The dominant use of this data type is for locals and args, and profiling
 // with ZenGarden and Tanks suggests an initial size of 16 minimises heap
 // allocation, both in terms of blocks and bytes.
-typedef Vector<ValType, 16, SystemAllocPolicy> ValTypeVector;
+using ValTypeVector = Vector<ValType, 16, SystemAllocPolicy>;
 
 // ValType utilities
 
@@ -1192,8 +1192,8 @@ struct ExceptionTag : AtomicRefCounted<ExceptionTag> {
   ExceptionTag() = default;
 };
 using SharedExceptionTag = RefPtr<ExceptionTag>;
-typedef Vector<SharedExceptionTag, 0, SystemAllocPolicy>
-    SharedExceptionTagVector;
+using SharedExceptionTagVector =
+    Vector<SharedExceptionTag, 0, SystemAllocPolicy>;
 
 // WasmJSExceptionObject wraps a JS Value in order to provide a uniform
 // method of handling JS thrown exceptions. Exceptions originating in Wasm
@@ -1483,7 +1483,7 @@ using RootedVal = Rooted<Val>;
 using HandleVal = Handle<Val>;
 using MutableHandleVal = MutableHandle<Val>;
 
-typedef GCVector<Val, 0, SystemAllocPolicy> ValVector;
+using ValVector = GCVector<Val, 0, SystemAllocPolicy>;
 using RootedValVector = Rooted<ValVector>;
 using HandleValVector = Handle<ValVector>;
 using MutableHandleValVector = MutableHandle<ValVector>;
@@ -2108,7 +2108,7 @@ struct StructField {
   bool isMutable;
 };
 
-typedef Vector<StructField, 0, SystemAllocPolicy> StructFieldVector;
+using StructFieldVector = Vector<StructField, 0, SystemAllocPolicy>;
 
 class StructType {
  public:
@@ -2156,8 +2156,8 @@ class StructType {
   WASM_DECLARE_SERIALIZABLE(StructType)
 };
 
-typedef Vector<StructType, 0, SystemAllocPolicy> StructTypeVector;
-typedef Vector<const StructType*, 0, SystemAllocPolicy> StructTypePtrVector;
+using StructTypeVector = Vector<StructType, 0, SystemAllocPolicy>;
+using StructTypePtrVector = Vector<const StructType*, 0, SystemAllocPolicy>;
 
 // Array type
 
@@ -2192,8 +2192,8 @@ class ArrayType {
   WASM_DECLARE_SERIALIZABLE(ArrayType)
 };
 
-typedef Vector<ArrayType, 0, SystemAllocPolicy> ArrayTypeVector;
-typedef Vector<const ArrayType*, 0, SystemAllocPolicy> ArrayTypePtrVector;
+using ArrayTypeVector = Vector<ArrayType, 0, SystemAllocPolicy>;
+using ArrayTypePtrVector = Vector<const ArrayType*, 0, SystemAllocPolicy>;
 
 // An InitExpr describes a deferred initializer expression, used to initialize
 // a global or a table element offset. Such expressions are created during
@@ -2282,7 +2282,7 @@ struct CacheableChars : UniqueChars {
   WASM_DECLARE_SERIALIZABLE(CacheableChars)
 };
 
-typedef Vector<CacheableChars, 0, SystemAllocPolicy> CacheableCharsVector;
+using CacheableCharsVector = Vector<CacheableChars, 0, SystemAllocPolicy>;
 
 // Import describes a single wasm import. An ImportVector describes all
 // of a single module's imports.
@@ -2302,7 +2302,7 @@ struct Import {
   WASM_DECLARE_SERIALIZABLE(Import)
 };
 
-typedef Vector<Import, 0, SystemAllocPolicy> ImportVector;
+using ImportVector = Vector<Import, 0, SystemAllocPolicy>;
 
 // Export describes the export of a definition in a Module to a field in the
 // export object. The Export stores the index of the exported item in the
@@ -2340,7 +2340,7 @@ class Export {
   WASM_DECLARE_SERIALIZABLE(Export)
 };
 
-typedef Vector<Export, 0, SystemAllocPolicy> ExportVector;
+using ExportVector = Vector<Export, 0, SystemAllocPolicy>;
 
 // A FuncDesc describes a single function.
 
@@ -2356,7 +2356,7 @@ struct FuncDesc {
       : type(type), typeId(typeId), typeIndex(typeIndex) {}
 };
 
-typedef Vector<FuncDesc, 0, SystemAllocPolicy> FuncDescVector;
+using FuncDescVector = Vector<FuncDesc, 0, SystemAllocPolicy>;
 
 // A GlobalDesc describes a single global variable.
 //
@@ -2487,7 +2487,7 @@ class GlobalDesc {
   }
 };
 
-typedef Vector<GlobalDesc, 0, SystemAllocPolicy> GlobalDescVector;
+using GlobalDescVector = Vector<GlobalDesc, 0, SystemAllocPolicy>;
 
 // An EventDesc describes a single event for non-local control flow, such as
 // for exceptions.
@@ -2504,7 +2504,7 @@ struct EventDesc {
   ResultType resultType() const { return ResultType::Vector(type); }
 };
 
-typedef Vector<EventDesc, 0, SystemAllocPolicy> EventDescVector;
+using EventDescVector = Vector<EventDesc, 0, SystemAllocPolicy>;
 #endif
 
 // When a ElemSegment is "passive" it is shared between a wasm::Module and its
@@ -2541,7 +2541,7 @@ static_assert(NullFuncIndex > MaxFuncs, "Invariant");
 
 using MutableElemSegment = RefPtr<ElemSegment>;
 using SharedElemSegment = SerializableRefPtr<const ElemSegment>;
-typedef Vector<SharedElemSegment, 0, SystemAllocPolicy> ElemSegmentVector;
+using ElemSegmentVector = Vector<SharedElemSegment, 0, SystemAllocPolicy>;
 
 // DataSegmentEnv holds the initial results of decoding a data segment from the
 // bytecode and is stored in the ModuleEnvironment during compilation. When
@@ -2560,7 +2560,7 @@ struct DataSegmentEnv {
   uint32_t length;
 };
 
-typedef Vector<DataSegmentEnv, 0, SystemAllocPolicy> DataSegmentEnvVector;
+using DataSegmentEnvVector = Vector<DataSegmentEnv, 0, SystemAllocPolicy>;
 
 struct DataSegment : AtomicRefCounted<DataSegment> {
   Maybe<InitExpr> offsetIfActive;
@@ -2579,7 +2579,7 @@ struct DataSegment : AtomicRefCounted<DataSegment> {
 
 using MutableDataSegment = RefPtr<DataSegment>;
 using SharedDataSegment = SerializableRefPtr<const DataSegment>;
-typedef Vector<SharedDataSegment, 0, SystemAllocPolicy> DataSegmentVector;
+using DataSegmentVector = Vector<SharedDataSegment, 0, SystemAllocPolicy>;
 
 // The CustomSection(Env) structs are like DataSegment(Env): CustomSectionEnv is
 // stored in the ModuleEnvironment and CustomSection holds a copy of the payload
@@ -2592,7 +2592,7 @@ struct CustomSectionEnv {
   uint32_t payloadLength;
 };
 
-typedef Vector<CustomSectionEnv, 0, SystemAllocPolicy> CustomSectionEnvVector;
+using CustomSectionEnvVector = Vector<CustomSectionEnv, 0, SystemAllocPolicy>;
 
 struct CustomSection {
   Bytes name;
@@ -2601,7 +2601,7 @@ struct CustomSection {
   WASM_DECLARE_SERIALIZABLE(CustomSection)
 };
 
-typedef Vector<CustomSection, 0, SystemAllocPolicy> CustomSectionVector;
+using CustomSectionVector = Vector<CustomSection, 0, SystemAllocPolicy>;
 
 // A Name represents a string of utf8 chars embedded within the name custom
 // section. The offset of a name is expressed relative to the beginning of the
@@ -2616,7 +2616,7 @@ struct Name {
   Name() : offsetInNamePayload(UINT32_MAX), length(0) {}
 };
 
-typedef Vector<Name, 0, SystemAllocPolicy> NameVector;
+using NameVector = Vector<Name, 0, SystemAllocPolicy>;
 
 // A tagged container for the various types that can be present in a wasm
 // module's type section.
@@ -2793,7 +2793,7 @@ class TypeDef {
   WASM_DECLARE_SERIALIZABLE(TypeDef)
 };
 
-typedef Vector<TypeDef, 0, SystemAllocPolicy> TypeDefVector;
+using TypeDefVector = Vector<TypeDef, 0, SystemAllocPolicy>;
 
 // TypeIdDesc describes the runtime representation of a TypeDef suitable for
 // type equality checks. The kind of representation depends on whether the type
@@ -2840,7 +2840,7 @@ class TypeIdDesc {
   }
 };
 
-typedef Vector<TypeIdDesc, 0, SystemAllocPolicy> TypeIdDescVector;
+using TypeIdDescVector = Vector<TypeIdDesc, 0, SystemAllocPolicy>;
 
 // TypeDefWithId pairs a FuncType with TypeIdDesc, describing either how to
 // compile code that compares this signature's id or, at instantiation what
@@ -2858,9 +2858,9 @@ struct TypeDefWithId : public TypeDef {
   WASM_DECLARE_SERIALIZABLE(TypeDefWithId)
 };
 
-typedef Vector<TypeDefWithId, 0, SystemAllocPolicy> TypeDefWithIdVector;
-typedef Vector<const TypeDefWithId*, 0, SystemAllocPolicy>
-    TypeDefWithIdPtrVector;
+using TypeDefWithIdVector = Vector<TypeDefWithId, 0, SystemAllocPolicy>;
+using TypeDefWithIdPtrVector =
+    Vector<const TypeDefWithId*, 0, SystemAllocPolicy>;
 
 // A type cache maintains a cache of equivalence and subtype relations between
 // wasm types. This is required for the computation of equivalence and subtyping
@@ -3245,7 +3245,7 @@ struct FuncOffsets : CallableOffsets {
   uint32_t tierEntry;
 };
 
-typedef Vector<FuncOffsets, 0, SystemAllocPolicy> FuncOffsetsVector;
+using FuncOffsetsVector = Vector<FuncOffsets, 0, SystemAllocPolicy>;
 
 // A CodeRange describes a single contiguous range of code within a wasm
 // module's code segment. A CodeRange describes what the code does and, for
@@ -3514,7 +3514,7 @@ class CallSiteTarget {
   }
 };
 
-typedef Vector<CallSiteTarget, 0, SystemAllocPolicy> CallSiteTargetVector;
+using CallSiteTargetVector = Vector<CallSiteTarget, 0, SystemAllocPolicy>;
 
 // WasmTryNotes are stored in a vector that acts as an exception table for
 // wasm try-catch blocks. These represent the information needed to take
@@ -3744,7 +3744,7 @@ struct TableDesc {
         maximumLength(maximumLength) {}
 };
 
-typedef Vector<TableDesc, 0, SystemAllocPolicy> TableDescVector;
+using TableDescVector = Vector<TableDesc, 0, SystemAllocPolicy>;
 
 // TLS data for a single module instance.
 //
@@ -3814,7 +3814,7 @@ struct TlsDataDeleter {
   void operator()(TlsData* tlsData) { js_free(tlsData->allocatedBase); }
 };
 
-typedef UniquePtr<TlsData, TlsDataDeleter> UniqueTlsData;
+using UniqueTlsData = UniquePtr<TlsData, TlsDataDeleter>;
 
 extern UniqueTlsData CreateTlsData(uint32_t globalDataLength);
 

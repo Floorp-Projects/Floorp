@@ -519,10 +519,10 @@ static bool InRange(uint32_t caller, uint32_t callee) {
   return caller - callee < range;
 }
 
-typedef HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy>
-    OffsetMap;
-typedef EnumeratedArray<Trap, Trap::Limit, Maybe<uint32_t>>
-    TrapMaybeOffsetArray;
+using OffsetMap =
+    HashMap<uint32_t, uint32_t, DefaultHasher<uint32_t>, SystemAllocPolicy>;
+using TrapMaybeOffsetArray =
+    EnumeratedArray<Trap, Trap::Limit, Maybe<uint32_t>>;
 
 bool ModuleGenerator::linkCallSites() {
   masm_.haltingAlign(CodeAlignment);

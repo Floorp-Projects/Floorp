@@ -1735,7 +1735,7 @@ static bool DecodePreamble(Decoder& d) {
 
 enum class TypeState { None, Gc, ForwardGc, Func };
 
-typedef Vector<TypeState, 0, SystemAllocPolicy> TypeStateVector;
+using TypeStateVector = Vector<TypeState, 0, SystemAllocPolicy>;
 
 template <class T>
 static bool ValidateTypeState(Decoder& d, TypeStateVector* typeState, T type) {
@@ -2720,8 +2720,8 @@ static bool DecodeEventSection(Decoder& d, ModuleEnvironment* env) {
 }
 #endif
 
-typedef HashSet<const char*, mozilla::CStringHasher, SystemAllocPolicy>
-    CStringSet;
+using CStringSet =
+    HashSet<const char*, mozilla::CStringHasher, SystemAllocPolicy>;
 
 static UniqueChars DecodeExportName(Decoder& d, CStringSet* dupSet) {
   UniqueChars exportName = DecodeName(d);

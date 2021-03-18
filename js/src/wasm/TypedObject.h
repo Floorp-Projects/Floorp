@@ -184,7 +184,7 @@ class OutlineTypedObject : public TypedObject {
   static size_t offsetOfData() { return offsetof(OutlineTypedObject, data_); }
 
   static constexpr size_t offsetOfArrayLength() { return 0; }
-  typedef uint32_t ArrayLength;
+  using ArrayLength = uint32_t;
 
   uint8_t* outOfLineTypedMem() const { return data_; }
 
