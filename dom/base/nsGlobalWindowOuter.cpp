@@ -6710,9 +6710,10 @@ void nsGlobalWindowOuter::SetChromeEventHandler(
 
 void nsGlobalWindowOuter::SetFocusedElement(Element* aElement,
                                             uint32_t aFocusMethod,
-                                            bool aNeedsFocus) {
-  FORWARD_TO_INNER_VOID(SetFocusedElement,
-                        (aElement, aFocusMethod, aNeedsFocus));
+                                            bool aNeedsFocus,
+                                            bool aWillShowOutline) {
+  FORWARD_TO_INNER_VOID(SetFocusedElement, (aElement, aFocusMethod, aNeedsFocus,
+                                            aWillShowOutline));
 }
 
 uint32_t nsGlobalWindowOuter::GetFocusMethod() {
