@@ -2648,7 +2648,7 @@ class TypeDef {
   explicit TypeDef(ArrayType&& arrayType)
       : kind_(TypeDefKind::Array), arrayType_(std::move(arrayType)) {}
 
-  TypeDef(TypeDef&& td) : kind_(td.kind_) {
+  TypeDef(TypeDef&& td) noexcept : kind_(td.kind_) {
     switch (kind_) {
       case TypeDefKind::Func:
         new (&funcType_) FuncType(std::move(td.funcType_));
@@ -2680,7 +2680,7 @@ class TypeDef {
     }
   }
 
-  TypeDef& operator=(TypeDef&& that) {
+  TypeDef& operator=(TypeDef&& that) noexcept {
     MOZ_ASSERT(isNone());
     switch (that.kind_) {
       case TypeDefKind::Func:
@@ -2891,7 +2891,7 @@ class TypeCache {
   TypeSet subtype_;
 
  public:
-  TypeCache() {}
+  TypeCache() = default;
 
   // Mark `a` as equivalent to `b` in the equivalence cache.
   [[nodiscard]] bool markEquivalent(TypeIndex a, TypeIndex b) {
