@@ -714,6 +714,8 @@
 }
 } /*** END proton ***/
 
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+
 %ifdef MENUBAR_CAN_AUTOHIDE
 #toolbar-menubar:not([autohide=true]) + #TabsToolbar,
 %endif
@@ -729,6 +731,7 @@
 :root[extradragspace] .tab-background {
   border-top-style: solid;
 }
+} /*** END !proton ***/
 
 .tab-background[multiselected=true],
 .tab-background[selected=true] {
