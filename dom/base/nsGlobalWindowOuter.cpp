@@ -4822,7 +4822,7 @@ bool nsGlobalWindowOuter::CanMoveResizeWindows(CallerType aCallerType) {
   if (aCallerType != CallerType::System) {
     // Don't allow scripts to move or resize windows that were not opened by a
     // script.
-    if (!HadOriginalOpener()) {
+    if (!mBrowsingContext->HadOriginalOpener()) {
       return false;
     }
 
@@ -6158,8 +6158,9 @@ void nsGlobalWindowOuter::CloseOuter(bool aTrustedCaller) {
     nsresult rv = mDoc->GetURL(url);
     NS_ENSURE_SUCCESS_VOID(rv);
 
-    if (!StringBeginsWith(url, u"about:neterror"_ns) && !HadOriginalOpener() &&
-        !aTrustedCaller && !IsOnlyTopLevelDocumentInSHistory()) {
+    if (!StringBeginsWith(url, u"about:neterror"_ns) &&
+        !mBrowsingContext->HadOriginalOpener() && !aTrustedCaller &&
+        !IsOnlyTopLevelDocumentInSHistory()) {
       bool allowClose =
           mAllowScriptsToClose ||
           Preferences::GetBool("dom.allow_scripts_to_close_windows", true);
@@ -7438,10 +7439,6 @@ int16_t nsGlobalWindowOuter::Orientation(CallerType aCallerType) const {
              : WindowOrientationObserver::OrientationAngle();
 }
 #endif
-
-bool nsPIDOMWindowOuter::HadOriginalOpener() const {
-  return nsGlobalWindowOuter::Cast(this)->HadOriginalOpener();
-}
 
 #if defined(_WINDOWS_) && !defined(MOZ_WRAPPED_WINDOWS_H)
 #  pragma message( \

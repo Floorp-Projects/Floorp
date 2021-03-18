@@ -458,10 +458,6 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
 
   bool IsCleanedUp() const { return mCleanedUp; }
 
-  bool HadOriginalOpener() const {
-    return GetBrowsingContext()->HadOriginalOpener();
-  }
-
   virtual void FirePopupBlockedEvent(
       Document* aDoc, nsIURI* aPopupURI, const nsAString& aPopupWindowName,
       const nsAString& aPopupWindowFeatures) override;

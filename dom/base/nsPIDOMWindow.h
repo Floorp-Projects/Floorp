@@ -789,8 +789,6 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
   float GetDevicePixelRatio(mozilla::dom::CallerType aCallerType);
 
-  bool HadOriginalOpener() const;
-
   virtual nsPIDOMWindowOuter* GetPrivateRoot() = 0;
 
   /**
