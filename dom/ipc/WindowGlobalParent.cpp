@@ -1133,22 +1133,23 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
     }
   }
 
-  // Note that our WindowContext has become discarded.
-  WindowContext::Discard();
-
   ContentParent* cp = nullptr;
   if (!IsInProcess()) {
     cp = static_cast<ContentParent*>(Manager()->Manager());
   }
 
-  RefPtr<WindowGlobalParent> self(this);
   Group()->EachOtherParent(cp, [&](ContentParent* otherContent) {
-    // Keep the WindowContext alive until other processes have acknowledged it
-    // has been discarded.
-    auto resolve = [self](bool) {};
-    auto reject = [self](mozilla::ipc::ResponseRejectReason) {};
-    otherContent->SendDiscardWindowContext(InnerWindowId(), resolve, reject);
+    // Keep the WindowContext and our BrowsingContextGroup alive until other
+    // processes have acknowledged it has been discarded.
+    Group()->AddKeepAlive();
+    auto callback = [self = RefPtr{this}](auto) {
+      self->Group()->RemoveKeepAlive();
+    };
+    otherContent->SendDiscardWindowContext(InnerWindowId(), callback, callback);
   });
+
+  // Note that our WindowContext has become discarded.
+  WindowContext::Discard();
 
   // Report content blocking log when destroyed.
   // There shouldn't have any content blocking log when a documnet is loaded in
