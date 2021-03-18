@@ -522,7 +522,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
     }
 
     Nothing nothing;
-    NothingVector nothings;
+    NothingVector nothings{};
     ResultType unusedType;
 
     switch (op.b0) {
@@ -543,12 +543,12 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         CHECK(iter.readDrop());
       case uint16_t(Op::Call): {
         uint32_t unusedIndex;
-        NothingVector unusedArgs;
+        NothingVector unusedArgs{};
         CHECK(iter.readCall(&unusedIndex, &unusedArgs));
       }
       case uint16_t(Op::CallIndirect): {
         uint32_t unusedIndex, unusedIndex2;
-        NothingVector unusedArgs;
+        NothingVector unusedArgs{};
         CHECK(iter.readCallIndirect(&unusedIndex, &unusedIndex2, &nothing,
                                     &unusedArgs));
       }
@@ -887,7 +887,7 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         switch (op.b1) {
           case uint32_t(GcOp::StructNewWithRtt): {
             uint32_t unusedUint;
-            NothingVector unusedArgs;
+            NothingVector unusedArgs{};
             CHECK(
                 iter.readStructNewWithRtt(&unusedUint, &nothing, &unusedArgs));
           }
