@@ -6,21 +6,19 @@
 
 const EXPORTED_SYMBOLS = ["modal"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  Services: "resource://gre/modules/Services.jsm",
+
   Log: "chrome://marionette/content/log.js",
 });
 
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 
 const COMMON_DIALOG = "chrome://global/content/commonDialog.xhtml";
-
-const isFirefox = () =>
-  Services.appinfo.ID == "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
 
 /** @namespace */
 this.modal = {
