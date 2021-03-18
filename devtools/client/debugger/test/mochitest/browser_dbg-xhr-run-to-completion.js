@@ -10,8 +10,9 @@ add_task(async function() {
   await waitForSelectedLocation(dbg, 23);
   assertPausedLocation(dbg);
 
-  resume(dbg);
-  await once(Services.ppmm, "test passed");
+  const onTestPassed = once(Services.ppmm, "test passed");
+  await resume(dbg);
+  await onTestPassed;
 });
 
 // Test that XHR handlers are not called when pausing in the debugger,
@@ -22,12 +23,13 @@ add_task(async function() {
   invokeInTab("multipleRequests", "doc-xhr-run-to-completion.html");
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
-  resume(dbg);
+  await resume(dbg);
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
-  resume(dbg);
+  await resume(dbg);
   await waitForPaused(dbg);
   assertPausedLocation(dbg);
-  resume(dbg);
-  await once(Services.ppmm, "test passed");
+  const onTestPassed = once(Services.ppmm, "test passed");
+  await resume(dbg);
+  await onTestPassed;
 });

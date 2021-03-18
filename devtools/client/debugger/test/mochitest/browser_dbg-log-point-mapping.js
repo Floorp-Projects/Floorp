@@ -34,5 +34,5 @@ add_task(async function() {
   await hasConsoleMessage(dbg, "value:");
   const { value } = await findConsoleMessage(dbg, "value:");
   is(value, 'value: ["b (30)","a","b (5)","z"]', "Variables in logpoint expression should be mapped");
-  resume(dbg);
+  await resume(dbg);
 });
