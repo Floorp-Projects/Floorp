@@ -28,6 +28,8 @@ class Ping:
         include_client_id: bool = False,
         send_if_empty: bool = False,
         reasons: Dict[str, str] = None,
+        defined_in: Optional[Dict] = None,
+        no_lint: Optional[List[str]] = None,
         _validated: bool = False,
     ):
         # Avoid cyclical import
@@ -35,6 +37,7 @@ class Ping:
 
         self.name = name
         self.description = description
+
         self.bugs = bugs
         self.notification_emails = notification_emails
         if data_reviews is None:
@@ -45,13 +48,17 @@ class Ping:
         if reasons is None:
             reasons = {}
         self.reasons = reasons
+        self.defined_in = defined_in
+        if no_lint is None:
+            no_lint = []
+        self.no_lint = no_lint
 
         # _validated indicates whether this metric has already been jsonschema
         # validated (but not any of the Python-level validation).
         if not _validated:
             data: Dict[str, util.JSONType] = {
                 "$schema": parser.PINGS_ID,
-                self.name: self.serialize(),
+                self.name: self._serialize_input(),
             }
             for error in parser.validate(data):
                 raise ValueError(error)
@@ -73,6 +80,11 @@ class Ping:
         d = self.__dict__.copy()
         del d["name"]
         return d
+
+    def _serialize_input(self) -> Dict[str, util.JSONType]:
+        d = self.serialize()
+        modified_dict = util.remove_output_params(d, "defined_in")
+        return modified_dict
 
     def identifier(self) -> str:
         """

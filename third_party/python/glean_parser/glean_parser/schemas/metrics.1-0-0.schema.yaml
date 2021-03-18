@@ -211,7 +211,7 @@ definitions:
         minItems: 1
         items:
           anyOf:
-            - type: integer
+            - type: integer  # Keep supporting integer for backward-compat
             - type: string
               format: uri
 

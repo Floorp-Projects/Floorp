@@ -11,12 +11,8 @@ use crate::ErrorType;
 /// When changing this trait, make sure all the operations are
 /// implemented in the related type in `../metrics/`.
 pub trait TimingDistribution {
-    /// Starts tracking time for the provided metric.
-    ///
-    /// This records an error if it’s already tracking time (i.e.
-    /// [`start`](TimingDistribution::start) was already called with no corresponding
-    /// [`stop_and_accumulate`](TimingDistribution::stop_and_accumulate)): in that case the
-    /// original start time will be preserved.
+    /// Start tracking time for the provided metric.
+    /// Multiple timers can run simultaneously.
     ///
     /// # Returns
     ///

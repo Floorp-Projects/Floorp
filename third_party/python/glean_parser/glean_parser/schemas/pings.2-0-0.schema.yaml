@@ -1,0 +1,153 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: http://json-schema.org/draft-07/schema#
+title: Pings
+description: |
+  Schema for the pings.yaml files for Mozilla's Glean telemetry SDK.
+
+  The top-level of the `pings.yaml` file has a key defining the name of each
+  ping. The values contain metadata about that ping. Ping names must be
+  kebab-case per https://docs.telemetry.mozilla.org/cookbooks/new_ping.html
+
+$id: moz://mozilla.org/schemas/glean/pings/2-0-0
+
+definitions:
+  dotted_snake_case:
+    type: string
+    pattern: "^[a-z_][a-z0-9_]{0,29}(\\.[a-z_][a-z0-9_]{0,29})*$"
+    maxLength: 40
+  # Prior to version 2.0.0 of the schema, special ping names with underscores
+  # were also supported.
+  kebab_case:
+    type: string
+    pattern: "^[a-z][a-z0-9-]{0,29}$"
+
+type: object
+
+propertyNames:
+  allOf:
+    - anyOf:
+        - $ref: "#/definitions/kebab_case"
+        - enum: ['$schema', 'no_lint']
+    - not:
+        enum: ['all-pings']
+
+properties:
+  $schema:
+    type: string
+    format: url
+
+  no_lint:
+    title: Lint checks to skip globally
+    description: |
+      This parameter lists any lint checks to skip for this whole file.
+    type: array
+    items:
+      type: string
+
+additionalProperties:
+  type: object
+  properties:
+    description:
+      title: Description
+      description: |
+        **Required.**
+
+        A textual description of the purpose of this ping and what it contains.
+
+        Descriptions may contain [markdown
+        syntax](https://www.markdownguide.org/basic-syntax/).
+      type: string
+
+    include_client_id:
+      title: Include client id
+      description: |
+        **Required.**
+
+        When `true`, include the `client_id` value in the ping.
+      type: boolean
+
+    send_if_empty:
+      title: Send if empty
+      description: |
+        When `false` a ping is sent only if it contains data (the default).
+        When `true` a ping is sent even if it contains no data.
+      type: boolean
+
+    notification_emails:
+      title: Notification emails
+      description: |
+        **Required.**
+
+        A list of email addresses to notify for important events with the
+        ping or when people with context or ownership for the ping need to
+        be contacted.
+      type: array
+      minItems: 1
+      items:
+        type: string
+        format: email
+
+    bugs:
+      title: Related bugs
+      description: |
+        **Required.**
+
+        A list of bugs (e.g. Bugzilla and Github) that are relevant to this
+        ping, e.g., tracking its original implementation or later changes to
+        it.
+
+        It must be a URI to a bug page in a tracker.
+
+        Prior to version 2.0.0 of the schema, bugs could also be integers.
+      type: array
+      minItems: 1
+      items:
+        type: string
+        format: uri
+
+    data_reviews:
+      title: Review references
+      description: |
+        **Required.**
+
+        A list of URIs to any data collection reviews relevant to the ping.
+      type: array
+      items:
+        type: string
+        format: uri
+
+    reasons:
+      title: The reasons this ping can be sent.
+      description: |
+        A list of reasons that the ping might be triggered. Sent in the ping's
+        `ping_info.reason` field.
+
+        Specified as a mapping from reason codes (which are short strings), to
+        a textual description of the reason.
+      type: object
+      propertyNames:
+        type: string
+        maxLength: 30
+      additionalProperties:
+        type: string
+
+    no_lint:
+      title: Lint checks to skip
+      description: |
+        This parameter lists any lint checks to skip for this metric only.
+      type: array
+      items:
+        type: string
+
+  required:
+    - description
+    - include_client_id
+    - bugs
+    - notification_emails
+    - data_reviews
+
+  additionalProperties: false

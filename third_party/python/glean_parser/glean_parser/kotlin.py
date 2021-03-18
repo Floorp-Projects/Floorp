@@ -219,6 +219,27 @@ def output_kotlin(
     if options is None:
         options = {}
 
+    namespace = options.get("namespace", "GleanMetrics")
+    glean_namespace = options.get("glean_namespace", "mozilla.components.service.glean")
+    namespace_package = namespace[: namespace.rfind(".")]
+
+    # Write out the special "build info" object
+    template = util.get_jinja2_template(
+        "kotlin.buildinfo.jinja2",
+    )
+
+    # This filename needs to start with "Glean" so it can never clash with a
+    # metric category
+    with (output_dir / "GleanBuildInfo.kt").open("w", encoding="utf-8") as fd:
+        fd.write(
+            template.render(
+                namespace=namespace,
+                namespace_package=namespace_package,
+                glean_namespace=glean_namespace,
+            )
+        )
+        fd.write("\n")
+
     template = util.get_jinja2_template(
         "kotlin.jinja2",
         filters=(
@@ -227,9 +248,6 @@ def output_kotlin(
             ("class_name", class_name),
         ),
     )
-
-    namespace = options.get("namespace", "GleanMetrics")
-    glean_namespace = options.get("glean_namespace", "mozilla.components.service.glean")
 
     for category_key, category_val in objs.items():
         filename = util.Camelize(category_key) + ".kt"
