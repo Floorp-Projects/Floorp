@@ -92,7 +92,8 @@ class TimedRunnable final : public Runnable {
   static nsresult DispatchWithDocgroup(nsIRunnable* aRunnable,
                                        DocGroup* aDocGroup) {
     nsCOMPtr<nsIRunnable> runnable = aRunnable;
-    runnable = new SchedulerGroup::Runnable(runnable.forget(), aDocGroup);
+    runnable = new SchedulerGroup::Runnable(runnable.forget(),
+                                            aDocGroup->GetPerformanceCounter());
     return aDocGroup->Dispatch(TaskCategory::Other, runnable.forget());
   }
 

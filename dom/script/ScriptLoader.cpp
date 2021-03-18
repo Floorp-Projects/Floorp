@@ -2124,7 +2124,7 @@ namespace {
 class NotifyOffThreadScriptLoadCompletedRunnable : public Runnable {
   RefPtr<ScriptLoadRequest> mRequest;
   RefPtr<ScriptLoader> mLoader;
-  RefPtr<DocGroup> mDocGroup;
+  nsCOMPtr<nsISerialEventTarget> mEventTarget;
   JS::OffThreadToken* mToken;
 
  public:
@@ -2135,9 +2135,11 @@ class NotifyOffThreadScriptLoadCompletedRunnable : public Runnable {
       : Runnable("dom::NotifyOffThreadScriptLoadCompletedRunnable"),
         mRequest(aRequest),
         mLoader(aLoader),
-        mDocGroup(aLoader->GetDocGroup()),
         mToken(nullptr) {
     MOZ_ASSERT(NS_IsMainThread());
+    if (DocGroup* docGroup = aLoader->GetDocGroup()) {
+      mEventTarget = docGroup->EventTargetFor(TaskCategory::Other);
+    }
   }
 
   virtual ~NotifyOffThreadScriptLoadCompletedRunnable();
@@ -2150,8 +2152,8 @@ class NotifyOffThreadScriptLoadCompletedRunnable : public Runnable {
   static void Dispatch(
       already_AddRefed<NotifyOffThreadScriptLoadCompletedRunnable>&& aSelf) {
     RefPtr<NotifyOffThreadScriptLoadCompletedRunnable> self = aSelf;
-    RefPtr<DocGroup> docGroup = self->mDocGroup;
-    docGroup->Dispatch(TaskCategory::Other, self.forget());
+    nsCOMPtr<nsISerialEventTarget> eventTarget = self->mEventTarget;
+    eventTarget->Dispatch(self.forget());
   }
 
   NS_DECL_NSIRUNNABLE
