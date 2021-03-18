@@ -184,9 +184,9 @@ class StackMaps {
  public:
   StackMaps() : sorted_(false) {}
   ~StackMaps() {
-    for (size_t i = 0; i < mapping_.length(); i++) {
-      mapping_[i].map->destroy();
-      mapping_[i].map = nullptr;
+    for (auto& maplet : mapping_) {
+      maplet.map->destroy();
+      maplet.map = nullptr;
     }
   }
   [[nodiscard]] bool add(uint8_t* nextInsnAddr, StackMap* map) {
@@ -197,9 +197,9 @@ class StackMaps {
     return add(maplet.nextInsnAddr, maplet.map);
   }
   void clear() {
-    for (size_t i = 0; i < mapping_.length(); i++) {
-      mapping_[i].nextInsnAddr = nullptr;
-      mapping_[i].map = nullptr;
+    for (auto& maplet : mapping_) {
+      maplet.nextInsnAddr = nullptr;
+      maplet.map = nullptr;
     }
     mapping_.clear();
   }
@@ -213,7 +213,7 @@ class StackMaps {
     return m;
   }
   void offsetBy(uintptr_t delta) {
-    for (size_t i = 0; i < mapping_.length(); i++) mapping_[i].offsetBy(delta);
+    for (auto& maplet : mapping_) maplet.offsetBy(delta);
   }
   void sort() {
     MOZ_ASSERT(!sorted_);

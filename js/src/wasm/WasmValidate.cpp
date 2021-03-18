@@ -2215,8 +2215,8 @@ static bool DecodeMemoryLimits(Decoder& d, ModuleEnvironment* env) {
 
 #ifdef ENABLE_WASM_EXCEPTIONS
 static bool EventIsJSCompatible(Decoder& d, const ValTypeVector& type) {
-  for (uint32_t i = 0; i < type.length(); i++) {
-    if (type[i].isTypeIndex()) {
+  for (auto t : type) {
+    if (t.isTypeIndex()) {
       return d.fail("cannot expose indexed reference type");
     }
   }
