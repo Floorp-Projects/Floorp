@@ -25,14 +25,14 @@ add_task(async function() {
   pressKey(dbg, "Escape");
   await addedWatchpoint;
 
-  resume(dbg);
+  await resume(dbg);
   await waitForPaused(dbg);
   await waitForState(dbg, () => dbg.selectors.getSelectedInlinePreviews());
   assertPausedAtSourceAndLine(dbg, sourceId, 17);
   is(await getScopeValue(dbg, 5), "3");
 
   info("Resume and wait to pause at the access to b in the first `obj.b;`");
-  resume(dbg);
+  await resume(dbg);
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, sourceId, 19);
 
@@ -46,12 +46,12 @@ add_task(async function() {
   info(
     "Resume and wait to skip the second `obj.b` and pause on the debugger statement"
   );
-  resume(dbg);
+  await resume(dbg);
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, sourceId, 21);
 
   info("Resume and pause on the debugger statement in getB");
-  resume(dbg);
+  await resume(dbg);
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, sourceId, 5);
 
@@ -66,13 +66,13 @@ add_task(async function() {
   await addedWatchpoint2;
 
   info("Resume and wait to pause at the access to b in getB");
-  resume(dbg);
+  await resume(dbg);
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, sourceId, 6);
 
   info("Resume and pause on the debugger statement");
   await waitForRequestsToSettle(dbg);
-  resume(dbg);
+  await resume(dbg);
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, sourceId, 24);
 
@@ -95,7 +95,7 @@ add_task(async function() {
   await addedWatchpoint3;
 
   info("Resume and wait to pause on the final `obj.b;`");
-  resume(dbg);
+  await resume(dbg);
 
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, sourceId, 25);

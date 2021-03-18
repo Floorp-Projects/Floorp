@@ -33,7 +33,7 @@ add_task(async function() {
   await selectSource(dbg, "fib.c");
 
   info("resume");
-  resume(dbg);
+  await resume(dbg);
   await waitForPaused(dbg, "fib.c");
 
   const frames = findAllElements(dbg, "frames");
