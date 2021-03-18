@@ -136,6 +136,11 @@ NS_IMETHODIMP
 nsDeviceContextSpecProxy::BeginDocument(const nsAString& aTitle,
                                         const nsAString& aPrintToFileName,
                                         int32_t aStartPage, int32_t aEndPage) {
+  if (!mRemotePrintJob || mRemotePrintJob->IsDestroyed()) {
+    mRemotePrintJob = nullptr;
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   mRecorder = new mozilla::layout::DrawEventRecorderPRFileDesc();
   nsresult rv = mRemotePrintJob->InitializePrint(
       nsString(aTitle), nsString(aPrintToFileName), aStartPage, aEndPage);
@@ -151,22 +156,35 @@ nsDeviceContextSpecProxy::BeginDocument(const nsAString& aTitle,
 
 NS_IMETHODIMP
 nsDeviceContextSpecProxy::EndDocument() {
-  if (mRemotePrintJob) {
-    Unused << mRemotePrintJob->SendFinalizePrint();
+  if (!mRemotePrintJob || mRemotePrintJob->IsDestroyed()) {
+    mRemotePrintJob = nullptr;
+    return NS_ERROR_NOT_AVAILABLE;
   }
+
+  Unused << mRemotePrintJob->SendFinalizePrint();
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDeviceContextSpecProxy::AbortDocument() {
-  if (mRemotePrintJob) {
-    Unused << mRemotePrintJob->SendAbortPrint(NS_OK);
+  if (!mRemotePrintJob || mRemotePrintJob->IsDestroyed()) {
+    mRemotePrintJob = nullptr;
+    return NS_ERROR_NOT_AVAILABLE;
   }
+
+  Unused << mRemotePrintJob->SendAbortPrint(NS_OK);
+
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsDeviceContextSpecProxy::BeginPage() {
+  if (!mRemotePrintJob || mRemotePrintJob->IsDestroyed()) {
+    mRemotePrintJob = nullptr;
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   mRecorder->OpenFD(mRemotePrintJob->GetNextPageFD());
 
   return NS_OK;
@@ -174,6 +192,11 @@ nsDeviceContextSpecProxy::BeginPage() {
 
 NS_IMETHODIMP
 nsDeviceContextSpecProxy::EndPage() {
+  if (!mRemotePrintJob || mRemotePrintJob->IsDestroyed()) {
+    mRemotePrintJob = nullptr;
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   // Send the page recording to the parent.
   mRecorder->Close();
   mRemotePrintJob->ProcessPage(std::move(mRecorder->TakeDependentSurfaces()));

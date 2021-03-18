@@ -43,6 +43,7 @@ mozilla::ipc::IPCResult RemotePrintJobChild::RecvPrintInitializationResult(
 }
 
 PRFileDesc* RemotePrintJobChild::GetNextPageFD() {
+  MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(mNextPageFD);
   PRFileDesc* fd = mNextPageFD;
   mNextPageFD = nullptr;
@@ -51,6 +52,7 @@ PRFileDesc* RemotePrintJobChild::GetNextPageFD() {
 
 void RemotePrintJobChild::SetNextPageFD(
     const mozilla::ipc::FileDescriptor& aFd) {
+  MOZ_ASSERT(!mDestroyed);
   auto handle = aFd.ClonePlatformHandle();
   mNextPageFD = PR_ImportFile(PROsfd(handle.release()));
 }
@@ -82,12 +84,14 @@ mozilla::ipc::IPCResult RemotePrintJobChild::RecvAbortPrint(
 }
 
 void RemotePrintJobChild::SetPagePrintTimer(nsPagePrintTimer* aPagePrintTimer) {
+  MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(aPagePrintTimer);
 
   mPagePrintTimer = aPagePrintTimer;
 }
 
 void RemotePrintJobChild::SetPrintJob(nsPrintJob* aPrintJob) {
+  MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(aPrintJob);
 
   mPrintJob = aPrintJob;
