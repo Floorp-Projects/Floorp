@@ -615,17 +615,9 @@ nsresult GfxInfo::GetFeatureStatusImpl(
                      // Excluding G31 due to bug 1689947.
                      gpu.Find("Mali-G31", /*ignoreCase*/ true) == kNotFound;
 
-      // Webrender requires the extension GL_OES_EGL_image_external_essl3
-      // to render video. Bug 1507074 tracks removing this requirement.
-      bool supportsImageExternalEssl3 = mGLStrings->Extensions().Contains(
-          "GL_OES_EGL_image_external_essl3"_ns);
-
       if (!isUnblocked) {
         *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
         aFailureId = "FEATURE_FAILURE_WEBRENDER_BLOCKED_DEVICE";
-      } else if (!supportsImageExternalEssl3) {
-        *aStatus = nsIGfxInfo::FEATURE_BLOCKED_DEVICE;
-        aFailureId = "FEATURE_FAILURE_WEBRENDER_NO_IMAGE_EXTERNAL";
       } else {
         *aStatus = nsIGfxInfo::FEATURE_ALLOW_QUALIFIED;
       }
