@@ -66,7 +66,7 @@ public class WebExtensionController {
              *
              * @param extension the newly-created extension object
              */
-            void onNewExtension(final WebExtension extension);
+            WebExtension onNewExtension(final GeckoBundle extension);
         }
 
         public GeckoResult<WebExtension> get(final String id) {
@@ -80,10 +80,9 @@ public class WebExtensionController {
 
             final GeckoResult<WebExtension> pending = EventDispatcher.getInstance()
                     .queryBundle("GeckoView:WebExtension:Get", bundle)
-                    .map(WebExtension::fromBundle)
-                    .map(ext -> {
+                    .map(extensionBundle -> {
+                        final WebExtension ext = mObserver.onNewExtension(extensionBundle);
                         mData.put(ext.id, ext);
-                        mObserver.onNewExtension(ext);
                         return ext;
                     });
 
@@ -124,8 +123,8 @@ public class WebExtensionController {
         }
 
         @Override
-        public void onNewExtension(final WebExtension extension) {
-            extension.setDelegateController(new DelegateController(extension));
+        public WebExtension onNewExtension(final GeckoBundle bundle) {
+            return WebExtension.fromBundle(mDelegateControllerProvider, bundle);
         }
     }
 
@@ -221,6 +220,14 @@ public class WebExtensionController {
             return mListener.getDownloadDelegate(mExtension);
         }
     }
+
+    final WebExtension.DelegateControllerProvider mDelegateControllerProvider =
+        new WebExtension.DelegateControllerProvider() {
+            @Override
+            public WebExtension.DelegateController controllerFor(final WebExtension extension) {
+                return new DelegateController(extension);
+            }
+        };
 
     /**
      * This delegate will be called whenever an extension is about to be installed or it needs
@@ -419,7 +426,7 @@ public class WebExtensionController {
 
         final GeckoResult<WebExtension> result = EventDispatcher.getInstance()
                 .queryBundle("GeckoView:WebExtension:Install", bundle)
-                .map(WebExtension::fromBundle,
+                .map(ext -> WebExtension.fromBundle(mDelegateControllerProvider, ext),
                      WebExtension.InstallException::fromQueryException)
                 .map(this::registerWebExtension);
         result.setCancellationDelegate(canceller);
@@ -445,7 +452,7 @@ public class WebExtensionController {
 
         return EventDispatcher.getInstance()
                 .queryBundle("GeckoView:WebExtension:SetPBAllowed", bundle)
-                .map(WebExtension::fromBundle)
+                .map(ext -> WebExtension.fromBundle(mDelegateControllerProvider, ext))
                 .map(this::registerWebExtension);
     }
 
@@ -479,7 +486,7 @@ public class WebExtensionController {
 
         return EventDispatcher.getInstance()
                 .queryBundle("GeckoView:WebExtension:InstallBuiltIn", bundle)
-                .map(WebExtension::fromBundle,
+                .map(ext -> WebExtension.fromBundle(mDelegateControllerProvider, ext),
                      WebExtension.InstallException::fromQueryException)
                 .map(this::registerWebExtension);
     }
@@ -516,7 +523,7 @@ public class WebExtensionController {
 
         return EventDispatcher.getInstance()
                 .queryBundle("GeckoView:WebExtension:EnsureBuiltIn", bundle)
-                .map(WebExtension::fromBundle,
+                .map(ext -> WebExtension.fromBundle(mDelegateControllerProvider, ext),
                      WebExtension.InstallException::fromQueryException)
                 .map(this::registerWebExtension);
     }
@@ -586,7 +593,7 @@ public class WebExtensionController {
 
         return EventDispatcher.getInstance()
                 .queryBundle("GeckoView:WebExtension:Enable", bundle)
-                .map(WebExtension::fromBundle)
+                .map(ext -> WebExtension.fromBundle(mDelegateControllerProvider, ext))
                 .map(this::registerWebExtension);
     }
 
@@ -609,7 +616,7 @@ public class WebExtensionController {
 
         return EventDispatcher.getInstance()
                 .queryBundle("GeckoView:WebExtension:Disable", bundle)
-                .map(WebExtension::fromBundle)
+                .map(ext -> WebExtension.fromBundle(mDelegateControllerProvider, ext))
                 .map(this::registerWebExtension);
     }
 
@@ -618,7 +625,7 @@ public class WebExtensionController {
         final List<WebExtension> list = new ArrayList<>(bundles.length);
 
         for (GeckoBundle bundle : bundles) {
-            final WebExtension extension = new WebExtension(bundle);
+            final WebExtension extension = new WebExtension(mDelegateControllerProvider, bundle);
             list.add(registerWebExtension(extension));
         }
 
@@ -671,7 +678,7 @@ public class WebExtensionController {
 
         return EventDispatcher.getInstance()
                 .queryBundle("GeckoView:WebExtension:Update", bundle)
-                .map(WebExtension::fromBundle,
+                .map(ext -> WebExtension.fromBundle(mDelegateControllerProvider, ext),
                      WebExtension.InstallException::fromQueryException)
                 .map(this::registerWebExtension);
     }
@@ -688,7 +695,6 @@ public class WebExtensionController {
 
     /* package */ WebExtension registerWebExtension(final WebExtension webExtension) {
         if (webExtension != null) {
-            webExtension.setDelegateController(new DelegateController(webExtension));
             mExtensions.update(webExtension.id, webExtension);
         }
         return webExtension;
@@ -799,8 +805,8 @@ public class WebExtensionController {
             return;
         }
 
-        final WebExtension extension = new WebExtension(extensionBundle);
-        extension.setDelegateController(new DelegateController(extension));
+        final WebExtension extension =
+                new WebExtension(mDelegateControllerProvider, extensionBundle);
 
         if (mPromptDelegate == null) {
             Log.e(LOGTAG, "Tried to install extension " + extension.id +
@@ -834,11 +840,11 @@ public class WebExtensionController {
             return;
         }
 
-        final WebExtension currentExtension = new WebExtension(currentBundle);
-        currentExtension.setDelegateController(new DelegateController(currentExtension));
+        final WebExtension currentExtension =
+                new WebExtension(mDelegateControllerProvider, currentBundle);
 
-        final WebExtension updatedExtension = new WebExtension(updatedBundle);
-        updatedExtension.setDelegateController(new DelegateController(updatedExtension));
+        final WebExtension updatedExtension =
+                new WebExtension(mDelegateControllerProvider, updatedBundle);
 
         if (mPromptDelegate == null) {
             Log.e(LOGTAG, "Tried to update extension " + currentExtension.id +
@@ -1048,7 +1054,6 @@ public class WebExtensionController {
 
     /* package */ void unregisterWebExtension(final WebExtension webExtension) {
         mExtensions.remove(webExtension.id);
-        webExtension.setDelegateController(null);
         mListener.unregisterWebExtension(webExtension);
     }
 

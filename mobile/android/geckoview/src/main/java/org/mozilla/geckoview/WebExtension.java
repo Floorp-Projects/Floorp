@@ -72,11 +72,11 @@ public class WebExtension {
         DownloadDelegate getDownloadDelegate();
     }
 
-    private DelegateController mDelegateController = null;
-
-    /* package */ void setDelegateController(final DelegateController delegate) {
-        mDelegateController = delegate;
+    /* package */ interface DelegateControllerProvider {
+        @NonNull DelegateController controllerFor(final WebExtension extension);
     }
+
+    private final DelegateController mDelegateController;
 
     @Override
     public String toString() {
@@ -110,7 +110,8 @@ public class WebExtension {
             value = { Flags.NONE, Flags.ALLOW_CONTENT_MESSAGING })
     /* package */ @interface WebExtensionFlags {}
 
-    /* package */ WebExtension(final GeckoBundle bundle) {
+    /* package */ WebExtension(final DelegateControllerProvider provider,
+                               final GeckoBundle bundle) {
         location = bundle.getString("locationURI");
         id = bundle.getString("webExtensionId");
         flags = bundle.getInt("webExtensionFlags", 0);
@@ -120,6 +121,7 @@ public class WebExtension {
         } else {
             metaData = null;
         }
+        mDelegateController = provider.controllerFor(this);
     }
 
     /**
@@ -173,9 +175,7 @@ public class WebExtension {
     @UiThread
     public void setMessageDelegate(final @Nullable MessageDelegate messageDelegate,
                                    final @NonNull String nativeApp) {
-        if (mDelegateController != null) {
-            mDelegateController.onMessageDelegate(nativeApp, messageDelegate);
-        }
+        mDelegateController.onMessageDelegate(nativeApp, messageDelegate);
     }
 
     @Retention(RetentionPolicy.SOURCE)
@@ -817,9 +817,7 @@ public class WebExtension {
      */
     @UiThread
     public void setTabDelegate(final @Nullable TabDelegate delegate) {
-        if (mDelegateController != null) {
-            mDelegateController.onTabDelegate(delegate);
-        }
+        mDelegateController.onTabDelegate(delegate);
     }
 
     @UiThread
@@ -830,9 +828,7 @@ public class WebExtension {
 
     @UiThread
     public void setBrowsingDataDelegate(final @Nullable BrowsingDataDelegate delegate) {
-        if (mDelegateController != null) {
-            mDelegateController.onBrowsingDataDelegate(delegate);
-        }
+        mDelegateController.onBrowsingDataDelegate(delegate);
     }
 
     private static class Sender {
@@ -1216,11 +1212,12 @@ public class WebExtension {
         }
     }
 
-    /* package */ static WebExtension fromBundle(final GeckoBundle bundle) {
+    /* package */ static WebExtension fromBundle(final DelegateControllerProvider provider,
+                                                 final GeckoBundle bundle) {
         if (bundle == null) {
             return null;
         }
-        return new WebExtension(bundle.getBundle("extension"));
+        return new WebExtension(provider, bundle.getBundle("extension"));
     }
 
     /**
@@ -1673,9 +1670,7 @@ public class WebExtension {
      */
     @AnyThread
     public void setActionDelegate(final @Nullable ActionDelegate delegate) {
-        if (mDelegateController != null) {
-            mDelegateController.onActionDelegate(delegate);
-        }
+        mDelegateController.onActionDelegate(delegate);
 
         final GeckoBundle bundle = new GeckoBundle(1);
         bundle.putString("extensionId", id);
@@ -2260,9 +2255,7 @@ public class WebExtension {
      */
     @UiThread
     public void setDownloadDelegate(final @Nullable DownloadDelegate delegate) {
-        if (mDelegateController != null) {
-            mDelegateController.onDownloadDelegate(delegate);
-        }
+        mDelegateController.onDownloadDelegate(delegate);
     }
 
     /**
