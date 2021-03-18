@@ -255,7 +255,7 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
   int visualID = 0;
 #ifdef MOZ_X11
   GdkDisplay* gdkDisplay = gdk_display_get_default();
-  if (GdkIsX11Display(gdkDisplay)) {
+  if (GdkIsX11Display(gdkDisplay) && aWindow) {
     auto* display = GDK_DISPLAY_XDISPLAY(gdkDisplay);
     if (display) {
       XWindowAttributes windowAttrs;
