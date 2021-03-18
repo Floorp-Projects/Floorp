@@ -167,9 +167,11 @@ function testHTMLElements(list, isMac, expectedNoRingsOnWin)
     if (childdoc.activeElement)
       childdoc.activeElement.blur();
 
+    ringSize = (elem.localName == "a" ? "0" : (expectedNoRingsOnWin ? 2 : 1)) + "px";
+
     elem.focus();
     is(childdoc.activeElement, elem, "focus() on " + list[e]);
-    is(childwin.getComputedStyle(elem).outlineWidth, mouseRingSize,
+    is(childwin.getComputedStyle(elem).outlineWidth, ringSize,
        "focus() on " + list[e] + " ring");
 
     childdoc.activeElement.blur();
