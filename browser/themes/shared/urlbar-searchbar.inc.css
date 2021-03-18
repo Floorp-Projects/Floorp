@@ -39,6 +39,13 @@
   margin-inline: @urlbarMarginInline@;
 }
 
+@supports -moz-bool-pref("browser.proton.enabled") {
+:root[uidensity=touch] #urlbar-container,
+:root[uidensity=touch] #search-container {
+  padding-block: 6px;
+}
+}
+
 #urlbar,
 #searchbar {
   min-height: var(--urlbar-min-height);
