@@ -257,6 +257,12 @@ void nsMenuItemX::SetKeyEquiv() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+void nsMenuItemX::Dump(uint32_t aIndent) const {
+  printf("%*s - item [%p] %-16s <%s>\n", aIndent * 2, "", this,
+         mType == eSeparatorMenuItemType ? "----" : [mNativeMenuItem.title UTF8String],
+         NS_ConvertUTF16toUTF8(mContent->NodeName()).get());
+}
+
 //
 // nsChangeObserver
 //

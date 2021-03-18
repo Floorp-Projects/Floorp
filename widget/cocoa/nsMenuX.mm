@@ -692,6 +692,33 @@ void nsMenuX::IconUpdated() {
   mParent->IconUpdated();
 }
 
+void nsMenuX::Dump(uint32_t aIndent) const {
+  printf("%*s - menu [%p] %-16s <%s>", aIndent * 2, "", this,
+         mLabel.IsEmpty() ? "(empty label)" : NS_ConvertUTF16toUTF8(mLabel).get(),
+         NS_ConvertUTF16toUTF8(mContent->NodeName()).get());
+  if (mNeedsRebuild) {
+    printf(" [NeedsRebuild]");
+  }
+  if (mConstructed) {
+    printf(" [Constructed]");
+  }
+  if (mVisible) {
+    printf(" [Visible]");
+  }
+  if (mIsEnabled) {
+    printf(" [IsEnabled]");
+  }
+  printf(" (%d visible items)", int(mVisibleItemsCount));
+  printf("\n");
+  for (const auto& subitem : mMenuObjectsArray) {
+    if (subitem->MenuObjectType() == eSubmenuObjectType) {
+      static_cast<nsMenuX*>(subitem.get())->Dump(aIndent + 1);
+    } else if (subitem->MenuObjectType() == eMenuItemObjectType) {
+      static_cast<nsMenuItemX*>(subitem.get())->Dump(aIndent + 1);
+    }
+  }
+}
+
 //
 // MenuDelegate Objective-C class, used to set up Carbon events
 //
