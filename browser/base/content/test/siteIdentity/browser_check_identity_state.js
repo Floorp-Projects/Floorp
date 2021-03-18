@@ -544,7 +544,7 @@ add_task(async function noCertErrorSecurityConnectionBGTest() {
 
   is(
     getSecurityConnectionBG(),
-    `url("chrome://global/skin/icons/connection-mixed-passive-loaded.svg")`,
+    `url("chrome://global/skin/icons/security-warning.svg")`,
     "Security connection should show a warning lock icon."
   );
 

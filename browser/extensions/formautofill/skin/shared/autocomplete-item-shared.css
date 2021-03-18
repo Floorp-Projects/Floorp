@@ -182,7 +182,7 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
   content: "";
   width: 16px;
   height: 16px;
-  background-image: url(chrome://global/skin/icons/connection-mixed-active-loaded.svg);
+  background-image: url(chrome://global/skin/icons/security-broken.svg);
   -moz-context-properties: fill;
   fill: GrayText;
 }

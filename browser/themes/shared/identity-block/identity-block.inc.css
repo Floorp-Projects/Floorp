@@ -238,7 +238,7 @@
 
 #identity-box[pageproxystate="valid"].verifiedDomain #identity-icon,
 #identity-box[pageproxystate="valid"].mixedActiveBlocked #identity-icon {
-  list-style-image: url(chrome://browser/skin/connection-secure.svg);
+  list-style-image: url(chrome://global/skin/icons/security.svg);
 }
 
 #identity-box[pageproxystate="valid"].verifiedDomain #identity-icon:not([lock-icon-gray]),
@@ -252,7 +252,7 @@
 #identity-box[pageproxystate="valid"].mixedDisplayContentLoadedActiveBlocked #identity-icon,
 #identity-box[pageproxystate="valid"].certUserOverridden #identity-icon,
 #identity-box[pageproxystate="valid"].certErrorPage #identity-icon {
-  list-style-image: url(chrome://global/skin/icons/connection-mixed-passive-loaded.svg);
+  list-style-image: url(chrome://global/skin/icons/security-warning.svg);
   fill: unset;
 }
 
@@ -260,7 +260,7 @@
 #identity-box[pageproxystate="valid"].notSecure #identity-icon,
 #identity-box[pageproxystate="valid"].mixedActiveContent #identity-icon,
 #identity-box[pageproxystate="valid"].httpsOnlyErrorPage #identity-icon {
-  list-style-image: url(chrome://global/skin/icons/connection-mixed-active-loaded.svg);
+  list-style-image: url(chrome://global/skin/icons/security-broken.svg);
 }
 
 #permissions-granted-icon {

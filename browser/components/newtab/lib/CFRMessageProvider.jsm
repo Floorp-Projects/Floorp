@@ -557,7 +557,7 @@ const CFR_MESSAGES = [
       anchor_id: "PanelUI-menu-button",
       layout: "icon_and_message",
       text: { string_id: "cfr-doorhanger-doh-body" },
-      icon: "chrome://browser/skin/connection-secure.svg",
+      icon: "chrome://global/skin/icons/security.svg",
       buttons: {
         secondary: [
           {
