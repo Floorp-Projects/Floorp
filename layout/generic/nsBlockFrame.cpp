@@ -1530,9 +1530,9 @@ void nsBlockFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
     }
   }
 
-  nsRect areaBounds = nsRect(0, 0, aMetrics.Width(), aMetrics.Height());
-  aMetrics.mOverflowAreas = ComputeOverflowAreas(
-      areaBounds, reflowInput->mStyleDisplay, blockEndEdgeOfChildren);
+  aMetrics.SetOverflowAreasToDesiredBounds();
+  ComputeOverflowAreas(aMetrics.mOverflowAreas, blockEndEdgeOfChildren,
+                       reflowInput->mStyleDisplay);
   // Factor overflow container child bounds into the overflow area
   aMetrics.mOverflowAreas.UnionWith(ocBounds);
   // Factor pushed float child bounds into the overflow area
@@ -2089,13 +2089,11 @@ static void ConsiderBlockEndEdgeOfChildren(const WritingMode aWritingMode,
   }
 }
 
-OverflowAreas nsBlockFrame::ComputeOverflowAreas(const nsRect& aBounds,
-                                                 const nsStyleDisplay* aDisplay,
-                                                 nscoord aBEndEdgeOfChildren) {
-  // Compute the overflow areas of our children
+void nsBlockFrame::ComputeOverflowAreas(OverflowAreas& aOverflowAreas,
+                                        nscoord aBEndEdgeOfChildren,
+                                        const nsStyleDisplay* aDisplay) const {
   // XXX_perf: This can be done incrementally.  It is currently one of
   // the things that makes incremental reflow O(N^2).
-  OverflowAreas areas(aBounds, aBounds);
   if (ShouldApplyOverflowClipping(aDisplay) != PhysicalAxes::Both) {
     for (const auto& line : Lines()) {
       if (aDisplay->IsContainLayout()) {
@@ -2108,9 +2106,9 @@ OverflowAreas nsBlockFrame::ComputeOverflowAreas(const nsRect& aBounds,
         nsRect childVisualRect = line.InkOverflowRect();
         OverflowAreas childVisualArea =
             OverflowAreas(childVisualRect, nsRect());
-        areas.UnionWith(childVisualArea);
+        aOverflowAreas.UnionWith(childVisualArea);
       } else {
-        areas.UnionWith(line.GetOverflowAreas());
+        aOverflowAreas.UnionWith(line.GetOverflowAreas());
       }
     }
 
@@ -2120,20 +2118,18 @@ OverflowAreas nsBlockFrame::ComputeOverflowAreas(const nsRect& aBounds,
     // factor it in anyway (it can't hurt if it was already done).
     // XXXldb Can we just fix GetOverflowArea instead?
     if (nsIFrame* outsideMarker = GetOutsideMarker()) {
-      areas.UnionAllWith(outsideMarker->GetRect());
+      aOverflowAreas.UnionAllWith(outsideMarker->GetRect());
     }
 
-    ConsiderBlockEndEdgeOfChildren(GetWritingMode(), aBEndEdgeOfChildren, areas,
-                                   aDisplay);
+    ConsiderBlockEndEdgeOfChildren(GetWritingMode(), aBEndEdgeOfChildren,
+                                   aOverflowAreas, aDisplay);
   }
 
 #ifdef NOISY_OVERFLOW_AREAS
   printf("%s: InkOverflowArea=%s, ScrollableOverflowArea=%s\n", ListTag().get(),
-         ToString(areas.InkOverflow()).c_str(),
-         ToString(areas.ScrollableOverflow()).c_str());
+         ToString(aOverflowAreas.InkOverflow()).c_str(),
+         ToString(aOverflowAreas.ScrollableOverflow()).c_str());
 #endif
-
-  return areas;
 }
 
 void nsBlockFrame::UnionChildOverflow(OverflowAreas& aOverflowAreas) {
