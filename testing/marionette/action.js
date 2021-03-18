@@ -9,12 +9,12 @@
 
 const EXPORTED_SYMBOLS = ["action"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AppInfo: "chrome://marionette/content/appinfo.js",
   assert: "chrome://marionette/content/assert.js",
   element: "chrome://marionette/content/element.js",
   error: "chrome://marionette/content/error.js",
@@ -1251,7 +1251,7 @@ function dispatchPointerDown(a, inputState, win) {
         let mouseEvent = new action.Mouse("mousedown", a.button);
         mouseEvent.update(inputState);
         if (mouseEvent.ctrlKey) {
-          if (Services.appinfo.OS === "Darwin") {
+          if (AppInfo.isMac) {
             mouseEvent.button = 2;
             event.DoubleClickTracker.resetClick();
           }
@@ -1266,7 +1266,7 @@ function dispatchPointerDown(a, inputState, win) {
         );
         if (
           event.MouseButton.isSecondary(a.button) ||
-          (mouseEvent.ctrlKey && Services.appinfo.OS === "Darwin")
+          (mouseEvent.ctrlKey && AppInfo.isMac)
         ) {
           let contextMenuEvent = Object.assign({}, mouseEvent, {
             type: "contextmenu",

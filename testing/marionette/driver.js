@@ -7,15 +7,16 @@
 
 const EXPORTED_SYMBOLS = ["GeckoDriver"];
 
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 
   Addon: "chrome://marionette/content/addon.js",
+  AppInfo: "chrome://marionette/content/appinfo.js",
   assert: "chrome://marionette/content/assert.js",
   atom: "chrome://marionette/content/atom.js",
   browser: "chrome://marionette/content/browser.js",
@@ -63,9 +64,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 XPCOMUtils.defineLazyGetter(this, "logger", () => Log.get());
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
-const APP_ID_FIREFOX = "{ec8030f7-c20a-464f-9b0e-13a3a9e97384}";
-const APP_ID_THUNDERBIRD = "{3550f703-e582-4d05-9a08-453d09bdfdc6}";
-
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 const SUPPORTED_STRATEGIES = new Set([
@@ -107,9 +105,6 @@ const globalMessageManager = Services.mm;
  *     The instance of Marionette server.
  */
 this.GeckoDriver = function(server) {
-  this.appId = Services.appinfo.ID;
-  this.appName = Services.appinfo.name.toLowerCase();
-
   this._server = server;
 
   // WebDriver Session
@@ -411,7 +406,7 @@ GeckoDriver.prototype.registerBrowser = function(browserElement) {
   // as well as XUL frames. Ideally this should be cleaned up and we should
   // keep track of browsers a different way.
   if (
-    this.appId != APP_ID_FIREFOX ||
+    !AppInfo.isFirefox ||
     browserElement.namespaceURI != XUL_NS ||
     browserElement.nodeName != "browser" ||
     browserElement.getTabBrowser()
@@ -542,15 +537,12 @@ GeckoDriver.prototype.newSession = async function(cmd) {
   await new Promise(resolve => {
     const waitForWindow = () => {
       let windowTypes;
-      switch (this.appId) {
-        case APP_ID_THUNDERBIRD:
-          windowTypes = ["mail:3pane"];
-          break;
-        default:
-          // We assume that an app either has GeckoView windows, or
-          // Firefox/Fennec windows, but not both.
-          windowTypes = ["navigator:browser", "navigator:geckoview"];
-          break;
+      if (AppInfo.isThunderbird) {
+        windowTypes = ["mail:3pane"];
+      } else {
+        // We assume that an app either has GeckoView windows, or
+        // Firefox/Fennec windows, but not both.
+        windowTypes = ["navigator:browser", "navigator:geckoview"];
       }
 
       let win;
@@ -2411,7 +2403,7 @@ GeckoDriver.prototype.takeScreenshot = async function(cmd) {
  *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.getScreenOrientation = function() {
-  assert.fennec();
+  assert.mobile();
   assert.open(this.getBrowsingContext({ top: true }));
 
   const win = this.getCurrentWindow();
@@ -2434,7 +2426,7 @@ GeckoDriver.prototype.getScreenOrientation = function() {
  *     Top-level browsing context has been discarded.
  */
 GeckoDriver.prototype.setScreenOrientation = function(cmd) {
-  assert.fennec();
+  assert.mobile();
   assert.open(this.getBrowsingContext({ top: true }));
 
   const ors = [
