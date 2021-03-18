@@ -41,8 +41,7 @@ using mozilla::widget::IconLoader;
 
 static const uint32_t kIconSize = 16;
 
-nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem)
-    : mMenuObject(aMenuItem), mSetIcon(false) {
+nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem) : mMenuObject(aMenuItem) {
   MOZ_COUNT_CTOR(nsMenuItemIconX);
 }
 
@@ -75,16 +74,6 @@ void nsMenuItemIconX::SetupIcon(nsIContent* aContent) {
     mIconLoader = new IconLoader(this);
   }
 
-  if (!mSetIcon) {
-    // Load placeholder icon.
-    NSSize iconSize = NSMakeSize(kIconSize, kIconSize);
-    if (mIconImage) {
-      [mIconImage release];
-      mIconImage = nil;
-    }
-    mIconImage = [[MOZIconHelper placeholderIconWithSize:iconSize] retain];
-  }
-
   nsresult rv = mIconLoader->LoadIcon(iconURI, aContent);
   if (NS_FAILED(rv)) {
     // There is no icon for this menu item, as an error occurred while loading it.
@@ -94,9 +83,15 @@ void nsMenuItemIconX::SetupIcon(nsIContent* aContent) {
       [mIconImage release];
       mIconImage = nil;
     }
+    return;
   }
 
-  mSetIcon = true;
+  if (!mIconImage) {
+    // Set a placeholder icon, so that the menuitem reserves space for the icon during the load and
+    // there is no sudden shift once the icon finishes loading.
+    NSSize iconSize = NSMakeSize(kIconSize, kIconSize);
+    mIconImage = [[MOZIconHelper placeholderIconWithSize:iconSize] retain];
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
