@@ -1468,7 +1468,7 @@ bool WasmModuleObject::customSections(JSContext* cx, unsigned argc, Value* vp) {
     if (name.length() != cs.name.length()) {
       continue;
     }
-    if (memcmp(name.begin(), cs.name.begin(), name.length())) {
+    if (memcmp(name.begin(), cs.name.begin(), name.length()) != 0) {
       continue;
     }
 
