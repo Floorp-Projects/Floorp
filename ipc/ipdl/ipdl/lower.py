@@ -4321,14 +4321,9 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     """
                     {
                         ${manageecxxtype} actor = static_cast<${manageecxxtype}>(aListener);
-                        auto& container = ${container};
 
-                        // Use a temporary variable here so all the assertion expressions
-                        // in the MOZ_RELEASE_ASSERT call below are textually identical;
-                        // the linker can then merge the strings from the assertion macro(s).
-                        MOZ_RELEASE_ASSERT(container.Contains(actor),
-                            "actor not managed by this!");
-                        container.RemoveEntry(actor);
+                        const bool removed = ${container}.EnsureRemoved(actor);
+                        MOZ_RELEASE_ASSERT(removed, "actor not managed by this!");
 
                         auto* proxy = actor->GetLifecycleProxy();
                         NS_IF_RELEASE(proxy);
