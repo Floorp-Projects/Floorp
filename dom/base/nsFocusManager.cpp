@@ -1225,16 +1225,14 @@ nsresult nsFocusManager::FocusPlugin(Element* aPlugin) {
 }
 
 nsFocusManager::BlurredElementInfo::BlurredElementInfo(Element& aElement)
-    : mElement(aElement),
-      mHadRing(aElement.State().HasState(NS_EVENT_STATE_FOCUSRING)) {}
+    : mElement(aElement) {}
 
 nsFocusManager::BlurredElementInfo::~BlurredElementInfo() = default;
 
 // https://drafts.csswg.org/selectors-4/#the-focus-visible-pseudo
-static bool ShouldMatchFocusVisible(
-    nsPIDOMWindowOuter* aWindow, const Element& aElement, int32_t aFocusFlags,
-    const Maybe<nsFocusManager::BlurredElementInfo>& aBlurredElementInfo,
-    bool aIsRefocus, bool aRefocusedElementUsedToShowOutline) {
+static bool ShouldMatchFocusVisible(nsPIDOMWindowOuter* aWindow,
+                                    const Element& aElement,
+                                    int32_t aFocusFlags) {
   // If we were explicitly requested to show the ring, do it.
   if (aFocusFlags & nsIFocusManager::FLAG_SHOWRING) {
     return true;
@@ -1269,20 +1267,9 @@ static bool ShouldMatchFocusVisible(
       // :focus).
       return true;
     case InputContextAction::CAUSE_UNKNOWN:
-      // If the active element matches :focus-visible, and a script causes focus
-      // to move elsewhere, the newly focused element should match
-      // :focus-visible.
-      //
-      // Conversely, if the active element does not match :focus-visible, and a
-      // script causes focus to move elsewhere, the newly focused element should
-      // not match :focus-visible.
-      //
-      // There's an special-case here. If this is a refocus, we just keep the
-      // outline as it was before, the focus isn't moving after all.
-      if (aIsRefocus) {
-        return aRefocusedElementUsedToShowOutline;
-      }
-      return !aBlurredElementInfo || aBlurredElementInfo->mHadRing;
+      // We render outlines if the last "known" focus method was by key or there
+      // was no previous known focus method, otherwise we don't.
+      return aWindow->UnknownFocusMethodShouldShowOutline();
     case InputContextAction::CAUSE_MOUSE:
     case InputContextAction::CAUSE_TOUCH:
     case InputContextAction::CAUSE_LONGPRESS:
@@ -2543,13 +2530,9 @@ void nsFocusManager::Focus(
                                 !IsNonFocusableRoot(aElement);
     const bool isRefocus = focusedNode && focusedNode == aElement;
     const bool shouldShowFocusRing =
-        sendFocusEvent &&
-        ShouldMatchFocusVisible(
-            aWindow, *aElement, aFlags, aBlurredElementInfo, isRefocus,
-            isRefocus && aWindow->FocusedElementShowedOutline());
+        sendFocusEvent && ShouldMatchFocusVisible(aWindow, *aElement, aFlags);
 
-    aWindow->SetFocusedElement(aElement, focusMethod, false,
-                               shouldShowFocusRing);
+    aWindow->SetFocusedElement(aElement, focusMethod, false);
 
     // if the focused element changed, scroll it into view
     if (aElement && aFocusChanged) {

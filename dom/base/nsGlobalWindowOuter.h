@@ -891,8 +891,8 @@ class nsGlobalWindowOuter final : public mozilla::dom::EventTarget,
                                            nsIBaseWindow* aWindow);
 
   void SetFocusedElement(mozilla::dom::Element* aElement,
-                         uint32_t aFocusMethod = 0, bool aNeedsFocus = false,
-                         bool aWillShowOutline = false) override;
+                         uint32_t aFocusMethod = 0,
+                         bool aNeedsFocus = false) override;
 
   uint32_t GetFocusMethod() override;
 
