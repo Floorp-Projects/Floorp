@@ -4,7 +4,7 @@
 
 //! IPC Implementation, Rust part
 
-use crate::private::{Instant, MetricId};
+use crate::private::MetricId;
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -19,7 +19,7 @@ use {
 
 use super::metrics::__glean_metric_maps;
 
-type EventRecord = (Instant, Option<HashMap<i32, String>>);
+type EventRecord = (u64, HashMap<i32, String>);
 
 /// Contains all the information necessary to update the metrics on the main
 /// process.
@@ -124,8 +124,10 @@ pub fn replay_from_buf(buf: &[u8]) -> Result<(), ()> {
             metric.add(value);
         }
     }
-    for (id, _records) in ipc_payload.events.into_iter() {
-        log::info!("Cannot yet replay child process event {:?}", id);
+    for (id, records) in ipc_payload.events.into_iter() {
+        for (timestamp, extra) in records.into_iter() {
+            let _ = __glean_metric_maps::record_event_by_id_with_time(id, timestamp, extra);
+        }
     }
     for (id, samples) in ipc_payload.memory_samples.into_iter() {
         if let Some(metric) = __glean_metric_maps::MEMORY_DISTRIBUTION_MAP.get(&id) {

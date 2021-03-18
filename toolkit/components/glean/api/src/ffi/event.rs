@@ -18,7 +18,7 @@ pub extern "C" fn fog_event_record(
 ) {
     // If no extra keys are passed, we can shortcut here.
     if extra_keys.is_empty() {
-        if metric_maps::event_record_wrapper(id, Default::default()).is_err() {
+        if metric_maps::record_event_by_id(id, Default::default()).is_err() {
             panic!("No event for id {}", id);
         }
 
@@ -38,7 +38,7 @@ pub extern "C" fn fog_event_record(
         .zip(extra_values.iter())
         .map(|(&k, v)| (k, v.to_string()))
         .collect();
-    match metric_maps::event_record_wrapper(id, extra) {
+    match metric_maps::record_event_by_id(id, extra) {
         Ok(()) => {}
         Err(EventRecordingError::InvalidId) => panic!("No event for id {}", id),
         Err(EventRecordingError::InvalidExtraKey) => {
@@ -55,7 +55,7 @@ pub extern "C" fn fog_event_record_str(
 ) {
     // If no extra keys are passed, we can shortcut here.
     if extra_keys.is_empty() {
-        if metric_maps::event_record_wrapper_str(id, Default::default()).is_err() {
+        if metric_maps::record_event_by_id_with_strings(id, Default::default()).is_err() {
             panic!("No event for id {}", id);
         }
 
@@ -75,7 +75,7 @@ pub extern "C" fn fog_event_record_str(
         .zip(extra_values.iter())
         .map(|(k, v)| (k.to_string(), v.to_string()))
         .collect();
-    match metric_maps::event_record_wrapper_str(id, extra) {
+    match metric_maps::record_event_by_id_with_strings(id, extra) {
         Ok(()) => {}
         Err(EventRecordingError::InvalidId) => panic!("No event for id {}", id),
         Err(EventRecordingError::InvalidExtraKey) => {
