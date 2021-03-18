@@ -423,7 +423,7 @@ interface nsIHttpChannelInternal : nsISupports
         in nsILoadInfo_CrossOriginOpenerPolicy aInitiatorPolicy);
 
     [noscript]
-    bool hasCrossOriginOpenerPolicyMismatch(); 
+    bool hasCrossOriginOpenerPolicyMismatch();
 
     [noscript]
     nsILoadInfo_CrossOriginEmbedderPolicy getResponseEmbedderPolicy();
@@ -443,4 +443,9 @@ interface nsIHttpChannelInternal : nsISupports
      * This attribute indicates if the channel has support for HTTP3
      */
     [must_use] readonly attribute boolean supportsHTTP3;
+
+    /**
+     * This attribute indicates if the HTTPS RR is used for this channel.
+     */
+    [must_use] readonly attribute boolean hasHTTPSRR;
 };

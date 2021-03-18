@@ -1243,6 +1243,7 @@ HttpChannelParent::OnStartRequest(nsIRequest* aRequest) {
   UpdateAndSerializeSecurityInfo(args.securityInfoSerialization());
 
   chan->GetRedirectCount(&args.redirectCount());
+  chan->GetHasHTTPSRR(&args.hasHTTPSRR());
 
   nsCOMPtr<nsILoadInfo> loadInfo = chan->LoadInfo();
   mozilla::ipc::LoadInfoToParentLoadInfoForwarder(loadInfo,

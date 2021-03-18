@@ -7475,6 +7475,7 @@ nsHttpChannel::OnStartRequest(nsIRequest* request) {
           Telemetry::HTTP_CHANNEL_ONSTART_SUCCESS_HTTPS_RR,
           LoadEchConfigUsed() ? "echConfig-used"_ns : "echConfig-not-used"_ns,
           NS_SUCCEEDED(mStatus));
+      StoreHasHTTPSRR(true);
     }
   }
 
