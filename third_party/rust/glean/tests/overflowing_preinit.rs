@@ -60,7 +60,7 @@ fn overflowing_the_task_queue_records_telemetry() {
 
     // Create a custom configuration to use a validating uploader.
     let dir = tempfile::tempdir().unwrap();
-    let tmpname = dir.path().display().to_string();
+    let tmpname = dir.path().to_path_buf();
 
     let cfg = Configuration {
         data_path: tmpname,

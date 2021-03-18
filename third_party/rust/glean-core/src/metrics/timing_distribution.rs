@@ -47,6 +47,7 @@ impl Timings {
     }
 
     /// Start a new timer and set it to the `start_time`.
+    /// Multiple timers can run simultaneously.
     ///
     /// Returns a new [`TimerId`] identifying the timer.
     fn set_start(&mut self, start_time: u64) -> TimerId {
@@ -319,7 +320,7 @@ impl TimingDistributionMetric {
     ///
     /// This doesn't clear the stored value.
     pub fn test_get_value(&self, glean: &Glean, storage_name: &str) -> Option<DistributionData> {
-        match StorageManager.snapshot_metric(
+        match StorageManager.snapshot_metric_for_test(
             glean.storage(),
             storage_name,
             &self.meta.identifier(glean),

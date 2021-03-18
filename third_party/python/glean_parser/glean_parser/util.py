@@ -66,47 +66,41 @@ class _NoDatesSafeLoader(yaml.SafeLoader):
 _NoDatesSafeLoader.remove_implicit_resolver("tag:yaml.org,2002:timestamp")
 
 
-if sys.version_info < (3, 7):
-    # In Python prior to 3.7, dictionary order is not preserved. However, we
-    # want the metrics to appear in the output in the same order as they are in
-    # the metrics.yaml file, so on earlier versions of Python we must use an
-    # OrderedDict object.
-    def ordered_yaml_load(stream):
-        class OrderedLoader(_NoDatesSafeLoader):
-            pass
+def yaml_load(stream):
+    """
+    Map line number to yaml nodes, and preserve the order
+    of metrics as they appear in the metrics.yaml file.
+    """
 
-        def construct_mapping(loader, node):
-            loader.flatten_mapping(node)
-            return OrderedDict(loader.construct_pairs(node))
+    class SafeLineLoader(_NoDatesSafeLoader):
+        pass
 
-        OrderedLoader.add_constructor(
-            yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, construct_mapping
+    def _construct_mapping_adding_line(loader, node):
+        loader.flatten_mapping(node)
+        mapping = OrderedDict(loader.construct_pairs(node))
+        mapping.defined_in = {"line": node.start_mark.line}
+        return mapping
+
+    SafeLineLoader.add_constructor(
+        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _construct_mapping_adding_line
+    )
+    return yaml.load(stream, SafeLineLoader)
+
+
+def ordered_yaml_dump(data, **kwargs):
+    class OrderedDumper(yaml.Dumper):
+        pass
+
+    def _dict_representer(dumper, data):
+        return dumper.represent_mapping(
+            yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, data.items()
         )
-        return yaml.load(stream, OrderedLoader)
 
-    def ordered_yaml_dump(data, **kwargs):
-        class OrderedDumper(yaml.Dumper):
-            pass
-
-        def _dict_representer(dumper, data):
-            return dumper.represent_mapping(
-                yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, data.items()
-            )
-
-        OrderedDumper.add_representer(OrderedDict, _dict_representer)
-        return yaml.dump(data, Dumper=OrderedDumper, **kwargs)
+    OrderedDumper.add_representer(OrderedDict, _dict_representer)
+    return yaml.dump(data, Dumper=OrderedDumper, **kwargs)
 
 
-else:
-
-    def ordered_yaml_load(stream):
-        return yaml.load(stream, Loader=_NoDatesSafeLoader)
-
-    def ordered_yaml_dump(data, **kwargs):
-        return yaml.dump(data, **kwargs)
-
-
-def load_yaml_or_json(path: Path, ordered_dict: bool = False):
+def load_yaml_or_json(path: Path):
     """
     Load the content from either a .json or .yaml file, based on the filename
     extension.
@@ -125,10 +119,7 @@ def load_yaml_or_json(path: Path, ordered_dict: bool = False):
             return json.load(fd)
     elif path.suffix in (".yml", ".yaml", ".yamlx"):
         with path.open("r", encoding="utf-8") as fd:
-            if ordered_dict:
-                return ordered_yaml_load(fd)
-            else:
-                return yaml.load(fd, Loader=_NoDatesSafeLoader)
+            return yaml_load(fd)
     else:
         raise ValueError(f"Unknown file extension {path.suffix}")
 
@@ -399,19 +390,30 @@ def report_validation_errors(all_objects):
     return found_error
 
 
-# Names of metric parameters to pass to constructors.
-# This includes only things that the language bindings care about, not things
-# that are metadata-only or are resolved into other parameters at parse time.
-# **CAUTION**: This list needs to be in the order the Swift type constructors
-# expects them. (The other language bindings don't care about the order). The
-# `test_order_of_fields` test checks that the generated code is valid.
-# **DO NOT CHANGE THE ORDER OR ADD NEW FIELDS IN THE MIDDLE**
-extra_metric_args = [
+def remove_output_params(d, output_params):
+    """
+    Remove output-only params, such as "defined_in",
+    in order to validate the output against the input schema.
+    """
+    modified_dict = {}
+    for key, value in d.items():
+        if key is not output_params:
+            modified_dict[key] = value
+    return modified_dict
+
+
+# Names of  parameters to pass to all metrics constructors constructors.
+common_metric_args = [
     "category",
     "name",
     "send_in_pings",
     "lifetime",
     "disabled",
+]
+
+
+# Names of parameters that only apply to some of the metrics types.
+extra_metric_args = [
     "time_unit",
     "memory_unit",
     "allowed_extra_keys",
@@ -420,11 +422,21 @@ extra_metric_args = [
     "range_max",
     "range_min",
     "histogram_type",
+    "numerators",
 ]
 
 
+# This includes only things that the language bindings care about, not things
+# that are metadata-only or are resolved into other parameters at parse time.
+# **CAUTION**: This list needs to be in the order the Swift type constructors
+# expects them. (The other language bindings don't care about the order). The
+# `test_order_of_fields` test checks that the generated code is valid.
+# **DO NOT CHANGE THE ORDER OR ADD NEW FIELDS IN THE MIDDLE**
+metric_args = common_metric_args + extra_metric_args
+
+
 # Names of ping parameters to pass to constructors.
-extra_ping_args = [
+ping_args = [
     "include_client_id",
     "send_if_empty",
     "name",
@@ -433,6 +445,4 @@ extra_ping_args = [
 
 
 # Names of parameters to pass to both metric and ping constructors (no duplicates).
-extra_args = extra_metric_args + [
-    v for v in extra_ping_args if v not in extra_metric_args
-]
+extra_args = metric_args + [v for v in ping_args if v not in metric_args]

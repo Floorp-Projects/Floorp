@@ -107,7 +107,7 @@ jobs:
 
     build-39:
         docker:
-            - image: circleci/python:3.9.0rc1
+            - image: circleci/python:3.9.0
         steps:
             - test-start
             - test-python-version
