@@ -26,6 +26,20 @@
   }
 }
 
+@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+/* Add a fog for background tabs to be visible on Windows 7 glass window background */
+@media (-moz-os-version: windows-win7) {
+  @media (-moz-windows-default-theme) {
+    #TabsToolbar {
+      background-image: radial-gradient(ellipse at bottom, rgba(255,255,255,0.8), rgba(255,255,255,0.5) 80%, transparent);
+      color: black;
+      --lwt-toolbarbutton-icon-fill: currentColor;
+    }
+  }
+}
+} /*** END proton ***/
+
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 @media (-moz-os-version: windows-win7) {
   @media (-moz-windows-default-theme) {
     /* Always show light toolbar elements on aero surface. */
@@ -36,22 +50,20 @@
     /* Because we're forcing the tabs toolbar to be [brighttext] to
      * get white toolbar button icons, we need to manually set the
      * correct color for the tab hover state for the light theme. */
-    .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true], [multiselected]):-moz-lwtheme-darktext {
-      background-color: rgba(0,0,0,.1) !important;
-    }
-    @supports not -moz-bool-pref("browser.proton.enabled") {
     .tabbrowser-tab:hover > .tab-stack > .tab-background > .tab-line:not([selected=true], [multiselected]):-moz-lwtheme-darktext {
       background-color: rgba(0,0,0,.2) !important;
     }
-    } /*** END !proton ***/
   }
 }
+} /*** END !proton ***/
 
 @media (-moz-windows-glass) {
+  @supports not -moz-bool-pref("browser.proton.tabs.enabled") {
   /* Use opaque white icons on Aero Glass. */
   #TabsToolbar {
     --lwt-toolbarbutton-icon-fill: white;
   }
+  } /*** END !proton ***/
 
   /* Make the menubar text readable on aero glass (copied from browser-aero.css). */
   #toolbar-menubar {
@@ -79,6 +91,7 @@
     }
   }
 
+  @supports not -moz-bool-pref("browser.proton.tabs.enabled") {
   /* Always show full-height tab separators on tabs with borders. */
   .tabbrowser-tab::before,
   .tabbrowser-tab::after {
@@ -109,6 +122,7 @@
   .tabbrowser-tab[last-visible-tab]::after {
     display: none !important;
   }
+  } /*** END !proton ***/
 
   /* Use proper menu text styling in Win7 classic mode (copied from browser.css) */
   @media (-moz-windows-compositor: 0),
