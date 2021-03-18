@@ -47,6 +47,8 @@ class RemotePrintJobChild final : public PRemotePrintJobChild,
 
   PRFileDesc* GetNextPageFD();
 
+  [[nodiscard]] bool IsDestroyed() const { return mDestroyed; }
+
  private:
   ~RemotePrintJobChild() final;
   void SetNextPageFD(const mozilla::ipc::FileDescriptor& aFd);

@@ -683,7 +683,7 @@ nsresult nsPageSequenceFrame::DoPageEnd() {
   if (PresContext()->IsRootPaginatedDocument()) {
     PR_PL(("***************** End Page (DoPageEnd) *****************\n"));
     rv = PresContext()->DeviceContext()->EndPage();
-    NS_ENSURE_SUCCESS(rv, rv);
+    // Fall through to clean up resources/state below even if EndPage failed.
   }
 
   ResetPrintCanvasList();
