@@ -308,6 +308,7 @@ whitelist-types = [
     "nsStyleMargin",
     "nsStyleOutline",
     "nsStylePadding",
+    "nsStylePage",
     "nsStylePosition",
     "nsStyleSides",
     "nsStyleSVG",
@@ -581,6 +582,7 @@ cbindgen-types = [
     { gecko = "StyleFontSizeKeyword", servo = "crate::values::specified::font::FontSizeKeyword" },
     { gecko = "StyleDefaultFontSizes", servo = "crate::gecko::wrapper::DefaultFontSizes" },
     { gecko = "StyleCaptionSide", servo = "crate::values::computed::table::CaptionSide" },
+    { gecko = "StylePageSize", servo = "crate::values::computed::page::PageSize" },
 ]
 
 mapped-generic-types = [
