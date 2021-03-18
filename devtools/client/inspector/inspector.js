@@ -1302,7 +1302,11 @@ Inspector.prototype = {
   onResourceAvailable: function(resources) {
     for (const resource of resources) {
       if (
-        resource.resourceType === this.toolbox.resourceWatcher.TYPES.ROOT_NODE
+        resource.resourceType ===
+          this.toolbox.resourceWatcher.TYPES.ROOT_NODE &&
+        // It might happen that the ROOT_NODE resource (which is a Front) is already
+        // destroyed, and in such case we want to ignore it.
+        !resource.isDestroyed()
       ) {
         const rootNodeFront = resource;
         const isTopLevelTarget = !!resource.targetFront.isTopLevel;
