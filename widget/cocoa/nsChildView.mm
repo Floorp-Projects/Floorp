@@ -1101,6 +1101,8 @@ void nsChildView::PostHandleKeyEvent(mozilla::WidgetKeyboardEvent* aEvent) {
 nsresult nsChildView::ActivateNativeMenuItemAt(const nsAString& indexString) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
+  nsMenuUtilsX::CheckNativeMenuConsistency([NSApp mainMenu]);
+
   NSString* locationString =
       [NSString stringWithCharacters:reinterpret_cast<const unichar*>(indexString.BeginReading())
                               length:indexString.Length()];

@@ -93,10 +93,13 @@ nsStandaloneNativeMenu::ActivateNativeMenuItemAt(const nsAString& indexString) {
     return NS_ERROR_NOT_INITIALIZED;
   }
 
+  NSMenu* menu = mMenu->NativeNSMenu();
+
+  nsMenuUtilsX::CheckNativeMenuConsistency(menu);
+
   NSString* locationString =
       [NSString stringWithCharacters:reinterpret_cast<const unichar*>(indexString.BeginReading())
                               length:indexString.Length()];
-  NSMenu* menu = mMenu->NativeNSMenu();
   NSMenuItem* item = nsMenuUtilsX::NativeMenuItemWithLocation(menu, locationString, false);
 
   // We can't perform an action on an item with a submenu, that will raise
