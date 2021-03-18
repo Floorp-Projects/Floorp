@@ -1127,7 +1127,7 @@ var gPopupBlockerObserver = {
             },
           ];
 
-          const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
+          const priority = notificationBox.PRIORITY_INFO_MEDIUM;
           notificationBox.appendNotification(
             message,
             "popup-blocked",
