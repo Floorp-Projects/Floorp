@@ -52,11 +52,6 @@ interface TopSitesStorage : Observable<TopSitesStorage.Observer> {
     ): List<TopSite>
 
     /**
-     * Return a count of top sites.
-     */
-    suspend fun getTopSitesCount(): Int
-
-    /**
      * Interface to be implemented by classes that want to observe the top site storage.
      */
     interface Observer {

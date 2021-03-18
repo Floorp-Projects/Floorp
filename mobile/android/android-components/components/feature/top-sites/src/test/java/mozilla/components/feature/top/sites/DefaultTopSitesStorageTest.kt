@@ -180,6 +180,7 @@ class DefaultTopSitesStorageTest {
                 pinnedSite
             )
         )
+        whenever(pinnedSitesStorage.getPinnedSitesCount()).thenReturn(2)
 
         var topSites = defaultTopSitesStorage.getTopSites(0, frecencyConfig = null)
         assertTrue(topSites.isEmpty())
@@ -232,6 +233,7 @@ class DefaultTopSitesStorageTest {
                 pinnedSite
             )
         )
+        whenever(pinnedSitesStorage.getPinnedSitesCount()).thenReturn(2)
 
         val frecentSite1 = TopFrecentSiteInfo("https://mozilla.com", "Mozilla")
         whenever(historyStorage.getTopFrecentSites(anyInt(), any())).thenReturn(listOf(frecentSite1))
@@ -333,6 +335,7 @@ class DefaultTopSitesStorageTest {
                 pinnedSite2
             )
         )
+        whenever(pinnedSitesStorage.getPinnedSitesCount()).thenReturn(3)
 
         val frecentSiteWithNoTitle = TopFrecentSiteInfo("https://mozilla.com", "")
         val frecentSiteFirefox = TopFrecentSiteInfo("https://firefox.com", "Firefox")
@@ -359,29 +362,5 @@ class DefaultTopSitesStorageTest {
         assertEquals(frecentSite1.toTopSite(), topSites[4])
         assertEquals("mozilla.com", frecentSiteWithNoTitle.toTopSite().title)
         assertEquals(defaultTopSitesStorage.cachedTopSites, topSites)
-    }
-
-    @Test
-    fun `get top site count returns pinned site storage count`() = runBlockingTest {
-        val defaultTopSites = listOf(
-            Pair("Mozilla", "https://mozilla.com"),
-            Pair("Firefox", "https://firefox.com")
-        )
-
-        val defaultTopSitesStorage = DefaultTopSitesStorage(
-            pinnedSitesStorage,
-            historyStorage,
-            defaultTopSites,
-            coroutineContext
-        )
-
-        whenever(pinnedSitesStorage.getPinnedSitesCount()).thenReturn(0)
-        assertEquals(0, defaultTopSitesStorage.getTopSitesCount())
-
-        whenever(pinnedSitesStorage.getPinnedSitesCount()).thenReturn(1)
-        assertEquals(1, defaultTopSitesStorage.getTopSitesCount())
-
-        whenever(pinnedSitesStorage.getPinnedSitesCount()).thenReturn(10)
-        assertEquals(10, defaultTopSitesStorage.getTopSitesCount())
     }
 }

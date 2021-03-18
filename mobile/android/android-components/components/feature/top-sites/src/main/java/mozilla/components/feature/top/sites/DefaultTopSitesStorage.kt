@@ -12,6 +12,7 @@ import mozilla.components.concept.storage.FrecencyThresholdOption
 import mozilla.components.feature.top.sites.TopSite.Type.FRECENT
 import mozilla.components.feature.top.sites.ext.hasUrl
 import mozilla.components.feature.top.sites.ext.toTopSite
+import mozilla.components.feature.top.sites.facts.emitTopSitesCountFact
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 import kotlin.coroutines.CoroutineContext
@@ -97,12 +98,9 @@ class DefaultTopSitesStorage(
             topSites.addAll(frecentSites)
         }
 
+        emitTopSitesCountFact(pinnedSites.size)
         cachedTopSites = topSites
 
         return topSites
-    }
-
-    override suspend fun getTopSitesCount(): Int {
-        return pinnedSitesStorage.getPinnedSitesCount()
     }
 }

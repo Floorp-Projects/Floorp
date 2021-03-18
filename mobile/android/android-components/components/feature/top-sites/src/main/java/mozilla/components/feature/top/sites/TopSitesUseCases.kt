@@ -4,12 +4,6 @@
 
 package mozilla.components.feature.top.sites
 
-import androidx.annotation.VisibleForTesting
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import mozilla.components.feature.top.sites.facts.emitTopSitesCountFact
-
 /**
  * Contains use cases related to the top sites feature.
  */
@@ -18,9 +12,6 @@ class TopSitesUseCases(topSitesStorage: TopSitesStorage) {
      * Add a pinned site use case.
      */
     class AddPinnedSiteUseCase internal constructor(private val storage: TopSitesStorage) {
-        @VisibleForTesting
-        internal var scope = CoroutineScope(Dispatchers.IO)
-
         /**
          * Adds a new [PinnedSite].
          *
@@ -29,10 +20,6 @@ class TopSitesUseCases(topSitesStorage: TopSitesStorage) {
          */
         operator fun invoke(title: String, url: String, isDefault: Boolean = false) {
             storage.addTopSite(title, url, isDefault)
-
-            scope.launch {
-                emitTopSitesCountFact(storage.getTopSitesCount())
-            }
         }
     }
 
