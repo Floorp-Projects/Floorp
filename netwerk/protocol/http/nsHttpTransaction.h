@@ -100,7 +100,12 @@ class nsHttpTransaction final : public nsAHttpTransaction,
       // for the response headers.
       mPendingDurationTime = TimeStamp::Now() - mPendingTime;
     }
-    mPendingTime = now ? TimeStamp::Now() : TimeStamp();
+    // Note that the transaction could be added in to a pending queue multiple
+    // times (when the transaction is restarted or moved to a new conn entry due
+    // to HTTPS RR), so we should only set the pending time once.
+    if (mPendingTime.IsNull()) {
+      mPendingTime = now ? TimeStamp::Now() : TimeStamp();
+    }
   }
   const TimeStamp GetPendingTime() { return mPendingTime; }
 
