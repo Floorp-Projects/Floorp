@@ -126,7 +126,6 @@
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/quota/QuotaManagerService.h"
 #include "mozilla/embedding/printingui/PrintingParent.h"
-#include "mozilla/extensions/ExtensionsParent.h"
 #include "mozilla/extensions/StreamFilterParent.h"
 #include "mozilla/gfx/GPUProcessManager.h"
 #include "mozilla/gfx/gfxVars.h"
@@ -4999,11 +4998,6 @@ mozilla::ipc::IPCResult ContentParent::RecvCreateAudioIPCConnection(
   }
   aResolver(std::move(result));
   return IPC_OK();
-}
-
-already_AddRefed<extensions::PExtensionsParent>
-ContentParent::AllocPExtensionsParent() {
-  return MakeAndAddRef<extensions::ExtensionsParent>();
 }
 
 PFileDescriptorSetParent* ContentParent::AllocPFileDescriptorSetParent(

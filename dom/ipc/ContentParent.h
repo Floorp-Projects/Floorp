@@ -1177,8 +1177,6 @@ class ContentParent final
   mozilla::ipc::IPCResult RecvCreateAudioIPCConnection(
       CreateAudioIPCConnectionResolver&& aResolver);
 
-  already_AddRefed<extensions::PExtensionsParent> AllocPExtensionsParent();
-
   PFileDescriptorSetParent* AllocPFileDescriptorSetParent(
       const mozilla::ipc::FileDescriptor&);
 
