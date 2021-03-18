@@ -15,7 +15,6 @@ use std::sync::RwLock;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value as JsonValue};
 
-use crate::coverage::record_coverage;
 use crate::CommonMetricData;
 use crate::Glean;
 use crate::Result;
@@ -327,8 +326,6 @@ impl EventDatabase {
     ///
     /// This doesn't clear the stored value.
     pub fn test_has_value<'a>(&'a self, meta: &'a CommonMetricData, store_name: &str) -> bool {
-        record_coverage(&meta.base_identifier());
-
         self.event_stores
             .read()
             .unwrap() // safe unwrap, only error case is poisoning
@@ -349,8 +346,6 @@ impl EventDatabase {
         meta: &'a CommonMetricData,
         store_name: &str,
     ) -> Option<Vec<RecordedEvent>> {
-        record_coverage(&meta.base_identifier());
-
         let value: Vec<RecordedEvent> = self
             .event_stores
             .read()

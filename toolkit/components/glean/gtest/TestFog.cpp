@@ -136,16 +136,7 @@ TEST(FOG, TestCppEventWorks)
   extra.AppendElement(MakeTuple(AnEventKeys::Extra1, val));
 
   test_only_ipc::an_event.Record(std::move(extra));
-  auto optEvents = test_only_ipc::an_event.TestGetValue("store1"_ns);
-  ASSERT_TRUE(optEvents.isSome());
-
-  auto events = optEvents.extract();
-  ASSERT_EQ(1UL, events.Length());
-  ASSERT_STREQ("test_only.ipc", events[0].mCategory.get());
-  ASSERT_STREQ("an_event", events[0].mName.get());
-  ASSERT_EQ(1UL, events[0].mExtra.Length());
-  ASSERT_STREQ("extra1", mozilla::Get<0>(events[0].mExtra[0]).get());
-  ASSERT_STREQ("can set extras", mozilla::Get<1>(events[0].mExtra[0]).get());
+  ASSERT_TRUE(test_only_ipc::an_event.TestGetValue("store1"_ns).isSome());
 }
 
 TEST(FOG, TestCppMemoryDistWorks)

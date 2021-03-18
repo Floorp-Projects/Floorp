@@ -151,18 +151,13 @@ add_task(function test_fog_boolean_works() {
 
 add_task(async function test_fog_event_works() {
   Glean.testOnlyIpc.noExtraEvent.record();
-  var events = Glean.testOnlyIpc.noExtraEvent.testGetValue();
-  Assert.equal(1, events.length);
-  Assert.equal("test_only.ipc", events[0].category);
-  Assert.equal("no_extra_event", events[0].name);
+  // FIXME(bug 1678567): Check that the value was recorded when we can.
+  // Assert.ok(Glean.testOnlyIpc.noExtraEvent.testGetValue("store1"));
 
   let extra = { extra1: "can set extras", extra2: "passing more data" };
   Glean.testOnlyIpc.anEvent.record(extra);
-  events = Glean.testOnlyIpc.anEvent.testGetValue();
-  Assert.equal(1, events.length);
-  Assert.equal("test_only.ipc", events[0].category);
-  Assert.equal("an_event", events[0].name);
-  Assert.deepEqual(extra, events[0].extra);
+  // FIXME(bug 1678567): Check that the value was recorded when we can.
+  // Assert.ok(Glean.testOnlyIpc.anEvent.testGetValue("store1"));
 });
 
 add_task(async function test_fog_memory_distribution_works() {
