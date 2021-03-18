@@ -981,7 +981,7 @@ class Decoder {
 // The local entries are part of function bodies and thus serialized by both
 // wasm and asm.js and decoded as part of both validation and compilation.
 
-[[nodiscard]] bool EncodeLocalEntries(Encoder& d, const ValTypeVector& locals);
+[[nodiscard]] bool EncodeLocalEntries(Encoder& e, const ValTypeVector& locals);
 
 // This performs no validation; the local entries must already have been
 // validated by an earlier pass.
@@ -1003,7 +1003,7 @@ class Decoder {
 // handle this special case.
 
 [[nodiscard]] bool StartsCodeSection(const uint8_t* begin, const uint8_t* end,
-                                     SectionRange* range);
+                                     SectionRange* codeSection);
 
 // Calling DecodeModuleEnvironment decodes all sections up to the code section
 // and performs full validation of all those sections. The client must then

@@ -3314,7 +3314,7 @@ class BaseCompiler final : public BaseCompilerInterface {
  public:
   BaseCompiler(const ModuleEnvironment& moduleEnv,
                const CompilerEnvironment& compilerEnv,
-               const FuncCompileInput& input, const ValTypeVector& locals,
+               const FuncCompileInput& func, const ValTypeVector& locals,
                const MachineState& trapExitLayout,
                size_t trapExitLayoutNumWords, Decoder& decoder,
                StkVector& stkSource, TempAllocator* alloc, MacroAssembler* masm,
@@ -8412,7 +8412,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     False
   };
 
-  [[nodiscard]] bool emitCallArgs(const ValTypeVector& args,
+  [[nodiscard]] bool emitCallArgs(const ValTypeVector& argTypes,
                                   const StackResultsLoc& results,
                                   FunctionCall* baselineCall,
                                   CalleeOnStack calleeOnStack);

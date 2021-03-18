@@ -99,7 +99,7 @@ class DebugState {
   bool hasBreakpointSite(uint32_t offset);
   void destroyBreakpointSite(JSFreeOp* fop, Instance* instance,
                              uint32_t offset);
-  void clearBreakpointsIn(JSFreeOp* fp, WasmInstanceObject* instance,
+  void clearBreakpointsIn(JSFreeOp* fop, WasmInstanceObject* instance,
                           js::Debugger* dbg, JSObject* handler);
 
   // When the Code is debug-enabled, single-stepping mode can be toggled on

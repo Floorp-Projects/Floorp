@@ -3334,7 +3334,7 @@ static bool CheckVariables(FunctionValidatorShared& f, ParseNode** stmtIter) {
 }
 
 template <typename Unit>
-static bool CheckExpr(FunctionValidator<Unit>& f, ParseNode* op, Type* type);
+static bool CheckExpr(FunctionValidator<Unit>& f, ParseNode* expr, Type* type);
 
 template <typename Unit>
 static bool CheckNumericLiteral(FunctionValidator<Unit>& f, ParseNode* num,

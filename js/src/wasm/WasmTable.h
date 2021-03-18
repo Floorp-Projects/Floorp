@@ -58,9 +58,9 @@ class Table : public ShareableBase<Table> {
 
   template <class>
   friend struct js::MallocProvider;
-  Table(JSContext* cx, const TableDesc& td, HandleWasmTableObject maybeObject,
+  Table(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeObject,
         UniqueFuncRefArray functions);
-  Table(JSContext* cx, const TableDesc& td, HandleWasmTableObject maybeObject,
+  Table(JSContext* cx, const TableDesc& desc, HandleWasmTableObject maybeObject,
         TableAnyRefVector&& objects);
 
   void tracePrivate(JSTracer* trc);

@@ -317,12 +317,12 @@ rewind:
   return true;
 }
 
-bool Decoder::finishNameSubsection(uint32_t expected) {
+bool Decoder::finishNameSubsection(uint32_t endOffset) {
   uint32_t actual = currentOffset();
-  if (expected != actual) {
-    return failf("bad name subsection length (expected: %" PRIu32
+  if (endOffset != actual) {
+    return failf("bad name subsection length (endOffset: %" PRIu32
                  ", actual: %" PRIu32 ")",
-                 expected, actual);
+                 endOffset, actual);
   }
 
   return true;
