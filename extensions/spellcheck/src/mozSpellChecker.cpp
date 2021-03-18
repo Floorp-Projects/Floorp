@@ -10,18 +10,22 @@
 #include "nsISimpleEnumerator.h"
 #include "mozEnglishWordUtils.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/Logging.h"
 #include "mozilla/PRemoteSpellcheckEngineChild.h"
 #include "mozilla/TextServicesDocument.h"
 #include "nsXULAppAPI.h"
 #include "RemoteSpellCheckEngineChild.h"
 
 using mozilla::GenericPromise;
+using mozilla::LogLevel;
 using mozilla::PRemoteSpellcheckEngineChild;
 using mozilla::RemoteSpellcheckEngineChild;
 using mozilla::TextServicesDocument;
 using mozilla::dom::ContentChild;
 
 #define DEFAULT_SPELL_CHECKER "@mozilla.org/spellchecker/engine;1"
+
+static mozilla::LazyLogModule sSpellChecker("SpellChecker");
 
 NS_IMPL_CYCLE_COLLECTION(mozSpellChecker, mTextServicesDocument,
                          mPersonalDictionary)
@@ -68,6 +72,8 @@ TextServicesDocument* mozSpellChecker::GetTextServicesDocument() {
 
 nsresult mozSpellChecker::SetDocument(
     TextServicesDocument* aTextServicesDocument, bool aFromStartofDoc) {
+  MOZ_LOG(sSpellChecker, LogLevel::Debug, ("%s", __FUNCTION__));
+
   mTextServicesDocument = aTextServicesDocument;
   mFromStart = aFromStartofDoc;
   return NS_OK;
