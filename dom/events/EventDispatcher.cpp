@@ -1101,14 +1101,30 @@ nsresult EventDispatcher::Dispatch(nsISupports* aTarget,
         }
         aEvent->mPath = nullptr;
 
-        if (aEvent->mMessage == eKeyPress && aEvent->IsTrusted()) {
-          if (aPresContext && aPresContext->GetRootPresContext()) {
-            nsRefreshDriver* driver =
-                aPresContext->GetRootPresContext()->RefreshDriver();
-            if (driver && driver->HasPendingTick()) {
-              driver->RegisterCompositionPayload(
-                  {layers::CompositionPayloadType::eKeyPress,
-                   aEvent->mTimeStamp});
+        if (aPresContext && aPresContext->GetRootPresContext() &&
+            aEvent->IsTrusted()) {
+          nsRefreshDriver* driver =
+              aPresContext->GetRootPresContext()->RefreshDriver();
+          if (driver && driver->HasPendingTick()) {
+            switch (aEvent->mMessage) {
+              case eKeyPress:
+                driver->RegisterCompositionPayload(
+                    {layers::CompositionPayloadType::eKeyPress,
+                     aEvent->mTimeStamp});
+                break;
+              case eMouseClick: {
+                if (aEvent->AsMouseEvent()->mInputSource ==
+                        MouseEvent_Binding::MOZ_SOURCE_MOUSE ||
+                    aEvent->AsMouseEvent()->mInputSource ==
+                        MouseEvent_Binding::MOZ_SOURCE_TOUCH) {
+                  driver->RegisterCompositionPayload(
+                      {layers::CompositionPayloadType::eMouseUpFollowedByClick,
+                       aEvent->mTimeStamp});
+                }
+                break;
+              }
+              default:
+                break;
             }
           }
         }
