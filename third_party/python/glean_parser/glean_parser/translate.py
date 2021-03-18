@@ -11,12 +11,14 @@ High-level interface for translating `metrics.yaml` into other formats.
 from pathlib import Path
 import os
 import shutil
+import sys
 import tempfile
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
 from . import lint
 from . import parser
 from . import csharp
+from . import javascript
 from . import kotlin
 from . import markdown
 from . import metrics
@@ -51,10 +53,45 @@ class Outputter:
 
 OUTPUTTERS = {
     "csharp": Outputter(csharp.output_csharp, ["*.cs"]),
+    "javascript": Outputter(javascript.output_javascript, []),
+    "typescript": Outputter(javascript.output_typescript, []),
     "kotlin": Outputter(kotlin.output_kotlin, ["*.kt"]),
     "markdown": Outputter(markdown.output_markdown, []),
     "swift": Outputter(swift.output_swift, ["*.swift"]),
 }
+
+
+def transform_metrics(objects):
+    """
+    Transform the object model from one that represents the YAML definitions
+    to one that reflects the type specifics needed by code generators.
+
+    e.g. This will transform a `rate` to be a `numerator` if its denominator is
+    external.
+    """
+    counters = {}
+    numerators_by_denominator: Dict[str, Any] = {}
+    for category_val in objects.values():
+        for metric in category_val.values():
+            fqmn = metric.identifier()
+            if getattr(metric, "type", None) == "counter":
+                counters[fqmn] = metric
+            denominator_name = getattr(metric, "denominator_metric", None)
+            if denominator_name:
+                metric.type = "numerator"
+                numerators_by_denominator.setdefault(denominator_name, [])
+                numerators_by_denominator[denominator_name].append(fqmn)
+
+    for denominator_name, numerator_names in numerators_by_denominator.items():
+        if denominator_name not in counters:
+            print(
+                f"No `counter` named {denominator_name} found to be used as"
+                "denominator for {numerator_names}",
+                file=sys.stderr,
+            )
+            return 1
+        counters[denominator_name].type = "denominator"
+        counters[denominator_name].numerators = numerator_names
 
 
 def translate_metrics(
