@@ -635,29 +635,29 @@ const ObjectOps TypedObject::objectOps_ = {
     nullptr,                                    // funToString
 };
 
-#define DEFINE_TYPEDOBJ_CLASS(Name, Trace, Finalize, Moved, Flags)  \
-  static const JSClassOps Name##ClassOps = {                        \
-      nullptr, /* addProperty */                                    \
-      nullptr, /* delProperty */                                    \
-      nullptr, /* enumerate   */                                    \
-      TypedObject::obj_newEnumerate,                                \
-      nullptr,  /* resolve     */                                   \
-      nullptr,  /* mayResolve  */                                   \
-      Finalize, /* finalize    */                                   \
-      nullptr,  /* call        */                                   \
-      nullptr,  /* hasInstance */                                   \
-      nullptr,  /* construct   */                                   \
-      Trace,                                                        \
-  };                                                                \
-  static const ClassExtension Name##ClassExt = {                    \
-      Moved /* objectMovedOp */                                     \
-  };                                                                \
-  const JSClass Name::class_ = {                                    \
-      #Name,                                                        \
-      JSClass::NON_NATIVE | JSCLASS_DELAY_METADATA_BUILDER | Flags, \
-      &Name##ClassOps,                                              \
-      JS_NULL_CLASS_SPEC,                                           \
-      &Name##ClassExt,                                              \
+#define DEFINE_TYPEDOBJ_CLASS(Name, Trace, Finalize, Moved, Flags)    \
+  static const JSClassOps Name##ClassOps = {                          \
+      nullptr, /* addProperty */                                      \
+      nullptr, /* delProperty */                                      \
+      nullptr, /* enumerate   */                                      \
+      TypedObject::obj_newEnumerate,                                  \
+      nullptr,  /* resolve     */                                     \
+      nullptr,  /* mayResolve  */                                     \
+      Finalize, /* finalize    */                                     \
+      nullptr,  /* call        */                                     \
+      nullptr,  /* hasInstance */                                     \
+      nullptr,  /* construct   */                                     \
+      Trace,                                                          \
+  };                                                                  \
+  static const ClassExtension Name##ClassExt = {                      \
+      Moved /* objectMovedOp */                                       \
+  };                                                                  \
+  const JSClass Name::class_ = {                                      \
+      #Name,                                                          \
+      JSClass::NON_NATIVE | JSCLASS_DELAY_METADATA_BUILDER | (Flags), \
+      &Name##ClassOps,                                                \
+      JS_NULL_CLASS_SPEC,                                             \
+      &Name##ClassExt,                                                \
       &TypedObject::objectOps_}
 
 DEFINE_TYPEDOBJ_CLASS(OutlineTypedObject, OutlineTypedObject::obj_trace,
