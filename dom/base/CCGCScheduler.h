@@ -58,6 +58,18 @@ static const TimeDuration kMaxCCLockedoutTime = TimeDuration::FromSeconds(30);
 // Trigger a CC if the purple buffer exceeds this size when we check it.
 static const uint32_t kCCPurpleLimit = 200;
 
+// Actions performed by the GCRunner state machine.
+enum class GCRunnerAction {
+  MajorGC,  // Start a new major GC
+  GCSlice,  // Run a single slice of a major GC
+  None
+};
+
+struct GCRunnerStep {
+  GCRunnerAction mAction;
+  JS::GCReason mReason;
+};
+
 enum class CCRunnerAction {
   None,
   ForgetSkippable,
@@ -129,6 +141,21 @@ class CCGCScheduler {
 
   void SetNeedsFullGC(bool aNeedGC = true) { mNeedsFullGC = aNeedGC; }
 
+  void SetWantMajorGC(JS::GCReason aReason) {
+    if (mMajorGCReason == JS::GCReason::NO_REASON) {
+      // If there was already a reason for doing a major GC, do not override it
+      // with a newer reason. When looking at the profiler, the initial reason
+      // is probably more useful to know than any followup reasons while things
+      // are getting worse.
+      mMajorGCReason = aReason;
+    }
+
+    // Force full GCs when called from reftests so that we collect dead zones
+    // that have not been scheduled for collection.
+    if (aReason == JS::GCReason::DOM_WINDOW_UTILS) {
+      SetNeedsFullGC();
+    }
+  }
   // Ensure that the current runner does a cycle collection, and trigger a GC
   // after it finishes.
   void EnsureCCThenGC() {
@@ -287,6 +314,8 @@ class CCGCScheduler {
 
   void DeactivateCCRunner() { mCCRunnerState = CCRunnerState::Inactive; }
 
+  inline GCRunnerStep GetNextGCRunnerAction(TimeStamp aDeadline);
+
   inline CCRunnerStep GetNextCCRunnerAction(TimeStamp aDeadline);
 
   // aStartTimeStamp : when the ForgetSkippable timer fired. This may be some
@@ -325,6 +354,8 @@ class CCGCScheduler {
   bool mNeedsFullGC = true;
   bool mNeedsGCAfterCC = false;
   uint32_t mPreviousSuspectedCount = 0;
+
+  JS::GCReason mMajorGCReason = JS::GCReason::NO_REASON;
 
   uint32_t mCleanupsSinceLastGC = UINT32_MAX;
 
@@ -610,6 +641,20 @@ CCRunnerStep CCGCScheduler::GetNextCCRunnerAction(TimeStamp aDeadline) {
     default:
       MOZ_CRASH("Unexpected CCRunner state");
   };
+}
+
+GCRunnerStep CCGCScheduler::GetNextGCRunnerAction(TimeStamp aDeadline) {
+  if (InIncrementalGC()) {
+    return {GCRunnerAction::GCSlice, JS::GCReason::INTER_SLICE_GC};
+  }
+
+  if (mMajorGCReason != JS::GCReason::NO_REASON) {
+    GCRunnerStep step{GCRunnerAction::MajorGC, mMajorGCReason};
+    mMajorGCReason = JS::GCReason::NO_REASON;
+    return step;
+  }
+
+  return {GCRunnerAction::None, JS::GCReason::NO_REASON};
 }
 
 inline js::SliceBudget CCGCScheduler::ComputeForgetSkippableBudget(
