@@ -59,7 +59,7 @@ class BrowserMenuAdapter(
     private var blockingItemViewHolderReference = WeakReference<BlockingItemViewHolder>(null)
 
     init {
-        initializeMenu(fragment.session.url, customTabConfig)
+        initializeMenu(fragment.tab.content.url, customTabConfig)
     }
 
     private fun initializeMenu(url: String, customTabConfig: CustomTabConfig?) {

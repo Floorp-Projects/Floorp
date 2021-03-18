@@ -34,7 +34,7 @@ internal class RequestDesktopCheckItemViewHolder/* package */(
         ThreadUtils.postToMainThreadDelayed(Runnable {
             menu.dismiss()
 
-            val url = UrlUtils.stripSchemeAndSubDomain(fragment.session.url)
+            val url = UrlUtils.stripSchemeAndSubDomain(fragment.tab.content.url)
             fragment.requireComponents.sessionUseCases.loadUrl(url)
         }, ANIMATION_DURATION)
     }

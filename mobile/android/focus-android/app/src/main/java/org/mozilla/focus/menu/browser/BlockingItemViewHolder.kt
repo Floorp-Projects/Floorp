@@ -27,7 +27,7 @@ internal class BlockingItemViewHolder(
         val switchView = itemView.findViewById<Switch>(R.id.blocking_switch)
 
         switchView.isChecked = fragment.requireContext().components.store.state.findTabOrCustomTabOrSelectedTab(
-            fragment.session.id
+            fragment.tab.id
         )!!.trackingProtection.ignoredOnTrackingProtection.not()
 
         switchView.setOnCheckedChangeListener(this)
@@ -41,11 +41,11 @@ internal class BlockingItemViewHolder(
 
         trackerCounter = itemView.findViewById(R.id.trackers_count)
 
-        updateTrackers(fragment.session.trackersBlocked.size)
+        updateTrackers(fragment.tab.trackingProtection.blockedTrackers.size)
     }
 
     fun updateTrackers(trackers: Int) {
-        if (fragment.session.trackerBlockingEnabled) {
+        if (fragment.tab.trackingProtection.enabled) {
             updateTrackingCount(trackerCounter, trackers)
         } else {
             disableTrackingCount(trackerCounter)
@@ -70,12 +70,12 @@ internal class BlockingItemViewHolder(
 
             buttonView.context.components.apply {
                 if (isChecked) {
-                    trackingProtectionUseCases.removeException(fragment.session.id)
+                    trackingProtectionUseCases.removeException(fragment.tab.id)
                 } else {
-                    trackingProtectionUseCases.addException(fragment.session.id)
+                    trackingProtectionUseCases.addException(fragment.tab.id)
                 }
 
-                sessionUseCases.reload(fragment.session)
+                sessionUseCases.reload(fragment.tab.id)
             }
         }, THUMB_ANIMATION_DURATION)
     }

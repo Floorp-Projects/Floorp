@@ -9,7 +9,6 @@ import android.view.View
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.mapNotNull
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.selector.findTabOrCustomTabOrSelectedTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.SessionState
@@ -25,19 +24,20 @@ private const val ANIMATION_DURATION = 300
  */
 class BlockingThemeBinding(
     store: BrowserStore,
-    private val session: Session,
+    private val tabId: String,
+    private val isCustomTab: Boolean,
     private val statusBar: View,
     private val urlBar: View,
     private val blockView: View
 ) : AbstractBinding(store) {
     private var backgroundTransitionGroup: TransitionDrawableGroup? = updateResources(
-        session.isCustomTabSession(), enabled = true
+        isCustomTab, enabled = true
     )
     private var hasLoadedOnce = false
     private var trackingProtectionDisabled = false
 
     override suspend fun onState(flow: Flow<BrowserState>) {
-        flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(session.id) }
+        flow.mapNotNull { state -> state.findTabOrCustomTabOrSelectedTab(tabId) }
             .ifAnyChanged { tab -> arrayOf(tab.trackingProtection.ignoredOnTrackingProtection, tab.content.loading) }
             .collect { tab -> onLoadingStateChanged(tab) }
     }
@@ -45,7 +45,7 @@ class BlockingThemeBinding(
     private fun onLoadingStateChanged(tab: SessionState) {
         if (tab.trackingProtection.ignoredOnTrackingProtection != trackingProtectionDisabled) {
             trackingProtectionDisabled = tab.trackingProtection.ignoredOnTrackingProtection
-            backgroundTransitionGroup = updateResources(session.isCustomTabSession(), trackingProtectionDisabled.not())
+            backgroundTransitionGroup = updateResources(isCustomTab, trackingProtectionDisabled.not())
         }
 
         if (tab.content.loading) {

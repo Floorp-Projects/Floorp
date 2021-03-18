@@ -5,11 +5,8 @@
 package org.mozilla.focus.activity
 
 import android.os.Bundle
-import mozilla.components.browser.session.Session
 import mozilla.components.browser.state.selector.findCustomTab
-import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.CustomTabSessionState
-import mozilla.components.browser.state.state.SessionState
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.ext.components
 

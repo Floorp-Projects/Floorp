@@ -8,7 +8,6 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.drawable.BitmapDrawable
 import android.graphics.drawable.Drawable
-import androidx.core.content.ContextCompat
 import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
@@ -17,8 +16,9 @@ import android.webkit.URLUtil
 import android.widget.ImageView
 import android.widget.PopupWindow
 import android.widget.TextView
+import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
-import mozilla.components.browser.session.Session
+import mozilla.components.browser.state.state.SessionState
 import mozilla.components.support.utils.DrawableUtils
 import org.mozilla.focus.R
 import java.net.MalformedURLException
@@ -26,15 +26,15 @@ import java.net.URL
 
 object PopupUtils {
 
-    fun createSecurityPopup(context: Context, session: Session): PopupWindow? {
-        val isSecure = session.securityInfo.secure
-        val url = session.url
+    fun createSecurityPopup(context: Context, tab: SessionState): PopupWindow? {
+        val isSecure = tab.content.securityInfo.secure
+        val url = tab.content.url
         val res = context.resources
 
         val inflater = LayoutInflater.from(context)
         val popUpView = inflater.inflate(R.layout.security_popup, null)
-        val origin = session.securityInfo.host
-        val verifierInfo = session.securityInfo.issuer
+        val origin = tab.content.securityInfo.host
+        val verifierInfo = tab.content.securityInfo.issuer
         val hostInfo = popUpView.findViewById<TextView>(R.id.site_identity_title)
         val securityInfoIcon = popUpView.findViewById<ImageView>(R.id.site_identity_icon)
         val verifier = popUpView.findViewById<TextView>(R.id.verifier)

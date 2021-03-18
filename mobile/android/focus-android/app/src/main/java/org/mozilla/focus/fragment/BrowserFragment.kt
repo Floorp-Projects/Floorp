@@ -38,6 +38,7 @@ import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
+import mozilla.components.browser.state.state.createTab
 import mozilla.components.concept.engine.Engine
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.feature.contextmenu.ContextMenuCandidate
@@ -77,7 +78,6 @@ import org.mozilla.focus.ext.isSearch
 import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.locale.LocaleAwareFragment
-import org.mozilla.focus.observer.LoadTimeObserver
 import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.popup.PopupUtils
 import org.mozilla.focus.session.ui.TabSheetFragment
@@ -88,7 +88,6 @@ import org.mozilla.focus.utils.AppPermissionCodes.REQUEST_CODE_PROMPT_PERMISSION
 import org.mozilla.focus.utils.Browsers
 import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
-import org.mozilla.focus.utils.createTab
 import org.mozilla.focus.widget.AnimatedProgressBar
 import org.mozilla.focus.widget.FloatingEraseButton
 import org.mozilla.focus.widget.FloatingSessionsButton
@@ -144,13 +143,7 @@ class BrowserFragment :
     val tab: SessionState
         get() = requireComponents.store.state.findTabOrCustomTab(tabId)
                 // Workaround for tab not existing temporarily.
-                ?: mozilla.components.browser.state.state.createTab("about:blank")
-
-    val session: Session by lazy {
-        requireComponents.sessionManager.findSessionById(tabId)
-            // Workaround for tab not existing temporarily.
-            ?: createTab("about:blank")
-    }
+                ?: createTab("about:blank")
 
     override fun onPause() {
         super.onPause()
@@ -174,8 +167,6 @@ class BrowserFragment :
 
         urlView = view.findViewById<View>(R.id.display_url) as TextView
         urlView!!.setOnLongClickListener(this)
-
-        LoadTimeObserver.addObservers(session, this)
 
         val blockIcon = view.findViewById<View>(R.id.block_image) as ImageView
         blockIcon.setImageResource(R.drawable.ic_tracking_protection_disabled)
@@ -331,7 +322,8 @@ class BrowserFragment :
         blockingThemeBinding.set(
             BlockingThemeBinding(
                 components.store,
-                session,
+                tab.id,
+                tab.isCustomTab(),
                 statusBar!!,
                 urlBar!!,
                 blockView
@@ -617,7 +609,7 @@ class BrowserFragment :
         val addToHomescreenDialogFragment = AddToHomescreenDialogFragment.newInstance(
             url,
             title,
-            session.trackerBlockingEnabled,
+            tab.trackingProtection.enabled,
             requestDesktop = requestDesktop
         )
 
@@ -752,12 +744,12 @@ class BrowserFragment :
                 val event = AccessibilityEvent.obtain()
                 event.eventType = AccessibilityEvent.TYPE_ANNOUNCEMENT
                 event.className = javaClass.name
-                event.packageName = getContext()!!.packageName
+                event.packageName = requireContext().packageName
                 event.text.add(getString(R.string.feedback_erase))
             }
         }
 
-        requireComponents.sessionManager.remove(session)
+        requireComponents.tabsUseCases.removeTab(tab.id)
 
         // Temporary workaround until we get https://bugzilla.mozilla.org/show_bug.cgi?id=1644156
         // See comment in TabUtils.createTab().
@@ -808,28 +800,28 @@ class BrowserFragment :
             }
 
             R.id.back -> {
-                requireComponents.sessionUseCases.goBack(session)
+                requireComponents.sessionUseCases.goBack(tab.id)
             }
 
             R.id.forward -> {
-                requireComponents.sessionUseCases.goForward(session)
+                requireComponents.sessionUseCases.goForward(tab.id)
             }
 
             R.id.refresh -> {
-                requireComponents.sessionUseCases.reload(session)
+                requireComponents.sessionUseCases.reload(tab.id)
 
                 TelemetryWrapper.menuReloadEvent()
             }
 
             R.id.stop -> {
-                requireComponents.sessionUseCases.stopLoading(session)
+                requireComponents.sessionUseCases.stopLoading(tab.id)
             }
 
             R.id.open_in_firefox_focus -> {
                 // Release the session from this view so that it can immediately be rendered by a different view
                 sessionFeature.get()?.release()
 
-                requireComponents.customTabsUseCases.migrate(session.id)
+                requireComponents.customTabsUseCases.migrate(tab.id)
 
                 val intent = Intent(context, MainActivity::class.java)
                 intent.action = Intent.ACTION_MAIN
@@ -946,7 +938,7 @@ class BrowserFragment :
                 ).apply()
         }
 
-        requireComponents.sessionUseCases.requestDesktopSite(enabled, session)
+        requireComponents.sessionUseCases.requestDesktopSite(enabled, tab.id)
     }
 
     fun showSecurityPopUp() {
@@ -958,7 +950,7 @@ class BrowserFragment :
         if (tab.content.loading) {
             return
         }
-        val securityPopup = PopupUtils.createSecurityPopup(requireContext(), session)
+        val securityPopup = PopupUtils.createSecurityPopup(requireContext(), tab)
         if (securityPopup != null) {
             securityPopup.setOnDismissListener { popupTint!!.visibility = View.GONE }
             securityPopup.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -993,8 +985,8 @@ class BrowserFragment :
             ?.beginTransaction()
             ?.replace(
                 R.id.container,
-                BrowserFragment.createForSession(requireNotNull(session)),
-                BrowserFragment.FRAGMENT_TAG
+                createForTab(tab.id),
+                FRAGMENT_TAG
             )
             ?.commit()
     }
@@ -1007,11 +999,6 @@ class BrowserFragment :
         const val FRAGMENT_TAG = "browser"
 
         private const val ARGUMENT_SESSION_UUID = "sessionUUID"
-
-        @JvmStatic
-        fun createForSession(session: Session): BrowserFragment {
-            return createForTab(session.id)
-        }
 
         fun createForTab(tabId: String): BrowserFragment {
             val fragment = BrowserFragment()
