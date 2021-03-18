@@ -77,6 +77,7 @@ import org.mozilla.fenix.exceptions.trackingprotection.TrackingProtectionExcepti
 import org.mozilla.fenix.ext.alreadyOnDestination
 import org.mozilla.fenix.ext.breadcrumb
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.enableSystemInsetsHandling
 import org.mozilla.fenix.ext.metrics
 import org.mozilla.fenix.ext.nav
 import org.mozilla.fenix.ext.settings
@@ -253,6 +254,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         startupTelemetryOnCreateCalled(intent.toSafeIntent(), savedInstanceState != null)
 
         components.core.requestInterceptor.setNavigationController(navHost.navController)
+
+        enableSystemInsetsHandling()
 
         StartupTimeline.onActivityCreateEndHome(this) // DO NOT MOVE ANYTHING BELOW HERE.
     }

@@ -4,16 +4,24 @@
 
 package org.mozilla.fenix.settings.account
 
+import android.os.Bundle
+import android.os.PersistableBundle
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
 import mozilla.components.concept.sync.OAuthAccount
 import org.mozilla.fenix.customtabs.ExternalAppBrowserActivity
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.enableSystemInsetsHandling
 
 /**
  * A special custom tab for signing into a Firefox Account. The activity is closed once the user is signed in.
  */
 class AuthCustomTabActivity : ExternalAppBrowserActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
+        super.onCreate(savedInstanceState, persistentState)
+        enableSystemInsetsHandling()
+    }
 
     private val accountStateObserver = object : AccountObserver {
         /**

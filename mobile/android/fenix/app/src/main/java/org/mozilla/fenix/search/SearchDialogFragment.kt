@@ -13,7 +13,8 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
-import android.os.Build
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.speech.RecognizerIntent
 import android.text.style.StyleSpan
@@ -89,7 +90,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         // https://github.com/mozilla-mobile/fenix/issues/14279
         // To prevent GeckoView from resizing we're going to change the softInputMode to not adjust
         // the size of the window.
-        requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
+        if (VERSION.SDK_INT < VERSION_CODES.R)
+            requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_NOTHING)
         // Refocus the toolbar editing and show keyboard if the QR fragment isn't showing
         if (childFragmentManager.findFragmentByTag(QR_FRAGMENT_TAG) == null) {
             toolbarView.view.edit.focus()
@@ -102,7 +104,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         // Let's reset back to the default behavior after we're done searching
         // This will be addressed on https://github.com/mozilla-mobile/fenix/issues/17805
         @Suppress("DEPRECATION")
-        requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
+        if (VERSION.SDK_INT < VERSION_CODES.R)
+            requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -346,7 +349,7 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
 
     private fun updateAccessibilityTraversalOrder() {
         val searchWrapperId = search_wrapper.id
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP_MR1) {
+        if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP_MR1) {
             qr_scan_button.accessibilityTraversalAfter = searchWrapperId
             search_engines_shortcut_button.accessibilityTraversalAfter = searchWrapperId
             fill_link_from_clipboard.accessibilityTraversalAfter = searchWrapperId

@@ -77,8 +77,7 @@
             android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|layoutDirection|smallestScreenSize|screenLayout"
             android:launchMode="singleTask"
             android:resizeableActivity="true"
-            android:supportsPictureInPicture="true"
-            android:windowSoftInputMode="adjustResize">
+            android:supportsPictureInPicture="true">
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.BROWSABLE" />
@@ -135,7 +134,7 @@
             android:taskAffinity=""
             android:resizeableActivity="true"
             android:supportsPictureInPicture="true"
-            android:windowSoftInputMode="adjustResize|stateAlwaysHidden" />
+            android:windowSoftInputMode="stateAlwaysHidden" />
 
         <activity
             android:name=".IntentReceiverActivity"
@@ -239,7 +238,7 @@
             android:configChanges="keyboard|keyboardHidden|mcc|mnc|orientation|screenSize|layoutDirection|smallestScreenSize|screenLayout"
             android:exported="false"
             android:taskAffinity=""
-            android:windowSoftInputMode="adjustResize|stateAlwaysHidden" />
+            android:windowSoftInputMode="stateAlwaysHidden" />
 
         <activity android:name=".settings.account.AuthIntentReceiverActivity"
             android:exported="false" />
