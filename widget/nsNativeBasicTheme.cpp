@@ -1518,7 +1518,7 @@ void nsNativeBasicTheme::PaintScrollbarButton(
   float arrowPolygonX[] = {-4.0f, 0.0f, 4.0f, 4.0f, 0.0f, -4.0f};
   float arrowPolygonY[] = {0.0f, -4.0f, 0.0f, 3.0f, -1.0f, 3.0f};
 
-  const float kPolygonSize = kMinimumScrollbarSize;
+  const float kPolygonSize = 17;
 
   const int32_t arrowNumPoints = ArrayLength(arrowPolygonX);
   switch (aAppearance) {
@@ -1934,9 +1934,10 @@ bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
 auto nsNativeBasicTheme::GetScrollbarSizes(nsPresContext* aPresContext,
                                            StyleScrollbarWidth aWidth, Overlay)
     -> ScrollbarSizes {
-  CSSCoord size = aWidth == StyleScrollbarWidth::Thin
-                      ? kMinimumThinScrollbarSize
-                      : kMinimumScrollbarSize;
+  CSSCoord size =
+      aWidth == StyleScrollbarWidth::Thin
+          ? StaticPrefs::widget_non_native_theme_scrollbar_thin_size()
+          : StaticPrefs::widget_non_native_theme_scrollbar_normal_size();
   LayoutDeviceIntCoord s =
       (size * GetDPIRatioForScrollbarPart(aPresContext)).Rounded();
   return {s, s};

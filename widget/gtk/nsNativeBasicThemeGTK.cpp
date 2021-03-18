@@ -41,18 +41,6 @@ bool nsNativeBasicThemeGTK::ThemeSupportsScrollbarButtons() {
   return StaticPrefs::widget_non_native_theme_gtk_scrollbar_allow_buttons();
 }
 
-auto nsNativeBasicThemeGTK::GetScrollbarSizes(nsPresContext* aPresContext,
-                                              StyleScrollbarWidth aWidth,
-                                              Overlay) -> ScrollbarSizes {
-  DPIRatio dpiRatio = GetDPIRatioForScrollbarPart(aPresContext);
-  CSSCoord size =
-      aWidth == StyleScrollbarWidth::Thin
-          ? StaticPrefs::widget_non_native_theme_gtk_scrollbar_thin_size()
-          : StaticPrefs::widget_non_native_theme_gtk_scrollbar_normal_size();
-  LayoutDeviceIntCoord s = (size * dpiRatio).Truncated();
-  return {s, s};
-}
-
 NS_IMETHODIMP
 nsNativeBasicThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
                                             nsIFrame* aFrame,
