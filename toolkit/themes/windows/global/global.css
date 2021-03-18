@@ -10,7 +10,6 @@
 
 :root {
   /* ::::: Variables ::::: */
-  --arrowpanel-padding: 10px;
   --default-arrowpanel-background: Field;
   --default-arrowpanel-color: FieldText;
   --default-arrowpanel-border-color: ThreeDShadow;
@@ -25,6 +24,12 @@
   color: -moz-DialogText;
   font: message-box;
 }
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+:root {
+  --arrowpanel-padding: 10px;
+}
+} /** END not Proton **/
 
 @supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
