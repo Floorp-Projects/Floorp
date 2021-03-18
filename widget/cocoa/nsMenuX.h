@@ -47,7 +47,7 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
   // nsMenuObjectX
   void* NativeData() override { return (void*)mNativeMenu; }
   nsMenuObjectTypeX MenuObjectType() override { return eSubmenuObjectType; }
-  void IconUpdated() override { mParent->IconUpdated(); }
+  void IconUpdated() override;
 
   // nsMenuX
   nsresult Create(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode);
@@ -64,7 +64,7 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
   void MenuClosed();
   void SetRebuild(bool aMenuEvent);
   NSMenuItem* NativeMenuItem();
-  nsresult SetupIcon();
+  void SetupIcon();
   nsIContent* Content() { return mContent; }
 
   static bool IsXULHelpMenu(nsIContent* aMenuContent);

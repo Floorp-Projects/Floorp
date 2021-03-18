@@ -23,17 +23,25 @@ class nsMenuObjectX;
 
 class nsMenuItemIconX final : public mozilla::widget::IconLoader::Listener {
  public:
-  nsMenuItemIconX(nsMenuObjectX* aMenuItem, NSMenuItem* aNativeMenuItem);
+  explicit nsMenuItemIconX(nsMenuObjectX* aMenuItem);
   ~nsMenuItemIconX();
 
  public:
-  // SetupIcon succeeds if it was able to set up the icon, or if there should
-  // be no icon, in which case it clears any existing icon but still succeeds.
-  nsresult SetupIcon(nsIContent* aContent);
+  // SetupIcon starts the icon load. Once the icon has loaded,
+  // nsMenuObjectX::IconUpdated will be called. The icon image needs to be
+  // retrieved from GetIconImage(). If aContent is an icon-less menuitem,
+  // GetIconImage() will return nil. If it does have an icon, GetIconImage()
+  // will return a transparent placeholder icon during the load and the actual
+  // icon when the load is completed.
+  void SetupIcon(nsIContent* aContent);
 
   // Implements this method for mozilla::widget::IconLoader::Listener.
   // Called once the icon load is complete.
   nsresult OnComplete(imgIContainer* aImage) override;
+
+  // Returns a weak reference to the icon image that is owned by this class. Can
+  // return nil.
+  NSImage* GetIconImage() const { return mIconImage; }
 
  protected:
   // GetIconURI returns null if the item should not have any icon.
@@ -43,7 +51,7 @@ class nsMenuItemIconX final : public mozilla::widget::IconLoader::Listener {
   nsMenuObjectX* mMenuObject;     // [weak]
   nsIntRect mImageRegionRect;
   bool mSetIcon;
-  NSMenuItem* mNativeMenuItem;  // [weak]
+  NSImage* mIconImage = nil;  // [strong]
   // The icon loader object should never outlive its creating nsMenuItemIconX
   // object.
   RefPtr<mozilla::widget::IconLoader> mIconLoader;

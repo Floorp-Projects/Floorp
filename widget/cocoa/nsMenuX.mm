@@ -159,7 +159,7 @@ nsMenuX::nsMenuX(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsI
   // menu gets selected, which is bad.
   MenuConstruct();
 
-  mIcon = MakeUnique<nsMenuItemIconX>(this, mNativeMenuItem);
+  mIcon = MakeUnique<nsMenuItemIconX>(this);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -680,8 +680,14 @@ void nsMenuX::ObserveContentInserted(dom::Document* aDocument, nsIContent* aCont
   SetRebuild(true);
 }
 
-nsresult nsMenuX::SetupIcon() {
-  return mIcon->SetupIcon(mContent);
+void nsMenuX::SetupIcon() {
+  mIcon->SetupIcon(mContent);
+  mNativeMenuItem.image = mIcon->GetIconImage();
+}
+
+void nsMenuX::IconUpdated() {
+  mNativeMenuItem.image = mIcon->GetIconImage();
+  mParent->IconUpdated();
 }
 
 //
