@@ -1692,6 +1692,10 @@ WritingMode nsIFrame::WritingModeForLine(WritingMode aSelfWM,
   return writingMode;
 }
 
+nsRect nsIFrame::GetMarginRect() const {
+  return GetMarginRectRelativeToSelf() + GetPosition();
+}
+
 nsRect nsIFrame::GetMarginRectRelativeToSelf() const {
   nsMargin m = GetUsedMargin().ApplySkipSides(GetSkipSides());
   nsRect r(0, 0, mRect.width, mRect.height);
