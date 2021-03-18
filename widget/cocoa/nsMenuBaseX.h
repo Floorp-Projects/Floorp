@@ -27,7 +27,6 @@ class nsMenuObjectX {
  public:
   virtual ~nsMenuObjectX() {}
   virtual nsMenuObjectTypeX MenuObjectType() = 0;
-  virtual void* NativeData() = 0;
 
   /**
    * Called when an icon of a menu item somewhere in this menu has updated.

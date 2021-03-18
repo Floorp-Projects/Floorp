@@ -200,7 +200,7 @@ int nsMenuUtilsX::CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuOb
       if (currMenu == aChild) {
         return insertionPoint;  // we found ourselves, break out
       }
-      if (currMenu && currMenu->NativeMenuItem().menu) {
+      if (currMenu && currMenu->NativeNSMenuItem().menu) {
         insertionPoint++;
       }
     }
@@ -222,9 +222,10 @@ int nsMenuUtilsX::CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuOb
       NSMenuItem* nativeItem = nil;
       nsMenuObjectTypeX currItemType = currItem->MenuObjectType();
       if (currItemType == eSubmenuObjectType) {
-        nativeItem = static_cast<nsMenuX*>(currItem)->NativeMenuItem();
+        nativeItem = static_cast<nsMenuX*>(currItem)->NativeNSMenuItem();
       } else {
-        nativeItem = (NSMenuItem*)(currItem->NativeData());
+        MOZ_RELEASE_ASSERT(currItemType == eMenuItemObjectType);
+        nativeItem = static_cast<nsMenuItemX*>(currItem)->NativeNSMenuItem();
       }
       if (nativeItem.menu) {
         insertionPoint++;

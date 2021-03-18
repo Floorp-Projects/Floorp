@@ -50,7 +50,6 @@ class nsMenuItemX final : public nsMenuObjectX, public nsChangeObserver {
   NS_DECL_CHANGEOBSERVER
 
   // nsMenuObjectX
-  void* NativeData() override { return (void*)mNativeMenuItem; }
   nsMenuObjectTypeX MenuObjectType() override { return eMenuItemObjectType; }
   void IconUpdated() override;
 
@@ -62,6 +61,7 @@ class nsMenuItemX final : public nsMenuObjectX, public nsChangeObserver {
                             bool* preventDefaultCalled);
   void SetupIcon();
   nsIContent* Content() { return mContent; }
+  NSMenuItem* NativeNSMenuItem() { return mNativeMenuItem; }
 
  protected:
   void UncheckRadioSiblings(nsIContent* aCheckedElement);

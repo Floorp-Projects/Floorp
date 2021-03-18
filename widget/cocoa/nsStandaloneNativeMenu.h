@@ -22,12 +22,11 @@ class nsStandaloneNativeMenu : public nsMenuGroupOwnerX,
   nsMenuObjectTypeX MenuObjectType() override {
     return eStandaloneNativeMenuObjectType;
   }
-  void* NativeData() override {
-    return mMenu != nullptr ? mMenu->NativeData() : nullptr;
-  }
   virtual void IconUpdated() override;
 
   nsMenuX* GetMenuXObject() { return mMenu.get(); }
+
+  NSMenu* NativeNSMenu() { return mMenu ? mMenu->NativeNSMenu() : nil; }
 
   // If this menu is the menu of a system status bar item (NSStatusItem),
   // let the menu know about the status item so that it can propagate
