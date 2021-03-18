@@ -38,7 +38,9 @@
 :root:-moz-lwtheme {
   --toolbarbutton-hover-background: color-mix(in srgb, currentColor 15%, transparent);
   --toolbarbutton-active-background: color-mix(in srgb, currentColor 30%, transparent);
+}
 
+:root:-moz-lwtheme-brighttext {
   --backbutton-background: var(--toolbarbutton-hover-background);
   --backbutton-hover-background: var(--toolbarbutton-active-background);
   --backbutton-active-background: color-mix(in srgb, currentColor 20%, transparent);
