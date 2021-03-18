@@ -15,8 +15,8 @@
 @supports -moz-bool-pref("browser.proton.tabs.enabled") {
 :root {
   --tab-min-height: 36px;
-  --proton-tab-radius: 4px;
-  --proton-shadow-blur-radius: 6px;
+  --tab-border-radius: 4px;
+  --tab-shadow-max-size: 6px;
   --proton-tab-block-margin: 4px;
   --proton-tab-inline-padding: 2px;
   --inline-tab-padding: 8px;
@@ -74,7 +74,7 @@
   /* Add padding to match the shadow's blur radius so the
     shadow doesn't get clipped when either the first or
     last tab is selected */
-  padding-inline: var(--proton-shadow-blur-radius);
+  padding-inline: var(--tab-shadow-max-size);
 }
 } /*** END proton ***/
 
@@ -120,7 +120,7 @@
 .keyboard-focused-tab > .tab-stack > .tab-background,
 .tabbrowser-tab:focus:not([aria-activedescendant]) > .tab-stack > .tab-background {
   outline: var(--focus-outline);
-  -moz-outline-radius: var(--proton-tab-radius);
+  -moz-outline-radius: var(--tab-border-radius);
   outline-offset: -2px;
 }
 } /*** END proton ***/
@@ -497,7 +497,7 @@
   width: 24px;
   height: 24px;
   padding: 5px;
-  border-radius: var(--proton-tab-radius);
+  border-radius: var(--tab-border-radius);
 }
 } /*** END proton ***/
 
@@ -697,7 +697,7 @@
 
 @supports -moz-bool-pref("browser.proton.tabs.enabled") {
 .tab-background {
-  border-radius: var(--proton-tab-radius);
+  border-radius: var(--tab-border-radius);
   margin-block: var(--proton-tab-block-margin);
 }
 
@@ -710,9 +710,13 @@
 }
 
 .tabbrowser-tab[visuallyselected=true]:hover > .tab-stack > .tab-background {
-  box-shadow: 0px 2px var(--proton-shadow-blur-radius) rgba(58, 57, 68, 0.2);
+  box-shadow: 0px 2px var(--tab-shadow-max-size) rgba(58, 57, 68, 0.2);
 }
 } /*** END proton ***/
+
+.tab-background-inner {
+  border-radius: inherit;
+}
 
 @supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 
@@ -746,12 +750,6 @@
   background: currentColor;
   opacity: .1;
 }
-
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
-.tab-background[multiselected=true]:not([selected=true]) > .tab-background-inner {
-  border-radius: var(--proton-tab-radius);
-}
-} /*** END proton ***/
 
 .tab-line[multiselected],
 .tab-line[selected=true] {

@@ -8,6 +8,7 @@
 
 @supports -moz-bool-pref("browser.proton.places-tooltip.enabled") {
 .places-tooltip {
+  --places-tooltip-shadow-size: 6px;
   appearance: none;
   background: transparent;
   border: none;
@@ -16,9 +17,9 @@
      here keeps the tooltip aligned horizontally with the
      anchor, and should match the padding-inline-start of
      the tooltip. */
-  padding: var(--proton-shadow-blur-radius);
-  margin-inline-start: calc(-1 * var(--proton-shadow-blur-radius));
-  margin-block-start: calc(-1 * var(--proton-shadow-blur-radius));
+  padding: var(--places-tooltip-shadow-size);
+  margin-inline-start: calc(-1 * var(--places-tooltip-shadow-size));
+  margin-block-start: calc(-1 * var(--places-tooltip-shadow-size));
 }
 
 .places-tooltip-box {
@@ -26,8 +27,8 @@
   background: var(--arrowpanel-background);
   color: var(--arrowpanel-color);
   border: 1px solid transparent;
-  border-radius: var(--proton-tab-radius);
-  box-shadow: 0 2px var(--proton-shadow-blur-radius) rgba(58,57,68,.2);
+  border-radius: 4px;
+  box-shadow: 0 2px var(--places-tooltip-shadow-size) rgba(58,57,68,.2);
 }
 
 .places-tooltip-title {
