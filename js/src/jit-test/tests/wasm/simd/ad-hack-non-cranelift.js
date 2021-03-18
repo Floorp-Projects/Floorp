@@ -336,6 +336,25 @@ function wasmCompile(text) {
 }
 
 
+// i64x2.abs
+
+var ins = wasmEvalText(`
+  (module
+    (memory (export "mem") 1 1)
+    (func (export "i64_abs")
+      (v128.store (i32.const 0)
+        (i64x2.abs (v128.load (i32.const 16))) )) )`);
+
+var mem64 = new BigInt64Array(ins.exports.mem.buffer);
+
+set(mem64, 2, [-3n, 42n]);
+ins.exports.i64_abs();
+assertSame(get(mem64, 0, 2), [3n, 42n]);
+set(mem64, 2, [0n, -0x8000000000000000n]);
+ins.exports.i64_abs();
+assertSame(get(mem64, 0, 2), [0n, -0x8000000000000000n]);
+
+
 // Load lane
 
 var ins = wasmEvalText(`

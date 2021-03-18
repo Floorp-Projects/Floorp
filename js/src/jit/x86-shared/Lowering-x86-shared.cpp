@@ -1286,6 +1286,7 @@ void LIRGenerator::visitWasmUnarySimd128(MWasmUnarySimd128* ins) {
     case wasm::SimdOp::I8x16Abs:
     case wasm::SimdOp::I16x8Abs:
     case wasm::SimdOp::I32x4Abs:
+    case wasm::SimdOp::I64x2Abs:
     case wasm::SimdOp::I32x4TruncSSatF32x4:
     case wasm::SimdOp::F32x4ConvertUI32x4:
     case wasm::SimdOp::I16x8ExtAddPairwiseI8x16S:
