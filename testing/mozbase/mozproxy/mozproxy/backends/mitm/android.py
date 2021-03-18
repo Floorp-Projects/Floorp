@@ -192,7 +192,7 @@ class MitmproxyAndroid(Mitmproxy):
 
         cmd_output = self.certutil(args)
 
-        if "mitmproxy-cert" in cmd_output:
+        if "mitmproxy-cert" in cmd_output.decode("utf-8"):
             LOG.info(
                 "verfied the mitmproxy-cert is installed in the nss cert db on android"
             )
