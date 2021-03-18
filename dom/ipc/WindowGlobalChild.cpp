@@ -340,6 +340,8 @@ void WindowGlobalChild::BeforeUnloadRemoved() {
 void WindowGlobalChild::Destroy() {
   JSActorWillDestroy();
 
+  mWindowContext->Discard();
+
   // Perform async IPC shutdown unless we're not in-process, and our
   // BrowserChild is in the process of being destroyed, which will destroy
   // us as well.
@@ -644,6 +646,10 @@ void WindowGlobalChild::ActorDestroy(ActorDestroyReason aWhy) {
              "Destroying WindowGlobalChild can run script");
 
   gWindowGlobalChildById->Remove(InnerWindowId());
+
+  // If our WindowContext hasn't been marked as discarded yet, ensure it's
+  // marked as discarded at this point.
+  mWindowContext->Discard();
 
 #ifdef MOZ_GECKO_PROFILER
   profiler_unregister_page(InnerWindowId());
