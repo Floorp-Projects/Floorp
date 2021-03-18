@@ -25,6 +25,11 @@ def generate(output, idlFilename, dataFile):
     for p in propList:
         if "Internal" in p.flags:
             continue
+
+        # Skip properties which aren't valid in style rules.
+        if "Style" not in p.rules:
+            continue
+
         # Unfortunately, even some of the getters here are fallible
         # (e.g. on nsComputedDOMStyle).
         extendedAttrs = [
