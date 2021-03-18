@@ -252,18 +252,19 @@ NSMenuItem* nsMenuUtilsX::NativeMenuItemWithLocation(NSMenu* aRootMenu, NSString
       targetIndex++;
     }
     int itemCount = currentSubmenu.numberOfItems;
-    if (targetIndex < itemCount) {
-      NSMenuItem* menuItem = [currentSubmenu itemAtIndex:targetIndex];
-      // if this is the last index just return the menu item
-      if (depth == pathLength - 1) {
-        return menuItem;
-      }
-      // if this is not the last index find the submenu and keep going
-      if (menuItem.hasSubmenu) {
-        currentSubmenu = menuItem.submenu;
-      } else {
-        return nil;
-      }
+    if (targetIndex >= itemCount) {
+      return nil;
+    }
+    NSMenuItem* menuItem = [currentSubmenu itemAtIndex:targetIndex];
+    // if this is the last index just return the menu item
+    if (depth == pathLength - 1) {
+      return menuItem;
+    }
+    // if this is not the last index find the submenu and keep going
+    if (menuItem.hasSubmenu) {
+      currentSubmenu = menuItem.submenu;
+    } else {
+      return nil;
     }
   }
 
