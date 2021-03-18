@@ -22,6 +22,7 @@ MOCHITEST_MANIFESTS += [
     "https-only/mochitest.ini",
     "mixedcontentblocker/mochitest.ini",
     "referrer-policy/mochitest.ini",
+    "sec-fetch/mochitest.ini",
     "sri/mochitest.ini",
 ]
 
