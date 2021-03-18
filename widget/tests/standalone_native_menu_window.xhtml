@@ -305,22 +305,33 @@
         // return state to original diagramed state
         menuNode.appendChild(newMenu0);
 
-        // Test for bug 447042, make sure that adding a menu node with no children
+        // The following is based on a similar test bug 447042 from the native
+        // menu bar test: Make sure that adding a menu node with no children
         // to the menu bar and then adding another menu node with children works.
-        // Menus with no children don't get their native menu items shown and that
-        // caused internal arrays to get out of sync and an append crashed.
+        // In the menubar, root menus with no children are skipped - they're not
+        // visible in the menubar.
+        // Regular menus currently treat submenus without children differently:
+        // submenus without children *are* visible.
+        // We may want to change this in the future.
+        // After the mutation below we have the following root menu content:
+        //  - [0] Foo (with submenu)
+        //  - [1] tmpMenu0 (with empty submenu)
+        //  - [2] NewMenu0 (with submenu)
+        // Since the empty tmpMenu0 item is not skipped, NewMenu0 has index 2,
+        // so we use "2|..." below, rather than the "1|..." that's used in the
+        // menubar test.
         var tmpMenu0 = createXULMenu("tmpMenu0");
         menuNode.removeChild(newMenu0);
         menuNode.appendChild(tmpMenu0);
         menuNode.appendChild(newMenu0);
-        menu.forceUpdateNativeMenuAt("1|3");
-        //todo(runBaseMenuTests(menu), "base tests #8");
-        todo_is(activateItem(menu, "1|0"), "cmd_NewItem0", "#33:" +sa);
-        todo_is(activateItem(menu, "1|1"), "cmd_NewItem1", "#34:" +sa);
-        todo_is(activateItem(menu, "1|2"), "cmd_NewItem2", "#35:" +sa);
-        todo_is(activateItem(menu, "1|3|0"), "cmd_NewItem3", "#36:" +sa);
-        todo_is(activateItem(menu, "1|3|1"), "cmd_NewItem4", "#37:" +sa);
-        todo_is(activateItem(menu, "1|3|2"), "cmd_NewItem5", "#38:" +sa);
+        menu.forceUpdateNativeMenuAt("2|3");
+        ok(runBaseMenuTests(menu), "base tests #8");
+        is(activateItem(menu, "2|0"), "cmd_NewItem0", "#33:" + sa);
+        is(activateItem(menu, "2|1"), "cmd_NewItem1", "#34:" + sa);
+        is(activateItem(menu, "2|2"), "cmd_NewItem2", "#35:" + sa);
+        is(activateItem(menu, "2|3|0"), "cmd_NewItem3", "#36:" + sa);
+        is(activateItem(menu, "2|3|1"), "cmd_NewItem4", "#37:" + sa);
+        is(activateItem(menu, "2|3|2"), "cmd_NewItem5", "#38:" + sa);
         // return state to original diagramed state
         menuNode.removeChild(tmpMenu0);
 
