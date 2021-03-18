@@ -423,7 +423,15 @@ MOZ_DEFINE_ENUM_CLASS_WITH_BASE(CompositionPayloadType, uint8_t, (
    * A |CompositionPayload| with this type indicates that content was painted
    * that will be included in the composition.
    */
-  eContentPaint
+  eContentPaint,
+
+  /**
+   * A |CompositionPayload| with this type indicates a mouse up (which caused
+   * a click to happen) happened before composition and will be used to determine latency
+   * between mouse up and presentation in
+   * |mozilla::Telemetry::MOUSEUP_FOLLOWED_BY_CLICK_PRESENT_LATENCY|
+   */
+  eMouseUpFollowedByClick
 ));
 // clang-format on
 
