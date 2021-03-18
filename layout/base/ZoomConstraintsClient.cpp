@@ -223,6 +223,12 @@ void ZoomConstraintsClient::RefreshZoomConstraints() {
     mZoomConstraints.mAllowDoubleTapZoom = false;
   }
 
+  if (mDocument->IsStaticDocument()) {
+    ZCC_LOG("%p is in print or print preview, disallowing double tap zooming\n",
+            this);
+    mZoomConstraints.mAllowDoubleTapZoom = false;
+  }
+
   // On macOS the OS can send us a double tap zoom event from the touchpad and
   // there are no touch screen macOS devices so we never wait to see if a second
   // tap is coming so we can always allow double tap zooming on mac. We need
