@@ -353,7 +353,12 @@ var gSync = {
   get fluentStrings() {
     delete this.fluentStrings;
     return (this.fluentStrings = new Localization(
-      ["branding/brand.ftl", "browser/appmenu.ftl", "browser/sync.ftl"],
+      [
+        "branding/brand.ftl",
+        "browser/accounts.ftl",
+        "browser/appmenu.ftl",
+        "browser/sync.ftl",
+      ],
       true
     ));
   },
@@ -886,15 +891,15 @@ var gSync = {
     } else if (state.status === UIState.STATUS_LOGIN_FAILED) {
       stateValue = "login-failed";
       headerTitle = state.email;
-      headerDescription = this.fxaStrings.GetStringFromName(
-        "account.reconnectToFxA"
+      headerDescription = this.fluentStrings.formatValueSync(
+        "account-reconnect-to-fxa"
       );
       mainWindowEl.style.removeProperty("--avatar-image-url");
     } else if (state.status === UIState.STATUS_NOT_VERIFIED) {
       stateValue = "unverified";
       headerTitle = state.email;
-      headerDescription = this.fxaStrings.GetStringFromName(
-        "account.finishAccountSetup"
+      headerDescription = this.fluentStrings.formatValueSync(
+        "account-finish-account-setup"
       );
     } else if (state.status === UIState.STATUS_SIGNED_IN) {
       stateValue = "signedin";
@@ -1029,8 +1034,8 @@ var gSync = {
         [state.email]
       );
       appMenuStatus.setAttribute("fxastatus", "login-failed");
-      let errorLabel = this.fxaStrings.GetStringFromName(
-        "account.reconnectToFxA"
+      let errorLabel = this.fluentStrings.formatValueSync(
+        "account-reconnect-to-fxa"
       );
       appMenuLabel.setAttribute("label", errorLabel);
       appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
@@ -1041,8 +1046,8 @@ var gSync = {
         [state.email]
       );
       appMenuStatus.setAttribute("fxastatus", "unverified");
-      let unverifiedLabel = this.fxaStrings.GetStringFromName(
-        "account.finishAccountSetup"
+      let unverifiedLabel = this.fluentStrings.formatValueSync(
+        "account-finish-account-setup"
       );
       appMenuLabel.setAttribute("label", unverifiedLabel);
       appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
