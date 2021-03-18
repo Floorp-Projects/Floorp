@@ -10967,7 +10967,7 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
       .setWasm(enableWasm)
       .setWasmForTrustedPrinciples(enableWasm)
       .setWasmBaseline(enableWasmBaseline)
-#ifdef ENABLE_WASM_CRANELIFT
+#if defined(ENABLE_WASM_CRANELIFT) && defined(JS_CODEGEN_ARM64)
       // Cranelift->Ion transition
       .setWasmCranelift(enableWasmOptimizing && !forceWasmIon)
       .setWasmIon(enableWasmOptimizing && forceWasmIon)
@@ -11375,7 +11375,7 @@ static void SetWorkerContextOptions(JSContext* cx) {
       .setAsmJS(enableAsmJS)
       .setWasm(enableWasm)
       .setWasmBaseline(enableWasmBaseline)
-#ifdef ENABLE_WASM_CRANELIFT
+#if defined(ENABLE_WASM_CRANELIFT) && defined(JS_CODEGEN_ARM64)
       // Cranelift->Ion transition
       .setWasmCranelift(enableWasmOptimizing && !forceWasmIon)
       .setWasmIon(enableWasmOptimizing && forceWasmIon)
