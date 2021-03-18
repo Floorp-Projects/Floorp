@@ -67,23 +67,6 @@ nsresult nsMenuItemIconX::SetupIcon() {
     return NS_ERROR_FAILURE;
   }
 
-  if (!mMenuObject) {
-    return NS_OK;
-  }
-
-  // Mac native menu items support having both a checkmark and an icon
-  // simultaneously, but this is unheard of in the cross-platform toolkit,
-  // seemingly because the win32 theme is unable to cope with both at once.
-  // The downside is that it's possible to get a menu item marked with a
-  // native checkmark and a checkmark for an icon.  Head off that possibility
-  // by pretending that no icon exists if this is a checkable menu item.
-  if (mMenuObject->MenuObjectType() == eMenuItemObjectType) {
-    nsMenuItemX* menuItem = static_cast<nsMenuItemX*>(mMenuObject);
-    if (menuItem->GetMenuItemType() != eRegularMenuItemType) {
-      return NS_OK;
-    }
-  }
-
   nsCOMPtr<nsIURI> iconURI = GetIconURI();
   if (!iconURI) {
     // There is no icon for this menu item. An icon might have been set
