@@ -332,37 +332,6 @@ def _cxxLifecycleProxyType(ptr=False):
     return Type("mozilla::ipc::ActorLifecycleProxy", ptr=ptr)
 
 
-def _callInsertManagedActor(managees, actor):
-    return ExprCall(ExprSelect(managees, ".", "PutEntry"), args=[actor])
-
-
-def _callRemoveManagedActor(managees, actor):
-    return ExprCall(ExprSelect(managees, ".", "RemoveEntry"), args=[actor])
-
-
-def _callClearManagedActors(managees):
-    return ExprCall(ExprSelect(managees, ".", "Clear"))
-
-
-def _callHasManagedActor(managees, actor):
-    return ExprCall(ExprSelect(managees, ".", "Contains"), args=[actor])
-
-
-def _callGetLifecycleProxy(actor=ExprVar.THIS):
-    return ExprCall(ExprSelect(actor, "->", "GetLifecycleProxy"))
-
-
-def _releaseLifecycleProxy(actor=None):
-    return StmtCode(
-        """
-        mozilla::ipc::ActorLifecycleProxy* proxy =
-            (${actor})->GetLifecycleProxy();
-        NS_IF_RELEASE(proxy);
-        """,
-        actor=actor or ExprVar.THIS,
-    )
-
-
 def _otherSide(side):
     if side == "child":
         return "parent"
