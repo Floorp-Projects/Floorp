@@ -2628,7 +2628,7 @@ LayerManager::PaintedLayerCreationHint ContainerState::GetLayerCreationHint(
   // root chain.
   for (AnimatedGeometryRoot* agr = aAnimatedGeometryRoot;
        agr && agr != mContainerAnimatedGeometryRoot; agr = agr->mParentAGR) {
-    nsIFrame* fParent = nsLayoutUtils::GetCrossDocParentFrame(*agr);
+    nsIFrame* fParent = nsLayoutUtils::GetCrossDocParentFrameInProcess(*agr);
     if (!fParent) {
       break;
     }
@@ -4354,7 +4354,7 @@ nsIntRegion ContainerState::ComputeOpaqueRect(
   // container layer is going to be the rootmost layer, otherwise transforms
   // etc will mess us up (and opaque contributions from other containers are
   // not needed).
-  if (!nsLayoutUtils::GetCrossDocParentFrame(mContainerFrame)) {
+  if (!nsLayoutUtils::GetCrossDocParentFrameInProcess(mContainerFrame)) {
     mBuilder->AddWindowOpaqueRegion(aItem->Frame(), opaqueClipped.GetBounds());
   }
   opaquePixels = ScaleRegionToInsidePixels(opaqueClipped, snapOpaque);
