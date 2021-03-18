@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Test cross origin fission iframes get displayport that covers whole width</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<script src="/tests/SimpleTest/paint_listener.js"></script>
+<script src="apz_test_utils.js"></script>
+<script src="apz_test_native_event_utils.js"></script>
+</head>
+<body>
+  <iframe id="iframe" style="width:700px; height:150px; border:2px solid blue;"></iframe>
+<script>
+
+  window.addEventListener("message", event => {
+    if (event.data == "wereDone") {
+      subtestDone();
+    } else if (event.data.x != undefined && event.data.y != undefined && event.data.w != undefined && event.data.h != undefined) {
+      info("event.data " + event.data.x +  " " + event.data.y +  " " + event.data.w +  " " + event.data.h);
+      // 683 = 700 width of iframe minus maximum width of scrollbars seen on try
+      ok(event.data.w >= 683, "dp is wide enough");
+    }
+  });
+
+  function test() {
+    document.getElementById("iframe").setAttribute("src", "http://example.org/tests/gfx/layers/apz/test/mochitest/helper_wide_crossorigin_iframe_child.html");
+  }
+
+  waitUntilApzStable().then(test);
+
+</script>
+</body>
+</html>
