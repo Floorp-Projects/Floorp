@@ -8,8 +8,6 @@ use std::sync::Arc;
 use glean_core::metrics::{DistributionData, MetricType};
 use glean_core::{CommonMetricData, ErrorType, HistogramType};
 
-use crate::dispatcher;
-
 // We need to wrap the glean-core type: otherwise if we try to implement
 // the trait for the metric in `glean_core::metrics` we hit error[E0117]:
 // only traits defined in the current crate can be implemented for arbitrary
@@ -48,9 +46,7 @@ impl CustomDistributionMetric {
 impl glean_core::traits::CustomDistribution for CustomDistributionMetric {
     fn accumulate_samples_signed(&self, samples: Vec<i64>) {
         let metric = Arc::clone(&self.0);
-        dispatcher::launch(move || {
-            crate::with_glean(|glean| metric.accumulate_samples_signed(glean, samples))
-        });
+        crate::launch_with_glean(move |glean| metric.accumulate_samples_signed(glean, samples));
     }
 
     fn test_get_value<'a, S: Into<Option<&'a str>>>(

@@ -10,6 +10,7 @@ Outputter to generate Markdown documentation for metrics.
 
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple, Union
+from urllib.parse import urlsplit, parse_qs
 
 
 from . import metrics
@@ -121,6 +122,31 @@ def ping_data_reviews(
         return None
 
 
+def ping_review_title(data_url: str, index: int) -> str:
+    """
+    Return a title for a data review in human readable form.
+
+    :param data_url: A url for data review.
+    :param index: Position of the data review on list (e.g: 1, 2, 3...).
+    """
+    url_object = urlsplit(data_url)
+
+    # Bugzilla urls like `https://bugzilla.mozilla.org/show_bug.cgi?id=1581647`
+    query = url_object.query
+    params = parse_qs(query)
+
+    # GitHub urls like `https://github.com/mozilla-mobile/fenix/pull/1707`
+    path = url_object.path
+    short_url = path[1:].replace("/pull/", "#")
+
+    if params and params["id"]:
+        return f"Bug {params['id'][0]}"
+    elif url_object.netloc == "github.com":
+        return short_url
+
+    return f"Review {index}"
+
+
 def ping_bugs(
     ping_name: str, custom_pings_cache: Optional[Dict[str, pings.Ping]] = None
 ) -> Optional[List[str]]:
@@ -222,6 +248,7 @@ def output_markdown(
             ("ping_docs", ping_docs),
             ("ping_reasons", lambda x: ping_reasons(x, custom_pings_cache)),
             ("ping_data_reviews", lambda x: ping_data_reviews(x, custom_pings_cache)),
+            ("ping_review_title", ping_review_title),
             ("ping_bugs", lambda x: ping_bugs(x, custom_pings_cache)),
             (
                 "ping_include_client_id",

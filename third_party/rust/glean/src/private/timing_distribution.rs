@@ -44,13 +44,11 @@ impl glean_core::traits::TimingDistribution for TimingDistributionMetric {
     fn stop_and_accumulate(&self, id: TimerId) {
         let stop_time = time::precise_time_ns();
         let metric = Arc::clone(&self.0);
-        dispatcher::launch(move || {
-            crate::with_glean(|glean| {
-                metric
-                    .write()
-                    .unwrap()
-                    .set_stop_and_accumulate(glean, id, stop_time)
-            })
+        crate::launch_with_glean(move |glean| {
+            metric
+                .write()
+                .unwrap()
+                .set_stop_and_accumulate(glean, id, stop_time)
         });
     }
 

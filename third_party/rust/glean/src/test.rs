@@ -4,7 +4,6 @@
 
 use crate::private::PingType;
 use crate::private::{BooleanMetric, CounterMetric, EventMetric};
-use std::path::PathBuf;
 
 use super::*;
 use crate::common_test::{lock_test, new_glean, GLOBAL_APPLICATION_ID};
@@ -35,7 +34,7 @@ fn send_a_ping() {
 
     // Create a custom configuration to use a fake uploader.
     let dir = tempfile::tempdir().unwrap();
-    let tmpname = dir.path().display().to_string();
+    let tmpname = dir.path().to_path_buf();
 
     let cfg = Configuration {
         data_path: tmpname,
@@ -144,7 +143,7 @@ fn test_experiments_recording_before_glean_inits() {
     set_experiment_inactive("experiment_preinit_disabled".to_string());
 
     let dir = tempfile::tempdir().unwrap();
-    let tmpname = dir.path().display().to_string();
+    let tmpname = dir.path().to_path_buf();
 
     test_reset_glean(
         Configuration {
@@ -205,7 +204,7 @@ fn sending_of_foreground_background_pings() {
 
     // Create a custom configuration to use a fake uploader.
     let dir = tempfile::tempdir().unwrap();
-    let tmpname = dir.path().display().to_string();
+    let tmpname = dir.path().to_path_buf();
 
     let cfg = Configuration {
         data_path: tmpname,
@@ -286,7 +285,7 @@ fn sending_of_startup_baseline_ping() {
     }
 
     // Create a custom configuration to use a fake uploader.
-    let tmpname = data_dir.path().display().to_string();
+    let tmpname = data_dir.path().to_path_buf();
 
     // Now reset Glean: it should still send a baseline ping with reason
     // dirty_startup when starting, because of the dirty bit being set.
@@ -346,7 +345,7 @@ fn no_dirty_baseline_on_clean_shutdowns() {
     }
 
     // Create a custom configuration to use a fake uploader.
-    let tmpname = data_dir.path().display().to_string();
+    let tmpname = data_dir.path().to_path_buf();
 
     // Now reset Glean: it should not send a baseline ping, because
     // we cleared the dirty bit.
@@ -376,14 +375,14 @@ fn initialize_must_not_crash_if_data_dir_is_messed_up() {
     let _lock = lock_test();
 
     let dir = tempfile::tempdir().unwrap();
-    let tmpdirname = dir.path().display().to_string();
+    let tmpdirname = dir.path();
     // Create a file in the temporary dir and use that as the
     // name of the Glean data dir.
-    let file_path = PathBuf::from(tmpdirname).join("notadir");
+    let file_path = tmpdirname.to_path_buf().join("notadir");
     std::fs::write(file_path.clone(), "test").expect("The test Glean dir file must be created");
 
     let cfg = Configuration {
-        data_path: file_path.to_string_lossy().to_string(),
+        data_path: file_path,
         application_id: GLOBAL_APPLICATION_ID.into(),
         upload_enabled: true,
         max_events: None,
@@ -442,7 +441,7 @@ fn initializing_twice_is_a_noop() {
     let _lock = lock_test();
 
     let dir = tempfile::tempdir().unwrap();
-    let tmpname = dir.path().display().to_string();
+    let tmpname = dir.path().to_path_buf();
 
     test_reset_glean(
         Configuration {
@@ -495,7 +494,7 @@ fn the_app_channel_must_be_correctly_set_if_requested() {
     let _lock = lock_test();
 
     let dir = tempfile::tempdir().unwrap();
-    let tmpname = dir.path().display().to_string();
+    let tmpname = dir.path().to_path_buf();
 
     // No appChannel must be set if nothing was provided through the config
     // options.
@@ -612,7 +611,7 @@ fn sending_deletion_ping_if_disabled_outside_of_run() {
 
     // Create a custom configuration to use a fake uploader.
     let dir = tempfile::tempdir().unwrap();
-    let tmpname = dir.path().display().to_string();
+    let tmpname = dir.path().to_path_buf();
 
     let cfg = Configuration {
         data_path: tmpname.clone(),
@@ -677,7 +676,7 @@ fn no_sending_of_deletion_ping_if_unchanged_outside_of_run() {
 
     // Create a custom configuration to use a fake uploader.
     let dir = tempfile::tempdir().unwrap();
-    let tmpname = dir.path().display().to_string();
+    let tmpname = dir.path().to_path_buf();
 
     let cfg = Configuration {
         data_path: tmpname.clone(),
@@ -760,7 +759,7 @@ fn setting_debug_view_tag_before_initialization_should_not_crash() {
 
     // Create a custom configuration to use a fake uploader.
     let dir = tempfile::tempdir().unwrap();
-    let tmpname = dir.path().display().to_string();
+    let tmpname = dir.path().to_path_buf();
 
     let cfg = Configuration {
         data_path: tmpname,
@@ -819,7 +818,7 @@ fn setting_source_tags_before_initialization_should_not_crash() {
 
     // Create a custom configuration to use a fake uploader.
     let dir = tempfile::tempdir().unwrap();
-    let tmpname = dir.path().display().to_string();
+    let tmpname = dir.path().to_path_buf();
 
     let cfg = Configuration {
         data_path: tmpname,
@@ -885,7 +884,7 @@ fn flipping_upload_enabled_respects_order_of_events() {
 
     // Create a custom configuration to use a fake uploader.
     let dir = tempfile::tempdir().unwrap();
-    let tmpname = dir.path().display().to_string();
+    let tmpname = dir.path().to_path_buf();
 
     let cfg = Configuration {
         data_path: tmpname,
@@ -955,7 +954,7 @@ fn registering_pings_before_init_must_work() {
 
     // Create a custom configuration to use a fake uploader.
     let dir = tempfile::tempdir().unwrap();
-    let tmpname = dir.path().display().to_string();
+    let tmpname = dir.path().to_path_buf();
 
     let cfg = Configuration {
         data_path: tmpname,
@@ -977,4 +976,74 @@ fn registering_pings_before_init_must_work() {
     // Wait for the ping to arrive.
     let url = r.recv().unwrap();
     assert!(url.contains("pre-register"));
+}
+
+#[test]
+fn test_a_ping_before_submission() {
+    let _lock = lock_test();
+
+    // Define a fake uploader that reports back the submission headers
+    // using a crossbeam channel.
+    let (s, r) = crossbeam_channel::bounded::<String>(1);
+
+    #[derive(Debug)]
+    pub struct FakeUploader {
+        sender: crossbeam_channel::Sender<String>,
+    }
+    impl net::PingUploader for FakeUploader {
+        fn upload(
+            &self,
+            url: String,
+            _body: Vec<u8>,
+            _headers: Vec<(String, String)>,
+        ) -> net::UploadResult {
+            self.sender.send(url).unwrap();
+            net::UploadResult::HttpStatus(200)
+        }
+    }
+
+    // Create a custom configuration to use a fake uploader.
+    let dir = tempfile::tempdir().unwrap();
+    let tmpname = dir.path().to_path_buf();
+
+    let cfg = Configuration {
+        data_path: tmpname,
+        application_id: GLOBAL_APPLICATION_ID.into(),
+        upload_enabled: true,
+        max_events: None,
+        delay_ping_lifetime_io: false,
+        channel: Some("testing".into()),
+        server_endpoint: Some("invalid-test-host".into()),
+        uploader: Some(Box::new(FakeUploader { sender: s })),
+    };
+
+    let _t = new_glean(Some(cfg), true);
+
+    // Create a custom ping and register it.
+    let sample_ping = PingType::new("custom1", true, true, vec![]);
+
+    let metric = CounterMetric::new(CommonMetricData {
+        name: "counter_metric".into(),
+        category: "test".into(),
+        send_in_pings: vec!["custom1".into()],
+        lifetime: Lifetime::Application,
+        disabled: false,
+        dynamic_label: None,
+    });
+
+    crate::block_on_dispatcher();
+
+    metric.add(1);
+
+    sample_ping.test_before_next_submit(move |reason| {
+        assert_eq!(None, reason);
+        assert_eq!(1, metric.test_get_value(None).unwrap());
+    });
+
+    // Submit a baseline ping.
+    sample_ping.submit(None);
+
+    // Wait for the ping to arrive.
+    let url = r.recv().unwrap();
+    assert!(url.contains("custom1"));
 }

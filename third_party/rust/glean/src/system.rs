@@ -53,3 +53,37 @@ pub const ARCH: &str = "x86_64";
 )))]
 /// `target_arch` when building this crate: unknown!
 pub const ARCH: &str = "unknown";
+
+#[cfg(any(target_os = "macos", target_os = "windows"))]
+/// Returns Darwin kernel version for MacOS, or NT Kernel version for Windows
+pub fn get_os_version() -> String {
+    whatsys::kernel_version().unwrap_or_else(|| "unknown".to_owned())
+}
+
+#[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+/// Returns "unknown" for platforms other than Linux, MacOS or Windows
+pub fn get_os_version() -> String {
+    "unknown".to_owned()
+}
+
+#[cfg(target_os = "linux")]
+/// Returns Linux kernel version, in the format of <Major>.<Minor> e.g. 5.8
+pub fn get_os_version() -> String {
+    parse_linux_os_string(whatsys::kernel_version().unwrap_or_else(|| "unknown".to_owned()))
+}
+
+#[cfg(target_os = "linux")]
+fn parse_linux_os_string(os_str: String) -> String {
+    os_str.split('.').take(2).collect::<Vec<&str>>().join(".")
+}
+
+#[test]
+#[cfg(target_os = "linux")]
+fn parse_fixed_linux_os_string() {
+    let alpine_os_string = "4.12.0-rc6-g48ec1f0-dirty".to_owned();
+    assert_eq!(parse_linux_os_string(alpine_os_string), "4.12");
+    let centos_os_string = "3.10.0-514.16.1.el7.x86_64".to_owned();
+    assert_eq!(parse_linux_os_string(centos_os_string), "3.10");
+    let ubuntu_os_string = "5.8.0-44-generic".to_owned();
+    assert_eq!(parse_linux_os_string(ubuntu_os_string), "5.8");
+}

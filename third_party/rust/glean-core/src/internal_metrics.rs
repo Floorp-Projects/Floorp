@@ -17,6 +17,7 @@ pub struct CoreMetrics {
     /// **Note**: Not a _core_ metric, but an error metric,
     /// placed here for the lack of a more suitable part in the Glean struct.
     pub io_errors: CounterMetric,
+    pub pings_submitted: LabeledMetric<CounterMetric>,
 }
 
 impl CoreMetrics {
@@ -72,6 +73,18 @@ impl CoreMetrics {
                 disabled: false,
                 dynamic_label: None,
             }),
+
+            pings_submitted: LabeledMetric::new(
+                CounterMetric::new(CommonMetricData {
+                    name: "pings_submitted".into(),
+                    category: "glean.validation".into(),
+                    send_in_pings: vec!["metrics".into(), "baseline".into()],
+                    lifetime: Lifetime::Ping,
+                    disabled: false,
+                    dynamic_label: None,
+                }),
+                None,
+            ),
         }
     }
 }
