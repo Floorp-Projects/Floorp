@@ -84,9 +84,8 @@ nsresult nsMenuItemIconX::SetupIcon() {
     }
   }
 
-  nsCOMPtr<nsIURI> iconURI;
-  nsresult rv = GetIconURI(getter_AddRefs(iconURI));
-  if (NS_FAILED(rv)) {
+  nsCOMPtr<nsIURI> iconURI = GetIconURI();
+  if (!iconURI) {
     // There is no icon for this menu item. An icon might have been set
     // earlier.  Clear it.
     mNativeMenuItem.image = nil;
@@ -103,7 +102,7 @@ nsresult nsMenuItemIconX::SetupIcon() {
     mNativeMenuItem.image = [MOZIconHelper placeholderIconWithSize:iconSize];
   }
 
-  rv = mIconLoader->LoadIcon(iconURI, mContent);
+  nsresult rv = mIconLoader->LoadIcon(iconURI, mContent);
   if (NS_FAILED(rv)) {
     // There is no icon for this menu item, as an error occurred while loading it.
     // An icon might have been set earlier or the place holder icon may have
@@ -118,68 +117,61 @@ nsresult nsMenuItemIconX::SetupIcon() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-nsresult nsMenuItemIconX::GetIconURI(nsIURI** aIconURI) {
+already_AddRefed<nsIURI> nsMenuItemIconX::GetIconURI() {
   // First, look at the content node's "image" attribute.
   nsAutoString imageURIString;
   bool hasImageAttr =
       mContent->IsElement() &&
       mContent->AsElement()->GetAttr(kNameSpaceID_None, nsGkAtoms::image, imageURIString);
 
-  nsresult rv;
-  RefPtr<ComputedStyle> sc;
-  nsCOMPtr<nsIURI> iconURI;
-  if (!hasImageAttr) {
-    // If the content node has no "image" attribute, get the
-    // "list-style-image" property from CSS.
-    RefPtr<mozilla::dom::Document> document = mContent->GetComposedDoc();
-    if (!document || !mContent->IsElement()) {
-      return NS_ERROR_FAILURE;
-    }
-
-    sc = nsComputedDOMStyle::GetComputedStyle(mContent->AsElement(), nullptr);
-    if (!sc) {
-      return NS_ERROR_FAILURE;
-    }
-
-    iconURI = sc->StyleList()->GetListStyleImageURI();
-    if (!iconURI) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
+  if (hasImageAttr) {
+    // Use the URL from the image attribute.
     // If this menu item shouldn't have an icon, the string will be empty,
     // and NS_NewURI will fail.
-    rv = NS_NewURI(getter_AddRefs(iconURI), imageURIString);
+    RefPtr<nsIURI> iconURI;
+    nsresult rv = NS_NewURI(getter_AddRefs(iconURI), imageURIString);
     if (NS_FAILED(rv)) {
-      return rv;
+      return nullptr;
     }
+    mImageRegionRect.SetEmpty();
+    return iconURI.forget();
   }
 
-  // Empty the mImageRegionRect initially as the image region CSS could
-  // have been changed and now have an error or have been removed since the
-  // last GetIconURI call.
-  mImageRegionRect.SetEmpty();
-
-  iconURI.forget(aIconURI);
-
-  if (!hasImageAttr) {
-    // Check if the icon has a specified image region so that it can be
-    // cropped appropriately before being displayed.
-    const nsRect r = sc->StyleList()->GetImageRegion();
-
-    // Return NS_ERROR_FAILURE if the image region is invalid so the image
-    // is not drawn, and behavior is similar to XUL menus.
-    if (r.X() < 0 || r.Y() < 0 || r.Width() < 0 || r.Height() < 0) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // 'auto' is represented by a [0, 0, 0, 0] rect. Only set mImageRegionRect
-    // if we have some other value.
-    if (!r.IsEmpty()) {
-      mImageRegionRect = r.ToNearestPixels(mozilla::AppUnitsPerCSSPixel());
-    }
+  // If the content node has no "image" attribute, get the
+  // "list-style-image" property from CSS.
+  RefPtr<mozilla::dom::Document> document = mContent->GetComposedDoc();
+  if (!document || !mContent->IsElement()) {
+    return nullptr;
   }
 
-  return NS_OK;
+  RefPtr<ComputedStyle> sc = nsComputedDOMStyle::GetComputedStyle(mContent->AsElement(), nullptr);
+  if (!sc) {
+    return nullptr;
+  }
+
+  RefPtr<nsIURI> iconURI = sc->StyleList()->GetListStyleImageURI();
+  if (!iconURI) {
+    return nullptr;
+  }
+
+  // Check if the icon has a specified image region so that it can be
+  // cropped appropriately before being displayed.
+  const nsRect r = sc->StyleList()->GetImageRegion();
+
+  // Return nullptr if the image region is invalid so the image
+  // is not drawn, and behavior is similar to XUL menus.
+  if (r.X() < 0 || r.Y() < 0 || r.Width() < 0 || r.Height() < 0) {
+    return nullptr;
+  }
+
+  // 'auto' is represented by a [0, 0, 0, 0] rect. Only set mImageRegionRect
+  // if we have some other value.
+  if (r.IsEmpty()) {
+    mImageRegionRect.SetEmpty();
+  } else {
+    mImageRegionRect = r.ToNearestPixels(mozilla::AppUnitsPerCSSPixel());
+  }
+  return iconURI.forget();
 }
 
 //
