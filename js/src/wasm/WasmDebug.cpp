@@ -290,8 +290,10 @@ void DebugState::toggleDebugTrap(uint32_t offset, bool enabled) {
       i++;
     }
     if (i >= farJumpOffsets.length() ||
-        (i > 0 && offset - farJumpOffsets[i - 1] < farJumpOffsets[i] - offset))
+        (i > 0 &&
+         offset - farJumpOffsets[i - 1] < farJumpOffsets[i] - offset)) {
       i--;
+    }
     uint8_t* farJump = code_->segment(Tier::Debug).base() + farJumpOffsets[i];
     MacroAssembler::patchNopToCall(trap, farJump);
   } else {

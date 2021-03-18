@@ -748,8 +748,9 @@ bool LazyStubTier::createMany(const Uint32Vector& funcExportIndices,
   size_t interpRangeIndex;
   uint8_t* codePtr = nullptr;
   if (!segment->addStubs(codeLength, funcExportIndices, funcExports, codeRanges,
-                         &codePtr, &interpRangeIndex))
+                         &codePtr, &interpRangeIndex)) {
     return false;
+  }
 
   masm.executableCopy(codePtr);
   PatchDebugSymbolicAccesses(codePtr, masm);
@@ -1324,8 +1325,9 @@ const CallSite* Code::lookupCallSite(void* returnAddress) const {
 
     size_t match;
     if (BinarySearch(CallSiteRetAddrOffset(metadata(t).callSites), lowerBound,
-                     upperBound, target, &match))
+                     upperBound, target, &match)) {
       return &metadata(t).callSites[match];
+    }
   }
 
   return nullptr;
