@@ -8690,7 +8690,6 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
       targetContext = newBC;
     }
   }
-
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(targetContext, rv);
 
@@ -8710,6 +8709,27 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
   // No forced download
   aLoadState->SetFileName(VoidString());
   return targetContext->InternalLoad(aLoadState);
+}
+
+static nsAutoCString RefMaybeNull(nsIURI* aURI) {
+  nsAutoCString result;
+  if (NS_FAILED(aURI->GetRef(result))) {
+    result.SetIsVoid(true);
+  }
+  return result;
+}
+
+uint32_t nsDocShell::GetSameDocumentNavigationFlags(nsIURI* aNewURI) {
+  uint32_t flags = LOCATION_CHANGE_SAME_DOCUMENT;
+
+  bool equal = false;
+  if (mCurrentURI &&
+      NS_SUCCEEDED(mCurrentURI->EqualsExceptRef(aNewURI, &equal)) && equal &&
+      RefMaybeNull(mCurrentURI) != RefMaybeNull(aNewURI)) {
+    flags |= LOCATION_CHANGE_HASHCHANGE;
+  }
+
+  return flags;
 }
 
 bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
@@ -8913,6 +8933,10 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
     newURIPartitionedPrincipalToInherit = doc->PartitionedPrincipal();
     newCsp = doc->GetCsp();
   }
+
+  uint32_t locationChangeFlags =
+      GetSameDocumentNavigationFlags(aLoadState->URI());
+
   // Pass true for aCloneSHChildren, since we're not
   // changing documents here, so all of our subframes are
   // still relevant to the new session history entry.
@@ -9100,8 +9124,7 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   }
 
   if (locationChangeNeeded) {
-    FireOnLocationChange(this, nullptr, aLoadState->URI(),
-                         LOCATION_CHANGE_SAME_DOCUMENT);
+    FireOnLocationChange(this, nullptr, aLoadState->URI(), locationChangeFlags);
   }
 
   /* Restore the original LSHE if we were loading something
@@ -11492,7 +11515,8 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
   // can't load into a docshell that is being destroyed.
   if (!aEqualURIs && !mIsBeingDestroyed) {
     aDocument->SetDocumentURI(aNewURI);
-    SetCurrentURI(aNewURI, nullptr, true, LOCATION_CHANGE_SAME_DOCUMENT);
+    SetCurrentURI(aNewURI, nullptr, true,
+                  GetSameDocumentNavigationFlags(aNewURI));
 
     AddURIVisit(aNewURI, aCurrentURI, 0);
 
