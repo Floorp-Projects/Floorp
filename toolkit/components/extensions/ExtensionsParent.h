@@ -9,6 +9,8 @@
 #include "mozilla/extensions/PExtensionsParent.h"
 #include "nsISupportsImpl.h"
 
+class extIWebNavigation;
+
 namespace mozilla {
 namespace extensions {
 
@@ -16,7 +18,7 @@ class ExtensionsParent final : public PExtensionsParent {
  public:
   NS_INLINE_DECL_REFCOUNTING(ExtensionsParent, final)
 
-  ExtensionsParent() = default;
+  ExtensionsParent();
 
   ipc::IPCResult RecvDocumentChange(MaybeDiscardedBrowsingContext&& aBC,
                                     FrameTransitionData&& aTransitionData,
@@ -40,7 +42,11 @@ class ExtensionsParent final : public PExtensionsParent {
                                       nsIURI* aDocumentURI);
 
  private:
-  ~ExtensionsParent() = default;
+  ~ExtensionsParent();
+
+  extIWebNavigation* WebNavigation();
+
+  nsCOMPtr<extIWebNavigation> mWebNavigation;
 
  protected:
   void ActorDestroy(ActorDestroyReason aWhy) override;
