@@ -24,7 +24,7 @@ sw_compositor = ["swgl"]
 
 [build-dependencies]
 build-parallel = "0.1.2"
-glslopt = "0.1.8"
+glslopt = "0.1.9"
 webrender_build = { version = "0.0.1", path = "../webrender_build" }
 
 [dependencies]
