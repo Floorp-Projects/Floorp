@@ -343,4 +343,11 @@ void nsMenuItemX::ObserveContentInserted(dom::Document* aDocument, nsIContent* a
   }
 }
 
-void nsMenuItemX::SetupIcon() { mIcon->SetupIcon(); }
+void nsMenuItemX::SetupIcon() {
+  if (mType != eRegularMenuItemType) {
+    // Don't support icons on checkbox and radio menuitems, for consistency with Windows & Linux.
+    return;
+  }
+
+  mIcon->SetupIcon();
+}
