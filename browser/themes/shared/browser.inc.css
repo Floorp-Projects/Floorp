@@ -838,11 +838,6 @@ menupopup::part(drop-indicator) {
   background-color: rgb(0,62,170);
 }
 
-.webRTC-selectDevice-label {
-  margin-top: 6px;
-  font-weight: 600;
-}
-
 .webRTC-selectDevice-selector-container {
   display: flex;
   align-items: center;
@@ -853,6 +848,11 @@ menupopup::part(drop-indicator) {
 }
 
 @supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
+.webRTC-selectDevice-label {
+  margin-top: 6px;
+  font-weight: 600;
+}
+
 #webRTC-selectCamera-icon,
 #webRTC-selectMicrophone-icon {
   display: none;
@@ -860,6 +860,18 @@ menupopup::part(drop-indicator) {
 } /** END not Proton **/
 
 @supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
+popupnotificationcontent {
+  margin-block-start: 8px;
+}
+
+.popup-notification-checkbox {
+  margin-block: 8px;
+}
+
+.popup-notification-body-container {
+  padding-block-end: 0;
+}
+
 #webRTC-selectCamera-label,
 #webRTC-selectMicrophone-label {
   display: none;
@@ -868,6 +880,7 @@ menupopup::part(drop-indicator) {
 .webRTC-selectDevice-icon {
   -moz-context-properties: fill;
   fill: currentColor;
+  margin-inline-end: 6px;
 }
 
 #webRTC-selectCamera-icon {
@@ -877,6 +890,13 @@ menupopup::part(drop-indicator) {
 #webRTC-selectMicrophone-icon {
   list-style-image: url("chrome://browser/skin/notification-icons/microphone.svg");
 }
+
+.popup-notification-body description,
+.popup-notification-body label,
+.popup-notification-body checkbox {
+  margin-inline-start: 0;
+}
+
 } /** END Proton **/
 
 #tab-notification-deck {
