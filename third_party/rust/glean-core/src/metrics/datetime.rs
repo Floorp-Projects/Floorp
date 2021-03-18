@@ -159,7 +159,7 @@ impl DatetimeMetric {
     ///
     /// The stored value or `None` if nothing stored.
     pub fn test_get_value(&self, glean: &Glean, storage_name: &str) -> Option<Datetime> {
-        match StorageManager.snapshot_metric(
+        match StorageManager.snapshot_metric_for_test(
             glean.storage(),
             storage_name,
             &self.meta.identifier(glean),
@@ -211,7 +211,7 @@ impl DatetimeMetric {
     ///
     /// This doesn't clear the stored value.
     pub fn test_get_value_as_string(&self, glean: &Glean, storage_name: &str) -> Option<String> {
-        match StorageManager.snapshot_metric(
+        match StorageManager.snapshot_metric_for_test(
             glean.storage(),
             storage_name,
             &self.meta.identifier(glean),

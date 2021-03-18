@@ -38,13 +38,11 @@ impl glean_core::traits::Timespan for TimespanMetric {
         let start_time = time::precise_time_ns();
 
         let metric = Arc::clone(&self.0);
-        dispatcher::launch(move || {
-            crate::with_glean(|glean| {
-                let mut lock = metric
-                    .write()
-                    .expect("Lock poisoned for timespan metric on start.");
-                lock.set_start(glean, start_time)
-            })
+        crate::launch_with_glean(move |glean| {
+            let mut lock = metric
+                .write()
+                .expect("Lock poisoned for timespan metric on start.");
+            lock.set_start(glean, start_time)
         });
     }
 
@@ -52,13 +50,11 @@ impl glean_core::traits::Timespan for TimespanMetric {
         let stop_time = time::precise_time_ns();
 
         let metric = Arc::clone(&self.0);
-        dispatcher::launch(move || {
-            crate::with_glean(|glean| {
-                let mut lock = metric
-                    .write()
-                    .expect("Lock poisoned for timespan metric on stop.");
-                lock.set_stop(glean, stop_time)
-            })
+        crate::launch_with_glean(move |glean| {
+            let mut lock = metric
+                .write()
+                .expect("Lock poisoned for timespan metric on stop.");
+            lock.set_stop(glean, stop_time)
         });
     }
 

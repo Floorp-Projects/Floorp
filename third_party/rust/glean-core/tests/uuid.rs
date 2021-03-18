@@ -26,14 +26,16 @@ fn uuid_is_generated_and_stored() {
     let snapshot = glean.snapshot("core", false);
     assert!(
         snapshot.contains(r#""local.uuid": ""#),
-        format!("Snapshot 1: {}", snapshot)
+        "Snapshot 1: {}",
+        snapshot
     );
 
     uuid.generate_and_set(&glean);
     let snapshot = glean.snapshot("core", false);
     assert!(
         snapshot.contains(r#""local.uuid": ""#),
-        format!("Snapshot 2: {}", snapshot)
+        "Snapshot 2: {}",
+        snapshot
     );
 }
 

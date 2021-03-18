@@ -221,7 +221,7 @@ impl ExperimentMetric {
     ///
     /// This doesn't clear the stored value.
     pub fn test_get_value_as_json_string(&self, glean: &Glean) -> Option<String> {
-        match StorageManager.snapshot_metric(
+        match StorageManager.snapshot_metric_for_test(
             glean.storage(),
             INTERNAL_STORAGE,
             &self.meta.identifier(glean),

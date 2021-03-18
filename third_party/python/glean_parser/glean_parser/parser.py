@@ -25,10 +25,8 @@ from . import util
 ROOT_DIR = Path(__file__).parent
 SCHEMAS_DIR = ROOT_DIR / "schemas"
 
-METRICS_ID = "moz://mozilla.org/schemas/glean/metrics/1-0-0"
-PINGS_ID = "moz://mozilla.org/schemas/glean/pings/1-0-0"
-
-FILE_TYPES = {METRICS_ID: "metrics", PINGS_ID: "pings"}
+METRICS_ID = "moz://mozilla.org/schemas/glean/metrics/2-0-0"
+PINGS_ID = "moz://mozilla.org/schemas/glean/pings/2-0-0"
 
 
 def _update_validator(validator):
@@ -62,7 +60,7 @@ def _load_file(
     `parser_config["allow_missing_files"]` is `True`.
     """
     try:
-        content = util.load_yaml_or_json(filepath, ordered_dict=True)
+        content = util.load_yaml_or_json(filepath)
     except FileNotFoundError:
         if not parser_config.get("allow_missing_files", False):
             raise
@@ -86,7 +84,14 @@ def _load_file(
     if not isinstance(schema_key, str):
         raise TypeError(f"Invalid schema key {schema_key}")
 
-    filetype = FILE_TYPES.get(schema_key)
+    filetype: Optional[str] = None
+    try:
+        filetype = schema_key.split("/")[-2]
+    except IndexError:
+        filetype = None
+
+    if filetype not in ("metrics", "pings"):
+        filetype = None
 
     for error in validate(content, filepath):
         content = {}
@@ -235,6 +240,9 @@ def _instantiate_metrics(
             if metric_obj is not None:
                 metric_obj.no_lint = list(set(metric_obj.no_lint + global_no_lint))
 
+            if isinstance(filepath, Path):
+                metric_obj.defined_in["filepath"] = str(filepath)
+
             already_seen = sources.get((category_key, metric_key))
             if already_seen is not None:
                 # We've seen this metric name already
@@ -262,8 +270,13 @@ def _instantiate_pings(
     Load a list of pings.yaml files, convert the JSON information into Ping
     objects.
     """
+    global_no_lint = content.get("no_lint", [])
+    assert isinstance(global_no_lint, list)
+
     for ping_key, ping_val in content.items():
         if ping_key.startswith("$"):
+            continue
+        if ping_key == "no_lint":
             continue
         if not config.get("allow_reserved"):
             if ping_key in RESERVED_PING_NAMES:
@@ -277,10 +290,20 @@ def _instantiate_pings(
             raise TypeError(f"Invalid content for ping {ping_key}")
         ping_val["name"] = ping_key
         try:
-            ping_obj = Ping(**ping_val)
+            ping_obj = Ping(
+                defined_in=getattr(ping_val, "defined_in", None),
+                _validated=True,
+                **ping_val,
+            )
         except Exception as e:
             yield util.format_error(filepath, f"On instance '{ping_key}'", str(e))
             continue
+
+        if ping_obj is not None:
+            ping_obj.no_lint = list(set(ping_obj.no_lint + global_no_lint))
+
+        if isinstance(filepath, Path) and ping_obj.defined_in is not None:
+            ping_obj.defined_in["filepath"] = str(filepath)
 
         already_seen = sources.get(ping_key)
         if already_seen is not None:

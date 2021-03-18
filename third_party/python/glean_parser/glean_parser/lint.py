@@ -16,6 +16,7 @@ from typing import (
     Iterable,
     Optional,
     Tuple,
+    Union,
 )  # noqa
 
 
@@ -198,7 +199,7 @@ def check_category_generic(
 
 
 def check_bug_number(
-    metric: metrics.Metric, parser_config: Dict[str, Any]
+    metric: Union[metrics.Metric, pings.Ping], parser_config: Dict[str, Any]
 ) -> LintGenerator:
     number_bugs = [str(bug) for bug in metric.bugs if isinstance(bug, int)]
 
@@ -206,7 +207,8 @@ def check_bug_number(
         yield (
             f"For bugs {', '.join(number_bugs)}: "
             "Bug numbers are deprecated and should be changed to full URLs. "
-            "For example, use 'http://bugzilla.mozilla.org/12345' instead of '12345'."
+            f"For example, use 'http://bugzilla.mozilla.org/{number_bugs[0]}' "
+            f"instead of '{number_bugs[0]}'."
         )
 
 
@@ -272,7 +274,7 @@ CATEGORY_CHECKS: Dict[
 
 # The checks that operate on individual metrics:
 #     {NAME: (function, is_error)}
-INDIVIDUAL_CHECKS: Dict[
+METRIC_CHECKS: Dict[
     str, Tuple[Callable[[metrics.Metric, dict], LintGenerator], CheckType]
 ] = {
     "UNIT_IN_NAME": (check_unit_in_name, CheckType.error),
@@ -282,6 +284,15 @@ INDIVIDUAL_CHECKS: Dict[
     "EXPIRATION_DATE_TOO_FAR": (check_expired_date, CheckType.warning),
     "USER_LIFETIME_EXPIRATION": (check_user_lifetime_expiration, CheckType.warning),
     "EXPIRED": (check_expired_metric, CheckType.warning),
+}
+
+
+# The checks that operate on individual pings:
+#     {NAME: (function, is_error)}
+PING_CHECKS: Dict[
+    str, Tuple[Callable[[pings.Ping, dict], LintGenerator], CheckType]
+] = {
+    "BUG_NUMBER": (check_bug_number, CheckType.error),
 }
 
 
@@ -297,6 +308,31 @@ class GlinterNit:
             f"{self.check_type.name.upper()}: {self.check_name}: "
             f"{self.name}: {self.msg}"
         )
+
+
+def _lint_pings(
+    category: Dict[str, Union[metrics.Metric, pings.Ping]],
+    parser_config: Dict[str, Any],
+):
+    nits: List[GlinterNit] = []
+
+    for (ping_name, ping) in sorted(list(category.items())):
+        assert isinstance(ping, pings.Ping)
+        for (check_name, (check_func, check_type)) in PING_CHECKS.items():
+            new_nits = list(check_func(ping, parser_config))
+            if len(new_nits):
+                if check_name not in ping.no_lint:
+                    nits.extend(
+                        GlinterNit(
+                            check_name,
+                            ping_name,
+                            msg,
+                            check_type,
+                        )
+                        for msg in new_nits
+                    )
+
+    return nits
 
 
 def lint_metrics(
@@ -317,6 +353,7 @@ def lint_metrics(
     nits: List[GlinterNit] = []
     for (category_name, category) in sorted(list(objs.items())):
         if category_name == "pings":
+            nits.extend(_lint_pings(category, parser_config))
             continue
 
         # Make sure the category has only Metrics, not Pings
@@ -337,7 +374,7 @@ def lint_metrics(
             )
 
         for (_metric_name, metric) in sorted(list(category_metrics.items())):
-            for (check_name, (check_func, check_type)) in INDIVIDUAL_CHECKS.items():
+            for (check_name, (check_func, check_type)) in METRIC_CHECKS.items():
                 new_nits = list(check_func(metric, parser_config))
                 if len(new_nits):
                     if check_name not in metric.no_lint:
@@ -402,7 +439,7 @@ def lint_yaml_files(
     if len(nits):
         print("Sorry, Glean found some glinter nits:", file=file)
         for (path, p) in nits:
-            print(f"{path} ({p.line}:{p.column}) - {p.message}")
+            print(f"{path} ({p.line}:{p.column}) - {p.message}", file=file)
         print("", file=file)
         print("Please fix the above nits to continue.", file=file)
 

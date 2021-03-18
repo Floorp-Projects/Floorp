@@ -2,15 +2,24 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use std::sync::{Arc, Mutex};
+
 use inherent::inherent;
+
+type BoxedCallback = Box<dyn FnOnce(Option<&str>) + Send + 'static>;
 
 /// A ping is a bundle of related metrics, gathered in a payload to be transmitted.
 ///
 /// The ping payload will be encoded in JSON format and contains shared information data.
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct PingType {
     pub(crate) name: String,
     pub(crate) ping_type: glean_core::metrics::PingType,
+
+    /// **Test-only API**
+    ///
+    /// A function to be called right before a ping is submitted.
+    test_callback: Arc<Mutex<Option<BoxedCallback>>>,
 }
 
 impl PingType {
@@ -36,15 +45,40 @@ impl PingType {
             reason_codes,
         );
 
-        let me = Self { name, ping_type };
+        let me = Self {
+            name,
+            ping_type,
+            test_callback: Arc::new(Default::default()),
+        };
         crate::register_ping_type(&me);
         me
+    }
+
+    /// **Test-only API**
+    ///
+    /// Attach a callback to be called right before a new ping is submitted.
+    /// The provided function is called exactly once before submitting a ping.
+    ///
+    /// Note: The callback will be called on any call to submit.
+    /// A ping might not be sent afterwards, e.g. if the ping is otherwise empty (and
+    /// `send_if_empty` is `false`).
+    pub fn test_before_next_submit(&self, cb: impl FnOnce(Option<&str>) + Send + 'static) {
+        let mut test_callback = self.test_callback.lock().unwrap();
+
+        let cb = Box::new(cb);
+        *test_callback = Some(cb);
     }
 }
 
 #[inherent(pub)]
 impl glean_core::traits::Ping for PingType {
     fn submit(&self, reason: Option<&str>) {
+        let mut cb = self.test_callback.lock().unwrap();
+        let cb = cb.take();
+        if let Some(cb) = cb {
+            cb(reason)
+        }
+
         crate::submit_ping(self, reason)
     }
 }
