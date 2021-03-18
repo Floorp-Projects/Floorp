@@ -69,6 +69,7 @@ import org.mozilla.fenix.components.toolbar.ToolbarPosition
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.BrowsersCache
+import org.mozilla.fenix.utils.Settings
 
 private class EventWrapper<T : Enum<T>>(
     private val recorder: ((Map<T, String>?) -> Unit),
@@ -859,11 +860,20 @@ class GleanMetricsService(
 
             // setStartupMetrics is not a fast function. It does not need to be done before we can consider
             // ourselves initialized. So, let's do it, well, later.
-            setStartupMetrics()
+            setStartupMetrics(context.settings())
         }
     }
 
-    internal fun setStartupMetrics() {
+    /**
+     * This function is called before the metrics ping is sent.  Part of this function depends on
+     * shared preferences to be updated so the correct value is sent with the metrics ping.
+     *
+     * The reason we're using shared preferences to track some of these values is due to the
+     * limitations of the metrics ping.  Events are only sent in a metrics ping if the user have made
+     * changes between each ping.  However, in some cases we want current values to be sent even if
+     * the user have not changed anything between pings.
+     */
+    internal fun setStartupMetrics(settings: Settings) {
         setPreferenceMetrics()
         with(Metrics) {
             defaultBrowser.set(browsersCache.all(context).isDefaultBrowser)
@@ -873,46 +883,58 @@ class GleanMetricsService(
 
             mozillaProducts.set(mozillaProductDetector.getInstalledMozillaProducts(context))
 
-            adjustCampaign.set(context.settings().adjustCampaignId)
-            adjustAdGroup.set(context.settings().adjustAdGroup)
-            adjustCreative.set(context.settings().adjustCreative)
-            adjustNetwork.set(context.settings().adjustNetwork)
+            adjustCampaign.set(settings.adjustCampaignId)
+            adjustAdGroup.set(settings.adjustAdGroup)
+            adjustCreative.set(settings.adjustCreative)
+            adjustNetwork.set(settings.adjustNetwork)
 
-            searchWidgetInstalled.set(context.settings().searchWidgetInstalled)
+            searchWidgetInstalled.set(settings.searchWidgetInstalled)
 
-            val openTabsCount = context.settings().openTabsCount
+            val openTabsCount = settings.openTabsCount
             hasOpenTabs.set(openTabsCount > 0)
             if (openTabsCount > 0) {
                 tabsOpenCount.add(openTabsCount)
             }
 
-            val topSitesSize = context.settings().topSitesSize
+            val topSitesSize = settings.topSitesSize
             hasTopSites.set(topSitesSize > 0)
             if (topSitesSize > 0) {
                 topSitesCount.add(topSitesSize)
             }
 
-            val desktopBookmarksSize = context.settings().desktopBookmarksSize
+            val installedAddonSize = settings.installedAddonsCount
+            Addons.hasInstalledAddons.set(installedAddonSize > 0)
+            if (installedAddonSize > 0) {
+                Addons.installedAddons.set(settings.installedAddonsList.split(','))
+            }
+
+            val enabledAddonSize = settings.enabledAddonsCount
+            Addons.hasEnabledAddons.set(enabledAddonSize > 0)
+            if (enabledAddonSize > 0) {
+                Addons.enabledAddons.set(settings.enabledAddonsList.split(','))
+            }
+
+            val desktopBookmarksSize = settings.desktopBookmarksSize
             hasDesktopBookmarks.set(desktopBookmarksSize > 0)
             if (desktopBookmarksSize > 0) {
                 desktopBookmarksCount.add(desktopBookmarksSize)
             }
 
-            val mobileBookmarksSize = context.settings().mobileBookmarksSize
+            val mobileBookmarksSize = settings.mobileBookmarksSize
             hasMobileBookmarks.set(mobileBookmarksSize > 0)
             if (mobileBookmarksSize > 0) {
                 mobileBookmarksCount.add(mobileBookmarksSize)
             }
 
             toolbarPosition.set(
-                when (context.settings().toolbarPosition) {
+                when (settings.toolbarPosition) {
                     ToolbarPosition.BOTTOM -> Event.ToolbarPositionChanged.Position.BOTTOM.name
                     ToolbarPosition.TOP -> Event.ToolbarPositionChanged.Position.TOP.name
                 }
             )
 
-            tabViewSetting.set(context.settings().getTabViewPingString())
-            closeTabSetting.set(context.settings().getTabTimeoutPingString())
+            tabViewSetting.set(settings.getTabViewPingString())
+            closeTabSetting.set(settings.getTabTimeoutPingString())
         }
 
         store.value.waitForSelectedOrDefaultSearchEngine { searchEngine ->

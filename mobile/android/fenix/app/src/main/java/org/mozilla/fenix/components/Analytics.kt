@@ -100,7 +100,8 @@ class Analytics(
                 AdjustMetricsService(context as Application)
             ),
             isDataTelemetryEnabled = { context.settings().isTelemetryEnabled },
-            isMarketingDataTelemetryEnabled = { context.settings().isMarketingTelemetryEnabled }
+            isMarketingDataTelemetryEnabled = { context.settings().isMarketingTelemetryEnabled },
+            context.settings()
         )
     }
 

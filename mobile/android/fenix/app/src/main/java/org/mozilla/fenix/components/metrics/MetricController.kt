@@ -34,9 +34,9 @@ import mozilla.components.support.base.facts.Facts
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.webextensions.facts.WebExtensionFacts
 import org.mozilla.fenix.BuildConfig
-import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.GleanMetrics.PerfAwesomebar
 import org.mozilla.fenix.search.awesomebar.ShortcutsSuggestionProvider
+import org.mozilla.fenix.utils.Settings
 
 interface MetricController {
     fun start(type: MetricServiceType)
@@ -47,13 +47,15 @@ interface MetricController {
         fun create(
             services: List<MetricsService>,
             isDataTelemetryEnabled: () -> Boolean,
-            isMarketingDataTelemetryEnabled: () -> Boolean
+            isMarketingDataTelemetryEnabled: () -> Boolean,
+            settings: Settings
         ): MetricController {
             return if (BuildConfig.TELEMETRY) {
                 ReleaseMetricController(
                     services,
                     isDataTelemetryEnabled,
-                    isMarketingDataTelemetryEnabled
+                    isMarketingDataTelemetryEnabled,
+                    settings
                 )
             } else DebugMetricController()
         }
@@ -83,7 +85,8 @@ internal class DebugMetricController(
 internal class ReleaseMetricController(
     private val services: List<MetricsService>,
     private val isDataTelemetryEnabled: () -> Boolean,
-    private val isMarketingDataTelemetryEnabled: () -> Boolean
+    private val isMarketingDataTelemetryEnabled: () -> Boolean,
+    private val settings: Settings
 ) : MetricController {
     private var initialized = mutableSetOf<MetricServiceType>()
 
@@ -213,16 +216,16 @@ internal class ReleaseMetricController(
         Component.SUPPORT_WEBEXTENSIONS to WebExtensionFacts.Items.WEB_EXTENSIONS_INITIALIZED -> {
             metadata?.get("installed")?.let { installedAddons ->
                 if (installedAddons is List<*>) {
-                    Addons.installedAddons.set(installedAddons.map { it.toString() })
-                    Addons.hasInstalledAddons.set(installedAddons.size > 0)
+                    settings.installedAddonsCount = installedAddons.size
+                    settings.installedAddonsList = installedAddons.joinToString(",")
                     Leanplum.setUserAttributes(mapOf("installed_addons" to installedAddons.size))
                 }
             }
 
             metadata?.get("enabled")?.let { enabledAddons ->
                 if (enabledAddons is List<*>) {
-                    Addons.enabledAddons.set(enabledAddons.map { it.toString() })
-                    Addons.hasEnabledAddons.set(enabledAddons.size > 0)
+                    settings.enabledAddonsCount = enabledAddons.size
+                    settings.enabledAddonsList = enabledAddons.joinToString()
                     Leanplum.setUserAttributes(mapOf("enabled_addons" to enabledAddons.size))
                 }
             }

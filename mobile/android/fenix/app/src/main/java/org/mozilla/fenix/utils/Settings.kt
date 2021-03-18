@@ -937,6 +937,38 @@ class Settings(private val appContext: Context) : PreferencesHolder {
         0
     )
 
+    /**
+     * Storing number of installed add-ons for telemetry purposes
+     */
+    var installedAddonsCount by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_installed_addons_count),
+        0
+    )
+
+    /**
+     * Storing the list of installed add-ons for telemetry purposes
+     */
+    var installedAddonsList by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_installed_addons_list),
+        default = ""
+    )
+
+    /**
+     * Storing number of enabled add-ons for telemetry purposes
+     */
+    var enabledAddonsCount by intPreference(
+        appContext.getPreferenceKey(R.string.pref_key_enabled_addons_count),
+        0
+    )
+
+    /**
+     * Storing the list of enabled add-ons for telemetry purposes
+     */
+    var enabledAddonsList by stringPreference(
+        appContext.getPreferenceKey(R.string.pref_key_enabled_addons_list),
+        default = ""
+    )
+
     private var savedLoginsSortingStrategyString by stringPreference(
         appContext.getPreferenceKey(R.string.pref_key_saved_logins_sorting_strategy),
         default = SavedLoginsSortingStrategyMenu.Item.AlphabeticallySort.strategyString

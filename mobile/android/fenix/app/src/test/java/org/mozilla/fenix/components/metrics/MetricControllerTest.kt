@@ -15,9 +15,11 @@ import mozilla.components.support.base.Component
 import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.log.logger.Logger
+import mozilla.components.support.webextensions.facts.WebExtensionFacts
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
+import org.mozilla.fenix.utils.Settings
 
 class MetricControllerTest {
 
@@ -57,7 +59,8 @@ class MetricControllerTest {
         val controller = ReleaseMetricController(
             services = listOf(dataService1, marketingService1, dataService2, marketingService2),
             isDataTelemetryEnabled = { enabled },
-            isMarketingDataTelemetryEnabled = { enabled }
+            isMarketingDataTelemetryEnabled = { enabled },
+            mockk()
         )
 
         controller.start(MetricServiceType.Data)
@@ -83,7 +86,8 @@ class MetricControllerTest {
         val controller = ReleaseMetricController(
             services = listOf(dataService1),
             isDataTelemetryEnabled = { false },
-            isMarketingDataTelemetryEnabled = { true }
+            isMarketingDataTelemetryEnabled = { true },
+            mockk()
         )
 
         controller.start(MetricServiceType.Data)
@@ -99,7 +103,8 @@ class MetricControllerTest {
         val controller = ReleaseMetricController(
             services = listOf(dataService1),
             isDataTelemetryEnabled = { enabled },
-            isMarketingDataTelemetryEnabled = { true }
+            isMarketingDataTelemetryEnabled = { true },
+            mockk()
         )
 
         controller.start(MetricServiceType.Data)
@@ -119,7 +124,8 @@ class MetricControllerTest {
         val controller = ReleaseMetricController(
             services = listOf(dataService1, marketingService1, dataService2, marketingService2),
             isDataTelemetryEnabled = { enabled },
-            isMarketingDataTelemetryEnabled = { enabled }
+            isMarketingDataTelemetryEnabled = { enabled },
+            mockk()
         )
 
         controller.start(MetricServiceType.Marketing)
@@ -145,7 +151,8 @@ class MetricControllerTest {
         val controller = ReleaseMetricController(
             listOf(dataService1, marketingService1),
             isDataTelemetryEnabled = { true },
-            isMarketingDataTelemetryEnabled = { true }
+            isMarketingDataTelemetryEnabled = { true },
+            mockk()
         )
         every { dataService1.shouldTrack(Event.TabMediaPause) } returns false
         every { marketingService1.shouldTrack(Event.TabMediaPause) } returns true
@@ -161,7 +168,8 @@ class MetricControllerTest {
         val controller = ReleaseMetricController(
             listOf(dataService1, marketingService1),
             isDataTelemetryEnabled = { enabled },
-            isMarketingDataTelemetryEnabled = { true }
+            isMarketingDataTelemetryEnabled = { true },
+            mockk()
         )
         every { dataService1.shouldTrack(Event.TabMediaPause) } returns true
         every { marketingService1.shouldTrack(Event.TabMediaPause) } returns true
@@ -179,7 +187,8 @@ class MetricControllerTest {
         val controller = ReleaseMetricController(
             services = listOf(dataService1),
             isDataTelemetryEnabled = { enabled },
-            isMarketingDataTelemetryEnabled = { enabled }
+            isMarketingDataTelemetryEnabled = { enabled },
+            mockk()
         )
 
         var fact = Fact(
@@ -233,7 +242,8 @@ class MetricControllerTest {
         val controller = ReleaseMetricController(
             listOf(marketingService1),
             isDataTelemetryEnabled = { true },
-            isMarketingDataTelemetryEnabled = { true }
+            isMarketingDataTelemetryEnabled = { true },
+            mockk()
         )
         every { marketingService1.shouldTrack(Event.SyncedTabSuggestionClicked) } returns true
         controller.start(MetricServiceType.Marketing)
@@ -247,7 +257,8 @@ class MetricControllerTest {
         val controller = ReleaseMetricController(
             listOf(marketingService1),
             isDataTelemetryEnabled = { true },
-            isMarketingDataTelemetryEnabled = { true }
+            isMarketingDataTelemetryEnabled = { true },
+            mockk()
         )
         every { marketingService1.shouldTrack(Event.BookmarkSuggestionClicked) } returns true
         every { marketingService1.shouldTrack(Event.ClipboardSuggestionClicked) } returns true
@@ -281,7 +292,8 @@ class MetricControllerTest {
         val controller = ReleaseMetricController(
             listOf(marketingService1),
             isDataTelemetryEnabled = { true },
-            isMarketingDataTelemetryEnabled = { true }
+            isMarketingDataTelemetryEnabled = { true },
+            mockk()
         )
         every { marketingService1.shouldTrack(Event.AddBookmark) } returns true
         every { marketingService1.shouldTrack(Event.RemoveBookmark) } returns true
@@ -336,7 +348,8 @@ class MetricControllerTest {
         val controller = ReleaseMetricController(
             listOf(marketingService1),
             isDataTelemetryEnabled = { true },
-            isMarketingDataTelemetryEnabled = { true }
+            isMarketingDataTelemetryEnabled = { true },
+            mockk()
         )
         every { marketingService1.shouldTrack(Event.HistoryOpenedInNewTab) } returns true
         every { marketingService1.shouldTrack(Event.HistoryOpenedInNewTabs) } returns true
@@ -354,5 +367,36 @@ class MetricControllerTest {
         verify { marketingService1.track(Event.HistoryOpenedInNewTabs) }
         verify { marketingService1.track(Event.HistoryOpenedInPrivateTab) }
         verify { marketingService1.track(Event.HistoryOpenedInPrivateTabs) }
+    }
+
+    @Test
+    fun `web extension fact should set value in SharedPreference`() {
+        val enabled = true
+        val settings: Settings = mockk(relaxed = true)
+        val controller = ReleaseMetricController(
+            services = listOf(dataService1),
+            isDataTelemetryEnabled = { enabled },
+            isMarketingDataTelemetryEnabled = { enabled },
+            settings
+        )
+        val fact = Fact(
+            Component.SUPPORT_WEBEXTENSIONS,
+            Action.INTERACTION,
+            WebExtensionFacts.Items.WEB_EXTENSIONS_INITIALIZED,
+            metadata = mapOf(
+                "installed" to listOf("test1"),
+                "enabled" to listOf("test2")
+            )
+        )
+
+        verify(exactly = 0) { settings.installedAddonsCount = any() }
+        verify(exactly = 0) { settings.installedAddonsList = any() }
+        verify(exactly = 0) { settings.enabledAddonsCount = any() }
+        verify(exactly = 0) { settings.enabledAddonsList = any() }
+        controller.factToEvent(fact)
+        verify(exactly = 1) { settings.installedAddonsCount = any() }
+        verify(exactly = 1) { settings.installedAddonsList = any() }
+        verify(exactly = 1) { settings.enabledAddonsCount = any() }
+        verify(exactly = 1) { settings.enabledAddonsList = any() }
     }
 }
