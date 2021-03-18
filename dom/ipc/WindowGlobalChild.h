@@ -170,10 +170,6 @@ class WindowGlobalChild final : public WindowGlobalActor,
   mozilla::ipc::IPCResult RecvSetContainerFeaturePolicy(
       dom::FeaturePolicy* aContainerFeaturePolicy);
 
-  mozilla::ipc::IPCResult RecvRestoreTabContent(
-      dom::SessionStoreRestoreData* aData,
-      RestoreTabContentResolver&& aResolve);
-
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
  private:

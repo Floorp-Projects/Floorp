@@ -376,6 +376,7 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mItemType(aBrowsingContext->IsContent() ? typeContent : typeChrome),
       mPreviousEntryIndex(-1),
       mLoadedEntryIndex(-1),
+      mChildOffset(0),
       mBusyFlags(BUSY_FLAGS_NONE),
       mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
       mLoadType(0),
@@ -1022,7 +1023,7 @@ bool nsDocShell::MaybeHandleSubframeHistory(
         // it wasn't originally for some other frame.
         nsCOMPtr<nsISHEntry> shEntry;
         currentSH->GetChildSHEntryIfHasNoDynamicallyAddedChild(
-            mBrowsingContext->ChildOffset(), getter_AddRefs(shEntry));
+            mChildOffset, getter_AddRefs(shEntry));
         if (shEntry) {
           aLoadState->SetSHEntry(shEntry);
         }
@@ -2989,6 +2990,12 @@ nsDocShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner) {
   return NS_OK;
 }
 
+void nsDocShell::SetChildOffset(int32_t aChildOffset) {
+  mChildOffset = aChildOffset;
+}
+
+int32_t nsDocShell::GetChildOffset() { return mChildOffset; }
+
 NS_IMETHODIMP
 nsDocShell::GetHistoryID(nsID& aID) {
   aID = mBrowsingContext->GetHistoryID();
@@ -3042,11 +3049,24 @@ nsDocShell::AddChild(nsIDocShellTreeItem* aChild) {
   NS_ASSERTION(!mChildList.IsEmpty(),
                "child list must not be empty after a successful add");
 
+  nsCOMPtr<nsIDocShell> childDocShell = do_QueryInterface(aChild);
+  bool dynamic = nsDocShell::Cast(childDocShell)->GetCreatedDynamically();
+  if (!dynamic) {
+    nsCOMPtr<nsISHEntry> currentSH;
+    bool oshe = false;
+    GetCurrentSHEntry(getter_AddRefs(currentSH), &oshe);
+    if (currentSH) {
+      currentSH->HasDynamicallyAddedChild(&dynamic);
+    }
+  }
+  childDocShell->SetChildOffset(dynamic ? -1 : mChildList.Length() - 1);
+
   /* Set the child's global history if the parent has one */
   if (mBrowsingContext->GetUseGlobalHistory()) {
     // childDocShell->SetUseGlobalHistory(true);
     // this should be set through BC inherit
-    MOZ_ASSERT(aChild->GetBrowsingContext()->GetUseGlobalHistory());
+    MOZ_ASSERT(nsDocShell::Cast(childDocShell)
+                   ->mBrowsingContext->GetUseGlobalHistory());
   }
 
   if (aChild->ItemType() != mItemType) {
@@ -5882,7 +5902,6 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
       }
     }
   }
-
   if ((~aStateFlags & (STATE_IS_DOCUMENT | STATE_STOP)) == 0) {
     nsCOMPtr<nsIWebProgress> webProgress =
         do_QueryInterface(GetAsSupports(this));
@@ -6528,12 +6547,6 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
   // during this load handler.
   //
   nsCOMPtr<nsIDocShell> kungFuDeathGrip(this);
-
-  // We'll never need to restore data into an about:blank document, so we can
-  // ignore those here.
-  if (!NS_IsAboutBlank(url)) {
-    MaybeRestoreTabContent();
-  }
 
   // Notify the ContentViewer that the Document has finished loading.  This
   // will cause any OnLoad(...) and PopState(...) handlers to fire.
@@ -11819,8 +11832,7 @@ nsresult nsDocShell::AddToSessionHistory(
       MOZ_ALWAYS_SUCCEEDS(topWc->SetSHEntryHasUserInteraction(false));
     }
     if (!mOSHE || !LOAD_TYPE_HAS_FLAGS(mLoadType, LOAD_FLAGS_REPLACE_HISTORY)) {
-      rv = AddChildSHEntryToParent(entry, mBrowsingContext->ChildOffset(),
-                                   aCloneChildren);
+      rv = AddChildSHEntryToParent(entry, mChildOffset, aCloneChildren);
     }
   }
 
@@ -13274,23 +13286,6 @@ void nsDocShell::NotifyJSRunToCompletionStop() {
     if (timelines && timelines->HasConsumer(this)) {
       timelines->AddMarkerForDocShell(this, "Javascript",
                                       MarkerTracingType::END);
-    }
-  }
-}
-
-void nsDocShell::MaybeRestoreTabContent() {
-  BrowsingContext* bc = mBrowsingContext;
-  if (bc && bc->Top()->GetHasRestoreData()) {
-    if (XRE_IsParentProcess()) {
-      if (WindowGlobalParent* wgp = bc->Canonical()->GetCurrentWindowGlobal()) {
-        bc->Canonical()->RequestRestoreTabContent(wgp);
-      }
-    } else {
-      if (WindowContext* windowContext = bc->GetCurrentWindowContext()) {
-        if (WindowGlobalChild* wgc = windowContext->GetWindowGlobalChild()) {
-          wgc->SendRequestRestoreTabContent();
-        }
-      }
     }
   }
 }
