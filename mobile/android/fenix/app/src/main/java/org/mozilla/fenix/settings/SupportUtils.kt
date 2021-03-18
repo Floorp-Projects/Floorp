@@ -6,6 +6,7 @@ package org.mozilla.fenix.settings
 
 import android.content.Context
 import android.content.Intent
+import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.core.net.toUri
 import mozilla.components.support.ktx.android.content.appVersionName
@@ -94,7 +95,9 @@ object SupportUtils {
 
     fun createCustomTabIntent(context: Context, url: String): Intent = CustomTabsIntent.Builder()
         .setInstantAppsEnabled(false)
-        .setToolbarColor(context.getColorFromAttr(R.attr.foundation))
+        .setDefaultColorSchemeParams(
+            CustomTabColorSchemeParams.Builder().setToolbarColor(context.getColorFromAttr(R.attr.foundation)).build()
+        )
         .build()
         .intent
         .setData(url.toUri())
