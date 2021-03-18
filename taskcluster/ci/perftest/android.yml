@@ -143,7 +143,7 @@ hw-p2-view-gv:
             --android-activity org.mozilla.geckoview_example.GeckoViewActivity
             --android-perf-tuning
             --perfherder-metrics processLaunchToNavStart
-            --android-install-apk gve_nightly_api16
+            --android-install-apk gve_nightly_aarch64
             --hooks testing/performance/hooks_android_view.py
             --perfherder
             --perfherder-app geckoview
