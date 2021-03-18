@@ -6012,7 +6012,7 @@ class BaseCompiler final : public BaseCompilerInterface {
     fr.allocArgArea(adjustment);
   }
 
-  const ABIArg reservePointerArgument(FunctionCall* call) {
+  ABIArg reservePointerArgument(FunctionCall* call) {
     return call->abi.next(MIRType::Pointer);
   }
 
