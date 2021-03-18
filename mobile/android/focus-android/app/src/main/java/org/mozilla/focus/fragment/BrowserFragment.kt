@@ -827,11 +827,9 @@ class BrowserFragment :
 
             R.id.open_in_firefox_focus -> {
                 // Release the session from this view so that it can immediately be rendered by a different view
-                engineView!!.release()
+                sessionFeature.get()?.release()
 
-                // Strip the CustomTabConfig to turn this Session into a regular tab and then select it
-                session.customTabConfig = null
-                requireComponents.sessionManager.select(session)
+                requireComponents.customTabsUseCases.migrate(session.id)
 
                 val intent = Intent(context, MainActivity::class.java)
                 intent.action = Intent.ACTION_MAIN

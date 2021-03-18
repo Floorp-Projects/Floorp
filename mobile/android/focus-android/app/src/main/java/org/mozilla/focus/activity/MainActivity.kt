@@ -12,6 +12,7 @@ import android.view.View
 import androidx.preference.PreferenceManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.lib.crash.Crash
@@ -37,8 +38,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     protected open val isCustomTabMode: Boolean
         get() = false
 
-    protected open val currentSessionForActivity: Session
-        get() = components.sessionManager.selectedSessionOrThrow
+    protected open val currentTabForActivity: SessionState?
+        get() = components.store.state.selectedTab
 
     private val intentProcessor by lazy { IntentProcessor(this, components.sessionManager) }
 
@@ -247,20 +248,20 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     }
 
     protected fun showBrowserScreenForCurrentSession() {
-        val currentSession = currentSessionForActivity
         val fragmentManager = supportFragmentManager
+        val tab = currentTabForActivity ?: return
 
         val fragment = fragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG) as BrowserFragment?
-        if (fragment != null && fragment.session == currentSession) {
+        if (fragment != null && fragment.session.id == tab.id) {
             // There's already a BrowserFragment displaying this session.
             return
         }
 
-        val browserFragment = BrowserFragment.createForSession(currentSession)
+        val browserFragment = BrowserFragment.createForTab(tab.id)
         val isNewSession = previousSessionCount < components.sessionManager.sessions.count() && previousSessionCount > 0
 
-        if ((currentSession.source == SessionState.Source.ACTION_SEND ||
-                currentSession.source == SessionState.Source.HOME_SCREEN) && isNewSession) {
+        if ((tab.source == SessionState.Source.ACTION_SEND ||
+                tab.source == SessionState.Source.HOME_SCREEN) && isNewSession) {
             browserFragment.openedFromExternalLink = true
         }
 
