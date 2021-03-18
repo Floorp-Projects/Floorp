@@ -781,5 +781,10 @@ ClassifierDummyChannel::GetSupportsHTTP3(bool* aSupportsHTTP3) {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+ClassifierDummyChannel::GetHasHTTPSRR(bool*) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 }  // namespace net
 }  // namespace mozilla
