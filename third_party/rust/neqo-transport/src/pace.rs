@@ -37,14 +37,14 @@ pub struct Pacer {
 }
 
 impl Pacer {
-    /// Create a new `Pacer`.  This takes the current time and the
-    /// initial congestion window.
+    /// Create a new `Pacer`.  This takes the current time, the maximum burst size,
+    /// and the packet size.
     ///
-    /// The value of `m` is the maximum capacity.  `m` primes the pacer
+    /// The value of `m` is the maximum capacity in bytes.  `m` primes the pacer
     /// with credit and determines the burst size.  `m` must not exceed
     /// the initial congestion window, but it should probably be lower.
     ///
-    /// The value of `p` is the packet size, which determines the minimum
+    /// The value of `p` is the packet size in bytes, which determines the minimum
     /// credit needed before a packet is sent.  This should be a substantial
     /// fraction of the maximum packet size, if not the packet size.
     pub fn new(now: Instant, m: usize, p: usize) -> Self {

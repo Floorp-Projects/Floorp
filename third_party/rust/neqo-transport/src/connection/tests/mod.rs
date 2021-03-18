@@ -33,6 +33,7 @@ mod handshake;
 mod idle;
 mod keys;
 mod migration;
+mod priority;
 mod recovery;
 mod resumption;
 mod stream;
@@ -96,6 +97,7 @@ pub fn new_client(params: ConnectionParameters) -> Connection {
         addr(),
         addr(),
         params,
+        now(),
     )
     .expect("create a default client")
 }
@@ -144,7 +146,12 @@ fn handshake(
     let mut now = now;
 
     let mut input = None;
-    let is_done = |c: &mut Connection| matches!(c.state(), State::Confirmed | State::Closing { .. } | State::Closed(..));
+    let is_done = |c: &mut Connection| {
+        matches!(
+            c.state(),
+            State::Confirmed | State::Closing { .. } | State::Closed(..)
+        )
+    };
 
     while !is_done(a) {
         let _ = maybe_authenticate(a);
@@ -181,8 +188,8 @@ fn connect_with_rtt(
     assert_eq!(*client.state(), State::Confirmed);
     assert_eq!(*server.state(), State::Confirmed);
 
-    assert_eq!(client.loss_recovery.rtt(), rtt);
-    assert_eq!(server.loss_recovery.rtt(), rtt);
+    assert_eq!(client.paths.rtt(), rtt);
+    assert_eq!(server.paths.rtt(), rtt);
     now
 }
 
@@ -262,6 +269,7 @@ fn connect_rtt_idle(client: &mut Connection, server: &mut Connection, rtt: Durat
     // Drain events from both as well.
     let _ = client.events().count();
     let _ = server.events().count();
+    qtrace!("----- connected and idle with RTT {:?}", rtt);
     now
 }
 
@@ -275,36 +283,33 @@ fn connect_force_idle(client: &mut Connection, server: &mut Connection) {
 /// from the return value whether a timeout is an ACK delay, PTO, or
 /// pacing, this looks at the congestion window to tell when to stop.
 /// Returns a list of datagrams and the new time.
-fn fill_cwnd(src: &mut Connection, stream: u64, mut now: Instant) -> (Vec<Datagram>, Instant) {
+fn fill_cwnd(c: &mut Connection, stream: u64, mut now: Instant) -> (Vec<Datagram>, Instant) {
     const BLOCK_SIZE: usize = 4_096;
-    let mut total_dgrams = Vec::new();
+    // Train wreck function to get the remaining congestion window on the primary path.
+    fn cwnd(c: &Connection) -> usize {
+        c.paths.primary().borrow().sender().cwnd_avail()
+    }
 
-    qtrace!(
-        "fill_cwnd starting cwnd: {}",
-        src.loss_recovery.cwnd_avail()
-    );
+    qtrace!("fill_cwnd starting cwnd: {}", cwnd(c));
 
     loop {
-        let bytes_sent = src.stream_send(stream, &[0x42; BLOCK_SIZE]).unwrap();
+        let bytes_sent = c.stream_send(stream, &[0x42; BLOCK_SIZE]).unwrap();
         qtrace!("fill_cwnd wrote {} bytes", bytes_sent);
         if bytes_sent < BLOCK_SIZE {
             break;
         }
     }
 
+    let mut total_dgrams = Vec::new();
     loop {
-        let pkt = src.process_output(now);
-        qtrace!(
-            "fill_cwnd cwnd remaining={}, output: {:?}",
-            src.loss_recovery.cwnd_avail(),
-            pkt
-        );
+        let pkt = c.process_output(now);
+        qtrace!("fill_cwnd cwnd remaining={}, output: {:?}", cwnd(c), pkt);
         match pkt {
             Output::Datagram(dgram) => {
                 total_dgrams.push(dgram);
             }
             Output::Callback(t) => {
-                if src.loss_recovery.cwnd_avail() < ACK_ONLY_SIZE_LIMIT {
+                if cwnd(c) < ACK_ONLY_SIZE_LIMIT {
                     break;
                 }
                 now += t;
@@ -313,6 +318,10 @@ fn fill_cwnd(src: &mut Connection, stream: u64, mut now: Instant) -> (Vec<Datagr
         }
     }
 
+    qtrace!(
+        "fill_cwnd sent {} bytes",
+        total_dgrams.iter().map(|d| d.len()).sum::<usize>()
+    );
     (total_dgrams, now)
 }
 

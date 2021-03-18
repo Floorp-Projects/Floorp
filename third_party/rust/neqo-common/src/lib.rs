@@ -10,6 +10,7 @@
 mod codec;
 mod datagram;
 pub mod event;
+pub mod hrtime;
 mod incrdecoder;
 pub mod log;
 pub mod qlog;

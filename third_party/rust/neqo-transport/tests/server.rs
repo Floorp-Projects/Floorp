@@ -98,7 +98,12 @@ fn complete_connection(
     server: &mut Server,
     mut datagram: Option<Datagram>,
 ) -> ActiveConnectionRef {
-    let is_done = |c: &Connection| matches!(c.state(), State::Confirmed | State::Closing { .. } | State::Closed(..));
+    let is_done = |c: &Connection| {
+        matches!(
+            c.state(),
+            State::Confirmed | State::Closing { .. } | State::Closed(..)
+        )
+    };
     while !is_done(client) {
         let _ = test_fixture::maybe_authenticate(client);
         let out = client.process(datagram, now());
@@ -695,8 +700,8 @@ fn vn_after_retry() {
 // Generate an AEAD and header protection object for a client Initial.
 fn client_initial_aead_and_hp(dcid: &[u8]) -> (Aead, HpKey) {
     const INITIAL_SALT: &[u8] = &[
-        0xaf, 0xbf, 0xec, 0x28, 0x99, 0x93, 0xd2, 0x4c, 0x9e, 0x97, 0x86, 0xf1, 0x9c, 0x61, 0x11,
-        0xe0, 0x43, 0x90, 0xa8, 0x99,
+        0x38, 0x76, 0x2c, 0xf7, 0xf5, 0x59, 0x34, 0xb3, 0x4d, 0x17, 0x9a, 0xe6, 0xa4, 0xc8, 0x0c,
+        0xad, 0xcc, 0xbb, 0x7f, 0x0a,
     ];
     let initial_secret = hkdf::extract(
         TLS_VERSION_1_3,
@@ -881,7 +886,7 @@ fn mitm_retry() {
     assert!(dgram.is_some()); // Client sending CLOSE_CONNECTIONs
     assert!(matches!(
         *client.state(),
-        State::Closing{
+        State::Closing {
             error: ConnectionError::Transport(Error::ProtocolViolation),
             ..
         }

@@ -214,9 +214,8 @@ impl HFrameReader {
             if fin {
                 if self.decoding_in_progress() {
                     break Err(Error::HttpFrame);
-                } else {
-                    break Ok((None, fin));
                 }
+                break Ok((None, fin));
             }
 
             if !read {
@@ -266,12 +265,11 @@ impl HFrameReader {
                         | H3_FRAME_TYPE_HEADERS => {
                             if len == 0 {
                                 return Ok(Some(self.get_frame()?));
-                            } else {
-                                HFrameReaderState::GetData {
-                                    decoder: IncrementalDecoderBuffer::new(
-                                        usize::try_from(len).or(Err(Error::HttpFrame))?,
-                                    ),
-                                }
+                            }
+                            HFrameReaderState::GetData {
+                                decoder: IncrementalDecoderBuffer::new(
+                                    usize::try_from(len).or(Err(Error::HttpFrame))?,
+                                ),
                             }
                         }
                         _ => {
