@@ -54,8 +54,6 @@ class nsMenuItemIconX final : public mozilla::widget::IconLoader::Listener {
   nsMenuObjectX* mMenuObject;     // [weak]
   nsIntRect mImageRegionRect;
   NSImage* mIconImage = nil;  // [strong]
-  // The icon loader object should never outlive its creating nsMenuItemIconX
-  // object.
   RefPtr<mozilla::widget::IconLoader> mIconLoader;
 };
 
