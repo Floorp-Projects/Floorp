@@ -348,13 +348,13 @@ uint32_t Table::grow(uint32_t delta) {
     }
   }
 
-  if (auto object = maybeObject_.unbarrieredGet()) {
+  if (auto* object = maybeObject_.unbarrieredGet()) {
     RemoveCellMemory(object, gcMallocBytes(), MemoryUse::WasmTableTable);
   }
 
   length_ = newLength.value();
 
-  if (auto object = maybeObject_.unbarrieredGet()) {
+  if (auto* object = maybeObject_.unbarrieredGet()) {
     AddCellMemory(object, gcMallocBytes(), MemoryUse::WasmTableTable);
   }
 
