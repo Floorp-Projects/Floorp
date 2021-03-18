@@ -45,7 +45,6 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
   NS_DECL_CHANGEOBSERVER
 
   // nsMenuObjectX
-  void* NativeData() override { return (void*)mNativeMenu; }
   nsMenuObjectTypeX MenuObjectType() override { return eSubmenuObjectType; }
   void IconUpdated() override;
 
@@ -63,9 +62,10 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
   nsEventStatus MenuOpened();
   void MenuClosed();
   void SetRebuild(bool aMenuEvent);
-  NSMenuItem* NativeMenuItem();
   void SetupIcon();
   nsIContent* Content() { return mContent; }
+  NSMenuItem* NativeNSMenuItem() { return mNativeMenuItem; }
+  GeckoNSMenu* NativeNSMenu() { return mNativeMenu; }
 
   static bool IsXULHelpMenu(nsIContent* aMenuContent);
 

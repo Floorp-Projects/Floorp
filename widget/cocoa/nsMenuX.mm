@@ -5,6 +5,7 @@
 
 #include <dlfcn.h>
 
+#include "nsMenuBaseX.h"
 #include "nsMenuX.h"
 #include "nsMenuItemX.h"
 #include "nsMenuUtilsX.h"
@@ -198,7 +199,7 @@ void nsMenuX::AddMenuItem(UniquePtr<nsMenuItemX>&& aMenuItem) {
 
   ++mVisibleItemsCount;
 
-  NSMenuItem* newNativeMenuItem = (NSMenuItem*)menuItem->NativeData();
+  NSMenuItem* newNativeMenuItem = menuItem->NativeNSMenuItem();
 
   // add the menu item to this menu
   [mNativeMenu addItem:newNativeMenuItem];
@@ -233,10 +234,10 @@ void nsMenuX::AddMenu(UniquePtr<nsMenuX>&& aMenu) {
   ++mVisibleItemsCount;
 
   // We have to add a menu item and then associate the menu with it
-  NSMenuItem* newNativeMenuItem = menu->NativeMenuItem();
+  NSMenuItem* newNativeMenuItem = menu->NativeNSMenuItem();
   if (newNativeMenuItem) {
     [mNativeMenu addItem:newNativeMenuItem];
-    newNativeMenuItem.submenu = (NSMenu*)menu->NativeData();
+    newNativeMenuItem.submenu = menu->NativeNSMenu();
   }
 
   menu->SetupIcon();
@@ -567,8 +568,6 @@ already_AddRefed<nsIContent> nsMenuX::GetMenuPopupContent() {
   return nullptr;
 }
 
-NSMenuItem* nsMenuX::NativeMenuItem() { return mNativeMenuItem; }
-
 bool nsMenuX::IsXULHelpMenu(nsIContent* aMenuContent) {
   bool retval = false;
   if (aMenuContent && aMenuContent->IsElement()) {
@@ -625,20 +624,24 @@ void nsMenuX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aCon
       return;
     }
 
-    if (contentIsHiddenOrCollapsed) {
-      if (parentType == eMenuBarObjectType || parentType == eSubmenuObjectType ||
-          parentType == eStandaloneNativeMenuObjectType) {
-        NSMenu* parentMenu = (NSMenu*)mParent->NativeData();
+    NSMenu* parentMenu = nil;
+    if (parentType == eMenuBarObjectType) {
+      parentMenu = static_cast<nsMenuBarX*>(mParent)->NativeNSMenu();
+    } else if (parentType == eSubmenuObjectType) {
+      parentMenu = static_cast<nsMenuX*>(mParent)->NativeNSMenu();
+    } else if (parentType == eStandaloneNativeMenuObjectType) {
+      // XXXmstange this is a mistake and will be removed in the future.
+      parentMenu = static_cast<nsStandaloneNativeMenu*>(mParent)->NativeNSMenu();
+    }
+    if (parentMenu) {
+      if (contentIsHiddenOrCollapsed) {
         // An exception will get thrown if we try to remove an item that isn't
         // in the menu.
         if ([parentMenu indexOfItem:mNativeMenuItem] != -1) {
           [parentMenu removeItem:mNativeMenuItem];
         }
         mVisible = false;
-      }
-    } else {
-      if (parentType == eMenuBarObjectType || parentType == eSubmenuObjectType ||
-          parentType == eStandaloneNativeMenuObjectType) {
+      } else {
         int insertionIndex = nsMenuUtilsX::CalculateNativeInsertionPoint(mParent, this);
         if (parentType == eMenuBarObjectType) {
           // Before inserting we need to figure out if we should take the native
@@ -648,7 +651,6 @@ void nsMenuX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aCon
             insertionIndex++;
           }
         }
-        NSMenu* parentMenu = (NSMenu*)mParent->NativeData();
         [parentMenu insertItem:mNativeMenuItem atIndex:insertionIndex];
         mNativeMenuItem.submenu = mNativeMenu;
         mVisible = true;

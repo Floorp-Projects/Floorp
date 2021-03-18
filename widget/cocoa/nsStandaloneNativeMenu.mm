@@ -75,7 +75,7 @@ nsStandaloneNativeMenu::GetNativeMenu(void** aVoidPointer) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (mMenu) {
-    *aVoidPointer = mMenu->NativeData();
+    *aVoidPointer = mMenu->NativeNSMenu();
     [[(NSObject*)(*aVoidPointer) retain] autorelease];
     return NS_OK;
   }
@@ -96,7 +96,7 @@ nsStandaloneNativeMenu::ActivateNativeMenuItemAt(const nsAString& indexString) {
   NSString* locationString =
       [NSString stringWithCharacters:reinterpret_cast<const unichar*>(indexString.BeginReading())
                               length:indexString.Length()];
-  NSMenu* menu = static_cast<NSMenu*>(mMenu->NativeData());
+  NSMenu* menu = mMenu->NativeNSMenu();
   NSMenuItem* item = nsMenuUtilsX::NativeMenuItemWithLocation(menu, locationString, false);
 
   // We can't perform an action on an item with a submenu, that will raise
@@ -172,7 +172,7 @@ void nsStandaloneNativeMenu::IconUpdated() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   if (mContainerStatusBarItem) {
-    NSImage* menuImage = mMenu->NativeMenuItem().image;
+    NSImage* menuImage = mMenu->NativeNSMenuItem().image;
     if (menuImage) {
       [menuImage setTemplate:YES];
     }
