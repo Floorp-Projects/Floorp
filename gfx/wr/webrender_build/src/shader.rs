@@ -170,6 +170,7 @@ pub fn build_shader_prefix_string<F: FnMut(&str)>(
     // GLSL requires that the version number comes first.
     let gl_version_string = match gl_version {
         ShaderVersion::Gl => "#version 150\n",
+        ShaderVersion::Gles if features.contains(&"TEXTURE_EXTERNAL_ESSL1") => "#version 100\n",
         ShaderVersion::Gles => "#version 300 es\n",
     };
     output(gl_version_string);

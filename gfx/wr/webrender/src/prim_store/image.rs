@@ -3,13 +3,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use api::{
-    AlphaType, ColorDepth, ColorF, ColorU, RasterSpace,
-    ImageKey as ApiImageKey, ImageRendering,
-    PremultipliedColorF, Shadow, YuvColorSpace, ColorRange, YuvFormat,
+    AlphaType, ColorDepth, ColorF, ColorU, ExternalImageData, ExternalImageType,
+    ImageKey as ApiImageKey, ImageBufferKind, ImageRendering, PremultipliedColorF,
+    RasterSpace, Shadow, YuvColorSpace, ColorRange, YuvFormat,
 };
 use api::units::*;
 use crate::scene_building::{CreateShadow, IsVisible};
-use crate::frame_builder::{FrameBuildingContext, FrameBuildingState};
+use crate::frame_builder::{FrameBuildingContext, FrameBuildingState, add_child_render_task};
 use crate::gpu_cache::{GpuCache, GpuDataRequest};
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::{LayoutPrimitiveInfo};
@@ -171,15 +171,53 @@ impl ImageData {
 
         match image_properties {
             // Non-tiled (most common) path.
-            Some(ImageProperties { tiling: None, ref descriptor, .. }) => {
+            Some(ImageProperties { tiling: None, ref descriptor, ref external_image, .. }) => {
                 let mut size = frame_state.resource_cache.request_image(
                     request,
                     frame_state.gpu_cache,
                 );
 
-                let task_id = frame_state.rg_builder.add().init(
+                let orig_task_id = frame_state.rg_builder.add().init(
                     RenderTask::new_image(size, request)
                 );
+
+                // On some devices we cannot render from an ImageBufferKind::TextureExternal
+                // source using most shaders, so must peform a copy to a regular texture first.
+                let task_id = if frame_context.fb_config.external_images_require_copy
+                    && matches!(
+                        external_image,
+                        Some(ExternalImageData {
+                            image_type: ExternalImageType::TextureHandle(
+                                ImageBufferKind::TextureExternal
+                            ),
+                            ..
+                        })
+                    )
+                {
+                    let target_kind = if descriptor.format.bytes_per_pixel() == 1 {
+                        RenderTargetKind::Alpha
+                    } else {
+                        RenderTargetKind::Color
+                    };
+
+                    let task_id = RenderTask::new_scaling(
+                        orig_task_id,
+                        frame_state.rg_builder,
+                        target_kind,
+                        size
+                    );
+
+                    add_child_render_task(
+                        parent_surface,
+                        task_id,
+                        frame_state.surfaces,
+                        frame_state.rg_builder,
+                    );
+
+                    task_id
+                } else {
+                    orig_task_id
+                };
 
                 // Every frame, for cached items, we need to request the render
                 // task cache item. The closure will be invoked on the first

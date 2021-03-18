@@ -4,12 +4,6 @@
 
 #if defined(GL_ES)
     #if GL_ES == 1
-        #ifdef GL_FRAGMENT_PRECISION_HIGH
-        precision highp sampler2DArray;
-        #else
-        precision mediump sampler2DArray;
-        #endif
-
         // Sampler default precision is lowp on mobile GPUs.
         // This causes RGBA32F texture data to be clamped to 16 bit floats on some GPUs (e.g. Mali-T880).
         // Define highp precision macro to allow lossless FLOAT texture sampling.
@@ -56,10 +50,20 @@
         #define PER_INSTANCE
     #endif
 
-    #define varying out
+    #if __VERSION__ != 100
+        #define varying out
+        #define attribute in
+    #endif
 #endif
 
 #ifdef WR_FRAGMENT_SHADER
     precision highp float;
-    #define varying in
+    #if __VERSION__ != 100
+        #define varying in
+    #endif
+#endif
+
+// Flat interpolation is not supported on ESSL 1
+#if __VERSION__ == 100
+    #define flat
 #endif

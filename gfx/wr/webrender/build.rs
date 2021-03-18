@@ -129,6 +129,9 @@ fn write_optimized_shaders(shader_dir: &Path, shader_file: &mut File, out_dir: &
             flags.remove(ShaderFeatureFlags::GLES);
             flags.remove(ShaderFeatureFlags::TEXTURE_EXTERNAL);
         }
+        if !matches!(env::var("CARGO_CFG_TARGET_OS").as_ref().map(|s| &**s), Ok("android")) {
+            flags.remove(ShaderFeatureFlags::TEXTURE_EXTERNAL_ESSL1);
+        }
         flags.remove(ShaderFeatureFlags::DITHERING);
 
         for (shader_name, configs) in get_shader_features(flags) {

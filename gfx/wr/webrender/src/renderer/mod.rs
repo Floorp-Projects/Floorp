@@ -598,6 +598,21 @@ impl TextureResolver {
         }
     }
 
+    /// Returns the size of the texture in pixels
+    fn get_texture_size(&self, texture: &TextureSource) -> DeviceIntSize {
+        match *texture {
+            TextureSource::Invalid => DeviceIntSize::zero(),
+            TextureSource::TextureCache(id, _) => {
+                self.texture_cache_map[&id].get_dimensions()
+            },
+            TextureSource::External(index, _) => {
+                let uv_rect = self.external_images[&index].get_uv_rect();
+                (uv_rect.uv1 - uv_rect.uv0).abs().to_size().to_i32()
+            },
+            TextureSource::Dummy => DeviceIntSize::new(1, 1),
+        }
+    }
+
     fn report_memory(&self) -> MemoryReport {
         let mut report = MemoryReport::default();
 
@@ -1128,6 +1143,7 @@ impl Renderer {
             gpu_supports_advanced_blend: ext_blend_equation_advanced,
             advanced_blend_is_coherent: ext_blend_equation_advanced_coherent,
             gpu_supports_render_target_partial_update: device.get_capabilities().supports_render_target_partial_update,
+            external_images_require_copy: !device.get_capabilities().supports_image_external_essl3,
             batch_lookback_count: RendererOptions::BATCH_LOOKBACK_COUNT,
             background_color: options.clear_color,
             compositor_kind,
@@ -2688,6 +2704,7 @@ impl Renderer {
                 .bind(
                     &mut self.device,
                     &projection,
+                    Some(self.texture_resolver.get_texture_size(source).to_f32()),
                     &mut self.renderer_errors,
                 );
 
@@ -2716,6 +2733,7 @@ impl Renderer {
         self.shaders.borrow_mut().cs_svg_filter.bind(
             &mut self.device,
             &projection,
+            None,
             &mut self.renderer_errors
         );
 
@@ -2773,6 +2791,7 @@ impl Renderer {
                     self.shaders.borrow_mut().ps_clear.bind(
                         &mut self.device,
                         &projection,
+                        None,
                         &mut self.renderer_errors,
                     );
                     self.draw_instanced_batch(
@@ -2853,7 +2872,7 @@ impl Renderer {
                     self.shaders.borrow_mut()
                         .get(&batch.key, batch.features, self.debug_flags, &self.device)
                         .bind(
-                            &mut self.device, projection,
+                            &mut self.device, projection, None,
                             &mut self.renderer_errors,
                         );
 
@@ -2929,6 +2948,7 @@ impl Renderer {
                             shader.bind(
                                 &mut self.device,
                                 projection,
+                                None,
                                 &mut self.renderer_errors,
                             );
                             self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass0 as _);
@@ -2969,6 +2989,7 @@ impl Renderer {
                 shader.bind(
                     &mut self.device,
                     projection,
+                    None,
                     &mut self.renderer_errors,
                 );
 
@@ -2985,6 +3006,7 @@ impl Renderer {
                     shader.bind(
                         &mut self.device,
                         projection,
+                        None,
                         &mut self.renderer_errors,
                     );
                     self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass1 as _);
@@ -3001,6 +3023,7 @@ impl Renderer {
                     shader.bind(
                         &mut self.device,
                         projection,
+                        None,
                         &mut self.renderer_errors,
                     );
                     self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass2 as _);
@@ -3096,6 +3119,7 @@ impl Renderer {
                         ).bind(
                             &mut self.device,
                             &projection,
+                            None,
                             &mut self.renderer_errors
                         );
 
@@ -3140,6 +3164,7 @@ impl Renderer {
                         ).bind(
                             &mut self.device,
                             &projection,
+                            None,
                             &mut self.renderer_errors
                         );
 
@@ -3191,6 +3216,7 @@ impl Renderer {
             CompositeSurfaceFormat::Rgba,
             ImageBufferKind::Texture2D,
             CompositeFeatures::empty(),
+            None,
         );
         let mut current_textures = BatchTextures::empty();
         let mut instances = Vec::new();
@@ -3204,6 +3230,7 @@ impl Renderer {
             ).bind(
                 &mut self.device,
                 projection,
+                None,
                 &mut self.renderer_errors
             );
 
@@ -3246,7 +3273,7 @@ impl Renderer {
                     (
                         instance,
                         BatchTextures::composite_rgb(dummy),
-                        (CompositeSurfaceFormat::Rgba, image_buffer_kind, features),
+                        (CompositeSurfaceFormat::Rgba, image_buffer_kind, features, None),
                     )
                 }
                 CompositeTileSurface::Clear => {
@@ -3262,7 +3289,7 @@ impl Renderer {
                     (
                         instance,
                         BatchTextures::composite_rgb(dummy),
-                        (CompositeSurfaceFormat::Rgba, image_buffer_kind, features),
+                        (CompositeSurfaceFormat::Rgba, image_buffer_kind, features, None),
                     )
                 }
                 CompositeTileSurface::Texture { surface: ResolvedSurfaceTexture::TextureCache { texture } } => {
@@ -3280,6 +3307,7 @@ impl Renderer {
                             CompositeSurfaceFormat::Rgba,
                             ImageBufferKind::Texture2D,
                             features,
+                            None,
                         ),
                     )
                 }
@@ -3316,7 +3344,12 @@ impl Renderer {
                                     uv_rects,
                                 ),
                                 textures,
-                                (CompositeSurfaceFormat::Yuv, surface.image_buffer_kind, CompositeFeatures::empty()),
+                                (
+                                    CompositeSurfaceFormat::Yuv,
+                                    surface.image_buffer_kind,
+                                    CompositeFeatures::empty(),
+                                    None
+                                ),
                             )
                         },
                         ResolvedExternalSurfaceColorData::Rgb{ ref plane, flip_y, .. } => {
@@ -3338,7 +3371,12 @@ impl Renderer {
                             (
                                 instance,
                                 BatchTextures::composite_rgb(plane.texture),
-                                (CompositeSurfaceFormat::Rgba, surface.image_buffer_kind, features),
+                                (
+                                    CompositeSurfaceFormat::Rgba,
+                                    surface.image_buffer_kind,
+                                    features,
+                                    Some(self.texture_resolver.get_texture_size(&plane.texture).to_f32()),
+                                ),
                             )
                         },
                     }
@@ -3371,6 +3409,7 @@ impl Renderer {
                     .bind(
                         &mut self.device,
                         projection,
+                        shader_params.3,
                         &mut self.renderer_errors
                     );
 
@@ -3590,7 +3629,7 @@ impl Renderer {
 
             self.set_blend(false, framebuffer_kind);
             self.shaders.borrow_mut().cs_blur_rgba8
-                .bind(&mut self.device, projection, &mut self.renderer_errors);
+                .bind(&mut self.device, projection, None, &mut self.renderer_errors);
 
             if !target.vertical_blurs.is_empty() {
                 self.draw_blurs(
@@ -3674,6 +3713,7 @@ impl Renderer {
             self.shaders.borrow_mut().cs_clip_rectangle_slow.bind(
                 &mut self.device,
                 projection,
+                None,
                 &mut self.renderer_errors,
             );
             self.draw_instanced_batch(
@@ -3688,6 +3728,7 @@ impl Renderer {
             self.shaders.borrow_mut().cs_clip_rectangle_fast.bind(
                 &mut self.device,
                 projection,
+                None,
                 &mut self.renderer_errors,
             );
             self.draw_instanced_batch(
@@ -3703,7 +3744,7 @@ impl Renderer {
             let _gm2 = self.gpu_profiler.start_marker("box-shadows");
             let textures = BatchTextures::composite_rgb(*mask_texture_id);
             self.shaders.borrow_mut().cs_clip_box_shadow
-                .bind(&mut self.device, projection, &mut self.renderer_errors);
+                .bind(&mut self.device, projection, None, &mut self.renderer_errors);
             self.draw_instanced_batch(
                 items,
                 VertexArrayKind::ClipBoxShadow,
@@ -3717,7 +3758,7 @@ impl Renderer {
             let _gm2 = self.gpu_profiler.start_marker("clip images");
             let textures = BatchTextures::composite_rgb(*mask_texture_id);
             self.shaders.borrow_mut().cs_clip_image
-                .bind(&mut self.device, projection, &mut self.renderer_errors);
+                .bind(&mut self.device, projection, None, &mut self.renderer_errors);
             self.draw_instanced_batch(
                 items,
                 VertexArrayKind::ClipImage,
@@ -3785,7 +3826,7 @@ impl Renderer {
             let _timer = self.gpu_profiler.start_timer(GPU_TAG_BLUR);
 
             self.shaders.borrow_mut().cs_blur_a8
-                .bind(&mut self.device, projection, &mut self.renderer_errors);
+                .bind(&mut self.device, projection, None, &mut self.renderer_errors);
 
             if !target.vertical_blurs.is_empty() {
                 self.draw_blurs(
@@ -3893,6 +3934,7 @@ impl Renderer {
                 self.shaders.borrow_mut().ps_clear.bind(
                     &mut self.device,
                     &projection,
+                    None,
                     &mut self.renderer_errors,
                 );
                 self.draw_instanced_batch(
@@ -3932,6 +3974,7 @@ impl Renderer {
                 self.shaders.borrow_mut().cs_border_solid.bind(
                     &mut self.device,
                     &projection,
+                    None,
                     &mut self.renderer_errors,
                 );
 
@@ -3947,6 +3990,7 @@ impl Renderer {
                 self.shaders.borrow_mut().cs_border_segment.bind(
                     &mut self.device,
                     &projection,
+                    None,
                     &mut self.renderer_errors,
                 );
 
@@ -3971,6 +4015,7 @@ impl Renderer {
             self.shaders.borrow_mut().cs_line_decoration.bind(
                 &mut self.device,
                 &projection,
+                None,
                 &mut self.renderer_errors,
             );
 
@@ -3993,6 +4038,7 @@ impl Renderer {
             self.shaders.borrow_mut().cs_fast_linear_gradient.bind(
                 &mut self.device,
                 &projection,
+                None,
                 &mut self.renderer_errors,
             );
 
@@ -4013,7 +4059,7 @@ impl Renderer {
                 match target.target_kind {
                     RenderTargetKind::Alpha => &mut shaders.cs_blur_a8,
                     RenderTargetKind::Color => &mut shaders.cs_blur_rgba8,
-                }.bind(&mut self.device, &projection, &mut self.renderer_errors);
+                }.bind(&mut self.device, &projection, None, &mut self.renderer_errors);
             }
 
             self.draw_blurs(

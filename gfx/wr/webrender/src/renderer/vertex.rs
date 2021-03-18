@@ -223,7 +223,7 @@ pub mod desc {
             VertexAttribute {
                 name: "aScaleSourceRect",
                 count: 4,
-                kind: VertexAttributeKind::I32,
+                kind: VertexAttributeKind::F32,
             },
         ],
     };
