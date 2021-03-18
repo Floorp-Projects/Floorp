@@ -3066,7 +3066,6 @@ exports.CSS_PROPERTIES = {
       "-moz-outline-radius-bottomright",
       "-moz-outline-radius-bottomleft",
       "outline-offset",
-      "size",
       "padding-top",
       "padding-right",
       "padding-bottom",
@@ -11070,10 +11069,6 @@ exports.PREFERENCES = [
   [
     "scale",
     "layout.css.individual-transform.enabled"
-  ],
-  [
-    "size",
-    "layout.css.page-size.enabled"
   ],
   [
     "translate",
