@@ -13,9 +13,16 @@ import time
 import uuid
 from abc import ABCMeta, abstractmethod, abstractproperty
 from shutil import copytree
+from io import open
 
 import mozfile
 from six import string_types, python_2_unicode_compatible
+
+if six.PY3:
+
+    def unicode(input):
+        return input
+
 
 from .addons import AddonManager
 from .permissions import Permissions
@@ -313,12 +320,12 @@ class Profile(BaseProfile):
             self.written_prefs.add(filename)
 
             # opening delimeter
-            f.write("\n%s\n" % self.delimeters[0])
+            f.write(unicode("\n%s\n" % self.delimeters[0]))
 
             Preferences.write(f, preferences)
 
             # closing delimeter
-            f.write("%s\n" % self.delimeters[1])
+            f.write(unicode("%s\n" % self.delimeters[1]))
 
     def set_persistent_preferences(self, preferences):
         """
@@ -347,7 +354,7 @@ class Profile(BaseProfile):
         """
 
         path = os.path.join(self.profile, filename)
-        with open(path) as f:
+        with open(path, "r", encoding="utf-8") as f:
             lines = f.read().splitlines()
 
         def last_index(_list, value):
@@ -554,7 +561,10 @@ class ChromiumProfile(BaseProfile):
         with open(pref_file, "w") as fh:
             prefstr = json.dumps(prefs)
             prefstr % values  # interpolate prefs with values
-            fh.write(prefstr)
+            if six.PY2:
+                fh.write(unicode(prefstr))
+            else:
+                fh.write(prefstr)
 
 
 class ChromeProfile(ChromiumProfile):

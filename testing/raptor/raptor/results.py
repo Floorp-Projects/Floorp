@@ -10,6 +10,7 @@ import json
 import os
 import shutil
 from abc import ABCMeta, abstractmethod
+from io import open
 
 import six
 from logger.logger import RaptorLogger
@@ -229,7 +230,7 @@ class PerftestResultsHandler(object):
         )
         LOG.info("Validating PERFHERDER_DATA against %s" % schema_path)
         try:
-            with open(schema_path) as f:
+            with open(schema_path, encoding="utf-8") as f:
                 schema = json.load(f)
             if output.summarized_results:
                 data = output.summarized_results
@@ -673,7 +674,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 return False
 
             try:
-                with open(bt_res_json, "r") as f:
+                with open(bt_res_json, "r", encoding="utf8") as f:
                     raw_btresults = json.load(f)
             except Exception as e:
                 LOG.error("Exception reading %s" % bt_res_json)

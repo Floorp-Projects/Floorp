@@ -76,6 +76,7 @@ job-defaults:
             chrome-m: []
             fennec: []
             default: ["webrender"]
+    python-3: true
 
 browsertime-tp6m:
     description: "Raptor (browsertime) tp6 page-load tests on android"

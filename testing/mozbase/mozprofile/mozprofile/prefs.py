@@ -14,6 +14,13 @@ import tokenize
 
 from six.moves.configparser import SafeConfigParser as ConfigParser
 from six import StringIO, string_types
+import six
+
+if six.PY3:
+
+    def unicode(input):
+        return input
+
 
 __all__ = ("PreferencesReadError", "Preferences")
 
@@ -232,7 +239,7 @@ class Preferences(object):
 
         # write the preferences
         for _pref in _prefs:
-            print(pref_string % _pref, file=f)
+            print(unicode(pref_string % _pref), file=f)
 
         # close the file if opened internally
         if isinstance(_file, string_types):
