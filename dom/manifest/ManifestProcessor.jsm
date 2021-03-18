@@ -233,14 +233,20 @@ var ManifestProcessor = {
         return defaultScope;
       }
       // If start URL is not within scope of scope URL:
-      let isSameOrigin = startURL && startURL.origin !== scopeURL.origin;
-      if (isSameOrigin || !startURL.pathname.startsWith(scopeURL.pathname)) {
+      if (
+        startURL.origin !== scopeURL.origin ||
+        startURL.pathname.startsWith(scopeURL.pathname) === false
+      ) {
         const warn = domBundle.GetStringFromName(
           "ManifestStartURLOutsideScope"
         );
         errors.push({ warn });
         return defaultScope;
       }
+      // Drop search params and fragment
+      // https://github.com/w3c/manifest/pull/961
+      scopeURL.hash = "";
+      scopeURL.search = "";
       return scopeURL.href;
     }
 
