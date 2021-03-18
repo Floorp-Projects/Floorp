@@ -334,6 +334,11 @@
         newMenu1.setAttribute("hidden", "false");
         menu.forceUpdateNativeMenuAt("1");
 
+        // Check that "path components" which are out-of-range are not ignored.
+        // There are only two menu items in the root menu (with index 0 and 1),
+        // so index 2 is out of range.
+        is(activateItem(menu, "2|1|0"), "", "#39:" + sna);
+
         // Run tests where the menu nodes are not in the document's node tree.
         runDetachedMenuTests(false);
         runDetachedMenuTests(true);
