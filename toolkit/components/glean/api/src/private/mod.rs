@@ -4,9 +4,6 @@
 
 //! The different metric types supported by the Glean SDK to handle data.
 
-use std::convert::TryFrom;
-use std::time::{SystemTime, UNIX_EPOCH};
-
 use serde::{Deserialize, Serialize};
 
 // Re-export of `glean` types we can re-use.
@@ -47,39 +44,10 @@ pub use self::timespan::TimespanMetric;
 pub use self::timing_distribution::TimingDistributionMetric;
 pub use self::uuid::UuidMetric;
 
-/// An instant in time.
-///
-/// Similar to [`std::time::Instant`](https://doc.rust-lang.org/std/time/struct.Instant.html),
-/// but much simpler in that we explicitly expose that it's just an integer.
-///
-/// This is needed, as the current `glean-core` API expects timestamps as integers.
-/// We probably should move this API into `glean-core` directly.
-/// See [Bug 1619253](https://bugzilla.mozilla.org/show_bug.cgi?id=1619253).
-#[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct Instant(u64);
-
-impl Instant {
-    /// Returns an instant corresponding to "now".
-    fn now() -> Instant {
-        let now = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .expect("SystemTime before UNIX epoch!");
-        let now = now.as_nanos();
-
-        match u64::try_from(now) {
-            Ok(now) => Instant(now),
-            Err(_) => {
-                // Greetings to 2554 from 2020!
-                panic!("timestamp exceeds value range")
-            }
-        }
-    }
-}
-
 /// Uniquely identifies a single metric within its metric type.
 #[derive(Debug, PartialEq, Eq, Hash, Copy, Clone, Deserialize, Serialize)]
 #[repr(transparent)]
-pub struct MetricId(u32);
+pub struct MetricId(pub(crate) u32);
 
 impl MetricId {
     pub fn new(id: u32) -> Self {

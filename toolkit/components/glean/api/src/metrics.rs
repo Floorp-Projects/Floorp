@@ -23,6 +23,7 @@ include!(concat!(
 #[allow(dead_code)]
 pub(crate) mod __glean_metric_maps {
     use std::collections::HashMap;
+    use std::sync::RwLock;
 
     use crate::private::*;
     use once_cell::sync::Lazy;
@@ -47,14 +48,25 @@ pub(crate) mod __glean_metric_maps {
 
     pub static UUID_MAP: Lazy<HashMap<MetricId, &Lazy<UuidMetric>>> = Lazy::new(HashMap::new);
 
-    pub(crate) fn event_record_wrapper(
+    pub static LABELED_COUNTER_MAP: Lazy<RwLock<HashMap<MetricId, LabeledCounterMetric>>> =
+        Lazy::new(|| RwLock::new(HashMap::new()));
+
+    pub(crate) fn record_event_by_id(
         _metric_id: u32,
         _extra: Option<HashMap<i32, String>>,
     ) -> Result<(), EventRecordingError> {
         Err(EventRecordingError::InvalidId)
     }
 
-    pub(crate) fn event_record_wrapper_str(
+    pub(crate) fn record_event_by_id_with_time(
+        _metric_id: MetricId,
+        _timestamp: u64,
+        _extra: HashMap<i32, String>,
+    ) -> Result<(), EventRecordingError> {
+        Ok(())
+    }
+
+    pub(crate) fn record_event_by_id_with_strings(
         _metric_id: u32,
         _extra: Option<HashMap<String, String>>,
     ) -> Result<(), EventRecordingError> {
