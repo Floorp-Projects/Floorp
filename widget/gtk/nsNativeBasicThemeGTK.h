@@ -40,8 +40,6 @@ class nsNativeBasicThemeGTK : public nsNativeBasicTheme {
                              DPIRatio);
 
   bool ThemeSupportsScrollbarButtons() override;
-  ScrollbarSizes GetScrollbarSizes(nsPresContext*, StyleScrollbarWidth,
-                                   Overlay) override;
 
  protected:
   virtual ~nsNativeBasicThemeGTK() = default;

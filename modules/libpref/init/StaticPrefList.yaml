@@ -10715,13 +10715,17 @@
   mirror: always
 
 # The size in CSS pixels at full zoom of the minimum scrollbar width.
-- name: widget.non-native-theme.gtk.scrollbar.normal-size
+- name: widget.non-native-theme.scrollbar.normal-size
   type: uint32_t
+#if defined(MOZ_WIDGET_GTK)
   value: 12
+#else
+  value: 17
+#endif
   mirror: always
 
 # The size in CSS pixels at full zoom of the "thin" scrollbars.
-- name: widget.non-native-theme.gtk.scrollbar.thin-size
+- name: widget.non-native-theme.scrollbar.thin-size
   type: uint32_t
   value: 6
   mirror: always
