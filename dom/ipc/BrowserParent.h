@@ -474,6 +474,11 @@ class BrowserParent final : public PBrowserParent,
 
   nsresult UpdatePosition();
 
+  // Notify position update to all descendant documents in this browser parent.
+  // NOTE: This should use only for browsers in popup windows attached to the
+  // main browser window.
+  void NotifyPositionUpdatedForContentsInPopup();
+
   void SizeModeChanged(const nsSizeMode& aSizeMode);
 
   void HandleAccessKey(const WidgetKeyboardEvent& aEvent,
