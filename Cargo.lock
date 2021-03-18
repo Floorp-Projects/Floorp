@@ -2071,9 +2071,9 @@ dependencies = [
 
 [[package]]
 name = "glean"
-version = "36.0.0"
+version = "34.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27c487254df8abcae3b3ff1a8d5ceb8f7d39b05e67d58f0b89898c20844da41d"
+checksum = "8193d78e62cd2e5e1e0d430e5ca0462c5998c3ac1ba8b723702edb3bb3a47689"
 dependencies = [
  "chrono",
  "crossbeam-channel 0.5.0",
@@ -2086,14 +2086,13 @@ dependencies = [
  "thiserror",
  "time",
  "uuid",
- "whatsys",
 ]
 
 [[package]]
 name = "glean-core"
-version = "36.0.0"
+version = "34.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0a249ed8bd8588cf97d03de14e0a8ebe4e637c52581fb497bfa0f2bbf7e85018"
+checksum = "f91bd1df09ff9a8111111c9202e57244873b4e25fc2f5909329230c0dce60d3c"
 dependencies = [
  "bincode",
  "chrono",
@@ -2105,7 +2104,6 @@ dependencies = [
  "serde",
  "serde_json",
  "uuid",
- "zeitstempel",
 ]
 
 [[package]]
@@ -5954,17 +5952,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "whatsys"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c24fff5aa1e0973964ba23a995e8b10fa2cdeae507e0cbbbd36f8403242a765d"
-dependencies = [
- "cc",
- "cfg-if 1.0.0",
- "libc",
-]
-
-[[package]]
 name = "winapi"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -6150,17 +6137,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "95acf0db5515d07da9965ec0e0ba6cc2d825e2caeb7303b66ca441729801254e"
 dependencies = [
  "linked-hash-map",
-]
-
-[[package]]
-name = "zeitstempel"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f2837f9ad7a7a8c88d1cc50cb0c3d202ce6e178aa6ebf3e49b29561896a61f1d"
-dependencies = [
- "cfg-if 1.0.0",
- "libc",
- "once_cell",
 ]
 
 [[package]]
