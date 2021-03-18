@@ -382,8 +382,8 @@ add_task(async function test_ui_state_unverified() {
     await openFxaPanel();
   }
 
-  const expectedLabel = gSync.fxaStrings.GetStringFromName(
-    "account.finishAccountSetup"
+  const expectedLabel = gSync.fluentStrings.formatValueSync(
+    "account-finish-account-setup"
   );
 
   checkMenuBarItem("sync-unverifieditem");
@@ -436,8 +436,8 @@ add_task(async function test_ui_state_loginFailed() {
     await openFxaPanel();
   }
 
-  const expectedLabel = gSync.fxaStrings.GetStringFromName(
-    "account.reconnectToFxA"
+  const expectedLabel = gSync.fluentStrings.formatValueSync(
+    "account-reconnect-to-fxa"
   );
 
   checkMenuBarItem("sync-reauthitem");
