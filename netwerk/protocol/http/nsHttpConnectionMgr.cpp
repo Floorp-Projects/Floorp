@@ -1499,6 +1499,19 @@ nsresult nsHttpConnectionMgr::DispatchTransaction(ConnectionEntry* ent,
   // when a muxed connection (e.g. h2) becomes available.
   trans->CancelPacing(NS_OK);
 
+  auto recordPendingTimeForHTTPSRR = [&](nsCString& aKey) {
+    uint32_t stage = trans->HTTPSSVCReceivedStage();
+    if (HTTPS_RR_IS_USED(stage)) {
+      aKey.Append("_with_https_rr");
+    } else {
+      aKey.Append("_no_https_rr");
+    }
+
+    AccumulateTimeDelta(Telemetry::TRANSACTION_WAIT_TIME_HTTPS_RR, aKey,
+                        trans->GetPendingTime(), TimeStamp::Now());
+  };
+
+  nsAutoCString httpVersionkey("h1"_ns);
   if (conn->UsingSpdy() || conn->UsingHttp3()) {
     LOG(
         ("Spdy Dispatch Transaction via Activate(). Transaction host = %s, "
@@ -1507,12 +1520,15 @@ nsresult nsHttpConnectionMgr::DispatchTransaction(ConnectionEntry* ent,
     rv = conn->Activate(trans, caps, priority);
     if (NS_SUCCEEDED(rv) && !trans->GetPendingTime().IsNull()) {
       if (conn->UsingSpdy()) {
+        httpVersionkey = "h2"_ns;
         AccumulateTimeDelta(Telemetry::TRANSACTION_WAIT_TIME_SPDY,
                             trans->GetPendingTime(), TimeStamp::Now());
       } else {
+        httpVersionkey = "h3"_ns;
         AccumulateTimeDelta(Telemetry::TRANSACTION_WAIT_TIME_HTTP3,
                             trans->GetPendingTime(), TimeStamp::Now());
       }
+      recordPendingTimeForHTTPSRR(httpVersionkey);
       trans->SetPendingTime(false);
     }
     return rv;
@@ -1526,6 +1542,7 @@ nsresult nsHttpConnectionMgr::DispatchTransaction(ConnectionEntry* ent,
   if (NS_SUCCEEDED(rv) && !trans->GetPendingTime().IsNull()) {
     AccumulateTimeDelta(Telemetry::TRANSACTION_WAIT_TIME_HTTP,
                         trans->GetPendingTime(), TimeStamp::Now());
+    recordPendingTimeForHTTPSRR(httpVersionkey);
     trans->SetPendingTime(false);
   }
   return rv;
