@@ -18,9 +18,10 @@ import os
 import subprocess
 import sys
 
-import setup_development
-
 here = os.path.abspath(os.path.dirname(__file__))
+sys.path.insert(0, here)
+
+import setup_development
 
 
 def run_hg(command):
@@ -29,7 +30,7 @@ def run_hg(command):
         command = command.split()
     command.insert(0, "hg")
     try:
-        output = subprocess.check_output(command, cwd=here)
+        output = subprocess.check_output(command, cwd=here, universal_newlines=True)
     except subprocess.CalledProcessError:
         sys.exit(1)
     return output
