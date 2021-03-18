@@ -76,10 +76,7 @@ static const CallSite* SlowCallSiteSearchByOffset(const MetadataTier& metadata,
 bool DebugState::getLineOffsets(size_t lineno, Vector<uint32_t>* offsets) {
   const CallSite* callsite =
       SlowCallSiteSearchByOffset(metadata(Tier::Debug), lineno);
-  if (callsite && !offsets->append(lineno)) {
-    return false;
-  }
-  return true;
+  return !(callsite && !offsets->append(lineno));
 }
 
 bool DebugState::getAllColumnOffsets(Vector<ExprLoc>* offsets) {

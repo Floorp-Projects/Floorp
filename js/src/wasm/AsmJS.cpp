@@ -1938,11 +1938,7 @@ class MOZ_STACK_CLASS ModuleValidator : public ModuleValidatorShared {
                              !parser_.pc_->sc()->hasExplicitUseStrict();
     asmJSMetadata_->source = do_AddRef(parser_.ss);
 
-    if (!addStandardLibraryMathInfo()) {
-      return false;
-    }
-
-    return true;
+    return addStandardLibraryMathInfo();
   }
 
   AsmJSParser<Unit>& parser() const { return parser_; }
@@ -3562,11 +3558,7 @@ static bool CheckLoadArray(FunctionValidator<Unit>& f, ParseNode* elem,
       MOZ_CRASH("Unexpected array type");
   }
 
-  if (!WriteArrayAccessFlags(f, viewType)) {
-    return false;
-  }
-
-  return true;
+  return WriteArrayAccessFlags(f, viewType);
 }
 
 template <typename Unit>
@@ -4932,9 +4924,8 @@ static bool CheckDivOrMod(FunctionValidator<Unit>& f, ParseNode* expr,
     *type = Type::Floatish;
     if (expr->isKind(ParseNodeKind::DivExpr)) {
       return f.encoder().writeOp(Op::F32Div);
-    } else {
-      return f.fail(expr, "modulo cannot receive float arguments");
     }
+    return f.fail(expr, "modulo cannot receive float arguments");
   }
 
   if (lhsType.isSigned() && rhsType.isSigned()) {
@@ -5857,10 +5848,7 @@ static bool CheckSwitch(FunctionValidator<Unit>& f, ParseNode* switchStmt) {
   }
 
   // Close the wrapping block.
-  if (!f.popBreakableBlock()) {
-    return false;
-  }
-  return true;
+  return f.popBreakableBlock();
 }
 
 static bool CheckReturnType(FunctionValidatorShared& f, ParseNode* usepn,
@@ -5903,11 +5891,7 @@ static bool CheckReturn(FunctionValidator<Unit>& f, ParseNode* returnStmt) {
     }
   }
 
-  if (!f.encoder().writeOp(Op::Return)) {
-    return false;
-  }
-
-  return true;
+  return f.encoder().writeOp(Op::Return);
 }
 
 template <typename Unit>
@@ -5925,10 +5909,7 @@ static bool CheckStatementList(FunctionValidator<Unit>& f, ParseNode* stmtList,
     }
   }
 
-  if (!f.popUnbreakableBlock(labels)) {
-    return false;
-  }
-  return true;
+  return f.popUnbreakableBlock(labels);
 }
 
 template <typename Unit>
@@ -6508,14 +6489,11 @@ static bool HasPureCoercion(JSContext* cx, HandleValue v) {
   // are not observable and coercion via ToNumber/ToInt32 definitely produces
   // NaN/0. We should remove this special case later once most apps have been
   // built with newer Emscripten.
-  if (v.toObject().is<JSFunction>() &&
-      HasNoToPrimitiveMethodPure(&v.toObject(), cx) &&
-      HasObjectValueOfMethodPure(&v.toObject(), cx) &&
-      HasNativeMethodPure(&v.toObject(), cx->names().toString, fun_toString,
-                          cx)) {
-    return true;
-  }
-  return false;
+  return v.toObject().is<JSFunction>() &&
+         HasNoToPrimitiveMethodPure(&v.toObject(), cx) &&
+         HasObjectValueOfMethodPure(&v.toObject(), cx) &&
+         HasNativeMethodPure(&v.toObject(), cx->names().toString, fun_toString,
+                             cx);
 }
 
 static bool ValidateGlobalVariable(JSContext* cx, const AsmJSGlobal& global,

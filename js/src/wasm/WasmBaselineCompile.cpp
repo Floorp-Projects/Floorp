@@ -17383,12 +17383,8 @@ bool BaseCompiler::init() {
   }
 
   ArgTypeVector args(funcType());
-  if (!fr.setupLocals(locals_, args, compilerEnv_.debugEnabled(),
-                      &localInfo_)) {
-    return false;
-  }
-
-  return true;
+  return fr.setupLocals(locals_, args, compilerEnv_.debugEnabled(),
+                        &localInfo_);
 }
 
 FuncOffsets BaseCompiler::finish() {

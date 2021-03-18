@@ -3027,10 +3027,7 @@ bool wasm::GenerateProvisionalLazyJitEntryStub(MacroAssembler& masm,
   masm.SetStackPointer64(sp);
 #endif
 
-  if (!FinishOffsets(masm, offsets)) {
-    return false;
-  }
-  return true;
+  return FinishOffsets(masm, offsets);
 }
 
 bool wasm::GenerateStubs(const ModuleEnvironment& env,
