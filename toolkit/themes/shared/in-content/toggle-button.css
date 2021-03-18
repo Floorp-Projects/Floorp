@@ -36,10 +36,8 @@ input[type="checkbox"].toggle-button:enabled:active {
   border-color: var(--border-color);
 }
 input[type="checkbox"].toggle-button:focus {
-  box-shadow: 0 0 0 1px var(--border-color), 0 0 0 4px rgba(10, 132, 255, 0.3);
-}
-input[type="checkbox"].toggle-button:checked:focus {
-  box-shadow: 0 0 0 1px var(--in-content-border-active), 0 0 0 4px rgba(10, 132, 255, 0.3);
+  outline: 2px solid var(--in-content-focus-outline-color);
+  outline-offset: var(--in-content-focus-outline-offset);
 }
 
 input[type="checkbox"].toggle-button:checked {
