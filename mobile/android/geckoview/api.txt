@@ -1226,7 +1226,7 @@ package org.mozilla.geckoview {
 
   @AnyThread public static class GeckoSession.SessionState extends AbstractSequentialList implements GeckoSession.HistoryDelegate.HistoryList Parcelable {
     ctor public SessionState(@NonNull GeckoSession.SessionState);
-    method @NonNull public static GeckoSession.SessionState fromString(@NonNull String);
+    method @Nullable public static GeckoSession.SessionState fromString(@Nullable String);
     method public void readFromParcel(@NonNull Parcel);
     field public static final Parcelable.Creator<GeckoSession.SessionState> CREATOR;
   }

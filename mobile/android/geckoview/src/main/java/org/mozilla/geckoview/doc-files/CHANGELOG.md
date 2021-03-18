@@ -34,6 +34,8 @@ exclude: true
 - ⚠️ Deprecate [`GeckoResult.ALLOW`][89.6] and [`GeckoResult.DENY`][89.7] in
   favor of [`GeckoResult.allow`][89.8] and [`GeckoResult.deny`][89.9].
   ([bug 1697270]({{bugzilla}}1697270)).
+- ⚠️ Update [`SessionState`][88.10] to handle null states/strings more gracefully.
+  ([bug 1685486]({{bugzilla}}1685486)).
 
 [88.1]: {{javadoc_uri}}/WebExtension.Download.html#update-org.mozilla.geckoview.WebExtension.Download.Info-
 [88.2]: {{javadoc_uri}}/PanZoomController.html#onTouchEventForDetailResult
@@ -44,6 +46,7 @@ exclude: true
 [88.7]: {{javadoc_uri}}/GeckoResult.html#DENY
 [88.8]: {{javadoc_uri}}/GeckoResult.html#allow--
 [88.9]: {{javadoc_uri}}/GeckoResult.html#deny--
+[88.10]: {{javadoc_uri}}/GeckoSession.SessionState.html
 
 ## v87
 - ⚠ Added [`WebExtension.DownloadInitData`][87.1] class that can be used to
@@ -56,6 +59,8 @@ exclude: true
   ([bug 1689745]({{bugzilla}}1689745))
 - Added support for HTTPS-only mode to [`GeckoRuntimeSettings`][87.5] via
   [`setAllowInsecureConnections`][87.6].
+- Removed [`JSONException`] throws from [`SessionState.fromString`][87.7], fixed annotations,
+  and clarified null-handling a bit.
   
 [87.1]: {{javadoc_uri}}/WebExtension.DownloadInitData.html
 [87.2]: {{javadoc_uri}}/WebExtension.Download.Info.html
@@ -63,6 +68,7 @@ exclude: true
 [87.4]: {{javadoc_uri}}/Image.ImageProcessingException.html
 [87.5]: {{javadoc_uri}}/GeckoRuntimeSettings.html
 [87.6]: {{javadoc_uri}}/GeckoRuntimeSettings.html#setAllowInsecureConnections-int-
+[87.7]: {{javadoc_uri}}/GeckoSession.SessionState.html#fromString-java.lang.String-
 
 ## v86
 - Removed deprecated [`ContentDelegate#onExternalResponse(GeckoSession, WebResponseInfo)`].
@@ -928,4 +934,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 2e897390b591268984d7af478badd5ee80a34ee4
+[api-version]: f6ad9d26fbb3880d60970a1f25e406096c9efca0
