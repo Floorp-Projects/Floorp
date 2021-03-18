@@ -59,23 +59,8 @@ nsMenuItemIconX::~nsMenuItemIconX() {
 void nsMenuItemIconX::SetupIcon(nsIContent* aContent) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  nsCOMPtr<nsIURI> iconURI = GetIconURI(aContent);
-  if (!iconURI) {
-    // There is no icon for this menu item. An icon might have been set
-    // earlier.  Clear it.
-    if (mIconImage) {
-      [mIconImage release];
-      mIconImage = nil;
-    }
-    return;
-  }
-
-  if (!mIconLoader) {
-    mIconLoader = new IconLoader(this);
-  }
-
-  nsresult rv = mIconLoader->LoadIcon(iconURI, aContent);
-  if (NS_FAILED(rv)) {
+  bool shouldHaveIcon = StartIconLoad(aContent);
+  if (!shouldHaveIcon) {
     // There is no icon for this menu item, as an error occurred while loading it.
     // An icon might have been set earlier or the place holder icon may have
     // been set.  Clear it.
@@ -94,6 +79,20 @@ void nsMenuItemIconX::SetupIcon(nsIContent* aContent) {
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+bool nsMenuItemIconX::StartIconLoad(nsIContent* aContent) {
+  RefPtr<nsIURI> iconURI = GetIconURI(aContent);
+  if (!iconURI) {
+    return false;
+  }
+
+  if (!mIconLoader) {
+    mIconLoader = new IconLoader(this);
+  }
+
+  nsresult rv = mIconLoader->LoadIcon(iconURI, aContent);
+  return NS_SUCCEEDED(rv);
 }
 
 already_AddRefed<nsIURI> nsMenuItemIconX::GetIconURI(nsIContent* aContent) {
