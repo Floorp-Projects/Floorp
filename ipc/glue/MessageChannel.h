@@ -81,6 +81,7 @@ enum class ResponseRejectReason {
   ChannelClosed,
   HandlerRejected,
   ActorDestroyed,
+  ResolverDestroyed,
   EndGuard_,
 };
 
