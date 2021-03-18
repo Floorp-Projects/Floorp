@@ -16,6 +16,7 @@
   --arrowpanel-background: var(--default-arrowpanel-background);
   --arrowpanel-color: var(--default-arrowpanel-color);
   --arrowpanel-border-color: var(--default-arrowpanel-border-color);
+  --arrowpanel-border-radius: 8px;
   --panel-disabled-color: GrayText;
   --panel-description-color: GrayText;
 
@@ -28,6 +29,7 @@
 @supports not -moz-bool-pref("browser.proton.enabled") {
 :root {
   --arrowpanel-padding: 10px;
+  --arrowpanel-border-radius: 0;
 }
 } /** END not Proton **/
 
