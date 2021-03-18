@@ -7,8 +7,6 @@
 
 #include "ipc/IPCMessageUtils.h"
 #include "SessionStoreData.h"
-#include "SessionStoreUtils.h"
-#include "SessionStoreRestoreData.h"
 
 namespace IPC {
 
@@ -69,69 +67,5 @@ struct ParamTraits<InputFormData> {
 };
 
 }  // namespace IPC
-
-namespace mozilla {
-namespace ipc {
-
-template <>
-struct IPDLParamTraits<mozilla::dom::SessionStoreRestoreData*> {
-  // Note that we intentionally don't de/serialize mChildren here. The receiver
-  // won't be doing anything with the children lists, and it avoids sending form
-  // data for subframes to the content processes of their embedders.
-
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
-                    mozilla::dom::SessionStoreRestoreData* aParam) {
-    bool isNull = !aParam;
-    WriteIPDLParam(aMsg, aActor, isNull);
-    if (isNull) {
-      return;
-    }
-    WriteIPDLParam(aMsg, aActor, aParam->mUrl);
-    WriteIPDLParam(aMsg, aActor, aParam->mInnerHTML);
-    WriteIPDLParam(aMsg, aActor, aParam->mScroll);
-    WriteIPDLParam(aMsg, aActor, aParam->mEntries);
-  }
-
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor,
-                   RefPtr<mozilla::dom::SessionStoreRestoreData>* aResult) {
-    *aResult = nullptr;
-    bool isNull;
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &isNull)) {
-      return false;
-    }
-    if (isNull) {
-      return true;
-    }
-    auto data = MakeRefPtr<mozilla::dom::SessionStoreRestoreData>();
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &data->mUrl) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &data->mInnerHTML) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &data->mScroll) ||
-        !ReadIPDLParam(aMsg, aIter, aActor, &data->mEntries)) {
-      return false;
-    }
-    *aResult = std::move(data);
-    return true;
-  }
-};
-
-template <>
-struct IPDLParamTraits<mozilla::dom::SessionStoreRestoreData::Entry> {
-  static void Write(IPC::Message* aMsg, IProtocol* aActor,
-                    mozilla::dom::SessionStoreRestoreData::Entry aParam) {
-    WriteIPDLParam(aMsg, aActor, aParam.mData);
-    WriteIPDLParam(aMsg, aActor, aParam.mIsXPath);
-  }
-
-  static bool Read(const IPC::Message* aMsg, PickleIterator* aIter,
-                   IProtocol* aActor,
-                   mozilla::dom::SessionStoreRestoreData::Entry* aResult) {
-    return ReadIPDLParam(aMsg, aIter, aActor, &aResult->mData) &&
-           ReadIPDLParam(aMsg, aIter, aActor, &aResult->mIsXPath);
-  }
-};
-
-}  // namespace ipc
-}  // namespace mozilla
 
 #endif  // mozilla_dom_SessionStoreMessageUtils_h
