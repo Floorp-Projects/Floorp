@@ -457,65 +457,8 @@ QuickSuggest Click
 Other telemetry relevant to the Address Bar
 -------------------------------------------
 
-SEARCH_COUNTS
-  This histogram tracks search engines and Search Access Points. It is augmented
-  by multiple SAPs, including the urlbar.
-  It's a keyed histogram, the keys are strings made up of search engine names
-  and SAP names, for example ``google.urlbar``.
-  For each key, this records the count of searches made using that engine and SAP.
-  SAP names can be:
-
-    - ``alias`` This is when using an alias (like ``@google``) in the urlbar.
-      Note there is often confusion between the terms alias and keyword, and
-      they may be used inappropriately: aliases refer to search engines, while
-      keywords refer to bookmarks. We expect no results for this SAP in Firefox
-      83+, since urlbar-searchmode replaces it.
-    - ``abouthome``
-    - ``contextmenu``
-    - ``newtab``
-    - ``searchbar``
-    - ``system``
-    - ``urlbar`` Except aliases and search mode.
-    - ``urlbar-searchmode`` Used when the Urlbar is in search mode.
-    - ``webextension``
-    - ``oneoff-urlbar``
-    - ``oneoff-searchbar``
-    - ``unknown`` This is actually the searchbar, when using the current engine
-      one-off button.
-
-browser.engagement.navigation.*
-  These keyed scalars track search through different SAPs, for example the
-  urlbar is tracked by ``browser.engagement.navigation.urlbar``.
-  It counts loads triggered in a subsession from the specified SAP, broken down
-  by the originating action.
-  Possible SAPs are:
-
-    - ``urlbar``  Except search mode.
-    - ``urlbar_searchmode``  Used when the Urlbar is in search mode.
-    - ``searchbar``
-    - ``about_home``
-    - ``about_newtab``
-    - ``contextmenu``
-    - ``webextension``
-    - ``system`` Indicates a search from the command line.
-
-  Recorded actions may be:
-
-    - ``search``
-      Used for any search from ``contextmenu``, ``system`` and ``webextension``.
-    - ``search_alias``
-      For ``urlbar``, indicates the user confirmed a search through an alias.
-    - ``search_enter``
-      For ``about_home`` and ``about:newtab`` this counts any search.
-      For the other SAPs it tracks typing and then pressing Enter.
-    - ``search_formhistory``
-      For ``urlbar``, indicates the user picked a form history result.
-    - ``search_oneoff``
-      For ``urlbar`` or ``searchbar``, indicates the user confirmed a search
-      using a one-off button.
-    - ``search_suggestion``
-      For ``urlbar`` or ``searchbar``, indicates the user confirmed a search
-      suggestion.
+Search Telemetry
+  Some of the `search telemetry`_ is also relevant to the address bar.
 
 contextual.services.topsites.*
   These keyed scalars instrument the impressions and clicks for sponsored TopSites
@@ -605,11 +548,4 @@ FX_URLBAR_SELECTED_RESULT_INDEX_BY_TYPE and FX_URLBAR_SELECTED_RESULT_INDEX_BY_T
   FX_URLBAR_SELECTED_RESULT_TYPE above). For each key, this recorded the indexes
   of picked results for that result type.
 
-Obsolete search probes
-----------------------
-
-navigation.search (OBSOLETE)
-  This is a legacy and disabled event telemetry that is currently under
-  discussion for removal or modernization. It can't be enabled through a pref.
-  it's more or less equivalent to browser.engagement.navigation, but can also
-  report the picked search engine.
+.. _search telemetry: /browser/search/telemetry.html
