@@ -158,6 +158,14 @@ def get_tasks_with_downstream(labels, full_task_graph, label_to_taskid):
     ).nodes & set(label_to_taskid.keys())
 
 
+def get_downstream_browsertime_tasks(labels, full_task_graph, label_to_taskid):
+    # Used to gather tasks when downstream tasks need to run as well. This
+    # function is specific to browsertime as it doesn't take an intersection
+    # with existing tasks, making it possible to schedule these without
+    # previously having scheduled them.
+    return full_task_graph.graph.transitive_closure(set(labels), reverse=True).nodes
+
+
 def rename_browsertime_vismet_task(label):
     # Vismet tasks have labels which are modified from
     # the task label which created the data so we can undo it here

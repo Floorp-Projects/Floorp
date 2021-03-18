@@ -12,7 +12,7 @@ from .util import (
     combine_task_graph_files,
     create_tasks,
     fetch_graph_and_labels,
-    get_tasks_with_downstream,
+    get_downstream_browsertime_tasks,
     rename_browsertime_vismet_task,
 )
 
@@ -64,7 +64,7 @@ def add_new_jobs_action(parameters, graph_config, input, task_group_id, task_id)
     if len(browsertime_tasks) > 0:
         to_run.extend(
             list(
-                get_tasks_with_downstream(
+                get_downstream_browsertime_tasks(
                     browsertime_tasks, full_task_graph, label_to_taskid
                 )
             )
