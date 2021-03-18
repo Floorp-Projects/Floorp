@@ -7,18 +7,21 @@ package org.mozilla.fenix.tabstray
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.tabstray.BrowserTabViewHolder.Companion.LAYOUT_ID_NORMAL_TAB
 import org.mozilla.fenix.tabstray.BrowserTabViewHolder.Companion.LAYOUT_ID_PRIVATE_TAB
-import org.mozilla.fenix.tabtray.FenixTabsAdapter
+import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
+import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 
 class TrayPagerAdapter(
-    context: Context,
-    val interactor: TabsTrayInteractor
+    val context: Context,
+    val interactor: TabsTrayInteractor,
+    val browserInteractor: BrowserTrayInteractor
 ) : RecyclerView.Adapter<TrayViewHolder>() {
 
-    private val normalAdapter by lazy { FenixTabsAdapter(context) }
-    private val privateAdapter by lazy { FenixTabsAdapter(context) }
+    private val normalAdapter by lazy { BrowserTabsAdapter(context, browserInteractor) }
+    private val privateAdapter by lazy { BrowserTabsAdapter(context, browserInteractor) }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrayViewHolder {
         val itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
@@ -37,7 +40,7 @@ class TrayPagerAdapter(
             else -> throw IllegalStateException("View type does not exist.")
         }
 
-        viewHolder.bind(adapter)
+        viewHolder.bind(adapter, GridLayoutManager(context, 1))
     }
 
     override fun getItemViewType(position: Int): Int {

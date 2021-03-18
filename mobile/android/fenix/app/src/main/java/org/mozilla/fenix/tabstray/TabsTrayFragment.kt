@@ -17,10 +17,31 @@ import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.component_tabstray2.*
 import kotlinx.android.synthetic.main.component_tabstray2.view.*
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.requireComponents
+import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
+import org.mozilla.fenix.tabstray.browser.DefaultBrowserTrayInteractor
+import org.mozilla.fenix.tabstray.browser.RemoveTabUseCaseWrapper
+import org.mozilla.fenix.tabstray.browser.SelectTabUseCaseWrapper
 
 class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
     lateinit var behavior: BottomSheetBehavior<ConstraintLayout>
+
+    private val selectTabUseCase by lazy {
+        SelectTabUseCaseWrapper(
+            requireComponents.analytics.metrics,
+            requireComponents.useCases.tabsUseCases.selectTab
+        ) {
+            navigateToBrowser()
+        }
+    }
+
+    private val removeUseCases by lazy {
+        RemoveTabUseCaseWrapper(requireComponents.analytics.metrics
+        ) {
+            tabRemoved(it)
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,7 +65,13 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupPager(view.context, this)
+        val browserTrayInteractor = DefaultBrowserTrayInteractor(
+            this,
+            selectTabUseCase,
+            removeUseCases
+        )
+
+        setupPager(view.context, this, browserTrayInteractor)
     }
 
     override fun setCurrentTrayPosition(position: Int) {
@@ -65,19 +92,26 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         }
     }
 
-    override fun tabRemoved(sessionId: String) {
+    override fun tabRemoved(tabId: String) {
         // TODO re-implement these methods
         // showUndoSnackbarForTab(sessionId)
         // removeIfNotLastTab(sessionId)
+
+        // Temporary
+        requireComponents.useCases.tabsUseCases.removeTab(tabId)
     }
 
-    private fun setupPager(context: Context, interactor: TabsTrayInteractor) {
+    private fun setupPager(
+        context: Context,
+        trayInteractor: TabsTrayInteractor,
+        browserInteractor: BrowserTrayInteractor
+    ) {
         tabsTray.apply {
-            adapter = TrayPagerAdapter(context, interactor)
+            adapter = TrayPagerAdapter(context, trayInteractor, browserInteractor)
             isUserInputEnabled = false
         }
 
-        tab_layout.addOnTabSelectedListener(TabLayoutObserver(interactor))
+        tab_layout.addOnTabSelectedListener(TabLayoutObserver(trayInteractor))
     }
 }
 

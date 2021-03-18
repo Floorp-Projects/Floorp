@@ -7,12 +7,8 @@ package org.mozilla.fenix.tabstray.browser
 import android.content.Context
 import android.util.AttributeSet
 import androidx.recyclerview.widget.RecyclerView
-import mozilla.components.browser.tabstray.TabsAdapter
-import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.tabs.tabstray.TabsFeature
 import mozilla.components.support.base.feature.ViewBoundFeatureWrapper
-import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TrayItem
@@ -25,7 +21,14 @@ abstract class BaseBrowserTrayList @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : RecyclerView(context, attrs, defStyleAttr), TrayItem {
 
+    /**
+     * The browser tab types we would want to show.
+     */
     enum class BrowserTabType { NORMAL, PRIVATE }
+
+    /**
+     * A configuration for classes that extend [BaseBrowserTrayList].
+     */
     data class Configuration(val browserTabType: BrowserTabType)
 
     abstract val configuration: Configuration
@@ -69,27 +72,5 @@ abstract class BaseBrowserTrayList @JvmOverloads constructor(
         // lazy reference to the feature/adapter so that we do not re-create
         // it every time it's attached. This reference is our way to init.
         tabsFeature
-    }
-}
-
-internal class SelectTabUseCaseWrapper(
-    private val metrics: MetricController,
-    private val selectTab: TabsUseCases.SelectTabUseCase,
-    private val onSelect: (String) -> Unit
-) : TabsUseCases.SelectTabUseCase {
-    override fun invoke(tabId: String) {
-        metrics.track(Event.OpenedExistingTab)
-        selectTab(tabId)
-        onSelect(tabId)
-    }
-}
-
-internal class RemoveTabUseCaseWrapper(
-    private val metrics: MetricController,
-    private val onRemove: (String) -> Unit
-) : TabsUseCases.RemoveTabUseCase {
-    override fun invoke(sessionId: String) {
-        metrics.track(Event.ClosedExistingTab)
-        onRemove(sessionId)
     }
 }

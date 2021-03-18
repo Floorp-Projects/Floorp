@@ -5,17 +5,22 @@
 package org.mozilla.fenix.tabstray
 
 import android.view.View
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
 import org.mozilla.fenix.R
 import org.mozilla.fenix.tabstray.browser.BaseBrowserTrayList
 
+/**
+ * Base [RecyclerView.ViewHolder] for [TrayPagerAdapter] items.
+ */
 sealed class TrayViewHolder constructor(
     override val containerView: View
 ) : RecyclerView.ViewHolder(containerView), LayoutContainer {
 
-    abstract fun bind(adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>)
+    abstract fun bind(
+        adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
+        layoutManager: RecyclerView.LayoutManager
+    )
 }
 
 class BrowserTabViewHolder(
@@ -29,8 +34,11 @@ class BrowserTabViewHolder(
         trayList.interactor = interactor
     }
 
-    override fun bind(adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>) {
-        trayList.layoutManager = LinearLayoutManager(itemView.context)
+    override fun bind(
+        adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
+        layoutManager: RecyclerView.LayoutManager
+    ) {
+        trayList.layoutManager = layoutManager
         trayList.adapter = adapter
     }
 

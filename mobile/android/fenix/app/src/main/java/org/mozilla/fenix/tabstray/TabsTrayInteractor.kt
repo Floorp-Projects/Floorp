@@ -16,7 +16,7 @@ interface TabsTrayInteractor {
     fun navigateToBrowser()
 
     /**
-     * Invoked when a tab is removed from the tabs tray with the given [sessionId].
+     * Invoked when a tab is removed from the tabs tray with the given [tabId].
      */
-    fun tabRemoved(sessionId: String)
+    fun tabRemoved(tabId: String)
 }
