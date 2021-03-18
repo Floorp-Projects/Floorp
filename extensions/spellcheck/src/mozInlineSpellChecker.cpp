@@ -70,9 +70,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
-// Set to spew messages to the console about what is happening.
-//#define DEBUG_INLINESPELL
-
 // the number of milliseconds that we will take at once to do spellchecking
 #define INLINESPELL_CHECK_TIMEOUT 1
 
@@ -1332,10 +1329,11 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
     // see if we've done enough words in this round and run out of time.
     if (wordsChecked >= INLINESPELL_MINIMUM_WORDS_BEFORE_TIMEOUT &&
         PR_Now() > PRTime(beginTime + kMaxSpellCheckTimeInUsec)) {
-// stop checking, our time limit has been exceeded.
-#ifdef DEBUG_INLINESPELL
-      printf("We have run out of the time, schedule next round.\n");
-#endif
+      // stop checking, our time limit has been exceeded.
+      MOZ_LOG(
+          sInlineSpellCheckerLog, LogLevel::Verbose,
+          ("%s: we have run out of time, schedule next round.", __FUNCTION__));
+
       CheckCurrentWordsNoSuggest(aSpellCheckSelection, std::move(words),
                                  std::move(checkRanges));
 
@@ -1351,11 +1349,10 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
       return NS_OK;
     }
 
-#ifdef DEBUG_INLINESPELL
-    printf("->Got word \"%s\"", NS_ConvertUTF16toUTF8(wordText).get());
-    if (dontCheckWord) printf(" (not checking)");
-    printf("\n");
-#endif
+    MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Debug,
+            ("%s: got word \"%s\"%s", __FUNCTION__,
+             NS_ConvertUTF16toUTF8(wordText).get(),
+             dontCheckWord ? " (not checking)" : ""));
 
     ErrorResult erv;
     // see if there is a spellcheck range that already intersects the word
