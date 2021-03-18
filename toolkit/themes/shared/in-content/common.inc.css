@@ -21,9 +21,12 @@
   --in-content-accent-color: #0a84ff;
   --in-content-accent-color-active: #0060df;
   --in-content-border-hover: var(--grey-90-a50);
+  --in-content-border-active: var(--blue-50);
+  --in-content-border-active-shadow: var(--blue-50-a30);
   --in-content-border-invalid: var(--red-50);
   --in-content-border-invalid-shadow: var(--red-50-a30);
   --in-content-border-color: #d7d7db;
+  --in-content-category-outline-focus: 1px dotted #0a84ff;
   --in-content-link-color: var(--blue-60);
   --in-content-link-color-hover: var(--blue-70);
   --in-content-link-color-active: var(--blue-80);
@@ -35,11 +38,17 @@
   --in-content-primary-button-background: #0061e0;
   --in-content-primary-button-background-hover: #0250bb;
   --in-content-primary-button-background-active: #053e94;
+  /* Once proton ships, these can probably stop being variables. */
+  --in-content-button-border-radius: 4px;
+  /* Make outline-radius slightly bigger than the border-radius,
+   * to make the thicker outline corners look smooth */
+  --in-content-focus-outline-radius: 6px;
+  --in-content-focus-outline-offset: 2px;
   --in-content-focus-outline-color: var(--in-content-primary-button-background);
+  --in-content-button-box-shadow: transparent;
 
   /* Note: 1px smaller than we want because we have a 1px transparent border. */
   /* Once proton ships, these can probably stop being variables. */
-  --in-content-button-border-radius: 4px;
   --in-content-button-horizontal-padding: 15px;
   --in-content-button-vertical-padding: 7px;
 
@@ -110,10 +119,14 @@
   --in-content-primary-button-background-hover: var(--blue-70);
   --in-content-primary-button-background-active: var(--blue-80);
   --in-content-button-border-radius: 2px;
-  --in-content-focus-outline-color: var(--blue-50);
+  --in-content-focus-outline-radius: 3px;
+  --in-content-focus-outline-offset: -1px;
+  --in-content-focus-outline-color: var(--in-content-border-active);
 
   --in-content-button-horizontal-padding: 8px;
   --in-content-button-vertical-padding: 0;
+
+  --in-content-button-box-shadow: var(--in-content-border-active-shadow);
 
   --in-content-table-background: #ebebeb;
 }
@@ -302,18 +315,15 @@ html|button {
 button:-moz-focusring,
 html|select:-moz-focusring,
 html|input:is([type="checkbox"], [type="color"], [type="radio"]):-moz-focusring,
-xul|menulist:-moz-focusring,
-xul|checkbox:not([native]):-moz-focusring > .checkbox-check, /* :not([native]) to win specificity over checkbox.css */
-xul|radio[focused="true"] > .radio-check,
-xul|tab:-moz-focusring > .tab-middle > .tab-text {
-  box-shadow: none;
+xul|menulist:-moz-focusring {
   outline: 2px solid var(--in-content-focus-outline-color);
-  outline-offset: 2px;
-  -moz-outline-radius: 6px;
+  /* offset outline to align with 1px border-width set for buttons/menulists above. */
+  outline-offset: var(--in-content-focus-outline-offset);
+  -moz-outline-radius: var(--in-content-focus-outline-radius);
+  box-shadow: 0 0 0 4px var(--in-content-button-box-shadow);
 }
 
-html|input[type="radio"]:-moz-focusring,
-xul|radio[focused="true"] > .radio-check {
+html|input[type="radio"]:-moz-focusring {
   -moz-outline-radius: 100%;
 }
 
@@ -522,27 +532,22 @@ xul|search-textbox:not([disabled="true"], [focused]):hover {
 html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):focus,
 html|textarea:focus,
 xul|search-textbox[focused] {
-  border-color: var(--in-content-focus-outline-color);
-  outline: 1px solid var(--in-content-focus-outline-color);
+  border-color: var(--in-content-border-active);
+  box-shadow: 0 0 0 1px var(--in-content-border-active),
+    0 0 0 4px var(--in-content-border-active-shadow);
+  outline: none;
 }
 
 html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):-moz-ui-invalid,
 html|textarea:-moz-ui-invalid {
   border-color: var(--in-content-border-invalid);
-  outline: 1px solid var(--in-content-border-invalid);
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
-html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):focus,
-html|textarea:focus,
-xul|search-textbox[focused] {
-  box-shadow: 0 0 0 4px var(--blue-50-a30);
+/* Don't show the field error outlines and focus borders at the same time. */
+html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):-moz-ui-invalid:focus,
+html|textarea:-moz-ui-invalid:focus {
+  box-shadow: 0 0 0 3px var(--in-content-border-invalid-shadow);
 }
-html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):-moz-ui-invalid,
-html|textarea:-moz-ui-invalid {
-  box-shadow: 0 0 0 4px var(--red-50-a30);
-}
-} /*** END !proton ***/
 
 html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):disabled,
 html|textarea:disabled,
@@ -737,7 +742,7 @@ xul|label[disabled="true"] {
   margin: 70px 0 0;
   border-width: 0;
   width: var(--in-content-sidebar-width);
-  outline: none;
+  box-shadow: none;
 }
 
 @media print {
@@ -752,7 +757,6 @@ html|*#categories {
 }
 
 #categories > .category {
-  border-radius: 4px;
   min-height: 48px;
   appearance: none;
   margin-inline-start: 34px;
@@ -781,6 +785,7 @@ html|*#categories > html|*.category:dir(rtl) {
 
 #categories > .category:hover {
   background-color: var(--in-content-button-background-hover);
+  border-radius: 4px;
 }
 
 #categories > .category:hover:active {
@@ -788,12 +793,9 @@ html|*#categories > html|*.category:dir(rtl) {
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
-#categories > .category {
-  border-radius: 2px;
-}
-
 #categories > .category:hover {
   background-color: var(--in-content-button-background);
+  border-radius: 2px;
 }
 
 #categories > .category:hover:active {
@@ -816,14 +818,13 @@ html|*#categories > html|*.category:dir(rtl) {
   color: var(--in-content-accent-color-active) !important;
 }
 
-#categories[keyboard-navigation="true"]:-moz-focusring > .category[current],
-#categories > .category:-moz-focusring {
-  outline: 2px solid var(--in-content-focus-outline-color);
-  outline-offset: -2px;
+#categories[keyboard-navigation="true"]:-moz-focusring > .category[current] {
+  outline: var(--in-content-category-outline-focus);
 }
 
 html|*#categories[last-input-type="mouse"] > html|button.category:-moz-focusring {
   outline: none;
+  box-shadow: none;
 }
 
 .category-name {
@@ -976,8 +977,9 @@ xul|tree {
 
 xul|tree:-moz-focusring,
 xul|richlistbox:-moz-focusring {
-  border-color: var(--in-content-focus-outline-color);
-  outline: 1px solid var(--in-content-focus-outline-color);
+  border-color: var(--in-content-border-active);
+  box-shadow: 0 0 0 1px var(--in-content-border-active),
+    0 0 0 4px var(--in-content-border-active-shadow);
 }
 
 xul|treecols {
@@ -1141,7 +1143,7 @@ input[type="text"][warning]:enabled:not(:focus) {
 .sidebar-footer-link {
   height: 36px;
   cursor: default;
-  border-radius: 4px;
+  border-radius: 2px;
   display: flex;
   align-items: center;
 
@@ -1164,10 +1166,6 @@ xul|*.sidebar-footer-link {
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
-.sidebar-footer-link {
-  border-radius: 2px;
-}
-
 .sidebar-footer-link:hover {
   background-color: var(--in-content-button-background);
 }
@@ -1178,9 +1176,8 @@ xul|*.sidebar-footer-link {
 } /*** END !proton ***/
 
 .sidebar-footer-link:-moz-focusring {
-  outline: 2px solid var(--in-content-focus-outline-color);
-  outline-offset: -2px;
-  -moz-outline-radius: 6px;
+  outline: var(--in-content-category-outline-focus);
+  outline-offset: -1px;
 }
 
 .sidebar-footer-icon {
