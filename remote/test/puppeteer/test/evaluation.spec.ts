@@ -276,7 +276,7 @@ describe('Evaluation specs', function () {
 
       const windowHandle = await page.evaluateHandle(() => window);
       const errorText = await windowHandle
-        .jsonValue()
+        .jsonValue<string>()
         .catch((error_) => error_.message);
       const error = await page
         .evaluate<(errorText: string) => Error>((errorText) => {
