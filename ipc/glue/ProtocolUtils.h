@@ -17,6 +17,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/FunctionRef.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/RefPtr.h"
@@ -165,6 +166,7 @@ const char* ProtocolIdToName(IPCMessageStart aId);
 class IToplevelProtocol;
 class ActorLifecycleProxy;
 class WeakActorLifecycleProxy;
+class IPDLResolverInner;
 
 class IProtocol : public HasResultCodes {
  public:
@@ -272,6 +274,7 @@ class IProtocol : public HasResultCodes {
 
   friend class IToplevelProtocol;
   friend class ActorLifecycleProxy;
+  friend class IPDLResolverInner;
 
   void SetId(int32_t aId);
 
@@ -726,6 +729,29 @@ class WeakActorLifecycleProxy final {
 
 void TableToArray(const nsTHashtable<nsPtrHashKey<void>>& aTable,
                   nsTArray<void*>& aArray);
+
+class IPDLResolverInner final {
+ public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_DESTROY(IPDLResolverInner,
+                                                     Destroy())
+
+  explicit IPDLResolverInner(UniquePtr<IPC::Message> aReply, IProtocol* aActor);
+
+  template <typename F>
+  void Resolve(F&& aWrite) {
+    ResolveOrReject(true, aWrite);
+  }
+
+ private:
+  void ResolveOrReject(bool aResolve,
+                       FunctionRef<void(IPC::Message*, IProtocol*)> aWrite);
+
+  void Destroy();
+  ~IPDLResolverInner();
+
+  UniquePtr<IPC::Message> mReply;
+  RefPtr<WeakActorLifecycleProxy> mWeakProxy;
+};
 
 }  // namespace ipc
 

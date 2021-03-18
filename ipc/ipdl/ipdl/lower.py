@@ -4984,31 +4984,19 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         if not md.decl.type.isAsync() or not md.hasReply():
             return []
 
-        selfvar = ExprVar("self__")
-        serializeParams = [
-            StmtCode("bool resolve__ = true;\n"),
-            _ParamTraits.checkedWrite(
-                None,
-                ExprVar("resolve__"),
-                self.replyvar,
-                sentinelKey="resolve__",
-                actor=selfvar,
-            ),
-        ]
-
         def paramValue(idx):
             assert idx < len(md.returns)
             if len(md.returns) > 1:
                 return ExprCode("mozilla::Get<${idx}>(aParam)", idx=idx)
             return ExprVar("aParam")
 
-        serializeParams += [
+        serializeParams = [
             _ParamTraits.checkedWrite(
                 p.ipdltype,
                 paramValue(idx),
                 self.replyvar,
                 sentinelKey=p.name,
-                actor=selfvar,
+                actor=ExprVar("self__"),
             )
             for idx, p in enumerate(md.returns)
         ]
@@ -5016,33 +5004,23 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         return [
             StmtCode(
                 """
-                int32_t seqno__ = ${msgvar}.seqno();
-                RefPtr<mozilla::ipc::ActorLifecycleProxy> proxy__ =
-                    GetLifecycleProxy();
+                UniquePtr<IPC::Message> ${replyvar}(${replyCtor}(${routingId}));
+                ${replyvar}->set_seqno(${msgvar}.seqno());
 
-                ${resolvertype} resolver = [proxy__, seqno__, ${routingId}](${resolveType} aParam) {
-                    if (!proxy__->Get()) {
-                        NS_WARNING("Not resolving response because actor is dead.");
-                        return;
-                    }
-                    ${actortype} self__ = static_cast<${actortype}>(proxy__->Get());
+                RefPtr<mozilla::ipc::IPDLResolverInner> resolver__ =
+                    new mozilla::ipc::IPDLResolverInner(std::move(${replyvar}), this);
 
-                    IPC::Message* ${replyvar} = ${replyCtor}(${routingId});
-                    ${replyvar}->set_seqno(seqno__);
-
-                    $*{serializeParams}
-                    ${logSendingReply}
-                    bool sendok__ = self__->ChannelSend(${replyvar});
-                    if (!sendok__) {
-                        NS_WARNING("Error sending reply");
-                    }
+                ${resolvertype} resolver = [resolver__ = std::move(resolver__)](${resolveType} aParam) {
+                    resolver__->Resolve([&] (IPC::Message* ${replyvar}, IProtocol* self__) {
+                        $*{serializeParams}
+                        ${logSendingReply}
+                    });
                 };
                 """,
                 msgvar=self.msgvar,
                 resolvertype=Type(md.resolverName()),
                 routingId=routingId,
                 resolveType=_resolveType(md.returns, self.side),
-                actortype=_cxxBareType(ActorType(self.protocol.decl.type), self.side),
                 replyvar=self.replyvar,
                 replyCtor=ExprVar(md.pqReplyCtorFunc()),
                 serializeParams=serializeParams,
@@ -5050,7 +5028,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     md,
                     self.replyvar,
                     "Sending reply ",
-                    actor=selfvar,
+                    actor=ExprVar("self__"),
                 ),
             )
         ]
@@ -5191,32 +5169,34 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         isctor = md.decl.type.isCtor()
         resolve = ExprVar("resolve__")
         reason = ExprVar("reason__")
+
+        # NOTE: The `resolve__` and `reason__` parameters don't have sentinels,
+        # as they are serialized by the IPDLResolverInner type in
+        # ProtocolUtils.cpp rather than by generated code.
         desresolve = [
-            StmtDecl(Decl(Type.BOOL, resolve.name), init=ExprLiteral.FALSE),
-            _ParamTraits.checkedRead(
-                None,
-                ExprAddrOf(resolve),
-                msgexpr,
-                ExprAddrOf(itervar),
-                errfn,
-                "'%s'" % resolve.name,
-                sentinelKey=resolve.name,
-                errfnSentinel=errfnSent,
-                actor=ExprVar.THIS,
+            StmtCode(
+                """
+                bool resolve__ = false;
+                if (!ReadIPDLParam(${msgexpr}, &${itervar}, this, &resolve__)) {
+                    FatalError("Error deserializing bool");
+                    return MsgValueError;
+                }
+                """,
+                msgexpr=msgexpr,
+                itervar=itervar,
             ),
         ]
         desrej = [
-            StmtDecl(Decl(_ResponseRejectReason.Type(), reason.name), initargs=[]),
-            _ParamTraits.checkedRead(
-                None,
-                ExprAddrOf(reason),
-                msgexpr,
-                ExprAddrOf(itervar),
-                errfn,
-                "'%s'" % reason.name,
-                sentinelKey=reason.name,
-                errfnSentinel=errfnSent,
-                actor=ExprVar.THIS,
+            StmtCode(
+                """
+                ResponseRejectReason reason__{};
+                if (!ReadIPDLParam(${msgexpr}, &${itervar}, this, &reason__)) {
+                    FatalError("Error deserializing ResponseRejectReason");
+                    return MsgValueError;
+                }
+                """,
+                msgexpr=msgexpr,
+                itervar=itervar,
             ),
             self.endRead(msgvar, itervar),
         ]
