@@ -119,7 +119,7 @@
 
 #prefs > tr.locked {
   opacity: 0.4;
-  background-image: url("chrome://global/skin/icons/privacy-security.svg");
+  background-image: url("chrome://global/skin/icons/security.svg");
   background-repeat: no-repeat;
   background-position: 9px center;
   background-size: 16px 16px;
