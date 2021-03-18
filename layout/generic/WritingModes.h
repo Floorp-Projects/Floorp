@@ -1429,6 +1429,16 @@ class LogicalMargin {
             mMargin.bottom == 0);
   }
 
+  bool operator==(const LogicalMargin& aMargin) const {
+    CHECK_WRITING_MODE(aMargin.GetWritingMode());
+    return mMargin == aMargin.mMargin;
+  }
+
+  bool operator!=(const LogicalMargin& aMargin) const {
+    CHECK_WRITING_MODE(aMargin.GetWritingMode());
+    return mMargin != aMargin.mMargin;
+  }
+
   LogicalMargin operator+(const LogicalMargin& aMargin) const {
     CHECK_WRITING_MODE(aMargin.GetWritingMode());
     return LogicalMargin(GetWritingMode(), BStart() + aMargin.BStart(),
