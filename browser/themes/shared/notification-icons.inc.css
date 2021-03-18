@@ -393,7 +393,7 @@
 }
 
 .plugin-blocked > .plugin-icon {
-  list-style-image: url(chrome://global/skin/plugins/plugin-blocked.svg);
+  list-style-image: url(chrome://global/skin/icons/plugin-blocked.svg);
   fill: #d92215 !important;
 }
 
