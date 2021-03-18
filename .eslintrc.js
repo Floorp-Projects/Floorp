@@ -247,6 +247,7 @@ module.exports = {
         "dom/security/test/general/**",
         "dom/security/test/https-only/**",
         "dom/security/test/mixedcontentblocker/**",
+        "dom/security/test/sec-fetch/**",
         "dom/security/test/sri/**",
         "dom/security/test/referrer-policy/**",
         "dom/serviceworkers/**",
