@@ -7011,7 +7011,7 @@ static void InvalidateRenderingObservers(nsIFrame* aDisplayRoot,
   SVGObserverUtils::InvalidateDirectRenderingObservers(aFrame);
   nsIFrame* parent = aFrame;
   while (parent != aDisplayRoot &&
-         (parent = nsLayoutUtils::GetCrossDocParentFrame(parent)) &&
+         (parent = nsLayoutUtils::GetCrossDocParentFrameInProcess(parent)) &&
          !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
     SVGObserverUtils::InvalidateDirectRenderingObservers(parent);
   }
@@ -7066,7 +7066,7 @@ static void InvalidateFrameInternal(nsIFrame* aFrame, bool aHasDisplayItem,
   if (nsLayoutUtils::IsPopup(aFrame)) {
     needsSchedulePaint = true;
   } else {
-    nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(aFrame);
+    nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrameInProcess(aFrame);
     while (parent &&
            !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
       if (aHasDisplayItem && !parent->HasAnyStateBits(NS_FRAME_IS_NONDISPLAY)) {
@@ -7081,7 +7081,7 @@ static void InvalidateFrameInternal(nsIFrame* aFrame, bool aHasDisplayItem,
         needsSchedulePaint = true;
         break;
       }
-      parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
+      parent = nsLayoutUtils::GetCrossDocParentFrameInProcess(parent);
     }
     if (!parent) {
       needsSchedulePaint = true;
@@ -10853,7 +10853,7 @@ void nsIFrame::SetParent(nsContainerFrame* aParent) {
     for (nsIFrame* f = aParent;
          f && !f->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT |
                                   NS_FRAME_IS_NONDISPLAY);
-         f = nsLayoutUtils::GetCrossDocParentFrame(f)) {
+         f = nsLayoutUtils::GetCrossDocParentFrameInProcess(f)) {
       f->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
     }
   }
