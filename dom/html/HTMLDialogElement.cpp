@@ -128,28 +128,28 @@ void HTMLDialogElement::FocusDialog() {
   }
 
   Element* control = nullptr;
-  nsIContent* child = GetFirstChild();
-  while (child) {
-    if (child->IsElement()) {
-      nsIFrame* frame = child->GetPrimaryFrame();
-      if (frame && frame->IsFocusable()) {
-        if (child->AsElement()->HasAttr(kNameSpaceID_None,
-                                        nsGkAtoms::autofocus)) {
-          // Find the first descendant of element of subject that this
-          // not inert and has autofucus attribute
-          // inert bug: https://bugzilla.mozilla.org/show_bug.cgi?id=921504
-          control = child->AsElement();
-          break;
-        }
-        // If there isn't one, then let control be the first non-inert
-        // descendant element of subject, in tree order.
-        if (!control) {
-          control = child->AsElement();
-        }
-      }
+  for (auto* child = GetFirstChild(); child; child = child->GetNextNode(this)) {
+    auto* element = Element::FromNode(child);
+    if (!element) {
+      continue;
     }
-    child = child->GetNextNode(this);
+    nsIFrame* frame = element->GetPrimaryFrame();
+    if (!frame || !frame->IsFocusable()) {
+      continue;
+    }
+    if (element->HasAttr(nsGkAtoms::autofocus)) {
+      // Find the first descendant of element of subject that this not inert and
+      // has autofucus attribute.
+      control = element;
+      break;
+    }
+    if (!control) {
+      // If there isn't one, then let control be the first non-inert descendant
+      // element of subject, in tree order.
+      control = element;
+    }
   }
+
   // If there isn't one of those either, then let control be subject.
   if (!control) {
     control = this;
@@ -163,12 +163,9 @@ void HTMLDialogElement::FocusDialog() {
     if (rv.Failed()) {
       return;
     }
-  } else {
-    nsFocusManager* fm = nsFocusManager::GetFocusManager();
-    if (fm) {
-      // Clear the focus which ends up making the body gets focused
-      fm->ClearFocus(OwnerDoc()->GetWindow());
-    }
+  } else if (nsFocusManager* fm = nsFocusManager::GetFocusManager()) {
+    // Clear the focus which ends up making the body gets focused
+    fm->ClearFocus(OwnerDoc()->GetWindow());
   }
 
   // 4) Let topDocument be the active document of control's node document's
@@ -177,9 +174,8 @@ void HTMLDialogElement::FocusDialog() {
   // topDocument, then return.
   BrowsingContext* bc = control->OwnerDoc()->GetBrowsingContext();
   if (bc && bc->SameOriginWithTop()) {
-    nsCOMPtr<nsIDocShell> docShell = bc->Top()->GetDocShell();
-    if (docShell) {
-      if (Document* topDocument = docShell->GetDocument()) {
+    if (nsCOMPtr<nsIDocShell> docShell = bc->Top()->GetDocShell()) {
+      if (Document* topDocument = docShell->GetExtantDocument()) {
         // 6) Empty topDocument's autofocus candidates.
         // 7) Set topDocument's autofocus processed flag to true.
         topDocument->SetAutoFocusFired();
