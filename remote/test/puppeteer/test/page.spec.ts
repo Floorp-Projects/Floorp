@@ -172,11 +172,25 @@ describe('Page', function () {
       expect(await page.evaluate(() => !!window.opener)).toBe(false);
       expect(await popup.evaluate(() => !!window.opener)).toBe(false);
     });
-    it('should work with clicking target=_blank', async () => {
+    it('should work with clicking target=_blank and without rel=opener', async () => {
       const { page, server } = getTestState();
 
       await page.goto(server.EMPTY_PAGE);
       await page.setContent('<a target=_blank href="/one-style.html">yo</a>');
+      const [popup] = await Promise.all([
+        new Promise<Page>((x) => page.once('popup', x)),
+        page.click('a'),
+      ]);
+      expect(await page.evaluate(() => !!window.opener)).toBe(false);
+      expect(await popup.evaluate(() => !!window.opener)).toBe(false);
+    });
+    it('should work with clicking target=_blank and with rel=opener', async () => {
+      const { page, server } = getTestState();
+
+      await page.goto(server.EMPTY_PAGE);
+      await page.setContent(
+        '<a target=_blank rel=opener href="/one-style.html">yo</a>'
+      );
       const [popup] = await Promise.all([
         new Promise<Page>((x) => page.once('popup', x)),
         page.click('a'),
@@ -242,6 +256,7 @@ describe('Page', function () {
       await page.goto(server.EMPTY_PAGE);
       let error = null;
       await context
+        // @ts-expect-error purposeful bad input for test
         .overridePermissions(server.EMPTY_PAGE, ['foo'])
         .catch((error_) => (error = error_));
       expect(error.message).toBe('Unknown permission: foo');
@@ -381,6 +396,28 @@ describe('Page', function () {
       expect(await page.evaluate(() => window.navigator.onLine)).toBe(false);
       await page.setOfflineMode(false);
       expect(await page.evaluate(() => window.navigator.onLine)).toBe(true);
+    });
+  });
+
+  describe('Page.emulateNetworkConditions', function () {
+    it('should change navigator.connection.effectiveType', async () => {
+      const { page, puppeteer } = getTestState();
+
+      const slow3G = puppeteer.networkConditions['Slow 3G'];
+      const fast3G = puppeteer.networkConditions['Fast 3G'];
+
+      expect(
+        await page.evaluate('window.navigator.connection.effectiveType')
+      ).toBe('4g');
+      await page.emulateNetworkConditions(fast3G);
+      expect(
+        await page.evaluate('window.navigator.connection.effectiveType')
+      ).toBe('3g');
+      await page.emulateNetworkConditions(slow3G);
+      expect(
+        await page.evaluate('window.navigator.connection.effectiveType')
+      ).toBe('2g');
+      await page.emulateNetworkConditions(null);
     });
   });
 
@@ -707,6 +744,22 @@ describe('Page', function () {
         .waitForRequest(() => false)
         .catch((error_) => (error = error_));
       expect(error).toBeInstanceOf(puppeteer.errors.TimeoutError);
+    });
+    it('should work with async predicate', async () => {
+      const { page, server } = getTestState();
+      await page.goto(server.EMPTY_PAGE);
+      const [response] = await Promise.all([
+        page.waitForResponse(async (response) => {
+          console.log(response.url());
+          return response.url() === server.PREFIX + '/digits/2.png';
+        }),
+        page.evaluate(() => {
+          fetch('/digits/1.png');
+          fetch('/digits/2.png');
+          fetch('/digits/3.png');
+        }),
+      ]);
+      expect(response.url()).toBe(server.PREFIX + '/digits/2.png');
     });
     it('should work with no timeout', async () => {
       const { page, server } = getTestState();
