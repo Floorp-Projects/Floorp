@@ -472,9 +472,13 @@ class nsBlockFrame : public nsContainerFrame {
                         BlockReflowInput& aState, ReflowOutput& aMetrics,
                         nscoord* aBEndEdgeOfChildren);
 
-  mozilla::OverflowAreas ComputeOverflowAreas(const nsRect& aBounds,
-                                              const nsStyleDisplay* aDisplay,
-                                              nscoord aBEndEdgeOfChildren);
+  /**
+   * Helper method for Reflow(). Computes the overflow areas created by our
+   * children, and includes them into aOverflowAreas.
+   */
+  void ComputeOverflowAreas(mozilla::OverflowAreas& aOverflowAreas,
+                            nscoord aBEndEdgeOfChildren,
+                            const nsStyleDisplay* aDisplay) const;
 
   /**
    * Add the frames in aFrameList to this block after aPrevSibling.
