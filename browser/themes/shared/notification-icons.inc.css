@@ -199,6 +199,45 @@
   list-style-image: url(chrome://browser/skin/notification-icons/webauthn.svg);
 }
 
+@supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
+#webRTC-preview:not([hidden]) {
+  min-width: 368px;
+  min-height: 10em;
+  -moz-box-orient: vertical;
+}
+
+#webRTC-previewVideo {
+  border-radius: 4px;
+  border: 1px solid var(--panel-separator-color);
+  width: 368px;
+  /* If we don't set the min-width, width is ignored. */
+  min-width: 368px;
+  min-height: 10em;
+  max-height: 250px;
+}
+
+#webRTC-all-windows-shared,
+#webRTC-previewWarning {
+  font-size: 0.75em;
+  opacity: 0.6;
+}
+
+#webRTC-previewWarning {
+  margin-block-start: 14px;
+}
+
+/**
+ * All learn-more links tend to have an !important margin-top, but
+ * the small one below the WebRTC preview warning is special and
+ * doesn't have one by design.
+ */
+#webRTC-previewWarning-learnMore {
+  margin-top: 0 !important;
+  font-size: 0.75em;
+}
+} /** END Proton **/
+
+@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
 #webRTC-preview:not([hidden]) {
   border-radius: 4px;
   border: 1px solid var(--panel-separator-color);
@@ -207,7 +246,7 @@
   -moz-box-orient: vertical;
 }
 
-html|*#webRTC-previewVideo {
+#webRTC-previewVideo {
   width: 300px;
   /* If we don't set the min-width, width is ignored. */
   min-width: 300px;
@@ -225,6 +264,7 @@ html|*#webRTC-previewVideo {
   padding-inline-start: calc(1.5em + 16px);
   border-top: 1px solid var(--panel-separator-color);
 }
+} /** END not Proton **/
 
 #webRTC-previewWarningBox:-moz-locale-dir(rtl) {
   background-position: calc(100% - .75em) .75em;
