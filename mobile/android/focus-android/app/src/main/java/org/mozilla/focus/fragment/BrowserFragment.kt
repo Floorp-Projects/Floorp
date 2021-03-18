@@ -35,6 +35,7 @@ import kotlinx.android.synthetic.main.fragment_browser.*
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.findTabOrCustomTab
+import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.CustomTabConfig
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.content.DownloadState
@@ -627,22 +628,23 @@ class BrowserFragment :
     }
 
     override fun biometricCreateNewSessionWithLink() {
-        for (session in requireComponents.sessionManager.sessions) {
-            if (session != requireComponents.sessionManager.selectedSession) {
-                requireComponents.sessionManager.remove(session)
-            }
-        }
+        val state = requireComponents.store.state
+        val tabs = state.privateTabs
+            .map { tab -> tab.id }
+            .filter { tabId -> tabId != state.selectedTabId }
+
+        requireComponents.tabsUseCases.removeTabs(tabs)
 
         // Purposefully not calling onAuthSuccess in case we add to that function in the future
-        view!!.alpha = 1f
+        requireView().alpha = 1f
     }
 
     override fun biometricCreateNewSession() {
-        requireComponents.sessionManager.removeSessions()
+        requireComponents.tabsUseCases.removeAllTabs()
     }
 
     override fun onAuthSuccess() {
-        view!!.alpha = 1f
+        requireView().alpha = 1f
     }
 
     override fun onResume() {
@@ -654,7 +656,7 @@ class BrowserFragment :
 
         if (Biometrics.isBiometricsEnabled(requireContext())) {
             if (biometricController == null) {
-                biometricController = BiometricAuthenticationHandler(context!!)
+                biometricController = BiometricAuthenticationHandler(requireContext())
             }
 
             displayBiometricPromptIfNeeded()
@@ -716,7 +718,7 @@ class BrowserFragment :
 
                 // If there are no other sessions then we remove the whole task because otherwise
                 // the old session might still be partially visible in the app switcher.
-                if (requireComponents.sessionManager.sessions.isEmpty()) {
+                if (requireComponents.store.state.privateTabs.isEmpty()) {
                     requireActivity().finishAndRemoveTask()
                 } else {
                     requireActivity().finish()

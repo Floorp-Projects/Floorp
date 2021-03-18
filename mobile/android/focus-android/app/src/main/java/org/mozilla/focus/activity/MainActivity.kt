@@ -193,7 +193,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         val fromShortcut = intent.getBooleanExtra(EXTRA_SHORTCUT, false)
         val fromNotification = intent.getBooleanExtra(EXTRA_NOTIFICATION, false)
 
-        components.sessionManager.removeSessions()
+        components.tabsUseCases.removeAllTabs()
 
         if (fromShortcut) {
             TelemetryWrapper.eraseShortcutEvent()
