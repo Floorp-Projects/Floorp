@@ -4303,6 +4303,7 @@ LogicVRegister Simulator::fcvtl2(VectorFormat vform,
 LogicVRegister Simulator::fcvtn(VectorFormat vform,
                                 LogicVRegister dst,
                                 const LogicVRegister& src) {
+  dst.ClearForWrite(vform);
   if (LaneSizeInBitsFromFormat(vform) == kHRegSize) {
     for (int i = 0; i < LaneCountFromFormat(vform); i++) {
       dst.SetFloat(i,
