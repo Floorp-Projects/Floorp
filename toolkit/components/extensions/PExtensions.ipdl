@@ -6,9 +6,20 @@
 
 include protocol PContent;
 include protocol PInProcess;
+include DOMTypes;
+include "mozilla/ipc/URIUtils.h";
 
 namespace mozilla {
 namespace extensions {
+
+struct FrameTransitionData
+{
+    bool clientRedirect;
+    bool formSubmit;
+    bool forwardBack;
+    bool reload;
+    bool serverRedirect;
+};
 
 /**
  * A generic protocol used by the extension framework for process-level IPC. A
@@ -22,6 +33,25 @@ refcounted protocol PExtensions
 
   parent:
     async __delete__();
+
+    async DocumentChange(MaybeDiscardedBrowsingContext bc,
+                         FrameTransitionData transitionData,
+                         nsIURI location);
+
+    async HistoryChange(MaybeDiscardedBrowsingContext bc,
+                        FrameTransitionData transitionData,
+                        nsIURI location,
+                        bool isHistoryStateUpdated,
+                        bool isReferenceFragmentUpdated);
+
+    async StateChange(MaybeDiscardedBrowsingContext bc,
+                      nsIURI requestURI,
+                      nsresult status,
+                      uint32_t stateFlags);
+
+    async CreatedNavigationTarget(MaybeDiscardedBrowsingContext bc,
+                                  MaybeDiscardedBrowsingContext sourceBC,
+                                  nsCString url);
 };
 
 } // namespace extensions
