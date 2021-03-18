@@ -10,6 +10,9 @@
 #include <stdlib.h>
 #include "mozilla/ArrayUtils.h"
 
+// Do not consider properties not valid in style rules
+#define CSS_PROP_LIST_EXCLUDE_NOT_IN_STYLE
+
 // Need an extra level of macro nesting to force expansion of method_
 // params before they get pasted.
 #define STRINGIFY_METHOD(method_) #method_

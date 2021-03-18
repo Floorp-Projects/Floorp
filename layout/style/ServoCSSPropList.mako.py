@@ -8,7 +8,7 @@ def _assign_slots(obj, args):
 
 
 class Longhand(object):
-    __slots__ = ["name", "method", "id", "flags", "pref"]
+    __slots__ = ["name", "method", "id", "rules", "flags", "pref"]
 
     def __init__(self, *args):
         _assign_slots(self, args)
@@ -19,7 +19,7 @@ class Longhand(object):
 
 
 class Shorthand(object):
-    __slots__ = ["name", "method", "id", "flags", "pref", "subprops"]
+    __slots__ = ["name", "method", "id", "rules", "flags", "pref", "subprops"]
 
     def __init__(self, *args):
         _assign_slots(self, args)
@@ -30,7 +30,7 @@ class Shorthand(object):
 
 
 class Alias(object):
-    __slots__ = ["name", "method", "alias_id", "prop_id", "flags", "pref"]
+    __slots__ = ["name", "method", "alias_id", "prop_id", "rules", "flags", "pref"]
 
     def __init__(self, *args):
         _assign_slots(self, args)
@@ -123,6 +123,9 @@ def exposed_on_getcs(prop):
     if prop.type() == "shorthand":
         return "SHORTHAND_IN_GETCS" in prop.flags
 
+def rules(prop):
+    return ", ".join('"{}"'.format(rule) for rule in prop.rule_types_allowed_names())
+
 def flags(prop):
     result = []
     if prop.explicitly_enabled_in_chrome():
@@ -154,15 +157,15 @@ def sub_properties(prop):
 
 data = [
     % for prop in data.longhands:
-    Longhand("${prop.name}", "${method(prop)}", "${prop.ident}", [${flags(prop)}], ${pref(prop)}),
+    Longhand("${prop.name}", "${method(prop)}", "${prop.ident}", [${rules(prop)}], [${flags(prop)}], ${pref(prop)}),
     % endfor
 
     % for prop in data.shorthands:
-    Shorthand("${prop.name}", "${prop.camel_case}", "${prop.ident}", [${flags(prop)}], ${pref(prop)},
+    Shorthand("${prop.name}", "${prop.camel_case}", "${prop.ident}", [${rules(prop)}], [${flags(prop)}], ${pref(prop)},
               [${sub_properties(prop)}]),
     % endfor
 
     % for prop in data.all_aliases():
-    Alias("${prop.name}", "${prop.camel_case}", "${prop.ident}", "${prop.original.ident}", [], ${pref(prop)}),
+    Alias("${prop.name}", "${prop.camel_case}", "${prop.ident}", "${prop.original.ident}", [${rules(prop)}], [], ${pref(prop)}),
     % endfor
 ]
