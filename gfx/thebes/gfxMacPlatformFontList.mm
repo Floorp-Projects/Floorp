@@ -1084,6 +1084,11 @@ void gfxMacPlatformFontList::InitAliasesForSingleFaceList() {
       }
     }
   }
+  if (!mAliasTable.IsEmpty()) {
+    // This will be updated when the font loader completes, but we require
+    // at least the Osaka-Mono alias to be available immediately.
+    SharedFontList()->SetAliases(mAliasTable);
+  }
 }
 
 void gfxMacPlatformFontList::InitSingleFaceList() {
