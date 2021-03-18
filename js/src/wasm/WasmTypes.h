@@ -3538,9 +3538,8 @@ struct WasmTryNote {
   bool operator<(const WasmTryNote& other) const {
     if (end == other.end) {
       return begin > other.begin;
-    } else {
-      return end < other.end;
     }
+    return end < other.end;
   }
 };
 
