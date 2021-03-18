@@ -1,3 +1,8 @@
+const { AppConstants } = SpecialPowers.Cu.import(
+  "resource://gre/modules/AppConstants.jsm",
+  {}
+);
+
 // In each list of tests below, test file types that are not supported should
 // be ignored. To make sure tests respect that, we include a file of type
 // "bogus/duh" in each list.
@@ -499,9 +504,6 @@ var gPlayTests = [
   // Test playback of a MP4 file with a non-zero start time (and audio starting
   // a second later).
   { name: "bipbop-lateaudio.mp4", type: "video/mp4" },
-  // Ambisonics AAC, requires AAC extradata to be set when creating decoder (see bug 1431169)
-  // Also test 4.0 decoding.
-  { name: "ambisonics.mp4", type: "audio/mp4", duration: 16.48 },
   // Opus in MP4 channel mapping=0 sample file (content shorter due to preskip)
   {
     name: "opus-sample.mp4",
@@ -565,6 +567,25 @@ const win32 =
   !SpecialPowers.Services.appinfo.is64Bit;
 if (!win32) {
   gPlayTests.push({ name: "av1.mp4", type: "video/mp4", duration: 1.0 });
+}
+
+// ambisonics.mp4 causes intermittents, so we conditionally add it until we fix
+// the root cause.
+const skipAmbisonics =
+  // Bug 1484451 - skip on mac debug
+  (AppConstants.platform == "macosx" && AppConstants.DEBUG) ||
+  // Bug 1483259 - skip on linux64 opt
+  (AppConstants.platform == "linux" &&
+    !AppConstants.DEBUG &&
+    SpecialPowers.Services.appinfo.is64Bit);
+if (!skipAmbisonics) {
+  // Ambisonics AAC, requires AAC extradata to be set when creating decoder (see bug 1431169)
+  // Also test 4.0 decoding.
+  gPlayTests.push({
+    name: "ambisonics.mp4",
+    type: "audio/mp4",
+    duration: 16.48,
+  });
 }
 
 var gSeekToNextFrameTests = [
