@@ -131,14 +131,10 @@ nsStandaloneNativeMenu::ForceUpdateNativeMenuAt(const nsAString& indexString) {
       [NSString stringWithCharacters:reinterpret_cast<const unichar*>(indexString.BeginReading())
                               length:indexString.Length()];
   NSArray<NSString*>* indexes = [locationString componentsSeparatedByString:@"|"];
-  unsigned int indexCount = indexes.count;
-  if (indexCount == 0) {
-    return NS_OK;
-  }
-
   nsMenuX* currentMenu = mMenu.get();
 
   // now find the correct submenu
+  unsigned int indexCount = indexes.count;
   for (unsigned int i = 1; currentMenu && i < indexCount; i++) {
     int targetIndex = [indexes objectAtIndex:i].intValue;
     int visible = 0;
@@ -157,14 +153,15 @@ nsStandaloneNativeMenu::ForceUpdateNativeMenuAt(const nsAString& indexString) {
         visible++;
         if (targetMenu->MenuObjectType() == eSubmenuObjectType && visible == (targetIndex + 1)) {
           currentMenu = static_cast<nsMenuX*>(targetMenu);
-          // fake open/close to cause lazy update to happen
-          currentMenu->MenuOpened();
-          currentMenu->MenuClosed();
           break;
         }
       }
     }
   }
+
+  // fake open/close to cause lazy update to happen
+  currentMenu->MenuOpened();
+  currentMenu->MenuClosed();
 
   return NS_OK;
 
