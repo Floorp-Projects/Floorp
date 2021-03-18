@@ -34,6 +34,10 @@ int CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuObjectX* aChild)
 NSMenuItem* NativeMenuItemWithLocation(NSMenu* aRootMenu, NSString* aLocationString,
                                        bool aIsMenuBar);
 
+// Print out debugging information about the native menu tree structure.
+void DumpNativeMenu(NSMenu* aMenu);
+void DumpNativeMenuItem(NSMenuItem* aMenuItem);
+
 }  // namespace nsMenuUtilsX
 
 #endif  // nsMenuUtilsX_h_
