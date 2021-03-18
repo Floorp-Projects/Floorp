@@ -90,18 +90,32 @@ sRGBColor nsNativeBasicTheme::sAccentColorForeground = sRGBColor::OpaqueWhite();
 sRGBColor nsNativeBasicTheme::sAccentColorLight = sRGBColor::OpaqueWhite();
 sRGBColor nsNativeBasicTheme::sAccentColorDark = sRGBColor::OpaqueWhite();
 sRGBColor nsNativeBasicTheme::sAccentColorDarker = sRGBColor::OpaqueWhite();
+CSSIntCoord nsNativeBasicTheme::sHorizontalScrollbarHeight = CSSIntCoord(0);
+CSSIntCoord nsNativeBasicTheme::sVerticalScrollbarWidth = CSSIntCoord(0);
+
+static constexpr nsLiteralCString kPrefs[] = {
+    "widget.non-native-theme.use-theme-accent"_ns,
+    "widget.non-native-theme.win.scrollbar.use-system-size"_ns,
+    "widget.non-native-theme.scrollbar.size"_ns,
+};
 
 void nsNativeBasicTheme::Init() {
-  Preferences::RegisterCallbackAndCall(PrefChangedCallback,
-                                       "widget.non-native.use-theme-accent");
+  for (const auto& pref : kPrefs) {
+    Preferences::RegisterCallback(PrefChangedCallback, pref);
+  }
+  LookAndFeelChanged();
 }
 
 void nsNativeBasicTheme::Shutdown() {
-  Preferences::UnregisterCallback(PrefChangedCallback,
-                                  "widget.non-native.use-theme-accent");
+  for (const auto& pref : kPrefs) {
+    Preferences::UnregisterCallback(PrefChangedCallback, pref);
+  }
 }
 
-void nsNativeBasicTheme::LookAndFeelChanged() { RecomputeAccentColors(); }
+void nsNativeBasicTheme::LookAndFeelChanged() {
+  RecomputeAccentColors();
+  RecomputeScrollbarSizes();
+}
 
 void nsNativeBasicTheme::RecomputeAccentColors() {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
@@ -148,6 +162,18 @@ void nsNativeBasicTheme::RecomputeAccentColors() {
       RelativeLuminanceUtils::Adjust(accent, darkLuminanceAdjust));
   sAccentColorDarker = sRGBColor::FromABGR(
       RelativeLuminanceUtils::Adjust(accent, darkerLuminanceAdjust));
+}
+
+void nsNativeBasicTheme::RecomputeScrollbarSizes() {
+  uint32_t defaultSize = StaticPrefs::widget_non_native_theme_scrollbar_size();
+  if (StaticPrefs::widget_non_native_theme_win_scrollbar_use_system_size()) {
+    sHorizontalScrollbarHeight = LookAndFeel::GetInt(
+        LookAndFeel::IntID::SystemHorizontalScrollbarHeight, defaultSize);
+    sVerticalScrollbarWidth = LookAndFeel::GetInt(
+        LookAndFeel::IntID::SystemVerticalScrollbarWidth, defaultSize);
+  } else {
+    sHorizontalScrollbarHeight = sVerticalScrollbarWidth = defaultSize;
+  }
 }
 
 static bool IsScrollbarWidthThin(nsIFrame* aFrame) {
@@ -1934,13 +1960,14 @@ bool nsNativeBasicTheme::GetWidgetOverflow(nsDeviceContext* aContext,
 auto nsNativeBasicTheme::GetScrollbarSizes(nsPresContext* aPresContext,
                                            StyleScrollbarWidth aWidth, Overlay)
     -> ScrollbarSizes {
-  CSSCoord size =
-      aWidth == StyleScrollbarWidth::Thin
-          ? StaticPrefs::widget_non_native_theme_scrollbar_thin_size()
-          : StaticPrefs::widget_non_native_theme_scrollbar_normal_size();
-  LayoutDeviceIntCoord s =
-      (size * GetDPIRatioForScrollbarPart(aPresContext)).Rounded();
-  return {s, s};
+  CSSIntCoord h = sHorizontalScrollbarHeight;
+  CSSIntCoord w = sVerticalScrollbarWidth;
+  if (aWidth == StyleScrollbarWidth::Thin) {
+    h /= 2;
+    w /= 2;
+  }
+  auto dpi = GetDPIRatioForScrollbarPart(aPresContext);
+  return {(CSSCoord(w) * dpi).Rounded(), (CSSCoord(h) * dpi).Rounded()};
 }
 
 nscoord nsNativeBasicTheme::GetCheckboxRadioPrefSize() {
@@ -1991,10 +2018,14 @@ nsNativeBasicTheme::GetMinimumWidgetSize(nsPresContext* aPresContext,
       auto* style = nsLayoutUtils::StyleForScrollbar(aFrame);
       auto width = style->StyleUIReset()->mScrollbarWidth;
       auto sizes = GetScrollbarSizes(aPresContext, width, Overlay::No);
-      MOZ_ASSERT(sizes.mHorizontal == sizes.mVertical);
       // TODO: for short scrollbars it could be nice if the thumb could shrink
       // under this size.
-      aResult->SizeTo(sizes.mHorizontal, sizes.mHorizontal);
+      const bool isHorizontal =
+          aAppearance == StyleAppearance::ScrollbarthumbHorizontal ||
+          aAppearance == StyleAppearance::ScrollbarbuttonLeft ||
+          aAppearance == StyleAppearance::ScrollbarbuttonRight;
+      const auto size = isHorizontal ? sizes.mHorizontal : sizes.mVertical;
+      aResult->SizeTo(size, size);
       break;
     }
     default:

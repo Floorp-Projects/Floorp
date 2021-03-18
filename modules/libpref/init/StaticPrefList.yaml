@@ -10715,7 +10715,7 @@
   mirror: always
 
 # The size in CSS pixels at full zoom of the minimum scrollbar width.
-- name: widget.non-native-theme.scrollbar.normal-size
+- name: widget.non-native-theme.scrollbar.size
   type: uint32_t
 #if defined(MOZ_WIDGET_GTK)
   value: 12
@@ -10724,10 +10724,11 @@
 #endif
   mirror: always
 
-# The size in CSS pixels at full zoom of the "thin" scrollbars.
-- name: widget.non-native-theme.scrollbar.thin-size
-  type: uint32_t
-  value: 6
+# Whether we use the Windows CSS scrollbar sizes, or the scrollbar sizes
+# defined above.
+- name: widget.non-native-theme.win.scrollbar.use-system-size
+  type: bool
+  value: true
   mirror: always
 
 # The amount of space that the thumb should fill the scrollbar, from zero to
