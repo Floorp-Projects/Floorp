@@ -4336,8 +4336,7 @@ void nsGlobalWindowInner::StopVRActivity() {
 
 void nsGlobalWindowInner::SetFocusedElement(Element* aElement,
                                             uint32_t aFocusMethod,
-                                            bool aNeedsFocus,
-                                            bool aWillShowOutline) {
+                                            bool aNeedsFocus) {
   if (aElement && aElement->GetComposedDoc() != mDoc) {
     NS_WARNING("Trying to set focus to a node from a wrong document");
     return;
@@ -4347,7 +4346,6 @@ void nsGlobalWindowInner::SetFocusedElement(Element* aElement,
     NS_ASSERTION(!aElement, "Trying to focus cleaned up window!");
     aElement = nullptr;
     aNeedsFocus = false;
-    aWillShowOutline = false;
   }
   if (mFocusedElement != aElement) {
     UpdateCanvasFocus(false, aElement);
@@ -4356,13 +4354,15 @@ void nsGlobalWindowInner::SetFocusedElement(Element* aElement,
     mFocusMethod = aFocusMethod & FOCUSMETHOD_MASK;
   }
 
-  mFocusedElementShowedOutlines = aWillShowOutline;
-
   if (mFocusedElement) {
     // if a node was focused by a keypress, turn on focus rings for the
     // window.
     if (mFocusMethod & nsIFocusManager::FLAG_BYKEY) {
+      mUnknownFocusMethodShouldShowOutline = true;
       mFocusByKeyOccurred = true;
+    } else if (nsFocusManager::GetFocusMoveActionCause(mFocusMethod) !=
+               widget::InputContextAction::CAUSE_UNKNOWN) {
+      mUnknownFocusMethodShouldShowOutline = false;
     }
   }
 
