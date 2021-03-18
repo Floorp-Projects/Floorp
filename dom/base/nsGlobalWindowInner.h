@@ -1130,8 +1130,8 @@ class nsGlobalWindowInner final : public mozilla::dom::EventTarget,
   bool IsInModalState();
 
   void SetFocusedElement(mozilla::dom::Element* aElement,
-                         uint32_t aFocusMethod = 0,
-                         bool aNeedsFocus = false) override;
+                         uint32_t aFocusMethod = 0, bool aNeedsFocus = false,
+                         bool aWillShowOutline = false) override;
 
   uint32_t GetFocusMethod() override;
 
