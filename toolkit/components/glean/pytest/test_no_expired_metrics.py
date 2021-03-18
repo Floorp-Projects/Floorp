@@ -2,7 +2,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-import buildconfig
 import mozunit
 from os import path
 from pathlib import Path
@@ -30,7 +29,8 @@ def test_no_metrics_expired():
 
     (This also checks other lints, as a treat.)
     """
-    app_version = buildconfig.substs.get("MOZ_APP_VERSION")
+    with open("browser/config/version.txt", "r") as version_file:
+        app_version = version_file.read().strip()
 
     options = run_glean_parser.get_parser_options(app_version)
     metrics_paths = [Path(x) for x in metrics_yamls]
