@@ -2241,6 +2241,11 @@ void RecordCompositionPayloadsPresented(
         Telemetry::AccumulateTimeDelta(
             mozilla::Telemetry::SCROLL_PRESENT_LATENCY, payload.mTimeStamp,
             presented);
+      } else if (payload.mType ==
+                 CompositionPayloadType::eMouseUpFollowedByClick) {
+        Telemetry::AccumulateTimeDelta(
+            mozilla::Telemetry::MOUSEUP_FOLLOWED_BY_CLICK_PRESENT_LATENCY,
+            payload.mTimeStamp, presented);
       }
     }
   }
