@@ -198,8 +198,7 @@ enum class ExplicitActiveStatus : uint8_t {
   /* The number of entries added to the session history because of this       \
    * browsing context. */                                                     \
   FIELD(HistoryEntryCount, uint32_t)                                          \
-  FIELD(IsInBFCache, bool)                                                    \
-  FIELD(HasRestoreData, bool)
+  FIELD(IsInBFCache, bool)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -679,7 +678,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     bool mUseRemoteTabs = false;
     bool mUseRemoteSubframes = false;
     bool mCreatedDynamically = false;
-    int32_t mChildOffset = 0;
     int32_t mSessionHistoryIndex = -1;
     int32_t mSessionHistoryCount = 0;
     OriginAttributes mOriginAttributes;
@@ -717,8 +715,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   }
 
   bool CreatedDynamically() const { return mCreatedDynamically; }
-
-  int32_t ChildOffset() const { return mChildOffset; }
 
   const OriginAttributes& OriginAttributesRef() { return mOriginAttributes; }
   nsresult SetOriginAttributes(const OriginAttributes& aAttrs);
@@ -1028,9 +1024,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
               ContentParent* aSource);
   void DidSet(FieldIndex<IDX_HasMainMediaController>, bool aOldValue);
 
-  bool CanSet(FieldIndex<IDX_HasRestoreData>, bool aNewValue,
-              ContentParent* aSource);
-
   template <size_t I, typename T>
   bool CanSet(FieldIndex<I>, const T&, ContentParent*) {
     return true;
@@ -1140,10 +1133,6 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   // True if this BrowsingContext is for a frame that was added dynamically.
   bool mCreatedDynamically : 1;
-
-  // The original offset of this context in its container. This property is -1
-  // if this BrowsingContext is for a frame that was added dynamically.
-  int32_t mChildOffset;
 
   // The start time of user gesture, this is only available if the browsing
   // context is in process.

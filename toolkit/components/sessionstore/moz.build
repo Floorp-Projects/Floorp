@@ -8,13 +8,11 @@ EXPORTS.mozilla.dom += [
     "SessionStoreData.h",
     "SessionStoreListener.h",
     "SessionStoreMessageUtils.h",
-    "SessionStoreRestoreData.h",
     "SessionStoreUtils.h",
 ]
 
 UNIFIED_SOURCES += [
     "SessionStoreListener.cpp",
-    "SessionStoreRestoreData.cpp",
     "SessionStoreUtils.cpp",
 ]
 
@@ -22,15 +20,10 @@ EXTRA_JS_MODULES += [
     "SessionStoreFunctions.jsm",
 ]
 
-XPIDL_MODULE = "sessionstore"
+XPIDL_MODULE = "sessionStore_funcs"
 
 XPIDL_SOURCES += [
-    "nsISessionStoreRestoreData.idl",
     "SessionStoreFunctions.idl",
-]
-
-IPDL_SOURCES += [
-    "SessionStoreTypes.ipdlh",
 ]
 
 include("/ipc/chromium/chromium-config.mozbuild")
