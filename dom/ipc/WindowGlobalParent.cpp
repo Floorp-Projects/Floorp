@@ -69,9 +69,9 @@ namespace mozilla::dom {
 
 WindowGlobalParent::WindowGlobalParent(
     CanonicalBrowsingContext* aBrowsingContext, uint64_t aInnerWindowId,
-    uint64_t aOuterWindowId, bool aInProcess, FieldValues&& aInit)
+    uint64_t aOuterWindowId, FieldValues&& aInit)
     : WindowContext(aBrowsingContext, aInnerWindowId, aOuterWindowId,
-                    aInProcess, std::move(aInit)),
+                    std::move(aInit)),
       mIsInitialDocument(false),
       mSandboxFlags(0),
       mDocumentHasLoaded(false),
@@ -82,7 +82,7 @@ WindowGlobalParent::WindowGlobalParent(
 }
 
 already_AddRefed<WindowGlobalParent> WindowGlobalParent::CreateDisconnected(
-    const WindowGlobalInit& aInit, bool aInProcess) {
+    const WindowGlobalInit& aInit) {
   RefPtr<CanonicalBrowsingContext> browsingContext =
       CanonicalBrowsingContext::Get(aInit.context().mBrowsingContextId);
   if (NS_WARN_IF(!browsingContext)) {
@@ -94,9 +94,9 @@ already_AddRefed<WindowGlobalParent> WindowGlobalParent::CreateDisconnected(
   MOZ_RELEASE_ASSERT(!wgp, "Creating duplicate WindowGlobalParent");
 
   FieldValues fields(aInit.context().mFields);
-  wgp = new WindowGlobalParent(browsingContext, aInit.context().mInnerWindowId,
-                               aInit.context().mOuterWindowId, aInProcess,
-                               std::move(fields));
+  wgp =
+      new WindowGlobalParent(browsingContext, aInit.context().mInnerWindowId,
+                             aInit.context().mOuterWindowId, std::move(fields));
   wgp->mDocumentPrincipal = aInit.principal();
   wgp->mDocumentURI = aInit.documentURI();
   wgp->mBlockAllMixedContent = aInit.blockAllMixedContent();

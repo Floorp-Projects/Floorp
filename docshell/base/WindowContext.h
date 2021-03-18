@@ -107,7 +107,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   bool IsCached() const;
 
-  bool IsInProcess() const { return mInProcess; }
+  bool IsInProcess() const { return mWindowGlobalChild; }
 
   bool HasBeforeUnload() const { return GetHasBeforeUnload(); }
 
@@ -117,7 +117,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   Document* GetDocument() const;
   Document* GetExtantDoc() const;
 
-  WindowGlobalChild* GetWindowGlobalChild() const;
+  WindowGlobalChild* GetWindowGlobalChild() const { return mWindowGlobalChild; }
 
   // Get the parent WindowContext of this WindowContext, taking the BFCache into
   // account. This will not cross chrome/content <browser> boundaries.
@@ -183,8 +183,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
  protected:
   WindowContext(BrowsingContext* aBrowsingContext, uint64_t aInnerWindowId,
-                uint64_t aOuterWindowId, bool aInProcess,
-                FieldValues&& aFields);
+                uint64_t aOuterWindowId, FieldValues&& aFields);
   virtual ~WindowContext();
 
   virtual void Init();
@@ -287,6 +286,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   const uint64_t mInnerWindowId;
   const uint64_t mOuterWindowId;
   RefPtr<BrowsingContext> mBrowsingContext;
+  RefPtr<WindowGlobalChild> mWindowGlobalChild;
 
   // --- NEVER CHANGE `mChildren` DIRECTLY! ---
   // Changes to this list need to be synchronized to the list within our
@@ -295,7 +295,6 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   nsTArray<RefPtr<BrowsingContext>> mChildren;
 
   bool mIsDiscarded = false;
-  bool mInProcess = false;
 
   // The start time of user gesture, this is only available if the window
   // context is in process.
