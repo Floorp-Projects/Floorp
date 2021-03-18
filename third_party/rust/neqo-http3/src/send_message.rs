@@ -271,7 +271,10 @@ impl SendMessage {
     // This method returns if they're still being sent. Request body (if any) is sent by
     // http client afterwards using `send_request_body` after receiving DataWritable event.
     pub fn has_data_to_send(&self) -> bool {
-        matches!(self.state, SendMessageState::Initialized {..} | SendMessageState::SendingInitialMessage { .. } )
+        matches!(
+            self.state,
+            SendMessageState::Initialized { .. } | SendMessageState::SendingInitialMessage { .. }
+        )
     }
 
     pub fn close(&mut self, conn: &mut Connection) -> Res<()> {

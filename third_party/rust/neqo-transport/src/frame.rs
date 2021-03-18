@@ -6,10 +6,10 @@
 
 // Directly relating to QUIC frames.
 
-use neqo_common::{qtrace, Decoder};
+use neqo_common::{qtrace, Decoder, Encoder};
 
 use crate::cid::MAX_CONNECTION_ID_LEN;
-use crate::packet::PacketType;
+use crate::packet::{PacketBuilder, PacketType};
 use crate::stream_id::{StreamId, StreamIndex, StreamType};
 use crate::{AppError, ConnectionError, Error, Res, TransportError};
 
@@ -23,20 +23,20 @@ const FRAME_TYPE_PADDING: FrameType = 0x0;
 pub const FRAME_TYPE_PING: FrameType = 0x1;
 pub const FRAME_TYPE_ACK: FrameType = 0x2;
 const FRAME_TYPE_ACK_ECN: FrameType = 0x3;
-const FRAME_TYPE_RST_STREAM: FrameType = 0x4;
-const FRAME_TYPE_STOP_SENDING: FrameType = 0x5;
+pub const FRAME_TYPE_RESET_STREAM: FrameType = 0x4;
+pub const FRAME_TYPE_STOP_SENDING: FrameType = 0x5;
 pub const FRAME_TYPE_CRYPTO: FrameType = 0x6;
 pub const FRAME_TYPE_NEW_TOKEN: FrameType = 0x7;
 const FRAME_TYPE_STREAM: FrameType = 0x8;
 const FRAME_TYPE_STREAM_MAX: FrameType = 0xf;
-const FRAME_TYPE_MAX_DATA: FrameType = 0x10;
-const FRAME_TYPE_MAX_STREAM_DATA: FrameType = 0x11;
-const FRAME_TYPE_MAX_STREAMS_BIDI: FrameType = 0x12;
-const FRAME_TYPE_MAX_STREAMS_UNIDI: FrameType = 0x13;
-const FRAME_TYPE_DATA_BLOCKED: FrameType = 0x14;
-const FRAME_TYPE_STREAM_DATA_BLOCKED: FrameType = 0x15;
-const FRAME_TYPE_STREAMS_BLOCKED_BIDI: FrameType = 0x16;
-const FRAME_TYPE_STREAMS_BLOCKED_UNIDI: FrameType = 0x17;
+pub const FRAME_TYPE_MAX_DATA: FrameType = 0x10;
+pub const FRAME_TYPE_MAX_STREAM_DATA: FrameType = 0x11;
+pub const FRAME_TYPE_MAX_STREAMS_BIDI: FrameType = 0x12;
+pub const FRAME_TYPE_MAX_STREAMS_UNIDI: FrameType = 0x13;
+pub const FRAME_TYPE_DATA_BLOCKED: FrameType = 0x14;
+pub const FRAME_TYPE_STREAM_DATA_BLOCKED: FrameType = 0x15;
+pub const FRAME_TYPE_STREAMS_BLOCKED_BIDI: FrameType = 0x16;
+pub const FRAME_TYPE_STREAMS_BLOCKED_UNIDI: FrameType = 0x17;
 pub const FRAME_TYPE_NEW_CONNECTION_ID: FrameType = 0x18;
 pub const FRAME_TYPE_RETIRE_CONNECTION_ID: FrameType = 0x19;
 pub const FRAME_TYPE_PATH_CHALLENGE: FrameType = 0x1a;
@@ -91,6 +91,26 @@ impl From<ConnectionError> for CloseError {
 pub struct AckRange {
     pub(crate) gap: u64,
     pub(crate) range: u64,
+}
+
+/// A lot of frames here are just a collection of varints.
+/// This helper functions writes a frame like that safely, returning `true` if
+/// a frame was written.
+pub fn write_varint_frame(builder: &mut PacketBuilder, values: &[u64]) -> Res<bool> {
+    let write = builder.remaining()
+        >= values
+            .iter()
+            .map(|&v| Encoder::varint_len(v))
+            .sum::<usize>();
+    if write {
+        for v in values {
+            builder.encode_varint(*v);
+        }
+        if builder.len() > builder.limit() {
+            return Err(Error::InternalError(16));
+        }
+    };
+    Ok(write)
 }
 
 #[derive(PartialEq, Debug, Clone)]
@@ -194,7 +214,7 @@ impl<'a> Frame<'a> {
             Self::Padding => FRAME_TYPE_PADDING,
             Self::Ping => FRAME_TYPE_PING,
             Self::Ack { .. } => FRAME_TYPE_ACK, // We don't do ACK ECN.
-            Self::ResetStream { .. } => FRAME_TYPE_RST_STREAM,
+            Self::ResetStream { .. } => FRAME_TYPE_RESET_STREAM,
             Self::StopSending { .. } => FRAME_TYPE_STOP_SENDING,
             Self::Crypto { .. } => FRAME_TYPE_CRYPTO,
             Self::NewToken { .. } => FRAME_TYPE_NEW_TOKEN,
@@ -239,17 +259,22 @@ impl<'a> Frame<'a> {
     /// If the frame causes a recipient to generate an ACK within its
     /// advertised maximum acknowledgement delay.
     pub fn ack_eliciting(&self) -> bool {
-        !matches!(self, Self::Ack { .. } | Self::Padding | Self::ConnectionClose { .. })
+        !matches!(
+            self,
+            Self::Ack { .. } | Self::Padding | Self::ConnectionClose { .. }
+        )
     }
 
     /// If the frame can be sent in a path probe
     /// without initiating migration to that path.
     pub fn path_probing(&self) -> bool {
-        matches!(self,
+        matches!(
+            self,
             Self::Padding
-            | Self::NewConnectionId { .. }
-            | Self::PathChallenge { .. }
-            | Self::PathResponse { .. })
+                | Self::NewConnectionId { .. }
+                | Self::PathChallenge { .. }
+                | Self::PathResponse { .. }
+        )
     }
 
     /// Converts AckRanges as encoded in a ACK frame (see -transport
@@ -348,7 +373,7 @@ impl<'a> Frame<'a> {
         match t {
             FRAME_TYPE_PADDING => Ok(Self::Padding),
             FRAME_TYPE_PING => Ok(Self::Ping),
-            FRAME_TYPE_RST_STREAM => Ok(Self::ResetStream {
+            FRAME_TYPE_RESET_STREAM => Ok(Self::ResetStream {
                 stream_id: StreamId::from(dv(dec)?),
                 application_error_code: d(dec.decode_varint())?,
                 final_size: match dec.decode_varint() {

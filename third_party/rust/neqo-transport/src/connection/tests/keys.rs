@@ -277,9 +277,13 @@ fn exhaust_read_keys() {
     ));
 
     client.process_input(dgram.unwrap(), now());
-    assert!(matches!(client.state(), State::Draining {
-        error: ConnectionError::Transport(Error::PeerError(ERROR_AEAD_LIMIT_REACHED)), ..
-    }));
+    assert!(matches!(
+        client.state(),
+        State::Draining {
+            error: ConnectionError::Transport(Error::PeerError(ERROR_AEAD_LIMIT_REACHED)),
+            ..
+        }
+    ));
 }
 
 #[test]

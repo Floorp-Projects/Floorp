@@ -41,21 +41,21 @@ fn remember_smoothed_rtt() {
     let mut server = default_server();
 
     let now = connect_with_rtt(&mut client, &mut server, now(), RTT1);
-    assert_eq!(client.loss_recovery.rtt(), RTT1);
+    assert_eq!(client.paths.rtt(), RTT1);
 
     let token = exchange_ticket(&mut client, &mut server, now);
     let mut client = default_client();
     let mut server = default_server();
     client.enable_resumption(now, token).unwrap();
     assert_eq!(
-        client.loss_recovery.rtt(),
+        client.paths.rtt(),
         RTT1,
         "client should remember previous RTT"
     );
 
     connect_with_rtt(&mut client, &mut server, now, RTT2);
     assert_eq!(
-        client.loss_recovery.rtt(),
+        client.paths.rtt(),
         RTT2,
         "previous RTT should be completely erased"
     );
@@ -114,19 +114,19 @@ fn two_tickets_on_timer() {
 
     // We need to wait for release_resumption_token_timer to expire. The timer will be
     // set to 3 * PTO
-    let mut now = now() + 3 * client.get_pto();
+    let mut now = now() + 3 * client.pto();
     let _ = client.process(None, now);
     let mut recv_tokens = get_tokens(&mut client);
     assert_eq!(recv_tokens.len(), 1);
     let token1 = recv_tokens.pop().unwrap();
     // Wai for anottheer 3 * PTO to get the nex okeen.
-    now += 3 * client.get_pto();
+    now += 3 * client.pto();
     let _ = client.process(None, now);
     let mut recv_tokens = get_tokens(&mut client);
     assert_eq!(recv_tokens.len(), 1);
     let token2 = recv_tokens.pop().unwrap();
     // Wait for 3 * PTO, but now there are no more tokens.
-    now += 3 * client.get_pto();
+    now += 3 * client.pto();
     let _ = client.process(None, now);
     assert_eq!(get_tokens(&mut client).len(), 0);
     assert_ne!(token1.as_ref(), token2.as_ref());

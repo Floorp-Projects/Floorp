@@ -91,6 +91,7 @@ impl From<CryptoSpace> for PacketType {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum QuicVersion {
+    Version1,
     Draft27,
     Draft28,
     Draft29,
@@ -102,6 +103,7 @@ pub enum QuicVersion {
 impl QuicVersion {
     pub fn as_u32(self) -> Version {
         match self {
+            Self::Version1 => 1,
             Self::Draft27 => 0xff00_0000 + 27,
             Self::Draft28 => 0xff00_0000 + 28,
             Self::Draft29 => 0xff00_0000 + 29,
@@ -114,7 +116,7 @@ impl QuicVersion {
 
 impl Default for QuicVersion {
     fn default() -> Self {
-        Self::Draft29
+        Self::Version1
     }
 }
 
@@ -122,7 +124,9 @@ impl TryFrom<Version> for QuicVersion {
     type Error = Error;
 
     fn try_from(ver: Version) -> Res<Self> {
-        if ver == 0xff00_0000 + 27 {
+        if ver == 1 {
+            Ok(Self::Version1)
+        } else if ver == 0xff00_0000 + 27 {
             Ok(Self::Draft27)
         } else if ver == 0xff00_0000 + 28 {
             Ok(Self::Draft28)
@@ -157,6 +161,8 @@ pub struct PacketBuilder {
     header: Range<usize>,
     offsets: PacketBuilderOffsets,
     limit: usize,
+    /// Whether to pad the packet before construction.
+    padding: bool,
 }
 
 impl PacketBuilder {
@@ -169,13 +175,28 @@ impl PacketBuilder {
     }
 
     /// Start building a short header packet.
+    ///
+    /// This doesn't fail if there isn't enough space; instead it returns a builder that
+    /// has no available space left.  This allows the caller to extract the encoder
+    /// and any packets that might have been added before as adding a packet header is
+    /// only likely to fail if there are other packets already written.
+    ///
+    /// If, after calling this method, `remaining()` returns 0, then call `abort()` to get
+    /// the encoder back.
     #[allow(clippy::unknown_clippy_lints)] // Until we require rust 1.45.
     #[allow(clippy::reversed_empty_ranges)]
     pub fn short(mut encoder: Encoder, key_phase: bool, dcid: impl AsRef<[u8]>) -> Self {
+        let mut limit = Self::infer_limit(&encoder);
         let header_start = encoder.len();
-        encoder.encode_byte(PACKET_BIT_SHORT | PACKET_BIT_FIXED_QUIC | (u8::from(key_phase) << 2));
-        encoder.encode(dcid.as_ref());
-        let limit = Self::infer_limit(&encoder);
+        // Check that there is enough space for the header.
+        // 5 = 1 (first byte) + 4 (packet number)
+        if limit > encoder.len() && 5 + dcid.as_ref().len() < limit - encoder.len() {
+            encoder
+                .encode_byte(PACKET_BIT_SHORT | PACKET_BIT_FIXED_QUIC | (u8::from(key_phase) << 2));
+            encoder.encode(dcid.as_ref());
+        } else {
+            limit = 0;
+        }
         Self {
             encoder,
             pn: u64::max_value(),
@@ -186,12 +207,15 @@ impl PacketBuilder {
                 len: 0,
             },
             limit,
+            padding: false,
         }
     }
 
     /// Start building a long header packet.
     /// For an Initial packet you will need to call initial_token(),
     /// even if the token is empty.
+    ///
+    /// See `short()` for more on how to handle this in cases where there is no space.
     #[allow(clippy::unknown_clippy_lints)] // Until we require rust 1.45.
     #[allow(clippy::reversed_empty_ranges)] // For initializing an empty range.
     pub fn long(
@@ -201,12 +225,21 @@ impl PacketBuilder {
         dcid: impl AsRef<[u8]>,
         scid: impl AsRef<[u8]>,
     ) -> Self {
+        let mut limit = Self::infer_limit(&encoder);
         let header_start = encoder.len();
-        encoder.encode_byte(PACKET_BIT_LONG | PACKET_BIT_FIXED_QUIC | pt.code() << 4);
-        encoder.encode_uint(4, quic_version.as_u32());
-        encoder.encode_vec(1, dcid.as_ref());
-        encoder.encode_vec(1, scid.as_ref());
-        let limit = Self::infer_limit(&encoder);
+        // Check that there is enough space for the header.
+        // 11 = 1 (first byte) + 4 (version) + 2 (dcid+scid length) + 4 (packet number)
+        if limit > encoder.len()
+            && 11 + dcid.as_ref().len() + scid.as_ref().len() < limit - encoder.len()
+        {
+            encoder.encode_byte(PACKET_BIT_LONG | PACKET_BIT_FIXED_QUIC | pt.code() << 4);
+            encoder.encode_uint(4, quic_version.as_u32());
+            encoder.encode_vec(1, dcid.as_ref());
+            encoder.encode_vec(1, scid.as_ref());
+        } else {
+            limit = 0;
+        }
+
         Self {
             encoder,
             pn: u64::max_value(),
@@ -217,6 +250,7 @@ impl PacketBuilder {
                 len: 0,
             },
             limit,
+            padding: false,
         }
     }
 
@@ -238,22 +272,29 @@ impl PacketBuilder {
     /// How many bytes remain against the size limit for the builder.
     #[must_use]
     pub fn remaining(&self) -> usize {
-        self.limit - self.encoder.len()
+        self.limit.saturating_sub(self.encoder.len())
     }
 
-    /// Pad with "PADDING" frames.
-    pub fn pad(&mut self) -> Res<()> {
-        self.encoder.pad_to(self.limit, 0);
-        if self.len() > self.limit {
-            qwarn!("Packet contents are more than the limit");
-            debug_assert!(false);
-            return Err(Error::InternalError(17));
+    /// Mark the packet as needing padding (or not).
+    pub fn enable_padding(&mut self, needs_padding: bool) {
+        self.padding = needs_padding;
+    }
+
+    /// Maybe pad with "PADDING" frames.
+    /// Only does so if padding was needed and this is a short packet.
+    /// Returns true if padding was added.
+    pub fn pad(&mut self) -> bool {
+        if self.padding && !self.is_long() {
+            self.encoder.pad_to(self.limit, 0);
+            true
+        } else {
+            false
         }
-        Ok(())
     }
 
     /// Add unpredictable values for unprotected parts of the packet.
     pub fn scramble(&mut self, quic_bit: bool) {
+        debug_assert!(self.len() > self.header.start);
         let mask = if quic_bit { PACKET_BIT_FIXED_QUIC } else { 0 }
             | if self.is_long() { 0 } else { PACKET_BIT_SPIN };
         let first = self.header.start;
@@ -262,25 +303,29 @@ impl PacketBuilder {
 
     /// For an Initial packet, encode the token.
     /// If you fail to do this, then you will not get a valid packet.
-    pub fn initial_token(&mut self, token: &[u8]) -> Res<()> {
+    pub fn initial_token(&mut self, token: &[u8]) {
         debug_assert_eq!(
             self.encoder[self.header.start] & 0xb0,
             PACKET_BIT_LONG | PACKET_TYPE_INITIAL << 4
         );
-        self.encoder.encode_vvec(token);
-
-        if self.len() > self.limit {
-            qwarn!("Packet contents are more than the limit");
-            debug_assert!(false);
-            return Err(Error::InternalError(18));
+        if Encoder::vvec_len(token.len()) < self.remaining() {
+            self.encoder.encode_vvec(token);
+        } else {
+            self.limit = 0;
         }
-        Ok(())
     }
 
     /// Add a packet number of the given size.
     /// For a long header packet, this also inserts a dummy length.
     /// The length is filled in after calling `build`.
-    pub fn pn(&mut self, pn: PacketNumber, pn_len: usize) -> Res<()> {
+    /// Does nothing if there isn't 4 bytes available other than render this builder
+    /// unusable; if `remaining()` returns 0 at any point, call `abort()`.
+    pub fn pn(&mut self, pn: PacketNumber, pn_len: usize) {
+        if self.remaining() < 4 {
+            self.limit = 0;
+            return;
+        }
+
         // Reserve space for a length in long headers.
         if self.is_long() {
             self.offsets.len = self.encoder.len();
@@ -299,13 +344,6 @@ impl PacketBuilder {
         self.encoder[self.header.start] |= u8::try_from(pn_len - 1).unwrap();
         self.header.end = self.encoder.len();
         self.pn = pn;
-
-        if self.len() > self.limit {
-            qwarn!("Packet contents are more than the limit");
-            debug_assert!(false);
-            return Err(Error::InternalError(19));
-        }
-        Ok(())
     }
 
     fn write_len(&mut self, expansion: usize) {
@@ -424,6 +462,7 @@ impl PacketBuilder {
         encoder.encode(&[0; 4]); // Zero version == VN.
         encoder.encode_vec(1, dcid);
         encoder.encode_vec(1, scid);
+        encoder.encode_uint(4, QuicVersion::Version1.as_u32());
         encoder.encode_uint(4, QuicVersion::Draft27.as_u32());
         encoder.encode_uint(4, QuicVersion::Draft28.as_u32());
         encoder.encode_uint(4, QuicVersion::Draft29.as_u32());
@@ -850,15 +889,15 @@ mod tests {
         0xb9, 0xda, 0x1a, 0x00, 0x2b, 0x00, 0x02, 0x03, 0x04,
     ];
     const SAMPLE_INITIAL: &[u8] = &[
-        0xc7, 0xff, 0x00, 0x00, 0x1d, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5,
-        0x00, 0x40, 0x75, 0xfb, 0x12, 0xff, 0x07, 0x82, 0x3a, 0x5d, 0x24, 0x53, 0x4d, 0x90, 0x6c,
-        0xe4, 0xc7, 0x67, 0x82, 0xa2, 0x16, 0x7e, 0x34, 0x79, 0xc0, 0xf7, 0xf6, 0x39, 0x5d, 0xc2,
-        0xc9, 0x16, 0x76, 0x30, 0x2f, 0xe6, 0xd7, 0x0b, 0xb7, 0xcb, 0xeb, 0x11, 0x7b, 0x4d, 0xdb,
-        0x7d, 0x17, 0x34, 0x98, 0x44, 0xfd, 0x61, 0xda, 0xe2, 0x00, 0xb8, 0x33, 0x8e, 0x1b, 0x93,
-        0x29, 0x76, 0xb6, 0x1d, 0x91, 0xe6, 0x4a, 0x02, 0xe9, 0xe0, 0xee, 0x72, 0xe3, 0xa6, 0xf6,
-        0x3a, 0xba, 0x4c, 0xee, 0xee, 0xc5, 0xbe, 0x2f, 0x24, 0xf2, 0xd8, 0x60, 0x27, 0x57, 0x29,
-        0x43, 0x53, 0x38, 0x46, 0xca, 0xa1, 0x3e, 0x6f, 0x16, 0x3f, 0xb2, 0x57, 0x47, 0x3d, 0xcc,
-        0xa2, 0x53, 0x96, 0xe8, 0x87, 0x24, 0xf1, 0xe5, 0xd9, 0x64, 0xde, 0xde, 0xe9, 0xb6, 0x33,
+        0xcf, 0x00, 0x00, 0x00, 0x01, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5,
+        0x00, 0x40, 0x75, 0xc0, 0xd9, 0x5a, 0x48, 0x2c, 0xd0, 0x99, 0x1c, 0xd2, 0x5b, 0x0a, 0xac,
+        0x40, 0x6a, 0x58, 0x16, 0xb6, 0x39, 0x41, 0x00, 0xf3, 0x7a, 0x1c, 0x69, 0x79, 0x75, 0x54,
+        0x78, 0x0b, 0xb3, 0x8c, 0xc5, 0xa9, 0x9f, 0x5e, 0xde, 0x4c, 0xf7, 0x3c, 0x3e, 0xc2, 0x49,
+        0x3a, 0x18, 0x39, 0xb3, 0xdb, 0xcb, 0xa3, 0xf6, 0xea, 0x46, 0xc5, 0xb7, 0x68, 0x4d, 0xf3,
+        0x54, 0x8e, 0x7d, 0xde, 0xb9, 0xc3, 0xbf, 0x9c, 0x73, 0xcc, 0x3f, 0x3b, 0xde, 0xd7, 0x4b,
+        0x56, 0x2b, 0xfb, 0x19, 0xfb, 0x84, 0x02, 0x2f, 0x8e, 0xf4, 0xcd, 0xd9, 0x37, 0x95, 0xd7,
+        0x7d, 0x06, 0xed, 0xbb, 0x7a, 0xaf, 0x2f, 0x58, 0x89, 0x18, 0x50, 0xab, 0xbd, 0xca, 0x3d,
+        0x20, 0x39, 0x8c, 0x27, 0x64, 0x56, 0xcb, 0xc4, 0x21, 0x58, 0x40, 0x7d, 0xd0, 0x74, 0xee,
     ];
 
     #[test]
@@ -878,8 +917,8 @@ mod tests {
             &ConnectionId::from(&[][..]),
             &ConnectionId::from(SERVER_CID),
         );
-        builder.initial_token(&[]).unwrap();
-        builder.pn(1, 2).unwrap();
+        builder.initial_token(&[]);
+        builder.pn(1, 2);
         builder.encode(&SAMPLE_INITIAL_PAYLOAD);
         let packet = builder.build(&mut prot).expect("build");
         assert_eq!(&packet[..], SAMPLE_INITIAL);
@@ -930,8 +969,8 @@ mod tests {
     }
 
     const SAMPLE_SHORT: &[u8] = &[
-        0x55, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5, 0x99, 0x9c, 0xbd, 0x77, 0xf5, 0xd7,
-        0x0a, 0x28, 0xe8, 0xfb, 0xc3, 0xed, 0xf5, 0x71, 0xb1, 0x04, 0x32, 0x2a, 0xae, 0xae,
+        0x40, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5, 0xf4, 0xa8, 0x30, 0x39, 0xc4, 0x7d,
+        0x99, 0xe3, 0x94, 0x1c, 0x9b, 0xb9, 0x7a, 0x30, 0x1d, 0xd5, 0x8f, 0xf3, 0xdd, 0xa9,
     ];
     const SAMPLE_SHORT_PAYLOAD: &[u8] = &[0; 3];
 
@@ -940,7 +979,7 @@ mod tests {
         fixture_init();
         let mut builder =
             PacketBuilder::short(Encoder::new(), true, &ConnectionId::from(SERVER_CID));
-        builder.pn(0, 1).unwrap();
+        builder.pn(0, 1);
         builder.encode(SAMPLE_SHORT_PAYLOAD); // Enough payload for sampling.
         let packet = builder
             .build(&mut CryptoDxState::test_default())
@@ -956,7 +995,7 @@ mod tests {
             let mut builder =
                 PacketBuilder::short(Encoder::new(), true, &ConnectionId::from(SERVER_CID));
             builder.scramble(true);
-            builder.pn(0, 1).unwrap();
+            builder.pn(0, 1);
             firsts.push(builder[0]);
         }
         let is_set = |bit| move |v| v & bit == bit;
@@ -1019,14 +1058,14 @@ mod tests {
             &ConnectionId::from(SERVER_CID),
             &ConnectionId::from(CLIENT_CID),
         );
-        builder.pn(0, 1).unwrap();
+        builder.pn(0, 1);
         builder.encode(&[0; 3]);
         let encoder = builder.build(&mut prot).expect("build");
         assert_eq!(encoder.len(), 45);
         let first = encoder.clone();
 
         let mut builder = PacketBuilder::short(encoder, false, &ConnectionId::from(SERVER_CID));
-        builder.pn(1, 3).unwrap();
+        builder.pn(1, 3);
         builder.encode(&[0]); // Minimal size (packet number is big enough).
         let encoder = builder.build(&mut prot).expect("build");
         assert_eq!(
@@ -1040,9 +1079,9 @@ mod tests {
     #[test]
     fn build_long() {
         const EXPECTED: &[u8] = &[
-            0xe5, 0xff, 0x00, 0x00, 0x1d, 0x00, 0x00, 0x40, 0x14, 0xa8, 0x9d, 0xbf, 0x74, 0x70,
-            0x32, 0xda, 0xba, 0xfb, 0x87, 0x61, 0xb8, 0x31, 0x90, 0xf3, 0x25, 0x52, 0x0b, 0xbe,
-            0xdb,
+            0xe4, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x40, 0x14, 0xfb, 0xa9, 0x32, 0x3a, 0xf8,
+            0xbb, 0x18, 0x63, 0xc6, 0xbd, 0x78, 0x0e, 0xba, 0x0c, 0x98, 0x65, 0x58, 0xc9, 0x62,
+            0x31,
         ];
 
         fixture_init();
@@ -1053,7 +1092,7 @@ mod tests {
             &ConnectionId::from(&[][..]),
             &ConnectionId::from(&[][..]),
         );
-        builder.pn(0, 1).unwrap();
+        builder.pn(0, 1);
         builder.encode(&[1, 2, 3]);
         let packet = builder.build(&mut CryptoDxState::test_default()).unwrap();
         assert_eq!(&packet[..], EXPECTED);
@@ -1072,7 +1111,7 @@ mod tests {
                 &ConnectionId::from(&[][..]),
                 &ConnectionId::from(&[][..]),
             );
-            builder.pn(0, 1).unwrap();
+            builder.pn(0, 1);
             builder.scramble(true);
             if (builder[0] & PACKET_BIT_FIXED_QUIC) == 0 {
                 found_unset = true;
@@ -1093,12 +1132,49 @@ mod tests {
             &ConnectionId::from(&[][..]),
             &ConnectionId::from(SERVER_CID),
         );
-        builder.initial_token(&[]).unwrap();
-        builder.pn(1, 2).unwrap();
+        assert_ne!(builder.remaining(), 0);
+        builder.initial_token(&[]);
+        assert_ne!(builder.remaining(), 0);
+        builder.pn(1, 2);
+        assert_ne!(builder.remaining(), 0);
         let encoder = builder.abort();
         assert!(encoder.is_empty());
     }
 
+    #[test]
+    fn build_insufficient_space() {
+        fixture_init();
+
+        let mut builder = PacketBuilder::short(
+            Encoder::with_capacity(100),
+            true,
+            &ConnectionId::from(SERVER_CID),
+        );
+        builder.pn(0, 1);
+        // Pad, but not up to the full capacity. Leave enough space for the
+        // AEAD expansion and some extra, but not for an entire long header.
+        builder.set_limit(75);
+        builder.enable_padding(true);
+        assert!(builder.pad());
+        let encoder = builder.build(&mut CryptoDxState::test_default()).unwrap();
+        let encoder_copy = encoder.clone();
+
+        let builder = PacketBuilder::long(
+            encoder,
+            PacketType::Initial,
+            QuicVersion::default(),
+            &ConnectionId::from(SERVER_CID),
+            &ConnectionId::from(SERVER_CID),
+        );
+        assert_eq!(builder.remaining(), 0);
+        assert_eq!(builder.abort(), encoder_copy);
+    }
+
+    const SAMPLE_RETRY_V1: &[u8] = &[
+        0xff, 0x00, 0x00, 0x00, 0x01, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5,
+        0x74, 0x6f, 0x6b, 0x65, 0x6e, 0x04, 0xa2, 0x65, 0xba, 0x2e, 0xff, 0x4d, 0x82, 0x90, 0x58,
+        0xfb, 0x3f, 0x0f, 0x24, 0x96, 0xba,
+    ];
     const SAMPLE_RETRY_27: &[u8] = &[
         0xff, 0xff, 0x00, 0x00, 0x1b, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5,
         0x74, 0x6f, 0x6b, 0x65, 0x6e, 0xa5, 0x23, 0xcb, 0x5b, 0xa5, 0x24, 0x69, 0x5f, 0x65, 0x69,
@@ -1159,6 +1235,11 @@ mod tests {
     }
 
     #[test]
+    fn build_retry_v1() {
+        build_retry_single(QuicVersion::Version1, SAMPLE_RETRY_V1);
+    }
+
+    #[test]
     fn build_retry_27() {
         build_retry_single(QuicVersion::Draft27, SAMPLE_RETRY_27);
     }
@@ -1194,10 +1275,13 @@ mod tests {
         // Odds are approximately 1 in 8 that the full comparison doesn't happen
         // for a given version.
         for _ in 0..32 {
+            build_retry_v1();
             build_retry_27();
             build_retry_28();
             build_retry_29();
             build_retry_30();
+            build_retry_31();
+            build_retry_32();
         }
     }
 
@@ -1278,9 +1362,9 @@ mod tests {
 
     const SAMPLE_VN: &[u8] = &[
         0x80, 0x00, 0x00, 0x00, 0x00, 0x08, 0xf0, 0x67, 0xa5, 0x50, 0x2a, 0x42, 0x62, 0xb5, 0x08,
-        0x83, 0x94, 0xc8, 0xf0, 0x3e, 0x51, 0x57, 0x08, 0xff, 0x00, 0x00, 0x1b, 0xff, 0x00, 0x00,
-        0x1c, 0xff, 0x00, 0x00, 0x1d, 0xff, 0x00, 0x00, 0x1e, 0xff, 0x00, 0x00, 0x1f, 0xff, 0x00,
-        0x00, 0x20, 0x0a, 0x0a, 0x0a, 0x0a,
+        0x83, 0x94, 0xc8, 0xf0, 0x3e, 0x51, 0x57, 0x08, 0x00, 0x00, 0x00, 0x01, 0xff, 0x00, 0x00,
+        0x1b, 0xff, 0x00, 0x00, 0x1c, 0xff, 0x00, 0x00, 0x1d, 0xff, 0x00, 0x00, 0x1e, 0xff, 0x00,
+        0x00, 0x1f, 0xff, 0x00, 0x00, 0x20, 0x0a, 0x0a, 0x0a, 0x0a,
     ];
 
     #[test]
