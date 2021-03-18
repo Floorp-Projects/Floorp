@@ -10,11 +10,11 @@ add_task(async function() {
   await waitForPaused(dbg);
   let result = await dbg.client.evaluate("event.data");
   is(result.result, "first", "first message delivered in order");
-  resume(dbg);
+  await resume(dbg);
   await waitForPaused(dbg);
   result = await dbg.client.evaluate("event.data");
   is(result.result, "second", "second message delivered in order");
-  resume(dbg);
+  await resume(dbg);
   await waitForPaused(dbg);
   result = await dbg.client.evaluate("event.data");
   is(result.result, "third", "third message delivered in order");

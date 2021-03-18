@@ -18,8 +18,8 @@ add_task(async function() {
   await waitForState(dbg, state => !dbg.selectors.getSkipPausing());
   invokeInTab("simple");
   await waitForPaused(dbg);
-  resume(dbg);
   ok(true, "The breakpoint has been hit after a breakpoint was created");
+  await resume(dbg);
 
   info("Toggling a breakpoint should remove the skipped pausing state");
   // First disable the breakpoint to ensure skip pausing gets turned off
@@ -36,8 +36,8 @@ add_task(async function() {
   await waitForDispatch(dbg.store, "SET_BREAKPOINT");
   invokeInTab("simple");
   await waitForPaused(dbg);
-  resume(dbg);
   ok(true, "The breakpoint has been hit after skip pausing was disabled");
+  await resume(dbg);
 
   info("Disabling a breakpoint should remove the skipped pausing state");
   await addBreakpoint(dbg, "simple3", 3);
@@ -46,8 +46,8 @@ add_task(async function() {
   await waitForState(dbg, state => !dbg.selectors.getSkipPausing());
   invokeInTab("simple");
   await waitForPaused(dbg);
-  resume(dbg);
   ok(true, "The breakpoint has been hit after skip pausing was disabled again");
+  await resume(dbg);
 
   info("Removing a breakpoint should remove the skipped pause state");
   toggleBreakpoint(dbg, 0);
@@ -62,8 +62,8 @@ add_task(async function() {
   // Unfortunately required as the test harness throws if preview doesn't
   // complete before the end of the test.
   await waitForDispatch(dbg.store, "ADD_INLINE_PREVIEW");
-  resume(dbg);
   ok(true, "Breakpoint is hit after a breakpoint was removed");
+  await resume(dbg);
 });
 
 function skipPausing(dbg) {
