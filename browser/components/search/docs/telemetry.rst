@@ -53,10 +53,6 @@ SEARCH_COUNTS - SAP usage
     - ``urlbar`` Except aliases and search mode.
     - ``urlbar-searchmode`` Used when the Urlbar is in search mode.
     - ``webextension``
-    - ``oneoff-urlbar``
-    - ``oneoff-searchbar``
-    - ``unknown`` This is actually the searchbar, when using the current engine
-      one-off button.
 
 browser.engagement.navigation.*
   These keyed scalars track search through different SAPs, for example the
