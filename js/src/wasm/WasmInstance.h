@@ -111,8 +111,8 @@ class Instance {
   WasmMemoryObject* memory() const;
   size_t memoryMappedSize() const;
   SharedArrayRawBuffer* sharedMemoryBuffer() const;  // never null
-  bool memoryAccessInGuardRegion(uint8_t* addr, unsigned numBytes) const;
-  bool memoryAccessInBounds(uint8_t* addr, unsigned numBytes) const;
+  bool memoryAccessInGuardRegion(const uint8_t* addr, unsigned numBytes) const;
+  bool memoryAccessInBounds(const uint8_t* addr, unsigned numBytes) const;
   const SharedExceptionTagVector& exceptionTags() const {
     return exceptionTags_;
   }
