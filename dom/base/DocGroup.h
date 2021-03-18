@@ -41,7 +41,8 @@ class DocGroup final {
  public:
   typedef nsTArray<Document*>::iterator Iterator;
 
-  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DocGroup)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(DocGroup)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(DocGroup)
 
   static already_AddRefed<DocGroup> Create(
       BrowsingContextGroup* aBrowsingContextGroup, const nsACString& aKey);

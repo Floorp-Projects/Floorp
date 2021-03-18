@@ -60,13 +60,6 @@ void SchedulerGroup::MarkVsyncRan() { gEarliestUnprocessedVsync = 0; }
 SchedulerGroup::SchedulerGroup() : mIsRunning(false) {}
 
 /* static */
-nsresult SchedulerGroup::DispatchWithDocGroup(
-    TaskCategory aCategory, already_AddRefed<nsIRunnable>&& aRunnable,
-    dom::DocGroup* aDocGroup) {
-  return LabeledDispatch(aCategory, std::move(aRunnable), aDocGroup);
-}
-
-/* static */
 nsresult SchedulerGroup::Dispatch(TaskCategory aCategory,
                                   already_AddRefed<nsIRunnable>&& aRunnable) {
   return LabeledDispatch(aCategory, std::move(aRunnable), nullptr);
@@ -75,11 +68,11 @@ nsresult SchedulerGroup::Dispatch(TaskCategory aCategory,
 /* static */
 nsresult SchedulerGroup::LabeledDispatch(
     TaskCategory aCategory, already_AddRefed<nsIRunnable>&& aRunnable,
-    dom::DocGroup* aDocGroup) {
+    mozilla::PerformanceCounter* aPerformanceCounter) {
   nsCOMPtr<nsIRunnable> runnable(aRunnable);
   if (XRE_IsContentProcess()) {
     RefPtr<Runnable> internalRunnable =
-        new Runnable(runnable.forget(), aDocGroup);
+        new Runnable(runnable.forget(), aPerformanceCounter);
     return InternalUnlabeledDispatch(aCategory, internalRunnable.forget());
   }
   return UnlabeledDispatch(aCategory, runnable.forget());
@@ -113,13 +106,17 @@ nsresult SchedulerGroup::InternalUnlabeledDispatch(
   return rv;
 }
 
-SchedulerGroup::Runnable::Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
-                                   dom::DocGroup* aDocGroup)
+SchedulerGroup::Runnable::Runnable(
+    already_AddRefed<nsIRunnable>&& aRunnable,
+    mozilla::PerformanceCounter* aPerformanceCounter)
     : mozilla::Runnable("SchedulerGroup::Runnable"),
       mRunnable(std::move(aRunnable)),
-      mDocGroup(aDocGroup) {}
+      mPerformanceCounter(aPerformanceCounter) {}
 
-dom::DocGroup* SchedulerGroup::Runnable::DocGroup() const { return mDocGroup; }
+mozilla::PerformanceCounter* SchedulerGroup::Runnable::GetPerformanceCounter()
+    const {
+  return mPerformanceCounter;
+}
 
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
 NS_IMETHODIMP

@@ -9,6 +9,7 @@
 
 #include "mozilla/RefPtr.h"
 #include "mozilla/TaskCategory.h"
+#include "mozilla/PerformanceCounter.h"
 #include "nsCOMPtr.h"
 #include "nsID.h"
 #include "nsIRunnable.h"
@@ -34,16 +35,6 @@ class DocGroup;
     }                                                \
   }
 
-// The "main thread" in Gecko will soon be a set of cooperatively scheduled
-// "fibers". Global state in Gecko will be partitioned into a series of "groups"
-// (with roughly one group per tab). Runnables will be annotated with the set of
-// groups that they touch. Two runnables may run concurrently on different
-// fibers as long as they touch different groups.
-//
-// A SchedulerGroup is an abstract class to represent a "group". Essentially the
-// only functionality offered by a SchedulerGroup is the ability to dispatch
-// runnables to the group. DocGroup, and SystemGroup are the concrete
-// implementations of SchedulerGroup.
 class SchedulerGroup {
  public:
   SchedulerGroup();
@@ -53,9 +44,9 @@ class SchedulerGroup {
   class Runnable final : public mozilla::Runnable, public nsIRunnablePriority {
    public:
     Runnable(already_AddRefed<nsIRunnable>&& aRunnable,
-             dom::DocGroup* aDocGroup);
+             mozilla::PerformanceCounter* aPerformanceCounter);
 
-    dom::DocGroup* DocGroup() const;
+    mozilla::PerformanceCounter* GetPerformanceCounter() const;
 
 #ifdef MOZ_COLLECTING_RUNNABLE_TELEMETRY
     NS_IMETHOD GetName(nsACString& aName) override;
@@ -73,7 +64,7 @@ class SchedulerGroup {
     ~Runnable() = default;
 
     nsCOMPtr<nsIRunnable> mRunnable;
-    RefPtr<dom::DocGroup> mDocGroup;
+    RefPtr<mozilla::PerformanceCounter> mPerformanceCounter;
   };
   friend class Runnable;
 
@@ -87,17 +78,13 @@ class SchedulerGroup {
 
   static void MarkVsyncRan();
 
-  static nsresult DispatchWithDocGroup(
+  static nsresult LabeledDispatch(
       TaskCategory aCategory, already_AddRefed<nsIRunnable>&& aRunnable,
-      dom::DocGroup* aDocGroup);
+      mozilla::PerformanceCounter* aPerformanceCounter);
 
  protected:
   static nsresult InternalUnlabeledDispatch(
       TaskCategory aCategory, already_AddRefed<Runnable>&& aRunnable);
-
-  static nsresult LabeledDispatch(TaskCategory aCategory,
-                                  already_AddRefed<nsIRunnable>&& aRunnable,
-                                  dom::DocGroup* aDocGroup);
 
   // Shuts down this dispatcher. If aXPCOMShutdown is true, invalidates this
   // dispatcher.

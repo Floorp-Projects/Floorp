@@ -974,10 +974,7 @@ mozilla::PerformanceCounter* nsThread::GetPerformanceCounterBase(
     nsIRunnable* aEvent) {
   RefPtr<SchedulerGroup::Runnable> docRunnable = do_QueryObject(aEvent);
   if (docRunnable) {
-    mozilla::dom::DocGroup* docGroup = docRunnable->DocGroup();
-    if (docGroup) {
-      return docGroup->GetPerformanceCounter();
-    }
+    return docRunnable->GetPerformanceCounter();
   }
   return nullptr;
 }
