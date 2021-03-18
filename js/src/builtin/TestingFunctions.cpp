@@ -1005,8 +1005,8 @@ static char lastAnalysisResult[1024];
 
 namespace js {
 namespace wasm {
-void ReportSimdAnalysis(const char* v) {
-  strncpy(lastAnalysisResult, v, sizeof(lastAnalysisResult));
+void ReportSimdAnalysis(const char* data) {
+  strncpy(lastAnalysisResult, data, sizeof(lastAnalysisResult));
   lastAnalysisResult[sizeof(lastAnalysisResult) - 1] = 0;
 }
 }  // namespace wasm

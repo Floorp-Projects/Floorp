@@ -179,7 +179,7 @@ class ModuleSegment : public CodeSegment {
   static UniqueModuleSegment create(Tier tier, const Bytes& unlinkedBytes,
                                     const LinkData& linkData);
 
-  bool initialize(IsTier2 compileMode, const CodeTier& codeTier,
+  bool initialize(IsTier2 isTier2, const CodeTier& codeTier,
                   const LinkData& linkData, const Metadata& metadata,
                   const MetadataTier& metadataTier);
 
@@ -797,7 +797,7 @@ class Code : public ShareableBase<Code> {
   uint8_t* serialize(uint8_t* cursor, const LinkData& linkData) const;
   static const uint8_t* deserialize(const uint8_t* cursor,
                                     const LinkData& linkData,
-                                    Metadata& metadata, SharedCode* code);
+                                    Metadata& metadata, SharedCode* out);
 };
 
 void PatchDebugSymbolicAccesses(uint8_t* codeBase, jit::MacroAssembler& masm);
