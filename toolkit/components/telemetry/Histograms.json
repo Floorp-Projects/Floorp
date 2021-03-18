@@ -3408,6 +3408,18 @@
     "n_buckets": 100,
     "description": "Time from submission to dispatch of HTTP/3 transaction (ms)"
   },
+  "TRANSACTION_WAIT_TIME_HTTPS_RR": {
+    "record_in_processes": ["main", "socket"],
+    "products": ["firefox"],
+    "alert_emails": ["necko@mozilla.com", "kershaw@mozilla.com"],
+    "bug_numbers": [1697480],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 5000,
+    "n_buckets": 100,
+    "keyed": true,
+    "description": "Time from submission to dispatch of transaction when HTTPS RR is used (ms)"
+  },
   "TRANSACTION_WAIT_TIME_HTTP2_SUP_HTTP3": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
