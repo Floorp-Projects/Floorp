@@ -88,5 +88,26 @@ data.jsonText = JSON.stringify({
 result = processor.process(data);
 is(result.scope.toString(), new URL("/foo/", manifestURL).toString(), expected);
 
+expected = "scope member has the URL's query removed.";
+data.jsonText = JSON.stringify({
+  scope: "./test/?a=b&a=b&b=c&c=d&e",
+});
+result = processor.process(data);
+is(new URL(result.scope).search, "", expected);
+
+expected = "scope member has the URL's fragment removed.";
+data.jsonText = JSON.stringify({
+  scope: "./test/#fragment"
+});
+result = processor.process(data);
+is(new URL(result.scope).hash, "", expected);
+
+expected = "scope member has the URL's query and fragment removed.";
+data.jsonText = JSON.stringify({
+  scope: "./test/?a=b&a=b&b=c&c=d&e#fragment"
+});
+result = processor.process(data);
+is(new URL(result.scope).search, "", expected);
+is(new URL(result.scope).hash, "", expected);
   </script>
 </head>
