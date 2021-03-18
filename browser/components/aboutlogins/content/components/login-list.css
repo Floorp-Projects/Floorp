@@ -126,8 +126,8 @@ ol {
 }
 
 .login-list-item.keyboard-selected {
-  border-inline-start-color: var(--in-content-border-active-shadow);
-  background-color: var(--in-content-box-background-odd);
+  border-inline-start-color: var(--in-content-border-color);
+  background-color: var(--in-content-page-background);
 }
 
 .login-list-item.selected {

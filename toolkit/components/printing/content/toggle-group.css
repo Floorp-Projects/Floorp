@@ -56,16 +56,12 @@
 }
 
 .toggle-group-input:-moz-focusring + .toggle-group-label {
-  box-shadow: 0 0 0 1px var(--border-color), 0 0 0 4px rgba(10, 132, 255, 0.3);
-  outline: none;
+  outline: 2px solid var(--in-content-focus-outline-color);
+  outline-offset: 2px;
   z-index: 1;
 }
 
-.toggle-group-input:checked:-moz-focusring + .toggle-group-label {
-  box-shadow: 0 0 0 1px var(--in-content-border-active), 0 0 0 4px rgba(10, 132, 255, 0.3);
-}
-
-.toggle-group-input:enabled:checked + .toggle-group-label{
+.toggle-group-input:enabled:checked + .toggle-group-label {
   background-color: var(--in-content-primary-button-background);
   color: var(--in-content-selected-text);
 }

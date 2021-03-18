@@ -11,7 +11,7 @@ h1 {
 .certificate-tabs {
   display: flex;
   text-align: center;
-  border-bottom: 1px solid var(--in-content-border-active);
+  border-bottom: 1px solid var(--in-content-border-color);
   box-shadow: var(--card-shadow);
 }
 
@@ -60,12 +60,12 @@ h1 {
 }
 
 .tab:hover {
-  border-bottom-color: var(--in-content-border-active-shadow);
+  border-bottom-color: var(--in-content-border-color);
 }
 
 .tab.selected {
-  border-bottom-color: var(--in-content-border-active);
-  color: var(--in-content-link-color);
+  border-bottom-color: currentColor;
+  color: var(--in-content-accent-color);
   text-overflow: unset;
   overflow: visible;
 }
