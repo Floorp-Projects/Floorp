@@ -26,3 +26,5 @@ src:*/dom/canvas/WebGLContextGL.cpp
 src:*/js/src/builtin/TypedObject.cpp
 # jittest Jit6
 src:*/js/src/jit/x86-shared/Assembler-x86-shared.h
+# https://gitlab.freedesktop.org/mesa/mesa/-/issues/4477
+fun:remove_line_continuations
