@@ -1014,6 +1014,21 @@ void js::gc::PerformIncrementalBarrier(TenuredCell* cell) {
   trc->performBarrier(JS::GCCellPtr(cell, cell->getTraceKind()));
 }
 
+void js::gc::PerformIncrementalBarrierDuringFlattening(JSString* str) {
+  TenuredCell* cell = &str->asTenured();
+
+  // Skip recording ropes. Buffering them is problematic because they will have
+  // their flags temporarily overwritten during flattening. Fortunately their
+  // children will also be barriered by flattening process so we don't need to
+  // traverse them.
+  if (str->isRope()) {
+    cell->markBlack();
+    return;
+  }
+
+  PerformIncrementalBarrier(cell);
+}
+
 template <typename T>
 void js::GCMarker::markAndTraverse(T* thing) {
   if (thing->isPermanentAndMayBeShared()) {

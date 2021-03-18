@@ -2,6 +2,7 @@
 basic/spread-call-maxarg.js
 basic/spread-call-near-maxarg.js
 arrays/too-long-array-splice.js
+bug-1698543.js
 # Skip tests that use too much memory under tsan - see bug 1519263.
 bug1355573.js
 max-string-length.js
