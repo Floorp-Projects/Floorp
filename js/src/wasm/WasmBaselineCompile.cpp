@@ -10202,7 +10202,7 @@ bool BaseCompiler::endIfThen(ResultType type) {
 
 bool BaseCompiler::emitElse() {
   ResultType params, results;
-  NothingVector unused_thenValues;
+  NothingVector unused_thenValues{};
 
   if (!iter_.readElse(&params, &results, &unused_thenValues)) {
     return false;
@@ -10309,7 +10309,7 @@ bool BaseCompiler::endIfThenElse(ResultType type) {
 bool BaseCompiler::emitEnd() {
   LabelKind kind;
   ResultType type;
-  NothingVector unused_values;
+  NothingVector unused_values{};
   if (!iter_.readEnd(&kind, &type, &unused_values, &unused_values)) {
     return false;
   }
@@ -10362,7 +10362,7 @@ bool BaseCompiler::emitEnd() {
 bool BaseCompiler::emitBr() {
   uint32_t relativeDepth;
   ResultType type;
-  NothingVector unused_values;
+  NothingVector unused_values{};
   if (!iter_.readBr(&relativeDepth, &type, &unused_values)) {
     return false;
   }
@@ -10393,7 +10393,7 @@ bool BaseCompiler::emitBr() {
 bool BaseCompiler::emitBrIf() {
   uint32_t relativeDepth;
   ResultType type;
-  NothingVector unused_values;
+  NothingVector unused_values{};
   Nothing unused_condition;
   if (!iter_.readBrIf(&relativeDepth, &type, &unused_values,
                       &unused_condition)) {
@@ -10419,7 +10419,7 @@ bool BaseCompiler::emitBrOnNull() {
 
   uint32_t relativeDepth;
   ResultType type;
-  NothingVector unused_values;
+  NothingVector unused_values{};
   Nothing unused_condition;
   if (!iter_.readBrOnNull(&relativeDepth, &type, &unused_values,
                           &unused_condition)) {
@@ -10455,7 +10455,7 @@ bool BaseCompiler::emitBrTable() {
   Uint32Vector depths;
   uint32_t defaultDepth;
   ResultType branchParams;
-  NothingVector unused_values;
+  NothingVector unused_values{};
   Nothing unused_index;
   // N.B., `branchParams' gets set to the type of the default branch target.  In
   // the presence of subtyping, it could be that the different branch targets
@@ -10604,7 +10604,7 @@ bool BaseCompiler::emitCatch() {
   LabelKind kind;
   uint32_t eventIndex;
   ResultType paramType, resultType;
-  NothingVector unused_tryValues;
+  NothingVector unused_tryValues{};
 
   if (!iter_.readCatch(&kind, &eventIndex, &paramType, &resultType,
                        &unused_tryValues)) {
@@ -10830,7 +10830,7 @@ bool BaseCompiler::endTryCatch(ResultType type) {
 bool BaseCompiler::emitThrow() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
   uint32_t exnIndex;
-  NothingVector unused_argValues;
+  NothingVector unused_argValues{};
 
   if (!iter_.readThrow(&exnIndex, &unused_argValues)) {
     return false;
@@ -10970,7 +10970,7 @@ void BaseCompiler::doReturn(ContinuationKind kind) {
 }
 
 bool BaseCompiler::emitReturn() {
-  NothingVector unused_values;
+  NothingVector unused_values{};
   if (!iter_.readReturn(&unused_values)) {
     return false;
   }
@@ -11149,7 +11149,7 @@ bool BaseCompiler::emitCall() {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
   uint32_t funcIndex;
-  NothingVector args_;
+  NothingVector args_{};
   if (!iter_.readCall(&funcIndex, &args_)) {
     return false;
   }
@@ -11209,7 +11209,7 @@ bool BaseCompiler::emitCallIndirect() {
   uint32_t funcTypeIndex;
   uint32_t tableIndex;
   Nothing callee_;
-  NothingVector args_;
+  NothingVector args_{};
   if (!iter_.readCallIndirect(&funcTypeIndex, &tableIndex, &callee_, &args_)) {
     return false;
   }
@@ -12511,7 +12511,7 @@ bool BaseCompiler::emitRefAsNonNull() {
 
 bool BaseCompiler::emitAtomicCmpXchg(ValType type, Scalar::Type viewType) {
   LinearMemoryAddress<Nothing> addr;
-  Nothing unused;
+  Nothing unused{};
 
   if (!iter_.readAtomicCmpXchg(&addr, type, Scalar::byteSize(viewType), &unused,
                                &unused)) {
@@ -13643,7 +13643,7 @@ bool BaseCompiler::emitStructNewWithRtt() {
 
   uint32_t typeIndex;
   Nothing rtt;
-  NothingVector args;
+  NothingVector args{};
   if (!iter_.readStructNewWithRtt(&typeIndex, &rtt, &args)) {
     return false;
   }
@@ -14189,8 +14189,8 @@ bool BaseCompiler::emitBrOnCast() {
 
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
   uint32_t relativeDepth;
-  Nothing unused;
-  NothingVector unused_values;
+  Nothing unused{};
+  NothingVector unused_values{};
   uint32_t rttTypeIndex;
   uint32_t rttDepth;
   ResultType branchTargetType;
