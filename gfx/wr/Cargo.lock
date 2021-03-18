@@ -289,9 +289,18 @@ dependencies = [
 name = "compositor"
 version = "0.1.0"
 dependencies = [
+ "compositor-wayland",
  "compositor-windows",
  "gleam 0.13.1",
  "webrender",
+]
+
+[[package]]
+name = "compositor-wayland"
+version = "0.1.0"
+dependencies = [
+ "cc",
+ "pkg-config",
 ]
 
 [[package]]

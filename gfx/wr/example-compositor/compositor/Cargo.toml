@@ -11,3 +11,6 @@ gleam = "0.13.1"
 
 [target.'cfg(windows)'.dependencies]
 compositor-windows = { path = "../compositor-windows" }
+
+[target.'cfg(unix)'.dependencies]
+compositor-wayland = { path = "../compositor-wayland" }
