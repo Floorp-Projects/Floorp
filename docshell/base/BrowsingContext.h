@@ -184,7 +184,6 @@ enum class ExplicitActiveStatus : uint8_t {
   FIELD(UseErrorPages, bool)                                                  \
   FIELD(PlatformOverride, nsString)                                           \
   FIELD(HasLoadedNonInitialDocument, bool)                                    \
-  FIELD(CreatedDynamically, bool)                                             \
   /* Default value for nsIContentViewer::authorStyleDisabled in any new       \
    * browsing contexts created as a descendant of this one.  Valid only for   \
    * top BCs. */                                                              \
