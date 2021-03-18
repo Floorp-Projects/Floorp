@@ -106,6 +106,9 @@ class AppWindow final : public nsIBaseWindow,
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
     virtual void FullscreenChanged(bool aInFullscreen) override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
+    virtual void MacFullscreenMenubarOverlapChanged(
+        mozilla::DesktopCoord aOverlapAmount) override;
+    MOZ_CAN_RUN_SCRIPT_BOUNDARY
     virtual void OcclusionStateChanged(bool aIsFullyOccluded) override;
     MOZ_CAN_RUN_SCRIPT_BOUNDARY
     virtual void OSToolbarButtonPressed() override;
@@ -161,6 +164,8 @@ class AppWindow final : public nsIBaseWindow,
   MOZ_CAN_RUN_SCRIPT void UIResolutionChanged();
   MOZ_CAN_RUN_SCRIPT void FullscreenWillChange(bool aInFullscreen);
   MOZ_CAN_RUN_SCRIPT void FullscreenChanged(bool aInFullscreen);
+  MOZ_CAN_RUN_SCRIPT void MacFullscreenMenubarOverlapChanged(
+      mozilla::DesktopCoord aOverlapAmount);
   MOZ_CAN_RUN_SCRIPT void OcclusionStateChanged(bool aIsFullyOccluded);
   MOZ_CAN_RUN_SCRIPT void OSToolbarButtonPressed();
   MOZ_CAN_RUN_SCRIPT

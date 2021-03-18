@@ -16,6 +16,7 @@
 #include "Navigator.h"
 #include "mozilla/Encoding.h"
 #include "nsContentSecurityManager.h"
+#include "nsGlobalWindowOuter.h"
 #include "nsScreen.h"
 #include "nsHistory.h"
 #include "nsDOMNavigationTiming.h"
@@ -4714,6 +4715,39 @@ void nsGlobalWindowOuter::FinishFullscreenChange(bool aIsFullscreen) {
       mChromeFields.mFullscreenPresShell = nullptr;
     }
   }
+}
+
+/* virtual */
+void nsGlobalWindowOuter::MacFullscreenMenubarOverlapChanged(
+    mozilla::DesktopCoord aOverlapAmount) {
+  ErrorResult res;
+  RefPtr<Event> domEvent =
+      mDoc->CreateEvent(u"CustomEvent"_ns, CallerType::System, res);
+  if (res.Failed()) {
+    return;
+  }
+
+  AutoJSAPI jsapi;
+  jsapi.Init();
+  JSContext* cx = jsapi.cx();
+  JSAutoRealm ar(cx, GetWrapperPreserveColor());
+
+  JS::Rooted<JS::Value> detailValue(cx);
+  if (!ToJSValue(cx, aOverlapAmount, &detailValue)) {
+    return;
+  }
+
+  CustomEvent* customEvent = static_cast<CustomEvent*>(domEvent.get());
+  customEvent->InitCustomEvent(cx, u"MacFullscreenMenubarRevealUpdate"_ns,
+                               /* aCanBubble = */ true,
+                               /* aCancelable = */ true, detailValue);
+  domEvent->SetTrusted(true);
+  domEvent->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
+
+  nsCOMPtr<EventTarget> target = this;
+  domEvent->SetTarget(target);
+
+  target->DispatchEvent(*domEvent, CallerType::System, IgnoreErrors());
 }
 
 bool nsGlobalWindowOuter::Fullscreen() const {

@@ -3366,6 +3366,15 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 
 @end
 
+@implementation FullscreenTitlebarTracker
+- (FullscreenTitlebarTracker*)init {
+  [super init];
+  self.view = [[[NSView alloc] initWithFrame:NSZeroRect] autorelease];
+  self.hidden = YES;
+  return self;
+}
+@end
+
 // This class allows us to exercise control over the window's title bar. It is
 // used for all windows with titlebars.
 //
@@ -3436,17 +3445,83 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
     mUnifiedToolbarHeight = 22.0f;
     mSheetAttachmentPosition = aChildViewRect.size.height;
     mWindowButtonsRect = NSZeroRect;
+    mInitialTitlebarHeight = [self titlebarHeight];
 
     [self setTitlebarAppearsTransparent:YES];
     [self updateTitlebarView];
+
+    mFullscreenTitlebarTracker = [[FullscreenTitlebarTracker alloc] init];
+    // revealAmount is an undocumented property of
+    // NSTitlebarAccessoryViewController that updates whenever the menubar
+    // slides down in fullscreen mode.
+    [mFullscreenTitlebarTracker addObserver:self
+                                 forKeyPath:@"revealAmount"
+                                    options:NSKeyValueObservingOptionNew
+                                    context:nil];
+    [(NSWindow*)self addTitlebarAccessoryViewController:mFullscreenTitlebarTracker];
   }
   return self;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(nil);
 }
 
+- (void)observeValueForKeyPath:(NSString*)keyPath
+                      ofObject:(id)object
+                        change:(NSDictionary<NSKeyValueChangeKey, id>*)change
+                       context:(void*)context {
+  if ([keyPath isEqualToString:@"revealAmount"]) {
+    NSNumber* revealAmount = (change[NSKeyValueChangeNewKey]);
+    [self updateTitlebarShownAmount:[revealAmount doubleValue]];
+  }
+}
+
+- (void)updateTitlebarShownAmount:(CGFloat)aShownAmount {
+  NSInteger styleMask = [self styleMask];
+  if (!(styleMask & NSWindowStyleMaskFullScreen)) {
+    // We are not interested in the size of the titlebar unless we are in
+    // fullscreen.
+    return;
+  }
+
+  // [NSApp mainMenu] menuBarHeight] returns one of two values: the full height
+  // if the menubar is shown or is in the process of being shown, and 0
+  // otherwise. Since we are multiplying the menubar height by aShownAmount, we
+  // always want the full height.
+  if ([[NSApp mainMenu] menuBarHeight] > 0) {
+    mMenuBarHeight = [[NSApp mainMenu] menuBarHeight];
+  }
+
+  if ([[self delegate] isKindOfClass:[WindowDelegate class]]) {
+    WindowDelegate* windowDelegate = (WindowDelegate*)[self delegate];
+    nsCocoaWindow* geckoWindow = [windowDelegate geckoWidget];
+    if (!geckoWindow) {
+      return;
+    }
+
+    nsIWidgetListener* listener = geckoWindow->GetWidgetListener();
+    if (listener) {
+      // Use the titlebar height cached in our frame rather than
+      // [ToolbarWindow titlebarHeight]. titlebarHeight returns 0 when we're in
+      // fullscreen.
+      CGFloat shiftByPixels = (mInitialTitlebarHeight + mMenuBarHeight) * aShownAmount;
+      // Use mozilla::DesktopToLayoutDeviceScale rather than the
+      // DesktopToLayoutDeviceScale in nsCocoaWindow. The latter accounts for
+      // screen DPI. We don't want that because the revealAmount property
+      // already accounts for it, so we'd be compounding DPI scales > 1.
+      mozilla::DesktopCoord coord =
+          LayoutDeviceCoord(shiftByPixels) / mozilla::DesktopToLayoutDeviceScale();
+
+      listener->MacFullscreenMenubarOverlapChanged(coord);
+    }
+  }
+}
+
 - (void)dealloc {
   [mTitlebarView release];
+  [mFullscreenTitlebarTracker removeObserver:self forKeyPath:@"revealAmount"];
+  [mFullscreenTitlebarTracker removeFromParentViewController];
+  [mFullscreenTitlebarTracker release];
+
   [super dealloc];
 }
 
