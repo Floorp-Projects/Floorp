@@ -2205,15 +2205,26 @@ public class GeckoSession {
          * {@link #toString()}.
          *
          * @param value The serialized SessionState in String form.
-         * @return A new SessionState instance.
-         * @throws JSONException if the value is not a valid json
+         * @return A new SessionState instance if input is valid; otherwise null.
          */
-        public static @NonNull SessionState fromString(final @NonNull String value) throws JSONException {
-            return new SessionState(GeckoBundle.fromJSONObject(new JSONObject(value)));
+        public static @Nullable SessionState fromString(final @Nullable String value) {
+            GeckoBundle bundleState;
+            try {
+                bundleState = GeckoBundle.fromJSONObject(new JSONObject(value));
+            } catch (Exception e) {
+                Log.e(LOGTAG, "String does not represent valid session state.");
+                return null;
+            }
+
+            if (bundleState == null) {
+                return null;
+            }
+
+            return new SessionState(bundleState);
         }
 
         @Override
-        public String toString() {
+        public @Nullable String toString() {
             if (mState == null) {
                 Log.w(LOGTAG, "Can't convert SessionState with null state to string");
                 return null;

@@ -445,6 +445,12 @@ class ProgressDelegateTest : BaseSessionTest() {
         })
     }
 
+    @Test fun nullState() {
+        val stateFromNull : GeckoSession.SessionState? = GeckoSession.SessionState.fromString(null)
+        val nullState : GeckoSession.SessionState? = null
+        assertThat("Null string should result in null state", stateFromNull, equalTo(nullState))
+    }
+
     @NullDelegate(GeckoSession.HistoryDelegate::class)
     @Test fun noHistoryDelegateOnSessionStateChange() {
         // TODO: Bug 1648158
