@@ -356,17 +356,28 @@ toolbar .toolbarbutton-1:-moz-focusring {
 
 /* ::::: bookmark buttons ::::: */
 
+#personal-toolbar-empty-description,
+#PersonalToolbar .toolbarbutton-1,
+toolbarbutton.bookmark-item:not(.subviewbutton) {
+  margin: 2px;
+  padding: var(--bookmark-block-padding) 4px;
+}
+
+#PersonalToolbar .toolbarbutton-1,
+toolbarbutton.bookmark-item:not(.subviewbutton) {
+  border-radius: var(--toolbarbutton-border-radius);
+}
+
+:root[uidensity=compact] #PersonalToolbar .toolbarbutton-1,
+:root[uidensity=compact] toolbarbutton.bookmark-item:not(.subviewbutton) {
+  margin-inline: 1px;
+}
+
 @supports not -moz-bool-pref("browser.proton.enabled") {
   #PersonalToolbar .toolbarbutton-1,
   #personal-toolbar-empty-description,
   toolbarbutton.bookmark-item:not(.subviewbutton) {
-    margin: 0 2px;
-    padding: var(--bookmark-block-padding) 4px;
-  }
-
-  #PersonalToolbar .toolbarbutton-1,
-  toolbarbutton.bookmark-item:not(.subviewbutton) {
-    border-radius: var(--toolbarbutton-border-radius);
+    margin-block: 0;
   }
 
   #PersonalToolbar > #wrapper-import-button + #wrapper-personal-bookmarks > #personal-bookmarks,
@@ -396,33 +407,11 @@ toolbar .toolbarbutton-1:-moz-focusring {
       border-inline-start-width: 0.5px;
     }
   }
-} /** END !proton **/
-
-@supports -moz-bool-pref("browser.proton.enabled") {
-  #PersonalToolbar .toolbarbutton-1,
-  #personal-toolbar-empty-description,
-  toolbarbutton.bookmark-item:not(.subviewbutton) {
-    margin: 2px;
-    padding: var(--bookmark-block-padding) 4px;
-  }
-
-  /*
-   * bookmark items' border radius differ from other toolbar items, which is why we don't reuse
-   * --toolbarbutton-border-radius.
-   */
-  #PersonalToolbar .toolbarbutton-1,
-  toolbarbutton.bookmark-item:not(.subviewbutton) {
-    border-radius: 2px;
-  }
-} /** END proton **/
+} /*** END !proton ***/
 
 toolbarbutton.bookmark-item:not(.subviewbutton) {
   max-width: 13em;
   appearance: none;
-}
-
-:root[uidensity=compact] toolbarbutton.bookmark-item:not(.subviewbutton) {
-  margin-inline: 1px;
 }
 
 /**
