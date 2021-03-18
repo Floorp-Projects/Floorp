@@ -481,6 +481,14 @@ class nsBlockFrame : public nsContainerFrame {
                             const nsStyleDisplay* aDisplay) const;
 
   /**
+   * Helper method for ComputeOverflowAreas(). Incorporates aBEndEdgeOfChildren
+   * into the aOverflowAreas.
+   */
+  void ConsiderBlockEndEdgeOfChildren(mozilla::OverflowAreas& aOverflowAreas,
+                                      nscoord aBEndEdgeOfChildren,
+                                      const nsStyleDisplay* aDisplay) const;
+
+  /**
    * Add the frames in aFrameList to this block after aPrevSibling.
    * This block thinks in terms of lines, but the frame construction code
    * knows nothing about lines at all so we need to find the line that
