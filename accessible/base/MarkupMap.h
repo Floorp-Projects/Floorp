@@ -539,7 +539,10 @@ MARKUPMAP(
         nsIFrame* parentFrame = parentContent->GetPrimaryFrame();
         if (!parentFrame || !parentFrame->IsTableWrapperFrame()) {
           parentContent = parentContent->GetParent();
-          parentFrame = parentContent->GetPrimaryFrame();
+          // parentContent can be null if this tr is at the top level of a
+          // shadow root (with the table outside the shadow root).
+          parentFrame =
+              parentContent ? parentContent->GetPrimaryFrame() : nullptr;
           if (table->GetContent() == parentContent &&
               ((!parentFrame || !parentFrame->IsTableWrapperFrame()) ||
                !aElement->GetPrimaryFrame() ||
