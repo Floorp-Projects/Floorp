@@ -541,6 +541,7 @@ pub struct Program {
     id: gl::GLuint,
     u_transform: gl::GLint,
     u_mode: gl::GLint,
+    u_texture_size: gl::GLint,
     source_info: ProgramSourceInfo,
     is_initialized: bool,
 }
@@ -967,6 +968,10 @@ pub struct Capabilities {
     /// Whether anti-aliasing is supported natively by the GL implementation
     /// rather than emulated in shaders.
     pub uses_native_antialiasing: bool,
+    /// Whether the extension GL_OES_EGL_image_external_essl3 is supported. If true, external
+    /// textures can be used as normal. If false, external textures can only be rendered with
+    /// certain shaders, and must first be copied in to regular textures for others.
+    pub supports_image_external_essl3: bool,
     /// The name of the renderer, as reported by GL
     pub renderer_name: String,
 }
@@ -1658,6 +1663,8 @@ impl Device {
         // As above, this allows bypassing certain alpha-pass variants.
         let uses_native_antialiasing = is_software_webrender;
 
+        let supports_image_external_essl3 = supports_extension(&extensions, "GL_OES_EGL_image_external_essl3");
+
         let is_mali_g = renderer_name.starts_with("Mali-G");
 
         let mut requires_batched_texture_uploads = None;
@@ -1710,6 +1717,7 @@ impl Device {
                 supports_r8_texture_upload,
                 uses_native_clip_mask,
                 uses_native_antialiasing,
+                supports_image_external_essl3,
                 renderer_name,
             },
 
@@ -2321,6 +2329,7 @@ impl Device {
         program.is_initialized = true;
         program.u_transform = self.gl.get_uniform_location(program.id, "uTransform");
         program.u_mode = self.gl.get_uniform_location(program.id, "uMode");
+        program.u_texture_size = self.gl.get_uniform_location(program.id, "uTextureSize");
 
         Ok(())
     }
@@ -2825,6 +2834,7 @@ impl Device {
             id: pid,
             u_transform: 0,
             u_mode: 0,
+            u_texture_size: 0,
             source_info,
             is_initialized: false,
         };
@@ -2889,6 +2899,22 @@ impl Device {
         debug_assert!(self.shader_is_ready);
 
         self.gl.uniform_1i(self.program_mode_id.0, mode);
+    }
+
+    /// Sets the uTextureSize uniform. Most shaders do not require this to be called
+    /// as they use the textureSize GLSL function instead.
+    pub fn set_shader_texture_size(
+        &self,
+        program: &Program,
+        texture_size: DeviceSize,
+    ) {
+        debug_assert!(self.inside_frame);
+        #[cfg(debug_assertions)]
+        debug_assert!(self.shader_is_ready);
+
+        if program.u_texture_size != -1 {
+            self.gl.uniform_2f(program.u_texture_size, texture_size.width, texture_size.height);
+        }
     }
 
     pub fn create_pbo(&mut self) -> PBO {

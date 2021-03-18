@@ -100,7 +100,7 @@ pub struct BlurInstance {
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub struct ScalingInstance {
     pub target_rect: DeviceRect,
-    pub source_rect: DeviceIntRect,
+    pub source_rect: DeviceRect,
 }
 
 #[derive(Clone, Debug)]

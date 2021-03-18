@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use api::ImageBufferKind;
+use api::{ImageBufferKind, units::DeviceSize};
 use crate::batch::{BatchKey, BatchKind, BrushBatchKind, BatchFeatures};
 use crate::composite::{CompositeFeatures, CompositeSurfaceFormat};
 use crate::device::{Device, Program, ShaderError};
@@ -22,11 +22,22 @@ use std::rc::Rc;
 
 use webrender_build::shader::{ShaderFeatures, ShaderFeatureFlags, get_shader_features};
 
-pub(crate) fn get_feature_string(kind: ImageBufferKind) -> &'static str {
-    match kind {
-        ImageBufferKind::Texture2D => "TEXTURE_2D",
-        ImageBufferKind::TextureRect => "TEXTURE_RECT",
-        ImageBufferKind::TextureExternal => "TEXTURE_EXTERNAL",
+/// Which extension version to use for texture external support.
+#[derive(Clone, Copy, Debug, PartialEq)]
+enum TextureExternalVersion {
+    // GL_OES_EGL_image_external_essl3 (Compatible with ESSL 3.0 and
+    // later shaders, but not supported on all GLES 3 devices.)
+    ESSL3,
+    // GL_OES_EGL_image_external (Compatible with ESSL 1.0 shaders)
+    ESSL1,
+}
+
+fn get_feature_string(kind: ImageBufferKind, texture_external_version: TextureExternalVersion) -> &'static str {
+    match (kind, texture_external_version) {
+        (ImageBufferKind::Texture2D, _) => "TEXTURE_2D",
+        (ImageBufferKind::TextureRect, _) => "TEXTURE_RECT",
+        (ImageBufferKind::TextureExternal, TextureExternalVersion::ESSL3) => "TEXTURE_EXTERNAL",
+        (ImageBufferKind::TextureExternal, TextureExternalVersion::ESSL1) => "TEXTURE_EXTERNAL_ESSL1",
     }
 }
 
@@ -127,6 +138,7 @@ impl LazilyCompiledShader {
         &mut self,
         device: &mut Device,
         projection: &Transform3D<f32>,
+        texture_size: Option<DeviceSize>,
         renderer_errors: &mut Vec<RendererError>,
     ) {
         let update_projection = self.cached_projection != *projection;
@@ -138,6 +150,9 @@ impl LazilyCompiledShader {
             }
         };
         device.bind_program(program);
+        if let Some(texture_size) = texture_size {
+            device.set_shader_texture_size(program, texture_size);
+        }
         if update_projection {
             device.set_uniforms(program, projection);
             // thanks NLL for this (`program` technically borrows `self`)
@@ -611,9 +626,20 @@ impl Shaders {
             device.get_capabilities().supports_advanced_blend_equation &&
             options.allow_advanced_blend_equation;
 
+        let texture_external_version = if device.get_capabilities().supports_image_external_essl3 {
+            TextureExternalVersion::ESSL3
+        } else {
+            TextureExternalVersion::ESSL1
+        };
         let mut shader_flags = match gl_type {
             GlType::Gl => ShaderFeatureFlags::GL,
-            GlType::Gles => ShaderFeatureFlags::GLES | ShaderFeatureFlags::TEXTURE_EXTERNAL,
+            GlType::Gles => {
+                let texture_external_flag = match texture_external_version {
+                    TextureExternalVersion::ESSL3 => ShaderFeatureFlags::TEXTURE_EXTERNAL,
+                    TextureExternalVersion::ESSL1 => ShaderFeatureFlags::TEXTURE_EXTERNAL_ESSL1,
+                };
+                ShaderFeatureFlags::GLES | texture_external_flag
+            }
         };
         shader_flags.set(ShaderFeatureFlags::ADVANCED_BLEND_EQUATION, use_advanced_blend_equation);
         shader_flags.set(ShaderFeatureFlags::DUAL_SOURCE_BLENDING, use_dual_source_blending);
@@ -783,7 +809,10 @@ impl Shaders {
         }
         for image_buffer_kind in &IMAGE_BUFFER_KINDS {
             if has_platform_support(*image_buffer_kind, &gl_type) {
-                let feature_string = get_feature_string(*image_buffer_kind);
+                let feature_string = get_feature_string(
+                    *image_buffer_kind,
+                    texture_external_version,
+                );
 
                 let mut features = Vec::new();
                 if feature_string != "" {
@@ -857,11 +886,18 @@ impl Shaders {
             brush_fast_image.push(None);
         }
         for buffer_kind in 0 .. IMAGE_BUFFER_KINDS.len() {
-            if !has_platform_support(IMAGE_BUFFER_KINDS[buffer_kind], &gl_type) {
+            if !has_platform_support(IMAGE_BUFFER_KINDS[buffer_kind], &gl_type)
+                // Brush shaders are not ESSL1 compatible
+                || (IMAGE_BUFFER_KINDS[buffer_kind] == ImageBufferKind::TextureExternal
+                    && texture_external_version == TextureExternalVersion::ESSL1)
+            {
                 continue;
             }
 
-            let feature_string = get_feature_string(IMAGE_BUFFER_KINDS[buffer_kind]);
+            let feature_string = get_feature_string(
+                IMAGE_BUFFER_KINDS[buffer_kind],
+                texture_external_version,
+            );
             if feature_string != "" {
                 image_features.push(feature_string);
             }
@@ -913,31 +949,44 @@ impl Shaders {
                 yuv_features.push("YUV");
                 fast_path_features.push("FAST_PATH");
 
-                let feature_string = get_feature_string(*image_buffer_kind);
+                let index = Self::get_compositing_shader_index(
+                    *image_buffer_kind,
+                );
+
+                let feature_string = get_feature_string(
+                    *image_buffer_kind,
+                    texture_external_version,
+                );
                 if feature_string != "" {
                     yuv_features.push(feature_string);
                     rgba_features.push(feature_string);
                     fast_path_features.push(feature_string);
                 }
 
-                let brush_shader = BrushShader::new(
-                    "brush_yuv_image",
-                    device,
-                    &yuv_features,
-                    options.precache_flags,
-                    &shader_list,
-                    false /* advanced blend */,
-                    false /* dual source */,
-                )?;
+                // YUV shaders are not compatible with ESSL1
+                if *image_buffer_kind != ImageBufferKind::TextureExternal ||
+                    texture_external_version == TextureExternalVersion::ESSL3 {
+                    let brush_shader = BrushShader::new(
+                        "brush_yuv_image",
+                        device,
+                        &yuv_features,
+                        options.precache_flags,
+                        &shader_list,
+                        false /* advanced blend */,
+                        false /* dual source */,
+                    )?;
+                    brush_yuv_image[index] = Some(brush_shader);
 
-                let composite_yuv_shader = LazilyCompiledShader::new(
-                    ShaderKind::Composite,
-                    "composite",
-                    &yuv_features,
-                    device,
-                    options.precache_flags,
-                    &shader_list,
-                )?;
+                    let composite_yuv_shader = LazilyCompiledShader::new(
+                        ShaderKind::Composite,
+                        "composite",
+                        &yuv_features,
+                        device,
+                        options.precache_flags,
+                        &shader_list,
+                    )?;
+                    composite_yuv[index] = Some(composite_yuv_shader);
+                }
 
                 let composite_rgba_shader = LazilyCompiledShader::new(
                     ShaderKind::Composite,
@@ -960,8 +1009,6 @@ impl Shaders {
                 let index = Self::get_compositing_shader_index(
                     *image_buffer_kind,
                 );
-                brush_yuv_image[index] = Some(brush_shader);
-                composite_yuv[index] = Some(composite_yuv_shader);
                 composite_rgba[index] = Some(composite_rgba_shader);
                 composite_rgba_fast_path[index] = Some(composite_rgba_fast_path_shader);
 

@@ -8,6 +8,13 @@
 #extension GL_OES_EGL_image_external_essl3 : require
 #endif
 
+#ifdef WR_FEATURE_TEXTURE_EXTERNAL_ESSL1
+// Some GLES 3 devices do not support GL_OES_EGL_image_external_essl3, so we
+// must use GL_OES_EGL_image_external instead and make the shader ESSL1
+// compatible.
+#extension GL_OES_EGL_image_external : require
+#endif
+
 #ifdef WR_FEATURE_ADVANCED_BLEND
 #extension GL_KHR_blend_equation_advanced : require
 #endif
@@ -22,7 +29,11 @@
 
 #include base
 
+#if defined(WR_FEATURE_TEXTURE_EXTERNAL_ESSL1)
+#define TEX_SAMPLE(sampler, tex_coord) texture2D(sampler, tex_coord.xy)
+#else
 #define TEX_SAMPLE(sampler, tex_coord) texture(sampler, tex_coord.xy)
+#endif
 
 #if defined(WR_FEATURE_TEXTURE_EXTERNAL) && defined(PLATFORM_ANDROID)
 // On some Mali GPUs we have encountered crashes in glDrawElements when using
@@ -56,7 +67,7 @@ highp ivec2 textureSizeMaliWorkaround(samplerExternalOES sampler, int lod) {
     uniform mat4 uTransform;       // Orthographic projection
 
     // Attribute inputs
-    in vec2 aPosition;
+    attribute vec2 aPosition;
 
     // get_fetch_uv is a macro to work around a macOS Intel driver parsing bug.
     // TODO: convert back to a function once the driver issues are resolved, if ever.
@@ -77,7 +88,9 @@ highp ivec2 textureSizeMaliWorkaround(samplerExternalOES sampler, int lod) {
         layout(blend_support_all_equations) out;
     #endif
 
-    #ifdef WR_FEATURE_DUAL_SOURCE_BLENDING
+    #if __VERSION__ == 100
+        #define oFragColor gl_FragColor
+    #elif defined(WR_FEATURE_DUAL_SOURCE_BLENDING)
         layout(location = 0, index = 0) out vec4 oFragColor;
         layout(location = 0, index = 1) out vec4 oFragBlend;
     #else
@@ -99,6 +112,9 @@ highp ivec2 textureSizeMaliWorkaround(samplerExternalOES sampler, int lod) {
         return dot(normalize(perp_dir), dir_to_p0);
     }
 
+// fwidth is not defined in ESSL 1, but that's okay because we don't need
+// it for any ESSL 1 shader variants.
+#if __VERSION__ != 100
     /// Find the appropriate half range to apply the AA approximation over.
     /// This range represents a coefficient to go from one CSS pixel to half a device pixel.
     float compute_aa_range(vec2 position) {
@@ -132,6 +148,7 @@ highp ivec2 textureSizeMaliWorkaround(samplerExternalOES sampler, int lod) {
             return inversesqrt(0.5 * dot(w, w));
         #endif
     }
+#endif
 
     /// Return the blending coefficient for distance antialiasing.
     ///
@@ -179,7 +196,7 @@ uniform sampler2D sColor2;
 uniform sampler2DRect sColor0;
 uniform sampler2DRect sColor1;
 uniform sampler2DRect sColor2;
-#elif defined WR_FEATURE_TEXTURE_EXTERNAL
+#elif defined(WR_FEATURE_TEXTURE_EXTERNAL) || defined(WR_FEATURE_TEXTURE_EXTERNAL_ESSL1)
 uniform samplerExternalOES sColor0;
 uniform samplerExternalOES sColor1;
 uniform samplerExternalOES sColor2;

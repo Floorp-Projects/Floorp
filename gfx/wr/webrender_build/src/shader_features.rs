@@ -14,7 +14,8 @@ bitflags! {
         const DUAL_SOURCE_BLENDING = 1 << 9;
         const DITHERING = 1 << 10;
         const TEXTURE_EXTERNAL = 1 << 11;
-        const DEBUG = 1 << 12;
+        const TEXTURE_EXTERNAL_ESSL1 = 1 << 12;
+        const DEBUG = 1 << 13;
     }
 }
 
@@ -150,8 +151,12 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
     }
     shaders.insert("brush_image", image_features);
 
+    let mut composite_texture_types = texture_types.clone();
+    if flags.contains(ShaderFeatureFlags::TEXTURE_EXTERNAL_ESSL1) {
+        composite_texture_types.push("TEXTURE_EXTERNAL_ESSL1");
+    }
     let mut composite_features: Vec<String> = Vec::new();
-    for texture_type in &texture_types {
+    for texture_type in &composite_texture_types {
         let base = texture_type.to_string();
         composite_features.push(base);
     }
@@ -173,7 +178,7 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
     shaders.insert("brush_yuv_image", yuv_features);
 
     // Fast path composite shaders
-    for texture_type in &texture_types {
+    for texture_type in &composite_texture_types {
         let mut list = FeatureList::new();
         if !texture_type.is_empty() {
             list.add(texture_type);
