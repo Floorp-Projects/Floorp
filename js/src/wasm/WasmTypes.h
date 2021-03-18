@@ -2960,7 +2960,7 @@ class TypeContext {
 
   template <typename U>
   [[nodiscard]] bool append(U&& typeDef) {
-    return types_.append(std::move(typeDef));
+    return types_.append(std::forward<U>(typeDef));
   }
   [[nodiscard]] bool resize(uint32_t length) { return types_.resize(length); }
 
