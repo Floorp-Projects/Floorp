@@ -339,7 +339,7 @@ class WebExtensionBrowserMenuBuilderTest {
         assertEquals("ParentBrowserMenuItem", parentMenuItem.javaClass.simpleName)
 
         // the replaced item should have the action title of the WebExtensionBrowserMenuItem
-        assertEquals("Extensions", parentMenuItem.label)
+        assertEquals("Add-ons", parentMenuItem.label)
 
         val subMenuItemSize = parentMenuItem.subMenu.adapter.visibleItems.size
 

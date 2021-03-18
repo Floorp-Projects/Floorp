@@ -63,13 +63,13 @@ class WebExtensionBrowserMenuBuilder(
 
         val webExtMenuItem = if (filteredExtensionMenuItems.isNotEmpty()) {
             val backPressMenuItem = BackPressMenuItem(
-                label = context.getString(R.string.mozac_browser_menu_addons2),
+                label = context.getString(R.string.mozac_browser_menu_addons),
                 imageResource = R.drawable.mozac_ic_back,
                 iconTintColorResource = webExtIconTintColorResource
             )
 
             val addonsManagerMenuItem = BrowserMenuImageText(
-                label = context.getString(R.string.mozac_browser_menu_addons_manager2),
+                label = context.getString(R.string.mozac_browser_menu_addons_manager),
                 imageResource = R.drawable.mozac_ic_extensions,
                 iconTintColorResource = webExtIconTintColorResource
             ) {
@@ -90,7 +90,7 @@ class WebExtensionBrowserMenuBuilder(
             val webExtMenu = WebExtensionBrowserMenu(webExtBrowserMenuAdapter, store)
 
             ParentBrowserMenuItem(
-                label = context.getString(R.string.mozac_browser_menu_addons2),
+                label = context.getString(R.string.mozac_browser_menu_addons),
                 imageResource = R.drawable.mozac_ic_extensions,
                 iconTintColorResource = webExtIconTintColorResource,
                 subMenu = webExtMenu,
@@ -98,7 +98,7 @@ class WebExtensionBrowserMenuBuilder(
             )
         } else {
             BrowserMenuImageText(
-                label = context.getString(R.string.mozac_browser_menu_addons2),
+                label = context.getString(R.string.mozac_browser_menu_addons),
                 imageResource = R.drawable.mozac_ic_extensions,
                 iconTintColorResource = webExtIconTintColorResource
             ) {
