@@ -167,111 +167,80 @@ fn prepare_prim_for_render(
     // For example, scrolling may affect the location of an item in
     // local space, which may force us to render this item on a larger
     // picture target, if being composited.
-    let pic_info = {
-        match prim_instance.kind {
-            PrimitiveInstanceKind::Picture { pic_index ,.. } => {
-                let pic = &mut store.pictures[pic_index.0];
+    if let PrimitiveInstanceKind::Picture { pic_index, .. } = prim_instance.kind {
+        let pic = &mut store.pictures[pic_index.0];
 
-                match pic.take_context(
-                    pic_index,
-                    pic_context.surface_spatial_node_index,
-                    pic_context.raster_spatial_node_index,
-                    pic_context.surface_index,
-                    &pic_context.subpixel_mode,
-                    frame_state,
+        match pic.take_context(
+            pic_index,
+            pic_context.surface_spatial_node_index,
+            pic_context.raster_spatial_node_index,
+            pic_context.surface_index,
+            &pic_context.subpixel_mode,
+            frame_state,
+            frame_context,
+            scratch,
+            tile_cache_log,
+            tile_caches,
+        ) {
+            Some((pic_context_for_children, mut pic_state_for_children, mut prim_list)) => {
+                prepare_primitives(
+                    store,
+                    &mut prim_list,
+                    &pic_context_for_children,
+                    &mut pic_state_for_children,
                     frame_context,
+                    frame_state,
+                    data_stores,
                     scratch,
                     tile_cache_log,
                     tile_caches,
-                ) {
-                    Some(info) => Some(info),
-                    None => {
-                        if prim_instance.is_chased() {
-                            println!("\tculled for carrying an invisible composite filter");
-                        }
-
-                        return false;
-                    }
-                }
-            }
-            PrimitiveInstanceKind::TextRun { .. } |
-            PrimitiveInstanceKind::Rectangle { .. } |
-            PrimitiveInstanceKind::LineDecoration { .. } |
-            PrimitiveInstanceKind::NormalBorder { .. } |
-            PrimitiveInstanceKind::ImageBorder { .. } |
-            PrimitiveInstanceKind::YuvImage { .. } |
-            PrimitiveInstanceKind::Image { .. } |
-            PrimitiveInstanceKind::LinearGradient { .. } |
-            PrimitiveInstanceKind::RadialGradient { .. } |
-            PrimitiveInstanceKind::ConicGradient { .. } |
-            PrimitiveInstanceKind::Clear { .. } |
-            PrimitiveInstanceKind::Backdrop { .. } => {
-                None
-            }
-        }
-    };
-
-    let is_passthrough = match pic_info {
-        Some((pic_context_for_children, mut pic_state_for_children, mut prim_list)) => {
-            let is_passthrough = pic_context_for_children.is_passthrough;
-
-            prepare_primitives(
-                store,
-                &mut prim_list,
-                &pic_context_for_children,
-                &mut pic_state_for_children,
-                frame_context,
-                frame_state,
-                data_stores,
-                scratch,
-                tile_cache_log,
-                tile_caches,
-            );
-
-            // Restore the dependencies (borrow check dance)
-            store.pictures[pic_context_for_children.pic_index.0]
-                .restore_context(
-                    prim_list,
-                    pic_context_for_children,
-                    pic_state_for_children,
-                    frame_state,
                 );
 
-            is_passthrough
+                // Restore the dependencies (borrow check dance)
+                store.pictures[pic_context_for_children.pic_index.0]
+                    .restore_context(
+                        prim_list,
+                        pic_context_for_children,
+                        pic_state_for_children,
+                        frame_state,
+                    );
+            }
+            None => {
+                if prim_instance.is_chased() {
+                    println!("\tculled for carrying an invisible composite filter");
+                }
+
+                return false;
+            }
         }
-        None => {
-            false
-        }
-    };
+    }
 
     let prim_rect = data_stores.get_local_prim_rect(
         prim_instance,
         store,
     );
 
-    if !is_passthrough {
-        if !update_clip_task(
-            prim_instance,
-            &prim_rect.origin,
-            cluster.spatial_node_index,
-            pic_context.raster_spatial_node_index,
-            pic_context,
-            pic_state,
-            frame_context,
-            frame_state,
-            store,
-            data_stores,
-            scratch,
-        ) {
-            if prim_instance.is_chased() {
-                println!("\tconsidered invisible");
-            }
-            return false;
-        }
-
+    if !update_clip_task(
+        prim_instance,
+        &prim_rect.origin,
+        cluster.spatial_node_index,
+        pic_context.raster_spatial_node_index,
+        pic_context,
+        pic_state,
+        frame_context,
+        frame_state,
+        store,
+        data_stores,
+        scratch,
+    ) {
         if prim_instance.is_chased() {
-            println!("\tconsidered visible and ready with local pos {:?}", prim_rect.origin);
+            println!("\tconsidered invisible");
         }
+        return false;
+    }
+
+    if prim_instance.is_chased() {
+        println!("\tconsidered visible and ready with local pos {:?}", prim_rect.origin);
     }
 
     #[cfg(debug_assertions)]
