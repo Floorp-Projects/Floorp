@@ -9,16 +9,16 @@
         onload="onLoad();"
         title="nsIStandaloneNativeMenu Test">
 
-  <command id="cmd_FooItem0" oncommand="executedCommandID = 'cmd_FooItem0';"/>
-  <command id="cmd_FooItem1" oncommand="executedCommandID = 'cmd_FooItem1';"/>
-  <command id="cmd_BarItem0" oncommand="executedCommandID = 'cmd_BarItem0';"/>
-  <command id="cmd_BarItem1" oncommand="executedCommandID = 'cmd_BarItem1';"/>
-  <command id="cmd_NewItem0" oncommand="executedCommandID = 'cmd_NewItem0';"/>
-  <command id="cmd_NewItem1" oncommand="executedCommandID = 'cmd_NewItem1';"/>
-  <command id="cmd_NewItem2" oncommand="executedCommandID = 'cmd_NewItem2';"/>
-  <command id="cmd_NewItem3" oncommand="executedCommandID = 'cmd_NewItem3';"/>
-  <command id="cmd_NewItem4" oncommand="executedCommandID = 'cmd_NewItem4';"/>
-  <command id="cmd_NewItem5" oncommand="executedCommandID = 'cmd_NewItem5';"/>
+  <command id="cmd_FooItem0" oncommand="gExecutedCommandID = 'cmd_FooItem0';"/>
+  <command id="cmd_FooItem1" oncommand="gExecutedCommandID = 'cmd_FooItem1';"/>
+  <command id="cmd_BarItem0" oncommand="gExecutedCommandID = 'cmd_BarItem0';"/>
+  <command id="cmd_BarItem1" oncommand="gExecutedCommandID = 'cmd_BarItem1';"/>
+  <command id="cmd_NewItem0" oncommand="gExecutedCommandID = 'cmd_NewItem0';"/>
+  <command id="cmd_NewItem1" oncommand="gExecutedCommandID = 'cmd_NewItem1';"/>
+  <command id="cmd_NewItem2" oncommand="gExecutedCommandID = 'cmd_NewItem2';"/>
+  <command id="cmd_NewItem3" oncommand="gExecutedCommandID = 'cmd_NewItem3';"/>
+  <command id="cmd_NewItem4" oncommand="gExecutedCommandID = 'cmd_NewItem4';"/>
+  <command id="cmd_NewItem5" oncommand="gExecutedCommandID = 'cmd_NewItem5';"/>
 
   <!-- We do not modify any menus or menu items defined here in testing. These
        serve as a baseline structure for us to test after other modifications.
@@ -57,22 +57,26 @@
       window.arguments[0].SimpleTest.finish();
     }
 
-    var executedCommandID = "";
+    var gExecutedCommandID;
 
-    function testItem(menu, location, targetID) {
-      var correctCommandHandler = false;
+    // returns the executed command ID, or the empty string if nothing was executed
+    function activateItem(menu, location) {
       try {
+        gExecutedCommandID = "";
         menu.menuWillOpen();
         menu.activateNativeMenuItemAt(location);
-        correctCommandHandler = executedCommandID == targetID;
+        return gExecutedCommandID;
       }
       catch (e) {
+        // activateNativeMenuItemAt throws an exception if the item was not found
         dump(e + "\n");
+        return "";
       }
-      finally {
-        executedCommandID = "";
-      }
-      return correctCommandHandler;
+    }
+
+    function testItem(menu, location, targetID) {
+      var activatedCommandID = activateItem(menu, location);
+      return activatedCommandID != "" && activatedCommandID == targetID;
     }
 
     var XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -184,7 +188,7 @@
 
         // Create another submenu with hierarchy via DOM manipulation.
         // ******************
-        // * Foo * NewMenu0 * <- Menu bar 
+        // * Foo * NewMenu0 * <- Menu bar
         // ******************
         //       ****************
         //       * NewMenuItem0 * <- NewMenu0 submenu
