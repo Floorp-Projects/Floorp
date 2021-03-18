@@ -746,6 +746,12 @@
   "JSHandle JSHandle.jsonValue should work (jshandle.spec.ts)": [
     "PASS"
   ],
+  "JSHandle JSHandle.jsonValue works with jsonValues that are not objects (jshandle.spec.ts)": [
+    "PASS"
+  ],
+  "JSHandle JSHandle.jsonValue works with jsonValues that are primitives (jshandle.spec.ts)": [
+    "PASS"
+  ],
   "JSHandle JSHandle.jsonValue should not work with dates (jshandle.spec.ts)": [
     "FAIL"
   ],
@@ -897,7 +903,7 @@
     "FAIL"
   ],
   "Launcher specs Puppeteer Puppeteer.launch should be able to launch Firefox (launcher.spec.ts)": [
-    "SKIP"
+    "FAIL"
   ],
   "Launcher specs Puppeteer Puppeteer.connect should be able to connect multiple times to the same browser (launcher.spec.ts)": [
     "PASS"
@@ -912,6 +918,9 @@
     "PASS"
   ],
   "Launcher specs Puppeteer Puppeteer.connect should be able to connect to the same page simultaneously (launcher.spec.ts)": [
+    "FAIL"
+  ],
+  "Launcher specs Puppeteer Puppeteer.connect should be able to reconnect (launcher.spec.ts)": [
     "FAIL"
   ],
   "Launcher specs Puppeteer Puppeteer.executablePath should work (launcher.spec.ts)": [
@@ -1238,7 +1247,10 @@
   "Page Page.Events.Popup should work with noopener (page.spec.ts)": [
     "TIMEOUT"
   ],
-  "Page Page.Events.Popup should work with clicking target=_blank (page.spec.ts)": [
+  "Page Page.Events.Popup should work with clicking target=_blank and without rel=opener (page.spec.ts)": [
+    "TIMEOUT"
+  ],
+  "Page Page.Events.Popup should work with clicking target=_blank and with rel=opener (page.spec.ts)": [
     "TIMEOUT"
   ],
   "Page Page.Events.Popup should work with fake-clicking target=_blank and rel=noopener (page.spec.ts)": [
@@ -1278,6 +1290,9 @@
     "FAIL"
   ],
   "Page Page.setOfflineMode should emulate navigator.onLine (page.spec.ts)": [
+    "FAIL"
+  ],
+  "Page Page.emulateNetworkConditions should change navigator.connection.effectiveType (page.spec.ts)": [
     "FAIL"
   ],
   "Page ExecutionContext.queryObjects should work (page.spec.ts)": [
@@ -1332,6 +1347,9 @@
     "PASS"
   ],
   "Page Page.waitForRequest should respect default timeout (page.spec.ts)": [
+    "PASS"
+  ],
+  "Page Page.waitForRequest should work with async predicate (page.spec.ts)": [
     "PASS"
   ],
   "Page Page.waitForRequest should work with no timeout (page.spec.ts)": [
@@ -1793,8 +1811,8 @@
   "Screenshots Page.screenshot should clip rect (screenshot.spec.ts)": [
     "FAIL"
   ],
-  "Screenshots Page.screenshot should clip elements to the viewport (screenshot.spec.ts)": [
-    "FAIL"
+  "Screenshots Page.screenshot should get screenshot bigger than the viewport (screenshot.spec.ts)": [
+    "PASS"
   ],
   "Screenshots Page.screenshot should run in parallel (screenshot.spec.ts)": [
     "PASS"
