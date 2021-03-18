@@ -42,7 +42,7 @@ object FeatureFlags {
     /**
      * Enables the tabs tray re-write with Synced Tabs.
      */
-    val tabsTrayRewrite = Config.channel.isNightlyOrDebug
+    val tabsTrayRewrite = Config.channel.isDebug
 
     /**
      * Enables the updated icon set look and feel.
