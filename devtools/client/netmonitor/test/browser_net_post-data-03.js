@@ -70,8 +70,11 @@ add_task(async function() {
     "The second request header value was incorrect."
   );
 
-  // Wait for all tree sections updated by react
-  wait = waitForDOM(document, "#request-panel .accordion-item", 2);
+  // Wait for raw data toggle to be displayed
+  wait = waitForDOM(
+    document,
+    "#request-panel .raw-data-toggle-input .devtools-checkbox-toggle"
+  );
   clickOnSidebarTab(document, "request");
   await wait;
 
@@ -87,8 +90,7 @@ add_task(async function() {
   );
 
   is(
-    tabpanel.querySelector(".accordion-item .accordion-header-label")
-      .textContent,
+    tabpanel.querySelector(".data-label").textContent,
     L10N.getStr("paramsFormData"),
     "The form data section doesn't have the correct title."
   );
