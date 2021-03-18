@@ -961,9 +961,9 @@ class FunctionCompiler {
     AliasSet aliases = moduleEnv_.maxMemoryLength.isSome()
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
-    auto load = MWasmLoadTls::New(alloc(), tlsPointer_,
-                                  offsetof(wasm::TlsData, boundsCheckLimit32),
-                                  MIRType::Int32, aliases);
+    auto* load = MWasmLoadTls::New(alloc(), tlsPointer_,
+                                   offsetof(wasm::TlsData, boundsCheckLimit32),
+                                   MIRType::Int32, aliases);
     curBlock_->add(load);
     return load;
   }
