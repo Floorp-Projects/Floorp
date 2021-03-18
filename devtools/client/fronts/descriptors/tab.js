@@ -195,19 +195,26 @@ class TabDescriptorFront extends DescriptorMixin(
     }
 
     this._targetFrontPromise = (async () => {
-      let targetFront = null;
+      let newTargetFront = null;
       try {
         const targetForm = await super.getTarget();
-        targetFront = this._createTabTarget(targetForm);
-        await targetFront.attach();
+        newTargetFront = this._createTabTarget(targetForm);
+        await newTargetFront.attach();
       } catch (e) {
         console.log(
           `Request to connect to TabDescriptor "${this.id}" failed: ${e}`
         );
       }
-      this._targetFront = targetFront;
+
+      // Completely ignore the previous target.
+      // We might nullify the _targetFront unexpectely due to previous target
+      // being destroyed after the new is created
+      if (this._targetFront) {
+        this._targetFront.off("target-destroyed", this._onTargetDestroyed);
+      }
+      this._targetFront = newTargetFront;
       this._targetFrontPromise = null;
-      return targetFront;
+      return newTargetFront;
     })();
     return this._targetFrontPromise;
   }
