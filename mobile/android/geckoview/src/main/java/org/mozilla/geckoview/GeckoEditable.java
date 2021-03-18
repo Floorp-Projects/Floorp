@@ -24,6 +24,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
 
 import android.graphics.RectF;
+import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -1694,6 +1695,13 @@ import android.view.inputmethod.EditorInfo;
 
         if ((flags & SessionTextInput.EditableListener.IME_FLAG_PRIVATE_BROWSING) != 0) {
             outAttrs.imeOptions |= InputMethods.IME_FLAG_NO_PERSONALIZED_LEARNING;
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            final Spanned currentText = mText.getCurrentText();
+            outAttrs.initialSelStart =  Selection.getSelectionStart(currentText);
+            outAttrs.initialSelEnd = Selection.getSelectionEnd(currentText);
+            outAttrs.setInitialSurroundingText(currentText);
         }
 
         toggleSoftInput(/* force */ false, state);
