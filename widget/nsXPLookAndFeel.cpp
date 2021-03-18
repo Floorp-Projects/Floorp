@@ -39,13 +39,43 @@
 
 using namespace mozilla;
 
+using IntID = mozilla::LookAndFeel::IntID;
+using FloatID = mozilla::LookAndFeel::FloatID;
+using ColorID = mozilla::LookAndFeel::ColorID;
+
+struct nsLookAndFeelIntPref {
+  const char* name;
+  IntID id;
+  bool isSet;
+  int32_t intVar;
+};
+
+struct nsLookAndFeelFloatPref {
+  const char* name;
+  FloatID id;
+  bool isSet;
+  float floatVar;
+};
+
+#define CACHE_BLOCK(x) (uint32_t(x) >> 5)
+#define CACHE_BIT(x) (1 << (uint32_t(x) & 31))
+
+#define COLOR_CACHE_SIZE (CACHE_BLOCK(uint32_t(LookAndFeel::ColorID::End)) + 1)
+#define IS_COLOR_CACHED(x) (CACHE_BIT(x) & sCachedColorBits[CACHE_BLOCK(x)])
+#define CLEAR_COLOR_CACHE(x)      \
+  sCachedColors[uint32_t(x)] = 0; \
+  sCachedColorBits[CACHE_BLOCK(x)] &= ~(CACHE_BIT(x));
+#define CACHE_COLOR(x, y)         \
+  sCachedColors[uint32_t(x)] = y; \
+  sCachedColorBits[CACHE_BLOCK(x)] |= CACHE_BIT(x);
+
 // To make one of these prefs toggleable from a reftest add a user
 // pref in testing/profiles/reftest/user.js. For example, to make
 // ui.useAccessibilityTheme toggleable, add:
 //
 // user_pref("ui.useAccessibilityTheme", 0);
 //
-nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] = {
+static nsLookAndFeelIntPref sIntPrefs[] = {
     {"ui.caretBlinkTime", IntID::CaretBlinkTime, false, 0},
     {"ui.caretWidth", IntID::CaretWidth, false, 0},
     {"ui.caretVisibleWithSelection", IntID::ShowCaretDuringSelection, false, 0},
@@ -104,7 +134,7 @@ nsLookAndFeelIntPref nsXPLookAndFeel::sIntPrefs[] = {
     {"ui.scrollArrowStyle", IntID::ScrollArrowStyle, false, 0},
 };
 
-nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] = {
+static nsLookAndFeelFloatPref sFloatPrefs[] = {
     {"ui.IMEUnderlineRelativeSize", FloatID::IMEUnderlineRelativeSize, false,
      0},
     {"ui.SpellCheckerUnderlineRelativeSize",
@@ -119,7 +149,7 @@ nsLookAndFeelFloatPref nsXPLookAndFeel::sFloatPrefs[] = {
  * to the following array then you MUST update the
  * sizes of the sColorPrefs array in nsXPLookAndFeel.h
  */
-const char nsXPLookAndFeel::sColorPrefs[][41] = {
+static const char sColorPrefs[][41] = {
     "ui.windowBackground",
     "ui.windowForeground",
     "ui.widgetBackground",
@@ -239,8 +269,8 @@ const char nsXPLookAndFeel::sColorPrefs[][41] = {
     "ui.-moz-colheadertext",
     "ui.-moz-colheaderhovertext"};
 
-int32_t nsXPLookAndFeel::sCachedColors[size_t(LookAndFeel::ColorID::End)] = {0};
-int32_t nsXPLookAndFeel::sCachedColorBits[COLOR_CACHE_SIZE] = {0};
+static int32_t sCachedColors[size_t(LookAndFeel::ColorID::End)] = {0};
+static int32_t sCachedColorBits[COLOR_CACHE_SIZE] = {0};
 
 bool nsXPLookAndFeel::sInitialized = false;
 
@@ -309,7 +339,7 @@ void nsXPLookAndFeel::Shutdown() {
 }
 
 // static
-void nsXPLookAndFeel::IntPrefChanged(nsLookAndFeelIntPref* data) {
+static void IntPrefChanged(nsLookAndFeelIntPref* data) {
   if (!data) {
     return;
   }
@@ -332,11 +362,11 @@ void nsXPLookAndFeel::IntPrefChanged(nsLookAndFeelIntPref* data) {
   }
 
   // Int prefs can't change our system colors or fonts.
-  NotifyChangedAllWindows(widget::ThemeChangeKind::MediaQueriesOnly);
+  LookAndFeel::NotifyChangedAllWindows(
+      widget::ThemeChangeKind::MediaQueriesOnly);
 }
 
-// static
-void nsXPLookAndFeel::FloatPrefChanged(nsLookAndFeelFloatPref* data) {
+static void FloatPrefChanged(nsLookAndFeelFloatPref* data) {
   if (!data) {
     return;
   }
@@ -359,12 +389,12 @@ void nsXPLookAndFeel::FloatPrefChanged(nsLookAndFeelFloatPref* data) {
   }
 
   // Float prefs can't change our system colors or fonts.
-  NotifyChangedAllWindows(widget::ThemeChangeKind::MediaQueriesOnly);
+  LookAndFeel::NotifyChangedAllWindows(
+      widget::ThemeChangeKind::MediaQueriesOnly);
 }
 
 // static
-void nsXPLookAndFeel::ColorPrefChanged(unsigned int index,
-                                       const char* prefName) {
+static void ColorPrefChanged(unsigned int index, const char* prefName) {
   nsAutoString colorStr;
   nsresult rv = Preferences::GetString(prefName, colorStr);
   if (NS_SUCCEEDED(rv) && !colorStr.IsEmpty()) {
@@ -394,10 +424,10 @@ void nsXPLookAndFeel::ColorPrefChanged(unsigned int index,
   }
 
   // Color prefs affect style, because they by definition change system colors.
-  NotifyChangedAllWindows(widget::ThemeChangeKind::Style);
+  LookAndFeel::NotifyChangedAllWindows(widget::ThemeChangeKind::Style);
 }
 
-void nsXPLookAndFeel::InitFromPref(nsLookAndFeelIntPref* aPref) {
+static void InitFromPref(nsLookAndFeelIntPref* aPref) {
   int32_t intpref;
   nsresult rv = Preferences::GetInt(aPref->name, &intpref);
   if (NS_SUCCEEDED(rv)) {
@@ -406,7 +436,7 @@ void nsXPLookAndFeel::InitFromPref(nsLookAndFeelIntPref* aPref) {
   }
 }
 
-void nsXPLookAndFeel::InitFromPref(nsLookAndFeelFloatPref* aPref) {
+static void InitFromPref(nsLookAndFeelFloatPref* aPref) {
   int32_t intpref;
   nsresult rv = Preferences::GetInt(aPref->name, &intpref);
   if (NS_SUCCEEDED(rv)) {
@@ -415,7 +445,7 @@ void nsXPLookAndFeel::InitFromPref(nsLookAndFeelFloatPref* aPref) {
   }
 }
 
-void nsXPLookAndFeel::InitColorFromPref(int32_t i) {
+static void InitColorFromPref(int32_t i) {
   static_assert(ArrayLength(sColorPrefs) == size_t(ColorID::End),
                 "Should have a pref for each color value");
 

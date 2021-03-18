@@ -7,38 +7,10 @@
 #define __nsXPLookAndFeel
 
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/ServoStyleConsts.h"
 #include "mozilla/widget/LookAndFeelTypes.h"
 #include "nsTArray.h"
 
 class nsLookAndFeel;
-
-struct nsLookAndFeelIntPref {
-  const char* name;
-  mozilla::LookAndFeel::IntID id;
-  bool isSet;
-  int32_t intVar;
-};
-
-struct nsLookAndFeelFloatPref {
-  const char* name;
-  mozilla::LookAndFeel::FloatID id;
-  bool isSet;
-  float floatVar;
-};
-
-#define CACHE_BLOCK(x) (uint32_t(x) >> 5)
-#define CACHE_BIT(x) (1 << (uint32_t(x) & 31))
-
-#define COLOR_CACHE_SIZE (CACHE_BLOCK(uint32_t(LookAndFeel::ColorID::End)) + 1)
-#define IS_COLOR_CACHED(x) \
-  (CACHE_BIT(x) & nsXPLookAndFeel::sCachedColorBits[CACHE_BLOCK(x)])
-#define CLEAR_COLOR_CACHE(x)                       \
-  nsXPLookAndFeel::sCachedColors[uint32_t(x)] = 0; \
-  nsXPLookAndFeel::sCachedColorBits[CACHE_BLOCK(x)] &= ~(CACHE_BIT(x));
-#define CACHE_COLOR(x, y)                          \
-  nsXPLookAndFeel::sCachedColors[uint32_t(x)] = y; \
-  nsXPLookAndFeel::sCachedColorBits[CACHE_BLOCK(x)] |= CACHE_BIT(x);
 
 class nsXPLookAndFeel : public mozilla::LookAndFeel {
  public:
@@ -100,27 +72,13 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
  protected:
   nsXPLookAndFeel() = default;
 
-  static void IntPrefChanged(nsLookAndFeelIntPref* data);
-  static void FloatPrefChanged(nsLookAndFeelFloatPref* data);
-  static void ColorPrefChanged(unsigned int index, const char* prefName);
   static nscolor GetStandinForNativeColor(ColorID);
-  void InitFromPref(nsLookAndFeelIntPref* aPref);
-  void InitFromPref(nsLookAndFeelFloatPref* aPref);
-  void InitColorFromPref(int32_t aIndex);
   void RecordTelemetry();
   virtual void RecordLookAndFeelSpecificTelemetry() {}
 
   static void OnPrefChanged(const char* aPref, void* aClosure);
 
   static bool sInitialized;
-  static nsLookAndFeelIntPref sIntPrefs[];
-  static nsLookAndFeelFloatPref sFloatPrefs[];
-  /* this length must not be shorter than the length of the longest string in
-   * the array see nsXPLookAndFeel.cpp
-   */
-  static const char sColorPrefs[][41];
-  static int32_t sCachedColors[size_t(LookAndFeel::ColorID::End)];
-  static int32_t sCachedColorBits[COLOR_CACHE_SIZE];
 
   static nsXPLookAndFeel* sInstance;
   static bool sShutdown;
