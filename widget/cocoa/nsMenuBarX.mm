@@ -243,7 +243,7 @@ void nsMenuBarX::InsertMenuAtIndex(UniquePtr<nsMenuX>&& aMenu, uint32_t aIndex) 
     if (MenuContainsAppMenu()) {
       insertionIndex++;
     }
-    [mNativeMenu insertItem:menu->NativeMenuItem() atIndex:insertionIndex];
+    [mNativeMenu insertItem:menu->NativeNSMenuItem() atIndex:insertionIndex];
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -260,7 +260,7 @@ void nsMenuBarX::RemoveMenuAtIndex(uint32_t aIndex) {
   // Our native menu and our internal menu object array might be out of sync.
   // This happens, for example, when a submenu is hidden. Because of this we
   // should not assume that a native submenu is hooked up.
-  NSMenuItem* nativeMenuItem = mMenuArray[aIndex]->NativeMenuItem();
+  NSMenuItem* nativeMenuItem = mMenuArray[aIndex]->NativeNSMenuItem();
   int nativeMenuItemIndex = [mNativeMenu indexOfItem:nativeMenuItem];
   if (nativeMenuItemIndex != -1) {
     [mNativeMenu removeItemAtIndex:nativeMenuItemIndex];
@@ -397,7 +397,7 @@ void nsMenuBarX::SetSystemHelpMenu() {
 
   nsMenuX* xulHelpMenu = GetXULHelpMenu();
   if (xulHelpMenu) {
-    NSMenu* helpMenu = (NSMenu*)xulHelpMenu->NativeData();
+    NSMenu* helpMenu = xulHelpMenu->NativeNSMenu();
     if (helpMenu) {
       NSApp.helpMenu = helpMenu;
     }
