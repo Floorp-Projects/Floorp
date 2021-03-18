@@ -257,7 +257,19 @@ ActorLifecycleProxy::ActorLifecycleProxy(IProtocol* aActor) : mActor(aActor) {
   mActor->ActorAlloc();
 }
 
+WeakActorLifecycleProxy* ActorLifecycleProxy::GetWeakProxy() {
+  if (!mWeakProxy) {
+    mWeakProxy = new WeakActorLifecycleProxy(this);
+  }
+  return mWeakProxy;
+}
+
 ActorLifecycleProxy::~ActorLifecycleProxy() {
+  if (mWeakProxy) {
+    mWeakProxy->mProxy = nullptr;
+    mWeakProxy = nullptr;
+  }
+
   // When the LifecycleProxy's lifetime has come to an end, it means that the
   // actor should have its `Dealloc` method called on it. In a well-behaved
   // actor, this will release the IPC-held reference to the actor.
@@ -276,6 +288,18 @@ ActorLifecycleProxy::~ActorLifecycleProxy() {
   mActor->mLinkStatus = LinkStatus::Inactive;
   mActor->ActorDealloc();
   mActor = nullptr;
+}
+
+WeakActorLifecycleProxy::WeakActorLifecycleProxy(ActorLifecycleProxy* aProxy)
+    : mProxy(aProxy), mActorEventTarget(GetCurrentSerialEventTarget()) {}
+
+WeakActorLifecycleProxy::~WeakActorLifecycleProxy() {
+  MOZ_DIAGNOSTIC_ASSERT(!mProxy, "Destroyed before mProxy was cleared?");
+}
+
+IProtocol* WeakActorLifecycleProxy::Get() const {
+  MOZ_DIAGNOSTIC_ASSERT(mActorEventTarget->IsOnCurrentThread());
+  return mProxy ? mProxy->Get() : nullptr;
 }
 
 IProtocol::~IProtocol() {
