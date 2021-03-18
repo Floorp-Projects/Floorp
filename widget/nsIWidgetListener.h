@@ -112,6 +112,12 @@ class nsIWidgetListener {
   virtual void FullscreenChanged(bool aInFullscreen);
 
   /**
+   * Called when the macOS titlebar is shown while in fullscreen.
+   */
+  virtual void MacFullscreenMenubarOverlapChanged(
+      mozilla::DesktopCoord aOverlapAmount);
+
+  /**
    * Called when the occlusion state is changed.
    */
   virtual void OcclusionStateChanged(bool aIsFullyOccluded);

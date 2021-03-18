@@ -174,6 +174,10 @@ typedef struct _nsCocoaWindowList {
 @interface MOZTitlebarView : NSVisualEffectView
 @end
 
+@interface FullscreenTitlebarTracker : NSTitlebarAccessoryViewController
+- (FullscreenTitlebarTracker*)init;
+@end
+
 // NSWindow subclass for handling windows with toolbars.
 @interface ToolbarWindow : BaseWindow {
   // This window's titlebar view, if present.
@@ -181,9 +185,18 @@ typedef struct _nsCocoaWindowList {
   // This view is a subview of the window's content view and gets created and
   // destroyed by updateTitlebarView.
   MOZTitlebarView* mTitlebarView;  // [STRONG]
+  // mFullscreenTitlebarTracker attaches an invisible rectangle to the system
+  // title bar. This allows us to detect when the title bar is showing in
+  // fullscreen.
+  FullscreenTitlebarTracker* mFullscreenTitlebarTracker;
 
   CGFloat mUnifiedToolbarHeight;
   CGFloat mSheetAttachmentPosition;
+  CGFloat mMenuBarHeight;
+  /* Store the height of the titlebar when this window is initialized. The
+     titlebarHeight getter returns 0 when in fullscreen, which is not useful in
+     some cases. */
+  CGFloat mInitialTitlebarHeight;
   NSRect mWindowButtonsRect;
 }
 - (void)setUnifiedToolbarHeight:(CGFloat)aHeight;
