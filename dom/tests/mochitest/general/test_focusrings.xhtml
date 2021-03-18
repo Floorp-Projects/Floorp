@@ -46,7 +46,7 @@ function runTest()
   }
 
   // make sure that a focus ring appears on the focused button
-  if (navigator.platform.includes("Mac")) {
+  if (isMac) {
     var focusedButton = $("b3");
     ok(compareSnapshots(snapShot(focusedButton), snapShot($("b2")), true)[0], "unfocused shows no ring");
     focusedButton.focus();
@@ -103,10 +103,10 @@ function testMacFocusesFormControl()
 
 var htmlElements = [
   "<button id='elem'>Button</button>",
-  "<input id='elem' class='canfocus'>",
-  "<input id='elem' type='password' class='canfocus'>",
   "<input id='elem' type='button'>",
   "<input id='elem' type='checkbox'>",
+  "<input id='elem' class='canfocus'>",
+  "<input id='elem' type='password' class='canfocus'>",
   "<textarea id='elem' class='canfocus'></textarea>",
   "<select id='elem' class='canfocus'><option>One</select>",
   "<select id='elem' rows='5' class='canfocus'><option>One</select>",
@@ -167,7 +167,10 @@ function testHTMLElements(list, isMac, expectedNoRingsOnWin)
     if (childdoc.activeElement)
       childdoc.activeElement.blur();
 
-    ringSize = (elem.localName == "a" ? "0" : (expectedNoRingsOnWin ? 2 : 1)) + "px";
+    ringSize = mouseRingSize;
+    if (isMac && !shouldFocus && elem.localName != "a") {
+      ringSize = "1px";
+    }
 
     elem.focus();
     is(childdoc.activeElement, elem, "focus() on " + list[e]);
