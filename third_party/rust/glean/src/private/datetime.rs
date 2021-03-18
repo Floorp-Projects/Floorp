@@ -9,6 +9,8 @@ use glean_core::metrics::MetricType;
 pub use glean_core::metrics::{Datetime, TimeUnit};
 use glean_core::ErrorType;
 
+use crate::dispatcher;
+
 // We need to wrap the glean-core type: otherwise if we try to implement
 // the trait for the metric in `glean_core::metrics` we hit error[E0117]:
 // only traits defined in the current crate can be implemented for arbitrary
@@ -35,7 +37,7 @@ impl DatetimeMetric {
 impl glean_core::traits::Datetime for DatetimeMetric {
     fn set(&self, value: Option<Datetime>) {
         let metric = Arc::clone(&self.0);
-        crate::launch_with_glean(move |glean| metric.set(glean, value));
+        dispatcher::launch(move || crate::with_glean(|glean| metric.set(glean, value)));
     }
 
     fn test_get_value<'a, S: Into<Option<&'a str>>>(&self, ping_name: S) -> Option<Datetime> {

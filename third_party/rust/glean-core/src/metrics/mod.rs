@@ -14,7 +14,6 @@ mod boolean;
 mod counter;
 mod custom_distribution;
 mod datetime;
-mod denominator;
 mod event;
 mod experiment;
 mod jwe;
@@ -23,7 +22,6 @@ mod memory_distribution;
 mod memory_unit;
 mod ping;
 mod quantity;
-mod rate;
 mod string;
 mod string_list;
 mod time_unit;
@@ -42,7 +40,6 @@ pub use self::boolean::BooleanMetric;
 pub use self::counter::CounterMetric;
 pub use self::custom_distribution::CustomDistributionMetric;
 pub use self::datetime::DatetimeMetric;
-pub use self::denominator::DenominatorMetric;
 pub use self::event::EventMetric;
 pub(crate) use self::experiment::ExperimentMetric;
 pub use crate::histogram::HistogramType;
@@ -58,7 +55,6 @@ pub use self::memory_distribution::MemoryDistributionMetric;
 pub use self::memory_unit::MemoryUnit;
 pub use self::ping::PingType;
 pub use self::quantity::QuantityMetric;
-pub use self::rate::RateMetric;
 pub use self::string::StringMetric;
 pub use self::string_list::StringListMetric;
 pub use self::time_unit::TimeUnit;
@@ -121,8 +117,6 @@ pub enum Metric {
     MemoryDistribution(Histogram<Functional>),
     /// A JWE metric. See [`JweMetric`] for more information.
     Jwe(String),
-    /// A rate metric. See [`RateMetric`] for more information.
-    Rate(i32, i32),
 }
 
 /// A [`MetricType`] describes common behavior across all metrics.
@@ -157,7 +151,6 @@ impl Metric {
             Metric::Datetime(_, _) => "datetime",
             Metric::Experiment(_) => panic!("Experiments should not be serialized through this"),
             Metric::Quantity(_) => "quantity",
-            Metric::Rate(..) => "rate",
             Metric::String(_) => "string",
             Metric::StringList(_) => "string_list",
             Metric::Timespan(..) => "timespan",
@@ -180,9 +173,6 @@ impl Metric {
             Metric::Datetime(d, time_unit) => json!(get_iso_time_string(*d, *time_unit)),
             Metric::Experiment(e) => e.as_json(),
             Metric::Quantity(q) => json!(q),
-            Metric::Rate(num, den) => {
-                json!({"numerator": num, "denominator": den})
-            }
             Metric::String(s) => json!(s),
             Metric::StringList(v) => json!(v),
             Metric::Timespan(time, time_unit) => {
