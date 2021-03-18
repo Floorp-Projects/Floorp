@@ -27,10 +27,10 @@ class nsMenuGroupOwnerX : public nsMenuObjectX, public nsIMutationObserver {
 
   void RegisterForContentChanges(nsIContent* aContent, nsChangeObserver* aMenuObject);
   void UnregisterForContentChanges(nsIContent* aContent);
-  uint32_t RegisterForCommand(nsMenuItemX* aItem);
+  uint32_t RegisterForCommand(nsMenuItemX* aMenuItem);
   void UnregisterCommand(uint32_t aCommandID);
-  nsMenuItemX* GetMenuItemForCommandID(uint32_t inCommandID);
-  void AddMenuItemInfoToSet(MenuItemInfo* info);
+  nsMenuItemX* GetMenuItemForCommandID(uint32_t aCommandID);
+  void AddMenuItemInfoToSet(MenuItemInfo* aInfo);
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMUTATIONOBSERVER
