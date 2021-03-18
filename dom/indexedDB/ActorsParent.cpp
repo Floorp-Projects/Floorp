@@ -1823,7 +1823,7 @@ class DatabaseOperationBase : public Runnable,
   void NoteActorDestroyed() {
     AssertIsOnOwningThread();
 
-    mActorDestroyed.Flip();
+    mActorDestroyed.EnsureFlipped();
     mOperationMayProceed = false;
   }
 
