@@ -64,7 +64,7 @@ async function testChromeTab() {
     Services.obs.addObserver(observe, "devtools:loader:destroy");
   });
 
-  await target.descriptorFront.destroy();
+  await target.destroy();
 
   // Wait for the dedicated loader used for DevToolsServer to be destroyed
   // in order to prevent leak reports on try

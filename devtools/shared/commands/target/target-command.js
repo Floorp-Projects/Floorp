@@ -144,9 +144,7 @@ class TargetCommand extends EventEmitter {
       for (const target of this._targets) {
         // We only consider the top level target to be switched
         const isDestroyedTargetSwitching = target == this.targetFront;
-        this._onTargetDestroyed(target, {
-          isTargetSwitching: isDestroyedTargetSwitching,
-        });
+        this._onTargetDestroyed(target, isDestroyedTargetSwitching);
       }
       // Stop listening to legacy listeners as we now have to listen
       // on the new target.
@@ -176,10 +174,6 @@ class TargetCommand extends EventEmitter {
       targetFrontsSet.delete(targetFront);
     }
 
-    if (this.isDestroyed() || targetFront.isDestroyedOrBeingDestroyed()) {
-      return;
-    }
-
     // Then, once the target is attached, notify the target front creation listeners
     await this._createListeners.emitAsync(targetType, {
       targetFront,
@@ -196,39 +190,7 @@ class TargetCommand extends EventEmitter {
     this.emitForTests("processed-available-target", targetFront);
   }
 
-  /**
-   * Function fired everytime a target is destroyed.
-   *
-   * This is called either:
-   * - via target-destroyed event fired by the WatcherFront,
-   *   event which is a simple translation of the target-destroyed-form emitted by the WatcherActor.
-   *   Watcher Actor emits this is various condition when the debugged target is meant to be destroyed:
-   *   - the related target context is destroyed (tab closed, worker shut down, content process destroyed, ...),
-   *   - when the DevToolsServerConnection used on the server side to communicate to the client is closed.
-
-   * - by TargetCommand._onTargetAvailable, when a top level target switching happens and all previously
-   *   registered target fronts should be destroyed.
-
-   * - by the legacy Targets listeners, calling this method directly.
-   *   This usecase is meant to be removed someday when all target targets are supported by the Watcher.
-   *   (bug 1687459)
-   *
-   * @param {TargetFront} targetFront
-   *        The target that just got destroyed.
-   * @param Object options
-   *        Dictionary object with:
-   *        - `isTargetSwitching` optional boolean. To be set to true when this
-   *           is about the top level target which is being replaced by a new one.
-   *           The passed target should be still the one store in TargetCommand.targetFront
-   *           and will be replaced via a call to onTargetAvailable with a new target front.
-   *        - `shouldDestroyTargetFront` optional boolean. By default, the passed target
-   *           front will be destroyed. But in some cases like legacy listeners for service workers
-   *           we want to keep the front alive.
-   */
-  _onTargetDestroyed(
-    targetFront,
-    { isTargetSwitching = false, shouldDestroyTargetFront = true } = {}
-  ) {
+  _onTargetDestroyed(targetFront, isTargetSwitching = false) {
     // The watcher actor may notify us about the destruction of the top level target.
     // But second argument to this method, isTargetSwitching is only passed from the frontend.
     // So automatically toggle the isTargetSwitching flag for server side destructions
@@ -241,10 +203,6 @@ class TargetCommand extends EventEmitter {
       isTargetSwitching,
     });
     this._targets.delete(targetFront);
-
-    if (shouldDestroyTargetFront) {
-      targetFront.destroy();
-    }
   }
 
   _setListening(type, value) {
@@ -308,8 +266,6 @@ class TargetCommand extends EventEmitter {
       const supportsWatcher = this.descriptorFront.traits?.watcher;
       if (supportsWatcher) {
         this.watcherFront = await this.descriptorFront.getWatcher();
-        this.watcherFront.on("target-available", this._onTargetAvailable);
-        this.watcherFront.on("target-destroyed", this._onTargetDestroyed);
       }
     }
 
@@ -356,10 +312,18 @@ class TargetCommand extends EventEmitter {
         // When we switch to a new top level target, we don't have to stop and restart
         // Watcher listener as it is independant from the top level target.
         // This isn't the case for some Legacy Listeners, which fetch targets from the top level target
-        if (!onlyLegacy) {
-          await this.watcherFront.watchTargets(type);
+        if (onlyLegacy) {
+          continue;
         }
-      } else if (this.legacyImplementation[type]) {
+        if (!this._startedListeningToWatcher) {
+          this._startedListeningToWatcher = true;
+          this.watcherFront.on("target-available", this._onTargetAvailable);
+          this.watcherFront.on("target-destroyed", this._onTargetDestroyed);
+        }
+        await this.watcherFront.watchTargets(type);
+        continue;
+      }
+      if (this.legacyImplementation[type]) {
         await this.legacyImplementation[type].listen();
       } else {
         throw new Error(`Unsupported target type '${type}'`);
@@ -391,7 +355,9 @@ class TargetCommand extends EventEmitter {
         if (!onlyLegacy) {
           this.watcherFront.unwatchTargets(type);
         }
-      } else if (this.legacyImplementation[type]) {
+        continue;
+      }
+      if (this.legacyImplementation[type]) {
         this.legacyImplementation[type].unlisten();
       } else {
         throw new Error(`Unsupported target type '${type}'`);
@@ -580,12 +546,17 @@ class TargetCommand extends EventEmitter {
    *        The BrowsingContextTargetFront instance that navigated to another process
    */
   async onLocalTabRemotenessChange(targetFront) {
-    // Wait for the target to be destroyed so that TabDescriptorFactory clears its memoized descriptor for this tab
-    // TabDescriptor may emit the event with a null targetFront, interpret that as if the previous target
-    // has already been destroyed
-    if (targetFront) {
-      await targetFront.once("target-destroyed");
-    }
+    // By default, we do close the DevToolsClient when the target is destroyed.
+    // This happens when we close the toolbox (Toolbox.destroy calls Target.destroy),
+    // or when the tab is closes, the server emits tabDetached and the target
+    // destroy itself.
+    // Here, in the context of the process switch, the current target will be destroyed
+    // due to a tabDetached event and a we will create a new one. But we want to reuse
+    // the same client.
+    targetFront.shouldCloseClient = false;
+
+    // Wait for the target to be destroyed so that TabDescriptorFactory clears its memoized target for this tab
+    await targetFront.once("target-destroyed");
 
     // Fetch the new target from the descriptor.
     const newTarget = await this.descriptorFront.getTarget();

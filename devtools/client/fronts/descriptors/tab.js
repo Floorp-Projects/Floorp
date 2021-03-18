@@ -86,12 +86,6 @@ class TabDescriptorFront extends DescriptorMixin(
   setLocalTab(localTab) {
     this._localTab = localTab;
     this._setupLocalTabListeners();
-
-    // This is pure legacy. We always assumed closing the DevToolsClient
-    // when the tab was closed. It is mostly important for tests,
-    // but also ensure cleaning up the client and everything on tab closing.
-    // (this flag is handled by DescriptorMixin)
-    this.shouldCloseClient = true;
   }
 
   get isLocalTab() {
@@ -144,6 +138,10 @@ class TabDescriptorFront extends DescriptorMixin(
   _createTabTarget(form) {
     const front = new BrowsingContextTargetFront(this._client, null, this);
 
+    if (this.isLocalTab) {
+      front.shouldCloseClient = true;
+    }
+
     // As these fronts aren't instantiated by protocol.js, we have to set their actor ID
     // manually like that:
     front.actorID = form.actor;
@@ -164,12 +162,7 @@ class TabDescriptorFront extends DescriptorMixin(
     // so that we also have to remove the descriptor when the target is destroyed.
     // Should be kept until about:debugging supports target switching and we remove the
     // !isLocalTab check.
-    // Also destroy descriptor of web extension as they expect the client to be closed immediately
-    if (
-      !this.traits.emitDescriptorDestroyed ||
-      !this.isLocalTab ||
-      this.isDevToolsExtensionContext
-    ) {
+    if (!this.traits.emitDescriptorDestroyed || !this.isLocalTab) {
       this.destroy();
     }
   }
@@ -202,26 +195,19 @@ class TabDescriptorFront extends DescriptorMixin(
     }
 
     this._targetFrontPromise = (async () => {
-      let newTargetFront = null;
+      let targetFront = null;
       try {
         const targetForm = await super.getTarget();
-        newTargetFront = this._createTabTarget(targetForm);
-        await newTargetFront.attach();
+        targetFront = this._createTabTarget(targetForm);
+        await targetFront.attach();
       } catch (e) {
         console.log(
           `Request to connect to TabDescriptor "${this.id}" failed: ${e}`
         );
       }
-
-      // Completely ignore the previous target.
-      // We might nullify the _targetFront unexpectely due to previous target
-      // being destroyed after the new is created
-      if (this._targetFront) {
-        this._targetFront.off("target-destroyed", this._onTargetDestroyed);
-      }
-      this._targetFront = newTargetFront;
+      this._targetFront = targetFront;
       this._targetFrontPromise = null;
-      return newTargetFront;
+      return targetFront;
     })();
     return this._targetFrontPromise;
   }

@@ -45,6 +45,12 @@ function TargetMixin(parentClass) {
 
       this.threadFront = null;
 
+      // This flag will be set to true from:
+      // - TabDescriptorFront getTarget(), for local tab targets
+      // - descriptorFromURL(), for local targets (about:debugging)
+      // - initToolbox(), for some test-only targets
+      this.shouldCloseClient = false;
+
       this._client = client;
 
       // Cache of already created targed-scoped fronts
@@ -559,6 +565,14 @@ function TargetMixin(parentClass) {
      */
     _addListeners() {
       this.client.on("closed", this.destroy);
+
+      // `tabDetached` is sent by all target targets types: frame, process and workers.
+      // This is sent when the target is destroyed:
+      // * the target context destroys itself (the tab closes for ex, or the worker shuts down)
+      //   in this case, it may be the connector that send this event in the name of the target actor
+      // * the target actor is destroyed, but the target context stays up and running (for ex, when we call Watcher.unwatchTargets)
+      // * the DevToolsServerConnection closes (client closes the connection)
+      this.on("tabDetached", this.destroy);
     }
 
     /**
@@ -569,6 +583,7 @@ function TargetMixin(parentClass) {
       if (this.client) {
         this.client.off("closed", this.destroy);
       }
+      this.off("tabDetached", this.destroy);
 
       // Remove listeners set in attachConsole
       if (this.removeOnInspectObjectListener) {
@@ -630,13 +645,18 @@ function TargetMixin(parentClass) {
 
       this.threadFront = null;
 
-      // This event should be emitted before calling super.destroy(), because
-      // super.destroy() will remove all event listeners attached to this front.
-      this.emit("target-destroyed");
+      if (this.shouldCloseClient) {
+        try {
+          await this._client.close();
+        } catch (e) {
+          // Ignore any errors while closing, since there is not much that can be done
+          // at this point.
+          console.warn("Error while closing client:", e);
+        }
 
-      // Not all targets supports attach/detach. For example content process doesn't.
-      // Also ensure that the front is still active before trying to do the request.
-      if (this.detach && !this.isDestroyed()) {
+        // Not all targets supports attach/detach. For example content process doesn't.
+        // Also ensure that the front is still active before trying to do the request.
+      } else if (this.detach && !this.isDestroyed()) {
         // The client was handed to us, so we are not responsible for closing
         // it. We just need to detach from the tab, if already attached.
         // |detach| may fail if the connection is already dead, so proceed with
@@ -647,6 +667,10 @@ function TargetMixin(parentClass) {
           this.logDetachError(e);
         }
       }
+
+      // This event should be emitted before calling super.destroy(), because
+      // super.destroy() will remove all event listeners attached to this front.
+      this.emit("target-destroyed");
 
       // Do that very last in order to let a chance to dispatch `detach` requests.
       super.destroy();
