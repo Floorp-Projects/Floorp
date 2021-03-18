@@ -2181,6 +2181,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Loader)
   for (nsCOMPtr<nsICSSLoaderObserver>& obs : tmp->mObservers.ForwardRange()) {
     ImplCycleCollectionTraverse(cb, obs, "mozilla::css::Loader.mObservers");
   }
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocGroup)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Loader)
@@ -2192,6 +2193,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Loader)
   }
   tmp->mInlineSheets.Clear();
   tmp->mObservers.Clear();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mDocGroup)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(Loader, AddRef)

@@ -2398,6 +2398,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(Document)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPrototypeDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMidasCommandManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAll)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDocGroup)
 
   // Traverse all our nsCOMArrays.
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPreloadingImages)
@@ -2528,6 +2529,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Document)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAll)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mReferrerInfo)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPreloadReferrerInfo)
+
+  if (tmp->mDocGroup && tmp->mDocGroup->GetBrowsingContextGroup()) {
+    tmp->mDocGroup->GetBrowsingContextGroup()->RemoveDocument(
+        tmp->mDocGroup->GetKey(), tmp);
+  }
+  tmp->mDocGroup = nullptr;
 
   if (tmp->IsTopLevelContentDocument()) {
     RemoveToplevelLoadingDocument(tmp);
