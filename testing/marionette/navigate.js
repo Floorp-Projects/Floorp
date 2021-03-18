@@ -313,10 +313,11 @@ navigate.waitForNavigationCompleted = async function waitForNavigationCompleted(
 
   // In the case when the currently selected frame is closed,
   // there will be no further load events. Stop listening immediately.
-  const onBrowsingContextDiscarded = (subject, topic) => {
-    // With the currentWindowGlobal gone the browsing context hasn't been
-    // replaced due to a remoteness change but closed.
-    if (subject == browsingContextFn() && !subject.currentWindowGlobal) {
+  const onBrowsingContextDiscarded = (subject, topic, why) => {
+    // If the BrowsingContext is being discarded to be replaced by another
+    // context, we don't want to stop waiting for the pageload to complete, as
+    // we will continue listening to the newly created context.
+    if (subject == browsingContextFn() && why != "replace") {
       logger.trace(
         "Canceled page load listener " +
           `because browsing context with id ${subject.id} has been removed`
