@@ -37,7 +37,6 @@ STYLE_STRUCT_LIST = [
     "list",
     "margin",
     "outline",
-    "page",
     "padding",
     "position",
     "svg",

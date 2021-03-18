@@ -1048,18 +1048,6 @@ bool nsStyleSVGReset::HasMask() const {
 }
 
 // --------------------
-// nsStylePage
-//
-
-nsChangeHint nsStylePage::CalcDifference(const nsStylePage& aNewData) const {
-  // Page rule styling only matters when printing or using print preview.
-  if (aNewData.mSize != mSize) {
-    return nsChangeHint_NeutralChange;
-  }
-  return nsChangeHint_Empty;
-}
-
-// --------------------
 // nsStylePosition
 //
 nsStylePosition::nsStylePosition(const Document& aDocument)
