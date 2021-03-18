@@ -1381,9 +1381,7 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
     ExclusiveData<FuncTypeIdSet>::Guard lockedFuncTypeIdSet =
         funcTypeIdSet.lock();
 
-    for (uint32_t typeIndex = 0; typeIndex < metadata().types.length();
-         typeIndex++) {
-      const TypeDefWithId& typeDef = metadata().types[typeIndex];
+    for (const TypeDefWithId& typeDef : metadata().types) {
       switch (typeDef.kind()) {
         case TypeDefKind::Func: {
           const FuncType& funcType = typeDef.funcType();
@@ -2145,8 +2143,8 @@ JSString* Instance::createDisplayURL(JSContext* cx) {
     }
 
     const ModuleHash& hash = metadata().debugHash;
-    for (size_t i = 0; i < sizeof(ModuleHash); i++) {
-      char digit1 = hash[i] / 16, digit2 = hash[i] % 16;
+    for (unsigned char byte : hash) {
+      char digit1 = byte / 16, digit2 = byte % 16;
       if (!result.append(
               (char)(digit1 < 10 ? digit1 + '0' : digit1 + 'a' - 10))) {
         return nullptr;
