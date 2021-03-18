@@ -2427,6 +2427,10 @@ void MacroAssembler::absInt32x4(FloatRegister src, FloatRegister dest) {
   Abs(Simd4S(dest), Simd4S(src));
 }
 
+void MacroAssembler::absInt64x2(FloatRegister src, FloatRegister dest) {
+  Abs(Simd2D(dest), Simd2D(src));
+}
+
 // Left shift by variable scalar
 
 void MacroAssembler::leftShiftInt8x16(Register rhs, FloatRegister lhsDest) {

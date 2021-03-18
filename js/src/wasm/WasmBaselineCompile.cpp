@@ -14915,6 +14915,10 @@ static void AbsI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
   masm.absInt32x4(rs, rd);
 }
 
+static void AbsI64x2(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.absInt64x2(rs, rd);
+}
+
 static void ExtractLaneI8x16(MacroAssembler& masm, uint32_t laneIndex,
                              RegV128 rs, RegI32 rd) {
   masm.extractLaneInt8x16(laneIndex, rs, rd);
@@ -16878,6 +16882,8 @@ bool BaseCompiler::emitBody() {
             CHECK_NEXT(dispatchVectorUnary(AbsI16x8));
           case uint32_t(SimdOp::I32x4Abs):
             CHECK_NEXT(dispatchVectorUnary(AbsI32x4));
+          case uint32_t(SimdOp::I64x2Abs):
+            CHECK_NEXT(dispatchVectorUnary(AbsI64x2));
           case uint32_t(SimdOp::F32x4Ceil):
             CHECK_NEXT(dispatchVectorUnary(CeilF32x4));
           case uint32_t(SimdOp::F32x4Floor):

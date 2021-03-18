@@ -3369,6 +3369,9 @@ void CodeGenerator::visitWasmUnarySimd128(LWasmUnarySimd128* ins) {
     case wasm::SimdOp::I32x4Abs:
       masm.absInt32x4(src, dest);
       break;
+    case wasm::SimdOp::I64x2Abs:
+      masm.absInt64x2(src, dest);
+      break;
     case wasm::SimdOp::F32x4Ceil:
       masm.ceilFloat32x4(src, dest);
       break;
