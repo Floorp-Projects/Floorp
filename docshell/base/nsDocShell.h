@@ -398,8 +398,6 @@ class nsDocShell final : public nsDocLoader,
 
   void StoreWindowNameToSHEntries();
 
-  void MaybeRestoreTabContent();
-
   void SetWillChangeProcess() { mWillChangeProcess = true; }
   bool WillChangeProcess() { return mWillChangeProcess; }
 
@@ -1194,6 +1192,10 @@ class nsDocShell final : public nsDocLoader,
   // root docshell's indices can differ from child docshells'.
   int32_t mPreviousEntryIndex;
   int32_t mLoadedEntryIndex;
+
+  // Offset in the parent's child list.
+  // -1 if the docshell is added dynamically to the parent shell.
+  int32_t mChildOffset;
 
   BusyFlags mBusyFlags;
   AppType mAppType;

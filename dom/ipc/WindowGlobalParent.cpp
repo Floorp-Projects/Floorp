@@ -1086,11 +1086,6 @@ void WindowGlobalParent::FinishAccumulatingPageUseCounters() {
   mPageUseCounters = nullptr;
 }
 
-mozilla::ipc::IPCResult WindowGlobalParent::RecvRequestRestoreTabContent() {
-  BrowsingContext()->Top()->RequestRestoreTabContent(this);
-  return IPC_OK();
-}
-
 void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
   if (mPageUseCountersWindow) {
     mPageUseCountersWindow->FinishAccumulatingPageUseCounters();
