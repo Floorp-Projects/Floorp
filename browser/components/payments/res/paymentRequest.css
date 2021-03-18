@@ -152,7 +152,7 @@ payment-dialog[complete-status="processing"] #pay {
 
 payment-dialog #pay::before {
   -moz-context-properties: fill;
-  content: url(chrome://browser/skin/connection-secure.svg);
+  content: url(chrome://global/skin/icons/security.svg);
   fill: currentColor;
   height: 16px;
   margin-inline-end: 0.5em;

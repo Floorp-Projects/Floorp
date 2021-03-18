@@ -199,7 +199,7 @@ button > hbox > label {
 }
 
 #category-privacy > .category-icon {
-  list-style-image: url("chrome://global/skin/icons/privacy-security.svg");
+  list-style-image: url("chrome://browser/skin/preferences/category-privacy-security.svg");
 }
 
 #category-sync > .category-icon {

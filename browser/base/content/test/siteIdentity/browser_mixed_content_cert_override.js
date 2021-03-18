@@ -43,13 +43,13 @@ add_task(async function() {
 
   // check that a warning is shown when loading a page with mixed content and an overridden certificate
   await loadBadCertPage(MIXED_CONTENT_URL);
-  checkIdentityPopup("connection-mixed-passive-loaded.svg");
+  checkIdentityPopup("security-warning.svg");
 
   // check that the crossed out icon is shown when disabling mixed content protection
   gIdentityHandler.disableMixedContentProtection();
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
 
-  checkIdentityPopup("connection-mixed-active-loaded.svg");
+  checkIdentityPopup("security-broken.svg");
 
   // check that a warning is shown even without mixed content
   BrowserTestUtils.loadURI(
@@ -57,7 +57,7 @@ add_task(async function() {
     "https://self-signed.example.com"
   );
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-  checkIdentityPopup("connection-mixed-passive-loaded.svg");
+  checkIdentityPopup("security-warning.svg");
 
   // remove cert exception
   let certOverrideService = Cc[

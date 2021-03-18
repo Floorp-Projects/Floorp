@@ -53,17 +53,17 @@ add_task(async function() {
     .getPropertyValue("background-image");
   is(
     identityIconImage,
-    'url("chrome://global/skin/icons/connection-mixed-passive-loaded.svg")',
+    'url("chrome://global/skin/icons/security-warning.svg")',
     "Using expected icon image in the identity block"
   );
   is(
     securityViewBG,
-    'url("chrome://global/skin/icons/connection-mixed-passive-loaded.svg")',
+    'url("chrome://global/skin/icons/security-warning.svg")',
     "Using expected icon image in the Control Center main view"
   );
   is(
     securityContentBG,
-    'url("chrome://global/skin/icons/connection-mixed-passive-loaded.svg")',
+    'url("chrome://global/skin/icons/security-warning.svg")',
     "Using expected icon image in the Control Center subview"
   );
 

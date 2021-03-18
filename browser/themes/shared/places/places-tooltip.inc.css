@@ -43,7 +43,7 @@
 
 #places-tooltip-insecure-icon {
   /* Using the same broken-lock icon as the main identity-block styles. */
-  list-style-image: url(chrome://global/skin/icons/connection-mixed-active-loaded.svg);
+  list-style-image: url(chrome://global/skin/icons/security-broken.svg);
   -moz-context-properties: fill;
   fill: currentColor;
   width: 1em;
