@@ -6,7 +6,8 @@
 
 use super::super::Connection;
 use super::{
-    connect, default_client, default_server, exchange_ticket, CountingConnectionIdGenerator,
+    connect, default_client, default_server, exchange_ticket, new_server,
+    CountingConnectionIdGenerator,
 };
 use crate::events::ConnectionEvent;
 use crate::{ConnectionParameters, Error, StreamType};
@@ -195,4 +196,63 @@ fn zero_rtt_send_reject() {
     // The server should receive new stream
     server.process_input(client_after_reject.unwrap(), now());
     assert!(server.events().any(recvd_stream_evt));
+}
+
+#[test]
+fn zero_rtt_update_flow_control() {
+    const LOW: u64 = 3;
+    const HIGH: u64 = 10;
+    #[allow(clippy::cast_possible_truncation)]
+    const MESSAGE: &[u8] = &[0; HIGH as usize];
+
+    let mut client = default_client();
+    let mut server = new_server(
+        ConnectionParameters::default()
+            .max_stream_data(StreamType::UniDi, true, LOW)
+            .max_stream_data(StreamType::BiDi, true, LOW),
+    );
+    connect(&mut client, &mut server);
+
+    let token = exchange_ticket(&mut client, &mut server, now());
+    let mut client = default_client();
+    client
+        .enable_resumption(now(), token)
+        .expect("should set token");
+    let mut server = new_server(
+        ConnectionParameters::default()
+            .max_stream_data(StreamType::UniDi, true, HIGH)
+            .max_stream_data(StreamType::BiDi, true, HIGH),
+    );
+
+    // Stream limits should be low for 0-RTT.
+    let client_hs = client.process(None, now()).dgram();
+    let uni_stream = client.stream_create(StreamType::UniDi).unwrap();
+    assert!(!client.stream_send_atomic(uni_stream, MESSAGE).unwrap());
+    let bidi_stream = client.stream_create(StreamType::BiDi).unwrap();
+    assert!(!client.stream_send_atomic(bidi_stream, MESSAGE).unwrap());
+
+    // Now get the server transport parameters.
+    let server_hs = server.process(client_hs, now()).dgram();
+    client.process_input(server_hs.unwrap(), now());
+
+    // The streams should report a writeable event.
+    let mut uni_stream_event = false;
+    let mut bidi_stream_event = false;
+    for e in client.events() {
+        if let ConnectionEvent::SendStreamWritable { stream_id } = e {
+            if stream_id.is_uni() {
+                uni_stream_event = true;
+            } else {
+                bidi_stream_event = true;
+            }
+        }
+    }
+    assert!(uni_stream_event);
+    assert!(bidi_stream_event);
+    // But no MAX_STREAM_DATA frame was received.
+    assert_eq!(client.stats().frame_rx.max_stream_data, 0);
+
+    // And the new limit applies.
+    assert!(client.stream_send_atomic(uni_stream, MESSAGE).unwrap());
+    assert!(client.stream_send_atomic(bidi_stream, MESSAGE).unwrap());
 }

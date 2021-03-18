@@ -322,7 +322,7 @@ impl PushController {
     pub fn close(&mut self, push_id: u64) {
         qtrace!("Push stream has been closed.");
         if let Some(push_state) = self.push_streams.close(push_id) {
-            debug_assert!(matches!(push_state, PushState::Active{..}));
+            debug_assert!(matches!(push_state, PushState::Active { .. }));
         } else {
             debug_assert!(false, "Closing non existing push stream!");
         }

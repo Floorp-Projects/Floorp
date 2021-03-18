@@ -59,6 +59,7 @@ where
 
 fn alpn_from_quic_version(version: QuicVersion) -> &'static str {
     match version {
+        QuicVersion::Version1 => "h3",
         QuicVersion::Draft27 => "h3-27",
         QuicVersion::Draft28 => "h3-28",
         QuicVersion::Draft29 => "h3-29",
@@ -97,6 +98,7 @@ impl Http3Client {
         remote_addr: SocketAddr,
         conn_params: ConnectionParameters,
         http3_parameters: &Http3Parameters,
+        now: Instant,
     ) -> Res<Self> {
         Ok(Self::new_with_conn(
             Connection::new_client(
@@ -106,6 +108,7 @@ impl Http3Client {
                 local_addr,
                 remote_addr,
                 conn_params,
+                now,
             )?,
             http3_parameters,
         ))
@@ -223,7 +226,10 @@ impl Http3Client {
         S: AsRef<str> + Display,
     {
         qinfo!([self], "Close the connection error={} msg={}.", error, msg);
-        if !matches!(self.base_handler.state, Http3State::Closing(_)| Http3State::Closed(_)) {
+        if !matches!(
+            self.base_handler.state,
+            Http3State::Closing(_) | Http3State::Closed(_)
+        ) {
             self.push_handler.borrow_mut().clear();
             self.conn.close(now, error, msg);
             self.base_handler.close(error);
@@ -686,6 +692,15 @@ impl Http3Client {
         Ok(())
     }
 
+    /// Increases `max_stream_data` for a `stream_id`.
+    /// # Errors
+    /// Returns `InvalidStreamId` if a stream does not exist or the receiving
+    /// side is closed.
+    pub fn set_stream_max_data(&mut self, stream_id: u64, max_data: u64) -> Res<()> {
+        self.conn.set_stream_max_data(stream_id, max_data)?;
+        Ok(())
+    }
+
     #[must_use]
     pub fn qpack_decoder_stats(&self) -> QpackStats {
         self.base_handler.qpack_decoder.stats()
@@ -783,6 +798,7 @@ mod tests {
                 },
                 max_concurrent_push_streams: 5,
             },
+            now(),
         )
         .expect("create a default client")
     }
@@ -4464,28 +4480,21 @@ mod tests {
         let any_push_event = |e| {
             matches!(
                 e,
-                Http3ClientEvent::PushPromise{..}
-                | Http3ClientEvent::PushHeaderReady{..}
-                | Http3ClientEvent::PushDataReadable{..})
+                Http3ClientEvent::PushPromise { .. }
+                    | Http3ClientEvent::PushHeaderReady { .. }
+                    | Http3ClientEvent::PushDataReadable { .. }
+            )
         };
         client.events().any(any_push_event)
     }
 
     fn check_data_readable(client: &mut Http3Client) -> bool {
-        let any_data_event = |e| {
-            matches!(
-                e,
-                Http3ClientEvent::DataReadable{..})
-        };
+        let any_data_event = |e| matches!(e, Http3ClientEvent::DataReadable { .. });
         client.events().any(any_data_event)
     }
 
     fn check_header_ready(client: &mut Http3Client) -> bool {
-        let any_event = |e| {
-            matches!(
-                e,
-                Http3ClientEvent::HeaderReady{..})
-        };
+        let any_event = |e| matches!(e, Http3ClientEvent::HeaderReady { .. });
         client.events().any(any_event)
     }
 
@@ -4493,8 +4502,8 @@ mod tests {
         let any_event = |e| {
             matches!(
                 e,
-                Http3ClientEvent::HeaderReady{..}
-                | Http3ClientEvent::PushPromise{..})
+                Http3ClientEvent::HeaderReady { .. } | Http3ClientEvent::PushPromise { .. }
+            )
         };
         client.events().any(any_event)
     }
@@ -4740,7 +4749,7 @@ mod tests {
         send_push_promise_and_exchange_packets(&mut client, &mut server, request_stream_id_2, 5);
 
         // Check that we do not have a Http3ClientEvent::PushPromise.
-        let push_event = |e| matches!(e, Http3ClientEvent::PushPromise{ .. });
+        let push_event = |e| matches!(e, Http3ClientEvent::PushPromise { .. });
         assert!(!client.events().any(push_event));
     }
 

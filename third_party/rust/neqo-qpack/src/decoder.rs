@@ -160,7 +160,7 @@ impl QPackDecoder {
     }
 
     /// # Errors
-    ///     May return an error in case of any transport error. TODO: define transport errors.
+    /// May return an error in case of any transport error. TODO: define transport errors.
     #[allow(clippy::map_err_ignore, clippy::unknown_clippy_lints)]
     pub fn send(&mut self, conn: &mut Connection) -> Res<()> {
         // Encode increment instruction if needed.
@@ -239,7 +239,7 @@ impl QPackDecoder {
     }
 
     /// # Errors
-    ///     May return WrongStreamCount if Http3 has received multiple encoder streams.
+    /// May return `WrongStreamCount` if HTTP/3 has received multiple encoder streams.
     pub fn add_recv_stream(&mut self, stream_id: u64) -> Res<()> {
         if self.remote_stream_id.is_some() {
             Err(Error::WrongStreamCount)
