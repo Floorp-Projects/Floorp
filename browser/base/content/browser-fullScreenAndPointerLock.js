@@ -266,6 +266,7 @@ var FullScreen = {
     // the content.
     addEventListener("willenterfullscreen", this, true);
     addEventListener("willexitfullscreen", this, true);
+    addEventListener("MacFullscreenMenubarRevealUpdate", this, true);
 
     if (window.fullScreen) {
       this.toggle();
@@ -300,6 +301,7 @@ var FullScreen = {
       // Make sure the menu items are adjusted.
       document.getElementById("enterFullScreenItem").hidden = enterFS;
       document.getElementById("exitFullScreenItem").hidden = !enterFS;
+      this.shiftMacToolbarDown(0);
     }
 
     if (!this._fullScrToggler) {
@@ -357,6 +359,34 @@ var FullScreen = {
     }
   },
 
+  /**
+   * Shifts the browser toolbar down when it is moused over on macOS in
+   * fullscreen.
+   * @param {number} shiftSize
+   *   A distance, in pixels, by which to shift the browser toolbar down.
+   */
+  shiftMacToolbarDown(shiftSize) {
+    if (typeof shiftSize !== "number") {
+      Cu.reportError("Tried to shift the toolbar by a non-numeric distance.");
+      return;
+    }
+
+    // shiftSize is sent from Cocoa widget code as a very precise double. We
+    // don't need that kind of precision in our CSS.
+    shiftSize = shiftSize.toFixed(2);
+    let toolbox = document.getElementById("navigator-toolbox");
+    let browserEl = document.getElementById("browser");
+    if (shiftSize > 0) {
+      toolbox.style.setProperty("transform", `translateY(${shiftSize}px)`);
+      toolbox.style.setProperty("z-index", "2");
+      browserEl.style.setProperty("position", "relative");
+    } else {
+      toolbox.style.removeProperty("transform");
+      toolbox.style.removeProperty("z-index");
+      browserEl.style.removeProperty("position");
+    }
+  },
+
   handleEvent(event) {
     switch (event.type) {
       case "willenterfullscreen":
@@ -367,6 +397,9 @@ var FullScreen = {
         break;
       case "fullscreen":
         this.toggle();
+        break;
+      case "MacFullscreenMenubarRevealUpdate":
+        this.shiftMacToolbarDown(event.detail);
         break;
     }
   },
