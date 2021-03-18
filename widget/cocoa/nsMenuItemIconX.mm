@@ -48,6 +48,7 @@ nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem, nsIContent* aContent,
       mSetIcon(false),
       mNativeMenuItem(aNativeMenuItem) {
   MOZ_COUNT_CTOR(nsMenuItemIconX);
+  MOZ_RELEASE_ASSERT(mContent);
 }
 
 nsMenuItemIconX::~nsMenuItemIconX() {
@@ -118,10 +119,6 @@ nsresult nsMenuItemIconX::SetupIcon() {
 }
 
 nsresult nsMenuItemIconX::GetIconURI(nsIURI** aIconURI) {
-  if (!mContent) {
-    return NS_ERROR_FAILURE;
-  }
-
   // First, look at the content node's "image" attribute.
   nsAutoString imageURIString;
   bool hasImageAttr =
