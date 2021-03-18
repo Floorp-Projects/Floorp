@@ -868,10 +868,7 @@ class Decoder {
     if (MOZ_LIKELY(!IsPrefixByte(u8))) {
       return true;
     }
-    if (!readVarU32(&op->b1)) {
-      return false;
-    }
-    return true;
+    return readVarU32(&op->b1);
   }
 
   // See writeBytes comment.

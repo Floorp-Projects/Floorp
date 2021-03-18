@@ -3267,11 +3267,7 @@ static bool DecodeFunctionBody(Decoder& d, const ModuleEnvironment& env,
     return d.fail("function body length too big");
   }
 
-  if (!ValidateFunctionBody(env, funcIndex, bodySize, d)) {
-    return false;
-  }
-
-  return true;
+  return ValidateFunctionBody(env, funcIndex, bodySize, d);
 }
 
 static bool DecodeCodeSection(Decoder& d, ModuleEnvironment* env) {

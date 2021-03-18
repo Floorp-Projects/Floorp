@@ -1487,11 +1487,7 @@ bool Instance::memoryAccessInBounds(uint8_t* addr, unsigned numBytes) const {
   // This calculation can't wrap around because the access is small and there
   // always is a guard page following the memory.
   size_t lastByteOffset = addr - base + (numBytes - 1);
-  if (lastByteOffset >= length) {
-    return false;
-  }
-
-  return true;
+  return lastByteOffset < length;
 }
 
 void Instance::tracePrivate(JSTracer* trc) {
