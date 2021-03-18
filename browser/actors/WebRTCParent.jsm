@@ -172,7 +172,7 @@ class WebRTCParent extends JSWindowActorParent {
         data.documentURI = this.manager.documentURI?.spec;
         if (data.windowId) {
           if (!data.remove) {
-            data.principal = this.browsingContext.top.currentWindowGlobal.documentPrincipal;
+            data.principal = this.manager.topWindowContext.documentPrincipal;
           }
           webrtcUI.streamAddedOrRemoved(this.browsingContext, data);
         }
