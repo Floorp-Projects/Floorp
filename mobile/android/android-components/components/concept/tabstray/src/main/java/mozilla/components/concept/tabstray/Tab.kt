@@ -13,6 +13,7 @@ import mozilla.components.concept.engine.mediasession.MediaSession
  * @property id Unique ID of the tab.
  * @property url Current URL of the tab.
  * @property title Current title of the tab (or an empty [String]]).
+ * @property private whether or not the session is private.
  * @property icon Current icon of the tab (or null)
  * @property thumbnail Current thumbnail of the tab (or null)
  * @property playbackState Current media session playback state for the tab (or null)
@@ -22,6 +23,7 @@ data class Tab(
     val id: String,
     val url: String,
     val title: String = "",
+    val private: Boolean = false,
     val icon: Bitmap? = null,
     val thumbnail: Bitmap? = null,
     val playbackState: MediaSession.PlaybackState? = null,
