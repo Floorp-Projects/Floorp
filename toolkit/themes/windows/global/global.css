@@ -30,28 +30,25 @@
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
   :root {
     /* Override some menu color variables for light browser themes. */
-    --menuitem-hover-background-color: #E0E0E6;
-    --menuitem-hover-color: black;
+    --menuitem-hover-background-color: #e0e0e6;
     --menu-background-color: #f9f9fb;
     --menu-color: #15141a;
     --menu-disabled-color: rgba(21, 20, 26, 0.4);
-    --menu-border-color: #E0E0E6;
+    --menu-border-color: #e0e0e6;
     --menu-icon-opacity: 0.7;
 
     /* Declare menu colors for dark themes, but don't override anything yet. */
-    --dark-menuitem-hover-background-color: #52525E;
-    --dark-menuitem-hover-color: white;
-    --dark-menu-background-color: #15141a;
+    --dark-menuitem-hover-background-color: #52525e;
+    --dark-menu-background-color: #2b2a33;
     --dark-menu-color: #fbfbfe;
-    --dark-menu-disabled-color: rgba(251, 251, 254, 0.6);
-    --dark-menu-border-color: #52525E;
+    --dark-menu-disabled-color: rgba(251, 251, 254, 0.4);
+    --dark-menu-border-color: #52525e;
     --dark-menu-icon-opacity: 1;
   }
 
   /* Override the menu color variables for dark browser themes. */
   :root:-moz-lwtheme-brighttext {
     --menuitem-hover-background-color: var(--dark-menuitem-hover-background-color);
-    --menuitem-hover-color: var(--dark-menuitem-hover-color);
     --menu-background-color: var(--dark-menu-background-color);
     --menu-color: var(--dark-menu-color);
     --menu-disabled-color: var(--dark-menu-disabled-color);
@@ -66,7 +63,6 @@
   @media (prefers-color-scheme: dark) {
     :root:not(:-moz-lwtheme) {
       --menuitem-hover-background-color: var(--dark-menuitem-hover-background-color);
-      --menuitem-hover-color: var(--dark-menuitem-hover-color);
       --menu-background-color: var(--dark-menu-background-color);
       --menu-color: var(--dark-menu-color);
       --menu-disabled-color: var(--dark-menu-disabled-color);
