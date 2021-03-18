@@ -189,3 +189,15 @@ void nsStandaloneNativeMenu::SetContainerStatusBarItem(NSStatusItem* aItem) {
   mContainerStatusBarItem = aItem;
   IconUpdated();
 }
+
+NS_IMETHODIMP
+nsStandaloneNativeMenu::Dump() {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  mMenu->Dump(0);
+  nsMenuUtilsX::DumpNativeMenu(mMenu->NativeNSMenu());
+
+  return NS_OK;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}

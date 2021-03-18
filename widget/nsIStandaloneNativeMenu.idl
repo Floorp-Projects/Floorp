@@ -53,4 +53,11 @@ interface nsIStandaloneNativeMenu : nsISupports
    *        pipe ('|') characters
    */
   void forceUpdateNativeMenuAt(in AString anIndexString);
+
+
+  /**
+   * Print information about the menu structure to stdout. Only used for
+   * debugging.
+   */
+  void dump();
 };
