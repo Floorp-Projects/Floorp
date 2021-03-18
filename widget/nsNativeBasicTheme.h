@@ -66,8 +66,6 @@ static const gfx::sRGBColor sScrollbarBorderColor(gfx::sRGBColor(1.0f, 1.0f,
 static const gfx::sRGBColor sScrollbarThumbColor(
     gfx::sRGBColor::UnusualFromARGB(0xffcdcdcd));
 
-static const CSSCoord kMinimumScrollbarSize = 17.0f;
-static const CSSCoord kMinimumThinScrollbarSize = 6.0f;
 static const CSSCoord kMinimumColorPickerHeight = 32.0f;
 static const CSSCoord kMinimumRangeThumbSize = 20.0f;
 static const CSSCoord kMinimumDropdownArrowButtonWidth = 18.0f;
