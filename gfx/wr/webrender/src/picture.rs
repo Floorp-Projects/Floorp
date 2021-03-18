@@ -5747,7 +5747,7 @@ impl PicturePrimitive {
 
         // Disallow subpixel AA if an intermediate surface is needed.
         // TODO(lsalzman): allow overriding parent if intermediate surface is opaque
-        let (is_passthrough, subpixel_mode) = match self.raster_config {
+        let subpixel_mode = match self.raster_config {
             Some(RasterConfig { ref composite_mode, .. }) => {
                 let subpixel_mode = match composite_mode {
                     PictureCompositeMode::TileCache { slice_id } => {
@@ -5766,10 +5766,10 @@ impl PicturePrimitive {
                     }
                 };
 
-                (false, subpixel_mode)
+                subpixel_mode
             }
             None => {
-                (true, SubpixelMode::Allow)
+                SubpixelMode::Allow
             }
         };
 
@@ -5805,7 +5805,6 @@ impl PicturePrimitive {
         let context = PictureContext {
             pic_index,
             apply_local_clip_rect: self.apply_local_clip_rect,
-            is_passthrough,
             raster_spatial_node_index,
             surface_spatial_node_index,
             surface_index,
