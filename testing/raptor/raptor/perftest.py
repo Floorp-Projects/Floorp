@@ -757,7 +757,7 @@ class PerftestDesktop(Perftest):
                     bmeta = proc.output
                     meta_re = re.compile(r"([A-z\s]+)\s+([\w.]*)")
                     if len(bmeta) != 0:
-                        match = meta_re.match(bmeta[0])
+                        match = meta_re.match(bmeta[0].decode("utf-8"))
                         if match:
                             browser_name = self.config["app"]
                             browser_version = match.group(2)
@@ -771,7 +771,7 @@ class PerftestDesktop(Perftest):
                     bmeta = subprocess.check_output(command)
 
                     meta_re = re.compile(r"\s+([\d.a-z]+)\s+")
-                    match = meta_re.findall(bmeta)
+                    match = meta_re.findall(bmeta.decode("utf-8"))
                     if len(match) > 0:
                         browser_name = self.config["app"]
                         browser_version = match[-1]

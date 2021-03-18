@@ -412,7 +412,7 @@ class Browsertime(Perftest):
                 if self.browsertime_failure, and raise an Exception if necessary
                 to stop Raptor execution (preventing the results processing).
                 """
-                match = line_matcher.match(line)
+                match = line_matcher.match(line.decode("utf-8"))
                 if not match:
                     LOG.info(line)
                     return
