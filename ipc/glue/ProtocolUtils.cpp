@@ -19,6 +19,7 @@
 
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/Transport.h"
+#include "mozilla/ipc/IPDLParamTraits.h"
 #include "mozilla/StaticMutex.h"
 #if defined(DEBUG) || defined(FUZZING)
 #  include "mozilla/Tokenizer.h"
@@ -927,6 +928,52 @@ void IToplevelProtocol::ReplaceEventTargetForActor(
   MutexAutoLock lock(mEventTargetMutex);
   MOZ_ASSERT(mEventTargetMap.Contains(id), "Only replace an existing ID");
   mEventTargetMap.InsertOrUpdate(id, nsCOMPtr{aEventTarget});
+}
+
+IPDLResolverInner::IPDLResolverInner(UniquePtr<IPC::Message> aReply,
+                                     IProtocol* aActor)
+    : mReply(std::move(aReply)),
+      mWeakProxy(aActor->GetLifecycleProxy()->GetWeakProxy()) {}
+
+void IPDLResolverInner::ResolveOrReject(
+    bool aResolve, FunctionRef<void(IPC::Message*, IProtocol*)> aWrite) {
+  MOZ_ASSERT(mWeakProxy);
+  IProtocol* actor = mWeakProxy->Get();
+  if (!actor) {
+    NS_WARNING("Not resolving response because actor is dead.");
+    return;
+  }
+
+  UniquePtr<IPC::Message> reply = std::move(mReply);
+
+  WriteIPDLParam(reply.get(), actor, aResolve);
+  aWrite(reply.get(), actor);
+
+  bool sendok = actor->ChannelSend(reply.release());
+  if (!sendok) {
+    NS_WARNING("Error sending reject reply");
+  }
+}
+
+void IPDLResolverInner::Destroy() {
+  if (mReply) {
+    NS_PROXY_DELETE_TO_EVENT_TARGET(IPDLResolverInner,
+                                    mWeakProxy->ActorEventTarget());
+  } else {
+    // If we've already been consumed, just delete without proxying. This avoids
+    // leaking the resolver if the actor's thread is already dead.
+    delete this;
+  }
+}
+
+IPDLResolverInner::~IPDLResolverInner() {
+  if (mReply) {
+    NS_WARNING("IPDL resolver dropped without being called!");
+    ResolveOrReject(false, [](IPC::Message* aMessage, IProtocol* aActor) {
+      ResponseRejectReason reason = ResponseRejectReason::ResolverDestroyed;
+      WriteIPDLParam(aMessage, aActor, reason);
+    });
+  }
 }
 
 }  // namespace ipc
