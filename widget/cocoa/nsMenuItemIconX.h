@@ -23,14 +23,13 @@ class nsMenuObjectX;
 
 class nsMenuItemIconX final : public mozilla::widget::IconLoader::Listener {
  public:
-  nsMenuItemIconX(nsMenuObjectX* aMenuItem, nsIContent* aContent,
-                  NSMenuItem* aNativeMenuItem);
+  nsMenuItemIconX(nsMenuObjectX* aMenuItem, NSMenuItem* aNativeMenuItem);
   ~nsMenuItemIconX();
 
  public:
   // SetupIcon succeeds if it was able to set up the icon, or if there should
   // be no icon, in which case it clears any existing icon but still succeeds.
-  nsresult SetupIcon();
+  nsresult SetupIcon(nsIContent* aContent);
 
   // Implements this method for mozilla::widget::IconLoader::Listener.
   // Called once the icon load is complete.
@@ -38,7 +37,7 @@ class nsMenuItemIconX final : public mozilla::widget::IconLoader::Listener {
 
  protected:
   // GetIconURI returns null if the item should not have any icon.
-  already_AddRefed<nsIURI> GetIconURI();
+  already_AddRefed<nsIURI> GetIconURI(nsIContent* aContent);
 
   nsCOMPtr<nsIContent> mContent;  // always non-null
   nsMenuObjectX* mMenuObject;     // [weak]
