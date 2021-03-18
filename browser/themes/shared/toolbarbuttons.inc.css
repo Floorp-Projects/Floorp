@@ -167,7 +167,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-icon,
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-text,
 #TabsToolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
-  border-radius: var(--proton-tab-radius);
+  border-radius: var(--tab-border-radius);
 }
 } /*** END proton ***/
 
