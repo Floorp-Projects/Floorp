@@ -523,6 +523,7 @@ OpKind wasm::Classify(OpBytes op) {
         case SimdOp::I8x16Abs:
         case SimdOp::I16x8Abs:
         case SimdOp::I32x4Abs:
+        case SimdOp::I64x2Abs:
         case SimdOp::F32x4Ceil:
         case SimdOp::F32x4Floor:
         case SimdOp::F32x4Trunc:

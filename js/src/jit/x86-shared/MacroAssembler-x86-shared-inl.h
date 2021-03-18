@@ -2004,6 +2004,15 @@ void MacroAssembler::absInt32x4(FloatRegister src, FloatRegister dest) {
   vpabsd(Operand(src), dest);
 }
 
+void MacroAssembler::absInt64x2(FloatRegister src, FloatRegister dest) {
+  ScratchSimd128Scope scratch(*this);
+  vpshufd(ComputeShuffleMask(1, 1, 3, 3), src, scratch);
+  moveSimd128(src, dest);
+  vpsrad(Imm32(31), scratch, scratch);
+  vpxor(Operand(scratch), dest, dest);
+  vpsubq(Operand(scratch), dest, dest);
+}
+
 // Left shift by scalar
 
 void MacroAssembler::leftShiftInt8x16(Register rhs, FloatRegister lhsDest,
