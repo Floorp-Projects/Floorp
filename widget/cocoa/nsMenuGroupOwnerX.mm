@@ -104,8 +104,7 @@ void nsMenuGroupOwnerX::ContentRemoved(nsIContent* aChild, nsIContent* aPrevious
     if (parent) {
       obs = LookupContentChangeObserver(parent);
       if (obs) {
-        obs->ObserveContentRemoved(aChild->OwnerDoc(), aChild->GetParent(), aChild,
-                                   aPreviousSibling);
+        obs->ObserveContentRemoved(aChild->OwnerDoc(), container, aChild, aPreviousSibling);
       }
     }
   }
