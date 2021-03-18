@@ -731,7 +731,7 @@ fn add_scaling_instances(
 
     let source = source_task.unwrap().get_texture_source();
 
-    let source_rect = source_task.unwrap().get_target_rect();
+    let source_rect = source_task.unwrap().get_target_rect().to_f32();
 
     instances
         .entry(source)

@@ -301,6 +301,7 @@ impl BuiltScene {
                 gpu_supports_advanced_blend: false,
                 advanced_blend_is_coherent: false,
                 gpu_supports_render_target_partial_update: true,
+                external_images_require_copy: false,
                 batch_lookback_count: 0,
                 background_color: None,
                 compositor_kind: CompositorKind::default(),

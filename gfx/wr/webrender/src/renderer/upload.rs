@@ -516,6 +516,7 @@ fn copy_from_staging_to_cache_using_draw_calls(
                 ).bind(
                     &mut renderer.device,
                     &projection,
+                    None,
                     &mut renderer.renderer_errors
                 );
 
