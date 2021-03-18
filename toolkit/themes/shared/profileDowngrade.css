@@ -7,7 +7,7 @@ dialog::part(button-spacer) {
 }
 
 #info {
-  list-style-image: url("chrome://mozapps/skin/profile/information.svg");
+  list-style-image: url("chrome://global/skin/icons/info.svg");
   width: 32px;
   height: 32px;
 }

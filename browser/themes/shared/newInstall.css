@@ -10,7 +10,7 @@ window {
   width: 32px;
   height: 32px;
   margin-inline-end: 8px;
-  list-style-image: url("chrome://mozapps/skin/profile/information.svg");
+  list-style-image: url("chrome://global/skin/icons/info.svg");
 }
 
 description {
