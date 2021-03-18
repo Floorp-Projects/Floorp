@@ -487,10 +487,15 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
 
   virtual void SetFocusedElement(mozilla::dom::Element* aElement,
                                  uint32_t aFocusMethod = 0,
-                                 bool aNeedsFocus = false) = 0;
-
-  bool UnknownFocusMethodShouldShowOutline() const {
-    return mUnknownFocusMethodShouldShowOutline;
+                                 bool aNeedsFocus = false,
+                                 bool aWillShowOutline = false) = 0;
+  /**
+   * Get whether the focused element did show outlines when it was focused.
+   *
+   * Only for the focus manager. Returns false if there was no focused element.
+   */
+  bool FocusedElementShowedOutline() const {
+    return mFocusedElementShowedOutlines;
   }
 
   /**
@@ -676,7 +681,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // notification.
   bool mHasNotifiedGlobalCreated;
 
-  bool mUnknownFocusMethodShouldShowOutline = true;
+  bool mFocusedElementShowedOutlines = false;
 
   uint32_t mMarkedCCGeneration;
 
@@ -950,12 +955,14 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
   virtual void SetFocusedElement(mozilla::dom::Element* aElement,
                                  uint32_t aFocusMethod = 0,
-                                 bool aNeedsFocus = false) = 0;
+                                 bool aNeedsFocus = false,
+                                 bool aWillShowOutline = false) = 0;
   /**
-   * Get whether a focused element focused by unknown reasons (like script
-   * focus) should match the :focus-visible pseudo-class.
+   * Get whether the focused element did show outlines when it was focused.
+   *
+   * Only for the focus manager. Returns false if there was no focused element.
    */
-  bool UnknownFocusMethodShouldShowOutline() const;
+  bool FocusedElementShowedOutline() const;
 
   /**
    * Retrieves the method that was used to focus the current node.

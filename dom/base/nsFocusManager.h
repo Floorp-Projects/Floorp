@@ -301,6 +301,7 @@ class nsFocusManager final : public nsIFocusManager,
 
   struct BlurredElementInfo {
     const mozilla::OwningNonNull<mozilla::dom::Element> mElement;
+    const bool mHadRing;
 
     explicit BlurredElementInfo(mozilla::dom::Element&);
     ~BlurredElementInfo();

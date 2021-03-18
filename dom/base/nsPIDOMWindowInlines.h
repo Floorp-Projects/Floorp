@@ -81,8 +81,8 @@ inline mozilla::dom::Element* nsPIDOMWindowOuter::GetFocusedElement() const {
   return mInnerWindow ? mInnerWindow->GetFocusedElement() : nullptr;
 }
 
-inline bool nsPIDOMWindowOuter::UnknownFocusMethodShouldShowOutline() const {
-  return mInnerWindow && mInnerWindow->UnknownFocusMethodShouldShowOutline();
+inline bool nsPIDOMWindowOuter::FocusedElementShowedOutline() const {
+  return mInnerWindow && mInnerWindow->FocusedElementShowedOutline();
 }
 
 #endif
