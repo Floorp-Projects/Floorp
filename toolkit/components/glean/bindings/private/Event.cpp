@@ -9,6 +9,7 @@
 #include "Common.h"
 #include "nsString.h"
 #include "mozilla/Components.h"
+#include "mozilla/dom/ToJSValue.h"
 #include "nsIClassInfoImpl.h"
 #include "jsapi.h"
 #include "nsIScriptError.h"
@@ -82,14 +83,75 @@ GleanEvent::Record(JS::HandleValue aExtra, JSContext* aCx) {
 NS_IMETHODIMP
 GleanEvent::TestGetValue(const nsACString& aStorageName, JSContext* aCx,
                          JS::MutableHandleValue aResult) {
-  auto result = mEvent.TestGetValue(aStorageName);
-  if (result.isNothing()) {
+  auto optEvents = mEvent.TestGetValue(aStorageName);
+  if (optEvents.isNothing()) {
     aResult.set(JS::UndefinedValue());
     return NS_OK;
   }
 
-  // TODO(bug 1678567): Implement this.
-  return NS_ERROR_FAILURE;
+  auto events = optEvents.extract();
+
+  auto count = events.Length();
+  JS::RootedObject eventArray(aCx, JS::NewArrayObject(aCx, count));
+  if (NS_WARN_IF(!eventArray)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  for (size_t i = 0; i < count; i++) {
+    auto* value = &events[i];
+
+    JS::RootedObject eventObj(aCx, JS_NewPlainObject(aCx));
+    if (NS_WARN_IF(!eventObj)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (!JS_DefineProperty(aCx, eventObj, "timestamp",
+                           (double)value->mTimestamp, JSPROP_ENUMERATE)) {
+      NS_WARNING("Failed to define timestamp for event object.");
+      return NS_ERROR_FAILURE;
+    }
+
+    JS::Rooted<JS::Value> catStr(aCx);
+    if (!dom::ToJSValue(aCx, value->mCategory, &catStr) ||
+        !JS_DefineProperty(aCx, eventObj, "category", catStr,
+                           JSPROP_ENUMERATE)) {
+      NS_WARNING("Failed to define category for event object.");
+      return NS_ERROR_FAILURE;
+    }
+    JS::Rooted<JS::Value> nameStr(aCx);
+    if (!dom::ToJSValue(aCx, value->mName, &nameStr) ||
+        !JS_DefineProperty(aCx, eventObj, "name", nameStr, JSPROP_ENUMERATE)) {
+      NS_WARNING("Failed to define name for event object.");
+      return NS_ERROR_FAILURE;
+    }
+
+    JS::RootedObject extraObj(aCx, JS_NewPlainObject(aCx));
+    if (!JS_DefineProperty(aCx, eventObj, "extra", extraObj,
+                           JSPROP_ENUMERATE)) {
+      NS_WARNING("Failed to define extra for event object.");
+      return NS_ERROR_FAILURE;
+    }
+
+    for (auto pair : value->mExtra) {
+      auto key = mozilla::Get<0>(pair);
+      auto val = mozilla::Get<1>(pair);
+      JS::Rooted<JS::Value> valStr(aCx);
+      if (!dom::ToJSValue(aCx, val, &valStr) ||
+          !JS_DefineProperty(aCx, extraObj, key.Data(), valStr,
+                             JSPROP_ENUMERATE)) {
+        NS_WARNING("Failed to define extra property for event object.");
+        return NS_ERROR_FAILURE;
+      }
+    }
+
+    if (!JS_DefineElement(aCx, eventArray, i, eventObj, JSPROP_ENUMERATE)) {
+      NS_WARNING("Failed to define item in events array.");
+      return NS_ERROR_FAILURE;
+    }
+  }
+
+  aResult.setObject(*eventArray);
+  return NS_OK;
 }
 
 }  // namespace mozilla::glean

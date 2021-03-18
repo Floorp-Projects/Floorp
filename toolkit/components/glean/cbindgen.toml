@@ -1,6 +1,12 @@
 header = """/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */"""
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+#ifndef mozilla_glean_fog_ffi_generated_h
+#define mozilla_glean_fog_ffi_generated_h
+"""
+trailer = """
+#endif // mozilla_glean_fog_ffi_generated_h
+"""
 autogen_warning = """/* DO NOT MODIFY THIS MANUALLY! This file was generated using cbindgen. */"""
 include_version = true
 braces = "SameLine"
@@ -12,6 +18,7 @@ includes = ["nsTArray.h", "nsString.h"]
 
 [export.rename]
 "ThinVec" = "nsTArray"
+"nsCStringRepr" = "nsCString"
 
 [parse]
 parse_deps = true
