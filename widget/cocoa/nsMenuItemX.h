@@ -63,6 +63,8 @@ class nsMenuItemX final : public nsMenuObjectX, public nsChangeObserver {
   nsIContent* Content() { return mContent; }
   NSMenuItem* NativeNSMenuItem() { return mNativeMenuItem; }
 
+  void Dump(uint32_t aIndent) const;
+
  protected:
   void UncheckRadioSiblings(nsIContent* aCheckedElement);
   void SetKeyEquiv();
