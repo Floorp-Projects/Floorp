@@ -41,8 +41,8 @@ using mozilla::widget::IconLoader;
 
 static const uint32_t kIconSize = 16;
 
-nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem, NSMenuItem* aNativeMenuItem)
-    : mMenuObject(aMenuItem), mSetIcon(false), mNativeMenuItem(aNativeMenuItem) {
+nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem)
+    : mMenuObject(aMenuItem), mSetIcon(false) {
   MOZ_COUNT_CTOR(nsMenuItemIconX);
 }
 
@@ -50,34 +50,39 @@ nsMenuItemIconX::~nsMenuItemIconX() {
   if (mIconLoader) {
     mIconLoader->Destroy();
   }
+  if (mIconImage) {
+    [mIconImage release];
+    mIconImage = nil;
+  }
   MOZ_COUNT_DTOR(nsMenuItemIconX);
 }
 
-nsresult nsMenuItemIconX::SetupIcon(nsIContent* aContent) {
+void nsMenuItemIconX::SetupIcon(nsIContent* aContent) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  // Still don't have one, then something is wrong, get out of here.
-  if (!mNativeMenuItem) {
-    NS_ERROR("No native menu item");
-    return NS_ERROR_FAILURE;
-  }
 
   nsCOMPtr<nsIURI> iconURI = GetIconURI(aContent);
   if (!iconURI) {
     // There is no icon for this menu item. An icon might have been set
     // earlier.  Clear it.
-    mNativeMenuItem.image = nil;
-
-    return NS_OK;
+    if (mIconImage) {
+      [mIconImage release];
+      mIconImage = nil;
+    }
+    return;
   }
 
   if (!mIconLoader) {
     mIconLoader = new IconLoader(this);
   }
+
   if (!mSetIcon) {
     // Load placeholder icon.
     NSSize iconSize = NSMakeSize(kIconSize, kIconSize);
-    mNativeMenuItem.image = [MOZIconHelper placeholderIconWithSize:iconSize];
+    if (mIconImage) {
+      [mIconImage release];
+      mIconImage = nil;
+    }
+    mIconImage = [[MOZIconHelper placeholderIconWithSize:iconSize] retain];
   }
 
   nsresult rv = mIconLoader->LoadIcon(iconURI, aContent);
@@ -85,12 +90,13 @@ nsresult nsMenuItemIconX::SetupIcon(nsIContent* aContent) {
     // There is no icon for this menu item, as an error occurred while loading it.
     // An icon might have been set earlier or the place holder icon may have
     // been set.  Clear it.
-    mNativeMenuItem.image = nil;
+    if (mIconImage) {
+      [mIconImage release];
+      mIconImage = nil;
+    }
   }
 
   mSetIcon = true;
-
-  return rv;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -159,21 +165,21 @@ already_AddRefed<nsIURI> nsMenuItemIconX::GetIconURI(nsIContent* aContent) {
 nsresult nsMenuItemIconX::OnComplete(imgIContainer* aImage) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (!mNativeMenuItem) {
-    mIconLoader->Destroy();
-    return NS_ERROR_FAILURE;
+  if (mIconImage) {
+    [mIconImage release];
+    mIconImage = nil;
   }
 
-  NSImage* image = [MOZIconHelper iconImageFromImageContainer:aImage
-                                                     withSize:NSMakeSize(kIconSize, kIconSize)
-                                                      subrect:mImageRegionRect
-                                                  scaleFactor:0.0f];
-  mNativeMenuItem.image = image;
+  mIconImage = [[MOZIconHelper iconImageFromImageContainer:aImage
+                                                  withSize:NSMakeSize(kIconSize, kIconSize)
+                                                   subrect:mImageRegionRect
+                                               scaleFactor:0.0f] retain];
   if (mMenuObject) {
     mMenuObject->IconUpdated();
   }
 
   mIconLoader->Destroy();
+
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
