@@ -569,7 +569,7 @@ exports.isBool = isBool;
 exports.isNum = isNum;
 exports.isSameOrigin = isSameOrigin;
 exports.isString = isString;
-exports.objectFromEntries = objectFromEntries;
+exports.objectFromMap = objectFromMap;
 exports.objectSize = objectSize;
 exports.removeNullCharacters = removeNullCharacters;
 exports.setVerbosityLevel = setVerbosityLevel;
@@ -1157,8 +1157,14 @@ function objectSize(obj) {
   return Object.keys(obj).length;
 }
 
-function objectFromEntries(iterable) {
-  return Object.assign(Object.create(null), Object.fromEntries(iterable));
+function objectFromMap(map) {
+  const obj = Object.create(null);
+
+  for (const [key, value] of map) {
+    obj[key] = value;
+  }
+
+  return obj;
 }
 
 function isLittleEndian() {
@@ -1553,17 +1559,19 @@ function getDocument(src) {
     } else if (key === "worker") {
       worker = source[key];
       continue;
-    } else if (key === "data" && !(source[key] instanceof Uint8Array)) {
+    } else if (key === "data") {
       const pdfBytes = source[key];
 
-      if (typeof pdfBytes === "string") {
+      if (pdfBytes instanceof Uint8Array) {
+        params[key] = pdfBytes;
+      } else if (typeof pdfBytes === "string") {
         params[key] = (0, _util.stringToBytes)(pdfBytes);
       } else if (typeof pdfBytes === "object" && pdfBytes !== null && !isNaN(pdfBytes.length)) {
         params[key] = new Uint8Array(pdfBytes);
       } else if ((0, _util.isArrayBuffer)(pdfBytes)) {
         params[key] = new Uint8Array(pdfBytes);
       } else {
-        throw new Error("Invalid PDF binary data: either typed array, " + "string or array-like object is expected in the " + "data property.");
+        throw new Error("Invalid PDF binary data: either typed array, " + "string, or array-like object is expected in the data property.");
       }
 
       continue;
@@ -1680,7 +1688,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.8.188',
+    apiVersion: '2.8.243',
     source: {
       data: source.data,
       url: source.url,
@@ -3686,9 +3694,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.8.188';
+const version = '2.8.243';
 exports.version = version;
-const build = '5e3af62d5';
+const build = 'a16494135';
 exports.build = build;
 
 /***/ }),
@@ -3998,11 +4006,9 @@ class AnnotationStorage {
   }
 
   getValue(key, defaultValue) {
-    if (this._storage.has(key)) {
-      return this._storage.get(key);
-    }
+    const obj = this._storage.get(key);
 
-    return defaultValue;
+    return obj !== undefined ? obj : defaultValue;
   }
 
   getOrCreateValue(key, defaultValue) {
@@ -4041,7 +4047,7 @@ class AnnotationStorage {
   }
 
   getAll() {
-    return this._storage.size > 0 ? (0, _util.objectFromEntries)(this._storage) : null;
+    return this._storage.size > 0 ? (0, _util.objectFromMap)(this._storage) : null;
   }
 
   get size() {
@@ -7365,7 +7371,7 @@ class Metadata {
   }
 
   getAll() {
-    return (0, _util.objectFromEntries)(this._metadataMap);
+    return (0, _util.objectFromMap)(this._metadataMap);
   }
 
   has(name) {
@@ -7529,11 +7535,7 @@ class OptionalContentConfig {
   }
 
   getGroups() {
-    if (!this._groups.size) {
-      return null;
-    }
-
-    return (0, _util.objectFromEntries)(this._groups);
+    return this._groups.size > 0 ? (0, _util.objectFromMap)(this._groups) : null;
   }
 
   getGroup(id) {
@@ -11242,8 +11244,8 @@ var _text_layer = __w_pdfjs_require__(20);
 
 var _svg = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.8.188';
-const pdfjsBuild = '5e3af62d5';
+const pdfjsVersion = '2.8.243';
+const pdfjsBuild = 'a16494135';
 ;
 })();
 
