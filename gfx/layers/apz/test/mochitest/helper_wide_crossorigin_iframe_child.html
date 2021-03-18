@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html id="helper_wide_crossorigin_iframe_child_docelement">
+<meta charset=utf-8>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="apz_test_utils.js"></script>
+  <script src="apz_test_native_event_utils.js"></script>
+<style>
+html {
+    border: 5px solid lime;
+    background: yellow;
+    box-sizing: border-box;
+    overflow-y: scroll;
+}
+</style>
+<script>
+  // negative means keep sending forever
+  // we flip this to 10 when we hit onload, so that we send several
+  // before load and some after.
+  let numMoreTimesToSend = -1;
+  function sendDpToParent() {
+    if (numMoreTimesToSend > 0) {
+      numMoreTimesToSend--;
+    }
+    if (numMoreTimesToSend == 0) {
+      clearInterval(intervalId);
+      parent.postMessage("wereDone", "*");
+      return;
+    }
+    let dp = getLastContentDisplayportFor("helper_wide_crossorigin_iframe_child_docelement", /* expectPainted = */ false);
+    if (dp != null) {
+      let result = { x: dp.x, y: dp.y, w: dp.w, h: dp.h };
+
+      info("result " + dp.x + " " + dp.y + " " + dp.w + " " + dp.h);
+
+      parent.postMessage(result, "*");
+    } else {
+      info("no dp yet");
+    }
+  }
+
+  sendDpToParent();
+  setTimeout(sendDpToParent,0);
+
+  let intervalId = setInterval(sendDpToParent, 100);
+
+  addEventListener("MozAfterPaint", sendAndSetTimeout);
+  function sendAndSetTimeout() {
+    sendDpToParent();
+    setTimeout(sendDpToParent,0);
+  }
+
+  window.requestAnimationFrame(checkAndSendRaf);
+  function checkAndSendRaf() {
+    if (numMoreTimesToSend != 0) {
+      window.requestAnimationFrame(checkAndSendRaf);
+    }
+    sendDpToParent();
+    setTimeout(sendDpToParent,0);
+  }
+
+  window.onload = onloaded;
+  window.onDOMContentLoaded = sendDpToParent;
+  document.onreadystatechange = sendDpToParent;
+  document.onafterscriptexecute = sendDpToParent;
+  document.onbeforescriptexecute = sendDpToParent;
+  document.onvisibilitychange = sendDpToParent;
+  function onloaded() {
+    numMoreTimesToSend = 10;
+    sendDpToParent();
+  }
+
+</script>
+<div style="background: blue; height: 400vh;"></div>
