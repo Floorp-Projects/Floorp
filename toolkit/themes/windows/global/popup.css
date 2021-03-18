@@ -19,6 +19,7 @@ panel {
 menupopup {
   appearance: auto;
   -moz-default-appearance: menupopup;
+  --nested-margin: -3px;
 }
 
 @supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
@@ -27,16 +28,11 @@ menupopup {
     /* Disable the default appearance so we can override the native styling. */
     appearance: none;
 
-    /* Leave enough space for the drop shadow and border. */
-    padding: 3px 30px 42px;
-
-    /* But also prevent the menu from opening away from where it should be. */
-    margin-inline-start: -30px;
-    margin-top: -3px;
-
     /* Prevent any background or border around the outside of the shadow. */
     background-color: transparent;
     border-color: transparent;
+
+    --nested-margin: -6px;
   }
 
   menupopup > menuitem,
@@ -54,9 +50,7 @@ menupopup {
     border: 1px solid var(--menu-border-color);
     border-radius: 4px;
 
-    box-shadow:
-      0px 2.4px 7.2px rgba(0, 0, 0, 0.18),
-      0px 12.8px 28.8px rgba(0, 0, 0, 0.22);
+    padding-block: 4px;
 
     /* Prevent contained items from drawing over the border-radius. */
     overflow: hidden;
@@ -66,8 +60,8 @@ menupopup {
 
 menupopup > menu > menupopup {
  /* align submenus */
-  margin-inline-start: -3px;
-  margin-top: -3px;
+  margin-inline-start: var(--nested-margin);
+  margin-top: var(--nested-margin);
 }
 
 panel[type="arrow"] {
