@@ -22,6 +22,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include <algorithm>
+#include <utility>
 
 #include "jsmath.h"
 
@@ -1184,7 +1185,7 @@ Instance::Instance(JSContext* cx, Handle<WasmInstanceObject*> object,
           cx->runtime()->jitRuntime()->getExceptionTail().value),
       preBarrierCode_(
           cx->runtime()->jitRuntime()->preBarrier(MIRType::Object).value),
-      code_(code),
+      code_(std::move(code)),
       tlsData_(std::move(tlsDataIn)),
       memory_(memory),
       exceptionTags_(std::move(exceptionTags)),
