@@ -283,7 +283,7 @@ nsresult ClientSource::WindowExecutionReady(nsPIDOMWindowInner* aInnerWindow) {
   FrameType frameType = FrameType::Top_level;
   if (!outer->GetBrowsingContext()->IsTop()) {
     frameType = FrameType::Nested;
-  } else if (outer->HadOriginalOpener()) {
+  } else if (outer->GetBrowsingContext()->HadOriginalOpener()) {
     frameType = FrameType::Auxiliary;
   }
 
@@ -325,7 +325,7 @@ nsresult ClientSource::DocShellExecutionReady(nsIDocShell* aDocShell) {
   FrameType frameType = FrameType::Top_level;
   if (!outer->GetBrowsingContext()->IsTop()) {
     frameType = FrameType::Nested;
-  } else if (outer->HadOriginalOpener()) {
+  } else if (outer->GetBrowsingContext()->HadOriginalOpener()) {
     frameType = FrameType::Auxiliary;
   }
 
