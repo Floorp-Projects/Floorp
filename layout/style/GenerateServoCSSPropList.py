@@ -100,11 +100,20 @@ def generate_header(output, data):
             if not flags:
                 flags = "CSSPropFlags(0)"
             params = [prop.name, prop.id, method, flags, pref]
+        excludes = []
+        if is_internal:
+            excludes.append("CSS_PROP_LIST_EXCLUDE_INTERNAL")
+        if "Style" not in prop.rules:
+            excludes.append("CSS_PROP_LIST_EXCLUDE_NOT_IN_STYLE")
 
-        if is_internal:
-            output.write("#ifndef CSS_PROP_LIST_EXCLUDE_INTERNAL\n")
+        if excludes:
+            output.write(
+                "#if {}\n".format(
+                    " || ".join("!defined " + exclude for exclude in excludes)
+                )
+            )
         output.write("{}({})\n".format(MACRO_NAMES[prop.type()], ", ".join(params)))
-        if is_internal:
+        if excludes:
             output.write("#endif\n")
 
     output.write(
