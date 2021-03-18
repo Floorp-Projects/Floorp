@@ -268,3 +268,36 @@ NSMenuItem* nsMenuUtilsX::NativeMenuItemWithLocation(NSMenu* aRootMenu, NSString
 
   return nil;
 }
+static void DumpNativeNSMenuItemImpl(NSMenuItem* aItem, uint32_t aIndent,
+                                     const Maybe<int>& aIndexInParentMenu);
+
+static void DumpNativeNSMenuImpl(NSMenu* aMenu, uint32_t aIndent) {
+  printf("%*sNSMenu [%p] %-16s\n", aIndent * 2, "", aMenu,
+         (aMenu.title.length == 0 ? "(no title)" : aMenu.title.UTF8String));
+  int index = 0;
+  for (NSMenuItem* item in aMenu.itemArray) {
+    DumpNativeNSMenuItemImpl(item, aIndent + 1, Some(index));
+    index++;
+  }
+}
+
+static void DumpNativeNSMenuItemImpl(NSMenuItem* aItem, uint32_t aIndent,
+                                     const Maybe<int>& aIndexInParentMenu) {
+  printf("%*s", aIndent * 2, "");
+  if (aIndexInParentMenu) {
+    printf("[%d] ", *aIndexInParentMenu);
+  }
+  printf("NSMenuItem [%p] %-16s%s\n", aItem,
+         aItem.isSeparatorItem ? "----"
+                               : (aItem.title.length == 0 ? "(no title)" : aItem.title.UTF8String),
+         aItem.hasSubmenu ? " [hasSubmenu]" : "");
+  if (aItem.hasSubmenu) {
+    DumpNativeNSMenuImpl(aItem.submenu, aIndent + 1);
+  }
+}
+
+void nsMenuUtilsX::DumpNativeMenu(NSMenu* aMenu) { DumpNativeNSMenuImpl(aMenu, 0); }
+
+void nsMenuUtilsX::DumpNativeMenuItem(NSMenuItem* aMenuItem) {
+  DumpNativeNSMenuItemImpl(aMenuItem, 0, Nothing());
+}
