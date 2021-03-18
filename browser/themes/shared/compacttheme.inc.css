@@ -10,3 +10,9 @@
   /* !important to override LightweightThemeConsumer.jsm */
   --autocomplete-popup-background: #2A2A2E !important;
 }
+
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+:root {
+  --urlbar-box-unfocused-bgcolor: var(--lwt-toolbar-field-focus);
+}
+} /** END Proton **/

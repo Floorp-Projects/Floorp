@@ -126,14 +126,14 @@
 #identity-box[pageproxystate="valid"].chromeUI > .identity-box-button,
 #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button,
 #urlbar-label-box {
-  background-color: var(--urlbar-box-bg-overlay);
+  background-color: var(--urlbar-box-bgcolor);
 }
 
 #urlbar:not([focused="true"]) #identity-box[pageproxystate="valid"].notSecureText > .identity-box-button,
 #urlbar:not([focused="true"]) #identity-box[pageproxystate="valid"].chromeUI > .identity-box-button,
 #urlbar:not([focused="true"]) #identity-box[pageproxystate="valid"].extensionPage > .identity-box-button,
 #urlbar:not([focused="true"]) #urlbar-label-box {
-  background-color: var(--urlbar-box-unfocused-bg-overlay);
+  background-color: var(--urlbar-box-unfocused-bgcolor);
 }
 } /*** END proton ***/
 
