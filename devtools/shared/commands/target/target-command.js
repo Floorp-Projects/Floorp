@@ -174,6 +174,10 @@ class TargetCommand extends EventEmitter {
       targetFrontsSet.delete(targetFront);
     }
 
+    if (this.isDestroyed() || targetFront.isDestroyedOrBeingDestroyed()) {
+      return;
+    }
+
     // Then, once the target is attached, notify the target front creation listeners
     await this._createListeners.emitAsync(targetType, {
       targetFront,
