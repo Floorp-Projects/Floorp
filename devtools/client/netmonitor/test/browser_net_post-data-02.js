@@ -23,8 +23,11 @@ add_task(async function() {
   // Execute requests.
   await performRequests(monitor, tab, 1);
 
-  // Wait for all tree view updated by react
-  const wait = waitForDOM(document, "#request-panel .accordion-item", 2);
+  // Wait for raw data toggle to be displayed
+  const wait = waitForDOM(
+    document,
+    "#request-panel .raw-data-toggle-input .devtools-checkbox-toggle"
+  );
   EventUtils.sendMouseEvent(
     { type: "mousedown" },
     document.querySelectorAll(".request-list-item")[0]
@@ -44,9 +47,9 @@ add_task(async function() {
   );
 
   is(
-    tabpanel.querySelectorAll(".accordion-item").length,
-    2,
-    "There should be 2 accordion items displayed in this tabpanel."
+    tabpanel.querySelectorAll(".raw-data-toggle") !== null,
+    true,
+    "The raw request data toggle should be displayed in this tabpanel."
   );
   is(
     tabpanel.querySelectorAll(".empty-notice").length,
@@ -55,8 +58,7 @@ add_task(async function() {
   );
 
   is(
-    tabpanel.querySelector(".accordion-item .accordion-header-label")
-      .textContent,
+    tabpanel.querySelector(".data-label").textContent,
     L10N.getStr("paramsFormData"),
     "The post section doesn't have the correct title."
   );
