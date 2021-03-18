@@ -4,7 +4,9 @@
 
 #![cfg(feature = "with_gecko")]
 
-use nsstring::{nsACString, nsCString};
+use std::collections::HashMap;
+
+use nsstring::{nsACString, nsCString, nsCStringRepr};
 use thin_vec::ThinVec;
 
 use crate::metrics::__glean_metric_maps as metric_maps;
@@ -85,6 +87,91 @@ pub extern "C" fn fog_event_record_str(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn fog_event_test_has_value(id: u32, storage_name: &nsACString) -> bool {
-    metric_maps::event_test_get_value_wrapper(id, &storage_name.to_utf8()).is_some()
+pub unsafe extern "C" fn fog_event_test_has_value(id: u32, ping_name: &nsACString) -> bool {
+    let storage = if ping_name.is_empty() {
+        None
+    } else {
+        Some(ping_name.to_utf8().into_owned())
+    };
+    metric_maps::event_test_get_value_wrapper(id, storage).is_some()
+}
+
+/// FFI-compatible representation of recorded event data.
+///
+/// This wraps Gecko strings, but ensures they are not dropped on the Rust side.
+/// That happens on the C++ side, where they are represented as `nsCString`.
+#[repr(C)]
+pub struct FfiRecordedEvent {
+    timestamp: u64,
+    category: nsCStringRepr,
+    name: nsCStringRepr,
+
+    /// Number of extra item pairs.
+    /// The `extra` array has length `2 * extra_len`.
+    extra_len: u32,
+
+    /// Flat array of extra data, keys and values are interleaved.
+    ///
+    /// This needs to be passed to `fog_event_free_event_extra` for deallocation.
+    extra: *mut nsCStringRepr,
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn fog_event_test_get_value(
+    id: u32,
+    ping_name: &nsACString,
+    out_events: &mut ThinVec<FfiRecordedEvent>,
+) {
+    let storage = if ping_name.is_empty() {
+        None
+    } else {
+        Some(ping_name.to_utf8().into_owned())
+    };
+
+    let events = match metric_maps::event_test_get_value_wrapper(id, storage) {
+        Some(events) => events,
+        None => return,
+    };
+
+    for event in events {
+        let extra = event.extra.unwrap_or_else(HashMap::new);
+        let extra_len = extra.len();
+        let mut extras = Vec::with_capacity(extra_len * 2);
+        for (k, v) in extra.into_iter() {
+            extras.push(nsCString::from(k).into_repr());
+            extras.push(nsCString::from(v).into_repr());
+        }
+
+        // Ensure that `len == cap` to make deallocation later easier.
+        extras.shrink_to_fit();
+        let extra_ptr = extras.as_mut_ptr();
+
+        // Need to forget it, so it's not deallocated.
+        // It needs to be deallocated later by passing it to `fog_event_free_event_extra`.
+        std::mem::forget(extras);
+
+        let event = FfiRecordedEvent {
+            timestamp: event.timestamp,
+            category: nsCString::from(event.category).into_repr(),
+            name: nsCString::from(event.name).into_repr(),
+            extra_len: extra_len as u32,
+            extra: extra_ptr,
+        };
+
+        out_events.push(event);
+    }
+}
+
+/// Free the event extra array from a `FfiRecordedEvent` as returned by `fog_event_test_get_value`.
+///
+/// SAFETY:
+/// * The pointer needs to be from a `FfiRecordedEvent` returned from `fog_event_test_get_value`
+/// * The array is assumed to be fitted, that is `len == capacity`
+/// * `nsCStringRepr` does not drop its iternal buffer on the Rust side,
+///   this needs to happen on the C++ side.
+#[no_mangle]
+pub unsafe extern "C" fn fog_event_free_event_extra(extra: *mut nsCStringRepr, len: u32) {
+    assert!(!extra.is_null());
+    let v = Vec::from_raw_parts(extra, len as usize, len as usize);
+    drop(v);
 }

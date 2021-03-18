@@ -143,7 +143,7 @@ interface nsIGleanTimingDistribution : nsISupports
    * @param aPingName The (optional) name of the ping to retrieve the metric
    *        for. Defaults to the first value in `send_in_pings`.
    *
-   * @return value of the stored metric, or Nothing() if there is no value.
+   * @return value of the stored metric, or undefined if there is no value.
    */
   [implicit_jscontext]
 	jsval testGetValue([optional] in ACString aPingName);
@@ -178,7 +178,7 @@ interface nsIGleanMemoryDistribution : nsISupports
    * @param aPingName The (optional) name of the ping to retrieve the metric
    *        for. Defaults to the first value in `send_in_pings`.
    *
-   * @return value of the stored metric, or Nothing() if there is no value.
+   * @return value of the stored metric, or undefined if there is no value.
    */
   [implicit_jscontext]
 	jsval testGetValue([optional] in ACString aPingName);
@@ -387,7 +387,29 @@ interface nsIGleanEvent : nsISupports
    * @param aPingName The (optional) name of the ping to retrieve the metric
    *        for. Defaults to the first value in `send_in_pings`.
    *
-   * @return value of the stored metric.
+   * @return value of the stored metric, or undefined if there is no value.
+   *
+   * The data is an array of objects:
+   *
+   * ```
+   * [
+   *    {
+   *        timestamp: Integer,
+   *        category: String,
+   *        name: String,
+   *        extra: {
+   *          String: String
+   *          ...
+   *        }
+   *    },
+   *    ...
+   * ]
+   * ```
+   *
+   * The difference between event timestamps is in milliseconds
+   * See https://mozilla.github.io/glean/book/user/metrics/event.html for further details.
+   * Due to limitations of numbers in JavaScript, the timestamp will only be accurate up until 2^53.
+   * (This is probably not an issue with the current clock implementation. Probably.)
    */
   [implicit_jscontext]
   jsval testGetValue([optional] in AUTF8String aPingName);
