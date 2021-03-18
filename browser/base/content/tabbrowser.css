@@ -19,7 +19,7 @@
 }
 
 @supports -moz-bool-pref("browser.proton.tabs.enabled") {
-:root[uidensity="compact"] .tab-secondary-label,
+:root[uidensity=compact] .tab-secondary-label,
 .tab-secondary-label:not([soundplaying], [muted], [activemedia-blocked], [pictureinpicture]),
 .tab-secondary-label:not([activemedia-blocked]) > .tab-icon-sound-blocked-label,
 .tab-secondary-label[muted][activemedia-blocked] > .tab-icon-sound-blocked-label,
