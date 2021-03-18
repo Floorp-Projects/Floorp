@@ -7,7 +7,6 @@ package org.mozilla.focus.activity
 import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
-import mozilla.components.browser.session.Session
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.session.IntentProcessor
@@ -17,7 +16,9 @@ import org.mozilla.focus.utils.SupportUtils
  * This activity receives VIEW intents and either forwards them to MainActivity or CustomTabActivity.
  */
 class IntentReceiverActivity : Activity() {
-    private val intentProcessor by lazy { IntentProcessor(this, components.sessionManager) }
+    private val intentProcessor by lazy {
+        IntentProcessor(this, components.tabsUseCases, components.customTabsUseCases)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,10 +30,10 @@ class IntentReceiverActivity : Activity() {
             return
         }
 
-        val session = intentProcessor.handleIntent(this, intent, savedInstanceState)
+        val result = intentProcessor.handleIntent(this, intent, savedInstanceState)
 
-        if (session?.isCustomTabSession() == true) {
-            dispatchCustomTabsIntent(session)
+        if (result is IntentProcessor.Result.CustomTab) {
+            dispatchCustomTabsIntent(result.id)
         } else {
             dispatchNormalIntent()
         }
@@ -40,14 +41,14 @@ class IntentReceiverActivity : Activity() {
         finish()
     }
 
-    private fun dispatchCustomTabsIntent(session: Session) {
+    private fun dispatchCustomTabsIntent(tabId: String) {
         val intent = Intent(intent)
 
         intent.setClassName(applicationContext, CustomTabActivity::class.java.name)
 
         // We are adding a generated custom tab ID to the intent here. CustomTabActivity will
         // use this ID to later decide what session to display once it is created.
-        intent.putExtra(CustomTabActivity.CUSTOM_TAB_ID, session.id)
+        intent.putExtra(CustomTabActivity.CUSTOM_TAB_ID, tabId)
 
         startActivity(intent)
     }

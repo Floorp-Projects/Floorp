@@ -41,7 +41,9 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     protected open val currentTabForActivity: SessionState?
         get() = components.store.state.selectedTab
 
-    private val intentProcessor by lazy { IntentProcessor(this, components.sessionManager) }
+    private val intentProcessor by lazy {
+        IntentProcessor(this, components.tabsUseCases, components.customTabsUseCases)
+    }
 
     private var previousSessionCount = 0
 
