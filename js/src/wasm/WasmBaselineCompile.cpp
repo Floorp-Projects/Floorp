@@ -2712,7 +2712,7 @@ struct Stk {
   }
 };
 
-typedef Vector<Stk, 0, SystemAllocPolicy> StkVector;
+using StkVector = Vector<Stk, 0, SystemAllocPolicy>;
 
 // MachineStackTracker, used for stack-slot pointerness tracking.
 

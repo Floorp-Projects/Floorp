@@ -45,7 +45,7 @@ using mozilla::BinarySearchIf;
 // any JSContext/JS::Compartment/etc lying around, we have to use a process-wide
 // map instead.
 
-typedef Vector<const CodeSegment*, 0, SystemAllocPolicy> CodeSegmentVector;
+using CodeSegmentVector = Vector<const CodeSegment*, 0, SystemAllocPolicy>;
 
 Atomic<bool> wasm::CodeExists(false);
 
