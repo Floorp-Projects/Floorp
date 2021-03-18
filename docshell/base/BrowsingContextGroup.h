@@ -172,7 +172,7 @@ class BrowsingContextGroup final : public nsWrapperCache {
 
   uint32_t mKeepAliveCount = 0;
 
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   bool mDestroyed = false;
 #endif
 

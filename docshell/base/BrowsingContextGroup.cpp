@@ -51,13 +51,13 @@ BrowsingContextGroup::BrowsingContextGroup(uint64_t aId) : mId(aId) {
 }
 
 void BrowsingContextGroup::Register(nsISupports* aContext) {
-  MOZ_ASSERT(!mDestroyed);
+  MOZ_DIAGNOSTIC_ASSERT(!mDestroyed);
   MOZ_DIAGNOSTIC_ASSERT(aContext);
   mContexts.PutEntry(aContext);
 }
 
 void BrowsingContextGroup::Unregister(nsISupports* aContext) {
-  MOZ_ASSERT(!mDestroyed);
+  MOZ_DIAGNOSTIC_ASSERT(!mDestroyed);
   MOZ_DIAGNOSTIC_ASSERT(aContext);
   mContexts.RemoveEntry(aContext);
 
@@ -65,7 +65,7 @@ void BrowsingContextGroup::Unregister(nsISupports* aContext) {
 }
 
 void BrowsingContextGroup::EnsureHostProcess(ContentParent* aProcess) {
-  MOZ_ASSERT(!mDestroyed);
+  MOZ_DIAGNOSTIC_ASSERT(!mDestroyed);
   MOZ_DIAGNOSTIC_ASSERT(this != sChromeGroup,
                         "cannot have content host for chrome group");
   MOZ_DIAGNOSTIC_ASSERT(aProcess->GetRemoteType() != PREALLOC_REMOTE_TYPE,
@@ -117,7 +117,7 @@ static void CollectContextInitializers(
 }
 
 void BrowsingContextGroup::Subscribe(ContentParent* aProcess) {
-  MOZ_ASSERT(!mDestroyed);
+  MOZ_DIAGNOSTIC_ASSERT(!mDestroyed);
   MOZ_DIAGNOSTIC_ASSERT(aProcess && !aProcess->IsLaunching());
   MOZ_DIAGNOSTIC_ASSERT(aProcess->GetRemoteType() != PREALLOC_REMOTE_TYPE);
 
@@ -220,13 +220,13 @@ bool BrowsingContextGroup::ShouldSuspendAllTopLevelContexts() const {
 BrowsingContextGroup::~BrowsingContextGroup() { Destroy(); }
 
 void BrowsingContextGroup::Destroy() {
-#ifdef DEBUG
+#ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   if (mDestroyed) {
-    MOZ_ASSERT(mHosts.Count() == 0);
-    MOZ_ASSERT(mSubscribers.Count() == 0);
-    MOZ_ASSERT_IF(sBrowsingContextGroups,
-                  !sBrowsingContextGroups->Contains(Id()) ||
-                      *sBrowsingContextGroups->Lookup(Id()) != this);
+    MOZ_DIAGNOSTIC_ASSERT(mHosts.Count() == 0);
+    MOZ_DIAGNOSTIC_ASSERT(mSubscribers.Count() == 0);
+    MOZ_DIAGNOSTIC_ASSERT_IF(sBrowsingContextGroups,
+                             !sBrowsingContextGroups->Contains(Id()) ||
+                                 *sBrowsingContextGroups->Lookup(Id()) != this);
   }
   mDestroyed = true;
 #endif
@@ -249,12 +249,12 @@ void BrowsingContextGroup::Destroy() {
 }
 
 void BrowsingContextGroup::AddKeepAlive() {
-  MOZ_ASSERT(!mDestroyed);
+  MOZ_DIAGNOSTIC_ASSERT(!mDestroyed);
   mKeepAliveCount++;
 }
 
 void BrowsingContextGroup::RemoveKeepAlive() {
-  MOZ_ASSERT(!mDestroyed);
+  MOZ_DIAGNOSTIC_ASSERT(!mDestroyed);
   MOZ_DIAGNOSTIC_ASSERT(mKeepAliveCount > 0);
   mKeepAliveCount--;
 
