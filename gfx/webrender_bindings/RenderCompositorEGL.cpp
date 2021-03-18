@@ -36,7 +36,7 @@ namespace mozilla::wr {
 UniquePtr<RenderCompositor> RenderCompositorEGL::Create(
     RefPtr<widget::CompositorWidget> aWidget, nsACString& aError) {
 #ifdef MOZ_WAYLAND
-  if (!mozilla::widget::GdkIsWaylandDisplay()) {
+  if (!gfx::gfxVars::UseEGL()) {
     return nullptr;
   }
 #endif
