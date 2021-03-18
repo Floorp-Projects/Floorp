@@ -37,11 +37,14 @@ describe('DefaultBrowserContext', function () {
         value: 'John Doe',
         domain: 'localhost',
         path: '/',
+        sameParty: false,
         expires: -1,
         size: 16,
         httpOnly: false,
         secure: false,
         session: true,
+        sourcePort: 8907,
+        sourceScheme: 'NonSecure',
       },
     ]);
   });
@@ -62,11 +65,14 @@ describe('DefaultBrowserContext', function () {
         value: 'John Doe',
         domain: 'localhost',
         path: '/',
+        sameParty: false,
         expires: -1,
         size: 16,
         httpOnly: false,
         secure: false,
         session: true,
+        sourcePort: 80,
+        sourceScheme: 'NonSecure',
       },
     ]);
   });
@@ -93,11 +99,14 @@ describe('DefaultBrowserContext', function () {
         value: '1',
         domain: 'localhost',
         path: '/',
+        sameParty: false,
         expires: -1,
         size: 8,
         httpOnly: false,
         secure: false,
         session: true,
+        sourcePort: 80,
+        sourceScheme: 'NonSecure',
       },
     ]);
   });

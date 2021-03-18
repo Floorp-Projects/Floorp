@@ -21,6 +21,7 @@ import { promisify } from 'util';
 import {
   getTestState,
   itOnlyRegularInstall,
+  itFailsWindows,
 } from './mocha-utils'; // eslint-disable-line import/extensions
 import utils from './utils.js';
 import expect from 'expect';
@@ -472,7 +473,7 @@ describe('Launcher specs', function () {
        * combo of that plus it running on CI, but it's hard to track down.
        * See comment here: https://github.com/puppeteer/puppeteer/issues/5673#issuecomment-670141377.
        */
-      itOnlyRegularInstall('should be able to launch Firefox', async function () {
+      itFailsWindows('should be able to launch Firefox', async function () {
         this.timeout(FIREFOX_TIMEOUT);
         const { puppeteer } = getTestState();
         const browser = await puppeteer.launch({ product: 'firefox' });
@@ -587,6 +588,25 @@ describe('Launcher specs', function () {
           await browserOne.close();
         }
       );
+      // @see https://github.com/puppeteer/puppeteer/issues/6527
+      it('should be able to reconnect', async () => {
+        const { puppeteer, server } = getTestState();
+        const browserOne = await puppeteer.launch();
+        const browserWSEndpoint = browserOne.wsEndpoint();
+        const pageOne = await browserOne.newPage();
+        await pageOne.goto(server.EMPTY_PAGE);
+        browserOne.disconnect();
+
+        const browserTwo = await puppeteer.connect({ browserWSEndpoint });
+        const pages = await browserTwo.pages();
+        const pageTwo = pages.find((page) => page.url() === server.EMPTY_PAGE);
+        await pageTwo.reload();
+        const bodyHandle = await pageTwo.waitForSelector('body', {
+          timeout: 10000,
+        });
+        await bodyHandle.dispose();
+        await browserTwo.close();
+      });
     });
     describe('Puppeteer.executablePath', function () {
       itOnlyRegularInstall('should work', async () => {

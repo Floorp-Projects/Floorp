@@ -15,9 +15,7 @@
  */
 
 import expect from 'expect';
-import {
-  getTestState,
-} from './mocha-utils'; // eslint-disable-line import/extensions
+import { getTestState } from './mocha-utils'; // eslint-disable-line import/extensions
 
 describe('ignoreHTTPSErrors', function () {
   /* Note that this test creates its own browser rather than use

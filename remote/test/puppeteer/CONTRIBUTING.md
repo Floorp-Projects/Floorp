@@ -183,7 +183,7 @@ There are additional considerations for dependencies that are environment agonis
 - Tests should not depend on external services.
 - Tests should work on all three platforms: Mac, Linux and Win. This is especially important for screenshot tests.
 
-Puppeteer tests are located in the test directory ([`test`](https://github.com/puppeteer/puppeteer/blob/main/test/) and are written using Mocha. See [`test/README.md`](https://github.com/puppeteer/puppeteer/blob/main/test/) for more details.
+Puppeteer tests are located in [the `test` directory](https://github.com/puppeteer/puppeteer/blob/main/test/) and are written using Mocha. See [`test/README.md`](https://github.com/puppeteer/puppeteer/blob/main/test/README.md) for more details.
 
 Despite being named 'unit', these are integration tests, making sure public API methods and events work as expected.
 
@@ -276,9 +276,8 @@ node utils/bisect.js --good 686378 --bad 706915 script.js
 Releasing to npm consists of the following phases:
 
 1. Source Code: mark a release.
-    1. Run `npm run release` to bump the version number in `package.json` and populate the changelog.
-    1. Run `npm run doc` to update the docs accordingly.
-    1. Send a PR titled `'chore(release): mark vXXX.YYY.ZZZ'` ([example](https://github.com/puppeteer/puppeteer/pull/5078)).
+    1. Run `npm run release`. (This automatically bumps the version number in `package.json`, populates the changelog, updates the docs, and creates a Git commit for the next step.)
+    1. Send a PR for the commit created in the previous step.
     1. Make sure the PR passes **all checks**.
         - **WHY**: there are linters in place that help to avoid unnecessary errors, e.g. [like this](https://github.com/puppeteer/puppeteer/pull/2446)
     1. Merge the PR.
@@ -286,5 +285,5 @@ Releasing to npm consists of the following phases:
         - **NOTE**: tag names are prefixed with `'v'`, e.g. for version `1.4.0` the tag is `v1.4.0`.
     1. As soon as the Git tag is created by completing the previous step, our CI automatically `npm publish`es the new releases for both the `puppeteer` and `puppeteer-core` packages.
 1. Source Code: mark post-release.
-    1. Bump `package.json` version to the `-post` version, run `npm run doc` to update the “released APIs” section at the top of `docs/api.md` accordingly, and send a PR titled `'chore: bump version to vXXX.YYY.ZZZ-post'` ([example](https://github.com/puppeteer/puppeteer/commit/d02440d1eac98028e29f4e1cf55413062a259156))
+    1. Bump `package.json` version to the `-post` version, run `npm run doc` to update the “released APIs” section at the top of `docs/api.md` accordingly, and send a PR titled `'chore: bump version to vXXX.YYY.ZZZ-post'` ([example](https://github.com/puppeteer/puppeteer/pull/6808))
         - **NOTE**: no other commits should be landed in-between release commit and bump commit.
