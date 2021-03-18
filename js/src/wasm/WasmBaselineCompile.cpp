@@ -3356,8 +3356,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   }
 
   [[nodiscard]] bool generateOutOfLineCode() {
-    for (uint32_t i = 0; i < outOfLine_.length(); i++) {
-      OutOfLineCode* ool = outOfLine_[i];
+    for (auto ool : outOfLine_) {
       ool->bind(&fr, &masm);
       ool->generate(&masm);
     }
@@ -5443,8 +5442,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   // Call this between opcodes.
   void performRegisterLeakCheck() {
     BaseRegAlloc::LeakCheck check(ra);
-    for (size_t i = 0; i < stk_.length(); i++) {
-      Stk& item = stk_[i];
+    for (auto& item : stk_) {
       switch (item.kind_) {
         case Stk::RegisterI32:
           check.addKnownI32(item.i32reg());
@@ -6291,10 +6289,10 @@ class BaseCompiler final : public BaseCompilerInterface {
 #endif
     masm.bind(theTable);
 
-    for (uint32_t i = 0; i < labels.length(); i++) {
+    for (const auto& label : labels) {
       CodeLabel cl;
       masm.writeCodePointer(&cl);
-      cl.target()->bind(labels[i].offset());
+      cl.target()->bind(label.offset());
       masm.addCodeLabel(cl);
     }
   }

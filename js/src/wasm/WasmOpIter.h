@@ -3146,7 +3146,7 @@ inline bool OpIter<Policy>::readVectorShuffle(Value* v1, Value* v2,
                                               V128* selectMask) {
   MOZ_ASSERT(Classify(op_) == OpKind::VectorShuffle);
 
-  for (unsigned i = 0; i < 16; i++) {
+  for (unsigned char& byte : selectMask->bytes) {
     uint8_t tmp;
     if (!readFixedU8(&tmp)) {
       return fail("unable to read shuffle index");
@@ -3154,7 +3154,7 @@ inline bool OpIter<Policy>::readVectorShuffle(Value* v1, Value* v2,
     if (tmp > 31) {
       return fail("shuffle index out of range");
     }
-    selectMask->bytes[i] = tmp;
+    byte = tmp;
   }
 
   if (!popWithType(ValType::V128, v2)) {
@@ -3174,8 +3174,8 @@ template <typename Policy>
 inline bool OpIter<Policy>::readV128Const(V128* value) {
   MOZ_ASSERT(Classify(op_) == OpKind::V128);
 
-  for (unsigned i = 0; i < 16; i++) {
-    if (!readFixedU8(&value->bytes[i])) {
+  for (unsigned char& byte : value->bytes) {
+    if (!readFixedU8(&byte)) {
       return fail("unable to read V128 constant");
     }
   }

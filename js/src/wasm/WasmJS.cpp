@@ -3694,8 +3694,8 @@ WasmExceptionObject* WasmExceptionObject::create(JSContext* cx,
                    MemoryUse::WasmExceptionTag);
 
   wasm::ValTypeVector* newValueTypes = js_new<ValTypeVector>();
-  for (uint32_t i = 0; i < type.length(); i++) {
-    if (!newValueTypes->append(type[i])) {
+  for (auto t : type) {
+    if (!newValueTypes->append(t)) {
       return nullptr;
     }
   }
