@@ -231,7 +231,7 @@ class StackMaps {
         }
         return 0;
       }
-      explicit Comparator(uint8_t* aTarget) : mTarget(aTarget) {}
+      explicit Comparator(const uint8_t* aTarget) : mTarget(aTarget) {}
       const uint8_t* mTarget;
     };
 

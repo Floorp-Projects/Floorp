@@ -1447,7 +1447,7 @@ size_t Instance::memoryMappedSize() const {
   return memory_->buffer().wasmMappedSize();
 }
 
-bool Instance::memoryAccessInGuardRegion(uint8_t* addr,
+bool Instance::memoryAccessInGuardRegion(const uint8_t* addr,
                                          unsigned numBytes) const {
   MOZ_ASSERT(numBytes > 0);
 
@@ -1465,7 +1465,8 @@ bool Instance::memoryAccessInGuardRegion(uint8_t* addr,
          lastByteOffset < memoryMappedSize();
 }
 
-bool Instance::memoryAccessInBounds(uint8_t* addr, unsigned numBytes) const {
+bool Instance::memoryAccessInBounds(const uint8_t* addr,
+                                    unsigned numBytes) const {
   MOZ_ASSERT(numBytes > 0 && numBytes <= sizeof(double));
 
   if (!metadata().usesMemory()) {
