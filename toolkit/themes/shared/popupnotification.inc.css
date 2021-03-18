@@ -7,7 +7,8 @@
 .popup-notification-header-container,
 .popup-notification-footer-container {
   display: flex;
-  max-width: calc(2 * var(--arrowpanel-padding) + 32px + 4px + 25em);
+  /** Padding + Icon width + border-radius + popup-notification-body-width **/
+  max-width: calc(2 * var(--arrowpanel-padding) + 32px + 4px + var(--popup-notification-body-width));
 }
 
 .popup-notification-body-container {
@@ -21,7 +22,7 @@
 }
 
 .popup-notification-body {
-  width: 25em;
+  width: var(--popup-notification-body-width);
 }
 
 .popup-notification-closebutton {
@@ -110,6 +111,10 @@
 
 /** PopupNotifications **/
 @supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
+popupnotification {
+  font: caption;
+}
+
 .panel-footer {
   justify-content: flex-end;
   margin-inline: 16px;

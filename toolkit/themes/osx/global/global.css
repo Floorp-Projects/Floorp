@@ -6,7 +6,6 @@
 
 :root {
   /* ::::: Variables ::::: */
-  --arrowpanel-padding: 16px;
   --default-arrowpanel-background: #fff;
   --default-arrowpanel-color: hsl(0,0%,10%);
   --default-arrowpanel-border-color: hsla(210,4%,10%,.05);
