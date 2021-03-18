@@ -521,9 +521,9 @@ WasmValueBox* WasmValueBox::create(JSContext* cx, HandleValue val) {
   return obj;
 }
 
-bool wasm::BoxAnyRef(JSContext* cx, HandleValue val, MutableHandleAnyRef addr) {
+bool wasm::BoxAnyRef(JSContext* cx, HandleValue val, MutableHandleAnyRef result) {
   if (val.isNull()) {
-    addr.set(AnyRef::null());
+    result.set(AnyRef::null());
     return true;
   }
 
@@ -531,13 +531,13 @@ bool wasm::BoxAnyRef(JSContext* cx, HandleValue val, MutableHandleAnyRef addr) {
     JSObject* obj = &val.toObject();
     MOZ_ASSERT(!obj->is<WasmValueBox>());
     MOZ_ASSERT(obj->compartment() == cx->compartment());
-    addr.set(AnyRef::fromJSObject(obj));
+    result.set(AnyRef::fromJSObject(obj));
     return true;
   }
 
   WasmValueBox* box = WasmValueBox::create(cx, val);
   if (!box) return false;
-  addr.set(AnyRef::fromJSObject(box));
+  result.set(AnyRef::fromJSObject(box));
   return true;
 }
 

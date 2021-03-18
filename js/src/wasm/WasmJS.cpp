@@ -3359,7 +3359,7 @@ void WasmGlobalObject::finalize(JSFreeOp* fop, JSObject* obj) {
 }
 
 /* static */
-WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal hval,
+WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal value,
                                            bool isMutable, HandleObject proto) {
   AutoSetNewObjectMetadata metadata(cx);
   RootedWasmGlobalObject obj(
@@ -3371,7 +3371,7 @@ WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal hval,
   MOZ_ASSERT(obj->isNewborn());
   MOZ_ASSERT(obj->isTenured(), "assumed by global.set post barriers");
 
-  GCPtrVal* val = js_new<GCPtrVal>(Val(hval.get().type()));
+  GCPtrVal* val = js_new<GCPtrVal>(Val(value.get().type()));
   if (!val) {
     ReportOutOfMemory(cx);
     return nullptr;
@@ -3381,7 +3381,7 @@ WasmGlobalObject* WasmGlobalObject::create(JSContext* cx, HandleVal hval,
 
   // It's simpler to initialize the cell after the object has been created,
   // to avoid needing to root the cell before the object creation.
-  obj->val() = hval.get();
+  obj->val() = value.get();
 
   MOZ_ASSERT(!obj->isNewborn());
 
