@@ -398,11 +398,12 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   static sRGBColor sAccentColorLight;
   static sRGBColor sAccentColorDark;
   static sRGBColor sAccentColorDarker;
+  static CSSIntCoord sHorizontalScrollbarHeight;
+  static CSSIntCoord sVerticalScrollbarWidth;
 
-  static void PrefChangedCallback(const char*, void*) {
-    RecomputeAccentColors();
-  }
+  static void PrefChangedCallback(const char*, void*) { LookAndFeelChanged(); }
   static void RecomputeAccentColors();
+  static void RecomputeScrollbarSizes();
 };
 
 #endif

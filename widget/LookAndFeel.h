@@ -335,6 +335,12 @@ class LookAndFeel {
      */
     GTKCSDMaximizeButtonPosition,
 
+    /** The vertical scrollbar width, in CSS pixels. */
+    SystemVerticalScrollbarWidth,
+
+    /** The horizontal scrollbar height, in CSS pixels. */
+    SystemHorizontalScrollbarHeight,
+
     /*
      * Not an ID; used to define the range of valid IDs.  Must be last.
      */
