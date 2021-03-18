@@ -48,7 +48,7 @@ add_task(async function test_login_item() {
 
   function waitForDelete() {
     let numLogins = Services.logins.countLogins("", "", "");
-    return BrowserTestUtils.waitForCondition(
+    return TestUtils.waitForCondition(
       () => Services.logins.countLogins("", "", "") < numLogins,
       "Error waiting for login deletion"
     );
