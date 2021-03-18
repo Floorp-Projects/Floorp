@@ -87,7 +87,7 @@ nsMenuItemX::nsMenuItemX(nsMenuX* aParent, const nsString& aLabel, EMenuItemType
     SetKeyEquiv();
   }
 
-  mIcon = MakeUnique<nsMenuItemIconX>(this, mContent, mNativeMenuItem);
+  mIcon = MakeUnique<nsMenuItemIconX>(this, mNativeMenuItem);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -349,5 +349,5 @@ void nsMenuItemX::SetupIcon() {
     return;
   }
 
-  mIcon->SetupIcon();
+  mIcon->SetupIcon(mContent);
 }
