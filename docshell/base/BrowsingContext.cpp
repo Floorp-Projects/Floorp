@@ -716,6 +716,10 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
                             "local attach in discarded window");
       MOZ_DIAGNOSTIC_ASSERT(!GetParent()->IsDiscarded(),
                             "local attach call in discarded bc");
+      MOZ_DIAGNOSTIC_ASSERT(mParentWindow->GetWindowGlobalChild(),
+                            "local attach call with oop parent window");
+      MOZ_DIAGNOSTIC_ASSERT(mParentWindow->GetWindowGlobalChild()->CanSend(),
+                            "local attach call with dead parent window");
     }
 
     mParentWindow->AppendChildBrowsingContext(this);
