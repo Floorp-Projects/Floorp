@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsMenuUtilsX.h"
+#include <unordered_set>
 
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
@@ -268,6 +269,36 @@ NSMenuItem* nsMenuUtilsX::NativeMenuItemWithLocation(NSMenu* aRootMenu, NSString
 
   return nil;
 }
+
+static void CheckNativeMenuConsistencyImpl(NSMenu* aMenu, std::unordered_set<void*>& aSeenObjects);
+
+static void CheckNativeMenuItemConsistencyImpl(NSMenuItem* aMenuItem,
+                                               std::unordered_set<void*>& aSeenObjects) {
+  bool inserted = aSeenObjects.insert(aMenuItem).second;
+  MOZ_RELEASE_ASSERT(inserted, "Duplicate NSMenuItem object in native menu structure");
+  if (aMenuItem.hasSubmenu) {
+    CheckNativeMenuConsistencyImpl(aMenuItem.submenu, aSeenObjects);
+  }
+}
+
+static void CheckNativeMenuConsistencyImpl(NSMenu* aMenu, std::unordered_set<void*>& aSeenObjects) {
+  bool inserted = aSeenObjects.insert(aMenu).second;
+  MOZ_RELEASE_ASSERT(inserted, "Duplicate NSMenu object in native menu structure");
+  for (NSMenuItem* item in aMenu.itemArray) {
+    CheckNativeMenuItemConsistencyImpl(item, aSeenObjects);
+  }
+}
+
+void nsMenuUtilsX::CheckNativeMenuConsistency(NSMenu* aMenu) {
+  std::unordered_set<void*> seenObjects;
+  CheckNativeMenuConsistencyImpl(aMenu, seenObjects);
+}
+
+void nsMenuUtilsX::CheckNativeMenuConsistency(NSMenuItem* aMenuItem) {
+  std::unordered_set<void*> seenObjects;
+  CheckNativeMenuItemConsistencyImpl(aMenuItem, seenObjects);
+}
+
 static void DumpNativeNSMenuItemImpl(NSMenuItem* aItem, uint32_t aIndent,
                                      const Maybe<int>& aIndexInParentMenu);
 

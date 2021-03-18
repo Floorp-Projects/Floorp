@@ -34,6 +34,11 @@ int CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuObjectX* aChild)
 NSMenuItem* NativeMenuItemWithLocation(NSMenu* aRootMenu, NSString* aLocationString,
                                        bool aIsMenuBar);
 
+// Traverse the menu tree and check that there are no cycles or NSMenu(Item) objects that are used
+// more than once. If inconsistencies are found, these functions crash the process.
+void CheckNativeMenuConsistency(NSMenu* aMenu);
+void CheckNativeMenuConsistency(NSMenuItem* aMenuItem);
+
 // Print out debugging information about the native menu tree structure.
 void DumpNativeMenu(NSMenu* aMenu);
 void DumpNativeMenuItem(NSMenuItem* aMenuItem);
