@@ -18,6 +18,7 @@
 #include "mozilla/TextEditor.h"
 #include "mozilla/StaticPrefs_html5.h"
 #include "mozilla/StaticPrefs_layout.h"
+#include "mozilla/StaticPrefs_accessibility.h"
 
 #include "nscore.h"
 #include "nsGenericHTMLElement.h"
@@ -1589,6 +1590,21 @@ bool nsGenericHTMLElement::LegacyTouchAPIEnabled(JSContext* aCx,
   return TouchEvent::LegacyAPIEnabled(aCx, aGlobal);
 }
 
+bool nsGenericHTMLElement::IsFormControlDefaultFocusable(
+    bool aWithMouse) const {
+  if (!aWithMouse) {
+    return true;
+  }
+  switch (StaticPrefs::accessibility_mouse_focuses_formcontrol()) {
+    case 0:
+      return false;
+    case 1:
+      return true;
+    default:
+      return !IsInChromeDocument();
+  }
+}
+
 //----------------------------------------------------------------------
 
 nsGenericHTMLFormElement::nsGenericHTMLFormElement(
@@ -1962,10 +1978,7 @@ bool nsGenericHTMLFormElement::IsHTMLFocusable(bool aWithMouse,
     return true;
   }
 
-#ifdef XP_MACOSX
-  *aIsFocusable = (!aWithMouse || nsFocusManager::sMouseFocusesFormControl) &&
-                  *aIsFocusable;
-#endif
+  *aIsFocusable = *aIsFocusable && IsFormControlDefaultFocusable(aWithMouse);
   return false;
 }
 

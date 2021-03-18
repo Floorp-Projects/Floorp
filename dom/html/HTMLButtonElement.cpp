@@ -118,11 +118,7 @@ bool HTMLButtonElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
     return true;
   }
 
-  *aIsFocusable =
-#ifdef XP_MACOSX
-      (!aWithMouse || nsFocusManager::sMouseFocusesFormControl) &&
-#endif
-      !IsDisabled();
+  *aIsFocusable = IsFormControlDefaultFocusable(aWithMouse) && !IsDisabled();
 
   return false;
 }

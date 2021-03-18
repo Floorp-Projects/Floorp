@@ -128,7 +128,7 @@ function* tests() {
   // Release.
   sendMouseEvent("mouseup", label);
   yield undefined;
-  var focusOnMouse = navigator.platform.indexOf("Mac") != 0 || SpecialPowers.getBoolPref("accessibility.mouse_focuses_formcontrol");
+  var focusOnMouse = SpecialPowers.getIntPref("accessibility.mouse_focuses_formcontrol") > 0;
   compareSnapshots_(focusOnMouse ? normalFocusedButtonCanvas : normalButtonCanvas,
                     currentSnapshot, true, "Releasing the mouse over the label should have unpressed" +
                                             (focusOnMouse ? " (and focused)" : "") + " the button.");
