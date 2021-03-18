@@ -23,8 +23,7 @@
   skin/classic/mozapps/aboutProfiles.css                     (../../shared/aboutProfiles.css)
 #endif
   skin/classic/mozapps/aboutServiceWorkers.css               (../../shared/aboutServiceWorkers.css)
-  skin/classic/mozapps/profile/profileDowngrade.css          (../../shared/profile/profileDowngrade.css)
-  skin/classic/mozapps/profile/information.svg               (../../shared/profile/information.svg)
+  skin/classic/mozapps/profileDowngrade.css                  (../../shared/profileDowngrade.css)
 
 % override chrome://mozapps/skin/extensions/category-extensions.svg       chrome://mozapps/skin/extensions/extensionGeneric.svg
 % override chrome://mozapps/skin/extensions/category-languages.svg        chrome://mozapps/skin/extensions/localeGeneric.svg
