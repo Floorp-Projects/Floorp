@@ -165,14 +165,12 @@ NS_IMPL_CYCLE_COLLECTION_WEAK(nsFocusManager, mActiveWindow,
                               mWindowBeingLowered, mDelayedBlurFocusEvents)
 
 StaticRefPtr<nsFocusManager> nsFocusManager::sInstance;
-bool nsFocusManager::sMouseFocusesFormControl = false;
 bool nsFocusManager::sTestMode = false;
 uint64_t nsFocusManager::sFocusActionCounter = 0;
 
-static const char* kObservedPrefs[] = {
-    "accessibility.browsewithcaret", "accessibility.tabfocus_applies_to_xul",
-    "accessibility.mouse_focuses_formcontrol", "focusmanager.testmode",
-    nullptr};
+static const char* kObservedPrefs[] = {"accessibility.browsewithcaret",
+                                       "accessibility.tabfocus_applies_to_xul",
+                                       "focusmanager.testmode", nullptr};
 
 nsFocusManager::nsFocusManager()
     : mActionIdForActiveBrowsingContextInContent(0),
@@ -197,9 +195,6 @@ nsresult nsFocusManager::Init() {
   nsIContent::sTabFocusModelAppliesToXUL =
       Preferences::GetBool("accessibility.tabfocus_applies_to_xul",
                            nsIContent::sTabFocusModelAppliesToXUL);
-
-  sMouseFocusesFormControl =
-      Preferences::GetBool("accessibility.mouse_focuses_formcontrol", false);
 
   sTestMode = Preferences::GetBool("focusmanager.testmode", false);
 
@@ -230,9 +225,6 @@ void nsFocusManager::PrefChanged(const char* aPref) {
     nsIContent::sTabFocusModelAppliesToXUL =
         Preferences::GetBool("accessibility.tabfocus_applies_to_xul",
                              nsIContent::sTabFocusModelAppliesToXUL);
-  } else if (pref.EqualsLiteral("accessibility.mouse_focuses_formcontrol")) {
-    sMouseFocusesFormControl =
-        Preferences::GetBool("accessibility.mouse_focuses_formcontrol", false);
   } else if (pref.EqualsLiteral("focusmanager.testmode")) {
     sTestMode = Preferences::GetBool("focusmanager.testmode", false);
   }

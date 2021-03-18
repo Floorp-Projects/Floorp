@@ -295,8 +295,6 @@ class nsFocusManager final : public nsIFocusManager,
    */
   void NotifyOfReFocus(nsIContent& aContent);
 
-  static bool sMouseFocusesFormControl;
-
   static void MarkUncollectableForCCGeneration(uint32_t aGeneration);
 
   struct BlurredElementInfo {
