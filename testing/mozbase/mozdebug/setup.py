@@ -6,7 +6,7 @@ from __future__ import absolute_import
 
 from setuptools import setup
 
-PACKAGE_VERSION = "0.2.0"
+PACKAGE_VERSION = "0.3.0"
 DEPS = ["mozinfo"]
 
 
@@ -18,7 +18,7 @@ setup(
     long_description="see https://firefox-source-docs.mozilla.org/mozbase/index.html",
     classifiers=[
         "Programming Language :: Python :: 2.7",
-        "Programming Language :: Python :: 2 :: Only",
+        "Programming Language :: Python :: 3.6",
     ],
     # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
     keywords="mozilla",
