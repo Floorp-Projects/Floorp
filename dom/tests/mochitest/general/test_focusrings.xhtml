@@ -55,7 +55,7 @@ function runTest()
   }
 
   // make sure that a focus ring appears on the focused button
-  if (isMac) {
+  if (kIsMac) {
     var focusedButton = $("b3");
     ok(compareSnapshots(snapShot(focusedButton), snapShot($("b2")), true)[0], "unfocused shows no ring");
     focusedButton.focus();
@@ -176,7 +176,7 @@ function testHTMLElements(list, expectedNoRingsOnWin) {
       childdoc.activeElement.blur();
 
     ringSize = mouseRingSize;
-    if (isMac && !shouldFocus && elem.localName != "a") {
+    if (kIsMac && !shouldFocus && elem.localName != "a") {
       ringSize = "1px";
     }
 
