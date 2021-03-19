@@ -13,6 +13,7 @@ import mozilla.components.service.glean.config.Configuration
 import mozilla.components.service.glean.net.ConceptFetchHttpUploader
 import mozilla.components.service.nimbus.Nimbus
 import mozilla.components.service.nimbus.NimbusApi
+import mozilla.components.service.nimbus.NimbusAppInfo
 import mozilla.components.service.nimbus.NimbusServerSettings
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
@@ -82,8 +83,14 @@ class GleanApplication : Application() {
         RustLog.enable()
         RustHttpConfig.setClient(lazy { HttpURLConnectionClient() })
         val url = Uri.parse(getString(R.string.nimbus_default_endpoint))
-        nimbus = Nimbus(this,
-            NimbusServerSettings(url)
+        val appInfo = NimbusAppInfo(
+            appName = "samples-glean",
+            channel = "samples"
+        )
+        nimbus = Nimbus(
+            context = this,
+            appInfo = appInfo,
+            server = NimbusServerSettings(url)
         ).also { nimbus ->
             if (isFirstRun) {
                 // This file is bundled with the app, but derived from the server at build time.

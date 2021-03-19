@@ -178,11 +178,38 @@ private val loggingErrorReporter: ErrorReporter = { e: Throwable ->
 }
 
 /**
+ * This class represents the client application name and channel for filtering purposes
+ */
+data class NimbusAppInfo(
+    /**
+     * The app name, used for experiment filtering purposes so that only the intended application
+     * is targeted for the experiment.
+     *
+     * Examples: "fenix", "focus".
+     *
+     * For Mozilla products, this is defined in the telemetry system. For more context on where the
+     * app_name comes for Mozilla products from see:
+     * https://probeinfo.telemetry.mozilla.org/v2/glean/app-listings
+     * and
+     * https://github.com/mozilla/probe-scraper/blob/master/repositories.yaml
+     */
+    val appName: String,
+    /**
+     * The app channel used for experiment filtering purposes, so that only the intended application
+     * channel is targeted for the experiment.
+     *
+     * Examples: "nightly", "beta", "release"
+     */
+    val channel: String
+)
+
+/**
  * A implementation of the [NimbusApi] interface backed by the Nimbus SDK.
  */
-@Suppress("LargeClass")
+@Suppress("LargeClass", "LongParameterList")
 class Nimbus(
     private val context: Context,
+    private val appInfo: NimbusAppInfo,
     server: NimbusServerSettings?,
     private val delegate: Observable<NimbusApi.Observer> = ObserverRegistry(),
     private val errorReporter: ErrorReporter = loggingErrorReporter
@@ -471,6 +498,8 @@ class Nimbus(
 
         return AppContext(
             appId = context.packageName,
+            appName = appInfo.appName,
+            channel = appInfo.channel,
             androidSdkVersion = Build.VERSION.SDK_INT.toString(),
             appBuild = packageInfo?.let { PackageInfoCompat.getLongVersionCode(it).toString() },
             appVersion = packageInfo?.versionName,

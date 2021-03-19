@@ -34,7 +34,16 @@ class NimbusTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext()
 
-    private val nimbus = Nimbus(context, NimbusServerSettings(Uri.parse("https://example.com")))
+    private val appInfo = NimbusAppInfo(
+        appName = "NimbusUnitTest",
+        channel = "test"
+    )
+
+    private val nimbus = Nimbus(
+        context = context,
+        appInfo = appInfo,
+        server = NimbusServerSettings(Uri.parse("https://example.com"))
+    )
 
     @get:Rule
     val gleanRule = GleanTestRule(context)
@@ -150,7 +159,9 @@ class NimbusTest {
               ],
               "probeSets": [],
               "startDate": null,
-              "application": "mozilla.components.service.nimbus.test",
+              "appName": "NimbusUnitTest",
+              "appId": "mozilla.components.service.nimbus.test",
+              "channel": "test",
               "bucketConfig": {
                 "count": 10000,
                 "start": 0,

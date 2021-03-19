@@ -101,7 +101,7 @@ open class MainActivity : AppCompatActivity(), NimbusApi.Observer {
     @MainThread
     private fun configureButton() {
         val nimbus = GleanApplication.nimbus
-        val branch = nimbus.getExperimentBranch("test-color")
+        val branch = nimbus.getExperimentBranch("sample-experiment-feature")
 
         val color = when (branch) {
             "blue" -> Color.BLUE
