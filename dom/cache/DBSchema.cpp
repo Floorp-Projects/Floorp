@@ -21,6 +21,7 @@
 #include "mozilla/net/MozURL.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/StaticPrefs_extensions.h"
+#include "mozilla/Telemetry.h"
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "mozStorageHelper.h"
@@ -438,6 +439,33 @@ class MOZ_RAII AutoDisableForeignKeyChecking {
   bool mForeignKeyCheckingDisabled;
 };
 
+nsresult IntegrityCheck(mozIStorageConnection& aConn) {
+  // CACHE_INTEGRITY_CHECK_COUNT is designed to report at most once.
+  static bool reported = false;
+  if (reported) {
+    return NS_OK;
+  }
+
+  CACHE_TRY_INSPECT(const auto& stmt,
+                    quota::CreateAndExecuteSingleStepStatement(
+                        aConn,
+                        "SELECT COUNT(*) FROM pragma_integrity_check() "
+                        "WHERE integrity_check != 'ok';"_ns));
+
+  CACHE_TRY_INSPECT(const auto& result,
+                    MOZ_TO_RESULT_INVOKE_TYPED(nsString, *stmt, GetString, 0));
+
+  nsresult rv;
+  const uint32_t count = result.ToInteger(&rv);
+  CACHE_TRY(OkIf(NS_SUCCEEDED(rv)), rv);
+
+  Telemetry::ScalarSet(Telemetry::ScalarID::CACHE_INTEGRITY_CHECK_COUNT, count);
+
+  reported = true;
+
+  return NS_OK;
+}
+
 nsresult CreateOrMigrateSchema(mozIStorageConnection& aConn) {
   MOZ_ASSERT(!NS_IsMainThread());
 
@@ -491,7 +519,14 @@ nsresult CreateOrMigrateSchema(mozIStorageConnection& aConn) {
     // if a new migration is incorrect by fast failing on the corruption.
     // Unfortunately, this must be performed outside of the transaction.
 
-    CACHE_TRY(aConn.ExecuteSimpleSQL("VACUUM"_ns));
+    CACHE_TRY(ToResult(aConn.ExecuteSimpleSQL("VACUUM"_ns))
+                  .orElse([&aConn](const nsresult rv) -> Result<Ok, nsresult> {
+                    if (rv == NS_ERROR_STORAGE_CONSTRAINT) {
+                      CACHE_TRY(IntegrityCheck(aConn));
+                    }
+
+                    return Err(rv);
+                  }));
   }
 
   return NS_OK;
