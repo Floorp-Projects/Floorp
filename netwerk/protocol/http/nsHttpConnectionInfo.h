@@ -139,7 +139,13 @@ class nsHttpConnectionInfo final : public ARefBase {
   }
   bool GetInsecureScheme() const { return mHashKey.CharAt(4) == 'I'; }
 
-  void SetNoSpdy(bool aNoSpdy) { mHashKey.SetCharAt(aNoSpdy ? 'X' : '.', 5); }
+  void SetNoSpdy(bool aNoSpdy) {
+    mHashKey.SetCharAt(aNoSpdy ? 'X' : '.', 5);
+    if (aNoSpdy && mNPNToken == "h2"_ns) {
+      mNPNToken.Truncate();
+      RebuildHashKey();
+    }
+  }
   bool GetNoSpdy() const { return mHashKey.CharAt(5) == 'X'; }
 
   void SetBeConservative(bool aBeConservative) {
