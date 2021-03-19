@@ -52,10 +52,8 @@ add_task(async function test_parse_additional_section() {
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
 
-  await trrServer.registerDoHAnswers(
-    "something.foo",
-    "A",
-    [
+  await trrServer.registerDoHAnswers("something.foo", "A", {
+    answers: [
       {
         name: "something.foo",
         ttl: 55,
@@ -64,7 +62,7 @@ add_task(async function test_parse_additional_section() {
         data: "1.2.3.4",
       },
     ],
-    [
+    additionals: [
       {
         name: "else.foo",
         ttl: 55,
@@ -72,16 +70,14 @@ add_task(async function test_parse_additional_section() {
         flush: false,
         data: "2.3.4.5",
       },
-    ]
-  );
+    ],
+  });
 
   await new TRRDNSListener("something.foo", { expectedAnswer: "1.2.3.4" });
   await new TRRDNSListener("else.foo", { expectedAnswer: "2.3.4.5" });
 
-  await trrServer.registerDoHAnswers(
-    "a.foo",
-    "A",
-    [
+  await trrServer.registerDoHAnswers("a.foo", "A", {
+    answers: [
       {
         name: "a.foo",
         ttl: 55,
@@ -90,7 +86,7 @@ add_task(async function test_parse_additional_section() {
         data: "1.2.3.4",
       },
     ],
-    [
+    additionals: [
       {
         name: "b.foo",
         ttl: 55,
@@ -98,17 +94,19 @@ add_task(async function test_parse_additional_section() {
         flush: false,
         data: "2.3.4.5",
       },
-    ]
-  );
-  await trrServer.registerDoHAnswers("b.foo", "A", [
-    {
-      name: "b.foo",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "3.4.5.6",
-    },
-  ]);
+    ],
+  });
+  await trrServer.registerDoHAnswers("b.foo", "A", {
+    answers: [
+      {
+        name: "b.foo",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "3.4.5.6",
+      },
+    ],
+  });
 
   let req1 = new TRRDNSListener("a.foo", { expectedAnswer: "1.2.3.4" });
 
@@ -122,10 +120,8 @@ add_task(async function test_parse_additional_section() {
   await Promise.all([req1, req2]);
 
   // IPv6 additional
-  await trrServer.registerDoHAnswers(
-    "xyz.foo",
-    "A",
-    [
+  await trrServer.registerDoHAnswers("xyz.foo", "A", {
+    answers: [
       {
         name: "xyz.foo",
         ttl: 55,
@@ -134,7 +130,7 @@ add_task(async function test_parse_additional_section() {
         data: "1.2.3.4",
       },
     ],
-    [
+    additionals: [
       {
         name: "abc.foo",
         ttl: 55,
@@ -142,17 +138,15 @@ add_task(async function test_parse_additional_section() {
         flush: false,
         data: "::1:2:3:4",
       },
-    ]
-  );
+    ],
+  });
 
   await new TRRDNSListener("xyz.foo", { expectedAnswer: "1.2.3.4" });
   await new TRRDNSListener("abc.foo", { expectedAnswer: "::1:2:3:4" });
 
   // IPv6 additional
-  await trrServer.registerDoHAnswers(
-    "ipv6.foo",
-    "AAAA",
-    [
+  await trrServer.registerDoHAnswers("ipv6.foo", "AAAA", {
+    answers: [
       {
         name: "ipv6.foo",
         ttl: 55,
@@ -161,7 +155,7 @@ add_task(async function test_parse_additional_section() {
         data: "2001::a:b:c:d",
       },
     ],
-    [
+    additionals: [
       {
         name: "def.foo",
         ttl: 55,
@@ -169,17 +163,15 @@ add_task(async function test_parse_additional_section() {
         flush: false,
         data: "::a:b:c:d",
       },
-    ]
-  );
+    ],
+  });
 
   await new TRRDNSListener("ipv6.foo", { expectedAnswer: "2001::a:b:c:d" });
   await new TRRDNSListener("def.foo", { expectedAnswer: "::a:b:c:d" });
 
   // IPv6 additional
-  await trrServer.registerDoHAnswers(
-    "ipv6b.foo",
-    "AAAA",
-    [
+  await trrServer.registerDoHAnswers("ipv6b.foo", "AAAA", {
+    answers: [
       {
         name: "ipv6b.foo",
         ttl: 55,
@@ -188,7 +180,7 @@ add_task(async function test_parse_additional_section() {
         data: "2001::a:b:c:d",
       },
     ],
-    [
+    additionals: [
       {
         name: "qqqq.foo",
         ttl: 55,
@@ -196,17 +188,15 @@ add_task(async function test_parse_additional_section() {
         flush: false,
         data: "9.8.7.6",
       },
-    ]
-  );
+    ],
+  });
 
   await new TRRDNSListener("ipv6b.foo", { expectedAnswer: "2001::a:b:c:d" });
   await new TRRDNSListener("qqqq.foo", { expectedAnswer: "9.8.7.6" });
 
   // Multiple IPs and multiple additional records
-  await trrServer.registerDoHAnswers(
-    "multiple.foo",
-    "A",
-    [
+  await trrServer.registerDoHAnswers("multiple.foo", "A", {
+    answers: [
       {
         name: "multiple.foo",
         ttl: 55,
@@ -215,7 +205,7 @@ add_task(async function test_parse_additional_section() {
         data: "9.9.9.9",
       },
     ],
-    [
+    additionals: [
       {
         // Should be ignored, because it should be in the answer section
         name: "multiple.foo",
@@ -246,8 +236,8 @@ add_task(async function test_parse_additional_section() {
         flush: false,
         data: "1.2.3.4",
       },
-    ]
-  );
+    ],
+  });
 
   let [, inRecord] = await new TRRDNSListener("multiple.foo", {
     expectedAnswer: "9.9.9.9",
@@ -275,21 +265,21 @@ add_task(async function test_parse_additional_section() {
 });
 
 add_task(async function test_additional_after_resolve() {
-  await trrServer.registerDoHAnswers("first.foo", "A", [
-    {
-      name: "first.foo",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "3.4.5.6",
-    },
-  ]);
+  await trrServer.registerDoHAnswers("first.foo", "A", {
+    answers: [
+      {
+        name: "first.foo",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "3.4.5.6",
+      },
+    ],
+  });
   await new TRRDNSListener("first.foo", { expectedAnswer: "3.4.5.6" });
 
-  await trrServer.registerDoHAnswers(
-    "second.foo",
-    "A",
-    [
+  await trrServer.registerDoHAnswers("second.foo", "A", {
+    answers: [
       {
         name: "second.foo",
         ttl: 55,
@@ -298,7 +288,7 @@ add_task(async function test_additional_after_resolve() {
         data: "1.2.3.4",
       },
     ],
-    [
+    additionals: [
       {
         name: "first.foo",
         ttl: 55,
@@ -306,8 +296,8 @@ add_task(async function test_additional_after_resolve() {
         flush: false,
         data: "2.3.4.5",
       },
-    ]
-  );
+    ],
+  });
 
   await new TRRDNSListener("second.foo", { expectedAnswer: "1.2.3.4" });
   await new TRRDNSListener("first.foo", { expectedAnswer: "2.3.4.5" });

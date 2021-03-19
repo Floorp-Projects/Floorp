@@ -263,29 +263,33 @@ add_task(async function testFallback() {
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
 
-  await trrServer.registerDoHAnswers("test.fallback.com", "A", [
-    {
-      name: "test.fallback.com",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "127.0.0.1",
-    },
-  ]);
-  // Use a wrong port number 8888, so this connection will be refused.
-  await trrServer.registerDoHAnswers("test.fallback.com", "HTTPS", [
-    {
-      name: "test.fallback.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 1,
-        name: "foo.example.com",
-        values: [{ key: "port", value: 8888 }],
+  await trrServer.registerDoHAnswers("test.fallback.com", "A", {
+    answers: [
+      {
+        name: "test.fallback.com",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "127.0.0.1",
       },
-    },
-  ]);
+    ],
+  });
+  // Use a wrong port number 8888, so this connection will be refused.
+  await trrServer.registerDoHAnswers("test.fallback.com", "HTTPS", {
+    answers: [
+      {
+        name: "test.fallback.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "foo.example.com",
+          values: [{ key: "port", value: 8888 }],
+        },
+      },
+    ],
+  });
 
   let listener = new DNSListener();
 

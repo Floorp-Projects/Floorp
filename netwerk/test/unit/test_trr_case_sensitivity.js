@@ -52,90 +52,106 @@ add_task(async function test_trr_casing() {
 
   // This CNAME response goes to B.example.com (uppercased)
   // It should be lowercased by the code
-  await trrServer.registerDoHAnswers("a.example.com", "A", [
-    {
-      name: "a.example.com",
-      ttl: 55,
-      type: "CNAME",
-      flush: false,
-      data: "B.example.com",
-    },
-  ]);
+  await trrServer.registerDoHAnswers("a.example.com", "A", {
+    answers: [
+      {
+        name: "a.example.com",
+        ttl: 55,
+        type: "CNAME",
+        flush: false,
+        data: "B.example.com",
+      },
+    ],
+  });
   // Like in bug 1635566, the response for B.example.com will be lowercased
   // by the server too -> b.example.com
   // Requesting this resource would case the browser to reject the resource
-  await trrServer.registerDoHAnswers("B.example.com", "A", [
-    {
-      name: "b.example.com",
-      ttl: 55,
-      type: "CNAME",
-      flush: false,
-      data: "c.example.com",
-    },
-  ]);
+  await trrServer.registerDoHAnswers("B.example.com", "A", {
+    answers: [
+      {
+        name: "b.example.com",
+        ttl: 55,
+        type: "CNAME",
+        flush: false,
+        data: "c.example.com",
+      },
+    ],
+  });
 
   // The browser should request this one
-  await trrServer.registerDoHAnswers("b.example.com", "A", [
-    {
-      name: "b.example.com",
-      ttl: 55,
-      type: "CNAME",
-      flush: false,
-      data: "c.example.com",
-    },
-  ]);
+  await trrServer.registerDoHAnswers("b.example.com", "A", {
+    answers: [
+      {
+        name: "b.example.com",
+        ttl: 55,
+        type: "CNAME",
+        flush: false,
+        data: "c.example.com",
+      },
+    ],
+  });
   // Finally, it gets an IP
-  await trrServer.registerDoHAnswers("c.example.com", "A", [
-    {
-      name: "c.example.com",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "1.2.3.4",
-    },
-  ]);
+  await trrServer.registerDoHAnswers("c.example.com", "A", {
+    answers: [
+      {
+        name: "c.example.com",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "1.2.3.4",
+      },
+    ],
+  });
   await new TRRDNSListener("a.example.com", { expectedAnswer: "1.2.3.4" });
 
-  await trrServer.registerDoHAnswers("a.test.com", "A", [
-    {
-      name: "a.test.com",
-      ttl: 55,
-      type: "CNAME",
-      flush: false,
-      data: "B.test.com",
-    },
-  ]);
+  await trrServer.registerDoHAnswers("a.test.com", "A", {
+    answers: [
+      {
+        name: "a.test.com",
+        ttl: 55,
+        type: "CNAME",
+        flush: false,
+        data: "B.test.com",
+      },
+    ],
+  });
   // We try this again, this time we explicitly make sure this resource
   // is never used
-  await trrServer.registerDoHAnswers("B.test.com", "A", [
-    {
-      name: "B.test.com",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "9.9.9.9",
-    },
-  ]);
-  await trrServer.registerDoHAnswers("b.test.com", "A", [
-    {
-      name: "b.test.com",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "8.8.8.8",
-    },
-  ]);
+  await trrServer.registerDoHAnswers("B.test.com", "A", {
+    answers: [
+      {
+        name: "B.test.com",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "9.9.9.9",
+      },
+    ],
+  });
+  await trrServer.registerDoHAnswers("b.test.com", "A", {
+    answers: [
+      {
+        name: "b.test.com",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "8.8.8.8",
+      },
+    ],
+  });
   await new TRRDNSListener("a.test.com", { expectedAnswer: "8.8.8.8" });
 
-  await trrServer.registerDoHAnswers("CAPITAL.COM", "A", [
-    {
-      name: "capital.com",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "2.2.2.2",
-    },
-  ]);
+  await trrServer.registerDoHAnswers("CAPITAL.COM", "A", {
+    answers: [
+      {
+        name: "capital.com",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "2.2.2.2",
+      },
+    ],
+  });
   await new TRRDNSListener("CAPITAL.COM", { expectedAnswer: "2.2.2.2" });
   await new TRRDNSListener("CAPITAL.COM.", { expectedAnswer: "2.2.2.2" });
 
