@@ -9032,6 +9032,12 @@
   value: 60
   mirror: always
 
+# The uri indicates where to get ODoHConfigs.
+- name: network.trr.odoh.configs_uri
+  type: String
+  value: ""
+  mirror: never
+
 # Allow the network changed event to get sent when a network topology or setup
 # change is noticed while running.
 - name: network.notify.changed

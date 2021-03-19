@@ -105,7 +105,7 @@ class ODoHDNSPacket final : public DNSPacket {
   ODoHDNSPacket() = default;
   virtual ~ODoHDNSPacket();
 
-  static bool ParseODoHConfigs(const nsCString& aRawODoHConfig,
+  static bool ParseODoHConfigs(Span<const uint8_t> aData,
                                nsTArray<ObliviousDoHConfig>& aOut);
 
   virtual nsresult EncodeRequest(nsCString& aBody, const nsACString& aHost,

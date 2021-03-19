@@ -58,7 +58,7 @@ class HttpBaseChannel;
 class HttpHandlerInitArgs;
 class HttpTransactionShell;
 class AltSvcMapping;
-class TRR;
+class DNSUtils;
 class TRRServiceChannel;
 class SocketProcessChild;
 
@@ -530,9 +530,10 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   // thread. Updates mSpeculativeConnectEnabled when done.
   void MaybeEnableSpeculativeConnect();
 
-  // We only allow TRR and TRRServiceChannel itself to create TRRServiceChannel.
+  // We only allow DNSUtils and TRRServiceChannel itself to create
+  // TRRServiceChannel.
   friend class TRRServiceChannel;
-  friend class TRR;
+  friend class DNSUtils;
   nsresult CreateTRRServiceChannel(nsIURI* uri, nsIProxyInfo* givenProxyInfo,
                                    uint32_t proxyResolveFlags, nsIURI* proxyURI,
                                    nsILoadInfo* aLoadInfo, nsIChannel** result);

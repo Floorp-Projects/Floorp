@@ -977,7 +977,6 @@ function handleRequest(req, res) {
       payload = Buffer.concat([payload, chunk]);
     });
     req.on("end", function finishedData() {
-      let packet = dnsPacket.decode(payload);
       let answers = [];
       let odohconfig;
       if (u.query.invalid) {
@@ -1007,37 +1006,49 @@ function handleRequest(req, res) {
       } else {
         odohconfig = odoh.get_odoh_config();
       }
-      var b64encoded = Buffer.from(odohconfig).toString("base64");
-      if (packet.questions[0].type == "HTTPS") {
-        answers.push({
-          name: packet.questions[0].name,
-          type: packet.questions[0].type,
-          ttl: u.query.ttl ? u.query.ttl : 55,
-          class: "IN",
-          flush: false,
-          data: {
-            priority: 1,
+
+      if (u.query.downloadFrom === "http") {
+        res.writeHead(200);
+        res.write(odohconfig);
+        res.end("");
+      } else {
+        var b64encoded = Buffer.from(odohconfig).toString("base64");
+        let packet = dnsPacket.decode(payload);
+        if (packet.questions[0].type == "HTTPS") {
+          answers.push({
             name: packet.questions[0].name,
-            values: [
-              { key: "odohconfig", value: b64encoded, needBase64Decode: true },
-            ],
-          },
+            type: packet.questions[0].type,
+            ttl: u.query.ttl ? u.query.ttl : 55,
+            class: "IN",
+            flush: false,
+            data: {
+              priority: 1,
+              name: packet.questions[0].name,
+              values: [
+                {
+                  key: "odohconfig",
+                  value: b64encoded,
+                  needBase64Decode: true,
+                },
+              ],
+            },
+          });
+        }
+
+        let buf = dnsPacket.encode({
+          type: "response",
+          id: packet.id,
+          flags: dnsPacket.RECURSION_DESIRED,
+          questions: packet.questions,
+          answers,
         });
+
+        res.setHeader("Content-Type", "application/dns-message");
+        res.setHeader("Content-Length", buf.length);
+        res.writeHead(200);
+        res.write(buf);
+        res.end("");
       }
-
-      let buf = dnsPacket.encode({
-        type: "response",
-        id: packet.id,
-        flags: dnsPacket.RECURSION_DESIRED,
-        questions: packet.questions,
-        answers,
-      });
-
-      res.setHeader("Content-Type", "application/dns-message");
-      res.setHeader("Content-Length", buf.length);
-      res.writeHead(200);
-      res.write(buf);
-      res.end("");
     });
     return;
   } else if (u.pathname === "/odoh") {

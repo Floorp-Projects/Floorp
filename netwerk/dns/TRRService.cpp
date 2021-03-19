@@ -21,6 +21,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/TelemetryComms.h"
 #include "mozilla/Tokenizer.h"
 #include "mozilla/net/rust_helper.h"
 
