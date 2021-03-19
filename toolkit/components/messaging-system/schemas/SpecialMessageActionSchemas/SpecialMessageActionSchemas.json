@@ -326,6 +326,18 @@
           "properties": {
             "type": {
               "type": "string",
+              "enum": ["PIN_FIREFOX_TO_TASKBAR"]
+            }
+          },
+          "required": ["type"],
+          "additionalProperties": false,
+          "description": "Pin the app to taskbar"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "type": "string",
               "enum": ["SET_DEFAULT_BROWSER"]
             }
           },
