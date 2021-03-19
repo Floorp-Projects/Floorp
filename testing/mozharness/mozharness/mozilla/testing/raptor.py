@@ -620,6 +620,7 @@ class Raptor(
         self.browsertime_visualmetrics = False
         self.browsertime_video = False
         self.enable_marionette_trace = self.config.get("enable_marionette_trace")
+        self.browser_cycles = self.config.get("browser_cycles")
 
         for (arg,), details in Raptor.browsertime_options:
             # Allow overriding defaults on the `./mach raptor-test ...` command-line.
@@ -899,6 +900,10 @@ class Raptor(
             )
         if self.config.get("enable_marionette_trace", False):
             options.extend(["--enable-marionette-trace"])
+        if self.config.get("browser_cycles"):
+            options.extend(
+                ["--browser-cycles={}".format(self.config.get("browser_cycles"))]
+            )
 
         for (arg,), details in Raptor.browsertime_options:
             # Allow overriding defaults on the `./mach raptor-test ...` command-line
