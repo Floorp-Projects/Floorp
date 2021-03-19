@@ -60,7 +60,6 @@ this container is a toolbar. This avoids double-speaking. -->
 <!-- LOCALIZATION NOTE (libraryDownloads.label): This label is similar to
   -  downloads.label, but used in the Library panel. -->
 <!ENTITY libraryDownloads.label       "Downloads">
-<!ENTITY addons.label                 "Add-ons">
 
 <!ENTITY webDeveloperMenu.label       "Web Developer">
 
