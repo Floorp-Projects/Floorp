@@ -531,6 +531,14 @@ menuitem.bookmark-item {
 
 %include ../shared/urlbar-searchbar.inc.css
 
+@media not (prefers-contrast) {
+  @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+  :root:not(:-moz-lwtheme) #urlbar:not([focused="true"]) {
+    --urlbar-box-bgcolor: white;
+  }
+  } /*** END proton ***/
+}
+
 #urlbar,
 #searchbar {
   font-size: 1.15em;
