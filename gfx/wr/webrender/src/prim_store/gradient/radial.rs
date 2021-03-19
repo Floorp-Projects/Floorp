@@ -8,7 +8,8 @@
 //!
 //! Radial gradients are rendered via cached render tasks and composited with the image brush.
 
-use api::{ExtendMode, GradientStop, PremultipliedColorF};
+use euclid::{vec2, size2};
+use api::{ExtendMode, GradientStop, PremultipliedColorF, ColorU};
 use api::units::*;
 use crate::scene_building::IsVisible;
 use crate::frame_builder::FrameBuildingState;
@@ -357,3 +358,161 @@ pub struct RadialGradientCacheKey {
     pub stops: Vec<GradientStopKey>,
 }
 
+/// Avoid invoking the radial gradient shader on large areas where the color is
+/// constant.
+///
+/// If the extend mode is set to clamp, the "interesting" part
+/// of the gradient is only in the bounds of the gradient's ellipse, and the rest
+/// is the color of the last gradient stop.
+///
+/// Sometimes we run into radial gradient with a small radius compared to the
+/// primitive bounds, which means a large area of the primitive is a constant color
+/// This function tries to detect that, potentially shrink the gradient primitive to only
+/// the useful part and if needed insert solid color primitives around the gradient where
+/// parts of it have been removed.
+pub fn optimize_radial_gradient(
+    prim_rect: &mut LayoutRect,
+    stretch_size: &mut LayoutSize,
+    center: &mut LayoutPoint,
+    tile_spacing: &mut LayoutSize,
+    radius: LayoutSize,
+    extend_mode: ExtendMode,
+    stops: &[GradientStopKey],
+    solid_parts: &mut dyn FnMut(&LayoutRect, ColorU),
+) {
+    if extend_mode != ExtendMode::Clamp || stops.is_empty() {
+        return;
+    }
+
+    // Bounding box of the "interesting" part of the gradient.
+    let min = prim_rect.origin + center.to_vector() - radius.to_vector();
+    let max = prim_rect.origin + center.to_vector() + radius.to_vector();
+
+    // The (non-repeated) gradient primitive rect.
+    let gradient_rect = LayoutRect {
+        origin: prim_rect.origin,
+        size: *stretch_size,
+    };
+
+    // How much internal margin between the primitive bounds and the gradient's
+    // bounding rect (areas that are a constant color).
+    let mut l = (min.x - gradient_rect.min_x()).max(0.0).floor();
+    let mut t = (min.y - gradient_rect.min_y()).max(0.0).floor();
+    let mut r = (gradient_rect.max_x() - max.x).max(0.0).floor();
+    let mut b = (gradient_rect.max_y() - max.y).max(0.0).floor();
+
+    let is_tiled = prim_rect.size.width > stretch_size.width + tile_spacing.width
+        || prim_rect.size.height > stretch_size.height + tile_spacing.height;
+
+    let bg_color = stops.last().unwrap().color;
+
+    if bg_color.a != 0 && is_tiled {
+        // If the primitive has repetitions, it's not enough to insert solid rects around it,
+        // so bail out.
+        return;
+    }
+
+    // If the background is fully transparent, shrinking the primitive bounds as much as possible
+    // is always a win. If the background is not transparent, we have to insert solid rectangles
+    // around the shrunk parts.
+    // If the background is transparent and the primitive is tiled, the optimization may introduce
+    // tile spacing which forces the tiling to be manually decomposed.
+    // Either way, don't bother optimizing unless it saves a significant amount of pixels.
+    if bg_color.a != 0 || (is_tiled && tile_spacing.is_empty()) {
+        let threshold = 128.0;
+        if l < threshold { l = 0.0 }
+        if t < threshold { t = 0.0 }
+        if r < threshold { r = 0.0 }
+        if b < threshold { b = 0.0 }
+    }
+
+
+    if l + t + r + b == 0.0 {
+        // No adjustment to make;
+        return;
+    }
+
+    // Insert solid rectangles around the gradient, in the places where the primitive will be
+    // shrunk.
+    if bg_color.a != 0 {
+        if l != 0.0 && t != 0.0 {
+            let solid_rect = LayoutRect {
+                origin: gradient_rect.origin,
+                size: size2(l, t),
+            };
+            solid_parts(&solid_rect, bg_color);
+        }
+
+        if l != 0.0 && b != 0.0 {
+            let solid_rect = LayoutRect {
+                origin: gradient_rect.bottom_left() - vec2(0.0, b),
+                size: size2(l, b),
+            };
+            solid_parts(&solid_rect, bg_color);
+        }
+
+        if t != 0.0 && r != 0.0 {
+            let solid_rect = LayoutRect {
+                origin: gradient_rect.top_right() - vec2(r, 0.0),
+                size: size2(r, t),
+            };
+            solid_parts(&solid_rect, bg_color);
+        }
+
+        if r != 0.0 && b != 0.0 {
+            let solid_rect = LayoutRect {
+                origin: gradient_rect.bottom_right() - vec2(r, b),
+                size: size2(r, b),
+            };
+            solid_parts(&solid_rect, bg_color);
+        }
+
+        if l != 0.0 {
+            let solid_rect = LayoutRect {
+                origin: gradient_rect.origin + vec2(0.0, t),
+                size: size2(l, gradient_rect.size.height - t - b),
+            };
+            solid_parts(&solid_rect, bg_color);
+        }
+
+        if r != 0.0 {
+            let solid_rect = LayoutRect {
+                origin: gradient_rect.top_right() + vec2(-r, t),
+                size: size2(r, gradient_rect.size.height - t - b),
+            };
+            solid_parts(&solid_rect, bg_color);
+        }
+
+        if t != 0.0 {
+            let solid_rect = LayoutRect {
+                origin: gradient_rect.origin + vec2(l, 0.0),
+                size: size2(gradient_rect.size.width - l - r, t),
+            };
+            solid_parts(&solid_rect, bg_color);
+        }
+
+        if b != 0.0 {
+            let solid_rect = LayoutRect {
+                origin: gradient_rect.bottom_left() + vec2(l, -b),
+                size: size2(gradient_rect.size.width - l - r, b),
+            };
+            solid_parts(&solid_rect, bg_color);
+        }
+    }
+
+    // Shrink the gradient primitive.
+
+    prim_rect.origin.x += l;
+    prim_rect.origin.y += t;
+    prim_rect.size.width -= l;
+    prim_rect.size.height -= t;
+
+    stretch_size.width -= l + r;
+    stretch_size.height -= b + t;
+
+    center.x -= l;
+    center.y -= t;
+
+    tile_spacing.width += l + r;
+    tile_spacing.height += t + b;
+}
