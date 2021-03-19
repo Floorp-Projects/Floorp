@@ -78,7 +78,7 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
   nsresult GetEnabled(bool* aIsEnabled);
   already_AddRefed<nsIContent> GetMenuPopupContent();
   bool OnOpen();
-  bool OnClose();
+  void OnClose();
   void AddMenuItem(mozilla::UniquePtr<nsMenuItemX>&& aMenuItem);
   void AddMenu(mozilla::UniquePtr<nsMenuX>&& aMenu);
   void LoadMenuItem(nsIContent* aMenuItemContent);
