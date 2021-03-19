@@ -386,6 +386,21 @@ impl From<WorldPoint> for PointKey {
     }
 }
 
+/// A hashable float for using as a key during primitive interning.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[derive(Debug, Copy, Clone, MallocSizeOf, PartialEq)]
+pub struct FloatKey(f32);
+
+impl Eq for FloatKey {}
+
+impl hash::Hash for FloatKey {
+    fn hash<H: hash::Hasher>(&self, state: &mut H) {
+        self.0.to_bits().hash(state);
+    }
+}
+
+
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(Debug, Clone, Eq, MallocSizeOf, PartialEq, Hash)]
@@ -485,6 +500,7 @@ impl From<PrimitiveKeyKind> for PrimitiveTemplateKind {
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(MallocSizeOf)]
+#[derive(Debug)]
 pub struct PrimTemplateCommonData {
     pub flags: PrimitiveFlags,
     pub may_need_repetition: bool,
