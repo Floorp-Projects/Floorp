@@ -100,8 +100,6 @@ class TRR : public Runnable,
   void SaveAdditionalRecords(
       const nsClassHashtable<nsCStringHashKey, DOHresp>& aRecords);
 
-  nsresult CreateChannelHelper(nsIURI* aUri, nsIChannel** aResult);
-
   friend class TRRServiceChannel;
   static nsresult SetupTRRServiceChannelInternal(
       nsIHttpChannel* aChannel, bool aUseGet, const nsACString& aContentType);

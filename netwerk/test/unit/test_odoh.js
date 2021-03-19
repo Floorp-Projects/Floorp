@@ -141,6 +141,7 @@ registerCleanupFunction(() => {
   prefs.clearUserPref("network.trr.clear-cache-on-pref-change");
   prefs.clearUserPref("network.trr.odoh.enabled");
   prefs.clearUserPref("network.trr.odoh.target_path");
+  prefs.clearUserPref("network.trr.odoh.configs_uri");
   certOverrideService.setDisableAllSecurityChecksAndLetAttackersInterceptMyData(
     false
   );
@@ -351,6 +352,61 @@ add_task(async function testODoHConfig7() {
   await new DNSListener("bar.example.com", "127.0.0.1");
 });
 
+async function ODoHConfigTestHTTP(configUri, expectedResult) {
+  // Setting the pref "network.trr.odoh.configs_uri" will trigger the reload of
+  // the ODoHConfigs.
+  prefs.setCharPref("network.trr.odoh.configs_uri", configUri);
+
+  await observerPromise("odoh-service-activated");
+  Assert.equal(dns.ODoHActivated, expectedResult);
+}
+
+add_task(async function testODoHConfig8() {
+  dns.clearCache(true);
+  prefs.setCharPref("network.trr.uri", "");
+
+  await ODoHConfigTestHTTP(
+    `https://foo.example.com:${h2Port}/odohconfig?downloadFrom=http`,
+    true
+  );
+});
+
+add_task(async function testODoHConfig9() {
+  // Reset the prefs back to the correct values, so we will get valid
+  // ODoHConfigs when "network.trr.odoh.configs_uri" is cleared below.
+  prefs.setCharPref(
+    "network.trr.uri",
+    `https://foo.example.com:${h2Port}/odohconfig`
+  );
+  prefs.setCharPref(
+    "network.trr.odoh.target_host",
+    `https://odoh_host.example.com:${h2Port}`
+  );
+
+  // Use a very short TTL.
+  prefs.setIntPref("network.trr.odoh.min_ttl", 1);
+  // This will trigger to download ODoHConfigs from HTTPS RR.
+  prefs.clearUserPref("network.trr.odoh.configs_uri");
+
+  await observerPromise("odoh-service-activated");
+  Assert.ok(dns.ODoHActivated);
+
+  await ODoHConfigTestHTTP(
+    `https://foo.example.com:${h2Port}/odohconfig?downloadFrom=http`,
+    true
+  );
+
+  // This is triggered by the expiration of the TTL.
+  await observerPromise("odoh-service-activated");
+  Assert.ok(dns.ODoHActivated);
+  prefs.clearUserPref("network.trr.odoh.min_ttl");
+});
+
+add_task(async function testODoHConfig10() {
+  // We can still get ODoHConfigs from HTTPS RR.
+  await ODoHConfigTestHTTP("http://invalid_odoh_config.com", true);
+});
+
 // verify basic A record
 add_task(async function test1() {
   dns.clearCache(true);
@@ -358,7 +414,10 @@ add_task(async function test1() {
   prefs.setBoolPref("network.trr.odoh.enabled", true);
 
   // Make sure we have an usable ODoHConfig to use.
-  await ODoHConfigTest("", `https://odoh_host.example.com:${h2Port}`, true);
+  await ODoHConfigTestHTTP(
+    `https://foo.example.com:${h2Port}/odohconfig?downloadFrom=http`,
+    true
+  );
 
   // Make sure we can connect to ODOH target successfully.
   prefs.setCharPref("network.dns.localDomains", "odoh_host.example.com");

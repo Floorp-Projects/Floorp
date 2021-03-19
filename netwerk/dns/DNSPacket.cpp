@@ -1066,7 +1066,7 @@ static bool CreateConfigId(ObliviousDoHConfig& aConfig) {
 }
 
 // static
-bool ODoHDNSPacket::ParseODoHConfigs(const nsCString& aRawODoHConfig,
+bool ODoHDNSPacket::ParseODoHConfigs(Span<const uint8_t> aData,
                                      nsTArray<ObliviousDoHConfig>& aOut) {
   // struct {
   //     uint16 kem_id;
@@ -1086,29 +1086,26 @@ bool ODoHDNSPacket::ParseODoHConfigs(const nsCString& aRawODoHConfig,
   //  ObliviousDoHConfig ObliviousDoHConfigs<1..2^16-1>;
 
   // At least we need two bytes to indicate the total length of ODoHConfig.
-  if (aRawODoHConfig.Length() < 2) {
+  if (aData.Length() < 2) {
     return false;
   }
 
-  const unsigned char* data =
-      reinterpret_cast<const unsigned char*>(aRawODoHConfig.BeginReading());
-
   uint32_t index = 0;
-  uint16_t length = get16bit(data, index);
+  uint16_t length = get16bit(aData.Elements(), index);
   index += 2;
 
-  if (length != aRawODoHConfig.Length() - 2) {
+  if (length != aData.Length() - 2) {
     return false;
   }
 
   nsTArray<ObliviousDoHConfig> result;
   while (length > 0) {
     ObliviousDoHConfig config;
-    config.mVersion = get16bit(data, index);
+    config.mVersion = get16bit(aData.Elements(), index);
     index += 2;
     length -= 2;
 
-    config.mLength = get16bit(data, index);
+    config.mLength = get16bit(aData.Elements(), index);
     index += 2;
     length -= 2;
 
@@ -1116,24 +1113,24 @@ bool ODoHDNSPacket::ParseODoHConfigs(const nsCString& aRawODoHConfig,
       return false;
     }
 
-    config.mContents.mKemId = get16bit(data, index);
+    config.mContents.mKemId = get16bit(aData.Elements(), index);
     index += 2;
     length -= 2;
-    config.mContents.mKdfId = get16bit(data, index);
+    config.mContents.mKdfId = get16bit(aData.Elements(), index);
     index += 2;
     length -= 2;
-    config.mContents.mAeadId = get16bit(data, index);
+    config.mContents.mAeadId = get16bit(aData.Elements(), index);
     index += 2;
     length -= 2;
 
-    uint16_t keyLength = get16bit(data, index);
+    uint16_t keyLength = get16bit(aData.Elements(), index);
     index += 2;
     length -= 2;
     if (keyLength > length) {
       return false;
     }
 
-    config.mContents.mPublicKey.AppendElements(Span(data + index, keyLength));
+    config.mContents.mPublicKey.AppendElements(Span(&aData[index], keyLength));
     index += keyLength;
     length -= keyLength;
 

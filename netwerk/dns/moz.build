@@ -65,6 +65,7 @@ UNIFIED_SOURCES += [
     "DNSRequestChild.cpp",
     "DNSRequestParent.cpp",
     "DNSResolverInfo.cpp",
+    "DNSUtils.cpp",
     "HTTPSSVC.cpp",
     "IDNBlocklistUtils.cpp",
     "NativeDNSResolverOverrideChild.cpp",

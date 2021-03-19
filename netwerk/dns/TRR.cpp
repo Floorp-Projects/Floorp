@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DNS.h"
+#include "DNSUtils.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentUtils.h"
 #include "nsHttpHandler.h"
@@ -32,7 +33,6 @@
 #include "mozilla/Logging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_network.h"
-#include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Tokenizer.h"
@@ -132,64 +132,6 @@ TRR::Run() {
     // The dtor will now be run
   }
   return NS_OK;
-}
-
-static void InitHttpHandler() {
-  nsresult rv;
-  nsCOMPtr<nsIIOService> ios = do_GetIOService(&rv);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
-  nsCOMPtr<nsIProtocolHandler> handler;
-  rv = ios->GetProtocolHandler("http", getter_AddRefs(handler));
-  if (NS_FAILED(rv)) {
-    return;
-  }
-}
-
-nsresult TRR::CreateChannelHelper(nsIURI* aUri, nsIChannel** aResult) {
-  *aResult = nullptr;
-
-  if (NS_IsMainThread() && !XRE_IsSocketProcess()) {
-    nsresult rv;
-    nsCOMPtr<nsIIOService> ios(do_GetIOService(&rv));
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_NewChannel(
-        aResult, aUri, nsContentUtils::GetSystemPrincipal(),
-        nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_SEC_CONTEXT_IS_NULL,
-        nsIContentPolicy::TYPE_OTHER,
-        nullptr,  // nsICookieJarSettings
-        nullptr,  // PerformanceStorage
-        nullptr,  // aLoadGroup
-        nullptr,  // aCallbacks
-        nsIRequest::LOAD_NORMAL, ios);
-  }
-
-  // Unfortunately, we can only initialize gHttpHandler on main thread.
-  if (!gHttpHandler) {
-    nsCOMPtr<nsIEventTarget> main = GetMainThreadEventTarget();
-    if (main) {
-      // Forward to the main thread synchronously.
-      SyncRunnable::DispatchToThread(
-          main, new SyncRunnable(NS_NewRunnableFunction(
-                    "InitHttpHandler", []() { InitHttpHandler(); })));
-    }
-  }
-
-  if (!gHttpHandler) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  RefPtr<TRRLoadInfo> loadInfo =
-      new TRRLoadInfo(aUri, nsIContentPolicy::TYPE_OTHER);
-  return gHttpHandler->CreateTRRServiceChannel(aUri,
-                                               nullptr,   // givenProxyInfo
-                                               0,         // proxyResolveFlags
-                                               nullptr,   // proxyURI
-                                               loadInfo,  // aLoadInfo
-                                               aResult);
 }
 
 DNSPacket* TRR::GetOrCreateDNSPacket() {
@@ -313,7 +255,7 @@ nsresult TRR::SendHTTPRequest() {
   }
 
   nsCOMPtr<nsIChannel> channel;
-  rv = CreateChannelHelper(dnsURI, getter_AddRefs(channel));
+  rv = DNSUtils::CreateChannelHelper(dnsURI, getter_AddRefs(channel));
   if (NS_FAILED(rv) || !channel) {
     LOG(("TRR:SendHTTPRequest: NewChannel failed!\n"));
     return rv;
