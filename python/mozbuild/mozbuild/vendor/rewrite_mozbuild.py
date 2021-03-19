@@ -1,0 +1,646 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, # You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Utility package for working with moz.yaml files.
+#
+# Requires `pyyaml` and `voluptuous`
+# (both are in-tree under third_party/python)
+
+from __future__ import absolute_import, print_function, unicode_literals
+
+
+"""
+Problem:
+    ./mach vendor needs to be able to add or remove files from moz.build files automatically to
+    be able to effectively update a library automatically and send useful try runs in.
+
+    So far, it has been difficult to do that.
+    Why:
+        Some files need to go into UNIFIED_SOURCES vs SOURCES
+        Some files are os-specific, and need to go into per-OS conditionals
+        Some files are both UNIFIED_SOURCES/SOURCES sensitive and OS-specific.
+
+Proposal:
+    Design an algorithm that maps a third party library file to a suspected moz.build location.
+    Run the algorithm on all files specified in all third party libraries' moz.build files.
+    See if the proposed place in the moz.build file matches the actual place.
+
+Initial Algorithm
+    Given a file, which includes the filename and the path from gecko root, we want to find the
+        correct moz.build file and location within that file.
+    Take the path of the file, and iterate up the directory tree, looking for moz.build files as
+    we go.
+    Consider each of these moz.build files, starting with the one closest to the file.
+    Within a moz.build file, identify the SOURCES or UNIFIED_SOURCES block(s) that contains a file
+        in the same directory path as the file to be added.
+    If there is only one such block, use that one.
+    If there are multiple blocks, look at the files within each block and note the longest length
+        of a common prefix (including partial filenames - if we just did full directories the
+        result would be the same as the prior step and we would not narrow the results down). Use
+        the block containing the longest prefix. (We call this 'guessing'.)
+
+Result of the proposal:
+    The initial implementation works on 1675 of 1977 elligible files.
+    The files it does not work on include:
+        - general failures. Such as when we find that avutil.cpp wants to be next to adler32.cpp
+          but avutil.cpp is in SOURCES and adler32.cpp is in UNIFIED_SOURCES. (And many similar
+          cases.)
+        - per-cpu-feature files, where only a single file is added under a conditional
+        - When guessing, because of a len(...) > longest_so_far comparison, we would prefer the
+          first block we found.
+          -  Changing this to prefer UNIFIED_SOURCES in the event of a tie
+             yielded 17 additional correct assignments (about a 1% improvement)
+        - As a result of the change immediately above, when guessing, because given equal
+          prefixes, we would prefer a UNIFIED_SOURCES block over other blocks, even if the other
+          blocks are longer
+          - Changing this (again) to prefer the block containing more files yielded 49 additional
+            correct assignments (about a 2.5% improvement)
+
+    The files that are ineligible for consideration are:
+        - Those in libwebrtc
+        - Those specified in source assignments composed of generators (e.g. [f for f in '%.c'])
+        - Those specified in source assignments to subscripted variables
+          (e.g. SOURCES += foo['x86_files'])
+    We needed to iterate up the directory and look at a different moz.build file _zero_ times.
+        This indicates this code is probably not needed, and therefore we will remove it from the
+        algorithm.
+    We needed to guess base on the longest prefix 944 times, indicating that this code is
+        absolutely crucial and should be double-checked. (And indeed, upon double-checking it,
+        bugs were identified.)
+
+Slightly Improved Algorithm Changes:
+    Don't bother iterating up the directory tree looking for moz.build files, just take the first.
+    When guessing, in the event of a common-prefix tie, prefer the block containing more files
+
+    With these changes, we now Successfully Matched 1724 of 1977 files
+
+CODE CONCEPTS
+
+source-assignment
+    An assignment of files to a SOURCES or UNIFIED_SOURCES variable, such as
+    SOURCES += ['ffpvx.cpp']
+
+    We specifically look only for these two variable names to avoid identifying things
+    such as CXX_FLAGS.
+
+    Sometimes; however, there is an intermediary variable, such as SOURCES += celt_filenames
+    In this situation we find the celt_filenames assignment, and treat it as a 'source-assignment'
+
+source-assignment-location
+    source-assignment-location is a human readable string that identifies where in the moz.build
+    file the source-assignment is. It can used to visually match the location upon manual
+    inspection; and given a source-assignment-location, re-identify it when iterating over all
+    source-assignments in a file.
+
+    The actual string consists of the path from the root of the moz.build file to the
+    source-assignment, plus a suffix number.
+
+    We suffix the final value with an incrementing counter. This is to support moz.build files
+    that, for whatever reason, use multiple SOURCES += [] list in the same basic block. This index
+    is per-file, so no two assignments in the same file (even if they have separate locations)
+    should have the same suffix.
+
+    For example:
+
+    When SOURCES += ['ffpvx.xpp'] appears as the first line of the file (or any other
+    unindented-location) its source-assignment-location will be "> SOURCES 1".
+
+    When SOURCES += ['ffpvx.xpp'] appears inside a conditional such as
+    `CONFIG['OS_TARGET'] == 'WINNT'` then its source-assignment-location will be
+    "> if CONFIG['OS_TARGET'] == 'WINNT' > SOURCES 1"
+
+    When SOURCES += ['ffpvx.xpp'] appears as the second line of the file, and a different
+    SOURCES += [] was the first line, then its source-assignment-location will be "> SOURCES 2".
+
+    No two source-assignments may have the same source-assignment-location. If they do, we raise
+    an assert.
+
+file vs filename
+    a 'filename' is a string specifing the name and sometimes the path of a file.
+    a 'file' is an object you get from open()-ing a filename
+
+    A variable that is a string should always use 'filename'
+
+normalized-filename
+    A filename is 'normalized' if it has been expanded to the full path from the gecko root. This
+    requires a moz.build file.
+
+    For example a filename `lib/opus.c` may be specified inside the `/media/libopus/moz.build`
+    file. The filename is normalized by os.path.join()-ing the dirname of the moz.build file
+    (i.e. `/media/libopus`) to the filename, resulting in `/media/libopus/lib/opus.c`
+
+    A filename that begins with '/' is presumed to already be specified relative to the gecko
+    root, and therefore is not modified.
+
+    Whenevr a filename is normalized, it should be specified as such in the variable name, either
+    as a prefix (normalized_filename) or a suffix (target_filename_normalized)
+
+statistic_
+    Using some hacky stuff, we report statistics about how many times we hit certain branches of
+    the code.
+    e.g.
+        "How many times did we refine a guess based on prefix length"
+        "How many times did we refine a guess based on the number of files in the block"
+        "What is the histogram of guess candidates"
+
+    We do this to identify how frequently certain code paths were taken, allowing us to identify
+    strange behavior and investigate outliers. This process lead to identifying bugs and small
+    improvements.
+"""
+
+import os
+import ast
+import sys
+import copy
+import subprocess
+
+from pprint import pprint
+
+statistics = {
+    "guess_candidates": {},
+    "number_refinements": {},
+    "needed_to_guess": 0,
+    "length_logic": {},
+}
+
+
+def log(*args, **kwargs):
+    # If is helpful to keep some logging statements around, but we don't want to print them
+    #  unless we are debugging
+    # print(*args, **kwargs)
+    pass
+
+
+def node_to_readable_file_location(code, node, child_node=None):
+    location = ""
+
+    if isinstance(node.parent, ast.Module):
+        # The next node up is the root, don't go higher.
+        pass
+    else:
+        location += node_to_readable_file_location(code, node.parent, node)
+
+    location += " > "
+    if isinstance(node, ast.Module):
+        raise Exception("We shouldn't see a Module")
+    elif isinstance(node, ast.If):
+        assert child_node
+        if child_node in node.body:
+            location += "if " + ast.get_source_segment(code, node.test)
+        else:
+            location += "else-of-if " + ast.get_source_segment(code, node.test)
+    elif isinstance(node, ast.For):
+        location += (
+            "for "
+            + ast.get_source_segment(code, node.target)
+            + " in "
+            + ast.get_source_segment(code, node.iter)
+        )
+    elif isinstance(node, ast.AugAssign):
+        location += node.target.id
+    elif isinstance(node, ast.Assign):
+        # This assert would fire if we did e.g. some_sources = all_sources = [ ... ]
+        assert len(node.targets) == 1, "Assignment node contains more than one target"
+        location += node.targets[0].id
+    else:
+        raise Exception("Got a node type I don't know how to handle: " + str(node))
+
+    return location
+
+
+def assignment_node_to_source_filename_list(code, node):
+    """
+    If the list of filenames is not a list of constants (e.g. it's a generated list)
+    it's (probably) infeasible to try and figure it out. At least we're not going to try
+    right now. Maybe in the future?
+
+    If this happens, we'll return an empty list. The consequence of this is that we
+    won't be able to match a file against this list, so we may not be able to add it.
+
+    (But if the file matches a generated list, perhaps it will be included in the
+    Sources list automatically?)
+    """
+    if isinstance(node.value, ast.List) and "elts" in node.value._fields:
+        for f in node.value.elts:
+            if not isinstance(f, ast.Constant):
+                log(
+                    "Found non-constant source file name in list: ",
+                    ast.get_source_segment(code, f),
+                )
+                return []
+        return [f.value for f in node.value.elts]
+    elif isinstance(node.value, ast.ListComp):
+        # SOURCES += [f for f in foo if blah]
+        log("Could not find the files for " + ast.get_source_segment(code, node.value))
+    elif isinstance(node.value, ast.Name) or isinstance(node.value, ast.Subscript):
+        # SOURCES += other_var
+        # SOURCES += files['X64_SOURCES']
+        log("Could not find the files for " + ast.get_source_segment(code, node))
+    elif isinstance(node.value, ast.Call):
+        # SOURCES += sorted(...)
+        log("Could not find the files for " + ast.get_source_segment(code, node))
+    else:
+        raise Exception(
+            "Unexpected node received in assignment_node_to_source_filename_list: "
+            + str(node)
+        )
+    return []
+
+
+def mozbuild_file_to_source_assignments(normalized_mozbuild_filename):
+    """
+    Returns a dictionary of 'source-assignment-location' -> 'normalized source filename list'
+    contained in the moz.build file specified
+
+    normalized_mozbuild_filename: the moz.build file to read
+    """
+    source_assignments = {}
+
+    # Parse the AST of the moz.build file
+    code = open(normalized_mozbuild_filename).read()
+    root = ast.parse(code)
+
+    # Populate node parents. This allows us to walk up from a node to the root.
+    # (Really I think python's ast class should do this, but it doesn't, so we monkey-patch it)
+    for node in ast.walk(root):
+        for child in ast.iter_child_nodes(node):
+            child.parent = node
+
+    # Find all the assignments of SOURCES or UNIFIED_SOURCES
+    source_assignment_nodes = [
+        node
+        for node in ast.walk(root)
+        if isinstance(node, ast.AugAssign)
+        and isinstance(node.target, ast.Name)
+        and node.target.id in ["SOURCES", "UNIFIED_SOURCES"]
+    ]
+    assert (
+        len([n for n in source_assignment_nodes if not isinstance(n.op, ast.Add)]) == 0
+    ), "We got a Source assignment that wasn't +="
+
+    # Recurse and find nodes where we do SOURCES += other_var or SOURCES += FILES['foo']
+    recursive_assignment_nodes = [
+        node
+        for node in source_assignment_nodes
+        if isinstance(node.value, ast.Name) or isinstance(node.value, ast.Subscript)
+    ]
+
+    recursive_assignment_nodes_names = [
+        node.value.id
+        for node in recursive_assignment_nodes
+        if isinstance(node.value, ast.Name)
+    ]
+
+    # TODO: We do not dig into subscript variables. These are currently only used by two libraries
+    #       that use external sources.mozbuild files.
+    # recursive_assignment_nodes_names.extend([something<node> for node in
+    #    recursive_assignment_nodes if isinstance(node.value, ast.Subscript)]
+
+    additional_assignment_nodes = [
+        node
+        for node in ast.walk(root)
+        if isinstance(node, ast.Assign)
+        and isinstance(node.targets[0], ast.Name)
+        and node.targets[0].id in recursive_assignment_nodes_names
+    ]
+
+    # Remove the original, useless assignment node (the SOURCES += other_var)
+    for node in recursive_assignment_nodes:
+        source_assignment_nodes.remove(node)
+    # Add the other_var += [''] source-assignment
+    source_assignment_nodes.extend(additional_assignment_nodes)
+
+    # Get the source-assignment-location for the node:
+    assignment_index = 1
+    for a in source_assignment_nodes:
+        source_assignment_location = (
+            node_to_readable_file_location(code, a) + " " + str(assignment_index)
+        )
+        source_filename_list = assignment_node_to_source_filename_list(code, a)
+
+        if not source_filename_list:
+            # In some cases (like generated source file lists) we will have an empty list.
+            # If that is the case, just omit the source assignment
+            continue
+
+        normalized_source_filename_list = [
+            normalize_filename(normalized_mozbuild_filename, f)
+            for f in source_filename_list
+        ]
+
+        if source_assignment_location in source_assignments:
+            source_assignment_location = node_to_readable_file_location(code, a)
+
+        assert (
+            source_assignment_location not in source_assignments
+        ), "In %s, two assignments have the same key ('%s')" % (
+            normalized_mozbuild_filename,
+            source_assignment_location,
+        )
+        source_assignments[source_assignment_location] = normalized_source_filename_list
+        assignment_index += 1
+
+    return source_assignments
+
+
+def normalize_filename(mozbuild_filename, filename):
+    if filename[0] == "/":
+        return filename
+
+    mozbuild_path = os.path.dirname(mozbuild_filename)
+    return os.path.join(mozbuild_path, filename)
+
+
+def get_mozbuild_file_search_order(
+    normalized_filename, all_mozbuild_filenames_normalized
+):
+    """
+    Returns an ordered list of normalized moz.build filenames to consider for a given filename
+
+    NOTE: This function is not really used, see the comment in get_closest_mozbuild_file
+
+    normalized_filename: a source filename normalized to the gecko root
+    all_mozbuild_filenames_normalized: the list of all third-party moz.build files
+    """
+    ordered_list = []
+
+    # The first time around, this variable name is incorrect.
+    #    It's actually the full path+filename, not a directory.
+    # We're going to walk up the directory tree, looking for a moz.build file in each
+    #    directory we ascend to.
+    test_directory = normalized_filename
+    while len(os.path.dirname(test_directory)) > 1:  # While we are not at '/'
+        containing_directory = os.path.dirname(test_directory)
+
+        possible_normalized_mozbuild_filename = os.path.join(
+            containing_directory, "moz.build"
+        )
+        if possible_normalized_mozbuild_filename in all_mozbuild_filenames_normalized:
+            ordered_list.append(possible_normalized_mozbuild_filename)
+
+        test_directory = containing_directory
+
+    return ordered_list
+
+
+def get_closest_mozbuild_file(normalized_filename, all_mozbuild_filenames_normalized):
+    """
+    Returns the closest moz.build file in the directory tree to a normalized filename
+
+    Our experimenting indicated that we never need to go further than the nearest moz.build
+    file, so to keep the code complexity down, we removed that part of the algorithm.
+
+    Still, we keep that function around and return just the first entry in the list
+    """
+    r = get_mozbuild_file_search_order(
+        normalized_filename, all_mozbuild_filenames_normalized
+    )
+    return r[0] if r else None
+
+
+def filenames_directory_is_in_filename_list(
+    filename_normalized, list_of_normalized_filenames
+):
+    """
+    Given a normalized filename and a list of normalized filenames, first turn them into a
+    containing directory, and a list of containing directories. Then test if the containing
+    directory of the filename is in the list.
+
+    ex:
+        f = filenames_directory_is_in_filename_list
+        f("foo/bar/a.c", ["foo/b.c"]) -> false
+        f("foo/bar/a.c", ["foo/b.c", "foo/bar/c.c"]) -> true
+        f("foo/bar/a.c", ["foo/b.c", "foo/bar/baz/d.c"]) -> false
+    """
+    path_list = set([os.path.dirname(f) for f in list_of_normalized_filenames])
+    return os.path.dirname(filename_normalized) in path_list
+
+
+def find_all_posible_assignments_from_filename(source_assignments, filename_normalized):
+    """
+    Given a list of source assignments and a normalized filename, narrow the list to assignments
+    that contain a file whose directory matches the filename's directory.
+    """
+    possible_assignments = {}
+    for key, list_of_normalized_filenames in source_assignments.items():
+        if not list_of_normalized_filenames:
+            continue
+        if filenames_directory_is_in_filename_list(
+            filename_normalized, list_of_normalized_filenames
+        ):
+            possible_assignments[key] = list_of_normalized_filenames
+    return possible_assignments
+
+
+def guess_best_assignment(source_assignments, filename_normalized):
+    """
+    Given several assignments, all of which contain the same directory as the filename, pick one
+    we think is best and return its source-assignment-location.
+
+    We do this by looking at the filename itself (not just its directory) and picking the
+    assignment which contains a filename with the longest matching prefix.
+
+    e.g: "foo/asm_neon.c" compared to ["foo/main.c", "foo/all_utility.c"], ["foo/asm_arm.c"]
+            -> ["foo/asm_arm.c"] (match of foo/asm_)
+    """
+    length_of_longest_match = 0
+    source_assignment_location_of_longest_match = None
+    statistic_number_refinements = 0
+    statistic_length_logic = 0
+
+    for key, list_of_normalized_filenames in source_assignments.items():
+        for f in list_of_normalized_filenames:
+            if filename_normalized == f:
+                # Do not cheat by matching the prefix of the exact file
+                continue
+
+            prefix = os.path.commonprefix([filename_normalized, f])
+            if len(prefix) > length_of_longest_match:
+                statistic_number_refinements += 1
+                length_of_longest_match = len(prefix)
+                source_assignment_location_of_longest_match = key
+            elif len(prefix) == length_of_longest_match and len(
+                source_assignments[key]
+            ) > len(source_assignments[source_assignment_location_of_longest_match]):
+                statistic_number_refinements += 1
+                statistic_length_logic += 1
+                length_of_longest_match = len(prefix)
+                source_assignment_location_of_longest_match = key
+    return (
+        source_assignment_location_of_longest_match,
+        (statistic_number_refinements, statistic_length_logic),
+    )
+
+
+#########################################################
+# TESTING CODE
+#########################################################
+
+
+def get_all_target_filenames_normalized(all_mozbuild_filenames_normalized):
+    """
+    Given a list of moz.build files, returns all the files listed in all the souce assignments
+    in the file.
+
+    This function is only used for debug/testing purposes - there is no reason to call this
+    as part of 'the algorithm'
+    """
+    all_target_filenames_normalized = []
+    for normalized_mozbuild_filename in all_mozbuild_filenames_normalized:
+        source_assignments = mozbuild_file_to_source_assignments(
+            normalized_mozbuild_filename
+        )
+        for key in source_assignments:
+            list_of_normalized_filenames = source_assignments[key]
+            all_target_filenames_normalized.extend(list_of_normalized_filenames)
+
+    return all_target_filenames_normalized
+
+
+def try_to_match_target_file(
+    all_mozbuild_filenames_normalized, target_filename_normalized
+):
+    """
+    Runs 'the algorithm' on a target file, and returns if the algorithm was successful
+
+    all_mozbuild_filenames_normalized: the list of all third-party moz.build files
+    target_filename_normalized - the target filename, normalized to the gecko root
+    """
+
+    # We do not update the statistics for failed matches, so save a copy
+    global statistics
+    backup_statistics = copy.deepcopy(statistics)
+
+    if "" == target_filename_normalized:
+        raise Exception("Received an empty target_filename_normalized")
+
+    normalized_mozbuild_filename = get_closest_mozbuild_file(
+        target_filename_normalized, all_mozbuild_filenames_normalized
+    )
+    if not normalized_mozbuild_filename:
+        return (False, "No moz.build file found")
+
+    source_assignments = mozbuild_file_to_source_assignments(
+        normalized_mozbuild_filename
+    )
+    possible_assignments = find_all_posible_assignments_from_filename(
+        source_assignments, target_filename_normalized
+    )
+
+    if len(possible_assignments) == 0:
+        raise Exception("No possible assignments were found")
+    elif len(possible_assignments) > 1:
+        (
+            best_guess,
+            (statistic_number_refinements, statistic_length_logic),
+        ) = guess_best_assignment(possible_assignments, target_filename_normalized)
+        chosen_source_assignment_location = best_guess
+
+        statistics["needed_to_guess"] += 1
+
+        if len(possible_assignments) not in statistics["guess_candidates"]:
+            statistics["guess_candidates"][len(possible_assignments)] = 0
+        statistics["guess_candidates"][len(possible_assignments)] += 1
+
+        if statistic_number_refinements not in statistics["number_refinements"]:
+            statistics["number_refinements"][statistic_number_refinements] = 0
+        statistics["number_refinements"][statistic_number_refinements] += 1
+
+        if statistic_length_logic not in statistics["length_logic"]:
+            statistics["length_logic"][statistic_length_logic] = 0
+        statistics["length_logic"][statistic_length_logic] += 1
+
+    else:
+        chosen_source_assignment_location = list(possible_assignments.keys())[0]
+
+    guessed_list_containing_normalized_filenames = possible_assignments[
+        chosen_source_assignment_location
+    ]
+
+    if target_filename_normalized in guessed_list_containing_normalized_filenames:
+        return (True, None)
+
+    # Restore the copy of the statistics so we don't alter it for failed matches
+    statistics = backup_statistics
+    return (False, chosen_source_assignment_location)
+
+
+def get_all_mozbuild_filenames():
+    """
+    Using __file__ as a base, find all the third party moz.build files in the gecko repo
+    """
+    gecko_root = None
+    directory_to_check = os.path.dirname(os.path.abspath(__file__))
+    while not os.path.isfile(os.path.join(directory_to_check, ".arcconfig")):
+        directory_to_check = os.path.dirname(directory_to_check)
+        if directory_to_check == "/":
+            print("Could not find gecko root")
+            sys.exit(1)
+
+    gecko_root = directory_to_check
+    third_party_paths = open(
+        os.path.join(gecko_root, "tools", "rewriting", "ThirdPartyPaths.txt")
+    ).readlines()
+    all_mozbuild_filenames_normalized = []
+    for path in third_party_paths:
+        # We need shell=True because some paths are specified as globs
+        # We need an exception handler because sometimes the directory doesn't exist and find barfs
+        try:
+            output = subprocess.check_output(
+                "find %s -name moz.build" % os.path.join(gecko_root, path.strip()),
+                shell=True,
+            ).decode("utf-8")
+            for f in output.split("\n"):
+                f = f.replace("//", "/").strip().replace(gecko_root, "")[1:]
+                if f:
+                    all_mozbuild_filenames_normalized.append(f)
+        except Exception:
+            pass
+
+    return gecko_root, all_mozbuild_filenames_normalized
+
+
+def test_all_third_party_files(gecko_root, all_mozbuild_filenames_normalized):
+    """
+    Run the algorithm on every source file in a third party moz.build file and output the results
+    """
+    all_mozbuild_filenames_normalized = [
+        f for f in all_mozbuild_filenames_normalized if "webrtc" not in f
+    ]
+    all_target_filenames_normalized = get_all_target_filenames_normalized(
+        all_mozbuild_filenames_normalized
+    )
+
+    total_attempted = 0
+    failed_matched = []
+    successfully_matched = 0
+
+    print("Going to try to match %i files..." % len(all_target_filenames_normalized))
+    for target_filename_normalized in all_target_filenames_normalized:
+        result, wrong_guess = try_to_match_target_file(
+            all_mozbuild_filenames_normalized, target_filename_normalized
+        )
+
+        total_attempted += 1
+        if result:
+            successfully_matched += 1
+        else:
+            failed_matched.append((target_filename_normalized, wrong_guess))
+        if total_attempted % 100 == 0:
+            print("Progress:", total_attempted)
+
+    print(
+        "Successfully Matched %i of %i files" % (successfully_matched, total_attempted)
+    )
+    if failed_matched:
+        print("Failed files:")
+        for f in failed_matched:
+            print("\t", f[0], f[1])
+    print("Statistics:")
+    pprint(statistics)
+
+
+if __name__ == "__main__":
+    gecko_root, all_mozbuild_filenames_normalized = get_all_mozbuild_filenames()
+    # test_all_third_party_files(gecko_root, all_mozbuild_filenames_normalized)
