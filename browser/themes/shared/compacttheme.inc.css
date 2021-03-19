@@ -12,7 +12,7 @@
 }
 
 @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
-#urlbar:not([focused="true"]) {
-  --urlbar-box-bgcolor: var(--lwt-toolbar-field-focus);
+:root {
+  --urlbar-box-unfocused-bgcolor: var(--lwt-toolbar-field-focus);
 }
 } /** END Proton **/
