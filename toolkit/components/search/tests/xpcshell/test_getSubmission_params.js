@@ -3,8 +3,6 @@
 
 "use strict";
 
-SearchTestUtils.initXPCShellAddonManager(this);
-
 add_task(async function setup() {
   await SearchTestUtils.useTestEngines("simple-engines");
   await AddonTestUtils.promiseStartupManager();
@@ -84,7 +82,7 @@ add_task(async function test_paramSubstitution() {
 });
 
 add_task(async function test_mozParamsFailForNonAppProvided() {
-  let extension = await SearchTestUtils.installSearchExtension();
+  await SearchTestUtils.installSearchExtension();
 
   let prefix = "https://example.com/?q=";
   let engine = await Services.search.getEngineByName("Example");
@@ -101,6 +99,5 @@ add_task(async function test_mozParamsFailForNonAppProvided() {
   check("{moz:official}", "{moz:official}");
   check("{moz:locale}", "{moz:locale}");
 
-  await extension.unload();
   await promiseAfterSettings();
 });

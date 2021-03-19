@@ -40,6 +40,7 @@ var SearchTestUtils = {
       this._isMochitest = false;
       // This handles xpcshell-tests.
       gTestScope.ExtensionTestUtils = ExtensionTestUtils;
+      this.initXPCShellAddonManager(testScope);
     }
   },
 
@@ -174,7 +175,11 @@ var SearchTestUtils = {
       "extensions.webextensions.background-delayed-startup",
       false
     );
-    gTestScope.ExtensionTestUtils.init(scope);
+    // Only do this once.
+    if (!this._initedTestUtils) {
+      gTestScope.ExtensionTestUtils.init(scope);
+      this._initedTestUtils = true;
+    }
     AddonTestUtils.usePrivilegedSignatures = usePrivilegedSignatures;
     AddonTestUtils.overrideCertDB();
   },
@@ -182,16 +187,11 @@ var SearchTestUtils = {
   /**
    * Add a search engine as a WebExtension.
    *
-   * Note: If you are in xpcshell-tests, then you should call
-   * `initXPCShellAddonManager` before calling this.
-   *
    * Note: for tests, the extension must generally be unloaded before
    * `registerCleanupFunction`s are triggered. See bug 1694409.
    *
-   * For mochitests this function automatically registers an unload, this
+   * This function automatically registers an unload for the extension, this
    * may be skipped with the skipUnload argument.
-   * For xpcshell-tests, we will hopefully be able to add the unload once
-   * bug 1694409 is fixed.
    *
    * @param {object} [options]
    *   @see createEngineManifest
@@ -201,6 +201,8 @@ var SearchTestUtils = {
    *   The loaded extension. This will need unloading before ending the test.
    */
   async installSearchExtension(options = {}, skipUnload = false) {
+    await Services.search.init();
+
     let extensionInfo = {
       useAddonManager: "permanent",
       manifest: this.createEngineManifest(options),
@@ -222,15 +224,20 @@ var SearchTestUtils = {
       await AddonTestUtils.waitForSearchProviderStartup(extension);
     }
 
+    // For xpcshell-tests we must register the unload after adding the extension.
+    // See bug 1694409 for why this is.
+    if (!skipUnload && !this._isMochitest) {
+      gTestScope.registerCleanupFunction(async () => {
+        await extension.unload();
+      });
+    }
+
     return extension;
   },
 
   /**
    * Install a search engine as a system extension to simulate
    * Normandy updates. For xpcshell-tests only.
-   *
-   * Note: If you are in xpcshell-tests, then you should call
-   * `initXPCShellAddonManager` before calling this.
    *
    * @param {object} [options]
    *   @see createEngineManifest

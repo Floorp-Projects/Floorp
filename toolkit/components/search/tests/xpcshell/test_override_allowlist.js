@@ -7,8 +7,6 @@ const kBaseURL = "https://example.com/";
 const kSearchEngineURL = `${kBaseURL}?q={searchTerms}&foo=myparams`;
 const kOverriddenEngineName = "Simple Engine";
 
-SearchTestUtils.initXPCShellAddonManager(this);
-
 const whitelist = [
   {
     thirdPartyId: "test@thirdparty.example.com",

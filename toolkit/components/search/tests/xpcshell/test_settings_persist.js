@@ -3,8 +3,6 @@
 
 "use strict";
 
-SearchTestUtils.initXPCShellAddonManager(this, "system");
-
 const CONFIG_DEFAULT = [
   {
     webExtension: { id: "plainengine@search.mozilla.org" },
