@@ -3016,18 +3016,6 @@ void nsFrameLoader::ApplySandboxFlags(uint32_t sandboxFlags) {
   // The child can only add restrictions, never remove them.
   sandboxFlags |= parentSandboxFlags;
 
-  // XXX this probably isn't fission compatible.
-  if (GetDocShell()) {
-    // If this frame is a receiving browsing context, we should add
-    // sandboxed auxiliary navigation flag to sandboxFlags. See
-    // https://w3c.github.io/presentation-api/#creating-a-receiving-browsing-context
-    nsAutoString presentationURL;
-    nsContentUtils::GetPresentationURL(GetDocShell(), presentationURL);
-    if (!presentationURL.IsEmpty()) {
-      sandboxFlags |= SANDBOXED_AUXILIARY_NAVIGATION;
-    }
-  }
-
   MOZ_ALWAYS_SUCCEEDS(context->SetSandboxFlags(sandboxFlags));
 }
 
@@ -3550,10 +3538,6 @@ void nsFrameLoader::MaybeUpdatePrimaryBrowserParent(
 
 nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
                                          nsIURI* aURI) {
-  nsAutoString presentationURLStr;
-  mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::mozpresentation,
-                         presentationURLStr);
-
   nsCOMPtr<nsIDocShell> docShell = mOwnerContent->OwnerDoc()->GetDocShell();
   nsCOMPtr<nsILoadContext> parentContext = do_QueryInterface(docShell);
   NS_ENSURE_STATE(parentContext);
@@ -3580,7 +3564,7 @@ nsresult nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
   uint32_t maxTouchPoints = BrowserParent::GetMaxTouchPoints(mOwnerContent);
 
   bool tabContextUpdated = aTabContext->SetTabContext(
-      chromeOuterWindowID, showFocusRings, presentationURLStr, maxTouchPoints);
+      chromeOuterWindowID, showFocusRings, maxTouchPoints);
   NS_ENSURE_STATE(tabContextUpdated);
 
   return NS_OK;
