@@ -53,6 +53,11 @@ panel[type="arrow"][side="right"] {
   margin: 1px;
 }
 
+.panel-arrowcontent > html|slot {
+  /* propagate border-radius from arrowcontent to slotted children */
+  border-radius: inherit;
+}
+
 :host([orient=vertical]) .panel-arrowcontent {
   -moz-box-orient: vertical;
 }
