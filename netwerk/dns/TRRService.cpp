@@ -64,18 +64,7 @@ const nsCString& TRRService::ProviderKey() { return kTRRDomains[sDomainIndex]; }
 
 NS_IMPL_ISUPPORTS(TRRService, nsIObserver, nsISupportsWeakReference)
 
-TRRService::TRRService()
-    : mInitialized(false),
-      mBlocklistDurationSeconds(60),
-      mLock("trrservice"),
-      mConfirmationNS("example.com"_ns),
-      mCaptiveIsPassed(false),
-      mTRRBLStorage("DataMutex::TRRBlocklist"),
-      mParentalControlEnabled(false) {
-  mConfirmation.mState = CONFIRM_INIT;
-  mConfirmation.mTRRFailures = 0;
-  MOZ_ASSERT(NS_IsMainThread(), "wrong thread");
-}
+TRRService::TRRService() { MOZ_ASSERT(NS_IsMainThread(), "wrong thread"); }
 
 // static
 void TRRService::AddObserver(nsIObserver* aObserver,

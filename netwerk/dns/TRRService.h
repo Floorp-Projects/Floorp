@@ -115,24 +115,25 @@ class TRRService : public TRRServiceBase,
 
   void CompleteConfirmation(nsresult aStatus, TRR* aTrrRequest);
 
-  bool mInitialized;
-  Atomic<uint32_t, Relaxed> mBlocklistDurationSeconds;
+  bool mInitialized{false};
+  Atomic<uint32_t, Relaxed> mBlocklistDurationSeconds{60};
 
-  Mutex mLock;
+  Mutex mLock{"TRRService"};
 
   nsCString mPrivateCred;  // main thread only
-  nsCString mConfirmationNS;
+  nsCString mConfirmationNS{"example.com"_ns};
   nsCString mBootstrapAddr;
 
-  Atomic<bool, Relaxed>
-      mCaptiveIsPassed;  // set when captive portal check is passed
+  Atomic<bool, Relaxed> mCaptiveIsPassed{
+      false};  // set when captive portal check is passed
   Atomic<bool, Relaxed> mDisableIPv6;  // don't even try
 
   // TRR Blocklist storage
   // mTRRBLStorage is only modified on the main thread, but we query whether it
   // is initialized or not off the main thread as well. Therefore we need to
   // lock while creating it and while accessing it off the main thread.
-  DataMutex<nsTHashMap<nsCStringHashKey, int32_t>> mTRRBLStorage;
+  DataMutex<nsTHashMap<nsCStringHashKey, int32_t>> mTRRBLStorage{
+      "DataMutex::TRRBlocklist"};
 
   // A set of domains that we should not use TRR for.
   nsTHashtable<nsCStringHashKey> mExcludedDomains;
@@ -150,12 +151,12 @@ class TRRService : public TRRServiceBase,
    public:
     static const size_t RESULTS_SIZE = 32;
 
-    Atomic<ConfirmationState, Relaxed> mState;
+    Atomic<ConfirmationState, Relaxed> mState{CONFIRM_INIT};
     RefPtr<TRR> mTask;
     nsCOMPtr<nsITimer> mTimer;
     uint32_t mRetryInterval = 125;  // milliseconds until retry
     // The number of TRR requests that failed in a row.
-    Atomic<uint32_t, Relaxed> mTRRFailures;
+    Atomic<uint32_t, Relaxed> mTRRFailures{0};
 
     // This buffer holds consecutive TRR failures reported by calling
     // TRRIsOkay(). It is only meant for reporting event telemetry.
@@ -197,7 +198,7 @@ class TRRService : public TRRServiceBase,
 
   ConfirmationContext mConfirmation;
 
-  bool mParentalControlEnabled;
+  bool mParentalControlEnabled{false};
   RefPtr<ODoHService> mODoHService;
   nsCOMPtr<nsINetworkLinkService> mLinkService;
 };
