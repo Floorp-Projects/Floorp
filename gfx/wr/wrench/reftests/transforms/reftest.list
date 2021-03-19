@@ -7,7 +7,7 @@ platform(linux,mac) == image-rotated-clip.yaml image-rotated-clip.png
 platform(linux,mac) fuzzy(1,6) == rotated-image.yaml rotated-image.png
 == singular.yaml singular-ref.yaml
 platform(linux) fuzzy(1,630) == perspective.yaml perspective.png
-platform(linux,mac) fuzzy(1,156) == prim-suite.yaml prim-suite.png
+platform(linux,mac) fuzzy(3,8100) == prim-suite.yaml prim-suite.png
 fuzzy-if(platform(swgl),1,2) == segments-bug.yaml segments-bug-ref.yaml
 platform(linux,mac) == content-offset.yaml content-offset.png
 platform(linux,mac) == coord-system.yaml coord-system.png

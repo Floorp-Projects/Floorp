@@ -41,21 +41,21 @@ fuzzy(0-3,0-7860) fuzzy-if(cocoaWidget,0-5,0-89041) fuzzy-if(azureSkiaGL,0-4,0-9
 fuzzy-if(cocoaWidget,0-1,0-28) fuzzy-if(winWidget,0-1,0-18) fuzzy-if(skiaContent,0-1,0-50) == radial-position-1b.html radial-position-1-ref.html
 fuzzy-if(cocoaWidget,0-4,0-22317) fuzzy-if(Android,0-8,0-771) == radial-shape-closest-corner-1a.html radial-shape-closest-corner-1-ref.html
 fuzzy(0-1,0-238) fuzzy-if(cocoaWidget,0-4,0-22608) fuzzy-if((/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\./.test(http.oscpu))&&d2d,0-1,0-336) fuzzy-if(Android,0-8,0-787) fuzzy-if(skiaContent,0-2,0-300) == radial-shape-closest-corner-1b.html radial-shape-closest-corner-1-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),0-1,0-5) fuzzy-if(Android,0-17,0-3880) == radial-shape-closest-side-1a.html radial-shape-closest-side-1-ref.html
-fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),0-1,0-5) fuzzy-if(Android,0-17,0-3880) == radial-shape-closest-side-1b.html radial-shape-closest-side-1-ref.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),0-1,0-5) fuzzy-if(webrender,0-5,0-30000) fuzzy-if(Android,0-17,0-5000) == radial-shape-closest-side-1a.html radial-shape-closest-side-1-ref.html
+fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windows\x20NT\x206\.2/.test(http.oscpu),0-1,0-5) fuzzy-if(webrender,0-5,0-30000) fuzzy-if(Android,0-17,0-5000) == radial-shape-closest-side-1b.html radial-shape-closest-side-1-ref.html
 fuzzy-if(Android,0-8,0-771) == radial-shape-farthest-corner-1a.html radial-shape-farthest-corner-1-ref.html
 fails-if(gtkWidget&&/x86_64-/.test(xulRuntime.XPCOMABI)) fuzzy(0-1,0-1622) fuzzy-if(cocoaWidget,0-2,0-41281) fuzzy-if(Android,0-8,0-1091) fuzzy-if(skiaContent,0-2,0-500) == radial-shape-farthest-corner-1b.html radial-shape-farthest-corner-1-ref.html
-fuzzy-if(Android,0-17,0-13320) == radial-shape-farthest-side-1a.html radial-shape-farthest-side-1-ref.html
-fuzzy-if(Android,0-17,0-13320) == radial-shape-farthest-side-1b.html radial-shape-farthest-side-1-ref.html
-fuzzy-if(webrender&&!swgl,0-2,0-26) fuzzy-if(webrender&&swgl,1-1,944-983) == radial-size-1a.html radial-size-1-ref.html
-fuzzy-if(webrender&&!swgl,0-1,0-26) fuzzy-if(webrender&&swgl,1-1,944-983) == radial-size-1b.html radial-size-1-ref.html
+fuzzy-if(webrender,0-2,0-15000) fuzzy-if(Android,0-17,0-13320) == radial-shape-farthest-side-1a.html radial-shape-farthest-side-1-ref.html
+fuzzy-if(webrender,0-2,0-15000) fuzzy-if(Android,0-17,0-13320) == radial-shape-farthest-side-1b.html radial-shape-farthest-side-1-ref.html
+== radial-size-1a.html radial-size-1-ref.html
+== radial-size-1b.html radial-size-1-ref.html
 fuzzy-if(Android,0-4,0-248) == radial-zero-length-1a.html radial-zero-length-1-ref.html
 fuzzy-if(Android,0-4,0-248) == radial-zero-length-1b.html radial-zero-length-1-ref.html
 fuzzy-if(Android,0-4,0-248) == radial-zero-length-1c.html radial-zero-length-1-ref.html
 fuzzy-if(Android,0-4,0-248) == radial-zero-length-1d.html radial-zero-length-1-ref.html
 fuzzy-if(Android,0-4,0-248) == radial-zero-length-1e.html radial-zero-length-1-ref.html
 fuzzy-if(Android,0-4,0-248) == radial-zero-length-1f.html radial-zero-length-1-ref.html
-== radial-premul.html radial-premul-ref.html
+fuzzy-if(webrender,0-1,0-10) == radial-premul.html radial-premul-ref.html
 == repeated-final-stop-1.html repeated-final-stop-1-ref.html
 == repeating-linear-1a.html repeating-linear-1-ref.html
 == repeating-linear-1b.html repeating-linear-1-ref.html
