@@ -124,7 +124,10 @@ def MakeCustomHandlerClass(
             self.handle_gecko_profile = handle_gecko_profile
             self.background_app = background_app
             self.foreground_app = foreground_app
-            super(MyHandler, self).__init__(*args, **kwargs)
+            try:
+                super(MyHandler, self).__init__(*args, **kwargs)
+            except ValueError:
+                pass
 
         def log_request(self, code="-", size="-"):
             if code != 200:
