@@ -8933,7 +8933,16 @@
 # global mode is TRR-only (no fallback).
 - name: network.trr.wait-for-confirmation
   type: RelaxedAtomicBool
-  value: true
+  value: false
+  mirror: always
+
+# Normally when confirmation fails we wait for the confirmation to succeed
+# before attempting to do TRR. When this pref is true, we optimistically
+# assume the confirmation will succeed and might attempt TRR anyway.
+# If network.trr.wait-for-confirmation is true, this pref is ignored.
+- name: network.trr.attempt-when-retrying-confirmation
+  type: RelaxedAtomicBool
+  value: false
   mirror: always
 
 # Use GET (rather than POST)

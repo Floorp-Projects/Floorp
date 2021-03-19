@@ -17,8 +17,8 @@ const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
   Ci.nsIDNSService
 );
 
-trr_test_setup();
 registerCleanupFunction(async () => {
+  Services.prefs.clearUserPref("network.proxy.type");
   trr_clear_prefs();
 });
 
@@ -48,6 +48,7 @@ const override = Cc["@mozilla.org/network/native-dns-override;1"].getService(
 );
 
 add_task(async function test_pac_dnsResolve() {
+  Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
   Services.console.reset();
   // Create a console listener.
   let consolePromise = new Promise(resolve => {
@@ -107,6 +108,8 @@ add_task(async function test_pac_dnsResolve() {
     "network.trr.uri",
     `https://foo.example.com:${h2Port}/doh?responseIP=127.0.0.1`
   );
+
+  trr_test_setup();
 
   async function test_with(DOMAIN, trrMode, fetchOffMainThread) {
     Services.prefs.setIntPref("network.trr.mode", trrMode); // TRR first

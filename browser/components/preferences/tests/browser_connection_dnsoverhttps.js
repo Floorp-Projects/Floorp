@@ -45,12 +45,13 @@ async function resetPrefs() {
   Services.telemetry.clearEvents();
   await DoHController.init();
 }
-
+Services.prefs.setStringPref("network.trr.confirmationNS", "skip");
 let preferencesOpen = new Promise(res => open_preferences(res));
 
 registerCleanupFunction(() => {
   resetPrefs();
   gBrowser.removeCurrentTab();
+  Services.prefs.clearUserPref("network.trr.confirmationNS");
 });
 
 async function openConnectionsSubDialog() {

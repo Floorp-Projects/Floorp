@@ -29,8 +29,6 @@ function trr_test_setup() {
   // make all native resolve calls "secretly" resolve localhost instead
   Services.prefs.setBoolPref("network.dns.native-is-localhost", true);
 
-  // 0 - off, 1 - reserved, 2 - TRR first, 3  - TRR only, 4 - reserved
-  Services.prefs.setIntPref("network.trr.mode", 2); // TRR first
   Services.prefs.setBoolPref("network.trr.wait-for-portal", false);
   // By default wait for all responses before notifying the listeners.
   Services.prefs.setBoolPref("network.trr.wait-for-A-and-AAAA", true);
@@ -46,6 +44,9 @@ function trr_test_setup() {
     Ci.nsIX509CertDB
   );
   addCertFromFile(certdb, "http2-ca.pem", "CTu,u,u");
+
+  // We intentionally don't set the TRR mode. Each test should set it
+  // after setup in the first test.
 }
 
 /// Clears the prefs that we're likely to set while testing TRR code
