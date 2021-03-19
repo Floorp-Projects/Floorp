@@ -62,10 +62,7 @@ use crate::prim_store::{PrimitiveInstanceKind, NinePatchDescriptor, PrimitiveSto
 use crate::prim_store::{InternablePrimitive, SegmentInstanceIndex, PictureIndex};
 use crate::prim_store::backdrop::Backdrop;
 use crate::prim_store::borders::{ImageBorder, NormalBorderPrim};
-use crate::prim_store::gradient::{
-    GradientStopKey, LinearGradient, RadialGradient, RadialGradientParams, ConicGradient,
-    ConicGradientParams, optimize_radial_gradient,
-};
+use crate::prim_store::gradient::{GradientStopKey, LinearGradient, RadialGradient, RadialGradientParams, ConicGradient, ConicGradientParams};
 use crate::prim_store::image::{Image, YuvImage};
 use crate::prim_store::line_dec::{LineDecoration, LineDecorationCacheKey, get_line_decoration_size};
 use crate::prim_store::picture::{Picture, PictureCompositeKey, PictureKey};
@@ -1231,73 +1228,37 @@ impl<'a> SceneBuilder<'a> {
             DisplayItem::RadialGradient(ref info) => {
                 profile_scope!("radial");
 
-                let (mut layout, unsnapped_rect, spatial_node_index, clip_chain_id) = self.process_common_properties_with_bounds(
+                let (layout, unsnapped_rect, spatial_node_index, clip_chain_id) = self.process_common_properties_with_bounds(
                     &info.common,
                     &info.bounds,
                 );
 
-                let stops = read_gradient_stops(item.gradient_stops());
-
-                let mut tile_size = process_repeat_size(
+                let tile_size = process_repeat_size(
                     &layout.rect,
                     &unsnapped_rect,
                     info.tile_size,
                 );
 
-                let mut prim_rect = layout.rect;
-                let mut tile_spacing = info.tile_spacing;
-                let mut center = info.gradient.center;
-                optimize_radial_gradient(
-                    &mut prim_rect,
-                    &mut tile_size,
-                    &mut center,
-                    &mut tile_spacing,
-                    info.gradient.radius,
+                let prim_key_kind = self.create_radial_gradient_prim(
+                    &layout,
+                    info.gradient.center,
+                    info.gradient.start_offset * info.gradient.radius.width,
+                    info.gradient.end_offset * info.gradient.radius.width,
+                    info.gradient.radius.width / info.gradient.radius.height,
+                    item.gradient_stops(),
                     info.gradient.extend_mode,
-                    &stops,
-                    &mut |solid_rect, color| {
-                        self.add_nonshadowable_primitive(
-                            spatial_node_index,
-                            clip_chain_id,
-                            &LayoutPrimitiveInfo {
-                                rect: *solid_rect,
-                                .. layout
-                            },
-                            Vec::new(),
-                            PrimitiveKeyKind::Rectangle { color: PropertyBinding::Value(color) },
-                        );
-                    }
+                    tile_size,
+                    info.tile_spacing,
+                    None,
                 );
 
-                // TODO: create_radial_gradient_prim already calls 
-                // this, but it leaves the info variable that is
-                // passed to add_nonshadowable_primitive unmodified
-                // which can cause issues.
-                simplify_repeated_primitive(&tile_size, &mut tile_spacing, &mut prim_rect);
-
-                if !tile_size.is_empty() {
-                    layout.rect = prim_rect;
-                    let prim_key_kind = self.create_radial_gradient_prim(
-                        &layout,
-                        center,
-                        info.gradient.start_offset * info.gradient.radius.width,
-                        info.gradient.end_offset * info.gradient.radius.width,
-                        info.gradient.radius.width / info.gradient.radius.height,
-                        stops,
-                        info.gradient.extend_mode,
-                        tile_size,
-                        tile_spacing,
-                        None,
-                    );
-
-                    self.add_nonshadowable_primitive(
-                        spatial_node_index,
-                        clip_chain_id,
-                        &layout,
-                        Vec::new(),
-                        prim_key_kind,
-                    );
-                }
+                self.add_nonshadowable_primitive(
+                    spatial_node_index,
+                    clip_chain_id,
+                    &layout,
+                    Vec::new(),
+                    prim_key_kind,
+                );
             }
             DisplayItem::ConicGradient(ref info) => {
                 profile_scope!("conic");
@@ -2978,7 +2939,7 @@ impl<'a> SceneBuilder<'a> {
                             gradient.start_offset * gradient.radius.width,
                             gradient.end_offset * gradient.radius.width,
                             gradient.radius.width / gradient.radius.height,
-                            read_gradient_stops(gradient_stops),
+                            gradient_stops,
                             gradient.extend_mode,
                             LayoutSize::new(border.height as f32, border.width as f32),
                             LayoutSize::zero(),
@@ -3096,7 +3057,7 @@ impl<'a> SceneBuilder<'a> {
         start_radius: f32,
         end_radius: f32,
         ratio_xy: f32,
-        stops: Vec<GradientStopKey>,
+        stops: ItemRange<GradientStop>,
         extend_mode: ExtendMode,
         stretch_size: LayoutSize,
         mut tile_spacing: LayoutSize,
@@ -3110,6 +3071,13 @@ impl<'a> SceneBuilder<'a> {
             end_radius,
             ratio_xy,
         };
+
+        let stops = stops.iter().map(|stop| {
+            GradientStopKey {
+                offset: stop.offset,
+                color: stop.color.into(),
+            }
+        }).collect();
 
         RadialGradient {
             extend_mode,
@@ -3922,13 +3890,4 @@ fn process_repeat_size(
             repeat_size.height
         },
     )
-}
-
-fn read_gradient_stops(stops: ItemRange<GradientStop>) -> Vec<GradientStopKey> {
-    stops.iter().map(|stop| {
-        GradientStopKey {
-            offset: stop.offset,
-            color: stop.color.into(),
-        }
-    }).collect()
 }
