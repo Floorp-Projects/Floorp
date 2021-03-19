@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "build-pvutils": "./node_modules/browserify/bin/cmd.js pvutils.js --standalone pvutils -o ./vendor/pvutils_bundle.js",
-    "build-asn1js": "./node_modules/browserify/bin/cmd.js asn1js.js --standalone asn1js -o ./vendor/asn1js_bundle.js",
-    "build-pkijs": "./node_modules/browserify/bin/cmd.js pkijs.js --standalone pkijs -o ./vendor/pkijs_bundle.js",
+    "build-pvutils": "./bundle.sh pvutils",
+    "build-asn1js": "./bundle.sh asn1js",
+    "build-pkijs": "./bundle.sh pkijs",
     "build": "npm run build-pvutils && npm run build-asn1js && npm run build-pkijs"
   },
   "license": "MPL-2.0",
