@@ -24,8 +24,10 @@ elif CONFIG['CPU_ARCH'] == 'x86':
         '/media/libdav1d/asm/x86_32/',
     ]
 
-include('autovendored_sources.mozbuild')
-SOURCES += sources
+SOURCES += [
+    '/third_party/dav1d/tests/libfuzzer/dav1d_fuzzer.c',
+    'dav1d_fuzz_adapter.cpp',
+]
 
 include('/tools/fuzzing/libfuzzer-config.mozbuild')
 
