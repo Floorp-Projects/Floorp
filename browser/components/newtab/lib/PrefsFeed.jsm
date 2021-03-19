@@ -135,7 +135,7 @@ this.PrefsFeed = class PrefsFeed {
     );
 
     // Read the pref for search shortcuts top sites experiment from firefox.js and store it
-    // in our interal list of prefs to watch
+    // in our internal list of prefs to watch
     let searchTopSiteExperimentPrefValue = Services.prefs.getBoolPref(
       "browser.newtabpage.activity-stream.improvesearch.topSiteSearchShortcuts"
     );
@@ -151,13 +151,24 @@ this.PrefsFeed = class PrefsFeed {
     );
 
     // Read the pref for search hand-off from firefox.js and store it
-    // in our interal list of prefs to watch
+    // in our internal list of prefs to watch
     let handoffToAwesomebarPrefValue = Services.prefs.getBoolPref(
       "browser.newtabpage.activity-stream.improvesearch.handoffToAwesomebar"
     );
     values["improvesearch.handoffToAwesomebar"] = handoffToAwesomebarPrefValue;
     this._prefMap.set("improvesearch.handoffToAwesomebar", {
       value: handoffToAwesomebarPrefValue,
+    });
+
+    // Read the pref for the cached default engine name from firefox.js and
+    // store it in our internal list of prefs to watch
+    let placeholderPrefValue = Services.prefs.getStringPref(
+      "browser.urlbar.placeholderName",
+      ""
+    );
+    values["urlbar.placeholderName"] = placeholderPrefValue;
+    this._prefMap.set("urlbar.placeholderName", {
+      value: placeholderPrefValue,
     });
 
     // Add experiment values and default values
