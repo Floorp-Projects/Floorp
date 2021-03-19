@@ -1531,3 +1531,51 @@ TEST(Hashtables, RefPtrHashtable)
   }
   ASSERT_EQ(count, uint32_t(0));
 }
+
+TEST(Hashtables, RefPtrHashtable_Clone)
+{
+  // check a RefPtr-hashtable
+  nsRefPtrHashtable<nsCStringHashKey, TestUniCharRefCounted> EntToUniClass(
+      ENTITY_COUNT);
+
+  for (auto& entity : gEntities) {
+    EntToUniClass.InsertOrUpdate(
+        nsDependentCString(entity.mStr),
+        MakeRefPtr<TestUniCharRefCounted>(entity.mUnicode));
+  }
+
+  auto clone = EntToUniClass.Clone();
+  static_assert(std::is_same_v<decltype(clone), decltype(EntToUniClass)>);
+
+  EXPECT_EQ(clone.Count(), EntToUniClass.Count());
+
+  for (const auto& entry : EntToUniClass) {
+    auto cloneEntry = clone.Lookup(entry.GetKey());
+
+    EXPECT_TRUE(cloneEntry);
+    EXPECT_EQ(cloneEntry.Data(), entry.GetWeak());
+  }
+}
+
+TEST(Hashtables, Clone)
+{
+  static constexpr uint64_t count = 10;
+
+  nsTHashMap<nsUint64HashKey, uint64_t> table;
+  for (uint64_t i = 0; i < count; i++) {
+    table.InsertOrUpdate(42 + i, i);
+  }
+
+  auto clone = table.Clone();
+
+  static_assert(std::is_same_v<decltype(clone), decltype(table)>);
+
+  EXPECT_EQ(clone.Count(), table.Count());
+
+  for (const auto& entry : table) {
+    auto cloneEntry = clone.Lookup(entry.GetKey());
+
+    EXPECT_TRUE(cloneEntry);
+    EXPECT_EQ(cloneEntry.Data(), entry.GetData());
+  }
+}

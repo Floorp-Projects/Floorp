@@ -878,6 +878,26 @@ class nsBaseHashtable
   }
 
   using nsTHashtable<EntryType>::MarkImmutable;
+
+  /**
+   * Makes a clone of this hashtable by copying all entries. This requires
+   * KeyType and DataType to be copy-constructible.
+   */
+  nsBaseHashtable Clone() const { return CloneAs<nsBaseHashtable>(); }
+
+ protected:
+  template <typename T>
+  T CloneAs() const {
+    static_assert(std::is_base_of_v<nsBaseHashtable, T>);
+    // XXX This can probably be optimized, see Bug 1694368.
+    T result(Count());
+    for (const auto& srcEntry : *this) {
+      result.WithEntryHandle(srcEntry.GetKey(), [&](auto&& dstEntry) {
+        dstEntry.Insert(srcEntry.GetData());
+      });
+    }
+    return result;
+  }
 };
 
 //
