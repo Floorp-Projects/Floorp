@@ -235,101 +235,115 @@ add_task(async function test_aliasform() {
   }
 
   // Test that HTTPS priority = 0 (AliasForm) behaves like a CNAME
-  await trrServer.registerDoHAnswers("test.com", "A", [
-    {
-      name: "test.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 0,
-        name: "something.com",
-        values: [],
+  await trrServer.registerDoHAnswers("test.com", "A", {
+    answers: [
+      {
+        name: "test.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 0,
+          name: "something.com",
+          values: [],
+        },
       },
-    },
-  ]);
-  await trrServer.registerDoHAnswers("something.com", "A", [
-    {
-      name: "something.com",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "1.2.3.4",
-    },
-  ]);
+    ],
+  });
+  await trrServer.registerDoHAnswers("something.com", "A", {
+    answers: [
+      {
+        name: "something.com",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "1.2.3.4",
+      },
+    ],
+  });
 
   await new TRRDNSListener("test.com", { expectedAnswer: "1.2.3.4" });
 
   // Test a chain of HTTPSSVC AliasForm and CNAMEs
-  await trrServer.registerDoHAnswers("x.com", "A", [
-    {
-      name: "x.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 0,
+  await trrServer.registerDoHAnswers("x.com", "A", {
+    answers: [
+      {
+        name: "x.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 0,
+          name: "y.com",
+          values: [],
+        },
+      },
+    ],
+  });
+  await trrServer.registerDoHAnswers("y.com", "A", {
+    answers: [
+      {
         name: "y.com",
-        values: [],
+        type: "CNAME",
+        ttl: 55,
+        class: "IN",
+        flush: false,
+        data: "z.com",
       },
-    },
-  ]);
-  await trrServer.registerDoHAnswers("y.com", "A", [
-    {
-      name: "y.com",
-      type: "CNAME",
-      ttl: 55,
-      class: "IN",
-      flush: false,
-      data: "z.com",
-    },
-  ]);
-  await trrServer.registerDoHAnswers("z.com", "A", [
-    {
-      name: "z.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 0,
+    ],
+  });
+  await trrServer.registerDoHAnswers("z.com", "A", {
+    answers: [
+      {
+        name: "z.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 0,
+          name: "target.com",
+          values: [],
+        },
+      },
+    ],
+  });
+  await trrServer.registerDoHAnswers("target.com", "A", {
+    answers: [
+      {
         name: "target.com",
-        values: [],
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "4.3.2.1",
       },
-    },
-  ]);
-  await trrServer.registerDoHAnswers("target.com", "A", [
-    {
-      name: "target.com",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "4.3.2.1",
-    },
-  ]);
+    ],
+  });
 
   await new TRRDNSListener("x.com", { expectedAnswer: "4.3.2.1" });
 
   // We get a ServiceForm instead of a A answer, CNAME or AliasForm
-  await trrServer.registerDoHAnswers("no-ip-host.com", "A", [
-    {
-      name: "no-ip-host.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 1,
-        name: "h3pool",
-        values: [
-          { key: "alpn", value: ["h2", "h3"] },
-          { key: "no-default-alpn" },
-          { key: "port", value: 8888 },
-          { key: "ipv4hint", value: "1.2.3.4" },
-          { key: "echconfig", value: "123..." },
-          { key: "ipv6hint", value: "::1" },
-        ],
+  await trrServer.registerDoHAnswers("no-ip-host.com", "A", {
+    answers: [
+      {
+        name: "no-ip-host.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "h3pool",
+          values: [
+            { key: "alpn", value: ["h2", "h3"] },
+            { key: "no-default-alpn" },
+            { key: "port", value: 8888 },
+            { key: "ipv4hint", value: "1.2.3.4" },
+            { key: "echconfig", value: "123..." },
+            { key: "ipv6hint", value: "::1" },
+          ],
+        },
       },
-    },
-  ]);
+    ],
+  });
 
   let [, , inStatus] = await new TRRDNSListener("no-ip-host.com", {
     expectedSuccess: false,
@@ -340,29 +354,33 @@ add_task(async function test_aliasform() {
   );
 
   // Test CNAME/AliasForm loop
-  await trrServer.registerDoHAnswers("loop.com", "A", [
-    {
-      name: "loop.com",
-      type: "CNAME",
-      ttl: 55,
-      class: "IN",
-      flush: false,
-      data: "loop2.com",
-    },
-  ]);
-  await trrServer.registerDoHAnswers("loop2.com", "A", [
-    {
-      name: "loop2.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 0,
+  await trrServer.registerDoHAnswers("loop.com", "A", {
+    answers: [
+      {
         name: "loop.com",
-        values: [],
+        type: "CNAME",
+        ttl: 55,
+        class: "IN",
+        flush: false,
+        data: "loop2.com",
       },
-    },
-  ]);
+    ],
+  });
+  await trrServer.registerDoHAnswers("loop2.com", "A", {
+    answers: [
+      {
+        name: "loop2.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 0,
+          name: "loop.com",
+          values: [],
+        },
+      },
+    ],
+  });
 
   [, , inStatus] = await new TRRDNSListener("loop.com", {
     expectedSuccess: false,
@@ -373,19 +391,21 @@ add_task(async function test_aliasform() {
   );
 
   // Alias form for .
-  await trrServer.registerDoHAnswers("empty.com", "A", [
-    {
-      name: "empty.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 0,
-        name: "", // This is not allowed
-        values: [],
+  await trrServer.registerDoHAnswers("empty.com", "A", {
+    answers: [
+      {
+        name: "empty.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 0,
+          name: "", // This is not allowed
+          values: [],
+        },
       },
-    },
-  ]);
+    ],
+  });
 
   [, , inStatus] = await new TRRDNSListener("empty.com", {
     expectedSuccess: false,
@@ -396,37 +416,39 @@ add_task(async function test_aliasform() {
   );
 
   // We should ignore ServiceForm if an AliasForm record is also present
-  await trrServer.registerDoHAnswers("multi.com", "HTTPS", [
-    {
-      name: "multi.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 1,
-        name: "h3pool",
-        values: [
-          { key: "alpn", value: ["h2", "h3"] },
-          { key: "no-default-alpn" },
-          { key: "port", value: 8888 },
-          { key: "ipv4hint", value: "1.2.3.4" },
-          { key: "echconfig", value: "123..." },
-          { key: "ipv6hint", value: "::1" },
-        ],
+  await trrServer.registerDoHAnswers("multi.com", "HTTPS", {
+    answers: [
+      {
+        name: "multi.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "h3pool",
+          values: [
+            { key: "alpn", value: ["h2", "h3"] },
+            { key: "no-default-alpn" },
+            { key: "port", value: 8888 },
+            { key: "ipv4hint", value: "1.2.3.4" },
+            { key: "echconfig", value: "123..." },
+            { key: "ipv6hint", value: "::1" },
+          ],
+        },
       },
-    },
-    {
-      name: "multi.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 0,
-        name: "example.com",
-        values: [],
+      {
+        name: "multi.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 0,
+          name: "example.com",
+          values: [],
+        },
       },
-    },
-  ]);
+    ],
+  });
 
   let listener = new DNSListener();
   let request = dns.asyncResolve(
@@ -447,26 +469,28 @@ add_task(async function test_aliasform() {
   );
 
   // the svcparam keys are in reverse order
-  await trrServer.registerDoHAnswers("order.com", "HTTPS", [
-    {
-      name: "order.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 1,
-        name: "h3pool",
-        values: [
-          { key: "ipv6hint", value: "::1" },
-          { key: "echconfig", value: "123..." },
-          { key: "ipv4hint", value: "1.2.3.4" },
-          { key: "port", value: 8888 },
-          { key: "no-default-alpn" },
-          { key: "alpn", value: ["h2", "h3"] },
-        ],
+  await trrServer.registerDoHAnswers("order.com", "HTTPS", {
+    answers: [
+      {
+        name: "order.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "h3pool",
+          values: [
+            { key: "ipv6hint", value: "::1" },
+            { key: "echconfig", value: "123..." },
+            { key: "ipv4hint", value: "1.2.3.4" },
+            { key: "port", value: 8888 },
+            { key: "no-default-alpn" },
+            { key: "alpn", value: ["h2", "h3"] },
+          ],
+        },
       },
-    },
-  ]);
+    ],
+  });
 
   listener = new DNSListener();
   request = dns.asyncResolve(
@@ -487,22 +511,24 @@ add_task(async function test_aliasform() {
   );
 
   // duplicate svcparam keys
-  await trrServer.registerDoHAnswers("duplicate.com", "HTTPS", [
-    {
-      name: "duplicate.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 1,
-        name: "h3pool",
-        values: [
-          { key: "alpn", value: ["h2", "h3"] },
-          { key: "alpn", value: ["h2", "h3", "h4"] },
-        ],
+  await trrServer.registerDoHAnswers("duplicate.com", "HTTPS", {
+    answers: [
+      {
+        name: "duplicate.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "h3pool",
+          values: [
+            { key: "alpn", value: ["h2", "h3"] },
+            { key: "alpn", value: ["h2", "h3", "h4"] },
+          ],
+        },
       },
-    },
-  ]);
+    ],
+  });
 
   listener = new DNSListener();
   request = dns.asyncResolve(
@@ -523,23 +549,25 @@ add_task(async function test_aliasform() {
   );
 
   // mandatory svcparam
-  await trrServer.registerDoHAnswers("mandatory.com", "HTTPS", [
-    {
-      name: "mandatory.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 1,
-        name: "h3pool",
-        values: [
-          { key: "mandatory", value: ["key100"] },
-          { key: "alpn", value: ["h2", "h3"] },
-          { key: "key100" },
-        ],
+  await trrServer.registerDoHAnswers("mandatory.com", "HTTPS", {
+    answers: [
+      {
+        name: "mandatory.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "h3pool",
+          values: [
+            { key: "mandatory", value: ["key100"] },
+            { key: "alpn", value: ["h2", "h3"] },
+            { key: "key100" },
+          ],
+        },
       },
-    },
-  ]);
+    ],
+  });
 
   listener = new DNSListener();
   request = dns.asyncResolve(
@@ -557,37 +585,39 @@ add_task(async function test_aliasform() {
   Assert.ok(!Components.isSuccessCode(inStatus2), `${inStatus2} should fail`);
 
   // mandatory svcparam
-  await trrServer.registerDoHAnswers("mandatory2.com", "HTTPS", [
-    {
-      name: "mandatory2.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 1,
-        name: "h3pool",
-        values: [
-          {
-            key: "mandatory",
-            value: [
-              "alpn",
-              "no-default-alpn",
-              "port",
-              "ipv4hint",
-              "echconfig",
-              "ipv6hint",
-            ],
-          },
-          { key: "alpn", value: ["h2", "h3"] },
-          { key: "no-default-alpn" },
-          { key: "port", value: 8888 },
-          { key: "ipv4hint", value: "1.2.3.4" },
-          { key: "echconfig", value: "123..." },
-          { key: "ipv6hint", value: "::1" },
-        ],
+  await trrServer.registerDoHAnswers("mandatory2.com", "HTTPS", {
+    answers: [
+      {
+        name: "mandatory2.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "h3pool",
+          values: [
+            {
+              key: "mandatory",
+              value: [
+                "alpn",
+                "no-default-alpn",
+                "port",
+                "ipv4hint",
+                "echconfig",
+                "ipv6hint",
+              ],
+            },
+            { key: "alpn", value: ["h2", "h3"] },
+            { key: "no-default-alpn" },
+            { key: "port", value: 8888 },
+            { key: "ipv4hint", value: "1.2.3.4" },
+            { key: "echconfig", value: "123..." },
+            { key: "ipv6hint", value: "::1" },
+          ],
+        },
       },
-    },
-  ]);
+    ],
+  });
 
   listener = new DNSListener();
   request = dns.asyncResolve(
@@ -605,19 +635,21 @@ add_task(async function test_aliasform() {
   Assert.ok(Components.isSuccessCode(inStatus2), `${inStatus2} should succeed`);
 
   // alias-mode with . targetName
-  await trrServer.registerDoHAnswers("no-alias.com", "HTTPS", [
-    {
-      name: "no-alias.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 0,
-        name: ".",
-        values: [],
+  await trrServer.registerDoHAnswers("no-alias.com", "HTTPS", {
+    answers: [
+      {
+        name: "no-alias.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 0,
+          name: ".",
+          values: [],
+        },
       },
-    },
-  ]);
+    ],
+  });
 
   listener = new DNSListener();
   request = dns.asyncResolve(
@@ -635,19 +667,21 @@ add_task(async function test_aliasform() {
   Assert.ok(!Components.isSuccessCode(inStatus2), `${inStatus2} should fail`);
 
   // service-mode with . targetName
-  await trrServer.registerDoHAnswers("service.com", "HTTPS", [
-    {
-      name: "service.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 1,
-        name: ".",
-        values: [{ key: "alpn", value: ["h2", "h3"] }],
+  await trrServer.registerDoHAnswers("service.com", "HTTPS", {
+    answers: [
+      {
+        name: "service.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: ".",
+          values: [{ key: "alpn", value: ["h2", "h3"] }],
+        },
       },
-    },
-  ]);
+    ],
+  });
 
   listener = new DNSListener();
   request = dns.asyncResolve(

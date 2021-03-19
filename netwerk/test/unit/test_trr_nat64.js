@@ -85,15 +85,17 @@ add_task(async function test_add_nat64_prefix_to_trr() {
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
 
-  await trrServer.registerDoHAnswers("xyz.foo", "A", [
-    {
-      name: "xyz.foo",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "1.2.3.4",
-    },
-  ]);
+  await trrServer.registerDoHAnswers("xyz.foo", "A", {
+    answers: [
+      {
+        name: "xyz.foo",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "1.2.3.4",
+      },
+    ],
+  });
   let [, inRecord] = await new TRRDNSListener("xyz.foo", {
     expectedSuccess: false,
   });

@@ -162,36 +162,40 @@ add_task(async function testRetryWithoutECH() {
   await trrServer.registerDoHAnswers(
     "delegated-disabled.example.com",
     "HTTPS",
-    [
+    {
+      answers: [
+        {
+          name: "delegated-disabled.example.com",
+          ttl: 55,
+          type: "HTTPS",
+          flush: false,
+          data: {
+            priority: 1,
+            name: "delegated-disabled.example.com",
+            values: [
+              {
+                key: "echconfig",
+                value: ECH_CONFIG_FIXED,
+                needBase64Decode: true,
+              },
+            ],
+          },
+        },
+      ],
+    }
+  );
+
+  await trrServer.registerDoHAnswers("delegated-disabled.example.com", "A", {
+    answers: [
       {
         name: "delegated-disabled.example.com",
         ttl: 55,
-        type: "HTTPS",
+        type: "A",
         flush: false,
-        data: {
-          priority: 1,
-          name: "delegated-disabled.example.com",
-          values: [
-            {
-              key: "echconfig",
-              value: ECH_CONFIG_FIXED,
-              needBase64Decode: true,
-            },
-          ],
-        },
+        data: "127.0.0.1",
       },
-    ]
-  );
-
-  await trrServer.registerDoHAnswers("delegated-disabled.example.com", "A", [
-    {
-      name: "delegated-disabled.example.com",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "127.0.0.1",
-    },
-  ]);
+    ],
+  });
 
   let listener = new DNSListener();
 

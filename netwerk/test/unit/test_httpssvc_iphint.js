@@ -117,24 +117,26 @@ add_task(async function testStoreIPHint() {
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
 
-  await trrServer.registerDoHAnswers("test.IPHint.com", "HTTPS", [
-    {
-      name: "test.IPHint.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 1,
+  await trrServer.registerDoHAnswers("test.IPHint.com", "HTTPS", {
+    answers: [
+      {
         name: "test.IPHint.com",
-        values: [
-          { key: "alpn", value: ["h2", "h3"] },
-          { key: "port", value: 8888 },
-          { key: "ipv4hint", value: ["1.2.3.4", "5.6.7.8"] },
-          { key: "ipv6hint", value: ["::1", "fe80::794f:6d2c:3d5e:7836"] },
-        ],
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "test.IPHint.com",
+          values: [
+            { key: "alpn", value: ["h2", "h3"] },
+            { key: "port", value: 8888 },
+            { key: "ipv4hint", value: ["1.2.3.4", "5.6.7.8"] },
+            { key: "ipv6hint", value: ["::1", "fe80::794f:6d2c:3d5e:7836"] },
+          ],
+        },
       },
-    },
-  ]);
+    ],
+  });
 
   let listener = new DNSListener();
 

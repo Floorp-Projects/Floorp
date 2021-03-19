@@ -112,52 +112,54 @@ add_task(async function testPriorityAndECHConfig() {
     `https://foo.example.com:${trrServer.port}/dns-query`
   );
 
-  await trrServer.registerDoHAnswers("test.priority.com", "HTTPS", [
-    {
-      name: "test.priority.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 1,
-        name: "test.p1.com",
-        values: [{ key: "alpn", value: ["h2", "h3"] }],
+  await trrServer.registerDoHAnswers("test.priority.com", "HTTPS", {
+    answers: [
+      {
+        name: "test.priority.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "test.p1.com",
+          values: [{ key: "alpn", value: ["h2", "h3"] }],
+        },
       },
-    },
-    {
-      name: "test.priority.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 4,
-        name: "test.p4.com",
-        values: [{ key: "echconfig", value: "456..." }],
+      {
+        name: "test.priority.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 4,
+          name: "test.p4.com",
+          values: [{ key: "echconfig", value: "456..." }],
+        },
       },
-    },
-    {
-      name: "test.priority.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 3,
-        name: "test.p3.com",
-        values: [{ key: "ipv4hint", value: "1.2.3.4" }],
+      {
+        name: "test.priority.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 3,
+          name: "test.p3.com",
+          values: [{ key: "ipv4hint", value: "1.2.3.4" }],
+        },
       },
-    },
-    {
-      name: "test.priority.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 2,
-        name: "test.p2.com",
-        values: [{ key: "echconfig", value: "123..." }],
+      {
+        name: "test.priority.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 2,
+          name: "test.p2.com",
+          values: [{ key: "echconfig", value: "123..." }],
+        },
       },
-    },
-  ]);
+    ],
+  });
 
   let listener = new DNSListener();
 
