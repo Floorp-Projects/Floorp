@@ -56,7 +56,7 @@ final class SamplePool {
                 final Sample s = Sample.obtain();
                 s.bufferId = id;
                 return s;
-            } catch (NoSuchMethodException | IOException e) {
+            } catch (final NoSuchMethodException | IOException e) {
                 mBuffers.remove(id);
                 throw new UnsupportedOperationException(e);
             }
@@ -79,12 +79,12 @@ final class SamplePool {
         }
 
         private synchronized void clear() {
-            for (Sample s : mRecycledSamples) {
+            for (final Sample s : mRecycledSamples) {
                 disposeSample(s);
             }
             mRecycledSamples.clear();
 
-            for (SampleBuffer b: mBuffers.values()) {
+            for (final SampleBuffer b: mBuffers.values()) {
                 b.dispose();
             }
             mBuffers.clear();
@@ -121,13 +121,13 @@ final class SamplePool {
     }
 
     /* package */ Sample obtainInput(final int size) {
-        Sample input = mInputs.obtain(size);
+        final Sample input = mInputs.obtain(size);
         input.info.set(0, 0, 0, 0);
         return input;
     }
 
     /* package */ Sample obtainOutput(final MediaCodec.BufferInfo info) {
-        Sample output = mOutputs.obtain(info.size);
+        final Sample output = mOutputs.obtain(info.size);
         output.info.set(0, info.size, info.presentationTimeUs, info.flags);
         return output;
     }

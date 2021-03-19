@@ -18,7 +18,7 @@ import java.nio.ByteBuffer;
 public final class Sample implements Parcelable {
     public static final Sample EOS;
     static {
-        BufferInfo eosInfo = new BufferInfo();
+        final BufferInfo eosInfo = new BufferInfo();
         EOS = new Sample();
         EOS.info.set(0, 0, Long.MIN_VALUE, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
     }
@@ -41,27 +41,27 @@ public final class Sample implements Parcelable {
     private Sample() { }
 
     private void readInfo(final Parcel in) {
-        int offset = in.readInt();
-        int size = in.readInt();
-        long pts = in.readLong();
-        int flags = in.readInt();
+        final int offset = in.readInt();
+        final int size = in.readInt();
+        final long pts = in.readLong();
+        final int flags = in.readInt();
 
         info.set(offset, size, pts, flags);
     }
 
     private void readCrypto(final Parcel in) {
-        int hasCryptoInfo = in.readInt();
+        final int hasCryptoInfo = in.readInt();
         if (hasCryptoInfo == 0) {
             cryptoInfo = null;
             return;
         }
 
-        byte[] iv = in.createByteArray();
-        byte[] key = in.createByteArray();
-        int mode = in.readInt();
-        int[] numBytesOfClearData = in.createIntArray();
-        int[] numBytesOfEncryptedData = in.createIntArray();
-        int numSubSamples = in.readInt();
+        final byte[] iv = in.createByteArray();
+        final byte[] key = in.createByteArray();
+        final int mode = in.readInt();
+        final int[] numBytesOfClearData = in.createIntArray();
+        final int[] numBytesOfEncryptedData = in.createIntArray();
+        final int numSubSamples = in.readInt();
 
         if (cryptoInfo == null) {
             cryptoInfo = new CryptoInfo();
@@ -153,7 +153,7 @@ public final class Sample implements Parcelable {
         }
 
         private Sample obtainSample(final Parcel in) {
-            Sample s = obtain();
+            final Sample s = obtain();
             s.session = in.readLong();
             s.bufferId = in.readInt();
             s.readInfo(in);
@@ -204,8 +204,8 @@ public final class Sample implements Parcelable {
         if (buffer.hasArray() && offset == 0 && buffer.array().length == size) {
             return buffer.array();
         }
-        int length = Math.min(offset + size, buffer.capacity()) - offset;
-        byte[] bytes = new byte[length];
+        final int length = Math.min(offset + size, buffer.capacity()) - offset;
+        final byte[] bytes = new byte[length];
         buffer.position(offset);
         buffer.get(bytes);
         return bytes;
@@ -217,7 +217,7 @@ public final class Sample implements Parcelable {
             return "EOS sample";
         }
 
-        StringBuilder str = new StringBuilder();
+        final StringBuilder str = new StringBuilder();
         str.append("{ session#:").append(session).
                 append(", buffer#").append(bufferId).
                 append(", info=").

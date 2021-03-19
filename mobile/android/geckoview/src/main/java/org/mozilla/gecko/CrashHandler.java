@@ -74,8 +74,8 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
      * @return The exception stack trace.
      */
     public static String getExceptionStackTrace(final Throwable exc) {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
+        final StringWriter sw = new StringWriter();
+        final PrintWriter pw = new PrintWriter(sw);
         exc.printStackTrace(pw);
         pw.flush();
         return sw.toString();
@@ -166,7 +166,7 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
 
             if (MAIN_THREAD != thread) {
                 Log.e(LOGTAG, "Main thread (" + MAIN_THREAD.getId() + ") stack:");
-                for (StackTraceElement ste : MAIN_THREAD.getStackTrace()) {
+                for (final StackTraceElement ste : MAIN_THREAD.getStackTrace()) {
                     Log.e(LOGTAG, "    " + ste.toString());
                 }
             }
@@ -220,7 +220,7 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
         }
 
         // Package name is also the process name in most cases.
-        String processName = getProcessName();
+        final String processName = getProcessName();
         if (processName != null) {
             return processName;
         }
@@ -426,8 +426,8 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
             final String url = getServerUrl(extras);
             extras.putString("ServerURL", url);
 
-            JSONObject json = new JSONObject();
-            for (String key : extras.keySet()) {
+            final JSONObject json = new JSONObject();
+            for (final String key : extras.keySet()) {
                 json.put(key, extras.get(key));
             }
 

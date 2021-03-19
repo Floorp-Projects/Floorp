@@ -381,7 +381,7 @@ public class ContentBlockingController {
             origin = bundle.getString("origin");
             final GeckoBundle[] data = bundle.getBundleArray("blockData");
             final ArrayList<BlockingData> dataArray = new ArrayList<BlockingData>(data.length);
-            for (GeckoBundle b : data) {
+            for (final GeckoBundle b : data) {
                 dataArray.add(new BlockingData(b));
             }
             blockingData = Collections.unmodifiableList(dataArray);
@@ -396,7 +396,7 @@ public class ContentBlockingController {
     private List<LogEntry> logFromBundle(final GeckoBundle value) {
         final GeckoBundle[] bundles = value.getBundleArray("log");
         final ArrayList<LogEntry> logArray = new ArrayList<>(bundles.length);
-        for (GeckoBundle b : bundles) {
+        for (final GeckoBundle b : bundles) {
             logArray.add(new LogEntry(b));
         }
         return Collections.unmodifiableList(logArray);

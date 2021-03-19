@@ -13,7 +13,7 @@ public interface WebNotificationDelegate {
      */
     @AnyThread
     @WrapForJNI
-    default void onShowNotification(@NonNull WebNotification notification) {}
+    default void onShowNotification(@NonNull final WebNotification notification) {}
 
     /**
      * This is called when an existing notification is closed.
@@ -22,6 +22,6 @@ public interface WebNotificationDelegate {
      */
     @AnyThread
     @WrapForJNI
-    default void onCloseNotification(@NonNull WebNotification notification) {}
+    default void onCloseNotification(@NonNull final WebNotification notification) {}
 }
 

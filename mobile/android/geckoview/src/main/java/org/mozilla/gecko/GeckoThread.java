@@ -114,7 +114,7 @@ public class GeckoThread extends Thread {
         @Override
         public void run() {
             ThreadUtils.assertOnUiThread();
-            long nextDelay = runUiThreadCallback();
+            final long nextDelay = runUiThreadCallback();
             if (nextDelay >= 0) {
                 ThreadUtils.getUiHandler().postDelayed(this, nextDelay);
             }
@@ -258,7 +258,7 @@ public class GeckoThread extends Thread {
         if (locale.toString().equalsIgnoreCase("zh_hk")) {
             final Locale mappedLocale = Locale.TRADITIONAL_CHINESE;
             Locale.setDefault(mappedLocale);
-            Configuration config = res.getConfiguration();
+            final Configuration config = res.getConfiguration();
             config.locale = mappedLocale;
             res.updateConfiguration(config, null);
         }
@@ -357,7 +357,7 @@ public class GeckoThread extends Thread {
             return new ArrayList<>();
         }
 
-        ArrayList<String> result = new ArrayList<>();
+        final ArrayList<String> result = new ArrayList<>();
         if (extras != null) {
             String env = extras.getString("env0");
             for (int c = 1; env != null; c++) {
@@ -385,7 +385,7 @@ public class GeckoThread extends Thread {
         final MessageQueue.IdleHandler idleHandler = new MessageQueue.IdleHandler() {
             @Override public boolean queueIdle() {
                 final Handler geckoHandler = ThreadUtils.sGeckoHandler;
-                Message idleMsg = Message.obtain(geckoHandler);
+                final Message idleMsg = Message.obtain(geckoHandler);
                 // Use |Message.obj == GeckoHandler| to identify our "queue is empty" message
                 idleMsg.obj = geckoHandler;
                 geckoHandler.sendMessageAtFrontOfQueue(idleMsg);
@@ -493,7 +493,7 @@ public class GeckoThread extends Thread {
             }
 
             if (e.startsWith("MOZ_DEBUG_CHILD_WAIT_FOR_JAVA_DEBUGGER=")) {
-                String filter = e.substring("MOZ_DEBUG_CHILD_WAIT_FOR_JAVA_DEBUGGER=".length());
+                final String filter = e.substring("MOZ_DEBUG_CHILD_WAIT_FOR_JAVA_DEBUGGER=".length());
                 if (isChildProcess()) {
                     final String processName = getProcessName(context);
                     if (processName == null || processName.endsWith(filter)) {
@@ -538,7 +538,7 @@ public class GeckoThread extends Thread {
 
             if (envItem.startsWith(startupEnv)) {
                 // Check the environment variable value to see if it's positive.
-                String value = envItem.substring(startupEnv.length());
+                final String value = envItem.substring(startupEnv.length());
                 if (value.isEmpty() || value.equals("0") || value.equals("n") || value.equals("N")) {
                     // ''/'0'/'n'/'N' values mean do not start the startup profiler.
                     // There's no need to inspect other environment variables,
@@ -549,23 +549,23 @@ public class GeckoThread extends Thread {
                 isStartupProfiling = true;
             } else if (envItem.startsWith(intervalEnv)) {
                 // Parse the interval environment variable if present
-                String value = envItem.substring(intervalEnv.length());
+                final String value = envItem.substring(intervalEnv.length());
 
                 try {
-                    int intValue = Integer.parseInt(value);
+                    final int intValue = Integer.parseInt(value);
                     interval = Math.max(intValue, interval);
-                } catch (NumberFormatException err) {
+                } catch (final NumberFormatException err) {
                     // Failed to parse. Do nothing and just use the default value.
                 }
             } else if (envItem.startsWith(capacityEnv)) {
                 // Parse the capacity environment variable if present
-                String value = envItem.substring(capacityEnv.length());
+                final String value = envItem.substring(capacityEnv.length());
 
                 try {
-                    int intValue = Integer.parseInt(value);
+                    final int intValue = Integer.parseInt(value);
                     // See `scMinimumBufferEntries` variable for this value on the platform side.
                     capacity = Math.max(intValue, minCapacity);
-                } catch (NumberFormatException err) {
+                } catch (final NumberFormatException err) {
                     // Failed to parse. Do nothing and just use the default value.
                 }
             }
@@ -581,13 +581,13 @@ public class GeckoThread extends Thread {
         final ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
 
         // This can be quite slow, and it can return null.
-        List<ActivityManager.RunningAppProcessInfo> processInfos = manager.getRunningAppProcesses();
+        final List<ActivityManager.RunningAppProcessInfo> processInfos = manager.getRunningAppProcesses();
 
         if (processInfos == null) {
             return null;
         }
 
-        for (ActivityManager.RunningAppProcessInfo processInfo : processInfos) {
+        for (final ActivityManager.RunningAppProcessInfo processInfo : processInfos) {
             if (processInfo.pid == pid) {
                 return processInfo.processName;
             }

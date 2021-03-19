@@ -387,19 +387,19 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
         }
 
         try {
-            WifiManager mgr = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+            final WifiManager mgr = (WifiManager) context.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
             if (mgr == null) {
                 return 0;
             }
 
-            @SuppressLint("MissingPermission") DhcpInfo d = mgr.getDhcpInfo();
+            @SuppressLint("MissingPermission") final DhcpInfo d = mgr.getDhcpInfo();
             if (d == null) {
                 return 0;
             }
 
             return d.gateway;
 
-        } catch (Exception ex) {
+        } catch (final Exception ex) {
             // getDhcpInfo() is not documented to require any permissions, but on some devices
             // requires android.permission.ACCESS_WIFI_STATE. Just catch the generic exception
             // here and returning 0. Not logging because this could be noisy.
@@ -437,7 +437,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements BundleEven
             return;
         }
 
-        int ip = info.getIpAddress();
+        final int ip = info.getIpAddress();
         if (ip == 0) {
             callback.sendError("Cannot get IPv4 address");
             return;

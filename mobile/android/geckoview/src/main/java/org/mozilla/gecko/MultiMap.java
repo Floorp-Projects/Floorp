@@ -162,8 +162,8 @@ public class MultiMap<K, T> {
             return false;
         }
 
-        List<T> values = mMap.get(key);
-        boolean wasPresent = values.remove(value);
+        final List<T> values = mMap.get(key);
+        final boolean wasPresent = values.remove(value);
 
         if (values.isEmpty()) {
             mMap.remove(key);

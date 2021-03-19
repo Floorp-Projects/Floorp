@@ -74,12 +74,12 @@ import java.util.LinkedList;
     public synchronized int read() throws IOException {
         ensureNotClosed();
 
-        int expect = Integer.SIZE / 8;
-        byte[] bytes = new byte[expect];
+        final int expect = Integer.SIZE / 8;
+        final byte[] bytes = new byte[expect];
 
         int count = 0;
         while (count < expect) {
-            long bytesRead = read(bytes, count, expect - count);
+            final long bytesRead = read(bytes, count, expect - count);
             if (bytesRead < 0) {
                 return -1;
             }
@@ -101,7 +101,7 @@ import java.util.LinkedList;
             throws IOException {
         ensureNotClosed();
 
-        long startTime = System.currentTimeMillis();
+        final long startTime = System.currentTimeMillis();
         while (!mEOF && mBuffers.size() == 0) {
             if (mReadTimeout > 0 && (System.currentTimeMillis() - startTime) >= mReadTimeout) {
                 throw new IOException("Timed out");
@@ -116,7 +116,7 @@ import java.util.LinkedList;
 
             try {
                 wait(mReadTimeout);
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
             }
         }
 

@@ -140,7 +140,7 @@ public class GeckoProfileDirectories {
     static String findDefaultProfileName(final Context context) throws NoMozillaDirectoryException {
         final INIParser parser = GeckoProfileDirectories.getProfilesINI(getMozillaDirectory(context));
         if (parser.getSections() != null) {
-            for (Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements(); ) {
+            for (final Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements(); ) {
                 final INISection section = e.nextElement();
                 if (section.getIntProperty("Default") == 1) {
                     return section.getStringProperty("Name");
@@ -194,7 +194,7 @@ public class GeckoProfileDirectories {
         final INIParser parser = GeckoProfileDirectories.getProfilesINI(mozillaDir);
 
         if (parser.getSections() != null) {
-            for (Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements(); ) {
+            for (final Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements(); ) {
                 final INISection section = e.nextElement();
                 if (predicate == null || predicate.matches(section)) {
                     final String name = section.getStringProperty("Name");
@@ -216,7 +216,7 @@ public class GeckoProfileDirectories {
         // Open profiles.ini to find the correct path.
         final INIParser parser = GeckoProfileDirectories.getProfilesINI(mozillaDir);
         if (parser.getSections() != null) {
-            for (Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements(); ) {
+            for (final Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements(); ) {
                 final INISection section = e.nextElement();
                 final String name = section.getStringProperty("Name");
                 if (name != null && name.equals(profileName)) {

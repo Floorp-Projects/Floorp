@@ -59,7 +59,7 @@ public final class OverscrollEdgeEffect {
             try {
                 paintField = EdgeEffect.class.getDeclaredField("mPaint");
                 paintField.setAccessible(true);
-            } catch (NoSuchFieldException e) {
+            } catch (final NoSuchFieldException e) {
             }
         }
 
@@ -78,7 +78,7 @@ public final class OverscrollEdgeEffect {
                 // the destination. Since the LayerView itself is fully transparent, it
                 // doesn't display at all. We need to use SRC instead.
                 p.setXfermode(mode);
-            } catch (IllegalAccessException e) {
+            } catch (final IllegalAccessException e) {
             }
         }
     }
@@ -202,7 +202,7 @@ public final class OverscrollEdgeEffect {
         final int state = canvas.save();
         canvas.translate(translateX, translateY);
         canvas.rotate(rotation);
-        boolean invalidate = edge.draw(canvas);
+        final boolean invalidate = edge.draw(canvas);
         canvas.restoreToCount(state);
 
         return invalidate;

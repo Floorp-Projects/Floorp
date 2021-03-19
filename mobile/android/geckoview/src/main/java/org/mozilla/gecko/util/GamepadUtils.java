@@ -44,14 +44,14 @@ public final class GamepadUtils {
     }
 
     public static boolean isValueInDeadZone(final MotionEvent event, final int axis) {
-        float threshold;
+        final float threshold;
         if (sDeadZoneThresholdOverride >= 0) {
             threshold = sDeadZoneThresholdOverride;
         } else {
-            InputDevice.MotionRange range = event.getDevice().getMotionRange(axis);
+            final InputDevice.MotionRange range = event.getDevice().getMotionRange(axis);
             threshold = range.getFlat() + range.getFuzz();
         }
-        float value = event.getAxisValue(axis);
+        final float value = event.getAxisValue(axis);
         return (Math.abs(value) < threshold);
     }
 
@@ -86,7 +86,7 @@ public final class GamepadUtils {
     public static KeyEvent translateSonyXperiaGamepadKeys(final int keyCode, final KeyEvent event) {
         // The cross and circle button mappings may be swapped in the different regions so
         // determine if they are swapped so the proper key codes can be mapped to the keys
-        boolean areKeysSwapped = areSonyXperiaGamepadKeysSwapped();
+        final boolean areKeysSwapped = areSonyXperiaGamepadKeysSwapped();
 
         int translatedKeyCode = keyCode;
         // If a Sony Xperia, remap the cross and circle buttons to buttons
@@ -122,10 +122,10 @@ public final class GamepadUtils {
         final char DEFAULT_O_BUTTON_LABEL = 0x25CB;
 
         boolean swapped = false;
-        int[] deviceIds = InputDevice.getDeviceIds();
+        final int[] deviceIds = InputDevice.getDeviceIds();
 
         for (int i = 0; deviceIds != null && i < deviceIds.length; i++) {
-            KeyCharacterMap keyCharacterMap = KeyCharacterMap.load(deviceIds[i]);
+            final KeyCharacterMap keyCharacterMap = KeyCharacterMap.load(deviceIds[i]);
             if (keyCharacterMap != null && DEFAULT_O_BUTTON_LABEL ==
                 keyCharacterMap.getDisplayLabel(KeyEvent.KEYCODE_DPAD_CENTER)) {
                 swapped = true;

@@ -95,9 +95,9 @@ import java.security.spec.InvalidKeySpecException;
                 final ECGenParameterSpec genSpec = new ECGenParameterSpec("secp256r1");
                 gen.initialize(genSpec);
                 sSpec = ((ECPublicKey) gen.generateKeyPair().getPublic()).getParams();
-            } catch (NoSuchAlgorithmException e) {
+            } catch (final NoSuchAlgorithmException e) {
                 throw new RuntimeException(e);
-            } catch (InvalidAlgorithmParameterException e) {
+            } catch (final InvalidAlgorithmParameterException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -159,9 +159,9 @@ import java.security.spec.InvalidKeySpecException;
             final ECPublicKey key = (ECPublicKey) factory.generatePublic(spec);
 
             return key;
-        } catch (NoSuchAlgorithmException e) {
+        } catch (final NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
-        } catch (InvalidKeySpecException e) {
+        } catch (final InvalidKeySpecException e) {
             throw new RuntimeException(e);
         }
     }

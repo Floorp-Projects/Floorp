@@ -371,7 +371,7 @@ public class GeckoDisplay {
             if (mRecycle == null) {
                 try {
                     target = Bitmap.createBitmap(mOutWidth, mOutHeight, Bitmap.Config.ARGB_8888);
-                } catch (Throwable e) {
+                } catch (final Throwable e) {
                     if (e instanceof NullPointerException || e instanceof OutOfMemoryError) {
                         return GeckoResult.fromException(new OutOfMemoryError("Not enough memory to allocate for bitmap"));
                     }

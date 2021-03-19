@@ -55,7 +55,7 @@ public final class SysInfo {
         }
 
         // Avoid a strict mode warning.
-        try (StrictModeContext unused = StrictModeContext.allowDiskReads()) {
+        try (final StrictModeContext unused = StrictModeContext.allowDiskReads()) {
             return readCPUCount();
         }
     }
@@ -70,7 +70,7 @@ public final class SysInfo {
         try {
             final File dir = new File("/sys/devices/system/cpu/");
             return cpuCount = dir.listFiles(new CpuFilter()).length;
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.w(LOG_TAG, "Assuming 1 CPU; got exception.", e);
             return cpuCount = 1;
         }

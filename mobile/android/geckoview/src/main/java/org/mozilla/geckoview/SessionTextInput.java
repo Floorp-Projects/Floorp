@@ -143,7 +143,7 @@ public final class SessionTextInput {
 
             try {
                 imm.restartInput(view);
-            } catch (RuntimeException e) {
+            } catch (final RuntimeException e) {
                 Log.e(LOGTAG, "Error restarting input", e);
             }
         }

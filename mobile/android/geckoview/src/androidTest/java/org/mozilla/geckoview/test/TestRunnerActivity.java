@@ -55,7 +55,7 @@ public class TestRunnerActivity extends Activity {
         public HashMap<GeckoSession, WebExtension.Action> browserActions;
         public HashMap<GeckoSession, WebExtension.Action> pageActions;
 
-        public ExtensionWrapper(WebExtension extension) {
+        public ExtensionWrapper(final WebExtension extension) {
             this.extension = extension;
             browserActions = new HashMap<>();
             pageActions = new HashMap<>();
@@ -99,40 +99,40 @@ public class TestRunnerActivity extends Activity {
 
     private GeckoSession.PermissionDelegate mPermissionDelegate = new GeckoSession.PermissionDelegate() {
         @Override
-        public void onContentPermissionRequest(@NonNull GeckoSession session, @Nullable String uri, int type, @NonNull Callback callback) {
+        public void onContentPermissionRequest(@NonNull final GeckoSession session, @Nullable final String uri, final int type, @NonNull final Callback callback) {
             callback.grant();
         }
 
         @Override
-        public void onAndroidPermissionsRequest(@NonNull GeckoSession session, @Nullable String[] permissions, @NonNull Callback callback) {
+        public void onAndroidPermissionsRequest(@NonNull final GeckoSession session, @Nullable final String[] permissions, @NonNull final Callback callback) {
             callback.grant();
         }
     };
 
     private GeckoSession.NavigationDelegate mNavigationDelegate = new GeckoSession.NavigationDelegate() {
         @Override
-        public void onLocationChange(GeckoSession session, String url) {
+        public void onLocationChange(final GeckoSession session, final String url) {
             getActionBar().setSubtitle(url);
         }
 
         @Override
-        public GeckoResult<AllowOrDeny> onLoadRequest(GeckoSession session,
-                                                  LoadRequest request) {
+        public GeckoResult<AllowOrDeny> onLoadRequest(final GeckoSession session,
+                                                      final LoadRequest request) {
             // Allow Gecko to load all URIs
             return GeckoResult.fromValue(AllowOrDeny.ALLOW);
         }
 
         @Override
-        public GeckoResult<GeckoSession> onNewSession(GeckoSession session, String uri) {
+        public GeckoResult<GeckoSession> onNewSession(final GeckoSession session, final String uri) {
             webExtensionController().setTabActive(mOwnedSessions.peek(), false);
-            GeckoSession newSession = createBackgroundSession(session.getSettings(),
+            final GeckoSession newSession = createBackgroundSession(session.getSettings(),
                                                               /* active */ true);
             webExtensionController().setTabActive(newSession, true);
             return GeckoResult.fromValue(newSession);
         }
 
         @Override
-        public GeckoResult<String> onLoadError(GeckoSession session, String uri, WebRequestError error) {
+        public GeckoResult<String> onLoadError(final GeckoSession session, final String uri, final WebRequestError error) {
 
             return GeckoResult.fromValue("data:text/html," + ERROR_PAGE);
         }
@@ -146,25 +146,25 @@ public class TestRunnerActivity extends Activity {
         }
 
         @Override
-        public void onCloseRequest(GeckoSession session) {
+        public void onCloseRequest(final GeckoSession session) {
             closeSession(session);
         }
 
         @Override
-        public void onCrash(GeckoSession session) {
+        public void onCrash(final GeckoSession session) {
             onContentProcessGone();
         }
 
         @Override
-        public void onKill(GeckoSession session) {
+        public void onKill(final GeckoSession session) {
             onContentProcessGone();
         }
     };
 
     private WebExtension.TabDelegate mTabDelegate = new WebExtension.TabDelegate() {
         @Override
-        public GeckoResult<GeckoSession> onNewTab(WebExtension source,
-                                                  WebExtension.CreateTabDetails details) {
+        public GeckoResult<GeckoSession> onNewTab(final WebExtension source,
+                                                  final WebExtension.CreateTabDetails details) {
             GeckoSessionSettings settings = null;
             if (details.cookieStoreId != null) {
                 settings = new GeckoSessionSettings.Builder()
@@ -175,7 +175,7 @@ public class TestRunnerActivity extends Activity {
             if (details.active == Boolean.TRUE) {
                 webExtensionController().setTabActive(mOwnedSessions.peek(), false);
             }
-            GeckoSession newSession = createSession(
+            final GeckoSession newSession = createSession(
                     settings,
                     details.active == Boolean.TRUE);
             return GeckoResult.fromValue(newSession);
@@ -234,15 +234,15 @@ public class TestRunnerActivity extends Activity {
     private WebExtension.SessionTabDelegate mSessionTabDelegate = new WebExtension.SessionTabDelegate() {
         @NonNull
         @Override
-        public GeckoResult<AllowOrDeny> onCloseTab(@Nullable WebExtension source,
-                                                   @NonNull GeckoSession session) {
+        public GeckoResult<AllowOrDeny> onCloseTab(@Nullable final WebExtension source,
+                                                   @NonNull final GeckoSession session) {
             closeSession(session);
             return GeckoResult.fromValue(AllowOrDeny.ALLOW);
         }
         @Override
-        public GeckoResult<AllowOrDeny> onUpdateTab(@NonNull WebExtension source,
-                                                    @NonNull GeckoSession session,
-                                                    @NonNull WebExtension.UpdateTabDetails updateDetails) {
+        public GeckoResult<AllowOrDeny> onUpdateTab(@NonNull final WebExtension source,
+                                                    @NonNull final GeckoSession session,
+                                                    @NonNull final WebExtension.UpdateTabDetails updateDetails) {
             if (updateDetails.active == Boolean.TRUE) {
                 // Move session to the top since it's now the active tab
                 mOwnedSessions.remove(session);
@@ -260,7 +260,7 @@ public class TestRunnerActivity extends Activity {
      *               The active session always sit at the top of the owned sessions deque.
      * @return the newly created session.
      */
-    private GeckoSession createSession(boolean active) {
+    private GeckoSession createSession(final boolean active) {
         return createSession(null, active);
     }
 
@@ -273,7 +273,7 @@ public class TestRunnerActivity extends Activity {
      *               The active session always sit at the top of the owned sessions deque.
      * @return the newly created session.
      */
-    private GeckoSession createSession(GeckoSessionSettings settings, boolean active) {
+    private GeckoSession createSession(GeckoSessionSettings settings, final boolean active) {
         if (settings == null) {
             settings = new GeckoSessionSettings();
         }
@@ -307,7 +307,7 @@ public class TestRunnerActivity extends Activity {
      *               The active session always sit at the top of the owned sessions deque.
      * @return the newly created session.
      */
-    private GeckoSession createBackgroundSession(final GeckoSessionSettings settings, boolean active) {
+    private GeckoSession createBackgroundSession(final GeckoSessionSettings settings, final boolean active) {
         final GeckoSession session = createSession(settings, active);
 
         final Display display = new Display(mView.getWidth(), mView.getHeight());
@@ -318,7 +318,7 @@ public class TestRunnerActivity extends Activity {
         return session;
     }
 
-    private void closeSession(GeckoSession session) {
+    private void closeSession(final GeckoSession session) {
         if (session == mOwnedSessions.peek()) {
             webExtensionController().setTabActive(session, false);
         }
@@ -335,7 +335,7 @@ public class TestRunnerActivity extends Activity {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         final Intent intent = getIntent();

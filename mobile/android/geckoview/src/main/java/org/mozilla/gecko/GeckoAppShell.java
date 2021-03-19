@@ -256,7 +256,7 @@ public class GeckoAppShell {
     }
 
     private static float getLocationAccuracy(final Location location) {
-        float radius = location.getAccuracy();
+        final float radius = location.getAccuracy();
         return (location.hasAccuracy() && radius > 0) ? radius : 1001;
     }
 
@@ -264,10 +264,10 @@ public class GeckoAppShell {
     @SuppressLint("MissingPermission")
     private static Location getLastKnownLocation(final LocationManager lm) {
         Location lastKnownLocation = null;
-        List<String> providers = lm.getAllProviders();
+        final List<String> providers = lm.getAllProviders();
 
-        for (String provider : providers) {
-            Location location = lm.getLastKnownLocation(provider);
+        for (final String provider : providers) {
+            final Location location = lm.getLastKnownLocation(provider);
             if (location == null) {
                 continue;
             }
@@ -277,7 +277,7 @@ public class GeckoAppShell {
                 continue;
             }
 
-            long timeDiff = location.getTime() - lastKnownLocation.getTime();
+            final long timeDiff = location.getTime() - lastKnownLocation.getTime();
             if (timeDiff > 0 ||
                 (timeDiff == 0 &&
                  getLocationAccuracy(location) < getLocationAccuracy(lastKnownLocation))) {
@@ -339,7 +339,7 @@ public class GeckoAppShell {
     private static LocationManager getLocationManager(final Context context) {
         try {
             return (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-        } catch (NoSuchFieldError e) {
+        } catch (final NoSuchFieldError e) {
             // Some Tegras throw exceptions about missing the CONTROL_LOCATION_UPDATES permission,
             // which allows enabling/disabling location update notifications from the cell radio.
             // CONTROL_LOCATION_UPDATES is not for use by normal applications, but we might be
@@ -372,7 +372,7 @@ public class GeckoAppShell {
 
         @Override
         public void onSensorChanged(final SensorEvent s) {
-            int sensorType = s.sensor.getType();
+            final int sensorType = s.sensor.getType();
             int halType = 0;
             float x = 0.0f, y = 0.0f, z = 0.0f, w = 0.0f;
             // SensorEvent timestamp is in nanoseconds, Gecko expects microseconds.
@@ -441,24 +441,24 @@ public class GeckoAppShell {
         public void onLocationChanged(final Location location) {
             // No logging here: user-identifying information.
 
-            double altitude = location.hasAltitude()
+            final double altitude = location.hasAltitude()
                             ? location.getAltitude()
                             : Double.NaN;
 
-            float accuracy = location.hasAccuracy()
+            final float accuracy = location.hasAccuracy()
                            ? location.getAccuracy()
                            : Float.NaN;
 
-            float altitudeAccuracy = Build.VERSION.SDK_INT >= 26 &&
+            final float altitudeAccuracy = Build.VERSION.SDK_INT >= 26 &&
                                      location.hasVerticalAccuracy()
                                    ? location.getVerticalAccuracyMeters()
                                    : Float.NaN;
 
-            float speed = location.hasSpeed()
+            final float speed = location.hasSpeed()
                         ? location.getSpeed()
                         : Float.NaN;
 
-            float heading = location.hasBearing()
+            final float heading = location.hasBearing()
                           ? location.getBearing()
                           : Float.NaN;
 
@@ -752,19 +752,19 @@ public class GeckoAppShell {
 
     @WrapForJNI(calledFrom = "gecko")
     public static String getMimeTypeFromExtensions(final String aFileExt) {
-        StringTokenizer st = new StringTokenizer(aFileExt, ".,; ");
+        final StringTokenizer st = new StringTokenizer(aFileExt, ".,; ");
         String type = null;
         String subType = null;
         while (st.hasMoreElements()) {
-            String ext = st.nextToken();
-            String mt = getMimeTypeFromExtension(ext);
+            final String ext = st.nextToken();
+            final String mt = getMimeTypeFromExtension(ext);
             if (mt == null)
                 continue;
-            int slash = mt.indexOf('/');
-            String tmpType = mt.substring(0, slash);
+            final int slash = mt.indexOf('/');
+            final String tmpType = mt.substring(0, slash);
             if (!tmpType.equalsIgnoreCase(type))
                 type = type == null ? tmpType : "*";
-            String tmpSubType = mt.substring(slash + 1);
+            final String tmpSubType = mt.substring(slash + 1);
             if (!tmpSubType.equalsIgnoreCase(subType))
                 subType = subType == null ? tmpSubType : "*";
         }
@@ -854,7 +854,7 @@ public class GeckoAppShell {
         if (sScreenDepth == 0) {
             sScreenDepth = 16;
             final Context applicationContext = getApplicationContext();
-            PixelFormat info = new PixelFormat();
+            final PixelFormat info = new PixelFormat();
             final WindowManager wm = (WindowManager) applicationContext.getSystemService(Context.WINDOW_SERVICE);
             PixelFormat.getPixelFormatInfo(wm.getDefaultDisplay().getPixelFormat(), info);
             if (info.bitsPerPixel >= 24 && isHighMemoryDevice(applicationContext)) {
@@ -888,7 +888,7 @@ public class GeckoAppShell {
 
     // Helper method to convert integer array to long array.
     private static long[] convertIntToLongArray(final int[] input) {
-        long[] output = new long[input.length];
+        final long[] output = new long[input.length];
         for (int i = 0; i < input.length; i++) {
             output[i] = input[i];
         }
@@ -925,7 +925,7 @@ public class GeckoAppShell {
         // If pattern.length is odd, the last element in the pattern is a
         // meaningless delay, so don't include it in vibrationDuration.
         long vibrationDuration = 0;
-        int iterLen = pattern.length & ~1;
+        final int iterLen = pattern.length & ~1;
         for (int i = 0; i < iterLen; i++) {
             vibrationDuration += pattern[i];
         }
@@ -964,10 +964,10 @@ public class GeckoAppShell {
     private static boolean isNetworkLinkUp() {
         ensureConnectivityManager();
         try {
-            NetworkInfo info = sConnectivityManager.getActiveNetworkInfo();
+            final NetworkInfo info = sConnectivityManager.getActiveNetworkInfo();
             if (info == null || !info.isConnected())
                 return false;
-        } catch (SecurityException se) {
+        } catch (final SecurityException se) {
             return false;
         }
         return true;
@@ -979,7 +979,7 @@ public class GeckoAppShell {
         try {
             if (sConnectivityManager.getActiveNetworkInfo() == null)
                 return false;
-        } catch (SecurityException se) {
+        } catch (final SecurityException se) {
             return false;
         }
         return true;
@@ -988,7 +988,7 @@ public class GeckoAppShell {
     @WrapForJNI(calledFrom = "gecko")
     private static int getNetworkLinkType() {
         ensureConnectivityManager();
-        NetworkInfo info = sConnectivityManager.getActiveNetworkInfo();
+        final NetworkInfo info = sConnectivityManager.getActiveNetworkInfo();
         if (info == null) {
             return LINK_TYPE_UNKNOWN;
         }
@@ -1015,12 +1015,12 @@ public class GeckoAppShell {
         }
 
         ensureConnectivityManager();
-        Network net = sConnectivityManager.getActiveNetwork();
+        final Network net = sConnectivityManager.getActiveNetwork();
         if (net == null) {
             return "";
         }
 
-        LinkProperties lp = sConnectivityManager.getLinkProperties(net);
+        final LinkProperties lp = sConnectivityManager.getLinkProperties(net);
         if (lp == null) {
             return "";
         }
@@ -1045,7 +1045,7 @@ public class GeckoAppShell {
             android.R.attr.panelColorBackground
         };
 
-        int[] result = new int[attrsAppearance.length];
+        final int[] result = new int[attrsAppearance.length];
 
         final ContextThemeWrapper contextThemeWrapper =
             new ContextThemeWrapper(getApplicationContext(), android.R.style.TextAppearance);
@@ -1054,8 +1054,8 @@ public class GeckoAppShell {
 
         if (appearance != null) {
             for (int i = 0; i < appearance.getIndexCount(); i++) {
-                int idx = appearance.getIndex(i);
-                int color = appearance.getColor(idx, 0);
+                final int idx = appearance.getIndex(i);
+                final int color = appearance.getColor(idx, 0);
                 result[idx] = color;
             }
             appearance.recycle();
@@ -1077,7 +1077,7 @@ public class GeckoAppShell {
                 resolvedExt = aExt.substring(1);
             }
 
-            PackageManager pm = getApplicationContext().getPackageManager();
+            final PackageManager pm = getApplicationContext().getPackageManager();
             Drawable icon = getDrawableForExtension(pm, resolvedExt);
             if (icon == null) {
                 // Use a generic icon.
@@ -1089,11 +1089,11 @@ public class GeckoAppShell {
                 bitmap = Bitmap.createScaledBitmap(bitmap, resolvedIconSize, resolvedIconSize, true);
             }
 
-            ByteBuffer buf = ByteBuffer.allocate(resolvedIconSize * resolvedIconSize * 4);
+            final ByteBuffer buf = ByteBuffer.allocate(resolvedIconSize * resolvedIconSize * 4);
             bitmap.copyPixelsToBuffer(buf);
 
             return buf.array();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.w(LOGTAG, "getIconForExtension failed.",  e);
             return null;
         }
@@ -1109,8 +1109,8 @@ public class GeckoAppShell {
         int height = drawable.getIntrinsicHeight();
         height = height > 0 ? height : 1;
 
-        Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
+        final Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+        final Canvas canvas = new Canvas(bitmap);
         drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
         drawable.draw(canvas);
 
@@ -1123,23 +1123,23 @@ public class GeckoAppShell {
     }
 
     private static Drawable getDrawableForExtension(final PackageManager pm, final String aExt) {
-        Intent intent = new Intent(Intent.ACTION_VIEW);
+        final Intent intent = new Intent(Intent.ACTION_VIEW);
         final String mimeType = getMimeTypeFromExtension(aExt);
         if (mimeType != null && mimeType.length() > 0)
             intent.setType(mimeType);
         else
             return null;
 
-        List<ResolveInfo> list = pm.queryIntentActivities(intent, 0);
+        final List<ResolveInfo> list = pm.queryIntentActivities(intent, 0);
         if (list.size() == 0)
             return null;
 
-        ResolveInfo resolveInfo = list.get(0);
+        final ResolveInfo resolveInfo = list.get(0);
 
         if (resolveInfo == null)
             return null;
 
-        ActivityInfo activityInfo = resolveInfo.activityInfo;
+        final ActivityInfo activityInfo = resolveInfo.activityInfo;
 
         return activityInfo.loadIcon(pm);
     }
@@ -1147,11 +1147,11 @@ public class GeckoAppShell {
     @WrapForJNI(calledFrom = "gecko")
     private static boolean getShowPasswordSetting() {
         try {
-            int showPassword =
+            final int showPassword =
                 Settings.System.getInt(getApplicationContext().getContentResolver(),
                                        Settings.System.TEXT_SHOW_PASSWORD, 1);
             return (showPassword > 0);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             return true;
         }
     }
@@ -1199,7 +1199,7 @@ public class GeckoAppShell {
         // [1] = width
         // [2] = height
         // [3] = fps
-        int[] result = new int[4];
+        final int[] result = new int[4];
         result[0] = 0;
 
         if (Camera.getNumberOfCameras() == 0) {
@@ -1215,24 +1215,24 @@ public class GeckoAppShell {
             // use the preview fps closest to 25 fps.
             int fpsDelta = 1000;
             try {
-                Iterator<Integer> it = params.getSupportedPreviewFrameRates().iterator();
+                final Iterator<Integer> it = params.getSupportedPreviewFrameRates().iterator();
                 while (it.hasNext()) {
-                    int nFps = it.next();
+                    final int nFps = it.next();
                     if (Math.abs(nFps - kPreferredFPS) < fpsDelta) {
                         fpsDelta = Math.abs(nFps - kPreferredFPS);
                         params.setPreviewFrameRate(nFps);
                     }
                 }
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 params.setPreviewFrameRate(kPreferredFPS);
             }
 
             // set up the closest preview size available
-            Iterator<Camera.Size> sit = params.getSupportedPreviewSizes().iterator();
+            final Iterator<Camera.Size> sit = params.getSupportedPreviewSizes().iterator();
             int sizeDelta = 10000000;
             int bufferSize = 0;
             while (sit.hasNext()) {
-                Camera.Size size = sit.next();
+                final Camera.Size size = sit.next();
                 if (Math.abs(size.width * size.height - aWidth * aHeight) < sizeDelta) {
                     sizeDelta = Math.abs(size.width * size.height - aWidth * aHeight);
                     params.setPreviewSize(size.width, size.height);
@@ -1250,7 +1250,7 @@ public class GeckoAppShell {
             result[1] = params.getPreviewSize().width;
             result[2] = params.getPreviewSize().height;
             result[3] = params.getPreviewFrameRate();
-        } catch (RuntimeException e) {
+        } catch (final RuntimeException e) {
             Log.w(LOGTAG, "initCamera RuntimeException.", e);
             result[0] = result[1] = result[2] = result[3] = 0;
         }
@@ -1362,7 +1362,7 @@ public class GeckoAppShell {
         // Then force unlock this profile
         final GeckoProfile profile = GeckoThread.getActiveProfile();
         if (profile != null) {
-            File lock = profile.getFile(".parentlock");
+            final File lock = profile.getFile(".parentlock");
             return lock != null && lock.exists() && lock.delete();
         }
         return false;
@@ -1373,7 +1373,7 @@ public class GeckoAppShell {
                                          final int port) {
         final ProxySelector ps = new ProxySelector();
 
-        Proxy proxy = ps.select(scheme, host);
+        final Proxy proxy = ps.select(scheme, host);
         if (Proxy.NO_PROXY.equals(proxy)) {
             return "DIRECT";
         }
@@ -1390,7 +1390,7 @@ public class GeckoAppShell {
 
     @WrapForJNI(calledFrom = "gecko")
     private static int getMaxTouchPoints() {
-        PackageManager pm = getApplicationContext().getPackageManager();
+        final PackageManager pm = getApplicationContext().getPackageManager();
         if (pm.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN_MULTITOUCH_JAZZHAND)) {
             // at least, 5+ fingers.
             return 5;
@@ -1416,7 +1416,7 @@ public class GeckoAppShell {
     static private final int HOVER_CAPABLE_POINTER = 0x00000004;
     private static int getPointerCapabilities(final InputDevice inputDevice) {
         int result = NO_POINTER;
-        int sources = inputDevice.getSources();
+        final int sources = inputDevice.getSources();
 
         if (hasInputDeviceSource(sources, InputDevice.SOURCE_TOUCHSCREEN) ||
             hasInputDeviceSource(sources, InputDevice.SOURCE_JOYSTICK)) {
@@ -1443,8 +1443,8 @@ public class GeckoAppShell {
     private static int getAllPointerCapabilities() {
         int result = NO_POINTER;
 
-        for (int deviceId : InputDevice.getDeviceIds()) {
-            InputDevice inputDevice = InputDevice.getDevice(deviceId);
+        for (final int deviceId : InputDevice.getDeviceIds()) {
+            final InputDevice inputDevice = InputDevice.getDevice(deviceId);
             if (inputDevice == null ||
                 !InputDeviceUtils.isPointerTypeDevice(inputDevice)) {
                 continue;
@@ -1461,8 +1461,8 @@ public class GeckoAppShell {
     private static int getPrimaryPointerCapabilities() {
         int result = NO_POINTER;
 
-        for (int deviceId : InputDevice.getDeviceIds()) {
-            InputDevice inputDevice = InputDevice.getDevice(deviceId);
+        for (final int deviceId : InputDevice.getDeviceIds()) {
+            final InputDevice inputDevice = InputDevice.getDevice(deviceId);
             if (inputDevice == null ||
                 !InputDeviceUtils.isPointerTypeDevice(inputDevice)) {
                 continue;
@@ -1497,7 +1497,7 @@ public class GeckoAppShell {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.JELLY_BEAN_MR1) {
             return new Rect(0, 0, disp.getWidth(), disp.getHeight());
         }
-        Point size = new Point();
+        final Point size = new Point();
         disp.getRealSize(size);
         return new Rect(0, 0, size.x, size.y);
     }
@@ -1558,7 +1558,7 @@ public class GeckoAppShell {
                 am.stopBluetoothSco();
                 am.setBluetoothScoOn(false);
             }
-        } catch (SecurityException e) {
+        } catch (final SecurityException e) {
             Log.e(LOGTAG, "could not set communication mode", e);
         }
     }
@@ -1582,13 +1582,13 @@ public class GeckoAppShell {
         // XXX We may have to convert some language codes such as "id" vs "in".
         if (Build.VERSION.SDK_INT >= 24) {
             final LocaleList localeList = LocaleList.getDefault();
-            String[] locales = new String[localeList.size()];
+            final String[] locales = new String[localeList.size()];
             for (int i = 0; i < localeList.size(); i++) {
                 locales[i] = localeList.get(i).toLanguageTag();
             }
             return locales;
         }
-        String[] locales = new String[1];
+        final String[] locales = new String[1];
         final Locale locale = Locale.getDefault();
         if (Build.VERSION.SDK_INT >= 21) {
             locales[0] = locale.toLanguageTag();

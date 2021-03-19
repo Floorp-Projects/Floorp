@@ -51,7 +51,7 @@ public class INISection {
 
     // get a global property out of the hash table. will return null if the property doesn't exist
     public int getIntProperty(final String key) {
-        Object val = getProperty(key);
+        final Object val = getProperty(key);
         if (val == null)
             return -1;
 
@@ -60,7 +60,7 @@ public class INISection {
 
     // get a global property out of the hash table. will return null if the property doesn't exist
     public String getStringProperty(final String key) {
-        Object val = getProperty(key);
+        final Object val = getProperty(key);
         if (val == null)
             return null;
 
@@ -72,7 +72,7 @@ public class INISection {
         if (mProperties == null) {
             try {
                 parse();
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 debug("Error parsing: " + e);
             }
         }
@@ -107,8 +107,8 @@ public class INISection {
         }
 
         if (mProperties != null) {
-            for (Enumeration<String> e = mProperties.keys(); e.hasMoreElements();) {
-                String key = e.nextElement();
+            for (final Enumeration<String> e = mProperties.keys(); e.hasMoreElements();) {
+                final String key = e.nextElement();
                 writeProperty(writer, key, mProperties.get(key));
             }
         }
@@ -120,7 +120,7 @@ public class INISection {
         try {
             writer.write(key + "=" + value);
             writer.newLine();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             e.printStackTrace();
         }
     }

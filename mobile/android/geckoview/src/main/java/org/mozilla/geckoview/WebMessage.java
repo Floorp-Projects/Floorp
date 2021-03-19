@@ -41,14 +41,14 @@ public abstract class WebMessage {
 
     // This is only used via JNI.
     private String[] getHeaderKeys() {
-        String[] keys = new String[headers.size()];
+        final String[] keys = new String[headers.size()];
         headers.keySet().toArray(keys);
         return keys;
     }
 
     // This is only used via JNI.
     private String[] getHeaderValues() {
-        String[] values = new String[headers.size()];
+        final String[] values = new String[headers.size()];
         headers.values().toArray(values);
         return values;
     }

@@ -481,7 +481,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
          */
         public void onBindComplete(@NonNull final ChildConnection conn) {
             if (conn.getType() == GeckoProcessType.CONTENT) {
-                int pid = conn.getPid();
+                final int pid = conn.getPid();
                 if (pid == INVALID_PID) {
                     throw new AssertionError("PID is invalid even though our caller just successfully retrieved it after binding");
                 }
@@ -618,7 +618,7 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             conn.bind().accept(proc -> {
                 try {
                     proc.crash();
-                } catch (RemoteException e) {
+                } catch (final RemoteException e) {
                 }
             });
         });

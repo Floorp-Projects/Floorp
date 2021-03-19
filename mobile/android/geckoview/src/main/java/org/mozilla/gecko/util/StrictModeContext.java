@@ -48,7 +48,7 @@ public final class StrictModeContext implements Closeable {
      *     https://developer.android.com/reference/android/os/StrictMode.VmPolicy.Builder.html
      */
     public static StrictModeContext allowAllVmPolicies() {
-        StrictMode.VmPolicy oldPolicy = StrictMode.getVmPolicy();
+        final StrictMode.VmPolicy oldPolicy = StrictMode.getVmPolicy();
         StrictMode.setVmPolicy(StrictMode.VmPolicy.LAX);
         return new StrictModeContext(oldPolicy);
     }
@@ -58,7 +58,7 @@ public final class StrictModeContext implements Closeable {
      * try-with-resources.
      */
     public static StrictModeContext allowDiskWrites() {
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
+        final StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskWrites();
         return new StrictModeContext(oldPolicy);
     }
 
@@ -66,7 +66,7 @@ public final class StrictModeContext implements Closeable {
      * Convenience method for disabling StrictMode for disk-reads with try-with-resources.
      */
     public static StrictModeContext allowDiskReads() {
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
+        final StrictMode.ThreadPolicy oldPolicy = StrictMode.allowThreadDiskReads();
         return new StrictModeContext(oldPolicy);
     }
 
@@ -74,7 +74,7 @@ public final class StrictModeContext implements Closeable {
      * Convenience method for disabling StrictMode for slow calls with try-with-resources.
      */
     public static StrictModeContext allowSlowCalls() {
-        StrictMode.ThreadPolicy oldPolicy = StrictMode.getThreadPolicy();
+        final StrictMode.ThreadPolicy oldPolicy = StrictMode.getThreadPolicy();
         StrictMode.setThreadPolicy(
                 new StrictMode.ThreadPolicy.Builder(oldPolicy).permitCustomSlowCalls().build());
         return new StrictModeContext(oldPolicy);

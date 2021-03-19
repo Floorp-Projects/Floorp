@@ -763,19 +763,19 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     }
 
     private String computeAcceptLanguages() {
-        ArrayList<String> locales = new ArrayList<String>();
+        final ArrayList<String> locales = new ArrayList<String>();
 
         // Explicitly-set app prefs come first:
         if (mRequestedLocales != null) {
-            for (String locale : mRequestedLocales) {
+            for (final String locale : mRequestedLocales) {
                 locales.add(locale.toLowerCase(Locale.ROOT));
             }
         }
         // OS prefs come second:
-        for (String locale : getDefaultLocales()) {
-            locale = locale.toLowerCase(Locale.ROOT);
-            if (!locales.contains(locale)) {
-                locales.add(locale);
+        for (final String locale : getDefaultLocales()) {
+            final String localeLowerCase = locale.toLowerCase(Locale.ROOT);
+            if (!locales.contains(localeLowerCase)) {
+                locales.add(localeLowerCase);
             }
         }
 
@@ -785,13 +785,13 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     private static String[] getDefaultLocales() {
         if (VERSION.SDK_INT >= 24) {
             final LocaleList localeList = LocaleList.getDefault();
-            String[] locales = new String[localeList.size()];
+            final String[] locales = new String[localeList.size()];
             for (int i = 0; i < localeList.size(); i++) {
                 locales[i] = localeList.get(i).toLanguageTag();
             }
             return locales;
         }
-        String[] locales = new String[1];
+        final String[] locales = new String[1];
         final Locale locale = Locale.getDefault();
         if (VERSION.SDK_INT >= 21) {
             locales[0] = locale.toLanguageTag();
@@ -1171,8 +1171,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
      * @return One of the {@link GeckoRuntimeSettings#ALLOW_ALL HttpsOnlyMode} constants.
      */
     public @HttpsOnlyMode int getAllowInsecureConnections() {
-        boolean httpsOnly = mHttpsOnly.get();
-        boolean httpsOnlyPrivate = mHttpsOnlyPrivateMode.get();
+        final boolean httpsOnly = mHttpsOnly.get();
+        final boolean httpsOnlyPrivate = mHttpsOnlyPrivateMode.get();
         if (httpsOnly) {
             return HTTPS_ONLY;
         } else if (httpsOnlyPrivate) {
@@ -1247,7 +1247,7 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
                         (Class<? extends Service>) Class.forName(crashHandlerName);
 
                 mCrashHandler = handler;
-            } catch (ClassNotFoundException e) {
+            } catch (final ClassNotFoundException e) {
             }
         }
 

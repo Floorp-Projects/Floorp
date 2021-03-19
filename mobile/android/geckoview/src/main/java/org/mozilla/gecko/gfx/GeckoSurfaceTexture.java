@@ -122,7 +122,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
             if (mListener != null) {
                 mListener.onUpdateTexImage();
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.w(LOGTAG, "updateTexImage() failed", e);
         }
     }
@@ -138,7 +138,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
             synchronized (sSurfaceTextures) {
                 sSurfaceTextures.remove(mHandle);
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.w(LOGTAG, "release() failed", e);
         }
     }
@@ -155,7 +155,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
             if (mListener != null) {
                 mListener.onReleaseTexImage();
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.w(LOGTAG, "releaseTexImage() failed", e);
         }
     }
@@ -176,7 +176,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
 
     @WrapForJNI
     public synchronized void decrementUse() {
-        int useCount = mUseCount.decrementAndGet();
+        final int useCount = mUseCount.decrementAndGet();
 
         if (useCount == 0) {
             setListener(null);
@@ -202,7 +202,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
 
     @WrapForJNI
     public static void destroyUnused(final long context) {
-        LinkedList<GeckoSurfaceTexture> list;
+        final LinkedList<GeckoSurfaceTexture> list;
         synchronized (sUnusedTextures) {
             list = sUnusedTextures.remove(context);
         }
@@ -211,7 +211,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
             return;
         }
 
-        for (GeckoSurfaceTexture tex : list) {
+        for (final GeckoSurfaceTexture tex : list) {
             try {
                 if (tex.isSingleBuffer()) {
                     tex.releaseTexImage();
@@ -224,10 +224,10 @@ import org.mozilla.gecko.mozglue.JNIObject;
                 // of file descriptors if the GC doesn't kick in soon enough. Bug 1416015.
                 try {
                     tex.finalize();
-                } catch (Throwable t) {
+                } catch (final Throwable t) {
                     Log.e(LOGTAG, "Failed to finalize SurfaceTexture", t);
                 }
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 Log.e(LOGTAG, "Failed to destroy SurfaceTexture", e);
             }
         }
@@ -300,7 +300,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
                                                 final GeckoSurface targetSurface,
                                                 final int width,
                                                 final int height) {
-            NativeGLBlitHelper helper = nativeCreate(textureHandle, targetSurface, width, height);
+            final NativeGLBlitHelper helper = nativeCreate(textureHandle, targetSurface, width, height);
             helper.mTargetSurface = targetSurface; // Take ownership of surface.
             return helper;
         }

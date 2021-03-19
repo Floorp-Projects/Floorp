@@ -23,7 +23,7 @@ public class UiThreadUtils {
         try {
             sGetNextMessage = MessageQueue.class.getDeclaredMethod("next");
             sGetNextMessage.setAccessible(true);
-        } catch (NoSuchMethodException e) {
+        } catch (final NoSuchMethodException e) {
             throw new IllegalStateException(e);
         }
     }
@@ -74,7 +74,7 @@ public class UiThreadUtils {
      * @param <T> The type of the value held by the {@link GeckoResult}
      * @return The value of the completed {@link GeckoResult}.
      */
-    public static <T> T waitForResult(@NonNull GeckoResult<T> result, long timeout) throws Throwable {
+    public static <T> T waitForResult(@NonNull final GeckoResult<T> result, final long timeout) throws Throwable {
         final ResultHolder<T> holder = new ResultHolder<>(result);
 
         waitForCondition(() -> holder.isComplete, timeout);
@@ -91,7 +91,7 @@ public class UiThreadUtils {
         public Throwable error;
         public boolean isComplete;
 
-        public ResultHolder(GeckoResult<T> result) {
+        public ResultHolder(final GeckoResult<T> result) {
             result.accept(value -> {
                 ResultHolder.this.value = value;
                 isComplete = true;
@@ -107,7 +107,7 @@ public class UiThreadUtils {
     }
 
     public static void loopUntilIdle(final long timeout) {
-        AtomicBoolean idle = new AtomicBoolean(false);
+        final AtomicBoolean idle = new AtomicBoolean(false);
 
         MessageQueue.IdleHandler handler = null;
         try {
@@ -127,7 +127,7 @@ public class UiThreadUtils {
         }
     }
 
-    public static void waitForCondition(Condition condition, final long timeout) {
+    public static void waitForCondition(final Condition condition, final long timeout) {
          // Adapted from GeckoThread.pumpMessageLoop.
         final MessageQueue queue = HANDLER.getLooper().getQueue();
 

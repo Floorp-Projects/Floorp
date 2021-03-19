@@ -159,7 +159,7 @@ public class GeckoResultTest {
 
         try {
             Thread.sleep(50);
-        } catch (InterruptedException ex) {
+        } catch (final InterruptedException ex) {
         }
 
         // Complete the results out of order so that we can verify the input order is preserved
@@ -373,7 +373,7 @@ public class GeckoResultTest {
 
             try {
                 queue.put(new Handler());
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
                 throw new RuntimeException(e);
             }
 
@@ -393,7 +393,7 @@ public class GeckoResultTest {
             });
 
             thread.join();
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
@@ -430,7 +430,7 @@ public class GeckoResultTest {
     @UiThreadTest
     @Test
     public void cancelNoDelegate() {
-        GeckoResult<Void> result = new GeckoResult<Void>();
+        final GeckoResult<Void> result = new GeckoResult<Void>();
         result.cancel().accept(value -> {
             assertThat("Cancellation should fail", value, equalTo(false));
             done();
@@ -439,7 +439,7 @@ public class GeckoResultTest {
     }
 
     private GeckoResult<Integer> createCancellableResult() {
-        GeckoResult<Integer> result = new GeckoResult<>();
+        final GeckoResult<Integer> result = new GeckoResult<>();
         result.setCancellationDelegate(new GeckoResult.CancellationDelegate() {
             @Override
             public GeckoResult<Boolean> cancel() {
@@ -453,7 +453,7 @@ public class GeckoResultTest {
     @UiThreadTest
     @Test
     public void cancelSuccess() {
-        GeckoResult<Integer> result = createCancellableResult();
+        final GeckoResult<Integer> result = createCancellableResult();
 
         result.cancel().accept(value -> {
             assertThat("Cancel should succeed", value, equalTo(true));
@@ -471,7 +471,7 @@ public class GeckoResultTest {
     @UiThreadTest
     @Test
     public void cancelCompleted() {
-        GeckoResult<Integer> result = createCancellableResult();
+        final GeckoResult<Integer> result = createCancellableResult();
         result.complete(42);
         result.cancel().accept(value -> {
             assertThat("Cancel should fail", value, equalTo(false));
@@ -484,8 +484,8 @@ public class GeckoResultTest {
     @UiThreadTest
     @Test
     public void cancelParent() {
-        GeckoResult<Integer> result = createCancellableResult();
-        GeckoResult<Integer> result2 = result.then(value -> GeckoResult.fromValue(42));
+        final GeckoResult<Integer> result = createCancellableResult();
+        final GeckoResult<Integer> result2 = result.then(value -> GeckoResult.fromValue(42));
 
         result.cancel().accept(value -> {
             assertThat("Cancel should succeed", value, equalTo(true));
@@ -503,7 +503,7 @@ public class GeckoResultTest {
     @UiThreadTest
     @Test
     public void cancelChildParentNotComplete() {
-        GeckoResult<Integer> result = new GeckoResult<Integer>()
+        final GeckoResult<Integer> result = new GeckoResult<Integer>()
                 .then(value -> createCancellableResult())
                 .then(value -> new GeckoResult<Integer>());
 

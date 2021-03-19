@@ -270,10 +270,10 @@ public class WebExtensionController {
          */
         @Nullable
         default GeckoResult<AllowOrDeny> onUpdatePrompt(
-                @NonNull WebExtension currentlyInstalled,
-                @NonNull WebExtension updatedExtension,
-                @NonNull String[] newPermissions,
-                @NonNull String[] newOrigins) {
+                @NonNull final WebExtension currentlyInstalled,
+                @NonNull final WebExtension updatedExtension,
+                @NonNull final String[] newPermissions,
+                @NonNull final String[] newOrigins) {
             return null;
         }
 
@@ -624,7 +624,7 @@ public class WebExtensionController {
         final GeckoBundle[] bundles = response.getBundleArray("extensions");
         final List<WebExtension> list = new ArrayList<>(bundles.length);
 
-        for (GeckoBundle bundle : bundles) {
+        for (final GeckoBundle bundle : bundles) {
             final WebExtension extension = new WebExtension(mDelegateControllerProvider, bundle);
             list.add(registerWebExtension(extension));
         }
@@ -777,7 +777,7 @@ public class WebExtensionController {
                     if (BuildConfig.DEBUG) {
                         try {
                             Log.e(LOGTAG, "Could not find recipient for message: " + bundle.toJSONObject());
-                        } catch (JSONException ex) {
+                        } catch (final JSONException ex) {
                         }
                     }
                     callback.sendError("Could not find recipient for " + bundle.getBundle("sender"));
@@ -920,9 +920,9 @@ public class WebExtensionController {
 
         final GeckoBundle optionsBundle = message.bundle.getBundle("options");
 
-        WebExtension.DownloadRequest request = WebExtension.DownloadRequest.fromBundle(optionsBundle);
+        final WebExtension.DownloadRequest request = WebExtension.DownloadRequest.fromBundle(optionsBundle);
 
-        GeckoResult<WebExtension.DownloadInitData> result = delegate.onDownload(extension, request);
+        final GeckoResult<WebExtension.DownloadInitData> result = delegate.onDownload(extension, request);
         if (result == null) {
             message.callback.sendError("downloads.download is not supported");
             return;
@@ -934,7 +934,7 @@ public class WebExtensionController {
                 throw new IllegalArgumentException("downloads.download is not supported");
             }
 
-            GeckoBundle returnMessage = WebExtension.Download.downloadInfoToBundle(value.initData);
+            final GeckoBundle returnMessage = WebExtension.Download.downloadInfoToBundle(value.initData);
             returnMessage.putInt("id", value.download.id);
 
             return returnMessage;
@@ -1066,7 +1066,7 @@ public class WebExtensionController {
         }
 
         final String envType = sender.getString("envType");
-        @WebExtension.MessageSender.EnvType int environmentType;
+        @WebExtension.MessageSender.EnvType final int environmentType;
 
         if ("content_child".equals(envType)) {
             environmentType = WebExtension.MessageSender.ENV_TYPE_CONTENT_SCRIPT;
@@ -1086,7 +1086,7 @@ public class WebExtensionController {
         }
 
         final String url = sender.getString("url");
-        boolean isTopLevel;
+        final boolean isTopLevel;
         if (session == null) {
             // This message is coming from the background page
             isTopLevel = true;
@@ -1200,7 +1200,7 @@ public class WebExtensionController {
         final Object content;
         try {
             content = message.bundle.toJSONObject().get("data");
-        } catch (JSONException ex) {
+        } catch (final JSONException ex) {
             callback.sendError(ex.getMessage());
             return;
         }
@@ -1287,7 +1287,7 @@ public class WebExtensionController {
         if (mDownloads.containsKey(id)) {
             throw new IllegalArgumentException("Download with this id already exists");
         } else {
-            WebExtension.Download download = new WebExtension.Download(id);
+            final WebExtension.Download download = new WebExtension.Download(id);
             mDownloads.put(id, download);
 
             return download;

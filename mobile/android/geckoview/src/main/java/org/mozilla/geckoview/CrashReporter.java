@@ -138,7 +138,7 @@ public class CrashReporter {
             return GeckoResult.fromException(new Exception("No server url present"));
         }
 
-        for (String key : IGNORE_KEYS) {
+        for (final String key : IGNORE_KEYS) {
             annotations.remove(key);
         }
 
@@ -173,12 +173,12 @@ public class CrashReporter {
                     url.getPath(), url.getQuery(), url.getRef());
             conn = (HttpURLConnection) ProxySelector.openConnectionWithProxy(uri);
             conn.setRequestMethod("POST");
-            String boundary = generateBoundary();
+            final String boundary = generateBoundary();
             conn.setDoOutput(true);
             conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
             conn.setRequestProperty("Content-Encoding", "gzip");
 
-            OutputStream os = new GZIPOutputStream(conn.getOutputStream());
+            final OutputStream os = new GZIPOutputStream(conn.getOutputStream());
             sendAnnotations(os, boundary, extras);
             sendFile(os, boundary, MINI_DUMP_PATH_KEY, minidumpFile);
             os.write(("\r\n--" + boundary + "--\r\n").getBytes());
@@ -189,10 +189,10 @@ public class CrashReporter {
             try {
                 br = new BufferedReader(
                         new InputStreamReader(conn.getInputStream()));
-                HashMap<String, String> responseMap = readStringsFromReader(br);
+                final HashMap<String, String> responseMap = readStringsFromReader(br);
 
                 if (conn.getResponseCode() == HttpURLConnection.HTTP_OK) {
-                    String crashid = responseMap.get("CrashID");
+                    final String crashid = responseMap.get("CrashID");
                     if (crashid != null) {
                         Log.i(LOGTAG, "Successfully sent crash report: " + crashid);
                         return GeckoResult.fromValue(crashid);
@@ -202,18 +202,18 @@ public class CrashReporter {
                 } else {
                     Log.w(LOGTAG, "Received failure HTTP response code from server: " + conn.getResponseCode());
                 }
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 return GeckoResult.fromException(new Exception("Failed to submit crash report", e));
             } finally {
                 try {
                     if (br != null) {
                         br.close();
                     }
-                } catch (IOException e) {
+                } catch (final IOException e) {
                     return GeckoResult.fromException(new Exception("Failed to submit crash report", e));
                 }
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             return GeckoResult.fromException(new Exception("Failed to submit crash report", e));
         } finally {
             if (conn != null) {
@@ -225,24 +225,24 @@ public class CrashReporter {
 
     private static String computeMinidumpHash(@NonNull final File minidump) throws IOException {
         MessageDigest md = null;
-        FileInputStream stream = new FileInputStream(minidump);
+        final FileInputStream stream = new FileInputStream(minidump);
         try {
             md = MessageDigest.getInstance("SHA-256");
 
-            byte[] buffer = new byte[4096];
+            final byte[] buffer = new byte[4096];
             int readBytes;
 
             while ((readBytes = stream.read(buffer)) != -1) {
                 md.update(buffer, 0, readBytes);
             }
-        } catch (NoSuchAlgorithmException e) {
+        } catch (final NoSuchAlgorithmException e) {
             throw new IOException(e);
         } finally {
             stream.close();
         }
 
-        byte[] digest = md.digest();
-        StringBuilder hash = new StringBuilder(64);
+        final byte[] digest = md.digest();
+        final StringBuilder hash = new StringBuilder(64);
 
         for (int i = 0; i < digest.length; i++) {
             hash.append(Integer.toHexString((digest[i] & 0xf0) >> 4));
@@ -255,12 +255,12 @@ public class CrashReporter {
     private static HashMap<String, String> readStringsFromReader(final BufferedReader reader)
             throws IOException {
         String line;
-        HashMap<String, String> map = new HashMap<>();
+        final HashMap<String, String> map = new HashMap<>();
         while ((line = reader.readLine()) != null) {
             int equalsPos = -1;
             if ((equalsPos = line.indexOf('=')) != -1) {
-                String key = line.substring(0, equalsPos);
-                String val = unescape(line.substring(equalsPos + 1));
+                final String key = line.substring(0, equalsPos);
+                final String val = unescape(line.substring(equalsPos + 1));
                 map.put(key, val);
             }
         }
@@ -269,16 +269,16 @@ public class CrashReporter {
 
     private static JSONObject readExtraFile(final String filePath)
             throws IOException, JSONException {
-        byte[] buffer = new byte[4096];
-        FileInputStream inputStream = new FileInputStream(filePath);
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        final byte[] buffer = new byte[4096];
+        final FileInputStream inputStream = new FileInputStream(filePath);
+        final ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         int bytesRead = 0;
 
         while ((bytesRead = inputStream.read(buffer)) != -1) {
             outputStream.write(buffer, 0, bytesRead);
         }
 
-        String contents = new String(outputStream.toByteArray(), "UTF-8");
+        final String contents = new String(outputStream.toByteArray(), "UTF-8");
         return new JSONObject(contents);
     }
 
@@ -294,7 +294,7 @@ public class CrashReporter {
             try {
                 final String hash = computeMinidumpHash(minidump);
                 annotations.put(MINIDUMP_SHA256_HASH_KEY, hash);
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 Log.e(LOGTAG, "exception while computing the minidump hash: ", e);
             }
 
@@ -312,21 +312,21 @@ public class CrashReporter {
             try {
                 annotations.put("Android_CPU_ABI2", Build.CPU_ABI2);
                 annotations.put("Android_Hardware", Build.HARDWARE);
-            } catch (Exception ex) {
+            } catch (final Exception ex) {
                 Log.e(LOGTAG, "Exception while sending SDK version 8 keys", ex);
             }
             annotations.put("Android_Version",  Build.VERSION.SDK_INT + " (" + Build.VERSION.CODENAME + ")");
 
             return annotations;
-        } catch (JSONException e) {
+        } catch (final JSONException e) {
             throw new IOException(e);
         }
     }
 
     private static String generateBoundary() {
         // Generate some random numbers to fill out the boundary
-        int r0 = (int)(Integer.MAX_VALUE * Math.random());
-        int r1 = (int)(Integer.MAX_VALUE * Math.random());
+        final int r0 = (int)(Integer.MAX_VALUE * Math.random());
+        final int r1 = (int)(Integer.MAX_VALUE * Math.random());
         return String.format("---------------------------%08X%08X", r0, r1);
     }
 
@@ -350,7 +350,7 @@ public class CrashReporter {
                 "Content-Type: application/octet-stream\r\n" +
                 "\r\n"
         ).getBytes());
-        FileChannel fc = new FileInputStream(file).getChannel();
+        final FileChannel fc = new FileInputStream(file).getChannel();
         fc.transferTo(0, fc.size(), Channels.newChannel(os));
         fc.close();
     }

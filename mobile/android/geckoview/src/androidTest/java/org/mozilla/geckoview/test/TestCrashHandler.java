@@ -28,12 +28,12 @@ public class TestCrashHandler extends Service {
         private static final String BUNDLE_KEY_RESULT = "TestCrashHandler.EvalResult.mResult";
         private static final String BUNDLE_KEY_MSG = "TestCrashHandler.EvalResult.mMsg";
 
-        public EvalResult(boolean result, String msg) {
+        public EvalResult(final boolean result, final String msg) {
             mResult = result;
             mMsg = msg;
         }
 
-        public EvalResult(Bundle bundle) {
+        public EvalResult(final Bundle bundle) {
             mResult = bundle.getBoolean(BUNDLE_KEY_RESULT, false);
             mMsg = bundle.getString(BUNDLE_KEY_MSG);
         }
@@ -58,7 +58,7 @@ public class TestCrashHandler extends Service {
             }
 
             @Override
-            public void handleMessage(Message msg) {
+            public void handleMessage(final Message msg) {
                 if (msg.what == MSG_CRASH_DUMP_EVAL_RESULT) {
                     setEvalResult(new EvalResult(msg.getData()));
                     return;
@@ -78,12 +78,12 @@ public class TestCrashHandler extends Service {
 
         private ServiceConnection mConnection = new ServiceConnection() {
             @Override
-            public void onServiceConnected(ComponentName className, IBinder service) {
+            public void onServiceConnected(final ComponentName className, final IBinder service) {
                 mService = new Messenger(service);
             }
 
             @Override
-            public void onServiceDisconnected(ComponentName className) {
+            public void onServiceDisconnected(final ComponentName className) {
                 disconnect();
             }
         };
@@ -107,13 +107,13 @@ public class TestCrashHandler extends Service {
             mReceiver.post(new Runnable() {
                 @Override
                 public void run() {
-                    Message msg = Message.obtain(null, MSG_EVAL_NEXT_CRASH_DUMP,
+                    final Message msg = Message.obtain(null, MSG_EVAL_NEXT_CRASH_DUMP,
                                                  expectFatal ? 1 : 0, 0);
                     msg.replyTo = mMessenger;
 
                     try {
                         mService.send(msg);
-                    } catch (RemoteException e) {
+                    } catch (final RemoteException e) {
                         throw new RuntimeException(e.getMessage());
                     }
                 }
@@ -121,7 +121,7 @@ public class TestCrashHandler extends Service {
         }
 
         public boolean connect(final long timeoutMillis) {
-            Intent intent = new Intent(mContext, TestCrashHandler.class);
+            final Intent intent = new Intent(mContext, TestCrashHandler.class);
             mDoUnbind = mContext.bindService(intent, mConnection, Context.BIND_AUTO_CREATE |
                                                                   Context.BIND_IMPORTANT);
             if (!mDoUnbind) {
@@ -142,7 +142,7 @@ public class TestCrashHandler extends Service {
             mThread.quitSafely();
         }
 
-        private synchronized void setEvalResult(EvalResult result) {
+        private synchronized void setEvalResult(final EvalResult result) {
             mResult = result;
         }
 
@@ -171,7 +171,7 @@ public class TestCrashHandler extends Service {
         }
 
         @Override
-        public void handleMessage(Message msg) {
+        public void handleMessage(final Message msg) {
             if (msg.what == MSG_EVAL_NEXT_CRASH_DUMP) {
                 mReplyToMessenger = msg.replyTo;
                 mExpectFatal = msg.arg1 != 0;
@@ -181,17 +181,17 @@ public class TestCrashHandler extends Service {
             super.handleMessage(msg);
         }
 
-        public void reportResult(EvalResult result) {
+        public void reportResult(final EvalResult result) {
             if (mReplyToMessenger == null) {
                 return;
             }
 
-            Message msg = Message.obtain(null, MSG_CRASH_DUMP_EVAL_RESULT);
+            final Message msg = Message.obtain(null, MSG_CRASH_DUMP_EVAL_RESULT);
             msg.setData(result.asBundle());
 
             try {
                 mReplyToMessenger.send(msg);
-            } catch (RemoteException e) {
+            } catch (final RemoteException e) {
                 throw new RuntimeException(e.getMessage());
             }
 
@@ -239,7 +239,7 @@ public class TestCrashHandler extends Service {
     }
 
     @Override
-    public synchronized int onStartCommand(Intent intent, int flags, int startId) {
+    public synchronized int onStartCommand(final Intent intent, final int flags, final int startId) {
         if (mMsgHandler != null) {
             mMsgHandler.reportResult(evalCrashInfo(intent));
             return Service.START_NOT_STICKY;
@@ -253,14 +253,14 @@ public class TestCrashHandler extends Service {
     }
 
     @Override
-    public synchronized IBinder onBind(Intent intent) {
+    public synchronized IBinder onBind(final Intent intent) {
         mMsgHandler = new MessageHandler();
         mMessenger = new Messenger(mMsgHandler);
         return mMessenger.getBinder();
     }
 
     @Override
-    public synchronized boolean onUnbind(Intent intent) {
+    public synchronized boolean onUnbind(final Intent intent) {
         mMsgHandler = null;
         mMessenger = null;
         return false;

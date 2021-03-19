@@ -206,7 +206,7 @@ public class Autocomplete {
         @Override
         @AnyThread
         public String toString() {
-            StringBuilder builder = new StringBuilder("LoginEntry {");
+            final StringBuilder builder = new StringBuilder("LoginEntry {");
             builder
                 .append("guid=").append(guid)
                 .append(", origin=").append(origin)
@@ -370,7 +370,7 @@ public class Autocomplete {
          */
         @UiThread
         default @Nullable GeckoResult<LoginEntry[]> onLoginFetch(
-                @NonNull String domain) {
+                @NonNull final String domain) {
             return null;
         }
 
@@ -383,7 +383,7 @@ public class Autocomplete {
          *              request.
          */
         @UiThread
-        default void onLoginSave(@NonNull LoginEntry login) {}
+        default void onLoginSave(@NonNull final LoginEntry login) {}
 
         /**
          * Notify that the given login was used to autofill login input fields.
@@ -397,8 +397,8 @@ public class Autocomplete {
          */
         @UiThread
         default void onLoginUsed(
-                @NonNull LoginEntry login,
-                @LSUsedField int usedFields) {}
+                @NonNull final LoginEntry login,
+                @LSUsedField final int usedFields) {}
     }
 
     /**

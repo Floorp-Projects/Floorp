@@ -44,7 +44,7 @@ public final class MediaManager extends Service {
             if (mNumActiveRequests > 0) {
                 mNumActiveRequests--;
             } else {
-                RuntimeException e = new RuntimeException("unmatched codec/DRM bridge creation and ending calls!");
+                final RuntimeException e = new RuntimeException("unmatched codec/DRM bridge creation and ending calls!");
                 Log.e(LOGTAG, "Error:", e);
             }
         }

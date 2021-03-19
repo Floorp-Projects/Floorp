@@ -9,7 +9,7 @@ import android.view.InputDevice;
 
 public class InputDeviceUtils {
     public static boolean isPointerTypeDevice(final InputDevice inputDevice) {
-        int sources = inputDevice.getSources();
+        final int sources = inputDevice.getSources();
         return (sources & (InputDevice.SOURCE_CLASS_JOYSTICK |
                            InputDevice.SOURCE_CLASS_POINTER |
                            InputDevice.SOURCE_CLASS_POSITION |

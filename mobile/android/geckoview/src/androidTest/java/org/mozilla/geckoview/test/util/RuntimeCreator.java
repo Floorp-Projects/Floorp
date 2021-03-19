@@ -39,28 +39,28 @@ public class RuntimeCreator {
         public RuntimeTelemetry.Delegate delegate = null;
 
         @Override
-        public void onHistogram(@NonNull RuntimeTelemetry.Histogram metric) {
+        public void onHistogram(@NonNull final RuntimeTelemetry.Histogram metric) {
             if (delegate != null) {
                 delegate.onHistogram(metric);
             }
         }
 
         @Override
-        public void onBooleanScalar(@NonNull RuntimeTelemetry.Metric<Boolean> metric) {
+        public void onBooleanScalar(@NonNull final RuntimeTelemetry.Metric<Boolean> metric) {
             if (delegate != null) {
                 delegate.onBooleanScalar(metric);
             }
         }
 
         @Override
-        public void onStringScalar(@NonNull RuntimeTelemetry.Metric<String> metric) {
+        public void onStringScalar(@NonNull final RuntimeTelemetry.Metric<String> metric) {
             if (delegate != null) {
                 delegate.onStringScalar(metric);
             }
         }
 
         @Override
-        public void onLongScalar(@NonNull RuntimeTelemetry.Metric<Long> metric) {
+        public void onLongScalar(@NonNull final RuntimeTelemetry.Metric<Long> metric) {
             if (delegate != null) {
                 delegate.onLongScalar(metric);
             }
@@ -78,7 +78,7 @@ public class RuntimeCreator {
             = new WebExtension.MessageDelegate() {
         @Nullable
         @Override
-        public void onConnect(@NonNull WebExtension.Port port) {
+        public void onConnect(@NonNull final WebExtension.Port port) {
             sBackgroundPort = port;
             port.setDelegate(sWrapperPortDelegate);
         }
@@ -86,7 +86,7 @@ public class RuntimeCreator {
 
     private static WebExtension.PortDelegate sWrapperPortDelegate = new WebExtension.PortDelegate() {
         @Override
-        public void onPortMessage(@NonNull Object message, @NonNull WebExtension.Port port) {
+        public void onPortMessage(@NonNull final Object message, @NonNull final WebExtension.Port port) {
             if (sPortDelegate != null) {
                 sPortDelegate.onPortMessage(message, port);
             }
@@ -118,11 +118,11 @@ public class RuntimeCreator {
      *
      * @param delegate the {@link RuntimeTelemetry.Delegate} for this test run.
      */
-    public static void setTelemetryDelegate(RuntimeTelemetry.Delegate delegate) {
+    public static void setTelemetryDelegate(final RuntimeTelemetry.Delegate delegate) {
         sRuntimeTelemetryProxy.delegate = delegate;
     }
 
-    public static void setPortDelegate(WebExtension.PortDelegate portDelegate) {
+    public static void setPortDelegate(final WebExtension.PortDelegate portDelegate) {
         sPortDelegate = portDelegate;
     }
 
@@ -240,11 +240,11 @@ public class RuntimeCreator {
             }
         };
 
-        FutureTask<Void> task = new FutureTask<>(runnable, null);
+        final FutureTask<Void> task = new FutureTask<>(runnable, null);
         InstrumentationRegistry.getInstrumentation().runOnMainSync(task);
         try {
             task.get(timeoutMillis, TimeUnit.MILLISECONDS);
-        } catch (Throwable e) {
+        } catch (final Throwable e) {
             throw new RuntimeException(e.toString());
         }
     }

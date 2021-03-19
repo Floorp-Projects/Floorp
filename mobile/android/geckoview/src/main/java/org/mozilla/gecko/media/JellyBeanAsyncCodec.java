@@ -93,7 +93,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
                 return;
             }
 
-            Message msg = obtainMessage(MSG_INPUT_BUFFER_AVAILABLE);
+            final Message msg = obtainMessage(MSG_INPUT_BUFFER_AVAILABLE);
             msg.arg1 = index;
             processMessage(msg);
         }
@@ -111,7 +111,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
                 return;
             }
 
-            Message msg = obtainMessage(MSG_OUTPUT_BUFFER_AVAILABLE, info);
+            final Message msg = obtainMessage(MSG_OUTPUT_BUFFER_AVAILABLE, info);
             msg.arg1 = index;
             processMessage(msg);
         }
@@ -207,7 +207,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
                     default:
                         return false;
                 }
-            } catch (IllegalStateException e) {
+            } catch (final IllegalStateException e) {
                 e.printStackTrace();
                 mCallbackSender.notifyError(ERROR_CODEC);
             }
@@ -216,7 +216,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
         }
 
         private void pollInputBuffer() {
-            int result = mCodec.dequeueInputBuffer(DEQUEUE_TIMEOUT_US);
+            final int result = mCodec.dequeueInputBuffer(DEQUEUE_TIMEOUT_US);
             if (result >= 0) {
                 mCallbackSender.notifyInputBuffer(result);
             } else if (result == MediaCodec.INFO_TRY_AGAIN_LATER) {
@@ -228,8 +228,8 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
 
         private void pollOutputBuffer() {
             boolean dequeueMoreBuffer = true;
-            MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
-            int result = mCodec.dequeueOutputBuffer(info, DEQUEUE_TIMEOUT_US);
+            final MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
+            final int result = mCodec.dequeueOutputBuffer(info, DEQUEUE_TIMEOUT_US);
             if (result >= 0) {
                 if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                     mOutputEnded = true;
@@ -275,7 +275,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
             Log.e(LOGTAG, "poller already initialized");
             return;
         }
-        HandlerThread thread = new HandlerThread(name);
+        final HandlerThread thread = new HandlerThread(name);
         thread.start();
         mBufferPoller = new BufferPoller(thread.getLooper());
         if (DEBUG) {
@@ -324,7 +324,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
                    && mCodec.getCodecInfo()
                             .getCapabilitiesForType(mimeType)
                             .isFeatureSupported(CodecCapabilities.FEATURE_TunneledPlayback);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             return false;
         }
     }
@@ -357,7 +357,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
     @Override
     public final void setBitrate(final int bps) {
         if (android.os.Build.VERSION.SDK_INT >= 19) {
-            Bundle params = new Bundle();
+            final Bundle params = new Bundle();
             params.putInt(MediaCodec.PARAMETER_KEY_VIDEO_BITRATE, bps);
             mCodec.setParameters(params);
         }
@@ -372,14 +372,14 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
 
         if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT
                 && ((flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0)) {
-            Bundle params = new Bundle();
+            final Bundle params = new Bundle();
             params.putInt(MediaCodec.PARAMETER_KEY_REQUEST_SYNC_FRAME, 0);
             mCodec.setParameters(params);
         }
 
         try {
             mCodec.queueInputBuffer(index, offset, size, presentationTimeUs, flags);
-        } catch (IllegalStateException e) {
+        } catch (final IllegalStateException e) {
             e.printStackTrace();
             mCallbackSender.notifyError(ERROR_CODEC);
             return;
@@ -401,7 +401,7 @@ final class JellyBeanAsyncCodec implements AsyncCodec {
 
         try {
             mCodec.queueSecureInputBuffer(index, offset, cryptoInfo, presentationTimeUs, flags);
-        } catch (IllegalStateException e) {
+        } catch (final IllegalStateException e) {
             e.printStackTrace();
             mCallbackSender.notifyError(ERROR_CODEC);
             return;

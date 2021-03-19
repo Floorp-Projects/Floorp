@@ -301,7 +301,7 @@ public class GeckoJavaSampler {
 
     @WrapForJNI
     public synchronized static double getSampleTime(final int aSampleId) {
-        Sample sample = getSample(aSampleId);
+        final Sample sample = getSample(aSampleId);
         if (sample != null) {
             if (sample.mJavaTime != 0) {
                 return (sample.mJavaTime -
@@ -314,9 +314,9 @@ public class GeckoJavaSampler {
 
     @WrapForJNI
     public synchronized static String getFrameName(final int aSampleId, final int aFrameId) {
-        Sample sample = getSample(aSampleId);
+        final Sample sample = getSample(aSampleId);
         if (sample != null && aFrameId < sample.mFrames.length) {
-            Frame frame = sample.mFrames[aFrameId];
+            final Frame frame = sample.mFrames[aFrameId];
             if (frame == null) {
                 return null;
             }
@@ -349,7 +349,7 @@ public class GeckoJavaSampler {
                                @Nullable final Double aStartTime,
                                @Nullable final Double aEndTime,
                                @Nullable final String aText) {
-            Queue<Marker> markersQueue = this.mMarkers;
+            final Queue<Marker> markersQueue = this.mMarkers;
             if (markersQueue == null) {
                 // Profiler is not active.
                 return;
@@ -363,7 +363,7 @@ public class GeckoJavaSampler {
                 throw new AssertionError("Currently only main thread is supported for markers.");
             }
 
-            Marker newMarker = new Marker(aMarkerName, aStartTime, aEndTime, aText);
+            final Marker newMarker = new Marker(aMarkerName, aStartTime, aEndTime, aText);
 
             boolean successful = markersQueue.offer(newMarker);
             while (!successful) {
@@ -374,7 +374,7 @@ public class GeckoJavaSampler {
         }
 
         private Marker pollNextMarker() {
-            Queue<Marker> markersQueue = this.mMarkers;
+            final Queue<Marker> markersQueue = this.mMarkers;
             if (markersQueue == null) {
                 // Profiler is not active.
                 return null;
@@ -399,7 +399,7 @@ public class GeckoJavaSampler {
 
             // Setting a limit of 120000 (2 mins with 1ms interval) for samples and markers for now
             // to make sure we are not allocating too much.
-            int limitedEntryCount = Math.min(aEntryCount, 120000);
+            final int limitedEntryCount = Math.min(aEntryCount, 120000);
             sSamplingRunnable = new SamplingRunnable(aInterval, limitedEntryCount);
             sMarkerStorage.start(limitedEntryCount);
             sSamplingScheduler = Executors.newSingleThreadScheduledExecutor();
@@ -436,7 +436,7 @@ public class GeckoJavaSampler {
                 sSamplingScheduler.shutdown();
                 // 1s is enough to wait shutdown.
                 sSamplingScheduler.awaitTermination(1000, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
                 Log.e(LOGTAG, "Sampling scheduler isn't terminated. Last sampling data might be broken.");
                 sSamplingScheduler.shutdownNow();
             }
