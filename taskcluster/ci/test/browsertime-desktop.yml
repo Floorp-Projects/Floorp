@@ -31,6 +31,13 @@ job-defaults:
             - --browsertime
             - --no-conditioned-profile
     fission-run-on-projects: []
+    variants:
+        by-app:
+            firefox:
+                by-test-platform:
+                    .*shippable-qr/.*: [fission]
+                    default: []
+            default: []
     python-3: true
 
 browsertime-tp6:
@@ -82,17 +89,11 @@ browsertime-tp6:
                     default: 2
             default: 3
     apps: ['firefox', 'chrome', 'chromium']
-    variants:
-        by-app:
-            firefox: ['fission']
-            default: []
     fission-tier: 2
     fission-run-on-projects:
         by-test-platform:
-            (linux|windows|macos)(?!.*shippable).*: []
-            windows7.*shippable.*: []
-            windows10.*shippable[^-qr].*: []
-            default: ["mozilla-central"]
+            windows7.*: []
+            default: [mozilla-central]
     run-on-projects:
         by-app:
             firefox:
@@ -156,10 +157,8 @@ browsertime-benchmark:
             default: 2
     fission-run-on-projects:
         by-test-platform:
-            (linux|windows|macos)(?!.*shippable).*: []
-            windows7.*shippable.*: []
-            windows10.*shippable[^-qr].*: []
-            default: ["mozilla-central"]
+            windows7.*: []
+            default: [mozilla-central]
     run-on-projects:
         by-app:
             firefox:
@@ -170,7 +169,6 @@ browsertime-benchmark:
                     windows10.*shippable.*: ["trunk", "mozilla-beta"]
                     default: []
             default: []
-    variants: ["fission"]
     apps: ["firefox"]
     treeherder-symbol: Btime()
 
@@ -178,16 +176,62 @@ browsertime-tp6-live:
     description: "Raptor (browsertime) tp6 on live-sites"
     raptor-test: tp6
     raptor-subtests:
-        - [cnn-ampstories, cnn-amp]
-    tier: 2
-    apps: ["firefox"]
-    variants: []
+        - amazon
+        - apple
+        - [bing-search, bing]
+        - ebay
+        - [facebook, fb]
+        - [facebook-redesign, fbr]
+        - fandom
+        - [google-docs, gdocs]
+        - [google-mail, gmail]
+        - [google-search, gsearch]
+        - [google-sheets, gsheets]
+        - [google-slides, gslides]
+        - imdb
+        - imgur
+        - instagram
+        - linkedin
+        - microsoft
+        - netflix
+        # - office (site loads blank page if not signed in)
+        - outlook
+        - paypal
+        - pinterest
+        - reddit
+        - tumblr
+        - twitch
+        - twitter
+        - wikipedia
+        - yahoo-mail
+        - yahoo-news
+        - yandex
+        - youtube
+    apps: [firefox, chrome, chromium]
+    tier: 3
+    run-on-projects: []
+    run-visual-metrics: true
     treeherder-symbol: Btime-live(tp6)
+    mozharness:
+        extra-options:
+            - --browser-cycles=15
+            - --chimera
+            - --live-sites
+
+browsertime-tp6-live-sheriffed:
+    description: "Raptor (browsertime) tp6 on live-sites"
+    raptor-test: tp6
+    raptor-subtests:
+        - [cnn-ampstories, cnn-amp]
+    apps: [firefox]
+    tier: 2
     run-on-projects:
         by-test-platform:
             (linux|windows|macos)(?!.*shippable).*: []
             windows7.*shippable.*: []
-            default: ["autoland"]
+            default: [autoland]
+    run-visual-metrics: true
+    treeherder-symbol: Btime-live(tp6)
     mozharness:
         extra-options:
             - --chimera
