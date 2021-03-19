@@ -12,6 +12,8 @@ import android.view.View
 import androidx.preference.PreferenceManager
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
+import mozilla.components.browser.state.selector.findCustomTab
+import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.EngineView
@@ -55,7 +57,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         // The session for this ID, no longer exists. This usually happens because we were gc-d
         // and since we do not save custom tab sessions, the activity is re-created and we no longer
         // have a session with us to restore. It's safer to finish the activity instead.
-        if (customTabId != null && components.sessionManager.findSessionById(customTabId) == null) {
+        if (customTabId != null && components.store.state.findCustomTab(customTabId) == null) {
             finish()
             return
         }
@@ -117,7 +119,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
         // If needed show the first run tour on top of the browser or url input fragment.
         if (Settings.getInstance(this@MainActivity).shouldShowFirstrun() && !isCustomTabMode) {
-            showFirstrun(components.sessionManager.selectedSession)
+            showFirstrun(components.store.state.selectedTabId)
         }
     }
 
@@ -242,10 +244,10 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
                 .commitAllowingStateLoss()
     }
 
-    private fun showFirstrun(currentSession: Session? = null) {
+    private fun showFirstrun(tabId: String? = null) {
         supportFragmentManager
                 .beginTransaction()
-                .add(R.id.container, FirstrunFragment.create(currentSession), FirstrunFragment.FRAGMENT_TAG)
+                .add(R.id.container, FirstrunFragment.create(tabId), FirstrunFragment.FRAGMENT_TAG)
                 .commit()
     }
 
@@ -260,7 +262,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         }
 
         val browserFragment = BrowserFragment.createForTab(tab.id)
-        val isNewSession = previousSessionCount < components.sessionManager.sessions.count() && previousSessionCount > 0
+        val isNewSession = previousSessionCount < components.store.state.privateTabs.size && previousSessionCount > 0
 
         if ((tab.source == SessionState.Source.ACTION_SEND ||
                 tab.source == SessionState.Source.HOME_SCREEN) && isNewSession) {
@@ -272,7 +274,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
                 .replace(R.id.container, browserFragment, BrowserFragment.FRAGMENT_TAG)
             .commitAllowingStateLoss()
 
-        previousSessionCount = components.sessionManager.sessions.count()
+        previousSessionCount = components.store.state.privateTabs.size
     }
 
     override fun onCreateView(name: String, context: Context, attrs: AttributeSet): View? {

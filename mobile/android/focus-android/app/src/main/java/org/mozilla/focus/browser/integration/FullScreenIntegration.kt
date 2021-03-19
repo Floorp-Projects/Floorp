@@ -20,7 +20,6 @@ import org.mozilla.focus.browser.DisplayToolbar
 class FullScreenIntegration(
     val activity: Activity,
     val store: BrowserStore,
-    val sessionManager: SessionManager,
     tabId: String?,
     sessionUseCases: SessionUseCases,
     private val toolbarView: DisplayToolbar,

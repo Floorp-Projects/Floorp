@@ -203,7 +203,6 @@ class BrowserFragment :
         fullScreenIntegration.set(FullScreenIntegration(
             requireActivity(),
             components.store,
-            components.sessionManager,
             tab.id,
             components.sessionUseCases,
             toolbarView!!,

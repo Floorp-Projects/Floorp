@@ -144,11 +144,9 @@ class FirstrunFragment : Fragment(), View.OnClickListener {
 
         private const val ARGUMENT_SESSION_UUID = "sessionUUID"
 
-        fun create(currentSession: Session?): FirstrunFragment {
-            val uuid = currentSession?.id
-
+        fun create(tabId: String?): FirstrunFragment {
             val arguments = Bundle()
-            arguments.putString(ARGUMENT_SESSION_UUID, uuid)
+            arguments.putString(ARGUMENT_SESSION_UUID, tabId)
 
             val fragment = FirstrunFragment()
             fragment.arguments = arguments
