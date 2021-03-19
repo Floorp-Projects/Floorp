@@ -79,6 +79,7 @@ class Components(
         )
     }
 
+    @Suppress("DEPRECATION")
     private fun findSessionById(tabId: String): Session? {
         return sessionManager.findSessionById(tabId)
     }
@@ -88,8 +89,10 @@ class Components(
      */
     val customTabsStore by lazy { CustomTabsServiceStore() }
 
+    @Suppress("DEPRECATION")
     val sessionUseCases: SessionUseCases by lazy { SessionUseCases(store, sessionManager) }
 
+    @Suppress("DEPRECATION")
     val tabsUseCases: TabsUseCases by lazy { TabsUseCases(store, sessionManager) }
 
     val contextMenuUseCases: ContextMenuUseCases by lazy { ContextMenuUseCases(store) }
@@ -98,9 +101,11 @@ class Components(
 
     val appLinksUseCases: AppLinksUseCases by lazy { AppLinksUseCases(context.applicationContext) }
 
+    @Suppress("DEPRECATION")
     val customTabsUseCases: CustomTabsUseCases by lazy { CustomTabsUseCases(sessionManager, sessionUseCases.loadUrl) }
 
-    val sessionManager by lazy {
+    @Deprecated("Use BrowserStore instead")
+    private val sessionManager by lazy {
         SessionManager(engine, store)
     }
 
