@@ -1543,18 +1543,18 @@ describe("Reducers", () => {
         INITIAL_STATE.Search
       );
     });
-    it("should set hide to true on HIDE_SEARCH", () => {
-      const nextState = Search(undefined, { type: "HIDE_SEARCH" });
-      assert.propertyVal(nextState, "hide", true);
+    it("should set disable to true on DISABLE_SEARCH", () => {
+      const nextState = Search(undefined, { type: "DISABLE_SEARCH" });
+      assert.propertyVal(nextState, "disable", true);
     });
     it("should set focus to true on FAKE_FOCUS_SEARCH", () => {
       const nextState = Search(undefined, { type: "FAKE_FOCUS_SEARCH" });
       assert.propertyVal(nextState, "fakeFocus", true);
     });
-    it("should set focus and hide to false on SHOW_SEARCH", () => {
+    it("should set focus and disable to false on SHOW_SEARCH", () => {
       const nextState = Search(undefined, { type: "SHOW_SEARCH" });
       assert.propertyVal(nextState, "fakeFocus", false);
-      assert.propertyVal(nextState, "hide", false);
+      assert.propertyVal(nextState, "disable", false);
     });
   });
   it("should set initialized to true on AS_ROUTER_INITIALIZED", () => {

@@ -101,20 +101,19 @@ p {
   padding-inline: 46px 48px;
   position: relative;
   opacity: 1;
-  transition: opacity 500ms;
   width: 100%;
   -moz-context-properties: fill;
   fill: rgba(12, 12, 13, 0.4);
 }
 
-.search-handoff-button.focused {
+.search-handoff-button.focused:not(.disabled) {
   border: solid 1px #0060df;
   box-shadow: 0 0 0 1px #0060df, 0 0 0 4px rgba(0, 96, 223, 0.3);
 }
 
-.search-handoff-button.hidden {
-  opacity: 0;
-  visibility: hidden;
+.search-handoff-button.disabled {
+  opacity: 0.5;
+  box-shadow: none;
 }
 
 .search-handoff-button:dir(rtl),
@@ -127,7 +126,7 @@ p {
   background-color: #fff;
 }
 
-.search-handoff-button.focused .fake-caret {
+.search-handoff-button.focused:not(.disabled) .fake-caret {
   display: block;
 }
 
