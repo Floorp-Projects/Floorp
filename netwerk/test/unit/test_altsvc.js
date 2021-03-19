@@ -529,10 +529,7 @@ function doTest19() {
   );
   const BAD_PORT_U32 = 6667 + 65536;
   otherServer.init(BAD_PORT_U32, true, -1);
-  Assert.ok(
-    otherServer.port == 6667,
-    "Trying to listen on port 6667"
-  );
+  Assert.ok(otherServer.port == 6667, "Trying to listen on port 6667");
   xaltsvc = "localhost:" + BAD_PORT_U32;
   dump("Blocked port: " + otherServer.port);
   waitFor = 500;
@@ -559,10 +556,7 @@ function doTest20() {
   );
   const BAD_PORT_U64 = 6666 + 429496729;
   otherServer.init(6666, true, -1);
-  Assert.ok(
-    otherServer.port == 6666,
-    "Trying to listen on port 6666"
-  );
+  Assert.ok(otherServer.port == 6666, "Trying to listen on port 6666");
   xaltsvc = "localhost:" + BAD_PORT_U64;
   dump("Blocked port: " + otherServer.port);
   waitFor = 500;
