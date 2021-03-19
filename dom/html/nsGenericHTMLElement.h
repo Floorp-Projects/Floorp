@@ -679,9 +679,6 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase {
     }
   }
 
- private:
-  void RegUnRegAccessKey(bool aDoReg);
-
  protected:
   virtual nsresult BeforeSetAttr(int32_t aNamespaceID, nsAtom* aName,
                                  const nsAttrValueOrString* aValue,
