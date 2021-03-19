@@ -16,8 +16,8 @@
 ./gradlew -q \
         ktlint \
         detektCheck \
-        assembleFocusX86DebugAndroidTest \
-        testFocusX86DebugUnitTest
+        assembleFocusDebugAndroidTest \
+        testFocusDebugUnitTest
 
 # Tasks omitted because they take a long time to run:
 # - unit test on all variants

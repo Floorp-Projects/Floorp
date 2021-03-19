@@ -9,7 +9,6 @@ the app, run tests and execute code quality tools:
 """
 
 import datetime
-import json
 import taskcluster
 import os
 
@@ -66,28 +65,11 @@ def generate_compare_locales_task():
         })
 
 
-def generate_ui_test_task(dependencies, engine="Klar", device="arm"):
-    '''
-    :param str engine: Klar, Webview
-    :param str device: ARM, X86
-    :return: uiWebviewARMTestTaskId, uiWebviewARMTestTask
-    '''
-    if engine is "Klar":
-        engine = "geckoview"
-        assemble_engine = engine
-    elif engine is "Webview":
-        engine = "webview"
-        assemble_engine = "Focus"
-    else:
-        raise Exception("ERROR: unknown engine type --> Aborting!")
-
-    task_name = "(Focus for Android) UI tests - {0} {1}".format(engine, device)
-    task_description = "Run UI tests for {0} build for Android.".format(engine, device)
-    build_dir = "assemble{0}{1}Debug".format(assemble_engine, device.capitalize())
-    build_dir_test = "assemble{0}{1}DebugAndroidTest".format(assemble_engine, device.capitalize())
-    print('BUILD_DIR: {0}'.format(build_dir))
-    print('BUILD_DIR_TEST: {0}'.format(build_dir_test))
-    device = device.lower()
+def generate_ui_test_task(dependencies):
+    task_name = "(Focus for Android) UI tests"
+    task_description = "Run UI tests for Focus for Android."
+    build_dir = "assembleFocusDebug"
+    build_dir_test = "assembleFocusDebugAndroidTest"
 
     return taskcluster.slugId(), generate_task(
         name=task_name,
@@ -95,7 +77,7 @@ def generate_ui_test_task(dependencies, engine="Klar", device="arm"):
         command=('echo "--" > .adjust_token'
                  ' && ./gradlew --no-daemon clean ' + build_dir + ' ' + build_dir_test + ' '
                  ' && ./tools/taskcluster/google-firebase-testlab-login.sh'
-                 ' && tools/taskcluster/execute-firebase-tests.sh ' + device + ' ' + engine),
+                 ' && ./tools/taskcluster/execute-firebase-tests.sh'),
         dependencies=dependencies,
         scopes=['secrets:get:project/focus/firebase'],
         routes=['notify.irc-channel.#android-ci.on-any'],
@@ -168,9 +150,7 @@ if __name__ == "__main__":
     clTaskId, clTask = generate_compare_locales_task()
     schedule_task(queue, clTaskId, clTask)
 
-    uiWebviewARMTestTaskId, uiWebviewARMTestTask = generate_ui_test_task( [unitTestTaskId, codeQualityTaskId], "Webview", "ARM")
-    schedule_task(queue, uiWebviewARMTestTaskId, uiWebviewARMTestTask)
+    uiTestTaskId, uiTestTask = generate_ui_test_task([buildTaskId])
+    schedule_task(queue, uiTestTaskId, uiTestTask)
 
-    # uiWebviewX86TestTaskId, uiWebviewX86TestTask = generate_ui_test_task([unitTestTaskId, codeQualityTaskId], "Webview", "X86")
-    # schedule_task(queue, uiWebviewX86TestTaskId, uiWebviewX86TestTask)
 

@@ -13,7 +13,7 @@ set -ex
 python tools/taskcluster/get-google-firebase-token.py
 
 # this is where the Google Testcloud project ID is set
-/google-cloud-sdk/bin/gcloud config set project moz-fx-mobile-firebase-testlab
+/opt/google-cloud-sdk/bin/gcloud config set project moz-fx-mobile-firebase-testlab
 
  # this is where the service account login happens with the saved JSON from above
-/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file .firebase_token.json
+/opt/google-cloud-sdk/bin/gcloud auth activate-service-account --key-file .firebase_token.json

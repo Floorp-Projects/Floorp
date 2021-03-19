@@ -44,7 +44,7 @@ Before you attempt to make a contribution please read the [Community Participati
 2. Import the project into Android Studio **or** build on the command line:
 
   ```shell
-  ./gradlew clean app:assembleFocusArmDebug
+  ./gradlew clean app:assembleFocusDebug
   ```
 
 3. Make sure to select the correct build variant in Android Studio:

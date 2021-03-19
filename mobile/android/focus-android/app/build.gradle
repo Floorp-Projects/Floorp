@@ -5,6 +5,8 @@ apply plugin: 'jacoco'
 apply plugin: 'kotlin-android-extensions'
 apply from: "$project.rootDir/tools/gradle/versionCode.gradle"
 
+import com.android.build.OutputFile
+
 android {
     compileSdkVersion 29
     buildToolsVersion '28.0.3'
@@ -34,7 +36,7 @@ android {
     }
 
     // We have a three dimensional build configuration:
-    // BUILD TYPE (debug, release) X PRODUCT FLAVOR (focus, klar) X ARCHITECTURE (x86, arm, aarch64)
+    // BUILD TYPE (debug, release) X PRODUCT FLAVOR (focus, klar)
 
     buildTypes {
         release {
@@ -55,7 +57,7 @@ android {
         }
     }
 
-    flavorDimensions "product", "abi"
+    flavorDimensions "product"
 
     productFlavors {
         // In most countries we are Firefox Focus - but in some we need to be Firefox Klar
@@ -69,24 +71,15 @@ android {
 
             applicationIdSuffix ".klar"
         }
+    }
 
-        arm {
-            dimension "abi"
-            ndk {
-                abiFilter "armeabi-v7a"
-            }
-        }
-        aarch64 {
-            dimension "abi"
-            ndk {
-                abiFilter "arm64-v8a"
-            }
-        }
-        x86 {
-            dimension "abi"
-            ndk {
-                abiFilter "x86"
-            }
+    splits {
+        abi {
+            enable true
+
+            reset()
+
+            include "x86", "armeabi-v7a", "arm64-v8a", "x86_64"
         }
     }
 
@@ -101,31 +94,16 @@ android {
         }
 
         // Release
-        focusX86Release.root = 'src/focusRelease'
-        focusArmRelease.root = 'src/focusRelease'
-        focusAarch64Release.root = 'src/focusRelease'
-
-        klarX86Release.root = 'src/klarRelease'
-        klarArmRelease.root = 'src/klarRelease'
-        klarAarch64Release.root = 'src/klarRelease'
+        focusRelease.root = 'src/focusRelease'
+        klarRelease.root = 'src/klarRelease'
 
         // Debug
-        focusX86Debug.root = 'src/focusDebug'
-        focusArmDebug.root = 'src/focusDebug'
-        focusAarch64Debug.root = 'src/focusDebug'
-
-        klarX86Debug.root = 'src/klarDebug'
-        klarArmDebug.root = 'src/klarDebug'
-        klarAarch64Debug.root = 'src/klarDebug'
+        focusDebug.root = 'src/focusDebug'
+        klarDebug.root = 'src/klarDebug'
 
         // Nightly
-        focusX86Nightly.root = 'src/focusNightly'
-        focusArmNightly.root = 'src/focusNightly'
-        focusAarch64Nightly.root = 'src/focusNightly'
-
-        klarX86Nightly.root = 'src/klarNightly'
-        klarArmNightly.root = 'src/klarNightly'
-        klarAarch64Nightly.root = 'src/klarNightly'
+        focusNightly.root = 'src/focusNightly'
+        klarNightly.root = 'src/klarNightly'
     }
 
     packagingOptions {
@@ -231,8 +209,14 @@ dependencies {
 android.applicationVariants.all { variant ->
     def buildType = variant.buildType.name
 
+    println("----------------------------------------------")
+    println("Variant name:      " + variant.name)
+    println("Application ID:    " + [variant.mergedFlavor.applicationId, variant.buildType.applicationIdSuffix].findAll().join())
+    println("Build type:        " + variant.buildType.name)
+    println("Flavor:            " + variant.flavorName)
+
     if (buildType == "release" || buildType == "nightly") {
-        def versionCode = generatedVersionCode
+        def baseVersionCode = generatedVersionCode
 
         // The Google Play Store does not allow multiple APKs for the same app that all have the
         // same version code. Therefore we need to have different version codes for our ARM and x86
@@ -242,23 +226,31 @@ android.applicationVariants.all { variant ->
         // Our x86 builds need a higher version code to avoid installing ARM builds on an x86 device
         // with ARM compatibility mode.
 
-        if (variant.flavorName.contains("X86")) {
-            versionCode = versionCode + 2
-        } else if (variant.flavorName.contains("Aarch64")) {
-            versionCode = versionCode + 1
-        }// else variant.flavorName.contains("Arm")) use generated version code
+        variant.outputs.each { output ->
+            def abi = output.getFilter(OutputFile.ABI)
+            // We use the same version code generator, that we inherited from Fennec, across all channels - even on
+            // channels that never shipped a Fennec build.
 
-        variant.outputs.all { output ->
-            setVersionCodeOverride(versionCode)
+            def versionCodeOverride = baseVersionCode
+
+            if (abi == "x86_64") {
+                versionCodeOverride = versionCodeOverride + 3
+            } else if (abi == "x86") {
+                versionCodeOverride = versionCodeOverride + 2
+            } else if (abi == "arm64-v8a") {
+                versionCodeOverride = versionCodeOverride + 1
+            } else if (abi == "armeabi-v7a") {
+                versionCodeOverride = versionCodeOverride + 0
+            } else {
+                throw new RuntimeException("Unknown ABI: " + abi)
+            }
+
+            output.versionCodeOverride = versionCodeOverride
+
+            println("versionCode for $abi = $versionCodeOverride")
         }
+
     }
-
-    println("----------------------------------------------")
-    println("Build type:   " + buildType)
-    println("Flavor:       " + variant.flavorName)
-    println("Version code: " + variant.mergedFlavor.versionCode)
-
-
 }
 
 // -------------------------------------------------------------------------------------------------
