@@ -119,7 +119,7 @@ gl::GLContext* MacIOSurfaceTextureHostOGL::gl() const {
 
 gfx::YUVColorSpace MacIOSurfaceTextureHostOGL::GetYUVColorSpace() const {
   if (!mSurface) {
-    return gfx::YUVColorSpace::UNKNOWN;
+    return gfx::YUVColorSpace::Identity;
   }
   return mSurface->GetYUVColorSpace();
 }
