@@ -424,13 +424,8 @@ nsresult TelemetryOrigin::GetOriginSnapshot(bool aClear, JSContext* aCx,
 
       gMetricToOriginBag->SwapElements(copy);
     } else {
-      auto iter = gMetricToOriginBag->ConstIter();
-      for (; !iter.Done(); iter.Next()) {
-        OriginBag& bag = copy.LookupOrInsert(iter.Key());
-        auto originIt = iter.Data().ConstIter();
-        for (; !originIt.Done(); originIt.Next()) {
-          bag.InsertOrUpdate(originIt.Key(), originIt.Data());
-        }
+      for (const auto& entry : *gMetricToOriginBag) {
+        copy.InsertOrUpdate(entry.GetKey(), entry.GetData().Clone());
       }
     }
   }
