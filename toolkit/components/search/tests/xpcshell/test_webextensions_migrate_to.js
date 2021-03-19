@@ -21,6 +21,14 @@ add_task(async function setup() {
 
   await promiseSaveSettingsData(data);
 
+  await Services.search.init();
+
+  // We need the extension installed for this test, but we do not want to
+  // trigger the functions that happen on installation, so stub that out.
+  // The manifest already has details of this engine.
+  let oldFunc = Services.search.wrappedJSObject.addEnginesFromExtension;
+  Services.search.wrappedJSObject.addEnginesFromExtension = () => {};
+
   // Add the add-on so add-on manager has a valid item.
   extension = await SearchTestUtils.installSearchExtension({
     id: "simple",
@@ -28,6 +36,8 @@ add_task(async function setup() {
     search_url: "https://example.com/",
     skipWaitForSearchEngine: true,
   });
+
+  Services.search.wrappedJSObject.addEnginesFromExtension = oldFunc;
 });
 
 add_task(async function test_migrateLegacyEngineDifferentName() {
