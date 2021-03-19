@@ -26,6 +26,9 @@ browser.jar:
 * res/activity-stream/data/content/abouthomecache/page.html.template (./data/content/abouthomecache/page.html.template)
 * res/activity-stream/data/content/abouthomecache/script.js.template (./data/content/abouthomecache/script.js.template)
   content/activity-stream/data/content/assets/  (./data/content/assets/*)
+#ifdef XP_WIN
+  content/activity-stream/data/content/assets/remote  (./data/content/windows-assets/*)
+#endif
   content/activity-stream/data/content/tippytop/ (./data/content/tippytop/*)
   res/activity-stream/data/content/activity-stream.bundle.js (./data/content/activity-stream.bundle.js)
   res/activity-stream/data/content/newtab-render.js (./data/content/newtab-render.js)
