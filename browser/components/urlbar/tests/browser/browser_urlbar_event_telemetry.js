@@ -533,9 +533,9 @@ const tests = [
   async function(win) {
     info("Type an @alias, then space, then search and press enter.");
     const alias = "testalias";
-    let aliasEngine = await Services.search.addEngineWithDetails("AliasTest", {
-      alias,
-      template: "http://example.com/?search={searchTerms}",
+    await SearchTestUtils.installSearchExtension({
+      name: "AliasTest",
+      keyword: alias,
     });
 
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -557,7 +557,6 @@ const tests = [
     EventUtils.synthesizeKey("VK_RETURN", {}, win);
     await promise;
 
-    await Services.search.removeEngine(aliasEngine);
     return {
       category: "urlbar",
       method: "engagement",

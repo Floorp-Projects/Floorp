@@ -87,11 +87,13 @@ async function withNewSearchEngine(taskFn) {
 }
 
 add_task(async function setup() {
-  // Create a new search engine.
-  await Services.search.addEngineWithDetails("MozSearch", {
-    alias: "mozalias",
-    method: "GET",
-    template: "http://example.com/?q={searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    name: "MozSearch",
+    keyword: "mozalias",
+    // TODO: Bug 1698568. This should just be `search_url: "https://example.com"`
+    // with the default value of `search_url_get_params`.
+    search_url: "https://example.com/?q={searchTerms}",
+    search_url_get_params: "",
   });
 
   // Make it the default search engine.
@@ -135,7 +137,6 @@ add_task(async function setup() {
   registerCleanupFunction(async function() {
     Services.telemetry.canRecordExtended = oldCanRecord;
     await Services.search.setDefault(originalEngine);
-    await Services.search.removeEngine(engine);
     Services.prefs.setBoolPref(SUGGEST_URLBAR_PREF, suggestionsEnabled);
     await PlacesUtils.history.clear();
     await UrlbarTestUtils.formHistory.clear();
@@ -1170,7 +1171,7 @@ add_task(async function test_privateWindow() {
   SearchSERPTelemetry.overrideSearchTelemetryForTests([
     {
       telemetryId: "example",
-      searchPageRegexp: "^http://example\\.com/",
+      searchPageRegexp: "^https://example\\.com/",
       queryParamName: "q",
     },
   ]);
