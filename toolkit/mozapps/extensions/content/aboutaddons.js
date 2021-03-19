@@ -82,7 +82,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-const PLUGIN_ICON_URL = "chrome://global/skin/plugins/plugin.svg";
+const PLUGIN_ICON_URL = "chrome://global/skin/icons/plugin.svg";
 const EXTENSION_ICON_URL =
   "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 const BUILTIN_THEME_PREVIEWS = new Map([
