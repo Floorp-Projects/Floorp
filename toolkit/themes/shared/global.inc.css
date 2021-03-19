@@ -11,18 +11,6 @@
 @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 @namespace html url("http://www.w3.org/1999/xhtml");
 
-:root {
-  /* ::::: Variables ::::: */
-  --arrowpanel-padding: 16px;
-  --popup-notification-body-width: calc(31em - calc(2 * var(--arrowpanel-padding)));
-}
-
-@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
-:root {
-  --popup-notification-body-width: 25em;
-}
-} /** END not Proton **/
-
 /* Lightweight theme roots */
 
 :root[lwtheme-image]:-moz-lwtheme-darktext {
