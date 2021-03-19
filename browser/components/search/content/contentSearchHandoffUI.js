@@ -20,29 +20,24 @@ ContentSearchHandoffUIController.prototype = {
     }
   },
 
-  get defaultEngine() {
-    return this._defaultEngine;
-  },
-
   _onMsgEngine({ isPrivateWindow, engine }) {
     this._isPrivateWindow = isPrivateWindow;
-    this._updateEngine(engine);
+    this._updateEngineIcon(engine);
   },
 
   _onMsgCurrentEngine(engine) {
     if (!this._isPrivateWindow) {
-      this._updateEngine(engine);
+      this._updateEngineIcon(engine);
     }
   },
 
   _onMsgCurrentPrivateEngine(engine) {
     if (this._isPrivateWindow) {
-      this._updateEngine(engine);
+      this._updateEngineIcon(engine);
     }
   },
 
-  _updateEngine(engine) {
-    this._defaultEngine = engine;
+  _updateEngineIcon(engine) {
     if (this._engineIcon) {
       URL.revokeObjectURL(this._engineIcon);
     }
@@ -61,42 +56,6 @@ ContentSearchHandoffUIController.prototype = {
       "--newtab-search-icon",
       "url(" + this._engineIcon + ")"
     );
-
-    let fakeButton = document.querySelector(".search-handoff-button");
-    let fakeInput = document.querySelector(".fake-textbox");
-    if (!engine.isAppProvided) {
-      document.l10n.setAttributes(
-        fakeButton,
-        this._isPrivateWindow
-          ? "about-private-browsing-handoff-no-engine"
-          : "newtab-search-box-handoff-input-no-engine"
-      );
-      document.l10n.setAttributes(
-        fakeInput,
-        this._isPrivateWindow
-          ? "about-private-browsing-handoff-text-no-engine"
-          : "newtab-search-box-handoff-text-no-engine"
-      );
-    } else {
-      document.l10n.setAttributes(
-        fakeButton,
-        this._isPrivateWindow
-          ? "about-private-browsing-handoff"
-          : "newtab-search-box-handoff-input",
-        {
-          engine: engine.name,
-        }
-      );
-      document.l10n.setAttributes(
-        fakeInput,
-        this._isPrivateWindow
-          ? "about-private-browsing-handoff-text"
-          : "newtab-search-box-handoff-text",
-        {
-          engine: engine.name,
-        }
-      );
-    }
   },
 
   // If the favicon is an array buffer, convert it into a Blob URI.

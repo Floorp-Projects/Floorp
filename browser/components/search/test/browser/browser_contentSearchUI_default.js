@@ -27,6 +27,8 @@ add_task(async function setup() {
   });
 });
 
+// async function runAboutNewTabTest(expectedIcon)
+
 async function ensureIcon(tab, expectedIcon) {
   await SpecialPowers.spawn(tab.linkedBrowser, [expectedIcon], async function(
     icon
@@ -47,29 +49,7 @@ async function ensureIcon(tab, expectedIcon) {
   });
 }
 
-async function ensurePlaceholder(tab, expectedId, expectedEngine) {
-  await SpecialPowers.spawn(
-    tab.linkedBrowser,
-    [expectedId, expectedEngine],
-    async function(id, engine) {
-      await ContentTaskUtils.waitForCondition(() => !content.document.hidden);
-
-      await ContentTaskUtils.waitForCondition(
-        () => content.document.querySelector(".search-handoff-button"),
-        "l10n ID not set."
-      );
-      let buttonNode = content.document.querySelector(".search-handoff-button");
-      let expectedAttributes = { id, args: engine ? { engine } : null };
-      Assert.deepEqual(
-        content.document.l10n.getAttributes(buttonNode),
-        expectedAttributes,
-        "Expected updated l10n ID and args."
-      );
-    }
-  );
-}
-
-async function runNewTabTest(isHandoff) {
+async function runNewTabTest() {
   let tab = await BrowserTestUtils.openNewForegroundTab({
     url: "about:newtab",
     gBrowser,
@@ -79,45 +59,35 @@ async function runNewTabTest(isHandoff) {
   let engineIcon = defaultEngine.getIconURLBySize(16, 16);
 
   await ensureIcon(tab, engineIcon);
-  if (isHandoff) {
-    await ensurePlaceholder(
-      tab,
-      "newtab-search-box-handoff-input",
-      Services.search.defaultEngine.name
-    );
-  }
 
   await Services.search.setDefault(addedEngine);
 
   // We only show the engine's own icon for app provided engines, otherwise show
   // a default. xref https://bugzilla.mozilla.org/show_bug.cgi?id=1449338#c19
   await ensureIcon(tab, "chrome://global/skin/icons/search-glass.svg");
-  if (isHandoff) {
-    await ensurePlaceholder(tab, "newtab-search-box-handoff-input-no-engine");
-  }
 
   await Services.search.setDefault(defaultEngine);
 
   BrowserTestUtils.removeTab(tab);
 }
 
-add_task(async function test_content_search_attributes() {
+add_task(async function test_content_search_icon() {
   SpecialPowers.pushPrefEnv({
     set: [[HANDOFF_PREF, true]],
   });
 
-  await runNewTabTest(true);
+  await runNewTabTest();
 });
 
-add_task(async function test_content_search_attributes_no_handoff() {
+add_task(async function test_content_search_icon_no_handoff() {
   SpecialPowers.pushPrefEnv({
     set: [[HANDOFF_PREF, false]],
   });
 
-  await runNewTabTest(false);
+  await runNewTabTest();
 });
 
-add_task(async function test_content_search_attributes_in_private_window() {
+add_task(async function test_content_search_icon_in_private_window() {
   let win = await BrowserTestUtils.openNewBrowserWindow({
     private: true,
     waitForTabURL: "about:privatebrowsing",
@@ -127,18 +97,12 @@ add_task(async function test_content_search_attributes_in_private_window() {
   let engineIcon = defaultEngine.getIconURLBySize(16, 16);
 
   await ensureIcon(tab, engineIcon);
-  await ensurePlaceholder(
-    tab,
-    "about-private-browsing-handoff",
-    Services.search.defaultEngine.name
-  );
 
   await Services.search.setDefault(addedEngine);
 
   // We only show the engine's own icon for app provided engines, otherwise show
   // a default. xref https://bugzilla.mozilla.org/show_bug.cgi?id=1449338#c19
   await ensureIcon(tab, "chrome://global/skin/icons/search-glass.svg");
-  await ensurePlaceholder(tab, "about-private-browsing-handoff-no-engine");
 
   await Services.search.setDefault(defaultEngine);
 

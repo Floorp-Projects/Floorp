@@ -89,59 +89,31 @@ document.addEventListener("DOMContentLoaded", function() {
   openSearchOptions.addEventListener("click", openSearchOptionsEvtHandler);
   openSearchOptions.addEventListener("keypress", openSearchOptionsEvtHandler);
 
-  // Load contentSearchUI so it sets the search engine icon and name for us.
-  new window.ContentSearchHandoffUIController();
-
   // Setup the search hand-off box.
   let btn = document.getElementById("search-handoff-button");
-  RPMSendQuery("ShouldShowSearch", {}).then(engineName => {
-    let input = document.querySelector(".fake-textbox");
-    if (engineName) {
-      document.l10n.setAttributes(btn, "about-private-browsing-handoff", {
-        engine: engineName,
-      });
-      document.l10n.setAttributes(
-        input,
-        "about-private-browsing-handoff-text",
-        {
-          engine: engineName,
-        }
-      );
-    } else {
-      document.l10n.setAttributes(
-        btn,
-        "about-private-browsing-handoff-no-engine"
-      );
-      document.l10n.setAttributes(
-        input,
-        "about-private-browsing-handoff-text-no-engine"
-      );
-    }
-  });
-
   let editable = document.getElementById("fake-editable");
-  let DISABLE_SEARCH_TOPIC = "DisableSearch";
+  let HIDE_SEARCH_TOPIC = "HideSearch";
   let SHOW_SEARCH_TOPIC = "ShowSearch";
   let SEARCH_HANDOFF_TOPIC = "SearchHandoff";
 
   function showSearch() {
     btn.classList.remove("focused");
-    btn.classList.remove("disabled");
+    btn.classList.remove("hidden");
     RPMRemoveMessageListener(SHOW_SEARCH_TOPIC, showSearch);
   }
 
-  function disableSearch() {
-    btn.classList.add("disabled");
+  function hideSearch() {
+    btn.classList.add("hidden");
   }
 
   function handoffSearch(text) {
     RPMSendAsyncMessage(SEARCH_HANDOFF_TOPIC, { text });
     RPMAddMessageListener(SHOW_SEARCH_TOPIC, showSearch);
     if (text) {
-      disableSearch();
+      hideSearch();
     } else {
       btn.classList.add("focused");
-      RPMAddMessageListener(DISABLE_SEARCH_TOPIC, disableSearch);
+      RPMAddMessageListener(HIDE_SEARCH_TOPIC, hideSearch);
     }
   }
   btn.addEventListener("focus", function() {
@@ -163,4 +135,7 @@ document.addEventListener("DOMContentLoaded", function() {
     ev.preventDefault();
     handoffSearch(ev.clipboardData.getData("Text"));
   });
+
+  // Load contentSearchUI so it sets the search engine icon for us.
+  new window.ContentSearchHandoffUIController();
 });
