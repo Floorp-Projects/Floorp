@@ -857,7 +857,7 @@ pub fn build_render_pass(
                         TextureCacheRenderTarget::new(target_kind)
                     );
                 for task_id in &sub_pass.task_ids {
-                    texture.add_task(*task_id, render_tasks);
+                    texture.add_task(*task_id, render_tasks, gpu_cache);
                 }
             }
             SubPassSurface::Persistent { surface: StaticRenderTaskSurface::ReadOnly { .. } } => {

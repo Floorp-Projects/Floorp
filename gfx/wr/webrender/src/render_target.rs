@@ -17,7 +17,7 @@ use crate::gpu_types::{TransformPalette, ZBufferIdGenerator};
 use crate::internal_types::{FastHashMap, TextureSource, CacheTextureId};
 use crate::picture::{SliceId, SurfaceInfo, ResolvedSurfaceTexture, TileCacheInstance};
 use crate::prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
-use crate::prim_store::gradient::FastLinearGradientInstance;
+use crate::prim_store::gradient::{FastLinearGradientInstance, RadialGradientInstance};
 use crate::render_backend::DataStores;
 use crate::render_task::{RenderTaskKind, RenderTaskAddress};
 use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo};
@@ -404,6 +404,7 @@ impl RenderTarget for ColorRenderTarget {
             RenderTaskKind::Border(..) |
             RenderTaskKind::CacheMask(..) |
             RenderTaskKind::FastLinearGradient(..) |
+            RenderTaskKind::RadialGradient(..) |
             RenderTaskKind::LineDecoration(..) => {
                 panic!("Should not be added to color target!");
             }
@@ -497,6 +498,7 @@ impl RenderTarget for AlphaRenderTarget {
             RenderTaskKind::Border(..) |
             RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::FastLinearGradient(..) |
+            RenderTaskKind::RadialGradient(..) |
             RenderTaskKind::SvgFilter(..) => {
                 panic!("BUG: should not be added to alpha target!");
             }
@@ -598,6 +600,7 @@ pub struct TextureCacheRenderTarget {
     pub clears: Vec<DeviceIntRect>,
     pub line_decorations: Vec<LineDecorationJob>,
     pub fast_linear_gradients: Vec<FastLinearGradientInstance>,
+    pub radial_gradients: Vec<RadialGradientInstance>,
 }
 
 impl TextureCacheRenderTarget {
@@ -611,6 +614,7 @@ impl TextureCacheRenderTarget {
             clears: vec![],
             line_decorations: vec![],
             fast_linear_gradients: vec![],
+            radial_gradients: vec![],
         }
     }
 
@@ -618,6 +622,7 @@ impl TextureCacheRenderTarget {
         &mut self,
         task_id: RenderTaskId,
         render_tasks: &RenderTaskGraph,
+        gpu_cache: &mut GpuCache,
     ) {
         profile_scope!("add_task");
         let task_address = task_id.into();
@@ -679,6 +684,9 @@ impl TextureCacheRenderTarget {
             }
             RenderTaskKind::FastLinearGradient(ref task_info) => {
                 self.fast_linear_gradients.push(task_info.to_instance(&target_rect));
+            }
+            RenderTaskKind::RadialGradient(ref task_info) => {
+                self.radial_gradients.push(task_info.to_instance(&target_rect, gpu_cache));
             }
             RenderTaskKind::Image(..) |
             RenderTaskKind::Cached(..) |
