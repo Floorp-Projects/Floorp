@@ -9,7 +9,7 @@
 
 "use strict";
 
-const ENGINE_NAME = "TestEngine";
+const ENGINE_NAME = "engine.xml";
 
 add_task(async function searchEngines() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
@@ -27,14 +27,23 @@ add_task(async function searchEngines() {
     );
   });
 
-  let schemes = ["http", "https"];
-  for (let i = 0; i < schemes.length; i++) {
-    let scheme = schemes[i];
-    let engine = await Services.search.addEngineWithDetails(ENGINE_NAME, {
-      method: "GET",
-      template: scheme + "://www.example.com/",
-      searchGetParams: "q={searchTerms}",
-    });
+  let server = makeTestServer();
+
+  // Bug 1149672: Once we drop support for http with OpenSearch engines,
+  // we should be able to drop the http part of this.
+  for (let scheme of ["https", "http"]) {
+    let extension;
+    if (scheme == "https") {
+      extension = await SearchTestUtils.installSearchExtension(
+        {
+          name: ENGINE_NAME,
+          search_url: "https://www.example.com/",
+        },
+        true
+      );
+    } else {
+      await addTestEngine("engine.xml", server);
+    }
 
     let context = createContext("ex", { isPrivate: false });
     await check_results({
@@ -187,7 +196,7 @@ add_task(async function searchEngines() {
 
     // We should just get a normal heuristic result from HeuristicFallback for
     // these queries.
-    let otherScheme = schemes[(i + 1) % schemes.length];
+    let otherScheme = scheme == "http" ? "https" : "http";
     context = createContext(otherScheme + "://ex", { isPrivate: false });
     await check_results({
       context,
@@ -229,6 +238,6 @@ add_task(async function searchEngines() {
       ],
     });
 
-    await Services.search.removeEngine(engine);
+    await extension?.unload();
   }
 });

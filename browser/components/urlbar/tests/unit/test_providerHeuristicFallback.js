@@ -490,11 +490,11 @@ add_task(async function() {
 
   info("change default engine");
   let originalTestEngine = Services.search.getEngineByName(ENGINE_NAME);
-  let engine2 = await Services.search.addEngineWithDetails("AliasEngine", {
-    alias: "alias",
-    method: "GET",
-    template: "http://example.com/?q={searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    name: "AliasEngine",
+    keyword: "alias",
   });
+  let engine2 = Services.search.getEngineByName("AliasEngine");
   Assert.notEqual(
     Services.search.defaultEngine,
     engine2,
@@ -595,8 +595,6 @@ add_task(async function() {
       });
     }
   }
-
-  await Services.search.removeEngine(engine2);
 });
 
 /**

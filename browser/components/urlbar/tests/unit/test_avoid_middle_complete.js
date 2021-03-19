@@ -58,12 +58,10 @@ add_task(async function test_trailing_space_noautofill() {
 
 add_task(async function test_searchEngine_autofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  let engine = await Services.search.addEngineWithDetails("CakeSearch", {
-    method: "GET",
-    template: "http://cake.search/",
-    searchGetParams: "q={searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    name: "CakeSearch",
+    search_url: "https://cake.search",
   });
-  registerCleanupFunction(async () => Services.search.removeEngine(engine));
 
   info(
     "Should autoFill search engine if search string does not contains a space"
@@ -84,12 +82,10 @@ add_task(async function test_searchEngine_autofill() {
 
 add_task(async function test_searchEngine_prefix_space_noautofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  let engine = await Services.search.addEngineWithDetails("CupcakeSearch", {
-    method: "GET",
-    template: "http://cupcake.search/",
-    searchGetParams: "q={searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    name: "CupcakeSearch",
+    search_url: "https://cupcake.search",
   });
-  registerCleanupFunction(async () => Services.search.removeEngine(engine));
 
   info(
     "Should not try to autoFill search engine if search string contains a space"
@@ -111,12 +107,10 @@ add_task(async function test_searchEngine_prefix_space_noautofill() {
 
 add_task(async function test_searchEngine_trailing_space_noautofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  let engine = await Services.search.addEngineWithDetails("BaconSearch", {
-    method: "GET",
-    template: "http://bacon.search/",
-    searchGetParams: "q={searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    name: "BaconSearch",
+    search_url: "https://bacon.search",
   });
-  registerCleanupFunction(async () => Services.search.removeEngine(engine));
 
   info(
     "Should not try to autoFill search engine if search string contains a space"
@@ -138,12 +132,10 @@ add_task(async function test_searchEngine_trailing_space_noautofill() {
 
 add_task(async function test_searchEngine_www_noautofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  let engine = await Services.search.addEngineWithDetails("HamSearch", {
-    method: "GET",
-    template: "http://ham.search/",
-    searchGetParams: "q={searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    name: "HamSearch",
+    search_url: "https://ham.search",
   });
-  registerCleanupFunction(async () => Services.search.removeEngine(engine));
 
   info(
     "Should not autoFill search engine if search string contains www. but engine doesn't"
@@ -171,12 +163,10 @@ add_task(async function test_searchEngine_www_noautofill() {
 
 add_task(async function test_searchEngine_different_scheme_noautofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  let engine = await Services.search.addEngineWithDetails("PieSearch", {
-    method: "GET",
-    template: "https://pie.search/",
-    searchGetParams: "q={searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    name: "PieSearch",
+    search_url: "https://pie.search",
   });
-  registerCleanupFunction(async () => Services.search.removeEngine(engine));
 
   info(
     "Should not autoFill search engine if search string has a different scheme."
@@ -200,18 +190,16 @@ add_task(async function test_searchEngine_different_scheme_noautofill() {
 
 add_task(async function test_searchEngine_matching_prefix_autofill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
-  let engine = await Services.search.addEngineWithDetails("BeanSearch", {
-    method: "GET",
-    template: "http://www.bean.search/",
-    searchGetParams: "q={searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    name: "BeanSearch",
+    search_url: "https://www.bean.search",
   });
-  registerCleanupFunction(async () => Services.search.removeEngine(engine));
 
   info("Should autoFill search engine if search string has matching prefix.");
-  let context = createContext("http://www.be", { isPrivate: false });
+  let context = createContext("https://www.be", { isPrivate: false });
   await check_results({
     context,
-    autofilled: "http://www.bean.search/",
+    autofilled: "https://www.bean.search/",
     matches: [
       makePrioritySearchResult(context, {
         engineName: "BeanSearch",
@@ -234,10 +222,10 @@ add_task(async function test_searchEngine_matching_prefix_autofill() {
   });
 
   info("Should autoFill search engine if search string has matching scheme.");
-  context = createContext("http://be", { isPrivate: false });
+  context = createContext("https://be", { isPrivate: false });
   await check_results({
     context,
-    autofilled: "http://bean.search/",
+    autofilled: "https://bean.search/",
     matches: [
       makePrioritySearchResult(context, {
         engineName: "BeanSearch",
