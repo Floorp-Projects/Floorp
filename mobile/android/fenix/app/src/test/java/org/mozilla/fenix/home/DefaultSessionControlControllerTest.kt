@@ -101,6 +101,15 @@ class DefaultSessionControlControllerTest {
         suggestUrl = "https://www.google.com/"
     )
 
+    private val duckDuckGoSearchEngine = SearchEngine(
+        id = "ddgTest",
+        name = "DuckDuckGo Test Engine",
+        icon = mockk(relaxed = true),
+        type = SearchEngine.Type.BUNDLED,
+        resultUrls = listOf("https://duckduckgo.com/?q=%7BsearchTerms%7D&t=fpas"),
+        suggestUrl = "https://ac.duckduckgo.com/ac/?q=%7BsearchTerms%7D&type=list"
+    )
+
     private lateinit var store: BrowserStore
     private lateinit var controller: DefaultSessionControlController
 
@@ -374,6 +383,7 @@ class DefaultSessionControlControllerTest {
     @Test
     fun handleSelectDefaultTopSite() {
         val topSiteUrl = "mozilla.org"
+        every { controller.getAvailableSearchEngines() } returns listOf(searchEngine)
 
         controller.handleSelectTopSite(topSiteUrl, TopSite.Type.DEFAULT)
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
@@ -391,6 +401,7 @@ class DefaultSessionControlControllerTest {
     @Test
     fun handleSelectNonDefaultTopSite() {
         val topSiteUrl = "mozilla.org"
+        every { controller.getAvailableSearchEngines() } returns listOf(searchEngine)
 
         controller.handleSelectTopSite(topSiteUrl, TopSite.Type.FRECENT)
         verify { metrics.track(Event.TopSiteOpenInNewTab) }
@@ -466,6 +477,36 @@ class DefaultSessionControlControllerTest {
                         )
                     )
                 )
+                metrics.track(Event.TopSiteOpenGoogle)
+                metrics.track(Event.TopSiteOpenDefault)
+            }
+        } finally {
+            unmockkStatic("mozilla.components.browser.state.state.SearchStateKt")
+        }
+    }
+
+    @Test
+    fun handleSelectDuckDuckGoTopSite_EventPerformedSearchTopSite() {
+        val topSiteUrl = "https://duckduckgo.com"
+        val engineSource = EngineSource.Shortcut(duckDuckGoSearchEngine, false)
+        every { controller.getAvailableSearchEngines() } returns listOf(googleSearchEngine, duckDuckGoSearchEngine)
+        try {
+            mockkStatic("mozilla.components.browser.state.state.SearchStateKt")
+
+            every { any<SearchState>().selectedOrDefaultSearchEngine } returns googleSearchEngine
+
+            controller.handleSelectTopSite(topSiteUrl, TopSite.Type.PINNED)
+
+            verify {
+                metrics.track(
+                    Event.PerformedSearch(
+                        Event.PerformedSearch.EventSource.TopSite(
+                            engineSource
+                        )
+                    )
+                )
+
+                metrics.track(Event.TopSiteOpenPinned)
             }
         } finally {
             unmockkStatic("mozilla.components.browser.state.state.SearchStateKt")

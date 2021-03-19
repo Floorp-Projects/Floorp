@@ -13,6 +13,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
+import mozilla.components.browser.state.state.availableSearchEngines
 import mozilla.components.browser.state.state.searchEngines
 import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.browser.state.store.BrowserStore
@@ -384,19 +385,18 @@ class DefaultSessionControlController(
             metrics.track(Event.PocketTopSiteClicked)
         }
 
-        if (SupportUtils.GOOGLE_URL.equals(url, true)) {
-            val availableEngines = getAvailableSearchEngines()
+        val availableEngines = getAvailableSearchEngines()
 
-            val searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.TOPSITE
-            val event =
-                availableEngines.firstOrNull { engine -> engine.suggestUrl?.contains(url) == true }
-                    ?.let { searchEngine ->
-                        searchAccessPoint.let { sap ->
-                            MetricsUtils.createSearchEvent(searchEngine, store, sap)
-                        }
-                    }
-            event?.let { activity.metrics.track(it) }
-        }
+        val searchAccessPoint = Event.PerformedSearch.SearchAccessPoint.TOPSITE
+        val event =
+            availableEngines.firstOrNull {
+                    engine -> engine.resultUrls.firstOrNull { it.contains(url) } != null
+            }?.let {
+                    searchEngine -> searchAccessPoint.let { sap ->
+                    MetricsUtils.createSearchEvent(searchEngine, store, sap)
+                }
+            }
+        event?.let { activity.metrics.track(it) }
 
         addTabUseCase.invoke(
             url = appendSearchAttributionToUrlIfNeeded(url),
@@ -407,13 +407,9 @@ class DefaultSessionControlController(
     }
 
     @VisibleForTesting
-    internal fun getAvailableSearchEngines() = activity
-        .components
-        .core
-        .store
-        .state
-        .search
-        .searchEngines
+    internal fun getAvailableSearchEngines() =
+        activity.components.core.store.state.search.searchEngines +
+                activity.components.core.store.state.search.availableSearchEngines
 
     /**
      * Append a search attribution query to any provided search engine URL based on the
