@@ -171,6 +171,14 @@ const GPU_TAG_BRUSH_LINEAR_GRADIENT: GpuProfileTag = GpuProfileTag {
     label: "B_LinearGradient",
     color: debug_colors::POWDERBLUE,
 };
+const GPU_TAG_BRUSH_RADIAL_GRADIENT: GpuProfileTag = GpuProfileTag {
+    label: "B_RadialGradient",
+    color: debug_colors::LIGHTPINK,
+};
+const GPU_TAG_BRUSH_CONIC_GRADIENT: GpuProfileTag = GpuProfileTag {
+    label: "B_ConicGradient",
+    color: debug_colors::GREEN,
+};
 const GPU_TAG_BRUSH_YUV_IMAGE: GpuProfileTag = GpuProfileTag {
     label: "B_YuvImage",
     color: debug_colors::DARKGREEN,
@@ -205,14 +213,6 @@ const GPU_TAG_CACHE_LINE_DECORATION: GpuProfileTag = GpuProfileTag {
 };
 const GPU_TAG_CACHE_FAST_LINEAR_GRADIENT: GpuProfileTag = GpuProfileTag {
     label: "C_FastLinearGradient",
-    color: debug_colors::BROWN,
-};
-const GPU_TAG_CACHE_RADIAL_GRADIENT: GpuProfileTag = GpuProfileTag {
-    label: "C_RadialGradient",
-    color: debug_colors::BROWN,
-};
-const GPU_TAG_CACHE_CONIC_GRADIENT: GpuProfileTag = GpuProfileTag {
-    label: "C_ConicGradient",
     color: debug_colors::BROWN,
 };
 const GPU_TAG_SETUP_TARGET: GpuProfileTag = GpuProfileTag {
@@ -285,6 +285,8 @@ impl BatchKind {
                     BrushBatchKind::Blend => "Brush (Blend)",
                     BrushBatchKind::MixBlend { .. } => "Brush (Composite)",
                     BrushBatchKind::YuvImage(..) => "Brush (YuvImage)",
+                    BrushBatchKind::ConicGradient => "Brush (ConicGradient)",
+                    BrushBatchKind::RadialGradient => "Brush (RadialGradient)",
                     BrushBatchKind::LinearGradient => "Brush (LinearGradient)",
                     BrushBatchKind::Opacity => "Brush (Opacity)",
                 }
@@ -303,6 +305,8 @@ impl BatchKind {
                     BrushBatchKind::Blend => GPU_TAG_BRUSH_BLEND,
                     BrushBatchKind::MixBlend { .. } => GPU_TAG_BRUSH_MIXBLEND,
                     BrushBatchKind::YuvImage(..) => GPU_TAG_BRUSH_YUV_IMAGE,
+                    BrushBatchKind::ConicGradient => GPU_TAG_BRUSH_CONIC_GRADIENT,
+                    BrushBatchKind::RadialGradient => GPU_TAG_BRUSH_RADIAL_GRADIENT,
                     BrushBatchKind::LinearGradient => GPU_TAG_BRUSH_LINEAR_GRADIENT,
                     BrushBatchKind::Opacity => GPU_TAG_BRUSH_OPACITY,
                 }
@@ -4046,54 +4050,6 @@ impl Renderer {
             );
         }
 
-        // Draw any radial gradients for this target.
-        if !target.radial_gradients.is_empty() {
-            let _timer = self.gpu_profiler.start_timer(GPU_TAG_CACHE_RADIAL_GRADIENT);
-
-            self.set_blend(false, FramebufferKind::Other);
-
-            self.shaders.borrow_mut().cs_radial_gradient.bind(
-                &mut self.device,
-                &projection,
-                &mut self.renderer_errors,
-            );
-
-            if let Some(ref texture) = self.dither_matrix_texture {
-                self.device.bind_texture(TextureSampler::Dither, texture, Swizzle::default());
-            }
-
-            self.draw_instanced_batch(
-                &target.radial_gradients,
-                VertexArrayKind::RadialGradient,
-                &BatchTextures::empty(),
-                stats,
-            );
-        }
-
-        // Draw any conic gradients for this target.
-        if !target.conic_gradients.is_empty() {
-            let _timer = self.gpu_profiler.start_timer(GPU_TAG_CACHE_CONIC_GRADIENT);
-
-            self.set_blend(false, FramebufferKind::Other);
-
-            self.shaders.borrow_mut().cs_conic_gradient.bind(
-                &mut self.device,
-                &projection,
-                &mut self.renderer_errors,
-            );
-
-            if let Some(ref texture) = self.dither_matrix_texture {
-                self.device.bind_texture(TextureSampler::Dither, texture, Swizzle::default());
-            }
-
-            self.draw_instanced_batch(
-                &target.conic_gradients,
-                VertexArrayKind::ConicGradient,
-                &BatchTextures::empty(),
-                stats,
-            );
-        }
-
         // Draw any blurs for this target.
         if !target.horizontal_blurs.is_empty() {
             let _timer = self.gpu_profiler.start_timer(GPU_TAG_BLUR);
@@ -5999,6 +5955,8 @@ fn should_skip_batch(kind: &BatchKind, flags: DebugFlags) -> bool {
         BatchKind::TextRun(_) => {
             flags.contains(DebugFlags::DISABLE_TEXT_PRIMS)
         }
+        BatchKind::Brush(BrushBatchKind::ConicGradient) |
+        BatchKind::Brush(BrushBatchKind::RadialGradient) |
         BatchKind::Brush(BrushBatchKind::LinearGradient) => {
             flags.contains(DebugFlags::DISABLE_GRADIENT_PRIMS)
         }

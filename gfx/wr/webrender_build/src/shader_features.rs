@@ -81,18 +81,6 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
         shaders.insert(name, vec![String::new()]);
     }
 
-    for name in &[
-        "cs_radial_gradient",
-        "cs_conic_gradient",
-    ] {
-        let mut features = Vec::new();
-        features.push(String::new());
-        if flags.contains(ShaderFeatureFlags::DITHERING) {
-            features.push("DITHERING".to_string());
-        }
-        shaders.insert(name, features);
-    }
-
     let mut base_prim_features = FeatureList::new();
 
     // Brush shaders
@@ -104,7 +92,7 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
         features.push("DEBUG_OVERDRAW".to_string());
         shaders.insert(name, features);
     }
-    for name in &["brush_linear_gradient"] {
+    for name in &["brush_conic_gradient", "brush_radial_gradient", "brush_linear_gradient"] {
         let mut features: Vec<String> = Vec::new();
         let mut list = FeatureList::new();
         if flags.contains(ShaderFeatureFlags::DITHERING) {

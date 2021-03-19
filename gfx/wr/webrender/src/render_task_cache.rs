@@ -13,7 +13,7 @@ use crate::gpu_cache::GpuCache;
 use crate::internal_types::FastHashMap;
 use crate::picture::{SurfaceIndex, SurfaceInfo};
 use crate::prim_store::image::ImageCacheKey;
-use crate::prim_store::gradient::{FastLinearGradientCacheKey, RadialGradientCacheKey, ConicGradientCacheKey};
+use crate::prim_store::gradient::FastLinearGradientCacheKey;
 use crate::prim_store::line_dec::LineDecorationCacheKey;
 use crate::resource_cache::CacheItem;
 use std::{mem, usize, f32, i32};
@@ -46,8 +46,6 @@ pub enum RenderTaskCacheKeyKind {
     BorderSegment(BorderSegmentCacheKey),
     LineDecoration(LineDecorationCacheKey),
     FastLinearGradient(FastLinearGradientCacheKey),
-    RadialGradient(RadialGradientCacheKey),
-    ConicGradient(ConicGradientCacheKey),
 }
 
 #[derive(Clone, Debug, Hash, PartialEq, Eq)]
