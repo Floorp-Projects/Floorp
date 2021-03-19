@@ -4,7 +4,7 @@
 
 import { InfoItem } from "./info-item.js";
 import { updateSelectedItem } from "../certviewer.js";
-import { normalizeToKebabCase } from "../utils.js";
+import { normalizeToKebabCase } from "./utils.js";
 
 export class InfoGroup extends HTMLElement {
   constructor(item, final) {
