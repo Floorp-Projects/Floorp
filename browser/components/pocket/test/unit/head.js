@@ -6,7 +6,7 @@ ChromeUtils.defineModuleGetter(
 XPCOMUtils.defineLazyScriptGetter(
   this,
   "pktUI",
-  "chrome://pocket/content/main.js"
+  "chrome://pocket/content/pktUI.js"
 );
 
 const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
