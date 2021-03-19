@@ -808,12 +808,12 @@ function DiscoveryStream(prevState = INITIAL_STATE.DiscoveryStream, action) {
 
 function Search(prevState = INITIAL_STATE.Search, action) {
   switch (action.type) {
-    case at.HIDE_SEARCH:
-      return Object.assign({ ...prevState, hide: true });
+    case at.DISABLE_SEARCH:
+      return Object.assign({ ...prevState, disable: true });
     case at.FAKE_FOCUS_SEARCH:
       return Object.assign({ ...prevState, fakeFocus: true });
     case at.SHOW_SEARCH:
-      return Object.assign({ ...prevState, hide: false, fakeFocus: false });
+      return Object.assign({ ...prevState, disable: false, fakeFocus: false });
     default:
       return prevState;
   }
