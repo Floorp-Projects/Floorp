@@ -215,6 +215,10 @@ const GPU_TAG_CACHE_RADIAL_GRADIENT: GpuProfileTag = GpuProfileTag {
     label: "C_RadialGradient",
     color: debug_colors::BROWN,
 };
+const GPU_TAG_CACHE_CONIC_GRADIENT: GpuProfileTag = GpuProfileTag {
+    label: "C_ConicGradient",
+    color: debug_colors::BROWN,
+};
 const GPU_TAG_SETUP_TARGET: GpuProfileTag = GpuProfileTag {
     label: "target init",
     color: debug_colors::SLATEGREY,
@@ -4068,6 +4072,31 @@ impl Renderer {
             self.draw_instanced_batch(
                 &target.radial_gradients,
                 VertexArrayKind::RadialGradient,
+                &BatchTextures::empty(),
+                stats,
+            );
+        }
+
+        // Draw any conic gradients for this target.
+        if !target.conic_gradients.is_empty() {
+            let _timer = self.gpu_profiler.start_timer(GPU_TAG_CACHE_CONIC_GRADIENT);
+
+            self.set_blend(false, FramebufferKind::Other);
+
+            self.shaders.borrow_mut().cs_conic_gradient.bind(
+                &mut self.device,
+                &projection,
+                None,
+                &mut self.renderer_errors,
+            );
+
+            if let Some(ref texture) = self.dither_matrix_texture {
+                self.device.bind_texture(TextureSampler::Dither, texture, Swizzle::default());
+            }
+
+            self.draw_instanced_batch(
+                &target.conic_gradients,
+                VertexArrayKind::ConicGradient,
                 &BatchTextures::empty(),
                 stats,
             );

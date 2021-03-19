@@ -17,7 +17,7 @@ use crate::gpu_types::{TransformPalette, ZBufferIdGenerator};
 use crate::internal_types::{FastHashMap, TextureSource, CacheTextureId};
 use crate::picture::{SliceId, SurfaceInfo, ResolvedSurfaceTexture, TileCacheInstance};
 use crate::prim_store::{PrimitiveStore, DeferredResolve, PrimitiveScratchBuffer};
-use crate::prim_store::gradient::{FastLinearGradientInstance, RadialGradientInstance};
+use crate::prim_store::gradient::{FastLinearGradientInstance, RadialGradientInstance, ConicGradientInstance};
 use crate::render_backend::DataStores;
 use crate::render_task::{RenderTaskKind, RenderTaskAddress};
 use crate::render_task::{RenderTask, ScalingTask, SvgFilterInfo};
@@ -405,6 +405,7 @@ impl RenderTarget for ColorRenderTarget {
             RenderTaskKind::CacheMask(..) |
             RenderTaskKind::FastLinearGradient(..) |
             RenderTaskKind::RadialGradient(..) |
+            RenderTaskKind::ConicGradient(..) |
             RenderTaskKind::LineDecoration(..) => {
                 panic!("Should not be added to color target!");
             }
@@ -499,6 +500,7 @@ impl RenderTarget for AlphaRenderTarget {
             RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::FastLinearGradient(..) |
             RenderTaskKind::RadialGradient(..) |
+            RenderTaskKind::ConicGradient(..) |
             RenderTaskKind::SvgFilter(..) => {
                 panic!("BUG: should not be added to alpha target!");
             }
@@ -601,6 +603,7 @@ pub struct TextureCacheRenderTarget {
     pub line_decorations: Vec<LineDecorationJob>,
     pub fast_linear_gradients: Vec<FastLinearGradientInstance>,
     pub radial_gradients: Vec<RadialGradientInstance>,
+    pub conic_gradients: Vec<ConicGradientInstance>,
 }
 
 impl TextureCacheRenderTarget {
@@ -615,6 +618,7 @@ impl TextureCacheRenderTarget {
             line_decorations: vec![],
             fast_linear_gradients: vec![],
             radial_gradients: vec![],
+            conic_gradients: vec![],
         }
     }
 
@@ -687,6 +691,9 @@ impl TextureCacheRenderTarget {
             }
             RenderTaskKind::RadialGradient(ref task_info) => {
                 self.radial_gradients.push(task_info.to_instance(&target_rect, gpu_cache));
+            }
+            RenderTaskKind::ConicGradient(ref task_info) => {
+                self.conic_gradients.push(task_info.to_instance(&target_rect, gpu_cache));
             }
             RenderTaskKind::Image(..) |
             RenderTaskKind::Cached(..) |
