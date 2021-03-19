@@ -86,7 +86,7 @@ final class RemoteMediaDrmBridge implements GeckoMediaDrm {
         mCallbacksFwd = new CallbacksForwarder(callbacks);
         try {
             mRemote.setCallbacks(mCallbacksFwd);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "Got exception during setCallbacks", e);
         }
     }
@@ -100,7 +100,7 @@ final class RemoteMediaDrmBridge implements GeckoMediaDrm {
 
         try {
             mRemote.createSession(createSessionToken, promiseId, initDataType, initData);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "Got exception while creating remote session.", e);
             mCallbacksFwd.onRejectPromise(promiseId, "Failed to create session.");
         }
@@ -113,7 +113,7 @@ final class RemoteMediaDrmBridge implements GeckoMediaDrm {
 
         try {
             mRemote.updateSession(promiseId, sessionId, response);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "Got exception while updating remote session.", e);
             mCallbacksFwd.onRejectPromise(promiseId, "Failed to update session.");
         }
@@ -125,7 +125,7 @@ final class RemoteMediaDrmBridge implements GeckoMediaDrm {
 
         try {
             mRemote.closeSession(promiseId, sessionId);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "Got exception while closing remote session.", e);
             mCallbacksFwd.onRejectPromise(promiseId, "Failed to close session.");
         }
@@ -137,7 +137,7 @@ final class RemoteMediaDrmBridge implements GeckoMediaDrm {
 
         try {
             mRemote.release();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "Got exception while releasing RemoteDrmBridge.", e);
         }
         RemoteManager.getInstance().onRemoteMediaDrmBridgeReleased(mRemote);
@@ -156,7 +156,7 @@ final class RemoteMediaDrmBridge implements GeckoMediaDrm {
     public synchronized void setServerCertificate(final byte[] cert) {
         try {
             mRemote.setServerCertificate(cert);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "Got exception while setting server certificate.", e);
             throw new RuntimeException(e);
         }

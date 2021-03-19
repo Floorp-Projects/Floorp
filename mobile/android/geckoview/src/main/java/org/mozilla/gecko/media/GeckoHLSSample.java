@@ -16,7 +16,7 @@ import java.nio.ByteBuffer;
 public final class GeckoHLSSample {
     public static final GeckoHLSSample EOS;
     static {
-        BufferInfo eosInfo = new BufferInfo();
+        final BufferInfo eosInfo = new BufferInfo();
         eosInfo.set(0, 0, Long.MIN_VALUE, MediaCodec.BUFFER_FLAG_END_OF_STREAM);
         EOS = new GeckoHLSSample(null, eosInfo, null, 0);
     }
@@ -73,7 +73,7 @@ public final class GeckoHLSSample {
             return "EOS GeckoHLSSample";
         }
 
-        StringBuilder str = new StringBuilder();
+        final StringBuilder str = new StringBuilder();
         str.append("{ info=").
                 append("{ offset=").append(info.offset).
                 append(", size=").append(info.size).

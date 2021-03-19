@@ -58,15 +58,15 @@ public final class GeckoLoader {
             }
             putenv("DOWNLOADS_DIRECTORY=" + downloadDir.getPath());
             putenv("UPDATES_DIRECTORY="   + updatesDir.getPath());
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.w(LOGTAG, "No download directory found.", e);
         }
     }
 
     private static void delTree(final File file) {
         if (file.isDirectory()) {
-            File children[] = file.listFiles();
-            for (File child : children) {
+            final File[] children = file.listFiles();
+            for (final File child : children) {
                 delTree(child);
             }
         }
@@ -74,9 +74,9 @@ public final class GeckoLoader {
     }
 
     private static File getTmpDir(final Context context) {
-        File tmpDir = context.getDir("tmpdir", Context.MODE_PRIVATE);
+        final File tmpDir = context.getDir("tmpdir", Context.MODE_PRIVATE);
         // check if the old tmp dir is there
-        File oldDir = new File(tmpDir.getParentFile(), "app_tmp");
+        final File oldDir = new File(tmpDir.getParentFile(), "app_tmp");
         if (oldDir.exists()) {
             delTree(oldDir);
         }
@@ -143,7 +143,7 @@ public final class GeckoLoader {
             }
 
             if (Build.VERSION.SDK_INT >= 17) {
-                android.os.UserManager um = (android.os.UserManager)context.getSystemService(Context.USER_SERVICE);
+                final android.os.UserManager um = (android.os.UserManager)context.getSystemService(Context.USER_SERVICE);
                 if (um != null) {
                     putenv("MOZ_ANDROID_USER_SERIAL_NUMBER=" + um.getSerialNumberForUser(android.os.Process.myUserHandle()));
                 } else {
@@ -155,7 +155,7 @@ public final class GeckoLoader {
         }
 
         // setup the tmp path
-        File f = getTmpDir(context);
+        final File f = getTmpDir(context);
         if (!f.exists()) {
             f.mkdirs();
         }
@@ -228,7 +228,7 @@ public final class GeckoLoader {
         }
 
         // Try to extract the named library from the APK.
-        File outDirFile = new File(outDir);
+        final File outDirFile = new File(outDir);
         if (!outDirFile.isDirectory()) {
             if (!outDirFile.mkdirs()) {
                 Log.e(LOGTAG, "Couldn't create " + outDir);
@@ -237,8 +237,8 @@ public final class GeckoLoader {
         }
 
         if (Build.VERSION.SDK_INT >= 21) {
-            String[] abis = Build.SUPPORTED_ABIS;
-            for (String abi : abis) {
+            final String[] abis = Build.SUPPORTED_ABIS;
+            for (final String abi : abis) {
                 if (tryLoadWithABI(lib, outDir, apkPath, abi)) {
                     return true;
                 }
@@ -275,7 +275,7 @@ public final class GeckoLoader {
                         while ((read = in.read(bytes, 0, 1024)) != -1) {
                             out.write(bytes, 0, read);
                         }
-                    } catch (Exception e) {
+                    } catch (final Exception e) {
                         Log.w(LOGTAG, "Failing library copy.", e);
                         failed = true;
                     } finally {
@@ -302,7 +302,7 @@ public final class GeckoLoader {
             } finally {
                 zipFile.close();
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "Failed to extract lib from APK.", e);
             return false;
         }
@@ -326,7 +326,7 @@ public final class GeckoLoader {
             final boolean dataDataExists = new File(packageDataDir + "/lib/lib" + lib + ".so").exists();
             message.append(", ax=" + appLibExists);
             message.append(", ddx=" + dataDataExists);
-        } catch (Throwable e) {
+        } catch (final Throwable e) {
             message.append(": ax/ddx fail, ");
         }
 
@@ -337,7 +337,7 @@ public final class GeckoLoader {
             final boolean dashTwoExists = new File(dashTwo).exists();
             message.append(", -1x=" + dashOneExists);
             message.append(", -2x=" + dashTwoExists);
-        } catch (Throwable e) {
+        } catch (final Throwable e) {
             message.append(", dash fail, ");
         }
 
@@ -349,7 +349,7 @@ public final class GeckoLoader {
             message.append(", nativeLib: " + nativeLibPath);
             message.append(", dirx=" + nativeLibDirExists);
             message.append(", libx=" + nativeLibLibExists);
-        } catch (Throwable e) {
+        } catch (final Throwable e) {
             message.append(", nativeLib fail.");
         }
 
@@ -360,7 +360,7 @@ public final class GeckoLoader {
         try {
             System.load(path);
             return true;
-        } catch (Throwable e) {
+        } catch (final Throwable e) {
             Log.wtf(LOGTAG, "Couldn't load " + path + ": " + e);
         }
 
@@ -378,7 +378,7 @@ public final class GeckoLoader {
             // Attempt 1: the way that should work.
             System.loadLibrary(lib);
             return null;
-        } catch (Throwable e) {
+        } catch (final Throwable e) {
             Log.wtf(LOGTAG, "Couldn't load " + lib + ". Trying native library dir.");
 
             // Attempt 2: use nativeLibraryDir, which should also work.

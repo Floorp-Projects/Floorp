@@ -47,13 +47,13 @@ public class StringUtils {
     */
     public static boolean isSearchQuery(final String text, final boolean wasSearchQuery) {
         // We remove leading and trailing white spaces when decoding URLs
-        String trimmedText = text.trim();
+        final String trimmedText = text.trim();
         if (trimmedText.length() == 0) {
             return wasSearchQuery;
         }
-        int colon = trimmedText.indexOf(':');
-        int dot = trimmedText.indexOf('.');
-        int space = trimmedText.indexOf(' ');
+        final int colon = trimmedText.indexOf(':');
+        final int dot = trimmedText.indexOf('.');
+        final int space = trimmedText.indexOf(' ');
 
         // If a space is found in a trimmed string, we assume this is a search query(Bug 1278245)
         if (space > -1) {
@@ -228,7 +228,7 @@ public class StringUtils {
      * @return url component entered by user
      */
     public static String decodeUserEnteredUrl(final String url) {
-        Uri uri = Uri.parse(url);
+        final Uri uri = Uri.parse(url);
         if ("user-entered".equals(uri.getScheme())) {
             return uri.getSchemeSpecificPart();
         }

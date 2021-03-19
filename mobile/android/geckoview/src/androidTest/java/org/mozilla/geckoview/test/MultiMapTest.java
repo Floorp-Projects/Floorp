@@ -65,13 +65,13 @@ public class MultiMapTest {
         assertThat(map.containsEntry("test3", "value1"), is(false));
         assertThat(map.containsEntry("test", "value3"), is(false));
 
-        List<String> values = map.get("test");
+        final List<String> values = map.get("test");
         assertThat(values.contains("value1"), is(true));
         assertThat(values.contains("value2"), is(true));
         assertThat(values.contains("value3"), is(false));
         assertThat(values.size(), is(2));
 
-        List<String> values2 = map.get("test2");
+        final List<String> values2 = map.get("test2");
         assertThat(values2.contains("value1"), is(false));
         assertThat(values2.contains("value2"), is(false));
         assertThat(values2.contains("value3"), is(true));
@@ -89,7 +89,7 @@ public class MultiMapTest {
 
         assertThat(map.size(), is(2));
 
-        List<String> values = map.remove("test");
+        final List<String> values = map.remove("test");
 
         assertThat(values.size(), is(2));
         assertThat(values.contains("value1"), is(true));
@@ -136,7 +136,7 @@ public class MultiMapTest {
         map.add("test", "value2");
         map.add("test2", "value3");
 
-        Set<String> keys = map.keySet();
+        final Set<String> keys = map.keySet();
 
         assertThat(keys.size(), is(2));
         assertThat(keys.contains("test"), is(true));
@@ -189,7 +189,7 @@ public class MultiMapTest {
         assertThat(map.get("test").size(), is(1));
 
         // Existing key test
-        List<String> values = map.addAll("test", Arrays.asList("value2", "value3"));
+        final List<String> values = map.addAll("test", Arrays.asList("value2", "value3"));
 
         assertThat(values.size(), is(3));
         assertThat(values.contains("value1"), is(true));
@@ -201,7 +201,7 @@ public class MultiMapTest {
         assertThat(map.containsEntry("test", "value3"), is(true));
 
         // New key test
-        List<String> values2 = map.addAll("test2", Arrays.asList("value4", "value5"));
+        final List<String> values2 = map.addAll("test2", Arrays.asList("value4", "value5"));
         assertThat(values2.size(), is(2));
         assertThat(values2.contains("value4"), is(true));
         assertThat(values2.contains("value5"), is(true));

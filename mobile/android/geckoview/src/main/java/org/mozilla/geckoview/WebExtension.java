@@ -475,7 +475,7 @@ public class WebExtension {
             final Object content;
             try {
                 content = bundle.toJSONObject().get("data");
-            } catch (JSONException ex) {
+            } catch (final JSONException ex) {
                 callback.sendError(ex);
                 return;
             }
@@ -489,10 +489,10 @@ public class WebExtension {
          * @param message {@link JSONObject} that will be sent to the WebExtension.
          */
         public void postMessage(final @NonNull JSONObject message) {
-            GeckoBundle args = new GeckoBundle(1);
+            final GeckoBundle args = new GeckoBundle(1);
             try {
                 args.putBundle("message", GeckoBundle.fromJSONObject(message));
-            } catch (JSONException ex) {
+            } catch (final JSONException ex) {
                 throw new RuntimeException(ex);
             }
 
@@ -507,7 +507,7 @@ public class WebExtension {
                 return;
             }
 
-            GeckoBundle args = new GeckoBundle(1);
+            final GeckoBundle args = new GeckoBundle(1);
             args.putLong("portId", id);
 
             mEventDispatcher.dispatch("GeckoView:WebExtension:PortDisconnect", args);
@@ -579,8 +579,8 @@ public class WebExtension {
          */
         @UiThread
         @NonNull
-        default GeckoResult<AllowOrDeny> onCloseTab(@Nullable WebExtension source,
-                                                    @NonNull GeckoSession session)  {
+        default GeckoResult<AllowOrDeny> onCloseTab(@Nullable final WebExtension source,
+                                                    @NonNull final GeckoSession session)  {
             return GeckoResult.deny();
         }
 
@@ -774,8 +774,8 @@ public class WebExtension {
          */
         @UiThread
         @Nullable
-        default GeckoResult<GeckoSession> onNewTab(@NonNull WebExtension source,
-                                                   @NonNull CreateTabDetails createDetails) {
+        default GeckoResult<GeckoSession> onNewTab(@NonNull final WebExtension source,
+                                                   @NonNull final CreateTabDetails createDetails) {
             return null;
         }
 
@@ -789,7 +789,7 @@ public class WebExtension {
          * @param source An instance of {@link WebExtension}.
          */
         @UiThread
-        default void onOpenOptionsPage(@NonNull WebExtension source) {}
+        default void onOpenOptionsPage(@NonNull final WebExtension source) {}
     }
 
     /**
@@ -846,7 +846,7 @@ public class WebExtension {
                 return false;
             }
 
-            Sender o = (Sender) other;
+            final Sender o = (Sender) other;
             return webExtensionId.equals(o.webExtensionId) &&
                     nativeApp.equals(o.nativeApp);
         }
@@ -1455,7 +1455,7 @@ public class WebExtension {
                     return;
                 }
 
-                GeckoResult<GeckoSession> popup = delegate.onTogglePopup(mExtension, this);
+                final GeckoResult<GeckoSession> popup = delegate.onTogglePopup(mExtension, this);
                 openPopup(popup, uri);
             });
         }
@@ -1941,7 +1941,7 @@ public class WebExtension {
             baseUrl = bundle.getString("baseURL");
             allowedInPrivateBrowsing = bundle.getBoolean("privateBrowsingAllowed", false);
 
-            int signedState = bundle.getInt("signedState", SignedStateFlags.UNKNOWN);
+            final int signedState = bundle.getInt("signedState", SignedStateFlags.UNKNOWN);
             if (signedState <= SignedStateFlags.LAST) {
                 this.signedState = signedState;
             } else {
@@ -2054,10 +2054,10 @@ public class WebExtension {
         /* package */ Menu(final @NonNull WebExtension extension, final GeckoBundle bundle) {
             this.extension = extension;
             title = bundle.getString("title", "");
-            GeckoBundle[] items = bundle.getBundleArray("items");
+            final GeckoBundle[] items = bundle.getBundleArray("items");
             this.items = new ArrayList<>();
             if (items != null) {
-                for (GeckoBundle item : items) {
+                for (final GeckoBundle item : items) {
                     this.items.add(new MenuItem(this.extension, item));
                 }
             }
@@ -2239,7 +2239,7 @@ public class WebExtension {
          */
         @AnyThread
         @Nullable
-        default GeckoResult<WebExtension.DownloadInitData> onDownload(@NonNull WebExtension source, @NonNull DownloadRequest request) {
+        default GeckoResult<WebExtension.DownloadInitData> onDownload(@NonNull final WebExtension source, @NonNull final DownloadRequest request) {
             return null;
         }
     }
@@ -2315,7 +2315,7 @@ public class WebExtension {
             bundle.putInt("state", data.state());
             bundle.putBoolean("canResume", data.canResume());
             bundle.putBoolean("paused", data.paused());
-            Integer error = data.error();
+            final Integer error = data.error();
             if (error != null) {
                 bundle.putInt("error",  error);
             }
@@ -2327,7 +2327,7 @@ public class WebExtension {
                     "GeckoView:WebExtension:DownloadChanged", bundle
             ).map(null, e -> {
                 if (e instanceof EventDispatcher.QueryException) {
-                    EventDispatcher.QueryException queryException = (EventDispatcher.QueryException) e;
+                    final EventDispatcher.QueryException queryException = (EventDispatcher.QueryException) e;
                     if (queryException.data instanceof String) {
                         return new IllegalArgumentException((String) queryException.data);
                     }
@@ -2338,27 +2338,27 @@ public class WebExtension {
 
         /* package */ interface Delegate {
 
-            default GeckoResult<Void> onPause(WebExtension source, WebExtension.Download download) {
+            default GeckoResult<Void> onPause(final WebExtension source, final WebExtension.Download download) {
                 return null;
             }
 
-            default GeckoResult<Void> onResume(WebExtension source, WebExtension.Download download) {
+            default GeckoResult<Void> onResume(final WebExtension source, final WebExtension.Download download) {
                 return null;
             }
 
-            default GeckoResult<Void> onCancel(WebExtension source, WebExtension.Download download) {
+            default GeckoResult<Void> onCancel(final WebExtension source, final WebExtension.Download download) {
                 return null;
             }
 
-            default GeckoResult<Void> onErase(WebExtension source, WebExtension.Download download) {
+            default GeckoResult<Void> onErase(final WebExtension source, final WebExtension.Download download) {
                 return null;
             }
 
-            default GeckoResult<Void> onOpen(WebExtension source, WebExtension.Download download) {
+            default GeckoResult<Void> onOpen(final WebExtension source, final WebExtension.Download download) {
                 return null;
             }
 
-            default GeckoResult<Void> onRemoveFile(WebExtension source, WebExtension.Download download) {
+            default GeckoResult<Void> onRemoveFile(final WebExtension source, final WebExtension.Download download) {
                 return null;
             }
         }
@@ -2585,7 +2585,7 @@ public class WebExtension {
         @NonNull
         @UiThread
         /* package */ static GeckoBundle downloadInfoToBundle(final @NonNull Info data) {
-            GeckoBundle dataBundle = new GeckoBundle();
+            final GeckoBundle dataBundle = new GeckoBundle();
 
             dataBundle.putLong("bytesReceived", data.bytesReceived());
             dataBundle.putBoolean("canResume", data.canResume());
@@ -2599,15 +2599,15 @@ public class WebExtension {
             dataBundle.putInt("state", data.state());
             dataBundle.putLong("totalBytes", data.totalBytes());
 
-            Long endTime = data.endTime();
+            final Long endTime = data.endTime();
             if (endTime != null) {
                 dataBundle.putString("endTime", endTime.toString());
             }
-            Integer error = data.error();
+            final Integer error = data.error();
             if (error != null) {
                 dataBundle.putInt("error", error);
             }
-            Long estimatedEndTime = data.estimatedEndTime();
+            final Long estimatedEndTime = data.estimatedEndTime();
             if (estimatedEndTime != null) {
                 dataBundle.putString("estimatedEndTime", estimatedEndTime.toString());
             }
@@ -2692,21 +2692,21 @@ public class WebExtension {
         /* package */ static DownloadRequest fromBundle(final GeckoBundle optionsBundle) {
             final String uri = optionsBundle.getString("url");
 
-            WebRequest.Builder mainRequestBuilder = new WebRequest.Builder(uri);
+            final WebRequest.Builder mainRequestBuilder = new WebRequest.Builder(uri);
 
-            String method = optionsBundle.getString("method");
+            final String method = optionsBundle.getString("method");
             if (method != null) {
                 mainRequestBuilder.method(method);
 
                 if (method.equals("POST")) {
-                    String body = optionsBundle.getString("body");
+                    final String body = optionsBundle.getString("body");
                     mainRequestBuilder.body(body);
                 }
             }
 
-            GeckoBundle[] headers = optionsBundle.getBundleArray("headers");
+            final GeckoBundle[] headers = optionsBundle.getBundleArray("headers");
             if (headers != null) {
-                for (GeckoBundle header : headers) {
+                for (final GeckoBundle header : headers) {
                     String value = header.getString("value");
                     if (value == null) {
                         value = header.getString("binaryValue");
@@ -2715,18 +2715,18 @@ public class WebExtension {
                 }
             }
 
-            WebRequest mainRequest = mainRequestBuilder.build();
+            final WebRequest mainRequest = mainRequestBuilder.build();
 
             int downloadFlags = GeckoWebExecutor.FETCH_FLAGS_NONE;
-            boolean incognito = optionsBundle.getBoolean("incognito");
+            final boolean incognito = optionsBundle.getBoolean("incognito");
             if (incognito) {
                 downloadFlags |= GeckoWebExecutor.FETCH_FLAGS_PRIVATE;
             }
 
-            boolean allowHttpErrors = optionsBundle.getBoolean("allowHttpErrors");
+            final boolean allowHttpErrors = optionsBundle.getBoolean("allowHttpErrors");
 
             int conflictActionFlags = CONFLICT_ACTION_UNIQUIFY;
-            String conflictActionString = optionsBundle.getString("conflictAction");
+            final String conflictActionString = optionsBundle.getString("conflictAction");
             if (conflictActionString != null) {
                 switch (conflictActionString.toLowerCase(Locale.ROOT)) {
                     case "overwrite":
@@ -2738,9 +2738,9 @@ public class WebExtension {
                 }
             }
 
-            boolean saveAs = optionsBundle.getBoolean("saveAs");
+            final boolean saveAs = optionsBundle.getBoolean("saveAs");
 
-            WebExtension.DownloadRequest request = new WebExtension.DownloadRequest.Builder(mainRequest)
+            final WebExtension.DownloadRequest request = new WebExtension.DownloadRequest.Builder(mainRequest)
                     .filename(optionsBundle.getString("filename"))
                     .downloadFlags(downloadFlags)
                     .conflictAction(conflictActionFlags)

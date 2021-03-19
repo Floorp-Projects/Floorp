@@ -95,9 +95,9 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
 
         List<MediaCodecInfo> decoderInfos = null;
         try {
-            MediaCodecSelector mediaCodecSelector = MediaCodecSelector.DEFAULT;
+            final MediaCodecSelector mediaCodecSelector = MediaCodecSelector.DEFAULT;
             decoderInfos = mediaCodecSelector.getDecoderInfos(mimeType, false, false);
-        } catch (MediaCodecUtil.DecoderQueryException e) {
+        } catch (final MediaCodecUtil.DecoderQueryException e) {
             Log.e(LOGTAG, e.getMessage());
         }
         if (decoderInfos == null || decoderInfos.isEmpty()) {
@@ -106,7 +106,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
 
         boolean decoderCapable = false;
         MediaCodecInfo info = null;
-        for (MediaCodecInfo i : decoderInfos) {
+        for (final MediaCodecInfo i : decoderInfos) {
             if (i.isCodecSupported(format)) {
                 decoderCapable = true;
                 info = i;
@@ -116,7 +116,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
             if (Build.VERSION.SDK_INT < 21) {
                 try {
                     decoderCapable = format.width * format.height <= MediaCodecUtil.maxH264DecodableFrameSize();
-                } catch (MediaCodecUtil.DecoderQueryException e) {
+                } catch (final MediaCodecUtil.DecoderQueryException e) {
                     Log.e(LOGTAG, e.getMessage());
                 }
                 if (!decoderCapable) {
@@ -142,7 +142,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
     protected final void createInputBuffer() throws ExoPlaybackException {
         assertTrue(mFormats.size() > 0);
         // Calculate maximum size which might be used for target format.
-        Format currentFormat = mFormats.get(mFormats.size() - 1);
+        final Format currentFormat = mFormats.get(mFormats.size() - 1);
         mCodecMaxValues = getCodecMaxValues(currentFormat, mStreamFormats);
         // Create a buffer with maximal size for reading source.
         // Note : Though we are able to dynamically enlarge buffer size by
@@ -151,7 +151,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
         // runtime overhead.
         try {
             mInputBuffer = ByteBuffer.wrap(new byte[mCodecMaxValues.inputSize]);
-        } catch (OutOfMemoryError e) {
+        } catch (final OutOfMemoryError e) {
             Log.e(LOGTAG, "cannot allocate input buffer of size " + mCodecMaxValues.inputSize, e);
             throw ExoPlaybackException.createForRenderer(new Exception(e),
                     getIndex(),
@@ -190,9 +190,9 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
             if (DEBUG) {
                 Log.d(LOGTAG, "[feedInput][WRITE_PENDING] put initialization data");
             }
-            Format currentFormat = mFormats.get(mFormats.size() - 1);
+            final Format currentFormat = mFormats.get(mFormats.size() - 1);
             for (int i = 0; i < currentFormat.initializationData.size(); i++) {
-                byte[] data = currentFormat.initializationData.get(i);
+                final byte[] data = currentFormat.initializationData.get(i);
                 bufferForRead.data.put(data);
             }
             mRendererReconfigurationState = RECONFIGURATION_STATE.QUEUE_PENDING;
@@ -227,16 +227,16 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
             mRendererReconfigurationState = RECONFIGURATION_STATE.WRITE_PENDING;
         }
         mInputStreamEnded = true;
-        GeckoHLSSample sample = GeckoHLSSample.EOS;
+        final GeckoHLSSample sample = GeckoHLSSample.EOS;
         calculatDuration(sample);
     }
 
     @Override
     protected void handleSamplePreparation(final DecoderInputBuffer bufferForRead) {
-        int csdInfoSize = mCSDInfo != null ? mCSDInfo.length : 0;
-        int dataSize = bufferForRead.data.limit();
-        int size = bufferForRead.isKeyFrame() ? csdInfoSize + dataSize : dataSize;
-        byte[] realData = new byte[size];
+        final int csdInfoSize = mCSDInfo != null ? mCSDInfo.length : 0;
+        final int dataSize = bufferForRead.data.limit();
+        final int size = bufferForRead.isKeyFrame() ? csdInfoSize + dataSize : dataSize;
+        final byte[] realData = new byte[size];
         if (bufferForRead.isKeyFrame()) {
             // Prepend the CSD information to the sample if it's a key frame.
             System.arraycopy(mCSDInfo, 0, realData, 0, csdInfoSize);
@@ -244,12 +244,12 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
         } else {
             bufferForRead.data.get(realData, 0, dataSize);
         }
-        ByteBuffer buffer = ByteBuffer.wrap(realData);
+        final ByteBuffer buffer = ByteBuffer.wrap(realData);
         mInputBuffer = bufferForRead.data;
         mInputBuffer.clear();
 
-        CryptoInfo cryptoInfo = bufferForRead.isEncrypted() ? bufferForRead.cryptoInfo.getFrameworkCryptoInfoV16() : null;
-        BufferInfo bufferInfo = new BufferInfo();
+        final CryptoInfo cryptoInfo = bufferForRead.isEncrypted() ? bufferForRead.cryptoInfo.getFrameworkCryptoInfoV16() : null;
+        final BufferInfo bufferInfo = new BufferInfo();
         // Flags in DecoderInputBuffer are synced with MediaCodec Buffer flags.
         int flags = 0;
         flags |= bufferForRead.isKeyFrame() ? MediaCodec.BUFFER_FLAG_KEY_FRAME : 0;
@@ -259,7 +259,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
         assertTrue(mFormats.size() > 0);
         // We add a new format in the list once format changes, so the formatIndex
         // should indicate to the last(latest) format.
-        GeckoHLSSample sample = GeckoHLSSample.create(buffer,
+        final GeckoHLSSample sample = GeckoHLSSample.create(buffer,
                                                       bufferInfo,
                                                       cryptoInfo,
                                                       mFormats.size() - 1);
@@ -296,7 +296,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
 
     @Override
     protected boolean canReconfigure(final Format oldFormat, final Format newFormat) {
-        boolean canReconfig = areAdaptationCompatible(oldFormat, newFormat)
+        final boolean canReconfig = areAdaptationCompatible(oldFormat, newFormat)
                 && newFormat.width <= mCodecMaxValues.width
                 && newFormat.height <= mCodecMaxValues.height
                 && newFormat.maxInputSize <= mCodecMaxValues.inputSize;
@@ -324,7 +324,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
         int startPos = 0;
         mCSDInfo = new byte[size];
         for (int i = 0; i < format.initializationData.size(); i++) {
-            byte[] data = format.initializationData.get(i);
+            final byte[] data = format.initializationData.get(i);
             System.arraycopy(data, 0, mCSDInfo, startPos, data.length);
             startPos += data.length;
         }
@@ -376,15 +376,15 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
         if (inputSample != null) {
             mDemuxedNoDurationSamples.offer(inputSample);
         }
-        int sizeOfNoDura = mDemuxedNoDurationSamples.size();
+        final int sizeOfNoDura = mDemuxedNoDurationSamples.size();
         // A calculation window we've ever found suitable for both HLS TS & FMP4.
-        int range = sizeOfNoDura >= 17 ? 17 : sizeOfNoDura;
-        GeckoHLSSample[] inputArray =
+        final int range = sizeOfNoDura >= 17 ? 17 : sizeOfNoDura;
+        final GeckoHLSSample[] inputArray =
             mDemuxedNoDurationSamples.toArray(new GeckoHLSSample[sizeOfNoDura]);
         if (range >= 17 && !mInputStreamEnded) {
             calculateSamplesWithin(inputArray, range);
 
-            GeckoHLSSample toQueue = mDemuxedNoDurationSamples.poll();
+            final GeckoHLSSample toQueue = mDemuxedNoDurationSamples.poll();
             mDemuxedInputSamples.offer(toQueue);
             if (BuildConfig.DEBUG_BUILD) {
                 Log.d(LOGTAG, "Demuxed sample PTS : " +
@@ -425,7 +425,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
     // MFR won't mistake for that which the decode is getting slow.
     public long getNextKeyFrameTime() {
         long nextKeyFrameTime = Long.MAX_VALUE;
-        for (GeckoHLSSample sample : mDemuxedInputSamples) {
+        for (final GeckoHLSSample sample : mDemuxedInputSamples) {
             if (sample != null &&
                 (sample.info.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME) != 0) {
                 nextKeyFrameTime = sample.info.presentationTimeUs;
@@ -445,7 +445,7 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
         int maxWidth = format.width;
         int maxHeight = format.height;
         int maxInputSize = getMaxInputSize(format);
-        for (Format streamFormat : streamFormats) {
+        for (final Format streamFormat : streamFormats) {
             if (areAdaptationCompatible(format, streamFormat)) {
                 maxWidth = Math.max(maxWidth, streamFormat.width);
                 maxHeight = Math.max(maxHeight, streamFormat.height);
@@ -467,8 +467,8 @@ public class GeckoHlsVideoRenderer extends GeckoHlsRendererBase {
         }
 
         // Attempt to infer a maximum input size from the format.
-        int maxPixels;
-        int minCompressionRatio;
+        final int maxPixels;
+        final int minCompressionRatio;
         switch (format.sampleMimeType) {
             case MimeTypes.VIDEO_H264:
                 // Round up width/height to an integer number of macroblocks.

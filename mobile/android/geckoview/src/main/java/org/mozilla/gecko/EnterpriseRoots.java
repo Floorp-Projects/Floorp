@@ -34,22 +34,22 @@ public class EnterpriseRoots {
 
         // The KeyStore "AndroidCAStore" contains the certificates we're
         // interested in.
-        KeyStore ks;
+        final KeyStore ks;
         try {
             ks = KeyStore.getInstance("AndroidCAStore");
-        } catch (KeyStoreException kse) {
+        } catch (final KeyStoreException kse) {
             Log.e(LOGTAG, "getInstance() failed", kse);
             return new byte[0][0];
         }
         try {
             ks.load(null);
-        } catch (CertificateException ce) {
+        } catch (final CertificateException ce) {
             Log.e(LOGTAG, "load() failed", ce);
             return new byte[0][0];
-        } catch (IOException ioe) {
+        } catch (final IOException ioe) {
             Log.e(LOGTAG, "load() failed", ioe);
             return new byte[0][0];
-        } catch (NoSuchAlgorithmException nsae) {
+        } catch (final NoSuchAlgorithmException nsae) {
             Log.e(LOGTAG, "load() failed", nsae);
             return new byte[0][0];
         }
@@ -58,20 +58,20 @@ public class EnterpriseRoots {
         // entries that shipped with the OS and entries that were added by the
         // user or an administrator. The former we ignore and the latter we
         // collect in an array of byte arrays and return.
-        Enumeration<String> aliases;
+        final Enumeration<String> aliases;
         try {
             aliases = ks.aliases();
-        } catch (KeyStoreException kse) {
+        } catch (final KeyStoreException kse) {
             Log.e(LOGTAG, "aliases() failed", kse);
             return new byte[0][0];
         }
-        ArrayList<byte[]> roots = new ArrayList<byte[]>();
+        final ArrayList<byte[]> roots = new ArrayList<byte[]>();
         while (aliases.hasMoreElements()) {
-            String alias = aliases.nextElement();
-            boolean isCertificate;
+            final String alias = aliases.nextElement();
+            final boolean isCertificate;
             try {
                 isCertificate = ks.isCertificateEntry(alias);
-            } catch (KeyStoreException kse) {
+            } catch (final KeyStoreException kse) {
                 Log.e(LOGTAG, "isCertificateEntry() failed", kse);
                 continue;
             }
@@ -81,16 +81,16 @@ public class EnterpriseRoots {
             // there appears to be no other way to differentiate between the
             // two.
             if (isCertificate && alias.startsWith("user:")) {
-                Certificate certificate;
+                final Certificate certificate;
                 try {
                     certificate = ks.getCertificate(alias);
-                } catch (KeyStoreException kse) {
+                } catch (final KeyStoreException kse) {
                     Log.e(LOGTAG, "getCertificate() failed", kse);
                     continue;
                 }
                 try {
                     roots.add(certificate.getEncoded());
-                } catch (CertificateEncodingException cee) {
+                } catch (final CertificateEncodingException cee) {
                     Log.e(LOGTAG, "getEncoded() failed", cee);
                 }
             }

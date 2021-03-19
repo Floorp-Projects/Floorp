@@ -217,7 +217,7 @@ public class ImageResource {
              * @return This builder instance.
              */
             public @NonNull Builder add(final ImageResource image) {
-                int index = mCollection.mImages.size();
+                final int index = mCollection.mImages.size();
 
                 if (image.sizes == null) {
                     // Null-sizes are handled the same as `any`.

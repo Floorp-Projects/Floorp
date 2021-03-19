@@ -54,28 +54,28 @@ public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
          *                         but may suffer a brief discontinuity (~50-100ms)
          *                         when adaptation occurs.
          */
-        String mimeType = format.sampleMimeType;
+        final String mimeType = format.sampleMimeType;
         if (!MimeTypes.isAudio(mimeType)) {
             return RendererCapabilities.create(FORMAT_UNSUPPORTED_TYPE);
         }
         List<MediaCodecInfo> decoderInfos = null;
         try {
-            MediaCodecSelector mediaCodecSelector = MediaCodecSelector.DEFAULT;
+            final MediaCodecSelector mediaCodecSelector = MediaCodecSelector.DEFAULT;
             decoderInfos = mediaCodecSelector.getDecoderInfos(mimeType, false, false);
-        } catch (MediaCodecUtil.DecoderQueryException e) {
+        } catch (final MediaCodecUtil.DecoderQueryException e) {
             Log.e(LOGTAG, e.getMessage());
         }
         if (decoderInfos == null || decoderInfos.isEmpty()) {
             return RendererCapabilities.create(FORMAT_UNSUPPORTED_SUBTYPE);
         }
-        MediaCodecInfo info = decoderInfos.get(0);
+        final MediaCodecInfo info = decoderInfos.get(0);
         /*
          *  Note : If the code can make it to this place, ExoPlayer assumes
          *         support for unknown sampleRate and channelCount when
          *         SDK version is less than 21, otherwise, further check is needed
          *         if there's no sampleRate/channelCount in format.
          */
-        boolean decoderCapable = (Build.VERSION.SDK_INT < 21) ||
+        final boolean decoderCapable = (Build.VERSION.SDK_INT < 21) ||
                                  ((format.sampleRate == Format.NO_VALUE ||
                                  info.isAudioSampleRateSupportedV21(format.sampleRate)) &&
                                  (format.channelCount == Format.NO_VALUE ||
@@ -118,15 +118,15 @@ public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
 
     @Override
     protected void handleSamplePreparation(final DecoderInputBuffer bufferForRead) {
-        int size = bufferForRead.data.limit();
-        byte[] realData = new byte[size];
+        final int size = bufferForRead.data.limit();
+        final byte[] realData = new byte[size];
         bufferForRead.data.get(realData, 0, size);
-        ByteBuffer buffer = ByteBuffer.wrap(realData);
+        final ByteBuffer buffer = ByteBuffer.wrap(realData);
         mInputBuffer = bufferForRead.data;
         mInputBuffer.clear();
 
-        CryptoInfo cryptoInfo = bufferForRead.isEncrypted() ? bufferForRead.cryptoInfo.getFrameworkCryptoInfoV16() : null;
-        BufferInfo bufferInfo = new BufferInfo();
+        final CryptoInfo cryptoInfo = bufferForRead.isEncrypted() ? bufferForRead.cryptoInfo.getFrameworkCryptoInfoV16() : null;
+        final BufferInfo bufferInfo = new BufferInfo();
         // Flags in DecoderInputBuffer are synced with MediaCodec Buffer flags.
         int flags = 0;
         flags |= bufferForRead.isKeyFrame() ? MediaCodec.BUFFER_FLAG_KEY_FRAME : 0;
@@ -136,7 +136,7 @@ public class GeckoHlsAudioRenderer extends GeckoHlsRendererBase {
         assertTrue(mFormats.size() >= 0);
         // We add a new format in the list once format changes, so the formatIndex
         // should indicate to the last(latest) format.
-        GeckoHLSSample sample = GeckoHLSSample.create(buffer,
+        final GeckoHLSSample sample = GeckoHLSSample.create(buffer,
                                                       bufferInfo,
                                                       cryptoInfo,
                                                       mFormats.size() - 1);

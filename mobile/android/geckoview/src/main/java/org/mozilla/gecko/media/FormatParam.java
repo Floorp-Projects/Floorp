@@ -66,7 +66,7 @@ public final class FormatParam implements Parcelable {
     }
 
     public void readFromParcel(final Parcel in) {
-        Bundle bundle = in.readBundle();
+        final Bundle bundle = in.readBundle();
         fromBundle(bundle);
     }
 
@@ -127,7 +127,7 @@ public final class FormatParam implements Parcelable {
     }
 
     private Bundle toBundle() {
-        Bundle bundle = new Bundle();
+        final Bundle bundle = new Bundle();
         if (mFormat.containsKey(MediaFormat.KEY_MIME)) {
             bundle.putString(MediaFormat.KEY_MIME, mFormat.getString(MediaFormat.KEY_MIME));
         }
@@ -144,12 +144,12 @@ public final class FormatParam implements Parcelable {
             bundle.putInt(MediaFormat.KEY_SAMPLE_RATE, mFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE));
         }
         if (mFormat.containsKey(KEY_CONFIG_0)) {
-            ByteBuffer bytes = mFormat.getByteBuffer(KEY_CONFIG_0);
+            final ByteBuffer bytes = mFormat.getByteBuffer(KEY_CONFIG_0);
             bundle.putByteArray(KEY_CONFIG_0,
                 Sample.byteArrayFromBuffer(bytes, 0, bytes.capacity()));
         }
         if (mFormat.containsKey(KEY_CONFIG_1)) {
-            ByteBuffer bytes = mFormat.getByteBuffer(KEY_CONFIG_1);
+            final ByteBuffer bytes = mFormat.getByteBuffer(KEY_CONFIG_1);
             bundle.putByteArray(KEY_CONFIG_1,
                 Sample.byteArrayFromBuffer(bytes, 0, bytes.capacity()));
         }

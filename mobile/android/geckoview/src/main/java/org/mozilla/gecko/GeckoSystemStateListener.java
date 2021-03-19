@@ -51,8 +51,8 @@ public class GeckoSystemStateListener
         mInputManager.registerInputDeviceListener(listenerInstance, ThreadUtils.getUiHandler());
 
         sApplicationContext = context;
-        ContentResolver contentResolver = sApplicationContext.getContentResolver();
-        Uri animationSetting = Settings.System.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE);
+        final ContentResolver contentResolver = sApplicationContext.getContentResolver();
+        final Uri animationSetting = Settings.System.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE);
         mContentObserver = new ContentObserver(new Handler(Looper.getMainLooper())) {
             @Override
             public void onChange(final boolean selfChange) {
@@ -80,7 +80,7 @@ public class GeckoSystemStateListener
 
         mInputManager.unregisterInputDeviceListener(listenerInstance);
 
-        ContentResolver contentResolver = sApplicationContext.getContentResolver();
+        final ContentResolver contentResolver = sApplicationContext.getContentResolver();
         contentResolver.unregisterContentObserver(mContentObserver);
 
         mInitialized = false;
@@ -100,7 +100,7 @@ public class GeckoSystemStateListener
             return false;
         }
 
-        ContentResolver contentResolver = sApplicationContext.getContentResolver();
+        final ContentResolver contentResolver = sApplicationContext.getContentResolver();
 
         return Settings.Global.getFloat(contentResolver,
                                         Settings.Global.ANIMATOR_DURATION_SCALE,
@@ -115,7 +115,7 @@ public class GeckoSystemStateListener
     }
 
     public void updateNightMode(final int newUIMode) {
-        boolean isNightMode = (newUIMode & Configuration.UI_MODE_NIGHT_MASK)
+        final boolean isNightMode = (newUIMode & Configuration.UI_MODE_NIGHT_MASK)
             == Configuration.UI_MODE_NIGHT_YES;
         if (isNightMode == mIsNightMode) {
             return;
@@ -138,7 +138,7 @@ public class GeckoSystemStateListener
     }
 
     private void notifyDeviceChanged(final int deviceId) {
-        InputDevice device = InputDevice.getDevice(deviceId);
+        final InputDevice device = InputDevice.getDevice(deviceId);
         if (device == null ||
             !InputDeviceUtils.isPointerTypeDevice(device)) {
             return;

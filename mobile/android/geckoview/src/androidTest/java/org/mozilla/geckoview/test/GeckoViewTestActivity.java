@@ -15,7 +15,7 @@ public class GeckoViewTestActivity extends Activity {
     public GeckoView view;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         view = new GeckoView(new ContextWrapper(this));

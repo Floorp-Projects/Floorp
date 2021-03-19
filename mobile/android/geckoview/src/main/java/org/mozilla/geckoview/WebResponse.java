@@ -161,7 +161,7 @@ public class WebResponse extends WebMessage {
                 final CertificateFactory factory = CertificateFactory.getInstance("X.509");
                 final X509Certificate cert = (X509Certificate) factory.generateCertificate(new ByteArrayInputStream(encodedCert));
                 certificate(cert);
-            } catch (CertificateException e) {
+            } catch (final CertificateException e) {
                 throw new IllegalArgumentException("Unable to parse DER certificate");
             }
         }

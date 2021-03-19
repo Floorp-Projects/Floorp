@@ -31,9 +31,9 @@ public class GeckoMediaDrmBridgeV23 extends GeckoMediaDrmBridgeV21 {
             if (keyInformation.size() == 0) {
                 return;
             }
-            SessionKeyInfo[] keyInfos = new SessionKeyInfo[keyInformation.size()];
+            final SessionKeyInfo[] keyInfos = new SessionKeyInfo[keyInformation.size()];
             for (int i = 0; i < keyInformation.size(); i++) {
-                MediaDrm.KeyStatus keyStatus = keyInformation.get(i);
+                final MediaDrm.KeyStatus keyStatus = keyInformation.get(i);
                 keyInfos[i] = new SessionKeyInfo(keyStatus.getKeyId(),
                                                  keyStatus.getStatusCode());
             }

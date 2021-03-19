@@ -26,7 +26,13 @@
     </module>
 
     <module name="TreeWalker">
-        <module name="FinalParameters"/>
+        <module name="FinalParameters">
+          <property name="tokens" value="METHOD_DEF, CTOR_DEF, LITERAL_CATCH, FOR_EACH_CLAUSE"/>
+        </module>
+        <module name="FinalLocalVariableCheck">
+          <property name="tokens" value="VARIABLE_DEF, PARAMETER_DEF"/>
+          <property name="validateEnhancedForLoopVariable" value="true"/>
+        </module>
         <module name="ParameterName"/>
         <module name="StaticVariableName"/>
         <module name="LeftCurly"/>

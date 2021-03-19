@@ -77,8 +77,8 @@ public class IOUtils {
 
                 // If buffer has overflowed, double its size and carry on.
                 if (bPointer > buffer.length) {
-                    int newBufferSize = bufferSize * 2;
-                    byte[] newBuffer = new byte[newBufferSize];
+                    final int newBufferSize = bufferSize * 2;
+                    final byte[] newBuffer = new byte[newBufferSize];
 
                     // Copy the contents of the old buffer into the new buffer.
                     System.arraycopy(buffer, 0, newBuffer, 0, buffer.length);
@@ -87,7 +87,7 @@ public class IOUtils {
             }
 
             return new ConsumedInputStream(bPointer + 1, buffer);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             Log.e(LOGTAG, "Error consuming input stream.", e);
         } finally {
             IOUtils.safeStreamClose(iStream);
@@ -101,7 +101,7 @@ public class IOUtils {
      * bytes of the input.
      */
     public static byte[] truncateBytes(final byte[] bytes, final int length) {
-        byte[] newBytes = new byte[length];
+        final byte[] newBytes = new byte[length];
         System.arraycopy(bytes, 0, newBytes, 0, length);
 
         return newBytes;
@@ -111,11 +111,11 @@ public class IOUtils {
         try {
             if (stream != null)
                 stream.close();
-        } catch (IOException e) { }
+        } catch (final IOException e) { }
     }
 
     public static void copy(final InputStream in, final OutputStream out) throws IOException {
-        byte[] buffer = new byte[4096];
+        final byte[] buffer = new byte[4096];
         int len;
 
         while ((len = in.read(buffer)) != -1) {

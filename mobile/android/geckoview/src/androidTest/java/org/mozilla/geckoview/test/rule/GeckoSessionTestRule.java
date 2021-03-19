@@ -243,14 +243,14 @@ public class GeckoSessionTestRule implements TestRule {
             public void set(final GeckoSessionSettings settings, final String value) {
                 try {
                     if (boolean.class.equals(mType) || Boolean.class.equals(mType)) {
-                        Method method = GeckoSessionSettings.class
+                        final Method method = GeckoSessionSettings.class
                                 .getDeclaredMethod("setBoolean",
                                         GeckoSessionSettings.Key.class,
                                         boolean.class);
                         method.setAccessible(true);
                         method.invoke(settings, mKey, Boolean.valueOf(value));
                     } else if (int.class.equals(mType) || Integer.class.equals(mType)) {
-                        Method method = GeckoSessionSettings.class
+                        final Method method = GeckoSessionSettings.class
                                 .getDeclaredMethod("setInt",
                                         GeckoSessionSettings.Key.class,
                                         int.class);
@@ -266,7 +266,7 @@ public class GeckoSessionTestRule implements TestRule {
                                     Integer.valueOf(value));
                         }
                     } else if (String.class.equals(mType)) {
-                        Method method = GeckoSessionSettings.class
+                        final Method method = GeckoSessionSettings.class
                                 .getDeclaredMethod("setString",
                                         GeckoSessionSettings.Key.class,
                                         String.class);
@@ -276,7 +276,7 @@ public class GeckoSessionTestRule implements TestRule {
                         throw new IllegalArgumentException("Unsupported type: " +
                                 mType.getSimpleName());
                     }
-                } catch (NoSuchMethodException
+                } catch (final NoSuchMethodException
                         | IllegalAccessException
                         | InvocationTargetException e) {
                     throw new RuntimeException(e);
@@ -547,7 +547,7 @@ public class GeckoSessionTestRule implements TestRule {
         }
 
         @Override
-        public boolean equals(Object obj) {
+        public boolean equals(final Object obj) {
             return obj instanceof ExternalDelegate<?> &&
                     delegate.equals(((ExternalDelegate<?>) obj).delegate);
         }
@@ -880,7 +880,7 @@ public class GeckoSessionTestRule implements TestRule {
         return RuntimeCreator.getRuntime();
     }
 
-    public void setTelemetryDelegate(RuntimeTelemetry.Delegate delegate) {
+    public void setTelemetryDelegate(final RuntimeTelemetry.Delegate delegate) {
         RuntimeCreator.setTelemetryDelegate(delegate);
     }
 
@@ -1137,7 +1137,7 @@ public class GeckoSessionTestRule implements TestRule {
         for (final Class<?> cls : DEFAULT_DELEGATES) {
             try {
                 setDelegate(cls, session, mNullDelegates.contains(cls) ? null : mCallbackProxy);
-            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            } catch (final NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -1225,19 +1225,19 @@ public class GeckoSessionTestRule implements TestRule {
     }
 
     protected void deleteCrashDumps() {
-        File dumpDir = new File(getRuntime().getProfileDir(), "minidumps");
+        final File dumpDir = new File(getRuntime().getProfileDir(), "minidumps");
         for (final File dump : dumpDir.listFiles()) {
             dump.delete();
         }
     }
 
     protected void cleanupExtensions() throws Throwable {
-        WebExtensionController controller = getRuntime().getWebExtensionController();
-        List<WebExtension> list = waitForResult(controller.list());
+        final WebExtensionController controller = getRuntime().getWebExtensionController();
+        final List<WebExtension> list = waitForResult(controller.list());
 
         boolean hasTestSupport = false;
         // Uninstall any left-over extensions
-        for (WebExtension extension : list) {
+        for (final WebExtension extension : list) {
             if (!extension.id.equals(RuntimeCreator.TEST_SUPPORT_EXTENSION_ID)) {
                 waitForResult(controller.uninstall(extension));
             } else {
@@ -1318,21 +1318,21 @@ public class GeckoSessionTestRule implements TestRule {
                         Log.e(LOGTAG, "after evaluate");
                         performTestEndCheck();
                         Log.e(LOGTAG, "after performTestEndCheck");
-                    } catch (Throwable t) {
+                    } catch (final Throwable t) {
                         Log.e(LOGTAG, "Error", t);
                         exceptionRef.set(t);
                     } finally {
                         try {
                             mServer.stop();
                             cleanupStatement();
-                        } catch (Throwable t) {
+                        } catch (final Throwable t) {
                             exceptionRef.compareAndSet(null, t);
                         }
                         Log.e(LOGTAG, TEST_END_MARKER + " " + description);
                     }
                 });
 
-                Throwable throwable = exceptionRef.get();
+                final Throwable throwable = exceptionRef.get();
                 if (throwable != null) {
                     throw throwable;
                 }
@@ -1580,7 +1580,7 @@ public class GeckoSessionTestRule implements TestRule {
 
         boolean calledAny = false;
         int index = mLastWaitEnd;
-        long startTime = SystemClock.uptimeMillis();
+        final long startTime = SystemClock.uptimeMillis();
 
         beforeWait();
 
@@ -1833,13 +1833,13 @@ public class GeckoSessionTestRule implements TestRule {
 
     private WebExtension.PortDelegate mPortDelegate = new WebExtension.PortDelegate() {
         @Override
-        public void onPortMessage(@NonNull Object message, @NonNull WebExtension.Port port) {
-            JSONObject response = (JSONObject) message;
+        public void onPortMessage(@NonNull final Object message, @NonNull final WebExtension.Port port) {
+            final JSONObject response = (JSONObject) message;
 
             final String id;
             try {
                 id = response.getString("id");
-                EvalJSResult result = new EvalJSResult();
+                final EvalJSResult result = new EvalJSResult();
 
                 final Object exception = response.get("exception");
                 if (exception != JSONObject.NULL) {
@@ -1852,7 +1852,7 @@ public class GeckoSessionTestRule implements TestRule {
                 }
 
                 mPendingMessages.put(id, result);
-            } catch (JSONException ex) {
+            } catch (final JSONException ex) {
                 throw new RuntimeException(ex);
             }
         }
@@ -1907,7 +1907,7 @@ public class GeckoSessionTestRule implements TestRule {
         try {
             message.put("id", id);
             message.put("eval", js);
-        } catch (JSONException ex) {
+        } catch (final JSONException ex) {
             throw new RuntimeException(ex);
         }
 
@@ -1927,7 +1927,7 @@ public class GeckoSessionTestRule implements TestRule {
         for (int i = 0; i < jsonPids.length(); i++) {
             try {
                 pids[i] = jsonPids.getInt(i);
-            } catch (JSONException e) {
+            } catch (final JSONException e) {
                 throw new RuntimeException(e);
             }
         }
@@ -1946,7 +1946,7 @@ public class GeckoSessionTestRule implements TestRule {
         return isActive;
     }
 
-    private Object waitForMessage(String id) {
+    private Object waitForMessage(final String id) {
         UiThreadUtils.waitForCondition(() -> mPendingMessages.containsKey(id),
                 mTimeoutMillis);
 
@@ -1964,7 +1964,7 @@ public class GeckoSessionTestRule implements TestRule {
         Object value;
         try {
             value = new JSONTokener((String) result.value).nextValue();
-        } catch (JSONException ex) {
+        } catch (final JSONException ex) {
             value = result.value;
         }
 
@@ -2052,7 +2052,7 @@ public class GeckoSessionTestRule implements TestRule {
      * @return Value from input array indexed by the current call counter.
      */
     @SafeVarargs
-    public final <T> T forEachCall(T... values) {
+    public final <T> T forEachCall(final T... values) {
         assertThat("Should be in a method call", mCurrentMethodCall, notNullValue());
         return values[Math.min(mCurrentMethodCall.getCurrentCount(), values.length) - 1];
     }
@@ -2105,15 +2105,15 @@ public class GeckoSessionTestRule implements TestRule {
 
     public List<String> getRequestedLocales() {
         try {
-            JSONArray locales = (JSONArray) webExtensionApiCall("GetRequestedLocales", null);
-            List<String> result = new ArrayList<>();
+            final JSONArray locales = (JSONArray) webExtensionApiCall("GetRequestedLocales", null);
+            final List<String> result = new ArrayList<>();
 
             for (int i = 0; i < locales.length(); i++) {
                 result.add(locales.getString(i));
             }
 
             return result;
-        } catch (JSONException ex) {
+        } catch (final JSONException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -2206,7 +2206,7 @@ public class GeckoSessionTestRule implements TestRule {
             message.put("id", id);
             message.put("type", apiName);
             message.put("args", args);
-        } catch (JSONException ex) {
+        } catch (final JSONException ex) {
             throw new RuntimeException(ex);
         }
 
@@ -2335,7 +2335,7 @@ public class GeckoSessionTestRule implements TestRule {
      * @param <T> The type of the value held by the {@link GeckoResult}
      * @return The value of the completed {@link GeckoResult}.
      */
-    public <T> T waitForResult(@NonNull GeckoResult<T> result) throws Throwable {
+    public <T> T waitForResult(@NonNull final GeckoResult<T> result) throws Throwable {
         beforeWait();
         try {
             return UiThreadUtils.waitForResult(result, mTimeoutMillis);

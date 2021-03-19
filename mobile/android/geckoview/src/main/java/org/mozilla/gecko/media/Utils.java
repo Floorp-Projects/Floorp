@@ -8,16 +8,16 @@ import android.util.Log;
 
 public class Utils {
     public static long getThreadId() {
-        Thread t = Thread.currentThread();
+        final Thread t = Thread.currentThread();
         return t.getId();
     }
 
     public static String getThreadSignature() {
-        Thread t = Thread.currentThread();
-        long l = t.getId();
-        String name = t.getName();
-        long p = t.getPriority();
-        String gname = t.getThreadGroup().getName();
+        final Thread t = Thread.currentThread();
+        final long l = t.getId();
+        final String name = t.getName();
+        final long p = t.getPriority();
+        final String gname = t.getThreadGroup().getName();
         return (name
                 + ":(id)" + l
                 + ":(priority)" + p
@@ -30,9 +30,9 @@ public class Utils {
 
     private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
     public static String bytesToHex(final byte[] bytes) {
-        char[] hexChars = new char[bytes.length * 2];
+        final char[] hexChars = new char[bytes.length * 2];
         for ( int j = 0; j < bytes.length; j++ ) {
-            int v = bytes[j] & 0xFF;
+            final int v = bytes[j] & 0xFF;
             hexChars[j * 2] = hexArray[v >>> 4];
             hexChars[j * 2 + 1] = hexArray[v & 0x0F];
         }

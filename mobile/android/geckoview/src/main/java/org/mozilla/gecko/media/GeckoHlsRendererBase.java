@@ -73,15 +73,15 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
             return false;
         }
 
-        Iterator<GeckoHLSSample> iter = mDemuxedInputSamples.iterator();
+        final Iterator<GeckoHLSSample> iter = mDemuxedInputSamples.iterator();
         long firstPTS = 0;
         if (iter.hasNext()) {
-            GeckoHLSSample sample = iter.next();
+            final GeckoHLSSample sample = iter.next();
             firstPTS = sample.info.presentationTimeUs;
         }
         long lastPTS = firstPTS;
         while (iter.hasNext()) {
-            GeckoHLSSample sample = iter.next();
+            final GeckoHLSSample sample = iter.next();
             lastPTS = sample.info.presentationTimeUs;
         }
         return Math.abs(lastPTS - firstPTS) > QUEUED_INPUT_SAMPLE_DURATION_THRESHOLD;
@@ -89,7 +89,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
 
     public Format getFormat(final int index) {
         assertTrue(index >= 0);
-        Format fmt = index < mFormats.size() ? mFormats.get(index) : null;
+        final Format fmt = index < mFormats.size() ? mFormats.get(index) : null;
         if (DEBUG) {
             Log.d(LOGTAG, "getFormat : index = " + index + ", format : " + fmt);
         }
@@ -101,11 +101,11 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
     }
 
     public synchronized ConcurrentLinkedQueue<GeckoHLSSample> getQueuedSamples(final int number) {
-        ConcurrentLinkedQueue<GeckoHLSSample> samples =
+        final ConcurrentLinkedQueue<GeckoHLSSample> samples =
             new ConcurrentLinkedQueue<GeckoHLSSample>();
 
         GeckoHLSSample sample = null;
-        int queuedSize = mDemuxedInputSamples.size();
+        final int queuedSize = mDemuxedInputSamples.size();
         for (int i = 0; i < queuedSize; i++) {
             if (i >= number) {
                 break;
@@ -130,8 +130,8 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
     }
 
     protected void handleDrmInitChanged(final Format oldFormat, final Format newFormat) {
-        Object oldDrmInit = oldFormat == null ? null : oldFormat.drmInitData;
-        Object newDrnInit = newFormat.drmInitData;
+        final Object oldDrmInit = oldFormat == null ? null : oldFormat.drmInitData;
+        final Object newDrnInit = newFormat.drmInitData;
 
         // TODO: Notify MFR if the content is encrypted or not.
         if (newDrnInit != oldDrmInit) {
@@ -160,7 +160,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
         Format oldFormat;
         try {
             oldFormat = mFormats.get(mFormats.size() - 1);
-        } catch (IndexOutOfBoundsException e) {
+        } catch (final IndexOutOfBoundsException e) {
             oldFormat = null;
         }
         if (DEBUG) {
@@ -191,7 +191,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
         try {
             createInputBuffer();
             mInitialized = true;
-        } catch (OutOfMemoryError e) {
+        } catch (final OutOfMemoryError e) {
             throw ExoPlaybackException.createForRenderer(new RuntimeException(e),
                                                          getIndex(),
                                                          mFormats.isEmpty() ? null : getFormat(mFormats.size() - 1),
@@ -227,7 +227,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
         int result = C.RESULT_NOTHING_READ;
         try {
             result = readSource(mFormatHolder, mBufferForRead, false);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "[feedInput] Exception when readSource :", e);
             return false;
         }
@@ -270,7 +270,7 @@ public abstract class GeckoHlsRendererBase extends BaseRenderer {
 
     private void readFormat() throws ExoPlaybackException {
         mFlagsOnlyBuffer.clear();
-        int result = readSource(mFormatHolder, mFlagsOnlyBuffer, true);
+        final int result = readSource(mFormatHolder, mFlagsOnlyBuffer, true);
         if (result == C.RESULT_FORMAT_READ) {
             onInputFormatChanged(mFormatHolder.format);
         }

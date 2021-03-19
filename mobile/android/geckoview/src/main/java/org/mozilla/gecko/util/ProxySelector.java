@@ -30,10 +30,10 @@ import java.util.List;
 
 public class ProxySelector {
     public static URLConnection openConnectionWithProxy(final URI uri) throws IOException {
-        java.net.ProxySelector ps = java.net.ProxySelector.getDefault();
+        final java.net.ProxySelector ps = java.net.ProxySelector.getDefault();
         Proxy proxy = Proxy.NO_PROXY;
         if (ps != null) {
-            List<Proxy> proxies = ps.select(uri);
+            final List<Proxy> proxies = ps.select(uri);
             if (proxies != null && !proxies.isEmpty()) {
                 proxy = proxies.get(0);
             }
@@ -114,11 +114,11 @@ public class ProxySelector {
     }
 
     private int getSystemPropertyInt(final String key, final int defaultValue) {
-        String string = System.getProperty(key);
+        final String string = System.getProperty(key);
         if (string != null) {
             try {
                 return Integer.parseInt(string);
-            } catch (NumberFormatException ignored) {
+            } catch (final NumberFormatException ignored) {
             }
         }
         return defaultValue;
@@ -134,9 +134,9 @@ public class ProxySelector {
         }
 
         // construct pattern
-        StringBuilder patternBuilder = new StringBuilder();
+        final StringBuilder patternBuilder = new StringBuilder();
         for (int i = 0; i < nonProxyHosts.length(); i++) {
-            char c = nonProxyHosts.charAt(i);
+            final char c = nonProxyHosts.charAt(i);
             switch (c) {
                 case '.':
                     patternBuilder.append("\\.");
@@ -149,7 +149,7 @@ public class ProxySelector {
             }
         }
         // check whether the host is the nonProxyHosts.
-        String pattern = patternBuilder.toString();
+        final String pattern = patternBuilder.toString();
         return host.matches(pattern);
     }
 }

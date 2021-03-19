@@ -77,7 +77,7 @@ public class ContentUriUtils {
                         final Uri contentUri = ContentUris.withAppendedId(
                                 Uri.parse("content://downloads/public_downloads"), Long.valueOf(id));
                         return getDataColumn(context, contentUri, null, null);
-                    } catch (NumberFormatException e) {
+                    } catch (final NumberFormatException e) {
                         return null;
                     }
                 }
@@ -133,7 +133,7 @@ public class ContentUriUtils {
         }
 
         if (!TextUtils.isEmpty(fileName) && success) {
-            File copyFile = new File(folder.getPath(), fileName);
+            final File copyFile = new File(folder.getPath(), fileName);
             FileUtils.copy(context, contentUri, copyFile);
             return copyFile.getAbsolutePath();
         }
@@ -158,7 +158,7 @@ public class ContentUriUtils {
             column
         };
 
-        try (Cursor cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
+        try (final Cursor cursor = context.getContentResolver().query(uri, projection, selection, selectionArgs,
                 null)) {
             if (cursor != null && cursor.moveToFirst()) {
                 final int column_index = cursor.getColumnIndex(column);

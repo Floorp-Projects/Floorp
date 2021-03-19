@@ -258,8 +258,8 @@ public class MediaElement {
         /* package */ LoadProgressInfo(final GeckoBundle bundle) {
             loadedBytes = bundle.getLong("loadedBytes", -1);
             totalBytes = bundle.getLong("loadedBytes", -1);
-            double[] starts = bundle.getDoubleArray("timeRangeStarts");
-            double[] ends = bundle.getDoubleArray("timeRangeEnds");
+            final double[] starts = bundle.getDoubleArray("timeRangeStarts");
+            final double[] ends = bundle.getDoubleArray("timeRangeEnds");
             if (starts == null || ends == null) {
                 buffered = null;
                 return;
@@ -297,8 +297,8 @@ public class MediaElement {
          *                   One of the {@link #MEDIA_STATE_PLAY MEDIA_STATE_*} flags.
          */
         @UiThread
-        default void onPlaybackStateChange(@NonNull MediaElement mediaElement,
-                                           @MediaStateFlags int mediaState) {}
+        default void onPlaybackStateChange(@NonNull final MediaElement mediaElement,
+                                           @MediaStateFlags final int mediaState) {}
 
         /**
          * The readiness state of the media has changed.
@@ -308,8 +308,8 @@ public class MediaElement {
          *                   One of the {@link #MEDIA_READY_STATE_HAVE_NOTHING MEDIA_READY_STATE_*} flags.
          */
         @UiThread
-        default void onReadyStateChange(@NonNull MediaElement mediaElement,
-                                        @ReadyStateFlags int readyState) {}
+        default void onReadyStateChange(@NonNull final MediaElement mediaElement,
+                                        @ReadyStateFlags final int readyState) {}
 
         /**
          * The media metadata has loaded or changed.
@@ -318,8 +318,8 @@ public class MediaElement {
          * @param metaData The MetaData values of the media.
          */
         @UiThread
-        default void onMetadataChange(@NonNull MediaElement mediaElement,
-                                      @NonNull Metadata metaData) {}
+        default void onMetadataChange(@NonNull final MediaElement mediaElement,
+                                      @NonNull final Metadata metaData) {}
 
         /**
          * Indicates that a loading operation is in progress for the media.
@@ -328,8 +328,8 @@ public class MediaElement {
          * @param progressInfo Information about the load progress and buffered ranges.
          */
         @UiThread
-        default void onLoadProgress(@NonNull MediaElement mediaElement,
-                                    @NonNull LoadProgressInfo progressInfo) {}
+        default void onLoadProgress(@NonNull final MediaElement mediaElement,
+                                    @NonNull final LoadProgressInfo progressInfo) {}
 
         /**
          * The media audio volume has changed.
@@ -339,8 +339,8 @@ public class MediaElement {
          * @param muted True if the media is muted.
          */
         @UiThread
-        default void onVolumeChange(@NonNull MediaElement mediaElement, double volume,
-                                    boolean muted) {}
+        default void onVolumeChange(@NonNull final MediaElement mediaElement, final double volume,
+                                    final boolean muted) {}
 
         /**
          * The current playback time has changed. This event is usually dispatched every 250ms.
@@ -349,7 +349,7 @@ public class MediaElement {
          * @param time The current playback time in seconds.
          */
         @UiThread
-        default void onTimeChange(@NonNull MediaElement mediaElement, double time) {}
+        default void onTimeChange(@NonNull final MediaElement mediaElement, final double time) {}
 
         /**
          * The media playback speed has changed.
@@ -358,7 +358,7 @@ public class MediaElement {
          * @param rate The current playback rate. A value of 1.0 indicates normal speed.
          */
         @UiThread
-        default void onPlaybackRateChange(@NonNull MediaElement mediaElement, double rate) {}
+        default void onPlaybackRateChange(@NonNull final MediaElement mediaElement, final double rate) {}
 
         /**
          * A media element has entered or exited fullscreen mode.
@@ -367,7 +367,7 @@ public class MediaElement {
          * @param fullscreen True if the media has entered full screen mode.
          */
         @UiThread
-        default void onFullscreenChange(@NonNull MediaElement mediaElement, boolean fullscreen) {}
+        default void onFullscreenChange(@NonNull final MediaElement mediaElement, final boolean fullscreen) {}
 
         /**
          * An error has occurred.
@@ -377,7 +377,7 @@ public class MediaElement {
          *                  One of the {@link #MEDIA_ERROR_NETWORK_NO_SOURCE MEDIA_ERROR_*} flags.
          */
         @UiThread
-        default void onError(@NonNull MediaElement mediaElement, @MediaErrorFlags int errorCode) {}
+        default void onError(@NonNull final MediaElement mediaElement, @MediaErrorFlags final int errorCode) {}
     }
 
     /* package */ long getVideoId() {
@@ -403,7 +403,7 @@ public class MediaElement {
         if (mDelegate == delegate) {
             return;
         }
-        MediaElement.Delegate oldDelegate = mDelegate;
+        final MediaElement.Delegate oldDelegate = mDelegate;
         mDelegate = delegate;
         if (oldDelegate != null && mDelegate == null) {
             mSession.getEventDispatcher().dispatch("GeckoView:MediaUnobserve", createMessage());
@@ -478,7 +478,7 @@ public class MediaElement {
 
     @UiThread
     /* package */ void notifyPlaybackStateChange(final String event) {
-        @MediaStateFlags int state;
+        @MediaStateFlags final int state;
         switch (event.toLowerCase(Locale.ROOT)) {
             case "play":
                 state = MEDIA_STATE_PLAY;

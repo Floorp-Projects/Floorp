@@ -392,7 +392,7 @@ public class GeckoView extends FrameLayout {
             return null;
         }
 
-        GeckoSession session = mSession;
+        final GeckoSession session = mSession;
         mSession.releaseDisplay(mDisplay.release());
         mSession.getOverscrollEdgeEffect().setInvalidationCallback(null);
         mSession.getCompositorController().setFirstPaintCallback(null);

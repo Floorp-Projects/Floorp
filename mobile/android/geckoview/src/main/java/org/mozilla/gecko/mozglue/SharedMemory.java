@@ -29,7 +29,7 @@ public class SharedMemory implements Parcelable {
         Method method = null;
         try {
             method = MemoryFile.class.getDeclaredMethod("getFileDescriptor");
-        } catch (NoSuchMethodException e) {
+        } catch (final NoSuchMethodException e) {
             e.printStackTrace();
         }
         sGetFDMethod = method;
@@ -72,12 +72,12 @@ public class SharedMemory implements Parcelable {
         }
         mBackedFile = new MemoryFile(null, size);
         try {
-            FileDescriptor fd = (FileDescriptor)sGetFDMethod.invoke(mBackedFile);
+            final FileDescriptor fd = (FileDescriptor)sGetFDMethod.invoke(mBackedFile);
             mDescriptor = ParcelFileDescriptor.dup(fd);
             mSize = size;
             mId = id;
             mBackedFile.allowPurging(false);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             e.printStackTrace();
             close();
             throw new IOException(e.getMessage());
@@ -100,7 +100,7 @@ public class SharedMemory implements Parcelable {
         if (mDescriptor != null) {
             try {
                 mDescriptor.close();
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 e.printStackTrace();
             }
             mDescriptor = null;
@@ -143,7 +143,7 @@ public class SharedMemory implements Parcelable {
         if (!mIsMapped) {
             try {
                 mHandle = map(getFD(), mSize);
-            } catch (NullPointerException e) {
+            } catch (final NullPointerException e) {
                 Log.e(LOGTAG, "SharedMemory#" + mId + " error.", e);
                 throw e;
             }

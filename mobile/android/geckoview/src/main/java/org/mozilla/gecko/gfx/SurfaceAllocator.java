@@ -28,7 +28,7 @@ import org.mozilla.gecko.GeckoAppShell;
         }
 
         sConnection = new SurfaceAllocatorConnection();
-        Intent intent = new Intent();
+        final Intent intent = new Intent();
         intent.setClassName(GeckoAppShell.getApplicationContext(),
                             "org.mozilla.gecko.gfx.SurfaceAllocatorService");
 
@@ -47,13 +47,13 @@ import org.mozilla.gecko.GeckoAppShell;
             if (singleBufferMode && !GeckoSurfaceTexture.isSingleBufferSupported()) {
                 return null;
             }
-            ISurfaceAllocator allocator = sConnection.getAllocator();
-            GeckoSurface surface = allocator.acquireSurface(width, height, singleBufferMode);
+            final ISurfaceAllocator allocator = sConnection.getAllocator();
+            final GeckoSurface surface = allocator.acquireSurface(width, height, singleBufferMode);
             if (surface != null && !surface.inProcess()) {
                 allocator.configureSync(surface.initSyncSurface(width, height));
             }
             return surface;
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.w(LOGTAG, "Failed to acquire GeckoSurface", e);
             return null;
         }
@@ -63,7 +63,7 @@ import org.mozilla.gecko.GeckoAppShell;
     public static void disposeSurface(final GeckoSurface surface) {
         try {
             ensureConnection();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.w(LOGTAG, "Failed to dispose surface, no connection");
             return;
         }
@@ -71,14 +71,14 @@ import org.mozilla.gecko.GeckoAppShell;
         // Release the SurfaceTexture on the other side
         try {
             sConnection.getAllocator().releaseSurface(surface.getHandle());
-        } catch (RemoteException e) {
+        } catch (final RemoteException e) {
             Log.w(LOGTAG, "Failed to release surface texture", e);
         }
 
         // And now our Surface
         try {
             surface.release();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.w(LOGTAG, "Failed to release surface", e);
         }
     }
@@ -86,7 +86,7 @@ import org.mozilla.gecko.GeckoAppShell;
     public static void sync(final int upstream) {
         try {
             ensureConnection();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.w(LOGTAG, "Failed to sync texture, no connection");
             return;
         }
@@ -94,7 +94,7 @@ import org.mozilla.gecko.GeckoAppShell;
         // Release the SurfaceTexture on the other side
         try {
             sConnection.getAllocator().sync(upstream);
-        } catch (RemoteException e) {
+        } catch (final RemoteException e) {
             Log.w(LOGTAG, "Failed to sync texture", e);
         }
     }
@@ -106,7 +106,7 @@ import org.mozilla.gecko.GeckoAppShell;
             while (mAllocator == null) {
                 try {
                     this.wait();
-                } catch (InterruptedException e) { }
+                } catch (final InterruptedException e) { }
             }
 
             return mAllocator;

@@ -1426,8 +1426,8 @@ public class ContentBlocking {
         * @param event The {@link BlockEvent} details.
         */
         @UiThread
-        default void onContentBlocked(@NonNull GeckoSession session,
-                                      @NonNull BlockEvent event) {}
+        default void onContentBlocked(@NonNull final GeckoSession session,
+                                      @NonNull final BlockEvent event) {}
 
         /**
          * A content element that could be blocked has been loaded.
@@ -1436,8 +1436,8 @@ public class ContentBlocking {
         * @param event The {@link BlockEvent} details.
         */
         @UiThread
-        default void onContentLoaded(@NonNull GeckoSession session,
-                                     @NonNull BlockEvent event) {}
+        default void onContentLoaded(@NonNull final GeckoSession session,
+                                     @NonNull final BlockEvent event) {}
     }
 
     private static final String TEST = "moztest-track-simple";
@@ -1468,7 +1468,7 @@ public class ContentBlocking {
     }
 
     /* package */ static String catToAtPref(@CBAntiTracking final int cat) {
-        StringBuilder builder = new StringBuilder();
+        final StringBuilder builder = new StringBuilder();
 
         if ((cat & AntiTracking.TEST) != 0) {
             builder.append(TEST).append(',');
@@ -1497,7 +1497,7 @@ public class ContentBlocking {
     }
 
     /* package */ static String catToCmListPref(@CBAntiTracking final int cat) {
-        StringBuilder builder = new StringBuilder();
+        final StringBuilder builder = new StringBuilder();
 
         if ((cat & AntiTracking.CRYPTOMINING) != 0) {
             builder.append(CRYPTOMINING);
@@ -1510,7 +1510,7 @@ public class ContentBlocking {
     }
 
     /* package */ static String catToFpListPref(@CBAntiTracking final int cat) {
-        StringBuilder builder = new StringBuilder();
+        final StringBuilder builder = new StringBuilder();
 
         if ((cat & AntiTracking.FINGERPRINTING) != 0) {
             builder.append(FINGERPRINTING);
@@ -1534,7 +1534,7 @@ public class ContentBlocking {
     }
 
     /* package */ static String catToStListPref(@CBAntiTracking final int cat) {
-        StringBuilder builder = new StringBuilder();
+        final StringBuilder builder = new StringBuilder();
 
         if ((cat & AntiTracking.STP) != 0) {
             builder.append(STP).append(",");

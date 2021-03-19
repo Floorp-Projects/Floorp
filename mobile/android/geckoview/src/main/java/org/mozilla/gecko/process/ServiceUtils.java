@@ -82,7 +82,7 @@ import androidx.annotation.NonNull;
             final ServiceInfo svcInfo = pkgMgr.getServiceInfo(component, 0);
             // svcInfo is never null
             return svcInfo.flags;
-        } catch (PackageManager.NameNotFoundException e) {
+        } catch (final PackageManager.NameNotFoundException e) {
             throw new RuntimeException(e);
         }
     }
@@ -95,7 +95,7 @@ import androidx.annotation.NonNull;
         try {
             packageInfo = context.getPackageManager()
                     .getPackageInfo(context.getPackageName(), PackageManager.GET_SERVICES);
-        } catch (PackageManager.NameNotFoundException e) {
+        } catch (final PackageManager.NameNotFoundException e) {
             throw new AssertionError("Should not happen: Can't get package info of own package");
         }
         return packageInfo.services;

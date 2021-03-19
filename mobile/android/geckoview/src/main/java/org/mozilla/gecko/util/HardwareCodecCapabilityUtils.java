@@ -79,11 +79,11 @@ public final class HardwareCodecCapabilityUtils {
         }
 
         for (int i = 0; i < numCodecs; ++i) {
-            MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
+            final MediaCodecInfo info = MediaCodecList.getCodecInfoAt(i);
             if (info.isEncoder()) {
                 continue;
             }
-            for (String mimeType : info.getSupportedTypes()) {
+            for (final String mimeType : info.getSupportedTypes()) {
                 if (mimeType.equals(aMimeType)) {
                     return true;
                 }
@@ -102,12 +102,12 @@ public final class HardwareCodecCapabilityUtils {
         }
 
         try {
-            MediaCodecInfo info = aCodec.getCodecInfo();
-            MediaCodecInfo.CodecCapabilities capabilities = info.getCapabilitiesForType(aMimeType);
+            final MediaCodecInfo info = aCodec.getCodecInfo();
+            final MediaCodecInfo.CodecCapabilities capabilities = info.getCapabilitiesForType(aMimeType);
             return capabilities != null &&
                     capabilities.isFeatureSupported(
                             MediaCodecInfo.CodecCapabilities.FEATURE_AdaptivePlayback);
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             Log.e(LOGTAG, "Retrieve codec information failed", e);
         }
         return false;
@@ -125,7 +125,7 @@ public final class HardwareCodecCapabilityUtils {
             return false;
         }
 
-        for (String model : adaptivePlaybackBlacklist) {
+        for (final String model : adaptivePlaybackBlacklist) {
             if (Build.MODEL.startsWith(model)) {
                 return true;
             }
@@ -141,7 +141,7 @@ public final class HardwareCodecCapabilityUtils {
                     continue;
                 }
                 String name = null;
-                for (String mimeType : info.getSupportedTypes()) {
+                for (final String mimeType : info.getSupportedTypes()) {
                     if (mimeType.equals(aMimeType)) {
                         name = info.getName();
                         break;
@@ -171,11 +171,11 @@ public final class HardwareCodecCapabilityUtils {
                 // Check if codec supports either yuv420 or nv12.
                 final CodecCapabilities capabilities =
                         info.getCapabilitiesForType(aMimeType);
-                for (int colorFormat : capabilities.colorFormats) {
+                for (final int colorFormat : capabilities.colorFormats) {
                     Log.v(LOGTAG, "   Color: 0x" + Integer.toHexString(colorFormat));
                 }
-                for (int supportedColorFormat : supportedColorList) {
-                    for (int codecColorFormat : capabilities.colorFormats) {
+                for (final int supportedColorFormat : supportedColorList) {
+                    for (final int codecColorFormat : capabilities.colorFormats) {
                         if (codecColorFormat == supportedColorFormat) {
                             // Found supported HW Codec.
                             Log.d(LOGTAG, "Found target" +

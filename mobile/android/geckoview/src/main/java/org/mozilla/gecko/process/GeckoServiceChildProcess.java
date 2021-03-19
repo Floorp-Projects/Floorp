@@ -116,7 +116,7 @@ public class GeckoServiceChildProcess extends Service {
                             // do anything special for that.
                             GeckoAppShell.setCrashHandlerService(crashHandler);
                             GeckoAppShell.ensureCrashHandling(crashHandler);
-                        } catch (ClassNotFoundException e) {
+                        } catch (final ClassNotFoundException e) {
                             Log.w(LOGTAG, "Couldn't find crash handler service " + crashHandlerService);
                         }
                     }

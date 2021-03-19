@@ -121,7 +121,7 @@ public final class PrefsHelper {
                                                 final PrefHandler handler) {
         List<String> prefsToObserve = null;
 
-        for (String pref : prefNames) {
+        for (final String pref : prefNames) {
             final Object existing = OBSERVERS.get(pref);
 
             if (existing == null) {
