@@ -271,13 +271,7 @@ function trrQueryHandler(req, resp, url) {
       ] || {};
 
     let flags = global.dnsPacket.RECURSION_DESIRED;
-    if (
-      (!response.answers || !response.answers.length) &&
-      response.additionals &&
-      response.additionals.length > 0
-    ) {
-      flags |= global.dnsPacket.rcodes.toRcode("SERVFAIL");
-    }
+    flags |= response.flags || 0;
     let buf = global.dnsPacket.encode({
       type: "response",
       id: dnsQuery.id,
@@ -287,25 +281,39 @@ function trrQueryHandler(req, resp, url) {
       additionals: response.additionals || [],
     });
 
-    let writeResponse = (resp, buf) => {
-      resp.setHeader("Content-Length", buf.length);
-      resp.writeHead(200, { "Content-Type": "application/dns-message" });
-      resp.write(buf);
-      resp.end("");
+    let writeResponse = (resp, buf, context) => {
+      try {
+        if (context.error) {
+          // If the error is a valid HTTP response number just write it out.
+          if (context.error < 600) {
+            resp.writeHead(context.error);
+            resp.end("Intentional error");
+            return;
+          }
+
+          // Bigger error means force close the session
+          req.stream.session.close();
+          return;
+        }
+        resp.setHeader("Content-Length", buf.length);
+        resp.writeHead(200, { "Content-Type": "application/dns-message" });
+        resp.write(buf);
+        resp.end("");
+      } catch (e) {}
     };
 
     if (response.delay) {
       setTimeout(
         arg => {
-          writeResponse(arg[0], arg[1]);
+          writeResponse(arg[0], arg[1], arg[2]);
         },
         response.delay,
-        [resp, buf]
+        [resp, buf, response]
       );
       return;
     }
 
-    writeResponse(resp, buf);
+    writeResponse(resp, buf, response);
   }
 }
 
@@ -347,7 +355,7 @@ class TRRServer {
   /// @name : string - name we're providing answers for. eg: foo.example.com
   /// @type : string - the DNS query type. eg: "A", "AAAA", "CNAME", etc
   /// @response : a map containing the response
-  ///   answers - array of answers (hashmap) that dnsPacket can parse
+  ///   answers: array of answers (hashmap) that dnsPacket can parse
   ///    eg: [{
   ///          name: "bar.example.com",
   ///          ttl: 55,
@@ -356,7 +364,9 @@ class TRRServer {
   ///          data: "1.2.3.4",
   ///        }]
   ///   additionals - array of answers (hashmap) to be added to the additional section
-  ///   delay - if not 0 the response will be sent with after `delay` ms.
+  ///   delay: int - if not 0 the response will be sent with after `delay` ms.
+  ///   flags: int - flags to be set on the answer
+  ///   error: int - HTTP status. If truthy then the response will send this status
   async registerDoHAnswers(name, type, response = {}) {
     let text = `global.dns_query_answers["${name}/${type}"] = ${JSON.stringify(
       response

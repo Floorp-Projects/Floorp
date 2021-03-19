@@ -121,7 +121,7 @@ add_task(async function confirm_ok() {
       },
     ],
     delay: 500,
-  }); // 500ms delay for confirmation
+  });
   Services.prefs.setIntPref(
     "network.trr.mode",
     Ci.nsIDNSService.MODE_NATIVEONLY
@@ -138,5 +138,103 @@ add_task(async function confirm_ok() {
     CONFIRM_TRYING_OK,
     "Confirmation should still be pending"
   );
+  await waitForConfirmationState(CONFIRM_OK, 1000);
+});
+
+add_task(async function confirm_timeout() {
+  Services.prefs.setIntPref(
+    "network.trr.mode",
+    Ci.nsIDNSService.MODE_NATIVEONLY
+  );
+  equal(dns.currentTrrConfirmationState, CONFIRM_OFF);
+  await trrServer.registerDoHAnswers("confirm.example.com", "NS", {
+    answers: [
+      {
+        name: "confirm.example.com",
+        ttl: 55,
+        type: "NS",
+        flush: false,
+        data: "test.com",
+      },
+    ],
+    delay: 7000,
+  });
+  Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
+  equal(
+    dns.currentTrrConfirmationState,
+    CONFIRM_TRYING_OK,
+    "Should be CONFIRM_TRYING_OK"
+  );
+  await waitForConfirmationState(CONFIRM_FAILED, 7500);
+  // After the confirmation fails, a timer will periodically trigger a retry
+  // causing the state to go into CONFIRM_TRYING_FAILED.
+  await waitForConfirmationState(CONFIRM_TRYING_FAILED, 500);
+});
+
+add_task(async function confirm_fail_fast() {
+  Services.prefs.setIntPref(
+    "network.trr.mode",
+    Ci.nsIDNSService.MODE_NATIVEONLY
+  );
+  equal(dns.currentTrrConfirmationState, CONFIRM_OFF);
+  await trrServer.registerDoHAnswers("confirm.example.com", "NS", {
+    error: 404,
+  });
+  Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
+  equal(
+    dns.currentTrrConfirmationState,
+    CONFIRM_TRYING_OK,
+    "Should be CONFIRM_TRYING_OK"
+  );
+  await waitForConfirmationState(CONFIRM_FAILED, 100);
+});
+
+add_task(async function multiple_failures() {
+  Services.prefs.setIntPref(
+    "network.trr.mode",
+    Ci.nsIDNSService.MODE_NATIVEONLY
+  );
+  equal(dns.currentTrrConfirmationState, CONFIRM_OFF);
+  await trrServer.registerDoHAnswers("confirm.example.com", "NS", {
+    answers: [
+      {
+        name: "confirm.example.com",
+        ttl: 55,
+        type: "NS",
+        flush: false,
+        data: "test.com",
+      },
+    ],
+    delay: 100,
+  });
+  Services.prefs.setIntPref("network.trr.mode", Ci.nsIDNSService.MODE_TRRFIRST);
+  equal(
+    dns.currentTrrConfirmationState,
+    CONFIRM_TRYING_OK,
+    "Should be CONFIRM_TRYING_OK"
+  );
+  await waitForConfirmationState(CONFIRM_OK, 1000);
+
+  for (let i = 0; i < 15; i++) {
+    await trrServer.registerDoHAnswers(`domain${i}.example.com`, "A", {
+      error: 600,
+    });
+    await trrServer.registerDoHAnswers(`domain${i}.example.com`, "AAAA", {
+      error: 600,
+    });
+  }
+
+  let p = waitForConfirmationState(CONFIRM_TRYING_OK, 3000);
+  let dnsRequests = [];
+  for (let i = 0; i < 15; i++) {
+    dnsRequests.push(
+      new TRRDNSListener(`domain${i}.example.com`, {
+        expectedAnswer: "127.0.0.1",
+      })
+    );
+  }
+
+  await p;
+  await Promise.all(dnsRequests);
   await waitForConfirmationState(CONFIRM_OK, 1000);
 });
