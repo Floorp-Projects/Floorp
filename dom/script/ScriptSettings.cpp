@@ -298,7 +298,7 @@ AutoJSAPI::~AutoJSAPI() {
   if (!mCx) {
     // No need to do anything here: we never managed to Init, so can't have an
     // exception on our (nonexistent) JSContext.  We also don't need to restore
-    // any state on it.  Finally, we never made it to pushing outselves onto the
+    // any state on it.  Finally, we never made it to pushing ourselves onto the
     // ScriptSettingsStack, so shouldn't pop.
     MOZ_ASSERT(ScriptSettingsStack::Top() != this);
     return;
