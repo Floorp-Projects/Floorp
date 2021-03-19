@@ -133,12 +133,11 @@ class WebRTCParent extends JSWindowActorParent {
         // Record third party origins for telemetry.
         let isThirdPartyOrigin =
           this.manager.documentPrincipal.origin !=
-          this.browsingContext.top.currentWindowGlobal.documentPrincipal.origin;
+          this.manager.topWindowContext.documentPrincipal.origin;
         data.isThirdPartyOrigin = isThirdPartyOrigin;
 
         data.origin = data.shouldDelegatePermission
-          ? this.browsingContext.top.currentWindowGlobal.documentPrincipal
-              .origin
+          ? this.manager.topWindowContext.documentPrincipal.origin
           : this.manager.documentPrincipal.origin;
 
         let browser = this.getBrowser();
