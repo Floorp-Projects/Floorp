@@ -9482,6 +9482,10 @@ var gDialogBox = {
     let haveClosedPromise = new Promise(resolve => {
       this._didCloseHTMLDialog = resolve;
     });
+
+    // Bring the window to the front in case we're minimized or occluded:
+    window.focus();
+
     try {
       await this._open(uri, args);
     } catch (ex) {
