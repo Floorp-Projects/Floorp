@@ -6,8 +6,6 @@
 let engine;
 let originalDefaultEngine;
 
-SearchTestUtils.initXPCShellAddonManager(this);
-
 add_task(async function setup() {
   await AddonTestUtils.promiseStartupManager();
   useHttpServer();
@@ -55,16 +53,14 @@ add_task(async function test_addingEngine_webExtension() {
     SearchUtils.MODIFIED_TYPE.ADDED
   );
 
-  let extension = await SearchTestUtils.installSearchExtension({
+  await SearchTestUtils.installSearchExtension({
     name: "Example Engine",
   });
-  await extension.awaitStartup();
 
   let webExtensionEngine = await addEngineObserver.promise;
 
   let retrievedEngine = Services.search.getEngineByName("Example Engine");
   Assert.equal(webExtensionEngine, retrievedEngine);
-  await extension.unload();
 });
 
 async function defaultNotificationTest(

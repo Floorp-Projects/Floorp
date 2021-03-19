@@ -7,10 +7,7 @@
 
 "use strict";
 
-SearchTestUtils.initXPCShellAddonManager(this);
-
 const kExtensionID = "simple@tests.mozilla.org";
-let extension;
 
 add_task(async function setup() {
   useHttpServer("opensearch");
@@ -30,11 +27,10 @@ add_task(async function setup() {
   Services.search.wrappedJSObject.addEnginesFromExtension = () => {};
 
   // Add the add-on so add-on manager has a valid item.
-  extension = await SearchTestUtils.installSearchExtension({
+  await SearchTestUtils.installSearchExtension({
     id: "simple",
     name: "simple search",
     search_url: "https://example.com/",
-    skipWaitForSearchEngine: true,
   });
 
   Services.search.wrappedJSObject.addEnginesFromExtension = oldFunc;
@@ -66,6 +62,4 @@ add_task(async function test_migrateLegacyEngineDifferentName() {
     engine.name,
     "Should have switched to the WebExtension engine as default."
   );
-
-  await extension.unload();
 });

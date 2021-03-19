@@ -20,7 +20,6 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/ExtensionXPCShellUtils.jsm"
 );
 
-ExtensionTestUtils.init(this);
 SearchTestUtils.init(this);
 
 function promiseNextTick() {
@@ -121,7 +120,13 @@ async function checkDefaultSearch(privateOn, reInitSearchService) {
   );
   Preferences.set("browser.search.separatePrivateDefault", privateOn);
 
-  let data = await TelemetryEnvironment.testCleanRestart().onInitialized();
+  let data;
+  if (privateOn) {
+    data = await TelemetryEnvironment.testCleanRestart().onInitialized();
+  } else {
+    data = TelemetryEnvironment.currentEnvironment;
+  }
+
   TelemetryEnvironmentTesting.checkEnvironmentData(data);
   Assert.ok(!("defaultSearchEngine" in data.settings));
   Assert.ok(!("defaultSearchEngineData" in data.settings));
@@ -177,13 +182,16 @@ async function checkDefaultSearch(privateOn, reInitSearchService) {
   }
 
   // Add a new search engine (this will have no engine identifier).
-  const SEARCH_ENGINE_ID = "telemetry_default";
-  const SEARCH_ENGINE_URL = `http://www.example.org/${
+  const SEARCH_ENGINE_ID = privateOn
+    ? "telemetry_private"
+    : "telemetry_default";
+  const SEARCH_ENGINE_URL = `https://www.example.org/${
     privateOn ? "private" : ""
-  }?search={searchTerms}`;
-  await Services.search.addEngineWithDetails(SEARCH_ENGINE_ID, {
-    method: "get",
-    template: SEARCH_ENGINE_URL,
+  }`;
+  await SearchTestUtils.installSearchExtension({
+    id: `${SEARCH_ENGINE_ID}@test.engine`,
+    name: SEARCH_ENGINE_ID,
+    search_url: SEARCH_ENGINE_URL,
   });
 
   // Register a new change listener and then wait for the search engine change to be notified.
@@ -216,8 +224,8 @@ async function checkDefaultSearch(privateOn, reInitSearchService) {
 
   const EXPECTED_SEARCH_ENGINE = "other-" + SEARCH_ENGINE_ID;
   const EXPECTED_SEARCH_ENGINE_DATA = {
-    name: "telemetry_default",
-    loadPath: "[other]addEngineWithDetails:telemetry_default@test.engine",
+    name: SEARCH_ENGINE_ID,
+    loadPath: `[other]addEngineWithDetails:${SEARCH_ENGINE_ID}@test.engine`,
     origin: "verified",
   };
   if (privateOn) {
@@ -350,10 +358,13 @@ add_task(async function test_defaultPrivateSearchEngine() {
 });
 
 add_task(async function test_defaultSearchEngine_paramsChanged() {
-  let extension = await SearchTestUtils.installSearchExtension({
-    name: "TestEngine",
-    search_url: "https://www.google.com/fake1",
-  });
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "TestEngine",
+      search_url: "https://www.google.com/fake1",
+    },
+    true
+  );
 
   let promise = new Promise(resolve => {
     TelemetryEnvironment.registerChangeListener(

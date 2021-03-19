@@ -13,9 +13,6 @@ const ENGINE_ID = "enginetest@example.com";
 let xpi;
 let profile = do_get_profile().clone();
 
-Services.prefs.setIntPref("extensions.autoDisableScopes", 0);
-SearchTestUtils.initXPCShellAddonManager(this);
-
 add_task(async function setup() {
   await SearchTestUtils.useTestEngines("data1");
   xpi = AddonTestUtils.createTempWebExtensionFile({
