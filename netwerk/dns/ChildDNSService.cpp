@@ -312,6 +312,11 @@ ChildDNSService::GetCurrentTrrMode(nsIDNSService::ResolverMode* aMode) {
 }
 
 NS_IMETHODIMP
+ChildDNSService::GetCurrentTrrConfirmationState(uint32_t* aConfirmationState) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 ChildDNSService::GetMyHostName(nsACString& result) {
   if (XRE_IsParentProcess()) {
     char name[100];

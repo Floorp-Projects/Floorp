@@ -239,6 +239,12 @@ interface nsIDNSService : nsISupports
     readonly attribute nsIDNSService_ResolverMode currentTrrMode;
 
     /**
+     * The TRRService's current confirmation state.
+     * This is mostly for testing purposes.
+     */
+    readonly attribute unsigned long currentTrrConfirmationState;
+
+    /**
      * @return the hostname of the operating system.
      */
     readonly attribute AUTF8String myHostName;
