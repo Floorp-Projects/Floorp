@@ -595,7 +595,6 @@
   border-image: linear-gradient(transparent 15%, var(--urlbar-separator-color) 15%, var(--urlbar-separator-color) 85%, transparent 85%);
   border-image-slice: 1;
   width: 1px;
-  height: calc(var(--urlbar-min-height) - 2px);
   visibility: hidden;
 }
 
@@ -835,6 +834,8 @@
   transition-property: background-color, mask-position-x, width, margin-inline-end;
   transition-timing-function: ease-in-out, ease-in-out, step-end, step-end;
   transition-duration: var(--cfr-animation-duration);
+  -moz-box-align: center;
+  margin-block: calc((var(--urlbar-min-height) - var(--urlbar-container-padding) - 2px /* border */ - 24px) / 2);
 }
 #cfr-label-container:-moz-locale-dir(rtl) {
   mask-position-x: calc(var(--cfr-label-width) * -1);
@@ -903,8 +904,17 @@
   font-size: .8em;
   padding: 0 8px;
   border-radius: 1em;
-  background-color: hsla(0,0%,0%,.05);
-  border: 1px solid hsla(210,4%,50%,.3);
+  background-color: var(--urlbar-box-bgcolor);
+  margin-block: calc((var(--urlbar-min-height) - var(--urlbar-container-padding) - 2px /* border */ - 18px) / 2);
+  overflow: hidden;
+}
+
+#urlbar-zoom-button:hover {
+  background-color: var(--urlbar-box-hover-bgcolor);
+}
+
+#urlbar-zoom-button:hover:active {
+  background-color: var(--urlbar-box-active-bgcolor);
 }
 
 @keyframes urlbar-zoom-reset-pulse {
@@ -924,21 +934,20 @@
   animation-duration: 250ms;
 }
 
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+#urlbar-zoom-button {
+  background-color: hsla(0,0%,0%,.05);
+  border: 1px solid hsla(210,4%,50%,.3);
+}
+
 #urlbar-zoom-button:hover {
-  background-color: hsla(0,0%,0%,.1);
+  background-color: color-mix(in srgb, currentColor 10%, transparent);
 }
 
 #urlbar-zoom-button:hover:active {
-  background-color: hsla(0,0%,0%,.15);
+  background-color: color-mix(in srgb, currentColor 17%, transparent);
 }
-
-:root[lwt-toolbar-field-brighttext] #urlbar-zoom-button:hover {
-  background-color: rgba(255,255,255,.2);
-}
-
-:root[lwt-toolbar-field-brighttext] #urlbar-zoom-button:hover:active {
-  background-color: rgba(255,255,255,.3);
-}
+} /*** END !proton ***/
 
 #urlbar-zoom-button:-moz-focusring {
   outline: var(--toolbarbutton-focus-outline);
