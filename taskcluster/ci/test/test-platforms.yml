@@ -345,6 +345,22 @@ macosx1015-64-shippable-qr/opt:
         - raptor-firefox-power
         - raptor-profiling
         - talos-profiling
+        - macosx1015-64-qr-tests
+
+macosx1015-64/debug:
+    build-platform: macosx64/debug
+    test-sets:
+        - macosx1015-64-tests
+
+macosx1015-64-devedition/opt:
+    build-platform: macosx64-devedition/opt
+    test-sets:
+        - macosx1015-64-tests
+
+macosx1015-64-qr/opt:
+    build-platform: macosx64/opt
+    test-sets:
+        - macosx1015-64-qr-tests
 
 macosx1014-64/debug:
     build-platform: macosx64/debug
