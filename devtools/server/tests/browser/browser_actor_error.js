@@ -81,6 +81,14 @@ add_task(async function test_protocoljs_actor() {
         `\\(${TEST_ERRORS_ACTOR_URL}:\\d+:\\d+\\)`
     ).test(e.message);
   });
+  await Assert.rejects(testErrorsFront.throwsString(), e => {
+    return new RegExp(`ErrorString from: ${testErrorsFront.actorID}`).test(
+      e.message
+    );
+  });
+  await Assert.rejects(testErrorsFront.throwsObject(), e => {
+    return new RegExp(`foo from: ${testErrorsFront.actorID}`).test(e.message);
+  });
 
   await gClient.close();
 });

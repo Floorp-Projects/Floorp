@@ -22,6 +22,14 @@ const testErrorsSpec = protocol.generateActorSpec({
       request: {},
       response: {},
     },
+    throwsString: {
+      request: {},
+      response: {},
+    },
+    throwsObject: {
+      request: {},
+      response: {},
+    },
   },
 });
 
@@ -31,16 +39,28 @@ const TestErrorsActor = protocol.ActorClassWithSpec(testErrorsSpec, {
     this.conn = conn;
   },
 
-  throwsComponentsException: async function() {
+  throwsComponentsException() {
     throw components.Exception("", Cr.NS_ERROR_NOT_IMPLEMENTED);
   },
 
-  throwsException: async function() {
+  throwsException() {
     return this.a.b.c;
   },
 
-  throwsJSError: async function() {
+  throwsJSError() {
     throw new Error("JSError");
+  },
+
+  throwsString() {
+    // eslint-disable-next-line no-throw-literal
+    throw "ErrorString";
+  },
+
+  throwsObject() {
+    // eslint-disable-next-line no-throw-literal
+    throw {
+      error: "foo",
+    };
   },
 });
 exports.TestErrorsActor = TestErrorsActor;
