@@ -83,6 +83,7 @@ add_task(async function test_extended_error_bogus() {
         ],
       },
     ],
+    flags: 2, // SERVFAIL
   });
 
   // Check that we don't fall back to DNS
