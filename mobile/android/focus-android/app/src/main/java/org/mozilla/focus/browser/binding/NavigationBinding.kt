@@ -38,6 +38,12 @@ class NavigationBinding(
             scope.launch { observeSelectionChanges(store.flow(activity)) }
             scope.launch { observeTabsClosed(store.flow(activity)) }
         }
+
+        // If we are in a custom tab then we do not need to wait for the selected tab and can
+        // display the current tab immediately.
+        if (activity.isCustomTabMode) {
+            activity.showBrowserScreenForCurrentSession()
+        }
     }
 
     override fun stop() {

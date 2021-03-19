@@ -27,6 +27,10 @@ import org.mozilla.focus.ext.ContextKt;
 import org.mozilla.focus.helpers.SessionLoadedIdlingResource;
 import org.mozilla.focus.helpers.TestHelper;
 
+import mozilla.components.browser.session.ext.BrowserStoreExtensionsKt;
+import mozilla.components.browser.state.selector.SelectorsKt;
+import mozilla.components.browser.state.store.BrowserStore;
+import mozilla.components.feature.tabs.ext.BrowserStateKt;
 import okhttp3.mockwebserver.MockWebServer;
 
 import static androidx.test.espresso.Espresso.onView;
@@ -169,9 +173,10 @@ public class MultitaskingTest {
             // Now on main view
             assertTrue(TestHelper.inlineAutocompleteEditText.waitForExists(TestHelper.waitingTime));
 
-            final SessionManager sessionManager = ContextKt.getComponents(
-                    InstrumentationRegistry.getTargetContext().getApplicationContext()).getSessionManager();
-            assertTrue(sessionManager.getSessions().isEmpty());
+            final BrowserStore store = ContextKt.getComponents(InstrumentationRegistry.getTargetContext().getApplicationContext())
+                    .getStore();
+
+            assertTrue(SelectorsKt.getPrivateTabs(store.getState()).isEmpty());
         }
     }
 
