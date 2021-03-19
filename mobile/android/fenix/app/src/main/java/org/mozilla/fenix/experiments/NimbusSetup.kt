@@ -10,9 +10,11 @@ import android.os.StrictMode
 import io.sentry.Sentry
 import mozilla.components.service.nimbus.NimbusApi
 import mozilla.components.service.nimbus.Nimbus
+import mozilla.components.service.nimbus.NimbusAppInfo
 import mozilla.components.service.nimbus.NimbusDisabled
 import mozilla.components.service.nimbus.NimbusServerSettings
 import mozilla.components.support.base.log.logger.Logger
+import org.mozilla.fenix.Config
 import org.mozilla.fenix.components.isSentryEnabled
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
@@ -37,7 +39,17 @@ fun createNimbus(context: Context, url: String?): NimbusApi =
                 context.settings().isExperimentationEnabled
             }
 
-        Nimbus(context, serverSettings).apply {
+        // The name "fenix" here corresponds to the app_name defined for the family of apps
+        // that encompasses all of the channels for the Fenix app.  This is defined upstream in
+        // the telemetry system. For more context on where the app_name come from see:
+        // https://probeinfo.telemetry.mozilla.org/v2/glean/app-listings
+        // and
+        // https://github.com/mozilla/probe-scraper/blob/master/repositories.yaml
+        val appInfo = NimbusAppInfo(
+            appName = "fenix",
+            channel = Config.channel.toString()
+        )
+        Nimbus(context, appInfo, serverSettings).apply {
             // This performs the minimal amount of work required to load branch and enrolment data
             // into memory. If `getExperimentBranch` is called from another thread between here
             // and the next nimbus disk write (setting `globalUserParticipation` or
