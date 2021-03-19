@@ -1597,3 +1597,21 @@ TEST(Hashtables, Clone)
     EXPECT_EQ(cloneEntry.Data(), entry.GetData());
   }
 }
+
+TEST(Hashtables, Values)
+{
+  static constexpr uint64_t count = 10;
+
+  nsTHashMap<nsUint64HashKey, uint64_t> table;
+  for (uint64_t i = 0; i < count; i++) {
+    table.InsertOrUpdate(42 + i, i);
+  }
+
+  nsTArray<uint64_t> values;
+  for (const uint64_t& value : table.Values()) {
+    values.AppendElement(value);
+  }
+  values.Sort();
+
+  EXPECT_EQ((nsTArray<uint64_t>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}), values);
+}
