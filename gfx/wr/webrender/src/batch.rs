@@ -61,7 +61,6 @@ pub enum BrushBatchKind {
     },
     YuvImage(ImageBufferKind, YuvFormat, ColorDepth, YuvColorSpace, ColorRange),
     ConicGradient,
-    RadialGradient,
     LinearGradient,
     Opacity,
 }
