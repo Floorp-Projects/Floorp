@@ -9,8 +9,6 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 
 const { promiseShutdownManager, promiseStartupManager } = AddonTestUtils;
 
-SearchTestUtils.initXPCShellAddonManager(this);
-
 let extension;
 let oldRemoveEngineFunc;
 
@@ -28,7 +26,7 @@ add_task(async function setup() {
   await Services.search.init();
   await promiseAfterSettings();
 
-  extension = await SearchTestUtils.installSearchExtension();
+  extension = await SearchTestUtils.installSearchExtension({}, true);
   await extension.awaitStartup();
 
   // For these tests, stub-out the removeEngine function, so that when we

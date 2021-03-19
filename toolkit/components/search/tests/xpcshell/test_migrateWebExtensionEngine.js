@@ -5,8 +5,6 @@
 
 const kExtensionID = "simple@tests.mozilla.org";
 
-SearchTestUtils.initXPCShellAddonManager(this);
-
 add_task(async function setup() {
   useHttpServer("opensearch");
   await AddonTestUtils.promiseStartupManager();
@@ -25,11 +23,14 @@ add_task(async function test_migrateLegacyEngine() {
   await Services.search.setDefault(engine);
 
   // This should replace the existing engine
-  let extension = await SearchTestUtils.installSearchExtension({
-    id: "simple",
-    name: "simple",
-    search_url: "https://example.com/",
-  });
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      id: "simple",
+      name: "simple",
+      search_url: "https://example.com/",
+    },
+    true
+  );
 
   engine = Services.search.getEngineByName("simple");
   Assert.equal(
@@ -58,11 +59,14 @@ add_task(async function test_migrateLegacyEngineDifferentName() {
   await Services.search.setDefault(engine);
 
   // This should replace the existing engine - it has the same id, but a different name.
-  let extension = await SearchTestUtils.installSearchExtension({
-    id: "simple",
-    name: "simple search",
-    search_url: "https://example.com/",
-  });
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      id: "simple",
+      name: "simple search",
+      search_url: "https://example.com/",
+    },
+    true
+  );
 
   engine = Services.search.getEngineByName("simple");
   Assert.equal(engine, null, "Should have removed the old engine");

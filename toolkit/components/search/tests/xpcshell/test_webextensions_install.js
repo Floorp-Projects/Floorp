@@ -14,8 +14,6 @@ const {
   promiseStartupManager,
 } = AddonTestUtils;
 
-SearchTestUtils.initXPCShellAddonManager(this);
-
 async function getEngineNames() {
   let engines = await Services.search.getEngines();
   return engines.map(engine => engine._name);
@@ -44,9 +42,12 @@ add_task(async function basic_install_test() {
   Assert.deepEqual(await getEngineNames(), ["Plain", "Special"]);
 
   // User installs a new search engine
-  let extension = await SearchTestUtils.installSearchExtension({
-    encoding: "windows-1252",
-  });
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      encoding: "windows-1252",
+    },
+    true
+  );
   Assert.deepEqual((await getEngineNames()).sort(), [
     "Example",
     "Plain",
@@ -68,10 +69,13 @@ add_task(async function basic_install_test() {
 });
 
 add_task(async function test_install_duplicate_engine() {
-  let extension = await SearchTestUtils.installSearchExtension({
-    name: "Plain",
-    search_url: "https://example.com/plain",
-  });
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "Plain",
+      search_url: "https://example.com/plain",
+    },
+    true
+  );
 
   let engine = await Services.search.getEngineByName("Plain");
   let submission = engine.getSubmission("foo");
@@ -82,7 +86,6 @@ add_task(async function test_install_duplicate_engine() {
   );
 
   // User uninstalls their engine
-  await extension.awaitStartup();
   await extension.unload();
 });
 

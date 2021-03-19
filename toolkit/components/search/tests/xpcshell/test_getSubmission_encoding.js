@@ -3,8 +3,6 @@
 
 "use strict";
 
-SearchTestUtils.initXPCShellAddonManager(this);
-
 const prefix = "https://example.com/?sourceId=Mozilla-search&search=";
 
 add_task(async function setup() {

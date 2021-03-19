@@ -9,8 +9,6 @@ const {
   promiseStartupManager,
 } = AddonTestUtils;
 
-SearchTestUtils.initXPCShellAddonManager(this);
-
 add_task(async function setup() {
   await SearchTestUtils.useTestEngines("data1");
   await promiseStartupManager();
@@ -21,11 +19,14 @@ add_task(async function setup() {
 });
 
 add_task(async function test_basic_upgrade() {
-  let extension = await SearchTestUtils.installSearchExtension({
-    version: "1.0",
-    search_url_get_params: `q={searchTerms}&version=1.0`,
-    keyword: "foo",
-  });
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      version: "1.0",
+      search_url_get_params: `q={searchTerms}&version=1.0`,
+      keyword: "foo",
+    },
+    true
+  );
 
   let engine = await Services.search.getEngineByAlias("foo");
   Assert.ok(engine, "Can fetch engine with alias");
@@ -72,12 +73,15 @@ add_task(async function test_basic_upgrade() {
 });
 
 add_task(async function test_upgrade_changes_name() {
-  let extension = await SearchTestUtils.installSearchExtension({
-    name: "engine",
-    id: "engine@tests.mozilla.org",
-    search_url_get_params: `q={searchTerms}&version=1.0`,
-    version: "1.0",
-  });
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "engine",
+      id: "engine@tests.mozilla.org",
+      search_url_get_params: `q={searchTerms}&version=1.0`,
+      version: "1.0",
+    },
+    true
+  );
 
   let engine = Services.search.getEngineByName("engine");
   Assert.ok(!!engine, "Should have loaded the engine");
@@ -140,11 +144,14 @@ add_task(async function test_upgrade_changes_name() {
 });
 
 add_task(async function test_upgrade_to_existing_name_not_allowed() {
-  let extension = await SearchTestUtils.installSearchExtension({
-    name: "engine",
-    search_url_get_params: `q={searchTerms}&version=1.0`,
-    version: "1.0",
-  });
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "engine",
+      search_url_get_params: `q={searchTerms}&version=1.0`,
+      version: "1.0",
+    },
+    true
+  );
 
   let engine = Services.search.getEngineByName("engine");
   Assert.ok(!!engine, "Should have loaded the engine");
