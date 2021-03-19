@@ -14,10 +14,7 @@ use crate::gpu_types::{BorderInstance, ImageSource, UvRectKind};
 use crate::internal_types::{CacheTextureId, FastHashMap, TextureSource, Swizzle};
 use crate::picture::{ResolvedSurfaceTexture, SurfaceInfo};
 use crate::prim_store::{ClipData, PictureIndex};
-use crate::prim_store::gradient::{
-    GRADIENT_FP_STOPS, GradientStopKey, FastLinearGradientTask, RadialGradientTask,
-    ConicGradientTask,
-};
+use crate::prim_store::gradient::{GRADIENT_FP_STOPS, GradientStopKey, FastLinearGradientTask};
 #[cfg(feature = "debugger")]
 use crate::print_tree::{PrintTreePrinter};
 use crate::resource_cache::{ResourceCache, ImageRequest};
@@ -309,8 +306,6 @@ pub enum RenderTaskKind {
     Border(BorderTask),
     LineDecoration(LineDecorationTask),
     FastLinearGradient(FastLinearGradientTask),
-    RadialGradient(RadialGradientTask),
-    ConicGradient(ConicGradientTask),
     SvgFilter(SvgFilterTask),
     #[cfg(test)]
     Test(RenderTargetKind),
@@ -340,8 +335,6 @@ impl RenderTaskKind {
             RenderTaskKind::Border(..) => "Border",
             RenderTaskKind::LineDecoration(..) => "LineDecoration",
             RenderTaskKind::FastLinearGradient(..) => "FastLinearGradient",
-            RenderTaskKind::RadialGradient(..) => "RadialGradient",
-            RenderTaskKind::ConicGradient(..) => "ConicGradient",
             RenderTaskKind::SvgFilter(..) => "SvgFilter",
             #[cfg(test)]
             RenderTaskKind::Test(..) => "Test",
@@ -355,8 +348,6 @@ impl RenderTaskKind {
             RenderTaskKind::Readback(..) |
             RenderTaskKind::Border(..) |
             RenderTaskKind::FastLinearGradient(..) |
-            RenderTaskKind::RadialGradient(..) |
-            RenderTaskKind::ConicGradient(..) |
             RenderTaskKind::Picture(..) |
             RenderTaskKind::Blit(..) |
             RenderTaskKind::SvgFilter(..) => {
@@ -653,8 +644,6 @@ impl RenderTaskKind {
             RenderTaskKind::Border(..) |
             RenderTaskKind::LineDecoration(..) |
             RenderTaskKind::FastLinearGradient(..) |
-            RenderTaskKind::RadialGradient(..) |
-            RenderTaskKind::ConicGradient(..) |
             RenderTaskKind::Blit(..) => {
                 [0.0; 4]
             }
@@ -1478,12 +1467,6 @@ impl RenderTask {
             }
             RenderTaskKind::FastLinearGradient(..) => {
                 pt.new_level("FastLinearGradient".to_owned());
-            }
-            RenderTaskKind::RadialGradient(..) => {
-                pt.new_level("RadialGradient".to_owned());
-            }
-            RenderTaskKind::ConicGradient(..) => {
-                pt.new_level("ConicGradient".to_owned());
             }
             RenderTaskKind::SvgFilter(ref task) => {
                 pt.new_level("SvgFilter".to_owned());
