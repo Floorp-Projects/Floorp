@@ -41,9 +41,9 @@ AppleVTDecoder::AppleVTDecoder(const VideoInfo& aConfig,
       mPictureHeight(aConfig.mImage.height),
       mDisplayWidth(aConfig.mDisplay.width),
       mDisplayHeight(aConfig.mDisplay.height),
-      mColorSpace(aConfig.mColorSpace == gfx::YUVColorSpace::UNKNOWN
-                      ? DefaultColorSpace({mPictureWidth, mPictureHeight})
-                      : aConfig.mColorSpace),
+      mColorSpace(aConfig.mColorSpace
+                      ? *aConfig.mColorSpace
+                      : DefaultColorSpace({mPictureWidth, mPictureHeight})),
       mColorRange(aConfig.mColorRange),
       mStreamType(MP4Decoder::IsH264(aConfig.mMimeType)  ? StreamType::H264
                   : VPXDecoder::IsVP9(aConfig.mMimeType) ? StreamType::VP9

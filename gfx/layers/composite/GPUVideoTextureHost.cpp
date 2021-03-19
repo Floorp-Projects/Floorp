@@ -147,7 +147,7 @@ void GPUVideoTextureHost::SetTextureSourceProvider(
 gfx::YUVColorSpace GPUVideoTextureHost::GetYUVColorSpace() const {
   MOZ_ASSERT(mWrappedTextureHost, "Image isn't valid yet");
   if (!mWrappedTextureHost) {
-    return gfx::YUVColorSpace::UNKNOWN;
+    return TextureHost::GetYUVColorSpace();
   }
   return mWrappedTextureHost->GetYUVColorSpace();
 }

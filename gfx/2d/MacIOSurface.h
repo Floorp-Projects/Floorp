@@ -69,13 +69,13 @@ class MacIOSurface final
       IOSurfaceID aSurfaceID, double aContentsScaleFactor = 1.0,
       bool aHasAlpha = true,
       mozilla::gfx::YUVColorSpace aColorSpace =
-          mozilla::gfx::YUVColorSpace::UNKNOWN);
+          mozilla::gfx::YUVColorSpace::Identity);
 
   explicit MacIOSurface(CFTypeRefPtr<IOSurfaceRef> aIOSurfaceRef,
                         double aContentsScaleFactor = 1.0,
                         bool aHasAlpha = true,
                         mozilla::gfx::YUVColorSpace aColorSpace =
-                            mozilla::gfx::YUVColorSpace::UNKNOWN);
+                            mozilla::gfx::YUVColorSpace::Identity);
 
   ~MacIOSurface();
   IOSurfaceID GetIOSurfaceID() const;
@@ -142,10 +142,10 @@ class MacIOSurface final
 
  private:
   CFTypeRefPtr<IOSurfaceRef> mIOSurfaceRef;
-  double mContentsScaleFactor;
-  bool mHasAlpha;
+  const double mContentsScaleFactor;
+  const bool mHasAlpha;
+  YUVColorSpace mColorSpace = YUVColorSpace::Identity;
   bool mIsLocked = false;
-  YUVColorSpace mColorSpace = YUVColorSpace::UNKNOWN;
 };
 
 #endif

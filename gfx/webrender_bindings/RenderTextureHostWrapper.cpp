@@ -108,14 +108,14 @@ gfx::ColorDepth RenderTextureHostWrapper::GetColorDepth() const {
   if (RenderTextureHostSWGL* swglHost = EnsureRenderTextureHostSWGL()) {
     return swglHost->GetColorDepth();
   }
-  return gfx::ColorDepth::UNKNOWN;
+  return gfx::ColorDepth::COLOR_8;
 }
 
 gfx::YUVColorSpace RenderTextureHostWrapper::GetYUVColorSpace() const {
   if (RenderTextureHostSWGL* swglHost = EnsureRenderTextureHostSWGL()) {
     return swglHost->GetYUVColorSpace();
   }
-  return gfx::YUVColorSpace::UNKNOWN;
+  return gfx::YUVColorSpace::Default;
 }
 
 bool RenderTextureHostWrapper::MapPlane(RenderCompositor* aCompositor,
