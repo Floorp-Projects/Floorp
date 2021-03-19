@@ -447,11 +447,7 @@
 #ifdef XP_MACOSX
 <!-- nsMenuBarX hides these and uses them to build the Application menu. -->
               <menuitem id="menu_preferences"
-#ifdef NIGHTLY_BUILD
-                        data-l10n-id="menu-settings"
-#else
                         data-l10n-id="menu-preferences"
-#endif
                         key="key_preferencesCmdMac" oncommand="openPreferences(undefined);"/>
               <menuitem id="menu_mac_services" data-l10n-id="menu-application-services"/>
               <menuitem id="menu_mac_hide_app" data-l10n-id="menu-application-hide-this" key="key_hideThisAppCmdMac"/>
