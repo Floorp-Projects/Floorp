@@ -75,24 +75,28 @@ add_task(async function confirm_ok() {
     "network.trr.confirmationNS",
     "confirm.example.com"
   );
-  await trrServer.registerDoHAnswers("confirm.example.com", "NS", [
-    {
-      name: "confirm.example.com",
-      ttl: 55,
-      type: "NS",
-      flush: false,
-      data: "test.com",
-    },
-  ]);
-  await trrServer.registerDoHAnswers("example.com", "A", [
-    {
-      name: "example.com",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "1.2.3.4",
-    },
-  ]);
+  await trrServer.registerDoHAnswers("confirm.example.com", "NS", {
+    answers: [
+      {
+        name: "confirm.example.com",
+        ttl: 55,
+        type: "NS",
+        flush: false,
+        data: "test.com",
+      },
+    ],
+  });
+  await trrServer.registerDoHAnswers("example.com", "A", {
+    answers: [
+      {
+        name: "example.com",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "1.2.3.4",
+      },
+    ],
+  });
   Services.prefs.setCharPref(
     "network.trr.uri",
     `https://foo.example.com:${trrServer.port}/dns-query` // No server on this port
@@ -106,10 +110,8 @@ add_task(async function confirm_ok() {
   await new TRRDNSListener("example.com", { expectedAnswer: "1.2.3.4" });
   await waitForConfirmationState(CONFIRM_OK, 1000);
 
-  await trrServer.registerDoHAnswers(
-    "confirm.example.com",
-    "NS",
-    [
+  await trrServer.registerDoHAnswers("confirm.example.com", "NS", {
+    answers: [
       {
         name: "confirm.example.com",
         ttl: 55,
@@ -118,9 +120,8 @@ add_task(async function confirm_ok() {
         data: "test.com",
       },
     ],
-    [],
-    500
-  ); // 500ms delay for confirmation
+    delay: 500,
+  }); // 500ms delay for confirmation
   Services.prefs.setIntPref(
     "network.trr.mode",
     Ci.nsIDNSService.MODE_NATIVEONLY

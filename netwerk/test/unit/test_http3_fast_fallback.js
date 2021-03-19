@@ -284,58 +284,64 @@ add_task(async function testFastfallback() {
     1000
   );
 
-  await trrServer.registerDoHAnswers("test.fastfallback.com", "HTTPS", [
-    {
-      name: "test.fastfallback.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 1,
+  await trrServer.registerDoHAnswers("test.fastfallback.com", "HTTPS", {
+    answers: [
+      {
+        name: "test.fastfallback.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "test.fastfallback1.com",
+          values: [
+            { key: "alpn", value: "h3-27" },
+            { key: "port", value: h3Port },
+            { key: "echconfig", value: "456..." },
+          ],
+        },
+      },
+      {
+        name: "test.fastfallback.com",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 2,
+          name: "test.fastfallback2.com",
+          values: [
+            { key: "alpn", value: "h2" },
+            { key: "port", value: h2Port },
+            { key: "echconfig", value: "456..." },
+          ],
+        },
+      },
+    ],
+  });
+
+  await trrServer.registerDoHAnswers("test.fastfallback1.com", "A", {
+    answers: [
+      {
         name: "test.fastfallback1.com",
-        values: [
-          { key: "alpn", value: "h3-27" },
-          { key: "port", value: h3Port },
-          { key: "echconfig", value: "456..." },
-        ],
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "127.0.0.1",
       },
-    },
-    {
-      name: "test.fastfallback.com",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 2,
+    ],
+  });
+
+  await trrServer.registerDoHAnswers("test.fastfallback2.com", "A", {
+    answers: [
+      {
         name: "test.fastfallback2.com",
-        values: [
-          { key: "alpn", value: "h2" },
-          { key: "port", value: h2Port },
-          { key: "echconfig", value: "456..." },
-        ],
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "127.0.0.1",
       },
-    },
-  ]);
-
-  await trrServer.registerDoHAnswers("test.fastfallback1.com", "A", [
-    {
-      name: "test.fastfallback1.com",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "127.0.0.1",
-    },
-  ]);
-
-  await trrServer.registerDoHAnswers("test.fastfallback2.com", "A", [
-    {
-      name: "test.fastfallback2.com",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "127.0.0.1",
-    },
-  ]);
+    ],
+  });
 
   let chan = makeChan(`https://test.fastfallback.com/server-timing`);
   let [req] = await channelOpenPromise(chan);
@@ -367,58 +373,64 @@ add_task(async function testFastfallback1() {
     10
   );
 
-  await trrServer.registerDoHAnswers("test.fastfallback.org", "HTTPS", [
-    {
-      name: "test.fastfallback.org",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 1,
+  await trrServer.registerDoHAnswers("test.fastfallback.org", "HTTPS", {
+    answers: [
+      {
+        name: "test.fastfallback.org",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "test.fastfallback1.org",
+          values: [
+            { key: "alpn", value: "h3-27" },
+            { key: "port", value: h3Port },
+            { key: "echconfig", value: "456..." },
+          ],
+        },
+      },
+      {
+        name: "test.fastfallback.org",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 2,
+          name: "test.fastfallback2.org",
+          values: [
+            { key: "alpn", value: "h2" },
+            { key: "port", value: h2Port },
+            { key: "echconfig", value: "456..." },
+          ],
+        },
+      },
+    ],
+  });
+
+  await trrServer.registerDoHAnswers("test.fastfallback1.org", "A", {
+    answers: [
+      {
         name: "test.fastfallback1.org",
-        values: [
-          { key: "alpn", value: "h3-27" },
-          { key: "port", value: h3Port },
-          { key: "echconfig", value: "456..." },
-        ],
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "127.0.0.1",
       },
-    },
-    {
-      name: "test.fastfallback.org",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 2,
+    ],
+  });
+
+  await trrServer.registerDoHAnswers("test.fastfallback2.org", "A", {
+    answers: [
+      {
         name: "test.fastfallback2.org",
-        values: [
-          { key: "alpn", value: "h2" },
-          { key: "port", value: h2Port },
-          { key: "echconfig", value: "456..." },
-        ],
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "127.0.0.1",
       },
-    },
-  ]);
-
-  await trrServer.registerDoHAnswers("test.fastfallback1.org", "A", [
-    {
-      name: "test.fastfallback1.org",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "127.0.0.1",
-    },
-  ]);
-
-  await trrServer.registerDoHAnswers("test.fastfallback2.org", "A", [
-    {
-      name: "test.fastfallback2.org",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "127.0.0.1",
-    },
-  ]);
+    ],
+  });
 
   let chan = makeChan(`https://test.fastfallback.org/server-timing`);
   let [req] = await channelOpenPromise(chan);
@@ -450,73 +462,79 @@ add_task(async function testFastfallbackWithEchConfig() {
     1000
   );
 
-  await trrServer.registerDoHAnswers("test.ech.org", "HTTPS", [
-    {
-      name: "test.ech.org",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 1,
+  await trrServer.registerDoHAnswers("test.ech.org", "HTTPS", {
+    answers: [
+      {
+        name: "test.ech.org",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "test.ech1.org",
+          values: [
+            { key: "alpn", value: "h3-27" },
+            { key: "port", value: h3Port },
+            { key: "echconfig", value: "456..." },
+          ],
+        },
+      },
+      {
+        name: "test.ech.org",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 2,
+          name: "test.ech2.org",
+          values: [
+            { key: "alpn", value: "h2" },
+            { key: "port", value: h2Port },
+            { key: "echconfig", value: "456..." },
+          ],
+        },
+      },
+      {
+        name: "test.ech.org",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 3,
+          name: "test.ech3.org",
+          values: [
+            { key: "alpn", value: "h2" },
+            { key: "port", value: h2Port },
+            { key: "echconfig", value: "456..." },
+          ],
+        },
+      },
+    ],
+  });
+
+  await trrServer.registerDoHAnswers("test.ech1.org", "A", {
+    answers: [
+      {
         name: "test.ech1.org",
-        values: [
-          { key: "alpn", value: "h3-27" },
-          { key: "port", value: h3Port },
-          { key: "echconfig", value: "456..." },
-        ],
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "127.0.0.1",
       },
-    },
-    {
-      name: "test.ech.org",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 2,
-        name: "test.ech2.org",
-        values: [
-          { key: "alpn", value: "h2" },
-          { key: "port", value: h2Port },
-          { key: "echconfig", value: "456..." },
-        ],
-      },
-    },
-    {
-      name: "test.ech.org",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 3,
+    ],
+  });
+
+  await trrServer.registerDoHAnswers("test.ech3.org", "A", {
+    answers: [
+      {
         name: "test.ech3.org",
-        values: [
-          { key: "alpn", value: "h2" },
-          { key: "port", value: h2Port },
-          { key: "echconfig", value: "456..." },
-        ],
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "127.0.0.1",
       },
-    },
-  ]);
-
-  await trrServer.registerDoHAnswers("test.ech1.org", "A", [
-    {
-      name: "test.ech1.org",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "127.0.0.1",
-    },
-  ]);
-
-  await trrServer.registerDoHAnswers("test.ech3.org", "A", [
-    {
-      name: "test.ech3.org",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "127.0.0.1",
-    },
-  ]);
+    ],
+  });
 
   let chan = makeChan(`https://test.ech.org/server-timing`);
   let [req] = await channelOpenPromise(chan);
@@ -548,47 +566,51 @@ add_task(async function testFastfallbackWithpartialEchConfig() {
     1000
   );
 
-  await trrServer.registerDoHAnswers("test.partial_ech.org", "HTTPS", [
-    {
-      name: "test.partial_ech.org",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 1,
-        name: "test.partial_ech1.org",
-        values: [
-          { key: "alpn", value: "h3-27" },
-          { key: "port", value: h3Port },
-          { key: "echconfig", value: "456..." },
-        ],
+  await trrServer.registerDoHAnswers("test.partial_ech.org", "HTTPS", {
+    answers: [
+      {
+        name: "test.partial_ech.org",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "test.partial_ech1.org",
+          values: [
+            { key: "alpn", value: "h3-27" },
+            { key: "port", value: h3Port },
+            { key: "echconfig", value: "456..." },
+          ],
+        },
       },
-    },
-    {
-      name: "test.partial_ech.org",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 2,
-        name: "test.partial_ech2.org",
-        values: [
-          { key: "alpn", value: "h2" },
-          { key: "port", value: h2Port },
-        ],
+      {
+        name: "test.partial_ech.org",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 2,
+          name: "test.partial_ech2.org",
+          values: [
+            { key: "alpn", value: "h2" },
+            { key: "port", value: h2Port },
+          ],
+        },
       },
-    },
-  ]);
+    ],
+  });
 
-  await trrServer.registerDoHAnswers("test.partial_ech1.org", "A", [
-    {
-      name: "test.partial_ech1.org",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "127.0.0.1",
-    },
-  ]);
+  await trrServer.registerDoHAnswers("test.partial_ech1.org", "A", {
+    answers: [
+      {
+        name: "test.partial_ech1.org",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "127.0.0.1",
+      },
+    ],
+  });
 
   let chan = makeChan(`https://test.partial_ech.org/server-timing`);
   await channelOpenPromise(chan, CL_EXPECT_LATE_FAILURE | CL_ALLOW_UNKNOWN_CL);
@@ -614,42 +636,48 @@ add_task(async function testFastfallbackWithoutEchConfig() {
     1000
   );
 
-  await trrServer.registerDoHAnswers("test.no_ech_h2.org", "HTTPS", [
-    {
-      name: "test.no_ech_h2.org",
-      ttl: 55,
-      type: "HTTPS",
-      flush: false,
-      data: {
-        priority: 1,
-        name: "test.no_ech_h3.org",
-        values: [
-          { key: "alpn", value: "h3-27" },
-          { key: "port", value: h3Port },
-        ],
+  await trrServer.registerDoHAnswers("test.no_ech_h2.org", "HTTPS", {
+    answers: [
+      {
+        name: "test.no_ech_h2.org",
+        ttl: 55,
+        type: "HTTPS",
+        flush: false,
+        data: {
+          priority: 1,
+          name: "test.no_ech_h3.org",
+          values: [
+            { key: "alpn", value: "h3-27" },
+            { key: "port", value: h3Port },
+          ],
+        },
       },
-    },
-  ]);
+    ],
+  });
 
-  await trrServer.registerDoHAnswers("test.no_ech_h3.org", "A", [
-    {
-      name: "test.no_ech_h3.org",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "127.0.0.1",
-    },
-  ]);
+  await trrServer.registerDoHAnswers("test.no_ech_h3.org", "A", {
+    answers: [
+      {
+        name: "test.no_ech_h3.org",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "127.0.0.1",
+      },
+    ],
+  });
 
-  await trrServer.registerDoHAnswers("test.no_ech_h2.org", "A", [
-    {
-      name: "test.no_ech_h2.org",
-      ttl: 55,
-      type: "A",
-      flush: false,
-      data: "127.0.0.1",
-    },
-  ]);
+  await trrServer.registerDoHAnswers("test.no_ech_h2.org", "A", {
+    answers: [
+      {
+        name: "test.no_ech_h2.org",
+        ttl: 55,
+        type: "A",
+        flush: false,
+        data: "127.0.0.1",
+      },
+    ],
+  });
 
   let chan = makeChan(`https://test.no_ech_h2.org:${h2Port}/server-timing`);
   let [req] = await channelOpenPromise(chan);

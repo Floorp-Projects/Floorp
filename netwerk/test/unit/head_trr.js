@@ -346,7 +346,8 @@ class TRRServer {
 
   /// @name : string - name we're providing answers for. eg: foo.example.com
   /// @type : string - the DNS query type. eg: "A", "AAAA", "CNAME", etc
-  /// @answers : array - array of answers (hashmap) that dnsPacket can parse
+  /// @response : a map containing the response
+  ///   answers - array of answers (hashmap) that dnsPacket can parse
   ///    eg: [{
   ///          name: "bar.example.com",
   ///          ttl: 55,
@@ -354,12 +355,12 @@ class TRRServer {
   ///          flush: false,
   ///          data: "1.2.3.4",
   ///        }]
-  async registerDoHAnswers(name, type, answers, additionals, delay = 0) {
-    let text = `global.dns_query_answers["${name}/${type}"] = ${JSON.stringify({
-      answers,
-      additionals,
-      delay,
-    })}`;
+  ///   additionals - array of answers (hashmap) to be added to the additional section
+  ///   delay - if not 0 the response will be sent with after `delay` ms.
+  async registerDoHAnswers(name, type, response = {}) {
+    let text = `global.dns_query_answers["${name}/${type}"] = ${JSON.stringify(
+      response
+    )}`;
     return this.execute(text);
   }
 }
