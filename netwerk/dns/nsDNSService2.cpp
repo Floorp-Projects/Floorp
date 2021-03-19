@@ -1442,6 +1442,15 @@ nsDNSService::GetCurrentTrrMode(nsIDNSService::ResolverMode* aMode) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDNSService::GetCurrentTrrConfirmationState(uint32_t* aConfirmationState) {
+  *aConfirmationState = uint32_t(TRRService::CONFIRM_OFF);
+  if (mTrrService) {
+    *aConfirmationState = mTrrService->ConfirmationState();
+  }
+  return NS_OK;
+}
+
 size_t nsDNSService::SizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf) const {
   // Measurement of the following members may be added later if DMD finds it

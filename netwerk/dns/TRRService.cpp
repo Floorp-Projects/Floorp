@@ -1174,7 +1174,7 @@ void TRRService::ConfirmationContext::RecordEvent(const char* aReason) {
         Telemetry::EventExtraEntry{"failedLookups"_ns, mFailedLookups});
   }
 
-  ConfirmationState state = mState;
+  enum ConfirmationState state = mState;
   Telemetry::RecordEvent(eventType, mozilla::Some(nsPrintfCString("%u", state)),
                          extra);
 
