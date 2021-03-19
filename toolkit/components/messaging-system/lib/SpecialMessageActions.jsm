@@ -84,17 +84,13 @@ const SpecialMessageActions = {
    *
    * @param {Window} window Reference to a window object
    */
-  async pinFirefoxToTaskbar(window) {
+  pinFirefoxToTaskbar(window) {
     try {
       // Currently this only works on certain Windows versions.
-      const shell = window
+      window
         .getShellService()
-        .QueryInterface(Ci.nsIWindowsShellService);
-
-      // Avoid re-pinning as that causes the taskbar icon to change.
-      if (!(await shell.isCurrentAppPinnedToTaskbarAsync())) {
-        shell.pinCurrentAppToTaskbar();
-      }
+        .QueryInterface(Ci.nsIWindowsShellService)
+        .pinCurrentAppToTaskbar();
     } catch (e) {
       Cu.reportError(e);
     }
