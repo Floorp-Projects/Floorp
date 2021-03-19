@@ -76,7 +76,9 @@ class VendorManifest(MozbuildObject):
         )
 
         self.log(logging.INFO, "vendor", {}, "Updating moz.build files")
-        self.update_moz_build(yaml_file)
+        self.update_moz_build(
+            self.manifest["vendoring"]["vendor-directory"], os.path.dirname(yaml_file)
+        )
 
         self.log(
             logging.INFO,
@@ -268,11 +270,9 @@ class VendorManifest(MozbuildObject):
             else:
                 assert False, "Unknown action supplied (how did this pass validation?)"
 
-    def update_moz_build(self, yaml_file):
-        def load_file_into_list(path):
-            from runpy import run_path
-
-            return run_path(path)["sources"]
+    def update_moz_build(self, vendoring_dir, moz_yaml_dir):
+        if vendoring_dir == moz_yaml_dir:
+            vendoring_dir = moz_yaml_dir = None
 
         source_suffixes = [".cc", ".c", ".cpp", ".h", ".hpp", ".S", ".asm"]
 
@@ -294,7 +294,7 @@ class VendorManifest(MozbuildObject):
         should_abort = False
         for f in files_added:
             try:
-                add_file_to_moz_build_file(f)
+                add_file_to_moz_build_file(f, moz_yaml_dir, vendoring_dir)
             except Exception:
                 self.log(
                     logging.ERROR,
@@ -306,7 +306,7 @@ class VendorManifest(MozbuildObject):
 
         for f in files_removed:
             try:
-                remove_file_from_moz_build_file(f)
+                remove_file_from_moz_build_file(f, moz_yaml_dir, vendoring_dir)
             except Exception:
                 self.log(
                     logging.ERROR,

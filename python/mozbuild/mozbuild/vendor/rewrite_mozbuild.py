@@ -69,6 +69,12 @@ Result of the proposal:
         absolutely crucial and should be double-checked. (And indeed, upon double-checking it,
         bugs were identified.)
 
+    After some initial testing, it was determined that this code completely fell down when the
+    vendoring directory differed from the moz.yaml directory (definitions below.) The code was
+    slightly refactored to handle this case, primarily by (a) re-inserting the logic to check
+    multiple moz.build files instead of the first and (b) handling some complicated normalization
+    notions (details in comments).
+
 Slightly Improved Algorithm Changes:
     Don't bother iterating up the directory tree looking for moz.build files, just take the first.
     When guessing, in the event of a common-prefix tie, prefer the block containing more files
@@ -122,19 +128,42 @@ file vs filename
 
     A variable that is a string should always use 'filename'
 
+vendoring directory vs moz.yaml directory
+    In many cases, a library's moz.yaml file, moz.build file(s), and sources files will all live
+    under a single directory. e.g. libjpeg
+
+    In other cases, a library's source files are in one directory (we call this the 'vendoring
+    directory') and the moz.yaml file and moz.build file(s) are in another directory (we call this
+    the moz.yaml directory).  e.g. libdav1d
+
 normalized-filename
     A filename is 'normalized' if it has been expanded to the full path from the gecko root. This
     requires a moz.build file.
 
-    For example a filename `lib/opus.c` may be specified inside the `/media/libopus/moz.build`
+    For example a filename `lib/opus.c` may be specified inside the `media/libopus/moz.build`
     file. The filename is normalized by os.path.join()-ing the dirname of the moz.build file
-    (i.e. `/media/libopus`) to the filename, resulting in `/media/libopus/lib/opus.c`
+    (i.e. `media/libopus`) to the filename, resulting in `media/libopus/lib/opus.c`
 
     A filename that begins with '/' is presumed to already be specified relative to the gecko
     root, and therefore is not modified.
 
-    Whenevr a filename is normalized, it should be specified as such in the variable name, either
-    as a prefix (normalized_filename) or a suffix (target_filename_normalized)
+    Normalization gets more complicated when dealing with separate vendoring and moz.yaml
+    directories. This is because a file can be considered normalized when it looks like
+       third_party/libdav1d/src/a.cpp
+    _or_ when it looks like
+       media/libdav1d/../../third_party/libdav1d/src/a.cpp
+    This is because in the moz.build file, it will be specified as
+    `../../third_party/libdav1d/src/a.cpp` and we 'normalize' it by prepending the path to the
+    moz.build file.
+
+    Normalization is not just about having an 'absolute' path from gecko_root to file. In fact
+    it's not really about that at all - it's about matching filenames. Therefore when we are
+    dealing with separate vendoring and moz.yaml directories we will very quickly 're-normalize'
+    a normalized filename to get it into one of those foo/bar/../../third_party/... paths that
+    will make sense for the moz.build file we are interested in.
+
+    Whenever a filename is normalized, it should be specified as such in the variable name,
+    either as a prefix (normalized_filename) or a suffix (target_filename_normalized)
 
 statistic_
     Using some hacky stuff, we report statistics about how many times we hit certain branches of
@@ -370,17 +399,53 @@ def normalize_filename(normalized_mozbuild_filename, filename):
 
 
 def get_mozbuild_file_search_order(
-    normalized_filename, all_mozbuild_filenames_normalized=None
+    normalized_filename,
+    moz_yaml_dir=None,
+    vendoring_dir=None,
+    all_mozbuild_filenames_normalized=None,
 ):
     """
     Returns an ordered list of normalized moz.build filenames to consider for a given filename
 
-    NOTE: This function is not really used, see the comment in get_closest_mozbuild_file
-
     normalized_filename: a source filename normalized to the gecko root
+    moz_yaml_dir: the path from gecko_root to the moz.yaml file (which is the root of the
+                  moz.build files)
+    moz_yaml_dir: the path to where the library's source files are
     all_mozbuild_filenames_normalized: (optional) the list of all third-party moz.build files
 
     If all_mozbuild_filenames_normalized is not specified, we look in the filesystem.
+
+    The list is built out of two distinct steps.
+
+    In Step 1 we will walk up a directory tree, looking for moz.build files. We append moz.build
+    files in this order, preferring the lowest moz.build we find, then moving on to one in a
+    higher directory.
+    The directory we start in is a little complicated. We take the series of subdirectories
+    between vendoring_dir and the file in question, and then append them to the moz.yaml
+    directory.
+
+    Example:
+        When moz_yaml directory != vendoring_directory:
+            moz_yaml_dir = foo/bar/
+            vendoring_dir = third_party/baz/
+            normalized_filename = third_party/baz/asm/arm/a.S
+            starting_directory: foo/bar/asm/arm/
+        When moz_yaml directory == vendoring_directory
+            (In this case, these variables will actually be 'None' but the algorthm is the same)
+            moz_yaml_dir = foo/bar/
+            vendoring_dir = foo/bar/
+            normalized_filename = foo/bar/asm/arm/a.S
+            starting_directory: foo/bar/asm/arm/
+
+    In Step 2 we get a bit desparate. When the vendoring directory and the moz_yaml directory are
+    not the same, there is no guarentee that the moz_yaml directory will adhere to the same
+    directory structure as the vendoring directory.  And indeed it doesn't in some cases
+    (e.g. libdav1d.)
+    So in this situation we start at the root of the moz_yaml directory and walk downwards, adding
+    _any_ moz.build file we encounter to the list. Later on (in all cases, not just
+    moz_yaml_dir != vendoring_dir) we only consider a moz.build file if it has source files whose
+    directory matches the normalized_filename, so this step, though desparate, is safe-ish and
+    believe it or not has worked for some file additions.
     """
     ordered_list = []
 
@@ -391,9 +456,21 @@ def get_mozbuild_file_search_order(
 
     # The first time around, this variable name is incorrect.
     #    It's actually the full path+filename, not a directory.
-    # We're going to walk up the directory tree, looking for a moz.build file in each
-    #    directory we ascend to.
-    test_directory = normalized_filename
+    test_directory = None
+    if (moz_yaml_dir, vendoring_dir) == (None, None):
+        # In this situation, the library is vendored into the same directory as
+        # the moz.build files. We can start traversing directories up from the file to
+        # add to find the correct moz.build file
+        test_directory = normalized_filename
+    elif moz_yaml_dir and vendoring_dir:
+        # In this situation, the library is vendored in a different place (typically
+        # third_party/foo) from the moz.build files.
+        subdirectory_path = normalized_filename.replace(vendoring_dir, "")
+        test_directory = os.path.join(moz_yaml_dir, subdirectory_path)
+    else:
+        raise Exception("If moz_yaml_dir or vendoring_dir are specified, both must be")
+
+    # Step 1
     while len(os.path.dirname(test_directory)) > 1:  # While we are not at '/'
         containing_directory = os.path.dirname(test_directory)
 
@@ -409,20 +486,30 @@ def get_mozbuild_file_search_order(
 
         test_directory = containing_directory
 
+    # Step 2
+    if moz_yaml_dir:
+        for root, dirs, files in os.walk(moz_yaml_dir):
+            for f in files:
+                if f == "moz.build":
+                    ordered_list.append(os.path.join(root, f))
+
     return ordered_list
 
 
-def get_closest_mozbuild_file(normalized_filename, all_mozbuild_filenames_normalized):
+def get_closest_mozbuild_file(
+    normalized_filename,
+    moz_yaml_dir=None,
+    vendoring_dir=None,
+    all_mozbuild_filenames_normalized=None,
+):
     """
     Returns the closest moz.build file in the directory tree to a normalized filename
-
-    Our experimenting indicated that we never need to go further than the nearest moz.build
-    file, so to keep the code complexity down, we removed that part of the algorithm.
-
-    Still, we keep that function around and return just the first entry in the list
     """
     r = get_mozbuild_file_search_order(
-        normalized_filename, all_mozbuild_filenames_normalized
+        normalized_filename,
+        moz_yaml_dir,
+        vendoring_dir,
+        all_mozbuild_filenames_normalized,
     )
     return r[0] if r else None
 
@@ -640,84 +727,161 @@ def edit_moz_build_file_to_remove_file(
     file.close()
 
 
+def validate_directory_parameters(moz_yaml_dir, vendoring_dir):
+    # Validate the parameters
+    assert (moz_yaml_dir, vendoring_dir) == (None, None) or (
+        moz_yaml_dir and vendoring_dir
+    ), "If either moz_yaml_dir or vendoring_dir are specified, they both must be"
+
+    # Ensure they are provided with trailing slashes
+    moz_yaml_dir += "/" if moz_yaml_dir[-1] != "/" else ""
+    vendoring_dir += "/" if vendoring_dir[-1] != "/" else ""
+
+    return (moz_yaml_dir, vendoring_dir)
+
+
 #########################################################
 # PUBLIC API
 #########################################################
 
 
-def remove_file_from_moz_build_file(normalized_filename_to_remove):
+def remove_file_from_moz_build_file(
+    normalized_filename_to_remove, moz_yaml_dir=None, vendoring_dir=None
+):
     """
     Given a filename, relative to the gecko root (aka normalized), we look for the nearest
     moz.build file, look in that file for the file, and then edit that moz.build file in-place.
     """
-    normalized_mozbuild_filename = get_closest_mozbuild_file(
-        normalized_filename_to_add, None
+    moz_yaml_dir, vendoring_dir = validate_directory_parameters(
+        moz_yaml_dir, vendoring_dir
     )
 
-    source_assignments, root, code = mozbuild_file_to_source_assignments(
-        normalized_mozbuild_filename
+    all_possible_normalized_mozbuild_filenames = get_mozbuild_file_search_order(
+        normalized_filename_to_remove, moz_yaml_dir, vendoring_dir, None
     )
 
-    for key, normalized_source_filename_list in source_assignments:
-        if normalized_filename_to_remove in normalized_source_filename_list:
-            unnormalized_filename_to_remove = unnormalize_filename(
-                normalized_mozbuild_filename, normalized_filename_to_remove
-            )
-            edit_moz_build_file_to_remove_file(
-                normalized_mozbuild_filename, unnormalized_filename_to_remove
-            )
-            return
+    # normalized_filename_to_remove is the path from gecko_root to the file. However, if we vendor
+    #    separate from moz.yaml; then 'normalization' gets more complicated as explained above.
+    # We will need to re-normalize the filename for each moz.build file we want to test, so we
+    #    save the original normalized filename for this purpose
+    original_normalized_filename_to_remove = normalized_filename_to_remove
+
+    for normalized_mozbuild_filename in all_possible_normalized_mozbuild_filenames:
+        if moz_yaml_dir and vendoring_dir:
+            # Here is where we re-normalize the filename. For the rest of the algorithm, we
+            #    will be using this re-normalized filename.
+            # To re-normalize it, we:
+            #   (a) get the path from gecko_root to the moz.build file we are considering
+            #   (b) compute a relative path from that directory to the file we want
+            #   (c) because (b) started at the moz.build file's directory, it is not
+            #       normalized to the gecko_root. Therefore we need to normalize it by
+            #       prepending (a)
+            a = os.path.dirname(normalized_mozbuild_filename)
+            b = os.path.relpath(normalized_filename_to_remove, start=a)
+            c = os.path.join(a, b)
+            normalized_filename_to_remove = c
+
+        source_assignments, root, code = mozbuild_file_to_source_assignments(
+            normalized_mozbuild_filename
+        )
+
+        for key, normalized_source_filename_list in source_assignments:
+            if normalized_filename_to_remove in normalized_source_filename_list:
+                unnormalized_filename_to_remove = unnormalize_filename(
+                    normalized_mozbuild_filename, normalized_filename_to_remove
+                )
+                edit_moz_build_file_to_remove_file(
+                    normalized_mozbuild_filename, unnormalized_filename_to_remove
+                )
+                return
 
         normalized_filename_to_remove = original_normalized_filename_to_remove
 
 
-def add_file_to_moz_build_file(normalized_filename_to_add):
+def add_file_to_moz_build_file(
+    normalized_filename_to_add, moz_yaml_dir=None, vendoring_dir=None
+):
     """
     This is the overall function. Given a filename, relative to the gecko root (aka normalized),
     we look for a moz.build file to add it to, look for the place in the moz.build file to add it,
     and then edit that moz.build file in-place.
+
+    It accepted two optional parameters. If one is specified they both must be. If a library is
+    vendored in a separate place from the moz.yaml file, these parameters specify those two
+    directories.
     """
-    normalized_mozbuild_filename = get_closest_mozbuild_file(
-        normalized_filename_to_add, None
+    moz_yaml_dir, vendoring_dir = validate_directory_parameters(
+        moz_yaml_dir, vendoring_dir
     )
 
-    source_assignments, root, code = mozbuild_file_to_source_assignments(
-        normalized_mozbuild_filename
+    all_possible_normalized_mozbuild_filenames = get_mozbuild_file_search_order(
+        normalized_filename_to_add, moz_yaml_dir, vendoring_dir, None
     )
 
-    possible_assignments = find_all_posible_assignments_from_filename(
-        source_assignments, normalized_filename_to_add
-    )
+    # normalized_filename_to_add is the path from gecko_root to the file. However, if we vendor
+    #    separate from moz.yaml; then 'normalization' gets more complicated as explained above.
+    # We will need to re-normalize the filename for each moz.build file we want to test, so we
+    #    save the original normalized filename for this purpose
+    original_normalized_filename_to_add = normalized_filename_to_add
 
-    assert (
-        len(possible_assignments) > 0
-    ), "Could not find a single possible source assignment"
-    if len(possible_assignments) > 1:
-        best_guess, _ = guess_best_assignment(
-            possible_assignments, normalized_filename_to_add
+    for normalized_mozbuild_filename in all_possible_normalized_mozbuild_filenames:
+        if moz_yaml_dir and vendoring_dir:
+            # Here is where we re-normalize the filename. For the rest of the algorithm, we
+            #    will be using this re-normalized filename.
+            # To re-normalize it, we:
+            #   (a) get the path from gecko_root to the moz.build file we are considering
+            #   (b) compute a relative path from that directory to the file we want
+            #   (c) because (b) started at the moz.build file's directory, it is not
+            #       normalized to the gecko_root. Therefore we need to normalize it by
+            #       prepending (a)
+            a = os.path.dirname(normalized_mozbuild_filename)
+            b = os.path.relpath(normalized_filename_to_add, start=a)
+            c = os.path.join(a, b)
+            normalized_filename_to_add = c
+
+        source_assignments, root, code = mozbuild_file_to_source_assignments(
+            normalized_mozbuild_filename
         )
-        chosen_source_assignment_location = best_guess
-    else:
-        chosen_source_assignment_location = list(possible_assignments.keys())[0]
 
-    guessed_list_containing_normalized_filenames = possible_assignments[
-        chosen_source_assignment_location
-    ]
+        possible_assignments = find_all_posible_assignments_from_filename(
+            source_assignments, normalized_filename_to_add
+        )
 
-    # unnormalize filenames so we can edit the moz.build file. They rarely use full paths.
-    unnormalized_filename_to_add = unnormalize_filename(
-        normalized_mozbuild_filename, normalized_filename_to_add
-    )
-    unnormalized_list_of_files = [
-        unnormalize_filename(normalized_mozbuild_filename, f)
-        for f in guessed_list_containing_normalized_filenames
-    ]
+        if len(possible_assignments) == 0:
+            normalized_filename_to_add = original_normalized_filename_to_add
+            continue
 
-    edit_moz_build_file_to_add_file(
-        normalized_mozbuild_filename,
-        unnormalized_filename_to_add,
-        unnormalized_list_of_files,
-    )
+        assert (
+            len(possible_assignments) > 0
+        ), "Could not find a single possible source assignment"
+        if len(possible_assignments) > 1:
+            best_guess, _ = guess_best_assignment(
+                possible_assignments, normalized_filename_to_add
+            )
+            chosen_source_assignment_location = best_guess
+        else:
+            chosen_source_assignment_location = list(possible_assignments.keys())[0]
+
+        guessed_list_containing_normalized_filenames = possible_assignments[
+            chosen_source_assignment_location
+        ]
+
+        # unnormalize filenames so we can edit the moz.build file. They rarely use full paths.
+        unnormalized_filename_to_add = unnormalize_filename(
+            normalized_mozbuild_filename, normalized_filename_to_add
+        )
+        unnormalized_list_of_files = [
+            unnormalize_filename(normalized_mozbuild_filename, f)
+            for f in guessed_list_containing_normalized_filenames
+        ]
+
+        edit_moz_build_file_to_add_file(
+            normalized_mozbuild_filename,
+            unnormalized_filename_to_add,
+            unnormalized_list_of_files,
+        )
+        return
+    assert False, "Could not find a single moz.build file to edit"
 
 
 #########################################################
@@ -763,7 +927,7 @@ def try_to_match_target_file(
         raise Exception("Received an empty target_filename_normalized")
 
     normalized_mozbuild_filename = get_closest_mozbuild_file(
-        target_filename_normalized, all_mozbuild_filenames_normalized
+        target_filename_normalized, None, None, all_mozbuild_filenames_normalized
     )
     if not normalized_mozbuild_filename:
         return (False, "No moz.build file found")
@@ -899,7 +1063,9 @@ if __name__ == "__main__":
     gecko_root = get_gecko_root()
 
     os.chdir(gecko_root)
-    # update_moz_build_file("gfx/cairo/libpixman/src/pixman-sse2-more.c")
+    add_file_to_moz_build_file(
+        "third_party/dav1d/src/arm/32/ipred16.S", "media/libdav1d", "third_party/dav1d/"
+    )
 
     # all_mozbuild_filenames_normalized = get_all_mozbuild_filenames(gecko_root)
     # test_all_third_party_files(gecko_root, all_mozbuild_filenames_normalized)
