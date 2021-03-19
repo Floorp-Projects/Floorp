@@ -1190,9 +1190,9 @@ policies and contribution forms [3].
                     console.debug("ASSERT", name, tests.current_test && tests.current_test.name, args);
                 }
                 if (tests.output) {
-                    tests.set_assert(name, ...args);
+                    tests.set_assert(name, args);
                 }
-                const rv = f(...args);
+                const rv = f.apply(undefined, args);
                 status = Test.statuses.PASS;
                 return rv;
             } catch(e) {
@@ -2725,7 +2725,7 @@ policies and contribution forms [3].
         return this.formats[this.status];
     }
 
-    function AssertRecord(test, assert_name, ...args) {
+    function AssertRecord(test, assert_name, args = []) {
         this.assert_name = assert_name;
         this.test = test;
         // Avoid keeping complex objects alive
@@ -3032,8 +3032,8 @@ policies and contribution forms [3].
                   all_complete);
     };
 
-    Tests.prototype.set_assert = function(assert_name, ...args) {
-        this.asserts_run.push(new AssertRecord(this.current_test, assert_name, ...args))
+    Tests.prototype.set_assert = function(assert_name, args) {
+        this.asserts_run.push(new AssertRecord(this.current_test, assert_name, args))
     }
 
     Tests.prototype.set_assert_status = function(status, stack) {
