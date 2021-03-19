@@ -107,11 +107,8 @@ SandboxBroker::~SandboxBroker() {
 SandboxBroker::Policy::Policy() = default;
 SandboxBroker::Policy::~Policy() = default;
 
-SandboxBroker::Policy::Policy(const Policy& aOther) {
-  for (auto iter = aOther.mMap.ConstIter(); !iter.Done(); iter.Next()) {
-    mMap.InsertOrUpdate(iter.Key(), iter.Data());
-  }
-}
+SandboxBroker::Policy::Policy(const Policy& aOther)
+    : mMap(aOther.mMap.Clone()) {}
 
 // Chromium
 // sandbox/linux/syscall_broker/broker_file_permission.cc

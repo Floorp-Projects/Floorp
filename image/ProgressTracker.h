@@ -79,11 +79,10 @@ class ObserverTable : public nsTHashMap<nsPtrHashKey<IProgressObserver>,
 
   ObserverTable() = default;
 
-  ObserverTable(const ObserverTable& aOther) {
+  ObserverTable(const ObserverTable& aOther)
+      : nsTHashMap<nsPtrHashKey<IProgressObserver>, WeakPtr<IProgressObserver>>(
+            aOther.Clone()) {
     NS_WARNING("Forced to copy ObserverTable due to nested notifications");
-    for (auto iter = aOther.ConstIter(); !iter.Done(); iter.Next()) {
-      this->InsertOrUpdate(iter.Key(), iter.Data());
-    }
   }
 
  private:
