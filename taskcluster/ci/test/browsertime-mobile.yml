@@ -189,15 +189,17 @@ browsertime-youtube-playback-mobile:
             android-hw-g5.*:
                 - [youtube-playback-h264-sfr, ytp-h264-sfr]
                 - [youtube-playback-hfr, ytp-hfr]
-                - [youtube-playback-widevine-h264-sfr, ytp-widevine-h264-sfr]
-                - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
+                # Bug 1699469 - Disabled until a crash is fixed.
+                # - [youtube-playback-widevine-h264-sfr, ytp-widevine-h264-sfr]
+                # - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
             android-hw-p2.*:
                 - [youtube-playback-h264-sfr, ytp-h264-sfr]
                 - [youtube-playback-hfr, ytp-hfr]
                 - [youtube-playback-vp9-sfr, ytp-vp9-sfr]
-                - [youtube-playback-widevine-h264-sfr, ytp-widevine-h264-sfr]
-                - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
-                - [youtube-playback-widevine-vp9-sfr, ytp-widevine-vp9-sfr]
+                # Bug 1699469 - Disabled until a crash is fixed.
+                # - [youtube-playback-widevine-h264-sfr, ytp-widevine-h264-sfr]
+                # - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
+                # - [youtube-playback-widevine-vp9-sfr, ytp-widevine-vp9-sfr]
     apps: ["fenix", "geckoview", "refbrow"]
     webrender-run-on-projects:
         by-app:
