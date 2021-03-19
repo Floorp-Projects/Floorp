@@ -14,6 +14,10 @@
     %1$s will be replaced with the login/username of the account. -->
     <string name="mozac_feature_autofill_popup_password">Contraseña de %1$s</string>
 
+    <!-- Autofill: Title of a dialog asking the user to confirm before autofilling credentials into
+    a third-party app after the authenticity verification failed. -->
+    <string name="mozac_feature_autofill_confirmation_title">La verificación falló</string>
+
     <!-- Autofill: Text shown in dialog asking the user to confirm before autofilling credentials into a
     third-party app where we could not verify the authenticity (e.g. we determined that this app is
     a twitter client and we could autofill twitter credentials, but according to the "Digital Asset

@@ -19,6 +19,6 @@
     <string name="mozac_feature_findindpage_previous_result">Знайти попередній результат</string>
 
     <!-- String to be read by the accessibility service when focusing the dismiss button in the "find in page" UI. -->
-    <string name="mozac_feature_findindpage_dismiss">Прибрати пошук на сторінці</string>
+    <string name="mozac_feature_findindpage_dismiss">Відхилити пошук на сторінці</string>
 
 </resources>

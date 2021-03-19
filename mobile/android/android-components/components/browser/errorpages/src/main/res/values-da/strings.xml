@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <!-- The default document title of an error page (i.e., the contents of the `<title>` tag). -->
-    <string name="mozac_browser_errorpages_page_title">Problem med indlæsning af side</string>
-
     <!-- The button that appears at the bottom of an error page. -->
     <string name="mozac_browser_errorpages_page_refresh">Prøv igen</string>
-
-    <!-- The button that appears at the bottom of an error page. -->
-    <string name="mozac_browser_errorpages_page_go_back">Gå tilbage</string>
 
     <!-- The document title and heading of an error page shown when a website cannot be loaded for an unknown reason. -->
     <string name="mozac_browser_errorpages_generic_title">Kan ikke færdiggøre forespørgsel</string>
@@ -24,7 +18,7 @@
     <!-- The error message shown when a website sends back unusual and incorrect credentials for an SSL certificate. -->
     <string name="mozac_browser_errorpages_security_ssl_message"><![CDATA[
       <ul>
-        <li>Siden kunne ikke vises, da autenciteten af de modtagne data ikke kunne bekræftes.</li>
+        <li>Siden kunne ikke vises, da autenticiteten af de modtagne data ikke kunne bekræftes.</li>
         <li>Kontakt ejerne af webstedet omkring dette problem.</li>
       </ul>
     ]]></string>
