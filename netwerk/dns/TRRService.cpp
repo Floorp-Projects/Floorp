@@ -737,6 +737,7 @@ void TRRService::MaybeConfirm_locked(const char* aReason) {
         new TRR(this, mConfirmationNS, TRRTYPE_NS, ""_ns, false);
     mConfirmation.mTask->SetTimeout(
         StaticPrefs::network_trr_confirmation_timeout_ms());
+    mConfirmation.mTask->SetPurpose(TRR::Confirmation);
 
     if (mLinkService) {
       mLinkService->GetNetworkID(mConfirmation.mNetworkId);
@@ -927,6 +928,7 @@ void TRRService::AddToBlocklist(const nsACString& aHost,
       // check if there's an NS entry for this name
       RefPtr<TRR> trr =
           new TRR(this, check, TRRTYPE_NS, aOriginSuffix, privateBrowsing);
+      trr->SetPurpose(TRR::Blocklist);
       DispatchTRRRequest(trr);
     }
   }
@@ -1105,6 +1107,55 @@ void TRRService::ConfirmationContext::RequestCompleted(
   mAttemptCount++;
 }
 
+void TRRService::CompleteConfirmation(nsresult aStatus, TRR* aTRRRequest) {
+  MOZ_ASSERT(mConfirmation.mState == CONFIRM_TRYING);
+  if (mConfirmation.mState != CONFIRM_TRYING) {
+    return;
+  }
+
+  mConfirmation.RequestCompleted(aStatus, aTRRRequest->ChannelStatus());
+
+  {
+    MutexAutoLock lock(mLock);
+    MOZ_ASSERT(mConfirmation.mTask);
+    mConfirmation.mState = NS_SUCCEEDED(aStatus) ? CONFIRM_OK : CONFIRM_FAILED;
+    LOG(("TRRService finishing confirmation test %s %d %X\n", mPrivateURI.get(),
+         (int)mConfirmation.mState, (unsigned int)aStatus));
+    mConfirmation.mTask = nullptr;
+  }
+
+  if (mConfirmation.mState == CONFIRM_OK) {
+    mConfirmation.mRetryInterval = StaticPrefs::network_trr_retry_timeout_ms();
+
+    // Record event and start new confirmation context
+    mConfirmation.RecordEvent("success");
+
+    // A fresh confirmation means previous blocked entries might not
+    // be valid anymore.
+    auto bl = mTRRBLStorage.Lock();
+    bl->Clear();
+  } else {
+    MOZ_ASSERT(mConfirmation.mState == CONFIRM_FAILED);
+
+    // retry failed NS confirmation
+    NS_NewTimerWithCallback(getter_AddRefs(mConfirmation.mTimer), this,
+                            mConfirmation.mRetryInterval,
+                            nsITimer::TYPE_ONE_SHOT);
+    if (mConfirmation.mRetryInterval < 64000) {
+      // double the interval up to this point
+      mConfirmation.mRetryInterval *= 2;
+    }
+  }
+
+  if (mMode != nsIDNSService::MODE_TRRONLY) {
+    // don't accumulate trr-only data here since we only care about
+    // confirmation in trr-first mode
+    Telemetry::Accumulate(Telemetry::DNS_TRR_NS_VERFIFIED3,
+                          TRRService::ProviderKey(),
+                          (mConfirmation.mState == CONFIRM_OK));
+  }
+}
+
 AHostResolver::LookupStatus TRRService::CompleteLookup(
     nsHostRecord* rec, nsresult status, AddrInfo* aNewRRSet, bool pb,
     const nsACString& aOriginSuffix, TRRSkippedReason aReason,
@@ -1118,67 +1169,21 @@ AHostResolver::LookupStatus TRRService::CompleteLookup(
   RefPtr<AddrInfo> newRRSet(aNewRRSet);
   MOZ_ASSERT(newRRSet && newRRSet->TRRType() == TRRTYPE_NS);
 
-#ifdef DEBUG
-  {
-    MutexAutoLock lock(mLock);
-    MOZ_ASSERT(!mConfirmation.mTask ||
-               (mConfirmation.mState == CONFIRM_TRYING));
-  }
-#endif
-  if (mConfirmation.mState == CONFIRM_TRYING) {
-    mConfirmation.RequestCompleted(status, aTRRRequest->ChannelStatus());
-
-    {
-      MutexAutoLock lock(mLock);
-      MOZ_ASSERT(mConfirmation.mTask);
-      mConfirmation.mState = NS_SUCCEEDED(status) ? CONFIRM_OK : CONFIRM_FAILED;
-      LOG(("TRRService finishing confirmation test %s %d %X\n",
-           mPrivateURI.get(), (int)mConfirmation.mState, (unsigned int)status));
-      mConfirmation.mTask = nullptr;
-    }
-
-    if (mConfirmation.mState == CONFIRM_OK) {
-      mConfirmation.mRetryInterval =
-          StaticPrefs::network_trr_retry_timeout_ms();
-
-      // Record event and start new confirmation context
-      mConfirmation.RecordEvent("success");
-
-      // A fresh confirmation means previous blocked entries might not
-      // be valid anymore.
-      auto bl = mTRRBLStorage.Lock();
-      bl->Clear();
-    } else {
-      MOZ_ASSERT(mConfirmation.mState == CONFIRM_FAILED);
-
-      // retry failed NS confirmation
-      NS_NewTimerWithCallback(getter_AddRefs(mConfirmation.mTimer), this,
-                              mConfirmation.mRetryInterval,
-                              nsITimer::TYPE_ONE_SHOT);
-      if (mConfirmation.mRetryInterval < 64000) {
-        // double the interval up to this point
-        mConfirmation.mRetryInterval *= 2;
-      }
-    }
-
-    if (mMode != nsIDNSService::MODE_TRRONLY) {
-      // don't accumulate trr-only data here since we only care about
-      // confirmation in trr-first mode
-      Telemetry::Accumulate(Telemetry::DNS_TRR_NS_VERFIFIED3,
-                            TRRService::ProviderKey(),
-                            (mConfirmation.mState == CONFIRM_OK));
-    }
-
+  if (aTRRRequest->Purpose() == TRR::Confirmation) {
+    CompleteConfirmation(status, aTRRRequest);
     return LOOKUP_OK;
+  } else if (aTRRRequest->Purpose() == TRR::Blocklist) {
+    if (NS_SUCCEEDED(status)) {
+      LOG(("TRR verified %s to be fine!\n", newRRSet->Hostname().get()));
+    } else {
+      LOG(("TRR says %s doesn't resolve as NS!\n", newRRSet->Hostname().get()));
+      AddToBlocklist(newRRSet->Hostname(), aOriginSuffix, pb, false);
+    }
+  } else {
+    MOZ_ASSERT_UNREACHABLE(
+        "TRRService::CompleteLookup called for unexpected request");
   }
 
-  // when called without a host record, this is a domain name check response.
-  if (NS_SUCCEEDED(status)) {
-    LOG(("TRR verified %s to be fine!\n", newRRSet->Hostname().get()));
-  } else {
-    LOG(("TRR says %s doesn't resolve as NS!\n", newRRSet->Hostname().get()));
-    AddToBlocklist(newRRSet->Hostname(), aOriginSuffix, pb, false);
-  }
   return LOOKUP_OK;
 }
 
