@@ -559,7 +559,7 @@ class nsXULElement : public nsStyledElement {
   }
 
   bool SupportsAccessKey() const;
-  void RegUnRegAccessKey(bool aDoReg);
+  void RegUnRegAccessKey(bool aDoReg) override;
   bool BoolAttrIsTrue(nsAtom* aName) const;
 
   friend nsXULElement* NS_NewBasicXULElement(

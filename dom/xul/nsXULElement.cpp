@@ -743,31 +743,13 @@ void nsXULElement::DoneAddingChildren(bool aHaveNotified) {
   }
 }
 
-// XXX(ntim): Unify with nsGenericHTMLElement.cpp
 void nsXULElement::RegUnRegAccessKey(bool aDoReg) {
   // Don't try to register for unsupported elements
   if (!SupportsAccessKey()) {
     return;
   }
 
-  // first check to see if we have an access key
-  nsAutoString accessKey;
-  GetAttr(nsGkAtoms::accesskey, accessKey);
-  if (accessKey.IsEmpty()) {
-    return;
-  }
-
-  // We have an access key, so get the ESM from the pres context.
-  if (nsPresContext* presContext = GetPresContext(eForUncomposedDoc)) {
-    EventStateManager* esm = presContext->EventStateManager();
-
-    // Register or unregister as appropriate.
-    if (aDoReg) {
-      esm->RegisterAccessKey(this, (uint32_t)accessKey.First());
-    } else {
-      esm->UnregisterAccessKey(this, (uint32_t)accessKey.First());
-    }
-  }
+  nsStyledElement::RegUnRegAccessKey(aDoReg);
 }
 
 bool nsXULElement::SupportsAccessKey() const {
