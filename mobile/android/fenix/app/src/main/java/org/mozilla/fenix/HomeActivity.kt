@@ -362,10 +362,6 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             window.addFlags(FLAG_SECURE)
         }
 
-        // We will remove this when AC code lands to emit a fact on getTopSites in DefaultTopSitesStorage
-        // https://github.com/mozilla-mobile/android-components/issues/8679
-        settings().topSitesSize = components.core.topSitesStorage.cachedTopSites.size
-
         lifecycleScope.launch(IO) {
             components.core.bookmarksStorage.getTree(BookmarkRoot.Root.id, true)?.let {
                 val desktopRootNode = DesktopFolders(

@@ -266,11 +266,7 @@ internal class ReleaseMetricController(
                     // Do nothing
                 }
 
-                return if (count > 0) {
-                    Event.HaveTopSites
-                } else {
-                    Event.HaveNoTopSites
-                }
+                settings.topSitesSize = count
             }
             null
         }

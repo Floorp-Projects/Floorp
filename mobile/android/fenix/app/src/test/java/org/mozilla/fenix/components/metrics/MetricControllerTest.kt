@@ -16,7 +16,6 @@ import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.webextensions.facts.WebExtensionFacts
-import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.mozilla.fenix.utils.Settings
@@ -182,59 +181,26 @@ class MetricControllerTest {
     }
 
     @Test
-    fun `topsites fact should convert to the right events`() {
-        var enabled = true
+    fun `topsites fact should set value in SharedPreference`() {
+        val enabled = true
+        val settings: Settings = mockk(relaxed = true)
         val controller = ReleaseMetricController(
             services = listOf(dataService1),
             isDataTelemetryEnabled = { enabled },
             isMarketingDataTelemetryEnabled = { enabled },
-            mockk()
+            settings
         )
 
-        var fact = Fact(
+        val fact = Fact(
             Component.FEATURE_TOP_SITES,
             Action.INTERACTION,
             TopSitesFacts.Items.COUNT,
             "1"
         )
 
-        assertEquals(controller.factToEvent(fact), Event.HaveTopSites)
-
-        fact = Fact(
-            Component.FEATURE_TOP_SITES,
-            Action.INTERACTION,
-            TopSitesFacts.Items.COUNT,
-            "0"
-        )
-
-        assertEquals(controller.factToEvent(fact), Event.HaveNoTopSites)
-
-        fact = Fact(
-            Component.FEATURE_TOP_SITES,
-            Action.INTERACTION,
-            TopSitesFacts.Items.COUNT,
-            "10"
-        )
-
-        assertEquals(controller.factToEvent(fact), Event.HaveTopSites)
-
-        fact = Fact(
-            Component.FEATURE_TOP_SITES,
-            Action.INTERACTION,
-            TopSitesFacts.Items.COUNT,
-            "-4"
-        )
-
-        assertEquals(controller.factToEvent(fact), Event.HaveNoTopSites)
-
-        fact = Fact(
-            Component.FEATURE_TOP_SITES,
-            Action.INTERACTION,
-            TopSitesFacts.Items.COUNT,
-            "test"
-        )
-
-        assertEquals(controller.factToEvent(fact), Event.HaveNoTopSites)
+        verify(exactly = 0) { settings.topSitesSize = any() }
+        controller.factToEvent(fact)
+        verify(exactly = 1) { settings.topSitesSize = any() }
     }
 
     @Test

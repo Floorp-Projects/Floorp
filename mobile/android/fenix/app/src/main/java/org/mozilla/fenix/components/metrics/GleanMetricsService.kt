@@ -751,13 +751,6 @@ private val Event.wrapper: EventWrapper<*>?
         Event.HaveNoOpenTabs -> EventWrapper<NoExtraKeys>(
             { Metrics.hasOpenTabs.set(false) }
         )
-        Event.HaveTopSites -> EventWrapper<NoExtraKeys>(
-            { Metrics.hasTopSites.set(true) }
-        )
-        Event.HaveNoTopSites -> EventWrapper<NoExtraKeys>(
-            { Metrics.hasTopSites.set(false) }
-        )
-
         is Event.BannerOpenInAppDisplayed -> EventWrapper<NoExtraKeys>(
             { BannerOpenInApp.displayed.record(it) }
         )

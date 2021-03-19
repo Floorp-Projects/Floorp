@@ -216,9 +216,6 @@ sealed class Event {
     object ContextMenuSelectAllTapped : Event()
     object ContextMenuShareTapped : Event()
 
-    object HaveTopSites : Event()
-    object HaveNoTopSites : Event()
-
     object SyncedTabSuggestionClicked : Event()
     object BookmarkSuggestionClicked : Event()
     object ClipboardSuggestionClicked : Event()
