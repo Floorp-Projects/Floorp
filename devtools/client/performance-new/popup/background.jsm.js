@@ -131,6 +131,7 @@ const presets = {
       "RenderBackend",
       "SceneBuilder",
       "WrWorker",
+      "CanvasWorkers",
     ],
     duration: 0,
   },
