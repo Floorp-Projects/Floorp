@@ -37,6 +37,7 @@ panel[type="arrow"][side="right"] {
   padding: var(--arrowpanel-padding);
   color: var(--arrowpanel-color);
   background: var(--arrowpanel-background);
+  border-radius: var(--arrowpanel-border-radius);
   border: 1px solid var(--arrowpanel-border-color);
   box-shadow: 0 0 4px hsla(0,0%,0%,.2);
   margin: 4px;
