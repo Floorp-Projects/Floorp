@@ -914,6 +914,9 @@ JSContext::JSContext(JSRuntime* runtime, const JS::ContextOptions& options)
 #if defined(DEBUG) || defined(JS_OOM_BREAKPOINT)
       runningOOMTest(this, false),
 #endif
+#ifdef DEBUG
+      disableCompartmentCheckTracer(this, false),
+#endif
       inUnsafeRegion(this, 0),
       generationalDisabled(this, 0),
       compactingDisabledCount(this, 0),
