@@ -4,8 +4,25 @@
 
 /* eslint-env mozilla/frame-script */
 
-import { parse } from "chrome://global/content/certviewer/certDecoder.js";
-import { pemToDER } from "chrome://global/content/certviewer/utils.js";
+import "chrome://global/content/certviewer/certDecoder.js";
+const certDecoderInitializer = globalThis.certDecoderInitializer;
+
+// These globals are loaded in aboutNetError.xhtml.
+/* eslint-disable-next-line no-undef */
+const { Integer, fromBER } = asn1js.asn1js;
+/* eslint-disable-next-line no-undef */
+const { Certificate } = pkijs.pkijs;
+/* eslint-disable-next-line no-undef */
+const { fromBase64, stringToArrayBuffer } = pvutils.pvutils;
+
+const { parse, pemToDER } = certDecoderInitializer(
+  Integer,
+  fromBER,
+  Certificate,
+  fromBase64,
+  stringToArrayBuffer,
+  crypto
+);
 
 const formatter = new Intl.DateTimeFormat("default");
 
