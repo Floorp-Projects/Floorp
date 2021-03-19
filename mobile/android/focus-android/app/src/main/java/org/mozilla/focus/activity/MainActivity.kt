@@ -22,6 +22,7 @@ import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.CustomTabActivity.Companion.CUSTOM_TAB_ID
 import org.mozilla.focus.biometrics.Biometrics
+import org.mozilla.focus.browser.binding.NavigationBinding
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.fragment.FirstrunFragment
@@ -37,7 +38,7 @@ import org.mozilla.focus.utils.ViewUtils
 
 @Suppress("TooManyFunctions")
 open class MainActivity : LocaleAwareAppCompatActivity() {
-    protected open val isCustomTabMode: Boolean
+    internal open val isCustomTabMode: Boolean
         get() = false
 
     protected open val currentTabForActivity: SessionState?
@@ -48,6 +49,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
     }
 
     private var previousSessionCount = 0
+
+    private val navigation by lazy { NavigationBinding(components.store, activity = this) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,44 +86,11 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
             TelemetryWrapper.openFromIconEvent()
         }
 
-        registerSessionObserver()
-
         val launchCount = Settings.getInstance(this).getAppLaunchCount()
         PreferenceManager.getDefaultSharedPreferences(this)
                 .edit()
                 .putInt(getString(R.string.app_launch_count), launchCount + 1)
                 .apply()
-    }
-
-    private fun registerSessionObserver() {
-        @Suppress("DEPRECATION")
-        components.sessionManager.register(object : SessionManager.Observer {
-            override fun onSessionSelected(session: Session) {
-                showBrowserScreenForCurrentSession()
-            }
-
-            override fun onAllSessionsRemoved() {
-                showUrlInputScreen()
-            }
-
-            override fun onSessionRemoved(session: Session) {
-                previousSessionCount = components.sessionManager.sessions.count()
-                if (!isCustomTabMode && components.sessionManager.sessions.isEmpty()) {
-                    showUrlInputScreen()
-                }
-            }
-        }, owner = this)
-
-        if (!isCustomTabMode && components.sessionManager.sessions.isEmpty()) {
-            showUrlInputScreen()
-        } else {
-            showBrowserScreenForCurrentSession()
-        }
-
-        // If needed show the first run tour on top of the browser or url input fragment.
-        if (Settings.getInstance(this@MainActivity).shouldShowFirstrun() && !isCustomTabMode) {
-            showFirstrun(components.store.state.selectedTabId)
-        }
     }
 
     override fun applyLocale() {
@@ -149,7 +119,15 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         TelemetryWrapper.stopSession()
     }
 
+    override fun onStart() {
+        super.onStart()
+
+        navigation.start()
+    }
+
     override fun onStop() {
+        navigation.stop()
+
         super.onStop()
 
         TelemetryWrapper.stopMainActivity()
@@ -206,7 +184,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         }
     }
 
-    private fun showUrlInputScreen() {
+    internal fun showUrlInputScreen() {
         val fragmentManager = supportFragmentManager
         val browserFragment = fragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG) as BrowserFragment?
 
@@ -244,14 +222,14 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
                 .commitAllowingStateLoss()
     }
 
-    private fun showFirstrun(tabId: String? = null) {
+    internal fun showFirstrun(tabId: String? = null) {
         supportFragmentManager
                 .beginTransaction()
                 .add(R.id.container, FirstrunFragment.create(tabId), FirstrunFragment.FRAGMENT_TAG)
                 .commit()
     }
 
-    protected fun showBrowserScreenForCurrentSession() {
+    internal fun showBrowserScreenForCurrentSession() {
         val fragmentManager = supportFragmentManager
         val tab = currentTabForActivity ?: return
 
