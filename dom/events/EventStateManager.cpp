@@ -1069,8 +1069,8 @@ bool EventStateManager::LookForAccessKeyAndExecute(
   if (Element* focusedElement = GetFocusedElement()) {
     start = mAccessKeys.IndexOf(focusedElement);
     if (start == -1 && focusedElement->IsInNativeAnonymousSubtree()) {
-      start = mAccessKeys.IndexOf(
-          focusedElement->GetClosestNativeAnonymousSubtreeRootParent());
+      start = mAccessKeys.IndexOf(Element::FromNodeOrNull(
+          focusedElement->GetClosestNativeAnonymousSubtreeRootParent()));
     }
   }
   RefPtr<Element> element;
@@ -1082,7 +1082,7 @@ bool EventStateManager::LookForAccessKeyAndExecute(
     AppendUCS4ToUTF16(ch, accessKey);
     for (count = 1; count <= length; ++count) {
       // mAccessKeys always stores Element instances.
-      element = mAccessKeys[(start + count) % length]->AsElement();
+      element = mAccessKeys[(start + count) % length];
       frame = element->GetPrimaryFrame();
       if (IsAccessKeyTarget(element, frame, accessKey)) {
         if (!aExecute) {
@@ -5673,18 +5673,23 @@ bool EventStateManager::EventStatusOK(WidgetGUIEvent* aEvent) {
 // Access Key Registration
 //-------------------------------------------
 void EventStateManager::RegisterAccessKey(Element* aElement, uint32_t aKey) {
-  if (aElement && mAccessKeys.IndexOf(aElement) == -1)
+  if (aElement && !mAccessKeys.Contains(aElement)) {
     mAccessKeys.AppendObject(aElement);
+  }
 }
 
 void EventStateManager::UnregisterAccessKey(Element* aElement, uint32_t aKey) {
-  if (aElement) mAccessKeys.RemoveObject(aElement);
+  if (aElement) {
+    mAccessKeys.RemoveObject(aElement);
+  }
 }
 
 uint32_t EventStateManager::GetRegisteredAccessKey(Element* aElement) {
   MOZ_ASSERT(aElement);
 
-  if (mAccessKeys.IndexOf(aElement) == -1) return 0;
+  if (!mAccessKeys.Contains(aElement)) {
+    return 0;
+  }
 
   nsAutoString accessKey;
   aElement->GetAttr(kNameSpaceID_None, nsGkAtoms::accesskey, accessKey);

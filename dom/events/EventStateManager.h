@@ -1199,12 +1199,13 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   nsRefPtrHashtable<nsUint32HashKey, OverOutElementsWrapper>
       mPointersEnterLeaveHelper;
 
+  // Array for accesskey support
+  nsCOMArray<dom::Element> mAccessKeys;
+
   bool ShouldAlwaysUseLineDeltas();
 
  public:
   static nsresult UpdateUserActivityTimer(void);
-  // Array for accesskey support
-  nsCOMArray<nsIContent> mAccessKeys;
 
   static bool sNormalLMouseEventInProcess;
   static int16_t sCurrentMouseBtn;
