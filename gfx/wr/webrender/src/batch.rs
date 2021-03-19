@@ -60,7 +60,6 @@ pub enum BrushBatchKind {
         backdrop_id: RenderTaskId,
     },
     YuvImage(ImageBufferKind, YuvFormat, ColorDepth, YuvColorSpace, ColorRange),
-    ConicGradient,
     LinearGradient,
     Opacity,
 }
