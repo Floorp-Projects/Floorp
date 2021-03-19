@@ -325,14 +325,6 @@
       ],
     },
     {
-      'target_name': 'chacha20-ppc_lib',
-      'type': 'static_library',
-      'sources': [
-        'chacha20poly1305-ppc.c',
-        'chacha20-ppc64le.S',
-      ]
-    },
-    {
       'target_name': 'armv8_c_lib',
       'type': 'static_library',
       'sources': [
@@ -418,7 +410,6 @@
           'dependencies': [
             'gcm-aes-ppc_c_lib',
             'gcm-sha512-ppc_c_lib',
-            'chacha20-ppc_lib',
           ],
         }],
         [ 'disable_altivec==1 and (target_arch=="ppc64" or target_arch=="ppc64le")', {
