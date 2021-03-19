@@ -1149,6 +1149,10 @@
       }
     },
 
+    "ShowHomeButton": {
+      "type": "boolean"
+    },
+
     "SSLVersionMax": {
       "type": "string",
       "enum": ["tls1", "tls1.1", "tls1.2", "tls1.3"]
