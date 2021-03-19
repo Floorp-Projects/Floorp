@@ -242,6 +242,7 @@ function checkPermissionString(string, key, param, msg) {
 function checkNotification(panel, checkIcon, permissions) {
   let icon = panel.getAttribute("icon");
   let ul = document.getElementById("addon-webext-perm-list");
+  let singleDataEl = document.getElementById("addon-webext-perm-single-entry");
   let header = document.getElementById("addon-webext-perm-intro");
   let learnMoreLink = document.getElementById("addon-webext-perm-info");
 
@@ -256,27 +257,39 @@ function checkNotification(panel, checkIcon, permissions) {
     is(icon, checkIcon, "Notification icon is correct");
   }
 
-  is(
-    ul.childElementCount,
-    permissions.length,
-    `Permissions list has ${permissions.length} entries`
-  );
   if (!permissions.length) {
     ok(header.hidden, "Permissions header is hidden");
     ok(learnMoreLink.hidden, "Permissions learn more is hidden");
+    ok(ul.hidden, "Permissions list is hidden");
+    ok(singleDataEl.hidden, "Single permission data entry is hidden");
+    ok(
+      !(ul.childElementCount || singleDataEl.textContent),
+      "Permission list and single permission element have no entries"
+    );
   } else {
     ok(!header.hidden, "Permissions header is visible");
     ok(!learnMoreLink.hidden, "Permissions learn more is visible");
-  }
 
-  for (let i in permissions) {
-    let [key, param] = permissions[i];
-    checkPermissionString(
-      ul.children[i].textContent,
-      key,
-      param,
-      `Permission number ${i + 1} is correct`
-    );
+    if (permissions.length === 1) {
+      ok(ul.hidden, "Permissions list is hidden");
+      ok(!ul.childElementCount, "Permission list has no entries");
+      ok(singleDataEl.textContent, "Single permission data label has been set");
+    } else {
+      ok(singleDataEl.hidden, "Single permission data entry is hidden");
+      ok(
+        !singleDataEl.textContent,
+        "Single permission data label has not been set"
+      );
+      for (let i in permissions) {
+        let [key, param] = permissions[i];
+        checkPermissionString(
+          ul.children[i].textContent,
+          key,
+          param,
+          `Permission number ${i + 1} is correct`
+        );
+      }
+    }
   }
 }
 
