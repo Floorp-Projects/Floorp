@@ -506,3 +506,24 @@ fn device_push_dir() {
         },
     );
 }
+
+#[test]
+fn format_own_device_error_types() {
+    assert_eq!(
+        format!("{}", DeviceError::InvalidStorage),
+        "Invalid storage".to_string()
+    );
+    assert_eq!(
+        format!("{}", DeviceError::MissingPackage),
+        "Missing package".to_string()
+    );
+    assert_eq!(
+        format!("{}", DeviceError::MultipleDevices),
+        "Multiple Android devices online".to_string()
+    );
+
+    assert_eq!(
+        format!("{}", DeviceError::Adb("foo".to_string())),
+        "foo".to_string()
+    );
+}
