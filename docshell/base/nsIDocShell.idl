@@ -44,7 +44,6 @@ interface nsIURI;
 interface nsIChannel;
 interface nsIContentViewer;
 interface nsIContentSecurityPolicy;
-interface nsIDocShellLoadInfo;
 interface nsIEditor;
 interface nsIEditingSession;
 interface nsIInputStream;

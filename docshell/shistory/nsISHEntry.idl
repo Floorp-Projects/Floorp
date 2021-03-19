@@ -381,13 +381,12 @@ interface nsISHEntry : nsISupports
     boolean sharesDocumentWith(in nsISHEntry aEntry);
 
     /**
-     * Sets an SHEntry to reflect that it is a history type load. As
-     * nsIDocShellLoadInfo and its LoadType enum were removed, this is the
+     * Sets an SHEntry to reflect that it is a history type load. This is the
      * equivalent to doing
      *
      * shEntry.loadType = 4;
      *
-     * in js, but easier to maintain and less opaque.
+     * in js, but is easier to maintain and less opaque.
      */
     void setLoadTypeAsHistory();
 
@@ -408,8 +407,8 @@ interface nsISHEntry : nsISupports
     nsISHEntry GetChildAt(in long aIndex);
 
     /**
-     * If this entry has no dynamically added child, get the child SHEntry 
-     * at the given offset. The loadtype of the returned entry is set 
+     * If this entry has no dynamically added child, get the child SHEntry
+     * at the given offset. The loadtype of the returned entry is set
      * to its parent's loadtype.
      */
     [notxpcom] void GetChildSHEntryIfHasNoDynamicallyAddedChild(in long aChildOffset,
@@ -426,9 +425,9 @@ interface nsISHEntry : nsISupports
     * Remove all children of this entry and call abandonBFCacheEntry.
     */
     [notxpcom] void ClearEntry();
-    
+
     /**
-     * Create nsDocShellLoadState and fill it with information. 
+     * Create nsDocShellLoadState and fill it with information.
      * Don't set nsSHEntry here to avoid serializing it.
      */
     [noscript] nsDocShellLoadStatePtr CreateLoadInfo();
@@ -447,4 +446,3 @@ interface nsISHEntry : nsISupports
                                                    in BrowsingContext aTopBC,
                                                    in BrowsingContext aIgnoreBC);
 };
-
