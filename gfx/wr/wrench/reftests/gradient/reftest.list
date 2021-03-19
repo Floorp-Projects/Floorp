@@ -104,3 +104,7 @@ fuzzy-range(<=1,1) == gradient_cache_hardstop_clip.yaml gradient_cache_hardstop_
 == linear-backdrop.yaml linear-backdrop-ref.yaml
 == radial-backdrop-with-spacing.yaml radial-backdrop-with-spacing-ref.yaml
 == radial-backdrop.yaml radial-backdrop-ref.yaml
+
+# Exercise the radial gradient optimization code path
+== radial-optimized.yaml radial-optimized-ref.yaml
+== radial-tiling-optimized.yaml radial-tiling-optimized-ref.yaml
