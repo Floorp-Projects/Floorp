@@ -72,7 +72,7 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
   static bool IsXULHelpMenu(nsIContent* aMenuContent);
 
  protected:
-  void MenuConstruct();
+  void RebuildMenu();
   nsresult RemoveAll();
   nsresult SetEnabled(bool aIsEnabled);
   nsresult GetEnabled(bool* aIsEnabled);
@@ -99,10 +99,8 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
   // nsMenuX objects should always have a valid native menu item.
   NSMenuItem* mNativeMenuItem = nil;  // [strong]
   bool mIsEnabled = true;
-  bool mDidFirePopupHiding = false;
-  bool mDidFirePopupHidden = false;
   bool mNeedsRebuild = true;
-  bool mConstructed = false;
+  bool mIsOpen = false;
   bool mVisible = true;
 };
 
