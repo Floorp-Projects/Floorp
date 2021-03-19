@@ -1671,13 +1671,7 @@ def enable_webrender(config, tasks):
     """
     for task in tasks:
         if task.get("webrender"):
-            extra_options = task.get("mozharness", {}).get("extra-options", [])
-
-            if task["attributes"]["unittest_category"] in ["raptor"] and (
-                "--app=chrome" in extra_options or "--app=chromium" in extra_options
-            ):
-                continue
-
+            extra_options = task["mozharness"].setdefault("extra-options", [])
             extra_options.append("--enable-webrender")
             # We only want to 'setpref' on tests that have a profile
             if not task["attributes"]["unittest_category"] in [
