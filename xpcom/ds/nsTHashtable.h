@@ -24,35 +24,27 @@
 #include "mozilla/PodOperations.h"
 #include "mozilla/fallible.h"
 #include "nsPointerHashKeys.h"
+#include "nsTArrayForwardDeclare.h"
+
+template <class EntryType>
+class nsTHashtable;
 
 namespace detail {
-// STL-style iterators to allow the use in range-based for loops, e.g.
-template <typename T>
-class nsTHashtable_base_iterator
-    : public std::iterator<std::forward_iterator_tag, T, int32_t> {
+class nsTHashtableIteratorBase {
  public:
-  using
-      typename std::iterator<std::forward_iterator_tag, T, int32_t>::value_type;
-  using typename std::iterator<std::forward_iterator_tag, T,
-                               int32_t>::difference_type;
-
-  using iterator_type = nsTHashtable_base_iterator;
-  using const_iterator_type = nsTHashtable_base_iterator<const T>;
-
   using EndIteratorTag = PLDHashTable::Iterator::EndIteratorTag;
 
-  nsTHashtable_base_iterator(nsTHashtable_base_iterator&& aOther) = default;
+  nsTHashtableIteratorBase(nsTHashtableIteratorBase&& aOther) = default;
 
-  nsTHashtable_base_iterator& operator=(nsTHashtable_base_iterator&& aOther) {
+  nsTHashtableIteratorBase& operator=(nsTHashtableIteratorBase&& aOther) {
     // User-defined because the move assignment operator is deleted in
     // PLDHashtable::Iterator.
-    return operator=(static_cast<const nsTHashtable_base_iterator&>(aOther));
+    return operator=(static_cast<const nsTHashtableIteratorBase&>(aOther));
   }
 
-  nsTHashtable_base_iterator(const nsTHashtable_base_iterator& aOther)
+  nsTHashtableIteratorBase(const nsTHashtableIteratorBase& aOther)
       : mIterator{aOther.mIterator.Clone()} {}
-  nsTHashtable_base_iterator& operator=(
-      const nsTHashtable_base_iterator& aOther) {
+  nsTHashtableIteratorBase& operator=(const nsTHashtableIteratorBase& aOther) {
     // Since PLDHashTable::Iterator has no assignment operator, we destroy and
     // recreate mIterator.
     mIterator.~Iterator();
@@ -60,19 +52,42 @@ class nsTHashtable_base_iterator
     return *this;
   }
 
-  explicit nsTHashtable_base_iterator(PLDHashTable::Iterator aFrom)
+  explicit nsTHashtableIteratorBase(PLDHashTable::Iterator aFrom)
       : mIterator{std::move(aFrom)} {}
 
-  explicit nsTHashtable_base_iterator(const PLDHashTable& aTable)
+  explicit nsTHashtableIteratorBase(const PLDHashTable& aTable)
       : mIterator{&const_cast<PLDHashTable&>(aTable)} {}
 
-  nsTHashtable_base_iterator(const PLDHashTable& aTable, EndIteratorTag aTag)
+  nsTHashtableIteratorBase(const PLDHashTable& aTable, EndIteratorTag aTag)
       : mIterator{&const_cast<PLDHashTable&>(aTable), aTag} {}
 
-  bool operator==(const iterator_type& aRhs) const {
+  bool operator==(const nsTHashtableIteratorBase& aRhs) const {
     return mIterator == aRhs.mIterator;
   }
-  bool operator!=(const iterator_type& aRhs) const { return !(*this == aRhs); }
+  bool operator!=(const nsTHashtableIteratorBase& aRhs) const {
+    return !(*this == aRhs);
+  }
+
+ protected:
+  PLDHashTable::Iterator mIterator;
+};
+
+// STL-style iterators to allow the use in range-based for loops, e.g.
+template <typename T>
+class nsTHashtableEntryIterator : public nsTHashtableIteratorBase {
+  friend class nsTHashtable<std::remove_const_t<T>>;
+
+ public:
+  using iterator_category = std::forward_iterator_tag;
+  using value_type = T;
+  using difference_type = int32_t;
+  using pointer = value_type*;
+  using reference = value_type&;
+
+  using iterator_type = nsTHashtableEntryIterator;
+  using const_iterator_type = nsTHashtableEntryIterator<const T>;
+
+  using nsTHashtableIteratorBase::nsTHashtableIteratorBase;
 
   value_type* operator->() const {
     return static_cast<value_type*>(mIterator.Get());
@@ -94,10 +109,62 @@ class nsTHashtable_base_iterator
   operator const_iterator_type() const {
     return const_iterator_type{mIterator.Clone()};
   }
+};
+
+template <typename EntryType>
+class nsTHashtableKeyIterator : public nsTHashtableIteratorBase {
+  friend class nsTHashtable<EntryType>;
+
+ public:
+  using iterator_category = std::forward_iterator_tag;
+  using value_type = const std::decay_t<typename EntryType::KeyType>;
+  using difference_type = int32_t;
+  using pointer = value_type*;
+  using reference = value_type&;
+
+  using iterator_type = nsTHashtableKeyIterator;
+  using const_iterator_type = nsTHashtableKeyIterator;
+
+  using nsTHashtableIteratorBase::nsTHashtableIteratorBase;
+
+  value_type* operator->() const {
+    return &static_cast<const EntryType*>(mIterator.Get())->GetKey();
+  }
+  decltype(auto) operator*() const {
+    return static_cast<const EntryType*>(mIterator.Get())->GetKey();
+  }
+
+  iterator_type& operator++() {
+    mIterator.Next();
+    return *this;
+  }
+  iterator_type operator++(int) {
+    iterator_type it = *this;
+    ++*this;
+    return it;
+  }
+};
+
+template <typename EntryType>
+class nsTHashtableKeyRange {
+ public:
+  using IteratorType = nsTHashtableKeyIterator<EntryType>;
+  using iterator = IteratorType;
+
+  explicit nsTHashtableKeyRange(const PLDHashTable& aHashtable)
+      : mHashtable{aHashtable} {}
+
+  auto begin() const { return IteratorType{mHashtable}; }
+  auto end() const {
+    return IteratorType{mHashtable, typename IteratorType::EndIteratorTag{}};
+  }
+  auto cbegin() const { return begin(); }
+  auto cend() const { return end(); }
 
  private:
-  PLDHashTable::Iterator mIterator;
+  const PLDHashTable& mHashtable;
 };
+
 }  // namespace detail
 
 /**
@@ -429,8 +496,8 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
     return ConstIterator(const_cast<nsTHashtable*>(this));
   }
 
-  using const_iterator = ::detail::nsTHashtable_base_iterator<const EntryType>;
-  using iterator = ::detail::nsTHashtable_base_iterator<EntryType>;
+  using const_iterator = ::detail::nsTHashtableEntryIterator<const EntryType>;
+  using iterator = ::detail::nsTHashtableEntryIterator<EntryType>;
 
   iterator begin() { return iterator{mTable}; }
   const_iterator begin() const { return const_iterator{mTable}; }
@@ -442,6 +509,30 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
     return const_iterator{mTable, typename const_iterator::EndIteratorTag{}};
   }
   const_iterator cend() const { return end(); }
+
+  void Remove(const_iterator& aIter) { aIter.mIterator.Remove(); }
+
+  /**
+   * Return a range of the keys (of KeyType). Note this range iterates over the
+   * keys in place, so modifications to the nsTHashtable invalidate the range
+   * while it's iterated, except when calling Remove() with a key iterator
+   * derived from that range.
+   */
+  auto Keys() const {
+    return ::detail::nsTHashtableKeyRange<EntryType>{mTable};
+  }
+
+  /**
+   * Remove an entry from a key range, specified via a key iterator, e.g.
+   *
+   * for (auto it = hash.Keys().begin(), end = hash.Keys().end();
+   *      it != end; * ++it) {
+   *   if (*it > 42) { hash.Remove(it); }
+   * }
+   */
+  void Remove(::detail::nsTHashtableKeyIterator<EntryType>& aIter) {
+    aIter.mIterator.Remove();
+  }
 
   /**
    * Remove all entries, return hashtable to "pristine" state. It's
@@ -837,8 +928,8 @@ class nsTHashtable<nsPtrHashKey<T>>
     return ConstIterator(const_cast<nsTHashtable*>(this));
   }
 
-  using const_iterator = ::detail::nsTHashtable_base_iterator<const EntryType>;
-  using iterator = ::detail::nsTHashtable_base_iterator<EntryType>;
+  using const_iterator = ::detail::nsTHashtableEntryIterator<const EntryType>;
+  using iterator = ::detail::nsTHashtableEntryIterator<EntryType>;
 
   iterator begin() { return iterator{mTable}; }
   const_iterator begin() const { return const_iterator{mTable}; }
@@ -850,6 +941,14 @@ class nsTHashtable<nsPtrHashKey<T>>
     return const_iterator{mTable, typename const_iterator::EndIteratorTag{}};
   }
   const_iterator cend() const { return end(); }
+
+  auto Keys() const {
+    return ::detail::nsTHashtableKeyRange<nsPtrHashKey<T>>{mTable};
+  }
+
+  void Remove(::detail::nsTHashtableKeyIterator<EntryType>& aIter) {
+    aIter.mIterator.Remove();
+  }
 
   void SwapElements(nsTHashtable& aOther) { Base::SwapElements(aOther); }
 };

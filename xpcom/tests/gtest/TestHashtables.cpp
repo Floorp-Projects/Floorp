@@ -587,6 +587,24 @@ TEST(Hashtable, Move)
   EXPECT_FALSE(table.Contains(kPtr));
 }
 
+TEST(Hashtable, Keys)
+{
+  static constexpr uint64_t count = 10;
+
+  nsTHashtable<nsUint64HashKey> table;
+  for (uint64_t i = 0; i < count; i++) {
+    table.PutEntry(i);
+  }
+
+  nsTArray<uint64_t> keys;
+  for (const uint64_t& key : table.Keys()) {
+    keys.AppendElement(key);
+  }
+  keys.Sort();
+
+  EXPECT_EQ((nsTArray<uint64_t>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}), keys);
+}
+
 template <typename TypeParam>
 class BaseHashtableTest : public ::testing::Test {};
 

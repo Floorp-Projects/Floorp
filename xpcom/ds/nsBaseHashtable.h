@@ -156,6 +156,8 @@ class nsBaseHashtableET : public KeyClass {
   template <typename KeyClassX, typename DataTypeX, typename UserDataTypeX,
             typename ConverterX>
   friend class nsBaseHashtable;
+  friend class ::detail::nsTHashtableKeyIterator<
+      nsBaseHashtableET<KeyClass, DataType>>;
 
   typedef typename KeyClass::KeyType KeyType;
   typedef typename KeyClass::KeyTypePointer KeyTypePointer;
@@ -831,6 +833,8 @@ class nsBaseHashtable
     return ConstIterator(const_cast<nsBaseHashtable*>(this));
   }
 
+  using nsTHashtable<EntryType>::Remove;
+
   /**
    * Remove the entry associated with aIter.
    *
@@ -846,6 +850,8 @@ class nsBaseHashtable
   using nsTHashtable<EntryType>::end;
   using nsTHashtable<EntryType>::cbegin;
   using nsTHashtable<EntryType>::cend;
+
+  using nsTHashtable<EntryType>::Keys;
 
   /**
    * reset the hashtable, removing all entries
