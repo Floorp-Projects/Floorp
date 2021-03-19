@@ -27,6 +27,7 @@ toolkit.jar:
   skin/classic/global/datetimeinputpickers.css             (../../shared/datetimeinputpickers.css)
   skin/classic/global/notification.css                     (../../shared/notification.css)
   skin/classic/global/numberinput.css                      (../../shared/numberinput.css)
+  skin/classic/global/in-content/info-pages.css            (../../shared/in-content/info-pages.css)
   skin/classic/global/in-content/toggle-button.css         (../../shared/in-content/toggle-button.css)
   skin/classic/global/icons/add.svg                        (../../shared/icons/add.svg)
   skin/classic/global/icons/arrow-left.svg                 (../../shared/icons/arrow-left.svg)
