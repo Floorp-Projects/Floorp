@@ -252,7 +252,12 @@ void TraceCrossCompartmentEdge(JSTracer* trc, JSObject* src,
 }
 
 // Trace an edge that's guaranteed to be same-zone but may cross a compartment
-// boundary.
+// boundary. This should NOT be used for object => object edges, as those have
+// to be in the cross-compartment wrapper map.
+//
+// WARNING: because this turns off certain compartment checks, you most likely
+// don't want to use this! If you still think you need this function, talk to a
+// GC peer first.
 template <typename T>
 void TraceSameZoneCrossCompartmentEdge(JSTracer* trc,
                                        const WriteBarriered<T>* dst,
