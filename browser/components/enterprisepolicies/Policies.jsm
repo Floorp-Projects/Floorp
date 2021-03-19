@@ -1213,12 +1213,13 @@ var Policies = {
             "pref.browser.homepage.disable_button.restore_default",
             true
           );
-          if (param.URL != "about:blank") {
-            manager.disallowFeature("removeHomeButtonByDefault");
-          }
         } else {
           // Clear out old run once modification that is no longer used.
           clearRunOnceModification("setHomepage");
+        }
+        // If a homepage has been set via policy, show the home button
+        if (param.URL != "about:blank") {
+          manager.disallowFeature("removeHomeButtonByDefault");
         }
       }
       if (param.StartPage) {
@@ -1967,6 +1968,31 @@ var Policies = {
           log.error(`Unable to add security device ${deviceName}`);
           log.debug(ex);
         }
+      }
+    },
+  },
+
+  ShowHomeButton: {
+    onBeforeAddons(manager, param) {
+      if (param) {
+        manager.disallowFeature("removeHomeButtonByDefault");
+      }
+    },
+    onAllWindowsRestored(manager, param) {
+      if (param) {
+        let homeButtonPlacement = CustomizableUI.getPlacementOfWidget(
+          "home-button"
+        );
+        if (!homeButtonPlacement) {
+          let placement = CustomizableUI.getPlacementOfWidget("forward-button");
+          CustomizableUI.addWidgetToArea(
+            "home-button",
+            CustomizableUI.AREA_NAVBAR,
+            placement.position + 2
+          );
+        }
+      } else {
+        CustomizableUI.removeWidgetFromArea("home-button");
       }
     },
   },

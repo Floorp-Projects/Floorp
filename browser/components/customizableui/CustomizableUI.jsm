@@ -257,7 +257,10 @@ var CustomizableUIInternal = {
       "back-button",
       "forward-button",
       "stop-reload-button",
-      gProtonToolbarEnabled ? null : "home-button",
+      gProtonToolbarEnabled &&
+      Services.policies.isAllowed("removeHomeButtonByDefault")
+        ? null
+        : "home-button",
       "spring",
       "urlbar-container",
       "spring",
