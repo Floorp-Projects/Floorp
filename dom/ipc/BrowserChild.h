@@ -741,12 +741,6 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   void HandleDoubleTap(const CSSPoint& aPoint, const Modifiers& aModifiers,
                        const ScrollableLayerGuid& aGuid);
 
-  // Notify others that our TabContext has been updated.
-  //
-  // You should call this after calling TabContext::SetTabContext().  We also
-  // call this during Init().
-  void NotifyTabContextUpdated();
-
   void ActorDestroy(ActorDestroyReason why) override;
 
   bool InitBrowserChildMessageManager();
