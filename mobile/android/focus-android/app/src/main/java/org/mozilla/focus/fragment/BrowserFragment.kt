@@ -68,6 +68,7 @@ import org.mozilla.focus.browser.binding.LoadingBinding
 import org.mozilla.focus.browser.binding.MenuBinding
 import org.mozilla.focus.browser.binding.ProgressBinding
 import org.mozilla.focus.browser.binding.SecurityInfoBinding
+import org.mozilla.focus.browser.binding.TabCountBinding
 import org.mozilla.focus.browser.binding.ToolbarButtonBinding
 import org.mozilla.focus.browser.binding.UrlBinding
 import org.mozilla.focus.browser.integration.FindInPageIntegration
@@ -126,6 +127,7 @@ class BrowserFragment :
     private val menuBinding = ViewBoundFeatureWrapper<MenuBinding>()
     private val toolbarButtonBinding = ViewBoundFeatureWrapper<ToolbarButtonBinding>()
     private val blockingThemeBinding = ViewBoundFeatureWrapper<BlockingThemeBinding>()
+    private val tabCountBinding = ViewBoundFeatureWrapper<TabCountBinding>()
 
     private var biometricController: BiometricAuthenticationHandler? = null
 
@@ -367,27 +369,15 @@ class BrowserFragment :
         val tabsButton = view.findViewById<FloatingSessionsButton>(R.id.tabs)
         tabsButton.setOnClickListener(this)
 
-        val sessionManager = requireComponents.sessionManager
-        @Suppress("DEPRECATION")
-        sessionManager.register(object : SessionManager.Observer {
-            override fun onSessionAdded(session: Session) {
-                tabsButton.updateSessionsCount(sessionManager.sessions.size)
-                eraseButton.updateSessionsCount(sessionManager.sessions.size)
-            }
-
-            override fun onSessionRemoved(session: Session) {
-                tabsButton.updateSessionsCount(sessionManager.sessions.size)
-                eraseButton.updateSessionsCount(sessionManager.sessions.size)
-            }
-
-            override fun onAllSessionsRemoved() {
-                tabsButton.updateSessionsCount(sessionManager.sessions.size)
-                eraseButton.updateSessionsCount(sessionManager.sessions.size)
-            }
-        })
-
-        tabsButton.updateSessionsCount(sessionManager.sessions.size)
-        eraseButton.updateSessionsCount(sessionManager.sessions.size)
+        tabCountBinding.set(
+            TabCountBinding(
+                requireComponents.store,
+                eraseButton,
+                tabsButton
+            ),
+            owner = this,
+            view = eraseButton
+        )
     }
 
     private fun initialiseCustomTabUi(view: View, customTabConfig: CustomTabConfig) {
