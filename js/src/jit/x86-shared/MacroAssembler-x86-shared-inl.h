@@ -1331,11 +1331,8 @@ void MacroAssembler::interleaveLowInt8x16(FloatRegister rhs,
 
 void MacroAssembler::permuteInt8x16(const uint8_t lanes[16], FloatRegister src,
                                     FloatRegister dest) {
-  ScratchSimd128Scope scratch(*this);
-  loadConstantSimd128Int(SimdConstant::CreateX16((const int8_t*)lanes),
-                         scratch);
   moveSimd128Int(src, dest);
-  vpshufb(scratch, dest, dest);
+  vpshufbSimd128(SimdConstant::CreateX16((const int8_t*)lanes), dest);
 }
 
 void MacroAssembler::permuteLowInt16x8(const uint16_t lanes[4],
