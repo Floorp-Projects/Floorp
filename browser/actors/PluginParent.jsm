@@ -701,7 +701,7 @@ class PluginParent extends JSWindowActorParent {
 
     // Configure the notification bar
     let priority = notificationBox.PRIORITY_WARNING_MEDIUM;
-    let iconURL = "chrome://global/skin/plugins/plugin.svg";
+    let iconURL = "chrome://global/skin/icons/plugin.svg";
     let reloadLabel = gNavigatorBundle.GetStringFromName(
       "crashedpluginsMessage.reloadButton.label"
     );
