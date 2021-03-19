@@ -353,27 +353,35 @@ nsEventStatus nsMenuX::MenuOpened() {
 }
 
 void nsMenuX::MenuClosed() {
-  if (mConstructed) {
-    OnClose();
+  if (!mConstructed) {
+    return;
+  }
 
-    if (mNeedsRebuild) {
-      mConstructed = false;
-    }
+  nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
+  nsIContent* dispatchTo = popupContent ? popupContent : mContent;
 
-    if (mContent->IsElement()) {
-      mContent->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::open, true);
-    }
-
+  if (!mDidFirePopupHiding && !mDidFirePopupHidden) {
     nsEventStatus status = nsEventStatus_eIgnore;
-    WidgetMouseEvent event(true, eXULPopupHidden, nullptr, WidgetMouseEvent::eReal);
-
-    nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
-    nsIContent* dispatchTo = popupContent ? popupContent : mContent;
+    WidgetMouseEvent event(true, eXULPopupHiding, nullptr, WidgetMouseEvent::eReal);
     EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
 
-    mDidFirePopupHidden = true;
+    mDidFirePopupHiding = true;
+  }
+
+  if (mNeedsRebuild) {
     mConstructed = false;
   }
+
+  if (mContent->IsElement()) {
+    mContent->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::open, true);
+  }
+
+  nsEventStatus status = nsEventStatus_eIgnore;
+  WidgetMouseEvent event(true, eXULPopupHidden, nullptr, WidgetMouseEvent::eReal);
+  EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
+
+  mDidFirePopupHidden = true;
+  mConstructed = false;
 }
 
 void nsMenuX::MenuConstruct() {
@@ -517,22 +525,6 @@ bool nsMenuX::OnOpen() {
   }
 
   return true;
-}
-
-void nsMenuX::OnClose() {
-  if (mDidFirePopupHiding || mDidFirePopupHidden) {
-    return;
-  }
-
-  nsEventStatus status = nsEventStatus_eIgnore;
-  WidgetMouseEvent event(true, eXULPopupHiding, nullptr, WidgetMouseEvent::eReal);
-
-  nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
-
-  nsIContent* dispatchTo = popupContent ? popupContent : mContent;
-  EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
-
-  mDidFirePopupHiding = true;
 }
 
 // Find the |menupopup| child in the |popup| representing this menu. It should be one
