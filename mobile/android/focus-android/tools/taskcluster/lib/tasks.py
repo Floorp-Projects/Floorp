@@ -45,7 +45,7 @@ class TaskBuilder(object):
             "payload": {
                 "features": features,
                 "maxRunTime": 7200,
-                "image": "mozillamobile/focus-android:1.5",
+                "image": "mozillamobile/focus-android:1.6",
                 "command": [
                     "/bin/bash",
                     "--login",
