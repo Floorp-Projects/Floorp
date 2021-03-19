@@ -150,6 +150,7 @@ statistic_
 """
 
 import os
+import re
 import ast
 import sys
 import copy
@@ -500,7 +501,7 @@ def guess_best_assignment(source_assignments, filename_normalized):
     )
 
 
-def edit_moz_build_file(
+def edit_moz_build_file_to_add_file(
     normalized_mozbuild_filename,
     unnormalized_filename_to_add,
     unnormalized_list_of_files,
@@ -592,9 +593,82 @@ def edit_moz_build_file(
     file.close()
 
 
+def edit_moz_build_file_to_remove_file(
+    normalized_mozbuild_filename,
+    unnormalized_filename_to_remove,
+):
+    """
+    This function edits the moz.build file in-place
+    """
+
+    simple_file_line = re.compile(
+        "^\s*['\"]" + unnormalized_filename_to_remove + "['\"],*$"
+    )
+    did_replace = False
+
+    # FileInput is a strange class that lets you edit a file in-place, but does so by hijacking
+    # stdout, so you just print() the output you want as you go through
+    file = fileinput.FileInput(normalized_mozbuild_filename, inplace=True)
+    for line in file:
+        if not did_replace and unnormalized_filename_to_remove in line:
+            did_replace = True
+
+            # If the line consists of just a single source file on it, then we're in the clear
+            # we can just skip this line.
+            if simple_file_line.match(line):
+                # Do not output anything, just keep going.
+                continue
+
+            # Okay, so the line is a little more complicated.
+            quote_type = line[line.index(unnormalized_filename_to_remove) - 1]
+
+            if "[" in line or "]" in line:
+                find_str = "%s%s%s,*" % (
+                    quote_type,
+                    unnormalized_filename_to_remove,
+                    quote_type,
+                )
+                line = re.sub(find_str, "", line)
+            else:
+                raise Exception(
+                    "Got an unusual type of line we're trying to remove a file from:",
+                    line,
+                )
+
+        print(line, end="")
+
+    file.close()
+
+
 #########################################################
 # PUBLIC API
 #########################################################
+
+
+def remove_file_from_moz_build_file(normalized_filename_to_remove):
+    """
+    Given a filename, relative to the gecko root (aka normalized), we look for the nearest
+    moz.build file, look in that file for the file, and then edit that moz.build file in-place.
+    """
+    normalized_mozbuild_filename = get_closest_mozbuild_file(
+        normalized_filename_to_add, None
+    )
+
+    source_assignments, root, code = mozbuild_file_to_source_assignments(
+        normalized_mozbuild_filename
+    )
+
+    for key, normalized_source_filename_list in source_assignments:
+        if normalized_filename_to_remove in normalized_source_filename_list:
+            unnormalized_filename_to_remove = unnormalize_filename(
+                normalized_mozbuild_filename, normalized_filename_to_remove
+            )
+            edit_moz_build_file_to_remove_file(
+                normalized_mozbuild_filename, unnormalized_filename_to_remove
+            )
+            return
+
+        normalized_filename_to_remove = original_normalized_filename_to_remove
 
 
 def add_file_to_moz_build_file(normalized_filename_to_add):
@@ -639,7 +713,7 @@ def add_file_to_moz_build_file(normalized_filename_to_add):
         for f in guessed_list_containing_normalized_filenames
     ]
 
-    edit_moz_build_file(
+    edit_moz_build_file_to_add_file(
         normalized_mozbuild_filename,
         unnormalized_filename_to_add,
         unnormalized_list_of_files,
