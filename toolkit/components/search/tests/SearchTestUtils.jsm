@@ -176,9 +176,13 @@ var SearchTestUtils = {
       false
     );
     // Only do this once.
-    if (!this._initedTestUtils) {
+    try {
       gTestScope.ExtensionTestUtils.init(scope);
-      this._initedTestUtils = true;
+    } catch (ex) {
+      // This can happen if init is called twice.
+      if (ex.result != Cr.NS_ERROR_FILE_ALREADY_EXISTS) {
+        throw ex;
+      }
     }
     AddonTestUtils.usePrivilegedSignatures = usePrivilegedSignatures;
     AddonTestUtils.overrideCertDB();
@@ -278,17 +282,19 @@ var SearchTestUtils = {
    * @param {string} [options.favicon_url]
    *   The favicon to use for the search engine in the WebExtension.
    * @param {string} [options.keyword]
-   *   The keyword to use for the WebExtension.
+   *   The keyword to use for the search engine.
    * @param {string} [options.encoding]
-   *   The encoding to use for the WebExtension.
+   *   The encoding to use for the search engine.
    * @param {string} [options.search_url]
-   *   The search URL to use for the WebExtension.
+   *   The search URL to use for the search engine.
    * @param {string} [options.search_url_get_params]
-   *   The search URL parameters to use for the WebExtension.
+   *   The GET search URL parameters to use for the search engine
+   * @param {string} [options.search_url_post_params]
+   *   The POST search URL parameters to use for the search engine
    * @param {string} [options.suggest_url]
-   *   The suggestion URL to use for the WebExtension.
+   *   The suggestion URL to use for the search engine.
    * @param {string} [options.suggest_url]
-   *   The suggestion URL parameters to use for the WebExtension.
+   *   The suggestion URL parameters to use for the search engine.
    * @returns {object}
    *   The generated manifest.
    */
@@ -310,11 +316,18 @@ var SearchTestUtils = {
         search_provider: {
           name: options.name,
           search_url: options.search_url ?? "https://example.com/",
-          search_url_get_params:
-            options.search_url_get_params ?? "?q={searchTerms}",
         },
       },
     };
+
+    if (options.search_url_post_params) {
+      manifest.chrome_settings_overrides.search_provider.search_url_post_params =
+        options.search_url_post_params;
+    } else {
+      manifest.chrome_settings_overrides.search_provider.search_url_get_params =
+        options.search_url_get_params ?? "?q={searchTerms}";
+    }
+
     if (options.favicon_url) {
       manifest.chrome_settings_overrides.search_provider.favicon_url =
         options.favicon_url;

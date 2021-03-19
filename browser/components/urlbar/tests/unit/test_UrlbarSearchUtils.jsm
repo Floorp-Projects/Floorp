@@ -6,6 +6,8 @@ const { UrlbarSearchUtils } = ChromeUtils.import(
   "resource:///modules/UrlbarSearchUtils.jsm"
 );
 
+let baconEngineExtension;
+
 add_task(async function() {
   await UrlbarSearchUtils.init();
   // Tell the search service we are running in the US.  This also has the
@@ -72,26 +74,23 @@ add_task(async function onlyEnabled_option_nomatch() {
 });
 
 add_task(async function add_search_engine_match() {
-  let promiseTopic = promiseSearchTopic("engine-added");
   Assert.equal(
     0,
     (await UrlbarSearchUtils.enginesForDomainPrefix("bacon")).length
   );
-  await Promise.all([
-    Services.search.addEngineWithDetails("bacon", {
-      alias: "pork",
-      description: "Search Bacon",
-      method: "GET",
-      template: "http://www.bacon.moz/?search={searchTerms}",
-    }),
-    promiseTopic,
-  ]);
-  await promiseTopic;
+  baconEngineExtension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "bacon",
+      keyword: "pork",
+      search_url: "https://www.bacon.moz/",
+    },
+    true
+  );
   let matchedEngine = (
     await UrlbarSearchUtils.enginesForDomainPrefix("bacon")
   )[0];
   Assert.ok(matchedEngine);
-  Assert.equal(matchedEngine.searchForm, "http://www.bacon.moz");
+  Assert.equal(matchedEngine.searchForm, "https://www.bacon.moz");
   Assert.equal(matchedEngine.name, "bacon");
   Assert.equal(matchedEngine.iconURI, null);
   info("also type part of the public suffix");
@@ -99,35 +98,29 @@ add_task(async function add_search_engine_match() {
     await UrlbarSearchUtils.enginesForDomainPrefix("bacon.m")
   )[0];
   Assert.ok(matchedEngine);
-  Assert.equal(matchedEngine.searchForm, "http://www.bacon.moz");
+  Assert.equal(matchedEngine.searchForm, "https://www.bacon.moz");
   Assert.equal(matchedEngine.name, "bacon");
   Assert.equal(matchedEngine.iconURI, null);
 });
 
 add_task(async function match_multiple_search_engines() {
-  let promiseTopic = promiseSearchTopic("engine-added");
   Assert.equal(
     0,
     (await UrlbarSearchUtils.enginesForDomainPrefix("baseball")).length
   );
-  await Promise.all([
-    Services.search.addEngineWithDetails("baseball", {
-      description: "Search Baseball",
-      method: "GET",
-      template: "http://www.baseball.moz/?search={searchTerms}",
-    }),
-    promiseTopic,
-  ]);
-  await promiseTopic;
+  await SearchTestUtils.installSearchExtension({
+    name: "baseball",
+    search_url: "https://www.baseball.moz/",
+  });
   let matchedEngines = await UrlbarSearchUtils.enginesForDomainPrefix("ba");
   Assert.equal(
     matchedEngines.length,
     2,
     "enginesForDomainPrefix returned two engines."
   );
-  Assert.equal(matchedEngines[0].searchForm, "http://www.bacon.moz");
+  Assert.equal(matchedEngines[0].searchForm, "https://www.bacon.moz");
   Assert.equal(matchedEngines[0].name, "bacon");
-  Assert.equal(matchedEngines[1].searchForm, "http://www.baseball.moz");
+  Assert.equal(matchedEngines[1].searchForm, "https://www.baseball.moz");
   Assert.equal(matchedEngines[1].name, "baseball");
 });
 
@@ -154,20 +147,15 @@ add_task(async function test_aliased_search_engine_match() {
 });
 
 add_task(async function test_aliased_search_engine_match_upper_case_alias() {
-  let promiseTopic = promiseSearchTopic("engine-added");
   Assert.equal(
     0,
     (await UrlbarSearchUtils.enginesForDomainPrefix("patch")).length
   );
-  await Promise.all([
-    Services.search.addEngineWithDetails("patch", {
-      alias: "PR",
-      description: "Search Patch",
-      method: "GET",
-      template: "http://www.patch.moz/?search={searchTerms}",
-    }),
-    promiseTopic,
-  ]);
+  await SearchTestUtils.installSearchExtension({
+    name: "patch",
+    keyword: "PR",
+    search_url: "https://www.patch.moz/",
+  });
   // lower case
   let matchedEngine = await UrlbarSearchUtils.engineForAlias("pr");
   Assert.ok(matchedEngine);
@@ -189,9 +177,8 @@ add_task(async function test_aliased_search_engine_match_upper_case_alias() {
 });
 
 add_task(async function remove_search_engine_nomatch() {
-  let engine = Services.search.getEngineByName("bacon");
   let promiseTopic = promiseSearchTopic("engine-removed");
-  await Promise.all([Services.search.removeEngine(engine), promiseTopic]);
+  await Promise.all([baconEngineExtension.unload(), promiseTopic]);
   Assert.equal(
     0,
     (await UrlbarSearchUtils.enginesForDomainPrefix("bacon")).length
@@ -245,35 +232,57 @@ add_task(async function test_serps_are_equivalent() {
 });
 
 add_task(async function test_get_root_domain_from_engine() {
-  let engine = await Services.search.addEngineWithDetails("TestEngine2", {
-    template: "http://example.com",
-  });
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "TestEngine2",
+      search_url: "https://example.com/",
+    },
+    true
+  );
+  let engine = Services.search.getEngineByName("TestEngine2");
   Assert.equal(UrlbarSearchUtils.getRootDomainFromEngine(engine), "example");
-  await Services.search.removeEngine(engine);
+  await extension.unload();
 
-  engine = await Services.search.addEngineWithDetails("TestEngine", {
-    template: "http://www.subdomain.othersubdomain.example.com",
-  });
+  extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "TestEngine",
+      search_url: "https://www.subdomain.othersubdomain.example.com",
+    },
+    true
+  );
+  engine = Services.search.getEngineByName("TestEngine");
   Assert.equal(UrlbarSearchUtils.getRootDomainFromEngine(engine), "example");
-  await Services.search.removeEngine(engine);
+  await extension.unload();
 
   // We let engines with URL ending in .test through even though its not a valid
   // TLD.
-  engine = await Services.search.addEngineWithDetails("TestMalformed", {
-    template: `http://mochi.test/?search={searchTerms}`,
-  });
+  extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "TestMalformed",
+      search_url: "https://mochi.test/",
+      search_url_get_params: "search={searchTerms}",
+    },
+    true
+  );
+  engine = Services.search.getEngineByName("TestMalformed");
   Assert.equal(UrlbarSearchUtils.getRootDomainFromEngine(engine), "mochi");
-  await Services.search.removeEngine(engine);
+  await extension.unload();
 
   // We return the domain for engines with a malformed URL.
-  engine = await Services.search.addEngineWithDetails("TestMalformed", {
-    template: `http://subdomain.foobar/?search={searchTerms}`,
-  });
+  extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "TestMalformed",
+      search_url: "https://subdomain.foobar/",
+      search_url_get_params: "search={searchTerms}",
+    },
+    true
+  );
+  engine = Services.search.getEngineByName("TestMalformed");
   Assert.equal(
     UrlbarSearchUtils.getRootDomainFromEngine(engine),
     "subdomain.foobar"
   );
-  await Services.search.removeEngine(engine);
+  await extension.unload();
 });
 
 function promiseSearchTopic(expectedVerb) {

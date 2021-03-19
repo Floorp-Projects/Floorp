@@ -6,15 +6,14 @@ let engine;
 add_task(async function test_searchEngine_autoFill() {
   Services.prefs.setBoolPref("browser.urlbar.autoFill.searchEngines", true);
   Services.prefs.setBoolPref("browser.urlbar.suggest.searches", false);
-  await Services.search.addEngineWithDetails("MySearchEngine", {
-    method: "GET",
-    template: "http://my.search.com/",
+  await SearchTestUtils.installSearchExtension({
+    name: "MySearchEngine",
+    search_url: "https://my.search.com/",
   });
   engine = Services.search.getEngineByName("MySearchEngine");
   registerCleanupFunction(async () => {
     Services.prefs.clearUserPref("browser.urlbar.autoFill.searchEngines");
     Services.prefs.clearUserPref("browser.urlbar.suggest.searches");
-    Services.search.removeEngine(engine);
   });
 
   // Add an uri that matches the search string with high frecency.

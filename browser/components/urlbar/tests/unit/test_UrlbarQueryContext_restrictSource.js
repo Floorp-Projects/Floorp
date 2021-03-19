@@ -92,12 +92,9 @@ add_task(async function test_restrictions() {
   );
 
   info("search restrict with alias");
-  let aliasEngine = await Services.search.addEngineWithDetails("Test", {
-    alias: "match",
-    template: "http://example.com/?search={searchTerms}",
-  });
-  registerCleanupFunction(async function() {
-    await Services.search.removeEngine(aliasEngine);
+  await SearchTestUtils.installSearchExtension({
+    name: "Test",
+    keyword: "match",
   });
   results = await get_results({
     sources: [UrlbarUtils.RESULT_SOURCE.SEARCH],

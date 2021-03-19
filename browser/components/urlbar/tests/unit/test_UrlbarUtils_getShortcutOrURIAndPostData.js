@@ -1,5 +1,5 @@
 /* Any copyright is dedicated to the Public Domain.
-   http://creativecommons.org/publicdomain/zero/1.0/ */
+   https://creativecommons.org/publicdomain/zero/1.0/ */
 
 /**
  * These tests unit test the functionality of UrlbarController by stubbing out the
@@ -53,59 +53,59 @@ searchKeywordData.prototype = new keyWordData();
 
 var testData = [
   [
-    new bmKeywordData("bmget", "http://bmget/search=%s", null, "foo"),
-    new keywordResult("http://bmget/search=foo", null),
+    new bmKeywordData("bmget", "https://bmget/search=%s", null, "foo"),
+    new keywordResult("https://bmget/search=foo", null),
   ],
 
   [
-    new bmKeywordData("bmpost", "http://bmpost/", "search=%s", "foo2"),
-    new keywordResult("http://bmpost/", "search=foo2"),
+    new bmKeywordData("bmpost", "https://bmpost/", "search=%s", "foo2"),
+    new keywordResult("https://bmpost/", "search=foo2"),
   ],
 
   [
     new bmKeywordData(
       "bmpostget",
-      "http://bmpostget/search1=%s",
+      "https://bmpostget/search1=%s",
       "search2=%s",
       "foo3"
     ),
-    new keywordResult("http://bmpostget/search1=foo3", "search2=foo3"),
+    new keywordResult("https://bmpostget/search1=foo3", "search2=foo3"),
   ],
 
   [
-    new bmKeywordData("bmget-nosearch", "http://bmget-nosearch/", null, ""),
-    new keywordResult("http://bmget-nosearch/", null),
+    new bmKeywordData("bmget-nosearch", "https://bmget-nosearch/", null, ""),
+    new keywordResult("https://bmget-nosearch/", null),
   ],
 
   [
     new searchKeywordData(
       "searchget",
-      "http://searchget/?search={searchTerms}",
+      "https://searchget/?search={searchTerms}",
       null,
       "foo4"
     ),
-    new keywordResult("http://searchget/?search=foo4", null, true),
+    new keywordResult("https://searchget/?search=foo4", null, true),
   ],
 
   [
     new searchKeywordData(
       "searchpost",
-      "http://searchpost/",
+      "https://searchpost/",
       "search={searchTerms}",
       "foo5"
     ),
-    new keywordResult("http://searchpost/", "search=foo5", true),
+    new keywordResult("https://searchpost/", "search=foo5", true),
   ],
 
   [
     new searchKeywordData(
       "searchpostget",
-      "http://searchpostget/?search1={searchTerms}",
+      "https://searchpostget/?search1={searchTerms}",
       "search2={searchTerms}",
       "foo6"
     ),
     new keywordResult(
-      "http://searchpostget/?search1=foo6",
+      "https://searchpostget/?search1=foo6",
       "search2=foo6",
       true
     ),
@@ -114,13 +114,13 @@ var testData = [
   // Bookmark keywords that don't take parameters should not be activated if a
   // parameter is passed (bug 420328).
   [
-    new bmKeywordData("bmget-noparam", "http://bmget-noparam/", null, "foo7"),
+    new bmKeywordData("bmget-noparam", "https://bmget-noparam/", null, "foo7"),
     new keywordResult(null, null, true),
   ],
   [
     new bmKeywordData(
       "bmpost-noparam",
-      "http://bmpost-noparam/",
+      "https://bmpost-noparam/",
       "not_a=param",
       "foo8"
     ),
@@ -132,21 +132,21 @@ var testData = [
   [
     new bmKeywordData(
       "bmget-escaping",
-      "http://bmget/?esc=%s&raw=%S",
+      "https://bmget/?esc=%s&raw=%S",
       null,
       "fo\xE9"
     ),
-    new keywordResult("http://bmget/?esc=fo%C3%A9&raw=fo\xE9", null),
+    new keywordResult("https://bmget/?esc=fo%C3%A9&raw=fo\xE9", null),
   ],
   // Explicitly-defined ISO-8859-1
   [
     new bmKeywordData(
       "bmget-escaping2",
-      "http://bmget/?esc=%s&raw=%S&mozcharset=ISO-8859-1",
+      "https://bmget/?esc=%s&raw=%S&mozcharset=ISO-8859-1",
       null,
       "fo\xE9"
     ),
-    new keywordResult("http://bmget/?esc=fo%E9&raw=fo\xE9", null),
+    new keywordResult("https://bmget/?esc=fo%E9&raw=fo\xE9", null),
   ],
 
   // Bug 359809: Test escaping +, /, and @
@@ -154,27 +154,27 @@ var testData = [
   [
     new bmKeywordData(
       "bmget-escaping",
-      "http://bmget/?esc=%s&raw=%S",
+      "https://bmget/?esc=%s&raw=%S",
       null,
       "+/@"
     ),
-    new keywordResult("http://bmget/?esc=%2B%2F%40&raw=+/@", null),
+    new keywordResult("https://bmget/?esc=%2B%2F%40&raw=+/@", null),
   ],
   // Explicitly-defined ISO-8859-1
   [
     new bmKeywordData(
       "bmget-escaping2",
-      "http://bmget/?esc=%s&raw=%S&mozcharset=ISO-8859-1",
+      "https://bmget/?esc=%s&raw=%S&mozcharset=ISO-8859-1",
       null,
       "+/@"
     ),
-    new keywordResult("http://bmget/?esc=%2B%2F%40&raw=+/@", null),
+    new keywordResult("https://bmget/?esc=%2B%2F%40&raw=+/@", null),
   ],
 
   // Test using a non-bmKeywordData object, to test the behavior of
   // getShortcutOrURIAndPostData for non-keywords (setupKeywords only adds keywords for
   // bmKeywordData objects)
-  [{ keyword: "http://gavinsharp.com" }, new keywordResult(null, null, true)],
+  [{ keyword: "https://gavinsharp.com" }, new keywordResult(null, null, true)],
 ];
 
 add_task(async function test_getshortcutoruri() {
@@ -211,7 +211,6 @@ add_task(async function test_getshortcutoruri() {
 });
 
 var folder = null;
-var gAddedEngines = [];
 
 async function setupKeywords() {
   folder = await PlacesUtils.bookmarks.insert({
@@ -234,24 +233,17 @@ async function setupKeywords() {
     }
 
     if (data instanceof searchKeywordData) {
-      let addedEngine = await Services.search.addEngineWithDetails(
-        data.keyword,
-        {
-          alias: data.keyword,
-          method: data.method,
-          template: data.uri.spec,
-          searchPostParams: data.postData,
-        }
-      );
-      gAddedEngines.push(addedEngine);
+      await SearchTestUtils.installSearchExtension({
+        name: data.keyword,
+        keyword: data.keyword,
+        search_url: data.uri.spec,
+        search_url_get_params: "",
+        search_url_post_params: data.postData,
+      });
     }
   }
 }
 
 async function cleanupKeywords() {
   await PlacesUtils.bookmarks.remove(folder);
-  for (let engine of gAddedEngines) {
-    await Services.search.removeEngine(engine);
-  }
-  gAddedEngines = [];
 }
