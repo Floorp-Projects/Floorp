@@ -5,7 +5,10 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import os
+import tempfile
 import unittest
+
 
 from mozunit import main
 import mozbuild.vendor.rewrite_mozbuild as mu
@@ -21,6 +24,26 @@ class TestUtils(unittest.TestCase):
             mu.normalize_filename("foo/bar/moz.build", "baz/a.c"), "foo/bar/baz/a.c"
         )
         self.assertEqual(mu.normalize_filename("foo/bar/moz.build", "/a.c"), "/a.c")
+
+    def test_unnormalize_filename(self):
+        test_vectors = [
+            (
+                "foo/bar/moz.build",
+                "/",
+            ),
+            ("foo/bar/moz.build", "a.c"),
+            ("foo/bar/moz.build", "baz/a.c"),
+            ("foo/bar/moz.build", "/a.c"),
+        ]
+
+        for vector in test_vectors:
+            mozbuild, file = vector
+            self.assertEqual(
+                mu.unnormalize_filename(
+                    mozbuild, mu.normalize_filename(mozbuild, file)
+                ),
+                file,
+            )
 
     def test_find_all_posible_assignments_from_filename(self):
         test_vectors = [
@@ -96,6 +119,132 @@ class TestUtils(unittest.TestCase):
                 source_assignments, normalized_filename
             )
             self.assertEqual(actual, expected)
+
+    def test_mozbuild_rewriting(self):
+        sample_mozbuild = """
+if CONFIG['OS_ARCH'] != 'Darwin' and CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+    if CONFIG['HAVE_ARM_NEON']:
+        SOURCES += [
+            "pixman-arm-neon-asm-bilinear.S",
+            "pixman-arm-neon-asm.S",
+        ]
+    if CONFIG['HAVE_ARM_SIMD']:
+        SOURCES += [
+            'pixman-arm-simd-asm-scaled.S',
+            'pixman-arm-simd-asm.S']
+
+SOURCES += [
+    'pixman-region32.c',
+    'pixman-solid-fill.c',
+    'pixman-trap.c',
+    'pixman-utils.c',
+    'pixman-x86.c',
+    'pixman.c',
+]
+
+if use_sse2:
+    DEFINES['USE_SSE'] = True
+    DEFINES['USE_SSE2'] = True
+    SOURCES += ['pixman-sse2.c']
+    SOURCES['pixman-sse2.c'].flags += CONFIG['SSE_FLAGS'] + CONFIG['SSE2_FLAGS']
+    if CONFIG['CC_TYPE'] in ('clang', 'gcc'):
+        SOURCES['pixman-sse2.c'].flags += ['-Winline']
+"""
+        test_vectors = [
+            # (
+            # mozbuild_contents
+            # unnormalized_filename_to_add
+            # unnormalized_list_of_files
+            # expected_output
+            # )
+            (
+                sample_mozbuild,
+                "pixman-sse2-more.c",
+                ["pixman-sse2.c"],
+                sample_mozbuild.replace(
+                    "SOURCES += ['pixman-sse2.c']",
+                    "SOURCES += ['pixman-sse2-more.c','pixman-sse2.c']",
+                ),
+            ),
+            (
+                sample_mozbuild,
+                "pixman-trap-more.c",
+                [
+                    "pixman-region32.c",
+                    "pixman-solid-fill.c",
+                    "pixman-trap.c",
+                    "pixman-utils.c",
+                    "pixman-x86.c",
+                    "pixman.c",
+                ],
+                sample_mozbuild.replace(
+                    "'pixman-trap.c',", "'pixman-trap-more.c',\n    'pixman-trap.c',"
+                ),
+            ),
+            (
+                sample_mozbuild,
+                "pixman-arm-neon-asm-more.S",
+                [
+                    "pixman-arm-neon-asm-bilinear.S",
+                    "pixman-arm-neon-asm.S",
+                ],
+                sample_mozbuild.replace(
+                    '"pixman-arm-neon-asm.S"',
+                    '"pixman-arm-neon-asm-more.S",\n            "pixman-arm-neon-asm.S"',
+                ),
+            ),
+            (
+                sample_mozbuild,
+                "pixman-arm-simd-asm-smore.S",
+                ["pixman-arm-simd-asm-scaled.S", "pixman-arm-simd-asm.S"],
+                sample_mozbuild.replace(
+                    "'pixman-arm-simd-asm.S'",
+                    "'pixman-arm-simd-asm-smore.S',\n            'pixman-arm-simd-asm.S'",
+                ),
+            ),
+            (
+                sample_mozbuild,
+                "pixman-arm-simd-asn.S",
+                ["pixman-arm-simd-asm-scaled.S", "pixman-arm-simd-asm.S"],
+                sample_mozbuild.replace(
+                    "'pixman-arm-simd-asm.S'",
+                    "'pixman-arm-simd-asm.S',\n            'pixman-arm-simd-asn.S'",
+                ),
+            ),
+        ]
+
+        for vector in test_vectors:
+            (
+                mozbuild_contents,
+                unnormalized_filename_to_add,
+                unnormalized_list_of_files,
+                expected_output,
+            ) = vector
+
+            fd, filename = tempfile.mkstemp(text=True)
+            os.close(fd)
+            file = open(filename, mode="w")
+            file.write(mozbuild_contents)
+            file.close()
+
+            mu.edit_moz_build_file(
+                filename, unnormalized_filename_to_add, unnormalized_list_of_files
+            )
+
+            with open(filename) as file:
+                contents = file.read()
+            os.remove(filename)
+
+            if contents != expected_output:
+                print("Contents:")
+                print("-------------------")
+                print(contents)
+                print("-------------------")
+                print("Expected:")
+                print("-------------------")
+                print(expected_output)
+                print("-------------------")
+            self.assertEqual(contents, expected_output)
 
 
 if __name__ == "__main__":
