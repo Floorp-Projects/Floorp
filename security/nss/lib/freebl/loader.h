@@ -10,7 +10,7 @@
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x0325
+#define FREEBL_VERSION 0x0324
 
 struct FREEBLVectorStr {
 
@@ -814,23 +814,6 @@ struct FREEBLVectorStr {
 
     PRBool (*p_KEA_PrimeCheck)(SECItem *prime);
     /* Version 3.024 came to here */
-
-    SECStatus (*p_ChaCha20_InitContext)(ChaCha20Context *ctx,
-                                        const unsigned char *key,
-                                        unsigned int keyLen,
-                                        const unsigned char *nonce,
-                                        unsigned int nonceLen,
-                                        PRUint32 ctr);
-
-    ChaCha20Context *(*p_ChaCha20_CreateContext)(const unsigned char *key,
-                                                 unsigned int keyLen,
-                                                 const unsigned char *nonce,
-                                                 unsigned int nonceLen,
-                                                 PRUint32 ctr);
-
-    void (*p_ChaCha20_DestroyContext)(ChaCha20Context *ctx, PRBool freeit);
-
-    /* Version 3.025 came to here */
 
     /* Add new function pointers at the end of this struct and bump
      * FREEBL_VERSION at the beginning of this file. */
