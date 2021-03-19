@@ -153,9 +153,11 @@ import os
 import ast
 import sys
 import copy
+import fileinput
 import subprocess
 
 from pprint import pprint
+from mozbuild.frontend.sandbox import alphabetical_sorted
 
 statistics = {
     "guess_candidates": {},
@@ -198,11 +200,17 @@ def node_to_readable_file_location(code, node, child_node=None):
             + ast.get_source_segment(code, node.iter)
         )
     elif isinstance(node, ast.AugAssign):
-        location += node.target.id
+        if isinstance(node.target, ast.Name):
+            location += node.target.id
+        else:
+            location += ast.get_source_segment(code, node.target)
     elif isinstance(node, ast.Assign):
         # This assert would fire if we did e.g. some_sources = all_sources = [ ... ]
         assert len(node.targets) == 1, "Assignment node contains more than one target"
-        location += node.targets[0].id
+        if isinstance(node.targets[0], ast.Name):
+            location += node.targets[0].id
+        else:
+            location += ast.get_source_segment(code, node.targets[0])
     else:
         raise Exception("Got a node type I don't know how to handle: " + str(node))
 
@@ -341,19 +349,27 @@ def mozbuild_file_to_source_assignments(normalized_mozbuild_filename):
         source_assignments[source_assignment_location] = normalized_source_filename_list
         assignment_index += 1
 
-    return source_assignments
+    return (source_assignments, root, code)
 
 
-def normalize_filename(mozbuild_filename, filename):
+def unnormalize_filename(normalized_mozbuild_filename, normalized_filename):
+    if normalized_filename[0] == "/":
+        return normalized_filename
+
+    mozbuild_path = os.path.dirname(normalized_mozbuild_filename) + "/"
+    return normalized_filename.replace(mozbuild_path, "")
+
+
+def normalize_filename(normalized_mozbuild_filename, filename):
     if filename[0] == "/":
         return filename
 
-    mozbuild_path = os.path.dirname(mozbuild_filename)
+    mozbuild_path = os.path.dirname(normalized_mozbuild_filename)
     return os.path.join(mozbuild_path, filename)
 
 
 def get_mozbuild_file_search_order(
-    normalized_filename, all_mozbuild_filenames_normalized
+    normalized_filename, all_mozbuild_filenames_normalized=None
 ):
     """
     Returns an ordered list of normalized moz.build filenames to consider for a given filename
@@ -361,9 +377,16 @@ def get_mozbuild_file_search_order(
     NOTE: This function is not really used, see the comment in get_closest_mozbuild_file
 
     normalized_filename: a source filename normalized to the gecko root
-    all_mozbuild_filenames_normalized: the list of all third-party moz.build files
+    all_mozbuild_filenames_normalized: (optional) the list of all third-party moz.build files
+
+    If all_mozbuild_filenames_normalized is not specified, we look in the filesystem.
     """
     ordered_list = []
+
+    if all_mozbuild_filenames_normalized is None:
+        assert os.path.isfile(
+            ".arcconfig"
+        ), "We do not seem to be running from the gecko root"
 
     # The first time around, this variable name is incorrect.
     #    It's actually the full path+filename, not a directory.
@@ -376,7 +399,11 @@ def get_mozbuild_file_search_order(
         possible_normalized_mozbuild_filename = os.path.join(
             containing_directory, "moz.build"
         )
-        if possible_normalized_mozbuild_filename in all_mozbuild_filenames_normalized:
+
+        if not all_mozbuild_filenames_normalized:
+            if os.path.isfile(possible_normalized_mozbuild_filename):
+                ordered_list.append(possible_normalized_mozbuild_filename)
+        elif possible_normalized_mozbuild_filename in all_mozbuild_filenames_normalized:
             ordered_list.append(possible_normalized_mozbuild_filename)
 
         test_directory = containing_directory
@@ -473,6 +500,152 @@ def guess_best_assignment(source_assignments, filename_normalized):
     )
 
 
+def edit_moz_build_file(
+    normalized_mozbuild_filename,
+    unnormalized_filename_to_add,
+    unnormalized_list_of_files,
+):
+    """
+    This function edits the moz.build file in-place
+
+    I had _really_ hoped to replace this whole damn thing with something that adds a
+    node to the AST, dumps the AST out, and then runs black on the file but there are
+    some issues:
+      - third party moz.build files (or maybe all moz.build files) aren't always run
+        through black
+      - dumping the ast out losing comments
+    """
+
+    # add the file into the list, and then sort it in the same way the moz.build validator
+    # expects
+    unnormalized_list_of_files.append(unnormalized_filename_to_add)
+    unnormalized_list_of_files = alphabetical_sorted(unnormalized_list_of_files)
+
+    # we're going to add our file by doing a find/replace of an adjacent file in the list
+    indx_of_addition = unnormalized_list_of_files.index(unnormalized_filename_to_add)
+    indx_of_addition
+    if indx_of_addition == 0:
+        target_indx = 1
+        replace_before = False
+    else:
+        target_indx = indx_of_addition - 1
+        replace_before = True
+
+    find_str = unnormalized_list_of_files[target_indx]
+
+    # We will only perform the first replacement. This is because sometimes there's moz.build
+    # code like:
+    #   SOURCES += ['file.cpp']
+    #   SOURCES['file.cpp'].flags += ['-Winline']
+    # If we replaced every time we found the target, we would be inserting into that second
+    # line.
+    did_replace = False
+
+    # FileInput is a strange class that lets you edit a file in-place, but does so by hijacking
+    # stdout, so you just print() the output you want as you go through
+    file = fileinput.FileInput(normalized_mozbuild_filename, inplace=True)
+    for line in file:
+        if not did_replace and find_str in line:
+            did_replace = True
+
+            # Okay, we found the line we need to edit, now we need to be ugly about it
+            # Grab the type of quote used in this moz.build file: single or double
+            quote_type = line[line.index(find_str) - 1]
+
+            if "[" not in line:
+                # We'll want to put our new file onto its own line
+                newline_to_add = "\n"
+                # And copy the indentation of the line we're adding adjacent to
+                indent_value = line[0 : line.index(quote_type)]
+            else:
+                # This is frustrating, we have the start of the array here. We aren't
+                # going to be able to indent things onto a newline properly. We're just
+                # going to have to stick it in on the same line.
+                newline_to_add = ""
+                indent_value = ""
+
+            find_str = "%s%s%s" % (quote_type, find_str, quote_type)
+            if replace_before:
+                replacement_tuple = (
+                    find_str,
+                    newline_to_add,
+                    indent_value,
+                    quote_type,
+                    unnormalized_filename_to_add,
+                    quote_type,
+                )
+                replace_str = "%s,%s%s%s%s%s" % replacement_tuple
+            else:
+                replacement_tuple = (
+                    quote_type,
+                    unnormalized_filename_to_add,
+                    quote_type,
+                    newline_to_add,
+                    indent_value,
+                    find_str,
+                )
+                replace_str = "%s%s%s,%s%s%s" % replacement_tuple
+
+            line = line.replace(find_str, replace_str)
+
+        print(line, end="")  # line has its own newline on it, don't add a second
+    file.close()
+
+
+#########################################################
+# PUBLIC API
+#########################################################
+
+
+def update_moz_build_file(normalized_filename_to_add):
+    """
+    This is the overall function. Given a filename, relative to the gecko root (aka normalized),
+    we look for a moz.build file to add it to, look for the place in the moz.build file to add it,
+    and then edit that moz.build file in-place.
+    """
+    normalized_mozbuild_filename = get_closest_mozbuild_file(
+        normalized_filename_to_add, None
+    )
+
+    source_assignments, root, code = mozbuild_file_to_source_assignments(
+        normalized_mozbuild_filename
+    )
+
+    possible_assignments = find_all_posible_assignments_from_filename(
+        source_assignments, normalized_filename_to_add
+    )
+
+    assert (
+        len(possible_assignments) > 0
+    ), "Could not find a single possible source assignment"
+    if len(possible_assignments) > 1:
+        best_guess, _ = guess_best_assignment(
+            possible_assignments, normalized_filename_to_add
+        )
+        chosen_source_assignment_location = best_guess
+    else:
+        chosen_source_assignment_location = list(possible_assignments.keys())[0]
+
+    guessed_list_containing_normalized_filenames = possible_assignments[
+        chosen_source_assignment_location
+    ]
+
+    # unnormalize filenames so we can edit the moz.build file. They rarely use full paths.
+    unnormalized_filename_to_add = unnormalize_filename(
+        normalized_mozbuild_filename, normalized_filename_to_add
+    )
+    unnormalized_list_of_files = [
+        unnormalize_filename(normalized_mozbuild_filename, f)
+        for f in guessed_list_containing_normalized_filenames
+    ]
+
+    edit_moz_build_file(
+        normalized_mozbuild_filename,
+        unnormalized_filename_to_add,
+        unnormalized_list_of_files,
+    )
+
+
 #########################################################
 # TESTING CODE
 #########################################################
@@ -488,7 +661,7 @@ def get_all_target_filenames_normalized(all_mozbuild_filenames_normalized):
     """
     all_target_filenames_normalized = []
     for normalized_mozbuild_filename in all_mozbuild_filenames_normalized:
-        source_assignments = mozbuild_file_to_source_assignments(
+        source_assignments, root, code = mozbuild_file_to_source_assignments(
             normalized_mozbuild_filename
         )
         for key in source_assignments:
@@ -521,7 +694,7 @@ def try_to_match_target_file(
     if not normalized_mozbuild_filename:
         return (False, "No moz.build file found")
 
-    source_assignments = mozbuild_file_to_source_assignments(
+    source_assignments, root, code = mozbuild_file_to_source_assignments(
         normalized_mozbuild_filename
     )
     possible_assignments = find_all_posible_assignments_from_filename(
@@ -566,9 +739,9 @@ def try_to_match_target_file(
     return (False, chosen_source_assignment_location)
 
 
-def get_all_mozbuild_filenames():
+def get_gecko_root():
     """
-    Using __file__ as a base, find all the third party moz.build files in the gecko repo
+    Using __file__ as a base, find the gecko root
     """
     gecko_root = None
     directory_to_check = os.path.dirname(os.path.abspath(__file__))
@@ -579,6 +752,13 @@ def get_all_mozbuild_filenames():
             sys.exit(1)
 
     gecko_root = directory_to_check
+    return gecko_root
+
+
+def get_all_mozbuild_filenames(gecko_root):
+    """
+    Find all the third party moz.build files in the gecko repo
+    """
     third_party_paths = open(
         os.path.join(gecko_root, "tools", "rewriting", "ThirdPartyPaths.txt")
     ).readlines()
@@ -598,7 +778,7 @@ def get_all_mozbuild_filenames():
         except Exception:
             pass
 
-    return gecko_root, all_mozbuild_filenames_normalized
+    return all_mozbuild_filenames_normalized
 
 
 def test_all_third_party_files(gecko_root, all_mozbuild_filenames_normalized):
@@ -642,5 +822,10 @@ def test_all_third_party_files(gecko_root, all_mozbuild_filenames_normalized):
 
 
 if __name__ == "__main__":
-    gecko_root, all_mozbuild_filenames_normalized = get_all_mozbuild_filenames()
+    gecko_root = get_gecko_root()
+
+    os.chdir(gecko_root)
+    # update_moz_build_file("gfx/cairo/libpixman/src/pixman-sse2-more.c")
+
+    # all_mozbuild_filenames_normalized = get_all_mozbuild_filenames(gecko_root)
     # test_all_third_party_files(gecko_root, all_mozbuild_filenames_normalized)
