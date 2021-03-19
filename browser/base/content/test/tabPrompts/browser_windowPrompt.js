@@ -10,7 +10,7 @@ add_task(async function test_check_window_modal_prompt_service() {
   await SpecialPowers.pushPrefEnv({
     set: [["prompts.windowPromptSubDialog", true]],
   });
-  let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen(null);
+  let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen();
   // Avoid blocking the test on the (sync) alert by sticking it in a timeout:
   setTimeout(
     () => Services.prompt.alert(window, "Some title", "some message"),
@@ -82,7 +82,7 @@ add_task(async function test_check_window_modal_prompt_service() {
   await SpecialPowers.pushPrefEnv({
     set: [["prompts.windowPromptSubDialog", true]],
   });
-  let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen(null);
+  let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen();
   // Avoid blocking the test on the (sync) alert by sticking it in a timeout:
   setTimeout(
     () => Services.prompt.alert(window, "Some title", "some message"),
@@ -129,7 +129,7 @@ add_task(async function test_check_multiple_prompts() {
     set: [["prompts.windowPromptSubDialog", true]],
   });
   let container = document.getElementById("window-modal-dialog");
-  let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen(null);
+  let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen();
 
   let firstDialogClosedPromise = new Promise(resolve => {
     // Avoid blocking the test on the (sync) alert by sticking it in a timeout:
@@ -160,7 +160,7 @@ add_task(async function test_check_multiple_prompts() {
     }, 0);
   });
 
-  dialogPromise = BrowserTestUtils.promiseAlertDialogOpen(null);
+  dialogPromise = BrowserTestUtils.promiseAlertDialogOpen();
 
   info("Accepting dialog");
   dialogWin.document.querySelector("dialog").acceptDialog();
@@ -199,6 +199,60 @@ add_task(async function test_check_multiple_prompts() {
   for (let menu of document.querySelectorAll("menubar > menu")) {
     ok(!menu.disabled, `Menu ${menu.id} should not be disabled anymore.`);
   }
+});
+
+/**
+ * Check that the in-window modal dialogs un-minimizes windows when necessary.
+ */
+add_task(async function test_check_minimize_response() {
+  // Window minimization doesn't necessarily work on Linux...
+  if (AppConstants.platform == "linux") {
+    return;
+  }
+  await SpecialPowers.pushPrefEnv({
+    set: [["prompts.windowPromptSubDialog", true]],
+  });
+
+  window.minimize();
+  is(window.windowState, window.STATE_MINIMIZED, "Should be minimized.");
+  let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen();
+  // Use an async alert to avoid blocking.
+  Services.prompt.asyncAlert(
+    window.browsingContext,
+    Ci.nsIPrompt.MODAL_TYPE_INTERNAL_WINDOW,
+    "Some title",
+    "some message"
+  );
+  let dialogWin = await dialogPromise;
+
+  isnot(
+    window.windowState,
+    window.STATE_MINIMIZED,
+    "Should no longer be minimized."
+  );
+
+  // Check dialog content:
+  is(
+    dialogWin.document.getElementById("infoTitle").textContent,
+    "Some title",
+    "Title should be correct."
+  );
+
+  let container = dialogWin.docShell.chromeEventHandler.closest("dialog");
+  let closedPromise = BrowserTestUtils.waitForMutationCondition(
+    container,
+    { childList: true, attributes: true },
+    () => !container.hasChildNodes() && !container.open
+  );
+
+  EventUtils.sendKey("ESCAPE");
+  await closedPromise;
+
+  await BrowserTestUtils.waitForMutationCondition(
+    document.querySelector("menubar > menu"),
+    { attributes: true },
+    () => !document.querySelector("menubar > menu").disabled
+  );
 });
 
 /**
