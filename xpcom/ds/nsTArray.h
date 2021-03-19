@@ -3164,7 +3164,6 @@ class CopyableAutoTArray : public AutoTArray<E, N> {
   CopyableAutoTArray& operator=(CopyableAutoTArray&&) = default;
 };
 
-// Span integration
 namespace mozilla {
 template <typename E, typename ArrayT>
 class nsTArrayBackInserter
@@ -3174,13 +3173,9 @@ class nsTArrayBackInserter
  public:
   explicit nsTArrayBackInserter(ArrayT& aArray) : mArray{&aArray} {}
 
-  nsTArrayBackInserter& operator=(const E& aValue) {
-    mArray->AppendElement(aValue);
-    return *this;
-  }
-
-  nsTArrayBackInserter& operator=(E&& aValue) {
-    mArray->AppendElement(std::move(aValue));
+  template <typename E2>
+  nsTArrayBackInserter& operator=(E2&& aValue) {
+    mArray->AppendElement(std::forward<E2>(aValue));
     return *this;
   }
 
@@ -3189,12 +3184,15 @@ class nsTArrayBackInserter
   nsTArrayBackInserter& operator++() { return *this; }
   nsTArrayBackInserter& operator++(int) { return *this; }
 };
+}  // namespace mozilla
 
 template <typename E>
 auto MakeBackInserter(nsTArray<E>& aArray) {
-  return nsTArrayBackInserter<E, nsTArray<E>>{aArray};
+  return mozilla::nsTArrayBackInserter<E, nsTArray<E>>{aArray};
 }
 
+// Span integration
+namespace mozilla {
 template <typename E, class Alloc>
 Span(nsTArray_Impl<E, Alloc>&) -> Span<E>;
 
