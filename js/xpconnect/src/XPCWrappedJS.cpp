@@ -281,7 +281,7 @@ MozExternalRefCountType nsXPCWrappedJS::Release(void) {
     }
 
     // If we are not a root wrapper being used from a weak reference,
-    // then the extra ref is not needed and we can let outselves be
+    // then the extra ref is not needed and we can let ourselves be
     // deleted.
     if (!HasWeakReferences()) {
       return Release();
