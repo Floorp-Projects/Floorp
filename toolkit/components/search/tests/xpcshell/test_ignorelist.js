@@ -7,10 +7,10 @@ const kSearchEngineID1 = "ignorelist_test_engine1";
 const kSearchEngineID2 = "ignorelist_test_engine2";
 const kSearchEngineID3 = "ignorelist_test_engine3";
 const kSearchEngineURL1 =
-  "http://example.com/?search={searchTerms}&ignore=true";
+  "https://example.com/?search={searchTerms}&ignore=true";
 const kSearchEngineURL2 =
-  "http://example.com/?search={searchTerms}&IGNORE=TRUE";
-const kSearchEngineURL3 = "http://example.com/?search={searchTerms}";
+  "https://example.com/?search={searchTerms}&IGNORE=TRUE";
+const kSearchEngineURL3 = "https://example.com/?search={searchTerms}";
 const kExtensionID = "searchignore@mozilla.com";
 
 add_task(async function setup() {
@@ -29,9 +29,9 @@ add_task(async function test_ignoreList() {
     "settings-update-complete"
   );
 
-  await Services.search.addEngineWithDetails(kSearchEngineID1, {
-    method: "get",
-    template: kSearchEngineURL1,
+  await SearchTestUtils.installSearchExtension({
+    name: kSearchEngineID1,
+    search_url: kSearchEngineURL1,
   });
 
   await updatePromise;
@@ -43,9 +43,9 @@ add_task(async function test_ignoreList() {
     "Engine with ignored search params should not exist"
   );
 
-  await Services.search.addEngineWithDetails(kSearchEngineID2, {
-    method: "get",
-    template: kSearchEngineURL2,
+  await SearchTestUtils.installSearchExtension({
+    name: kSearchEngineID2,
+    search_url: kSearchEngineURL2,
   });
 
   // An ignored engine shouldn't be available at all
@@ -56,10 +56,10 @@ add_task(async function test_ignoreList() {
     "Engine with ignored search params of a different case should not exist"
   );
 
-  await Services.search.addEngineWithDetails(kSearchEngineID3, {
-    method: "get",
-    template: kSearchEngineURL3,
-    extensionID: kExtensionID,
+  await SearchTestUtils.installSearchExtension({
+    id: kExtensionID,
+    name: kSearchEngineID3,
+    search_url: kSearchEngineURL3,
   });
 
   // An ignored engine shouldn't be available at all

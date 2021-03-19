@@ -59,10 +59,7 @@ add_task(async function test_engine_sort_only_builtins() {
 });
 
 add_task(async function test_engine_sort_with_non_builtins_sort() {
-  await Services.search.addEngineWithDetails("nonbuiltin1", {
-    method: "get",
-    template: "http://example.com/?search={searchTerms}",
-  });
+  await SearchTestUtils.installSearchExtension({ name: "nonbuiltin1" });
 
   // As we've added an engine, the pref will have been set to true, but
   // we do really want to test the default sort.
