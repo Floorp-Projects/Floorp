@@ -270,8 +270,6 @@ function useHttpServer(dir = "data") {
  *   {
  *     name: Engine name, used to wait for it to be loaded.
  *     xmlFileName: Name of the XML file in the "data" folder.
- *     details: Object containing the parameters of addEngineWithDetails,
- *              except for the engine name.  Alternative to xmlFileName.
  *   }
  */
 var addTestEngines = async function(aItems) {
@@ -300,11 +298,7 @@ var addTestEngines = async function(aItems) {
         }
       }, "browser-search-engine-modified");
 
-      if (item.xmlFileName) {
-        Services.search.addOpenSearchEngine(gDataUrl + item.xmlFileName, null);
-      } else {
-        Services.search.addEngineWithDetails(item.name, item.details);
-      }
+      Services.search.addOpenSearchEngine(gDataUrl + item.xmlFileName, null);
     });
   }
 

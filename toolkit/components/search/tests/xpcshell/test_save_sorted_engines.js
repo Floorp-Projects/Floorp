@@ -50,11 +50,12 @@ add_task(async function test_save_sorted_engines() {
   Assert.equal(metadata["A second test engine"].order, 1);
 
   // Test adding a new engine
-  let engine = await search.addEngineWithDetails("foo", {
-    alias: "foo",
-    method: "GET",
-    template: "http://searchget/?search={searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    name: "foo",
+    keyword: "foo",
   });
+
+  let engine = Services.search.getEngineByName("foo");
   await promiseAfterSettings();
   info("Commit complete after addEngineWithDetails");
 
