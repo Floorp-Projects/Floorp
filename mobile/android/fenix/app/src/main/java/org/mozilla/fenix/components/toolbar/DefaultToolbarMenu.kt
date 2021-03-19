@@ -21,6 +21,7 @@ import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
 import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
+import mozilla.components.browser.menu.item.BrowserMenuImageTextCheckboxButton
 import mozilla.components.browser.menu.item.BrowserMenuItemToolbar
 import mozilla.components.browser.menu.item.WebExtensionPlaceholderMenuItem
 import mozilla.components.browser.state.selector.findTab
@@ -163,8 +164,7 @@ class DefaultToolbarMenu(
                 secondaryImageTintResource = primaryTextColor(),
                 disableInSecondaryState = false
             ) {
-                if (!isCurrentUrlBookmarked) isCurrentUrlBookmarked = true
-                onItemTapped.invoke(ToolbarMenu.Item.Bookmark)
+                handleBookmarkItemTapped()
             }
 
             BrowserMenuItemToolbar(listOf(back, forward, bookmark, share, refresh))
@@ -375,14 +375,6 @@ class DefaultToolbarMenu(
             onItemTapped.invoke(ToolbarMenu.Item.NewTab)
         }
 
-        val bookmarksItem = BrowserMenuImageText(
-            context.getString(R.string.library_bookmarks),
-            R.drawable.ic_bookmark_filled,
-            primaryTextColor()
-        ) {
-            onItemTapped.invoke(ToolbarMenu.Item.Bookmarks)
-        }
-
         val historyItem = BrowserMenuImageText(
             context.getString(R.string.library_history),
             R.drawable.ic_history,
@@ -495,6 +487,23 @@ class DefaultToolbarMenu(
             onItemTapped.invoke(ToolbarMenu.Item.Settings)
         }
 
+        val bookmarksItem = BrowserMenuImageTextCheckboxButton(
+            imageResource = R.drawable.ic_bookmarks_menu,
+            iconTintColorResource = primaryTextColor(),
+            label = context.getString(R.string.library_bookmarks),
+            labelListener = {
+                onItemTapped.invoke(ToolbarMenu.Item.Bookmarks)
+            },
+            primaryStateIconResource = R.drawable.ic_bookmark_outline,
+            secondaryStateIconResource = R.drawable.ic_bookmark_filled,
+            tintColorResource = accentBrightTextColor(),
+            primaryLabel = context.getString(R.string.add_label),
+            secondaryLabel = context.getString(R.string.edit_label),
+            isInPrimaryState = { !isCurrentUrlBookmarked }
+        ) {
+            handleBookmarkItemTapped()
+        }
+
         val menuItems =
             listOfNotNull(
                 if (isTopToolbarSelected) menuToolbar else null,
@@ -524,9 +533,18 @@ class DefaultToolbarMenu(
         menuItems
     }
 
+    private fun handleBookmarkItemTapped() {
+        if (!isCurrentUrlBookmarked) isCurrentUrlBookmarked = true
+        onItemTapped.invoke(ToolbarMenu.Item.Bookmark)
+    }
+
     @ColorRes
     @VisibleForTesting
     internal fun primaryTextColor() = ThemeManager.resolveAttribute(R.attr.primaryText, context)
+
+    @ColorRes
+    @VisibleForTesting
+    internal fun accentBrightTextColor() = ThemeManager.resolveAttribute(R.attr.accentBright, context)
 
     @VisibleForTesting
     internal fun registerForIsBookmarkedUpdates() {
