@@ -310,12 +310,6 @@ interface nsISearchService : nsISupports
                         [optional] in AString alias);
 
   /**
-   * Test-only function for adding an engine. This should be considered obsolete,
-   * and will be replaced soon (bug 1649186).
-   */
-  Promise addEngineWithDetails(in AString name, in jsval details);
-
-  /**
    * Adds search providers to the search service.  If the search
    * service is configured to load multiple locales for the extension,
    * it may load more than one search engine. If called directly
