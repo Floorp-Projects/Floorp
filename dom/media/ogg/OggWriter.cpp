@@ -147,21 +147,20 @@ nsresult OggWriter::GetContainerData(nsTArray<nsTArray<uint8_t>>* aOutputBufs,
     ProduceOggPage(aOutputBufs);
   }
 
-  if (aFlags & ContainerWriter::FLUSH_NEEDED) {
-    // rc = 0 means no packet to put into a page, or an internal error.
-    rc = ogg_stream_flush(&mOggStreamState, &mOggPage);
-  } else {
-    // rc = 0 means insufficient data has accumulated to fill a page, or an
-    // internal error has occurred.
-    rc = ogg_stream_pageout(&mOggStreamState, &mOggPage);
-  }
-
-  if (rc) {
+  // return value 0 means insufficient data has accumulated to fill a page, or
+  // an internal error has occurred.
+  while (ogg_stream_pageout(&mOggStreamState, &mOggPage) != 0) {
     ProduceOggPage(aOutputBufs);
   }
+
   if (aFlags & ContainerWriter::FLUSH_NEEDED) {
+    // return value 0 means no packet to put into a page, or an internal error.
+    if (ogg_stream_flush(&mOggStreamState, &mOggPage) != 0) {
+      ProduceOggPage(aOutputBufs);
+    }
     mIsWritingComplete = true;
   }
+
   // We always return NS_OK here since it's OK to call this without having
   // enough data to fill a page. It's the more common case compared to internal
   // errors, and we cannot distinguish the two.
