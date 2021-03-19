@@ -23,6 +23,7 @@ const char* kCompositionPayloadTypeNames[kCompositionPayloadTypeCount] = {
     "APZScroll",
     "APZPinchZoom",
     "ContentPaint",
+    "MouseUpFollowedByClick",
 };
 
 const char* GetLayersBackendName(LayersBackend aBackend) {
