@@ -113,6 +113,8 @@ class TRRService : public TRRServiceBase,
   virtual void ReadEtcHostsFile() override;
   void AddEtcHosts(const nsTArray<nsCString>&);
 
+  void CompleteConfirmation(nsresult aStatus, TRR* aTrrRequest);
+
   bool mInitialized;
   Atomic<uint32_t, Relaxed> mBlocklistDurationSeconds;
 
