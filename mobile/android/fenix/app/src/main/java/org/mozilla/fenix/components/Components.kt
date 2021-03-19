@@ -8,6 +8,7 @@ import android.app.Application
 import android.content.Context
 import android.content.Intent
 import androidx.core.net.toUri
+import com.google.android.play.core.review.ReviewManagerFactory
 import mozilla.components.feature.addons.AddonManager
 import mozilla.components.feature.addons.amo.AddonCollectionProvider
 import mozilla.components.feature.addons.migration.DefaultSupportedAddonsChecker
@@ -154,8 +155,8 @@ class Components(private val context: Context) {
 
     val reviewPromptController by lazyMonitored {
         ReviewPromptController(
-            context,
-            FenixReviewSettings(settings)
+            manager = ReviewManagerFactory.create(context),
+            reviewSettings = FenixReviewSettings(settings)
         )
     }
 
