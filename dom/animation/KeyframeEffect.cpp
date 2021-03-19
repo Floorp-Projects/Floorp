@@ -102,11 +102,7 @@ KeyframeEffect::KeyframeEffect(Document* aDocument,
                      mTarget.mPseudoType},
       mKeyframes(aOther.mKeyframes.Clone()),
       mProperties(aOther.mProperties.Clone()),
-      mBaseValues(aOther.mBaseValues.Count()) {
-  for (auto iter = aOther.mBaseValues.ConstIter(); !iter.Done(); iter.Next()) {
-    mBaseValues.InsertOrUpdate(iter.Key(), RefPtr{iter.Data()});
-  }
-}
+      mBaseValues(aOther.mBaseValues.Clone()) {}
 
 JSObject* KeyframeEffect::WrapObject(JSContext* aCx,
                                      JS::Handle<JSObject*> aGivenProto) {

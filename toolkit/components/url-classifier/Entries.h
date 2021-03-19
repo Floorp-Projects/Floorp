@@ -328,10 +328,7 @@ struct CachedFullHashResponse {
   CachedFullHashResponse& operator=(const CachedFullHashResponse& aOther) {
     negativeCacheExpirySec = aOther.negativeCacheExpirySec;
 
-    fullHashes.Clear();
-    for (auto iter = aOther.fullHashes.ConstIter(); !iter.Done(); iter.Next()) {
-      fullHashes.InsertOrUpdate(iter.Key(), iter.Data());
-    }
+    fullHashes = aOther.fullHashes.Clone();
 
     return *this;
   }
