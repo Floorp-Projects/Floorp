@@ -51,21 +51,15 @@ bool TabContext::UpdateTabContextAfterSwap(const TabContext& aContext) {
   return true;
 }
 
-const nsAString& TabContext::PresentationURL() const {
-  return mPresentationURL;
-}
-
 UIStateChangeType TabContext::ShowFocusRings() const { return mShowFocusRings; }
 
 bool TabContext::SetTabContext(uint64_t aChromeOuterWindowID,
                                UIStateChangeType aShowFocusRings,
-                               const nsAString& aPresentationURL,
                                uint32_t aMaxTouchPoints) {
   NS_ENSURE_FALSE(mInitialized, false);
 
   mInitialized = true;
   mChromeOuterWindowID = aChromeOuterWindowID;
-  mPresentationURL = aPresentationURL;
   mShowFocusRings = aShowFocusRings;
   mMaxTouchPoints = aMaxTouchPoints;
   return true;
@@ -84,8 +78,7 @@ IPCTabContext TabContext::AsIPCTabContext() const {
     return IPCTabContext(JSPluginFrameIPCTabContext(mJSPluginID));
   }
 
-  return IPCTabContext(FrameIPCTabContext(mChromeOuterWindowID,
-                                          mPresentationURL, mShowFocusRings,
+  return IPCTabContext(FrameIPCTabContext(mChromeOuterWindowID, mShowFocusRings,
                                           mMaxTouchPoints));
 }
 
@@ -93,7 +86,6 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
     : mInvalidReason(nullptr) {
   uint64_t chromeOuterWindowID = 0;
   int32_t jsPluginId = -1;
-  nsAutoString presentationURL;
   UIStateChangeType showFocusRings = UIStateChangeType_NoChange;
   uint32_t maxTouchPoints = 0;
 
@@ -115,7 +107,6 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
       const FrameIPCTabContext& ipcContext = aParams.get_FrameIPCTabContext();
 
       chromeOuterWindowID = ipcContext.chromeOuterWindowID();
-      presentationURL = ipcContext.presentationURL();
       showFocusRings = ipcContext.showFocusRings();
       maxTouchPoints = ipcContext.maxTouchPoints();
       break;
@@ -130,7 +121,7 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
     rv = mTabContext.SetTabContextForJSPluginFrame(jsPluginId);
   } else {
     rv = mTabContext.SetTabContext(chromeOuterWindowID, showFocusRings,
-                                   presentationURL, maxTouchPoints);
+                                   maxTouchPoints);
   }
   if (!rv) {
     mInvalidReason = "Couldn't initialize TabContext.";

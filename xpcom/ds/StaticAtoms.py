@@ -997,7 +997,6 @@ STATIC_ATOMS = [
     Atom("prefersContrast", "prefers-contrast"),
     Atom("prefix", "prefix"),
     Atom("preload", "preload"),
-    Atom("mozpresentation", "mozpresentation"),
     Atom("preserve", "preserve"),
     Atom("preserveSpace", "preserve-space"),
     Atom("preventdefault", "preventdefault"),
