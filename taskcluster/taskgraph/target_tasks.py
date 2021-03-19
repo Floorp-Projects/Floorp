@@ -798,31 +798,41 @@ def target_tasks_live_site_perf_testing(full_task_graph, parameters, graph_confi
     """
 
     def filter(task):
-        platform = task.attributes.get("build_platform")
         attributes = task.attributes
-        vismet = attributes.get("kind") == "visual-metrics-dep"
-        if attributes.get("unittest_suite") != "raptor" and not vismet:
-            return False
+        platform = attributes.get("test_platform")
         try_name = attributes.get("raptor_try_name")
+
+        vismet = attributes.get("kind") == "visual-metrics-dep"
         if vismet:
             platform = task.task.get("extra").get("treeherder-platform")
             try_name = task.label
 
-        if not accept_raptor_android_build(platform):
+        if attributes.get("unittest_suite") != "raptor" and not vismet:
             return False
-        if "-wr" not in try_name:
+        elif "live" not in try_name:
             return False
-        if "fenix" not in try_name:
+        elif "browsertime" not in try_name:
             return False
-        if "browsertime" not in try_name:
+        elif "shippable" not in platform:
             return False
-        if "live" not in try_name:
-            return False
-        for test in LIVE_SITES:
-            if try_name.endswith(test + "-wr") or try_name.endswith(test + "-wr-e10s"):
-                # These tests run 3 times a week, ignore them
+
+        # android
+        if "android" in platform:
+            if not accept_raptor_android_build(platform):
+                return False
+            elif "-wr" not in try_name:
+                return False
+            elif "fenix" not in try_name:
                 return False
 
+        # desktop
+        if "windows7" in platform:
+            return False
+
+        for test in LIVE_SITES:
+            if re.search(test + r"(-fis|-wr)?$", try_name):
+                # These tests run 3 times a week, ignore them
+                return False
         return True
 
     return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
