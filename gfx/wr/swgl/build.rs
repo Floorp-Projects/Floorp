@@ -73,6 +73,7 @@ fn translate_shader(shader_key: &str, shader_dir: &str) {
     std::fs::write(&imp_name, imported).unwrap();
 
     let mut build = cc::Build::new();
+    build.no_default_flags(true);
     if build.get_compiler().is_like_msvc() {
         build.flag("/EP").flag("/u");
     } else {
