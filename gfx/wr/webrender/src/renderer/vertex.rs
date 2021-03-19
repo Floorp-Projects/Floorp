@@ -153,6 +153,51 @@ pub mod desc {
         ],
     };
 
+    pub const RADIAL_GRADIENT: VertexDescriptor = VertexDescriptor {
+        vertex_attributes: &[VertexAttribute {
+            name: "aPosition",
+            count: 2,
+            kind: VertexAttributeKind::U8Norm,
+        }],
+        instance_attributes: &[
+            VertexAttribute {
+                name: "aTaskRect",
+                count: 4,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aCenter",
+                count: 2,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aStartRadius",
+                count: 1,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aEndRadius",
+                count: 1,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aXYRatio",
+                count: 1,
+                kind: VertexAttributeKind::F32,
+            },
+            VertexAttribute {
+                name: "aExtendMode",
+                count: 1,
+                kind: VertexAttributeKind::I32,
+            },
+            VertexAttribute {
+                name: "aGradientStopsAddress",
+                count: 1,
+                kind: VertexAttributeKind::I32,
+            },
+        ],
+    };
+
     pub const BORDER: VertexDescriptor = VertexDescriptor {
         vertex_attributes: &[VertexAttribute {
             name: "aPosition",
@@ -652,6 +697,7 @@ pub enum VertexArrayKind {
     Scale,
     LineDecoration,
     FastLinearGradient,
+    RadialGradient,
     Resolve,
     SvgFilter,
     Composite,
@@ -873,6 +919,7 @@ pub struct RendererVAOs {
     line_vao: VAO,
     scale_vao: VAO,
     fast_linear_gradient_vao: VAO,
+    radial_gradient_vao: VAO,
     resolve_vao: VAO,
     svg_filter_vao: VAO,
     composite_vao: VAO,
@@ -916,6 +963,7 @@ impl RendererVAOs {
             scale_vao: device.create_vao_with_new_instances(&desc::SCALE, &prim_vao),
             line_vao: device.create_vao_with_new_instances(&desc::LINE, &prim_vao),
             fast_linear_gradient_vao: device.create_vao_with_new_instances(&desc::FAST_LINEAR_GRADIENT, &prim_vao),
+            radial_gradient_vao: device.create_vao_with_new_instances(&desc::RADIAL_GRADIENT, &prim_vao),
             resolve_vao: device.create_vao_with_new_instances(&desc::RESOLVE, &prim_vao),
             svg_filter_vao: device.create_vao_with_new_instances(&desc::SVG_FILTER, &prim_vao),
             composite_vao: device.create_vao_with_new_instances(&desc::COMPOSITE, &prim_vao),
@@ -931,6 +979,7 @@ impl RendererVAOs {
         device.delete_vao(self.clip_box_shadow_vao);
         device.delete_vao(self.clip_image_vao);
         device.delete_vao(self.fast_linear_gradient_vao);
+        device.delete_vao(self.radial_gradient_vao);
         device.delete_vao(self.blur_vao);
         device.delete_vao(self.line_vao);
         device.delete_vao(self.border_vao);
@@ -955,6 +1004,7 @@ impl ops::Index<VertexArrayKind> for RendererVAOs {
             VertexArrayKind::Scale => &self.scale_vao,
             VertexArrayKind::LineDecoration => &self.line_vao,
             VertexArrayKind::FastLinearGradient => &self.fast_linear_gradient_vao,
+            VertexArrayKind::RadialGradient => &self.radial_gradient_vao,
             VertexArrayKind::Resolve => &self.resolve_vao,
             VertexArrayKind::SvgFilter => &self.svg_filter_vao,
             VertexArrayKind::Composite => &self.composite_vao,
