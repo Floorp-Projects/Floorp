@@ -115,6 +115,9 @@ async function setup() {
   // Global canary
   gDNSOverride.addIPOverride("use-application-dns.net.", "4.1.1.1");
 
+  // Avoid non-local connections to the TRR endpoint.
+  Preferences.set("network.trr.confirmationNS", "skip");
+
   registerCleanupFunction(async () => {
     Services.telemetry.canRecordExtended = oldCanRecord;
     Services.telemetry.clearEvents();
@@ -129,6 +132,7 @@ async function setup() {
     Services.telemetry.clearEvents();
     Preferences.reset(Object.values(prefs));
     await DoHController.init();
+    Preferences.reset("network.trr.confirmationNS");
   });
 }
 

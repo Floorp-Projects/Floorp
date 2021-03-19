@@ -127,6 +127,7 @@ void TRRServiceBase::OnTRRModeChange() {
   uint32_t oldMode = mMode;
   mMode = ModeFromPrefs();
   if (mMode != oldMode) {
+    LOG(("TRR Mode changed from %d to %d", oldMode, int(mMode)));
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
       obs->NotifyObservers(nullptr, NS_NETWORK_TRR_MODE_CHANGED_TOPIC, nullptr);

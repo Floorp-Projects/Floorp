@@ -40,7 +40,7 @@ class TRRService : public TRRServiceBase,
   nsresult Init();
   nsresult Start();
   bool Enabled(nsIRequest::TRRMode aRequestMode = nsIRequest::TRR_DEFAULT_MODE);
-  bool IsConfirmed() { return mConfirmation.mState == CONFIRM_OK; }
+  bool IsConfirmed() { return mConfirmation.State() == CONFIRM_OK; }
 
   bool DisableIPv6() { return mDisableIPv6; }
   nsresult GetURI(nsACString& result);
@@ -89,8 +89,6 @@ class TRRService : public TRRServiceBase,
 
   nsresult ReadPrefs(const char* name);
   void GetPrefBranch(nsIPrefBranch** result);
-  void MaybeConfirm(const char* aReason);
-  void MaybeConfirm_locked(const char* aReason);
   friend class ::nsDNSService;
   void SetDetectedTrrURI(const nsACString& aURI);
 
@@ -140,18 +138,64 @@ class TRRService : public TRRServiceBase,
   nsTHashtable<nsCStringHashKey> mDNSSuffixDomains;
   nsTHashtable<nsCStringHashKey> mEtcHostsDomains;
 
+  enum class ConfirmationEvent {
+    Init,
+    PrefChange,
+    Retry,
+    FailedLookups,
+    URIChange,
+    CaptivePortalConnectivity,
+    NetworkUp,
+    ConfirmOK,
+    ConfirmFail,
+  };
+
+  void HandleConfirmationEvent(ConfirmationEvent aEvent);
+  void HandleConfirmationEvent(ConfirmationEvent aEvent, const MutexAutoLock&);
+
+  //                                 (FailedLookups/URIChange/NetworkUp)
+  //                                    +-------------------------+
+  // +-----------+                      |                         |
+  // |   (Init)  |               +------v---------+             +-+--+
+  // |           | TRR turned on |                | (ConfirmOK) |    |
+  // |    OFF    +--------------->     TRY-OK     +-------------> OK |
+  // |           |  (PrefChange) |                |             |    |
+  // +-----^-----+               +^-^----+--------+             +-^--+
+  //       |    (PrefChange/CP)   | |    |                        |
+  //   TRR +   +------------------+ |    |                        |
+  //   off |   |               +----+    |(ConfirmFail)           |(ConfirmOK)
+  // (Pref)|   |               |         |                        |
+  // +---------+-+             |         |                        |
+  // |           |    (CPConn) | +-------v--------+         +-----+-----+
+  // | ANY-STATE |  (NetworkUp)| |                |  timer  |           |
+  // |           |  (URIChange)+-+      FAIL      +--------->  TRY-FAIL |
+  // +-----+-----+               |                | (Retry) |           |
+  //       |                     +------^---------+         +------+----+
+  //       | (PrefChange)               |                         |
+  //       | TRR_ONLY mode or           +-------------------------+
+  //       | confirmationNS = skip                (ConfirmFail)
+  // +-----v-----+
+  // |           |
+  // |  DISABLED |
+  // |           |
+  // +-----------+
+  //
   enum ConfirmationState {
-    CONFIRM_INIT = 0,
-    CONFIRM_TRYING = 1,
+    CONFIRM_OFF = 0,
+    CONFIRM_TRYING_OK = 1,
     CONFIRM_OK = 2,
-    CONFIRM_FAILED = 3
+    CONFIRM_FAILED = 3,
+    CONFIRM_TRYING_FAILED = 4,
+    CONFIRM_DISABLED = 5,
   };
 
   class ConfirmationContext {
+    friend void TRRService::HandleConfirmationEvent(ConfirmationEvent,
+                                                    const MutexAutoLock&);
+
    public:
     static const size_t RESULTS_SIZE = 32;
 
-    Atomic<ConfirmationState, Relaxed> mState{CONFIRM_INIT};
     RefPtr<TRR> mTask;
     nsCOMPtr<nsITimer> mTimer;
     uint32_t mRetryInterval = 125;  // milliseconds until retry
@@ -194,6 +238,11 @@ class TRRService : public TRRServiceBase,
     // Called when a confirmation request is completed. The status is recorded
     // in the results.
     void RequestCompleted(nsresult aLookupStatus, nsresult aChannelStatus);
+
+    ConfirmationState State() { return mState; }
+
+   private:
+    Atomic<ConfirmationState, Relaxed> mState{CONFIRM_OFF};
   };
 
   ConfirmationContext mConfirmation;
