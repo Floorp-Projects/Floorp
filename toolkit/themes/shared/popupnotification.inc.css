@@ -222,4 +222,8 @@ popupnotification {
   height: 16px;
   width: 16px;
 }
+
+.popup-notification-checkbox > .checkbox-label-box > .checkbox-label {
+  opacity: 0.7;
+}
 } /*** END proton ***/
