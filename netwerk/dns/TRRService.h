@@ -41,6 +41,7 @@ class TRRService : public TRRServiceBase,
   nsresult Start();
   bool Enabled(nsIRequest::TRRMode aRequestMode = nsIRequest::TRR_DEFAULT_MODE);
   bool IsConfirmed() { return mConfirmation.State() == CONFIRM_OK; }
+  uint32_t ConfirmationState() { return mConfirmation.State(); }
 
   bool DisableIPv6() { return mDisableIPv6; }
   nsresult GetURI(nsACString& result);
@@ -239,10 +240,10 @@ class TRRService : public TRRServiceBase,
     // in the results.
     void RequestCompleted(nsresult aLookupStatus, nsresult aChannelStatus);
 
-    ConfirmationState State() { return mState; }
+    enum ConfirmationState State() { return mState; }
 
    private:
-    Atomic<ConfirmationState, Relaxed> mState{CONFIRM_OFF};
+    Atomic<enum ConfirmationState, Relaxed> mState{CONFIRM_OFF};
   };
 
   ConfirmationContext mConfirmation;
