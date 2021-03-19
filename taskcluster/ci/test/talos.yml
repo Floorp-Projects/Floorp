@@ -296,7 +296,6 @@ talos-g4:
             default:
                 by-test-platform:
                     windows7-32.*: []
-                    windows10-64-ref-hw-2017/opt: ['mozilla-central']
                     (linux|windows10|macos)(?!.*shippable).*: []
                     default: ['mozilla-beta', 'trunk']
     max-run-time:
@@ -584,12 +583,12 @@ talos-webgl:
         by-test-platform:
             android.*: []
             windows7-32.*: []
+            windows10-64-ref-hw-2017/opt: []
             (linux64|windows10|macos).*-qr.*: ['webgl-ipc', 'webrender-sw']
             default: ['webgl-ipc']
     run-on-projects:
         by-test-platform:
             windows7-32.*: []
-            windows10-64-ref-hw-2017/opt: ['mozilla-central']
             (linux|windows10|macos)(?!.*shippable).*: []
             default: ['mozilla-beta', 'trunk']
     max-run-time: 2100
