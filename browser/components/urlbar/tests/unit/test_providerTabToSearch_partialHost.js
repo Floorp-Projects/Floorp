@@ -32,16 +32,15 @@ add_task(async function setup() {
   });
 
   let url = "https://en.example.com/";
-  let engine = await Services.search.addEngineWithDetails("TestEngine", {
-    method: "GET",
-    template: url,
-    searchGetParams: "q={searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    name: "TestEngine",
+    search_url: url,
   });
+  let engine = Services.search.getEngineByName("TestEngine");
   let defaultEngine = await Services.search.getDefault();
   await Services.search.setDefault(engine);
   registerCleanupFunction(async () => {
     await Services.search.setDefault(defaultEngine);
-    await Services.search.removeEngine(engine);
   });
   // Make sure the engine domain would be autofilled.
   await PlacesUtils.bookmarks.insert({
@@ -82,14 +81,12 @@ add_task(async function setup() {
 
   info("Test a www engine");
   let url2 = "https://www.it.mochi.com/";
-  let engine2 = await Services.search.addEngineWithDetails("TestEngine2", {
-    method: "GET",
-    template: url2,
-    searchGetParams: "q={searchTerms}",
+  await SearchTestUtils.installSearchExtension({
+    name: "TestEngine2",
+    search_url: url2,
   });
-  registerCleanupFunction(async () => {
-    await Services.search.removeEngine(engine2);
-  });
+
+  let engine2 = Services.search.getEngineByName("TestEngine2");
   // Make sure the engine domain would be autofilled.
   await PlacesUtils.bookmarks.insert({
     url: url2,

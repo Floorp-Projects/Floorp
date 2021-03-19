@@ -19,12 +19,10 @@ add_task(async function init() {
     "browser.urlbar.tabToSearch.onboard.interactionsLeft",
     0
   );
-  testEngine = await Services.search.addEngineWithDetails("Test", {
-    template: "https://example.com/?search={searchTerms}",
-  });
+  await SearchTestUtils.installSearchExtension({ name: "Test" });
+  testEngine = await Services.search.getEngineByName("Test");
 
   registerCleanupFunction(async () => {
-    await Services.search.removeEngine(testEngine);
     Services.prefs.clearUserPref(
       "browser.urlbar.tabToSearch.onboard.interactionsLeft"
     );
@@ -154,9 +152,14 @@ add_task(async function ignoreWww() {
 
   // The engine has www., the history result does not.
   await PlacesTestUtils.addVisits(["https://foo.bar/"]);
-  let wwwTestEngine = await Services.search.addEngineWithDetails("TestWww", {
-    template: "https://www.foo.bar/?search={searchTerms}",
-  });
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "TestWww",
+      search_url: "https://www.foo.bar/",
+    },
+    true
+  );
+  let wwwTestEngine = Services.search.getEngineByName("TestWww");
   context = createContext("foo", { isPrivate: false });
   await check_results({
     context,
@@ -211,7 +214,7 @@ add_task(async function ignoreWww() {
   });
   await cleanupPlaces();
 
-  await Services.search.removeEngine(wwwTestEngine);
+  await extension.unload();
 });
 
 // Tests that when a user's query causes autofill to replace one engine's domain
@@ -223,13 +226,22 @@ add_task(async function conflictingEngines() {
       "https://foo.com/",
     ]);
   }
-  let fooBarTestEngine = await Services.search.addEngineWithDetails(
-    "TestFooBar",
-    { template: "https://foobar.com/?search={searchTerms}" }
+  let extension1 = await SearchTestUtils.installSearchExtension(
+    {
+      name: "TestFooBar",
+      search_url: "https://foobar.com/",
+    },
+    true
   );
-  let fooTestEngine = await Services.search.addEngineWithDetails("TestFoo", {
-    template: "https://foo.com/?search={searchTerms}",
-  });
+  let extension2 = await SearchTestUtils.installSearchExtension(
+    {
+      name: "TestFoo",
+      search_url: "https://foo.com/",
+    },
+    true
+  );
+  let fooBarTestEngine = Services.search.getEngineByName("TestFooBar");
+  let fooTestEngine = Services.search.getEngineByName("TestFoo");
 
   // Search for "foo", autofilling foo.com. Observe that the foo.com
   // tab-to-search result is shown, even though the foobar.com engine was added
@@ -293,17 +305,21 @@ add_task(async function conflictingEngines() {
   });
 
   await cleanupPlaces();
-  await Services.search.removeEngine(fooTestEngine);
-  await Services.search.removeEngine(fooBarTestEngine);
+  await extension1.unload();
+  await extension2.unload();
 });
 
 add_task(async function multipleEnginesForHostname() {
   info(
     "In case of multiple engines only one tab-to-search result should be returned"
   );
-  let mapsEngine = await Services.search.addEngineWithDetails("TestMaps", {
-    template: "https://example.com/maps/?search={searchTerms}",
-  });
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "TestMaps",
+      search_url: "https://example.com/maps/",
+    },
+    true
+  );
   await PlacesTestUtils.addVisits(["https://example.com/"]);
   let context = createContext("examp", { isPrivate: false });
   await check_results({
@@ -330,7 +346,7 @@ add_task(async function multipleEnginesForHostname() {
     ],
   });
   await cleanupPlaces();
-  await Services.search.removeEngine(mapsEngine);
+  await extension.unload();
 });
 
 add_task(async function test_casing() {
@@ -365,9 +381,14 @@ add_task(async function test_casing() {
 
 add_task(async function test_publicSuffix() {
   info("Tab-to-search results appear also in case of partial host match.");
-  let engine = await Services.search.addEngineWithDetails("MyTest", {
-    template: "https://test.mytest.it/?search={searchTerms}",
-  });
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "MyTest",
+      search_url: "https://test.mytest.it/",
+    },
+    true
+  );
+  let engine = Services.search.getEngineByName("MyTest");
   await PlacesTestUtils.addVisits(["https://test.mytest.it/"]);
   let context = createContext("my", { isPrivate: false });
   await check_results({
@@ -396,14 +417,19 @@ add_task(async function test_publicSuffix() {
     ],
   });
   await cleanupPlaces();
-  await Services.search.removeEngine(engine);
+  await extension.unload();
 });
 
 add_task(async function test_publicSuffixIsHost() {
   info("Tab-to-search results does not appear in case we autofill a suffix.");
-  let suffixEngine = await Services.search.addEngineWithDetails("SuffixTest", {
-    template: "https://somesuffix.com.mx/?search={searchTerms}",
-  });
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "SuffixTest",
+      search_url: "https://somesuffix.com.mx/",
+    },
+    true
+  );
+
   // The top level domain will be autofilled, not the full domain.
   await PlacesTestUtils.addVisits(["https://com.mx/"]);
   let context = createContext("co", { isPrivate: false });
@@ -421,14 +447,19 @@ add_task(async function test_publicSuffixIsHost() {
     ],
   });
   await cleanupPlaces();
-  await Services.search.removeEngine(suffixEngine);
+  await extension.unload();
 });
 
 add_task(async function test_disabledEngine() {
   info("Tab-to-search results does not appear for a Pref-disabled engine.");
-  let engine = await Services.search.addEngineWithDetails("Disabled", {
-    template: "https://disabled.com/?search={searchTerms}",
-  });
+  let extension = await SearchTestUtils.installSearchExtension(
+    {
+      name: "Disabled",
+      search_url: "https://disabled.com/",
+    },
+    true
+  );
+  let engine = Services.search.getEngineByName("Disabled");
   await PlacesTestUtils.addVisits(["https://disabled.com/"]);
   let context = createContext("dis", { isPrivate: false });
 
@@ -473,5 +504,5 @@ add_task(async function test_disabledEngine() {
   Services.prefs.clearUserPref("browser.search.hiddenOneOffs");
 
   await cleanupPlaces();
-  await Services.search.removeEngine(engine);
+  await extension.unload();
 });

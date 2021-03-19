@@ -53,6 +53,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
+const { SearchTestUtils } = ChromeUtils.import(
+  "resource://testing-common/SearchTestUtils.jsm"
+);
+
+Services.prefs.setBoolPref("browser.search.log", true);
+SearchTestUtils.init(this);
+
 const { AddonTestUtils } = ChromeUtils.import(
   "resource://testing-common/AddonTestUtils.jsm"
 );
@@ -565,14 +572,12 @@ add_task(async function ensure_search_engine() {
   let geoPref = "browser.search.geoip.url";
   Services.prefs.setCharPref(geoPref, "");
   registerCleanupFunction(() => Services.prefs.clearUserPref(geoPref));
-  // Remove any existing engines before adding ours.
-  for (let engine of await Services.search.getEngines()) {
-    await Services.search.removeEngine(engine);
-  }
-  await Services.search.addEngineWithDetails("MozSearch", {
-    method: "GET",
-    template: "http://s.example.com/search",
+
+  await SearchTestUtils.installSearchExtension({
+    name: "MozSearch",
+    search_url: "https://s.example.com/search",
   });
+
   let engine = Services.search.getEngineByName("MozSearch");
   await Services.search.setDefault(engine);
 });
