@@ -151,7 +151,7 @@ interface nsIWebProgress : nsISupports
 
   /**
    * Contains a load type as specified by the load* constants in
-   * nsIDocShellLoadInfo.idl.
+   * nsIDocShell:LoadCommand.
    */
   readonly attribute unsigned long loadType;
 
