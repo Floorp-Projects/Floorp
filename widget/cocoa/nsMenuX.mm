@@ -354,10 +354,7 @@ nsEventStatus nsMenuX::MenuOpened() {
 
 void nsMenuX::MenuClosed() {
   if (mConstructed) {
-    // Don't close if a handler tells us to stop.
-    if (!OnClose()) {
-      return;
-    }
+    OnClose();
 
     if (mNeedsRebuild) {
       mConstructed = false;
@@ -522,11 +519,9 @@ bool nsMenuX::OnOpen() {
   return true;
 }
 
-// Returns TRUE if we should keep processing the event, FALSE if the handler
-// wants to stop the closing of the menu.
-bool nsMenuX::OnClose() {
+void nsMenuX::OnClose() {
   if (mDidFirePopupHiding || mDidFirePopupHidden) {
-    return true;
+    return;
   }
 
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -534,17 +529,10 @@ bool nsMenuX::OnClose() {
 
   nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
 
-  nsresult rv = NS_OK;
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
-  rv = EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
+  EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
 
   mDidFirePopupHiding = true;
-
-  if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault) {
-    return false;
-  }
-
-  return true;
 }
 
 // Find the |menupopup| child in the |popup| representing this menu. It should be one
