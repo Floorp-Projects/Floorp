@@ -572,7 +572,6 @@ pub struct Shaders {
     brush_blend: BrushShader,
     brush_mix_blend: BrushShader,
     brush_yuv_image: Vec<Option<BrushShader>>,
-    brush_conic_gradient: BrushShader,
     brush_linear_gradient: BrushShader,
     brush_opacity: BrushShader,
     brush_opacity_aa: BrushShader,
@@ -673,20 +672,6 @@ impl Shaders {
             "brush_mix_blend",
             device,
             &[],
-            options.precache_flags,
-            &shader_list,
-            false /* advanced blend */,
-            false /* dual source */,
-        )?;
-
-        let brush_conic_gradient = BrushShader::new(
-            "brush_conic_gradient",
-            device,
-            if options.enable_dithering {
-               &[DITHERING_FEATURE]
-            } else {
-               &[]
-            },
             options.precache_flags,
             &shader_list,
             false /* advanced blend */,
@@ -1078,7 +1063,6 @@ impl Shaders {
             brush_blend,
             brush_mix_blend,
             brush_yuv_image,
-            brush_conic_gradient,
             brush_linear_gradient,
             brush_opacity,
             brush_opacity_aa,
@@ -1182,8 +1166,7 @@ impl Shaders {
                     BrushBatchKind::MixBlend { .. } => {
                         &mut self.brush_mix_blend
                     }
-                    BrushBatchKind::LinearGradient |
-                    BrushBatchKind::ConicGradient => {
+                    BrushBatchKind::LinearGradient => {
                         // SWGL uses a native clip mask implementation that bypasses the shader.
                         // Don't consider it in that case when deciding whether or not to use
                         // an alpha-pass shader.
@@ -1201,7 +1184,6 @@ impl Shaders {
                         }
                         match brush_kind {
                             BrushBatchKind::LinearGradient => &mut self.brush_linear_gradient,
-                            BrushBatchKind::ConicGradient => &mut self.brush_conic_gradient,
                             _ => panic!(),
                         }
                     }
@@ -1244,7 +1226,6 @@ impl Shaders {
         self.brush_solid.deinit(device);
         self.brush_blend.deinit(device);
         self.brush_mix_blend.deinit(device);
-        self.brush_conic_gradient.deinit(device);
         self.brush_linear_gradient.deinit(device);
         self.brush_opacity.deinit(device);
         self.brush_opacity_aa.deinit(device);
