@@ -964,17 +964,12 @@ fn prepare_interned_prim_for_render(
             profile_scope!("ConicGradient");
             let prim_data = &mut data_stores.conic_grad[*data_handle];
 
-            if prim_data.stretch_size.width >= prim_data.common.prim_rect.size.width &&
-                prim_data.stretch_size.height >= prim_data.common.prim_rect.size.height {
-
-                // We are performing the decomposition on the CPU here, no need to
-                // have it in the shader.
-                prim_data.common.may_need_repetition = false;
-            }
+            prim_data.common.may_need_repetition = prim_data.stretch_size.width < prim_data.common.prim_rect.size.width
+                || prim_data.stretch_size.height < prim_data.common.prim_rect.size.height;
 
             // Update the template this instane references, which may refresh the GPU
             // cache with any shared template data.
-            prim_data.update(frame_state);
+            prim_data.update(frame_state, pic_context.surface_index);
 
             if prim_data.tile_spacing != LayoutSize::zero() {
                 prim_data.common.may_need_repetition = false;
@@ -988,20 +983,7 @@ fn prepare_interned_prim_for_render(
                     frame_state,
                     &mut scratch.gradient_tiles,
                     &frame_context.spatial_tree,
-                    Some(&mut |_, mut request| {
-                        request.push([
-                            prim_data.center.x,
-                            prim_data.center.y,
-                            prim_data.params.start_offset,
-                            prim_data.params.end_offset,
-                        ]);
-                        request.push([
-                            prim_data.params.angle,
-                            pack_as_float(prim_data.extend_mode as u32),
-                            prim_data.stretch_size.width,
-                            prim_data.stretch_size.height,
-                        ]);
-                    }),
+                    None,
                 );
 
                 if visible_tiles_range.is_empty() {
