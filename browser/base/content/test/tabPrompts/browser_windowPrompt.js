@@ -200,3 +200,31 @@ add_task(async function test_check_multiple_prompts() {
     ok(!menu.disabled, `Menu ${menu.id} should not be disabled anymore.`);
   }
 });
+
+/**
+ * Tests that we get a closed callback even when closing the prompt before the
+ * underlying SubDialog has fully opened.
+ */
+add_task(async function test_closed_callback() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["prompts.windowPromptSubDialog", true]],
+  });
+
+  let promptClosedPromise = Services.prompt.asyncAlert(
+    window.browsingContext,
+    Services.prompt.MODAL_TYPE_INTERNAL_WINDOW,
+    "Hello",
+    "Hello, World!"
+  );
+
+  let dialog = gDialogBox._dialog;
+  ok(dialog, "gDialogBox should have a dialog");
+
+  // Directly close the dialog without waiting for it to initialize.
+  dialog.close();
+
+  info("Waiting for prompt close");
+  await promptClosedPromise;
+
+  ok(!gDialogBox._dialog, "gDialogBox should no longer have a dialog");
+});
