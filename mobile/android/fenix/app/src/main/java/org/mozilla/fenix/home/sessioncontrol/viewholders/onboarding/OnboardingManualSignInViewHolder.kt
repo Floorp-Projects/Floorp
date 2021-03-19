@@ -10,35 +10,25 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.onboarding_manual_signin.view.*
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
-import org.mozilla.fenix.ext.addUnderline
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.HomeFragmentDirections
-import org.mozilla.fenix.onboarding.OnboardingController
-import org.mozilla.fenix.onboarding.OnboardingInteractor
 
 class OnboardingManualSignInViewHolder(view: View) : RecyclerView.ViewHolder(view) {
 
     private val headerText = view.header_text
 
     init {
-        val interactor = OnboardingInteractor(OnboardingController(itemView.context))
-
         view.fxa_sign_in_button.setOnClickListener {
             it.context.components.analytics.metrics.track(Event.OnboardingManualSignIn)
 
             val directions = HomeFragmentDirections.actionGlobalTurnOnSync()
             Navigation.findNavController(view).navigate(directions)
         }
-
-        view.learn_more.addUnderline()
-        view.learn_more.setOnClickListener {
-            interactor.onLearnMoreClicked()
-        }
     }
 
     fun bind() {
         val context = itemView.context
-        headerText.text = context.getString(R.string.onboarding_account_sign_in_header)
+        headerText.text = context.getString(R.string.onboarding_account_sign_in_header_1)
     }
 
     companion object {

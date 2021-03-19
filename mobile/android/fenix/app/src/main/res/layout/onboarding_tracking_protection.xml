@@ -18,22 +18,12 @@
         android:drawablePadding="12dp"
         android:gravity="center_vertical"
         android:lines="1"
-        android:text="@string/onboarding_tracking_protection_header_2"
+        android:text="@string/onboarding_tracking_protection_header_3"
         android:textAppearance="@style/HeaderTextStyle"
-        app:layout_constraintEnd_toStartOf="@id/tracking_protection_toggle"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:drawableStart="@drawable/ic_onboarding_tracking_protection" />
-
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/tracking_protection_toggle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:minWidth="48dp"
-        android:minHeight="48dp"
-        app:layout_constraintBottom_toBottomOf="@id/header_text"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@id/header_text" />
 
     <TextView
         android:id="@+id/description_text"
@@ -44,7 +34,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/header_text"
-        tools:text="@string/onboarding_tracking_protection_description_2" />
+        tools:text="@string/onboarding_tracking_protection_description_3" />
 
 
     <org.mozilla.fenix.onboarding.OnboardingRadioButton
@@ -64,7 +54,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/description_text"
         app:onboardingKey="@string/pref_key_tracking_protection_standard_option"
-        app:onboardingKeyDescription="@string/onboarding_tracking_protection_standard_button_description_2"
+        app:onboardingKeyDescription="@string/onboarding_tracking_protection_standard_button_description_3"
         app:onboardingKeyTitle="@string/onboarding_tracking_protection_standard_button_2"
         tools:text="Standard" />
 
@@ -87,7 +77,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tracking_protection_standard_option"
         app:onboardingKey="@string/pref_key_tracking_protection_strict_default"
-        app:onboardingKeyDescription="@string/onboarding_tracking_protection_strict_button_description_2"
+        app:onboardingKeyDescription="@string/onboarding_tracking_protection_strict_button_description_3"
         app:onboardingKeyTitle="@string/onboarding_tracking_protection_strict_option"
         tools:text="Strict" />
 </androidx.constraintlayout.widget.ConstraintLayout>

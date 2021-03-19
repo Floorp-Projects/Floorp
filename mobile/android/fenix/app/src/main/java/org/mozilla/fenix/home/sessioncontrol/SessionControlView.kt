@@ -12,7 +12,6 @@ import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.extensions.LayoutContainer
 import mozilla.components.feature.tab.collections.TabCollection
 import mozilla.components.feature.top.sites.TopSite
-import org.mozilla.fenix.R
 import org.mozilla.fenix.components.tips.Tip
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.home.HomeFragmentState
@@ -71,6 +70,13 @@ private fun privateModeAdapterItems() = listOf(AdapterItem.PrivateBrowsingDescri
 private fun onboardingAdapterItems(onboardingState: OnboardingState): List<AdapterItem> {
     val items: MutableList<AdapterItem> = mutableListOf(AdapterItem.OnboardingHeader)
 
+    items.addAll(
+        listOf(
+            AdapterItem.OnboardingThemePicker,
+            AdapterItem.OnboardingToolbarPositionPicker,
+            AdapterItem.OnboardingTrackingProtection
+        )
+    )
     // Customize FxA items based on where we are with the account state:
     items.addAll(
         when (onboardingState) {
@@ -90,14 +96,6 @@ private fun onboardingAdapterItems(onboardingState: OnboardingState): List<Adapt
 
     items.addAll(
         listOf(
-            AdapterItem.OnboardingSectionHeader {
-                val appName = it.getString(R.string.app_name)
-                it.getString(R.string.onboarding_feature_section_header, appName)
-            },
-            AdapterItem.OnboardingTrackingProtection,
-            AdapterItem.OnboardingThemePicker,
-            AdapterItem.OnboardingPrivateBrowsing,
-            AdapterItem.OnboardingToolbarPositionPicker,
             AdapterItem.OnboardingPrivacyNotice,
             AdapterItem.OnboardingFinish
         )

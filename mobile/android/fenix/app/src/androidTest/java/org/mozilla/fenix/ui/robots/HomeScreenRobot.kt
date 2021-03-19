@@ -54,6 +54,9 @@ import org.mozilla.fenix.helpers.click
 import org.mozilla.fenix.helpers.ext.waitNotNull
 import org.mozilla.fenix.helpers.matchers.hasItem
 import org.mozilla.fenix.helpers.withBitmapDrawable
+import org.mozilla.fenix.ui.util.STRING_ONBOARDING_ACCOUNT_SIGN_IN_HEADER
+import org.mozilla.fenix.ui.util.STRING_ONBOARDING_TOOLBAR_PLACEMENT_HEADER
+import org.mozilla.fenix.ui.util.STRING_ONBOARDING_TRACKING_PROTECTION_HEADER
 
 /**
  * Implementation of Robot Pattern for the home screen menu.
@@ -85,7 +88,6 @@ class HomeScreenRobot {
 
     fun verifyStartSyncHeader() = assertStartSyncHeader()
     fun verifyAccountsSignInButton() = assertAccountsSignInButton()
-    fun verifyGetToKnowHeader() = assertGetToKnowHeader()
     fun verifyChooseThemeHeader() = assertChooseThemeHeader()
     fun verifyChooseThemeText() = assertChooseThemeText()
     fun verifyLightThemeToggle() = assertLightThemeToggle()
@@ -95,18 +97,13 @@ class HomeScreenRobot {
     fun verifyAutomaticThemeToggle() = assertAutomaticThemeToggle()
     fun verifyAutomaticThemeDescription() = assertAutomaticThemeDescription()
     fun verifyAutomaticPrivacyHeader() = assertAutomaticPrivacyHeader()
-    fun verifyTrackingProtectionToggle() = assertTrackingProtectionToggle()
-    fun verifyAutomaticPrivacyText() = assertAutomaticPrivacyText()
+    fun verifyAutomaticPrivacyText() = assertAlwaysPrivacyText()
 
-    // Browse privately
-    fun verifyBrowsePrivatelyHeader() = assertBrowsePrivatelyHeader()
-    fun verifyBrowsePrivatelyText() = assertBrowsePrivatelyText()
-
-    // Take a position
-    fun verifyTakePositionHeader() = assertTakePositionheader()
+    // Pick your toolbar placement
+    fun verifyTakePositionHeader() = assertTakePlacementHeader()
     fun verifyTakePositionElements() {
-        assertTakePositionBottomRadioButton()
-        assertTakePositionTopRadioButton()
+        assertTakePlacementBottomRadioButton()
+        assertTakePacementTopRadioButton()
     }
 
     // Your privacy
@@ -549,16 +546,13 @@ private fun assertWelcomeHeader() =
     onView(allOf(withText("Welcome to ${appContext.appName}!")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-private fun assertStartSyncHeader() =
-    onView(allOf(withText("Start syncing bookmarks, passwords, and more with your Firefox account.")))
+private fun assertStartSyncHeader() {
+    scrollToElementByText(STRING_ONBOARDING_ACCOUNT_SIGN_IN_HEADER)
+    onView(allOf(withText(R.string.onboarding_account_sign_in_header_1)))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
+}
 private fun assertAccountsSignInButton() =
     onView(ViewMatchers.withResourceName("fxa_sign_in_button"))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-
-private fun assertGetToKnowHeader() =
-    onView(allOf(withText("Get to know ${appContext.appName}")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertChooseThemeHeader() {
@@ -568,7 +562,7 @@ private fun assertChooseThemeHeader() {
 }
 private fun assertChooseThemeText() {
     scrollToElementByText("Choose your theme")
-    onView(allOf(withText("Save some battery and your eyesight by enabling dark mode.")))
+    onView(allOf(withText("Save some battery and your eyesight with dark mode.")))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
@@ -608,40 +602,23 @@ private fun assertAutomaticThemeDescription() {
 }
 
 private fun assertAutomaticPrivacyHeader() {
-    scrollToElementByText("Automatic privacy")
-    onView(allOf(withText("Automatic privacy")))
+    scrollToElementByText(STRING_ONBOARDING_TRACKING_PROTECTION_HEADER)
+    onView(allOf(withText(STRING_ONBOARDING_TRACKING_PROTECTION_HEADER)))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertTrackingProtectionToggle() {
-    scrollToElementByText("Automatic privacy")
-    onView(withId(R.id.tracking_protection_toggle))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
-private fun assertAutomaticPrivacyText() {
-    scrollToElementByText("Automatic privacy")
+private fun assertAlwaysPrivacyText() {
+    scrollToElementByText(STRING_ONBOARDING_TRACKING_PROTECTION_HEADER)
     onView(
         allOf(
             withText(
-                "Privacy and security settings block trackers, malware, and companies that follow you."
+                R.string.onboarding_tracking_protection_description_3
             )
         )
     )
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertBrowsePrivatelyHeader() {
-    scrollToElementByText("Browse privately")
-    onView(allOf(withText("Browse privately")))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
-
-private fun assertBrowsePrivatelyText() {
-    scrollToElementByText("Browse privately")
-    onView(allOf(withText(containsString("Update your private browsing settings."))))
-        .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
-}
 private fun assertYourPrivacyHeader() {
     scrollToElementByText("Your privacy")
     onView(allOf(withText("Your privacy")))
@@ -672,21 +649,21 @@ private fun assertStartBrowsingButton() {
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-// Take a position
-private fun assertTakePositionheader() {
-    scrollToElementByText("Take a position")
-    onView(allOf(withText("Take a position")))
+// Pick your toolbar placement
+private fun assertTakePlacementHeader() {
+    scrollToElementByText(STRING_ONBOARDING_TOOLBAR_PLACEMENT_HEADER)
+    onView(allOf(withText(STRING_ONBOARDING_TOOLBAR_PLACEMENT_HEADER)))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertTakePositionTopRadioButton() {
-    scrollToElementByText("Take a position")
+private fun assertTakePacementTopRadioButton() {
+    scrollToElementByText(STRING_ONBOARDING_TOOLBAR_PLACEMENT_HEADER)
     onView(ViewMatchers.withResourceName("toolbar_top_radio_button"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }
 
-private fun assertTakePositionBottomRadioButton() {
-    scrollToElementByText("Take a position")
+private fun assertTakePlacementBottomRadioButton() {
+    scrollToElementByText(STRING_ONBOARDING_TOOLBAR_PLACEMENT_HEADER)
     onView(ViewMatchers.withResourceName("toolbar_bottom_radio_button"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }

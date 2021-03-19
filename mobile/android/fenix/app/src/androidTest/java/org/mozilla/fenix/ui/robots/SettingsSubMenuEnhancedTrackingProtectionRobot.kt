@@ -143,16 +143,13 @@ private fun assertEnhancedTrackingProtectionOptions() {
     onView(withText("Standard (default)"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    val stdText = "Blocks fewer trackers. Pages will load normally."
-    onView(withText(stdText))
+    onView(withText(org.mozilla.fenix.R.string.preference_enhanced_tracking_protection_standard_description_4))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
     onView(withText("Strict"))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
-    val strictText =
-        "Blocks more trackers, ads, and popups. Pages load faster, but some functionality might not work."
-    onView(withText(strictText))
+    onView(withText(org.mozilla.fenix.R.string.preference_enhanced_tracking_protection_strict_description_3))
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
     onView(withText("Custom"))
@@ -168,16 +165,13 @@ private fun assertEnhancedTrackingProtectionOptionsGrayedOut() {
     onView(withText("Standard (default)"))
         .check(matches(not(isEnabled(true))))
 
-    val stdText = "Blocks fewer trackers. Pages will load normally."
-    onView(withText(stdText))
+    onView(withText(org.mozilla.fenix.R.string.preference_enhanced_tracking_protection_standard_description_4))
         .check(matches(not(isEnabled(true))))
 
     onView(withText("Strict"))
         .check(matches(not(isEnabled(true))))
 
-    val strictText =
-        "Blocks more trackers, ads, and popups. Pages load faster, but some functionality might not work."
-    onView(withText(strictText))
+    onView(withText(org.mozilla.fenix.R.string.preference_enhanced_tracking_protection_strict_description_3))
         .check(matches(not(isEnabled(true))))
 
     onView(withText("Custom"))

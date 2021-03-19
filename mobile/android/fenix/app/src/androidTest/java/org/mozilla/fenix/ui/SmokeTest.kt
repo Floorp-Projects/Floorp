@@ -35,6 +35,7 @@ import org.mozilla.fenix.ui.robots.enhancedTrackingProtection
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 import org.mozilla.fenix.ui.robots.tabDrawer
+import org.mozilla.fenix.ui.util.STRING_ONBOARDING_TRACKING_PROTECTION_HEADER
 
 /**
  * Test Suite that contains tests defined as part of the Smoke and Sanity check defined in Test rail.
@@ -125,13 +126,9 @@ class SmokeTest {
             verifyStartSyncHeader()
             verifyAccountsSignInButton()
 
-            // Intro to other sections
-            verifyGetToKnowHeader()
-
-            // Automatic privacy
-            scrollToElementByText("Automatic privacy")
+            // Always-on privacy
+            scrollToElementByText(STRING_ONBOARDING_TRACKING_PROTECTION_HEADER)
             verifyAutomaticPrivacyHeader()
-            verifyTrackingProtectionToggle()
             verifyAutomaticPrivacyText()
 
             // Choose your theme
@@ -142,11 +139,7 @@ class SmokeTest {
             verifyLightThemeDescription()
             verifyLightThemeToggle()
 
-            // Browse privately
-            verifyBrowsePrivatelyHeader()
-            verifyBrowsePrivatelyText()
-
-            // Take a position
+            // Pick your toolbar placement
             verifyTakePositionHeader()
             verifyTakePositionElements()
 
@@ -161,6 +154,7 @@ class SmokeTest {
     }
 
     @Test
+    @Ignore("https://github.com/mozilla-mobile/fenix/issues/18603")
     // Verifies the functionality of the onboarding Start Browsing button
     fun startBrowsingButtonTest() {
         homeScreen {

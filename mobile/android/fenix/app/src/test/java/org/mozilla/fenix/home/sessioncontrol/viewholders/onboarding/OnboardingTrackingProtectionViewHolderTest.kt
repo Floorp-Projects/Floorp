@@ -32,9 +32,7 @@ class OnboardingTrackingProtectionViewHolderTest {
     fun `sets description text`() {
         OnboardingTrackingProtectionViewHolder(view)
 
-        assertEquals(
-            "Privacy and security settings block trackers, malware, and companies that follow you.",
-            view.description_text.text
-        )
+        val string = testContext.getString(R.string.onboarding_tracking_protection_description_3)
+        assertEquals(string, view.description_text.text)
     }
 }

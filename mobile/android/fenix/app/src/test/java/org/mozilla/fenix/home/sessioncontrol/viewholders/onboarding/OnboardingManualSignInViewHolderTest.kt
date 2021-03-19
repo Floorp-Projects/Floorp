@@ -9,9 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.NavController
 import androidx.navigation.Navigation
-import io.mockk.Runs
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
@@ -23,16 +21,15 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.HomeFragmentDirections
-import org.mozilla.fenix.onboarding.OnboardingInteractor
 
 @RunWith(FenixRobolectricTestRunner::class)
 class OnboardingManualSignInViewHolderTest {
 
     private lateinit var view: View
     private lateinit var navController: NavController
-    private lateinit var interactor: OnboardingInteractor
     private lateinit var itemView: ViewGroup
 
     @Before
@@ -40,12 +37,10 @@ class OnboardingManualSignInViewHolderTest {
         view = LayoutInflater.from(testContext)
             .inflate(OnboardingManualSignInViewHolder.LAYOUT_ID, null)
         navController = mockk(relaxed = true)
-        interactor = mockk(relaxUnitFun = true)
         itemView = mockk(relaxed = true)
 
         mockkStatic(Navigation::class)
         every { itemView.context } returns testContext
-        every { interactor.onLearnMoreClicked() } just Runs
         every { Navigation.findNavController(view) } returns navController
     }
 
@@ -57,9 +52,9 @@ class OnboardingManualSignInViewHolderTest {
     @Test
     fun `bind header text`() {
         OnboardingManualSignInViewHolder(view).bind()
-
+        val string = testContext.getString(R.string.onboarding_account_sign_in_header_1)
         assertEquals(
-            "Start syncing bookmarks, passwords, and more with your Firefox account.",
+            string,
             view.header_text.text
         )
     }
