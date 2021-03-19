@@ -12,10 +12,4 @@ struct ChaCha20Poly1305ContextStr {
     unsigned char tagLen;
 };
 
-struct ChaCha20ContextStr {
-    unsigned char key[32];
-    unsigned char nonce[12];
-    PRUint32 counter;
-};
-
 #endif /* _CHACHA20_POLY1305_H_ */
