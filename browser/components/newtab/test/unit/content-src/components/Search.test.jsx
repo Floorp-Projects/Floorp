@@ -145,7 +145,7 @@ describe("<Search>", () => {
         },
         type: "HANDOFF_SEARCH_TO_AWESOMEBAR",
       });
-      assert.calledWith(dispatch, { type: "HIDE_SEARCH" });
+      assert.calledWith(dispatch, { type: "DISABLE_SEARCH" });
       const [action] = dispatch.thirdCall.args;
       assert.isUserEventAction(action);
       assert.propertyVal(action.data, "event", "SEARCH_HANDOFF");
@@ -170,7 +170,7 @@ describe("<Search>", () => {
         },
         type: "HANDOFF_SEARCH_TO_AWESOMEBAR",
       });
-      assert.calledWith(dispatch, { type: "HIDE_SEARCH" });
+      assert.calledWith(dispatch, { type: "DISABLE_SEARCH" });
       const [action] = dispatch.thirdCall.args;
       assert.isUserEventAction(action);
       assert.propertyVal(action.data, "event", "SEARCH_HANDOFF");

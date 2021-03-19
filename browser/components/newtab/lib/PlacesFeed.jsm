@@ -399,7 +399,7 @@ class PlacesFeed {
         urlBar.removeHiddenFocus();
         urlBar.search("");
         this.store.dispatch(
-          ac.OnlyToOneContent({ type: at.HIDE_SEARCH }, meta.fromTarget)
+          ac.OnlyToOneContent({ type: at.DISABLE_SEARCH }, meta.fromTarget)
         );
         urlBar.removeEventListener("compositionstart", checkFirstChange);
         urlBar.removeEventListener("paste", checkFirstChange);
