@@ -1417,7 +1417,7 @@ nsIOService::AllowPort(int32_t inPort, const char* scheme, bool* _retval) {
     return NS_OK;
   }
 
-  if (port == 0) {
+  if (port <= 0 || port >= std::numeric_limits<uint16_t>::max()) {
     *_retval = false;
     return NS_OK;
   }
@@ -1427,7 +1427,6 @@ nsIOService::AllowPort(int32_t inPort, const char* scheme, bool* _retval) {
     MutexAutoLock lock(mMutex);
     restrictedPortList.Assign(mRestrictedPortList);
   }
-
   // first check to see if the port is in our blacklist:
   int32_t badPortListCnt = restrictedPortList.Length();
   for (int i = 0; i < badPortListCnt; i++) {

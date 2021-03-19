@@ -514,6 +514,68 @@ function doTest18() {
       do_test_finished();
     },
   });
+  nextTest = doTest19;
+  do_test_pending();
+  doTest();
+}
+
+// Check we don't connect to blocked ports
+function doTest19() {
+  dump("doTest19()\n");
+  origin = httpFooOrigin;
+  nextTest = testsDone;
+  otherServer = Cc["@mozilla.org/network/server-socket;1"].createInstance(
+    Ci.nsIServerSocket
+  );
+  const BAD_PORT_U32 = 6667 + 65536;
+  otherServer.init(BAD_PORT_U32, true, -1);
+  Assert.ok(
+    otherServer.port == 6667,
+    "Trying to listen on port 6667"
+  );
+  xaltsvc = "localhost:" + BAD_PORT_U32;
+  dump("Blocked port: " + otherServer.port);
+  waitFor = 500;
+  otherServer.asyncListen({
+    onSocketAccepted() {
+      Assert.ok(false, "Got connection to socket when we didn't expect it!");
+    },
+    onStopListening() {
+      // We get closed when the entire file is done, which guarantees we get the socket accept
+      // if we do connect to the alt-svc header
+      do_test_finished();
+    },
+  });
+  nextTest = doTest20;
+  do_test_pending();
+  doTest();
+}
+function doTest20() {
+  dump("doTest20()\n");
+  origin = httpFooOrigin;
+  nextTest = testsDone;
+  otherServer = Cc["@mozilla.org/network/server-socket;1"].createInstance(
+    Ci.nsIServerSocket
+  );
+  const BAD_PORT_U64 = 6666 + 429496729;
+  otherServer.init(6666, true, -1);
+  Assert.ok(
+    otherServer.port == 6666,
+    "Trying to listen on port 6666"
+  );
+  xaltsvc = "localhost:" + BAD_PORT_U64;
+  dump("Blocked port: " + otherServer.port);
+  waitFor = 500;
+  otherServer.asyncListen({
+    onSocketAccepted() {
+      Assert.ok(false, "Got connection to socket when we didn't expect it!");
+    },
+    onStopListening() {
+      // We get closed when the entire file is done, which guarantees we get the socket accept
+      // if we do connect to the alt-svc header
+      do_test_finished();
+    },
+  });
   do_test_pending();
   doTest();
 }
