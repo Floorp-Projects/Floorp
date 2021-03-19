@@ -122,6 +122,7 @@ add_task(async function testLocalStorage() {
         browser.browsingData.removeLocalStorage({
           cookieStoreId: "firefox-container-1",
         }),
+        "Firefox does not support clearing localStorage with 'cookieStoreId'.",
         "removeLocalStorage with cookieStoreId requires LSNG"
       );
     }
