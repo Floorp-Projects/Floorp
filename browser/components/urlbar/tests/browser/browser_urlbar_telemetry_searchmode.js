@@ -392,39 +392,6 @@ add_task(async function test_tabmenu() {
   assertSearchModeScalars("tabmenu", "tabs");
 });
 
-// Enters search mode by performing a search handoff on about:privatebrowsing.
-// NOTE: We don't test handoff on about:home. Running mochitests on about:home
-// is quite difficult. This subtest verifies that `handoff` is a valid scalar
-// suffix and that a call to
-// UrlbarInput.search(value, { searchEngine, searchModeEntry: "handoff" }) records values in
-// the urlbar.searchmode.handoff scalar. PlacesFeed.test.js verfies that
-// about:home handoff makes that exact call.
-add_task(async function test_handoff_pbm() {
-  let win = await BrowserTestUtils.openNewBrowserWindow({
-    private: true,
-    waitForTabURL: "about:privatebrowsing",
-  });
-  let tab = win.gBrowser.selectedBrowser;
-
-  await SpecialPowers.spawn(tab, [], async function() {
-    let btn = content.document.getElementById("search-handoff-button");
-    btn.click();
-  });
-
-  let searchPromise = UrlbarTestUtils.promiseSearchComplete(win);
-  await new Promise(r => EventUtils.synthesizeKey("f", {}, win, r));
-  await searchPromise;
-  await UrlbarTestUtils.assertSearchMode(win, {
-    engineName,
-    entry: "handoff",
-  });
-  assertSearchModeScalars("handoff", "other");
-
-  await UrlbarTestUtils.exitSearchMode(win);
-  await UrlbarTestUtils.promisePopupClose(win);
-  await BrowserTestUtils.closeWindow(win);
-});
-
 // Enters search mode by tapping a search shortcut on the Touch Bar.
 add_task(async function test_touchbar() {
   if (AppConstants.platform != "macosx") {
