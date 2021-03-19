@@ -3920,6 +3920,7 @@ void CompartmentCheckTracer::onChild(const JS::GCCellPtr& thing) {
   if (comp && compartment) {
     MOZ_ASSERT(
         comp == compartment ||
+        runtime()->mainContextFromOwnThread()->disableCompartmentCheckTracer ||
         (srcKind == JS::TraceKind::Object &&
          InCrossCompartmentMap(runtime(), static_cast<JSObject*>(src), thing)));
   } else {

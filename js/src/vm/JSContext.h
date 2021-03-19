@@ -586,6 +586,10 @@ struct JS_PUBLIC_API JSContext : public JS::RootingContext,
   js::ContextData<bool> runningOOMTest;
 #endif
 
+#ifdef DEBUG
+  js::ContextData<bool> disableCompartmentCheckTracer;
+#endif
+
   /*
    * Some regions of code are hard for the static rooting hazard analysis to
    * understand. In those cases, we trade the static analysis for a dynamic

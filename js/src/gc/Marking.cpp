@@ -547,6 +547,25 @@ template void js::TraceManuallyBarrieredCrossCompartmentEdge<JSObject*>(
 template void js::TraceManuallyBarrieredCrossCompartmentEdge<BaseScript*>(
     JSTracer*, JSObject*, BaseScript**, const char*);
 
+class MOZ_RAII AutoDisableCompartmentCheckTracer {
+#ifdef DEBUG
+  JSContext* cx_;
+  bool prev_;
+
+ public:
+  AutoDisableCompartmentCheckTracer()
+      : cx_(TlsContext.get()), prev_(cx_->disableCompartmentCheckTracer) {
+    cx_->disableCompartmentCheckTracer = true;
+  }
+  ~AutoDisableCompartmentCheckTracer() {
+    cx_->disableCompartmentCheckTracer = prev_;
+  }
+#else
+ public:
+  AutoDisableCompartmentCheckTracer(){};
+#endif
+};
+
 template <typename T>
 void js::TraceSameZoneCrossCompartmentEdge(JSTracer* trc,
                                            const WriteBarriered<T>* dst,
@@ -564,6 +583,7 @@ void js::TraceSameZoneCrossCompartmentEdge(JSTracer* trc,
 
   // Clear expected compartment for cross-compartment edge.
   AutoClearTracingSource acts(trc);
+  AutoDisableCompartmentCheckTracer adcct;
   TraceEdgeInternal(trc, ConvertToBase(dst->unbarrieredAddress()), name);
 }
 template void js::TraceSameZoneCrossCompartmentEdge(
