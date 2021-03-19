@@ -16,7 +16,10 @@ import mozfile
 import mozpack.path as mozpath
 
 from mozbuild.base import MozbuildObject
-from mozbuild_utils import add_file_to_moz_build_file
+from mozbuild.vendor.rewrite_mozbuild import (
+    add_file_to_moz_build_file,
+    remove_file_from_moz_build_file,
+)
 
 DEFAULT_EXCLUDE_FILES = [
     ".git*",
@@ -298,6 +301,18 @@ class VendorManifest(MozbuildObject):
                     "vendor",
                     {},
                     "Could not add %s to the appropriate moz.build file" % f,
+                )
+                should_abort = True
+
+        for f in files_removed:
+            try:
+                remove_file_from_moz_build_file(f)
+            except Exception:
+                self.log(
+                    logging.ERROR,
+                    "vendor",
+                    {},
+                    "Could not remove %s from the appropriate moz.build file" % f,
                 )
                 should_abort = True
 
