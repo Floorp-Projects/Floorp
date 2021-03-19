@@ -29,8 +29,7 @@ f2 0f 70 c0 aa            pshuflw \\$0xAA, %xmm0, %xmm0
      // Permute bytes
     ['i8x16.shuffle 2 1 4 3 6 5 8 7 10 9 12 11 14 13 0 15',
 `
-66 44 0f 6f 3d ${RIPRADDR} movdqax ${RIPR}, %xmm15
-66 41 0f 38 00 c7          pshufb %xmm15, %xmm0`],
+66 0f 38 00 05 ${RIPRADDR} pshufbx ${RIPR}, %xmm0`],
 
      // Permute words
     ['i8x16.shuffle 2 3 0 1 6 7 4 5 10 11 8 9 14 15 12 13',
