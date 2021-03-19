@@ -35,9 +35,14 @@ open class MainActivityFirstrunTestRule(private val showFirstRun: Boolean) :
 
         activity.finishAndRemoveTask()
 
-        val sessionManager =
-            InstrumentationRegistry.getInstrumentation().targetContext.applicationContext.components.sessionManager
-
-        ThreadUtils.postToMainThread(Runnable { sessionManager.removeAll() })
+        ThreadUtils.postToMainThread {
+            InstrumentationRegistry
+                .getInstrumentation()
+                .targetContext
+                .applicationContext
+                .components
+                .tabsUseCases
+                .removeAllTabs()
+        }
     }
 }

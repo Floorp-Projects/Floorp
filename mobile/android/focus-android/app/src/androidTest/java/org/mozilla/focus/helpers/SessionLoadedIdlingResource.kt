@@ -6,6 +6,7 @@ package org.mozilla.focus.helpers
 
 import androidx.test.espresso.IdlingResource
 import androidx.test.platform.app.InstrumentationRegistry
+import mozilla.components.browser.state.selector.selectedTab
 import org.mozilla.focus.FocusApplication
 
 /**
@@ -21,11 +22,9 @@ class SessionLoadedIdlingResource : IdlingResource {
 
     override fun isIdleNow(): Boolean {
         val context = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext as FocusApplication
-        val sessionManager = context.components.sessionManager
+        val tab = context.components.store.state.selectedTab
 
-        val session = sessionManager.selectedSession
-
-        return if (session?.loading == true) {
+        return if (tab?.content?.loading == true) {
             false
         } else {
             invokeCallback()
