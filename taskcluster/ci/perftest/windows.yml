@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
 job-defaults:
-    worker-type: t-win10-64-hw
+    worker-type: t-win10-64-1803-hw
     fetches:
         build:
             - artifact: target.perftests.tests.tar.gz
