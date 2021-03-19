@@ -10,8 +10,6 @@ import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
 import androidx.preference.PreferenceManager
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.findCustomTab
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.selector.selectedTab

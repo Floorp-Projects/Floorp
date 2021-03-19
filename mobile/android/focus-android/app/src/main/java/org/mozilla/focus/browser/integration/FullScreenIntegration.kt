@@ -9,7 +9,6 @@ import android.os.Build
 import android.view.View
 import android.view.WindowManager
 import androidx.annotation.RequiresApi
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.session.FullScreenFeature
 import mozilla.components.feature.session.SessionUseCases

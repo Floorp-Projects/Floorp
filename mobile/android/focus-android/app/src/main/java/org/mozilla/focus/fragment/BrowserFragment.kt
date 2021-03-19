@@ -32,8 +32,6 @@ import androidx.preference.PreferenceManager
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.snackbar.Snackbar
 import kotlinx.android.synthetic.main.fragment_browser.*
-import mozilla.components.browser.session.Session
-import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.state.CustomTabConfig
