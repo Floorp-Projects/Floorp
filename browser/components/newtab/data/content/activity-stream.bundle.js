@@ -10431,6 +10431,8 @@ __webpack_require__.r(__webpack_exports__);
 /* globals ContentSearchUIController, ContentSearchHandoffUIController */
 
 
+function _extends() { _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; }; return _extends.apply(this, arguments); }
+
 
 
 
@@ -10535,10 +10537,35 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureComponent
 
   onInputMountHandoff(input) {
     if (input) {
-      // The handoff UI controller helps usset the search icon and reacts to
+      // The handoff UI controller helps us set the search icon and reacts to
       // changes to default engine to keep everything in sync.
       this._handoffSearchController = new ContentSearchHandoffUIController();
     }
+  }
+
+  getDefaultEngineName() {
+    // _handoffSearchController will manage engine names once it is initialized.
+    return this.props.Prefs.values["urlbar.placeholderName"];
+  }
+
+  getHandoffInputL10nAttributes() {
+    let defaultEngineName = this.getDefaultEngineName();
+    return defaultEngineName ? {
+      "data-l10n-id": "newtab-search-box-handoff-input",
+      "data-l10n-args": `{"engine": "${defaultEngineName}"}`
+    } : {
+      "data-l10n-id": "newtab-search-box-handoff-input-no-engine"
+    };
+  }
+
+  getHandoffTextL10nAttributes() {
+    let defaultEngineName = this.getDefaultEngineName();
+    return defaultEngineName ? {
+      "data-l10n-id": "newtab-search-box-handoff-text",
+      "data-l10n-args": `{"engine": "${defaultEngineName}"}`
+    } : {
+      "data-l10n-id": "newtab-search-box-handoff-text-no-engine"
+    };
   }
 
   onSearchHandoffButtonMount(button) {
@@ -10578,16 +10605,15 @@ class _Search extends react__WEBPACK_IMPORTED_MODULE_3___default.a.PureComponent
       onClick: this.onSearchClick
     })), this.props.handoffEnabled && /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
       className: "search-inner-wrapper"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("button", {
-      className: "search-handoff-button",
-      "data-l10n-id": isNewNewtabExperienceEnabled ? "newtab-search-box-input" : "newtab-search-box-search-the-web-input",
+    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("button", _extends({
+      className: "search-handoff-button"
+    }, this.getHandoffInputL10nAttributes(), {
       ref: this.onSearchHandoffButtonMount,
       onClick: this.onSearchHandoffClick,
       tabIndex: "-1"
-    }, /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", {
-      className: "fake-textbox",
-      "data-l10n-id": isNewNewtabExperienceEnabled ? "newtab-search-box-text" : "newtab-search-box-search-the-web-text"
-    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
+    }), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("div", _extends({
+      className: "fake-textbox"
+    }, this.getHandoffTextL10nAttributes())), /*#__PURE__*/react__WEBPACK_IMPORTED_MODULE_3___default.a.createElement("input", {
       type: "search",
       className: "fake-editable",
       tabIndex: "-1",
