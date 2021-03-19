@@ -790,7 +790,7 @@ this.PluginBlocklistRS = {
           blockedItems.push({
             name: plugin.name,
             version: plugin.version,
-            icon: "chrome://global/skin/icons/plugin.svg",
+            icon: "chrome://mozapps/skin/plugins/plugin.svg",
             disable: false,
             blocked: state == Ci.nsIBlocklistService.STATE_BLOCKED,
             item: plugin,
