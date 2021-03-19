@@ -378,6 +378,14 @@
   z-index: 1; /* Overlay tab title */
 }
 
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+.tab-icon-overlay[pictureinpicture] {
+  top: -4.5px;
+  inset-inline-end: -9px;
+  z-index: 1; /* Overlay tab title */
+}
+} /*** END !proton ***/
+
 @supports -moz-bool-pref("browser.proton.tabs.enabled") {
 #toolbar-menubar:not(:hover) + #TabsToolbar:not(:hover) .tab-icon-overlay@tabIndicatorReplacesIcon@,
 :is(#toolbar-menubar:hover + #TabsToolbar, #TabsToolbar:hover) .tab-icon-stack@tabIndicatorReplacesIcon@ > :not(.tab-icon-overlay) {
@@ -399,6 +407,13 @@
   background-color: white;
   color: black;
 }
+
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+.tab-icon-overlay[pictureinpicture]:hover {
+  background-color: white;
+  color: black;
+}
+} /*** END !proton ***/
 
 @supports -moz-bool-pref("browser.proton.tabs.enabled") {
 .tab-icon-overlay@tabIndicatorReplacesIcon@ {
