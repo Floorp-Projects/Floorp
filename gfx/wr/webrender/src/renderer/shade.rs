@@ -234,6 +234,7 @@ impl LazilyCompiledShader {
                 VertexArrayKind::LineDecoration => &desc::LINE,
                 VertexArrayKind::FastLinearGradient => &desc::FAST_LINEAR_GRADIENT,
                 VertexArrayKind::RadialGradient => &desc::RADIAL_GRADIENT,
+                VertexArrayKind::ConicGradient => &desc::CONIC_GRADIENT,
                 VertexArrayKind::Blur => &desc::BLUR,
                 VertexArrayKind::ClipImage => &desc::CLIP_IMAGE,
                 VertexArrayKind::ClipRect => &desc::CLIP_RECT,
@@ -561,6 +562,7 @@ pub struct Shaders {
     pub cs_line_decoration: LazilyCompiledShader,
     pub cs_fast_linear_gradient: LazilyCompiledShader,
     pub cs_radial_gradient: LazilyCompiledShader,
+    pub cs_conic_gradient: LazilyCompiledShader,
     pub cs_svg_filter: LazilyCompiledShader,
 
     // Brush shaders
@@ -1032,6 +1034,15 @@ impl Shaders {
             &shader_list,
         )?;
 
+        let cs_conic_gradient = LazilyCompiledShader::new(
+            ShaderKind::Cache(VertexArrayKind::ConicGradient),
+            "cs_conic_gradient",
+            &[],
+            device,
+            options.precache_flags,
+            &shader_list,
+        )?;
+
         let cs_border_segment = LazilyCompiledShader::new(
             ShaderKind::Cache(VertexArrayKind::Border),
             "cs_border_segment",
@@ -1057,6 +1068,7 @@ impl Shaders {
             cs_line_decoration,
             cs_fast_linear_gradient,
             cs_radial_gradient,
+            cs_conic_gradient,
             cs_border_solid,
             cs_scale,
             cs_svg_filter,
@@ -1262,6 +1274,7 @@ impl Shaders {
         self.cs_border_solid.deinit(device);
         self.cs_fast_linear_gradient.deinit(device);
         self.cs_radial_gradient.deinit(device);
+        self.cs_conic_gradient.deinit(device);
         self.cs_line_decoration.deinit(device);
         self.cs_border_segment.deinit(device);
         self.ps_split_composite.deinit(device);
