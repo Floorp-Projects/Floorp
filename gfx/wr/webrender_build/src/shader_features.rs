@@ -81,6 +81,17 @@ pub fn get_shader_features(flags: ShaderFeatureFlags) -> ShaderFeatures {
         shaders.insert(name, vec![String::new()]);
     }
 
+    for name in &[
+        "cs_radial_gradient",
+    ] {
+        let mut features = Vec::new();
+        features.push(String::new());
+        if flags.contains(ShaderFeatureFlags::DITHERING) {
+            features.push("DITHERING".to_string());
+        }
+        shaders.insert(name, features);
+    }
+
     let mut base_prim_features = FeatureList::new();
 
     // Brush shaders
