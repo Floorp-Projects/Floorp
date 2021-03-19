@@ -53,7 +53,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
       box-shadow: 0 0 0 2px var(--newtab-focus-outline);
     }
 
-    &.fake-focus:not(.search.disabled) {
+    &.fake-focus {
       .search-handoff-button {
         border: 1px solid var(--newtab-focus-border);
         box-shadow: 0 0 0 2px var(--newtab-focus-outline);
@@ -267,6 +267,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
   padding-inline-end: 48px;
   padding-inline-start: 46px;
   opacity: 1;
+  transition: opacity 500ms;
   width: 100%;
 
   &:dir(rtl) {
@@ -277,7 +278,7 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     box-shadow: $shadow-secondary, 0 0 0 1px $black-25;
   }
 
-  .fake-focus:not(.search-disabled) & {
+  .fake-focus & {
     border: $input-border-active;
     box-shadow: var(--newtab-textbox-focus-boxshadow);
 
@@ -286,9 +287,9 @@ $glyph-forward: url('chrome://browser/skin/forward.svg');
     }
   }
 
-  .search-disabled & {
-    opacity: 0.5;
-    box-shadow: none;
+  .search-hidden & {
+    opacity: 0;
+    visibility: hidden;
   }
 
   .fake-editable:focus {

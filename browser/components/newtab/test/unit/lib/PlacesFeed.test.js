@@ -616,7 +616,7 @@ describe("PlacesFeed", () => {
           to: "ActivityStream:Content",
           toTarget: {},
         },
-        type: "DISABLE_SEARCH",
+        type: "HIDE_SEARCH",
       });
     });
     it("should properly handle handoff with text data passed in", () => {
@@ -626,7 +626,10 @@ describe("PlacesFeed", () => {
         meta: { fromTarget: {} },
       });
       assert.calledOnce(fakeUrlBar.search);
-      assert.calledWith(fakeUrlBar.search, "foo");
+      assert.calledWith(fakeUrlBar.search, "@google foo", {
+        searchEngine: global.Services.search.defaultEngine,
+        searchModeEntry: "handoff",
+      });
       assert.notCalled(fakeUrlBar.focus);
       assert.notCalled(fakeUrlBar.setHiddenFocus);
 
@@ -651,7 +654,10 @@ describe("PlacesFeed", () => {
         meta: { fromTarget: {} },
       });
       assert.calledOnce(fakeUrlBar.search);
-      assert.calledWith(fakeUrlBar.search, "foo");
+      assert.calledWith(fakeUrlBar.search, "@bing foo", {
+        searchEngine: global.Services.search.defaultPrivateEngine,
+        searchModeEntry: "handoff",
+      });
       assert.notCalled(fakeUrlBar.focus);
       assert.notCalled(fakeUrlBar.setHiddenFocus);
 
@@ -676,7 +682,10 @@ describe("PlacesFeed", () => {
         meta: { fromTarget: {} },
       });
       assert.calledOnce(fakeUrlBar.search);
-      assert.calledWithExactly(fakeUrlBar.search, "foo");
+      assert.calledWithExactly(fakeUrlBar.search, "@google foo", {
+        searchEngine: global.Services.search.defaultEngine,
+        searchModeEntry: "handoff",
+      });
       assert.notCalled(fakeUrlBar.focus);
 
       // Now call ESC keydown.
@@ -690,6 +699,19 @@ describe("PlacesFeed", () => {
           toTarget: {},
         },
         type: "SHOW_SEARCH",
+      });
+    });
+    it("should properly handle no defined search alias", () => {
+      global.Services.search.defaultEngine.aliases = [];
+      feed.handoffSearchToAwesomebar({
+        _target: { browser: { ownerGlobal: { gURLBar: fakeUrlBar } } },
+        data: { text: "foo" },
+        meta: { fromTarget: {} },
+      });
+      assert.calledOnce(fakeUrlBar.search);
+      assert.calledWithExactly(fakeUrlBar.search, "foo", {
+        searchEngine: global.Services.search.defaultEngine,
+        searchModeEntry: "handoff",
       });
     });
   });

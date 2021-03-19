@@ -191,14 +191,14 @@ add_task(async function searchWithAlias() {
   await UrlbarTestUtils.promisePopupOpen(window, async () =>
     gURLBar.search(`${ALIAS} test`, {
       searchEngine: aliasEngine,
-      searchModeEntry: "topsites_urlbar",
+      searchModeEntry: "handoff",
     })
   );
   Assert.ok(gURLBar.hasAttribute("focused"), "Urlbar is focused");
 
   await UrlbarTestUtils.assertSearchMode(window, {
     engineName: aliasEngine.name,
-    entry: "topsites_urlbar",
+    entry: "handoff",
   });
   await assertUrlbarValue("test");
   assertOneOffButtonsVisible(true);

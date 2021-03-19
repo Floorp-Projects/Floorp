@@ -57,14 +57,23 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
         break;
       }
       case "SearchHandoff": {
+        let searchAlias = "";
+        let searchEngine = Services.search.defaultPrivateEngine;
+        let searchAliases = searchEngine.aliases;
+        if (searchAliases && searchAliases.length) {
+          searchAlias = `${searchAliases[0]} `;
+        }
         let urlBar = win.gURLBar;
         let isFirstChange = true;
 
         if (!aMessage.data || !aMessage.data.text) {
           urlBar.setHiddenFocus();
         } else {
-          // Pass the provided text to the awesomebar
-          urlBar.search(aMessage.data.text);
+          // Pass the provided text to the awesomebar. Prepend the @engine shortcut.
+          urlBar.search(`${searchAlias}${aMessage.data.text}`, {
+            searchEngine,
+            searchModeEntry: "handoff",
+          });
           isFirstChange = false;
         }
 
@@ -75,8 +84,11 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
           if (isFirstChange) {
             isFirstChange = false;
             urlBar.removeHiddenFocus();
-            urlBar.search("");
-            this.sendAsyncMessage("DisableSearch");
+            urlBar.search(searchAlias, {
+              searchEngine,
+              searchModeEntry: "handoff",
+            });
+            this.sendAsyncMessage("HideSearch");
             urlBar.removeEventListener("compositionstart", checkFirstChange);
             urlBar.removeEventListener("paste", checkFirstChange);
           }
@@ -111,13 +123,6 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
         urlBar.addEventListener("compositionstart", checkFirstChange);
         urlBar.addEventListener("paste", checkFirstChange);
         break;
-      }
-      case "ShouldShowSearch": {
-        return new Promise(resolve => {
-          Services.search.getDefaultPrivate().then(engine => {
-            resolve(engine.isAppProvided ? engine.name : null);
-          });
-        });
       }
       case "ShouldShowSearchBanner": {
         // If this is a pre-loaded private browsing new tab, then we don't want
