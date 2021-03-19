@@ -36,15 +36,15 @@ final public class InputMethods {
     private InputMethods() {}
 
     public static String getCurrentInputMethod(final Context context) {
-        String inputMethod = Secure.getString(context.getContentResolver(), Secure.DEFAULT_INPUT_METHOD);
+        final String inputMethod = Secure.getString(context.getContentResolver(), Secure.DEFAULT_INPUT_METHOD);
         return (inputMethod != null ? inputMethod : "");
     }
 
     public static InputMethodInfo getInputMethodInfo(final Context context,
                                                      final String inputMethod) {
-        InputMethodManager imm = getInputMethodManager(context);
-        Collection<InputMethodInfo> infos = imm.getEnabledInputMethodList();
-        for (InputMethodInfo info : infos) {
+        final InputMethodManager imm = getInputMethodManager(context);
+        final Collection<InputMethodInfo> infos = imm.getEnabledInputMethodList();
+        for (final InputMethodInfo info : infos) {
             if (info.getId().equals(inputMethod)) {
                 return info;
             }
@@ -90,7 +90,7 @@ final public class InputMethods {
     }
 
     public static boolean needsRestartOnReplaceRemove(final Context context) {
-        String inputMethod = getCurrentInputMethod(context);
+        final String inputMethod = getCurrentInputMethod(context);
         return METHOD_SONY.equals(inputMethod);
     }
 

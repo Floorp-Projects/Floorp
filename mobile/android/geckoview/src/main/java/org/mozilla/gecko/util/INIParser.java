@@ -41,14 +41,14 @@ public final class INIParser extends INISection {
         FileWriter outputStream = null;
         try {
             outputStream = new FileWriter(f);
-        } catch (IOException e1) {
+        } catch (final IOException e1) {
             e1.printStackTrace();
         }
 
         final BufferedWriter writer = new BufferedWriter(outputStream);
         try {
             write(writer);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             e.printStackTrace();
         } finally {
             IOUtils.safeStreamClose(writer);
@@ -60,8 +60,8 @@ public final class INIParser extends INISection {
         super.write(writer);
 
         if (mSections != null) {
-            for (Enumeration<INISection> e = mSections.elements(); e.hasMoreElements();) {
-                INISection section = e.nextElement();
+            for (final Enumeration<INISection> e = mSections.elements(); e.hasMoreElements();) {
+                final INISection section = e.nextElement();
                 section.write(writer);
                 writer.newLine();
             }
@@ -73,7 +73,7 @@ public final class INIParser extends INISection {
         if (mSections == null) {
             try {
                 parse();
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 debug("Error parsing: " + e);
             }
         }
@@ -98,12 +98,12 @@ public final class INIParser extends INISection {
         FileReader inputStream = null;
         try {
             inputStream = new FileReader(f);
-        } catch (FileNotFoundException e1) {
+        } catch (final FileNotFoundException e1) {
             // If the file doesn't exist. Just return;
             return;
         }
 
-        BufferedReader buf = new BufferedReader(inputStream);
+        final BufferedReader buf = new BufferedReader(inputStream);
         String line = null;            // current line of text we are parsing
         INISection currentSection = null; // section we are currently parsing
 
@@ -122,12 +122,12 @@ public final class INIParser extends INISection {
             } else {
                 debug("Parse as property: " + line);
 
-                String[] pieces = line.split("=");
+                final String[] pieces = line.split("=");
                 if (pieces.length != 2)
                     continue;
 
-                String key = pieces[0].trim();
-                String value = pieces[1].trim();
+                final String key = pieces[0].trim();
+                final String value = pieces[1].trim();
                 if (currentSection != null) {
                     currentSection.setProperty(key, value);
                 } else {
@@ -166,7 +166,7 @@ public final class INIParser extends INISection {
         getSections();
 
         mSections.remove(newName);
-        INISection section = mSections.get(oldName);
+        final INISection section = mSections.get(oldName);
         if (section == null)
             return;
 

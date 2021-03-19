@@ -116,10 +116,10 @@ public final class HardwareUtils {
             }
 
             return machineType;
-        } catch (FileNotFoundException e) {
+        } catch (final FileNotFoundException e) {
             Log.w(LOGTAG, String.format("Failed to open %s", file.getAbsolutePath()));
             return ELF_MACHINE_UNKNOWN;
-        } catch (IOException e) {
+        } catch (final IOException e) {
             Log.w(LOGTAG, "Failed to read library", e);
             return ELF_MACHINE_UNKNOWN;
         }

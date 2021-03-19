@@ -62,14 +62,14 @@ public class SpeechSynthesisService  {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                TextToSpeech tss = getTTS();
-                Locale defaultLocale = Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2
+                final TextToSpeech tss = getTTS();
+                final Locale defaultLocale = Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR2
                         ? tss.getDefaultLanguage()
                         : tss.getLanguage();
-                for (Locale locale : getAvailableLanguages()) {
+                for (final Locale locale : getAvailableLanguages()) {
                     final Set<String> features = tss.getFeatures(locale);
-                    boolean isLocal = features != null && features.contains(TextToSpeech.Engine.KEY_FEATURE_EMBEDDED_SYNTHESIS);
-                    String localeStr = locale.toString();
+                    final boolean isLocal = features != null && features.contains(TextToSpeech.Engine.KEY_FEATURE_EMBEDDED_SYNTHESIS);
+                    final String localeStr = locale.toString();
                     registerVoice("moz-tts:android:" + localeStr, locale.getDisplayName(), localeStr.replace("_", "-"), !isLocal, defaultLocale == locale);
                 }
                 doneRegisteringVoices();
@@ -83,8 +83,8 @@ public class SpeechSynthesisService  {
             // has not been implemented in the speech service side until 23.
             return getTTS().getAvailableLanguages();
         }
-        Set<Locale> locales = new HashSet<Locale>();
-        for (Locale locale : Locale.getAvailableLocales()) {
+        final Set<Locale> locales = new HashSet<Locale>();
+        for (final Locale locale : Locale.getAvailableLocales()) {
             if (locale.getVariant().isEmpty() && getTTS().isLanguageAvailable(locale) > 0) {
                 locales.add(locale);
             }
@@ -102,7 +102,7 @@ public class SpeechSynthesisService  {
     @WrapForJNI(calledFrom = "gecko")
     public static String speak(final String uri, final String text, final float rate,
                                final float pitch, final float volume) {
-        AtomicBoolean result = new AtomicBoolean(false);
+        final AtomicBoolean result = new AtomicBoolean(false);
         final String utteranceId = UUID.randomUUID().toString();
         speakInternal(uri, text, rate, pitch, volume, utteranceId, result);
         return result.get() ? utteranceId : null;
@@ -116,14 +116,14 @@ public class SpeechSynthesisService  {
             return;
         }
 
-        HashMap<String, String> params = new HashMap<String, String>();
+        final HashMap<String, String> params = new HashMap<String, String>();
         params.put(TextToSpeech.Engine.KEY_PARAM_VOLUME, Float.toString(volume));
         params.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, utteranceId);
-        TextToSpeech tss = (TextToSpeech) sTTS;
+        final TextToSpeech tss = (TextToSpeech) sTTS;
         tss.setLanguage(new Locale(uri.substring("moz-tts:android:".length())));
         tss.setSpeechRate(rate);
         tss.setPitch(pitch);
-        int speakRes = tss.speak(text, TextToSpeech.QUEUE_FLUSH, params);
+        final int speakRes = tss.speak(text, TextToSpeech.QUEUE_FLUSH, params);
         result.set(speakRes == TextToSpeech.SUCCESS);
     }
 

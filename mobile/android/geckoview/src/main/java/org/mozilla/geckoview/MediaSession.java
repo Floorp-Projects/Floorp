@@ -193,8 +193,8 @@ public class MediaSession {
          * @param mediaSession The media session for the given GeckoSession.
          */
         default void onActivated(
-                @NonNull GeckoSession session,
-                @NonNull MediaSession mediaSession) {}
+                @NonNull final GeckoSession session,
+                @NonNull final MediaSession mediaSession) {}
 
         /**
          * Notify that the given media session has become inactive.
@@ -206,8 +206,8 @@ public class MediaSession {
          * @param mediaSession The media session for the given GeckoSession.
          */
         default void onDeactivated(
-                @NonNull GeckoSession session,
-                @NonNull MediaSession mediaSession) {}
+                @NonNull final GeckoSession session,
+                @NonNull final MediaSession mediaSession) {}
 
         /**
          * Notify on updated metadata.
@@ -219,9 +219,9 @@ public class MediaSession {
          * @param meta The updated metadata.
          */
         default void onMetadata(
-                @NonNull GeckoSession session,
-                @NonNull MediaSession mediaSession,
-                @NonNull Metadata meta) {}
+                @NonNull final GeckoSession session,
+                @NonNull final MediaSession mediaSession,
+                @NonNull final Metadata meta) {}
 
         /**
          * Notify on updated supported features.
@@ -232,9 +232,9 @@ public class MediaSession {
          * @param features A combination of {@link Feature}.
          */
         default void onFeatures(
-                @NonNull GeckoSession session,
-                @NonNull MediaSession mediaSession,
-                @MSFeature long features) {}
+                @NonNull final GeckoSession session,
+                @NonNull final MediaSession mediaSession,
+                @MSFeature final long features) {}
 
         /**
          * Notify that playback has started for the given media session.
@@ -243,8 +243,8 @@ public class MediaSession {
          * @param mediaSession The media session for the given GeckoSession.
          */
         default void onPlay(
-                @NonNull GeckoSession session,
-                @NonNull MediaSession mediaSession) {}
+                @NonNull final GeckoSession session,
+                @NonNull final MediaSession mediaSession) {}
 
         /**
          * Notify that playback has paused for the given media session.
@@ -253,8 +253,8 @@ public class MediaSession {
          * @param mediaSession The media session for the given GeckoSession.
          */
         default void onPause(
-                @NonNull GeckoSession session,
-                @NonNull MediaSession mediaSession) {}
+                @NonNull final GeckoSession session,
+                @NonNull final MediaSession mediaSession) {}
 
         /**
          * Notify that playback has stopped for the given media session.
@@ -263,8 +263,8 @@ public class MediaSession {
          * @param mediaSession The media session for the given GeckoSession.
          */
         default void onStop(
-                @NonNull GeckoSession session,
-                @NonNull MediaSession mediaSession) {}
+                @NonNull final GeckoSession session,
+                @NonNull final MediaSession mediaSession) {}
 
         /**
          * Notify on updated position state.
@@ -274,9 +274,9 @@ public class MediaSession {
          * @param state An instance of {@link PositionState}.
          */
         default void onPositionState(
-                @NonNull GeckoSession session,
-                @NonNull MediaSession mediaSession,
-                @NonNull PositionState state) {}
+                @NonNull final GeckoSession session,
+                @NonNull final MediaSession mediaSession,
+                @NonNull final PositionState state) {}
 
         /**
          * Notify on changed fullscreen state.
@@ -287,10 +287,10 @@ public class MediaSession {
          * @param meta An instance of {@link ElementMetadata}, if enabled.
          */
         default void onFullscreen(
-                @NonNull GeckoSession session,
-                @NonNull MediaSession mediaSession,
-                boolean enabled,
-                @Nullable ElementMetadata meta) {}
+                @NonNull final GeckoSession session,
+                @NonNull final MediaSession mediaSession,
+                final boolean enabled,
+                @Nullable final ElementMetadata meta) {}
     }
 
 

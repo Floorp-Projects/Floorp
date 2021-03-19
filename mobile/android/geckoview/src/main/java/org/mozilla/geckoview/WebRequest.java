@@ -182,8 +182,8 @@ public class WebRequest extends WebMessage {
                 mBody = null;
                 return this;
             }
-            CharBuffer chars = CharBuffer.wrap(bodyString);
-            ByteBuffer buffer = ByteBuffer.allocateDirect(bodyString.length());
+            final CharBuffer chars = CharBuffer.wrap(bodyString);
+            final ByteBuffer buffer = ByteBuffer.allocateDirect(bodyString.length());
             Charset.forName("UTF-8").newEncoder().encode(chars, buffer, true);
 
             mBody = buffer;

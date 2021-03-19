@@ -290,7 +290,7 @@ public final class GeckoEditableChild extends JNIObject implements IGeckoEditabl
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
             ThreadUtils.assertOnGeckoThread();
-            StringBuilder sb = new StringBuilder("onDefaultKeyEvent(");
+            final StringBuilder sb = new StringBuilder("onDefaultKeyEvent(");
             sb.append("action=").append(event.getAction()).append(", ")
                 .append("keyCode=").append(event.getKeyCode()).append(", ")
                 .append("metaState=").append(event.getMetaState()).append(", ")

@@ -24,12 +24,12 @@ public class TestRunnerApiEngine implements WebExtension.MessageDelegate {
 
     private final Api mImpl;
 
-    public TestRunnerApiEngine(Api impl) {
+    public TestRunnerApiEngine(final Api impl) {
         mImpl = impl;
     }
 
     @SuppressWarnings("unchecked")
-    private GeckoResult<Object> handleMessage(JSONObject message) throws JSONException {
+    private GeckoResult<Object> handleMessage(final JSONObject message) throws JSONException {
         final String type = message.getString("type");
 
         Log.i(LOGTAG, "Test API: " + type);
@@ -51,12 +51,12 @@ public class TestRunnerApiEngine implements WebExtension.MessageDelegate {
 
     @Nullable
     @Override
-    public GeckoResult<Object> onMessage(@NonNull String nativeApp,
-                                         @NonNull Object message,
-                                         @NonNull WebExtension.MessageSender sender) {
+    public GeckoResult<Object> onMessage(@NonNull final String nativeApp,
+                                         @NonNull final Object message,
+                                         @NonNull final WebExtension.MessageSender sender) {
         try {
             return handleMessage((JSONObject) message);
-        } catch (JSONException ex) {
+        } catch (final JSONException ex) {
             throw new RuntimeException(ex);
         }
     }

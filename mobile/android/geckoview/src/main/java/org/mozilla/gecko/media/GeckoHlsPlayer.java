@@ -446,7 +446,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
             Log.d(LOGTAG, "onTracksChanged : TGA[" + ignored +
                           "], TSA[" + trackSelections + "]");
 
-            MappedTrackInfo mappedTrackInfo = mTrackSelector.getCurrentMappedTrackInfo();
+            final MappedTrackInfo mappedTrackInfo = mTrackSelector.getCurrentMappedTrackInfo();
             if (mappedTrackInfo == null) {
                 Log.d(LOGTAG, "Tracks []");
                 return;
@@ -454,18 +454,18 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
             Log.d(LOGTAG, "Tracks [");
             // Log tracks associated to renderers.
             for (int rendererIndex = 0; rendererIndex < mappedTrackInfo.length; rendererIndex++) {
-                TrackGroupArray rendererTrackGroups = mappedTrackInfo.getTrackGroups(rendererIndex);
-                TrackSelection trackSelection = trackSelections.get(rendererIndex);
+                final TrackGroupArray rendererTrackGroups = mappedTrackInfo.getTrackGroups(rendererIndex);
+                final TrackSelection trackSelection = trackSelections.get(rendererIndex);
                 if (rendererTrackGroups.length > 0) {
                     Log.d(LOGTAG, "  Renderer:" + rendererIndex + " [");
                     for (int groupIndex = 0; groupIndex < rendererTrackGroups.length; groupIndex++) {
-                        TrackGroup trackGroup = rendererTrackGroups.get(groupIndex);
-                        String adaptiveSupport = getAdaptiveSupportString(trackGroup.length,
+                        final TrackGroup trackGroup = rendererTrackGroups.get(groupIndex);
+                        final String adaptiveSupport = getAdaptiveSupportString(trackGroup.length,
                                 mappedTrackInfo.getAdaptiveSupport(rendererIndex, groupIndex, false));
                         Log.d(LOGTAG, "    Group:" + groupIndex + ", adaptive_supported=" + adaptiveSupport + " [");
                         for (int trackIndex = 0; trackIndex < trackGroup.length; trackIndex++) {
-                            String status = getTrackStatusString(trackSelection, trackGroup, trackIndex);
-                            String formatSupport = getFormatSupportString(
+                            final String status = getTrackStatusString(trackSelection, trackGroup, trackIndex);
+                            final String formatSupport = getFormatSupportString(
                                     mappedTrackInfo.getTrackFormatSupport(rendererIndex, groupIndex, trackIndex));
                             Log.d(LOGTAG, "      " + status + " Track:" + trackIndex + ", " +
                                     Format.toLogString(trackGroup.getFormat(trackIndex)) +
@@ -477,15 +477,15 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
                 }
             }
             // Log tracks not associated with a renderer.
-            TrackGroupArray unassociatedTrackGroups = mappedTrackInfo.getUnassociatedTrackGroups();
+            final TrackGroupArray unassociatedTrackGroups = mappedTrackInfo.getUnassociatedTrackGroups();
             if (unassociatedTrackGroups.length > 0) {
                 Log.d(LOGTAG, "  Renderer:None [");
                 for (int groupIndex = 0; groupIndex < unassociatedTrackGroups.length; groupIndex++) {
                     Log.d(LOGTAG, "    Group:" + groupIndex + " [");
-                    TrackGroup trackGroup = unassociatedTrackGroups.get(groupIndex);
+                    final TrackGroup trackGroup = unassociatedTrackGroups.get(groupIndex);
                     for (int trackIndex = 0; trackIndex < trackGroup.length; trackIndex++) {
-                        String status = getTrackStatusString(false);
-                        String formatSupport = getFormatSupportString(
+                        final String status = getTrackStatusString(false);
+                        final String formatSupport = getFormatSupportString(
                                 RendererCapabilities.FORMAT_UNSUPPORTED_TYPE);
                         Log.d(LOGTAG, "      " + status + " Track:" + trackIndex +
                                 ", " + Format.toLogString(trackGroup.getFormat(trackIndex)) +
@@ -501,9 +501,9 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         int numVideoTracks = 0;
         int numAudioTracks = 0;
         for (int j = 0; j < ignored.length; j++) {
-            TrackGroup tg = ignored.get(j);
+            final TrackGroup tg = ignored.get(j);
             for (int i = 0; i < tg.length; i++) {
-                Format fmt = tg.getFormat(i);
+                final Format fmt = tg.getFormat(i);
                 if (fmt.sampleMimeType != null) {
                     if (mRendererController.isVideoRendererEnabled() &&
                         fmt.sampleMimeType.startsWith(new String("video"))) {
@@ -529,16 +529,16 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         // the dynamic duration.
         // See. http://google.github.io/ExoPlayer/doc/reference/com/google/android/exoplayer2/Timeline.html
         // for further information.
-        Timeline.Window window = new Timeline.Window();
+        final Timeline.Window window = new Timeline.Window();
         mIsTimelineStatic = !timeline.isEmpty()
                 && !timeline.getWindow(timeline.getWindowCount() - 1, window).isDynamic;
 
-        int periodCount = timeline.getPeriodCount();
-        int windowCount = timeline.getWindowCount();
+        final int periodCount = timeline.getPeriodCount();
+        final int windowCount = timeline.getWindowCount();
         if (DEBUG) {
             Log.d(LOGTAG, "sourceInfo [periodCount=" + periodCount + ", windowCount=" + windowCount);
         }
-        Timeline.Period period = new Timeline.Period();
+        final Timeline.Period period = new Timeline.Period();
         for (int i = 0; i < Math.min(periodCount, MAX_TIMELINE_ITEM_LINES); i++) {
             timeline.getPeriod(i, period);
             if (mDurationUs < period.getDurationUs()) {
@@ -621,13 +621,13 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     private void createExoPlayer(final String url) {
         assertTrue(isPlayerThread());
 
-        Context ctx = GeckoAppShell.getApplicationContext();
+        final Context ctx = GeckoAppShell.getApplicationContext();
         mComponentListener = new ComponentListener();
         mComponentEventDispatcher = new ComponentEventDispatcher();
         mDurationUs = 0;
 
         // Prepare trackSelector
-        TrackSelection.Factory videoTrackSelectionFactory =
+        final TrackSelection.Factory videoTrackSelectionFactory =
                 new AdaptiveTrackSelection.Factory(BANDWIDTH_METER);
         mTrackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
 
@@ -638,7 +638,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         mRenderers[0] = mVRenderer;
         mRenderers[1] = mARenderer;
 
-        DefaultLoadControl dlc = new DefaultLoadControl.Builder()
+        final DefaultLoadControl dlc = new DefaultLoadControl.Builder()
                 .setAllocator(new DefaultAllocator(true, C.DEFAULT_BUFFER_SEGMENT_SIZE))
                 .setBufferDurationsMs(DEFAULT_MIN_BUFFER_MS,
                         DEFAULT_MAX_BUFFER_MS,
@@ -652,7 +652,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
                 .build();
         mPlayer.addListener(this);
 
-        Uri uri = Uri.parse(url);
+        final Uri uri = Uri.parse(url);
         mMediaSource = buildDataSourceFactory(ctx, BANDWIDTH_METER).createMediaSource(uri);
         mSourceEventListener = new SourceEventListener();
         mMediaSource.addEventListener(mMainHandler, mSourceEventListener);
@@ -715,7 +715,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     public long getBufferedPosition() {
         return awaitPlayerThread(() -> {
             // Value returned by getBufferedPosition() is in milliseconds.
-            long bufferedPos = mPlayer == null ? 0L : Math.max(0L, mPlayer.getBufferedPosition() * 1000L);
+            final long bufferedPos = mPlayer == null ? 0L : Math.max(0L, mPlayer.getBufferedPosition() * 1000L);
             if (DEBUG) {
                 Log.d(LOGTAG, "getBufferedPosition : " + bufferedPos + "(Us)");
             }
@@ -740,7 +740,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     // Called on MFR's TaskQueue
     @Override
     public GeckoVideoInfo getVideoInfo(final int index) {
-        Format fmt;
+        final Format fmt;
         synchronized (this) {
             if (DEBUG) {
                 Log.d(LOGTAG, "getVideoInfo");
@@ -757,7 +757,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
                 return null;
             }
         }
-        GeckoVideoInfo vInfo = new GeckoVideoInfo(fmt.width, fmt.height,
+        final GeckoVideoInfo vInfo = new GeckoVideoInfo(fmt.width, fmt.height,
                                                   fmt.width, fmt.height,
                                                   fmt.rotationDegrees, fmt.stereoMode,
                                                   getDuration(), fmt.sampleMimeType,
@@ -768,7 +768,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     // Called on MFR's TaskQueue
     @Override
     public GeckoAudioInfo getAudioInfo(final int index) {
-        Format fmt;
+        final Format fmt;
         synchronized (this) {
             if (DEBUG) {
                 Log.d(LOGTAG, "getAudioInfo");
@@ -794,8 +794,8 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
          */
         assertTrue(!MimeTypes.AUDIO_RAW.equals(fmt.sampleMimeType));
         // For HLS content, csd-0 is enough.
-        byte[] csd = fmt.initializationData.isEmpty() ? null : fmt.initializationData.get(0);
-        GeckoAudioInfo aInfo = new GeckoAudioInfo(fmt.sampleRate, fmt.channelCount,
+        final byte[] csd = fmt.initializationData.isEmpty() ? null : fmt.initializationData.get(0);
+        final GeckoAudioInfo aInfo = new GeckoAudioInfo(fmt.sampleRate, fmt.channelCount,
                                                   16, 0, getDuration(),
                                                   fmt.sampleMimeType, csd);
         return aInfo;
@@ -826,7 +826,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
                 // TODO : Gather Timeline Period / Window information to develop
                 //        complete timeline, and seekTime should be inside the duration.
                 Long startTime = Long.MAX_VALUE;
-                for (GeckoHlsRendererBase r : mRenderers) {
+                for (final GeckoHlsRendererBase r : mRenderers) {
                     if (r == mVRenderer && mRendererController.isVideoRendererEnabled() && mTracksInfo.hasVideo() ||
                         r == mARenderer && mRendererController.isAudioRendererEnabled() && mTracksInfo.hasAudio()) {
                     // Find the min value of the start time
@@ -839,7 +839,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
                 }
                 assertTrue(startTime != Long.MAX_VALUE && startTime != Long.MIN_VALUE);
                 mPlayer.seekTo(positionUs / 1000 - startTime / 1000);
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 if (mDemuxerCallbacks != null) {
                     mDemuxerCallbacks.onError(DemuxerError.UNKNOWN.code());
                 }
@@ -852,7 +852,7 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
     // Called on HLSDemuxer's TaskQueue
     @Override
     public synchronized long getNextKeyFrameTime() {
-        long nextKeyFrameTime = mVRenderer != null
+        final long nextKeyFrameTime = mVRenderer != null
             ? mVRenderer.getNextKeyFrameTime()
             : Long.MAX_VALUE;
         return nextKeyFrameTime;
@@ -998,10 +998,10 @@ public class GeckoHlsPlayer implements BaseHlsPlayer, ExoPlayer.EventListener {
         assertTrue(!isPlayerThread());
 
         try {
-            FutureTask<T> wait = new FutureTask<T>(task);
+            final FutureTask<T> wait = new FutureTask<T>(task);
             mMainHandler.post(wait);
             return wait.get();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new RuntimeException(e);
         }
     }

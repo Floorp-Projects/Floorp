@@ -46,7 +46,7 @@ public class GeckoScreenOrientation {
         private final static ScreenOrientation[] sValues = ScreenOrientation.values();
 
         public static ScreenOrientation get(final int value) {
-            for (ScreenOrientation orient: sValues) {
+            for (final ScreenOrientation orient: sValues) {
                 if (orient.value == value) {
                     return orient;
                 }
@@ -124,7 +124,7 @@ public class GeckoScreenOrientation {
         if (appContext == null) {
             return false;
         }
-        Configuration config = appContext.getResources().getConfiguration();
+        final Configuration config = appContext.getResources().getConfiguration();
         return update(config.orientation);
     }
 
@@ -155,7 +155,7 @@ public class GeckoScreenOrientation {
     public synchronized boolean update(final ScreenOrientation aScreenOrientation) {
         // Gecko expects a definite screen orientation, so we default to the
         // primary orientations.
-        ScreenOrientation screenOrientation;
+        final ScreenOrientation screenOrientation;
         if ((aScreenOrientation.value & ScreenOrientation.PORTRAIT_PRIMARY.value) != 0) {
             screenOrientation = ScreenOrientation.PORTRAIT_PRIMARY;
         } else if ((aScreenOrientation.value & ScreenOrientation.PORTRAIT_SECONDARY.value) != 0) {
@@ -193,7 +193,7 @@ public class GeckoScreenOrientation {
         final Runnable notifier = new Runnable() {
             @Override
             public void run() {
-                for (OrientationChangeListener listener : mListeners) {
+                for (final OrientationChangeListener listener : mListeners) {
                     listener.onScreenOrientationChanged(newOrientation);
                 }
             }
@@ -226,7 +226,7 @@ public class GeckoScreenOrientation {
      */
     private ScreenOrientation getScreenOrientation(final int aAndroidOrientation,
                                                    final int aRotation) {
-        boolean isPrimary = aRotation == Surface.ROTATION_0 || aRotation == Surface.ROTATION_90;
+        final boolean isPrimary = aRotation == Surface.ROTATION_0 || aRotation == Surface.ROTATION_90;
         if (aAndroidOrientation == Configuration.ORIENTATION_PORTRAIT) {
             if (isPrimary) {
                 // Non-rotated portrait device or landscape device rotated

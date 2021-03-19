@@ -70,7 +70,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
                                                   promiseId,
                                                   sessionId,
                                                   request);
-            } catch (RemoteException e) {
+            } catch (final RemoteException e) {
                 Log.e(LOGTAG, "Exception ! Dead recipient !!", e);
             }
         }
@@ -80,7 +80,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
             if (DEBUG) Log.d(LOGTAG, "onSessionUpdated()");
             try {
                 mRemoteCallbacks.onSessionUpdated(promiseId, sessionId);
-            } catch (RemoteException e) {
+            } catch (final RemoteException e) {
                 Log.e(LOGTAG, "Exception ! Dead recipient !!", e);
             }
         }
@@ -90,7 +90,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
             if (DEBUG) Log.d(LOGTAG, "onSessionClosed()");
             try {
                 mRemoteCallbacks.onSessionClosed(promiseId, sessionId);
-            } catch (RemoteException e) {
+            } catch (final RemoteException e) {
                 Log.e(LOGTAG, "Exception ! Dead recipient !!", e);
             }
         }
@@ -102,7 +102,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
             if (DEBUG) Log.d(LOGTAG, "onSessionMessage()");
             try {
                 mRemoteCallbacks.onSessionMessage(sessionId, sessionMessageType, request);
-            } catch (RemoteException e) {
+            } catch (final RemoteException e) {
                 Log.e(LOGTAG, "Exception ! Dead recipient !!", e);
             }
         }
@@ -112,7 +112,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
             if (DEBUG) Log.d(LOGTAG, "onSessionError()");
             try {
                 mRemoteCallbacks.onSessionError(sessionId, message);
-            } catch (RemoteException e) {
+            } catch (final RemoteException e) {
                 Log.e(LOGTAG, "Exception ! Dead recipient !!", e);
             }
         }
@@ -123,7 +123,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
             if (DEBUG) Log.d(LOGTAG, "onSessionBatchedKeyChanged()");
             try {
                 mRemoteCallbacks.onSessionBatchedKeyChanged(sessionId, keyInfos);
-            } catch (RemoteException e) {
+            } catch (final RemoteException e) {
                 Log.e(LOGTAG, "Exception ! Dead recipient !!", e);
             }
         }
@@ -133,7 +133,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
             if (DEBUG) Log.d(LOGTAG, "onRejectPromise()");
             try {
                 mRemoteCallbacks.onRejectPromise(promiseId, message);
-            } catch (RemoteException e) {
+            } catch (final RemoteException e) {
                 Log.e(LOGTAG, "Exception ! Dead recipient !!", e);
             }
         }
@@ -158,7 +158,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
             }
             mStubId = stubId;
             mBridgeStubs.add(this);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new RemoteException("RemoteMediaDrmBridgeStub cannot create bridge implementation.");
         }
     }
@@ -187,7 +187,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
                                   promiseId,
                                   initDataType,
                                   initData);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "Failed to createSession.", e);
             mCallbacks.onRejectPromise(promiseId, "Failed to createSession.");
         }
@@ -202,7 +202,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
             assertTrue(mCallbacks != null);
             assertTrue(mBridge != null);
             mBridge.updateSession(promiseId, sessionId, response);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "Failed to updateSession.", e);
             mCallbacks.onRejectPromise(promiseId, "Failed to updateSession.");
         }
@@ -216,7 +216,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
             assertTrue(mCallbacks != null);
             assertTrue(mBridge != null);
             mBridge.closeSession(promiseId, sessionId);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "Failed to closeSession.", e);
             mCallbacks.onRejectPromise(promiseId, "Failed to closeSession.");
         }
@@ -228,7 +228,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
         Log.e(LOGTAG, "Binder died !!");
         try {
             release();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "Exception ! Dead recipient !!", e);
         }
     }
@@ -250,7 +250,7 @@ final class RemoteMediaDrmBridgeStub extends IMediaDrmBridge.Stub implements IBi
     public synchronized void setServerCertificate(final byte[] cert) {
         try {
             mBridge.setServerCertificate(cert);
-        } catch (IllegalStateException e) {
+        } catch (final IllegalStateException e) {
             Log.e(LOGTAG, "Failed to setServerCertificate.", e);
             throw e;
         }

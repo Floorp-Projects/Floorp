@@ -115,7 +115,7 @@ public final class GeckoProfile {
 
     public static GeckoProfile get(final Context context, final String profileName) {
         if (profileName != null) {
-            GeckoProfile profile = sProfileCache.get(profileName);
+            final GeckoProfile profile = sProfileCache.get(profileName);
             if (profile != null)
                 return profile;
         }
@@ -185,7 +185,7 @@ public final class GeckoProfile {
             try {
                 Log.d(LOGTAG, "Loading profile at: " + profileDir + " name: " + resolvedProfileName);
                 newProfile = new GeckoProfile(context, resolvedProfileName, profileDir);
-            } catch (NoMozillaDirectoryException e) {
+            } catch (final NoMozillaDirectoryException e) {
                 // We're unable to do anything sane here.
                 throw new RuntimeException(e);
             }
@@ -268,7 +268,7 @@ public final class GeckoProfile {
             try {
                 fileWriter = new FileWriter(new File(profileDir, ".can-write-sentinel"), false);
                 fileWriter.write(0);
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 throw new IllegalArgumentException("Profile directory must be writable if specified: " +
                         profileDir.getPath(), e);
             } finally {
@@ -276,7 +276,7 @@ public final class GeckoProfile {
                     if (fileWriter != null) {
                         fileWriter.close();
                     }
-                } catch (IOException e) {
+                } catch (final IOException e) {
                     Log.e(LOGTAG, "Error closing .can-write-sentinel; ignoring", e);
                 }
             }
@@ -332,18 +332,18 @@ public final class GeckoProfile {
             try {
                 mProfileDir = findProfileDir();
                 Log.d(LOGTAG, "Found profile dir: " + mProfileDir);
-            } catch (NoSuchProfileException noSuchProfile) {
+            } catch (final NoSuchProfileException noSuchProfile) {
                 // If it doesn't exist, create it.
                 mProfileDir = createProfileDir();
                 Log.d(LOGTAG, "Creating profile dir: " + mProfileDir);
             }
-        } catch (IOException ioe) {
+        } catch (final IOException ioe) {
             Log.e(LOGTAG, "Error getting profile dir", ioe);
         }
     }
 
     public File getFile(final String aFile) {
-        File f = getDir();
+        final File f = getDir();
         if (f == null)
             return null;
 
@@ -396,19 +396,19 @@ public final class GeckoProfile {
     }
 
     public void writeFile(final String filename, final String data) {
-        File file = new File(getDir(), filename);
+        final File file = new File(getDir(), filename);
         BufferedWriter bufferedWriter = null;
         try {
             bufferedWriter = new BufferedWriter(new FileWriter(file, false));
             bufferedWriter.write(data);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             Log.e(LOGTAG, "Unable to write to file", e);
         } finally {
             try {
                 if (bufferedWriter != null) {
                     bufferedWriter.close();
                 }
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 Log.e(LOGTAG, "Error closing writer while writing to file", e);
             }
         }
@@ -455,7 +455,7 @@ public final class GeckoProfile {
             return mProfileDir;
         }
 
-        INIParser parser = GeckoProfileDirectories.getProfilesINI(mMozillaDir);
+        final INIParser parser = GeckoProfileDirectories.getProfilesINI(mMozillaDir);
 
         // Salt the name of our requested profile
         String saltedName;
@@ -490,7 +490,7 @@ public final class GeckoProfile {
         profileSection.setProperty("Path", saltedName);
 
         if (parser.getSection("General") == null) {
-            INISection generalSection = new INISection("General");
+            final INISection generalSection = new INISection("General");
             generalSection.setProperty("StartWithLastProfile", 1);
             parser.addSection(generalSection);
         }
@@ -507,14 +507,14 @@ public final class GeckoProfile {
 
         // Write out profile creation time, mirroring the logic in nsToolkitProfileService.
         try {
-            FileOutputStream stream = new FileOutputStream(profileDir.getAbsolutePath() + File.separator + TIMES_PATH);
-            OutputStreamWriter writer = new OutputStreamWriter(stream, Charset.forName("UTF-8"));
+            final FileOutputStream stream = new FileOutputStream(profileDir.getAbsolutePath() + File.separator + TIMES_PATH);
+            final OutputStreamWriter writer = new OutputStreamWriter(stream, Charset.forName("UTF-8"));
             try {
                 writer.append("{\"created\": " + System.currentTimeMillis() + "}\n");
             } finally {
                 writer.close();
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             // Best-effort.
             Log.w(LOGTAG, "Couldn't write " + TIMES_PATH, e);
         }

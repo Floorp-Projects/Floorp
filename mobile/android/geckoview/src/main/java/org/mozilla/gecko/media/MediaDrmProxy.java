@@ -236,7 +236,7 @@ public final class MediaDrmProxy {
     @WrapForJNI(calledFrom = "gecko")
     public static MediaDrmProxy create(final String keySystem,
                                        final Callbacks nativeCallbacks) {
-        MediaDrmProxy proxy = new MediaDrmProxy(keySystem, nativeCallbacks);
+        final MediaDrmProxy proxy = new MediaDrmProxy(keySystem, nativeCallbacks);
         return proxy;
     }
 
@@ -244,12 +244,12 @@ public final class MediaDrmProxy {
         if (DEBUG) Log.d(LOGTAG, "Constructing MediaDrmProxy");
         try {
             mDrmStubId = UUID.randomUUID().toString();
-            IMediaDrmBridge remoteBridge =
+            final IMediaDrmBridge remoteBridge =
                 RemoteManager.getInstance().createRemoteMediaDrmBridge(keySystem, mDrmStubId);
             mImpl = new RemoteMediaDrmBridge(remoteBridge);
             mImpl.setCallbacks(new MediaDrmProxyCallbacks(this, nativeCallbacks));
             sProxyList.add(this);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "Constructing MediaDrmProxy ... error", e);
         }
     }
@@ -288,7 +288,7 @@ public final class MediaDrmProxy {
         try {
             mImpl.setServerCertificate(cert);
             return true;
-        } catch (RuntimeException e) {
+        } catch (final RuntimeException e) {
             return false;
         }
     }
@@ -297,7 +297,7 @@ public final class MediaDrmProxy {
     // Will be called on MediaFormatReader's TaskQueue.
     @WrapForJNI
     public static MediaCrypto getMediaCrypto(final String stubId) {
-        for (MediaDrmProxy proxy : sProxyList) {
+        for (final MediaDrmProxy proxy : sProxyList) {
             if (proxy.getStubId().equals(stubId)) {
                 return proxy.getMediaCryptoFromBridge();
             }

@@ -15,17 +15,17 @@ public final class GeckoPlayerFactory {
     synchronized static BaseHlsPlayer getPlayer() {
         try {
             final Class<?> cls = Class.forName("org.mozilla.gecko.media.GeckoHlsPlayer");
-            BaseHlsPlayer player = (BaseHlsPlayer) cls.newInstance();
+            final BaseHlsPlayer player = (BaseHlsPlayer) cls.newInstance();
             sPlayerList.add(player);
             return player;
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e("GeckoPlayerFactory", "Class GeckoHlsPlayer not found or failed to create", e);
         }
         return null;
     }
 
     synchronized static BaseHlsPlayer getPlayer(final int id) {
-        for (BaseHlsPlayer player : sPlayerList) {
+        for (final BaseHlsPlayer player : sPlayerList) {
             if (player.getId() == id) {
                 return player;
             }
@@ -35,7 +35,7 @@ public final class GeckoPlayerFactory {
     }
 
     synchronized static void removePlayer(final @NonNull BaseHlsPlayer player) {
-        int index = sPlayerList.indexOf(player);
+        final int index = sPlayerList.indexOf(player);
         if (index >= 0) {
             sPlayerList.remove(player);
             Log.d("GeckoPlayerFactory", "HlsPlayer with id(" + player.getId() + ") is removed.");

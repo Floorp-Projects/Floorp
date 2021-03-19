@@ -285,7 +285,7 @@ public class TestFileUtils {
     // Since the read methods may not be tested yet.
     private static String readStringFromFile(final File file, final int bufferLen) throws IOException {
         final char[] buffer = new char[bufferLen];
-        try (InputStreamReader reader = new InputStreamReader(new FileInputStream(file), Charset.forName("UTF-8"))) {
+        try (final InputStreamReader reader = new InputStreamReader(new FileInputStream(file), Charset.forName("UTF-8"))) {
             reader.read(buffer, 0, buffer.length);
         }
         return new String(buffer);
@@ -293,7 +293,7 @@ public class TestFileUtils {
 
     // Since the write methods may not be tested yet.
     private static void writeStringToFile(final File file, final String str) throws IOException {
-        try (OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file, false), CHARSET)) {
+        try (final OutputStreamWriter writer = new OutputStreamWriter(new FileOutputStream(file, false), CHARSET)) {
             writer.write(str);
         }
         assertTrue("Written file from helper method exists", file.exists());
@@ -346,10 +346,10 @@ public class TestFileUtils {
 
     @Test
     public void testCreateTempDir() throws Exception {
-        String prefix = "tmp";
-        File directory = tempDir.newFolder();
-        File tempDir1 = FileUtils.createTempDir(directory, prefix);
-        File tempDir2 = FileUtils.createTempDir(directory, prefix);
+        final String prefix = "tmp";
+        final File directory = tempDir.newFolder();
+        final File tempDir1 = FileUtils.createTempDir(directory, prefix);
+        final File tempDir2 = FileUtils.createTempDir(directory, prefix);
 
         assertThat(tempDir1, not(nullValue()));
         assertThat(tempDir1.isDirectory(), is(true));

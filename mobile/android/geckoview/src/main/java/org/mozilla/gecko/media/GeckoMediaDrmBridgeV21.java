@@ -131,7 +131,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
             // ensureMediaCryptoCreated may cause NotProvisionedException for the first time use.
             // Need to start provisioning with a dummy promise id.
             ensureMediaCryptoCreated();
-        } catch (android.media.NotProvisionedException e) {
+        } catch (final android.media.NotProvisionedException e) {
             if (DEBUG) Log.d(LOGTAG, "Device not provisioned:" + e.getMessage());
             startProvisioning(MAX_PROMISE_ID);
         }
@@ -164,7 +164,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
 
         ByteBuffer sessionId = null;
         try {
-            boolean hasMediaCrypto = ensureMediaCryptoCreated();
+            final boolean hasMediaCrypto = ensureMediaCryptoCreated();
             if (!hasMediaCrypto) {
                 onRejectPromise(promiseId, "MediaCrypto intance is not created !");
                 return;
@@ -176,7 +176,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
                 return;
             }
 
-            MediaDrm.KeyRequest request = getKeyRequest(sessionId, initData, initDataType);
+            final MediaDrm.KeyRequest request = getKeyRequest(sessionId, initData, initDataType);
             if (request == null) {
                 mDrm.closeSession(sessionId.array());
                 onRejectPromise(promiseId, "Cannot get a key request from MediaDrm !");
@@ -193,7 +193,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
             mSessionIds.add(sessionId);
             if (DEBUG) Log.d(LOGTAG, " StringID : " + new String(
                     sessionId.array(), StringUtils.UTF_8) + " is put into mSessionIds ");
-        } catch (android.media.NotProvisionedException e) {
+        } catch (final android.media.NotProvisionedException e) {
             if (DEBUG) Log.d(LOGTAG, "Device not provisioned:" + e.getMessage());
             if (sessionId != null) {
                 // The promise of this createSession will be either resolved
@@ -216,7 +216,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
             return;
         }
 
-        ByteBuffer session = ByteBuffer.wrap(sessionId.getBytes(StringUtils.UTF_8));
+        final ByteBuffer session = ByteBuffer.wrap(sessionId.getBytes(StringUtils.UTF_8));
         if (!sessionExists(session)) {
             onRejectPromise(promiseId, "Invalid session during updateSession.");
             return;
@@ -225,9 +225,9 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         try {
             final byte [] keySetId = mDrm.provideKeyResponse(session.array(), response);
             if (DEBUG) {
-                HashMap<String, String> infoMap = mDrm.queryKeyStatus(session.array());
-                for (String strKey : infoMap.keySet()) {
-                    String strValue = infoMap.get(strKey);
+                final HashMap<String, String> infoMap = mDrm.queryKeyStatus(session.array());
+                for (final String strKey : infoMap.keySet()) {
+                    final String strValue = infoMap.get(strKey);
                     Log.d(LOGTAG, "InfoMap : key(" + strKey + ")/value(" + strValue + ")");
                 }
             }
@@ -251,7 +251,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
             return;
         }
 
-        ByteBuffer session = ByteBuffer.wrap(sessionId.getBytes(StringUtils.UTF_8));
+        final ByteBuffer session = ByteBuffer.wrap(sessionId.getBytes(StringUtils.UTF_8));
         mSessionIds.remove(session);
         mDrm.closeSession(session.array());
         onSessionClosed(promiseId, session.array());
@@ -269,7 +269,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
             mProvisioningPromiseId = 0;
         }
         while (!mPendingCreateSessionDataQueue.isEmpty()) {
-            PendingCreateSessionData pendingData = mPendingCreateSessionDataQueue.poll();
+            final PendingCreateSessionData pendingData = mPendingCreateSessionDataQueue.poll();
             if (pendingData != null) {
                 onRejectPromise(pendingData.mPromiseId, "Releasing ... reject all pending sessions.");
             }
@@ -277,7 +277,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         mPendingCreateSessionDataQueue = null;
 
         if (mDrm != null) {
-            for (ByteBuffer session : mSessionIds) {
+            for (final ByteBuffer session : mSessionIds) {
                 mDrm.closeSession(session.array());
             }
             mDrm.release();
@@ -318,7 +318,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
     }
 
     protected void HandleKeyStatusChangeByDummyKey(final String sessionId) {
-        SessionKeyInfo[] keyInfos = new SessionKeyInfo[1];
+        final SessionKeyInfo[] keyInfos = new SessionKeyInfo[1];
         keyInfos[0] = new SessionKeyInfo(DUMMY_KEY_ID,
                                          MediaDrm.KeyStatus.STATUS_USABLE);
         onSessionBatchedKeyChanged(sessionId.getBytes(), keyInfos);
@@ -390,13 +390,13 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         }
 
         try {
-            HashMap<String, String> optionalParameters = new HashMap<String, String>();
+            final HashMap<String, String> optionalParameters = new HashMap<String, String>();
             return mDrm.getKeyRequest(aSession.array(),
                                       data,
                                       mimeType,
                                       MediaDrm.KEY_TYPE_STREAMING,
                                       optionalParameters);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "Got excpetion during MediaDrm.getKeyRequest", e);
         }
         return null;
@@ -411,7 +411,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
                 if (DEBUG) Log.d(LOGTAG, "MediaDrmListener: Null session.");
                 return;
             }
-            ByteBuffer session = ByteBuffer.wrap(sessionArray);
+            final ByteBuffer session = ByteBuffer.wrap(sessionArray);
             if (!sessionExists(session)) {
                 if (DEBUG) Log.d(LOGTAG, "MediaDrmListener: Invalid session.");
                 return;
@@ -441,18 +441,18 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
 
     private ByteBuffer openSession() throws android.media.NotProvisionedException {
         try {
-            byte[] sessionId = mDrm.openSession();
+            final byte[] sessionId = mDrm.openSession();
             // ByteBuffer.wrap() is backed by the byte[]. Make a clone here in
             // case the underlying byte[] is modified.
             return ByteBuffer.wrap(sessionId.clone());
-        } catch (android.media.NotProvisionedException e) {
+        } catch (final android.media.NotProvisionedException e) {
             // Throw NotProvisionedException so that we can startProvisioning().
             throw e;
-        } catch (java.lang.RuntimeException e) {
+        } catch (final java.lang.RuntimeException e) {
             if (DEBUG) Log.d(LOGTAG, "Cannot open a new session:" + e.getMessage());
             release();
             return null;
-        } catch (android.media.MediaDrmException e) {
+        } catch (final android.media.MediaDrmException e) {
             // Other MediaDrmExceptions (e.g. ResourceBusyException) are not
             // recoverable.
             release();
@@ -491,7 +491,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
             HttpURLConnection urlConnection = null;
             BufferedReader in = null;
             try {
-                URI finalURI = new URI(mURL + "&signedRequest=" + URLEncoder.encode(new String(mDrmRequest), "UTF-8"));
+                final URI finalURI = new URI(mURL + "&signedRequest=" + URLEncoder.encode(new String(mDrmRequest), "UTF-8"));
                 urlConnection = (HttpURLConnection) ProxySelector.openConnectionWithProxy(finalURI);
                 urlConnection.setRequestMethod("POST");
                 if (DEBUG) Log.d(LOGTAG, "Provisioning, posting url =" + finalURI.toString());
@@ -504,11 +504,11 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
                 // Execute HTTP Post Request
                 urlConnection.connect();
 
-                int responseCode = urlConnection.getResponseCode();
+                final int responseCode = urlConnection.getResponseCode();
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream(), StringUtils.UTF_8));
                     String inputLine;
-                    StringBuffer response = new StringBuffer();
+                    final StringBuffer response = new StringBuffer();
 
                     while ((inputLine = in.readLine()) != null) {
                         response.append(inputLine);
@@ -520,9 +520,9 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
                 } else {
                     Log.d(LOGTAG, "Provisioning, server returned HTTP error code :" + responseCode);
                 }
-            } catch (IOException e) {
+            } catch (final IOException e) {
                 Log.e(LOGTAG, "Got exception during posting provisioning request ...", e);
-            } catch (URISyntaxException e) {
+            } catch (final URISyntaxException e) {
                 Log.e(LOGTAG, "Got exception during creating uri ...", e);
             } finally {
                 if (urlConnection != null) {
@@ -532,7 +532,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
                     if (in != null) {
                         in.close();
                     }
-                } catch (IOException e) {
+                } catch (final IOException e) {
                     Log.e(LOGTAG, "Exception during closing in ...", e);
                 }
             }
@@ -554,9 +554,9 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         try {
             mDrm.provideProvisionResponse(response);
             return true;
-        } catch (android.media.DeniedByServerException e) {
+        } catch (final android.media.DeniedByServerException e) {
             if (DEBUG) Log.d(LOGTAG, "Failed to provide provision response:" + e.getMessage());
-        } catch (java.lang.IllegalStateException e) {
+        } catch (final java.lang.IllegalStateException e) {
             if (DEBUG) Log.d(LOGTAG, "Failed to provide provision response:" + e.getMessage());
         }
         return false;
@@ -576,7 +576,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         assertTrue(mProvisioningPromiseId == 0);
         try {
             while (!mPendingCreateSessionDataQueue.isEmpty()) {
-                PendingCreateSessionData pendingData = mPendingCreateSessionDataQueue.poll();
+                final PendingCreateSessionData pendingData = mPendingCreateSessionDataQueue.poll();
                 if (pendingData == null) {
                     return;
                 }
@@ -587,7 +587,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
                               pendingData.mMimeType,
                               pendingData.mInitData);
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "Got excpetion during processPendingCreateSessionData ...", e);
         }
     }
@@ -617,11 +617,11 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         }
         try {
             mProvisioningPromiseId = promiseId;
-            MediaDrm.ProvisionRequest request = mDrm.getProvisionRequest();
+            final MediaDrm.ProvisionRequest request = mDrm.getProvisionRequest();
             mProvisionTask =
                 new PostRequestTask(promiseId, request.getDefaultUrl(), request.getData());
             mProvisionTask.execute();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             onRejectPromise(promiseId, "Exception happened in startProvisioning !");
             mProvisioningPromiseId = 0;
         }
@@ -631,7 +631,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
         if (DEBUG) Log.d(LOGTAG, "onProvisionResponse()");
         mProvisionTask = null;
         mProvisioningPromiseId = 0;
-        boolean success = provideProvisionResponse(response);
+        final boolean success = provideProvisionResponse(response);
         if (success) {
             // Promise will either be resovled / rejected in createSession during
             // resuming operations.
@@ -663,11 +663,11 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
                 if (DEBUG) Log.d(LOGTAG, "Cannot create MediaCrypto for unsupported scheme.");
                 return false;
             }
-        } catch (android.media.MediaCryptoException e) {
+        } catch (final android.media.MediaCryptoException e) {
             if (DEBUG) Log.d(LOGTAG, "Cannot create MediaCrypto:" + e.getMessage());
             release();
             return false;
-        } catch (android.media.NotProvisionedException e) {
+        } catch (final android.media.NotProvisionedException e) {
             if (DEBUG) Log.d(LOGTAG, "ensureMediaCryptoCreated::Device not provisioned:" + e.getMessage());
             throw e;
         }
@@ -684,7 +684,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
     private String getCDMUserAgent() {
         // This user agent is found and hard-coded in Android(L) source code and
         // Chromium project. Not sure if it's gonna change in the future.
-        String ua = "Widevine CDM v1.0";
+        final String ua = "Widevine CDM v1.0";
         return ua;
     }
 }

@@ -129,8 +129,8 @@ import android.util.Log;
         }
 
         mPrevGeckoFontScale = mSettings.getFontSizeFactor();
-        ContentResolver contentResolver = mApplicationContext.getContentResolver();
-        Uri fontSizeSetting = Settings.System.getUriFor(Settings.System.FONT_SCALE);
+        final ContentResolver contentResolver = mApplicationContext.getContentResolver();
+        final Uri fontSizeSetting = Settings.System.getUriFor(Settings.System.FONT_SCALE);
         contentResolver.registerContentObserver(fontSizeSetting, false, this);
         onSystemFontScaleChange(contentResolver, false);
 
@@ -142,7 +142,7 @@ import android.util.Log;
             return;
         }
 
-        ContentResolver contentResolver = mApplicationContext.getContentResolver();
+        final ContentResolver contentResolver = mApplicationContext.getContentResolver();
         contentResolver.unregisterContentObserver(this);
         onSystemFontScaleChange(contentResolver, /*stopping*/ true);
 

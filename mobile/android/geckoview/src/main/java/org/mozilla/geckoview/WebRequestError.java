@@ -273,14 +273,14 @@ public class WebRequestError extends Exception {
                                                         final int geckoErrorModule,
                                                         final int geckoErrorClass,
                                                         final byte[] certificateBytes) {
-        int code = convertGeckoError(geckoError, geckoErrorModule, geckoErrorClass);
-        int category = getErrorCategory(geckoErrorModule, code);
+        final int code = convertGeckoError(geckoError, geckoErrorModule, geckoErrorClass);
+        final int category = getErrorCategory(geckoErrorModule, code);
         X509Certificate certificate = null;
         if (certificateBytes != null) {
             try {
                 final CertificateFactory factory = CertificateFactory.getInstance("X.509");
                 certificate = (X509Certificate) factory.generateCertificate(new ByteArrayInputStream(certificateBytes));
-            } catch (CertificateException e) {
+            } catch (final CertificateException e) {
                 throw new IllegalArgumentException("Unable to parse DER certificate");
             }
         }

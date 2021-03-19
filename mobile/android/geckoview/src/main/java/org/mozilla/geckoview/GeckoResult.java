@@ -560,7 +560,7 @@ public class GeckoResult<T> {
                     result.mIsUncaughtError = mIsUncaughtError;
                     result.completeExceptionally(mError);
                 }
-            } catch (Throwable e) {
+            } catch (final Throwable e) {
                 if (!result.mComplete) {
                     result.mIsUncaughtError = true;
                     result.completeExceptionally(e);
@@ -747,8 +747,8 @@ public class GeckoResult<T> {
         }
 
         for (int i = 0; i < mListeners.size(); ++i) {
-            Dispatcher dispatcher = mListeners.keyAt(i);
-            ArrayList<Runnable> jobs = mListeners.valueAt(i);
+            final Dispatcher dispatcher = mListeners.keyAt(i);
+            final ArrayList<Runnable> jobs = mListeners.valueAt(i);
             dispatcher.dispatch(() -> {
                 for (final Runnable job : jobs) {
                     job.run();
@@ -824,7 +824,7 @@ public class GeckoResult<T> {
         while (!mComplete && remaining > 0) {
             try {
                 wait(remaining);
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
             }
 
             remaining = timeoutMillis - (SystemClock.uptimeMillis() - start);
@@ -1005,7 +1005,7 @@ public class GeckoResult<T> {
                 if (value) {
                     try {
                         this.completeExceptionally(new CancellationException());
-                    } catch (IllegalStateException e) {
+                    } catch (final IllegalStateException e) {
                         // Can't really do anything about this.
                     }
                 }

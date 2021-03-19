@@ -189,8 +189,8 @@ import java.lang.reflect.Proxy;
         if (view == null || editable == null) {
             return false;
         }
-        int selStart = Selection.getSelectionStart(editable);
-        int selEnd = Selection.getSelectionEnd(editable);
+        final int selStart = Selection.getSelectionStart(editable);
+        final int selEnd = Selection.getSelectionEnd(editable);
 
         switch (id) {
             case android.R.id.selectAll:
@@ -210,14 +210,14 @@ import java.lang.reflect.Proxy;
                 }
                 break;
             case android.R.id.paste:
-                String text = Clipboard.getText(view.getContext());
+                final String text = Clipboard.getText(view.getContext());
                 if (text != null) {
                     commitText(text, 1);
                 }
                 break;
             case android.R.id.copy:
                 // Copy the current selection or the empty string if nothing is selected.
-                String copiedText = selStart == selEnd ? "" :
+                final String copiedText = selStart == selEnd ? "" :
                                     editable.toString().substring(
                                         Math.min(selStart, selEnd),
                                         Math.max(selStart, selEnd));
@@ -252,14 +252,14 @@ import java.lang.reflect.Proxy;
         if ((flags & GET_EXTRACTED_TEXT_MONITOR) != 0)
             mUpdateRequest = req;
 
-        Editable editable = getEditable();
+        final Editable editable = getEditable();
         if (editable == null) {
             return null;
         }
-        int selStart = Selection.getSelectionStart(editable);
-        int selEnd = Selection.getSelectionEnd(editable);
+        final int selStart = Selection.getSelectionStart(editable);
+        final int selEnd = Selection.getSelectionEnd(editable);
 
-        ExtractedText extract = new ExtractedText();
+        final ExtractedText extract = new ExtractedText();
         extract.flags = 0;
         extract.partialStartOffset = -1;
         extract.partialEndOffset = -1;
@@ -467,7 +467,7 @@ import java.lang.reflect.Proxy;
         // GeckoBackgroundThread. If we were to use GeckoBackgroundThread, due to IME,
         // GeckoBackgroundThread may end up also block waiting on Gecko thread and a
         // deadlock occurs
-        Thread backgroundThread = new Thread(new Runnable() {
+        final Thread backgroundThread = new Thread(new Runnable() {
             @Override
             public void run() {
                 Looper.prepare();
@@ -486,7 +486,7 @@ import java.lang.reflect.Proxy;
             try {
                 // wait for new thread to set sBackgroundHandler
                 GeckoInputConnection.class.wait();
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
             }
         }
         return sBackgroundHandler;
@@ -496,7 +496,7 @@ import java.lang.reflect.Proxy;
         if (mIMEState == IME_STATE_DISABLED) {
             return false;
         }
-        for (StackTraceElement frame : Thread.currentThread().getStackTrace()) {
+        for (final StackTraceElement frame : Thread.currentThread().getStackTrace()) {
             // We only return our custom Handler to InputMethodManager's InputConnection
             // proxy. For all other purposes, we return the regular Handler.
             // InputMethodManager retrieves the Handler for its InputConnection proxy
@@ -558,8 +558,8 @@ import java.lang.reflect.Proxy;
             return null;
         }
 
-        Context context = getView().getContext();
-        DisplayMetrics metrics = context.getResources().getDisplayMetrics();
+        final Context context = getView().getContext();
+        final DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         if (Math.min(metrics.widthPixels, metrics.heightPixels) > INLINE_IME_MIN_DISPLAY_SIZE) {
             // prevent showing full-screen keyboard only when the screen is tall enough
             // to show some reasonable amount of the page (see bug 752709)
@@ -573,7 +573,7 @@ import java.lang.reflect.Proxy;
                           Integer.toHexString(outAttrs.imeOptions));
         }
 
-        String prevInputMethod = mCurrentInputMethod;
+        final String prevInputMethod = mCurrentInputMethod;
         mCurrentInputMethod = InputMethods.getCurrentInputMethod(context);
         if (DEBUG) {
             Log.d(LOGTAG, "IME: CurrentInputMethod=" + mCurrentInputMethod);
@@ -589,8 +589,8 @@ import java.lang.reflect.Proxy;
         if (content == null) {
             return false;
         }
-        int a = getComposingSpanStart(content),
-            b = getComposingSpanEnd(content);
+        final int a = getComposingSpanStart(content);
+        final int b = getComposingSpanEnd(content);
         if (a != -1 && b != -1) {
             if (DEBUG) {
                 Log.d(LOGTAG, "removing composition at " + a + "-" + b);
@@ -631,7 +631,7 @@ import java.lang.reflect.Proxy;
 
     @Override
     public boolean sendKeyEvent(final @NonNull KeyEvent event) {
-        KeyEvent translatedEvent = translateKey(event.getKeyCode(), event);
+        final KeyEvent translatedEvent = translateKey(event.getKeyCode(), event);
         mEditableClient.sendKeyEvent(getView(), event.getAction(), translatedEvent);
         return false; // seems to always return false
     }
@@ -673,8 +673,8 @@ import java.lang.reflect.Proxy;
                 // These are all the keys dispatchMediaKeyEvent supports.
                 if (Build.VERSION.SDK_INT >= 19) {
                     // dispatchMediaKeyEvent is only available on Android 4.4+
-                    Context viewContext = getView().getContext();
-                    AudioManager am = (AudioManager)viewContext.getSystemService(Context.AUDIO_SERVICE);
+                    final Context viewContext = getView().getContext();
+                    final AudioManager am = (AudioManager)viewContext.getSystemService(Context.AUDIO_SERVICE);
                     am.dispatchMediaKeyEvent(event);
                 }
                 break;

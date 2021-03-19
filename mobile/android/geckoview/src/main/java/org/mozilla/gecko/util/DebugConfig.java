@@ -62,7 +62,7 @@ public class DebugConfig {
         final FileInputStream fileInputStream = new FileInputStream(configFile);
         try {
             return yaml.load(fileInputStream);
-        } catch (YAMLException e) {
+        } catch (final YAMLException e) {
             throw new ConfigException(e.getMessage());
         } finally {
             IOUtils.safeStreamClose(fileInputStream);

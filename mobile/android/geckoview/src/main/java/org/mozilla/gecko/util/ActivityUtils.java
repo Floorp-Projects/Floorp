@@ -19,7 +19,7 @@ public class ActivityUtils {
 
     public static void setFullScreen(final Activity activity, final boolean fullscreen) {
         // Hide/show the system notification bar
-        Window window = activity.getWindow();
+        final Window window = activity.getWindow();
 
         int newVis;
         if (fullscreen) {
@@ -60,7 +60,7 @@ public class ActivityUtils {
      * Finish this activity and launch the default home screen activity.
      */
     public static void goToHomeScreen(final Context context) {
-        Intent intent = new Intent(Intent.ACTION_MAIN);
+        final Intent intent = new Intent(Intent.ACTION_MAIN);
 
         intent.addCategory(Intent.CATEGORY_HOME);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

@@ -45,7 +45,7 @@ class ByteBufferInputStream extends InputStream {
             return -1;
         }
 
-        int remainingLength = Math.min(length, mBuf.remaining());
+        final int remainingLength = Math.min(length, mBuf.remaining());
         mBuf.get(buffer, offset, remainingLength);
         return length;
     }
@@ -56,7 +56,7 @@ class ByteBufferInputStream extends InputStream {
             return 0;
         }
 
-        long remainingByteCount = Math.min(byteCount, mBuf.remaining());
+        final long remainingByteCount = Math.min(byteCount, mBuf.remaining());
         mBuf.position(mBuf.position() + (int) remainingByteCount);
         return remainingByteCount;
     }

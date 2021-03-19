@@ -27,8 +27,8 @@ public interface WebPushDelegate {
      * @see <a href="http://w3c.github.io/push-api/#dom-pushsubscriptionoptionsinit-applicationserverkey">Application server key</a>
      */
     @UiThread
-    default @Nullable GeckoResult<WebPushSubscription> onSubscribe(@NonNull String scope,
-                                                                   @Nullable byte[] appServerKey) {
+    default @Nullable GeckoResult<WebPushSubscription> onSubscribe(@NonNull final String scope,
+                                                                   @Nullable final byte[] appServerKey) {
         return null;
     }
 
@@ -41,7 +41,7 @@ public interface WebPushDelegate {
      * @see <a href="http://w3c.github.io/push-api/#dom-pushmanager-getsubscription">getSubscription()</a>
      */
     @UiThread
-    default @Nullable GeckoResult<WebPushSubscription> onGetSubscription(@NonNull String scope) {
+    default @Nullable GeckoResult<WebPushSubscription> onGetSubscription(@NonNull final String scope) {
         return null;
     }
 
@@ -55,7 +55,7 @@ public interface WebPushDelegate {
      * @see <a href="http://w3c.github.io/push-api/#dom-pushsubscription-unsubscribe">unsubscribe()</a>
      */
     @UiThread
-    default @Nullable GeckoResult<Void> onUnsubscribe(@NonNull String scope) {
+    default @Nullable GeckoResult<Void> onUnsubscribe(@NonNull final String scope) {
         return null;
     }
 }

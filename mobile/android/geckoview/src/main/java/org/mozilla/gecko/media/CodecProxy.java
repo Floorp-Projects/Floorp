@@ -99,7 +99,7 @@ public final class CodecProxy {
                 return;
             }
 
-            SampleBuffer buffer = CodecProxy.this.getOutputBuffer(sample.bufferId);
+            final SampleBuffer buffer = CodecProxy.this.getOutputBuffer(sample.bufferId);
             if (mOutputSurface != null) {
                 // Don't render to surface just yet. Callback will make that happen when it's time.
                 mSurfaceOutputs.offer(sample);
@@ -161,7 +161,7 @@ public final class CodecProxy {
                 return false;
             }
             remote.start();
-        } catch (RemoteException e) {
+        } catch (final RemoteException e) {
             e.printStackTrace();
             return false;
         }
@@ -176,7 +176,7 @@ public final class CodecProxy {
             mRemote.release();
             mRemote = null;
             return true;
-        } catch (RemoteException e) {
+        } catch (final RemoteException e) {
             e.printStackTrace();
             return false;
         }
@@ -190,7 +190,7 @@ public final class CodecProxy {
         }
         try {
             return mRemote.isAdaptivePlaybackSupported();
-        } catch (RemoteException e) {
+        } catch (final RemoteException e) {
             e.printStackTrace();
             return false;
         }
@@ -204,7 +204,7 @@ public final class CodecProxy {
         }
         try {
             return mRemote.isHardwareAccelerated();
-        } catch (RemoteException e) {
+        } catch (final RemoteException e) {
             e.printStackTrace();
             return false;
         }
@@ -218,7 +218,7 @@ public final class CodecProxy {
         }
         try {
             return mRemote.isTunneledPlaybackSupported();
-        } catch (RemoteException e) {
+        } catch (final RemoteException e) {
             e.printStackTrace();
             return false;
         }
@@ -232,20 +232,20 @@ public final class CodecProxy {
             return INVALID_SESSION;
         }
 
-        boolean eos = info.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM;
+        final boolean eos = info.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM;
 
         if (eos) {
             return sendInput(Sample.EOS);
         }
 
         try {
-            Sample s = mRemote.dequeueInput(info.size);
+            final Sample s = mRemote.dequeueInput(info.size);
             fillInputBuffer(s.bufferId, bytes, info.offset, info.size);
             mSession = s.session;
             return sendInput(s.set(info, cryptoInfo));
-        } catch (RemoteException | NullPointerException e) {
+        } catch (final RemoteException | NullPointerException e) {
             Log.e(LOGTAG, "fail to dequeue input buffer", e);
-        } catch (IOException e) {
+        } catch (final IOException e) {
             Log.e(LOGTAG, "fail to copy input data.", e);
             // Balance dequeue/queue.
             sendInput(null);
@@ -269,7 +269,7 @@ public final class CodecProxy {
         }
 
         if (buffer.capacity() < size) {
-            IOException e = new IOException("data larger than capacity: " + size + " > " + buffer.capacity());
+            final IOException e = new IOException("data larger than capacity: " + size + " > " + buffer.capacity());
             Log.e(LOGTAG, "cannot fill input.", e);
             throw e;
         }
@@ -284,7 +284,7 @@ public final class CodecProxy {
                 sample.dispose();
                 mFlushed = false;
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "fail to queue input:" + sample, e);
             return INVALID_SESSION;
         }
@@ -307,9 +307,9 @@ public final class CodecProxy {
             resetBuffers();
             mRemote.flush();
             mFlushed = true;
-        } catch (DeadObjectException e) {
+        } catch (final DeadObjectException e) {
             return false;
-        } catch (RemoteException e) {
+        } catch (final RemoteException e) {
             e.printStackTrace();
             return false;
         }
@@ -317,11 +317,11 @@ public final class CodecProxy {
     }
 
     private void resetBuffers() {
-        for (SampleBuffer b : mInputBuffers.values()) {
+        for (final SampleBuffer b : mInputBuffers.values()) {
             b.dispose();
         }
         mInputBuffers.clear();
-        for (SampleBuffer b : mOutputBuffers.values()) {
+        for (final SampleBuffer b : mOutputBuffers.values()) {
             b.dispose();
         }
         mOutputBuffers.clear();
@@ -344,10 +344,10 @@ public final class CodecProxy {
                 // should not happen unless caller release codec before processing all buffers.
                 Log.w(LOGTAG, "release codec when " + mSurfaceOutputs.size() + " output buffers unhandled");
                 try {
-                    for (Sample s : mSurfaceOutputs) {
+                    for (final Sample s : mSurfaceOutputs) {
                         mRemote.releaseOutput(s, true);
                     }
-                } catch (RemoteException e) {
+                } catch (final RemoteException e) {
                     e.printStackTrace();
                 }
                 mSurfaceOutputs.clear();
@@ -357,9 +357,9 @@ public final class CodecProxy {
 
             try {
                 RemoteManager.getInstance().releaseCodec(this);
-            } catch (DeadObjectException e) {
+            } catch (final DeadObjectException e) {
                 return false;
-            } catch (RemoteException e) {
+            } catch (final RemoteException e) {
                 e.printStackTrace();
                 return false;
             }
@@ -386,7 +386,7 @@ public final class CodecProxy {
 
         try {
             mRemote.setBitrate(bps);
-        } catch (RemoteException e) {
+        } catch (final RemoteException e) {
             Log.e(LOGTAG, "remote fail to set rates:" + bps);
             e.printStackTrace();
         }
@@ -414,7 +414,7 @@ public final class CodecProxy {
 
         try {
             mRemote.releaseOutput(sample, render);
-        } catch (RemoteException e) {
+        } catch (final RemoteException e) {
             Log.e(LOGTAG, "remote fail to release output:" + sample.info.presentationTimeUs);
             e.printStackTrace();
         }
@@ -444,7 +444,7 @@ public final class CodecProxy {
 
         try {
             buffer = mRemote.getOutputBuffer(id);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "cannot get buffer#" + id, e);
             return null;
         }

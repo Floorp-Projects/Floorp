@@ -171,7 +171,7 @@ public final class GeckoSharedPrefs {
         // is likely the UI thread) as this is actually cheaper than enforcing a
         // context switch to another thread (see bug 940575).
         // Avoid strict mode warnings when doing so.
-        try (StrictModeContext unused = StrictModeContext.allowDiskWrites()) {
+        try (final StrictModeContext unused = StrictModeContext.allowDiskWrites()) {
             performMigration(context);
         }
 
@@ -198,7 +198,7 @@ public final class GeckoSharedPrefs {
         final String defaultProfileName;
         try {
             defaultProfileName = GeckoProfile.getDefaultProfileName(context);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new IllegalStateException("Failed to get default profile name for migration");
         }
 
@@ -250,7 +250,7 @@ public final class GeckoSharedPrefs {
         final SharedPreferences pmPrefs =
                 PreferenceManager.getDefaultSharedPreferences(context);
 
-        for (Map.Entry<String, ?> entry : pmPrefs.getAll().entrySet()) {
+        for (final Map.Entry<String, ?> entry : pmPrefs.getAll().entrySet()) {
             final String key = entry.getKey();
 
             final Editor to;
@@ -278,7 +278,7 @@ public final class GeckoSharedPrefs {
                                                      final List<String> profileKeys) {
         Log.d(LOGTAG, "Migrating crash reporter settings");
 
-        for (Map.Entry<String, ?> entry : appPrefs.getAll().entrySet()) {
+        for (final Map.Entry<String, ?> entry : appPrefs.getAll().entrySet()) {
             final String key = entry.getKey();
 
             if (profileKeys.contains(key)) {

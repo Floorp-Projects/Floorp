@@ -74,7 +74,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         private boolean mStopped;
 
         private synchronized Sample onAllocate(final int size) {
-            Sample sample = mSamplePool.obtainInput(size);
+            final Sample sample = mSamplePool.obtainInput(size);
             sample.session = mSession;
             mDequeuedSamples.add(sample);
             return sample;
@@ -94,7 +94,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             }
 
             if (sample.session >= mSession) {
-                Sample dequeued = mDequeuedSamples.remove();
+                final Sample dequeued = mDequeuedSamples.remove();
                 dequeued.setBufferInfo(sample.info);
                 dequeued.setCryptoInfo(sample.cryptoInfo);
                 queueSample(dequeued);
@@ -111,7 +111,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
 
             try {
                 feedSampleToBuffer();
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 reportError(Error.FATAL, e);
             }
         }
@@ -122,7 +122,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             }
 
             if (!mHasInputCapacitySet) {
-                int capacity = mCodec.getInputBuffer(index).capacity();
+                final int capacity = mCodec.getInputBuffer(index).capacity();
                 if (capacity > 0) {
                     mSamplePool.setInputBufferSize(capacity);
                     mHasInputCapacitySet = true;
@@ -140,7 +140,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         private boolean isValidBuffer(final int index) {
             try {
                 return mCodec.getInputBuffer(index) != null;
-            } catch (IllegalStateException e) {
+            } catch (final IllegalStateException e) {
                 if (DEBUG) {
                     Log.d(LOGTAG, "invalid input buffer#" + index, e);
                 }
@@ -150,22 +150,22 @@ import org.mozilla.gecko.gfx.GeckoSurface;
 
         private void feedSampleToBuffer() {
             while (!mAvailableInputBuffers.isEmpty() && !mInputSamples.isEmpty()) {
-                int index = mAvailableInputBuffers.poll();
+                final int index = mAvailableInputBuffers.poll();
                 if (!isValidBuffer(index)) {
                     continue;
                 }
                 int len = 0;
                 final Sample sample = mInputSamples.poll().sample;
-                long pts = sample.info.presentationTimeUs;
-                int flags = sample.info.flags;
-                MediaCodec.CryptoInfo cryptoInfo = sample.cryptoInfo;
+                final long pts = sample.info.presentationTimeUs;
+                final int flags = sample.info.flags;
+                final MediaCodec.CryptoInfo cryptoInfo = sample.cryptoInfo;
                 if (!sample.isEOS() && sample.bufferId != Sample.NO_BUFFER) {
                     len = sample.info.size;
-                    ByteBuffer buf = mCodec.getInputBuffer(index);
+                    final ByteBuffer buf = mCodec.getInputBuffer(index);
                     try {
                         mSamplePool.getInputBuffer(sample.bufferId).
                                 writeToByteBuffer(buf, sample.info.offset, len);
-                    } catch (IOException e) {
+                    } catch (final IOException e) {
                         e.printStackTrace();
                         len = 0;
                     }
@@ -179,9 +179,9 @@ import org.mozilla.gecko.gfx.GeckoSurface;
                         mCodec.queueInputBuffer(index, 0, len, pts, flags);
                     }
                     mCallbacks.onInputQueued(pts);
-                } catch (RemoteException e) {
+                } catch (final RemoteException e) {
                     e.printStackTrace();
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     reportError(Error.FATAL, e);
                     return;
                 }
@@ -191,26 +191,26 @@ import org.mozilla.gecko.gfx.GeckoSurface;
 
         private void reportPendingInputs() {
             try {
-                for (Input i : mInputSamples) {
+                for (final Input i : mInputSamples) {
                     if (!i.reported) {
                         i.reported = true;
                         mCallbacks.onInputPending(i.sample.info.presentationTimeUs);
                     }
                 }
-            } catch (RemoteException e) {
+            } catch (final RemoteException e) {
                 e.printStackTrace();
             }
         }
 
         private synchronized void reset() {
-            for (Input i : mInputSamples) {
+            for (final Input i : mInputSamples) {
                 if (!i.sample.isEOS()) {
                     mSamplePool.recycleInput(i.sample);
                 }
             }
             mInputSamples.clear();
 
-            for (Sample s : mDequeuedSamples) {
+            for (final Sample s : mDequeuedSamples) {
                 mSamplePool.recycleInput(s);
             }
             mDequeuedSamples.clear();
@@ -260,16 +260,16 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             }
 
             try {
-                Sample output = obtainOutputSample(index, info);
+                final Sample output = obtainOutputSample(index, info);
                 mSentOutputs.add(new Output(output, index));
                 output.session = mSession;
                 mCallbacks.onOutput(output);
-            } catch (Exception e) {
+            } catch (final Exception e) {
                 e.printStackTrace();
                 mCodec.releaseOutputBuffer(index, false);
             }
 
-            boolean eos = (info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
+            final boolean eos = (info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0;
             if (DEBUG && eos) {
                 Log.d(LOGTAG, "output EOS");
             }
@@ -278,7 +278,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         private boolean isValidBuffer(final int index) {
             try {
                 return (mCodec.getOutputBuffer(index) != null) || mRenderToSurface;
-            } catch (IllegalStateException e) {
+            } catch (final IllegalStateException e) {
                 if (DEBUG) {
                     Log.e(LOGTAG, "invalid buffer#" + index, e);
                 }
@@ -287,15 +287,15 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         }
 
         private Sample obtainOutputSample(final int index, final MediaCodec.BufferInfo info) {
-            Sample sample = mSamplePool.obtainOutput(info);
+            final Sample sample = mSamplePool.obtainOutput(info);
 
             if (mRenderToSurface) {
                 return sample;
             }
 
-            ByteBuffer output = mCodec.getOutputBuffer(index);
+            final ByteBuffer output = mCodec.getOutputBuffer(index);
             if (!mHasOutputCapacitySet) {
-                int capacity = output.capacity();
+                final int capacity = output.capacity();
                 if (capacity > 0) {
                     mSamplePool.setOutputBufferSize(capacity);
                     mHasOutputCapacitySet = true;
@@ -305,7 +305,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             if (info.size > 0) {
                 try {
                     mSamplePool.getOutputBuffer(sample.bufferId).readFromByteBuffer(output, info.offset, info.size);
-                } catch (IOException e) {
+                } catch (final IOException e) {
                     Log.e(LOGTAG, "Fail to read output buffer:" + e.getMessage());
                 }
             }
@@ -331,7 +331,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             }
             try {
                 mCallbacks.onOutputFormatChanged(new FormatParam(format));
-            } catch (RemoteException re) {
+            } catch (final RemoteException re) {
                 // Dead recipient.
                 re.printStackTrace();
             }
@@ -384,7 +384,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         Log.e(LOGTAG, "Callbacks is dead");
         try {
             release();
-        } catch (RemoteException e) {
+        } catch (final RemoteException e) {
             // Nowhere to report the error.
         }
     }
@@ -551,7 +551,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         mOutputProcessor.start();
         try {
             mCodec.start();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             reportError(Error.FATAL, e);
         }
     }
@@ -562,9 +562,9 @@ import org.mozilla.gecko.gfx.GeckoSurface;
         }
         try {
             mCallbacks.onError(error == Error.FATAL);
-        } catch (NullPointerException ne) {
+        } catch (final NullPointerException ne) {
             // mCallbacks has been disposed by release().
-        } catch (RemoteException re) {
+        } catch (final RemoteException re) {
             re.printStackTrace();
         }
     }
@@ -579,7 +579,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             mOutputProcessor.stop();
 
             mCodec.stop();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             reportError(Error.FATAL, e);
         }
     }
@@ -601,7 +601,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             mOutputProcessor.start();
             mCodec.resumeReceivingInputs();
             mSession++;
-        } catch (Exception e) {
+        } catch (final Exception e) {
             reportError(Error.FATAL, e);
         }
     }
@@ -610,7 +610,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     public synchronized Sample dequeueInput(final int size) throws RemoteException {
         try {
             return mInputProcessor.onAllocate(size);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             // Translate allocation error to remote exception.
             throw new RemoteException(e.getMessage());
         }
@@ -636,7 +636,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     public synchronized void queueInput(final Sample sample) throws RemoteException {
         try {
             mInputProcessor.onSample(sample);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new RemoteException(e.getMessage());
         }
     }
@@ -645,7 +645,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     public synchronized void setBitrate(final int bps) {
         try {
             mCodec.setBitrate(bps);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             reportError(Error.FATAL, e);
         }
     }
@@ -654,7 +654,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
     public synchronized void releaseOutput(final Sample sample, final boolean render) {
         try {
             mOutputProcessor.onRelease(sample, render);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             reportError(Error.FATAL, e);
         }
     }
@@ -670,7 +670,7 @@ import org.mozilla.gecko.gfx.GeckoSurface;
             mOutputProcessor.stop();
 
             mCodec.release();
-        } catch (Exception e) {
+        } catch (final Exception e) {
             reportError(Error.FATAL, e);
         }
         mCodec = null;

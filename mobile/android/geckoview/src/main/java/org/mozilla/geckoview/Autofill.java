@@ -288,7 +288,7 @@ public class Autofill {
         @Override
         @AnyThread
         public String toString() {
-            StringBuilder builder = new StringBuilder("Session {");
+            final StringBuilder builder = new StringBuilder("Session {");
             builder
                 .append("id=").append(mId)
                 .append(", focusedId=").append(mFocusedId)
@@ -611,7 +611,7 @@ public class Autofill {
         @Override
         @AnyThread
         public String toString() {
-            StringBuilder builder = new StringBuilder("Node {");
+            final StringBuilder builder = new StringBuilder("Node {");
             builder
                 .append("id=").append(mId)
                 .append(", parent=").append(mParentId)
@@ -958,9 +958,9 @@ public class Autofill {
          *             {@link Notify#SESSION_CANCELED}.
          */
         @UiThread
-        default void onAutofill(@NonNull GeckoSession session,
-                                @AutofillNotify int notification,
-                                @Nullable Node node) {}
+        default void onAutofill(@NonNull final GeckoSession session,
+                                @AutofillNotify final int notification,
+                                @Nullable final Node node) {}
     }
 
     /* package */ static final class Support implements BundleEventListener {

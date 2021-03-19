@@ -31,7 +31,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
     private volatile boolean mObservingVsync;
 
     public AndroidVsync() {
-        Handler mainHandler = new Handler(Looper.getMainLooper());
+        final Handler mainHandler = new Handler(Looper.getMainLooper());
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -86,7 +86,7 @@ import org.mozilla.gecko.mozglue.JNIObject;
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @WrapForJNI
     public float getRefreshRate() {
-        DisplayManager dm = (DisplayManager)
+        final DisplayManager dm = (DisplayManager)
             GeckoAppShell.getApplicationContext().getSystemService(Context.DISPLAY_SERVICE);
         return dm.getDisplay(Display.DEFAULT_DISPLAY).getRefreshRate();
     }

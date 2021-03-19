@@ -63,7 +63,7 @@ public class FileUtils {
         @Override
         public boolean accept(final File dir, final String filename) {
             if (mName == null || mName.matches(filename)) {
-                File f = new File(dir, filename);
+                final File f = new File(dir, filename);
 
                 if (mMaxAge < 0 || System.currentTimeMillis() - f.lastModified() > mMaxAge) {
                     return true;
@@ -88,8 +88,8 @@ public class FileUtils {
             return;
         }
 
-        for (String file : files) {
-            File f = new File(dir, file);
+        for (final String file : files) {
+            final File f = new File(dir, file);
             delete(f, recurse);
         }
     }
@@ -101,12 +101,12 @@ public class FileUtils {
     public static boolean delete(final File file, final boolean recurse) {
         if (file.isDirectory() && recurse) {
             // If the quick delete failed and this is a dir, recursively delete the contents of the dir
-            String files[] = file.list();
-            for (String temp : files) {
-                File fileDelete = new File(file, temp);
+            final String[] files = file.list();
+            for (final String temp : files) {
+                final File fileDelete = new File(file, temp);
                 try {
                     delete(fileDelete);
-                } catch (IOException ex) {
+                } catch (final IOException ex) {
                     Log.i(LOGTAG, "Error deleting " + fileDelete.getPath(), ex);
                 }
             }
@@ -288,11 +288,11 @@ public class FileUtils {
         }
         File tempDirectory = directory;
         if (tempDirectory == null) {
-            String tmpDir = System.getProperty("java.io.tmpdir", ".");
+            final String tmpDir = System.getProperty("java.io.tmpdir", ".");
             tempDirectory = new File(tmpDir);
         }
         File result;
-        Random random = new Random();
+        final Random random = new Random();
         do {
             result = new File(tempDirectory, prefix + random.nextInt());
         } while (!result.mkdirs());
@@ -316,11 +316,11 @@ public class FileUtils {
         final String[] projection = {MediaStore.MediaColumns.DISPLAY_NAME};
         String fileName = null;
 
-        try (Cursor metaCursor = cr.query(uri, projection, null, null, null);) {
+        try (final Cursor metaCursor = cr.query(uri, projection, null, null, null);) {
             if (metaCursor.moveToFirst()) {
                 fileName = metaCursor.getString(0);
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             e.printStackTrace();
         }
 
@@ -328,10 +328,10 @@ public class FileUtils {
     }
 
     public static void copy(final Context context, final Uri srcUri, final File dstFile) {
-        try (InputStream inputStream = context.getContentResolver().openInputStream(srcUri);
-             OutputStream outputStream = new FileOutputStream(dstFile)) {
+        try (final InputStream inputStream = context.getContentResolver().openInputStream(srcUri);
+             final OutputStream outputStream = new FileOutputStream(dstFile)) {
             IOUtils.copy(inputStream, outputStream);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             e.printStackTrace();
         }
     }
@@ -365,12 +365,12 @@ public class FileUtils {
         // to enumerate all mount points, but it only works on API24+.
         // So instead, we use the output of getExternalFilesDirs for this purpose, which works on
         // API19 and up.
-        File [] externalStorages = context.getExternalFilesDirs(null);
-        String uuidDir = !TextUtils.isEmpty(uuid) ? '/' + uuid + '/' : null;
+        final File [] externalStorages = context.getExternalFilesDirs(null);
+        final String uuidDir = !TextUtils.isEmpty(uuid) ? '/' + uuid + '/' : null;
 
         String firstNonEmulatedStorage = null;
         String targetStorage = null;
-        for (File externalStorage : externalStorages) {
+        for (final File externalStorage : externalStorages) {
             if (isExternalStorageEmulated(externalStorage)) {
                 // The paths returned by getExternalFilesDirs also include locations that actually
                 // sit on the internal "external" storage, so we need to filter them out again.
@@ -410,7 +410,7 @@ public class FileUtils {
         if (Build.VERSION.SDK_INT >= 21) {
             return Environment.isExternalStorageEmulated(path);
         } else {
-            String absPath = path.getAbsolutePath();
+            final String absPath = path.getAbsolutePath();
             // This is rather hacky, but then SD card support on older Android versions
             // was equally messy.
             return absPath.contains("/sdcard0") || absPath.contains("/storage/emulated");

@@ -252,7 +252,7 @@ public class PanZoomController {
                 for (int historyIndex = 0; historyIndex < historySize; historyIndex++) {
                     event.getHistoricalPointerCoords(i, historyIndex, coords);
 
-                    int historicalI = historyIndex * count + i;
+                    final int historicalI = historyIndex * count + i;
                     historicalX[historicalI] = coords.x;
                     historicalY[historicalI] = coords.y;
 
@@ -438,7 +438,7 @@ public class PanZoomController {
     }
 
     private static void initMouseAsTouch() {
-        PrefsHelper.PrefHandler prefHandler = new PrefsHelper.PrefHandlerBase() {
+        final PrefsHelper.PrefHandler prefHandler = new PrefsHelper.PrefHandlerBase() {
             @Override
             public void prefValue(final String pref, final int value) {
                 if (!PREF_MOUSE_AS_TOUCH.equals(pref)) {
@@ -449,8 +449,8 @@ public class PanZoomController {
                 } else if (value == 1) {
                     sTreatMouseAsTouch = true;
                 } else if (value == 2) {
-                    Context c = GeckoAppShell.getApplicationContext();
-                    UiModeManager m = (UiModeManager)c.getSystemService(Context.UI_MODE_SERVICE);
+                    final Context c = GeckoAppShell.getApplicationContext();
+                    final UiModeManager m = (UiModeManager)c.getSystemService(Context.UI_MODE_SERVICE);
                     // on TV devices, treat mouse as touch. everywhere else, don't
                     sTreatMouseAsTouch = (m.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION);
                 }
@@ -604,9 +604,9 @@ public class PanZoomController {
             return;
         }
 
-        ArrayList<Pair<Integer, MotionEvent>> events = mQueuedEvents;
+        final ArrayList<Pair<Integer, MotionEvent>> events = mQueuedEvents;
         mQueuedEvents = null;
-        for (Pair<Integer, MotionEvent> pair : events) {
+        for (final Pair<Integer, MotionEvent> pair : events) {
             switch (pair.first) {
                 case EVENT_SOURCE_MOTION:
                     handleMotionEvent(pair.second);
@@ -650,7 +650,7 @@ public class PanZoomController {
         public int buttonState;
 
         public MotionEvent.PointerCoords getCoords() {
-            MotionEvent.PointerCoords coords = new MotionEvent.PointerCoords();
+            final MotionEvent.PointerCoords coords = new MotionEvent.PointerCoords();
             coords.orientation = orientation;
             coords.pressure = (float)pressure;
             coords.x = surfaceX;
@@ -677,7 +677,7 @@ public class PanZoomController {
         }
 
         int addPointer(final int pointerId, final int source) {
-            PointerInfo info = new PointerInfo();
+            final PointerInfo info = new PointerInfo();
             info.pointerId = pointerId;
             info.source = source;
             pointers.add(info);
@@ -704,12 +704,12 @@ public class PanZoomController {
         }
 
         MotionEvent.PointerProperties[] getPointerProperties(final int source) {
-            MotionEvent.PointerProperties[] props =
+            final MotionEvent.PointerProperties[] props =
                     new MotionEvent.PointerProperties[getPointerCount(source)];
             int index = 0;
             for (int i = 0; i < pointers.size(); i++) {
                 if (pointers.get(i).source == source) {
-                    MotionEvent.PointerProperties p = new MotionEvent.PointerProperties();
+                    final MotionEvent.PointerProperties p = new MotionEvent.PointerProperties();
                     p.id = pointers.get(i).pointerId;
                     switch (source) {
                         case InputDevice.SOURCE_TOUCHSCREEN:
@@ -726,7 +726,7 @@ public class PanZoomController {
         }
 
         MotionEvent.PointerCoords[] getPointerCoords(final int source) {
-            MotionEvent.PointerCoords[] coords =
+            final MotionEvent.PointerCoords[] coords =
                     new MotionEvent.PointerCoords[getPointerCount(source)];
             int index = 0;
             for (int i = 0; i < pointers.size(); i++) {
@@ -803,7 +803,7 @@ public class PanZoomController {
         final int surfaceY = clientY + mTempRect.top;
 
         // Update the pointer with the new info
-        PointerInfo info = mPointerState.pointers.get(pointerIndex);
+        final PointerInfo info = mPointerState.pointers.get(pointerIndex);
         info.surfaceX = surfaceX;
         info.surfaceY = surfaceY;
         info.pressure = pressure;

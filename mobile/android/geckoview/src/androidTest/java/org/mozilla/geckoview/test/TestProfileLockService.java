@@ -33,7 +33,7 @@ public class TestProfileLockService extends Service implements
 
     private class Handler extends android.os.Handler {
         @Override
-        public void handleMessage(@NonNull Message msg) {
+        public void handleMessage(@NonNull final Message msg) {
             switch (msg.what) {
                 case MESSAGE_REGISTER:
                     mClient = msg.replyTo;
@@ -51,17 +51,17 @@ public class TestProfileLockService extends Service implements
         final Message message = Message.obtain(null, MESSAGE_QUIT);
         try {
             mClient.send(message);
-        } catch (RemoteException ex) {
+        } catch (final RemoteException ex) {
             throw new RuntimeException(ex);
         }
     }
 
     @Override
-    public void onPageStop(@NonNull GeckoSession session, boolean success) {
+    public void onPageStop(@NonNull final GeckoSession session, final boolean success) {
         final Message message = Message.obtain(null, MESSAGE_PAGE_STOP);
         try {
             mClient.send(message);
-        } catch (RemoteException ex) {
+        } catch (final RemoteException ex) {
             throw new RuntimeException(ex);
         }
     }
@@ -74,7 +74,7 @@ public class TestProfileLockService extends Service implements
 
     @Nullable
     @Override
-    public IBinder onBind(Intent intent) {
+    public IBinder onBind(final Intent intent) {
         // Request to be killed as soon as the client unbinds.
         stopSelf();
 
@@ -83,7 +83,7 @@ public class TestProfileLockService extends Service implements
             throw new RuntimeException("Multiple clients !?");
         }
 
-        GeckoRuntimeSettings settings = new GeckoRuntimeSettings.Builder()
+        final GeckoRuntimeSettings settings = new GeckoRuntimeSettings.Builder()
                 .extras(intent.getExtras())
                 .build();
         mRuntime = GeckoRuntime.create(getApplicationContext(), settings);

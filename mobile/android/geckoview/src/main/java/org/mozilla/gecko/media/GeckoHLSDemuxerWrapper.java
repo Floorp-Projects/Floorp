@@ -84,7 +84,7 @@ public final class GeckoHLSDemuxerWrapper {
     @WrapForJNI
     public int getNumberOfTracks(final int trackType) {
         assertTrue(mPlayer != null);
-        int tracks = mPlayer.getNumberOfTracks(getPlayerTrackType(trackType));
+        final int tracks = mPlayer.getNumberOfTracks(getPlayerTrackType(trackType));
         if (DEBUG) Log.d(LOGTAG, "[GetNumberOfTracks] type : " + trackType + ", num = " + tracks);
         return tracks;
     }
@@ -93,7 +93,7 @@ public final class GeckoHLSDemuxerWrapper {
     public GeckoAudioInfo getAudioInfo(final int index) {
         assertTrue(mPlayer != null);
         if (DEBUG) Log.d(LOGTAG, "[getAudioInfo] formatIndex : " + index);
-        GeckoAudioInfo aInfo = mPlayer.getAudioInfo(index);
+        final GeckoAudioInfo aInfo = mPlayer.getAudioInfo(index);
         return aInfo;
     }
 
@@ -101,7 +101,7 @@ public final class GeckoHLSDemuxerWrapper {
     public GeckoVideoInfo getVideoInfo(final int index) {
         assertTrue(mPlayer != null);
         if (DEBUG) Log.d(LOGTAG, "[getVideoInfo] formatIndex : " + index);
-        GeckoVideoInfo vInfo = mPlayer.getVideoInfo(index);
+        final GeckoVideoInfo vInfo = mPlayer.getVideoInfo(index);
         return vInfo;
     }
 
@@ -121,7 +121,7 @@ public final class GeckoHLSDemuxerWrapper {
             if (mPlayer != null) {
                 mPlayer.addDemuxerWrapperCallbackListener(callback);
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             Log.e(LOGTAG, "Constructing GeckoHLSDemuxerWrapper ... error", e);
             callback.onError(BaseHlsPlayer.DemuxerError.UNKNOWN.code());
         }
