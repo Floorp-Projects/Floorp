@@ -136,6 +136,10 @@ updatebot:
                         "component": "Graphics",
                         "product": "Core",
                     },
+                    "vendoring": {
+                        "url": "https://example.com",
+                        "source-hosting": "gitlab",
+                    },
                     "updatebot": {
                         "maintainer-phab": "tjr",
                         "maintainer-bz": "a@example.com",
@@ -154,6 +158,9 @@ origin:
     - MPL-1.1
     - LGPL-2.1
   revision: AA001122334455
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
 bugzilla:
   product: Core
   component: Graphics
@@ -179,6 +186,10 @@ updatebot:
                     "bugzilla": {
                         "component": "Graphics",
                         "product": "Core",
+                    },
+                    "vendoring": {
+                        "url": "https://example.com",
+                        "source-hosting": "gitlab",
                     },
                     "updatebot": {
                         "maintainer-phab": "tjr",
@@ -206,6 +217,9 @@ origin:
     - MPL-1.1
     - LGPL-2.1
   revision: AA001122334455
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
 bugzilla:
   product: Core
   component: Graphics
@@ -236,6 +250,10 @@ updatebot:
                         "component": "Graphics",
                         "product": "Core",
                     },
+                    "vendoring": {
+                        "url": "https://example.com",
+                        "source-hosting": "gitlab",
+                    },
                     "updatebot": {
                         "maintainer-phab": "tjr",
                         "maintainer-bz": "a@example.com",
@@ -254,6 +272,44 @@ updatebot:
                         ],
                     },
                 },
+                b"""
+---
+schema: 1
+origin:
+  name: cairo
+  description: 2D Graphics Library
+  url: https://www.cairographics.org/
+  release: version 1.6.4
+  license:
+    - MPL-1.1
+    - LGPL-2.1
+  revision: AA001122334455
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
+bugzilla:
+  product: Core
+  component: Graphics
+updatebot:
+  maintainer-phab: tjr
+  maintainer-bz: a@example.com
+  tasks:
+    - type: vendoring
+      enabled: False
+      branch: foo
+      cc:
+        - b@example.com
+        - c@example.com
+    - type: commit-alert
+      filter: none
+      source-extensions:
+        - .c
+        - .cpp
+            """.strip(),
+            ),
+            # -------------------------------------------------
+            (
+                "exception",
                 b"""
 ---
 schema: 1
@@ -300,7 +356,47 @@ origin:
   license:
     - MPL-1.1
     - LGPL-2.1
+bugzilla:
+  product: Core
+  component: Graphics
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
+updatebot:
+  maintainer-phab: tjr
+  maintainer-bz: a@example.com
+  tasks:
+    - type: vendoring
+      enabled: False
+      branch: foo
+      cc:
+        - b@example.com
+        - c@example.com
+    - type: commit-alert
+      filter: none
+      source-extensions:
+        - .c
+        - .cpp
+            """.strip(),
+            ),
+            # -------------------------------------------------
+            (
+                "exception",
+                b"""
+---
+schema: 1
+origin:
+  name: cairo
+  description: 2D Graphics Library
+  url: https://www.cairographics.org/
+  release: version 1.6.4
+  license:
+    - MPL-1.1
+    - LGPL-2.1
   revision: AA001122334455
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
 bugzilla:
   product: Core
   component: Graphics
@@ -327,6 +423,9 @@ origin:
     - MPL-1.1
     - LGPL-2.1
   revision: AA001122334455
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
 bugzilla:
   product: Core
   component: Graphics
@@ -352,6 +451,9 @@ origin:
     - MPL-1.1
     - LGPL-2.1
   revision: AA001122334455
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
 bugzilla:
   product: Core
   component: Graphics
@@ -380,6 +482,9 @@ origin:
     - MPL-1.1
     - LGPL-2.1
   revision: AA001122334455
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
 bugzilla:
   product: Core
   component: Graphics
@@ -408,6 +513,9 @@ origin:
 bugzilla:
   product: Core
   component: Graphics
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
 updatebot:
   maintainer-phab: tjr
   maintainer-bz: a@example.com
@@ -442,6 +550,9 @@ origin:
 bugzilla:
   product: Core
   component: Graphics
+vendoring:
+  url: https://example.com
+  source-hosting: gitlab
 updatebot:
   maintainer-phab: tjr
   maintainer-bz: a@example.com
