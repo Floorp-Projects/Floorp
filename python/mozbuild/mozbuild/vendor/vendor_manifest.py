@@ -16,6 +16,7 @@ import mozfile
 import mozpack.path as mozpath
 
 from mozbuild.base import MozbuildObject
+from mozbuild_utils import add_file_to_moz_build_file
 
 DEFAULT_EXCLUDE_FILES = [
     ".git*",
@@ -279,11 +280,6 @@ class VendorManifest(MozbuildObject):
         files_added = [
             f for f in files_added if any([f.endswith(s) for s in source_suffixes])
         ]
-        map_added_file_to_mozbuild = {
-            f: None
-            for f in files_added
-            if any([f.endswith(s) for s in source_suffixes])
-        }
 
         self.log(
             logging.DEBUG,
@@ -292,122 +288,18 @@ class VendorManifest(MozbuildObject):
             "Found {added} files added and {removed} files removed.",
         )
 
-        # Identify all the autovendored_sources.mozbuild files for this library,
-        # which are required for Updatebot.
-        moz_build_filenames = []
-        for root, dirs, files in os.walk(os.path.dirname(yaml_file), topdown=False):
-            if "autovendored_sources.mozbuild" in files:
-                moz_build_filenames.append(
-                    mozpath.join(root, "autovendored_sources.mozbuild")
-                )
-
-        # For each of the files, look for any removed files, and omit them if found.
-        # At the same time, identify the correct moz.build file for any files added
-        # by looking for the first moz.build match. Because we traverse bottom-up this
-        # will be the best match.  (Until we find a library where it isn't and we
-        # refactor.)
-        def is_file_removed(l):
-            l = l.strip(",'\" \n\r")
-            for f in files_removed:
-                if l.endswith(f):
-                    return True
-            return False
-
         should_abort = False
-
-        for filename in moz_build_filenames:
-            # Process deletions
-            # Additions may not always go into the autovendored_sources.mozbuild file, but
-            # it's kind of the best we can reasonably attempt to automate. However deletions
-            # in the more complicated moz.build file we can easily address.
-            files_to_check = [
-                filename,
-                filename.replace("autovendored_sources.mozbuild", "moz.build"),
-            ]
-            for deletion_filename in files_to_check:
-                with open(deletion_filename, "r") as f:
-                    moz_build_contents = f.readlines()
-
-                new_moz_build_contents = [
-                    l for l in moz_build_contents if not is_file_removed(l)
-                ]
-
-                if len(new_moz_build_contents) != len(moz_build_contents):
-                    self.log(
-                        logging.INFO,
-                        "vendor",
-                        {
-                            "filename": deletion_filename,
-                            "lines": (
-                                len(moz_build_contents) - len(new_moz_build_contents)
-                            ),
-                        },
-                        "Rewriting {filename} to remove {lines} lines.",
-                    )
-                    with open(deletion_filename, "w") as f:
-                        f.write("".join(new_moz_build_contents))
-
-            # See if this autovendored_sources file is a good fit for any of the files added
-            for added_file in files_added:
-                if map_added_file_to_mozbuild[added_file]:
-                    continue
-                dirname_of_added_file = os.path.dirname(added_file)
-
-                if any([l for l in moz_build_contents if dirname_of_added_file in l]):
-                    map_added_file_to_mozbuild[added_file] = filename
-
-        # Now go through all the additions and add them in the correct place
-        # in the correct autovendored_sources.mozbuild file
-        for added_file, moz_build_filename in map_added_file_to_mozbuild.items():
-            if not moz_build_filename:
-                should_abort = True
+        for f in files_added:
+            try:
+                add_file_to_moz_build_file(f)
+            except Exception:
                 self.log(
                     logging.ERROR,
                     "vendor",
-                    {"file": added_file},
-                    "Could not identify the autovendored_sources.mozbuild file to add {file} to.",
-                )
-                continue
-
-            # Load the sources variable as a python variable
-            sources_file_contents = load_file_into_list(moz_build_filename)
-
-            # Find a full matching path within the list - we're going to use this to
-            # figure out the full path prefix we need
-            prefix = None
-            dirname_of_added_file = os.path.dirname(added_file)
-            for l in sources_file_contents:
-                if dirname_of_added_file in l:
-                    # Grab the prefix and suffix
-                    prefix = l[: l.index(dirname_of_added_file)]
-                    break
-            if not prefix:
-                self.log(
-                    logging.ERROR,
-                    "vendor",
-                    {"build_file": moz_build_filename, "added_file": added_file},
-                    "Could not find a valid prefix in {build_file} for {added_file}.",
+                    {},
+                    "Could not add %s to the appropriate moz.build file" % f,
                 )
                 should_abort = True
-                continue
-
-            # Get just the filenames, add our added file, sort it
-            sources_file_contents.append(prefix + added_file)
-            sources_file_contents = sorted(sources_file_contents)
-
-            # Write out the new file, tacking on the declaration and closing bracket
-            self.log(
-                logging.INFO,
-                "vendor",
-                {"build_file": moz_build_filename, "added_file": added_file},
-                "Updating {build_file} to add {added_file}.",
-            )
-            with open(moz_build_filename, "w") as f:
-                f.write("sources = [\n")
-                for l in sources_file_contents:
-                    newline = "'" + l + "',\n"
-                    f.write(newline)
-                f.write("]\n")
 
         if should_abort:
             self.log(

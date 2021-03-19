@@ -597,7 +597,7 @@ def edit_moz_build_file(
 #########################################################
 
 
-def update_moz_build_file(normalized_filename_to_add):
+def add_file_to_moz_build_file(normalized_filename_to_add):
     """
     This is the overall function. Given a filename, relative to the gecko root (aka normalized),
     we look for a moz.build file to add it to, look for the place in the moz.build file to add it,
