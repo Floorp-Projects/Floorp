@@ -155,9 +155,11 @@ add_task(async function basic() {
 
 // For engines with an invalid TLD, we filter on the entire domain.
 add_task(async function malformedEngine() {
-  let badEngine = await Services.search.addEngineWithDetails("TestMalformed", {
-    template: `http://example.foobar/?search={searchTerms}`,
+  await SearchTestUtils.installSearchExtension({
+    name: "TestMalformed",
+    search_url: "https://example.foobar/",
   });
+  let badEngine = Services.search.getEngineByName("TestMalformed");
 
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -206,5 +208,4 @@ add_task(async function malformedEngine() {
 
   await UrlbarTestUtils.exitSearchMode(window);
   await UrlbarTestUtils.promisePopupClose(window);
-  await Services.search.removeEngine(badEngine);
 });
