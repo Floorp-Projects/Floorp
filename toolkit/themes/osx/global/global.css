@@ -6,13 +6,14 @@
 
 :root {
   /* ::::: Variables ::::: */
+  --arrowpanel-padding: 16px;
   --default-arrowpanel-background: #fff;
   --default-arrowpanel-color: hsl(0,0%,10%);
   --default-arrowpanel-border-color: hsla(210,4%,10%,.05);
   --arrowpanel-background: var(--default-arrowpanel-background);
   --arrowpanel-color: var(--default-arrowpanel-color);
   --arrowpanel-border-color: var(--default-arrowpanel-border-color);
-  --arrowpanel-border-radius: 8px;
+  --arrowpanel-border-radius: 3.5px;
   --panel-disabled-color: GrayText;
   --panel-description-color: hsl(0,0%,50%);
 
@@ -24,12 +25,6 @@
   color: -moz-DialogText;
   font: message-box;
 }
-
-@supports not -moz-bool-pref("browser.proton.enabled") {
-:root {
-  --arrowpanel-border-radius: 3.5px;
-}
-} /** END not Proton **/
 
 /* ::::: Alert icons :::::*/
 
