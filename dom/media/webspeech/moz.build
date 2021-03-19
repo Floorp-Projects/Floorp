@@ -7,3 +7,6 @@ DIRS = ["synth"]
 
 if CONFIG["MOZ_WEBSPEECH"]:
     DIRS += ["recognition"]
+
+with Files("**"):
+    BUG_COMPONENT = ("Core", "Web Speech")

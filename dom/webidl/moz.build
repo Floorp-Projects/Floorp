@@ -298,6 +298,9 @@ with Files("SocketCommon.webidl"):
 with Files("SourceBuffer*"):
     BUG_COMPONENT = ("Core", "Audio/Video")
 
+with Files("Speech*"):
+    BUG_COMPONENT = ("Core", "Web Speech")
+
 with Files("StereoPannerNode.webidl"):
     BUG_COMPONENT = ("Core", "Web Audio")
 
