@@ -62,6 +62,8 @@ job-defaults:
             NEED_XVFB: "false"
             NO_FAIL_ON_TEST_ERRORS: "1"
             XPCOM_DEBUG_BREAK: "warn"
+            PYTHON: "python3"
+            LANG: "en_US.UTF-8"
         artifacts:
             - name: public/logs/
               path: workspace/logs
