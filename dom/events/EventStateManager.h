@@ -573,7 +573,7 @@ class EventStateManager : public nsSupportsWeakReference, public nsIObserver {
   // DocShell Focus Traversal Methods
   //---------------------------------------------
 
-  nsIContent* GetFocusedContent();
+  dom::Element* GetFocusedElement();
   bool IsShellVisible(nsIDocShell* aShell);
 
   // These functions are for mousewheel and pixel scrolling
