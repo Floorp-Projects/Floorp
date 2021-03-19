@@ -6,24 +6,26 @@
 //!
 //! Specification: https://drafts.csswg.org/css-images-4/#conic-gradients
 //!
-//! Conic gradients are rendered via a brush shader directly into the picture pass.
-//!
-//! TODO: The plan is to use render tasks and the image brush instead.
+//! Conic gradients are rendered via cached render tasks and composited with the image brush.
 
-use api::{ExtendMode, GradientStop};
-use api::units::{LayoutPoint, LayoutSize, LayoutVector2D};
+use api::{ExtendMode, GradientStop, PremultipliedColorF};
+use api::units::*;
 use crate::scene_building::IsVisible;
 use crate::frame_builder::FrameBuildingState;
-use crate::gpu_cache::GpuCacheHandle;
+use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::LayoutPrimitiveInfo;
 use crate::prim_store::{BrushSegment, GradientTileRange};
-use crate::prim_store::{PrimitiveInstanceKind, PrimitiveOpacity};
+use crate::prim_store::{PrimitiveInstanceKind, PrimitiveOpacity, FloatKey};
 use crate::prim_store::{PrimKeyCommonData, PrimTemplateCommonData, PrimitiveStore};
 use crate::prim_store::{NinePatchDescriptor, PointKey, SizeKey, InternablePrimitive};
+use crate::render_task::{RenderTask, RenderTaskKind};
+use crate::render_task_graph::RenderTaskId;
+use crate::render_task_cache::{RenderTaskCacheKeyKind, RenderTaskCacheKey, RenderTaskParent};
+use crate::picture::{SurfaceIndex};
+
 use std::{hash, ops::{Deref, DerefMut}};
-use crate::util::pack_as_float;
-use super::{get_gradient_opacity, stops_and_min_alpha, GradientStopKey, GradientGpuBlockBuilder};
+use super::{stops_and_min_alpha, GradientStopKey, GradientGpuBlockBuilder};
 
 /// Hashable conic gradient parameters, for use during prim interning.
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -86,7 +88,7 @@ impl InternDebug for ConicGradientKey {}
 pub struct ConicGradientTemplate {
     pub common: PrimTemplateCommonData,
     pub extend_mode: ExtendMode,
-    pub center: LayoutPoint,
+    pub center: DevicePoint,
     pub params: ConicGradientParams,
     pub stretch_size: LayoutSize,
     pub tile_spacing: LayoutSize,
@@ -94,6 +96,7 @@ pub struct ConicGradientTemplate {
     pub stops_opacity: PrimitiveOpacity,
     pub stops: Vec<GradientStop>,
     pub stops_handle: GpuCacheHandle,
+    pub src_color: Option<RenderTaskId>,
 }
 
 impl Deref for ConicGradientTemplate {
@@ -127,7 +130,7 @@ impl From<ConicGradientKey> for ConicGradientTemplate {
 
         ConicGradientTemplate {
             common,
-            center: item.center.into(),
+            center: DevicePoint::new(item.center.x, item.center.y),
             extend_mode: item.extend_mode,
             params: item.params,
             stretch_size: item.stretch_size.into(),
@@ -136,6 +139,7 @@ impl From<ConicGradientKey> for ConicGradientTemplate {
             stops_opacity,
             stops,
             stops_handle: GpuCacheHandle::new(),
+            src_color: None,
         }
     }
 }
@@ -148,21 +152,18 @@ impl ConicGradientTemplate {
     pub fn update(
         &mut self,
         frame_state: &mut FrameBuildingState,
+        parent_surface: SurfaceIndex,
     ) {
         if let Some(mut request) =
             frame_state.gpu_cache.request(&mut self.common.gpu_cache_handle) {
             // write_prim_gpu_blocks
+            request.push(PremultipliedColorF::WHITE);
+            request.push(PremultipliedColorF::WHITE);
             request.push([
-                self.center.x,
-                self.center.y,
-                self.params.start_offset,
-                self.params.end_offset,
-            ]);
-            request.push([
-                self.params.angle,
-                pack_as_float(self.extend_mode as u32),
                 self.stretch_size.width,
                 self.stretch_size.height,
+                0.0,
+                0.0,
             ]);
 
             // write_segment_gpu_blocks
@@ -183,12 +184,48 @@ impl ConicGradientTemplate {
             );
         }
 
-        self.opacity = get_gradient_opacity(
-            self.common.prim_rect,
-            self.stretch_size,
-            self.tile_spacing,
-            self.stops_opacity,
+        let task_size = self.stretch_size.to_i32().cast_unit();
+        let cache_key = ConicGradientCacheKey {
+            size: task_size,
+            center: PointKey { x: self.center.x, y: self.center.y },
+            start_offset: FloatKey(self.params.start_offset),
+            end_offset: FloatKey(self.params.end_offset),
+            angle: FloatKey(self.params.angle),
+            extend_mode: self.extend_mode,
+            stops: self.stops.iter().map(|stop| (*stop).into()).collect(),
+        };
+
+        let task_id = frame_state.resource_cache.request_render_task(
+            RenderTaskCacheKey {
+                size: task_size,
+                kind: RenderTaskCacheKeyKind::ConicGradient(cache_key),
+            },
+            frame_state.gpu_cache,
+            frame_state.rg_builder,
+            None,
+            false,
+            RenderTaskParent::Surface(parent_surface),
+            frame_state.surfaces,
+            |rg_builder| {
+                rg_builder.add().init(RenderTask::new_dynamic(
+                    task_size,
+                    RenderTaskKind::ConicGradient(ConicGradientTask {
+                        extend_mode: self.extend_mode,
+                        center: self.center,
+                        params: self.params.clone(),
+                        stops: self.stops_handle,
+                    }),
+                ))
+            }
         );
+
+        self.src_color = Some(task_id);
+
+        // Tile spacing is always handled by decomposing into separate draw calls so the
+        // primitive opacity is equivalent to stops opacity. This might change to being
+        // set to non-opaque in the presence of tile spacing if/when tile spacing is handled
+        // in the same way as with the image primitive.
+        self.opacity = self.stops_opacity;
     }
 }
 
@@ -239,5 +276,59 @@ impl IsVisible for ConicGradient {
     fn is_visible(&self) -> bool {
         true
     }
+}
+
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct ConicGradientTask {
+    pub extend_mode: ExtendMode,
+    pub center: DevicePoint,
+    pub params: ConicGradientParams,
+    pub stops: GpuCacheHandle,
+}
+
+impl ConicGradientTask {
+    pub fn to_instance(&self, target_rect: &DeviceIntRect, gpu_cache: &mut GpuCache) -> ConicGradientInstance {
+        ConicGradientInstance {
+            task_rect: target_rect.to_f32(),
+            center: self.center,
+            start_offset: self.params.start_offset,
+            end_offset: self.params.end_offset,
+            angle: self.params.angle,
+            extend_mode: self.extend_mode as i32,
+            gradient_stops_address: self.stops.as_int(gpu_cache),
+        }
+    }
+}
+
+/// The per-instance shader input of a radial gradient render task.
+///
+/// Must match the RADIAL_GRADIENT instance description in renderer/vertex.rs.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[repr(C)]
+#[derive(Clone, Debug)]
+pub struct ConicGradientInstance {
+    pub task_rect: DeviceRect,
+    pub center: DevicePoint,
+    pub start_offset: f32,
+    pub end_offset: f32,
+    pub angle: f32,
+    pub extend_mode: i32,
+    pub gradient_stops_address: i32,
+}
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct ConicGradientCacheKey {
+    pub size: DeviceIntSize,
+    pub center: PointKey,
+    pub start_offset: FloatKey,
+    pub end_offset: FloatKey,
+    pub angle: FloatKey,
+    pub extend_mode: ExtendMode,
+    pub stops: Vec<GradientStopKey>,
 }
 
