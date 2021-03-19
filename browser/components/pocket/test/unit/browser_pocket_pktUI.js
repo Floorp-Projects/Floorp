@@ -20,7 +20,7 @@ function test_runner(test) {
   add_task(testTask);
 }
 
-test_runner(async function test_main_getAndShowRecsForItem_on({ sandbox }) {
+test_runner(async function test_pktUI_getAndShowRecsForItem_on({ sandbox }) {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.pocket.onSaveRecs", true]],
   });
@@ -40,7 +40,7 @@ test_runner(async function test_main_getAndShowRecsForItem_on({ sandbox }) {
   Assert.equal(getRecsForItemStub.getCall(0).args[0], "1234");
 });
 
-test_runner(async function test_main_getAndShowRecsForItem_off({ sandbox }) {
+test_runner(async function test_pktUI_getAndShowRecsForItem_off({ sandbox }) {
   await SpecialPowers.pushPrefEnv({
     set: [["extensions.pocket.onSaveRecs", false]],
   });
@@ -59,7 +59,9 @@ test_runner(async function test_main_getAndShowRecsForItem_off({ sandbox }) {
   Assert.ok(getRecsForItemStub.notCalled);
 });
 
-test_runner(async function test_main_getAndShowRecsForItem_locale({ sandbox }) {
+test_runner(async function test_pktUI_getAndShowRecsForItem_locale({
+  sandbox,
+}) {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["extensions.pocket.onSaveRecs", true],
