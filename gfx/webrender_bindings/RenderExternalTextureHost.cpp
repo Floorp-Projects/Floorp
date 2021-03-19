@@ -218,7 +218,7 @@ gfx::YUVColorSpace RenderExternalTextureHost::GetYUVColorSpace() const {
     case layers::BufferDescriptor::TYCbCrDescriptor:
       return mDescriptor.get_YCbCrDescriptor().yUVColorSpace();
     default:
-      return gfx::YUVColorSpace::UNKNOWN;
+      return gfx::YUVColorSpace::Default;
   }
 }
 

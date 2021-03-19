@@ -239,6 +239,7 @@ static bool LockD3DTexture(T* aTexture) {
 
 template <typename T>
 static bool HasKeyedMutex(T* aTexture) {
+  MOZ_ASSERT(aTexture);
   RefPtr<IDXGIKeyedMutex> mutex;
   aTexture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
   return !!mutex;
@@ -265,11 +266,11 @@ D3D11TextureData::D3D11TextureData(ID3D11Texture2D* aTexture,
       mFormat(aFormat),
       mNeedsClear(aFlags & ALLOC_CLEAR_BUFFER),
       mNeedsClearWhite(aFlags & ALLOC_CLEAR_BUFFER_WHITE),
+      mHasSynchronization(HasKeyedMutex(aTexture)),
       mIsForOutOfBandContent(aFlags & ALLOC_FOR_OUT_OF_BAND_CONTENT),
       mTexture(aTexture),
       mAllocationFlags(aFlags) {
   MOZ_ASSERT(aTexture);
-  mHasSynchronization = HasKeyedMutex(aTexture);
 }
 
 static void DestroyDrawTarget(RefPtr<DrawTarget>& aDT,

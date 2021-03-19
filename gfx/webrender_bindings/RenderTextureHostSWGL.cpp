@@ -52,9 +52,6 @@ bool RenderTextureHostSWGL::UpdatePlanes(RenderCompositor* aCompositor,
           case gfx::ColorDepth::COLOR_16:
             internalFormat = LOCAL_GL_R16;
             break;
-          default:
-            MOZ_RELEASE_ASSERT(false, "Unhandled YUV color depth");
-            break;
         }
         break;
       case gfx::SurfaceFormat::NV12:
@@ -170,10 +167,8 @@ bool RenderTextureHostSWGL::LockSWGLCompositeSurface(
     case gfx::SurfaceFormat::YUV422: {
       aInfo->yuv_planes = mPlanes.size();
       auto colorSpace = GetYUVColorSpace();
-      MOZ_ASSERT(colorSpace != gfx::YUVColorSpace::UNKNOWN);
       aInfo->color_space = ToWrYuvColorSpace(colorSpace);
       auto colorDepth = GetColorDepth();
-      MOZ_ASSERT(colorDepth != gfx::ColorDepth::UNKNOWN);
       aInfo->color_depth = ToWrColorDepth(colorDepth);
       break;
     }

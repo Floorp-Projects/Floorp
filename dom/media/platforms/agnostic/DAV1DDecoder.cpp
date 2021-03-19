@@ -188,6 +188,46 @@ int DAV1DDecoder::GetPicture(DecodedData& aData, MediaResult& aResult) {
   return 0;
 }
 
+Maybe<gfx::YUVColorSpace> GetColorSpace(const Dav1dPicture& aPicture,
+                                        LazyLogModule& aLogger) {
+  // On every other case use the default (BT601).
+  if (!aPicture.seq_hdr->color_description_present) {
+    return {};
+  }
+
+  switch (aPicture.seq_hdr->mtrx) {
+    case DAV1D_MC_BT2020_NCL:
+    case DAV1D_MC_BT2020_CL:
+      return Some(gfx::YUVColorSpace::BT2020);
+    case DAV1D_MC_BT601:
+      return Some(gfx::YUVColorSpace::BT601);
+    case DAV1D_MC_BT709:
+      return Some(gfx::YUVColorSpace::BT709);
+    case DAV1D_MC_IDENTITY:
+      return Some(gfx::YUVColorSpace::Identity);
+    case DAV1D_MC_CHROMAT_NCL:
+    case DAV1D_MC_CHROMAT_CL:
+    case DAV1D_MC_UNKNOWN:  // MIAF specific
+      switch (aPicture.seq_hdr->pri) {
+        case DAV1D_COLOR_PRI_BT601:
+          return Some(gfx::YUVColorSpace::BT601);
+        case DAV1D_COLOR_PRI_BT709:
+          return Some(gfx::YUVColorSpace::BT709);
+        case DAV1D_COLOR_PRI_BT2020:
+          return Some(gfx::YUVColorSpace::BT2020);
+        default:
+          MOZ_LOG(aLogger, LogLevel::Debug,
+                  ("Couldn't infer color matrix from primaries: %u",
+                   aPicture.seq_hdr->pri));
+          return {};
+      }
+    default:
+      MOZ_LOG(aLogger, LogLevel::Debug,
+              ("Unsupported color matrix value: %u", aPicture.seq_hdr->mtrx));
+      return {};
+  }
+}
+
 already_AddRefed<VideoData> DAV1DDecoder::ConstructImage(
     const Dav1dPicture& aPicture) {
   VideoData::YCbCrBuffer b;
@@ -195,50 +235,15 @@ already_AddRefed<VideoData> DAV1DDecoder::ConstructImage(
     b.mColorDepth = gfx::ColorDepth::COLOR_10;
   } else if (aPicture.p.bpc == 12) {
     b.mColorDepth = gfx::ColorDepth::COLOR_12;
+  } else {
+    b.mColorDepth = gfx::ColorDepth::COLOR_8;
   }
 
-  // On every other case use the default (BT601).
-  if (aPicture.seq_hdr->color_description_present) {
-    switch (aPicture.seq_hdr->mtrx) {
-      case DAV1D_MC_BT2020_NCL:
-      case DAV1D_MC_BT2020_CL:
-        b.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
-        break;
-      case DAV1D_MC_BT601:
-        b.mYUVColorSpace = gfx::YUVColorSpace::BT601;
-        break;
-      case DAV1D_MC_BT709:
-        b.mYUVColorSpace = gfx::YUVColorSpace::BT709;
-        break;
-      case DAV1D_MC_IDENTITY:
-        b.mYUVColorSpace = gfx::YUVColorSpace::Identity;
-        break;
-      case DAV1D_MC_CHROMAT_NCL:
-      case DAV1D_MC_CHROMAT_CL:
-      case DAV1D_MC_UNKNOWN:  // MIAF specific
-        switch (aPicture.seq_hdr->pri) {
-          case DAV1D_COLOR_PRI_BT601:
-            b.mYUVColorSpace = gfx::YUVColorSpace::BT601;
-            break;
-          case DAV1D_COLOR_PRI_BT709:
-            b.mYUVColorSpace = gfx::YUVColorSpace::BT709;
-            break;
-          case DAV1D_COLOR_PRI_BT2020:
-            b.mYUVColorSpace = gfx::YUVColorSpace::BT2020;
-            break;
-          default:
-            b.mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
-            break;
-        }
-        break;
-      default:
-        LOG("Unsupported color matrix value: %u", aPicture.seq_hdr->mtrx);
-        b.mYUVColorSpace = gfx::YUVColorSpace::UNKNOWN;
-    }
+  auto colorSpace = GetColorSpace(aPicture, sPDMLog);
+  if (!colorSpace) {
+    colorSpace = Some(DefaultColorSpace({aPicture.p.w, aPicture.p.h}));
   }
-  if (b.mYUVColorSpace == gfx::YUVColorSpace::UNKNOWN) {
-    b.mYUVColorSpace = DefaultColorSpace({aPicture.p.w, aPicture.p.h});
-  }
+  b.mYUVColorSpace = *colorSpace;
   b.mColorRange = aPicture.seq_hdr->color_range ? gfx::ColorRange::FULL
                                                 : gfx::ColorRange::LIMITED;
 

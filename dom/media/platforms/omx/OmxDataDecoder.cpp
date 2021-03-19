@@ -937,12 +937,14 @@ already_AddRefed<VideoData> MediaDataHelper::CreateYUV420VideoData(
   b.mPlanes[2].mStride = (stride + 1) / 2;
   b.mPlanes[2].mSkip = 0;
 
-  b.mYUVColorSpace =
-      mTrackInfo->GetAsVideoInfo()->mColorSpace == YUVColorSpace::UNKNOWN
-          ? DefaultColorSpace({width, height})
-          : mTrackInfo->GetAsVideoInfo()->mColorSpace;
-
   VideoInfo info(*mTrackInfo->GetAsVideoInfo());
+
+  auto maybeColorSpace = info.mColorSpace;
+  if (!maybeColorSpace) {
+    maybeColorSpace = Some(DefaultColorSpace({width, height}));
+  }
+  b.mYUVColorSpace = *maybeColorSpace;
+
   RefPtr<VideoData> data = VideoData::CreateAndCopyData(
       info, mImageContainer,
       0,                                     // Filled later by caller.
