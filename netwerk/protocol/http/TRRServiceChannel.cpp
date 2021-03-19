@@ -1151,6 +1151,12 @@ nsresult TRRServiceChannel::SetupReplacementChannel(nsIURI* aNewURI,
     encodedChannel->SetApplyConversion(LoadApplyConversion());
   }
 
+  // mContentTypeHint is empty when this channel is used to download
+  // ODoHConfigs.
+  if (mContentTypeHint.IsEmpty()) {
+    return NS_OK;
+  }
+
   // Make sure we set content-type on the old channel properly.
   MOZ_ASSERT(mContentTypeHint.Equals("application/dns-message") ||
              mContentTypeHint.Equals("application/oblivious-dns-message"));
