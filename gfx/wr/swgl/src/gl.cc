@@ -2036,11 +2036,18 @@ void FramebufferRenderbuffer(GLenum target, GLenum attachment,
 
 }  // extern "C"
 
-static inline Framebuffer* get_framebuffer(GLenum target) {
+static inline Framebuffer* get_framebuffer(GLenum target,
+                                           bool fallback = false) {
   if (target == GL_FRAMEBUFFER) {
     target = GL_DRAW_FRAMEBUFFER;
   }
-  return ctx->framebuffers.find(ctx->get_binding(target));
+  Framebuffer* fb = ctx->framebuffers.find(ctx->get_binding(target));
+  if (fallback && !fb) {
+    // If the specified framebuffer isn't found and a fallback is requested,
+    // use the default framebuffer.
+    fb = &ctx->framebuffers[0];
+  }
+  return fb;
 }
 
 template <typename T>
@@ -2426,7 +2433,7 @@ void ClearTexImage(GLuint texture, GLint level, GLenum format, GLenum type,
 }
 
 void Clear(GLbitfield mask) {
-  Framebuffer& fb = *get_framebuffer(GL_DRAW_FRAMEBUFFER);
+  Framebuffer& fb = *get_framebuffer(GL_DRAW_FRAMEBUFFER, true);
   if ((mask & GL_COLOR_BUFFER_BIT) && fb.color_attachment) {
     Texture& t = ctx->textures[fb.color_attachment];
     IntRect scissor = ctx->scissortest
@@ -2636,7 +2643,10 @@ void DrawElementsInstanced(GLenum mode, GLsizei count, GLenum type,
     return;
   }
 
-  Framebuffer& fb = *get_framebuffer(GL_DRAW_FRAMEBUFFER);
+  Framebuffer& fb = *get_framebuffer(GL_DRAW_FRAMEBUFFER, true);
+  if (!fb.color_attachment) {
+    return;
+  }
   Texture& colortex = ctx->textures[fb.color_attachment];
   if (!colortex.buf) {
     return;
