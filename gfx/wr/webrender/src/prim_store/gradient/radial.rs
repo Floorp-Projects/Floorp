@@ -6,24 +6,26 @@
 //!
 //! Specification: https://drafts.csswg.org/css-images-4/#radial-gradients
 //!
-//! Radial gradients are rendered via a brush shader directly into the picture pass.
-//!
-//! TODO: The plan is to use render tasks and the image brush instead.
+//! Radial gradients are rendered via cached render tasks and composited with the image brush.
 
-use api::{ExtendMode, GradientStop};
-use api::units::{LayoutPoint, LayoutSize, LayoutVector2D};
+use api::{ExtendMode, GradientStop, PremultipliedColorF};
+use api::units::*;
 use crate::scene_building::IsVisible;
 use crate::frame_builder::FrameBuildingState;
-use crate::gpu_cache::GpuCacheHandle;
+use crate::gpu_cache::{GpuCache, GpuCacheHandle};
 use crate::intern::{Internable, InternDebug, Handle as InternHandle};
 use crate::internal_types::LayoutPrimitiveInfo;
-use crate::prim_store::{BrushSegment, GradientTileRange};
+use crate::prim_store::{BrushSegment, GradientTileRange, InternablePrimitive};
 use crate::prim_store::{PrimitiveInstanceKind, PrimitiveOpacity};
 use crate::prim_store::{PrimKeyCommonData, PrimTemplateCommonData, PrimitiveStore};
-use crate::prim_store::{NinePatchDescriptor, PointKey, SizeKey, InternablePrimitive};
+use crate::prim_store::{NinePatchDescriptor, PointKey, SizeKey, FloatKey};
+use crate::render_task::{RenderTask, RenderTaskKind};
+use crate::render_task_graph::RenderTaskId;
+use crate::render_task_cache::{RenderTaskCacheKeyKind, RenderTaskCacheKey, RenderTaskParent};
+use crate::picture::{SurfaceIndex};
+
 use std::{hash, ops::{Deref, DerefMut}};
-use crate::util::pack_as_float;
-use super::{get_gradient_opacity, stops_and_min_alpha, GradientStopKey, GradientGpuBlockBuilder};
+use super::{stops_and_min_alpha, GradientStopKey, GradientGpuBlockBuilder};
 
 /// Hashable radial gradient parameters, for use during prim interning.
 #[cfg_attr(feature = "capture", derive(Serialize))]
@@ -83,6 +85,7 @@ impl InternDebug for RadialGradientKey {}
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 #[derive(MallocSizeOf)]
+#[derive(Debug)]
 pub struct RadialGradientTemplate {
     pub common: PrimTemplateCommonData,
     pub extend_mode: ExtendMode,
@@ -94,6 +97,7 @@ pub struct RadialGradientTemplate {
     pub stops_opacity: PrimitiveOpacity,
     pub stops: Vec<GradientStop>,
     pub stops_handle: GpuCacheHandle,
+    pub src_color: Option<RenderTaskId>,
 }
 
 impl Deref for RadialGradientTemplate {
@@ -136,6 +140,7 @@ impl From<RadialGradientKey> for RadialGradientTemplate {
             stops_opacity,
             stops,
             stops_handle: GpuCacheHandle::new(),
+            src_color: None,
         }
     }
 }
@@ -148,21 +153,18 @@ impl RadialGradientTemplate {
     pub fn update(
         &mut self,
         frame_state: &mut FrameBuildingState,
+        parent_surface: SurfaceIndex,
     ) {
         if let Some(mut request) =
             frame_state.gpu_cache.request(&mut self.common.gpu_cache_handle) {
             // write_prim_gpu_blocks
+            request.push(PremultipliedColorF::WHITE);
+            request.push(PremultipliedColorF::WHITE);
             request.push([
-                self.center.x,
-                self.center.y,
-                self.params.start_radius,
-                self.params.end_radius,
-            ]);
-            request.push([
-                self.params.ratio_xy,
-                pack_as_float(self.extend_mode as u32),
                 self.stretch_size.width,
                 self.stretch_size.height,
+                0.0,
+                0.0,
             ]);
 
             // write_segment_gpu_blocks
@@ -183,12 +185,48 @@ impl RadialGradientTemplate {
             );
         }
 
-        self.opacity = get_gradient_opacity(
-            self.common.prim_rect,
-            self.stretch_size,
-            self.tile_spacing,
-            self.stops_opacity,
+        let task_size = self.stretch_size.to_i32().cast_unit();
+        let cache_key = RadialGradientCacheKey {
+            size: task_size,
+            center: self.center.into(),
+            start_radius: FloatKey(self.params.start_radius),
+            end_radius: FloatKey(self.params.end_radius),
+            ratio_xy: FloatKey(self.params.ratio_xy),
+            extend_mode: self.extend_mode,
+            stops: self.stops.iter().map(|stop| (*stop).into()).collect(),
+        };
+
+        let task_id = frame_state.resource_cache.request_render_task(
+            RenderTaskCacheKey {
+                size: task_size,
+                kind: RenderTaskCacheKeyKind::RadialGradient(cache_key),
+            },
+            frame_state.gpu_cache,
+            frame_state.rg_builder,
+            None,
+            false,
+            RenderTaskParent::Surface(parent_surface),
+            frame_state.surfaces,
+            |rg_builder| {
+                rg_builder.add().init(RenderTask::new_dynamic(
+                    task_size,
+                    RenderTaskKind::RadialGradient(RadialGradientTask {
+                        extend_mode: self.extend_mode,
+                        center: self.center.into(),
+                        params: self.params.clone(),
+                        stops: self.stops_handle,
+                    }),
+                ))
+            }
         );
+
+        self.src_color = Some(task_id);
+
+        // Tile spacing is always handled by decomposing into separate draw calls so the
+        // primitive opacity is equivalent to stops opacity. This might change to being
+        // set to non-opaque in the presence of tile spacing if/when tile spacing is handled
+        // in the same way as with the image primitive.
+        self.opacity = self.stops_opacity;
     }
 }
 
@@ -240,3 +278,58 @@ impl IsVisible for RadialGradient {
         true
     }
 }
+
+#[derive(Debug)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct RadialGradientTask {
+    pub extend_mode: ExtendMode,
+    pub center: PointKey,
+    pub params: RadialGradientParams,
+    pub stops: GpuCacheHandle,
+}
+
+impl RadialGradientTask {
+    pub fn to_instance(&self, target_rect: &DeviceIntRect, gpu_cache: &mut GpuCache) -> RadialGradientInstance {
+        RadialGradientInstance {
+            task_rect: target_rect.to_f32(),
+            center: DevicePoint::new(self.center.x, self.center.y),
+            start_radius: self.params.start_radius,
+            end_radius: self.params.end_radius,
+            ratio_xy: self.params.ratio_xy,
+            extend_mode: self.extend_mode as i32,
+            gradient_stops_address: self.stops.as_int(gpu_cache),
+        }
+    }
+}
+
+/// The per-instance shader input of a radial gradient render task.
+///
+/// Must match the RADIAL_GRADIENT instance description in renderer/vertex.rs.
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+#[repr(C)]
+#[derive(Clone, Debug)]
+pub struct RadialGradientInstance {
+    pub task_rect: DeviceRect,
+    pub center: DevicePoint,
+    pub start_radius: f32,
+    pub end_radius: f32,
+    pub ratio_xy: f32,
+    pub extend_mode: i32,
+    pub gradient_stops_address: i32,
+}
+
+#[derive(Clone, Debug, Hash, PartialEq, Eq)]
+#[cfg_attr(feature = "capture", derive(Serialize))]
+#[cfg_attr(feature = "replay", derive(Deserialize))]
+pub struct RadialGradientCacheKey {
+    pub size: DeviceIntSize,
+    pub center: PointKey,
+    pub start_radius: FloatKey,
+    pub end_radius: FloatKey,
+    pub ratio_xy: FloatKey,
+    pub extend_mode: ExtendMode,
+    pub stops: Vec<GradientStopKey>,
+}
+
