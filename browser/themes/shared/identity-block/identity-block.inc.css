@@ -145,6 +145,10 @@
 }
 } /*** END proton ***/
 
+#urlbar[searchmode]:not([focused="true"]) > #urlbar-input-container > #urlbar-label-box {
+  pointer-events: none;
+}
+
 @supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
 #identity-box[pageproxystate="valid"].notSecureText,
 #identity-box[pageproxystate="valid"].chromeUI,
@@ -171,7 +175,6 @@
 #urlbar[searchmode]:not([breakout-extend]) > #urlbar-input-container > #urlbar-label-box {
   border-inline-start-color: transparent;
   border-image-width: 0 1px 0 0;
-  pointer-events: none;
 }
 
 #urlbar[searchmode]:not([breakout-extend]) > #urlbar-input-container > #urlbar-label-box:-moz-locale-dir(rtl) {
