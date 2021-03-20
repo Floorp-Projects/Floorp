@@ -117,7 +117,11 @@ bc1.onmessage = (msgEvent) => {
 bc2.onmessage = bc1.onmessage;
 
 var gGen = test();
-gGen.next();
+
+// If Fission is disabled, the pref is no-op.
+SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+  gGen.next();
+});
 
 </script>
 </pre>
