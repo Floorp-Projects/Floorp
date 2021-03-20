@@ -1177,10 +1177,19 @@
     <string name="onboarding_feature_section_header">Descobrissètz %s</string>
     <!-- text for the "What's New" onboarding card header -->
     <string name="onboarding_whats_new_header1">Descobrissètz las novetats</string>
+    <!-- text for the "what's new" onboarding card description
+    The first parameter is the short name of the app (e.g. Firefox) -->
+    <string name="onboarding_whats_new_description">Avètz de question tocant lo nòu %s ? Volètz saber çò que cambièt ?</string>
     <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
     <string name="onboarding_whats_new_description_linktext">Trobatz de responsas aquí</string>
+    <!-- text for the Firefox account onboarding sign in card header -->
+    <string name="onboarding_account_sign_in_header">Començatz de sincronizar los marcapaginas, senhals e mai amb vòstre compte Firefox</string>
     <!-- Text for the button to learn more about signing in to your Firefox account -->
     <string name="onboarding_manual_sign_in_learn_more">Ne saber mai</string>
+    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
+        another Firefox browser. (The word `Firefox` should not be translated)
+        The first parameter is the email of the detected user's account -->
+    <string name="onboarding_firefox_account_auto_signin_header_3">Sètz connectat coma %s sus un autre navegador Firefox amb aqueste periferic. Volètz vos connectar amb aqueste compte ?</string>
     <!-- text for the button to confirm automatic sign-in -->
     <string name="onboarding_firefox_account_auto_signin_confirm">Òc, connectatz-me</string>
     <!-- text for the automatic sign-in button while signing in is in process -->
@@ -1212,15 +1221,22 @@
         In English this is an idiom for "choose a side as in an argument or fight"
         but it is ok to make this more literally about "choosing a position in a physical space -->
     <string name="onboarding_toolbar_position_header">Prenètz posicion</string>
+    <!-- text for the toolbar position card description -->
+    <string name="onboarding_toolbar_position_description">Ensajatz la navegacion amb la man amb la barra d’aisinas inferiora o deplaçatz-la ennaut.</string>
     <!-- text for the private browsing onboarding card header -->
     <string name="onboarding_private_browsing_header">Navegatz d’un biais privat</string>
     <!-- text for the private browsing onboarding card description
     The first parameter is an icon that represents private browsing -->
     <string name="onboarding_private_browsing_description1">Dobrir un sol onglet privat : tocatz l’icòna %s.</string>
+    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
+    <string name="onboarding_private_browsing_always_description">Dobrir d’onglets privats cada còp : definissètz vòstres paramètres de navigacion privada.</string>
     <!-- text for the private browsing onbording card button, that launches settings -->
     <string name="onboarding_private_browsing_button">Dobrir los paramètres</string>
     <!-- text for the privacy notice onboarding card header -->
     <string name="onboarding_privacy_notice_header">Vòstra vida privada</string>
+    <!-- text for the privacy notice onboarding card description
+    The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="onboarding_privacy_notice_description2">Concebèrem %s per vos donar lo contraròtle de çò que partejatz en linha e çò que partejatz amb nosautres.</string>
     <!-- Text for the button to read the privacy notice -->
     <string name="onboarding_privacy_notice_read_button">Legissètz nòstra politica de confidencialitat</string>
     <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
@@ -1337,8 +1353,12 @@
     <string name="etp_social_media_trackers_description">Limita la capacitat dels malhums socials de seguir vòstra activitat en linha.</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">Cookies de seguiment entre sites</string>
+    <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_description">Bloca los cookies que los malhums publicitaris e las societats d’analisi de donadas utilizan per compilar vòstras donadas de navegacion sus mantun site.</string>
     <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_title">Minaires de criptomonedas</string>
+    <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_description">Empacha los scripts malvolents d’accedir a vòstre periferic per minar de moneda numerica.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Generadors d’emprentas numericas</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
@@ -1387,6 +1407,9 @@
     <!-- About page link text to open a screen with libraries that are used -->
     <string name="about_other_open_source_libraries">Bibliotècas qu’utilizam</string>
 
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">Menú de desbugatge : %1$d clic(s) restant(s) per l’activar</string>
     <string name="about_debug_menu_toast_done">Menú de desbugatge activat</string>
 
     <!-- Content description of the tab counter toolbar button when one tab is open -->
@@ -1416,6 +1439,9 @@
 
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Nom de l’acorchi</string>
+
+    <!-- Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description_2">Podètz facilament apondre aqueste site a l’ecran d’acuèlh de vòstre periferic per i accedir dirèctament e i navegar coma se foguèsse una aplicacion.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Identificants e senhals</string>
@@ -1504,6 +1530,8 @@
     <string name="logins_biometric_prompt_message">Desblocatz per veire los identificants enregistrats</string>
     <!-- Title of warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_title">Protegissètz vòstres identificants e senhals</string>
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_message">Configuratz un esquèma de verrolhatge, un còdi PIN o un senhal per protegir vòstres identificants de connexion e senhals enregistrats se per cas qualqu’un accedisca a vòstre periferic.</string>
     <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
     <string name="logins_warning_dialog_later">Mai tard</string>
     <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
@@ -1512,6 +1540,8 @@
     <string name="logins_biometric_prompt_message_pin">Desverrolhatz lo periferic</string>
     <!-- Title for Accessibility Force Enable Zoom Preference -->
     <string name="preference_accessibility_force_enable_zoom">Zoom per totes los sites</string>
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">Activar per permetre de zoomar amb dos dets encara que lo site empache aquò.</string>
     <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
     <string name="saved_logins_sort_strategy_alphabetically">Nom (A-Z)</string>
     <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
@@ -1696,4 +1726,6 @@
     <string name="no_collections_description1">Agropatz de recèrcas, de sites e d’onglets similaris per i accedir rapidament mai tard.</string>
     <!-- Deprecated: text for the firefox account onboarding card header when we detect you're already signed in to -->
     <string name="onboarding_firefox_account_auto_signin_header_2">Sètz connectat coma %s sus un autre navegador Firefox sus aqueste telefòn. Volètz vos connectar amb aqueste compte ?</string>
-    </resources>
+    <!-- Deprecated: Describes the add to homescreen functionality -->
+    <string name="add_to_homescreen_description">Podètz facilament apondre aqueste site a vòstre ecran d’acuèlh de telefòn per i accedir e navigar mai rapidament coma se foguèssetz dins l’aplicacion.</string>
+</resources>
