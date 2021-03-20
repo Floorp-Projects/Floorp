@@ -6,7 +6,9 @@
 
 varying vec2 v_pos;
 
+flat varying vec2 v_center;
 flat varying float v_start_radius;
+flat varying float v_end_radius;
 
 #ifdef WR_VERTEX_SHADER
 
@@ -35,9 +37,12 @@ void main(void) {
     // Transform all coordinates by the y scale so the
     // fragment shader can work with circles
 
-    // v_pos is in a coordinate space relative to the task rect
-    // (so it is independent of the task origin).
-    v_pos = (aTaskRect.zw * aPosition.xy - aCenter) * radius_scale;
+    // v_pos and v_center are in a coordinate space relative to the task rect
+    // (so they are independent of the task origin).
+    v_center = aCenter * radius_scale;
+    v_center.y *= aXYRatio;
+
+    v_pos = aTaskRect.zw * aPosition.xy * radius_scale;
     v_pos.y *= aXYRatio;
 
     v_gradient_repeat = float(aExtendMode == EXTEND_MODE_REPEAT);
@@ -50,21 +55,9 @@ void main(void) {
 
 void main(void) {
     // Solve for t in length(pd) = v_start_radius + t * rd
-    float offset = length(v_pos) - v_start_radius;
+    float offset = length(v_pos - v_center) - v_start_radius;
 
     oFragColor = sample_gradient(offset);
 }
-
-#ifdef SWGL_DRAW_SPAN
-void swgl_drawSpanRGBA8() {
-    int address = swgl_validateGradient(sGpuCache, get_gpu_cache_uv(v_gradient_address),
-                                        int(GRADIENT_ENTRIES + 2.0));
-    if (address < 0) {
-        return;
-    }
-    swgl_commitRadialGradientRGBA8(sGpuCache, address, GRADIENT_ENTRIES, v_gradient_repeat != 0.0,
-                                   v_pos, v_start_radius);
-}
-#endif
 
 #endif
