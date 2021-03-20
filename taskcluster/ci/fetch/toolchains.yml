@@ -277,16 +277,19 @@ upx-3.95-win:
         sha256: 5c076f87ba64d82f11513f4af0ceb07246a3540aa3c72ca3ffc2d53971fa56e3
         size: 462820
 
-wine-5.0:
-    description: wine-5.0.tar.xz
+wine:
+    description: wine source code
     fetch:
         type: static-url
-        url: https://dl.winehq.org/wine/source/5.0/wine-5.0.tar.xz
-        sha256: 181550ba69a80b00c631f80c28ff7642264613bbecdb0c0fc04d6534866713b4
-        size: 22469428
+        url: https://dl.winehq.org/wine/source/6.0/wine-6.0.tar.xz
+        sha256: b493065f2f83ee429c62e2ec58698a3cf63ef78722e1b20765823152e8582c56
+        size: 24192280
         gpg-signature:
             sig-url: "{url}.sign"
             key-path: build/unix/build-gcc/DA23579A74D4AD9AF9D3F945CEFAC8EAAF17519D.key
+        artifact-name: wine.tar.zst
+        strip-components: 1
+        add-prefix: wine-source/
 
 cbindgen-0.16.0:
     description: cbindgen source code
