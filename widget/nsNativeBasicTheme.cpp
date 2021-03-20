@@ -851,7 +851,7 @@ void nsNativeBasicTheme::PaintRoundedRectWithRadius(
   // stroke fills exactly the area we want to fill and not more.
   rect.Deflate(borderWidth * 0.5f);
 
-  LayoutDeviceCoord radius(aRadius * aDpiRatio);
+  LayoutDeviceCoord radius(aRadius * aDpiRatio + borderWidth * 0.5f);
   // Fix up the radius if it's too large with the rect we're going to paint.
   {
     LayoutDeviceCoord min = std::min(rect.width, rect.height);
@@ -906,9 +906,10 @@ void nsNativeBasicTheme::PaintCheckboxControl(DrawTarget& aDrawTarget,
   auto [backgroundColor, borderColor] = ComputeCheckboxColors(
       aState, StyleAppearance::Checkbox, aUseSystemColors);
   {
-    const CSSCoord radius = 2.0f;
+    CSSCoord radius = 2.0f;
     CSSCoord borderWidth = kCheckboxRadioBorderWidth;
     if (backgroundColor == borderColor) {
+      radius += borderWidth;
       borderWidth = 0.0f;
     }
     PaintRoundedRectWithRadius(aDrawTarget, aRect, backgroundColor, borderColor,
