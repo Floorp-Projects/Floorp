@@ -180,6 +180,10 @@ void Axis::OverscrollBy(ParentLayerCoord aOverscroll) {
 
 ParentLayerCoord Axis::GetOverscroll() const { return mOverscroll; }
 
+void Axis::RestoreOverscroll(ParentLayerCoord aOverscroll) {
+  mOverscroll = aOverscroll;
+}
+
 void Axis::StartOverscrollAnimation(float aVelocity) {
   aVelocity = clamped(aVelocity / 2.0f, -20.0f, 20.0f);
   SetVelocity(aVelocity);
