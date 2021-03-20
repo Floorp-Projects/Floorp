@@ -17,6 +17,8 @@ add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.suggest.searches", false]],
   });
+  // Ensure initial state.
+  UrlbarTestUtils.getOneOffSearchButtons(window).invalidateCache();
 });
 
 add_task(async function shortcuts_none() {
@@ -30,7 +32,7 @@ add_task(async function shortcuts_none() {
     );
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      value: "",
+      value: "test",
     });
     await rebuildPromise;
 
@@ -52,7 +54,7 @@ add_task(async function shortcuts_two() {
     );
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      value: "",
+      value: "test",
     });
     await rebuildPromise;
 
@@ -123,7 +125,7 @@ add_task(async function shortcuts_two() {
       );
       await UrlbarTestUtils.promiseAutocompleteResultPopup({
         window,
-        value: "",
+        value: "test",
       });
       await rebuildPromise;
       Assert.ok(
@@ -145,7 +147,7 @@ add_task(async function shortcuts_many() {
     );
     await UrlbarTestUtils.promiseAutocompleteResultPopup({
       window,
-      value: "",
+      value: "test",
     });
     await rebuildPromise;
 
