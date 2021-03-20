@@ -5117,12 +5117,13 @@ bool nsDisplayBoxShadowOuter::CanBuildWebRenderDisplayItems() {
   }
 
   bool hasBorderRadius;
-  bool nativeTheme =
-      nsCSSRendering::HasBoxShadowNativeTheme(mFrame, hasBorderRadius);
-
   // We don't support native themed things yet like box shadows around
   // input buttons.
-  if (nativeTheme) {
+  //
+  // TODO(emilio): The non-native theme could provide the right rect+radius
+  // instead relatively painlessly, if we find this causes performance issues or
+  // what not.
+  if (nsCSSRendering::HasBoxShadowNativeTheme(mFrame, hasBorderRadius)) {
     return false;
   }
 

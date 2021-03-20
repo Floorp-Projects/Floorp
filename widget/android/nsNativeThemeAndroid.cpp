@@ -479,7 +479,8 @@ nsNativeThemeAndroid::DrawWidgetBackground(gfxContext* aContext,
                                            nsIFrame* aFrame,
                                            StyleAppearance aAppearance,
                                            const nsRect& aRect,
-                                           const nsRect& /* aDirtyRect */) {
+                                           const nsRect& /* aDirtyRect */,
+                                           DrawOverflow) {
   DrawTarget* dt = aContext->GetDrawTarget();
   const nscoord twipsPerPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
   EventStates eventState = GetContentState(aFrame, aAppearance);
