@@ -152,7 +152,8 @@ menucaption {
     -moz-context-properties: fill, fill-opacity;
     fill: currentColor;
     fill-opacity: var(--menu-icon-opacity);
-    margin-inline-end: 8px;
+    margin-inline-end: 1em;
+    padding-top: 0;
   }
 
   .menu-right > image {
@@ -349,18 +350,22 @@ menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
     padding-inline-start: 36px;
   }
 
-  /* For Windows 10, checkbox and radio button menu items need the default
+  /* For Windows 10, checkbox, radio and iconified menuitems need the default
      appearance disabled so they pick up our custom styles instead. */
+  .menu-iconic-left,
   menuitem[type="checkbox"],
-  menuitem[type="checkbox"] > .menu-iconic-left ,
-  menuitem[type="radio"],
-  menuitem[type="radio"] > .menu-iconic-left {
-    appearance: none;
+  menuitem[type="radio"] {
+    appearance: none !important; /* to override more specific selectors above. */
     min-width: unset;
   }
 
+  .menu-iconic > .menu-iconic-left,
+  .menuitem-iconic > .menu-iconic-left {
+    margin-inline-end: 1em;
+  }
+
   menuitem[checked="true"] {
-    padding-inline-start: 8px;
+    padding-inline-start: 12px;
   }
 
   /* We need to do something to override the default style for selected
@@ -368,14 +373,11 @@ menuitem[type="radio"] > .menu-iconic-left > .menu-iconic-icon {
      Windows versions looks pretty bad with the Win10 styles, so for now we'll
      insert a generic checkmark icon for both types. */
   menuitem[checked="true"] > .menu-iconic-left {
-    appearance: none !important;
     -moz-context-properties: fill, fill-opacity;
     fill: currentColor;
     fill-opacity: var(--menu-icon-opacity);
     list-style-image: url("chrome://global/skin/icons/check.svg");
-    width: 20px;
-    height: 20px;
-    padding: 2px;
+    width: 16px;
     margin-inline-end: 8px;
   }
   menuitem[checked="true"] > .menu-iconic-left > .menu-iconic-icon {
