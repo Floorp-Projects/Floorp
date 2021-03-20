@@ -142,6 +142,13 @@ class Axis {
   ParentLayerCoord GetOverscroll() const;
 
   /**
+   * Restore the amount by which this axis is overscrolled to the specified
+   * amount. This is for test-related use; overscrolling as a result of user
+   * input should happen via OverscrollBy().
+   */
+  void RestoreOverscroll(ParentLayerCoord aOverscroll);
+
+  /**
    * Start an overscroll animation with the given initial velocity.
    */
   void StartOverscrollAnimation(float aVelocity);

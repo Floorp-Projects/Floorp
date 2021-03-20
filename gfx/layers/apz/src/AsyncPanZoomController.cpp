@@ -575,6 +575,7 @@ class MOZ_RAII AutoApplyAsyncTestAttributes final {
  private:
   AsyncPanZoomController* mApzc;
   FrameMetrics mPrevFrameMetrics;
+  ParentLayerPoint mPrevOverscroll;
   const RecursiveMutexAutoLock& mProofOfLock;
 };
 
@@ -587,12 +588,14 @@ AutoApplyAsyncTestAttributes::AutoApplyAsyncTestAttributes(
     // query the async transforms non-const.
     : mApzc(const_cast<AsyncPanZoomController*>(aApzc)),
       mPrevFrameMetrics(aApzc->Metrics()),
+      mPrevOverscroll(aApzc->GetOverscrollAmount()),
       mProofOfLock(aProofOfLock) {
   mApzc->ApplyAsyncTestAttributes(aProofOfLock);
 }
 
 AutoApplyAsyncTestAttributes::~AutoApplyAsyncTestAttributes() {
-  mApzc->UnapplyAsyncTestAttributes(mProofOfLock, mPrevFrameMetrics);
+  mApzc->UnapplyAsyncTestAttributes(mProofOfLock, mPrevFrameMetrics,
+                                    mPrevOverscroll);
 }
 
 class ZoomAnimation : public AsyncPanZoomAnimation {
@@ -3710,6 +3713,16 @@ ExternalPoint AsyncPanZoomController::GetFirstExternalTouchPoint(
                          ((SingleTouchData&)aEvent.mTouches[0]).mScreenPoint);
 }
 
+ParentLayerPoint AsyncPanZoomController::GetOverscrollAmount() const {
+  return {mX.GetOverscroll(), mY.GetOverscroll()};
+}
+
+void AsyncPanZoomController::RestoreOverscrollAmount(
+    const ParentLayerPoint& aOverscroll) {
+  mX.RestoreOverscroll(aOverscroll.x);
+  mY.RestoreOverscroll(aOverscroll.y);
+}
+
 void AsyncPanZoomController::StartAnimation(AsyncPanZoomAnimation* aAnimation) {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
   mAnimation = aAnimation;
@@ -4254,6 +4267,7 @@ bool AsyncPanZoomController::UpdateAnimation(
 AsyncTransformComponentMatrix AsyncPanZoomController::GetOverscrollTransform(
     AsyncTransformConsumer aMode) const {
   RecursiveMutexAutoLock lock(mRecursiveMutex);
+  AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
 
   if (aMode == eForCompositing && mScrollMetadata.IsApzForceDisabled()) {
     return AsyncTransformComponentMatrix();
@@ -4289,13 +4303,14 @@ bool AsyncPanZoomController::AdvanceAnimations(const SampleTime& aSampleTime) {
   {
     RecursiveMutexAutoLock lock(mRecursiveMutex);
     {  // scope lock
+      CSSRect visibleRect = GetVisibleRect(lock);
       MutexAutoLock lock2(mCheckerboardEventLock);
       // Update RendertraceProperty before UpdateAnimation() call, since
       // the UpdateAnimation() updates effective ScrollOffset for next frame
       // if APZFrameDelay is enabled.
       if (mCheckerboardEvent) {
         mCheckerboardEvent->UpdateRendertraceProperty(
-            CheckerboardEvent::UserVisible, GetVisibleRect(lock));
+            CheckerboardEvent::UserVisible, visibleRect);
       }
     }
 
@@ -4481,7 +4496,16 @@ void AsyncPanZoomController::ApplyAsyncTestAttributes(
       // mSampledState.front(). We can even save/restore that SampledAPZCState
       // instance in the AutoApplyAsyncTestAttributes instead of Metrics().
       Metrics().ZoomBy(mTestAsyncZoom.scale);
+      CSSPoint asyncScrollPosition = Metrics().GetVisualScrollOffset();
+      CSSPoint requestedPoint =
+          asyncScrollPosition + this->mTestAsyncScrollOffset;
+      CSSPoint clampedPoint =
+          Metrics().CalculateScrollRange().ClampPoint(requestedPoint);
+      CSSPoint difference = mTestAsyncScrollOffset - clampedPoint;
+
       ScrollByAndClamp(mTestAsyncScrollOffset);
+      ParentLayerPoint overscroll = difference * Metrics().GetZoom();
+      OverscrollBy(overscroll);
       ResampleCompositedAsyncTransform(aProofOfLock);
     }
   }
@@ -4490,13 +4514,15 @@ void AsyncPanZoomController::ApplyAsyncTestAttributes(
 
 void AsyncPanZoomController::UnapplyAsyncTestAttributes(
     const RecursiveMutexAutoLock& aProofOfLock,
-    const FrameMetrics& aPrevFrameMetrics) {
+    const FrameMetrics& aPrevFrameMetrics,
+    const ParentLayerPoint& aPrevOverscroll) {
   MOZ_ASSERT(mTestAttributeAppliers >= 1);
   --mTestAttributeAppliers;
   if (mTestAttributeAppliers == 0) {
     if (mTestAsyncScrollOffset != CSSPoint() ||
         mTestAsyncZoom != LayerToParentLayerScale()) {
       Metrics() = aPrevFrameMetrics;
+      RestoreOverscrollAmount(aPrevOverscroll);
       ResampleCompositedAsyncTransform(aProofOfLock);
     }
   }
