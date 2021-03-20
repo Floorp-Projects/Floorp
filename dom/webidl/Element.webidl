@@ -169,8 +169,6 @@ interface Element : Node {
 // https://html.spec.whatwg.org/#focus-management-apis
 dictionary FocusOptions {
   boolean preventScroll = false;
-  // Prevents the focus ring if this is not a text control / editable element.
-  [ChromeOnly] boolean preventFocusRing = false;
 };
 
 interface mixin HTMLOrForeignElement {

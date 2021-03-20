@@ -4341,8 +4341,7 @@ void nsGlobalWindowInner::StopVRActivity() {
 
 void nsGlobalWindowInner::SetFocusedElement(Element* aElement,
                                             uint32_t aFocusMethod,
-                                            bool aNeedsFocus,
-                                            bool aWillShowOutline) {
+                                            bool aNeedsFocus) {
   if (aElement && aElement->GetComposedDoc() != mDoc) {
     NS_WARNING("Trying to set focus to a node from a wrong document");
     return;
@@ -4368,14 +4367,6 @@ void nsGlobalWindowInner::SetFocusedElement(Element* aElement,
       mFocusByKeyOccurred = true;
     } else if (nsFocusManager::GetFocusMoveActionCause(mFocusMethod) !=
                widget::InputContextAction::CAUSE_UNKNOWN) {
-      mUnknownFocusMethodShouldShowOutline = false;
-    } else if (!aWillShowOutline) {
-      // If we get focused via script, for example, and we won't show an
-      // outline, that has to be because mUnknownFocusMethodShouldShowOutline is
-      // false already (in which case the assignment below is redundant) or
-      // because script has explicitly opted out of outlines via
-      // FLAG_NOSHOWRING. In that case, we don't want to make a refocus start
-      // showing outlines.
       mUnknownFocusMethodShouldShowOutline = false;
     }
   }
