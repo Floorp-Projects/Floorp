@@ -677,6 +677,10 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
   // notification.
   bool mHasNotifiedGlobalCreated;
 
+  // Whether when focused via an "unknown" focus method, we should show outlines
+  // by default or not. The initial value of this is true (so as to show
+  // outlines for stuff like html autofocus, or initial programmatic focus
+  // without any other user interaction).
   bool mUnknownFocusMethodShouldShowOutline = true;
 
   uint32_t mMarkedCCGeneration;
