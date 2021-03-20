@@ -14,10 +14,6 @@
   -moz-default-appearance: dialog;
 }
 
-.wizard-header-box-1 {
-  color: #000;
-}
-
 .wizard-header-box-text {
   padding: 6px 10px;
   font: menu;
