@@ -590,10 +590,11 @@ RefPtr<nsIPrinter> nsPrinterListWin::CreatePrinter(PrinterInfo aInfo) const {
 }
 
 nsresult nsPrinterListWin::SystemDefaultPrinterName(nsAString& aName) const {
-  if (GetDefaultPrinterName(aName)) {
-    return NS_OK;
+  if (!GetDefaultPrinterName(aName)) {
+    NS_WARNING("Uh oh, GetDefaultPrinterName failed");
+    // Indicate failure by leaving aName untouched, i.e. the empty string.
   }
-  return NS_ERROR_NOT_AVAILABLE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
