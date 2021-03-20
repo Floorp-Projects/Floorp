@@ -1,7 +1,7 @@
 platform(linux,mac) == border-clamp-corner-radius.yaml border-clamp-corner-radius.png
 fuzzy(1,840) == border-gradient-simple.yaml border-gradient-simple-ref.yaml
 platform(linux,mac) == border-gradient-nine-patch.yaml border-gradient-nine-patch.png
-== border-radial-gradient-simple.yaml border-radial-gradient-simple-ref.yaml
+fuzzy-if(platform(swgl),1,4) == border-radial-gradient-simple.yaml border-radial-gradient-simple-ref.yaml
 platform(linux,mac) == border-radial-gradient-nine-patch.yaml border-radial-gradient-nine-patch.png
 == fuzzy(1,10) border-radii.yaml border-radii.png
 == border-none.yaml border-none-ref.yaml
