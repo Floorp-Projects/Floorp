@@ -1520,7 +1520,7 @@ void nsCSSRendering::PaintBoxShadowOuter(nsPresContext* aPresContext,
       nativeRect.IntersectRect(frameRect, nativeRect);
       aPresContext->Theme()->DrawWidgetBackground(
           shadowContext, aForFrame, styleDisplay->EffectiveAppearance(),
-          aFrameArea, nativeRect);
+          aFrameArea, nativeRect, nsITheme::DrawOverflow::No);
 
       blurringArea.DoPaint();
       aRenderingContext.Restore();

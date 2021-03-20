@@ -315,7 +315,8 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance, const nsRect& aRect,
-                                  const nsRect& aDirtyRect) override;
+                                  const nsRect& aDirtyRect,
+                                  DrawOverflow) override;
   bool CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBuilder& aBuilder,
                                         mozilla::wr::IpcResourceUpdateQueue& aResources,
                                         const mozilla::layers::StackingContextHelper& aSc,

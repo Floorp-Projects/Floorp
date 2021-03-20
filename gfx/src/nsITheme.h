@@ -76,11 +76,16 @@ class nsITheme : public nsISupports {
    * @param aWidgetType the -moz-appearance value to draw
    * @param aRect the rectangle defining the area occupied by the widget
    * @param aDirtyRect the rectangle that needs to be drawn
+   * @param DrawOverflow whether outlines, shadows and other such overflowing
+   *        things should be drawn. Honoring this creates better results for
+   *        box-shadow, though it's not a hard requirement.
    */
+  enum class DrawOverflow { No, Yes };
   NS_IMETHOD DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                   StyleAppearance aWidgetType,
                                   const nsRect& aRect,
-                                  const nsRect& aDirtyRect) = 0;
+                                  const nsRect& aDirtyRect,
+                                  DrawOverflow = DrawOverflow::Yes) = 0;
 
   /**
    * Create WebRender commands for the theme background.

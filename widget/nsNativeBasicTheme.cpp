@@ -1580,9 +1580,10 @@ NS_IMETHODIMP
 nsNativeBasicTheme::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                          StyleAppearance aAppearance,
                                          const nsRect& aRect,
-                                         const nsRect& /* aDirtyRect */) {
+                                         const nsRect& /* aDirtyRect */,
+                                         DrawOverflow aDrawOverflow) {
   if (!DoDrawWidgetBackground(*aContext->GetDrawTarget(), aFrame, aAppearance,
-                              aRect)) {
+                              aRect, aDrawOverflow)) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   return NS_OK;
@@ -1598,7 +1599,7 @@ bool nsNativeBasicTheme::CreateWebRenderCommandsForWidget(
     return false;
   }
   WebRenderBackendData data{aBuilder, aResources, aSc, aManager};
-  return DoDrawWidgetBackground(data, aFrame, aAppearance, aRect);
+  return DoDrawWidgetBackground(data, aFrame, aAppearance, aRect, DrawOverflow::Yes);
 }
 
 static LayoutDeviceRect ToSnappedRect(const nsRect& aRect,
@@ -1626,7 +1627,8 @@ template <typename PaintBackendData>
 bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
                                                 nsIFrame* aFrame,
                                                 StyleAppearance aAppearance,
-                                                const nsRect& aRect) {
+                                                const nsRect& aRect,
+                                                DrawOverflow aDrawOverflow) {
   static_assert(std::is_same_v<PaintBackendData, DrawTarget> ||
                 std::is_same_v<PaintBackendData, WebRenderBackendData>);
 
@@ -1647,6 +1649,10 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
       aFrame = parentFrame;
       eventState = GetContentState(parentFrame, aAppearance);
     }
+  }
+
+  if (aDrawOverflow == DrawOverflow::No) {
+    eventState &= ~NS_EVENT_STATE_FOCUSRING;
   }
 
   // Hack to avoid skia fuzziness: Add a dummy clip if the widget doesn't
