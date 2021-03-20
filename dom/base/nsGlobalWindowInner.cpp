@@ -4368,6 +4368,11 @@ void nsGlobalWindowInner::SetFocusedElement(Element* aElement,
     } else if (nsFocusManager::GetFocusMoveActionCause(mFocusMethod) !=
                widget::InputContextAction::CAUSE_UNKNOWN) {
       mUnknownFocusMethodShouldShowOutline = false;
+    } else if (aFocusMethod & nsIFocusManager::FLAG_NOSHOWRING) {
+      // If we get focused via script, and script has explicitly opted out of
+      // outlines via FLAG_NOSHOWRING, we don't want to make a refocus start
+      // showing outlines.
+      mUnknownFocusMethodShouldShowOutline = false;
     }
   }
 
