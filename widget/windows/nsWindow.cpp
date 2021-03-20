@@ -1596,8 +1596,7 @@ void nsWindow::Show(bool bState) {
     // Initialize the UI state - this would normally happen below, but since
     // we're actually already showing, we won't hit it in the normal way.
     ::SendMessageW(mWnd, WM_CHANGEUISTATE,
-                   MAKEWPARAM(UIS_INITIALIZE, UISF_HIDEFOCUS | UISF_HIDEACCEL),
-                   0);
+                   MAKEWPARAM(UIS_SET, UISF_HIDEFOCUS | UISF_HIDEACCEL), 0);
   }
 
   if (mWindowType == eWindowType_popup) {
@@ -1702,10 +1701,9 @@ void nsWindow::Show(bool bState) {
 
       if (!wasVisible && (mWindowType == eWindowType_toplevel ||
                           mWindowType == eWindowType_dialog)) {
-        // when a toplevel window or dialog is shown, initialize the UI state
-        ::SendMessageW(
-            mWnd, WM_CHANGEUISTATE,
-            MAKEWPARAM(UIS_INITIALIZE, UISF_HIDEFOCUS | UISF_HIDEACCEL), 0);
+        // When a toplevel window or dialog is shown, initialize the UI state
+        ::SendMessageW(mWnd, WM_CHANGEUISTATE,
+                       MAKEWPARAM(UIS_SET, UISF_HIDEFOCUS | UISF_HIDEACCEL), 0);
       }
     } else {
       // Clear contents to avoid ghosting of old content if we display
@@ -6215,9 +6213,10 @@ bool nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         if (action == UIS_SET || action == UIS_CLEAR) {
           int32_t flags = HIWORD(wParam);
           UIStateChangeType showFocusRings = UIStateChangeType_NoChange;
-          if (flags & UISF_HIDEFOCUS)
+          if (flags & UISF_HIDEFOCUS) {
             showFocusRings = (action == UIS_SET) ? UIStateChangeType_Clear
                                                  : UIStateChangeType_Set;
+          }
           NotifyUIStateChanged(showFocusRings);
         }
       }
