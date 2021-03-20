@@ -62,39 +62,10 @@
 
 "use strict";
 
-const { components, Cc, Ci, Cu } = require("chrome");
+const { components, Cc, Ci } = require("chrome");
 loader.lazyImporter(this, "NetUtil", "resource://gre/modules/NetUtil.jsm");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const Services = require("Services");
-
-loader.lazyGetter(this, "certDecoder", () => {
-  const { asn1js } = Cu.import(
-    "chrome://global/content/certviewer/asn1js_bundle.js"
-  );
-  const { pkijs } = Cu.import(
-    "chrome://global/content/certviewer/pkijs_bundle.js"
-  );
-  const { pvutils } = Cu.import(
-    "chrome://global/content/certviewer/pvutils_bundle.js"
-  );
-
-  const { Integer, fromBER } = asn1js.asn1js;
-  const { Certificate } = pkijs.pkijs;
-  const { fromBase64, stringToArrayBuffer } = pvutils.pvutils;
-
-  const { certDecoderInitializer } = Cu.import(
-    "chrome://global/content/certviewer/certDecoder.js"
-  );
-  const { parse, pemToDER } = certDecoderInitializer(
-    Integer,
-    fromBER,
-    Certificate,
-    fromBase64,
-    stringToArrayBuffer,
-    crypto
-  );
-  return { parse, pemToDER };
-});
 
 // The cache used in the `nsIURL` function.
 const gNSURLStore = new Map();
@@ -581,7 +552,7 @@ var NetworkHelper = {
    *            - weaknessReasons: list of reasons that cause the request to be
    *                               considered weak. See getReasonsForWeakness.
    */
-  parseSecurityInfo: async function(securityInfo, httpActivity) {
+  parseSecurityInfo: function(securityInfo, httpActivity) {
     const info = {
       state: "insecure",
     };
@@ -675,7 +646,7 @@ var NetworkHelper = {
       );
 
       // Certificate.
-      info.cert = await this.parseCertificateInfo(securityInfo.serverCert);
+      info.cert = this.parseCertificateInfo(securityInfo.serverCert);
 
       // Certificate transparency status.
       info.certificateTransparency = securityInfo.certificateTransparencyStatus;
@@ -732,47 +703,29 @@ var NetworkHelper = {
    *             fingerprint: { sha1, sha256 }
    *           }
    */
-  parseCertificateInfo: async function(cert) {
-    function getDNComponent(dn, componentType) {
-      for (const [type, value] of dn.entries) {
-        if (type == componentType) {
-          return value;
-        }
-      }
-      return undefined;
-    }
-
+  parseCertificateInfo: function(cert) {
     const info = {};
     if (cert) {
-      const parsedCert = await certDecoder.parse(
-        certDecoder.pemToDER(cert.getBase64DERString())
-      );
       info.subject = {
-        commonName: getDNComponent(parsedCert.subject, "Common Name"),
-        organization: getDNComponent(parsedCert.subject, "Organization"),
-        organizationalUnit: getDNComponent(
-          parsedCert.subject,
-          "Organizational Unit"
-        ),
+        commonName: cert.commonName,
+        organization: cert.organization,
+        organizationalUnit: cert.organizationalUnit,
       };
 
       info.issuer = {
-        commonName: getDNComponent(parsedCert.issuer, "Common Name"),
-        organization: getDNComponent(parsedCert.issuer, "Organization"),
-        organizationUnit: getDNComponent(
-          parsedCert.issuer,
-          "Organizational Unit"
-        ),
+        commonName: cert.issuerCommonName,
+        organization: cert.issuerOrganization,
+        organizationUnit: cert.issuerOrganizationUnit,
       };
 
       info.validity = {
-        start: parsedCert.notBeforeUTC,
-        end: parsedCert.notAfterUTC,
+        start: cert.validity.notBeforeLocalDay,
+        end: cert.validity.notAfterLocalDay,
       };
 
       info.fingerprint = {
-        sha1: parsedCert.fingerprint.sha1,
-        sha256: parsedCert.fingerprint.sha256,
+        sha1: cert.sha1Fingerprint,
+        sha256: cert.sha256Fingerprint,
       };
     } else {
       DevToolsUtils.reportException(
