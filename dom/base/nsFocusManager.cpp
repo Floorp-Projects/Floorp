@@ -1251,6 +1251,10 @@ static bool ShouldMatchFocusVisible(nsPIDOMWindowOuter* aWindow,
     }
   }
 
+  if (aFocusFlags & nsIFocusManager::FLAG_NOSHOWRING) {
+    return false;
+  }
+
   switch (nsFocusManager::GetFocusMoveActionCause(aFocusFlags)) {
     case InputContextAction::CAUSE_KEY:
       // If the user interacts with the page via the keyboard, the currently
@@ -1724,7 +1728,8 @@ void nsFocusManager::SetFocusInner(Element* aNewContent, int32_t aFlags,
     // set the focus node and method as needed
     uint32_t focusMethod =
         aFocusChanged ? aFlags & FOCUSMETHODANDRING_MASK
-                      : newWindow->GetFocusMethod() | (aFlags & FLAG_SHOWRING);
+                      : newWindow->GetFocusMethod() |
+                            (aFlags & (FLAG_SHOWRING | FLAG_NOSHOWRING));
     newWindow->SetFocusedElement(elementToFocus, focusMethod);
     if (aFocusChanged) {
       nsCOMPtr<nsIDocShell> docShell = newWindow->GetDocShell();
@@ -2427,9 +2432,10 @@ void nsFocusManager::Focus(
   // If the focus actually changed, set the focus method (mouse, keyboard, etc).
   // Otherwise, just get the current focus method and use that. This ensures
   // that the method is set during the document and window focus events.
-  uint32_t focusMethod =
-      aFocusChanged ? aFlags & FOCUSMETHODANDRING_MASK
-                    : aWindow->GetFocusMethod() | (aFlags & FLAG_SHOWRING);
+  uint32_t focusMethod = aFocusChanged
+                             ? aFlags & FOCUSMETHODANDRING_MASK
+                             : aWindow->GetFocusMethod() |
+                                   (aFlags & (FLAG_SHOWRING | FLAG_NOSHOWRING));
 
   if (!IsWindowVisible(aWindow)) {
     // if the window isn't visible, for instance because it is a hidden tab,
@@ -3588,7 +3594,14 @@ nsresult nsFocusManager::DetermineElementToMoveFocus(
 
 uint32_t nsFocusManager::FocusOptionsToFocusManagerFlags(
     const mozilla::dom::FocusOptions& aOptions) {
-  return aOptions.mPreventScroll ? nsIFocusManager::FLAG_NOSCROLL : 0;
+  uint32_t flags = 0;
+  if (aOptions.mPreventScroll) {
+    flags |= FLAG_NOSCROLL;
+  }
+  if (aOptions.mPreventFocusRing) {
+    flags |= FLAG_NOSHOWRING;
+  }
+  return flags;
 }
 
 static bool IsHostOrSlot(const nsIContent* aContent) {

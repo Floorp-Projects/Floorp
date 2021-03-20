@@ -219,8 +219,14 @@ interface nsIFocusManager : nsISupports
   const unsigned long FLAG_BYMOVEFOCUS = 0x4000;
 
   /**
+   * Do not show a ring around the element to focus, if this is not a text
+   * control, regardless of other state.
+   */
+  const unsigned long FLAG_NOSHOWRING = 0x8000;
+
+  /**
    * Always show the focus ring or other indicator of focus, regardless of
-   * other state.
+   * other state. Overrides FLAG_NOSHOWRING.
    */
   const unsigned long FLAG_SHOWRING = 0x100000;
 
