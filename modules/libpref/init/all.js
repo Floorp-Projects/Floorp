@@ -1411,7 +1411,11 @@ pref("network.http.spdy.websockets", true);
 pref("network.http.spdy.enable-hpack-dump", false);
 
 // Http3 parameters
+#if defined(EARLY_BETA_OR_EARLIER) && !defined(ANDROID)
+pref("network.http.http3.enabled", true);
+#else
 pref("network.http.http3.enabled", false);
+#endif
 
 // Http3 qpack table size.
 pref("network.http.http3.default-qpack-table-size", 65536); // 64k

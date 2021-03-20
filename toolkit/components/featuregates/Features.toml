@@ -164,7 +164,7 @@ preference = "network.http.http3.enabled"
 type = "boolean"
 bug-numbers = [1682539]
 is-public = true
-default-value = false
+default-value = {default = false, nightly = true, beta = true}
 
 [url-bar-ime-search]
 title = "experimental-features-ime-search"
