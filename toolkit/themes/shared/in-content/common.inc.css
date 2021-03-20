@@ -970,6 +970,7 @@ xul|tree {
   border: 1px solid var(--in-content-box-border-color);
   border-radius: 2px;
   background-color: var(--in-content-box-background);
+  color: inherit;
   margin: 0;
 }
 
@@ -1027,13 +1028,6 @@ xul|treecol[sortDirection="ascending"]:not([hideheader="true"]) > xul|*.treecol-
 /* This is the only way to increase the height of a tree row unfortunately */
 xul|treechildren::-moz-tree-row {
   min-height: 2em;
-}
-
-/* Color needs to be set on tree cell in order to be applied */
-xul|treechildren::-moz-tree-cell-text,
-xul|treechildren::-moz-tree-twisty,
-xul|treechildren::-moz-tree-image {
-  color: var(--in-content-text-color);
 }
 
 xul|treechildren::-moz-tree-cell-text(selected),
