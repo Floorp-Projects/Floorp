@@ -795,6 +795,17 @@ class AsyncPanZoomController {
   ExternalPoint GetFirstExternalTouchPoint(const MultiTouchInput& aEvent);
 
   /**
+   * Gets the amount by which this APZC is overscrolled along both axes.
+   */
+  ParentLayerPoint GetOverscrollAmount() const;
+  /**
+   * Restore the amount by which this APZC is overscrolled along both axes
+   * to the specified amount. This is for test-related use; overscrolling
+   * as a result of user input should happen via OverscrollBy().
+   */
+  void RestoreOverscrollAmount(const ParentLayerPoint& aOverscroll);
+
+  /**
    * Sets the panning state basing on the pan direction angle and current
    * touch-action value.
    */
@@ -1245,7 +1256,8 @@ class AsyncPanZoomController {
    * by |ApplyAsyncTestAttributes|.
    */
   void UnapplyAsyncTestAttributes(const RecursiveMutexAutoLock& aProofOfLock,
-                                  const FrameMetrics& aPrevFrameMetrics);
+                                  const FrameMetrics& aPrevFrameMetrics,
+                                  const ParentLayerPoint& aPrevOverscroll);
 
   /* ===================================================================
    * The functions and members in this section are used to manage
