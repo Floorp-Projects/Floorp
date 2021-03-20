@@ -113,7 +113,8 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(gfxContext* aContext, nsIFrame*,
                                   StyleAppearance, const nsRect& aRect,
-                                  const nsRect& aDirtyRect) override;
+                                  const nsRect& aDirtyRect,
+                                  DrawOverflow) override;
 
   struct WebRenderBackendData {
     mozilla::wr::DisplayListBuilder& mBuilder;
@@ -135,7 +136,7 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   // given back-end.
   template <typename PaintBackendData>
   bool DoDrawWidgetBackground(PaintBackendData&, nsIFrame*, StyleAppearance,
-                              const nsRect& aRect);
+                              const nsRect&, DrawOverflow);
 
   [[nodiscard]] LayoutDeviceIntMargin GetWidgetBorder(nsDeviceContext* aContext,
                                                       nsIFrame*,
