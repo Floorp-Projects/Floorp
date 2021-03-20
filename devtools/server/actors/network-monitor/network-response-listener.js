@@ -15,6 +15,11 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "DevToolsUtils",
+  "devtools/shared/DevToolsUtils"
+);
+loader.lazyRequireGetter(
+  this,
   "CacheEntry",
   "devtools/shared/platform/cache-entry",
   true
@@ -222,7 +227,7 @@ NetworkResponseListener.prototype = {
     }
 
     this.request = request;
-    this._onSecurityInfo = this._getSecurityInfo();
+    this._getSecurityInfo();
     this._findOpenResponse();
     // We need to track the offset for the onDataAvailable calls where
     // we pass the data from our pipe to the converter.
@@ -311,7 +316,7 @@ NetworkResponseListener.prototype = {
   /**
    * Parse security state of this request and report it to the client.
    */
-  _getSecurityInfo: async function() {
+  _getSecurityInfo: DevToolsUtils.makeInfallible(function() {
     // Many properties of the securityInfo (e.g., the server certificate or HPKP
     // status) are not available in the content process and can't be even touched safely,
     // because their C++ getters trigger assertions. This function is called in content
@@ -328,10 +333,8 @@ NetworkResponseListener.prototype = {
     if (secinfo) {
       secinfo.QueryInterface(Ci.nsITransportSecurityInfo);
     }
-    const info = await NetworkHelper.parseSecurityInfo(
-      secinfo,
-      this.httpActivity
-    );
+    const info = NetworkHelper.parseSecurityInfo(secinfo, this.httpActivity);
+
     let isRacing = false;
     try {
       const channel = this.httpActivity.channel;
@@ -344,7 +347,7 @@ NetworkResponseListener.prototype = {
     }
 
     this.httpActivity.owner.addSecurityInfo(info, isRacing);
-  },
+  }),
 
   /**
    * Fetches cache information from CacheEntry
@@ -476,15 +479,6 @@ NetworkResponseListener.prototype = {
    *        from the cache.
    */
   _onComplete: function(data) {
-    // Make sure all the security and response content info are sent
-    this._getResponseContent(data);
-    this._onSecurityInfo.then(() => this._destroy());
-  },
-
-  /**
-   * Create the response object and send it to the client.
-   */
-  _getResponseContent: function(data) {
     const response = {
       mimeType: "",
       text: data || "",
@@ -540,9 +534,7 @@ NetworkResponseListener.prototype = {
       blockedReason: reason,
       blockingExtension: id,
     });
-  },
 
-  _destroy: function() {
     this._wrappedNotificationCallbacks = null;
     this.httpActivity = null;
     this.sink = null;
