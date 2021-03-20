@@ -268,7 +268,7 @@ linux64-wine:
         toolchain-artifact: public/build/wine.tar.xz
     fetches:
         fetch:
-            - wine-5.0
+            - wine
 
 win32-pdbstr:
     description: "pdbstr for 32-bits Windows"
