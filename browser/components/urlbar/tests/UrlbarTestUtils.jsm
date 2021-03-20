@@ -348,9 +348,7 @@ var UrlbarTestUtils = {
     if (win.gURLBar.view.isOpen) {
       return;
     }
-    if (this._testScope) {
-      this._testScope.info("Awaiting for the urlbar panel to open");
-    }
+    this._testScope?.info("Awaiting for the urlbar panel to open");
     await new Promise(resolve => {
       win.gURLBar.controller.addQueryListener({
         onViewOpen() {
@@ -359,6 +357,7 @@ var UrlbarTestUtils = {
         },
       });
     });
+    this._testScope?.info("Urlbar panel opened");
   },
 
   /**
@@ -377,9 +376,7 @@ var UrlbarTestUtils = {
     if (!win.gURLBar.view.isOpen) {
       return;
     }
-    if (this._testScope) {
-      this._testScope.info("Awaiting for the urlbar panel to close");
-    }
+    this._testScope?.info("Awaiting for the urlbar panel to close");
     await new Promise(resolve => {
       win.gURLBar.controller.addQueryListener({
         onViewClose() {
@@ -388,6 +385,7 @@ var UrlbarTestUtils = {
         },
       });
     });
+    this._testScope?.info("Urlbar panel closed");
   },
 
   /**
@@ -481,11 +479,9 @@ var UrlbarTestUtils = {
     let ignoreProperties = ["icon", "pref", "restrict"];
     for (let prop of ignoreProperties) {
       if (prop in expectedSearchMode && !(prop in window.gURLBar.searchMode)) {
-        if (this._testScope) {
-          this._testScope.info(
-            `Ignoring unimportant property '${prop}' in expected search mode`
-          );
-        }
+        this._testScope?.info(
+          `Ignoring unimportant property '${prop}' in expected search mode`
+        );
         delete expectedSearchMode[prop];
       }
     }
@@ -595,6 +591,8 @@ var UrlbarTestUtils = {
    * @note Can only be used if UrlbarTestUtils has been initialized with init().
    */
   async enterSearchMode(window, searchMode = null) {
+    this._testScope?.info(`Enter Search Mode ${JSON.stringify(searchMode)}`);
+
     // Ensure any pending query is complete.
     await this.promiseSearchComplete(window);
 
