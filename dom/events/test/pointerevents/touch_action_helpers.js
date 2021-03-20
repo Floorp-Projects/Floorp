@@ -9,21 +9,19 @@ function promiseTimeout(delay) {
 async function touchScrollRight(aSelector = "#target0", aX = 20, aY = 20) {
   var target = document.querySelector(aSelector);
   let dragDonePromise = promiseTouchEnd(document.body);
-  ok(
-    synthesizeNativeTouchDrag(target, aX + 40, aY, -40, 0),
-    "Synthesized horizontal drag"
-  );
+  dump("Synthesizing horizontal drag\n");
+  await promiseNativePointerDrag(target, "touch", aX + 40, aY, -40, 0);
   await dragDonePromise;
+  dump("Got touchend from the horizontal drag\n");
 }
 
 async function touchScrollDown(aSelector = "#target0", aX = 20, aY = 20) {
   var target = document.querySelector(aSelector);
   let dragDonePromise = promiseTouchEnd(document.body);
-  ok(
-    synthesizeNativeTouchDrag(target, aX, aY + 40, 0, -40),
-    "Synthesized vertical drag"
-  );
+  dump("Synthesizing vertical drag\n");
+  await promiseNativePointerDrag(target, "touch", aX, aY + 40, 0, -40);
   await dragDonePromise;
+  dump("Got touchend from the vertical drag\n");
 }
 
 async function tapCompleteAndWaitTestDone() {
