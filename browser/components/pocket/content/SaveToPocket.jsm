@@ -284,7 +284,7 @@ var SaveToPocket = {
     label: gStrings.formatStringFromName("readerView.savetopocket.label", [
       "Pocket",
     ]),
-    image: "chrome://global/skin/reader/pocket.svg",
+    image: "chrome://global/skin/icons/pocket.svg",
     width: 16,
     height: 16,
   },
