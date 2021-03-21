@@ -86,7 +86,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=607529
     bc.postMessage("close");
   }
 
-  window.open("file_bug607529.html", "", "noopener");
+  // If Fission is disabled, the pref is no-op.
+  SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+    window.open("file_bug607529.html", "", "noopener");
+  });
 </script>
 </pre>
 </body>
