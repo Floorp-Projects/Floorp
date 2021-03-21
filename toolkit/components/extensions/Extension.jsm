@@ -1692,12 +1692,9 @@ class ExtensionData {
 
     const haveAccessKeys = AppConstants.platform !== "android";
 
-    result.header = bundle.formatStringFromName("webextPerms.header", ["<>"]);
-    result.text = info.unsigned
-      ? bundle.GetStringFromName("webextPerms.unsignedWarning")
-      : "";
-    result.listIntro = bundle.GetStringFromName("webextPerms.listIntro2");
-
+    let headerKey;
+    result.text = "";
+    result.listIntro = "";
     result.acceptText = bundle.GetStringFromName("webextPerms.add.label");
     result.cancelText = bundle.GetStringFromName("webextPerms.cancel.label");
     if (haveAccessKeys) {
@@ -1708,10 +1705,7 @@ class ExtensionData {
     }
 
     if (info.type == "sideload") {
-      result.header = bundle.formatStringFromName(
-        "webextPerms.sideloadHeader",
-        ["<>"]
-      );
+      headerKey = "webextPerms.sideloadHeader";
       let key = !result.msgs.length
         ? "webextPerms.sideloadTextNoPerms"
         : "webextPerms.sideloadText2";
@@ -1731,9 +1725,7 @@ class ExtensionData {
         );
       }
     } else if (info.type == "update") {
-      result.header = bundle.formatStringFromName("webextPerms.updateText", [
-        "<>",
-      ]);
+      headerKey = "webextPerms.updateText2";
       result.text = "";
       result.acceptText = bundle.GetStringFromName(
         "webextPerms.updateAccept.label"
@@ -1744,10 +1736,7 @@ class ExtensionData {
         );
       }
     } else if (info.type == "optional") {
-      result.header = bundle.formatStringFromName(
-        "webextPerms.optionalPermsHeader",
-        ["<>"]
-      );
+      headerKey = "webextPerms.optionalPermsHeader";
       result.text = "";
       result.listIntro = bundle.GetStringFromName(
         "webextPerms.optionalPermsListIntro"
@@ -1766,8 +1755,17 @@ class ExtensionData {
           "webextPerms.optionalPermsDeny.accessKey"
         );
       }
+    } else {
+      headerKey = "webextPerms.header";
+      if (result.msgs.length) {
+        headerKey = info.unsigned
+          ? "webextPerms.headerUnsignedWithPerms"
+          : "webextPerms.headerWithPerms";
+      } else if (info.unsigned) {
+        headerKey = "webextPerms.headerUnsigned";
+      }
     }
-
+    result.header = bundle.formatStringFromName(headerKey, ["<>"]);
     return result;
   }
 }

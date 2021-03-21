@@ -12,6 +12,8 @@ AddonTestUtils.initMochitest(this);
 hookExtensionsTelemetry();
 AddonTestUtils.hookAMTelemetryEvents();
 
+const kSideloaded = true;
+
 async function createWebExtension(details) {
   let options = {
     manifest: {
@@ -176,10 +178,15 @@ add_task(async function test_sideloading() {
   );
 
   // Check the contents of the notification, then choose "Cancel"
-  checkNotification(panel, /\/foo-icon\.png$/, [
-    ["webextPerms.hostDescription.allUrls"],
-    ["webextPerms.description.history"],
-  ]);
+  checkNotification(
+    panel,
+    /\/foo-icon\.png$/,
+    [
+      ["webextPerms.hostDescription.allUrls"],
+      ["webextPerms.description.history"],
+    ],
+    kSideloaded
+  );
 
   panel.secondaryButton.click();
 
@@ -227,9 +234,12 @@ add_task(async function test_sideloading() {
   popupPromise = promisePopupNotificationShown("addon-webext-permissions");
   clickEnableExtension(addonElement);
   panel = await popupPromise;
-  checkNotification(panel, DEFAULT_ICON_URL, [
-    ["webextPerms.hostDescription.allUrls"],
-  ]);
+  checkNotification(
+    panel,
+    DEFAULT_ICON_URL,
+    [["webextPerms.hostDescription.allUrls"]],
+    kSideloaded
+  );
 
   // Test incognito checkbox in post install notification
   function setupPostInstallNotificationTest() {
@@ -292,9 +302,12 @@ add_task(async function test_sideloading() {
   ExtensionsUI.showSideloaded(gBrowser, addon3);
 
   panel = await popupPromise;
-  checkNotification(panel, DEFAULT_ICON_URL, [
-    ["webextPerms.hostDescription.allUrls"],
-  ]);
+  checkNotification(
+    panel,
+    DEFAULT_ICON_URL,
+    [["webextPerms.hostDescription.allUrls"]],
+    kSideloaded
+  );
 
   // Setup async test for post install notification on addon 3
   testPostInstallIncognitoCheckbox = setupPostInstallNotificationTest();
