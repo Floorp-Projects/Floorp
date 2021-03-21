@@ -868,10 +868,6 @@ bool TRRService::MaybeBootstrap(const nsACString& aPossible,
 bool TRRService::IsDomainBlocked(const nsACString& aHost,
                                  const nsACString& aOriginSuffix,
                                  bool aPrivateBrowsing) {
-  if (!Enabled()) {
-    return true;
-  }
-
   auto bl = mTRRBLStorage.Lock();
   if (bl->IsEmpty()) {
     return false;
