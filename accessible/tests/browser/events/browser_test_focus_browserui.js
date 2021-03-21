@@ -12,6 +12,11 @@ loadScripts(
 );
 
 async function runTests(browser, accDoc) {
+  await SpecialPowers.pushPrefEnv({
+    // If Fission is disabled, the pref is no-op.
+    set: [["fission.bfcacheInParent", true]],
+  });
+
   let onFocus = waitForEvent(EVENT_FOCUS, "input");
   EventUtils.synthesizeKey("VK_TAB", {}, browser.ownerGlobal);
   let evt = await onFocus;
