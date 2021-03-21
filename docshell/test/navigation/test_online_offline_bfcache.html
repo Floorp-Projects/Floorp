@@ -1,0 +1,99 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Online/Offline with BFCache</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+
+    /*
+     * The test is designed to work with and without bfcache.
+     * (1) First the test opens a window which then loads another page which
+     * goes back to the original page to detect if bfcache is enabled. If
+     * bfcache isn't enabled, close message is sent to the opened window and it
+     * closes itself and sends a message back and the test finishes.
+     * (2) The browser is set to offline mode. The opened page sends message
+     * that it has received offline event. This controller page then asks the
+     * page to go forward. The page which comes out from the bfcache gets
+     * offline event and sends message about that to this controller.
+     * (3) Browser is set to online mode. Similar cycle as with offline happens.
+     * (4) Controller page sends close message to the opened window and it
+     * closes itself and sends a message back and the test finishes.
+     */
+
+    function offlineOnline(online) {
+      function offlineFn() {
+        Services.io.offline = true;
+      }
+      function onlineFn() {
+        Services.io.offline = false;
+      }
+      SpecialPowers.loadChromeScript(online ? onlineFn : offlineFn);
+    }
+
+    var bc = new BroadcastChannel("online_offline_bfcache");
+    var pageshowCount = 0;
+    var offlineCount = 0;
+    var onlineCount = 0;
+
+    bc.onmessage = function(event) {
+      if (event.data.event == "pageshow") {
+        ++pageshowCount;
+        info("pageshow " + pageshowCount);
+        if (pageshowCount == 1) {
+          ok(!event.data.persisted);
+          bc.postMessage("nextpage");
+        } else if (pageshowCount == 2) {
+          ok(!event.data.persisted);
+          bc.postMessage("back");
+        } else if (pageshowCount == 3) {
+          if (!event.data.persisted) {
+            info("BFCache is not enabled, return early");
+            bc.postMessage("close");
+          } else {
+            offlineOnline(false);
+          }
+        }
+      } else if (event.data == "offline") {
+        ++offlineCount;
+        info("offline " + offlineCount);
+        if (offlineCount == 1) {
+          bc.postMessage("forward");
+        } else if (offlineCount == 2) {
+          offlineOnline(true);
+        } else {
+          ok(false, "unexpected offline event");
+        }
+      }  else if (event.data == "online") {
+        ++onlineCount;
+        info("online " + onlineCount);
+        if (onlineCount == 1) {
+          bc.postMessage("back");
+        } else if (onlineCount == 2) {
+          bc.postMessage("close");
+        } else {
+          ok(false, "unexpected online event");
+        }
+      } else if ("closed") {
+        ok(true, "Did pass the test");
+        bc.close();
+        SimpleTest.finish();
+      }
+    };
+
+    function runTest() {
+      SpecialPowers.pushPrefEnv({"set": [["network.manage-offline-status", false]]}, function() {
+          window.open("file_online_offline_bfcache.html", "", "noopener");
+      });
+    }
+
+    SimpleTest.waitForExplicitFinish();
+  </script>
+</head>
+<body onload="runTest()">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
