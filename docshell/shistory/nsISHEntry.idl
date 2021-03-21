@@ -42,6 +42,7 @@ struct EntriesAndBrowsingContextData;
 [ref] native nsIntRect(nsIntRect);
 [ptr] native nsDocShellEditorDataPtr(nsDocShellEditorData);
 [ptr] native nsDocShellLoadStatePtr(nsDocShellLoadState);
+[ptr] native SHEntrySharedParentStatePtr(mozilla::dom::SHEntrySharedParentState);
 webidl BrowsingContext;
 
 [builtinclass, scriptable, uuid(0dad26b8-a259-42c7-93f1-2fa7fc076e45)]
@@ -358,7 +359,8 @@ interface nsISHEntry : nsISupports
      * the BFCache entry will evict the SHEntry, since the two entries
      * correspond to the same document.
      */
-    [noscript, notxpcom] boolean hasBFCacheEntry(in nsIBFCacheEntry aEntry);
+    [noscript, notxpcom]
+    boolean hasBFCacheEntry(in SHEntrySharedParentStatePtr aEntry);
 
     /**
      * Adopt aEntry's BFCacheEntry, so now both this and aEntry point to
