@@ -64,9 +64,11 @@ bc.onmessage = (msgEvent) => {
     }
 }
 
-
-// Have to open a new window, since there's no bfcache in subframes
-window.open("file_bug660404-1.html", "", "noopener");
+// If Fission is disabled, the pref is no-op.
+SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+  // Have to open a new window, since there's no bfcache in subframes
+  window.open("file_bug660404-1.html", "", "noopener");
+});
 
 </script>
 </pre>
