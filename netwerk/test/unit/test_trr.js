@@ -445,28 +445,6 @@ add_task(async function test_GET_ECS() {
   Services.prefs.clearUserPref("network.trr.disable-ECS");
 });
 
-add_task(async function test_skip_confirmation_mode3() {
-  info("Check that confirmation is skipped in mode 3");
-  // TODO: this is a bit of a smoke test since we allow lookups when
-  // confirmation is pending, and we don't wait for confirmation to complete
-  // in the test - because there's no obvious way to wait. This can probably
-  // be improved in the future, e.g. expose confirmation state somehow for the
-  // test to consume (maybe only expose and test in debug?)
-  dns.clearCache(true);
-  Services.prefs.clearUserPref("network.trr.useGET");
-  Services.prefs.clearUserPref("network.trr.disable-ECS");
-  Services.prefs.setCharPref(
-    "network.trr.confirmationNS",
-    "confirm.example.com"
-  );
-  setModeAndURI(3, "doh?responseIP=1::ffff");
-
-  await new DNSListener("skipConfirmationForMode3.example.com", "1::ffff");
-
-  // Reset
-  Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
-});
-
 add_task(async function test_timeout_mode3() {
   info("Verifying that a short timeout causes failure with a slow server");
   dns.clearCache(true);
@@ -513,42 +491,11 @@ add_task(async function test_404_fallback() {
 
 add_task(async function test_mode_1_and_4() {
   info("Verifying modes 1 and 4 are treated as TRR-off");
-  let do_test = async mode => {
+  for (let mode of [1, 4]) {
     dns.clearCache(true);
     setModeAndURI(mode, "doh?responseIP=2.2.2.2");
-
-    await new DNSListener("mode1and4.example.com", "127.0.0.1"); // Should use Do53
-
-    // For good measure, test a case when the server sends 404
-    setModeAndURI(mode, "404");
-
-    await new DNSListener("bar.example.com", "127.0.0.1"); // Should use Do53
-
-    // For good measure, test against a CNAME loop.
-    dns.clearCache(true);
-    setModeAndURI(mode, "doh?responseIP=none&cnameloop=true");
-    await new DNSListener("mode1and4.example.com", "127.0.0.1");
-
-    // For good measure, test a case with slow server and short timeout
-    dns.clearCache(true);
-    setModeAndURI(mode, "dns-750ms");
-    Services.prefs.setIntPref("network.trr.request_timeout_ms", 10);
-    Services.prefs.setIntPref(
-      "network.trr.request_timeout_mode_trronly_ms",
-      10
-    );
-    await new DNSListener("mode1and4.example.com", "127.0.0.1"); // Should use Do53
-
-    // Finally, repeat with a fast server
-    setModeAndURI(mode, "doh?responseIP=2.2.2.2");
-    await new DNSListener("bar.example.com", "127.0.0.1");
-
-    Services.prefs.clearUserPref("network.trr.request_timeout_ms");
-    Services.prefs.clearUserPref("network.trr.request_timeout_mode_trronly_ms");
-  };
-
-  await do_test(1);
-  await do_test(4);
+    Assert.equal(dns.currentTrrMode, 5, "Effective TRR mode should be 5");
+  }
 });
 
 add_task(async function test_CNAME() {
@@ -581,6 +528,13 @@ add_task(async function test_CNAME() {
   setModeAndURI(2, "doh?responseIP=none&cnameloop=true");
 
   await new DNSListener("test20.example.com", "127.0.0.1"); // Should fallback
+
+  info("Check that we correctly handle CNAME bundled with an A record");
+  dns.clearCache(true);
+  // "dns-cname-a" path causes server to send a CNAME as well as an A record
+  setModeAndURI(3, "dns-cname-a");
+
+  await new DNSListener("cname-a.example.com", "9.8.7.6");
 });
 
 add_task(async function test_name_mismatch() {
@@ -599,17 +553,6 @@ add_task(async function test_name_mismatch() {
     !Components.isSuccessCode(inStatus),
     `${inStatus} should be an error code`
   );
-});
-
-add_task(async function test_CNAME_A() {
-  info("Check that we correctly handle CNAME bundled with an A record");
-  dns.clearCache(true);
-  // "dns-cname-a" path causes server to send a CNAME as well as an A record
-  setModeAndURI(3, "dns-cname-a");
-
-  // TODO: test whether we actually received the CNAME; test whether we handle
-  // it correctly when the server sends a CNAME and an irrelevant A record
-  await new DNSListener("cname-a.example.com", "9.8.7.6");
 });
 
 add_task(async function test_mode_2() {
@@ -1267,7 +1210,7 @@ add_task(async function test_redirect() {
 // confirmationNS set without confirmed NS yet
 // checks that we properly fall back to DNS is confirmation is not ready yet,
 // and wait-for-confirmation pref is true
-add_task(async function test_resolve_not_confirmed_wait_for_confirmation() {
+add_task(async function test_confirmation() {
   info("Checking that we fall back correctly when confirmation is pending");
   dns.clearCache(true);
   Services.prefs.setBoolPref("network.trr.wait-for-confirmation", true);
@@ -1281,8 +1224,27 @@ add_task(async function test_resolve_not_confirmed_wait_for_confirmation() {
   await new Promise(resolve => do_timeout(1000, resolve));
   await waitForConfirmation("7.7.7.7");
 
+  // Reset between each test to force re-confirm
+  Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
+
+  info("Check that confirmation is skipped in mode 3");
+  // This is just a smoke test to make sure lookups succeed immediately
+  // in mode 3 without waiting for confirmation.
+  dns.clearCache(true);
+  setModeAndURI(3, "doh?responseIP=1::ffff&slowConfirm=true");
+  Services.prefs.setCharPref(
+    "network.trr.confirmationNS",
+    "confirm.example.com"
+  );
+
+  await new DNSListener("skipConfirmationForMode3.example.com", "1::ffff");
+
+  // Reset between each test to force re-confirm
+  Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
+
   dns.clearCache(true);
   Services.prefs.setBoolPref("network.trr.wait-for-confirmation", false);
+  setModeAndURI(2, "doh?responseIP=7.7.7.7&slowConfirm=true");
   Services.prefs.setCharPref(
     "network.trr.confirmationNS",
     "confirm.example.com"
@@ -1290,6 +1252,9 @@ add_task(async function test_resolve_not_confirmed_wait_for_confirmation() {
 
   // DoH available immediately
   await new DNSListener("example.org", "7.7.7.7");
+
+  // Reset between each test to force re-confirm
+  Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
 
   // Fallback when confirmation fails
   dns.clearCache(true);
@@ -1304,6 +1269,7 @@ add_task(async function test_resolve_not_confirmed_wait_for_confirmation() {
 
   await new DNSListener("example.org", "127.0.0.1");
 
+  // Reset
   Services.prefs.setCharPref("network.trr.confirmationNS", "skip");
   Services.prefs.clearUserPref("network.trr.wait-for-confirmation");
 });
