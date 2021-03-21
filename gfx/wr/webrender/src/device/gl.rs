@@ -73,7 +73,7 @@ pub enum DepthFunction {
 }
 
 #[repr(u32)]
-#[derive(Copy, Clone, Debug, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq)]
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
 pub enum TextureFilter {
@@ -156,6 +156,15 @@ pub fn get_gl_target(target: ImageBufferKind) -> gl::GLuint {
         ImageBufferKind::Texture2D => gl::TEXTURE_2D,
         ImageBufferKind::TextureRect => gl::TEXTURE_RECTANGLE,
         ImageBufferKind::TextureExternal => gl::TEXTURE_EXTERNAL_OES,
+    }
+}
+
+pub fn from_gl_target(target: gl::GLuint) -> ImageBufferKind {
+    match target {
+        gl::TEXTURE_2D => ImageBufferKind::Texture2D,
+        gl::TEXTURE_RECTANGLE => ImageBufferKind::TextureRect,
+        gl::TEXTURE_EXTERNAL_OES => ImageBufferKind::TextureExternal,
+        _ => panic!("Unexpected target {:?}", target),
     }
 }
 
@@ -469,6 +478,10 @@ impl Texture {
 
     pub fn get_filter(&self) -> TextureFilter {
         self.filter
+    }
+
+    pub fn get_target(&self) -> ImageBufferKind {
+        from_gl_target(self.target)
     }
 
     pub fn supports_depth(&self) -> bool {
