@@ -79,7 +79,10 @@
     }
   }
 
-  window.open("suspend_window.html", "testWin", "noopener");
+  // If Fission is disabled, the pref is no-op.
+  SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+    window.open("suspend_window.html", "testWin", "noopener");
+  });
 
   function finishTest() {
     if (finished) {
