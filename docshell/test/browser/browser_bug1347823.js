@@ -11,7 +11,7 @@ add_task(async function testValidCache() {
   });
 
   await BrowserTestUtils.withNewTab(
-    { gBrowser, url: "data:text/html;charset=utf-8,page1" },
+    { gBrowser, url: "data:text/html;charset=utf-8,pageA1" },
     async function(browser) {
       // Make a simple modification for bfcache testing.
       await SpecialPowers.spawn(browser, [], () => {
@@ -19,7 +19,7 @@ add_task(async function testValidCache() {
       });
 
       // Load a random page.
-      BrowserTestUtils.loadURI(browser, "data:text/html;charset=utf-8,page2");
+      BrowserTestUtils.loadURI(browser, "data:text/html;charset=utf-8,pageA2");
       await BrowserTestUtils.browserLoaded(browser);
 
       // Go back and verify text content.
@@ -44,7 +44,7 @@ add_task(async function testExpiredCache() {
   });
 
   await BrowserTestUtils.withNewTab(
-    { gBrowser, url: "data:text/html;charset=utf-8,page1" },
+    { gBrowser, url: "data:text/html;charset=utf-8,pageB1" },
     async function(browser) {
       // Make a simple modification for bfcache testing.
       await SpecialPowers.spawn(browser, [], () => {
@@ -52,7 +52,7 @@ add_task(async function testExpiredCache() {
       });
 
       // Load a random page.
-      BrowserTestUtils.loadURI(browser, "data:text/html;charset=utf-8,page2");
+      BrowserTestUtils.loadURI(browser, "data:text/html;charset=utf-8,pageB2");
       await BrowserTestUtils.browserLoaded(browser);
 
       // Wait for 3 times of expiration timeout, hopefully it's evicted...
@@ -70,7 +70,7 @@ add_task(async function testExpiredCache() {
       browser.goBack();
       await awaitPageShow;
       await SpecialPowers.spawn(browser, [], () => {
-        is(content.document.body.textContent, "page1");
+        is(content.document.body.textContent, "pageB1");
       });
     }
   );
