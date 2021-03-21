@@ -5,6 +5,8 @@ add_task(async function() {
     set: [
       ["browser.sessionhistory.max_total_viewers", 3],
       ["docshell.shistory.testing.bfevict", true],
+      // If Fission is disabled, the pref is no-op.
+      ["fission.bfcacheInParent", true],
     ],
   });
 
