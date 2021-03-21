@@ -244,11 +244,6 @@ toolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active)
   color: inherit;
 }
 
-toolbar .toolbarbutton-1[checked]:not(:active):hover > .toolbarbutton-icon {
-  background-color: var(--toolbarbutton-hover-background);
-  transition: background-color .4s;
-}
-
 /* Keyboard focus styling */
 #PersonalToolbar .toolbarbutton-1:-moz-focusring,
 .findbar-button:-moz-focusring,
