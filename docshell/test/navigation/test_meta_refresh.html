@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test meta refresh</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+    SimpleTest.waitForExplicitFinish();
+
+    let hasLoadedInitialOnce = false;
+    let bc = new BroadcastChannel("test_meta_refresh");
+    bc.onmessage = function(event) {
+      info(event.data.load || event.data);
+      if (event.data.load == "initial") {
+        if (!hasLoadedInitialOnce) {
+          hasLoadedInitialOnce = true;
+          bc.postMessage("loadnext");
+        } else {
+          bc.postMessage("ensuremetarefresh");
+        }
+      } else if (event.data.load == "nextpage") {
+        bc.postMessage("back");
+      } else if (event.data.load == "refresh") {
+        bc.postMessage("close");
+      } else if (event.data == "closed") {
+        ok(true, "Meta refresh page was loaded.");
+        SimpleTest.finish();
+      }
+    }
+
+    function test() {
+      window.open("file_meta_refresh.html?initial", "", "noopener");
+    }
+  </script>
+</head>
+<body onload="test()">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>

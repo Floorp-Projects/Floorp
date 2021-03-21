@@ -1,0 +1,40 @@
+<html>
+  <head>
+  </head>
+  <body>
+    <script>
+      function addMetaRefresh() {
+        // eslint-disable-next-line no-unsanitized/property
+        document.head.innerHTML = "<meta http-equiv='refresh' content='5; url=" +
+          location.href.replace("?initial", "?refresh") + "'>";
+      }
+
+      onpageshow = function() {
+        let bc = new BroadcastChannel("test_meta_refresh");
+        bc.onmessage = function(event) {
+          if (event.data == "loadnext") {
+            bc.close();
+            addMetaRefresh();
+            location.href = location.href.replace("?initial", "?nextpage");
+          } else if (event.data == "back") {
+            bc.close();
+            history.back();
+          } else if (event.data == "ensuremetarefresh") {
+            bc.close();
+            // This test is designed to work with and without bfcache, but
+            // if bfcache is enabled, meta refresh should be suspended/resumed.
+            if (document.head.firstChild.localName != "meta") {
+              addMetaRefresh();
+            }
+          } else if (event.data == "close") {
+            bc.postMessage("closed");
+            bc.close();
+            window.close();
+          }
+        };
+
+        bc.postMessage({ load: location.search.substr(1) });
+      }
+    </script>
+  </body>
+</html>
