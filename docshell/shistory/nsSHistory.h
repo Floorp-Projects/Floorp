@@ -36,7 +36,8 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
                    public nsSupportsWeakReference {
  public:
   // The timer based history tracker is used to evict bfcache on expiration.
-  class HistoryTracker final : public nsExpirationTracker<nsSHEntryShared, 3> {
+  class HistoryTracker final
+      : public nsExpirationTracker<mozilla::dom::SHEntrySharedParentState, 3> {
    public:
     explicit HistoryTracker(nsSHistory* aSHistory, uint32_t aTimeout,
                             nsIEventTarget* aEventTarget)
@@ -47,7 +48,8 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
     }
 
    protected:
-    virtual void NotifyExpired(nsSHEntryShared* aObj) override {
+    virtual void NotifyExpired(
+        mozilla::dom::SHEntrySharedParentState* aObj) override {
       RemoveObject(aObj);
       mSHistory->EvictExpiredContentViewerForEntry(aObj);
     }
@@ -226,8 +228,8 @@ class nsSHistory : public mozilla::LinkedListElement<nsSHistory>,
 
   // Find the history entry for a given bfcache entry. It only looks up between
   // the range where alive viewers may exist (i.e nsSHistory::VIEWER_WINDOW).
-  nsresult FindEntryForBFCache(nsIBFCacheEntry* aBFEntry, nsISHEntry** aResult,
-                               int32_t* aResultIndex);
+  nsresult FindEntryForBFCache(mozilla::dom::SHEntrySharedParentState* aEntry,
+                               nsISHEntry** aResult, int32_t* aResultIndex);
 
   // Evict content viewers in this window which don't lie in the "safe" range
   // around aIndex.

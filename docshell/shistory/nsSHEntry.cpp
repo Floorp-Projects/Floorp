@@ -1059,8 +1059,9 @@ bool nsSHEntry::HasDetachedEditor() {
   return GetState()->mEditorData != nullptr;
 }
 
-bool nsSHEntry::HasBFCacheEntry(nsIBFCacheEntry* aEntry) {
-  return static_cast<nsIBFCacheEntry*>(GetState()) == aEntry;
+bool nsSHEntry::HasBFCacheEntry(
+    mozilla::dom::SHEntrySharedParentState* aEntry) {
+  return GetState() == aEntry;
 }
 
 NS_IMETHODIMP
