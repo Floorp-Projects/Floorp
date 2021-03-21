@@ -492,7 +492,7 @@
 
 #pocket-button[open="true"],
 #pocket-button[pocketed="true"] {
-  list-style-image: url("chrome://browser/skin/pocket.svg");
+  list-style-image: url("chrome://global/skin/icons/pocket.svg");
   fill: #ef4056;
   fill-opacity: 1;
 }

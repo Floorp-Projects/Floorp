@@ -98,7 +98,7 @@
 }
 
 #appMenu-library-pocket-button {
-  list-style-image: url("chrome://browser/skin/pocket.svg");
+  list-style-image: url("chrome://global/skin/icons/pocket.svg");
 }
 
 #appMenu-library-history-button {
