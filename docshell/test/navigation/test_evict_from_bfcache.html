@@ -1,0 +1,63 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Evict a page from bfcache</title>
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+  <script>
+  /*
+   * This test checks that a page can be evicted from bfcache. Sending a
+   * message to an open BroadcastChannel is used for this.
+   *
+   * First the test opens a window and loads a page there. Another page is then
+   * loaded and then session history is navigated back to check if bfcache is
+   * enabled. If not, close message is sent to close the opened window and this
+   * controller page will finish the test.
+   * If bfcache is enabled, session history goes forward, but the
+   * BroadcastChannel in the page isn't closed. Then sending the message to go
+   * back again should evict the bfcached page.
+   * Close message is sent and window closed and test finishes.
+   */
+
+  SimpleTest.waitForExplicitFinish();
+  var bc = new BroadcastChannel("evict_from_bfcache");
+  var pageshowCount = 0;
+  bc.onmessage = function(event) {
+    if (event.data.type == "pageshow") {
+      ++pageshowCount;
+      info("pageshow " + pageshowCount);
+      if (pageshowCount == 1) {
+        bc.postMessage("nextpage");
+      } else if (pageshowCount == 2) {
+        bc.postMessage("back");
+      } else if (pageshowCount == 3) {
+        if (!event.data.persisted) {
+          ok(true, "BFCache isn't enabled.");
+          bc.postMessage("close");
+        } else {
+          bc.postMessage("forward");
+        }
+      } else if (pageshowCount == 4) {
+        bc.postMessage("back");
+      } else if (pageshowCount == 5) {
+        ok(!event.data.persisted,
+           "The page should have been evicted from BFCache");
+        bc.postMessage("close");
+      }
+    } else if (event.data == "closed") {
+      SimpleTest.finish();
+    }
+  }
+
+  function runTest() {
+    window.open("file_evict_from_bfcache.html", "", "noopener");
+  }
+  </script>
+</head>
+<body onload="runTest()">
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+</body>
+</html>
