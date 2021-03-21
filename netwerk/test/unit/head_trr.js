@@ -11,19 +11,11 @@
 /* globals require, __dirname, global, Buffer */
 
 const { NodeServer } = ChromeUtils.import("resource://testing-common/httpd.js");
-let gDNS;
 
 /// Sets the TRR related prefs and adds the certificate we use for the HTTP2
 /// server.
 function trr_test_setup() {
   dump("start!\n");
-
-  let env = Cc["@mozilla.org/process/environment;1"].getService(
-    Ci.nsIEnvironment
-  );
-  let h2Port = env.get("MOZHTTP2_PORT");
-  Assert.notEqual(h2Port, null);
-  Assert.notEqual(h2Port, "");
 
   // Set to allow the cert presented by our H2 server
   do_get_profile();
@@ -33,6 +25,7 @@ function trr_test_setup() {
   // the TRR server is on 127.0.0.1
   Services.prefs.setCharPref("network.trr.bootstrapAddress", "127.0.0.1");
 
+  // use the h2 server as DOH provider
   // make all native resolve calls "secretly" resolve localhost instead
   Services.prefs.setBoolPref("network.dns.native-is-localhost", true);
 
@@ -54,8 +47,6 @@ function trr_test_setup() {
 
   // We intentionally don't set the TRR mode. Each test should set it
   // after setup in the first test.
-
-  return h2Port;
 }
 
 /// Clears the prefs that we're likely to set while testing TRR code
@@ -93,47 +84,30 @@ function trr_clear_prefs() {
 /// This class sends a DNS query and can be awaited as a promise to get the
 /// response.
 class TRRDNSListener {
-  constructor(...args) {
-    if (args.length < 2) {
-      Assert.ok(false, "TRRDNSListener requires at least two arguments");
-    }
-    this.name = args[0];
-    if (typeof args[1] == "object") {
-      this.options = args[1];
-    } else {
-      this.options = {
-        expectedAnswer: args[1],
-        expectedSuccess: args[2] ?? true,
-        delay: args[3],
-        trrServer: args[4] ?? "",
-        expectEarlyFail: args[5] ?? "",
-        flags: args[6] ?? 0,
-      };
-    }
-    this.expectedAnswer = this.options.expectedAnswer ?? undefined;
-    this.expectedSuccess = this.options.expectedSuccess ?? true;
-    this.delay = this.options.delay;
+  constructor(name, options = {}) {
+    this.name = name;
+    this.options = options;
+    this.expectedAnswer = options.expectedAnswer ?? undefined;
+    this.expectedSuccess = options.expectedSuccess ?? true;
+    this.delay = options.delay;
     this.promise = new Promise(resolve => {
       this.resolve = resolve;
     });
-    let trrServer = this.options.trrServer || "";
+    let trrServer = options.trrServer || "";
 
+    const dns = Cc["@mozilla.org/network/dns-service;1"].getService(
+      Ci.nsIDNSService
+    );
     const threadManager = Cc["@mozilla.org/thread-manager;1"].getService(
       Ci.nsIThreadManager
     );
     const currentThread = threadManager.currentThread;
 
-    if (!gDNS) {
-      gDNS = Cc["@mozilla.org/network/dns-service;1"].getService(
-        Ci.nsIDNSService
-      );
-    }
-
     let resolverInfo =
-      trrServer == "" ? null : gDNS.newTRRResolverInfo(trrServer);
+      trrServer == "" ? null : dns.newTRRResolverInfo(trrServer);
     try {
-      this.request = gDNS.asyncResolve(
-        this.name,
+      this.request = dns.asyncResolve(
+        name,
         Ci.nsIDNSService.RESOLVE_TYPE_DEFAULT,
         this.options.flags || 0,
         resolverInfo,
@@ -141,9 +115,9 @@ class TRRDNSListener {
         currentThread,
         {} // defaultOriginAttributes
       );
-      Assert.ok(!this.options.expectEarlyFail);
+      Assert.ok(!options.expectEarlyFail);
     } catch (e) {
-      Assert.ok(this.options.expectEarlyFail);
+      Assert.ok(options.expectEarlyFail);
       this.resolve([e]);
     }
   }
