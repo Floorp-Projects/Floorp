@@ -13,7 +13,6 @@ const gOverride = Cc["@mozilla.org/network/native-dns-override;1"].getService(
   Ci.nsINativeDNSResolverOverride
 );
 
-
 async function SetParentalControlEnabled(aEnabled) {
   let parentalControlsService = {
     parentalControlsEnabled: aEnabled,
