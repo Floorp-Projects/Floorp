@@ -46,9 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151667
 
 async function test() {
   var subframe = document.getElementById("subframe");
-  await new Promise(resolve => {
-    synthesizeNativeWheelAndWaitForScrollEvent(subframe, 100, 150, 0, -10, resolve);
-  });
+  await promiseNativeWheelAndWaitForScrollEvent(subframe, 100, 150, 0, -10);
 
   is(subframe.scrollTop > 0, true, "We should have scrolled the subframe down");
   is(document.documentElement.scrollTop, 0, "We should not have scrolled the page");
