@@ -6259,7 +6259,8 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   // The compiler depends on moveImm32() clearing the high bits of a 64-bit
   // register on 64-bit systems except MIPS64 where high bits are sign extended
-  // from lower bits.
+  // from lower bits, see doc block "64-bit GPRs carrying 32-bit values" in
+  // MacroAssembler.h.
 
   void moveImm32(int32_t v, RegI32 dest) { masm.move32(Imm32(v), dest); }
 
