@@ -10,6 +10,7 @@
 #include <prio.h>
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "ErrorList.h"
 
 namespace mozilla {
 namespace devtools {

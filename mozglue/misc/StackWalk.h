@@ -11,6 +11,9 @@
 
 #include "mozilla/Types.h"
 #include <stdint.h>
+#include <stdio.h>
+
+MOZ_BEGIN_EXTERN_C
 
 /**
  * The callback for MozStackWalk and MozStackWalkThread.
@@ -136,16 +139,54 @@ MFBT_API int MozFormatCodeAddressDetails(char* aBuffer, uint32_t aBufferSize,
                                          uint32_t aFrameNumber, void* aPC,
                                          const MozCodeAddressDetails* aDetails);
 
+#ifdef __cplusplus
+#  define FRAMES_DEFAULT = 0
+#else
+#  define FRAMES_DEFAULT
+#endif
+/**
+ * Walk the stack and print the stack trace to the given stream.
+ *
+ * @param aStream      A stdio stream.
+ * @param aSkipFrames  Number of initial frames to skip.  0 means that
+ *                     the first callback will be for the caller of
+ *                     MozWalkTheStack.
+ * @param aMaxFrames   Maximum number of frames to trace.  0 means no limit.
+ */
+MFBT_API void MozWalkTheStack(FILE* aStream,
+                              uint32_t aSkipFrames FRAMES_DEFAULT,
+                              uint32_t aMaxFrames FRAMES_DEFAULT);
+
+/**
+ * Walk the stack and send each stack trace line to a callback writer.
+ * Each line string is null terminated but doesn't contain a '\n' character.
+ *
+ * @param aWriter      The callback.
+ * @param aSkipFrames  Number of initial frames to skip.  0 means that
+ *                     the first callback will be for the caller of
+ *                     MozWalkTheStack.
+ * @param aMaxFrames   Maximum number of frames to trace.  0 means no limit.
+ */
+MFBT_API void MozWalkTheStackWithWriter(void (*aWriter)(const char*),
+                                        uint32_t aSkipFrames FRAMES_DEFAULT,
+                                        uint32_t aMaxFrames FRAMES_DEFAULT);
+
+#undef FRAMES_DEFAULT
+
+MOZ_END_EXTERN_C
+
+#ifdef __cplusplus
 namespace mozilla {
 
 MFBT_API void FramePointerStackWalk(MozWalkStackCallback aCallback,
                                     uint32_t aMaxFrames, void* aClosure,
                                     void** aBp, void* aStackEnd);
 
-#if defined(XP_LINUX) || defined(XP_FREEBSD)
+#  if defined(XP_LINUX) || defined(XP_FREEBSD)
 MFBT_API void DemangleSymbol(const char* aSymbol, char* aBuffer, int aBufLen);
-#endif
+#  endif
 
 }  // namespace mozilla
+#endif
 
 #endif

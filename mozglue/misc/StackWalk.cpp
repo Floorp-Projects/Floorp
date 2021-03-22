@@ -13,6 +13,9 @@
 #include "mozilla/StackWalk.h"
 #ifdef XP_WIN
 #  include "mozilla/StackWalkThread.h"
+#  include <io.h>
+#else
+#  include <unistd.h>
 #endif
 #include "mozilla/Sprintf.h"
 
@@ -951,4 +954,65 @@ MFBT_API int MozFormatCodeAddress(char* aBuffer, uint32_t aBufferSize,
                       ")",
                       aFrameNumber);
   }
+}
+
+static void EnsureWrite(FILE* aStream, const char* aBuf, size_t aLen) {
+#ifdef XP_WIN
+  int fd = _fileno(aStream);
+#else
+  int fd = fileno(aStream);
+#endif
+  while (aLen > 0) {
+#ifdef XP_WIN
+    auto written = _write(fd, aBuf, aLen);
+#else
+    auto written = write(fd, aBuf, aLen);
+#endif
+    if (written <= 0 || size_t(written) > aLen) {
+      break;
+    }
+    aBuf += written;
+    aLen -= written;
+  }
+}
+
+template <int N>
+static int PrintStackFrameBuf(char (&aBuf)[N], uint32_t aFrameNumber, void* aPC,
+                              void* aSP) {
+  MozCodeAddressDetails details;
+  MozDescribeCodeAddress(aPC, &details);
+  int len =
+      MozFormatCodeAddressDetails(aBuf, N - 1, aFrameNumber, aPC, &details);
+  len = std::min(len, N - 2);
+  aBuf[len++] = '\n';
+  aBuf[len] = '\0';
+  return len;
+}
+
+static void PrintStackFrame(uint32_t aFrameNumber, void* aPC, void* aSP,
+                            void* aClosure) {
+  FILE* stream = (FILE*)aClosure;
+  char buf[1025];  // 1024 + 1 for trailing '\n'
+  int len = PrintStackFrameBuf(buf, aFrameNumber, aPC, aSP);
+  fflush(stream);
+  EnsureWrite(stream, buf, len);
+}
+
+MFBT_API void MozWalkTheStack(FILE* aStream, uint32_t aSkipFrames,
+                              uint32_t aMaxFrames) {
+  MozStackWalk(PrintStackFrame, aSkipFrames + 1, aMaxFrames, aStream);
+}
+
+static void WriteStackFrame(uint32_t aFrameNumber, void* aPC, void* aSP,
+                            void* aClosure) {
+  auto writer = (void (*)(const char*))aClosure;
+  char buf[1024];
+  PrintStackFrameBuf(buf, aFrameNumber, aPC, aSP);
+  writer(buf);
+}
+
+MFBT_API void MozWalkTheStackWithWriter(void (*aWriter)(const char*),
+                                        uint32_t aSkipFrames,
+                                        uint32_t aMaxFrames) {
+  MozStackWalk(WriteStackFrame, aSkipFrames + 1, aMaxFrames, (void*)aWriter);
 }
