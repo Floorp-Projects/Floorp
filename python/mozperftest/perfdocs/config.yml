@@ -33,6 +33,7 @@ suites:
             YouTube Link: ""
             pageload: ""
             JSConf (warm): ""
+            perfstats: ""
     browser/base/content/test:
         description: "Performance tests from the 'browser/base/content/test' folder."
         tests:

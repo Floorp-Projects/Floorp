@@ -201,5 +201,15 @@ perftest_pageload.js
 
 **Measures time to load mozilla page**
 
+perftest_perfstats.js
+=====================
+
+:owner: Performance Team
+:name: perfstats
+
+**Collect perfstats for the given site**
+
+This test launches browsertime with the perfStats option (will collect low-overhead timings, see Bug 1553254). The test currently runs a single site, google.com - the top-ranking global Alexa site.
+
 
 If you have any questions, please see this `wiki page <https://wiki.mozilla.org/TestEngineering/Performance#Where_to_find_us>`_.
