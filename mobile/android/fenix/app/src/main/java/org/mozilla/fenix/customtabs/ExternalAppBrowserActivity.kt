@@ -5,8 +5,6 @@
 package org.mozilla.fenix.customtabs
 
 import android.content.Intent
-import android.os.Bundle
-import android.os.PersistableBundle
 import androidx.annotation.VisibleForTesting
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDirections
@@ -22,7 +20,6 @@ import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.enableSystemInsetsHandling
 import java.security.InvalidParameterException
 
 /**
@@ -31,12 +28,6 @@ import java.security.InvalidParameterException
  */
 @Suppress("TooManyFunctions")
 open class ExternalAppBrowserActivity : HomeActivity() {
-
-    override fun onCreate(savedInstanceState: Bundle?, persistentState: PersistableBundle?) {
-        super.onCreate(savedInstanceState, persistentState)
-        enableSystemInsetsHandling()
-    }
-
     override fun onResume() {
         super.onResume()
 
