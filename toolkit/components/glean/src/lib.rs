@@ -137,14 +137,12 @@ pub unsafe extern "C" fn fog_init(data_path_override: &nsACString) -> nsresult {
         log::error!("Failed to create Viaduct via XPCOM. Ping upload may not be available.");
     }
 
-    if data_path_str.len() > 0 {
-        glean::initialize(configuration, client_info);
+    glean::initialize(configuration, client_info);
 
-        // Register all custom pings before we initialize.
-        fog::pings::register_pings();
+    // Register all custom pings before we initialize.
+    fog::pings::register_pings();
 
-        fog::metrics::fog::initialization.stop();
-    }
+    fog::metrics::fog::initialization.stop();
 
     NS_OK
 }
