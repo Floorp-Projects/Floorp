@@ -27,7 +27,8 @@ namespace dom {
 // ScriptFetchOptions
 //////////////////////////////////////////////////////////////
 
-NS_IMPL_CYCLE_COLLECTION(ScriptFetchOptions, mElement, mTriggeringPrincipal)
+NS_IMPL_CYCLE_COLLECTION(ScriptFetchOptions, mElement, mTriggeringPrincipal,
+                         mWebExtGlobal)
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(ScriptFetchOptions, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ScriptFetchOptions, Release)
@@ -35,12 +36,14 @@ NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(ScriptFetchOptions, Release)
 ScriptFetchOptions::ScriptFetchOptions(mozilla::CORSMode aCORSMode,
                                        ReferrerPolicy aReferrerPolicy,
                                        Element* aElement,
-                                       nsIPrincipal* aTriggeringPrincipal)
+                                       nsIPrincipal* aTriggeringPrincipal,
+                                       nsIGlobalObject* aWebExtGlobal)
     : mCORSMode(aCORSMode),
       mReferrerPolicy(aReferrerPolicy),
       mIsPreload(false),
       mElement(aElement),
-      mTriggeringPrincipal(aTriggeringPrincipal) {
+      mTriggeringPrincipal(aTriggeringPrincipal),
+      mWebExtGlobal(aWebExtGlobal) {
   MOZ_ASSERT(mTriggeringPrincipal);
 }
 
@@ -59,6 +62,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(ScriptLoadRequest)
 NS_IMPL_CYCLE_COLLECTION_CLASS(ScriptLoadRequest)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ScriptLoadRequest)
+  // XXX missing mLoadBlockedDocument ?
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFetchOptions, mCacheInfo)
   tmp->mScript = nullptr;
   if (Runnable* runnable = tmp->mRunnable.exchange(nullptr)) {
