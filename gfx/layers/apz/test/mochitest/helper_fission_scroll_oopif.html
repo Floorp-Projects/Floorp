@@ -113,7 +113,7 @@ async function test() {
   }
   utils.restoreNormalRefresh();
   // Let the repaint requests get processed
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
   await promiseAllPaintsDone();
 
   ok(window.scrollY > 5, "window has scrolled by " + window.scrollY + " pixels");

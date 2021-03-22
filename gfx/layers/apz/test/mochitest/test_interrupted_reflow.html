@@ -610,7 +610,7 @@ async function test() {
   var maxScroll = elm.scrollTopMax;
   elm.scrollTop = maxScroll;
   await promiseAllPaintsDone();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   // Take control of the refresh driver
   utils.advanceTimeAndRefresh(0);

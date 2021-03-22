@@ -139,7 +139,7 @@ async function test() {
   // Scrolling over outer1 should activate outer1 directly, but not inner1.
   await scrollWheelOver(document.getElementById("outer1"));
   await promiseAllPaintsDone();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
   ok(checkDirectActivation("outer1"),
     "scrolling 'outer1' should activate it directly");
   ok(checkInactive("inner1"),
@@ -148,7 +148,7 @@ async function test() {
   // Scrolling over inner2 should activate inner2 directly, but outer2 only ancestrally.
   await scrollWheelOver(document.getElementById("inner2"));
   await promiseAllPaintsDone();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
   ok(checkDirectActivation("inner2"),
     "scrolling 'inner2' should cause it to be directly activated");
   ok(checkAncestorActivation("outer2"),
@@ -160,7 +160,7 @@ async function test() {
   // Scrolling over outer3 should activate outer3 directly, but not inner3.
   await scrollWheelOver(outer3Doc.documentElement);
   await promiseAllPaintsDone();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
   ok(checkDirectActivation("outer3"), "scrolling 'outer3' should cause it to be directly activated");
   ok(checkInactive("inner3", outer3Doc),
     "scrolling 'outer3' should not cause 'inner3' to be activated");
@@ -168,7 +168,7 @@ async function test() {
   // Scrolling over inner4 should activate inner4 directly, but outer4 only ancestrally.
   await scrollWheelOver(outer4Doc.getElementById("inner4"));
   await promiseAllPaintsDone();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
   ok(checkDirectActivation("inner4", outer4Doc),
     "scrolling 'inner4' should cause it to be directly activated");
   ok(checkAncestorActivation("outer4"),
@@ -194,7 +194,7 @@ async function test() {
   // Expire displayport with scrolling on outer1
   await scrollWheelOver(document.getElementById("outer1"));
   await promiseAllPaintsDone();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
   await SpecialPowers.promiseTimeout(DISPLAYPORT_EXPIRY);
   await promiseAllPaintsDone();
   ok(checkInactive("outer1"), "outer1 is inactive after displayport expiry");
@@ -203,7 +203,7 @@ async function test() {
   // Expire displayport with scrolling on inner2
   await scrollWheelOver(document.getElementById("inner2"));
   await promiseAllPaintsDone();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
   // Once the expiry elapses, it will trigger expiry on outer2, so we check
   // both, one at a time.
   await SpecialPowers.promiseTimeout(DISPLAYPORT_EXPIRY);
@@ -239,7 +239,7 @@ async function test() {
     let inner3 = outer3Doc.getElementById("inner3");
     await scrollWheelOver(inner3);
     await promiseAllPaintsDone();
-    await promiseApzRepaintsFlushed();
+    await promiseOnlyApzControllerFlushed();
     let timerPromise = new Promise(resolve => {
       var timeoutTarget = function() {
         inner3.removeEventListener("scroll", timeoutResetter);
@@ -272,7 +272,7 @@ async function test() {
   // inner4 is still layerized
   await scrollWheelOver(outer4Doc.documentElement);
   await promiseAllPaintsDone();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
   // Wait for the expiry to elapse
   await SpecialPowers.promiseTimeout(DISPLAYPORT_EXPIRY);
   await promiseAllPaintsDone();

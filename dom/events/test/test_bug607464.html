@@ -61,7 +61,7 @@ function runTest() {
       }
     }, true);
 
-    promiseApzRepaintsFlushed(win).then(function() {
+    promiseOnlyApzControllerFlushed(win).then(function() {
       scrollDown150PxWithPixelScrolling(scrollbox);
     });
   }, win);

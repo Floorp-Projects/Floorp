@@ -18,7 +18,7 @@ async function clickButton() {
     // force a dispatch-to-content region on the document
     document.addEventListener("wheel", function() { /* no-op */ }, { passive: false });
     await promiseAllPaintsDone();
-    await promiseApzRepaintsFlushed();
+    await promiseOnlyApzControllerFlushed();
   }
 
   synthesizeNativeMouseEventWithAPZ(
