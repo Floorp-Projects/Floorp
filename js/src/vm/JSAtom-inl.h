@@ -20,7 +20,7 @@
 
 namespace js {
 
-inline jsid AtomToId(JSAtom* atom) {
+MOZ_ALWAYS_INLINE jsid AtomToId(JSAtom* atom) {
   static_assert(JSID_INT_MIN == 0);
 
   uint32_t index;
