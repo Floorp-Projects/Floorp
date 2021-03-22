@@ -21,7 +21,8 @@ class CSSFontFaceRuleDecl final : public nsICSSDeclaration {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIDOMCSSSTYLEDECLARATION_HELPER
 
-  nsINode* GetParentObject() final;
+  nsINode* GetAssociatedNode() const final;
+  nsISupports* GetParentObject() const final;
   void IndexedGetter(uint32_t aIndex, bool& aFound,
                      nsACString& aPropName) final;
 

@@ -41,7 +41,11 @@ NS_IMPL_RELEASE_USING_AGGREGATOR(CSSPageRuleDeclaration, Rule())
 
 css::Rule* CSSPageRuleDeclaration::GetParentRule() { return Rule(); }
 
-nsINode* CSSPageRuleDeclaration::GetParentObject() {
+nsINode* CSSPageRuleDeclaration::GetAssociatedNode() const {
+  return Rule()->GetAssociatedDocumentOrShadowRoot();
+}
+
+nsISupports* CSSPageRuleDeclaration::GetParentObject() const {
   return Rule()->GetParentObject();
 }
 

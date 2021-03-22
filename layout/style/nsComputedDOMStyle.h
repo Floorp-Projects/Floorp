@@ -85,7 +85,8 @@ class nsComputedDOMStyle final : public nsDOMCSSDeclaration,
   nsComputedDOMStyle(Element* aElement, const nsAString& aPseudoElt,
                      Document* aDocument, StyleType aStyleType);
 
-  nsINode* GetParentObject() override { return mElement; }
+  nsINode* GetAssociatedNode() const override { return mElement; }
+  nsINode* GetParentObject() const override { return mElement; }
 
   static already_AddRefed<ComputedStyle> GetComputedStyle(
       Element* aElement, nsAtom* aPseudo, StyleType aStyleType = eAll);

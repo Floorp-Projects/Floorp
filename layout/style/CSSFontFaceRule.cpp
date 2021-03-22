@@ -126,7 +126,11 @@ void CSSFontFaceRuleDecl::IndexedGetter(uint32_t aIndex, bool& aFound,
 
 css::Rule* CSSFontFaceRuleDecl::GetParentRule() { return ContainingRule(); }
 
-nsINode* CSSFontFaceRuleDecl::GetParentObject() {
+nsINode* CSSFontFaceRuleDecl::GetAssociatedNode() const {
+  return ContainingRule()->GetAssociatedDocumentOrShadowRoot();
+}
+
+nsISupports* CSSFontFaceRuleDecl::GetParentObject() const {
   return ContainingRule()->GetParentObject();
 }
 
