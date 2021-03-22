@@ -38,7 +38,7 @@ async function test() {
   await dragFinisher();
 
   // Flush everything just to be safe
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   // In this case we just want to make sure the scroll position moved from 0
   // which indicates the thumb dragging worked properly.

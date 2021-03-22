@@ -70,7 +70,7 @@ async function test() {
     utils.advanceTimeAndRefresh(16);
   }
   utils.restoreNormalRefresh();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   ok(!wheeled, "OOPIF correctly did not get wheel event");
   ok(!scrolled, "OOPIF correctly did not scroll");

@@ -32,7 +32,7 @@ async function test() {
   // Scrolling over outer1 should layerize outer1, but not inner1.
   await promiseMoveMouseAndScrollWheelOver(no_layer, 10, 10, true);
   await promiseAllPaintsDone();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   ok(container.scrollTop > 0, "We should have scrolled the body");
   ok(!isLayerized("no_layer"), "no_layer should still not be layerized");

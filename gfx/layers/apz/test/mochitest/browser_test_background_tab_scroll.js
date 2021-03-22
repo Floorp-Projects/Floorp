@@ -46,7 +46,7 @@ add_task(async function test_main() {
     utils.restoreNormalRefresh();
     // Flush pending APZ repaints, then read the main-thread scroll
     // position
-    await content.window.wrappedJSObject.promiseApzRepaintsFlushed(
+    await content.window.wrappedJSObject.promiseOnlyApzControllerFlushed(
       content.window
     );
     return content.window.scrollY;
