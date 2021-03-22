@@ -36,7 +36,7 @@ class nsIWidget;
 // Do not hold references to this, they can become invalid any time the DOM node can be destroyed.
 class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
  public:
-  using MenuChild = mozilla::Variant<RefPtr<nsMenuX>, mozilla::UniquePtr<nsMenuItemX>>;
+  using MenuChild = mozilla::Variant<RefPtr<nsMenuX>, RefPtr<nsMenuItemX>>;
 
   nsMenuX(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aContent);
 
@@ -85,7 +85,7 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
   nsresult GetEnabled(bool* aIsEnabled);
   already_AddRefed<nsIContent> GetMenuPopupContent();
   bool OnOpen();
-  void AddMenuItem(mozilla::UniquePtr<nsMenuItemX>&& aMenuItem);
+  void AddMenuItem(RefPtr<nsMenuItemX>&& aMenuItem);
   void AddMenu(RefPtr<nsMenuX>&& aMenu);
   void LoadMenuItem(nsIContent* aMenuItemContent);
   void LoadSubMenu(nsIContent* aMenuContent);
