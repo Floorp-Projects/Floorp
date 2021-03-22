@@ -2294,22 +2294,6 @@ bool nsContentUtils::LookupBindingMember(
   return true;
 }
 
-// static
-nsINode* nsContentUtils::GetCrossDocParentNode(nsINode* aChild) {
-  MOZ_ASSERT(aChild, "The child is null!");
-
-  nsINode* parent = aChild->GetParentNode();
-  if (parent && parent->IsContent() && aChild->IsContent()) {
-    parent = aChild->AsContent()->GetFlattenedTreeParent();
-  }
-
-  if (parent || !aChild->IsDocument()) {
-    return parent;
-  }
-
-  return aChild->AsDocument()->GetEmbedderElement();
-}
-
 nsINode* nsContentUtils::GetNearestInProcessCrossDocParentNode(
     nsINode* aChild) {
   if (aChild->IsDocument()) {
