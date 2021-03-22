@@ -37,12 +37,7 @@ MOZ_ALWAYS_INLINE bool IdIsIndex(jsid id, uint32_t* indexp) {
   }
 
   JSAtom* atom = JSID_TO_ATOM(id);
-  if (atom->length() == 0 ||
-      !mozilla::IsAsciiDigit(atom->latin1OrTwoByteChar(0))) {
-    return false;
-  }
-
-  return js::StringIsArrayIndex(atom, indexp);
+  return atom->isIndex(indexp) && *indexp <= MAX_ARRAY_INDEX;
 }
 
 // The methods below only create dense boxed arrays.
