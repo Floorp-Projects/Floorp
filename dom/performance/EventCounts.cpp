@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsIGlobalObject.h"
 #include "EventCounts.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Event.h"
@@ -17,122 +18,60 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(EventCounts, mParent)
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(EventCounts, AddRef)
 NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(EventCounts, Release)
 
+static const EventMessage sQualifiedEventType[36] = {
+    EventMessage::eMouseAuxClick,
+    EventMessage::eMouseClick,
+    EventMessage::eContextMenu,
+    EventMessage::eMouseDoubleClick,
+    EventMessage::eMouseDown,
+    EventMessage::eMouseEnter,
+    EventMessage::eMouseLeave,
+    EventMessage::eMouseOut,
+    EventMessage::eMouseOver,
+    EventMessage::eMouseUp,
+    EventMessage::ePointerOver,
+    EventMessage::ePointerEnter,
+    EventMessage::ePointerDown,
+    EventMessage::ePointerUp,
+    EventMessage::ePointerCancel,
+    EventMessage::ePointerOut,
+    EventMessage::ePointerLeave,
+    EventMessage::ePointerGotCapture,
+    EventMessage::ePointerLostCapture,
+    EventMessage::eTouchStart,
+    EventMessage::eTouchEnd,
+    EventMessage::eTouchCancel,
+    EventMessage::eKeyDown,
+    EventMessage::eKeyPress,
+    EventMessage::eKeyUp,
+    EventMessage::eEditorBeforeInput,
+    EventMessage::eEditorInput,
+    EventMessage::eCompositionStart,
+    EventMessage::eCompositionUpdate,
+    EventMessage::eCompositionEnd,
+    EventMessage::eDragStart,
+    EventMessage::eDragEnd,
+    EventMessage::eDragEnter,
+    EventMessage::eDragLeave,
+    EventMessage::eDragOver,
+    EventMessage::eDrop};
+
 EventCounts::EventCounts(nsISupports* aParent) : mParent(aParent) {
   ErrorResult rv;
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eMouseAuxClick)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eMouseClick)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eContextMenu)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eMouseDoubleClick)), 0,
-      rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eMouseDown)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eMouseEnter)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eMouseLeave)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eMouseOut)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eMouseOver)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eMouseUp)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(ePointerOver)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(ePointerEnter)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(ePointerDown)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(ePointerUp)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(ePointerCancel)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(ePointerOut)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(ePointerLeave)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(ePointerGotCapture)), 0,
-      rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(ePointerLostCapture)), 0,
-      rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eTouchStart)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eTouchEnd)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eTouchCancel)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eKeyDown)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eKeyPress)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eKeyUp)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eEditorBeforeInput)), 0,
-      rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eEditorInput)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eCompositionStart)), 0,
-      rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eCompositionUpdate)), 0,
-      rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eCompositionEnd)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eDragStart)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eDragEnd)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eDragEnter)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eDragLeave)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eDragOver)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
-  EventCounts_Binding::MaplikeHelpers::Set(
-      this, NS_ConvertUTF8toUTF16(Event::GetEventName(eDrop)), 0, rv);
-  MOZ_ASSERT(!rv.Failed());
+
+  for (const EventMessage& eventType : sQualifiedEventType) {
+    EventCounts_Binding::MaplikeHelpers::Set(
+        this, NS_ConvertUTF8toUTF16(Event::GetEventName(eventType)), 0, rv);
+    if (NS_WARN_IF(rv.Failed())) {
+#ifdef DEBUG
+      nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(GetParentObject());
+      if (global) {
+        MOZ_ASSERT(global->IsDying());
+      }
+#endif
+      return;
+    }
+  }
 }
 
 JSObject* EventCounts::WrapObject(JSContext* aCx,
