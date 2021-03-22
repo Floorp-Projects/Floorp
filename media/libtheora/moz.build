@@ -24,12 +24,14 @@ DEFINES['THEORA_DISABLE_ENCODE'] = True
 # Suppress warnings in third-party code.
 CFLAGS += ['-Wno-type-limits']
 if CONFIG['CC_TYPE'] in ('clang', 'clang-cl'):
-    CFLAGS += ['-Wno-tautological-compare']
+    CFLAGS += [
+        '-Wno-shift-negative-value',
+        '-Wno-tautological-compare',
+    ]
 if CONFIG['CC_TYPE'] == 'clang-cl':
     CFLAGS += [
         '-Wno-parentheses',
         '-Wno-pointer-sign',
-        '-Wno-shift-negative-value',
     ]
 
 UNIFIED_SOURCES += [
