@@ -472,28 +472,53 @@ function renderTimeline(id, resources) {
     ;
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-  d3.json("build_resources.json", function onList(error, response) {
-    if (!response) {
-      return;
-    }
-    // If the response contains a list of files, use that list.
-    // Otherwise, we expect it's directly build resources data.
-    if (Object.keys(response).length == 1 && "files" in response) {
-      if (response.files.length > 1) {
-        var list = d3.select("#list");
-        for (file of response.files) {
-          list.append("option").attr("value", file).text(file);
-        }
-        list.on("change", function() {renderKey(this.value);})
-        list.style("display", "inline");
+function initData(data) {
+  var list = d3.select("#list");
+  // Clear the list if it wasn't already empty.
+  list.selectAll("*").remove();
+  list.style("display", "none");
+
+  if (!data) {
+    return;
+  }
+  // If the data contains a list of files, use that list.
+  // Otherwise, we expect it's directly resources info data.
+  if (Object.keys(data).length == 1 && "files" in data) {
+    if (data.files.length > 1) {
+      for (file of data.files) {
+        list.append("option").attr("value", file).text(file);
       }
-      renderKey(response.files[0]);
-    } else {
-      currentResources = new BuildResources(response);
-      updateResourcesGraph();
+      list.style("display", "inline");
     }
+    renderKey(data.files[0]);
+  } else {
+    currentResources = new BuildResources(data);
+    updateResourcesGraph();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  var list = d3.select("#list");
+  list.on("change", function() {renderKey(this.value);})
+  d3.json("build_resources.json", function onList(error, response) {
+    initData(response);
   });
+}, false);
+
+document.addEventListener("drop", function(event) {
+  event.preventDefault();
+  var uris = event.dataTransfer.getData("text/uri-list");
+  if (uris) {
+    var data = {
+      files: uris.split(/\r\n|\r|\n/).filter(uri => !uri.startsWith("#")),
+    };
+    initData(data);
+  }
+}, false);
+
+document.addEventListener("dragover", function(event) {
+  // prevent default to allow drop
+  event.preventDefault();
 }, false);
 
     </script>
