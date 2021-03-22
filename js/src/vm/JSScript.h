@@ -2147,7 +2147,6 @@ class JSScript : public js::BaseScript {
   const js::PCCounts* maybeGetThrowCounts(jsbytecode* pc);
   js::PCCounts* getThrowCounts(jsbytecode* pc);
   uint64_t getHitCount(jsbytecode* pc);
-  void incHitCount(jsbytecode* pc);  // Used when we bailout out of Ion.
   void addIonCounts(js::jit::IonScriptCounts* ionCounts);
   js::jit::IonScriptCounts* getIonCounts();
   void releaseScriptCounts(js::ScriptCounts* counts);
