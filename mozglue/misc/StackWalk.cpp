@@ -14,6 +14,7 @@
 #ifdef XP_WIN
 #  include "mozilla/StackWalkThread.h"
 #endif
+#include "mozilla/Sprintf.h"
 
 #include <string.h>
 
@@ -932,21 +933,21 @@ MFBT_API void MozFormatCodeAddress(char* aBuffer, uint32_t aBufferSize,
   const char* function = aFunction && aFunction[0] ? aFunction : "???";
   if (aFileName && aFileName[0]) {
     // We have a filename and (presumably) a line number. Use them.
-    snprintf(aBuffer, aBufferSize, "#%02u: %s (%s:%u)", aFrameNumber, function,
-             aFileName, aLineNo);
+    SprintfBuf(aBuffer, aBufferSize, "#%02u: %s (%s:%u)", aFrameNumber,
+               function, aFileName, aLineNo);
   } else if (aLibrary && aLibrary[0]) {
     // We have no filename, but we do have a library name. Use it and the
     // library offset, and print them in a way that `fix_stacks.py` can
     // post-process.
-    snprintf(aBuffer, aBufferSize, "#%02u: %s[%s +0x%" PRIxPTR "]",
-             aFrameNumber, function, aLibrary,
-             static_cast<uintptr_t>(aLOffset));
+    SprintfBuf(aBuffer, aBufferSize, "#%02u: %s[%s +0x%" PRIxPTR "]",
+               aFrameNumber, function, aLibrary,
+               static_cast<uintptr_t>(aLOffset));
   } else {
     // We have nothing useful to go on. (The format string is split because
     // '??)' is a trigraph and causes a warning, sigh.)
-    snprintf(aBuffer, aBufferSize,
-             "#%02u: ??? (???:???"
-             ")",
-             aFrameNumber);
+    SprintfBuf(aBuffer, aBufferSize,
+               "#%02u: ??? (???:???"
+               ")",
+               aFrameNumber);
   }
 }
