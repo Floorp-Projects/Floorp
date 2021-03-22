@@ -26,18 +26,6 @@ class DocAccessibleParent;
 class RemoteAccessible;
 enum class RelationType;
 
-enum Interfaces {
-  HYPERTEXT = 1,
-  HYPERLINK = 1 << 1,
-  IMAGE = 1 << 2,
-  VALUE = 1 << 3,
-  TABLE = 1 << 4,
-  TABLECELL = 1 << 5,
-  DOCUMENT = 1 << 6,
-  SELECTION = 1 << 7,
-  ACTION = 1 << 8,
-};
-
 template <class Derived>
 class RemoteAccessibleBase : public Accessible {
  public:

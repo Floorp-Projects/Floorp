@@ -27,11 +27,6 @@ class xpcAccessibleHyperText : public xpcAccessibleGeneric,
     if (aIntl->IsHyperText() && aIntl->IsTextRole()) mSupportedIfaces |= eText;
   }
 
-  xpcAccessibleHyperText(RemoteAccessible* aProxy, uint32_t aInterfaces)
-      : xpcAccessibleGeneric(aProxy, aInterfaces) {
-    mSupportedIfaces |= eText;
-  }
-
   NS_DECL_ISUPPORTS_INHERITED
 
   NS_DECL_NSIACCESSIBLETEXT
