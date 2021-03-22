@@ -16,7 +16,7 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-// This is a simplified/combined version of promiseApzRepaintsFlushed and
+// This is a simplified/combined version of promiseOnlyApzControllerFlushed and
 // promiseAllPaintsDone.  We need this function because, unfortunately, there is
 // no easy way to use paint_listeners.js' functions and apz_test_utils.js'
 // functions in popup contents opened by extensions either as scripts in the

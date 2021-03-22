@@ -76,7 +76,7 @@ async function test() {
 
   // Let the event regions and layerization propagate to the APZ
   await promiseAllPaintsDone();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   await promiseNativeMouseEventWithAPZAndWaitForEvent({
     type: "mousemove",

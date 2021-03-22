@@ -19,7 +19,7 @@ async function test() {
   await transformEndPromise;
 
   dump("Transform complete; flushing repaints...\n");
-  await promiseApzRepaintsFlushed(outer.contentWindow);
+  await promiseOnlyApzControllerFlushed(outer.contentWindow);
 
   var outerScroll = outer.contentWindow.scrollY;
   if (getPlatform() == "windows") {

@@ -7,7 +7,7 @@
 async function doZoomIn() {
     await waitUntilApzStable();
     await pinchZoomInWithTouch(100, 100);
-    await promiseApzRepaintsFlushed();
+    await promiseOnlyApzControllerFlushed();
 }
 
 // Silence SimpleTest warning about missing assertions by having it wait
