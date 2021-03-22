@@ -168,7 +168,18 @@
         (container, host) => {
           host.shadowRoot.getElementById("slot").remove();
       }, { SECTION: [{ SECTION: [{ name: "green"} ] }] });
+    }
 
+    function shadowProcessInvalidation() {
+      testAccessibleTree("shadowProcessInvalidation",
+      { SECTION: [{
+          SECTION: [{
+            SECTION: [{ TEXT_LEAF: { name: "Hello "} },
+                      { TEXT: [{ TEXT_LEAF: { name: "World"} }] },
+                      { PUSHBUTTON: { name: "World"} }]
+          }]
+        }]
+      });
     }
 
     async function doTest() {
@@ -201,6 +212,8 @@
       await shadowReassignDynamic_3();
 
       await shadowReassignDynamic_4();
+
+      shadowProcessInvalidation();
 
       SimpleTest.finish();
     }
@@ -459,6 +472,20 @@
       document.querySelector("#shadowReassignDynamic_4 > .host")
         .attachShadow({ mode: "open" })
         .appendChild(document.querySelector("#shadowReassignDynamic_4 > .shadowtree").content.cloneNode(true));
+    </script>
+  </div>
+
+  <div id="shadowProcessInvalidation">
+    <template class="shadowtree">
+      <div id="shadowdiv">
+        <slot></slot>
+      </div>
+    </template>
+    <section class="host">Hello <span id="c">World</span><button aria-labelledby="c"></button></section>
+    <script>
+      document.querySelector("#shadowProcessInvalidation > .host")
+        .attachShadow({ mode: "open" })
+        .appendChild(document.querySelector("#shadowProcessInvalidation > .shadowtree").content.cloneNode(true));
     </script>
   </div>
 
