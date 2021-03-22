@@ -25,6 +25,12 @@ const TOGGLE_ENABLED_PREF =
  * This API is expected to be running in the parent process.
  */
 this.pictureInPictureParent = class extends ExtensionAPI {
+  /**
+   * Override ExtensionAPI with PiP override's specific API
+   * Relays the site overrides to this extension's child process
+   * @param {ExtensionContext} context the context of our extension
+   * @returns {Object} returns the necessary API structure required to manage sharedData in PictureInPictureParent
+   */
   getAPI(context) {
     return {
       pictureInPictureParent: {
@@ -52,6 +58,12 @@ this.pictureInPictureParent = class extends ExtensionAPI {
  * background scripts.
  */
 this.pictureInPictureChild = class extends ExtensionAPI {
+  /**
+   * Override ExtensionAPI with PiP override's specific API
+   * Clone constants into the Picture-in-Picture child process
+   * @param {ExtensionContext} context the context of our extension
+   * @returns returns the necessary API structure required to get data from PictureInPictureChild
+   */
   getAPI(context) {
     return {
       pictureInPictureChild: {
