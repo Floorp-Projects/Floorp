@@ -277,9 +277,7 @@ class DocAccessible : public HyperTextAccessibleWrap,
   /**
    * Return a container accessible for the given DOM node.
    */
-  LocalAccessible* GetContainerAccessible(nsINode* aNode) const {
-    return aNode ? GetAccessibleOrContainer(aNode->GetParentNode()) : nullptr;
-  }
+  LocalAccessible* GetContainerAccessible(nsINode* aNode) const;
 
   /**
    * Return an accessible for the given node if any, or an immediate accessible
