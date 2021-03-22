@@ -1032,7 +1032,24 @@ static void AllocCallback(void* aPtr, size_t aReqSize, Thread* aT) {
   // options and the outcome of a Bernoulli trial.
   bool getTrace = gOptions->DoFullStacks() || gBernoulli->trial(actualSize);
   LiveBlock b(aPtr, aReqSize, getTrace ? StackTrace::Get(aT) : nullptr);
-  MOZ_ALWAYS_TRUE(gLiveBlockTable->putNew(aPtr, b));
+  LiveBlockTable::AddPtr p = gLiveBlockTable->lookupForAdd(aPtr);
+  if (!p) {
+    // Most common case: there wasn't a record already.
+    MOZ_ALWAYS_TRUE(gLiveBlockTable->add(p, b));
+  } else {
+    // Edge-case: there was a record for the same address. We'll assume the
+    // allocator is not giving out a pointer to an existing allocation, so
+    // this means the previously recorded allocation was freed while we were
+    // blocking interceptions. This can happen while processing the data in
+    // e.g. AnalyzeImpl.
+    if (gOptions->IsCumulativeMode()) {
+      // Copy it out so it can be added to the dead block list later.
+      DeadBlock db(*p);
+      MaybeAddToDeadBlockTable(db);
+    }
+    gLiveBlockTable->remove(p);
+    MOZ_ALWAYS_TRUE(gLiveBlockTable->putNew(aPtr, b));
+  }
 }
 
 static void FreeCallback(void* aPtr, Thread* aT, DeadBlock* aDeadBlock) {
