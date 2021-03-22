@@ -17,6 +17,11 @@ main-context-menu-back-2 =
     .aria-label = Back
     .accesskey = B
 
+# This menuitem is only visible on macOS
+main-context-menu-back-mac =
+    .label = Back
+    .accesskey = B
+
 navbar-tooltip-back-2 =
     .value = { main-context-menu-back-2.tooltiptext }
 
@@ -32,6 +37,11 @@ main-context-menu-forward-2 =
     .aria-label = Forward
     .accesskey = F
 
+# This menuitem is only visible on macOS
+main-context-menu-forward-mac =
+    .label = Forward
+    .accesskey = F
+
 navbar-tooltip-forward-2 =
     .value = { main-context-menu-forward-2.tooltiptext }
 
@@ -44,6 +54,11 @@ main-context-menu-reload =
     .aria-label = Reload
     .accesskey = R
 
+# This menuitem is only visible on macOS
+main-context-menu-reload-mac =
+    .label = Reload
+    .accesskey = R
+
 toolbar-button-reload =
     .label = { main-context-menu-reload.aria-label }
 
@@ -51,6 +66,11 @@ toolbar-button-reload =
 
 main-context-menu-stop =
     .aria-label = Stop
+    .accesskey = S
+
+# This menuitem is only visible on macOS
+main-context-menu-stop-mac =
+    .label = Stop
     .accesskey = S
 
 toolbar-button-stop =
@@ -73,6 +93,20 @@ main-context-menu-bookmark-add =
     .aria-label = Bookmark This Page
     .accesskey = m
     .tooltiptext = Bookmark this page
+
+# This menuitem is only visible on macOS
+# Cannot be shown at the same time as main-context-menu-bookmark-edit-mac,
+# so should probably have the same access key if possible.
+main-context-menu-bookmark-add-mac =
+    .label = Bookmark Page
+    .accesskey = m
+
+# This menuitem is only visible on macOS
+# Cannot be shown at the same time as main-context-menu-bookmark-add-mac,
+# so should probably have the same access key if possible.
+main-context-menu-bookmark-edit-mac =
+    .label = Edit Bookmark
+    .accesskey = m
 
 # Variables
 #   $shortcut (String) - A keyboard shortcut for the add bookmark command.

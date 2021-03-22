@@ -3,6 +3,38 @@
 let contextMenu;
 let hasPocket = Services.prefs.getBoolPref("extensions.pocket.enabled");
 
+const NAVIGATION_ITEMS =
+  AppConstants.platform == "macosx"
+    ? [
+        "context-back",
+        false,
+        "context-forward",
+        false,
+        "context-reload",
+        true,
+        "---",
+        null,
+        "context-bookmarkpage",
+        true,
+      ]
+    : [
+        "context-navigation",
+        null,
+        [
+          "context-back",
+          false,
+          "context-forward",
+          false,
+          "context-reload",
+          true,
+          "context-bookmarkpage",
+          true,
+        ],
+        null,
+        "---",
+        null,
+      ];
+
 add_task(async function test_setup() {
   const example_base =
     "http://example.com/browser/browser/base/content/test/contextMenu/";
@@ -191,21 +223,7 @@ add_task(
       await test_contextmenu(
         selector,
         [
-          "context-navigation",
-          null,
-          [
-            "context-back",
-            false,
-            "context-forward",
-            false,
-            "context-reload",
-            true,
-            "context-bookmarkpage",
-            true,
-          ],
-          null,
-          "---",
-          null,
+          ...NAVIGATION_ITEMS,
           "context-savepage",
           true,
           ...(hasPocket ? ["context-pocket", true] : []),

@@ -430,20 +430,37 @@ class nsContextMenu {
         this.onAudio ||
         this.onTextInput
       ) && this.inTabBrowser;
-    this.showItem("context-navigation", shouldShow);
+    if (AppConstants.platform == "macosx") {
+      for (let id of [
+        "context-back",
+        "context-forward",
+        "context-reload",
+        "context-stop",
+        "context-sep-navigation",
+      ]) {
+        this.showItem(id, shouldShow);
+      }
+    } else {
+      this.showItem("context-navigation", shouldShow);
+    }
 
     let stopped =
       XULBrowserWindow.stopCommand.getAttribute("disabled") == "true";
 
     let stopReloadItem = "";
-    if (shouldShow || !this.inTabBrowser) {
-      stopReloadItem = stopped || !this.inTabBrowser ? "reload" : "stop";
+    if (shouldShow) {
+      stopReloadItem = stopped ? "reload" : "stop";
     }
 
     this.showItem("context-reload", stopReloadItem == "reload");
     this.showItem("context-stop", stopReloadItem == "stop");
 
     function initBackForwardMenuItemTooltip(menuItemId, l10nId, shortcutId) {
+      // On macOS regular menuitems are used and the shortcut isn't added
+      if (AppConstants.platform == "macosx") {
+        return;
+      }
+
       let shortcut = document.getElementById(shortcutId);
       if (shortcut) {
         shortcut = ShortcutUtils.prettifyShortcut(shortcut);
