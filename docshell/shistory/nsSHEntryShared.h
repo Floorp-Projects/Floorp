@@ -103,6 +103,8 @@ class SHEntrySharedParentState : public SHEntrySharedState {
 
   void NotifyListenersContentViewerEvicted();
 
+  nsExpirationState* GetExpirationState() { return &mExpirationState; }
+
   SHEntrySharedParentState();
   SHEntrySharedParentState(nsIPrincipal* aTriggeringPrincipal,
                            nsIPrincipal* aPrincipalToInherit,
@@ -137,6 +139,8 @@ class SHEntrySharedParentState : public SHEntrySharedState {
 
   RefPtr<nsFrameLoader> mFrameLoader;
 
+  nsExpirationState mExpirationState;
+
   bool mSticky = true;
   bool mDynamicallyCreated = false;
 
@@ -166,7 +170,6 @@ class SHEntrySharedChildState {
   nsCOMPtr<nsISupports> mWindowState;
   // FIXME Move to parent?
   nsCOMPtr<nsIMutableArray> mRefreshURIList;
-  nsExpirationState mExpirationState;
   UniquePtr<nsDocShellEditorData> mEditorData;
 };
 
@@ -201,8 +204,6 @@ class nsSHEntryShared final : public nsIBFCacheEntry,
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTAPPENDED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTINSERTED
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
-
-  nsExpirationState* GetExpirationState() { return &mExpirationState; }
 
  private:
   ~nsSHEntryShared();

@@ -15,10 +15,16 @@ webidl BrowsingContext;
 #include "nsTArrayForwardDeclare.h"
 #include "mozilla/Maybe.h"
 struct EntriesAndBrowsingContextData;
+namespace mozilla {
+namespace dom {
+class SHEntrySharedParentState;
+} // namespace dom
+} // namespace mozilla
 %}
 
 [ref] native nsDocshellIDArray(nsTArray<nsID>);
 native MaybeInt32(mozilla::Maybe<int32_t>);
+[ptr] native SHEntrySharedParentStatePtr(mozilla::dom::SHEntrySharedParentState);
 /**
  * An interface to the primary properties of the Session History
  * component. In an embedded browser environment, the nsIWebBrowser
@@ -197,7 +203,8 @@ interface nsISHistory: nsISupports
    * Evict the content viewer associated with a bfcache entry that has timed
    * out.
    */
-  void evictExpiredContentViewerForEntry(in nsIBFCacheEntry aEntry);
+  [noscript, notxpcom]
+  void evictExpiredContentViewerForEntry(in SHEntrySharedParentStatePtr aEntry);
 
   /**
    * Evict all the content viewers in this session history
@@ -209,13 +216,13 @@ interface nsISHistory: nsISupports
    * expiration.
    */
   [noscript, notxpcom]
-  void addToExpirationTracker(in nsIBFCacheEntry aEntry);
+  void addToExpirationTracker(in SHEntrySharedParentStatePtr aEntry);
 
   /**
    * Remove a BFCache entry from expiration tracker.
    */
   [noscript, notxpcom]
-  void removeFromExpirationTracker(in nsIBFCacheEntry aEntry);
+  void removeFromExpirationTracker(in SHEntrySharedParentStatePtr aEntry);
 
   /**
    * Remove dynamic entries found at given index.

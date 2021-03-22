@@ -1,0 +1,41 @@
+<html>
+  <head>
+    <script>
+      onpageshow = function(pageshowEvent) {
+        let bc = new BroadcastChannel("online_offline_bfcache");
+        bc.onmessage = function(event) {
+          if (event.data == "nextpage") {
+            bc.close();
+            location.href = location.href + "?nextpage";
+          } else if (event.data == "back") {
+            bc.close();
+            history.back();
+          } else if (event.data == "forward") {
+            bc.close();
+            history.forward();
+          }  else if (event.data == "close") {
+            bc.postMessage("closed");
+            bc.close();
+            window.close();
+          }
+        };
+        bc.postMessage({ event: pageshowEvent.type, persisted: pageshowEvent.persisted });
+      }
+
+      onoffline = function(event) {
+        let bc = new BroadcastChannel("online_offline_bfcache");
+        bc.postMessage(event.type);
+        bc.close();
+      }
+
+      ononline = function(event) {
+        let bc = new BroadcastChannel("online_offline_bfcache");
+        bc.postMessage(event.type);
+        bc.close();
+      }
+
+    </script>
+  </head>
+  <body>
+  </body>
+</html>

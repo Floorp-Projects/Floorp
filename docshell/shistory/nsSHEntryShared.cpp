@@ -70,7 +70,8 @@ SHEntrySharedParentState::SHEntrySharedParentState(
 SHEntrySharedParentState::~SHEntrySharedParentState() {
   MOZ_ASSERT(mId != 0);
 
-  RefPtr<nsFrameLoader> loader = mFrameLoader.forget();
+  RefPtr<nsFrameLoader> loader = mFrameLoader;
+  SetFrameLoader(nullptr);
   if (loader) {
     loader->Destroy();
   }
@@ -117,7 +118,20 @@ void SHEntrySharedChildState::CopyFrom(SHEntrySharedChildState* aEntry) {
 }
 
 void SHEntrySharedParentState::SetFrameLoader(nsFrameLoader* aFrameLoader) {
+  // If expiration tracker is removing this object, IsTracked() returns false.
+  if (GetExpirationState()->IsTracked() && mFrameLoader) {
+    if (nsCOMPtr<nsISHistory> shistory = do_QueryReferent(mSHistory)) {
+      shistory->RemoveFromExpirationTracker(this);
+    }
+  }
+
   mFrameLoader = aFrameLoader;
+
+  if (mFrameLoader) {
+    if (nsCOMPtr<nsISHistory> shistory = do_QueryReferent(mSHistory)) {
+      shistory->AddToExpirationTracker(this);
+    }
+  }
 }
 
 nsFrameLoader* SHEntrySharedParentState::GetFrameLoader() {
