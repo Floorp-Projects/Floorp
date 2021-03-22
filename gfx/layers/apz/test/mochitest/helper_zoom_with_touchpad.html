@@ -40,6 +40,8 @@ async function test() {
   isfuzzy(initial_resolution, final_resolution, 0.0001, "The final resolution approximatly the same after zooming In and Out");
 
   // Scenario 4: zoom in, with the page using preventDefault()
+  var resolveWheelPromise;
+  var wheelPromise = new Promise(resolve => { resolveWheelPromise = resolve; });
   var deltaSum = 0;
   initial_resolution = final_resolution;
   var onWheel = function(e) {
@@ -52,7 +54,7 @@ async function test() {
         document.removeEventListener("wheel", onWheel, { passive: false });
         final_resolution = getResolution();
         ok(final_resolution === initial_resolution, "The final resolution (" + final_resolution + ") is equal after prevent default");
-        subtestDone();
+        resolveWheelPromise();
       }
     }
   };
@@ -64,11 +66,12 @@ async function test() {
   // Do not use `await` because calling preventDefault() means
   // the APZ:TransformEnd notification will never be sent.
   pinchZoomInWithTouchpad(641, 465);
+  await wheelPromise;
 }
 
 waitUntilApzStable()
 .then(test)
-.catch(subtestFailed);
+.then(subtestDone, subtestFailed);
 
   </script>
 </head>
