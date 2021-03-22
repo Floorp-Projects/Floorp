@@ -2334,6 +2334,8 @@ static void ComputeImmediateDominators(MIRGraph& graph) {
 }
 
 bool jit::BuildDominatorTree(MIRGraph& graph) {
+  MOZ_ASSERT(graph.canBuildDominators());
+
   ComputeImmediateDominators(graph);
 
   Vector<MBasicBlock*, 4, JitAllocPolicy> worklist(graph.alloc());
