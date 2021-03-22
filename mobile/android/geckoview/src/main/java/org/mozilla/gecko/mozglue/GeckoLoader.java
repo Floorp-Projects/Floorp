@@ -74,13 +74,15 @@ public final class GeckoLoader {
     }
 
     private static File getTmpDir(final Context context) {
-        final File tmpDir = context.getDir("tmpdir", Context.MODE_PRIVATE);
-        // check if the old tmp dir is there
-        final File oldDir = new File(tmpDir.getParentFile(), "app_tmp");
+        // Old directory
+        // TODO: Bug 1699845 delete this code in Gecko 95
+        final File oldDir = context.getDir("tmpdir", Context.MODE_PRIVATE);
         if (oldDir.exists()) {
             delTree(oldDir);
         }
-        return tmpDir;
+        // It's important that this folder is in the cache directory so users can actually
+        // clear it when it gets too big.
+        return new File(context.getCacheDir(), "gecko_temp");
     }
 
     private static String escapeDoubleQuotes(final String str) {
