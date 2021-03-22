@@ -4975,6 +4975,9 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
                            G_CALLBACK(settings_changed_cb), this);
     g_signal_connect_after(default_settings, "notify::gtk-xft-dpi",
                            G_CALLBACK(settings_xft_dpi_changed_cb), this);
+    // Text resolution affects system fonts and widget sizes.
+    g_signal_connect_after(default_settings, "notify::resolution",
+                           G_CALLBACK(settings_changed_cb), this);
     // For remote LookAndFeel, to refresh the content processes' copies:
     g_signal_connect_after(default_settings, "notify::gtk-cursor-blink-time",
                            G_CALLBACK(settings_changed_cb), this);

@@ -408,6 +408,9 @@ class LookAndFeel {
     // should be added to the calculated caret width.
     CaretAspectRatio,
 
+    // GTK text scale factor.
+    TextScaleFactor,
+
     // Not an ID; used to define the range of valid IDs.  Must be last.
     End,
   };

@@ -353,6 +353,9 @@ gfxPlatformFontList* gfxPlatformGtk::CreatePlatformFontList() {
 }
 
 int32_t gfxPlatformGtk::GetFontScaleDPI() {
+  MOZ_ASSERT(XRE_IsParentProcess(),
+             "You can access this via LookAndFeel if you need it in child "
+             "processes");
   if (MOZ_LIKELY(sDPI != 0)) {
     return sDPI;
   }
