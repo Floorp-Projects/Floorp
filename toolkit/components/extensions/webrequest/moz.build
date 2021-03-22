@@ -16,11 +16,16 @@ UNIFIED_SOURCES += [
     "StreamFilterChild.cpp",
     "StreamFilterEvents.cpp",
     "StreamFilterParent.cpp",
+    "WebNavigationContent.cpp",
     "WebRequestService.cpp",
 ]
 
 IPDL_SOURCES += [
     "PStreamFilter.ipdl",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
 ]
 
 EXPORTS.mozilla += [
@@ -34,6 +39,7 @@ EXPORTS.mozilla.extensions += [
     "StreamFilterChild.h",
     "StreamFilterEvents.h",
     "StreamFilterParent.h",
+    "WebNavigationContent.h",
 ]
 
 LOCAL_INCLUDES += [
