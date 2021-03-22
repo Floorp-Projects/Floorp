@@ -10,6 +10,7 @@
 #include "mozilla/BaseProfilerMarkers.h"
 #include "mozilla/glue/WindowsUnicode.h"
 #include "mozilla/StackWalk_windows.h"
+#include "mozilla/TimeStamp.h"
 
 namespace {
 

@@ -5740,11 +5740,8 @@ ScrollFrameHelper::ScrollEndEvent::Run() {
 void ScrollFrameHelper::FireScrollEvent() {
   nsIContent* content = mOuter->GetContent();
   nsPresContext* prescontext = mOuter->PresContext();
-#ifdef MOZ_GECKO_PROFILER
-  nsCOMPtr<nsIDocShell> docShell = prescontext->GetDocShell();
   AUTO_PROFILER_TRACING_MARKER_DOCSHELL("Paint", "FireScrollEvent", GRAPHICS,
-                                        docShell);
-#endif
+                                        prescontext->GetDocShell());
 
   MOZ_ASSERT(mScrollEvent);
   mScrollEvent->Revoke();

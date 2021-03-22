@@ -8,6 +8,7 @@
 #include "nsGlobalWindow.h"
 #include "mozilla/Logging.h"
 #include "mozilla/PerformanceCounter.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_privacy.h"
@@ -24,10 +25,6 @@
 #include "TimeoutBudgetManager.h"
 #include "mozilla/net/WebSocketEventService.h"
 #include "mozilla/MediaManager.h"
-
-#if MOZ_GECKO_PROFILER
-#  include "GeckoProfiler.h"
-#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -130,9 +127,7 @@ void TimeoutManager::SetLoading(bool value) {
 void TimeoutManager::MoveIdleToActive() {
   uint32_t num = 0;
   TimeStamp when;
-#if MOZ_GECKO_PROFILER
   TimeStamp now;
-#endif
   // Ensure we maintain the ordering of timeouts, so timeouts
   // never fire before a timeout set for an earlier time, or
   // before a timeout for the same time already submitted.
@@ -143,7 +138,6 @@ void TimeoutManager::MoveIdleToActive() {
     }
     timeout->remove();
     mTimeouts.InsertFront(timeout);
-#if MOZ_GECKO_PROFILER
     if (profiler_can_accept_markers()) {
       if (num == 0) {
         now = TimeStamp::Now();
@@ -165,7 +159,6 @@ void TimeoutManager::MoveIdleToActive() {
               MarkerInnerWindowId(mWindow.WindowID())),
           marker);
     }
-#endif
     num++;
   }
   if (num > 0) {

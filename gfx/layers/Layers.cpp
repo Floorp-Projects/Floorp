@@ -2215,7 +2215,6 @@ void RecordCompositionPayloadsPresented(
   if (aPayloads.Length()) {
     TimeStamp presented = aCompositionEndTime;
     for (const CompositionPayload& payload : aPayloads) {
-#if MOZ_GECKO_PROFILER
       if (profiler_can_accept_markers()) {
         MOZ_RELEASE_ASSERT(payload.mType <= kHighestCompositionPayloadType);
         nsAutoCString name(
@@ -2231,7 +2230,6 @@ void RecordCompositionPayloadsPresented(
             name, GRAPHICS,
             MarkerTiming::Interval(payload.mTimeStamp, presented), text);
       }
-#endif
 
       if (payload.mType == CompositionPayloadType::eKeyPress) {
         Telemetry::AccumulateTimeDelta(

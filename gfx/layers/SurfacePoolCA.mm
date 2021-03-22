@@ -71,16 +71,13 @@ void SurfacePoolCA::LockedPool::DestroyGLResourcesForContext(GLContext* aGL) {
 template <typename F>
 void SurfacePoolCA::LockedPool::MutateEntryStorage(const char* aMutationType,
                                                    const gfx::IntSize& aSize, F aFn) {
-#ifdef MOZ_GECKO_PROFILER
-  size_t inUseCountBefore = mInUseEntries.size();
-  size_t pendingCountBefore = mPendingEntries.Length();
-  size_t availableCountBefore = mAvailableEntries.Length();
-  TimeStamp before = TimeStamp::NowUnfuzzed();
-#endif
+  [[maybe_unused]] size_t inUseCountBefore = mInUseEntries.size();
+  [[maybe_unused]] size_t pendingCountBefore = mPendingEntries.Length();
+  [[maybe_unused]] size_t availableCountBefore = mAvailableEntries.Length();
+  [[maybe_unused]] TimeStamp before = TimeStamp::NowUnfuzzed();
 
   aFn();
 
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_thread_is_being_profiled()) {
     PROFILER_MARKER_TEXT(
         "SurfacePool", GRAPHICS, MarkerTiming::IntervalUntilNowFrom(before),
@@ -91,7 +88,6 @@ void SurfacePoolCA::LockedPool::MutateEntryStorage(const char* aMutationType,
                         int(mAvailableEntries.Length()), aMutationType, aSize.width, aSize.height,
                         int(EstimateTotalMemory() / 1000 / 1000)));
   }
-#endif
 }
 
 template <typename F>
@@ -275,11 +271,9 @@ Maybe<GLuint> SurfacePoolCA::LockedPool::GetFramebufferForSurface(
 
   // No usable existing framebuffer, we need to create one.
 
-#ifdef MOZ_GECKO_PROFILER
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
       "Framebuffer creation", GRAPHICS_TileAllocation,
       nsPrintfCString("%dx%d", entry.mSize.width, entry.mSize.height));
-#endif
 
   RefPtr<GLContextCGL> cgl = GLContextCGL::Cast(aGL);
   MOZ_RELEASE_ASSERT(cgl, "Unexpected GLContext type");

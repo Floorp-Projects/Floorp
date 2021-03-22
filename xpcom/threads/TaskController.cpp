@@ -54,7 +54,7 @@ static int32_t GetPoolThreadCount() {
   return std::min<int32_t>(kMaximumPoolThreadCount, numCores - 1);
 }
 
-#if defined(MOZ_GECKO_PROFILER) && defined(MOZ_COLLECTING_RUNNABLE_TELEMETRY)
+#if defined(MOZ_COLLECTING_RUNNABLE_TELEMETRY)
 #  define AUTO_PROFILE_FOLLOWING_TASK(task)                                  \
     nsAutoCString name;                                                      \
     (task)->GetName(name);                                                   \
@@ -340,9 +340,7 @@ void TaskController::AddTask(already_AddRefed<Task>&& aTask) {
     task->mPriorityModifier = manager->mCurrentPriorityModifier;
   }
 
-#ifdef MOZ_GECKO_PROFILER
   task->mInsertionTime = TimeStamp::Now();
-#endif
 
 #ifdef DEBUG
   task->mIsInGraph = true;
@@ -655,7 +653,6 @@ bool TaskController::ExecuteNextTaskOnlyMainThreadInternal(
 
 bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
     const MutexAutoLock& aProofOfLock) {
-#ifdef MOZ_GECKO_PROFILER
   nsCOMPtr<nsIThread> mainIThread;
   NS_GetMainThread(getter_AddRefs(mainIThread));
 
@@ -663,7 +660,6 @@ bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
   if (mainThread) {
     mainThread->SetRunningEventDelay(TimeDuration(), TimeStamp());
   }
-#endif
 
   uint32_t totalSuspended = 0;
   for (TaskManager* manager : mTaskManagers) {
@@ -739,7 +735,6 @@ bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
 
         TimeStamp now = TimeStamp::Now();
 
-#ifdef MOZ_GECKO_PROFILER
         if (mainThread) {
           if (task->GetPriority() < uint32_t(EventQueuePriority::InputHigh)) {
             mainThread->SetRunningEventDelay(TimeDuration(), now);
@@ -747,7 +742,6 @@ bool TaskController::DoExecuteNextTaskOnlyMainThreadInternal(
             mainThread->SetRunningEventDelay(now - task->mInsertionTime, now);
           }
         }
-#endif
 
         PerformanceCounterState::Snapshot snapshot =
             mPerformanceCounterState->RunnableWillRun(

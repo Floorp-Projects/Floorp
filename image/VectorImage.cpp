@@ -260,14 +260,12 @@ bool SVGDrawingCallback::operator()(gfxContext* aContext,
   RefPtr<PresShell> presShell = mSVGDocumentWrapper->GetPresShell();
   MOZ_ASSERT(presShell, "GetPresShell returned null for an SVG image?");
 
-#ifdef MOZ_GECKO_PROFILER
   Document* doc = presShell->GetDocument();
-  nsIURI* uri = doc ? doc->GetDocumentURI() : nullptr;
+  [[maybe_unused]] nsIURI* uri = doc ? doc->GetDocumentURI() : nullptr;
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
       "SVG Image drawing", GRAPHICS,
       nsPrintfCString("%dx%d %s", mSize.width, mSize.height,
                       uri ? uri->GetSpecOrDefault().get() : "N/A"));
-#endif
 
   gfxContextAutoSaveRestore contextRestorer(aContext);
 

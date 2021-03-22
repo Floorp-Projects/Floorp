@@ -6,12 +6,12 @@
 
 #include "ProfilerMarkers.h"
 
-#include "GeckoProfiler.h"
 #include "MainThreadUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/mscom/Utils.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/Services.h"
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
@@ -207,7 +207,6 @@ namespace mozilla {
 namespace mscom {
 
 void InitProfilerMarkers() {
-#ifdef MOZ_GECKO_PROFILER
   if (!XRE_IsParentProcess()) {
     return;
   }
@@ -235,7 +234,6 @@ void InitProfilerMarkers() {
 
   nsCOMPtr<nsIObserver> obs(new ProfilerStartupObserver());
   obsServ->AddObserver(obs, "profiler-started", false);
-#endif  // MOZ_GECKO_PROFILER
 }
 
 }  // namespace mscom
