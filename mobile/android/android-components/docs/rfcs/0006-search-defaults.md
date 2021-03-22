@@ -1,7 +1,7 @@
 ---
 layout: page
 title: Determining the set of default search engines
-permalink: /rfc/0000-search-defaults
+permalink: /rfc/0006-search-defaults
 ---
 
 * Start date: 2020-09-D8
