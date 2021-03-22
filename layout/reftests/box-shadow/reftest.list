@@ -45,5 +45,5 @@ fuzzy-if(winWidget,0-5,0-30) fuzzy-if(skiaContent,0-16,0-10) fails-if(webrender)
 == 1178575.html 1178575-ref.html
 == 1178575-2.html 1178575-2-ref.html
 fuzzy(0-159,0-2) fails-if(!dwrite||!nativeThemePref) == 1212823-1.html 1212823-1-ref.html
-fuzzy(0-29,0-8) fuzzy-if(winWidget&&!webrender,0-40,0-10) fails-if(nativeThemePref) == 1212823-2.html 1212823-2-ref.html
+fuzzy(0-93,0-8) fuzzy-if(winWidget&&!webrender,0-60,0-10) fails-if(nativeThemePref) == 1212823-2.html 1212823-2-ref.html
 == boxshadow-large-offset.html boxshadow-large-offset-ref.html
