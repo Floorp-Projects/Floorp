@@ -1,28 +1,18 @@
 <!DOCTYPE HTML>
-<html class="reftest-wait"><head>
+<html><head>
     <meta charset="utf-8">
     <title>Testcases for overflow-clip-box:content-box</title>
     <style type="text/css">
-font-face {
-  font-family: DejaVuSansMono;
-  src: url(../fonts/DejaVuSansMono.woff),url(DejaVuSansMono.woff);
+html,body {
+  color:black; background-color:white; font:16px monospace; padding:0; margin:7px;
 }
 
-        html,body {
-            color:black; background-color:white; font:16px DejaVuSansMono!important; padding:0; margin:7px;
-        }
-
-    input {
-      width: 100px; padding:50px; -moz-appearance:none; overflow-clip-box:padding-box;
-      border: 3px solid black;
-      background-color: white;
-    }
-    textarea, #textarea {
-      width: 160px; height:110px; padding:40px; overflow:scroll; -moz-appearance:none; overflow-clip-box:padding-box;
-      border: 3px solid black;
-    }
-    #textarea { word-break: break-all; font:14px DejaVuSansMono!important; }
-
+input {
+  width: 100px; padding:50px; -moz-appearance:none; overflow-clip-box:padding-box;
+  border: 3px solid black;
+  background-color: white;
+  font-family: monospace;
+}
 
 p {
  position:absolute;
@@ -44,14 +34,8 @@ p {
 .mask5 { position:absolute; height:40px; background:white; top:3px; right:3px; width:50px; }
 .button { width:100px; padding:0 50px; overflow:hidden; }
     </style>
-<script>
-function runTest() {
-  // the timeout is for avoiding differences in scrollbar fading
-  document.documentElement.removeAttribute("class");
-}
-</script>
 </head>
-<body onload="setTimeout(runTest,5000)">
+<body>
 
 <div class="rel block">XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX<p style="padding-right:20px"></p><div class=mask1></div></div>
 <div style="float:right">
