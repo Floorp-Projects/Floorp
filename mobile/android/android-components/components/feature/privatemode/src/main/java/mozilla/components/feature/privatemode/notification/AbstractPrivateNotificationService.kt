@@ -4,6 +4,7 @@
 
 package mozilla.components.feature.privatemode.notification
 
+import android.app.Notification
 import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_ONE_SHOT
 import android.app.Service
@@ -14,12 +15,14 @@ import android.os.IBinder
 import androidx.annotation.CallSuper
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationCompat.VISIBILITY_SECRET
+import androidx.core.app.NotificationManagerCompat
 import androidx.core.app.NotificationManagerCompat.IMPORTANCE_LOW
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.store.BrowserStore
@@ -29,6 +32,7 @@ import mozilla.components.support.base.ids.SharedIdsHelper
 import mozilla.components.support.ktx.android.notification.ChannelData
 import mozilla.components.support.ktx.android.notification.ensureNotificationChannelExists
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
+import java.util.Locale
 
 /**
  * Manages notifications for private tabs.
@@ -41,9 +45,11 @@ import mozilla.components.support.ktx.kotlinx.coroutines.flow.ifChanged
  *
  * As long as a private tab is open this service will keep its notification alive.
  */
+@Suppress("TooManyFunctions")
 abstract class AbstractPrivateNotificationService : Service() {
 
-    private var scope: CoroutineScope? = null
+    private var privateTabsScope: CoroutineScope? = null
+    private var localeScope: CoroutineScope? = null
 
     abstract val store: BrowserStore
 
@@ -51,6 +57,11 @@ abstract class AbstractPrivateNotificationService : Service() {
      * Customizes the private browsing notification.
      */
     abstract fun NotificationCompat.Builder.buildNotification()
+
+    /**
+     * Customize the notification response when the [Locale] has been changed.
+     */
+    abstract fun notifyLocaleChanged()
 
     /**
      * Erases all private tabs in reaction to the user tapping the notification.
@@ -61,6 +72,41 @@ abstract class AbstractPrivateNotificationService : Service() {
     }
 
     /**
+     * Retrieves the notification id based on the tag.
+     */
+    protected fun getNotificationId(): Int {
+        return SharedIdsHelper.getIdForTag(this, NOTIFICATION_TAG)
+    }
+
+    /**
+     * Retrieves the channel id based on the channel data.
+     */
+    protected fun getChannelId(): String {
+        return ensureNotificationChannelExists(
+            this,
+            NOTIFICATION_CHANNEL,
+            onSetupChannel = {
+                if (SDK_INT >= Build.VERSION_CODES.O) {
+                    enableLights(false)
+                    enableVibration(false)
+                    setShowBadge(false)
+                }
+            }
+        )
+    }
+
+    /**
+     * Re-build and notify an existing notification.
+     */
+    protected fun refreshNotification() {
+        val notificationId = getNotificationId()
+        val channelId = getChannelId()
+
+        val notification = createNotification(channelId)
+        NotificationManagerCompat.from(applicationContext).notify(notificationId, notification)
+    }
+
+    /**
      * Create the private browsing notification and
      * add a listener to stop the service once all private tabs are closed.
      *
@@ -68,16 +114,36 @@ abstract class AbstractPrivateNotificationService : Service() {
      */
     @ExperimentalCoroutinesApi
     final override fun onCreate() {
-        val id = SharedIdsHelper.getIdForTag(this, NOTIFICATION_TAG)
-        val channelId = ensureNotificationChannelExists(this, NOTIFICATION_CHANNEL, onSetupChannel = {
-            if (SDK_INT >= Build.VERSION_CODES.O) {
-                enableLights(false)
-                enableVibration(false)
-                setShowBadge(false)
-            }
-        })
+        val notificationId = getNotificationId()
+        val channelId = getChannelId()
+        val notification = createNotification(channelId)
 
-        val notification = NotificationCompat.Builder(this, channelId)
+        startForeground(notificationId, notification)
+
+        privateTabsScope = store.flowScoped { flow ->
+            flow.map { state -> state.privateTabs.isEmpty() }
+                .ifChanged()
+                .collect { noPrivateTabs ->
+                    if (noPrivateTabs) stopService()
+                }
+        }
+
+        localeScope = store.flowScoped { flow ->
+            flow.mapNotNull { state -> state.locale }
+                .ifChanged()
+                .collect {
+                    notifyLocaleChanged()
+                }
+        }
+    }
+
+    /**
+     * Builds a notification based on the specified channel id.
+     *
+     * @param channelId The channel id for the [Notification]
+     */
+    fun createNotification(channelId: String): Notification {
+        return NotificationCompat.Builder(this, channelId)
             .setOngoing(true)
             .setVisibility(VISIBILITY_SECRET)
             .setShowWhen(false)
@@ -88,16 +154,6 @@ abstract class AbstractPrivateNotificationService : Service() {
             })
             .apply { buildNotification() }
             .build()
-
-        startForeground(id, notification)
-
-        scope = store.flowScoped { flow ->
-            flow.map { state -> state.privateTabs.isEmpty() }
-                .ifChanged()
-                .collect { noPrivateTabs ->
-                    if (noPrivateTabs) stopService()
-                }
-        }
     }
 
     final override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
@@ -109,7 +165,8 @@ abstract class AbstractPrivateNotificationService : Service() {
     }
 
     final override fun onDestroy() {
-        scope?.cancel()
+        privateTabsScope?.cancel()
+        localeScope?.cancel()
     }
 
     final override fun onBind(intent: Intent?): IBinder? = null

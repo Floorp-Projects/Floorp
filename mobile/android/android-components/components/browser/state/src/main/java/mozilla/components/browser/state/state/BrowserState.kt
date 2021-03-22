@@ -7,6 +7,7 @@ package mozilla.components.browser.state.state
 import mozilla.components.browser.state.state.content.DownloadState
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import mozilla.components.lib.state.State
+import java.util.Locale
 
 /**
  * Value type that represents the complete state of the browser/engine.
@@ -27,6 +28,7 @@ import mozilla.components.lib.state.State
  * @property undoHistory History of recently closed tabs to support "undo" (Requires UndoMiddleware).
  * @property restoreComplete Whether or not restoring [BrowserState] has completed. This can be used
  * on application startup e.g. as an indicator that tabs have been restored.
+ * @property locale The current locale of the app. Will be null when following the system default.
  */
 data class BrowserState(
     val tabs: List<TabSessionState> = emptyList(),
@@ -39,5 +41,6 @@ data class BrowserState(
     val downloads: Map<String, DownloadState> = emptyMap(),
     val search: SearchState = SearchState(),
     val undoHistory: UndoHistoryState = UndoHistoryState(),
-    val restoreComplete: Boolean = false
+    val restoreComplete: Boolean = false,
+    val locale: Locale? = null
 ) : State

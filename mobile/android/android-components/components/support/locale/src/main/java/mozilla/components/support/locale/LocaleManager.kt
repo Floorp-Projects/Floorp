@@ -11,15 +11,12 @@ import android.content.res.Resources
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.os.ConfigurationCompat
 import mozilla.components.support.base.R
-import mozilla.components.support.base.log.logger.Logger
 import java.util.Locale
 
 /**
  * Helper for apps that want to change locale defined by the system.
  */
 object LocaleManager {
-    private val logger = Logger("LocaleManager")
-
     /**
      * Change the system defined locale to the indicated in the [language] parameter.
      * This new [language] will be stored and will be the new current locale returned by [getCurrentLocale].
@@ -28,15 +25,27 @@ object LocaleManager {
      * get recreated. If your app is using the single activity approach, this will be trivial just call
      * [AppCompatActivity.recreate]. On the other hand, if you have multiple activity this could be tricky, one
      * alternative could be restarting your application process see https://github.com/JakeWharton/ProcessPhoenix
+     *
+     * @param context The [Context]
+     * @param localeUseCase The [LocaleUseCases] used to notify [Locale] changes
+     * @param language The new [Locale] that has been selected
      * @return A new Context object for whose resources are adjusted to match the new [language].
      */
-    fun setNewLocale(context: Context, language: String): Context {
-        Storage.save(context, language)
+    fun setNewLocale(context: Context, localeUseCase: LocaleUseCases? = null, locale: Locale?): Context {
+        Storage.save(context, locale?.language)
+
+        localeUseCase?.let { useCases ->
+            useCases.notifyLocaleChanged(locale)
+        }
+
         return updateResources(context)
     }
 
     /**
      * The latest stored locale saved by [setNewLocale].
+     *
+     * @return The current selected locale. If the app is following the system default then this
+     * value will be null.
      */
     fun getCurrentLocale(context: Context): Locale? {
         return Storage.getLocale(context)?.toLocale()
@@ -52,12 +61,14 @@ object LocaleManager {
      * alternative could be restarting your application process see https://github.com/JakeWharton/ProcessPhoenix
      *
      */
-    fun resetToSystemDefault(context: Context) {
+    fun resetToSystemDefault(context: Context, localeUseCase: LocaleUseCases) {
         clear(context)
         val locale = getSystemDefault()
 
         updateSystemLocale(locale)
         updateConfiguration(context, locale)
+
+        localeUseCase.notifyLocaleChanged(locale)
     }
 
     /**
@@ -106,7 +117,7 @@ object LocaleManager {
         }
 
         @Synchronized
-        fun save(context: Context, localeCode: String) {
+        fun save(context: Context, localeCode: String?) {
             val settings = getSharedPreferences(context)
             val key = context.getString(R.string.mozac_support_base_locale_preference_key_locale)
             settings.edit().putString(key, localeCode).apply()

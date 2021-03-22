@@ -49,6 +49,11 @@ permalink: /changelog/
 * **service-nimbus**
   * Added UI components for displaying a list of active Nimbus experiments.
 
+* **support-locale**
+  * ⚠️ **This is a breaking change**: Extended support for locale changes. The `LocaleManager` can now handle notifications about `Locale` changes through `LocaleUseCase`s, which are then reflected in the `BrowserStore`.
+  * 🚒 Bug fixed [issue #17190](https://github.com/mozilla-mobile/fenix/issues/17190) - Private browsing notifications are updated with the correct language when the app locale is changed.
+
+
 # 73.0.0
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v72.0.0...v73.0.0)

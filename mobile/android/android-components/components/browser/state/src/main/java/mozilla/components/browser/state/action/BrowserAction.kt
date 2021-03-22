@@ -47,6 +47,7 @@ import mozilla.components.concept.engine.webextension.WebExtensionPageAction
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.lib.state.Action
 import mozilla.components.support.base.android.Clock
+import java.util.Locale
 
 /**
  * [Action] implementation related to [BrowserState].
@@ -80,6 +81,23 @@ sealed class SystemAction : BrowserAction() {
     data class LowMemoryAction(
         val level: Int
     ) : SystemAction()
+}
+
+/**
+ * [BrowserAction] implementations related to updating the [Locale] inside [BrowserState].
+ */
+sealed class LocaleAction : BrowserAction() {
+    /**
+     * Updating the [BrowserState] to reflect app [Locale] changes.
+     *
+     * @property locale the updated [Locale]
+     */
+    data class UpdateLocaleAction(val locale: Locale?) : LocaleAction()
+
+    /**
+     * Restores the [BrowserState.locale] state from storage.
+     */
+    object RestoreLocaleStateAction : LocaleAction()
 }
 
 /**

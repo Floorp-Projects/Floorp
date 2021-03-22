@@ -39,5 +39,5 @@ internal object DownloadStateReducer {
     }
 
     private fun updateDownloads(state: BrowserState, download: DownloadState) =
-            state.copy(downloads = state.downloads + (download.id to download))
+        state.copy(downloads = state.downloads + (download.id to download))
 }

@@ -12,14 +12,22 @@ import android.content.SharedPreferences
 import androidx.core.app.NotificationCompat
 import androidx.core.content.getSystemService
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.setMain
+import mozilla.components.browser.state.action.LocaleAction
 import mozilla.components.browser.state.action.TabListAction
+import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.privatemode.notification.AbstractPrivateNotificationService.Companion.ACTION_ERASE
 import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.whenever
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -30,6 +38,7 @@ import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Mockito
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
+import java.util.Locale
 
 @ExperimentalCoroutinesApi
 @RunWith(AndroidJUnit4::class)
@@ -37,9 +46,12 @@ class AbstractPrivateNotificationServiceTest {
 
     private lateinit var preferences: SharedPreferences
     private lateinit var notificationManager: NotificationManager
+    private val testDispatcher = TestCoroutineDispatcher()
 
     @Before
     fun setup() {
+        Dispatchers.setMain(testDispatcher)
+
         preferences = mock()
         notificationManager = mock()
         val editor = mock<SharedPreferences.Editor>()
@@ -48,11 +60,21 @@ class AbstractPrivateNotificationServiceTest {
         whenever(editor.putLong(anyString(), anyLong())).thenReturn(editor)
     }
 
+    @After
+    @ExperimentalCoroutinesApi
+    fun tearDown() {
+        Dispatchers.resetMain()
+        testDispatcher.cleanupTestCoroutines()
+    }
+
     @Test
-    fun `start foreground on create`() {
+    fun `WHEN the service is created THEN start foreground is called`() {
         val service = spy(object : MockService() {
             override fun NotificationCompat.Builder.buildNotification() {
                 setCategory(Notification.CATEGORY_STATUS)
+            }
+            override fun notifyLocaleChanged() {
+                // NOOP
             }
         })
         attachContext(service)
@@ -65,7 +87,7 @@ class AbstractPrivateNotificationServiceTest {
     }
 
     @Test
-    fun `remove all private tabs on erase intent`() {
+    fun `GIVEN an erase intent is received THEN remove all private tabs`() {
         val service = MockService()
         val result = service.onStartCommand(Intent(ACTION_ERASE), 0, 0)
 
@@ -74,7 +96,7 @@ class AbstractPrivateNotificationServiceTest {
     }
 
     @Test
-    fun `remove all private tabs on task removed`() {
+    fun `WHEN task is removed THEN all private tabs are removed`() {
         val service = spy(MockService())
         service.onTaskRemoved(mock())
 
@@ -83,9 +105,37 @@ class AbstractPrivateNotificationServiceTest {
         verify(service).stopSelf()
     }
 
+    @Test
+    fun `WHEN a locale change is made in the browser store THEN the service should notify`() {
+        val service = spy(MockServiceWithStore())
+        attachContext(service)
+        service.onCreate()
+
+        val mockLocale = Locale("English")
+        service.store.dispatch(LocaleAction.UpdateLocaleAction(mockLocale)).joinBlocking()
+        testDispatcher.advanceUntilIdle()
+
+        verify(service).notifyLocaleChanged()
+    }
+
     private open class MockService : AbstractPrivateNotificationService() {
         override val store: BrowserStore = mock()
         override fun NotificationCompat.Builder.buildNotification() = Unit
+        override fun notifyLocaleChanged() {
+            // NOOP
+        }
+    }
+
+    private open class MockServiceWithStore : AbstractPrivateNotificationService() {
+        override val store = BrowserStore(
+            BrowserState(
+                locale = null
+            )
+        )
+        override fun NotificationCompat.Builder.buildNotification() = Unit
+        override fun notifyLocaleChanged() {
+            // NOOP
+        }
     }
 
     private fun attachContext(service: Service) {
