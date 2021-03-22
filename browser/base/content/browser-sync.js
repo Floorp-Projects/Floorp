@@ -1022,6 +1022,7 @@ var gSync = {
         appMenuHeaderText.hidden = false;
         appMenuHeaderText.style.visibility = "visible";
         appMenuStatus.classList.add("toolbaritem-combined-buttons");
+        appMenuLabel.classList.remove("subviewbutton-nav");
       }
       return;
     }
