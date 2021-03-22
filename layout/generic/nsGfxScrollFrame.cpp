@@ -3765,20 +3765,20 @@ void ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                 : disp->mOverflowClipBoxBlock) ==
                StyleOverflowClipBox::ContentBox;
     // We only clip if there is *scrollable* overflow, to avoid clipping
-    // *visual* overflow unnecessarily.
+    // *ink* overflow unnecessarily.
     nsRect clipRect = effectiveScrollPort + aBuilder->ToReferenceFrame(mOuter);
+    nsMargin padding = mOuter->GetUsedPadding();
+    if (!cbH) {
+      padding.left = padding.right = nscoord(0);
+    }
+    if (!cbV) {
+      padding.top = padding.bottom = nscoord(0);
+    }
+    clipRect.Deflate(padding);
+
     nsRect so = mScrolledFrame->ScrollableOverflowRect();
     if ((cbH && (clipRect.width != so.width || so.x < 0)) ||
         (cbV && (clipRect.height != so.height || so.y < 0))) {
-      nsMargin padding = mOuter->GetUsedPadding();
-      if (!cbH) {
-        padding.left = padding.right = nscoord(0);
-      }
-      if (!cbV) {
-        padding.top = padding.bottom = nscoord(0);
-      }
-      clipRect.Deflate(padding);
-
       // The non-inflated clip needs to be set on all non-caret items.
       // We prepare an extra DisplayItemClipChain here that will be intersected
       // with those items after they've been created.
