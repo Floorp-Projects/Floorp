@@ -222,6 +222,7 @@ class FeatureGate {
   static targetingFacts = new Map([
     ["release", AppConstants.MOZ_UPDATE_CHANNEL === "release"],
     ["beta", AppConstants.MOZ_UPDATE_CHANNEL === "beta"],
+    ["early_beta_or_earlier", AppConstants.EARLY_BETA_OR_EARLIER],
     ["dev-edition", AppConstants.MOZ_DEV_EDITION],
     ["nightly", AppConstants.NIGHTLY_BUILD],
     ["win", AppConstants.platform === "win"],
