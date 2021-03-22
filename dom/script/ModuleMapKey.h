@@ -12,7 +12,7 @@ namespace mozilla::dom {
 
 class ModuleMapKey : public nsURIHashKey {
  public:
-  using KeyType = const ModuleMapKey&;
+  using KeyType = ModuleMapKey&;
   using KeyTypePointer = const ModuleMapKey*;
 
   ModuleMapKey() = default;
@@ -22,16 +22,25 @@ class ModuleMapKey : public nsURIHashKey {
 
   ModuleMapKey& operator=(const ModuleMapKey& aOther) = default;
 
-  KeyType GetKey() const { return *this; }
+  KeyType GetKey() { return *this; }
   KeyTypePointer GetKeyPointer() const { return this; }
   static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
 
   bool KeyEquals(KeyTypePointer aOther) const;
   static PLDHashNumber HashKey(KeyTypePointer aKey);
 
- private:
   nsCOMPtr<nsIGlobalObject> mWebExtGlobal;
 };
+
+inline void ImplCycleCollectionUnlink(ModuleMapKey& aField) {
+  ImplCycleCollectionUnlink(aField.mWebExtGlobal);
+}
+
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback, ModuleMapKey& aField,
+    const char* aName, uint32_t aFlags = 0) {
+  ImplCycleCollectionTraverse(aCallback, aField.mWebExtGlobal, aName, aFlags);
+}
 
 }  // namespace mozilla::dom
 
