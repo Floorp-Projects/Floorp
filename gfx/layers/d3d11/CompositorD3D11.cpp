@@ -29,6 +29,7 @@
 #include "mozilla/widget/WinCompositorWidget.h"
 
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/ProfilerState.h"
 #include "mozilla/StaticPrefs_gfx.h"
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/Telemetry.h"
@@ -466,12 +467,8 @@ CompositorD3D11::CreateRenderTargetFromSource(
 }
 
 bool CompositorD3D11::ShouldAllowFrameRecording() const {
-#ifdef MOZ_GECKO_PROFILER
   return mAllowFrameRecording ||
          profiler_feature_active(ProfilerFeature::Screenshots);
-#else
-  return mAllowFrameRecording;
-#endif
 }
 
 already_AddRefed<CompositingRenderTarget>
@@ -1256,11 +1253,9 @@ Maybe<IntRect> CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 void CompositorD3D11::NormalDrawingDone() { mDiagnostics->End(); }
 
 void CompositorD3D11::EndFrame() {
-#ifdef MOZ_GECKO_PROFILER
   if (!profiler_feature_active(ProfilerFeature::Screenshots) && mWindowRTCopy) {
     mWindowRTCopy = nullptr;
   }
-#endif  // MOZ_GECKO_PROFILER
 
   if (!mDefaultRT) {
     Compositor::EndFrame();

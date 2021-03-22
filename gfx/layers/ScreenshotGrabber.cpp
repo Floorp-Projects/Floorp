@@ -6,7 +6,7 @@
 
 #include "ScreenshotGrabber.h"
 
-#include "GeckoProfiler.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/UniquePtr.h"
@@ -93,10 +93,8 @@ void ScreenshotGrabber::MaybeProcessQueue() {
 }
 
 void ScreenshotGrabber::NotifyEmptyFrame() {
-#ifdef MOZ_GECKO_PROFILER
   PROFILER_MARKER_UNTYPED("NoCompositorScreenshot because nothing changed",
                           GRAPHICS);
-#endif
 }
 
 void ScreenshotGrabber::Destroy() { mImpl = nullptr; }

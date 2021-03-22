@@ -11,6 +11,8 @@
 #ifndef ProfilerLabels_h
 #define ProfilerLabels_h
 
+#include "mozilla/ProfilerState.h"
+
 #ifndef MOZ_GECKO_PROFILER
 
 #  define AUTO_PROFILER_LABEL(label, categoryPair)
@@ -35,7 +37,6 @@
 #  include "mozilla/Atomics.h"
 #  include "mozilla/Attributes.h"
 #  include "mozilla/Maybe.h"
-#  include "mozilla/ProfilerState.h"
 #  include "mozilla/ThreadLocal.h"
 #  include "nsString.h"
 

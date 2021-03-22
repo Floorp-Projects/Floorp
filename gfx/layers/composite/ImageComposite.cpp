@@ -8,7 +8,7 @@
 
 #include <inttypes.h>
 
-#include "GeckoProfiler.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "gfxPlatform.h"
 #include "nsPrintfCString.h"
 
@@ -44,7 +44,6 @@ void ImageComposite::UpdateBias(size_t aImageIndex, bool aFrameChanged) {
                                 ? mImages[aImageIndex + 1].mTimeStamp
                                 : TimeStamp();
 
-#if MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers() && compositedImageTime && nextImageTime) {
     TimeDuration offsetCurrent = compositedImageTime - compositionTime;
     TimeDuration offsetNext = nextImageTime - compositionTime;
@@ -53,7 +52,6 @@ void ImageComposite::UpdateBias(size_t aImageIndex, bool aFrameChanged) {
                         offsetNext.ToMilliseconds());
     PROFILER_MARKER_TEXT("Video frame offsets", GRAPHICS, {}, str);
   }
-#endif
 
   if (compositedImageTime.IsNull()) {
     mBias = ImageComposite::BIAS_NONE;
@@ -183,7 +181,6 @@ void ImageComposite::SetImages(nsTArray<TimedImage>&& aNewImages) {
     // will never be shown.
     CountSkippedFrames(&aNewImages[0]);
 
-#if MOZ_GECKO_PROFILER
     if (profiler_can_accept_markers()) {
       int len = aNewImages.Length();
       const auto& first = aNewImages[0];
@@ -194,7 +191,6 @@ void ImageComposite::SetImages(nsTArray<TimedImage>&& aNewImages) {
                           first.mProducerID, last.mFrameID, last.mProducerID);
       PROFILER_MARKER_TEXT("ImageComposite::SetImages", GRAPHICS, {}, str);
     }
-#endif
   }
   mImages = std::move(aNewImages);
 }
@@ -211,7 +207,6 @@ bool ImageComposite::UpdateCompositedFrame(
   MOZ_RELEASE_ASSERT(compositionTime,
                      "Should only be called during a composition");
 
-#if MOZ_GECKO_PROFILER
   nsCString descr;
   if (profiler_can_accept_markers()) {
     nsCString relativeTimeString;
@@ -237,7 +232,6 @@ bool ImageComposite::UpdateCompositedFrame(
     }
   }
   PROFILER_MARKER_TEXT("UpdateCompositedFrame", GRAPHICS, {}, descr);
-#endif
 
   if (mLastFrameID == image.mFrameID && mLastProducerID == image.mProducerID) {
     // The frame didn't change.
@@ -259,7 +253,6 @@ bool ImageComposite::UpdateCompositedFrame(
 
   if (dropped > 0) {
     mDroppedFrames += dropped;
-#if MOZ_GECKO_PROFILER
     if (profiler_can_accept_markers()) {
       const char* frameOrFrames = dropped == 1 ? "frame" : "frames";
       nsPrintfCString text("%" PRId32 " %s dropped: %" PRId32 " -> %" PRId32
@@ -268,7 +261,6 @@ bool ImageComposite::UpdateCompositedFrame(
                            mLastProducerID);
       PROFILER_MARKER_TEXT("Video frames dropped", GRAPHICS, {}, text);
     }
-#endif
   }
 
   mLastFrameID = image.mFrameID;
@@ -354,7 +346,6 @@ void ImageComposite::CountSkippedFrames(const TimedImage* aImage) {
 }
 
 void ImageComposite::DetectTimeStampJitter(const TimedImage* aNewImage) {
-#if MOZ_GECKO_PROFILER
   if (!profiler_can_accept_markers() || aNewImage->mTimeStamp.IsNull()) {
     return;
   }
@@ -379,7 +370,6 @@ void ImageComposite::DetectTimeStampJitter(const TimedImage* aNewImage) {
     nsPrintfCString text("%.2lfms", jitter->ToMilliseconds());
     PROFILER_MARKER_TEXT("VideoFrameTimeStampJitter", GRAPHICS, {}, text);
   }
-#endif
 }
 
 }  // namespace layers

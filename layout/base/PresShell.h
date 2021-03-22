@@ -95,9 +95,7 @@ class GeckoMVMContext;
 class OverflowChangedTracker;
 class StyleSheet;
 
-#ifdef MOZ_GECKO_PROFILER
 class ProfileChunkedBuffer;
-#endif
 
 #ifdef ACCESSIBILITY
 namespace a11y {
@@ -2867,13 +2865,11 @@ class PresShell final : public nsStubDocumentObserver,
   // Reflow roots that need to be reflowed.
   DirtyRootsList mDirtyRoots;
 
-#ifdef MOZ_GECKO_PROFILER
   // These two fields capture call stacks of any changes that require a restyle
   // or a reflow. Only the first change per restyle / reflow is recorded (the
   // one that caused a call to SetNeedStyleFlush() / SetNeedLayoutFlush()).
   UniquePtr<ProfileChunkedBuffer> mStyleCause;
   UniquePtr<ProfileChunkedBuffer> mReflowCause;
-#endif
 
   nsTArray<UniquePtr<DelayedEvent>> mDelayedEvents;
 

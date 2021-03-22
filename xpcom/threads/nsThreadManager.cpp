@@ -545,9 +545,7 @@ nsThreadManager::NewNamedThread(const nsACString& aName, uint32_t aStackSize,
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-#ifdef MOZ_GECKO_PROFILER
-  TimeStamp startTime = TimeStamp::Now();
-#endif
+  [[maybe_unused]] TimeStamp startTime = TimeStamp::Now();
 
   RefPtr<ThreadEventQueue> queue =
       new ThreadEventQueue(MakeUnique<EventQueue>());

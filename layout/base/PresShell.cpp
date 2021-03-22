@@ -4086,7 +4086,6 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
 
   MOZ_ASSERT(NeedFlush(flushType), "Why did we get called?");
 
-#ifdef MOZ_GECKO_PROFILER
   AUTO_PROFILER_MARKER_TEXT(
       "DoFlushPendingNotifications", LAYOUT,
       MarkerOptions(MarkerStack::Capture(), MarkerInnerWindowIdFromDocShell(
@@ -4095,7 +4094,6 @@ void PresShell::DoFlushPendingNotifications(mozilla::ChangesToFlush aFlush) {
   AUTO_PROFILER_LABEL_DYNAMIC_CSTR_NONSENSITIVE(
       "PresShell::DoFlushPendingNotifications", LAYOUT,
       kFlushTypeNames[flushType]);
-#endif
 
 #ifdef ACCESSIBILITY
 #  ifdef DEBUG
@@ -9465,11 +9463,9 @@ bool PresShell::ScheduleReflowOffTimer() {
 
 bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
                          OverflowChangedTracker* aOverflowTracker) {
-#ifdef MOZ_GECKO_PROFILER
-  nsIURI* uri = mDocument->GetDocumentURI();
+  [[maybe_unused]] nsIURI* uri = mDocument->GetDocumentURI();
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING(
       "Reflow", LAYOUT_Reflow, uri ? uri->GetSpecOrDefault() : "N/A"_ns);
-#endif
 
   LAYOUT_TELEMETRY_RECORD_BASE(Reflow);
 

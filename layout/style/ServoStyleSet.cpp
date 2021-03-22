@@ -1221,11 +1221,9 @@ bool ServoStyleSet::ShouldTraverseInParallel() const {
   if (!mDocument->GetPresShell()->IsActive()) {
     return false;
   }
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_feature_active(ProfilerFeature::SequentialStyle)) {
     return false;
   }
-#endif
   return true;
 }
 

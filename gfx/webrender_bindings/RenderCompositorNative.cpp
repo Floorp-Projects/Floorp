@@ -224,10 +224,10 @@ void RenderCompositorNative::CompositorBeginFrame() {
 }
 
 void RenderCompositorNative::CompositorEndFrame() {
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_thread_is_being_profiled()) {
     auto bufferSize = GetBufferSize();
-    uint64_t windowPixelCount = uint64_t(bufferSize.width) * bufferSize.height;
+    [[maybe_unused]] uint64_t windowPixelCount =
+        uint64_t(bufferSize.width) * bufferSize.height;
     int nativeLayerCount = 0;
     for (const auto& it : mSurfaces) {
       nativeLayerCount += int(it.second.mNativeLayers.size());
@@ -245,7 +245,6 @@ void RenderCompositorNative::CompositorEndFrame() {
                         int((mTotalTilePixelCount - mAddedTilePixelCount) *
                             100 / windowPixelCount)));
   }
-#endif
   mDrawnPixelCount = 0;
 
   DoFlush();

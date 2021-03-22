@@ -663,7 +663,6 @@ void GlobalImageObserver::Notify(imgIRequest* aRequest, int32_t aType,
 
 void ImageLoader::Notify(imgIRequest* aRequest, int32_t aType,
                          const nsIntRect* aData) {
-#ifdef MOZ_GECKO_PROFILER
   nsCString uriString;
   if (profiler_is_active()) {
     nsCOMPtr<nsIURI> uri;
@@ -675,7 +674,6 @@ void ImageLoader::Notify(imgIRequest* aRequest, int32_t aType,
 
   AUTO_PROFILER_LABEL_DYNAMIC_NSCSTRING("ImageLoader::Notify", OTHER,
                                         uriString);
-#endif
 
   if (aType == imgINotificationObserver::SIZE_AVAILABLE) {
     nsCOMPtr<imgIContainer> image;
