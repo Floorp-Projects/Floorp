@@ -6,18 +6,19 @@
 
 const myScope = this;
 
-const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
 const { PromiseUtils } = ChromeUtils.import(
   "resource://gre/modules/PromiseUtils.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { TelemetryController } = ChromeUtils.import(
-  "resource://gre/modules/TelemetryController.jsm"
-);
 const { setTimeout } = ChromeUtils.import("resource://gre/modules/Timer.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm"
 );
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  Log: "resource://gre/modules/Log.jsm",
+  TelemetryController: "resource://gre/modules/TelemetryController.jsm",
+});
 
 var EXPORTED_SYMBOLS = ["CrashManager", "getCrashManager"];
 
@@ -112,8 +113,6 @@ function parseAndRemoveField(obj, field) {
  *     Telemetry histogram to report store size under.
  */
 var CrashManager = function(options) {
-  this._log = Log.repository.getLogger("Crashes.CrashManager");
-
   for (let k in options) {
     let value = options[k];
 
@@ -1507,6 +1506,10 @@ CrashRecord.prototype = Object.freeze({
     return this._o.metadata;
   },
 });
+
+XPCOMUtils.defineLazyGetter(CrashManager, "_log", () =>
+  Log.repository.getLogger("Crashes.CrashManager")
+);
 
 /**
  * Obtain the global CrashManager instance used by the running application.
