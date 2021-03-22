@@ -1027,7 +1027,7 @@ nsresult EventListenerManager::CompileEventHandlerInternal(
 
   RefPtr<ScriptFetchOptions> fetchOptions = new ScriptFetchOptions(
       CORS_NONE, aElement->OwnerDoc()->GetReferrerPolicy(), aElement,
-      aElement->OwnerDoc()->NodePrincipal(), nullptr);
+      aElement->OwnerDoc()->NodePrincipal());
 
   RefPtr<EventScript> eventScript = new EventScript(fetchOptions, uri);
 
