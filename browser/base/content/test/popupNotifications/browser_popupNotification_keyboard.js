@@ -69,8 +69,7 @@ var tests = [
   // Test that for non-persistent notifications, the escape key dismisses the notification.
   {
     id: "Test#2",
-    async run() {
-      await waitForWindowReadyForPopupNotifications(window);
+    run() {
       this.notifyObj = new BasicNotification(this.id);
       this.notification = showNotification(this.notifyObj);
     },
