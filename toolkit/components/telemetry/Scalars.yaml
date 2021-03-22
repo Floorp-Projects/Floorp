@@ -4074,6 +4074,36 @@ idb.failure:
       - 'fennec'
     record_in_processes:
       - 'main'
+  unknown_objectstore_empty_database:
+    bug_numbers:
+      - 1669730
+    description: >
+      Tracking the number of attempts to open an unknown objectstore on an
+      empty IndexedDB database.
+    expires: "89"
+    kind: uint
+    notification_emails:
+      - storage-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'content'
+  unknown_objectstore_non_empty_database:
+    bug_numbers:
+      - 1669730
+    description: >
+      Tracking the number of attempts to open an unknown objectstore on a
+      non-empty IndexedDB database.
+    expires: "89"
+    kind: uint
+    notification_emails:
+      - storage-telemetry@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'content'
 
 # The following section contains scalars for the PDF viewer.
 pdf.viewer:
