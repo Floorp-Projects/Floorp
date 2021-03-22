@@ -4,9 +4,9 @@
 #
 #    pip-compile --allow-unsafe --generate-hashes --output-file=tools/lint/python/flake8_requirements.txt tools/lint/python/flake8_requirements.in
 #
-autopep8==1.5.5 \
-    --hash=sha256:9e136c472c475f4ee4978b51a88a494bfcd4e3ed17950a44a988d9e434837bea \
-    --hash=sha256:cae4bc0fb616408191af41d062d7ec7ef8679c7f27b068875ca3a9e2878d5443
+autopep8==1.5.6 \
+    --hash=sha256:5454e6e9a3d02aae38f866eec0d9a7de4ab9f93c10a273fb0340f3d6d09f7514 \
+    --hash=sha256:f01b06a6808bc31698db907761e5890eb2295e287af53f6693b39ce55454034a
     # via -r tools/lint/python/flake8_requirements.in
 flake8==3.9.0 \
     --hash=sha256:12d05ab02614b6aee8df7c36b97d1a3b2372761222b19b58621355e82acddcff \
