@@ -105,11 +105,10 @@ nsMenuBarX::~nsMenuBarX() {
     UnregisterForContentChanges(mContent);
   }
 
-  // We have to manually clear the array here because clearing causes menu items
-  // to call back into the menu bar to unregister themselves. We don't want to
-  // depend on member variable ordering to ensure that the array gets cleared
-  // before the registration hash table is destroyed.
-  mMenuArray.Clear();
+  for (nsMenuX* menu : mMenuArray) {
+    menu->DetachFromGroupOwnerRecursive();
+    menu->DetachFromParent();
+  }
 
   if (mApplicationMenuDelegate) {
     [mApplicationMenuDelegate release];
@@ -256,16 +255,20 @@ void nsMenuBarX::RemoveMenuAtIndex(uint32_t aIndex) {
     return;
   }
 
+  RefPtr<nsMenuX> menu = mMenuArray[aIndex];
+  mMenuArray.RemoveElementAt(aIndex);
+
+  menu->DetachFromGroupOwnerRecursive();
+  menu->DetachFromParent();
+
   // Our native menu and our internal menu object array might be out of sync.
   // This happens, for example, when a submenu is hidden. Because of this we
   // should not assume that a native submenu is hooked up.
-  NSMenuItem* nativeMenuItem = mMenuArray[aIndex]->NativeNSMenuItem();
+  NSMenuItem* nativeMenuItem = menu->NativeNSMenuItem();
   int nativeMenuItemIndex = [mNativeMenu indexOfItem:nativeMenuItem];
   if (nativeMenuItemIndex != -1) {
     [mNativeMenu removeItemAtIndex:nativeMenuItemIndex];
   }
-
-  mMenuArray.RemoveElementAt(aIndex);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
