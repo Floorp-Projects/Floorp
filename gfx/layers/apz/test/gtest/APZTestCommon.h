@@ -370,6 +370,10 @@ class TestAsyncPanZoomController : public AsyncPanZoomController {
 
   void SetWaitForMainThread() { mWaitForMainThread = true; }
 
+  bool IsOverscrollAnimationRunning() const {
+    return mState == PanZoomState::OVERSCROLL_ANIMATION;
+  }
+
  private:
   bool mWaitForMainThread;
   MockContentControllerDelayed* mcc;
