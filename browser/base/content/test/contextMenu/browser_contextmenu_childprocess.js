@@ -125,5 +125,9 @@ function checkMenu(contextMenu) {
       ],
     },
   ];
-  checkItems(contextMenu.children[2], items);
+  let startIndex =
+    Array.from(contextMenu.children).findIndex(
+      node => node.id == "context-sep-navigation"
+    ) + 1;
+  checkItems(contextMenu.children[startIndex], items);
 }

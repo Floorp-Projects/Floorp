@@ -41,7 +41,6 @@ let extData = {
 };
 
 let contextMenuItems = {
-  "context-navigation": "hidden",
   "context-sep-navigation": "hidden",
   "context-viewsource": "",
   "inspect-separator": "hidden",
@@ -49,6 +48,14 @@ let contextMenuItems = {
   "context-inspect-a11y": "hidden",
   "context-bookmarkpage": "hidden",
 };
+if (AppConstants.platform == "macosx") {
+  contextMenuItems["context-back"] = "hidden";
+  contextMenuItems["context-forward"] = "hidden";
+  contextMenuItems["context-reload"] = "hidden";
+  contextMenuItems["context-stop"] = "hidden";
+} else {
+  contextMenuItems["context-navigation"] = "hidden";
+}
 
 add_task(async function pageaction_popup_contextmenu() {
   let extension = ExtensionTestUtils.loadExtension(extData);

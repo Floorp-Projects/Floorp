@@ -11,6 +11,7 @@ function finishTest() {
     [
       "main-context-menu-bookmark-add",
       "main-context-menu-bookmark-add-with-shortcut",
+      "main-context-menu-bookmark-add-mac",
     ].includes(l10n.id)
   );
 

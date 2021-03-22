@@ -51,7 +51,6 @@ let extData = {
 };
 
 let contextMenuItems = {
-  "context-navigation": "hidden",
   "context-sep-navigation": "hidden",
   "context-viewsource": "",
   "inspect-separator": "hidden",
@@ -59,6 +58,14 @@ let contextMenuItems = {
   "context-inspect-a11y": "hidden",
   "context-bookmarkpage": "hidden",
 };
+if (AppConstants.platform == "macosx") {
+  contextMenuItems["context-back"] = "hidden";
+  contextMenuItems["context-forward"] = "hidden";
+  contextMenuItems["context-reload"] = "hidden";
+  contextMenuItems["context-stop"] = "hidden";
+} else {
+  contextMenuItems["context-navigation"] = "hidden";
+}
 
 const type = "extension";
 
@@ -110,6 +117,7 @@ add_task(async function browseraction_popup_contextmenu_hidden_items() {
 
   let item, state;
   for (const itemID in contextMenuItems) {
+    info(`Checking ${itemID}`);
     item = contentAreaContextMenu.querySelector(`#${itemID}`);
     state = contextMenuItems[itemID];
 
