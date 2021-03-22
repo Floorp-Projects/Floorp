@@ -19,7 +19,7 @@ async function test() {
 
   // wait for it to layerize fully and then try again
   await promiseAllPaintsDone();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
   scrollerPos = scroller.scrollTop;
 
   await promiseMoveMouseAndScrollWheelOver(scroller, dx, dy);

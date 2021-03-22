@@ -18,7 +18,7 @@ async function test() {
       "Synthesized native vertical drag, waiting for touch-end event...");
   await touchEndPromise;
 
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   is(window.scrollX, 0, "X scroll offset didn't change");
   is(window.scrollY, 0, "Y scroll offset didn't change");

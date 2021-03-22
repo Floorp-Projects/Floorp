@@ -52,7 +52,7 @@ async function test() {
   for (let i = 0; i < 5; i++) {
     utils.advanceTimeAndRefresh(16);
   }
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   let curPos = scroller.scrollTop;
   ok(curPos > 0,
@@ -69,7 +69,7 @@ async function test() {
   for (let i = 0; i < 1000; i++) {
     utils.advanceTimeAndRefresh(16);
   }
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   // Ensure the scroll position hasn't changed since the last time we checked,
   // which indicates the animation got interrupted.

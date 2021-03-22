@@ -53,7 +53,7 @@ async function test() {
   for (let i = 0; i < 1000; i++) {
     utils.advanceTimeAndRefresh(16);
   }
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   let pageScrollAmount = scroller.scrollTop;
   ok(pageScrollAmount > scroller.clientHeight / 2,
@@ -71,7 +71,7 @@ async function test() {
   for (let i = 0; i < 5; i++) {
     utils.advanceTimeAndRefresh(16);
   }
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
   let curPos = scroller.scrollTop;
   ok(curPos > pageScrollAmount, `Scroll offset has increased to ${curPos}`);
   ok(curPos < pageScrollAmount * 2, "Second page-scroll is not yet complete");
@@ -87,7 +87,7 @@ async function test() {
   for (let i = 0; i < 1000; i++) {
     utils.advanceTimeAndRefresh(16);
   }
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
   curPos = scroller.scrollTop;
   ok(Math.abs(curPos - (pageScrollAmount * 3)) < 3,
      `Final scroll offset ${curPos} is close to 3x${pageScrollAmount}`);

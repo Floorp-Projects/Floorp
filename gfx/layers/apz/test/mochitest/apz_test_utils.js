@@ -249,7 +249,13 @@ function promiseAfterPaint() {
   });
 }
 
-function promiseApzRepaintsFlushed(aWindow = window) {
+// This waits until any pending events on the APZ controller thread are
+// processed, and any resulting repaint requests are received by the main
+// thread. Note that while the repaint requests do get processed by the
+// APZ handler on the main thread, the repaints themselves may not have
+// occurred by the the returned promise resolves. If you want to wait
+// for those repaints, consider using promiseApzFlushedRepaints instead.
+function promiseOnlyApzControllerFlushed(aWindow = window) {
   return new Promise(function(resolve, reject) {
     var repaintDone = function() {
       dump("PromiseApzRepaintsFlushed: APZ flush done\n");
@@ -284,7 +290,7 @@ function promiseApzRepaintsFlushed(aWindow = window) {
 // most tests.
 async function promiseApzFlushedRepaints() {
   await promiseAllPaintsDone();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
   await promiseAllPaintsDone();
 }
 
@@ -583,7 +589,7 @@ async function waitUntilApzStable() {
   dump("WaitUntilApzStable: done promiseFocus\n");
   await promiseAllPaintsDone();
   dump("WaitUntilApzStable: done promiseAllPaintsDone\n");
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
   dump("WaitUntilApzStable: all done\n");
 }
 
@@ -609,7 +615,7 @@ async function forceLayerTreeToCompositor() {
     }
   }
   await promiseAllPaintsDone(null, true);
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 }
 
 function isApzEnabled() {
@@ -1148,7 +1154,7 @@ function assertNotCheckerboarded(utils, scrollerId, msgPrefix) {
 async function waitToClearOutAnyPotentialScrolls(aWindow) {
   await promiseFrame(aWindow);
   await promiseFrame(aWindow);
-  await promiseApzRepaintsFlushed(aWindow);
+  await promiseOnlyApzControllerFlushed(aWindow);
   await promiseFrame(aWindow);
   await promiseFrame(aWindow);
 }

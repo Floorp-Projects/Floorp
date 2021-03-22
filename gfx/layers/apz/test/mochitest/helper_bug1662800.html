@@ -36,7 +36,7 @@ async function test() {
   await dragFinisher();
 
   // Flush everything just to be safe
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   // Ensure the scroll position ended up roughly where we wanted it (around
   // 50px, but definitely less than 1300px).

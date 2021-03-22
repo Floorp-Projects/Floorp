@@ -22,12 +22,12 @@ async function test() {
   for (let i = 0; i < 100; i++) {
     s1.scrollBy({top:60, behavior: "smooth"});
     s2.scrollBy({top:60, behavior: "smooth"});
-    await promiseApzRepaintsFlushed();
+    await promiseOnlyApzControllerFlushed();
     utils.advanceTimeAndRefresh(16);
   }
 
   utils.restoreNormalRefresh();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   let s1pos = s1.scrollTop;
   let s2pos = s2.scrollTop;

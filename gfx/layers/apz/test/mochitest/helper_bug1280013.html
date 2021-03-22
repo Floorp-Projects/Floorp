@@ -29,7 +29,7 @@ async function test() {
   // scrolling is happening in APZ and is not reflected in the main-thread
   // scroll position (it is stored in the callback transform instead). We check
   // this by checking the scroll offset.
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
   is(window.scrollY, 0, "Main-thread scroll position is still at 0");
 
   // Scroll the iframe by 150px.

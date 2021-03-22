@@ -37,7 +37,7 @@ async function test() {
   // Set margins on the element, to ensure it is layerized
   utils.setDisplayPortMarginsForElement(0, 0, 0, 0, elm, /* priority*/ 1);
   await promiseAllPaintsDone();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   // Take control of the refresh driver
   utils.advanceTimeAndRefresh(0);
@@ -62,7 +62,7 @@ async function test() {
   }
   utils.restoreNormalRefresh();
 
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
   is(elm.scrollTop, 100, "The scrollTop now should be y=100");
 }
 
