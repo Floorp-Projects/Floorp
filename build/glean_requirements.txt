@@ -58,16 +58,17 @@ diskcache==5.1.0 \
     --hash=sha256:bc7928df986dbc8a8d6e34c33b0da89d668cfa65e7fcc91298a6959a35076993 \
     --hash=sha256:d8d608363f1b0ecbc216b5b34b6c8e269a5d4cce338269f3b1c1f8f11816f71d
     # via glean-parser
-glean-parser==2.2.0 \
-    --hash=sha256:41726b795773d9ea0fcaf0893ade517da1aa5c2f279079a0cad7e0b91df80c2f \
-    --hash=sha256:6ec26c99d93b9cad0b19495a8a63598acce5911d93a7820cbc6fa768475ce7b2
+glean-parser==2.5.0 \
+    --hash=sha256:50d53cb23c7b2ecdfed497187c63ea03bff8f78a0bbfd32dbaffb0affa0b6d2d \
+    --hash=sha256:b2c1b670b73e7df21de335de34e9ece457ef3996110567d7ad6f09fb546e6e5e
     # via glean-sdk
-glean_sdk==35.0.0 \
-    --hash=sha256:89df46f3137b6f9db83fbc5e92ae4396a259115dbd336820c76133aecf97791e \
-    --hash=sha256:af345080fb10d1d563e90a4a73c51b01d6187f8ac55c411a2c1e820c8cc58f6f \
-    --hash=sha256:c17b2d3ec5922aff49758e2c6e16bb95b0e33851ed43363a203ff399862dc2fe \
-    --hash=sha256:cfb8b7a2e5a19b2e619d41975b7dce1b7e337341b5cfa92cea2f631224db11e1 \
-    --hash=sha256:d0fdfd655cf962eb72ac41e56aab064b44dc80be7687cb80e1b9c92ed61d6f91
+glean_sdk==36.0.0 \
+    --hash=sha256:325606a32442fb6956def031568904e3ad663db49c31992082645e4f57827e49 \
+    --hash=sha256:45aba5df378584aedf2890a1c918846f3f29f52ff63e9cb24d1bc5135edd8f4c \
+    --hash=sha256:48401bb9bc2bb4b44b7897305007fa67e0bde044ac73309050d60d78a4ee2cca \
+    --hash=sha256:64b91f1ba273db500a2ced9a549ce5a95ccbeaf22fc9568d8d4fda6fe38a7e6c \
+    --hash=sha256:81ddbf2d471009b6a07f33ebca37aa4694a2dfa7c8362f4d6aa101b0293c6f12 \
+    --hash=sha256:8baf391b64445c8bb40f2a36e511a87653c60e481c0ac2a89521d9f4e9b66425
     # via -r glean_requirements.in
 importlib-metadata==3.7.0 \
     --hash=sha256:24499ffde1b80be08284100393955842be4a59c7c16bbf2738aad0e464a8e0aa \
