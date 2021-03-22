@@ -662,12 +662,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   margin-top: -14px;
 }
 
-%include ../shared/contextmenu.inc.css
-
-#context-navigation > .menuitem-iconic {
-  padding-inline: 0;
-}
-
 .cui-widget-panelview[id^=PanelUI-webext-] {
   border-radius: 3.5px;
 }
