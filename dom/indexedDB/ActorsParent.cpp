@@ -413,7 +413,7 @@ struct FullIndexMetadata {
   ~FullIndexMetadata() = default;
 };
 
-typedef nsRefPtrHashtable<nsUint64HashKey, FullIndexMetadata> IndexTable;
+typedef nsTHashMap<nsUint64HashKey, SafeRefPtr<FullIndexMetadata>> IndexTable;
 
 // Can be instantiated either on the QuotaManager IO thread or on a
 // versionchange transaction thread. These threads can never race so this is
@@ -447,7 +447,7 @@ struct FullObjectStoreMetadata {
   ~FullObjectStoreMetadata() = default;
 };
 
-typedef nsRefPtrHashtable<nsUint64HashKey, FullObjectStoreMetadata>
+typedef nsTHashMap<nsUint64HashKey, SafeRefPtr<FullObjectStoreMetadata>>
     ObjectStoreTable;
 
 static_assert(
@@ -500,7 +500,8 @@ auto MatchMetadataNameOrId(const Enumerable& aEnumerable,
                 (aName && *aName == value->mCommonMetadata.name()));
       });
 
-  return ToMaybeRef(it != aEnumerable.cend() ? it->GetData().get() : nullptr);
+  return ToMaybeRef(it != aEnumerable.cend() ? it->GetData().unsafeGetRawPtr()
+                                             : nullptr);
 }
 
 /*******************************************************************************
@@ -2619,7 +2620,7 @@ class TransactionBase : public AtomicSafeRefCounted<TransactionBase> {
 
  private:
   const SafeRefPtr<Database> mDatabase;
-  nsTArray<RefPtr<FullObjectStoreMetadata>>
+  nsTArray<SafeRefPtr<FullObjectStoreMetadata>>
       mModifiedAutoIncrementObjectStoreMetadataArray;
   LazyInitializedOnceNotNull<const uint64_t> mTransactionId;
   const nsCString mDatabaseId;
@@ -2719,11 +2720,11 @@ class TransactionBase : public AtomicSafeRefCounted<TransactionBase> {
     return NS_FAILED(mResultCode);
   }
 
-  [[nodiscard]] RefPtr<FullObjectStoreMetadata> GetMetadataForObjectStoreId(
+  [[nodiscard]] SafeRefPtr<FullObjectStoreMetadata> GetMetadataForObjectStoreId(
       IndexOrObjectStoreId aObjectStoreId) const;
 
-  [[nodiscard]] RefPtr<FullIndexMetadata> GetMetadataForIndexId(
-      FullObjectStoreMetadata* const aObjectStoreMetadata,
+  [[nodiscard]] SafeRefPtr<FullIndexMetadata> GetMetadataForIndexId(
+      FullObjectStoreMetadata& aObjectStoreMetadata,
       IndexOrObjectStoreId aIndexId) const;
 
   PBackgroundParent* GetBackgroundParent() const {
@@ -2733,10 +2734,11 @@ class TransactionBase : public AtomicSafeRefCounted<TransactionBase> {
     return GetDatabase().GetBackgroundParent();
   }
 
-  void NoteModifiedAutoIncrementObjectStore(FullObjectStoreMetadata* aMetadata);
+  void NoteModifiedAutoIncrementObjectStore(
+      const SafeRefPtr<FullObjectStoreMetadata>& aMetadata);
 
   void ForgetModifiedAutoIncrementObjectStore(
-      FullObjectStoreMetadata* aMetadata);
+      FullObjectStoreMetadata& aMetadata);
 
   void NoteActiveRequest();
 
@@ -2860,7 +2862,7 @@ class TransactionBase::CommitOp final : public DatabaseOperationBase,
 
 class NormalTransaction final : public TransactionBase,
                                 public PBackgroundIDBTransactionParent {
-  nsTArray<RefPtr<FullObjectStoreMetadata>> mObjectStores;
+  nsTArray<SafeRefPtr<FullObjectStoreMetadata>> mObjectStores;
 
   // Reference counted.
   ~NormalTransaction() override = default;
@@ -2899,8 +2901,9 @@ class NormalTransaction final : public TransactionBase,
 
  public:
   // This constructor is only called by Database.
-  NormalTransaction(SafeRefPtr<Database> aDatabase, TransactionBase::Mode aMode,
-                    nsTArray<RefPtr<FullObjectStoreMetadata>>&& aObjectStores);
+  NormalTransaction(
+      SafeRefPtr<Database> aDatabase, TransactionBase::Mode aMode,
+      nsTArray<SafeRefPtr<FullObjectStoreMetadata>>&& aObjectStores);
 
   MOZ_INLINE_DECL_SAFEREFCOUNTING_INHERITED(NormalTransaction, TransactionBase)
 };
@@ -3558,18 +3561,18 @@ class CreateObjectStoreOp final : public VersionChangeTransactionOp {
 class DeleteObjectStoreOp final : public VersionChangeTransactionOp {
   friend class VersionChangeTransaction;
 
-  const RefPtr<FullObjectStoreMetadata> mMetadata;
+  const SafeRefPtr<FullObjectStoreMetadata> mMetadata;
   const bool mIsLastObjectStore;
 
  private:
   // Only created by VersionChangeTransaction.
   DeleteObjectStoreOp(SafeRefPtr<VersionChangeTransaction> aTransaction,
-                      FullObjectStoreMetadata* const aMetadata,
+                      SafeRefPtr<FullObjectStoreMetadata> aMetadata,
                       const bool aIsLastObjectStore)
       : VersionChangeTransactionOp(std::move(aTransaction)),
-        mMetadata(aMetadata),
+        mMetadata(std::move(aMetadata)),
         mIsLastObjectStore(aIsLastObjectStore) {
-    MOZ_ASSERT(aMetadata->mCommonMetadata.id());
+    MOZ_ASSERT(mMetadata->mCommonMetadata.id());
   }
 
   ~DeleteObjectStoreOp() override = default;
@@ -3586,10 +3589,10 @@ class RenameObjectStoreOp final : public VersionChangeTransactionOp {
  private:
   // Only created by VersionChangeTransaction.
   RenameObjectStoreOp(SafeRefPtr<VersionChangeTransaction> aTransaction,
-                      FullObjectStoreMetadata* const aMetadata)
+                      FullObjectStoreMetadata& aMetadata)
       : VersionChangeTransactionOp(std::move(aTransaction)),
-        mId(aMetadata->mCommonMetadata.id()),
-        mNewName(aMetadata->mCommonMetadata.name()) {
+        mId(aMetadata.mCommonMetadata.id()),
+        mNewName(aMetadata.mCommonMetadata.name()) {
     MOZ_ASSERT(mId);
   }
 
@@ -3686,12 +3689,12 @@ class RenameIndexOp final : public VersionChangeTransactionOp {
  private:
   // Only created by VersionChangeTransaction.
   RenameIndexOp(SafeRefPtr<VersionChangeTransaction> aTransaction,
-                FullIndexMetadata* const aMetadata,
+                FullIndexMetadata& aMetadata,
                 IndexOrObjectStoreId aObjectStoreId)
       : VersionChangeTransactionOp(std::move(aTransaction)),
         mObjectStoreId(aObjectStoreId),
-        mIndexId(aMetadata->mCommonMetadata.id()),
-        mNewName(aMetadata->mCommonMetadata.name()) {
+        mIndexId(aMetadata.mCommonMetadata.id()),
+        mNewName(aMetadata.mCommonMetadata.name()) {
     MOZ_ASSERT(mIndexId);
   }
 
@@ -3824,7 +3827,7 @@ class ObjectStoreAddOrPutRequestOp final : public NormalTransactionOp {
 
   // This must be non-const so that we can update the mNextAutoIncrementId field
   // if we are modifying an autoIncrement objectStore.
-  RefPtr<FullObjectStoreMetadata> mMetadata;
+  SafeRefPtr<FullObjectStoreMetadata> mMetadata;
 
   nsTArray<StoredFileInfo> mStoredFileInfos;
 
@@ -4179,7 +4182,7 @@ class ObjectStoreCountRequestOp final : public NormalTransactionOp {
 
 class IndexRequestOpBase : public NormalTransactionOp {
  protected:
-  const RefPtr<FullIndexMetadata> mMetadata;
+  const SafeRefPtr<FullIndexMetadata> mMetadata;
 
  protected:
   IndexRequestOpBase(SafeRefPtr<TransactionBase> aTransaction,
@@ -4190,7 +4193,7 @@ class IndexRequestOpBase : public NormalTransactionOp {
   ~IndexRequestOpBase() override = default;
 
  private:
-  static RefPtr<FullIndexMetadata> IndexMetadataForParams(
+  static SafeRefPtr<FullIndexMetadata> IndexMetadataForParams(
       const TransactionBase& aTransaction, const RequestParams& aParams);
 };
 
@@ -4309,7 +4312,7 @@ class CursorBase : public PBackgroundIDBCursorParent {
   // This should only be touched on the PBackground thread to check whether
   // the objectStore has been deleted. Holding these saves a hash lookup for
   // every call to continue()/advance().
-  InitializedOnce<const NotNull<RefPtr<FullObjectStoreMetadata>>>
+  InitializedOnce<const NotNull<SafeRefPtr<FullObjectStoreMetadata>>>
       mObjectStoreMetadata;
 
   const IndexOrObjectStoreId mObjectStoreId;
@@ -4335,7 +4338,7 @@ class CursorBase : public PBackgroundIDBCursorParent {
                                         final)
 
   CursorBase(SafeRefPtr<TransactionBase> aTransaction,
-             RefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
+             SafeRefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
              Direction aDirection,
              ConstructFromTransactionBase aConstructionTag);
 
@@ -4352,8 +4355,8 @@ class IndexCursorBase : public CursorBase {
   bool IsLocaleAware() const { return !mLocale.IsEmpty(); }
 
   IndexCursorBase(SafeRefPtr<TransactionBase> aTransaction,
-                  RefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
-                  RefPtr<FullIndexMetadata> aIndexMetadata,
+                  SafeRefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
+                  SafeRefPtr<FullIndexMetadata> aIndexMetadata,
                   Direction aDirection,
                   ConstructFromTransactionBase aConstructionTag)
       : CursorBase{std::move(aTransaction), std::move(aObjectStoreMetadata),
@@ -4369,7 +4372,7 @@ class IndexCursorBase : public CursorBase {
   // This should only be touched on the PBackground thread to check whether
   // the index has been deleted. Holding these saves a hash lookup for every
   // call to continue()/advance().
-  InitializedOnce<const NotNull<RefPtr<FullIndexMetadata>>> mIndexMetadata;
+  InitializedOnce<const NotNull<SafeRefPtr<FullIndexMetadata>>> mIndexMetadata;
   const IndexOrObjectStoreId mIndexId;
   const bool mUniqueIndex;
   const nsCString
@@ -4521,8 +4524,8 @@ class Cursor final
 
  public:
   Cursor(SafeRefPtr<TransactionBase> aTransaction,
-         RefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
-         RefPtr<FullIndexMetadata> aIndexMetadata,
+         SafeRefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
+         SafeRefPtr<FullIndexMetadata> aIndexMetadata,
          typename Base::Direction aDirection,
          typename Base::ConstructFromTransactionBase aConstructionTag)
       : Base{std::move(aTransaction), std::move(aObjectStoreMetadata),
@@ -4530,7 +4533,7 @@ class Cursor final
         KeyValueBase{this->mTransaction.unsafeGetRawPtr()} {}
 
   Cursor(SafeRefPtr<TransactionBase> aTransaction,
-         RefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
+         SafeRefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
          typename Base::Direction aDirection,
          typename Base::ConstructFromTransactionBase aConstructionTag)
       : Base{std::move(aTransaction), std::move(aObjectStoreMetadata),
@@ -9081,7 +9084,7 @@ SafeRefPtr<FullDatabaseMetadata> FullDatabaseMetadata::Duplicate() const {
   for (const auto& objectStoreEntry : mObjectStores) {
     const auto& objectStoreValue = objectStoreEntry.GetData();
 
-    auto newOSMetadata = MakeRefPtr<FullObjectStoreMetadata>(
+    auto newOSMetadata = MakeSafeRefPtr<FullObjectStoreMetadata>(
         objectStoreValue->mCommonMetadata, [&objectStoreValue] {
           const auto&& srcLocked = objectStoreValue->mAutoIncrementIds.Lock();
           return *srcLocked;
@@ -9090,7 +9093,7 @@ SafeRefPtr<FullDatabaseMetadata> FullDatabaseMetadata::Duplicate() const {
     for (const auto& indexEntry : objectStoreValue->mIndexes) {
       const auto& value = indexEntry.GetData();
 
-      auto newIndexMetadata = MakeRefPtr<FullIndexMetadata>();
+      auto newIndexMetadata = MakeSafeRefPtr<FullIndexMetadata>();
 
       newIndexMetadata->mCommonMetadata = value->mCommonMetadata;
 
@@ -9993,7 +9996,7 @@ Database::AllocPBackgroundIDBTransactionParent(
           aObjectStoreNames,
           [lastName = Maybe<const nsString&>{},
            &objectStores](const nsString& name) mutable
-          -> mozilla::Result<RefPtr<FullObjectStoreMetadata>, nsresult> {
+          -> mozilla::Result<SafeRefPtr<FullObjectStoreMetadata>, nsresult> {
             if (lastName) {
               // Make sure that this name is sorted properly and not a
               // duplicate.
@@ -10017,7 +10020,7 @@ Database::AllocPBackgroundIDBTransactionParent(
               return Err(NS_ERROR_FAILURE);
             }
 
-            return foundIt->GetData();
+            return foundIt->GetData().clonePtr();
           },
           fallible),
       nullptr);
@@ -10289,7 +10292,8 @@ void TransactionBase::CommitOrAbort() {
   gConnectionPool->Finish(TransactionId(), commitOp);
 }
 
-RefPtr<FullObjectStoreMetadata> TransactionBase::GetMetadataForObjectStoreId(
+SafeRefPtr<FullObjectStoreMetadata>
+TransactionBase::GetMetadataForObjectStoreId(
     IndexOrObjectStoreId aObjectStoreId) const {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aObjectStoreId);
@@ -10298,20 +10302,18 @@ RefPtr<FullObjectStoreMetadata> TransactionBase::GetMetadataForObjectStoreId(
     return nullptr;
   }
 
-  RefPtr<FullObjectStoreMetadata> metadata;
-  if (!mDatabase->Metadata().mObjectStores.Get(aObjectStoreId,
-                                               getter_AddRefs(metadata)) ||
-      metadata->mDeleted) {
+  auto metadata = mDatabase->Metadata().mObjectStores.Lookup(aObjectStoreId);
+  if (!metadata || (*metadata)->mDeleted) {
     return nullptr;
   }
 
-  MOZ_ASSERT(metadata->mCommonMetadata.id() == aObjectStoreId);
+  MOZ_ASSERT((*metadata)->mCommonMetadata.id() == aObjectStoreId);
 
-  return metadata;
+  return metadata->clonePtr();
 }
 
-RefPtr<FullIndexMetadata> TransactionBase::GetMetadataForIndexId(
-    FullObjectStoreMetadata* const aObjectStoreMetadata,
+SafeRefPtr<FullIndexMetadata> TransactionBase::GetMetadataForIndexId(
+    FullObjectStoreMetadata& aObjectStoreMetadata,
     IndexOrObjectStoreId aIndexId) const {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aIndexId);
@@ -10320,33 +10322,31 @@ RefPtr<FullIndexMetadata> TransactionBase::GetMetadataForIndexId(
     return nullptr;
   }
 
-  RefPtr<FullIndexMetadata> metadata;
-  if (!aObjectStoreMetadata->mIndexes.Get(aIndexId, getter_AddRefs(metadata)) ||
-      metadata->mDeleted) {
+  auto metadata = aObjectStoreMetadata.mIndexes.Lookup(aIndexId);
+  if (!metadata || (*metadata)->mDeleted) {
     return nullptr;
   }
 
-  MOZ_ASSERT(metadata->mCommonMetadata.id() == aIndexId);
+  MOZ_ASSERT((*metadata)->mCommonMetadata.id() == aIndexId);
 
-  return metadata;
+  return metadata->clonePtr();
 }
 
 void TransactionBase::NoteModifiedAutoIncrementObjectStore(
-    FullObjectStoreMetadata* aMetadata) {
+    const SafeRefPtr<FullObjectStoreMetadata>& aMetadata) {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(aMetadata);
 
   if (!mModifiedAutoIncrementObjectStoreMetadataArray.Contains(aMetadata)) {
-    mModifiedAutoIncrementObjectStoreMetadataArray.AppendElement(aMetadata);
+    mModifiedAutoIncrementObjectStoreMetadataArray.AppendElement(
+        aMetadata.clonePtr());
   }
 }
 
 void TransactionBase::ForgetModifiedAutoIncrementObjectStore(
-    FullObjectStoreMetadata* aMetadata) {
+    FullObjectStoreMetadata& aMetadata) {
   AssertIsOnConnectionThread();
-  MOZ_ASSERT(aMetadata);
 
-  mModifiedAutoIncrementObjectStoreMetadataArray.RemoveElement(aMetadata);
+  mModifiedAutoIncrementObjectStoreMetadataArray.RemoveElement(&aMetadata);
 }
 
 bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
@@ -10376,7 +10376,7 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
 
     case RequestParams::TObjectStoreGetParams: {
       const ObjectStoreGetParams& params = aParams.get_ObjectStoreGetParams();
-      const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+      const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
       if (NS_WARN_IF(!objectStoreMetadata)) {
         ASSERT_UNLESS_FUZZING();
@@ -10392,7 +10392,7 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
     case RequestParams::TObjectStoreGetKeyParams: {
       const ObjectStoreGetKeyParams& params =
           aParams.get_ObjectStoreGetKeyParams();
-      const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+      const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
       if (NS_WARN_IF(!objectStoreMetadata)) {
         ASSERT_UNLESS_FUZZING();
@@ -10408,7 +10408,7 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
     case RequestParams::TObjectStoreGetAllParams: {
       const ObjectStoreGetAllParams& params =
           aParams.get_ObjectStoreGetAllParams();
-      const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+      const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
       if (NS_WARN_IF(!objectStoreMetadata)) {
         ASSERT_UNLESS_FUZZING();
@@ -10424,7 +10424,7 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
     case RequestParams::TObjectStoreGetAllKeysParams: {
       const ObjectStoreGetAllKeysParams& params =
           aParams.get_ObjectStoreGetAllKeysParams();
-      const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+      const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
       if (NS_WARN_IF(!objectStoreMetadata)) {
         ASSERT_UNLESS_FUZZING();
@@ -10448,7 +10448,7 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
 
       const ObjectStoreDeleteParams& params =
           aParams.get_ObjectStoreDeleteParams();
-      const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+      const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
       if (NS_WARN_IF(!objectStoreMetadata)) {
         ASSERT_UNLESS_FUZZING();
@@ -10472,7 +10472,7 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
 
       const ObjectStoreClearParams& params =
           aParams.get_ObjectStoreClearParams();
-      const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+      const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
       if (NS_WARN_IF(!objectStoreMetadata)) {
         ASSERT_UNLESS_FUZZING();
@@ -10484,7 +10484,7 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
     case RequestParams::TObjectStoreCountParams: {
       const ObjectStoreCountParams& params =
           aParams.get_ObjectStoreCountParams();
-      const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+      const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
       if (NS_WARN_IF(!objectStoreMetadata)) {
         ASSERT_UNLESS_FUZZING();
@@ -10499,14 +10499,14 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
 
     case RequestParams::TIndexGetParams: {
       const IndexGetParams& params = aParams.get_IndexGetParams();
-      const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+      const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
       if (NS_WARN_IF(!objectStoreMetadata)) {
         ASSERT_UNLESS_FUZZING();
         return false;
       }
-      const RefPtr<FullIndexMetadata> indexMetadata =
-          GetMetadataForIndexId(objectStoreMetadata, params.indexId());
+      const SafeRefPtr<FullIndexMetadata> indexMetadata =
+          GetMetadataForIndexId(*objectStoreMetadata, params.indexId());
       if (NS_WARN_IF(!indexMetadata)) {
         ASSERT_UNLESS_FUZZING();
         return false;
@@ -10520,14 +10520,14 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
 
     case RequestParams::TIndexGetKeyParams: {
       const IndexGetKeyParams& params = aParams.get_IndexGetKeyParams();
-      const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+      const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
       if (NS_WARN_IF(!objectStoreMetadata)) {
         ASSERT_UNLESS_FUZZING();
         return false;
       }
-      const RefPtr<FullIndexMetadata> indexMetadata =
-          GetMetadataForIndexId(objectStoreMetadata, params.indexId());
+      const SafeRefPtr<FullIndexMetadata> indexMetadata =
+          GetMetadataForIndexId(*objectStoreMetadata, params.indexId());
       if (NS_WARN_IF(!indexMetadata)) {
         ASSERT_UNLESS_FUZZING();
         return false;
@@ -10541,14 +10541,14 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
 
     case RequestParams::TIndexGetAllParams: {
       const IndexGetAllParams& params = aParams.get_IndexGetAllParams();
-      const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+      const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
       if (NS_WARN_IF(!objectStoreMetadata)) {
         ASSERT_UNLESS_FUZZING();
         return false;
       }
-      const RefPtr<FullIndexMetadata> indexMetadata =
-          GetMetadataForIndexId(objectStoreMetadata, params.indexId());
+      const SafeRefPtr<FullIndexMetadata> indexMetadata =
+          GetMetadataForIndexId(*objectStoreMetadata, params.indexId());
       if (NS_WARN_IF(!indexMetadata)) {
         ASSERT_UNLESS_FUZZING();
         return false;
@@ -10562,14 +10562,14 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
 
     case RequestParams::TIndexGetAllKeysParams: {
       const IndexGetAllKeysParams& params = aParams.get_IndexGetAllKeysParams();
-      const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+      const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
       if (NS_WARN_IF(!objectStoreMetadata)) {
         ASSERT_UNLESS_FUZZING();
         return false;
       }
-      const RefPtr<FullIndexMetadata> indexMetadata =
-          GetMetadataForIndexId(objectStoreMetadata, params.indexId());
+      const SafeRefPtr<FullIndexMetadata> indexMetadata =
+          GetMetadataForIndexId(*objectStoreMetadata, params.indexId());
       if (NS_WARN_IF(!indexMetadata)) {
         ASSERT_UNLESS_FUZZING();
         return false;
@@ -10583,14 +10583,14 @@ bool TransactionBase::VerifyRequestParams(const RequestParams& aParams) const {
 
     case RequestParams::TIndexCountParams: {
       const IndexCountParams& params = aParams.get_IndexCountParams();
-      const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+      const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
           GetMetadataForObjectStoreId(params.objectStoreId());
       if (NS_WARN_IF(!objectStoreMetadata)) {
         ASSERT_UNLESS_FUZZING();
         return false;
       }
-      const RefPtr<FullIndexMetadata> indexMetadata =
-          GetMetadataForIndexId(objectStoreMetadata, params.indexId());
+      const SafeRefPtr<FullIndexMetadata> indexMetadata =
+          GetMetadataForIndexId(*objectStoreMetadata, params.indexId());
       if (NS_WARN_IF(!indexMetadata)) {
         ASSERT_UNLESS_FUZZING();
         return false;
@@ -10652,7 +10652,7 @@ bool TransactionBase::VerifyRequestParams(
     return false;
   }
 
-  RefPtr<FullObjectStoreMetadata> objMetadata =
+  SafeRefPtr<FullObjectStoreMetadata> objMetadata =
       GetMetadataForObjectStoreId(aParams.objectStoreId());
   if (NS_WARN_IF(!objMetadata)) {
     ASSERT_UNLESS_FUZZING();
@@ -10690,8 +10690,8 @@ bool TransactionBase::VerifyRequestParams(
   }
 
   for (const auto& updateInfo : aParams.indexUpdateInfos()) {
-    RefPtr<FullIndexMetadata> indexMetadata =
-        GetMetadataForIndexId(objMetadata, updateInfo.indexId());
+    SafeRefPtr<FullIndexMetadata> indexMetadata =
+        GetMetadataForIndexId(*objMetadata, updateInfo.indexId());
     if (NS_WARN_IF(!indexMetadata)) {
       ASSERT_UNLESS_FUZZING();
       return false;
@@ -10949,8 +10949,8 @@ already_AddRefed<PBackgroundIDBCursorParent> TransactionBase::AllocCursor(
 #endif
 
   const OpenCursorParams::Type type = aParams.type();
-  RefPtr<FullObjectStoreMetadata> objectStoreMetadata;
-  RefPtr<FullIndexMetadata> indexMetadata;
+  SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata;
+  SafeRefPtr<FullIndexMetadata> indexMetadata;
   CursorBase::Direction direction;
 
   // First extract the parameters common to all open cursor variants.
@@ -10972,8 +10972,8 @@ already_AddRefed<PBackgroundIDBCursorParent> TransactionBase::AllocCursor(
   if (type == OpenCursorParams::TIndexOpenCursorParams ||
       type == OpenCursorParams::TIndexOpenKeyCursorParams) {
     const auto& commonIndexParams = GetCommonIndexOpenCursorParams(aParams);
-    indexMetadata =
-        GetMetadataForIndexId(objectStoreMetadata, commonIndexParams.indexId());
+    indexMetadata = GetMetadataForIndexId(*objectStoreMetadata,
+                                          commonIndexParams.indexId());
     if (NS_WARN_IF(!indexMetadata)) {
       ASSERT_UNLESS_FUZZING();
       return nullptr;
@@ -11033,7 +11033,7 @@ bool TransactionBase::StartCursor(PBackgroundIDBCursorParent* const aActor,
 
 NormalTransaction::NormalTransaction(
     SafeRefPtr<Database> aDatabase, TransactionBase::Mode aMode,
-    nsTArray<RefPtr<FullObjectStoreMetadata>>&& aObjectStores)
+    nsTArray<SafeRefPtr<FullObjectStoreMetadata>>&& aObjectStores)
     : TransactionBase(std::move(aDatabase), aMode),
       mObjectStores{std::move(aObjectStores)} {
   AssertIsOnBackgroundThread();
@@ -11243,7 +11243,8 @@ void VersionChangeTransaction::UpdateMetadata(nsresult aResult) {
     // Remove all deleted objectStores and indexes, then mark immutable.
     info->mMetadata->mObjectStores.RemoveIf([](const auto& objectStoreIter) {
       MOZ_ASSERT(objectStoreIter.Key());
-      const RefPtr<FullObjectStoreMetadata>& metadata = objectStoreIter.Data();
+      const SafeRefPtr<FullObjectStoreMetadata>& metadata =
+          objectStoreIter.Data();
       MOZ_ASSERT(metadata);
 
       if (metadata->mDeleted) {
@@ -11252,7 +11253,7 @@ void VersionChangeTransaction::UpdateMetadata(nsresult aResult) {
 
       metadata->mIndexes.RemoveIf([](const auto& indexIter) -> bool {
         MOZ_ASSERT(indexIter.Key());
-        const RefPtr<FullIndexMetadata>& index = indexIter.Data();
+        const SafeRefPtr<FullIndexMetadata>& index = indexIter.Data();
         MOZ_ASSERT(index);
 
         return index->mDeleted;
@@ -11382,8 +11383,9 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateObjectStore(
   }
 
   const int64_t initialAutoIncrementId = aMetadata.autoIncrement() ? 1 : 0;
-  RefPtr<FullObjectStoreMetadata> newMetadata = new FullObjectStoreMetadata(
-      aMetadata, {initialAutoIncrementId, initialAutoIncrementId});
+  auto newMetadata = MakeSafeRefPtr<FullObjectStoreMetadata>(
+      aMetadata, FullObjectStoreMetadata::AutoIncrementIds{
+                     initialAutoIncrementId, initialAutoIncrementId});
 
   if (NS_WARN_IF(!dbMetadata->mObjectStores.InsertOrUpdate(
           aMetadata.id(), std::move(newMetadata), fallible))) {
@@ -11422,7 +11424,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteObjectStore(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  RefPtr<FullObjectStoreMetadata> foundMetadata =
+  SafeRefPtr<FullObjectStoreMetadata> foundMetadata =
       GetMetadataForObjectStoreId(aObjectStoreId);
 
   if (NS_WARN_IF(!foundMetadata)) {
@@ -11451,8 +11453,8 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteObjectStore(
   MOZ_ASSERT_IF(isLastObjectStore, foundTargetId);
 
   RefPtr<DeleteObjectStoreOp> op = new DeleteObjectStoreOp(
-      SafeRefPtrFromThis().downcast<VersionChangeTransaction>(), foundMetadata,
-      isLastObjectStore);
+      SafeRefPtrFromThis().downcast<VersionChangeTransaction>(),
+      std::move(foundMetadata), isLastObjectStore);
 
   if (NS_WARN_IF(!op->Init(*this))) {
     op->Cleanup();
@@ -11483,7 +11485,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameObjectStore(
     }
   }
 
-  RefPtr<FullObjectStoreMetadata> foundMetadata =
+  SafeRefPtr<FullObjectStoreMetadata> foundMetadata =
       GetMetadataForObjectStoreId(aObjectStoreId);
 
   if (NS_WARN_IF(!foundMetadata)) {
@@ -11499,7 +11501,8 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameObjectStore(
   foundMetadata->mCommonMetadata.name() = aName;
 
   RefPtr<RenameObjectStoreOp> renameOp = new RenameObjectStoreOp(
-      SafeRefPtrFromThis().downcast<VersionChangeTransaction>(), foundMetadata);
+      SafeRefPtrFromThis().downcast<VersionChangeTransaction>(),
+      *foundMetadata);
 
   if (NS_WARN_IF(!renameOp->Init(*this))) {
     renameOp->Cleanup();
@@ -11533,7 +11536,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateIndex(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  RefPtr<FullObjectStoreMetadata> foundObjectStoreMetadata =
+  SafeRefPtr<FullObjectStoreMetadata> foundObjectStoreMetadata =
       GetMetadataForObjectStoreId(aObjectStoreId);
 
   if (NS_WARN_IF(!foundObjectStoreMetadata)) {
@@ -11554,7 +11557,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvCreateIndex(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  RefPtr<FullIndexMetadata> newMetadata = new FullIndexMetadata();
+  auto newMetadata = MakeSafeRefPtr<FullIndexMetadata>();
   newMetadata->mCommonMetadata = aMetadata;
 
   if (NS_WARN_IF(!foundObjectStoreMetadata->mIndexes.InsertOrUpdate(
@@ -11608,7 +11611,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteIndex(
     }
   }
 
-  RefPtr<FullObjectStoreMetadata> foundObjectStoreMetadata =
+  SafeRefPtr<FullObjectStoreMetadata> foundObjectStoreMetadata =
       GetMetadataForObjectStoreId(aObjectStoreId);
 
   if (NS_WARN_IF(!foundObjectStoreMetadata)) {
@@ -11616,8 +11619,8 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvDeleteIndex(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  RefPtr<FullIndexMetadata> foundIndexMetadata =
-      GetMetadataForIndexId(foundObjectStoreMetadata, aIndexId);
+  SafeRefPtr<FullIndexMetadata> foundIndexMetadata =
+      GetMetadataForIndexId(*foundObjectStoreMetadata, aIndexId);
 
   if (NS_WARN_IF(!foundIndexMetadata)) {
     ASSERT_UNLESS_FUZZING();
@@ -11690,7 +11693,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameIndex(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  RefPtr<FullObjectStoreMetadata> foundObjectStoreMetadata =
+  SafeRefPtr<FullObjectStoreMetadata> foundObjectStoreMetadata =
       GetMetadataForObjectStoreId(aObjectStoreId);
 
   if (NS_WARN_IF(!foundObjectStoreMetadata)) {
@@ -11698,8 +11701,8 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameIndex(
     return IPC_FAIL_NO_REASON(this);
   }
 
-  RefPtr<FullIndexMetadata> foundIndexMetadata =
-      GetMetadataForIndexId(foundObjectStoreMetadata, aIndexId);
+  SafeRefPtr<FullIndexMetadata> foundIndexMetadata =
+      GetMetadataForIndexId(*foundObjectStoreMetadata, aIndexId);
 
   if (NS_WARN_IF(!foundIndexMetadata)) {
     ASSERT_UNLESS_FUZZING();
@@ -11715,7 +11718,7 @@ mozilla::ipc::IPCResult VersionChangeTransaction::RecvRenameIndex(
 
   RefPtr<RenameIndexOp> renameOp = new RenameIndexOp(
       SafeRefPtrFromThis().downcast<VersionChangeTransaction>(),
-      foundIndexMetadata, aObjectStoreId);
+      *foundIndexMetadata, aObjectStoreId);
 
   if (NS_WARN_IF(!renameOp->Init(*this))) {
     renameOp->Cleanup();
@@ -11784,7 +11787,7 @@ VersionChangeTransaction::RecvPBackgroundIDBCursorConstructor(
  ******************************************************************************/
 
 CursorBase::CursorBase(SafeRefPtr<TransactionBase> aTransaction,
-                       RefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
+                       SafeRefPtr<FullObjectStoreMetadata> aObjectStoreMetadata,
                        const Direction aDirection,
                        const ConstructFromTransactionBase /*aConstructionTag*/)
     : mTransaction(std::move(aTransaction)),
@@ -11815,7 +11818,7 @@ bool Cursor<CursorType>::VerifyRequestParams(
 
 #ifdef DEBUG
   {
-    const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+    const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
         mTransaction->GetMetadataForObjectStoreId(mObjectStoreId);
     if (objectStoreMetadata) {
       MOZ_ASSERT(objectStoreMetadata == (*this->mObjectStoreMetadata));
@@ -11825,8 +11828,8 @@ bool Cursor<CursorType>::VerifyRequestParams(
 
     if constexpr (IsIndexCursor) {
       if (objectStoreMetadata) {
-        const RefPtr<FullIndexMetadata> indexMetadata =
-            mTransaction->GetMetadataForIndexId(objectStoreMetadata,
+        const SafeRefPtr<FullIndexMetadata> indexMetadata =
+            mTransaction->GetMetadataForIndexId(*objectStoreMetadata,
                                                 this->mIndexId);
         if (indexMetadata) {
           MOZ_ASSERT(indexMetadata == *this->mIndexMetadata);
@@ -16236,7 +16239,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
 
               IDB_TRY(OkIf(objectStores.InsertOrUpdate(
                           objectStoreId,
-                          MakeRefPtr<FullObjectStoreMetadata>(
+                          MakeSafeRefPtr<FullObjectStoreMetadata>(
                               std::move(commonMetadata),
                               FullObjectStoreMetadata::AutoIncrementIds{
                                   nextAutoIncrementId, nextAutoIncrementId}),
@@ -16277,12 +16280,14 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
               IDB_TRY_INSPECT(const IndexOrObjectStoreId& objectStoreId,
                               MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 1));
 
-              RefPtr<FullObjectStoreMetadata> objectStoreMetadata;
-              IDB_TRY(OkIf(objectStores.Get(
-                          objectStoreId, getter_AddRefs(objectStoreMetadata))),
+              // XXX Why does this return NS_ERROR_OUT_OF_MEMORY if we don't
+              // know the object store id?
+
+              auto objectStoreMetadata = objectStores.Lookup(objectStoreId);
+              IDB_TRY(OkIf(static_cast<bool>(objectStoreMetadata)),
                       Err(NS_ERROR_OUT_OF_MEMORY));
 
-              MOZ_ASSERT(objectStoreMetadata->mCommonMetadata.id() ==
+              MOZ_ASSERT((*objectStoreMetadata)->mCommonMetadata.id() ==
                          objectStoreId);
 
               IndexOrObjectStoreId indexId;
@@ -16315,7 +16320,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
               IDB_TRY(OkIf(usedNames.ref().PutEntry(hashName, fallible)),
                       Err(NS_ERROR_OUT_OF_MEMORY));
 
-              RefPtr<FullIndexMetadata> indexMetadata = new FullIndexMetadata();
+              auto indexMetadata = MakeSafeRefPtr<FullIndexMetadata>();
               indexMetadata->mCommonMetadata.id() = indexId;
               indexMetadata->mCommonMetadata.name() = name;
 
@@ -16369,9 +16374,11 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
                 }
               }
 
-              IDB_TRY(OkIf(objectStoreMetadata->mIndexes.InsertOrUpdate(
-                          indexId, std::move(indexMetadata), fallible)),
-                      Err(NS_ERROR_OUT_OF_MEMORY));
+              IDB_TRY(
+                  OkIf((*objectStoreMetadata)
+                           ->mIndexes.InsertOrUpdate(
+                               indexId, std::move(indexMetadata), fallible)),
+                  Err(NS_ERROR_OUT_OF_MEMORY));
 
               lastIndexId = std::max(lastIndexId, indexId);
 
@@ -16834,7 +16841,7 @@ Result<DatabaseSpec, nsresult> OpenDatabaseOp::MetadataToSpec() const {
           mMetadata->mObjectStores,
           [](const auto& objectStoreEntry)
               -> mozilla::Result<ObjectStoreSpec, nsresult> {
-            FullObjectStoreMetadata* metadata = objectStoreEntry.GetData();
+            FullObjectStoreMetadata* metadata = objectStoreEntry.GetWeak();
             MOZ_ASSERT(objectStoreEntry.GetKey());
             MOZ_ASSERT(metadata);
 
@@ -16846,7 +16853,7 @@ Result<DatabaseSpec, nsresult> OpenDatabaseOp::MetadataToSpec() const {
                                metadata->mIndexes,
                                [](const auto& indexEntry) {
                                  FullIndexMetadata* indexMetadata =
-                                     indexEntry.GetData();
+                                     indexEntry.GetWeak();
                                  MOZ_ASSERT(indexEntry.GetKey());
                                  MOZ_ASSERT(indexMetadata);
 
@@ -16891,8 +16898,7 @@ void OpenDatabaseOp::AssertMetadataConsistency(
 
   MOZ_ASSERT(thisDB.mObjectStores.Count() == otherDB.mObjectStores.Count());
 
-  for (const auto& objectStoreEntry : thisDB.mObjectStores) {
-    FullObjectStoreMetadata* thisObjectStore = objectStoreEntry.GetData();
+  for (const auto& thisObjectStore : thisDB.mObjectStores.Values()) {
     MOZ_ASSERT(thisObjectStore);
     MOZ_ASSERT(!thisObjectStore->mDeleted);
 
@@ -16933,8 +16939,7 @@ void OpenDatabaseOp::AssertMetadataConsistency(
     MOZ_ASSERT(thisObjectStore->mIndexes.Count() ==
                otherObjectStore->mIndexes.Count());
 
-    for (const auto& indexEntry : thisObjectStore->mIndexes) {
-      FullIndexMetadata* thisIndex = indexEntry.GetData();
+    for (const auto& thisIndex : thisObjectStore->mIndexes.Values()) {
       MOZ_ASSERT(thisIndex);
       MOZ_ASSERT(!thisIndex->mDeleted);
 
@@ -17735,7 +17740,7 @@ nsresult TransactionBase::CommitOp::WriteAutoIncrementCounts() {
              mTransaction->GetMode() == IDBTransaction::Mode::Cleanup ||
              mTransaction->GetMode() == IDBTransaction::Mode::VersionChange);
 
-  const nsTArray<RefPtr<FullObjectStoreMetadata>>& metadataArray =
+  const nsTArray<SafeRefPtr<FullObjectStoreMetadata>>& metadataArray =
       mTransaction->mModifiedAutoIncrementObjectStoreMetadataArray;
 
   if (!metadataArray.IsEmpty()) {
@@ -18390,7 +18395,7 @@ nsresult DeleteObjectStoreOp::DoDatabaseWork(DatabaseConnection* aConnection) {
   IDB_TRY(autoSave.Commit());
 
   if (mMetadata->mCommonMetadata.autoIncrement()) {
-    Transaction().ForgetModifiedAutoIncrementObjectStore(mMetadata);
+    Transaction().ForgetModifiedAutoIncrementObjectStore(*mMetadata);
   }
 
   return NS_OK;
@@ -18533,7 +18538,7 @@ bool CreateIndexOp::Init(TransactionBase& aTransaction) {
   MOZ_ASSERT(mObjectStoreId);
   MOZ_ASSERT(mMaybeUniqueIndexTable.isNothing());
 
-  const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+  const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
       aTransaction.GetMetadataForObjectStoreId(mObjectStoreId);
   MOZ_ASSERT(objectStoreMetadata);
 
@@ -18544,8 +18549,7 @@ bool CreateIndexOp::Init(TransactionBase& aTransaction) {
 
   auto uniqueIndexTable = UniqueIndexTable{indexCount};
 
-  for (const auto& indexEntry : objectStoreMetadata->mIndexes) {
-    const FullIndexMetadata* const value = indexEntry.GetData();
+  for (const auto& value : objectStoreMetadata->mIndexes.Values()) {
     MOZ_ASSERT(!uniqueIndexTable.Contains(value->mCommonMetadata.id()));
 
     if (NS_WARN_IF(!uniqueIndexTable.InsertOrUpdate(
@@ -19417,17 +19421,17 @@ bool ObjectStoreAddOrPutRequestOp::Init(TransactionBase& aTransaction) {
     mUniqueIndexTable.emplace();
 
     for (const auto& updateInfo : indexUpdateInfos) {
-      RefPtr<FullIndexMetadata> indexMetadata;
-      MOZ_ALWAYS_TRUE(mMetadata->mIndexes.Get(updateInfo.indexId(),
-                                              getter_AddRefs(indexMetadata)));
+      auto indexMetadata = mMetadata->mIndexes.Lookup(updateInfo.indexId());
+      MOZ_ALWAYS_TRUE(indexMetadata);
 
-      MOZ_ASSERT(!indexMetadata->mDeleted);
+      MOZ_ASSERT(!(*indexMetadata)->mDeleted);
 
-      const IndexOrObjectStoreId& indexId = indexMetadata->mCommonMetadata.id();
-      const bool& unique = indexMetadata->mCommonMetadata.unique();
+      const IndexOrObjectStoreId& indexId =
+          (*indexMetadata)->mCommonMetadata.id();
+      const bool& unique = (*indexMetadata)->mCommonMetadata.unique();
 
       MOZ_ASSERT(indexId == updateInfo.indexId());
-      MOZ_ASSERT_IF(!indexMetadata->mCommonMetadata.multiEntry(),
+      MOZ_ASSERT_IF(!(*indexMetadata)->mCommonMetadata.multiEntry(),
                     !mUniqueIndexTable.ref().Contains(indexId));
 
       if (NS_WARN_IF(!mUniqueIndexTable.ref().InsertOrUpdate(indexId, unique,
@@ -20119,7 +20123,7 @@ ObjectStoreDeleteRequestOp::ObjectStoreDeleteRequestOp(
       mObjectStoreMayHaveIndexes(false) {
   AssertIsOnBackgroundThread();
 
-  RefPtr<FullObjectStoreMetadata> metadata =
+  SafeRefPtr<FullObjectStoreMetadata> metadata =
       Transaction().GetMetadataForObjectStoreId(mParams.objectStoreId());
   MOZ_ASSERT(metadata);
 
@@ -20178,7 +20182,7 @@ ObjectStoreClearRequestOp::ObjectStoreClearRequestOp(
       mObjectStoreMayHaveIndexes(false) {
   AssertIsOnBackgroundThread();
 
-  RefPtr<FullObjectStoreMetadata> metadata =
+  SafeRefPtr<FullObjectStoreMetadata> metadata =
       Transaction().GetMetadataForObjectStoreId(mParams.objectStoreId());
   MOZ_ASSERT(metadata);
 
@@ -20277,7 +20281,7 @@ nsresult ObjectStoreCountRequestOp::DoDatabaseWork(
 }
 
 // static
-RefPtr<FullIndexMetadata> IndexRequestOpBase::IndexMetadataForParams(
+SafeRefPtr<FullIndexMetadata> IndexRequestOpBase::IndexMetadataForParams(
     const TransactionBase& aTransaction, const RequestParams& aParams) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() == RequestParams::TIndexGetParams ||
@@ -20329,12 +20333,12 @@ RefPtr<FullIndexMetadata> IndexRequestOpBase::IndexMetadataForParams(
       MOZ_CRASH("Should never get here!");
   }
 
-  const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
+  const SafeRefPtr<FullObjectStoreMetadata> objectStoreMetadata =
       aTransaction.GetMetadataForObjectStoreId(objectStoreId);
   MOZ_ASSERT(objectStoreMetadata);
 
-  RefPtr<FullIndexMetadata> indexMetadata =
-      aTransaction.GetMetadataForIndexId(objectStoreMetadata, indexId);
+  SafeRefPtr<FullIndexMetadata> indexMetadata =
+      aTransaction.GetMetadataForIndexId(*objectStoreMetadata, indexId);
   MOZ_ASSERT(indexMetadata);
 
   return indexMetadata;
