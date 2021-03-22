@@ -84,8 +84,9 @@ static inline gint GetMonitorScaleFactor(nsPresContext* aPresContext) {
       // value. The computed monitor scale factor needs to be rounded before
       // casting to integer to avoid rounding errors which would lead to
       // returning 0.
-      int monitorScale = int(round(rootWidget->GetDefaultScale().scale /
-                                   gfxPlatformGtk::GetFontScaleFactor()));
+      int monitorScale = int(
+          round(rootWidget->GetDefaultScale().scale /
+                LookAndFeel::GetFloat(LookAndFeel::FloatID::TextScaleFactor)));
       // Monitor scale can be negative if it has not been initialized in the
       // puppet widget yet. We also make sure that we return positive value.
       if (monitorScale < 1) {
@@ -1093,8 +1094,7 @@ NS_IMETHODIMP
 nsNativeThemeGTK::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                        StyleAppearance aAppearance,
                                        const nsRect& aRect,
-                                       const nsRect& aDirtyRect,
-                                       DrawOverflow) {
+                                       const nsRect& aDirtyRect, DrawOverflow) {
   GtkWidgetState state;
   WidgetNodeType gtkWidgetType;
   GtkTextDirection direction = GetTextDirection(aFrame);

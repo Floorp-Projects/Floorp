@@ -830,6 +830,9 @@ nsresult nsLookAndFeel::NativeGetFloat(FloatID aID, float& aResult) {
       EnsureInit();
       aResult = mCaretRatio;
       break;
+    case FloatID::TextScaleFactor:
+      aResult = gfxPlatformGtk::GetFontScaleFactor();
+      break;
     default:
       aResult = -1.0;
       rv = NS_ERROR_FAILURE;
