@@ -961,9 +961,6 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(
 
   uint32_t languageOverride = NO_FONT_LANGUAGE_OVERRIDE;
   StyleFontDisplay fontDisplay = StyleFontDisplay::Auto;
-  float ascentOverride = -1.0;
-  float descentOverride = -1.0;
-  float lineGapOverride = -1.0;
 
   gfxFontEntry::RangeFlags rangeFlags = gfxFontEntry::RangeFlags::eNoFlags;
 
@@ -982,17 +979,6 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(
   // set up font display
   if (Maybe<StyleFontDisplay> display = aFontFace->GetFontDisplay()) {
     fontDisplay = *display;
-  }
-
-  // set up font metrics overrides
-  if (Maybe<StylePercentage> ascent = aFontFace->GetAscentOverride()) {
-    ascentOverride = ascent->_0;
-  }
-  if (Maybe<StylePercentage> descent = aFontFace->GetDescentOverride()) {
-    descentOverride = descent->_0;
-  }
-  if (Maybe<StylePercentage> lineGap = aFontFace->GetLineGapOverride()) {
-    lineGapOverride = lineGap->_0;
   }
 
   // set up font features
@@ -1018,8 +1004,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(
     // rather than creating a new one.
     existingEntry->UpdateAttributes(
         weight, stretch, italicStyle, featureSettings, variationSettings,
-        languageOverride, unicodeRanges, fontDisplay, rangeFlags,
-        ascentOverride, descentOverride, lineGapOverride);
+        languageOverride, unicodeRanges, fontDisplay, rangeFlags);
     // If the family name has changed, remove the entry from its current family
     // and clear the mFamilyName field so it can be reset when added to a new
     // family.
@@ -1155,7 +1140,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(
   RefPtr<gfxUserFontEntry> entry = set->mUserFontSet->FindOrCreateUserFontEntry(
       aFamilyName, srcArray, weight, stretch, italicStyle, featureSettings,
       variationSettings, languageOverride, unicodeRanges, fontDisplay,
-      rangeFlags, ascentOverride, descentOverride, lineGapOverride);
+      rangeFlags);
 
   return entry.forget();
 }
@@ -1827,12 +1812,11 @@ FontFaceSet::UserFontSet::CreateUserFontEntry(
     const nsTArray<gfxFontFeature>& aFeatureSettings,
     const nsTArray<gfxFontVariation>& aVariationSettings,
     uint32_t aLanguageOverride, gfxCharacterMap* aUnicodeRanges,
-    StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags,
-    float aAscentOverride, float aDescentOverride, float aLineGapOverride) {
+    StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags) {
   RefPtr<gfxUserFontEntry> entry = new FontFace::Entry(
       this, aFontFaceSrcList, aWeight, aStretch, aStyle, aFeatureSettings,
       aVariationSettings, aLanguageOverride, aUnicodeRanges, aFontDisplay,
-      aRangeFlags, aAscentOverride, aDescentOverride, aLineGapOverride);
+      aRangeFlags);
   return entry.forget();
 }
 

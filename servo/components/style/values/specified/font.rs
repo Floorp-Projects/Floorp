@@ -17,7 +17,7 @@ use crate::values::generics::font::{self as generics, FeatureTagValue, FontSetti
 use crate::values::generics::NonNegative;
 use crate::values::specified::length::{FontBaseSize, AU_PER_PT, AU_PER_PX};
 use crate::values::specified::{AllowQuirks, Angle, Integer, LengthPercentage};
-use crate::values::specified::{NoCalcLength, NonNegativeNumber, Number, NonNegativePercentage};
+use crate::values::specified::{NoCalcLength, NonNegativeNumber, Number, Percentage};
 use crate::values::CustomIdent;
 use crate::Atom;
 use cssparser::{Parser, Token};
@@ -357,11 +357,13 @@ impl ToComputedValue for FontStyle {
 /// A value for the `font-stretch` property.
 ///
 /// https://drafts.csswg.org/css-fonts-4/#font-stretch-prop
+///
+/// TODO(emilio): We could derive Parse if we had NonNegativePercentage.
 #[allow(missing_docs)]
-#[derive(Clone, Copy, Debug, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToCss, ToShmem)]
+#[derive(Clone, Copy, Debug, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToCss, ToShmem)]
 #[repr(u8)]
 pub enum FontStretch {
-    Stretch(NonNegativePercentage),
+    Stretch(Percentage),
     Keyword(FontStretchKeyword),
     #[css(skip)]
     System(SystemFont),
@@ -448,13 +450,32 @@ impl FontStretch {
     system_font_methods!(FontStretch, font_stretch);
 }
 
+impl Parse for FontStretch {
+    fn parse<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        // From https://drafts.csswg.org/css-fonts-4/#font-stretch-prop:
+        //
+        //    Values less than 0% are not allowed and are treated as parse
+        //    errors.
+        if let Ok(percentage) =
+            input.try_parse(|input| Percentage::parse_non_negative(context, input))
+        {
+            return Ok(FontStretch::Stretch(percentage));
+        }
+
+        Ok(FontStretch::Keyword(FontStretchKeyword::parse(input)?))
+    }
+}
+
 impl ToComputedValue for FontStretch {
     type ComputedValue = computed::FontStretch;
 
     fn to_computed_value(&self, context: &Context) -> Self::ComputedValue {
         match *self {
             FontStretch::Stretch(ref percentage) => {
-                computed::FontStretch(percentage.to_computed_value(context))
+                computed::FontStretch(NonNegative(percentage.to_computed_value(context)))
             },
             FontStretch::Keyword(ref kw) => computed::FontStretch(NonNegative(kw.compute())),
             FontStretch::System(_) => self.compute_system(context),
@@ -462,7 +483,7 @@ impl ToComputedValue for FontStretch {
     }
 
     fn from_computed_value(computed: &Self::ComputedValue) -> Self {
-        FontStretch::Stretch(NonNegativePercentage::from_computed_value(&NonNegative((computed.0).0)))
+        FontStretch::Stretch(Percentage::from_computed_value(&(computed.0).0))
     }
 }
 
@@ -2190,37 +2211,6 @@ impl Parse for VariationValue<Number> {
         let tag = FontTag::parse(context, input)?;
         let value = Number::parse(context, input)?;
         Ok(Self { tag, value })
-    }
-}
-
-/// A metrics override value for a @font-face descriptor
-///
-/// https://drafts.csswg.org/css-fonts/#font-metrics-override-desc
-#[derive(Clone, Copy, Debug, MallocSizeOf, Parse, PartialEq, SpecifiedValueInfo, ToCss, ToShmem)]
-pub enum MetricsOverride {
-    /// A non-negative `<percentage>` of the computed font size
-    Override(NonNegativePercentage),
-    /// Normal metrics from the font.
-    Normal,
-}
-
-impl MetricsOverride {
-    #[inline]
-    /// Get default value with `normal`
-    pub fn normal() -> MetricsOverride {
-        MetricsOverride::Normal
-    }
-
-    /// The ToComputedValue implementation, used for @font-face descriptors.
-    ///
-    /// Valid override percentages must be non-negative; we return -1.0 to indicate
-    /// the absence of an override (i.e. 'normal').
-    #[inline]
-    pub fn compute(&self) -> ComputedPercentage {
-        match *self {
-            MetricsOverride::Normal => ComputedPercentage(-1.0),
-            MetricsOverride::Override(percent) => ComputedPercentage(percent.0.get()),
-        }
     }
 }
 
