@@ -828,12 +828,13 @@ class GatherDecls(TcheckVisitor):
         self.symtab = None
         self.builtinUsing = builtinUsing
 
-    def declare(self, loc, type, shortname=None, fullname=None, progname=None):
+    def declare(self, loc, type, shortname=None, fullname=None, progname=None, attributes={}):
         d = Decl(loc)
         d.type = type
         d.progname = progname
         d.shortname = shortname
         d.fullname = fullname
+        d.attributes = attributes
         self.symtab.declare(d)
         return d
 
@@ -1326,7 +1327,7 @@ class GatherDecls(TcheckVisitor):
                 ptype = VOID
             else:
                 ptype = self._canonicalType(ptdecl.type, param.typespec)
-            return self.declare(loc=ploc, type=ptype, progname=param.name)
+            return self.declare(loc=ploc, type=ptype, progname=param.name, attributes=param.attributes)
 
         for i, inparam in enumerate(md.inParams):
             pdecl = paramToDecl(inparam)
