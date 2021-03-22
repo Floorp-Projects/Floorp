@@ -265,6 +265,23 @@ void nsHashPropertyBagBase::CopyFrom(nsIPropertyBag* aOther) {
   }
 }
 
+nsresult nsGetProperty::operator()(const nsIID& aIID,
+                                   void** aInstancePtr) const {
+  nsresult rv;
+
+  if (mPropBag) {
+    rv = mPropBag->GetPropertyAsInterface(mPropName, aIID, aInstancePtr);
+  } else {
+    rv = NS_ERROR_NULL_POINTER;
+    *aInstancePtr = 0;
+  }
+
+  if (mErrorPtr) {
+    *mErrorPtr = rv;
+  }
+  return rv;
+}
+
 /*
  * nsHashPropertyBag implementation.
  */
