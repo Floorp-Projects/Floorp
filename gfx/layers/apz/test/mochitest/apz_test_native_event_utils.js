@@ -429,31 +429,11 @@ function promiseNativeWheelAndWaitForWheelEvent(
   });
 }
 
-// Synthesizes a native mousewheel event and invokes the callback once the
+// Synthesizes a native mousewheel event and resolves the returned promise once the
 // first resulting scroll event is dispatched to |aTarget|'s containing window.
 // If the event targets content in a subdocument, |aTarget| should be inside
 // the subdocument (or the subdocument's window).  See synthesizeNativeWheel
 // for details on the other parameters.
-function synthesizeNativeWheelAndWaitForScrollEvent(
-  aTarget,
-  aX,
-  aY,
-  aDeltaX,
-  aDeltaY,
-  aCallback
-) {
-  promiseNativeWheelAndWaitForScrollEvent(
-    aTarget,
-    aX,
-    aY,
-    aDeltaX,
-    aDeltaY
-  ).then(aCallback);
-  return true;
-}
-
-// Same as synthesizeNativeWheelAndWaitForScrollEvent, but returns a promise
-// instead of taking a callback
 function promiseNativeWheelAndWaitForScrollEvent(
   aTarget,
   aX,
