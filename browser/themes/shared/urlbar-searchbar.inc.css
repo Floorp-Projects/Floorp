@@ -902,10 +902,10 @@
   appearance: none;
   color: inherit;
   font-size: .8em;
-  padding: 0 8px;
-  border-radius: 1em;
+  padding: 3px 7px;
+  border-radius: var(--toolbarbutton-border-radius);
   background-color: var(--urlbar-box-bgcolor);
-  margin-block: calc((var(--urlbar-min-height) - var(--urlbar-container-padding) - 2px /* border */ - 18px) / 2);
+  margin-block: calc((var(--urlbar-min-height) - 20px) / 2 - 1px /* border */ - var(--urlbar-container-padding));
   overflow: hidden;
 }
 
@@ -938,6 +938,9 @@
 #urlbar-zoom-button {
   background-color: hsla(0,0%,0%,.05);
   border: 1px solid hsla(210,4%,50%,.3);
+  border-radius: 1em;
+  padding: 0 8px;
+  margin-block: calc((var(--urlbar-min-height) - 18px) / 2  - 1px /* border */ - var(--urlbar-container-padding));
 }
 
 #urlbar-zoom-button:hover {
