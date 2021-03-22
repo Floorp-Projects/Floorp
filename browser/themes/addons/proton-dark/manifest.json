@@ -52,7 +52,8 @@
       "input_background": "#42414D",
       "input_color": "#BFBFC9",
       "input_border": "#8f8f9d",
-      "input_border_error": "rgb(255, 132, 138)"
+      "input_border_error": "rgb(255, 132, 138)",
+      "zoom_controls": "rgb(74,74,85)"
     },
     "properties": {
       "panel_hover": "color-mix(in srgb, currentColor 9%, transparent)",
@@ -79,7 +80,8 @@
       "input_background": "--input-bgcolor",
       "input_color": "--input-color",
       "input_border": "--input-border-color",
-      "input_border_error": "--input-error-border-color"
+      "input_border_error": "--input-error-border-color",
+      "zoom_controls": "--zoom-controls-bgcolor"
     },
     "properties": {
       "panel_hover": "--arrowpanel-dimmed",
