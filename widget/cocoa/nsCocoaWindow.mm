@@ -3476,6 +3476,7 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
                         change:(NSDictionary<NSKeyValueChangeKey, id>*)change
                        context:(void*)context {
   if ([keyPath isEqualToString:@"revealAmount"]) {
+    [[self mainChildView] ensureNextCompositeIsAtomicWithMainThreadPaint];
     NSNumber* revealAmount = (change[NSKeyValueChangeNewKey]);
     [self updateTitlebarShownAmount:[revealAmount doubleValue]];
   }
