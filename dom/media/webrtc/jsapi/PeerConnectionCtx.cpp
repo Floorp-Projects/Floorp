@@ -14,6 +14,7 @@
 #include "gmp-video-encode.h"  // GMP_API_VIDEO_ENCODER
 #include "modules/audio_device/include/fake_audio_device.h"
 #include "modules/audio_processing/include/audio_processing.h"
+#include "modules/audio_processing/include/aec_dump.h"
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
