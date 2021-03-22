@@ -495,14 +495,16 @@ static bool ReadableStream_tee(JSContext* cx, unsigned argc, Value* vp) {
 // Not implemented.
 
 static const JSFunctionSpec ReadableStream_methods[] = {
-    JS_FN("cancel", ReadableStream_cancel, 1, 0),
-    JS_FN("getReader", ReadableStream_getReader, 0, 0),
+    JS_FN("cancel", ReadableStream_cancel, 0, JSPROP_ENUMERATE),
+    JS_FN("getReader", ReadableStream_getReader, 0, JSPROP_ENUMERATE),
     // pipeTo is only conditionally supported right now, so it must be manually
     // added below if desired.
-    JS_FN("tee", ReadableStream_tee, 0, 0), JS_FS_END};
+    JS_FN("tee", ReadableStream_tee, 0, JSPROP_ENUMERATE), JS_FS_END};
 
 static const JSPropertySpec ReadableStream_properties[] = {
-    JS_PSG("locked", ReadableStream_locked, 0), JS_PS_END};
+    JS_PSG("locked", ReadableStream_locked, JSPROP_ENUMERATE),
+    JS_STRING_SYM_PS(toStringTag, "ReadableStream", JSPROP_READONLY),
+    JS_PS_END};
 
 static bool FinishReadableStreamClassInit(JSContext* cx, Handle<JSObject*> ctor,
                                           Handle<JSObject*> proto) {
@@ -518,7 +520,7 @@ static bool FinishReadableStreamClassInit(JSContext* cx, Handle<JSObject*> ctor,
       rco.getReadableStreamPipeToEnabled()) {
     Rooted<jsid> pipeTo(cx, NameToId(cx->names().pipeTo));
     if (!DefineFunction(cx, proto, pipeTo, ReadableStream_pipeTo, 2,
-                        JSPROP_RESOLVING)) {
+                        JSPROP_RESOLVING | JSPROP_ENUMERATE)) {
       return false;
     }
   }
@@ -527,7 +529,7 @@ static bool FinishReadableStreamClassInit(JSContext* cx, Handle<JSObject*> ctor,
 }
 
 const ClassSpec ReadableStream::classSpec_ = {
-    js::GenericCreateConstructor<ReadableStream::constructor, 2,
+    js::GenericCreateConstructor<ReadableStream::constructor, 0,
                                  js::gc::AllocKind::FUNCTION>,
     js::GenericCreatePrototype<ReadableStream>,
     nullptr,
