@@ -3078,6 +3078,22 @@ void EventStateManager::DecideGestureEvent(WidgetGestureNotifyEvent* aEvent,
 }
 
 #ifdef XP_MACOSX
+static nsINode* GetCrossDocParentNode(nsINode* aChild) {
+  MOZ_ASSERT(aChild, "The child is null!");
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  nsINode* parent = aChild->GetParentNode();
+  if (parent && parent->IsContent() && aChild->IsContent()) {
+    parent = aChild->AsContent()->GetFlattenedTreeParent();
+  }
+
+  if (parent || !aChild->IsDocument()) {
+    return parent;
+  }
+
+  return aChild->AsDocument()->GetEmbedderElement();
+}
+
 static bool NodeAllowsClickThrough(nsINode* aNode) {
   while (aNode) {
     if (aNode->IsXULElement(nsGkAtoms::browser)) {
@@ -3095,7 +3111,7 @@ static bool NodeAllowsClickThrough(nsINode* aNode) {
           return false;
       }
     }
-    aNode = nsContentUtils::GetCrossDocParentNode(aNode);
+    aNode = GetCrossDocParentNode(aNode);
   }
   return true;
 }
