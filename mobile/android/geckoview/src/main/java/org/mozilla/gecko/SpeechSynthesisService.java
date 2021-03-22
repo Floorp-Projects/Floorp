@@ -81,7 +81,10 @@ public class SpeechSynthesisService  {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // While this method was introduced in 21, it seems that it
             // has not been implemented in the speech service side until 23.
-            return getTTS().getAvailableLanguages();
+            final Set<Locale> availableLanguages = getTTS().getAvailableLanguages();
+            if (availableLanguages != null) {
+                return availableLanguages;
+            }
         }
         final Set<Locale> locales = new HashSet<Locale>();
         for (final Locale locale : Locale.getAvailableLocales()) {
