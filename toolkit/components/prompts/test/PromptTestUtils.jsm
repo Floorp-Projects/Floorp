@@ -26,10 +26,20 @@ let tabPromptSubDialogEnabled = Services.prefs.getBoolPref(
   false
 );
 
+// Whether web content prompts (alert etc.) are shown as SubDialog (true)
+// or TabModalPrompt (false)
+let contentPromptSubDialogEnabled = Services.prefs.getBoolPref(
+  "prompts.contentPromptSubDialog",
+  false
+);
+
 function isCommonDialog(modalType) {
   return (
     modalType === Services.prompt.MODAL_TYPE_WINDOW ||
-    (tabPromptSubDialogEnabled && modalType === Services.prompt.MODAL_TYPE_TAB)
+    (tabPromptSubDialogEnabled &&
+      modalType === Services.prompt.MODAL_TYPE_TAB) ||
+    (contentPromptSubDialogEnabled &&
+      modalType === Services.prompt.MODAL_TYPE_CONTENT)
   );
 }
 
@@ -172,9 +182,23 @@ let PromptTestUtils = {
         // For tab prompts, ensure that the associated browser matches.
         if (browser && modalType == Services.prompt.MODAL_TYPE_TAB) {
           let dialogBox = parentWindow.gBrowser.getTabDialogBox(browser);
-          let hasMatchingDialog = dialogBox._tabDialogManager._dialogs.some(
-            d => d._frame?.browsingContext == subject.browsingContext
-          );
+          let hasMatchingDialog = dialogBox
+            .getTabDialogManager()
+            ._dialogs.some(
+              d => d._frame?.browsingContext == subject.browsingContext
+            );
+          if (!hasMatchingDialog) {
+            return false;
+          }
+        }
+
+        if (browser && modalType == Services.prompt.MODAL_TYPE_CONTENT) {
+          let dialogBox = parentWindow.gBrowser.getTabDialogBox(browser);
+          let hasMatchingDialog = dialogBox
+            .getContentDialogManager()
+            ._dialogs.some(
+              d => d._frame?.browsingContext == subject.browsingContext
+            );
           if (!hasMatchingDialog) {
             return false;
           }
