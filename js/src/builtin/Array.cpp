@@ -223,57 +223,20 @@ static MOZ_ALWAYS_INLINE bool GetLengthProperty(JSContext* cx, HandleObject obj,
  * "08" or "4.0" as array indices, which they are not.
  *
  */
-template <typename CharT>
-static bool StringIsArrayIndexHelper(const CharT* s, uint32_t length,
-                                     uint32_t* indexp) {
-  const CharT* end = s + length;
-
-  if (length == 0 || length > (sizeof("4294967294") - 1) || !IsAsciiDigit(*s)) {
-    return false;
-  }
-
-  uint32_t c = 0, previous = 0;
-  uint32_t index = AsciiDigitToNumber(*s++);
-
-  /* Don't allow leading zeros. */
-  if (index == 0 && s != end) {
-    return false;
-  }
-
-  for (; s < end; s++) {
-    if (!IsAsciiDigit(*s)) {
-      return false;
-    }
-
-    previous = index;
-    c = AsciiDigitToNumber(*s);
-    index = 10 * index + c;
-  }
-
-  /* Make sure we didn't overflow. */
-  if (previous < (MAX_ARRAY_INDEX / 10) ||
-      (previous == (MAX_ARRAY_INDEX / 10) && c <= (MAX_ARRAY_INDEX % 10))) {
-    MOZ_ASSERT(index <= MAX_ARRAY_INDEX);
-    *indexp = index;
-    return true;
-  }
-
-  return false;
-}
-
 JS_FRIEND_API bool js::StringIsArrayIndex(JSLinearString* str,
                                           uint32_t* indexp) {
-  AutoCheckCannotGC nogc;
-  return str->hasLatin1Chars()
-             ? StringIsArrayIndexHelper(str->latin1Chars(nogc), str->length(),
-                                        indexp)
-             : StringIsArrayIndexHelper(str->twoByteChars(nogc), str->length(),
-                                        indexp);
+  return str->isIndex(indexp) && *indexp <= MAX_ARRAY_INDEX;
 }
 
 JS_FRIEND_API bool js::StringIsArrayIndex(const char16_t* str, uint32_t length,
                                           uint32_t* indexp) {
-  return StringIsArrayIndexHelper(str, length, indexp);
+  if (length == 0 || length > UINT32_CHAR_BUFFER_LENGTH) {
+    return false;
+  }
+  if (!mozilla::IsAsciiDigit(str[0])) {
+    return false;
+  }
+  return CheckStringIsIndex(str, length, indexp) && *indexp <= MAX_ARRAY_INDEX;
 }
 
 template <typename T>
