@@ -407,6 +407,9 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     eHasVisualViewportScrollEvents = 1 << 5,
   };
 
+  void AddForceNotifyContentfulPaintPresContext(nsPresContext* aPresContext);
+  void FlushForceNotifyContentfulPaintPresContext();
+
  private:
   typedef nsTArray<RefPtr<VVPResizeEvent>> VisualViewportResizeEventArray;
   typedef nsTArray<RefPtr<mozilla::Runnable>> ScrollEventArray;
@@ -587,6 +590,17 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
       mPendingFullscreenEvents;
   AutoTArray<mozilla::AnimationEventDispatcher*, 16>
       mAnimationEventFlushObservers;
+
+  // nsPresContexts which `NotifyContentfulPaint` have been called,
+  // however the corresponding paint doesn't come from a regular
+  // rendering steps(aka tick).
+  //
+  // For these nsPresContexts, we invoke
+  // `FlushForceNotifyContentfulPaintPresContext` in the next tick
+  // to force notify contentful paint, regardless whether the tick paints
+  // or not.
+  nsTArray<mozilla::WeakPtr<nsPresContext>>
+      mForceNotifyContentfulPaintPresContexts;
 
   void BeginRefreshingImages(RequestTable& aEntries,
                              mozilla::TimeStamp aDesired);
