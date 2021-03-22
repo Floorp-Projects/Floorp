@@ -270,8 +270,6 @@ static const struct wl_callback_listener frame_listener = {handle_callback};
 
 void com_wl_swap_buffers(WLWindow* window) {
   if (window->enable_compositor) {
-    eglSwapInterval(window->eglDisplay, 0);
-
     for (auto surface_it = window->surfaces.begin();
          surface_it != window->surfaces.end(); ++surface_it) {
       Surface* surface = &surface_it->second;
@@ -283,6 +281,7 @@ void com_wl_swap_buffers(WLWindow* window) {
         if (!tile->damage_rects.empty()) {
           eglMakeCurrent(window->eglDisplay, tile->egl_surface,
                          tile->egl_surface, window->eglContext);
+          eglSwapInterval(window->eglDisplay, 0);
 
           /* if (window->display->swap_buffers_with_damage) {
             window->display->swap_buffers_with_damage(
