@@ -418,7 +418,7 @@ class nsPIDOMWindowInner : public mozIDOMWindow {
 
   // Fire any DOM notification events related to things that happened while
   // the window was frozen.
-  virtual nsresult FireDelayedDOMEvents() = 0;
+  virtual nsresult FireDelayedDOMEvents(bool aIncludeSubWindows) = 0;
 
   /**
    * Get the docshell in this window.
@@ -873,7 +873,7 @@ class nsPIDOMWindowOuter : public mozIDOMWindowProxy {
 
   // Fire any DOM notification events related to things that happened while
   // the window was frozen.
-  virtual nsresult FireDelayedDOMEvents() = 0;
+  virtual nsresult FireDelayedDOMEvents(bool aIncludeSubWindows) = 0;
 
   /**
    * Get the docshell in this window.

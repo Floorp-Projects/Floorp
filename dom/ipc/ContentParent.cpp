@@ -7368,6 +7368,49 @@ ContentParent::RecvGetLoadingSessionHistoryInfoFromParent(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvRemoveFromBFCache(
+    const MaybeDiscarded<BrowsingContext>& aContext) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsFrameLoaderOwner> owner =
+      do_QueryInterface(aContext.get_canonical()->GetEmbedderElement());
+  if (!owner) {
+    return IPC_OK();
+  }
+
+  RefPtr<nsFrameLoader> frameLoader = owner->GetFrameLoader();
+  if (!frameLoader || !frameLoader->GetMaybePendingBrowsingContext()) {
+    return IPC_OK();
+  }
+
+  nsCOMPtr<nsISHistory> shistory = frameLoader->GetMaybePendingBrowsingContext()
+                                       ->Canonical()
+                                       ->GetSessionHistory();
+  if (!shistory) {
+    return IPC_OK();
+  }
+
+  uint32_t count = shistory->GetCount();
+  for (uint32_t i = 0; i < count; ++i) {
+    nsCOMPtr<nsISHEntry> entry;
+    shistory->GetEntryAtIndex(i, getter_AddRefs(entry));
+    nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(entry);
+    if (she) {
+      if (RefPtr<nsFrameLoader> frameLoader = she->GetFrameLoader()) {
+        if (frameLoader->GetMaybePendingBrowsingContext() == aContext.get()) {
+          she->SetFrameLoader(nullptr);
+          frameLoader->Destroy();
+          break;
+        }
+      }
+    }
+  }
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentParent::RecvSetActiveSessionHistoryEntry(
     const MaybeDiscarded<BrowsingContext>& aContext,
     const Maybe<nsPoint>& aPreviousScrollPos, SessionHistoryInfo&& aInfo,

@@ -1041,9 +1041,8 @@ SessionHistoryEntry::HasDynamicallyAddedChild(bool* aHasDynamicallyAddedChild) {
 }
 
 NS_IMETHODIMP_(bool)
-SessionHistoryEntry::HasBFCacheEntry(nsIBFCacheEntry* aEntry) {
-  MOZ_CRASH("This lives in the child process");
-  return false;
+SessionHistoryEntry::HasBFCacheEntry(SHEntrySharedParentState* aEntry) {
+  return SharedInfo() == aEntry;
 }
 
 NS_IMETHODIMP
@@ -1356,7 +1355,7 @@ void SessionHistoryEntry::SetFrameLoader(nsFrameLoader* aFrameLoader) {
   MOZ_ASSERT_IF(aFrameLoader, !SharedInfo()->mFrameLoader);
   // If the pref is disabled, we still allow evicting the existing entries.
   MOZ_RELEASE_ASSERT(!aFrameLoader || mozilla::BFCacheInParent());
-  SharedInfo()->mFrameLoader = aFrameLoader;
+  SharedInfo()->SetFrameLoader(aFrameLoader);
   if (aFrameLoader) {
     if (BrowserParent* bp = aFrameLoader->GetBrowserParent()) {
       bp->Deactivated();
