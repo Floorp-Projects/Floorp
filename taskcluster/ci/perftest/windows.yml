@@ -174,3 +174,26 @@ controlled:
             --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver.exe
             --browsertime-node ${MOZ_FETCHES_DIR}/node/node.exe
             --output $MOZ_FETCHES_DIR/../artifacts
+
+perfstats:
+    description: Run PerfStats pageload test
+    treeherder:
+        symbol: perftest(win-perfstats)
+    attributes:
+        batch: false
+        cron: false
+    run:
+        command: >-
+            mkdir -p $MOZ_FETCHES_DIR/../artifacts &&
+            cd $MOZ_FETCHES_DIR &&
+            python3.exe python/mozperftest/mozperftest/runner.py
+            --browsertime-binary ${MOZ_FETCHES_DIR}/firefox/firefox.exe
+            --flavor desktop-browser
+            --browsertime-geckodriver ${MOZ_FETCHES_DIR}/geckodriver.exe
+            --browsertime-node ${MOZ_FETCHES_DIR}/node/node.exe
+            --output $MOZ_FETCHES_DIR/../artifacts
+            --perfherder
+            --perfherder-metrics name:HttpChannelCompletion_Cache,unit:ms name:HttpChannelCompletion_Network,unit:ms
+            --browsertime-iterations 10
+            --hooks testing/performance/hooks_perfstats.py
+            testing/performance/perftest_perfstats.js
