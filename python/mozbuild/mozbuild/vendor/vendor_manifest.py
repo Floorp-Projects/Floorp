@@ -157,7 +157,9 @@ class VendorManifest(MozbuildObject):
         """Remove files we don't want to import."""
         to_exclude = []
         vendor_dir = self.manifest["vendoring"]["vendor-directory"]
-        for pattern in self.manifest["vendoring"]["exclude"] + DEFAULT_EXCLUDE_FILES:
+        for pattern in (
+            self.manifest["vendoring"].get("exclude", []) + DEFAULT_EXCLUDE_FILES
+        ):
             if "*" in pattern:
                 to_exclude.extend(glob.iglob(mozpath.join(vendor_dir, pattern)))
             else:
