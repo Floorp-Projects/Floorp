@@ -789,9 +789,6 @@ with modules["DOM"]:
     # objects being loaded.
     errors["NS_ERROR_RECURSIVE_DOCUMENT_LOAD"] = FAILURE(1038)
 
-    # WebExtension content script may not load this URL.
-    errors["NS_ERROR_DOM_WEBEXT_CONTENT_SCRIPT_URI"] = FAILURE(1039)
-
     # May be used to indicate when e.g. setting a property value didn't
     # actually change the value, like for obj.foo = "bar"; obj.foo = "bar";
     # the second assignment throws NS_SUCCESS_DOM_NO_OPERATION.
