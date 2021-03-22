@@ -2559,6 +2559,10 @@ void ConstructJSImplementation(const char* aContractId,
     AutoNoJSAPI nojsapi;
 
     nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(aGlobal);
+    if (!window) {
+      aRv.ThrowInvalidStateError("Global is not a Window");
+      return;
+    }
     if (!window->IsCurrentInnerWindow()) {
       aRv.ThrowInvalidStateError("Window no longer active");
       return;
