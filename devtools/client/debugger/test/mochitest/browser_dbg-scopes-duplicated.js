@@ -156,6 +156,8 @@ add_task(async function() {
   nodes = getAllLabels(dbg);
   ok(nodes.length > originalNodesCount, "the target node was expanded");
   ok(nodes.includes("classList"), "classList is displayed");
+
+  await resume(dbg);
 });
 
 function getAllLabels(dbg, withIndent = false) {
