@@ -102,12 +102,16 @@ MFBT_API bool MozDescribeCodeAddress(void* aPC,
  * @param aLOffset     The library offset.
  * @param aFileName    The filename. Possibly null or the empty string.
  * @param aLineNo      The line number. Possibly zero.
+ * @return             The minimum number of characters necessary to format
+ *                     the frame information, without the terminating null.
+ *                     The buffer will have been truncated if the returned
+ *                     value is greater than aBufferSize-1.
  */
-MFBT_API void MozFormatCodeAddress(char* aBuffer, uint32_t aBufferSize,
-                                   uint32_t aFrameNumber, const void* aPC,
-                                   const char* aFunction, const char* aLibrary,
-                                   ptrdiff_t aLOffset, const char* aFileName,
-                                   uint32_t aLineNo);
+MFBT_API int MozFormatCodeAddress(char* aBuffer, uint32_t aBufferSize,
+                                  uint32_t aFrameNumber, const void* aPC,
+                                  const char* aFunction, const char* aLibrary,
+                                  ptrdiff_t aLOffset, const char* aFileName,
+                                  uint32_t aLineNo);
 
 /**
  * Format the information about a code address in the same fashion as
@@ -123,10 +127,14 @@ MFBT_API void MozFormatCodeAddress(char* aBuffer, uint32_t aBufferSize,
  * @param aFrameNumber The frame number.
  * @param aPC          The code address.
  * @param aDetails     The value filled in by MozDescribeCodeAddress(aPC).
+ * @return             The minimum number of characters necessary to format
+ *                     the frame information, without the terminating null.
+ *                     The buffer will have been truncated if the returned
+ *                     value is greater than aBufferSize-1.
  */
-MFBT_API void MozFormatCodeAddressDetails(
-    char* aBuffer, uint32_t aBufferSize, uint32_t aFrameNumber, void* aPC,
-    const MozCodeAddressDetails* aDetails);
+MFBT_API int MozFormatCodeAddressDetails(char* aBuffer, uint32_t aBufferSize,
+                                         uint32_t aFrameNumber, void* aPC,
+                                         const MozCodeAddressDetails* aDetails);
 
 namespace mozilla {
 

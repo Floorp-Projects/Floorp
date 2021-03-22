@@ -747,12 +747,13 @@ static void PrintStackFrame(uint32_t aFrameNumber, void* aPC, void* aSP,
                             void* aClosure) {
   FILE* stream = (FILE*)aClosure;
   MozCodeAddressDetails details;
-  static const size_t buflen = 1024;
+  static const int buflen = 1024;
   char buf[buflen + 1];  // 1 for trailing '\n'
 
   MozDescribeCodeAddress(aPC, &details);
-  MozFormatCodeAddressDetails(buf, buflen, aFrameNumber, aPC, &details);
-  size_t len = std::min(strlen(buf), buflen + 1 - 2);
+  int len =
+      MozFormatCodeAddressDetails(buf, buflen, aFrameNumber, aPC, &details);
+  len = std::min(len, buflen + 1 - 2);
   buf[len++] = '\n';
   buf[len] = '\0';
   fflush(stream);
@@ -762,10 +763,11 @@ static void PrintStackFrame(uint32_t aFrameNumber, void* aPC, void* aSP,
 static void PrintStackFrameCached(uint32_t aFrameNumber, void* aPC, void* aSP,
                                   void* aClosure) {
   auto stream = static_cast<FILE*>(aClosure);
-  static const size_t buflen = 1024;
+  static const int buflen = 1024;
   char buf[buflen + 5] = "    ";  // 5 for leading "    " and trailing '\n'
-  gCodeAddressService->GetLocation(aFrameNumber, aPC, buf + 4, buflen);
-  size_t len = std::min(strlen(buf), buflen + 5 - 2);
+  int len =
+      gCodeAddressService->GetLocation(aFrameNumber, aPC, buf + 4, buflen);
+  len = std::min(len, buflen + 1 - 2) + 4;
   buf[len++] = '\n';
   buf[len] = '\0';
   fflush(stream);

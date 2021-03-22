@@ -917,37 +917,38 @@ MFBT_API void FramePointerStackWalk(MozWalkStackCallback aCallback,
 
 #endif
 
-MFBT_API void MozFormatCodeAddressDetails(
+MFBT_API int MozFormatCodeAddressDetails(
     char* aBuffer, uint32_t aBufferSize, uint32_t aFrameNumber, void* aPC,
     const MozCodeAddressDetails* aDetails) {
-  MozFormatCodeAddress(aBuffer, aBufferSize, aFrameNumber, aPC,
-                       aDetails->function, aDetails->library, aDetails->loffset,
-                       aDetails->filename, aDetails->lineno);
+  return MozFormatCodeAddress(aBuffer, aBufferSize, aFrameNumber, aPC,
+                              aDetails->function, aDetails->library,
+                              aDetails->loffset, aDetails->filename,
+                              aDetails->lineno);
 }
 
-MFBT_API void MozFormatCodeAddress(char* aBuffer, uint32_t aBufferSize,
-                                   uint32_t aFrameNumber, const void* aPC,
-                                   const char* aFunction, const char* aLibrary,
-                                   ptrdiff_t aLOffset, const char* aFileName,
-                                   uint32_t aLineNo) {
+MFBT_API int MozFormatCodeAddress(char* aBuffer, uint32_t aBufferSize,
+                                  uint32_t aFrameNumber, const void* aPC,
+                                  const char* aFunction, const char* aLibrary,
+                                  ptrdiff_t aLOffset, const char* aFileName,
+                                  uint32_t aLineNo) {
   const char* function = aFunction && aFunction[0] ? aFunction : "???";
   if (aFileName && aFileName[0]) {
     // We have a filename and (presumably) a line number. Use them.
-    SprintfBuf(aBuffer, aBufferSize, "#%02u: %s (%s:%u)", aFrameNumber,
-               function, aFileName, aLineNo);
+    return SprintfBuf(aBuffer, aBufferSize, "#%02u: %s (%s:%u)", aFrameNumber,
+                      function, aFileName, aLineNo);
   } else if (aLibrary && aLibrary[0]) {
     // We have no filename, but we do have a library name. Use it and the
     // library offset, and print them in a way that `fix_stacks.py` can
     // post-process.
-    SprintfBuf(aBuffer, aBufferSize, "#%02u: %s[%s +0x%" PRIxPTR "]",
-               aFrameNumber, function, aLibrary,
-               static_cast<uintptr_t>(aLOffset));
+    return SprintfBuf(aBuffer, aBufferSize, "#%02u: %s[%s +0x%" PRIxPTR "]",
+                      aFrameNumber, function, aLibrary,
+                      static_cast<uintptr_t>(aLOffset));
   } else {
     // We have nothing useful to go on. (The format string is split because
     // '??)' is a trigraph and causes a warning, sigh.)
-    SprintfBuf(aBuffer, aBufferSize,
-               "#%02u: ??? (???:???"
-               ")",
-               aFrameNumber);
+    return SprintfBuf(aBuffer, aBufferSize,
+                      "#%02u: ??? (???:???"
+                      ")",
+                      aFrameNumber);
   }
 }
