@@ -19,14 +19,13 @@ please reach out to the team on
 ```eval_rst
 .. toctree::
     :titlesonly:
-    :maxdepth: 1
+    :maxdepth: 2
     :glob:
 
-    Glean SDK Source <https://github.com/mozilla/glean/>
-    Glean SDK Documentation <https://mozilla.github.io/glean/book/index.html>
-    *
-
+    user/index
+    dev/index
 ```
+
 [telemetry]: ../telemetry
 [glean-sdk]: https://github.com/mozilla/glean/
 [book-of-glean]: https://mozilla.github.io/glean/book/index.html
