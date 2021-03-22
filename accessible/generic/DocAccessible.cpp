@@ -1362,6 +1362,11 @@ LocalAccessible* DocAccessible::GetAccessibleOrContainer(
   return nullptr;
 }
 
+LocalAccessible* DocAccessible::GetContainerAccessible(nsINode* aNode) const {
+  return aNode ? GetAccessibleOrContainer(aNode->GetFlattenedTreeParentNode())
+               : nullptr;
+}
+
 LocalAccessible* DocAccessible::GetAccessibleOrDescendant(
     nsINode* aNode) const {
   LocalAccessible* acc = GetAccessible(aNode);
