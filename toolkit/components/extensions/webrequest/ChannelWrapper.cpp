@@ -145,10 +145,7 @@ already_AddRefed<ChannelWrapper> ChannelWrapper::Get(const GlobalObject& global,
 
   nsCOMPtr<nsIWritablePropertyBag2> props = do_QueryInterface(channel);
   if (props) {
-    Unused << props->GetPropertyAsInterface(CHANNELWRAPPER_PROP_KEY,
-                                            NS_GET_IID(ChannelWrapper),
-                                            getter_AddRefs(wrapper));
-
+    wrapper = do_GetProperty(props, CHANNELWRAPPER_PROP_KEY);
     if (wrapper) {
       // Assume cached attributes may have changed at this point.
       wrapper->ClearCachedAttributes();
