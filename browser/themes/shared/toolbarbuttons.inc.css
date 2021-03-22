@@ -125,11 +125,6 @@
   background-color: Highlight;
 }
 
-.findbar-button {
-  appearance: none;
-  color: inherit;
-}
-
 toolbar .toolbarbutton-1 {
   appearance: none;
   margin: 0;
@@ -157,7 +152,6 @@ toolbar .toolbarbutton-1 > menupopup {
   margin-top: -3px;
 }
 
-.findbar-button,
 toolbar .toolbarbutton-1 > .toolbarbutton-icon,
 toolbar .toolbarbutton-1 > .toolbarbutton-text,
 toolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
@@ -224,7 +218,6 @@ toolbar[brighttext] .toolbaritem-combined-buttons > separator {
 #PersonalToolbar .toolbarbutton-1:not([disabled=true], [checked], [open], :active):hover,
 #tabbrowser-arrowscrollbox:not([scrolledtostart=true])::part(scrollbutton-up):hover,
 #tabbrowser-arrowscrollbox:not([scrolledtoend=true])::part(scrollbutton-down):hover,
-.findbar-button:not([checked="true"],[disabled="true"]):hover,
 toolbarbutton.bookmark-item:not(.subviewbutton, [disabled=true], [open]):hover,
 toolbar .toolbarbutton-1:not([disabled=true], [checked], [open], :active):hover > .toolbarbutton-icon,
 toolbar .toolbarbutton-1:not([disabled=true], [checked], [open], :active):hover > .toolbarbutton-text,
@@ -234,7 +227,6 @@ toolbar .toolbarbutton-1:not([disabled=true], [checked], [open], :active):hover 
 }
 
 #PersonalToolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active),
-.findbar-button:not([disabled=true]):is([checked="true"],:hover:active),
 toolbarbutton.bookmark-item:hover:active:not(.subviewbutton, [disabled="true"]),
 toolbarbutton.bookmark-item[open="true"],
 toolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active) > .toolbarbutton-icon,
@@ -246,7 +238,6 @@ toolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active)
 
 /* Keyboard focus styling */
 #PersonalToolbar .toolbarbutton-1:-moz-focusring,
-.findbar-button:-moz-focusring,
 findbar toolbarbutton.tabbable:-moz-focusring,
 toolbarbutton.bookmark-item:not(.subviewbutton):-moz-focusring,
 toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-icon,
@@ -258,7 +249,6 @@ toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-b
   outline-offset: calc(var(--focus-outline-width) * -1);
 }
 
-:root[uidensity=compact] .findbar-button:-moz-focusring,
 :root[uidensity=compact] findbar toolbarbutton.tabbable:-moz-focusring,
 :root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-icon,
 :root[uidensity=compact] toolbar:not(#PersonalToolbar) .toolbarbutton-1:-moz-focusring > .toolbarbutton-text,

@@ -27,9 +27,8 @@ findbar[noanim] {
   transition-delay: 0s !important;
 }
 
-.findbar-container {
-  padding-block: 4px;
-  padding-inline-start: 8px;
+.findbar-container > checkbox {
+  margin: 0 8px;
 }
 
 .findbar-closebutton {
@@ -51,29 +50,30 @@ html|html[lwtheme-image] findbar {
 html|input.findbar-textbox {
   appearance: none;
   background-color: Field;
-  border: 1px solid var(--lwt-toolbar-field-border-color, ThreeDShadow);
-  border-start-start-radius: 2px;
-  border-end-start-radius: 2px;
+  border: 1px solid var(--input-border-color, var(--lwt-toolbar-field-border-color, ThreeDShadow));
+  border-radius: 4px;
   outline: none;
   margin: 0;
   padding: 2px 5px;
-  width: 14em;
+  padding-inline-start: 8px;
+  width: 18em;
 }
 
 html|input.findbar-textbox:-moz-lwtheme {
-  background-color: var(--lwt-toolbar-field-background-color, Field);
-  color: var(--lwt-toolbar-field-color, FieldText);
+  background-color: var(--input-bgcolor, var(--lwt-toolbar-field-background-color, Field));
+  color: var(--input-color, var(--lwt-toolbar-field-color, FieldText));
 }
 
 html|input.findbar-textbox:focus {
-  background-color: var(--lwt-toolbar-field-focus, var(--lwt-toolbar-field-background-color, Field));
-  color: var(--lwt-toolbar-field-focus-color, var(--lwt-toolbar-field-color, FieldText));
-  border-color: var(--toolbar-field-focus-border-color, Highlight);
+  /* Make a 2px border without shifting contents */
+  border-color: var(--focus-outline-color, -moz-accent-color);
+  outline: 1px solid var(--focus-outline-color, -moz-accent-color);
 }
 
 html|input.findbar-textbox[status="notfound"] {
-  background-color: rgba(255,0,57,.3);
-  color: inherit;
+  /* Make a 2px border without shifting contents */
+  border-color: var(--input-error-border-color, #E22850);
+  outline: 1px solid var(--input-error-border-color, #E22850);
 }
 
 html|input.findbar-textbox[flash="true"] {
@@ -89,36 +89,38 @@ html|input.findbar-textbox.minimal {
 .findbar-find-next {
   margin-inline-start: 0;
   appearance: none;
-  background: rgba(255,255,255,.2);
-  border: 1px solid ThreeDShadow;
   padding: 2px 5px;
   line-height: 1em;
   -moz-context-properties: fill;
   fill: currentColor;
   color: inherit;
+  border-radius: 4px;
+}
+
+.findbar-find-previous > .toolbarbutton-icon,
+.findbar-find-next > .toolbarbutton-icon {
+  padding: 2px;
 }
 
 .findbar-find-previous:not([disabled]):hover,
 .findbar-find-next:not([disabled]):hover {
-  background: rgba(190,190,190,.2);
+  background: var(--buttons-secondary-hover-bgcolor, rgba(190,190,190,.2));
 }
 
 .findbar-find-previous:not([disabled]):hover:active,
 .findbar-find-next:not([disabled]):hover:active {
-  background: rgba(23,50,76,.2);
-  box-shadow: 0 1px 2px rgba(10,31,51,.2) inset;
+  background: var(--buttons-secondary-active-bgcolor, rgba(23,50,76,.2));
 }
 
 .findbar-find-previous {
   list-style-image: url(chrome://global/skin/icons/find-previous-arrow.svg);
   border-inline-width: 0;
-  margin-inline-end: 0;
+  margin-inline: 8px 0;
 }
 
 .findbar-find-next {
+  margin-inline-end: 8px;
   list-style-image: url(chrome://global/skin/icons/find-next-arrow.svg);
-  border-start-end-radius: 2px;
-  border-end-end-radius: 2px;
 }
 
 .findbar-find-next:-moz-lwtheme,
@@ -163,6 +165,66 @@ html|input.findbar-textbox.minimal {
   opacity: .6;
 }
 
+.findbar-closebutton {
+  /* Override margin-inline from close-icon.css */
+  margin-inline: 4px 8px !important;
+  width: 16px;
+}
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+html|input.findbar-textbox {
+  border-radius: 0;
+  border-start-start-radius: 2px;
+  border-end-start-radius: 2px;
+  width: 14em;
+}
+
+html|input.findbar-textbox:focus {
+  background-color: var(--lwt-toolbar-field-focus, var(--lwt-toolbar-field-background-color, Field));
+  color: var(--lwt-toolbar-field-focus-color, var(--lwt-toolbar-field-color, FieldText));
+}
+
+html|input.findbar-textbox[status="notfound"] {
+  border-color: var(--focus-outline-color, -moz-accent-color);
+  outline-color: var(--focus-outline-color, -moz-accent-color);
+  background-color: rgba(255,0,57,.3);
+  color: inherit;
+}
+
+.findbar-container {
+  padding-block: 4px;
+  padding-inline-start: 8px;
+}
+
+.findbar-find-previous,
+.findbar-find-next {
+  background: rgba(255,255,255,.2);
+  border: 1px solid ThreeDShadow;
+  border-inline-start: none;
+  border-radius: 0;
+}
+
+.findbar-find-previous > .toolbarbutton-icon,
+.findbar-find-next > .toolbarbutton-icon {
+  padding: 0;
+}
+
+.findbar-find-previous {
+  margin-inline-start: 0;
+}
+
+.findbar-find-next {
+  border-start-end-radius: 2px;
+  border-end-end-radius: 2px;
+  margin-inline-end: 0;
+}
+
+.findbar-find-previous:not([disabled]):hover:active,
+.findbar-find-next:not([disabled]):hover:active {
+  box-shadow: 0 1px 2px rgba(10,31,51,.2) inset;
+}
+
+
 .find-status-icon[status="pending"] {
   list-style-image: url("chrome://global/skin/icons/loading.png");
 }
@@ -173,3 +235,11 @@ html|input.findbar-textbox.minimal {
     list-style-image: url("chrome://global/skin/icons/loading@2x.png");
   }
 }
+} /*** END !proton ***/
+
+@supports -moz-bool-pref("browser.proton.enabled") {
+.findbar-find-status[status="notfound"] {
+  color: var(--error-text-color, color-mix(in srgb, currentColor 40%, #C50042));
+  opacity: 0.8;
+}
+}/*** END proton ***/
