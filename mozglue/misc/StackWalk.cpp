@@ -11,6 +11,9 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/StackWalk.h"
+#ifdef XP_WIN
+#  include "mozilla/StackWalkThread.h"
+#endif
 
 #include <string.h>
 
@@ -62,7 +65,7 @@ extern MOZ_EXPORT void* __libc_stack_end;  // from ld-linux.so
 #  include <pthread.h>
 #endif
 
-#if MOZ_STACKWALK_SUPPORTS_WINDOWS
+#ifdef XP_WIN
 
 #  include <windows.h>
 #  include <process.h>
