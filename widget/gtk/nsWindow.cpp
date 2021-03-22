@@ -4338,6 +4338,10 @@ gboolean nsWindow::OnTouchpadPinchEvent(GdkEventTouchpadPinch* aEvent) {
                      : PreviousSpan),
         KeymapWrapper::ComputeKeyModifiers(aEvent->state));
 
+    double deltaY = event.ComputeDeltaY(this);
+    gfx::IntPoint lineOrPageDelta = PinchGestureInput::GetIntegerDeltaForEvent(
+        (aEvent->phase == GDK_TOUCHPAD_GESTURE_PHASE_BEGIN), 0, deltaY);
+    event.mLineOrPageDeltaY = lineOrPageDelta.y;
     DispatchPinchGestureInput(event);
   }
   return TRUE;

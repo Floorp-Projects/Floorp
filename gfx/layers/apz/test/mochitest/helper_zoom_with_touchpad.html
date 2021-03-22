@@ -67,6 +67,24 @@ async function test() {
   // the APZ:TransformEnd notification will never be sent.
   pinchZoomInWithTouchpad(641, 465);
   await wheelPromise;
+
+  // Scenario 5: check that page receives DOMMouseScroll event
+  var resolveDOMMouseScrollPromise;
+  var DOMMouseScrollPromise = new Promise(resolve => { resolveDOMMouseScrollPromise = resolve; });
+  deltaSum = 0;
+  var onDOMMouseScroll = function(e) {
+    if (e.ctrlKey) {
+      deltaSum += e.detail;
+      if (deltaSum < -40) {
+        ok(true, "Accumulated a deltaSum of -40");
+        document.removeEventListener("DOMMouseScroll", onDOMMouseScroll, { passive: false });
+        resolveDOMMouseScrollPromise();
+      }
+    }
+  };
+  document.addEventListener("DOMMouseScroll", onDOMMouseScroll, { passive: false });
+  pinchZoomInWithTouchpad(641, 465);
+  await DOMMouseScrollPromise;
 }
 
 waitUntilApzStable()
