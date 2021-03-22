@@ -715,7 +715,10 @@ void nsMenuX::Dump(uint32_t aIndent) const {
       return;
     }
   }
-  mGeckoMenu->MenuOpened();
+
+  // Hold a strong reference to mGeckoMenu while calling its methods.
+  RefPtr<nsMenuX> geckoMenu = mGeckoMenu;
+  geckoMenu->MenuOpened();
 }
 
 - (void)menuDidClose:(NSMenu*)menu {
@@ -730,7 +733,9 @@ void nsMenuX::Dump(uint32_t aIndent) const {
     return;
   }
 
-  mGeckoMenu->MenuClosed();
+  // Hold a strong reference to mGeckoMenu while calling its methods.
+  RefPtr<nsMenuX> geckoMenu = mGeckoMenu;
+  geckoMenu->MenuClosed();
 }
 
 @end
