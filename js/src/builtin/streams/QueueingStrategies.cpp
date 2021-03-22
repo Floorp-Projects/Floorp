@@ -10,7 +10,8 @@
 
 #include "builtin/streams/ClassSpecMacro.h"  // JS_STREAMS_CLASS_SPEC
 #include "js/CallArgs.h"                     // JS::CallArgs{,FromVp}
-#include "js/Class.h"         // JS::ObjectOpResult, JS_NULL_CLASS_OPS
+#include "js/Class.h"        // JS::ObjectOpResult, JS_NULL_CLASS_OPS
+#include "js/Conversions.h"  // JS::ToNumber
 #include "js/PropertySpec.h"  // JS{Property,Function}Spec, JS_FN, JS_FS_END, JS_PS_END
 #include "js/ProtoKey.h"          // JSProto_{ByteLength,Count}QueuingStrategy
 #include "js/RootingAPI.h"        // JS::{Handle,Rooted}
@@ -19,36 +20,25 @@
 #include "vm/Runtime.h"           // JSAtomState
 #include "vm/StringType.h"        // js::NameToId, PropertyName
 
+#include "vm/Compartment-inl.h"   // js::UnwrapAndTypeCheckThis
 #include "vm/JSObject-inl.h"      // js::NewObjectWithClassProto
 #include "vm/NativeObject-inl.h"  // js::ThrowIfNotConstructing
 
 using js::ByteLengthQueuingStrategy;
 using js::CountQueuingStrategy;
 using js::PropertyName;
+using js::UnwrapAndTypeCheckThis;
 
 using JS::CallArgs;
 using JS::CallArgsFromVp;
 using JS::Handle;
 using JS::ObjectOpResult;
 using JS::Rooted;
+using JS::ToNumber;
 using JS::ToObject;
 using JS::Value;
 
 /*** 6.1. Queuing strategies ************************************************/
-
-/**
- * ECMA-262 7.3.4 CreateDataProperty(O, P, V)
- */
-[[nodiscard]] static bool CreateDataProperty(JSContext* cx,
-                                             Handle<JSObject*> obj,
-                                             Handle<PropertyName*> key,
-                                             Handle<Value> value,
-                                             ObjectOpResult& result) {
-  Rooted<jsid> id(cx, js::NameToId(key));
-  Rooted<JS::PropertyDescriptor> desc(cx);
-  desc.setDataDescriptor(value, JSPROP_ENUMERATE);
-  return js::DefineProperty(cx, obj, id, desc, result);
-}
 
 // Streams spec, 6.1.2.2. new ByteLengthQueuingStrategy({ highWaterMark })
 bool js::ByteLengthQueuingStrategy::constructor(JSContext* cx, unsigned argc,
@@ -65,32 +55,62 @@ bool js::ByteLengthQueuingStrategy::constructor(JSContext* cx, unsigned argc,
           cx, args, JSProto_ByteLengthQueuingStrategy, &proto)) {
     return false;
   }
-  Rooted<JSObject*> strategy(
+  Rooted<ByteLengthQueuingStrategy*> strategy(
       cx, NewObjectWithClassProto<ByteLengthQueuingStrategy>(cx, proto));
   if (!strategy) {
     return false;
   }
 
   // Implicit in the spec: Argument destructuring.
-  Rooted<JSObject*> argObj(cx, ToObject(cx, args.get(0)));
+  RootedObject argObj(cx, ToObject(cx, args.get(0)));
   if (!argObj) {
     return false;
   }
-  Rooted<Value> highWaterMark(cx);
+
+  // https://heycam.github.io/webidl/#es-dictionary
+  // 3.2.17. Dictionary types
+  // Step 4.1.2: Let esMemberValue be an ECMAScript value,
+  //             depending on Type(esDict): ? Get(esDict, key)
+  RootedValue highWaterMarkV(cx);
   if (!GetProperty(cx, argObj, argObj, cx->names().highWaterMark,
-                   &highWaterMark)) {
+                   &highWaterMarkV)) {
+    return false;
+  }
+  // Step 4.1.5: Otherwise, if esMemberValue is undefined and
+  //             member is required, then throw a TypeError.
+  if (highWaterMarkV.isUndefined()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_STREAM_MISSING_HIGHWATERMARK);
+    return false;
+  }
+  // Step 4.1.3: If esMemberValue is not undefined, then:
+  //  Let idlMemberValue be the result of converting esMemberValue to
+  //  an IDL value whose type is the type member is declared to be of.
+  double highWaterMark;
+  if (!ToNumber(cx, highWaterMarkV, &highWaterMark)) {
     return false;
   }
 
-  // Step 1: Perform ! CreateDataProperty(this, "highWaterMark",
-  //                                      highWaterMark).
-  ObjectOpResult ignored;
-  if (!CreateDataProperty(cx, strategy, cx->names().highWaterMark,
-                          highWaterMark, ignored)) {
-    return false;
-  }
+  // Step 1: Set this.[[highWaterMark]] to init["highWaterMark"].
+  strategy->setHighWaterMark(highWaterMark);
 
   args.rval().setObject(*strategy);
+  return true;
+}
+
+static bool ByteLengthQueuingStrategy_highWaterMark(JSContext* cx,
+                                                    unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  Rooted<ByteLengthQueuingStrategy*> unwrappedStrategy(
+      cx, UnwrapAndTypeCheckThis<ByteLengthQueuingStrategy>(
+              cx, args, "get highWaterMark"));
+  if (!unwrappedStrategy) {
+    return false;
+  }
+
+  // Step 1: Return this.[[highWaterMark]].
+  args.rval().setDouble(unwrappedStrategy->highWaterMark());
   return true;
 }
 
@@ -104,13 +124,16 @@ static bool ByteLengthQueuingStrategy_size(JSContext* cx, unsigned argc,
 }
 
 static const JSPropertySpec ByteLengthQueuingStrategy_properties[] = {
+    JS_PSG("highWaterMark", ByteLengthQueuingStrategy_highWaterMark,
+           JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "ByteLengthQueuingStrategy", JSPROP_READONLY),
     JS_PS_END};
 
 static const JSFunctionSpec ByteLengthQueuingStrategy_methods[] = {
     JS_FN("size", ByteLengthQueuingStrategy_size, 1, 0), JS_FS_END};
 
-JS_STREAMS_CLASS_SPEC(ByteLengthQueuingStrategy, 1, 0, 0, 0, JS_NULL_CLASS_OPS);
+JS_STREAMS_CLASS_SPEC(ByteLengthQueuingStrategy, 1, SlotCount, 0, 0,
+                      JS_NULL_CLASS_OPS);
 
 // Streams spec, 6.1.3.2. new CountQueuingStrategy({ highWaterMark })
 bool js::CountQueuingStrategy::constructor(JSContext* cx, unsigned argc,
@@ -138,20 +161,50 @@ bool js::CountQueuingStrategy::constructor(JSContext* cx, unsigned argc,
   if (!argObj) {
     return false;
   }
-  RootedValue highWaterMark(cx);
+  // https://heycam.github.io/webidl/#es-dictionary
+  // 3.2.17. Dictionary types
+  // Step 4.1.2: Let esMemberValue be an ECMAScript value,
+  //             depending on Type(esDict): ? Get(esDict, key)
+  RootedValue highWaterMarkV(cx);
   if (!GetProperty(cx, argObj, argObj, cx->names().highWaterMark,
-                   &highWaterMark)) {
+                   &highWaterMarkV)) {
+    return false;
+  }
+  // Step 4.1.5: Otherwise, if esMemberValue is undefined and
+  //             member is required, then throw a TypeError.
+  if (highWaterMarkV.isUndefined()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_STREAM_MISSING_HIGHWATERMARK);
+    return false;
+  }
+  // Step 4.1.3: If esMemberValue is not undefined, then:
+  //  Let idlMemberValue be the result of converting esMemberValue to
+  //  an IDL value whose type is the type member is declared to be of.
+  double highWaterMark;
+  if (!ToNumber(cx, highWaterMarkV, &highWaterMark)) {
     return false;
   }
 
-  // Step 1: Perform ! CreateDataProperty(this, "highWaterMark", highWaterMark).
-  ObjectOpResult ignored;
-  if (!CreateDataProperty(cx, strategy, cx->names().highWaterMark,
-                          highWaterMark, ignored)) {
-    return false;
-  }
+  // Step 1: Set this.[[highWaterMark]] to init["highWaterMark"].
+  strategy->setHighWaterMark(highWaterMark);
 
   args.rval().setObject(*strategy);
+  return true;
+}
+
+static bool CountQueuingStrategy_highWaterMark(JSContext* cx, unsigned argc,
+                                               Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+
+  Rooted<CountQueuingStrategy*> unwrappedStrategy(
+      cx, UnwrapAndTypeCheckThis<CountQueuingStrategy>(cx, args,
+                                                       "get highWaterMark"));
+  if (!unwrappedStrategy) {
+    return false;
+  }
+
+  // Step 1: Return this.[[highWaterMark]].
+  args.rval().setDouble(unwrappedStrategy->highWaterMark());
   return true;
 }
 
@@ -165,10 +218,13 @@ static bool CountQueuingStrategy_size(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 static const JSPropertySpec CountQueuingStrategy_properties[] = {
+    JS_PSG("highWaterMark", CountQueuingStrategy_highWaterMark,
+           JSPROP_ENUMERATE),
     JS_STRING_SYM_PS(toStringTag, "CountQueuingStrategy", JSPROP_READONLY),
     JS_PS_END};
 
 static const JSFunctionSpec CountQueuingStrategy_methods[] = {
     JS_FN("size", CountQueuingStrategy_size, 0, 0), JS_FS_END};
 
-JS_STREAMS_CLASS_SPEC(CountQueuingStrategy, 1, 0, 0, 0, JS_NULL_CLASS_OPS);
+JS_STREAMS_CLASS_SPEC(CountQueuingStrategy, 1, SlotCount, 0, 0,
+                      JS_NULL_CLASS_OPS);
