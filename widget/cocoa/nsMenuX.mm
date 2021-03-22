@@ -245,16 +245,12 @@ void nsMenuX::AddMenu(RefPtr<nsMenuX>&& aMenu) {
 uint32_t nsMenuX::GetItemCount() { return mMenuChildren.Length(); }
 
 // Includes all items, including hidden/collapsed ones
-nsMenuObjectX* nsMenuX::GetItemAt(uint32_t aPos) {
+mozilla::Maybe<nsMenuX::MenuChild> nsMenuX::GetItemAt(uint32_t aPos) {
   if (aPos >= (uint32_t)mMenuChildren.Length()) {
-    return nullptr;
+    return {};
   }
 
-  return mMenuChildren[aPos].match(
-      [](const RefPtr<nsMenuX>& aMenu) { return static_cast<nsMenuObjectX*>(aMenu.get()); },
-      [](const RefPtr<nsMenuItemX>& aMenuItem) {
-        return static_cast<nsMenuObjectX*>(aMenuItem.get());
-      });
+  return Some(mMenuChildren[aPos]);
 }
 
 // Only includes visible items
@@ -265,10 +261,10 @@ nsresult nsMenuX::GetVisibleItemCount(uint32_t& aCount) {
 
 // Only includes visible items. Note that this is provides O(N) access
 // If you need to iterate or search, consider using GetItemAt and doing your own filtering
-nsMenuObjectX* nsMenuX::GetVisibleItemAt(uint32_t aPos) {
+Maybe<nsMenuX::MenuChild> nsMenuX::GetVisibleItemAt(uint32_t aPos) {
   uint32_t count = mMenuChildren.Length();
   if (aPos >= mVisibleItemsCount || aPos >= count) {
-    return nullptr;
+    return {};
   }
 
   // If there are no invisible items, can provide direct access
@@ -279,22 +275,20 @@ nsMenuObjectX* nsMenuX::GetVisibleItemAt(uint32_t aPos) {
   // Otherwise, traverse the array until we find the the item we're looking for.
   uint32_t visibleNodeIndex = 0;
   for (uint32_t i = 0; i < count; i++) {
-    nsMenuObjectX* item = GetItemAt(i);
-    MOZ_RELEASE_ASSERT(item->MenuObjectType() == eSubmenuObjectType ||
-                       item->MenuObjectType() == eMenuItemObjectType);
-    RefPtr<nsIContent> content = item->MenuObjectType() == eSubmenuObjectType
-                                     ? static_cast<nsMenuX*>(item)->Content()
-                                     : static_cast<nsMenuItemX*>(item)->Content();
+    MenuChild item = *GetItemAt(i);
+    RefPtr<nsIContent> content =
+        item.match([](const RefPtr<nsMenuX>& aMenu) { return aMenu->Content(); },
+                   [](const RefPtr<nsMenuItemX>& aMenuItem) { return aMenuItem->Content(); });
     if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(content)) {
       if (aPos == visibleNodeIndex) {
         // we found the visible node we're looking for, return it
-        return item;
+        return Some(item);
       }
       visibleNodeIndex++;
     }
   }
 
-  return nullptr;
+  return {};
 }
 
 nsresult nsMenuX::RemoveAll() {
@@ -691,11 +685,12 @@ void nsMenuX::Dump(uint32_t aIndent) const {
     return;
   }
 
-  nsMenuObjectX* target = mGeckoMenu->GetVisibleItemAt((uint32_t)[menu indexOfItem:item]);
-  if (target && (target->MenuObjectType() == eMenuItemObjectType)) {
-    nsMenuItemX* targetMenuItem = static_cast<nsMenuItemX*>(target);
+  Maybe<nsMenuX::MenuChild> target =
+      mGeckoMenu->GetVisibleItemAt((uint32_t)[menu indexOfItem:item]);
+  if (target && target->is<RefPtr<nsMenuItemX>>()) {
     bool handlerCalledPreventDefault;  // but we don't actually care
-    targetMenuItem->DispatchDOMEvent(u"DOMMenuItemActive"_ns, &handlerCalledPreventDefault);
+    target->as<RefPtr<nsMenuItemX>>()->DispatchDOMEvent(u"DOMMenuItemActive"_ns,
+                                                        &handlerCalledPreventDefault);
   }
 }
 
