@@ -2720,6 +2720,14 @@ nsEventStatus AsyncPanZoomController::OnPanEnd(const PanGestureInput& aEvent) {
     return HandleEndOfPan();
   }
 
+  if (IsOverscrolled() && mState != OVERSCROLL_ANIMATION) {
+    // If we are in overscrolled state, trigger OverscrollAnimation to
+    // ensure we will snap back to the scroll edge.
+    StartOverscrollAnimation(GetVelocityVector());
+  } else {
+    SetState(NOTHING);
+  }
+
   // Drop any velocity on axes where we don't have room to scroll anyways
   // (in this APZC, or an APZC further in the handoff chain).
   // This ensures that we don't enlarge the display port unnecessarily.
@@ -2738,7 +2746,6 @@ nsEventStatus AsyncPanZoomController::OnPanEnd(const PanGestureInput& aEvent) {
     }
   }
 
-  SetState(NOTHING);
   RequestContentRepaint();
 
   if (!aEvent.mFollowedByMomentum) {
