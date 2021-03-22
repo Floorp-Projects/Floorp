@@ -6,6 +6,7 @@
 
 #include "nsWidgetsCID.h"
 #include "nsIUserIdleService.h"
+#include "mozilla/StackWalk.h"
 
 #ifndef TEST_NAME
 #  error "Must #define TEST_NAME before including places_test_harness_tail.h"
@@ -37,7 +38,7 @@ static const bool kDebugRunNextTest = false;
 void run_next_test() {
   if (kDebugRunNextTest) {
     printf_stderr("run_next_test()\n");
-    nsTraceRefcnt::WalkTheStack(stderr);
+    MozWalkTheStack(stderr);
   }
   nsCOMPtr<nsIRunnable> event = new RunNextTest();
   do_check_success(NS_DispatchToCurrentThread(event));
@@ -49,7 +50,7 @@ void do_test_pending() {
   NS_ASSERTION(NS_IsMainThread(), "Not running on the main thread?");
   if (kDebugRunNextTest) {
     printf_stderr("do_test_pending()\n");
-    nsTraceRefcnt::WalkTheStack(stderr);
+    MozWalkTheStack(stderr);
   }
   gPendingTests++;
 }

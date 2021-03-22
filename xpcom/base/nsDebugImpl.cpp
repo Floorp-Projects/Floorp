@@ -32,7 +32,7 @@
 #  include <stdlib.h>
 #endif
 
-#include "nsTraceRefcnt.h"
+#include "mozilla/StackWalk.h"
 
 #if defined(XP_UNIX)
 #  include <signal.h>
@@ -404,7 +404,7 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
       RealBreak();
 #endif
 #if defined(DEBUG)
-      nsTraceRefcnt::WalkTheStack(stderr);
+      MozWalkTheStack(stderr);
 #endif
       Abort(buf.buffer);
       return;
@@ -428,11 +428,11 @@ NS_DebugBreak(uint32_t aSeverity, const char* aStr, const char* aExpr,
       return;
 
     case NS_ASSERT_STACK:
-      nsTraceRefcnt::WalkTheStack(stderr);
+      MozWalkTheStack(stderr);
       return;
 
     case NS_ASSERT_STACK_AND_ABORT:
-      nsTraceRefcnt::WalkTheStack(stderr);
+      MozWalkTheStack(stderr);
       // Fall through to abort
       [[fallthrough]];
 
