@@ -12,7 +12,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=675884
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=675884">Mozilla Bug 675884</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -23,32 +23,10 @@ SpecialPowers.pushPrefEnv({"set": [
   ["device.sensors.enabled", true],
   ["device.sensors.orientation.enabled", true],
   ["device.sensors.motion.enabled", true],
-  ["device.sensors.proximity.enabled", true],
   ["device.sensors.ambientLight.enabled", true]
 ]}, () => {
   let receivedEvent;
   document.addEventListener("hello", function(e) { receivedEvent = e; }, true);
-  // DeviceProximityEvent
-  let e = new DeviceProximityEvent("hello", {min: 0, value: 1, max: 2});
-  is(e.type, "hello", "Wrong event type!");
-  ok(!e.isTrusted, "Event should not be trusted");
-  is(e.value, 1, "value should be 1");
-  is(e.min, 0, "min should be 0");
-  is(e.max, 2, "max should be 2");
-  document.dispatchEvent(e);
-  is(receivedEvent, e, "Wrong event!");
-  e = new DeviceProximityEvent("hello");
-  is(e.value, Infinity, "Uninitialized value should be infinity");
-  is(e.min, -Infinity, "Uninitialized min should be -infinity");
-  is(e.max, Infinity, "Uninitialized max should be infinity");
-
-  // UserProximityEvent
-  e = new UserProximityEvent("hello", {near: true});
-  is(e.type, "hello", "Wrong event type!");
-  ok(!e.isTrusted, "Event should not be trusted");
-  is(e.near, true, "near should be true");
-  document.dispatchEvent(e);
-  is(receivedEvent, e, "Wrong event!");
 
   // DeviceLightEvent
   e = new DeviceLightEvent("hello", {value: 1} );

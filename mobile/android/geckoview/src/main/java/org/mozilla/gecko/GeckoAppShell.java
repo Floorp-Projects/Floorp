@@ -184,7 +184,6 @@ public class GeckoAppShell {
     private static Sensor gLinearAccelerometerSensor;
     private static Sensor gGyroscopeSensor;
     private static Sensor gOrientationSensor;
-    private static Sensor gProximitySensor;
     private static Sensor gLightSensor;
     private static Sensor gRotationVectorSensor;
     private static Sensor gGameRotationVectorSensor;
@@ -401,12 +400,6 @@ public class GeckoAppShell {
                     z = (float) Math.toDegrees(s.values[2]);
                     break;
 
-                case Sensor.TYPE_PROXIMITY:
-                    halType = GeckoHalDefines.SENSOR_PROXIMITY;
-                    x = s.values[0];
-                    z = s.sensor.getMaximumRange();
-                    break;
-
                 case Sensor.TYPE_LIGHT:
                     halType = GeckoHalDefines.SENSOR_LIGHT;
                     x = s.values[0];
@@ -618,17 +611,6 @@ public class GeckoAppShell {
                 }
                 break;
 
-            case GeckoHalDefines.SENSOR_PROXIMITY:
-                if (gProximitySensor == null) {
-                    gProximitySensor = sm.getDefaultSensor(Sensor.TYPE_PROXIMITY);
-                }
-                if (gProximitySensor != null) {
-                    sm.registerListener(sAndroidListeners,
-                                        gProximitySensor,
-                                        SensorManager.SENSOR_DELAY_NORMAL);
-                }
-                break;
-
             case GeckoHalDefines.SENSOR_LIGHT:
                 if (gLightSensor == null) {
                     gLightSensor = sm.getDefaultSensor(Sensor.TYPE_LIGHT);
@@ -699,12 +681,6 @@ public class GeckoAppShell {
             case GeckoHalDefines.SENSOR_ACCELERATION:
                 if (gAccelerometerSensor != null) {
                     sm.unregisterListener(sAndroidListeners, gAccelerometerSensor);
-                }
-                break;
-
-            case GeckoHalDefines.SENSOR_PROXIMITY:
-                if (gProximitySensor != null) {
-                    sm.unregisterListener(sAndroidListeners, gProximitySensor);
                 }
                 break;
 
