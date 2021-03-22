@@ -51,11 +51,20 @@ try {
     const connections = new Map();
 
     const onConnect = DevToolsUtils.makeInfallible(function(msg) {
-      removeMessageListener("debug:connect", onConnect);
-
       const mm = msg.target;
       const prefix = msg.data.prefix;
       const addonId = msg.data.addonId;
+
+      // If we try to create several frame targets simultaneously, the frame script will be loaded several times.
+      // In this case a single "debug:connect" message might be received by all the already loaded frame scripts.
+      // Check if the DevToolsServer already knows the provided connection prefix,
+      // because it means that another framescript instance already handled this message.
+      // Another "debug:connect" message is guaranteed to be emitted for another prefix,
+      // so we keep the message listener and wait for this next message.
+      if (DevToolsServer.hasConnectionForPrefix(prefix)) {
+        return;
+      }
+      removeMessageListener("debug:connect", onConnect);
 
       const conn = DevToolsServer.connectToParent(prefix, mm);
       conn.parentMessageManager = mm;

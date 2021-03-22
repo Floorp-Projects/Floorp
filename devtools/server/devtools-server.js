@@ -145,6 +145,9 @@ var DevToolsServer = {
     return this._connections && Object.keys(this._connections).length > 0;
   },
 
+  hasConnectionForPrefix(prefix) {
+    return this._connections && !!this._connections[prefix + "/"];
+  },
   /**
    * Performs cleanup tasks before shutting down the devtools server. Such tasks
    * include clearing any actor constructors added at runtime. This method
