@@ -518,11 +518,7 @@ bool ArgumentsObject::obj_mayResolve(const JSAtomState& names, jsid id,
   // Arguments might resolve indexes, Symbol.iterator, or length/callee.
   if (JSID_IS_ATOM(id)) {
     JSAtom* atom = JSID_TO_ATOM(id);
-    uint32_t index;
-    if (atom->isIndex(&index)) {
-      return true;
-    }
-    return atom == names.length || atom == names.callee;
+    return atom->isIndex() || atom == names.length || atom == names.callee;
   }
 
   return id.isInt() || id.isWellKnownSymbol(JS::SymbolCode::iterator);
