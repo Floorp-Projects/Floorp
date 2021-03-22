@@ -56,6 +56,16 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
   // nsMenuX
   nsresult Create(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode);
 
+  // Unregisters nsMenuX from the nsMenuGroupOwner, and nulls out the group owner pointer, on this
+  // nsMenuX and also all nested nsMenuX and nsMenuItemX objects.
+  // This is needed because nsMenuX is reference-counted and can outlive its owner, and the menu
+  // group owner asserts that everything has been unregistered when it is destroyed.
+  void DetachFromGroupOwnerRecursive();
+
+  // Nulls out our reference to the parent.
+  // This is needed because nsMenuX is reference-counted and can outlive its parent.
+  void DetachFromParent() { mParent = nullptr; }
+
   mozilla::Maybe<MenuChild> GetItemAt(uint32_t aPos);
   uint32_t GetItemCount();
 
@@ -96,6 +106,7 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
   void LoadMenuItem(nsIContent* aMenuItemContent);
   void LoadSubMenu(nsIContent* aMenuContent);
   GeckoNSMenu* CreateMenuWithGeckoString(nsString& aMenuTitle);
+  void UnregisterCommands();
 
   nsCOMPtr<nsIContent> mContent;  // XUL <menu> or <menupopup>
 
