@@ -190,7 +190,7 @@ bool nsMenuUtilsX::NodeIsHiddenOrCollapsed(nsIContent* aContent) {
 
 // Determines how many items are visible among the siblings in a menu that are
 // before the given child. This will not count the application menu.
-int nsMenuUtilsX::CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuObjectX* aChild) {
+int nsMenuUtilsX::CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuX* aChild) {
   int insertionPoint = 0;
   nsMenuObjectTypeX parentType = aParent->MenuObjectType();
   if (parentType == eMenuBarObjectType) {
