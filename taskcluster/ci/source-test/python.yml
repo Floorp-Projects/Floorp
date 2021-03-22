@@ -118,7 +118,7 @@ mochitest-harness:
                 linux1804-64/debug: build-linux64/debug
                 linux1804-64/opt: build-linux64-shippable/opt
     treeherder:
-        symbol: py2(mch)
+        symbol: py3(mch)
     worker:
         by-platform:
             linux1804-64.*:
@@ -132,7 +132,7 @@ mochitest-harness:
             start_xvfb '1600x1200x24' 0 &&
             export GECKO_BINARY_PATH=$MOZ_FETCHES_DIR/firefox/firefox &&
             export TEST_HARNESS_ROOT=$MOZ_FETCHES_DIR/tests &&
-            python2 ./mach python-test --subsuite mochitest
+            ./mach python-test --subsuite mochitest
     fetches:
         build:
             - target.tar.bz2
@@ -299,7 +299,7 @@ reftest-harness:
                 linux1804-64/opt: build-linux64-shippable/opt
     always-target: false
     treeherder:
-        symbol: py2(ref)
+        symbol: py3(ref)
     worker:
         by-platform:
             linux1804-64.*:
@@ -313,7 +313,7 @@ reftest-harness:
             start_xvfb '1600x1200x24' 0 &&
             export GECKO_BINARY_PATH=$MOZ_FETCHES_DIR/firefox/firefox &&
             export TEST_HARNESS_ROOT=$MOZ_FETCHES_DIR/tests &&
-            python2 ./mach python-test --subsuite reftest
+            ./mach python-test --subsuite reftest
     fetches:
         build:
             - target.tar.bz2
