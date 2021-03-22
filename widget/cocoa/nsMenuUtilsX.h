@@ -14,6 +14,7 @@
 
 class nsIContent;
 class nsMenuBarX;
+class nsMenuX;
 
 // Namespace containing utility functions used in our native menu implementation.
 namespace nsMenuUtilsX {
@@ -24,7 +25,7 @@ unsigned int MacModifiersForGeckoModifiers(uint8_t geckoModifiers);
 nsMenuBarX* GetHiddenWindowMenuBar();   // returned object is not retained
 NSMenuItem* GetStandardEditMenuItem();  // returned object is not retained
 bool NodeIsHiddenOrCollapsed(nsIContent* aContent);
-int CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuObjectX* aChild);
+int CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuX* aChild);
 
 // Find the menu item by following the path aLocationString from aRootMenu.
 // aLocationString is a '|'-separated list of integers, where each integer is
