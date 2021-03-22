@@ -45,7 +45,7 @@
     <!-- Description for find permission. -->
     <string name="mozac_feature_addons_permissions_find_description">Γer aḍris n waccaren akk yeldin</string>
     <!-- Description for geolocation permission. -->
-    <string name="mozac_feature_addons_permissions_geolocation_description">Kcem ɣer wadig-ik</string>
+    <string name="mozac_feature_addons_permissions_geolocation_description">Kcem ɣer wadig-ik·im</string>
     <!-- Description for history permission. -->
     <string name="mozac_feature_addons_permissions_history_description">Kcem ɣer uzray n yiminig</string>
     <!-- Description for management permission. -->
