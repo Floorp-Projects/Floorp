@@ -104,6 +104,7 @@ static bool ByteLengthQueuingStrategy_size(JSContext* cx, unsigned argc,
 }
 
 static const JSPropertySpec ByteLengthQueuingStrategy_properties[] = {
+    JS_STRING_SYM_PS(toStringTag, "ByteLengthQueuingStrategy", JSPROP_READONLY),
     JS_PS_END};
 
 static const JSFunctionSpec ByteLengthQueuingStrategy_methods[] = {
@@ -163,7 +164,9 @@ static bool CountQueuingStrategy_size(JSContext* cx, unsigned argc, Value* vp) {
   return true;
 }
 
-static const JSPropertySpec CountQueuingStrategy_properties[] = {JS_PS_END};
+static const JSPropertySpec CountQueuingStrategy_properties[] = {
+    JS_STRING_SYM_PS(toStringTag, "CountQueuingStrategy", JSPROP_READONLY),
+    JS_PS_END};
 
 static const JSFunctionSpec CountQueuingStrategy_methods[] = {
     JS_FN("size", CountQueuingStrategy_size, 0, 0), JS_FS_END};
