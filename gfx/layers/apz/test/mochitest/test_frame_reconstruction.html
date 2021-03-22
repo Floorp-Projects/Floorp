@@ -157,7 +157,7 @@
 async function test() {
   var elm = document.getElementsByClassName("inner")[0];
   elm.scrollTop = 0;
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   // Take over control of the refresh driver and compositor
   var utils = SpecialPowers.DOMWindowUtils;
@@ -170,7 +170,7 @@ async function test() {
   // Let's do a couple of frames of the animation, and make sure it's going
   utils.advanceTimeAndRefresh(16);
   utils.advanceTimeAndRefresh(16);
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
   ok(elm.scrollTop > 0, "APZ animation in progress, scrollTop is now " + elm.scrollTop);
   ok(elm.scrollTop < 200, "APZ animation not yet completed, scrollTop is now " + elm.scrollTop);
 
@@ -190,7 +190,7 @@ async function test() {
   // and the frame reconstruction
   utils.advanceTimeAndRefresh(16);
   utils.advanceTimeAndRefresh(16);
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
   ok(elm.scrollTop < 200, "APZ animation not yet completed, scrollTop is now " + elm.scrollTop);
   ok(frameReconstructionTriggered > 0, "Frame reconstruction triggered, reconstruction triggered " + frameReconstructionTriggered + " times");
 
@@ -200,7 +200,7 @@ async function test() {
   }
   utils.restoreNormalRefresh();
   await promiseAllPaintsDone();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   is(elm.scrollTop, 200, "Element should have scrolled by 200px");
 }

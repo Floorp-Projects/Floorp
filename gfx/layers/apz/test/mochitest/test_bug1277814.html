@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1277814
       // Wait for the layer tree with any updated dispatch-to-content region to
       // get pushed over to the APZ
       await promiseAllPaintsDone();
-      await promiseApzRepaintsFlushed();
+      await promiseOnlyApzControllerFlushed();
 
       // Trigger layerization of the subframe by scrolling the wheel over it
       await promiseMoveMouseAndScrollWheelOver(subframe, 10, 10);

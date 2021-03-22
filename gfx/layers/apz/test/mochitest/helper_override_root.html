@@ -37,7 +37,7 @@ async function test() {
   dump("Finished native wheel, waiting for listener to run...\n");
 
   await wheelEventPromise;
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   is(window.scrollY, 0, "check that the window didn't scroll");
 }

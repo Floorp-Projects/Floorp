@@ -57,7 +57,7 @@
         await new Promise(resolve => {
             synthesizeNativeTouchDrag(target, 10, 10, 200, -10, resolve);
         });
-        await promiseApzRepaintsFlushed();
+        await promiseOnlyApzControllerFlushed();
         apzFlushed = true;
 
         setTimeout(checkForTestEnd, 0);

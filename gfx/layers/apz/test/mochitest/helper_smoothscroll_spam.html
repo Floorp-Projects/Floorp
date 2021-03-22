@@ -25,12 +25,12 @@ async function test() {
   // in the scroll position not advancing at all.
   for (let i = 0; i < 100; i++) {
     document.scrollingElement.scrollBy({top:60, behavior: "smooth"});
-    await promiseApzRepaintsFlushed();
+    await promiseOnlyApzControllerFlushed();
     utils.advanceTimeAndRefresh(16);
   }
 
   utils.restoreNormalRefresh();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   let scrollPos = document.scrollingElement.scrollTop;
   ok(scrollPos > 60, `Scrolled ${scrollPos}px, should be more than 60`);

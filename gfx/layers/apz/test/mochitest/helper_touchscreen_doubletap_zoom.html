@@ -19,7 +19,7 @@ async function doubleTapOn(element, x, y) {
   await transformEndPromise;
 
   // Flush state so we can query an accurate resolution
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 }
 
 async function test() {
