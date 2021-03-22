@@ -560,18 +560,26 @@ DevToolsStartup.prototype = {
     if (widget && widget.provider == CustomizableUI.PROVIDER_API) {
       return;
     }
+
+    const protonEnabled =
+      Services.prefs.getBoolPref("browser.proton.doorhangers.enabled", false) &&
+      Services.prefs.getBoolPref("browser.proton.enabled", false);
+    const panelviewId = protonEnabled
+      ? "appmenu-moreTools"
+      : "PanelUI-developer";
+    const subviewId = protonEnabled
+      ? "appmenu-developer-tools-view"
+      : "PanelUI-developerItems";
+
     const item = {
       id: id,
       type: "view",
-      viewId: "PanelUI-developer",
+      viewId: panelviewId,
       shortcutId: "key_toggleToolbox",
       tooltiptext: "developer-button.tooltiptext2",
       onViewShowing: event => {
         const doc = event.target.ownerDocument;
-        const developerItems = PanelMultiView.getViewNode(
-          doc,
-          "PanelUI-developerItems"
-        );
+        const developerItems = PanelMultiView.getViewNode(doc, subviewId);
         this.addDevToolsItemsToSubview(developerItems);
       },
       onInit(anchor) {
@@ -584,16 +592,6 @@ DevToolsStartup.prototype = {
         // In DEV EDITION, the toggle is added before 1st paint and hookKeyShortcuts() is
         // not called yet when CustomizableUI creates the widget.
         this.hookKeyShortcuts(doc.defaultView);
-
-        if (PanelMultiView.getViewNode(doc, "PanelUI-developerItems")) {
-          return;
-        }
-        const view = doc.createXULElement("panelview");
-        view.id = "PanelUI-developerItems";
-        const panel = doc.createXULElement("vbox");
-        panel.setAttribute("class", "panel-subview-body");
-        view.appendChild(panel);
-        doc.getElementById("PanelUI-multiView").appendChild(view);
       },
     };
     CustomizableUI.createWidget(item);
