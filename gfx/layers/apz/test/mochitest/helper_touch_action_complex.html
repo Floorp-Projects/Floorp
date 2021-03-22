@@ -41,7 +41,7 @@ async function resetConfiguration(config) {
   s.scrollTop = 0;
 
   await promiseAllPaintsDone();
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 }
 
 async function test() {
@@ -63,7 +63,7 @@ async function test() {
         "Synthesized drag of (" + dx + ", " + dy + ") on configuration " + configuration);
     await touchEndPromise;
     await promiseAllPaintsDone();
-    await promiseApzRepaintsFlushed();
+    await promiseOnlyApzControllerFlushed();
     // Check for expected scroll position
     checkScroll(scrollframe, ex, ey, "configuration " + configuration + " " + desc);
   }

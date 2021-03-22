@@ -36,7 +36,7 @@ async function test() {
   await dragFinisher();
 
   // Flush everything just to be safe
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   // After dragging the scrollbar 20px on a 1000px-high viewport, we should
   // have scrolled approx 2% of the 5000px high content. There might have been

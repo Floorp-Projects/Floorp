@@ -18,7 +18,7 @@ async function test() {
   await transformEndPromise;
 
   dump("Transform complete; flushing repaints...\n");
-  await promiseApzRepaintsFlushed();
+  await promiseOnlyApzControllerFlushed();
 
   var outerScroll = document.getElementById("outer").scrollTop;
   is(outerScroll, 50, "check that the div scrolled");
