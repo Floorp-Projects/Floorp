@@ -148,7 +148,7 @@ void nsMenuBarX::ConstructNativeMenus() {
   for (nsIContent* menuContent = mContent->GetFirstChild(); menuContent;
        menuContent = menuContent->GetNextSibling()) {
     if (menuContent->IsXULElement(nsGkAtoms::menu)) {
-      InsertMenuAtIndex(MakeUnique<nsMenuX>(this, this, menuContent->AsElement()), GetMenuCount());
+      InsertMenuAtIndex(MakeRefPtr<nsMenuX>(this, this, menuContent->AsElement()), GetMenuCount());
     }
   }
 }
@@ -213,7 +213,7 @@ bool nsMenuBarX::MenuContainsAppMenu() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void nsMenuBarX::InsertMenuAtIndex(UniquePtr<nsMenuX>&& aMenu, uint32_t aIndex) {
+void nsMenuBarX::InsertMenuAtIndex(RefPtr<nsMenuX>&& aMenu, uint32_t aIndex) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   // If we've only yet created a fallback global Application menu (using
@@ -233,17 +233,16 @@ void nsMenuBarX::InsertMenuAtIndex(UniquePtr<nsMenuX>&& aMenu, uint32_t aIndex) 
   }
 
   // add menu to array that owns our menus
-  nsMenuX* menu = aMenu.get();
-  mMenuArray.InsertElementAt(aIndex, std::move(aMenu));
+  mMenuArray.InsertElementAt(aIndex, aMenu);
 
   // hook up submenus
-  nsIContent* menuContent = menu->Content();
+  RefPtr<nsIContent> menuContent = aMenu->Content();
   if (menuContent->GetChildCount() > 0 && !nsMenuUtilsX::NodeIsHiddenOrCollapsed(menuContent)) {
-    int insertionIndex = nsMenuUtilsX::CalculateNativeInsertionPoint(this, menu);
+    int insertionIndex = nsMenuUtilsX::CalculateNativeInsertionPoint(this, aMenu);
     if (MenuContainsAppMenu()) {
       insertionIndex++;
     }
-    [mNativeMenu insertItem:menu->NativeNSMenuItem() atIndex:insertionIndex];
+    [mNativeMenu insertItem:aMenu->NativeNSMenuItem() atIndex:insertionIndex];
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -284,7 +283,7 @@ void nsMenuBarX::ObserveContentRemoved(mozilla::dom::Document* aDocument, nsICon
 
 void nsMenuBarX::ObserveContentInserted(mozilla::dom::Document* aDocument, nsIContent* aContainer,
                                         nsIContent* aChild) {
-  InsertMenuAtIndex(MakeUnique<nsMenuX>(this, this, aChild), aContainer->ComputeIndexOf(aChild));
+  InsertMenuAtIndex(MakeRefPtr<nsMenuX>(this, this, aChild), aContainer->ComputeIndexOf(aChild));
 }
 
 void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& aIndexString) {

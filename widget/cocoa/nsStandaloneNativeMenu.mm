@@ -39,7 +39,7 @@ nsStandaloneNativeMenu::Init(Element* aElement) {
     return rv;
   }
 
-  mMenu = MakeUnique<nsMenuX>(this, this, aElement);
+  mMenu = MakeRefPtr<nsMenuX>(this, this, aElement);
   mMenu->SetupIcon();
 
   return NS_OK;
