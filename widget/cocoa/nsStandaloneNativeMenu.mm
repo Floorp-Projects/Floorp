@@ -51,9 +51,9 @@ static void UpdateMenu(nsMenuX* aMenu) {
 
   uint32_t itemCount = aMenu->GetItemCount();
   for (uint32_t i = 0; i < itemCount; i++) {
-    nsMenuObjectX* menuObject = aMenu->GetItemAt(i);
-    if (menuObject->MenuObjectType() == eSubmenuObjectType) {
-      UpdateMenu(static_cast<nsMenuX*>(menuObject));
+    nsMenuX::MenuChild menuObject = *aMenu->GetItemAt(i);
+    if (menuObject.is<RefPtr<nsMenuX>>()) {
+      UpdateMenu(menuObject.as<RefPtr<nsMenuX>>());
     }
   }
 }
@@ -131,7 +131,7 @@ nsStandaloneNativeMenu::ForceUpdateNativeMenuAt(const nsAString& indexString) {
       [NSString stringWithCharacters:reinterpret_cast<const unichar*>(indexString.BeginReading())
                               length:indexString.Length()];
   NSArray<NSString*>* indexes = [locationString componentsSeparatedByString:@"|"];
-  nsMenuX* currentMenu = mMenu.get();
+  RefPtr<nsMenuX> currentMenu = mMenu.get();
 
   // now find the correct submenu
   unsigned int indexCount = indexes.count;
@@ -140,19 +140,17 @@ nsStandaloneNativeMenu::ForceUpdateNativeMenuAt(const nsAString& indexString) {
     int visible = 0;
     uint32_t length = currentMenu->GetItemCount();
     for (unsigned int j = 0; j < length; j++) {
-      nsMenuObjectX* targetMenu = currentMenu->GetItemAt(j);
+      Maybe<nsMenuX::MenuChild> targetMenu = currentMenu->GetItemAt(j);
       if (!targetMenu) {
         return NS_OK;
       }
-      MOZ_RELEASE_ASSERT(targetMenu->MenuObjectType() == eSubmenuObjectType ||
-                         targetMenu->MenuObjectType() == eMenuItemObjectType);
-      RefPtr<nsIContent> content = targetMenu->MenuObjectType() == eSubmenuObjectType
-                                       ? static_cast<nsMenuX*>(targetMenu)->Content()
-                                       : static_cast<nsMenuItemX*>(targetMenu)->Content();
+      RefPtr<nsIContent> content = targetMenu->match(
+          [](const RefPtr<nsMenuX>& aMenu) { return aMenu->Content(); },
+          [](const RefPtr<nsMenuItemX>& aMenuItem) { return aMenuItem->Content(); });
       if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(content)) {
         visible++;
-        if (targetMenu->MenuObjectType() == eSubmenuObjectType && visible == (targetIndex + 1)) {
-          currentMenu = static_cast<nsMenuX*>(targetMenu);
+        if (targetMenu->is<RefPtr<nsMenuX>>() && visible == (targetIndex + 1)) {
+          currentMenu = targetMenu->as<RefPtr<nsMenuX>>();
           break;
         }
       }

@@ -298,17 +298,17 @@ void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& aIndexString) {
     return;
   }
 
-  nsMenuX* currentMenu = nullptr;
+  RefPtr<nsMenuX> currentMenu = nullptr;
   int targetIndex = [[indexes objectAtIndex:0] intValue];
   int visible = 0;
   uint32_t length = mMenuArray.Length();
   // first find a menu in the menu bar
   for (unsigned int i = 0; i < length; i++) {
-    nsMenuX* menu = mMenuArray[i].get();
+    RefPtr<nsMenuX> menu = mMenuArray[i];
     if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(menu->Content())) {
       visible++;
       if (visible == (targetIndex + 1)) {
-        currentMenu = menu;
+        currentMenu = std::move(menu);
         break;
       }
     }
@@ -328,19 +328,17 @@ void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& aIndexString) {
     visible = 0;
     length = currentMenu->GetItemCount();
     for (unsigned int j = 0; j < length; j++) {
-      nsMenuObjectX* targetMenu = currentMenu->GetItemAt(j);
+      Maybe<nsMenuX::MenuChild> targetMenu = currentMenu->GetItemAt(j);
       if (!targetMenu) {
         return;
       }
-      MOZ_RELEASE_ASSERT(targetMenu->MenuObjectType() == eSubmenuObjectType ||
-                         targetMenu->MenuObjectType() == eMenuItemObjectType);
-      RefPtr<nsIContent> content = targetMenu->MenuObjectType() == eSubmenuObjectType
-                                       ? static_cast<nsMenuX*>(targetMenu)->Content()
-                                       : static_cast<nsMenuItemX*>(targetMenu)->Content();
+      RefPtr<nsIContent> content = targetMenu->match(
+          [](const RefPtr<nsMenuX>& aMenu) { return aMenu->Content(); },
+          [](const RefPtr<nsMenuItemX>& aMenuItem) { return aMenuItem->Content(); });
       if (!nsMenuUtilsX::NodeIsHiddenOrCollapsed(content)) {
         visible++;
-        if (targetMenu->MenuObjectType() == eSubmenuObjectType && visible == (targetIndex + 1)) {
-          currentMenu = static_cast<nsMenuX*>(targetMenu);
+        if (targetMenu->is<RefPtr<nsMenuX>>() && visible == (targetIndex + 1)) {
+          currentMenu = targetMenu->as<RefPtr<nsMenuX>>();
           // fake open/close to cause lazy update to happen
           currentMenu->MenuOpened();
           currentMenu->MenuClosed();
