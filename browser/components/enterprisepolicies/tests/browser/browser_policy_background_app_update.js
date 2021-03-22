@@ -40,9 +40,35 @@ async function test_background_update_pref(expectedEnabled, expectedLocked) {
       expectedLocked ? "should" : "should not"
     } fail`
   );
+
+  if (AppConstants.MOZ_UPDATER && AppConstants.MOZ_UPDATE_AGENT) {
+    await BrowserTestUtils.withNewTab("about:preferences", browser => {
+      is(
+        browser.contentDocument.getElementById("backgroundUpdate").hidden,
+        expectedLocked,
+        `When background update ${
+          expectedLocked ? "is" : "isn't"
+        } locked, the corresponding preferences entry ${
+          expectedLocked ? "should" : "shouldn't"
+        } be hidden`
+      );
+    });
+  } else {
+    // The backgroundUpdate element is #ifdef'ed out if MOZ_UPDATER and
+    // MOZ_UPDATE_AGENT are not both defined.
+    info(
+      "Warning: UI testing skipped because support for background update is " +
+        "not present"
+    );
+  }
 }
 
 add_task(async function test_background_app_update_policy() {
+  // Turn on the background update UI so we can test it.
+  await SpecialPowers.pushPrefEnv({
+    set: [["app.update.background.experimental", true]],
+  });
+
   const origBackgroundUpdateVal = await UpdateUtils.readUpdateConfigSetting(
     PREF_NAME
   );
