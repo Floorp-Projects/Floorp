@@ -187,19 +187,18 @@ nsMenuX::~nsMenuX() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-void nsMenuX::AddMenuItem(UniquePtr<nsMenuItemX>&& aMenuItem) {
+void nsMenuX::AddMenuItem(RefPtr<nsMenuItemX>&& aMenuItem) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  nsMenuItemX* menuItem = aMenuItem.get();
-  mMenuChildren.AppendElement(std::move(aMenuItem));
+  mMenuChildren.AppendElement(aMenuItem);
 
-  if (nsMenuUtilsX::NodeIsHiddenOrCollapsed(menuItem->Content())) {
+  if (nsMenuUtilsX::NodeIsHiddenOrCollapsed(aMenuItem->Content())) {
     return;
   }
 
   ++mVisibleItemsCount;
 
-  NSMenuItem* newNativeMenuItem = menuItem->NativeNSMenuItem();
+  NSMenuItem* newNativeMenuItem = aMenuItem->NativeNSMenuItem();
 
   // add the menu item to this menu
   [mNativeMenu addItem:newNativeMenuItem];
@@ -209,12 +208,12 @@ void nsMenuX::AddMenuItem(UniquePtr<nsMenuItemX>&& aMenuItem) {
   newNativeMenuItem.action = @selector(menuItemHit:);
 
   // set its command. we get the unique command id from the menubar
-  newNativeMenuItem.tag = mMenuGroupOwner->RegisterForCommand(menuItem);
+  newNativeMenuItem.tag = mMenuGroupOwner->RegisterForCommand(aMenuItem);
   MenuItemInfo* info = [[MenuItemInfo alloc] initWithMenuGroupOwner:mMenuGroupOwner];
   newNativeMenuItem.representedObject = info;
   [info release];
 
-  menuItem->SetupIcon();
+  aMenuItem->SetupIcon();
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -253,7 +252,7 @@ nsMenuObjectX* nsMenuX::GetItemAt(uint32_t aPos) {
 
   return mMenuChildren[aPos].match(
       [](const RefPtr<nsMenuX>& aMenu) { return static_cast<nsMenuObjectX*>(aMenu.get()); },
-      [](const UniquePtr<nsMenuItemX>& aMenuItem) {
+      [](const RefPtr<nsMenuItemX>& aMenuItem) {
         return static_cast<nsMenuObjectX*>(aMenuItem.get());
       });
 }
@@ -473,7 +472,7 @@ void nsMenuX::LoadMenuItem(nsIContent* aMenuItemContent) {
   }
 
   AddMenuItem(
-      MakeUnique<nsMenuItemX>(this, menuitemName, itemType, mMenuGroupOwner, aMenuItemContent));
+      MakeRefPtr<nsMenuItemX>(this, menuitemName, itemType, mMenuGroupOwner, aMenuItemContent));
 }
 
 void nsMenuX::LoadSubMenu(nsIContent* aMenuContent) {
@@ -668,7 +667,7 @@ void nsMenuX::Dump(uint32_t aIndent) const {
   printf("\n");
   for (const auto& subitem : mMenuChildren) {
     subitem.match([=](const RefPtr<nsMenuX>& aMenu) { aMenu->Dump(aIndent + 1); },
-                  [=](const UniquePtr<nsMenuItemX>& aMenuItem) { aMenuItem->Dump(aIndent + 1); });
+                  [=](const RefPtr<nsMenuItemX>& aMenuItem) { aMenuItem->Dump(aIndent + 1); });
   }
 }
 

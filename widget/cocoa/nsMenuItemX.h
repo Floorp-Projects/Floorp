@@ -7,6 +7,7 @@
 #define nsMenuItemX_h_
 
 #include "mozilla/RefPtr.h"
+#include "nsISupports.h"
 #include "nsMenuBaseX.h"
 #include "nsMenuGroupOwnerX.h"
 #include "nsChangeObserver.h"
@@ -45,7 +46,8 @@ class nsMenuItemX final : public nsMenuObjectX, public nsChangeObserver {
  public:
   nsMenuItemX(nsMenuX* aParent, const nsString& aLabel, EMenuItemType aItemType,
               nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode);
-  virtual ~nsMenuItemX();
+
+  NS_INLINE_DECL_REFCOUNTING(nsMenuItemX)
 
   NS_DECL_CHANGEOBSERVER
 
@@ -66,6 +68,8 @@ class nsMenuItemX final : public nsMenuObjectX, public nsChangeObserver {
   void Dump(uint32_t aIndent) const;
 
  protected:
+  virtual ~nsMenuItemX();
+
   void UncheckRadioSiblings(nsIContent* aCheckedElement);
   void SetKeyEquiv();
 
