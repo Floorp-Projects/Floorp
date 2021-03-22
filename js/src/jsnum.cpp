@@ -818,7 +818,7 @@ JSLinearString* js::Int32ToString(JSContext* cx, int32_t si) {
     return nullptr;
   }
   if (si >= 0) {
-    str->maybeInitializeIndexValue(si);
+    str->maybeInitializeIndex(si);
   }
 
   CacheNumber(cx, si, str);
@@ -1660,7 +1660,7 @@ static JSString* NumberToStringWithBase(JSContext* cx, double d, int base) {
   }
 
   if (isBase10Int && i >= 0) {
-    s->maybeInitializeIndexValue(i);
+    s->maybeInitializeIndex(i);
   }
 
   realm->dtoaCache.cache(base, d, s);

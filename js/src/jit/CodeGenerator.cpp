@@ -12111,7 +12111,8 @@ void CodeGenerator::addGetPropertyCache(LInstruction* ins,
   CacheKind kind = CacheKind::GetElem;
   if (id.constant() && id.value().isString()) {
     JSString* idString = id.value().toString();
-    if (idString->isAtom() && !idString->asAtom().isIndex()) {
+    uint32_t dummy;
+    if (idString->isAtom() && !idString->asAtom().isIndex(&dummy)) {
       kind = CacheKind::GetProp;
     }
   }
@@ -12128,7 +12129,8 @@ void CodeGenerator::addSetPropertyCache(LInstruction* ins,
   CacheKind kind = CacheKind::SetElem;
   if (id.constant() && id.value().isString()) {
     JSString* idString = id.value().toString();
-    if (idString->isAtom() && !idString->asAtom().isIndex()) {
+    uint32_t dummy;
+    if (idString->isAtom() && !idString->asAtom().isIndex(&dummy)) {
       kind = CacheKind::SetProp;
     }
   }
@@ -12176,7 +12178,8 @@ void CodeGenerator::visitGetPropSuperCache(LGetPropSuperCache* ins) {
   CacheKind kind = CacheKind::GetElemSuper;
   if (id.constant() && id.value().isString()) {
     JSString* idString = id.value().toString();
-    if (idString->isAtom() && !idString->asAtom().isIndex()) {
+    uint32_t dummy;
+    if (idString->isAtom() && !idString->asAtom().isIndex(&dummy)) {
       kind = CacheKind::GetPropSuper;
     }
   }
