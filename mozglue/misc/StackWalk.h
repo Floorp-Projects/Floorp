@@ -44,37 +44,6 @@ typedef void (*MozWalkStackCallback)(uint32_t aFrameNumber, void* aPC,
 MFBT_API void MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
                            uint32_t aMaxFrames, void* aClosure);
 
-#if defined(_WIN32) && (defined(_M_IX86) || defined(_M_AMD64) || \
-                        defined(_M_IA64) || defined(_M_ARM64))
-
-#  include <windows.h>
-
-#  define MOZ_STACKWALK_SUPPORTS_WINDOWS 1
-
-/**
- * Like MozStackWalk, but walks the stack for another thread.
- * Call aCallback for each stack frame on the current thread, from
- * the caller of MozStackWalk to main (or above).
- *
- * @param aCallback    Same as for MozStackWalk().
- * @param aMaxFrames   Same as for MozStackWalk().
- * @param aClosure     Same as for MozStackWalk().
- * @param aThread      The handle of the thread whose stack is to be walked.
- *                     If 0, walks the current thread.
- * @param aContext     A CONTEXT, presumably obtained with GetThreadContext()
- *                     after suspending the thread with SuspendThread(). If
- *                     null, the CONTEXT will be re-obtained.
- */
-MFBT_API void MozStackWalkThread(MozWalkStackCallback aCallback,
-                                 uint32_t aMaxFrames, void* aClosure,
-                                 HANDLE aThread, CONTEXT* aContext);
-
-#else
-
-#  define MOZ_STACKWALK_SUPPORTS_WINDOWS 0
-
-#endif
-
 typedef struct {
   /*
    * The name of the shared library or executable containing an

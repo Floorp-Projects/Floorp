@@ -30,6 +30,7 @@ if CONFIG["OS_ARCH"] == "WINNT":
     EXPORTS.mozilla += [
         "PreXULSkeletonUI.h",
         "StackWalk_windows.h",
+        "StackWalkThread.h",
         "TimeStamp_windows.h",
         "WindowsDpiAwareness.h",
     ]
