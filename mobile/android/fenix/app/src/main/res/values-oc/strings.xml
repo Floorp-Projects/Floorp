@@ -1361,9 +1361,13 @@
     <string name="etp_cryptominers_description">Empacha los scripts malvolents d’accedir a vòstre periferic per minar de moneda numerica.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_title">Generadors d’emprentas numericas</string>
+    <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_description">Empacha la culhida de donadas unicas identificables quant a vòstre periferic que pòdon èsser utilizadas pel seguiment.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_title">Contengut utilizat pel seguiment</string>
 
+    <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_description">Empacha lo cargament de publicitats, vidèos e autre contengut que contenon de còdi de seguiment. Pòt afectar d’unas foncionalitats de sites web.</string>
     <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
     <string name="etp_onboarding_cfr_message">Quand l’escut es violet, %s a blocat de traçadors sus aqueste site. Tocatz aquí per ne saber mai.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
