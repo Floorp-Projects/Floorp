@@ -62,7 +62,15 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
   mozilla::Maybe<MenuChild> GetVisibleItemAt(uint32_t aPos);
   nsresult GetVisibleItemCount(uint32_t& aCount);
 
+  // Called from the menu delegate during menuWillOpen.
+  // Fires the popupshown event.
+  // When calling this method, the caller must hold a strong reference to this object, because other
+  // references to this object can be dropped during the handling of the DOM event.
   nsEventStatus MenuOpened();
+
+  // Called from the menu delegate during menuDidClose.
+  // When calling this method, the caller must hold a strong reference to this object, because other
+  // references to this object can be dropped during the handling of the DOM event.
   void MenuClosed();
   void SetRebuild(bool aMenuEvent);
   void SetupIcon();
