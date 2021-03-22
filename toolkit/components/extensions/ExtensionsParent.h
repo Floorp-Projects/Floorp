@@ -18,6 +18,24 @@ class ExtensionsParent final : public PExtensionsParent {
 
   ExtensionsParent() = default;
 
+  ipc::IPCResult RecvDocumentChange(MaybeDiscardedBrowsingContext&& aBC,
+                                    FrameTransitionData&& aTransitionData,
+                                    nsIURI* aLocation);
+
+  ipc::IPCResult RecvHistoryChange(MaybeDiscardedBrowsingContext&& aBC,
+                                   FrameTransitionData&& aTransitionData,
+                                   nsIURI* aLocation,
+                                   bool aIsHistoryStateUpdated,
+                                   bool aIsReferenceFragmentUpdated);
+
+  ipc::IPCResult RecvStateChange(MaybeDiscardedBrowsingContext&& aBC,
+                                 nsIURI* aRequestURI, nsresult aStatus,
+                                 uint32_t aStateFlags);
+
+  ipc::IPCResult RecvCreatedNavigationTarget(
+      MaybeDiscardedBrowsingContext&& aBC,
+      MaybeDiscardedBrowsingContext&& aSourceBC, const nsCString& aURI);
+
  private:
   ~ExtensionsParent() = default;
 
