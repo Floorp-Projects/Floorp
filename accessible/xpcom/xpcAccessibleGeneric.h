@@ -34,9 +34,6 @@ class xpcAccessibleGeneric : public xpcAccessible,
     if (aInternal->IsLink()) mSupportedIfaces |= eHyperLink;
   }
 
-  xpcAccessibleGeneric(RemoteAccessible* aProxy, uint8_t aInterfaces)
-      : mIntl(aProxy), mSupportedIfaces(aInterfaces) {}
-
   NS_DECL_ISUPPORTS
 
   // nsIAccessible
