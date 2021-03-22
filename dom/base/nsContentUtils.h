@@ -369,14 +369,11 @@ class nsContentUtils {
       int32_t* aOutputHeight);
 
   /**
-   * Returns the parent node of aChild crossing document boundaries.
+   * Returns the parent node of aChild crossing document boundaries, but skips
+   * any cross-process parent frames and continues with the nearest in-process
+   * frame in the hierarchy.
+   *
    * Uses the parent node in the composed document.
-   */
-  static nsINode* GetCrossDocParentNode(nsINode* aChild);
-
-  /**
-   * Like GetCrossDocParentNode, but skips any cross-process parent frames and
-   * continues with the nearest in-process frame in the hierarchy.
    */
   static nsINode* GetNearestInProcessCrossDocParentNode(nsINode* aChild);
 
