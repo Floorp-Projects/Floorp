@@ -230,9 +230,13 @@ async function testTabFrames(mainRoot) {
       afterNavigationFramesCount,
       "retrieved all targets after navigation"
     );
+    // As targetFront.url isn't reliable and might be about:blank,
+    // try to assert that we got the right target via other means.
+    // outerWindowID should change when navigating to another process,
+    // while it would stay equal for in-process navigations.
     is(
-      targets[2].targetFront.url,
-      SECOND_PAGE_URL,
+      targets[2].targetFront.outerWindowID,
+      browser.outerWindowID,
       "The new target should be the newly loaded document"
     );
     is(
