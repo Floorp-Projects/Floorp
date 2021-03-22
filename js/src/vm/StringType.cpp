@@ -1230,40 +1230,17 @@ template bool js::CheckStringIsIndex(const char16_t* s, size_t length,
                                      uint32_t* indexp);
 
 template <typename CharT>
-static uint32_t AtomCharsToIndex(const CharT* s, size_t length) {
-  // Chars are known to be a valid index value (as determined by
-  // CheckStringIsIndex) that didn't fit in the "index value" bits in the
-  // header.
-
-  MOZ_ASSERT(length > 0);
-  MOZ_ASSERT(length <= UINT32_CHAR_BUFFER_LENGTH);
-
-  RangedPtr<const CharT> cp(s, length);
-  const RangedPtr<const CharT> end(s + length, s, length);
-
-  MOZ_ASSERT(IsAsciiDigit(*cp));
-  uint32_t index = AsciiDigitToNumber(*cp++);
-  MOZ_ASSERT(index != 0);
-
-  while (cp < end) {
-    MOZ_ASSERT(IsAsciiDigit(*cp));
-    index = 10 * index + AsciiDigitToNumber(*cp);
-    cp++;
-  }
-
-  return index;
+/* static */
+bool JSLinearString::isIndexSlow(const CharT* s, size_t length,
+                                 uint32_t* indexp) {
+  return js::CheckStringIsIndex(s, length, indexp);
 }
 
-uint32_t JSAtom::getIndexSlow() const {
-  MOZ_ASSERT(isIndex());
-  MOZ_ASSERT(!hasIndexValue());
+template bool JSLinearString::isIndexSlow(const Latin1Char* s, size_t length,
+                                          uint32_t* indexp);
 
-  size_t len = length();
-
-  AutoCheckCannotGC nogc;
-  return hasLatin1Chars() ? AtomCharsToIndex(latin1Chars(nogc), len)
-                          : AtomCharsToIndex(twoByteChars(nogc), len);
-}
+template bool JSLinearString::isIndexSlow(const char16_t* s, size_t length,
+                                          uint32_t* indexp);
 
 constexpr StaticStrings::SmallCharTable StaticStrings::createSmallCharTable() {
   SmallCharTable array{};
@@ -1328,7 +1305,7 @@ bool StaticStrings::init(JSContext* cx) {
 
     // Static string initialization can not race, so allow even without the
     // lock.
-    intStaticTable[i]->setIsIndex(i);
+    intStaticTable[i]->maybeInitializeIndex(i, true);
   }
 
   return true;
