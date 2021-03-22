@@ -190,6 +190,12 @@ def test_perfdocs_gatherer_fetch_perfdocs_tree(
     assert not gatherer._perfdocs_tree
 
     gatherer.fetch_perfdocs_tree()
+
+    expected = "Found 1 perfdocs directories"
+    args, _ = logger.log.call_args
+
+    assert expected in args[0]
+    assert logger.log.call_count == 1
     assert gatherer._perfdocs_tree
 
     expected = ["path", "yml", "rst", "static"]
@@ -346,7 +352,7 @@ def test_perfdocs_verifier_not_existing_suite_in_test_list(
 
     expected = (
         "Could not find an existing suite for suite - bad suite name?",
-        perfdocs_sample["config"],
+        os.path.realpath(perfdocs_sample["config"]),
     )
     args, _ = logger.warning.call_args
 
