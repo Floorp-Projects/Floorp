@@ -6,6 +6,8 @@ const { CommonDialog } = ChromeUtils.import(
   "resource://gre/modules/CommonDialog.jsm"
 );
 
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+
 var propBag, args, Dialog;
 
 function commonDialogOnLoad() {
@@ -19,6 +21,16 @@ function commonDialogOnLoad() {
   }
 
   let dialog = document.getElementById("commonDialog");
+
+  let needIconifiedHeader =
+    args.modalType == Ci.nsIPrompt.MODAL_TYPE_CONTENT ||
+    ["promptUserAndPass", "promptPassword"].includes(args.promptType);
+  let root = document.documentElement;
+  if (needIconifiedHeader) {
+    root.setAttribute("neediconheader", "true");
+  }
+  let title = { raw: args.title };
+  root.setAttribute("headertitle", JSON.stringify(title));
 
   let ui = {
     prompt: window,
