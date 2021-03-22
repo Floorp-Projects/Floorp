@@ -7,6 +7,7 @@
 
 #include "mozilla/BinarySearch.h"
 #include "mozilla/HTMLEditor.h"
+#include "mozilla/Logging.h"
 #include "mozilla/TextEditor.h"
 #include "mozilla/dom/Element.h"
 
@@ -23,6 +24,8 @@
 #include <algorithm>
 
 using namespace mozilla;
+
+static LazyLogModule sInlineSpellWordUtilLog{"InlineSpellWordUtil"};
 
 // IsIgnorableCharacter
 //
@@ -333,9 +336,8 @@ static void NormalizeWord(const nsAString& aInput, int32_t aPos, int32_t aLen,
 bool mozInlineSpellWordUtil::GetNextWord(nsAString& aText,
                                          NodeOffsetRange* aNodeOffsetRange,
                                          bool* aSkipChecking) {
-#ifdef DEBUG_SPELLCHECK
-  printf("GetNextWord called; mNextWordIndex=%d\n", mNextWordIndex);
-#endif
+  MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug,
+          ("%s: mNextWordIndex=%d", __FUNCTION__, mNextWordIndex));
 
   if (mNextWordIndex < 0 || mNextWordIndex >= int32_t(mRealWords.Length())) {
     mNextWordIndex = -1;
@@ -349,10 +351,9 @@ bool mozInlineSpellWordUtil::GetNextWord(nsAString& aText,
   *aSkipChecking = !word.mCheckableWord;
   ::NormalizeWord(mSoftText, word.mSoftTextOffset, word.mLength, aText);
 
-#ifdef DEBUG_SPELLCHECK
-  printf("GetNextWord returning: %s (skip=%d)\n",
-         NS_ConvertUTF16toUTF8(aText).get(), *aSkipChecking);
-#endif
+  MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug,
+          ("%s: returning: %s (skip=%d)", __FUNCTION__,
+           NS_ConvertUTF16toUTF8(aText).get(), *aSkipChecking));
 
   return true;
 }
@@ -875,9 +876,9 @@ void mozInlineSpellWordUtil::BuildSoftText() {
     }
   }
 
-#ifdef DEBUG_SPELLCHECK
-  printf("Got DOM string: %s\n", NS_ConvertUTF16toUTF8(mSoftText).get());
-#endif
+  MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug,
+          ("%s: got DOM string: %s", __FUNCTION__,
+           NS_ConvertUTF16toUTF8(mSoftText).get()));
 }
 
 nsresult mozInlineSpellWordUtil::BuildRealWords() {
