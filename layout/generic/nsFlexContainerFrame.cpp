@@ -4650,10 +4650,36 @@ void nsFlexContainerFrame::Reflow(nsPresContext* aPresContext,
     }
   }
 
-  // Overflow area = union(my overflow area, kids' overflow areas)
+  // Overflow area = union(my overflow area, children's overflow areas)
   aReflowOutput.SetOverflowAreasToDesiredBounds();
   for (nsIFrame* childFrame : mFrames) {
     ConsiderChildOverflow(aReflowOutput.mOverflowAreas, childFrame);
+  }
+
+  if (Style()->GetPseudoType() == PseudoStyleType::scrolledContent) {
+    MOZ_ASSERT(aReflowInput.ComputedLogicalBorderPadding(wm) ==
+                   aReflowInput.ComputedLogicalPadding(wm),
+               "A scrolled inner frame shouldn't have any border!");
+    const LogicalMargin& padding = borderPadding;
+
+    // Scrollable flex containers have special behavior for computing their
+    // scrollable overflow [1]. They incorporate the margin-boxes of their flex
+    // items, as well as their end-edge padding area (which is adjacent to the
+    // margin-box of the last flex item in a single column flex container for
+    // example). So, we union the margin boxes of our flex items, and apply the
+    // container's padding as an inflation to that. Note that this adds padding
+    // on all sides, not just the end sides; this is fine because our flex items
+    // are placed relative to our content-box origin. The inflated bounds won't
+    // go beyond our padding-box edges on the start sides.
+    //
+    // [1] https://drafts.csswg.org/css-overflow-3/#scrollable.
+    nsRect childrenInflowBounds;
+    for (nsIFrame* childFrame : mFrames) {
+      childrenInflowBounds =
+          childrenInflowBounds.Union(childFrame->GetMarginRect());
+    }
+    childrenInflowBounds.Inflate(padding.GetPhysicalMargin(wm));
+    aReflowOutput.mOverflowAreas.UnionAllWith(childrenInflowBounds);
   }
 
   // Merge overflow container bounds and status.
