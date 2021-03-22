@@ -22,6 +22,10 @@ addAccessibleTask(
       "Document has Document interface"
     );
     ok(
+      accDoc instanceof nsIAccessibleHyperText,
+      "Document has HyperText interface"
+    );
+    ok(
       findAccessibleChildByID(accDoc, "img") instanceof nsIAccessibleImage,
       "img has Image interface"
     );
