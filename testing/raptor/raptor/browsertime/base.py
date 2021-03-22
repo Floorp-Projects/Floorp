@@ -433,6 +433,7 @@ class Browsertime(Perftest):
                 self.vismet_failed = False
 
                 def _vismet_line_handler(line):
+                    line = line.decode("utf-8")
                     LOG.info(line)
                     if "FAIL" in line:
                         self.vismet_failed = True

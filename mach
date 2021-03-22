@@ -12,8 +12,6 @@
 ''':'
 # Commands that are to be run with Python 2.
 py2commands="
-    raptor
-    raptor-test
     telemetry-tests-client
 "
 
