@@ -39,12 +39,7 @@ void LoggingHelper(bool aUseProfiler, const char* aFmt, va_list args) {
   static const mozilla::LogLevel logLevel = LogLevel::Warning;
 
   if (MOZ_LOG_TEST(logModule, logLevel) ||
-#ifdef MOZ_GECKO_PROFILER
-      (aUseProfiler && profiler_thread_is_being_profiled())
-#else
-      false
-#endif
-  ) {
+      (aUseProfiler && profiler_thread_is_being_profiled())) {
     nsAutoCString message;
 
     message.AppendVprintf(aFmt, args);

@@ -93,19 +93,15 @@ class EventQueueInternal {
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const {
     size_t size = mQueue.ShallowSizeOfExcludingThis(aMallocSizeOf);
-#ifdef MOZ_GECKO_PROFILER
     size += mDispatchTimes.ShallowSizeOfExcludingThis(aMallocSizeOf);
-#endif
     return size;
   }
 
  private:
   mozilla::Queue<nsCOMPtr<nsIRunnable>, ItemsPerPage> mQueue;
-#ifdef MOZ_GECKO_PROFILER
   // This queue is only populated when the profiler is turned on.
   mozilla::Queue<mozilla::TimeStamp, ItemsPerPage> mDispatchTimes;
   TimeDuration mLastEventDelay;
-#endif
   // This indicates PutEvent forwards runnables to the TaskController. This
   // should be true for the top level event queue on the main thread.
   bool mForwardToTC;

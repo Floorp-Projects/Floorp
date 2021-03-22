@@ -932,13 +932,11 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
     // If the provider returned an existing ContentParent, use that one.
     if (0 <= index && static_cast<uint32_t>(index) <= aMaxContentParents) {
       RefPtr<ContentParent> retval = aContentParents[index];
-#ifdef MOZ_GECKO_PROFILER
       if (profiler_thread_is_being_profiled()) {
         nsPrintfCString marker("Reused process %u",
                                (unsigned int)retval->ChildID());
         PROFILER_MARKER_TEXT("Process", DOM, {}, marker);
       }
-#endif
       MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
               ("GetUsedProcess: Reused process %p (%u) for %s", retval.get(),
                (unsigned int)retval->ChildID(),
@@ -971,13 +969,11 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
     recycled->AssertAlive();
     recycled->StopRecycling();
 
-#ifdef MOZ_GECKO_PROFILER
     if (profiler_thread_is_being_profiled()) {
       nsPrintfCString marker("Recycled process %u (%p)",
                              (unsigned int)recycled->ChildID(), recycled.get());
       PROFILER_MARKER_TEXT("Process", DOM, {}, marker);
     }
-#endif
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
             ("Recycled process %p", recycled.get()));
 
@@ -994,13 +990,11 @@ already_AddRefed<ContentParent> ContentParent::GetUsedBrowserProcess(
     MOZ_DIAGNOSTIC_ASSERT(sRecycledE10SProcess != preallocated);
     preallocated->AssertAlive();
 
-#ifdef MOZ_GECKO_PROFILER
     if (profiler_thread_is_being_profiled()) {
       nsPrintfCString marker("Assigned preallocated process %u",
                              (unsigned int)preallocated->ChildID());
       PROFILER_MARKER_TEXT("Process", DOM, {}, marker);
     }
-#endif
     MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
             ("Adopted preallocated process %p for type %s", preallocated.get(),
              PromiseFlatCString(aRemoteType).get()));
@@ -2607,7 +2601,6 @@ bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
   mPrefSerializer = nullptr;
 
   const auto launchResumeTS = TimeStamp::Now();
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_thread_is_being_profiled()) {
     nsPrintfCString marker("Process start%s for %u",
                            mIsAPreallocBlocker ? " (immediate)" : "",
@@ -2617,7 +2610,6 @@ bool ContentParent::LaunchSubprocessResolve(bool aIsSync,
                             : ProfilerString8View("Process Launch"),
         DOM, MarkerTiming::Interval(mLaunchTS, launchResumeTS), marker);
   }
-#endif
 
   if (!sCreatedFirstContentProcess) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();

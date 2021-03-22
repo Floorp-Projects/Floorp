@@ -604,12 +604,7 @@ already_AddRefed<RecordedFrame> Compositor::RecordFrame(
 }
 
 bool Compositor::ShouldRecordFrames() const {
-#ifdef MOZ_GECKO_PROFILER
-  if (profiler_feature_active(ProfilerFeature::Screenshots)) {
-    return true;
-  }
-#endif
-  return mRecordFrames;
+  return profiler_feature_active(ProfilerFeature::Screenshots) || mRecordFrames;
 }
 
 }  // namespace layers

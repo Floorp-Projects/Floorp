@@ -579,18 +579,18 @@ bool XPCJSContext::InterruptCallback(JSContext* cx) {
   // Now is a good time to turn on profiling if it's pending.
   PROFILER_JS_INTERRUPT_CALLBACK();
 
-#ifdef MOZ_GECKO_PROFILER
-  nsDependentCString filename("unknown file");
-  JS::AutoFilename scriptFilename;
-  // Computing the line number can be very expensive (see bug 1330231 for
-  // example), so don't request it here.
-  if (JS::DescribeScriptedCaller(cx, &scriptFilename)) {
-    if (const char* file = scriptFilename.get()) {
-      filename.Assign(file, strlen(file));
+  if (profiler_can_accept_markers()) {
+    nsDependentCString filename("unknown file");
+    JS::AutoFilename scriptFilename;
+    // Computing the line number can be very expensive (see bug 1330231 for
+    // example), so don't request it here.
+    if (JS::DescribeScriptedCaller(cx, &scriptFilename)) {
+      if (const char* file = scriptFilename.get()) {
+        filename.Assign(file, strlen(file));
+      }
+      PROFILER_MARKER_TEXT("JS::InterruptCallback", JS, {}, filename);
     }
-    PROFILER_MARKER_TEXT("JS::InterruptCallback", JS, {}, filename);
   }
-#endif
 
   // Normally we record mSlowScriptCheckpoint when we start to process an
   // event. However, we can run JS outside of event handlers. This code takes

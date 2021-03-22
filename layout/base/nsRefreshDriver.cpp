@@ -1206,10 +1206,7 @@ void nsRefreshDriver::AddRefreshObserver(nsARefreshObserver* aObserver,
 #endif
   array.AppendElement(ObserverData{aObserver, aObserverDescription,
                                    TimeStamp::Now(), innerWindowID,
-#ifdef MOZ_GECKO_PROFILER
-                                   profiler_capture_backtrace(),
-#endif
-                                   aFlushType});
+                                   profiler_capture_backtrace(), aFlushType});
   EnsureTimerStarted();
 }
 
@@ -1221,7 +1218,6 @@ bool nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver* aObserver,
     return false;
   }
 
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     auto& data = array.ElementAt(index);
     nsPrintfCString str("%s [%s]", data.mDescription,
@@ -1233,7 +1229,6 @@ bool nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver* aObserver,
                       MarkerInnerWindowId(data.mInnerWindowId)),
         str);
   }
-#endif
 
   array.RemoveElementAt(index);
   return true;
@@ -1384,11 +1379,9 @@ void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
 
   if (mTestControllingRefreshes) return;
 
-#ifdef MOZ_GECKO_PROFILER
   if (!mRefreshTimerStartedCause) {
     mRefreshTimerStartedCause = profiler_capture_backtrace();
   }
-#endif
 
   // will it already fire, and no other changes needed?
   if (mActiveTimer && !(aFlags & eForceAdjustTimer)) return;
@@ -1458,9 +1451,7 @@ void nsRefreshDriver::StopTimer() {
 
   mActiveTimer->RemoveRefreshDriver(this);
   mActiveTimer = nullptr;
-#ifdef MOZ_GECKO_PROFILER
   mRefreshTimerStartedCause = nullptr;
-#endif
 }
 
 uint32_t nsRefreshDriver::ObserverCount() const {
@@ -2011,7 +2002,6 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   AUTO_PROFILER_LABEL("nsRefreshDriver::Tick", LAYOUT);
 
   nsAutoCString profilerStr;
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     profilerStr.AppendLiteral("Tick reasons:");
     AppendTickReasonsToString(tickReasons, profilerStr);
@@ -2022,7 +2012,6 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
           MarkerStack::TakeBacktrace(std::move(mRefreshTimerStartedCause)),
           MarkerInnerWindowIdFromDocShell(GetDocShell(mPresContext))),
       profilerStr);
-#endif
 
   mResizeSuppressed = false;
 
@@ -2275,12 +2264,10 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   if (mViewManagerFlushIsPending) {
     AutoRecordPhase paintRecord(&phasePaint);
     nsCString transactionId;
-#ifdef MOZ_GECKO_PROFILER
     if (profiler_can_accept_markers()) {
       transactionId.AppendLiteral("Transaction ID: ");
       transactionId.AppendInt((uint64_t)mNextTransactionId);
     }
-#endif
     AUTO_PROFILER_MARKER_TEXT(
         "ViewManagerFlush", GRAPHICS,
         MarkerStack::TakeBacktrace(std::move(mViewManagerFlushCause)),
@@ -2619,11 +2606,9 @@ void nsRefreshDriver::ScheduleViewManagerFlush() {
   NS_ASSERTION(mPresContext->IsRoot(),
                "Should only schedule view manager flush on root prescontexts");
   mViewManagerFlushIsPending = true;
-#ifdef MOZ_GECKO_PROFILER
   if (!mViewManagerFlushCause) {
     mViewManagerFlushCause = profiler_capture_backtrace();
   }
-#endif
   mHasScheduleFlush = true;
   EnsureTimerStarted(eNeverAdjustTimer);
 }

@@ -6224,7 +6224,6 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
 
   const char* reason = GetTimeoutReasonString(timeout);
 
-#ifdef MOZ_GECKO_PROFILER
   nsCString str;
   if (profiler_can_accept_markers()) {
     TimeDuration originalInterval = timeout->When() - timeout->SubmitTime();
@@ -6241,7 +6240,6 @@ bool nsGlobalWindowInner::RunTimeoutHandler(Timeout* aTimeout,
                                               timeout->TakeProfilerBacktrace()),
                                           MarkerInnerWindowId(mWindowID)),
                             str);
-#endif
 
   bool abortIntervalHandler;
   {

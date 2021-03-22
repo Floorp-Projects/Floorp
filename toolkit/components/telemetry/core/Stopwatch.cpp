@@ -381,16 +381,16 @@ int32_t Timers::Finish(JSContext* aCx, const nsAString& aHistogram,
   } else {
     rv = TelemetryHistogram::Accumulate(histogram.get(), delta);
   }
-#ifdef MOZ_GECKO_PROFILER
-  nsCString markerText = histogram;
-  if (!aKey.IsVoid()) {
-    markerText.AppendLiteral(":");
-    markerText.Append(NS_ConvertUTF16toUTF8(aKey));
+  if (profiler_can_accept_markers()) {
+    nsCString markerText = histogram;
+    if (!aKey.IsVoid()) {
+      markerText.AppendLiteral(":");
+      markerText.Append(NS_ConvertUTF16toUTF8(aKey));
+    }
+    PROFILER_MARKER_TEXT("TelemetryStopwatch", OTHER,
+                         MarkerTiming::IntervalUntilNowFrom(timer->StartTime()),
+                         markerText);
   }
-  PROFILER_MARKER_TEXT("TelemetryStopwatch", OTHER,
-                       MarkerTiming::IntervalUntilNowFrom(timer->StartTime()),
-                       markerText);
-#endif
   if (NS_FAILED(rv) && rv != NS_ERROR_NOT_AVAILABLE && !mSuppressErrors) {
     LogError(aCx, nsPrintfCString(
                       "TelemetryStopwatch: failed to update the Histogram "
@@ -529,7 +529,6 @@ bool Timers::FinishUserInteraction(
     return false;
   }
 
-#ifdef MOZ_GECKO_PROFILER
   if (profiler_can_accept_markers()) {
     nsAutoCString markerText(timer->GetBHRAnnotationValue());
     if (aAdditionalText.WasPassed()) {
@@ -541,7 +540,6 @@ bool Timers::FinishUserInteraction(
                          MarkerTiming::IntervalUntilNowFrom(timer->StartTime()),
                          markerText);
   }
-#endif
 
   // The Timer will be held alive by the RefPtr that's still in the LinkedList,
   // so the automatic removal from the LinkedList from the LinkedListElement

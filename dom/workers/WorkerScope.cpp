@@ -425,7 +425,6 @@ void WorkerGlobalScope::ImportScripts(JSContext* aCx,
   }
 
   {
-#ifdef MOZ_GECKO_PROFILER
     AUTO_PROFILER_MARKER_TEXT(
         "ImportScripts", JS, MarkerStack::Capture(),
         profiler_can_accept_markers()
@@ -434,7 +433,6 @@ void WorkerGlobalScope::ImportScripts(JSContext* aCx,
                            AppendUTF16toUTF8(scriptUrl, dest);
                          })
             : nsAutoCString{});
-#endif
     workerinternals::Load(mWorkerPrivate, std::move(stack), aScriptURLs,
                           WorkerScript, aRv);
   }

@@ -23,11 +23,9 @@ void PresShell::SetNeedLayoutFlush() {
     }
   }
 
-#ifdef MOZ_GECKO_PROFILER
   if (!mReflowCause) {
     mReflowCause = profiler_capture_backtrace();
   }
-#endif
 
   mLayoutTelemetry.IncReqsPerFlush(FlushType::Layout);
 }
@@ -47,11 +45,9 @@ void PresShell::SetNeedStyleFlush() {
     }
   }
 
-#ifdef MOZ_GECKO_PROFILER
   if (!mStyleCause) {
     mStyleCause = profiler_capture_backtrace();
   }
-#endif
 
   mLayoutTelemetry.IncReqsPerFlush(FlushType::Layout);
 }
