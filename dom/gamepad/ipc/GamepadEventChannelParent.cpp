@@ -89,9 +89,8 @@ mozilla::ipc::IPCResult GamepadEventChannelParent::RecvStopVibrateHaptic(
 
 mozilla::ipc::IPCResult GamepadEventChannelParent::RecvLightIndicatorColor(
     const Tainted<GamepadHandle>& aHandle,
-    const Tainted<uint32_t>& aLightColorIndex, const Tainted<uint8_t>& aRed,
-    const Tainted<uint8_t>& aGreen, const Tainted<uint8_t>& aBlue,
-    const uint32_t& aPromiseID) {
+    const Tainted<uint32_t>& aLightColorIndex, const uint8_t& aRed,
+    const uint8_t& aGreen, const uint8_t& aBlue, const uint32_t& aPromiseID) {
   SetGamepadLightIndicatorColor(aHandle, aLightColorIndex, aRed, aGreen, aBlue);
 
   if (SendReplyGamepadPromise(aPromiseID)) {
