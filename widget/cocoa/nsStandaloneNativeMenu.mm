@@ -22,7 +22,12 @@ NS_IMPL_ISUPPORTS_INHERITED(nsStandaloneNativeMenu, nsMenuGroupOwnerX, nsIMutati
 
 nsStandaloneNativeMenu::nsStandaloneNativeMenu() : mMenu(nullptr), mContainerStatusBarItem(nil) {}
 
-nsStandaloneNativeMenu::~nsStandaloneNativeMenu() {}
+nsStandaloneNativeMenu::~nsStandaloneNativeMenu() {
+  if (mMenu) {
+    mMenu->DetachFromGroupOwnerRecursive();
+    mMenu->DetachFromParent();
+  }
+}
 
 NS_IMETHODIMP
 nsStandaloneNativeMenu::Init(Element* aElement) {

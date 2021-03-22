@@ -47,6 +47,17 @@ class nsMenuItemX final : public nsMenuObjectX, public nsChangeObserver {
   nsMenuItemX(nsMenuX* aParent, const nsString& aLabel, EMenuItemType aItemType,
               nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode);
 
+  // Unregisters nsMenuX from the nsMenuGroupOwner, and nulls out the group
+  // owner pointer. This is needed because nsMenuX is reference-counted and can
+  // outlive its owner, and the menu group owner asserts that everything has
+  // been unregistered when it is destroyed.
+  void DetachFromGroupOwner();
+
+  // Nulls out our reference to the parent.
+  // This is needed because nsMenuX is reference-counted and can outlive its
+  // parent.
+  void DetachFromParent() { mMenuParent = nullptr; }
+
   NS_INLINE_DECL_REFCOUNTING(nsMenuItemX)
 
   NS_DECL_CHANGEOBSERVER
