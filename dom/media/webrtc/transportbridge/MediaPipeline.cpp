@@ -1416,10 +1416,11 @@ class MediaPipelineReceiveAudio::PipelineListener
                  " (desired %" PRId64 " -> %f)",
                  err, mPlayedTicks, aDesiredTime,
                  mSource->TrackTimeToSeconds(aDesiredTime)));
+        constexpr size_t mono = 1;
         mAudioFrame->UpdateFrame(
             mAudioFrame->timestamp_, nullptr, samplesPer10ms, mRate,
             mAudioFrame->speech_type_, mAudioFrame->vad_activity_,
-            std::max(1UL, mAudioFrame->num_channels()));
+            std::max(mono, mAudioFrame->num_channels()));
       }
 
       MOZ_LOG(
