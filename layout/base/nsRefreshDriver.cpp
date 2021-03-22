@@ -1355,6 +1355,21 @@ void nsRefreshDriver::RegisterCompositionPayload(
   mCompositionPayloads.AppendElement(aPayload);
 }
 
+void nsRefreshDriver::AddForceNotifyContentfulPaintPresContext(
+    nsPresContext* aPresContext) {
+  mForceNotifyContentfulPaintPresContexts.AppendElement(aPresContext);
+}
+
+void nsRefreshDriver::FlushForceNotifyContentfulPaintPresContext() {
+  while (!mForceNotifyContentfulPaintPresContexts.IsEmpty()) {
+    WeakPtr<nsPresContext> presContext =
+        mForceNotifyContentfulPaintPresContexts.PopLastElement();
+    if (presContext) {
+      presContext->NotifyContentfulPaint();
+    }
+  }
+}
+
 void nsRefreshDriver::RunDelayedEventsSoon() {
   // Place entries for delayed events into their corresponding normal list,
   // and schedule a refresh. When these delayed events run, if their document
@@ -2032,6 +2047,8 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
   if (StaticPrefs::apz_peek_messages_enabled()) {
     DisplayPortUtils::UpdateDisplayPortMarginsFromPendingMessages();
   }
+
+  FlushForceNotifyContentfulPaintPresContext();
 
   AutoTArray<nsCOMPtr<nsIRunnable>, 16> earlyRunners = std::move(mEarlyRunners);
   for (auto& runner : earlyRunners) {

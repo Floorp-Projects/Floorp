@@ -220,6 +220,7 @@ nsPresContext::nsPresContext(dom::Document* aDocument, nsPresContextType aType)
       mQuirkSheetAdded(false),
       mHadNonBlankPaint(false),
       mHadContentfulPaint(false),
+      mHadNonTickContentfulPaint(false),
       mHadContentfulPaintComposite(false)
 #ifdef DEBUG
       ,
@@ -2422,33 +2423,42 @@ void nsPresContext::NotifyNonBlankPaint() {
 }
 
 void nsPresContext::NotifyContentfulPaint() {
+  nsRootPresContext* rootPresContext = GetRootPresContext();
+  if (!rootPresContext) {
+    return;
+  }
   if (!mHadContentfulPaint) {
 #if defined(MOZ_WIDGET_ANDROID)
-    (new AsyncEventDispatcher(mDocument, u"MozFirstContentfulPaint"_ns,
-                              CanBubble::eYes, ChromeOnlyDispatch::eYes))
-        ->PostDOMEvent();
+    if (!mHadNonTickContentfulPaint) {
+      (new AsyncEventDispatcher(mDocument, u"MozFirstContentfulPaint"_ns,
+                                CanBubble::eYes, ChromeOnlyDispatch::eYes))
+          ->PostDOMEvent();
+    }
 #endif
+    if (!rootPresContext->RefreshDriver()->IsInRefresh()) {
+      if (!mHadNonTickContentfulPaint) {
+        rootPresContext->RefreshDriver()
+            ->AddForceNotifyContentfulPaintPresContext(this);
+        mHadNonTickContentfulPaint = true;
+      }
+      return;
+    }
     mHadContentfulPaint = true;
-    if (nsRootPresContext* rootPresContext = GetRootPresContext()) {
-      mFirstContentfulPaintTransactionId =
-          Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
-      if (nsPIDOMWindowInner* innerWindow = mDocument->GetInnerWindow()) {
-        if (Performance* perf = innerWindow->GetPerformance()) {
-          TimeStamp nowTime =
-              rootPresContext->RefreshDriver()->MostRecentRefresh(
-                  /* aEnsureTimerStarted */ false);
-          MOZ_ASSERT(
-              !nowTime.IsNull(),
-              "Most recent refresh timestamp should exist since we are in "
-              "a refresh driver tick");
-          MOZ_ASSERT(rootPresContext->RefreshDriver()->IsInRefresh(),
-                     "We should only notify contentful paint during refresh "
-                     "driver ticks");
-          RefPtr<PerformancePaintTiming> paintTiming =
-              new PerformancePaintTiming(perf, u"first-contentful-paint"_ns,
-                                         nowTime);
-          perf->SetFCPTimingEntry(paintTiming);
-        }
+    mFirstContentfulPaintTransactionId =
+        Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
+    if (nsPIDOMWindowInner* innerWindow = mDocument->GetInnerWindow()) {
+      if (Performance* perf = innerWindow->GetPerformance()) {
+        TimeStamp nowTime = rootPresContext->RefreshDriver()->MostRecentRefresh(
+            /* aEnsureTimerStarted */ false);
+        MOZ_ASSERT(!nowTime.IsNull(),
+                   "Most recent refresh timestamp should exist since we are in "
+                   "a refresh driver tick");
+        MOZ_ASSERT(rootPresContext->RefreshDriver()->IsInRefresh(),
+                   "We should only notify contentful paint during refresh "
+                   "driver ticks");
+        RefPtr<PerformancePaintTiming> paintTiming = new PerformancePaintTiming(
+            perf, u"first-contentful-paint"_ns, nowTime);
+        perf->SetFCPTimingEntry(paintTiming);
       }
     }
   }
@@ -2462,6 +2472,7 @@ void nsPresContext::NotifyPaintStatusReset() {
                             CanBubble::eYes, ChromeOnlyDispatch::eYes))
       ->PostDOMEvent();
 #endif
+  mHadNonTickContentfulPaint = false;
 }
 
 void nsPresContext::NotifyDOMContentFlushed() {
