@@ -18,7 +18,6 @@ const asyncStorage = require("devtools/shared/async-storage");
 // should be enough.
 requestLongerTimeout(2);
 
-Services.prefs.setBoolPref("devtools.testing", true);
 Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
 Services.prefs.setCharPref(
   "devtools.devices.url",
@@ -26,7 +25,6 @@ Services.prefs.setCharPref(
 );
 
 registerCleanupFunction(() => {
-  Services.prefs.clearUserPref("devtools.testing");
   Services.prefs.clearUserPref("devtools.devices.url");
   Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
   asyncStorage.removeItem("devtools.devices.url_cache");
