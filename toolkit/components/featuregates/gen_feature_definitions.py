@@ -184,6 +184,7 @@ def process_configured_value(name, value):
             "linux",
             "android",
             "nightly",
+            "early_beta_or_earlier",
             "beta",
             "release",
             "dev-edition",
