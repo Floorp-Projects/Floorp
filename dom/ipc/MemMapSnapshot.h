@@ -12,6 +12,7 @@
 #include "mozilla/RangedPtr.h"
 #include "mozilla/Result.h"
 #include "base/shared_memory.h"
+#include "ErrorList.h"
 
 namespace mozilla {
 namespace loader {
