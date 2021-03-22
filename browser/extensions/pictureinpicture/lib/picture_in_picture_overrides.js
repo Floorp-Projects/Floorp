@@ -6,7 +6,14 @@
 
 /* globals browser, module */
 
+/**
+ * Picture-in-Picture Overrides
+ */
 class PictureInPictureOverrides {
+  /**
+   * Class constructor
+   * @param {Object} availableOverrides Contains all overrides provided in data/picture_in_picture_overrides.js
+   */
   constructor(availableOverrides) {
     this.pref = "enable_picture_in_picture_overrides";
     this._prefEnabledOverrides = new Set();
@@ -14,6 +21,9 @@ class PictureInPictureOverrides {
     this.policies = browser.pictureInPictureChild.getPolicies();
   }
 
+  /**
+   * Ensures the "enable_picture_in_picture_overrides" pref is set; if it is undefined, sets the pref to true
+   */
   async _checkGlobalPref() {
     await browser.aboutConfigPipPrefs.getPref(this.pref).then(value => {
       if (value === false) {
@@ -27,6 +37,11 @@ class PictureInPictureOverrides {
     });
   }
 
+  /**
+   * Checks the status of a specified override, and updates the set, `this._prefEnabledOverrides`, accordingly
+   * @param {String} id the id of the specific override contained in `this._availableOverrides`
+   * @param {String} pref the specific preference to check, in the form `disabled_picture_in_picture_overrides.${id}`
+   */
   async _checkSpecificOverridePref(id, pref) {
     const isDisabled = await browser.aboutConfigPipPrefs.getPref(pref);
     if (isDisabled === true) {
@@ -36,6 +51,9 @@ class PictureInPictureOverrides {
     }
   }
 
+  /**
+   * The function that `run.js` calls to begin checking for changes to the PiP overrides
+   */
   bootup() {
     const checkGlobal = async () => {
       await this._checkGlobalPref();
@@ -63,6 +81,9 @@ class PictureInPictureOverrides {
     });
   }
 
+  /**
+   * Sets pictureInPictureParent's overrides
+   */
   async _onAvailableOverridesChanged() {
     const policies = await this.policies;
     let enabledOverrides = {};
