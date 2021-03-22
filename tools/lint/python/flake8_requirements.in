@@ -1,0 +1,3 @@
+flake8==3.8.4
+zipp==0.5
+autopep8==1.5.5
