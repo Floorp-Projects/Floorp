@@ -61,6 +61,12 @@ class PropertyName;
 /* The buffer length required to contain any unsigned 32-bit integer. */
 static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
 
+// Returns true if the characters of `s` store an unsigned 32-bit integer value,
+// initializing `*indexp` to that value if so.
+// Leading '0' isn't allowed except 0 itself.
+template <typename CharT>
+bool CheckStringIsIndex(const CharT* s, size_t length, uint32_t* indexp);
+
 } /* namespace js */
 
 // clang-format off
@@ -775,9 +781,6 @@ class JSLinearString : public JSString {
   bool isLinear() const = delete;
   JSLinearString& asLinear() const = delete;
 
-  template <typename CharT>
-  static bool isIndexSlow(const CharT* s, size_t length, uint32_t* indexp);
-
  protected:
   /* Returns void pointer to latin1/twoByte chars, for finalizers. */
   MOZ_ALWAYS_INLINE
@@ -864,10 +867,11 @@ class JSLinearString : public JSString {
     JS::AutoCheckCannotGC nogc;
     if (hasLatin1Chars()) {
       const JS::Latin1Char* s = latin1Chars(nogc);
-      return mozilla::IsAsciiDigit(*s) && isIndexSlow(s, len, indexp);
+      return mozilla::IsAsciiDigit(*s) &&
+             js::CheckStringIsIndex(s, len, indexp);
     }
     const char16_t* s = twoByteChars(nogc);
-    return mozilla::IsAsciiDigit(*s) && isIndexSlow(s, len, indexp);
+    return mozilla::IsAsciiDigit(*s) && js::CheckStringIsIndex(s, len, indexp);
   }
 
   /*
@@ -1243,12 +1247,6 @@ MOZ_ALWAYS_INLINE JSAtom* JSLinearString::morphAtomizedStringIntoPermanentAtom(
 }
 
 namespace js {
-
-// Returns true if the characters of `s` store an unsigned 32-bit integer value,
-// initializing `*indexp` to that value if so.
-// Leading '0' isn't allowed except 0 itself.
-template <typename CharT>
-bool CheckStringIsIndex(const CharT* s, size_t length, uint32_t* indexp);
 
 /**
  * An indexable characters class exposing unaligned, little-endian encoded

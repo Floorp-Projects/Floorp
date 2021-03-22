@@ -1229,19 +1229,6 @@ template bool js::CheckStringIsIndex(const Latin1Char* s, size_t length,
 template bool js::CheckStringIsIndex(const char16_t* s, size_t length,
                                      uint32_t* indexp);
 
-template <typename CharT>
-/* static */
-bool JSLinearString::isIndexSlow(const CharT* s, size_t length,
-                                 uint32_t* indexp) {
-  return js::CheckStringIsIndex(s, length, indexp);
-}
-
-template bool JSLinearString::isIndexSlow(const Latin1Char* s, size_t length,
-                                          uint32_t* indexp);
-
-template bool JSLinearString::isIndexSlow(const char16_t* s, size_t length,
-                                          uint32_t* indexp);
-
 constexpr StaticStrings::SmallCharTable StaticStrings::createSmallCharTable() {
   SmallCharTable array{};
   for (size_t i = 0; i < SMALL_CHAR_TABLE_SIZE; i++) {
