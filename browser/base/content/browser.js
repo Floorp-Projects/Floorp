@@ -9650,7 +9650,7 @@ var ConfirmationHint = {
    * Shows a transient, non-interactive confirmation hint anchored to an
    * element, usually used in response to a user action to reaffirm that it was
    * successful and potentially provide extra context. Examples for such hints:
-   * - "Saved to Library!" after bookmarking a page
+   * - "Saved to bookmarks" after bookmarking a page
    * - "Sent!" after sending a tab to another device
    * - "Queued (offline)" when attempting to send a tab to another device
    *   while offline

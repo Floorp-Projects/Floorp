@@ -448,7 +448,7 @@ var StarUI = {
   showConfirmation() {
     let animationTriggered = LibraryUI.triggerLibraryAnimation("bookmark");
 
-    // Show the "Saved to Library!" hint in addition to the library button
+    // Show the "Saved to bookmarks" hint in addition to the library button
     // animation for the first three times, or when the animation was skipped
     // e.g. because the library button has been customized away.
     const HINT_COUNT_PREF =
@@ -476,7 +476,7 @@ var StarUI = {
     if (!anchor) {
       anchor = document.getElementById("PanelUI-menu-button");
     }
-    ConfirmationHint.show(anchor, "pageBookmarked");
+    ConfirmationHint.show(anchor, "pageBookmarked2");
   },
 };
 
