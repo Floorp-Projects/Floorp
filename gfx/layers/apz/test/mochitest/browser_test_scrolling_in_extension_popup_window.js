@@ -152,18 +152,7 @@ add_task(async () => {
   );
 
   // Send native mouse wheel to scroll the content in the popup.
-  await new Promise(resolve => {
-    synthesizeNativeWheelAndWaitForObserver(
-      browserForPopup,
-      50,
-      50,
-      0,
-      -100,
-      () => {
-        resolve();
-      }
-    );
-  });
+  await promiseNativeWheelAndWaitForObserver(browserForPopup, 50, 50, 0, -100);
 
   // Flush APZ repaints and waits for MozAfterPaint to make sure the scroll has
   // been reflected on the main thread.

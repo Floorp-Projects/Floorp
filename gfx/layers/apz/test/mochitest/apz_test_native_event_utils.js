@@ -377,26 +377,27 @@ function synthesizeNativeWheel(aTarget, aX, aY, aDeltaX, aDeltaY, aObserver) {
   return true;
 }
 
-// Synthesizes a native mousewheel event and invokes the callback once the
+// Synthesizes a native mousewheel event and resolve the returned promise once the
 // request has been successfully made to the OS. This does not necessarily
 // guarantee that the OS generates the event we requested. See
 // synthesizeNativeWheel for details on the parameters.
-function synthesizeNativeWheelAndWaitForObserver(
+function promiseNativeWheelAndWaitForObserver(
   aElement,
   aX,
   aY,
   aDeltaX,
-  aDeltaY,
-  aCallback
+  aDeltaY
 ) {
-  var observer = {
-    observe(aSubject, aTopic, aData) {
-      if (aCallback && aTopic == "mousescrollevent") {
-        setTimeout(aCallback, 0);
-      }
-    },
-  };
-  return synthesizeNativeWheel(aElement, aX, aY, aDeltaX, aDeltaY, observer);
+  return new Promise(resolve => {
+    var observer = {
+      observe(aSubject, aTopic, aData) {
+        if (aTopic == "mousescrollevent") {
+          resolve();
+        }
+      },
+    };
+    synthesizeNativeWheel(aElement, aX, aY, aDeltaX, aDeltaY, observer);
+  });
 }
 
 // Synthesizes a native mousewheel event and resolve the returned promise once the
