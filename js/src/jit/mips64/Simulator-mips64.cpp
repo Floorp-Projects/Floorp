@@ -1514,6 +1514,16 @@ JS::ProfilingFrameIterator::RegisterState Simulator::registerState() {
   return state;
 }
 
+static bool AllowUnaligned() {
+  static bool hasReadFlag = false;
+  static bool unalignedAllowedFlag = false;
+  if (!hasReadFlag) {
+    unalignedAllowedFlag = !!getenv("MIPS_UNALIGNED");
+    hasReadFlag = true;
+  }
+  return unalignedAllowedFlag;
+}
+
 // MIPS memory instructions (except lw(d)l/r , sw(d)l/r) trap on unaligned
 // memory access enabling the OS to handle them via trap-and-emulate. Note that
 // simulator runs have the runtime system running directly on the host system
@@ -1565,7 +1575,7 @@ uint16_t Simulator::readHU(uint64_t addr, SimInstruction* instr) {
     return 0xffff;
   }
 
-  if ((addr & 1) == 0 ||
+  if (AllowUnaligned() || (addr & 1) == 0 ||
       wasm::InCompiledCode(reinterpret_cast<void*>(get_pc()))) {
     uint16_t* ptr = reinterpret_cast<uint16_t*>(addr);
     return *ptr;
@@ -1582,7 +1592,7 @@ int16_t Simulator::readH(uint64_t addr, SimInstruction* instr) {
     return -1;
   }
 
-  if ((addr & 1) == 0 ||
+  if (AllowUnaligned() || (addr & 1) == 0 ||
       wasm::InCompiledCode(reinterpret_cast<void*>(get_pc()))) {
     int16_t* ptr = reinterpret_cast<int16_t*>(addr);
     return *ptr;
@@ -1599,7 +1609,7 @@ void Simulator::writeH(uint64_t addr, uint16_t value, SimInstruction* instr) {
     return;
   }
 
-  if ((addr & 1) == 0 ||
+  if (AllowUnaligned() || (addr & 1) == 0 ||
       wasm::InCompiledCode(reinterpret_cast<void*>(get_pc()))) {
     uint16_t* ptr = reinterpret_cast<uint16_t*>(addr);
     LLBit_ = false;
@@ -1617,7 +1627,7 @@ void Simulator::writeH(uint64_t addr, int16_t value, SimInstruction* instr) {
     return;
   }
 
-  if ((addr & 1) == 0 ||
+  if (AllowUnaligned() || (addr & 1) == 0 ||
       wasm::InCompiledCode(reinterpret_cast<void*>(get_pc()))) {
     int16_t* ptr = reinterpret_cast<int16_t*>(addr);
     LLBit_ = false;
@@ -1634,7 +1644,7 @@ uint32_t Simulator::readWU(uint64_t addr, SimInstruction* instr) {
     return -1;
   }
 
-  if ((addr & 3) == 0 ||
+  if (AllowUnaligned() || (addr & 3) == 0 ||
       wasm::InCompiledCode(reinterpret_cast<void*>(get_pc()))) {
     uint32_t* ptr = reinterpret_cast<uint32_t*>(addr);
     return *ptr;
@@ -1650,7 +1660,7 @@ int32_t Simulator::readW(uint64_t addr, SimInstruction* instr) {
     return -1;
   }
 
-  if ((addr & 3) == 0 ||
+  if (AllowUnaligned() || (addr & 3) == 0 ||
       wasm::InCompiledCode(reinterpret_cast<void*>(get_pc()))) {
     int32_t* ptr = reinterpret_cast<int32_t*>(addr);
     return *ptr;
@@ -1666,7 +1676,7 @@ void Simulator::writeW(uint64_t addr, uint32_t value, SimInstruction* instr) {
     return;
   }
 
-  if ((addr & 3) == 0 ||
+  if (AllowUnaligned() || (addr & 3) == 0 ||
       wasm::InCompiledCode(reinterpret_cast<void*>(get_pc()))) {
     uint32_t* ptr = reinterpret_cast<uint32_t*>(addr);
     LLBit_ = false;
@@ -1683,7 +1693,7 @@ void Simulator::writeW(uint64_t addr, int32_t value, SimInstruction* instr) {
     return;
   }
 
-  if ((addr & 3) == 0 ||
+  if (AllowUnaligned() || (addr & 3) == 0 ||
       wasm::InCompiledCode(reinterpret_cast<void*>(get_pc()))) {
     int32_t* ptr = reinterpret_cast<int32_t*>(addr);
     LLBit_ = false;
@@ -1700,7 +1710,7 @@ int64_t Simulator::readDW(uint64_t addr, SimInstruction* instr) {
     return -1;
   }
 
-  if ((addr & kPointerAlignmentMask) == 0 ||
+  if (AllowUnaligned() || (addr & kPointerAlignmentMask) == 0 ||
       wasm::InCompiledCode(reinterpret_cast<void*>(get_pc()))) {
     intptr_t* ptr = reinterpret_cast<intptr_t*>(addr);
     return *ptr;
@@ -1716,7 +1726,7 @@ void Simulator::writeDW(uint64_t addr, int64_t value, SimInstruction* instr) {
     return;
   }
 
-  if ((addr & kPointerAlignmentMask) == 0 ||
+  if (AllowUnaligned() || (addr & kPointerAlignmentMask) == 0 ||
       wasm::InCompiledCode(reinterpret_cast<void*>(get_pc()))) {
     int64_t* ptr = reinterpret_cast<int64_t*>(addr);
     LLBit_ = false;
@@ -1733,7 +1743,7 @@ double Simulator::readD(uint64_t addr, SimInstruction* instr) {
     return NAN;
   }
 
-  if ((addr & kDoubleAlignmentMask) == 0 ||
+  if (AllowUnaligned() || (addr & kDoubleAlignmentMask) == 0 ||
       wasm::InCompiledCode(reinterpret_cast<void*>(get_pc()))) {
     double* ptr = reinterpret_cast<double*>(addr);
     return *ptr;
@@ -1749,7 +1759,7 @@ void Simulator::writeD(uint64_t addr, double value, SimInstruction* instr) {
     return;
   }
 
-  if ((addr & kDoubleAlignmentMask) == 0 ||
+  if (AllowUnaligned() || (addr & kDoubleAlignmentMask) == 0 ||
       wasm::InCompiledCode(reinterpret_cast<void*>(get_pc()))) {
     double* ptr = reinterpret_cast<double*>(addr);
     LLBit_ = false;
