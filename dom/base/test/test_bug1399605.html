@@ -18,6 +18,7 @@
   let observer = new IntersectionObserver(function() {
     ok(true, "we are still observing");
     SimpleTest.finish();
+    observer.unobserve(document.getElementById('target'));
   });
   observer.observe(document.getElementById('target'));
   observer.unobserve(document.getElementById('content'));
