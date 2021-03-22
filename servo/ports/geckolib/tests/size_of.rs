@@ -33,7 +33,7 @@ size_of_test!(size_of_pseudo_class, selector_parser::NonTSPseudoClass, 16);
 size_of_test!(test_size_of_rule, style::stylist::Rule, 32);
 
 // Large pages generate tens of thousands of ComputedValues.
-size_of_test!(test_size_of_cv, ComputedValues, 224);
+size_of_test!(test_size_of_cv, ComputedValues, 232);
 
 size_of_test!(test_size_of_option_arc_cv, Option<Arc<ComputedValues>>, 8);
 size_of_test!(test_size_of_option_rule_node, Option<StrongRuleNode>, 8);
