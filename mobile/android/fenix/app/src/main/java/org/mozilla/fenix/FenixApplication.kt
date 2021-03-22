@@ -51,6 +51,7 @@ import org.mozilla.fenix.components.metrics.MetricServiceType
 import org.mozilla.fenix.components.metrics.SecurePrefsTelemetry
 import org.mozilla.fenix.ext.measureNoInline
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.perf.AppStartReasonProvider
 import org.mozilla.fenix.perf.ProfilerMarkerFactProcessor
 import org.mozilla.fenix.perf.StartupTimeline
 import org.mozilla.fenix.perf.StorageStatsMetrics
@@ -190,6 +191,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             //    runStorageMaintenance()
             // }
 
+            components.appStartReasonProvider.registerInAppOnCreate(this)
             initVisualCompletenessQueueAndQueueTasks()
 
             components.appStartupTelemetry.onFenixApplicationOnCreate()
