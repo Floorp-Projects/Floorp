@@ -1437,11 +1437,6 @@
   value: true
   mirror: always
 
-- name: device.sensors.proximity.enabled
-  type: bool
-  value: false
-  mirror: always
-
 - name: device.sensors.test.events
   type: bool
   value: false

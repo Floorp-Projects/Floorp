@@ -288,7 +288,6 @@ class GeckoAppShellSupport final
       case hal::SENSOR_LINEAR_ACCELERATION:
       case hal::SENSOR_ACCELERATION:
       case hal::SENSOR_GYROSCOPE:
-      case hal::SENSOR_PROXIMITY:
         values.AppendElement(aX);
         values.AppendElement(aY);
         values.AppendElement(aZ);

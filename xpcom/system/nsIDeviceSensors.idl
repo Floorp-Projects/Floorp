@@ -19,7 +19,6 @@ interface nsIDeviceSensorData : nsISupports
   // and [2, 1] if absolute orientation (compass heading) is required.
   const unsigned long TYPE_ORIENTATION = 0;
   const unsigned long TYPE_ACCELERATION = 1;
-  const unsigned long TYPE_PROXIMITY = 2;
   const unsigned long TYPE_LINEAR_ACCELERATION = 3;
   const unsigned long TYPE_GYROSCOPE = 4;
   const unsigned long TYPE_LIGHT = 5;

@@ -45,12 +45,6 @@ class nsDeviceSensors : public nsIDeviceSensors,
 
   void FireDOMLightEvent(mozilla::dom::EventTarget* aTarget, double value);
 
-  void FireDOMProximityEvent(mozilla::dom::EventTarget* aTarget, double aValue,
-                             double aMin, double aMax);
-
-  void FireDOMUserProximityEvent(mozilla::dom::EventTarget* aTarget,
-                                 bool aNear);
-
   void FireDOMOrientationEvent(mozilla::dom::EventTarget* target, double aAlpha,
                                double aBeta, double aGamma, bool aIsAbsolute);
 
@@ -65,7 +59,6 @@ class nsDeviceSensors : public nsIDeviceSensors,
   bool IsSensorAllowedByPref(uint32_t aType, nsIDOMWindow* aWindow);
 
   mozilla::TimeStamp mLastDOMMotionEventTime;
-  bool mIsUserProximityNear;
   mozilla::Maybe<DeviceAccelerationInit> mLastAcceleration;
   mozilla::Maybe<DeviceAccelerationInit> mLastAccelerationIncludingGravity;
   mozilla::Maybe<DeviceRotationRateInit> mLastRotationRate;
