@@ -1297,8 +1297,23 @@ class GatherDecls(TcheckVisitor):
 
         # replace inparam Param nodes with proper Decls
         def paramToDecl(param):
+            self.checkAttributes(
+                param.attributes,
+                {
+                    "NoTaint": ("passback",)
+                },
+            )
+
             ptname = param.typespec.basename()
             ploc = param.typespec.loc
+
+            if 'NoTaint' in param.attributes and 'Tainted' not in md.attributes:
+                self.error(
+                    ploc,
+                    "argument typename `%s' of message `%s' has a NoTaint attribute, but the message lacks the Tainted attribute",
+                    ptname,
+                    msgname,
+                )
 
             ptdecl = self.symtab.lookup(ptname)
             if ptdecl is None:
