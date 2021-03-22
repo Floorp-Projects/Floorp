@@ -94,8 +94,6 @@ add_task(async function test_window_open_in_named_win() {
     },
   });
 
-  assertNoPendingCreatedNavigationTargetData();
-
   BrowserTestUtils.removeTab(tab1);
 
   await extension.unload();
