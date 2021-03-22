@@ -269,6 +269,10 @@ function PopupNotifications(tabbrowser, panel, iconBox, options = {}) {
     ) {
       let escAction = notification.notification.options.escAction;
       this._onButtonEvent(aEvent, escAction, "esc-press", notification);
+      // Without this preventDefault call, the event will be sent to the content page
+      // and our event listener might be called again after receiving a reply from
+      // the content process, which could accidentally dismiss another notification.
+      aEvent.preventDefault();
     }
   };
 
