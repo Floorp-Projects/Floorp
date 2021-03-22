@@ -42,6 +42,8 @@
     static get markup() {
       return `
       <hbox anonid="findbar-container" class="findbar-container" flex="1" align="center">
+        <toolbarbutton anonid="find-closebutton" class="findbar-closebutton tabbable close-icon"
+          data-l10n-id="findbar-find-button-close" oncommand="close();" />
         <hbox anonid="findbar-textbox-wrapper" align="stretch">
           <html:input anonid="findbar-textbox" class="findbar-textbox findbar-find-fast" />
           <toolbarbutton anonid="find-previous" class="findbar-find-previous tabbable"
@@ -50,13 +52,13 @@
           <toolbarbutton anonid="find-next" class="findbar-find-next tabbable"
             data-l10n-id="findbar-next" oncommand="onFindAgainCommand(false);" disabled="true" />
         </hbox>
-        <toolbarbutton anonid="highlight" class="findbar-highlight findbar-button tabbable"
+        <checkbox anonid="highlight" class="findbar-highlight tabbable"
           data-l10n-id="findbar-highlight-all2" oncommand="toggleHighlight(this.checked);" type="checkbox" />
-        <toolbarbutton anonid="find-case-sensitive" class="findbar-case-sensitive findbar-button tabbable"
+        <checkbox anonid="find-case-sensitive" class="findbar-case-sensitive tabbable"
           data-l10n-id="findbar-case-sensitive" oncommand="_setCaseSensitivity(this.checked ? 1 : 0);" type="checkbox" />
-        <toolbarbutton anonid="find-match-diacritics" class="findbar-match-diacritics findbar-button tabbable"
+        <checkbox anonid="find-match-diacritics" class="findbar-match-diacritics tabbable"
           data-l10n-id="findbar-match-diacritics" oncommand="_setDiacriticMatching(this.checked ? 1 : 0);" type="checkbox" />
-        <toolbarbutton anonid="find-entire-word" class="findbar-entire-word findbar-button tabbable"
+        <checkbox anonid="find-entire-word" class="findbar-entire-word tabbable"
           data-l10n-id="findbar-entire-word" oncommand="toggleEntireWord(this.checked);" type="checkbox" />
         <label anonid="match-case-status" class="findbar-find-fast" />
         <label anonid="match-diacritics-status" class="findbar-find-fast" />
@@ -65,8 +67,6 @@
         <image anonid="find-status-icon" class="findbar-find-fast find-status-icon" />
         <description anonid="find-status" control="findbar-textbox" class="findbar-find-fast findbar-find-status" />
       </hbox>
-      <toolbarbutton anonid="find-closebutton" class="findbar-closebutton close-icon"
-        data-l10n-id="findbar-find-button-close" oncommand="close();" />
       `;
     }
 
@@ -1067,6 +1067,7 @@
           this._findField.removeAttribute("status");
           break;
         case Ci.nsITypeAheadFind.FIND_NOTFOUND:
+          this._findStatusDesc.setAttribute("status", "notfound");
           this._findStatusIcon.setAttribute("status", "notfound");
           this._findStatusDesc.textContent = this._notFoundStr;
           this._findField.setAttribute("status", "notfound");
@@ -1075,12 +1076,14 @@
           this._findStatusIcon.setAttribute("status", "pending");
           this._findStatusDesc.textContent = "";
           this._findField.removeAttribute("status");
+          this._findStatusDesc.removeAttribute("status");
           break;
         case Ci.nsITypeAheadFind.FIND_FOUND:
         default:
           this._findStatusIcon.removeAttribute("status");
           this._findStatusDesc.textContent = "";
           this._findField.removeAttribute("status");
+          this._findStatusDesc.removeAttribute("status");
           break;
       }
     }
