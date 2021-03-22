@@ -194,7 +194,7 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   // position, search forward until we do find a word and return that (if
   // found).
   int32_t FindRealWordContaining(int32_t aSoftTextOffset, DOMMapHint aHint,
-                                 bool aSearchForward);
+                                 bool aSearchForward) const;
 
   // build mSoftText and mSoftTextDOMMapping
   void BuildSoftText();
