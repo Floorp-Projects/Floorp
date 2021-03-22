@@ -6,13 +6,19 @@
   appearance: none;
   -moz-context-properties: fill, fill-opacity;
   list-style-image: url(chrome://global/skin/icons/close.svg);
-  border-radius: 2px;
+  border-radius: 4px;
   color: inherit !important;
   fill: currentColor;
   padding: 2px;
   width: 20px;
   height: auto;
 }
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+.close-icon {
+  border-radius: 2px;
+}
+} /*** END !proton ***/
 
 .close-icon:hover {
   background-color: color-mix(in srgb, currentColor 10%, transparent);

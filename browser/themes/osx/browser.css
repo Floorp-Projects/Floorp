@@ -197,13 +197,6 @@
 %include ../shared/toolbarbutton-icons.inc.css
 %include ../shared/menupanel.inc.css
 
-/* Override OSX-specific toolkit findbar button styles */
-.findbar-button {
-  background-image: none !important;
-  box-shadow: none !important;
-  border: none;
-}
-
 @supports not -moz-bool-pref("browser.proton.enabled") {
 /* On Mac, native buttons keep their full opacity when they become disabled
  * and only the glyph or text on top of them becomes less opaque. */
@@ -494,12 +487,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 }
 
 /* ----- CONTENT ----- */
-
-.browserContainer > findbar {
-  /* Use the default background gradient from findBar.css */
-  background-color: transparent;
-  color: -moz-DialogText;
-}
 
 .openintabs-menuitem {
   list-style-image: none;
