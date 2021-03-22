@@ -1,4 +1,0 @@
-intr protocol PMessageTaintedWithPassback {
-child:
-    [Tainted] async foo([NoTaint=passback] int id);
-};
