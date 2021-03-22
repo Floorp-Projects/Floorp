@@ -51,7 +51,7 @@ fuzzy-if(OSX==1010,0-9,0-1) fuzzy-if(OSX&&skiaContent&&!webrender,0-6,0-1) fuzzy
 fuzzy(0-7,0-4) needs-focus == rtl-selection-with-decoration.html rtl-selection-with-decoration-ref.html
 needs-focus == semitransparent-decoration-line.html semitransparent-decoration-line-ref.html
 fuzzy-if(OSX,0-1,0-6) fuzzy-if(Android,0-188,0-39) needs-focus == writing-mode.html writing-mode-ref.html
-needs-focus fuzzy-if(!nativeThemePref,0-5,0-1) == 1478604.html 1478604-ref.html
+needs-focus fuzzy-if(!nativeThemePref,0-5,0-1) fuzzy-if(!nativeThemePref&&!webrender,0-127,0-4) == 1478604.html 1478604-ref.html # !webrender: Seems like an antialiasing+invalidation issue.
 
 needs-focus fuzzy-if(!nativeThemePref,0-3,0-13) == disabled-1.html disabled-1-notref.html
 needs-focus != disabled-2.html disabled-2-notref.html
