@@ -114,7 +114,7 @@ class nsMenuBarX : public nsMenuGroupOwnerX, public nsChangeObserver {
  protected:
   void ConstructNativeMenus();
   void ConstructFallbackNativeMenus();
-  void InsertMenuAtIndex(mozilla::UniquePtr<nsMenuX>&& aMenu, uint32_t aIndex);
+  void InsertMenuAtIndex(RefPtr<nsMenuX>&& aMenu, uint32_t aIndex);
   void RemoveMenuAtIndex(uint32_t aIndex);
   RefPtr<mozilla::dom::Element> HideItem(mozilla::dom::Document* aDocument, const nsAString& aID);
   void AquifyMenuBar();
@@ -122,7 +122,7 @@ class nsMenuBarX : public nsMenuGroupOwnerX, public nsChangeObserver {
                                       int aTag, NativeMenuItemTarget* aTarget);
   void CreateApplicationMenu(nsMenuX* aMenu);
 
-  nsTArray<mozilla::UniquePtr<nsMenuX>> mMenuArray;
+  nsTArray<RefPtr<nsMenuX>> mMenuArray;
   GeckoNSMenu* mNativeMenu;  // root menu, representing entire menu bar
   bool mNeedsRebuild;
   ApplicationMenuDelegate* mApplicationMenuDelegate;

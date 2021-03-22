@@ -36,7 +36,7 @@ class nsStandaloneNativeMenu : public nsMenuGroupOwnerX,
  protected:
   virtual ~nsStandaloneNativeMenu();
 
-  mozilla::UniquePtr<nsMenuX> mMenu;
+  RefPtr<nsMenuX> mMenu;
   NSStatusItem* mContainerStatusBarItem;
 };
 
