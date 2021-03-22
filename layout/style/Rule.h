@@ -99,12 +99,15 @@ class Rule : public nsISupports, public nsWrapperCache {
   void SetCssText(const nsACString& aCssText);
   Rule* GetParentRule() const;
   StyleSheet* GetParentStyleSheet() const { return GetStyleSheet(); }
-  nsINode* GetParentObject() const {
+  nsINode* GetAssociatedDocumentOrShadowRoot() const {
     if (!mSheet) {
       return nullptr;
     }
     auto* associated = mSheet->GetAssociatedDocumentOrShadowRoot();
     return associated ? &associated->AsNode() : nullptr;
+  }
+  nsISupports* GetParentObject() const {
+    return mSheet ? mSheet->GetRelevantGlobal() : nullptr;
   }
 
  protected:

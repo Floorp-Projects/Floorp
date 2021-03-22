@@ -343,6 +343,11 @@ void StyleSheet::SetURLExtraData() {
       new URLExtraData(GetBaseURI(), GetReferrerInfo(), Principal());
 }
 
+nsISupports* StyleSheet::GetRelevantGlobal() const {
+  const StyleSheet& outer = OutermostSheet();
+  return outer.mRelevantGlobal;
+}
+
 StyleSheetInfo::StyleSheetInfo(CORSMode aCORSMode,
                                const SRIMetadata& aIntegrity,
                                css::SheetParsingMode aParsingMode)

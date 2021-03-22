@@ -51,7 +51,9 @@ class nsICSSDeclaration : public nsISupports, public nsWrapperCache {
  public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICSSDECLARATION_IID)
 
-  virtual nsINode* GetParentObject() = 0;
+  virtual nsINode* GetAssociatedNode() const = 0;
+  virtual nsISupports* GetParentObject() const = 0;
+
   mozilla::dom::DocGroup* GetDocGroup();
 
   NS_IMETHOD GetPropertyValue(const nsACString& aPropName,

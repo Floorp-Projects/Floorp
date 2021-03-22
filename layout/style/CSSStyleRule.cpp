@@ -14,6 +14,7 @@
 #include "nsCSSPseudoElements.h"
 
 #include "mozAutoDocUpdate.h"
+#include "nsISupports.h"
 
 using namespace mozilla::dom;
 
@@ -48,7 +49,11 @@ NS_IMPL_RELEASE_USING_AGGREGATOR(CSSStyleRuleDeclaration, Rule())
 
 css::Rule* CSSStyleRuleDeclaration::GetParentRule() { return Rule(); }
 
-nsINode* CSSStyleRuleDeclaration::GetParentObject() {
+nsINode* CSSStyleRuleDeclaration::GetAssociatedNode() const {
+  return Rule()->GetAssociatedDocumentOrShadowRoot();
+}
+
+nsISupports* CSSStyleRuleDeclaration::GetParentObject() const {
   return Rule()->GetParentObject();
 }
 

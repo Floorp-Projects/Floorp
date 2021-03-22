@@ -25,7 +25,8 @@ class CSSPageRuleDeclaration final : public nsDOMCSSDeclaration {
   NS_DECL_ISUPPORTS_INHERITED
 
   css::Rule* GetParentRule() final;
-  nsINode* GetParentObject() final;
+  nsINode* GetAssociatedNode() const final;
+  nsISupports* GetParentObject() const final;
 
  protected:
   DeclarationBlock* GetOrCreateCSSDeclaration(
