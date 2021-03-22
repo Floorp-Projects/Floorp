@@ -544,6 +544,12 @@
       <radio id="autoDesktop"
              value="true"
              data-l10n-id="update-application-auto"/>
+#ifdef MOZ_UPDATE_AGENT
+      <checkbox id="backgroundUpdate"
+                class="indent"
+                hidden="true"
+                data-l10n-id="update-application-background-enabled"/>
+#endif
       <radio id="manualDesktop"
              value="false"
              data-l10n-id="update-application-check-choose"/>
