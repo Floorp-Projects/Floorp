@@ -896,25 +896,15 @@ function promiseNativeMouseEventWithAPZ(aParams) {
 }
 
 // See synthesizeNativeMouseEventWithAPZ for the detail of aParams.
-function synthesizeNativeMouseEventWithAPZAndWaitForEvent(
-  aParams,
-  aCallback = null
-) {
-  const targetWindow = windowForTarget(aParams.target);
-  const eventType = aParams.eventTypeToWait || aParams.type;
-  targetWindow.addEventListener(
-    eventType,
-    function(e) {
-      setTimeout(aCallback, 0);
-    },
-    { capture: true, once: true }
-  );
-  return synthesizeNativeMouseEventWithAPZ(aParams);
-}
-
 function promiseNativeMouseEventWithAPZAndWaitForEvent(aParams) {
   return new Promise(resolve => {
-    synthesizeNativeMouseEventWithAPZAndWaitForEvent(aParams, resolve);
+    const targetWindow = windowForTarget(aParams.target);
+    const eventType = aParams.eventTypeToWait || aParams.type;
+    targetWindow.addEventListener(eventType, resolve, {
+      capture: true,
+      once: true,
+    });
+    synthesizeNativeMouseEventWithAPZ(aParams);
   });
 }
 
