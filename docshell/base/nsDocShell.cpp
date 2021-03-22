@@ -1208,6 +1208,8 @@ void nsDocShell::FirePageHideShowNonRecursive(bool aShow) {
   // For pagehide, set mFiredUnloadEvent to true, so that unload doesn't fire.
   nsCOMPtr<nsIContentViewer> contentViewer(mContentViewer);
   if (aShow) {
+    mRefreshURIList = std::move(mBFCachedRefreshURIList);
+    RefreshURIFromQueue();
     mFiredUnloadEvent = false;
     RefPtr<Document> doc = contentViewer->GetDocument();
     if (doc) {
@@ -1243,10 +1245,24 @@ void nsDocShell::FirePageHideShowNonRecursive(bool aShow) {
       if (presShell) {
         presShell->Thaw(false);
       }
+
+      if (inner) {
+        inner->FireDelayedDOMEvents(false);
+      }
     }
   } else if (!mFiredUnloadEvent) {
     // XXXBFCache check again that the page can enter bfcache.
     // XXXBFCache should mTiming->NotifyUnloadEventStart()/End() be called here?
+
+    if (mRefreshURIList) {
+      RefreshURIToQueue();
+      mBFCachedRefreshURIList = std::move(mRefreshURIList);
+    } else {
+      // If Stop was called, the list was moved to mSavedRefreshURIList after
+      // calling SuspendRefreshURIs, which calls RefreshURIToQueue.
+      mBFCachedRefreshURIList = std::move(mSavedRefreshURIList);
+    }
+
     mFiredUnloadEvent = true;
     contentViewer->PageHide(false);
 
@@ -5677,8 +5693,10 @@ NS_IMETHODIMP
 nsDocShell::CancelRefreshURITimers() {
   DoCancelRefreshURITimers(mRefreshURIList);
   DoCancelRefreshURITimers(mSavedRefreshURIList);
+  DoCancelRefreshURITimers(mBFCachedRefreshURIList);
   mRefreshURIList = nullptr;
   mSavedRefreshURIList = nullptr;
+  mBFCachedRefreshURIList = nullptr;
 
   return NS_OK;
 }
@@ -5698,8 +5716,7 @@ nsDocShell::GetRefreshPending(bool* aResult) {
   return rv;
 }
 
-NS_IMETHODIMP
-nsDocShell::SuspendRefreshURIs() {
+void nsDocShell::RefreshURIToQueue() {
   if (mRefreshURIList) {
     uint32_t n = 0;
     mRefreshURIList->GetLength(&n);
@@ -5719,6 +5736,11 @@ nsDocShell::SuspendRefreshURIs() {
       mRefreshURIList->ReplaceElementAt(callback, i);
     }
   }
+}
+
+NS_IMETHODIMP
+nsDocShell::SuspendRefreshURIs() {
+  RefreshURIToQueue();
 
   // Suspend refresh URIs for our child shells as well.
   for (auto* child : mChildList.ForwardRange()) {
@@ -7860,7 +7882,7 @@ nsresult nsDocShell::RestoreFromHistory() {
     presShell->Thaw();
   }
 
-  return privWin->FireDelayedDOMEvents();
+  return privWin->FireDelayedDOMEvents(true);
 }
 
 nsresult nsDocShell::CreateContentViewer(const nsACString& aContentType,

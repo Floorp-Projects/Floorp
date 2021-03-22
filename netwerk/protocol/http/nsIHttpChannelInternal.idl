@@ -264,7 +264,7 @@ interface nsIHttpChannelInternal : nsISupports
      * Is false for resources loaded from the cache or resources that have an
      * IP literal host.
      */
-    [noscript, must_use] readonly attribute boolean isResolvedByTRR;
+    [must_use] readonly attribute boolean isResolvedByTRR;
 
     /**
      * Set to true if the channel is an OCSP check.

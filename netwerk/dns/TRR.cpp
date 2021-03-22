@@ -167,6 +167,12 @@ bool TRR::MaybeBlockRequest() {
     // we also don't check the blocklist for TRR only requests
     MOZ_ASSERT(mRec);
 
+    // If TRRService isn't enabled anymore for the req, don't do TRR.
+    if (!gTRRService->Enabled(mRec->mEffectiveTRRMode)) {
+      RecordReason(TRRSkippedReason::TRR_MODE_NOT_ENABLED);
+      return true;
+    }
+
     if (UseDefaultServer() &&
         gTRRService->IsTemporarilyBlocked(mHost, mOriginSuffix, mPB, true)) {
       if (mType == TRRTYPE_A) {
