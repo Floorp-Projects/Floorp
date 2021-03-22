@@ -335,8 +335,9 @@ class WindowsGamepadService {
   bool HandleRawInput(HRAWINPUT handle);
   void SetLightIndicatorColor(const Tainted<GamepadHandle>& aGamepadHandle,
                               const Tainted<uint32_t>& aLightColorIndex,
-                              const uint8_t& aRed, const uint8_t& aGreen,
-                              const uint8_t& aBlue);
+                              const Tainted<uint8_t>& aRed,
+                              const Tainted<uint8_t>& aGreen,
+                              const Tainted<uint8_t>& aBlue);
   size_t WriteOutputReport(const std::vector<uint8_t>& aReport);
   static void XInputMessageLoopOnceCallback(nsITimer* aTimer, void* aClosure);
   static void DevicesChangeCallback(nsITimer* aTimer, void* aService);
@@ -891,8 +892,8 @@ bool WindowsGamepadService::HandleRawInput(HRAWINPUT handle) {
 
 void WindowsGamepadService::SetLightIndicatorColor(
     const Tainted<GamepadHandle>& aGamepadHandle,
-    const Tainted<uint32_t>& aLightColorIndex, const uint8_t& aRed,
-    const uint8_t& aGreen, const uint8_t& aBlue) {
+    const Tainted<uint32_t>& aLightColorIndex, const Tainted<uint8_t>& aRed,
+    const Tainted<uint8_t>& aGreen, const Tainted<uint8_t>& aBlue) {
   // We get aControllerIdx from GamepadPlatformService::AddGamepad(),
   // It begins from 1 and is stored at Gamepad.id.
   const Gamepad* gamepad = (MOZ_FIND_AND_VALIDATE(
@@ -911,7 +912,13 @@ void WindowsGamepadService::SetLightIndicatorColor(
   }
 
   std::vector<uint8_t> report;
-  remapper->GetLightColorReport(aRed, aGreen, aBlue, report);
+  remapper->GetLightColorReport(
+      MOZ_NO_VALIDATE(aRed, "uint8_t's range is the range of all valid values"),
+      MOZ_NO_VALIDATE(aGreen,
+                      "uint8_t's range is the range of all valid values"),
+      MOZ_NO_VALIDATE(aBlue,
+                      "uint8_t's range is the range of all valid values"),
+      report);
   WriteOutputReport(report);
 }
 
