@@ -1165,7 +1165,7 @@ int32_t GetIndexFromString(JSString* str) {
     return -1;
   }
 
-  uint32_t index = UINT32_MAX;
+  uint32_t index = UINT32_MAX;  // Initialize this to appease Valgrind.
   if (!str->asLinear().isIndex(&index) || index > INT32_MAX) {
     return -1;
   }

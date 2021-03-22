@@ -336,8 +336,7 @@ static bool ValueToNameOrSymbolId(JSContext* cx, HandleValue idVal,
     return true;
   }
 
-  uint32_t dummy;
-  if (id.isAtom() && id.toAtom()->isIndex(&dummy)) {
+  if (id.isAtom() && id.toAtom()->isIndex()) {
     id.set(JSID_VOID);
     return true;
   }
