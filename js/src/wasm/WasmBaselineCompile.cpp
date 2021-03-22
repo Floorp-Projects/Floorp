@@ -17524,6 +17524,10 @@ bool js::wasm::IsValidStackMapKey(bool debugEnabled, const uint8_t* nextPC) {
           (insn[-1] & 0xfc000000) == 0x94000000 ||    // bl simm26
           (debugEnabled && insn[-1] == 0xd503201f));  // nop
 
+#  elif defined(JS_CODEGEN_MIPS64)
+  // TODO (bug 1699696): Implement this.  As for the platforms above, we need to
+  // enumerate all code sequences that can precede the stack map location.
+  return true;
 #  else
   MOZ_CRASH("IsValidStackMapKey: requires implementation on this platform");
 #  endif
