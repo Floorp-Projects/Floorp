@@ -911,31 +911,14 @@ function promiseNativeMouseEventWithAPZAndWaitForEvent(aParams) {
 // Move the mouse to (dx, dy) relative to |target|, and scroll the wheel
 // at that location.
 // Moving the mouse is necessary to avoid wheel events from two consecutive
-// moveMouseAndScrollWheelOver() calls on different elements being incorrectly
+// promiseMoveMouseAndScrollWheelOver() calls on different elements being incorrectly
 // considered as part of the same wheel transaction.
 // We also wait for the mouse move event to be processed before sending the
 // wheel event, otherwise there is a chance they might get reordered, and
 // we have the transaction problem again.
-function moveMouseAndScrollWheelOver(
-  target,
-  dx,
-  dy,
-  testDriver,
-  waitForScroll = true,
-  scrollDelta = 10
-) {
-  promiseMoveMouseAndScrollWheelOver(
-    target,
-    dx,
-    dy,
-    waitForScroll,
-    scrollDelta
-  ).then(testDriver);
-  return true;
-}
-
-// Same as moveMouseAndScrollWheelOver, but returns a promise instead of taking
-// a callback function.
+// This function returns a promise that is resolved when the resulting wheel
+// (if waitForScroll = false) or scroll (if waitForScroll = true) event is
+// received.
 function promiseMoveMouseAndScrollWheelOver(
   target,
   dx,
