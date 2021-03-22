@@ -191,7 +191,7 @@ void nsMenuX::AddMenuItem(UniquePtr<nsMenuItemX>&& aMenuItem) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   nsMenuItemX* menuItem = aMenuItem.get();
-  mMenuObjectsArray.AppendElement(std::move(aMenuItem));
+  mMenuChildren.AppendElement(std::move(aMenuItem));
 
   if (nsMenuUtilsX::NodeIsHiddenOrCollapsed(menuItem->Content())) {
     return;
@@ -222,10 +222,10 @@ void nsMenuX::AddMenuItem(UniquePtr<nsMenuItemX>&& aMenuItem) {
 void nsMenuX::AddMenu(UniquePtr<nsMenuX>&& aMenu) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  // aMenu transfers ownership to mMenuObjectsArray and becomes nullptr, so
+  // aMenu transfers ownership to mMenuChildren and becomes nullptr, so
   // we need to keep a raw pointer to access it conveniently.
   nsMenuX* menu = aMenu.get();
-  mMenuObjectsArray.AppendElement(std::move(aMenu));
+  mMenuChildren.AppendElement(std::move(aMenu));
 
   if (nsMenuUtilsX::NodeIsHiddenOrCollapsed(menu->Content())) {
     return;
@@ -246,15 +246,19 @@ void nsMenuX::AddMenu(UniquePtr<nsMenuX>&& aMenu) {
 }
 
 // Includes all items, including hidden/collapsed ones
-uint32_t nsMenuX::GetItemCount() { return mMenuObjectsArray.Length(); }
+uint32_t nsMenuX::GetItemCount() { return mMenuChildren.Length(); }
 
 // Includes all items, including hidden/collapsed ones
 nsMenuObjectX* nsMenuX::GetItemAt(uint32_t aPos) {
-  if (aPos >= (uint32_t)mMenuObjectsArray.Length()) {
+  if (aPos >= (uint32_t)mMenuChildren.Length()) {
     return nullptr;
   }
 
-  return mMenuObjectsArray[aPos].get();
+  return mMenuChildren[aPos].match(
+      [](const UniquePtr<nsMenuX>& aMenu) { return static_cast<nsMenuObjectX*>(aMenu.get()); },
+      [](const UniquePtr<nsMenuItemX>& aMenuItem) {
+        return static_cast<nsMenuObjectX*>(aMenuItem.get());
+      });
 }
 
 // Only includes visible items
@@ -266,20 +270,20 @@ nsresult nsMenuX::GetVisibleItemCount(uint32_t& aCount) {
 // Only includes visible items. Note that this is provides O(N) access
 // If you need to iterate or search, consider using GetItemAt and doing your own filtering
 nsMenuObjectX* nsMenuX::GetVisibleItemAt(uint32_t aPos) {
-  uint32_t count = mMenuObjectsArray.Length();
+  uint32_t count = mMenuChildren.Length();
   if (aPos >= mVisibleItemsCount || aPos >= count) {
     return nullptr;
   }
 
   // If there are no invisible items, can provide direct access
   if (mVisibleItemsCount == count) {
-    return mMenuObjectsArray[aPos].get();
+    return GetItemAt(aPos);
   }
 
   // Otherwise, traverse the array until we find the the item we're looking for.
   uint32_t visibleNodeIndex = 0;
   for (uint32_t i = 0; i < count; i++) {
-    nsMenuObjectX* item = mMenuObjectsArray[i].get();
+    nsMenuObjectX* item = GetItemAt(i);
     MOZ_RELEASE_ASSERT(item->MenuObjectType() == eSubmenuObjectType ||
                        item->MenuObjectType() == eMenuItemObjectType);
     RefPtr<nsIContent> content = item->MenuObjectType() == eSubmenuObjectType
@@ -312,7 +316,7 @@ nsresult nsMenuX::RemoveAll() {
     }
   }
 
-  mMenuObjectsArray.Clear();
+  mMenuChildren.Clear();
   mVisibleItemsCount = 0;
 
   return NS_OK;
@@ -665,12 +669,9 @@ void nsMenuX::Dump(uint32_t aIndent) const {
   }
   printf(" (%d visible items)", int(mVisibleItemsCount));
   printf("\n");
-  for (const auto& subitem : mMenuObjectsArray) {
-    if (subitem->MenuObjectType() == eSubmenuObjectType) {
-      static_cast<nsMenuX*>(subitem.get())->Dump(aIndent + 1);
-    } else if (subitem->MenuObjectType() == eMenuItemObjectType) {
-      static_cast<nsMenuItemX*>(subitem.get())->Dump(aIndent + 1);
-    }
+  for (const auto& subitem : mMenuChildren) {
+    subitem.match([=](const UniquePtr<nsMenuX>& aMenu) { aMenu->Dump(aIndent + 1); },
+                  [=](const UniquePtr<nsMenuItemX>& aMenuItem) { aMenuItem->Dump(aIndent + 1); });
   }
 }
 
