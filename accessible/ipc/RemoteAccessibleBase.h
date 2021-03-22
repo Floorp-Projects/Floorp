@@ -191,7 +191,7 @@ class RemoteAccessibleBase : public Accessible {
         mID(0),
         mRole(roles::DOCUMENT),
         mOuterDoc(false) {
-    mGenericTypes = eDocument;
+    mGenericTypes = eDocument | eHyperText;
   }
 
  protected:
