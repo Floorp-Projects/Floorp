@@ -1,0 +1,19 @@
+Writing New Firefox-Specific Static Analysis Checks
+===================================================
+
+This section is intended to help Mozilla engineers either casually play with writing a static analysis check
+or seriously develop one we can land and run internally.  While being written for internal consumption, it's broadly applicable outside Mozilla.
+
+.. toctree::
+  :maxdepth: 2
+
+  clang-query.rst
+  compiler-explorer.rst
+  writing-matchers.rst
+
+The above Table of Contents presents the full breadth of information.  A quick-start guide follows.
+
+Quick-State Guide
+-----------------
+
+TODO
