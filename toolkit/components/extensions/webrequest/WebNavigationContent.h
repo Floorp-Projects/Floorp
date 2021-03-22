@@ -9,6 +9,12 @@
 
 #include "nsIDOMEventListener.h"
 #include "nsIObserver.h"
+#include "nsIWebProgressListener.h"
+#include "nsWeakReference.h"
+
+class nsIPropertyBag2;
+class nsIRequest;
+class nsIWebProgress;
 
 namespace mozilla {
 namespace dom {
@@ -17,22 +23,32 @@ class EventTarget;
 
 namespace extensions {
 
+class FrameTransitionData;
+
 class WebNavigationContent final : public nsIObserver,
-                                   public nsIDOMEventListener {
+                                   public nsIDOMEventListener,
+                                   public nsIWebProgressListener,
+                                   public nsSupportsWeakReference {
  public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
   NS_DECL_NSIDOMEVENTLISTENER
+  NS_DECL_NSIWEBPROGRESSLISTENER
 
   static already_AddRefed<WebNavigationContent> GetSingleton();
 
  private:
-  WebNavigationContent();
+  WebNavigationContent() = default;
   ~WebNavigationContent() = default;
 
   void AttachListeners(mozilla::dom::EventTarget* aEventTarget);
 
   void Init();
+
+  FrameTransitionData GetFrameTransitionData(nsIWebProgress* aWebProgress,
+                                             nsIRequest* aRequest);
+
+  nsresult OnCreatedNavigationTargetFromJS(nsIPropertyBag2* aProps);
 };
 
 }  // namespace extensions
