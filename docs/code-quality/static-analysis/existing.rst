@@ -1,9 +1,7 @@
-Static analysis
-===============
+Existing Infrastructure and Analysis
+====================================
 
-This document is split in two parts. The first part will focus on the
-modern and robust way of static-analysis and the second part will
-present the build-time static-analysis.
+This document is about how Static Analysis occurs at Mozilla: the Firefox-specific and general llvm clang-tidy checks that are run on submissions in Phabricator and how to run them locally.  For information about how to develop your own static analysis checks, please see `Writing New Firefox-Specific Checks </code-quality/static-analysis/writing-new/>`_.
 
 For linting, please see the `linting documentation </code-quality/lint/>`_.
 
@@ -14,10 +12,9 @@ Ask questions on `#static-analysis:mozilla.org <https://chat.mozilla.org/#/room/
 Clang-Tidy static analysis
 --------------------------
 
-Our current static-analysis infrastructure is based on
-`clang-tidy <http://clang.llvm.org/extra/clang-tidy/>`__. It uses
-checkers in order to assert different programming errors present in the
-code. The checkers that we use are split into 3 categories:
+As explained earlier, our current static-analysis infrastructure is based on
+`clang-tidy <http://clang.llvm.org/extra/clang-tidy/>`__. The checkers that
+we use are split into 3 categories:
 
 #. `Firefox specific checkers <https://searchfox.org/mozilla-central/source/build/clang-plugin>`_. They detect incorrect Gecko programming
    patterns which could lead to bugs or security issues.
@@ -53,12 +50,12 @@ An example of automated review can be found `on
 phabricator <https://phabricator.services.mozilla.com/D2066>`__.
 
 
-Mach static analysis
---------------------
+./mach static-analysis
+----------------------
 
-It is supported on all Firefox built platforms. During the first run it
-automatically installs all of its dependencies like clang-tidy
-executable in the .mozbuild folder thus making it very easy to use. The
+The ``./mach static-analysis`` command is supported on all Firefox built platforms. During the first run it
+automatically installs all of its dependencies, such as the clang-tidy
+executable, in the .mozbuild folder thus making it very easy to use. The
 resources that are used are provided by toolchain artifacts clang-tidy
 target.
 

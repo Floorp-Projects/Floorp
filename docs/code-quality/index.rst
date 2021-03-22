@@ -10,7 +10,7 @@ In this document, we try to list these all tools.
   :maxdepth: 1
   :glob:
 
-  static-analysis.rst
+  static-analysis/index.rst
   lint/index.rst
   coding-style/index.rst
 
