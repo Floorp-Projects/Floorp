@@ -23,15 +23,15 @@ namespace a11y {
 class xpcAccessibleDocument : public xpcAccessibleHyperText,
                               public nsIAccessibleDocument {
  public:
-  explicit xpcAccessibleDocument(DocAccessible* aIntl)
+  explicit xpcAccessibleDocument(Accessible* aIntl)
       : xpcAccessibleHyperText(aIntl),
         mCache(kDefaultCacheLength),
-        mRemote(false) {}
-
-  xpcAccessibleDocument(RemoteAccessible* aProxy, uint32_t aInterfaces)
-      : xpcAccessibleHyperText(aProxy, aInterfaces),
-        mCache(kDefaultCacheLength),
-        mRemote(true) {}
+        mRemote(aIntl->IsRemote()) {
+    // XXX: Once there is a base doc class that both remote and local
+    // accessibles inherit, we can add the type to the prototype and remove this
+    // assert.
+    MOZ_ASSERT(aIntl->IsDoc());
+  }
 
   NS_DECL_ISUPPORTS_INHERITED
 
