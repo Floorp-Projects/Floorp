@@ -27,6 +27,8 @@ function doit(x) {
     if (e instanceof SyntaxError)
       doit(x);
   }
-  x = x.replace(/!/g, "");
+  try {
+    x = x.replace(/!/g, "");
+  } catch (e) {}
   foo += x + " ";
 }
