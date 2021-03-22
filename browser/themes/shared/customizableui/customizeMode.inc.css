@@ -302,27 +302,21 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 }
 
 #customization-uidensity-touch-spacer {
-  border-top: 1px solid ThreeDLightShadow;
-  margin: 0 -10px 10px;
+  border-top: 1px solid var(--panel-separator-color);
+  margin: 6px calc(-1 * var(--arrowpanel-padding)) 9px;
 }
 
 #customization-uidensity-autotouchmode-checkbox {
-  margin-bottom: 10px;
+  margin-bottom: var(--arrowpanel-padding);
 }
 
 #customization-uidensity-menu,
 #customization-lwtheme-menu {
   font: menu;
-}
 
-#customization-lwtheme-menu {
   /* Make the panel padding uniform across all platforms due to the
      styling of the section headers and footer. */
-  --arrowpanel-padding: 10px;
-}
-
-#customization-uidensity-menu {
-  --arrowpanel-padding: 5px 10px;
+  --arrowpanel-padding: 8px;
 }
 
 .customization-uidensity-menuitem > .menu-iconic-left > .menu-iconic-icon,
@@ -336,9 +330,10 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 .customization-lwtheme-menu-theme {
   appearance: none;
   border: 1px solid transparent;
-  margin: 0 -5px 5px;
+  border-radius: 4px;
   padding-block: 0;
   padding-inline: 0 5px;
+  margin: 2px 0;
 }
 
 .customization-uidensity-menuitem {
@@ -357,53 +352,47 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   list-style-image: url("chrome://browser/skin/customizableui/density-touch.svg");
 }
 
-.customization-uidensity-menuitem[active="true"],
 .customization-uidensity-menuitem:hover,
-.customization-lwtheme-menu-theme[active="true"],
 .customization-lwtheme-menu-theme:hover {
-  background-color: var(--arrowpanel-dimmed);
-  border-color: var(--panel-separator-color);
+  background-color: var(--buttons-secondary-hover-bgcolor);
 }
 
-.customization-uidensity-menuitem[active="true"],
-.customization-uidensity-menuitem:hover:active,
-.customization-lwtheme-menu-theme[active="true"],
-.customization-lwtheme-menu-theme:hover:active {
-  background-color: var(--arrowpanel-dimmed-further);
+.customization-uidensity-menuitem:is(:hover:active, [active="true"]),
+.customization-lwtheme-menu-theme:is(:hover:active, [active="true"]) {
+  background-color: var(--buttons-secondary-active-bgcolor);
 }
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+.customization-uidensity-menuitem,
+.customization-lwtheme-menu-theme {
+  margin: 0 0 5px;
+  border-radius: 0;
+}
+.customization-uidensity-menuitem:last-child {
+  margin-bottom: 0;
+}
+.customization-uidensity-menuitem:is(:hover, [active="true"]),
+.customization-lwtheme-menu-theme:is(:hover, [active="true"]) {
+  border-color: var(--panel-separator-color);
+}
+#customization-lwtheme-menu-footer {
+  margin-inline: calc(-1 * var(--arrowpanel-padding));
+}
+} /*** END !proton ***/
 
 .customization-uidensity-menuitem > .menu-iconic-text,
 .customization-lwtheme-menu-theme > .toolbarbutton-text {
   text-align: start;
 }
 
-#customization-lwtheme-menu-header,
-#customization-lwtheme-menu-recommended {
+#customization-lwtheme-menu-header {
   padding: 10px;
+  margin-top: calc(-1 * var(--arrowpanel-padding));
+  margin-inline: calc(-1 * var(--arrowpanel-padding));
   margin-bottom: 5px;
   text-align: center;
   font-weight: 600;
   border-bottom: 1px solid var(--panel-separator-color);
-}
-
-#customization-lwtheme-menu-header,
-#customization-lwtheme-menu-recommended,
-#customization-lwtheme-menu-footer {
-  margin-inline: -10px;
-}
-
-#customization-lwtheme-menu-header {
-  margin-top: -10px;
-}
-
-#customization-lwtheme-menu-recommended {
-  border-top: 1px solid var(--panel-separator-color);
-}
-
-#customization-lwtheme-menu-footer {
-  background: linear-gradient(var(--arrowpanel-dimmed) 60%, transparent) border-box;
-  border-top: 1px solid var(--arrowpanel-dimmed);
-  margin-bottom: -10px;
 }
 
 .customization-lwtheme-menu-footeritem {
@@ -411,6 +400,39 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   -moz-box-flex: 1;
   color: inherit;
   border-style: none;
+  padding: 8px 16px;
+}
+
+@supports -moz-bool-pref("browser.proton.enabled") {
+.customization-lwtheme-menu-footeritem {
+  font-weight: 600;
+  border-radius: 4px;
+  margin: 0;
+  margin-top: 4px;
+  background-color: var(--buttons-secondary-bgcolor);
+}
+
+.customization-lwtheme-menu-footeritem:first-child {
+  margin-inline-end: 8px;
+}
+
+.customization-lwtheme-menu-footeritem:hover {
+  background-color: var(--buttons-secondary-hover-bgcolor);
+}
+
+.customization-lwtheme-menu-footeritem:hover:active {
+  background-color: var(--buttons-secondary-active-bgcolor);
+}
+} /*** END proton ***/
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+#customization-lwtheme-menu-footer {
+  background: linear-gradient(var(--arrowpanel-dimmed) 60%, transparent) border-box;
+  border-top: 1px solid var(--arrowpanel-dimmed);
+  margin-bottom: calc(-1 * var(--arrowpanel-padding));
+}
+
+.customization-lwtheme-menu-footeritem {
   padding: 10px;
   margin-inline: 0;
 }
@@ -422,6 +444,7 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 .customization-lwtheme-menu-footeritem:first-child {
   border-inline-end: 1px solid var(--panel-separator-color);
 }
+} /*** END !proton ***/
 
 .customization-uidensity-menuitem > .menu-iconic-left > .menu-iconic-icon:-moz-locale-dir(rtl),
 .customization-lwtheme-menu-theme > .toolbarbutton-icon:-moz-locale-dir(rtl) {
