@@ -6,7 +6,6 @@
 #ifndef nsTraceRefcnt_h
 #define nsTraceRefcnt_h
 
-#include <stdio.h>  // for FILE
 #include "nscore.h"
 
 class nsTraceRefcnt {
@@ -16,11 +15,6 @@ class nsTraceRefcnt {
   static nsresult DumpStatistics();
 
   static void ResetStatistics();
-
-  static void WalkTheStack(FILE* aStream, uint32_t aMaxFrames = 0);
-#ifdef ANDROID
-  static void WalkTheStack(void (*aWriter)(uint32_t, void*, void*, void*));
-#endif
 
   /**
    * Tell nsTraceRefcnt whether refcounting, allocation, and destruction

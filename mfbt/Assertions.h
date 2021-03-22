@@ -9,7 +9,7 @@
 #ifndef mozilla_Assertions_h
 #define mozilla_Assertions_h
 
-#if defined(MOZILLA_INTERNAL_API) && defined(__cplusplus)
+#if defined(MOZ_HAS_MOZGLUE) || defined(MOZILLA_INTERNAL_API)
 #  define MOZ_DUMP_ASSERTION_STACK
 #endif
 
@@ -20,11 +20,7 @@
 #include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/Types.h"
 #ifdef MOZ_DUMP_ASSERTION_STACK
-#  include "nsTraceRefcnt.h"
-#  ifdef ANDROID
-#    include "mozilla/StackWalk.h"
-#    include <algorithm>
-#  endif
+#  include "mozilla/StackWalk.h"
 #endif
 
 /*
@@ -72,6 +68,13 @@ MOZ_END_EXTERN_C
 
 MOZ_BEGIN_EXTERN_C
 
+#if defined(ANDROID) && defined(MOZ_DUMP_ASSERTION_STACK)
+MOZ_MAYBE_UNUSED static void MOZ_ReportAssertionFailurePrintFrame(
+    const char* aBuf) {
+  __android_log_print(ANDROID_LOG_FATAL, "MOZ_Assert", "%s\n", aBuf);
+}
+#endif
+
 /*
  * Prints |aStr| as an assertion failure (using aFilename and aLine as the
  * location of the assertion) to the standard debug-output channel.
@@ -88,24 +91,13 @@ MOZ_ReportAssertionFailure(const char* aStr, const char* aFilename,
                       "Assertion failure: %s, at %s:%d\n", aStr, aFilename,
                       aLine);
 #  if defined(MOZ_DUMP_ASSERTION_STACK)
-  nsTraceRefcnt::WalkTheStack(
-      [](uint32_t aFrameNumber, void* aPC, void* aSP, void* aClosure) {
-        MozCodeAddressDetails details;
-        static const size_t buflen = 1024;
-        char buf[buflen + 1];  // 1 for trailing '\n'
-
-        MozDescribeCodeAddress(aPC, &details);
-        MozFormatCodeAddressDetails(buf, buflen, aFrameNumber, aPC, &details);
-        size_t len = std::min(strlen(buf), buflen + 1 - 2);
-        buf[len++] = '\n';
-        buf[len] = '\0';
-        __android_log_print(ANDROID_LOG_FATAL, "MOZ_Assert", "%s", buf);
-      });
+  MozWalkTheStackWithWriter(MOZ_ReportAssertionFailurePrintFrame,
+                            /* aSkipFrames */ 1, /* aMaxFrames */ 0);
 #  endif
 #else
   fprintf(stderr, "Assertion failure: %s, at %s:%d\n", aStr, aFilename, aLine);
 #  if defined(MOZ_DUMP_ASSERTION_STACK)
-  nsTraceRefcnt::WalkTheStack(stderr);
+  MozWalkTheStack(stderr, /* aSkipFrames */ 1, /* aMaxFrames */ 0);
 #  endif
   fflush(stderr);
 #endif
@@ -120,7 +112,7 @@ MOZ_MAYBE_UNUSED static MOZ_COLD MOZ_NEVER_INLINE void MOZ_ReportCrash(
 #else
   fprintf(stderr, "Hit MOZ_CRASH(%s) at %s:%d\n", aStr, aFilename, aLine);
 #  if defined(MOZ_DUMP_ASSERTION_STACK)
-  nsTraceRefcnt::WalkTheStack(stderr);
+  MozWalkTheStack(stderr, /* aSkipFrames */ 1, /* aMaxFrames */ 0);
 #  endif
   fflush(stderr);
 #endif
