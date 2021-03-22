@@ -60,7 +60,11 @@ class CSSKeyframeDeclaration : public nsDOMCSSDeclaration {
   }
   Document* DocToUpdate() final { return nullptr; }
 
-  nsINode* GetParentObject() final {
+  nsINode* GetAssociatedNode() const final {
+    return mRule ? mRule->GetAssociatedDocumentOrShadowRoot() : nullptr;
+  }
+
+  nsISupports* GetParentObject() const final {
     return mRule ? mRule->GetParentObject() : nullptr;
   }
 

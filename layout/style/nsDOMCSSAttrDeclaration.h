@@ -45,7 +45,8 @@ class nsDOMCSSAttributeDeclaration final : public nsDOMCSSDeclaration {
 
   mozilla::css::Rule* GetParentRule() override { return nullptr; }
 
-  nsINode* GetParentObject() override { return mElement; }
+  nsINode* GetAssociatedNode() const override { return mElement; }
+  nsINode* GetParentObject() const override { return mElement; }
 
   nsresult SetSMILValue(const nsCSSPropertyID aPropID, const SMILValue& aValue);
   nsresult SetSMILValue(const nsCSSPropertyID aPropID,

@@ -14,7 +14,7 @@
 using mozilla::dom::DocGroup;
 
 DocGroup* nsICSSDeclaration::GetDocGroup() {
-  nsINode* parentNode = GetParentObject();
+  nsINode* parentNode = GetAssociatedNode();
   if (!parentNode) {
     return nullptr;
   }

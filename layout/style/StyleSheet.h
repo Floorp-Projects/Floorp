@@ -450,6 +450,9 @@ class StyleSheet final : public nsICSSLoaderObserver, public nsWrapperCache {
   // Rejects mReplacePromise with a NetworkError.
   void MaybeRejectReplacePromise();
 
+  // Gets the relevant global if exists.
+  nsISupports* GetRelevantGlobal() const;
+
  private:
   void SetModifiedRules() {
     mState |= State::ModifiedRules | State::ModifiedRulesForDevtools;
