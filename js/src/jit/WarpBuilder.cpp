@@ -268,6 +268,11 @@ bool WarpBuilder::startNewOsrPreHeaderBlock(BytecodeLocation loopHead) {
     return false;
   }
 
+  // Give the preheader block the same hit count as the code before the loop.
+  if (pred->getHitState() == MBasicBlock::HitState::Count) {
+    current->setHitCount(pred->getHitCount());
+  }
+
   return true;
 }
 
@@ -3301,9 +3306,10 @@ bool WarpBuilder::buildIC(BytecodeLocation loc, CacheKind kind,
 bool WarpBuilder::buildBailoutForColdIC(BytecodeLocation loc, CacheKind kind) {
   MOZ_ASSERT(loc.opHasIC());
 
+  // TODO: ideally we would terminate the block here and set the implicitly-used
+  // flag for skipped bytecode ops. OSR makes this more tricky though.
   MBail* bail = MBail::New(alloc(), BailoutKind::FirstExecution);
   current->add(bail);
-  current->setAlwaysBails();
 
   MIRType resultType;
   switch (kind) {
