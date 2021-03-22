@@ -174,6 +174,15 @@ void nsNativeBasicTheme::RecomputeScrollbarSizes() {
   } else {
     sHorizontalScrollbarHeight = sVerticalScrollbarWidth = defaultSize;
   }
+  // On GTK, widgets don't account for text scale factor, but that's included
+  // in the usual DPI computations, so we undo that here, just like
+  // GetMonitorScaleFactor does it in nsNativeThemeGTK.
+  float scale =
+      LookAndFeel::GetFloat(LookAndFeel::FloatID::TextScaleFactor, 1.0f);
+  if (scale != 1.0f) {
+    sVerticalScrollbarWidth = float(sVerticalScrollbarWidth) / scale;
+    sHorizontalScrollbarHeight = float(sHorizontalScrollbarHeight) / scale;
+  }
 }
 
 static bool IsScrollbarWidthThin(nsIFrame* aFrame) {
@@ -1599,7 +1608,8 @@ bool nsNativeBasicTheme::CreateWebRenderCommandsForWidget(
     return false;
   }
   WebRenderBackendData data{aBuilder, aResources, aSc, aManager};
-  return DoDrawWidgetBackground(data, aFrame, aAppearance, aRect, DrawOverflow::Yes);
+  return DoDrawWidgetBackground(data, aFrame, aAppearance, aRect,
+                                DrawOverflow::Yes);
 }
 
 static LayoutDeviceRect ToSnappedRect(const nsRect& aRect,
