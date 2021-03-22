@@ -29,10 +29,6 @@ function hasOrientationListeners() {
          dss.hasWindowListener(Ci.nsIDeviceSensorData.TYPE_GAME_ROTATION_VECTOR, window);
 }
 
-function hasProximityListeners() {
-  return dss.hasWindowListener(Ci.nsIDeviceSensorData.TYPE_PROXIMITY, window);
-}
-
 function hasMotionListeners() {
   return dss.hasWindowListener(Ci.nsIDeviceSensorData.TYPE_ACCELERATION, window) ||
          dss.hasWindowListener(Ci.nsIDeviceSensorData.TYPE_LINEAR_ACCELERATION, window) ||
@@ -117,7 +113,6 @@ async function start() {
   });
 
   await test_event_presence("device.sensors.ambientLight.enabled", hasLightListeners, "devicelight");
-  await test_event_presence("device.sensors.proximity.enabled", hasProximityListeners, "deviceproximity");
   await test_event_presence("device.sensors.motion.enabled", hasMotionListeners, "devicemotion");
   await test_event_presence("device.sensors.orientation.enabled", hasOrientationListeners, "deviceorientation");
 
