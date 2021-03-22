@@ -77,6 +77,10 @@ enum LoadType : uint32_t {
                              nsIWebNavigation::LOAD_FLAGS_IS_LINK),
   LOAD_REFRESH = MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL,
                                 nsIWebNavigation::LOAD_FLAGS_IS_REFRESH),
+  LOAD_REFRESH_REPLACE =
+      MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_NORMAL,
+                     nsIWebNavigation::LOAD_FLAGS_IS_REFRESH |
+                         nsIWebNavigation::LOAD_FLAGS_REPLACE_HISTORY),
   LOAD_RELOAD_CHARSET_CHANGE =
       MAKE_LOAD_TYPE(nsIDocShell::LOAD_CMD_RELOAD,
                      nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE),
@@ -142,6 +146,7 @@ static inline bool IsValidLoadType(uint32_t aLoadType) {
     case LOAD_RELOAD_ALLOW_MIXED_CONTENT:
     case LOAD_LINK:
     case LOAD_REFRESH:
+    case LOAD_REFRESH_REPLACE:
     case LOAD_RELOAD_CHARSET_CHANGE:
     case LOAD_RELOAD_CHARSET_CHANGE_BYPASS_PROXY_AND_CACHE:
     case LOAD_RELOAD_CHARSET_CHANGE_BYPASS_CACHE:
@@ -173,6 +178,11 @@ static inline nsDOMNavigationTiming::Type ConvertLoadTypeToNavigationType(
     case LOAD_NORMAL_ALLOW_MIXED_CONTENT:
     case LOAD_LINK:
     case LOAD_STOP_CONTENT:
+    // FIXME: It isn't clear that LOAD_REFRESH_REPLACE should have a different
+    // navigation type than LOAD_REFRESH. Those loads historically used the
+    // LOAD_NORMAL_REPLACE type, and therefore wound up with TYPE_NAVIGATE by
+    // default.
+    case LOAD_REFRESH_REPLACE:
     case LOAD_REPLACE_BYPASS_CACHE:
       result = nsDOMNavigationTiming::TYPE_NAVIGATE;
       break;
