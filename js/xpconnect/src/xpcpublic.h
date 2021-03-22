@@ -138,6 +138,7 @@ bool AllowContentXBLScope(JS::Realm* realm);
 JSObject* NACScope(JSObject* global);
 
 bool IsSandboxPrototypeProxy(JSObject* obj);
+bool IsWebExtensionContentScriptSandbox(JSObject* obj);
 
 // The JSContext argument represents the Realm that's asking the question.  This
 // is needed to properly answer without exposing information unnecessarily

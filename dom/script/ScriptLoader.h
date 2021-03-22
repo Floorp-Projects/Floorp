@@ -24,6 +24,7 @@
 #include "mozilla/MaybeOneOf.h"
 #include "mozilla/MozPromise.h"
 #include "ScriptKind.h"
+#include "ModuleMapKey.h"
 
 class nsCycleCollectionTraversalCallback;
 class nsIChannel;
@@ -626,7 +627,16 @@ class ScriptLoader final : public nsISupports {
 
   void GiveUpBytecodeEncoding();
 
-  already_AddRefed<nsIScriptGlobalObject> GetScriptGlobalObject();
+  already_AddRefed<nsIGlobalObject> GetGlobalForRequest(
+      ScriptLoadRequest* aRequest);
+
+  // This is a marker class to ensure proper handling of requests with a
+  // WebExtGlobal.
+  enum class WebExtGlobal { Ignore, Handled };
+
+  already_AddRefed<nsIScriptGlobalObject> GetScriptGlobalObject(
+      WebExtGlobal aWebExtGlobal);
+
   nsresult FillCompileOptionsForRequest(const mozilla::dom::AutoJSAPI& jsapi,
                                         ScriptLoadRequest* aRequest,
                                         JS::Handle<JSObject*> aScopeChain,
@@ -658,11 +668,10 @@ class ScriptLoader final : public nsISupports {
   void SetModuleFetchFinishedAndResumeWaitingRequests(
       ModuleLoadRequest* aRequest, nsresult aResult);
 
-  bool IsFetchingModule(ModuleLoadRequest* aRequest) const;
-
-  bool ModuleMapContainsURL(nsIURI* aURL) const;
-  RefPtr<mozilla::GenericNonExclusivePromise> WaitForModuleFetch(nsIURI* aURL);
-  ModuleScript* GetFetchedModule(nsIURI* aURL) const;
+  bool ModuleMapContainsURL(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
+  RefPtr<mozilla::GenericNonExclusivePromise> WaitForModuleFetch(
+      nsIURI* aURL, nsIGlobalObject* aGlobal);
+  ModuleScript* GetFetchedModule(nsIURI* aURL, nsIGlobalObject* aGlobal) const;
 
   friend JSObject* HostResolveImportedModule(
       JSContext* aCx, JS::Handle<JS::Value> aReferencingPrivate,
@@ -749,9 +758,9 @@ class ScriptLoader final : public nsISupports {
   bool mGiveUpEncoding;
 
   // Module map
-  nsRefPtrHashtable<nsURIHashKey, mozilla::GenericNonExclusivePromise::Private>
+  nsRefPtrHashtable<ModuleMapKey, mozilla::GenericNonExclusivePromise::Private>
       mFetchingModules;
-  nsRefPtrHashtable<nsURIHashKey, ModuleScript> mFetchedModules;
+  nsRefPtrHashtable<ModuleMapKey, ModuleScript> mFetchedModules;
 
   nsCOMPtr<nsIConsoleReportCollector> mReporter;
 
