@@ -75,7 +75,7 @@ skip == chrome://reftest/content/xul/treecell-image-svg-1b.xhtml chrome://reftes
 fuzzy-if(gtkWidget,0-1,0-1) fuzzy-if(winWidget&&!nativeThemePref,0-1,0-1) == chrome://reftest/content/xul/treechildren-padding-percent-1.xhtml chrome://reftest/content/xul/treechildren-padding-percent-1-ref.xhtml
 
 != chrome://reftest/content/xul/treetwisty-svg-context-paint-1-not-ref.xhtml chrome://reftest/content/xul/treetwisty-svg-context-paint-1-ref.xhtml
-test-pref(svg.context-properties.content.enabled,true) fuzzy-if(!nativeThemePref,0-21,0-2) == chrome://reftest/content/xul/treetwisty-svg-context-paint-1.xhtml chrome://reftest/content/xul/treetwisty-svg-context-paint-1-ref.xhtml
+test-pref(svg.context-properties.content.enabled,true) fuzzy-if(!nativeThemePref,0-26,0-2) == chrome://reftest/content/xul/treetwisty-svg-context-paint-1.xhtml chrome://reftest/content/xul/treetwisty-svg-context-paint-1-ref.xhtml
 
 # resizer (non-native-themed)
 
