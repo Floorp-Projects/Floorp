@@ -18,6 +18,15 @@ namespace js {
 
 class ByteLengthQueuingStrategy : public NativeObject {
  public:
+  enum Slots { Slot_HighWaterMark, SlotCount };
+
+  double highWaterMark() const {
+    return getFixedSlot(Slot_HighWaterMark).toDouble();
+  }
+  void setHighWaterMark(double value) {
+    setFixedSlot(Slot_HighWaterMark, JS::DoubleValue(value));
+  }
+
   static bool constructor(JSContext* cx, unsigned argc, JS::Value* vp);
   static const ClassSpec classSpec_;
   static const JSClass class_;
@@ -27,6 +36,15 @@ class ByteLengthQueuingStrategy : public NativeObject {
 
 class CountQueuingStrategy : public NativeObject {
  public:
+  enum Slots { Slot_HighWaterMark, SlotCount };
+
+  double highWaterMark() const {
+    return getFixedSlot(Slot_HighWaterMark).toDouble();
+  }
+  void setHighWaterMark(double value) {
+    setFixedSlot(Slot_HighWaterMark, JS::DoubleValue(value));
+  }
+
   static bool constructor(JSContext* cx, unsigned argc, JS::Value* vp);
   static const ClassSpec classSpec_;
   static const JSClass class_;
