@@ -5335,7 +5335,7 @@ void ClientWebGLContext::LinkProgram(WebGLProgramJS& prog) const {
   if (IsContextLost()) return;
   if (!prog.ValidateUsable(*this, "program")) return;
 
-  if (prog.mActiveTfos.size()) {
+  if (!prog.mActiveTfos.empty()) {
     EnqueueError(LOCAL_GL_INVALID_OPERATION,
                  "Program still in use by active or paused"
                  " Transform Feedback objects.");
