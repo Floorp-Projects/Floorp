@@ -6,13 +6,16 @@ package mozilla.components.feature.prompts.creditcard
 
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import mozilla.components.concept.engine.prompt.CreditCard
 import mozilla.components.feature.prompts.R
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
+import mozilla.components.support.utils.CreditCardNetworkType
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -21,6 +24,7 @@ import org.junit.runner.RunWith
 class CreditCardItemViewHolderTest {
 
     private lateinit var view: View
+    private lateinit var cardLogoView: ImageView
     private lateinit var cardNumberView: TextView
     private lateinit var expirationDateView: TextView
     private lateinit var onCreditCardSelected: (CreditCard) -> Unit
@@ -28,24 +32,26 @@ class CreditCardItemViewHolderTest {
     private val creditCard = CreditCard(
         guid = "1",
         name = "Banana Apple",
-        number = "4111111111111110",
+        number = "4111111111111111",
         expiryMonth = "5",
         expiryYear = "2030",
-        cardType = "amex"
+        cardType = CreditCardNetworkType.VISA.cardName
     )
 
     @Before
     fun setup() {
         view = LayoutInflater.from(testContext).inflate(CreditCardItemViewHolder.LAYOUT_ID, null)
+        cardLogoView = view.findViewById(R.id.credit_card_logo)
         cardNumberView = view.findViewById(R.id.credit_card_number)
         expirationDateView = view.findViewById(R.id.credit_card_expiration_date)
         onCreditCardSelected = mock()
     }
 
     @Test
-    fun `GIVEN a credit card item WHEN bind is called THEN set the card number and expiry date text`() {
+    fun `GIVEN a credit card item WHEN bind is called THEN set the card number, logo and expiry date`() {
         CreditCardItemViewHolder(view, onCreditCardSelected).bind(creditCard)
 
+        assertNotNull(cardLogoView.drawable)
         assertEquals(creditCard.obfuscatedCardNumber, cardNumberView.text)
         assertEquals("0${creditCard.expiryMonth}/${creditCard.expiryYear}", expirationDateView.text)
     }

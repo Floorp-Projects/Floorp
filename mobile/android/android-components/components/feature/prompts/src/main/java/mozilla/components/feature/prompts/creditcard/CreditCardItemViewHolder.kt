@@ -5,10 +5,12 @@
 package mozilla.components.feature.prompts.creditcard
 
 import android.view.View
+import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.engine.prompt.CreditCard
 import mozilla.components.feature.prompts.R
+import mozilla.components.support.utils.creditCardIssuerNetwork
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -29,6 +31,9 @@ class CreditCardItemViewHolder(
      * @param creditCard The [CreditCard] to display.
      */
     fun bind(creditCard: CreditCard) {
+        itemView.findViewById<ImageView>(R.id.credit_card_logo)
+            .setImageResource(creditCard.cardType.creditCardIssuerNetwork().icon)
+
         itemView.findViewById<TextView>(R.id.credit_card_number).text =
             creditCard.obfuscatedCardNumber
 

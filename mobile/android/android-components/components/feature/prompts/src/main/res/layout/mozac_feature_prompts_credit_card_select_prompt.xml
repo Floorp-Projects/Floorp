@@ -68,7 +68,7 @@
                 android:background="?android:selectableItemBackground"
                 android:drawablePadding="24dp"
                 android:gravity="center_vertical"
-                android:paddingStart="16dp"
+                android:paddingStart="24dp"
                 android:paddingEnd="0dp"
                 android:text="@string/mozac_feature_prompts_manage_credit_cards"
                 android:textColor="?android:textColorPrimary"
