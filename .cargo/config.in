@@ -77,6 +77,11 @@ git = "https://github.com/jfkthame/mapped_hyph.git"
 replace-with = "vendored-sources"
 rev = "578d7058a638c955a597f035ce1a11049c3021d7"
 
+[source."https://github.com/hsivonen/xmldecl"]
+git = "https://github.com/hsivonen/xmldecl"
+replace-with = "vendored-sources"
+rev = "a74f7df5bf6cb11194fb74daa0c3cf42f326fd90"
+
 [source."https://github.com/hsivonen/packed_simd"]
 git = "https://github.com/hsivonen/packed_simd"
 replace-with = "vendored-sources"

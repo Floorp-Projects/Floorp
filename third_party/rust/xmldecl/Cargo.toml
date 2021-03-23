@@ -1,0 +1,16 @@
+[package]
+name = "xmldecl"
+version = "0.1.1"
+authors = ["Henri Sivonen <hsivonen@hsivonen.fi>"]
+edition = "2018"
+description = "Extracts an encoding from an ASCII-based bogo-XML declaration in text/html in a Web-compatible way"
+license = "Apache-2.0 OR MIT"
+readme = "README.md"
+documentation = "https://docs.rs/xmldecl/"
+homepage = "https://docs.rs/xmldecl/"
+repository = "https://github.com/hsivonen/xmldecl"
+keywords = ["encoding", "web", "unicode", "charset"]
+categories = ["text-processing", "encoding", "web-programming", "internationalization"]
+
+[dependencies]
+encoding_rs = "0.8.0"

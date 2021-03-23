@@ -15,6 +15,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Span.h"
 #include "mozilla/UniquePtr.h"
+#include "nsCharsetSource.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
@@ -89,36 +90,86 @@ enum eBomState {
   /**
    * BOM sniffing hasn't started.
    */
-  BOM_SNIFFING_NOT_STARTED = 0,
+  BOM_SNIFFING_NOT_STARTED,
 
   /**
    * BOM sniffing is ongoing, and the first byte of an UTF-16LE BOM has been
    * seen.
    */
-  SEEN_UTF_16_LE_FIRST_BYTE = 1,
+  SEEN_UTF_16_LE_FIRST_BYTE,
 
   /**
    * BOM sniffing is ongoing, and the first byte of an UTF-16BE BOM has been
    * seen.
    */
-  SEEN_UTF_16_BE_FIRST_BYTE = 2,
+  SEEN_UTF_16_BE_FIRST_BYTE,
 
   /**
    * BOM sniffing is ongoing, and the first byte of an UTF-8 BOM has been
    * seen.
    */
-  SEEN_UTF_8_FIRST_BYTE = 3,
+  SEEN_UTF_8_FIRST_BYTE,
 
   /**
    * BOM sniffing is ongoing, and the first and second bytes of an UTF-8 BOM
    * have been seen.
    */
-  SEEN_UTF_8_SECOND_BYTE = 4,
+  SEEN_UTF_8_SECOND_BYTE,
+
+  /**
+   * Seen \x00 in UTF-16BE bogo-XML declaration.
+   */
+  SEEN_UTF_16_BE_XML_FIRST,
+
+  /**
+   * Seen \x00< in UTF-16BE bogo-XML declaration.
+   */
+  SEEN_UTF_16_BE_XML_SECOND,
+
+  /**
+   * Seen \x00<\x00 in UTF-16BE bogo-XML declaration.
+   */
+  SEEN_UTF_16_BE_XML_THIRD,
+
+  /**
+   * Seen \x00<\x00? in UTF-16BE bogo-XML declaration.
+   */
+  SEEN_UTF_16_BE_XML_FOURTH,
+
+  /**
+   * Seen \x00<\x00?\x00 in UTF-16BE bogo-XML declaration.
+   */
+  SEEN_UTF_16_BE_XML_FIFTH,
+
+  /**
+   * Seen < in UTF-16BE bogo-XML declaration.
+   */
+  SEEN_UTF_16_LE_XML_FIRST,
+
+  /**
+   * Seen <\x00 in UTF-16BE bogo-XML declaration.
+   */
+  SEEN_UTF_16_LE_XML_SECOND,
+
+  /**
+   * Seen <\x00? in UTF-16BE bogo-XML declaration.
+   */
+  SEEN_UTF_16_LE_XML_THIRD,
+
+  /**
+   * Seen <\x00?\x00 in UTF-16BE bogo-XML declaration.
+   */
+  SEEN_UTF_16_LE_XML_FOURTH,
+
+  /**
+   * Seen <\x00?\x00x in UTF-16BE bogo-XML declaration.
+   */
+  SEEN_UTF_16_LE_XML_FIFTH,
 
   /**
    * BOM sniffing was started but is now over for whatever reason.
    */
-  BOM_SNIFFING_OVER = 5
+  BOM_SNIFFING_OVER,
 };
 
 enum eHtml5StreamState {
@@ -186,12 +237,15 @@ class nsHtml5StreamParser final : public nsISupports {
    *  @param   aCharsetSource the source of the charset
    */
   inline void SetDocumentCharset(NotNull<const Encoding*> aEncoding,
-                                 int32_t aSource) {
+                                 int32_t aSource, bool aChannelHadCharset) {
     MOZ_ASSERT(mStreamState == STREAM_NOT_STARTED,
                "SetDocumentCharset called too late.");
     NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+    MOZ_ASSERT(!(aSource == kCharsetFromChannel && !aChannelHadCharset),
+               "If charset is from channel, channel must have had charset.");
     mEncoding = aEncoding;
     mCharsetSource = aSource;
+    mChannelHadCharset = aChannelHadCharset;
   }
 
   inline void SetObserver(nsIRequestObserver* aObserver) {
@@ -310,7 +364,7 @@ class nsHtml5StreamParser final : public nsISupports {
   /**
    * Check whether every other byte in the sniffing buffer is zero.
    */
-  void SniffBOMlessUTF16BasicLatin(mozilla::Span<const uint8_t> aFromSegment);
+  void SniffBOMlessUTF16BasicLatin(const uint8_t* aBuf, size_t aBufLen);
 
   /**
    * Write the start of the stream to detector.
@@ -347,7 +401,9 @@ class nsHtml5StreamParser final : public nsISupports {
    *                            (UTF-16BE, UTF-16LE or UTF-8; the BOM has
    *                            been swallowed)
    */
-  nsresult SetupDecodingFromBom(NotNull<const Encoding*> aEncoding);
+  void SetupDecodingFromBom(NotNull<const Encoding*> aEncoding);
+
+  void SetupDecodingFromUtf16BogoXml(NotNull<const Encoding*> aEncoding);
 
   /**
    * When speculatively decoding from file: URL as UTF-8, commit
@@ -488,6 +544,11 @@ class nsHtml5StreamParser final : public nsISupports {
    * Whether reparse is forbidden
    */
   bool mReparseForbidden;
+
+  /**
+   * Whether the channel had charset.
+   */
+  bool mChannelHadCharset;
 
   // Portable parser objects
   /**
