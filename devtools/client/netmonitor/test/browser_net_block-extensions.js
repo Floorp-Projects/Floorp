@@ -61,34 +61,38 @@ add_task(async function() {
     waitForReload,
   ]);
 
-  const requests = document.querySelectorAll(".request-list-item");
+  // Find the request list item that matches the blocked url
+  const request = document.querySelector(
+    "td.requests-list-url[title*=request_0]"
+  ).parentNode;
 
   info("Assert the blocked request");
   ok(
-    !!requests[1].querySelector(
-      ".requests-list-status .status-code-blocked-icon"
-    ),
+    !!request.querySelector(".requests-list-status .status-code-blocked-icon"),
     "The request blocked status icon is visible"
   );
+
   is(
-    requests[1].querySelector(
-      ".requests-list-status .requests-list-status-code"
-    ).title,
+    request.querySelector(".requests-list-status .requests-list-status-code")
+      .title,
     "Blocked",
     "The request status title is 'Blocked'"
   );
+
   is(
-    requests[1].querySelector(".requests-list-type").innerText,
+    request.querySelector(".requests-list-type").innerText,
     "",
     "The request shows no type"
   );
+
   is(
-    requests[1].querySelector(".requests-list-transferred").innerText,
+    request.querySelector(".requests-list-transferred").innerText,
     `Blocked By ${extensionName}`,
     "The request shows the blocking extension name"
   );
+
   is(
-    requests[1].querySelector(".requests-list-size").innerText,
+    request.querySelector(".requests-list-size").innerText,
     "",
     "The request shows no size"
   );
