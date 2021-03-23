@@ -37,7 +37,7 @@ use crate::segment::SegmentBuilder;
 use crate::space::SpaceMapper;
 use crate::texture_cache::TEXTURE_REGION_DIMENSIONS;
 use crate::util::{clamp_to_scale_factor, pack_as_float, raster_rect_to_device_pixels};
-use crate::visibility::{compute_conservative_visible_rect, PrimitiveVisibility, VisibilityState};
+use crate::visibility::{compute_conservative_visible_rect, PrimitiveVisibility, VisibilityState, PrimitiveVisibilityMask};
 
 
 const MAX_MASK_SIZE: f32 = 4096.0;
@@ -91,19 +91,22 @@ pub fn prepare_primitives(
                     // Clear the current visibiilty mask, and build a more detailed one based on the dirty rect
                     // regions below.
                     let dirty_region = frame_state.current_dirty_region();
-                    let is_in_dirty_region = dirty_region.dirty_rects
-                        .iter()
-                        .any(|region| {
-                            rect_in_pic_space.intersects(&region.rect_in_pic_space)
-                        });
+                    let mut visibility_mask = PrimitiveVisibilityMask::empty();
 
-                    if is_in_dirty_region {
-                        prim_instance.vis.state = VisibilityState::Detailed {
-                            rect_in_pic_space: *rect_in_pic_space,
+                    for dirty_region in &dirty_region.dirty_rects {
+                        if rect_in_pic_space.intersects(&dirty_region.rect_in_pic_space) {
+                            visibility_mask.include(dirty_region.visibility_mask);
                         }
-                    } else {
+                    }
+
+                    // Check again if the prim is now visible after considering the current dirty regions.
+                    if visibility_mask.is_empty() {
                         prim_instance.clear_visibility();
                         continue;
+                    } else {
+                        prim_instance.vis.state = VisibilityState::Detailed {
+                            visibility_mask,
+                        }
                     }
                 }
                 VisibilityState::Detailed { .. } => {
