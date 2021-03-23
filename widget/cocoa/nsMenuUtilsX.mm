@@ -189,7 +189,6 @@ bool nsMenuUtilsX::NodeIsHiddenOrCollapsed(nsIContent* aContent) {
 }
 
 int nsMenuUtilsX::CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuX* aChild) {
-  int insertionPoint = 0;
   nsMenuObjectTypeX parentType = aParent->MenuObjectType();
   MOZ_RELEASE_ASSERT(parentType == eMenuBarObjectType || parentType == eSubmenuObjectType);
   if (parentType == eMenuBarObjectType) {
@@ -198,22 +197,9 @@ int nsMenuUtilsX::CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuX*
   }
   if (parentType == eSubmenuObjectType) {
     nsMenuX* menuParent = static_cast<nsMenuX*>(aParent);
-    uint32_t numItems = menuParent->GetItemCount();
-    for (uint32_t i = 0; i < numItems; i++) {
-      // Using GetItemAt instead of GetVisibleItemAt to avoid O(N^2)
-      nsMenuX::MenuChild currItem = *menuParent->GetItemAt(i);
-      if (currItem.is<RefPtr<nsMenuX>>() && currItem.as<RefPtr<nsMenuX>>() == aChild) {
-        return insertionPoint;  // we found ourselves, break out
-      }
-      NSMenuItem* nativeItem = currItem.match(
-          [](const RefPtr<nsMenuX>& aMenu) { return aMenu->NativeNSMenuItem(); },
-          [](const RefPtr<nsMenuItemX>& aMenuItem) { return aMenuItem->NativeNSMenuItem(); });
-      if (nativeItem.menu) {
-        insertionPoint++;
-      }
-    }
+    return menuParent->CalculateNativeInsertionPoint(aChild);
   }
-  return insertionPoint;
+  return 0;
 }
 
 NSMenuItem* nsMenuUtilsX::NativeMenuItemWithLocation(NSMenu* aRootMenu, NSString* aLocationString,
