@@ -11,19 +11,13 @@
 #include "nsMenuX.h"
 #include "nsIStandaloneNativeMenu.h"
 
-class nsStandaloneNativeMenu : public nsMenuObjectX,
-                               public nsIStandaloneNativeMenu,
+class nsStandaloneNativeMenu : public nsIStandaloneNativeMenu,
                                public nsMenuItemIconX::Listener {
  public:
   nsStandaloneNativeMenu();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTANDALONENATIVEMENU
-
-  // nsMenuObjectX
-  nsMenuObjectTypeX MenuObjectType() override {
-    return eStandaloneNativeMenuObjectType;
-  }
 
   // nsMenuItemIconX::Listener
   void IconUpdated() override;
