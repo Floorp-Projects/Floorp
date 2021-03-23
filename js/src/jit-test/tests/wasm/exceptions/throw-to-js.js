@@ -49,6 +49,29 @@ assertThrowsValue(
   42
 );
 
+// Like previous test, but using a rethrow instruction instead.
+assertThrowsValue(
+  () =>
+    wasmEvalText(
+      `(module
+         (import "m" "import" (func $import))
+         (func (export "f")
+           try
+             (call $import)
+           catch_all
+             (rethrow 0)
+           end))`,
+      {
+        m: {
+          import: () => {
+            throw 42;
+          },
+        },
+      }
+    ).exports.f(),
+  42
+);
+
 // Test for throwing to JS and then back to Wasm.
 {
   var wasmThrower;

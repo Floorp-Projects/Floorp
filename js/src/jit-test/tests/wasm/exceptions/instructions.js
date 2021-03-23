@@ -294,6 +294,40 @@ assertEq(
   2
 );
 
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func (param)))
+       (event $exn (type 0))
+       (func (export "f") (result i32)
+         try $l (result i32)
+           (throw $exn)
+         catch $exn
+           (i32.const 2)
+           (br $l)
+           rethrow 0
+         end))`
+  ).exports.f(),
+  2
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func (param)))
+       (event $exn (type 0))
+       (func (export "f") (result i32)
+         try $l (result i32)
+           (throw $exn)
+         catch_all
+           (i32.const 2)
+           (br $l)
+           rethrow 0
+         end))`
+  ).exports.f(),
+  2
+);
+
 // Test br branching out of a catch block.
 assertEq(
   wasmEvalText(
@@ -664,3 +698,143 @@ assertErrorMessage(
     102
   );
 }
+
+// Test simple rethrow.
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func))
+       (event $exn (type 0))
+       (func (export "f") (result i32)
+         try (result i32)
+           try
+             throw $exn
+           catch $exn
+             rethrow 0
+           end
+           i32.const 1
+         catch $exn
+           i32.const 27
+         end))`
+  ).exports.f(),
+  27
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func))
+       (event $exn (type 0))
+       (func (export "f") (result i32)
+         try (result i32)
+           try
+             throw $exn
+           catch_all
+             rethrow 0
+           end
+           i32.const 1
+         catch $exn
+           i32.const 27
+         end))`
+  ).exports.f(),
+  27
+);
+
+// Test rethrows in nested blocks.
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func))
+       (event $exn (type 0))
+       (func (export "f") (result i32)
+         try (result i32)
+           try
+             throw $exn
+           catch $exn
+             block
+               rethrow 1
+             end
+           end
+           i32.const 1
+         catch $exn
+           i32.const 27
+         end))`
+  ).exports.f(),
+  27
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func))
+       (event $exn (type 0))
+       (func (export "f") (result i32)
+         try (result i32)
+           try
+             throw $exn
+           catch_all
+             block
+               rethrow 1
+             end
+           end
+           i32.const 1
+         catch $exn
+           i32.const 27
+         end))`
+  ).exports.f(),
+  27
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func))
+       (event $exn1 (type 0))
+       (event $exn2 (type 0))
+       (func (export "f") (result i32)
+         try (result i32)
+           try
+             throw $exn1
+           catch $exn1
+             try
+               throw $exn2
+             catch $exn2
+               rethrow 1
+             end
+           end
+           i32.const 0
+         catch $exn1
+           i32.const 1
+         catch $exn2
+           i32.const 2
+         end))`
+  ).exports.f(),
+  1
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func))
+       (event $exn1 (type 0))
+       (event $exn2 (type 0))
+       (func (export "f") (result i32)
+         try (result i32)
+           try
+             throw $exn1
+           catch $exn1
+             try
+               throw $exn2
+             catch_all
+               rethrow 1
+             end
+           end
+           i32.const 0
+         catch $exn1
+           i32.const 1
+         catch $exn2
+           i32.const 2
+         end))`
+  ).exports.f(),
+  1
+);

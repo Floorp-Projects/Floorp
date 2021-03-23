@@ -205,6 +205,7 @@ enum class OpKind {
   Catch,
   CatchAll,
   Throw,
+  Rethrow,
   Try,
 #  endif
 };
@@ -483,6 +484,7 @@ class MOZ_STACK_CLASS OpIter : private Policy {
                                   ResultType* resultType,
                                   ValueVector* tryResults);
   [[nodiscard]] bool readThrow(uint32_t* eventIndex, ValueVector* argValues);
+  [[nodiscard]] bool readRethrow(uint32_t* relativeDepth);
 #endif
   [[nodiscard]] bool readUnreachable();
   [[nodiscard]] bool readDrop();
@@ -662,6 +664,11 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   ControlItem& controlItem(uint32_t relativeDepth) {
     return controlStack_[controlStack_.length() - 1 - relativeDepth]
         .controlItem();
+  }
+
+  // Return the LabelKind of an element in the control stack.
+  LabelKind controlKind(uint32_t relativeDepth) {
+    return controlStack_[controlStack_.length() - 1 - relativeDepth].kind();
   }
 
   // Return a reference to the outermost element on the control stack.
@@ -1533,6 +1540,26 @@ inline bool OpIter<Policy>::readThrow(uint32_t* eventIndex,
 
   if (!popWithType(env_.events[*eventIndex].resultType(), argValues)) {
     return false;
+  }
+
+  afterUnconditionalBranch();
+  return true;
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readRethrow(uint32_t* relativeDepth) {
+  MOZ_ASSERT(Classify(op_) == OpKind::Rethrow);
+
+  if (!readVarU32(relativeDepth)) {
+    return fail("unable to read rethrow depth");
+  }
+
+  if (*relativeDepth >= controlStack_.length()) {
+    return fail("rethrow depth exceeds current nesting level");
+  }
+  LabelKind kind = controlKind(*relativeDepth);
+  if (kind != LabelKind::Catch && kind != LabelKind::CatchAll) {
+    return fail("rethrow target was not a catch block");
   }
 
   afterUnconditionalBranch();

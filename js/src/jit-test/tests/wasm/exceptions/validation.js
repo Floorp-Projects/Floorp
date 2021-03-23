@@ -99,6 +99,28 @@ function testValidateDecode() {
     ]),
     /try without catch or unwind not allowed/
   );
+
+  // Rethrow must have a depth argument.
+  wasmInvalid(
+    moduleWithSections([
+      sigSection([emptyType]),
+      declSection([0]),
+      eventSection([{ type: 0 }]),
+      bodySection([
+        funcBody(
+          {
+            locals: [],
+            body: [
+              RethrowCode,
+              // Index missing.
+            ],
+          },
+          (withEndCode = false)
+        ),
+      ]),
+    ]),
+    /unable to read rethrow depth/
+  );
 }
 
 function testValidateThrow() {
@@ -392,9 +414,120 @@ function testValidateExnPayload() {
   wasmInvalid(invalid1, /event index out of range/);
 }
 
+function testValidateRethrow() {
+  wasmValidateText(
+    `(module
+       (event $exn (param))
+       (func
+         try
+           nop
+         catch $exn
+           rethrow 0
+         end))`
+  );
+
+  wasmValidateText(
+    `(module
+       (event $exn (param))
+       (func
+         try
+           nop
+         catch_all
+           rethrow 0
+         end))`
+  );
+
+  wasmValidateText(
+    `(module
+       (func (result i32)
+         try (result i32)
+           (i32.const 1)
+         catch_all
+           rethrow 0
+         end))`
+  );
+
+  wasmValidateText(
+    `(module
+       (event $exn (param))
+       (func
+         try
+           nop
+         catch $exn
+           block
+             try
+             catch $exn
+               rethrow 0
+             end
+           end
+         end))`
+  );
+
+  wasmValidateText(
+    `(module
+       (event $exn (param))
+       (func
+         try
+           nop
+         catch $exn
+           block
+             try
+             catch $exn
+               rethrow 2
+             end
+           end
+         end))`
+  );
+
+  wasmFailValidateText(
+    `(module
+       (event $exn (param))
+       (func
+         try
+           nop
+         catch $exn
+           block
+             try
+             catch $exn
+               rethrow 1
+             end
+           end
+         end))`,
+    /rethrow target was not a catch block/
+  );
+
+  wasmFailValidateText(
+    `(module (func rethrow 0))`,
+    /rethrow target was not a catch block/
+  );
+
+  wasmFailValidateText(
+    `(module (func try rethrow 0 catch_all end))`,
+    /rethrow target was not a catch block/
+  );
+
+  wasmFailValidateText(
+    `(module
+       (event $exn (param))
+       (func
+         try
+           nop
+         catch $exn
+           block
+             try
+             catch $exn
+               rethrow 4
+             end
+           end
+         end))`,
+    /rethrow depth exceeds current nesting level/
+  );
+}
+
 testValidateDecode();
 testValidateThrow();
 testValidateTryCatch();
 testValidateCatch();
 testValidateCatchAll();
 testValidateExnPayload();
+testValidateRethrow();
