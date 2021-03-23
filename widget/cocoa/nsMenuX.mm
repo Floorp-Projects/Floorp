@@ -3,10 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsMenuX.h"
+
 #include <dlfcn.h>
 
-#include "nsMenuBaseX.h"
-#include "nsMenuX.h"
+#include "mozilla/dom/Document.h"
+#include "mozilla/dom/ScriptSettings.h"
+#include "mozilla/EventDispatcher.h"
+#include "mozilla/MouseEvents.h"
+
 #include "nsMenuItemX.h"
 #include "nsMenuUtilsX.h"
 #include "nsMenuItemIconX.h"
@@ -25,17 +30,12 @@
 #include "nsCRT.h"
 #include "nsBaseWidget.h"
 
-#include "mozilla/dom/Document.h"
 #include "nsIContent.h"
 #include "nsIDocumentObserver.h"
 #include "nsIComponentManager.h"
 #include "nsIRollupListener.h"
 #include "nsIServiceManager.h"
 #include "nsXULPopupManager.h"
-#include "mozilla/dom/ScriptSettings.h"
-#include "mozilla/EventDispatcher.h"
-
-#include "mozilla/MouseEvents.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -71,7 +71,7 @@ static void SwizzleDynamicIndexingMethods() {
 // nsMenuX
 //
 
-nsMenuX::nsMenuX(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aContent)
+nsMenuX::nsMenuX(nsMenuParentX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aContent)
     : mContent(aContent), mParent(aParent), mMenuGroupOwner(aMenuGroupOwner) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -96,8 +96,8 @@ nsMenuX::nsMenuX(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsI
 
   if (mParent) {
     // Our parent could be either a menu bar (if we're toplevel) or a menu (if we're a submenu).
-    nsMenuObjectTypeX parentType = mParent->MenuObjectType();
-    MOZ_RELEASE_ASSERT(parentType == eMenuBarObjectType || parentType == eSubmenuObjectType);
+    nsMenuParentTypeX parentType = mParent->MenuParentType();
+    MOZ_RELEASE_ASSERT(parentType == eMenuBarParentType || parentType == eSubmenuParentType);
   }
 
   if (nsMenuUtilsX::NodeIsHiddenOrCollapsed(mContent)) {
@@ -391,7 +391,7 @@ void nsMenuX::RebuildMenu() {
 void nsMenuX::SetRebuild(bool aNeedsRebuild) {
   if (!gConstructingMenu) {
     mNeedsRebuild = aNeedsRebuild;
-    if (mParent && mParent->MenuObjectType() == eMenuBarObjectType) {
+    if (mParent && mParent->MenuParentType() == eMenuBarParentType) {
       nsMenuBarX* mb = static_cast<nsMenuBarX*>(mParent);
       mb->SetNeedsRebuild();
     }
@@ -568,15 +568,15 @@ void nsMenuX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aCon
     }
 
     if (mParent) {
-      nsMenuObjectTypeX parentType = mParent->MenuObjectType();
-      if (parentType == eMenuBarObjectType) {
+      nsMenuParentTypeX parentType = mParent->MenuParentType();
+      if (parentType == eMenuBarParentType) {
         nsMenuBarX* parentMenuBar = static_cast<nsMenuBarX*>(mParent);
         if (newVisible) {
           parentMenuBar->InsertChildNativeMenuItem(this);
         } else {
           parentMenuBar->RemoveChildNativeMenuItem(this);
         }
-      } else if (parentType == eSubmenuObjectType) {
+      } else if (parentType == eSubmenuParentType) {
         nsMenuX* parentMenu = static_cast<nsMenuX*>(mParent);
         if (newVisible) {
           parentMenu->InsertChildNativeMenuItem(this);

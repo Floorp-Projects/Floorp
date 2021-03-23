@@ -7,7 +7,6 @@
 #define nsMenuUtilsX_h_
 
 #include "nscore.h"
-#include "nsMenuBaseX.h"
 #include "nsStringFwd.h"
 
 #import <Cocoa/Cocoa.h>
