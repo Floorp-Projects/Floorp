@@ -15,12 +15,10 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.BuildConfig;
 import org.mozilla.geckoview.GeckoResult;
 
-import android.app.ActivityManager;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.os.Bundle;
-import android.os.Debug;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
@@ -420,11 +418,6 @@ public class GeckoThread extends Thread {
             env.add(0, "MOZ_ANDROID_USER_SERIAL_NUMBER=" + mInitInfo.userSerialNumber);
         }
 
-        // Very early -- before we load mozglue -- wait for Java debuggers.  This allows to connect
-        // a dual/hybrid debugger as well, allowing to debug child processes -- including the
-        // mozglue loading process.
-        maybeWaitForJavaDebugger(context, env);
-
         // Start the profiler before even loading mozglue, so we can capture more
         // things that are happening on the JVM side.
         maybeStartGeckoProfiler(env);
@@ -477,31 +470,6 @@ public class GeckoThread extends Thread {
 
         // Remove pumpMessageLoop() idle handler
         Looper.myQueue().removeIdleHandler(idleHandler);
-    }
-
-    private static void maybeWaitForJavaDebugger(final @NonNull Context context, final @NonNull List<String> env) {
-        for (final String e : env) {
-            if (e == null) {
-                continue;
-            }
-
-            if (e.equals("MOZ_DEBUG_WAIT_FOR_JAVA_DEBUGGER=1")) {
-                if (!isChildProcess()) {
-                    final String processName = getProcessName(context);
-                    waitForJavaDebugger(processName);
-                }
-            }
-
-            if (e.startsWith("MOZ_DEBUG_CHILD_WAIT_FOR_JAVA_DEBUGGER=")) {
-                final String filter = e.substring("MOZ_DEBUG_CHILD_WAIT_FOR_JAVA_DEBUGGER=".length());
-                if (isChildProcess()) {
-                    final String processName = getProcessName(context);
-                    if (processName == null || processName.endsWith(filter)) {
-                        waitForJavaDebugger(processName);
-                    }
-                }
-            }
-        }
     }
 
     // This may start the gecko profiler early by looking at the environment variables.
@@ -574,42 +542,6 @@ public class GeckoThread extends Thread {
         if (isStartupProfiling) {
             GeckoJavaSampler.start(interval, capacity);
         }
-    }
-
-    private static @Nullable String getProcessName(final @NonNull Context context) {
-        final int pid = Process.myPid();
-        final ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-
-        // This can be quite slow, and it can return null.
-        final List<ActivityManager.RunningAppProcessInfo> processInfos = manager.getRunningAppProcesses();
-
-        if (processInfos == null) {
-            return null;
-        }
-
-        for (final ActivityManager.RunningAppProcessInfo processInfo : processInfos) {
-            if (processInfo.pid == pid) {
-                return processInfo.processName;
-            }
-        }
-
-        return null;
-    }
-
-    private static void waitForJavaDebugger(final @Nullable String processName) {
-        final int pid = Process.myPid();
-        final String processIdentification = (isChildProcess() ? "Child process " : "Main process ") +
-                (processName != null ? processName : "<unknown>") +
-                " (" + pid + ")";
-
-        if (Debug.isDebuggerConnected()) {
-            Log.i(LOGTAG, processIdentification + ": Waiting for Java debugger ... " + " already connected");
-            return;
-        }
-
-        Log.w(LOGTAG, processIdentification + ": Waiting for Java debugger ...");
-        Debug.waitForDebugger();
-        Log.w(LOGTAG, processIdentification + ": Waiting for Java debugger ... connected");
     }
 
     @WrapForJNI(calledFrom = "gecko")
