@@ -112,6 +112,9 @@ var httpObserver = function(subject, topic, state) {
   }
 };
 Services.obs.addObserver(httpObserver, "http-on-modify-request");
+registerCleanupFunction(() => {
+  Services.obs.removeObserver(httpObserver, "http-on-modify-request");
+});
 
 function onMessage({ data }) {
   assertEvent(data.event, data.data);
