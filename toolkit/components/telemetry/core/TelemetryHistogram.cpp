@@ -2763,7 +2763,7 @@ nsresult TelemetryHistogram::GetAllStores(StringHashSet& set) {
     const char* name = &gHistogramStringTable[storeIdx];
     nsAutoCString store;
     store.AssignASCII(name);
-    if (!set.PutEntry(store)) {
+    if (!set.Insert(store, mozilla::fallible)) {
       return NS_ERROR_FAILURE;
     }
   }
