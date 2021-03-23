@@ -33,7 +33,7 @@
 #include "nsRegion.h"                                // for nsIntRegion
 #include "nsStringFwd.h"                             // for nsCString, nsAString
 #include "nsTArray.h"                                // for nsTArray
-#include "nsTHashtable.h"  // for nsTHashtable<>::Iterator, nsTHashtable
+#include "nsTHashSet.h"
 
 class gfxContext;
 class nsDisplayList;
@@ -55,8 +55,7 @@ class WebRenderParentCommand;
 
 class WebRenderLayerManager final : public LayerManager {
   typedef nsTArray<RefPtr<Layer>> LayerRefArray;
-  typedef nsTHashtable<nsRefPtrHashKey<WebRenderUserData>>
-      WebRenderUserDataRefTable;
+  typedef nsTHashSet<RefPtr<WebRenderUserData>> WebRenderUserDataRefTable;
 
  public:
   explicit WebRenderLayerManager(nsIWidget* aWidget);

@@ -12,14 +12,14 @@
 #include "mozilla/layers/IpcResourceUpdateQueue.h"
 #include "mozilla/layers/SharedSurfacesChild.h"
 #include "mozilla/layers/WebRenderCommandBuilder.h"
+#include "nsTHashSet.h"
 
 namespace mozilla {
 
 namespace layers {
 
 class RenderRootStateManager {
-  typedef nsTHashtable<nsRefPtrHashKey<WebRenderUserData>>
-      WebRenderUserDataRefTable;
+  typedef nsTHashSet<RefPtr<WebRenderUserData>> WebRenderUserDataRefTable;
 
  public:
   void AddRef();
