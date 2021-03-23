@@ -76,21 +76,6 @@ nsStandaloneNativeMenu::MenuWillOpen(bool* aResult) {
 }
 
 NS_IMETHODIMP
-nsStandaloneNativeMenu::GetNativeMenu(void** aVoidPointer) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  if (mMenu) {
-    *aVoidPointer = mMenu->NativeNSMenu();
-    [[(NSObject*)(*aVoidPointer) retain] autorelease];
-    return NS_OK;
-  }
-  *aVoidPointer = nullptr;
-  return NS_ERROR_NOT_INITIALIZED;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-NS_IMETHODIMP
 nsStandaloneNativeMenu::ActivateNativeMenuItemAt(const nsAString& indexString) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 

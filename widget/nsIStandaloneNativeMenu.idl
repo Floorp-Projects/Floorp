@@ -30,13 +30,6 @@ interface nsIStandaloneNativeMenu : nsISupports
   boolean menuWillOpen();
 
   /**
-   * The native object representing the XUL menu that was passed to Init(). On
-   * Mac OS X, this will be a NSMenu pointer, which will be retained and
-   * autoreleased when the attribute is retrieved.
-   */
-  [noscript] readonly attribute voidPtr nativeMenu;
-
-  /**
    * Activate the native menu item specified by |anIndexString|. This method
    * is intended to be used by the test suite.
    *
@@ -53,7 +46,6 @@ interface nsIStandaloneNativeMenu : nsISupports
    *        pipe ('|') characters
    */
   void forceUpdateNativeMenuAt(in AString anIndexString);
-
 
   /**
    * Print information about the menu structure to stdout. Only used for
