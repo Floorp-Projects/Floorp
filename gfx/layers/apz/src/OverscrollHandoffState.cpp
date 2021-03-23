@@ -135,6 +135,10 @@ bool OverscrollHandoffChain::HasFastFlungApzc() const {
   return AnyApzc(&AsyncPanZoomController::IsFlingingFast);
 }
 
+bool OverscrollHandoffChain::HasAutoscrollApzc() const {
+  return AnyApzc(&AsyncPanZoomController::IsAutoscroll);
+}
+
 RefPtr<AsyncPanZoomController> OverscrollHandoffChain::FindFirstScrollable(
     const InputData& aInput,
     ScrollDirections* aOutAllowedScrollDirections) const {

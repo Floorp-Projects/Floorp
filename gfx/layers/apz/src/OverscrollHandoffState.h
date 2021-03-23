@@ -90,6 +90,9 @@ class OverscrollHandoffChain {
   // Determine whether any APZC along this handoff chain has been flung fast.
   bool HasFastFlungApzc() const;
 
+  // Determine whether any APZC along this handoff chain is autoscroll.
+  bool HasAutoscrollApzc() const;
+
   // Find the first APZC in this handoff chain that can be scrolled by |aInput|.
   // Since overscroll-behavior can restrict handoff in some directions,
   // |aOutAllowedScrollDirections| is populated with the scroll directions
