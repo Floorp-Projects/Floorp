@@ -22,6 +22,7 @@
 #include "nsPoint.h"
 #include "nsString.h"
 #include "nsTArray.h"
+#include "nsTHashSet.h"
 #include "nsTextFrameUtils.h"
 #include "DrawMode.h"
 #include "harfbuzz/hb.h"
@@ -914,7 +915,7 @@ MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(FallbackTypes)
 
 struct FontMatchingStats {
   // Set of names that have been looked up (whether successfully or not).
-  nsTHashtable<nsCStringHashKey> mFamilyNames;
+  nsTHashSet<nsCString> mFamilyNames;
   // Number of font-family names resolved at each level of visibility.
   uint32_t mBaseFonts = 0;
   uint32_t mLangPackFonts = 0;

@@ -9,6 +9,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "gfxFT2FontBase.h"
 #include "gfxPlatformFontList.h"
+#include "nsTHashSet.h"
 
 namespace mozilla {
 namespace dom {
@@ -111,7 +112,7 @@ class FT2FontEntry final : public gfxFT2FontEntryBase {
 
   mozilla::ThreadSafeWeakPtr<mozilla::gfx::UnscaledFontFreeType> mUnscaledFont;
 
-  nsTHashtable<nsUint32HashKey> mAvailableTables;
+  nsTHashSet<uint32_t> mAvailableTables;
 
   bool mHasVariations = false;
   bool mHasVariationsInitialized = false;
@@ -225,7 +226,7 @@ class gfxFT2FontList final : public gfxPlatformFontList {
   FontFamily GetDefaultFontForPlatform(const gfxFontStyle* aStyle,
                                        nsAtom* aLanguage = nullptr) override;
 
-  nsTHashtable<nsCStringHashKey> mSkipSpaceLookupCheckFamilies;
+  nsTHashSet<nsCString> mSkipSpaceLookupCheckFamilies;
 
  private:
   mozilla::UniquePtr<FontNameCache> mFontNameCache;
