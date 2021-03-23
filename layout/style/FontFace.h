@@ -51,11 +51,13 @@ class FontFace final : public nsISupports, public nsWrapperCache {
           const nsTArray<gfxFontFeature>& aFeatureSettings,
           const nsTArray<gfxFontVariation>& aVariationSettings,
           uint32_t aLanguageOverride, gfxCharacterMap* aUnicodeRanges,
-          StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags)
+          StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags,
+          float aAscentOverride, float aDescentOverride, float aLineGapOverride)
         : gfxUserFontEntry(aFontSet, aFontFaceSrcList, aWeight, aStretch,
                            aStyle, aFeatureSettings, aVariationSettings,
                            aLanguageOverride, aUnicodeRanges, aFontDisplay,
-                           aRangeFlags) {}
+                           aRangeFlags, aAscentOverride, aDescentOverride,
+                           aLineGapOverride) {}
 
     virtual void SetLoadState(UserFontLoadState aLoadState) override;
     virtual void GetUserFontSets(nsTArray<gfxUserFontSet*>& aResult) override;

@@ -3669,6 +3669,25 @@ void gfxFont::SanitizeMetrics(gfxFont::Metrics* aMetrics,
     return;
   }
 
+  // If the font entry has ascent/descent/lineGap-override values,
+  // replace the metrics from the font with the overrides.
+  gfxFloat adjustedSize = GetAdjustedSize();
+  if (mFontEntry->mAscentOverride >= 0.0) {
+    aMetrics->maxAscent = mFontEntry->mAscentOverride * adjustedSize;
+    aMetrics->maxHeight = aMetrics->maxAscent + aMetrics->maxDescent;
+    aMetrics->internalLeading =
+        std::max(0.0, aMetrics->maxHeight - aMetrics->emHeight);
+  }
+  if (mFontEntry->mDescentOverride >= 0.0) {
+    aMetrics->maxDescent = mFontEntry->mDescentOverride * adjustedSize;
+    aMetrics->maxHeight = aMetrics->maxAscent + aMetrics->maxDescent;
+    aMetrics->internalLeading =
+        std::max(0.0, aMetrics->maxHeight - aMetrics->emHeight);
+  }
+  if (mFontEntry->mLineGapOverride >= 0.0) {
+    aMetrics->externalLeading = mFontEntry->mLineGapOverride * adjustedSize;
+  }
+
   aMetrics->underlineSize = std::max(1.0, aMetrics->underlineSize);
   aMetrics->strikeoutSize = std::max(1.0, aMetrics->strikeoutSize);
 
