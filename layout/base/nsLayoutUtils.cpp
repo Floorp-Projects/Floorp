@@ -3431,6 +3431,11 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
   UniquePtr<std::stringstream> ss;
   if (consoleNeedsDisplayList) {
     ss = MakeUnique<std::stringstream>();
+    Document* doc = presContext->Document();
+    nsAutoString uri;
+    if (doc && doc->GetDocumentURI(uri) == NS_OK) {
+      *ss << "Display list for " << uri << "\n";
+    }
     DumpBeforePaintDisplayList(ss, builder, list, visibleRect);
   }
 
