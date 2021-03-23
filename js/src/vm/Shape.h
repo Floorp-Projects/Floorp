@@ -1175,10 +1175,10 @@ class Shape : public gc::CellWithTenuredGCPointer<gc::TenuredCell, BaseShape> {
 
   uint32_t slotSpan(const JSClass* clasp) const {
     MOZ_ASSERT(!inDictionary());
-    // Proxy classes have reserved slots, but proxies manage their own slot
-    // layout. This means all non-native object shapes have nfixed == 0 and
-    // slotSpan == 0.
-    uint32_t free = clasp->isProxyObject() ? 0 : JSSLOT_FREE(clasp);
+    // slotSpan is only defined for native objects. Proxy classes have reserved
+    // slots, but proxies manage their own slot layout.
+    MOZ_ASSERT(clasp->isNativeObject());
+    uint32_t free = JSSLOT_FREE(clasp);
     return hasMissingSlot() ? free : std::max(free, maybeSlot() + 1);
   }
 
