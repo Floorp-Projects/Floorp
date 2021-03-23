@@ -29,7 +29,7 @@
 #include "nsIPropertyBag2.h"
 #include "nsComponentManagerUtils.h"
 #include "nsCRT.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 #include "nsQueryObject.h"
 #include "nsTHashMap.h"
 
@@ -170,7 +170,7 @@ class ProcessPriorityManagerImpl final : public nsIObserver,
       mParticularManagers;
 
   /** Contains the PIDs of child processes holding high-priority wakelocks */
-  nsTHashtable<nsUint64HashKey> mHighPriorityChildIDs;
+  nsTHashSet<uint64_t> mHighPriorityChildIDs;
 };
 
 /**
@@ -287,7 +287,7 @@ class ParticularProcessPriorityManager final : public WakeLockObserver,
   nsCOMPtr<nsITimer> mResetPriorityTimer;
 
   // This hashtable contains the list of active TabId for this process.
-  nsTHashtable<nsUint64HashKey> mActiveBrowserParents;
+  nsTHashSet<uint64_t> mActiveBrowserParents;
 };
 
 /* static */
@@ -447,7 +447,7 @@ void ProcessPriorityManagerImpl::ObserveContentParentDestroyed(
 
   if (auto entry = mParticularManagers.Lookup(childID)) {
     entry.Data()->ShutDown();
-    mHighPriorityChildIDs.RemoveEntry(childID);
+    mHighPriorityChildIDs.Remove(childID);
     entry.Remove();
   }
 }
@@ -459,10 +459,10 @@ void ProcessPriorityManagerImpl::NotifyProcessPriorityChanged(
 
   if (newPriority >= PROCESS_PRIORITY_FOREGROUND_HIGH &&
       aOldPriority < PROCESS_PRIORITY_FOREGROUND_HIGH) {
-    mHighPriorityChildIDs.PutEntry(aParticularManager->ChildID());
+    mHighPriorityChildIDs.Insert(aParticularManager->ChildID());
   } else if (newPriority < PROCESS_PRIORITY_FOREGROUND_HIGH &&
              aOldPriority >= PROCESS_PRIORITY_FOREGROUND_HIGH) {
-    mHighPriorityChildIDs.RemoveEntry(aParticularManager->ChildID());
+    mHighPriorityChildIDs.Remove(aParticularManager->ChildID());
   }
 }
 
@@ -661,7 +661,7 @@ void ParticularProcessPriorityManager::OnBrowserParentDestroyed(
     return;
   }
 
-  mActiveBrowserParents.RemoveEntry(browserHost->GetTabId());
+  mActiveBrowserParents.Remove(browserHost->GetTabId());
 
   ResetPriority();
 }
@@ -796,9 +796,9 @@ void ParticularProcessPriorityManager::TabActivityChanged(
   MOZ_ASSERT(aBrowserParent);
 
   if (!aIsActive) {
-    mActiveBrowserParents.RemoveEntry(aBrowserParent->GetTabId());
+    mActiveBrowserParents.Remove(aBrowserParent->GetTabId());
   } else {
-    mActiveBrowserParents.PutEntry(aBrowserParent->GetTabId());
+    mActiveBrowserParents.Insert(aBrowserParent->GetTabId());
   }
 
   ResetPriority();
