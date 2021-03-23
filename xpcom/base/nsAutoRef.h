@@ -188,9 +188,8 @@ class nsAutoRef : public nsAutoRefBase<T> {
   // operator->() and disown() are provided by nsAutoRefBase<T>.
   // The default nsSimpleRef<T> provides get().
 
- private:
   // No copy constructor
-  explicit nsAutoRef(ThisClass& aRefToSteal);
+  explicit nsAutoRef(const ThisClass& aRefToSteal) = delete;
 };
 
 /**
@@ -216,8 +215,8 @@ class nsReturnRef : public nsAutoRefBase<T> {
   MOZ_IMPLICIT nsReturnRef(RawRefOnly aRefToRelease)
       : BaseClass(aRefToRelease) {}
 
-  // Copy construction transfers ownership
-  nsReturnRef(nsReturnRef<T>& aRefToSteal) : BaseClass(aRefToSteal) {}
+  // Move construction transfers ownership
+  nsReturnRef(nsReturnRef<T>&& aRefToSteal) = default;
 
   MOZ_IMPLICIT nsReturnRef(const nsReturningRef<T>& aReturning)
       : BaseClass(aReturning) {}
@@ -428,8 +427,7 @@ class nsAutoRefBase : public nsSimpleRef<T> {
   explicit nsAutoRefBase(RawRefOnly aRefToRelease) : SimpleRef(aRefToRelease) {}
 
   // Constructors that steal ownership
-  explicit nsAutoRefBase(ThisClass& aRefToSteal)
-      : SimpleRef(aRefToSteal.disown()) {}
+  nsAutoRefBase(ThisClass&& aRefToSteal) : SimpleRef(aRefToSteal.disown()) {}
   explicit nsAutoRefBase(const nsReturningRef<T>& aReturning)
       : SimpleRef(aReturning.mReturnRef.disown()) {}
 
@@ -444,10 +442,9 @@ class nsAutoRefBase : public nsSimpleRef<T> {
     explicit LocalSimpleRef(RawRef aRawRef) : SimpleRef(aRawRef) {}
   };
 
- private:
+ public:
   ThisClass& operator=(const ThisClass& aSmartRef) = delete;
 
- public:
   RawRef operator->() const { return this->get(); }
 
   // Transfer ownership to a raw reference.

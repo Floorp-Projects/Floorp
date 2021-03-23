@@ -14,6 +14,10 @@ using mozilla::Ok;
 using mozilla::Result;
 using mozilla::UniquePtr;
 
+#define MOZ_STATIC_AND_RELEASE_ASSERT(expr) \
+  static_assert(expr);                      \
+  MOZ_RELEASE_ASSERT(expr)
+
 enum struct TestUnusedZeroEnum : int16_t { Ok = 0, NotOk = 1 };
 
 namespace mozilla::detail {
@@ -94,23 +98,28 @@ static_assert(sizeof(Foo32) >= sizeof(uintptr_t) ||
                   sizeof(Result<Foo16, Foo32>) <= sizeof(uintptr_t),
               "Result with small types should be pointer-sized");
 
-static GenericErrorResult<Failed> Fail() {
-  static Failed failed;
-  return Err(failed);
-}
+static_assert(std::is_literal_type_v<Result<int*, Failed>>);
+static_assert(std::is_literal_type_v<Result<Ok, Failed>>);
+static_assert(std::is_literal_type_v<Result<Ok, Foo8>>);
+static_assert(std::is_literal_type_v<Result<Foo8, Foo16>>);
+static_assert(!std::is_literal_type_v<Result<Ok, UniquePtr<int>>>);
 
-static GenericErrorResult<TestUnusedZeroEnum> FailTestUnusedZeroEnum() {
+static constexpr GenericErrorResult<Failed> Fail() { return Err(Failed{}); }
+
+static constexpr GenericErrorResult<TestUnusedZeroEnum>
+FailTestUnusedZeroEnum() {
   return Err(TestUnusedZeroEnum::NotOk);
 }
 
-static Result<Ok, Failed> Task1(bool pass) {
+static constexpr Result<Ok, Failed> Task1(bool pass) {
   if (!pass) {
     return Fail();  // implicit conversion from GenericErrorResult to Result
   }
   return Ok();
 }
 
-static Result<Ok, TestUnusedZeroEnum> Task1UnusedZeroEnumErr(bool pass) {
+static constexpr Result<Ok, TestUnusedZeroEnum> Task1UnusedZeroEnumErr(
+    bool pass) {
   if (!pass) {
     return FailTestUnusedZeroEnum();  // implicit conversion from
                                       // GenericErrorResult to Result
@@ -118,14 +127,14 @@ static Result<Ok, TestUnusedZeroEnum> Task1UnusedZeroEnumErr(bool pass) {
   return Ok();
 }
 
-static Result<int, Failed> Task2(bool pass, int value) {
+static constexpr Result<int, Failed> Task2(bool pass, int value) {
   MOZ_TRY(
       Task1(pass));  // converts one type of result to another in the error case
   return value;      // implicit conversion from T to Result<T, E>
 }
 
-static Result<int, TestUnusedZeroEnum> Task2UnusedZeroEnumErr(bool pass,
-                                                              int value) {
+static constexpr Result<int, TestUnusedZeroEnum> Task2UnusedZeroEnumErr(
+    bool pass, int value) {
   MOZ_TRY(Task1UnusedZeroEnumErr(
       pass));    // converts one type of result to another in the error case
   return value;  // implicit conversion from T to Result<T, E>
@@ -139,32 +148,34 @@ static Result<int, Failed> Task3(bool pass1, bool pass2, int value) {
 }
 
 static void BasicTests() {
-  MOZ_RELEASE_ASSERT(Task1(true).isOk());
-  MOZ_RELEASE_ASSERT(!Task1(true).isErr());
-  MOZ_RELEASE_ASSERT(!Task1(false).isOk());
-  MOZ_RELEASE_ASSERT(Task1(false).isErr());
+  MOZ_STATIC_AND_RELEASE_ASSERT(Task1(true).isOk());
+  MOZ_STATIC_AND_RELEASE_ASSERT(!Task1(true).isErr());
+  MOZ_STATIC_AND_RELEASE_ASSERT(!Task1(false).isOk());
+  MOZ_STATIC_AND_RELEASE_ASSERT(Task1(false).isErr());
 
-  MOZ_RELEASE_ASSERT(Task1UnusedZeroEnumErr(true).isOk());
-  MOZ_RELEASE_ASSERT(!Task1UnusedZeroEnumErr(true).isErr());
-  MOZ_RELEASE_ASSERT(!Task1UnusedZeroEnumErr(false).isOk());
-  MOZ_RELEASE_ASSERT(Task1UnusedZeroEnumErr(false).isErr());
-  MOZ_RELEASE_ASSERT(TestUnusedZeroEnum::NotOk ==
-                     Task1UnusedZeroEnumErr(false).inspectErr());
-  MOZ_RELEASE_ASSERT(TestUnusedZeroEnum::NotOk ==
-                     Task1UnusedZeroEnumErr(false).unwrapErr());
+  MOZ_STATIC_AND_RELEASE_ASSERT(Task1UnusedZeroEnumErr(true).isOk());
+  MOZ_STATIC_AND_RELEASE_ASSERT(!Task1UnusedZeroEnumErr(true).isErr());
+  MOZ_STATIC_AND_RELEASE_ASSERT(!Task1UnusedZeroEnumErr(false).isOk());
+  MOZ_STATIC_AND_RELEASE_ASSERT(Task1UnusedZeroEnumErr(false).isErr());
+  MOZ_STATIC_AND_RELEASE_ASSERT(TestUnusedZeroEnum::NotOk ==
+                                Task1UnusedZeroEnumErr(false).inspectErr());
+  MOZ_STATIC_AND_RELEASE_ASSERT(TestUnusedZeroEnum::NotOk ==
+                                Task1UnusedZeroEnumErr(false).unwrapErr());
 
   // MOZ_TRY works.
-  MOZ_RELEASE_ASSERT(Task2(true, 3).isOk());
-  MOZ_RELEASE_ASSERT(Task2(true, 3).unwrap() == 3);
-  MOZ_RELEASE_ASSERT(Task2(true, 3).unwrapOr(6) == 3);
+  MOZ_STATIC_AND_RELEASE_ASSERT(Task2(true, 3).isOk());
+  MOZ_STATIC_AND_RELEASE_ASSERT(Task2(true, 3).unwrap() == 3);
+  MOZ_STATIC_AND_RELEASE_ASSERT(Task2(true, 3).unwrapOr(6) == 3);
   MOZ_RELEASE_ASSERT(Task2(false, 3).isErr());
   MOZ_RELEASE_ASSERT(Task2(false, 3).unwrapOr(6) == 6);
 
-  MOZ_RELEASE_ASSERT(Task2UnusedZeroEnumErr(true, 3).isOk());
-  MOZ_RELEASE_ASSERT(Task2UnusedZeroEnumErr(true, 3).unwrap() == 3);
-  MOZ_RELEASE_ASSERT(Task2UnusedZeroEnumErr(true, 3).unwrapOr(6) == 3);
-  MOZ_RELEASE_ASSERT(Task2UnusedZeroEnumErr(false, 3).isErr());
-  MOZ_RELEASE_ASSERT(Task2UnusedZeroEnumErr(false, 3).unwrapOr(6) == 6);
+  MOZ_STATIC_AND_RELEASE_ASSERT(Task2UnusedZeroEnumErr(true, 3).isOk());
+  MOZ_STATIC_AND_RELEASE_ASSERT(Task2UnusedZeroEnumErr(true, 3).unwrap() == 3);
+  MOZ_STATIC_AND_RELEASE_ASSERT(Task2UnusedZeroEnumErr(true, 3).unwrapOr(6) ==
+                                3);
+  MOZ_STATIC_AND_RELEASE_ASSERT(Task2UnusedZeroEnumErr(false, 3).isErr());
+  MOZ_STATIC_AND_RELEASE_ASSERT(Task2UnusedZeroEnumErr(false, 3).unwrapOr(6) ==
+                                6);
 
   // MOZ_TRY_VAR works.
   MOZ_RELEASE_ASSERT(Task3(true, true, 3).isOk());
@@ -175,13 +186,13 @@ static void BasicTests() {
 
   // Lvalues should work too.
   {
-    Result<Ok, Failed> res = Task1(true);
-    MOZ_RELEASE_ASSERT(res.isOk());
-    MOZ_RELEASE_ASSERT(!res.isErr());
+    constexpr Result<Ok, Failed> res1 = Task1(true);
+    MOZ_STATIC_AND_RELEASE_ASSERT(res1.isOk());
+    MOZ_STATIC_AND_RELEASE_ASSERT(!res1.isErr());
 
-    res = Task1(false);
-    MOZ_RELEASE_ASSERT(!res.isOk());
-    MOZ_RELEASE_ASSERT(res.isErr());
+    constexpr Result<Ok, Failed> res2 = Task1(false);
+    MOZ_STATIC_AND_RELEASE_ASSERT(!res2.isOk());
+    MOZ_STATIC_AND_RELEASE_ASSERT(res2.isErr());
   }
 
   {
@@ -210,7 +221,7 @@ static void BasicTests() {
 }
 
 struct NonCopyableNonMovable {
-  explicit NonCopyableNonMovable(uint32_t aValue) : mValue(aValue) {}
+  explicit constexpr NonCopyableNonMovable(uint32_t aValue) : mValue(aValue) {}
 
   NonCopyableNonMovable(const NonCopyableNonMovable&) = delete;
   NonCopyableNonMovable(NonCopyableNonMovable&&) = delete;
@@ -226,8 +237,8 @@ static void InPlaceConstructionTests() {
     static_assert(mozilla::detail::SelectResultImpl<NonCopyableNonMovable,
                                                     Failed>::value ==
                   mozilla::detail::PackingStrategy::NullIsOk);
-    const Result<NonCopyableNonMovable, Failed> result{std::in_place, 42};
-    MOZ_RELEASE_ASSERT(42 == result.inspect().mValue);
+    constexpr Result<NonCopyableNonMovable, Failed> result{std::in_place, 42u};
+    MOZ_STATIC_AND_RELEASE_ASSERT(42 == result.inspect().mValue);
   }
 
   {
@@ -310,6 +321,17 @@ static void MapTest() {
     MOZ_RELEASE_ASSERT(res2.isOk());
     MOZ_RELEASE_ASSERT(invoked);
     MOZ_RELEASE_ASSERT(strcmp(res2.unwrap(), "hello") == 0);
+  }
+
+  // Mapping over success values (constexpr).
+  {
+    constexpr uint64_t kValue = 42u;
+    constexpr auto res2a = Result<int32_t, Failed>{5}.map([](int32_t x) {
+      MOZ_RELEASE_ASSERT(x == 5);
+      return kValue;
+    });
+    MOZ_STATIC_AND_RELEASE_ASSERT(res2a.isOk());
+    MOZ_STATIC_AND_RELEASE_ASSERT(kValue == res2a.inspect());
   }
 
   // Mapping over error values.
@@ -407,13 +429,13 @@ static void OrElseTest() {
   struct MyError {
     int x;
 
-    explicit MyError(int y) : x(y) {}
+    explicit constexpr MyError(int y) : x(y) {}
   };
 
   struct MyError2 {
     int a;
 
-    explicit MyError2(int b) : a(b) {}
+    explicit constexpr MyError2(int b) : a(b) {}
   };
 
   // `orElse`ing over error values, to Result<V, E> (the same error type) error
@@ -528,6 +550,14 @@ static void AndThenTest() {
     MOZ_RELEASE_ASSERT(r2.unwrap() == 11);
   }
 
+  // `andThen`ing over success results (constexpr).
+  {
+    constexpr Result<int, Failed> r2a = Result<int, Failed>{10}.andThen(
+        [](int x) { return Result<int, Failed>(x + 1); });
+    MOZ_STATIC_AND_RELEASE_ASSERT(r2a.isOk());
+    MOZ_STATIC_AND_RELEASE_ASSERT(r2a.inspect() == 11);
+  }
+
   // `andThen`ing over error results.
   {
     Result<int, const char*> r3("error");
@@ -546,6 +576,16 @@ static void AndThenTest() {
         r1.andThen([](int&& x) { return Result<int, const char*>(x + 1); });
     MOZ_RELEASE_ASSERT(r2.isOk());
     MOZ_RELEASE_ASSERT(r2.unwrap() == 11);
+  }
+
+  // `andThen`ing over error results (constexpr).
+  {
+    constexpr Result<int, Failed> r4a =
+        Result<int, Failed>{Failed{}}.andThen([](int x) {
+          MOZ_RELEASE_ASSERT(false);
+          return Result<int, Failed>(1);
+        });
+    MOZ_STATIC_AND_RELEASE_ASSERT(r4a.isErr());
   }
 }
 
