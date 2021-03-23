@@ -865,6 +865,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
   RootedShape fromShape(cx, fromPlain->lastProperty());
 #endif
 
+  bool hasPropsWithNonDefaultAttrs = false;
   for (Shape::Range<NoGC> r(fromPlain->lastProperty()); !r.empty();
        r.popFront()) {
     // Symbol properties need to be assigned last. For now fall back to the
@@ -881,6 +882,13 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
     if (MOZ_UNLIKELY(!propShape.isDataProperty())) {
       return true;
     }
+    if (propShape.attributes() == JSPROP_ENUMERATE) {
+      MOZ_ASSERT(propShape.writable());
+      MOZ_ASSERT(propShape.configurable());
+      MOZ_ASSERT(propShape.enumerable());
+    } else {
+      hasPropsWithNonDefaultAttrs = true;
+    }
     if (!propShape.enumerable()) {
       continue;
     }
@@ -892,6 +900,23 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
   *optimized = true;
 
   bool toWasEmpty = toPlain->empty();
+
+  // If the |to| object has no properties and the |from| object only has plain
+  // enumerable/writable/configurable data properties, try to use its shape.
+  if (toWasEmpty && !hasPropsWithNonDefaultAttrs &&
+      toPlain->canReuseShapeForNewProperties(fromPlain->shape())) {
+    Shape* newShape = fromPlain->shape();
+    if (!toPlain->setLastProperty(cx, newShape)) {
+      return false;
+    }
+    for (size_t i = shapes.length(); i > 0; i--) {
+      Shape* propShape = shapes[i - 1];
+      size_t slot = propShape->slot();
+      toPlain->setSlot(slot, fromPlain->getSlot(slot));
+    }
+    return true;
+  }
+
   RootedValue propValue(cx);
   RootedId nextKey(cx);
 

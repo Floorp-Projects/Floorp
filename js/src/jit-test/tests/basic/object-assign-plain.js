@@ -82,3 +82,21 @@ function testNonConfigurableFrom() {
     assertEq(Object.getOwnPropertyDescriptor(to, "x").configurable, true);
 }
 testNonConfigurableFrom();
+
+function testNonEnumerableFrom() {
+    var from = {};
+    Object.defineProperty(from, "x", {value: 1, configurable: true, writable: true});
+    var to = Object.assign({}, from);
+    assertEq(Object.getOwnPropertyNames(to).length, 0);
+    assertEq(to.x, undefined);
+}
+testNonEnumerableFrom();
+
+function testNonWritableFrom() {
+    var from = {};
+    Object.defineProperty(from, "x", {value: 1, configurable: true, enumerable: true});
+    var to = Object.assign({}, from);
+    assertEq(to.x, 1);
+    assertEq(Object.getOwnPropertyDescriptor(to, "x").writable, true);
+}
+testNonWritableFrom();
