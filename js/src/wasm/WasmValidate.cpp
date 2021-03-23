@@ -1491,6 +1491,14 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         CHECK(iter.readCatch(&unusedKind, &unusedIndex, &unusedType,
                              &unusedType, &nothings));
       }
+      case uint16_t(Op::CatchAll): {
+        if (!env.exceptionsEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        LabelKind unusedKind;
+        CHECK(iter.readCatchAll(&unusedKind, &unusedType, &unusedType,
+                                &nothings));
+      }
       case uint16_t(Op::Throw): {
         if (!env.exceptionsEnabled()) {
           return iter.unrecognizedOpcode(&op);

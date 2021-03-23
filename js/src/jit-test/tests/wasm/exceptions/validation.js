@@ -214,6 +214,61 @@ function testValidateCatch() {
   );
 }
 
+function testValidateCatchAll() {
+  wasmValidateText(
+    `(module
+       (event $exn)
+       (func try catch $exn catch_all end))`
+  );
+
+  wasmValidateText(
+    `(module
+       (func (result i32)
+         try (result i32)
+           (i32.const 0)
+         catch_all
+           (i32.const 1)
+         end))`
+  );
+
+  wasmFailValidateText(
+    `(module
+       (event $exn)
+       (func try catch_all catch 0 end))`,
+    /catch cannot follow a catch_all/
+  );
+
+  wasmFailValidateText(
+    `(module
+       (event $exn)
+       (func try (result i32) (i32.const 1) catch_all end drop))`,
+    /popping value from empty stack/
+  );
+
+  wasmFailValidateText(
+    `(module
+       (event $exn (param i32))
+       (func try catch $exn drop catch_all drop end))`,
+    /popping value from empty stack/
+  );
+
+  // We can't distinguish `else` and `catch_all` in error messages since they
+  // share the binary opcode.
+  wasmFailValidateText(
+    `(module
+       (event $exn)
+       (func try catch_all catch_all end))`,
+    /catch_all can only be used within a try/
+  );
+
+  wasmFailValidateText(
+    `(module
+       (event $exn)
+       (func catch_all))`,
+    /catch_all can only be used within a try/
+  );
+}
+
 function testValidateExnPayload() {
   valid0 = moduleWithSections([
     sigSection([i32Type, i32Toi32Type]),
@@ -341,4 +396,5 @@ testValidateDecode();
 testValidateThrow();
 testValidateTryCatch();
 testValidateCatch();
+testValidateCatchAll();
 testValidateExnPayload();
