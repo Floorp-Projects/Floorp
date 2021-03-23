@@ -10,7 +10,9 @@
 #include "nsISystemStatusBar.h"
 #include "nsClassHashtable.h"
 
-class nsStandaloneNativeMenu;
+namespace mozilla::widget {
+class NativeMenuMac;
+}
 @class NSStatusItem;
 
 class nsSystemStatusBarCocoa : public nsISystemStatusBar {
@@ -24,11 +26,11 @@ class nsSystemStatusBarCocoa : public nsISystemStatusBar {
   virtual ~nsSystemStatusBarCocoa() {}
 
   struct StatusItem {
-    explicit StatusItem(nsStandaloneNativeMenu* aMenu);
+    explicit StatusItem(mozilla::widget::NativeMenuMac* aMenu);
     ~StatusItem();
 
    private:
-    RefPtr<nsStandaloneNativeMenu> mMenu;
+    RefPtr<mozilla::widget::NativeMenuMac> mMenu;
     NSStatusItem* mStatusItem;
   };
 
