@@ -173,6 +173,19 @@ jobs:
       when:
           - {hour: 10, minute: 0}
 
+    - name: updatebot-cron-job
+      job:
+          type: decision-task
+          treeherder-symbol: updatebot
+          target-tasks-method: updatebot_cron
+      run-on-projects:
+          - mozilla-central
+      when:
+          - {hour: 0, minute: 0}
+          - {hour: 6, minute: 0}
+          - {hour: 12, minute: 0}
+          - {hour: 18, minute: 0}
+
     - name: customv8-update
       job:
           type: decision-task
