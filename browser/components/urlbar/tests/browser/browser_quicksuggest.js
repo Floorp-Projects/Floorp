@@ -36,6 +36,31 @@ const TEST_DATA = [
   },
 ];
 
+const EXPERIMENT_RECIPE = ExperimentFakes.recipe(
+  "mochitest-quicksuggest-experiment",
+  {
+    branches: [
+      {
+        slug: "treatment-branch",
+        ratio: 1,
+        feature: {
+          featureId: "urlbar",
+          enabled: true,
+          value: { quickSuggestEnabled: true },
+        },
+      },
+    ],
+    bucketConfig: {
+      start: 0,
+      // Ensure 100% enrollment
+      count: 10000,
+      total: 10000,
+      namespace: "my-mochitest",
+      randomizationUnit: "normandy_id",
+    },
+  }
+);
+
 const ABOUT_BLANK = "about:blank";
 const SUGGESTIONS_PREF = "browser.search.suggest.enabled";
 const PRIVATE_SUGGESTIONS_PREF = "browser.search.suggest.enabled.private";
@@ -118,11 +143,14 @@ add_task(async function init() {
   await PlacesUtils.history.clear();
   await UrlbarTestUtils.formHistory.clear();
   await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.quicksuggest.enabled", true],
-      ["browser.urlbar.suggest.searches", true],
-    ],
+    set: [["browser.urlbar.suggest.searches", true]],
   });
+  let {
+    enrollmentPromise,
+    doExperimentCleanup,
+  } = ExperimentFakes.enrollmentHelper(EXPERIMENT_RECIPE);
+
+  await enrollmentPromise;
 
   // Add a mock engine so we don't hit the network loading the SERP.
   await SearchTestUtils.installSearchExtension();
@@ -136,6 +164,7 @@ add_task(async function init() {
     Services.search.setDefault(oldDefaultEngine);
     await PlacesUtils.history.clear();
     await UrlbarTestUtils.formHistory.clear();
+    await doExperimentCleanup();
   });
 });
 

@@ -25,6 +25,11 @@ ChromeUtils.defineModuleGetter(
   "UrlbarUtils",
   "resource:///modules/UrlbarUtils.jsm"
 );
+ChromeUtils.defineModuleGetter(
+  this,
+  "ExperimentFeature",
+  "resource://nimbus/ExperimentAPI.jsm"
+);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarProviderQuickSuggest:
@@ -46,10 +51,6 @@ Preferences.addAll([
 const ENGINE_FLAVOR = "text/x-moz-search-engine";
 const SEARCH_TYPE = "default_search";
 const SEARCH_KEY = "defaultSearch";
-
-// This pref is true when the user is enrolled in the en-US Quick Suggest
-// experiment.
-const QUICK_SUGGEST_EXPERIMENT_PREF = "browser.urlbar.quicksuggest.enabled";
 
 var gEngineView = null;
 
@@ -132,12 +133,13 @@ var gSearchPane = {
     this._initDefaultEngines();
     this._updateSuggestionCheckboxes();
     this._showAddEngineButton();
-
-    Services.prefs.addObserver(QUICK_SUGGEST_EXPERIMENT_PREF, this);
+    this._updateQuickSuggest = this._updateQuickSuggest.bind(this);
+    this.urlbarExperimentFeature = new ExperimentFeature("urlbar");
+    this.urlbarExperimentFeature.onUpdate(this._updateQuickSuggest);
     window.addEventListener("unload", () => {
-      Services.prefs.removeObserver(QUICK_SUGGEST_EXPERIMENT_PREF, this);
+      this.urlbarExperimentFeature.off(this._updateQuickSuggest);
     });
-    this._updateQuickSuggest();
+    this._updateQuickSuggest(true);
   },
 
   /**
@@ -240,19 +242,18 @@ var gSearchPane = {
    * Shows or hides the Quick Suggest checkbox depending on whether the en-US
    * Quick Suggest experiment is enabled.
    *
-   * @param {boolean} [experimentPrefChanged]
-   *   False when this is called on init and true when called due to a change in
-   *   QUICK_SUGGEST_EXPERIMENT_PREF.
+   * @param {boolean} [onStartup]
+   *   True when this is called from `.init`
    */
-  _updateQuickSuggest(experimentPrefChanged = false) {
+  _updateQuickSuggest(onStartup = false) {
     let container = document.getElementById("showQuickSuggestContainer");
     let desc = document.getElementById("searchSuggestionsDesc");
 
-    if (!Services.prefs.getBoolPref(QUICK_SUGGEST_EXPERIMENT_PREF, false)) {
+    if (!this.urlbarExperimentFeature.getValue().quickSuggestEnabled) {
       // The experiment is not enabled.  This is the default, so to avoid
       // accidentally messing anything up, only modify the doc if we're being
       // called due to a change in the experiment enabled status.
-      if (experimentPrefChanged) {
+      if (!onStartup) {
         container.setAttribute("hidden", "true");
         if (desc.dataset.l10nIdOriginal) {
           desc.dataset.l10nId = desc.dataset.l10nIdOriginal;
@@ -433,8 +434,6 @@ var gSearchPane = {
    *
    * * browser-search-engine-modified: Update the default engine UI and engine
    *   tree view as appropriate when engine changes occur.
-   * * nsPref:changed: Observe changes to QUICK_SUGGEST_EXPERIMENT_PREF in order
-   *   to update the UI for the en-US Quick Suggest experiment.
    */
   observe(subject, topic, data) {
     if (topic == "browser-search-engine-modified") {
@@ -483,10 +482,6 @@ var gSearchPane = {
           break;
         }
       }
-      return;
-    }
-    if (topic == "nsPref:changed" && data == QUICK_SUGGEST_EXPERIMENT_PREF) {
-      this._updateQuickSuggest(true);
     }
   },
 

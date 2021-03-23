@@ -22,8 +22,14 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UrlbarUtils: "resource:///modules/UrlbarUtils.jsm",
 });
 
+XPCOMUtils.defineLazyGetter(this, "urlbarExperimentFeature", () => {
+  const { ExperimentFeature } = ChromeUtils.import(
+    "resource://nimbus/ExperimentAPI.jsm"
+  );
+  return new ExperimentFeature("urlbar");
+});
+
 // These prefs are relative to the `browser.urlbar` branch.
-const EXPERIMENT_PREF = "quicksuggest.enabled";
 const SUGGEST_PREF = "suggest.quicksuggest";
 
 const NONSPONSORED_ACTION_TEXT = "Firefox Suggest";
@@ -45,6 +51,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     super(...args);
     this._updateExperimentState();
     UrlbarPrefs.addObserver(this);
+    urlbarExperimentFeature.onUpdate(this._updateExperimentState);
   }
 
   /**
@@ -95,7 +102,7 @@ class ProviderQuickSuggest extends UrlbarProvider {
     return (
       queryContext.trimmedSearchString &&
       !queryContext.searchMode &&
-      UrlbarPrefs.get(EXPERIMENT_PREF) &&
+      urlbarExperimentFeature.getValue().quickSuggestEnabled &&
       UrlbarPrefs.get(SUGGEST_PREF) &&
       UrlbarPrefs.get("suggest.searches") &&
       UrlbarPrefs.get("browser.search.suggest.enabled") &&
@@ -261,9 +268,6 @@ class ProviderQuickSuggest extends UrlbarProvider {
    */
   onPrefChanged(pref) {
     switch (pref) {
-      case EXPERIMENT_PREF:
-        this._updateExperimentState();
-        break;
       case SUGGEST_PREF:
         Services.telemetry.recordEvent(
           TELEMETRY_EVENT_CATEGORY,
@@ -282,12 +286,12 @@ class ProviderQuickSuggest extends UrlbarProvider {
   _updateExperimentState() {
     Services.telemetry.setEventRecordingEnabled(
       TELEMETRY_EVENT_CATEGORY,
-      UrlbarPrefs.get(EXPERIMENT_PREF)
+      urlbarExperimentFeature.getValue().quickSuggestEnabled
     );
     // QuickSuggest is only loaded by the UrlBar on it's first query, however
     // there is work it can preload when idle instead of starting it on user
     // input. Referencing it here will trigger its import and init.
-    if (UrlbarPrefs.get(EXPERIMENT_PREF)) {
+    if (urlbarExperimentFeature.getValue().quickSuggestEnabled) {
       UrlbarQuickSuggest; // eslint-disable-line no-unused-expressions
     }
   }
