@@ -12,14 +12,9 @@
 enum nsMenuObjectTypeX {
   eMenuBarObjectType,
   eSubmenuObjectType,
-  eMenuItemObjectType,
 };
 
-// All menu objects subclass this.
-// Menu bars are owned by their top-level nsIWidgets.
-// All other objects are memory-managed based on the DOM.
-// Content removal deletes them immediately and nothing else should.
-// Do not attempt to hold strong references to them or delete them.
+// A base class for objects that can be the parent of an nsMenuX or nsMenuItemX.
 class nsMenuObjectX {
  public:
   virtual ~nsMenuObjectX() {}
