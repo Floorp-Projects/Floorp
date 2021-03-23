@@ -635,6 +635,30 @@ Maybe<StyleFontLanguageOverride> FontFace::GetFontLanguageOverride() const {
   return Some(langOverride);
 }
 
+Maybe<StylePercentage> FontFace::GetAscentOverride() const {
+  StylePercentage ascent{0};
+  if (!Servo_FontFaceRule_GetAscentOverride(GetData(), &ascent)) {
+    return Nothing();
+  }
+  return Some(ascent);
+}
+
+Maybe<StylePercentage> FontFace::GetDescentOverride() const {
+  StylePercentage descent{0};
+  if (!Servo_FontFaceRule_GetDescentOverride(GetData(), &descent)) {
+    return Nothing();
+  }
+  return Some(descent);
+}
+
+Maybe<StylePercentage> FontFace::GetLineGapOverride() const {
+  StylePercentage lineGap{0};
+  if (!Servo_FontFaceRule_GetLineGapOverride(GetData(), &lineGap)) {
+    return Nothing();
+  }
+  return Some(lineGap);
+}
+
 bool FontFace::HasLocalSrc() const {
   AutoTArray<StyleFontFaceSourceListComponent, 8> components;
   GetSources(components);

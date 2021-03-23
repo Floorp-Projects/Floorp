@@ -91,6 +91,9 @@ class FontFace final : public nsISupports, public nsWrapperCache {
   void GetFontVariationSettings(nsTArray<gfxFontVariation>&) const;
   void GetSources(nsTArray<StyleFontFaceSourceListComponent>&) const;
   Maybe<StyleFontLanguageOverride> GetFontLanguageOverride() const;
+  Maybe<StylePercentage> GetAscentOverride() const;
+  Maybe<StylePercentage> GetDescentOverride() const;
+  Maybe<StylePercentage> GetLineGapOverride() const;
 
   gfxUserFontEntry* CreateUserFontEntry();
   gfxUserFontEntry* GetUserFontEntry() const { return mUserFontEntry; }
