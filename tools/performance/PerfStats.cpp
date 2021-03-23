@@ -20,10 +20,10 @@ using namespace mozilla::gfx;
 
 namespace mozilla {
 
-static const char* const sMetricNames[] = {"DisplayList Building",
+static const char* const sMetricNames[] = {"DisplayListBuilding",
                                            "Rasterizing",
                                            "LayerBuilding",
-                                           "Layer Transactions",
+                                           "LayerTransactions",
                                            "Compositing",
                                            "Reflowing",
                                            "Styling",
