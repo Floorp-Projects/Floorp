@@ -1257,21 +1257,15 @@ already_AddRefed<nsIPrincipal> nsOuterWindowProxy::GetNoPDFJSPrincipal(
     return nullptr;
   }
 
-  Document* doc = inner->GetExtantDoc();
-  if (!doc) {
-    return nullptr;
+  if (Document* doc = inner->GetExtantDoc()) {
+    if (nsCOMPtr<nsIPropertyBag2> propBag =
+            do_QueryInterface(doc->GetChannel())) {
+      nsCOMPtr<nsIPrincipal> principal(
+          do_GetProperty(propBag, u"noPDFJSPrincipal"_ns));
+      return principal.forget();
+    }
   }
-
-  nsCOMPtr<nsIPropertyBag2> propBag(do_QueryInterface(doc->GetChannel()));
-  if (!propBag) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIPrincipal> principal;
-  propBag->GetPropertyAsInterface(u"noPDFJSPrincipal"_ns,
-                                  NS_GET_IID(nsIPrincipal),
-                                  getter_AddRefs(principal));
-  return principal.forget();
+  return nullptr;
 }
 
 const nsOuterWindowProxy nsOuterWindowProxy::singleton;
