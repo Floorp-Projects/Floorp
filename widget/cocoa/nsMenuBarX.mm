@@ -71,11 +71,24 @@ static nsIContent* sQuitItemContent = nullptr;
 
 @end
 
-nsMenuBarX::nsMenuBarX() : mNeedsRebuild(false), mApplicationMenuDelegate(nil) {
+nsMenuBarX::nsMenuBarX(mozilla::dom::Element* aElement)
+    : mNeedsRebuild(false), mApplicationMenuDelegate(nil) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   mMenuGroupOwner = new nsMenuGroupOwnerX(this);
   mNativeMenu = [[GeckoNSMenu alloc] initWithTitle:@"MainMenuBar"];
+
+  mContent = aElement;
+
+  if (mContent) {
+    AquifyMenuBar();
+
+    mMenuGroupOwner->Create(aElement);
+    mMenuGroupOwner->RegisterForContentChanges(mContent, this);
+    ConstructNativeMenus();
+  } else {
+    ConstructFallbackNativeMenus();
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -114,26 +127,6 @@ nsMenuBarX::~nsMenuBarX() {
   }
 
   [mNativeMenu release];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-nsresult nsMenuBarX::Create(Element* aContent) {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  mContent = aContent;
-
-  if (mContent) {
-    AquifyMenuBar();
-
-    mMenuGroupOwner->Create(aContent);
-    mMenuGroupOwner->RegisterForContentChanges(mContent, this);
-    ConstructNativeMenus();
-  } else {
-    ConstructFallbackNativeMenus();
-  }
-
-  return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
