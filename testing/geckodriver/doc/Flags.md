@@ -1,6 +1,52 @@
 Flags
 =====
 
+#### <code>&#x2D;&#x2D;android-storage <var>ANDROID_STORAGE</var></code>
+
+Selects the test data location on the Android device, eg. the Firefox profile.
+By default `auto` is used.
+
+<style type="text/css">
+  table { width: 100%; margin-bottom: 2em; }
+  table, th, td { border: solid gray 1px; }
+  td, th { padding: 10px; text-align: left; vertical-align: middle; }
+  td:nth-child(1), th:nth-child(1) { width: 10em; text-align: center; }
+</style>
+
+<table>
+ <thead>
+  <tr>
+    <th>Value
+    <th>Description
+  </tr>
+ </thead>
+
+ <tr>
+  <td>auto
+  <td>Best suitable location based on whether the device is rooted.<br/>
+    If the device is rooted <code>internal</code> is used, otherwise <code>app</code>.
+ <tr>
+  <td>app
+  <td><p>Location: <code>/data/data/%androidPackage%/test_root</code></p>
+    Based on the <code>androidPackage</code> capability that is passed as part of
+    <code>moz:firefoxOptions</code> when creating a new session. Commands that
+    change data in the app's directory are executed using run-as. This requires
+    that the installed app is debuggable.
+ <tr>
+  <td>internal
+  <td><p>Location: <code>/data/local/tmp/test_root</code></p>
+    The device must be rooted since when the app runs, files that are created
+    in the profile, which is owned by the app user, cannot be changed by the
+    shell user. Commands will be executed via <code>su</code>.
+ <tr>
+  <td>sdcard
+  <td><p>Location: <code>/mnt/sdcard/test_root</code></p>
+    This location is not supported on Android 11+ due to the
+    <a href="https://developer.android.com/about/versions/11/privacy/storage">
+    changes related to scoped storage</a>.
+</table>
+
+
 #### <code>-b <var>BINARY</var></code> / <code>&#x2D;&#x2D;binary <var>BINARY</var></code>
 
 Path to the Firefox binary to use.  By default geckodriver tries to
