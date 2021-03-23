@@ -1499,6 +1499,17 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         CHECK(iter.readCatchAll(&unusedKind, &unusedType, &unusedType,
                                 &nothings));
       }
+      case uint16_t(Op::Delegate): {
+        if (!env.exceptionsEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        uint32_t unusedDepth;
+        if (!iter.readDelegate(&unusedDepth, &unusedType, &nothings)) {
+          return false;
+        }
+        iter.popDelegate();
+        break;
+      }
       case uint16_t(Op::Throw): {
         if (!env.exceptionsEnabled()) {
           return iter.unrecognizedOpcode(&op);

@@ -212,3 +212,33 @@ assertEq(
     "unreachable executed"
   );
 }
+
+// Test delegate throwing out of function.
+assertWasmThrowsExn(() =>
+  wasmEvalText(
+    `(module
+       (event $exn (param))
+       (func (export "f") (result i32)
+         try (result i32)
+           throw $exn
+         delegate 0))`
+  ).exports.f()
+);
+
+assertWasmThrowsExn(() =>
+  wasmEvalText(
+    `(module
+       (event $exn (param))
+       (func (export "f") (result i32)
+         try (result i32)
+           i32.const 0
+           if
+             i32.const 1
+             return
+           else
+             throw $exn
+           end
+           i32.const 0
+         delegate 0))`
+  ).exports.f()
+);

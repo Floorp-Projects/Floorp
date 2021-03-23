@@ -121,6 +121,32 @@ function testValidateDecode() {
     ]),
     /unable to read rethrow depth/
   );
+
+  // Delegate must have a depth argument.
+  wasmInvalid(
+    moduleWithSections([
+      sigSection([emptyType]),
+      declSection([0]),
+      eventSection([{ type: 0 }]),
+      bodySection([
+        funcBody(
+          {
+            locals: [],
+            body: [
+              TryCode,
+              I32Code,
+              I32ConstCode,
+              0x01,
+              DelegateCode,
+              // Index missing.
+            ],
+          },
+          (withEndCode = false)
+        ),
+      ]),
+    ]),
+    /unable to read delegate depth/
+  );
 }
 
 function testValidateThrow() {
@@ -524,6 +550,97 @@ function testValidateRethrow() {
   );
 }
 
+function testValidateDelegate() {
+  wasmValidateText(
+    `(module
+       (event $exn (param))
+       (func
+         try
+           try
+             throw $exn
+           delegate 0
+         catch $exn
+         end))`
+  );
+
+  wasmValidateText(
+    `(module
+       (event $exn (param))
+       (func
+         try
+           try
+             throw $exn
+           delegate 1
+         catch $exn
+         end))`
+  );
+
+  wasmFailValidateText(
+    `(module
+       (event $exn (param))
+       (func (result i32)
+         try
+           throw $exn
+         delegate 0
+         (i64.const 0)
+         end))`,
+    /type mismatch: expression has type i64 but expected i32/
+  );
+
+  wasmFailValidateText(
+    `(module
+       (event $exn (param))
+       (func
+         try (result i32)
+           (i64.const 0)
+         delegate 0))`,
+    /type mismatch: expression has type i64 but expected i32/
+  );
+
+  wasmFailValidateText(
+    `(module
+       (event $exn (param))
+       (func
+         try
+           try
+             throw $exn
+           delegate 2
+         catch $exn
+         end))`,
+    /delegate depth exceeds current nesting level/
+  );
+
+  wasmFailValidateText(
+    `(module
+       (event $exn (param))
+       (func
+         block
+           try
+             throw $exn
+           delegate 0
+         end))`,
+    /delegate target was not a try or function body/
+  );
+
+  wasmFailValidateText(
+    `(module
+       (event $exn (param))
+       (func
+         try
+         catch $exn
+           try
+             throw $exn
+           delegate 0
+         end))`,
+    /delegate target was not a try or function body/
+  );
+
+  wasmFailValidateText(
+    `(module (func delegate 0))`,
+    /delegate can only be used within a try/
+  );
+}
+
 testValidateDecode();
 testValidateThrow();
 testValidateTryCatch();
@@ -531,3 +648,4 @@ testValidateCatch();
 testValidateCatchAll();
 testValidateExnPayload();
 testValidateRethrow();
+testValidateDelegate();

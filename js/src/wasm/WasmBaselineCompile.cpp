@@ -3169,6 +3169,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   struct Control {
     NonAssertingLabel label;       // The "exit" label
     NonAssertingLabel otherLabel;  // Used for the "else" branch of if-then-else
+                                   // and to allow delegate to jump to catches.
     StackHeight stackHeight;       // From BaseStackFrame
     uint32_t stackSize;            // Value stack height
     BCESet bceSafeOnEntry;         // Bounds check info flowing into the item
@@ -8154,7 +8155,6 @@ class BaseCompiler final : public BaseCompilerInterface {
       return false;
     }
     freeRef(popRef());
-    deadCode_ = true;
 
     return true;
   }
@@ -8425,10 +8425,14 @@ class BaseCompiler final : public BaseCompilerInterface {
   // Used for common setup for catch and catch_all.
   void emitCatchSetup(LabelKind kind, Control& tryCatch,
                       const ResultType& resultType);
+  // Helper function used to generate landing pad code for the special
+  // case in which `delegate` jumps to a function's body block.
+  [[nodiscard]] bool emitBodyDelegateThrowPad();
 
   [[nodiscard]] bool emitTry();
   [[nodiscard]] bool emitCatch();
   [[nodiscard]] bool emitCatchAll();
+  [[nodiscard]] bool emitDelegate();
   [[nodiscard]] bool emitThrow();
   [[nodiscard]] bool emitRethrow();
 #endif
@@ -10358,6 +10362,12 @@ bool BaseCompiler::emitEnd() {
         return false;
       }
       doReturn(ContinuationKind::Fallthrough);
+      // This is emitted here after `doReturn` to avoid being executed in the
+      // normal return path of a function, and instead only when a `delegate`
+      // jumps to it.
+      if (!emitBodyDelegateThrowPad()) {
+        return false;
+      }
       iter_.popEnd();
       MOZ_ASSERT(iter_.controlStackEmpty());
       return iter_.readFunctionEnd(iter_.end());
@@ -10818,6 +10828,86 @@ bool BaseCompiler::emitCatchAll() {
   return true;
 }
 
+bool BaseCompiler::emitBodyDelegateThrowPad() {
+  Control& block = controlItem();
+
+  // Only emit a landing pad if a `delegate` has generated a jump to here.
+  if (block.otherLabel.used()) {
+    StackHeight savedHeight = fr.stackHeight();
+    fr.setStackHeight(block.stackHeight);
+    masm.bind(&block.otherLabel);
+
+    // We can assume this is live because `delegate` received it from a throw.
+    RegRef exn = RegRef(WasmExceptionReg);
+    needRef(exn);
+    if (!throwFrom(exn, readCallSiteLineOrBytecode())) {
+      return false;
+    }
+    fr.setStackHeight(savedHeight);
+  }
+
+  return true;
+}
+
+bool BaseCompiler::emitDelegate() {
+  uint32_t relativeDepth;
+  ResultType resultType;
+  NothingVector unused_tryValues;
+
+  if (!iter_.readDelegate(&relativeDepth, &resultType, &unused_tryValues)) {
+    return false;
+  }
+
+  Control& tryDelegate = controlItem();
+  Control& target = controlItem(relativeDepth);
+
+  // End the try branch like a plain catch block without exception ref handling.
+  if (deadCode_) {
+    fr.resetStackHeight(tryDelegate.stackHeight, resultType);
+    popValueStackTo(tryDelegate.stackSize);
+  } else {
+    MOZ_ASSERT(stk_.length() == tryDelegate.stackSize + resultType.length());
+    popBlockResults(resultType, tryDelegate.stackHeight,
+                    ContinuationKind::Jump);
+    freeResultRegisters(resultType);
+    masm.jump(&tryDelegate.label);
+    MOZ_ASSERT(!tryDelegate.deadOnArrival);
+  }
+
+  deadCode_ = tryDelegate.deadOnArrival;
+
+  if (deadCode_) {
+    return true;
+  }
+
+  // Create an exception landing pad that immediately branches to the landing
+  // pad of the delegated try block.
+  masm.bind(&tryDelegate.otherLabel);
+
+  StackHeight savedHeight = fr.stackHeight();
+  fr.setStackHeight(tryDelegate.stackHeight);
+
+  WasmTryNoteVector& tryNotes = masm.tryNotes();
+  WasmTryNote& tryNote = tryNotes[controlItem().tryNoteIndex];
+  tryNote.end = masm.currentOffset();
+  tryNote.entryPoint = tryNote.end;
+  tryNote.framePushed = masm.framePushed();
+
+  masm.jump(&target.otherLabel);
+
+  fr.setStackHeight(savedHeight);
+
+  // Where the try branch jumps to, if it's not dead.
+  if (tryDelegate.label.used()) {
+    masm.bind(&tryDelegate.label);
+  }
+
+  captureResultRegisters(resultType);
+  bceSafe_ = tryDelegate.bceSafeOnExit;
+
+  return pushBlockResults(resultType);
+}
+
 bool BaseCompiler::endTryCatch(ResultType type) {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
@@ -11038,6 +11128,8 @@ bool BaseCompiler::emitThrow() {
   }
   MOZ_ASSERT(argOffset == 0);
   freeRef(scratch);
+
+  deadCode_ = true;
 
   return throwFrom(exn, lineOrBytecode);
 }
@@ -15939,6 +16031,13 @@ bool BaseCompiler::emitBody() {
           return iter_.unrecognizedOpcode(&op);
         }
         CHECK_NEXT(emitCatchAll());
+      case uint16_t(Op::Delegate):
+        if (!moduleEnv_.exceptionsEnabled()) {
+          return iter_.unrecognizedOpcode(&op);
+        }
+        CHECK(emitDelegate());
+        iter_.popDelegate();
+        NEXT();
       case uint16_t(Op::Throw):
         if (!moduleEnv_.exceptionsEnabled()) {
           return iter_.unrecognizedOpcode(&op);
