@@ -12,6 +12,7 @@
 #include "mozilla/WindowsVersion.h"
 
 #include "nsTHashMap.h"
+#include "nsTHashSet.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
@@ -224,7 +225,7 @@ Maybe<bool> Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam) {
   const DWORD ourPid = ::GetCurrentProcessId();
   Maybe<PVOID> kernelObject;
   static Maybe<USHORT> sectionObjTypeIndex;
-  nsTHashtable<nsUint32HashKey> nonSectionObjTypes;
+  nsTHashSet<uint32_t> nonSectionObjTypes;
   nsTHashMap<nsVoidPtrHashKey, DWORD> objMap;
 
   auto handleInfo =
@@ -275,7 +276,7 @@ Maybe<bool> Compatibility::OnUIAMessage(WPARAM aWParam, LPARAM aLParam) {
       nsDependentSubstring objTypeName(
           objType->TypeName.Buffer, objType->TypeName.Length / sizeof(wchar_t));
       if (!objTypeName.Equals(u"Section"_ns)) {
-        nonSectionObjTypes.PutEntry(
+        nonSectionObjTypes.Insert(
             static_cast<uint32_t>(curHandle.mObjectTypeIndex));
         continue;
       }
