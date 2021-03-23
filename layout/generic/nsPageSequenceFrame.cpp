@@ -704,7 +704,6 @@ gfx::Matrix4x4 ComputePageSequenceTransform(nsIFrame* aFrame,
 
 void nsPageSequenceFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                            const nsDisplayListSet& aLists) {
-  aBuilder->SetInPageSequence(true);
   aBuilder->SetDisablePartialUpdates(true);
   DisplayBorderBackgroundOutline(aBuilder, aLists);
 
@@ -737,7 +736,6 @@ void nsPageSequenceFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
                                              ::ComputePageSequenceTransform);
 
   aLists.Content()->AppendToTop(&content);
-  aBuilder->SetInPageSequence(false);
 }
 
 //------------------------------------------------------------------------------
