@@ -24,8 +24,12 @@ appmenuitem-find-in-page =
     .label = Find In Page…
 appmenuitem-more-tools =
     .label = More Tools
-appmenuitem-exit =
-    .label = Exit
+appmenuitem-exit2 =
+    .label =
+        { PLATFORM() ->
+            [linux] Quit
+           *[other] Exit
+        }
 appmenu-menu-button-closed =
     .tooltiptext = Open Application Menu
     .label = { -brand-shorter-name }
