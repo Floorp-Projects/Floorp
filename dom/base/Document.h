@@ -3369,19 +3369,19 @@ class Document : public nsINode,
   bool ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
                    const nsAString& aValue, nsIPrincipal& aSubjectPrincipal,
                    mozilla::ErrorResult& aRv);
-  bool QueryCommandEnabled(const nsAString& aHTMLCommandName,
-                           nsIPrincipal& aSubjectPrincipal,
-                           mozilla::ErrorResult& aRv);
-  bool QueryCommandIndeterm(const nsAString& aHTMLCommandName,
-                            mozilla::ErrorResult& aRv);
-  bool QueryCommandState(const nsAString& aHTMLCommandName,
-                         mozilla::ErrorResult& aRv);
-  bool QueryCommandSupported(const nsAString& aHTMLCommandName,
-                             mozilla::dom::CallerType aCallerType,
-                             mozilla::ErrorResult& aRv);
-  MOZ_CAN_RUN_SCRIPT
-  void QueryCommandValue(const nsAString& aHTMLCommandName, nsAString& aValue,
-                         mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT bool QueryCommandEnabled(const nsAString& aHTMLCommandName,
+                                              nsIPrincipal& aSubjectPrincipal,
+                                              mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT bool QueryCommandIndeterm(
+      const nsAString& aHTMLCommandName, mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT bool QueryCommandState(const nsAString& aHTMLCommandName,
+                                            mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT bool QueryCommandSupported(
+      const nsAString& aHTMLCommandName, mozilla::dom::CallerType aCallerType,
+      mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT void QueryCommandValue(const nsAString& aHTMLCommandName,
+                                            nsAString& aValue,
+                                            mozilla::ErrorResult& aRv);
   nsIHTMLCollection* Applets();
   nsIHTMLCollection* Anchors();
   TimeStamp LastFocusTime() const;
@@ -4192,10 +4192,13 @@ class Document : public nsINode,
       return !!mEditorCommand;
     }
 
+    MOZ_CAN_RUN_SCRIPT bool IsCommandEnabled() const;
     MOZ_CAN_RUN_SCRIPT nsresult DoCommand(nsIPrincipal* aPrincipal) const;
     template <typename ParamType>
     MOZ_CAN_RUN_SCRIPT nsresult DoCommandParam(const ParamType& aParam,
                                                nsIPrincipal* aPrincipal) const;
+    MOZ_CAN_RUN_SCRIPT nsresult
+    GetCommandStateParams(nsCommandParams& aParams) const;
 
    private:
     RefPtr<TextEditor> mTextEditor;
