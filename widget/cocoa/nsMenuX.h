@@ -40,6 +40,7 @@ class nsMenuX final : public nsMenuObjectX,
  public:
   using MenuChild = mozilla::Variant<RefPtr<nsMenuX>, RefPtr<nsMenuItemX>>;
 
+  // aParent is optional.
   nsMenuX(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aContent);
 
   NS_INLINE_DECL_REFCOUNTING(nsMenuX)

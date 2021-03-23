@@ -27,7 +27,6 @@ nsStandaloneNativeMenu::nsStandaloneNativeMenu() : mMenu(nullptr), mContainerSta
 nsStandaloneNativeMenu::~nsStandaloneNativeMenu() {
   if (mMenu) {
     mMenu->DetachFromGroupOwnerRecursive();
-    mMenu->DetachFromParent();
     mMenu->ClearIconListener();
   }
 }
@@ -44,7 +43,7 @@ nsStandaloneNativeMenu::Init(Element* aElement) {
 
   mMenuGroupOwner->Create(aElement);
 
-  mMenu = MakeRefPtr<nsMenuX>(this, mMenuGroupOwner, aElement);
+  mMenu = MakeRefPtr<nsMenuX>(nullptr, mMenuGroupOwner, aElement);
   mMenu->SetIconListener(this);
   mMenu->SetupIcon();
 
