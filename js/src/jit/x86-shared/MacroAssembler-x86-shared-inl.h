@@ -1386,8 +1386,7 @@ void MacroAssembler::allTrueInt8x16(FloatRegister src, Register dest) {
   vpmovmskb(xtmp, dest);
   // Now set dest to 1 if it is zero, otherwise to zero.
   testl(dest, dest);
-  setCC(Zero, dest);
-  movzbl(dest, dest);
+  emitSetRegisterIfZero(dest);
 }
 
 void MacroAssembler::allTrueInt16x8(FloatRegister src, Register dest) {
@@ -1401,8 +1400,7 @@ void MacroAssembler::allTrueInt16x8(FloatRegister src, Register dest) {
   vpmovmskb(xtmp, dest);
   // Now set dest to 1 if it is zero, otherwise to zero.
   testl(dest, dest);
-  setCC(Zero, dest);
-  movzbl(dest, dest);
+  emitSetRegisterIfZero(dest);
 }
 
 void MacroAssembler::allTrueInt32x4(FloatRegister src, Register dest) {
@@ -1416,8 +1414,7 @@ void MacroAssembler::allTrueInt32x4(FloatRegister src, Register dest) {
   vpmovmskb(xtmp, dest);
   // Now set dest to 1 if it is zero, otherwise to zero.
   testl(dest, dest);
-  setCC(Zero, dest);
-  movzbl(dest, dest);
+  emitSetRegisterIfZero(dest);
 }
 
 void MacroAssembler::allTrueInt64x2(FloatRegister src, Register dest) {
@@ -1431,8 +1428,7 @@ void MacroAssembler::allTrueInt64x2(FloatRegister src, Register dest) {
   vpmovmskb(xtmp, dest);
   // Now set dest to 1 if it is zero, otherwise to zero.
   testl(dest, dest);
-  setCC(Zero, dest);
-  movzbl(dest, dest);
+  emitSetRegisterIfZero(dest);
 }
 
 // Bitmask
