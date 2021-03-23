@@ -34,6 +34,7 @@ dependencies {
     implementation project(':browser-state')
 
     testImplementation project(':support-test')
+    testImplementation project(':support-test-libstate')
     testImplementation Dependencies.androidx_test_core
     testImplementation Dependencies.androidx_test_junit
     testImplementation Dependencies.testing_robolectric

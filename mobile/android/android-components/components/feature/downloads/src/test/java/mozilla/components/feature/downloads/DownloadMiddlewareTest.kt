@@ -133,8 +133,8 @@ class DownloadMiddlewareTest {
             coroutineContext = dispatcher
         )
         val store = BrowserStore(
-                initialState = BrowserState(),
-                middleware = listOf(downloadMiddleware)
+            initialState = BrowserState(),
+            middleware = listOf(downloadMiddleware)
         )
 
         var download = DownloadState("https://mozilla.org/download", destinationDirectory = "")
