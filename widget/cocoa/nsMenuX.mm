@@ -345,6 +345,11 @@ nsEventStatus nsMenuX::MenuOpened() {
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
   EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
 
+  // Notify our observer.
+  if (mObserver) {
+    mObserver->OnMenuOpened();
+  }
+
   return nsEventStatus_eConsumeNoDefault;
 }
 
@@ -407,6 +412,11 @@ void nsMenuX::MenuClosedAsync() {
 
   WidgetMouseEvent popupHidden(true, eXULPopupHidden, nullptr, WidgetMouseEvent::eReal);
   EventDispatcher::Dispatch(dispatchTo, nullptr, &popupHidden, nullptr, &status);
+
+  // Notify our observer.
+  if (mObserver) {
+    mObserver->OnMenuClosed();
+  }
 }
 
 void nsMenuX::RebuildMenu() {
