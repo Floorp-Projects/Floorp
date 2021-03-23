@@ -791,19 +791,16 @@ class NativeObject : public JSObject {
   inline void* getPrivateMaybeForwarded() const;
 
   uint32_t numUsedFixedSlots() const {
-    uint32_t nslots = lastProperty()->slotSpan(getClass());
+    uint32_t nslots = lastProperty()->slotSpan();
     return std::min(nslots, numFixedSlots());
   }
 
   uint32_t slotSpan() const {
     if (inDictionaryMode()) {
       return dictionaryModeSlotSpan();
-    } else {
-      MOZ_ASSERT(getSlotsHeader()->dictionarySlotSpan() == 0);
-      // Get the class from the object group rather than the base shape to avoid
-      // a race between Shape::ensureOwnBaseShape and background sweeping.
-      return lastProperty()->slotSpan(getClass());
     }
+    MOZ_ASSERT(getSlotsHeader()->dictionarySlotSpan() == 0);
+    return lastProperty()->slotSpan();
   }
 
   uint32_t dictionaryModeSlotSpan() const {

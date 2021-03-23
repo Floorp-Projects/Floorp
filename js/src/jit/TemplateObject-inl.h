@@ -76,9 +76,7 @@ inline uint32_t TemplateNativeObject::numFixedSlots() const {
 }
 
 inline uint32_t TemplateNativeObject::slotSpan() const {
-  // Don't call NativeObject::slotSpan, it uses shape->base->clasp and the
-  // shape's BaseShape can change when we create a ShapeTable for it.
-  return asNativeObject().shape()->slotSpan(obj_->getClass());
+  return asNativeObject().shape()->slotSpan();
 }
 
 inline Value TemplateNativeObject::getSlot(uint32_t i) const {
