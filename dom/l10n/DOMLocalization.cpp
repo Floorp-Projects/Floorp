@@ -97,16 +97,14 @@ void DOMLocalization::ConnectRoot(nsINode& aNode, ErrorResult& aRv) {
              "Cannot add a root that overlaps with existing root.");
 
 #ifdef DEBUG
-  for (auto iter = mRoots.ConstIter(); !iter.Done(); iter.Next()) {
-    nsINode* root = iter.Get()->GetKey();
-
+  for (nsINode* root : mRoots) {
     MOZ_ASSERT(
         root != &aNode && !root->Contains(&aNode) && !aNode.Contains(root),
         "Cannot add a root that overlaps with existing root.");
   }
 #endif
 
-  mRoots.PutEntry(&aNode);
+  mRoots.Insert(&aNode);
 
   aNode.AddMutationObserverUnlessExists(mMutations);
 }
@@ -114,7 +112,7 @@ void DOMLocalization::ConnectRoot(nsINode& aNode, ErrorResult& aRv) {
 void DOMLocalization::DisconnectRoot(nsINode& aNode, ErrorResult& aRv) {
   if (mRoots.Contains(&aNode)) {
     aNode.RemoveMutationObserver(mMutations);
-    mRoots.RemoveEntry(&aNode);
+    mRoots.Remove(&aNode);
   }
 }
 
@@ -395,9 +393,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(L10nRootTranslationHandler)
 already_AddRefed<Promise> DOMLocalization::TranslateRoots(ErrorResult& aRv) {
   nsTArray<RefPtr<Promise>> promises;
 
-  for (auto iter = mRoots.ConstIter(); !iter.Done(); iter.Next()) {
-    nsINode* root = iter.Get()->GetKey();
-
+  for (nsINode* root : mRoots) {
     RefPtr<Promise> promise = TranslateFragment(*root, aRv);
 
     // If the root is an element, we'll add a native handler
@@ -539,9 +535,7 @@ void DOMLocalization::DisconnectMutations() {
 }
 
 void DOMLocalization::DisconnectRoots() {
-  for (auto iter = mRoots.ConstIter(); !iter.Done(); iter.Next()) {
-    nsINode* node = iter.Get()->GetKey();
-
+  for (nsINode* node : mRoots) {
     node->RemoveMutationObserver(mMutations);
   }
   mRoots.Clear();
