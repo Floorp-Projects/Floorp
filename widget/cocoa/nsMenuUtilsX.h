@@ -26,11 +26,6 @@ nsMenuBarX* GetHiddenWindowMenuBar();   // returned object is not retained
 NSMenuItem* GetStandardEditMenuItem();  // returned object is not retained
 bool NodeIsHiddenOrCollapsed(nsIContent* aContent);
 
-// Determines how many items are visible among the siblings in a menu that are
-// before the given child. This will not count the application menu.
-// aParent must be of eMenuBarObjectType or eSubmenuObjectType.
-int CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuX* aChild);
-
 // Find the menu item by following the path aLocationString from aRootMenu.
 // aLocationString is a '|'-separated list of integers, where each integer is
 // the index of the menu item in the menu.

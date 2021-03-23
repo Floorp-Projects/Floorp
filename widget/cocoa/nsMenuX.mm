@@ -623,16 +623,20 @@ void nsMenuX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aCon
         }
         mVisible = false;
       } else {
-        int insertionIndex = nsMenuUtilsX::CalculateNativeInsertionPoint(mParent, this);
         if (parentType == eMenuBarObjectType) {
           // Before inserting we need to figure out if we should take the native
           // application menu into account.
           nsMenuBarX* mb = static_cast<nsMenuBarX*>(mParent);
+          NSInteger insertionIndex = mb->CalculateNativeInsertionPoint(this);
           if (mb->MenuContainsAppMenu()) {
             insertionIndex++;
           }
+          [parentMenu insertItem:mNativeMenuItem atIndex:insertionIndex];
+        } else if (parentType == eSubmenuObjectType) {
+          nsMenuX* parentMenuX = static_cast<nsMenuX*>(mParent);
+          NSInteger insertionIndex = parentMenuX->CalculateNativeInsertionPoint(this);
+          [parentMenu insertItem:mNativeMenuItem atIndex:insertionIndex];
         }
-        [parentMenu insertItem:mNativeMenuItem atIndex:insertionIndex];
         mNativeMenuItem.submenu = mNativeMenu;
         mVisible = true;
       }
