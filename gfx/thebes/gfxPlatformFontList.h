@@ -8,6 +8,7 @@
 
 #include "nsClassHashtable.h"
 #include "nsTHashMap.h"
+#include "nsTHashSet.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTHashtable.h"
 
@@ -406,11 +407,11 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
 
   // keep track of userfont sets to notify when global fontlist changes occur
   void AddUserFontSet(gfxUserFontSet* aUserFontSet) {
-    mUserFontSetList.PutEntry(aUserFontSet);
+    mUserFontSetList.Insert(aUserFontSet);
   }
 
   void RemoveUserFontSet(gfxUserFontSet* aUserFontSet) {
-    mUserFontSetList.RemoveEntry(aUserFontSet);
+    mUserFontSetList.Remove(aUserFontSet);
   }
 
   static const gfxFontEntry::ScriptRange sComplexScriptRanges[];
@@ -823,10 +824,10 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   mozilla::UniquePtr<ExtraNames> mExtraNames;
 
   // face names missed when face name loading takes a long time
-  mozilla::UniquePtr<nsTHashtable<nsCStringHashKey>> mFaceNamesMissed;
+  mozilla::UniquePtr<nsTHashSet<nsCString>> mFaceNamesMissed;
 
   // localized family names missed when face name loading takes a long time
-  mozilla::UniquePtr<nsTHashtable<nsCStringHashKey>> mOtherNamesMissed;
+  mozilla::UniquePtr<nsTHashSet<nsCString>> mOtherNamesMissed;
 
   typedef mozilla::RangedArray<mozilla::UniquePtr<PrefFontList>,
                                size_t(mozilla::StyleGenericFontFamily::None),
@@ -864,7 +865,7 @@ class gfxPlatformFontList : public gfxFontInfoLoader {
   // see bugs 636957, 1070983, 1189129
   uint32_t mFontlistInitCount;  // num times InitFontList called
 
-  nsTHashtable<nsPtrHashKey<gfxUserFontSet>> mUserFontSetList;
+  nsTHashSet<gfxUserFontSet*> mUserFontSetList;
 
   nsLanguageAtomService* mLangService;
 

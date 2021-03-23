@@ -27,6 +27,7 @@
 #include "nsCOMPtr.h"
 #include "nsColor.h"
 #include "nsTHashMap.h"
+#include "nsTHashSet.h"
 #include "nsExpirationTracker.h"
 #include "nsFontMetrics.h"
 #include "nsHashKeys.h"
@@ -2034,7 +2035,7 @@ class gfxFont {
 
   // used when analyzing whether a font has space contextual lookups
   static nsTHashMap<nsUint32HashKey, Script>* sScriptTagToCode;
-  static nsTHashtable<nsUint32HashKey>* sDefaultFeatures;
+  static nsTHashSet<uint32_t>* sDefaultFeatures;
 
   RefPtr<gfxFontEntry> mFontEntry;
 
@@ -2128,8 +2129,7 @@ class gfxFont {
   static const uint32_t kShapedWordCacheMaxAge = 3;
 
   nsTArray<mozilla::UniquePtr<gfxGlyphExtents>> mGlyphExtentsArray;
-  mozilla::UniquePtr<nsTHashtable<nsPtrHashKey<GlyphChangeObserver>>>
-      mGlyphChangeObservers;
+  mozilla::UniquePtr<nsTHashSet<GlyphChangeObserver*>> mGlyphChangeObservers;
 
   // a copy of the font without antialiasing, if needed for separate
   // measurement by mathml code

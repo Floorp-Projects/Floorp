@@ -465,7 +465,7 @@ hb_face_t* FT2FontEntry::CreateHBFace() const {
 
 bool FT2FontEntry::HasFontTable(uint32_t aTableTag) {
   if (mAvailableTables.Count() > 0) {
-    return mAvailableTables.GetEntry(aTableTag);
+    return mAvailableTables.Contains(aTableTag);
   }
 
   // If we haven't created a FreeType face already, try to avoid that by
@@ -485,7 +485,7 @@ bool FT2FontEntry::HasFontTable(uint32_t aTableTag) {
         totalTables = hb_face_get_table_tags(face, startOffset, &count, tags);
         startOffset += count;
         while (count-- > 0) {
-          mAvailableTables.PutEntry(tags[count]);
+          mAvailableTables.Insert(tags[count]);
         }
       } while (startOffset < totalTables);
       hb_face_destroy(face);
@@ -493,9 +493,9 @@ bool FT2FontEntry::HasFontTable(uint32_t aTableTag) {
       // Failed to create the HarfBuzz face! The font is probably broken.
       // Put a dummy entry in mAvailableTables so that we don't bother
       // re-trying here.
-      mAvailableTables.PutEntry(uint32_t(-1));
+      mAvailableTables.Insert(uint32_t(-1));
     }
-    return mAvailableTables.GetEntry(aTableTag);
+    return mAvailableTables.Contains(aTableTag);
   }
 
   RefPtr<SharedFTFace> face = GetFTFace();
@@ -1622,14 +1622,14 @@ void gfxFT2FontList::ReadSystemFontList(nsTArray<FontListEntry>* aList) {
 }
 
 static void LoadSkipSpaceLookupCheck(
-    nsTHashtable<nsCStringHashKey>& aSkipSpaceLookupCheck) {
+    nsTHashSet<nsCString>& aSkipSpaceLookupCheck) {
   AutoTArray<nsCString, 5> skiplist;
   gfxFontUtils::GetPrefsFontList(
       "font.whitelist.skip_default_features_space_check", skiplist);
   uint32_t numFonts = skiplist.Length();
   for (uint32_t i = 0; i < numFonts; i++) {
     ToLowerCase(skiplist[i]);
-    aSkipSpaceLookupCheck.PutEntry(skiplist[i]);
+    aSkipSpaceLookupCheck.Insert(skiplist[i]);
   }
 }
 

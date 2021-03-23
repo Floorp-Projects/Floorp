@@ -21,6 +21,7 @@
 #include "gfxOTSUtils.h"
 #include "nsIFontLoadCompleteCallback.h"
 #include "nsProxyRelease.h"
+#include "nsTHashSet.h"
 
 using namespace mozilla;
 
@@ -137,10 +138,9 @@ class MOZ_STACK_CLASS gfxOTSMessageContext : public gfxOTSContext {
     if (level > 0) {
       // For warnings (rather than errors that cause the font to fail),
       // we only report the first instance of any given message.
-      if (mWarningsIssued.Contains(msg)) {
+      if (!mWarningsIssued.EnsureInserted(msg)) {
         return;
       }
-      mWarningsIssued.PutEntry(msg);
     }
 
     mMessages.AppendElement(gfxUserFontEntry::OTSMessage{msg, level});
@@ -158,7 +158,7 @@ class MOZ_STACK_CLASS gfxOTSMessageContext : public gfxOTSContext {
   }
 
  private:
-  nsTHashtable<nsCStringHashKey> mWarningsIssued;
+  nsTHashSet<nsCString> mWarningsIssued;
   nsTArray<gfxUserFontEntry::OTSMessage> mMessages;
 };
 
