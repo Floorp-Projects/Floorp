@@ -1207,10 +1207,27 @@ metrics:
   start_reason_activity_error:
     type: boolean
     description: |
-      The `AppStartReasonProvider.ActivityLifecycleCallbacks.onCreate` was
-      unexpectedly called twice. We can use this metric to validate our
+      The `AppStartReasonProvider.ActivityLifecycleCallbacks.onActivityCreated`
+      was unexpectedly called twice. We can use this metric to validate our
       assumptions about how these APIs are called. This probe can be removed
       once we validate these assumptions.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18426
+    data_reviews:
+      - TODO
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - perf-android-fe@mozilla.com
+      - mcomella@mozilla.com
+    expires: "2021-08-11"
+  activity_state_provider_error:
+    type: boolean
+    description: |
+      The `StartupActivityStateProvider...onActivityStarted` was unexpectedly
+      called twice. We can use this metric to validate our assumptions about
+      how these APIs are called. This probe can be removed once we validate
+      these assumptions.
     bugs:
       - https://github.com/mozilla-mobile/fenix/issues/18426
     data_reviews:
