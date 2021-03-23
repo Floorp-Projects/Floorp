@@ -111,9 +111,12 @@ class nsMenuBarX : public nsMenuGroupOwnerX, public nsChangeObserver {
   bool PerformKeyEquivalent(NSEvent* aEvent);
   GeckoNSMenu* NativeNSMenu() { return mNativeMenu; }
 
-  // Determines how many items are visible among the siblings in a menu that are
-  // before the given child. This counts the application menu, if present.
-  NSInteger CalculateNativeInsertionPoint(nsMenuX* aChild);
+  // If aChild is one of our child menus, insert aChild's native menu item in our native menu at the
+  // right location.
+  void InsertChildNativeMenuItem(nsMenuX* aChild);
+
+  // Remove aChild's native menu item from our native menu.
+  void RemoveChildNativeMenuItem(nsMenuX* aChild);
 
  protected:
   void ConstructNativeMenus();
@@ -125,6 +128,16 @@ class nsMenuBarX : public nsMenuGroupOwnerX, public nsChangeObserver {
   NSMenuItem* CreateNativeAppMenuItem(nsMenuX* aMenu, const nsAString& aNodeID, SEL aAction,
                                       int aTag, NativeMenuItemTarget* aTarget);
   void CreateApplicationMenu(nsMenuX* aMenu);
+
+  // Calculates the index at which aChild's NSMenuItem should be inserted into our NSMenu.
+  // The order of NSMenuItems in the NSMenu is the same as the order of nsMenuX objects in
+  // mMenuArray; there are two differences:
+  //  - mMenuArray contains both visible and invisible menus, and the NSMenu only contains visible
+  //    menus.
+  //  - Our NSMenu may also contain an item for the app menu, whereas mMenuArray never does.
+  // So the insertion index is equal to the number of visible previous siblings of aChild in
+  // mMenuArray, plus one if the app menu is present.
+  NSInteger CalculateNativeInsertionPoint(nsMenuX* aChild);
 
   nsTArray<RefPtr<nsMenuX>> mMenuArray;
   GeckoNSMenu* mNativeMenu;  // root menu, representing entire menu bar
