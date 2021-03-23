@@ -188,20 +188,6 @@ bool nsMenuUtilsX::NodeIsHiddenOrCollapsed(nsIContent* aContent) {
                                              nsGkAtoms::_true, eCaseMatters));
 }
 
-int nsMenuUtilsX::CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuX* aChild) {
-  nsMenuObjectTypeX parentType = aParent->MenuObjectType();
-  MOZ_RELEASE_ASSERT(parentType == eMenuBarObjectType || parentType == eSubmenuObjectType);
-  if (parentType == eMenuBarObjectType) {
-    nsMenuBarX* menubarParent = static_cast<nsMenuBarX*>(aParent);
-    return menubarParent->CalculateNativeInsertionPoint(aChild);
-  }
-  if (parentType == eSubmenuObjectType) {
-    nsMenuX* menuParent = static_cast<nsMenuX*>(aParent);
-    return menuParent->CalculateNativeInsertionPoint(aChild);
-  }
-  return 0;
-}
-
 NSMenuItem* nsMenuUtilsX::NativeMenuItemWithLocation(NSMenu* aRootMenu, NSString* aLocationString,
                                                      bool aIsMenuBar) {
   NSArray<NSString*>* indexes = [aLocationString componentsSeparatedByString:@"|"];
