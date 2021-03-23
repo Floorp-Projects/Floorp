@@ -883,9 +883,7 @@ static BOOL gMenuItemsExecuteCommands = YES;
     if (!menuGroupOwner) {
       return;
     }
-    if (menuGroupOwner->MenuObjectType() == eMenuBarObjectType) {
-      menuBar = static_cast<nsMenuBarX*>(menuGroupOwner);
-    }
+    menuBar = menuGroupOwner->GetMenuBar();
   }
 
   // Do special processing if this is for an app-global command.
