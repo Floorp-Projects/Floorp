@@ -17,7 +17,7 @@
 #include "nsTHashMap.h"
 #include "nsHashKeys.h"
 #include "nsString.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 
 class nsIEventTarget;
 class nsIGlobalObject;
@@ -70,7 +70,7 @@ class IDBDatabase final : public DOMEventTargetHelper {
 
   indexedDB::BackgroundDatabaseChild* mBackgroundActor;
 
-  nsTHashtable<nsPtrHashKey<IDBTransaction>> mTransactions;
+  nsTHashSet<IDBTransaction*> mTransactions;
 
   nsTHashMap<nsISupportsHashKey, indexedDB::PBackgroundIDBDatabaseFileChild*>
       mFileActors;

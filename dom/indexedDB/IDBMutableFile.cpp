@@ -95,7 +95,7 @@ void IDBMutableFile::RegisterFileHandle(IDBFileHandle* aFileHandle) {
   aFileHandle->AssertIsOnOwningThread();
   MOZ_ASSERT(!mFileHandles.Contains(aFileHandle));
 
-  mFileHandles.PutEntry(aFileHandle);
+  mFileHandles.Insert(aFileHandle);
 }
 
 void IDBMutableFile::UnregisterFileHandle(IDBFileHandle* aFileHandle) {
@@ -104,7 +104,7 @@ void IDBMutableFile::UnregisterFileHandle(IDBFileHandle* aFileHandle) {
   aFileHandle->AssertIsOnOwningThread();
   MOZ_ASSERT(mFileHandles.Contains(aFileHandle));
 
-  mFileHandles.RemoveEntry(aFileHandle);
+  mFileHandles.Remove(aFileHandle);
 }
 
 void IDBMutableFile::AbortFileHandles() {
@@ -117,8 +117,7 @@ void IDBMutableFile::AbortFileHandles() {
   nsTArray<RefPtr<IDBFileHandle>> fileHandlesToAbort;
   fileHandlesToAbort.SetCapacity(mFileHandles.Count());
 
-  for (const auto& entry : mFileHandles) {
-    IDBFileHandle* const fileHandle = entry.GetKey();
+  for (IDBFileHandle* const fileHandle : mFileHandles) {
     MOZ_ASSERT(fileHandle);
 
     fileHandle->AssertIsOnOwningThread();
