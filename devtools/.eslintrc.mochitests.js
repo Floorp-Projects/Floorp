@@ -7,10 +7,6 @@
 // Parent config file for all devtools browser mochitest files.
 module.exports = {
   extends: ["plugin:mozilla/browser-test"],
-  // All globals made available in the test environment.
-  globals: {
-    waitForTick: true,
-  },
 
   rules: {
     // Allow non-camelcase so that run_test doesn't produce a warning.
