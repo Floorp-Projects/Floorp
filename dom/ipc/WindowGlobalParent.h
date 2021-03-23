@@ -261,6 +261,8 @@ class WindowGlobalParent final : public WindowContext,
   mozilla::ipc::IPCResult RecvAccumulatePageUseCounters(
       const UseCounters& aUseCounters);
 
+  mozilla::ipc::IPCResult RecvRequestRestoreTabContent();
+
  private:
   WindowGlobalParent(CanonicalBrowsingContext* aBrowsingContext,
                      uint64_t aInnerWindowId, uint64_t aOuterWindowId,

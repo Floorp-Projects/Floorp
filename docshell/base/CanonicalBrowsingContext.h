@@ -10,6 +10,8 @@
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/MediaControlKeySource.h"
 #include "mozilla/dom/BrowsingContextWebProgress.h"
+#include "mozilla/dom/SessionStoreRestoreData.h"
+#include "mozilla/dom/SessionStoreUtils.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/MozPromise.h"
@@ -282,6 +284,9 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     return mContainerFeaturePolicy;
   }
 
+  void SetRestoreData(SessionStoreRestoreData* aData);
+  void RequestRestoreTabContent(WindowGlobalParent* aWindow);
+
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
@@ -392,6 +397,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   RefPtr<nsBrowserStatusFilter> mStatusFilter;
 
   RefPtr<FeaturePolicy> mContainerFeaturePolicy;
+
+  RefPtr<SessionStoreRestoreData> mRestoreData;
+  uint32_t mRequestedContentRestores = 0;
+  uint32_t mCompletedContentRestores = 0;
 };
 
 }  // namespace dom

@@ -7,6 +7,7 @@
 include "mozilla/dom/DocShellMessageUtils.h";
 include "mozilla/dom/FeaturePolicyUtils.h";
 include "mozilla/dom/PermissionMessageUtils.h";
+include "mozilla/dom/SessionStoreMessageUtils.h";
 include "mozilla/ipc/TransportSecurityInfoUtils.h";
 include "mozilla/ipc/URIUtils.h";
 
@@ -32,6 +33,7 @@ using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 using mozilla::UseCounters from "mozilla/UseCounter.h";
 using mozilla::dom::MaybeDiscardedWindowContext from "mozilla/dom/WindowContext.h";
 [RefCounted] using mozilla::dom::FeaturePolicy from "mozilla/dom/FeaturePolicy.h";
+[RefCounted] using mozilla::dom::SessionStoreRestoreData from "mozilla/dom/SessionStoreRestoreData.h";
 
 namespace mozilla {
 namespace dom {
@@ -89,6 +91,8 @@ child:
   async ResetScalingZoom();
 
   async SetContainerFeaturePolicy(FeaturePolicy aContainerFeaturePolicy);
+
+  async RestoreTabContent(SessionStoreRestoreData aData) returns (bool success);
 
 both:
   async RawMessage(JSActorMessageMeta aMetadata, ClonedMessageData? aData,
@@ -168,6 +172,8 @@ parent:
    * the document previously passed into the ExpectPageUseCounters call.
    */
   async AccumulatePageUseCounters(UseCounters aUseCounters);
+
+  async RequestRestoreTabContent();
 
   async Destroy();
 };
