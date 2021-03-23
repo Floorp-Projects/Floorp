@@ -26,6 +26,7 @@
 #include "nsIObserver.h"
 #include "nsISpeculativeConnect.h"
 #include "nsTHashMap.h"
+#include "nsTHashSet.h"
 #ifdef DEBUG
 #  include "nsIOService.h"
 #endif
@@ -833,10 +834,10 @@ class nsHttpHandler final : public nsIHttpProtocolHandler,
   [[nodiscard]] bool IsHostExcludedForHTTPSRR(const nsACString& aHost);
 
  private:
-  nsTHashtable<nsCStringHashKey> mExcludedHttp2Origins;
-  nsTHashtable<nsCStringHashKey> mExcludedHttp3Origins;
+  nsTHashSet<nsCString> mExcludedHttp2Origins;
+  nsTHashSet<nsCString> mExcludedHttp3Origins;
   // A set of hosts that we should not upgrade to HTTPS with HTTPS RR.
-  nsTHashtable<nsCStringHashKey> mExcludedHostsForHTTPSRRUpgrade;
+  nsTHashSet<nsCString> mExcludedHostsForHTTPSRRUpgrade;
 
   Atomic<bool, Relaxed> mThroughCaptivePortal;
 
