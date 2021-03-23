@@ -10,8 +10,7 @@
 
 #include "modules/audio_processing/aec3/adaptive_fir_filter.h"
 
-#include <immintrin.h>
-
+#include "common_audio/intrin.h"
 #include "rtc_base/checks.h"
 
 namespace webrtc {
