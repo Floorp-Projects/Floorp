@@ -245,6 +245,8 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
   static constexpr auto kResourceURI = "resourceuri"_ns;
   static constexpr auto kBlobUri = "bloburi"_ns;
   static constexpr auto kDataUri = "dataurl"_ns;
+  static constexpr auto kDataUriWebExtCStyle =
+      "dataurl-extension-contentstyle"_ns;
   static constexpr auto kSingleString = "singlestring"_ns;
   static constexpr auto kMozillaExtension = "mozillaextension"_ns;
   static constexpr auto kOtherExtension = "otherextension"_ns;
@@ -276,6 +278,9 @@ FilenameTypeAndDetails nsContentSecurityUtils::FilenameToFilenameType(
   // blob: and data:
   if (StringBeginsWith(fileName, u"blob:"_ns)) {
     return FilenameTypeAndDetails(kBlobUri, Nothing());
+  }
+  if (StringBeginsWith(fileName, u"data:text/css;extension=style;"_ns)) {
+    return FilenameTypeAndDetails(kDataUriWebExtCStyle, Nothing());
   }
   if (StringBeginsWith(fileName, u"data:"_ns)) {
     return FilenameTypeAndDetails(kDataUri, Nothing());
