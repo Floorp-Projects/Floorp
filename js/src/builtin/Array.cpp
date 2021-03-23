@@ -225,7 +225,11 @@ static MOZ_ALWAYS_INLINE bool GetLengthProperty(JSContext* cx, HandleObject obj,
  */
 JS_FRIEND_API bool js::StringIsArrayIndex(JSLinearString* str,
                                           uint32_t* indexp) {
-  return str->isIndex(indexp) && *indexp <= MAX_ARRAY_INDEX;
+  if (!str->isIndex(indexp)) {
+    return false;
+  }
+  MOZ_ASSERT(*indexp <= MAX_ARRAY_INDEX);
+  return true;
 }
 
 JS_FRIEND_API bool js::StringIsArrayIndex(const char16_t* str, uint32_t length,
@@ -236,7 +240,11 @@ JS_FRIEND_API bool js::StringIsArrayIndex(const char16_t* str, uint32_t length,
   if (!mozilla::IsAsciiDigit(str[0])) {
     return false;
   }
-  return CheckStringIsIndex(str, length, indexp) && *indexp <= MAX_ARRAY_INDEX;
+  if (!CheckStringIsIndex(str, length, indexp)) {
+    return false;
+  }
+  MOZ_ASSERT(*indexp <= MAX_ARRAY_INDEX);
+  return true;
 }
 
 template <typename T>
