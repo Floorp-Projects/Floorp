@@ -367,11 +367,6 @@ bool jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph) {
   // Pruning is guided by unconditional bailouts. Wasm does not have bailouts.
   MOZ_ASSERT(!mir->compilingWasm());
 
-  // TODO: Support pruning with OSR.
-  if (graph.osrBlock()) {
-    return true;
-  }
-
   Vector<MBasicBlock*, 16, SystemAllocPolicy> worklist;
   uint32_t numMarked = 0;
   bool needsTrim = false;
@@ -387,6 +382,11 @@ bool jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph) {
 
   // The entry block is always reachable.
   if (!markReachable(graph.entryBlock())) {
+    return false;
+  }
+
+  // The OSR entry block is always reachable if it exists.
+  if (graph.osrBlock() && !markReachable(graph.osrBlock())) {
     return false;
   }
 
@@ -465,6 +465,27 @@ bool jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph) {
       MBasicBlock* succ = block->getSuccessor(i);
       if (succ->isDead()) {
         continue;
+      }
+
+      // Our dominators code expects all loop headers to have two predecessors.
+      // If we are removing the normal entry to a loop, but can still reach
+      // the loop header via OSR, we create a fake unreachable predecessor.
+      if (succ->isLoopHeader() && block != succ->backedge()) {
+        MOZ_ASSERT(graph.osrBlock());
+        if (!graph.alloc().ensureBallast()) {
+          return false;
+        }
+
+        MBasicBlock* fake = MBasicBlock::NewFakeLoopPredecessor(graph, succ);
+        if (!fake) {
+          return false;
+        }
+        // Mark the block to avoid removing it as unreachable.
+        fake->mark();
+
+        JitSpew(JitSpew_Prune,
+                "Header %u only reachable by OSR. Add fake predecessor %u",
+                succ->id(), fake->id());
       }
 
       JitSpew(JitSpew_Prune, "Remove block edge %u -> %u.", block->id(),
@@ -1434,9 +1455,14 @@ MIRType TypeAnalyzer::guessPhiType(MPhi* phi) const {
 
   MIRType type = MIRType::None;
   bool convertibleToFloat32 = false;
+  bool hasNonOSRInputs = false;
   DebugOnly<bool> hasPhiInputs = false;
   for (size_t i = 0, e = phi->numOperands(); i < e; i++) {
     MDefinition* in = phi->getOperand(i);
+    if (!in->isOsrValue()) {
+      hasNonOSRInputs = true;
+    }
+
     if (in->isPhi()) {
       hasPhiInputs = true;
       if (!in->toPhi()->triedToSpecialize()) {
@@ -1490,8 +1516,11 @@ MIRType TypeAnalyzer::guessPhiType(MPhi* phi) const {
     }
   }
 
-  MOZ_ASSERT_IF(type == MIRType::None, hasPhiInputs);
+  if (!hasNonOSRInputs) {
+    type = MIRType::Value;
+  }
 
+  MOZ_ASSERT_IF(type == MIRType::None, hasPhiInputs);
   return type;
 }
 
@@ -1608,7 +1637,11 @@ bool TypeAnalyzer::specializePhis() {
     MBasicBlock* preHeader = graph.osrPreHeaderBlock();
     MBasicBlock* header = preHeader->getSingleSuccessor();
 
-    if (header->isLoopHeader()) {
+    if (preHeader->numPredecessors() == 1) {
+      // Branch pruning has removed the path from the entry block
+      // to the preheader. There is nothing to do in this case.
+      MOZ_ASSERT(preHeader->getPredecessor(0) == graph.osrBlock());
+    } else if (header->isLoopHeader()) {
       for (MPhiIterator phi(header->phisBegin()); phi != header->phisEnd();
            phi++) {
         MPhi* preHeaderPhi = phi->getOperand(0)->toPhi();
@@ -1628,11 +1661,12 @@ bool TypeAnalyzer::specializePhis() {
         return false;
       }
     } else {
-      // Edge case: the header is a 'pending' loop header when control flow in
-      // the loop body is terminated unconditionally and there's no backedge.
-      // In this case the header only has the preheader as predecessor and we
-      // don't need to do anything.
-      MOZ_ASSERT(header->isPendingLoopHeader());
+      // Edge case: there is no backedge in this loop. This can happen
+      // if the header is a 'pending' loop header when control flow in
+      // the loop body is terminated unconditionally, or if a block
+      // that dominates the backedge unconditionally bails out. In
+      // this case the header only has the preheader as predecessor
+      // and we don't need to do anything.
       MOZ_ASSERT(header->numPredecessors() == 1);
     }
   }
