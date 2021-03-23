@@ -20,7 +20,7 @@
 #include "nsISupports.h"
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 
 class nsITimer;
 
@@ -95,8 +95,8 @@ class LSSnapshot final : public nsIRunnable {
 
   LSSnapshotChild* mActor;
 
-  nsTHashtable<nsStringHashKey> mLoadedItems;
-  nsTHashtable<nsStringHashKey> mUnknownItems;
+  nsTHashSet<nsString> mLoadedItems;
+  nsTHashSet<nsString> mUnknownItems;
   nsTHashMap<nsStringHashKey, nsString> mValues;
   UniquePtr<SnapshotWriteOptimizer> mWriteOptimizer;
   UniquePtr<nsTArray<LSWriteAndNotifyInfo>> mWriteAndNotifyInfos;
