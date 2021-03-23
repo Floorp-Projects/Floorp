@@ -4347,7 +4347,23 @@ nsresult nsIFrame::HandleEvent(nsPresContext* aPresContext,
     } else if (aEvent->mMessage == eMouseUp || aEvent->mMessage == eTouchEnd) {
       HandleRelease(aPresContext, aEvent, aEventStatus);
     }
+    return NS_OK;
   }
+
+  // When middle button is down, we need to just move selection and focus at
+  // the clicked point.  Note that even if middle click paste is not enabled,
+  // Chrome moves selection at middle mouse button down.  So, we should follow
+  // the behavior for the compatibility.
+  if (aEvent->mMessage == eMouseDown) {
+    WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
+    if (mouseEvent && mouseEvent->mButton == MouseButton::eMiddle) {
+      if (*aEventStatus == nsEventStatus_eConsumeNoDefault) {
+        return NS_OK;
+      }
+      return MoveCaretToEventPoint(aPresContext, mouseEvent, aEventStatus);
+    }
+  }
+
   return NS_OK;
 }
 
@@ -4552,14 +4568,6 @@ nsIFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
     return NS_ERROR_FAILURE;
   }
 
-  // if we are in Navigator and the click is in a draggable node, we don't want
-  // to start selection because we don't want to interfere with a potential
-  // drag of said node and steal all its glory.
-  int16_t isEditor = presShell->GetSelectionFlags();
-  // weaaak. only the editor can display frame selection not just text and
-  // images
-  isEditor = isEditor == nsISelectionDisplay::DISPLAY_ALL;
-
   WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent();
 
   if (!mouseEvent->IsAlt()) {
@@ -4577,6 +4585,35 @@ nsIFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
     }
   }
 
+  return MoveCaretToEventPoint(aPresContext, mouseEvent, aEventStatus);
+}
+
+nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
+                                         WidgetMouseEvent* aMouseEvent,
+                                         nsEventStatus* aEventStatus) {
+  MOZ_ASSERT(aPresContext);
+  MOZ_ASSERT(aMouseEvent);
+  MOZ_ASSERT(aMouseEvent->mMessage == eMouseDown);
+  MOZ_ASSERT(aMouseEvent->mButton == MouseButton::ePrimary ||
+             aMouseEvent->mButton == MouseButton::eMiddle);
+  MOZ_ASSERT(aEventStatus);
+
+  mozilla::PresShell* presShell = aPresContext->GetPresShell();
+  if (!presShell) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // if we are in Navigator and the click is in a draggable node, we don't want
+  // to start selection because we don't want to interfere with a potential
+  // drag of said node and steal all its glory.
+  int16_t isEditor = presShell->GetSelectionFlags();
+  // weaaak. only the editor can display frame selection not just text and
+  // images
+  isEditor = isEditor == nsISelectionDisplay::DISPLAY_ALL;
+
+  // Don't do something if it's moddle button down event.
+  bool isPrimaryButtonDown = aMouseEvent->mButton == MouseButton::ePrimary;
+
   // check whether style allows selection
   // if not, don't tell selection the mouse event even occurred.
   StyleUserSelect selectStyle;
@@ -4585,141 +4622,155 @@ nsIFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
     return NS_OK;
   }
 
-  bool useFrameSelection = (selectStyle == StyleUserSelect::Text);
-
-  // If the mouse is dragged outside the nearest enclosing scrollable area
-  // while making a selection, the area will be scrolled. To do this, capture
-  // the mouse on the nearest scrollable frame. If there isn't a scrollable
-  // frame, or something else is already capturing the mouse, there's no
-  // reason to capture.
-  if (!PresShell::GetCapturingContent()) {
-    nsIScrollableFrame* scrollFrame = nsLayoutUtils::GetNearestScrollableFrame(
-        this, nsLayoutUtils::SCROLLABLE_SAME_DOC |
-                  nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
-    if (scrollFrame) {
-      nsIFrame* capturingFrame = do_QueryFrame(scrollFrame);
-      PresShell::SetCapturingContent(capturingFrame->GetContent(),
-                                     CaptureFlags::IgnoreAllowedState);
+  if (isPrimaryButtonDown) {
+    // If the mouse is dragged outside the nearest enclosing scrollable area
+    // while making a selection, the area will be scrolled. To do this, capture
+    // the mouse on the nearest scrollable frame. If there isn't a scrollable
+    // frame, or something else is already capturing the mouse, there's no
+    // reason to capture.
+    if (!PresShell::GetCapturingContent()) {
+      nsIScrollableFrame* scrollFrame =
+          nsLayoutUtils::GetNearestScrollableFrame(
+              this, nsLayoutUtils::SCROLLABLE_SAME_DOC |
+                        nsLayoutUtils::SCROLLABLE_INCLUDE_HIDDEN);
+      if (scrollFrame) {
+        nsIFrame* capturingFrame = do_QueryFrame(scrollFrame);
+        PresShell::SetCapturingContent(capturingFrame->GetContent(),
+                                       CaptureFlags::IgnoreAllowedState);
+      }
     }
   }
 
   // XXX This is screwy; it really should use the selection frame, not the
   // event frame
-  const nsFrameSelection* frameselection = nullptr;
-  if (useFrameSelection)
-    frameselection = GetConstFrameSelection();
-  else
-    frameselection = presShell->ConstFrameSelection();
+  const nsFrameSelection* frameselection =
+      selectStyle == StyleUserSelect::Text ? GetConstFrameSelection()
+                                           : presShell->ConstFrameSelection();
 
   if (!frameselection || frameselection->GetDisplaySelection() ==
-                             nsISelectionController::SELECTION_OFF)
+                             nsISelectionController::SELECTION_OFF) {
     return NS_OK;  // nothing to do we cannot affect selection from here
+  }
 
 #ifdef XP_MACOSX
-  if (mouseEvent->IsControl())
-    return NS_OK;  // short circuit. hard coded for mac due to time restraints.
-  bool control = mouseEvent->IsMeta();
+  // If Control key is pressed on macOS, it should be treated as right click.
+  // So, don't change selection.
+  if (aMouseEvent->IsControl()) {
+    return NS_OK;
+  }
+  bool control = aMouseEvent->IsMeta();
 #else
-  bool control = mouseEvent->IsControl();
+  bool control = aMouseEvent->IsControl();
 #endif
 
   RefPtr<nsFrameSelection> fc = const_cast<nsFrameSelection*>(frameselection);
-  if (mouseEvent->mClickCount > 1) {
+  if (isPrimaryButtonDown && aMouseEvent->mClickCount > 1) {
     // These methods aren't const but can't actually delete anything,
     // so no need for AutoWeakFrame.
     fc->SetDragState(true);
-    return HandleMultiplePress(aPresContext, mouseEvent, aEventStatus, control);
+    return HandleMultiplePress(aPresContext, aMouseEvent, aEventStatus,
+                               control);
   }
 
-  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(mouseEvent,
+  nsPoint pt = nsLayoutUtils::GetEventCoordinatesRelativeTo(aMouseEvent,
                                                             RelativeTo{this});
   ContentOffsets offsets = GetContentOffsetsFromPoint(pt, SKIP_HIDDEN);
 
-  if (!offsets.content) return NS_ERROR_FAILURE;
+  if (!offsets.content) {
+    return NS_ERROR_FAILURE;
+  }
 
-  // Let Ctrl/Cmd+mouse down do table selection instead of drag initiation
-  nsCOMPtr<nsIContent> parentContent;
-  int32_t contentOffset;
-  TableSelectionMode target;
-  nsresult rv;
-  rv = GetDataForTableSelection(frameselection, presShell, mouseEvent,
-                                getter_AddRefs(parentContent), &contentOffset,
-                                &target);
-  if (NS_SUCCEEDED(rv) && parentContent) {
-    fc->SetDragState(true);
-    return fc->HandleTableSelection(parentContent, contentOffset, target,
-                                    mouseEvent);
+  if (isPrimaryButtonDown) {
+    // Let Ctrl/Cmd + left mouse down do table selection instead of drag
+    // initiation.
+    nsCOMPtr<nsIContent> parentContent;
+    int32_t contentOffset;
+    TableSelectionMode target;
+    nsresult rv = GetDataForTableSelection(
+        frameselection, presShell, aMouseEvent, getter_AddRefs(parentContent),
+        &contentOffset, &target);
+    if (NS_SUCCEEDED(rv) && parentContent) {
+      fc->SetDragState(true);
+      return fc->HandleTableSelection(parentContent, contentOffset, target,
+                                      aMouseEvent);
+    }
   }
 
   fc->SetDelayedCaretData(0);
 
-  // Check if any part of this frame is selected, and if the
-  // user clicked inside the selected region. If so, we delay
-  // starting a new selection since the user may be trying to
-  // drag the selected region to some other app.
+  if (isPrimaryButtonDown) {
+    // Check if any part of this frame is selected, and if the user clicked
+    // inside the selected region, and if it's the left button. If so, we delay
+    // starting a new selection since the user may be trying to drag the
+    // selected region to some other app.
 
-  if (GetContent() && GetContent()->IsMaybeSelected()) {
-    bool inSelection = false;
-    UniquePtr<SelectionDetails> details = frameselection->LookUpSelection(
-        offsets.content, 0, offsets.EndOffset(), false);
+    if (GetContent() && GetContent()->IsMaybeSelected()) {
+      bool inSelection = false;
+      UniquePtr<SelectionDetails> details = frameselection->LookUpSelection(
+          offsets.content, 0, offsets.EndOffset(), false);
 
-    //
-    // If there are any details, check to see if the user clicked
-    // within any selected region of the frame.
-    //
-
-    for (SelectionDetails* curDetail = details.get(); curDetail;
-         curDetail = curDetail->mNext.get()) {
       //
-      // If the user clicked inside a selection, then just
-      // return without doing anything. We will handle placing
-      // the caret later on when the mouse is released. We ignore
-      // the spellcheck, find and url formatting selections.
+      // If there are any details, check to see if the user clicked
+      // within any selected region of the frame.
       //
-      if (curDetail->mSelectionType != SelectionType::eSpellCheck &&
-          curDetail->mSelectionType != SelectionType::eFind &&
-          curDetail->mSelectionType != SelectionType::eURLSecondary &&
-          curDetail->mSelectionType != SelectionType::eURLStrikeout &&
-          curDetail->mStart <= offsets.StartOffset() &&
-          offsets.EndOffset() <= curDetail->mEnd) {
-        inSelection = true;
+
+      for (SelectionDetails* curDetail = details.get(); curDetail;
+           curDetail = curDetail->mNext.get()) {
+        //
+        // If the user clicked inside a selection, then just
+        // return without doing anything. We will handle placing
+        // the caret later on when the mouse is released. We ignore
+        // the spellcheck, find and url formatting selections.
+        //
+        if (curDetail->mSelectionType != SelectionType::eSpellCheck &&
+            curDetail->mSelectionType != SelectionType::eFind &&
+            curDetail->mSelectionType != SelectionType::eURLSecondary &&
+            curDetail->mSelectionType != SelectionType::eURLStrikeout &&
+            curDetail->mStart <= offsets.StartOffset() &&
+            offsets.EndOffset() <= curDetail->mEnd) {
+          inSelection = true;
+        }
+      }
+
+      if (inSelection) {
+        fc->SetDragState(false);
+        fc->SetDelayedCaretData(aMouseEvent);
+        return NS_OK;
       }
     }
 
-    if (inSelection) {
-      fc->SetDragState(false);
-      fc->SetDelayedCaretData(mouseEvent);
-      return NS_OK;
-    }
+    fc->SetDragState(true);
   }
-
-  fc->SetDragState(true);
 
   // Do not touch any nsFrame members after this point without adding
   // weakFrame checks.
   const nsFrameSelection::FocusMode focusMode = [&]() {
     // If "Shift" and "Ctrl" are both pressed, "Shift" is given precedence. This
     // mimics the old behaviour.
-    if (mouseEvent->IsShift()) {
+    if (aMouseEvent->IsShift()) {
       return nsFrameSelection::FocusMode::kExtendSelection;
     }
 
-    if (control) {
+    if (isPrimaryButtonDown && control) {
       return nsFrameSelection::FocusMode::kMultiRangeSelection;
     }
 
     return nsFrameSelection::FocusMode::kCollapseToNewPoint;
   }();
 
-  rv = fc->HandleClick(MOZ_KnownLive(offsets.content) /* bug 1636889 */,
-                       offsets.StartOffset(), offsets.EndOffset(), focusMode,
-                       offsets.associate);
+  nsresult rv = fc->HandleClick(
+      MOZ_KnownLive(offsets.content) /* bug 1636889 */, offsets.StartOffset(),
+      offsets.EndOffset(), focusMode, offsets.associate);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
-  if (NS_FAILED(rv)) return rv;
+  // We don't handle mouse button up if it's middle button.
+  if (isPrimaryButtonDown && offsets.offset != offsets.secondaryOffset) {
+    fc->MaintainSelection();
+  }
 
-  if (offsets.offset != offsets.secondaryOffset) fc->MaintainSelection();
-
-  if (isEditor && !mouseEvent->IsShift() &&
+  if (isPrimaryButtonDown && isEditor && !aMouseEvent->IsShift() &&
       (offsets.EndOffset() - offsets.StartOffset()) == 1) {
     // A single node is selected and we aren't extending an existing
     // selection, which means the user clicked directly on an object (either
@@ -4729,7 +4780,7 @@ nsIFrame::HandlePress(nsPresContext* aPresContext, WidgetGUIEvent* aEvent,
     fc->SetDragState(false);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult nsIFrame::SelectByTypeAtPoint(nsPresContext* aPresContext,

@@ -5247,20 +5247,8 @@ nsresult EventStateManager::HandleMiddleClickPaste(
     }
   }
 
-  // Move selection to the clicked point.
-  nsCOMPtr<nsIContent> container;
-  int32_t offset;
-  nsLayoutUtils::GetContainerAndOffsetAtEvent(
-      aPresShell, aMouseEvent, getter_AddRefs(container), &offset);
-  if (container) {
-    // XXX If readonly or disabled <input> or <textarea> in contenteditable
-    //     designMode editor is clicked, the point is in the editor.
-    //     However, outer HTMLEditor and Selection should handle it.
-    //     So, in such case, Selection::Collapse() will fail.
-    DebugOnly<nsresult> rv = selection->CollapseInLimiter(container, offset);
-    NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                         "Failed to collapse Selection at middle clicked");
-  }
+  // Don't modify selection here because we've already set caret to the point
+  // at "mousedown" event.
 
   int32_t clipboardType = nsIClipboard::kGlobalClipboard;
   nsresult rv = NS_OK;
