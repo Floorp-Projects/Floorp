@@ -195,6 +195,7 @@ class ErrorResult;
 class EventListenerManager;
 class FullscreenExit;
 class FullscreenRequest;
+class HTMLEditor;
 struct LangGroupFontPrefs;
 class PendingAnimationTracker;
 class PermissionDelegateHandler;
@@ -4148,19 +4149,28 @@ class Document : public nsINode,
     // Its callers don't need to check this.
     ExecCommandParam mExecCommandParam;  // uint8_t
     GetEditorCommandFunc* mGetEditorCommandFunc;
+    enum class CommandOnTextEditor : uint8_t {
+      Disabled,
+      Enabled,
+      FallThrough,  // Not disabled, but handled by HTMLEditor if there is one
+    };
+    CommandOnTextEditor mCommandOnTextEditor;
 
     InternalCommandData()
         : mXULCommandName(nullptr),
           mCommand(mozilla::Command::DoNothing),
           mExecCommandParam(ExecCommandParam::Ignore),
-          mGetEditorCommandFunc(nullptr) {}
+          mGetEditorCommandFunc(nullptr),
+          mCommandOnTextEditor(CommandOnTextEditor::Disabled) {}
     InternalCommandData(const char* aXULCommandName, mozilla::Command aCommand,
                         ExecCommandParam aExecCommandParam,
-                        GetEditorCommandFunc aGetEditorCommandFunc)
+                        GetEditorCommandFunc aGetEditorCommandFunc,
+                        CommandOnTextEditor aCommandOnTextEditor)
         : mXULCommandName(aXULCommandName),
           mCommand(aCommand),
           mExecCommandParam(aExecCommandParam),
-          mGetEditorCommandFunc(aGetEditorCommandFunc) {}
+          mGetEditorCommandFunc(aGetEditorCommandFunc),
+          mCommandOnTextEditor(aCommandOnTextEditor) {}
 
     bool IsAvailableOnlyWhenEditable() const {
       return mCommand != mozilla::Command::Cut &&
@@ -4188,7 +4198,7 @@ class Document : public nsINode,
 
     bool DoNothing() const { return mDoNothing; }
     bool IsEditor() const {
-      MOZ_ASSERT(!!mTextEditor == !!mEditorCommand);
+      MOZ_ASSERT_IF(mEditorCommand, mActiveEditor || mHTMLEditor);
       return !!mEditorCommand;
     }
 
@@ -4201,7 +4211,11 @@ class Document : public nsINode,
     GetCommandStateParams(nsCommandParams& aParams) const;
 
    private:
-    RefPtr<TextEditor> mTextEditor;
+    // The returned editor's life is guaranteed while this instance is alive.
+    TextEditor* GetTargetEditor() const;
+
+    RefPtr<TextEditor> mActiveEditor;
+    RefPtr<HTMLEditor> mHTMLEditor;
     RefPtr<EditorCommand> mEditorCommand;
     const InternalCommandData& mCommandData;
     bool mDoNothing = false;
