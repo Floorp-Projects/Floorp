@@ -4,35 +4,44 @@
 
 package org.mozilla.fenix.utils
 
-import io.mockk.mockk
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestCoroutineDispatcher
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.ReaderState
 import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertEquals
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
+@ExperimentalCoroutinesApi
 @RunWith(FenixRobolectricTestRunner::class)
 class ToolbarPopupWindowTest {
+    private val testDispatcher = TestCoroutineDispatcher()
+
+    @get:Rule
+    val coroutinesTestRule = MainCoroutineRule(testDispatcher)
 
     @Test
-    fun getUrlForClipboard() {
-        val customTabSession = createCustomTab("https://mozilla.org")
-
+    fun `getUrlForClipboard should get the right URL`() {
         // Custom tab
+        val customTabSession = createCustomTab("https://mozilla.org")
+        var store = BrowserStore(BrowserState(customTabs = listOf(customTabSession)))
         assertEquals(
             "https://mozilla.org",
-            ToolbarPopupWindow.getUrlForClipboard(mockk(), customTabSession)
+            ToolbarPopupWindow.getUrlForClipboard(store, customTabSession.id)
         )
 
         // Regular tab
         val regularTab = createTab(url = "http://firefox.com")
-        var store =
-            BrowserStore(BrowserState(tabs = listOf(regularTab), selectedTabId = regularTab.id))
-        assertEquals(regularTab.content.url, ToolbarPopupWindow.getUrlForClipboard(store))
+        store = BrowserStore(BrowserState(tabs = listOf(regularTab), selectedTabId = regularTab.id))
+        assertEquals("http://firefox.com", ToolbarPopupWindow.getUrlForClipboard(store))
 
         // Reader Tab
         val readerTab = createTab(
@@ -40,6 +49,24 @@ class ToolbarPopupWindowTest {
             readerState = ReaderState(active = true, activeUrl = "https://blog.mozilla.org/123")
         )
         store = BrowserStore(BrowserState(tabs = listOf(readerTab), selectedTabId = readerTab.id))
-        assertEquals(readerTab.readerState.activeUrl, ToolbarPopupWindow.getUrlForClipboard(store))
+        assertEquals("https://blog.mozilla.org/123", ToolbarPopupWindow.getUrlForClipboard(store))
+    }
+
+    @Test
+    fun `getUrlForClipboard should get the updated URL`() {
+        // Custom tab
+        val customTabSession = createCustomTab("https://mozilla.org")
+        var store = BrowserStore(BrowserState(customTabs = listOf(customTabSession)))
+        store.dispatch(ContentAction.UpdateUrlAction(customTabSession.id, "https://firefox.com")).joinBlocking()
+        assertEquals(
+            "https://firefox.com",
+            ToolbarPopupWindow.getUrlForClipboard(store, customTabSession.id)
+        )
+
+        // Regular tab
+        val regularTab = createTab(url = "http://firefox.com")
+        store = BrowserStore(BrowserState(tabs = listOf(regularTab), selectedTabId = regularTab.id))
+        store.dispatch(ContentAction.UpdateUrlAction(regularTab.id, "https://mozilla.org")).joinBlocking()
+        assertEquals("https://mozilla.org", ToolbarPopupWindow.getUrlForClipboard(store))
     }
 }
