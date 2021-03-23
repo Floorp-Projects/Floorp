@@ -23,7 +23,7 @@ const ICONS = {
     "chrome://devtools/skin/images/aboutdebugging-error.svg",
   [MESSAGE_LEVEL.INFO]:
     "chrome://devtools/skin/images/aboutdebugging-information.svg",
-  [MESSAGE_LEVEL.WARNING]: "chrome://global/skin/icons/warning.svg",
+  [MESSAGE_LEVEL.WARNING]: "chrome://devtools/skin/images/alert.svg",
 };
 const CLOSE_ICON_SRC = "chrome://devtools/skin/images/close.svg";
 
