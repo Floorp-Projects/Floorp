@@ -174,6 +174,12 @@ class FontFace final : public nsISupports, public nsWrapperCache {
   void SetVariationSettings(const nsACString& aValue, ErrorResult& aRv);
   void GetDisplay(nsACString& aResult);
   void SetDisplay(const nsACString& aValue, ErrorResult& aRv);
+  void GetAscentOverride(nsACString& aResult);
+  void SetAscentOverride(const nsACString& aValue, ErrorResult& aRv);
+  void GetDescentOverride(nsACString& aResult);
+  void SetDescentOverride(const nsACString& aValue, ErrorResult& aRv);
+  void GetLineGapOverride(nsACString& aResult);
+  void SetLineGapOverride(const nsACString& aValue, ErrorResult& aRv);
 
   FontFaceLoadStatus Status();
   Promise* Load(ErrorResult& aRv);
