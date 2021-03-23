@@ -219,6 +219,7 @@ enum class Op {
   Try = 0x06,
   Catch = 0x07,
   Throw = 0x08,
+  Rethrow = 0x09,
 #endif
   End = 0x0b,
   Br = 0x0c,

@@ -2600,6 +2600,15 @@ static bool EmitThrow(FunctionCompiler& f) {
 
   MOZ_CRASH("NYI");
 }
+
+static bool EmitRethrow(FunctionCompiler& f) {
+  uint32_t relativeDepth;
+  if (!f.iter().readRethrow(&relativeDepth)) {
+    return false;
+  }
+
+  MOZ_CRASH("NYI");
+}
 #endif
 
 static bool EmitCallArgs(FunctionCompiler& f, const FuncType& funcType,
@@ -4531,6 +4540,11 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           return f.iter().unrecognizedOpcode(&op);
         }
         CHECK(EmitThrow(f));
+      case uint16_t(Op::Rethrow):
+        if (!f.moduleEnv().exceptionsEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
+        CHECK(EmitRethrow(f));
 #endif
       case uint16_t(Op::Br):
         CHECK(EmitBr(f));

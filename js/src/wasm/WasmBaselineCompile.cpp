@@ -4086,6 +4086,13 @@ class BaseCompiler final : public BaseCompilerInterface {
     }
   }
 
+  // Duplicate the reference at the specified depth and load it into a register.
+  void dupRefAt(uint32_t depth, RegRef dest) {
+    MOZ_ASSERT(depth < stk_.length());
+    Stk& src = peek(stk_.length() - depth - 1);
+    loadRef(src, dest);
+  }
+
   // Flush all local and register value stack elements to memory.
   //
   // TODO / OPTIMIZE: As this is fairly expensive and causes worse
@@ -5198,6 +5205,31 @@ class BaseCompiler final : public BaseCompilerInterface {
       fr.popStackBeforeBranch(stackBase, type);
     }
   }
+
+#ifdef ENABLE_WASM_EXCEPTIONS
+  // This function is similar to popBlockResults, but additionally handles the
+  // implicit exception pointer that is pushed to the value stack on entry to
+  // a catch handler by dropping it appropriately.
+  void popCatchResults(ResultType type, StackHeight stackBase) {
+    if (!type.empty()) {
+      ABIResultIter iter(type);
+      popRegisterResults(iter);
+      if (!iter.done()) {
+        popStackResults(iter, stackBase);
+        // Since popStackResults clobbers the stack, we only need to free the
+        // exception off of the value stack.
+        popValueStackBy(1);
+      } else {
+        // If there are no stack results, we have to adjust the stack by
+        // dropping the exception reference that's now on the stack.
+        dropValue();
+      }
+    } else {
+      dropValue();
+    }
+    fr.popStackBeforeBranch(stackBase, type);
+  }
+#endif
 
   Stk captureStackResult(const ABIResult& result, StackHeight resultsBase,
                          uint32_t stackResultBytes) {
@@ -8398,6 +8430,7 @@ class BaseCompiler final : public BaseCompilerInterface {
   [[nodiscard]] bool emitCatch();
   [[nodiscard]] bool emitCatchAll();
   [[nodiscard]] bool emitThrow();
+  [[nodiscard]] bool emitRethrow();
 #endif
   [[nodiscard]] bool emitEnd();
   [[nodiscard]] bool emitBr();
@@ -10574,9 +10607,17 @@ void BaseCompiler::emitCatchSetup(LabelKind kind, Control& tryCatch,
     fr.resetStackHeight(tryCatch.stackHeight, resultType);
     popValueStackTo(tryCatch.stackSize);
   } else {
-    MOZ_ASSERT(stk_.length() == tryCatch.stackSize + resultType.length());
+    // If the previous block is a catch, we need to handle the extra exception
+    // reference on the stack (for rethrow) and thus the stack size is 1 more.
+    MOZ_ASSERT(stk_.length() == tryCatch.stackSize + resultType.length() +
+                                    (kind == LabelKind::Try ? 0 : 1));
     // Try jumps to the end of the try-catch block unless a throw is done.
-    popBlockResults(resultType, tryCatch.stackHeight, ContinuationKind::Jump);
+    if (kind == LabelKind::Try) {
+      popBlockResults(resultType, tryCatch.stackHeight, ContinuationKind::Jump);
+    } else {
+      popCatchResults(resultType, tryCatch.stackHeight);
+    }
+    MOZ_ASSERT(stk_.length() == tryCatch.stackSize);
     freeResultRegisters(resultType);
     MOZ_ASSERT(!tryCatch.deadOnArrival);
   }
@@ -10671,7 +10712,9 @@ bool BaseCompiler::emitCatch() {
 #  endif
   masm.loadPtr(Address(refs, NativeObject::offsetOfElements()), refs);
 
-  freeRef(exn);
+  // This reference is pushed onto the stack because a potential rethrow
+  // may need to access it. It is always popped at the end of the block.
+  pushRef(exn);
 
   masm.loadPtr(Address(values, dataOffset), values);
   size_t argOffset = 0;
@@ -10764,6 +10807,14 @@ bool BaseCompiler::emitCatchAll() {
 
   masm.bind(&tryCatch.catchInfos.back().label);
 
+  // The code in the landing pad guarantees us that the exception reference
+  // is live in this register.
+  RegRef exn = RegRef(WasmExceptionReg);
+  needRef(exn);
+  // This reference is pushed onto the stack because a potential rethrow
+  // may need to access it. It is always popped at the end of the block.
+  pushRef(exn);
+
   return true;
 }
 
@@ -10776,10 +10827,13 @@ bool BaseCompiler::endTryCatch(ResultType type) {
     fr.resetStackHeight(tryCatch.stackHeight, type);
     popValueStackTo(tryCatch.stackSize);
   } else {
-    MOZ_ASSERT(stk_.length() == tryCatch.stackSize + type.length());
+    // Since the previous block is a catch, we must handle the extra exception
+    // reference on the stack (for rethrow) and thus the stack size is 1 more.
+    MOZ_ASSERT(stk_.length() == tryCatch.stackSize + type.length() + 1);
     // Assume we have a control join, so place results in block result
     // allocations and also handle the implicit exception reference.
-    popBlockResults(type, tryCatch.stackHeight, ContinuationKind::Jump);
+    popCatchResults(type, tryCatch.stackHeight);
+    MOZ_ASSERT(stk_.length() == tryCatch.stackSize);
     // Since we will emit a landing pad after this and jump over it to get to
     // the control join, we free these here and re-capture at the join.
     freeResultRegisters(type);
@@ -10984,6 +11038,25 @@ bool BaseCompiler::emitThrow() {
   }
   MOZ_ASSERT(argOffset == 0);
   freeRef(scratch);
+
+  return throwFrom(exn, lineOrBytecode);
+}
+
+bool BaseCompiler::emitRethrow() {
+  uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
+
+  uint32_t relativeDepth;
+  if (!iter_.readRethrow(&relativeDepth)) {
+    return false;
+  }
+
+  if (deadCode_) {
+    return true;
+  }
+
+  Control& tryCatch = controlItem(relativeDepth);
+  RegRef exn = needRef();
+  dupRefAt(tryCatch.stackSize, exn);
 
   return throwFrom(exn, lineOrBytecode);
 }
@@ -15871,6 +15944,11 @@ bool BaseCompiler::emitBody() {
           return iter_.unrecognizedOpcode(&op);
         }
         CHECK_NEXT(emitThrow());
+      case uint16_t(Op::Rethrow):
+        if (!moduleEnv_.exceptionsEnabled()) {
+          return iter_.unrecognizedOpcode(&op);
+        }
+        CHECK_NEXT(emitRethrow());
 #endif
       case uint16_t(Op::Br):
         CHECK_NEXT(emitBr());

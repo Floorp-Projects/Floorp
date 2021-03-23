@@ -1506,6 +1506,13 @@ static bool DecodeFunctionBodyExprs(const ModuleEnvironment& env,
         uint32_t unusedIndex;
         CHECK(iter.readThrow(&unusedIndex, &nothings));
       }
+      case uint16_t(Op::Rethrow): {
+        if (!env.exceptionsEnabled()) {
+          return iter.unrecognizedOpcode(&op);
+        }
+        uint32_t unusedDepth;
+        CHECK(iter.readRethrow(&unusedDepth));
+      }
 #endif
       case uint16_t(Op::ThreadPrefix): {
         if (env.sharedMemoryEnabled() == Shareable::False) {
