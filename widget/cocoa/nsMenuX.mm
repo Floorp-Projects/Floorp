@@ -45,38 +45,6 @@ static bool gMenuMethodsSwizzled = false;
 
 int32_t nsMenuX::sIndexingMenuLevel = 0;
 
-//
-// Objective-C class used for representedObject
-//
-
-@implementation MenuItemInfo
-
-- (id)initWithMenuGroupOwner:(nsMenuGroupOwnerX*)aMenuGroupOwner {
-  if ((self = [super init]) != nil) {
-    [self setMenuGroupOwner:aMenuGroupOwner];
-  }
-  return self;
-}
-
-- (void)dealloc {
-  [self setMenuGroupOwner:nullptr];
-  [super dealloc];
-}
-
-- (nsMenuGroupOwnerX*)menuGroupOwner {
-  return mMenuGroupOwner;
-}
-
-- (void)setMenuGroupOwner:(nsMenuGroupOwnerX*)aMenuGroupOwner {
-  // weak reference as the nsMenuGroupOwnerX owns all of its sub-objects
-  mMenuGroupOwner = aMenuGroupOwner;
-  if (aMenuGroupOwner) {
-    aMenuGroupOwner->AddMenuItemInfoToSet(self);
-  }
-}
-
-@end
-
 // TODO: It is unclear whether this is still needed.
 static void SwizzleDynamicIndexingMethods() {
   if (gMenuMethodsSwizzled) {
@@ -240,9 +208,7 @@ void nsMenuX::AddMenuItem(RefPtr<nsMenuItemX>&& aMenuItem) {
 
   // set its command. we get the unique command id from the menubar
   newNativeMenuItem.tag = mMenuGroupOwner->RegisterForCommand(aMenuItem);
-  MenuItemInfo* info = [[MenuItemInfo alloc] initWithMenuGroupOwner:mMenuGroupOwner];
-  newNativeMenuItem.representedObject = info;
-  [info release];
+  newNativeMenuItem.representedObject = mMenuGroupOwner->GetRepresentedObject();
 
   aMenuItem->SetupIcon();
 

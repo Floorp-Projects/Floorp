@@ -19,6 +19,8 @@ class nsChangeObserver;
 class nsIWidget;
 class nsIContent;
 
+@class MOZMenuItemRepresentedObject;
+
 class nsMenuGroupOwnerX : public nsMenuObjectX, public nsIMutationObserver {
  public:
   nsMenuGroupOwnerX();
@@ -30,7 +32,9 @@ class nsMenuGroupOwnerX : public nsMenuObjectX, public nsIMutationObserver {
   uint32_t RegisterForCommand(nsMenuItemX* aMenuItem);
   void UnregisterCommand(uint32_t aCommandID);
   nsMenuItemX* GetMenuItemForCommandID(uint32_t aCommandID);
-  void AddMenuItemInfoToSet(MenuItemInfo* aInfo);
+
+  // The representedObject that's used for all menu items under this menu group owner.
+  MOZMenuItemRepresentedObject* GetRepresentedObject() { return mRepresentedObject; }
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMUTATIONOBSERVER
@@ -51,11 +55,13 @@ class nsMenuGroupOwnerX : public nsMenuObjectX, public nsIMutationObserver {
   // stores mapping of command IDs to menu objects
   nsTHashMap<nsUint32HashKey, nsMenuItemX*> mCommandToMenuObjectTable;
 
-  // Stores references to all the MenuItemInfo objects created with weak
-  // references to us.  They may live longer than we do, so when we're
-  // destroyed we need to clear all their weak references.  This avoids
-  // crashes in -[NativeMenuItemTarget menuItemHit:].  See bug 1131473.
-  NSMutableSet* mInfoSet;
+  MOZMenuItemRepresentedObject* mRepresentedObject = nil;  // [strong]
 };
+
+@interface MOZMenuItemRepresentedObject : NSObject
+- (id)initWithMenuGroupOwner:(nsMenuGroupOwnerX*)aMenuGroupOwner;
+- (void)setMenuGroupOwner:(nsMenuGroupOwnerX*)aMenuGroupOwner;
+- (nsMenuGroupOwnerX*)menuGroupOwner;
+@end
 
 #endif  // nsMenuGroupOwner_h_
