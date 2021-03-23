@@ -2696,7 +2696,7 @@ void ContentChild::AddIdleObserver(nsIObserver* aObserver,
   // Make sure aObserver isn't released while we wait for the parent
   aObserver->AddRef();
   SendAddIdleObserver(reinterpret_cast<uint64_t>(aObserver), aIdleTimeInS);
-  mIdleObservers.PutEntry(aObserver);
+  mIdleObservers.Insert(aObserver);
 }
 
 void ContentChild::RemoveIdleObserver(nsIObserver* aObserver,
@@ -2704,7 +2704,7 @@ void ContentChild::RemoveIdleObserver(nsIObserver* aObserver,
   MOZ_ASSERT(aObserver, "null idle observer");
   SendRemoveIdleObserver(reinterpret_cast<uint64_t>(aObserver), aIdleTimeInS);
   aObserver->Release();
-  mIdleObservers.RemoveEntry(aObserver);
+  mIdleObservers.Remove(aObserver);
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvNotifyIdleObserver(

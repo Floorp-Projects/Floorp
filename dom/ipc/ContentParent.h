@@ -35,6 +35,7 @@
 
 #include "nsClassHashtable.h"
 #include "nsTHashMap.h"
+#include "nsTHashSet.h"
 #include "nsPluginTags.h"
 #include "nsHashKeys.h"
 #include "nsIAsyncShutdown.h"
@@ -1593,7 +1594,7 @@ class ContentParent final
   // GetFilesHelper can be aborted by receiving RecvDeleteGetFilesRequest.
   nsRefPtrHashtable<nsIDHashKey, GetFilesHelper> mGetFilesPendingRequests;
 
-  nsTHashtable<nsCStringHashKey> mActivePermissionKeys;
+  nsTHashSet<nsCString> mActivePermissionKeys;
 
   nsTArray<nsCString> mBlobURLs;
 
@@ -1622,7 +1623,7 @@ class ContentParent final
   static bool sEarlySandboxInit;
 #endif
 
-  nsTHashtable<nsRefPtrHashKey<BrowsingContextGroup>> mGroups;
+  nsTHashSet<RefPtr<BrowsingContextGroup>> mGroups;
 
   // See `BrowsingContext::mEpochs` for an explanation of this field.
   uint64_t mBrowsingContextFieldEpoch = 0;
