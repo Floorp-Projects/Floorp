@@ -188,6 +188,7 @@
 #include "nsStringFlags.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
+#include "nsTHashSet.h"
 #include "nsTHashtable.h"
 #include "nsTLiteralString.h"
 #include "nsTStringRepr.h"
@@ -1724,7 +1725,7 @@ class ConnectionPool::ThreadRunnable final : public Runnable {
 class ConnectionPool::TransactionInfo final {
   friend class mozilla::DefaultDelete<TransactionInfo>;
 
-  nsTHashtable<nsPtrHashKey<TransactionInfo>> mBlocking;
+  nsTHashSet<TransactionInfo*> mBlocking;
   nsTArray<NotNull<TransactionInfo*>> mBlockingOrdered;
 
  public:
@@ -1734,7 +1735,7 @@ class ConnectionPool::TransactionInfo final {
   const uint64_t mTransactionId;
   const int64_t mLoggingSerialNumber;
   const nsTArray<nsString> mObjectStoreNames;
-  nsTHashtable<nsPtrHashKey<TransactionInfo>> mBlockedOn;
+  nsTHashSet<TransactionInfo*> mBlockedOn;
   nsTArray<nsCOMPtr<nsIRunnable>> mQueuedRunnables;
   const bool mIsWriteTransaction;
   bool mRunning;
@@ -2190,8 +2191,8 @@ class Database final
   SafeRefPtr<FullDatabaseMetadata> mMetadata;
   SafeRefPtr<FileManager> mFileManager;
   RefPtr<DirectoryLock> mDirectoryLock;
-  nsTHashtable<nsPtrHashKey<TransactionBase>> mTransactions;
-  nsTHashtable<nsPtrHashKey<MutableFile>> mMutableFiles;
+  nsTHashSet<TransactionBase*> mTransactions;
+  nsTHashSet<MutableFile*> mMutableFiles;
   nsRefPtrHashtable<nsIDHashKey, FileInfo> mMappedBlobs;
   RefPtr<DatabaseConnection> mConnection;
   const PrincipalInfo mPrincipalInfo;
@@ -2438,7 +2439,7 @@ class Database final
   mozilla::ipc::IPCResult RecvClose() override;
 
   template <typename T>
-  static bool InvalidateAll(const nsTHashtable<nsPtrHashKey<T>>& aTable);
+  static bool InvalidateAll(const nsTBaseHashSet<nsPtrHashKey<T>>& aTable);
 };
 
 class Database::StartTransactionOp final
@@ -5008,13 +5009,13 @@ class QuotaClient final : public mozilla::dom::quota::Client {
 
   struct SubdirectoriesToProcessAndDatabaseFilenames {
     AutoTArray<nsString, 20> subdirsToProcess;
-    nsTHashtable<nsStringHashKey> databaseFilenames{20};
+    nsTHashSet<nsString> databaseFilenames{20};
   };
 
   struct SubdirectoriesToProcessAndDatabaseFilenamesAndObsoleteFilenames {
     AutoTArray<nsString, 20> subdirsToProcess;
-    nsTHashtable<nsStringHashKey> databaseFilenames{20};
-    nsTHashtable<nsStringHashKey> obsoleteFilenames{20};
+    nsTHashSet<nsString> databaseFilenames{20};
+    nsTHashSet<nsString> obsoleteFilenames{20};
   };
 
   enum class ObsoleteFilenamesHandling { Include, Omit };
@@ -7925,13 +7926,13 @@ uint64_t ConnectionPool::Start(
 
     // Mark what we are blocking on.
     if (const auto maybeBlockingRead = blockInfo->mLastBlockingReads) {
-      transactionInfo.mBlockedOn.PutEntry(&maybeBlockingRead.ref());
+      transactionInfo.mBlockedOn.Insert(&maybeBlockingRead.ref());
       maybeBlockingRead->AddBlockingTransaction(transactionInfo);
     }
 
     if (aIsWriteTransaction) {
       for (const auto blockingWrite : blockInfo->mLastBlockingWrites) {
-        transactionInfo.mBlockedOn.PutEntry(blockingWrite);
+        transactionInfo.mBlockedOn.Insert(blockingWrite);
         blockingWrite->AddBlockingTransaction(transactionInfo);
       }
 
@@ -9031,7 +9032,7 @@ void ConnectionPool::TransactionInfo::MaybeUnblock(
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mBlockedOn.Contains(&aTransactionInfo));
 
-  mBlockedOn.RemoveEntry(&aTransactionInfo);
+  mBlockedOn.Remove(&aTransactionInfo);
   if (mBlockedOn.IsEmpty()) {
     ConnectionPool* connectionPool = mDatabaseInfo.mConnectionPool;
     MOZ_ASSERT(connectionPool);
@@ -9459,7 +9460,7 @@ Database::Database(
 }
 
 template <typename T>
-bool Database::InvalidateAll(const nsTHashtable<nsPtrHashKey<T>>& aTable) {
+bool Database::InvalidateAll(const nsTBaseHashSet<nsPtrHashKey<T>>& aTable) {
   AssertIsOnBackgroundThread();
 
   const uint32_t count = aTable.Count();
@@ -9467,10 +9468,11 @@ bool Database::InvalidateAll(const nsTHashtable<nsPtrHashKey<T>>& aTable) {
     return true;
   }
 
+  // XXX Does this really need to be fallible?
   IDB_TRY_INSPECT(
       const auto& elementsToInvalidate,
       TransformIntoNewArray(
-          aTable, [](const auto& entry) { return entry.GetKey(); }, fallible),
+          aTable, [](const auto& entry) { return entry; }, fallible),
       false);
 
   IDB_REPORT_INTERNAL_ERR();
@@ -9525,12 +9527,12 @@ nsresult Database::EnsureConnection() {
 
 bool Database::RegisterTransaction(TransactionBase& aTransaction) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(!mTransactions.GetEntry(&aTransaction));
+  MOZ_ASSERT(!mTransactions.Contains(&aTransaction));
   MOZ_ASSERT(mDirectoryLock);
   MOZ_ASSERT(!mInvalidated);
   MOZ_ASSERT(!mClosed);
 
-  if (NS_WARN_IF(!mTransactions.PutEntry(&aTransaction, fallible))) {
+  if (NS_WARN_IF(!mTransactions.Insert(&aTransaction, fallible))) {
     return false;
   }
 
@@ -9539,9 +9541,9 @@ bool Database::RegisterTransaction(TransactionBase& aTransaction) {
 
 void Database::UnregisterTransaction(TransactionBase& aTransaction) {
   AssertIsOnBackgroundThread();
-  MOZ_ASSERT(mTransactions.GetEntry(&aTransaction));
+  MOZ_ASSERT(mTransactions.Contains(&aTransaction));
 
-  mTransactions.RemoveEntry(&aTransaction);
+  mTransactions.Remove(&aTransaction);
 
   MaybeCloseConnection();
 }
@@ -9549,10 +9551,10 @@ void Database::UnregisterTransaction(TransactionBase& aTransaction) {
 bool Database::RegisterMutableFile(MutableFile* aMutableFile) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aMutableFile);
-  MOZ_ASSERT(!mMutableFiles.GetEntry(aMutableFile));
+  MOZ_ASSERT(!mMutableFiles.Contains(aMutableFile));
   MOZ_ASSERT(mDirectoryLock);
 
-  if (NS_WARN_IF(!mMutableFiles.PutEntry(aMutableFile, fallible))) {
+  if (NS_WARN_IF(!mMutableFiles.Insert(aMutableFile, fallible))) {
     return false;
   }
 
@@ -9562,9 +9564,9 @@ bool Database::RegisterMutableFile(MutableFile* aMutableFile) {
 void Database::UnregisterMutableFile(MutableFile* aMutableFile) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aMutableFile);
-  MOZ_ASSERT(mMutableFiles.GetEntry(aMutableFile));
+  MOZ_ASSERT(mMutableFiles.Contains(aMutableFile));
 
-  mMutableFiles.RemoveEntry(aMutableFile);
+  mMutableFiles.Remove(aMutableFile);
 }
 
 void Database::NoteActiveMutableFile() {
@@ -12626,7 +12628,7 @@ nsresult QuotaClient::UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
         nsDependentSubstring subdirNameBase;
         if (GetFilenameBase(subdirName, kFileManagerDirectoryNameSuffix,
                             subdirNameBase)) {
-          IDB_TRY(OkIf(databaseFilenames.GetEntry(subdirNameBase)), Ok{});
+          IDB_TRY(OkIf(databaseFilenames.Contains(subdirNameBase)), Ok{});
           return Ok{};
         }
 
@@ -12637,7 +12639,7 @@ nsresult QuotaClient::UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
             const auto& subdirNameWithSuffix,
             ([&databaseFilenames,
               &subdirName]() -> Result<nsAutoString, NotOk> {
-              if (databaseFilenames.GetEntry(subdirName)) {
+              if (databaseFilenames.Contains(subdirName)) {
                 return nsAutoString{subdirName +
                                     kFileManagerDirectoryNameSuffix};
               }
@@ -12647,7 +12649,7 @@ nsresult QuotaClient::UpgradeStorageFrom1_0To2_0(nsIFile* aDirectory) {
               // platforms, because the origin directory may have been created
               // on Windows and now accessed on different OS.
               const nsAutoString subdirNameWithDot = subdirName + u"."_ns;
-              IDB_TRY(OkIf(databaseFilenames.GetEntry(subdirNameWithDot)),
+              IDB_TRY(OkIf(databaseFilenames.Contains(subdirNameWithDot)),
                       Err(NotOk{}));
 
               return nsAutoString{subdirNameWithDot +
@@ -12813,7 +12815,7 @@ nsresult QuotaClient::GetUsageForOriginInternal(
                                                     aOriginMetadata, u""_ns),
                     Err(NS_ERROR_UNEXPECTED));
 
-            databaseFilenames.RemoveEntry(subdirNameBase);
+            databaseFilenames.Remove(subdirNameBase);
             return Ok{};
           }
 
@@ -12823,7 +12825,7 @@ nsresult QuotaClient::GetUsageForOriginInternal(
 
           IDB_TRY(([&databaseFilenames, &subdirNameBase] {
                     IDB_TRY_RETURN(
-                        OkIf(databaseFilenames.GetEntry(subdirNameBase)));
+                        OkIf(databaseFilenames.Contains(subdirNameBase)));
                   }()
                        .orElse([&directory, &subdirName](
                                    const NotOk) -> Result<Ok, nsresult> {
@@ -12841,12 +12843,10 @@ nsresult QuotaClient::GetUsageForOriginInternal(
         }));
   }
 
-  for (const auto& databaseEntry : databaseFilenames) {
+  for (const auto& databaseFilename : databaseFilenames) {
     if (aCanceled) {
       break;
     }
-
-    const auto& databaseFilename = databaseEntry.GetKey();
 
     IDB_TRY_INSPECT(
         const auto& fmDirectory,
@@ -12995,18 +12995,19 @@ nsCString QuotaClient::GetShutdownStatus() const {
                 IntToCString(static_cast<uint32_t>(gFactoryOps->Length())) +
                 " ("_ns);
 
-    nsTHashtable<nsCStringHashKey> ids;
+    // XXX It might be confusing to remove duplicates here, as the actual list
+    // won't match the count then.
+    nsTHashSet<nsCString> ids;
+    std::transform(gFactoryOps->cbegin(), gFactoryOps->cend(),
+                   MakeInserter(ids), [](const auto& factoryOp) {
+                     MOZ_ASSERT(factoryOp);
 
-    for (auto const& factoryOp : *gFactoryOps) {
-      MOZ_ASSERT(factoryOp);
+                     nsCString id;
+                     factoryOp->Stringify(id);
+                     return id;
+                   });
 
-      nsCString id;
-      factoryOp->Stringify(id);
-
-      ids.PutEntry(id);
-    }
-
-    StringifyTableKeys(ids, data);
+    StringJoinAppend(data, ", "_ns, ids);
 
     data.Append(")\n");
   }
@@ -13015,23 +13016,23 @@ nsCString QuotaClient::GetShutdownStatus() const {
     data.Append("LiveDatabases: "_ns +
                 IntToCString(gLiveDatabaseHashtable->Count()) + " ("_ns);
 
-    // TODO: This is a basic join-sequence-of-strings operation. Don't we have
-    // that available, i.e. something similar to
-    // https://searchfox.org/mozilla-central/source/security/sandbox/chromium/base/strings/string_util.cc#940
-    nsTHashtable<nsCStringHashKey> ids;
+    // XXX What's the purpose of adding these to a hashtable before joining them
+    // to the string? (Maybe this used to be an ordered container before???)
+    nsTHashSet<nsCString> ids;
 
-    for (const auto& entry : *gLiveDatabaseHashtable) {
-      MOZ_ASSERT(entry.GetData());
+    for (const auto& entry : gLiveDatabaseHashtable->Values()) {
+      MOZ_ASSERT(entry);
 
-      for (const auto& database : entry.GetData()->mLiveDatabases) {
-        nsCString id;
-        database->Stringify(id);
-
-        ids.PutEntry(id);
-      }
+      std::transform(entry->mLiveDatabases.cbegin(),
+                     entry->mLiveDatabases.cend(), MakeInserter(ids),
+                     [](const auto& database) {
+                       nsCString id;
+                       database->Stringify(id);
+                       return id;
+                     });
     }
 
-    StringifyTableKeys(ids, data);
+    StringJoinAppend(data, ", "_ns, ids);
 
     data.Append(")\n");
   }
@@ -13138,7 +13139,7 @@ QuotaClient::GetDatabaseFilenames(nsIFile& aDirectory,
             if constexpr (ObsoleteFilenames ==
                           ObsoleteFilenamesHandling::Include) {
               if (StringBeginsWith(leafName, kIdbDeletionMarkerFilePrefix)) {
-                result.obsoleteFilenames.PutEntry(
+                result.obsoleteFilenames.Insert(
                     Substring(leafName, kIdbDeletionMarkerFilePrefix.Length()));
                 break;
               }
@@ -13176,7 +13177,7 @@ QuotaClient::GetDatabaseFilenames(nsIFile& aDirectory,
               break;
             }
 
-            result.databaseFilenames.PutEntry(leafNameBase);
+            result.databaseFilenames.Insert(leafNameBase);
             break;
           }
 
@@ -13360,18 +13361,21 @@ void Maintenance::Stringify(nsACString& aResult) const {
   aResult.Append("DatabaseMaintenances: "_ns +
                  IntToCString(mDatabaseMaintenances.Count()) + " ("_ns);
 
-  nsTHashtable<nsCStringHashKey> ids;
+  // XXX It might be confusing to remove duplicates here, as the actual list
+  // won't match the count then.
+  nsTHashSet<nsCString> ids;
+  std::transform(mDatabaseMaintenances.Values().cbegin(),
+                 mDatabaseMaintenances.Values().cend(), MakeInserter(ids),
+                 [](const auto& entry) {
+                   MOZ_ASSERT(entry);
 
-  for (const auto& entry : mDatabaseMaintenances) {
-    MOZ_ASSERT(entry.GetData());
+                   nsCString id;
+                   entry->Stringify(id);
 
-    nsCString id;
-    entry.GetData()->Stringify(id);
+                   return id;
+                 });
 
-    ids.PutEntry(id);
-  }
-
-  StringifyTableKeys(ids, aResult);
+  StringJoinAppend(aResult, ", "_ns, ids);
 
   aResult.Append(")");
 }
@@ -16181,8 +16185,8 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
         IDB_TRY(CollectWhileHasResult(
             *stmt,
             [&lastObjectStoreId, &objectStores,
-             usedIds = Maybe<nsTHashtable<nsUint64HashKey>>{},
-             usedNames = Maybe<nsTHashtable<nsStringHashKey>>{}](
+             usedIds = Maybe<nsTHashSet<uint64_t>>{},
+             usedNames = Maybe<nsTHashSet<nsString>>{}](
                 auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
               IDB_TRY_INSPECT(const IndexOrObjectStoreId& objectStoreId,
                               MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 0));
@@ -16195,7 +16199,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
               IDB_TRY(OkIf(!usedIds.ref().Contains(objectStoreId)),
                       Err(NS_ERROR_FILE_CORRUPTED));
 
-              IDB_TRY(OkIf(usedIds.ref().PutEntry(objectStoreId, fallible)),
+              IDB_TRY(OkIf(usedIds.ref().Insert(objectStoreId, fallible)),
                       Err(NS_ERROR_OUT_OF_MEMORY));
 
               nsString name;
@@ -16208,7 +16212,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
               IDB_TRY(OkIf(!usedNames.ref().Contains(name)),
                       Err(NS_ERROR_FILE_CORRUPTED));
 
-              IDB_TRY(OkIf(usedNames.ref().PutEntry(name, fallible)),
+              IDB_TRY(OkIf(usedNames.ref().Insert(name, fallible)),
                       Err(NS_ERROR_OUT_OF_MEMORY));
 
               ObjectStoreMetadata commonMetadata;
@@ -16274,8 +16278,8 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
         IDB_TRY(CollectWhileHasResult(
             *stmt,
             [&lastIndexId, &objectStores, &aConnection,
-             usedIds = Maybe<nsTHashtable<nsUint64HashKey>>{},
-             usedNames = Maybe<nsTHashtable<nsStringHashKey>>{}](
+             usedIds = Maybe<nsTHashSet<uint64_t>>{},
+             usedNames = Maybe<nsTHashSet<nsString>>{}](
                 auto& stmt) mutable -> mozilla::Result<Ok, nsresult> {
               IDB_TRY_INSPECT(const IndexOrObjectStoreId& objectStoreId,
                               MOZ_TO_RESULT_INVOKE(stmt, GetInt64, 1));
@@ -16301,7 +16305,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
               IDB_TRY(OkIf(!usedIds.ref().Contains(indexId)),
                       Err(NS_ERROR_FILE_CORRUPTED));
 
-              IDB_TRY(OkIf(usedIds.ref().PutEntry(indexId, fallible)),
+              IDB_TRY(OkIf(usedIds.ref().Insert(indexId, fallible)),
                       Err(NS_ERROR_OUT_OF_MEMORY));
 
               nsString name;
@@ -16317,7 +16321,7 @@ nsresult OpenDatabaseOp::LoadDatabaseInformation(
               IDB_TRY(OkIf(!usedNames.ref().Contains(hashName)),
                       Err(NS_ERROR_FILE_CORRUPTED));
 
-              IDB_TRY(OkIf(usedNames.ref().PutEntry(hashName, fallible)),
+              IDB_TRY(OkIf(usedNames.ref().Insert(hashName, fallible)),
                       Err(NS_ERROR_OUT_OF_MEMORY));
 
               auto indexMetadata = MakeSafeRefPtr<FullIndexMetadata>();
