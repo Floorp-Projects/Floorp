@@ -48,7 +48,7 @@ def run_telemetry(tests, binary=None, topsrcdir=None, **kwargs):
     args.binary = binary
     args.logger = kwargs.pop("log", None)
 
-    for k, v in kwargs.iteritems():
+    for k, v in kwargs.items():
         setattr(args, k, v)
 
     parser.verify_usage(args)

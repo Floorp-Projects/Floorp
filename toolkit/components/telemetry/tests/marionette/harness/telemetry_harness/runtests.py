@@ -3,7 +3,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from marionette_harness.runtests import cli as mn_cli
-from runner import TelemetryTestRunner
+
+from .runner import TelemetryTestRunner
 
 
 def cli(args=None):

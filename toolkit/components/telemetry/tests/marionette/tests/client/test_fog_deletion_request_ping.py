@@ -54,7 +54,7 @@ class TestDeletionRequestPing(FOGTestCase):
             ping_server=self.fog_ping_server,
         )
 
-        self.assertEqual(ping2["debug_tag"], debug_tag)
+        self.assertEqual(ping2["debug_tag"].decode("utf-8"), debug_tag)
 
         self.assertIn("client_id", ping2["payload"]["client_info"])
         client_id2 = ping2["payload"]["client_info"]["client_id"]
