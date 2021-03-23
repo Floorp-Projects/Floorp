@@ -5368,7 +5368,7 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
      * we have in mind (15000 ms as defined by REFRESH_REDIRECT_TIMER).
      * Pass a REPLACE flag to LoadURI().
      */
-    loadState->SetLoadType(LOAD_REFRESH_REPLACE);
+    loadState->SetLoadType(LOAD_NORMAL_REPLACE);
 
     /* For redirects we mimic HTTP, which passes the
      * original referrer.
@@ -5846,7 +5846,6 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
   // Determine if this type of load should update history
   switch (mLoadType) {
     case LOAD_NORMAL_REPLACE:
-    case LOAD_REFRESH_REPLACE:
     case LOAD_STOP_CONTENT_AND_REPLACE:
     case LOAD_RELOAD_BYPASS_CACHE:
     case LOAD_RELOAD_BYPASS_PROXY:
@@ -8733,6 +8732,7 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
       targetContext = newBC;
     }
   }
+
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(targetContext, rv);
 
@@ -8752,27 +8752,6 @@ nsresult nsDocShell::PerformRetargeting(nsDocShellLoadState* aLoadState) {
   // No forced download
   aLoadState->SetFileName(VoidString());
   return targetContext->InternalLoad(aLoadState);
-}
-
-static nsAutoCString RefMaybeNull(nsIURI* aURI) {
-  nsAutoCString result;
-  if (NS_FAILED(aURI->GetRef(result))) {
-    result.SetIsVoid(true);
-  }
-  return result;
-}
-
-uint32_t nsDocShell::GetSameDocumentNavigationFlags(nsIURI* aNewURI) {
-  uint32_t flags = LOCATION_CHANGE_SAME_DOCUMENT;
-
-  bool equal = false;
-  if (mCurrentURI &&
-      NS_SUCCEEDED(mCurrentURI->EqualsExceptRef(aNewURI, &equal)) && equal &&
-      RefMaybeNull(mCurrentURI) != RefMaybeNull(aNewURI)) {
-    flags |= LOCATION_CHANGE_HASHCHANGE;
-  }
-
-  return flags;
 }
 
 bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
@@ -8976,10 +8955,6 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
     newURIPartitionedPrincipalToInherit = doc->PartitionedPrincipal();
     newCsp = doc->GetCsp();
   }
-
-  uint32_t locationChangeFlags =
-      GetSameDocumentNavigationFlags(aLoadState->URI());
-
   // Pass true for aCloneSHChildren, since we're not
   // changing documents here, so all of our subframes are
   // still relevant to the new session history entry.
@@ -9167,7 +9142,8 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
   }
 
   if (locationChangeNeeded) {
-    FireOnLocationChange(this, nullptr, aLoadState->URI(), locationChangeFlags);
+    FireOnLocationChange(this, nullptr, aLoadState->URI(),
+                         LOCATION_CHANGE_SAME_DOCUMENT);
   }
 
   /* Restore the original LSHE if we were loading something
@@ -11136,7 +11112,7 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
   // in session history.
   if (!mozilla::SessionHistoryInParent() && rootSH &&
       ((mLoadType & (LOAD_CMD_HISTORY | LOAD_CMD_RELOAD)) ||
-       mLoadType == LOAD_NORMAL_REPLACE || mLoadType == LOAD_REFRESH_REPLACE)) {
+       mLoadType == LOAD_NORMAL_REPLACE)) {
     mPreviousEntryIndex = rootSH->Index();
     if (!mozilla::SessionHistoryInParent()) {
       rootSH->LegacySHistory()->UpdateIndex();
@@ -11561,7 +11537,7 @@ nsresult nsDocShell::UpdateURLAndHistory(Document* aDocument, nsIURI* aNewURI,
     aDocument->SetDocumentURI(aNewURI);
     SetCurrentURI(aNewURI, nullptr, /* aFireLocationChange */ true,
                   /* aIsInitialAboutBlank */ false,
-                  GetSameDocumentNavigationFlags(aNewURI));
+                  LOCATION_CHANGE_SAME_DOCUMENT);
 
     AddURIVisit(aNewURI, aCurrentURI, 0);
 
@@ -12240,23 +12216,22 @@ nsDocShell::MakeEditable(bool aInWaitForUriLoad) {
     return;
   }
 
-  nsresult rv;
-  nsCOMPtr<nsIURI> uri(do_GetProperty(props, u"docshell.previousURI"_ns, &rv));
-  if (NS_SUCCEEDED(rv)) {
-    uri.forget(aURI);
+  nsresult rv = props->GetPropertyAsInterface(u"docshell.previousURI"_ns,
+                                              NS_GET_IID(nsIURI),
+                                              reinterpret_cast<void**>(aURI));
 
+  if (NS_FAILED(rv)) {
+    // There is no last visit for this channel, so this must be the first
+    // link.  Link the visit to the referrer of this request, if any.
+    // Treat referrer as null if there is an error getting it.
+    (void)NS_GetReferrerFromChannel(aChannel, aURI);
+  } else {
     rv = props->GetPropertyAsUint32(u"docshell.previousFlags"_ns,
                                     aChannelRedirectFlags);
 
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "Could not fetch previous flags, URI will be treated like referrer");
-
-  } else {
-    // There is no last visit for this channel, so this must be the first
-    // link.  Link the visit to the referrer of this request, if any.
-    // Treat referrer as null if there is an error getting it.
-    NS_GetReferrerFromChannel(aChannel, aURI);
   }
 }
 
