@@ -147,6 +147,10 @@ this.VideoControlsWidget = class {
     someVideo,
     reflowedDimensions
   ) {
+    if (isNaN(someVideo.duration)) {
+      return false;
+    }
+
     if (
       prefs["media.videocontrols.picture-in-picture.video-toggle.always-show"]
     ) {
