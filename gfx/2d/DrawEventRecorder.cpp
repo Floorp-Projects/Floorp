@@ -92,11 +92,10 @@ void DrawEventRecorderMemory::RecordEvent(const RecordedEvent& aEvent) {
 }
 
 void DrawEventRecorderMemory::AddDependentSurface(uint64_t aDependencyId) {
-  mDependentSurfaces.PutEntry(aDependencyId);
+  mDependentSurfaces.Insert(aDependencyId);
 }
 
-nsTHashtable<nsUint64HashKey>&&
-DrawEventRecorderMemory::TakeDependentSurfaces() {
+nsTHashSet<uint64_t>&& DrawEventRecorderMemory::TakeDependentSurfaces() {
   return std::move(mDependentSurfaces);
 }
 
