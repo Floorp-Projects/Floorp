@@ -558,6 +558,11 @@ bool IsSandboxPrototypeProxy(JSObject* obj) {
   return js::IsProxy(obj) && js::GetProxyHandler(obj) == &sandboxProxyHandler;
 }
 
+bool IsWebExtensionContentScriptSandbox(JSObject* obj) {
+  return IsSandbox(obj) &&
+         CompartmentPrivate::Get(obj)->isWebExtensionContentScript;
+}
+
 }  // namespace xpc
 
 // A proxy handler that lets us wrap callables and invoke them with
