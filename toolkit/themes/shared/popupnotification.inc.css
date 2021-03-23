@@ -142,6 +142,10 @@ popupnotification {
   margin: 4px 0 0;
 }
 
+.panel-footer.panel-footer-menulike > button:focus-visible {
+  box-shadow: var(--panelview-toolbarbutton-focus-box-shadow);
+}
+
 .panel-footer.panel-footer-menulike > button:hover:active {
   color: inherit;
 }
@@ -175,6 +179,11 @@ popupnotification {
 
 .panel-footer:not(.panel-footer-menulike) > button[disabled] {
   opacity: 0.4;
+}
+
+.panel-footer:not(.panel-footer-menulike) > button:focus-visible {
+  outline: 2px solid var(--focus-outline-color);
+  outline-offset: 0;
 }
 
 .panel-footer > button:not([disabled]):hover {
