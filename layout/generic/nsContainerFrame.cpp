@@ -7,6 +7,7 @@
 /* base class #1 for rendering objects that have child lists */
 
 #include "nsContainerFrame.h"
+#include "nsContainerFrameInlines.h"
 
 #include "mozilla/ComputedStyle.h"
 #include "mozilla/PresShell.h"
@@ -868,109 +869,25 @@ void nsContainerFrame::SyncFrameViewAfterReflow(nsPresContext* aPresContext,
   }
 }
 
-static nscoord GetCoord(const LengthPercentage& aCoord, nscoord aIfNotCoord) {
-  if (aCoord.ConvertsToLength()) {
-    return aCoord.ToLength();
-  }
-  return aIfNotCoord;
+void nsContainerFrame::DoInlineMinISize(gfxContext* aRenderingContext,
+                                        InlineMinISizeData* aData) {
+  auto handleChildren = [aRenderingContext](auto frame, auto data) {
+    for (nsIFrame* kid : frame->mFrames) {
+      kid->AddInlineMinISize(aRenderingContext, data);
+    }
+  };
+  DoInlineIntrinsicISize(aData, handleChildren);
 }
 
-static nscoord GetCoord(const LengthPercentageOrAuto& aCoord,
-                        nscoord aIfNotCoord) {
-  if (aCoord.IsAuto()) {
-    return aIfNotCoord;
-  }
-  return GetCoord(aCoord.AsLengthPercentage(), aIfNotCoord);
-}
-
-void nsContainerFrame::DoInlineIntrinsicISize(gfxContext* aRenderingContext,
-                                              InlineIntrinsicISizeData* aData,
-                                              IntrinsicISizeType aType) {
-  if (GetPrevInFlow()) return;  // Already added.
-
-  WritingMode wm = GetWritingMode();
-  mozilla::Side startSide = wm.PhysicalSideForInlineAxis(eLogicalEdgeStart);
-  mozilla::Side endSide = wm.PhysicalSideForInlineAxis(eLogicalEdgeEnd);
-
-  const nsStylePadding* stylePadding = StylePadding();
-  const nsStyleBorder* styleBorder = StyleBorder();
-  const nsStyleMargin* styleMargin = StyleMargin();
-
-  // This goes at the beginning no matter how things are broken and how
-  // messy the bidi situations are, since per CSS2.1 section 8.6
-  // (implemented in bug 328168), the startSide border is always on the
-  // first line.
-  // This frame is a first-in-flow, but it might have a previous bidi
-  // continuation, in which case that continuation should handle the startSide
-  // border.
-  // For box-decoration-break:clone we setup clonePBM = startPBM + endPBM and
-  // add that to each line.  For box-decoration-break:slice clonePBM is zero.
-  nscoord clonePBM = 0;  // PBM = PaddingBorderMargin
-  const bool sliceBreak =
-      styleBorder->mBoxDecorationBreak == StyleBoxDecorationBreak::Slice;
-  if (!GetPrevContinuation() || MOZ_UNLIKELY(!sliceBreak)) {
-    nscoord startPBM =
-        // clamp negative calc() to 0
-        std::max(GetCoord(stylePadding->mPadding.Get(startSide), 0), 0) +
-        styleBorder->GetComputedBorderWidth(startSide) +
-        GetCoord(styleMargin->mMargin.Get(startSide), 0);
-    if (MOZ_LIKELY(sliceBreak)) {
-      aData->mCurrentLine += startPBM;
-    } else {
-      clonePBM = startPBM;
+void nsContainerFrame::DoInlinePrefISize(gfxContext* aRenderingContext,
+                                         InlinePrefISizeData* aData) {
+  auto handleChildren = [aRenderingContext](auto frame, auto data) {
+    for (nsIFrame* kid : frame->mFrames) {
+      kid->AddInlinePrefISize(aRenderingContext, data);
     }
-  }
-
-  nscoord endPBM =
-      // clamp negative calc() to 0
-      std::max(GetCoord(stylePadding->mPadding.Get(endSide), 0), 0) +
-      styleBorder->GetComputedBorderWidth(endSide) +
-      GetCoord(styleMargin->mMargin.Get(endSide), 0);
-  if (MOZ_UNLIKELY(!sliceBreak)) {
-    clonePBM += endPBM;
-    aData->mCurrentLine += clonePBM;
-  }
-
-  const nsLineList_iterator* savedLine = aData->mLine;
-  nsIFrame* const savedLineContainer = aData->LineContainer();
-
-  nsContainerFrame* lastInFlow;
-  for (nsContainerFrame* nif = this; nif;
-       nif = static_cast<nsContainerFrame*>(nif->GetNextInFlow())) {
-    if (aData->mCurrentLine == 0) {
-      aData->mCurrentLine = clonePBM;
-    }
-    for (nsIFrame* kid : nif->mFrames) {
-      if (aType == IntrinsicISizeType::MinISize) {
-        kid->AddInlineMinISize(aRenderingContext,
-                               static_cast<InlineMinISizeData*>(aData));
-      } else {
-        kid->AddInlinePrefISize(aRenderingContext,
-                                static_cast<InlinePrefISizeData*>(aData));
-      }
-    }
-
-    // After we advance to our next-in-flow, the stored line and line container
-    // may no longer be correct. Just forget them.
-    aData->mLine = nullptr;
-    aData->SetLineContainer(nullptr);
-
-    lastInFlow = nif;
-  }
-
-  aData->mLine = savedLine;
-  aData->SetLineContainer(savedLineContainer);
-
-  // This goes at the end no matter how things are broken and how
-  // messy the bidi situations are, since per CSS2.1 section 8.6
-  // (implemented in bug 328168), the endSide border is always on the
-  // last line.
-  // We reached the last-in-flow, but it might have a next bidi
-  // continuation, in which case that continuation should handle
-  // the endSide border.
-  if (MOZ_LIKELY(!lastInFlow->GetNextContinuation() && sliceBreak)) {
-    aData->mCurrentLine += endPBM;
-  }
+  };
+  DoInlineIntrinsicISize(aData, handleChildren);
+  aData->mLineIsEmpty = false;
 }
 
 /* virtual */

@@ -211,10 +211,22 @@ class nsContainerFrame : public nsSplittableFrame {
                                  nsIWidget* aWidget, const nsSize& aMinSize,
                                  const nsSize& aMaxSize);
 
-  // Used by both nsInlineFrame and nsFirstLetterFrame.
-  void DoInlineIntrinsicISize(gfxContext* aRenderingContext,
-                              InlineIntrinsicISizeData* aData,
-                              mozilla::IntrinsicISizeType aType);
+  /**
+   * Helper for calculating intrinsic inline size for inline containers.
+   *
+   * @param aData the intrinsic inline size data, either an InlineMinISizeData
+   *  or an InlinePrefISizeData
+   * @param aHandleChildren a callback function invoked for each in-flow
+   *  continuation, with the continuation frame and the intrinsic inline size
+   *  data passed into it.
+   */
+  template <typename ISizeData, typename F>
+  void DoInlineIntrinsicISize(ISizeData* aData, F& aHandleChildren);
+
+  void DoInlineMinISize(gfxContext* aRenderingContext,
+                        InlineMinISizeData* aData);
+  void DoInlinePrefISize(gfxContext* aRenderingContext,
+                         InlinePrefISizeData* aData);
 
   /**
    * This is the CSS block concept of computing 'auto' widths, which most
