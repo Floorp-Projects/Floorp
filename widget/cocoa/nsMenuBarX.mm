@@ -6,7 +6,6 @@
 #include <objc/objc-runtime.h>
 
 #include "nsMenuBarX.h"
-#include "nsMenuBaseX.h"
 #include "nsMenuX.h"
 #include "nsMenuItemX.h"
 #include "nsMenuUtilsX.h"

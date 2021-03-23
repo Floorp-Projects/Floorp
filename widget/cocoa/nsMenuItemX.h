@@ -8,7 +8,6 @@
 
 #include "mozilla/RefPtr.h"
 #include "nsISupports.h"
-#include "nsMenuBaseX.h"
 #include "nsMenuGroupOwnerX.h"
 #include "nsMenuItemIconX.h"
 #include "nsChangeObserver.h"
@@ -18,6 +17,7 @@
 
 class nsMenuItemIconX;
 class nsMenuX;
+class nsMenuParentX;
 
 namespace mozilla {
 namespace dom {

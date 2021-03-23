@@ -17,7 +17,7 @@ class nsIURI;
 class nsIContent;
 class nsIPrincipal;
 class imgRequestProxy;
-class nsMenuObjectX;
+class nsMenuParentX;
 
 #import <Cocoa/Cocoa.h>
 
@@ -32,7 +32,7 @@ class nsMenuItemIconX final : public mozilla::widget::IconLoader::Listener {
   ~nsMenuItemIconX();
 
   // SetupIcon starts the icon load. Once the icon has loaded,
-  // nsMenuObjectX::IconUpdated will be called. The icon image needs to be
+  // nsMenuParentX::IconUpdated will be called. The icon image needs to be
   // retrieved from GetIconImage(). If aContent is an icon-less menuitem,
   // GetIconImage() will return nil. If it does have an icon, GetIconImage()
   // will return a transparent placeholder icon during the load and the actual

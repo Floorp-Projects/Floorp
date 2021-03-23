@@ -13,7 +13,7 @@
 #include "mozilla/UniquePtr.h"
 #include "mozilla/Variant.h"
 #include "nsISupports.h"
-#include "nsMenuBaseX.h"
+#include "nsMenuParentX.h"
 #include "nsMenuBarX.h"
 #include "nsMenuGroupOwnerX.h"
 #include "nsMenuItemIconX.h"
@@ -34,14 +34,14 @@ class nsIWidget;
 
 // Once instantiated, this object lives until its DOM node or its parent window is destroyed.
 // Do not hold references to this, they can become invalid any time the DOM node can be destroyed.
-class nsMenuX final : public nsMenuObjectX,
+class nsMenuX final : public nsMenuParentX,
                       public nsChangeObserver,
                       public nsMenuItemIconX::Listener {
  public:
   using MenuChild = mozilla::Variant<RefPtr<nsMenuX>, RefPtr<nsMenuItemX>>;
 
   // aParent is optional.
-  nsMenuX(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aContent);
+  nsMenuX(nsMenuParentX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aContent);
 
   NS_INLINE_DECL_REFCOUNTING(nsMenuX)
 
@@ -52,14 +52,14 @@ class nsMenuX final : public nsMenuObjectX,
 
   NS_DECL_CHANGEOBSERVER
 
-  // nsMenuObjectX
-  nsMenuObjectTypeX MenuObjectType() override { return eSubmenuObjectType; }
+  // nsMenuParentX
+  nsMenuParentTypeX MenuParentType() override { return eSubmenuParentType; }
 
   // nsMenuItemIconX::Listener
   void IconUpdated() override;
 
   // nsMenuX
-  nsresult Create(nsMenuObjectX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode);
+  nsresult Create(nsMenuParentX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode);
 
   // Unregisters nsMenuX from the nsMenuGroupOwner, and nulls out the group owner pointer, on this
   // nsMenuX and also all nested nsMenuX and nsMenuItemX objects.
@@ -137,7 +137,7 @@ class nsMenuX final : public nsMenuObjectX,
 
   nsString mLabel;
   uint32_t mVisibleItemsCount = 0;                     // cache
-  nsMenuObjectX* mParent = nullptr;                    // [weak]
+  nsMenuParentX* mParent = nullptr;                    // [weak]
   nsMenuGroupOwnerX* mMenuGroupOwner = nullptr;        // [weak]
   nsMenuItemIconX::Listener* mIconListener = nullptr;  // [weak]
   mozilla::UniquePtr<nsMenuItemIconX> mIcon;
