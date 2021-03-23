@@ -71,7 +71,7 @@ add_task(async function test_login_syncing_disabled() {
   });
 
   let notification;
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () =>
       (notification = gBrowser
         .getNotificationBox()
@@ -103,7 +103,7 @@ add_task(async function test_login_syncing_disabled() {
     "the pref to show the notification should be set to false after clicking the 'never ask' button"
   );
 
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () =>
       !gBrowser
         .getNotificationBox()
