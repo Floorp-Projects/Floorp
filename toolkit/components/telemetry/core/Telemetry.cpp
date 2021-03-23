@@ -1731,8 +1731,7 @@ TelemetryImpl::GetAllStores(JSContext* aCx, JS::MutableHandleValue aResult) {
     return NS_ERROR_FAILURE;
   }
 
-  for (auto iter = stores.Iter(); !iter.Done(); iter.Next()) {
-    auto& value = iter.Get()->GetKey();
+  for (const auto& value : stores) {
     JS::RootedValue store(aCx);
 
     store.setString(ToJSString(aCx, value));
