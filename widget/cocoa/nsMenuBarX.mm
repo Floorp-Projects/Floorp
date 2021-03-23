@@ -127,11 +127,7 @@ nsresult nsMenuBarX::Create(Element* aContent) {
   if (mContent) {
     AquifyMenuBar();
 
-    nsresult rv = mMenuGroupOwner->Create(aContent);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-
+    mMenuGroupOwner->Create(aContent);
     mMenuGroupOwner->RegisterForContentChanges(mContent, this);
     ConstructNativeMenus();
   } else {

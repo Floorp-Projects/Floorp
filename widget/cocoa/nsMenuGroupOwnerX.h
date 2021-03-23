@@ -28,7 +28,7 @@ class nsMenuGroupOwnerX : public nsIMutationObserver {
  public:
   explicit nsMenuGroupOwnerX(nsMenuBarX* aMenuBarIfMenuBar);
 
-  nsresult Create(mozilla::dom::Element* aContent);
+  void Create(mozilla::dom::Element* aContent);
 
   void RegisterForContentChanges(nsIContent* aContent, nsChangeObserver* aMenuObject);
   void UnregisterForContentChanges(nsIContent* aContent);

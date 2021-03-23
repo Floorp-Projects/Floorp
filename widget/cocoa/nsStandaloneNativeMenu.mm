@@ -42,10 +42,7 @@ nsStandaloneNativeMenu::Init(Element* aElement) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = mMenuGroupOwner->Create(aElement);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+  mMenuGroupOwner->Create(aElement);
 
   mMenu = MakeRefPtr<nsMenuX>(this, mMenuGroupOwner, aElement);
   mMenu->SetIconListener(this);
