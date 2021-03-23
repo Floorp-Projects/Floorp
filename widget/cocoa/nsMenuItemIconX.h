@@ -23,10 +23,14 @@ class nsMenuObjectX;
 
 class nsMenuItemIconX final : public mozilla::widget::IconLoader::Listener {
  public:
-  explicit nsMenuItemIconX(nsMenuObjectX* aMenuItem);
+  class Listener {
+   public:
+    virtual void IconUpdated() = 0;
+  };
+
+  explicit nsMenuItemIconX(Listener* aListener);
   ~nsMenuItemIconX();
 
- public:
   // SetupIcon starts the icon load. Once the icon has loaded,
   // nsMenuObjectX::IconUpdated will be called. The icon image needs to be
   // retrieved from GetIconImage(). If aContent is an icon-less menuitem,
@@ -51,7 +55,7 @@ class nsMenuItemIconX final : public mozilla::widget::IconLoader::Listener {
   already_AddRefed<nsIURI> GetIconURI(nsIContent* aContent);
 
   nsCOMPtr<nsIContent> mContent;  // always non-null
-  nsMenuObjectX* mMenuObject;     // [weak]
+  Listener* mListener;            // [weak]
   nsIntRect mImageRegionRect;
   NSImage* mIconImage = nil;  // [strong]
   RefPtr<mozilla::widget::IconLoader> mIconLoader;
