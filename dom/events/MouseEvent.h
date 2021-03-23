@@ -76,6 +76,7 @@ class MouseEvent : public UIEvent {
                         bool aAltKey, bool aShiftKey, bool aMetaKey,
                         uint16_t aButton, EventTarget* aRelatedTarget,
                         float aPressure, uint16_t aInputSource);
+  void PreventClickEvent();
 
  protected:
   ~MouseEvent() = default;
