@@ -93,6 +93,10 @@ NSRect nsCocoaUtils::GeckoRectToCocoaRect(const DesktopIntRect& geckoRect) {
                     geckoRect.height);
 }
 
+NSPoint nsCocoaUtils::GeckoPointToCocoaPoint(const mozilla::DesktopPoint& aPoint) {
+  return NSMakePoint(aPoint.x, MenuBarScreenHeight() - aPoint.y);
+}
+
 NSRect nsCocoaUtils::GeckoRectToCocoaRectDevPix(const LayoutDeviceIntRect& aGeckoRect,
                                                 CGFloat aBackingScale) {
   return NSMakeRect(aGeckoRect.x / aBackingScale,
