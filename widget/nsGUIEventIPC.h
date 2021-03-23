@@ -1186,6 +1186,7 @@ struct ParamTraits<mozilla::MouseInput> {
     WriteParam(aMsg, aParam.mOrigin);
     WriteParam(aMsg, aParam.mLocalOrigin);
     WriteParam(aMsg, aParam.mHandledByAPZ);
+    WriteParam(aMsg, aParam.mPreventClickEvent);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter,
@@ -1197,7 +1198,8 @@ struct ParamTraits<mozilla::MouseInput> {
            ReadParam(aMsg, aIter, &aResult->mButtons) &&
            ReadParam(aMsg, aIter, &aResult->mOrigin) &&
            ReadParam(aMsg, aIter, &aResult->mLocalOrigin) &&
-           ReadParam(aMsg, aIter, &aResult->mHandledByAPZ);
+           ReadParam(aMsg, aIter, &aResult->mHandledByAPZ) &&
+           ReadParam(aMsg, aIter, &aResult->mPreventClickEvent);
   }
 };
 

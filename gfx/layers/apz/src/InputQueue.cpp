@@ -31,7 +31,7 @@ InputQueue::~InputQueue() { mQueuedInputs.Clear(); }
 
 APZEventResult InputQueue::ReceiveInputEvent(
     const RefPtr<AsyncPanZoomController>& aTarget,
-    TargetConfirmationFlags aFlags, const InputData& aEvent,
+    TargetConfirmationFlags aFlags, InputData& aEvent,
     const Maybe<nsTArray<TouchBehaviorFlags>>& aTouchBehaviors) {
   APZThreadUtils::AssertOnControllerThread();
 
@@ -59,7 +59,7 @@ APZEventResult InputQueue::ReceiveInputEvent(
     }
 
     case MOUSE_INPUT: {
-      const MouseInput& event = aEvent.AsMouseInput();
+      MouseInput& event = aEvent.AsMouseInput();
       return ReceiveMouseInput(aTarget, aFlags, event);
     }
 
@@ -226,7 +226,7 @@ APZEventResult InputQueue::ReceiveTouchInput(
 
 APZEventResult InputQueue::ReceiveMouseInput(
     const RefPtr<AsyncPanZoomController>& aTarget,
-    TargetConfirmationFlags aFlags, const MouseInput& aEvent) {
+    TargetConfirmationFlags aFlags, MouseInput& aEvent) {
   APZEventResult result(aTarget, aFlags);
 
   // On a new mouse down we can have a new target so we must force a new block
@@ -269,6 +269,15 @@ APZEventResult InputQueue::ReceiveMouseInput(
     mActiveDragBlock = block;
 
     if (aFlags.mHitScrollThumb || !aFlags.mHitScrollbar) {
+      // If we're running autoscroll, we'll always cancel it during the
+      // following call of CancelAnimationsForNewBlock.  At this time,
+      // we don't want to fire `click` event on the web content for web-compat
+      // with Chrome.  Therefore, we notify widget of it with the flag.
+      if ((aEvent.mType == MouseInput::MOUSE_DOWN ||
+           aEvent.mType == MouseInput::MOUSE_UP) &&
+          block->GetOverscrollHandoffChain()->HasAutoscrollApzc()) {
+        aEvent.mPreventClickEvent = true;
+      }
       CancelAnimationsForNewBlock(block);
     }
     MaybeRequestContentResponse(aTarget, block);

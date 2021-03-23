@@ -155,9 +155,9 @@ class APZCPinchLockingTester : public APZCPinchTester {
     apzc->SetFrameMetrics(GetPinchableFrameMetrics());
     MakeApzcZoomable();
 
-    apzc->ReceiveInputEvent(
-        CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_START, mFocus,
-                                mSpan, mSpan, mcc->Time()));
+    auto event = CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_START,
+                                         mFocus, mSpan, mSpan, mcc->Time());
+    apzc->ReceiveInputEvent(event);
     mcc->AdvanceBy(TimeDuration::FromMilliseconds(51));
   }
 
@@ -168,9 +168,9 @@ class APZCPinchLockingTester : public APZCPinchTester {
 
     mFocus = ScreenIntPoint((int)(mFocus.x + panDistance), (int)(mFocus.y));
 
-    apzc->ReceiveInputEvent(
-        CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE, mFocus,
-                                mSpan, mSpan, mcc->Time()));
+    auto event = CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
+                                         mFocus, mSpan, mSpan, mcc->Time());
+    apzc->ReceiveInputEvent(event);
     mcc->AdvanceBy(TimeDuration::FromMilliseconds(51));
   }
 
@@ -181,9 +181,9 @@ class APZCPinchLockingTester : public APZCPinchTester {
 
     float newSpan = mSpan + pinchDistance;
 
-    apzc->ReceiveInputEvent(
-        CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE, mFocus,
-                                newSpan, mSpan, mcc->Time()));
+    auto event = CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
+                                         mFocus, newSpan, mSpan, mcc->Time());
+    apzc->ReceiveInputEvent(event);
     mcc->AdvanceBy(TimeDuration::FromMilliseconds(51));
     mSpan = newSpan;
   }
@@ -195,9 +195,10 @@ class APZCPinchLockingTester : public APZCPinchTester {
     float pinchDistance =
         StaticPrefs::apz_pinch_lock_span_breakout_threshold() * 0.8 *
         tm->GetDPI();
-    apzc->ReceiveInputEvent(
+    auto event =
         CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE, mFocus,
-                                mSpan + pinchDistance, mSpan, mcc->Time()));
+                                mSpan + pinchDistance, mSpan, mcc->Time());
+    apzc->ReceiveInputEvent(event);
 
     FrameMetrics result = apzc->GetFrameMetrics();
     bool lockActive = originalMetrics.GetZoom() == result.GetZoom() &&
@@ -563,12 +564,14 @@ TEST_F(APZCPinchTester, Pinch_TwoFinger_APZZoom_Disabled_Bug1354185) {
   ScreenIntPoint aFocus(250, 350);
   ScreenIntPoint aSecondFocus(200, 300);
   float aScale = 10;
-  apzc->ReceiveInputEvent(CreatePinchGestureInput(
-      PinchGestureInput::PINCHGESTURE_START, aFocus, 10.0, 10.0, mcc->Time()));
+  auto event = CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_START,
+                                       aFocus, 10.0, 10.0, mcc->Time());
+  apzc->ReceiveInputEvent(event);
 
-  apzc->ReceiveInputEvent(
+  event =
       CreatePinchGestureInput(PinchGestureInput::PINCHGESTURE_SCALE,
-                              aSecondFocus, 10.0f * aScale, 10.0, mcc->Time()));
+                              aSecondFocus, 10.0f * aScale, 10.0, mcc->Time());
+  apzc->ReceiveInputEvent(event);
 }
 
 TEST_F(APZCPinchLockingTester, Pinch_Locking_Free) {
