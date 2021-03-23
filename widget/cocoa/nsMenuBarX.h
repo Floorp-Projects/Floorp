@@ -98,7 +98,7 @@ class nsMenuBarX : public nsMenuParentX, public nsChangeObserver, public mozilla
   NS_DECL_CHANGEOBSERVER
 
   // nsMenuParentX
-  nsMenuParentTypeX MenuParentType() override { return eMenuBarParentType; }
+  nsMenuBarX* AsMenuBar() override { return this; }
 
   // nsMenuBarX
   nsresult Create(mozilla::dom::Element* aElement);

@@ -6,17 +6,14 @@
 #ifndef nsMenuParentX_h_
 #define nsMenuParentX_h_
 
-enum nsMenuParentTypeX {
-  eMenuBarParentType,
-  eSubmenuParentType,
-};
-
 class nsMenuX;
+class nsMenuBarX;
 
 // A base class for objects that can be the parent of an nsMenuX or nsMenuItemX.
 class nsMenuParentX {
  public:
-  virtual nsMenuParentTypeX MenuParentType() = 0;
+  // XXXmstange double-check that this is still needed
+  virtual nsMenuBarX* AsMenuBar() { return nullptr; }
 
   // If aChild is one of our child menus, insert aChild's native menu item in
   // our native menu at the right location.
