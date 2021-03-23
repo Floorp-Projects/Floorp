@@ -19,7 +19,7 @@
 #include "mozilla/dom/WorkletPrincipals.h"
 #include "mozilla/dom/AudioParamDescriptorBinding.h"
 #include "nsPrintfCString.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 
 namespace mozilla::dom {
 
@@ -214,7 +214,7 @@ AudioParamDescriptorMap AudioWorkletGlobalScope::DescriptorsFromJS(
     JSContext* aCx, JS::ForOfIterator* aIter, ErrorResult& aRv) {
   AudioParamDescriptorMap res;
   // To check for duplicates
-  nsTHashtable<nsStringHashKey> namesSet;
+  nsTHashSet<nsString> namesSet;
 
   JS::Rooted<JS::Value> nextValue(aCx);
   bool done = false;
@@ -250,7 +250,7 @@ AudioParamDescriptorMap AudioWorkletGlobalScope::DescriptorsFromJS(
       return AudioParamDescriptorMap();
     }
 
-    if (!namesSet.PutEntry(descriptor.mName, fallible)) {
+    if (!namesSet.Insert(descriptor.mName, fallible)) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return AudioParamDescriptorMap();
     }

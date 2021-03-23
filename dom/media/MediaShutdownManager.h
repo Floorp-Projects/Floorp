@@ -13,8 +13,7 @@
 #  include "nsCOMPtr.h"
 #  include "nsIAsyncShutdown.h"
 #  include "nsIThread.h"
-#  include "nsHashKeys.h"
-#  include "nsTHashtable.h"
+#  include "nsTHashSet.h"
 
 namespace mozilla {
 
@@ -89,7 +88,7 @@ class MediaShutdownManager : public nsIAsyncShutdownBlocker {
   // References to the MediaDecoder. The decoders unregister themselves
   // in their Shutdown() method, so we'll drop the reference naturally when
   // we're shutting down (in the non xpcom-shutdown case).
-  nsTHashtable<nsRefPtrHashKey<MediaDecoder>> mDecoders;
+  nsTHashSet<RefPtr<MediaDecoder>> mDecoders;
 };
 
 }  // namespace mozilla

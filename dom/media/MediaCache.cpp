@@ -27,6 +27,7 @@
 #include "nsIObserverService.h"
 #include "nsPrintfCString.h"
 #include "nsProxyRelease.h"
+#include "nsTHashSet.h"
 #include "nsThreadUtils.h"
 #include "prio.h"
 #include "VideoUtils.h"
@@ -1068,15 +1069,14 @@ void MediaCache::SwapBlocks(AutoLock& aLock, int32_t aBlockIndex1,
   // Now update references to blocks in block lists.
   mFreeBlocks.NotifyBlockSwapped(aBlockIndex1, aBlockIndex2);
 
-  nsTHashtable<nsPtrHashKey<MediaCacheStream> > visitedStreams;
+  nsTHashSet<MediaCacheStream*> visitedStreams;
 
   for (int32_t i = 0; i < 2; ++i) {
     for (uint32_t j = 0; j < blocks[i]->mOwners.Length(); ++j) {
       MediaCacheStream* stream = blocks[i]->mOwners[j].mStream;
       // Make sure that we don't update the same stream twice --- that
       // would result in swapping the block references back again!
-      if (visitedStreams.GetEntry(stream)) continue;
-      visitedStreams.PutEntry(stream);
+      if (!visitedStreams.EnsureInserted(stream)) continue;
       stream->mReadaheadBlocks.NotifyBlockSwapped(aBlockIndex1, aBlockIndex2);
       stream->mPlayedBlocks.NotifyBlockSwapped(aBlockIndex1, aBlockIndex2);
       stream->mMetadataBlocks.NotifyBlockSwapped(aBlockIndex1, aBlockIndex2);
