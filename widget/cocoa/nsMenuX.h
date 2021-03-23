@@ -19,6 +19,7 @@
 #include "nsMenuItemIconX.h"
 #include "nsCOMPtr.h"
 #include "nsChangeObserver.h"
+#include "nsThreadUtils.h"
 
 class nsMenuX;
 class nsMenuItemX;
@@ -81,6 +82,14 @@ class nsMenuX final : public nsMenuParentX,
   // When calling this method, the caller must hold a strong reference to this object, because other
   // references to this object can be dropped during the handling of the DOM event.
   void MenuClosed();
+
+  // Called from mPendingAsyncMenuCloseRunnable asynchronously after MenuClosed(), so that it runs
+  // after any potential menuItemHit calls for clicked menu items.
+  // Fires popuphiding and popuphidden events.
+  // When calling this method, the caller must hold a strong reference to this object, because other
+  // references to this object can be dropped during the handling of the DOM event.
+  void MenuClosedAsync();
+
   void SetRebuild(bool aMenuEvent);
   void SetupIcon();
   nsIContent* Content() { return mContent; }
@@ -135,13 +144,26 @@ class nsMenuX final : public nsMenuParentX,
   nsMenuGroupOwnerX* mMenuGroupOwner = nullptr;        // [weak]
   nsMenuItemIconX::Listener* mIconListener = nullptr;  // [weak]
   mozilla::UniquePtr<nsMenuItemIconX> mIcon;
+
+  // Non-null between a call to MenuClosed() and MenuClosedAsync().
+  // This is asynchronous so that, if a menu item is clicked, we can fire popuphiding *after* we
+  // execute the menu item command. The macOS menu system calls menuWillClose *before* it calls
+  // menuItemHit.
+  RefPtr<mozilla::CancelableRunnable> mPendingAsyncMenuCloseRunnable;
+
   GeckoNSMenu* mNativeMenu = nil;     // [strong]
   MenuDelegate* mMenuDelegate = nil;  // [strong]
   // nsMenuX objects should always have a valid native menu item.
   NSMenuItem* mNativeMenuItem = nil;  // [strong]
   bool mIsEnabled = true;
   bool mNeedsRebuild = true;
+
+  // Whether the native NSMenu is open, from the macOS perspective.
   bool mIsOpen = false;
+
+  // Whether the popup is open from Gecko's perspective, based on popupshowing / popuphiding events.
+  bool mIsOpenForGecko = false;
+
   bool mVisible = true;
 };
 

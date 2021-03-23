@@ -18,6 +18,7 @@
 
 #include "nsObjCExceptions.h"
 
+#include "nsThreadUtils.h"
 #include "nsToolkit.h"
 #include "nsCocoaUtils.h"
 #include "nsCOMPtr.h"
@@ -126,6 +127,11 @@ nsMenuX::~nsMenuX() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   RemoveAll();
+
+  if (mPendingAsyncMenuCloseRunnable) {
+    mPendingAsyncMenuCloseRunnable->Cancel();
+    mPendingAsyncMenuCloseRunnable = nullptr;
+  }
 
   mNativeMenu.delegate = nil;
   [mNativeMenu release];
@@ -307,6 +313,13 @@ nsresult nsMenuX::RemoveAll() {
 nsEventStatus nsMenuX::MenuOpened() {
   mIsOpen = true;
 
+  if (mPendingAsyncMenuCloseRunnable) {
+    // Make sure we fire any pending popuphiding / popuphidden events first.
+    MenuClosedAsync();
+  }
+
+  mIsOpenForGecko = true;
+
   // Open the node.
   if (mContent->IsElement()) {
     mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::open, u"true"_ns, true);
@@ -342,12 +355,51 @@ void nsMenuX::MenuClosed() {
 
   mIsOpen = false;
 
+  // Do the rest of the MenuClosed work in MenuClosedAsync.
+  // MenuClosed() is called from -[NSMenuDelegate menuDidClose:]. If a menuitem was clicked,
+  // menuDidClose is called *before* menuItemHit for the clicked menu item is called.
+  // This runnable will be canceled if ~nsMenuX runs before the runnable.
+  // The runnable object must not hold a strong reference to the nsMenuX, so that there is no
+  // reference cycle.
+  class MenuClosedAsyncRunnable final : public mozilla::CancelableRunnable {
+   public:
+    explicit MenuClosedAsyncRunnable(nsMenuX* aMenu)
+        : CancelableRunnable("MenuClosedAsyncRunnable"), mMenu(aMenu) {}
+
+    nsresult Run() override {
+      if (mMenu) {
+        RefPtr<nsMenuX> menu = mMenu;
+        menu->MenuClosedAsync();
+        mMenu = nullptr;
+      }
+      return NS_OK;
+    }
+    nsresult Cancel() override {
+      mMenu = nullptr;
+      return NS_OK;
+    }
+
+   private:
+    nsMenuX* mMenu;  // weak, cleared by Cancel() and Run()
+  };
+  mPendingAsyncMenuCloseRunnable = new MenuClosedAsyncRunnable(this);
+  NS_DispatchToCurrentThread(mPendingAsyncMenuCloseRunnable);
+}
+
+void nsMenuX::MenuClosedAsync() {
+  if (mPendingAsyncMenuCloseRunnable) {
+    mPendingAsyncMenuCloseRunnable->Cancel();
+    mPendingAsyncMenuCloseRunnable = nullptr;
+  }
+
   nsCOMPtr<nsIContent> popupContent = GetMenuPopupContent();
   nsCOMPtr<nsIContent> dispatchTo = popupContent ? popupContent : mContent;
 
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetMouseEvent popupHiding(true, eXULPopupHiding, nullptr, WidgetMouseEvent::eReal);
   EventDispatcher::Dispatch(dispatchTo, nullptr, &popupHiding, nullptr, &status);
+
+  mIsOpenForGecko = false;
 
   if (mContent->IsElement()) {
     mContent->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::open, true);
