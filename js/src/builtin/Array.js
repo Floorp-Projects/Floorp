@@ -112,6 +112,8 @@ function ArrayEvery(callbackfn/*, thisArg*/) {
     /* Step 8. */
     return true;
 }
+// Inlining this enables inlining of the callback function.
+_SetIsInlinableLargeFunction(ArrayEvery);
 
 /* ES5 15.4.4.17. */
 function ArraySome(callbackfn/*, thisArg*/) {
@@ -144,6 +146,8 @@ function ArraySome(callbackfn/*, thisArg*/) {
     /* Step 8. */
     return false;
 }
+// Inlining this enables inlining of the callback function.
+_SetIsInlinableLargeFunction(ArraySome);
 
 // ES2018 draft rev 3bbc87cd1b9d3bf64c3e68ca2fe9c5a3f2c304c0
 // 22.1.3.25 Array.prototype.sort ( comparefn )
@@ -220,6 +224,8 @@ function ArrayForEach(callbackfn/*, thisArg*/) {
     /* Step 8. */
     return void 0;
 }
+// Inlining this enables inlining of the callback function.
+_SetIsInlinableLargeFunction(ArrayForEach);
 
 /* ES 2016 draft Mar 25, 2016 22.1.3.15. */
 function ArrayMap(callbackfn/*, thisArg*/) {
@@ -255,6 +261,8 @@ function ArrayMap(callbackfn/*, thisArg*/) {
     /* Step 8. */
     return A;
 }
+// Inlining this enables inlining of the callback function.
+_SetIsInlinableLargeFunction(ArrayMap);
 
 /* ES 2016 draft Mar 25, 2016 22.1.3.7 Array.prototype.filter. */
 function ArrayFilter(callbackfn/*, thisArg*/) {
