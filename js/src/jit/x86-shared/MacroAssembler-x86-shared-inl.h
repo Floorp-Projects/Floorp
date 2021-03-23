@@ -1463,14 +1463,12 @@ void MacroAssembler::bitmaskInt64x2(FloatRegister src, Register dest) {
 
 // Swizzle - permute with variable indices
 
-void MacroAssembler::swizzleInt8x16(FloatRegister rhs, FloatRegister lhsDest,
-                                    FloatRegister temp) {
+void MacroAssembler::swizzleInt8x16(FloatRegister rhs, FloatRegister lhsDest) {
   ScratchSimd128Scope scratch(*this);
-  loadConstantSimd128Int(SimdConstant::SplatX16(15), scratch);
-  moveSimd128Int(rhs, temp);
-  vpcmpgtb(Operand(scratch), temp, temp);  // set high bit
-  vpor(Operand(rhs), temp, temp);          //   for values > 15
-  vpshufb(temp, lhsDest, lhsDest);         // permute
+  moveSimd128Int(rhs, scratch);
+  vpcmpgtbSimd128(SimdConstant::SplatX16(15), scratch);  // set high bit
+  vpor(Operand(rhs), scratch, scratch);                  //   for values > 15
+  vpshufb(scratch, lhsDest, lhsDest);                    // permute
 }
 
 // Integer Add
