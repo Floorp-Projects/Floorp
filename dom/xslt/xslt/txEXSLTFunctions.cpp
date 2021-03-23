@@ -330,15 +330,14 @@ nsresult txEXSLTFunctionCall::evaluate(txIEvalContext* aContext,
       rv = aContext->recycler()->getNodeSet(getter_AddRefs(resultSet));
       NS_ENSURE_SUCCESS(rv, rv);
 
-      nsTHashtable<nsStringHashKey> hash;
+      nsTHashSet<nsString> hash;
 
       int32_t i, len = nodes->size();
       for (i = 0; i < len; ++i) {
         nsAutoString str;
         const txXPathNode& node = nodes->get(i);
         txXPathNodeUtils::appendNodeValue(node, str);
-        if (!hash.GetEntry(str)) {
-          hash.PutEntry(str);
+        if (hash.EnsureInserted(str)) {
           rv = resultSet->append(node);
           NS_ENSURE_SUCCESS(rv, rv);
         }
