@@ -1,5 +1,5 @@
 use crate::capabilities::AndroidOptions;
-use mozdevice::{AndroidStorage, Device, Host};
+use mozdevice::{Device, Host};
 use mozprofile::profile::Profile;
 use serde::Serialize;
 use serde_yaml::{Mapping, Value};
@@ -141,11 +141,6 @@ impl Drop for AndroidHandler {
 
 impl AndroidHandler {
     pub fn new(options: &AndroidOptions, host_port: u16) -> Result<AndroidHandler> {
-        // We need to push profile.pathbuf to a safe space on the device.
-        // Make it per-Android package to avoid clashes and confusion.
-        // This naming scheme follows GeckoView's configuration file naming scheme,
-        // see bug 1533385.
-
         let host = Host {
             host: None,
             port: None,
@@ -153,7 +148,7 @@ impl AndroidHandler {
             write_timeout: Some(time::Duration::from_millis(5000)),
         };
 
-        let mut device = host.device_or_default(options.device_serial.as_ref(), options.storage)?;
+        let device = host.device_or_default(options.device_serial.as_ref())?;
 
         // Set up port forward.  Port forwarding will be torn down, if possible,
         device.forward_port(host_port, TARGET_PORT)?;
@@ -161,29 +156,6 @@ impl AndroidHandler {
             "Android port forward ({} -> {}) started",
             host_port, TARGET_PORT
         );
-
-        let test_root = match device.storage {
-            AndroidStorage::App => {
-                device.run_as_package = Some(options.package.to_owned());
-                let mut buf = PathBuf::from("/data/data");
-                buf.push(&options.package);
-                buf.push("test_root");
-                buf
-            }
-            AndroidStorage::Internal => PathBuf::from("/data/local/tmp/test_root"),
-            AndroidStorage::Sdcard => PathBuf::from("/mnt/sdcard/test_root"),
-        };
-
-        debug!(
-            "Connecting: options={:?}, storage={:?}) test_root={}, run_as_package={:?}",
-            options,
-            device.storage,
-            test_root.display(),
-            device.run_as_package
-        );
-
-        let mut profile = test_root.clone();
-        profile.push(format!("{}-geckodriver-profile", &options.package));
 
         // Check if the specified package is installed
         let response =
@@ -197,6 +169,26 @@ impl AndroidHandler {
         if !packages.contains(&options.package.as_str()) {
             return Err(AndroidError::PackageNotFound(options.package.clone()));
         }
+
+        // We need to push the profile to a location on the device that can also
+        // be read and write by the application, and works for unrooted devices.
+        // The only location that meets this criteria is under:
+        //     $EXTERNAL_STORAGE/Android/data/%package_name%/files
+        let external_storage = device.execute_host_shell_command("echo $EXTERNAL_STORAGE")?;
+        let mut test_root = PathBuf::from(external_storage.trim_end_matches('\n'));
+        test_root.push("Android/data");
+        test_root.push(&options.package);
+        test_root.push("files/test_root");
+
+        debug!(
+            "Connecting: options={:?}, test_root={}, run_as_package={:?}",
+            options,
+            test_root.display(),
+            device.run_as_package
+        );
+
+        let mut profile = test_root.clone();
+        profile.push("profile");
 
         let config = PathBuf::from(format!(
             "/data/local/tmp/{}-geckoview-config.yaml",
@@ -398,73 +390,19 @@ mod test {
 
     use crate::android::AndroidHandler;
     use crate::capabilities::AndroidOptions;
-    use mozdevice::{AndroidStorage, AndroidStorageInput};
-    use std::path::PathBuf;
 
-    fn run_handler_storage_test(package: &str, storage: AndroidStorageInput) {
-        let options = AndroidOptions::new(package.to_owned(), storage);
+    #[test]
+    #[ignore]
+    fn android_handler_test_root_and_profile_path() {
+        let package = "org.mozilla.geckoview_example";
+
+        let options = AndroidOptions::new(package.to_owned());
         let handler = AndroidHandler::new(&options, 4242).expect("has valid Android handler");
 
-        assert_eq!(handler.options, options);
-        assert_eq!(handler.process.package, package);
+        let path = format!("/Android/data/{}/files/test_root", package);
+        assert!(handler.test_root.display().to_string().contains(&path));
 
-        let expected_config_path = PathBuf::from(format!(
-            "/data/local/tmp/{}-geckoview-config.yaml",
-            &package
-        ));
-        assert_eq!(handler.config, expected_config_path);
-
-        if handler.process.device.storage == AndroidStorage::App {
-            assert_eq!(
-                handler.process.device.run_as_package,
-                Some(package.to_owned())
-            );
-        } else {
-            assert_eq!(handler.process.device.run_as_package, None);
-        }
-
-        let test_root = match handler.process.device.storage {
-            AndroidStorage::App => {
-                let mut buf = PathBuf::from("/data/data");
-                buf.push(&package);
-                buf.push("test_root");
-                buf
-            }
-            AndroidStorage::Internal => PathBuf::from("/data/local/tmp/test_root"),
-            AndroidStorage::Sdcard => PathBuf::from("/mnt/sdcard/test_root"),
-        };
-        assert_eq!(handler.test_root, test_root);
-
-        let mut profile = test_root.clone();
-        profile.push(format!("{}-geckodriver-profile", &package));
-        assert_eq!(handler.profile, profile);
-    }
-
-    #[test]
-    #[ignore]
-    fn android_handler_storage_as_app() {
-        let package = "org.mozilla.geckoview_example";
-        run_handler_storage_test(&package, AndroidStorageInput::App);
-    }
-
-    #[test]
-    #[ignore]
-    fn android_handler_storage_as_auto() {
-        let package = "org.mozilla.geckoview_example";
-        run_handler_storage_test(package, AndroidStorageInput::Auto);
-    }
-
-    #[test]
-    #[ignore]
-    fn android_handler_storage_as_internal() {
-        let package = "org.mozilla.geckoview_example";
-        run_handler_storage_test(package, AndroidStorageInput::Internal);
-    }
-
-    #[test]
-    #[ignore]
-    fn android_handler_storage_as_sdcard() {
-        let package = "org.mozilla.geckoview_example";
-        run_handler_storage_test(package, AndroidStorageInput::Sdcard);
+        let profile_path = format!("{}/profile", path);
+        assert!(handler.profile.display().to_string().ends_with(&profile_path));
     }
 }
