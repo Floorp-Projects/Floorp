@@ -100,6 +100,7 @@ if (
 
 if CONFIG["OS_TARGET"] == "WINNT":
     UNIFIED_SOURCES += [
+        "TestFileNTFSSpecialPaths.cpp",
         "TestFilePreferencesWin.cpp",
     ]
 else:
