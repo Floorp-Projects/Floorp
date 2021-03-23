@@ -27,6 +27,7 @@ class SessionStoreRestoreData final : public nsISessionStoreRestoreData {
   SessionStoreRestoreData() = default;
   bool IsEmpty();
   SessionStoreRestoreData* FindChild(BrowsingContext* aContext);
+  bool CanRestoreInto(nsIURI* aDocumentURI);
   bool RestoreInto(RefPtr<BrowsingContext> aContext);
 
   NS_DECL_ISUPPORTS
@@ -44,7 +45,7 @@ class SessionStoreRestoreData final : public nsISessionStoreRestoreData {
                     sessionstore::FormEntryValue aValue);
 
   nsCString mScroll;
-  nsCString mUrl;
+  nsCOMPtr<nsIURI> mURI;
   nsString mInnerHTML;
   nsTArray<Entry> mEntries;
   nsTArray<RefPtr<SessionStoreRestoreData>> mChildren;

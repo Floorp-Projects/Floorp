@@ -13,7 +13,7 @@ namespace dom {
 #include "nsISessionStoreRestoreData.h"
 
 bool SessionStoreRestoreData::IsEmpty() {
-  return (mUrl.IsEmpty() && mScroll.IsEmpty() && mInnerHTML.IsEmpty() &&
+  return (!mURI && mScroll.IsEmpty() && mInnerHTML.IsEmpty() &&
           mEntries.IsEmpty() && mChildren.IsEmpty());
 }
 
@@ -43,6 +43,21 @@ SessionStoreRestoreData* SessionStoreRestoreData::FindChild(
   return data;
 }
 
+bool SessionStoreRestoreData::CanRestoreInto(nsIURI* aDocumentURI) {
+  if (!mURI) {
+    // This should mean that we don't have form data. It's fine to restore this
+    // data into any document — the worst that will happen is that we restore an
+    // incorrect scroll position.
+    MOZ_ASSERT(mEntries.IsEmpty());
+    MOZ_ASSERT(mInnerHTML.IsEmpty());
+    return true;
+  }
+  bool equalsExceptRef = false;
+  return (aDocumentURI &&
+          NS_SUCCEEDED(mURI->EqualsExceptRef(aDocumentURI, &equalsExceptRef)) &&
+          equalsExceptRef);
+}
+
 MOZ_CAN_RUN_SCRIPT
 bool SessionStoreRestoreData::RestoreInto(RefPtr<BrowsingContext> aContext) {
   if (!aContext->IsInProcess()) {
@@ -55,12 +70,12 @@ bool SessionStoreRestoreData::RestoreInto(RefPtr<BrowsingContext> aContext) {
         SessionStoreUtils::RestoreScrollPosition(*inner, mScroll);
       }
     }
-    if (!mUrl.IsEmpty()) {
+    if (mURI) {
       if (nsCOMPtr<Document> doc = window->GetExtantDoc()) {
-        if (!SessionStoreUtils::RestoreFormData(*doc, mUrl, mInnerHTML,
-                                                mEntries)) {
+        if (!CanRestoreInto(doc->GetDocumentURI())) {
           return false;
         }
+        SessionStoreUtils::RestoreFormData(*doc, mInnerHTML, mEntries);
       }
     }
   }
@@ -79,14 +94,18 @@ NS_IMPL_ISUPPORTS(SessionStoreRestoreData, nsISessionStoreRestoreData,
                   SessionStoreRestoreData)
 
 NS_IMETHODIMP
-SessionStoreRestoreData::GetUrl(nsACString& aUrl) {
-  aUrl = mUrl;
+SessionStoreRestoreData::GetUrl(nsACString& aURL) {
+  if (mURI) {
+    nsresult rv = mURI->GetSpec(aURL);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-SessionStoreRestoreData::SetUrl(const nsACString& aUrl) {
-  mUrl = aUrl;
+SessionStoreRestoreData::SetUrl(const nsACString& aURL) {
+  nsresult rv = NS_NewURI(getter_AddRefs(mURI), aURL);
+  NS_ENSURE_SUCCESS(rv, rv);
   return NS_OK;
 }
 

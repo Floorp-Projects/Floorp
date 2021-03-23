@@ -86,7 +86,7 @@ struct IPDLParamTraits<mozilla::dom::SessionStoreRestoreData*> {
     if (isNull) {
       return;
     }
-    WriteIPDLParam(aMsg, aActor, aParam->mUrl);
+    WriteIPDLParam(aMsg, aActor, aParam->mURI);
     WriteIPDLParam(aMsg, aActor, aParam->mInnerHTML);
     WriteIPDLParam(aMsg, aActor, aParam->mScroll);
     WriteIPDLParam(aMsg, aActor, aParam->mEntries);
@@ -104,7 +104,7 @@ struct IPDLParamTraits<mozilla::dom::SessionStoreRestoreData*> {
       return true;
     }
     auto data = MakeRefPtr<mozilla::dom::SessionStoreRestoreData>();
-    if (!ReadIPDLParam(aMsg, aIter, aActor, &data->mUrl) ||
+    if (!ReadIPDLParam(aMsg, aIter, aActor, &data->mURI) ||
         !ReadIPDLParam(aMsg, aIter, aActor, &data->mInnerHTML) ||
         !ReadIPDLParam(aMsg, aIter, aActor, &data->mScroll) ||
         !ReadIPDLParam(aMsg, aIter, aActor, &data->mEntries)) {

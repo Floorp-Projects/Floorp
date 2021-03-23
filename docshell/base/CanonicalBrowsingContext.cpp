@@ -1774,13 +1774,18 @@ void CanonicalBrowsingContext::RequestRestoreTabContent(
 
     mRequestedContentRestores++;
 
-    if (aWindow->IsInProcess()) {
+    if (data->CanRestoreInto(aWindow->GetDocumentURI())) {
+      if (!aWindow->IsInProcess()) {
+        aWindow->SendRestoreTabContent(data, onTabRestoreComplete,
+                                       onTabRestoreComplete);
+        return;
+      }
       data->RestoreInto(context);
-      onTabRestoreComplete(true);
-    } else {
-      aWindow->SendRestoreTabContent(data, onTabRestoreComplete,
-                                     onTabRestoreComplete);
     }
+
+    // This must be called both when we're doing an in-process restore, and when
+    // we didn't do a restore at all due to a URL mismatch.
+    onTabRestoreComplete(true);
   }
 }
 

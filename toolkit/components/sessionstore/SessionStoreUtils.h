@@ -85,9 +85,8 @@ class SessionStoreUtils {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   static bool RestoreFormData(const GlobalObject& aGlobal, Document& aDocument,
                               const CollectedData& aData);
-  static bool RestoreFormData(
-      Document& aDocument, const nsCString& aFormUrl,
-      const nsString& aInnerHTML,
+  static void RestoreFormData(
+      Document& aDocument, const nsString& aInnerHTML,
       const nsTArray<SessionStoreRestoreData::Entry>& aEntries);
 
   static void CollectedSessionStorage(BrowsingContext* aBrowsingContext,
