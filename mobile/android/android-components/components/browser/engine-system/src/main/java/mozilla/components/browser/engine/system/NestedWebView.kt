@@ -50,6 +50,7 @@ class NestedWebView(context: Context) : WebView(context), NestedScrollingChild {
      *
      * There must be a 1-1 relation between this values and [EngineView.InputResult]'s.
      */
+    @Suppress("Deprecation")
     internal val inputResult: Int
         get() = getInputResult(eventHandled)
 
@@ -155,6 +156,7 @@ class NestedWebView(context: Context) : WebView(context), NestedScrollingChild {
         return childHelper.dispatchNestedPreFling(velocityX, velocityY)
     }
 
+    @Suppress("Deprecation")
     private fun getInputResult(eventHandled: Boolean): Int {
         return if (eventHandled) {
             EngineView.InputResult.INPUT_RESULT_HANDLED.value

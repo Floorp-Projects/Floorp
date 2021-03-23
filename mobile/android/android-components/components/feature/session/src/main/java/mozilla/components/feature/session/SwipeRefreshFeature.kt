@@ -72,6 +72,7 @@ class SwipeRefreshFeature(
      * If the child view cannot scroll up and the scroll event is not handled by the webpage
      * it means we need to trigger the pull down to refresh functionality.
      */
+    @Suppress("Deprecation")
     override fun canChildScrollUp(parent: SwipeRefreshLayout, child: View?) =
         if (child is EngineView) {
             child.canScrollVerticallyUp() ||

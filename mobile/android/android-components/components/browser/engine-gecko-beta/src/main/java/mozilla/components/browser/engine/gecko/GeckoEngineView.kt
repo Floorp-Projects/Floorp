@@ -93,6 +93,7 @@ class GeckoEngineView @JvmOverloads constructor(
     /**
      * Cache of the last valid input result we got from GeckoView.
      */
+    @Suppress("Deprecation")
     @VisibleForTesting
     internal var lastInputResult: EngineView.InputResult = EngineView.InputResult.INPUT_RESULT_UNHANDLED
 
@@ -174,7 +175,7 @@ class GeckoEngineView @JvmOverloads constructor(
     override fun canScrollVerticallyDown() =
         true // waiting for this issue https://bugzilla.mozilla.org/show_bug.cgi?id=1507569
 
-    @Suppress("MagicNumber")
+    @Suppress("MagicNumber", "Deprecation")
     override fun getInputResult(): EngineView.InputResult {
         // Direct mapping of GeckoView's returned values.
         // If not fail fast to allow for a quick fix.

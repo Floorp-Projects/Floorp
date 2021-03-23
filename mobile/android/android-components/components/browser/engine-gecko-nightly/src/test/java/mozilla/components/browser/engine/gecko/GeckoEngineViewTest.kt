@@ -278,6 +278,7 @@ class GeckoEngineViewTest {
         assertFalse(engineView.canClearSelection())
     }
 
+    @Suppress("Deprecation")
     @Test
     fun `currentInputResult should default to EngineView#InputResult#INPUT_RESULT_UNHANDLED`() {
         val engineView = GeckoEngineView(context)
@@ -285,6 +286,7 @@ class GeckoEngineViewTest {
         assertEquals(EngineView.InputResult.INPUT_RESULT_UNHANDLED, engineView.lastInputResult)
     }
 
+    @Suppress("Deprecation")
     @Test
     fun `getInputResult should do a 1-1 mapping of the values received from GeckoView and cache the result`() {
         val engineView = GeckoEngineView(context)
@@ -303,6 +305,7 @@ class GeckoEngineViewTest {
         assertEquals(EngineView.InputResult.INPUT_RESULT_HANDLED_CONTENT, engineView.lastInputResult)
     }
 
+    @Suppress("Deprecation")
     @Test
     fun `INPUT_RESULD_IGNORED should be ignored`() {
         val engineView = GeckoEngineView(context)
@@ -317,6 +320,7 @@ class GeckoEngineViewTest {
         assertEquals(EngineView.InputResult.INPUT_RESULT_HANDLED, engineView.lastInputResult)
     }
 
+    @Suppress("Deprecation")
     @Test(expected = IllegalArgumentException::class)
     fun `Values other than 0, 1, 2, 3 received as input results from GeckoView should throw`() {
         val engineView = GeckoEngineView(context)

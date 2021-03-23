@@ -694,6 +694,7 @@ class SystemEngineView @JvmOverloads constructor(
 
     override fun canScrollVerticallyDown() = session?.webView?.canScrollVertically(1) ?: false
 
+    @Suppress("Deprecation")
     override fun getInputResult(): EngineView.InputResult {
         (session?.webView as? NestedWebView)?.let { nestedWebView ->
             // Direct mapping of WebView's returned values.

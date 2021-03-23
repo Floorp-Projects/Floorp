@@ -12,6 +12,9 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **concept-engine**
+  * ⚠️ **EngineView#InputResult is deprecated in favor of InputResultDetail which offers more details about how a touch event will be handled.
+
 * **feature-downloads**:
   * 🚒 Bug fixed [issue #9964](https://github.com/mozilla-mobile/android-components/issues/9964) - Downloads notification strings are not localized.
 

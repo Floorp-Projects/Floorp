@@ -302,6 +302,7 @@ class BrowserToolbarBehaviorTest {
         verify(behavior).tryToScrollVertically(-100f)
     }
 
+    @Suppress("Deprecation")
     @Test
     fun `Behaviour shouldScroll if EngineView handled the MotionEvent and scrolling is enabled`() {
         val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
@@ -313,6 +314,7 @@ class BrowserToolbarBehaviorTest {
         assertTrue(behavior.shouldScroll)
     }
 
+    @Suppress("Deprecation")
     @Test
     fun `Behaviour !shouldScroll if EngineView handled the MotionEvent and scrolling is !enabled`() {
         val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
@@ -324,6 +326,7 @@ class BrowserToolbarBehaviorTest {
         assertFalse(behavior.shouldScroll)
     }
 
+    @Suppress("Deprecation")
     @Test
     fun `Behaviour !shouldScroll if EngineView didn't handle the MotionEvent and scrolling is enabled`() {
         val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
@@ -335,6 +338,7 @@ class BrowserToolbarBehaviorTest {
         assertFalse(behavior.shouldScroll)
     }
 
+    @Suppress("Deprecation")
     @Test
     fun `Behaviour !shouldScroll if EngineView didn't handle the MotionEvent and scrolling is !enabled`() {
         val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
@@ -346,6 +350,7 @@ class BrowserToolbarBehaviorTest {
         assertFalse(behavior.shouldScroll)
     }
 
+    @Suppress("Deprecation")
     @Test
     fun `Behaviour !shouldScroll if EngineView didn't handle the MotionEvent but the website and scrolling is enabled`() {
         val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)
@@ -357,6 +362,7 @@ class BrowserToolbarBehaviorTest {
         assertFalse(behavior.shouldScroll)
     }
 
+    @Suppress("Deprecation")
     @Test
     fun `Behaviour !shouldScroll if EngineView didn't handle the MotionEvent but the website and scrolling is !enabled`() {
         val behavior = BrowserToolbarBehavior(testContext, null, ToolbarPosition.BOTTOM)

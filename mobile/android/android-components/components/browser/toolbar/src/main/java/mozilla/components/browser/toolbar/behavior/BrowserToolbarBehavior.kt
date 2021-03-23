@@ -77,6 +77,7 @@ class BrowserToolbarBehavior(
      * - the website is not scrollable
      * - the website handles the touch events itself through it's own touch event listeners.
      */
+    @Suppress("Deprecation")
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val shouldScroll: Boolean
         get() = engineView?.getInputResult() == EngineView.InputResult.INPUT_RESULT_HANDLED && isScrollEnabled
@@ -232,6 +233,7 @@ class BrowserToolbarBehavior(
             }
         ))
 
+    @Suppress("Deprecation")
     @VisibleForTesting
     internal fun startNestedScroll(axes: Int, type: Int, toolbar: BrowserToolbar): Boolean {
         return if (shouldScroll && axes == ViewCompat.SCROLL_AXIS_VERTICAL) {
