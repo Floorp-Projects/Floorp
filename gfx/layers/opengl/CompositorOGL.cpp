@@ -1044,6 +1044,28 @@ Maybe<IntRect> CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   SetRenderTarget(rt);
   mWindowRenderTarget = mCurrentRenderTarget;
 
+  for (auto iter = aInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
+    const IntRect& r = iter.Get();
+    mCurrentFrameInvalidRegion.OrWith(
+        IntRect(r.X(), FlipY(r.YMost()), r.Width(), r.Height()));
+  }
+  // Check to see if there is any transparent dirty region that would require
+  // clearing. If not, just invalidate the framebuffer if supported.
+  // TODO: Currently we initialize the clear region to the widget bounds as
+  // SwapBuffers will update the entire framebuffer. On platforms that support
+  // damage regions, we could initialize this to mCurrentFrameInvalidRegion.
+  IntRegion regionToClear(rect);
+  regionToClear.SubOut(aOpaqueRegion);
+  GLbitfield clearBits = LOCAL_GL_DEPTH_BUFFER_BIT;
+  if (regionToClear.IsEmpty() &&
+      mGLContext->IsSupported(GLFeature::invalidate_framebuffer)) {
+    GLenum attachments[] = {LOCAL_GL_COLOR};
+    mGLContext->fInvalidateFramebuffer(
+        LOCAL_GL_FRAMEBUFFER, MOZ_ARRAY_LENGTH(attachments), attachments);
+  } else {
+    clearBits |= LOCAL_GL_COLOR_BUFFER_BIT;
+  }
+
 #if defined(MOZ_WIDGET_ANDROID)
   if ((mSurfaceOrigin.x > 0) || (mSurfaceOrigin.y > 0)) {
     mGLContext->fClearColor(
@@ -1059,13 +1081,7 @@ Maybe<IntRect> CompositorOGL::BeginFrame(const nsIntRegion& aInvalidRegion,
   mGLContext->fClearColor(mClearColor.r, mClearColor.g, mClearColor.b,
                           mClearColor.a);
 #endif  // defined(MOZ_WIDGET_ANDROID)
-  mGLContext->fClear(LOCAL_GL_COLOR_BUFFER_BIT | LOCAL_GL_DEPTH_BUFFER_BIT);
-
-  for (auto iter = aInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
-    const IntRect& r = iter.Get();
-    mCurrentFrameInvalidRegion.OrWith(
-        IntRect(r.X(), FlipY(r.YMost()), r.Width(), r.Height()));
-  }
+  mGLContext->fClear(clearBits);
 
   return Some(rect);
 }

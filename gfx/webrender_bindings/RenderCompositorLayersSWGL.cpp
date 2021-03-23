@@ -59,33 +59,54 @@ bool RenderCompositorLayersSWGL::MakeCurrent() {
 bool RenderCompositorLayersSWGL::BeginFrame() {
   MOZ_ASSERT(!mInFrame);
   MakeCurrent();
-  gfx::IntRect rect =
-      gfx::IntRect(gfx::IntPoint(0, 0), GetBufferSize().ToUnknownSize());
-  if (!mCompositor->BeginFrameForWindow(nsIntRegion(rect), Nothing(), rect,
-                                        nsIntRegion())) {
-    return false;
-  }
   mInFrame = true;
   return true;
 }
 
 void RenderCompositorLayersSWGL::CancelFrame() {
   MOZ_ASSERT(mInFrame);
-  mCompositor->CancelFrame();
   mInFrame = false;
-  mCompositingStarted = false;
+  if (mCompositingStarted) {
+    mCompositor->CancelFrame();
+    mCompositingStarted = false;
+  }
 }
 
 void RenderCompositorLayersSWGL::StartCompositing(
     const wr::DeviceIntRect* aDirtyRects, size_t aNumDirtyRects,
     const wr::DeviceIntRect* aOpaqueRects, size_t aNumOpaqueRects) {
-  mCompositingStarted = mInFrame;
+  if (!mInFrame) {
+    return;
+  }
+  gfx::IntRect bounds(gfx::IntPoint(0, 0), GetBufferSize().ToUnknownSize());
+  nsIntRegion dirty;
+  if (aNumDirtyRects) {
+    for (size_t i = 0; i < aNumDirtyRects; i++) {
+      const auto& rect = aDirtyRects[i];
+      dirty.OrWith(gfx::IntRect(rect.origin.x, rect.origin.y, rect.size.width,
+                                rect.size.height));
+    }
+    dirty.AndWith(bounds);
+  } else {
+    dirty = bounds;
+  }
+  nsIntRegion opaque(bounds);
+  opaque.SubOut(mWidget->GetTransparentRegion().ToUnknownRegion());
+  for (size_t i = 0; i < aNumOpaqueRects; i++) {
+    const auto& rect = aOpaqueRects[i];
+    opaque.OrWith(gfx::IntRect(rect.origin.x, rect.origin.y, rect.size.width,
+                               rect.size.height));
+  }
+  if (!mCompositor->BeginFrameForWindow(dirty, Nothing(), bounds, opaque)) {
+    return;
+  }
+  mCompositingStarted = true;
 }
 
 void RenderCompositorLayersSWGL::CompositorEndFrame() {
   nsTArray<FrameSurface> frameSurfaces = std::move(mFrameSurfaces);
 
-  if (!mInFrame) {
+  if (!mCompositingStarted) {
     return;
   }
 
@@ -133,8 +154,6 @@ RenderedFrameId RenderCompositorLayersSWGL::EndFrame(
   if (mCompositingStarted) {
     mCompositor->EndFrame();
     mCompositingStarted = false;
-  } else {
-    mCompositor->CancelFrame();
   }
   return GetNextRenderFrameId();
 }
