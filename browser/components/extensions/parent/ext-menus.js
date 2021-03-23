@@ -168,18 +168,10 @@ var gMenuBuilder = {
           Infinity,
           false
         );
-        if (!nextSibling) {
-          // The extension menu should be rendered at the top. If we use
-          // a navigation group (on non-macOS), the extension menu should
-          // come after that to avoid styling issues.
-          if (AppConstants.platform == "macosx") {
-            nextSibling = this.xulMenu.firstElementChild;
-          } else {
-            nextSibling = this.xulMenu.querySelector(
-              ":scope > #context-sep-navigation + *"
-            );
-          }
-        }
+        // The extension menu should be rendered at the top, but after the navigation buttons.
+        nextSibling =
+          nextSibling ||
+          this.xulMenu.querySelector(":scope > #context-sep-navigation + *");
         if (
           rootElements.length &&
           showDefaults &&
