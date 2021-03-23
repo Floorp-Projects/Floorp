@@ -10,7 +10,6 @@ module.exports = {
   // All globals made available in the test environment.
   globals: {
     waitForTick: true,
-    waitUntilState: true,
   },
 
   rules: {
