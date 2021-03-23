@@ -18,7 +18,7 @@ function promisePocketEnabled() {
   info("pocket is not enabled");
   Services.prefs.setBoolPref("extensions.pocket.enabled", true);
   return BrowserTestUtils.waitForCondition(() => {
-    return PageActions.actionForID("pocket");
+    return !!CustomizableUI.getWidget("save-to-pocket-button");
   });
 }
 
@@ -36,7 +36,7 @@ function promisePocketDisabled() {
   // back to false.
   Services.prefs.setBoolPref("extensions.pocket.enabled", false);
   return BrowserTestUtils.waitForCondition(() => {
-    return !PageActions.actionForID("pocket");
+    return !CustomizableUI.getWidget("save-to-pocket-button");
   });
 }
 
@@ -67,7 +67,7 @@ function checkElementsShown(expectPresent, l, win = window) {
     let el =
       win.document.getElementById(id) ||
       win.gNavToolbox.palette.querySelector("#" + id);
-    let elShown = window.getComputedStyle(el).display != "none";
+    let elShown = !!el && window.getComputedStyle(el).display != "none";
     is(
       elShown,
       expectPresent,

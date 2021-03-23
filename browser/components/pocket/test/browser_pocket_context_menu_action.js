@@ -25,11 +25,19 @@ add_task(async function() {
 
   info("opening pocket panel");
   let contextPocket = contextMenu.querySelector("#context-pocket");
+  // The panel is created on the fly, so we can't simply wait for focus
+  // inside it.
+  let pocketPanelShown = BrowserTestUtils.waitForEvent(
+    document,
+    "popupshown",
+    true
+  );
   contextPocket.click();
-  checkElements(true, ["pageActionActivatedActionPanel"]);
+  await pocketPanelShown;
+  checkElements(true, ["customizationui-widget-panel"]);
 
   info("closing pocket panel");
-  let pocketPanel = document.getElementById("pageActionActivatedActionPanel");
+  let pocketPanel = document.getElementById("customizationui-widget-panel");
   let pocketPanelHidden = BrowserTestUtils.waitForEvent(
     pocketPanel,
     "popuphidden"
@@ -37,7 +45,7 @@ add_task(async function() {
 
   pocketPanel.hidePopup();
   await pocketPanelHidden;
-  checkElements(false, ["pageActionActivatedActionPanel"]);
+  checkElements(false, ["customizationui-widget-panel"]);
 
   contextMenu.hidePopup();
   await popupHidden;

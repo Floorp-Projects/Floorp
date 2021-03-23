@@ -11,11 +11,11 @@ const TEST_ACTION_ID = "browser_PageActions_proton";
 
 // Set of action IDs to ignore during this test.
 //
-// Pocket and Screenshots are problematic for two reasons: (1) They're going
-// away in Proton, (2) they're built-in actions but they add themselves
+// Screenshots is problematic for two reasons: (1) It's going
+// away in Proton, (2) It's built-in actions but adds itself
 // dynamically outside of PageActions, which is a problem for this test since it
 // simulates app restart by removing all actions and adding them back.  So just
-// don't make any assertions about either of them.
+// don't make any assertions about it.
 //
 // addSearchEngine gets in the way of the test when it assumes for simplicity
 // that all actions are pinned when Proton is enabled, but addSearchEngine still
@@ -24,10 +24,8 @@ const TEST_ACTION_ID = "browser_PageActions_proton";
 // until it lands, just ignore addSearchEngine.
 const IGNORED_ACTION_IDS = new Set([
   "addSearchEngine",
-  "pocket",
   "screenshots_mozilla_org",
 ]);
-const EXTRA_IGNORED_ELEMENT_IDS = ["pocket-button"];
 
 // This test opens and closes lots of windows and can often cause TV tests to
 // time out for no good reason.  Request a ridiculously long timeout.
@@ -358,9 +356,9 @@ async function checkNewWindow({ idsInUrlbarExtra = [] } = {}) {
     url: "http://example.com/",
   });
 
-  let ignoredElementIDs = Array.from(IGNORED_ACTION_IDS)
-    .map(id => win.BrowserPageActions.urlbarButtonNodeIDForActionID(id))
-    .concat(EXTRA_IGNORED_ELEMENT_IDS);
+  let ignoredElementIDs = Array.from(IGNORED_ACTION_IDS).map(id =>
+    win.BrowserPageActions.urlbarButtonNodeIDForActionID(id)
+  );
 
   // Collect its urlbar element IDs.
   let elementIDs = [];

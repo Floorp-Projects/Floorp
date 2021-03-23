@@ -916,12 +916,12 @@ button {
 .pkt_ext_containersaved .pkt_ext_item_recs li a {
     padding-block: 8px;
     padding-inline: 1em 40px;
-    background: url(../img/open.svg) 318px 8px no-repeat;
+    background: url(../img/open.svg) top 8px right 14px no-repeat;
     flex-grow: 1;
 }
 
 .pkt_ext_containersaved .pkt_ext_item_recs li a:dir(rtl) {
-    background-position-x: right 318px;
+    background-position-x: left 14px;
 }
 
 .pkt_ext_containersaved .pkt_ext_item_recs li:hover,

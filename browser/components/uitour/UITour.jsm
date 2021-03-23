@@ -193,16 +193,7 @@ var UITour = {
       "pocket",
       {
         allowAdd: true,
-        query: aDocument => {
-          // The pocket's urlbar page action button is pre-defined in the DOM.
-          // It would be hidden if toggled off from the urlbar.
-          let node = aDocument.getElementById("pocket-button");
-          if (node && !node.hidden) {
-            return node;
-          }
-          aDocument.ownerGlobal.BrowserPageActions.placeLazyActionsInPanel();
-          return aDocument.getElementById("pageAction-panel-pocket");
-        },
+        query: "#save-to-pocket-button",
       },
     ],
     [

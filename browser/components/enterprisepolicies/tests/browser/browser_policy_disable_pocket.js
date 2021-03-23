@@ -7,7 +7,9 @@ const PREF_POCKET = "extensions.pocket.enabled";
 
 async function checkPocket(shouldBeEnabled) {
   return BrowserTestUtils.waitForCondition(() => {
-    return !!PageActions.actionForID("pocket") == shouldBeEnabled;
+    return (
+      !!CustomizableUI.getWidget("save-to-pocket-button") == shouldBeEnabled
+    );
   }, "Expecting Pocket to be " + shouldBeEnabled);
 }
 

@@ -412,6 +412,7 @@ var pktUI = (function() {
       Cu.reportError("Pocket: No open browser windows to openTabWithUrl");
       return;
     }
+    closePanel();
 
     // If the user is in permanent private browsing than this is not an issue,
     // since the current window will always share the same cookie jar as the other
@@ -529,14 +530,14 @@ var pktUI = (function() {
     return panel;
   }
 
-  var photonPageActionPanelFrame;
+  var toolbarPanelFrame;
 
-  function setPhotonPageActionPanelFrame(frame) {
-    photonPageActionPanelFrame = frame;
+  function setToolbarPanelFrame(frame) {
+    toolbarPanelFrame = frame;
   }
 
   function getPanelFrame() {
-    return photonPageActionPanelFrame;
+    return toolbarPanelFrame;
   }
 
   function isValidURL() {
@@ -565,7 +566,7 @@ var pktUI = (function() {
    * Public functions
    */
   return {
-    setPhotonPageActionPanelFrame,
+    setToolbarPanelFrame,
     getPanelFrame,
     initPrefs,
 
