@@ -343,9 +343,7 @@ MBasicBlock::MBasicBlock(MIRGraph& graph, const CompileInfo& info,
       mark_(false),
       immediatelyDominated_(graph.alloc()),
       immediateDominator_(nullptr),
-      trackedSite_(site),
-      hitCount_(0),
-      hitState_(HitState::NotDefined)
+      trackedSite_(site)
 #if defined(JS_ION_PERF) || defined(DEBUG)
       ,
       lineno_(0u),
