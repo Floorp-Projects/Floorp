@@ -9,10 +9,10 @@
     --buttons-primary-button-hover-bgcolor: rgb(2,80,187);
     --buttons-primary-button-active-bgcolor: rgb(5,62,148);
     --buttons-primary-button-color: rgb(251,251,254);
-    --buttons-secondary-bgcolor: rgb(240,240,244);
-    --buttons-secondary-hover-bgcolor: rgb(224,224,230);
-    --buttons-secondary-active-bgcolor: rgb(207,207,216);
-    --buttons-secondary-color: rgb(21,20,26);
+    --button-bgcolor: rgb(240,240,244);
+    --button-hover-bgcolor: rgb(224,224,230);
+    --button-active-bgcolor: rgb(207,207,216);
+    --button-color: rgb(21,20,26);
     --buttons-box-shadow: transparent;
 
     --focus-outline-color: var(--buttons-primary-button-bgcolor);

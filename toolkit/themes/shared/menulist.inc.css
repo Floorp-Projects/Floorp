@@ -7,8 +7,8 @@
 @supports -moz-bool-pref("browser.proton.enabled") {
 :host(:not([native])) {
   appearance: none;
-  background-color: var(--buttons-secondary-bgcolor, ButtonFace);
-  color: var(--buttons-secondary-color, ButtonText);
+  background-color: var(--button-bgcolor, ButtonFace);
+  color: var(--button-color, ButtonText);
   border-radius: 4px;
   padding: 4px 8px 4px 12px;
   margin: 5px 2px 3px;
@@ -23,11 +23,11 @@
 }
 
 :host(:not([native]):hover) {
-  background-color: var(--buttons-secondary-hover-bgcolor, color-mix(in srgb, currentColor 10%, ButtonFace));
+  background-color: var(--button-hover-bgcolor, color-mix(in srgb, currentColor 10%, ButtonFace));
 }
 
 :host(:not([native]):hover:active) {
-  background-color: var(--buttons-secondary-active-bgcolor, color-mix(in srgb, currentColor 20%, ButtonFace));
+  background-color: var(--button-active-bgcolor, color-mix(in srgb, currentColor 20%, ButtonFace));
 }
 
 :host(:not([native]):-moz-focusring) {
