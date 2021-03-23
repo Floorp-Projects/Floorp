@@ -1253,6 +1253,10 @@ toolbarpaletteitem > toolbaritem {
   -moz-box-pack: center;
 }
 
+toolbarpaletteitem > #stop-reload-button {
+  -moz-box-pack: inherit;
+}
+
 :root[customizing=true] .addon-banner-item,
 :root[customizing=true] .panel-banner-item {
   display: none;
