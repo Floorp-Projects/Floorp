@@ -414,7 +414,7 @@ nsresult TRRService::ReadPrefs(const char* name) {
                .ToRange()) {
         nsCString token{tokenSubstring};
         LOG(("TRRService::ReadPrefs %s host:[%s]\n", aPrefName, token.get()));
-        mExcludedDomains.PutEntry(token);
+        mExcludedDomains.Insert(token);
       }
     };
 
@@ -447,7 +447,7 @@ void TRRService::AddEtcHosts(const nsTArray<nsCString>& aArray) {
   MutexAutoLock lock(mLock);
   for (const auto& item : aArray) {
     LOG(("Adding %s from /etc/hosts to excluded domains", item.get()));
-    mEtcHostsDomains.PutEntry(item);
+    mEtcHostsDomains.Insert(item);
   }
 }
 
@@ -667,7 +667,7 @@ void TRRService::RebuildSuffixList(nsTArray<nsCString>&& aSuffixList) {
   mDNSSuffixDomains.Clear();
   for (const auto& item : aSuffixList) {
     LOG(("TRRService adding %s to suffix list", item.get()));
-    mDNSSuffixDomains.PutEntry(item);
+    mDNSSuffixDomains.Insert(item);
   }
 }
 
@@ -948,17 +948,17 @@ bool TRRService::IsExcludedFromTRR_unlocked(const nsACString& aHost) {
     nsDependentCSubstring subdomain =
         Substring(aHost, dot, aHost.Length() - dot);
 
-    if (mExcludedDomains.GetEntry(subdomain)) {
+    if (mExcludedDomains.Contains(subdomain)) {
       LOG(("Subdomain [%s] of host [%s] Is Excluded From TRR via pref\n",
            subdomain.BeginReading(), aHost.BeginReading()));
       return true;
     }
-    if (mDNSSuffixDomains.GetEntry(subdomain)) {
+    if (mDNSSuffixDomains.Contains(subdomain)) {
       LOG(("Subdomain [%s] of host [%s] Is Excluded From TRR via pref\n",
            subdomain.BeginReading(), aHost.BeginReading()));
       return true;
     }
-    if (mEtcHostsDomains.GetEntry(subdomain)) {
+    if (mEtcHostsDomains.Contains(subdomain)) {
       LOG(("Subdomain [%s] of host [%s] Is Excluded From TRR by /etc/hosts\n",
            subdomain.BeginReading(), aHost.BeginReading()));
       return true;
