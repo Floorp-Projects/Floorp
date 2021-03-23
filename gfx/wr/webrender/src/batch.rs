@@ -29,7 +29,7 @@ use crate::renderer::{BlendMode, ShaderColorMode};
 use crate::renderer::MAX_VERTEX_TEXTURE_WIDTH;
 use crate::resource_cache::{GlyphFetchResult, ImageProperties, ImageRequest, ResourceCache};
 use crate::space::SpaceMapper;
-use crate::visibility::{PrimitiveVisibility, PrimitiveVisibilityFlags, VisibilityState};
+use crate::visibility::{PrimitiveVisibilityMask, PrimitiveVisibility, PrimitiveVisibilityFlags, VisibilityState};
 use smallvec::SmallVec;
 use std::{f32, i32, usize};
 use crate::util::{project_rect, MaxRect, TransformedRectKind};
@@ -630,7 +630,7 @@ pub struct AlphaBatchBuilder {
     pub opaque_batch_list: OpaqueBatchList,
     pub render_task_id: RenderTaskId,
     render_task_address: RenderTaskAddress,
-    pub dirty_rect: Option<PictureRect>,
+    pub vis_mask: PrimitiveVisibilityMask,
 }
 
 impl AlphaBatchBuilder {
@@ -640,7 +640,7 @@ impl AlphaBatchBuilder {
         lookback_count: usize,
         render_task_id: RenderTaskId,
         render_task_address: RenderTaskAddress,
-        dirty_rect: Option<PictureRect>,
+        vis_mask: PrimitiveVisibilityMask,
         preallocate: usize,
     ) -> Self {
         // The threshold for creating a new batch is
@@ -652,7 +652,7 @@ impl AlphaBatchBuilder {
             opaque_batch_list: OpaqueBatchList::new(batch_area_threshold, lookback_count),
             render_task_id,
             render_task_address,
-            dirty_rect,
+            vis_mask,
         }
     }
 
@@ -662,15 +662,6 @@ impl AlphaBatchBuilder {
     fn clear(&mut self) {
         self.alpha_batch_list.clear();
         self.opaque_batch_list.clear();
-    }
-
-    /// Return true if a primitive occupying `rect_in_pic_space` should be
-    /// added this batcher.
-    fn should_draw(&self, rect_in_pic_space: &PictureRect) -> bool {
-        match self.dirty_rect {
-            Some(dirty_rect) => dirty_rect.intersects(rect_in_pic_space),
-            None => true,
-        }
     }
 
     pub fn build(
@@ -770,10 +761,10 @@ impl BatchBuilder {
         brush_flags: BrushFlags,
         prim_header_index: PrimitiveHeaderIndex,
         resource_address: i32,
-        rect_in_pic_space: &PictureRect,
+        prim_vis_mask: PrimitiveVisibilityMask,
     ) {
         for batcher in &mut self.batchers {
-            if batcher.should_draw(rect_in_pic_space) {
+            if batcher.vis_mask.intersects(prim_vis_mask) {
                 let render_task_address = batcher.render_task_address;
 
                 let instance = BrushInstance {
@@ -805,10 +796,10 @@ impl BatchBuilder {
         z_id: ZBufferId,
         prim_header_index: PrimitiveHeaderIndex,
         polygons_address: GpuCacheAddress,
-        rect_in_pic_space: &PictureRect,
+        prim_vis_mask: PrimitiveVisibilityMask,
     ) {
         for batcher in &mut self.batchers {
-            if batcher.should_draw(rect_in_pic_space) {
+            if batcher.vis_mask.intersects(prim_vis_mask) {
                 let render_task_address = batcher.render_task_address;
 
                 batcher.push_single_instance(
@@ -887,7 +878,7 @@ impl BatchBuilder {
         &mut self,
         prim_rect: LayoutRect,
         prim_info: &PrimitiveVisibility,
-        rect_in_pic_space: &PictureRect,
+        prim_vis_mask: PrimitiveVisibilityMask,
         z_id: ZBufferId,
         transform_id: TransformPaletteId,
         batch_features: BatchFeatures,
@@ -935,7 +926,7 @@ impl BatchBuilder {
             transform_kind,
             z_id,
             prim_info.clip_task_index,
-            rect_in_pic_space,
+            prim_vis_mask,
             ctx,
             render_tasks,
         );
@@ -960,15 +951,15 @@ impl BatchBuilder {
         z_generator: &mut ZBufferIdGenerator,
         composite_state: &mut CompositeState,
     ) {
-        let rect_in_pic_space = match prim_instance.vis.state {
+        let prim_vis_mask = match prim_instance.vis.state {
             VisibilityState::Culled => {
                 return;
             }
             VisibilityState::Unset | VisibilityState::Coarse { .. } => {
                 panic!("bug: invalid visibility state");
             }
-            VisibilityState::Detailed { ref rect_in_pic_space } => {
-                rect_in_pic_space
+            VisibilityState::Detailed { visibility_mask } => {
+                visibility_mask
             }
         };
 
@@ -1069,7 +1060,7 @@ impl BatchBuilder {
                     BrushFlags::PERSPECTIVE_INTERPOLATION,
                     prim_header_index,
                     0,
-                    rect_in_pic_space,
+                    prim_vis_mask,
                 );
             }
             PrimitiveInstanceKind::NormalBorder { data_handle, ref render_task_ids, .. } => {
@@ -1143,7 +1134,7 @@ impl BatchBuilder {
                     transform_kind,
                     z_id,
                     prim_info.clip_task_index,
-                    rect_in_pic_space,
+                    prim_vis_mask,
                     ctx,
                     render_tasks,
                 );
@@ -1358,7 +1349,7 @@ impl BatchBuilder {
                         let key = BatchKey::new(kind, blend_mode, textures);
 
                         for batcher in batchers.iter_mut() {
-                            if batcher.should_draw(rect_in_pic_space) {
+                            if batcher.vis_mask.intersects(prim_vis_mask) {
                                 let render_task_address = batcher.render_task_address;
                                 let batch = batcher.alpha_batch_list.set_params_and_get_batch(
                                     key,
@@ -1465,7 +1456,7 @@ impl BatchBuilder {
                     BrushFlags::PERSPECTIVE_INTERPOLATION,
                     prim_header_index,
                     specific_resource_address,
-                    rect_in_pic_space,
+                    prim_vis_mask,
                 );
             }
             PrimitiveInstanceKind::Picture { pic_index, segment_instance_index, .. } => {
@@ -1493,8 +1484,8 @@ impl BatchBuilder {
                             };
                             let pic = &ctx.prim_store.pictures[child_pic_index.0];
 
-                            let child_rect_in_pic_space = match child_prim_info.state {
-                                VisibilityState::Detailed { ref rect_in_pic_space } => rect_in_pic_space,
+                            let child_visibility_mask = match child_prim_info.state {
+                                VisibilityState::Detailed { visibility_mask } => visibility_mask,
                                 _ => panic!("bug: culled prim should not be in child list"),
                             };
 
@@ -1558,7 +1549,7 @@ impl BatchBuilder {
                                 z_id,
                                 prim_header_index,
                                 child.gpu_address,
-                                child_rect_in_pic_space,
+                                child_visibility_mask,
                             );
                         }
                     }
@@ -1643,7 +1634,7 @@ impl BatchBuilder {
                                             brush_flags,
                                             prim_header_index,
                                             uv_rect_address.as_int(),
-                                            rect_in_pic_space,
+                                            prim_vis_mask,
                                         );
                                     }
                                     Filter::DropShadows(shadows) => {
@@ -1729,7 +1720,7 @@ impl BatchBuilder {
                                                 brush_flags,
                                                 shadow_prim_header_index,
                                                 shadow_uv_rect_address.as_int(),
-                                                rect_in_pic_space,
+                                                prim_vis_mask,
                                             );
                                         }
                                         let z_id_content = z_generator.next();
@@ -1756,7 +1747,7 @@ impl BatchBuilder {
                                             brush_flags,
                                             content_prim_header_index,
                                             content_uv_rect_address,
-                                            rect_in_pic_space,
+                                            prim_vis_mask,
                                         );
                                     }
                                     Filter::Opacity(_, amount) => {
@@ -1801,7 +1792,7 @@ impl BatchBuilder {
                                             brush_flags,
                                             prim_header_index,
                                             0,
-                                            rect_in_pic_space,
+                                            prim_vis_mask,
                                         );
                                     }
                                     _ => {
@@ -1886,7 +1877,7 @@ impl BatchBuilder {
                                             brush_flags,
                                             prim_header_index,
                                             0,
-                                            rect_in_pic_space,
+                                            prim_vis_mask,
                                         );
                                     }
                                 }
@@ -1942,7 +1933,7 @@ impl BatchBuilder {
                                     brush_flags,
                                     prim_header_index,
                                     0,
-                                    rect_in_pic_space,
+                                    prim_vis_mask,
                                 );
                             }
                             PictureCompositeMode::MixBlend(mode) if BlendMode::from_mix_blend_mode(
@@ -2003,7 +1994,7 @@ impl BatchBuilder {
                                     brush_flags,
                                     prim_header_index,
                                     uv_rect_address.as_int(),
-                                    rect_in_pic_space,
+                                    prim_vis_mask,
                                 );
                             }
                             PictureCompositeMode::MixBlend(mode) => {
@@ -2025,7 +2016,7 @@ impl BatchBuilder {
                                 // a separate isolated intermediate surface.
 
                                 for batcher in &mut self.batchers {
-                                    if batcher.should_draw(rect_in_pic_space) {
+                                    if batcher.vis_mask.intersects(prim_vis_mask) {
                                         let render_task_address = batcher.render_task_address;
 
                                         let batch_key = BatchKey::new(
@@ -2153,7 +2144,7 @@ impl BatchBuilder {
                                     transform_kind,
                                     z_id,
                                     prim_info.clip_task_index,
-                                    rect_in_pic_space,
+                                    prim_vis_mask,
                                     ctx,
                                     render_tasks,
                                 );
@@ -2202,7 +2193,7 @@ impl BatchBuilder {
                                     brush_flags,
                                     prim_header_index,
                                     uv_rect_address.as_int(),
-                                    rect_in_pic_space,
+                                    prim_vis_mask,
                                 );
                             }
                         }
@@ -2287,7 +2278,7 @@ impl BatchBuilder {
                     transform_kind,
                     z_id,
                     prim_info.clip_task_index,
-                    rect_in_pic_space,
+                    prim_vis_mask,
                     ctx,
                     render_tasks,
                 );
@@ -2345,7 +2336,7 @@ impl BatchBuilder {
                     transform_kind,
                     z_id,
                     prim_info.clip_task_index,
-                    rect_in_pic_space,
+                    prim_vis_mask,
                     ctx,
                     render_tasks,
                 );
@@ -2355,7 +2346,7 @@ impl BatchBuilder {
                     self.emit_placeholder(
                         prim_rect,
                         prim_info,
-                        rect_in_pic_space,
+                        prim_vis_mask,
                         z_id,
                         transform_id,
                         batch_features,
@@ -2464,7 +2455,7 @@ impl BatchBuilder {
                     transform_kind,
                     z_id,
                     prim_info.clip_task_index,
-                    rect_in_pic_space,
+                    prim_vis_mask,
                     ctx,
                     render_tasks,
                 );
@@ -2474,7 +2465,7 @@ impl BatchBuilder {
                     self.emit_placeholder(
                         prim_rect,
                         prim_info,
-                        rect_in_pic_space,
+                        prim_vis_mask,
                         z_id,
                         transform_id,
                         batch_features,
@@ -2566,7 +2557,7 @@ impl BatchBuilder {
                         transform_kind,
                         z_id,
                         prim_info.clip_task_index,
-                        rect_in_pic_space,
+                        prim_vis_mask,
                         ctx,
                         render_tasks,
                     );
@@ -2632,7 +2623,7 @@ impl BatchBuilder {
                                 BrushFlags::SEGMENT_RELATIVE | BrushFlags::PERSPECTIVE_INTERPOLATION,
                                 prim_header_index,
                                 uv_rect_address.as_int(),
-                                rect_in_pic_space,
+                                prim_vis_mask,
                             );
                         }
                     }
@@ -2729,7 +2720,7 @@ impl BatchBuilder {
                             BrushFlags::PERSPECTIVE_INTERPOLATION,
                             prim_header_index,
                             specific_resource_address,
-                            rect_in_pic_space,
+                            prim_vis_mask,
                         );
                     }
                 } else if gradient.visible_tiles_range.is_empty() {
@@ -2771,7 +2762,7 @@ impl BatchBuilder {
                         transform_kind,
                         z_id,
                         prim_info.clip_task_index,
-                        rect_in_pic_space,
+                        prim_vis_mask,
                         ctx,
                         render_tasks,
                     );
@@ -2795,7 +2786,7 @@ impl BatchBuilder {
                         &prim_header,
                         prim_headers,
                         z_id,
-                        rect_in_pic_space,
+                        prim_vis_mask,
                         clip_mask_texture_id,
                     );
                 }
@@ -2874,7 +2865,7 @@ impl BatchBuilder {
                         transform_kind,
                         z_id,
                         prim_info.clip_task_index,
-                        rect_in_pic_space,
+                        prim_vis_mask,
                         ctx,
                         render_tasks,
                     );
@@ -2914,7 +2905,7 @@ impl BatchBuilder {
                             BrushFlags::PERSPECTIVE_INTERPOLATION,
                             prim_header_index,
                             uv_rect_address.as_int(),
-                            rect_in_pic_space,
+                            prim_vis_mask,
                         );
                     }
                 }
@@ -2994,7 +2985,7 @@ impl BatchBuilder {
                         transform_kind,
                         z_id,
                         prim_info.clip_task_index,
-                        rect_in_pic_space,
+                        prim_vis_mask,
                         ctx,
                         render_tasks,
                     );
@@ -3034,7 +3025,7 @@ impl BatchBuilder {
                             BrushFlags::PERSPECTIVE_INTERPOLATION,
                             prim_header_index,
                             uv_rect_address.as_int(),
-                            rect_in_pic_space,
+                            prim_vis_mask,
                         );
                     }
                 }
@@ -3091,7 +3082,7 @@ impl BatchBuilder {
                     BrushFlags::empty(),
                     prim_header_index,
                     backdrop_uv_rect_address.as_int(),
-                    rect_in_pic_space,
+                    prim_vis_mask,
                 );
             }
         }
@@ -3112,7 +3103,7 @@ impl BatchBuilder {
         z_id: ZBufferId,
         prim_opacity: PrimitiveOpacity,
         clip_task_index: ClipTaskIndex,
-        rect_in_pic_space: &PictureRect,
+        prim_vis_mask: PrimitiveVisibilityMask,
         ctx: &RenderTargetContext,
         render_tasks: &RenderTaskGraph,
     ) {
@@ -3153,7 +3144,7 @@ impl BatchBuilder {
                 BrushFlags::PERSPECTIVE_INTERPOLATION | segment.brush_flags,
                 prim_header_index,
                 segment_data.specific_resource_address,
-                rect_in_pic_space,
+                prim_vis_mask,
             );
         }
     }
@@ -3172,7 +3163,7 @@ impl BatchBuilder {
         transform_kind: TransformedRectKind,
         z_id: ZBufferId,
         clip_task_index: ClipTaskIndex,
-        rect_in_pic_space: &PictureRect,
+        prim_vis_mask: PrimitiveVisibilityMask,
         ctx: &RenderTargetContext,
         render_tasks: &RenderTaskGraph,
     ) {
@@ -3199,7 +3190,7 @@ impl BatchBuilder {
                         z_id,
                         prim_opacity,
                         clip_task_index,
-                        rect_in_pic_space,
+                        prim_vis_mask,
                         ctx,
                         render_tasks,
                     );
@@ -3225,7 +3216,7 @@ impl BatchBuilder {
                         z_id,
                         prim_opacity,
                         clip_task_index,
-                        rect_in_pic_space,
+                        prim_vis_mask,
                         ctx,
                         render_tasks,
                     );
@@ -3262,7 +3253,7 @@ impl BatchBuilder {
                     BrushFlags::PERSPECTIVE_INTERPOLATION,
                     prim_header_index,
                     segment_data.specific_resource_address,
-                    rect_in_pic_space,
+                    prim_vis_mask,
                 );
             }
             (None, SegmentDataKind::Instanced(..)) => {
@@ -3286,7 +3277,7 @@ impl BatchBuilder {
         base_prim_header: &PrimitiveHeader,
         prim_headers: &mut PrimitiveHeaders,
         z_id: ZBufferId,
-        rect_in_pic_space: &PictureRect,
+        prim_vis_mask: PrimitiveVisibilityMask,
         clip_mask_texture_id: TextureSource,
     ) {
         let key = BatchKey {
@@ -3317,7 +3308,7 @@ impl BatchBuilder {
                 BrushFlags::PERSPECTIVE_INTERPOLATION,
                 prim_header_index,
                 0,
-                rect_in_pic_space,
+                prim_vis_mask,
             );
         }
     }
