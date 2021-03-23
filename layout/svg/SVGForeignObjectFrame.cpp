@@ -65,6 +65,7 @@ void SVGForeignObjectFrame::Init(nsIContent* aContent,
   AddStateBits(aParent->GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD);
   AddStateBits(NS_FRAME_FONT_INFLATION_CONTAINER |
                NS_FRAME_FONT_INFLATION_FLOW_ROOT);
+  AddStateBits(NS_FRAME_MAY_BE_TRANSFORMED);
   if (!(mState & NS_FRAME_IS_NONDISPLAY)) {
     SVGUtils::GetOuterSVGFrame(this)->RegisterForeignObject(this);
   }

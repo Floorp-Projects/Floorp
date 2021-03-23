@@ -1703,14 +1703,18 @@ nsRect nsIFrame::GetMarginRectRelativeToSelf() const {
   return r;
 }
 
-bool nsIFrame::IsTransformed(const nsStyleDisplay* aStyleDisplay) const {
-  return IsCSSTransformed(aStyleDisplay) || IsSVGTransformed();
+bool nsIFrame::IsTransformed() const {
+  if (!HasAnyStateBits(NS_FRAME_MAY_BE_TRANSFORMED)) {
+    MOZ_ASSERT(!IsCSSTransformed());
+    MOZ_ASSERT(!IsSVGTransformed());
+    return false;
+  }
+  return IsCSSTransformed() || IsSVGTransformed();
 }
 
-bool nsIFrame::IsCSSTransformed(const nsStyleDisplay* aStyleDisplay) const {
-  MOZ_ASSERT(aStyleDisplay == StyleDisplay());
-  return ((mState & NS_FRAME_MAY_BE_TRANSFORMED) &&
-          (aStyleDisplay->HasTransform(this) || HasAnimationOfTransform()));
+bool nsIFrame::IsCSSTransformed() const {
+  return HasAnyStateBits(NS_FRAME_MAY_BE_TRANSFORMED) &&
+         (StyleDisplay()->HasTransform(this) || HasAnimationOfTransform());
 }
 
 bool nsIFrame::HasAnimationOfTransform() const {
@@ -1785,26 +1789,23 @@ bool nsIFrame::Extend3DContext(const nsStyleDisplay* aStyleDisplay,
          disp->mIsolation != StyleIsolation::Isolate;
 }
 
-bool nsIFrame::Combines3DTransformWithAncestors(
-    const nsStyleDisplay* aStyleDisplay) const {
-  MOZ_ASSERT(aStyleDisplay == StyleDisplay());
+bool nsIFrame::Combines3DTransformWithAncestors() const {
   nsIFrame* parent = GetClosestFlattenedTreeAncestorPrimaryFrame();
   if (!parent || !parent->Extend3DContext()) {
     return false;
   }
-  return IsCSSTransformed(aStyleDisplay) || BackfaceIsHidden(aStyleDisplay);
+  return IsCSSTransformed() || BackfaceIsHidden();
 }
 
 bool nsIFrame::In3DContextAndBackfaceIsHidden() const {
   // While both tests fail most of the time, test BackfaceIsHidden()
   // first since it's likely to fail faster.
-  const nsStyleDisplay* disp = StyleDisplay();
-  return BackfaceIsHidden(disp) && Combines3DTransformWithAncestors(disp);
+  return BackfaceIsHidden() && Combines3DTransformWithAncestors();
 }
 
 bool nsIFrame::HasPerspective(const nsStyleDisplay* aStyleDisplay) const {
   MOZ_ASSERT(aStyleDisplay == StyleDisplay());
-  if (!IsTransformed(aStyleDisplay)) {
+  if (!IsTransformed()) {
     return false;
   }
   nsIFrame* containingBlock =
@@ -3123,13 +3124,12 @@ void nsIFrame::BuildDisplayListForStackingContext(
       HasVisualOpacity(disp, effects, effectSetForOpacity) &&
       !SVGUtils::CanOptimizeOpacity(this);
 
-  const bool isTransformed = IsTransformed(disp);
+  const bool isTransformed = IsTransformed();
   const bool hasPerspective = isTransformed && HasPerspective(disp);
   const bool extend3DContext =
       Extend3DContext(disp, effects, effectSetForOpacity);
   const bool combines3DTransformWithAncestors =
-      (extend3DContext || isTransformed) &&
-      Combines3DTransformWithAncestors(disp);
+      (extend3DContext || isTransformed) && Combines3DTransformWithAncestors();
 
   Maybe<nsDisplayListBuilder::AutoPreserves3DContext> autoPreserves3DContext;
   if (extend3DContext && !combines3DTransformWithAncestors) {
@@ -6912,7 +6912,7 @@ Matrix4x4Flagged nsIFrame::GetTransformMatrix(ViewportType aViewportType,
    * transform/translate matrix that will apply our current transform, then
    * shift us to our parent.
    */
-  bool isTransformed = IsTransformed();
+  const bool isTransformed = IsTransformed();
   const nsIFrame* zoomedContentRoot = nullptr;
   if (aStopAtAncestor.mViewportType == ViewportType::Visual) {
     zoomedContentRoot = ViewportUtils::IsZoomedContentRoot(this);
@@ -9500,12 +9500,12 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
              "Don't call - overflow rects not maintained on these SVG frames");
 
   const nsStyleDisplay* disp = StyleDisplayWithOptionalParam(aStyleDisplay);
-  bool hasTransform = IsTransformed(disp);
+  bool hasTransform = IsTransformed();
 
   nsRect bounds(nsPoint(0, 0), aNewSize);
   // Store the passed in overflow area if we are a preserve-3d frame or we have
   // a transform, and it's not just the frame bounds.
-  if (hasTransform || Combines3DTransformWithAncestors(disp)) {
+  if (hasTransform || Combines3DTransformWithAncestors()) {
     if (!aOverflowAreas.InkOverflow().IsEqualEdges(bounds) ||
         !aOverflowAreas.ScrollableOverflow().IsEqualEdges(bounds)) {
       OverflowAreas* initial = GetProperty(nsIFrame::InitialOverflowProperty());
@@ -9651,7 +9651,7 @@ bool nsIFrame::FinishAndStoreOverflow(OverflowAreas& aOverflowAreas,
     SetProperty(nsIFrame::PreTransformOverflowAreasProperty(),
                 new OverflowAreas(aOverflowAreas));
 
-    if (Combines3DTransformWithAncestors(disp)) {
+    if (Combines3DTransformWithAncestors()) {
       /* If we're a preserve-3d leaf frame, then our pre-transform overflow
        * should be correct. Our post-transform overflow is empty though, because
        * we only contribute to the overflow area of the preserve-3d root frame.
@@ -9750,8 +9750,7 @@ void nsIFrame::ComputePreserve3DChildrenOverflow(
       // pre-transform region (which contains all descendants that aren't
       // participating in the 3d context) and transform it into the 3d context
       // root coordinate space.
-      const nsStyleDisplay* childDisp = child->StyleDisplay();
-      if (child->Combines3DTransformWithAncestors(childDisp)) {
+      if (child->Combines3DTransformWithAncestors()) {
         OverflowAreas childOverflow = child->GetOverflowAreasRelativeToSelf();
         TransformReferenceBox refBox(child);
         for (const auto otype : AllOverflowTypes()) {
@@ -9763,7 +9762,7 @@ void nsIFrame::ComputePreserve3DChildrenOverflow(
 
         // If this child also extends the 3d context, then recurse into it
         // looking for more participants.
-        if (child->Extend3DContext(childDisp, child->StyleEffects())) {
+        if (child->Extend3DContext()) {
           child->ComputePreserve3DChildrenOverflow(aOverflowAreas);
         }
       }
@@ -10946,8 +10945,7 @@ void nsIFrame::CreateOwnLayerIfNeeded(nsDisplayListBuilder* aBuilder,
 
 bool nsIFrame::IsStackingContext(const nsStyleDisplay* aStyleDisplay,
                                  const nsStyleEffects* aStyleEffects) {
-  return HasOpacity(aStyleDisplay, aStyleEffects, nullptr) ||
-         IsTransformed(aStyleDisplay) ||
+  return HasOpacity(aStyleDisplay, aStyleEffects, nullptr) || IsTransformed() ||
          ((aStyleDisplay->IsContainPaint() ||
            aStyleDisplay->IsContainLayout()) &&
           IsFrameOfType(eSupportsContainLayoutAndPaint)) ||
