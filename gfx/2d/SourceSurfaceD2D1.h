@@ -62,10 +62,11 @@ class SourceSurfaceD2D1 : public SourceSurface {
   // Keep this around to verify whether out image is still valid in the future.
   RefPtr<ID2D1Device> mDevice;
 
-  SurfaceFormat mFormat;
-  IntSize mSize;
+  const SurfaceFormat mFormat;
+  const IntSize mSize;
   DrawTargetD2D1* mDrawTarget;
   std::shared_ptr<Mutex> mSnapshotLock;
+  bool mOwnsCopy;
 };
 
 class DataSourceSurfaceD2D1 : public DataSourceSurface {
