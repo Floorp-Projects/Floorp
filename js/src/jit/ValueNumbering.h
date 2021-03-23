@@ -81,8 +81,7 @@ class ValueNumberer {
   [[nodiscard]] bool discardDef(MDefinition* def);
   [[nodiscard]] bool processDeadDefs();
 
-  [[nodiscard]] bool fixupOSROnlyLoop(MBasicBlock* block,
-                                      MBasicBlock* backedge);
+  [[nodiscard]] bool fixupOSROnlyLoop(MBasicBlock* block);
   [[nodiscard]] bool removePredecessorAndDoDCE(MBasicBlock* block,
                                                MBasicBlock* pred,
                                                size_t predIndex);
