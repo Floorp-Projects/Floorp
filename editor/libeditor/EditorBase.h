@@ -289,6 +289,12 @@ class EditorBase : public nsIEditor,
   Element* GetRoot() const { return mRootElement; }
 
   /**
+   * Likewise, but gets the text control element instead of the root for
+   * plaintext editors.
+   */
+  Element* GetExposedRoot() const;
+
+  /**
    * Set or unset TextInputListener.  If setting non-nullptr when the editor
    * already has a TextInputListener, this will crash in debug build.
    */
@@ -1860,12 +1866,6 @@ class EditorBase : public nsIEditor,
    * editors.
    */
   virtual Element* GetEditorRoot() const;
-
-  /**
-   * Likewise, but gets the text control element instead of the root for
-   * plaintext editors.
-   */
-  Element* GetExposedRoot() const;
 
   /**
    * Whether the editor is active on the DOM window.  Note that when this

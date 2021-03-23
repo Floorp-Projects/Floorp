@@ -5,16 +5,19 @@
 
 #include "mozilla/EditorCommands.h"
 
-#include "mozilla/HTMLEditor.h"    // for HTMLEditor
-#include "mozilla/TextEditor.h"    // for TextEditor
-#include "mozilla/dom/Document.h"  // for Document
-#include "nsCommandParams.h"       // for nsCommandParams
-#include "nsIEditingSession.h"     // for nsIEditingSession, etc
-#include "nsIPrincipal.h"          // for nsIPrincipal
-#include "nsISupportsImpl.h"       // for nsPresContext::Release
-#include "nsISupportsUtils.h"      // for NS_IF_ADDREF
-#include "nsIURI.h"                // for nsIURI
-#include "nsPresContext.h"         // for nsPresContext
+#include "mozilla/HTMLEditor.h"               // for HTMLEditor
+#include "mozilla/TextEditor.h"               // for TextEditor
+#include "mozilla/dom/Element.h"              // for Element
+#include "mozilla/dom/Document.h"             // for Document
+#include "mozilla/dom/HTMLInputElement.h"     // for HTMLInputElement
+#include "mozilla/dom/HTMLTextAreaElement.h"  // for HTMLTextAreaElement
+#include "nsCommandParams.h"                  // for nsCommandParams
+#include "nsIEditingSession.h"                // for nsIEditingSession, etc
+#include "nsIPrincipal.h"                     // for nsIPrincipal
+#include "nsISupportsImpl.h"                  // for nsPresContext::Release
+#include "nsISupportsUtils.h"                 // for NS_IF_ADDREF
+#include "nsIURI.h"                           // for nsIURI
+#include "nsPresContext.h"                    // for nsPresContext
 
 // defines
 #define STATE_ENABLED "state_enabled"
@@ -23,6 +26,8 @@
 #define STATE_DATA "state_data"
 
 namespace mozilla {
+
+using namespace dom;
 
 /*****************************************************************************
  * mozilla::SetDocumentStateCommand
@@ -38,7 +43,10 @@ StaticRefPtr<SetDocumentStateCommand> SetDocumentStateCommand::sInstance;
 
 bool SetDocumentStateCommand::IsCommandEnabled(Command aCommand,
                                                TextEditor* aTextEditor) const {
-  // These commands are always enabled if given editor is an HTMLEditor.
+  if (aCommand == Command::SetDocumentReadOnly) {
+    return !!aTextEditor;
+  }
+  // The other commands are always enabled if given editor is an HTMLEditor.
   return aTextEditor && aTextEditor->AsHTMLEditor();
 }
 
@@ -55,7 +63,8 @@ nsresult SetDocumentStateCommand::DoCommandParam(
     return NS_ERROR_INVALID_ARG;
   }
 
-  if (NS_WARN_IF(!aTextEditor.AsHTMLEditor())) {
+  if (aCommand != Command::SetDocumentReadOnly &&
+      NS_WARN_IF(!aTextEditor.IsHTMLEditor())) {
     return NS_ERROR_FAILURE;
   }
 
@@ -73,6 +82,39 @@ nsresult SetDocumentStateCommand::DoCommandParam(
       return rv;
     }
     case Command::SetDocumentReadOnly: {
+      if (aTextEditor.IsTextEditor()) {
+        Element* inputOrTextArea = aTextEditor.GetExposedRoot();
+        if (NS_WARN_IF(!inputOrTextArea)) {
+          return NS_ERROR_FAILURE;
+        }
+        // Perhaps, this legacy command shouldn't work with
+        // `<input type="file">` and `<input type="number">.
+        if (inputOrTextArea->IsInNativeAnonymousSubtree()) {
+          return NS_ERROR_FAILURE;
+        }
+        if (RefPtr<HTMLInputElement> inputElement =
+                HTMLInputElement::FromNode(inputOrTextArea)) {
+          if (inputElement->ReadOnly() == aBoolParam.value()) {
+            return NS_SUCCESS_DOM_NO_OPERATION;
+          }
+          ErrorResult error;
+          inputElement->SetReadOnly(aBoolParam.value(), error);
+          return error.StealNSResult();
+        }
+        if (RefPtr<HTMLTextAreaElement> textAreaElement =
+                HTMLTextAreaElement::FromNode(inputOrTextArea)) {
+          if (textAreaElement->ReadOnly() == aBoolParam.value()) {
+            return NS_SUCCESS_DOM_NO_OPERATION;
+          }
+          ErrorResult error;
+          textAreaElement->SetReadOnly(aBoolParam.value(), error);
+          return error.StealNSResult();
+        }
+        NS_ASSERTION(
+            false,
+            "Unexpected exposed root element, fallthrough to directly make the "
+            "editor readonly");
+      }
       ErrorResult error;
       if (aBoolParam.value()) {
         nsresult rv = aTextEditor.AddFlags(nsIEditor::eEditorReadonlyMask);
@@ -391,7 +433,7 @@ nsresult DocumentStateCommand::GetCommandStateParams(
       if (!aTextEditor) {
         return NS_OK;
       }
-      dom::Document* document = aTextEditor->GetDocument();
+      Document* document = aTextEditor->GetDocument();
       if (NS_WARN_IF(!document)) {
         return NS_ERROR_FAILURE;
       }
