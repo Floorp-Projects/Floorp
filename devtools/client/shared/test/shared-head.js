@@ -599,37 +599,6 @@ async function getActiveInspector() {
 }
 
 /**
- * Simulate a key event from a <key> element.
- * @param {DOMNode} key
- */
-function synthesizeKeyFromKeyTag(key) {
-  is(key && key.tagName, "key", "Successfully retrieved the <key> node");
-
-  const modifiersAttr = key.getAttribute("modifiers");
-
-  let name = null;
-
-  if (key.getAttribute("keycode")) {
-    name = key.getAttribute("keycode");
-  } else if (key.getAttribute("key")) {
-    name = key.getAttribute("key");
-  }
-
-  isnot(name, null, "Successfully retrieved keycode/key");
-
-  const modifiers = {
-    shiftKey: !!modifiersAttr.match("shift"),
-    ctrlKey: !!modifiersAttr.match("control"),
-    altKey: !!modifiersAttr.match("alt"),
-    metaKey: !!modifiersAttr.match("meta"),
-    accelKey: !!modifiersAttr.match("accel"),
-  };
-
-  info("Synthesizing key " + name + " " + JSON.stringify(modifiers));
-  EventUtils.synthesizeKey(name, modifiers);
-}
-
-/**
  * Simulate a key event from an electron key shortcut string:
  * https://github.com/electron/electron/blob/master/docs/api/accelerator.md
  *
