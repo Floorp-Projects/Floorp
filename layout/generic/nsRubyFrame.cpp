@@ -16,6 +16,7 @@
 #include "mozilla/WritingModes.h"
 #include "nsLineLayout.h"
 #include "nsPresContext.h"
+#include "nsContainerFrameInlines.h"
 #include "nsRubyBaseContainerFrame.h"
 #include "nsRubyTextContainerFrame.h"
 
@@ -59,23 +60,25 @@ nsresult nsRubyFrame::GetFrameName(nsAString& aResult) const {
 /* virtual */
 void nsRubyFrame::AddInlineMinISize(gfxContext* aRenderingContext,
                                     nsIFrame::InlineMinISizeData* aData) {
-  for (nsIFrame* frame = this; frame; frame = frame->GetNextInFlow()) {
+  auto handleChildren = [aRenderingContext](auto frame, auto data) {
     for (RubySegmentEnumerator e(static_cast<nsRubyFrame*>(frame)); !e.AtEnd();
          e.Next()) {
-      e.GetBaseContainer()->AddInlineMinISize(aRenderingContext, aData);
+      e.GetBaseContainer()->AddInlineMinISize(aRenderingContext, data);
     }
-  }
+  };
+  DoInlineIntrinsicISize(aData, handleChildren);
 }
 
 /* virtual */
 void nsRubyFrame::AddInlinePrefISize(gfxContext* aRenderingContext,
                                      nsIFrame::InlinePrefISizeData* aData) {
-  for (nsIFrame* frame = this; frame; frame = frame->GetNextInFlow()) {
+  auto handleChildren = [aRenderingContext](auto frame, auto data) {
     for (RubySegmentEnumerator e(static_cast<nsRubyFrame*>(frame)); !e.AtEnd();
          e.Next()) {
-      e.GetBaseContainer()->AddInlinePrefISize(aRenderingContext, aData);
+      e.GetBaseContainer()->AddInlinePrefISize(aRenderingContext, data);
     }
-  }
+  };
+  DoInlineIntrinsicISize(aData, handleChildren);
   aData->mLineIsEmpty = false;
 }
 
