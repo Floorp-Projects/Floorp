@@ -2698,9 +2698,13 @@ void Document::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup) {
   // timeline will have the same global clock time as the old one.
   mDocumentTimeline = nullptr;
 
-  if (nsCOMPtr<nsIPropertyBag2> bag = do_QueryInterface(aChannel)) {
-    if (nsCOMPtr<nsIURI> baseURI = do_GetProperty(bag, u"baseURI"_ns)) {
-      mDocumentBaseURI = baseURI.forget();
+  nsCOMPtr<nsIPropertyBag2> bag = do_QueryInterface(aChannel);
+  if (bag) {
+    nsCOMPtr<nsIURI> baseURI;
+    bag->GetPropertyAsInterface(u"baseURI"_ns, NS_GET_IID(nsIURI),
+                                getter_AddRefs(baseURI));
+    if (baseURI) {
+      mDocumentBaseURI = baseURI;
       mChromeXHRDocBaseURI = nullptr;
     }
   }
