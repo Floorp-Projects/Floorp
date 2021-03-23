@@ -660,6 +660,7 @@ with modules["FILES"]:
     errors["NS_ERROR_FILE_READ_ONLY"] = FAILURE(19)
     errors["NS_ERROR_FILE_DIR_NOT_EMPTY"] = FAILURE(20)
     errors["NS_ERROR_FILE_ACCESS_DENIED"] = FAILURE(21)
+    errors["NS_ERROR_FILE_FS_CORRUPTED"] = FAILURE(22)
 
     errors["NS_SUCCESS_FILE_DIRECTORY_EMPTY"] = SUCCESS(1)
     # Result codes used by nsIDirectoryServiceProvider2
