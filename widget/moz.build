@@ -172,6 +172,7 @@ EXPORTS.mozilla.widget += [
     "IMEData.h",
     "InProcessCompositorWidget.h",
     "MediaKeysEventSourceFactory.h",
+    "NativeMenu.h",
     "nsAutoRollup.h",
     "nsXPLookAndFeel.h",
     "PuppetBidiKeyboard.h",

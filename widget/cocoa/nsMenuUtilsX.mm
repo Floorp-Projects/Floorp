@@ -13,7 +13,7 @@
 #include "nsMenuBarX.h"
 #include "nsMenuX.h"
 #include "nsMenuItemX.h"
-#include "nsStandaloneNativeMenu.h"
+#include "NativeMenuMac.h"
 #include "nsObjCExceptions.h"
 #include "nsCocoaUtils.h"
 #include "nsCocoaWindow.h"
