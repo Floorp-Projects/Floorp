@@ -933,7 +933,7 @@ class TextInputDelegateTest : BaseSessionTest() {
         val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
 
         commitText(ic, "foo", 1)
-        setSelection(ic, 0, 3)
+        ic.setSelection(0, 3)
 
         mainSession.evaluateJS("""
             input_event_count = 0;
