@@ -6,6 +6,8 @@
 #ifndef mozilla_widget_NativeMenuSupport_h
 #define mozilla_widget_NativeMenuSupport_h
 
+#include "mozilla/RefPtr.h"
+
 class nsIWidget;
 
 namespace mozilla {
@@ -16,6 +18,8 @@ class Element;
 
 namespace widget {
 
+class NativeMenu;
+
 class NativeMenuSupport final {
  public:
   // Given a top-level window widget and a menu bar DOM node, sets up native
@@ -23,6 +27,11 @@ class NativeMenuSupport final {
   // destruction.
   static void CreateNativeMenuBar(nsIWidget* aParent,
                                   dom::Element* aMenuBarElement);
+
+  // Given a menupopup DOM node, create a NativeMenu instance that can be shown
+  // as a native context menu.
+  static already_AddRefed<NativeMenu> CreateNativeContextMenu(
+      dom::Element* aPopup);
 };
 
 }  // namespace widget
