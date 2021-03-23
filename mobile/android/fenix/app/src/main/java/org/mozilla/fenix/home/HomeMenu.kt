@@ -189,8 +189,16 @@ class HomeMenu(
             onItemTapped.invoke(Item.Settings)
         }
 
+        val accountManager = context.components.backgroundServices.accountManager
+        val account = accountManager.authenticatedAccount()
+        val syncItemTitle = if (account != null && accountManager.accountProfile()?.email != null) {
+            context.getString(R.string.sync_signed_as, accountManager.accountProfile()?.email)
+        } else {
+            context.getString(R.string.sync_menu_sign_in)
+        }
+
         val syncedTabsItem = BrowserMenuImageText(
-            context.getString(R.string.library_synced_tabs),
+            syncItemTitle,
             R.drawable.ic_synced_tabs,
             primaryTextColor
         ) {
@@ -215,13 +223,11 @@ class HomeMenu(
 
         // Only query account manager if it has been initialized.
         // We don't want to cause its initialization just for this check.
-        val accountAuthItem =
-            if (context.components.backgroundServices.accountManagerAvailableQueue.isReady() &&
-                context.components.backgroundServices.accountManager.accountNeedsReauth()) {
-                    reconnectToSyncItem
-            } else {
-                null
-            }
+        val accountAuthItem = if (context.components.backgroundServices.accountManagerAvailableQueue.isReady()) {
+            if (context.components.backgroundServices.accountManager.accountNeedsReauth()) reconnectToSyncItem else null
+        } else {
+            null
+        }
 
         val settings = context.components.settings
 

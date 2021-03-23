@@ -39,6 +39,8 @@ private fun goBackButton() =
     onView(allOf(withContentDescription("Navigate up")))
 
 private fun assertSyncedTabsMenuHeader() {
-    onView(withText(R.string.synced_tabs))
+    // Replaced with the new string here, the test is assuming we are NOT signed in
+    // Sync tests in SettingsSyncTest are still TO-DO, so I'm not sure that we have a test for signing into Sync
+    onView(withText(R.string.sync_menu_sign_in))
         .check((matches(withEffectiveVisibility(Visibility.VISIBLE))))
 }

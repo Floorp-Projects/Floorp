@@ -402,13 +402,21 @@ open class DefaultToolbarMenu(
         id = WebExtensionPlaceholderMenuItem.MAIN_EXTENSIONS_MENU_ID
     )
 
-    val syncedTabs = BrowserMenuImageText(
-        label = context.getString(R.string.synced_tabs),
-        imageResource = R.drawable.ic_synced_tabs,
-        iconTintColorResource = primaryTextColor()
-    ) {
-        onItemTapped.invoke(ToolbarMenu.Item.SyncedTabs)
-    }
+        val accountManager = context.components.backgroundServices.accountManager
+        val account = accountManager.authenticatedAccount()
+        val syncItemTitle = if (account != null && accountManager.accountProfile()?.email != null) {
+            context.getString(R.string.sync_signed_as, accountManager.accountProfile()?.email)
+        } else {
+            context.getString(R.string.sync_menu_sign_in)
+        }
+
+        val syncedTabs = BrowserMenuImageText(
+            syncItemTitle,
+            R.drawable.ic_synced_tabs,
+            primaryTextColor()
+        ) {
+            onItemTapped.invoke(ToolbarMenu.Item.SyncedTabs)
+        }
 
     val findInPageItem = BrowserMenuImageText(
         label = context.getString(R.string.browser_menu_find_in_page),
