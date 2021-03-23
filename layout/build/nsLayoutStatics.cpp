@@ -127,6 +127,7 @@
 #include "nsThreadManager.h"
 #include "mozilla/css/ImageLoader.h"
 #include "gfxUserFontSet.h"
+#include "RestoreTabContentObserver.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -291,6 +292,8 @@ nsresult nsLayoutStatics::Initialize() {
 
   ThirdPartyUtil::Startup();
 
+  RestoreTabContentObserver::Initialize();
+
   return NS_OK;
 }
 
@@ -399,4 +402,6 @@ void nsLayoutStatics::Shutdown() {
   css::ImageLoader::Shutdown();
 
   mozilla::net::UrlClassifierFeatureFactory::Shutdown();
+
+  RestoreTabContentObserver::Shutdown();
 }

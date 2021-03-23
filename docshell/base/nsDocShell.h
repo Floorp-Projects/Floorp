@@ -398,8 +398,6 @@ class nsDocShell final : public nsDocLoader,
 
   void StoreWindowNameToSHEntries();
 
-  void MaybeRestoreTabContent();
-
   void SetWillChangeProcess() { mWillChangeProcess = true; }
   bool WillChangeProcess() { return mWillChangeProcess; }
 
