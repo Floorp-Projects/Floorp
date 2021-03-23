@@ -41,7 +41,7 @@ using mozilla::widget::IconLoader;
 
 static const uint32_t kIconSize = 16;
 
-nsMenuItemIconX::nsMenuItemIconX(nsMenuObjectX* aMenuItem) : mMenuObject(aMenuItem) {
+nsMenuItemIconX::nsMenuItemIconX(Listener* aListener) : mListener(aListener) {
   MOZ_COUNT_CTOR(nsMenuItemIconX);
 }
 
@@ -168,8 +168,8 @@ nsresult nsMenuItemIconX::OnComplete(imgIContainer* aImage) {
                                                   withSize:NSMakeSize(kIconSize, kIconSize)
                                                    subrect:mImageRegionRect
                                                scaleFactor:0.0f] retain];
-  if (mMenuObject) {
-    mMenuObject->IconUpdated();
+  if (mListener) {
+    mListener->IconUpdated();
   }
 
   mIconLoader->Destroy();
