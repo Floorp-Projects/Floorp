@@ -27,16 +27,13 @@ object LocaleManager {
      * alternative could be restarting your application process see https://github.com/JakeWharton/ProcessPhoenix
      *
      * @param context The [Context]
-     * @param localeUseCase The [LocaleUseCases] used to notify [Locale] changes
+     * @param localeUseCase The [LocaleUseCases] used to notify the [BrowserStore] of the [Locale] changes.
      * @param language The new [Locale] that has been selected
      * @return A new Context object for whose resources are adjusted to match the new [language].
      */
     fun setNewLocale(context: Context, localeUseCase: LocaleUseCases? = null, locale: Locale?): Context {
-        Storage.save(context, locale?.language)
-
-        localeUseCase?.let { useCases ->
-            useCases.notifyLocaleChanged(locale)
-        }
+        Storage.save(context, locale?.toLanguageTag())
+        notifyStore(locale, localeUseCase)
 
         return updateResources(context)
     }
@@ -61,14 +58,14 @@ object LocaleManager {
      * alternative could be restarting your application process see https://github.com/JakeWharton/ProcessPhoenix
      *
      */
-    fun resetToSystemDefault(context: Context, localeUseCase: LocaleUseCases) {
+    fun resetToSystemDefault(context: Context, localeUseCase: LocaleUseCases?) {
         clear(context)
         val locale = getSystemDefault()
 
         updateSystemLocale(locale)
         updateConfiguration(context, locale)
 
-        localeUseCase.notifyLocaleChanged(locale)
+        notifyStore(locale, localeUseCase)
     }
 
     /**
@@ -84,6 +81,15 @@ object LocaleManager {
 
         updateSystemLocale(locale)
         return updateConfiguration(baseContext, locale)
+    }
+
+    /**
+     * Notify the [BrowserStore] that the [Locale] has been changed via [LocaleUseCases].
+     */
+    private fun notifyStore(locale: Locale?, localeUseCase: LocaleUseCases?) {
+        localeUseCase?.let { useCases ->
+            useCases.notifyLocaleChanged(locale)
+        }
     }
 
     private fun updateConfiguration(context: Context, locale: Locale): Context {
