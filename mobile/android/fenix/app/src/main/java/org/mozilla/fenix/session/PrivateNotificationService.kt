@@ -16,6 +16,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.metrics
+import java.util.Locale
 
 /**
  * Manages notifications for private tabs.
@@ -33,9 +34,28 @@ class PrivateNotificationService : AbstractPrivateNotificationService() {
 
     override fun NotificationCompat.Builder.buildNotification() {
         setSmallIcon(R.drawable.ic_private_browsing)
-        setContentTitle(applicationContext.getString(R.string.app_name_private_4, getString(R.string.app_name)))
-        setContentText(applicationContext.getString(R.string.notification_pbm_delete_text_2))
-        color = ContextCompat.getColor(this@PrivateNotificationService, R.color.pbm_notification_color)
+        setContentTitle(
+            applicationContext.getString(
+                R.string.app_name_private_4,
+                getString(R.string.app_name)
+            )
+        )
+        setContentText(
+            applicationContext.getString(
+                R.string.notification_pbm_delete_text_2
+            )
+        )
+        color = ContextCompat.getColor(
+            this@PrivateNotificationService,
+            R.color.pbm_notification_color
+        )
+    }
+
+    /**
+     * Update the existing notification when the [Locale] has been changed.
+     */
+    override fun notifyLocaleChanged() {
+        super.refreshNotification()
     }
 
     @SuppressLint("MissingSuperCall")

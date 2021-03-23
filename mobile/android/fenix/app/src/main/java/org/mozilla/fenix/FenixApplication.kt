@@ -165,6 +165,7 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
                 initializeWebExtensionSupport()
                 restoreBrowserState()
                 restoreDownloads()
+                restoreLocale()
 
                 // Just to make sure it is impossible for any application-services pieces
                 // to invoke parts of itself that require complete megazord initialization
@@ -211,6 +212,10 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
 
     private fun restoreDownloads() {
         components.useCases.downloadUseCases.restoreDownloads()
+    }
+
+    private fun restoreLocale() {
+        components.useCases.localeUseCases.restore()
     }
 
     private fun initVisualCompletenessQueueAndQueueTasks() {

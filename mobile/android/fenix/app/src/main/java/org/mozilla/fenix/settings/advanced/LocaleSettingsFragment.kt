@@ -17,13 +17,15 @@ import kotlinx.android.synthetic.main.fragment_locale_settings.view.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.lib.state.ext.consumeFrom
 import mozilla.components.support.ktx.android.view.hideKeyboard
+import mozilla.components.support.locale.LocaleUseCases
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.StoreProvider
+import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.showToolbar
 
 class LocaleSettingsFragment : Fragment() {
 
-    private lateinit var store: LocaleSettingsStore
+    private lateinit var localeSettingsStore: LocaleSettingsStore
     private lateinit var interactor: LocaleSettingsInteractor
     private lateinit var localeView: LocaleSettingsView
 
@@ -39,7 +41,10 @@ class LocaleSettingsFragment : Fragment() {
     ): View? {
         val view = inflater.inflate(R.layout.fragment_locale_settings, container, false)
 
-        store = StoreProvider.get(this) {
+        val browserStore = requireContext().components.core.store
+        val localeUseCase = LocaleUseCases(browserStore)
+
+        localeSettingsStore = StoreProvider.get(this) {
             LocaleSettingsStore(
                 createInitialLocaleSettingsState(requireContext())
             )
@@ -47,7 +52,8 @@ class LocaleSettingsFragment : Fragment() {
         interactor = LocaleSettingsInteractor(
             controller = DefaultLocaleSettingsController(
                 activity = requireActivity(),
-                localeSettingsStore = store
+                localeSettingsStore = localeSettingsStore,
+                localeUseCase = localeUseCase
             )
         )
         localeView = LocaleSettingsView(view.locale_container, interactor)
@@ -87,7 +93,7 @@ class LocaleSettingsFragment : Fragment() {
     @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        consumeFrom(store) {
+        consumeFrom(localeSettingsStore) {
             localeView.update(it)
         }
     }

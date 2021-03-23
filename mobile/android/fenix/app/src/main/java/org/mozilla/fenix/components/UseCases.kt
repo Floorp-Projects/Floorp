@@ -22,6 +22,7 @@ import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.feature.top.sites.TopSitesStorage
 import mozilla.components.feature.top.sites.TopSitesUseCases
+import mozilla.components.support.locale.LocaleUseCases
 import org.mozilla.fenix.perf.lazyMonitored
 import org.mozilla.fenix.utils.Mockable
 
@@ -88,4 +89,9 @@ class UseCases(
      * Use cases that provide top sites management.
      */
     val topSitesUseCase by lazyMonitored { TopSitesUseCases(topSitesStorage) }
+
+    /**
+     * Use cases that handle locale management.
+     */
+    val localeUseCases by lazyMonitored { LocaleUseCases(store) }
 }

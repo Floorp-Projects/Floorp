@@ -15,6 +15,7 @@ import io.mockk.spyk
 import io.mockk.verify
 import io.mockk.verifyAll
 import mozilla.components.support.locale.LocaleManager
+import mozilla.components.support.locale.LocaleUseCases
 import org.junit.Before
 import org.junit.Test
 import java.util.Locale
@@ -23,13 +24,20 @@ class LocaleSettingsControllerTest {
 
     private val activity = mockk<Activity>(relaxed = true)
     private val localeSettingsStore: LocaleSettingsStore = mockk(relaxed = true)
+    private val localeUseCases: LocaleUseCases = mockk(relaxed = true)
     private val mockState = LocaleSettingsState(mockk(), mockk(), mockk())
 
     private lateinit var controller: DefaultLocaleSettingsController
 
     @Before
     fun setup() {
-        controller = spyk(DefaultLocaleSettingsController(activity, localeSettingsStore))
+        controller = spyk(
+            DefaultLocaleSettingsController(
+                activity,
+                localeSettingsStore,
+                localeUseCases
+            )
+        )
 
         mockkObject(LocaleManager)
         mockkStatic("org.mozilla.fenix.settings.advanced.LocaleManagerExtensionKt")
@@ -45,11 +53,13 @@ class LocaleSettingsControllerTest {
 
         verifyAll(inverse = true) {
             localeSettingsStore.dispatch(LocaleSettingsAction.Select(selectedLocale))
-            LocaleManager.setNewLocale(activity, selectedLocale.toLanguageTag())
+            LocaleManager.setNewLocale(activity, locale = selectedLocale)
             activity.recreate()
         }
         with(controller) {
-            verify(inverse = true) { LocaleManager.updateBaseConfiguration(activity, selectedLocale) }
+            verify(inverse = true) {
+                LocaleManager.updateBaseConfiguration(activity, selectedLocale)
+            }
         }
     }
 
@@ -57,8 +67,9 @@ class LocaleSettingsControllerTest {
     fun `set a new locale from the list if other locale is chosen`() {
         val selectedLocale = Locale("en", "UK")
         val otherLocale: Locale = mockk()
+        every { localeUseCases.notifyLocaleChanged } returns mockk()
         every { localeSettingsStore.state } returns mockState.copy(selectedLocale = otherLocale)
-        every { LocaleManager.setNewLocale(activity, selectedLocale.toLanguageTag()) } returns activity
+        every { LocaleManager.setNewLocale(activity, localeUseCases, selectedLocale) } returns activity
         with(controller) {
             every { LocaleManager.updateBaseConfiguration(activity, selectedLocale) } just Runs
         }
@@ -66,7 +77,7 @@ class LocaleSettingsControllerTest {
         controller.handleLocaleSelected(selectedLocale)
 
         verify { localeSettingsStore.dispatch(LocaleSettingsAction.Select(selectedLocale)) }
-        verify { LocaleManager.setNewLocale(activity, selectedLocale.toLanguageTag()) }
+        verify { LocaleManager.setNewLocale(activity, localeUseCases, selectedLocale) }
         verify { activity.recreate() }
         with(controller) {
             verify { LocaleManager.updateBaseConfiguration(activity, selectedLocale) }
@@ -76,9 +87,11 @@ class LocaleSettingsControllerTest {
     @Test
     fun `set a new locale from the list if default locale is not selected`() {
         val selectedLocale = Locale("en", "UK")
+        every { localeUseCases.notifyLocaleChanged } returns mockk()
         every { localeSettingsStore.state } returns mockState.copy(selectedLocale = selectedLocale)
         every { LocaleManager.getCurrentLocale(activity) } returns null
-        every { LocaleManager.setNewLocale(activity, selectedLocale.toLanguageTag()) } returns activity
+        every { LocaleManager.setNewLocale(activity, localeUseCases, selectedLocale) } returns activity
+
         with(controller) {
             every { LocaleManager.updateBaseConfiguration(activity, selectedLocale) } just Runs
         }
@@ -86,7 +99,7 @@ class LocaleSettingsControllerTest {
         controller.handleLocaleSelected(selectedLocale)
 
         verify { localeSettingsStore.dispatch(LocaleSettingsAction.Select(selectedLocale)) }
-        verify { LocaleManager.setNewLocale(activity, selectedLocale.toLanguageTag()) }
+        verify { LocaleManager.setNewLocale(activity, localeUseCases, selectedLocale) }
         verify { activity.recreate() }
         with(controller) {
             verify { LocaleManager.updateBaseConfiguration(activity, selectedLocale) }
@@ -103,7 +116,7 @@ class LocaleSettingsControllerTest {
 
         verifyAll(inverse = true) {
             localeSettingsStore.dispatch(LocaleSettingsAction.Select(selectedLocale))
-            LocaleManager.resetToSystemDefault(activity)
+            LocaleManager.resetToSystemDefault(activity, localeUseCases)
             activity.recreate()
             with(controller) {
                 LocaleManager.updateBaseConfiguration(activity, selectedLocale)
@@ -114,8 +127,9 @@ class LocaleSettingsControllerTest {
     @Test
     fun `set the default locale as the new locale`() {
         val selectedLocale = Locale("en", "UK")
+        every { localeUseCases.notifyLocaleChanged } returns mockk()
         every { localeSettingsStore.state } returns mockState.copy(localeList = listOf(selectedLocale))
-        every { LocaleManager.resetToSystemDefault(activity) } just Runs
+        every { LocaleManager.resetToSystemDefault(activity, localeUseCases) } just Runs
         with(controller) {
             every { LocaleManager.updateBaseConfiguration(activity, selectedLocale) } just Runs
         }
@@ -123,7 +137,7 @@ class LocaleSettingsControllerTest {
         controller.handleDefaultLocaleSelected()
 
         verify { localeSettingsStore.dispatch(LocaleSettingsAction.Select(selectedLocale)) }
-        verify { LocaleManager.resetToSystemDefault(activity) }
+        verify { LocaleManager.resetToSystemDefault(activity, localeUseCases) }
         verify { activity.recreate() }
         with(controller) {
             verify { LocaleManager.updateBaseConfiguration(activity, selectedLocale) }
