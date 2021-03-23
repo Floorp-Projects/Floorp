@@ -46,6 +46,13 @@ nsresult nsMenuGroupOwnerX::Create(mozilla::dom::Element* aContent) {
   return NS_OK;
 }
 
+nsMenuBarX* nsMenuGroupOwnerX::GetMenuBar() {
+  if (MenuObjectType() == eMenuBarObjectType) {
+    return static_cast<nsMenuBarX*>(this);
+  }
+  return nullptr;
+}
+
 //
 // nsIMutationObserver
 //
