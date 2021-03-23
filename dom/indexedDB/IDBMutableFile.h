@@ -15,7 +15,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
 #include "nsString.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 
 namespace mozilla {
 
@@ -37,7 +37,7 @@ class IDBMutableFile final : public DOMEventTargetHelper {
 
   indexedDB::BackgroundMutableFileChild* mBackgroundActor;
 
-  nsTHashtable<nsPtrHashKey<IDBFileHandle>> mFileHandles;
+  nsTHashSet<IDBFileHandle*> mFileHandles;
 
   nsString mName;
   nsString mType;
