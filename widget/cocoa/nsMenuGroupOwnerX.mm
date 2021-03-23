@@ -26,7 +26,8 @@ using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(nsMenuGroupOwnerX, nsIMutationObserver)
 
-nsMenuGroupOwnerX::nsMenuGroupOwnerX(nsMenuBarX* aMenuBarIfMenuBar) : mMenuBar(aMenuBarIfMenuBar) {
+nsMenuGroupOwnerX::nsMenuGroupOwnerX(mozilla::dom::Element* aElement, nsMenuBarX* aMenuBarIfMenuBar)
+    : mContent(aElement), mMenuBar(aMenuBarIfMenuBar) {
   mRepresentedObject = [[MOZMenuItemRepresentedObject alloc] initWithMenuGroupOwner:this];
 }
 
@@ -35,8 +36,6 @@ nsMenuGroupOwnerX::~nsMenuGroupOwnerX() {
   [mRepresentedObject setMenuGroupOwner:nullptr];
   [mRepresentedObject release];
 }
-
-void nsMenuGroupOwnerX::Create(mozilla::dom::Element* aContent) { mContent = aContent; }
 
 //
 // nsIMutationObserver

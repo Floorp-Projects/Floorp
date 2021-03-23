@@ -42,9 +42,8 @@ enum {
 // There is one owner per menubar, and one per standalone native menu.
 class nsMenuGroupOwnerX : public nsIMutationObserver {
  public:
-  explicit nsMenuGroupOwnerX(nsMenuBarX* aMenuBarIfMenuBar);
-
-  void Create(mozilla::dom::Element* aContent);
+  // Both parameters can be null.
+  nsMenuGroupOwnerX(mozilla::dom::Element* aElement, nsMenuBarX* aMenuBarIfMenuBar);
 
   void RegisterForContentChanges(nsIContent* aContent, nsChangeObserver* aMenuObject);
   void UnregisterForContentChanges(nsIContent* aContent);

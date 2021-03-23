@@ -75,15 +75,13 @@ nsMenuBarX::nsMenuBarX(mozilla::dom::Element* aElement)
     : mNeedsRebuild(false), mApplicationMenuDelegate(nil) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  mMenuGroupOwner = new nsMenuGroupOwnerX(this);
+  mMenuGroupOwner = new nsMenuGroupOwnerX(aElement, this);
   mNativeMenu = [[GeckoNSMenu alloc] initWithTitle:@"MainMenuBar"];
 
   mContent = aElement;
 
   if (mContent) {
     AquifyMenuBar();
-
-    mMenuGroupOwner->Create(aElement);
     mMenuGroupOwner->RegisterForContentChanges(mContent, this);
     ConstructNativeMenus();
   } else {
