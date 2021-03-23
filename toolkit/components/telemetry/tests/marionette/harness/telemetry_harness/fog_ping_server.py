@@ -31,7 +31,7 @@ class FOGPingServer(object):
             """Handler for HTTP requests to the ping server."""
             request_data = request.body
 
-            if request.headers.get("Content-Encoding") == "gzip":
+            if request.headers.get("Content-Encoding") == b"gzip":
                 request_data = zlib.decompress(request_data, zlib.MAX_WBITS | 16)
 
             request_url = request.route_match.copy()
