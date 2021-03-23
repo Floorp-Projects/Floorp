@@ -32,7 +32,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   GeckoViewConnection: "resource://gre/modules/GeckoViewWebExtension.jsm",
   MessageManagerProxy: "resource://gre/modules/MessageManagerProxy.jsm",
   NativeApp: "resource://gre/modules/NativeMessaging.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   PerformanceCounters: "resource://gre/modules/PerformanceCounters.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
   Schemas: "resource://gre/modules/Schemas.jsm",
@@ -1720,27 +1719,27 @@ StartupCache = {
 
   // When the application version changes, this file is removed by
   // RemoveComponentRegistries in nsAppRunner.cpp.
-  file: OS.Path.join(
-    OS.Constants.Path.localProfileDir,
+  file: PathUtils.join(
+    Services.dirsvc.get("ProfLD", Ci.nsIFile).path,
     "startupCache",
     "webext.sc.lz4"
   ),
 
   async _saveNow() {
     let data = new Uint8Array(aomStartup.encodeBlob(this._data));
-    await OS.File.writeAtomic(this.file, data, { tmpPath: `${this.file}.tmp` });
+    await IOUtils.write(this.file, data, { tmpPath: `${this.file}.tmp` });
   },
 
   async save() {
     if (!this._saveTask) {
-      OS.File.makeDir(OS.Path.dirname(this.file), {
+      await IOUtils.makeDirectory(PathUtils.parent(this.file), {
         ignoreExisting: true,
-        from: OS.Constants.Path.localProfileDir,
+        createAncestors: true,
       });
 
       this._saveTask = new DeferredTask(() => this._saveNow(), 5000);
 
-      AsyncShutdown.profileBeforeChange.addBlocker(
+      IOUtils.profileBeforeChange.addBlocker(
         "Flush WebExtension StartupCache",
         async () => {
           await this._saveTask.finalize();
@@ -1755,11 +1754,11 @@ StartupCache = {
   async _readData() {
     let result = new Map();
     try {
-      let { buffer } = await OS.File.read(this.file);
+      let { buffer } = await IOUtils.read(this.file);
 
       result = aomStartup.decodeBlob(buffer);
     } catch (e) {
-      if (!e.becauseNoSuchFile) {
+      if (typeof e !== DOMException || e.name !== "NotFoundError") {
         Cu.reportError(e);
       }
     }
