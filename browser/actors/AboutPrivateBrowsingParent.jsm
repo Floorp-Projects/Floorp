@@ -112,6 +112,13 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
         urlBar.addEventListener("paste", checkFirstChange);
         break;
       }
+      case "ShouldShowSearch": {
+        let engineName = Services.prefs.getStringPref(
+          "browser.urlbar.placeholderName.private",
+          ""
+        );
+        return engineName;
+      }
       case "ShouldShowSearchBanner": {
         // If this is a pre-loaded private browsing new tab, then we don't want
         // to display the banner - it might never get displayed to the user
