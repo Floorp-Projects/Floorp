@@ -152,6 +152,57 @@ inline void ImplCycleCollectionTraverse(
 }
 
 //////////////////////////////////////////////////////////////
+// ScriptLoader::mFetchingModules / ScriptLoader::mFetchingModules
+//////////////////////////////////////////////////////////////
+
+inline void ImplCycleCollectionUnlink(
+    nsRefPtrHashtable<ModuleMapKey,
+                      mozilla::GenericNonExclusivePromise::Private>& aField) {
+  for (auto iter = aField.Iter(); !iter.Done(); iter.Next()) {
+    ImplCycleCollectionUnlink(iter.Key());
+
+    RefPtr<GenericNonExclusivePromise::Private> promise = iter.UserData();
+    if (promise) {
+      promise->Reject(NS_ERROR_ABORT, __func__);
+    }
+  }
+
+  aField.Clear();
+}
+
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback,
+    nsRefPtrHashtable<ModuleMapKey,
+                      mozilla::GenericNonExclusivePromise::Private>& aField,
+    const char* aName, uint32_t aFlags = 0) {
+  for (auto iter = aField.Iter(); !iter.Done(); iter.Next()) {
+    ImplCycleCollectionTraverse(aCallback, iter.Key(), "mFetchingModules key",
+                                aFlags);
+  }
+}
+
+inline void ImplCycleCollectionUnlink(
+    nsRefPtrHashtable<ModuleMapKey, ModuleScript>& aField) {
+  for (auto iter = aField.Iter(); !iter.Done(); iter.Next()) {
+    ImplCycleCollectionUnlink(iter.Key());
+  }
+
+  aField.Clear();
+}
+
+inline void ImplCycleCollectionTraverse(
+    nsCycleCollectionTraversalCallback& aCallback,
+    nsRefPtrHashtable<ModuleMapKey, ModuleScript>& aField, const char* aName,
+    uint32_t aFlags = 0) {
+  for (auto iter = aField.Iter(); !iter.Done(); iter.Next()) {
+    ImplCycleCollectionTraverse(aCallback, iter.Key(), "mFetchedModules key",
+                                aFlags);
+    CycleCollectionNoteChild(aCallback, iter.UserData(), "mFetchedModules data",
+                             aFlags);
+  }
+}
+
+//////////////////////////////////////////////////////////////
 // ScriptLoader
 //////////////////////////////////////////////////////////////
 
@@ -162,7 +213,8 @@ NS_IMPL_CYCLE_COLLECTION(ScriptLoader, mNonAsyncExternalScriptInsertedRequests,
                          mLoadingAsyncRequests, mLoadedAsyncRequests,
                          mDeferRequests, mXSLTRequests, mDynamicImportRequests,
                          mParserBlockingRequest, mBytecodeEncodingQueue,
-                         mPreloads, mPendingChildLoaders, mFetchedModules)
+                         mPreloads, mPendingChildLoaders, mFetchedModules,
+                         mFetchingModules)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ScriptLoader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(ScriptLoader)
@@ -455,9 +507,9 @@ void ScriptLoader::SetModuleFetchStarted(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsLoading());
   MOZ_ASSERT(
       !ModuleMapContainsURL(aRequest->mURI, aRequest->GetWebExtGlobal()));
+  ModuleMapKey key(aRequest->mURI, aRequest->GetWebExtGlobal());
   mFetchingModules.InsertOrUpdate(
-      ModuleMapKey(aRequest->mURI, aRequest->GetWebExtGlobal()),
-      RefPtr<GenericNonExclusivePromise::Private>{});
+      key, RefPtr<GenericNonExclusivePromise::Private>{});
 }
 
 void ScriptLoader::SetModuleFetchFinishedAndResumeWaitingRequests(
@@ -475,7 +527,11 @@ void ScriptLoader::SetModuleFetchFinishedAndResumeWaitingRequests(
 
   ModuleMapKey key(aRequest->mURI, aRequest->GetWebExtGlobal());
   RefPtr<GenericNonExclusivePromise::Private> promise;
-  MOZ_ALWAYS_TRUE(mFetchingModules.Remove(key, getter_AddRefs(promise)));
+  if (!mFetchingModules.Remove(key, getter_AddRefs(promise))) {
+    LOG(("ScriptLoadRequest (%p): Key not found in mFetchingModules",
+         aRequest));
+    return;
+  }
 
   RefPtr<ModuleScript> moduleScript(aRequest->mModuleScript);
   MOZ_ASSERT(NS_FAILED(aResult) == !moduleScript);
@@ -524,8 +580,8 @@ ModuleScript* ScriptLoader::GetFetchedModule(nsIURI* aURL,
   }
 
   bool found;
-  ModuleScript* ms =
-      mFetchedModules.GetWeak(ModuleMapKey(aURL, aGlobal), &found);
+  ModuleMapKey key(aURL, aGlobal);
+  ModuleScript* ms = mFetchedModules.GetWeak(key, &found);
   MOZ_ASSERT(found);
   return ms;
 }
