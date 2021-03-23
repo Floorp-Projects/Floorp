@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
+   content/global/adjustableTitle.js          (content/adjustableTitle.js)
    content/global/commonDialog.js             (content/commonDialog.js)
    content/global/commonDialog.xhtml          (content/commonDialog.xhtml)
    content/global/commonDialog.css            (content/commonDialog.css)
