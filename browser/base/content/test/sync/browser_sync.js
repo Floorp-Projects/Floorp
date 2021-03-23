@@ -84,6 +84,57 @@ add_task(async function test_navBar_button_visibility() {
   );
 });
 
+add_task(async function test_overflow_navBar_button_visibility() {
+  const button = document.getElementById("fxa-toolbar-menu-button");
+  info("proton enabled: " + CustomizableUI.protonToolbarEnabled);
+
+  let overflowPanel = document.getElementById("widget-overflow");
+  overflowPanel.setAttribute("animate", "false");
+  let navbar = document.getElementById(CustomizableUI.AREA_NAVBAR);
+  let originalWindowWidth = window.outerWidth;
+
+  registerCleanupFunction(function() {
+    overflowPanel.removeAttribute("animate");
+    window.resizeTo(originalWindowWidth, window.outerHeight);
+    return TestUtils.waitForCondition(
+      () => !navbar.hasAttribute("overflowing")
+    );
+  });
+
+  window.resizeTo(450, window.outerHeight);
+
+  await TestUtils.waitForCondition(() => navbar.hasAttribute("overflowing"));
+  ok(navbar.hasAttribute("overflowing"), "Should have an overflowing toolbar.");
+
+  let chevron = document.getElementById("nav-bar-overflow-button");
+  let shownPanelPromise = BrowserTestUtils.waitForEvent(
+    overflowPanel,
+    "popupshown"
+  );
+  chevron.click();
+  await shownPanelPromise;
+
+  ok(button, "fxa-toolbar-menu-button was found");
+
+  const state = {
+    status: UIState.STATUS_NOT_CONFIGURED,
+    syncEnabled: true,
+  };
+  gSync.updateAllUI(state);
+
+  is(
+    BrowserTestUtils.is_visible(button),
+    !CustomizableUI.protonToolbarEnabled,
+    "Check button visibility with STATUS_NOT_CONFIGURED"
+  );
+  let hidePanelPromise = BrowserTestUtils.waitForEvent(
+    overflowPanel,
+    "popuphidden"
+  );
+  chevron.click();
+  await hidePanelPromise;
+});
+
 add_task(async function setupForPanelTests() {
   /* Proton hides the FxA toolbar button when in the nav-bar and unconfigured.
      To test the panel in all states, we move it to the tabstrip toolbar where
