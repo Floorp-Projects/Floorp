@@ -15,7 +15,7 @@
 #include "mozilla/Attributes.h"
 #include "nsHashKeys.h"
 #include "nsIGlobalObject.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 
 namespace mozilla {
 namespace dom {
@@ -107,7 +107,7 @@ class AnimationTimeline : public nsISupports, public nsWrapperCache {
   //
   // The hashset keeps a strong reference to each animation since
   // dealing with addref/release with LinkedList is difficult.
-  typedef nsTHashtable<nsRefPtrHashKey<dom::Animation>> AnimationSet;
+  typedef nsTHashSet<nsRefPtrHashKey<dom::Animation>> AnimationSet;
   AnimationSet mAnimations;
   LinkedList<dom::Animation> mAnimationOrder;
 };

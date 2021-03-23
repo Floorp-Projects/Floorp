@@ -28,7 +28,7 @@ PendingAnimationTracker::PendingAnimationTracker(dom::Document* aDocument)
 
 void PendingAnimationTracker::AddPending(dom::Animation& aAnimation,
                                          AnimationSet& aSet) {
-  aSet.PutEntry(&aAnimation);
+  aSet.Insert(&aAnimation);
 
   // Schedule a paint. Otherwise animations that don't trigger a paint by
   // themselves (e.g. CSS animations with an empty keyframes rule) won't
@@ -38,7 +38,7 @@ void PendingAnimationTracker::AddPending(dom::Animation& aAnimation,
 
 void PendingAnimationTracker::RemovePending(dom::Animation& aAnimation,
                                             AnimationSet& aSet) {
-  aSet.RemoveEntry(&aAnimation);
+  aSet.Remove(&aAnimation);
 }
 
 bool PendingAnimationTracker::IsWaiting(const dom::Animation& aAnimation,
@@ -50,15 +50,16 @@ void PendingAnimationTracker::TriggerPendingAnimationsOnNextTick(
     const TimeStamp& aReadyTime) {
   auto triggerAnimationsAtReadyTime = [aReadyTime](
                                           AnimationSet& aAnimationSet) {
-    for (auto iter = aAnimationSet.Iter(); !iter.Done(); iter.Next()) {
-      dom::Animation* animation = iter.Get()->GetKey();
+    for (auto iter = aAnimationSet.begin(), end = aAnimationSet.end();
+         iter != end; ++iter) {
+      dom::Animation* animation = *iter;
       dom::AnimationTimeline* timeline = animation->GetTimeline();
 
       // If the animation does not have a timeline, just drop it from the map.
       // The animation will detect that it is not being tracked and will trigger
       // itself on the next tick where it has a timeline.
       if (!timeline) {
-        iter.Remove();
+        aAnimationSet.Remove(iter);
         continue;
       }
 
@@ -75,7 +76,7 @@ void PendingAnimationTracker::TriggerPendingAnimationsOnNextTick(
       Nullable<TimeDuration> readyTime = timeline->ToTimelineTime(aReadyTime);
       animation->TriggerOnNextTick(readyTime);
 
-      iter.Remove();
+      aAnimationSet.Remove(iter);
     }
   };
 
@@ -88,8 +89,8 @@ void PendingAnimationTracker::TriggerPendingAnimationsOnNextTick(
 
 void PendingAnimationTracker::TriggerPendingAnimationsNow() {
   auto triggerAndClearAnimations = [](AnimationSet& aAnimationSet) {
-    for (auto iter = aAnimationSet.Iter(); !iter.Done(); iter.Next()) {
-      iter.Get()->GetKey()->TriggerNow();
+    for (const auto& animation : aAnimationSet) {
+      animation->TriggerNow();
     }
     aAnimationSet.Clear();
   };
@@ -139,8 +140,7 @@ void PendingAnimationTracker::MarkAnimationsThatMightNeedSynchronization() {
   // on the main thread that really don't need to.
 
   mHasPlayPendingGeometricAnimations = CheckState::Absent;
-  for (auto iter = mPlayPendingSet.ConstIter(); !iter.Done(); iter.Next()) {
-    auto animation = iter.Get()->GetKey();
+  for (const auto& animation : mPlayPendingSet) {
     if (animation->GetEffect() && animation->GetEffect()->AffectsGeometry()) {
       mHasPlayPendingGeometricAnimations &= ~CheckState::Absent;
       mHasPlayPendingGeometricAnimations |= IsTransition(*animation)
@@ -160,8 +160,7 @@ void PendingAnimationTracker::MarkAnimationsThatMightNeedSynchronization() {
     return;
   }
 
-  for (auto iter = mPlayPendingSet.Iter(); !iter.Done(); iter.Next()) {
-    auto animation = iter.Get()->GetKey();
+  for (const auto& animation : mPlayPendingSet) {
     bool isTransition = IsTransition(*animation);
     if ((isTransition &&
          mHasPlayPendingGeometricAnimations & CheckState::TransitionsPresent) ||

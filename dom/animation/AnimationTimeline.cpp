@@ -48,7 +48,7 @@ void AnimationTimeline::RemoveAnimation(Animation* aAnimation) {
   if (static_cast<LinkedListElement<Animation>*>(aAnimation)->isInList()) {
     static_cast<LinkedListElement<Animation>*>(aAnimation)->remove();
   }
-  mAnimations.RemoveEntry(aAnimation);
+  mAnimations.Remove(aAnimation);
 }
 
 }  // namespace mozilla::dom
