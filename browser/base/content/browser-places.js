@@ -1796,12 +1796,17 @@ var BookmarkingUI = {
       return;
     }
 
+    let extraClasses = {
+      entry: "subviewbutton",
+    };
+
+    if (!gProtonDoorhangers) {
+      extraClasses.footer = "panel-subview-footer";
+    }
+
     new PlacesMenu(event, `place:parent=${PlacesUtils.bookmarks.menuGuid}`, {
-      extraClasses: {
-        entry: "subviewbutton",
-        footer: "panel-subview-footer",
-      },
-      insertionPoint: ".panel-subview-footer",
+      extraClasses,
+      insertionPoint: ".panel-subview-footer-button",
     });
   },
 
