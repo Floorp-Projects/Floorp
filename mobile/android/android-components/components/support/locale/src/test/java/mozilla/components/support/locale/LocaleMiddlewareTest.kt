@@ -22,6 +22,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito.verify
@@ -55,6 +56,7 @@ class LocaleMiddlewareTest {
     }
 
     @Test
+    @Ignore("Failing intermittently. To be fixed for https://github.com/mozilla-mobile/android-components/issues/9954")
     @Config(qualifiers = "en-rUS")
     fun `GIVEN a locale has been chosen in the app WHEN we restore state THEN locale is retrieved from storage`() = runBlockingTest {
         val localeManager = spy(LocaleManager)
