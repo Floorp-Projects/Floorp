@@ -242,3 +242,16 @@ assertWasmThrowsExn(() =>
          delegate 0))`
   ).exports.f()
 );
+
+// Test unwind rethrowing on exit.
+assertWasmThrowsExn(() =>
+  wasmEvalText(
+    `(module
+       (event $exn (param))
+       (func (export "f") (result i32)
+         try (result i32)
+           throw $exn
+         unwind
+         end))`
+  ).exports.f()
+);
