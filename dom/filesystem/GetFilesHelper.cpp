@@ -373,7 +373,7 @@ nsresult GetFilesHelperBase::AddExploredDirectory(nsIFile* aDir) {
     }
   }
 
-  mExploredDirectories.PutEntry(path);
+  mExploredDirectories.Insert(path);
   return NS_OK;
 }
 
