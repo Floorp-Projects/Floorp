@@ -28,6 +28,12 @@ add_task(async function common_initialize() {
       ["toolkit.telemetry.ipcBatchTimeout", 0],
     ],
   });
+  if (LoginHelper.relatedRealmsEnabled) {
+    LoginTestUtils.remoteSettings.setupWebsitesWithSharedCredentials();
+    registerCleanupFunction(function() {
+      LoginTestUtils.remoteSettings.cleanWebsitesWithSharedCredentials();
+    });
+  }
 });
 
 registerCleanupFunction(

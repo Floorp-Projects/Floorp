@@ -667,6 +667,23 @@ function resetRecipes() {
   });
 }
 
+function resetWebsitesWithSharedCredential() {
+  info("Resetting the 'websites-with-shared-credential-backend' collection");
+  return new Promise(resolve => {
+    PWMGR_COMMON_PARENT.addMessageListener(
+      "resetWebsitesWithSharedCredential",
+      function reset() {
+        PWMGR_COMMON_PARENT.removeMessageListener(
+          "resetWebsitesWithSharedCredential",
+          reset
+        );
+        resolve();
+      }
+    );
+    PWMGR_COMMON_PARENT.sendAsyncMessage("resetWebsitesWithSharedCredential");
+  });
+}
+
 function promiseStorageChanged(expectedChangeTypes) {
   return new Promise((resolve, reject) => {
     function onStorageChanged({ topic, data }) {
