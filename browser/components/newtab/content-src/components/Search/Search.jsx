@@ -42,7 +42,7 @@ export class _Search extends React.PureComponent {
     this.props.dispatch({ type: at.FAKE_FOCUS_SEARCH });
     this.props.dispatch(ac.UserEvent({ event: "SEARCH_HANDOFF" }));
     if (text) {
-      this.props.dispatch({ type: at.HIDE_SEARCH });
+      this.props.dispatch({ type: at.DISABLE_SEARCH });
     }
   }
 
@@ -125,7 +125,7 @@ export class _Search extends React.PureComponent {
   render() {
     const wrapperClassName = [
       "search-wrapper",
-      this.props.hide && "search-hidden",
+      this.props.disable && "search-disabled",
       this.props.fakeFocus && "fake-focus",
     ]
       .filter(v => v)
