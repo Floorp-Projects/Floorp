@@ -4899,12 +4899,10 @@ void nsTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   bool isTextTransparent =
       NS_GET_A(st->mWebkitTextFillColor.CalcColor(this)) == 0 &&
       NS_GET_A(st->mWebkitTextStrokeColor.CalcColor(this)) == 0;
-  Maybe<bool> isSelected;
   if ((HasAnyStateBits(TEXT_NO_RENDERED_GLYPHS) ||
        (isTextTransparent && !StyleText()->HasTextShadow())) &&
       aBuilder->IsForPainting() && !SVGUtils::IsInSVGTextSubtree(this)) {
-    isSelected.emplace(IsSelected());
-    if (!isSelected.value()) {
+    if (!IsSelected()) {
       TextDecorations textDecs;
       GetTextDecorations(PresContext(), eResolvedColors, textDecs);
       if (!textDecs.HasDecorationLines()) {
@@ -4916,7 +4914,7 @@ void nsTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  aLists.Content()->AppendNewToTop<nsDisplayText>(aBuilder, this, isSelected);
+  aLists.Content()->AppendNewToTop<nsDisplayText>(aBuilder, this);
 }
 
 UniquePtr<SelectionDetails> nsTextFrame::GetSelectionDetails() {
@@ -7430,7 +7428,14 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
 bool nsTextFrame::IsFrameSelected() const {
   NS_ASSERTION(!GetContent() || GetContent()->IsMaybeSelected(),
                "use the public IsSelected() instead");
-  return GetContent()->IsSelected(GetContentOffset(), GetContentEnd());
+  if (mIsSelected == nsTextFrame::SelectionState::Unknown) {
+    const bool isSelected =
+        GetContent()->IsSelected(GetContentOffset(), GetContentEnd());
+    mIsSelected = isSelected ? nsTextFrame::SelectionState::Selected
+                             : nsTextFrame::SelectionState::NotSelected;
+  }
+
+  return mIsSelected == nsTextFrame::SelectionState::Selected;
 }
 
 void nsTextFrame::SelectionStateChanged(uint32_t aStart, uint32_t aEnd,
@@ -7439,6 +7444,8 @@ void nsTextFrame::SelectionStateChanged(uint32_t aStart, uint32_t aEnd,
   NS_ASSERTION(!GetPrevContinuation(),
                "Should only be called for primary frame");
   DEBUG_VERIFY_NOT_DIRTY(mState);
+
+  mIsSelected = nsTextFrame::SelectionState::Unknown;
 
   // Selection is collapsed, which can't affect text frame rendering
   if (aStart == aEnd) return;
@@ -9049,6 +9056,7 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
                              DrawTarget* aDrawTarget, ReflowOutput& aMetrics,
                              nsReflowStatus& aStatus) {
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
+  mIsSelected = nsTextFrame::SelectionState::Unknown;
 
 #ifdef NOISY_REFLOW
   ListTag(stdout);

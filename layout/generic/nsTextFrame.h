@@ -202,7 +202,8 @@ class nsTextFrame : public nsIFrame {
         mNextContinuation(nullptr),
         mContentOffset(0),
         mContentLengthHint(0),
-        mAscent(0) {}
+        mAscent(0),
+        mIsSelected(SelectionState::Unknown) {}
 
   NS_DECL_FRAMEARENA_HELPERS(nsTextFrame)
 
@@ -801,6 +802,14 @@ class nsTextFrame : public nsIFrame {
   // start.
   int32_t mContentLengthHint;
   nscoord mAscent;
+
+  // Cached selection state.
+  enum class SelectionState : uint8_t {
+    Unknown,
+    Selected,
+    NotSelected,
+  };
+  mutable SelectionState mIsSelected;
 
   /**
    * Return true if the frame is part of a Selection.
