@@ -1197,7 +1197,7 @@ bool js::CheckStringIsIndex(const CharT* s, size_t length, uint32_t* indexp) {
   uint32_t c = 0;
 
   if (index != 0) {
-    /* Consume remaining characters only if the first character isn't '0'. */
+    // Consume remaining characters only if the first character isn't '0'.
     while (cp < end && IsAsciiDigit(*cp)) {
       oldIndex = index;
       c = AsciiDigitToNumber(*cp);
@@ -1206,17 +1206,17 @@ bool js::CheckStringIsIndex(const CharT* s, size_t length, uint32_t* indexp) {
     }
   }
 
-  /* It's not an integer index if there are characters after the number. */
+  // It's not an integer index if there are characters after the number.
   if (cp != end) {
     return false;
   }
 
-  /*
-   * Look out for "4294967296" and larger-number strings that fit in
-   * UINT32_CHAR_BUFFER_LENGTH: only unsigned 32-bit integers shall pass.
-   */
-  if (oldIndex < UINT32_MAX / 10 ||
-      (oldIndex == UINT32_MAX / 10 && c <= (UINT32_MAX % 10))) {
+  // Look out for "4294967295" and larger-number strings that fit in
+  // UINT32_CHAR_BUFFER_LENGTH: only unsigned 32-bit integers less than or equal
+  // to MAX_ARRAY_INDEX shall pass.
+  if (oldIndex < MAX_ARRAY_INDEX / 10 ||
+      (oldIndex == MAX_ARRAY_INDEX / 10 && c <= (MAX_ARRAY_INDEX % 10))) {
+    MOZ_ASSERT(index <= MAX_ARRAY_INDEX);
     *indexp = index;
     return true;
   }
@@ -1251,6 +1251,7 @@ static uint32_t AtomCharsToIndex(const CharT* s, size_t length) {
     cp++;
   }
 
+  MOZ_ASSERT(index <= MAX_ARRAY_INDEX);
   return index;
 }
 
