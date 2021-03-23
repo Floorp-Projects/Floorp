@@ -41,7 +41,8 @@
 #include "mozilla/mozalloc.h"              // for operator new, etc
 #include "nsIXULRuntime.h"                 // for BrowserTabsRemoteAutostart
 #include "nsTArray.h"                      // for AutoTArray, nsTArray, etc
-#include "nsXULAppAPI.h"                   // for XRE_GetProcessType, etc
+#include "nsTHashSet.h"
+#include "nsXULAppAPI.h"  // for XRE_GetProcessType, etc
 
 namespace mozilla {
 namespace ipc {
@@ -58,7 +59,7 @@ class ClientTiledLayerBuffer;
 
 typedef nsTArray<SurfaceDescriptor> BufferArray;
 typedef nsTArray<Edit> EditVector;
-typedef nsTHashtable<nsPtrHashKey<ShadowableLayer>> ShadowableLayerSet;
+typedef nsTHashSet<ShadowableLayer*> ShadowableLayerSet;
 typedef nsTArray<OpDestroy> OpDestroyVector;
 
 class Transaction {
@@ -95,11 +96,11 @@ class Transaction {
   }
   void AddMutant(ShadowableLayer* aLayer) {
     MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
-    mMutants.PutEntry(aLayer);
+    mMutants.Insert(aLayer);
   }
   void AddSimpleMutant(ShadowableLayer* aLayer) {
     MOZ_ASSERT(!Finished(), "forgot BeginTransaction?");
-    mSimpleMutants.PutEntry(aLayer);
+    mSimpleMutants.Insert(aLayer);
   }
   void End() {
     mCset.Clear();
@@ -610,9 +611,7 @@ bool ShadowLayerForwarder::EndTransaction(
   MOZ_LAYERS_LOG(("[LayersForwarder] building transaction..."));
 
   nsTArray<OpSetSimpleLayerAttributes> setSimpleAttrs;
-  for (ShadowableLayerSet::Iterator it(&mTxn->mSimpleMutants); !it.Done();
-       it.Next()) {
-    ShadowableLayer* shadow = it.Get()->GetKey();
+  for (ShadowableLayer* shadow : mTxn->mSimpleMutants) {
     if (!shadow->HasShadow()) {
       continue;
     }
@@ -629,10 +628,7 @@ bool ShadowLayerForwarder::EndTransaction(
   // attribute changes before new pixels arrive, which can be useful
   // for setting up back/front buffers.
   RenderTraceScope rendertrace2("Foward Transaction", "000092");
-  for (ShadowableLayerSet::Iterator it(&mTxn->mMutants); !it.Done();
-       it.Next()) {
-    ShadowableLayer* shadow = it.Get()->GetKey();
-
+  for (ShadowableLayer* shadow : mTxn->mMutants) {
     if (!shadow->HasShadow()) {
       continue;
     }

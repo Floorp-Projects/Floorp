@@ -34,6 +34,7 @@
 #include "gfxEnv.h"
 #include "nsDisplayListInvalidation.h"
 #include "nsLayoutUtils.h"
+#include "nsTHashSet.h"
 #include "WebRenderCanvasRenderer.h"
 #include "LayerTreeInvalidation.h"
 
@@ -290,7 +291,7 @@ struct DIGroup {
   //    We'll just need to be careful when iterating.
   //    The advantage of a Vec is that everything stays compact
   //    and we don't need to heap allocate the BlobItemData's
-  nsTHashtable<nsPtrHashKey<BlobItemData>> mDisplayItems;
+  nsTHashSet<BlobItemData*> mDisplayItems;
 
   IntRect mInvalidRect;
   nsRect mGroupBounds;
@@ -337,12 +338,11 @@ struct DIGroup {
 
   void ClearItems() {
     GP("items: %d\n", mDisplayItems.Count());
-    for (auto iter = mDisplayItems.Iter(); !iter.Done(); iter.Next()) {
-      BlobItemData* data = iter.Get()->GetKey();
+    for (BlobItemData* data : mDisplayItems) {
       GP("Deleting %p-%d\n", data->mFrame, data->mDisplayItemKey);
-      iter.Remove();
       delete data;
     }
+    mDisplayItems.Clear();
   }
 
   void ClearImageKey(RenderRootStateManager* aManager, bool aForce = false) {
@@ -592,18 +592,18 @@ struct DIGroup {
 
     // Invalidate any unused items
     GP("mDisplayItems\n");
-    for (auto iter = mDisplayItems.Iter(); !iter.Done(); iter.Next()) {
-      BlobItemData* data = iter.Get()->GetKey();
+    mDisplayItems.RemoveIf([&](BlobItemData* data) {
       GP("  : %p-%d\n", data->mFrame, data->mDisplayItemKey);
       if (!data->mUsed) {
         GP("Invalidate unused: %p-%d\n", data->mFrame, data->mDisplayItemKey);
         InvalidateRect(data->mRect);
-        iter.Remove();
         delete data;
-      } else {
-        data->mUsed = false;
+        return true;
       }
-    }
+
+      data->mUsed = false;
+      return false;
+    });
 
     IntSize dtSize = mVisibleRect.Size().ToUnknownSize();
     // The actual display item's size shouldn't have the scale factored in
@@ -868,10 +868,8 @@ struct DIGroup {
 
   ~DIGroup() {
     GP("Group destruct\n");
-    for (auto iter = mDisplayItems.Iter(); !iter.Done(); iter.Next()) {
-      BlobItemData* data = iter.Get()->GetKey();
+    for (BlobItemData* data : mDisplayItems) {
       GP("Deleting %p-%d\n", data->mFrame, data->mDisplayItemKey);
-      iter.Remove();
       delete data;
     }
   }
@@ -896,7 +894,7 @@ static BlobItemData* GetBlobItemDataForGroup(nsDisplayItem* aItem,
   if (!data) {
     GP("Allocating blob data\n");
     data = new BlobItemData(aGroup, aItem);
-    aGroup->mDisplayItems.PutEntry(data);
+    aGroup->mDisplayItems.Insert(data);
   }
   data->mUsed = true;
   return data;
@@ -1543,15 +1541,13 @@ void WebRenderCommandBuilder::Destroy() {
 
 void WebRenderCommandBuilder::EmptyTransaction() {
   // We need to update canvases that might have changed.
-  for (auto iter = mLastCanvasDatas.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<WebRenderCanvasData> canvasData = iter.Get()->GetKey();
+  for (RefPtr<WebRenderCanvasData> canvasData : mLastCanvasDatas) {
     WebRenderCanvasRendererAsync* canvas = canvasData->GetCanvasRenderer();
     if (canvas) {
       canvas->UpdateCompositableClientForEmptyTransaction();
     }
   }
-  for (auto iter = mLastLocalCanvasDatas.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<WebRenderLocalCanvasData> canvasData = iter.Get()->GetKey();
+  for (RefPtr<WebRenderLocalCanvasData> canvasData : mLastLocalCanvasDatas) {
     canvasData->RefreshExternalImage();
     canvasData->RequestFrameReadback();
   }
@@ -2647,8 +2643,7 @@ bool WebRenderCommandBuilder::PushItemAsImage(
 }
 
 void WebRenderCommandBuilder::RemoveUnusedAndResetWebRenderUserData() {
-  for (auto iter = mWebRenderUserDatas.Iter(); !iter.Done(); iter.Next()) {
-    WebRenderUserData* data = iter.Get()->GetKey();
+  mWebRenderUserDatas.RemoveIf([&](WebRenderUserData* data) {
     if (!data->IsUsed()) {
       nsIFrame* frame = data->GetFrame();
 
@@ -2669,10 +2664,10 @@ void WebRenderCommandBuilder::RemoveUnusedAndResetWebRenderUserData() {
 
       switch (data->GetType()) {
         case WebRenderUserData::UserDataType::eCanvas:
-          mLastCanvasDatas.RemoveEntry(data->AsCanvasData());
+          mLastCanvasDatas.Remove(data->AsCanvasData());
           break;
         case WebRenderUserData::UserDataType::eLocalCanvas:
-          mLastLocalCanvasDatas.RemoveEntry(data->AsLocalCanvasData());
+          mLastLocalCanvasDatas.Remove(data->AsLocalCanvasData());
           break;
         case WebRenderUserData::UserDataType::eAnimation:
           EffectCompositor::ClearIsRunningOnCompositor(
@@ -2682,12 +2677,12 @@ void WebRenderCommandBuilder::RemoveUnusedAndResetWebRenderUserData() {
           break;
       }
 
-      iter.Remove();
-      continue;
+      return true;
     }
 
     data->SetUsed(false);
-  }
+    return false;
+  });
 }
 
 void WebRenderCommandBuilder::ClearCachedResources() {

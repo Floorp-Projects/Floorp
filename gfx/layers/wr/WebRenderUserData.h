@@ -14,6 +14,7 @@
 #include "mozilla/UniquePtr.h"
 #include "nsIFrame.h"
 #include "nsRefPtrHashtable.h"
+#include "nsTHashSet.h"
 #include "ImageTypes.h"
 
 class nsDisplayItemGeometry;
@@ -61,8 +62,7 @@ class WebRenderBackgroundData {
 /// to an nsFrame.
 class WebRenderUserData {
  public:
-  typedef nsTHashtable<nsRefPtrHashKey<WebRenderUserData>>
-      WebRenderUserDataRefTable;
+  typedef nsTHashSet<RefPtr<WebRenderUserData>> WebRenderUserDataRefTable;
 
   static bool SupportsAsyncUpdate(nsIFrame* aFrame);
 
