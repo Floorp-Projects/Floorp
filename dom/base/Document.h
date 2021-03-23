@@ -195,7 +195,6 @@ class ErrorResult;
 class EventListenerManager;
 class FullscreenExit;
 class FullscreenRequest;
-class HTMLEditor;
 struct LangGroupFontPrefs;
 class PendingAnimationTracker;
 class PermissionDelegateHandler;
@@ -206,7 +205,6 @@ class SMILAnimationController;
 enum class StyleCursorKind : uint8_t;
 enum class StylePrefersColorScheme : uint8_t;
 enum class StyleRuleChangeKind : uint32_t;
-class TextEditor;
 template <typename>
 class OwningNonNull;
 struct URLExtraData;
@@ -1577,6 +1575,11 @@ class Document : public nsINode,
    * Do the tree-disconnection that ResetToURI and document.open need to do.
    */
   void DisconnectNodeTree();
+
+  /**
+   * Like IsEditingOn(), but will flush as needed first.
+   */
+  bool IsEditingOnAfterFlush();
 
   /**
    * MaybeDispatchCheckKeyPressEventModelEvent() dispatches
@@ -3365,19 +3368,19 @@ class Document : public nsINode,
   bool ExecCommand(const nsAString& aHTMLCommandName, bool aShowUI,
                    const nsAString& aValue, nsIPrincipal& aSubjectPrincipal,
                    mozilla::ErrorResult& aRv);
-  MOZ_CAN_RUN_SCRIPT bool QueryCommandEnabled(const nsAString& aHTMLCommandName,
-                                              nsIPrincipal& aSubjectPrincipal,
-                                              mozilla::ErrorResult& aRv);
-  MOZ_CAN_RUN_SCRIPT bool QueryCommandIndeterm(
-      const nsAString& aHTMLCommandName, mozilla::ErrorResult& aRv);
-  MOZ_CAN_RUN_SCRIPT bool QueryCommandState(const nsAString& aHTMLCommandName,
-                                            mozilla::ErrorResult& aRv);
-  MOZ_CAN_RUN_SCRIPT bool QueryCommandSupported(
-      const nsAString& aHTMLCommandName, mozilla::dom::CallerType aCallerType,
-      mozilla::ErrorResult& aRv);
-  MOZ_CAN_RUN_SCRIPT void QueryCommandValue(const nsAString& aHTMLCommandName,
-                                            nsAString& aValue,
-                                            mozilla::ErrorResult& aRv);
+  bool QueryCommandEnabled(const nsAString& aHTMLCommandName,
+                           nsIPrincipal& aSubjectPrincipal,
+                           mozilla::ErrorResult& aRv);
+  bool QueryCommandIndeterm(const nsAString& aHTMLCommandName,
+                            mozilla::ErrorResult& aRv);
+  bool QueryCommandState(const nsAString& aHTMLCommandName,
+                         mozilla::ErrorResult& aRv);
+  bool QueryCommandSupported(const nsAString& aHTMLCommandName,
+                             mozilla::dom::CallerType aCallerType,
+                             mozilla::ErrorResult& aRv);
+  MOZ_CAN_RUN_SCRIPT
+  void QueryCommandValue(const nsAString& aHTMLCommandName, nsAString& aValue,
+                         mozilla::ErrorResult& aRv);
   nsIHTMLCollection* Applets();
   nsIHTMLCollection* Anchors();
   TimeStamp LastFocusTime() const;
@@ -4144,79 +4147,30 @@ class Document : public nsINode,
     // Its callers don't need to check this.
     ExecCommandParam mExecCommandParam;  // uint8_t
     GetEditorCommandFunc* mGetEditorCommandFunc;
-    enum class CommandOnTextEditor : uint8_t {
-      Disabled,
-      Enabled,
-      FallThrough,  // Not disabled, but handled by HTMLEditor if there is one
-    };
-    CommandOnTextEditor mCommandOnTextEditor;
 
     InternalCommandData()
         : mXULCommandName(nullptr),
           mCommand(mozilla::Command::DoNothing),
           mExecCommandParam(ExecCommandParam::Ignore),
-          mGetEditorCommandFunc(nullptr),
-          mCommandOnTextEditor(CommandOnTextEditor::Disabled) {}
+          mGetEditorCommandFunc(nullptr) {}
     InternalCommandData(const char* aXULCommandName, mozilla::Command aCommand,
                         ExecCommandParam aExecCommandParam,
-                        GetEditorCommandFunc aGetEditorCommandFunc,
-                        CommandOnTextEditor aCommandOnTextEditor)
+                        GetEditorCommandFunc aGetEditorCommandFunc)
         : mXULCommandName(aXULCommandName),
           mCommand(aCommand),
           mExecCommandParam(aExecCommandParam),
-          mGetEditorCommandFunc(aGetEditorCommandFunc),
-          mCommandOnTextEditor(aCommandOnTextEditor) {}
+          mGetEditorCommandFunc(aGetEditorCommandFunc) {}
 
     bool IsAvailableOnlyWhenEditable() const {
       return mCommand != mozilla::Command::Cut &&
              mCommand != mozilla::Command::Copy &&
-             mCommand != mozilla::Command::Paste &&
-             mCommand != mozilla::Command::SetDocumentReadOnly &&
-             mCommand != mozilla::Command::GetHTML;
+             mCommand != mozilla::Command::Paste;
     }
     bool IsCutOrCopyCommand() const {
       return mCommand == mozilla::Command::Cut ||
              mCommand == mozilla::Command::Copy;
     }
     bool IsPasteCommand() const { return mCommand == mozilla::Command::Paste; }
-  };
-
-  /**
-   * AutoEditorCommandTarget considers which editor or global command manager
-   * handles given command.
-   */
-  class MOZ_RAII AutoEditorCommandTarget {
-   public:
-    MOZ_CAN_RUN_SCRIPT AutoEditorCommandTarget(
-        nsPresContext* aPresContext, const InternalCommandData& aCommandData);
-    AutoEditorCommandTarget() = delete;
-    explicit AutoEditorCommandTarget(const AutoEditorCommandTarget& aOther) =
-        delete;
-
-    bool DoNothing() const { return mDoNothing; }
-    MOZ_CAN_RUN_SCRIPT bool IsEditable(Document* aDocument) const;
-    bool IsEditor() const {
-      MOZ_ASSERT_IF(mEditorCommand, mActiveEditor || mHTMLEditor);
-      return !!mEditorCommand;
-    }
-
-    MOZ_CAN_RUN_SCRIPT bool IsCommandEnabled() const;
-    MOZ_CAN_RUN_SCRIPT nsresult DoCommand(nsIPrincipal* aPrincipal) const;
-    template <typename ParamType>
-    MOZ_CAN_RUN_SCRIPT nsresult DoCommandParam(const ParamType& aParam,
-                                               nsIPrincipal* aPrincipal) const;
-    MOZ_CAN_RUN_SCRIPT nsresult
-    GetCommandStateParams(nsCommandParams& aParams) const;
-
-   private:
-    // The returned editor's life is guaranteed while this instance is alive.
-    TextEditor* GetTargetEditor() const;
-
-    RefPtr<TextEditor> mActiveEditor;
-    RefPtr<HTMLEditor> mHTMLEditor;
-    RefPtr<EditorCommand> mEditorCommand;
-    const InternalCommandData& mCommandData;
-    bool mDoNothing = false;
   };
 
   /**
