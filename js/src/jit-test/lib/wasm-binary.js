@@ -55,6 +55,7 @@ const BlockCode        = 0x02;
 const TryCode          = 0x06;
 const CatchCode        = 0x07;
 const ThrowCode        = 0x08;
+const RethrowCode      = 0x09;
 const EndCode          = 0x0b;
 const ReturnCode       = 0x0f;
 const CallCode         = 0x10;
@@ -150,7 +151,7 @@ const MozPrefix = 0xff;
 
 const definedOpcodes =
     [0x00, 0x01, 0x02, 0x03, 0x04, 0x05,
-     ...(wasmExceptionsEnabled() ? [0x06, 0x07, 0x08] : []),
+     ...(wasmExceptionsEnabled() ? [0x06, 0x07, 0x08, 0x09] : []),
      0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
      0x10, 0x11,
      ...(wasmExceptionsEnabled() ? [0x19] : []),
