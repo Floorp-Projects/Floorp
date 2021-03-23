@@ -26,6 +26,10 @@ XPIDL_SOURCES += [
     "SessionStoreFunctions.idl",
 ]
 
+IPDL_SOURCES += [
+    "SessionStoreTypes.ipdlh",
+]
+
 include("/ipc/chromium/chromium-config.mozbuild")
 
 FINAL_LIBRARY = "xul"
