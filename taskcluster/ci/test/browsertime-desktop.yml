@@ -41,10 +41,47 @@ job-defaults:
     python-3: true
 
 browsertime-tp6:
-    description: "Raptor (browsertime) tp6 page-load tests"
-    raptor-test: tp6
+    <<: &tp6-defaults
+        apps: [firefox, chrome, chromium]
+        description: Raptor (browsertime) tp6 page-load tests
+        fission-tier: 2
+        fission-run-on-projects:
+            by-test-platform:
+                windows7.*: []
+                default: [mozilla-central]
+        limit-platforms:
+            by-app:
+                chrome:
+                    - .*shippable(?!-qr).*
+                chromium:
+                    - .*shippable(?!-qr).*
+                default: []
+        max-run-time: 4000
+        mozharness:
+            extra-options:
+                by-test-platform:
+                    windows10.*shippable.*-qr.*:
+                        - --chimera
+                        - --browsertime
+                        - --no-conditioned-profile
+                        - --browsertime-no-ffwindowrecorder
+                    default:
+                        - --chimera
+                        - --browsertime
+                        - --no-conditioned-profile
+        raptor-test: tp6
+        run-on-projects:
+            by-app:
+                firefox:
+                    by-test-platform:
+                        linux.*shippable.*: [trunk, mozilla-beta]
+                        macos.*shippable.*: [trunk, mozilla-beta]
+                        windows10.*shippable.*: [trunk, mozilla-beta]
+                        default: []
+                default: []
+        run-visual-metrics: true
+        treeherder-symbol: Btime(tp6)
     raptor-subtests:
-        - amazon
         - apple
         - [bing-search, bing]
         - ebay
@@ -52,12 +89,9 @@ browsertime-tp6:
         - [facebook-redesign, fbr]
         - fandom
         - [google-docs, gdocs]
-        - [google-mail, gmail]
         - [google-search, gsearch]
         - [google-sheets, gsheets]
-        - [google-slides, gslides]
         - imdb
-        - imgur
         - instagram
         - linkedin
         - microsoft
@@ -67,9 +101,6 @@ browsertime-tp6:
         - paypal
         - pinterest
         - reddit
-        - tumblr
-        - twitch
-        - twitter
         - wikipedia
         - yahoo-mail
         - yahoo-news
@@ -77,63 +108,32 @@ browsertime-tp6:
         - youtube
     tier:
         by-app:
-            firefox:
-                by-subtest:
-                    amazon: 1
-                    google-mail: 1
-                    google-slides: 1
-                    imgur: 1
-                    tumblr: 1
-                    twitch: 1
-                    twitter: 1
-                    default: 2
+            firefox: 2
             default: 3
-    apps: ['firefox', 'chrome', 'chromium']
-    fission-tier: 2
-    fission-run-on-projects:
-        by-test-platform:
-            windows7.*: []
-            default: [mozilla-central]
+
+browsertime-tp6-essential:
+    <<: *tp6-defaults
+    raptor-subtests:
+        - amazon
+        - [google-mail, gmail]
+        - [google-slides, gslides]
+        - imgur
+        - tumblr
+        - twitch
+        - twitter
     run-on-projects:
         by-app:
             firefox:
                 by-test-platform:
-                    (linux|windows|macos)(?!.*shippable).*: []
-                    linux.*shippable.*: ["trunk", "mozilla-beta"]
-                    macos.*shippable.*: ["trunk", "mozilla-beta"]
-                    windows10.*shippable.*: ["trunk", "mozilla-beta"]
+                    linux.*shippable.*: [trunk, mozilla-beta]
+                    macos.*shippable-qr.*: [trunk, mozilla-beta]
+                    windows10.*shippable.*: [trunk, mozilla-beta]
                     default: []
             default: []
-    limit-platforms:
+    tier:
         by-app:
-            chrome:
-                - linux.*shippable[^-qr].*
-                - macosx1015-64-shippable-qr/opt
-                - windows10.*shippable[^-qr].*
-            chromium:
-                # Run on non-QR shippable, but test-platforms.yml doesn't have
-                # any more non-QR macosx shippable things. So for macosx we want
-                # to run it on shippable-qr, otherwise there's nothing running
-                # this on macosx at all.
-                - .*shippable[^-qr].*
-                - macosx1015-64-shippable-qr/opt
-                - windows10.*shippable[^-qr].*
-            default: []
-    treeherder-symbol: Btime(tp6)
-    max-run-time: 4000
-    run-visual-metrics: true
-    mozharness:
-        extra-options:
-            by-test-platform:
-                windows10.*shippable.*-qr.*:
-                    - --chimera
-                    - --browsertime
-                    - --no-conditioned-profile
-                    - --browsertime-no-ffwindowrecorder
-                default:
-                    - --chimera
-                    - --browsertime
-                    - --no-conditioned-profile
+            firefox: 1
+            default: 3
 
 browsertime-benchmark:
     description: "Raptor (browsertime) Benchmark tests "
@@ -173,8 +173,15 @@ browsertime-benchmark:
     treeherder-symbol: Btime()
 
 browsertime-tp6-live:
-    description: "Raptor (browsertime) tp6 on live-sites"
-    raptor-test: tp6
+    <<: *tp6-defaults
+    description: Raptor (browsertime) tp6 on live-sites
+    fission-run-on-projects: []
+    fission-tier: 3
+    mozharness:
+        extra-options:
+            - --browser-cycles=15
+            - --chimera
+            - --live-sites
     raptor-subtests:
         - amazon
         - apple
@@ -207,44 +214,41 @@ browsertime-tp6-live:
         - yahoo-news
         - yandex
         - youtube
-    apps: [firefox, chrome, chromium]
-    tier: 3
     run-on-projects: []
-    run-visual-metrics: true
+    tier: 3
     treeherder-symbol: Btime-live(tp6)
-    mozharness:
-        extra-options:
-            - --browser-cycles=15
-            - --chimera
-            - --live-sites
 
 browsertime-tp6-live-sheriffed:
-    description: "Raptor (browsertime) tp6 on live-sites"
-    raptor-test: tp6
+    <<: *tp6-defaults
+    apps: [firefox]
+    description: Raptor (browsertime) tp6 on live-sites
+    fission-run-on-projects: []
+    mozharness:
+        extra-options:
+            - --chimera
+            - --live-sites
     raptor-subtests:
         - [cnn-ampstories, cnn-amp]
-    apps: [firefox]
-    tier: 2
     run-on-projects:
         by-test-platform:
             (linux|windows|macos)(?!.*shippable).*: []
             windows7.*shippable.*: []
             default: [autoland]
-    run-visual-metrics: true
+    tier: 2
     treeherder-symbol: Btime-live(tp6)
-    mozharness:
-        extra-options:
-            - --chimera
-            - --live-sites
 
 browsertime-tp6-profiling:
-    description: "Raptor (browsertime) tp6 page-load tests with Gecko Profiling"
-    raptor-test: tp6
-    raptor-subtests: ['amazon']
-    apps: ['firefox']
-    treeherder-symbol: Btime-Prof(tp6)
-    max-run-time: 4000
+    <<: *tp6-defaults
+    apps: [firefox]
+    description: Raptor (browsertime) tp6 page-load tests with Gecko Profiling
+    fission-run-on-projects: []
     mozharness:
         extra-options:
             - --chimera
             - --gecko-profile
+    raptor-subtests: [amazon]
+    run-on-projects:
+        by-test-platform:
+            linux.*shippable[^-qr].*: ['mozilla-central']
+            default: []
+    treeherder-symbol: Btime-Prof(tp6)
