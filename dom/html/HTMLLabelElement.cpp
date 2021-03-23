@@ -191,15 +191,9 @@ bool HTMLLabelElement::PerformAccesskey(bool aKeyCausesActivation,
     }
 
     // Click on it if the users prefs indicate to do so.
-    WidgetMouseEvent event(aIsTrustedEvent, eMouseClick, nullptr,
-                           WidgetMouseEvent::eReal);
-    event.mInputSource = MouseEvent_Binding::MOZ_SOURCE_KEYBOARD;
-
     AutoPopupStatePusher popupStatePusher(
         aIsTrustedEvent ? PopupBlocker::openAllowed : PopupBlocker::openAbused);
-
-    EventDispatcher::Dispatch(static_cast<nsIContent*>(this), presContext,
-                              &event);
+    DispatchSimulatedClick(this, aIsTrustedEvent, presContext);
   }
 
   return aKeyCausesActivation;
