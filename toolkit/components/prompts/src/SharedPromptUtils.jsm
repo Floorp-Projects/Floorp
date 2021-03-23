@@ -5,9 +5,6 @@
 var EXPORTED_SYMBOLS = ["PromptUtils", "EnableDelayHelper"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 
 var PromptUtils = {
   // Fire a dialog open/close event. Used by tabbrowser to focus the
@@ -52,13 +49,6 @@ var PromptUtils = {
     }
   },
 };
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  PromptUtils,
-  "protonModals",
-  "browser.proton.modals.enabled",
-  false
-);
 
 /**
  * This helper handles the enabling/disabling of dialogs that might
