@@ -60,7 +60,7 @@ nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache)
       mColorTextSelectBackgroundDisabled(0),
       mColorHighlight(0),
       mColorTextSelectForeground(0),
-      mColorMenuHoverText(0),
+      mColorAlternateSelectedControlText(0),
       mColorButtonHoverText(0),
       mColorText(0),
       mColorWindowText(0),
@@ -71,7 +71,6 @@ nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache)
       mColorInactiveCaption(0),
       mColorScrollbar(0),
       mColorThreeDHighlight(0),
-      mColorMenu(0),
       mColorWindowFrame(0),
       mColorFieldText(0),
       mColorDialog(0),
@@ -221,7 +220,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
     case ColorID::Highlighttext:  // CSS2 color
     case ColorID::MozAccentColorForeground:
     case ColorID::MozMenuhovertext:
-      aColor = mColorMenuHoverText;
+      aColor = mColorAlternateSelectedControlText;
       break;
     case ColorID::IMESelectedRawTextBackground:
     case ColorID::IMESelectedConvertedTextBackground:
@@ -328,7 +327,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       aColor = NS_RGB(0xDA, 0xDA, 0xDA);
       break;
     case ColorID::Menu:
-      aColor = mColorMenu;
+      aColor = mColorAlternateSelectedControlText;
       break;
     case ColorID::Windowframe:
       aColor = mColorWindowFrame;
@@ -705,7 +704,6 @@ mozilla::widget::LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
       ColorID::Inactivecaption,
       ColorID::Scrollbar,
       ColorID::Threedhighlight,
-      ColorID::Menu,
       ColorID::Windowframe,
       ColorID::Fieldtext,
       ColorID::MozDialog,
@@ -775,7 +773,7 @@ void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
         case ColorID::Highlight:
           return mColorHighlight;
         case ColorID::Highlighttext:
-          return mColorMenuHoverText;
+          return mColorAlternateSelectedControlText;
         case ColorID::Menutext:
           return mColorText;
         case ColorID::TextSelectBackground:
@@ -802,8 +800,6 @@ void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
           return mColorScrollbar;
         case ColorID::Threedhighlight:
           return mColorThreeDHighlight;
-        case ColorID::Menu:
-          return mColorMenu;
         case ColorID::Windowframe:
           return mColorWindowFrame;
         case ColorID::Fieldtext:
@@ -889,7 +885,8 @@ void nsLookAndFeel::EnsureInit() {
     mColorTextSelectForeground = NS_DONT_CHANGE_COLOR;
   }
 
-  mColorMenuHoverText = GetColorFromNSColor([NSColor alternateSelectedControlTextColor]);
+  mColorAlternateSelectedControlText =
+      GetColorFromNSColor([NSColor alternateSelectedControlTextColor]);
 
   mColorButtonHoverText = GetColorFromNSColor([NSColor controlTextColor]);
   mColorText = GetColorFromNSColor([NSColor textColor]);
@@ -902,7 +899,6 @@ void nsLookAndFeel::EnsureInit() {
   mColorInactiveCaption = GetColorFromNSColor([NSColor controlBackgroundColor]);
   mColorScrollbar = GetColorFromNSColor([NSColor scrollBarColor]);
   mColorThreeDHighlight = GetColorFromNSColor([NSColor highlightColor]);
-  mColorMenu = GetColorFromNSColor([NSColor alternateSelectedControlTextColor]);
   mColorWindowFrame = GetColorFromNSColor([NSColor gridColor]);
   mColorFieldText = GetColorFromNSColor([NSColor controlTextColor]);
   mColorDialog = GetColorFromNSColor([NSColor controlHighlightColor]);
