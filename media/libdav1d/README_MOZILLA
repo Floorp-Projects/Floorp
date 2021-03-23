@@ -29,6 +29,9 @@ The rough steps are:
   In the case of the asm dir, these may cause build failures on particular platforms which
   can be resolved by moving those out of autovendored_sources.mozbuild and into the regular
   moz.build which has a condition on CONFIG['CPU_ARCH'].
+- Files ending in _tmpl.c may be automatically added to SOURCES, resulting in build failures.
+  To fix this, the file must be moved to the appropriate bitdepth_basenames list where
+  generate_source.py will generate the templates into buildable source files.
 - Clone the tag from the dav1d repo and build a stand-alone libdav1d following the steps here:
   https://code.videolan.org/videolan/dav1d#compile
 - Copy vcs_version.h from the local build/include/vcs_version.h

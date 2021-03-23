@@ -149,6 +149,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
     relative_path = '../../../third_party/dav1d/src/arm/'
     bitdepth_basenames = [
         'cdef_init_tmpl.c',
+        'film_grain_init_tmpl.c',
         'ipred_init_tmpl.c',
         'itx_init_tmpl.c',
         'loopfilter_init_tmpl.c',
@@ -176,6 +177,7 @@ elif CONFIG['CPU_ARCH'] == 'arm' or CONFIG['CPU_ARCH'] == 'aarch64':
             '../../../third_party/dav1d/src/arm/64/cdef.S',
             '../../../third_party/dav1d/src/arm/64/cdef16.S',
             '../../../third_party/dav1d/src/arm/64/cdef_tmpl.S',
+            '../../../third_party/dav1d/src/arm/64/film_grain.S',
             '../../../third_party/dav1d/src/arm/64/ipred.S',
             '../../../third_party/dav1d/src/arm/64/ipred16.S',
             # itx.S is used for both 8 and 16 bpc.
