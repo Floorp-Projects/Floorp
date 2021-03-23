@@ -37,6 +37,9 @@
 
     --error-text-color: #C50042;
 
+    --input-color: rgb(21,20,26);
+    --input-bgcolor: rgb(255,255,255);
+    --input-border-color: rgb(143,143,157);
     --input-error-border-color: #E22850;
   }
   } /** END Proton **/
