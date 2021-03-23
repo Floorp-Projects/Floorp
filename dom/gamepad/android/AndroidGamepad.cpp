@@ -109,9 +109,8 @@ void StopGamepadMonitoring() {
 
 void SetGamepadLightIndicatorColor(const Tainted<GamepadHandle>& aGamepadHandle,
                                    const Tainted<uint32_t>& aLightColorIndex,
-                                   const Tainted<uint8_t>& aRed,
-                                   const Tainted<uint8_t>& aGreen,
-                                   const Tainted<uint8_t>& aBlue) {
+                                   const uint8_t& aRed, const uint8_t& aGreen,
+                                   const uint8_t& aBlue) {
   NS_WARNING("Android doesn't support gamepad light indicator.");
 }
 
