@@ -303,36 +303,6 @@ void FontFace::SetDisplay(const nsACString& aValue, ErrorResult& aRv) {
   }
 }
 
-void FontFace::GetAscentOverride(nsACString& aResult) {
-  GetDesc(eCSSFontDesc_AscentOverride, aResult);
-}
-
-void FontFace::SetAscentOverride(const nsACString& aValue, ErrorResult& aRv) {
-  if (SetDescriptor(eCSSFontDesc_AscentOverride, aValue, aRv)) {
-    DescriptorUpdated();
-  }
-}
-
-void FontFace::GetDescentOverride(nsACString& aResult) {
-  GetDesc(eCSSFontDesc_DescentOverride, aResult);
-}
-
-void FontFace::SetDescentOverride(const nsACString& aValue, ErrorResult& aRv) {
-  if (SetDescriptor(eCSSFontDesc_DescentOverride, aValue, aRv)) {
-    DescriptorUpdated();
-  }
-}
-
-void FontFace::GetLineGapOverride(nsACString& aResult) {
-  GetDesc(eCSSFontDesc_LineGapOverride, aResult);
-}
-
-void FontFace::SetLineGapOverride(const nsACString& aValue, ErrorResult& aRv) {
-  if (SetDescriptor(eCSSFontDesc_LineGapOverride, aValue, aRv)) {
-    DescriptorUpdated();
-  }
-}
-
 void FontFace::DescriptorUpdated() {
   // If we haven't yet initialized mUserFontEntry, no need to do anything here;
   // we'll respect the updated descriptor when the time comes to create it.
@@ -561,12 +531,7 @@ bool FontFace::SetDescriptors(const nsACString& aFamily,
       (StaticPrefs::layout_css_font_variations_enabled() &&
        !setDesc(eCSSFontDesc_FontVariationSettings,
                 aDescriptors.mVariationSettings)) ||
-      !setDesc(eCSSFontDesc_Display, aDescriptors.mDisplay) ||
-      (StaticPrefs::layout_css_font_metrics_overrides_enabled() &&
-       (!setDesc(eCSSFontDesc_AscentOverride, aDescriptors.mAscentOverride) ||
-        !setDesc(eCSSFontDesc_DescentOverride, aDescriptors.mDescentOverride) ||
-        !setDesc(eCSSFontDesc_LineGapOverride,
-                 aDescriptors.mLineGapOverride)))) {
+      !setDesc(eCSSFontDesc_Display, aDescriptors.mDisplay)) {
     // XXX Handle font-variant once we support it (bug 1055385).
 
     // If any of the descriptors failed to parse, none of them should be set
@@ -668,30 +633,6 @@ Maybe<StyleFontLanguageOverride> FontFace::GetFontLanguageOverride() const {
     return Nothing();
   }
   return Some(langOverride);
-}
-
-Maybe<StylePercentage> FontFace::GetAscentOverride() const {
-  StylePercentage ascent{0};
-  if (!Servo_FontFaceRule_GetAscentOverride(GetData(), &ascent)) {
-    return Nothing();
-  }
-  return Some(ascent);
-}
-
-Maybe<StylePercentage> FontFace::GetDescentOverride() const {
-  StylePercentage descent{0};
-  if (!Servo_FontFaceRule_GetDescentOverride(GetData(), &descent)) {
-    return Nothing();
-  }
-  return Some(descent);
-}
-
-Maybe<StylePercentage> FontFace::GetLineGapOverride() const {
-  StylePercentage lineGap{0};
-  if (!Servo_FontFaceRule_GetLineGapOverride(GetData(), &lineGap)) {
-    return Nothing();
-  }
-  return Some(lineGap);
 }
 
 bool FontFace::HasLocalSrc() const {
