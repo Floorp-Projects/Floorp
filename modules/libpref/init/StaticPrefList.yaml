@@ -244,7 +244,7 @@
   # On Android, we want an opaque background to be visible under the page,
   # so layout should not force a default background.
 -   name: android.widget_paints_background
-    type: bool
+    type: RelaxedAtomicBool
     value: true
     mirror: always
 
