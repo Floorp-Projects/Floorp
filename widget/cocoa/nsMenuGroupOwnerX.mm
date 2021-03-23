@@ -26,8 +26,7 @@ using namespace mozilla;
 
 NS_IMPL_ISUPPORTS(nsMenuGroupOwnerX, nsIMutationObserver)
 
-nsMenuGroupOwnerX::nsMenuGroupOwnerX(nsMenuBarX* aMenuBarIfMenuBar)
-    : mCurrentCommandID(eCommand_ID_Last), mMenuBar(aMenuBarIfMenuBar) {
+nsMenuGroupOwnerX::nsMenuGroupOwnerX(nsMenuBarX* aMenuBarIfMenuBar) : mMenuBar(aMenuBarIfMenuBar) {
   mRepresentedObject = [[MOZMenuItemRepresentedObject alloc] initWithMenuGroupOwner:this];
 }
 
