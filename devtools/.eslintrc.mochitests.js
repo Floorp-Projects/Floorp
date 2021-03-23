@@ -11,8 +11,6 @@ module.exports = {
   rules: {
     // Allow non-camelcase so that run_test doesn't produce a warning.
     camelcase: "off",
-    // Tests don't have to cleanup observers
-    "mozilla/balanced-observers": 0,
     // Tests can always import anything.
     "mozilla/reject-some-requires": 0,
   },
