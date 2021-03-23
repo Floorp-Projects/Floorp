@@ -802,7 +802,7 @@ menupopup::part(drop-indicator) {
 .ac-dropmarker::part(icon) {
   list-style-image: url(chrome://global/skin/icons/arrow-dropdown-12.svg);
   -moz-context-properties: fill;
-  fill: -moz-DialogText;
+  fill: var(--input-color, -moz-DialogText);
 }
 
 .ac-has-end-icon {
@@ -872,7 +872,7 @@ popupnotificationcontent {
 }
 
 .popup-notification-checkbox {
-  margin-block: 8px;
+  margin-block: 8px 0;
 }
 
 .popup-notification-body-container {
@@ -898,10 +898,42 @@ popupnotificationcontent {
   list-style-image: url("chrome://browser/skin/notification-icons/microphone.svg");
 }
 
-.popup-notification-body description,
-.popup-notification-body label,
-.popup-notification-body checkbox {
+.popup-notification-body :is(description, label, checkbox, input) {
   margin-inline-start: 0;
+}
+
+.popup-notification-body html|input {
+  padding: 8px;
+  border-radius: 4px;
+  border: 0;
+  outline: 1px solid var(--input-border-color, ThreeDShadow);
+  background-color: var(--input-bgcolor, Field);
+  color: var(--input-color, FieldText);
+}
+
+.popup-notification-body html|input:focus-visible {
+  outline: 2px solid var(--focus-outline-color);
+}
+
+/**
+ * There's already a margin-block-start of 8px on popupnotificationcontent,
+ * so the first label only needs 8px of margin-block-start to match the
+ * spec.
+ */
+.password-notification-label:first-of-type {
+  margin-block-start: 8px;
+}
+
+.password-notification-label:not(:first-of-type) {
+  margin-block-start: 16px;
+}
+
+#password-notification-visibilityToggle {
+  margin-block-start: 14px;
+}
+
+#password-notification-visibilityToggle > .checkbox-label-box > .checkbox-label {
+  opacity: 0.7;
 }
 
 } /** END Proton **/

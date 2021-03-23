@@ -64,9 +64,10 @@
 
     <popupnotification id="password-notification" hidden="true">
       <popupnotificationcontent orient="vertical">
-        <label data-l10n-id="panel-save-update-username" control="password-notification-username"></label>
+        <label data-l10n-id="panel-save-update-username" control="password-notification-username" class="password-notification-label"></label>
         <stack>
           <html:input id="password-notification-username" 
+                      type="text"
                       class="ac-has-end-icon"
                       autocompletesearch="login-doorhanger-username"
                       autocompletepopup="PopupAutoComplete"
@@ -76,7 +77,7 @@
           <dropmarker id="password-notification-username-dropmarker"
                       class="ac-dropmarker"/>
         </stack>
-        <label data-l10n-id="panel-save-update-password" control="password-notification-password"></label>
+        <label data-l10n-id="panel-save-update-password" control="password-notification-password" class="password-notification-label"></label>
         <stack>
           <html:input id="password-notification-password" type="password"/>
           <dropmarker id="password-notification-password-dropmarker"

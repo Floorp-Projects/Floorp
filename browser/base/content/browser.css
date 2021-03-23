@@ -1624,8 +1624,10 @@ toolbar[keyNav=true]:not([collapsed=true], [customizing=true]) toolbartabstop {
  * End Dialogs
  */
 
+@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
 /* Password update/save doorhanger */
 #password-notification-username,
 #password-notification-password {
   margin-inline-start: 6px;
 }
+} /** END not Proton **/
