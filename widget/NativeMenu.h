@@ -7,12 +7,17 @@
 #define mozilla_widget_NativeMenu_h
 
 #include "nsISupportsImpl.h"
+#include "Units.h"
 
 namespace mozilla::widget {
 
 class NativeMenu {
  public:
   NS_INLINE_DECL_REFCOUNTING(NativeMenu)
+
+  // Show this menu as a context menu at the specified position.
+  // Returns false if the popupshowing handler does not want this popup to open.
+  virtual bool ShowAsContextMenu(const mozilla::DesktopPoint& aPosition) = 0;
 
   class Observer {
    public:
