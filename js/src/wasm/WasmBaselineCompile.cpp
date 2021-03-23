@@ -15049,11 +15049,6 @@ static void BitmaskI32x4(MacroAssembler& masm, RegV128 rs, RegI32 rd) {
 static void BitmaskI64x2(MacroAssembler& masm, RegV128 rs, RegI32 rd) {
   masm.bitmaskInt64x2(rs, rd);
 }
-
-static void Swizzle(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
-                    RegV128 temp) {
-  masm.swizzleInt8x16(rs, rsd, temp);
-}
 #  elif defined(JS_CODEGEN_ARM64)
 static void BitmaskI8x16(MacroAssembler& masm, RegV128 rs, RegI32 rd,
                          RegV128 temp) {
@@ -15074,11 +15069,11 @@ static void BitmaskI64x2(MacroAssembler& masm, RegV128 rs, RegI32 rd,
                          RegV128 temp) {
   masm.bitmaskInt64x2(rs, rd, temp);
 }
+#  endif
 
 static void Swizzle(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
   masm.swizzleInt8x16(rs, rsd);
 }
-#  endif
 
 static void ConvertI32x4ToF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
   masm.convertInt32x4ToFloat32x4(rs, rd);
