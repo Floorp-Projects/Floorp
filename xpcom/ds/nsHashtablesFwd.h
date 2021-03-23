@@ -84,4 +84,11 @@ using nsTHashMap =
     nsBaseHashtable<typename mozilla::detail::nsKeyClass<KeyType>::type,
                     DataType, DataType>;
 
+template <class KeyClass>
+class nsTBaseHashSet;
+
+template <class KeyType>
+using nsTHashSet =
+    nsTBaseHashSet<typename mozilla::detail::nsKeyClass<KeyType>::type>;
+
 #endif  // XPCOM_DS_NSHASHTABLESFWD_H_
