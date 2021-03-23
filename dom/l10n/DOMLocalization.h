@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_l10n_DOMLocalization_h
 #define mozilla_dom_l10n_DOMLocalization_h
 
+#include "nsTHashSet.h"
 #include "nsXULPrototypeDocument.h"
 #include "mozilla/intl/Localization.h"
 #include "mozilla/dom/DOMLocalizationBinding.h"
@@ -101,8 +102,8 @@ class DOMLocalization : public intl::Localization {
                          nsXULPrototypeDocument* aProto, ErrorResult& aRv);
 
   bool SubtreeRootInRoots(nsINode* aSubtreeRoot) {
-    for (auto iter = mRoots.Iter(); !iter.Done(); iter.Next()) {
-      nsINode* subtreeRoot = iter.Get()->GetKey()->SubtreeRoot();
+    for (const auto* key : mRoots) {
+      nsINode* subtreeRoot = key->SubtreeRoot();
       if (subtreeRoot == aSubtreeRoot) {
         return true;
       }
@@ -122,7 +123,7 @@ class DOMLocalization : public intl::Localization {
                                ErrorResult& aRv);
 
   RefPtr<L10nMutations> mMutations;
-  nsTHashtable<nsRefPtrHashKey<nsINode>> mRoots;
+  nsTHashSet<RefPtr<nsINode>> mRoots;
 };
 
 }  // namespace dom
