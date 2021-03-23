@@ -27,7 +27,6 @@ use crate::render_task_graph::{PassId, RenderTaskId, RenderTaskGraphBuilder};
 #[cfg(feature = "debugger")]
 use crate::render_task_graph::RenderTaskGraph;
 use crate::render_task_cache::{RenderTaskCacheEntryHandle, RenderTaskCacheKey, RenderTaskCacheKeyKind, RenderTaskParent};
-use crate::visibility::PrimitiveVisibilityMask;
 use smallvec::SmallVec;
 
 const FLOATS_PER_RENDER_TASK_INFO: usize = 8;
@@ -175,9 +174,8 @@ pub struct PictureTask {
     pub content_origin: DevicePoint,
     pub surface_spatial_node_index: SpatialNodeIndex,
     pub device_pixel_scale: DevicePixelScale,
-    /// A bitfield that describes which dirty regions should be included
-    /// in batches built for this picture task.
-    pub vis_mask: PrimitiveVisibilityMask,
+    /// A dirty rect defining which prims should be built for this picture task.
+    pub dirty_rect: Option<PictureRect>,
     pub scissor_rect: Option<DeviceIntRect>,
     pub valid_rect: Option<DeviceIntRect>,
 }
@@ -393,7 +391,7 @@ impl RenderTaskKind {
         content_origin: DevicePoint,
         surface_spatial_node_index: SpatialNodeIndex,
         device_pixel_scale: DevicePixelScale,
-        vis_mask: PrimitiveVisibilityMask,
+        dirty_rect: Option<PictureRect>,
         scissor_rect: Option<DeviceIntRect>,
         valid_rect: Option<DeviceIntRect>,
     ) -> Self {
@@ -408,7 +406,7 @@ impl RenderTaskKind {
             can_merge,
             surface_spatial_node_index,
             device_pixel_scale,
-            vis_mask,
+            dirty_rect,
             scissor_rect,
             valid_rect,
         })
