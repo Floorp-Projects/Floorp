@@ -912,7 +912,7 @@ static bool CanAddNewPropertyExcludingProtoFast(PlainObject* obj) {
     for (size_t i = shapes.length(); i > 0; i--) {
       Shape* propShape = shapes[i - 1];
       size_t slot = propShape->slot();
-      toPlain->setSlot(slot, fromPlain->getSlot(slot));
+      toPlain->initSlot(slot, fromPlain->getSlot(slot));
     }
     return true;
   }

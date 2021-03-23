@@ -892,7 +892,7 @@ MOZ_ALWAYS_INLINE bool AddDataPropertyNonPrototype(JSContext* cx,
     return false;
   }
 
-  obj->setSlot(shape->slot(), v);
+  obj->initSlot(shape->slot(), v);
 
   MOZ_ASSERT(!obj->getClass()->getAddProperty());
   return true;
