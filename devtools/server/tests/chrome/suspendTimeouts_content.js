@@ -69,5 +69,7 @@ function handle_echo({ data }) {
   );
 
   // Finish the mochitest.
+  // This function is set and defined by test_suspendTimeouts.js
+  // eslint-disable-next-line no-undef
   finish();
 }

@@ -17,10 +17,6 @@ const {
  * Tests that the middleware handles errors thrown in tasks, and rejected promises.
  */
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function() {
   const store = applyMiddleware(task)(createStore)(reducer);
 

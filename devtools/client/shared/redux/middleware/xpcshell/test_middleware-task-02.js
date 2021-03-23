@@ -15,10 +15,6 @@ const {
 } = require("devtools/client/shared/vendor/redux");
 const { task } = require("devtools/client/shared/redux/middleware/task");
 
-function run_test() {
-  run_next_test();
-}
-
 add_task(async function() {
   const store = applyMiddleware(task)(createStore)(reducer);
 
