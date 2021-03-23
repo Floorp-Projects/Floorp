@@ -10,7 +10,6 @@
 #include "nsMenuItemX.h"
 #include "nsMenuUtilsX.h"
 #include "nsMenuItemIconX.h"
-#include "nsStandaloneNativeMenu.h"
 
 #include "nsObjCExceptions.h"
 
@@ -614,9 +613,6 @@ void nsMenuX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aCon
       parentMenu = static_cast<nsMenuBarX*>(mParent)->NativeNSMenu();
     } else if (parentType == eSubmenuObjectType) {
       parentMenu = static_cast<nsMenuX*>(mParent)->NativeNSMenu();
-    } else if (parentType == eStandaloneNativeMenuObjectType) {
-      // XXXmstange this is a mistake and will be removed in the future.
-      parentMenu = static_cast<nsStandaloneNativeMenu*>(mParent)->NativeNSMenu();
     }
     if (parentMenu) {
       if (contentIsHiddenOrCollapsed) {
