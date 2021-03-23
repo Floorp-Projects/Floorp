@@ -20,7 +20,7 @@
 #include "nsISupports.h"
 #include "nsPointerHashKeys.h"
 #include "nsRefPtrHashtable.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 
 class nsIChannel;
 class nsIObserverService;
@@ -114,8 +114,7 @@ class ExtensionPolicyService final : public nsIAddonPolicyService,
   nsRefPtrHashtable<nsPtrHashKey<const nsAtom>, WebExtensionPolicy> mExtensions;
   nsRefPtrHashtable<nsCStringHashKey, WebExtensionPolicy> mExtensionHosts;
 
-  nsTHashtable<nsRefPtrHashKey<dom::ContentFrameMessageManager>>
-      mMessageManagers;
+  nsTHashSet<RefPtr<dom::ContentFrameMessageManager>> mMessageManagers;
 
   nsRefPtrHashtable<nsPtrHashKey<const extensions::DocumentObserver>,
                     extensions::DocumentObserver>

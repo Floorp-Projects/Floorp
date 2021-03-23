@@ -249,7 +249,7 @@ nsresult ExtensionPolicyService::Observe(nsISupports* aSubject,
     RefPtr<ContentFrameMessageManager> mm = do_QueryObject(aSubject);
     NS_ENSURE_TRUE(mm, NS_ERROR_UNEXPECTED);
 
-    mMessageManagers.PutEntry(mm);
+    mMessageManagers.Insert(mm);
 
     mm->AddSystemEventListener(u"unload"_ns, this, false, false);
   } else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
@@ -266,7 +266,7 @@ nsresult ExtensionPolicyService::HandleEvent(dom::Event* aEvent) {
   RefPtr<ContentFrameMessageManager> mm = do_QueryObject(aEvent->GetTarget());
   MOZ_ASSERT(mm);
   if (mm) {
-    mMessageManagers.RemoveEntry(mm);
+    mMessageManagers.Remove(mm);
   }
   return NS_OK;
 }
@@ -316,9 +316,7 @@ nsresult ExtensionPolicyService::InjectContentScripts(
   AutoJSAPI jsapi;
   MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
 
-  for (auto iter = mMessageManagers.ConstIter(); !iter.Done(); iter.Next()) {
-    ContentFrameMessageManager* mm = iter.Get()->GetKey();
-
+  for (ContentFrameMessageManager* mm : mMessageManagers) {
     nsCOMPtr<nsIDocShell> docShell = mm->GetDocShell(IgnoreErrors());
     NS_ENSURE_TRUE(docShell, NS_ERROR_UNEXPECTED);
 
