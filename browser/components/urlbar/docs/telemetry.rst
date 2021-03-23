@@ -135,7 +135,8 @@ urlbar.searchmode.*
     menu.
   - ``handoff``
     Used when the user uses the search box on the new tab page and is handed off
-    to the address bar.
+    to the address bar. NOTE: This entry point was deprecated in Firefox 88.
+    Handoff no longer enters search mode.
   - ``keywordoffer``
     Used when the user selects a keyword offer result.
   - ``oneoff``
