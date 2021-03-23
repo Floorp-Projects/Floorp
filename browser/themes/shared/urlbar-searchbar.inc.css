@@ -485,18 +485,6 @@
   fill: var(--toolbarbutton-icon-fill-attention);
 }
 
-#pocket-button,
-#pageAction-panel-pocket {
-  list-style-image: url("chrome://browser/skin/pocket-outline.svg");
-}
-
-#pocket-button[open="true"],
-#pocket-button[pocketed="true"] {
-  list-style-image: url("chrome://global/skin/icons/pocket.svg");
-  fill: #ef4056;
-  fill-opacity: 1;
-}
-
 #pageAction-panel-pinTab,
 #pageAction-urlbar-pinTab {
   list-style-image: url("chrome://browser/skin/pin-tab.svg");
@@ -570,10 +558,6 @@
   height: 11px;
   min-width: 11px;
   min-height: 11px;
-}
-
-#pageActionActivatedActionPanel[actionID="pocket"] {
-  --arrowpanel-background: #fbfbfb;
 }
 
 /* URL bar and page action buttons */

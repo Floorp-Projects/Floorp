@@ -475,7 +475,7 @@ var PageActions = {
       // means we'll get the second case wrong if the user unpinned all actions,
       // but no big deal.
       if (!actions.idsInUrlbar.length) {
-        actions.idsInUrlbar = ["pocket", ACTION_ID_BOOKMARK];
+        actions.idsInUrlbar = [ACTION_ID_BOOKMARK];
       }
     } else if (actions) {
       // continue without Proton
@@ -1205,7 +1205,7 @@ Action.prototype = {
   },
 
   get _isBuiltIn() {
-    let builtInIDs = ["pocket", "screenshots_mozilla_org"].concat(
+    let builtInIDs = ["screenshots_mozilla_org"].concat(
       gBuiltInActions.filter(a => !a.__isSeparator).map(a => a.id)
     );
     return builtInIDs.includes(this.id);
@@ -1221,7 +1221,7 @@ PageActions.Action = Action;
 PageActions.ACTION_ID_BUILT_IN_SEPARATOR = ACTION_ID_BUILT_IN_SEPARATOR;
 PageActions.ACTION_ID_TRANSIENT_SEPARATOR = ACTION_ID_TRANSIENT_SEPARATOR;
 
-// These are only necessary so that Pocket and the test can use them.
+// These are only necessary so that the test can use them.
 PageActions.ACTION_ID_BOOKMARK = ACTION_ID_BOOKMARK;
 PageActions.ACTION_ID_PIN_TAB = ACTION_ID_PIN_TAB;
 PageActions.ACTION_ID_BOOKMARK_SEPARATOR = ACTION_ID_BOOKMARK_SEPARATOR;

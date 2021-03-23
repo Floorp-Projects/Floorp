@@ -85,7 +85,7 @@ const kSubviewEvents = ["ViewShowing", "ViewHiding"];
  * The current version. We can use this to auto-add new default widgets as necessary.
  * (would be const but isn't because of testing purposes)
  */
-var kVersion = 16;
+var kVersion = 17;
 
 /**
  * Buttons removed from built-ins by version they were removed. kVersion must be
@@ -264,6 +264,7 @@ var CustomizableUIInternal = {
       "spring",
       "urlbar-container",
       "spring",
+      "save-to-pocket-button",
       "downloads-button",
       gProtonToolbarEnabled ? null : "library-button",
       AppConstants.MOZ_DEV_EDITION ? "developer-button" : null,
@@ -601,6 +602,33 @@ var CustomizableUIInternal = {
       // Place the menu item as the first item to the left of the hamburger menu
       if (navbarPlacements) {
         navbarPlacements.push("fxa-toolbar-menu-button");
+      }
+    }
+
+    // Add the save to Pocket button left of downloads button.
+    if (currentVersion < 17 && gSavedState.placements) {
+      let navbarPlacements = gSavedState.placements[CustomizableUI.AREA_NAVBAR];
+      let persistedPageActionsPref = Services.prefs.getCharPref(
+        "browser.pageActions.persistedActions",
+        ""
+      );
+      let pocketPreviouslyInUrl = true;
+      try {
+        let persistedPageActionsData = JSON.parse(persistedPageActionsPref);
+        // If Pocket was previously not in the url bar, let's not put it in the toolbar.
+        // It'll still be an option to add from the customization page.
+        pocketPreviouslyInUrl = persistedPageActionsData.idsInUrlbar.includes(
+          "pocket"
+        );
+      } catch (e) {}
+      if (navbarPlacements && pocketPreviouslyInUrl) {
+        // Pocket's new home is next to the downloads button, or the next best spot.
+        let newPosition =
+          navbarPlacements.indexOf("downloads-button") ??
+          navbarPlacements.indexOf("fxa-toolbar-menu-button") ??
+          navbarPlacements.length;
+
+        navbarPlacements.splice(newPosition, 0, "save-to-pocket-button");
       }
     }
   },
