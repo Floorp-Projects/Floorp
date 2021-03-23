@@ -3156,6 +3156,9 @@ class BaseCompiler final : public BaseCompilerInterface {
     uint32_t eventIndex;      // Index for the associated exception.
     NonAssertingLabel label;  // The entry label for the handler.
 
+    static const uint32_t CATCH_ALL_INDEX = UINT32_MAX;
+    static_assert(CATCH_ALL_INDEX > MaxEvents);
+
     explicit CatchInfo(uint32_t eventIndex_) : eventIndex(eventIndex_) {}
   };
 
@@ -8393,6 +8396,7 @@ class BaseCompiler final : public BaseCompilerInterface {
 
   [[nodiscard]] bool emitTry();
   [[nodiscard]] bool emitCatch();
+  [[nodiscard]] bool emitCatchAll();
   [[nodiscard]] bool emitThrow();
 #endif
   [[nodiscard]] bool emitEnd();
@@ -10348,6 +10352,7 @@ bool BaseCompiler::emitEnd() {
       MOZ_CRASH("Try-catch block cannot end without catch.");
       break;
     case LabelKind::Catch:
+    case LabelKind::CatchAll:
       if (!endTryCatch(type)) {
         return false;
       }
@@ -10735,6 +10740,33 @@ bool BaseCompiler::emitCatch() {
   return true;
 }
 
+bool BaseCompiler::emitCatchAll() {
+  LabelKind kind;
+  ResultType paramType, resultType;
+  NothingVector unused_tryValues;
+
+  if (!iter_.readCatchAll(&kind, &paramType, &resultType, &unused_tryValues)) {
+    return false;
+  }
+
+  Control& tryCatch = controlItem();
+
+  emitCatchSetup(kind, tryCatch, resultType);
+
+  if (deadCode_) {
+    return true;
+  }
+
+  CatchInfo catchInfo(CatchInfo::CATCH_ALL_INDEX);
+  if (!tryCatch.catchInfos.emplaceBack(catchInfo)) {
+    return false;
+  }
+
+  masm.bind(&tryCatch.catchInfos.back().label);
+
+  return true;
+}
+
 bool BaseCompiler::endTryCatch(ResultType type) {
   uint32_t lineOrBytecode = readCallSiteLineOrBytecode();
 
@@ -10803,13 +10835,25 @@ bool BaseCompiler::endTryCatch(ResultType type) {
   // Ensure that the exception is materialized before branching.
   exn = popRef(RegRef(WasmExceptionReg));
 
+  bool hasCatchAll = false;
   for (CatchInfo& info : tryCatch.catchInfos) {
-    masm.branch32(Assembler::Equal, index, Imm32(info.eventIndex), &info.label);
+    if (info.eventIndex != CatchInfo::CATCH_ALL_INDEX) {
+      MOZ_ASSERT(!hasCatchAll);
+      masm.branch32(Assembler::Equal, index, Imm32(info.eventIndex),
+                    &info.label);
+    } else {
+      masm.jump(&info.label);
+      hasCatchAll = true;
+      // `catch_all` must be the last clause and we won't call throwFrom
+      // below due to the catch_all, so we can free exn here.
+      freeRef(exn);
+    }
   }
   freeI32(index);
 
-  // If none of the tag checks succeed, then we rethrow the exception.
-  if (!throwFrom(exn, lineOrBytecode)) {
+  // If none of the tag checks succeed and there is no catch_all,
+  // then we rethrow the exception.
+  if (!hasCatchAll && !throwFrom(exn, lineOrBytecode)) {
     return false;
   }
 
@@ -15817,6 +15861,11 @@ bool BaseCompiler::emitBody() {
           return iter_.unrecognizedOpcode(&op);
         }
         CHECK_NEXT(emitCatch());
+      case uint16_t(Op::CatchAll):
+        if (!moduleEnv_.exceptionsEnabled()) {
+          return iter_.unrecognizedOpcode(&op);
+        }
+        CHECK_NEXT(emitCatchAll());
       case uint16_t(Op::Throw):
         if (!moduleEnv_.exceptionsEnabled()) {
           return iter_.unrecognizedOpcode(&op);

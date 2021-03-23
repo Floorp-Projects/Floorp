@@ -13,6 +13,16 @@ assertEq(
   0
 );
 
+assertEq(
+  wasmEvalText(
+    `(module
+       (func (export "f") (result i32)
+         try nop catch_all end
+         (i32.const 0)))`
+  ).exports.f(),
+  0
+);
+
 // Test try block with no throws
 assertEq(
   wasmEvalText(
@@ -320,6 +330,17 @@ assertEq(
   0
 );
 
+assertEq(
+  wasmEvalText(
+    `(module
+       (func (export "f") (result i32)
+         i32.const 0
+         return
+         try nop catch_all end))`
+  ).exports.f(),
+  0
+);
+
 // Test catch with exception values pushed to stack.
 assertEq(
   wasmEvalText(
@@ -335,6 +356,8 @@ assertEq(
            (i32.const 42)
            (throw $exn)
          catch $exn
+         catch_all
+           (i32.const 99)
          end))`
   ).exports.f(),
   42
@@ -354,6 +377,11 @@ assertEq(
            (f64.const 84.4)
            (throw $exn)
          catch $exn
+         catch_all
+           (i32.const 99)
+           (i64.const 999)
+           (f32.const 99.9)
+           (f64.const 999.9)
          end
          drop drop drop))`
   ).exports.f(),
@@ -380,6 +408,11 @@ assertEq(
            (f64.const 84.4)
            (call $foo)
          catch $exn
+         catch_all
+           (i32.const 99)
+           (i64.const 999)
+           (f32.const 99.9)
+           (f64.const 999.9)
          end
          drop drop drop))`
   ).exports.f(),
@@ -399,6 +432,8 @@ assertEq(
            (throw $exn2)
          catch $exn1
          catch $exn2
+         catch_all
+           (i32.const 99)
          end))`
   ).exports.f(),
   42
@@ -419,6 +454,183 @@ assertEq(
          end))`
   ).exports.f(),
   42
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func (param i32)))
+       (event $exn (type 0))
+       (func (export "f") (result i32)
+         (i32.const 42)
+         try $l (param i32) (result i32)
+           (throw $exn)
+         catch $exn
+         catch_all
+           (i32.const 99)
+         end))`
+  ).exports.f(),
+  42
+);
+
+// Test the catch_all case.
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func (param i32)))
+       (event $exn1 (type 0))
+       (event $exn2 (type 0))
+       (func (export "f") (result i32)
+         try $l (result i32)
+           (i32.const 42)
+           (throw $exn2)
+         catch $exn1
+         catch_all
+           (i32.const 99)
+         end))`
+  ).exports.f(),
+  99
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (event $exn (param i32))
+       (func (export "f") (result i32)
+         try (result i32)
+           try (result i32)
+             (i32.const 42)
+             (throw $exn)
+           catch_all
+             (i32.const 99)
+           end
+         catch $exn
+         end))`
+  ).exports.f(),
+  99
+);
+
+// Test foreign exception catch.
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func))
+       (import "m" "foreign" (func $foreign))
+       (event $exn (type 0))
+       (func (export "f") (result i32) (local i32)
+         try $l
+           (call $foreign)
+         catch $exn
+         catch_all
+           (local.set 0 (i32.const 42))
+         end
+         (local.get 0)))`,
+    {
+      m: {
+        foreign() {
+          throw 5;
+        },
+      },
+    }
+  ).exports.f(),
+  42
+);
+
+// Exception handlers should not catch traps.
+assertErrorMessage(
+  () =>
+    wasmEvalText(
+      `(module
+         (type (func))
+         (event $exn (type 0))
+         (func (export "f") (result i32) (local i32)
+           try $l
+             unreachable
+           catch $exn
+             (local.set 0 (i32.const 98))
+           catch_all
+             (local.set 0 (i32.const 99))
+           end
+           (local.get 0)))`
+    ).exports.f(),
+  WebAssembly.RuntimeError,
+  "unreachable executed"
+);
+
+// Ensure that a RuntimeError created by the user is not filtered out
+// as a trap emitted by the runtime (i.e., the filtering predicate is not
+// observable from JS).
+assertEq(
+  wasmEvalText(
+    `(module
+       (import "m" "foreign" (func $foreign))
+       (func (export "f") (result i32)
+         try (result i32)
+           (call $foreign)
+           (i32.const 99)
+         catch_all
+           (i32.const 42)
+         end))`,
+    {
+      m: {
+        foreign() {
+          throw new WebAssembly.RuntimeError();
+        },
+      },
+    }
+  ).exports.f(),
+  42
+);
+
+// Test uncatchable JS exceptions (OOM & stack overflow).
+{
+  let f = wasmEvalText(
+    `(module
+       (import "m" "foreign" (func $foreign))
+       (func (export "f") (result)
+         try
+           (call $foreign)
+         catch_all
+         end))`,
+    {
+      m: {
+        foreign() {
+          throwOutOfMemory();
+        },
+      },
+    }
+  ).exports.f;
+
+  var thrownVal;
+  try {
+    f();
+  } catch (exn) {
+    thrownVal = exn;
+  }
+
+  assertEq(thrownVal, "out of memory");
+}
+
+assertErrorMessage(
+  () =>
+    wasmEvalText(
+      `(module
+       (import "m" "foreign" (func $foreign))
+       (func (export "f")
+         try
+           (call $foreign)
+         catch_all
+         end))`,
+      {
+        m: {
+          foreign: function foreign() {
+            foreign();
+          },
+        },
+      }
+    ).exports.f(),
+  Error,
+  "too much recursion"
 );
 
 // Ensure memory operations work after a throw. This is also testing that the

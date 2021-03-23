@@ -2475,6 +2475,9 @@ static bool EmitEnd(FunctionCompiler& f) {
     case LabelKind::Catch:
       MOZ_CRASH("NYI");
       break;
+    case LabelKind::CatchAll:
+      MOZ_CRASH("NYI");
+      break;
 #endif
   }
 
@@ -2571,6 +2574,17 @@ static bool EmitCatch(FunctionCompiler& f) {
   DefVector tryValues;
   if (!f.iter().readCatch(&kind, &eventIndex, &paramType, &resultType,
                           &tryValues)) {
+    return false;
+  }
+
+  MOZ_CRASH("NYI");
+}
+
+static bool EmitCatchAll(FunctionCompiler& f) {
+  LabelKind kind;
+  ResultType paramType, resultType;
+  DefVector tryValues;
+  if (!f.iter().readCatchAll(&kind, &paramType, &resultType, &tryValues)) {
     return false;
   }
 
@@ -4507,6 +4521,11 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           return f.iter().unrecognizedOpcode(&op);
         }
         CHECK(EmitCatch(f));
+      case uint16_t(Op::CatchAll):
+        if (!f.moduleEnv().exceptionsEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
+        CHECK(EmitCatchAll(f));
       case uint16_t(Op::Throw):
         if (!f.moduleEnv().exceptionsEnabled()) {
           return f.iter().unrecognizedOpcode(&op);

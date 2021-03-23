@@ -42,6 +42,7 @@ enum class LabelKind : uint8_t {
 #ifdef ENABLE_WASM_EXCEPTIONS
   Try,
   Catch,
+  CatchAll
 #endif
 };
 
@@ -202,6 +203,7 @@ enum class OpKind {
 #  endif
 #  ifdef ENABLE_WASM_EXCEPTIONS
   Catch,
+  CatchAll,
   Throw,
   Try,
 #  endif
@@ -267,6 +269,12 @@ class ControlStackEntry {
   void switchToCatch() {
     MOZ_ASSERT(kind() == LabelKind::Try);
     kind_ = LabelKind::Catch;
+    polymorphicBase_ = false;
+  }
+
+  void switchToCatchAll() {
+    MOZ_ASSERT(kind() == LabelKind::Try || kind() == LabelKind::Catch);
+    kind_ = LabelKind::CatchAll;
     polymorphicBase_ = false;
   }
 #endif
@@ -471,6 +479,9 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readCatch(LabelKind* kind, uint32_t* eventIndex,
                                ResultType* paramType, ResultType* resultType,
                                ValueVector* tryResults);
+  [[nodiscard]] bool readCatchAll(LabelKind* kind, ResultType* paramType,
+                                  ResultType* resultType,
+                                  ValueVector* tryResults);
   [[nodiscard]] bool readThrow(uint32_t* eventIndex, ValueVector* argValues);
 #endif
   [[nodiscard]] bool readUnreachable();
@@ -1464,8 +1475,11 @@ inline bool OpIter<Policy>::readCatch(LabelKind* kind, uint32_t* eventIndex,
   }
 
   Control& block = controlStack_.back();
+  if (block.kind() == LabelKind::CatchAll) {
+    return fail("catch cannot follow a catch_all");
+  }
   if (block.kind() != LabelKind::Try && block.kind() != LabelKind::Catch) {
-    return fail("catch can only be used within a try");
+    return fail("catch can only be used within a try-catch");
   }
   *kind = block.kind();
   *paramType = block.type().params();
@@ -1480,6 +1494,29 @@ inline bool OpIter<Policy>::readCatch(LabelKind* kind, uint32_t* eventIndex,
   }
 
   return push(env_.events[*eventIndex].resultType());
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readCatchAll(LabelKind* kind, ResultType* paramType,
+                                         ResultType* resultType,
+                                         ValueVector* tryResults) {
+  MOZ_ASSERT(Classify(op_) == OpKind::CatchAll);
+
+  Control& block = controlStack_.back();
+  if (block.kind() != LabelKind::Try && block.kind() != LabelKind::Catch) {
+    return fail("catch_all can only be used within a try-catch");
+  }
+  *kind = block.kind();
+  *paramType = block.type().params();
+
+  if (!checkStackAtEndOfBlock(resultType, tryResults)) {
+    return false;
+  }
+
+  valueStack_.shrinkTo(block.valueStackBase());
+  block.switchToCatchAll();
+
+  return true;
 }
 
 template <typename Policy>
