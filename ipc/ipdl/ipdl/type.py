@@ -1301,7 +1301,11 @@ class GatherDecls(TcheckVisitor):
             self.checkAttributes(
                 param.attributes,
                 {
-                    "NoTaint": ("passback",)
+                    # Passback indicates that the argument is unused by the Parent and is
+                    #    merely returned to the Child later.
+                    # AllValid indicates that the entire span of values representable by
+                    #    the type are acceptable.  e.g. 0-255 in a uint8
+                    "NoTaint": ("passback", "allvalid")
                 },
             )
 
