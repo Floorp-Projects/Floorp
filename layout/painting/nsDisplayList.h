@@ -807,9 +807,6 @@ class nsDisplayListBuilder {
    */
   bool IsInFilter() const { return mInFilter; }
 
-  bool IsInPageSequence() const { return mInPageSequence; }
-  void SetInPageSequence(bool aInPage) { mInPageSequence = aInPage; }
-
   /**
    * Return true if we're currently building a display list for a
    * nested presshell.
