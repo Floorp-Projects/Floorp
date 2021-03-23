@@ -32,6 +32,7 @@ class DefaultReaderModeControllerTest {
     private lateinit var readerViewFeature: ReaderViewFeature
     private lateinit var featureWrapper: ViewBoundFeatureWrapper<ReaderViewFeature>
     private lateinit var readerViewControlsBar: View
+    private lateinit var onReaderModeChanged: () -> Unit
 
     @Before
     fun setup() {
@@ -50,6 +51,7 @@ class DefaultReaderModeControllerTest {
             view = mockk(relaxed = true)
         )
         readerViewControlsBar = mockk(relaxed = true)
+        onReaderModeChanged = mockk(relaxed = true)
 
         every { readerViewFeature.hideReaderView() } returns Unit
         every { readerViewFeature.showReaderView() } returns Unit
@@ -59,17 +61,27 @@ class DefaultReaderModeControllerTest {
 
     @Test
     fun testHideReaderView() {
-        val controller = DefaultReaderModeController(featureWrapper, readerViewControlsBar)
+        val controller = DefaultReaderModeController(
+            featureWrapper,
+            readerViewControlsBar,
+            onReaderModeChanged = onReaderModeChanged
+        )
         controller.hideReaderView()
         verify { readerViewFeature.hideReaderView() }
         verify { readerViewFeature.hideControls() }
+        verify { onReaderModeChanged.invoke() }
     }
 
     @Test
     fun testShowReaderView() {
-        val controller = DefaultReaderModeController(featureWrapper, readerViewControlsBar)
+        val controller = DefaultReaderModeController(
+            featureWrapper,
+            readerViewControlsBar,
+            onReaderModeChanged = onReaderModeChanged
+        )
         controller.showReaderView()
         verify { readerViewFeature.showReaderView() }
+        verify { onReaderModeChanged.invoke() }
     }
 
     @Test

@@ -24,9 +24,11 @@ interface ReaderModeController {
 class DefaultReaderModeController(
     private val readerViewFeature: ViewBoundFeatureWrapper<ReaderViewFeature>,
     private val readerViewControlsBar: View,
-    private val isPrivate: Boolean = false
+    private val isPrivate: Boolean = false,
+    private val onReaderModeChanged: () -> Unit = {}
 ) : ReaderModeController {
     override fun hideReaderView() {
+        onReaderModeChanged()
         readerViewFeature.withFeature {
             it.hideReaderView()
             it.hideControls()
@@ -34,6 +36,7 @@ class DefaultReaderModeController(
     }
 
     override fun showReaderView() {
+        onReaderModeChanged()
         readerViewFeature.withFeature { it.showReaderView() }
     }
 

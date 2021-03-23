@@ -16,6 +16,7 @@ import android.util.AttributeSet
 import android.view.KeyEvent
 import android.view.LayoutInflater
 import android.view.View
+import android.view.ActionMode
 import android.view.ViewConfiguration
 import android.view.WindowManager.LayoutParams.FLAG_SECURE
 import androidx.annotation.CallSuper
@@ -164,6 +165,9 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     private var backLongPressJob: Job? = null
 
     private lateinit var navigationToolbar: Toolbar
+
+    // Tracker for contextual menu (Copy|Search|Select all|etc...)
+    private var actionMode: ActionMode? = null
 
     final override fun onCreate(savedInstanceState: Bundle?): Unit = PerfStartup.homeActivityOnCreate.measureNoInline {
         // DO NOT MOVE ANYTHING ABOVE THIS addMarker CALL.
@@ -517,6 +521,20 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             )
         }.asView()
         else -> super.onCreateView(parent, name, context, attrs)
+    }
+
+    override fun onActionModeStarted(mode: ActionMode?) {
+        actionMode = mode
+        super.onActionModeStarted(mode)
+    }
+
+    override fun onActionModeFinished(mode: ActionMode?) {
+        actionMode = null
+        super.onActionModeFinished(mode)
+    }
+
+    fun finishActionMode() {
+        actionMode?.finish().also { actionMode = null }
     }
 
     @Suppress("MagicNumber")
