@@ -6,8 +6,6 @@
 #ifndef nsMenuBaseX_h_
 #define nsMenuBaseX_h_
 
-#import <Foundation/Foundation.h>
-
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 
@@ -28,22 +26,6 @@ class nsMenuObjectX {
   virtual ~nsMenuObjectX() {}
   virtual nsMenuObjectTypeX MenuObjectType() = 0;
 };
-
-//
-// Object stored as "representedObject" for all menu items
-//
-
-class nsMenuGroupOwnerX;
-
-@interface MenuItemInfo : NSObject {
-  nsMenuGroupOwnerX* mMenuGroupOwner;
-}
-
-- (id)initWithMenuGroupOwner:(nsMenuGroupOwnerX*)aMenuGroupOwner;
-- (nsMenuGroupOwnerX*)menuGroupOwner;
-- (void)setMenuGroupOwner:(nsMenuGroupOwnerX*)aMenuGroupOwner;
-
-@end
 
 // Special command IDs that we know Mac OS X does not use for anything else.
 // We use these in place of carbon's IDs for these commands in order to stop

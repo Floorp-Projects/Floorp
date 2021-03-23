@@ -27,20 +27,13 @@ using namespace mozilla;
 NS_IMPL_ISUPPORTS(nsMenuGroupOwnerX, nsIMutationObserver)
 
 nsMenuGroupOwnerX::nsMenuGroupOwnerX() : mCurrentCommandID(eCommand_ID_Last) {
-  mInfoSet = [[NSMutableSet setWithCapacity:10] retain];
+  mRepresentedObject = [[MOZMenuItemRepresentedObject alloc] initWithMenuGroupOwner:this];
 }
 
 nsMenuGroupOwnerX::~nsMenuGroupOwnerX() {
   MOZ_ASSERT(mContentToObserverTable.Count() == 0, "have outstanding mutation observers!\n");
-
-  // The MenuItemInfo objects in mInfoSet may live longer than we do.  So when
-  // we get destroyed we need to invalidate all their mMenuGroupOwner pointers.
-  NSEnumerator* counter = [mInfoSet objectEnumerator];
-  MenuItemInfo* info;
-  while ((info = (MenuItemInfo*)[counter nextObject])) {
-    [info setMenuGroupOwner:nil];
-  }
-  [mInfoSet release];
+  [mRepresentedObject setMenuGroupOwner:nullptr];
+  [mRepresentedObject release];
 }
 
 nsresult nsMenuGroupOwnerX::Create(mozilla::dom::Element* aContent) {
@@ -194,4 +187,22 @@ nsMenuItemX* nsMenuGroupOwnerX::GetMenuItemForCommandID(uint32_t aCommandID) {
   return nullptr;
 }
 
-void nsMenuGroupOwnerX::AddMenuItemInfoToSet(MenuItemInfo* aInfo) { [mInfoSet addObject:aInfo]; }
+@implementation MOZMenuItemRepresentedObject {
+  nsMenuGroupOwnerX* mMenuGroupOwner;  // weak, cleared by nsMenuGroupOwnerX's destructor
+}
+
+- (id)initWithMenuGroupOwner:(nsMenuGroupOwnerX*)aMenuGroupOwner {
+  self = [super init];
+  mMenuGroupOwner = aMenuGroupOwner;
+  return self;
+}
+
+- (void)setMenuGroupOwner:(nsMenuGroupOwnerX*)aMenuGroupOwner {
+  mMenuGroupOwner = aMenuGroupOwner;
+}
+
+- (nsMenuGroupOwnerX*)menuGroupOwner {
+  return mMenuGroupOwner;
+}
+
+@end

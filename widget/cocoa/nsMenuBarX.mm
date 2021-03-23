@@ -605,10 +605,7 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* aMenu, const nsAString&
   newMenuItem.tag = aTag;
   newMenuItem.target = aTarget;
   newMenuItem.keyEquivalentModifierMask = macKeyModifiers;
-
-  MenuItemInfo* info = [[MenuItemInfo alloc] initWithMenuGroupOwner:this];
-  newMenuItem.representedObject = info;
-  [info release];
+  newMenuItem.representedObject = GetRepresentedObject();
 
   return newMenuItem;
 
@@ -879,10 +876,10 @@ static BOOL gMenuItemsExecuteCommands = YES;
 
   nsMenuGroupOwnerX* menuGroupOwner = nullptr;
   nsMenuBarX* menuBar = nullptr;
-  MenuItemInfo* info = [aSender representedObject];
+  MOZMenuItemRepresentedObject* representedObject = [aSender representedObject];
 
-  if (info) {
-    menuGroupOwner = info.menuGroupOwner;
+  if (representedObject) {
+    menuGroupOwner = representedObject.menuGroupOwner;
     if (!menuGroupOwner) {
       return;
     }
