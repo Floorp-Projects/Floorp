@@ -76,7 +76,7 @@ class AboutPrivateBrowsingParent extends JSWindowActorParent {
             isFirstChange = false;
             urlBar.removeHiddenFocus();
             urlBar.search("");
-            this.sendAsyncMessage("HideSearch");
+            this.sendAsyncMessage("DisableSearch");
             urlBar.removeEventListener("compositionstart", checkFirstChange);
             urlBar.removeEventListener("paste", checkFirstChange);
           }

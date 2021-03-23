@@ -616,7 +616,7 @@ describe("PlacesFeed", () => {
           to: "ActivityStream:Content",
           toTarget: {},
         },
-        type: "HIDE_SEARCH",
+        type: "DISABLE_SEARCH",
       });
     });
     it("should properly handle handoff with text data passed in", () => {

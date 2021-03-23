@@ -92,28 +92,28 @@ document.addEventListener("DOMContentLoaded", function() {
   // Setup the search hand-off box.
   let btn = document.getElementById("search-handoff-button");
   let editable = document.getElementById("fake-editable");
-  let HIDE_SEARCH_TOPIC = "HideSearch";
+  let DISABLE_SEARCH_TOPIC = "DisableSearch";
   let SHOW_SEARCH_TOPIC = "ShowSearch";
   let SEARCH_HANDOFF_TOPIC = "SearchHandoff";
 
   function showSearch() {
     btn.classList.remove("focused");
-    btn.classList.remove("hidden");
+    btn.classList.remove("disabled");
     RPMRemoveMessageListener(SHOW_SEARCH_TOPIC, showSearch);
   }
 
-  function hideSearch() {
-    btn.classList.add("hidden");
+  function disableSearch() {
+    btn.classList.add("disabled");
   }
 
   function handoffSearch(text) {
     RPMSendAsyncMessage(SEARCH_HANDOFF_TOPIC, { text });
     RPMAddMessageListener(SHOW_SEARCH_TOPIC, showSearch);
     if (text) {
-      hideSearch();
+      disableSearch();
     } else {
       btn.classList.add("focused");
-      RPMAddMessageListener(HIDE_SEARCH_TOPIC, hideSearch);
+      RPMAddMessageListener(DISABLE_SEARCH_TOPIC, disableSearch);
     }
   }
   btn.addEventListener("focus", function() {
