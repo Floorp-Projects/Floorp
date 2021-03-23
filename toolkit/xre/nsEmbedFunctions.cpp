@@ -649,6 +649,7 @@ nsresult XRE_InitChildProcess(int aArgc, char* aArgv[],
           break;
 
         case GeckoProcessType_Content:
+          ioInterposerGuard.emplace();
           process = MakeUnique<ContentProcess>(parentPID);
           break;
 
