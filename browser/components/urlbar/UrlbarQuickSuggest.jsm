@@ -15,6 +15,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   RemoteSettings: "resource://services-settings/remote-settings.js",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.jsm",
+  ExperimentFeature: "resource://nimbus/ExperimentAPI.jsm",
 });
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["TextDecoder"]);
@@ -25,7 +26,6 @@ const log = console.createInstance({
 });
 
 const RS_COLLECTION = "quicksuggest";
-const RS_PREF = "quicksuggest.enabled";
 
 // Categories that should show "Firefox Suggest" instead of "Sponsored"
 const NONSPONSORED_IAB_CATEGORIES = new Set(["5 - Education"]);
@@ -52,13 +52,15 @@ class Suggestions {
     }
     this._initPromise = Promise.resolve();
     this._rs = RemoteSettings(RS_COLLECTION);
-    if (UrlbarPrefs.get(RS_PREF)) {
+    this.onFeatureUpdate = this.onFeatureUpdate.bind(this);
+    this.urlbarExperimentFeature = new ExperimentFeature("urlbar");
+    if (this.urlbarExperimentFeature.getValue().quickSuggestEnabled) {
       this._initPromise = new Promise(resolve => (this._initResolve = resolve));
       Services.tm.idleDispatchToMainThread(
         this._setupRemoteSettings.bind(this)
       );
     } else {
-      UrlbarPrefs.addObserver(this);
+      this.urlbarExperimentFeature.onUpdate(this.onFeatureUpdate);
     }
     return this._initPromise;
   }
@@ -150,10 +152,10 @@ class Suggestions {
   }
 
   /*
-   * Called if a Urlbar preference is changed.
+   * Called if a Urlbar Experiment Feature is changed.
    */
-  onPrefChanged(changedPref) {
-    if (changedPref == RS_PREF && UrlbarPrefs.get(RS_PREF)) {
+  onFeatureUpdate() {
+    if (this.urlbarExperimentFeature.getValue().quickSuggestEnabled) {
       this._setupRemoteSettings();
     }
   }

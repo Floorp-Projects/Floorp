@@ -162,9 +162,6 @@ const PREF_URLBAR_DEFAULTS = new Map([
   // Whether results will include QuickSuggest suggestions.
   ["suggest.quicksuggest", true],
 
-  // Whether the QuickSuggest experiment is enabled.
-  ["quicksuggest.enabled", false],
-
   // The index where we show QuickSuggest results, -1 means they
   // will be shown as the last result.
   ["quicksuggest.suggestedIndex", -1],
