@@ -657,6 +657,19 @@ enum class ObjectFlag : uint16_t {
 
   // See JSObject::isQualifiedVarObj().
   QualifiedVarObj = 1 << 8,
+
+  // If set, the object may have a non-writable property or an accessor
+  // property.
+  //
+  // * This is only set for PlainObjects because we only need it for these
+  //   objects and setting it for other objects confuses insertInitialShape.
+  //
+  // * This flag does not account for properties named "__proto__". This is
+  //   because |Object.prototype| has a "__proto__" accessor property and we
+  //   don't want to include it because it would result in the flag being set on
+  //   most proto chains. Code using this flag must check for "__proto__"
+  //   property names separately.
+  HasNonWritableOrAccessorPropExclProto = 1 << 9,
 };
 
 using ObjectFlags = EnumFlags<ObjectFlag>;
