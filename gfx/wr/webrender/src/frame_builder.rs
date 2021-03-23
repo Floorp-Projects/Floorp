@@ -916,8 +916,8 @@ pub fn build_render_pass(
         let mut batchers = Vec::new();
         for task_id in &task_ids {
             let task_id = *task_id;
-            let vis_mask = match render_tasks[task_id].kind {
-                RenderTaskKind::Picture(ref info) => info.vis_mask,
+            let dirty_rect = match render_tasks[task_id].kind {
+                RenderTaskKind::Picture(ref info) => info.dirty_rect,
                 _ => unreachable!(),
             };
             batchers.push(AlphaBatchBuilder::new(
@@ -926,7 +926,7 @@ pub fn build_render_pass(
                 ctx.batch_lookback_count,
                 task_id,
                 task_id.into(),
-                vis_mask,
+                dirty_rect,
                 0,
             ));
         }
