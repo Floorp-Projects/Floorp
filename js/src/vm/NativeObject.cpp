@@ -1371,7 +1371,7 @@ static MOZ_ALWAYS_INLINE bool AddDataProperty(JSContext* cx,
     return false;
   }
 
-  obj->setSlot(shape->slot(), v);
+  obj->initSlot(shape->slot(), v);
 
   return CallAddPropertyHook(cx, obj, id, v);
 }
