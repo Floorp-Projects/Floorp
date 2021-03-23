@@ -7537,11 +7537,13 @@ Matrix4x4 nsDisplayTransform::GetResultingTransformMatrixInternal(
   /* Get the matrix, then change its basis to factor in the origin. */
   Matrix4x4 result;
   // Call IsSVGTransformed() regardless of the value of
-  // disp->mSpecifiedTransform, since we still need any
-  // parentsChildrenOnlyTransform.
-  bool hasSVGTransforms = false;
-  bool shouldRound = nsLayoutUtils::ShouldSnapToGrid(frame);
+  // aProperties.HasTransform(), since we still need any
+  // potential parentsChildrenOnlyTransform.
   Matrix svgTransform, parentsChildrenOnlyTransform;
+  const bool hasSVGTransforms = frame &&
+    frame->HasAnyStateBits(NS_FRAME_MAY_BE_TRANSFORMED) &&
+    frame->IsSVGTransformed(&svgTransform, &parentsChildrenOnlyTransform);
+  bool shouldRound = nsLayoutUtils::ShouldSnapToGrid(frame);
 
   /* Transformed frames always have a transform, or are preserving 3d (and might
    * still have perspective!) */
@@ -7550,15 +7552,12 @@ Matrix4x4 nsDisplayTransform::GetResultingTransformMatrixInternal(
         aProperties.mTranslate, aProperties.mRotate, aProperties.mScale,
         aProperties.mMotion, aProperties.mTransform, aRefBox,
         aAppUnitsPerPixel);
-  } else if (frame && frame->HasAnyStateBits(NS_FRAME_MAY_BE_TRANSFORMED)) {
-    if ((hasSVGTransforms = frame->IsSVGTransformed(
-             &svgTransform, &parentsChildrenOnlyTransform))) {
-      // Correct the translation components for zoom:
-      float pixelsPerCSSPx = AppUnitsPerCSSPixel() / aAppUnitsPerPixel;
-      svgTransform._31 *= pixelsPerCSSPx;
-      svgTransform._32 *= pixelsPerCSSPx;
-      result = Matrix4x4::From2D(svgTransform);
-    }
+  } else if (hasSVGTransforms) {
+    // Correct the translation components for zoom:
+    float pixelsPerCSSPx = AppUnitsPerCSSPixel() / aAppUnitsPerPixel;
+    svgTransform._31 *= pixelsPerCSSPx;
+    svgTransform._32 *= pixelsPerCSSPx;
+    result = Matrix4x4::From2D(svgTransform);
   }
 
   // Apply any translation due to 'transform-origin' and/or 'transform-box':
@@ -7566,7 +7565,7 @@ Matrix4x4 nsDisplayTransform::GetResultingTransformMatrixInternal(
 
   // See the comment for SVGContainerFrame::HasChildrenOnlyTransform for
   // an explanation of what children-only transforms are.
-  bool parentHasChildrenOnlyTransform =
+  const bool parentHasChildrenOnlyTransform =
       hasSVGTransforms && !parentsChildrenOnlyTransform.IsIdentity();
 
   if (parentHasChildrenOnlyTransform) {
