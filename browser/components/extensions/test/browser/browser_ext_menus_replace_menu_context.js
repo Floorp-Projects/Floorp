@@ -6,7 +6,7 @@
 function getVisibleChildrenIds(menuElem) {
   return Array.from(menuElem.children)
     .filter(elem => !elem.hidden)
-    .map(elem => elem.id || elem.tagName);
+    .map(elem => (elem.tagName != "menuseparator" ? elem.id : elem.tagName));
 }
 
 function checkIsDefaultMenuItemVisible(visibleMenuItemIds) {
@@ -299,7 +299,7 @@ add_task(async function overrideContext_with_context() {
         `${makeWidgetId(extension.id)}-menuitem-_tab_context`,
         `${makeWidgetId(extension.id)}-menuitem-_tab_context_http`,
         `${makeWidgetId(extension.id)}-menuitem-_tab_context_viewType_moz`,
-        `page-menu-separator`,
+        `menuseparator`,
         topLevels[0].id,
       ],
       "Expected menu items after changing context to tab"
@@ -440,7 +440,7 @@ add_task(async function overrideContext_with_context() {
         `${makeWidgetId(extension.id)}-menuitem-_bookmark_context_http`,
         `${makeWidgetId(extension.id)}-menuitem-_bookmark_context_moz`,
         `${makeWidgetId(extension.id)}-menuitem-_bookmark_context_viewType_moz`,
-        `page-menu-separator`,
+        `menuseparator`,
         topLevels[0].id,
       ],
       "Expected menu items after changing context to bookmark"
