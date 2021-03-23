@@ -64,8 +64,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   nscolor mColorGrid;
   nscolor mColorActiveBorder;
   nscolor mColorGrayText;
-  nscolor mColorInactiveBorder;
-  nscolor mColorInactiveCaption;
+  nscolor mColorControlBackground;
   nscolor mColorScrollbar;
   nscolor mColorThreeDHighlight;
   nscolor mColorDialog;
