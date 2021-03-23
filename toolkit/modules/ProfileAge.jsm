@@ -6,11 +6,8 @@
 
 var EXPORTED_SYMBOLS = ["ProfileAge"];
 
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
 const { Log } = ChromeUtils.import("resource://gre/modules/Log.jsm");
-const { CommonUtils } = ChromeUtils.import(
-  "resource://services-common/utils.js"
-);
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const FILE_TIMES = "times.json";
 
@@ -21,47 +18,33 @@ const FILE_TIMES = "times.json";
 async function getOldestProfileTimestamp(profilePath, log) {
   let start = Date.now();
   let oldest = start + 1000;
-  let iterator = new OS.File.DirectoryIterator(profilePath);
   log.debug("Iterating over profile " + profilePath);
-  if (!iterator) {
-    throw new Error(
-      "Unable to fetch oldest profile entry: no profile iterator."
-    );
-  }
 
   try {
-    await iterator.forEach(async entry => {
+    for (const childPath of await IOUtils.getChildren(profilePath)) {
       try {
-        let info = await OS.File.stat(entry.path);
-
-        // OS.File doesn't seem to be behaving. See Bug 827148.
-        // Let's do the best we can. This whole function is defensive.
-        let date = info.winBirthDate || info.macBirthDate;
-        if (!date || !date.getTime()) {
-          // OS.File will only return file creation times of any kind on Mac
-          // and Windows, where birthTime is defined.
-          // That means we're unable to function on Linux, so we use mtime
-          // instead.
+        let info = await IOUtils.stat(childPath);
+        let timestamp;
+        if (info.creationTime !== undefined) {
+          timestamp = info.creationTime;
+        } else {
+          // We only support file creation times on Mac and Windows. We have to
+          // settle for mtime on Linux.
           log.debug("No birth date. Using mtime.");
-          date = info.lastModificationDate;
+          timestamp = info.lastModified;
         }
 
-        if (date) {
-          let timestamp = date.getTime();
-          log.debug("Using date: " + entry.path + " = " + date);
-          if (timestamp < oldest) {
-            oldest = timestamp;
-          }
+        log.debug(`Using date: ${childPath} = ${timestamp}`);
+        if (timestamp < oldest) {
+          oldest = timestamp;
         }
       } catch (e) {
         // Never mind.
         log.debug("Stat failure", e);
       }
-    });
+    }
   } catch (reason) {
     throw new Error("Unable to fetch oldest profile entry: " + reason);
-  } finally {
-    iterator.close();
   }
 
   return oldest;
@@ -74,7 +57,7 @@ async function getOldestProfileTimestamp(profilePath, log) {
  */
 class ProfileAgeImpl {
   constructor(profile, times) {
-    this.profilePath = profile || OS.Constants.Path.profileDir;
+    this._profilePath = profile;
     this._times = times;
     this._log = Log.repository.getLogger("Toolkit.ProfileAge");
 
@@ -83,6 +66,14 @@ class ProfileAgeImpl {
       this._times.firstUse = Date.now();
       this.writeTimes();
     }
+  }
+
+  get profilePath() {
+    if (!this._profilePath) {
+      this._profilePath = Services.dirsvc.get("ProfD", Ci.nsIFile).path;
+    }
+
+    return this._profilePath;
   }
 
   /**
@@ -125,11 +116,21 @@ class ProfileAgeImpl {
   /**
    * Return a promise representing the writing the current times to the profile.
    */
-  writeTimes() {
-    return CommonUtils.writeJSON(
-      this._times,
-      OS.Path.join(this.profilePath, FILE_TIMES)
-    );
+  async writeTimes() {
+    try {
+      await IOUtils.writeJSON(
+        PathUtils.join(this.profilePath, FILE_TIMES),
+        this._times
+      );
+    } catch (e) {
+      if (
+        !(e instanceof DOMException) ||
+        e.name !== "AbortError" ||
+        e.message !== "IOUtils: Shutting down and refusing additional I/O tasks"
+      ) {
+        throw e;
+      }
+    }
   }
 
   /**
@@ -171,10 +172,10 @@ class ProfileAgeImpl {
 const PROFILES = new Map();
 
 async function initProfileAge(profile) {
-  let timesPath = OS.Path.join(profile, FILE_TIMES);
+  let timesPath = PathUtils.join(profile, FILE_TIMES);
 
   try {
-    let times = await CommonUtils.readJSON(timesPath);
+    let times = await IOUtils.readJSON(timesPath);
     return new ProfileAgeImpl(profile, times || {});
   } catch (e) {
     // Indicates that the file was missing or broken. In this case we want to
@@ -191,7 +192,11 @@ async function initProfileAge(profile) {
  * @param {string} profile The path to the profile directory.
  * @return {Promise<ProfileAgeImpl>} Resolves to the ProfileAgeImpl.
  */
-function ProfileAge(profile = OS.Constants.Path.profileDir) {
+async function ProfileAge(profile) {
+  if (!profile) {
+    profile = await PathUtils.getProfileDir();
+  }
+
   if (PROFILES.has(profile)) {
     return PROFILES.get(profile);
   }
