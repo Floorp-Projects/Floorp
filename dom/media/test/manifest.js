@@ -569,6 +569,46 @@ if (!win32) {
   gPlayTests.push({ name: "av1.mp4", type: "video/mp4", duration: 1.0 });
 }
 
+// AAC files with different sample rates. We add these here as some are added
+// conditionally.
+gPlayTests.push(
+  {
+    name: "bipbop_audio_aac_8k.mp4",
+    type: "audio/mp4",
+    duration: 1.06,
+  },
+  {
+    name: "bipbop_audio_aac_22.05k.mp4",
+    type: "audio/mp4",
+    duration: 1.06,
+  },
+  {
+    name: "bipbop_audio_aac_44.1k.mp4",
+    type: "audio/mp4",
+    duration: 1.06,
+  },
+  {
+    name: "bipbop_audio_aac_48k.mp4",
+    type: "audio/mp4",
+    duration: 1.06,
+  }
+);
+if (AppConstants.platform != "win") {
+  // Windows WMF decoder doesn't do >48K everywhere. See bug 1698639.
+  gPlayTests.push(
+    {
+      name: "bipbop_audio_aac_88.2k.mp4",
+      type: "audio/mp4",
+      duration: 1.06,
+    },
+    {
+      name: "bipbop_audio_aac_96k.mp4",
+      type: "audio/mp4",
+      duration: 1.06,
+    }
+  );
+}
+
 // ambisonics.mp4 causes intermittents, so we conditionally add it until we fix
 // the root cause.
 const skipAmbisonics =
