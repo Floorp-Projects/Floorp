@@ -12,6 +12,10 @@
 
 namespace mozilla {
 
+namespace layers {
+class TextureImageTextureSourceOGL;
+}
+
 namespace wr {
 
 class RenderCompositorOGLSWGL : public RenderCompositorLayersSWGL {
@@ -60,19 +64,20 @@ class RenderCompositorOGLSWGL : public RenderCompositorLayersSWGL {
 
   class TileOGL : public RenderCompositorLayersSWGL::Tile {
    public:
-    TileOGL(layers::DataTextureSource* aTexture,
-            gfx::DataSourceSurface* aSurface);
-    virtual ~TileOGL() = default;
+    TileOGL(RefPtr<layers::TextureImageTextureSourceOGL>&& aTexture,
+            const gfx::IntSize& aSize);
+    virtual ~TileOGL();
 
     bool Map(wr::DeviceIntRect aDirtyRect, wr::DeviceIntRect aValidRect,
              void** aData, int32_t* aStride) override;
     void Unmap(const gfx::IntRect& aDirtyRect) override;
-    layers::DataTextureSource* GetTextureSource() override { return mTexture; }
+    layers::DataTextureSource* GetTextureSource() override;
     bool IsValid() override { return true; }
 
    private:
-    RefPtr<layers::DataTextureSource> mTexture;
+    RefPtr<layers::TextureImageTextureSourceOGL> mTexture;
     RefPtr<gfx::DataSourceSurface> mSurface;
+    GLuint mPBO = 0;
   };
 };
 

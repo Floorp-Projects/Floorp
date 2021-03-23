@@ -249,16 +249,10 @@ LayoutDeviceIntSize RenderCompositorOGLSWGL::GetBufferSize() {
 
 UniquePtr<RenderCompositorLayersSWGL::Tile>
 RenderCompositorOGLSWGL::DoCreateTile(Surface* aSurface) {
-  const auto tileSize = aSurface->TileSize();
-
-  RefPtr<DataTextureSource> source = new TextureImageTextureSourceOGL(
+  auto source = MakeRefPtr<TextureImageTextureSourceOGL>(
       mCompositor->AsCompositorOGL(), layers::TextureFlags::NO_FLAGS);
 
-  RefPtr<gfx::DataSourceSurface> surf = gfx::Factory::CreateDataSourceSurface(
-      gfx::IntSize(tileSize.width, tileSize.height),
-      gfx::SurfaceFormat::B8G8R8A8);
-
-  return MakeUnique<TileOGL>(source, surf);
+  return MakeUnique<TileOGL>(std::move(source), aSurface->TileSize());
 }
 
 bool RenderCompositorOGLSWGL::MaybeReadback(
@@ -283,27 +277,133 @@ bool RenderCompositorOGLSWGL::MaybeReadback(
   return true;
 }
 
-RenderCompositorOGLSWGL::TileOGL::TileOGL(layers::DataTextureSource* aTexture,
-                                          gfx::DataSourceSurface* aSurface)
-    : Tile(), mTexture(aTexture), mSurface(aSurface) {}
+// This is a DataSourceSurface that represents a 0-based PBO for GLTextureImage.
+class PBOUnpackSurface : public gfx::DataSourceSurface {
+ public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PBOUnpackSurface, override)
+
+  explicit PBOUnpackSurface(const gfx::IntSize& aSize) : mSize(aSize) {}
+
+  uint8_t* GetData() override { return nullptr; }
+  int32_t Stride() override { return mSize.width * sizeof(uint32_t); }
+  gfx::SurfaceType GetType() const override {
+    return gfx::SurfaceType::DATA_ALIGNED;
+  }
+  gfx::IntSize GetSize() const override { return mSize; }
+  gfx::SurfaceFormat GetFormat() const override {
+    return gfx::SurfaceFormat::B8G8R8A8;
+  }
+
+  // PBO offsets need to start from a 0 address, but DataSourceSurface::Map
+  // checks for failure by comparing the address against nullptr. Override Map
+  // to work around this. Due to DataSourceSurface::Map checking for failure via
+  bool Map(MapType, MappedSurface* aMappedSurface) override {
+    aMappedSurface->mData = GetData();
+    aMappedSurface->mStride = Stride();
+    return true;
+  }
+
+  void Unmap() override {}
+
+ private:
+  gfx::IntSize mSize;
+};
+
+RenderCompositorOGLSWGL::TileOGL::TileOGL(
+    RefPtr<layers::TextureImageTextureSourceOGL>&& aTexture,
+    const gfx::IntSize& aSize)
+    : mTexture(aTexture) {
+  auto* gl = mTexture->gl();
+  if (gl && gl->HasPBOState() && gl->MakeCurrent()) {
+    mSurface = new PBOUnpackSurface(aSize);
+    // Create a PBO large enough to encompass any valid rects within the tile.
+    gl->fGenBuffers(1, &mPBO);
+    gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mPBO);
+    gl->fBufferData(LOCAL_GL_PIXEL_UNPACK_BUFFER,
+                    mSurface->Stride() * aSize.height, nullptr,
+                    LOCAL_GL_DYNAMIC_DRAW);
+    gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
+  } else {
+    // Couldn't allocate a PBO, so just use a memory surface instead.
+    mSurface = gfx::Factory::CreateDataSourceSurface(
+        aSize, gfx::SurfaceFormat::B8G8R8A8);
+  }
+}
+
+RenderCompositorOGLSWGL::TileOGL::~TileOGL() {
+  if (mPBO) {
+    auto* gl = mTexture->gl();
+    if (gl && gl->MakeCurrent()) {
+      gl->fDeleteBuffers(1, &mPBO);
+      mPBO = 0;
+    }
+  }
+}
+
+layers::DataTextureSource*
+RenderCompositorOGLSWGL::TileOGL::GetTextureSource() {
+  return mTexture.get();
+}
 
 bool RenderCompositorOGLSWGL::TileOGL::Map(wr::DeviceIntRect aDirtyRect,
                                            wr::DeviceIntRect aValidRect,
                                            void** aData, int32_t* aStride) {
-  gfx::DataSourceSurface::MappedSurface map;
-  if (!mSurface->Map(gfx::DataSourceSurface::READ_WRITE, &map)) {
-    return false;
+  if (mPBO) {
+    auto* gl = mTexture->gl();
+    if (!gl) {
+      return false;
+    }
+    // Map the PBO, but only within the range of the buffer that spans from the
+    // linear start offset to the linear end offset. Since we don't care about
+    // the previous contents of the buffer, we can just tell OpenGL to
+    // invalidate the entire buffer, even though we're only mapping a sub-range.
+    gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mPBO);
+    size_t stride = mSurface->Stride();
+    size_t offset =
+        stride * aValidRect.origin.y + aValidRect.origin.x * sizeof(uint32_t);
+    size_t length = stride * (aValidRect.size.height - 1) +
+                    aValidRect.size.width * sizeof(uint32_t);
+    void* data = gl->fMapBufferRange(
+        LOCAL_GL_PIXEL_UNPACK_BUFFER, offset, length,
+        LOCAL_GL_MAP_WRITE_BIT | LOCAL_GL_MAP_INVALIDATE_BUFFER_BIT);
+    gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
+    if (!data) {
+      return false;
+    }
+    *aData = data;
+    *aStride = stride;
+  } else {
+    // No PBO is available, so just directly write to the memory surface.
+    gfx::DataSourceSurface::MappedSurface map;
+    if (!mSurface->Map(gfx::DataSourceSurface::READ_WRITE, &map)) {
+      return false;
+    }
+    // Verify that we're not somehow using a PBOUnpackSurface.
+    MOZ_ASSERT(map.mData != nullptr);
+    *aData = map.mData + aValidRect.origin.y * map.mStride +
+             aValidRect.origin.x * sizeof(uint32_t);
+    *aStride = map.mStride;
   }
-  *aData =
-      map.mData + aValidRect.origin.y * map.mStride + aValidRect.origin.x * 4;
-  *aStride = map.mStride;
   return true;
 }
 
 void RenderCompositorOGLSWGL::TileOGL::Unmap(const gfx::IntRect& aDirtyRect) {
-  mSurface->Unmap();
   nsIntRegion dirty(aDirtyRect);
-  mTexture->Update(mSurface, &dirty);
+  if (mPBO) {
+    // If there is a PBO, it must be unmapped before it can be sourced from.
+    // Leave the PBO bound before the call to Update so that the texture uploads
+    // will source from it.
+    auto* gl = mTexture->gl();
+    if (!gl) {
+      return;
+    }
+    gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mPBO);
+    gl->fUnmapBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER);
+    mTexture->Update(mSurface, &dirty);
+    gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
+  } else {
+    mTexture->Update(mSurface, &dirty);
+  }
 }
 
 }  // namespace wr
