@@ -21,9 +21,6 @@ namespace js {
 
 class ArrayObject;
 
-/* 2^32-2, inclusive */
-const uint32_t MAX_ARRAY_INDEX = 4294967294u;
-
 MOZ_ALWAYS_INLINE bool IdIsIndex(jsid id, uint32_t* indexp) {
   if (JSID_IS_INT(id)) {
     int32_t i = JSID_TO_INT(id);
@@ -37,7 +34,7 @@ MOZ_ALWAYS_INLINE bool IdIsIndex(jsid id, uint32_t* indexp) {
   }
 
   JSAtom* atom = JSID_TO_ATOM(id);
-  return atom->isIndex(indexp) && *indexp <= MAX_ARRAY_INDEX;
+  return atom->isIndex(indexp);
 }
 
 // The methods below only create dense boxed arrays.

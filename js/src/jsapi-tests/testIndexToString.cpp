@@ -42,7 +42,6 @@ static const struct TestPair {
     {2147483648u, "2147483648"},
     {2147483649u, "2147483649"},
     {4294967294u, "4294967294"},
-    {4294967295u, "4294967295"},
 };
 
 BEGIN_TEST(testIndexToString) {
@@ -89,18 +88,25 @@ BEGIN_TEST(testStringToPropertyName) {
   CHECK(hiStr->toPropertyName(cx) != nullptr);
 
   static const char16_t maxChars[] = {'4', '2', '9', '4', '9',
-                                      '6', '7', '2', '9', '5'};
+                                      '6', '7', '2', '9', '4'};
   JSLinearString* maxStr = NewString(cx, maxChars);
   CHECK(maxStr);
   CHECK(maxStr->isIndex(&index));
-  CHECK(index == UINT32_MAX);
+  CHECK(index == UINT32_MAX - 1);
 
   static const char16_t maxPlusOneChars[] = {'4', '2', '9', '4', '9',
-                                             '6', '7', '2', '9', '6'};
+                                             '6', '7', '2', '9', '5'};
   JSLinearString* maxPlusOneStr = NewString(cx, maxPlusOneChars);
   CHECK(maxPlusOneStr);
   CHECK(!maxPlusOneStr->isIndex(&index));
   CHECK(maxPlusOneStr->toPropertyName(cx) != nullptr);
+
+  static const char16_t maxNonUint32Chars[] = {'4', '2', '9', '4', '9',
+                                               '6', '7', '2', '9', '6'};
+  JSLinearString* maxNonUint32Str = NewString(cx, maxNonUint32Chars);
+  CHECK(maxNonUint32Str);
+  CHECK(!maxNonUint32Str->isIndex(&index));
+  CHECK(maxNonUint32Str->toPropertyName(cx) != nullptr);
 
   return true;
 }

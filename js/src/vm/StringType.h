@@ -61,9 +61,15 @@ class PropertyName;
 /* The buffer length required to contain any unsigned 32-bit integer. */
 static const size_t UINT32_CHAR_BUFFER_LENGTH = sizeof("4294967295") - 1;
 
-// Returns true if the characters of `s` store an unsigned 32-bit integer value,
-// initializing `*indexp` to that value if so.
-// Leading '0' isn't allowed except 0 itself.
+// Maximum array index. This value is defined in the spec (ES2021 draft, 6.1.7):
+//
+//   An array index is an integer index whose numeric value i is in the range
+//   +0𝔽 ≤ i < 𝔽(2^32 - 1).
+const uint32_t MAX_ARRAY_INDEX = 4294967294u;  // 2^32-2 (= UINT32_MAX-1)
+
+// Returns true if the characters of `s` store an unsigned 32-bit integer value
+// less than or equal to MAX_ARRAY_INDEX, initializing `*indexp` to that value
+// if so. Leading '0' isn't allowed except 0 itself.
 template <typename CharT>
 bool CheckStringIsIndex(const CharT* s, size_t length, uint32_t* indexp);
 
@@ -311,8 +317,9 @@ class JSString : public js::gc::CellWithLengthAndFlags {
 
   static const uint32_t LATIN1_CHARS_BIT = js::Bit(9);
 
-  // Whether this atom's characters store an uint32 index value. Not used for
-  // non-atomized strings. See JSLinearString::isIndex.
+  // Whether this atom's characters store an uint32 index value less than or
+  // equal to MAX_ARRAY_INDEX. Not used for non-atomized strings.
+  // See JSLinearString::isIndex.
   static const uint32_t ATOM_IS_INDEX_BIT = js::Bit(10);
 
   static const uint32_t INDEX_VALUE_BIT = js::Bit(11);
@@ -878,13 +885,11 @@ class JSLinearString : public JSString {
     return mozilla::IsAsciiDigit(*s) && js::CheckStringIsIndex(s, len, indexp);
   }
 
-  /*
-   * Returns true if this string's characters store an unsigned 32-bit
-   * integer value, initializing *indexp to that value if so.
-   * Leading '0' isn't allowed except 0 itself.
-   * (Thus if calling isIndex returns true, js::IndexToString(cx, *indexp) will
-   * be a string equal to this string.)
-   */
+  // Returns true if this string's characters store an unsigned 32-bit integer
+  // value less than or equal to MAX_ARRAY_INDEX, initializing *indexp to that
+  // value if so. Leading '0' isn't allowed except 0 itself.
+  // (Thus if calling isIndex returns true, js::IndexToString(cx, *indexp) will
+  // be a string equal to this string.)
   inline bool isIndex(uint32_t* indexp) const;
 
   void maybeInitializeIndexValue(uint32_t index, bool allowAtom = false) {
