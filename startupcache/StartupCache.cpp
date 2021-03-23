@@ -858,16 +858,14 @@ bool StartupCacheDebugOutputStream::CheckReferences(nsISupports* aObject) {
   NS_ENSURE_SUCCESS(rv, false);
   if (flags & nsIClassInfo::SINGLETON) return true;
 
-  nsISupportsHashKey* key = mObjectMap->GetEntry(aObject);
-  if (key) {
+  bool inserted = mObjectMap->EnsureInserted(aObject);
+  if (!inserted) {
     NS_ERROR(
         "non-singleton aObject is referenced multiple times in this"
         "serialization, we don't support that.");
-    return false;
   }
 
-  mObjectMap->PutEntry(aObject);
-  return true;
+  return inserted;
 }
 
 // nsIObjectOutputStream implementation

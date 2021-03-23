@@ -11,6 +11,7 @@
 #include "nsClassHashtable.h"
 #include "nsComponentManagerUtils.h"
 #include "nsTArray.h"
+#include "nsTHashSet.h"
 #include "nsTStringHasher.h"  // mozilla::DefaultHasher<nsCString>
 #include "nsZipArchive.h"
 #include "nsITimer.h"
@@ -235,7 +236,7 @@ class StartupCache : public nsIMemoryReporter {
   PRThread* mPrefetchThread;
   UniquePtr<Compression::LZ4FrameDecompressionContext> mDecompressionContext;
 #ifdef DEBUG
-  nsTHashtable<nsISupportsHashKey> mWriteObjectMap;
+  nsTHashSet<nsCOMPtr<nsISupports>> mWriteObjectMap;
 #endif
 };
 
@@ -250,7 +251,7 @@ class StartupCacheDebugOutputStream final : public nsIObjectOutputStream {
   NS_DECL_NSIOBJECTOUTPUTSTREAM
 
   StartupCacheDebugOutputStream(nsIObjectOutputStream* binaryStream,
-                                nsTHashtable<nsISupportsHashKey>* objectMap)
+                                nsTHashSet<nsCOMPtr<nsISupports>>* objectMap)
       : mBinaryStream(binaryStream), mObjectMap(objectMap) {}
 
   NS_FORWARD_SAFE_NSIBINARYOUTPUTSTREAM(mBinaryStream)
@@ -259,7 +260,7 @@ class StartupCacheDebugOutputStream final : public nsIObjectOutputStream {
   bool CheckReferences(nsISupports* aObject);
 
   nsCOMPtr<nsIObjectOutputStream> mBinaryStream;
-  nsTHashtable<nsISupportsHashKey>* mObjectMap;
+  nsTHashSet<nsCOMPtr<nsISupports>>* mObjectMap;
 };
 #endif  // DEBUG
 
