@@ -12,6 +12,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -27,8 +28,11 @@ class OnboardingHeaderViewHolderTest {
 
     @Test
     fun `bind header text`() {
+        val appName = testContext.getString(R.string.app_name)
+        val welcomeMessage = testContext.getString(R.string.onboarding_header, appName)
+
         OnboardingHeaderViewHolder(view)
 
-        assertEquals("Welcome to Firefox Preview!", view.header_text.text)
+        assertEquals(welcomeMessage, view.header_text.text)
     }
 }
