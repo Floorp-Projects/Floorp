@@ -118,7 +118,7 @@ DefaultJitOptions::DefaultJitOptions() {
   SET_DEFAULT(disableBailoutLoopCheck, false);
 
   // Whether we use scalar replacement instead of the old arguments analysis.
-  SET_DEFAULT(scalarReplaceArguments, false);
+  SET_DEFAULT(scalarReplaceArguments, true);
 
   // Whether the Baseline Interpreter is enabled.
   SET_DEFAULT(baselineInterpreter, true);
