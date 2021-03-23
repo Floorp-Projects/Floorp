@@ -64,14 +64,13 @@ nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache)
       mColorControlText(0),
       mColorText(0),
       mColorWindowText(0),
-      mColorActiveCaption(0),
+      mColorGrid(0),
       mColorActiveBorder(0),
       mColorGrayText(0),
       mColorInactiveBorder(0),
       mColorInactiveCaption(0),
       mColorScrollbar(0),
       mColorThreeDHighlight(0),
-      mColorWindowFrame(0),
       mColorDialog(0),
       mColorDragTargetZone(0),
       mColorChromeActive(0),
@@ -273,7 +272,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       aColor = mColorWindowText;
       break;
     case ColorID::Activecaption:
-      aColor = mColorActiveCaption;
+      aColor = mColorGrid;
       break;
     case ColorID::Activeborder:
       aColor = mColorActiveBorder;
@@ -328,7 +327,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       aColor = mColorAlternateSelectedControlText;
       break;
     case ColorID::Windowframe:
-      aColor = mColorWindowFrame;
+      aColor = mColorGrid;
       break;
     case ColorID::Window:
     case ColorID::Field:
@@ -701,7 +700,6 @@ mozilla::widget::LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
       ColorID::Inactivecaption,
       ColorID::Scrollbar,
       ColorID::Threedhighlight,
-      ColorID::Windowframe,
       ColorID::Fieldtext,
       ColorID::MozDialog,
       ColorID::MozDragtargetzone,
@@ -781,7 +779,7 @@ void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
         case ColorID::Windowtext:
           return mColorWindowText;
         case ColorID::Activecaption:
-          return mColorActiveCaption;
+          return mColorGrid;
         case ColorID::Activeborder:
           return mColorActiveBorder;
         case ColorID::Graytext:
@@ -794,8 +792,6 @@ void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
           return mColorScrollbar;
         case ColorID::Threedhighlight:
           return mColorThreeDHighlight;
-        case ColorID::Windowframe:
-          return mColorWindowFrame;
         case ColorID::Fieldtext:
           return mColorControlText;
         case ColorID::MozDialog:
@@ -883,7 +879,7 @@ void nsLookAndFeel::EnsureInit() {
   mColorControlText = GetColorFromNSColor([NSColor controlTextColor]);
   mColorText = GetColorFromNSColor([NSColor textColor]);
   mColorWindowText = GetColorFromNSColor([NSColor windowFrameTextColor]);
-  mColorActiveCaption = GetColorFromNSColor([NSColor gridColor]);
+  mColorGrid = GetColorFromNSColor([NSColor gridColor]);
   mColorActiveBorder = GetColorFromNSColor([NSColor keyboardFocusIndicatorColor]);
   NSColor* disabledColor = [NSColor disabledControlTextColor];
   mColorGrayText = GetColorFromNSColorWithAlpha(disabledColor, [disabledColor alphaComponent]);
@@ -891,7 +887,6 @@ void nsLookAndFeel::EnsureInit() {
   mColorInactiveCaption = GetColorFromNSColor([NSColor controlBackgroundColor]);
   mColorScrollbar = GetColorFromNSColor([NSColor scrollBarColor]);
   mColorThreeDHighlight = GetColorFromNSColor([NSColor highlightColor]);
-  mColorWindowFrame = GetColorFromNSColor([NSColor gridColor]);
   mColorDialog = GetColorFromNSColor([NSColor controlHighlightColor]);
   mColorDragTargetZone = GetColorFromNSColor([NSColor selectedControlColor]);
 
