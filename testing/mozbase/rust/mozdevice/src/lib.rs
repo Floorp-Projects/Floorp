@@ -26,7 +26,7 @@ use std::iter::FromIterator;
 use std::net::TcpStream;
 use std::num::{ParseIntError, TryFromIntError};
 use std::path::{Path, PathBuf};
-use std::str::Utf8Error;
+use std::str::{FromStr, Utf8Error};
 use std::time::{Duration, SystemTime};
 use uuid::Uuid;
 use walkdir::WalkDir;
@@ -37,10 +37,46 @@ pub type Result<T> = std::result::Result<T, DeviceError>;
 
 static SYNC_REGEX: Lazy<Regex> = Lazy::new(|| Regex::new(r"[^A-Za-z0-9_@%+=:,./-]").unwrap());
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum AndroidStorageInput {
+    Auto,
+    App,
+    Internal,
+    Sdcard,
+}
+
+impl FromStr for AndroidStorageInput {
+    type Err = DeviceError;
+
+    fn from_str(s: &str) -> Result<Self> {
+        match s {
+            "auto" => Ok(AndroidStorageInput::Auto),
+            "app" => Ok(AndroidStorageInput::App),
+            "internal" => Ok(AndroidStorageInput::Internal),
+            "sdcard" => Ok(AndroidStorageInput::Sdcard),
+            _ => Err(DeviceError::InvalidStorage),
+        }
+    }
+}
+
+impl Default for AndroidStorageInput {
+    fn default() -> Self {
+        AndroidStorageInput::Auto
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum AndroidStorage {
+    App,
+    Internal,
+    Sdcard,
+}
+
 #[derive(Debug)]
 pub enum DeviceError {
     Adb(String),
     FromInt(TryFromIntError),
+    InvalidStorage,
     Io(io::Error),
     MissingPackage,
     MultipleDevices,
@@ -55,6 +91,7 @@ impl fmt::Display for DeviceError {
         match *self {
             DeviceError::Adb(ref message) => message.fmt(f),
             DeviceError::FromInt(ref int) => int.fmt(f),
+            DeviceError::InvalidStorage => write!(f, "Invalid storage"),
             DeviceError::Io(ref error) => error.fmt(f),
             DeviceError::MissingPackage => write!(f, "Missing package"),
             DeviceError::MultipleDevices => write!(f, "Multiple Android devices online"),
@@ -265,7 +302,8 @@ impl Host {
     /// the `ANDROID_SERIAL` environment variable can be used to select one.
     pub fn device_or_default<T: AsRef<str>>(
         self,
-        device_serial: Option<&T>
+        device_serial: Option<&T>,
+        storage: AndroidStorageInput,
     ) -> Result<Device> {
         let serials: Vec<String> = self
             .devices::<Vec<_>>()?
@@ -281,7 +319,7 @@ impl Host {
                 return Err(DeviceError::UnknownDevice(serial.clone()));
             }
 
-            return Device::new(self, serial.to_owned());
+            return Device::new(self, serial.to_owned(), storage);
         }
 
         if serials.len() > 1 {
@@ -289,7 +327,7 @@ impl Host {
         }
 
         if let Some(ref serial) = serials.first() {
-            return Device::new(self, serial.to_owned().to_string());
+            return Device::new(self, serial.to_owned().to_string(), storage);
         }
 
         Err(DeviceError::Adb("No Android devices are online".to_owned()))
@@ -369,18 +407,21 @@ pub struct Device {
 
     pub run_as_package: Option<String>,
 
+    pub storage: AndroidStorage,
+
     /// Cache intermediate tempfile name used in pushing via run_as.
     pub tempfile: PathBuf,
 }
 
 impl Device {
-    pub fn new(host: Host, serial: DeviceSerial) -> Result<Device> {
+    pub fn new(host: Host, serial: DeviceSerial, storage: AndroidStorageInput) -> Result<Device> {
         let mut device = Device {
             host,
             serial,
             adbd_root: false,
             is_rooted: false,
             run_as_package: None,
+            storage: AndroidStorage::App,
             su_c_root: false,
             su_0_root: false,
             tempfile: PathBuf::from("/data/local/tmp"),
@@ -402,13 +443,19 @@ impl Device {
             .map_or(false, uid_check);
         device.is_rooted = device.adbd_root || device.su_0_root || device.su_c_root;
 
-        if device.is_rooted {
-            debug!("Device is rooted");
+        device.storage = match storage {
+            AndroidStorageInput::App => AndroidStorage::App,
+            AndroidStorageInput::Internal => AndroidStorage::Internal,
+            AndroidStorageInput::Sdcard => AndroidStorage::Sdcard,
+            AndroidStorageInput::Auto => match device.is_rooted {
+                true => AndroidStorage::Internal,
+                false => AndroidStorage::App,
+            },
+        };
 
-            // Set Permissive=1 if we have root.
+        // Set Permissive=1 if we have root.
+        if device.is_rooted {
             device.execute_host_shell_command("setenforce permissive")?;
-        } else {
-            debug!("Device is unrooted");
         }
 
         Ok(device)

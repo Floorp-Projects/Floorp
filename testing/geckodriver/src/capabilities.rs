@@ -5,6 +5,7 @@
 use crate::command::LogOptions;
 use crate::logging::Level;
 use base64;
+use mozdevice::AndroidStorageInput;
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
 use mozrunner::runner::platform::firefox_default_path;
@@ -348,12 +349,14 @@ pub struct AndroidOptions {
     pub device_serial: Option<String>,
     pub intent_arguments: Option<Vec<String>>,
     pub package: String,
+    pub storage: AndroidStorageInput,
 }
 
 impl AndroidOptions {
-    pub fn new(package: String) -> AndroidOptions {
+    pub fn new(package: String, storage: AndroidStorageInput) -> AndroidOptions {
         AndroidOptions {
             package,
+            storage,
             ..Default::default()
         }
     }
@@ -383,6 +386,7 @@ impl FirefoxOptions {
 
     pub fn from_capabilities(
         binary_path: Option<PathBuf>,
+        android_storage: AndroidStorageInput,
         matched: &mut Capabilities,
     ) -> WebDriverResult<FirefoxOptions> {
         let mut rv = FirefoxOptions::new();
@@ -397,7 +401,7 @@ impl FirefoxOptions {
                 )
             })?;
 
-            rv.android = FirefoxOptions::load_android(&options)?;
+            rv.android = FirefoxOptions::load_android(android_storage, &options)?;
             rv.args = FirefoxOptions::load_args(&options)?;
             rv.env = FirefoxOptions::load_env(&options)?;
             rv.log = FirefoxOptions::load_log(&options)?;
@@ -555,6 +559,7 @@ impl FirefoxOptions {
     }
 
     pub fn load_android(
+        storage: AndroidStorageInput,
         options: &Capabilities,
     ) -> WebDriverResult<Option<AndroidOptions>> {
         if let Some(package_json) = options.get("androidPackage") {
@@ -578,7 +583,7 @@ impl FirefoxOptions {
                 ));
             }
 
-            let mut android = AndroidOptions::new(package);
+            let mut android = AndroidOptions::new(package, storage);
 
             android.activity = match options.get("androidActivity") {
                 Some(json) => {
@@ -720,6 +725,7 @@ mod tests {
     use self::mozprofile::preferences::Pref;
     use super::*;
     use crate::marionette::MarionetteHandler;
+    use mozdevice::AndroidStorageInput;
     use serde_json::json;
     use std::default::Default;
     use std::fs::File;
@@ -738,7 +744,7 @@ mod tests {
         let mut caps = Capabilities::new();
         caps.insert("moz:firefoxOptions".into(), Value::Object(firefox_opts));
 
-        FirefoxOptions::from_capabilities(None, &mut caps)
+        FirefoxOptions::from_capabilities(None, AndroidStorageInput::Auto, &mut caps)
     }
 
     #[test]
@@ -758,7 +764,7 @@ mod tests {
         let mut caps = Capabilities::new();
 
         let opts =
-            FirefoxOptions::from_capabilities(None, &mut caps).unwrap();
+            FirefoxOptions::from_capabilities(None, AndroidStorageInput::Auto, &mut caps).unwrap();
         assert_eq!(opts.android, None);
         assert_eq!(opts.args, None);
         assert_eq!(opts.binary, None);
@@ -778,6 +784,7 @@ mod tests {
 
         let opts = FirefoxOptions::from_capabilities(
             Some(binary.clone()),
+            AndroidStorageInput::Auto,
             &mut caps,
         )
         .unwrap();
@@ -792,7 +799,7 @@ mod tests {
     fn fx_options_from_capabilities_with_debugger_address_not_set() {
         let mut caps = Capabilities::new();
 
-        let opts = FirefoxOptions::from_capabilities(None, &mut caps)
+        let opts = FirefoxOptions::from_capabilities(None, AndroidStorageInput::Auto, &mut caps)
             .expect("Valid Firefox options");
 
         assert!(
@@ -806,7 +813,7 @@ mod tests {
         let mut caps = Capabilities::new();
         caps.insert("moz:debuggerAddress".into(), json!(false));
 
-        let opts = FirefoxOptions::from_capabilities(None, &mut caps)
+        let opts = FirefoxOptions::from_capabilities(None, AndroidStorageInput::Auto, &mut caps)
             .expect("Valid Firefox options");
 
         assert!(
@@ -820,7 +827,7 @@ mod tests {
         let mut caps = Capabilities::new();
         caps.insert("moz:debuggerAddress".into(), json!(true));
 
-        let opts = FirefoxOptions::from_capabilities(None, &mut caps)
+        let opts = FirefoxOptions::from_capabilities(None, AndroidStorageInput::Auto, &mut caps)
             .expect("Valid Firefox options");
 
         if let Some(args) = opts.args {
@@ -844,7 +851,7 @@ mod tests {
         let mut caps = Capabilities::new();
         caps.insert("moz:firefoxOptions".into(), json!(42));
 
-        FirefoxOptions::from_capabilities(None, &mut caps)
+        FirefoxOptions::from_capabilities(None, AndroidStorageInput::Auto, &mut caps)
             .expect_err("Firefox options need to be of type object");
     }
 
@@ -866,7 +873,10 @@ mod tests {
             let opts = make_options(firefox_opts).expect("valid firefox options");
             assert_eq!(
                 opts.android,
-                Some(AndroidOptions::new(value.to_string()))
+                Some(AndroidOptions::new(
+                    value.to_string(),
+                    AndroidStorageInput::Auto
+                ))
             );
         }
     }
