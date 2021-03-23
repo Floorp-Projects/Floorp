@@ -91,6 +91,31 @@ document.addEventListener("DOMContentLoaded", function() {
 
   // Setup the search hand-off box.
   let btn = document.getElementById("search-handoff-button");
+  RPMSendQuery("ShouldShowSearch", {}).then(engineName => {
+    let input = document.querySelector(".fake-textbox");
+    if (engineName) {
+      document.l10n.setAttributes(btn, "about-private-browsing-handoff", {
+        engine: engineName,
+      });
+      document.l10n.setAttributes(
+        input,
+        "about-private-browsing-handoff-text",
+        {
+          engine: engineName,
+        }
+      );
+    } else {
+      document.l10n.setAttributes(
+        btn,
+        "about-private-browsing-handoff-no-engine"
+      );
+      document.l10n.setAttributes(
+        input,
+        "about-private-browsing-handoff-text-no-engine"
+      );
+    }
+  });
+
   let editable = document.getElementById("fake-editable");
   let DISABLE_SEARCH_TOPIC = "DisableSearch";
   let SHOW_SEARCH_TOPIC = "ShowSearch";
@@ -136,6 +161,6 @@ document.addEventListener("DOMContentLoaded", function() {
     handoffSearch(ev.clipboardData.getData("Text"));
   });
 
-  // Load contentSearchUI so it sets the search engine icon for us.
+  // Load contentSearchUI so it sets the search engine icon and name for us.
   new window.ContentSearchHandoffUIController();
 });
