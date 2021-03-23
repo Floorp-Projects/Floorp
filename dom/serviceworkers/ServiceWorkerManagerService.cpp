@@ -68,7 +68,7 @@ void ServiceWorkerManagerService::RegisterActor(
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(!mAgents.Contains(aParent));
 
-  mAgents.PutEntry(aParent);
+  mAgents.Insert(aParent);
 }
 
 void ServiceWorkerManagerService::UnregisterActor(
@@ -77,7 +77,7 @@ void ServiceWorkerManagerService::UnregisterActor(
   MOZ_ASSERT(aParent);
   MOZ_ASSERT(mAgents.Contains(aParent));
 
-  mAgents.RemoveEntry(aParent);
+  mAgents.Remove(aParent);
 }
 
 void ServiceWorkerManagerService::PropagateRegistration(
@@ -88,8 +88,7 @@ void ServiceWorkerManagerService::PropagateRegistration(
     return;
   }
 
-  for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<ServiceWorkerManagerParent> parent = iter.Get()->GetKey();
+  for (RefPtr<ServiceWorkerManagerParent> parent : mAgents) {
     MOZ_ASSERT(parent);
 
     if (parent->ID() != aParentID) {
@@ -123,8 +122,7 @@ void ServiceWorkerManagerService::PropagateSoftUpdate(
     return;
   }
 
-  for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<ServiceWorkerManagerParent> parent = iter.Get()->GetKey();
+  for (RefPtr<ServiceWorkerManagerParent> parent : mAgents) {
     MOZ_ASSERT(parent);
 
     nsString scope(aScope);
@@ -158,8 +156,7 @@ void ServiceWorkerManagerService::PropagateUnregister(
     return;
   }
 
-  for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<ServiceWorkerManagerParent> parent = iter.Get()->GetKey();
+  for (RefPtr<ServiceWorkerManagerParent> parent : mAgents) {
     MOZ_ASSERT(parent);
 
     if (parent->ID() != aParentID) {
@@ -177,8 +174,7 @@ void ServiceWorkerManagerService::PropagateRemove(uint64_t aParentID,
     return;
   }
 
-  for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<ServiceWorkerManagerParent> parent = iter.Get()->GetKey();
+  for (RefPtr<ServiceWorkerManagerParent> parent : mAgents) {
     MOZ_ASSERT(parent);
 
     if (parent->ID() != aParentID) {
@@ -201,8 +197,7 @@ void ServiceWorkerManagerService::PropagateRemoveAll(uint64_t aParentID) {
 
   service->RemoveAll();
 
-  for (auto iter = mAgents.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<ServiceWorkerManagerParent> parent = iter.Get()->GetKey();
+  for (RefPtr<ServiceWorkerManagerParent> parent : mAgents) {
     MOZ_ASSERT(parent);
 
     if (parent->ID() != aParentID) {
