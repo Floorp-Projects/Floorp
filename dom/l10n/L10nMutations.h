@@ -9,7 +9,7 @@
 
 #include "nsRefreshObservers.h"
 #include "nsStubMutationObserver.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 #include "mozilla/dom/DOMLocalization.h"
 
 class nsRefreshDriver;
@@ -67,7 +67,7 @@ class L10nMutations final : public nsStubMutationObserver,
   DOMLocalization* mDOMLocalization;
 
   // The hash is used to speed up lookups into mPendingElements.
-  nsTHashtable<nsRefPtrHashKey<Element>> mPendingElementsHash;
+  nsTHashSet<RefPtr<Element>> mPendingElementsHash;
   nsTArray<RefPtr<Element>> mPendingElements;
 
   virtual void WillRefresh(mozilla::TimeStamp aTime) override;
