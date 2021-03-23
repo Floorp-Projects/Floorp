@@ -954,17 +954,11 @@ class RaptorOutput(PerftestOutput):
 
             suite["tags"].append(test["type"])
 
-            # for benchmarks there is generally  more than one subtest in each cycle
+            # for benchmarks there is generally more than one subtest in each cycle
             # and a benchmark-specific formula is needed to calculate the final score
-
-            # for pageload tests, if there are > 1 subtests here, that means there
-            # were multiple measurements captured in each single pageload; we want
-            # to get the mean of those values and report 1 overall 'suite' value
-            # for the page; so that each test page/URL only has 1 line output
-            # on treeherder/perfherder (all replicates available in the JSON)
-
-            # summarize results for both benchmark or pageload type tests
-            if len(subtests) > 1:
+            # we no longer summarise the page load as we alert on individual subtests
+            # and the geometric mean was found to be of little value
+            if len(subtests) > 1 and test["type"] != "pageload":
                 suite["value"] = self.construct_summary(vals, testname=test["name"])
 
             subtests.sort(key=lambda subtest: subtest["name"])
@@ -1450,12 +1444,11 @@ class BrowsertimeOutput(PerftestOutput):
             ]
             suite["subtests"].sort(key=lambda subtest: subtest["name"])
 
-            # for pageload tests, if there are > 1 subtests here, that means there
-            # were multiple measurement types captured in each single pageload; we want
-            # to get the mean of those values and report 1 overall 'suite' value
-            # for the page; all replicates will still be available in the JSON artifact
-            # summarize results to get top overall suite result
-            if len(suite["subtests"]) > 1:
+            # for benchmarks there is generally more than one subtest in each cycle
+            # and a benchmark-specific formula is needed to calculate the final score
+            # we no longer summarise the page load as we alert on individual subtests
+            # and the geometric mean was found to be of little value
+            if len(suite["subtests"]) > 1 and suite["type"] != "pageload":
                 vals = [
                     [subtest["value"], subtest["name"]] for subtest in suite["subtests"]
                 ]
