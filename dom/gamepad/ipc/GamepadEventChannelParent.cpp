@@ -71,10 +71,13 @@ void GamepadEventChannelParent::ActorDestroy(ActorDestroyReason aWhy) {
 mozilla::ipc::IPCResult GamepadEventChannelParent::RecvVibrateHaptic(
     const Tainted<GamepadHandle>& aHandle,
     const Tainted<uint32_t>& aHapticIndex, const Tainted<double>& aIntensity,
-    const Tainted<double>& aDuration, const uint32_t& aPromiseID) {
+    const Tainted<double>& aDuration, const Tainted<uint32_t>& aPromiseID) {
   // TODO: Bug 680289, implement for standard gamepads
 
-  if (SendReplyGamepadPromise(aPromiseID)) {
+  // TODO: simplify tainted validation, see 1610570
+  if (SendReplyGamepadPromise(MOZ_NO_VALIDATE(
+          aPromiseID,
+          "This value is unused aside from being passed back to the child."))) {
     return IPC_OK();
   }
 
@@ -89,11 +92,15 @@ mozilla::ipc::IPCResult GamepadEventChannelParent::RecvStopVibrateHaptic(
 
 mozilla::ipc::IPCResult GamepadEventChannelParent::RecvLightIndicatorColor(
     const Tainted<GamepadHandle>& aHandle,
-    const Tainted<uint32_t>& aLightColorIndex, const uint8_t& aRed,
-    const uint8_t& aGreen, const uint8_t& aBlue, const uint32_t& aPromiseID) {
+    const Tainted<uint32_t>& aLightColorIndex, const Tainted<uint8_t>& aRed,
+    const Tainted<uint8_t>& aGreen, const Tainted<uint8_t>& aBlue,
+    const Tainted<uint32_t>& aPromiseID) {
   SetGamepadLightIndicatorColor(aHandle, aLightColorIndex, aRed, aGreen, aBlue);
 
-  if (SendReplyGamepadPromise(aPromiseID)) {
+  // TODO: simplify tainted validation, see 1610570
+  if (SendReplyGamepadPromise(MOZ_NO_VALIDATE(
+          aPromiseID,
+          "This value is unused aside from being passed back to the child."))) {
     return IPC_OK();
   }
 
