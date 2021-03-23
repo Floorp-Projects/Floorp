@@ -6,21 +6,36 @@ function promiseTimeout(delay) {
   });
 }
 
+function promiseTouchStart(element) {
+  return new Promise(resolve => {
+    element.addEventListener("touchstart", resolve, {
+      passive: true,
+      once: true,
+    });
+  });
+}
+
 async function touchScrollRight(aSelector = "#target0", aX = 20, aY = 20) {
-  var target = document.querySelector(aSelector);
-  let dragDonePromise = promiseTouchEnd(document.body);
+  const target = document.querySelector(aSelector);
+  const touchStartPromise = promiseTouchStart(document.body);
+  const touchEndPromise = promiseTouchEnd(document.body);
   dump("Synthesizing horizontal drag\n");
   await promiseNativePointerDrag(target, "touch", aX + 40, aY, -40, 0);
-  await dragDonePromise;
+  await touchStartPromise;
+  dump("Got touchstart from the horizontal drag\n");
+  await touchEndPromise;
   dump("Got touchend from the horizontal drag\n");
 }
 
 async function touchScrollDown(aSelector = "#target0", aX = 20, aY = 20) {
-  var target = document.querySelector(aSelector);
-  let dragDonePromise = promiseTouchEnd(document.body);
+  const target = document.querySelector(aSelector);
+  const touchStartPromise = promiseTouchStart(document.body);
+  const touchEndPromise = promiseTouchEnd(document.body);
   dump("Synthesizing vertical drag\n");
   await promiseNativePointerDrag(target, "touch", aX, aY + 40, 0, -40);
-  await dragDonePromise;
+  await touchStartPromise;
+  dump("Got touchstart from the vertical drag\n");
+  await touchEndPromise;
   dump("Got touchend from the vertical drag\n");
 }
 
