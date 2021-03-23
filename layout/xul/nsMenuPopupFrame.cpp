@@ -61,6 +61,9 @@
 #ifdef MOZ_WAYLAND
 #  include "mozilla/WidgetUtilsGtk.h"
 #endif /* MOZ_WAYLAND */
+#ifdef XP_MACOSX
+#  include "mozilla/widget/NativeMenuSupport.h"
+#endif
 
 #include "X11UndefineNone.h"
 
@@ -69,6 +72,7 @@ using mozilla::dom::Document;
 using mozilla::dom::Element;
 using mozilla::dom::Event;
 using mozilla::dom::KeyboardEvent;
+using mozilla::widget::NativeMenu;
 
 int8_t nsMenuPopupFrame::sDefaultLevelIsTop = -1;
 
@@ -128,6 +132,12 @@ nsMenuPopupFrame::nsMenuPopupFrame(ComputedStyle* aStyle,
   sDefaultLevelIsTop =
       Preferences::GetBool("ui.panel.default_level_parent", false);
 }  // ctor
+
+nsMenuPopupFrame::~nsMenuPopupFrame() {
+  if (mNativeMenu) {
+    mNativeMenu->RemoveObserver(this);
+  }
+}
 
 void nsMenuPopupFrame::Init(nsIContent* aContent, nsContainerFrame* aParent,
                             nsIFrame* aPrevInFlow) {
@@ -903,6 +913,40 @@ void nsMenuPopupFrame::InitializePopupAtScreen(nsIContent* aTriggerContent,
   mPositionedOffset = 0;
 }
 
+bool nsMenuPopupFrame::InitializePopupAsNativeContextMenu(
+    nsIContent* aTriggerContent, int32_t aXPos, int32_t aYPos) {
+  RefPtr<NativeMenu> menu;
+#ifdef XP_MACOSX
+  if (mContent->IsElement()) {
+    menu = mozilla::widget::NativeMenuSupport::CreateNativeContextMenu(
+        mContent->AsElement());
+  }
+#endif
+  if (!menu) {
+    return false;
+  }
+
+  mTriggerContent = aTriggerContent;
+  mNativeMenu = menu;
+  mPopupState = ePopupClosed;  // Treat native popups as closed.
+  mAnchorContent = nullptr;
+  mScreenRect = nsIntRect(aXPos, aYPos, 0, 0);
+  mXPos = 0;
+  mYPos = 0;
+  mFlip = FlipType_Default;
+  mPopupAnchor = POPUPALIGNMENT_NONE;
+  mPopupAlignment = POPUPALIGNMENT_NONE;
+  mPosition = POPUPPOSITION_UNKNOWN;
+  mIsContextMenu = true;
+  mAdjustOffsetForContextMenu = true;
+  mAnchorType = MenuPopupAnchorType_Point;
+  mPositionedOffset = 0;
+
+  mNativeMenu->AddObserver(this);
+
+  return true;
+}
+
 void nsMenuPopupFrame::InitializePopupAtRect(nsIContent* aTriggerContent,
                                              const nsAString& aPosition,
                                              const nsIntRect& aRect,
@@ -910,6 +954,17 @@ void nsMenuPopupFrame::InitializePopupAtRect(nsIContent* aTriggerContent,
   InitializePopup(nullptr, aTriggerContent, aPosition, 0, 0,
                   MenuPopupAnchorType_Rect, aAttributesOverride);
   mScreenRect = aRect;
+}
+
+void nsMenuPopupFrame::ShowNativeMenu() {
+  MOZ_RELEASE_ASSERT(mNativeMenu);
+  bool succeeded = mNativeMenu->ShowAsContextMenu(
+      DesktopPoint::FromUnknownPoint(mScreenRect.TopLeft()));
+  if (!succeeded) {
+    // preventDefault() was called on the popupshowing event.
+    mNativeMenu->RemoveObserver(this);
+    mNativeMenu = nullptr;
+  }
 }
 
 void nsMenuPopupFrame::ShowPopup(bool aIsContextMenu) {
@@ -951,6 +1006,18 @@ void nsMenuPopupFrame::ShowPopup(bool aIsContextMenu) {
   }
 
   mShouldAutoPosition = true;
+}
+
+void nsMenuPopupFrame::OnNativeMenuClosed() {
+  if (!mNativeMenu) {
+    return;
+  }
+
+  // The native menu has closed.
+  // Null out mNativeMenu so that we don't keep it (and mContent) alive
+  // unnecessarily, and unregister ourselves first.
+  mNativeMenu->RemoveObserver(this);
+  mNativeMenu = nullptr;
 }
 
 void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState) {
