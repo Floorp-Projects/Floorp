@@ -237,8 +237,7 @@ void nsMenuBarX::InsertMenuAtIndex(RefPtr<nsMenuX>&& aMenu, uint32_t aIndex) {
   // hook up submenus
   RefPtr<nsIContent> menuContent = aMenu->Content();
   if (menuContent->GetChildCount() > 0 && !nsMenuUtilsX::NodeIsHiddenOrCollapsed(menuContent)) {
-    int insertionIndex = CalculateNativeInsertionPoint(aMenu);
-    [mNativeMenu insertItem:aMenu->NativeNSMenuItem() atIndex:insertionIndex];
+    InsertChildNativeMenuItem(aMenu);
   }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -459,6 +458,18 @@ void nsMenuBarX::ApplicationMenuOpened() {
 
 bool nsMenuBarX::PerformKeyEquivalent(NSEvent* aEvent) {
   return [mNativeMenu performSuperKeyEquivalent:aEvent];
+}
+
+void nsMenuBarX::InsertChildNativeMenuItem(nsMenuX* aChild) {
+  NSInteger insertionPoint = CalculateNativeInsertionPoint(aChild);
+  [mNativeMenu insertItem:aChild->NativeNSMenuItem() atIndex:insertionPoint];
+}
+
+void nsMenuBarX::RemoveChildNativeMenuItem(nsMenuX* aChild) {
+  NSMenuItem* item = aChild->NativeNSMenuItem();
+  if ([mNativeMenu indexOfItem:item] != -1) {
+    [mNativeMenu removeItem:item];
+  }
 }
 
 NSInteger nsMenuBarX::CalculateNativeInsertionPoint(nsMenuX* aChild) {

@@ -601,41 +601,29 @@ void nsMenuX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aCon
   } else if (aAttribute == nsGkAtoms::hidden || aAttribute == nsGkAtoms::collapsed) {
     SetRebuild(true);
 
-    bool contentIsHiddenOrCollapsed = nsMenuUtilsX::NodeIsHiddenOrCollapsed(mContent);
+    bool newVisible = !nsMenuUtilsX::NodeIsHiddenOrCollapsed(mContent);
 
     // don't do anything if the state is correct already
-    if (contentIsHiddenOrCollapsed != mVisible) {
+    if (newVisible == mVisible) {
       return;
     }
 
-    NSMenu* parentMenu = nil;
     if (parentType == eMenuBarObjectType) {
-      parentMenu = static_cast<nsMenuBarX*>(mParent)->NativeNSMenu();
-    } else if (parentType == eSubmenuObjectType) {
-      parentMenu = static_cast<nsMenuX*>(mParent)->NativeNSMenu();
-    }
-    if (parentMenu) {
-      if (contentIsHiddenOrCollapsed) {
-        // An exception will get thrown if we try to remove an item that isn't
-        // in the menu.
-        if ([parentMenu indexOfItem:mNativeMenuItem] != -1) {
-          [parentMenu removeItem:mNativeMenuItem];
-        }
-        mVisible = false;
+      nsMenuBarX* parentMenuBar = static_cast<nsMenuBarX*>(mParent);
+      if (newVisible) {
+        parentMenuBar->InsertChildNativeMenuItem(this);
       } else {
-        if (parentType == eMenuBarObjectType) {
-          nsMenuBarX* mb = static_cast<nsMenuBarX*>(mParent);
-          NSInteger insertionIndex = mb->CalculateNativeInsertionPoint(this);
-          [parentMenu insertItem:mNativeMenuItem atIndex:insertionIndex];
-        } else if (parentType == eSubmenuObjectType) {
-          nsMenuX* parentMenuX = static_cast<nsMenuX*>(mParent);
-          NSInteger insertionIndex = parentMenuX->CalculateNativeInsertionPoint(this);
-          [parentMenu insertItem:mNativeMenuItem atIndex:insertionIndex];
-        }
-        mNativeMenuItem.submenu = mNativeMenu;
-        mVisible = true;
+        parentMenuBar->RemoveChildNativeMenuItem(this);
+      }
+    } else if (parentType == eSubmenuObjectType) {
+      nsMenuX* parentMenu = static_cast<nsMenuX*>(mParent);
+      if (newVisible) {
+        parentMenu->InsertChildNativeMenuItem(this);
+      } else {
+        parentMenu->RemoveChildNativeMenuItem(this);
       }
     }
+    mVisible = newVisible;
   } else if (aAttribute == nsGkAtoms::image) {
     SetupIcon();
   }
@@ -671,6 +659,18 @@ void nsMenuX::IconUpdated() {
   mNativeMenuItem.image = mIcon->GetIconImage();
   if (mParent) {
     mParent->IconUpdated();
+  }
+}
+
+void nsMenuX::InsertChildNativeMenuItem(nsMenuX* aChild) {
+  NSInteger insertionPoint = CalculateNativeInsertionPoint(aChild);
+  [mNativeMenu insertItem:aChild->NativeNSMenuItem() atIndex:insertionPoint];
+}
+
+void nsMenuX::RemoveChildNativeMenuItem(nsMenuX* aChild) {
+  NSMenuItem* item = aChild->NativeNSMenuItem();
+  if ([mNativeMenu indexOfItem:item] != -1) {
+    [mNativeMenu removeItem:item];
   }
 }
 

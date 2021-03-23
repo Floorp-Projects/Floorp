@@ -88,9 +88,12 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
   NSMenuItem* NativeNSMenuItem() { return mNativeMenuItem; }
   GeckoNSMenu* NativeNSMenu() { return mNativeMenu; }
 
-  // Determines how many items are visible among the siblings in a menu that are
-  // before the given child.
-  NSInteger CalculateNativeInsertionPoint(nsMenuX* aChild);
+  // If aChild is one of our child menus, insert aChild's native menu item in our native menu at the
+  // right location.
+  void InsertChildNativeMenuItem(nsMenuX* aChild);
+
+  // Remove aChild's native menu item froum our native menu.
+  void RemoveChildNativeMenuItem(nsMenuX* aChild);
 
   void Dump(uint32_t aIndent) const;
 
@@ -111,6 +114,13 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
   void LoadSubMenu(nsIContent* aMenuContent);
   GeckoNSMenu* CreateMenuWithGeckoString(nsString& aMenuTitle);
   void UnregisterCommands();
+
+  // Calculates the index at which aChild's NSMenuItem should be inserted into our NSMenu.
+  // The order of NSMenuItems in the NSMenu is the same as the order of menu children in
+  // mMenuChildren; the only difference is that mMenuChildren contains both visible and invisible
+  // children, and the NSMenu only contains visible items. So the insertion index is equal to the
+  // number of visible previous siblings of aChild in mMenuChildren.
+  NSInteger CalculateNativeInsertionPoint(nsMenuX* aChild);
 
   nsCOMPtr<nsIContent> mContent;  // XUL <menu> or <menupopup>
 
