@@ -274,6 +274,9 @@ static void LogShellLoadType(nsIDocShell* aDocShell) {
     case LOAD_REFRESH:
       printf("refresh; ");
       break;
+    case LOAD_REFRESH_REPLACE:
+      printf("refresh replace; ");
+      break;
     case LOAD_RELOAD_CHARSET_CHANGE:
       printf("reload charset change; ");
       break;
