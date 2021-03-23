@@ -49,7 +49,7 @@ fun deleteAndQuit(activity: Activity, coroutineScope: CoroutineScope, snackbar: 
 
         snackbar?.dismiss()
 
-        activity.finish()
+        activity.finishAndRemoveTask()
     }
 }
 
