@@ -4,13 +4,22 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 74.0.0-SNAPSHOT (In Development)
+# 75.0.0-SNAPSHOT (In Development)
 
 * [Commits](https://github.com/mozilla-mobile/android-components/compare/v74.0.0...master)
-* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/135?closed=1)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/136?closed=1)
 * [Dependencies](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Dependencies.kt)
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
+
+
+# 74.0.0
+
+* [Commits](https://github.com/mozilla-mobile/android-components/compare/v73.0.0...v74.0.0)
+* [Milestone](https://github.com/mozilla-mobile/android-components/milestone/135?closed=1)
+* [Dependencies](https://github.com/mozilla-mobile/android-components/blob/v74.0.0/buildSrc/src/main/java/Dependencies.kt)
+* [Gecko](https://github.com/mozilla-mobile/android-components/blob/v74.0.0/buildSrc/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/android-components/blob/v74.0.0/.config.yml)
 
 * **feature-downloads**:
   * 🚒 Bug fixed [issue #9821](https://github.com/mozilla-mobile/android-components/issues/9821) - Crash for downloads inferred empty mime types.
