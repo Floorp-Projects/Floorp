@@ -1816,8 +1816,8 @@ void CycleCollectedJSRuntime::PrepareWaitingZonesForGC() {
   if (mZonesWaitingForGC.Count() == 0) {
     JS::PrepareForFullGC(cx);
   } else {
-    for (auto iter = mZonesWaitingForGC.Iter(); !iter.Done(); iter.Next()) {
-      JS::PrepareZoneForGC(cx, iter.Get()->GetKey());
+    for (const auto& key : mZonesWaitingForGC) {
+      JS::PrepareZoneForGC(cx, key);
     }
     mZonesWaitingForGC.Clear();
   }
@@ -1829,7 +1829,7 @@ void CycleCollectedJSRuntime::OnZoneDestroyed(JSFreeOp* aFop, JS::Zone* aZone) {
   // happen if a zone is added to the set during an incremental GC in which it
   // is later destroyed.
   CycleCollectedJSRuntime* runtime = Get();
-  runtime->mZonesWaitingForGC.RemoveEntry(aZone);
+  runtime->mZonesWaitingForGC.Remove(aZone);
 }
 
 void CycleCollectedJSRuntime::EnvironmentPreparer::invoke(
