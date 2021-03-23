@@ -862,7 +862,7 @@ class GeckoEngineTest {
         val geckoDelegateCaptor = argumentCaptor<WebExtensionController.PromptDelegate>()
         verify(webExtensionController).promptDelegate = geckoDelegateCaptor.capture()
 
-        assertEquals(GeckoResult.DENY, geckoDelegateCaptor.value.onInstallPrompt(extension))
+        assertEquals(GeckoResult.deny(), geckoDelegateCaptor.value.onInstallPrompt(extension))
         val extensionCaptor = argumentCaptor<WebExtension>()
         verify(webExtensionsDelegate).onInstallPermissionRequest(extensionCaptor.capture())
         val capturedExtension =
@@ -870,7 +870,7 @@ class GeckoEngineTest {
         assertEquals(extension, capturedExtension.nativeExtension)
 
         whenever(webExtensionsDelegate.onInstallPermissionRequest(any())).thenReturn(true)
-        assertEquals(GeckoResult.ALLOW, geckoDelegateCaptor.value.onInstallPrompt(extension))
+        assertEquals(GeckoResult.allow(), geckoDelegateCaptor.value.onInstallPrompt(extension))
     }
 
     @Test
@@ -912,7 +912,7 @@ class GeckoEngineTest {
         assertEquals(updatedExtension, updated.nativeExtension)
 
         onPermissionsGrantedCaptor.value.invoke(true)
-        assertEquals(GeckoResult.ALLOW, result)
+        assertEquals(GeckoResult.allow(), result)
     }
 
     @Test
@@ -953,7 +953,7 @@ class GeckoEngineTest {
         assertEquals(updatedExtension, updated.nativeExtension)
 
         onPermissionsGrantedCaptor.value.invoke(true)
-        assertEquals(GeckoResult.ALLOW, result)
+        assertEquals(GeckoResult.allow(), result)
     }
 
     @Test

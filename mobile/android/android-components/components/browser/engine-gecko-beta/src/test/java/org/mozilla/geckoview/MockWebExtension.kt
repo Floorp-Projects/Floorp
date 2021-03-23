@@ -4,8 +4,9 @@
 
 package org.mozilla.geckoview
 
+import mozilla.components.support.test.mock
 import org.mozilla.gecko.util.GeckoBundle
 
-class MockWebExtension(bundle: GeckoBundle) : WebExtension(bundle)
+class MockWebExtension(bundle: GeckoBundle) : WebExtension(DelegateControllerProvider { mock() }, bundle)
 class MockCreateTabDetails(bundle: GeckoBundle) : WebExtension.CreateTabDetails(bundle)
 class MockUpdateTabDetails(bundle: GeckoBundle) : WebExtension.UpdateTabDetails(bundle)
