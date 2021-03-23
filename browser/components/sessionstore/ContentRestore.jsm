@@ -56,7 +56,6 @@ function ContentRestore(chromeGlobal) {
     "restoreTabContent",
     "restoreDocument",
     "resetRestore",
-    "setRestoringDocument",
   ];
 
   for (let method of EXPORTED_METHODS) {
@@ -99,13 +98,6 @@ function ContentRestoreInternal(chromeGlobal) {
 ContentRestoreInternal.prototype = {
   get docShell() {
     return this.chromeGlobal.docShell;
-  },
-
-  setRestoringDocument(data) {
-    if (!Services.appinfo.sessionHistoryInParent) {
-      throw new Error("This function should only be used with SHIP");
-    }
-    this._restoringDocument = data;
   },
 
   /**
@@ -224,9 +216,7 @@ ContentRestoreInternal.prototype = {
         webNavigation.loadURI(tabData.userTypedValue, loadURIOptions);
       } else if (tabData.entries.length) {
         // Stash away the data we need for restoreDocument.
-        let activeIndex = tabData.index - 1;
         this._restoringDocument = {
-          entry: tabData.entries[activeIndex] || {},
           formdata: tabData.formdata || {},
           scrollPositions: tabData.scroll || {},
         };
@@ -294,7 +284,7 @@ ContentRestoreInternal.prototype = {
    */
   restoreDocument() {
     if (!this._restoringDocument) {
-      return false;
+      return;
     }
 
     let { formdata, scrollPositions } = this._restoringDocument;
@@ -316,7 +306,6 @@ ContentRestoreInternal.prototype = {
         SessionStoreUtils.restoreScrollPosition(frame, data);
       }
     });
-    return true;
   },
 
   /**
