@@ -110,6 +110,25 @@ class nsMenuX final : public nsMenuParentX,
 
   static bool IsXULHelpMenu(nsIContent* aMenuContent);
 
+  class Observer {
+   public:
+    // Called when the menu opened, after popupshown.
+    // No strong reference is held to the observer during the call.
+    virtual void OnMenuOpened() = 0;
+
+    // Called when the menu closed, after popuphidden.
+    // No strong reference is held to the observer during the call.
+    virtual void OnMenuClosed() = 0;
+  };
+
+  // Set an observer that gets notified of menu opening and closing.
+  // The menu does not keep a strong reference the observer. The observer must
+  // remove itself before it is destroyed.
+  void SetObserver(Observer* aObserver) { mObserver = aObserver; }
+
+  // Stop observing.
+  void ClearObserver() { mObserver = nullptr; }
+
  protected:
   virtual ~nsMenuX();
 
@@ -144,6 +163,8 @@ class nsMenuX final : public nsMenuParentX,
   nsMenuGroupOwnerX* mMenuGroupOwner = nullptr;        // [weak]
   nsMenuItemIconX::Listener* mIconListener = nullptr;  // [weak]
   mozilla::UniquePtr<nsMenuItemIconX> mIcon;
+
+  Observer* mObserver = nullptr;  // non-owning pointer to our observer
 
   // Non-null between a call to MenuClosed() and MenuClosedAsync().
   // This is asynchronous so that, if a menu item is clicked, we can fire popuphiding *after* we
