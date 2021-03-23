@@ -49,7 +49,7 @@
   min-height: 0;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@supports not -moz-bool-pref("browser.proton.modals.enabled") {
 .sizeDetermined,
 .sizeDetermined .dialogRow,
 .sizeDetermined #infoContainer {
@@ -76,7 +76,7 @@ dialog[subdialog] #infoContainer {
   text-align: match-parent;
 }
 
-@supports -moz-bool-pref("browser.proton.enabled") {
+@supports -moz-bool-pref("browser.proton.modals.enabled") {
 /* use flexbox instead of grid: */
 dialog[subdialog],
 dialog[subdialog] #dialogGrid,
@@ -119,8 +119,7 @@ dialog[subdialog] {
 }
 
 /* Add vertical spaces between rows: */
-dialog[subdialog] .dialogRow,
-dialog[subdialog] #infoTitle {
+dialog[subdialog] .dialogRow {
   margin-block: 0 20px;
 }
 
