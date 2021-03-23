@@ -122,9 +122,9 @@ mozilla::ipc::IPCResult RemotePrintJobParent::RecvProcessPage(
     return IPC_OK();
   }
 
-  nsTHashtable<nsUint64HashKey> deps;
+  nsTHashSet<uint64_t> deps;
   for (auto i : aDeps) {
-    deps.PutEntry(i);
+    deps.Insert(i);
   }
 
   gfx::CrossProcessPaint::Start(std::move(deps))

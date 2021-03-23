@@ -160,7 +160,7 @@ bool PaintFragment::IsEmpty() const {
 }
 
 PaintFragment::PaintFragment(IntSize aSize, ByteBuf&& aRecording,
-                             nsTHashtable<nsUint64HashKey>&& aDependencies)
+                             nsTHashSet<uint64_t>&& aDependencies)
     : mSize(aSize),
       mRecording(std::move(aRecording)),
       mDependencies(std::move(aDependencies)) {}
@@ -286,7 +286,7 @@ bool CrossProcessPaint::Start(dom::WindowGlobalParent* aRoot,
 
 /* static */
 RefPtr<CrossProcessPaint::ResolvePromise> CrossProcessPaint::Start(
-    nsTHashtable<nsUint64HashKey>&& aDependencies) {
+    nsTHashSet<uint64_t>&& aDependencies) {
   MOZ_ASSERT(!aDependencies.IsEmpty());
   RefPtr<CrossProcessPaint> resolver =
       new CrossProcessPaint(1.0, dom::TabId(0));
@@ -354,9 +354,9 @@ void CrossProcessPaint::LostFragment(dom::WindowGlobalParent* aWGP) {
 }
 
 void CrossProcessPaint::QueueDependencies(
-    const nsTHashtable<nsUint64HashKey>& aDependencies) {
-  for (auto iter = aDependencies.ConstIter(); !iter.Done(); iter.Next()) {
-    auto dependency = dom::TabId(iter.Get()->GetKey());
+    const nsTHashSet<uint64_t>& aDependencies) {
+  for (const auto& key : aDependencies) {
+    auto dependency = dom::TabId(key);
 
     // Get the current WindowGlobalParent of the remote browser that was marked
     // as a dependency
@@ -446,8 +446,8 @@ nsresult CrossProcessPaint::ResolveInternal(dom::TabId aTabId,
   }
 
   // Rasterize all the dependencies first so that we can resolve this fragment
-  for (auto iter = fragment->mDependencies.Iter(); !iter.Done(); iter.Next()) {
-    auto dependency = dom::TabId(iter.Get()->GetKey());
+  for (const auto& key : fragment->mDependencies) {
+    auto dependency = dom::TabId(key);
 
     nsresult rv = ResolveInternal(dependency, aResolved);
     if (NS_FAILED(rv)) {
