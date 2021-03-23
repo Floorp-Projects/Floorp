@@ -9,18 +9,9 @@ module.exports = {
   extends: ["plugin:mozilla/browser-test"],
   // All globals made available in the test environment.
   globals: {
-    DevToolsUtils: true,
     gDevTools: true,
-    once: true,
-    synthesizeKeyFromKeyTag: true,
     waitForTick: true,
     waitUntilState: true,
-  },
-
-  parserOptions: {
-    ecmaFeatures: {
-      jsx: true,
-    },
   },
 
   rules: {
