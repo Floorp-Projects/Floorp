@@ -740,14 +740,14 @@
 #PopupSearchAutoComplete {
   background: var(--autocomplete-popup-background);
   color: var(--autocomplete-popup-color);
+  border-color: var(--arrowpanel-border-color);
+}
+
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+#PopupSearchAutoComplete {
   border: 1px solid var(--arrowpanel-border-color);
   /* Remove the top border since the panel is flush with the input. */
   border-top-width: 0;
-}
-
-@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
-#PopupSearchAutoComplete {
-  border-width: 0;
 }
 } /*** END !proton ***/
 
