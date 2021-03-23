@@ -15,6 +15,8 @@
 #include <string.h>
 #include <xmmintrin.h>
 
+#include "common_audio/intrin.h"
+
 #include "rtc_base/checks.h"
 #include "rtc_base/memory/aligned_malloc.h"
 

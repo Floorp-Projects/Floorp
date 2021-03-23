@@ -266,19 +266,15 @@ if (current_cpu == "x86" || current_cpu == "x64") {
 
   rtc_library("common_audio_avx2") {
     sources = [
+      "resampler/sinc_resampler_avx2.cc",
       "fir_filter_avx2.cc",
       "fir_filter_avx2.h",
-      "resampler/sinc_resampler_avx2.cc",
     ]
 
-    if (is_win) {
-      cflags = [ "/arch:AVX2" ]
-    } else {
       cflags = [
         "-mavx2",
         "-mfma",
       ]
-    }
 
     deps = [
       ":fir_filter",

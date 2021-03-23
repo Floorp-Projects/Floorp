@@ -250,15 +250,11 @@ if (current_cpu == "x86" || current_cpu == "x64") {
       "vector_math_avx2.cc",
     ]
 
-    if (is_win) {
-      cflags = [ "/arch:AVX2" ]
-    } else {
-      cflags = [
-        "-mavx",
-        "-mavx2",
-        "-mfma",
-      ]
-    }
+    cflags = [
+      "-mavx",
+      "-mavx2",
+      "-mfma",
+    ]
 
     deps = [
       ":adaptive_fir_filter",
