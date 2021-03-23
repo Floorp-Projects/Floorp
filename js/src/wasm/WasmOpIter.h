@@ -204,6 +204,7 @@ enum class OpKind {
 #  ifdef ENABLE_WASM_EXCEPTIONS
   Catch,
   CatchAll,
+  Delegate,
   Throw,
   Rethrow,
   Try,
@@ -483,6 +484,10 @@ class MOZ_STACK_CLASS OpIter : private Policy {
   [[nodiscard]] bool readCatchAll(LabelKind* kind, ResultType* paramType,
                                   ResultType* resultType,
                                   ValueVector* tryResults);
+  [[nodiscard]] bool readDelegate(uint32_t* relativeDepth,
+                                  ResultType* resultType,
+                                  ValueVector* tryResults);
+  void popDelegate();
   [[nodiscard]] bool readThrow(uint32_t* eventIndex, ValueVector* argValues);
   [[nodiscard]] bool readRethrow(uint32_t* relativeDepth);
 #endif
@@ -1524,6 +1529,47 @@ inline bool OpIter<Policy>::readCatchAll(LabelKind* kind, ResultType* paramType,
   block.switchToCatchAll();
 
   return true;
+}
+
+template <typename Policy>
+inline bool OpIter<Policy>::readDelegate(uint32_t* relativeDepth,
+                                         ResultType* resultType,
+                                         ValueVector* tryResults) {
+  MOZ_ASSERT(Classify(op_) == OpKind::Delegate);
+
+  uint32_t originalDepth;
+  if (!readVarU32(&originalDepth)) {
+    return fail("unable to read delegate depth");
+  }
+
+  Control& block = controlStack_.back();
+  if (block.kind() != LabelKind::Try) {
+    return fail("delegate can only be used within a try");
+  }
+
+  // Depths for delegate start counting in the surrounding block.
+  *relativeDepth = originalDepth + 1;
+  if (*relativeDepth >= controlStack_.length()) {
+    return fail("delegate depth exceeds current nesting level");
+  }
+
+  LabelKind kind = controlKind(*relativeDepth);
+  if (kind != LabelKind::Try && kind != LabelKind::Body) {
+    return fail("delegate target was not a try or function body");
+  }
+
+  // Because `delegate` acts like `end` and ends the block, we will check
+  // the stack here.
+  return checkStackAtEndOfBlock(resultType, tryResults);
+}
+
+// We need popDelegate because readDelegate cannot pop the control stack
+// itself, as its caller may need to use the control item for delegate.
+template <typename Policy>
+inline void OpIter<Policy>::popDelegate() {
+  MOZ_ASSERT(Classify(op_) == OpKind::Delegate);
+
+  controlStack_.popBack();
 }
 
 template <typename Policy>

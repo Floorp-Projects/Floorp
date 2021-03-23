@@ -275,6 +275,8 @@ OpKind wasm::Classify(OpBytes op) {
       WASM_EXN_OP(OpKind::Catch);
     case Op::CatchAll:
       WASM_EXN_OP(OpKind::CatchAll);
+    case Op::Delegate:
+      WASM_EXN_OP(OpKind::Delegate);
     case Op::Throw:
       WASM_EXN_OP(OpKind::Throw);
     case Op::Rethrow:
