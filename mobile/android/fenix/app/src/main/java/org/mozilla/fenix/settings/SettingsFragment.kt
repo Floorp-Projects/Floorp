@@ -276,6 +276,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(R.string.pref_key_passwords) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToSavedLoginsAuthFragment()
             }
+            resources.getString(R.string.pref_key_credit_cards) -> {
+                SettingsFragmentDirections.actionSettingsFragmentToCreditCardsSettingFragment()
+            }
             resources.getString(R.string.pref_key_about) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToAboutFragment()
             }
@@ -423,12 +426,18 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
         preferenceFxAOverride?.onPreferenceChangeListener = syncFxAOverrideUpdater
         preferenceSyncOverride?.onPreferenceChangeListener = syncFxAOverrideUpdater
-        findPreference<Preference>(
-            getPreferenceKey(R.string.pref_key_debug_settings)
-        )?.isVisible = requireContext().settings().showSecretDebugMenuThisSession
-        findPreference<Preference>(
-            getPreferenceKey(R.string.pref_key_secret_debug_info)
-        )?.isVisible = requireContext().settings().showSecretDebugMenuThisSession
+
+        with(requireContext().settings()) {
+            findPreference<Preference>(
+                getPreferenceKey(R.string.pref_key_credit_cards)
+            )?.isVisible = creditCardsFeature
+            findPreference<Preference>(
+                getPreferenceKey(R.string.pref_key_debug_settings)
+            )?.isVisible = showSecretDebugMenuThisSession
+            findPreference<Preference>(
+                getPreferenceKey(R.string.pref_key_secret_debug_info)
+            )?.isVisible = showSecretDebugMenuThisSession
+        }
 
         setupAmoCollectionOverridePreference(requireContext().settings())
     }

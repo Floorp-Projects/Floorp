@@ -69,6 +69,11 @@
             android:title="@string/preferences_passwords_logins_and_passwords" />
 
         <androidx.preference.Preference
+            android:icon="@drawable/ic_formfill"
+            android:key="@string/pref_key_credit_cards"
+            android:title="@string/preferences_credit_cards" />
+
+        <androidx.preference.Preference
             android:icon="@drawable/ic_accessibility"
             android:key="@string/pref_key_accessibility"
             android:title="@string/preferences_accessibility" />

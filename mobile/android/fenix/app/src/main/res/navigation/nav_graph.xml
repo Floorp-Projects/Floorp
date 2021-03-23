@@ -444,6 +444,13 @@
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
         <action
+            android:id="@+id/action_settingsFragment_to_creditCardsSettingFragment"
+            app:destination="@id/credit_cards_graph"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        <action
             android:id="@+id/action_settingsFragment_to_accessibilityFragment"
             app:destination="@id/accessibilityFragment"
             app:enterAnim="@anim/slide_in_right"
@@ -991,6 +998,16 @@
             <argument
                 android:name="searchEngineIdentifier"
                 app:argType="string" />
+        </fragment>
+    </navigation>
+
+    <navigation
+        android:id="@+id/credit_cards_graph"
+        app:startDestination="@id/creditCardsSettingFragment">
+        <fragment
+            android:id="@+id/creditCardsSettingFragment"
+            android:name="org.mozilla.fenix.settings.creditcards.CreditCardsSettingFragment"
+            android:label="@string/preferences_credit_cards">
         </fragment>
     </navigation>
 </navigation>

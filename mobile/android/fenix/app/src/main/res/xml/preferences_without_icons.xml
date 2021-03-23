@@ -12,13 +12,13 @@
         android:layout="@layout/sign_in_preference"
         android:summary="@string/preferences_sign_in_description"
         android:title="@string/preferences_sync"
-        app:allowDividerBelow="false"/>
+        app:allowDividerBelow="false" />
 
     <androidx.preference.PreferenceCategory
         android:key="@string/pref_key_account_category"
         android:title="@string/preferences_category_account"
         app:isPreferenceVisible="false"
-        android:layout="@layout/preference_category_no_icon_style" >
+        android:layout="@layout/preference_category_no_icon_style">
 
         <org.mozilla.fenix.settings.account.AccountPreference
             android:icon="@drawable/ic_account"
@@ -26,7 +26,7 @@
 
         <org.mozilla.fenix.settings.account.AccountAuthErrorPreference
             android:icon="@drawable/ic_account_warning"
-            android:key="@string/pref_key_account_auth_error"/>
+            android:key="@string/pref_key_account_auth_error" />
     </androidx.preference.PreferenceCategory>
 
     <androidx.preference.EditTextPreference
@@ -34,14 +34,14 @@
         android:title="@string/preferences_override_fxa_server"
         android:inputType="textUri"
         app:iconSpaceReserved="false"
-        app:isPreferenceVisible="false"/>
+        app:isPreferenceVisible="false" />
 
     <androidx.preference.EditTextPreference
         android:key="@string/pref_key_override_sync_tokenserver"
         android:title="@string/preferences_override_sync_tokenserver"
         android:inputType="textUri"
         app:iconSpaceReserved="false"
-        app:isPreferenceVisible="false"/>
+        app:isPreferenceVisible="false" />
 
     <androidx.preference.PreferenceCategory
         android:title="@string/preferences_category_general"
@@ -67,6 +67,11 @@
             android:title="@string/preferences_passwords_logins_and_passwords" />
 
         <androidx.preference.Preference
+            app:iconSpaceReserved="false"
+            android:key="@string/pref_key_credit_cards"
+            android:title="@string/preferences_credit_cards" />
+
+        <androidx.preference.Preference
             android:key="@string/pref_key_accessibility"
             app:iconSpaceReserved="false"
             android:title="@string/preferences_accessibility" />
@@ -89,7 +94,7 @@
         <androidx.preference.Preference
             android:key="@string/pref_key_private_browsing"
             app:iconSpaceReserved="false"
-            android:title="@string/preferences_private_browsing_options"/>
+            android:title="@string/preferences_private_browsing_options" />
 
         <androidx.preference.Preference
             android:key="@string/pref_key_tracking_protection_settings"
@@ -135,7 +140,7 @@
         <androidx.preference.Preference
             android:key="@string/pref_key_override_amo_collection"
             app:iconSpaceReserved="false"
-            android:title="@string/preferences_customize_amo_collection"/>
+            android:title="@string/preferences_customize_amo_collection" />
 
         <androidx.preference.SwitchPreference
             android:defaultValue="false"
@@ -147,7 +152,7 @@
             android:defaultValue="false"
             android:key="@string/pref_key_external_download_manager"
             app:iconSpaceReserved="false"
-            android:title="@string/preferences_external_download_manager"/>
+            android:title="@string/preferences_external_download_manager" />
 
         <androidx.preference.SwitchPreference
             android:defaultValue="true"
