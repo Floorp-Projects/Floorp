@@ -385,9 +385,8 @@ void nsMenuX::RebuildMenu() {
 void nsMenuX::SetRebuild(bool aNeedsRebuild) {
   if (!gConstructingMenu) {
     mNeedsRebuild = aNeedsRebuild;
-    if (mParent && mParent->MenuParentType() == eMenuBarParentType) {
-      nsMenuBarX* mb = static_cast<nsMenuBarX*>(mParent);
-      mb->SetNeedsRebuild();
+    if (mParent && mParent->AsMenuBar()) {
+      mParent->AsMenuBar()->SetNeedsRebuild();
     }
   }
 }
