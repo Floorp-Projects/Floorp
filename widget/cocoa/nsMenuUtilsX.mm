@@ -194,17 +194,9 @@ int nsMenuUtilsX::CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuX*
   MOZ_RELEASE_ASSERT(parentType == eMenuBarObjectType || parentType == eSubmenuObjectType);
   if (parentType == eMenuBarObjectType) {
     nsMenuBarX* menubarParent = static_cast<nsMenuBarX*>(aParent);
-    uint32_t numMenus = menubarParent->GetMenuCount();
-    for (uint32_t i = 0; i < numMenus; i++) {
-      nsMenuX* currMenu = menubarParent->GetMenuAt(i);
-      if (currMenu == aChild) {
-        return insertionPoint;  // we found ourselves, break out
-      }
-      if (currMenu && currMenu->NativeNSMenuItem().menu) {
-        insertionPoint++;
-      }
-    }
-  } else if (parentType == eSubmenuObjectType) {
+    return menubarParent->CalculateNativeInsertionPoint(aChild);
+  }
+  if (parentType == eSubmenuObjectType) {
     nsMenuX* menuParent = static_cast<nsMenuX*>(aParent);
     uint32_t numItems = menuParent->GetItemCount();
     for (uint32_t i = 0; i < numItems; i++) {
