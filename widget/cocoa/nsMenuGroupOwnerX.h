@@ -24,6 +24,23 @@ class nsIContent;
 
 @class MOZMenuItemRepresentedObject;
 
+// Fixed command IDs that work even without a JS listener, for our fallback menu bar.
+// Dynamic command IDs start counting from eCommand_ID_Last.
+enum {
+  eCommand_ID_About = 1,
+  eCommand_ID_Prefs = 2,
+  eCommand_ID_Quit = 3,
+  eCommand_ID_HideApp = 4,
+  eCommand_ID_HideOthers = 5,
+  eCommand_ID_ShowAll = 6,
+  eCommand_ID_Update = 7,
+  eCommand_ID_TouchBar = 8,
+  eCommand_ID_Last = 9
+};
+
+// The menu group owner observes DOM mutations, notifies registered nsChangeObservers, and manages
+// command registration.
+// There is one owner per menubar, and one per standalone native menu.
 class nsMenuGroupOwnerX : public nsIMutationObserver {
  public:
   explicit nsMenuGroupOwnerX(nsMenuBarX* aMenuBarIfMenuBar);
@@ -52,8 +69,8 @@ class nsMenuGroupOwnerX : public nsIMutationObserver {
 
   RefPtr<nsIContent> mContent;
 
-  uint32_t mCurrentCommandID;  // unique command id (per menu-bar) to
-                               // give to next item that asks
+  // Unique command id (per menu-bar) to give to next item that asks.
+  uint32_t mCurrentCommandID = eCommand_ID_Last;
 
   // stores observers for content change notification
   nsTHashMap<nsPtrHashKey<nsIContent>, nsChangeObserver*> mContentToObserverTable;
