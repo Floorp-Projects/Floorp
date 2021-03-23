@@ -71,53 +71,6 @@ impl<'a> FrameVisibilityState<'a> {
     }
 }
 
-/// A bit mask describing which dirty regions a primitive is visible in.
-/// A value of 0 means not visible in any region, while a mask of 0xffff
-/// would be considered visible in all regions.
-#[derive(Debug, Copy, Clone)]
-#[cfg_attr(feature = "capture", derive(Serialize))]
-#[cfg_attr(feature = "replay", derive(Deserialize))]
-pub struct PrimitiveVisibilityMask {
-    bits: u16,
-}
-
-impl PrimitiveVisibilityMask {
-    /// Construct a default mask, where no regions are considered visible
-    pub fn empty() -> Self {
-        PrimitiveVisibilityMask {
-            bits: 0,
-        }
-    }
-
-    pub fn all() -> Self {
-        PrimitiveVisibilityMask {
-            bits: !0,
-        }
-    }
-
-    pub fn include(&mut self, other: PrimitiveVisibilityMask) {
-        self.bits |= other.bits;
-    }
-
-    pub fn intersects(&self, other: PrimitiveVisibilityMask) -> bool {
-        (self.bits & other.bits) != 0
-    }
-
-    /// Mark a given region index as visible
-    pub fn set_visible(&mut self, region_index: usize) {
-        debug_assert!(region_index < PrimitiveVisibilityMask::MAX_DIRTY_REGIONS);
-        self.bits |= 1 << region_index;
-    }
-
-    /// Returns true if there are no visible regions
-    pub fn is_empty(&self) -> bool {
-        self.bits == 0
-    }
-
-    /// The maximum number of supported dirty regions.
-    pub const MAX_DIRTY_REGIONS: usize = 8 * mem::size_of::<PrimitiveVisibilityMask>();
-}
-
 bitflags! {
     /// A set of bitflags that can be set in the visibility information
     /// for a primitive instance. This can be used to control how primitives
@@ -146,11 +99,12 @@ pub enum VisibilityState {
     Coarse {
         rect_in_pic_space: PictureRect,
     },
-    /// Once coarse visibility is resolved, this provides a bitmask of which dirty tiles
-    /// this primitive should be rasterized into.
+    /// Once coarse visibility is resolved, this will be set if the primitive
+    /// intersected any dirty rects, otherwise prim will be culled.
     Detailed {
-        /// A mask defining which of the dirty regions this primitive is visible in.
-        visibility_mask: PrimitiveVisibilityMask,
+        // TODO(gw): Intersecting Box2D is more efficient than Rect. Consider
+        //           storing here (and perhaps above) as a Box2D.
+        rect_in_pic_space: PictureRect,
     },
 }
 
@@ -385,7 +339,7 @@ pub fn update_primitive_visibility(
             if is_passthrough {
                 // Pass through pictures are always considered visible in all dirty tiles.
                 prim_instance.vis.state = VisibilityState::Detailed {
-                    visibility_mask: PrimitiveVisibilityMask::all(),
+                    rect_in_pic_space: PictureRect::max_rect(),
                 };
             } else {
                 if prim_local_rect.size.width <= 0.0 || prim_local_rect.size.height <= 0.0 {
@@ -498,46 +452,23 @@ pub fn update_primitive_visibility(
                     }
                 }
 
-                match frame_state.tile_cache {
-                    Some(ref mut tile_cache) => {
-                        // TODO(gw): Refactor how tile_cache is stored in frame_state
-                        //           so that we can pass frame_state directly to
-                        //           update_prim_dependencies, rather than splitting borrows.
-                        tile_cache.update_prim_dependencies(
-                            prim_instance,
-                            cluster.spatial_node_index,
-                            prim_local_rect,
-                            frame_context,
-                            frame_state.data_stores,
-                            frame_state.clip_store,
-                            &store.pictures,
-                            frame_state.resource_cache,
-                            &store.color_bindings,
-                            &frame_state.surface_stack,
-                            &mut frame_state.composite_state,
-                            &mut frame_state.gpu_cache,
-                        );
-                    }
-                    None => {
-                        // When picture cache is not in use, cull against the main world culling rect only.
-                        let clipped_world_rect = calculate_prim_clipped_world_rect(
-                            &prim_instance.vis.clip_chain.pic_clip_rect,
-                            &world_culling_rect,
-                            &map_surface_to_world,
-                        );
-
-                        prim_instance.vis.state = match clipped_world_rect {
-                            Some(_) => {
-                                VisibilityState::Detailed {
-                                    visibility_mask: PrimitiveVisibilityMask::all(),
-                                }
-                            }
-                            None => {
-                                VisibilityState::Culled
-                            }
-                        };
-                    }
-                }
+                frame_state.tile_cache
+                    .as_mut()
+                    .unwrap()
+                    .update_prim_dependencies(
+                        prim_instance,
+                        cluster.spatial_node_index,
+                        prim_local_rect,
+                        frame_context,
+                        frame_state.data_stores,
+                        frame_state.clip_store,
+                        &store.pictures,
+                        frame_state.resource_cache,
+                        &store.color_bindings,
+                        &frame_state.surface_stack,
+                        &mut frame_state.composite_state,
+                        &mut frame_state.gpu_cache,
+                );
 
                 // Skip post visibility prim update if this primitive was culled above.
                 match prim_instance.vis.state {
