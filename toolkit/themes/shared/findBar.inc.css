@@ -104,12 +104,12 @@ html|input.findbar-textbox.minimal {
 
 .findbar-find-previous:not([disabled]):hover,
 .findbar-find-next:not([disabled]):hover {
-  background: var(--buttons-secondary-hover-bgcolor, rgba(190,190,190,.2));
+  background: var(--button-hover-bgcolor, rgba(190,190,190,.2));
 }
 
 .findbar-find-previous:not([disabled]):hover:active,
 .findbar-find-next:not([disabled]):hover:active {
-  background: var(--buttons-secondary-active-bgcolor, rgba(23,50,76,.2));
+  background: var(--button-active-bgcolor, rgba(23,50,76,.2));
 }
 
 .findbar-find-previous {

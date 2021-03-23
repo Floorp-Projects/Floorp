@@ -22,10 +22,10 @@
   --short-notification-background: #0250BB;
   --short-notification-gradient: #9059FF;
 
-  --buttons-secondary-bgcolor: color-mix(in srgb, currentColor 13%, transparent);
-  --buttons-secondary-hover-bgcolor: color-mix(in srgb, currentColor 17%, transparent);
-  --buttons-secondary-active-bgcolor: color-mix(in srgb, currentColor 30%, transparent);
-  --buttons-secondary-color: currentColor;
+  --button-bgcolor: color-mix(in srgb, currentColor 13%, transparent);
+  --button-hover-bgcolor: color-mix(in srgb, currentColor 17%, transparent);
+  --button-active-bgcolor: color-mix(in srgb, currentColor 30%, transparent);
+  --button-color: currentColor;
 
   --buttons-destructive-bgcolor: #e22850;
   --buttons-destructive-hover-bgcolor: #c50042;
@@ -38,7 +38,7 @@
 
   --identity-box-margin-inline: 4px;
   --identity-box-label-opacity: .8;
-  --urlbar-box-bgcolor: var(--buttons-secondary-bgcolor);
+  --urlbar-box-bgcolor: var(--button-bgcolor);
   --urlbar-box-hover-bgcolor: color-mix(in srgb, var(--urlbar-box-bgcolor), currentColor 12%);
   --urlbar-box-active-bgcolor: color-mix(in srgb, var(--urlbar-box-bgcolor), currentColor 21%);
 
