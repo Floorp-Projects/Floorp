@@ -195,6 +195,8 @@ class TextureImageTextureSourceOGL final : public DataTextureSource,
 
   bool NextTile() override { return mTexImage->NextTile(); }
 
+  gl::GLContext* gl() const { return mGL; }
+
  protected:
   ~TextureImageTextureSourceOGL();
 

@@ -126,13 +126,20 @@ static void TexSubImage2DWithUnpackSubimageGLES(
   // row. We only upload the first height-1 rows using GL_UNPACK_ROW_LENGTH,
   // and then we upload the final row separately. See bug 697990.
   int rowLength = stride / pixelsize;
-  gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
-  gl->fTexSubImage2D(target, level, xoffset, yoffset, width, height - 1, format,
-                     type, pixels);
-  gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
-  gl->fTexSubImage2D(target, level, xoffset, yoffset + height - 1, width, 1,
-                     format, type,
-                     (const unsigned char*)pixels + (height - 1) * stride);
+  if (gl->HasPBOState()) {
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
+    gl->fTexSubImage2D(target, level, xoffset, yoffset, width, height, format,
+                       type, pixels);
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
+  } else {
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, rowLength);
+    gl->fTexSubImage2D(target, level, xoffset, yoffset, width, height - 1,
+                       format, type, pixels);
+    gl->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
+    gl->fTexSubImage2D(target, level, xoffset, yoffset + height - 1, width, 1,
+                       format, type,
+                       (const unsigned char*)pixels + (height - 1) * stride);
+  }
   gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
 }
 
@@ -211,7 +218,8 @@ static void TexSubImage2DHelper(GLContext* gl, GLenum target, GLint level,
       gl->fTexSubImage2D(target, level, xoffset, yoffset, width, height, format,
                          type, pixels);
       gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-    } else if (gl->IsExtensionSupported(GLContext::EXT_unpack_subimage)) {
+    } else if (gl->IsExtensionSupported(GLContext::EXT_unpack_subimage) ||
+               gl->HasPBOState()) {
       TexSubImage2DWithUnpackSubimageGLES(gl, target, level, xoffset, yoffset,
                                           width, height, stride, pixelsize,
                                           format, type, pixels);
