@@ -1,10 +1,7 @@
 "use strict";
 
+// General rule from /.eslintrc.js only accept folders matching **/test*/browser*/
+// where is this folder doesn't match, so manually apply browser test config
 module.exports = {
-  // Extend from the shared list of defined globals for mochitests.
-  extends: "../../../../.eslintrc.mochitests.js",
-  globals: {
-    runCodeMirrorTest: true,
-    gBrowser: true,
-  },
+  extends: ["plugin:mozilla/browser-test"],
 };

@@ -127,20 +127,17 @@ module.exports = {
     {
       ...browserTestConfig,
       files: browserTestPaths.map(path => `${path}**`),
-      excludedFiles: "devtools/**",
     },
     {
       ...removeOverrides(mochitestTestConfig),
       files: mochitestTestPaths.map(path => `${path}**`),
       excludedFiles: [
-        "devtools/**",
         "security/manager/ssl/tests/mochitest/browser/**",
       ],
     },
     {
       ...removeOverrides(chromeTestConfig),
       files: chromeTestPaths.map(path => `${path}**`),
-      excludedFiles: ["devtools/**"],
     },
     {
       env: {
