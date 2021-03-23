@@ -12,8 +12,8 @@
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/dom/KeyframeEffect.h"
-#include "nsHashKeys.h"    // For nsPtrHashKey
-#include "nsTHashtable.h"  // For nsTHashtable
+#include "nsHashKeys.h"  // For nsPtrHashKey
+#include "nsTHashSet.h"
 
 class nsPresContext;
 enum class DisplayItemType : uint8_t;
@@ -103,7 +103,7 @@ class EffectSet {
   bool MayHaveTransformAnimation() const { return mMayHaveTransformAnim; }
 
  private:
-  typedef nsTHashtable<nsRefPtrHashKey<dom::KeyframeEffect>> OwningEffectSet;
+  typedef nsTHashSet<nsRefPtrHashKey<dom::KeyframeEffect>> OwningEffectSet;
 
  public:
   // A simple iterator to support iterating over the effects in this object in
@@ -114,10 +114,11 @@ class EffectSet {
   // the rather complicated: iter.Get()->GetKey().
   //
   // XXX Except for the active iterator checks, this could be replaced by the
-  // STL-style iterators of nsTHashtable now.
+  // STL-style iterators of nsTHashSet directly now.
   class Iterator {
    public:
-    explicit Iterator(EffectSet& aEffectSet) : Iterator(aEffectSet, false) {}
+    explicit Iterator(EffectSet& aEffectSet)
+        : Iterator(aEffectSet, aEffectSet.mEffects.begin()) {}
 
     Iterator() = delete;
     Iterator(const Iterator&) = delete;
@@ -126,7 +127,7 @@ class EffectSet {
     Iterator& operator=(Iterator&&) = delete;
 
     static Iterator EndIterator(EffectSet& aEffectSet) {
-      return {aEffectSet, true};
+      return {aEffectSet, aEffectSet.mEffects.end()};
     }
 
 #ifdef DEBUG
@@ -137,43 +138,33 @@ class EffectSet {
 #endif
 
     bool operator!=(const Iterator& aOther) const {
-      if (Done() || aOther.Done()) {
-        return Done() != aOther.Done();
-      }
-      return mHashIterator.Get() != aOther.mHashIterator.Get();
+      return mHashIterator != aOther.mHashIterator;
     }
 
     Iterator& operator++() {
-      MOZ_ASSERT(!Done());
-      mHashIterator.Next();
+      ++mHashIterator;
       return *this;
     }
 
-    dom::KeyframeEffect* operator*() {
-      MOZ_ASSERT(!Done());
-      return mHashIterator.Get()->GetKey();
-    }
+    dom::KeyframeEffect* operator*() { return *mHashIterator; }
 
    private:
-    Iterator(EffectSet& aEffectSet, bool aIsEndIterator)
+    Iterator(EffectSet& aEffectSet,
+             OwningEffectSet::const_iterator aHashIterator)
         :
 #ifdef DEBUG
           mEffectSet(aEffectSet),
 #endif
-          mHashIterator(aEffectSet.mEffects.ConstIter()),
-          mIsEndIterator(aIsEndIterator) {
+          mHashIterator(std::move(aHashIterator)) {
 #ifdef DEBUG
       mEffectSet.mActiveIterators++;
 #endif
     }
 
-    bool Done() const { return mIsEndIterator || mHashIterator.Done(); }
-
 #ifdef DEBUG
     EffectSet& mEffectSet;
 #endif
-    OwningEffectSet::ConstIterator mHashIterator;
-    bool mIsEndIterator;
+    OwningEffectSet::const_iterator mHashIterator;
   };
 
   friend class Iterator;
