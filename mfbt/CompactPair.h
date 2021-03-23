@@ -43,22 +43,22 @@ struct CompactPairHelper<A, B, AsMember, AsMember> {
  protected:
   template <typename... AArgs, std::size_t... AIndexes, typename... BArgs,
             std::size_t... BIndexes>
-  CompactPairHelper(std::tuple<AArgs...>& aATuple,
-                    std::tuple<BArgs...>& aBTuple,
-                    std::index_sequence<AIndexes...>,
-                    std::index_sequence<BIndexes...>)
+  constexpr CompactPairHelper(std::tuple<AArgs...>& aATuple,
+                              std::tuple<BArgs...>& aBTuple,
+                              std::index_sequence<AIndexes...>,
+                              std::index_sequence<BIndexes...>)
       : mFirstA(std::forward<AArgs>(std::get<AIndexes>(aATuple))...),
         mSecondB(std::forward<BArgs>(std::get<BIndexes>(aBTuple))...) {}
 
  public:
   template <typename AArg, typename BArg>
-  CompactPairHelper(AArg&& aA, BArg&& aB)
+  constexpr CompactPairHelper(AArg&& aA, BArg&& aB)
       : mFirstA(std::forward<AArg>(aA)), mSecondB(std::forward<BArg>(aB)) {}
 
-  A& first() { return mFirstA; }
-  const A& first() const { return mFirstA; }
-  B& second() { return mSecondB; }
-  const B& second() const { return mSecondB; }
+  constexpr A& first() { return mFirstA; }
+  constexpr const A& first() const { return mFirstA; }
+  constexpr B& second() { return mSecondB; }
+  constexpr const B& second() const { return mSecondB; }
 
   void swap(CompactPairHelper& aOther) {
     std::swap(mFirstA, aOther.mFirstA);
@@ -75,22 +75,22 @@ struct CompactPairHelper<A, B, AsMember, AsBase> : private B {
  protected:
   template <typename... AArgs, std::size_t... AIndexes, typename... BArgs,
             std::size_t... BIndexes>
-  CompactPairHelper(std::tuple<AArgs...>& aATuple,
-                    std::tuple<BArgs...>& aBTuple,
-                    std::index_sequence<AIndexes...>,
-                    std::index_sequence<BIndexes...>)
+  constexpr CompactPairHelper(std::tuple<AArgs...>& aATuple,
+                              std::tuple<BArgs...>& aBTuple,
+                              std::index_sequence<AIndexes...>,
+                              std::index_sequence<BIndexes...>)
       : B(std::forward<BArgs>(std::get<BIndexes>(aBTuple))...),
         mFirstA(std::forward<AArgs>(std::get<AIndexes>(aATuple))...) {}
 
  public:
   template <typename AArg, typename BArg>
-  CompactPairHelper(AArg&& aA, BArg&& aB)
+  constexpr CompactPairHelper(AArg&& aA, BArg&& aB)
       : B(std::forward<BArg>(aB)), mFirstA(std::forward<AArg>(aA)) {}
 
-  A& first() { return mFirstA; }
-  const A& first() const { return mFirstA; }
-  B& second() { return *this; }
-  const B& second() const { return *this; }
+  constexpr A& first() { return mFirstA; }
+  constexpr const A& first() const { return mFirstA; }
+  constexpr B& second() { return *this; }
+  constexpr const B& second() const { return *this; }
 
   void swap(CompactPairHelper& aOther) {
     std::swap(mFirstA, aOther.mFirstA);
@@ -106,22 +106,22 @@ struct CompactPairHelper<A, B, AsBase, AsMember> : private A {
  protected:
   template <typename... AArgs, std::size_t... AIndexes, typename... BArgs,
             std::size_t... BIndexes>
-  CompactPairHelper(std::tuple<AArgs...>& aATuple,
-                    std::tuple<BArgs...>& aBTuple,
-                    std::index_sequence<AIndexes...>,
-                    std::index_sequence<BIndexes...>)
+  constexpr CompactPairHelper(std::tuple<AArgs...>& aATuple,
+                              std::tuple<BArgs...>& aBTuple,
+                              std::index_sequence<AIndexes...>,
+                              std::index_sequence<BIndexes...>)
       : A(std::forward<AArgs>(std::get<AIndexes>(aATuple))...),
         mSecondB(std::forward<BArgs>(std::get<BIndexes>(aBTuple))...) {}
 
  public:
   template <typename AArg, typename BArg>
-  CompactPairHelper(AArg&& aA, BArg&& aB)
+  constexpr CompactPairHelper(AArg&& aA, BArg&& aB)
       : A(std::forward<AArg>(aA)), mSecondB(std::forward<BArg>(aB)) {}
 
-  A& first() { return *this; }
-  const A& first() const { return *this; }
-  B& second() { return mSecondB; }
-  const B& second() const { return mSecondB; }
+  constexpr A& first() { return *this; }
+  constexpr const A& first() const { return *this; }
+  constexpr B& second() { return mSecondB; }
+  constexpr const B& second() const { return mSecondB; }
 
   void swap(CompactPairHelper& aOther) {
     std::swap(static_cast<A&>(*this), static_cast<A&>(aOther));
@@ -137,22 +137,22 @@ struct CompactPairHelper<A, B, AsBase, AsBase> : private A, private B {
  protected:
   template <typename... AArgs, std::size_t... AIndexes, typename... BArgs,
             std::size_t... BIndexes>
-  CompactPairHelper(std::tuple<AArgs...>& aATuple,
-                    std::tuple<BArgs...>& aBTuple,
-                    std::index_sequence<AIndexes...>,
-                    std::index_sequence<BIndexes...>)
+  constexpr CompactPairHelper(std::tuple<AArgs...>& aATuple,
+                              std::tuple<BArgs...>& aBTuple,
+                              std::index_sequence<AIndexes...>,
+                              std::index_sequence<BIndexes...>)
       : A(std::forward<AArgs>(std::get<AIndexes>(aATuple))...),
         B(std::forward<BArgs>(std::get<BIndexes>(aBTuple))...) {}
 
  public:
   template <typename AArg, typename BArg>
-  CompactPairHelper(AArg&& aA, BArg&& aB)
+  constexpr CompactPairHelper(AArg&& aA, BArg&& aB)
       : A(std::forward<AArg>(aA)), B(std::forward<BArg>(aB)) {}
 
-  A& first() { return static_cast<A&>(*this); }
-  const A& first() const { return static_cast<A&>(*this); }
-  B& second() { return static_cast<B&>(*this); }
-  const B& second() const { return static_cast<B&>(*this); }
+  constexpr A& first() { return static_cast<A&>(*this); }
+  constexpr const A& first() const { return static_cast<A&>(*this); }
+  constexpr B& second() { return static_cast<B&>(*this); }
+  constexpr const B& second() const { return static_cast<B&>(*this); }
 
   void swap(CompactPairHelper& aOther) {
     std::swap(static_cast<A&>(*this), static_cast<A&>(aOther));
@@ -185,8 +185,8 @@ struct CompactPair : private detail::CompactPairHelper<A, B> {
   using Base::Base;
 
   template <typename... AArgs, typename... BArgs>
-  CompactPair(std::piecewise_construct_t, std::tuple<AArgs...> aFirst,
-              std::tuple<BArgs...> aSecond)
+  constexpr CompactPair(std::piecewise_construct_t, std::tuple<AArgs...> aFirst,
+                        std::tuple<BArgs...> aSecond)
       : Base(aFirst, aSecond, std::index_sequence_for<AArgs...>(),
              std::index_sequence_for<BArgs...>()) {}
 

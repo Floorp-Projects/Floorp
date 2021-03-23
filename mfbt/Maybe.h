@@ -17,6 +17,7 @@
 #include "mozilla/Alignment.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/MaybeStorageBase.h"
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/OperatorNewExtensions.h"
 #include "mozilla/Poison.h"
@@ -102,12 +103,6 @@ struct MaybePoisoner {
     MOZ_MAKE_MEM_UNDEFINED(aPtr, N);
   }
 };
-
-template <typename T>
-constexpr bool IsTriviallyDestructibleAndCopyable =
-    std::is_trivially_destructible_v<T> &&
-    (std::is_trivially_copy_constructible_v<T> ||
-     !std::is_copy_constructible_v<T>);
 
 template <typename T,
           bool TriviallyDestructibleAndCopyable =
