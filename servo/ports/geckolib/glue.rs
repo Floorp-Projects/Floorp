@@ -2944,7 +2944,7 @@ macro_rules! simple_font_descriptor_getter_impl {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_FontFaceRule_GetFontWeight(
+pub extern "C" fn Servo_FontFaceRule_GetFontWeight(
     rule: &RawServoFontFaceRule,
     out: &mut font_face::ComputedFontWeightRange,
 ) -> bool {
@@ -2952,7 +2952,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetFontWeight(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_FontFaceRule_GetFontStretch(
+pub extern "C" fn Servo_FontFaceRule_GetFontStretch(
     rule: &RawServoFontFaceRule,
     out: &mut font_face::ComputedFontStretchRange,
 ) -> bool {
@@ -2960,7 +2960,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetFontStretch(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_FontFaceRule_GetFontStyle(
+pub extern "C" fn Servo_FontFaceRule_GetFontStyle(
     rule: &RawServoFontFaceRule,
     out: &mut font_face::ComputedFontStyleDescriptor,
 ) -> bool {
@@ -2968,7 +2968,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetFontStyle(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_FontFaceRule_GetFontDisplay(
+pub extern "C" fn Servo_FontFaceRule_GetFontDisplay(
     rule: &RawServoFontFaceRule,
     out: &mut font_face::FontDisplay,
 ) -> bool {
@@ -2976,7 +2976,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetFontDisplay(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_FontFaceRule_GetFontLanguageOverride(
+pub extern "C" fn Servo_FontFaceRule_GetFontLanguageOverride(
     rule: &RawServoFontFaceRule,
     out: &mut computed::FontLanguageOverride,
 ) -> bool {
@@ -3135,7 +3135,7 @@ pub unsafe extern "C" fn Servo_FontFaceRule_GetFeatureSettings(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_FontFaceRule_GetDescriptorCssText(
+pub extern "C" fn Servo_FontFaceRule_GetDescriptorCssText(
     rule: &RawServoFontFaceRule,
     desc: nsCSSFontDesc,
     result: &mut nsACString,
