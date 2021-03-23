@@ -77,9 +77,11 @@ namespace baseprofiler {
 int profiler_current_process_id() { return getpid(); }
 
 int profiler_current_thread_id() {
-#if defined(GP_OS_linux) || defined(GP_OS_android)
-  // glibc doesn't provide a wrapper for gettid().
+#if defined(GP_OS_linux)
+  // glibc doesn't provide a wrapper for gettid() until 2.30
   return static_cast<int>(static_cast<pid_t>(syscall(SYS_gettid)));
+#elif defined(GP_OS_android)
+  return gettid();
 #elif defined(GP_OS_freebsd)
   long id;
   (void)thr_self(&id);
