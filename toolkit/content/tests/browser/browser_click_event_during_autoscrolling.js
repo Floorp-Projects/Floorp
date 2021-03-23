@@ -380,6 +380,26 @@ add_task(async function() {
             aButton != 2 ? " not" : ""
           } be fired in the remote content`
         );
+
+        const promiseClickEvent = BrowserTestUtils.waitForContentEvent(
+          browser,
+          "click",
+          {
+            capture: true,
+          }
+        );
+        await promiseFlushLayoutInContent();
+        info(`${aDescription}: Waiting for click event in the remote content`);
+        EventUtils.synthesizeNativeMouseEvent({
+          type: "click",
+          target: browser,
+          atCenter: true,
+        });
+        await promiseClickEvent;
+        ok(
+          true,
+          `${aDescription}: click event is fired in the remote content after stopping autoscrolling`
+        );
       }
 
       // Clicking the primary button to stop autoscrolling.
