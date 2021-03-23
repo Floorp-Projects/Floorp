@@ -15,7 +15,7 @@
 #include "nsHashKeys.h"
 #include "nsISupports.h"
 #include "nsStringFwd.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 
 // XXX Remove this dependency.
 #include "mozilla/dom/LocalStorageCommon.h"
@@ -59,10 +59,10 @@ class Client {
   };
 
   class DirectoryLockIdTable final {
-    nsTHashtable<nsUint64HashKey> mIds;
+    nsTHashSet<uint64_t> mIds;
 
    public:
-    void Put(const int64_t aId) { mIds.PutEntry(aId); }
+    void Put(const int64_t aId) { mIds.Insert(aId); }
 
     bool Has(const int64_t aId) const { return mIds.Contains(aId); }
 
