@@ -142,6 +142,13 @@ APZEventResult APZInputBridge::ReceiveInputEvent(WidgetInputEvent& aEvent) {
         mouseEvent.mRefPoint.y = input.mOrigin.y;
         mouseEvent.mFlags.mHandledByAPZ = input.mHandledByAPZ;
         mouseEvent.mFocusSequenceNumber = input.mFocusSequenceNumber;
+        MOZ_ASSERT(
+            !mouseEvent.mClickEventPrevented,
+            "It's not assumed that the click event has already been prevented");
+        mouseEvent.mClickEventPrevented |= input.mPreventClickEvent;
+        MOZ_ASSERT_IF(mouseEvent.mClickEventPrevented,
+                      mouseEvent.mMessage == eMouseDown ||
+                          mouseEvent.mMessage == eMouseUp);
         aEvent.mLayersId = input.mLayersId;
         return result;
       }
