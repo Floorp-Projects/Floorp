@@ -13,6 +13,7 @@ use crate::*;
 //
 //     $ cargo test -- --ignored --test-threads=1
 
+use crate::{AndroidStorage, AndroidStorageInput};
 use std::collections::BTreeSet;
 use std::panic;
 use tempfile::{tempdir, TempDir};
@@ -80,7 +81,7 @@ where
         ..Default::default()
     };
     let device = host
-        .device_or_default::<String>(None)
+        .device_or_default::<String>(None, AndroidStorageInput::Auto)
         .expect("device_or_default");
 
     let tmp_dir = tempdir().expect("create temp dir");
@@ -130,7 +131,7 @@ fn host_device_or_default() {
     let expected_device = devices.first().expect("found a device");
 
     let device = host
-        .device_or_default::<String>(Some(&expected_device.serial))
+        .device_or_default::<String>(Some(&expected_device.serial), AndroidStorageInput::App)
         .expect("connected device with serial");
     assert_eq!(device.run_as_package, None);
     assert_eq!(device.serial, expected_device.serial);
@@ -144,7 +145,7 @@ fn host_device_or_default_invalid_serial() {
         ..Default::default()
     };
 
-    host.device_or_default::<String>(Some(&"foobar".to_owned()))
+    host.device_or_default::<String>(Some(&"foobar".to_owned()), AndroidStorageInput::Auto)
         .expect_err("invalid serial");
 }
 
@@ -159,9 +160,65 @@ fn host_device_or_default_no_serial() {
     let expected_device = devices.first().expect("found a device");
 
     let device = host
-        .device_or_default::<String>(None)
+        .device_or_default::<String>(None, AndroidStorageInput::Auto)
         .expect("connected device with serial");
     assert_eq!(device.serial, expected_device.serial);
+}
+
+#[test]
+#[ignore]
+fn host_device_or_default_storage_as_app() {
+    let host = Host {
+        ..Default::default()
+    };
+
+    let device = host
+        .device_or_default::<String>(None, AndroidStorageInput::App)
+        .expect("connected device");
+    assert_eq!(device.storage, AndroidStorage::App);
+}
+
+#[test]
+#[ignore]
+fn host_device_or_default_storage_as_auto() {
+    let host = Host {
+        ..Default::default()
+    };
+
+    let device = host
+        .device_or_default::<String>(None, AndroidStorageInput::Auto)
+        .expect("connected device");
+    if device.is_rooted {
+        assert_eq!(device.storage, AndroidStorage::Internal);
+    } else {
+        assert_eq!(device.storage, AndroidStorage::App);
+    }
+}
+
+#[test]
+#[ignore]
+fn host_device_or_default_storage_as_internal() {
+    let host = Host {
+        ..Default::default()
+    };
+
+    let device = host
+        .device_or_default::<String>(None, AndroidStorageInput::Internal)
+        .expect("connected device");
+    assert_eq!(device.storage, AndroidStorage::Internal);
+}
+
+#[test]
+#[ignore]
+fn host_device_or_default_storage_as_sdcard() {
+    let host = Host {
+        ..Default::default()
+    };
+
+    let device = host
+        .device_or_default::<String>(None, AndroidStorageInput::Sdcard)
+        .expect("connected device");
+    assert_eq!(device.storage, AndroidStorage::Sdcard);
 }
 
 #[test]
@@ -452,6 +509,10 @@ fn device_push_dir() {
 
 #[test]
 fn format_own_device_error_types() {
+    assert_eq!(
+        format!("{}", DeviceError::InvalidStorage),
+        "Invalid storage".to_string()
+    );
     assert_eq!(
         format!("{}", DeviceError::MissingPackage),
         "Missing package".to_string()
