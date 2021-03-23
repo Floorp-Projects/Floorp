@@ -14,6 +14,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/StaticPrefs_gfx.h"
 
 using namespace mozilla;
 
@@ -83,6 +84,11 @@ already_AddRefed<MacIOSurface> MacIOSurface::CreateIOSurface(
   CFTypeRefPtr<IOSurfaceRef> surfaceRef =
       CFTypeRefPtr<IOSurfaceRef>::WrapUnderCreateRule(
           ::IOSurfaceCreate(props.get()));
+
+  if (StaticPrefs::gfx_color_management_native_srgb()) {
+    IOSurfaceSetValue(surfaceRef.get(), CFSTR("IOSurfaceColorSpace"),
+                      kCGColorSpaceSRGB);
+  }
 
   if (!surfaceRef) {
     return nullptr;
