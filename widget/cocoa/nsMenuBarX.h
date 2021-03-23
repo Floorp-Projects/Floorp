@@ -112,7 +112,7 @@ class nsMenuBarX : public nsMenuGroupOwnerX, public nsChangeObserver {
   GeckoNSMenu* NativeNSMenu() { return mNativeMenu; }
 
   // Determines how many items are visible among the siblings in a menu that are
-  // before the given child. This will not count the application menu.
+  // before the given child. This counts the application menu, if present.
   NSInteger CalculateNativeInsertionPoint(nsMenuX* aChild);
 
  protected:
