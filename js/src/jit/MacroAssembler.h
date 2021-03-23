@@ -2145,11 +2145,8 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   // Swizzle - permute with variable indices.  `rhs` holds the lanes parameter.
 
-  inline void swizzleInt8x16(FloatRegister rhs, FloatRegister lhsDest,
-                             FloatRegister temp) DEFINED_ON(x86_shared);
-
   inline void swizzleInt8x16(FloatRegister rhs, FloatRegister lhsDest)
-      DEFINED_ON(arm64);
+      DEFINED_ON(x86_shared, arm64);
 
   // Integer Add
 
