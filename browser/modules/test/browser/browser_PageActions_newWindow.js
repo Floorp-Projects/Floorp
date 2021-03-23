@@ -117,7 +117,7 @@ add_task(async function migrate1() {
   // Add the bookmark action first to make sure it ends up last after migration.
   // Also include a non-default action (copyURL) to make sure we're not
   // accidentally testing default behavior.
-  let ids = [PageActions.ACTION_ID_BOOKMARK, "pocket", "copyURL"];
+  let ids = [PageActions.ACTION_ID_BOOKMARK, "copyURL"];
   let persisted = ids.reduce(
     (memo, id) => {
       memo.ids[id] = true;
@@ -142,7 +142,7 @@ add_task(async function migrate1() {
   PageActions.actionForID("copyURL")._pinnedToUrlbar = true;
 
   // expected order
-  let orderedIDs = ["pocket", "copyURL", PageActions.ACTION_ID_BOOKMARK];
+  let orderedIDs = ["copyURL", PageActions.ACTION_ID_BOOKMARK];
 
   // Check the ordering.
   Assert.deepEqual(

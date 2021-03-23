@@ -183,8 +183,6 @@ page-action-send-tabs-urlbar =
       [1] Send Tab to Device
      *[other] Send { $tabCount } Tabs to Device
   }
-page-action-pocket-panel =
-  .label = Save Page to { -pocket-brand-name }
 page-action-copy-url-panel =
   .label = Copy Link
 page-action-copy-url-urlbar =
@@ -490,8 +488,6 @@ urlbar-go-button =
   .tooltiptext = Go to the address in the Location Bar
 urlbar-page-action-button =
   .tooltiptext = Page actions
-urlbar-pocket-button =
-  .tooltiptext = Save to { -pocket-brand-name }
 
 ## Action text shown in urlbar results, usually appended after the search
 ## string or the url, like "result value - action text".
@@ -635,6 +631,12 @@ library-bookmarks-menu =
   .label = Bookmarks
 library-recent-activity-title =
   .value = Recent Activity
+
+## Pocket toolbar button
+
+save-to-pocket-button =
+  .label = Save to { -pocket-brand-name }
+  .tooltiptext = Save to { -pocket-brand-name }
 
 ## More items
 

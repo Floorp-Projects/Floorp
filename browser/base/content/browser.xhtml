@@ -1360,6 +1360,11 @@
       </vbox>
     </panelview>
 
+    <panelview id="PanelUI-savetopocket" flex="1" class="PanelUI-subView">
+      <vbox class="PanelUI-savetopocket-container">
+      </vbox>
+    </panelview>
+
     <panelview id="PanelUI-remotetabs" flex="1" class="PanelUI-subView"
                descriptionheightworkaround="true">
       <vbox class="panel-subview-body">
@@ -2024,12 +2029,6 @@
                        data-l10n-id="urlbar-page-action-button"
                        onmousedown="BrowserPageActions.mainButtonClicked(event);"
                        onkeypress="BrowserPageActions.mainButtonClicked(event);"/>
-                <image id="pocket-button"
-                       class="urlbar-icon urlbar-page-action"
-                       data-l10n-id="urlbar-pocket-button"
-                       role="button"
-                       hidden="true"
-                       onclick="BrowserPageActions.doCommandForAction(PageActions.actionForID('pocket'), event, this);"/>
                 <hbox id="star-button-box"
                       hidden="true"
                       class="urlbar-icon-wrapper urlbar-page-action"

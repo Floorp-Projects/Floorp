@@ -473,6 +473,18 @@ toolbar[brighttext] #panic-button[open] {
   animation-name: library-bookmark-fade;
 }
 
+#save-to-pocket-button {
+  list-style-image: url("chrome://browser/skin/pocket-outline.svg");
+  fill: var(--lwt-toolbarbutton-icon-fill, currentColor);
+  fill-opacity: var(--toolbarbutton-icon-fill-opacity);
+}
+
+#save-to-pocket-button[open="true"],
+#save-to-pocket-button[pocketed="true"] {
+  list-style-image: url("chrome://global/skin/icons/pocket.svg");
+  fill: #ef4056;
+}
+
 /* ----- BOOKMARK BUTTONS ----- */
 
 .bookmark-item {

@@ -37,7 +37,7 @@ add_task(async function() {
   );
   await popupShown;
 
-  checkElementsShown(true, ["pocket-button", "context-pocket"]);
+  checkElementsShown(true, ["save-to-pocket-button", "context-pocket"]);
 
   contextMenu.hidePopup();
   await popupHidden;
@@ -64,7 +64,7 @@ add_task(async function() {
   checkElementsShown(false, [
     "context-pocket",
     "context-savelinktopocket",
-    "pocket-button",
+    "save-to-pocket-button",
   ]);
 
   await promisePocketReset();

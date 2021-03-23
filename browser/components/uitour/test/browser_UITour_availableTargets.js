@@ -87,7 +87,6 @@ add_UITour_task(
     let expecteds = getExpectedTargets();
     ok_targets(data, expecteds);
     let expectedActions = [
-      ["pocket", "pageAction-panel-pocket"],
       ["pageAction-bookmark", "pageAction-panel-bookmark"],
       ["pageAction-copyURL", "pageAction-panel-copyURL"],
       ["pageAction-emailLink", "pageAction-panel-emailLink"],
@@ -107,7 +106,6 @@ add_UITour_task(async function test_availableTargets_addUrlbarPageActionsAll() {
   let expecteds = getExpectedTargets();
   ok_targets(data, expecteds);
   let expectedActions = [
-    ["pocket", "pocket-button"],
     ["pageAction-bookmark", "star-button-box"],
     ["pageAction-copyURL", "pageAction-urlbar-copyURL"],
     ["pageAction-emailLink", "pageAction-urlbar-emailLink"],
