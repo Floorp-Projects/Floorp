@@ -14,7 +14,7 @@ from marionette_driver import By, keys
 from marionette_harness import MarionetteTestCase
 from marionette_harness.runner.mixins.window_manager import WindowManagerMixin
 
-from .ping_server import PingServer
+from telemetry_harness.ping_server import PingServer
 
 
 CANARY_CLIENT_ID = "c0ffeec0-ffee-c0ff-eec0-ffeec0ffeec0"
