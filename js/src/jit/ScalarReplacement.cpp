@@ -1492,13 +1492,13 @@ void ArgumentsReplacer::visitGuardArgumentsObjectFlags(
   // property of the args object. We have already determined that the
   // args object doesn't escape, so its properties can't be mutated.
   //
-  // FORWARDED_ARGUMENTS_BIT is set if any argument is closed over,
-  // which is an immutable property of the script. Because we are
-  // replacing the args object for a known script, we can check the
-  // flag once, which is done when we first attach the CacheIR, and
-  // rely on it.  (Note that this wouldn't be true if we didn't know
-  // the origin of args_, because it could be passed in from another
-  // function.)
+  // FORWARDED_ARGUMENTS_BIT is set if any mapped argument is closed
+  // over, which is an immutable property of the script. Because we
+  // are replacing the args object for a known script, we can check
+  // the flag once, which is done when we first attach the CacheIR,
+  // and rely on it.  (Note that this wouldn't be true if we didn't
+  // know the origin of args_, because it could be passed in from
+  // another function.)
   uint32_t supportedBits = ArgumentsObject::LENGTH_OVERRIDDEN_BIT |
                            ArgumentsObject::ITERATOR_OVERRIDDEN_BIT |
                            ArgumentsObject::ELEMENT_OVERRIDDEN_BIT |
@@ -1507,7 +1507,7 @@ void ArgumentsReplacer::visitGuardArgumentsObjectFlags(
 
   MOZ_ASSERT((ins->flags() & ~supportedBits) == 0);
   MOZ_ASSERT_IF(ins->flags() & ArgumentsObject::FORWARDED_ARGUMENTS_BIT,
-                !args_->block()->info().anyFormalIsAliased());
+                !args_->block()->info().anyFormalIsForwarded());
 #endif
 
   // Replace the guard with the args object.

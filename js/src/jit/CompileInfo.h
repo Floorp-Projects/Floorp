@@ -84,7 +84,7 @@ class CompileInfo {
         hadBoundsCheckBailout_(script->failedBoundsCheck()),
         hadUnboxFoldingBailout_(script->hadUnboxFoldingBailout()),
         mayReadFrameArgsDirectly_(script->mayReadFrameArgsDirectly()),
-        anyFormalIsAliased_(script->anyFormalIsAliased()),
+        anyFormalIsForwarded_(script->anyFormalIsForwarded()),
         isDerivedClassConstructor_(script->isDerivedClassConstructor()),
         inlineScriptTree_(inlineScriptTree) {
     MOZ_ASSERT_IF(osrPc, JSOp(*osrPc) == JSOp::LoopHead);
@@ -150,7 +150,7 @@ class CompileInfo {
         hadBoundsCheckBailout_(false),
         hadUnboxFoldingBailout_(false),
         mayReadFrameArgsDirectly_(false),
-        anyFormalIsAliased_(false),
+        anyFormalIsForwarded_(false),
         inlineScriptTree_(nullptr),
         needsBodyEnvironmentObject_(false),
         funNeedsSomeEnvironmentObject_(false) {
@@ -347,7 +347,7 @@ class CompileInfo {
   bool hadUnboxFoldingBailout() const { return hadUnboxFoldingBailout_; }
 
   bool mayReadFrameArgsDirectly() const { return mayReadFrameArgsDirectly_; }
-  bool anyFormalIsAliased() const { return anyFormalIsAliased_; }
+  bool anyFormalIsForwarded() const { return anyFormalIsForwarded_; }
 
   bool isDerivedClassConstructor() const { return isDerivedClassConstructor_; }
 
@@ -378,7 +378,7 @@ class CompileInfo {
   bool hadUnboxFoldingBailout_;
 
   bool mayReadFrameArgsDirectly_;
-  bool anyFormalIsAliased_;
+  bool anyFormalIsForwarded_;
 
   bool isDerivedClassConstructor_;
 
