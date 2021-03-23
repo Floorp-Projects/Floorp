@@ -40,12 +40,9 @@ nsSystemStatusBarCocoa::StatusItem::StatusItem(nsStandaloneNativeMenu* aMenu) : 
 
   MOZ_COUNT_CTOR(nsSystemStatusBarCocoa::StatusItem);
 
-  NSMenu* nativeMenu = nil;
-  mMenu->GetNativeMenu(reinterpret_cast<void**>(&nativeMenu));
-
   mStatusItem =
       [[NSStatusBar.systemStatusBar statusItemWithLength:NSSquareStatusItemLength] retain];
-  mStatusItem.menu = nativeMenu;
+  mStatusItem.menu = mMenu->NativeNSMenu();
   mStatusItem.highlightMode = YES;
 
   // We want the status item to get its image from menu item that mMenu was
