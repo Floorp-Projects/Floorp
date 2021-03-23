@@ -13,7 +13,7 @@
 #include "mozilla/layers/TextureClient.h"
 #include "mozilla/SyncRunnable.h"
 #include "mozilla/Telemetry.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 #include "RecordedCanvasEventImpl.h"
 
 #if defined(XP_WIN)
@@ -64,7 +64,7 @@ TextureData* CanvasTranslator::CreateTextureData(TextureType aTextureType,
   return textureData;
 }
 
-typedef nsTHashtable<nsRefPtrHashKey<CanvasTranslator>> CanvasTranslatorSet;
+typedef nsTHashSet<RefPtr<CanvasTranslator>> CanvasTranslatorSet;
 
 static CanvasTranslatorSet& CanvasTranslators() {
   MOZ_ASSERT(CanvasThreadHolder::IsInCanvasThread());
@@ -73,8 +73,8 @@ static CanvasTranslatorSet& CanvasTranslators() {
 }
 
 static void EnsureAllClosed() {
-  for (auto iter = CanvasTranslators().Iter(); !iter.Done(); iter.Next()) {
-    iter.Get()->GetKey()->Close();
+  for (const auto& key : CanvasTranslators()) {
+    key->Close();
   }
 }
 
@@ -117,7 +117,7 @@ void CanvasTranslator::Bind(Endpoint<PCanvasParent>&& aEndpoint) {
     return;
   }
 
-  CanvasTranslators().PutEntry(this);
+  CanvasTranslators().Insert(this);
 }
 
 mozilla::ipc::IPCResult CanvasTranslator::RecvInitTranslator(
@@ -206,7 +206,7 @@ void CanvasTranslator::FinishShutdown() {
   // ReleaseOnCompositorThread.
   CanvasTranslatorSet& canvasTranslators = CanvasTranslators();
   CanvasThreadHolder::ReleaseOnCompositorThread(mCanvasThreadHolder.forget());
-  canvasTranslators.RemoveEntry(this);
+  canvasTranslators.Remove(this);
 }
 
 void CanvasTranslator::Deactivate() {

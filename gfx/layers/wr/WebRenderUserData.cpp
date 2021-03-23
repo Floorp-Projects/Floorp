@@ -88,7 +88,7 @@ WebRenderUserData::WebRenderUserData(RenderRootStateManager* aManager,
 
 WebRenderUserData::~WebRenderUserData() = default;
 
-void WebRenderUserData::RemoveFromTable() { mTable->RemoveEntry(this); }
+void WebRenderUserData::RemoveFromTable() { mTable->Remove(this); }
 
 WebRenderBridgeChild* WebRenderUserData::WrBridge() const {
   return mManager->WrBridge();
