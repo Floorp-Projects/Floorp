@@ -9,6 +9,14 @@
 
 const EXPORTED_SYMBOLS = ["LoginTestUtils"];
 
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
+
+XPCOMUtils.defineLazyModuleGetters(this, {
+  RemoteSettings: "resource://services-settings/remote-settings.js",
+});
+
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 let { Assert: AssertCls } = ChromeUtils.import(
@@ -614,5 +622,29 @@ LoginTestUtils.file = {
       new TextEncoder().encode(csvLines.join("\r\n"))
     );
     return tmpFile;
+  },
+};
+
+LoginTestUtils.remoteSettings = {
+  relatedRealmsCollection: "websites-with-shared-credential-backends",
+  async setupWebsitesWithSharedCredentials(
+    relatedRealms = [["other-example.com", "example.com", "example.co.uk"]]
+  ) {
+    let db = await RemoteSettings(this.relatedRealmsCollection).db;
+    await db.clear();
+    await db.create({
+      id: "some-fake-ID-abc",
+      relatedRealms,
+    });
+    await db.importChanges({}, 1234567);
+  },
+  async cleanWebsitesWithSharedCredentials() {
+    let db = await RemoteSettings(this.relatedRealmsCollection).db;
+    await db.clear();
+    await db.importChanges({}, 1234);
+  },
+  async updateTimestamp() {
+    let db = await RemoteSettings(this.relatedRealmsCollection).db;
+    await db.importChanges({}, 12345678);
   },
 };

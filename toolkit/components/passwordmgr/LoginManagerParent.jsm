@@ -22,6 +22,13 @@ XPCOMUtils.defineLazyGetter(this, "autocompleteFeature", () => {
   return new ExperimentFeature("password-autocomplete");
 });
 
+XPCOMUtils.defineLazyGetter(this, "LoginRelatedRealmsParent", () => {
+  const { LoginRelatedRealmsParent } = ChromeUtils.import(
+    "resource://gre/modules/LoginRelatedRealms.jsm"
+  );
+  return new LoginRelatedRealmsParent();
+});
+
 XPCOMUtils.defineLazyGlobalGetters(this, ["URL"]);
 
 XPCOMUtils.defineLazyModuleGetters(this, {
@@ -186,6 +193,7 @@ class LoginManagerParent extends JSWindowActorParent {
    * @param {origin?} options.httpRealm To match on. Omit this argument to match all realms.
    * @param {boolean} options.acceptDifferentSubdomains Include results for eTLD+1 matches
    * @param {boolean} options.ignoreActionAndRealm Include all form and HTTP auth logins for the site
+   * @param {string[]} options.relatedRealms Related realms to match against when searching
    */
   static async searchAndDedupeLogins(
     formOrigin,
@@ -194,6 +202,7 @@ class LoginManagerParent extends JSWindowActorParent {
       formActionOrigin,
       httpRealm,
       ignoreActionAndRealm,
+      relatedRealms,
     } = {}
   ) {
     let logins;
@@ -208,6 +217,10 @@ class LoginManagerParent extends JSWindowActorParent {
       } else if (typeof httpRealm != "undefined") {
         matchData.httpRealm = httpRealm;
       }
+    }
+    if (LoginHelper.relatedRealmsEnabled) {
+      matchData.acceptRelatedRealms = LoginHelper.relatedRealmsEnabled;
+      matchData.relatedRealms = relatedRealms;
     }
     try {
       logins = await Services.logins.searchLoginsAsync(matchData);
@@ -535,11 +548,22 @@ class LoginManagerParent extends JSWindowActorParent {
         origin: formOrigin,
       });
     } else {
+      let relatedRealmsOrigins = [];
+      if (LoginHelper.relatedRealmsEnabled) {
+        relatedRealmsOrigins = await LoginRelatedRealmsParent.findRelatedRealms(
+          formOrigin
+        );
+      }
       logins = await LoginManagerParent.searchAndDedupeLogins(formOrigin, {
         formActionOrigin: actionOrigin,
         ignoreActionAndRealm: true,
         acceptDifferentSubdomains: LoginHelper.includeOtherSubdomainsInLookup,
+        relatedRealms: relatedRealmsOrigins,
       });
+      debug(
+        "Adding related logins on page load",
+        logins.map(l => l.origin)
+      );
     }
 
     log("sendLoginDataToChild:", logins.length, "deduped logins");
@@ -606,12 +630,18 @@ class LoginManagerParent extends JSWindowActorParent {
       logins = LoginHelper.vanillaObjectsToLogins(previousResult.logins);
     } else {
       log("Creating new autocomplete search result.");
-
+      let relatedRealmsOrigins = [];
+      if (LoginHelper.relatedRealmsEnabled) {
+        relatedRealmsOrigins = await LoginRelatedRealmsParent.findRelatedRealms(
+          formOrigin
+        );
+      }
       // Autocomplete results do not need to match actionOrigin or exact origin.
       logins = await LoginManagerParent.searchAndDedupeLogins(formOrigin, {
         formActionOrigin: actionOrigin,
         ignoreActionAndRealm: true,
         acceptDifferentSubdomains: LoginHelper.includeOtherSubdomainsInLookup,
+        relatedRealms: relatedRealmsOrigins,
       });
     }
 

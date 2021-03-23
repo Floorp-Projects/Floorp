@@ -21,6 +21,12 @@ var { LoginManagerParent } = ChromeUtils.import(
 const { LoginTestUtils } = ChromeUtils.import(
   "resource://testing-common/LoginTestUtils.jsm"
 );
+if (LoginHelper.relatedRealmsEnabled) {
+  let rsPromise = LoginTestUtils.remoteSettings.setupWebsitesWithSharedCredentials();
+  async () => {
+    await rsPromise;
+  };
+}
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 /**
@@ -127,6 +133,7 @@ addMessageListener("cleanup", () => {
   Services.obs.removeObserver(onStorageChanged, "passwordmgr-storage-changed");
   Services.obs.removeObserver(onPrompt, "passwordmgr-prompt-change");
   Services.obs.removeObserver(onPrompt, "passwordmgr-prompt-save");
+  Services.logins.removeAllUserFacingLogins();
 });
 
 // Begin message listeners
