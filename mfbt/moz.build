@@ -67,6 +67,7 @@ EXPORTS.mozilla = [
     "MathAlgorithms.h",
     "Maybe.h",
     "MaybeOneOf.h",
+    "MaybeStorageBase.h",
     "MemoryChecking.h",
     "MemoryReporting.h",
     "NonDereferenceable.h",

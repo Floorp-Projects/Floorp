@@ -241,6 +241,9 @@ class MOZ_NEEDS_NO_VTABLE_TYPE nsTHashtable {
   nsTHashtable(nsTHashtable<EntryType>&& aOther);
   nsTHashtable<EntryType>& operator=(nsTHashtable<EntryType>&& aOther);
 
+  nsTHashtable(const nsTHashtable<EntryType>&) = delete;
+  nsTHashtable& operator=(const nsTHashtable<EntryType>&) = delete;
+
   /**
    * Return the generation number for the table. This increments whenever
    * the table data items are moved.
