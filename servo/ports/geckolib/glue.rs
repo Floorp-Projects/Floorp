@@ -6747,7 +6747,7 @@ pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
 
     *stretch = match font.font_stretch {
         FontStretch::Keyword(ref k) => k.compute().0,
-        FontStretch::Stretch(ref p) => p.get(),
+        FontStretch::Stretch(ref p) => p.0.get(),
         FontStretch::System(_) => return false,
     };
 
