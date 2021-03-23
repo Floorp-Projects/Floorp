@@ -599,6 +599,22 @@ class NativeObject : public JSObject {
   MOZ_ALWAYS_INLINE bool setLastPropertyForNewDataProperty(JSContext* cx,
                                                            Shape* shape);
 
+  MOZ_ALWAYS_INLINE bool canReuseShapeForNewProperties(Shape* shape) const {
+    if (lastProperty()->numFixedSlots() != shape->numFixedSlots()) {
+      return false;
+    }
+    if (lastProperty()->inDictionary() || shape->inDictionary()) {
+      return false;
+    }
+    if (lastProperty()->base() != shape->base()) {
+      return false;
+    }
+    MOZ_ASSERT(lastProperty()->getObjectClass() == shape->getObjectClass());
+    MOZ_ASSERT(lastProperty()->proto() == shape->proto());
+    MOZ_ASSERT(lastProperty()->realm() == shape->realm());
+    return lastProperty()->objectFlags() == shape->objectFlags();
+  }
+
   // Newly-created TypedArrays that map a SharedArrayBuffer are
   // marked as shared by giving them an ObjectElements that has the
   // ObjectElements::SHARED_MEMORY flag set.
