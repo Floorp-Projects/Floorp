@@ -2675,7 +2675,7 @@ void nsHttpHandler::ExcludeHttp2(const nsHttpConnectionInfo* ci) {
   mConnMgr->ExcludeHttp2(ci);
   if (!mExcludedHttp2Origins.Contains(ci->GetOrigin())) {
     MutexAutoLock lock(mHttpExclusionLock);
-    mExcludedHttp2Origins.PutEntry(ci->GetOrigin());
+    mExcludedHttp2Origins.Insert(ci->GetOrigin());
   }
 }
 
@@ -2690,7 +2690,7 @@ void nsHttpHandler::ExcludeHttp3(const nsHttpConnectionInfo* ci) {
   mConnMgr->ExcludeHttp3(ci);
   if (!mExcludedHttp3Origins.Contains(ci->GetRoutedHost())) {
     MutexAutoLock lock(mHttpExclusionLock);
-    mExcludedHttp3Origins.PutEntry(ci->GetRoutedHost());
+    mExcludedHttp3Origins.Insert(ci->GetRoutedHost());
   }
 }
 
@@ -2869,7 +2869,7 @@ bool nsHttpHandler::UseHTTPSRRForSpeculativeConnection() const {
 void nsHttpHandler::ExcludeHTTPSRRHost(const nsACString& aHost) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  mExcludedHostsForHTTPSRRUpgrade.PutEntry(aHost);
+  mExcludedHostsForHTTPSRRUpgrade.Insert(aHost);
 }
 
 bool nsHttpHandler::IsHostExcludedForHTTPSRR(const nsACString& aHost) {

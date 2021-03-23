@@ -283,12 +283,12 @@ nsresult nsIOService::Init() {
                                        gCallbackPrefs, this);
   PrefsChanged();
 
-  mSocketProcessTopicBlackList.PutEntry(
+  mSocketProcessTopicBlackList.Insert(
       nsLiteralCString(NS_XPCOM_WILL_SHUTDOWN_OBSERVER_ID));
-  mSocketProcessTopicBlackList.PutEntry(
+  mSocketProcessTopicBlackList.Insert(
       nsLiteralCString(NS_XPCOM_SHUTDOWN_OBSERVER_ID));
-  mSocketProcessTopicBlackList.PutEntry("xpcom-shutdown-threads"_ns);
-  mSocketProcessTopicBlackList.PutEntry("profile-do-change"_ns);
+  mSocketProcessTopicBlackList.Insert("xpcom-shutdown-threads"_ns);
+  mSocketProcessTopicBlackList.Insert("profile-do-change"_ns);
 
   // Register for profile change notifications
   mObserverService = services::GetObserverService();
@@ -352,7 +352,7 @@ nsIOService::AddObserver(nsIObserver* aObserver, const char* aTopic,
     return NS_ERROR_FAILURE;
   }
 
-  mObserverTopicForSocketProcess.PutEntry(topic);
+  mObserverTopicForSocketProcess.Insert(topic);
 
   // This happens when AddObserver() is called by nsIOService::Init(). We don't
   // want to add nsIOService again.

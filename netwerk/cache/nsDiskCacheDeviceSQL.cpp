@@ -1265,7 +1265,7 @@ nsresult nsOfflineCacheDevice::InitActiveCaches() {
     nsCString clientID;
     statement->GetUTF8String(1, clientID);
 
-    mActiveCaches.PutEntry(clientID);
+    mActiveCaches.Insert(clientID);
     mActiveCachesByGroup.InsertOrUpdate(group, MakeUnique<nsCString>(clientID));
 
     rv = statement->ExecuteStep(&hasRows);
@@ -2079,17 +2079,17 @@ nsresult nsOfflineCacheDevice::GetGroupsTimeOrdered(nsTArray<nsCString>& keys) {
 
 bool nsOfflineCacheDevice::IsLocked(const nsACString& key) {
   MutexAutoLock lock(mLock);
-  return mLockedEntries.GetEntry(key);
+  return mLockedEntries.Contains(key);
 }
 
 void nsOfflineCacheDevice::Lock(const nsACString& key) {
   MutexAutoLock lock(mLock);
-  mLockedEntries.PutEntry(key);
+  mLockedEntries.Insert(key);
 }
 
 void nsOfflineCacheDevice::Unlock(const nsACString& key) {
   MutexAutoLock lock(mLock);
-  mLockedEntries.RemoveEntry(key);
+  mLockedEntries.Remove(key);
 }
 
 nsresult nsOfflineCacheDevice::RunSimpleQuery(mozIStorageStatement* statement,
@@ -2211,7 +2211,7 @@ nsresult nsOfflineCacheDevice::DeactivateGroup(const nsACString& group) {
   MutexAutoLock lock(mLock);
 
   if (mActiveCachesByGroup.Get(group, &active)) {
-    mActiveCaches.RemoveEntry(*active);
+    mActiveCaches.Remove(*active);
     mActiveCachesByGroup.Remove(group);
     active = nullptr;
   }
@@ -2532,12 +2532,12 @@ nsresult nsOfflineCacheDevice::ActivateCache(const nsACString& group,
 
   mActiveCachesByGroup.WithEntryHandle(group, [&](auto&& entry) {
     if (entry) {
-      mActiveCaches.RemoveEntry(*entry.Data());
+      mActiveCaches.Remove(*entry.Data());
       entry.Remove();
     }
 
     if (!clientID.IsEmpty()) {
-      mActiveCaches.PutEntry(clientID);
+      mActiveCaches.Insert(clientID);
       entry.Insert(MakeUnique<nsCString>(clientID));
     }
   });

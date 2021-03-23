@@ -16,6 +16,7 @@
 #include "nsInterfaceHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsIWeakReference.h"
+#include "nsTHashSet.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
 
@@ -254,8 +255,8 @@ class nsOfflineCacheDevice final : public nsCacheDevice, public nsISupports {
 
   nsInterfaceHashtable<nsCStringHashKey, nsIWeakReference> mCaches;
   nsClassHashtable<nsCStringHashKey, nsCString> mActiveCachesByGroup;
-  nsTHashtable<nsCStringHashKey> mActiveCaches;
-  nsTHashtable<nsCStringHashKey> mLockedEntries;
+  nsTHashSet<nsCString> mActiveCaches;
+  nsTHashSet<nsCString> mLockedEntries;
 
   nsCOMPtr<nsIEventTarget> mInitEventTarget;
 };
