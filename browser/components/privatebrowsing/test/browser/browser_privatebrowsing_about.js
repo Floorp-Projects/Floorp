@@ -120,8 +120,8 @@ add_task(async function test_search_handoff_on_keydown() {
     ok(
       content.document
         .getElementById("search-handoff-button")
-        .classList.contains("hidden"),
-      "in-content search is hidden"
+        .classList.contains("disabled"),
+      "in-content search is disabled"
     );
   });
   await searchPromise;
@@ -137,8 +137,8 @@ add_task(async function test_search_handoff_on_keydown() {
     ok(
       !content.document
         .getElementById("search-handoff-button")
-        .classList.contains("hidden"),
-      "in-content search is not hidden"
+        .classList.contains("disabled"),
+      "in-content search is not disabled"
     );
   });
 
