@@ -350,6 +350,12 @@
         // so index 2 is out of range.
         is(activateItem(menu, "2|1|0"), "", "#39:" + sna);
 
+        // Check that hiding and then un-hiding the root menu doesn't result in
+        // a cyclic native menu structure.
+        menuNode.setAttribute("collapsed", "true");
+        menuNode.removeAttribute("collapsed");
+        ok(runBaseMenuTests(menu), "base tests #9");
+
         // Run tests where the menu nodes are not in the document's node tree.
         runDetachedMenuTests(false);
         runDetachedMenuTests(true);
