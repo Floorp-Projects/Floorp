@@ -1,7 +1,6 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* eslint-disable mozilla/reject-some-requires */
 
 // This file is a chrome-API-dependent version of the module
 // devtools/client/netmonitor/src/utils/open-request-in-tab.js, so that it can
