@@ -52,7 +52,7 @@ const newPropertyBag = LoginHelper.newPropertyBag;
 
 const NEW_PASSWORD_HEURISTIC_ENABLED_PREF =
   "signon.generation.confidenceThreshold";
-
+const RELATED_REALMS_ENABLED_PREF = "signon.relatedRealms.enabled";
 /**
  * All the tests are implemented with add_task, this starts them automatically.
  */
@@ -91,6 +91,12 @@ add_task(async function test_common_initialize() {
 
   // Ensure that the service and the storage module are initialized.
   await Services.logins.initializationPromise;
+  Services.prefs.setBoolPref(RELATED_REALMS_ENABLED_PREF, true);
+  if (LoginHelper.relatedRealmsEnabled) {
+    // Ensure that there is a mocked Remote Settings database for the
+    // "websites-with-shared-credential-backends" collection
+    await LoginTestUtils.remoteSettings.setupWebsitesWithSharedCredentials();
+  }
 });
 
 add_task(async function test_common_prefs() {

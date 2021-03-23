@@ -1935,6 +1935,7 @@ pref("signon.management.page.breachAlertUrl",
      "https://monitor.firefox.com/breach-details/");
 pref("signon.management.page.showPasswordSyncNotification", true);
 pref("signon.passwordEditCapture.enabled", true);
+pref("signon.relatedRealms.enabled", false);
 pref("signon.showAutoCompleteFooter", true);
 pref("signon.showAutoCompleteImport", "import");
 pref("signon.suggestImportCount", 3);

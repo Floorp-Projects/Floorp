@@ -475,7 +475,9 @@ class LoginManagerStorage_json {
           // Some property names aren't field names but are special options to
           // affect the search.
           case "acceptDifferentSubdomains":
-          case "schemeUpgrades": {
+          case "schemeUpgrades":
+          case "acceptRelatedRealms":
+          case "relatedRealms": {
             options[prop.name] = prop.value;
             break;
           }
@@ -508,6 +510,8 @@ class LoginManagerStorage_json {
     aOptions = {
       schemeUpgrades: false,
       acceptDifferentSubdomains: false,
+      acceptRelatedRealms: false,
+      relatedRealms: [],
     },
     candidateLogins = this._store.data.logins
   ) {

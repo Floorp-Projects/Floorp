@@ -322,7 +322,6 @@ LoginManager.prototype = {
     if (matchingLogin) {
       throw LoginHelper.createLoginAlreadyExistsError(matchingLogin.guid);
     }
-
     log.debug("Adding login");
     return this._storage.addLogin(login);
   },

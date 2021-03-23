@@ -371,6 +371,8 @@ this.LoginHelper = {
   privateBrowsingCaptureEnabled: null,
   remoteRecipesEnabled: null,
   remoteRecipesCollection: "password-recipes",
+  relatedRealmsEnabled: null,
+  relatedRealmsCollection: "websites-with-shared-credential-backends",
   schemeUpgrades: null,
   showAutoCompleteFooter: null,
   showAutoCompleteImport: null,
@@ -469,6 +471,9 @@ this.LoginHelper = {
     );
     this.remoteRecipesEnabled = Services.prefs.getBoolPref(
       "signon.recipes.remoteRecipesEnabled"
+    );
+    this.relatedRealmsEnabled = Services.prefs.getBoolPref(
+      "signon.relatedRealms.enabled"
     );
   },
 
@@ -682,6 +687,8 @@ this.LoginHelper = {
       schemeUpgrades: false,
       acceptWildcardMatch: false,
       acceptDifferentSubdomains: false,
+      acceptRelatedRealms: false,
+      relatedRealms: [],
     }
   ) {
     if (aLoginOrigin == aSearchOrigin) {
@@ -717,6 +724,18 @@ this.LoginHelper = {
             (aOptions.schemeUpgrades && schemeMatches))
         ) {
           return true;
+        }
+        if (
+          aOptions.acceptRelatedRealms &&
+          aOptions.relatedRealms.length &&
+          (loginURI.scheme == searchURI.scheme ||
+            (aOptions.schemeUpgrades && schemeMatches))
+        ) {
+          for (let relatedOrigin of aOptions.relatedRealms) {
+            if (Services.eTLD.hasRootDomain(loginURI.host, relatedOrigin)) {
+              return true;
+            }
+          }
         }
       }
 
