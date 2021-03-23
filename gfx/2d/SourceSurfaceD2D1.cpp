@@ -17,17 +17,22 @@ SourceSurfaceD2D1::SourceSurfaceD2D1(ID2D1Image* aImage,
     : mImage(aImage),
       mDC(aDC),
       mDevice(Factory::GetD2D1Device()),
-      mDrawTarget(aDT) {
+      mFormat(aFormat),
+      mSize(aSize),
+      mDrawTarget(aDT),
+      mOwnsCopy(false) {
   aImage->QueryInterface((ID2D1Bitmap1**)getter_AddRefs(mRealizedBitmap));
-
-  mFormat = aFormat;
-  mSize = aSize;
   if (aDT) {
     mSnapshotLock = aDT->mSnapshotLock;
   }
 }
 
-SourceSurfaceD2D1::~SourceSurfaceD2D1() {}
+SourceSurfaceD2D1::~SourceSurfaceD2D1() {
+  if (mOwnsCopy) {
+    DrawTargetD2D1::mVRAMUsageSS -=
+        mSize.width * mSize.height * BytesPerPixel(mFormat);
+  }
+}
 
 bool SourceSurfaceD2D1::IsValid() const {
   return mDevice == Factory::GetD2D1Device();
@@ -145,6 +150,7 @@ void SourceSurfaceD2D1::DrawTargetWillChange() {
 
   DrawTargetD2D1::mVRAMUsageSS +=
       mSize.width * mSize.height * BytesPerPixel(mFormat);
+  mOwnsCopy = true;
 
   // Ensure the object stays alive for the duration of MarkIndependent.
   RefPtr<SourceSurfaceD2D1> deathGrip = this;
