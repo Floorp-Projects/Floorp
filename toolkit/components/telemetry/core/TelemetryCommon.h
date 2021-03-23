@@ -9,7 +9,9 @@
 #include "jsapi.h"
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/TelemetryProcessEnums.h"
+#include "nsHashtablesFwd.h"
 #include "nsIScriptError.h"
+#include "nsTHashSet.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsXULAppAPI.h"
@@ -18,7 +20,7 @@ namespace mozilla {
 namespace Telemetry {
 namespace Common {
 
-typedef nsTHashtable<nsCStringHashKey> StringHashSet;
+typedef nsTHashSet<nsCString> StringHashSet;
 
 enum class RecordedProcessType : uint16_t {
   Main = (1 << GeckoProcessType_Default),  // Also known as "parent process"

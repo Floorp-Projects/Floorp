@@ -3744,7 +3744,7 @@ nsresult TelemetryScalar::GetAllStores(StringHashSet& set) {
     const char* name = &gScalarsStringTable[storeIdx];
     nsAutoCString store;
     store.AssignASCII(name);
-    if (!set.PutEntry(store)) {
+    if (!set.Insert(store, mozilla::fallible)) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -3753,7 +3753,7 @@ nsresult TelemetryScalar::GetAllStores(StringHashSet& set) {
   for (auto& ptr : *gDynamicStoreNames) {
     nsAutoCString store;
     ptr->ToUTF8String(store);
-    if (!set.PutEntry(store)) {
+    if (!set.Insert(store, mozilla::fallible)) {
       return NS_ERROR_FAILURE;
     }
   }
