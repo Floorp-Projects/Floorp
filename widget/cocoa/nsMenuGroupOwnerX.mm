@@ -37,15 +37,7 @@ nsMenuGroupOwnerX::~nsMenuGroupOwnerX() {
   [mRepresentedObject release];
 }
 
-nsresult nsMenuGroupOwnerX::Create(mozilla::dom::Element* aContent) {
-  if (!aContent) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  mContent = aContent;
-
-  return NS_OK;
-}
+void nsMenuGroupOwnerX::Create(mozilla::dom::Element* aContent) { mContent = aContent; }
 
 //
 // nsIMutationObserver
