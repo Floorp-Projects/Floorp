@@ -3,6 +3,8 @@
 
 "use strict";
 
+/* import-globals-from ../../shared/test/shared-head.js */
+
 const { listenOnce } = require("devtools/shared/async-utils");
 
 /**
