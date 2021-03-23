@@ -138,3 +138,10 @@
 #downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack {
   max-width: unset;
 }
+
+@supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
+#downloadsPanel-mainView {
+  font: caption;
+  width: 35em;
+}
+} /** END Proton **/
