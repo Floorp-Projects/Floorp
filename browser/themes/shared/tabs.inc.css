@@ -18,7 +18,6 @@
   --tab-border-radius: 4px;
   --tab-shadow-max-size: 6px;
   --proton-tab-block-margin: 4px;
-  --proton-tab-inline-padding: 2px;
   --inline-tab-padding: 8px;
 }
 } /*** END proton ***/
@@ -105,15 +104,15 @@
 @supports -moz-bool-pref("browser.proton.tabs.enabled") {
 .tabbrowser-tab {
   min-height: var(--tab-min-height);
-  padding-inline: var(--proton-tab-inline-padding) !important;
+  padding-inline: 2px !important;
 }
 
 .tabbrowser-tab[first-visible-tab] {
-  padding-inline-start: calc(2 * var(--proton-tab-inline-padding)) !important;
+  padding-inline-start: var(--tab-shadow-max-size) !important;
 }
 
-.tabbrowser-tab[last-visible-tab] {
-  padding-inline-end: calc(2 * var(--proton-tab-inline-padding)) !important;
+#tabbrowser-arrowscrollbox[overflowing][scrolledtoend] .tabbrowser-tab[last-visible-tab] {
+  padding-inline-end: var(--tab-shadow-max-size) !important;
 }
 
 /* tabbrowser-tab keyboard focus */
