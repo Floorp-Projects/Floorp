@@ -4191,6 +4191,15 @@
   value: false
   mirror: always
 
+- name: gfx.color_management.native_srgb
+  type: RelaxedAtomicBool
+#if defined(XP_MACOSX)
+  value: true
+#else
+  value: false
+#endif
+  mirror: always
+
 - name: gfx.color_management.enablev4
   type: RelaxedAtomicBool
   value: false
