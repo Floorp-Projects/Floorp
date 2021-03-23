@@ -130,7 +130,7 @@ var PreferenceRollouts = {
   // applicable, or the feature changing in such a way that Normandy's automatic
   // graduation system cannot detect that the rollout should hand off to the
   // built-in code.
-  GRADUATION_SET: new Set(),
+  GRADUATION_SET: new Set(["pref-webrender-intel-rollout-70-release"]),
 
   /**
    * Update the rollout database with changes that happened during early startup.
