@@ -237,7 +237,7 @@ void nsMenuBarX::InsertMenuAtIndex(RefPtr<nsMenuX>&& aMenu, uint32_t aIndex) {
   // hook up submenus
   RefPtr<nsIContent> menuContent = aMenu->Content();
   if (menuContent->GetChildCount() > 0 && !nsMenuUtilsX::NodeIsHiddenOrCollapsed(menuContent)) {
-    int insertionIndex = nsMenuUtilsX::CalculateNativeInsertionPoint(this, aMenu);
+    int insertionIndex = CalculateNativeInsertionPoint(aMenu);
     if (MenuContainsAppMenu()) {
       insertionIndex++;
     }
@@ -462,6 +462,22 @@ void nsMenuBarX::ApplicationMenuOpened() {
 
 bool nsMenuBarX::PerformKeyEquivalent(NSEvent* aEvent) {
   return [mNativeMenu performSuperKeyEquivalent:aEvent];
+}
+
+NSInteger nsMenuBarX::CalculateNativeInsertionPoint(nsMenuX* aChild) {
+  NSInteger insertionPoint = 0;
+  for (auto& currMenu : mMenuArray) {
+    if (currMenu == aChild) {
+      return insertionPoint;
+    }
+    // Only count items that are inside a menu.
+    // XXXmstange Not sure what would cause free-standing items. Maybe for collapsed/hidden menus?
+    // In that case, an nsMenuX::IsVisible() method would be better.
+    if (currMenu->NativeNSMenuItem().menu) {
+      insertionPoint++;
+    }
+  }
+  return insertionPoint;
 }
 
 // Hide the item in the menu by setting the 'hidden' attribute. Returns it so
