@@ -22,12 +22,26 @@ class Element;
 
 namespace widget {
 
-class NativeMenuMac : public NativeMenu, public nsMenuItemIconX::Listener {
+class NativeMenuMac : public NativeMenu,
+                      public nsMenuItemIconX::Listener,
+                      public nsMenuX::Observer {
  public:
   explicit NativeMenuMac(mozilla::dom::Element* aElement);
 
+  // NativeMenu
+  void AddObserver(NativeMenu::Observer* aObserver) override {
+    mObservers.AppendElement(aObserver);
+  }
+  void RemoveObserver(NativeMenu::Observer* aObserver) override {
+    mObservers.RemoveElement(aObserver);
+  }
+
   // nsMenuItemIconX::Listener
   void IconUpdated() override;
+
+  // nsMenuX::Observer
+  void OnMenuOpened() override;
+  void OnMenuClosed() override;
 
   NSMenu* NativeNSMenu() { return mMenu ? mMenu->NativeNSMenu() : nil; }
   void MenuWillOpen();
@@ -49,6 +63,7 @@ class NativeMenuMac : public NativeMenu, public nsMenuItemIconX::Listener {
   RefPtr<nsIContent> mContent;
   RefPtr<nsMenuGroupOwnerX> mMenuGroupOwner;
   RefPtr<nsMenuX> mMenu;
+  nsTArray<NativeMenu::Observer*> mObservers;
   NSStatusItem* mContainerStatusBarItem;
 };
 

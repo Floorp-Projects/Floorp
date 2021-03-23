@@ -14,6 +14,25 @@ class NativeMenu {
  public:
   NS_INLINE_DECL_REFCOUNTING(NativeMenu)
 
+  class Observer {
+   public:
+    // Called when the menu opened, after popupshown.
+    // No strong reference is held to the observer during the call.
+    virtual void OnNativeMenuOpened() = 0;
+
+    // Called when the menu closed, after popuphidden.
+    // No strong reference is held to the observer during the call.
+    virtual void OnNativeMenuClosed() = 0;
+  };
+
+  // Add an observer that gets notified of menu opening and closing.
+  // The menu does not keep a strong reference the observer. The observer must
+  // remove itself before it is destroyed.
+  virtual void AddObserver(Observer* aObserver) = 0;
+
+  // Remove an observer that was previously added with AddObserver.
+  virtual void RemoveObserver(Observer* aObserver) = 0;
+
  protected:
   virtual ~NativeMenu() = default;
 };
