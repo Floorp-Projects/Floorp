@@ -568,21 +568,10 @@ void nsMenuX::ObserveAttributeChanged(dom::Document* aDocument, nsIContent* aCon
     }
 
     if (mParent) {
-      nsMenuParentTypeX parentType = mParent->MenuParentType();
-      if (parentType == eMenuBarParentType) {
-        nsMenuBarX* parentMenuBar = static_cast<nsMenuBarX*>(mParent);
-        if (newVisible) {
-          parentMenuBar->InsertChildNativeMenuItem(this);
-        } else {
-          parentMenuBar->RemoveChildNativeMenuItem(this);
-        }
-      } else if (parentType == eSubmenuParentType) {
-        nsMenuX* parentMenu = static_cast<nsMenuX*>(mParent);
-        if (newVisible) {
-          parentMenu->InsertChildNativeMenuItem(this);
-        } else {
-          parentMenu->RemoveChildNativeMenuItem(this);
-        }
+      if (newVisible) {
+        mParent->InsertChildNativeMenuItem(this);
+      } else {
+        mParent->RemoveChildNativeMenuItem(this);
       }
     }
     mVisible = newVisible;

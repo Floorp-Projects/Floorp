@@ -118,10 +118,10 @@ class nsMenuBarX : public nsMenuParentX, public nsChangeObserver, public mozilla
 
   // If aChild is one of our child menus, insert aChild's native menu item in our native menu at the
   // right location.
-  void InsertChildNativeMenuItem(nsMenuX* aChild);
+  void InsertChildNativeMenuItem(nsMenuX* aChild) override;
 
   // Remove aChild's native menu item from our native menu.
-  void RemoveChildNativeMenuItem(nsMenuX* aChild);
+  void RemoveChildNativeMenuItem(nsMenuX* aChild) override;
 
  protected:
   virtual ~nsMenuBarX();

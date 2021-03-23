@@ -98,10 +98,10 @@ class nsMenuX final : public nsMenuParentX,
 
   // If aChild is one of our child menus, insert aChild's native menu item in our native menu at the
   // right location.
-  void InsertChildNativeMenuItem(nsMenuX* aChild);
+  void InsertChildNativeMenuItem(nsMenuX* aChild) override;
 
   // Remove aChild's native menu item froum our native menu.
-  void RemoveChildNativeMenuItem(nsMenuX* aChild);
+  void RemoveChildNativeMenuItem(nsMenuX* aChild) override;
 
   void Dump(uint32_t aIndent) const;
 
