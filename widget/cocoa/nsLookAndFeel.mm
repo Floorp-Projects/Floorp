@@ -67,8 +67,7 @@ nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache)
       mColorGrid(0),
       mColorActiveBorder(0),
       mColorGrayText(0),
-      mColorInactiveBorder(0),
-      mColorInactiveCaption(0),
+      mColorControlBackground(0),
       mColorScrollbar(0),
       mColorThreeDHighlight(0),
       mColorDialog(0),
@@ -297,10 +296,8 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       aColor = mColorGrayText;
       break;
     case ColorID::Inactiveborder:
-      aColor = mColorInactiveBorder;
-      break;
     case ColorID::Inactivecaption:
-      aColor = mColorInactiveCaption;
+      aColor = mColorControlBackground;
       break;
     case ColorID::Inactivecaptiontext:
       aColor = NS_RGB(0x45, 0x45, 0x45);
@@ -697,7 +694,6 @@ mozilla::widget::LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
       ColorID::Activeborder,
       ColorID::Graytext,
       ColorID::Inactiveborder,
-      ColorID::Inactivecaption,
       ColorID::Scrollbar,
       ColorID::Threedhighlight,
       ColorID::Fieldtext,
@@ -785,9 +781,7 @@ void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
         case ColorID::Graytext:
           return mColorGrayText;
         case ColorID::Inactiveborder:
-          return mColorInactiveBorder;
-        case ColorID::Inactivecaption:
-          return mColorInactiveCaption;
+          return mColorControlBackground;
         case ColorID::Scrollbar:
           return mColorScrollbar;
         case ColorID::Threedhighlight:
@@ -883,8 +877,7 @@ void nsLookAndFeel::EnsureInit() {
   mColorActiveBorder = GetColorFromNSColor([NSColor keyboardFocusIndicatorColor]);
   NSColor* disabledColor = [NSColor disabledControlTextColor];
   mColorGrayText = GetColorFromNSColorWithAlpha(disabledColor, [disabledColor alphaComponent]);
-  mColorInactiveBorder = GetColorFromNSColor([NSColor controlBackgroundColor]);
-  mColorInactiveCaption = GetColorFromNSColor([NSColor controlBackgroundColor]);
+  mColorControlBackground = GetColorFromNSColor([NSColor controlBackgroundColor]);
   mColorScrollbar = GetColorFromNSColor([NSColor scrollBarColor]);
   mColorThreeDHighlight = GetColorFromNSColor([NSColor highlightColor]);
   mColorDialog = GetColorFromNSColor([NSColor controlHighlightColor]);
