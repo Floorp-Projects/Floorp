@@ -37,9 +37,9 @@
       "ntp_background": "#F9F9FA",
       "ntp_text": "rgb(12, 12, 13)",
       "popup_action_color": "rgb(21,20,26)",
-      "buttons_secondary": "rgb(240,240,244)",
-      "buttons_secondary_hover": "rgb(224,224,230)",
-      "buttons_secondary_active": "rgb(207,207,216)",
+      "button": "rgb(240,240,244)",
+      "button_hover": "rgb(224,224,230)",
+      "button_active": "rgb(207,207,216)",
       "panel_hover": "rgb(224,224,230)",
       "panel_active": "rgb(207,207,21)",
       "panel_active_darker": "rgb(191,191,201)",
@@ -56,9 +56,9 @@
     "stylesheet": "experiment.css",
     "colors": {
       "popup_action_color": "--urlbar-popup-action-color",
-      "buttons_secondary": "--buttons-secondary-bgcolor",
-      "buttons_secondary_hover": "--buttons-secondary-hover-bgcolor",
-      "buttons_secondary_active": "--buttons-secondary-active-bgcolor",
+      "button": "--button-bgcolor",
+      "button_hover": "--button-hover-bgcolor",
+      "button_active": "--button-active-bgcolor",
       "urlbar_result_hover": "--urlbar-result-hover-bgcolor"
     },
     "properties": {

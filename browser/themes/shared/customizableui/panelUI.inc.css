@@ -779,17 +779,17 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
   #appMenu-fxa-status2:not([fxastatus]) > #appMenu-fxa-label2 {
     padding: 6px 12px;
-    background-color: var(--buttons-secondary-bgcolor);
+    background-color: var(--button-bgcolor);
     font-size: 11px;
     font-weight: 600;
   }
 
   #appMenu-fxa-status2:not([fxastatus]) > #appMenu-fxa-label2:hover {
-    background-color: var(--buttons-secondary-hover-bgcolor);
+    background-color: var(--button-hover-bgcolor);
   }
 
   #appMenu-fxa-status2:not([fxastatus]) > #appMenu-fxa-label2:active {
-    background-color: var(--buttons-secondary-active-bgcolor);
+    background-color: var(--button-active-bgcolor);
   }
 
   :root[fxadisabled=true] #appMenu-fxa-status2,
@@ -1313,7 +1313,7 @@ panelview .toolbarbutton-1,
 #appMenu-zoomEnlarge-button2 > .toolbarbutton-icon,
 #appMenu-fullscreen-button2 > .toolbarbutton-icon {
   -moz-context-properties: fill;
-  fill: var(--buttons-secondary-color);
+  fill: var(--button-color);
 }
 
 #appMenu-zoomReduce-button2 > .toolbarbutton-icon,
@@ -1334,21 +1334,21 @@ panelview .toolbarbutton-1,
 #appMenu-zoomReduce-button2 > .toolbarbutton-icon,
 #appMenu-zoomEnlarge-button2 > .toolbarbutton-icon,
 #appMenu-fullscreen-button2 > .toolbarbutton-icon {
-  background-color: var(--zoom-controls-bgcolor, var(--buttons-secondary-bgcolor, ButtonFace));
+  background-color: var(--zoom-controls-bgcolor, var(--button-bgcolor, ButtonFace));
 }
 
 #appMenu-zoomReduce-button2@buttonStateHover@ > .toolbarbutton-icon,
 #appMenu-zoomReset-button2@buttonStateHover@ > .toolbarbutton-text,
 #appMenu-zoomEnlarge-button2@buttonStateHover@ > .toolbarbutton-icon,
 #appMenu-fullscreen-button2@buttonStateHover@ > .toolbarbutton-icon {
-  background-color: var(--buttons-secondary-hover-bgcolor);
+  background-color: var(--button-hover-bgcolor);
 }
 
 #appMenu-zoomReduce-button2@buttonStateActive@ > .toolbarbutton-icon,
 #appMenu-zoomReset-button2@buttonStateActive@ > .toolbarbutton-text,
 #appMenu-zoomEnlarge-button2@buttonStateActive@ > .toolbarbutton-icon,
 #appMenu-fullscreen-button2@buttonStateActive@ > .toolbarbutton-icon {
-  background-color: var(--buttons-secondary-active-bgcolor);
+  background-color: var(--button-active-bgcolor);
 }
 
 #appMenu-zoomReduce-button2@buttonStateFocus@ > .toolbarbutton-icon,
@@ -1857,13 +1857,13 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 
 .subviewradio@buttonStateHoverOrFocus@ {
-  background-color: var(--buttons-secondary-hover-bgcolor);
+  background-color: var(--button-hover-bgcolor);
 }
 
 .subviewradio[selected],
 .subviewradio[selected]:hover,
 .subviewradio@buttonStateActive@ {
-  background-color: var(--buttons-secondary-active-bgcolor);
+  background-color: var(--button-active-bgcolor);
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
@@ -1976,8 +1976,8 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 
 #panic-button-success-closebutton {
-  background-color: var(--buttons-secondary-bgcolor);
-  color: var(--buttons-secondary-color);
+  background-color: var(--button-bgcolor);
+  color: var(--button-color);
   margin: 5px 0 0;
   border: 1px solid transparent;
   border-radius: 4px;
@@ -1987,11 +1987,11 @@ toolbarpaletteitem[place="menu-panel"] > .subviewbutton-nav::after {
 }
 
 #panic-button-success-closebutton:hover {
-  background-color: var(--buttons-secondary-hover-bgcolor);
+  background-color: var(--button-hover-bgcolor);
 }
 
 #panic-button-success-closebutton:hover:active {
-  background-color: var(--buttons-secondary-active-bgcolor);
+  background-color: var(--button-active-bgcolor);
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {

@@ -167,11 +167,11 @@ popupnotification {
 }
 
 .panel-footer > button {
-  color: var(--buttons-secondary-color);
+  color: var(--button-color);
 }
 
 .panel-footer:not(.panel-footer-menulike) > button {
-  background-color: var(--buttons-secondary-bgcolor, color-mix(in srgb, currentColor 13%, transparent));
+  background-color: var(--button-bgcolor, color-mix(in srgb, currentColor 13%, transparent));
 }
 
 .panel-footer:not(.panel-footer-menulike) > button[disabled] {
@@ -179,7 +179,7 @@ popupnotification {
 }
 
 .panel-footer > button:not([disabled]):hover {
-  background-color: var(--buttons-secondary-hover-bgcolor, color-mix(in srgb, currentColor 17%, transparent));
+  background-color: var(--button-hover-bgcolor, color-mix(in srgb, currentColor 17%, transparent));
 }
 
 .panel-footer > button:not([disabled]):hover:active {
@@ -187,8 +187,8 @@ popupnotification {
    * We override the colour here because on macOS, buttons default to
    * having :hover:active buttons have color -moz-mac-buttonactivetext
    */
-  color: var(--buttons-secondary-color);
-  background-color: var(--buttons-secondary-active-bgcolor, color-mix(in srgb, currentColor 30%, transparent));
+  color: var(--button-color);
+  background-color: var(--button-active-bgcolor, color-mix(in srgb, currentColor 30%, transparent));
 }
 
 .panel-footer > button:not([disabled])[default] {
