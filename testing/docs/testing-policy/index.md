@@ -20,3 +20,7 @@ One of the following Project Tags must be applied in Phabricator before landing,
 * **testing-exception-other**: Commits where none of the defined exceptions above apply but it should still be landed. This should be scrutinized by the reviewer before using it - consider whether an exception is actually required or if a test could be reasonably added before using it. This **requires a comment** from the reviewer explaining why it’s appropriate to land without tests. Some examples that have been identified include:
   * Interacting with external hardware or software and our code is missing abstractions to mock the interaction out.
   * Inability to reproduce a reported problem, so landing something to test a fix in Nightly.
+
+## Phabricator WebExtension
+
+When accepting a patch on Phabricator, the [phab-test-policy](https://addons.mozilla.org/en-US/firefox/addon/phab-test-policy/) webextension will show the list of available testing tags so you can add one faster.
