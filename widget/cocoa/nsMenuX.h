@@ -72,6 +72,11 @@ class nsMenuX final : public nsMenuParentX,
   mozilla::Maybe<MenuChild> GetVisibleItemAt(uint32_t aPos);
   nsresult GetVisibleItemCount(uint32_t& aCount);
 
+  // Fires the popupshowing event and returns whether the handler allows the popup to open.
+  // When calling this method, the caller must hold a strong reference to this object, because other
+  // references to this object can be dropped during the handling of the DOM event.
+  bool OnOpen();
+
   // Called from the menu delegate during menuWillOpen.
   // Fires the popupshown event.
   // When calling this method, the caller must hold a strong reference to this object, because other
@@ -137,7 +142,6 @@ class nsMenuX final : public nsMenuParentX,
   nsresult SetEnabled(bool aIsEnabled);
   nsresult GetEnabled(bool* aIsEnabled);
   already_AddRefed<nsIContent> GetMenuPopupContent();
-  bool OnOpen();
   void AddMenuItem(RefPtr<nsMenuItemX>&& aMenuItem);
   void AddMenu(RefPtr<nsMenuX>&& aMenu);
   void LoadMenuItem(nsIContent* aMenuItemContent);
@@ -186,6 +190,10 @@ class nsMenuX final : public nsMenuParentX,
   bool mIsOpenForGecko = false;
 
   bool mVisible = true;
+
+  // true between an OnOpen() call that returned true, and the subsequent call
+  // to MenuOpened().
+  bool mDidFirePopupshowingAndIsApprovedToOpen = false;
 };
 
 #endif  // nsMenuX_h_

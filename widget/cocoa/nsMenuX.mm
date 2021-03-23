@@ -311,6 +311,18 @@ nsresult nsMenuX::RemoveAll() {
 }
 
 nsEventStatus nsMenuX::MenuOpened() {
+  if (!mDidFirePopupshowingAndIsApprovedToOpen) {
+    // Fire popupshowing now.
+    bool approvedToOpen = OnOpen();
+    if (!approvedToOpen) {
+      // We can only stop menus from opening which we open ourselves. We cannot stop menubar root
+      // menus or menu submenus from opening.
+      // For context menus, we can call OnOpen() before we ask the system to open the menu.
+      NS_WARNING("The popupshowing event had preventDefault() called on it, but in MenuOpened() it "
+                 "is too late to stop the menu from opening.");
+    }
+  }
+
   mIsOpen = true;
 
   if (mPendingAsyncMenuCloseRunnable) {
@@ -325,19 +337,6 @@ nsEventStatus nsMenuX::MenuOpened() {
     mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::open, u"true"_ns, true);
   }
 
-  if (!OnOpen()) {
-    // The popupshowing had preventDefault() called on it. Stop processing menu opening.
-    // XXXmstange At the point this function is called, it is too late to stop
-    // the menu from opening. It will be displayed regardless of what we do here.
-    // This needs to be improved.
-    return nsEventStatus_eConsumeNoDefault;
-  }
-
-  if (mNeedsRebuild) {
-    RemoveAll();
-    RebuildMenu();
-  }
-
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetMouseEvent event(true, eXULPopupShown, nullptr, WidgetMouseEvent::eReal);
 
@@ -345,9 +344,17 @@ nsEventStatus nsMenuX::MenuOpened() {
   nsIContent* dispatchTo = popupContent ? popupContent : mContent;
   EventDispatcher::Dispatch(dispatchTo, nullptr, &event, nullptr, &status);
 
+  // Reset mDidFirePopupshowingAndIsApprovedToOpen for then next menu opening.
+  mDidFirePopupshowingAndIsApprovedToOpen = false;
+
   // Notify our observer.
   if (mObserver) {
     mObserver->OnMenuOpened();
+  }
+
+  if (mNeedsRebuild) {
+    RemoveAll();
+    RebuildMenu();
   }
 
   return nsEventStatus_eConsumeNoDefault;
@@ -524,9 +531,17 @@ void nsMenuX::LoadSubMenu(nsIContent* aMenuContent) {
   AddMenu(MakeRefPtr<nsMenuX>(this, mMenuGroupOwner, aMenuContent));
 }
 
-// This menu is about to open. Returns TRUE if we should keep processing the event,
-// FALSE if the handler wants to stop the opening of the menu.
+// This menu is about to open. Returns false if the handler wants to stop the opening of the menu.
 bool nsMenuX::OnOpen() {
+  if (mDidFirePopupshowingAndIsApprovedToOpen) {
+    return true;
+  }
+
+  if (mIsOpen) {
+    NS_WARNING("nsMenuX::OnOpen() called while the menu is already considered to be open. This "
+               "seems odd.");
+  }
+
   nsEventStatus status = nsEventStatus_eIgnore;
   WidgetMouseEvent event(true, eXULPopupShowing, nullptr, WidgetMouseEvent::eReal);
 
@@ -538,6 +553,8 @@ bool nsMenuX::OnOpen() {
   if (NS_FAILED(rv) || status == nsEventStatus_eConsumeNoDefault) {
     return false;
   }
+
+  mDidFirePopupshowingAndIsApprovedToOpen = true;
 
   // If the open is going to succeed we need to walk our menu items, checking to
   // see if any of them have a command attribute. If so, several attributes
