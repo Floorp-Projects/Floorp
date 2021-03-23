@@ -97,7 +97,9 @@ class FontFaceSet final : public DOMEventTargetHelper,
         const nsTArray<gfxFontFeature>& aFeatureSettings,
         const nsTArray<gfxFontVariation>& aVariationSettings,
         uint32_t aLanguageOverride, gfxCharacterMap* aUnicodeRanges,
-        StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags) override;
+        StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags,
+        float aAscentOverride, float aDescentOverride,
+        float aLineGapOverride) override;
 
    private:
     RefPtr<FontFaceSet> mFontFaceSet;
