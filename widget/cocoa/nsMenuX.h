@@ -16,11 +16,11 @@
 #include "nsMenuBaseX.h"
 #include "nsMenuBarX.h"
 #include "nsMenuGroupOwnerX.h"
+#include "nsMenuItemIconX.h"
 #include "nsCOMPtr.h"
 #include "nsChangeObserver.h"
 
 class nsMenuX;
-class nsMenuItemIconX;
 class nsMenuItemX;
 class nsIWidget;
 
@@ -34,7 +34,9 @@ class nsIWidget;
 
 // Once instantiated, this object lives until its DOM node or its parent window is destroyed.
 // Do not hold references to this, they can become invalid any time the DOM node can be destroyed.
-class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
+class nsMenuX final : public nsMenuObjectX,
+                      public nsChangeObserver,
+                      public nsMenuItemIconX::Listener {
  public:
   using MenuChild = mozilla::Variant<RefPtr<nsMenuX>, RefPtr<nsMenuItemX>>;
 
@@ -51,6 +53,8 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
 
   // nsMenuObjectX
   nsMenuObjectTypeX MenuObjectType() override { return eSubmenuObjectType; }
+
+  // nsMenuItemIconX::Listener
   void IconUpdated() override;
 
   // nsMenuX
@@ -87,6 +91,9 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
   nsIContent* Content() { return mContent; }
   NSMenuItem* NativeNSMenuItem() { return mNativeMenuItem; }
   GeckoNSMenu* NativeNSMenu() { return mNativeMenu; }
+
+  void SetIconListener(nsMenuItemIconX::Listener* aListener) { mIconListener = aListener; }
+  void ClearIconListener() { mIconListener = nullptr; }
 
   // If aChild is one of our child menus, insert aChild's native menu item in our native menu at the
   // right location.
@@ -128,9 +135,10 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
   nsTArray<MenuChild> mMenuChildren;
 
   nsString mLabel;
-  uint32_t mVisibleItemsCount = 0;               // cache
-  nsMenuObjectX* mParent = nullptr;              // [weak]
-  nsMenuGroupOwnerX* mMenuGroupOwner = nullptr;  // [weak]
+  uint32_t mVisibleItemsCount = 0;                     // cache
+  nsMenuObjectX* mParent = nullptr;                    // [weak]
+  nsMenuGroupOwnerX* mMenuGroupOwner = nullptr;        // [weak]
+  nsMenuItemIconX::Listener* mIconListener = nullptr;  // [weak]
   mozilla::UniquePtr<nsMenuItemIconX> mIcon;
   GeckoNSMenu* mNativeMenu = nil;     // [strong]
   MenuDelegate* mMenuDelegate = nil;  // [strong]

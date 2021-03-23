@@ -10,6 +10,7 @@
 #include "nsISupports.h"
 #include "nsMenuBaseX.h"
 #include "nsMenuGroupOwnerX.h"
+#include "nsMenuItemIconX.h"
 #include "nsChangeObserver.h"
 #include "nsStringFwd.h"
 
@@ -42,7 +43,9 @@ enum EMenuItemType {
 // Once instantiated, this object lives until its DOM node or its parent window
 // is destroyed. Do not hold references to this, they can become invalid any
 // time the DOM node can be destroyed.
-class nsMenuItemX final : public nsMenuObjectX, public nsChangeObserver {
+class nsMenuItemX final : public nsMenuObjectX,
+                          public nsChangeObserver,
+                          public nsMenuItemIconX::Listener {
  public:
   nsMenuItemX(nsMenuX* aParent, const nsString& aLabel, EMenuItemType aItemType,
               nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode);
@@ -64,6 +67,8 @@ class nsMenuItemX final : public nsMenuObjectX, public nsChangeObserver {
 
   // nsMenuObjectX
   nsMenuObjectTypeX MenuObjectType() override { return eMenuItemObjectType; }
+
+  // nsMenuItemIconX::Listener
   void IconUpdated() override;
 
   // nsMenuItemX

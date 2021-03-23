@@ -657,8 +657,8 @@ void nsMenuX::SetupIcon() {
 
 void nsMenuX::IconUpdated() {
   mNativeMenuItem.image = mIcon->GetIconImage();
-  if (mParent) {
-    mParent->IconUpdated();
+  if (mIconListener) {
+    mIconListener->IconUpdated();
   }
 }
 

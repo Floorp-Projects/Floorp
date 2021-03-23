@@ -7,11 +7,13 @@
 #define nsStandaloneNativeMenu_h_
 
 #include "nsMenuGroupOwnerX.h"
+#include "nsMenuItemIconX.h"
 #include "nsMenuX.h"
 #include "nsIStandaloneNativeMenu.h"
 
 class nsStandaloneNativeMenu : public nsMenuGroupOwnerX,
-                               public nsIStandaloneNativeMenu {
+                               public nsIStandaloneNativeMenu,
+                               public nsMenuItemIconX::Listener {
  public:
   nsStandaloneNativeMenu();
 
@@ -22,7 +24,9 @@ class nsStandaloneNativeMenu : public nsMenuGroupOwnerX,
   nsMenuObjectTypeX MenuObjectType() override {
     return eStandaloneNativeMenuObjectType;
   }
-  virtual void IconUpdated() override;
+
+  // nsMenuItemIconX::Listener
+  void IconUpdated() override;
 
   NSMenu* NativeNSMenu() { return mMenu ? mMenu->NativeNSMenu() : nil; }
 
