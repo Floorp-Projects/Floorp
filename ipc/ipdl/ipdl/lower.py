@@ -1116,7 +1116,11 @@ class MessageDecl(ipdl.ast.MessageDecl):
         |params| and |returns| is the C++ semantics of those: 'in', 'out', or None."""
 
         def makeDecl(d, sems):
-            if self.decl.type.tainted and 'NoTaint' not in d.attributes and direction == "recv":
+            if (
+                self.decl.type.tainted
+                and "NoTaint" not in d.attributes
+                and direction == "recv"
+            ):
                 # Tainted types are passed by-value, allowing the receiver to move them if desired.
                 assert sems != "out"
                 return Decl(Type("Tainted", T=d.bareType(side)), d.name)
@@ -5120,7 +5124,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     Decl(
                         (
                             Type("Tainted", T=p.bareType(side))
-                            if md.decl.type.tainted and 'NoTaint' not in p.attributes
+                            if md.decl.type.tainted and "NoTaint" not in p.attributes
                             else p.bareType(side)
                         ),
                         p.var().name,

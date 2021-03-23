@@ -213,9 +213,8 @@ class DarwinGamepadService {
   void Shutdown();
   void SetLightIndicatorColor(const Tainted<GamepadHandle>& aGamepadHandle,
                               const Tainted<uint32_t>& aLightColorIndex,
-                              const Tainted<uint8_t>& aRed,
-                              const Tainted<uint8_t>& aGreen,
-                              const Tainted<uint8_t>& aBlue);
+                              const uint8_t& aRed, const uint8_t& aGreen,
+                              const uint8_t& aBlue);
   friend class DarwinGamepadServiceStartupRunnable;
   friend class DarwinGamepadServiceShutdownRunnable;
 };
@@ -573,8 +572,8 @@ void DarwinGamepadService::Shutdown() {
 
 void DarwinGamepadService::SetLightIndicatorColor(
     const Tainted<GamepadHandle>& aGamepadHandle,
-    const Tainted<uint32_t>& aLightColorIndex, const Tainted<uint8_t>& aRed,
-    const Tainted<uint8_t>& aGreen, const Tainted<uint8_t>& aBlue) {
+    const Tainted<uint32_t>& aLightColorIndex, const uint8_t& aRed,
+    const uint8_t& aGreen, const uint8_t& aBlue) {
   // We get aControllerIdx from GamepadPlatformService::AddGamepad(),
   // It begins from 1 and is stored at Gamepad.id.
   const Gamepad* gamepad = MOZ_FIND_AND_VALIDATE(
@@ -593,13 +592,7 @@ void DarwinGamepadService::SetLightIndicatorColor(
   }
 
   std::vector<uint8_t> report;
-  remapper->GetLightColorReport(
-      MOZ_NO_VALIDATE(aRed, "uint8_t's range is the range of all valid values"),
-      MOZ_NO_VALIDATE(aGreen,
-                      "uint8_t's range is the range of all valid values"),
-      MOZ_NO_VALIDATE(aBlue,
-                      "uint8_t's range is the range of all valid values"),
-      report);
+  remapper->GetLightColorReport(aRed, aGreen, aBlue, report);
   gamepad->WriteOutputReport(report);
 }
 
@@ -630,9 +623,8 @@ void StopGamepadMonitoring() {
 
 void SetGamepadLightIndicatorColor(const Tainted<GamepadHandle>& aGamepadHandle,
                                    const Tainted<uint32_t>& aLightColorIndex,
-                                   const Tainted<uint8_t>& aRed,
-                                   const Tainted<uint8_t>& aGreen,
-                                   const Tainted<uint8_t>& aBlue) {
+                                   const uint8_t& aRed, const uint8_t& aGreen,
+                                   const uint8_t& aBlue) {
   MOZ_ASSERT(gService);
   if (!gService) {
     return;
