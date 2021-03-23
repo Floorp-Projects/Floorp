@@ -633,8 +633,8 @@ def p_ParamList(p):
 
 
 def p_Param(p):
-    """Param : Attributes Type ID"""
-    p[0] = Param(locFromTok(p, 2), p[2], p[3], p[1])
+    """Param : Type ID"""
+    p[0] = Param(locFromTok(p, 1), p[1], p[2])
 
 
 def p_Type(p):
