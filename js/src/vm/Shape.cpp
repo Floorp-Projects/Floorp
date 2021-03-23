@@ -772,7 +772,7 @@ Shape* NativeObject::addEnumerableDataProperty(JSContext* cx,
       break;
     }
 
-    if (!obj->setLastProperty(cx, child)) {
+    if (!obj->setLastPropertyForNewDataProperty(cx, child)) {
       return nullptr;
     }
     return child;
@@ -846,7 +846,7 @@ Shape* NativeObject::addEnumerableDataProperty(JSContext* cx,
     if (!shape) {
       return nullptr;
     }
-    if (!obj->setLastProperty(cx, shape)) {
+    if (!obj->setLastPropertyForNewDataProperty(cx, shape)) {
       return nullptr;
     }
   }

@@ -594,6 +594,11 @@ class NativeObject : public JSObject {
   // with the object's new slot span.
   MOZ_ALWAYS_INLINE bool setLastProperty(JSContext* cx, Shape* shape);
 
+  // Optimized version of setLastProperty for when |shape| is a new data
+  // property and |shape->previous() == lastProperty()|.
+  MOZ_ALWAYS_INLINE bool setLastPropertyForNewDataProperty(JSContext* cx,
+                                                           Shape* shape);
+
   // Newly-created TypedArrays that map a SharedArrayBuffer are
   // marked as shared by giving them an ObjectElements that has the
   // ObjectElements::SHARED_MEMORY flag set.
