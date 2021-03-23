@@ -105,8 +105,8 @@ class FileHandleThreadPool::DirectoryInfo {
   RefPtr<FileHandleThreadPool> mOwningFileHandleThreadPool;
   nsTArray<RefPtr<FileHandleQueue>> mFileHandleQueues;
   nsTArray<DelayedEnqueueInfo> mDelayedEnqueueInfos;
-  nsTHashtable<nsStringHashKey> mFilesReading;
-  nsTHashtable<nsStringHashKey> mFilesWriting;
+  nsTHashSet<nsString> mFilesReading;
+  nsTHashSet<nsString> mFilesWriting;
 
  public:
   FileHandleQueue* CreateFileHandleQueue(FileHandle* aFileHandle);
@@ -122,11 +122,11 @@ class FileHandleThreadPool::DirectoryInfo {
                                                bool aFinish);
 
   void LockFileForReading(const nsAString& aFileName) {
-    mFilesReading.PutEntry(aFileName);
+    mFilesReading.Insert(aFileName);
   }
 
   void LockFileForWriting(const nsAString& aFileName) {
-    mFilesWriting.PutEntry(aFileName);
+    mFilesWriting.Insert(aFileName);
   }
 
   bool IsFileLockedForReading(const nsAString& aFileName) {
@@ -1077,8 +1077,7 @@ void BackgroundMutableFileParentBase::Invalidate() {
 
   class MOZ_STACK_CLASS Helper final {
    public:
-    static bool InvalidateFileHandles(
-        nsTHashtable<nsPtrHashKey<FileHandle>>& aTable) {
+    static bool InvalidateFileHandles(nsTHashSet<FileHandle*>& aTable) {
       AssertIsOnBackgroundThread();
 
       const uint32_t count = aTable.Count();
@@ -1086,25 +1085,19 @@ void BackgroundMutableFileParentBase::Invalidate() {
         return true;
       }
 
-      FallibleTArray<RefPtr<FileHandle>> fileHandles;
+      nsTArray<RefPtr<FileHandle>> fileHandles;
       if (NS_WARN_IF(!fileHandles.SetCapacity(count, fallible))) {
         return false;
       }
 
-      for (auto iter = aTable.Iter(); !iter.Done(); iter.Next()) {
-        if (NS_WARN_IF(
-                !fileHandles.AppendElement(iter.Get()->GetKey(), fallible))) {
-          return false;
-        }
-      }
+      // This can't fail, since we already reserved the required capacity.
+      std::copy(aTable.cbegin(), aTable.cend(), MakeBackInserter(fileHandles));
 
-      if (count) {
-        for (uint32_t index = 0; index < count; index++) {
-          RefPtr<FileHandle> fileHandle = std::move(fileHandles[index]);
-          MOZ_ASSERT(fileHandle);
+      for (uint32_t index = 0; index < count; index++) {
+        RefPtr<FileHandle> fileHandle = std::move(fileHandles[index]);
+        MOZ_ASSERT(fileHandle);
 
-          fileHandle->Invalidate();
-        }
+        fileHandle->Invalidate();
       }
 
       return true;
@@ -1126,10 +1119,10 @@ bool BackgroundMutableFileParentBase::RegisterFileHandle(
     FileHandle* aFileHandle) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aFileHandle);
-  MOZ_ASSERT(!mFileHandles.GetEntry(aFileHandle));
+  MOZ_ASSERT(!mFileHandles.Contains(aFileHandle));
   MOZ_ASSERT(!mInvalidated);
 
-  if (NS_WARN_IF(!mFileHandles.PutEntry(aFileHandle, fallible))) {
+  if (NS_WARN_IF(!mFileHandles.Insert(aFileHandle, fallible))) {
     return false;
   }
 
@@ -1144,9 +1137,9 @@ void BackgroundMutableFileParentBase::UnregisterFileHandle(
     FileHandle* aFileHandle) {
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aFileHandle);
-  MOZ_ASSERT(mFileHandles.GetEntry(aFileHandle));
+  MOZ_ASSERT(mFileHandles.Contains(aFileHandle));
 
-  mFileHandles.RemoveEntry(aFileHandle);
+  mFileHandles.Remove(aFileHandle);
 
   if (!mFileHandles.Count()) {
     NoteInactiveState();
