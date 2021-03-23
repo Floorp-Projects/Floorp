@@ -113,7 +113,10 @@ function waitForDelayedStartupFinished(win) {
   return new Promise(resolve => {
     Services.obs.addObserver(function observer(subject, topic) {
       if (win == subject) {
-        Services.obs.removeObserver(observer, topic);
+        Services.obs.removeObserver(
+          observer,
+          "browser-delayed-startup-finished"
+        );
         resolve();
       }
     }, "browser-delayed-startup-finished");
