@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+include protocol PExtensions;
 include protocol PWindowGlobal;
 
 include DOMTypes;
@@ -21,6 +22,7 @@ namespace dom {
  */
 async refcounted protocol PInProcess
 {
+  manages PExtensions;
   manages PWindowGlobal;
 };
 
