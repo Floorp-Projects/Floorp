@@ -190,6 +190,7 @@ class nsCocoaUtils {
   // expected to be desktop pixels, which are equal to Cocoa points
   // (by definition).
   static NSRect GeckoRectToCocoaRect(const mozilla::DesktopIntRect& geckoRect);
+  static NSPoint GeckoPointToCocoaPoint(const mozilla::DesktopPoint& aPoint);
 
   // Converts aGeckoRect in dev pixels to points in Cocoa coordinates
   static NSRect GeckoRectToCocoaRectDevPix(const mozilla::LayoutDeviceIntRect& aGeckoRect,
