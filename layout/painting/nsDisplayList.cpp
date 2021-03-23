@@ -2919,7 +2919,7 @@ nsDisplayItem::nsDisplayItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
   if (mFrame->BackfaceIsHidden(disp)) {
     mItemFlags += ItemFlag::BackfaceHidden;
   }
-  if (mFrame->Combines3DTransformWithAncestors(disp)) {
+  if (mFrame->Combines3DTransformWithAncestors()) {
     mItemFlags += ItemFlag::Combines3DTransformWithAncestors;
   }
 }
@@ -7539,12 +7539,9 @@ Matrix4x4 nsDisplayTransform::GetResultingTransformMatrixInternal(
   // Call IsSVGTransformed() regardless of the value of
   // disp->mSpecifiedTransform, since we still need any
   // parentsChildrenOnlyTransform.
-  Matrix svgTransform, parentsChildrenOnlyTransform;
-  bool hasSVGTransforms =
-      frame &&
-      frame->IsSVGTransformed(&svgTransform, &parentsChildrenOnlyTransform);
-
+  bool hasSVGTransforms = false;
   bool shouldRound = nsLayoutUtils::ShouldSnapToGrid(frame);
+  Matrix svgTransform, parentsChildrenOnlyTransform;
 
   /* Transformed frames always have a transform, or are preserving 3d (and might
    * still have perspective!) */
@@ -7553,12 +7550,15 @@ Matrix4x4 nsDisplayTransform::GetResultingTransformMatrixInternal(
         aProperties.mTranslate, aProperties.mRotate, aProperties.mScale,
         aProperties.mMotion, aProperties.mTransform, aRefBox,
         aAppUnitsPerPixel);
-  } else if (hasSVGTransforms) {
-    // Correct the translation components for zoom:
-    float pixelsPerCSSPx = AppUnitsPerCSSPixel() / aAppUnitsPerPixel;
-    svgTransform._31 *= pixelsPerCSSPx;
-    svgTransform._32 *= pixelsPerCSSPx;
-    result = Matrix4x4::From2D(svgTransform);
+  } else if (frame && frame->HasAnyStateBits(NS_FRAME_MAY_BE_TRANSFORMED)) {
+    if ((hasSVGTransforms = frame->IsSVGTransformed(
+             &svgTransform, &parentsChildrenOnlyTransform))) {
+      // Correct the translation components for zoom:
+      float pixelsPerCSSPx = AppUnitsPerCSSPixel() / aAppUnitsPerPixel;
+      svgTransform._31 *= pixelsPerCSSPx;
+      svgTransform._32 *= pixelsPerCSSPx;
+      result = Matrix4x4::From2D(svgTransform);
+    }
   }
 
   // Apply any translation due to 'transform-origin' and/or 'transform-box':

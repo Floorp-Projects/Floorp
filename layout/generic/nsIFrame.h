@@ -1911,22 +1911,18 @@ class nsIFrame : public nsQueryFrame {
   }
 
   /**
-   * Returns true if this frame is transformed (e.g. has CSS or SVG transforms)
-   * or if its parent is an SVG frame that has children-only transforms (e.g.
-   * an SVG viewBox attribute) or if its transform-style is preserve-3d or
-   * the frame has transform animations.
-   *
-   * @param aStyleDisplay:  If the caller has this->StyleDisplay(), providing
-   *   it here will improve performance.
+   * Returns true if this frame is transformed (e.g. has CSS, SVG, or custom
+   * transforms) or if its parent is an SVG frame that has children-only
+   * transforms (e.g.  an SVG viewBox attribute) or if its transform-style is
+   * preserve-3d or the frame has transform animations.
    */
-  bool IsTransformed(const nsStyleDisplay* aStyleDisplay) const;
-  bool IsTransformed() const { return IsTransformed(StyleDisplay()); }
+  bool IsTransformed() const;
 
   /**
    * Same as IsTransformed, except that it doesn't take SVG transforms
    * into account.
    */
-  bool IsCSSTransformed(const nsStyleDisplay* aStyleDisplay) const;
+  bool IsCSSTransformed() const;
 
   /**
    * True if this frame has any animation of transform in effect.
@@ -2031,15 +2027,8 @@ class nsIFrame : public nsQueryFrame {
    * Returns whether this frame has a parent that Extend3DContext() and has
    * its own transform (or hidden backface) to be combined with the parent's
    * transform.
-   *
-   * @param aStyleDisplay:  If the caller has this->StyleDisplay(), providing
-   *   it here will improve performance.
    */
-  bool Combines3DTransformWithAncestors(
-      const nsStyleDisplay* aStyleDisplay) const;
-  bool Combines3DTransformWithAncestors() const {
-    return Combines3DTransformWithAncestors(StyleDisplay());
-  }
+  bool Combines3DTransformWithAncestors() const;
 
   /**
    * Returns whether this frame has a hidden backface and has a parent that
@@ -2051,7 +2040,7 @@ class nsIFrame : public nsQueryFrame {
 
   bool IsPreserve3DLeaf(const nsStyleDisplay* aStyleDisplay,
                         mozilla::EffectSet* aEffectSet = nullptr) const {
-    return Combines3DTransformWithAncestors(aStyleDisplay) &&
+    return Combines3DTransformWithAncestors() &&
            !Extend3DContext(aStyleDisplay, StyleEffects(), aEffectSet);
   }
   bool IsPreserve3DLeaf(mozilla::EffectSet* aEffectSet = nullptr) const {
