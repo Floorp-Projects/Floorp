@@ -5349,7 +5349,7 @@ nsDocShell::ForceRefreshURI(nsIURI* aURI, nsIPrincipal* aPrincipal,
      * we have in mind (15000 ms as defined by REFRESH_REDIRECT_TIMER).
      * Pass a REPLACE flag to LoadURI().
      */
-    loadState->SetLoadType(LOAD_NORMAL_REPLACE);
+    loadState->SetLoadType(LOAD_REFRESH_REPLACE);
 
     /* For redirects we mimic HTTP, which passes the
      * original referrer.
@@ -5827,6 +5827,7 @@ nsresult nsDocShell::Embed(nsIContentViewer* aContentViewer,
   // Determine if this type of load should update history
   switch (mLoadType) {
     case LOAD_NORMAL_REPLACE:
+    case LOAD_REFRESH_REPLACE:
     case LOAD_STOP_CONTENT_AND_REPLACE:
     case LOAD_RELOAD_BYPASS_CACHE:
     case LOAD_RELOAD_BYPASS_PROXY:
@@ -11116,7 +11117,7 @@ bool nsDocShell::OnNewURI(nsIURI* aURI, nsIChannel* aChannel,
   // in session history.
   if (!mozilla::SessionHistoryInParent() && rootSH &&
       ((mLoadType & (LOAD_CMD_HISTORY | LOAD_CMD_RELOAD)) ||
-       mLoadType == LOAD_NORMAL_REPLACE)) {
+       mLoadType == LOAD_NORMAL_REPLACE || mLoadType == LOAD_REFRESH_REPLACE)) {
     mPreviousEntryIndex = rootSH->Index();
     if (!mozilla::SessionHistoryInParent()) {
       rootSH->LegacySHistory()->UpdateIndex();
