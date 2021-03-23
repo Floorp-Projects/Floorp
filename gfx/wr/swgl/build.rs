@@ -75,7 +75,7 @@ fn translate_shader(shader_key: &str, shader_dir: &str) {
     let mut build = cc::Build::new();
     build.no_default_flags(true);
     if build.get_compiler().is_like_msvc() {
-        build.flag("/EP").flag("/u");
+        build.flag("/EP").flag("/clang:-undef");
     } else {
         build.flag("-xc").flag("-P").flag("-undef");
     }
