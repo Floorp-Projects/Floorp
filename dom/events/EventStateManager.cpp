@@ -3398,7 +3398,7 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
           // element that was clicked doesn't have -moz-user-focus: ignore,
           // clear the existing focus. For -moz-user-focus: ignore, the focus
           // is just left as is.
-          // Another effect of mouse clicking, handled in nsSelection, is that
+          // Another effect of mouse clicking, handled in Selection, is that
           // it should update the caret position to where the mouse was
           // clicked. Because the focus is cleared when clicking on a
           // non-focusable node, the next press of the tab key will cause
@@ -3424,7 +3424,17 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
               if (!activeContent || !activeContent->IsXULElement())
 #endif
                 fm->ClearFocus(mDocument->GetWindow());
-              fm->SetFocusedWindow(mDocument->GetWindow());
+              // Prevent switch frame if we're already not in the foreground tab
+              // and we're in a content process.
+              // TODO: If we were inactive frame in this tab, and now in
+              //       background tab, we shouldn't make the tab foreground, but
+              //       we should set focus to clicked document in the background
+              //       tab.  However, nsFocusManager does not have proper method
+              //       for doing this.  Therefore, we should skip setting focus
+              //       to clicked document for now.
+              if (XRE_IsParentProcess() || IsInActiveTab(mDocument)) {
+                fm->SetFocusedWindow(mDocument->GetWindow());
+              }
             }
           }
         }
@@ -3447,6 +3457,8 @@ nsresult EventStateManager::PostHandleEvent(nsPresContext* aPresContext,
         // any of our own processing of a drag. Workaround for bug 43258.
         StopTrackingDragGesture(true);
       }
+      // XXX Why do we always set this is active?  Active window may be changed
+      //     by a mousedown event listener.
       SetActiveManager(this, activeContent);
     } break;
     case ePointerCancel:
