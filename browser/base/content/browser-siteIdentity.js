@@ -158,9 +158,20 @@ var gIdentityHandler = {
     );
   },
 
+  get _isPDFViewer() {
+    return gBrowser.contentPrincipal?.originNoSuffix == "resource://pdf.js";
+  },
+
   get _isPotentiallyTrustworthy() {
+    // For PDF viewer pages (pdf.js) we can't rely on the isSecureContext
+    // field. The backend will return isSecureContext = true, because the
+    // content principal has a resource:// URI. Since we don't check
+    // isSecureContext for PDF viewer pages anymore, otherwise secure
+    // contexts, such as a localhost, will me marked as insecure when showing
+    // PDFs.
     return (
       !this._isBrokenConnection &&
+      !this._isPDFViewer &&
       (this._isSecureContext ||
         (gBrowser.selectedBrowser.documentURI &&
           gBrowser.selectedBrowser.documentURI.scheme == "chrome"))
