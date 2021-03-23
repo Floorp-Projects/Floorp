@@ -1,9 +1,9 @@
 [
-    {
-        "size": 5646483,
-        "visibility": "public",
-        "digest": "3f4c11d8003278b5b13ad3f2ed1adaf2a33e0b645844202d8371ee669e00d36f0ae09814ffda3632011bd47e8202cc8ef23757e5d72a6d05a37a49a1ad59413e",
-        "algorithm": "sha512",
-        "filename": "mitm4-linux-firefox-facebook.zip"
-    }
+  {
+    "algorithm": "sha512",
+    "digest": "df151b87d21c0ad7962f3c3b084c86a50ad691ae2ebd831f6ce07f3f022d03ad877210866df5145a820236d779674a8871680184fd32006162887039f3fe1463",
+    "filename": "mitm4-linux-firefox-facebook-redesign.zip",
+    "size": 13846814,
+    "visibility": "public"
+  }
 ]

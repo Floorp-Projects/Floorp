@@ -14,7 +14,6 @@ suites:
             bing-search: "BT, FF, CH, CU"
             ebay: "BT, FF, CH, CU"
             facebook: "BT, FF, CH, CU"
-            facebook-redesign: "BT, FF, CH, CU"
             fandom: "BT, FF, CH, CU"
             google-docs: "BT, FF, CH, CU"
             google-mail: "BT, FF, CH, CU"

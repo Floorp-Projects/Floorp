@@ -128,29 +128,6 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **use live sites**: false
 
 
-.. dropdown:: facebook-redesign (BT, FF, CH, CU)
-
-   * **alert on**: fcp, loadtime
-   * **alert threshold**: 2.0
-   * **apps**: firefox, chrome, chromium
-   * **browser cycles**: 25
-   * **expected**: pass
-   * **gecko profile entries**: 14000000
-   * **gecko profile interval**: 1
-   * **lower is better**: true
-   * **measure**: fnbpaint, fcp, dcf, loadtime
-   * **page cycles**: 25
-   * **page timeout**: 60000
-   * **playback**: mitmproxy
-   * **playback pageset manifest**: mitm5-linux-firefox-{subtest}.manifest
-   * **playback recordings**: mitm5-linux-firefox-{subtest}.mp
-   * **playback version**: 5.1.1
-   * **test url**: `<https://www.facebook.com>`__
-   * **type**: pageload
-   * **unit**: ms
-   * **use live sites**: false
-
-
 .. dropdown:: fandom (BT, FF, CH, CU)
 
    * **alert on**: fcp, loadtime

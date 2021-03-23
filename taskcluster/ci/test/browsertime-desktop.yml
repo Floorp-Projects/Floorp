@@ -188,7 +188,6 @@ browsertime-tp6-live:
         - [bing-search, bing]
         - ebay
         - [facebook, fb]
-        - [facebook-redesign, fbr]
         - fandom
         - [google-docs, gdocs]
         - [google-mail, gmail]
