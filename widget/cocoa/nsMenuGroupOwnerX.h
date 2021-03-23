@@ -10,7 +10,6 @@
 
 #include "mozilla/WeakPtr.h"
 
-#include "nsMenuBaseX.h"
 #include "nsIMutationObserver.h"
 #include "nsHashKeys.h"
 #include "nsTHashMap.h"

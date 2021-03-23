@@ -7,14 +7,15 @@
 #define nsMenuBarX_h_
 
 #import <Cocoa/Cocoa.h>
-#include "nsISupports.h"
 
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WeakPtr.h"
 
-#include "nsMenuBaseX.h"
+#include "nsISupports.h"
+#include "nsMenuParentX.h"
 #include "nsMenuGroupOwnerX.h"
 #include "nsChangeObserver.h"
+#include "nsTArray.h"
 #include "nsString.h"
 
 class nsMenuBarX;
@@ -78,7 +79,7 @@ class Element;
 
 // Once instantiated, this object lives until its DOM node or its parent window is destroyed.
 // Do not hold references to this, they can become invalid any time the DOM node can be destroyed.
-class nsMenuBarX : public nsMenuObjectX, public nsChangeObserver, public mozilla::SupportsWeakPtr {
+class nsMenuBarX : public nsMenuParentX, public nsChangeObserver, public mozilla::SupportsWeakPtr {
  public:
   nsMenuBarX();
 
@@ -96,8 +97,8 @@ class nsMenuBarX : public nsMenuObjectX, public nsChangeObserver, public mozilla
   // nsChangeObserver
   NS_DECL_CHANGEOBSERVER
 
-  // nsMenuObjectX
-  nsMenuObjectTypeX MenuObjectType() override { return eMenuBarObjectType; }
+  // nsMenuParentX
+  nsMenuParentTypeX MenuParentType() override { return eMenuBarParentType; }
 
   // nsMenuBarX
   nsresult Create(mozilla::dom::Element* aElement);
