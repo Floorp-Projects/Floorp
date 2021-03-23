@@ -491,7 +491,8 @@ class GlobalObject : public NativeObject {
   }
 
   static bool ensureModulePrototypesCreated(JSContext* cx,
-                                            Handle<GlobalObject*> global);
+                                            Handle<GlobalObject*> global,
+                                            bool setUsedAsPrototype = false);
 
   static JSObject* getOrCreateModulePrototype(JSContext* cx,
                                               Handle<GlobalObject*> global) {

@@ -1045,9 +1045,14 @@ static bool EnsureParserCreatedClasses(JSContext* cx, ParseTaskKind kind) {
     return false;  // needed by async function*() {}
   }
 
-  if (kind == ParseTaskKind::Module &&
-      !GlobalObject::ensureModulePrototypesCreated(cx, global)) {
-    return false;
+  if (kind == ParseTaskKind::Module) {
+    // Set the used-as-prototype flag on the prototype objects because we can't
+    // GC in mergeRealms.
+    bool setUsedAsPrototype = true;
+    if (!GlobalObject::ensureModulePrototypesCreated(cx, global,
+                                                     setUsedAsPrototype)) {
+      return false;
+    }
   }
 
   return true;
