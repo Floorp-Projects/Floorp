@@ -376,7 +376,6 @@ nsDocShell::nsDocShell(BrowsingContext* aBrowsingContext,
       mItemType(aBrowsingContext->IsContent() ? typeContent : typeChrome),
       mPreviousEntryIndex(-1),
       mLoadedEntryIndex(-1),
-      mChildOffset(0),
       mBusyFlags(BUSY_FLAGS_NONE),
       mAppType(nsIDocShell::APP_TYPE_UNKNOWN),
       mLoadType(0),
@@ -1023,7 +1022,7 @@ bool nsDocShell::MaybeHandleSubframeHistory(
         // it wasn't originally for some other frame.
         nsCOMPtr<nsISHEntry> shEntry;
         currentSH->GetChildSHEntryIfHasNoDynamicallyAddedChild(
-            mChildOffset, getter_AddRefs(shEntry));
+            mBrowsingContext->ChildOffset(), getter_AddRefs(shEntry));
         if (shEntry) {
           aLoadState->SetSHEntry(shEntry);
         }
@@ -3011,12 +3010,6 @@ nsDocShell::SetTreeOwner(nsIDocShellTreeOwner* aTreeOwner) {
   return NS_OK;
 }
 
-void nsDocShell::SetChildOffset(int32_t aChildOffset) {
-  mChildOffset = aChildOffset;
-}
-
-int32_t nsDocShell::GetChildOffset() { return mChildOffset; }
-
 NS_IMETHODIMP
 nsDocShell::GetHistoryID(nsID& aID) {
   aID = mBrowsingContext->GetHistoryID();
@@ -3070,24 +3063,11 @@ nsDocShell::AddChild(nsIDocShellTreeItem* aChild) {
   NS_ASSERTION(!mChildList.IsEmpty(),
                "child list must not be empty after a successful add");
 
-  nsCOMPtr<nsIDocShell> childDocShell = do_QueryInterface(aChild);
-  bool dynamic = nsDocShell::Cast(childDocShell)->GetCreatedDynamically();
-  if (!dynamic) {
-    nsCOMPtr<nsISHEntry> currentSH;
-    bool oshe = false;
-    GetCurrentSHEntry(getter_AddRefs(currentSH), &oshe);
-    if (currentSH) {
-      currentSH->HasDynamicallyAddedChild(&dynamic);
-    }
-  }
-  childDocShell->SetChildOffset(dynamic ? -1 : mChildList.Length() - 1);
-
   /* Set the child's global history if the parent has one */
   if (mBrowsingContext->GetUseGlobalHistory()) {
     // childDocShell->SetUseGlobalHistory(true);
     // this should be set through BC inherit
-    MOZ_ASSERT(nsDocShell::Cast(childDocShell)
-                   ->mBrowsingContext->GetUseGlobalHistory());
+    MOZ_ASSERT(aChild->GetBrowsingContext()->GetUseGlobalHistory());
   }
 
   if (aChild->ItemType() != mItemType) {
@@ -11865,7 +11845,8 @@ nsresult nsDocShell::AddToSessionHistory(
       MOZ_ALWAYS_SUCCEEDS(topWc->SetSHEntryHasUserInteraction(false));
     }
     if (!mOSHE || !LOAD_TYPE_HAS_FLAGS(mLoadType, LOAD_FLAGS_REPLACE_HISTORY)) {
-      rv = AddChildSHEntryToParent(entry, mChildOffset, aCloneChildren);
+      rv = AddChildSHEntryToParent(entry, mBrowsingContext->ChildOffset(),
+                                   aCloneChildren);
     }
   }
 
