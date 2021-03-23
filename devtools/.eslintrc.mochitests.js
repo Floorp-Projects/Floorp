@@ -7,9 +7,4 @@
 // Parent config file for all devtools browser mochitest files.
 module.exports = {
   extends: ["plugin:mozilla/browser-test"],
-
-  rules: {
-    // Allow non-camelcase so that run_test doesn't produce a warning.
-    camelcase: "off",
-  },
 };

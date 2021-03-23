@@ -22,7 +22,11 @@ module.exports = {
       },
     },
     {
-      files: ["client/shared/*.jsm"],
+      files: [
+        "client/shared/*.jsm",
+        // Allow non-camelcase so that run_test doesn't produce a warning.
+        "**/test*/**/*",
+      ],
       rules: {
         camelcase: "off",
       },
