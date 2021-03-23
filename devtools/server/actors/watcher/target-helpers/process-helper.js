@@ -183,19 +183,33 @@ async function createTargets(watcher) {
   // actor for each existing content process.
   // Also, we substract one as the parent process has a message manager and is counted
   // in `childCount`, but we ignore it from the process script and it won't reply.
-  const contentProcessCount = Services.ppmm.childCount - 1;
+  let contentProcessCount = Services.ppmm.childCount - 1;
   if (contentProcessCount == 0) {
     return;
   }
   const onTargetsCreated = new Promise(resolve => {
     let receivedTargetCount = 0;
     const listener = () => {
-      if (++receivedTargetCount == contentProcessCount) {
-        watcher.off("target-available-form", listener);
-        resolve();
-      }
+      receivedTargetCount++;
+      mayBeResolve();
     };
     watcher.on("target-available-form", listener);
+    const onContentProcessClosed = () => {
+      // Update the content process count as one has been just destroyed
+      contentProcessCount--;
+      mayBeResolve();
+    };
+    Services.obs.addObserver(onContentProcessClosed, "message-manager-close");
+    function mayBeResolve() {
+      if (receivedTargetCount >= contentProcessCount) {
+        watcher.off("target-available-form", listener);
+        Services.obs.removeObserver(
+          onContentProcessClosed,
+          "message-manager-close"
+        );
+        resolve();
+      }
+    }
   });
 
   Services.ppmm.broadcastAsyncMessage("debug:instantiate-already-available", {
