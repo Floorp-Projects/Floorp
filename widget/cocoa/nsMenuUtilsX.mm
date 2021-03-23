@@ -188,11 +188,10 @@ bool nsMenuUtilsX::NodeIsHiddenOrCollapsed(nsIContent* aContent) {
                                              nsGkAtoms::_true, eCaseMatters));
 }
 
-// Determines how many items are visible among the siblings in a menu that are
-// before the given child. This will not count the application menu.
 int nsMenuUtilsX::CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuX* aChild) {
   int insertionPoint = 0;
   nsMenuObjectTypeX parentType = aParent->MenuObjectType();
+  MOZ_RELEASE_ASSERT(parentType == eMenuBarObjectType || parentType == eSubmenuObjectType);
   if (parentType == eMenuBarObjectType) {
     nsMenuBarX* menubarParent = static_cast<nsMenuBarX*>(aParent);
     uint32_t numMenus = menubarParent->GetMenuCount();
@@ -205,14 +204,8 @@ int nsMenuUtilsX::CalculateNativeInsertionPoint(nsMenuObjectX* aParent, nsMenuX*
         insertionPoint++;
       }
     }
-  } else if (parentType == eSubmenuObjectType || parentType == eStandaloneNativeMenuObjectType) {
-    nsMenuX* menuParent;
-    if (parentType == eSubmenuObjectType) {
-      menuParent = static_cast<nsMenuX*>(aParent);
-    } else {
-      menuParent = static_cast<nsStandaloneNativeMenu*>(aParent)->GetMenuXObject();
-    }
-
+  } else if (parentType == eSubmenuObjectType) {
+    nsMenuX* menuParent = static_cast<nsMenuX*>(aParent);
     uint32_t numItems = menuParent->GetItemCount();
     for (uint32_t i = 0; i < numItems; i++) {
       // Using GetItemAt instead of GetVisibleItemAt to avoid O(N^2)

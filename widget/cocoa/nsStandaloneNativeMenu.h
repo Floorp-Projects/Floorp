@@ -24,8 +24,6 @@ class nsStandaloneNativeMenu : public nsMenuGroupOwnerX,
   }
   virtual void IconUpdated() override;
 
-  nsMenuX* GetMenuXObject() { return mMenu.get(); }
-
   NSMenu* NativeNSMenu() { return mMenu ? mMenu->NativeNSMenu() : nil; }
 
   // If this menu is the menu of a system status bar item (NSStatusItem),
