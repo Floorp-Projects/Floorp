@@ -11,13 +11,13 @@
 #include "nsMenuX.h"
 #include "nsIStandaloneNativeMenu.h"
 
-class nsStandaloneNativeMenu : public nsMenuGroupOwnerX,
+class nsStandaloneNativeMenu : public nsMenuObjectX,
                                public nsIStandaloneNativeMenu,
                                public nsMenuItemIconX::Listener {
  public:
   nsStandaloneNativeMenu();
 
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
   NS_DECL_NSISTANDALONENATIVEMENU
 
   // nsMenuObjectX
@@ -38,6 +38,8 @@ class nsStandaloneNativeMenu : public nsMenuGroupOwnerX,
  protected:
   virtual ~nsStandaloneNativeMenu();
 
+  RefPtr<nsIContent> mContent;
+  RefPtr<nsMenuGroupOwnerX> mMenuGroupOwner;
   RefPtr<nsMenuX> mMenu;
   NSStatusItem* mContainerStatusBarItem;
 };
