@@ -21,14 +21,14 @@ class GamepadEventChannelParent final : public PGamepadEventChannelParent {
   mozilla::ipc::IPCResult RecvVibrateHaptic(
       const Tainted<GamepadHandle>& aHandle,
       const Tainted<uint32_t>& aHapticIndex, const Tainted<double>& aIntensity,
-      const Tainted<double>& aDuration, const Tainted<uint32_t>& aPromiseID);
+      const Tainted<double>& aDuration, const uint32_t& aPromiseID);
   mozilla::ipc::IPCResult RecvStopVibrateHaptic(
       const Tainted<GamepadHandle>& aHandle);
   mozilla::ipc::IPCResult RecvLightIndicatorColor(
       const Tainted<GamepadHandle>& aHandle,
       const Tainted<uint32_t>& aLightColorIndex, const Tainted<uint8_t>& aRed,
       const Tainted<uint8_t>& aGreen, const Tainted<uint8_t>& aBlue,
-      const Tainted<uint32_t>& aPromiseID);
+      const uint32_t& aPromiseID);
   void DispatchUpdateEvent(const GamepadChangeEvent& aEvent);
 
   GamepadEventChannelParent(const GamepadEventChannelParent&) = delete;
