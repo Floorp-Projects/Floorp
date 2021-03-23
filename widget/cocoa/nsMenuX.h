@@ -55,9 +55,6 @@ class nsMenuX final : public nsMenuParentX,
   // nsMenuItemIconX::Listener
   void IconUpdated() override;
 
-  // nsMenuX
-  nsresult Create(nsMenuParentX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsIContent* aNode);
-
   // Unregisters nsMenuX from the nsMenuGroupOwner, and nulls out the group owner pointer, on this
   // nsMenuX and also all nested nsMenuX and nsMenuItemX objects.
   // This is needed because nsMenuX is reference-counted and can outlive its owner, and the menu
