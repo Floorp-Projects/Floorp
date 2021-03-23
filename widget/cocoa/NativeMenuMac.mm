@@ -25,9 +25,7 @@ namespace widget {
 
 NativeMenuMac::NativeMenuMac(mozilla::dom::Element* aElement) : mContainerStatusBarItem(nil) {
   MOZ_RELEASE_ASSERT(aElement->IsAnyOfXULElements(nsGkAtoms::menu, nsGkAtoms::menupopup));
-  mMenuGroupOwner = new nsMenuGroupOwnerX(nullptr);
-  mMenuGroupOwner->Create(aElement);
-
+  mMenuGroupOwner = new nsMenuGroupOwnerX(aElement, nullptr);
   mMenu = MakeRefPtr<nsMenuX>(nullptr, mMenuGroupOwner, aElement);
   mMenu->SetIconListener(this);
   mMenu->SetupIcon();
