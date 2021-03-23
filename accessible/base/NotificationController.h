@@ -12,6 +12,7 @@
 #include "mozilla/Tuple.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsRefreshObservers.h"
+#include "nsTHashSet.h"
 
 #include <utility>
 
@@ -173,7 +174,7 @@ class NotificationController final : public EventQueue,
     MOZ_ASSERT(aTextNode->GetPrimaryFrame()->StyleVisibility()->IsVisible(),
                "A text node is not visible");
 
-    mTextHash.PutEntry(aTextNode);
+    mTextHash.Insert(aTextNode);
     ScheduleProcessing();
   }
 
@@ -383,7 +384,7 @@ class NotificationController final : public EventQueue,
   /**
    * Pending accessible tree update notifications for rendered text changes.
    */
-  nsTHashtable<nsCOMPtrHashKey<nsIContent>> mTextHash;
+  nsTHashSet<nsCOMPtrHashKey<nsIContent>> mTextHash;
 
   /**
    * Other notifications like DOM events. Don't make this an AutoTArray; we

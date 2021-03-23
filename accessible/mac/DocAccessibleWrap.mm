@@ -84,13 +84,13 @@ void DocAccessibleWrap::QueueNewLiveRegion(LocalAccessible* aAccessible) {
     return;
   }
 
-  mNewLiveRegions.PutEntry(aAccessible->UniqueID());
+  mNewLiveRegions.Insert(aAccessible->UniqueID());
 }
 
 void DocAccessibleWrap::ProcessNewLiveRegions() {
-  for (auto iter = mNewLiveRegions.Iter(); !iter.Done(); iter.Next()) {
+  for (const auto& uniqueID : mNewLiveRegions) {
     if (LocalAccessible* liveRegion =
-            GetAccessibleByUniqueID(const_cast<void*>(iter.Get()->GetKey()))) {
+            GetAccessibleByUniqueID(const_cast<void*>(uniqueID))) {
       FireDelayedEvent(nsIAccessibleEvent::EVENT_LIVE_REGION_ADDED, liveRegion);
     }
   }

@@ -9,6 +9,7 @@
 #define mozilla_a11y_DocAccessibleWrap_h__
 
 #include "DocAccessible.h"
+#include "nsTHashSet.h"
 
 namespace mozilla {
 
@@ -36,7 +37,7 @@ class DocAccessibleWrap : public DocAccessible {
   virtual void DoInitialUpdate() override;
 
  private:
-  nsTHashtable<nsVoidPtrHashKey> mNewLiveRegions;
+  nsTHashSet<void*> mNewLiveRegions;
 };
 
 }  // namespace a11y

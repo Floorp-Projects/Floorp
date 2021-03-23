@@ -38,6 +38,7 @@
 #include "nsIURI.h"
 #include "nsIWebNavigation.h"
 #include "nsFocusManager.h"
+#include "nsTHashSet.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/EventStates.h"
@@ -2038,7 +2039,7 @@ class InsertIterator final {
   TreeWalker mWalker;
 
   const nsTArray<nsCOMPtr<nsIContent>>* mNodes;
-  nsTHashtable<nsPtrHashKey<const nsIContent>> mProcessedNodes;
+  nsTHashSet<nsPtrHashKey<const nsIContent>> mProcessedNodes;
   uint32_t mNodesIdx;
 };
 

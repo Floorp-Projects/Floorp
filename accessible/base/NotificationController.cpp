@@ -654,9 +654,7 @@ void NotificationController::WillRefresh(mozilla::TimeStamp aTime) {
   }
 
   // Process rendered text change notifications.
-  for (auto iter = mTextHash.ConstIter(); !iter.Done(); iter.Next()) {
-    const nsCOMPtrHashKey<nsIContent>* entry = iter.Get();
-    nsIContent* textNode = entry->GetKey();
+  for (nsIContent* textNode : mTextHash) {
     LocalAccessible* textAcc = mDocument->GetAccessible(textNode);
 
     // If the text node is not in tree or doesn't have a frame, or placed in
