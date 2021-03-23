@@ -3,16 +3,30 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "extIWebNavigation.h"
 #include "mozilla/extensions/ExtensionsParent.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/RefPtr.h"
 #include "jsapi.h"
+#include "nsImportModule.h"
 #include "xpcpublic.h"
 
 namespace mozilla {
 namespace extensions {
+
+ExtensionsParent::ExtensionsParent() {}
+ExtensionsParent::~ExtensionsParent() {}
+
+extIWebNavigation* ExtensionsParent::WebNavigation() {
+  if (!mWebNavigation) {
+    mWebNavigation = do_ImportModule("resource://gre/modules/WebNavigation.jsm",
+                                     "WebNavigationManager");
+    MOZ_RELEASE_ASSERT(mWebNavigation);
+  }
+  return mWebNavigation;
+}
 
 void ExtensionsParent::ActorDestroy(ActorDestroyReason aWhy) {}
 
@@ -53,6 +67,8 @@ ipc::IPCResult ExtensionsParent::RecvDocumentChange(
 
   JS::Rooted<JS::Value> transitionData(
       dom::RootingCx(), FrameTransitionDataToJSValue(aTransitionData));
+
+  WebNavigation()->OnDocumentChange(aBC.get(), transitionData, aLocation);
   return IPC_OK();
 }
 
@@ -66,6 +82,10 @@ ipc::IPCResult ExtensionsParent::RecvHistoryChange(
 
   JS::Rooted<JS::Value> transitionData(
       dom::RootingCx(), FrameTransitionDataToJSValue(aTransitionData));
+
+  WebNavigation()->OnHistoryChange(aBC.get(), transitionData, aLocation,
+                                   aIsHistoryStateUpdated,
+                                   aIsReferenceFragmentUpdated);
   return IPC_OK();
 }
 
@@ -75,15 +95,20 @@ ipc::IPCResult ExtensionsParent::RecvStateChange(
   if (aBC.IsNullOrDiscarded()) {
     return IPC_OK();
   }
+
+  WebNavigation()->OnStateChange(aBC.get(), aRequestURI, aStatus, aStateFlags);
   return IPC_OK();
 }
 
 ipc::IPCResult ExtensionsParent::RecvCreatedNavigationTarget(
     MaybeDiscardedBrowsingContext&& aBC,
-    MaybeDiscardedBrowsingContext&& aSourceBC, const nsCString& aURI) {
+    MaybeDiscardedBrowsingContext&& aSourceBC, const nsCString& aURL) {
   if (aBC.IsNullOrDiscarded() || aSourceBC.IsNull()) {
     return IPC_OK();
   }
+
+  WebNavigation()->OnCreatedNavigationTarget(
+      aBC.get(), aSourceBC.GetMaybeDiscarded(), aURL);
   return IPC_OK();
 }
 
@@ -92,6 +117,8 @@ ipc::IPCResult ExtensionsParent::RecvDOMContentLoaded(
   if (aBC.IsNullOrDiscarded()) {
     return IPC_OK();
   }
+
+  WebNavigation()->OnDOMContentLoaded(aBC.get(), aDocumentURI);
   return IPC_OK();
 }
 
