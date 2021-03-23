@@ -37,6 +37,7 @@ UNIFIED_SOURCES += [
     "GfxInfo.mm",
     "MOZIconHelper.mm",
     "NativeKeyBindings.mm",
+    "NativeMenuMac.mm",
     "NativeMenuSupport.mm",
     "nsAppShell.mm",
     "nsBidiKeyboard.mm",
