@@ -105,7 +105,7 @@ nsresult MediaShutdownManager::Register(MediaDecoder* aDecoder) {
   // Don't call Register() after you've Unregistered() all the decoders,
   // that's not going to work.
   MOZ_ASSERT(!mDecoders.Contains(aDecoder));
-  mDecoders.PutEntry(aDecoder);
+  mDecoders.Insert(aDecoder);
   MOZ_ASSERT(mDecoders.Contains(aDecoder));
   MOZ_ASSERT(mDecoders.Count() > 0);
   return NS_OK;
@@ -113,10 +113,9 @@ nsresult MediaShutdownManager::Register(MediaDecoder* aDecoder) {
 
 void MediaShutdownManager::Unregister(MediaDecoder* aDecoder) {
   MOZ_ASSERT(NS_IsMainThread());
-  if (!mDecoders.Contains(aDecoder)) {
+  if (!mDecoders.EnsureRemoved(aDecoder)) {
     return;
   }
-  mDecoders.RemoveEntry(aDecoder);
   if (sInitPhase == XPCOMShutdownStarted && mDecoders.Count() == 0) {
     RemoveBlocker();
   }
@@ -150,8 +149,8 @@ MediaShutdownManager::BlockShutdown(nsIAsyncShutdownClient*) {
   }
 
   // Iterate over the decoders and shut them down.
-  for (auto iter = mDecoders.Iter(); !iter.Done(); iter.Next()) {
-    iter.Get()->GetKey()->NotifyXPCOMShutdown();
+  for (const auto& key : mDecoders) {
+    key->NotifyXPCOMShutdown();
     // Check MediaDecoder::Shutdown doesn't call Unregister() synchronously in
     // order not to corrupt our hashtable traversal.
     MOZ_ASSERT(mDecoders.Count() == oldCount);
