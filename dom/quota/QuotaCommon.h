@@ -957,13 +957,6 @@ inline auto AnonymizedOriginString(const nsACString& aOriginString) {
   return result;
 }
 
-template <typename T>
-void StringifyTableKeys(const T& aTable, nsACString& aResult) {
-  StringJoinAppend(
-      aResult, ", "_ns, aTable,
-      [](nsACString& dest, const auto& entry) { dest.Append(entry.GetKey()); });
-}
-
 #ifdef XP_WIN
 void CacheUseDOSDevicePathSyntaxPrefValue();
 #endif
