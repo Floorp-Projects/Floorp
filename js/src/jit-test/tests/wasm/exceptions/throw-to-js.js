@@ -167,6 +167,7 @@ assertEq(
          try
            call $foreign
          catch $exn
+         catch_all
          end))`,
     {
       m: {

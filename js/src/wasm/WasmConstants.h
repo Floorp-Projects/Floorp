@@ -230,6 +230,11 @@ enum class Op {
   Call = 0x10,
   CallIndirect = 0x11,
 
+// Additional exception operators
+#ifdef ENABLE_WASM_EXCEPTIONS
+  CatchAll = 0x19,
+#endif
+
   // Parametric operators
   Drop = 0x1a,
   SelectNumeric = 0x1b,
