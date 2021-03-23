@@ -417,3 +417,4 @@ class Decl(Node):
         self.loc = loc
         self.type = None
         self.scope = None
+        self.attributes = {}
