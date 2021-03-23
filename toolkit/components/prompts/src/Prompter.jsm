@@ -1123,8 +1123,9 @@ class ModalPrompter {
       return args;
     }
 
-    args.promptPrincipal = this.browsingContext.window?.document.nodePrincipal;
     if (IS_CONTENT) {
+      args.promptPrincipal = this.browsingContext.window?.document.nodePrincipal;
+
       let docShell = this.browsingContext.docShell;
       let inPermitUnload = docShell?.contentViewer?.inPermitUnload;
       args.inPermitUnload = inPermitUnload;

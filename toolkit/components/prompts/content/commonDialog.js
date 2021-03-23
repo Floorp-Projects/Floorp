@@ -6,11 +6,6 @@ const { CommonDialog } = ChromeUtils.import(
   "resource://gre/modules/CommonDialog.jsm"
 );
 
-// imported by adjustableTitle.js loaded in the same context:
-/* globals PromptUtils */
-
-const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-
 var propBag, args, Dialog;
 
 function commonDialogOnLoad() {
@@ -24,45 +19,6 @@ function commonDialogOnLoad() {
   }
 
   let dialog = document.getElementById("commonDialog");
-
-  let needIconifiedHeader =
-    args.modalType == Ci.nsIPrompt.MODAL_TYPE_CONTENT ||
-    ["promptUserAndPass", "promptPassword"].includes(args.promptType);
-  let root = document.documentElement;
-  if (needIconifiedHeader) {
-    root.setAttribute("neediconheader", "true");
-  }
-  let title = { raw: args.title };
-  if (PromptUtils.protonModals) {
-    let { promptPrincipal } = args;
-    if (promptPrincipal) {
-      if (promptPrincipal.isNullPrincipal) {
-        title = { l10nId: "common-dialog-title-null" };
-      } else if (promptPrincipal.isSystemPrincipal) {
-        title = { l10nId: "common-dialog-title-system" };
-        root.style.setProperty(
-          "--icon-url",
-          "url('chrome://branding/content/icon32.png')"
-        );
-      } else if (promptPrincipal.addonPolicy) {
-        title.raw = promptPrincipal.addonPolicy.name;
-      } else if (promptPrincipal.isContentPrincipal) {
-        try {
-          title.raw = promptPrincipal.hostPort;
-        } catch (ex) {
-          // hostPort getter can throw, e.g. for about URIs.
-          title.raw = promptPrincipal.origin;
-        }
-        // hostPort can be empty for file URIs.
-        if (!title.raw) {
-          title.raw = promptPrincipal.prePath;
-        }
-      } else {
-        title = { l10nId: "common-dialog-title-unknown" };
-      }
-    }
-  }
-  root.setAttribute("headertitle", JSON.stringify(title));
 
   let ui = {
     prompt: window,
