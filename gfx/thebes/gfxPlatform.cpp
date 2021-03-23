@@ -2152,7 +2152,8 @@ void gfxPlatform::InitializeCMS() {
      of this preference, which means nsIPrefBranch::GetBoolPref will
      typically throw (and leave its out-param untouched).
    */
-  if (StaticPrefs::gfx_color_management_force_srgb()) {
+  if (StaticPrefs::gfx_color_management_force_srgb() ||
+      StaticPrefs::gfx_color_management_native_srgb()) {
     gCMSOutputProfile = gCMSsRGBProfile;
   }
 
