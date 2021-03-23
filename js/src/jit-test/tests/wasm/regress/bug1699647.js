@@ -1,3 +1,5 @@
+// |jit-test| skip-if: !wasmSimdEnabled() || !getBuildConfiguration().x86
+
 const module = new Uint8Array([
     0,97,115,109,1,0,0,0,1,4,1,96,0,0,3,2,1,0,
     5,4,1,1,0,0,7,10,1,6,109,101,109,111,114,121,2,0,10,49,
