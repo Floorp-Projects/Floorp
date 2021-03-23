@@ -294,7 +294,6 @@ add_task(async function test_regexp_list() {
     fname: null, // given-name
     mname: null, // additional-name
     lname: null, // family-name
-    cardholder: null, // cc-name
     "cc-number": null, // cc-number
     addmonth: "cc-exp-month",
     addyear: "cc-exp-year",

@@ -26,7 +26,7 @@ ChromeUtils.defineModuleGetter(
 XPCOMUtils.defineLazyModuleGetters(this, {
   CreditCard: "resource://gre/modules/CreditCard.jsm",
   creditCardRuleset: "resource://formautofill/CreditCardRuleset.jsm",
-  LabelUtils: "resource://formautofill/FormAutofillUtils.jsm",  // TODO: Is there a better way of importing multiple symbols from a single module? We already import from this one above.
+  LabelUtils: "resource://formautofill/FormAutofillUtils.jsm",
 });
 
 this.log = null;
@@ -181,7 +181,27 @@ class FieldScanner {
    *
    * @returns {Array<Object>}
    *          The array with the sections, and the belonging fieldDetails are in
-   *          each section.
+   *          each section. For example, it may return something like this:
+   *          [{
+   *             type: FormAutofillUtils.SECTION_TYPES.ADDRESS,  // section type
+   *             fieldDetails: [{  // a record for each field
+   *                 fieldName: "email",
+   *                 section: "",
+   *                 addressType: "",
+   *                 contactType: "",
+   *                 elementWeakRef: the element
+   *               }, ...]
+   *           },
+   *           {
+   *             type: FormAutofillUtils.SECTION_TYPES.CREDIT_CARD,
+   *             fieldDetails: [{
+   *                fieldName: "cc-exp-month",
+   *                section: "",
+   *                addressType: "",
+   *                contactType: "",
+   *                 elementWeakRef: the element
+   *               }, ...]
+   *           }]
    */
   getSectionFieldDetails() {
     // When the section feature is disabled, `getSectionFieldDetails` should
@@ -818,7 +838,7 @@ this.FormAutofillHeuristics = {
         fieldScanner
       );
 
-      // If there is no any field parsed, the parsing cursor can be moved
+      // If there is no field parsed, the parsing cursor can be moved
       // forward to the next one.
       if (
         !parsedPhoneFields &&
@@ -905,7 +925,63 @@ this.FormAutofillHeuristics = {
     return regexps;
   },
 
+  /**
+   * Using Fathom, say what kind of CC field an element is most likely to be.
+   *
+   * @param {HTMLElement} element
+   * @returns {Array} A tuple of [field name, probability] describing the
+   *   highest-confidence classification
+   */
+  _topFathomField(element) {
+    // Field names are also the names of Fathom ruleset types:
+    const fieldNames = [
+      "cc-name",
+      "cc-number",
+      "cc-exp-month",
+      "cc-exp-year",
+      "cc-exp",
+      "cc-type",
+    ];
+
+    /**
+     * Return how confident our ML model is that `element` is a field of the
+     * given type.
+     *
+     * @param {string} fieldName The Fathom type to check against. This is
+     *   conveniently the same as the autocomplete attribute value that means
+     *   the same thing.
+     * @returns {number} Confidence in range [0, 1]
+     */
+    function confidence(fieldName) {
+      const fnodes = creditCardRuleset.against(element).get(fieldName);
+      // fnodes is either 0 or 1 item long, since we ran the ruleset
+      // against a single element:
+      return fnodes.length ? fnodes[0].scoreFor(fieldName) : 0;
+    }
+
+    // Bang the element against the ruleset for every type of field:
+    const fieldsAndConfidences = fieldNames.map(fieldName => [
+      fieldName,
+      confidence(fieldName),
+    ]);
+
+    // Sort descending by confidence:
+    fieldsAndConfidences.sort(
+      ([_1, confidence1], [_2, confidence2]) => confidence2 - confidence1
+    );
+    return fieldsAndConfidences[0];
+  },
+
   getInfo(element) {
+    function infoRecordWithFieldName(fieldName) {
+      return {
+        fieldName,
+        section: "",
+        addressType: "",
+        contactType: "",
+      };
+    }
+
     let info = element.getAutocompleteInfo();
     // An input[autocomplete="on"] will not be early return here since it stll
     // needs to find the field name.
@@ -932,29 +1008,27 @@ this.FormAutofillHeuristics = {
     // (e.g. HomeDepot, BestBuy), so "tel" type should be not used for "tel"
     // prediction.
     if (element.type == "email" && !isAutoCompleteOff) {
-      return {
-        fieldName: "email",
-        section: "",
-        addressType: "",
-        contactType: "",
-      };
+      return infoRecordWithFieldName("email");
     }
 
+    // See if Fathom is confident in anything, and return it if so:
+    const [mostConfidentFieldName, mostConfidentScore] = this._topFathomField(
+      element
+    );
+    if (mostConfidentScore > 0.5) {
+      return infoRecordWithFieldName(mostConfidentFieldName);
+    }
+
+    // Since Fathom isn't confident, try the old heuristics. I've removed all
+    // the CC-specific ones, so this should be almost a mutually exclusive
+    // set of fields.
     let regexps = this._getRegExpList(isAutoCompleteOff, element.tagName);
-    if (!regexps.length) {
-      return null;
+    if (regexps.length) {
+      let matchedFieldName = this._findMatchedFieldName(element, regexps);
+      if (matchedFieldName) {
+        return infoRecordWithFieldName(matchedFieldName);
+      }
     }
-
-    let matchedFieldName = this._findMatchedFieldName(element, regexps);
-    if (matchedFieldName) {
-      return {
-        fieldName: matchedFieldName,
-        section: "",
-        addressType: "",
-        contactType: "",
-      };
-    }
-
     return null;
   },
 
