@@ -8,6 +8,8 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include "mozilla/WeakPtr.h"
+
 #include "nsMenuBaseX.h"
 #include "nsIMutationObserver.h"
 #include "nsHashKeys.h"
@@ -22,9 +24,9 @@ class nsIContent;
 
 @class MOZMenuItemRepresentedObject;
 
-class nsMenuGroupOwnerX : public nsMenuObjectX, public nsIMutationObserver {
+class nsMenuGroupOwnerX : public nsIMutationObserver {
  public:
-  nsMenuGroupOwnerX();
+  explicit nsMenuGroupOwnerX(nsMenuBarX* aMenuBarIfMenuBar);
 
   nsresult Create(mozilla::dom::Element* aContent);
 
@@ -38,7 +40,7 @@ class nsMenuGroupOwnerX : public nsMenuObjectX, public nsIMutationObserver {
   MOZMenuItemRepresentedObject* GetRepresentedObject() { return mRepresentedObject; }
 
   // If this is the group owner for a menubar, return the menubar, otherwise nullptr.
-  nsMenuBarX* GetMenuBar();
+  nsMenuBarX* GetMenuBar() { return mMenuBar.get(); }
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMUTATIONOBSERVER
@@ -60,6 +62,7 @@ class nsMenuGroupOwnerX : public nsMenuObjectX, public nsIMutationObserver {
   nsTHashMap<nsUint32HashKey, nsMenuItemX*> mCommandToMenuObjectTable;
 
   MOZMenuItemRepresentedObject* mRepresentedObject = nil;  // [strong]
+  mozilla::WeakPtr<nsMenuBarX> mMenuBar;
 };
 
 @interface MOZMenuItemRepresentedObject : NSObject

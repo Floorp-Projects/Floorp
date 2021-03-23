@@ -7,8 +7,11 @@
 #define nsMenuBarX_h_
 
 #import <Cocoa/Cocoa.h>
+#include "nsISupports.h"
 
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WeakPtr.h"
+
 #include "nsMenuBaseX.h"
 #include "nsMenuGroupOwnerX.h"
 #include "nsChangeObserver.h"
@@ -75,10 +78,11 @@ class Element;
 
 // Once instantiated, this object lives until its DOM node or its parent window is destroyed.
 // Do not hold references to this, they can become invalid any time the DOM node can be destroyed.
-class nsMenuBarX : public nsMenuGroupOwnerX, public nsChangeObserver {
+class nsMenuBarX : public nsMenuObjectX, public nsChangeObserver, public mozilla::SupportsWeakPtr {
  public:
   nsMenuBarX();
-  virtual ~nsMenuBarX();
+
+  NS_INLINE_DECL_REFCOUNTING(nsMenuBarX)
 
   static NativeMenuItemTarget* sNativeEventTarget;
   static nsMenuBarX* sLastGeckoMenuBarPainted;
@@ -119,6 +123,8 @@ class nsMenuBarX : public nsMenuGroupOwnerX, public nsChangeObserver {
   void RemoveChildNativeMenuItem(nsMenuX* aChild);
 
  protected:
+  virtual ~nsMenuBarX();
+
   void ConstructNativeMenus();
   void ConstructFallbackNativeMenus();
   void InsertMenuAtIndex(RefPtr<nsMenuX>&& aMenu, uint32_t aIndex);
@@ -139,6 +145,8 @@ class nsMenuBarX : public nsMenuGroupOwnerX, public nsChangeObserver {
   // mMenuArray, plus one if the app menu is present.
   NSInteger CalculateNativeInsertionPoint(nsMenuX* aChild);
 
+  RefPtr<nsIContent> mContent;
+  RefPtr<nsMenuGroupOwnerX> mMenuGroupOwner;
   nsTArray<RefPtr<nsMenuX>> mMenuArray;
   GeckoNSMenu* mNativeMenu;  // root menu, representing entire menu bar
   bool mNeedsRebuild;

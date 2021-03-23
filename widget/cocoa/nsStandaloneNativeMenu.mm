@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #import <Cocoa/Cocoa.h>
+#include "nsISupports.h"
 
 #include "nsStandaloneNativeMenu.h"
 #include "nsMenuItemX.h"
@@ -17,10 +18,11 @@ using namespace mozilla;
 
 using mozilla::dom::Element;
 
-NS_IMPL_ISUPPORTS_INHERITED(nsStandaloneNativeMenu, nsMenuGroupOwnerX, nsIMutationObserver,
-                            nsIStandaloneNativeMenu)
+NS_IMPL_ISUPPORTS(nsStandaloneNativeMenu, nsIStandaloneNativeMenu)
 
-nsStandaloneNativeMenu::nsStandaloneNativeMenu() : mMenu(nullptr), mContainerStatusBarItem(nil) {}
+nsStandaloneNativeMenu::nsStandaloneNativeMenu() : mMenu(nullptr), mContainerStatusBarItem(nil) {
+  mMenuGroupOwner = new nsMenuGroupOwnerX(nullptr);
+}
 
 nsStandaloneNativeMenu::~nsStandaloneNativeMenu() {
   if (mMenu) {
@@ -40,12 +42,12 @@ nsStandaloneNativeMenu::Init(Element* aElement) {
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = nsMenuGroupOwnerX::Create(aElement);
+  nsresult rv = mMenuGroupOwner->Create(aElement);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  mMenu = MakeRefPtr<nsMenuX>(this, this, aElement);
+  mMenu = MakeRefPtr<nsMenuX>(this, mMenuGroupOwner, aElement);
   mMenu->SetIconListener(this);
   mMenu->SetupIcon();
 

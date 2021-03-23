@@ -72,10 +72,10 @@ static nsIContent* sQuitItemContent = nullptr;
 
 @end
 
-nsMenuBarX::nsMenuBarX()
-    : nsMenuGroupOwnerX(), mNeedsRebuild(false), mApplicationMenuDelegate(nil) {
+nsMenuBarX::nsMenuBarX() : mNeedsRebuild(false), mApplicationMenuDelegate(nil) {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
+  mMenuGroupOwner = new nsMenuGroupOwnerX(this);
   mNativeMenu = [[GeckoNSMenu alloc] initWithTitle:@"MainMenuBar"];
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
@@ -102,7 +102,7 @@ nsMenuBarX::~nsMenuBarX() {
 
   // make sure we unregister ourselves as a content observer
   if (mContent) {
-    UnregisterForContentChanges(mContent);
+    mMenuGroupOwner->UnregisterForContentChanges(mContent);
   }
 
   for (nsMenuX* menu : mMenuArray) {
@@ -127,12 +127,12 @@ nsresult nsMenuBarX::Create(Element* aContent) {
   if (mContent) {
     AquifyMenuBar();
 
-    nsresult rv = nsMenuGroupOwnerX::Create(aContent);
+    nsresult rv = mMenuGroupOwner->Create(aContent);
     if (NS_FAILED(rv)) {
       return rv;
     }
 
-    RegisterForContentChanges(mContent, this);
+    mMenuGroupOwner->RegisterForContentChanges(mContent, this);
     ConstructNativeMenus();
   } else {
     ConstructFallbackNativeMenus();
@@ -147,7 +147,8 @@ void nsMenuBarX::ConstructNativeMenus() {
   for (nsIContent* menuContent = mContent->GetFirstChild(); menuContent;
        menuContent = menuContent->GetNextSibling()) {
     if (menuContent->IsXULElement(nsGkAtoms::menu)) {
-      InsertMenuAtIndex(MakeRefPtr<nsMenuX>(this, this, menuContent->AsElement()), GetMenuCount());
+      InsertMenuAtIndex(MakeRefPtr<nsMenuX>(this, mMenuGroupOwner, menuContent->AsElement()),
+                        GetMenuCount());
     }
   }
 }
@@ -282,7 +283,8 @@ void nsMenuBarX::ObserveContentRemoved(mozilla::dom::Document* aDocument, nsICon
 
 void nsMenuBarX::ObserveContentInserted(mozilla::dom::Document* aDocument, nsIContent* aContainer,
                                         nsIContent* aChild) {
-  InsertMenuAtIndex(MakeRefPtr<nsMenuX>(this, this, aChild), aContainer->ComputeIndexOf(aChild));
+  InsertMenuAtIndex(MakeRefPtr<nsMenuX>(this, mMenuGroupOwner, aChild),
+                    aContainer->ComputeIndexOf(aChild));
 }
 
 void nsMenuBarX::ForceUpdateNativeMenuAt(const nsAString& aIndexString) {
@@ -605,7 +607,7 @@ NSMenuItem* nsMenuBarX::CreateNativeAppMenuItem(nsMenuX* aMenu, const nsAString&
   newMenuItem.tag = aTag;
   newMenuItem.target = aTarget;
   newMenuItem.keyEquivalentModifierMask = macKeyModifiers;
-  newMenuItem.representedObject = GetRepresentedObject();
+  newMenuItem.representedObject = mMenuGroupOwner->GetRepresentedObject();
 
   return newMenuItem;
 
