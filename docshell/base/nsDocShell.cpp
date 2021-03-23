@@ -1638,6 +1638,7 @@ nsDocShell::GatherCharsetMenuTelemetry() {
             Telemetry::LABELS_ENCODING_OVERRIDE_SITUATION_2::ChannelNonUtf8);
       }
       break;
+    case kCharsetFromXmlDeclaration:
     case kCharsetFromMetaPrescan:
     case kCharsetFromMetaTag:
       if (isFileURL) {

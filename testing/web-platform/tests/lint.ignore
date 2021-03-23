@@ -13,6 +13,8 @@ INDENT TABS: encoding/legacy*/*
 TRAILING WHITESPACE: html/canvas/tools/current-work-canvas.xhtml
 TRAILING WHITESPACE: conformance-checkers/*
 TRAILING WHITESPACE: WebIDL/valid/*
+TRAILING WHITESPACE: html/syntax/xmldecl/support/no-version-or-space-or-trailing-question-trailing-body-single-quotes-spaces-and-line-breaks-around-equals.htm
+TRAILING WHITESPACE: html/syntax/xmldecl/support/no-version-or-space-or-trailing-question-trailing-body-single-quotes-spaces-and-line-breaks-around-equals-trail.htm
 
 ## File types that should never be checked ##
 

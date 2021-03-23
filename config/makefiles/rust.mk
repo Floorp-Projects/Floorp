@@ -218,7 +218,7 @@ endif
 
 ifndef RUSTC_BOOTSTRAP
 ifeq (,$(filter 1.47.% 1.48.% 1.49.%,$(RUSTC_VERSION)))
-RUSTC_BOOTSTRAP := gkrust_shared,qcms
+RUSTC_BOOTSTRAP := gkrust_shared,qcms,xmldecl
 ifdef MOZ_RUST_SIMD
 RUSTC_BOOTSTRAP := $(RUSTC_BOOTSTRAP),encoding_rs,packed_simd
 endif

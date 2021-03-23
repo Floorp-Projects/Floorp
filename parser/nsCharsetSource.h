@@ -28,9 +28,9 @@ enum {
   kCharsetFromParentFrame,  // Same-origin parent takes precedence over detector
                             // to avoid breaking tests. (Also, the HTML spec
                             // says so.)
+  kCharsetFromXmlDeclaration,
   kCharsetFromMetaPrescan,  // this one and smaller: HTML5 Tentative
   kCharsetFromMetaTag,      // this one and greater: HTML5 Confident
-  kCharsetFromIrreversibleAutoDetection,
   kCharsetFromChannel,
   kCharsetFromOtherComponent,
   kCharsetFromPendingUserForcedAutoDetection,  // Marker value to be upgraded
@@ -39,6 +39,10 @@ enum {
   kCharsetFromFinalUserForcedAutoDetection,
   kCharsetFromUserForced,  // propagates to child frames
   kCharsetFromUserForcedJapaneseAutoDetection,
+  kCharsetFromXmlDeclarationUtf16,        // This one is overridden by
+                                          // kCharsetFromChannel
+  kCharsetFromIrreversibleAutoDetection,  // This one is overridden by
+                                          // kCharsetFromChannel
   kCharsetFromByteOrderMark,
   kCharsetFromUtf8OnlyMime,  // For JSON, WebVTT and such
   kCharsetFromBuiltIn,       // resource: URLs
