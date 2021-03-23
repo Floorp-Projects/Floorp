@@ -81,6 +81,13 @@ TEST_F(TelemetryTestFixture, UnexpectedPrivilegedLoadsTelemetryTest) {
        ExtContentPolicy::TYPE_SCRIPT,
        "webCOOP+COEP=https://data.example"_ns,
        {"dataurl"_ns, "TYPE_SCRIPT"_ns, "webCOOP+COEP"_ns, "unknown"_ns}},
+      {// handle data URLs for webextension content scripts differently
+       // .. by noticing their annotation
+       "data:text/css;extension=style;charset=utf-8,/* some css here */"_ns,
+       ExtContentPolicy::TYPE_STYLESHEET,
+       "web"_ns,
+       {"dataurl-extension-contentstyle"_ns, "TYPE_STYLESHEET"_ns, "web"_ns,
+        "unknown"_ns}},
       {// we only report file URLs on windows, where we can easily sanitize
        "file://c/users/tom/file.txt"_ns,
        ExtContentPolicy::TYPE_SCRIPT,
