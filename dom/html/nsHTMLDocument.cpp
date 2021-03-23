@@ -446,12 +446,14 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     executor = static_cast<nsHtml5TreeOpExecutor*>(mParser->GetContentSink());
   }
 
+  bool channelHadCharset = false;
   if (forceUtf8) {
     charsetSource = kCharsetFromUtf8OnlyMime;
   } else if (!IsHTMLDocument() || !docShell) {  // no docshell for text/html XHR
     charsetSource =
         IsHTMLDocument() ? kCharsetFromFallback : kCharsetFromDocTypeDefault;
     TryChannelCharset(aChannel, charsetSource, encoding, executor);
+    channelHadCharset = (charsetSource == kCharsetFromChannel);
   } else {
     NS_ASSERTION(docShell, "Unexpected null value");
 
@@ -474,6 +476,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     // interpretation as ASCII and the user can be lured to using the
     // charset menu.
     TryChannelCharset(aChannel, charsetSource, encoding, executor);
+    channelHadCharset = (charsetSource == kCharsetFromChannel);
 
     TryUserForcedCharset(cv, docShell, charsetSource, encoding);
 
@@ -492,7 +495,7 @@ nsresult nsHTMLDocument::StartDocumentLoad(const char* aCommand,
 #ifdef DEBUG_charset
   printf(" charset = %s source %d\n", charset.get(), charsetSource);
 #endif
-  mParser->SetDocumentCharset(encoding, charsetSource);
+  mParser->SetDocumentCharset(encoding, charsetSource, channelHadCharset);
   mParser->SetCommand(aCommand);
 
   if (!IsHTMLDocument()) {

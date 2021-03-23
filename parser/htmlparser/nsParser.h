@@ -124,10 +124,12 @@ class nsParser final : public nsIParser,
    *  @update  ftang 4/23/99
    *  @param   aCharset- the charset of a document
    *  @param   aCharsetSource- the source of the charset
+   *  @param   aChannelHadCharset- ignored
    *  @return	 nada
    */
   virtual void SetDocumentCharset(NotNull<const Encoding*> aCharset,
-                                  int32_t aSource) override;
+                                  int32_t aSource,
+                                  bool aChannelHadCharset) override;
 
   NotNull<const Encoding*> GetDocumentCharset(int32_t& aSource) {
     aSource = mCharsetSource;

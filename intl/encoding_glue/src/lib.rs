@@ -14,6 +14,7 @@
 extern crate encoding_rs;
 extern crate nserror;
 extern crate nsstring;
+extern crate xmldecl;
 
 use encoding_rs::*;
 use nserror::*;
@@ -592,5 +593,18 @@ fn checked_add(num: usize, opt: Option<usize>) -> Option<usize> {
         n.checked_add(num)
     } else {
         None
+    }
+}
+
+// Declared in nsHtml5StreamParser.cpp
+#[no_mangle]
+pub unsafe extern "C" fn xmldecl_parse(
+    buf: *const u8,
+    buf_len: usize,
+) -> *const encoding_rs::Encoding {
+    if let Some(encoding) = xmldecl::parse(std::slice::from_raw_parts(buf, buf_len)) {
+        encoding
+    } else {
+        std::ptr::null()
     }
 }

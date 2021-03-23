@@ -55,7 +55,8 @@ class PrototypeDocumentParser final : public nsIParser,
   NS_IMETHOD_(void) SetCommand(eParserCommands aParserCommand) override {}
 
   virtual void SetDocumentCharset(NotNull<const Encoding*> aEncoding,
-                                  int32_t aSource) override {}
+                                  int32_t aSource,
+                                  bool aChannelHadCharset) override {}
 
   NS_IMETHOD GetChannel(nsIChannel** aChannel) override {
     return NS_ERROR_NOT_IMPLEMENTED;
