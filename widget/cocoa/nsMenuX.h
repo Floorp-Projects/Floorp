@@ -88,6 +88,10 @@ class nsMenuX final : public nsMenuObjectX, public nsChangeObserver {
   NSMenuItem* NativeNSMenuItem() { return mNativeMenuItem; }
   GeckoNSMenu* NativeNSMenu() { return mNativeMenu; }
 
+  // Determines how many items are visible among the siblings in a menu that are
+  // before the given child.
+  NSInteger CalculateNativeInsertionPoint(nsMenuX* aChild);
+
   void Dump(uint32_t aIndent) const;
 
   static bool IsXULHelpMenu(nsIContent* aMenuContent);
