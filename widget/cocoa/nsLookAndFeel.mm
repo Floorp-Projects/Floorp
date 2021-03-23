@@ -61,7 +61,6 @@ nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache)
       mColorHighlight(0),
       mColorTextSelectForeground(0),
       mColorMenuHoverText(0),
-      mColorButtonText(0),
       mColorButtonHoverText(0),
       mColorText(0),
       mColorWindowText(0),
@@ -261,7 +260,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       //
     case ColorID::MozMacButtonactivetext:
     case ColorID::MozMacDefaultbuttontext:
-      aColor = mColorButtonText;
+      aColor = NS_RGB(0xFF, 0xFF, 0xFF);
       break;
     case ColorID::Buttontext:
     case ColorID::MozButtonhovertext:
@@ -697,7 +696,6 @@ mozilla::widget::LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
       ColorID::TextSelectBackground,
       ColorID::TextSelectBackgroundDisabled,
       ColorID::TextSelectForeground,
-      ColorID::MozMacDefaultbuttontext,
       ColorID::MozButtonhovertext,
       ColorID::Windowtext,
       ColorID::Activecaption,
@@ -786,8 +784,6 @@ void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
           return mColorTextSelectBackgroundDisabled;
         case ColorID::TextSelectForeground:
           return mColorTextSelectForeground;
-        case ColorID::MozMacDefaultbuttontext:
-          return mColorButtonText;
         case ColorID::MozButtonhovertext:
           return mColorButtonHoverText;
         case ColorID::Windowtext:
@@ -895,7 +891,6 @@ void nsLookAndFeel::EnsureInit() {
 
   mColorMenuHoverText = GetColorFromNSColor([NSColor alternateSelectedControlTextColor]);
 
-  mColorButtonText = NS_RGB(0xFF, 0xFF, 0xFF);
   mColorButtonHoverText = GetColorFromNSColor([NSColor controlTextColor]);
   mColorText = GetColorFromNSColor([NSColor textColor]);
   mColorWindowText = GetColorFromNSColor([NSColor windowFrameTextColor]);
