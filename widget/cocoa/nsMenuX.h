@@ -52,9 +52,6 @@ class nsMenuX final : public nsMenuParentX,
 
   NS_DECL_CHANGEOBSERVER
 
-  // nsMenuParentX
-  nsMenuParentTypeX MenuParentType() override { return eSubmenuParentType; }
-
   // nsMenuItemIconX::Listener
   void IconUpdated() override;
 
