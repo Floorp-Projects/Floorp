@@ -1001,6 +1001,21 @@ class MacroAssemblerX86Shared : public Assembler {
     }
   }
 
+  void emitSetRegisterIfZero(Register dest) {
+    if (AllocatableGeneralRegisterSet(Registers::SingleByteRegs).has(dest)) {
+      // If the register we're defining is a single byte register,
+      // take advantage of the setCC instruction
+      setCC(AssemblerX86Shared::Zero, dest);
+      movzbl(dest, dest);
+    } else {
+      Label end;
+      movl(Imm32(1), dest);
+      j(AssemblerX86Shared::Zero, &end);
+      mov(ImmWord(0), dest);
+      bind(&end);
+    }
+  }
+
   // Emit a JMP that can be toggled to a CMP. See ToggleToJmp(), ToggleToCmp().
   CodeOffset toggledJump(Label* label) {
     CodeOffset offset(size());
