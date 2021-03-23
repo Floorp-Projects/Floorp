@@ -707,9 +707,10 @@ class _HybridDecl:
     """A hybrid decl stores both an IPDL type and all the C++ type
     info needed by later passes, along with a basic name for the decl."""
 
-    def __init__(self, ipdltype, name):
+    def __init__(self, ipdltype, name, attributes={}):
         self.ipdltype = ipdltype
         self.name = name
+        self.attributes = attributes
 
     def var(self):
         return ExprVar(self.name)
@@ -1115,7 +1116,7 @@ class MessageDecl(ipdl.ast.MessageDecl):
         |params| and |returns| is the C++ semantics of those: 'in', 'out', or None."""
 
         def makeDecl(d, sems):
-            if self.decl.type.tainted and direction == "recv":
+            if self.decl.type.tainted and 'NoTaint' not in d.attributes and direction == "recv":
                 # Tainted types are passed by-value, allowing the receiver to move them if desired.
                 assert sems != "out"
                 return Decl(Type("Tainted", T=d.bareType(side)), d.name)
@@ -1513,7 +1514,7 @@ class _DecorateWithCxxStuff(ipdl.ast.Visitor):
             self.typedefSet.add(Typedef(Type(ud.fqClassName()), ud.name))
 
     def visitDecl(self, decl):
-        return _HybridDecl(decl.type, decl.progname)
+        return _HybridDecl(decl.type, decl.progname, decl.attributes)
 
     def visitMessageDecl(self, md):
         md.namespace = self.protocolName
@@ -5119,7 +5120,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                     Decl(
                         (
                             Type("Tainted", T=p.bareType(side))
-                            if md.decl.type.tainted
+                            if md.decl.type.tainted and 'NoTaint' not in p.attributes
                             else p.bareType(side)
                         ),
                         p.var().name,
