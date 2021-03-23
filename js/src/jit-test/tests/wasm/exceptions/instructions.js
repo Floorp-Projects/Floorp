@@ -838,3 +838,154 @@ assertEq(
   ).exports.f(),
   1
 );
+
+// Test try-delegate blocks.
+assertEq(
+  wasmEvalText(
+    `(module
+       (event $exn (param))
+       (func (export "f") (result i32)
+         i32.const 1
+         br 0
+         try
+           throw $exn
+         delegate 0))`
+  ).exports.f(),
+  1
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (event $exn (param))
+       (func (export "f") (result i32)
+         try (result i32)
+           i32.const 1
+           br 0
+         delegate 0))`
+  ).exports.f(),
+  1
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (event $exn (param))
+       (func (export "f") (result i32)
+         try (result i32)
+           i32.const 1
+           return
+         delegate 0))`
+  ).exports.f(),
+  1
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func (param i32)))
+       (event $exn (type 0))
+       (func (export "f") (result i32)
+         try (result i32)
+           try
+             i32.const 42
+             throw $exn
+           delegate 0
+           i32.const 0
+         catch $exn
+           i32.const 1
+           i32.add
+         end))`
+  ).exports.f(),
+  43
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func (param i32)))
+       (event $exn (type 0))
+       (func (export "f") (result i32)
+         try (result i32)
+           try (result i32)
+             try
+               i32.const 42
+               throw $exn
+             delegate 1
+             i32.const 0
+           catch $exn
+             i32.const 1
+             i32.add
+           end
+         catch $exn
+           i32.const 2
+           i32.add
+         end))`
+  ).exports.f(),
+  44
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func (param i32)))
+       (event $exn (type 0))
+       (func (export "f") (result i32)
+         try (result i32)
+           try (result i32)
+             try (result i32)
+               try
+                 i32.const 42
+                 throw $exn
+               delegate 1
+               i32.const 0
+             catch $exn
+               i32.const 1
+               i32.add
+             end
+           delegate 0
+         catch $exn
+           i32.const 2
+           i32.add
+         end))`
+  ).exports.f(),
+  44
+);
+
+// Test delegation to function body.
+assertEq(
+  wasmEvalText(
+    `(module
+       (event $exn (param))
+       (func (export "f") (result i32)
+         try (result i32)
+           i32.const 1
+         delegate 0))`
+  ).exports.f(),
+  1
+);
+
+assertEq(
+  wasmEvalText(
+    `(module
+       (type (func (param i32)))
+       (event $exn (type 0))
+       (func (export "f") (result i32)
+         try (result i32)
+           call $g
+         catch $exn
+         end)
+       (func $g (result i32)
+         try (result i32)
+           try
+             i32.const 42
+             throw $exn
+           delegate 1
+           i32.const 0
+         catch $exn
+           i32.const 1
+           i32.add
+         end))`
+  ).exports.f(),
+  42
+);

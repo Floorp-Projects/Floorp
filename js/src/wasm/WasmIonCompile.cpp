@@ -2591,6 +2591,18 @@ static bool EmitCatchAll(FunctionCompiler& f) {
   MOZ_CRASH("NYI");
 }
 
+static bool EmitDelegate(FunctionCompiler& f) {
+  uint32_t relativeDepth;
+  ResultType resultType;
+  DefVector tryValues;
+  if (!f.iter().readDelegate(&relativeDepth, &resultType, &tryValues)) {
+    return false;
+  }
+  f.iter().popDelegate();
+
+  MOZ_CRASH("NYI");
+}
+
 static bool EmitThrow(FunctionCompiler& f) {
   uint32_t exnIndex;
   DefVector argValues;
@@ -4535,6 +4547,14 @@ static bool EmitBodyExprs(FunctionCompiler& f) {
           return f.iter().unrecognizedOpcode(&op);
         }
         CHECK(EmitCatchAll(f));
+      case uint16_t(Op::Delegate):
+        if (!f.moduleEnv().exceptionsEnabled()) {
+          return f.iter().unrecognizedOpcode(&op);
+        }
+        if (!EmitDelegate(f)) {
+          return false;
+        }
+        break;
       case uint16_t(Op::Throw):
         if (!f.moduleEnv().exceptionsEnabled()) {
           return f.iter().unrecognizedOpcode(&op);
