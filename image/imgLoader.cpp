@@ -131,10 +131,7 @@ class imgMemoryReporter final : public nsIMemoryReporter {
         RecordCounterForRequest(req, &content, !entry->HasNoProxies());
       }
       MutexAutoLock lock(mKnownLoaders[i]->mUncachedImagesMutex);
-      for (auto iter = mKnownLoaders[i]->mUncachedImages.ConstIter();
-           !iter.Done(); iter.Next()) {
-        const nsPtrHashKey<imgRequest>* entry = iter.Get();
-        RefPtr<imgRequest> req = entry->GetKey();
+      for (RefPtr<imgRequest> req : mKnownLoaders[i]->mUncachedImages) {
         RecordCounterForRequest(req, &uncached, req->HasConsumers());
       }
     }
@@ -1239,9 +1236,7 @@ imgLoader::~imgLoader() {
     // If there are any of our imgRequest's left they are in the uncached
     // images set, so clear their pointer to us.
     MutexAutoLock lock(mUncachedImagesMutex);
-    for (auto iter = mUncachedImages.ConstIter(); !iter.Done(); iter.Next()) {
-      const nsPtrHashKey<imgRequest>* entry = iter.Get();
-      RefPtr<imgRequest> req = entry->GetKey();
+    for (RefPtr<imgRequest> req : mUncachedImages) {
       req->ClearLoader();
     }
   }
@@ -2077,12 +2072,12 @@ nsresult imgLoader::EvictEntries(imgCacheQueue& aQueueToClear) {
 
 void imgLoader::AddToUncachedImages(imgRequest* aRequest) {
   MutexAutoLock lock(mUncachedImagesMutex);
-  mUncachedImages.PutEntry(aRequest);
+  mUncachedImages.Insert(aRequest);
 }
 
 void imgLoader::RemoveFromUncachedImages(imgRequest* aRequest) {
   MutexAutoLock lock(mUncachedImagesMutex);
-  mUncachedImages.RemoveEntry(aRequest);
+  mUncachedImages.Remove(aRequest);
 }
 
 bool imgLoader::PreferLoadFromCache(nsIURI* aURI) const {
