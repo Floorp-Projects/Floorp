@@ -95,6 +95,10 @@ module.exports = {
           "^(resource://)?devtools/client",
         ],
       },
+      excludedFiles: [
+        // Tests can always import anything.
+        "**/test*/**/*",
+      ],
     },
     {
       // Cu, Cc etc... are not available in most devtools modules loaded by require.
