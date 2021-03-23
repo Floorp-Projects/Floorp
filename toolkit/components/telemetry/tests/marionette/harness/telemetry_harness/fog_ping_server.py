@@ -5,6 +5,7 @@
 import json
 import zlib
 
+import wptserve.logger
 from marionette_harness.runner import httpd
 from mozlog import get_default_logger
 from six.moves.urllib import parse as urlparse
@@ -15,6 +16,14 @@ class FOGPingServer(object):
 
     def __init__(self, server_root, url):
         self._logger = get_default_logger(component="fog_ping_server")
+
+        # Ensure we see logs from wptserve
+        try:
+            wptserve.logger.set_logger(self._logger)
+        except Exception:
+            # Raises if already been set
+            pass
+
         self.pings = []
 
         @httpd.handlers.handler
