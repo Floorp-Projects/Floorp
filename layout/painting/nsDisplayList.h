@@ -7119,16 +7119,19 @@ class nsDisplayPerspective : public nsPaintedDisplayItem {
  */
 class nsDisplayText final : public nsPaintedDisplayItem {
  public:
-  nsDisplayText(nsDisplayListBuilder* aBuilder, nsTextFrame* aFrame);
+  nsDisplayText(nsDisplayListBuilder* aBuilder, nsTextFrame* aFrame,
+                const mozilla::Maybe<bool>& aIsSelected);
   MOZ_COUNTED_DTOR_OVERRIDE(nsDisplayText)
 
   NS_DISPLAY_DECL_NAME("Text", TYPE_TEXT)
 
   bool RestoreState() final {
-    if (!nsPaintedDisplayItem::RestoreState() && mOpacity == 1.0f) {
+    if (!nsPaintedDisplayItem::RestoreState() && mIsFrameSelected.isNothing() &&
+        mOpacity == 1.0f) {
       return false;
     }
 
+    mIsFrameSelected.reset();
     mOpacity = 1.0f;
     return true;
   }
@@ -7192,6 +7195,8 @@ class nsDisplayText final : public nsPaintedDisplayItem {
                : nullptr;
   }
 
+  bool IsSelected() const;
+
   struct ClipEdges {
     ClipEdges(const nsIFrame* aFrame, const nsPoint& aToReferenceFrame,
               nscoord aVisIStartEdge, nscoord aVisIEndEdge) {
@@ -7232,6 +7237,9 @@ class nsDisplayText final : public nsPaintedDisplayItem {
   // regardless of bidi directionality; top and bottom in vertical modes).
   nscoord mVisIStartEdge;
   nscoord mVisIEndEdge;
+
+  // Cached result of mFrame->IsSelected().  Only initialized when needed.
+  mutable mozilla::Maybe<bool> mIsFrameSelected;
 };
 
 /**
