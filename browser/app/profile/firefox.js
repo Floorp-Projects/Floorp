@@ -2414,8 +2414,8 @@ pref("devtools.browserconsole.input.editorWidth", 0);
 // Display an onboarding UI for the Editor mode.
 pref("devtools.webconsole.input.editorOnboarding", true);
 
-// Enable the new performance recording panel in Nightly builds.
-#if defined(NIGHTLY_BUILD)
+// Enable the new performance recording panel in Nightly and Beta/DevEdition builds.
+#if defined(NIGHTLY_BUILD) || defined(MOZ_DEV_EDITION)
   pref("devtools.performance.new-panel-enabled", true);
 #else
   pref("devtools.performance.new-panel-enabled", false);
