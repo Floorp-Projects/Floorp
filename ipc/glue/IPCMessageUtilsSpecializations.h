@@ -34,7 +34,6 @@
 #include "mozilla/dom/ipc/StructuredCloneData.h"
 #include "nsCSSPropertyID.h"
 #include "nsDebug.h"
-#include "nsHashKeys.h"
 #include "nsIContentPolicy.h"
 #include "nsID.h"
 #include "nsILoadInfo.h"
@@ -42,7 +41,7 @@
 #include "nsLiteralString.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 
 // XXX Includes that are only required by implementations which could be moved
 // to the cpp file.
@@ -227,15 +226,18 @@ struct ParamTraits<nsAutoString> : ParamTraits<nsString> {
 
 #endif  // MOZILLA_INTERNAL_API
 
+// XXX While this has no special dependencies, it's currently only used in
+// GfxMessageUtils and could be moved there, or generalized to potentially work
+// with any nsTHashSet.
 template <>
-struct ParamTraits<nsTHashtable<nsUint64HashKey>> {
-  typedef nsTHashtable<nsUint64HashKey> paramType;
+struct ParamTraits<nsTHashSet<uint64_t>> {
+  typedef nsTHashSet<uint64_t> paramType;
 
   static void Write(Message* aMsg, const paramType& aParam) {
     uint32_t count = aParam.Count();
     WriteParam(aMsg, count);
-    for (auto iter = aParam.ConstIter(); !iter.Done(); iter.Next()) {
-      WriteParam(aMsg, iter.Get()->GetKey());
+    for (const auto& key : aParam) {
+      WriteParam(aMsg, key);
     }
   }
 
@@ -251,7 +253,7 @@ struct ParamTraits<nsTHashtable<nsUint64HashKey>> {
       if (!ReadParam(aMsg, aIter, &key)) {
         return false;
       }
-      table.PutEntry(key);
+      table.Insert(key);
     }
     *aResult = std::move(table);
     return true;

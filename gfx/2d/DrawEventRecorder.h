@@ -16,8 +16,7 @@
 #include <unordered_map>
 #include <functional>
 
-#include "nsHashKeys.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 
 namespace mozilla {
 namespace gfx {
@@ -223,7 +222,7 @@ class DrawEventRecorderMemory : public DrawEventRecorderPrivate {
 
   void AddDependentSurface(uint64_t aDependencyId) override;
 
-  nsTHashtable<nsUint64HashKey>&& TakeDependentSurfaces();
+  nsTHashSet<uint64_t>&& TakeDependentSurfaces();
 
   /**
    * @return the current size of the recording (in chars).
@@ -253,7 +252,7 @@ class DrawEventRecorderMemory : public DrawEventRecorderPrivate {
 
  private:
   SerializeResourcesFn mSerializeCallback;
-  nsTHashtable<nsUint64HashKey> mDependentSurfaces;
+  nsTHashSet<uint64_t> mDependentSurfaces;
 
   void Flush() override;
 };
