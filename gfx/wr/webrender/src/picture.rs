@@ -137,7 +137,7 @@ use crate::texture_cache::TextureCacheHandle;
 use crate::util::{MaxRect, VecHelper, MatrixHelpers, Recycler, raster_rect_to_device_pixels, ScaleOffset};
 use crate::filterdata::{FilterDataHandle};
 use crate::tile_cache::{SliceDebugInfo, TileDebugInfo, DirtyTileDebugInfo};
-use crate::visibility::{PrimitiveVisibilityMask, PrimitiveVisibilityFlags, FrameVisibilityContext};
+use crate::visibility::{PrimitiveVisibilityFlags, FrameVisibilityContext};
 use crate::visibility::{VisibilityState, FrameVisibilityState};
 #[cfg(any(feature = "capture", feature = "replay"))]
 use ron;
@@ -678,8 +678,6 @@ pub enum TileSurface {
     Texture {
         /// Descriptor for the surface that this tile draws into.
         descriptor: SurfaceTextureDescriptor,
-        /// Bitfield specifying the dirty region(s) that are relevant to this tile.
-        visibility_mask: PrimitiveVisibilityMask,
     },
     Color {
         color: ColorF,
@@ -1425,11 +1423,10 @@ impl Tile {
             // the tile was previously a color, or not set, then just set
             // up a new texture cache handle.
             match self.surface.take() {
-                Some(TileSurface::Texture { descriptor, visibility_mask }) => {
+                Some(TileSurface::Texture { descriptor }) => {
                     // Reuse the existing descriptor and vis mask
                     TileSurface::Texture {
                         descriptor,
-                        visibility_mask,
                     }
                 }
                 Some(TileSurface::Color { .. }) | Some(TileSurface::Clear) | None => {
@@ -1457,7 +1454,6 @@ impl Tile {
 
                     TileSurface::Texture {
                         descriptor,
-                        visibility_mask: PrimitiveVisibilityMask::empty(),
                     }
                 }
             }
@@ -1731,8 +1727,6 @@ impl TileDescriptor {
 /// Stores both the world and devices rects for a single dirty rect.
 #[derive(Debug, Clone)]
 pub struct DirtyRegionRect {
-    /// Bitfield for picture render tasks that draw this dirty region.
-    pub visibility_mask: PrimitiveVisibilityMask,
     /// The dirty region in space of the picture cache
     pub rect_in_pic_space: PictureRect,
 }
@@ -1756,7 +1750,7 @@ impl DirtyRegion {
         spatial_node_index: SpatialNodeIndex,
     ) -> Self {
         DirtyRegion {
-            dirty_rects: Vec::with_capacity(PrimitiveVisibilityMask::MAX_DIRTY_REGIONS),
+            dirty_rects: Vec::with_capacity(16),
             combined: WorldRect::zero(),
             spatial_node_index,
         }
@@ -1778,7 +1772,7 @@ impl DirtyRegion {
         &mut self,
         rect_in_pic_space: PictureRect,
         spatial_tree: &SpatialTree,
-    ) -> PrimitiveVisibilityMask {
+    ) {
         let map_pic_to_world = SpaceMapper::new_with_target(
             ROOT_SPATIAL_NODE_INDEX,
             self.spatial_node_index,
@@ -1793,29 +1787,9 @@ impl DirtyRegion {
         // Include this in the overall dirty rect
         self.combined = self.combined.union(&world_rect);
 
-        let dirty_region_index = self.dirty_rects.len();
-        let mut visibility_mask = PrimitiveVisibilityMask::empty();
-
-        if dirty_region_index < PrimitiveVisibilityMask::MAX_DIRTY_REGIONS {
-            visibility_mask.set_visible(dirty_region_index);
-
-            self.dirty_rects.push(DirtyRegionRect {
-                visibility_mask,
-                rect_in_pic_space,
-            });
-        } else {
-            // If we run out of dirty regions, then force the last dirty region to
-            // be a union of any remaining regions. This is an inefficiency, in that
-            // we'll add items to batches later on that are redundant / outside this
-            // tile, but it's really rare except in pathological cases (even on a
-            // 4k screen, the typical dirty region count is < 16).
-            visibility_mask.set_visible(PrimitiveVisibilityMask::MAX_DIRTY_REGIONS - 1);
-
-            let combined_region = self.dirty_rects.last_mut().unwrap();
-            combined_region.rect_in_pic_space = combined_region.rect_in_pic_space.union(&rect_in_pic_space);
-        }
-
-        visibility_mask
+        self.dirty_rects.push(DirtyRegionRect {
+            rect_in_pic_space,
+        });
     }
 
     // TODO(gw): This returns a heap allocated object. Perhaps we can simplify this
@@ -1844,7 +1818,6 @@ impl DirtyRegion {
 
             combined = combined.union(&world_rect);
             dirty_rects.push(DirtyRegionRect {
-                visibility_mask: rect.visibility_mask,
                 rect_in_pic_space,
             });
         }
@@ -4884,18 +4857,16 @@ impl PicturePrimitive {
                         continue;
                     }
 
-                    // Get the visibility mask bit(s) for this tile from the dirty region tracker. This must be done
-                    // outside the if statement below, so that we include in the dirty region tiles that are handled
-                    // by a background color only (no surface allocation).
-                    let tile_vis_mask = tile_cache.dirty_region.add_dirty_region(
+                    // Add this dirty rect to the dirty region tracker. This must be done outside the if statement below,
+                    // so that we include in the dirty region tiles that are handled by a background color only (no
+                    // surface allocation).
+                    tile_cache.dirty_region.add_dirty_region(
                         tile.local_dirty_rect,
                         frame_context.spatial_tree,
                     );
 
                     // Ensure that this texture is allocated.
-                    if let TileSurface::Texture { ref mut descriptor, ref mut visibility_mask } = tile.surface.as_mut().unwrap() {
-                        *visibility_mask = tile_vis_mask;
-
+                    if let TileSurface::Texture { ref mut descriptor } = tile.surface.as_mut().unwrap() {
                         match descriptor {
                             SurfaceTextureDescriptor::TextureCache { ref mut handle } => {
                                 if !frame_state.resource_cache.texture_cache.is_allocated(handle) {
@@ -4991,7 +4962,7 @@ impl PicturePrimitive {
                                     content_origin,
                                     surface_spatial_node_index,
                                     device_pixel_scale,
-                                    *visibility_mask,
+                                    Some(tile.local_dirty_rect),
                                     Some(scissor_rect),
                                     Some(valid_rect),
                                 )
@@ -5229,7 +5200,7 @@ impl PicturePrimitive {
                                     device_rect.origin,
                                     surface_spatial_node_index,
                                     device_pixel_scale,
-                                    PrimitiveVisibilityMask::all(),
+                                    None,
                                     None,
                                     None,
                                 )
@@ -5307,7 +5278,7 @@ impl PicturePrimitive {
                                     device_rect.origin,
                                     surface_spatial_node_index,
                                     device_pixel_scale,
-                                    PrimitiveVisibilityMask::all(),
+                                    None,
                                     None,
                                     None,
                                 ),
@@ -5458,7 +5429,7 @@ impl PicturePrimitive {
                                     clipped.origin,
                                     surface_spatial_node_index,
                                     device_pixel_scale,
-                                    PrimitiveVisibilityMask::all(),
+                                    None,
                                     None,
                                     None,
                                 )
@@ -5504,7 +5475,7 @@ impl PicturePrimitive {
                                     clipped.origin,
                                     surface_spatial_node_index,
                                     device_pixel_scale,
-                                    PrimitiveVisibilityMask::all(),
+                                    None,
                                     None,
                                     None,
                                 )
@@ -5549,7 +5520,7 @@ impl PicturePrimitive {
                                     clipped.origin,
                                     surface_spatial_node_index,
                                     device_pixel_scale,
-                                    PrimitiveVisibilityMask::all(),
+                                    None,
                                     None,
                                     None,
                                 )
@@ -5595,7 +5566,7 @@ impl PicturePrimitive {
                                     clipped.origin,
                                     surface_spatial_node_index,
                                     device_pixel_scale,
-                                    PrimitiveVisibilityMask::all(),
+                                    None,
                                     None,
                                     None,
                                 )
@@ -5641,7 +5612,7 @@ impl PicturePrimitive {
                                     clipped.origin,
                                     surface_spatial_node_index,
                                     device_pixel_scale,
-                                    PrimitiveVisibilityMask::all(),
+                                    None,
                                     None,
                                     None,
                                 )
