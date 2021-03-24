@@ -18,7 +18,7 @@
 #include "nsAHtml5TreeOpSink.h"
 #include "nsHtml5TreeOpStage.h"
 #include "nsIURI.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 #include "nsHashKeys.h"
 #include "mozilla/LinkedList.h"
 #include "nsHtml5DocumentBuilder.h"
@@ -67,7 +67,7 @@ class nsHtml5TreeOpExecutor final
   /**
    * URLs already preloaded/preloading.
    */
-  nsTHashtable<nsCStringHashKey> mPreloadedURLs;
+  nsTHashSet<nsCString> mPreloadedURLs;
 
   nsCOMPtr<nsIURI> mSpeculationBaseURI;
 
