@@ -27,6 +27,7 @@ import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.focus.components.EngineProvider
 import org.mozilla.focus.downloads.DownloadService
+import org.mozilla.focus.engine.ClientWrapper
 import org.mozilla.focus.engine.LocalizedContentInterceptor
 import org.mozilla.focus.engine.SanityCheckMiddleware
 import org.mozilla.focus.notification.PrivateNotificationMiddleware
@@ -62,8 +63,8 @@ class Components(
         }
     }
 
-    val client: Client by lazy {
-        clientOverride ?: EngineProvider.createClient(context)
+    val client: ClientWrapper by lazy {
+        ClientWrapper(clientOverride ?: EngineProvider.createClient(context))
     }
 
     val trackingProtectionUseCases by lazy { TrackingProtectionUseCases(store, engine) }

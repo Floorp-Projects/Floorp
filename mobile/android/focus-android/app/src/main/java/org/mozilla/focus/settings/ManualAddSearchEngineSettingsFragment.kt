@@ -196,7 +196,8 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
                 url = searchURLStr,
                 connectTimeout = SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS.toLong() to TimeUnit.MILLISECONDS,
                 readTimeout = SEARCH_QUERY_VALIDATION_TIMEOUT_MILLIS.toLong() to TimeUnit.MILLISECONDS,
-                redirect = FOLLOW
+                redirect = FOLLOW,
+                private = true
             )
 
             return try {

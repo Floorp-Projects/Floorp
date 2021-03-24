@@ -5,6 +5,8 @@
 package org.mozilla.focus.settings
 
 import mozilla.components.concept.fetch.Client
+import mozilla.components.concept.fetch.Request
+import mozilla.components.concept.fetch.Response
 import mozilla.components.lib.fetch.okhttp.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -25,7 +27,7 @@ class SearchEngineValidationTest {
 
     @Before
     fun setup() {
-        client = OkHttpClient()
+        client = OkHttpWrapper()
     }
 
     @Test
@@ -79,3 +81,14 @@ private fun responseWithStatus(status: Int) =
         MockResponse()
                 .setResponseCode(status)
                 .setBody("")
+
+private class OkHttpWrapper : Client() {
+    private val actual = OkHttpClient()
+
+    override fun fetch(request: Request): Response {
+        // OkHttpClient does not support private requests. Therefore we make them non-private for
+        // testing purposes
+        val nonPrivate = request.copy(private = false)
+        return actual.fetch(nonPrivate)
+    }
+}

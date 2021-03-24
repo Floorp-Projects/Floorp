@@ -264,7 +264,7 @@ object TelemetryWrapper {
 
             val serializer = JSONPingSerializer()
             val storage = FileTelemetryStorage(configuration, serializer)
-            val client = TelemetryClient(context.components.client)
+            val client = TelemetryClient(context.components.client.unwrap())
             val scheduler = JobSchedulerTelemetryScheduler()
 
             TelemetryHolder.set(Telemetry(configuration, storage, client, scheduler)

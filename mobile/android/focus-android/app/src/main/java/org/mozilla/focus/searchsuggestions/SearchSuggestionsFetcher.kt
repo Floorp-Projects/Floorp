@@ -81,7 +81,8 @@ class SearchSuggestionsFetcher(
         val request = FetchRequest(
             url = url.sanitizeURL(),
             readTimeout = Pair(READ_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS),
-            connectTimeout = Pair(CONNECT_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS)
+            connectTimeout = Pair(CONNECT_TIMEOUT_IN_MS, TimeUnit.MILLISECONDS),
+            private = true
         )
         return fetchClient.fetch(request).body.string()
     }
