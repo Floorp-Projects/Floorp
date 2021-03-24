@@ -62,11 +62,10 @@ class HTMLFormSubmission {
    *
    * @param aName the name of the parameter
    * @param aBlob the blob to submit. The file's name will be used if the Blob
-   * is actually a File, otherwise 'blob' string is used instead if the aBlob is
-   * not null.
+   * is actually a File, otherwise 'blob' string is used instead. Must not be
+   * null.
    */
-  virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
-                                         Blob* aBlob) = 0;
+  virtual nsresult AddNameBlobPair(const nsAString& aName, Blob* aBlob) = 0;
 
   /**
    * Submit a name/directory pair
@@ -176,7 +175,7 @@ class DialogFormSubmission final : public HTMLFormSubmission {
     return NS_OK;
   }
 
-  nsresult AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob) override {
+  nsresult AddNameBlobPair(const nsAString& aName, Blob* aBlob) override {
     MOZ_CRASH("This method should not be called");
     return NS_OK;
   }
@@ -221,8 +220,8 @@ class FSMultipartFormData : public EncodingFormSubmission {
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue) override;
 
-  virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
-                                         Blob* aBlob) override;
+  virtual nsresult AddNameBlobPair(const nsAString& aName,
+                                   Blob* aBlob) override;
 
   virtual nsresult AddNameDirectoryPair(const nsAString& aName,
                                         Directory* aDirectory) override;
