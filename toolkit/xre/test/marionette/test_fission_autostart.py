@@ -57,7 +57,6 @@ class TestFissionAutostart(MarionetteTestCase):
             useRemoteSubframes: win.docShell.nsILoadContext.useRemoteSubframes,
             fissionAutostartSession: Services.prefs.getBoolPref("fission.autostart.session"),
             dynamicFissionAutostart: Services.prefs.getBoolPref("fission.autostart"),
-            nonNativeTheme: Services.prefs.getBoolPref("widget.non-native-theme.enabled"),
           };
         """
         )
@@ -75,14 +74,6 @@ class TestFissionAutostart(MarionetteTestCase):
             "fissionAutostartSession": enabled,
             "dynamicFissionAutostart": dynamic,
         }
-
-        if expected["fissionExperimentStatus"] in (
-            ExperimentStatus.ENROLLED_CONTROL,
-            ExperimentStatus.ENROLLED_TREATMENT,
-        ):
-            expected["nonNativeTheme"] = True
-        else:
-            expected["nonNativeTheme"] = self.nightly_build
 
         status = self.get_fission_status()
 

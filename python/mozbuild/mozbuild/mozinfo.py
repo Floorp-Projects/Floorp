@@ -96,7 +96,7 @@ def build_dict(config, env=os.environ):
     d["artifact"] = substs.get("MOZ_ARTIFACT_BUILDS") == "1"
     d["ccov"] = substs.get("MOZ_CODE_COVERAGE") == "1"
     d["cc_type"] = substs.get("CC_TYPE")
-    d["non_native_theme"] = d["nightly_build"]
+    d["non_native_theme"] = True
 
     def guess_platform():
         if d["buildapp"] == "browser":
