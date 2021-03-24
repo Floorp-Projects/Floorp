@@ -23,6 +23,10 @@ struct XREShellData {
    */
   sandbox::BrokerServices* sandboxBrokerServices;
 #endif
+#if defined(ANDROID)
+  FILE* outFile;
+  FILE* errFile;
+#endif
 };
 
 #endif  // XREShellData_h
