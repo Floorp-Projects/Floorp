@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   AddonManager: "resource://gre/modules/AddonManager.jsm",
   IgnoreLists: "resource://gre/modules/IgnoreLists.jsm",
   OpenSearchEngine: "resource://gre/modules/OpenSearchEngine.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   Region: "resource://gre/modules/Region.jsm",
   RemoteSettings: "resource://services-settings/remote-settings.js",
   SearchEngine: "resource://gre/modules/SearchEngine.jsm",
@@ -2777,7 +2776,7 @@ SearchService.prototype = {
         stack: undefined,
       },
     };
-    OS.File.profileBeforeChange.addBlocker(
+    IOUtils.profileBeforeChange.addBlocker(
       "Search service: shutting down",
       () =>
         (async () => {

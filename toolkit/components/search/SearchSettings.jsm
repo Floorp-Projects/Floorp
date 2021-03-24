@@ -10,7 +10,6 @@ const { XPCOMUtils } = ChromeUtils.import(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   DeferredTask: "resource://gre/modules/DeferredTask.jsm",
-  OS: "resource://gre/modules/osfile.jsm",
   SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
@@ -20,11 +19,6 @@ XPCOMUtils.defineLazyGetter(this, "logConsole", () => {
     prefix: "SearchSettings",
     maxLogLevel: SearchUtils.loggingEnabled ? "Debug" : "Warn",
   });
-});
-
-// A text encoder to UTF8, used whenever we commit the settings to disk.
-XPCOMUtils.defineLazyGetter(this, "gEncoder", function() {
-  return new TextEncoder();
 });
 
 const SETTINGS_FILENAME = "search.json.mozlz4";
@@ -102,12 +96,11 @@ class SearchSettings {
     let json;
     await this._ensurePendingWritesCompleted(origin);
     try {
-      let settingsFilePath = OS.Path.join(
-        OS.Constants.Path.profileDir,
+      let settingsFilePath = PathUtils.join(
+        await PathUtils.getProfileDir(),
         SETTINGS_FILENAME
       );
-      let bytes = await OS.File.read(settingsFilePath, { compression: "lz4" });
-      json = JSON.parse(new TextDecoder().decode(bytes));
+      json = await IOUtils.readJSON(settingsFilePath, { decompress: true });
       if (!json.engines || !json.engines.length) {
         throw new Error("no engine in the file");
       }
@@ -224,12 +217,11 @@ class SearchSettings {
       }
 
       logConsole.debug("_write: Writing to settings file.");
-      let path = OS.Path.join(OS.Constants.Path.profileDir, SETTINGS_FILENAME);
-      let data = gEncoder.encode(JSON.stringify(settings));
-      await OS.File.writeAtomic(path, data, {
-        compression: "lz4",
-        tmpPath: path + ".tmp",
-      });
+      let path = PathUtils.join(
+        await PathUtils.getProfileDir(),
+        SETTINGS_FILENAME
+      );
+      await IOUtils.writeJSON(path, settings, { compress: true });
       logConsole.debug("_write: settings file written to disk.");
       Services.obs.notifyObservers(
         null,

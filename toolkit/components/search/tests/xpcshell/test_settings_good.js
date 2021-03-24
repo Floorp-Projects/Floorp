@@ -68,10 +68,10 @@ add_task(async function setup() {
   enginesSettings.buildID = appInfo.platformBuildID;
   enginesSettings.appVersion = appInfo.version;
 
-  await OS.File.writeAtomic(
-    OS.Path.join(OS.Constants.Path.profileDir, SETTINGS_FILENAME),
-    new TextEncoder().encode(JSON.stringify(enginesSettings)),
-    { compression: "lz4" }
+  await IOUtils.writeJSON(
+    PathUtils.join(await PathUtils.getProfileDir(), SETTINGS_FILENAME),
+    enginesSettings,
+    { compress: true }
   );
 });
 
