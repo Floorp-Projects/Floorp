@@ -87,6 +87,7 @@
 #include "mozilla/dom/FrameLoaderBinding.h"
 #include "mozilla/dom/MozFrameLoaderOwnerBinding.h"
 #include "mozilla/dom/PBrowser.h"
+#include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/dom/SessionStoreListener.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/XULFrameElement.h"
@@ -1309,6 +1310,23 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
   MaybeUpdatePrimaryBrowserParent(eBrowserParentRemoved);
   aOther->MaybeUpdatePrimaryBrowserParent(eBrowserParentRemoved);
 
+  if (mozilla::BFCacheInParent() && XRE_IsParentProcess()) {
+    // nsFrameLoaders in session history can't be moved to another owner since
+    // there are no corresponging message managers on which swap can be done.
+    // See the line mMessageManager.swap(aOther->mMessageManager); below.
+    auto evict = [](nsFrameLoader* aFrameLoader) {
+      if (BrowsingContext* bc =
+              aFrameLoader->GetMaybePendingBrowsingContext()) {
+        nsCOMPtr<nsISHistory> shistory = bc->Canonical()->GetSessionHistory();
+        if (shistory) {
+          shistory->EvictAllContentViewers();
+        }
+      }
+    };
+    evict(this);
+    evict(aOther);
+  }
+
   SetOwnerContent(otherContent);
   aOther->SetOwnerContent(ourContent);
 
@@ -1338,6 +1356,9 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
     otherMessageManager->SetCallback(this);
   }
   mMessageManager.swap(aOther->mMessageManager);
+
+  // XXXsmaug what should be done to JSWindowActorParent objects when swapping
+  // frameloaders? Currently they leak very easily, bug 1697918.
 
   // Perform the actual swap of the internal refptrs. We keep a strong reference
   // to ourselves to make sure we don't die while we overwrite our reference to
@@ -2066,6 +2087,23 @@ void nsFrameLoader::SetOwnerContent(Element* aContent) {
 
   if (RefPtr<nsFrameLoaderOwner> owner = do_QueryObject(mOwnerContent)) {
     owner->AttachFrameLoader(this);
+
+#ifdef NIGHTLY_BUILD
+    if (mozilla::BFCacheInParent() && XRE_IsParentProcess()) {
+      if (BrowsingContext* bc = GetMaybePendingBrowsingContext()) {
+        nsISHistory* shistory = bc->Canonical()->GetSessionHistory();
+        if (shistory) {
+          uint32_t count = shistory->GetCount();
+          for (uint32_t i = 0; i < count; ++i) {
+            nsCOMPtr<nsISHEntry> entry;
+            shistory->GetEntryAtIndex(i, getter_AddRefs(entry));
+            nsCOMPtr<SessionHistoryEntry> she = do_QueryInterface(entry);
+            MOZ_RELEASE_ASSERT(!she || !she->GetFrameLoader());
+          }
+        }
+      }
+    }
+#endif
   }
 
   if (mSessionStoreListener && mOwnerContent) {
