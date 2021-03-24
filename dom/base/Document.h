@@ -4170,7 +4170,9 @@ class Document : public nsINode,
     bool IsAvailableOnlyWhenEditable() const {
       return mCommand != mozilla::Command::Cut &&
              mCommand != mozilla::Command::Copy &&
-             mCommand != mozilla::Command::Paste;
+             mCommand != mozilla::Command::Paste &&
+             mCommand != mozilla::Command::SetDocumentReadOnly &&
+             mCommand != mozilla::Command::GetHTML;
     }
     bool IsCutOrCopyCommand() const {
       return mCommand == mozilla::Command::Cut ||
