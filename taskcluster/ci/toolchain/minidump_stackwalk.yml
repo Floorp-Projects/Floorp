@@ -45,6 +45,18 @@ macosx64-minidump-stackwalk:
             - linux64-rust-macos-1.47
             - macosx64-sdk-10.12
 
+macosx64-aarch64-minidump-stackwalk:
+    treeherder:
+        symbol: TM(stackwalk-arm64)
+    run:
+        arguments: ['macosx64-aarch64']
+    fetches:
+        toolchain:
+            - linux64-cctools-port-clang-11
+            - linux64-clang-11
+            - linux64-rust-macos-1.49
+            - macosx64-sdk-11.0
+
 win32-minidump-stackwalk:
     treeherder:
         symbol: TW32(stackwalk)
