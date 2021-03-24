@@ -10121,11 +10121,11 @@ void nsTextFrame::List(FILE* out, const char* aPrefix, ListFlags aFlags) const {
 }
 
 void nsTextFrame::ListTextRuns(FILE* out,
-                               nsTHashtable<nsVoidPtrHashKey>& aSeen) const {
+                               nsTHashSet<const void*>& aSeen) const {
   if (!mTextRun || aSeen.Contains(mTextRun)) {
     return;
   }
-  aSeen.PutEntry(mTextRun);
+  aSeen.Insert(mTextRun);
   mTextRun->Dump(out);
 }
 #endif

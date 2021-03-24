@@ -1908,9 +1908,7 @@ nsresult nsTreeBodyFrame::GetImage(int32_t aRowIndex, nsTreeColumn* aCol,
     nsTreeImageListener* listener = new nsTreeImageListener(this);
     if (!listener) return NS_ERROR_OUT_OF_MEMORY;
 
-    if (!mCreatedListeners.PutEntry(listener)) {
-      return NS_ERROR_FAILURE;
-    }
+    mCreatedListeners.Insert(listener);
 
     listener->AddCell(aRowIndex, aCol);
     nsCOMPtr<imgINotificationObserver> imgNotificationObserver = listener;
@@ -4225,7 +4223,7 @@ void nsTreeBodyFrame::DetachImageListeners() { mCreatedListeners.Clear(); }
 
 void nsTreeBodyFrame::RemoveTreeImageListener(nsTreeImageListener* aListener) {
   if (aListener) {
-    mCreatedListeners.RemoveEntry(aListener);
+    mCreatedListeners.Remove(aListener);
   }
 }
 
