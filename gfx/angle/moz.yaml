@@ -21,12 +21,13 @@ origin:
   license: BSD-3-Clause
 
 updatebot:
-    maintainer-phab: tjr
-    maintainer-bz: tom@mozilla.com
+    maintainer-phab: jgilbert
+    maintainer-bz: jgilbert@mozilla.com
     tasks:
       - type: commit-alert
         enabled: True
         branch: chromium/4324
+        needinfo: ["jgilbert@mozilla.com"]
 
 vendoring:
   url: https://chromium.googlesource.com/angle/angle
