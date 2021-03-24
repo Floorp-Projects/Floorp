@@ -575,9 +575,6 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                         and bt in ("fnbpaint", "dcf")
                     ):
                         continue
-                    # fennec doesn't support 'fcp'
-                    if self.app and "fennec" in self.app.lower() and bt == "fcp":
-                        continue
 
                     # FCP uses a different path to get the timing, so we need to do
                     # some checks here

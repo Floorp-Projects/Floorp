@@ -75,9 +75,6 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
         # on-device: /data/local/tmp/com.yourcompany.yourapp-geckoview-config.yaml
         # https://mozilla.github.io/geckoview/tutorials/automation.html#configuration-file-format
 
-        # only supported for geckoview apps
-        if self.config["app"] == "fennec":
-            return
         LOG.info("creating android app config.yml")
 
         yml_config_data = dict(
@@ -134,49 +131,21 @@ class WebExtensionAndroid(PerftestAndroid, WebExtension):
     def launch_firefox_android_app(self, test_name):
         LOG.info("starting %s" % self.config["app"])
 
-        extra_args = [
-            "-profile",
-            self.remote_profile,
-            "--allow-downgrade",
-            "--es",
-            "env0",
-            "LOG_VERBOSE=1",
-            "--es",
-            "env1",
-            "R_LOG_LEVEL=6",
-            "--es",
-            "env2",
-            "MOZ_WEBRENDER=%d" % self.config["enable_webrender"],
-            # Force the app to immediately exit for content crashes
-            "--es",
-            "env3",
-            "MOZ_CRASHREPORTER_SHUTDOWN=1",
-        ]
-
         try:
             # make sure the android app is not already running
             self.device.stop_application(self.config["binary"])
 
-            if self.config["app"] == "fennec":
-                self.device.launch_fennec(
-                    self.config["binary"],
-                    extra_args=extra_args,
-                    url="about:blank",
-                    fail_if_running=False,
-                )
-            else:
+            # command line 'extra' args not used with geckoview apps; instead we use
+            # an on-device config.yml file (see write_android_app_config)
 
-                # command line 'extra' args not used with geckoview apps; instead we use
-                # an on-device config.yml file (see write_android_app_config)
-
-                self.device.launch_application(
-                    self.config["binary"],
-                    self.config["activity"],
-                    self.config["intent"],
-                    extras=None,
-                    url="about:blank",
-                    fail_if_running=False,
-                )
+            self.device.launch_application(
+                self.config["binary"],
+                self.config["activity"],
+                self.config["intent"],
+                extras=None,
+                url="about:blank",
+                fail_if_running=False,
+            )
 
             # Check if app has started and it's running
             if not self.process_exists:

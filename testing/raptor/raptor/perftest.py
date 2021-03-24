@@ -147,11 +147,9 @@ class Perftest(object):
         self.firefox_android_apps = FIREFOX_ANDROID_APPS
         # We are deactivating the conditioned profiles for:
         # - win10-aarch64 : no support for geckodriver see 1582757
-        # - fennec_aurora: no conditioned profiles created see 1606199
         # - reference browser: no conditioned profiles created see 1606767
         self.using_condprof = not (
             (self.config["platform"] == "win" and self.config["processor"] == "aarch64")
-            or self.config["binary"] == "org.mozilla.fennec_aurora"
             or self.config["binary"] == "org.mozilla.reference.browser.raptor"
             or self.config["no_conditioned_profile"]
         )
@@ -160,10 +158,6 @@ class Perftest(object):
         else:
             LOG.info("Using an empty profile.")
         self.config["using_condprof"] = self.using_condprof
-
-        # We can never use e10s on fennec
-        if self.config["app"] == "fennec":
-            self.config["e10s"] = False
 
         # To differentiate between chrome/firefox failures, we
         # set an app variable in the logger which prefixes messages

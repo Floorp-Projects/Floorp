@@ -711,13 +711,13 @@ A set of test pages that are run as live sites instead of recorded versions. The
 
 Mobile
 ------
-Page-load performance test suite on Android. The links direct to the actual websites that are being tested. (WX: WebExtension, BT: Browsertime, GV: Geckoview, RB: Refbrow, FE: Fenix, F68: Fennec68, CH-M: Chrome mobile)
+Page-load performance test suite on Android. The links direct to the actual websites that are being tested. (WX: WebExtension, BT: Browsertime, GV: Geckoview, RB: Refbrow, FE: Fenix, CH-M: Chrome mobile)
 
-.. dropdown:: allrecipes (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: allrecipes (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -732,11 +732,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: amazon (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: amazon (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -751,11 +751,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: amazon-search (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: amazon-search (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -770,11 +770,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: bbc (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: bbc (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -789,11 +789,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: bing (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: bing (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -808,11 +808,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: bing-search-restaurants (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: bing-search-restaurants (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -827,11 +827,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: booking (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: booking (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -846,11 +846,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: cnn (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: cnn (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -865,11 +865,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: cnn-ampstories (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: cnn-ampstories (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -884,11 +884,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: ebay-kleinanzeigen (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: ebay-kleinanzeigen (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -903,11 +903,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: ebay-kleinanzeigen-search (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: ebay-kleinanzeigen-search (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -922,11 +922,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: espn (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: espn (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -941,11 +941,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: facebook (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: facebook (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -960,11 +960,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: facebook-cristiano (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: facebook-cristiano (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -979,11 +979,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: google (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: google (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -998,11 +998,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: google-maps (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: google-maps (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -1018,11 +1018,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: google-search-restaurants (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: google-search-restaurants (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -1037,11 +1037,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: imdb (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: imdb (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -1056,11 +1056,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: instagram (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: instagram (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -1075,11 +1075,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: jianshu (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: jianshu (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -1094,11 +1094,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: microsoft-support (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: microsoft-support (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -1113,11 +1113,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: reddit (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: reddit (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -1132,11 +1132,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: stackoverflow (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: stackoverflow (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -1151,11 +1151,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: web-de (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: web-de (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -1170,11 +1170,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: wikipedia (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: wikipedia (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -1189,11 +1189,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: youtube (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: youtube (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true
@@ -1208,11 +1208,11 @@ Page-load performance test suite on Android. The links direct to the actual webs
    * **use live sites**: false
 
 
-.. dropdown:: youtube-watch (BT, GV, FE, RB, F68, CH-M)
+.. dropdown:: youtube-watch (BT, GV, FE, RB, CH-M)
 
    * **alert on**: fcp, loadtime
    * **alert threshold**: 2.0
-   * **apps**: geckoview, fenix, refbrow, fennec, chrome-m
+   * **apps**: geckoview, fenix, refbrow, chrome-m
    * **browser cycles**: 15
    * **expected**: pass
    * **lower is better**: true

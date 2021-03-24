@@ -39,8 +39,6 @@ treeherder:
         'Btime-P-refbrow-wr': 'Browsertime power tests on reference browser with webrender enabled'
         'Btime-fenix': 'Browsertime performance tests on Fenix'
         'Btime-fenix-wr': 'Browsertime performance tests on Fenix with webrender enabled'
-        'Btime-fennec': 'Browsertime performance tests on Fennec'
-        'Btime-fennec-1proc': 'Browsertime performance tests on Fennec without e10s'
         'Btime-refbrow': 'Browsertime performance tests on the reference browser'
         'Btime-refbrow-wr': 'Browsertime performance tests on the reference browser with webrender enabled'
         'Btime-wr': 'Browsertime performance tests on Android with webrender enabled'
