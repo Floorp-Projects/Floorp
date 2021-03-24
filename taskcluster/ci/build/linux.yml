@@ -911,7 +911,10 @@ linux64-asan-fuzzing-ccov/opt:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang
+            # For linux64-ccov only, start using the clang-12 toolchains ahead
+            # of general builds, due to bug 1692817. This can be reverted once
+            # clang-12 becomes the default (bug 1696917).
+            - linux64-clang-12
             - linux64-rust
             - linux64-rust-size
             - linux64-cbindgen
@@ -922,7 +925,7 @@ linux64-asan-fuzzing-ccov/opt:
             - linux64-node
             - linux64-lucetc
             - linux64-sysroot
-            - wasi-sysroot
+            - wasi-sysroot-12
 
 linux64-fuzzing-ccov/opt:
     description: "Linux64 Fuzzing Opt w/ Coverage"
@@ -955,7 +958,10 @@ linux64-fuzzing-ccov/opt:
     fetches:
         toolchain:
             - linux64-binutils
-            - linux64-clang
+            # For linux64-ccov only, start using the clang-12 toolchains ahead
+            # of general builds, due to bug 1692817. This can be reverted once
+            # clang-12 becomes the default (bug 1696917).
+            - linux64-clang-12
             - linux64-cbindgen
             - linux64-dump-syms
             - linux64-rust
@@ -965,7 +971,7 @@ linux64-fuzzing-ccov/opt:
             - linux64-node
             - linux64-lucetc
             - linux64-sysroot
-            - wasi-sysroot
+            - wasi-sysroot-12
     optimization:
         skip-unless-expanded: null
 
