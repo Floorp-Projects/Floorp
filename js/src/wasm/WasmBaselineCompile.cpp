@@ -10367,9 +10367,11 @@ bool BaseCompiler::emitEnd() {
       // This is emitted here after `doReturn` to avoid being executed in the
       // normal return path of a function, and instead only when a `delegate`
       // jumps to it.
+#ifdef ENABLE_WASM_EXCEPTIONS
       if (!emitBodyDelegateThrowPad()) {
         return false;
       }
+#endif
       iter_.popEnd();
       MOZ_ASSERT(iter_.controlStackEmpty());
       return iter_.readFunctionEnd(iter_.end());
