@@ -14,6 +14,7 @@
 #include "nsClassHashtable.h"
 #include "nsContentListDeclarations.h"
 #include "nsTArray.h"
+#include "nsTHashSet.h"
 
 class nsContentList;
 class nsCycleCollectionTraversalCallback;
@@ -254,7 +255,7 @@ class DocumentOrShadowRoot {
                            nsCycleCollectionTraversalCallback&);
   void UnlinkStyleSheets(nsTArray<RefPtr<StyleSheet>>&);
 
-  using StyleSheetSet = nsTHashtable<nsPtrHashKey<const StyleSheet>>;
+  using StyleSheetSet = nsTHashSet<const StyleSheet*>;
   void RemoveSheetFromStylesIfApplicable(StyleSheet&);
   void ClearAdoptedStyleSheets();
 
