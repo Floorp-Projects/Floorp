@@ -2471,7 +2471,18 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
   Print presentation, non-XUL
 
       ViewportFrame
-        nsCanvasFrame
+        nsPageSequenceFrame
+          PrintedSheetFrame
+            nsPageFrame
+              nsPageContentFrame [fixed-cb]
+                nsCanvasFrame [abs-cb]
+                  root element frame (nsBlockFrame, SVGOuterSVGFrame,
+                                      nsTableWrapperFrame, nsPlaceholderFrame)
+
+  Print-preview presentation, non-XUL
+
+      ViewportFrame
+        nsHTMLScrollFrame
           nsPageSequenceFrame
             PrintedSheetFrame
               nsPageFrame
@@ -2479,19 +2490,6 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
                   nsCanvasFrame [abs-cb]
                     root element frame (nsBlockFrame, SVGOuterSVGFrame,
                                         nsTableWrapperFrame, nsPlaceholderFrame)
-
-  Print-preview presentation, non-XUL
-
-      ViewportFrame
-        nsHTMLScrollFrame
-          nsCanvasFrame
-            nsPageSequenceFrame
-              PrintedSheetFrame
-                nsPageFrame
-                  nsPageContentFrame [fixed-cb]
-                    nsCanvasFrame [abs-cb]
-                      root element frame (nsBlockFrame, SVGOuterSVGFrame,
-                                          nsTableWrapperFrame, nsPlaceholderFrame)
 
   Print/print preview of XUL is not supported.
   [fixed-cb]: the default containing block for fixed-pos content
@@ -2517,49 +2515,35 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
   //   covers the entire canvas as specified by the CSS2 spec
 
   nsPresContext* presContext = mPresShell->GetPresContext();
-  const bool isPaginated = presContext->IsRootPaginatedDocument();
-
-  const bool isHTML = aDocElement->IsHTMLElement();
-  const bool isXUL = !isHTML && aDocElement->IsXULElement();
-
-  const bool isScrollable = [&] {
-    if (isPaginated) {
-      return presContext->HasPaginatedScrolling();
-    }
-    // Never create scrollbars for XUL documents or top level XHTML documents
-    // that disable scrolling.
-    if (isXUL) {
-      return false;
-    }
-    if (aDocElement->OwnerDoc()->IsDocumentURISchemeChrome() &&
-        aDocElement->AsElement()->AttrValueIs(
-                 kNameSpaceID_None, nsGkAtoms::scrolling, nsGkAtoms::_false,
-                 eCaseMatters)) {
-      return false;
-    }
-    return true;
-  }();
-
+  bool isPaginated = presContext->IsRootPaginatedDocument();
   nsContainerFrame* viewportFrame =
       static_cast<nsContainerFrame*>(GetRootFrame());
   ComputedStyle* viewportPseudoStyle = viewportFrame->Style();
 
   nsContainerFrame* rootFrame = nullptr;
+  PseudoStyleType rootPseudo;
 
+  if (!isPaginated) {
 #ifdef MOZ_XUL
-  if (aDocElement->IsXULElement()) {
-    // pass a temporary stylecontext, the correct one will be set later
-    rootFrame = NS_NewRootBoxFrame(mPresShell, viewportPseudoStyle);
-  } else
+    if (aDocElement->IsXULElement()) {
+      // pass a temporary stylecontext, the correct one will be set later
+      rootFrame = NS_NewRootBoxFrame(mPresShell, viewportPseudoStyle);
+    } else
 #endif
-  {
-    // pass a temporary stylecontext, the correct one will be set later
-    rootFrame = NS_NewCanvasFrame(mPresShell, viewportPseudoStyle);
-    mHasRootAbsPosContainingBlock = true;
-  }
+    {
+      // pass a temporary stylecontext, the correct one will be set later
+      rootFrame = NS_NewCanvasFrame(mPresShell, viewportPseudoStyle);
+      mHasRootAbsPosContainingBlock = true;
+    }
 
-  PseudoStyleType rootPseudo = PseudoStyleType::canvas;
-  mDocElementContainingBlock = rootFrame;
+    rootPseudo = PseudoStyleType::canvas;
+    mDocElementContainingBlock = rootFrame;
+  } else {
+    // Create a page sequence frame
+    rootFrame = mPageSequenceFrame =
+        NS_NewPageSequenceFrame(mPresShell, viewportPseudoStyle);
+    rootPseudo = PseudoStyleType::pageSequence;
+  }
 
   // --------- IF SCROLLABLE WRAP IN SCROLLFRAME --------
 
@@ -2567,6 +2551,27 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
   // for print-preview, but not when printing), then create a scroll frame that
   // will act as the scrolling mechanism for the viewport.
   // XXX Do we even need a viewport when printing to a printer?
+
+  bool isHTML = aDocElement->IsHTMLElement();
+  bool isXUL = false;
+
+  if (!isHTML) {
+    isXUL = aDocElement->IsXULElement();
+  }
+
+  // Never create scrollbars for XUL documents or top level XHTML documents that
+  // disable scrolling.
+  bool isScrollable = true;
+  if (isPaginated) {
+    isScrollable = presContext->HasPaginatedScrolling();
+  } else if (isXUL) {
+    isScrollable = false;
+  } else if (aDocElement->OwnerDoc()->IsDocumentURISchemeChrome() &&
+             aDocElement->AsElement()->AttrValueIs(
+                 kNameSpaceID_None, nsGkAtoms::scrolling, nsGkAtoms::_false,
+                 eCaseMatters)) {
+    isScrollable = false;
+  }
 
   // We no longer need to do overflow propagation here. It's taken care of
   // when we construct frames for the element whose overflow might be
@@ -2589,7 +2594,13 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
     rootPseudoStyle = styleSet->ResolveInheritingAnonymousBoxStyle(
         rootPseudo, viewportPseudoStyle);
   } else {
-    rootPseudo = PseudoStyleType::scrolledCanvas;
+    if (rootPseudo == PseudoStyleType::canvas) {
+      rootPseudo = PseudoStyleType::scrolledCanvas;
+    } else {
+      NS_ASSERTION(rootPseudo == PseudoStyleType::pageSequence,
+                   "Unknown root pseudo");
+      rootPseudo = PseudoStyleType::scrolledPageSequence;
+    }
 
     // Build the frame. We give it the content we are wrapping which is the
     // document element, the root frame, the parent view port frame, and we
@@ -2623,22 +2634,11 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
   }
 
   if (isPaginated) {
-    // Create a page sequence frame
-    {
-      RefPtr<ComputedStyle> pageSequenceStyle =
-        styleSet->ResolveInheritingAnonymousBoxStyle(
-          PseudoStyleType::pageSequence, viewportPseudoStyle);
-      mPageSequenceFrame =
-          NS_NewPageSequenceFrame(mPresShell, pageSequenceStyle);
-      mPageSequenceFrame->Init(aDocElement, rootFrame, nullptr);
-      SetInitialSingleChild(rootFrame, mPageSequenceFrame);
-    }
-
     // Create the first printed sheet frame, as the sole child (for now) of our
-    // page sequence frame (mPageSequenceFrame).
+    // page sequence frame (rootFrame).
     auto* printedSheetFrame =
-        ConstructPrintedSheetFrame(mPresShell, mPageSequenceFrame, nullptr);
-    SetInitialSingleChild(mPageSequenceFrame, printedSheetFrame);
+        ConstructPrintedSheetFrame(mPresShell, rootFrame, nullptr);
+    SetInitialSingleChild(rootFrame, printedSheetFrame);
 
     // Create the first page, as the sole child (for now) of the printed sheet
     // frame that we just created.
