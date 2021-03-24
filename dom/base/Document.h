@@ -205,6 +205,7 @@ class SMILAnimationController;
 enum class StyleCursorKind : uint8_t;
 enum class StylePrefersColorScheme : uint8_t;
 enum class StyleRuleChangeKind : uint32_t;
+class TextEditor;
 template <typename>
 class OwningNonNull;
 struct URLExtraData;
@@ -4171,6 +4172,36 @@ class Document : public nsINode,
              mCommand == mozilla::Command::Copy;
     }
     bool IsPasteCommand() const { return mCommand == mozilla::Command::Paste; }
+  };
+
+  /**
+   * AutoEditorCommandTarget considers which editor or global command manager
+   * handles given command.
+   */
+  class MOZ_RAII AutoEditorCommandTarget {
+   public:
+    MOZ_CAN_RUN_SCRIPT AutoEditorCommandTarget(
+        nsPresContext* aPresContext, const InternalCommandData& aCommandData);
+    AutoEditorCommandTarget() = delete;
+    explicit AutoEditorCommandTarget(const AutoEditorCommandTarget& aOther) =
+        delete;
+
+    bool DoNothing() const { return mDoNothing; }
+    bool IsEditor() const {
+      MOZ_ASSERT(!!mTextEditor == !!mEditorCommand);
+      return !!mEditorCommand;
+    }
+
+    MOZ_CAN_RUN_SCRIPT nsresult DoCommand(nsIPrincipal* aPrincipal) const;
+    template <typename ParamType>
+    MOZ_CAN_RUN_SCRIPT nsresult DoCommandParam(const ParamType& aParam,
+                                               nsIPrincipal* aPrincipal) const;
+
+   private:
+    RefPtr<TextEditor> mTextEditor;
+    RefPtr<EditorCommand> mEditorCommand;
+    const InternalCommandData& mCommandData;
+    bool mDoNothing = false;
   };
 
   /**
