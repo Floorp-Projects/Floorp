@@ -870,7 +870,7 @@ StaticRefPtr<InsertParagraphCommand> InsertParagraphCommand::sInstance;
 
 bool InsertParagraphCommand::IsCommandEnabled(Command aCommand,
                                               TextEditor* aTextEditor) const {
-  if (!aTextEditor || !aTextEditor->AsHTMLEditor()) {
+  if (!aTextEditor || aTextEditor->IsSingleLineEditor()) {
     return false;
   }
   return aTextEditor->IsSelectionEditable();
@@ -879,14 +879,20 @@ bool InsertParagraphCommand::IsCommandEnabled(Command aCommand,
 nsresult InsertParagraphCommand::DoCommand(Command aCommand,
                                            TextEditor& aTextEditor,
                                            nsIPrincipal* aPrincipal) const {
-  HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
-  if (!htmlEditor) {
-    return NS_OK;  // Do nothing for now.
+  if (aTextEditor.IsSingleLineEditor()) {
+    return NS_ERROR_FAILURE;
   }
-  nsresult rv =
-      MOZ_KnownLive(htmlEditor)->InsertParagraphSeparatorAsAction(aPrincipal);
+  if (aTextEditor.IsHTMLEditor()) {
+    nsresult rv = MOZ_KnownLive(aTextEditor.AsHTMLEditor())
+                      ->InsertParagraphSeparatorAsAction(aPrincipal);
+    NS_WARNING_ASSERTION(
+        NS_SUCCEEDED(rv),
+        "HTMLEditor::InsertParagraphSeparatorAsAction() failed");
+    return rv;
+  }
+  nsresult rv = aTextEditor.InsertLineBreakAsAction(aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::InsertParagraphSeparatorAsAction() failed");
+                       "TextEditor::InsertLineBreakAsAction() failed");
   return rv;
 }
 
@@ -905,7 +911,7 @@ StaticRefPtr<InsertLineBreakCommand> InsertLineBreakCommand::sInstance;
 
 bool InsertLineBreakCommand::IsCommandEnabled(Command aCommand,
                                               TextEditor* aTextEditor) const {
-  if (!aTextEditor || !aTextEditor->AsHTMLEditor()) {
+  if (!aTextEditor || aTextEditor->IsSingleLineEditor()) {
     return false;
   }
   return aTextEditor->IsSelectionEditable();
@@ -914,13 +920,12 @@ bool InsertLineBreakCommand::IsCommandEnabled(Command aCommand,
 nsresult InsertLineBreakCommand::DoCommand(Command aCommand,
                                            TextEditor& aTextEditor,
                                            nsIPrincipal* aPrincipal) const {
-  HTMLEditor* htmlEditor = aTextEditor.AsHTMLEditor();
-  if (!htmlEditor) {
+  if (aTextEditor.IsSingleLineEditor()) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = MOZ_KnownLive(htmlEditor)->InsertLineBreakAsAction(aPrincipal);
+  nsresult rv = aTextEditor.InsertLineBreakAsAction(aPrincipal);
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rv),
-                       "HTMLEditor::InsertLineBreakAsAction() failed");
+                       "TextEditor::InsertLineBreakAsAction() failed");
   return rv;
 }
 
