@@ -306,9 +306,7 @@ void LocalStorageCache::GetKeys(const LocalStorage* aStorage,
     return;
   }
 
-  for (auto iter = DataSet(aStorage).mKeys.Iter(); !iter.Done(); iter.Next()) {
-    aKeys.AppendElement(iter.Key());
-  }
+  AppendToArray(aKeys, DataSet(aStorage).mKeys.Keys());
 }
 
 nsresult LocalStorageCache::GetItem(const LocalStorage* aStorage,

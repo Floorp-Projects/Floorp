@@ -3131,11 +3131,11 @@ void RestyleManager::ProcessAllPendingAttributeAndStateInvalidations() {
   if (mSnapshots.IsEmpty()) {
     return;
   }
-  for (auto iter = mSnapshots.Iter(); !iter.Done(); iter.Next()) {
+  for (const auto& key : mSnapshots.Keys()) {
     // Servo data for the element might have been dropped. (e.g. by removing
     // from its document)
-    if (iter.Key()->HasFlag(ELEMENT_HAS_SNAPSHOT)) {
-      Servo_ProcessInvalidations(StyleSet()->RawSet(), iter.Key(), &mSnapshots);
+    if (key->HasFlag(ELEMENT_HAS_SNAPSHOT)) {
+      Servo_ProcessInvalidations(StyleSet()->RawSet(), key, &mSnapshots);
     }
   }
   ClearSnapshots();

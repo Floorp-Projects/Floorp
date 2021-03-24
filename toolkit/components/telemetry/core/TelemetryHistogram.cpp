@@ -1339,8 +1339,8 @@ nsresult KeyedHistogram::GetKeys(const StaticMutexAutoLock& aLock,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  for (auto iter = histogramMap->ConstIter(); !iter.Done(); iter.Next()) {
-    if (!aKeys.AppendElement(iter.Key(), mozilla::fallible)) {
+  for (const auto& key : histogramMap->Keys()) {
+    if (!aKeys.AppendElement(key, mozilla::fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }

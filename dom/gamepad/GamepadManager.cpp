@@ -169,8 +169,8 @@ void GamepadManager::RemoveListener(nsGlobalWindowInner* aWindow) {
     return;  // doesn't exist
   }
 
-  for (auto iter = mGamepads.ConstIter(); !iter.Done(); iter.Next()) {
-    aWindow->RemoveGamepad(iter.Key());
+  for (const auto& key : mGamepads.Keys()) {
+    aWindow->RemoveGamepad(key);
   }
 
   mListeners.RemoveElement(aWindow);

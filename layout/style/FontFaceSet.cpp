@@ -184,8 +184,8 @@ void FontFaceSet::Disconnect() {
     mDocument->CSSLoader()->RemoveObserver(this);
   }
 
-  for (auto it = mLoaders.Iter(); !it.Done(); it.Next()) {
-    it.Get()->GetKey()->Cancel();
+  for (const auto& key : mLoaders.Keys()) {
+    key->Cancel();
   }
 
   mLoaders.Clear();
