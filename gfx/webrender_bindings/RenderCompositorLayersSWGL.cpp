@@ -190,6 +190,9 @@ bool RenderCompositorLayersSWGL::MapTile(wr::NativeTileId aId,
                    aDirtyRect.size.width, aDirtyRect.size.height);
 
   if (!mCurrentTile->Map(aDirtyRect, aValidRect, aData, aStride)) {
+    gfxCriticalNote << "MapTile failed aValidRect: "
+                    << gfx::Rect(aValidRect.origin.x, aValidRect.origin.y,
+                                 aValidRect.size.width, aValidRect.size.height);
     return false;
   }
 
