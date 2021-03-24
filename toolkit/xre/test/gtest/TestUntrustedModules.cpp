@@ -53,13 +53,13 @@ class ModuleLoadCounter final {
 
   bool IsDone() const {
     bool allZero = true;
-    for (auto iter = mCounters.ConstIter(); !iter.Done(); iter.Next()) {
-      if (iter.Data() < 0) {
+    for (const auto& data : mCounters.Values()) {
+      if (data < 0) {
         // If any counter is negative, we know the test fails.
         // No need to continue.
         return true;
       }
-      if (iter.Data() > 0) {
+      if (data > 0) {
         allZero = false;
       }
     }
@@ -156,8 +156,7 @@ static void ValidateUntrustedModules(const UntrustedModulesData& aData) {
   EXPECT_EQ(aData.mPid, ::GetCurrentProcessId());
 
   nsTHashtable<nsPtrHashKey<void>> moduleSet;
-  for (auto iter = aData.mModules.ConstIter(); !iter.Done(); iter.Next()) {
-    const RefPtr<ModuleRecord>& module = iter.Data();
+  for (const RefPtr<ModuleRecord>& module : aData.mModules.Values()) {
     moduleSet.PutEntry(module);
   }
 

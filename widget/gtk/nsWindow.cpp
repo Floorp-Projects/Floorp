@@ -4401,8 +4401,8 @@ gboolean nsWindow::OnTouchEvent(GdkEventTouch* aEvent) {
   if (aEvent->type == GDK_TOUCH_BEGIN || aEvent->type == GDK_TOUCH_UPDATE) {
     mTouches.InsertOrUpdate(aEvent->sequence, std::move(touch));
     // add all touch points to event object
-    for (auto iter = mTouches.Iter(); !iter.Done(); iter.Next()) {
-      event.mTouches.AppendElement(new dom::Touch(*iter.UserData()));
+    for (const auto& data : mTouches.Values()) {
+      event.mTouches.AppendElement(new dom::Touch(*data));
     }
   } else if (aEvent->type == GDK_TOUCH_END ||
              aEvent->type == GDK_TOUCH_CANCEL) {

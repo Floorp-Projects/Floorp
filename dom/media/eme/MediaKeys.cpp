@@ -129,13 +129,11 @@ void MediaKeys::Terminated() {
 
   KeySessionHashMap keySessions;
   // Remove entries during iteration will screw it. Make a copy first.
-  for (auto iter = mKeySessions.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<MediaKeySession>& session = iter.Data();
+  for (const RefPtr<MediaKeySession>& session : mKeySessions.Values()) {
     // XXX Could the RefPtr still be moved here?
     keySessions.InsertOrUpdate(session->GetSessionId(), RefPtr{session});
   }
-  for (auto iter = keySessions.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<MediaKeySession>& session = iter.Data();
+  for (const RefPtr<MediaKeySession>& session : keySessions.Values()) {
     session->OnClosed();
   }
   keySessions.Clear();
@@ -161,8 +159,7 @@ void MediaKeys::Shutdown() {
   // down.
   RefPtr<MediaKeys> selfReference = this;
 
-  for (auto iter = mPromises.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<dom::DetailedPromise>& promise = iter.Data();
+  for (const RefPtr<dom::DetailedPromise>& promise : mPromises.Values()) {
     promise->MaybeRejectWithInvalidStateError(
         "Promise still outstanding at MediaKeys shutdown");
     Release();
@@ -233,8 +230,8 @@ PromiseId MediaKeys::StorePromise(DetailedPromise* aPromise) {
 
 #ifdef DEBUG
   // We should not have already stored this promise!
-  for (auto iter = mPromises.ConstIter(); !iter.Done(); iter.Next()) {
-    MOZ_ASSERT(iter.Data() != aPromise);
+  for (const RefPtr<dom::DetailedPromise>& promise : mPromises.Values()) {
+    MOZ_ASSERT(promise != aPromise);
   }
 #endif
 
@@ -675,9 +672,7 @@ void MediaKeys::Unbind() {
 }
 
 void MediaKeys::GetSessionsInfo(nsString& sessionsInfo) {
-  for (KeySessionHashMap::Iterator it = mKeySessions.Iter(); !it.Done();
-       it.Next()) {
-    MediaKeySession* keySession = it.Data();
+  for (const auto& keySession : mKeySessions.Values()) {
     nsString sessionID;
     keySession->GetSessionId(sessionID);
     sessionsInfo.AppendLiteral("(sid=");

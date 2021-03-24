@@ -314,8 +314,7 @@ nsCounterList* nsCounterManager::CounterListFor(nsAtom* aCounterName) {
 }
 
 void nsCounterManager::RecalcAll() {
-  for (auto iter = mNames.ConstIter(); !iter.Done(); iter.Next()) {
-    nsCounterList* list = iter.UserData();
+  for (const auto& list : mNames.Values()) {
     if (list->IsDirty()) {
       list->RecalcAll();
     }
@@ -323,8 +322,8 @@ void nsCounterManager::RecalcAll() {
 }
 
 void nsCounterManager::SetAllDirty() {
-  for (auto iter = mNames.ConstIter(); !iter.Done(); iter.Next()) {
-    iter.UserData()->SetDirty();
+  for (const auto& list : mNames.Values()) {
+    list->SetDirty();
   }
 }
 
@@ -332,8 +331,7 @@ bool nsCounterManager::DestroyNodesFor(nsIFrame* aFrame) {
   MOZ_ASSERT(aFrame->HasAnyStateBits(NS_FRAME_HAS_CSS_COUNTER_STYLE),
              "why call me?");
   bool destroyedAny = false;
-  for (auto iter = mNames.ConstIter(); !iter.Done(); iter.Next()) {
-    nsCounterList* list = iter.UserData();
+  for (const auto& list : mNames.Values()) {
     if (list->DestroyNodesFor(aFrame)) {
       destroyedAny = true;
       list->SetDirty();

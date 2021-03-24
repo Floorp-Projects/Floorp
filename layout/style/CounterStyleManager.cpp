@@ -1769,8 +1769,7 @@ void CounterStyleManager::DestroyCounterStyle(CounterStyle* aCounterStyle) {
 
 void CounterStyleManager::Disconnect() {
   CleanRetiredStyles();
-  for (auto iter = mStyles.Iter(); !iter.Done(); iter.Next()) {
-    CounterStyle* style = iter.Data();
+  for (CounterStyle* style : mStyles.Values()) {
     if (style->IsDependentStyle()) {
       DestroyCounterStyle(style);
     }
@@ -1862,8 +1861,7 @@ bool CounterStyleManager::NotifyRuleChanged() {
   }
 
   if (changed) {
-    for (auto iter = mStyles.Iter(); !iter.Done(); iter.Next()) {
-      CounterStyle* style = iter.Data();
+    for (CounterStyle* style : mStyles.Values()) {
       if (style->IsCustomStyle()) {
         CustomCounterStyle* custom = static_cast<CustomCounterStyle*>(style);
         custom->ResetDependentData();

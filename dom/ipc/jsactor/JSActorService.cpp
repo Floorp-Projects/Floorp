@@ -196,9 +196,8 @@ void JSActorService::GetJSWindowActorInfos(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  for (auto iter = mWindowActorDescriptors.ConstIter(); !iter.Done();
-       iter.Next()) {
-    aInfos.AppendElement(iter.Data()->ToIPC());
+  for (const auto& data : mWindowActorDescriptors.Values()) {
+    aInfos.AppendElement(data->ToIPC());
   }
 }
 
@@ -207,8 +206,8 @@ void JSActorService::RegisterChromeEventTarget(EventTarget* aTarget) {
   mChromeEventTargets.AppendElement(aTarget);
 
   // Register event listeners on the newly added Window Root.
-  for (auto iter = mWindowActorDescriptors.Iter(); !iter.Done(); iter.Next()) {
-    iter.Data()->RegisterListenersFor(aTarget);
+  for (const auto& data : mWindowActorDescriptors.Values()) {
+    data->RegisterListenersFor(aTarget);
   }
 
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
@@ -305,9 +304,8 @@ void JSActorService::GetJSProcessActorInfos(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(XRE_IsParentProcess());
 
-  for (auto iter = mProcessActorDescriptors.ConstIter(); !iter.Done();
-       iter.Next()) {
-    aInfos.AppendElement(iter.Data()->ToIPC());
+  for (const auto& data : mProcessActorDescriptors.Values()) {
+    aInfos.AppendElement(data->ToIPC());
   }
 }
 

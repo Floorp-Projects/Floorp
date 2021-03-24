@@ -234,9 +234,7 @@ void Http3Session::Shutdown() {
     gHttpHandler->ExcludeHttp3(mConnInfo);
   }
 
-  for (auto iter = mStreamTransactionHash.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<Http3Stream> stream = iter.Data();
-
+  for (const auto& stream : mStreamTransactionHash.Values()) {
     if (mBeforeConnectedError) {
       // We have an error before we were connected, just restart transactions.
       // The transaction restart code path will remove AltSvc mapping and the
@@ -1400,8 +1398,8 @@ void Http3Session::TopLevelOuterContentWindowIdChanged(uint64_t windowId) {
 
   mCurrentForegroundTabOuterContentWindowId = windowId;
 
-  for (auto iter = mStreamTransactionHash.Iter(); !iter.Done(); iter.Next()) {
-    iter.Data()->TopLevelOuterContentWindowIdChanged(windowId);
+  for (const auto& stream : mStreamTransactionHash.Values()) {
+    stream->TopLevelOuterContentWindowIdChanged(windowId);
   }
 }
 

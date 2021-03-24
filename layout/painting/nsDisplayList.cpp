@@ -1667,9 +1667,8 @@ void nsDisplayListBuilder::RecomputeCurrentAnimatedGeometryRoot() {
     // and check to see if they need to be updated. AGRs can be in the cache
     // multiple times, so we may end up doing the work multiple times for AGRs
     // that don't change.
-    for (auto iter = mFrameToAnimatedGeometryRootMap.Iter(); !iter.Done();
-         iter.Next()) {
-      RefPtr<AnimatedGeometryRoot> cached = iter.UserData();
+    for (const RefPtr<AnimatedGeometryRoot>& cached :
+         mFrameToAnimatedGeometryRootMap.Values()) {
       if (cached->mParentAGR == oldAGR && cached != mCurrentAGR) {
         // It's possible that this cached AGR struct that has the old AGR as a
         // parent should instead have mCurrentFrame has a parent.

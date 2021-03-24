@@ -929,8 +929,8 @@ class nsDisplayListBuilder {
   nsTArray<ThemeGeometry> GetThemeGeometries() const {
     nsTArray<ThemeGeometry> geometries;
 
-    for (auto iter = mThemeGeometries.ConstIter(); !iter.Done(); iter.Next()) {
-      geometries.AppendElements(*iter.Data());
+    for (const auto& data : mThemeGeometries.Values()) {
+      geometries.AppendElements(*data);
     }
 
     return geometries;

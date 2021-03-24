@@ -127,8 +127,7 @@ void nsLayoutHistoryState::SetScrollPositionOnly(const bool aFlag) {
 }
 
 void nsLayoutHistoryState::ResetScrollState() {
-  for (auto iter = mStates.ConstIter(); !iter.Done(); iter.Next()) {
-    PresState* state = iter.Data().get();
+  for (const auto& state : mStates.Values()) {
     if (state) {
       state->scrollState() = nsPoint(0, 0);
     }

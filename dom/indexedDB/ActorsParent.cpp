@@ -6124,8 +6124,8 @@ void InvalidateLiveDatabasesMatching(const Condition& aCondition) {
 
   nsTArray<SafeRefPtr<Database>> databases;
 
-  for (const auto& liveDatabasesEntry : *gLiveDatabaseHashtable) {
-    for (const auto& database : liveDatabasesEntry.GetData()->mLiveDatabases) {
+  for (const auto& liveDatabasesEntry : gLiveDatabaseHashtable->Values()) {
+    for (const auto& database : liveDatabasesEntry->mLiveDatabases) {
       if (aCondition(*database)) {
         databases.AppendElement(
             SafeRefPtr{database.get(), AcquireStrongRefFromRawPtr{}});
@@ -7535,8 +7535,8 @@ void DatabaseConnection::UpdateRefcountFunction::DidCommit() {
   AUTO_PROFILER_LABEL("DatabaseConnection::UpdateRefcountFunction::DidCommit",
                       DOM);
 
-  for (const auto& entry : mFileInfoEntries) {
-    entry.GetData()->MaybeUpdateDBRefs();
+  for (const auto& entry : mFileInfoEntries.Values()) {
+    entry->MaybeUpdateDBRefs();
   }
 
   QM_WARNONLY_TRY(RemoveJournals(mJournalsToRemoveAfterCommit));
@@ -7576,8 +7576,8 @@ void DatabaseConnection::UpdateRefcountFunction::RollbackSavepoint() {
   MOZ_ASSERT(!IsOnBackgroundThread());
   MOZ_ASSERT(mInSavepoint);
 
-  for (const auto& entry : mSavepointEntriesIndex) {
-    entry.GetData()->DecBySavepointDelta();
+  for (const auto& entry : mSavepointEntriesIndex.Values()) {
+    entry->DecBySavepointDelta();
   }
 
   mInSavepoint = false;
@@ -7597,11 +7597,10 @@ void DatabaseConnection::UpdateRefcountFunction::Reset() {
   // FileInfo implementation automatically removes unreferenced files, but it's
   // done asynchronously and with a delay. We want to remove them (and decrease
   // quota usage) before we fire the commit event.
-  for (const auto& entry : mFileInfoEntries) {
+  for (const auto& entry : mFileInfoEntries.Values()) {
     // We need to move mFileInfo into a raw pointer in order to release it
     // explicitly with aSyncDeleteFile == true.
-    FileInfo* const fileInfo =
-        entry.GetData()->ReleaseFileInfo().forget().take();
+    FileInfo* const fileInfo = entry->ReleaseFileInfo().forget().take();
     MOZ_ASSERT(fileInfo);
 
     fileInfo->Release(/* aSyncDeleteFile */ true);
@@ -9066,9 +9065,8 @@ ConnectionPool::TransactionInfoPair::~TransactionInfoPair() {
 bool FullObjectStoreMetadata::HasLiveIndexes() const {
   AssertIsOnBackgroundThread();
 
-  return std::any_of(mIndexes.cbegin(), mIndexes.cend(), [](const auto& entry) {
-    return !entry.GetData()->mDeleted;
-  });
+  return std::any_of(mIndexes.Values().cbegin(), mIndexes.Values().cend(),
+                     [](const auto& entry) { return !entry->mDeleted; });
 }
 
 SafeRefPtr<FullDatabaseMetadata> FullDatabaseMetadata::Duplicate() const {
@@ -13737,10 +13735,10 @@ nsresult Maintenance::BeginDatabaseMaintenance() {
 
       if (gLiveDatabaseHashtable) {
         return std::all_of(
-            gLiveDatabaseHashtable->cbegin(), gLiveDatabaseHashtable->cend(),
+            gLiveDatabaseHashtable->Values().cbegin(),
+            gLiveDatabaseHashtable->Values().cend(),
             [&aDatabasePath](const auto& liveDatabasesEntry) {
-              const auto& liveDatabases =
-                  liveDatabasesEntry.GetData()->mLiveDatabases;
+              const auto& liveDatabases = liveDatabasesEntry->mLiveDatabases;
               return std::all_of(liveDatabases.cbegin(), liveDatabases.cend(),
                                  [&aDatabasePath](const auto& database) {
                                    return database->FilePath() != aDatabasePath;

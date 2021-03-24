@@ -702,8 +702,8 @@ void IndexedDatabaseManager::AddFileManager(
 void IndexedDatabaseManager::InvalidateAllFileManagers() {
   AssertIsOnIOThread();
 
-  for (const auto& fileManagerInfo : mFileManagerInfos) {
-    fileManagerInfo.GetData()->InvalidateAllFileManagers();
+  for (const auto& fileManagerInfo : mFileManagerInfos.Values()) {
+    fileManagerInfo->InvalidateAllFileManagers();
   }
 
   mFileManagerInfos.Clear();

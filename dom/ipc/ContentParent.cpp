@@ -805,8 +805,7 @@ void ContentParent::ReleaseCachedProcesses() {
 
 #ifdef DEBUG
   int num = 0;
-  for (auto iter = sBrowserContentParents->Iter(); !iter.Done(); iter.Next()) {
-    nsTArray<ContentParent*>* contentParents = iter.Data().get();
+  for (const auto& contentParents : sBrowserContentParents->Values()) {
     num += contentParents->Length();
     for (auto* cp : *contentParents) {
       MOZ_LOG(ContentParent::GetLog(), LogLevel::Debug,
@@ -819,9 +818,7 @@ void ContentParent::ReleaseCachedProcesses() {
   // We process the toRelease array outside of the iteration to avoid modifying
   // the list (via RemoveFromList()) while we're iterating it.
   nsTArray<ContentParent*> toRelease;
-  for (auto iter = sBrowserContentParents->Iter(); !iter.Done(); iter.Next()) {
-    nsTArray<ContentParent*>* contentParents = iter.Data().get();
-
+  for (const auto& contentParents : sBrowserContentParents->Values()) {
     // Shutting down these processes will change the array so let's use another
     // array for the removal.
     for (auto* cp : *contentParents) {

@@ -863,8 +863,8 @@ void nsHostResolver::Shutdown() {
       mIdleTaskCV.NotifyAll();
     }
 
-    for (auto iter = mRecordDB.ConstIter(); !iter.Done(); iter.Next()) {
-      iter.UserData()->Cancel();
+    for (const auto& data : mRecordDB.Values()) {
+      data->Cancel();
     }
     // empty host database
     mRecordDB.Clear();
@@ -2187,8 +2187,7 @@ size_t nsHostResolver::SizeOfIncludingThis(MallocSizeOf mallocSizeOf) const {
   size_t n = mallocSizeOf(this);
 
   n += mRecordDB.ShallowSizeOfExcludingThis(mallocSizeOf);
-  for (auto iter = mRecordDB.ConstIter(); !iter.Done(); iter.Next()) {
-    auto* entry = iter.UserData();
+  for (const auto& entry : mRecordDB.Values()) {
     n += entry->SizeOfIncludingThis(mallocSizeOf);
   }
 

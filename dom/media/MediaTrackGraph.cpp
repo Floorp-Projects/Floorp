@@ -3371,8 +3371,8 @@ void MediaTrackGraph::AddTrack(MediaTrack* aTrack) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   if (graph->mRealtime) {
     bool found = false;
-    for (auto iter = gGraphs.ConstIter(); !iter.Done(); iter.Next()) {
-      if (iter.UserData() == graph) {
+    for (const auto& currentGraph : gGraphs.Values()) {
+      if (currentGraph == graph) {
         found = true;
         break;
       }

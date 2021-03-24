@@ -1658,8 +1658,8 @@ History::CollectReports(nsIHandleReportCallback* aHandleReport,
 size_t History::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
   size_t size = aMallocSizeOf(this);
   size += mTrackedURIs.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (const auto& entry : mTrackedURIs) {
-    size += entry.GetData().SizeOfExcludingThis(aMallocSizeOf);
+  for (const auto& entry : mTrackedURIs.Values()) {
+    size += entry.SizeOfExcludingThis(aMallocSizeOf);
   }
   return size;
 }

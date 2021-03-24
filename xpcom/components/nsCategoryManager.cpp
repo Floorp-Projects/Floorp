@@ -394,9 +394,9 @@ size_t nsCategoryManager::SizeOfIncludingThis(
   n += mArena.SizeOfExcludingThis(aMallocSizeOf);
 
   n += mTable.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (auto iter = mTable.ConstIter(); !iter.Done(); iter.Next()) {
+  for (const auto& data : mTable.Values()) {
     // We don't measure the key string because it's a non-owning pointer.
-    n += iter.Data()->SizeOfExcludingThis(aMallocSizeOf);
+    n += data->SizeOfExcludingThis(aMallocSizeOf);
   }
 
   return n;

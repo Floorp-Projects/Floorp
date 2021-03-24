@@ -286,11 +286,11 @@ Result<Ok, nsresult> WritableSharedMap::Serialize() {
   size_t headerSize = sizeof(count);
   size_t blobCount = 0;
 
-  for (const auto& entry : mEntries) {
-    headerSize += entry.GetData()->HeaderSize();
-    blobCount += entry.GetData()->BlobCount();
+  for (const auto& entry : mEntries.Values()) {
+    headerSize += entry->HeaderSize();
+    blobCount += entry->BlobCount();
 
-    dataSize += entry.GetData()->Size();
+    dataSize += entry->Size();
     AlignTo(&dataSize, kStructuredCloneAlign);
   }
 
@@ -310,18 +310,18 @@ Result<Ok, nsresult> WritableSharedMap::Serialize() {
   // as indexes into our blobs array.
   nsTArray<RefPtr<BlobImpl>> blobImpls(blobCount);
 
-  for (auto& entry : mEntries) {
+  for (const auto& entry : mEntries.Values()) {
     AlignTo(&offset, kStructuredCloneAlign);
 
     size_t blobOffset = blobImpls.Length();
-    if (entry.GetData()->BlobCount()) {
-      blobImpls.AppendElements(entry.GetData()->Blobs());
+    if (entry->BlobCount()) {
+      blobImpls.AppendElements(entry->Blobs());
     }
 
-    entry.GetData()->ExtractData(&ptr[offset], offset, blobOffset);
-    entry.GetData()->Code(header);
+    entry->ExtractData(&ptr[offset], offset, blobOffset);
+    entry->Code(header);
 
-    offset += entry.GetData()->Size();
+    offset += entry->Size();
   }
 
   mBlobImpls = std::move(blobImpls);

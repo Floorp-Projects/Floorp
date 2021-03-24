@@ -47,9 +47,7 @@ void nsHttpConnectionMgr::OnMsgPrintDiagnostics(int32_t, ARefBase*) {
   mLogData.AppendPrintf("mNumActiveConns = %d\n", mNumActiveConns);
   mLogData.AppendPrintf("mNumIdleConns = %d\n", mNumIdleConns);
 
-  for (auto iter = mCT.ConstIter(); !iter.Done(); iter.Next()) {
-    RefPtr<ConnectionEntry> ent = iter.Data();
-
+  for (RefPtr<ConnectionEntry> ent : mCT.Values()) {
     mLogData.AppendPrintf(
         "   AtActiveConnectionLimit = %d\n",
         AtActiveConnectionLimit(ent, NS_HTTP_ALLOW_KEEPALIVE));

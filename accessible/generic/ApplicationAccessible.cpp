@@ -123,8 +123,7 @@ void ApplicationAccessible::Init() {
     return;
   }
 
-  for (const auto& entry : *windowsById) {
-    nsGlobalWindowOuter* window = entry.GetData();
+  for (const auto& window : windowsById->Values()) {
     if (window->GetDocShell() && window->IsRootOuterWindow()) {
       if (RefPtr<dom::Document> docNode = window->GetExtantDoc()) {
         GetAccService()->GetDocAccessible(docNode);  // ensure creation

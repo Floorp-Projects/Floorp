@@ -1284,8 +1284,8 @@ already_AddRefed<nsISupports> CustomElementRegistry::CallGetCustomInterface(
 }
 
 void CustomElementRegistry::TraceDefinitions(JSTracer* aTrc) {
-  for (const auto& entry : mCustomDefinitions) {
-    const RefPtr<CustomElementDefinition>& definition = entry.GetData();
+  for (const RefPtr<CustomElementDefinition>& definition :
+       mCustomDefinitions.Values()) {
     if (definition && definition->mConstructor) {
       mozilla::TraceScriptHolder(definition->mConstructor, aTrc);
     }

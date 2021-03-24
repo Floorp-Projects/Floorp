@@ -88,8 +88,8 @@ void TouchManager::EvictTouchPoint(RefPtr<Touch>& aTouch,
 /*static*/
 void TouchManager::AppendToTouchList(
     WidgetTouchEvent::TouchArrayBase* aTouchList) {
-  for (auto iter = sCaptureTouchList->Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<Touch>& touch = iter.Data().mTouch;
+  for (const auto& data : sCaptureTouchList->Values()) {
+    const RefPtr<Touch>& touch = data.mTouch;
     touch->mChanged = false;
     aTouchList->AppendElement(touch);
   }
@@ -405,8 +405,8 @@ already_AddRefed<nsIContent> TouchManager::GetAnyCapturedTouchTarget() {
   if (sCaptureTouchList->Count() == 0) {
     return result.forget();
   }
-  for (auto iter = sCaptureTouchList->Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<Touch>& touch = iter.Data().mTouch;
+  for (const auto& data : sCaptureTouchList->Values()) {
+    const RefPtr<Touch>& touch = data.mTouch;
     if (touch) {
       EventTarget* target = touch->GetTarget();
       if (target) {

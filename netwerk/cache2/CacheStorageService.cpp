@@ -255,16 +255,12 @@ class WalkMemoryCacheRunnable : public WalkCacheRunnable {
 
       if (!CacheStorageService::IsRunning()) return NS_ERROR_NOT_INITIALIZED;
 
-      for (auto iterGlobal = sGlobalEntryTables->ConstIter();
-           !iterGlobal.Done(); iterGlobal.Next()) {
-        CacheEntryTable* entries = iterGlobal.UserData();
+      for (const auto& entries : sGlobalEntryTables->Values()) {
         if (entries->Type() != CacheEntryTable::MEMORY_ONLY) {
           continue;
         }
 
-        for (auto iter = entries->ConstIter(); !iter.Done(); iter.Next()) {
-          CacheEntry* entry = iter.UserData();
-
+        for (CacheEntry* entry : entries->Values()) {
           MOZ_ASSERT(!entry->IsUsingDisk());
 
           mSize += entry->GetMetadataMemoryConsumption();
@@ -899,10 +895,7 @@ nsresult CacheStorageService::ClearOriginInternal(
 
       nsTArray<RefPtr<CacheEntry>> entriesToDelete;
 
-      for (auto entryIter = table->ConstIter(); !entryIter.Done();
-           entryIter.Next()) {
-        CacheEntry* entry = entryIter.UserData();
-
+      for (CacheEntry* entry : table->Values()) {
         nsCOMPtr<nsIURI> uri;
         rv = NS_NewURI(getter_AddRefs(uri), entry->GetURI());
         NS_ENSURE_SUCCESS(rv, rv);

@@ -1280,8 +1280,8 @@ nsresult nsOfflineCacheDevice::Shutdown() {
 
   {
     MutexAutoLock lock(mLock);
-    for (auto iter = mCaches.Iter(); !iter.Done(); iter.Next()) {
-      nsCOMPtr<nsIApplicationCache> obj = do_QueryReferent(iter.UserData());
+    for (const auto& cache : mCaches.Values()) {
+      nsCOMPtr<nsIApplicationCache> obj = do_QueryReferent(cache);
       if (obj) {
         auto appCache = static_cast<nsApplicationCache*>(obj.get());
         appCache->MarkInvalid();

@@ -97,8 +97,7 @@ class nsCategoryCache final {
   }
 
   void AddEntries(nsCOMArray<T>& aResult) {
-    for (auto iter = mObserver->GetHash().Iter(); !iter.Done(); iter.Next()) {
-      nsISupports* entry = iter.UserData();
+    for (nsISupports* entry : mObserver->GetHash().Values()) {
       nsCOMPtr<T> service = do_QueryInterface(entry);
       if (service) {
         aResult.AppendElement(service.forget());

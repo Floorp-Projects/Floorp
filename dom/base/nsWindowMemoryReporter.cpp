@@ -497,10 +497,7 @@ nsWindowMemoryReporter::CollectReports(nsIHandleReportCallback* aHandleReport,
 
   // Hold on to every window in memory so that window objects can't be
   // destroyed while we're calling the memory reporter callback.
-  WindowArray windows;
-  for (const auto& entry : *windowsById) {
-    windows.AppendElement(entry.GetData());
-  }
+  const auto windows = ToTArray<WindowArray>(windowsById->Values());
 
   // Get the IDs of all the "ghost" windows, and call
   // aHandleReport->Callback() for each one.
@@ -896,10 +893,7 @@ void nsWindowMemoryReporter::UnlinkGhostWindows() {
 
   // Hold on to every window in memory so that window objects can't be
   // destroyed while we're calling the UnlinkGhostWindows callback.
-  WindowArray windows;
-  for (const auto& entry : *windowsById) {
-    windows.AppendElement(entry.GetData());
-  }
+  const auto windows = ToTArray<WindowArray>(windowsById->Values());
 
   // Get the IDs of all the "ghost" windows, and unlink them all.
   nsTHashSet<uint64_t> ghostWindows;

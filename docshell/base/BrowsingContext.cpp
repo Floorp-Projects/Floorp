@@ -1333,8 +1333,8 @@ void BrowsingContext::DiscardFromContentParent(ContentParent* aCP) {
 
   if (sBrowsingContexts) {
     AutoTArray<RefPtr<BrowsingContext>, 8> toDiscard;
-    for (const auto& entry : *sBrowsingContexts) {
-      auto* bc = entry.GetData()->Canonical();
+    for (const auto& data : sBrowsingContexts->Values()) {
+      auto* bc = data->Canonical();
       if (!bc->IsDiscarded() && bc->IsEmbeddedInProcess(aCP->ChildID())) {
         toDiscard.AppendElement(bc);
       }
@@ -2693,8 +2693,8 @@ bool BrowsingContext::LegacyCheckOnlyOwningProcessCanSet(
   return true;
 }
 
-auto BrowsingContext::LegacyRevertIfNotOwningOrParentProcess(ContentParent* aSource)
-    -> CanSetResult {
+auto BrowsingContext::LegacyRevertIfNotOwningOrParentProcess(
+    ContentParent* aSource) -> CanSetResult {
   if (aSource) {
     MOZ_ASSERT(XRE_IsParentProcess());
 

@@ -2261,12 +2261,8 @@ void MediaManager::DeviceListChanged() {
               // the loop. The StopRawID method modify indirectly the
               // mActiveWindows and will assert-crash since the iterator is
               // active and the table is being enumerated.
-              nsTArray<RefPtr<GetUserMediaWindowListener>> stopListeners;
-              for (auto iter = mActiveWindows.ConstIter(); !iter.Done();
-                   iter.Next()) {
-                stopListeners.AppendElement(iter.UserData());
-              }
-              for (auto& l : stopListeners) {
+              const auto listeners = ToArray(mActiveWindows.Values());
+              for (const auto& l : listeners) {
                 l->StopRawID(id);
               }
             }
@@ -3299,8 +3295,8 @@ void MediaManager::OnCameraMute(bool aMute) {
   mCamerasMuted = aMute;
   // This is safe since we're on main-thread, and the windowlist can only
   // be added to from the main-thread
-  for (auto iter = mActiveWindows.ConstIter(); !iter.Done(); iter.Next()) {
-    iter.UserData()->MuteOrUnmuteCameras(aMute);
+  for (const auto& window : mActiveWindows.Values()) {
+    window->MuteOrUnmuteCameras(aMute);
   }
 }
 
@@ -3310,8 +3306,8 @@ void MediaManager::OnMicrophoneMute(bool aMute) {
   mMicrophonesMuted = aMute;
   // This is safe since we're on main-thread, and the windowlist can only
   // be added to from the main-thread
-  for (auto iter = mActiveWindows.ConstIter(); !iter.Done(); iter.Next()) {
-    iter.UserData()->MuteOrUnmuteMicrophones(aMute);
+  for (const auto& window : mActiveWindows.Values()) {
+    window->MuteOrUnmuteMicrophones(aMute);
   }
 }
 
@@ -3506,13 +3502,8 @@ void MediaManager::Shutdown() {
     // the window listeners attempt to remove themselves from the active windows
     // table. We cannot touch the table at point so we grab a copy of the window
     // listeners first.
-    nsTArray<RefPtr<GetUserMediaWindowListener>> listeners(
-        GetActiveWindows()->Count());
-    for (auto iter = GetActiveWindows()->ConstIter(); !iter.Done();
-         iter.Next()) {
-      listeners.AppendElement(iter.UserData());
-    }
-    for (auto& listener : listeners) {
+    const auto listeners = ToArray(GetActiveWindows()->Values());
+    for (const auto& listener : listeners) {
       listener->RemoveAll();
     }
   }
@@ -3774,19 +3765,16 @@ MediaManager::CollectReports(nsIHandleReportCallback* aHandleReport,
                              nsISupports* aData, bool aAnonymize) {
   size_t amount = 0;
   amount += mActiveWindows.ShallowSizeOfExcludingThis(MallocSizeOf);
-  for (auto iter = mActiveWindows.ConstIter(); !iter.Done(); iter.Next()) {
-    const GetUserMediaWindowListener* listener = iter.UserData();
+  for (const GetUserMediaWindowListener* listener : mActiveWindows.Values()) {
     amount += listener->SizeOfIncludingThis(MallocSizeOf);
   }
   amount += mActiveCallbacks.ShallowSizeOfExcludingThis(MallocSizeOf);
-  for (auto iter = mActiveCallbacks.ConstIter(); !iter.Done(); iter.Next()) {
+  for (const GetUserMediaTask* task : mActiveCallbacks.Values()) {
     // Assume nsString buffers for keys are accounted in mCallIds.
-    const GetUserMediaTask* task = iter.UserData();
     amount += task->SizeOfIncludingThis(MallocSizeOf);
   }
   amount += mCallIds.ShallowSizeOfExcludingThis(MallocSizeOf);
-  for (auto iter = mCallIds.ConstIter(); !iter.Done(); iter.Next()) {
-    const nsTArray<nsString>* array = iter.UserData();
+  for (const auto& array : mCallIds.Values()) {
     amount += array->ShallowSizeOfExcludingThis(MallocSizeOf);
     for (const nsString& callID : *array) {
       amount += callID.SizeOfExcludingThisEvenIfShared(MallocSizeOf);

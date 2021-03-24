@@ -538,8 +538,7 @@ static void InvalidateImages(nsIFrame* aFrame, imgIRequest* aRequest,
 
   if (auto userDataTable =
           aFrame->GetProperty(layers::WebRenderUserDataProperty::Key())) {
-    for (auto iter = userDataTable->Iter(); !iter.Done(); iter.Next()) {
-      RefPtr<layers::WebRenderUserData> data = iter.UserData();
+    for (RefPtr<layers::WebRenderUserData> data : userDataTable->Values()) {
       switch (data->GetType()) {
         case layers::WebRenderUserData::UserDataType::eFallback:
           if (!IsRenderNoImages(data->GetDisplayItemKey())) {

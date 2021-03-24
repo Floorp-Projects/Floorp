@@ -118,15 +118,11 @@ class imgMemoryReporter final : public nsIMemoryReporter {
     nsTArray<ImageMemoryCounter> uncached;
 
     for (uint32_t i = 0; i < mKnownLoaders.Length(); i++) {
-      for (auto iter = mKnownLoaders[i]->mChromeCache.ConstIter(); !iter.Done();
-           iter.Next()) {
-        imgCacheEntry* entry = iter.UserData();
+      for (imgCacheEntry* entry : mKnownLoaders[i]->mChromeCache.Values()) {
         RefPtr<imgRequest> req = entry->GetRequest();
         RecordCounterForRequest(req, &chrome, !entry->HasNoProxies());
       }
-      for (auto iter = mKnownLoaders[i]->mCache.ConstIter(); !iter.Done();
-           iter.Next()) {
-        imgCacheEntry* entry = iter.UserData();
+      for (imgCacheEntry* entry : mKnownLoaders[i]->mCache.Values()) {
         RefPtr<imgRequest> req = entry->GetRequest();
         RecordCounterForRequest(req, &content, !entry->HasNoProxies());
       }
@@ -163,10 +159,8 @@ class imgMemoryReporter final : public nsIMemoryReporter {
     size_t n = 0;
     for (uint32_t i = 0; i < imgLoader::sMemReporter->mKnownLoaders.Length();
          i++) {
-      for (auto iter =
-               imgLoader::sMemReporter->mKnownLoaders[i]->mCache.ConstIter();
-           !iter.Done(); iter.Next()) {
-        imgCacheEntry* entry = iter.UserData();
+      for (imgCacheEntry* entry :
+           imgLoader::sMemReporter->mKnownLoaders[i]->mCache.Values()) {
         if (entry->HasNoProxies()) {
           continue;
         }
@@ -2031,14 +2025,10 @@ nsresult imgLoader::EvictEntries(imgCacheTable& aCacheToClear) {
 
   // We have to make a temporary, since RemoveFromCache removes the element
   // from the queue, invalidating iterators.
-  nsTArray<RefPtr<imgCacheEntry> > entries;
-  for (auto iter = aCacheToClear.ConstIter(); !iter.Done(); iter.Next()) {
-    const RefPtr<imgCacheEntry>& data = iter.Data();
-    entries.AppendElement(data);
-  }
-
-  for (uint32_t i = 0; i < entries.Length(); ++i) {
-    if (!RemoveFromCache(entries[i])) {
+  const auto entries =
+      ToTArray<nsTArray<RefPtr<imgCacheEntry>>>(aCacheToClear.Values());
+  for (const auto& entry : entries) {
+    if (!RemoveFromCache(entry)) {
       return NS_ERROR_FAILURE;
     }
   }
@@ -2053,7 +2043,7 @@ nsresult imgLoader::EvictEntries(imgCacheQueue& aQueueToClear) {
 
   // We have to make a temporary, since RemoveFromCache removes the element
   // from the queue, invalidating iterators.
-  nsTArray<RefPtr<imgCacheEntry> > entries(aQueueToClear.GetNumElements());
+  nsTArray<RefPtr<imgCacheEntry>> entries(aQueueToClear.GetNumElements());
   for (auto i = aQueueToClear.begin(); i != aQueueToClear.end(); ++i) {
     entries.AppendElement(*i);
   }

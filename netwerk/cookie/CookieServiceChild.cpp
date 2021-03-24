@@ -93,8 +93,7 @@ CookieServiceChild::CookieServiceChild() {
 
 void CookieServiceChild::MoveCookies() {
   TimeStamp start = TimeStamp::Now();
-  for (auto iter = mCookiesMap.Iter(); !iter.Done(); iter.Next()) {
-    CookiesList* cookiesList = iter.UserData();
+  for (const auto& cookiesList : mCookiesMap.Values()) {
     CookiesList newCookiesList;
     for (uint32_t i = 0; i < cookiesList->Length(); ++i) {
       Cookie* cookie = cookiesList->ElementAt(i);

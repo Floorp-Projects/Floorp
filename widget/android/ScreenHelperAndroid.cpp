@@ -90,17 +90,12 @@ ScreenHelperAndroid* ScreenHelperAndroid::GetSingleton() { return gHelper; }
 void ScreenHelperAndroid::Refresh() {
   mScreens.Remove(0);
 
-  AutoTArray<RefPtr<Screen>, 1> screenList;
   if (RefPtr<Screen> screen = MakePrimaryScreen()) {
     mScreens.InsertOrUpdate(0, std::move(screen));
   }
 
-  for (auto iter = mScreens.ConstIter(); !iter.Done(); iter.Next()) {
-    screenList.AppendElement(iter.Data());
-  }
-
   ScreenManager& manager = ScreenManager::GetSingleton();
-  manager.Refresh(std::move(screenList));
+  manager.Refresh(ToTArray<AutoTArray<RefPtr<Screen>, 1>>(mScreens.Values()));
 }
 
 void ScreenHelperAndroid::AddScreen(uint32_t aScreenId,

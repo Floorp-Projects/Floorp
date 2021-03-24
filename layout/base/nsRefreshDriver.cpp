@@ -1559,8 +1559,8 @@ void nsRefreshDriver::AppendObserverDescriptionsToString(
 }
 
 bool nsRefreshDriver::HasImageRequests() const {
-  for (auto iter = mStartTable.ConstIter(); !iter.Done(); iter.Next()) {
-    if (!iter.UserData()->mEntries.IsEmpty()) {
+  for (const auto& data : mStartTable.Values()) {
+    if (!data->mEntries.IsEmpty()) {
       return true;
     }
   }

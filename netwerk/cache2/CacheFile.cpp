@@ -2551,12 +2551,12 @@ size_t CacheFile::SizeOfExcludingThis(
   size_t n = 0;
   n += mKey.SizeOfExcludingThisIfUnshared(mallocSizeOf);
   n += mChunks.ShallowSizeOfExcludingThis(mallocSizeOf);
-  for (auto iter = mChunks.ConstIter(); !iter.Done(); iter.Next()) {
-    n += iter.Data()->SizeOfIncludingThis(mallocSizeOf);
+  for (const auto& chunk : mChunks.Values()) {
+    n += chunk->SizeOfIncludingThis(mallocSizeOf);
   }
   n += mCachedChunks.ShallowSizeOfExcludingThis(mallocSizeOf);
-  for (auto iter = mCachedChunks.ConstIter(); !iter.Done(); iter.Next()) {
-    n += iter.Data()->SizeOfIncludingThis(mallocSizeOf);
+  for (const auto& chunk : mCachedChunks.Values()) {
+    n += chunk->SizeOfIncludingThis(mallocSizeOf);
   }
   // Ignore metadata if it's still being read. It's not safe to access buffers
   // in CacheFileMetadata because they might be reallocated on another thread

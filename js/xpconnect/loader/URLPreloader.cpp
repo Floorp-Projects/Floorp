@@ -54,20 +54,20 @@ nsresult URLPreloader::CollectReports(nsIHandleReportCallback* aHandleReport,
                      ShallowSizeOfIncludingThis(MallocSizeOf),
                      "Memory used by the URL preloader service itself.");
 
-  for (const auto& elem : mCachedURLs) {
+  for (const auto& elem : mCachedURLs.Values()) {
     nsAutoCString pathName;
-    pathName.Append(elem.GetData()->mPath);
+    pathName.Append(elem->mPath);
     // The backslashes will automatically be replaced with slashes in
     // about:memory, without splitting each path component into a separate
     // branch in the memory report tree.
     pathName.ReplaceChar('/', '\\');
 
     nsPrintfCString path("explicit/url-preloader/cached-urls/%s/[%s]",
-                         elem.GetData()->TypeString(), pathName.get());
+                         elem->TypeString(), pathName.get());
 
     aHandleReport->Callback(
         ""_ns, path, KIND_HEAP, UNITS_BYTES,
-        elem.GetData()->SizeOfIncludingThis(MallocSizeOf),
+        elem->SizeOfIncludingThis(MallocSizeOf),
         nsLiteralCString("Memory used to hold cache data for files which "
                          "have been read or pre-loaded during this session."),
         aData);
@@ -224,9 +224,9 @@ Result<Ok, nsresult> URLPreloader::WriteCache() {
                                         &fd.rwget()));
 
     nsTArray<URLEntry*> entries;
-    for (auto& entry : mCachedURLs) {
-      if (entry.GetData()->mReadTime) {
-        entries.AppendElement(entry.GetWeak());
+    for (const auto& entry : mCachedURLs.Values()) {
+      if (entry->mReadTime) {
+        entries.AppendElement(entry.get());
       }
     }
 

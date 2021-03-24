@@ -242,9 +242,9 @@ size_t SharedStyleSheetCache::SizeOfIncludingThis(
   size_t n = aMallocSizeOf(this);
 
   n += mCompleteSheets.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (auto iter = mCompleteSheets.ConstIter(); !iter.Done(); iter.Next()) {
-    n += iter.Data().mSheet->SizeOfIncludingThis(aMallocSizeOf);
-    n += aMallocSizeOf(iter.Data().mUseCounters.get());
+  for (const auto& data : mCompleteSheets.Values()) {
+    n += data.mSheet->SizeOfIncludingThis(aMallocSizeOf);
+    n += aMallocSizeOf(data.mUseCounters.get());
   }
 
   // Measurement of the following members may be added later if DMD finds it is
@@ -559,11 +559,11 @@ void SharedStyleSheetCache::CancelLoadsForLoader(css::Loader& aLoader) {
 
   // We can't stop in-progress loads because some other loader may care about
   // them.
-  for (auto iter = mLoadingDatas.Iter(); !iter.Done(); iter.Next()) {
-    MOZ_DIAGNOSTIC_ASSERT(iter.Data(),
+  for (SheetLoadData* data : mLoadingDatas.Values()) {
+    MOZ_DIAGNOSTIC_ASSERT(data,
                           "We weren't properly notified and the load was "
                           "incorrectly dropped on the floor");
-    for (SheetLoadData* data = iter.Data(); data; data = data->mNext) {
+    for (; data; data = data->mNext) {
       if (data->mLoader == &aLoader) {
         data->mIsCancelled = true;
       }

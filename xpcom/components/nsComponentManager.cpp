@@ -1165,8 +1165,7 @@ nsresult nsComponentManagerImpl::FreeServices() {
     return NS_ERROR_FAILURE;
   }
 
-  for (auto iter = mFactories.Iter(); !iter.Done(); iter.Next()) {
-    nsFactoryEntry* entry = iter.UserData();
+  for (nsFactoryEntry* entry : mFactories.Values()) {
     entry->mFactory = nullptr;
     entry->mServiceObject = nullptr;
   }
@@ -1602,7 +1601,7 @@ NS_IMETHODIMP
 nsComponentManagerImpl::GetContractIDs(nsTArray<nsCString>& aResult) {
   aResult.Clear();
 
-  for (auto iter = mContractIDs.Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = mContractIDs.ConstIter(); !iter.Done(); iter.Next()) {
     aResult.AppendElement(iter.Key());
   }
 
@@ -1655,8 +1654,8 @@ size_t nsComponentManagerImpl::SizeOfIncludingThis(
   size_t n = aMallocSizeOf(this);
 
   n += mFactories.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (auto iter = mFactories.ConstIter(); !iter.Done(); iter.Next()) {
-    n += iter.Data()->SizeOfIncludingThis(aMallocSizeOf);
+  for (const auto& data : mFactories.Values()) {
+    n += data->SizeOfIncludingThis(aMallocSizeOf);
   }
 
   n += mContractIDs.ShallowSizeOfExcludingThis(aMallocSizeOf);
