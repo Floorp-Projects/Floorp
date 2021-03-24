@@ -773,9 +773,9 @@ add_old_configure_assignment(
 )
 
 
-@depends("MOZ_TELEMETRY_REPORTING", milestone.is_nightly, fennec_nightly)
-def telemetry_on_by_default(reporting, is_nightly, fennec_nightly):
-    return reporting and (is_nightly or fennec_nightly)
+@depends("MOZ_TELEMETRY_REPORTING", milestone.is_nightly)
+def telemetry_on_by_default(reporting, is_nightly):
+    return reporting and is_nightly
 
 
 set_define("MOZ_TELEMETRY_ON_BY_DEFAULT", True, when=telemetry_on_by_default)
