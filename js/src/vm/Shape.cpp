@@ -1009,8 +1009,12 @@ Shape* NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj,
       }
     }
 
+    // Update the last property's object flags. This is fine because we just
+    // generated a new shape for the object. Note that |shape|'s object flags
+    // aren't used anywhere if it's not the last property.
+    obj->lastProperty()->setObjectFlags(objectFlags);
+
     shape->setBase(obj->lastProperty()->base());
-    shape->setObjectFlags(objectFlags);
     shape->setSlot(slot);
     shape->attrs = uint8_t(attrs);
     shape->immutableFlags &= ~Shape::ACCESSOR_SHAPE;
@@ -1030,6 +1034,8 @@ Shape* NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj,
       return nullptr;
     }
   }
+
+  MOZ_ASSERT(obj->lastProperty()->objectFlags() == objectFlags);
 
   MOZ_ASSERT(shape->isDataProperty());
   return shape;
@@ -1106,8 +1112,12 @@ Shape* NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj,
       return nullptr;
     }
 
+    // Update the last property's object flags. This is fine because we just
+    // generated a new shape for the object. Note that |shape|'s object flags
+    // aren't used anywhere if it's not the last property.
+    obj->lastProperty()->setObjectFlags(objectFlags);
+
     shape->setBase(obj->lastProperty()->base());
-    shape->setObjectFlags(objectFlags);
     shape->setSlot(SHAPE_INVALID_SLOT);
     shape->attrs = uint8_t(attrs);
     shape->immutableFlags |= Shape::IN_DICTIONARY | Shape::ACCESSOR_SHAPE;
@@ -1142,6 +1152,8 @@ Shape* NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj,
   if (hadSlot && oldSlot < obj->slotSpan()) {
     obj->freeSlot(cx, oldSlot);
   }
+
+  MOZ_ASSERT(obj->lastProperty()->objectFlags() == objectFlags);
 
   MOZ_ASSERT(!shape->isDataProperty());
   return shape;
