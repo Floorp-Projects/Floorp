@@ -17,13 +17,15 @@
 #include "nsAppRunner.h"
 #include "nsExceptionHandler.h"
 #include "mozilla/Bootstrap.h"
+#include "XREShellData.h"
 
 #define LOG(args...) __android_log_print(ANDROID_LOG_INFO, MOZ_APP_NAME, args)
 
 using namespace mozilla;
 
 extern "C" NS_EXPORT void GeckoStart(JNIEnv* env, char** argv, int argc,
-                                     const StaticXREAppData& aAppData) {
+                                     const StaticXREAppData& aAppData,
+                                     bool xpcshell, const char* outFilePath) {
   mozilla::jni::SetGeckoThreadEnv(env);
 
   if (!argv) {
@@ -31,11 +33,26 @@ extern "C" NS_EXPORT void GeckoStart(JNIEnv* env, char** argv, int argc,
     return;
   }
 
-  BootstrapConfig config;
-  config.appData = &aAppData;
-  config.appDataPath = nullptr;
+  if (xpcshell) {
+    XREShellData shellData;
+    FILE* outFile = fopen(outFilePath, "w");
+    if (!outFile) {
+      LOG("XRE_XPCShellMain cannot open %s", outFilePath);
+      return;
+    }
+    // We redirect both stdout and stderr to the same file, to conform with
+    // what runxpcshell.py does on Desktop.
+    shellData.outFile = outFile;
+    shellData.errFile = outFile;
+    int result = XRE_XPCShellMain(argc, argv, nullptr, &shellData);
+    fclose(shellData.outFile);
+    if (result) LOG("XRE_XPCShellMain returned %d", result);
+  } else {
+    BootstrapConfig config;
+    config.appData = &aAppData;
+    config.appDataPath = nullptr;
 
-  int result = XRE_main(argc, argv, config);
-
-  if (result) LOG("XRE_main returned %d", result);
+    int result = XRE_main(argc, argv, config);
+    if (result) LOG("XRE_main returned %d", result);
+  }
 }

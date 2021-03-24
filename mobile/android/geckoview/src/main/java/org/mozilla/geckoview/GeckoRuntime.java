@@ -49,6 +49,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -289,6 +290,27 @@ public final class GeckoRuntime implements Parcelable {
         return null;
     }
 
+    private void setArguments(final Context context, final GeckoThread.InitInfo initInfo,
+                              final String[] arguments) {
+        final List<String> result = new ArrayList<>(arguments.length);
+        for (final String argument : arguments) {
+            if ("-xpcshell".equals(argument)) {
+                // Only debug builds of the test app can run an xpcshell
+                if (!BuildConfig.DEBUG
+                        || !"org.mozilla.geckoview.test".equals(
+                                context.getApplicationContext().getPackageName())) {
+                    throw new IllegalArgumentException("Only the test app can run -xpcshell.");
+                }
+
+                initInfo.xpcshell = true;
+            } else {
+                result.add(argument);
+            }
+        }
+
+        initInfo.args = result.toArray(new String[]{});
+    }
+
     /* package */ boolean init(final @NonNull Context context, final @NonNull GeckoRuntimeSettings settings) {
         if (DEBUG) {
             Log.d(LOGTAG, "init");
@@ -329,7 +351,10 @@ public final class GeckoRuntime implements Parcelable {
         GeckoFontScaleListener.getInstance().attachToContext(context, settings);
 
         final GeckoThread.InitInfo info = new GeckoThread.InitInfo();
-        info.args = settings.getArguments();
+        setArguments(context, info, settings.getArguments());
+        if (info.xpcshell) {
+            info.outFilePath = settings.getExtras().getString("out_file");
+        }
         info.extras = settings.getExtras();
         info.flags = flags;
 
