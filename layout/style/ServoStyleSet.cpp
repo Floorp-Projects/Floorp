@@ -130,8 +130,7 @@ nsPresContext* ServoStyleSet::GetPresContext() {
 template <typename Functor>
 static void EnumerateShadowRoots(const Document& aDoc, const Functor& aCb) {
   const Document::ShadowRootSet& shadowRoots = aDoc.ComposedShadowRoots();
-  for (auto iter = shadowRoots.ConstIter(); !iter.Done(); iter.Next()) {
-    ShadowRoot* root = iter.Get()->GetKey();
+  for (ShadowRoot* root : shadowRoots) {
     MOZ_ASSERT(root);
     MOZ_DIAGNOSTIC_ASSERT(root->IsInComposedDoc());
     aCb(*root);
