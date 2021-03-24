@@ -177,12 +177,8 @@ void PrincipalVerifier::DispatchToInitiatingThread(nsresult aRv) {
   // This will result in a new CacheStorage object delaying operations until
   // shutdown completes and the browser goes away.  This is as graceful as
   // we can get here.
-  nsresult rv =
-      mInitiatingEventTarget->Dispatch(this, nsIThread::DISPATCH_NORMAL);
-  if (NS_FAILED(rv)) {
-    NS_WARNING(
-        "Cache unable to complete principal verification due to shutdown.");
-  }
+  QM_WARNONLY_TRY(
+      mInitiatingEventTarget->Dispatch(this, nsIThread::DISPATCH_NORMAL));
 }
 
 }  // namespace mozilla::dom::cache
