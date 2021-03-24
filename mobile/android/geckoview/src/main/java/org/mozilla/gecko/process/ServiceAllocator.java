@@ -19,6 +19,7 @@ import android.os.IBinder;
 import androidx.annotation.NonNull;
 import android.util.Log;
 
+import java.security.SecureRandom;
 import java.util.BitSet;
 import java.util.EnumMap;
 import java.util.Map.Entry;
@@ -399,10 +400,12 @@ import java.util.Map.Entry;
     private static final class DefaultContentPolicy implements ContentAllocationPolicy {
         private final int mMaxNumSvcs;
         private final BitSet mAllocator;
+        private final SecureRandom mRandom;
 
         public DefaultContentPolicy() {
             mMaxNumSvcs = getContentServiceCount();
             mAllocator = new BitSet(mMaxNumSvcs);
+            mRandom = new SecureRandom();
         }
 
         @Override
@@ -412,11 +415,20 @@ import java.util.Map.Entry;
 
         @Override
         public int allocate() {
-            final int next = mAllocator.nextClearBit(0);
-            if (next >= mMaxNumSvcs) {
+            final int[] available = new int[mMaxNumSvcs];
+            int size = 0;
+            for (int i = 0; i < mMaxNumSvcs; i++) {
+                if (!mAllocator.get(i)) {
+                    available[size] = i;
+                    size++;
+                }
+            }
+
+            if (size == 0) {
                 throw new RuntimeException("No more content services available");
             }
 
+            final int next = available[mRandom.nextInt(size)];
             mAllocator.set(next);
             return next;
         }
