@@ -295,6 +295,40 @@ add_task(async function test_ui_state_syncing_panel_open() {
   BrowserTestUtils.removeTab(gBrowser.selectedTab);
 });
 
+add_task(async function test_ui_state_panel_open_after_syncing() {
+  await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/");
+
+  let state = {
+    status: UIState.STATUS_SIGNED_IN,
+    syncEnabled: true,
+    email: "foo@bar.com",
+    displayName: "Foo Bar",
+    avatarURL: "https://foo.bar",
+    lastSync: new Date(),
+    syncing: true,
+  };
+
+  gSync.updateAllUI(state);
+
+  await openFxaPanel();
+
+  checkSyncNowButtons(true);
+
+  // Be good citizens and remove the "syncing" state.
+  gSync.updateAllUI({
+    status: UIState.STATUS_SIGNED_IN,
+    syncEnabled: true,
+    email: "foo@bar.com",
+    lastSync: new Date(),
+    syncing: false,
+  });
+  // Because we switch from syncing to non-syncing, and there's a timeout involved.
+  await promiseObserver("test:browser-sync:activity-stop");
+
+  await closeFxaPanel();
+  BrowserTestUtils.removeTab(gBrowser.selectedTab);
+});
+
 add_task(async function test_ui_state_unconfigured() {
   await BrowserTestUtils.openNewForegroundTab(gBrowser, "https://example.com/");
 
@@ -599,7 +633,7 @@ function checkSyncNowButtons(syncing, tooltip = null) {
     if (syncing) {
       is(
         syncLabel.getAttribute("data-l10n-id"),
-        syncLabel.getAttribute("data-l10n-id"),
+        syncLabel.getAttribute("syncing-data-l10n-id"),
         "label is set to the right value"
       );
     } else {
