@@ -1011,10 +1011,8 @@ static const unsigned MaxTables = 100000;
 static const unsigned MaxImports = 100000;
 static const unsigned MaxExports = 100000;
 static const unsigned MaxGlobals = 1000000;
-#ifdef ENABLE_WASM_EXCEPTIONS
 static const unsigned MaxEvents =
     1000000;  // TODO: get this into the shared limits spec
-#endif
 static const unsigned MaxDataSegments = 100000;
 static const unsigned MaxDataSegmentLengthPages = 16384;
 static const unsigned MaxElemSegments = 10000000;
