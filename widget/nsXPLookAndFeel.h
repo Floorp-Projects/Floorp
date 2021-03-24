@@ -14,6 +14,13 @@ class nsLookAndFeel;
 
 class nsXPLookAndFeel : public mozilla::LookAndFeel {
  public:
+  using FullLookAndFeel = mozilla::widget::FullLookAndFeel;
+  using LookAndFeelCache = mozilla::widget::LookAndFeelCache;
+  using LookAndFeelInt = mozilla::widget::LookAndFeelInt;
+  using LookAndFeelFont = mozilla::widget::LookAndFeelFont;
+  using LookAndFeelColor = mozilla::widget::LookAndFeelColor;
+  using LookAndFeelTheme = mozilla::widget::LookAndFeelTheme;
+
   virtual ~nsXPLookAndFeel();
 
   static nsXPLookAndFeel* GetInstance();
@@ -33,9 +40,7 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
   nsresult GetFloatValue(FloatID aID, float& aResult);
   // Same, but returns false if there is no platform-specific value.
   // (There are no override prefs for font values.)
-  bool GetFontValue(FontID aID, nsString& aName, gfxFontStyle& aStyle) {
-    return NativeGetFont(aID, aName, aStyle);
-  }
+  bool GetFontValue(FontID aID, nsString& aName, gfxFontStyle& aStyle);
 
   virtual nsresult NativeGetInt(IntID aID, int32_t& aResult) = 0;
   virtual nsresult NativeGetFloat(FloatID aID, float& aResult) = 0;
@@ -51,12 +56,10 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
 
   virtual uint32_t GetPasswordMaskDelayImpl() { return 600; }
 
-  using FullLookAndFeel = mozilla::widget::FullLookAndFeel;
-  using LookAndFeelCache = mozilla::widget::LookAndFeelCache;
-  using LookAndFeelInt = mozilla::widget::LookAndFeelInt;
-  using LookAndFeelFont = mozilla::widget::LookAndFeelFont;
-  using LookAndFeelColor = mozilla::widget::LookAndFeelColor;
-  using LookAndFeelTheme = mozilla::widget::LookAndFeelTheme;
+  static bool LookAndFeelFontToStyle(const LookAndFeelFont&, nsString& aName,
+                                     gfxFontStyle&);
+  static LookAndFeelFont StyleToLookAndFeelFont(const nsAString& aName,
+                                                const gfxFontStyle&);
 
   virtual LookAndFeelCache GetCacheImpl();
   virtual void SetCacheImpl(const LookAndFeelCache& aCache) {}
