@@ -418,8 +418,8 @@ void RealmPrivate::UnregisterStackFrame(JSStackFrameBase* aFrame) {
 }
 
 void RealmPrivate::NukeJSStackFrames() {
-  for (auto iter = mJSStackFrames.Iter(); !iter.Done(); iter.Next()) {
-    iter.Get()->GetKey()->Clear();
+  for (const auto& key : mJSStackFrames.Keys()) {
+    key->Clear();
   }
 
   mJSStackFrames.Clear();

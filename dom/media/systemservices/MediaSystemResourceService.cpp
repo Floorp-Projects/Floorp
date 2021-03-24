@@ -119,8 +119,7 @@ void MediaSystemResourceService::ReleaseResource(
     return;
   }
 
-  for (auto iter = mResources.Iter(); !iter.Done(); iter.Next()) {
-    const uint32_t& key = iter.Key();
+  for (const uint32_t& key : mResources.Keys()) {
     RemoveRequests(aParent, static_cast<MediaSystemResourceType>(key));
     UpdateRequests(static_cast<MediaSystemResourceType>(key));
   }

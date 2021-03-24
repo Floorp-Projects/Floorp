@@ -26,11 +26,11 @@ StaticAutoPtr<SharedSurfacesParent> SharedSurfacesParent::sInstance;
 SharedSurfacesParent::SharedSurfacesParent() = default;
 
 SharedSurfacesParent::~SharedSurfacesParent() {
-  for (auto i = mSurfaces.Iter(); !i.Done(); i.Next()) {
+  for (const auto& key : mSurfaces.Keys()) {
     // There may be lingering consumers of the surfaces that didn't get shutdown
     // yet but since we are here, we know the render thread is finished and we
     // can unregister everything.
-    wr::RenderThread::Get()->UnregisterExternalImageDuringShutdown(i.Key());
+    wr::RenderThread::Get()->UnregisterExternalImageDuringShutdown(key);
   }
 }
 

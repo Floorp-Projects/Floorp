@@ -53,10 +53,7 @@ nsLayoutHistoryState::GetKeys(nsTArray<nsCString>& aKeys) {
     return NS_ERROR_FAILURE;
   }
 
-  aKeys.SetCapacity(mStates.Count());
-  for (auto iter = mStates.ConstIter(); !iter.Done(); iter.Next()) {
-    aKeys.AppendElement(iter.Key());
-  }
+  AppendToArray(aKeys, mStates.Keys());
 
   return NS_OK;
 }

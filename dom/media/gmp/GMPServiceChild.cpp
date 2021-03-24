@@ -498,11 +498,7 @@ void GMPServiceChild::RemoveGMPContentParent(
 
 void GMPServiceChild::GetAlreadyBridgedTo(
     nsTArray<base::ProcessId>& aAlreadyBridgedTo) {
-  aAlreadyBridgedTo.SetCapacity(mContentParents.Count());
-  for (auto iter = mContentParents.Iter(); !iter.Done(); iter.Next()) {
-    const uint64_t& id = iter.Key();
-    aAlreadyBridgedTo.AppendElement(id);
-  }
+  AppendToArray(aAlreadyBridgedTo, mContentParents.Keys());
 }
 
 class OpenPGMPServiceChild : public mozilla::Runnable {

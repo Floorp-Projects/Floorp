@@ -216,8 +216,8 @@ NS_IMETHODIMP mozHunspell::SetPersonalDictionary(
 NS_IMETHODIMP mozHunspell::GetDictionaryList(
     nsTArray<nsCString>& aDictionaries) {
   MOZ_ASSERT(aDictionaries.IsEmpty());
-  for (auto iter = mDictionaries.ConstIter(); !iter.Done(); iter.Next()) {
-    aDictionaries.AppendElement(NS_ConvertUTF16toUTF8(iter.Key()));
+  for (const auto& key : mDictionaries.Keys()) {
+    aDictionaries.AppendElement(NS_ConvertUTF16toUTF8(key));
   }
 
   return NS_OK;

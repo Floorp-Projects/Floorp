@@ -2085,7 +2085,7 @@ void SMILTimedElement::NotifyNewInterval() {
     container->SyncPauseTime();
   }
 
-  for (auto iter = mTimeDependents.Iter(); !iter.Done(); iter.Next()) {
+  for (SMILTimeValueSpec* spec : mTimeDependents.Keys()) {
     SMILInterval* interval = mCurrentInterval.get();
     // It's possible that in notifying one new time dependent of a new interval
     // that a chain reaction is triggered which results in the original
@@ -2094,7 +2094,6 @@ void SMILTimedElement::NotifyNewInterval() {
     if (!interval) {
       break;
     }
-    SMILTimeValueSpec* spec = iter.Get()->GetKey();
     spec->HandleNewInterval(*interval, container);
   }
 }

@@ -168,8 +168,8 @@ nsresult nsINIParser::GetString(const char* aSection, const char* aKey,
 }
 
 nsresult nsINIParser::GetSections(INISectionCallback aCB, void* aClosure) {
-  for (auto iter = mSections.ConstIter(); !iter.Done(); iter.Next()) {
-    if (!aCB(iter.Key(), aClosure)) {
+  for (const auto& key : mSections.Keys()) {
+    if (!aCB(key, aClosure)) {
       break;
     }
   }

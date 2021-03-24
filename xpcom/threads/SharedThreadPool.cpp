@@ -50,10 +50,10 @@ SharedThreadPoolShutdownObserver::Observe(nsISupports* aSubject,
 #ifdef EARLY_BETA_OR_EARLIER
   {
     ReentrantMonitorAutoEnter mon(*sMonitor);
-    if (!sPools->Iter().Done()) {
+    if (!sPools->IsEmpty()) {
       nsAutoCString str;
-      for (auto i = sPools->Iter(); !i.Done(); i.Next()) {
-        str.AppendPrintf("\"%s\" ", nsAutoCString(i.Key()).get());
+      for (const auto& key : sPools->Keys()) {
+        str.AppendPrintf("\"%s\" ", nsAutoCString(key).get());
       }
       printf_stderr(
           "SharedThreadPool in xpcom-shutdown-threads. Waiting for "

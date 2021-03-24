@@ -53,12 +53,7 @@ nsProperties::Has(const char* prop, bool* result) {
 
 NS_IMETHODIMP
 nsProperties::GetKeys(nsTArray<nsCString>& aKeys) {
-  uint32_t count = Count();
-  aKeys.SetCapacity(count);
-
-  for (auto iter = this->Iter(); !iter.Done(); iter.Next()) {
-    aKeys.AppendElement(iter.Key());
-  }
+  AppendToArray(aKeys, this->Keys());
 
   return NS_OK;
 }

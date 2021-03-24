@@ -1824,16 +1824,16 @@ void nsWebBrowserPersist::Cleanup() {
     MutexAutoLock lock(mOutputMapMutex);
     mOutputMap.SwapElements(outputMapCopy);
   }
-  for (auto iter = outputMapCopy.ConstIter(); !iter.Done(); iter.Next()) {
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(iter.Key());
+  for (const auto& key : outputMapCopy.Keys()) {
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(key);
     if (channel) {
       channel->Cancel(NS_BINDING_ABORTED);
     }
   }
   outputMapCopy.Clear();
 
-  for (auto iter = mUploadList.ConstIter(); !iter.Done(); iter.Next()) {
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(iter.Key());
+  for (const auto& key : mUploadList.Keys()) {
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(key);
     if (channel) {
       channel->Cancel(NS_BINDING_ABORTED);
     }
@@ -2379,8 +2379,7 @@ nsresult nsWebBrowserPersist::FixRedirectedChannelEntry(
   nsCOMPtr<nsIURI> originalURI;
   aNewChannel->GetOriginalURI(getter_AddRefs(originalURI));
   nsISupports* matchingKey = nullptr;
-  for (auto iter = mOutputMap.ConstIter(); !iter.Done(); iter.Next()) {
-    nsISupports* key = iter.Key();
+  for (nsISupports* key : mOutputMap.Keys()) {
     nsCOMPtr<nsIChannel> thisChannel = do_QueryInterface(key);
     nsCOMPtr<nsIURI> thisURI;
 

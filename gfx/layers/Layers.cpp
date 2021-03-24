@@ -2156,10 +2156,9 @@ Maybe<nsTArray<ScrollPositionUpdate>> LayerManager::GetPendingScrollInfoUpdate(
 
 std::unordered_set<ScrollableLayerGuid::ViewID>
 LayerManager::ClearPendingScrollInfoUpdate() {
-  std::unordered_set<ScrollableLayerGuid::ViewID> scrollIds;
-  for (auto it = mPendingScrollUpdates.Iter(); !it.Done(); it.Next()) {
-    scrollIds.insert(it.Key());
-  }
+  std::unordered_set<ScrollableLayerGuid::ViewID> scrollIds(
+      mPendingScrollUpdates.Keys().cbegin(),
+      mPendingScrollUpdates.Keys().cend());
   mPendingScrollUpdates.Clear();
   return scrollIds;
 }
