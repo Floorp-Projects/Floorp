@@ -1088,6 +1088,3 @@ var GeckoViewWebExtension = {
 GeckoViewWebExtension.browserActions = new WeakMap();
 // WeakMap[Extension -> PageAction]
 GeckoViewWebExtension.pageActions = new WeakMap();
-Services.obs.addObserver(GeckoViewWebExtension, "devtools-installed-addon");
-Services.obs.addObserver(GeckoViewWebExtension, "testing-installed-addon");
-Services.obs.addObserver(GeckoViewWebExtension, "testing-uninstalled-addon");
