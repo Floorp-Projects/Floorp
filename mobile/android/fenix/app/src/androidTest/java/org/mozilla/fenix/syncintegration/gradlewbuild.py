@@ -21,7 +21,7 @@ class GradlewBuild(object):
 
         # Change path accordingly to go to root folder to run gradlew
         os.chdir('../../../../../../../..')
-        cmd = './gradlew ' + 'app:connectedGeckoNightlyDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=org.mozilla.fenix.syncintegration.SyncIntegrationTest#{}'.format(identifier)
+        cmd = './gradlew ' + 'app:connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=org.mozilla.fenix.syncintegration.SyncIntegrationTest#{}'.format(identifier)
 
         self.logger.info('Running cmd: {}'.format(cmd))
 
