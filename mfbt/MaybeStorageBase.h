@@ -25,8 +25,6 @@ template <typename T, bool TriviallyDestructibleAndCopyable =
                           IsTriviallyDestructibleAndCopyable<T>>
 struct MaybeStorageBase;
 
-struct Dummy {};
-
 template <typename T>
 struct MaybeStorageBase<T, false> {
  protected:
@@ -73,7 +71,7 @@ struct MaybeStorageBase<T, true> {
         : val{std::forward<Args>(aArgs)...} {}
 
     NonConstT val;
-    Dummy dummy;
+    char dummy;
   } mStorage;
 
  public:

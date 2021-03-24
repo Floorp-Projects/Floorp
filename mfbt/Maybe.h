@@ -239,73 +239,52 @@ template <typename T, bool TriviallyDestructibleAndCopyable =
 struct MaybeStorage;
 
 template <typename T>
-struct MaybeStorage<T, false> {
-  using NonConstT = std::remove_const_t<T>;
-
-  union Union {
-    Union() {}
-    constexpr explicit Union(const T& aVal) : val{aVal} {}
-    template <typename U,
-              typename = std::enable_if_t<std::is_move_constructible_v<U>>>
-    constexpr explicit Union(U&& aVal) : val{std::forward<U>(aVal)} {}
-
-    ~Union() {}
-
-    NonConstT val;
-    char dummy;
-  } mStorage;
+struct MaybeStorage<T, false> : MaybeStorageBase<T> {
+ protected:
   char mIsSome = false;  // not bool -- guarantees minimal space consumption
 
   MaybeStorage() = default;
-  explicit MaybeStorage(const T& aVal) : mStorage{aVal}, mIsSome{true} {}
-  explicit MaybeStorage(T&& aVal) : mStorage{std::move(aVal)}, mIsSome{true} {}
+  explicit MaybeStorage(const T& aVal)
+      : MaybeStorageBase<T>{aVal}, mIsSome{true} {}
+  explicit MaybeStorage(T&& aVal)
+      : MaybeStorageBase<T>{std::move(aVal)}, mIsSome{true} {}
 
   template <typename... Args>
-  explicit MaybeStorage(std::in_place_t, Args&&... aArgs) : mIsSome{true} {
-    ::new (KnownNotNull, &mStorage.val) T(std::forward<Args>(aArgs)...);
-  }
+  explicit MaybeStorage(std::in_place_t, Args&&... aArgs)
+      : MaybeStorageBase<T>{std::in_place, std::forward<Args>(aArgs)...},
+        mIsSome{true} {}
 
+ public:
   // Copy and move operations are no-ops, since copying is moving is implemented
   // by Maybe_CopyMove_Enabler.
 
-  MaybeStorage(const MaybeStorage&) {}
+  MaybeStorage(const MaybeStorage&) : MaybeStorageBase<T>{} {}
   MaybeStorage& operator=(const MaybeStorage&) { return *this; }
-  MaybeStorage(MaybeStorage&&) {}
+  MaybeStorage(MaybeStorage&&) : MaybeStorageBase<T>{} {}
   MaybeStorage& operator=(MaybeStorage&&) { return *this; }
 
   ~MaybeStorage() {
     if (mIsSome) {
-      mStorage.val.T::~T();
+      this->addr()->T::~T();
     }
   }
 };
 
 template <typename T>
-struct MaybeStorage<T, true> {
-  using NonConstT = std::remove_const_t<T>;
-
-  union Union {
-    constexpr Union() : dummy() {}
-    constexpr explicit Union(const T& aVal) : val{aVal} {}
-    constexpr explicit Union(T&& aVal) : val{std::move(aVal)} {}
-    template <typename... Args>
-    constexpr explicit Union(std::in_place_t, Args&&... aArgs)
-        : val{std::forward<Args>(aArgs)...} {}
-
-    NonConstT val;
-    char dummy;
-  } mStorage;
+struct MaybeStorage<T, true> : MaybeStorageBase<T> {
+ protected:
   char mIsSome = false;  // not bool -- guarantees minimal space consumption
 
   constexpr MaybeStorage() = default;
   constexpr explicit MaybeStorage(const T& aVal)
-      : mStorage{aVal}, mIsSome{true} {}
+      : MaybeStorageBase<T>{aVal}, mIsSome{true} {}
   constexpr explicit MaybeStorage(T&& aVal)
-      : mStorage{std::move(aVal)}, mIsSome{true} {}
+      : MaybeStorageBase<T>{std::move(aVal)}, mIsSome{true} {}
 
   template <typename... Args>
   constexpr explicit MaybeStorage(std::in_place_t, Args&&... aArgs)
-      : mStorage{std::in_place, std::forward<Args>(aArgs)...}, mIsSome{true} {}
+      : MaybeStorageBase<T>{std::in_place, std::forward<Args>(aArgs)...},
+        mIsSome{true} {}
 };
 
 }  // namespace detail
