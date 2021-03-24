@@ -800,8 +800,9 @@ public final class GeckoProcessManager extends IProcessManager.Stub {
             // for now, so that's ok. We can improve on this if we eventually
             // end up needing something fancier.
             Log.w(LOGTAG, "Trying a different process");
-            start(result, type, args, extras, flags, prefsFd, prefMapFd, ipcFd,
-                    crashFd, crashAnnotationFd, /* isRetry */ false);
+            connection.unbind().accept(unused ->
+                start(result, type, args, extras, flags, prefsFd, prefMapFd, ipcFd,
+                        crashFd, crashAnnotationFd, /* isRetry */ false));
             return;
         }
 
