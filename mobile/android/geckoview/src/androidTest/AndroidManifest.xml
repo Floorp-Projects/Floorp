@@ -23,6 +23,7 @@
         <activity-alias android:name=".App" android:targetActivity=".TestRunnerActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
+                <action android:name="org.mozilla.geckoview.test.XPCSHELL_TEST"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
@@ -47,6 +48,18 @@
         <!-- This is needed for ProfileLockedTest -->
         <service android:name=".TestProfileLockService$p0" android:enabled="true" android:exported="false" android:process=":profiletest0" />
         <service android:name=".TestProfileLockService$p1" android:enabled="true" android:exported="false" android:process=":profiletest1" />
+
+        <!-- This is used to run xpcshell tests -->
+        <service android:name=".XpcshellTestRunnerService$i0" android:enabled="true" android:exported="true" android:process=":xpcshell0"/>
+        <service android:name=".XpcshellTestRunnerService$i1" android:enabled="true" android:exported="true" android:process=":xpcshell1"/>
+        <service android:name=".XpcshellTestRunnerService$i2" android:enabled="true" android:exported="true" android:process=":xpcshell2"/>
+        <service android:name=".XpcshellTestRunnerService$i3" android:enabled="true" android:exported="true" android:process=":xpcshell3"/>
+        <service android:name=".XpcshellTestRunnerService$i4" android:enabled="true" android:exported="true" android:process=":xpcshell4"/>
+        <service android:name=".XpcshellTestRunnerService$i5" android:enabled="true" android:exported="true" android:process=":xpcshell5"/>
+        <service android:name=".XpcshellTestRunnerService$i6" android:enabled="true" android:exported="true" android:process=":xpcshell6"/>
+        <service android:name=".XpcshellTestRunnerService$i7" android:enabled="true" android:exported="true" android:process=":xpcshell7"/>
+        <service android:name=".XpcshellTestRunnerService$i8" android:enabled="true" android:exported="true" android:process=":xpcshell8"/>
+        <service android:name=".XpcshellTestRunnerService$i9" android:enabled="true" android:exported="true" android:process=":xpcshell9"/>
     </application>
 
 </manifest>
