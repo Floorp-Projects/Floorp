@@ -19,8 +19,9 @@
 #include "npapi.h"
 #include "npfunctions.h"
 
-#include "nsTHashtable.h"
-#include "nsHashKeys.h"
+#if defined(XP_WIN)
+#  include "nsTHashSet.h"
+#endif
 
 #ifdef MOZ_WIDGET_COCOA
 #  include "PluginInterposeOSX.h"
@@ -282,7 +283,7 @@ class PluginModuleChild : public PPluginModuleChild {
 #endif
 
 #if defined(XP_WIN)
-  typedef nsTHashtable<nsPtrHashKey<PluginInstanceChild>> PluginInstanceSet;
+  typedef nsTHashSet<PluginInstanceChild*> PluginInstanceSet;
   // Set of plugins that have registered to be notified when the audio device
   // changes.
   PluginInstanceSet mAudioNotificationSet;

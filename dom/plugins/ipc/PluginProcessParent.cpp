@@ -47,7 +47,7 @@ PluginProcessParent::PluginProcessParent(const std::string& aPluginFilePath)
 PluginProcessParent::~PluginProcessParent() {
 #ifdef XP_WIN
   if (sPidSet && mChildPid) {
-    sPidSet->RemoveEntry(mChildPid);
+    sPidSet->Remove(mChildPid);
     if (sPidSet->IsEmpty()) {
       delete sPidSet;
       sPidSet = nullptr;
@@ -165,7 +165,7 @@ void PluginProcessParent::OnChannelConnected(int32_t peer_pid) {
   if (!sPidSet) {
     sPidSet = new PluginProcessParent::PidSet();
   }
-  sPidSet->PutEntry(mChildPid);
+  sPidSet->Insert(mChildPid);
 #endif
 
   GeckoChildProcessHost::OnChannelConnected(peer_pid);

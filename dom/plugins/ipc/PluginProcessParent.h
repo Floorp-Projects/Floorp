@@ -19,8 +19,10 @@
 #include "mozilla/ipc/TaskFactory.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
-#include "nsTHashtable.h"
-#include "nsHashKeys.h"
+
+#if defined(XP_WIN)
+#  include "nsTHashSet.h"
+#endif
 
 namespace mozilla {
 namespace plugins {
@@ -80,7 +82,7 @@ class PluginProcessParent final : public mozilla::ipc::GeckoChildProcessHost {
   UniquePtr<LaunchCompleteTask> mLaunchCompleteTask;
   MessageLoop* mMainMsgLoop;
 #ifdef XP_WIN
-  typedef nsTHashtable<nsUint32HashKey> PidSet;
+  typedef nsTHashSet<uint32_t> PidSet;
   // Set of PIDs for all plugin child processes or NULL if empty.
   static PidSet* sPidSet;
   uint32_t mChildPid;
