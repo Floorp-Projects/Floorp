@@ -10,7 +10,7 @@
 #define OK 0
 
 // Error codes that are no longer used should not be used again unless they
-// aren't used in client code (e.g. nsUpdateService.js, updates.js, etc.).
+// aren't used in client code (e.g. UpdateService.jsm, updates.js, etc.).
 
 #define MAR_ERROR_EMPTY_ACTION_LIST 1
 #define LOADSOURCE_ERROR_WRONG_SIZE 2
@@ -100,7 +100,7 @@
 #define INVALID_CALLBACK_DIR_ERROR 78
 #define UPDATE_STATUS_UNCHANGED 79
 
-// Error codes 80 through 99 are reserved for nsUpdateService.js
+// Error codes 80 through 99 are reserved for UpdateService.jsm
 
 // The following error codes are only used by updater.exe
 // when a fallback key exists for tests.
@@ -109,5 +109,9 @@
 #define FALLBACKKEY_NOKEY_ERROR 102
 #define FALLBACKKEY_SERVICE_NO_STOP_ERROR 103
 #define FALLBACKKEY_LAUNCH_ERROR 104
+
+#define BACKGROUND_TASK_NEEDED_ELEVATION_ERROR 105
+
+// Error codes 110 and 111 are reserved for UpdateService.jsm
 
 #endif  // UPDATEERRORS_H

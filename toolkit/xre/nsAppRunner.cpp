@@ -3505,7 +3505,8 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
 #ifdef MOZ_BACKGROUNDTASKS
   Maybe<nsCString> backgroundTask = Nothing();
   const char* backgroundTaskName = nullptr;
-  if (ARG_FOUND == CheckArg("backgroundtask", &backgroundTaskName)) {
+  if (ARG_FOUND ==
+      CheckArg("backgroundtask", &backgroundTaskName, CheckArgFlag::None)) {
     backgroundTask = Some(backgroundTaskName);
   }
   BackgroundTasks::Init(backgroundTask);
@@ -3872,6 +3873,12 @@ int XREMain::XRE_mainInit(bool* aExitFlag) {
 #ifdef MOZ_BACKGROUNDTASKS
   if (BackgroundTasks::IsBackgroundTaskMode()) {
     safeModeRequested = Some(false);
+
+    // Remove the --backgroundtask arg now that it has been saved in
+    // gRestartArgv.
+    const char* tmpBackgroundTaskName = nullptr;
+    Unused << CheckArg("backgroundtask", &tmpBackgroundTaskName,
+                       CheckArgFlag::RemoveArg);
   }
 #endif
 
