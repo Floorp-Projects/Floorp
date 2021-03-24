@@ -135,9 +135,8 @@ struct PerfStatsCollector {
         aParent->ManagedPBrowserParent();
 
     writer.StartArrayProperty("urls");
-    for (auto iter = browsers.ConstIter(); !iter.Done(); iter.Next()) {
-      RefPtr<BrowserParent> parent =
-          BrowserParent::GetFrom(iter.Get()->GetKey());
+    for (const auto& key : browsers) {
+      RefPtr<BrowserParent> parent = BrowserParent::GetFrom(key);
 
       CanonicalBrowsingContext* ctx = parent->GetBrowsingContext();
       if (!ctx) {

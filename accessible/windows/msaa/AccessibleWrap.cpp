@@ -1501,12 +1501,12 @@ static bool VisitDocAccessibleParentDescendantsAtTopLevelInContentProcess(
   // We can't use BrowserBridgeParent::VisitAllDescendants because it doesn't
   // provide a way to stop the search.
   const auto& bridges = aBrowser->ManagedPBrowserBridgeParent();
-  for (auto iter = bridges.ConstIter(); !iter.Done(); iter.Next()) {
-    auto bridge = static_cast<dom::BrowserBridgeParent*>(iter.Get()->GetKey());
+  return std::all_of(bridges.cbegin(), bridges.cend(), [&](const auto& key) {
+    auto* bridge = static_cast<dom::BrowserBridgeParent*>(key);
     dom::BrowserParent* childBrowser = bridge->GetBrowserParent();
     DocAccessibleParent* childDocAcc = childBrowser->GetTopLevelDocAccessible();
     if (!childDocAcc || childDocAcc->IsShutdown()) {
-      continue;
+      return true;
     }
     if (!aCallback(childDocAcc)) {
       return false;  // Stop traversal.
@@ -1515,8 +1515,8 @@ static bool VisitDocAccessibleParentDescendantsAtTopLevelInContentProcess(
             childBrowser, aCallback)) {
       return false;  // Stop traversal.
     }
-  }
-  return true;  // Continue traversal.
+    return true;  // Continue traversal.
+  });
 }
 
 already_AddRefed<IAccessible> AccessibleWrap::GetRemoteIAccessibleFor(

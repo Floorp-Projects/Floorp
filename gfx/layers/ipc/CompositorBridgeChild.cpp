@@ -207,9 +207,8 @@ void CompositorBridgeChild::Destroy() {
   }
 
   const ManagedContainer<PTextureChild>& textures = ManagedPTextureChild();
-  for (auto iter = textures.ConstIter(); !iter.Done(); iter.Next()) {
-    RefPtr<TextureClient> texture =
-        TextureClient::AsTextureClient(iter.Get()->GetKey());
+  for (const auto& key : textures) {
+    RefPtr<TextureClient> texture = TextureClient::AsTextureClient(key);
 
     if (texture) {
       texture->Destroy();

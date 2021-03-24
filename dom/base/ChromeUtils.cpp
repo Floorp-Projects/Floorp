@@ -963,14 +963,14 @@ already_AddRefed<Promise> ChromeUtils::RequestProcInfo(GlobalObject& aGlobal,
 
     // Attach DOM window information to the process.
     nsTArray<WindowInfo> windows;
-    for (const auto& browserParentWrapper :
+    for (const auto& browserParentWrapperKey :
          contentParent->ManagedPBrowserParent()) {
-      for (const auto& windowGlobalParentWrapper :
-           browserParentWrapper.GetKey()->ManagedPWindowGlobalParent()) {
+      for (const auto& windowGlobalParentWrapperKey :
+           browserParentWrapperKey->ManagedPWindowGlobalParent()) {
         // WindowGlobalParent is the only immediate subclass of
         // PWindowGlobalParent.
-        auto* windowGlobalParent = static_cast<WindowGlobalParent*>(
-            windowGlobalParentWrapper.GetKey());
+        auto* windowGlobalParent =
+            static_cast<WindowGlobalParent*>(windowGlobalParentWrapperKey);
 
         nsString documentTitle;
         windowGlobalParent->GetDocumentTitle(documentTitle);
