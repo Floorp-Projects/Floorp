@@ -2515,7 +2515,29 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
   //   covers the entire canvas as specified by the CSS2 spec
 
   nsPresContext* presContext = mPresShell->GetPresContext();
-  bool isPaginated = presContext->IsRootPaginatedDocument();
+  const bool isPaginated = presContext->IsRootPaginatedDocument();
+
+  const bool isHTML = aDocElement->IsHTMLElement();
+  const bool isXUL = !isHTML && aDocElement->IsXULElement();
+
+  const bool isScrollable = [&] {
+    if (isPaginated) {
+      return presContext->HasPaginatedScrolling();
+    }
+    // Never create scrollbars for XUL documents or top level XHTML documents
+    // that disable scrolling.
+    if (isXUL) {
+      return false;
+    }
+    if (aDocElement->OwnerDoc()->IsDocumentURISchemeChrome() &&
+        aDocElement->AsElement()->AttrValueIs(
+                 kNameSpaceID_None, nsGkAtoms::scrolling, nsGkAtoms::_false,
+                 eCaseMatters)) {
+      return false;
+    }
+    return true;
+  }();
+
   nsContainerFrame* viewportFrame =
       static_cast<nsContainerFrame*>(GetRootFrame());
   ComputedStyle* viewportPseudoStyle = viewportFrame->Style();
@@ -2551,27 +2573,6 @@ void nsCSSFrameConstructor::SetUpDocElementContainingBlock(
   // for print-preview, but not when printing), then create a scroll frame that
   // will act as the scrolling mechanism for the viewport.
   // XXX Do we even need a viewport when printing to a printer?
-
-  bool isHTML = aDocElement->IsHTMLElement();
-  bool isXUL = false;
-
-  if (!isHTML) {
-    isXUL = aDocElement->IsXULElement();
-  }
-
-  // Never create scrollbars for XUL documents or top level XHTML documents that
-  // disable scrolling.
-  bool isScrollable = true;
-  if (isPaginated) {
-    isScrollable = presContext->HasPaginatedScrolling();
-  } else if (isXUL) {
-    isScrollable = false;
-  } else if (aDocElement->OwnerDoc()->IsDocumentURISchemeChrome() &&
-             aDocElement->AsElement()->AttrValueIs(
-                 kNameSpaceID_None, nsGkAtoms::scrolling, nsGkAtoms::_false,
-                 eCaseMatters)) {
-    isScrollable = false;
-  }
 
   // We no longer need to do overflow propagation here. It's taken care of
   // when we construct frames for the element whose overflow might be
