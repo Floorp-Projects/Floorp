@@ -28,6 +28,7 @@ import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.focus.components.EngineProvider
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.LocalizedContentInterceptor
+import org.mozilla.focus.engine.SanityCheckMiddleware
 import org.mozilla.focus.notification.PrivateNotificationMiddleware
 import org.mozilla.focus.search.BingSearchEngineFilter
 import org.mozilla.focus.search.CustomSearchEngineProvider
@@ -74,7 +75,8 @@ class Components(
             middleware = listOf(
                 PrivateNotificationMiddleware(context),
                 TelemetryMiddleware(),
-                DownloadMiddleware(context, DownloadService::class.java)
+                DownloadMiddleware(context, DownloadService::class.java),
+                SanityCheckMiddleware()
             ) + EngineMiddleware.create(engine, ::findSessionById)
         )
     }
