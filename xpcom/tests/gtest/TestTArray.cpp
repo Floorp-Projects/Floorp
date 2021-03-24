@@ -8,6 +8,7 @@
 #include "gtest/gtest.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/RefPtr.h"
+#include "nsTHashMap.h"
 
 using namespace mozilla;
 
@@ -970,6 +971,43 @@ TEST(TArray, StableSort)
   });
 
   EXPECT_EQ(expected, array);
+}
+
+TEST(TArray, ToArray)
+{
+  const auto src = std::array{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+  nsTArray<int> keys = ToArray(src);
+  keys.Sort();
+
+  EXPECT_EQ((nsTArray<int>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}), keys);
+}
+
+// Test this to make sure this properly uses ADL.
+TEST(TArray, ToArray_HashMap)
+{
+  nsTHashMap<uint32_t, uint64_t> src;
+
+  for (uint32_t i = 0; i < 10; ++i) {
+    src.InsertOrUpdate(i, i);
+  }
+
+  nsTArray<uint32_t> keys = ToArray(src.Keys());
+  keys.Sort();
+
+  EXPECT_EQ((nsTArray<uint32_t>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}), keys);
+}
+
+TEST(TArray, ToTArray)
+{
+  const auto src = std::array{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+
+  auto keys = ToTArray<AutoTArray<uint64_t, 10>>(src);
+  keys.Sort();
+
+  static_assert(std::is_same_v<decltype(keys), AutoTArray<uint64_t, 10>>);
+
+  EXPECT_EQ((nsTArray<uint64_t>{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}), keys);
 }
 
 }  // namespace TestTArray
