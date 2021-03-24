@@ -43,7 +43,6 @@ function getRecipe(slug) {
 let rsClient = RemoteSettings("nimbus-desktop-experiments");
 
 add_task(async function setup() {
-  RemoteSettingsExperimentLoader.uninit();
   RemoteSettingsExperimentLoader._updating = true;
   await SpecialPowers.pushPrefEnv({
     set: [
@@ -58,24 +57,6 @@ add_task(async function setup() {
 });
 
 add_task(async function test_double_feature_enrollment() {
-  let sandbox = sinon.createSandbox();
-  let { doExperimentCleanup } = ExperimentFakes.enrollmentHelper();
-  let sendFailureTelemetryStub = sandbox.stub(
-    ExperimentManager,
-    "sendFailureTelemetry"
-  );
-  let enrolledPromise = ExperimentFakes.waitForExperimentUpdate(ExperimentAPI, {
-    featureId: "test-feature",
-  });
-
-  sandbox.stub(RemoteSettingsExperimentLoader, "setTimer");
-  sandbox.stub(RemoteSettingsExperimentLoader, "onEnabledPrefChange");
-  RemoteSettingsExperimentLoader.uninit();
-
-  await doExperimentCleanup();
-
-  Assert.ok(ExperimentManager.store.getAllActive().length === 0, "Clean state");
-
   await rsClient.db.importChanges(
     {},
     42,
@@ -84,6 +65,21 @@ add_task(async function test_double_feature_enrollment() {
       clear: true,
     }
   );
+  let { doExperimentCleanup } = ExperimentFakes.enrollmentHelper();
+  RemoteSettingsExperimentLoader.uninit();
+  await doExperimentCleanup();
+  let sandbox = sinon.createSandbox();
+  sandbox.stub(RemoteSettingsExperimentLoader, "setTimer");
+  sandbox.stub(RemoteSettingsExperimentLoader, "onEnabledPrefChange");
+  let sendFailureTelemetryStub = sandbox.stub(
+    ExperimentManager,
+    "sendFailureTelemetry"
+  );
+  let enrolledPromise = ExperimentFakes.waitForExperimentUpdate(ExperimentAPI, {
+    featureId: "test-feature",
+  });
+
+  Assert.ok(ExperimentManager.store.getAllActive().length === 0, "Clean state");
 
   await RemoteSettingsExperimentLoader.init();
 
@@ -106,6 +102,7 @@ add_task(async function test_double_feature_enrollment() {
   );
 
   await doExperimentCleanup();
+  await SpecialPowers.popPrefEnv();
   await rsClient.db.clear();
   sandbox.restore();
 });
