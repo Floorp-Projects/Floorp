@@ -191,9 +191,9 @@ StorageDBChild* StorageDBChild::GetOrCreate(const uint32_t aPrivateBrowsingId) {
   return storageChild;
 }
 
-nsTHashtable<nsCStringHashKey>& StorageDBChild::OriginsHavingData() {
+nsTHashSet<nsCString>& StorageDBChild::OriginsHavingData() {
   if (!mOriginsHavingData) {
-    mOriginsHavingData = MakeUnique<nsTHashtable<nsCStringHashKey>>();
+    mOriginsHavingData = MakeUnique<nsTHashSet<nsCString>>();
   }
 
   return *mOriginsHavingData;
@@ -244,7 +244,7 @@ void StorageDBChild::AsyncPreload(LocalStorageCacheBridge* aCache,
   if (mIPCOpen) {
     // Adding ref to cache for the time of preload.  This ensures a reference to
     // to the cache and that all keys will load into this cache object.
-    mLoadingCaches.PutEntry(aCache);
+    mLoadingCaches.Insert(aCache);
     SendAsyncPreload(aCache->OriginSuffix(), aCache->OriginNoSuffix(),
                      aPriority);
   } else {
@@ -296,7 +296,7 @@ nsresult StorageDBChild::AsyncAddItem(LocalStorageCacheBridge* aCache,
 
   SendAsyncAddItem(aCache->OriginSuffix(), aCache->OriginNoSuffix(),
                    nsString(aKey), nsString(aValue));
-  OriginsHavingData().PutEntry(aCache->Origin());
+  OriginsHavingData().Insert(aCache->Origin());
   return NS_OK;
 }
 
@@ -309,7 +309,7 @@ nsresult StorageDBChild::AsyncUpdateItem(LocalStorageCacheBridge* aCache,
 
   SendAsyncUpdateItem(aCache->OriginSuffix(), aCache->OriginNoSuffix(),
                       nsString(aKey), nsString(aValue));
-  OriginsHavingData().PutEntry(aCache->Origin());
+  OriginsHavingData().Insert(aCache->Origin());
   return NS_OK;
 }
 
@@ -330,7 +330,7 @@ nsresult StorageDBChild::AsyncClear(LocalStorageCacheBridge* aCache) {
   }
 
   SendAsyncClear(aCache->OriginSuffix(), aCache->OriginNoSuffix());
-  OriginsHavingData().RemoveEntry(aCache->Origin());
+  OriginsHavingData().Remove(aCache->Origin());
   return NS_OK;
 }
 
@@ -360,7 +360,7 @@ mozilla::ipc::IPCResult StorageDBChild::RecvOriginsHavingData(
   }
 
   for (uint32_t i = 0; i < aOrigins.Length(); ++i) {
-    OriginsHavingData().PutEntry(aOrigins[i]);
+    OriginsHavingData().Insert(aOrigins[i]);
   }
 
   return IPC_OK();
@@ -387,7 +387,7 @@ mozilla::ipc::IPCResult StorageDBChild::RecvLoadDone(
     aCache->LoadDone(aRv);
 
     // Just drop reference to this cache now since the load is done.
-    mLoadingCaches.RemoveEntry(static_cast<LocalStorageCacheBridge*>(aCache));
+    mLoadingCaches.Remove(static_cast<LocalStorageCacheBridge*>(aCache));
   }
 
   return IPC_OK();
