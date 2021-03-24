@@ -141,7 +141,7 @@ static bool IsFrameDescendantOfAny(
     nsIFrame* aCommonAncestor) {
   for (nsIFrame* f = aChild; f && f != aCommonAncestor;
        f = nsLayoutUtils::GetCrossDocParentFrameInProcess(f)) {
-    if (aSetOfFrames.GetEntry(f)) {
+    if (aSetOfFrames.Contains(f)) {
       return true;
     }
   }
@@ -391,7 +391,7 @@ void TextOverflow::ExamineFrameSubtree(nsIFrame* aFrame,
     }
     if (isAtomic && ((mIStart.mActive && overflowIStart) ||
                      (mIEnd.mActive && overflowIEnd))) {
-      aFramesToHide->PutEntry(aFrame);
+      aFramesToHide->Insert(aFrame);
     } else if (isAtomic || frameType == LayoutFrameType::Text) {
       AnalyzeMarkerEdges(aFrame, frameType, aInsideMarkersArea, aFramesToHide,
                          aAlignmentEdges, aFoundVisibleTextOrAtomic,
@@ -472,7 +472,7 @@ void TextOverflow::AnalyzeMarkerEdges(nsIFrame* aFrame,
         }
       }
     } else {
-      aFramesToHide->PutEntry(aFrame);
+      aFramesToHide->Insert(aFrame);
     }
   } else if (!insideIStartEdge || !insideIEndEdge) {
     // frame is outside
@@ -480,7 +480,7 @@ void TextOverflow::AnalyzeMarkerEdges(nsIFrame* aFrame,
       aAlignmentEdges->AccumulateOuter(mBlockWM, borderRect);
     }
     if (IsAtomicElement(aFrame, aFrameType)) {
-      aFramesToHide->PutEntry(aFrame);
+      aFramesToHide->Insert(aFrame);
     }
   } else {
     // frame is inside

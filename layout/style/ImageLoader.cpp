@@ -28,6 +28,7 @@
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/SVGObserverUtils.h"
 #include "mozilla/layers/WebRenderUserData.h"
+#include "nsTHashSet.h"
 
 using namespace mozilla::dom;
 
@@ -56,7 +57,7 @@ NS_INTERFACE_MAP_END
 struct ImageTableEntry {
   // Set of all ImageLoaders that have registered this URL and care for updates
   // for it.
-  nsTHashtable<nsPtrHashKey<ImageLoader>> mImageLoaders;
+  nsTHashSet<ImageLoader*> mImageLoaders;
 
   // The amount of style values that are sharing this image.
   uint32_t mSharedCount = 1;
@@ -352,8 +353,8 @@ void ImageLoader::SetAnimationMode(uint16_t aMode) {
                    aMode == imgIContainer::kLoopOnceAnimMode,
                "Wrong Animation Mode is being set!");
 
-  for (auto iter = mRequestToFrameMap.ConstIter(); !iter.Done(); iter.Next()) {
-    auto request = static_cast<imgIRequest*>(iter.Key());
+  for (nsISupports* key : mRequestToFrameMap.Keys()) {
+    auto* request = static_cast<imgIRequest*>(key);
 
 #ifdef DEBUG
     {
@@ -376,8 +377,8 @@ void ImageLoader::SetAnimationMode(uint16_t aMode) {
 void ImageLoader::ClearFrames(nsPresContext* aPresContext) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  for (auto iter = mRequestToFrameMap.ConstIter(); !iter.Done(); iter.Next()) {
-    auto request = static_cast<imgIRequest*>(iter.Key());
+  for (const auto& key : mRequestToFrameMap.Keys()) {
+    auto* request = static_cast<imgIRequest*>(key);
 
 #ifdef DEBUG
     {
@@ -651,12 +652,9 @@ void GlobalImageObserver::Notify(imgIRequest* aRequest, int32_t aType,
     return;
   }
 
-  auto& loaders = entry.Data()->mImageLoaders;
-  nsTArray<RefPtr<ImageLoader>> loadersToNotify(loaders.Count());
-  for (auto iter = loaders.Iter(); !iter.Done(); iter.Next()) {
-    loadersToNotify.AppendElement(iter.Get()->GetKey());
-  }
-  for (auto& loader : loadersToNotify) {
+  const auto loadersToNotify =
+      ToTArray<nsTArray<RefPtr<ImageLoader>>>(entry.Data()->mImageLoaders);
+  for (const auto& loader : loadersToNotify) {
     loader->Notify(aRequest, aType, aData);
   }
 }

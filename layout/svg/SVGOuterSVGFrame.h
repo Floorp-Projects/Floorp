@@ -12,6 +12,7 @@
 #include "mozilla/SVGContainerFrame.h"
 #include "mozilla/UniquePtr.h"
 #include "nsRegion.h"
+#include "nsTHashSet.h"
 
 class gfxContext;
 
@@ -196,8 +197,7 @@ class SVGOuterSVGFrame final : public SVGDisplayContainerFrame,
   // A hash-set containing our SVGForeignObjectFrame descendants. Note we use
   // a hash-set to avoid the O(N^2) behavior we'd get tearing down an SVG frame
   // subtree if we were to use a list (see bug 381285 comment 20).
-  UniquePtr<nsTHashtable<nsPtrHashKey<SVGForeignObjectFrame>>>
-      mForeignObjectHash;
+  UniquePtr<nsTHashSet<SVGForeignObjectFrame*>> mForeignObjectHash;
 
   nsRegion mInvalidRegion;
 

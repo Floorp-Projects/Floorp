@@ -3888,7 +3888,7 @@ void nsGridContainerFrame::AddImplicitNamedAreas(
   // http://dev.w3.org/csswg/css-grid/#implicit-named-areas
   // Note: recording these names for fast lookup later is just an optimization.
   const uint32_t len = std::min(aLineNameLists.Length(), size_t(kMaxLine));
-  nsTHashtable<nsStringHashKey> currentStarts;
+  nsTHashSet<nsString> currentStarts;
   ImplicitNamedAreas* areas = GetImplicitNamedAreas();
   for (uint32_t i = 0; i < len; ++i) {
     for (const auto& nameIdent : aLineNameLists[i].AsSpan()) {
@@ -7636,7 +7636,7 @@ nscoord nsGridContainerFrame::ReflowRowsInFragmentainer(
     MOZ_ASSERT(child->GetPrevInFlow() ? row < aStartRow : row >= aStartRow,
                "unexpected child start row");
     if (row >= aEndRow) {
-      pushedItems.PutEntry(child);
+      pushedItems.Insert(child);
       continue;
     }
 
@@ -7761,9 +7761,9 @@ nscoord nsGridContainerFrame::ReflowRowsInFragmentainer(
     MOZ_ASSERT(!childStatus.IsInlineBreakBefore(),
                "should've handled InlineBreak::Before above");
     if (childStatus.IsIncomplete()) {
-      incompleteItems.PutEntry(child);
+      incompleteItems.Insert(child);
     } else if (!childStatus.IsFullyComplete()) {
-      overflowIncompleteItems.PutEntry(child);
+      overflowIncompleteItems.Insert(child);
     }
     if (isColMasonry) {
       auto childWM = child->GetWritingMode();
@@ -8067,14 +8067,14 @@ nscoord nsGridContainerFrame::MasonryLayout(GridReflowInput& aState,
       }
       if (aChildStatus.IsInlineBreakBefore()) {
         aStatus.SetIncomplete();
-        pushedItems.PutEntry(child);
+        pushedItems.Insert(child);
       } else if (aChildStatus.IsIncomplete()) {
         recordAutoPlacement(aItem, gridAxis);
         aStatus.SetIncomplete();
-        incompleteItems.PutEntry(child);
+        incompleteItems.Insert(child);
       } else if (!aChildStatus.IsFullyComplete()) {
         recordAutoPlacement(aItem, gridAxis);
-        overflowIncompleteItems.PutEntry(child);
+        overflowIncompleteItems.Insert(child);
       }
     }
     return result;

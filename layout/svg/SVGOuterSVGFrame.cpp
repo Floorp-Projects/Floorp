@@ -35,24 +35,23 @@ void SVGOuterSVGFrame::RegisterForeignObject(SVGForeignObjectFrame* aFrame) {
   NS_ASSERTION(aFrame, "Who on earth is calling us?!");
 
   if (!mForeignObjectHash) {
-    mForeignObjectHash =
-        MakeUnique<nsTHashtable<nsPtrHashKey<SVGForeignObjectFrame>>>();
+    mForeignObjectHash = MakeUnique<nsTHashSet<SVGForeignObjectFrame*>>();
   }
 
-  NS_ASSERTION(!mForeignObjectHash->GetEntry(aFrame),
+  NS_ASSERTION(!mForeignObjectHash->Contains(aFrame),
                "SVGForeignObjectFrame already registered!");
 
-  mForeignObjectHash->PutEntry(aFrame);
+  mForeignObjectHash->Insert(aFrame);
 
-  NS_ASSERTION(mForeignObjectHash->GetEntry(aFrame),
+  NS_ASSERTION(mForeignObjectHash->Contains(aFrame),
                "Failed to register SVGForeignObjectFrame!");
 }
 
 void SVGOuterSVGFrame::UnregisterForeignObject(SVGForeignObjectFrame* aFrame) {
   NS_ASSERTION(aFrame, "Who on earth is calling us?!");
-  NS_ASSERTION(mForeignObjectHash && mForeignObjectHash->GetEntry(aFrame),
+  NS_ASSERTION(mForeignObjectHash && mForeignObjectHash->Contains(aFrame),
                "SVGForeignObjectFrame not in registry!");
-  return mForeignObjectHash->RemoveEntry(aFrame);
+  return mForeignObjectHash->Remove(aFrame);
 }
 
 }  // namespace mozilla
@@ -638,8 +637,8 @@ nsRegion SVGOuterSVGFrame::FindInvalidatedForeignObjectFrameChildren(
     nsIFrame* aFrame) {
   nsRegion result;
   if (mForeignObjectHash && mForeignObjectHash->Count()) {
-    for (auto it = mForeignObjectHash->Iter(); !it.Done(); it.Next()) {
-      result.Or(result, it.Get()->GetKey()->GetInvalidRegion());
+    for (const auto& key : *mForeignObjectHash) {
+      result.Or(result, key->GetInvalidRegion());
     }
   }
   return result;
