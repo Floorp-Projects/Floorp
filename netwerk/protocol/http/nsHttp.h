@@ -131,6 +131,8 @@ extern const nsCString kHttp3Versions[];
 // on a connection for an anonymous request.
 #define NS_HTTP_LOAD_ANONYMOUS_CONNECT_ALLOW_CLIENT_CERT (1 << 24)
 
+#define NS_HTTP_DISALLOW_HTTPS_RR (1 << 25)
+
 #define NS_HTTP_TRR_FLAGS_FROM_MODE(x) ((static_cast<uint32_t>(x) & 3) << 19)
 
 #define NS_HTTP_TRR_MODE_FROM_FLAGS(x) \

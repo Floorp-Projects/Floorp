@@ -623,18 +623,6 @@ nsresult nsHttpChannel::MaybeUseHTTPSRRForUpgrade(bool aShouldUpgrade,
   }
 
   auto shouldSkipUpgradeWithHTTPSRR = [&]() -> bool {
-    if (LoadBeConservative()) {
-      return true;
-    }
-
-    // Skip upgrading channel triggered by system unless it is a top-level
-    // load.
-    if (mLoadInfo->TriggeringPrincipal()->IsSystemPrincipal() &&
-        mLoadInfo->GetExternalContentPolicyType() !=
-            ExtContentPolicy::TYPE_DOCUMENT) {
-      return true;
-    }
-
     nsAutoCString uriHost;
     mURI->GetAsciiHost(uriHost);
 
@@ -728,6 +716,7 @@ nsresult nsHttpChannel::ContinueOnBeforeConnect(bool aShouldUpgrade,
 
   if (LoadIsTRRServiceChannel()) {
     mCaps |= NS_HTTP_LARGE_KEEPALIVE;
+    mCaps |= NS_HTTP_DISALLOW_HTTPS_RR;
   }
 
   mCaps |= NS_HTTP_TRR_FLAGS_FROM_MODE(nsIRequest::GetTRRMode());
@@ -6612,11 +6601,6 @@ nsresult nsHttpChannel::BeginConnect() {
                       !(mCaps & NS_HTTP_BE_CONSERVATIVE) &&
                       !LoadBeConservative() && LoadAllowHttp3();
 
-  // No need to lookup HTTPSSVC record if mHTTPSSVCRecord already contains a
-  // value.
-  StoreUseHTTPSSVC(StaticPrefs::network_dns_upgrade_with_https_rr() &&
-                   mHTTPSSVCRecord.isNothing());
-
   RefPtr<AltSvcMapping> mapping;
   if (!mConnectionInfo && LoadAllowAltSvc() &&  // per channel
       (http2Allowed || http3Allowed) && !(mLoadFlags & LOAD_FRESH_CONNECTION) &&
@@ -6665,9 +6649,6 @@ nsresult nsHttpChannel::BeginConnect() {
                                originAttributes);
     Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC, true);
     Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC_OE, !isHttps);
-
-    // Don't use HTTPSSVC record if we found altsvc mapping.
-    StoreUseHTTPSSVC(false);
   } else if (mConnectionInfo) {
     LOG(("nsHttpChannel %p Using channel supplied connection info", this));
     Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC, false);
@@ -6678,9 +6659,19 @@ nsresult nsHttpChannel::BeginConnect() {
     Telemetry::Accumulate(Telemetry::HTTP_TRANSACTION_USE_ALTSVC, false);
   }
 
-  if (mConnectionInfo->UsingConnect()) {
-    StoreUseHTTPSSVC(false);
+  bool httpsRRAllowed =
+      !LoadBeConservative() && !(mCaps & NS_HTTP_BE_CONSERVATIVE) &&
+      !(mLoadInfo->TriggeringPrincipal()->IsSystemPrincipal() &&
+        mLoadInfo->GetExternalContentPolicyType() !=
+            ExtContentPolicy::TYPE_DOCUMENT) &&
+      !mConnectionInfo->UsingConnect();
+  if (!httpsRRAllowed) {
+    mCaps |= NS_HTTP_DISALLOW_HTTPS_RR;
   }
+  // No need to lookup HTTPSSVC record if mHTTPSSVCRecord already contains a
+  // value.
+  StoreUseHTTPSSVC(StaticPrefs::network_dns_upgrade_with_https_rr() &&
+                   httpsRRAllowed && mHTTPSSVCRecord.isNothing());
 
   // Need to re-ask the handler, since mConnectionInfo may not be the connInfo
   // we used earlier
@@ -6800,8 +6791,8 @@ nsresult nsHttpChannel::MaybeStartDNSPrefetch() {
   bool httpssvcQueried = false;
   // If https rr is not queried sucessfully, we have to reset mUseHTTPSSVC to
   // false. Otherwise, this channel may wait https rr forever.
-  auto resetUsHTTPSSVC =
-      MakeScopeExit([&] { StoreUseHTTPSSVC(httpssvcQueried); });
+  auto resetUsHTTPSSVC = MakeScopeExit(
+      [&] { StoreUseHTTPSSVC(LoadUseHTTPSSVC() && httpssvcQueried); });
 
   // Start a DNS lookup very early in case the real open is queued the DNS can
   // happen in parallel. Do not do so in the presence of an HTTP proxy as
@@ -6855,7 +6846,7 @@ nsresult nsHttpChannel::MaybeStartDNSPrefetch() {
     // not "prefetch", since DNS prefetch can be disabled by the pref.
     if (LoadUseHTTPSSVC() ||
         (gHttpHandler->UseHTTPSRRForSpeculativeConnection() &&
-         !mHTTPSSVCRecord && !mConnectionInfo->UsingConnect())) {
+         !mHTTPSSVCRecord && !(mCaps & NS_HTTP_DISALLOW_HTTPS_RR))) {
       MOZ_ASSERT(!mHTTPSSVCRecord);
 
       OriginAttributes originAttributes;
