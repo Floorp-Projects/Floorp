@@ -26,18 +26,12 @@ public final class ThreadUtils {
     private static final Thread sUiThread = Looper.getMainLooper().getThread();
     private static final Handler sUiHandler = new Handler(Looper.getMainLooper());
 
-    private static volatile Thread sBackgroundThread;
-
     // Referenced directly from GeckoAppShell in highly performance-sensitive code (The extra
     // function call of the getter was harming performance. (Bug 897123))
     // Once Bug 709230 is resolved we should reconsider this as ProGuard should be able to optimise
     // this out at compile time.
     public static Handler sGeckoHandler;
     public static volatile Thread sGeckoThread;
-
-    public static void setBackgroundThread(final Thread thread) {
-        sBackgroundThread = thread;
-    }
 
     public static Thread getUiThread() {
         return sUiThread;
@@ -67,10 +61,6 @@ public final class ThreadUtils {
         sUiHandler.post(runnable);
     }
 
-    public static Thread getBackgroundThread() {
-        return sBackgroundThread;
-    }
-
     public static Handler getBackgroundHandler() {
         return GeckoBackgroundThread.getHandler();
     }
@@ -87,10 +77,6 @@ public final class ThreadUtils {
         assertOnThread(getUiThread(), AssertBehavior.THROW);
     }
 
-    public static void assertNotOnUiThread() {
-        assertNotOnThread(getUiThread(), AssertBehavior.THROW);
-    }
-
     @RobocopTarget
     public static void assertOnGeckoThread() {
         assertOnThread(sGeckoThread, AssertBehavior.THROW);
@@ -98,11 +84,6 @@ public final class ThreadUtils {
 
     public static void assertOnThread(final Thread expectedThread, final AssertBehavior behavior) {
         assertOnThreadComparison(expectedThread, behavior, true);
-    }
-
-    public static void assertNotOnThread(final Thread expectedThread,
-                                         final AssertBehavior behavior) {
-        assertOnThreadComparison(expectedThread, behavior, false);
     }
 
     private static void assertOnThreadComparison(final Thread expectedThread,
@@ -136,24 +117,8 @@ public final class ThreadUtils {
         }
     }
 
-    public static boolean isOnGeckoThread() {
-        if (sGeckoThread != null) {
-            return isOnThread(sGeckoThread);
-        }
-        return false;
-    }
-
     public static boolean isOnUiThread() {
         return isOnThread(getUiThread());
-    }
-
-    @RobocopTarget
-    public static boolean isOnBackgroundThread() {
-        if (sBackgroundThread == null) {
-            return false;
-        }
-
-        return isOnThread(sBackgroundThread);
     }
 
     @RobocopTarget
