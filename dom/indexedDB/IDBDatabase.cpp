@@ -203,10 +203,12 @@ RefPtr<IDBDatabase> IDBDatabase::Create(IDBOpenDBRequest* aRequest,
           obsSvc->AddObserver(observer, kWindowObserverTopic, false));
 
       // These topics are not crucial.
-      QM_WARNONLY_TRY(
-          obsSvc->AddObserver(observer, kCycleCollectionObserverTopic, false));
-      QM_WARNONLY_TRY(
-          obsSvc->AddObserver(observer, kMemoryPressureObserverTopic, false));
+      if (NS_FAILED(obsSvc->AddObserver(observer, kCycleCollectionObserverTopic,
+                                        false)) ||
+          NS_FAILED(obsSvc->AddObserver(observer, kMemoryPressureObserverTopic,
+                                        false))) {
+        NS_WARNING("Failed to add additional memory observers!");
+      }
 
       db->mObserver = std::move(observer);
     }
@@ -367,14 +369,11 @@ RefPtr<IDBObjectStore> IDBDatabase::CreateObjectStore(
     return nullptr;
   }
 
-  QM_NOTEONLY_TRY_UNWRAP(const auto maybeKeyPath,
-                         KeyPath::Parse(aOptionalParameters.mKeyPath));
-  if (!maybeKeyPath) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return nullptr;
-  }
-
-  const auto& keyPath = maybeKeyPath.ref();
+  // XXX This didn't use to warn before in case of a error. Should we remove the
+  // warning again?
+  IDB_TRY_INSPECT(const auto& keyPath,
+                  KeyPath::Parse(aOptionalParameters.mKeyPath), nullptr,
+                  [&aRv](const auto&) { aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR); });
 
   auto& objectStores = mSpec->objectStores();
   const auto end = objectStores.cend();

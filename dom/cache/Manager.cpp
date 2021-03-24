@@ -140,10 +140,13 @@ class SetupAction final : public SyncDBAction {
       // failure, but if we entered it and RestorePaddingFile succeeded, we
       // would have returned NS_OK. Now, we will never propagate a
       // MaybeUpdatePaddingFile failure.
-      QM_WARNONLY_TRY(
-          MaybeUpdatePaddingFile(aDBDir, aConn, /* aIncreaceSize */ 0,
-                                 overallDeletedPaddingSize.value(),
-                                 [&trans]() { return trans.Commit(); }));
+      [&] {
+        CACHE_TRY(MaybeUpdatePaddingFile(
+                      aDBDir, aConn, /* aIncreaceSize */ 0,
+                      overallDeletedPaddingSize.value(),
+                      [&trans]() mutable { return trans.Commit(); }),
+                  QM_VOID);
+      }();
     }
 
     if (DirectoryPaddingFileExists(*aDBDir, DirPaddingFile::TMP_FILE) ||
