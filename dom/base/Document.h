@@ -1579,11 +1579,6 @@ class Document : public nsINode,
   void DisconnectNodeTree();
 
   /**
-   * Like IsEditingOn(), but will flush as needed first.
-   */
-  bool IsEditingOnAfterFlush();
-
-  /**
    * MaybeDispatchCheckKeyPressEventModelEvent() dispatches
    * "CheckKeyPressEventModel" event to check whether we should dispatch
    * keypress events in confluent model or split model.  This should be
@@ -4197,6 +4192,7 @@ class Document : public nsINode,
         delete;
 
     bool DoNothing() const { return mDoNothing; }
+    MOZ_CAN_RUN_SCRIPT bool IsEditable(Document* aDocument) const;
     bool IsEditor() const {
       MOZ_ASSERT_IF(mEditorCommand, mActiveEditor || mHTMLEditor);
       return !!mEditorCommand;
