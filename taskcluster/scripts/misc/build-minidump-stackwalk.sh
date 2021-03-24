@@ -23,6 +23,11 @@ macosx64)
     echo ac_add_options --target=x86_64-apple-darwin >> .mozconfig
     echo ac_add_options --with-macos-sdk=$MOZ_FETCHES_DIR/MacOSX10.12.sdk >> .mozconfig
     ;;
+macosx64-aarch64)
+    TOOLCHAINS="cctools rustc clang"
+    echo ac_add_options --target=aarch64-apple-darwin >> .mozconfig
+    echo ac_add_options --with-macos-sdk=$MOZ_FETCHES_DIR/MacOSX11.0.sdk >> .mozconfig
+    ;;
 mingw32)
     TOOLCHAINS="binutils rustc clang"
     echo ac_add_options --target=i686-w64-mingw32 >> .mozconfig
