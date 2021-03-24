@@ -3962,8 +3962,8 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         for managed in ptype.manages:
             managedmeth.addcode(
                 """
-                for (auto it = ${container}.ConstIter(); !it.Done(); it.Next()) {
-                    arr__.AppendElement(it.Get()->GetKey()->GetLifecycleProxy());
+                for (auto* key : ${container}) {
+                    arr__.AppendElement(key->GetLifecycleProxy());
                 }
 
                 """,
@@ -4172,12 +4172,12 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
         for managed in ptype.manages:
             clearsubtree.addcode(
                 """
-                for (auto it = ${container}.Iter(); !it.Done(); it.Next()) {
-                    it.Get()->GetKey()->ClearSubtree();
+                for (auto* key : ${container}) {
+                    key->ClearSubtree();
                 }
-                for (auto it = ${container}.Iter(); !it.Done(); it.Next()) {
+                for (auto* key : ${container}) {
                     // Recursively releasing ${container} kids.
-                    auto* proxy = it.Get()->GetKey()->GetLifecycleProxy();
+                    auto* proxy = key->GetLifecycleProxy();
                     NS_IF_RELEASE(proxy);
                 }
                 ${container}.Clear();
@@ -4657,7 +4657,7 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
             }
 
             ${actor}->SetManagerAndRegister($,{setManagerArgs});
-            ${container}.PutEntry(${actor});
+            ${container}.Insert(${actor});
             """,
                 actor=actordecl.var(),
                 actorname=actorproto.name() + self.side.capitalize(),

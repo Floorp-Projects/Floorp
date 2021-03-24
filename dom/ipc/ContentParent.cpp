@@ -1819,7 +1819,7 @@ void ContentParent::ShutDownProcess(ShutDownMethod aMethod) {
 
   const ManagedContainer<POfflineCacheUpdateParent>& ocuParents =
       ManagedPOfflineCacheUpdateParent();
-  for (auto* key : ocuParents.Keys()) {
+  for (auto* key : ocuParents) {
     RefPtr<mozilla::docshell::OfflineCacheUpdateParent> ocuParent =
         static_cast<mozilla::docshell::OfflineCacheUpdateParent*>(key);
     ocuParent->StopSendingMessagesToChild();
