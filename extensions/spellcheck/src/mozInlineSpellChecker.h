@@ -73,10 +73,13 @@ class mozInlineSpellStatus {
   // hurt)
   RefPtr<nsRange> mCreatedRange;
 
+  // See `mNoCheckRange`.
+  const nsRange* GetNoCheckRange() const { return mNoCheckRange; }
+
+ private:
   // Contains the range computed for the current word. Can be nullptr.
   RefPtr<nsRange> mNoCheckRange;
 
- private:
   // Indicates the position of the cursor for the event (so we can compute
   // mNoCheckRange). It can be nullptr if we don't care about the cursor
   // position (such as for the intial check of everything).
