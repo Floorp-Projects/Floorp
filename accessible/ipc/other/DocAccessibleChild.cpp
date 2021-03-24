@@ -1542,6 +1542,11 @@ mozilla::ipc::IPCResult DocAccessibleChild::RecvFocusedChild(
     // document, not just a descendant of the caller's document. Check that it
     // is really a descendant.
     DocAccessible* doc = result->Document();
+    if (!doc) {
+      MOZ_ASSERT_UNREACHABLE("Focused child is unbound from doc.");
+      return IPC_OK();
+    }
+
     while (doc != mDoc) {
       doc = doc->ParentDocument();
       if (!doc) {
