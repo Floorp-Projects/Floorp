@@ -63,7 +63,9 @@ internal object DownloadNotification {
         return NotificationCompat.Builder(context, ensureChannelExists(context))
             .setSmallIcon(icon)
             .setColor(ContextCompat.getColor(context, notificationAccentColor))
-            .setContentTitle(context.getString(R.string.mozac_feature_downloads_notification_channel))
+            .setContentTitle(
+                context.applicationContext.getString(R.string.mozac_feature_downloads_notification_channel)
+            )
             .setContentText(summaryList.joinToString("\n"))
             .setStyle(NotificationCompat.InboxStyle().addLine(summaryLine1).addLine(summaryLine2))
             .setGroup(NOTIFICATION_GROUP_KEY)
@@ -116,7 +118,9 @@ internal object DownloadNotification {
         return NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.mozac_feature_download_ic_download)
             .setContentTitle(downloadState.fileName)
-            .setContentText(context.getString(R.string.mozac_feature_downloads_paused_notification_text))
+            .setContentText(
+                context.applicationContext.getString(R.string.mozac_feature_downloads_paused_notification_text)
+            )
             .setColor(ContextCompat.getColor(context, notificationAccentColor))
             .setCategory(NotificationCompat.CATEGORY_PROGRESS)
             .setOngoing(true)
@@ -145,7 +149,9 @@ internal object DownloadNotification {
             .setContentTitle(downloadState.fileName)
             .setWhen(downloadJobState.createdTime)
             .setOnlyAlertOnce(true)
-            .setContentText(context.getString(R.string.mozac_feature_downloads_completed_notification_text2))
+            .setContentText(
+                context.applicationContext.getString(R.string.mozac_feature_downloads_completed_notification_text2)
+            )
             .setColor(ContextCompat.getColor(context, notificationAccentColor))
             .setContentIntent(createPendingIntent(context, ACTION_OPEN, downloadState.id))
             .setPriority(NotificationCompat.PRIORITY_LOW)
@@ -168,7 +174,9 @@ internal object DownloadNotification {
         return NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.mozac_feature_download_ic_download_failed)
             .setContentTitle(downloadState.fileName)
-            .setContentText(context.getString(R.string.mozac_feature_downloads_failed_notification_text2))
+            .setContentText(
+                context.applicationContext.getString(R.string.mozac_feature_downloads_failed_notification_text2)
+            )
             .setColor(ContextCompat.getColor(context, notificationAccentColor))
             .setCategory(NotificationCompat.CATEGORY_ERROR)
             .addAction(getTryAgainAction(context, downloadState.id))
@@ -218,7 +226,7 @@ internal object DownloadNotification {
 
             val channel = NotificationChannel(
                 NOTIFICATION_CHANNEL_ID,
-                context.getString(R.string.mozac_feature_downloads_notification_channel),
+                context.applicationContext.getString(R.string.mozac_feature_downloads_notification_channel),
                 NotificationManager.IMPORTANCE_LOW
             )
 
@@ -235,7 +243,7 @@ internal object DownloadNotification {
 
         return NotificationCompat.Action.Builder(
             0,
-            context.getString(R.string.mozac_feature_downloads_button_pause),
+            context.applicationContext.getString(R.string.mozac_feature_downloads_button_pause),
             pauseIntent
         ).build()
     }
@@ -245,7 +253,7 @@ internal object DownloadNotification {
 
         return NotificationCompat.Action.Builder(
             0,
-            context.getString(R.string.mozac_feature_downloads_button_resume),
+            context.applicationContext.getString(R.string.mozac_feature_downloads_button_resume),
             resumeIntent
         ).build()
     }
@@ -255,7 +263,7 @@ internal object DownloadNotification {
 
         return NotificationCompat.Action.Builder(
             0,
-            context.getString(R.string.mozac_feature_downloads_button_cancel),
+            context.applicationContext.getString(R.string.mozac_feature_downloads_button_cancel),
             cancelIntent
         ).build()
     }
@@ -265,7 +273,7 @@ internal object DownloadNotification {
 
         return NotificationCompat.Action.Builder(
             0,
-            context.getString(R.string.mozac_feature_downloads_button_try_again),
+            context.applicationContext.getString(R.string.mozac_feature_downloads_button_try_again),
             tryAgainIntent
         ).build()
     }
@@ -315,15 +323,15 @@ internal fun DownloadJobState.getStatusDescription(context: Context): String {
         }
 
         PAUSED -> {
-            context.getString(R.string.mozac_feature_downloads_paused_notification_text)
+            context.applicationContext.getString(R.string.mozac_feature_downloads_paused_notification_text)
         }
 
         COMPLETED -> {
-            context.getString(R.string.mozac_feature_downloads_completed_notification_text2)
+            context.applicationContext.getString(R.string.mozac_feature_downloads_completed_notification_text2)
         }
 
         FAILED -> {
-            context.getString(R.string.mozac_feature_downloads_failed_notification_text2)
+            context.applicationContext.getString(R.string.mozac_feature_downloads_failed_notification_text2)
         }
 
         CANCELLED, INITIATED -> ""
