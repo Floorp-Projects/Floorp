@@ -154,6 +154,8 @@ public class GeckoThread extends Thread {
         public Map<String, Object> prefs;
         public String userSerialNumber;
 
+        public boolean xpcshell;
+        public String outFilePath;
         public int prefsFd;
         public int prefMapFd;
         public int ipcFd;
@@ -274,17 +276,20 @@ public class GeckoThread extends Thread {
 
         // argv[0] is the program name, which for us is the package name.
         args.add(context.getPackageName());
-        args.add("-greomni");
-        args.add(context.getPackageResourcePath());
 
-        final GeckoProfile profile = getProfile();
-        if (profile.isCustomProfile()) {
-            args.add("-profile");
-            args.add(profile.getDir().getAbsolutePath());
-        } else {
-            profile.getDir(); // Make sure the profile dir exists.
-            args.add("-P");
-            args.add(profile.getName());
+        if (!mInitInfo.xpcshell) {
+            args.add("-greomni");
+            args.add(context.getPackageResourcePath());
+
+            final GeckoProfile profile = getProfile();
+            if (profile.isCustomProfile()) {
+                args.add("-profile");
+                args.add(profile.getDir().getAbsolutePath());
+            } else {
+                profile.getDir(); // Make sure the profile dir exists.
+                args.add("-P");
+                args.add(profile.getName());
+            }
         }
 
         if (mInitInfo.args != null) {
@@ -435,7 +440,8 @@ public class GeckoThread extends Thread {
         final boolean isChildProcess = isChildProcess();
 
         GeckoLoader.setupGeckoEnvironment(context, isChildProcess,
-                                          context.getFilesDir().getPath(), env, mInitInfo.prefs);
+                                          context.getFilesDir().getPath(), env, mInitInfo.prefs,
+                                          mInitInfo.xpcshell);
 
         initGeckoEnvironment();
 
@@ -465,7 +471,9 @@ public class GeckoThread extends Thread {
                               mInitInfo.extras.getInt(EXTRA_PREF_MAP_FD, -1),
                               mInitInfo.extras.getInt(EXTRA_IPC_FD, -1),
                               mInitInfo.extras.getInt(EXTRA_CRASH_FD, -1),
-                              mInitInfo.extras.getInt(EXTRA_CRASH_ANNOTATION_FD, -1));
+                              mInitInfo.extras.getInt(EXTRA_CRASH_ANNOTATION_FD, -1),
+                              isChildProcess ? false : mInitInfo.xpcshell,
+                              isChildProcess ? null : mInitInfo.outFilePath);
 
         // And... we're done.
         final boolean restarting = isState(State.RESTARTING);
