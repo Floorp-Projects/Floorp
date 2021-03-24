@@ -30,6 +30,7 @@
 #include "mozilla/TelemetryScalarEnums.h"
 
 #include "gfxPlatform.h"
+#include "gfxFont.h"
 
 #include "qcms.h"
 
@@ -42,6 +43,7 @@ using namespace mozilla;
 using IntID = mozilla::LookAndFeel::IntID;
 using FloatID = mozilla::LookAndFeel::FloatID;
 using ColorID = mozilla::LookAndFeel::ColorID;
+using FontID = mozilla::LookAndFeel::FontID;
 
 struct nsLookAndFeelIntPref {
   const char* name;
@@ -57,10 +59,8 @@ struct nsLookAndFeelFloatPref {
   float floatVar;
 };
 
-template <typename Index, typename Value, Index kFirst, Index kEnd>
+template <typename Index, typename Value, Index kEnd>
 class EnumeratedCache {
-  static_assert(size_t(kFirst) == 0, "EnumeratedArray assumes this");
-
   static constexpr uint32_t ChunkFor(Index aIndex) {
     return uint32_t(aIndex) >> 5; // >> 5 is the same as / 32.
   }
@@ -103,7 +103,10 @@ class EnumeratedCache {
   }
 };
 
-static EnumeratedCache<ColorID, nscolor, ColorID(0), ColorID::End> sColorCache;
+static EnumeratedCache<ColorID, nscolor, ColorID::End> sColorCache;
+static EnumeratedCache<FloatID, float, FloatID::End> sFloatCache;
+static EnumeratedCache<IntID, int32_t, IntID::End> sIntCache;
+static EnumeratedCache<FontID, widget::LookAndFeelFont, FontID::End> sFontCache;
 
 // To make one of these prefs toggleable from a reftest add a user
 // pref in testing/profiles/reftest/user.js. For example, to make
@@ -365,9 +368,14 @@ void nsXPLookAndFeel::Shutdown() {
   if (sShutdown) {
     return;
   }
+
   sShutdown = true;
   delete sInstance;
   sInstance = nullptr;
+
+  // This keeps strings alive, so need to clear to make leak checking happy.
+  sFontCache.Clear();
+
   nsNativeBasicTheme::Shutdown();
 }
 
@@ -902,34 +910,113 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID,
 }
 
 nsresult nsXPLookAndFeel::GetIntValue(IntID aID, int32_t& aResult) {
-  if (!sInitialized) Init();
+  if (!sInitialized) {
+    Init();
+  }
+
+  if (const int32_t* cached = sIntCache.Get(aID)) {
+    aResult = *cached;
+    return NS_OK;
+  }
 
   for (unsigned int i = 0; i < ArrayLength(sIntPrefs); ++i) {
     if (sIntPrefs[i].isSet && (sIntPrefs[i].id == aID)) {
       aResult = sIntPrefs[i].intVar;
+      sIntCache.Insert(aID, aResult);
       return NS_OK;
     }
   }
 
-  return NativeGetInt(aID, aResult);
+  MOZ_TRY(NativeGetInt(aID, aResult));
+  sIntCache.Insert(aID, aResult);
+  return NS_OK;
 }
 
 nsresult nsXPLookAndFeel::GetFloatValue(FloatID aID, float& aResult) {
-  if (!sInitialized) Init();
+  if (!sInitialized) {
+    Init();
+  }
+
+  if (const float* cached = sFloatCache.Get(aID)) {
+    aResult = *cached;
+    return NS_OK;
+  }
 
   for (unsigned int i = 0; i < ArrayLength(sFloatPrefs); ++i) {
     if (sFloatPrefs[i].isSet && sFloatPrefs[i].id == aID) {
       aResult = sFloatPrefs[i].floatVar;
+      sFloatCache.Insert(aID, aResult);
       return NS_OK;
     }
   }
 
-  return NativeGetFloat(aID, aResult);
+  MOZ_TRY(NativeGetFloat(aID, aResult));
+  sFloatCache.Insert(aID, aResult);
+  return NS_OK;
+}
+
+bool nsXPLookAndFeel::LookAndFeelFontToStyle(const LookAndFeelFont& aFont,
+                                             nsString& aName,
+                                             gfxFontStyle& aStyle) {
+  if (!aFont.haveFont()) {
+    return false;
+  }
+  aName = aFont.name();
+  aStyle = gfxFontStyle();
+  aStyle.size = aFont.size();
+  aStyle.weight = FontWeight(aFont.weight());
+  aStyle.style =
+      aFont.italic() ? FontSlantStyle::Italic() : FontSlantStyle::Normal();
+  return true;
+}
+
+widget::LookAndFeelFont nsXPLookAndFeel::StyleToLookAndFeelFont(
+    const nsAString& aName, const gfxFontStyle& aStyle) {
+  LookAndFeelFont font;
+  font.haveFont() = true;
+  font.name() = aName;
+  font.size() = aStyle.size;
+  font.weight() = aStyle.weight.ToFloat();
+  font.italic() = aStyle.style.IsItalic();
+  MOZ_ASSERT(aStyle.style.IsNormal() || aStyle.style.IsItalic(),
+             "Cannot handle oblique font style");
+#ifdef DEBUG
+  {
+    // Assert that all the remaining font style properties have their
+    // default values.
+    gfxFontStyle candidate = aStyle;
+    gfxFontStyle defaults{};
+    candidate.size = defaults.size;
+    candidate.weight = defaults.weight;
+    candidate.style = defaults.style;
+    MOZ_ASSERT(candidate.Equals(defaults),
+               "Some font style properties not supported");
+  }
+#endif
+  return font;
+}
+
+bool nsXPLookAndFeel::GetFontValue(FontID aID, nsString& aName,
+                                   gfxFontStyle& aStyle) {
+  if (const LookAndFeelFont* cached = sFontCache.Get(aID)) {
+    return LookAndFeelFontToStyle(*cached, aName, aStyle);
+  }
+  LookAndFeelFont font;
+  const bool haveFont = NativeGetFont(aID, aName, aStyle);
+  font.haveFont() = haveFont;
+  if (haveFont) {
+    font = StyleToLookAndFeelFont(aName, aStyle);
+  }
+  sFontCache.Insert(aID, std::move(font));
+  return haveFont;
 }
 
 void nsXPLookAndFeel::RefreshImpl() {
-  // Wipe out our color cache.
+  // Wipe out our caches.
   sColorCache.Clear();
+  sFontCache.Clear();
+  sFloatCache.Clear();
+  sIntCache.Clear();
 
   // Reinit color cache from prefs.
   for (uint32_t i = 0; i < uint32_t(ColorID::End); ++i) {

@@ -720,7 +720,7 @@ LookAndFeelFont nsLookAndFeel::GetLookAndFeelFontInternal(
 
 LookAndFeelFont nsLookAndFeel::GetLookAndFeelFont(LookAndFeel::FontID anID) {
   if (XRE_IsContentProcess()) {
-    return mFontCache[size_t(anID)];
+    return mFontCache[anID];
   }
 
   LookAndFeelFont result{};
@@ -806,7 +806,7 @@ bool nsLookAndFeel::GetSysFont(LookAndFeel::FontID anID, nsString& aFontName,
 
 bool nsLookAndFeel::NativeGetFont(FontID anID, nsString& aFontName,
                                   gfxFontStyle& aFontStyle) {
-  CachedSystemFont& cacheSlot = mSystemFontCache[size_t(anID)];
+  CachedSystemFont& cacheSlot = mSystemFontCache[anID];
 
   bool status;
   if (cacheSlot.mCacheValid) {
@@ -860,9 +860,8 @@ LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
   lafInt.value() = GetInt(IntID::AllPointerCapabilities);
   cache.mInts().AppendElement(lafInt);
 
-  for (size_t i = size_t(LookAndFeel::FontID::MINIMUM);
-       i <= size_t(LookAndFeel::FontID::MAXIMUM); ++i) {
-    cache.mFonts().AppendElement(GetLookAndFeelFont(LookAndFeel::FontID(i)));
+  for (auto id : mozilla::MakeEnumeratedRange(LookAndFeel::FontID::End)) {
+    cache.mFonts().AppendElement(GetLookAndFeelFont(id));
   }
 
   return cache;
@@ -874,7 +873,7 @@ void nsLookAndFeel::SetCacheImpl(const LookAndFeelCache& aCache) {
 
 void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
   MOZ_ASSERT(XRE_IsContentProcess());
-  MOZ_RELEASE_ASSERT(aCache.mFonts().Length() == mFontCache.length());
+  MOZ_RELEASE_ASSERT(aCache.mFonts().Length() == FontCache::kSize);
 
   for (auto entry : aCache.mInts()) {
     switch (entry.id()) {
@@ -899,9 +898,9 @@ void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
     }
   }
 
-  size_t i = mFontCache.minIndex();
+  size_t i = 0;
   for (const auto& font : aCache.mFonts()) {
-    mFontCache[i] = font;
+    mFontCache[FontID(i)] = font;
     ++i;
   }
 }

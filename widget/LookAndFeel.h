@@ -415,11 +415,10 @@ class LookAndFeel {
     End,
   };
 
-  // These constants must be kept in 1:1 correspondence with the
-  // NS_STYLE_FONT_* system font constants.
+  // FIXME: Instead of having this list, use the system font definition in the
+  // style system like we do for colors.
   enum class FontID {
-    Caption = 1,  // css2
-    MINIMUM = Caption,
+    Caption = 0,  // css2
     Icon,
     Menu,
     MessageBox,
@@ -439,7 +438,8 @@ class LookAndFeel {
 
     Tooltips,  // moz
     Widget,
-    MAXIMUM = Widget,
+
+    End,  // Not a real value, just for indexing purposes.
   };
 
   /**
