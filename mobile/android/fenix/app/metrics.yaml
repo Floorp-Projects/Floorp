@@ -11,6 +11,12 @@ events:
   app_opened_all_startup:
     type: event
     description: |
+      **This probe has a known flaw:** for COLD start up, it doesn't take into
+      account if the process is already running when the app starts, possibly
+      inflating results (e.g. a Service started the process 20min ago and only
+      now is HomeActivity launching). See the `cold_*_app_to_first_frame` probes
+      for a replacement.
+      <br><br>
       A user opened the app to the HomeActivity. The HomeActivity
       encompasses the home screen, browser screen, settings screen,
       collections and other screens in the nav_graph.

@@ -33,6 +33,12 @@ import java.lang.reflect.Modifier.PRIVATE
  * Sample = [source = COLD, type = APP_ICON, hasSavedInstanceState = false,launchTimeNanoSeconds = 1824000000]
  * The basic idea is to collect these metrics from different phases of startup through
  * [AppAllStartup] and finally report them on Activity's onResume() function.
+ *
+ * **THIS CLASS HAS A KNOWN FLAW:** for COLD start, it doesn't take into account if the process is
+ * already running when the app starts, possibly inflating results (e.g. a Service started the
+ * process 20min ago and only now is HomeActivity launching). Future telemetry implementations should
+ * probably move in the ideological direction of [org.mozilla.fenix.perf.ColdStartupDurationTelemetry]:
+ * simplicity rather than comprehensiveness.
  */
 @Suppress("TooManyFunctions")
 class AppStartupTelemetry(
