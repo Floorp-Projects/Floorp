@@ -366,6 +366,14 @@ def add_remote_arguments(parser):
         help="Do not copy any files to device (to be used only if "
         "device is already setup).",
     )
+    parser.add_argument(
+        "--no-install",
+        action="store_false",
+        dest="setup",
+        default=True,
+        help="Don't install the app or any files to the device (to be used if "
+        "the device is already set up)",
+    )
 
     parser.add_argument(
         "--local-bin-dir",
