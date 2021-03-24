@@ -653,7 +653,7 @@ bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName, gfxFontStyle&
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   // hack for now
-  if (aID == FontID::Window || aID == FontID::Document) {
+  if (aID == FontID::MozWindow || aID == FontID::MozDocument) {
     aFontStyle.style = mozilla::FontSlantStyle::Normal();
     aFontStyle.weight = mozilla::FontWeight::Normal();
     aFontStyle.stretch = mozilla::FontStretch::Normal();

@@ -295,7 +295,7 @@ NS_DECL_THREADSAFE_FFI_REFCOUNTING(mozilla::SharedFontList, SharedFontList);
 
 // will not run destructors on dst, give it uninitialized memory
 // font_id is LookAndFeel::FontID
-void Gecko_nsFont_InitSystem(nsFont* dst, int32_t font_id,
+void Gecko_nsFont_InitSystem(nsFont* dst, mozilla::StyleSystemFont font_id,
                              const nsStyleFont* font,
                              const mozilla::dom::Document*);
 

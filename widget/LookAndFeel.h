@@ -26,6 +26,7 @@ class LookAndFeelCache;
 }  // namespace widget
 
 enum class StyleSystemColor : uint8_t;
+enum class StyleSystemFont : uint8_t;
 
 class LookAndFeel {
  public:
@@ -415,32 +416,7 @@ class LookAndFeel {
     End,
   };
 
-  // FIXME: Instead of having this list, use the system font definition in the
-  // style system like we do for colors.
-  enum class FontID {
-    Caption = 0,  // css2
-    Icon,
-    Menu,
-    MessageBox,
-    SmallCaption,
-    StatusBar,
-
-    Window,  // css3
-    Document,
-    Workspace,
-    Desktop,
-    Info,
-    Dialog,
-    Button,
-    PullDownMenu,
-    List,
-    Field,
-
-    Tooltips,  // moz
-    Widget,
-
-    End,  // Not a real value, just for indexing purposes.
-  };
+  using FontID = mozilla::StyleSystemFont;
 
   /**
    * GetColor() return a native color value (might be overwritten by prefs) for

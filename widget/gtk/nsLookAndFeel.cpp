@@ -880,18 +880,18 @@ bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName,
                                   gfxFontStyle& aFontStyle) {
   switch (aID) {
     case FontID::Menu:          // css2
-    case FontID::PullDownMenu:  // css3
+    case FontID::MozPullDownMenu:  // css3
       aFontName = mMenuFontName;
       aFontStyle = mMenuFontStyle;
       break;
 
-    case FontID::Field:  // css3
-    case FontID::List:   // css3
+    case FontID::MozField:  // css3
+    case FontID::MozList:   // css3
       aFontName = mFieldFontName;
       aFontStyle = mFieldFontStyle;
       break;
 
-    case FontID::Button:  // css3
+    case FontID::MozButton:  // css3
       aFontName = mButtonFontName;
       aFontStyle = mButtonFontStyle;
       break;
@@ -901,14 +901,12 @@ bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName,
     case FontID::MessageBox:    // css2
     case FontID::SmallCaption:  // css2
     case FontID::StatusBar:     // css2
-    case FontID::Window:        // css3
-    case FontID::Document:      // css3
-    case FontID::Workspace:     // css3
-    case FontID::Desktop:       // css3
-    case FontID::Info:          // css3
-    case FontID::Dialog:        // css3
-    case FontID::Tooltips:      // moz
-    case FontID::Widget:        // moz
+    case FontID::MozWindow:     // css3
+    case FontID::MozDocument:   // css3
+    case FontID::MozWorkspace:  // css3
+    case FontID::MozDesktop:    // css3
+    case FontID::MozInfo:       // css3
+    case FontID::MozDialog:     // css3
     default:
       aFontName = mDefaultFontName;
       aFontStyle = mDefaultFontStyle;

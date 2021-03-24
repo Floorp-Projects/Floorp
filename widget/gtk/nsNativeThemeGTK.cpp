@@ -1633,7 +1633,7 @@ nsNativeThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
         gfxFontStyle fieldFontStyle;
         nsAutoString unusedFontName;
         DebugOnly<bool> result = LookAndFeel::GetFont(
-            LookAndFeel::FontID::Field, unusedFontName, fieldFontStyle);
+            LookAndFeel::FontID::MozField, unusedFontName, fieldFontStyle);
         MOZ_ASSERT(result, "GTK look and feel supports the field font");
         // NOTE: GetFont returns font sizes in CSS pixels, and we want just
         // that.

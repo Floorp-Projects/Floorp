@@ -746,7 +746,7 @@ LookAndFeelFont nsLookAndFeel::GetLookAndFeelFont(LookAndFeel::FontID anID) {
 
   switch (anID) {
     case LookAndFeel::FontID::Menu:
-    case LookAndFeel::FontID::PullDownMenu:
+    case LookAndFeel::FontID::MozPullDownMenu:
       result = GetLookAndFeelFontInternal(ncm.lfMenuFont, false);
       break;
     case LookAndFeel::FontID::Caption:
@@ -756,14 +756,12 @@ LookAndFeelFont nsLookAndFeel::GetLookAndFeelFont(LookAndFeel::FontID anID) {
       result = GetLookAndFeelFontInternal(ncm.lfSmCaptionFont, false);
       break;
     case LookAndFeel::FontID::StatusBar:
-    case LookAndFeel::FontID::Tooltips:
       result = GetLookAndFeelFontInternal(ncm.lfStatusFont, false);
       break;
-    case LookAndFeel::FontID::Widget:
-    case LookAndFeel::FontID::Dialog:
-    case LookAndFeel::FontID::Button:
-    case LookAndFeel::FontID::Field:
-    case LookAndFeel::FontID::List:
+    case LookAndFeel::FontID::MozDialog:
+    case LookAndFeel::FontID::MozButton:
+    case LookAndFeel::FontID::MozField:
+    case LookAndFeel::FontID::MozList:
       // XXX It's not clear to me whether this is exactly the right
       // set of LookAndFeel values to map to the dialog font; we may
       // want to add or remove cases here after reviewing the visual
