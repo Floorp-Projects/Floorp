@@ -128,26 +128,26 @@ void JSActorService::UnregisterWindowActor(const nsACString& aName) {
     if (XRE_IsParentProcess()) {
       for (auto* cp : ContentParent::AllProcesses(ContentParent::eLive)) {
         Unused << cp->SendUnregisterJSWindowActor(name);
-        for (auto& bp : cp->ManagedPBrowserParent()) {
-          for (auto& wgp : bp.GetKey()->ManagedPWindowGlobalParent()) {
-            managers.AppendElement(
-                static_cast<WindowGlobalParent*>(wgp.GetKey()));
+        for (const auto& bp : cp->ManagedPBrowserParent()) {
+          for (const auto& wgp : bp->ManagedPWindowGlobalParent()) {
+            managers.AppendElement(static_cast<WindowGlobalParent*>(wgp));
           }
         }
       }
 
-      for (auto& wgp :
+      for (const auto& wgp :
            InProcessParent::Singleton()->ManagedPWindowGlobalParent()) {
-        managers.AppendElement(static_cast<WindowGlobalParent*>(wgp.GetKey()));
+        managers.AppendElement(static_cast<WindowGlobalParent*>(wgp));
       }
-      for (auto& wgc :
+      for (const auto& wgc :
            InProcessChild::Singleton()->ManagedPWindowGlobalChild()) {
-        managers.AppendElement(static_cast<WindowGlobalChild*>(wgc.GetKey()));
+        managers.AppendElement(static_cast<WindowGlobalChild*>(wgc));
       }
     } else {
-      for (auto& bc : ContentChild::GetSingleton()->ManagedPBrowserChild()) {
-        for (auto& wgc : bc.GetKey()->ManagedPWindowGlobalChild()) {
-          managers.AppendElement(static_cast<WindowGlobalChild*>(wgc.GetKey()));
+      for (const auto& bc :
+           ContentChild::GetSingleton()->ManagedPBrowserChild()) {
+        for (const auto& wgc : bc->ManagedPWindowGlobalChild()) {
+          managers.AppendElement(static_cast<WindowGlobalChild*>(wgc));
         }
       }
     }
