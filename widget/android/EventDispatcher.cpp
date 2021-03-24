@@ -949,9 +949,13 @@ void EventDispatcher::Attach(java::EventDispatcher::Param aDispatcher,
   dispatcher->SetAttachedToGecko(java::EventDispatcher::ATTACHED);
 }
 
-void EventDispatcher::Shutdown() {
+NS_IMETHODIMP
+EventDispatcher::Shutdown() {
+  MOZ_ASSERT(NS_IsMainThread());
   mDispatcher = nullptr;
   mDOMWindow = nullptr;
+  mListenersMap.Clear();
+  return NS_OK;
 }
 
 void EventDispatcher::Detach() {
