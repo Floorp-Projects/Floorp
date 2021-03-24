@@ -435,7 +435,7 @@ nsresult UpgradeHostToOriginAndInsert(
     rv = histResultContainer->GetChildCount(&childCount);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsTHashtable<nsCStringHashKey> insertedOrigins;
+    nsTHashSet<nsCString> insertedOrigins;
     for (uint32_t i = 0; i < childCount; i++) {
       nsCOMPtr<nsINavHistoryResultNode> child;
       histResultContainer->GetChild(i, getter_AddRefs(child));
@@ -484,7 +484,7 @@ nsresult UpgradeHostToOriginAndInsert(
       rv = aCallback(origin, aType, aPermission, aExpireType, aExpireTime,
                      aModificationTime);
       NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "Insert failed");
-      insertedOrigins.PutEntry(origin);
+      insertedOrigins.Insert(origin);
     }
 
     rv = histResultContainer->SetContainerOpen(false);
