@@ -162,6 +162,13 @@ UniquePtr<RenderCompositor> RenderCompositor::Create(
     if (comp) {
       return comp;
     }
+#if defined(MOZ_WIDGET_ANDROID)
+    // On Android, we do not want to fallback from RenderCompositorOGLSWGL to
+    // RenderCompositorSWGL.
+    if (aWidget->GetCompositorOptions().AllowSoftwareWebRenderOGL()) {
+      return nullptr;
+    }
+#endif
     return RenderCompositorSWGL::Create(std::move(aWidget), aError);
   }
 
