@@ -7,6 +7,7 @@
 
 #include "IHistory.h"
 #include "mozilla/dom/ContentParent.h"
+#include "nsTHashSet.h"
 
 /* A base class for history implementations that implement link coloring. */
 
@@ -40,7 +41,7 @@ class BaseHistory : public IHistory {
     }
   };
 
-  using PendingVisitedQueries = nsTHashtable<nsURIHashKey>;
+  using PendingVisitedQueries = nsTHashSet<nsURIHashKey>;
   using PendingVisitedResults = nsTArray<mozilla::dom::VisitedQueryResult>;
 
   // Starts all the queries in the pending queries list, potentially at the same
