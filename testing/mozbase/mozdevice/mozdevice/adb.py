@@ -3957,7 +3957,6 @@ class ADBDevice(ADBCommand):
         fail_if_running=True,
         grant_runtime_permissions=True,
         timeout=None,
-        is_service=False,
     ):
         """Launches an Android application
 
@@ -3978,7 +3977,6 @@ class ADBDevice(ADBCommand):
             This timeout is per adb call. The total time spent
             may exceed this value. If it is not specified, the value
             set in the ADB constructor is used.
-        :param bool is_service: Whether we want to launch a service or not.
         :raises: :exc:`ADBTimeoutError`
                  :exc:`ADBError`
         """
@@ -3994,8 +3992,7 @@ class ADBDevice(ADBCommand):
         if grant_runtime_permissions:
             self.grant_runtime_permissions(app_name)
 
-        acmd = ["am"] + [
-            "startservice" if is_service else "start",
+        acmd = ["am", "start"] + [
             "-W" if wait else "",
             "-n",
             "%s/%s" % (app_name, activity_name),
@@ -4087,76 +4084,6 @@ class ADBDevice(ADBCommand):
             timeout=timeout,
         )
 
-    def launch_service(
-        self,
-        app_name,
-        activity_name=None,
-        intent="android.intent.action.MAIN",
-        moz_env=None,
-        extra_args=None,
-        url=None,
-        e10s=False,
-        wait=True,
-        grant_runtime_permissions=False,
-        out_file=None,
-        timeout=None,
-    ):
-        """Convenience method to launch a service on Android with various
-        debugging arguments; convenient for geckoview apps.
-
-        :param str app_name: Name of application (e.g.
-            `org.mozilla.geckoview_example` or `org.mozilla.geckoview.test`)
-        :param str activity_name: Activity name, like `GeckoViewActivity`, or
-            `TestRunnerActivity`.
-        :param str intent: Intent to launch application.
-        :param str moz_env: Mozilla specific environment to pass into
-            application.
-        :param str extra_args: Extra arguments to be parsed by the app.
-        :param str url: URL to open
-        :param bool e10s: If True, run in multiprocess mode.
-        :param bool wait: If True, wait for application to start before
-            returning.
-        :param bool grant_runtime_permissions: Grant special runtime
-            permissions.
-        :param str out_file: File where to redirect the output to
-        :param int timeout: The maximum time in
-            seconds for any spawned adb process to complete before
-            throwing an ADBTimeoutError.
-            This timeout is per adb call. The total time spent
-            may exceed this value. If it is not specified, the value
-            set in the ADB constructor is used.
-        :raises: :exc:`ADBTimeoutError`
-                 :exc:`ADBError`
-        """
-        extras = {}
-
-        if moz_env:
-            # moz_env is expected to be a dictionary of environment variables:
-            # geckoview_example itself will set them when launched
-            for (env_count, (env_key, env_val)) in enumerate(moz_env.items()):
-                extras["env" + str(env_count)] = env_key + "=" + env_val
-
-        # Additional command line arguments that the app will read and use (e.g.
-        # with a custom profile)
-        if extra_args:
-            for (arg_count, arg) in enumerate(extra_args):
-                extras["arg" + str(arg_count)] = arg
-
-        extras["use_multiprocess"] = e10s
-        extras["out_file"] = out_file
-        self.launch_application(
-            app_name,
-            "%s.%s" % (app_name, activity_name),
-            intent,
-            url=url,
-            extras=extras,
-            wait=wait,
-            grant_runtime_permissions=grant_runtime_permissions,
-            timeout=timeout,
-            is_service=True,
-            fail_if_running=False,
-        )
-
     def launch_activity(
         self,
         app_name,
@@ -4207,9 +4134,7 @@ class ADBDevice(ADBCommand):
         # Additional command line arguments that the app will read and use (e.g.
         # with a custom profile)
         if extra_args:
-            for (arg_count, arg) in enumerate(extra_args):
-                extras["arg" + str(arg_count)] = arg
-
+            extras["args"] = " ".join(extra_args)
         extras["use_multiprocess"] = e10s
         self.launch_application(
             app_name,

@@ -118,8 +118,7 @@ public final class GeckoLoader {
                                                           final boolean isChildProcess,
                                                           final String profilePath,
                                                           final Collection<String> env,
-                                                          final Map<String, Object> prefs,
-                                                          final boolean xpcshell) {
+                                                          final Map<String, Object> prefs) {
         for (final String e : env) {
             putenv(e);
         }
@@ -157,15 +156,12 @@ public final class GeckoLoader {
             setupInitialPrefs(prefs);
         }
 
-        // Xpcshell tests set up their own temp directory
-        if (!xpcshell) {
-            // setup the tmp path
-            final File f = getTmpDir(context);
-            if (!f.exists()) {
-                f.mkdirs();
-            }
-            putenv("TMPDIR=" + f.getPath());
+        // setup the tmp path
+        final File f = getTmpDir(context);
+        if (!f.exists()) {
+            f.mkdirs();
         }
+        putenv("TMPDIR=" + f.getPath());
 
         putenv("LANG=" + Locale.getDefault().toString());
 
@@ -500,7 +496,7 @@ public final class GeckoLoader {
     private static native void putenv(String map);
 
     // These methods are implemented in mozglue/android/APKOpen.cpp
-    public static native void nativeRun(String[] args, int prefsFd, int prefMapFd, int ipcFd, int crashFd, int crashAnnotationFd, boolean xpcshell, String outFilePath);
+    public static native void nativeRun(String[] args, int prefsFd, int prefMapFd, int ipcFd, int crashFd, int crashAnnotationFd);
     private static native void loadGeckoLibsNative();
     private static native void loadSQLiteLibsNative();
     private static native void loadNSSLibsNative();
