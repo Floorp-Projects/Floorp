@@ -24,7 +24,7 @@
 #include "mozilla/dom/PBackgroundStorageParent.h"
 #include "mozilla/dom/PSessionStorageObserverChild.h"
 #include "mozilla/dom/PSessionStorageObserverParent.h"
-#include "nsClassHashtable.h"
+#include "nsTHashSet.h"
 
 namespace mozilla {
 
@@ -166,17 +166,17 @@ class StorageDBChild final : public PBackgroundStorageChild {
                                         const int64_t& aUsage) override;
   mozilla::ipc::IPCResult RecvError(const nsresult& aRv) override;
 
-  nsTHashtable<nsCStringHashKey>& OriginsHavingData();
+  nsTHashSet<nsCString>& OriginsHavingData();
 
   // Held to get caches to forward answers to.
   RefPtr<LocalStorageManager> mManager;
 
   // Origins having data hash, for optimization purposes only
-  UniquePtr<nsTHashtable<nsCStringHashKey>> mOriginsHavingData;
+  UniquePtr<nsTHashSet<nsCString>> mOriginsHavingData;
 
   // List of caches waiting for preload.  This ensures the contract that
   // AsyncPreload call references the cache for time of the preload.
-  nsTHashtable<nsRefPtrHashKey<LocalStorageCacheBridge>> mLoadingCaches;
+  nsTHashSet<RefPtr<LocalStorageCacheBridge>> mLoadingCaches;
 
   // Expected to be only 0 or 1.
   const uint32_t mPrivateBrowsingId;
