@@ -152,22 +152,28 @@ inline void ImplCycleCollectionTraverse(
 }
 
 namespace mozilla {
-template <typename E, typename SetT>
+template <typename SetT>
 class nsTSetInserter {
   SetT* mSet;
+
+  class Proxy {
+    SetT& mSet;
+
+   public:
+    explicit Proxy(SetT& aSet) : mSet{aSet} {}
+
+    template <typename E2>
+    void operator=(E2&& aValue) {
+      mSet.Insert(std::forward<E2>(aValue));
+    }
+  };
 
  public:
   using iterator_category = std::output_iterator_tag;
 
   explicit nsTSetInserter(SetT& aSet) : mSet{&aSet} {}
 
-  template <typename E2>
-  nsTSetInserter& operator=(E2&& aValue) {
-    mSet->Insert(std::forward<E2>(aValue));
-    return *this;
-  }
-
-  nsTSetInserter& operator*() { return *this; }
+  Proxy operator*() { return Proxy(*mSet); }
 
   nsTSetInserter& operator++() { return *this; }
   nsTSetInserter& operator++(int) { return *this; }
@@ -176,7 +182,7 @@ class nsTSetInserter {
 
 template <typename E>
 auto MakeInserter(nsTBaseHashSet<E>& aSet) {
-  return mozilla::nsTSetInserter<E, nsTBaseHashSet<E>>{aSet};
+  return mozilla::nsTSetInserter<nsTBaseHashSet<E>>{aSet};
 }
 
 #endif  // XPCOM_DS_NSTHASHSET_H_
