@@ -513,6 +513,17 @@
   padding: 5px;
   border-radius: var(--tab-border-radius);
 }
+
+/* The following rulesets allow showing more of the tab title */
+.tabbrowser-tab:not(:hover) > .tab-stack > .tab-content > .tab-close-button {
+  padding-inline-start: 0;
+  width: 19px;
+}
+
+.tabbrowser-tab[visuallyselected=true]:hover,
+#tabbrowser-tabs:not([closebuttons=activetab]) > #tabbrowser-arrowscrollbox > .tabbrowser-tab:not([visuallyselected=true]):hover {
+  --tab-label-mask-size: 1em;
+}
 } /*** END proton ***/
 
 @supports not -moz-bool-pref("browser.proton.tabs.enabled") {

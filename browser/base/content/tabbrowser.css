@@ -62,6 +62,10 @@
 }
 } /*** END !proton ***/
 
+.tabbrowser-tab {
+  --tab-label-mask-size: 2em;
+}
+
 .tab-label {
   white-space: nowrap;
 }
@@ -77,13 +81,13 @@
 .tab-label-container[textoverflow][labeldirection=ltr]:not([pinned]),
 .tab-label-container[textoverflow]:not([labeldirection], [pinned]):-moz-locale-dir(ltr) {
   direction: ltr;
-  mask-image: linear-gradient(to left, transparent, black 2em);
+  mask-image: linear-gradient(to left, transparent, black var(--tab-label-mask-size));
 }
 
 .tab-label-container[textoverflow][labeldirection=rtl]:not([pinned]),
 .tab-label-container[textoverflow]:not([labeldirection], [pinned]):-moz-locale-dir(rtl) {
   direction: rtl;
-  mask-image: linear-gradient(to right, transparent, black 2em);
+  mask-image: linear-gradient(to right, transparent, black var(--tab-label-mask-size));
 }
 
 tabpanels {
