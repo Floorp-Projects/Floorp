@@ -4,17 +4,6 @@
 
 @import url("chrome://browser/skin/error-pages.css");
 
-.illustrated #errorPageContainer {
-  min-height: 300px;
-  display: flex;
-  flex-direction: column;
-  background-position: left center;
-}
-
-#errorPageContainer:dir(rtl) {
-  background-position-x: right;
-}
-
 #header {
   background: none;
   padding-inline-start: 0;
@@ -23,6 +12,14 @@
 
 #text-container {
   margin: auto;
+}
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+#errorPageContainer:dir(rtl) {
+  background-position-x: right;
+}
+
+#text-container {
   padding-inline-start: 38%;
 }
 
@@ -35,6 +32,7 @@
   background-size: 38%;
   background-image: url("chrome://browser/skin/illustrations/error-connection-failure.svg");
 }
+} /*** END !proton ***/
 
 #restart {
   margin-top: 1.2em;

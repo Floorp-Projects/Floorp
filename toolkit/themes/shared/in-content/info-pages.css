@@ -49,6 +49,16 @@ body.wide-container {
   fill: currentColor;
 }
 
+@supports -moz-bool-pref("browser.proton.enabled") {
+.noIllustration {
+  background-image: none;
+}
+
+.container.restore-chosen {
+  margin: 25vh 0;
+}
+} /*** END !proton ***/
+
 .title:-moz-locale-dir(rtl),
 .title:dir(rtl) {
   background-position: right 0;
@@ -170,10 +180,12 @@ td {
 }
 
 /* Illustrated Info Pages */
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .illustrated .title {
   margin-inline-start: 0;
   padding-inline-start: 0;
 }
+} /*** END !proton ***/
 
 .notice-box {
   background-color: var(--in-content-table-background);
