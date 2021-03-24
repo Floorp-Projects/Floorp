@@ -61,39 +61,45 @@ add_task(async function() {
     getTestDirFile("syncManagerTestChild.js").path,
   ];
 
-  // Now we can actually invoke the process.
-  debugDump(`launching child process at ${thisBinary.path} with args ${args}`);
-  Subprocess.call({
-    command: thisBinary.path,
-    arguments: args,
-    stderr: "stdout",
-  });
-
-  // It will take the new xpcshell a little time to start up, but we should see
-  // the effect on the lock within at most a few seconds.
-  await TestUtils.waitForCondition(
-    () => syncManager.isOtherInstanceRunning(),
-    "waiting for child process to take the lock"
-  ).catch(e => {
-    // Rather than throwing out of waitForCondition(), catch and log the failure
-    // manually so that we get output that's a bit more readable.
-    Assert.ok(
-      syncManager.isOtherInstanceRunning(),
-      "child process has the lock"
+  // Run the second copy two times, to show the lock is usable after having
+  // been closed.
+  for (let runs = 0; runs < 2; runs++) {
+    // Now we can actually invoke the process.
+    debugDump(
+      `launching child process at ${thisBinary.path} with args ${args}`
     );
-  });
+    Subprocess.call({
+      command: thisBinary.path,
+      arguments: args,
+      stderr: "stdout",
+    });
 
-  // The lock should have been closed when the process exited, but we'll allow
-  // a little time for the OS to clean up the handle.
-  await TestUtils.waitForCondition(
-    () => !syncManager.isOtherInstanceRunning(),
-    "waiting for child process to release the lock"
-  ).catch(e => {
-    Assert.ok(
-      !syncManager.isOtherInstanceRunning(),
-      "child process has released the lock"
-    );
-  });
+    // It will take the new xpcshell a little time to start up, but we should see
+    // the effect on the lock within at most a few seconds.
+    await TestUtils.waitForCondition(
+      () => syncManager.isOtherInstanceRunning(),
+      "waiting for child process to take the lock"
+    ).catch(e => {
+      // Rather than throwing out of waitForCondition(), catch and log the failure
+      // manually so that we get output that's a bit more readable.
+      Assert.ok(
+        syncManager.isOtherInstanceRunning(),
+        "child process has the lock"
+      );
+    });
+
+    // The lock should have been closed when the process exited, but we'll allow
+    // a little time for the OS to clean up the handle.
+    await TestUtils.waitForCondition(
+      () => !syncManager.isOtherInstanceRunning(),
+      "waiting for child process to release the lock"
+    ).catch(e => {
+      Assert.ok(
+        !syncManager.isOtherInstanceRunning(),
+        "child process has released the lock"
+      );
+    });
+  }
 
   doTestFinish();
 });
