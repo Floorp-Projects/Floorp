@@ -190,7 +190,7 @@ a.perf-photon-button:focus {
   appearance: none;
   color: var(--theme-select-color);
   background-color: var(--theme-select-background);
-  background-image: url('chrome://global/skin/icons/arrow-dropdown-12.svg');
+  background-image: url('chrome://devtools/skin/images/arrow-dropdown-12.svg');
   background-position: right 4px center;
   background-repeat: no-repeat;
 

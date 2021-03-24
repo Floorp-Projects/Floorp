@@ -10,7 +10,7 @@ const TEST_URI = `
   <style type="text/css">
     div {
       width: 300px;height: 300px;border-radius: 50%;
-      background: red url(chrome://global/skin/icons/warning.svg);
+      background: red url(chrome://global/skin/icons/help.svg);
     }
   </style>
   <div></div>
