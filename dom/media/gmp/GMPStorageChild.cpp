@@ -21,13 +21,13 @@
     }                                                         \
   } while (false)
 
+namespace mozilla::gmp {
+
 static nsTArray<uint8_t> ToArray(const uint8_t* aData, uint32_t aDataSize) {
   nsTArray<uint8_t> data;
   data.AppendElements(aData, aDataSize);
   return data;
 }
-
-namespace mozilla::gmp {
 
 GMPRecordImpl::GMPRecordImpl(GMPStorageChild* aOwner, const nsCString& aName,
                              GMPRecordClient* aClient)
