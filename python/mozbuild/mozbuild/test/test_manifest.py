@@ -201,6 +201,7 @@ updatebot:
                                 "branch": "foo",
                                 "enabled": False,
                                 "cc": ["b@example.com"],
+                                "needinfo": ["c@example.com"],
                             },
                         ],
                     },
@@ -232,6 +233,7 @@ updatebot:
       enabled: False
       branch: foo
       cc: ["b@example.com"]
+      needinfo: ["c@example.com"]
             """.strip(),
             ),
             # -------------------------------------------------
@@ -263,6 +265,7 @@ updatebot:
                                 "branch": "foo",
                                 "enabled": False,
                                 "cc": ["b@example.com", "c@example.com"],
+                                "needinfo": ["d@example.com", "e@example.com"],
                             },
                             {
                                 "type": "commit-alert",
@@ -300,6 +303,9 @@ updatebot:
       cc:
         - b@example.com
         - c@example.com
+      needinfo:
+        - d@example.com
+        - e@example.com
     - type: commit-alert
       filter: none
       source-extensions:
