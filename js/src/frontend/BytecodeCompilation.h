@@ -96,14 +96,8 @@ extern JSScript* CompileEvalScript(JSContext* cx,
                                    JS::Handle<js::Scope*> enclosingScope,
                                    JS::Handle<JSObject*> enclosingEnv);
 
-extern void FillCompileOptionsForLazyFunction(JS::CompileOptions& options,
-                                              Handle<BaseScript*> lazy);
-
-extern bool CompileLazyFunction(JSContext* cx, CompilationInput& input,
-                                const char16_t* units, size_t length);
-
-extern bool CompileLazyFunction(JSContext* cx, CompilationInput& input,
-                                const mozilla::Utf8Unit* units, size_t length);
+extern bool DelazifyCanonicalScriptedFunction(JSContext* cx,
+                                              Handle<JSFunction*> fun);
 
 // Certain compile options will disable the syntax parser entirely.
 inline bool CanLazilyParse(const JS::ReadOnlyCompileOptions& options) {
