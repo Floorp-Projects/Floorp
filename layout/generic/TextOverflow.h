@@ -8,7 +8,7 @@
 #define TextOverflow_h_
 
 #include "nsDisplayList.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Likely.h"
 #include "mozilla/UniquePtr.h"
@@ -73,7 +73,7 @@ class TextOverflow final {
   // Returns whether aBlockFrame needs analysis for text overflow.
   static bool CanHaveOverflowMarkers(nsIFrame* aBlockFrame);
 
-  typedef nsTHashtable<nsPtrHashKey<nsIFrame>> FrameHashtable;
+  typedef nsTHashSet<nsIFrame*> FrameHashtable;
 
  private:
   typedef mozilla::WritingMode WritingMode;

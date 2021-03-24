@@ -77,7 +77,7 @@ namespace mozilla {
 
 class PaintedDisplayItemLayerUserData;
 
-static nsTHashtable<nsPtrHashKey<DisplayItemData>>* sAliveDisplayItemDatas;
+static nsTHashSet<DisplayItemData*>* sAliveDisplayItemDatas;
 
 // DO NOT MODIFY THE ARRAY RETURNED BY THIS FUNCTION.
 // It might be the static empty array.
@@ -288,10 +288,10 @@ DisplayItemData::DisplayItemData(LayerManagerData* aParent, uint32_t aKey,
   MOZ_COUNT_CTOR(DisplayItemData);
 
   if (!sAliveDisplayItemDatas) {
-    sAliveDisplayItemDatas = new nsTHashtable<nsPtrHashKey<DisplayItemData>>();
+    sAliveDisplayItemDatas = new nsTHashSet<DisplayItemData*>();
   }
   MOZ_RELEASE_ASSERT(!sAliveDisplayItemDatas->Contains(this));
-  sAliveDisplayItemDatas->PutEntry(this);
+  sAliveDisplayItemDatas->Insert(this);
 
   MOZ_RELEASE_ASSERT(mLayer);
   if (aFrame) {
@@ -443,11 +443,8 @@ DisplayItemData::~DisplayItemData() {
   }
 
   MOZ_RELEASE_ASSERT(sAliveDisplayItemDatas);
-  nsPtrHashKey<mozilla::DisplayItemData>* entry =
-      sAliveDisplayItemDatas->GetEntry(this);
-  MOZ_RELEASE_ASSERT(entry);
-
-  sAliveDisplayItemDatas->RemoveEntry(entry);
+  const bool removed = sAliveDisplayItemDatas->EnsureRemoved(this);
+  MOZ_RELEASE_ASSERT(removed);
 
   if (sAliveDisplayItemDatas->Count() == 0) {
     delete sAliveDisplayItemDatas;
@@ -1669,8 +1666,7 @@ class ContainerState {
    */
   typedef AutoTArray<NewLayerEntry, 1> AutoLayersArray;
   AutoLayersArray mNewChildLayers;
-  nsTHashtable<nsRefPtrHashKey<PaintedLayer>>
-      mPaintedLayersAvailableForRecycling;
+  nsTHashSet<RefPtr<PaintedLayer>> mPaintedLayersAvailableForRecycling;
   nscoord mAppUnitsPerDevPixel;
   bool mSnappingEnabled;
 
@@ -5601,7 +5597,7 @@ void ContainerState::CollectOldLayers() {
                  "Mask layers should not be part of the layer tree.");
     if (layer->HasUserData(&gPaintedDisplayItemLayerUserData)) {
       NS_ASSERTION(layer->AsPaintedLayer(), "Wrong layer type");
-      mPaintedLayersAvailableForRecycling.PutEntry(
+      mPaintedLayersAvailableForRecycling.Insert(
           static_cast<PaintedLayer*>(layer));
     }
 

@@ -489,10 +489,10 @@ void nsTableFrame::ResetRowIndices(
   RowGroupArray rowGroups;
   OrderRowGroups(rowGroups);
 
-  nsTHashtable<nsPtrHashKey<nsTableRowGroupFrame> > excludeRowGroups;
+  nsTHashSet<nsTableRowGroupFrame*> excludeRowGroups;
   nsFrameList::Enumerator excludeRowGroupsEnumerator(aRowGroupsToExclude);
   while (!excludeRowGroupsEnumerator.AtEnd()) {
-    excludeRowGroups.PutEntry(
+    excludeRowGroups.Insert(
         static_cast<nsTableRowGroupFrame*>(excludeRowGroupsEnumerator.get()));
 #ifdef DEBUG
     {
@@ -516,7 +516,7 @@ void nsTableFrame::ResetRowIndices(
   int32_t rowIndex = 0;
   for (uint32_t rgIdx = 0; rgIdx < rowGroups.Length(); rgIdx++) {
     nsTableRowGroupFrame* rgFrame = rowGroups[rgIdx];
-    if (!excludeRowGroups.GetEntry(rgFrame)) {
+    if (!excludeRowGroups.Contains(rgFrame)) {
       const nsFrameList& rowFrames = rgFrame->PrincipalChildList();
       for (nsFrameList::Enumerator rows(rowFrames); !rows.AtEnd();
            rows.Next()) {
