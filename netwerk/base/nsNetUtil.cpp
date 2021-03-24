@@ -1167,15 +1167,15 @@ nsresult NS_GetURLSpecFromDir(nsIFile* file, nsACString& url,
 void NS_GetReferrerFromChannel(nsIChannel* channel, nsIURI** referrer) {
   *referrer = nullptr;
 
-  if (nsCOMPtr<nsIPropertyBag2> props = do_QueryInterface(channel)) {
+  nsCOMPtr<nsIPropertyBag2> props(do_QueryInterface(channel));
+  if (props) {
     // We have to check for a property on a property bag because the
     // referrer may be empty for security reasons (for example, when loading
     // an http page with an https referrer).
-    nsresult rv;
-    nsCOMPtr<nsIURI> uri(
-        do_GetProperty(props, u"docshell.internalReferrer"_ns, &rv));
+    nsresult rv = props->GetPropertyAsInterface(
+        u"docshell.internalReferrer"_ns, NS_GET_IID(nsIURI),
+        reinterpret_cast<void**>(referrer));
     if (NS_SUCCEEDED(rv)) {
-      uri.forget(referrer);
       return;
     }
   }
