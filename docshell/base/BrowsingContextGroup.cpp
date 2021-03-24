@@ -53,13 +53,13 @@ BrowsingContextGroup::BrowsingContextGroup(uint64_t aId) : mId(aId) {
 void BrowsingContextGroup::Register(nsISupports* aContext) {
   MOZ_DIAGNOSTIC_ASSERT(!mDestroyed);
   MOZ_DIAGNOSTIC_ASSERT(aContext);
-  mContexts.Insert(aContext);
+  mContexts.PutEntry(aContext);
 }
 
 void BrowsingContextGroup::Unregister(nsISupports* aContext) {
   MOZ_DIAGNOSTIC_ASSERT(!mDestroyed);
   MOZ_DIAGNOSTIC_ASSERT(aContext);
-  mContexts.Remove(aContext);
+  mContexts.RemoveEntry(aContext);
 
   MaybeDestroy();
 }
@@ -168,7 +168,7 @@ void BrowsingContextGroup::Subscribe(ContentParent* aProcess) {
 void BrowsingContextGroup::Unsubscribe(ContentParent* aProcess) {
   MOZ_DIAGNOSTIC_ASSERT(aProcess);
   MOZ_DIAGNOSTIC_ASSERT(aProcess->GetRemoteType() != PREALLOC_REMOTE_TYPE);
-  mSubscribers.Remove(aProcess);
+  mSubscribers.RemoveEntry(aProcess);
   aProcess->RemoveBrowsingContextGroup(this);
 
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
@@ -237,8 +237,8 @@ void BrowsingContextGroup::Destroy() {
   for (auto& entry : mHosts) {
     entry.GetData()->RemoveBrowsingContextGroup(this);
   }
-  for (const auto& key : mSubscribers) {
-    key->RemoveBrowsingContextGroup(this);
+  for (auto& entry : mSubscribers) {
+    entry.GetKey()->RemoveBrowsingContextGroup(this);
   }
   mHosts.Clear();
   mSubscribers.Clear();

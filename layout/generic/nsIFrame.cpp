@@ -7903,11 +7903,12 @@ void nsIFrame::List(FILE* out, const char* aPrefix, ListFlags aFlags) const {
 }
 
 void nsIFrame::ListTextRuns(FILE* out) const {
-  nsTHashSet<const void*> seen;
+  nsTHashtable<nsVoidPtrHashKey> seen;
   ListTextRuns(out, seen);
 }
 
-void nsIFrame::ListTextRuns(FILE* out, nsTHashSet<const void*>& aSeen) const {
+void nsIFrame::ListTextRuns(FILE* out,
+                            nsTHashtable<nsVoidPtrHashKey>& aSeen) const {
   for (const auto& childList : ChildLists()) {
     for (const nsIFrame* kid : childList.mList) {
       kid->ListTextRuns(out, aSeen);

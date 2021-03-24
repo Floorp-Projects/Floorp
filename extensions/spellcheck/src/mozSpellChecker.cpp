@@ -320,7 +320,7 @@ nsresult mozSpellChecker::GetDictionaryList(
   nsresult rv;
 
   // For catching duplicates
-  nsTHashSet<nsCString> dictionaries;
+  nsTHashtable<nsCStringHashKey> dictionaries;
 
   nsCOMArray<mozISpellCheckingEngine> spellCheckingEngines;
   rv = GetEngineList(&spellCheckingEngines);
@@ -334,8 +334,9 @@ nsresult mozSpellChecker::GetDictionaryList(
     for (auto& dictName : dictNames) {
       // Skip duplicate dictionaries. Only take the first one
       // for each name.
-      if (!dictionaries.EnsureInserted(dictName)) continue;
+      if (dictionaries.Contains(dictName)) continue;
 
+      dictionaries.PutEntry(dictName);
       aDictionaryList->AppendElement(dictName);
     }
   }

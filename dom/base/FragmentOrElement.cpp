@@ -1302,13 +1302,15 @@ nsINode* FindOptimizableSubtreeRoot(nsINode* aNode) {
   return aNode;
 }
 
-StaticAutoPtr<nsTHashSet<nsINode*>> gCCBlackMarkedNodes;
+StaticAutoPtr<nsTHashtable<nsPtrHashKey<nsINode>>> gCCBlackMarkedNodes;
 
 static void ClearBlackMarkedNodes() {
   if (!gCCBlackMarkedNodes) {
     return;
   }
-  for (nsINode* n : *gCCBlackMarkedNodes) {
+  for (auto iter = gCCBlackMarkedNodes->ConstIter(); !iter.Done();
+       iter.Next()) {
+    nsINode* n = iter.Get()->GetKey();
     n->SetCCMarkedRoot(false);
     n->SetInCCBlackTree(false);
   }
@@ -1320,7 +1322,7 @@ void FragmentOrElement::RemoveBlackMarkedNode(nsINode* aNode) {
   if (!gCCBlackMarkedNodes) {
     return;
   }
-  gCCBlackMarkedNodes->Remove(aNode);
+  gCCBlackMarkedNodes->RemoveEntry(aNode);
 }
 
 static bool IsCertainlyAliveNode(nsINode* aNode, Document* aDoc) {
@@ -1366,7 +1368,7 @@ bool FragmentOrElement::CanSkipInCC(nsINode* aNode) {
   }
 
   if (!gCCBlackMarkedNodes) {
-    gCCBlackMarkedNodes = new nsTHashSet<nsINode*>(1020);
+    gCCBlackMarkedNodes = new nsTHashtable<nsPtrHashKey<nsINode>>(1020);
   }
 
   // nodesToUnpurple contains nodes which will be removed
@@ -1410,7 +1412,7 @@ bool FragmentOrElement::CanSkipInCC(nsINode* aNode) {
 
   root->SetCCMarkedRoot(true);
   root->SetInCCBlackTree(foundLiveWrapper);
-  gCCBlackMarkedNodes->Insert(root);
+  gCCBlackMarkedNodes->PutEntry(root);
 
   if (!foundLiveWrapper) {
     return false;
@@ -1425,7 +1427,7 @@ bool FragmentOrElement::CanSkipInCC(nsINode* aNode) {
     for (uint32_t i = 0; i < grayNodes.Length(); ++i) {
       nsINode* node = grayNodes[i];
       node->SetInCCBlackTree(true);
-      gCCBlackMarkedNodes->Insert(node);
+      gCCBlackMarkedNodes->PutEntry(node);
     }
   }
 
@@ -1719,7 +1721,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(FragmentOrElement)
           static_cast<IntersectionObserverList*>(
               elem->GetProperty(nsGkAtoms::intersectionobserverlist));
       if (observers) {
-        for (DOMIntersectionObserver* observer : observers->Keys()) {
+        for (const auto& entry : *observers) {
+          DOMIntersectionObserver* observer = entry.GetKey();
           cb.NoteXPCOMChild(observer);
         }
       }

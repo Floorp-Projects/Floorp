@@ -31,7 +31,7 @@
 #include "nsDebug.h"
 #include "nsISupports.h"
 #include "nsTArrayForwardDeclare.h"
-#include "nsTHashSet.h"
+#include "nsTHashtable.h"
 
 // XXX Things that could be replaced by a forward header
 #include "mozilla/ipc/Transport.h"  // for Transport
@@ -727,7 +727,8 @@ class WeakActorLifecycleProxy final {
   const nsCOMPtr<nsISerialEventTarget> mActorEventTarget;
 };
 
-void TableToArray(const nsTHashSet<void*>& aTable, nsTArray<void*>& aArray);
+void TableToArray(const nsTHashtable<nsPtrHashKey<void>>& aTable,
+                  nsTArray<void*>& aArray);
 
 class IPDLResolverInner final {
  public:
@@ -755,8 +756,8 @@ class IPDLResolverInner final {
 }  // namespace ipc
 
 template <typename Protocol>
-class ManagedContainer : public nsTHashSet<Protocol*> {
-  typedef nsTHashSet<Protocol*> BaseClass;
+class ManagedContainer : public nsTHashtable<nsPtrHashKey<Protocol>> {
+  typedef nsTHashtable<nsPtrHashKey<Protocol>> BaseClass;
 
  public:
   // Having the core logic work on void pointers, rather than typed pointers,
@@ -767,9 +768,10 @@ class ManagedContainer : public nsTHashSet<Protocol*> {
   // functions.)  We do have to pay for it with some eye-bleedingly bad casts,
   // though.
   void ToArray(nsTArray<Protocol*>& aArray) const {
-    ::mozilla::ipc::TableToArray(*reinterpret_cast<const nsTHashSet<void*>*>(
-                                     static_cast<const BaseClass*>(this)),
-                                 reinterpret_cast<nsTArray<void*>&>(aArray));
+    ::mozilla::ipc::TableToArray(
+        *reinterpret_cast<const nsTHashtable<nsPtrHashKey<void>>*>(
+            static_cast<const BaseClass*>(this)),
+        reinterpret_cast<nsTArray<void*>&>(aArray));
   }
 };
 
@@ -780,7 +782,7 @@ Protocol* LoneManagedOrNullAsserts(
     return nullptr;
   }
   MOZ_ASSERT(aManagees.Count() == 1);
-  return *aManagees.cbegin();
+  return aManagees.ConstIter().Get()->GetKey();
 }
 
 template <typename Protocol>
@@ -788,7 +790,7 @@ Protocol* SingleManagedOrNull(const ManagedContainer<Protocol>& aManagees) {
   if (aManagees.Count() != 1) {
     return nullptr;
   }
-  return *aManagees.cbegin();
+  return aManagees.ConstIter().Get()->GetKey();
 }
 
 }  // namespace mozilla

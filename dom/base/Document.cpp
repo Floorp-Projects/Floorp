@@ -4090,7 +4090,7 @@ AbstractThread* Document::AbstractMainThreadFor(
 void Document::NoteScriptTrackingStatus(const nsACString& aURL,
                                         bool aIsTracking) {
   if (aIsTracking) {
-    mTrackingScripts.Insert(aURL);
+    mTrackingScripts.PutEntry(aURL);
   } else {
     MOZ_ASSERT(!mTrackingScripts.Contains(aURL));
   }
@@ -8334,7 +8334,9 @@ already_AddRefed<Attr> Document::CreateAttributeNS(
 }
 
 void Document::ResolveScheduledSVGPresAttrs() {
-  for (SVGElement* svg : mLazySVGPresElements) {
+  for (auto iter = mLazySVGPresElements.ConstIter(); !iter.Done();
+       iter.Next()) {
+    SVGElement* svg = iter.Get()->GetKey();
     svg->UpdateContentDeclarationBlock();
   }
   mLazySVGPresElements.Clear();
@@ -11616,7 +11618,10 @@ void Document::RefreshLinkHrefs() {
   // Get a list of all links we know about.  We will reset them, which will
   // remove them from the document, so we need a copy of what is in the
   // hashtable.
-  const LinkArray linksToNotify = ToArray(mStyledLinks);
+  LinkArray linksToNotify(mStyledLinks.Count());
+  for (auto iter = mStyledLinks.ConstIter(); !iter.Done(); iter.Next()) {
+    linksToNotify.AppendElement(iter.Get()->GetKey());
+  }
 
   // Reset all of our styled links.
   nsAutoScriptBlocker scriptBlocker;
@@ -12558,16 +12563,21 @@ void Document::ScrollToRef() {
 
 void Document::RegisterActivityObserver(nsISupports* aSupports) {
   if (!mActivityObservers) {
-    mActivityObservers = MakeUnique<nsTHashSet<nsISupports*>>();
+    mActivityObservers = MakeUnique<nsTHashtable<nsPtrHashKey<nsISupports>>>();
   }
-  mActivityObservers->Insert(aSupports);
+  mActivityObservers->PutEntry(aSupports);
 }
 
 bool Document::UnregisterActivityObserver(nsISupports* aSupports) {
   if (!mActivityObservers) {
     return false;
   }
-  return mActivityObservers->EnsureRemoved(aSupports);
+  nsPtrHashKey<nsISupports>* entry = mActivityObservers->GetEntry(aSupports);
+  if (!entry) {
+    return false;
+  }
+  mActivityObservers->RemoveEntry(entry);
+  return true;
 }
 
 void Document::EnumerateActivityObservers(
@@ -12576,9 +12586,12 @@ void Document::EnumerateActivityObservers(
     return;
   }
 
-  const auto keyArray =
-      ToTArray<nsTArray<nsCOMPtr<nsISupports>>>(*mActivityObservers);
-  for (auto& observer : keyArray) {
+  nsTArray<nsCOMPtr<nsISupports>> observers(mActivityObservers->Count());
+  for (auto iter = mActivityObservers->ConstIter(); !iter.Done(); iter.Next()) {
+    observers.AppendElement(iter.Get()->GetKey());
+  }
+
+  for (auto& observer : observers) {
     aEnumerator(observer.get());
   }
 }
@@ -13019,7 +13032,10 @@ mozilla::dom::ImageTracker* Document::ImageTracker() {
 }
 
 void Document::GetPlugins(nsTArray<nsIObjectLoadingContent*>& aPlugins) {
-  aPlugins.AppendElements(ToArray(mPlugins));
+  aPlugins.SetCapacity(aPlugins.Length() + mPlugins.Count());
+  for (auto iter = mPlugins.ConstIter(); !iter.Done(); iter.Next()) {
+    aPlugins.AppendElement(iter.Get()->GetKey());
+  }
   auto recurse = [&aPlugins](Document& aSubDoc) {
     aSubDoc.GetPlugins(aPlugins);
     return CallState::Continue;
@@ -13036,7 +13052,7 @@ void Document::ScheduleSVGUseElementShadowTreeUpdate(
     return;
   }
 
-  mSVGUseElementsNeedingShadowTreeUpdate.Insert(&aUseElement);
+  mSVGUseElementsNeedingShadowTreeUpdate.PutEntry(&aUseElement);
 
   if (PresShell* presShell = GetPresShell()) {
     presShell->EnsureStyleFlush();
@@ -13045,13 +13061,22 @@ void Document::ScheduleSVGUseElementShadowTreeUpdate(
 
 void Document::DoUpdateSVGUseElementShadowTrees() {
   MOZ_ASSERT(!mSVGUseElementsNeedingShadowTreeUpdate.IsEmpty());
+  nsTArray<RefPtr<SVGUseElement>> useElementsToUpdate;
 
   do {
-    const auto useElementsToUpdate = ToTArray<nsTArray<RefPtr<SVGUseElement>>>(
-        mSVGUseElementsNeedingShadowTreeUpdate);
-    mSVGUseElementsNeedingShadowTreeUpdate.Clear();
+    useElementsToUpdate.Clear();
+    useElementsToUpdate.SetCapacity(
+        mSVGUseElementsNeedingShadowTreeUpdate.Count());
 
-    for (const auto& useElement : useElementsToUpdate) {
+    {
+      for (auto iter = mSVGUseElementsNeedingShadowTreeUpdate.ConstIter();
+           !iter.Done(); iter.Next()) {
+        useElementsToUpdate.AppendElement(iter.Get()->GetKey());
+      }
+      mSVGUseElementsNeedingShadowTreeUpdate.Clear();
+    }
+
+    for (auto& useElement : useElementsToUpdate) {
       if (MOZ_UNLIKELY(!useElement->IsInComposedDoc())) {
         // The element was in another <use> shadow tree which we processed
         // already and also needed an update, and is removed from the document
@@ -13065,7 +13090,8 @@ void Document::DoUpdateSVGUseElementShadowTrees() {
 }
 
 void Document::NotifyMediaFeatureValuesChanged() {
-  for (RefPtr<HTMLImageElement> imageElement : mResponsiveContent) {
+  for (auto iter = mResponsiveContent.ConstIter(); !iter.Done(); iter.Next()) {
+    RefPtr<HTMLImageElement> imageElement = iter.Get()->GetKey();
     imageElement->MediaFeatureValuesChanged();
   }
 }
@@ -15443,8 +15469,11 @@ void Document::UpdateIntersectionObservations(TimeStamp aNowTime) {
     }
   }
 
-  const auto observers = ToTArray<nsTArray<RefPtr<DOMIntersectionObserver>>>(
-      mIntersectionObservers);
+  nsTArray<RefPtr<DOMIntersectionObserver>> observers(
+      mIntersectionObservers.Count());
+  for (auto& observer : mIntersectionObservers) {
+    observers.AppendElement(observer.GetKey());
+  }
   for (const auto& observer : observers) {
     if (observer) {
       observer->Update(this, time);
@@ -15464,12 +15493,22 @@ void Document::ScheduleIntersectionObserverNotification() {
 }
 
 void Document::NotifyIntersectionObservers() {
-  const auto observers = ToTArray<nsTArray<RefPtr<DOMIntersectionObserver>>>(
-      mIntersectionObservers);
+  nsTArray<RefPtr<DOMIntersectionObserver>> observers(
+      mIntersectionObservers.Count());
+  for (auto iter = mIntersectionObservers.ConstIter(); !iter.Done();
+       iter.Next()) {
+    DOMIntersectionObserver* observer = iter.Get()->GetKey();
+    observers.AppendElement(observer);
+  }
   for (const auto& observer : observers) {
     if (observer) {
-      // MOZ_KnownLive because the 'observers' array guarantees to keep it
-      // alive.
+      // MOZ_KnownLive because 'observers' is guaranteed to
+      // keep it alive.
+      //
+      // Even with https://bugzilla.mozilla.org/show_bug.cgi?id=1620312 fixed
+      // this might need to stay, because 'observers' is not const, so it's not
+      // obvious how to prove via static analysis that it won't change and
+      // release us.
       MOZ_KnownLive(observer)->Notify();
     }
   }
@@ -16946,8 +16985,8 @@ void Document::DoCacheAllKnownLangPrefs() {
   data->GetFontPrefsForLang(nsGkAtoms::x_math);
   // https://bugzilla.mozilla.org/show_bug.cgi?id=1362599#c12
   data->GetFontPrefsForLang(nsGkAtoms::Unicode);
-  for (const auto& key : mLanguagesUsed) {
-    data->GetFontPrefsForLang(key);
+  for (auto iter = mLanguagesUsed.ConstIter(); !iter.Done(); iter.Next()) {
+    data->GetFontPrefsForLang(iter.Get()->GetKey());
   }
   mMayNeedFontPrefsUpdate = false;
 }
@@ -17248,7 +17287,10 @@ bool Document::ShouldIncludeInTelemetry(bool aAllowExtensionURIs) {
 
 void Document::GetConnectedShadowRoots(
     nsTArray<RefPtr<ShadowRoot>>& aOut) const {
-  AppendToArray(aOut, mComposedShadowRoots);
+  aOut.SetCapacity(mComposedShadowRoots.Count());
+  for (const auto& entry : mComposedShadowRoots) {
+    aOut.AppendElement(entry.GetKey());
+  }
 }
 
 bool Document::HasPictureInPictureChildElement() const {

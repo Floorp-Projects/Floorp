@@ -1310,7 +1310,7 @@ void RestyleManager::ProcessRestyledFrames(nsStyleChangeList& aChangeList) {
 
   MaybeClearDestroyedFrames maybeClear(mDestroyedFrames);
   if (!mDestroyedFrames) {
-    mDestroyedFrames = MakeUnique<nsTHashSet<const nsIFrame*>>();
+    mDestroyedFrames = MakeUnique<nsTHashtable<nsPtrHashKey<const nsIFrame>>>();
   }
 
   AUTO_PROFILER_LABEL("RestyleManager::ProcessRestyledFrames", LAYOUT);

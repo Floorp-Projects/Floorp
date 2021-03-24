@@ -1871,7 +1871,7 @@ void nsDisplayListBuilder::WeakFrameRegion::RemoveModifiedFramesAndRects() {
         AnyContentAncestorModified(wrapper.mWeakFrame->GetFrame())) {
       // To avoid multiple O(n) shifts in the array, move the last element of
       // the array to the current position and decrease the array length.
-      mFrameSet.Remove(wrapper.mFrame);
+      mFrameSet.RemoveEntry(wrapper.mFrame);
       mFrames[i] = std::move(mFrames[length - 1]);
       mRects[i] = std::move(mRects[length - 1]);
       length--;
@@ -2037,7 +2037,7 @@ bool nsDisplayListBuilder::AddToAGRBudget(nsIFrame* aFrame) {
 
   if (onBudget) {
     mUsedAGRBudget += cost;
-    mAGRBudgetSet.Insert(aFrame);
+    mAGRBudgetSet.PutEntry(aFrame);
   }
 
   return onBudget;
@@ -7540,9 +7540,9 @@ Matrix4x4 nsDisplayTransform::GetResultingTransformMatrixInternal(
   // aProperties.HasTransform(), since we still need any
   // potential parentsChildrenOnlyTransform.
   Matrix svgTransform, parentsChildrenOnlyTransform;
-  const bool hasSVGTransforms =
-      frame && frame->HasAnyStateBits(NS_FRAME_MAY_BE_TRANSFORMED) &&
-      frame->IsSVGTransformed(&svgTransform, &parentsChildrenOnlyTransform);
+  const bool hasSVGTransforms = frame &&
+    frame->HasAnyStateBits(NS_FRAME_MAY_BE_TRANSFORMED) &&
+    frame->IsSVGTransformed(&svgTransform, &parentsChildrenOnlyTransform);
   bool shouldRound = nsLayoutUtils::ShouldSnapToGrid(frame);
 
   /* Transformed frames always have a transform, or are preserving 3d (and might

@@ -23,7 +23,6 @@
 #include "nsIFile.h"
 #include "nsIThreadInternal.h"
 #include "nsThreadUtils.h"
-#include "nsTHashSet.h"
 
 class mozIStorageConnection;
 
@@ -412,7 +411,7 @@ class StorageDBThread final {
 
   // List of origins (including origin attributes suffix) having data, for
   // optimization purposes only
-  nsTHashSet<nsCString> mOriginsHavingData;
+  nsTHashtable<nsCStringHashKey> mOriginsHavingData;
 
   // Connection used by the worker thread for all read and write ops
   nsCOMPtr<mozIStorageConnection> mWorkerConnection;

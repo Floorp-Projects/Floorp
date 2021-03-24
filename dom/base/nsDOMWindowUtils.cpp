@@ -1442,7 +1442,7 @@ nsDOMWindowUtils::GetTranslationNodes(nsINode* aRoot,
     return NS_ERROR_DOM_WRONG_DOCUMENT_ERR;
   }
 
-  nsTHashSet<nsIContent*> translationNodesHash(500);
+  nsTHashtable<nsPtrHashKey<nsIContent>> translationNodesHash(500);
   RefPtr<nsTranslationNodeList> list = new nsTranslationNodeList;
 
   uint32_t limit = 15000;
@@ -1469,7 +1469,7 @@ nsDOMWindowUtils::GetTranslationNodes(nsINode* aRoot,
     for (nsIContent* child = content->GetFirstChild(); child;
          child = child->GetNextSibling()) {
       if (child->IsText() && child->GetAsText()->HasTextForTranslation()) {
-        translationNodesHash.Insert(content);
+        translationNodesHash.PutEntry(content);
 
         nsIFrame* frame = content->GetPrimaryFrame();
         bool isTranslationRoot = frame && frame->IsBlockFrameOrSubclass();
@@ -3280,7 +3280,7 @@ nsDOMWindowUtils::IsPartOfOpaqueLayer(Element* aElement, bool* aResult) {
 NS_IMETHODIMP
 nsDOMWindowUtils::NumberOfAssignedPaintedLayers(
     const nsTArray<RefPtr<Element>>& aElements, uint32_t* aResult) {
-  nsTHashSet<PaintedLayer*> layers;
+  nsTHashtable<nsPtrHashKey<PaintedLayer>> layers;
   for (Element* element : aElements) {
     nsIFrame* frame = element->GetPrimaryFrame();
     if (!frame) {
@@ -3293,7 +3293,7 @@ nsDOMWindowUtils::NumberOfAssignedPaintedLayers(
       return NS_ERROR_FAILURE;
     }
 
-    layers.Insert(layer);
+    layers.PutEntry(layer);
   }
 
   *aResult = layers.Count();

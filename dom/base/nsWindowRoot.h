@@ -14,7 +14,7 @@ class nsIGlobalObject;
 #include "nsIWeakReferenceUtils.h"
 #include "nsPIWindowRoot.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsTHashSet.h"
+#include "nsTHashtable.h"
 #include "nsHashKeys.h"
 
 class nsWindowRoot final : public nsPIWindowRoot {
@@ -77,7 +77,8 @@ class nsWindowRoot final : public nsPIWindowRoot {
   virtual ~nsWindowRoot();
 
   void GetEnabledDisabledCommandsForControllers(
-      nsIControllers* aControllers, nsTHashSet<nsCString>& aCommandsHandled,
+      nsIControllers* aControllers,
+      nsTHashtable<nsCStringHashKey>& aCommandsHandled,
       nsTArray<nsCString>& aEnabledCommands,
       nsTArray<nsCString>& aDisabledCommands);
 
@@ -94,7 +95,7 @@ class nsWindowRoot final : public nsPIWindowRoot {
 
   // The BrowserParents that are currently registered with this top-level
   // window.
-  typedef nsTHashSet<RefPtr<nsIWeakReference>> WeakBrowserTable;
+  typedef nsTHashtable<nsRefPtrHashKey<nsIWeakReference>> WeakBrowserTable;
   WeakBrowserTable mWeakBrowsers;
 };
 

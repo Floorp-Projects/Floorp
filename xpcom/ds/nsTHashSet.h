@@ -133,11 +133,6 @@ class nsTBaseHashSet : protected nsTHashtable<KeyClass> {
   }
 };
 
-template <typename KeyClass>
-auto RangeSize(const nsTBaseHashSet<KeyClass>& aRange) {
-  return aRange.Count();
-}
-
 class nsCycleCollectionTraversalCallback;
 
 template <class KeyClass>

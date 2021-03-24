@@ -78,7 +78,7 @@ void InspectorUtils::GetAllStyleSheets(GlobalObject& aGlobalObject,
 
     // The non-document stylesheet array can't have duplicates right now, but it
     // could once we include adopted stylesheets.
-    nsTHashSet<StyleSheet*> sheetSet;
+    nsTHashtable<nsPtrHashKey<StyleSheet>> sheetSet;
     for (StyleSheet* sheet : nonDocumentSheets) {
       if (sheetSet.EnsureInserted(sheet)) {
         aResult.AppendElement(sheet);

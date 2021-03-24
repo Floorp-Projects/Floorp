@@ -2095,15 +2095,18 @@ History::IsURIVisited(nsIURI* aURI, mozIVisitedStatusCallback* aCallback) {
 void History::StartPendingVisitedQueries(
     const PendingVisitedQueries& aQueries) {
   if (XRE_IsContentProcess()) {
-    const auto uris = ToTArray<nsTArray<RefPtr<nsIURI>>>(aQueries);
+    nsTArray<RefPtr<nsIURI>> uris(aQueries.Count());
+    for (auto iter = aQueries.ConstIter(); !iter.Done(); iter.Next()) {
+      uris.AppendElement(iter.Get()->GetKey());
+    }
     auto* cpc = mozilla::dom::ContentChild::GetSingleton();
     MOZ_ASSERT(cpc, "Content Protocol is NULL!");
     Unused << cpc->SendStartVisitedQueries(uris);
   } else {
     // TODO(bug 1594368): We could do a single query, as long as we can
     // then notify each URI individually.
-    for (const auto& key : aQueries) {
-      nsresult queryStatus = VisitedQuery::Start(key);
+    for (auto iter = aQueries.ConstIter(); !iter.Done(); iter.Next()) {
+      nsresult queryStatus = VisitedQuery::Start(iter.Get()->GetKey());
       Unused << NS_WARN_IF(NS_FAILED(queryStatus));
     }
   }

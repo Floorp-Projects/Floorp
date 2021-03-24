@@ -1492,37 +1492,37 @@ void nsTreeSanitizer::InitializeStatics() {
 
   sElementsHTML = new AtomsTable(ArrayLength(kElementsHTML));
   for (uint32_t i = 0; kElementsHTML[i]; i++) {
-    sElementsHTML->Insert(kElementsHTML[i]);
+    sElementsHTML->PutEntry(kElementsHTML[i]);
   }
 
   sAttributesHTML = new AtomsTable(ArrayLength(kAttributesHTML));
   for (uint32_t i = 0; kAttributesHTML[i]; i++) {
-    sAttributesHTML->Insert(kAttributesHTML[i]);
+    sAttributesHTML->PutEntry(kAttributesHTML[i]);
   }
 
   sPresAttributesHTML = new AtomsTable(ArrayLength(kPresAttributesHTML));
   for (uint32_t i = 0; kPresAttributesHTML[i]; i++) {
-    sPresAttributesHTML->Insert(kPresAttributesHTML[i]);
+    sPresAttributesHTML->PutEntry(kPresAttributesHTML[i]);
   }
 
   sElementsSVG = new AtomsTable(ArrayLength(kElementsSVG));
   for (uint32_t i = 0; kElementsSVG[i]; i++) {
-    sElementsSVG->Insert(kElementsSVG[i]);
+    sElementsSVG->PutEntry(kElementsSVG[i]);
   }
 
   sAttributesSVG = new AtomsTable(ArrayLength(kAttributesSVG));
   for (uint32_t i = 0; kAttributesSVG[i]; i++) {
-    sAttributesSVG->Insert(kAttributesSVG[i]);
+    sAttributesSVG->PutEntry(kAttributesSVG[i]);
   }
 
   sElementsMathML = new AtomsTable(ArrayLength(kElementsMathML));
   for (uint32_t i = 0; kElementsMathML[i]; i++) {
-    sElementsMathML->Insert(kElementsMathML[i]);
+    sElementsMathML->PutEntry(kElementsMathML[i]);
   }
 
   sAttributesMathML = new AtomsTable(ArrayLength(kAttributesMathML));
   for (uint32_t i = 0; kAttributesMathML[i]; i++) {
-    sAttributesMathML->Insert(kAttributesMathML[i]);
+    sAttributesMathML->PutEntry(kAttributesMathML[i]);
   }
 
   nsCOMPtr<nsIPrincipal> principal =

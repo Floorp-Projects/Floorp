@@ -12,7 +12,6 @@
 #include "nsIObserver.h"
 #include "nsITimer.h"
 #include "nsTHashMap.h"
-#include "nsTHashSet.h"
 #include "nsWeakReference.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Assertions.h"
@@ -133,7 +132,8 @@ class nsWindowMemoryReporter final : public nsIMemoryReporter,
    * This is called asynchronously after we observe a DOM window being detached
    * from its docshell, and also right before we generate a memory report.
    */
-  void CheckForGhostWindows(nsTHashSet<uint64_t>* aOutGhostIDs = nullptr);
+  void CheckForGhostWindows(
+      nsTHashtable<nsUint64HashKey>* aOutGhostIDs = nullptr);
 
   /**
    * Eventually do a check for ghost windows, if we haven't done one recently

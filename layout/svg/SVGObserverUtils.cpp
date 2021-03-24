@@ -1018,11 +1018,13 @@ class SVGRenderingObserverSet {
     MOZ_COUNT_DTOR(SVGRenderingObserverSet);
   }
 
-  void Add(SVGRenderingObserver* aObserver) { mObservers.Insert(aObserver); }
-  void Remove(SVGRenderingObserver* aObserver) { mObservers.Remove(aObserver); }
+  void Add(SVGRenderingObserver* aObserver) { mObservers.PutEntry(aObserver); }
+  void Remove(SVGRenderingObserver* aObserver) {
+    mObservers.RemoveEntry(aObserver);
+  }
 #ifdef DEBUG
   bool Contains(SVGRenderingObserver* aObserver) {
-    return mObservers.Contains(aObserver);
+    return (mObservers.GetEntry(aObserver) != nullptr);
   }
 #endif
   bool IsEmpty() { return mObservers.IsEmpty(); }
@@ -1046,7 +1048,7 @@ class SVGRenderingObserverSet {
   void RemoveAll();
 
  private:
-  nsTHashSet<SVGRenderingObserver*> mObservers;
+  nsTHashtable<nsPtrHashKey<SVGRenderingObserver>> mObservers;
 };
 
 void SVGRenderingObserverSet::InvalidateAll() {
@@ -1054,10 +1056,15 @@ void SVGRenderingObserverSet::InvalidateAll() {
     return;
   }
 
-  const auto observers = std::move(mObservers);
+  AutoTArray<SVGRenderingObserver*, 10> observers;
 
-  for (const auto& observer : observers) {
-    observer->OnNonDOMMutationRenderingChange();
+  for (auto it = mObservers.Iter(); !it.Done(); it.Next()) {
+    observers.AppendElement(it.Get()->GetKey());
+  }
+  mObservers.Clear();
+
+  for (uint32_t i = 0; i < observers.Length(); ++i) {
+    observers[i]->OnNonDOMMutationRenderingChange();
   }
 }
 
@@ -1068,12 +1075,11 @@ void SVGRenderingObserverSet::InvalidateAllForReflow() {
 
   AutoTArray<SVGRenderingObserver*, 10> observers;
 
-  for (auto it = mObservers.cbegin(), end = mObservers.cend(); it != end;
-       ++it) {
-    SVGRenderingObserver* obs = *it;
+  for (auto it = mObservers.Iter(); !it.Done(); it.Next()) {
+    SVGRenderingObserver* obs = it.Get()->GetKey();
     if (obs->ObservesReflow()) {
       observers.AppendElement(obs);
-      mObservers.Remove(it);
+      it.Remove();
     }
   }
 
@@ -1083,12 +1089,17 @@ void SVGRenderingObserverSet::InvalidateAllForReflow() {
 }
 
 void SVGRenderingObserverSet::RemoveAll() {
-  const auto observers = std::move(mObservers);
+  AutoTArray<SVGRenderingObserver*, 10> observers;
+
+  for (auto it = mObservers.Iter(); !it.Done(); it.Next()) {
+    observers.AppendElement(it.Get()->GetKey());
+  }
+  mObservers.Clear();
 
   // Our list is now cleared.  We need to notify the observers we've removed,
   // so they can update their state & remove themselves as mutation-observers.
-  for (const auto& observer : observers) {
-    observer->NotifyEvictedFromRenderingObserverSet();
+  for (uint32_t i = 0; i < observers.Length(); ++i) {
+    observers[i]->NotifyEvictedFromRenderingObserverSet();
   }
 }
 

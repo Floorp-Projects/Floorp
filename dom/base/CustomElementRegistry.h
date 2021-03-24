@@ -20,7 +20,6 @@
 #include "nsGenericHTMLElement.h"
 #include "nsWrapperCache.h"
 #include "nsContentUtils.h"
-#include "nsTHashSet.h"
 
 namespace mozilla {
 class ErrorResult;
@@ -475,7 +474,7 @@ class CustomElementRegistry final : public nsISupports, public nsWrapperCache {
       typeName = aElement->NodeInfo()->NameAtom();
     }
 
-    nsTHashSet<RefPtr<nsIWeakReference>>* elements =
+    nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>* elements =
         mElementCreationCallbacksUpgradeCandidatesMap.Get(typeName);
 
     // If there isn't a table, there won't be a definition added by the
@@ -485,7 +484,7 @@ class CustomElementRegistry final : public nsISupports, public nsWrapperCache {
     }
 
     nsWeakPtr elem = do_GetWeakReference(aElement);
-    elements->Insert(elem);
+    elements->PutEntry(elem);
   }
 
   void TraceDefinitions(JSTracer* aTrc);
@@ -512,7 +511,7 @@ class CustomElementRegistry final : public nsISupports, public nsWrapperCache {
                             CustomElementCreationCallback>
       ElementCreationCallbackMap;
   typedef nsClassHashtable<nsRefPtrHashKey<nsAtom>,
-                           nsTHashSet<RefPtr<nsIWeakReference>>>
+                           nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>>
       CandidateMap;
   typedef JS::GCHashMap<JS::Heap<JSObject*>, RefPtr<nsAtom>,
                         js::MovableCellHasher<JS::Heap<JSObject*>>,
