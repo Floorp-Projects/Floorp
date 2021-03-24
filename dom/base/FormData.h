@@ -32,6 +32,7 @@ class FormData final : public nsISupports,
 
   struct FormDataTuple {
     nsString name;
+    bool wasNullBlob;
     OwningBlobOrDirectoryOrUSVString value;
   };
 
@@ -41,7 +42,7 @@ class FormData final : public nsISupports,
       const nsAString& aName);
 
   void SetNameValuePair(FormDataTuple* aData, const nsAString& aName,
-                        const nsAString& aValue);
+                        const nsAString& aValue, bool aWasNullBlob = false);
 
   void SetNameFilePair(FormDataTuple* aData, const nsAString& aName,
                        File* aFile);
@@ -112,8 +113,8 @@ class FormData final : public nsISupports,
     return NS_OK;
   }
 
-  virtual nsresult AddNameBlobPair(const nsAString& aName,
-                                   Blob* aBlob) override;
+  virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
+                                         Blob* aBlob) override;
 
   virtual nsresult AddNameDirectoryPair(const nsAString& aName,
                                         Directory* aDirectory) override;
