@@ -354,12 +354,12 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 
 .customization-uidensity-menuitem:hover,
 .customization-lwtheme-menu-theme:hover {
-  background-color: var(--buttons-secondary-hover-bgcolor);
+  background-color: var(--button-hover-bgcolor);
 }
 
 .customization-uidensity-menuitem:is(:hover:active, [active="true"]),
 .customization-lwtheme-menu-theme:is(:hover:active, [active="true"]) {
-  background-color: var(--buttons-secondary-active-bgcolor);
+  background-color: var(--button-active-bgcolor);
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
@@ -409,7 +409,7 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
   border-radius: 4px;
   margin: 0;
   margin-top: 4px;
-  background-color: var(--buttons-secondary-bgcolor);
+  background-color: var(--button-bgcolor);
 }
 
 .customization-lwtheme-menu-footeritem:first-child {
@@ -417,11 +417,11 @@ toolbarpaletteitem > #search-container > #searchbar > .searchbar-textbox {
 }
 
 .customization-lwtheme-menu-footeritem:hover {
-  background-color: var(--buttons-secondary-hover-bgcolor);
+  background-color: var(--button-hover-bgcolor);
 }
 
 .customization-lwtheme-menu-footeritem:hover:active {
-  background-color: var(--buttons-secondary-active-bgcolor);
+  background-color: var(--button-active-bgcolor);
 }
 } /*** END proton ***/
 
