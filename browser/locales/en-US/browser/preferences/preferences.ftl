@@ -9,7 +9,11 @@ do-not-track-option-default-content-blocking-known =
 do-not-track-option-always =
     .label = Always
 
-settings-page-title = Settings
+pref-page-title =
+    { PLATFORM() ->
+        [windows] Options
+       *[other] Preferences
+    }
 
 # This is used to determine the width of the search field in about:preferences,
 # in order to make the entire placeholder string visible
@@ -19,9 +23,13 @@ settings-page-title = Settings
 # Notice: The value of the `.style` attribute is a CSS string, and the `width`
 # is the name of the CSS property. It is intended only to adjust the element's width.
 # Do not translate.
-search-input-box2 =
+search-input-box =
     .style = width: 15.4em
-    .placeholder = Find in Settings
+    .placeholder =
+        { PLATFORM() ->
+            [windows] Find in Options
+           *[other] Find in Preferences
+        }
 
 managed-notice = Your browser is being managed by your organization.
 
@@ -53,7 +61,7 @@ category-experimental =
     .tooltiptext = { -brand-short-name } Experiments
 pane-experimental-subtitle = Proceed with Caution
 pane-experimental-search-results-header = { -brand-short-name } Experiments: Proceed with Caution
-pane-experimental-description2 = Changing advanced configuration settings can impact { -brand-short-name } performance or security.
+pane-experimental-description = Changing advanced configuration preferences can impact { -brand-short-name } performance or security.
 
 pane-experimental-reset =
   .label = Restore Defaults
@@ -119,8 +127,11 @@ extension-controlled-enable = To enable the extension go to <img data-l10n-name=
 search-results-header = Search Results
 
 # `<span data-l10n-name="query"></span>` will be replaced by the search term.
-search-results-empty-message2 =
-        Sorry! There are no results in Settings for “<span data-l10n-name="query"></span>”.
+search-results-empty-message =
+    { PLATFORM() ->
+        [windows] Sorry! There are no results in Options for “<span data-l10n-name="query"></span>”.
+       *[other] Sorry! There are no results in Preferences for “<span data-l10n-name="query"></span>”.
+    }
 
 search-results-help-link = Need help? Visit <a data-l10n-name="url">{ -brand-short-name } Support</a>
 
@@ -443,14 +454,14 @@ update-application-use-service =
     .label = Use a background service to install updates
     .accesskey = b
 
-update-setting-write-failure-title2 = Error saving Update settings
+update-setting-write-failure-title = Error saving Update preferences
 
 # Variables:
 #   $path (String) - Path to the configuration file
 # The newlines between the main text and the line containing the path is
 # intentional so the path is easier to identify.
-update-setting-write-failure-message2 =
-    { -brand-short-name } encountered an error and didn’t save this change. Note that changing this update setting requires permission to write to the file below. You or a system administrator may be able resolve the error by granting the Users group full control to this file.
+update-setting-write-failure-message =
+    { -brand-short-name } encountered an error and didn’t save this change. Note that setting this update preference requires permission to write to the file below. You or a system administrator may be able resolve the error by granting the Users group full control to this file.
 
     Could not write to file: { $path }
 
@@ -695,7 +706,7 @@ search-show-suggestions-above-history-option =
 search-show-suggestions-private-windows =
     .label = Show search suggestions in Private Windows
 
-suggestions-addressbar-settings-generic2 = Change settings for other address bar suggestions
+suggestions-addressbar-settings-generic = Change preferences for other address bar suggestions
 
 search-suggestions-cant-show = Search suggestions will not be shown in location bar results because you have configured { -brand-short-name } to never remember history.
 
@@ -731,8 +742,12 @@ search-keyword-warning-bookmark = You have chosen a keyword that is currently in
 
 ## Containers Section
 
-containers-back-button2 =
-    .aria-label = Back to Settings
+containers-back-button =
+    .aria-label =
+      { PLATFORM() ->
+          [windows] Back to Options
+         *[other] Back to Preferences
+      }
 containers-header = Container Tabs
 containers-add-button =
     .label = Add New Container
@@ -742,8 +757,8 @@ containers-new-tab-check =
     .label = Select a container for each new tab
     .accesskey = S
 
-containers-settings-button =
-    .label = Settings
+containers-preferences-button =
+    .label = Preferences
 containers-remove-button =
     .label = Remove
 
@@ -751,7 +766,7 @@ containers-remove-button =
 ## more discrete ("signed in" no longer means "and sync is connected").
 
 sync-signedout-caption = Take Your Web With You
-sync-signedout-description2 = Synchronize your bookmarks, history, tabs, passwords, add-ons, and settings across all your devices.
+sync-signedout-description = Synchronize your bookmarks, history, tabs, passwords, add-ons, and preferences across all your devices.
 
 sync-signedout-account-signin2 =
     .label = Sign in to { -sync-brand-short-name }…
@@ -804,7 +819,7 @@ prefs-sync-setup =
     .label = Set Up { -sync-brand-short-name }…
     .accesskey = S
 
-prefs-sync-offer-setup-label2 = Synchronize your bookmarks, history, tabs, passwords, add-ons, and settings across all your devices.
+prefs-sync-offer-setup-label = Synchronize your bookmarks, history, tabs, passwords, add-ons, and preferences across all your devices.
 
 prefs-sync-now =
     .labelnotsyncing = Sync Now
@@ -822,7 +837,11 @@ sync-currently-syncing-logins-passwords = Logins and passwords
 sync-currently-syncing-addresses = Addresses
 sync-currently-syncing-creditcards = Credit cards
 sync-currently-syncing-addons = Add-ons
-sync-currently-syncing-settings = Settings
+sync-currently-syncing-prefs =
+    { PLATFORM() ->
+        [windows] Options
+       *[other] Preferences
+    }
 
 sync-change-options =
     .label = Change…
@@ -871,8 +890,12 @@ sync-engine-addons =
     .tooltiptext = Extensions and themes for Firefox desktop
     .accesskey = A
 
-sync-engine-settings =
-    .label = Settings
+sync-engine-prefs =
+    .label =
+        { PLATFORM() ->
+            [windows] Options
+           *[other] Preferences
+        }
     .tooltiptext = General, Privacy, and Security settings you’ve changed
     .accesskey = s
 
@@ -1311,12 +1334,23 @@ certs-devices =
     .label = Security Devices…
     .accesskey = D
 
-space-alert-over-5gb-settings-button =
-    .label = Open Settings
-    .accesskey = O
+space-alert-over-5gb-pref-button =
+    .label =
+        { PLATFORM() ->
+            [windows] Open Options
+           *[other] Open Preferences
+        }
+    .accesskey =
+        { PLATFORM() ->
+            [windows] O
+           *[other] O
+        }
 
-space-alert-over-5gb-message2 =
-    { -brand-short-name } is running out of disk space. Website contents may not display properly. You can clear stored data in Settings > Privacy & Security > Cookies and Site Data.
+space-alert-over-5gb-message =
+    { PLATFORM() ->
+        [windows] { -brand-short-name } is running out of disk space. Website contents may not display properly. You can clear stored data in Options > Privacy & Security > Cookies and Site Data.
+       *[other] { -brand-short-name } is running out of disk space. Website contents may not display properly. You can clear stored data in Preferences > Privacy & Security > Cookies and Site Data.
+    }
 
 space-alert-under-5gb-message = { -brand-short-name } is running out of disk space. Website contents may not display properly. Visit “Learn More” to optimize your disk usage for better browsing experience.
 

@@ -1980,8 +1980,8 @@ class SidebarFooter extends HTMLElement {
         link.id = "preferencesButton";
         return link;
       },
-      titleL10nId: "sidebar-settings-button-title",
-      labelL10nId: "addons-settings-button",
+      titleL10nId: "sidebar-preferences-button-title",
+      labelL10nId: "preferences",
       onClick: e => {
         e.preventDefault();
         AMTelemetry.recordLinkEvent({
