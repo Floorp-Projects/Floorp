@@ -35,6 +35,8 @@ add_task(async function test_popup_opened() {
           location: "3:12",
           last_line: "    <title>&nonExistingEntity;</title>",
           last_line_len: "38",
+          hidden: "false",
+          destroyed: "false",
         },
       },
     ],
