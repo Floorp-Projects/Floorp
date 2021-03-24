@@ -52,7 +52,6 @@ class mozInlineSpellStatus {
 
   RefPtr<mozInlineSpellChecker> mSpellChecker;
 
-  // what happened?
   enum Operation {
     eOpChange,        // for SpellCheckAfterEditorChange except
                       // deleteSelection
@@ -61,8 +60,10 @@ class mozInlineSpellStatus {
     eOpNavigation,    // for HandleNavigationEvent
     eOpSelection,     // re-check all misspelled words
     eOpResume
-  };  // for resuming a previously started check
-  Operation mOp;
+  };
+
+  // See `mOp`.
+  Operation GetOperation() const { return mOp; }
 
   // Used for events where we have already computed the range to use. It can
   // also be nullptr in these cases where we need to check the entire range.
@@ -75,6 +76,9 @@ class mozInlineSpellStatus {
   const nsRange* GetNoCheckRange() const { return mNoCheckRange; }
 
  private:
+  // For resuming a previously started check.
+  Operation mOp;
+
   //
   // If we happen to know something was inserted, this is that range.
   // Can be nullptr (this only allows an optimization, so not setting doesn't
