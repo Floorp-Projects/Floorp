@@ -16,7 +16,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ActorManagerParent: "resource://gre/modules/ActorManagerParent.jsm",
   EventDispatcher: "resource://gre/modules/Messaging.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
-  SafeBrowsing: "resource://gre/modules/SafeBrowsing.jsm",
   Services: "resource://gre/modules/Services.jsm",
 });
 
@@ -206,10 +205,6 @@ class GeckoViewStartup {
         });
 
         ChromeUtils.import("resource://gre/modules/NotificationDB.jsm");
-
-        // Initialize safe browsing module. This is required for content
-        // blocking features and manages blocklist downloads and updates.
-        SafeBrowsing.init();
 
         // Listen for global EventDispatcher messages
         EventDispatcher.instance.registerListener(this, [
