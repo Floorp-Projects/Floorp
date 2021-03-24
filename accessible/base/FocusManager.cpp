@@ -28,7 +28,14 @@ FocusManager::FocusManager() {}
 FocusManager::~FocusManager() {}
 
 LocalAccessible* FocusManager::FocusedAccessible() const {
-  if (mActiveItem) return mActiveItem;
+  if (mActiveItem) {
+    if (mActiveItem->IsDefunct()) {
+      MOZ_ASSERT_UNREACHABLE("Stored active item is unbound from document");
+      return nullptr;
+    }
+
+    return mActiveItem;
+  }
 
   nsINode* focusedNode = FocusedDOMNode();
   if (focusedNode) {
