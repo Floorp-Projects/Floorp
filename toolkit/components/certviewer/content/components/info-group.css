@@ -20,11 +20,15 @@
   font-weight: 700;
   color: var(--in-content-text-color);
   font-size: 1em;
+  vertical-align: middle;
 }
 
 #critical-info {
-  height: 13px;
-  width: 13px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  height: 16px;
+  width: 16px;
+  vertical-align: middle;
 }
 
 .extension {
