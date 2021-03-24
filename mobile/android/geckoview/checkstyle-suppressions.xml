@@ -8,6 +8,6 @@
   "https://checkstyle.org/dtds/suppressions_1_2.dtd">
 
 <suppressions>
-  <suppress checks="JavadocMethod"
+  <suppress id="checkstyle:javadocmethod"
     files="org[/\\]mozilla[/\\]gecko[/\\]"/>
 </suppressions>
