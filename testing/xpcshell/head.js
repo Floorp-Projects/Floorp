@@ -12,7 +12,7 @@
 
 /* defined by the harness */
 /* globals _HEAD_FILES, _HEAD_JS_PATH, _JSDEBUGGER_PORT, _JSCOV_DIR,
-    _MOZINFO_JS_PATH, _TEST_FILE, _TEST_NAME, _TEST_CWD, _TESTING_MODULES_DIR:true,
+    _MOZINFO_JS_PATH, _TEST_FILE, _TEST_NAME, _TESTING_MODULES_DIR:true,
     _PREFS_FILE */
 
 /* defined by XPCShellImpl.cpp */
@@ -63,8 +63,6 @@ let _XPCOMUtils = ChromeUtils.import(
   "resource://gre/modules/XPCOMUtils.jsm",
   null
 ).XPCOMUtils;
-
-let _OS = ChromeUtils.import("resource://gre/modules/osfile.jsm", null).OS;
 
 // Support a common assertion library, Assert.jsm.
 var AssertCls = ChromeUtils.import("resource://testing-common/Assert.jsm", null)
@@ -505,30 +503,6 @@ function _initDebugging(port) {
 }
 
 function _execute_test() {
-  if (typeof _TEST_CWD != "undefined") {
-    let cwd_complete = false;
-    _OS.File.setCurrentDirectory(_TEST_CWD)
-      .then(_ => (cwd_complete = true))
-      .catch(e => {
-        _testLogger.error(_exception_message(e));
-        cwd_complete = true;
-      });
-    _Services.tm.spinEventLoopUntil(
-      "Test(xpcshell/head.js:setCurrentDirectory)",
-      () => cwd_complete
-    );
-  }
-
-  if (runningInParent && _AppConstants.platform == "android") {
-    _Services.obs.notifyObservers(null, "profile-after-change");
-    // Wake up GeckoViewStartup
-    let geckoViewStartup = Cc["@mozilla.org/geckoview/startup;1"].getService(
-      Ci.nsIObserver
-    );
-    geckoViewStartup.observe(null, "profile-after-change", null);
-    geckoViewStartup.observe(null, "app-startup", null);
-  }
-
   // _JSDEBUGGER_PORT is dynamically defined by <runxpcshelltests.py>.
   if (_JSDEBUGGER_PORT) {
     try {
@@ -667,7 +641,7 @@ function _execute_test() {
     .catch(reportCleanupError)
     .then(() => (complete = true));
   _Services.tm.spinEventLoopUntil(
-    "Test(xpcshell/head.js:_execute_test)",
+    "Test(xpcshel/head.js:_execute_test)",
     () => complete
   );
   if (cleanupStartTime) {
@@ -1382,10 +1356,6 @@ function do_load_child_test_harness() {
 
   if (typeof _JSCOV_DIR === "string") {
     command += " const _JSCOV_DIR=" + uneval(_JSCOV_DIR) + ";";
-  }
-
-  if (typeof _TEST_CWD != "undefined") {
-    command += " const _TEST_CWD=" + uneval(_TEST_CWD) + ";";
   }
 
   if (_TESTING_MODULES_DIR) {

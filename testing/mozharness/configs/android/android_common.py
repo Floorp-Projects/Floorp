@@ -291,6 +291,7 @@ config = {
         "xpcshell": {
             "run_filename": "remotexpcshelltests.py",
             "testsdir": "xpcshell",
+            "install": False,
             "options": [
                 "--xre-path=%(xre_path)s",
                 "--testing-modules-dir=%(modules_dir)s",
@@ -303,7 +304,6 @@ config = {
                 "--log-errorsummary=%(error_summary_file)s",
                 "--log-tbpl-level=%(log_tbpl_level)s",
                 "--test-plugin-path=none",
-                "--threads=4",
                 "--deviceSerial=%(device_serial)s",
                 "%(xpcshell_extra)s",
             ],

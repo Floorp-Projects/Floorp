@@ -362,10 +362,11 @@ static void FreeArgv(char** argv, int argc) {
 }
 
 extern "C" APKOPEN_EXPORT void MOZ_JNICALL
-Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(
-    JNIEnv* jenv, jclass jc, jobjectArray jargs, int prefsFd, int prefMapFd,
-    int ipcFd, int crashFd, int crashAnnotationFd, bool xpcshell,
-    jstring outFilePath) {
+Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(JNIEnv* jenv, jclass jc,
+                                                     jobjectArray jargs,
+                                                     int prefsFd, int prefMapFd,
+                                                     int ipcFd, int crashFd,
+                                                     int crashAnnotationFd) {
   EnsureBaseProfilerInitialized();
 
   int argc = 0;
@@ -380,15 +381,7 @@ Java_org_mozilla_gecko_mozglue_GeckoLoader_nativeRun(
 #ifdef MOZ_LINKER
     ElfLoader::Singleton.ExpectShutdown(false);
 #endif
-    const char* outFilePathRaw = nullptr;
-    if (xpcshell) {
-      MOZ_ASSERT(outFilePath);
-      outFilePathRaw = jenv->GetStringUTFChars(outFilePath, nullptr);
-    }
-    gBootstrap->GeckoStart(jenv, argv, argc, sAppData, xpcshell, outFilePathRaw);
-    if (outFilePathRaw) {
-      jenv->ReleaseStringUTFChars(outFilePath, outFilePathRaw);
-    }
+    gBootstrap->GeckoStart(jenv, argv, argc, sAppData);
 #ifdef MOZ_LINKER
     ElfLoader::Singleton.ExpectShutdown(true);
 #endif

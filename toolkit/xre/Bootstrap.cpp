@@ -73,9 +73,8 @@ class BootstrapImpl final : public Bootstrap {
 
 #ifdef MOZ_WIDGET_ANDROID
   virtual void GeckoStart(JNIEnv* aEnv, char** argv, int argc,
-                          const StaticXREAppData& aAppData,
-                          bool xpcshell, const char* outFilePath) override {
-    ::GeckoStart(aEnv, argv, argc, aAppData, xpcshell, outFilePath);
+                          const StaticXREAppData& aAppData) override {
+    ::GeckoStart(aEnv, argv, argc, aAppData);
   }
 
   virtual void XRE_SetAndroidChildFds(
