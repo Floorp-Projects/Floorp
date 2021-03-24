@@ -940,11 +940,17 @@ var BrowserPageActions = {
       return;
     }
 
-    this._contextAction = this.actionForNode(popup.triggerNode);
-    if (!this._contextAction) {
+    let action = this.actionForNode(popup.triggerNode);
+    if (
+      !action ||
+      // In Proton, only extension actions provide a context menu.
+      (UrlbarPrefs.get("browser.proton.urlbar.enabled") && !action.extensionID)
+    ) {
+      this._contextAction = null;
       event.preventDefault();
       return;
     }
+    this._contextAction = action;
 
     let state;
     if (this._contextAction._isMozillaAction) {
