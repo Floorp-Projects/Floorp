@@ -24,7 +24,8 @@
 
 using namespace mozilla;
 
-void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent) {
+void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent,
+                                     NSEventModifierFlags aModifierFlags) {
   MOZ_ASSERT(aTargetContent, "null ptr");
 
   dom::Document* doc = aTargetContent->OwnerDoc();
@@ -32,12 +33,15 @@ void nsMenuUtilsX::DispatchCommandTo(nsIContent* aTargetContent) {
     RefPtr<dom::XULCommandEvent> event =
         new dom::XULCommandEvent(doc, doc->GetPresContext(), nullptr);
 
+    bool ctrlKey = aModifierFlags & NSEventModifierFlagControl;
+    bool altKey = aModifierFlags & NSEventModifierFlagOption;
+    bool shiftKey = aModifierFlags & NSEventModifierFlagShift;
+    bool cmdKey = aModifierFlags & NSEventModifierFlagCommand;
+
     IgnoredErrorResult rv;
     event->InitCommandEvent(u"command"_ns, true, true,
-                            nsGlobalWindowInner::Cast(doc->GetInnerWindow()), 0, false, false,
-                            false, false, nullptr, 0, rv);
-    // FIXME: Should probably figure out how to init this with the actual
-    // pressed keys, but this is a big old edge case anyway. -dwh
+                            nsGlobalWindowInner::Cast(doc->GetInnerWindow()), 0, ctrlKey, altKey,
+                            shiftKey, cmdKey, nullptr, 0, rv);
     if (!rv.Failed()) {
       event->SetTrusted(true);
       aTargetContent->DispatchEvent(*event);
