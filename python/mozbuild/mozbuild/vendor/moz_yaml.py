@@ -127,6 +127,7 @@ updatebot:
     - type: commit-alert
       branch: upstream-branch-name
       cc: ["bugzilla@email.address", "another@example.com"]
+      needinfo: ["bugzilla@email.address", "another@example.com"]
       enabled: True
       filter: security
     - type: vendoring
@@ -367,6 +368,7 @@ def _schema_1():
                             "branch": All(str, Length(min=1)),
                             "enabled": Boolean(),
                             "cc": Unique([str]),
+                            "needinfo": Unique([str]),
                             "filter": In(
                                 [
                                     "none",
