@@ -1389,8 +1389,9 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
     // We do a simple check to see if the beginning of our word is in the
     // exclusion range. Because the exclusion range is a multiple of a word,
     // this is sufficient.
-    if (aStatus->mNoCheckRange &&
-        aStatus->mNoCheckRange->IsPointInRange(*beginNode, beginOffset, erv)) {
+    if (aStatus->GetNoCheckRange() &&
+        aStatus->GetNoCheckRange()->IsPointInRange(*beginNode, beginOffset,
+                                                   erv)) {
       continue;
     }
 
