@@ -12,6 +12,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLEncoder;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.UUID;
@@ -29,7 +30,6 @@ import android.media.MediaDrm;
 import android.media.NotProvisionedException;
 import android.util.Log;
 
-import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ProxySelector;
 
 @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -44,6 +44,8 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
     // MediaDrm.KeyStatus information listener is supported on M+, adding a
     // dummy key id to report key status.
     private static final byte[] DUMMY_KEY_ID = new byte[] {0};
+
+    public static final Charset UTF_8 = Charset.forName("UTF-8");
 
     private UUID mSchemeUUID;
     private Handler mHandler;
@@ -192,7 +194,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
             mSessionMIMETypes.put(sessionId, initDataType);
             mSessionIds.add(sessionId);
             if (DEBUG) Log.d(LOGTAG, " StringID : " + new String(
-                    sessionId.array(), StringUtils.UTF_8) + " is put into mSessionIds ");
+                    sessionId.array(), UTF_8) + " is put into mSessionIds ");
         } catch (final android.media.NotProvisionedException e) {
             if (DEBUG) Log.d(LOGTAG, "Device not provisioned:" + e.getMessage());
             if (sessionId != null) {
@@ -216,7 +218,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
             return;
         }
 
-        final ByteBuffer session = ByteBuffer.wrap(sessionId.getBytes(StringUtils.UTF_8));
+        final ByteBuffer session = ByteBuffer.wrap(sessionId.getBytes(UTF_8));
         if (!sessionExists(session)) {
             onRejectPromise(promiseId, "Invalid session during updateSession.");
             return;
@@ -251,7 +253,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
             return;
         }
 
-        final ByteBuffer session = ByteBuffer.wrap(sessionId.getBytes(StringUtils.UTF_8));
+        final ByteBuffer session = ByteBuffer.wrap(sessionId.getBytes(UTF_8));
         mSessionIds.remove(session);
         mDrm.closeSession(session.array());
         onSessionClosed(promiseId, session.array());
@@ -427,10 +429,10 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
                     // No need to handle here if we're not in privacy mode.
                     break;
                 case MediaDrm.EVENT_KEY_EXPIRED:
-                    if (DEBUG) Log.d(LOGTAG, "MediaDrm.EVENT_KEY_EXPIRED, sessionId=" + new String(session.array(), StringUtils.UTF_8));
+                    if (DEBUG) Log.d(LOGTAG, "MediaDrm.EVENT_KEY_EXPIRED, sessionId=" + new String(session.array(), UTF_8));
                     break;
                 case MediaDrm.EVENT_VENDOR_DEFINED:
-                    if (DEBUG) Log.d(LOGTAG, "MediaDrm.EVENT_VENDOR_DEFINED, sessionId=" + new String(session.array(), StringUtils.UTF_8));
+                    if (DEBUG) Log.d(LOGTAG, "MediaDrm.EVENT_VENDOR_DEFINED, sessionId=" + new String(session.array(), UTF_8));
                     break;
                 default:
                     if (DEBUG) Log.d(LOGTAG, "Invalid DRM event " + event);
@@ -506,7 +508,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
 
                 final int responseCode = urlConnection.getResponseCode();
                 if (responseCode == HttpURLConnection.HTTP_OK) {
-                    in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream(), StringUtils.UTF_8));
+                    in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream(), UTF_8));
                     String inputLine;
                     final StringBuffer response = new StringBuffer();
 
@@ -514,7 +516,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
                         response.append(inputLine);
                     }
                     in.close();
-                    mResponseBody = String.valueOf(response).getBytes(StringUtils.UTF_8);
+                    mResponseBody = String.valueOf(response).getBytes(UTF_8);
                     if (DEBUG) Log.d(LOGTAG, "Provisioning, response received.");
                     if (mResponseBody != null) Log.d(LOGTAG, "response length=" + mResponseBody.length);
                 } else {
@@ -657,7 +659,7 @@ public class GeckoMediaDrmBridgeV21 implements GeckoMediaDrm {
                 mCrypto = new MediaCrypto(mSchemeUUID, cryptoSessionId);
                 mSessionIds.add(mCryptoSessionId);
                 if (DEBUG) Log.d(LOGTAG, "MediaCrypto successfully created! - SId " + INVALID_SESSION_ID +
-                        ", " + new String(cryptoSessionId, StringUtils.UTF_8));
+                        ", " + new String(cryptoSessionId, UTF_8));
                 return true;
             } else {
                 if (DEBUG) Log.d(LOGTAG, "Cannot create MediaCrypto for unsupported scheme.");
