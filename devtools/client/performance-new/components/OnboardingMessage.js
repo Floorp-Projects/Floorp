@@ -101,6 +101,15 @@ class OnboardingMessage extends PureComponent {
       return null;
     }
 
+    /** @type {any} */
+    const anyWindow = window;
+
+    // If gToolbox is not defined on window, the component is rendered in
+    // about:debugging, and no onboarding message should be displayed.
+    if (!anyWindow.gToolbox) {
+      return null;
+    }
+
     const learnMoreLink = button({
       className: "perf-external-link",
       onClick: this.handleLearnMoreClick,
