@@ -11,7 +11,7 @@
 #include "mozIPersonalDictionary.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 #include "nsCRT.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
@@ -53,8 +53,8 @@ class mozPersonalDictionary final : public mozIPersonalDictionary,
   nsCOMPtr<nsIFile> mFile;
   mozilla::Monitor mMonitor;
   mozilla::Monitor mMonitorSave;
-  nsTHashtable<nsStringHashKey> mDictionaryTable;
-  nsTHashtable<nsStringHashKey> mIgnoreTable;
+  nsTHashSet<nsString> mDictionaryTable;
+  nsTHashSet<nsString> mIgnoreTable;
 
  private:
   /* wait for the asynchronous load of the dictionary to be completed */
