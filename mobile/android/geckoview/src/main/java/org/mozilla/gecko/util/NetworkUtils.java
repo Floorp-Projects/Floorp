@@ -5,8 +5,10 @@
 
 package org.mozilla.gecko.util;
 
+import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import androidx.annotation.NonNull;
 import android.telephony.TelephonyManager;
 
 public class NetworkUtils {
@@ -63,6 +65,13 @@ public class NetworkUtils {
         }
     }
 
+    /**
+     * Indicates whether network connectivity exists and it is possible to establish connections and pass data.
+     */
+    public static boolean isConnected(final @NonNull Context context) {
+        return isConnected((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE));
+    }
+
     public static boolean isConnected(final ConnectivityManager connectivityManager) {
         if (connectivityManager == null) {
             return false;
@@ -99,6 +108,11 @@ public class NetworkUtils {
             default:
                 return ConnectionSubType.UNKNOWN;
         }
+    }
+
+    public static boolean isWifi(@NonNull final Context context) {
+        final ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
+        return getConnectionType(connectivityManager) == ConnectionType.WIFI;
     }
 
     public static ConnectionType getConnectionType(final ConnectivityManager connectivityManager) {

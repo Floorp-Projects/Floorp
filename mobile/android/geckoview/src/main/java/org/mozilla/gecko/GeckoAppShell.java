@@ -24,7 +24,6 @@ import org.mozilla.geckoview.BuildConfig;
 import org.mozilla.geckoview.R;
 
 import android.annotation.SuppressLint;
-import android.app.ActivityManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -78,23 +77,8 @@ import android.webkit.MimeTypeMap;
 public class GeckoAppShell {
     private static final String LOGTAG = "GeckoAppShell";
 
-    /*
-     * Keep these values consistent with |SensorType| in HalSensor.h
-     */
-    public static final int SENSOR_ORIENTATION = 0;
-    public static final int SENSOR_ACCELERATION = 1;
-    public static final int SENSOR_PROXIMITY = 2;
-    public static final int SENSOR_LINEAR_ACCELERATION = 3;
-    public static final int SENSOR_GYROSCOPE = 4;
-    public static final int SENSOR_LIGHT = 5;
-    public static final int SENSOR_ROTATION_VECTOR = 6;
-    public static final int SENSOR_GAME_ROTATION_VECTOR = 7;
-
     // We have static members only.
     private GeckoAppShell() { }
-
-    // Name for app-scoped prefs
-    public static final String APP_PREFS_NAME = "GeckoApp";
 
     private static class GeckoCrashHandler extends CrashHandler {
 
@@ -121,7 +105,7 @@ public class GeckoAppShell {
             try {
                 if (exc instanceof OutOfMemoryError) {
                     final SharedPreferences prefs =
-                            getApplicationContext().getSharedPreferences(APP_PREFS_NAME, 0);
+                            GeckoSharedPrefs.forApp(getApplicationContext());
                     final SharedPreferences.Editor editor = prefs.edit();
                     editor.putBoolean(PREFS_OOM_EXCEPTION, true);
 
@@ -398,11 +382,11 @@ public class GeckoAppShell {
                 case Sensor.TYPE_LINEAR_ACCELERATION:
                 case Sensor.TYPE_ORIENTATION:
                     if (sensorType == Sensor.TYPE_ACCELEROMETER) {
-                        halType = SENSOR_ACCELERATION;
+                        halType = GeckoHalDefines.SENSOR_ACCELERATION;
                     } else if (sensorType == Sensor.TYPE_LINEAR_ACCELERATION) {
-                        halType = SENSOR_LINEAR_ACCELERATION;
+                        halType = GeckoHalDefines.SENSOR_LINEAR_ACCELERATION;
                     } else {
-                        halType = SENSOR_ORIENTATION;
+                        halType = GeckoHalDefines.SENSOR_ORIENTATION;
                     }
                     x = s.values[0];
                     y = s.values[1];
@@ -410,22 +394,22 @@ public class GeckoAppShell {
                     break;
 
                 case Sensor.TYPE_GYROSCOPE:
-                    halType = SENSOR_GYROSCOPE;
+                    halType = GeckoHalDefines.SENSOR_GYROSCOPE;
                     x = (float) Math.toDegrees(s.values[0]);
                     y = (float) Math.toDegrees(s.values[1]);
                     z = (float) Math.toDegrees(s.values[2]);
                     break;
 
                 case Sensor.TYPE_LIGHT:
-                    halType = SENSOR_LIGHT;
+                    halType = GeckoHalDefines.SENSOR_LIGHT;
                     x = s.values[0];
                     break;
 
                 case Sensor.TYPE_ROTATION_VECTOR:
                 case Sensor.TYPE_GAME_ROTATION_VECTOR: // API >= 18
                     halType = (sensorType == Sensor.TYPE_ROTATION_VECTOR ?
-                            SENSOR_ROTATION_VECTOR :
-                            SENSOR_GAME_ROTATION_VECTOR);
+                            GeckoHalDefines.SENSOR_ROTATION_VECTOR :
+                            GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR);
                     x = s.values[0];
                     y = s.values[1];
                     z = s.values[2];
@@ -573,7 +557,7 @@ public class GeckoAppShell {
             getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
 
         switch (aSensortype) {
-            case SENSOR_GAME_ROTATION_VECTOR:
+            case GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR:
                 if (gGameRotationVectorSensor == null) {
                     gGameRotationVectorSensor = sm.getDefaultSensor(
                             Sensor.TYPE_GAME_ROTATION_VECTOR);
@@ -588,7 +572,7 @@ public class GeckoAppShell {
                 }
                 // Fallthrough
 
-            case SENSOR_ROTATION_VECTOR:
+            case GeckoHalDefines.SENSOR_ROTATION_VECTOR:
                 if (gRotationVectorSensor == null) {
                     gRotationVectorSensor = sm.getDefaultSensor(
                         Sensor.TYPE_ROTATION_VECTOR);
@@ -603,7 +587,7 @@ public class GeckoAppShell {
                 }
                 // Fallthrough
 
-            case SENSOR_ORIENTATION:
+            case GeckoHalDefines.SENSOR_ORIENTATION:
                 if (gOrientationSensor == null) {
                     gOrientationSensor = sm.getDefaultSensor(
                         Sensor.TYPE_ORIENTATION);
@@ -615,7 +599,7 @@ public class GeckoAppShell {
                 }
                 break;
 
-            case SENSOR_ACCELERATION:
+            case GeckoHalDefines.SENSOR_ACCELERATION:
                 if (gAccelerometerSensor == null) {
                     gAccelerometerSensor = sm.getDefaultSensor(
                         Sensor.TYPE_ACCELEROMETER);
@@ -627,7 +611,7 @@ public class GeckoAppShell {
                 }
                 break;
 
-            case SENSOR_LIGHT:
+            case GeckoHalDefines.SENSOR_LIGHT:
                 if (gLightSensor == null) {
                     gLightSensor = sm.getDefaultSensor(Sensor.TYPE_LIGHT);
                 }
@@ -638,7 +622,7 @@ public class GeckoAppShell {
                 }
                 break;
 
-            case SENSOR_LINEAR_ACCELERATION:
+            case GeckoHalDefines.SENSOR_LINEAR_ACCELERATION:
                 if (gLinearAccelerometerSensor == null) {
                     gLinearAccelerometerSensor = sm.getDefaultSensor(
                         Sensor.TYPE_LINEAR_ACCELERATION);
@@ -650,7 +634,7 @@ public class GeckoAppShell {
                 }
                 break;
 
-            case SENSOR_GYROSCOPE:
+            case GeckoHalDefines.SENSOR_GYROSCOPE:
                 if (gGyroscopeSensor == null) {
                     gGyroscopeSensor = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
                 }
@@ -674,45 +658,45 @@ public class GeckoAppShell {
             getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
 
         switch (aSensortype) {
-            case SENSOR_GAME_ROTATION_VECTOR:
+            case GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR:
                 if (gGameRotationVectorSensor != null) {
                     sm.unregisterListener(sAndroidListeners, gGameRotationVectorSensor);
                     break;
                 }
                 // Fallthrough
 
-            case SENSOR_ROTATION_VECTOR:
+            case GeckoHalDefines.SENSOR_ROTATION_VECTOR:
                 if (gRotationVectorSensor != null) {
                     sm.unregisterListener(sAndroidListeners, gRotationVectorSensor);
                     break;
                 }
                 // Fallthrough
 
-            case SENSOR_ORIENTATION:
+            case GeckoHalDefines.SENSOR_ORIENTATION:
                 if (gOrientationSensor != null) {
                     sm.unregisterListener(sAndroidListeners, gOrientationSensor);
                 }
                 break;
 
-            case SENSOR_ACCELERATION:
+            case GeckoHalDefines.SENSOR_ACCELERATION:
                 if (gAccelerometerSensor != null) {
                     sm.unregisterListener(sAndroidListeners, gAccelerometerSensor);
                 }
                 break;
 
-            case SENSOR_LIGHT:
+            case GeckoHalDefines.SENSOR_LIGHT:
                 if (gLightSensor != null) {
                     sm.unregisterListener(sAndroidListeners, gLightSensor);
                 }
                 break;
 
-            case SENSOR_LINEAR_ACCELERATION:
+            case GeckoHalDefines.SENSOR_LINEAR_ACCELERATION:
                 if (gLinearAccelerometerSensor != null) {
                     sm.unregisterListener(sAndroidListeners, gLinearAccelerometerSensor);
                 }
                 break;
 
-            case SENSOR_GYROSCOPE:
+            case GeckoHalDefines.SENSOR_GYROSCOPE:
                 if (gGyroscopeSensor != null) {
                     sm.unregisterListener(sAndroidListeners, gGyroscopeSensor);
                 }
@@ -829,23 +813,8 @@ public class GeckoAppShell {
         return sDensity;
     }
 
-    private static int sTotalRam;
-
-    private static int getTotalRam(final Context context) {
-        if (sTotalRam == 0) {
-            final ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
-            final ActivityManager am = (ActivityManager) context
-                    .getSystemService(Context.ACTIVITY_SERVICE);
-            am.getMemoryInfo(memInfo); // `getMemoryInfo()` returns a value in B. Convert to MB.
-            sTotalRam = (int) (memInfo.totalMem / (1024 * 1024));
-            Log.d(LOGTAG, "System memory: " + sTotalRam + "MB.");
-        }
-
-        return sTotalRam;
-    }
-
     private static boolean isHighMemoryDevice(final Context context) {
-        return getTotalRam(context) > HIGH_MEMORY_DEVICE_THRESHOLD_MB;
+        return SysInfo.getMemSize(context) > HIGH_MEMORY_DEVICE_THRESHOLD_MB;
     }
 
     public static synchronized void useMaxScreenDepth(final boolean enable) {

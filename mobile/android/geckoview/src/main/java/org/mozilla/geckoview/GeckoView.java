@@ -10,13 +10,13 @@ import org.mozilla.gecko.AndroidGamepadManager;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.InputMethods;
 import org.mozilla.gecko.SurfaceViewWrapper;
+import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -213,17 +213,6 @@ public class GeckoView extends FrameLayout {
         init();
     }
 
-    private static Activity getActivityFromContext(final Context outerContext) {
-        Context context = outerContext;
-        while (context instanceof ContextWrapper) {
-            if (context instanceof Activity) {
-                return (Activity) context;
-            }
-            context = ((ContextWrapper) context).getBaseContext();
-        }
-        return null;
-    }
-
     private void init() {
         setFocusable(true);
         setFocusableInTouchMode(true);
@@ -246,7 +235,7 @@ public class GeckoView extends FrameLayout {
 
         mSurfaceWrapper.setListener(mDisplay);
 
-        final Activity activity = getActivityFromContext(getContext());
+        final Activity activity = ActivityUtils.getActivityFromContext(getContext());
         if (activity != null) {
             mSelectionActionDelegate = new BasicSelectionActionDelegate(activity);
         }
