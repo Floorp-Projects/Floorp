@@ -76,6 +76,7 @@ class mozInlineSpellStatus {
   // Contains the range computed for the current word. Can be nullptr.
   RefPtr<nsRange> mNoCheckRange;
 
+ private:
   // Indicates the position of the cursor for the event (so we can compute
   // mNoCheckRange). It can be nullptr if we don't care about the cursor
   // position (such as for the intial check of everything).
@@ -99,7 +100,6 @@ class mozInlineSpellStatus {
   // Contains the offset passed in to HandleNavigationEvent
   int32_t mNewNavigationPositionOffset;
 
- protected:
   nsresult FinishNavigationEvent(mozInlineSpellWordUtil& aWordUtil);
 
   nsresult FillNoCheckRangeFromAnchor(mozInlineSpellWordUtil& aWordUtil);
