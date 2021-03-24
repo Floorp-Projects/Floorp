@@ -7,13 +7,17 @@
 from __future__ import absolute_import, print_function
 
 from argparse import Namespace
+import datetime
 import os
 import posixpath
+import mozdevice
 import shutil
 import six
 import sys
 import runxpcshelltests as xpcshell
 import tempfile
+import time
+import uuid
 from zipfile import ZipFile
 
 import mozcrash
@@ -27,6 +31,95 @@ from xpcshellcommandline import parser_remote
 here = os.path.dirname(os.path.abspath(__file__))
 
 
+class RemoteProcessMonitor(object):
+    processStatus = []
+
+    def __init__(self, package, device, log, remoteLogFile):
+        self.package = package
+        self.device = device
+        self.log = log
+        self.remoteLogFile = remoteLogFile
+        self.selectedProcess = -1
+
+    @classmethod
+    def pickUnusedProcess(cls):
+        for i in range(len(cls.processStatus)):
+            if not cls.processStatus[i]:
+                cls.processStatus[i] = True
+                return i
+        # No more free processes :(
+        return -1
+
+    @classmethod
+    def freeProcess(cls, processId):
+        cls.processStatus[processId] = False
+
+    def kill(self):
+        self.device.pkill(self.process_name, sig=9, attempts=1)
+
+    def launch_service(self, extra_args, env, selectedProcess):
+        if not self.device.process_exist(self.package):
+            # Make sure the main app is running, this should help making the
+            # tests get foreground priority scheduling.
+            self.device.launch_activity(
+                self.package,
+                intent="org.mozilla.geckoview.test.XPCSHELL_TEST_MAIN",
+                activity_name="TestRunnerActivity",
+                e10s=True,
+            )
+
+        self.process_name = self.package + (":xpcshell%d" % selectedProcess)
+        self.device.launch_service(
+            self.package,
+            activity_name=("XpcshellTestRunnerService$i%d" % selectedProcess),
+            e10s=True,
+            moz_env=env,
+            grant_runtime_permissions=False,
+            extra_args=extra_args,
+            out_file=self.remoteLogFile,
+        )
+        return self.pid
+
+    def wait(self, timeout, interval=0.1):
+        timer = 0
+        status = True
+
+        # wait for log creation on startup
+        retries = 0
+        while retries < 20 / interval and not self.device.is_file(self.remoteLogFile):
+            retries += 1
+            time.sleep(interval)
+        if not self.device.is_file(self.remoteLogFile):
+            self.log.warning(
+                "Failed wait for remote log: %s missing?" % self.remoteLogFile
+            )
+
+        while self.device.process_exist(self.process_name):
+            time.sleep(interval)
+            timer += interval
+            interval *= 1.5
+            if timeout and timer > timeout:
+                status = False
+                self.log.info("Timing out...")
+                self.kill()
+                break
+        return status
+
+    @property
+    def pid(self):
+        """
+        Determine the pid of the remote process (or the first process with
+        the same name).
+        """
+        procs = self.device.get_process_list()
+        # limit the comparison to the first 75 characters due to a
+        # limitation in processname length in android.
+        pids = [proc[0] for proc in procs if proc[1] == self.process_name[:75]]
+        if pids is None or len(pids) < 1:
+            return 0
+        return pids[0]
+
+
 class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
     def __init__(self, *args, **kwargs):
         xpcshell.XPCShellTestThread.__init__(self, *args, **kwargs)
@@ -36,6 +129,9 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         mobileArgs = kwargs.get("mobileArgs")
         for key in mobileArgs:
             setattr(self, key, mobileArgs[key])
+        self.remoteLogFile = posixpath.join(
+            mobileArgs["remoteLogFolder"], "xpcshell-%s.log" % str(uuid.uuid4())
+        )
 
     def initDir(self, path, mask="777", timeout=None):
         """Initialize a directory by removing it if it exists, creating it
@@ -63,7 +159,12 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
             remoteName = os.path.basename(name)
         else:
             remoteName = posixpath.join(remoteDir, os.path.basename(name))
-        return ["-e", 'const _TEST_FILE = ["%s"];' % remoteName.replace("\\", "/")]
+        return [
+            "-e",
+            'const _TEST_CWD = "%s";' % self.remoteHere,
+            "-e",
+            'const _TEST_FILE = ["%s"];' % remoteName.replace("\\", "/"),
+        ]
 
     def remoteForLocal(self, local):
         for mapping in self.pathMapping:
@@ -72,9 +173,11 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         return local
 
     def setupTempDir(self):
+        self.remoteTmpDir = posixpath.join(self.remoteTmpDir, str(uuid.uuid4()))
         # make sure the temp dir exists
         self.initDir(self.remoteTmpDir)
         # env var is set in buildEnvironment
+        self.env["XPCSHELL_TEST_TEMP_DIR"] = self.remoteTmpDir
         return self.remoteTmpDir
 
     def setupPluginsDir(self):
@@ -92,10 +195,23 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         return pluginsDir
 
     def setupProfileDir(self):
+        profileId = str(uuid.uuid4())
+        self.profileDir = posixpath.join(self.profileDir, profileId)
         self.initDir(self.profileDir)
         if self.interactive or self.singleFile:
             self.log.info("profile dir is %s" % self.profileDir)
+        self.env["XPCSHELL_TEST_PROFILE_DIR"] = self.profileDir
+        self.env["TMPDIR"] = self.profileDir
+        self.remoteMinidumpDir = posixpath.join(self.remoteMinidumpRootDir, profileId)
+        self.initDir(self.remoteMinidumpDir)
+        self.env["XPCSHELL_MINIDUMP_DIR"] = self.remoteMinidumpDir
         return self.profileDir
+
+    def clean_temp_dirs(self, name):
+        self.log.info("Cleaning up profile for %s folder: %s" % (name, self.profileDir))
+        self.device.rm(self.profileDir, force=True, recursive=True)
+        self.device.rm(self.remoteTmpDir, force=True, recursive=True)
+        self.device.rm(self.remoteMinidumpDir, force=True, recursive=True)
 
     def setupMozinfoJS(self):
         local = tempfile.mktemp()
@@ -148,9 +264,8 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         if self.options["localAPK"]:
             xpcsCmd.insert(1, "--greomni")
             xpcsCmd.insert(2, self.remoteAPK)
-        else:
-            xpcsCmd.insert(1, "-g")
-            xpcsCmd.insert(2, self.remoteBinDir)
+        xpcsCmd.insert(1, "-g")
+        xpcsCmd.insert(2, self.remoteBinDir)
 
         if self.remoteDebugger:
             # for example, "/data/local/gdbserver" "localhost:12345"
@@ -161,31 +276,37 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
         self.kill(proc)
 
     def launchProcess(self, cmd, stdout, stderr, env, cwd, timeout=None):
-        self.timedout = False
-        cmd.insert(1, self.remoteHere)
-        cmd = ADBDevice._escape_command_line(cmd)
+        rpm = RemoteProcessMonitor(
+            "org.mozilla.geckoview.test",
+            self.device,
+            self.log,
+            self.remoteLogFile,
+        )
+
+        startTime = datetime.datetime.now()
+
+        pid = rpm.launch_service(cmd[1:], self.env, self.selectedProcess)
+
+        self.log.info("remotexpcshelltests.py | Launched Test App PID=%s" % str(pid))
+
+        if rpm.wait(timeout):
+            self.shellReturnCode = 0
+        else:
+            self.shellReturnCode = 1
+        self.log.info(
+            "remotexpcshelltests.py | Application ran for: %s"
+            % str(datetime.datetime.now() - startTime)
+        )
+
         try:
-            # env is ignored here since the environment has already been
-            # set for the command via the pushWrapper method.
-            adb_process = self.device.shell(cmd, timeout=timeout + 10)
-            output_file = adb_process.stdout_file
-            self.shellReturnCode = adb_process.exitcode
-        except ADBTimeoutError:
+            return self.device.get_file(self.remoteLogFile)
+        except mozdevice.ADBTimeoutError:
             raise
         except Exception as e:
-            if self.timedout:
-                # If the test timed out, there is a good chance the shell
-                # call also timed out and raised this Exception.
-                # Ignore this exception to simplify the error report.
-                self.shellReturnCode = None
-            else:
-                raise e
-        # The device manager may have timed out waiting for xpcshell.
-        # Guard against an accumulation of hung processes by killing
-        # them here. Note also that IPC tests may spawn new instances
-        # of xpcshell.
-        self.device.pkill("xpcshell")
-        return output_file
+            self.log.info(
+                "remotexpcshelltests.py | Could not read log file: %s" % str(e)
+            )
+            return ""
 
     def checkForCrashes(self, dump_directory, symbols_path, test_name=None):
         with mozfile.TemporaryDirectory() as dumpDir:
@@ -193,14 +314,10 @@ class RemoteXPCShellTestThread(xpcshell.XPCShellTestThread):
             crashed = mozcrash.log_crashes(
                 self.log, dumpDir, symbols_path, test=test_name
             )
-            self.initDir(self.remoteMinidumpDir)
         return crashed
 
     def communicate(self, proc):
-        f = proc
-        contents = f.read()
-        f.close()
-        return contents, ""
+        return proc, ""
 
     def poll(self, proc):
         if not self.device.process_exist("xpcshell"):
@@ -236,6 +353,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
     def __init__(self, options, log):
         xpcshell.XPCShellTests.__init__(self, log)
 
+        options["threadCount"] = min(options["threadCount"] or 4, 4)
+
         self.options = options
         verbose = False
         if options["log_tbpl_level"] == "debug" or options["log_mach_level"] == "debug":
@@ -247,6 +366,7 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             verbose=verbose,
         )
         self.remoteTestRoot = posixpath.join(self.device.test_root, "xpc")
+        self.remoteLogFolder = posixpath.join(self.remoteTestRoot, "logs")
         # Add Android version (SDK level) to mozinfo so that manifest entries
         # can be conditional on android_version.
         mozinfo.info["android_version"] = str(self.device.version)
@@ -268,11 +388,20 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.remoteScriptsDir = self.remoteTestRoot
         self.remoteComponentsDir = posixpath.join(self.remoteTestRoot, "c")
         self.remoteModulesDir = posixpath.join(self.remoteTestRoot, "m")
-        self.remoteMinidumpDir = posixpath.join(self.remoteTestRoot, "minidumps")
+        self.remoteMinidumpRootDir = posixpath.join(self.remoteTestRoot, "minidumps")
         self.profileDir = posixpath.join(self.remoteTestRoot, "p")
         self.remoteDebugger = options["debugger"]
         self.remoteDebuggerArgs = options["debuggerArgs"]
         self.testingModulesDir = options["testingModulesDir"]
+
+        self.initDir(self.remoteTmpDir)
+        self.initDir(self.profileDir)
+
+        # Make sure we get a fresh start
+        self.device.stop_application("org.mozilla.geckoview.test")
+
+        for i in range(options["threadCount"]):
+            RemoteProcessMonitor.processStatus += [False]
 
         self.env = {}
 
@@ -296,7 +425,8 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             self.setupTestDir()
             self.setupUtilities()
             self.setupModules()
-        self.initDir(self.remoteMinidumpDir)
+        self.initDir(self.remoteMinidumpRootDir)
+        self.initDir(self.remoteLogFolder)
 
         # data that needs to be passed to the RemoteXPCShellTestThread
         self.mobileArgs = {
@@ -310,8 +440,9 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
             "remoteDebuggerArgs": self.remoteDebuggerArgs,
             "pathMapping": self.pathMapping,
             "profileDir": self.profileDir,
+            "remoteLogFolder": self.remoteLogFolder,
             "remoteTmpDir": self.remoteTmpDir,
-            "remoteMinidumpDir": self.remoteMinidumpDir,
+            "remoteMinidumpRootDir": self.remoteMinidumpRootDir,
         }
         if self.remoteAPK:
             self.mobileArgs["remoteAPK"] = self.remoteAPK
@@ -350,9 +481,20 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.device.chmod(remoteWrapper)
         os.remove(localWrapper)
 
+    def start_test(self, test):
+        test.selectedProcess = RemoteProcessMonitor.pickUnusedProcess()
+        if test.selectedProcess == -1:
+            self.log.error(
+                "TEST-UNEXPECTED-FAIL | remotexpcshelltests.py | "
+                "no more free processes"
+            )
+        test.start()
+
+    def test_ended(self, test):
+        RemoteProcessMonitor.freeProcess(test.selectedProcess)
+
     def buildPrefsFile(self, extraPrefs):
         prefs = super(XPCShellRemote, self).buildPrefsFile(extraPrefs)
-
         remotePrefsFile = posixpath.join(self.remoteTestRoot, "user.js")
         self.device.push(self.prefsFile, remotePrefsFile)
         self.device.chmod(remotePrefsFile)
@@ -366,12 +508,9 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.env["MOZ_LINKER_CACHE"] = self.remoteBinDir
         self.env["GRE_HOME"] = self.remoteBinDir
         self.env["XPCSHELL_TEST_PROFILE_DIR"] = self.profileDir
-        self.env["TMPDIR"] = self.remoteTmpDir
         self.env["HOME"] = self.profileDir
         self.env["XPCSHELL_TEST_TEMP_DIR"] = self.remoteTmpDir
-        self.env["XPCSHELL_MINIDUMP_DIR"] = self.remoteMinidumpDir
         self.env["MOZ_ANDROID_DATA_DIR"] = self.remoteBinDir
-        self.env["MOZ_FORCE_DISABLE_E10S"] = "1"
 
         # Guard against intermittent failures to retrieve abi property;
         # without an abi, xpcshell cannot find greprefs.js and crashes.
@@ -428,11 +567,9 @@ class XPCShellRemote(xpcshell.XPCShellTests, object):
         self.device.push(local, remoteFile)
         self.device.chmod(remoteFile)
 
-        # The xpcshell binary is required for all tests. Additional binaries
-        # are required for some tests. This list should be similar to
-        # TEST_HARNESS_BINS in testing/mochitest/Makefile.in.
+        # Additional binaries are required for some tests. This list should be
+        # similar to TEST_HARNESS_BINS in testing/mochitest/Makefile.in.
         binaries = [
-            "xpcshell",
             "ssltunnel",
             "certutil",
             "pk12util",
@@ -592,10 +729,11 @@ def main():
     if options["xpcshell"] is None:
         options["xpcshell"] = "xpcshell"
 
-    xpcsh = XPCShellRemote(options, log)
+    # The threadCount depends on the emulator rather than the host machine and
+    # empirically 10 seems to yield the best performance.
+    options["threadCount"] = min(options["threadCount"], 10)
 
-    # we don't run concurrent tests on mobile
-    options["sequential"] = True
+    xpcsh = XPCShellRemote(options, log)
 
     if not xpcsh.runTests(
         options, testClass=RemoteXPCShellTestThread, mobileArgs=xpcsh.mobileArgs
