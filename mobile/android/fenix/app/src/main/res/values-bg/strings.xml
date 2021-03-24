@@ -21,6 +21,10 @@
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Поверителните раздели ще бъдат показани тук.</string>
 
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">Baidu</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">JD</string>
     <!-- Message announced to the user when tab tray is selected with 1 tab -->
     <string name="open_tab_tray_single">1 отворен раздел. Докоснете за превключване на раздели.</string>
     <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
@@ -99,7 +103,7 @@
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_grid_view_banner_positive_button_text">Към настройки</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
-    <string name="tab_tray_grid_view_banner_negative_button_text">Отхвърляне</string>
+    <string name="tab_tray_grid_view_banner_negative_button_text">Прекратяване</string>
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
@@ -978,6 +982,8 @@
     <string name="snackbar_tabs_closed">Разделите са затворени</string>
     <!-- Text shown in snackbar when user closes tabs -->
     <string name="snackbar_message_tabs_closed">Разделите са затворени!</string>
+    <!-- Text shown in snackbar action for viewing bookmarks -->
+    <string name="snackbar_message_bookmarks_view">Преглед</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Поверителният раздел е затворен</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
