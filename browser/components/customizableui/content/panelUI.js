@@ -687,7 +687,15 @@ const PanelUI = {
 
     let helpMenu = document.getElementById("menu_HelpPopup");
     let items = this.getElementsByTagName("vbox")[0];
-    let attrs = ["command", "oncommand", "onclick", "key", "disabled"];
+    let attrs = [
+      "command",
+      "oncommand",
+      "onclick",
+      "key",
+      "disabled",
+      "accesskey",
+      "label",
+    ];
 
     // Remove all buttons from the view
     while (items.firstChild) {
@@ -715,7 +723,9 @@ const PanelUI = {
       // We have AppMenu-specific strings for the Help menu. By convention,
       // their localization IDs are set on "appmenu-data-l10n-id" attributes.
       let l10nId = node.getAttribute("appmenu-data-l10n-id");
-      button.setAttribute("data-l10n-id", l10nId);
+      if (l10nId) {
+        button.setAttribute("data-l10n-id", l10nId);
+      }
 
       if (node.id) {
         button.id = "appMenu_" + node.id;
@@ -732,6 +742,20 @@ const PanelUI = {
       }
       fragment.appendChild(button);
     }
+
+    // The Enterprise Support menu item has a different location than its
+    // placement in the menubar, so we need to specify it here.
+    let helpPolicySupport = fragment.querySelector(
+      "#appMenu_helpPolicySupport"
+    );
+    if (helpPolicySupport) {
+      fragment.insertBefore(
+        helpPolicySupport,
+        fragment.querySelector("#appMenu_menu_HelpPopup_reportPhishingtoolmenu")
+          .nextSibling
+      );
+    }
+
     items.appendChild(fragment);
   },
 
