@@ -12,7 +12,7 @@
 #include "nsRefPtrHashtable.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 #include "nsWrapperCache.h"
 #include "nsXULAppAPI.h"
 
@@ -105,9 +105,9 @@ class BrowsingContextGroup final : public nsWrapperCache {
   template <typename Func>
   void EachOtherParent(ContentParent* aExcludedParent, Func&& aCallback) {
     MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-    for (auto iter = mSubscribers.Iter(); !iter.Done(); iter.Next()) {
-      if (iter.Get()->GetKey() != aExcludedParent) {
-        aCallback(iter.Get()->GetKey());
+    for (const auto& key : mSubscribers) {
+      if (key != aExcludedParent) {
+        aCallback(key);
       }
     }
   }
@@ -117,8 +117,8 @@ class BrowsingContextGroup final : public nsWrapperCache {
   template <typename Func>
   void EachParent(Func&& aCallback) {
     MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess());
-    for (auto iter = mSubscribers.Iter(); !iter.Done(); iter.Next()) {
-      aCallback(iter.Get()->GetKey());
+    for (const auto& key : mSubscribers) {
+      aCallback(key);
     }
   }
 
@@ -184,7 +184,7 @@ class BrowsingContextGroup final : public nsWrapperCache {
   // non-discarded contexts within discarded contexts alive. It should be
   // removed in the future.
   // FIXME: Consider introducing a better common base than `nsISupports`?
-  nsTHashtable<nsRefPtrHashKey<nsISupports>> mContexts;
+  nsTHashSet<nsRefPtrHashKey<nsISupports>> mContexts;
 
   // The set of toplevel browsing contexts in the current BrowsingContextGroup.
   nsTArray<RefPtr<BrowsingContext>> mToplevels;
@@ -206,7 +206,7 @@ class BrowsingContextGroup final : public nsWrapperCache {
   // process.
   nsRefPtrHashtable<nsCStringHashKey, ContentParent> mHosts;
 
-  nsTHashtable<nsRefPtrHashKey<ContentParent>> mSubscribers;
+  nsTHashSet<nsRefPtrHashKey<ContentParent>> mSubscribers;
 
   // A queue to store postMessage events during page load, the queue will be
   // flushed once the page is loaded
