@@ -325,13 +325,13 @@ CustomElementRegistry::RunCustomElementCreationCallback::Run() {
   MOZ_ASSERT(!mRegistry->mElementCreationCallbacks.GetWeak(mAtom),
              "Callback should be removed.");
 
-  mozilla::UniquePtr<nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>> elements;
+  mozilla::UniquePtr<nsTHashSet<RefPtr<nsIWeakReference>>> elements;
   mRegistry->mElementCreationCallbacksUpgradeCandidatesMap.Remove(mAtom,
                                                                   &elements);
   MOZ_ASSERT(elements, "There should be a list");
 
-  for (auto iter = elements->ConstIter(); !iter.Done(); iter.Next()) {
-    nsCOMPtr<Element> elem = do_QueryReferent(iter.Get()->GetKey());
+  for (const auto& key : *elements) {
+    nsCOMPtr<Element> elem = do_QueryReferent(key);
     if (!elem) {
       continue;
     }
@@ -409,10 +409,10 @@ void CustomElementRegistry::RegisterUnresolvedElement(Element* aElement,
     return;
   }
 
-  nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>* unresolved =
+  nsTHashSet<RefPtr<nsIWeakReference>>* unresolved =
       mCandidatesMap.GetOrInsertNew(typeName);
   nsWeakPtr elem = do_GetWeakReference(aElement);
-  unresolved->PutEntry(elem);
+  unresolved->Insert(elem);
 }
 
 void CustomElementRegistry::UnregisterUnresolvedElement(Element* aElement,
@@ -431,10 +431,10 @@ void CustomElementRegistry::UnregisterUnresolvedElement(Element* aElement,
   }
 #endif
 
-  nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>* candidates = nullptr;
+  nsTHashSet<RefPtr<nsIWeakReference>>* candidates = nullptr;
   if (mCandidatesMap.Get(aTypeName, &candidates)) {
     MOZ_ASSERT(candidates);
-    candidates->RemoveEntry(weak);
+    candidates->Remove(weak);
   }
 }
 
@@ -549,7 +549,7 @@ namespace {
 
 class CandidateFinder {
  public:
-  CandidateFinder(nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>& aCandidates,
+  CandidateFinder(nsTHashSet<RefPtr<nsIWeakReference>>& aCandidates,
                   Document* aDoc);
   nsTArray<nsCOMPtr<Element>> OrderedCandidates();
 
@@ -559,12 +559,11 @@ class CandidateFinder {
 };
 
 CandidateFinder::CandidateFinder(
-    nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>& aCandidates,
-    Document* aDoc)
+    nsTHashSet<RefPtr<nsIWeakReference>>& aCandidates, Document* aDoc)
     : mDoc(aDoc), mCandidates(aCandidates.Count()) {
   MOZ_ASSERT(mDoc);
-  for (auto iter = aCandidates.ConstIter(); !iter.Done(); iter.Next()) {
-    nsCOMPtr<Element> elem = do_QueryReferent(iter.Get()->GetKey());
+  for (const auto& candidate : aCandidates) {
+    nsCOMPtr<Element> elem = do_QueryReferent(candidate);
     if (!elem) {
       continue;
     }
@@ -613,8 +612,7 @@ void CustomElementRegistry::UpgradeCandidates(
     return;
   }
 
-  mozilla::UniquePtr<nsTHashtable<nsRefPtrHashKey<nsIWeakReference>>>
-      candidates;
+  mozilla::UniquePtr<nsTHashSet<RefPtr<nsIWeakReference>>> candidates;
   if (mCandidatesMap.Remove(aKey, &candidates)) {
     MOZ_ASSERT(candidates);
     CustomElementReactionsStack* reactionsStack =
