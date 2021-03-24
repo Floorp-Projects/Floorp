@@ -269,7 +269,7 @@ void FontFaceSet::FindMatchingFontFaces(const nsACString& aFont,
   arrays[1] = &mRuleFaces;
 
   // Set of FontFaces that we want to return.
-  nsTHashtable<nsPtrHashKey<FontFace>> matchingFaces;
+  nsTHashSet<FontFace*> matchingFaces;
 
   for (const FontFamilyName& fontFamilyName : familyList->mNames) {
     if (!fontFamilyName.IsNamed()) {
@@ -290,7 +290,7 @@ void FontFaceSet::FindMatchingFontFaces(const nsACString& aFont,
       FontFace::Entry* entry = static_cast<FontFace::Entry*>(e);
       if (HasAnyCharacterInUnicodeRange(entry, aText)) {
         for (FontFace* f : entry->GetFontFaces()) {
-          matchingFaces.PutEntry(f);
+          matchingFaces.Insert(f);
         }
       }
     }
@@ -680,7 +680,7 @@ bool FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules) {
   // that not happen, but in the meantime, don't try to insert the same
   // FontFace object more than once into mRuleFaces.  We track which
   // ones we've handled in this table.
-  nsTHashtable<nsPtrHashKey<RawServoFontFaceRule>> handledRules;
+  nsTHashSet<RawServoFontFaceRule*> handledRules;
 
   for (size_t i = 0, i_end = aRules.Length(); i < i_end; ++i) {
     // Insert each FontFace objects for each rule into our list, migrating old

@@ -277,7 +277,7 @@ static nsAnimationManager::OwningCSSAnimationPtrArray BuildAnimations(
     nsPresContext* aPresContext, const NonOwningAnimationTarget& aTarget,
     const nsStyleDisplay& aStyleDisplay, ServoCSSAnimationBuilder& aBuilder,
     nsAnimationManager::CSSAnimationCollection* aCollection,
-    nsTHashtable<nsRefPtrHashKey<nsAtom>>& aReferencedAnimations) {
+    nsTHashSet<RefPtr<nsAtom>>& aReferencedAnimations) {
   nsAnimationManager::OwningCSSAnimationPtrArray result;
 
   for (size_t animIdx = aStyleDisplay.mAnimationNameCount; animIdx-- != 0;) {
@@ -291,7 +291,7 @@ static nsAnimationManager::OwningCSSAnimationPtrArray BuildAnimations(
       continue;
     }
 
-    aReferencedAnimations.PutEntry(name);
+    aReferencedAnimations.Insert(name);
     RefPtr<CSSAnimation> dest = BuildAnimation(
         aPresContext, aTarget, aStyleDisplay, animIdx, aBuilder, aCollection);
     if (!dest) {

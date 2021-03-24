@@ -108,7 +108,7 @@ void nsLineBox::StealHashTableFrom(nsLineBox* aFromLine,
   // remove aFromLine's frames that aren't on this line
   nsIFrame* f = aFromLine->mFirstChild;
   for (uint32_t i = 0; i < aFromLineNewCount; f = f->GetNextSibling(), ++i) {
-    mFrames->RemoveEntry(f);
+    mFrames->Remove(f);
   }
 }
 
@@ -136,14 +136,14 @@ void nsLineBox::NoteFramesMovedFrom(nsLineBox* aFromLine) {
       // remove the moved frames from it
       nsIFrame* f = mFirstChild;
       for (uint32_t i = 0; i < toCount; f = f->GetNextSibling(), ++i) {
-        aFromLine->mFrames->RemoveEntry(f);
+        aFromLine->mFrames->Remove(f);
       }
     } else if (toCount <= fromNewCount) {
       // This line needs a hash table, allocate a hash table for it since that
       // means fewer hash ops.
       nsIFrame* f = mFirstChild;
       for (uint32_t i = 0; i < toCount; f = f->GetNextSibling(), ++i) {
-        aFromLine->mFrames->RemoveEntry(f);  // toCount RemoveEntry
+        aFromLine->mFrames->Remove(f);  // toCount RemoveEntry
       }
       SwitchToHashtable();  // toCount PutEntry
     } else {

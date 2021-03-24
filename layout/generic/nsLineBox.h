@@ -14,6 +14,8 @@
 
 #include "nsILineIterator.h"
 #include "nsIFrame.h"
+#include "nsTHashSet.h"
+
 #include <algorithm>
 
 class nsLineBox;
@@ -302,10 +304,9 @@ class nsLineBox final : public nsLineLink {
     uint32_t minLength =
         std::max(kMinChildCountForHashtable,
                  uint32_t(PLDHashTable::kDefaultInitialLength));
-    mFrames =
-        new nsTHashtable<nsPtrHashKey<nsIFrame> >(std::max(count, minLength));
+    mFrames = new nsTHashSet<nsIFrame*>(std::max(count, minLength));
     for (nsIFrame* f = mFirstChild; count-- > 0; f = f->GetNextSibling()) {
-      mFrames->PutEntry(f);
+      mFrames->Insert(f);
     }
   }
   void SwitchToCounter() {
@@ -327,7 +328,7 @@ class nsLineBox final : public nsLineLink {
    */
   void NoteFrameAdded(nsIFrame* aFrame) {
     if (MOZ_UNLIKELY(mFlags.mHasHashedFrames)) {
-      mFrames->PutEntry(aFrame);
+      mFrames->Insert(aFrame);
     } else {
       if (++mChildCount >= kMinChildCountForHashtable) {
         SwitchToHashtable();
@@ -341,7 +342,7 @@ class nsLineBox final : public nsLineLink {
   void NoteFrameRemoved(nsIFrame* aFrame) {
     MOZ_ASSERT(GetChildCount() > 0);
     if (MOZ_UNLIKELY(mFlags.mHasHashedFrames)) {
-      mFrames->RemoveEntry(aFrame);
+      mFrames->Remove(aFrame);
       if (mFrames->Count() < kMinChildCountForHashtable) {
         SwitchToCounter();
       }
@@ -594,7 +595,7 @@ class nsLineBox final : public nsLineLink {
 
   // mFlags.mHasHashedFrames says which one to use
   union {
-    nsTHashtable<nsPtrHashKey<nsIFrame> >* mFrames;
+    nsTHashSet<nsIFrame*>* mFrames;
     uint32_t mChildCount;
   };
 
