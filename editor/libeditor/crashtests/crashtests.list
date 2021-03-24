@@ -75,7 +75,7 @@ load 1274050.html
 load 1317704.html
 load 1317718.html
 load 1324505.html
-needs-focus load 1343918.html
+asserts(1) needs-focus load 1343918.html # assertion in WSRunScanner::GetEditableBlockParentOrTopmostEditableInlineContent()
 load 1344097.html
 load 1345015.html
 load 1348851.html
