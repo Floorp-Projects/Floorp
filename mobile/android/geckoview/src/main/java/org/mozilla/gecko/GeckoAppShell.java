@@ -817,8 +817,23 @@ public class GeckoAppShell {
         return sDensity;
     }
 
+    private static int sTotalRam;
+
+    private static int getTotalRam(final Context context) {
+        if (sTotalRam == 0) {
+            final ActivityManager.MemoryInfo memInfo = new ActivityManager.MemoryInfo();
+            final ActivityManager am = (ActivityManager) context
+                    .getSystemService(Context.ACTIVITY_SERVICE);
+            am.getMemoryInfo(memInfo); // `getMemoryInfo()` returns a value in B. Convert to MB.
+            sTotalRam = (int) (memInfo.totalMem / (1024 * 1024));
+            Log.d(LOGTAG, "System memory: " + sTotalRam + "MB.");
+        }
+
+        return sTotalRam;
+    }
+
     private static boolean isHighMemoryDevice(final Context context) {
-        return SysInfo.getMemSize(context) > HIGH_MEMORY_DEVICE_THRESHOLD_MB;
+        return getTotalRam(context) > HIGH_MEMORY_DEVICE_THRESHOLD_MB;
     }
 
     public static synchronized void useMaxScreenDepth(final boolean enable) {
