@@ -200,7 +200,8 @@
   overflow-clip-box: inherit;
 }
 
-*|*::-moz-scrolled-content, *|*::-moz-scrolled-canvas {
+*|*::-moz-scrolled-content, *|*::-moz-scrolled-canvas,
+*|*::-moz-scrolled-page-sequence {
   /* e.g., text inputs, select boxes */
   padding: inherit;
   /* The display doesn't affect the kind of frame constructed here.  This just
@@ -290,7 +291,7 @@
   display: block;
 }
 
-*|*::-moz-page-sequence {
+*|*::-moz-page-sequence, *|*::-moz-scrolled-page-sequence {
   /* Collection of pages in print/print preview. Visual styles may only appear
    * in print preview. */
   display: block;
