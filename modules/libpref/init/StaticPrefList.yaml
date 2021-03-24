@@ -6985,13 +6985,6 @@
   value: true
   mirror: always
 
-# Are the width and height attributes on image-like elements mapped to the
-# internal-for-now aspect-ratio property?
-- name: layout.css.width-and-height-map-to-aspect-ratio.enabled
-  type: bool
-  value: true
-  mirror: always
-
 # Whether :is() and :where() ignore errors inside their selector lists
 # internally, rather than failing to parse altogether.
 #

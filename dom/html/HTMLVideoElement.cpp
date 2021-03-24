@@ -163,7 +163,8 @@ bool HTMLVideoElement::ParseAttribute(int32_t aNamespaceID, nsAtom* aAttribute,
 
 void HTMLVideoElement::MapAttributesIntoRule(
     const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
-  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aDecls);
+  nsGenericHTMLElement::MapImageSizeAttributesInto(aAttributes, aDecls,
+                                                   MapAspectRatio::Yes);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aDecls);
 }
 
