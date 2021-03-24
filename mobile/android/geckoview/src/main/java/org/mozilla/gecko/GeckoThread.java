@@ -485,6 +485,12 @@ public class GeckoThread extends Thread {
 
         // Remove pumpMessageLoop() idle handler
         Looper.myQueue().removeIdleHandler(idleHandler);
+
+        if (isChildProcess) {
+            // The child process is completely controlled by Gecko so we don't really need to keep
+            // it alive after Gecko exits.
+            System.exit(0);
+        }
     }
 
     // This may start the gecko profiler early by looking at the environment variables.
