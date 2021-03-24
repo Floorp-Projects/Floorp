@@ -141,7 +141,7 @@ EMenuItemType nsMenuItemX::GetMenuItemType() { return mType; }
 
 // Executes the "cached" javaScript command.
 // Returns NS_OK if the command was executed properly, otherwise an error code.
-void nsMenuItemX::DoCommand() {
+void nsMenuItemX::DoCommand(NSEventModifierFlags aModifierFlags) {
   // flip "checked" state if we're a checkbox menu, or an un-checked radio menu
   if (mType == eCheckboxMenuItemType || (mType == eRadioMenuItemType && !mIsChecked)) {
     if (!mContent->IsElement() ||
@@ -152,7 +152,7 @@ void nsMenuItemX::DoCommand() {
     /* the AttributeChanged code will update all the internal state */
   }
 
-  nsMenuUtilsX::DispatchCommandTo(mContent);
+  nsMenuUtilsX::DispatchCommandTo(mContent, aModifierFlags);
 }
 
 nsresult nsMenuItemX::DispatchDOMEvent(const nsString& eventName, bool* preventDefaultCalled) {
