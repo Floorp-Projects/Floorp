@@ -94,6 +94,11 @@ class GeckoViewStartup {
             "GeckoView:WebExtension:Uninstall",
             "GeckoView:WebExtension:Update",
           ],
+          observers: [
+            "devtools-installed-addon",
+            "testing-installed-addon",
+            "testing-uninstalled-addon",
+          ],
         });
 
         GeckoViewUtils.addLazyGetter(this, "GeckoViewStorageController", {
