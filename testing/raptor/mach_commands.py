@@ -31,7 +31,7 @@ HERE = os.path.dirname(os.path.realpath(__file__))
 BENCHMARK_REPOSITORY = "https://github.com/mozilla/perf-automation"
 BENCHMARK_REVISION = "e19a0865c946ae2f9a64dd25614b1c275a3996b2"
 
-ANDROID_BROWSERS = ["fennec", "geckoview", "refbrow", "fenix", "chrome-m"]
+ANDROID_BROWSERS = ["geckoview", "refbrow", "fenix", "chrome-m"]
 
 
 class RaptorRunner(MozbuildObject):

@@ -196,7 +196,7 @@ class WebExtension(Perftest):
             return
 
         LOG.info("removing webext %s" % self.raptor_webext)
-        if self.config["app"] in ["firefox", "geckoview", "fennec", "refbrow", "fenix"]:
+        if self.config["app"] in ["firefox", "geckoview", "refbrow", "fenix"]:
             self.profile.addons.remove_addon(self.webext_id)
 
         # for chrome the addon is just a list (appended to cmd line)
