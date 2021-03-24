@@ -2636,6 +2636,12 @@ static void StreamMetaJSCustomObject(
                         aPreRecordedMetaInformation.mProcessInfoCpuCount);
   }
 
+#if defined(GP_OS_android)
+  jni::String::LocalRef deviceInformation =
+      java::GeckoJavaSampler::GetDeviceInformation();
+  aWriter.StringProperty("device", deviceInformation->ToCString());
+#endif
+
   aWriter.StartObjectProperty("sampleUnits");
   {
     aWriter.StringProperty("time", "ms");
