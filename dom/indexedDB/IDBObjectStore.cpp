@@ -1378,6 +1378,8 @@ RefPtr<IDBIndex> IDBObjectStore::CreateIndex(
     return nullptr;
   }
 
+  // XXX This didn't use to warn before in case of a error. Should we remove the
+  // warning again?
   const auto checkValid = [](const auto& keyPath) -> Result<KeyPath, nsresult> {
     if (!keyPath.IsValid()) {
       return Err(NS_ERROR_DOM_SYNTAX_ERR);
@@ -1386,8 +1388,8 @@ RefPtr<IDBIndex> IDBObjectStore::CreateIndex(
     return keyPath;
   };
 
-  QM_NOTEONLY_TRY_UNWRAP(
-      const auto maybeKeyPath,
+  IDB_TRY_INSPECT(
+      const auto& keyPath,
       ([&aKeyPath, checkValid]() -> Result<KeyPath, nsresult> {
         if (aKeyPath.IsString()) {
           IDB_TRY_RETURN(
@@ -1401,13 +1403,8 @@ RefPtr<IDBIndex> IDBObjectStore::CreateIndex(
 
         IDB_TRY_RETURN(
             KeyPath::Parse(aKeyPath.GetAsStringSequence()).andThen(checkValid));
-      })());
-  if (!maybeKeyPath) {
-    aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
-    return nullptr;
-  }
-
-  const auto& keyPath = maybeKeyPath.ref();
+      })(),
+      nullptr, [&aRv](const auto&) { aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR); });
 
   if (aOptionalParameters.mMultiEntry && keyPath.IsArray()) {
     aRv.Throw(NS_ERROR_DOM_INVALID_ACCESS_ERR);

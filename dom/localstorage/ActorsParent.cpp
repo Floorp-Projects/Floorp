@@ -438,9 +438,9 @@ nsresult SetDefaultPragmas(mozIStorageConnection* aConnection) {
   if (kSQLiteGrowthIncrement) {
     // This is just an optimization so ignore the failure if the disk is
     // currently too full.
-    QM_TRY(QM_OR_ELSE_WARN(ToResult(aConnection->SetGrowthIncrement(
-                               kSQLiteGrowthIncrement, ""_ns)),
-                           ErrToDefaultOkOrErr<NS_ERROR_FILE_TOO_BIG>));
+    LS_TRY(
+        ToResult(aConnection->SetGrowthIncrement(kSQLiteGrowthIncrement, ""_ns))
+            .orElse(ErrToDefaultOkOrErr<NS_ERROR_FILE_TOO_BIG, Ok>));
   }
 #endif  // LS_MOBILE
 
@@ -463,25 +463,23 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
 
   LS_TRY_UNWRAP(
       auto connection,
-      QM_OR_ELSE_WARN(
-          MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>,
-                                     storageService, OpenDatabase, &aDBFile),
-          ([&aUsageFile, &aDBFile, &aCorruptedFileHandler,
-            &storageService](const nsresult rv)
-               -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
+      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>,
+                                 storageService, OpenDatabase, &aDBFile)
+          .orElse([&aUsageFile, &aDBFile, &aCorruptedFileHandler,
+                   &storageService](const nsresult rv)
+                      -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
             if (IsDatabaseCorruptionError(rv)) {
               // Remove the usage file first (it might not exist at all due
               // to corrupted state, which is ignored here).
-              QM_TRY(QM_OR_ELSE_WARN(
-                  ToResult(aUsageFile.Remove(false)),
-                  ([](const nsresult rv) -> Result<Ok, nsresult> {
-                    if (rv == NS_ERROR_FILE_NOT_FOUND ||
-                        rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
-                      return Ok{};
-                    }
+              LS_TRY(ToResult(aUsageFile.Remove(false))
+                         .orElse([](const nsresult rv) -> Result<Ok, nsresult> {
+                           if (rv == NS_ERROR_FILE_NOT_FOUND ||
+                               rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+                             return Ok{};
+                           }
 
-                    return Err(rv);
-                  })));
+                           return Err(rv);
+                         }));
 
               // Call the corrupted file handler before trying to remove the
               // database file, which might fail.
@@ -495,7 +493,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateStorageConnection(
                   &aDBFile));
             }
             return Err(rv);
-          })));
+          }));
 
   LS_TRY(SetDefaultPragmas(connection));
 
@@ -680,11 +678,10 @@ CreateArchiveStorageConnection(const nsAString& aStoragePath) {
 
   LS_TRY_UNWRAP(
       auto connection,
-      QM_OR_ELSE_WARN(
-          MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
-                                     OpenUnsharedDatabase, archiveFile),
-          ([](const nsresult rv)
-               -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
+      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
+                                 OpenUnsharedDatabase, archiveFile)
+          .orElse([](const nsresult rv)
+                      -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
             if (IsDatabaseCorruptionError(rv)) {
               // Don't throw an error, leave a corrupted ls-archive database as
               // it is.
@@ -692,7 +689,7 @@ CreateArchiveStorageConnection(const nsAString& aStoragePath) {
             }
 
             return Err(rv);
-          })));
+          }));
 
   if (connection) {
     const nsresult rv = StorageDBUpdater::Update(connection);
@@ -817,11 +814,10 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateShadowStorageConnection(
 
   LS_TRY_UNWRAP(
       auto connection,
-      QM_OR_ELSE_WARN(
-          MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
-                                     OpenUnsharedDatabase, shadowFile),
-          ([&shadowFile, &ss](const nsresult rv)
-               -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
+      MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageConnection>, ss,
+                                 OpenUnsharedDatabase, shadowFile)
+          .orElse([&shadowFile, &ss](const nsresult rv)
+                      -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
             if (IsDatabaseCorruptionError(rv)) {
               LS_TRY(shadowFile->Remove(false));
 
@@ -831,7 +827,7 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateShadowStorageConnection(
             }
 
             return Err(rv);
-          })));
+          }));
 
   LS_TRY(SetShadowJournalMode(connection));
 
@@ -849,22 +845,23 @@ Result<nsCOMPtr<mozIStorageConnection>, nsresult> CreateShadowStorageConnection(
   // complicated than it should be. Maybe these two methods can be merged (which
   // would mean that a parameter must be added that indicates whether it's
   // handling the shadow file or not).
-  QM_TRY(QM_OR_ELSE_WARN(
-      ToResult(StorageDBUpdater::Update(connection)),
-      ([&connection, &shadowFile, &ss](const nsresult) -> Result<Ok, nsresult> {
-        LS_TRY(connection->Close());
-        LS_TRY(shadowFile->Remove(false));
+  LS_TRY(ToResult(StorageDBUpdater::Update(connection))
+             .orElse([&connection, &shadowFile,
+                      &ss](const nsresult) -> Result<Ok, nsresult> {
+               LS_TRY(connection->Close());
+               LS_TRY(shadowFile->Remove(false));
 
-        LS_TRY_UNWRAP(connection, MOZ_TO_RESULT_INVOKE_TYPED(
-                                      nsCOMPtr<mozIStorageConnection>, ss,
-                                      OpenUnsharedDatabase, shadowFile));
+               LS_TRY_UNWRAP(connection,
+                             MOZ_TO_RESULT_INVOKE_TYPED(
+                                 nsCOMPtr<mozIStorageConnection>, ss,
+                                 OpenUnsharedDatabase, shadowFile));
 
-        LS_TRY(SetShadowJournalMode(connection));
+               LS_TRY(SetShadowJournalMode(connection));
 
-        LS_TRY(StorageDBUpdater::CreateCurrentSchema(connection));
+               LS_TRY(StorageDBUpdater::CreateCurrentSchema(connection));
 
-        return Ok{};
-      })));
+               return Ok{};
+             }));
 
   return connection;
 }
@@ -963,19 +960,19 @@ Result<bool, nsresult> ExistsAsFile(nsIFile& aFile) {
   // the path exists.
   LS_TRY_INSPECT(
       const auto& res,
-      QM_OR_ELSE_WARN(
-          MOZ_TO_RESULT_INVOKE(aFile, IsDirectory)
-              .map([](const bool isDirectory) {
-                return isDirectory ? ExistsAsFileResult::IsDirectory
-                                   : ExistsAsFileResult::IsFile;
-              }),
-          ([](const nsresult rv) -> Result<ExistsAsFileResult, nsresult> {
-            if (rv != NS_ERROR_FILE_NOT_FOUND &&
-                rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
-              return Err(rv);
-            }
-            return ExistsAsFileResult::DoesNotExist;
-          })));
+      MOZ_TO_RESULT_INVOKE(aFile, IsDirectory)
+          .map([](const bool isDirectory) {
+            return isDirectory ? ExistsAsFileResult::IsDirectory
+                               : ExistsAsFileResult::IsFile;
+          })
+          .orElse(
+              [](const nsresult rv) -> Result<ExistsAsFileResult, nsresult> {
+                if (rv != NS_ERROR_FILE_NOT_FOUND &&
+                    rv != NS_ERROR_FILE_TARGET_DOES_NOT_EXIST) {
+                  return Err(rv);
+                }
+                return ExistsAsFileResult::DoesNotExist;
+              }));
 
   LS_TRY(OkIf(res != ExistsAsFileResult::IsDirectory), Err(NS_ERROR_FAILURE));
 
@@ -3082,16 +3079,17 @@ void InitializeLocalStorage() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!gLocalStorageInitialized);
 
-  // XXX Isn't this redundant? It's already done in InitializeQuotaManager.
   if (!QuotaManager::IsRunningGTests()) {
     // This service has to be started on the main thread currently.
-    const nsCOMPtr<mozIStorageService> ss =
-        do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID);
-
-    QM_WARNONLY_TRY(OkIf(ss));
+    nsCOMPtr<mozIStorageService> ss;
+    if (NS_WARN_IF(!(ss = do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID)))) {
+      NS_WARNING("Failed to get storage service!");
+    }
   }
 
-  QM_WARNONLY_TRY(QuotaClient::Initialize());
+  if (NS_FAILED(QuotaClient::Initialize())) {
+    NS_WARNING("Failed to initialize quota client!");
+  }
 
   Preferences::RegisterCallbackAndCall(ShadowWritesPrefChangedCallback,
                                        kShadowWritesPref);
@@ -8104,29 +8102,31 @@ Result<UsageInfo, nsresult> QuotaClient::InitOrigin(
       ([fileExists, usageFileExists, &file, &usageFile, &usageJournalFile,
         &aOriginMetadata]() -> Result<UsageInfo, nsresult> {
         if (fileExists) {
-          LS_TRY_RETURN(QM_OR_ELSE_WARN(
+          LS_TRY_RETURN(
               // To simplify control flow, we call LoadUsageFile unconditionally
               // here, even though it will necessarily fail if usageFileExists
               // is false.
-              LoadUsageFile(*usageFile),
-              ([&file, &usageFile, &usageJournalFile, &aOriginMetadata](
-                   const nsresult) -> Result<UsageInfo, nsresult> {
-                LS_TRY_INSPECT(
-                    const auto& connection,
-                    CreateStorageConnection(*file, *usageFile,
-                                            aOriginMetadata.mOrigin, [] {}));
+              LoadUsageFile(*usageFile)
+                  .orElse([&file, &usageFile, &usageJournalFile,
+                           &aOriginMetadata](
+                              const nsresult) -> Result<UsageInfo, nsresult> {
+                    LS_TRY_INSPECT(
+                        const auto& connection,
+                        CreateStorageConnection(
+                            *file, *usageFile, aOriginMetadata.mOrigin, [] {}));
 
-                LS_TRY_INSPECT(const int64_t& usage,
-                               GetUsage(*connection,
-                                        /* aArchivedOriginScope */ nullptr));
+                    LS_TRY_INSPECT(
+                        const int64_t& usage,
+                        GetUsage(*connection,
+                                 /* aArchivedOriginScope */ nullptr));
 
-                LS_TRY(UpdateUsageFile(usageFile, usageJournalFile, usage));
+                    LS_TRY(UpdateUsageFile(usageFile, usageJournalFile, usage));
 
-                LS_TRY(usageJournalFile->Remove(false));
+                    LS_TRY(usageJournalFile->Remove(false));
 
-                MOZ_ASSERT(usage >= 0);
-                return UsageInfo{DatabaseUsageType(Some(uint64_t(usage)))};
-              })));
+                    MOZ_ASSERT(usage >= 0);
+                    return UsageInfo{DatabaseUsageType(Some(uint64_t(usage)))};
+                  }));
         }
 
         if (usageFileExists) {
@@ -8741,10 +8741,12 @@ AutoWriteTransaction::~AutoWriteTransaction() {
   MOZ_COUNT_DTOR(mozilla::dom::AutoWriteTransaction);
 
   if (mConnection) {
-    QM_WARNONLY_TRY(mConnection->RollbackWriteTransaction());
+    if (NS_FAILED(mConnection->RollbackWriteTransaction())) {
+      NS_WARNING("Failed to rollback write transaction!");
+    }
 
-    if (mShadowWrites) {
-      QM_WARNONLY_TRY(DetachShadowDatabaseAndUnlock());
+    if (mShadowWrites && NS_FAILED(DetachShadowDatabaseAndUnlock())) {
+      NS_WARNING("Failed to detach shadow database!");
     }
   }
 }
