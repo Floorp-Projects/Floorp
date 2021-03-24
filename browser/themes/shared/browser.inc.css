@@ -936,6 +936,13 @@ popupnotificationcontent {
   opacity: 0.7;
 }
 
+.popup-notification-description > b {
+  font-weight: inherit;
+}
+
+.popup-notification-description {
+  font-weight: 600;
+}
 } /** END Proton **/
 
 #tab-notification-deck {
