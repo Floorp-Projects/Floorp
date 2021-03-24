@@ -90,8 +90,8 @@ class FSURLEncoded : public EncodingFormSubmission {
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue) override;
 
-  virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
-                                         Blob* aBlob) override;
+  virtual nsresult AddNameBlobPair(const nsAString& aName,
+                                   Blob* aBlob) override;
 
   virtual nsresult AddNameDirectoryPair(const nsAString& aName,
                                         Directory* aDirectory) override;
@@ -150,8 +150,7 @@ nsresult FSURLEncoded::AddNameValuePair(const nsAString& aName,
   return NS_OK;
 }
 
-nsresult FSURLEncoded::AddNameBlobOrNullPair(const nsAString& aName,
-                                             Blob* aBlob) {
+nsresult FSURLEncoded::AddNameBlobPair(const nsAString& aName, Blob* aBlob) {
   if (!mWarnedFileControl) {
     SendJSWarning(mDocument, "ForgotFileEnctypeWarning", nsTArray<nsString>());
     mWarnedFileControl = true;
@@ -412,8 +411,10 @@ nsresult FSMultipartFormData::AddNameValuePair(const nsAString& aName,
   return NS_OK;
 }
 
-nsresult FSMultipartFormData::AddNameBlobOrNullPair(const nsAString& aName,
-                                                    Blob* aBlob) {
+nsresult FSMultipartFormData::AddNameBlobPair(const nsAString& aName,
+                                              Blob* aBlob) {
+  MOZ_ASSERT(aBlob);
+
   // Encode the control name
   nsAutoCString nameStr;
   nsresult rv = EncodeVal(aName, nameStr, true);
@@ -425,66 +426,61 @@ nsresult FSMultipartFormData::AddNameBlobOrNullPair(const nsAString& aName,
   nsAutoCString filename;
   nsAutoCString contentType;
   nsCOMPtr<nsIInputStream> fileStream;
+  nsAutoString filename16;
 
-  if (aBlob) {
-    nsAutoString filename16;
-
-    RefPtr<File> file = aBlob->ToFile();
-    if (file) {
-      nsAutoString relativePath;
-      file->GetRelativePath(relativePath);
-      if (StaticPrefs::dom_webkitBlink_dirPicker_enabled() &&
-          !relativePath.IsEmpty()) {
-        filename16 = relativePath;
-      }
-
-      if (filename16.IsEmpty()) {
-        RetrieveFileName(aBlob, filename16);
-      }
+  RefPtr<File> file = aBlob->ToFile();
+  if (file) {
+    nsAutoString relativePath;
+    file->GetRelativePath(relativePath);
+    if (StaticPrefs::dom_webkitBlink_dirPicker_enabled() &&
+        !relativePath.IsEmpty()) {
+      filename16 = relativePath;
     }
 
-    rv = EncodeVal(filename16, filename, true);
+    if (filename16.IsEmpty()) {
+      RetrieveFileName(aBlob, filename16);
+    }
+  }
+
+  rv = EncodeVal(filename16, filename, true);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Get content type
+  nsAutoString contentType16;
+  aBlob->GetType(contentType16);
+  if (contentType16.IsEmpty()) {
+    contentType16.AssignLiteral("application/octet-stream");
+  }
+
+  NS_ConvertUTF16toUTF8 contentType8(contentType16);
+  int32_t convertedBufLength = 0;
+  char* convertedBuf = nsLinebreakConverter::ConvertLineBreaks(
+      contentType8.get(), nsLinebreakConverter::eLinebreakAny,
+      nsLinebreakConverter::eLinebreakSpace, contentType8.Length(),
+      &convertedBufLength);
+  contentType.Adopt(convertedBuf, convertedBufLength);
+
+  // Get input stream
+  aBlob->CreateInputStream(getter_AddRefs(fileStream), error);
+  if (NS_WARN_IF(error.Failed())) {
+    return error.StealNSResult();
+  }
+
+  // Get size
+  size = aBlob->GetSize(error);
+  if (error.Failed()) {
+    error.SuppressException();
+    fileStream = nullptr;
+  }
+
+  if (fileStream) {
+    // Create buffered stream (for efficiency)
+    nsCOMPtr<nsIInputStream> bufferedStream;
+    rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
+                                   fileStream.forget(), 8192);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Get content type
-    nsAutoString contentType16;
-    aBlob->GetType(contentType16);
-    if (contentType16.IsEmpty()) {
-      contentType16.AssignLiteral("application/octet-stream");
-    }
-
-    NS_ConvertUTF16toUTF8 contentType8(contentType16);
-    int32_t convertedBufLength = 0;
-    char* convertedBuf = nsLinebreakConverter::ConvertLineBreaks(
-        contentType8.get(), nsLinebreakConverter::eLinebreakAny,
-        nsLinebreakConverter::eLinebreakSpace, contentType8.Length(),
-        &convertedBufLength);
-    contentType.Adopt(convertedBuf, convertedBufLength);
-
-    // Get input stream
-    aBlob->CreateInputStream(getter_AddRefs(fileStream), error);
-    if (NS_WARN_IF(error.Failed())) {
-      return error.StealNSResult();
-    }
-
-    // Get size
-    size = aBlob->GetSize(error);
-    if (error.Failed()) {
-      error.SuppressException();
-      fileStream = nullptr;
-    }
-
-    if (fileStream) {
-      // Create buffered stream (for efficiency)
-      nsCOMPtr<nsIInputStream> bufferedStream;
-      rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedStream),
-                                     fileStream.forget(), 8192);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      fileStream = bufferedStream;
-    }
-  } else {
-    contentType.AssignLiteral("application/octet-stream");
+    fileStream = bufferedStream;
   }
 
   AddDataChunk(nameStr, filename, contentType, fileStream, size);
@@ -610,8 +606,8 @@ class FSTextPlain : public EncodingFormSubmission {
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue) override;
 
-  virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
-                                         Blob* aBlob) override;
+  virtual nsresult AddNameBlobPair(const nsAString& aName,
+                                   Blob* aBlob) override;
 
   virtual nsresult AddNameDirectoryPair(const nsAString& aName,
                                         Directory* aDirectory) override;
@@ -634,8 +630,7 @@ nsresult FSTextPlain::AddNameValuePair(const nsAString& aName,
   return NS_OK;
 }
 
-nsresult FSTextPlain::AddNameBlobOrNullPair(const nsAString& aName,
-                                            Blob* aBlob) {
+nsresult FSTextPlain::AddNameBlobPair(const nsAString& aName, Blob* aBlob) {
   nsAutoString filename;
   RetrieveFileName(aBlob, filename);
   AddNameValuePair(aName, filename);
