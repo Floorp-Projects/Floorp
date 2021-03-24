@@ -679,9 +679,9 @@ nsresult SetDefaultPragmas(mozIStorageConnection& aConnection) {
   if (kSQLiteGrowthIncrement) {
     // This is just an optimization so ignore the failure if the disk is
     // currently too full.
-    IDB_TRY(QM_OR_ELSE_WARN(
-        ToResult(aConnection.SetGrowthIncrement(kSQLiteGrowthIncrement, ""_ns)),
-        (ErrToDefaultOkOrErr<NS_ERROR_FILE_TOO_BIG, Ok>)));
+    IDB_TRY(
+        ToResult(aConnection.SetGrowthIncrement(kSQLiteGrowthIncrement, ""_ns))
+            .orElse(ErrToDefaultOkOrErr<NS_ERROR_FILE_TOO_BIG, Ok>));
   }
 #endif  // IDB_MOBILE
 
@@ -748,12 +748,11 @@ OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
 
   IDB_TRY_UNWRAP(
       auto connection,
-      QM_OR_ELSE_WARN(
-          OpenDatabase(aStorageService, aFileURL, aTelemetryId)
-              .map([](auto connection) -> ConnectionType {
-                return Some(std::move(connection));
-              }),
-          (ErrToDefaultOkOrErr<NS_ERROR_STORAGE_BUSY, ConnectionType>)));
+      OpenDatabase(aStorageService, aFileURL, aTelemetryId)
+          .map([](auto connection) -> ConnectionType {
+            return Some(std::move(connection));
+          })
+          .orElse(ErrToDefaultOkOrErr<NS_ERROR_STORAGE_BUSY, ConnectionType>));
 
   if (connection.isNothing()) {
 #ifdef DEBUG
@@ -778,12 +777,12 @@ OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
 
       IDB_TRY_UNWRAP(
           connection,
-          QM_OR_ELSE_WARN(
-              OpenDatabase(aStorageService, aFileURL, aTelemetryId)
-                  .map([](auto connection) -> ConnectionType {
-                    return Some(std::move(connection));
-                  }),
-              ([&start](nsresult aValue) -> Result<ConnectionType, nsresult> {
+          OpenDatabase(aStorageService, aFileURL, aTelemetryId)
+              .map([](auto connection) -> ConnectionType {
+                return Some(std::move(connection));
+              })
+              .orElse([&start](
+                          nsresult aValue) -> Result<ConnectionType, nsresult> {
                 if (aValue != NS_ERROR_STORAGE_BUSY ||
                     TimeStamp::NowLoRes() - start >
                         TimeDuration::FromSeconds(10)) {
@@ -791,7 +790,7 @@ OpenDatabaseAndHandleBusy(mozIStorageService& aStorageService,
                 }
 
                 return ConnectionType();
-              })));
+              }));
     } while (connection.isNothing());
   }
 
@@ -845,13 +844,12 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
 
   IDB_TRY_UNWRAP(
       auto connection,
-      QM_OR_ELSE_WARN(
-          OpenDatabaseAndHandleBusy(*storageService, *dbFileUrl, aTelemetryId)
-              .map([](auto connection) -> nsCOMPtr<mozIStorageConnection> {
-                return std::move(connection).unwrapBasePtr();
-              }),
-          ([&aName](nsresult aValue)
-               -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
+      OpenDatabaseAndHandleBusy(*storageService, *dbFileUrl, aTelemetryId)
+          .map([](auto connection) -> nsCOMPtr<mozIStorageConnection> {
+            return std::move(connection).unwrapBasePtr();
+          })
+          .orElse([&aName](nsresult aValue)
+                      -> Result<nsCOMPtr<mozIStorageConnection>, nsresult> {
             // If we're just opening the database during origin initialization,
             // then we don't want to erase any files. The failure here will fail
             // origin initialization too.
@@ -860,7 +858,7 @@ CreateStorageConnection(nsIFile& aDBFile, nsIFile& aFMDirectory,
             }
 
             return nsCOMPtr<mozIStorageConnection>();
-          })));
+          }));
 
   if (!connection) {
     // XXX Shouldn't we also update quota usage?
@@ -5738,10 +5736,9 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
         if (aQuotaManager) {
           IDB_TRY_INSPECT(
               const Maybe<int64_t>& fileSize,
-              QM_OR_ELSE_WARN(
-                  MOZ_TO_RESULT_INVOKE(aFile, GetFileSize)
-                      .map([](const int64_t val) { return Some(val); }),
-                  MakeMaybeIdempotentFilter<int64_t>(aIdempotent)));
+              MOZ_TO_RESULT_INVOKE(aFile, GetFileSize)
+                  .map([](const int64_t val) { return Some(val); })
+                  .orElse(MakeMaybeIdempotentFilter<int64_t>(aIdempotent)));
 
           // XXX Can we really assert that the file size is not 0 if
           // it existed? This might be violated by external
@@ -5759,8 +5756,9 @@ nsresult DeleteFile(nsIFile& aFile, QuotaManager* const aQuotaManager,
   }
 
   IDB_TRY_INSPECT(const auto& didExist,
-                  QM_OR_ELSE_WARN(ToResult(aFile.Remove(false)).map(Some<Ok>),
-                                  MakeMaybeIdempotentFilter<Ok>(aIdempotent)));
+                  ToResult(aFile.Remove(false))
+                      .map(Some<Ok>)
+                      .orElse(MakeMaybeIdempotentFilter<Ok>(aIdempotent)));
 
   if (!didExist) {
     // XXX If we get here, this means that the file still existed when we
@@ -5806,9 +5804,9 @@ nsresult DeleteFilesNoQuota(nsIFile* aDirectory, const nsAString& aFilename) {
 
   IDB_TRY_INSPECT(const auto& file, CloneFileAndAppend(*aDirectory, aFilename));
 
-  IDB_TRY_INSPECT(const auto& didExist,
-                  QM_OR_ELSE_WARN(ToResult(file->Remove(true)).map(Some<Ok>),
-                                  IdempotentFilter<Ok>));
+  IDB_TRY_INSPECT(
+      const auto& didExist,
+      ToResult(file->Remove(true)).map(Some<Ok>).orElse(IdempotentFilter<Ok>));
 
   Unused << didExist;
 
@@ -5828,9 +5826,9 @@ Result<nsCOMPtr<nsIFile>, nsresult> CreateMarkerFile(
       CloneFileAndAppend(aBaseDirectory,
                          kIdbDeletionMarkerFilePrefix + aDatabaseNameBase));
 
-  QM_TRY(QM_OR_ELSE_WARN(
-      ToResult(markerFile->Create(nsIFile::NORMAL_FILE_TYPE, 0644)),
-      ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS>));
+  IDB_TRY(
+      MOZ_TO_RESULT_INVOKE(markerFile, Create, nsIFile::NORMAL_FILE_TYPE, 0644)
+          .orElse(ErrToDefaultOkOrErr<NS_ERROR_FILE_ALREADY_EXISTS, Ok>));
 
   return markerFile;
 }
@@ -5862,27 +5860,27 @@ Result<Ok, nsresult> DeleteFileManagerDirectory(
 
   uint64_t usageValue = fileUsage.GetValue().valueOr(0);
 
-  auto res = QM_OR_ELSE_WARN(
-      MOZ_TO_RESULT_INVOKE(aFileManagerDirectory, Remove, true),
-      ([&usageValue, &aFileManagerDirectory](nsresult rv) {
-        // We may have deleted some files, try to update quota
-        // information before returning the error.
+  auto res =
+      MOZ_TO_RESULT_INVOKE(aFileManagerDirectory, Remove, true)
+          .orElse([&usageValue, &aFileManagerDirectory](nsresult rv) {
+            // We may have deleted some files, try to update quota
+            // information before returning the error.
 
-        // failures of GetUsage are intentionally ignored
-        Unused << FileManager::GetUsage(&aFileManagerDirectory)
-                      .andThen([&usageValue](const auto& newFileUsage) {
-                        const auto newFileUsageValue =
-                            newFileUsage.GetValue().valueOr(0);
-                        MOZ_ASSERT(newFileUsageValue <= usageValue);
-                        usageValue -= newFileUsageValue;
+            // failures of GetUsage are intentionally ignored
+            Unused << FileManager::GetUsage(&aFileManagerDirectory)
+                          .andThen([&usageValue](const auto& newFileUsage) {
+                            const auto newFileUsageValue =
+                                newFileUsage.GetValue().valueOr(0);
+                            MOZ_ASSERT(newFileUsageValue <= usageValue);
+                            usageValue -= newFileUsageValue;
 
-                        // XXX andThen does not support void return
-                        // values right now, we must return a Result
-                        return Result<Ok, nsresult>{Ok{}};
-                      });
+                            // XXX andThen does not support void return
+                            // values right now, we must return a Result
+                            return Result<Ok, nsresult>{Ok{}};
+                          });
 
-        return Result<Ok, nsresult>{Err(rv)};
-      }));
+            return Result<Ok, nsresult>{Err(rv)};
+          });
 
   if (usageValue) {
     aQuotaManager->DecreaseUsageForClient(
@@ -6777,8 +6775,11 @@ bool DeallocPBackgroundIndexedDBUtilsParent(
 bool RecvFlushPendingFileDeletions() {
   AssertIsOnBackgroundThread();
 
-  if (QuotaClient* quotaClient = QuotaClient::GetInstance()) {
-    QM_WARNONLY_TRY(quotaClient->FlushPendingFileDeletions());
+  QuotaClient* quotaClient = QuotaClient::GetInstance();
+  if (quotaClient) {
+    if (NS_FAILED(quotaClient->FlushPendingFileDeletions())) {
+      NS_WARNING("Failed to flush pending file deletions!");
+    }
   }
 
   return true;
@@ -6890,30 +6891,29 @@ nsresult DatabaseConnection::BeginWriteTransaction() {
   IDB_TRY_INSPECT(const auto& beginStmt,
                   BorrowCachedStatement("BEGIN IMMEDIATE;"_ns));
 
-  QM_TRY(QM_OR_ELSE_WARN(
-      ToResult(beginStmt->Execute()), ([&beginStmt](nsresult rv) {
-        if (rv == NS_ERROR_STORAGE_BUSY) {
-          NS_WARNING(
-              "Received NS_ERROR_STORAGE_BUSY when attempting to start write "
-              "transaction, retrying for up to 10 seconds");
+  IDB_TRY(ToResult(beginStmt->Execute()).orElse([&beginStmt](nsresult rv) {
+    if (rv == NS_ERROR_STORAGE_BUSY) {
+      NS_WARNING(
+          "Received NS_ERROR_STORAGE_BUSY when attempting to start write "
+          "transaction, retrying for up to 10 seconds");
 
-          // Another thread must be using the database. Wait up to 10 seconds
-          // for that to complete.
-          const TimeStamp start = TimeStamp::NowLoRes();
+      // Another thread must be using the database. Wait up to 10 seconds for
+      // that to complete.
+      const TimeStamp start = TimeStamp::NowLoRes();
 
-          while (true) {
-            PR_Sleep(PR_MillisecondsToInterval(100));
+      while (true) {
+        PR_Sleep(PR_MillisecondsToInterval(100));
 
-            rv = beginStmt->Execute();
-            if (rv != NS_ERROR_STORAGE_BUSY ||
-                TimeStamp::NowLoRes() - start > TimeDuration::FromSeconds(10)) {
-              break;
-            }
-          }
+        rv = beginStmt->Execute();
+        if (rv != NS_ERROR_STORAGE_BUSY ||
+            TimeStamp::NowLoRes() - start > TimeDuration::FromSeconds(10)) {
+          break;
         }
+      }
+    }
 
-        return Result<Ok, nsresult>{rv};
-      })));
+    return Result<Ok, nsresult>{rv};
+  }));
 
   mInWriteTransaction = true;
 
@@ -6945,21 +6945,14 @@ void DatabaseConnection::RollbackWriteTransaction() {
     return;
   }
 
-  QM_WARNONLY_TRY(
-      BorrowCachedStatement("ROLLBACK;"_ns)
-          .andThen([&self = *this](const auto& stmt) -> Result<Ok, nsresult> {
-            // This may fail if SQLite already rolled back the transaction
-            // so ignore any errors.
+  IDB_TRY_INSPECT(const auto& stmt, BorrowCachedStatement("ROLLBACK;"_ns),
+                  QM_VOID);
 
-            // XXX ROLLBACK can fail quite normmally if a previous statement
-            // failed to execute successfully so SQLite rolled back the
-            // transaction already. However, if it failed because of some other
-            // reason, we could try to close the connection.
-            Unused << stmt->Execute();
+  // This may fail if SQLite already rolled back the transaction so ignore any
+  // errors.
+  Unused << stmt->Execute();
 
-            self.mInWriteTransaction = false;
-            return Ok{};
-          }));
+  mInWriteTransaction = false;
 }
 
 void DatabaseConnection::FinishWriteTransaction() {
@@ -6974,11 +6967,9 @@ void DatabaseConnection::FinishWriteTransaction() {
     mUpdateRefcountFunction->Reset();
   }
 
-  QM_WARNONLY_TRY(ToResult(ExecuteCachedStatement("BEGIN;"_ns))
-                      .andThen([&](const auto) -> Result<Ok, nsresult> {
-                        mInReadTransaction = true;
-                        return Ok{};
-                      }));
+  IDB_TRY(ExecuteCachedStatement("BEGIN;"_ns), QM_VOID);
+
+  mInReadTransaction = true;
 }
 
 nsresult DatabaseConnection::StartSavepoint() {
@@ -7129,17 +7120,18 @@ void DatabaseConnection::DoIdleProcessing(bool aNeedsCheckpoint) {
 
   // Truncate the WAL if we were asked to or if we managed to free some space.
   if (aNeedsCheckpoint || freedSomePages) {
-    QM_WARNONLY_TRY(CheckpointInternal(CheckpointMode::Truncate));
+    nsresult rv = CheckpointInternal(CheckpointMode::Truncate);
+    Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 
   // Finally try to restart the read transaction if we rolled it back earlier.
   if (beginStmt) {
-    QM_WARNONLY_TRY(
-        ToResult(beginStmt.Borrow()->Execute())
-            .andThen([&self = *this](const Ok) -> Result<Ok, nsresult> {
-              self.mInReadTransaction = true;
-              return Ok{};
-            }));
+    nsresult rv = beginStmt.Borrow()->Execute();
+    if (NS_SUCCEEDED(rv)) {
+      mInReadTransaction = true;
+    } else {
+      NS_WARNING("Failed to restart read transaction!");
+    }
   }
 }
 
@@ -7381,7 +7373,9 @@ DatabaseConnection::AutoSavepoint::~AutoSavepoint() {
         mDEBUGTransaction->GetMode() == IDBTransaction::Mode::Cleanup ||
         mDEBUGTransaction->GetMode() == IDBTransaction::Mode::VersionChange);
 
-    QM_WARNONLY_TRY(mConnection->RollbackSavepoint());
+    if (NS_FAILED(mConnection->RollbackSavepoint())) {
+      NS_WARNING("Failed to rollback savepoint!");
+    }
   }
 }
 
@@ -7540,7 +7534,9 @@ void DatabaseConnection::UpdateRefcountFunction::DidCommit() {
     entry.GetData()->MaybeUpdateDBRefs();
   }
 
-  QM_WARNONLY_TRY(RemoveJournals(mJournalsToRemoveAfterCommit));
+  if (NS_FAILED(RemoveJournals(mJournalsToRemoveAfterCommit))) {
+    NS_WARNING("RemoveJournals failed!");
+  }
 }
 
 void DatabaseConnection::UpdateRefcountFunction::DidAbort() {
@@ -7550,7 +7546,9 @@ void DatabaseConnection::UpdateRefcountFunction::DidAbort() {
   AUTO_PROFILER_LABEL("DatabaseConnection::UpdateRefcountFunction::DidAbort",
                       DOM);
 
-  QM_WARNONLY_TRY(RemoveJournals(mJournalsToRemoveAfterAbort));
+  if (NS_FAILED(RemoveJournals(mJournalsToRemoveAfterAbort))) {
+    NS_WARNING("RemoveJournals failed!");
+  }
 }
 
 void DatabaseConnection::UpdateRefcountFunction::StartSavepoint() {
@@ -7698,7 +7696,7 @@ nsresult DatabaseConnection::UpdateRefcountFunction::RemoveJournals(
         FileManager::GetFileForId(journalDirectory, journal);
     IDB_TRY(OkIf(file), NS_ERROR_FAILURE);
 
-    QM_WARNONLY_TRY(file->Remove(false));
+    [&file] { IDB_TRY(file->Remove(false), QM_VOID); }();
   }
 
   return NS_OK;
@@ -9501,9 +9499,13 @@ void Database::Invalidate() {
     Unused << SendInvalidate();
   }
 
-  QM_WARNONLY_TRY(OkIf(InvalidateAll(mTransactions)));
+  if (!InvalidateAll(mTransactions)) {
+    NS_WARNING("Failed to abort all transactions!");
+  }
 
-  QM_WARNONLY_TRY(OkIf(InvalidateAll(mMutableFiles)));
+  if (!InvalidateAll(mMutableFiles)) {
+    NS_WARNING("Failed to abort all mutable files!");
+  }
 
   MOZ_ALWAYS_TRUE(CloseInternal());
 }
@@ -12028,8 +12030,10 @@ void Cursor<CursorType>::SendResponseInternal(
   KeyValueBase::ProcessFiles(aResponse, aFiles);
 
   // Work around the deleted function by casting to the base class.
-  QM_WARNONLY_TRY(OkIf(
-      static_cast<PBackgroundIDBCursorParent*>(this)->SendResponse(aResponse)));
+  auto* const base = static_cast<PBackgroundIDBCursorParent*>(this);
+  if (!base->SendResponse(aResponse)) {
+    NS_WARNING("Failed to send response!");
+  }
 
   mCurrentlyRunningOp = nullptr;
 }
@@ -12442,21 +12446,21 @@ Result<FileUsageType, nsresult> FileManager::GetUsage(nsIFile* aDirectory) {
         if (NS_SUCCEEDED(rv)) {
           IDB_TRY_INSPECT(
               const auto& thisUsage,
-              QM_OR_ELSE_WARN(
-                  MOZ_TO_RESULT_INVOKE(file, GetFileSize)
-                      .map([](const int64_t fileSize) {
-                        return FileUsageType(Some(uint64_t(fileSize)));
-                      }),
-                  ([](const nsresult rv) -> Result<FileUsageType, nsresult> {
-                    if (rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
-                        rv == NS_ERROR_FILE_NOT_FOUND) {
-                      // If the file does no longer exist, treat it as
-                      // 0-sized.
-                      return FileUsageType{};
-                    }
+              MOZ_TO_RESULT_INVOKE(file, GetFileSize)
+                  .map([](const int64_t fileSize) {
+                    return FileUsageType(Some(uint64_t(fileSize)));
+                  })
+                  .orElse(
+                      [](const nsresult rv) -> Result<FileUsageType, nsresult> {
+                        if (rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ||
+                            rv == NS_ERROR_FILE_NOT_FOUND) {
+                          // If the file does no longer exist, treat it as
+                          // 0-sized.
+                          return FileUsageType{};
+                        }
 
-                    return Err(rv);
-                  })));
+                        return Err(rv);
+                      }));
 
           usage += thisUsage;
 
@@ -12786,22 +12790,21 @@ nsresult QuotaClient::GetUsageForOriginInternal(
          &aOriginMetadata](const nsString& subdirName) -> Result<Ok, nsresult> {
           // The directory must have the correct suffix.
           nsDependentSubstring subdirNameBase;
-          IDB_TRY(QM_OR_ELSE_WARN(
-                      ([&subdirName, &subdirNameBase] {
-                        IDB_TRY_RETURN(OkIf(GetFilenameBase(
-                            subdirName, kFileManagerDirectoryNameSuffix,
-                            subdirNameBase)));
-                      }()),
-                      ([&directory,
-                        &subdirName](const NotOk) -> Result<Ok, nsresult> {
-                        // If there is an unexpected directory in the idb
-                        // directory, trying to delete at first instead of
-                        // breaking the whole initialization.
-                        IDB_TRY(DeleteFilesNoQuota(directory, subdirName),
-                                Err(NS_ERROR_UNEXPECTED));
+          IDB_TRY(([&subdirName, &subdirNameBase] {
+                    IDB_TRY_RETURN(OkIf(GetFilenameBase(
+                        subdirName, kFileManagerDirectoryNameSuffix,
+                        subdirNameBase)));
+                  }()
+                       .orElse([&directory, &subdirName](
+                                   const NotOk) -> Result<Ok, nsresult> {
+                         // If there is an unexpected directory in the idb
+                         // directory, trying to delete at first instead of
+                         // breaking the whole initialization.
+                         IDB_TRY(DeleteFilesNoQuota(directory, subdirName),
+                                 Err(NS_ERROR_UNEXPECTED));
 
-                        return Ok{};
-                      })),
+                         return Ok{};
+                       })),
                   Ok{});
 
           if (obsoleteFilenames.Contains(subdirNameBase)) {
@@ -12820,22 +12823,21 @@ nsresult QuotaClient::GetUsageForOriginInternal(
           // If there is an unexpected directory in the idb directory, trying to
           // delete at first instead of breaking the whole initialization.
 
-          // XXX This is still somewhat quirky. It would be nice to make it
-          // clear that the warning handler is infallible, which would also
-          // remove the need for the error type conversion.
-          QM_WARNONLY_TRY(QM_OR_ELSE_WARN(
-              OkIf(databaseFilenames.Contains(subdirNameBase))
-                  .mapErr([](const NotOk) { return NS_ERROR_FAILURE; }),
-              ([&directory,
-                &subdirName](const nsresult) -> Result<Ok, nsresult> {
-                // XXX It seems if we really got here, we can fail the
-                // MOZ_ASSERT(!quotaManager->IsTemporaryStorageInitialized());
-                // assertion in DeleteFilesNoQuota.
-                IDB_TRY(DeleteFilesNoQuota(directory, subdirName),
-                        Err(NS_ERROR_UNEXPECTED));
+          IDB_TRY(([&databaseFilenames, &subdirNameBase] {
+                    IDB_TRY_RETURN(
+                        OkIf(databaseFilenames.Contains(subdirNameBase)));
+                  }()
+                       .orElse([&directory, &subdirName](
+                                   const NotOk) -> Result<Ok, nsresult> {
+                         // XXX It seems if we really got here, we can fail the
+                         // MOZ_ASSERT(!quotaManager->IsTemporaryStorageInitialized());
+                         // assertion in DeleteFilesNoQuota.
+                         IDB_TRY(DeleteFilesNoQuota(directory, subdirName),
+                                 Err(NS_ERROR_UNEXPECTED));
 
-                return Ok{};
-              })));
+                         return Ok{};
+                       })),
+                  Ok{});
 
           return Ok{};
         }));
@@ -12876,15 +12878,14 @@ nsresult QuotaClient::GetUsageForOriginInternal(
                         CloneFileAndAppend(
                             *directory, databaseFilename + kSQLiteWALSuffix));
 
-        IDB_TRY_INSPECT(
-            const int64_t& walFileSize,
-            QM_OR_ELSE_WARN(MOZ_TO_RESULT_INVOKE(walFile, GetFileSize),
-                            ([](const nsresult rv) {
+        IDB_TRY_INSPECT(const int64_t& walFileSize,
+                        MOZ_TO_RESULT_INVOKE(walFile, GetFileSize)
+                            .orElse([](const nsresult rv) {
                               return (rv == NS_ERROR_FILE_NOT_FOUND ||
                                       rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST)
                                          ? Result<int64_t, nsresult>{0}
                                          : Err(rv);
-                            })));
+                            }));
         MOZ_ASSERT(walFileSize >= 0);
         *aUsageInfo += DatabaseUsageType(Some(uint64_t(walFileSize)));
       }
@@ -14247,33 +14248,31 @@ void DatabaseMaintenance::FullVacuum(mozIStorageConnection& aConnection,
     return;
   }
 
-  QM_WARNONLY_TRY(([&]() -> Result<Ok, nsresult> {
-    IDB_TRY(aConnection.ExecuteSimpleSQL("VACUUM;"_ns));
+  IDB_TRY(aConnection.ExecuteSimpleSQL("VACUUM;"_ns), QM_VOID);
 
-    const PRTime vacuumTime = PR_Now();
-    MOZ_ASSERT(vacuumTime > 0);
+  const PRTime vacuumTime = PR_Now();
+  MOZ_ASSERT(vacuumTime > 0);
 
-    IDB_TRY_INSPECT(const int64_t& fileSize,
-                    MOZ_TO_RESULT_INVOKE(aDatabaseFile, GetFileSize));
+  IDB_TRY_INSPECT(const int64_t& fileSize,
+                  MOZ_TO_RESULT_INVOKE(aDatabaseFile, GetFileSize), QM_VOID);
 
-    MOZ_ASSERT(fileSize > 0);
+  MOZ_ASSERT(fileSize > 0);
 
-    // The parameter names are not used, parameters are bound by index only
-    // locally in the same function.
-    IDB_TRY_INSPECT(const auto& stmt, MOZ_TO_RESULT_INVOKE_TYPED(
-                                          nsCOMPtr<mozIStorageStatement>,
-                                          aConnection, CreateStatement,
-                                          "UPDATE database "
-                                          "SET last_vacuum_time = :time"
-                                          ", last_vacuum_size = :size;"_ns));
+  // The parameter names are not used, parameters are bound by index only
+  // locally in the same function.
+  IDB_TRY_INSPECT(const auto& stmt,
+                  MOZ_TO_RESULT_INVOKE_TYPED(nsCOMPtr<mozIStorageStatement>,
+                                             aConnection, CreateStatement,
+                                             "UPDATE database "
+                                             "SET last_vacuum_time = :time"
+                                             ", last_vacuum_size = :size;"_ns),
+                  QM_VOID);
 
-    IDB_TRY(stmt->BindInt64ByIndex(0, vacuumTime));
+  IDB_TRY(stmt->BindInt64ByIndex(0, vacuumTime), QM_VOID);
 
-    IDB_TRY(stmt->BindInt64ByIndex(1, fileSize));
+  IDB_TRY(stmt->BindInt64ByIndex(1, fileSize), QM_VOID);
 
-    IDB_TRY(stmt->Execute());
-    return Ok{};
-  }()));
+  IDB_TRY(stmt->Execute(), QM_VOID);
 }
 
 void DatabaseMaintenance::RunOnOwningThread() {
@@ -14615,28 +14614,29 @@ nsresult DatabaseOperationBase::InsertIndexTableRows(
     IDB_TRY(aObjectStoreKey.BindToStatement(&*borrowedStmt,
                                             kStmtParamNameObjectDataKey));
 
-    QM_TRY(QM_OR_ELSE_WARN(
-        ToResult(borrowedStmt->Execute()),
-        ([&info, index, &aIndexValues](nsresult rv) -> Result<Ok, nsresult> {
-          if (rv == NS_ERROR_STORAGE_CONSTRAINT && info.mUnique) {
-            // If we're inserting multiple entries for the same unique
-            // index, then we might have failed to insert due to
-            // colliding with another entry for the same index in which
-            // case we should ignore it.
-            for (int32_t index2 = int32_t(index) - 1;
-                 index2 >= 0 && aIndexValues[index2].mIndexId == info.mIndexId;
-                 --index2) {
-              if (info.mPosition == aIndexValues[index2].mPosition) {
-                // We found a key with the same value for the same
-                // index. So we must have had a collision with a value
-                // we just inserted.
-                return Ok{};
-              }
-            }
-          }
+    IDB_TRY(MOZ_TO_RESULT_INVOKE(&*borrowedStmt, Execute)
+                .orElse([&info, index,
+                         &aIndexValues](nsresult rv) -> Result<Ok, nsresult> {
+                  if (rv == NS_ERROR_STORAGE_CONSTRAINT && info.mUnique) {
+                    // If we're inserting multiple entries for the same unique
+                    // index, then we might have failed to insert due to
+                    // colliding with another entry for the same index in which
+                    // case we should ignore it.
+                    for (int32_t index2 = int32_t(index) - 1;
+                         index2 >= 0 &&
+                         aIndexValues[index2].mIndexId == info.mIndexId;
+                         --index2) {
+                      if (info.mPosition == aIndexValues[index2].mPosition) {
+                        // We found a key with the same value for the same
+                        // index. So we must have had a collision with a value
+                        // we just inserted.
+                        return Ok{};
+                      }
+                    }
+                  }
 
-          return Err(rv);
-        })));
+                  return Err(rv);
+                }));
   }
 
   return NS_OK;

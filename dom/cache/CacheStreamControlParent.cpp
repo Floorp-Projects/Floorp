@@ -145,9 +145,11 @@ void CacheStreamControlParent::CloseAll() {
 
 void CacheStreamControlParent::Shutdown() {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlParent);
-
-  // If child process is gone, warn and allow actor to clean up normally
-  QM_WARNONLY_TRY(OkIf(Send__delete__(this)));
+  if (!Send__delete__(this)) {
+    // child process is gone, allow actor to be destroyed normally
+    NS_WARNING("Cache failed to delete stream actor.");
+    return;
+  }
 }
 
 void CacheStreamControlParent::NotifyCloseAll() {
