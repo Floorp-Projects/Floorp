@@ -39,10 +39,11 @@ using namespace mozilla::dom;
 
 static nsOfflineCacheUpdateService* gOfflineCacheUpdateService = nullptr;
 
-nsTHashSet<nsCString>* nsOfflineCacheUpdateService::mAllowedDomains = nullptr;
+nsTHashtable<nsCStringHashKey>* nsOfflineCacheUpdateService::mAllowedDomains =
+    nullptr;
 
-nsTHashSet<nsCString>* nsOfflineCacheUpdateService::AllowedDomains() {
-  if (!mAllowedDomains) mAllowedDomains = new nsTHashSet<nsCString>();
+nsTHashtable<nsCStringHashKey>* nsOfflineCacheUpdateService::AllowedDomains() {
+  if (!mAllowedDomains) mAllowedDomains = new nsTHashtable<nsCStringHashKey>();
 
   return mAllowedDomains;
 }
@@ -629,7 +630,7 @@ nsOfflineCacheUpdateService::AllowOfflineApp(nsIPrincipal* aPrincipal) {
     rv = aPrincipal->GetBaseDomain(domain);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsOfflineCacheUpdateService::AllowedDomains()->Insert(domain);
+    nsOfflineCacheUpdateService::AllowedDomains()->PutEntry(domain);
   } else {
     nsCOMPtr<nsIPermissionManager> permissionManager =
         components::PermissionManager::Service();

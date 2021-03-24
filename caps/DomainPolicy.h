@@ -8,7 +8,7 @@
 #define DomainPolicy_h__
 
 #include "nsIDomainPolicy.h"
-#include "nsTHashSet.h"
+#include "nsTHashtable.h"
 #include "nsURIHashKey.h"
 
 namespace mozilla {
@@ -40,7 +40,7 @@ class DomainSet final : public nsIDomainSet {
 
  protected:
   virtual ~DomainSet() {}
-  nsTHashSet<nsURIHashKey> mHashTable;
+  nsTHashtable<nsURIHashKey> mHashTable;
   DomainSetType mType;
 };
 

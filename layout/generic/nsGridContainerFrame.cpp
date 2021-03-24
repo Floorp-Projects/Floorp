@@ -3888,7 +3888,7 @@ void nsGridContainerFrame::AddImplicitNamedAreas(
   // http://dev.w3.org/csswg/css-grid/#implicit-named-areas
   // Note: recording these names for fast lookup later is just an optimization.
   const uint32_t len = std::min(aLineNameLists.Length(), size_t(kMaxLine));
-  nsTHashSet<nsString> currentStarts;
+  nsTHashtable<nsStringHashKey> currentStarts;
   ImplicitNamedAreas* areas = GetImplicitNamedAreas();
   for (uint32_t i = 0; i < len; ++i) {
     for (const auto& nameIdent : aLineNameLists[i].AsSpan()) {
@@ -7636,7 +7636,7 @@ nscoord nsGridContainerFrame::ReflowRowsInFragmentainer(
     MOZ_ASSERT(child->GetPrevInFlow() ? row < aStartRow : row >= aStartRow,
                "unexpected child start row");
     if (row >= aEndRow) {
-      pushedItems.Insert(child);
+      pushedItems.PutEntry(child);
       continue;
     }
 
@@ -7761,9 +7761,9 @@ nscoord nsGridContainerFrame::ReflowRowsInFragmentainer(
     MOZ_ASSERT(!childStatus.IsInlineBreakBefore(),
                "should've handled InlineBreak::Before above");
     if (childStatus.IsIncomplete()) {
-      incompleteItems.Insert(child);
+      incompleteItems.PutEntry(child);
     } else if (!childStatus.IsFullyComplete()) {
-      overflowIncompleteItems.Insert(child);
+      overflowIncompleteItems.PutEntry(child);
     }
     if (isColMasonry) {
       auto childWM = child->GetWritingMode();
@@ -8067,14 +8067,14 @@ nscoord nsGridContainerFrame::MasonryLayout(GridReflowInput& aState,
       }
       if (aChildStatus.IsInlineBreakBefore()) {
         aStatus.SetIncomplete();
-        pushedItems.Insert(child);
+        pushedItems.PutEntry(child);
       } else if (aChildStatus.IsIncomplete()) {
         recordAutoPlacement(aItem, gridAxis);
         aStatus.SetIncomplete();
-        incompleteItems.Insert(child);
+        incompleteItems.PutEntry(child);
       } else if (!aChildStatus.IsFullyComplete()) {
         recordAutoPlacement(aItem, gridAxis);
-        overflowIncompleteItems.Insert(child);
+        overflowIncompleteItems.PutEntry(child);
       }
     }
     return result;

@@ -40,7 +40,6 @@
 #include "nsQueryObject.h"
 #include "nsBrowserStatusFilter.h"
 #include "nsIBrowser.h"
-#include "nsTHashSet.h"
 
 using namespace mozilla::ipc;
 
@@ -932,7 +931,7 @@ void CanonicalBrowsingContext::NotifyMediaMutedChanged(bool aMuted,
 uint32_t CanonicalBrowsingContext::CountSiteOrigins(
     GlobalObject& aGlobal,
     const Sequence<OwningNonNull<BrowsingContext>>& aRoots) {
-  nsTHashSet<nsCString> uniqueSiteOrigins;
+  nsTHashtable<nsCStringHashKey> uniqueSiteOrigins;
 
   for (const auto& root : aRoots) {
     root->PreOrderWalk([&](BrowsingContext* aContext) {
@@ -946,7 +945,7 @@ uint32_t CanonicalBrowsingContext::CountSiteOrigins(
         if (isContentPrincipal) {
           nsCString siteOrigin;
           documentPrincipal->GetSiteOrigin(siteOrigin);
-          uniqueSiteOrigins.Insert(siteOrigin);
+          uniqueSiteOrigins.PutEntry(siteOrigin);
         }
       }
     });

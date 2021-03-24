@@ -322,7 +322,7 @@ bool nsINode::IsSelected(const uint32_t aStartOffset,
                "Selection is for sure not selected.");
 
   // Collect the selection objects for potential ranges.
-  nsTHashSet<Selection*> ancestorSelections;
+  nsTHashtable<nsPtrHashKey<Selection>> ancestorSelections;
   Selection* prevSelection = nullptr;
   for (; n; n = GetClosestCommonInclusiveAncestorForRangeInSelection(
                 n->GetParentNode())) {
@@ -339,7 +339,7 @@ bool nsINode::IsSelected(const uint32_t aStartOffset,
         Selection* selection = range->GetSelection();
         if (prevSelection != selection) {
           prevSelection = selection;
-          ancestorSelections.Insert(selection);
+          ancestorSelections.PutEntry(selection);
         }
       }
     }
@@ -347,7 +347,8 @@ bool nsINode::IsSelected(const uint32_t aStartOffset,
 
   nsContentUtils::ComparePointsCache cache;
   IsItemInRangeComparator comparator{*this, aStartOffset, aEndOffset, &cache};
-  for (Selection* selection : ancestorSelections) {
+  for (auto iter = ancestorSelections.ConstIter(); !iter.Done(); iter.Next()) {
+    Selection* selection = iter.Get()->GetKey();
     // Binary search the sorted ranges in this selection.
     // (Selection::GetRangeAt returns its ranges ordered).
     size_t low = 0;
@@ -1827,18 +1828,19 @@ ConvertNodesOrStringsIntoNode(const Sequence<OwningNodeOrString>& aNodes,
   return fragment.forget();
 }
 
-static void InsertNodesIntoHashset(const Sequence<OwningNodeOrString>& aNodes,
-                                   nsTHashSet<nsINode*>& aHashset) {
+static void InsertNodesIntoHashset(
+    const Sequence<OwningNodeOrString>& aNodes,
+    nsTHashtable<nsPtrHashKey<nsINode>>& aHashset) {
   for (const auto& node : aNodes) {
     if (node.IsNode()) {
-      aHashset.Insert(node.GetAsNode());
+      aHashset.PutEntry(node.GetAsNode());
     }
   }
 }
 
 static nsINode* FindViablePreviousSibling(
     const nsINode& aNode, const Sequence<OwningNodeOrString>& aNodes) {
-  nsTHashSet<nsINode*> nodeSet(16);
+  nsTHashtable<nsPtrHashKey<nsINode>> nodeSet(16);
   InsertNodesIntoHashset(aNodes, nodeSet);
 
   nsINode* viablePreviousSibling = nullptr;
@@ -1855,7 +1857,7 @@ static nsINode* FindViablePreviousSibling(
 
 static nsINode* FindViableNextSibling(
     const nsINode& aNode, const Sequence<OwningNodeOrString>& aNodes) {
-  nsTHashSet<nsINode*> nodeSet(16);
+  nsTHashtable<nsPtrHashKey<nsINode>> nodeSet(16);
   InsertNodesIntoHashset(aNodes, nodeSet);
 
   nsINode* viableNextSibling = nullptr;

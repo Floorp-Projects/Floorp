@@ -147,7 +147,7 @@ NS_IMETHODIMP
 DomainSet::Add(nsIURI* aDomain) {
   nsCOMPtr<nsIURI> clone = GetCanonicalClone(aDomain);
   NS_ENSURE_TRUE(clone, NS_ERROR_FAILURE);
-  mHashTable.Insert(clone);
+  mHashTable.PutEntry(clone);
   if (XRE_IsParentProcess()) {
     return BroadcastDomainSetChange(mType, ADD_DOMAIN, aDomain);
   }
@@ -159,7 +159,7 @@ NS_IMETHODIMP
 DomainSet::Remove(nsIURI* aDomain) {
   nsCOMPtr<nsIURI> clone = GetCanonicalClone(aDomain);
   NS_ENSURE_TRUE(clone, NS_ERROR_FAILURE);
-  mHashTable.Remove(clone);
+  mHashTable.RemoveEntry(clone);
   if (XRE_IsParentProcess()) {
     return BroadcastDomainSetChange(mType, REMOVE_DOMAIN, aDomain);
   }
@@ -215,7 +215,10 @@ DomainSet::ContainsSuperDomain(nsIURI* aDomain, bool* aContains) {
 }
 
 void DomainSet::CloneSet(nsTArray<RefPtr<nsIURI>>* aDomains) {
-  AppendToArray(*aDomains, mHashTable);
+  for (auto iter = mHashTable.Iter(); !iter.Done(); iter.Next()) {
+    nsIURI* key = iter.Get()->GetKey();
+    aDomains->AppendElement(key);
+  }
 }
 
 } /* namespace mozilla */
