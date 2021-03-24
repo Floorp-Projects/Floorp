@@ -7,9 +7,9 @@
 #ifndef GFX_VR_MANAGER_H
 #define GFX_VR_MANAGER_H
 
-#include "nsHashKeys.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
+#include "nsTHashSet.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/dom/GamepadHandle.h"
@@ -132,7 +132,7 @@ class VRManager : nsIObserver {
                    const gfx::Rect& aRightEyeRect);
 
   Atomic<VRManagerState> mState;
-  typedef nsTHashtable<nsRefPtrHashKey<VRManagerParent>> VRManagerParentSet;
+  typedef nsTHashSet<RefPtr<VRManagerParent>> VRManagerParentSet;
   VRManagerParentSet mVRManagerParents;
 #if !defined(MOZ_WIDGET_ANDROID)
   VRManagerParentSet mManagerParentsWaitingForPuppetReset;
