@@ -33,6 +33,7 @@ BROWSER_CHROME_MANIFESTS += [
     "content/test/menubar/browser.ini",
     "content/test/metaTags/browser.ini",
     "content/test/outOfProcess/browser.ini",
+    "content/test/pageActions-proton/browser.ini",
     "content/test/pageActions/browser.ini",
     "content/test/pageinfo/browser.ini",
     "content/test/pageStyle/browser.ini",

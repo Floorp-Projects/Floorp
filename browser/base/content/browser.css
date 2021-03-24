@@ -762,6 +762,15 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
     display: none;
   }
 }
+
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+  /* The page actions menu is hidden by default, it is only shown in small
+     windows as the overflow target of multiple page action buttons */
+  #pageActionButton {
+    visibility: collapse;
+  }
+}
+
 /* 680px is just below half of popular 1366px wide screens, so when putting two
    browser windows next to each other on such a screen, they'll be above this
    threshold. */
@@ -769,8 +778,14 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
   /* Page action buttons are duplicated in the page action menu so we can
      safely hide them in small windows. */
   #pageActionSeparator,
-  #pageActionButton ~ .urlbar-page-action {
+  #pageActionButton[multiple-children] ~ .urlbar-page-action {
     display: none;
+  }
+
+  @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+    #pageActionButton[multiple-children] {
+      visibility: visible;
+    }
   }
 }
 @media (max-width: 550px) {

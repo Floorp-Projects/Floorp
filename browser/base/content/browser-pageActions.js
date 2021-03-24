@@ -96,6 +96,7 @@ var BrowserPageActions = {
     for (let action of urlbarActions) {
       this.placeActionInUrlbar(action);
     }
+    this._updateMainButtonAttributes();
   },
 
   /**
@@ -128,6 +129,7 @@ var BrowserPageActions = {
   placeAction(action) {
     this.placeActionInPanel(action);
     this.placeActionInUrlbar(action);
+    this._updateMainButtonAttributes();
   },
 
   /**
@@ -211,6 +213,13 @@ var BrowserPageActions = {
         }
       }
     }
+  },
+
+  _updateMainButtonAttributes() {
+    this.mainButtonNode.toggleAttribute(
+      "multiple-children",
+      PageActions.actions.length > 1
+    );
   },
 
   /**
@@ -545,6 +554,7 @@ var BrowserPageActions = {
     this._removeActionFromPanel(action);
     this._removeActionFromUrlbar(action);
     action.onRemovedFromWindow(window);
+    this._updateMainButtonAttributes();
   },
 
   _removeActionFromUrlbar(action) {

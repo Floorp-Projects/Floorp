@@ -43,7 +43,7 @@ with Files("test/keyboard/**"):
 with Files("test/outOfProcess/**"):
     BUG_COMPONENT = ("Firefox", "General")
 
-with Files("test/pageActions/**"):
+with Files("test/pageActions*/**"):
     BUG_COMPONENT = ("Firefox", "Toolbars and Customization")
 
 with Files("test/pageinfo/**"):
