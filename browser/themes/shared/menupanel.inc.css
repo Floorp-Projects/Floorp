@@ -120,15 +120,12 @@
 }
 
 #PanelUI-fxa-menu-view-sidebar,
-#PanelUI-remotetabs-view-sidebar,
 #panelMenu_viewBookmarksSidebar {
   list-style-image: url("chrome://browser/skin/sidebars-right.svg");
 }
 
 #PanelUI-fxa-menu-view-sidebar:-moz-locale-dir(ltr):not([positionend]),
 #PanelUI-fxa-menu-view-sidebar:-moz-locale-dir(rtl)[positionend],
-#PanelUI-remotetabs-view-sidebar:-moz-locale-dir(ltr):not([positionend]),
-#PanelUI-remotetabs-view-sidebar:-moz-locale-dir(rtl)[positionend],
 #panelMenu_viewBookmarksSidebar:-moz-locale-dir(ltr):not([positionend]),
 #panelMenu_viewBookmarksSidebar:-moz-locale-dir(rtl)[positionend] {
   list-style-image: url("chrome://browser/skin/sidebars.svg");
