@@ -195,9 +195,6 @@ class AndroidXPCShellRunner(MozbuildObject):
             else:
                 raise Exception("APK not found in objdir. You must specify an APK.")
 
-        if not kwargs["sequential"]:
-            kwargs["sequential"] = True
-
         xpcshell = remotexpcshelltests.XPCShellRemote(kwargs, log)
 
         result = xpcshell.runTests(
@@ -267,10 +264,14 @@ class MachCommands(MachCommandBase):
             from mozrunner.devices.android_device import (
                 verify_android_device,
                 get_adb_path,
+                InstallIntent,
             )
 
+            install = InstallIntent.YES if params["setup"] else InstallIntent.NO
             device_serial = params.get("deviceSerial")
-            verify_android_device(self, network=True, device_serial=device_serial)
+            verify_android_device(
+                self, network=True, install=install, device_serial=device_serial
+            )
             if not params["adbPath"]:
                 params["adbPath"] = get_adb_path(self)
             xpcshell = self._spawn(AndroidXPCShellRunner)
