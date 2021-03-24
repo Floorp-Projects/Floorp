@@ -1514,68 +1514,6 @@ bool JSFunction::finishBoundFunctionInit(JSContext* cx, HandleFunction bound,
   return true;
 }
 
-template <typename Unit>
-bool DelazifyCanonicalScriptedFunctionImpl(JSContext* cx, HandleFunction fun,
-                                           Handle<BaseScript*> lazy,
-                                           ScriptSource* ss) {
-  MOZ_ASSERT(!lazy->hasBytecode(), "Script is already compiled!");
-  MOZ_ASSERT(lazy->function() == fun);
-
-  AutoIncrementalTimer timer(cx->realm()->timers.delazificationTime);
-
-  size_t sourceStart = lazy->sourceStart();
-  size_t sourceLength = lazy->sourceEnd() - lazy->sourceStart();
-
-  {
-    MOZ_ASSERT(ss->hasSourceText());
-
-    // Parse and compile the script from source.
-    UncompressedSourceCache::AutoHoldEntry holder;
-
-    MOZ_ASSERT(ss->hasSourceType<Unit>());
-
-    ScriptSource::PinnedUnits<Unit> units(cx, ss, holder, sourceStart,
-                                          sourceLength);
-    if (!units.get()) {
-      return false;
-    }
-
-    JS::CompileOptions options(cx);
-    frontend::FillCompileOptionsForLazyFunction(options, lazy);
-
-    Rooted<frontend::CompilationInput> input(
-        cx, frontend::CompilationInput(options));
-    input.get().initFromLazy(lazy, ss);
-
-    if (!frontend::CompileLazyFunction(cx, input.get(), units.get(),
-                                       sourceLength)) {
-      // The frontend shouldn't fail after linking the function and the
-      // non-lazy script together.
-      MOZ_ASSERT(fun->baseScript() == lazy);
-      MOZ_ASSERT(lazy->isReadyForDelazification());
-      return false;
-    }
-  }
-
-  return true;
-}
-
-static bool DelazifyCanonicalScriptedFunction(JSContext* cx,
-                                              HandleFunction fun) {
-  Rooted<BaseScript*> lazy(cx, fun->baseScript());
-  ScriptSource* ss = lazy->scriptSource();
-
-  if (ss->hasSourceType<Utf8Unit>()) {
-    // UTF-8 source text.
-    return DelazifyCanonicalScriptedFunctionImpl<Utf8Unit>(cx, fun, lazy, ss);
-  }
-
-  MOZ_ASSERT(ss->hasSourceType<char16_t>());
-
-  // UTF-16 source text.
-  return DelazifyCanonicalScriptedFunctionImpl<char16_t>(cx, fun, lazy, ss);
-}
-
 /* static */
 bool JSFunction::delazifyLazilyInterpretedFunction(JSContext* cx,
                                                    HandleFunction fun) {
@@ -1606,7 +1544,15 @@ bool JSFunction::delazifyLazilyInterpretedFunction(JSContext* cx,
   }
 
   // Finally, compile the script if it really doesn't exist.
-  return DelazifyCanonicalScriptedFunction(cx, fun);
+  if (!frontend::DelazifyCanonicalScriptedFunction(cx, fun)) {
+    // The frontend shouldn't fail after linking the function and the
+    // non-lazy script together.
+    MOZ_ASSERT(fun->baseScript() == lazy);
+    MOZ_ASSERT(lazy->isReadyForDelazification());
+    return false;
+  }
+
+  return true;
 }
 
 /* static */
