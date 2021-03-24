@@ -68,15 +68,19 @@ class mozInlineSpellStatus {
   // also be nullptr in these cases where we need to check the entire range.
   RefPtr<nsRange> mRange;
 
-  // If we happen to know something was inserted, this is that range.
-  // Can be nullptr (this only allows an optimization, so not setting doesn't
-  // hurt)
-  RefPtr<nsRange> mCreatedRange;
+  // See `mCreatedRange`.
+  const nsRange* GetCreatedRange() const { return mCreatedRange; }
 
   // See `mNoCheckRange`.
   const nsRange* GetNoCheckRange() const { return mNoCheckRange; }
 
  private:
+  //
+  // If we happen to know something was inserted, this is that range.
+  // Can be nullptr (this only allows an optimization, so not setting doesn't
+  // hurt)
+  RefPtr<nsRange> mCreatedRange;
+
   // Contains the range computed for the current word. Can be nullptr.
   RefPtr<nsRange> mNoCheckRange;
 
