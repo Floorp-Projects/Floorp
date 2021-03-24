@@ -377,7 +377,7 @@ nsresult DocGroup::QueueIframePostMessages(
     MOZ_ASSERT(mIframePostMessageQueue);
     MOZ_ASSERT(mIframePostMessageQueue->IsPaused());
 
-    mIframesUsedPostMessageQueue.PutEntry(aWindowId);
+    mIframesUsedPostMessageQueue.Insert(aWindowId);
 
     mIframePostMessageQueue->Dispatch(std::move(aRunnable), NS_DISPATCH_NORMAL);
     return NS_OK;
@@ -387,7 +387,7 @@ nsresult DocGroup::QueueIframePostMessages(
 
 void DocGroup::TryFlushIframePostMessages(uint64_t aWindowId) {
   if (DocGroup::TryToLoadIframesInBackground()) {
-    mIframesUsedPostMessageQueue.RemoveEntry(aWindowId);
+    mIframesUsedPostMessageQueue.Remove(aWindowId);
     if (mIframePostMessageQueue && mIframesUsedPostMessageQueue.IsEmpty()) {
       MOZ_ASSERT(mIframePostMessageQueue->IsPaused());
       nsresult rv = mIframePostMessageQueue->SetIsPaused(true);

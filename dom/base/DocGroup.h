@@ -10,7 +10,7 @@
 #include "nsISupportsImpl.h"
 #include "nsIPrincipal.h"
 #include "nsThreadUtils.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 #include "nsString.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
@@ -141,7 +141,7 @@ class DocGroup final {
   RefPtr<mozilla::PerformanceCounter> mPerformanceCounter;
   RefPtr<BrowsingContextGroup> mBrowsingContextGroup;
   RefPtr<mozilla::ThrottledEventQueue> mIframePostMessageQueue;
-  nsTHashtable<nsUint64HashKey> mIframesUsedPostMessageQueue;
+  nsTHashSet<uint64_t> mIframesUsedPostMessageQueue;
   nsCOMPtr<nsISerialEventTarget> mEventTarget;
 
   // non-null if the JS execution for this docgroup is regulated with regards
