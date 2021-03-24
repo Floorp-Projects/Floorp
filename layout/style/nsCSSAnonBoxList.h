@@ -114,7 +114,6 @@ CSS_ANON_BOX(canvas, ":-moz-canvas")
 CSS_ANON_BOX(pageSequence, ":-moz-page-sequence")
 CSS_ANON_BOX(scrolledContent, ":-moz-scrolled-content")
 CSS_ANON_BOX(scrolledCanvas, ":-moz-scrolled-canvas")
-CSS_ANON_BOX(scrolledPageSequence, ":-moz-scrolled-page-sequence")
 
 // A column set is a set of columns inside of ColumnSetWrapperFrame, which
 // applies to nsColumnSetFrame. It doesn't contain any column-span elements.
