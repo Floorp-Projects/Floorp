@@ -120,7 +120,7 @@ void FormData::Append(const nsAString& aName, Blob& aBlob,
     return;
   }
 
-  AddNameBlobPair(aName, file);
+  AddNameBlobOrNullPair(aName, file);
 }
 
 void FormData::Append(const nsAString& aName, Directory* aDirectory) {
@@ -165,10 +165,15 @@ bool FormData::Has(const nsAString& aName) {
   return false;
 }
 
-nsresult FormData::AddNameBlobPair(const nsAString& aName, Blob* aBlob) {
-  MOZ_ASSERT(aBlob);
-
+nsresult FormData::AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob) {
   RefPtr<File> file;
+
+  if (!aBlob) {
+    FormDataTuple* data = mFormData.AppendElement();
+    SetNameValuePair(data, aName, u""_ns, true /* aWasNullBlob */);
+    return NS_OK;
+  }
+
   ErrorResult rv;
   file = GetOrCreateFileCalledBlob(*aBlob, rv);
   if (NS_WARN_IF(rv.Failed())) {
@@ -249,9 +254,10 @@ const OwningBlobOrDirectoryOrUSVString& FormData::GetValueAtIndex(
 }
 
 void FormData::SetNameValuePair(FormDataTuple* aData, const nsAString& aName,
-                                const nsAString& aValue) {
+                                const nsAString& aValue, bool aWasNullBlob) {
   MOZ_ASSERT(aData);
   aData->name = aName;
+  aData->wasNullBlob = aWasNullBlob;
   aData->value.SetAsUSVString() = aValue;
 }
 
@@ -261,6 +267,7 @@ void FormData::SetNameFilePair(FormDataTuple* aData, const nsAString& aName,
   MOZ_ASSERT(aFile);
 
   aData->name = aName;
+  aData->wasNullBlob = false;
   aData->value.SetAsBlob() = aFile;
 }
 
@@ -271,6 +278,7 @@ void FormData::SetNameDirectoryPair(FormDataTuple* aData,
   MOZ_ASSERT(aDirectory);
 
   aData->name = aName;
+  aData->wasNullBlob = false;
   aData->value.SetAsDirectory() = aDirectory;
 }
 
@@ -326,12 +334,15 @@ nsresult FormData::CopySubmissionDataTo(
     HTMLFormSubmission* aFormSubmission) const {
   MOZ_ASSERT(aFormSubmission, "Must have FormSubmission!");
   for (size_t i = 0; i < mFormData.Length(); ++i) {
-    if (mFormData[i].value.IsUSVString()) {
+    if (mFormData[i].wasNullBlob) {
+      MOZ_ASSERT(mFormData[i].value.IsUSVString());
+      aFormSubmission->AddNameBlobOrNullPair(mFormData[i].name, nullptr);
+    } else if (mFormData[i].value.IsUSVString()) {
       aFormSubmission->AddNameValuePair(mFormData[i].name,
                                         mFormData[i].value.GetAsUSVString());
     } else if (mFormData[i].value.IsBlob()) {
-      aFormSubmission->AddNameBlobPair(mFormData[i].name,
-                                       mFormData[i].value.GetAsBlob());
+      aFormSubmission->AddNameBlobOrNullPair(mFormData[i].name,
+                                             mFormData[i].value.GetAsBlob());
     } else {
       MOZ_ASSERT(mFormData[i].value.IsDirectory());
       aFormSubmission->AddNameDirectoryPair(

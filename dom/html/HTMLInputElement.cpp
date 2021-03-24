@@ -5668,21 +5668,13 @@ HTMLInputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission) {
         GetFilesOrDirectoriesInternal();
 
     if (files.IsEmpty()) {
-      ErrorResult rv;
-      RefPtr<Blob> blob = Blob::CreateStringBlob(
-          GetOwnerGlobal(), ""_ns, u"application/octet-stream"_ns);
-      RefPtr<File> file = blob->ToFile(u""_ns, rv);
-
-      if (!rv.Failed()) {
-        aFormSubmission->AddNameBlobPair(name, file);
-      }
-
-      return rv.StealNSResult();
+      aFormSubmission->AddNameBlobOrNullPair(name, nullptr);
+      return NS_OK;
     }
 
     for (uint32_t i = 0; i < files.Length(); ++i) {
       if (files[i].IsFile()) {
-        aFormSubmission->AddNameBlobPair(name, files[i].GetAsFile());
+        aFormSubmission->AddNameBlobOrNullPair(name, files[i].GetAsFile());
       } else {
         MOZ_ASSERT(files[i].IsDirectory());
         aFormSubmission->AddNameDirectoryPair(name, files[i].GetAsDirectory());
