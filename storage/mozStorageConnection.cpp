@@ -999,8 +999,8 @@ nsresult Connection::databaseElementExists(
 bool Connection::findFunctionByInstance(mozIStorageFunction* aInstance) {
   sharedDBMutex.assertCurrentThreadOwns();
 
-  for (auto iter = mFunctions.ConstIter(); !iter.Done(); iter.Next()) {
-    if (iter.UserData().function == aInstance) {
+  for (const auto& data : mFunctions.Values()) {
+    if (data.function == aInstance) {
       return true;
     }
   }

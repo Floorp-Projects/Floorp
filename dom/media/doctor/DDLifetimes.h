@@ -49,8 +49,8 @@ class DDLifetimes {
   template <typename F>
   void Visit(const dom::HTMLMediaElement* aMediaElement, F&& aF,
              bool aOnlyHTMLMediaElement = false) const {
-    for (auto iter = mLifetimes.ConstIter(); !iter.Done(); iter.Next()) {
-      for (const DDLifetime& lifetime : *iter.UserData()) {
+    for (const auto& lifetimes : mLifetimes.Values()) {
+      for (const DDLifetime& lifetime : *lifetimes) {
         if (lifetime.mMediaElement == aMediaElement) {
           if (aOnlyHTMLMediaElement) {
             if (lifetime.mObject.Pointer() == aMediaElement &&
@@ -76,8 +76,8 @@ class DDLifetimes {
   template <typename F>
   bool VisitBreakable(const dom::HTMLMediaElement* aMediaElement,
                       F&& aF) const {
-    for (auto iter = mLifetimes.ConstIter(); !iter.Done(); iter.Next()) {
-      for (const DDLifetime& lifetime : *iter.UserData()) {
+    for (const auto& lifetimes : mLifetimes.Values()) {
+      for (const DDLifetime& lifetime : *lifetimes) {
         if (lifetime.mMediaElement == aMediaElement) {
           static_assert(std::is_same_v<decltype(aF(lifetime)), bool>, "");
           if (aF(lifetime)) {

@@ -10656,8 +10656,7 @@ void ReflowCountMgr::DoIndiTotalsTree() {
     printf("------------------------------------------------\n");
     printf("-- Individual Counts of Frames not in Root Tree\n");
     printf("------------------------------------------------\n");
-    for (auto iter = mIndiFrameCounts.ConstIter(); !iter.Done(); iter.Next()) {
-      IndiReflowCounter* counter = iter.UserData();
+    for (const auto& counter : mIndiFrameCounts.Values()) {
       if (!counter->mHasBeenOutput) {
         char* name = ToNewCString(counter->mName);
         printf("%s - %p   [%d][", name, (void*)counter->mFrame,
@@ -10738,8 +10737,8 @@ void ReflowCountMgr::DisplayHTMLTotals(const char* aStr) {
 
 //------------------------------------------------------------------
 void ReflowCountMgr::ClearTotals() {
-  for (auto iter = mCounts.ConstIter(); !iter.Done(); iter.Next()) {
-    iter.Data()->ClearTotals();
+  for (const auto& data : mCounts.Values()) {
+    data->ClearTotals();
   }
 }
 

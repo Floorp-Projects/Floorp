@@ -1041,8 +1041,7 @@ gfxUserFontFamily* gfxUserFontSet::GetFamily(const nsACString& aFamilyName) {
 }
 
 void gfxUserFontSet::ForgetLocalFaces() {
-  for (const auto& entry : mFontFamilies) {
-    const auto fam = entry.GetData();
+  for (const auto& fam : mFontFamilies.Values()) {
     const auto& fonts = fam->GetFontList();
     for (const auto& f : fonts) {
       auto ufe = static_cast<gfxUserFontEntry*>(f.get());

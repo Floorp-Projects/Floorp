@@ -2962,8 +2962,7 @@ void InvalidatePreparedDatastoresMatching(const Condition& aCondition) {
     return;
   }
 
-  for (const auto& preparedDatastoreEntry : *gPreparedDatastores) {
-    const auto& preparedDatastore = preparedDatastoreEntry.GetData();
+  for (const auto& preparedDatastore : gPreparedDatastores->Values()) {
     MOZ_ASSERT(preparedDatastore);
 
     if (aCondition(*preparedDatastore)) {
@@ -3401,8 +3400,7 @@ bool RecvLSClearPrivateBrowsing() {
   gPrivateDatastores = nullptr;
 
   if (gDatastores) {
-    for (const auto& entry : *gDatastores) {
-      const auto& datastore = entry.GetData();
+    for (const auto& datastore : gDatastores->Values()) {
       if (datastore->PrivateBrowsingId()) {
         datastore->Clear(nullptr);
       }
@@ -5807,8 +5805,8 @@ mozilla::ipc::IPCResult Snapshot::RecvLoadValueAndMoreItems(
     mUnknownItems.Clear();
 #ifdef DEBUG
     const bool allValuesVoid =
-        std::all_of(mValues.cbegin(), mValues.cend(),
-                    [](const auto& entry) { return entry.GetData().IsVoid(); });
+        std::all_of(mValues.Values().cbegin(), mValues.Values().cend(),
+                    [](const auto& entry) { return entry.IsVoid(); });
     MOZ_ASSERT(allValuesVoid);
 #endif
     mValues.Clear();
@@ -7948,18 +7946,18 @@ bool ArchivedOriginScope::HasMatches(
         return aHashtable->Contains(hashKey);
       },
       [aHashtable](const Pattern& aPattern) {
-        return std::any_of(aHashtable->cbegin(), aHashtable->cend(),
-                           [&aPattern](const auto& entry) {
-                             return aPattern.GetPattern().Matches(
-                                 entry.GetData()->mOriginAttributes);
-                           });
+        return std::any_of(
+            aHashtable->Values().cbegin(), aHashtable->Values().cend(),
+            [&aPattern](const auto& entry) {
+              return aPattern.GetPattern().Matches(entry->mOriginAttributes);
+            });
       },
       [aHashtable](const Prefix& aPrefix) {
-        return std::any_of(aHashtable->cbegin(), aHashtable->cend(),
-                           [&aPrefix](const auto& entry) {
-                             return entry.GetData()->mOriginNoSuffix ==
-                                    aPrefix.OriginNoSuffix();
-                           });
+        return std::any_of(
+            aHashtable->Values().cbegin(), aHashtable->Values().cend(),
+            [&aPrefix](const auto& entry) {
+              return entry->mOriginNoSuffix == aPrefix.OriginNoSuffix();
+            });
       },
       [aHashtable](const Null& aNull) { return !aHashtable->IsEmpty(); });
 }

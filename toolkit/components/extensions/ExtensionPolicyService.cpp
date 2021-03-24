@@ -124,9 +124,7 @@ WebExtensionPolicy* ExtensionPolicyService::GetByURL(const URLInfo& aURL) {
 
 void ExtensionPolicyService::GetAll(
     nsTArray<RefPtr<WebExtensionPolicy>>& aResult) {
-  for (auto iter = mExtensions.Iter(); !iter.Done(); iter.Next()) {
-    aResult.AppendElement(iter.Data());
-  }
+  AppendToArray(aResult, mExtensions.Values());
 }
 
 bool ExtensionPolicyService::RegisterExtension(WebExtensionPolicy& aPolicy) {
@@ -178,9 +176,7 @@ bool ExtensionPolicyService::UnregisterObserver(DocumentObserver& aObserver) {
 NS_IMETHODIMP
 ExtensionPolicyService::CollectReports(nsIHandleReportCallback* aHandleReport,
                                        nsISupports* aData, bool aAnonymize) {
-  for (auto iter = mExtensions.Iter(); !iter.Done(); iter.Next()) {
-    auto& ext = iter.Data();
-
+  for (const auto& ext : mExtensions.Values()) {
     nsAtomCString id(ext->Id());
 
     NS_ConvertUTF16toUTF8 name(ext->Name());
@@ -484,9 +480,7 @@ void ExtensionPolicyService::CheckContentScripts(const DocInfo& aDocInfo,
 
   nsTArray<RefPtr<WebExtensionContentScript>> scriptsToLoad;
 
-  for (auto iter = mExtensions.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<WebExtensionPolicy> policy = iter.Data();
-
+  for (RefPtr<WebExtensionPolicy> policy : mExtensions.Values()) {
     for (auto& script : policy->ContentScripts()) {
       if (script->Matches(aDocInfo)) {
         if (aIsPreload) {
@@ -514,9 +508,7 @@ void ExtensionPolicyService::CheckContentScripts(const DocInfo& aDocInfo,
     scriptsToLoad.ClearAndRetainStorage();
   }
 
-  for (auto iter = mObservers.Iter(); !iter.Done(); iter.Next()) {
-    RefPtr<DocumentObserver> observer = iter.Data();
-
+  for (RefPtr<DocumentObserver> observer : mObservers.Values()) {
     for (auto& matcher : observer->Matchers()) {
       if (matcher->Matches(aDocInfo)) {
         if (aIsPreload) {

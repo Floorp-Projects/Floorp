@@ -60,9 +60,9 @@ void AudioStreamTrack::SetReadyState(MediaStreamTrackState aState) {
   if (!mCrossGraphs.IsEmpty() && !Ended() &&
       mReadyState == MediaStreamTrackState::Live &&
       aState == MediaStreamTrackState::Ended) {
-    for (auto iter = mCrossGraphs.Iter(); !iter.Done(); iter.Next()) {
-      (*iter.Data())->Destroy();
-      (*iter.Data()).reset();
+    for (const auto& data : mCrossGraphs.Values()) {
+      (*data)->Destroy();
+      data->reset();
     }
     mCrossGraphs.Clear();
   }

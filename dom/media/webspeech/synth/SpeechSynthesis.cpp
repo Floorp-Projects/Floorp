@@ -41,8 +41,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(SpeechSynthesis,
                                                   DOMEventTargetHelper)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCurrentTask)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSpeechQueue)
-  for (auto iter = tmp->mVoiceCache.Iter(); !iter.Done(); iter.Next()) {
-    SpeechSynthesisVoice* voice = iter.UserData();
+  for (SpeechSynthesisVoice* voice : tmp->mVoiceCache.Values()) {
     cb.NoteXPCOMChild(voice);
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END

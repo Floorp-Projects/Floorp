@@ -325,8 +325,8 @@ static BloatEntry* GetBloatEntry(const char* aTypeName,
   return entry;
 }
 
-static void DumpSerialNumbers(const SerialHash::Iterator& aHashEntry, FILE* aFd,
-                              bool aDumpAsStringBuffer) {
+static void DumpSerialNumbers(const SerialHash::ConstIterator& aHashEntry,
+                              FILE* aFd, bool aDumpAsStringBuffer) {
   SerialNumberRecord* record = aHashEntry.UserData();
   auto* outputFile = aFd;
 #ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR
@@ -398,10 +398,9 @@ nsresult nsTraceRefcnt::DumpStatistics() {
   gLogging = NoLogging;
 
   BloatEntry total("TOTAL", 0);
-  for (auto iter = gBloatView->Iter(); !iter.Done(); iter.Next()) {
-    BloatEntry* entry = iter.UserData();
-    if (nsCRT::strcmp(entry->GetClassName(), "TOTAL") != 0) {
-      entry->Total(&total);
+  for (const auto& data : gBloatView->Values()) {
+    if (nsCRT::strcmp(data->GetClassName(), "TOTAL") != 0) {
+      data->Total(&total);
     }
   }
 
@@ -413,9 +412,9 @@ nsresult nsTraceRefcnt::DumpStatistics() {
   }
   const bool leaked = total.PrintDumpHeader(gBloatLog, msg);
 
-  nsTArray<BloatEntry*> entries;
-  for (auto iter = gBloatView->Iter(); !iter.Done(); iter.Next()) {
-    entries.AppendElement(iter.UserData());
+  nsTArray<BloatEntry*> entries(gBloatView->Count());
+  for (const auto& data : gBloatView->Values()) {
+    entries.AppendElement(data.get());
   }
 
   const uint32_t count = entries.Length();
@@ -439,7 +438,7 @@ nsresult nsTraceRefcnt::DumpStatistics() {
                                     gTypesToLog->Contains("nsStringBuffer");
 
     fprintf(gBloatLog, "\nSerial Numbers of Leaked Objects:\n");
-    for (auto iter = gSerialNumbers->Iter(); !iter.Done(); iter.Next()) {
+    for (auto iter = gSerialNumbers->ConstIter(); !iter.Done(); iter.Next()) {
       DumpSerialNumbers(iter, gBloatLog, onlyLoggingStringBuffers);
     }
   }

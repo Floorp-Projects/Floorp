@@ -2174,9 +2174,9 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(Loader)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Loader)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mSheets);
-  for (auto iter = tmp->mInlineSheets.Iter(); !iter.Done(); iter.Next()) {
+  for (const auto& data : tmp->mInlineSheets.Values()) {
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "Inline sheet cache in Loader");
-    cb.NoteXPCOMChild(iter.UserData());
+    cb.NoteXPCOMChild(data);
   }
   for (nsCOMPtr<nsICSSLoaderObserver>& obs : tmp->mObservers.ForwardRange()) {
     ImplCycleCollectionTraverse(cb, obs, "mozilla::css::Loader.mObservers");

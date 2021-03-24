@@ -219,8 +219,8 @@ TEST(FOG, TestCppTimingDistWorks)
 
   // We also can't guarantee the buckets, but we can guarantee two samples.
   uint64_t sampleCount = 0;
-  for (auto iter = data.values.ConstIter(); !iter.Done(); iter.Next()) {
-    sampleCount += iter.UserData();
+  for (const auto& value : data.values.Values()) {
+    sampleCount += value;
   }
   ASSERT_EQ(sampleCount, (uint64_t)2);
 }

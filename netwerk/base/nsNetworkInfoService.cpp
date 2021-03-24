@@ -44,8 +44,8 @@ nsresult nsNetworkInfoService::ListNetworkAddresses(
     return NS_OK;
   }
 
-  for (auto iter = addrMap.Iter(); !iter.Done(); iter.Next()) {
-    addrStrings.AppendElement(iter.Data());
+  for (const auto& data : addrMap.Values()) {
+    addrStrings.AppendElement(data);
   }
   aListener->OnListedNetworkAddresses(addrStrings);
   return NS_OK;

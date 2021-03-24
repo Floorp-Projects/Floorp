@@ -533,8 +533,8 @@ nsresult UntrustedModulesDataSerializer::Add(
     return mCtorResult;
   }
 
-  for (auto iter = aData.ConstIter(); !iter.Done(); iter.Next()) {
-    const RefPtr<UntrustedModulesDataContainer>& container = iter.Data();
+  for (const RefPtr<UntrustedModulesDataContainer>& container :
+       aData.Values()) {
     if (!container) {
       continue;
     }

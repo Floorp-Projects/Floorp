@@ -467,8 +467,8 @@ nsresult nsXULPrototypeCache::BeginCaching(nsIURI* aURI) {
 }
 
 void nsXULPrototypeCache::MarkInCCGeneration(uint32_t aGeneration) {
-  for (auto iter = mPrototypeTable.Iter(); !iter.Done(); iter.Next()) {
-    iter.Data()->MarkInCCGeneration(aGeneration);
+  for (const auto& prototype : mPrototypeTable.Values()) {
+    prototype->MarkInCCGeneration(aGeneration);
   }
 }
 
@@ -508,12 +508,11 @@ void nsXULPrototypeCache::CollectMemoryReports(
   // TODO Report content in mPrototypeTable?
 
   other += sInstance->mStyleSheetTable.ShallowSizeOfExcludingThis(mallocSizeOf);
-  for (auto iter = sInstance->mStyleSheetTable.ConstIter(); !iter.Done();
-       iter.Next()) {
+  for (const auto& stylesheet : sInstance->mStyleSheetTable.Values()) {
     // NOTE: If Loader::DoSheetComplete() is ever modified to stop clongin
     // sheets before inserting into this cache, we will need to stop using
     // SizeOfIncludingThis()
-    other += iter.Data()->SizeOfIncludingThis(mallocSizeOf);
+    other += stylesheet->SizeOfIncludingThis(mallocSizeOf);
   }
 
   other += sInstance->mScriptTable.ShallowSizeOfExcludingThis(mallocSizeOf);

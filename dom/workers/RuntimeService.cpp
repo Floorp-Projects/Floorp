@@ -1681,9 +1681,7 @@ void RuntimeService::CrashIfHanging() {
   ActiveWorkerStats activeStats;
   uint32_t inactiveWorkers = 0;
 
-  for (const auto& entry : mDomainMap) {
-    const WorkerDomainInfo* const aData = entry.GetData().get();
-
+  for (const auto& aData : mDomainMap.Values()) {
     activeStats.Update<&ActiveWorkerStats::mWorkers>(aData->mActiveWorkers);
     activeStats.Update<&ActiveWorkerStats::mServiceWorkers>(
         aData->mActiveServiceWorkers);
@@ -1839,9 +1837,7 @@ void RuntimeService::Cleanup() {
 
 void RuntimeService::AddAllTopLevelWorkersToArray(
     nsTArray<WorkerPrivate*>& aWorkers) {
-  for (const auto& entry : mDomainMap) {
-    WorkerDomainInfo* const aData = entry.GetData().get();
-
+  for (const auto& aData : mDomainMap.Values()) {
 #ifdef DEBUG
     for (const auto& activeWorker : aData->mActiveWorkers) {
       MOZ_ASSERT(!activeWorker->GetParent(),

@@ -245,8 +245,8 @@ size_t gfxSVGGlyphs::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const {
   size_t result = aMallocSizeOf(this) +
                   mGlyphDocs.ShallowSizeOfExcludingThis(aMallocSizeOf) +
                   mGlyphIdMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (const auto& entry : mGlyphDocs) {
-    result += entry.GetData()->SizeOfIncludingThis(aMallocSizeOf);
+  for (const auto& entry : mGlyphDocs.Values()) {
+    result += entry->SizeOfIncludingThis(aMallocSizeOf);
   }
   return result;
 }

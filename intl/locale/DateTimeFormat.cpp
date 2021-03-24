@@ -354,8 +354,8 @@ void DateTimeFormat::BuildTimeZoneString(
 /*static*/
 void DateTimeFormat::DeleteCache() {
   if (mFormatCache) {
-    for (auto i = mFormatCache->Iter(); !i.Done(); i.Next()) {
-      udat_close(i.Data());
+    for (const auto& entry : mFormatCache->Values()) {
+      udat_close(entry);
     }
     delete mFormatCache;
     mFormatCache = nullptr;

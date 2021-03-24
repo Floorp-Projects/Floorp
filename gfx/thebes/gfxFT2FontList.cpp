@@ -1728,10 +1728,9 @@ gfxFontEntry* gfxFT2FontList::LookupLocalFont(const nsACString& aFontName,
   // walk over list of names
   FT2FontEntry* fontEntry = nullptr;
 
-  for (auto iter = mFontFamilies.ConstIter(); !iter.Done(); iter.Next()) {
+  for (const RefPtr<gfxFontFamily>& fontFamily : mFontFamilies.Values()) {
     // Check family name, based on the assumption that the
     // first part of the full name is the family name
-    const RefPtr<gfxFontFamily>& fontFamily = iter.Data();
 
     // does the family name match up to the length of the family name?
     const nsCString& family = fontFamily->Name();

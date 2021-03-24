@@ -163,12 +163,10 @@ const char* GetNameForMetricID(OriginMetricID aId) {
 // an encoded snapshot right now.
 uint32_t PrioDataCount(const StaticMutexAutoLock& lock) {
   uint32_t count = 0;
-  auto iter = gMetricToOriginBag->ConstIter();
-  for (; !iter.Done(); iter.Next()) {
-    auto originIt = iter.Data().ConstIter();
+  for (const auto& origins : gMetricToOriginBag->Values()) {
     uint32_t maxOriginCount = 0;
-    for (; !originIt.Done(); originIt.Next()) {
-      maxOriginCount = std::max(maxOriginCount, originIt.Data());
+    for (const auto& data : origins.Values()) {
+      maxOriginCount = std::max(maxOriginCount, data);
     }
     count += gPrioDatasPerMetric * maxOriginCount;
   }
@@ -603,10 +601,9 @@ size_t TelemetryOrigin::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) {
   }
 
   n += gMetricToOriginBag->ShallowSizeOfIncludingThis(aMallocSizeOf);
-  auto iter = gMetricToOriginBag->ConstIter();
-  for (; !iter.Done(); iter.Next()) {
+  for (const auto& origins : gMetricToOriginBag->Values()) {
     // The string hashkey and count should both be contained by the hashtable.
-    n += iter.Data().ShallowSizeOfIncludingThis(aMallocSizeOf);
+    n += origins.ShallowSizeOfIncludingThis(aMallocSizeOf);
   }
 
   // The string hashkey and ID should both be contained within the hashtable.

@@ -1217,8 +1217,7 @@ nsresult nsHttpConnectionMgr::MakeNewConnection(
     // If the global number of connections is preventing the opening of new
     // connections to a host without idle connections, then close any spdy
     // ASAP.
-    for (auto iter = mCT.ConstIter(); !iter.Done(); iter.Next()) {
-      RefPtr<ConnectionEntry> entry = iter.Data();
+    for (const RefPtr<ConnectionEntry>& entry : mCT.Values()) {
       while (entry->MakeFirstActiveSpdyConnDontReuse()) {
         // Stop on <= (particularly =) because this dontreuse
         // causes async close.
@@ -1863,8 +1862,8 @@ void nsHttpConnectionMgr::ProcessSpdyPendingQ(ConnectionEntry* ent) {
 void nsHttpConnectionMgr::OnMsgProcessAllSpdyPendingQ(int32_t, ARefBase*) {
   MOZ_ASSERT(OnSocketThread(), "not on socket thread");
   LOG(("nsHttpConnectionMgr::OnMsgProcessAllSpdyPendingQ\n"));
-  for (auto iter = mCT.ConstIter(); !iter.Done(); iter.Next()) {
-    ProcessSpdyPendingQ(iter.Data().get());
+  for (const auto& entry : mCT.Values()) {
+    ProcessSpdyPendingQ(entry.get());
   }
 }
 
@@ -2114,8 +2113,8 @@ void nsHttpConnectionMgr::OnMsgProcessPendingQ(int32_t, ARefBase* param) {
   if (!ci) {
     LOG(("nsHttpConnectionMgr::OnMsgProcessPendingQ [ci=nullptr]\n"));
     // Try and dispatch everything
-    for (auto iter = mCT.ConstIter(); !iter.Done(); iter.Next()) {
-      Unused << ProcessPendingQForEntry(iter.Data().get(), true);
+    for (const auto& entry : mCT.Values()) {
+      Unused << ProcessPendingQForEntry(entry.get(), true);
     }
     return;
   }
@@ -2128,8 +2127,8 @@ void nsHttpConnectionMgr::OnMsgProcessPendingQ(int32_t, ARefBase* param) {
   if (!(ent && ProcessPendingQForEntry(ent, false))) {
     // if we reach here, it means that we couldn't dispatch a transaction
     // for the specified connection info.  walk the connection table...
-    for (auto iter = mCT.ConstIter(); !iter.Done(); iter.Next()) {
-      if (ProcessPendingQForEntry(iter.Data().get(), false)) {
+    for (const auto& entry : mCT.Values()) {
+      if (ProcessPendingQForEntry(entry.get(), false)) {
         break;
       }
     }
@@ -2218,9 +2217,8 @@ void nsHttpConnectionMgr::OnMsgPruneNoTraffic(int32_t, ARefBase*) {
   LOG(("nsHttpConnectionMgr::OnMsgPruneNoTraffic\n"));
 
   // Prune connections without traffic
-  for (auto iter = mCT.ConstIter(); !iter.Done(); iter.Next()) {
+  for (const RefPtr<ConnectionEntry>& ent : mCT.Values()) {
     // Close the connections with no registered traffic.
-    RefPtr<ConnectionEntry> ent = iter.Data();
     ent->PruneNoTraffic();
   }
 
@@ -2238,8 +2236,8 @@ void nsHttpConnectionMgr::OnMsgVerifyTraffic(int32_t, ARefBase*) {
   }
 
   // Mark connections for traffic verification
-  for (auto iter = mCT.ConstIter(); !iter.Done(); iter.Next()) {
-    iter.Data()->VerifyTraffic();
+  for (const auto& entry : mCT.Values()) {
+    entry->VerifyTraffic();
   }
 
   // If the timer is already there. we just re-init it
@@ -2266,8 +2264,8 @@ void nsHttpConnectionMgr::OnMsgDoShiftReloadConnectionCleanup(int32_t,
 
   nsHttpConnectionInfo* ci = static_cast<nsHttpConnectionInfo*>(param);
 
-  for (auto iter = mCT.ConstIter(); !iter.Done(); iter.Next()) {
-    iter.Data()->ClosePersistentConnections();
+  for (const auto& entry : mCT.Values()) {
+    entry->ClosePersistentConnections();
   }
 
   if (ci) ResetIPFamilyPreference(ci);
@@ -2592,14 +2590,12 @@ void nsHttpConnectionMgr::LogActiveTransactions(char operation) {
   trs = mActiveTransactions[true].Get(mCurrentTopLevelOuterContentWindowId);
   at = trs ? trs->Length() : 0;
 
-  for (auto iter = mActiveTransactions[false].ConstIter(); !iter.Done();
-       iter.Next()) {
-    bu += iter.UserData()->Length();
+  for (const auto& data : mActiveTransactions[false].Values()) {
+    bu += data->Length();
   }
   bu -= au;
-  for (auto iter = mActiveTransactions[true].ConstIter(); !iter.Done();
-       iter.Next()) {
-    bt += iter.UserData()->Length();
+  for (const auto& data : mActiveTransactions[true].Values()) {
+    bt += data->Length();
   }
   bt -= at;
 
@@ -3206,9 +3202,7 @@ void nsHttpConnectionMgr::TimeoutTick() {
   // reduce it to their local needs.
   mTimeoutTickNext = 3600;  // 1hr
 
-  for (auto iter = mCT.ConstIter(); !iter.Done(); iter.Next()) {
-    RefPtr<ConnectionEntry> ent = iter.Data();
-
+  for (const RefPtr<ConnectionEntry>& ent : mCT.Values()) {
     uint32_t timeoutTickNext = ent->TimeoutTick();
     mTimeoutTickNext = std::min(mTimeoutTickNext, timeoutTickNext);
   }
@@ -3371,9 +3365,7 @@ void nsHttpConnectionMgr::RegisterOriginCoalescingKey(HttpConnectionBase* conn,
 }
 
 bool nsHttpConnectionMgr::GetConnectionData(nsTArray<HttpRetParams>* aArg) {
-  for (auto iter = mCT.ConstIter(); !iter.Done(); iter.Next()) {
-    RefPtr<ConnectionEntry> ent = iter.Data();
-
+  for (const RefPtr<ConnectionEntry>& ent : mCT.Values()) {
     if (ent->mConnInfo->GetPrivate()) {
       continue;
     }

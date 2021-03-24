@@ -48,9 +48,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(JSActor)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobal)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWrappedJS)
-  for (auto& query : tmp->mPendingQueries) {
-    CycleCollectionNoteChild(cb, query.GetData().mPromise.get(),
-                             "Pending Query Promise");
+  for (const auto& query : tmp->mPendingQueries.Values()) {
+    CycleCollectionNoteChild(cb, query.mPromise.get(), "Pending Query Promise");
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -70,13 +69,13 @@ void JSActor::AfterDestroy() {
 
   // Take our queries out, in case somehow rejecting promises can trigger
   // additions or removals.
-  nsTHashMap<nsUint64HashKey, PendingQuery> pendingQueries;
-  mPendingQueries.SwapElements(pendingQueries);
-  for (auto& entry : pendingQueries) {
+  const nsTHashMap<nsUint64HashKey, PendingQuery> pendingQueries =
+      std::move(mPendingQueries);
+  for (const auto& entry : pendingQueries.Values()) {
     nsPrintfCString message(
         "Actor '%s' destroyed before query '%s' was resolved", mName.get(),
-        NS_LossyConvertUTF16toASCII(entry.GetData().mMessageName).get());
-    entry.GetData().mPromise->MaybeRejectWithAbortError(message);
+        NS_LossyConvertUTF16toASCII(entry.mMessageName).get());
+    entry.mPromise->MaybeRejectWithAbortError(message);
   }
 
   InvokeCallback(CallbackFunction::DidDestroy);

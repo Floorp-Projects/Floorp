@@ -842,8 +842,8 @@ Document* ExternalResourceMap::RequestResource(
 
 void ExternalResourceMap::EnumerateResources(SubDocEnumFunc aCallback) {
   nsTArray<RefPtr<Document>> docs(mMap.Count());
-  for (const auto& entry : mMap) {
-    if (Document* doc = entry.GetData()->mDocument) {
+  for (const auto& entry : mMap.Values()) {
+    if (Document* doc = entry->mDocument) {
       docs.AppendElement(doc);
     }
   }

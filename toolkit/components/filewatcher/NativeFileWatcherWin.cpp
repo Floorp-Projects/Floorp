@@ -847,11 +847,11 @@ nsresult NativeFileWatcherIOTask::DeactivateRunnableMethod() {
              "watches manually before quitting.");
 
   // Log any pending watch.
-  for (auto it = mWatchedResourcesByHandle.Iter(); !it.Done(); it.Next()) {
+  for (const auto& data : mWatchedResourcesByHandle.Values()) {
     FILEWATCHERLOG(
         "NativeFileWatcherIOTask::DeactivateRunnableMethod - "
         "%S is still being watched.",
-        it.UserData()->mPath.get());
+        data->mPath.get());
   }
 
   // We return immediately if |mShuttingDown| is true (see below for

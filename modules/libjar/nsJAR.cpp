@@ -546,8 +546,8 @@ nsZipReaderCache::Init(uint32_t cacheSize) {
 }
 
 nsZipReaderCache::~nsZipReaderCache() {
-  for (auto iter = mZips.Iter(); !iter.Done(); iter.Next()) {
-    iter.UserData()->SetZipReaderCache(nullptr);
+  for (const auto& zip : mZips.Values()) {
+    zip->SetZipReaderCache(nullptr);
   }
 
 #ifdef ZIP_CACHE_HIT_RATE
@@ -730,8 +730,8 @@ nsresult nsZipReaderCache::ReleaseZip(nsJAR* zip) {
   // locked here for the zip. We return fast if it is not found.
 
   bool found = false;
-  for (auto iter = mZips.Iter(); !iter.Done(); iter.Next()) {
-    if (zip == iter.UserData()) {
+  for (const auto& current : mZips.Values()) {
+    if (zip == current) {
       found = true;
       break;
     }
@@ -750,8 +750,7 @@ nsresult nsZipReaderCache::ReleaseZip(nsJAR* zip) {
 
   // Find the oldest zip.
   nsJAR* oldest = nullptr;
-  for (auto iter = mZips.Iter(); !iter.Done(); iter.Next()) {
-    nsJAR* current = iter.UserData();
+  for (const auto& current : mZips.Values()) {
     PRIntervalTime currentReleaseTime = current->GetReleaseTime();
     if (currentReleaseTime != PR_INTERVAL_NO_TIMEOUT) {
       if (oldest == nullptr || currentReleaseTime < oldest->GetReleaseTime()) {
@@ -808,8 +807,8 @@ nsZipReaderCache::Observe(nsISupports* aSubject, const char* aTopic,
     }
   } else if (strcmp(aTopic, "chrome-flush-caches") == 0) {
     MutexAutoLock lock(mLock);
-    for (auto iter = mZips.Iter(); !iter.Done(); iter.Next()) {
-      iter.UserData()->SetZipReaderCache(nullptr);
+    for (const auto& current : mZips.Values()) {
+      current->SetZipReaderCache(nullptr);
     }
     mZips.Clear();
   } else if (strcmp(aTopic, "flush-cache-entry") == 0) {

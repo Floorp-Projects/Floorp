@@ -2421,9 +2421,8 @@ void nsWebBrowserPersist::CalcTotalProgress() {
 
   if (mOutputMap.Count() > 0) {
     // Total up the progress of each output stream
-    for (auto iter = mOutputMap.ConstIter(); !iter.Done(); iter.Next()) {
+    for (const auto& data : mOutputMap.Values()) {
       // Only count toward total progress if destination file is local.
-      OutputData* data = iter.UserData();
       nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(data->mFile);
       if (fileURL) {
         mTotalCurrentProgress += data->mSelfProgress;
@@ -2434,8 +2433,7 @@ void nsWebBrowserPersist::CalcTotalProgress() {
 
   if (mUploadList.Count() > 0) {
     // Total up the progress of each upload
-    for (auto iter = mUploadList.ConstIter(); !iter.Done(); iter.Next()) {
-      UploadData* data = iter.UserData();
+    for (const auto& data : mUploadList.Values()) {
       if (data) {
         mTotalCurrentProgress += data->mSelfProgress;
         mTotalMaxProgress += data->mSelfProgressMax;

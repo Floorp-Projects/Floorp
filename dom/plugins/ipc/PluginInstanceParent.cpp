@@ -1836,8 +1836,8 @@ bool PluginInstanceParent::DeallocPPluginScriptableObjectParent(
   }
 #ifdef DEBUG
   else {
-    for (auto iter = mScriptableObjects.Iter(); !iter.Done(); iter.Next()) {
-      NS_ASSERTION(actor != iter.UserData(),
+    for (const auto& scriptableObject : mScriptableObjects.Values()) {
+      NS_ASSERTION(actor != scriptableObject,
                    "Actor in the hash with a null NPObject!");
     }
   }
