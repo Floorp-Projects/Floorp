@@ -38,6 +38,7 @@ raptor_description_schema = Schema(
             "test-name",
             "raptor-test",
             "subtest",
+            "variant",
             test_description_schema["run-on-projects"],
         ),
         Optional("fission-run-on-projects"): optionally_keyed_by(
@@ -63,7 +64,7 @@ raptor_description_schema = Schema(
             "app", test_description_schema["target"]
         ),
         Optional("tier"): optionally_keyed_by(
-            "app", "raptor-test", "subtest", test_description_schema["tier"]
+            "app", "raptor-test", "subtest", "variant", test_description_schema["tier"]
         ),
         Optional("test-url-param"): optionally_keyed_by(
             "subtest", "test-platform", text_type
@@ -182,7 +183,9 @@ def handle_keyed_by(config, tests):
     ]
     for test in tests:
         for field in fields:
-            resolve_keyed_by(test, field, item_name=test["test-name"])
+            resolve_keyed_by(
+                test, field, item_name=test["test-name"], defer=["variant"]
+            )
         yield test
 
 

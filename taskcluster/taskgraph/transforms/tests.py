@@ -393,7 +393,11 @@ test_description_schema = Schema(
         # build task's run-on-projects, meaning that tests run only on platforms
         # that are built.
         Optional("run-on-projects"): optionally_keyed_by(
-            "test-platform", "test-name", "variant", Any([text_type], "built-projects")
+            "app",
+            "test-platform",
+            "test-name",
+            "variant",
+            Any([text_type], "built-projects"),
         ),
         # When set only run on projects where the build would already be running.
         # This ensures tasks where this is True won't be the cause of the build
