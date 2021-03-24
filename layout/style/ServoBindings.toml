@@ -509,6 +509,7 @@ cbindgen-types = [
     { gecko = "StyleFontFamilyNameSyntax", servo = "crate::values::computed::font::FontFamilyNameSyntax" },
     { gecko = "StyleGenericColor", servo = "crate::values::generics::color::Color" },
     { gecko = "StyleSystemColor", servo = "crate::values::specified::color::SystemColor" },
+    { gecko = "StyleSystemFont", servo = "crate::values::specified::font::SystemFont" },
     { gecko = "StyleGenericColorOrAuto", servo = "crate::values::generics::color::ColorOrAuto" },
     { gecko = "StyleGenericScrollbarColor", servo = "crate::values::generics::ui::ScrollbarColor" },
     { gecko = "StyleRGBA", servo = "cssparser::RGBA" },

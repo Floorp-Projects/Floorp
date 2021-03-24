@@ -1028,7 +1028,7 @@ void Gecko_CopyFontFamilyFrom(nsFont* dst, const nsFont* src) {
   dst->fontlist = src->fontlist;
 }
 
-void Gecko_nsFont_InitSystem(nsFont* aDest, int32_t aFontId,
+void Gecko_nsFont_InitSystem(nsFont* aDest, StyleSystemFont aFontId,
                              const nsStyleFont* aFont,
                              const Document* aDocument) {
   const nsFont* defaultVariableFont = ThreadSafeGetDefaultFontHelper(
@@ -1040,10 +1040,8 @@ void Gecko_nsFont_InitSystem(nsFont* aDest, int32_t aFontId,
   // itself, so this will do.
   new (aDest) nsFont(*defaultVariableFont);
 
-  LookAndFeel::FontID fontID = static_cast<LookAndFeel::FontID>(aFontId);
-
   AutoWriteLock guard(*sServoFFILock);
-  nsLayoutUtils::ComputeSystemFont(aDest, fontID, defaultVariableFont,
+  nsLayoutUtils::ComputeSystemFont(aDest, aFontId, defaultVariableFont,
                                    aDocument);
 }
 

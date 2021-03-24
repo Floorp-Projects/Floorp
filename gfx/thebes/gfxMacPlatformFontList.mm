@@ -1548,10 +1548,9 @@ void gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
   switch (aSystemFontID) {
     case LookAndFeel::FontID::MessageBox:
     case LookAndFeel::FontID::StatusBar:
-    case LookAndFeel::FontID::List:
-    case LookAndFeel::FontID::Field:
-    case LookAndFeel::FontID::Button:
-    case LookAndFeel::FontID::Widget:
+    case LookAndFeel::FontID::MozList:
+    case LookAndFeel::FontID::MozField:
+    case LookAndFeel::FontID::MozButton:
       font = [NSFont systemFontOfSize:[NSFont smallSystemFontSize]];
       systemFontName = (char*)kSystemFont_system;
       break;
@@ -1562,26 +1561,21 @@ void gfxMacPlatformFontList::LookupSystemFont(LookAndFeel::FontID aSystemFontID,
       break;
 
     case LookAndFeel::FontID::Icon:  // used in urlbar; tried labelFont, but too small
-    case LookAndFeel::FontID::Workspace:
-    case LookAndFeel::FontID::Desktop:
-    case LookAndFeel::FontID::Info:
+    case LookAndFeel::FontID::MozWorkspace:
+    case LookAndFeel::FontID::MozDesktop:
+    case LookAndFeel::FontID::MozInfo:
       font = [NSFont controlContentFontOfSize:0.0];
       systemFontName = (char*)kSystemFont_system;
       break;
 
-    case LookAndFeel::FontID::PullDownMenu:
+    case LookAndFeel::FontID::MozPullDownMenu:
       font = [NSFont menuBarFontOfSize:0.0];
-      systemFontName = (char*)kSystemFont_system;
-      break;
-
-    case LookAndFeel::FontID::Tooltips:
-      font = [NSFont toolTipsFontOfSize:0.0];
       systemFontName = (char*)kSystemFont_system;
       break;
 
     case LookAndFeel::FontID::Caption:
     case LookAndFeel::FontID::Menu:
-    case LookAndFeel::FontID::Dialog:
+    case LookAndFeel::FontID::MozDialog:
     default:
       font = [NSFont systemFontOfSize:0.0];
       systemFontName = (char*)kSystemFont_system;

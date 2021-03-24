@@ -83,6 +83,7 @@ class EffectSet;
 struct ActiveScrolledRoot;
 enum class ScrollOrigin : uint8_t;
 enum class StyleImageOrientation : uint8_t;
+enum class StyleSystemFont : uint8_t;
 enum class StyleScrollbarWidth : uint8_t;
 struct OverflowAreas;
 namespace dom {
@@ -2865,7 +2866,7 @@ class nsLayoutUtils {
       bool aUseUserFontSet);
 
   static void ComputeSystemFont(nsFont* aSystemFont,
-                                mozilla::LookAndFeel::FontID aFontID,
+                                mozilla::StyleSystemFont aFontID,
                                 const nsFont* aDefaultVariableFont,
                                 const mozilla::dom::Document* aDocument);
 

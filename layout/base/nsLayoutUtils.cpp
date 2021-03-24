@@ -9442,9 +9442,9 @@ void nsLayoutUtils::ComputeSystemFont(nsFont* aSystemFont,
   // aSystemFont->langGroup = fontStyle.langGroup;
   aSystemFont->sizeAdjust = fontStyle.sizeAdjust;
 
-  if (aFontID == LookAndFeel::FontID::Field ||
-      aFontID == LookAndFeel::FontID::Button ||
-      aFontID == LookAndFeel::FontID::List) {
+  if (aFontID == LookAndFeel::FontID::MozField ||
+      aFontID == LookAndFeel::FontID::MozButton ||
+      aFontID == LookAndFeel::FontID::MozList) {
     const bool isWindowsOrNonNativeTheme =
 #ifdef XP_WIN
         true ||
