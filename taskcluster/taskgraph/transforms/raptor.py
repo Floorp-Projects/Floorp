@@ -160,7 +160,9 @@ def split_raptor_subtests(config, tests):
             if isinstance(chunked["subtest"], list):
                 chunked["subtest"] = subtest[0]
                 chunked["subtest-symbol"] = subtest[1]
-            chunked = resolve_keyed_by(chunked, "tier", chunked["subtest"])
+            chunked = resolve_keyed_by(
+                chunked, "tier", chunked["subtest"], defer=["variant"]
+            )
             yield chunked
 
 
@@ -273,17 +275,4 @@ def add_extra_options(config, tests):
 
         extra_options.append("--project={}".format(config.params.get("project")))
 
-        yield test
-
-
-@transforms.add
-def apply_tier_optimization(config, tests):
-    for test in tests:
-        if test["test-platform"].startswith("android-hw"):
-            yield test
-            continue
-
-        test["optimization"] = {"skip-unless-expanded": None}
-        if test["tier"] > 1:
-            test["optimization"] = {"skip-unless-backstop": None}
         yield test

@@ -974,9 +974,6 @@ def setup_browsertime(config, tasks):
             yield task
             continue
 
-        # This is appropriate as the browsertime task variants mature.
-        task["tier"] = max(task["tier"], 1)
-
         ts = {
             "by-test-platform": {
                 "android.*": ["browsertime", "linux64-geckodriver", "linux64-node"],
@@ -1204,10 +1201,6 @@ def split_variants(config, tasks):
             taskv["treeherder-symbol"] = join_symbol(group, symbol)
 
             taskv.update(variant.get("replace", {}))
-
-            if task["suite"] == "raptor":
-                taskv["tier"] = max(taskv["tier"], 2)
-
             yield merge(taskv, variant.get("merge", {}))
 
 
@@ -1387,6 +1380,23 @@ def handle_tier(config, tasks):
             else:
                 task["tier"] = 2
 
+        yield task
+
+
+@transforms.add
+def apply_raptor_tier_optimization(config, tasks):
+    for task in tasks:
+        if task["suite"] != "raptor":
+            yield task
+            continue
+
+        if not task["test-platform"].startswith("android-hw"):
+            task["optimization"] = {"skip-unless-expanded": None}
+            if task["tier"] > 1:
+                task["optimization"] = {"skip-unless-backstop": None}
+
+        if task["attributes"].get("unittest_variant"):
+            task["tier"] = max(task["tier"], 2)
         yield task
 
 
