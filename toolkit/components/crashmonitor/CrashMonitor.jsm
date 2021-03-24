@@ -34,10 +34,6 @@
 var EXPORTED_SYMBOLS = ["CrashMonitor"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { OS } = ChromeUtils.import("resource://gre/modules/osfile.jsm");
-const { PromiseUtils } = ChromeUtils.import(
-  "resource://gre/modules/PromiseUtils.jsm"
-);
 
 const NOTIFICATIONS = [
   "final-ui-startup",
@@ -46,9 +42,10 @@ const NOTIFICATIONS = [
   "quit-application",
   "profile-change-net-teardown",
   "profile-change-teardown",
-  "profile-before-change",
   "sessionstore-final-state-write-complete",
 ];
+
+const SHUTDOWN_PHASES = ["profile-before-change"];
 
 var CrashMonitorInternal = {
   /**
@@ -73,16 +70,16 @@ var CrashMonitorInternal = {
    */
   previousCheckpoints: null,
 
-  /* Deferred for AsyncShutdown blocker */
-  profileBeforeChangeDeferred: PromiseUtils.defer(),
-
   /**
    * Path to checkpoint file.
    *
    * Each time a new notification is received, this file is written to
    * disc to reflect the information in |checkpoints|.
    */
-  path: OS.Path.join(OS.Constants.Path.profileDir, "sessionCheckpoints.json"),
+  path: PathUtils.join(
+    Services.dirsvc.get("ProfD", Ci.nsIFile).path,
+    "sessionCheckpoints.json"
+  ),
 
   /**
    * Load checkpoints from previous session asynchronously.
@@ -91,29 +88,16 @@ var CrashMonitorInternal = {
    */
   loadPreviousCheckpoints() {
     this.previousCheckpoints = (async function() {
-      let data;
-      try {
-        data = await OS.File.read(CrashMonitorInternal.path, {
-          encoding: "utf-8",
-        });
-      } catch (ex) {
-        if (!(ex instanceof OS.File.Error)) {
-          throw ex;
-        }
-        if (!ex.becauseNoSuchFile) {
-          Cu.reportError(
-            "Error while loading crash monitor data: " + ex.toString()
-          );
-        }
-
-        return null;
-      }
-
       let notifications;
       try {
-        notifications = JSON.parse(data);
+        notifications = await IOUtils.readJSON(CrashMonitorInternal.path);
       } catch (ex) {
-        Cu.reportError("Error while parsing crash monitor data: " + ex);
+        // Ignore file not found errors, but report all others.
+        if (ex.name !== "NotFoundError") {
+          Cu.reportError(
+            `Error while loading crash monitor data: ${ex.message}`
+          );
+        }
         return null;
       }
 
@@ -173,9 +157,9 @@ var CrashMonitor = {
     }, this);
 
     // Add shutdown blocker for profile-before-change
-    OS.File.profileBeforeChange.addBlocker(
+    IOUtils.profileBeforeChange.addBlocker(
       "CrashMonitor: Writing notifications to file after receiving profile-before-change",
-      CrashMonitorInternal.profileBeforeChangeDeferred.promise,
+      () => this.writeCheckpoint("profile-before-change"),
       () => this.checkpoints
     );
 
@@ -189,37 +173,38 @@ var CrashMonitor = {
    * Update checkpoint file for every new notification received.
    */
   observe(aSubject, aTopic, aData) {
-    if (!(aTopic in CrashMonitorInternal.checkpoints)) {
-      // If this is the first time this notification is received,
-      // remember it and write it to file
-      CrashMonitorInternal.checkpoints[aTopic] = true;
-      (async function() {
-        try {
-          let data = JSON.stringify(CrashMonitorInternal.checkpoints);
+    this.writeCheckpoint(aTopic);
 
-          /* Write to the checkpoint file asynchronously, off the main
-           * thread, for performance reasons. Note that this means
-           * that there's not a 100% guarantee that the file will be
-           * written by the time the notification completes. The
-           * exception is profile-before-change which has a shutdown
-           * blocker. */
-          await OS.File.writeAtomic(CrashMonitorInternal.path, data, {
-            tmpPath: CrashMonitorInternal.path + ".tmp",
-          });
-        } finally {
-          // Resolve promise for blocker
-          if (aTopic == "profile-before-change") {
-            CrashMonitorInternal.profileBeforeChangeDeferred.resolve();
-          }
-        }
-      })();
-    }
-
-    if (NOTIFICATIONS.every(elem => elem in CrashMonitorInternal.checkpoints)) {
+    if (
+      NOTIFICATIONS.every(elem => elem in CrashMonitorInternal.checkpoints) &&
+      SHUTDOWN_PHASES.every(elem => elem in CrashMonitorInternal.checkpoints)
+    ) {
       // All notifications received, unregister observers
       NOTIFICATIONS.forEach(function(aTopic) {
         Services.obs.removeObserver(this, aTopic);
       }, this);
+    }
+  },
+
+  async writeCheckpoint(aCheckpoint) {
+    if (!(aCheckpoint in CrashMonitorInternal.checkpoints)) {
+      // If this is the first time this notification is received,
+      // remember it and write it to file
+      CrashMonitorInternal.checkpoints[aCheckpoint] = true;
+
+      /* Write to the checkpoint file asynchronously, off the main
+       * thread, for performance reasons. Note that this means
+       * that there's not a 100% guarantee that the file will be
+       * written by the time the notification completes. The
+       * exception is profile-before-change which has a shutdown
+       * blocker. */
+      await IOUtils.writeJSON(
+        CrashMonitorInternal.path,
+        CrashMonitorInternal.checkpoints,
+        {
+          tmpPath: CrashMonitorInternal.path + ".tmp",
+        }
+      );
     }
   },
 };

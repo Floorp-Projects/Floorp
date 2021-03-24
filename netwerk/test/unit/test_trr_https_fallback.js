@@ -96,6 +96,7 @@ registerCleanupFunction(async () => {
   prefs.clearUserPref("network.dns.httpssvc.reset_exclustion_list");
   prefs.clearUserPref("network.http.http3.enabled");
   prefs.clearUserPref("network.dns.httpssvc.http3_fast_fallback_timeout");
+  prefs.clearUserPref("network.http.speculative-parallel-limit");
   if (trrServer) {
     await trrServer.stop();
   }
@@ -124,6 +125,7 @@ function makeChan(url) {
   let chan = NetUtil.newChannel({
     uri: url,
     loadUsingSystemPrincipal: true,
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
   }).QueryInterface(Ci.nsIHttpChannel);
   return chan;
 }
@@ -1103,6 +1105,9 @@ add_task(async function testAllRecordsInHttp3ExcludedList() {
   let [inRequest, , inStatus] = await listener;
   Assert.equal(inRequest, request, "correct request was used");
   Assert.equal(inStatus, Cr.NS_OK, "status OK");
+
+  Services.prefs.setIntPref("network.http.speculative-parallel-limit", 0);
+  Services.obs.notifyObservers(null, "net:prune-all-connections");
 
   // All HTTPS RRs are in http3 excluded list and all records are failed to
   // connect, so don't fallback to the origin one.

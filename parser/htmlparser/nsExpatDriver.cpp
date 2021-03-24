@@ -9,6 +9,7 @@
 #include "CParserContext.h"
 #include "nsIExpatSink.h"
 #include "nsIContentSink.h"
+#include "nsIDocShell.h"
 #include "nsParserMsgUtils.h"
 #include "nsIURL.h"
 #include "nsIUnicharInputStream.h"
@@ -823,6 +824,14 @@ nsresult nsExpatDriver::HandleError() {
 
   if (doc && nsContentUtils::IsChromeDoc(doc)) {
     nsCString path = doc->GetDocumentURI()->GetSpecOrDefault();
+    nsCOMPtr<nsISupports> container = doc->GetContainer();
+    nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(container);
+    nsCString docShellDestroyed("unknown"_ns);
+    if (docShell) {
+      bool destroyed = false;
+      docShell->IsBeingDestroyed(&destroyed);
+      docShellDestroyed.Assign(destroyed ? "true"_ns : "false"_ns);
+    }
 
     mozilla::Maybe<nsTArray<mozilla::Telemetry::EventExtraEntry>> extra =
         mozilla::Some<nsTArray<mozilla::Telemetry::EventExtraEntry>>({
@@ -834,6 +843,10 @@ nsresult nsExpatDriver::HandleError() {
                 "last_line"_ns, NS_ConvertUTF16toUTF8(mLastLine)},
             mozilla::Telemetry::EventExtraEntry{
                 "last_line_len"_ns, nsPrintfCString("%u", mLastLine.Length())},
+            mozilla::Telemetry::EventExtraEntry{
+                "hidden"_ns, doc->Hidden() ? "true"_ns : "false"_ns},
+            mozilla::Telemetry::EventExtraEntry{"destroyed"_ns,
+                                                docShellDestroyed},
         });
 
     mozilla::Telemetry::SetEventRecordingEnabled("ysod"_ns, true);

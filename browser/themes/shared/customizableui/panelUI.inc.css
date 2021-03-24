@@ -816,7 +816,8 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   }
 
   #fxa-manage-account-button > vbox > label,
-  #PanelUI-fxa-menu-syncnow-button > hbox > label {
+  #PanelUI-fxa-menu-syncnow-button > hbox > label,
+  #PanelUI-remotetabs-syncnow > hbox > label {
     margin-inline-start: 0;
   }
 

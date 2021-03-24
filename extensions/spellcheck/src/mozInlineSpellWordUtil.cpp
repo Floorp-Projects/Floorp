@@ -209,6 +209,10 @@ nsresult mozInlineSpellWordUtil::SetPositionAndEnd(nsINode* aPositionNode,
                                                    int32_t aPositionOffset,
                                                    nsINode* aEndNode,
                                                    int32_t aEndOffset) {
+  MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug,
+          ("%s: pos=(%p, %i), end=(%p, %i)", __FUNCTION__, aPositionNode,
+           aPositionOffset, aEndNode, aEndOffset));
+
   MOZ_ASSERT(aPositionNode, "Null begin node?");
   MOZ_ASSERT(aEndNode, "Null end node?");
 
@@ -757,6 +761,8 @@ void mozInlineSpellWordUtil::NormalizeWord(nsAString& aWord) {
 }
 
 void mozInlineSpellWordUtil::BuildSoftText() {
+  MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug, ("%s", __FUNCTION__));
+
   // First we have to work backwards from mSoftStart to find a text node
   // containing a DOM word separator, a non-inline-element
   // boundary, or the hard start node. That's where we'll start building the
@@ -1012,8 +1018,31 @@ NodeOffset mozInlineSpellWordUtil::MapSoftTextOffsetToDOMPosition(
   return NodeOffset(nullptr, -1);
 }
 
+// static
+void mozInlineSpellWordUtil::ToString(const DOMMapHint aHint,
+                                      nsACString& aResult) {
+  switch (aHint) {
+    case HINT_BEGIN:
+      aResult.AssignLiteral("begin");
+      break;
+    case HINT_END:
+      aResult.AssignLiteral("end");
+      break;
+  }
+}
+
 int32_t mozInlineSpellWordUtil::FindRealWordContaining(
     int32_t aSoftTextOffset, DOMMapHint aHint, bool aSearchForward) const {
+  if (MOZ_LOG_TEST(sInlineSpellWordUtilLog, LogLevel::Debug)) {
+    nsAutoCString hint;
+    mozInlineSpellWordUtil::ToString(aHint, hint);
+
+    MOZ_LOG(
+        sInlineSpellWordUtilLog, LogLevel::Debug,
+        ("%s: offset=%i, hint=%s, searchForward=%i.", __FUNCTION__,
+         aSoftTextOffset, hint.get(), static_cast<int32_t>(aSearchForward)));
+  }
+
   NS_ASSERTION(mSoftTextValid,
                "Soft text must be valid if we're to map out of it");
   if (!mSoftTextValid) return -1;

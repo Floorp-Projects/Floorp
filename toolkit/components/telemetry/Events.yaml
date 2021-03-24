@@ -2632,6 +2632,8 @@ ysod:
       location: Location as Row:Column of where the error happened.
       last_line: The content of the last line that led to the error.
       last_line_len: The length of the last line that led to the error.
+      hidden: The document is hidden.
+      destroyed: The container of this document is destroyed.
 
 dom.quota.try:
   error:
