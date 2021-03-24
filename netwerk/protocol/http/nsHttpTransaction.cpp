@@ -442,7 +442,8 @@ nsresult nsHttpTransaction::Init(
     mPushedStream = trans->TakePushedStreamById(aPushedStreamId);
   }
 
-  if (gHttpHandler->UseHTTPSRRAsAltSvcEnabled() && !mConnInfo->UsingConnect()) {
+  if (gHttpHandler->UseHTTPSRRAsAltSvcEnabled() &&
+      !(mCaps & NS_HTTP_DISALLOW_HTTPS_RR)) {
     mHTTPSSVCReceivedStage = HTTPSSVC_NOT_PRESENT;
 
     nsCOMPtr<nsIEventTarget> target;
