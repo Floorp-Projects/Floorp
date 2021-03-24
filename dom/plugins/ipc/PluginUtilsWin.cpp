@@ -9,13 +9,14 @@
 #include "PluginUtilsWin.h"
 #include "PluginModuleParent.h"
 #include "mozilla/StaticMutex.h"
+#include "nsTHashSet.h"
 
 namespace mozilla {
 namespace plugins {
 namespace PluginUtilsWin {
 
 class AudioNotification;
-typedef nsTHashtable<nsPtrHashKey<PluginModuleParent>> PluginModuleSet;
+typedef nsTHashSet<PluginModuleParent*> PluginModuleSet;
 StaticMutex sMutex;
 
 class AudioDeviceMessageRunnable : public Runnable {
@@ -147,12 +148,12 @@ class AudioNotification final : public IMMNotificationClient {
 
   void AddModule(PluginModuleParent* aModule) {
     StaticMutexAutoLock lock(sMutex);
-    mAudioNotificationSet.PutEntry(aModule);
+    mAudioNotificationSet.Insert(aModule);
   }
 
   void RemoveModule(PluginModuleParent* aModule) {
     StaticMutexAutoLock lock(sMutex);
-    mAudioNotificationSet.RemoveEntry(aModule);
+    mAudioNotificationSet.Remove(aModule);
   }
 
   /*
@@ -247,9 +248,7 @@ AudioDeviceMessageRunnable::Run() {
                     mAudioNotification->GetModuleSet()->Count()));
 
   bool success = true;
-  for (auto iter = mAudioNotification->GetModuleSet()->ConstIter();
-       !iter.Done(); iter.Next()) {
-    PluginModuleParent* pluginModule = iter.Get()->GetKey();
+  for (PluginModuleParent* pluginModule : *mAudioNotification->GetModuleSet()) {
     switch (mMessageType) {
       case DEFAULT_DEVICE_CHANGED:
         success &= pluginModule->SendNPP_SetValue_NPNVaudioDeviceChangeDetails(
