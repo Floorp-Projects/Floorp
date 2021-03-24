@@ -80,10 +80,12 @@
   flex: 1;
 }
 
+@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
 .popup-notification-dropmarker {
   flex: none;
   padding: 0 15px !important;
 }
+} /** END not Proton **/
 
 .popup-notification-dropmarker > .button-box > hbox {
   display: none;
@@ -212,6 +214,10 @@ popupnotification {
   background-color: var(--buttons-primary-button-active-bgcolor, color-mix(in srgb, black 20%, -moz-accent-color));
 }
 
+.panel-footer:not(.panel-footer-menulike) > button > .button-box {
+  padding: 0;
+}
+
 .popup-notification-button,
 .popup-notification-primary-button {
   flex: unset;
@@ -233,5 +239,10 @@ popupnotification {
 
 .popup-notification-checkbox > .checkbox-label-box > .checkbox-label {
   opacity: 0.7;
+}
+
+.panel-footer > .popup-notification-dropmarker {
+  max-width: 32px;
+  padding: 8px;
 }
 } /*** END proton ***/
