@@ -1,0 +1,10 @@
+<script>
+var func0 = async function(a) {
+    a.currentTarget.close()
+}
+document.addEventListener('DOMContentLoaded', () => {
+  document.write()
+  document.addEventListener('readystatechange', func0, true)
+  setTimeout(window.close, 0)
+})
+</script>
