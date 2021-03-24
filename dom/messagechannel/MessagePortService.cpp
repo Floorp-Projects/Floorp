@@ -308,11 +308,7 @@ void MessagePortService::CloseAll(const nsID& aUUID, bool aForced) {
     return;
   }
 
-#ifdef DEBUG
-  for (auto iter = mPorts.Iter(); !iter.Done(); iter.Next()) {
-    MOZ_ASSERT(!aUUID.Equals(iter.Key()));
-  }
-#endif
+  MOZ_ASSERT(!mPorts.Contains(aUUID));
 
   MaybeShutdown();
 }

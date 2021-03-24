@@ -844,11 +844,7 @@ void FontList::SetLocalNames(
   if (header.mLocalFaceCount > 0) {
     return;  // already been done!
   }
-  nsTArray<nsCString> faceArray;
-  faceArray.SetCapacity(aLocalNameTable.Count());
-  for (auto i = aLocalNameTable.ConstIter(); !i.Done(); i.Next()) {
-    faceArray.AppendElement(i.Key());
-  }
+  auto faceArray = ToTArray<nsTArray<nsCString>>(aLocalNameTable.Keys());
   faceArray.Sort();
   size_t count = faceArray.Length();
   Family* families = Families();

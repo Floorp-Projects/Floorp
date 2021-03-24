@@ -53,8 +53,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(EffectCompositor)
   for (const auto& elementSet : tmp->mElementsToRestyle) {
-    for (const auto& element : elementSet) {
-      CycleCollectionNoteChild(cb, element.GetKey().mElement,
+    for (const auto& key : elementSet.Keys()) {
+      CycleCollectionNoteChild(cb, key.mElement,
                                "EffectCompositor::mElementsToRestyle[]",
                                cb.Flags());
     }

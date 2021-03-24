@@ -133,10 +133,7 @@ void SessionStorageCache::GetItem(DataSetType aDataSetType,
 
 void SessionStorageCache::GetKeys(DataSetType aDataSetType,
                                   nsTArray<nsString>& aKeys) {
-  for (auto iter = Set(aDataSetType)->mKeys.ConstIter(); !iter.Done();
-       iter.Next()) {
-    aKeys.AppendElement(iter.Key());
-  }
+  AppendToArray(aKeys, Set(aDataSetType)->mKeys.Keys());
 }
 
 nsresult SessionStorageCache::SetItem(DataSetType aDataSetType,

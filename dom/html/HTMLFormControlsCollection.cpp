@@ -309,9 +309,7 @@ void HTMLFormControlsCollection::GetSupportedNames(nsTArray<nsString>& aNames) {
   // Just enumerate mNameLookupTable.  This won't guarantee order, but
   // that's OK, because the HTML5 spec doesn't define an order for
   // this enumeration.
-  for (auto iter = mNameLookupTable.Iter(); !iter.Done(); iter.Next()) {
-    aNames.AppendElement(iter.Key());
-  }
+  AppendToArray(aNames, mNameLookupTable.Keys());
 }
 
 /* virtual */

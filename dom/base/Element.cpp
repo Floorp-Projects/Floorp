@@ -3932,8 +3932,7 @@ static void IntersectionObserverPropertyDtor(void* aObject,
                                              void* aData) {
   auto* element = static_cast<Element*>(aObject);
   auto* observers = static_cast<IntersectionObserverList*>(aPropertyValue);
-  for (const auto& entry : *observers) {
-    DOMIntersectionObserver* observer = entry.GetKey();
+  for (DOMIntersectionObserver* observer : observers->Keys()) {
     observer->UnlinkTarget(*element);
   }
   delete observers;

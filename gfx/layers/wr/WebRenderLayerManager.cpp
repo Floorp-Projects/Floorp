@@ -295,9 +295,8 @@ bool WebRenderLayerManager::EndEmptyTransaction(EndTransactionFlags aFlags) {
           transactionData->mLargeShmems);
     }
     transactionData->mScrollUpdates = std::move(mPendingScrollUpdates);
-    for (auto it = transactionData->mScrollUpdates.Iter(); !it.Done();
-         it.Next()) {
-      nsLayoutUtils::NotifyPaintSkipTransaction(/*scroll id=*/it.Key());
+    for (const auto& scrollId : transactionData->mScrollUpdates.Keys()) {
+      nsLayoutUtils::NotifyPaintSkipTransaction(/*scroll id=*/scrollId);
     }
   }
 

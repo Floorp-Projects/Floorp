@@ -90,10 +90,7 @@ Result<Ok, nsresult> SharedStringMapBuilder::Finalize(
 
   MOZ_ASSERT(mEntries.Count() == mKeyTable.Count());
 
-  nsTArray<nsCString> keys(mEntries.Count());
-  for (auto iter = mEntries.Iter(); !iter.Done(); iter.Next()) {
-    keys.AppendElement(iter.Key());
-  }
+  auto keys = ToTArray<nsTArray<nsCString>>(mEntries.Keys());
   keys.Sort();
 
   Header header = {kSharedStringMapMagic, uint32_t(keys.Length())};

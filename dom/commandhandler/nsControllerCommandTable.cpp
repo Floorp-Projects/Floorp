@@ -171,11 +171,8 @@ nsControllerCommandTable::GetCommandState(const char* aCommandName,
 
 NS_IMETHODIMP
 nsControllerCommandTable::GetSupportedCommands(nsTArray<nsCString>& aCommands) {
-  aCommands.SetCapacity(mCommandsTable.Count());
+  mozilla::AppendToArray(aCommands, mCommandsTable.Keys());
 
-  for (auto iter = mCommandsTable.Iter(); !iter.Done(); iter.Next()) {
-    aCommands.AppendElement(iter.Key());
-  }
   return NS_OK;
 }
 

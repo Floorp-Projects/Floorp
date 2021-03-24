@@ -318,9 +318,7 @@ nsresult LSSnapshot::GetKeys(nsTArray<nsString>& aKeys) {
     return rv;
   }
 
-  for (auto iter = mValues.ConstIter(); !iter.Done(); iter.Next()) {
-    aKeys.AppendElement(iter.Key());
-  }
+  AppendToArray(aKeys, mValues.Keys());
 
   return NS_OK;
 }
