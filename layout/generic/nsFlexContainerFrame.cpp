@@ -5254,7 +5254,7 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
             "[frag] Flex item %p needed to be pushed to container's "
             "next-in-flow due to position below available space's block-end",
             item.Frame());
-        pushedItems.PutEntry(item.Frame());
+        pushedItems.Insert(item.Frame());
       } else if (item.NeedsFinalReflow(availableBSizeForItem)) {
         // The available size must be in item's writing-mode.
         const WritingMode itemWM = item.GetWritingMode();
@@ -5268,9 +5268,9 @@ std::tuple<nscoord, bool> nsFlexContainerFrame::ReflowChildren(
             aContainerSize, aHasLineClampEllipsis);
 
         if (childReflowStatus.IsIncomplete()) {
-          incompleteItems.PutEntry(item.Frame());
+          incompleteItems.Insert(item.Frame());
         } else if (childReflowStatus.IsOverflowIncomplete()) {
-          overflowIncompleteItems.PutEntry(item.Frame());
+          overflowIncompleteItems.Insert(item.Frame());
         }
       } else {
         MoveFlexItemToFinalPosition(aReflowInput, item, framePos,
