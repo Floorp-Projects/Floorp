@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import android.os.Build;
 import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
@@ -445,5 +446,16 @@ public class GeckoJavaSampler {
             sSamplingFuture = null;
             sMarkerStorage.stop();
         }
+    }
+
+    /**
+     * Returns the device brand and model as a string.
+     */
+    @WrapForJNI
+    public static String getDeviceInformation() {
+        final StringBuilder sb = new StringBuilder(Build.BRAND);
+        sb.append(" ");
+        sb.append(Build.MODEL);
+        return sb.toString();
     }
 }
