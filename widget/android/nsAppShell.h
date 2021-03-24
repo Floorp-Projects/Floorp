@@ -143,8 +143,6 @@ class nsAppShell : public nsBaseAppShell {
   static nsAppShell* sAppShell;
   static mozilla::StaticAutoPtr<mozilla::Mutex> sAppShellLock;
 
-  static void RecordLatencies();
-
   virtual ~nsAppShell();
 
   nsresult AddObserver(const nsAString& aObserverKey, nsIObserver* aObserver);
@@ -170,9 +168,6 @@ class nsAppShell : public nsBaseAppShell {
 
    public:
     enum { LATENCY_UI, LATENCY_OTHER, LATENCY_COUNT };
-    static uint32_t sLatencyCount[LATENCY_COUNT];
-    static uint64_t sLatencyTime[LATENCY_COUNT];
-
     Queue() : mMonitor("nsAppShell.Queue") {}
 
     void Signal() {
@@ -194,20 +189,6 @@ class nsAppShell : public nsBaseAppShell {
     }
 
     mozilla::UniquePtr<Event> Pop(bool mayWait) {
-#ifdef EARLY_BETA_OR_EARLIER
-      bool isQueueEmpty = false;
-      if (mayWait) {
-        mozilla::MonitorAutoLock lock(mMonitor);
-        isQueueEmpty = mQueue.isEmpty();
-      }
-      if (isQueueEmpty) {
-        // Record latencies when we're about to be idle.
-        // Note: We can't call this while holding the lock because
-        // nsAppShell::RecordLatencies may try to dispatch an event to the main
-        // thread which tries to acquire the lock again.
-        nsAppShell::RecordLatencies();
-      }
-#endif
       mozilla::MonitorAutoLock lock(mMonitor);
 
       if (mayWait && mQueue.isEmpty()) {
@@ -220,14 +201,6 @@ class nsAppShell : public nsBaseAppShell {
         return event;
       }
 
-#ifdef EARLY_BETA_OR_EARLIER
-      const size_t latencyType =
-          event->IsUIEvent() ? LATENCY_UI : LATENCY_OTHER;
-      const uint64_t latency = Event::GetTime() - event->mPostTime;
-
-      sLatencyCount[latencyType]++;
-      sLatencyTime[latencyType] += latency;
-#endif
       return event;
     }
 
