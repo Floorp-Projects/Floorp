@@ -13,8 +13,8 @@ const {
 } = require("devtools/client/aboutdebugging/src/constants");
 
 const ICONS = {
-  [ICON_LABEL_LEVEL.INFO]: "chrome://global/skin/icons/info.svg",
-  [ICON_LABEL_LEVEL.OK]: "chrome://global/skin/icons/success.svg",
+  [ICON_LABEL_LEVEL.INFO]: "chrome://devtools/skin/images/info.svg",
+  [ICON_LABEL_LEVEL.OK]: "chrome://devtools/skin/images/check.svg",
 };
 
 /* This component displays an icon accompanied by some content. It's similar

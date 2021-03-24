@@ -95,3 +95,9 @@ browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/du
 browser/chrome/browser/search-extensions/ddg/favicon.ico
 browser/chrome/browser/content/activity-stream/data/content/tippytop/favicons/google-com.ico
 browser/chrome/browser/search-extensions/google/favicon.ico
+
+# Bug 1699889 - Temporarily cloned icons will be resolved when toolkit svgs updated
+chrome/toolkit/skin/classic/global/icons/arrow-dropdown-12.svg
+browser/chrome/devtools/skin/images/arrow-dropdown-12.svg
+chrome/toolkit/skin/classic/global/icons/check.svg
+browser/chrome/devtools/skin/images/check.svg

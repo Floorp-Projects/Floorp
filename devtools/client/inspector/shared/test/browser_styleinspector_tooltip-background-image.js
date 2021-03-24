@@ -17,7 +17,7 @@ const TEST_URI = `
     .test-element {
       font-family: verdana;
       color: #333;
-      background: url(chrome://global/skin/icons/warning.svg) no-repeat left center;
+      background: url(chrome://global/skin/icons/help.svg) no-repeat left center;
       padding-left: 70px;
     }
   </style>
