@@ -1299,9 +1299,9 @@ nsresult nsFrameLoader::SwapWithOtherRemoteLoader(
         nsGlobalWindowOuter::Cast(newWin)->GetMainWidget();
     const ManagedContainer<mozilla::plugins::PPluginWidgetParent>& plugins =
         otherBrowserParent->ManagedPPluginWidgetParent();
-    for (auto iter = plugins.ConstIter(); !iter.Done(); iter.Next()) {
-      static_cast<mozilla::plugins::PluginWidgetParent*>(iter.Get()->GetKey())
-          ->SetParent(newParent);
+    for (auto* key : plugins) {
+      static_cast<mozilla::plugins::PluginWidgetParent*>(key)->SetParent(
+          newParent);
     }
   }
 #endif  // XP_WIN
