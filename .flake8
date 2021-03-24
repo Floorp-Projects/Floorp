@@ -3,7 +3,6 @@ max-line-length = 99
 exclude =
     # These paths should be triaged and either fixed or moved to the list below.
     devtools/shared,
-    dom/base,
     dom/bindings,
     gfx/tests,
     ipc/ipdl/ipdl,
