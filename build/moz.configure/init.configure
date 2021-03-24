@@ -1290,13 +1290,6 @@ set_config("MOZ_APP_VERSION_DISPLAY", milestone.app_version_display)
 add_old_configure_assignment("MOZ_APP_VERSION", milestone.app_version)
 
 
-# Dummy function for availability in toolkit/moz.configure. Overridden in
-# mobile/android/moz.configure.
-@depends(milestone.is_nightly)
-def fennec_nightly(is_nightly):
-    return is_nightly
-
-
 # The app update channel is 'default' when not supplied. The value is used in
 # the application's confvars.sh (and is made available to a project specific
 # moz.configure).
