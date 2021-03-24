@@ -193,6 +193,7 @@ body:not(.neterror) #advancedButton {
   display: none;
 }
 
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .connectionFailure #errorPageContainer,
 .netInterrupt #errorPageContainer,
 .netTimeout #errorPageContainer,
@@ -213,6 +214,7 @@ body:not(.neterror) #advancedButton {
   background-image: url("chrome://browser/skin/illustrations/blue-berror.svg");
   background-size: 18.5em;
 }
+} /* END !proton */
 
 .clockSkewError #returnButton {
   display: none;

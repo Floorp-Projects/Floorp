@@ -237,7 +237,10 @@ function initPage() {
     "netReset",
     "netOffline",
   ];
-  if (illustratedErrors.includes(err)) {
+  if (
+    illustratedErrors.includes(err) &&
+    !RPMGetBoolPref("browser.proton.enabled")
+  ) {
     document.body.classList.add("illustrated", err);
   }
   if (err == "blockedByPolicy") {

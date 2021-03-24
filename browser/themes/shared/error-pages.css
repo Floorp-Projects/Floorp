@@ -25,6 +25,7 @@ body {
   flex: 1;
 }
 
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .illustrated #errorPageContainer {
   min-height: 300px;
   display: flex;
@@ -48,6 +49,7 @@ body {
   margin: auto;
   padding-inline-start: 38%;
 }
+} /*** END !proton ***/
 
 @media only screen and (max-width: 959px) {
   body {

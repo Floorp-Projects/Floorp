@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .description-wrapper {
   background-image: url("chrome://browser/skin/illustrations/error-session-restore.svg");
   background-repeat: no-repeat;
@@ -10,6 +11,7 @@
   background-position: left center;
   min-height: 300px;
 }
+} /*** END !proton ***/
 
 .description-wrapper:dir(rtl) {
   background-position-x: right;
