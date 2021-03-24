@@ -60,6 +60,9 @@ open class ExternalAppBrowserActivity : HomeActivity() {
             homeActivityInitTimeStampNanoSeconds,
             rootContainer
         )
+
+        // coldStartupDurationTelemetry.onHomeActivityOnCreate is intentionally omitted so we don't
+        // include even more unpredictable code paths in the results.
     }
 
     override fun navigateToBrowserOnColdStart() {

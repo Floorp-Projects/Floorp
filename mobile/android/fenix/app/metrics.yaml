@@ -4194,6 +4194,86 @@ startup.timeline:
     expires: "2021-08-01"
 
 perf.startup:
+  cold_main_app_to_first_frame:
+    type: timing_distribution
+    time_unit: millisecond
+    description: |
+      The duration from `*Application`'s initializer to the first Android frame
+      being drawn in a [COLD MAIN start
+      up](https://wiki.mozilla.org/index.php?title=Performance/Fenix/Glossary).
+      Notably, this duration omits the time from process start to the
+      initializer (which includes a lengthy dex operation) and the time from
+      the first frame to visual completeness. This probe doesn't measure Custom
+      Tabs or other uses of `ExternalAppBrowserActivity` to simplify result
+      analysis. The methodology for determining this measurement is imperfect
+      to simplify implementation. Issues may include:
+      <br>- Not measuring Beta and Release channels (due to
+      `MigrationDecisionActivity` interrupting the logic).
+      <br>- Not distinguishing between MAIN to homescreen, onboarding, session
+      restore, others?
+      <br>- Not choosing to record a MAIN based on what the user would see and
+      thus the core code path (i.e. the thing we want to measure) but rather on
+      the initial `Intent` state.
+      <br><br>
+      The hope is that these cases will not have a significant impact on the end
+      results but, if they appear to, we can replace it with a more complex
+      implementation.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18426
+    data_reviews:
+      - TODO
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - perf-android-fe@mozilla.com
+      - mcomella@mozilla.com
+    expires: "2021-08-11"
+  cold_view_app_to_first_frame:
+    type: timing_distribution
+    time_unit: millisecond
+    description: |
+      The duration from `*Application`'s initializer to the first Android frame
+      being drawn in a [COLD VIEW start
+      up](https://wiki.mozilla.org/index.php?title=Performance/Fenix/Glossary).
+      The methodology for determining this measurement is imperfect to simplify
+      implementation. Issues may include:
+      <br>-Including VIEW intents that aren't valid so take code paths similar
+      to MAIN (this is speculative)
+      <br><br>
+      See the `cold_main_app_to_first_frame` probe docs for other possible
+      known issues and more details.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18426
+    data_reviews:
+      - TODO
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - perf-android-fe@mozilla.com
+      - mcomella@mozilla.com
+    expires: "2021-08-11"
+  cold_unknwn_app_to_first_frame:
+    type: timing_distribution
+    time_unit: millisecond
+    description: |
+      The duration from `*Application`'s initializer to the first Android frame
+      being drawn in a [COLD start
+      up](https://wiki.mozilla.org/index.php?title=Performance/Fenix/Glossary)
+      where we can't say it was a MAIN or VIEW start up. The methodology for
+      determining this measurement is imperfect to simplify implementation.
+      <br><br>
+      See the `cold_main_app_to_first_frame` probe docs for known issues and
+      more details.
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/18426
+    data_reviews:
+      - TODO
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - perf-android-fe@mozilla.com
+      - mcomella@mozilla.com
+    expires: "2021-08-11"
   application_on_create:
     type: timing_distribution
     time_unit: millisecond

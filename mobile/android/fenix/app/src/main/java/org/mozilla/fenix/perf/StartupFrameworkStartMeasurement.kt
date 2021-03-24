@@ -26,7 +26,8 @@ internal class StartupFrameworkStartMeasurement(
 
     private var isMetricSet = false
 
-    private var applicationInitNanos = -1L
+    var applicationInitNanos = -1L
+        private set
     private var isApplicationInitCalled = false
 
     fun onApplicationInit() {

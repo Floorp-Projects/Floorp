@@ -40,7 +40,7 @@ object StartupTimeline {
     private var state: StartupState = StartupState.Cold(StartupDestination.UNKNOWN)
 
     private val reportFullyDrawn by lazy { StartupReportFullyDrawn() }
-    private val frameworkStartMeasurement by lazy { StartupFrameworkStartMeasurement() }
+    internal val frameworkStartMeasurement by lazy { StartupFrameworkStartMeasurement() }
     internal val homeActivityLifecycleObserver by lazy {
         StartupHomeActivityLifecycleObserver(frameworkStartMeasurement)
     }

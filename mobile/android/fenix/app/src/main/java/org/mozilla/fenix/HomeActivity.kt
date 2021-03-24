@@ -271,6 +271,14 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
             hasSavedInstanceState,
             homeActivityInitTimeStampNanoSeconds, rootContainer
         )
+
+        components.performance.coldStartupDurationTelemetry.onHomeActivityOnCreate(
+            components.performance.visualCompletenessQueue,
+            components.appStartReasonProvider,
+            components.startupActivityStateProvider,
+            safeIntent,
+            rootContainer
+        )
     }
 
     override fun onRestart() {
