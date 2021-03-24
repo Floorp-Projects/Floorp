@@ -453,6 +453,11 @@ add_task(async function contextMenus() {
 });
 
 add_task(async function pageActions() {
+  // Built-in page actions are removed in Proton.
+  if (Services.prefs.getBoolPref("browser.proton.urlbar.enabled", false)) {
+    return;
+  }
+
   // The page action button is only visible when a page is loaded.
   await BrowserTestUtils.withNewTab("http://example.com", async () => {
     // Create a default state.

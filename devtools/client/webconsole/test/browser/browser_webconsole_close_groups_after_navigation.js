@@ -8,7 +8,11 @@ add_task(async function() {
   // Enable persist logs
   await pushPref("devtools.webconsole.persistlog", true);
 
+  info(
+    "Open the console and wait for the console.group message to be rendered"
+  );
   const hud = await openNewTabAndConsole(TEST_URI);
+  await waitFor(() => findMessage(hud, "hello", ".startGroup"));
 
   info("Refresh tab several times and check for correct message indentation");
   for (let i = 0; i < 5; i++) {
@@ -17,7 +21,7 @@ add_task(async function() {
 });
 
 async function refreshTabAndCheckIndent(hud) {
-  const onMessage = waitForMessage(hud, "hello");
+  const onMessage = waitForMessage(hud, "hello", ".startGroup");
   await refreshTab();
   const { node } = await onMessage;
 
