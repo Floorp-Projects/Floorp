@@ -88,7 +88,7 @@ if CONFIG["MOZ_TSAN"]:
 DEFINES["SPRINTF_H_USES_VSNPRINTF"] = True
 DEFINES["NS_NO_XPCOM"] = True
 DisableStlWrapping()
-for var in ("MAR_CHANNEL_ID", "MOZ_APP_VERSION"):
+for var in ("MAR_CHANNEL_ID", "MOZ_APP_VERSION", "MOZ_BACKGROUNDTASKS"):
     DEFINES[var] = '"%s"' % CONFIG[var]
 
 LOCAL_INCLUDES += [
