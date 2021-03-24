@@ -795,6 +795,8 @@ class XPCShellTestThread(Thread):
 
         if self.test_object.get("dmd") == "true":
             self.env["PYTHON"] = sys.executable
+            if build:
+                self.env["PYTHON3"] = build.substs.get("PYTHON3")
             self.env["BREAKPAD_SYMBOLS_PATH"] = self.symbolsPath
 
         if self.test_object.get("subprocess") == "true":
