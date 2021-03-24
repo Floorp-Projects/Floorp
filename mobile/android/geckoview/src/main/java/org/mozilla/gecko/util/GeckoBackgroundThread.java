@@ -43,8 +43,6 @@ final class GeckoBackgroundThread extends Thread {
 
     private static void startThread(final Runnable initialRunnable) {
         thread = new GeckoBackgroundThread(initialRunnable);
-        ThreadUtils.setBackgroundThread(thread);
-
         thread.setDaemon(true);
         thread.start();
     }
