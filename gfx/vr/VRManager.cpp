@@ -265,11 +265,11 @@ void VRManager::RemoveLayer(VRLayerParent* aLayer) {
 }
 
 void VRManager::AddVRManagerParent(VRManagerParent* aVRManagerParent) {
-  mVRManagerParents.PutEntry(aVRManagerParent);
+  mVRManagerParents.Insert(aVRManagerParent);
 }
 
 void VRManager::RemoveVRManagerParent(VRManagerParent* aVRManagerParent) {
-  mVRManagerParents.RemoveEntry(aVRManagerParent);
+  mVRManagerParents.Remove(aVRManagerParent);
   if (mVRManagerParents.IsEmpty()) {
     Destroy();
   }
@@ -280,8 +280,7 @@ void VRManager::UpdateRequestedDevices() {
   bool bHaveEventListenerNonFocus = false;
   bool bHaveControllerListener = false;
 
-  for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
-    VRManagerParent* vmp = iter.Get()->GetKey();
+  for (VRManagerParent* vmp : mVRManagerParents) {
     bHaveEventListener |= vmp->HaveEventListener() && vmp->GetVRActiveStatus();
     bHaveEventListenerNonFocus |=
         vmp->HaveEventListener() && !vmp->GetVRActiveStatus();
@@ -494,9 +493,8 @@ void VRManager::CheckForShutdown() {
 void VRManager::CheckForPuppetCompletion() {
   // Notify content process about completion of puppet test resets
   if (mState != VRManagerState::Active) {
-    for (auto iter = mManagerParentsWaitingForPuppetReset.Iter(); !iter.Done();
-         iter.Next()) {
-      Unused << iter.Get()->GetKey()->SendNotifyPuppetResetComplete();
+    for (const auto& key : mManagerParentsWaitingForPuppetReset) {
+      Unused << key->SendNotifyPuppetResetComplete();
     }
     mManagerParentsWaitingForPuppetReset.Clear();
   }
@@ -838,8 +836,8 @@ void VRManager::ProcessManagerState_Active() {
 }
 
 void VRManager::DispatchVRDisplayInfoUpdate() {
-  for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
-    Unused << iter.Get()->GetKey()->SendUpdateDisplayInfo(mDisplayInfo);
+  for (VRManagerParent* vmp : mVRManagerParents) {
+    Unused << vmp->SendUpdateDisplayInfo(mDisplayInfo);
   }
   mLastUpdateDisplayInfo = mDisplayInfo;
 }
@@ -854,8 +852,8 @@ void VRManager::DispatchRuntimeCapabilitiesUpdate() {
     flags |= VRDisplayCapabilityFlags::Cap_ImmersiveAR;
   }
 
-  for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
-    Unused << iter.Get()->GetKey()->SendUpdateRuntimeCapabilities(flags);
+  for (VRManagerParent* vmp : mVRManagerParents) {
+    Unused << vmp->SendUpdateRuntimeCapabilities(flags);
   }
 }
 
@@ -1017,7 +1015,7 @@ bool VRManager::RunPuppet(const nsTArray<uint64_t>& aBuffer,
 }
 
 void VRManager::ResetPuppet(VRManagerParent* aManagerParent) {
-  mManagerParentsWaitingForPuppetReset.PutEntry(aManagerParent);
+  mManagerParentsWaitingForPuppetReset.Insert(aManagerParent);
   if (mManagerParentRunningPuppet != nullptr) {
     Unused << mManagerParentRunningPuppet
                   ->SendNotifyPuppetCommandBufferCompleted(false);
@@ -1116,14 +1114,9 @@ void VRManager::Shutdown() {
 
 void VRManager::ShutdownVRManagerParents() {
   // Close removes the CanvasParent from the set so take a copy first.
-  VRManagerParentSet vrManagerParents;
-  for (auto iter = mVRManagerParents.Iter(); !iter.Done(); iter.Next()) {
-    vrManagerParents.PutEntry(iter.Get()->GetKey());
-  }
-
-  for (auto iter = vrManagerParents.Iter(); !iter.Done(); iter.Next()) {
-    iter.Get()->GetKey()->Close();
-    iter.Remove();
+  const auto parents = ToTArray<nsTArray<VRManagerParent*>>(mVRManagerParents);
+  for (RefPtr<VRManagerParent> vrManagerParent : parents) {
+    vrManagerParent->Close();
   }
 
   MOZ_DIAGNOSTIC_ASSERT(mVRManagerParents.IsEmpty(),
