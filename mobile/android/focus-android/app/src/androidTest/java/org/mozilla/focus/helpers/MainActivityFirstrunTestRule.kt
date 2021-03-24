@@ -13,8 +13,8 @@ import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.fragment.FirstrunFragment.Companion.FIRSTRUN_PREF
 
-open class MainActivityFirstrunTestRule(private val showFirstRun: Boolean) :
-    ActivityTestRule<MainActivity>(MainActivity::class.java) {
+open class MainActivityFirstrunTestRule(launchActivity: Boolean = true, private val showFirstRun: Boolean) :
+    ActivityTestRule<MainActivity>(MainActivity::class.java, launchActivity) {
 
     @CallSuper
     override fun beforeActivityLaunched() {
@@ -32,8 +32,6 @@ open class MainActivityFirstrunTestRule(private val showFirstRun: Boolean) :
 
     override fun afterActivityFinished() {
         super.afterActivityFinished()
-
-        activity.finishAndRemoveTask()
 
         ThreadUtils.postToMainThread {
             InstrumentationRegistry

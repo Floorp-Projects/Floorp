@@ -34,7 +34,7 @@ import static junit.framework.Assert.assertTrue;
 @Ignore("This test was written specifically for WebView and needs to be adapted for GeckoView")
 public class FirstRunScreenshots extends ScreenshotTest {
     @Rule
-    public ActivityTestRule<MainActivity> mActivityTestRule = new MainActivityFirstrunTestRule(true) {
+    public ActivityTestRule<MainActivity> mActivityTestRule = new MainActivityFirstrunTestRule(true,true) {
         @Override
         protected void beforeActivityLaunched() {
             super.beforeActivityLaunched();
