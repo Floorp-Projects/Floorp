@@ -54,22 +54,22 @@ Live {
 }
 
 Live {
-  0 blocks in heap block record 5 of 6
-  0 bytes (0 requested / 0 slop)
-  Individual block sizes: 20,480; -16,384; -8,192; 4,096
-  -0.00% of the heap (100.00% cumulative)
-  Allocated at {
-    #01: (no stack trace recorded due to --stacks=partial)
-  }
-}
-
-Live {
-  -2 blocks in heap block record 6 of 6
+  -2 blocks in heap block record 5 of 6
   0 bytes (0 requested / 0 slop)
   Individual block sizes: 8,192 x 2; -4,096 x 4
   -0.00% of the heap (100.00% cumulative)
   Allocated at {
     #01: B (B.cpp:99)
+  }
+}
+
+Live {
+  0 blocks in heap block record 6 of 6
+  0 bytes (0 requested / 0 slop)
+  Individual block sizes: 20,480; -16,384; -8,192; 4,096
+  -0.00% of the heap (100.00% cumulative)
+  Allocated at {
+    #01: (no stack trace recorded due to --stacks=partial)
   }
 }
 
