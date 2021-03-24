@@ -8,6 +8,7 @@
 #define mozilla_dom_WindowGlobalChild_h
 
 #include "mozilla/RefPtr.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/dom/PWindowGlobalChild.h"
 #include "nsRefPtrHashtable.h"
 #include "nsWrapperCache.h"
@@ -33,7 +34,8 @@ class BrowserChild;
  */
 class WindowGlobalChild final : public WindowGlobalActor,
                                 public nsWrapperCache,
-                                public PWindowGlobalChild {
+                                public PWindowGlobalChild,
+                                public SupportsWeakPtr {
   friend class PWindowGlobalChild;
 
  public:

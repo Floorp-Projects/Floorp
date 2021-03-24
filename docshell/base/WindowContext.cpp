@@ -81,6 +81,10 @@ Document* WindowContext::GetExtantDoc() const {
   return innerWindow ? innerWindow->GetExtantDoc() : nullptr;
 }
 
+WindowGlobalChild* WindowContext::GetWindowGlobalChild() const {
+  return mWindowGlobalChild;
+}
+
 WindowContext* WindowContext::GetParentWindowContext() {
   return mBrowsingContext->GetParentWindowContext();
 }
@@ -498,14 +502,12 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(WindowContext)
   }
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mBrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindowGlobalChild)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mChildren)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(WindowContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mBrowsingContext)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindowGlobalChild)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildren)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 

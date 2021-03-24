@@ -8,6 +8,7 @@
 #define mozilla_dom_WindowContext_h
 
 #include "mozilla/PermissionDelegateHandler.h"
+#include "mozilla/WeakPtr.h"
 #include "mozilla/Span.h"
 #include "mozilla/dom/MaybeDiscarded.h"
 #include "mozilla/dom/SyncedContext.h"
@@ -107,7 +108,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
 
   bool IsCached() const;
 
-  bool IsInProcess() const { return mWindowGlobalChild; }
+  bool IsInProcess() const { return mIsInProcess; }
 
   bool HasBeforeUnload() const { return GetHasBeforeUnload(); }
 
@@ -117,7 +118,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   Document* GetDocument() const;
   Document* GetExtantDoc() const;
 
-  WindowGlobalChild* GetWindowGlobalChild() const { return mWindowGlobalChild; }
+  WindowGlobalChild* GetWindowGlobalChild() const;
 
   // Get the parent WindowContext of this WindowContext, taking the BFCache into
   // account. This will not cross chrome/content <browser> boundaries.
@@ -286,7 +287,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   const uint64_t mInnerWindowId;
   const uint64_t mOuterWindowId;
   RefPtr<BrowsingContext> mBrowsingContext;
-  RefPtr<WindowGlobalChild> mWindowGlobalChild;
+  WeakPtr<WindowGlobalChild> mWindowGlobalChild;
 
   // --- NEVER CHANGE `mChildren` DIRECTLY! ---
   // Changes to this list need to be synchronized to the list within our
@@ -295,6 +296,7 @@ class WindowContext : public nsISupports, public nsWrapperCache {
   nsTArray<RefPtr<BrowsingContext>> mChildren;
 
   bool mIsDiscarded = false;
+  bool mIsInProcess = false;
 
   // The start time of user gesture, this is only available if the window
   // context is in process.
