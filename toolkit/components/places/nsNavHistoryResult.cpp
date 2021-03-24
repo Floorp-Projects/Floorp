@@ -3424,8 +3424,8 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsNavHistoryResult)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRootNode)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mObservers)
-  for (auto it = tmp->mBookmarkFolderObservers.Iter(); !it.Done(); it.Next()) {
-    nsNavHistoryResult::FolderObserverList*& list = it.Data();
+  for (nsNavHistoryResult::FolderObserverList* list :
+       tmp->mBookmarkFolderObservers.Values()) {
     for (uint32_t i = 0; i < list->Length(); ++i) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
                                          "mBookmarkFolderObservers value[i]");

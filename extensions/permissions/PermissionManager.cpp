@@ -627,10 +627,9 @@ PermissionManager::PermissionManager()
 PermissionManager::~PermissionManager() {
   // NOTE: Make sure to reject each of the promises in mPermissionKeyPromiseMap
   // before destroying.
-  for (auto iter = mPermissionKeyPromiseMap.ConstIter(); !iter.Done();
-       iter.Next()) {
-    if (iter.Data()) {
-      iter.Data()->Reject(NS_ERROR_FAILURE, __func__);
+  for (const auto& promise : mPermissionKeyPromiseMap.Values()) {
+    if (promise) {
+      promise->Reject(NS_ERROR_FAILURE, __func__);
     }
   }
   mPermissionKeyPromiseMap.Clear();

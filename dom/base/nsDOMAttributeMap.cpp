@@ -97,8 +97,8 @@ NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMAttributeMap)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMAttributeMap)
 
 nsresult nsDOMAttributeMap::SetOwnerDocument(Document* aDocument) {
-  for (const auto& entry : mAttributeCache) {
-    nsresult rv = entry.GetData()->SetOwnerDocument(aDocument);
+  for (const auto& entry : mAttributeCache.Values()) {
+    nsresult rv = entry->SetOwnerDocument(aDocument);
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
   }
   return NS_OK;

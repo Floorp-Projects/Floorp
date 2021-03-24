@@ -1043,8 +1043,8 @@ void nsIFrame::RemoveDisplayItemDataForDeletion() {
   WebRenderUserDataTable* userDataTable =
       TakeProperty(WebRenderUserDataProperty::Key());
   if (userDataTable) {
-    for (auto iter = userDataTable->Iter(); !iter.Done(); iter.Next()) {
-      iter.UserData()->RemoveFromTable();
+    for (const auto& data : userDataTable->Values()) {
+      data->RemoveFromTable();
     }
     delete userDataTable;
   }

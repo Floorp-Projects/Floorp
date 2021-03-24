@@ -613,8 +613,8 @@ void FrameLayerBuilder::DestroyDisplayItemDataFor(nsIFrame* aFrame) {
   WebRenderUserDataTable* userDataTable =
       aFrame->TakeProperty(WebRenderUserDataProperty::Key());
   if (userDataTable) {
-    for (auto iter = userDataTable->Iter(); !iter.Done(); iter.Next()) {
-      iter.UserData()->RemoveFromTable();
+    for (const auto& data : userDataTable->Values()) {
+      data->RemoveFromTable();
     }
     delete userDataTable;
   }

@@ -228,8 +228,8 @@ void PendingTransactionQueue::RemoveEmptyPendingQ() {
 
 size_t PendingTransactionQueue::PendingQueueLength() const {
   size_t length = 0;
-  for (auto it = mPendingTransactionTable.ConstIter(); !it.Done(); it.Next()) {
-    length += it.UserData()->Length();
+  for (const auto& data : mPendingTransactionTable.Values()) {
+    length += data->Length();
   }
 
   return length;
@@ -261,8 +261,8 @@ void PendingTransactionQueue::PrintPendingQ() {
 
 void PendingTransactionQueue::Compact() {
   mUrgentStartQ.Compact();
-  for (auto it = mPendingTransactionTable.ConstIter(); !it.Done(); it.Next()) {
-    it.UserData()->Compact();
+  for (const auto& data : mPendingTransactionTable.Values()) {
+    data->Compact();
   }
 }
 
@@ -274,13 +274,13 @@ void PendingTransactionQueue::CancelAllTransactions(nsresult reason) {
   }
   mUrgentStartQ.Clear();
 
-  for (auto it = mPendingTransactionTable.ConstIter(); !it.Done(); it.Next()) {
-    for (const auto& pendingTransInfo : *it.UserData()) {
+  for (const auto& data : mPendingTransactionTable.Values()) {
+    for (const auto& pendingTransInfo : *data) {
       LOG(("PendingTransactionQueue::CancelAllTransactions %p\n",
            pendingTransInfo->Transaction()));
       pendingTransInfo->Transaction()->Close(reason);
     }
-    it.UserData()->Clear();
+    data->Clear();
   }
 
   mPendingTransactionTable.Clear();

@@ -1492,9 +1492,9 @@ bool StorageDBThread::PendingOperations::IsOriginClearPending(
     const nsACString& aOriginSuffix, const nsACString& aOriginNoSuffix) const {
   // Called under the lock
 
-  for (auto iter = mClears.ConstIter(); !iter.Done(); iter.Next()) {
+  for (const auto& clear : mClears.Values()) {
     if (FindPendingClearForOrigin(aOriginSuffix, aOriginNoSuffix,
-                                  iter.UserData())) {
+                                  clear.get())) {
       return true;
     }
   }
@@ -1533,9 +1533,9 @@ bool StorageDBThread::PendingOperations::IsOriginUpdatePending(
     const nsACString& aOriginSuffix, const nsACString& aOriginNoSuffix) const {
   // Called under the lock
 
-  for (auto iter = mUpdates.ConstIter(); !iter.Done(); iter.Next()) {
+  for (const auto& update : mUpdates.Values()) {
     if (FindPendingUpdateForOrigin(aOriginSuffix, aOriginNoSuffix,
-                                   iter.UserData())) {
+                                   update.get())) {
       return true;
     }
   }

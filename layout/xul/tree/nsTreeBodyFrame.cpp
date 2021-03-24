@@ -79,10 +79,9 @@ using namespace mozilla::layout;
 
 // Function that cancels all the image requests in our cache.
 void nsTreeBodyFrame::CancelImageRequests() {
-  for (auto iter = mImageCache.Iter(); !iter.Done(); iter.Next()) {
+  for (nsTreeImageCacheEntry entry : mImageCache.Values()) {
     // If our imgIRequest object was registered with the refresh driver
     // then we need to deregister it.
-    nsTreeImageCacheEntry entry = iter.UserData();
     nsLayoutUtils::DeregisterImageRequest(PresContext(), entry.request,
                                           nullptr);
     entry.request->UnlockImage();

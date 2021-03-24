@@ -464,8 +464,8 @@ void RequestContextService::Shutdown() {
   MOZ_ASSERT(NS_IsMainThread());
   // We need to do this to prevent the requests from being scheduled after
   // shutdown.
-  for (auto iter = mTable.Iter(); !iter.Done(); iter.Next()) {
-    iter.Data()->CancelTailPendingRequests(NS_ERROR_ABORT);
+  for (const auto& data : mTable.Values()) {
+    data->CancelTailPendingRequests(NS_ERROR_ABORT);
   }
   mTable.Clear();
   sShutdown = true;

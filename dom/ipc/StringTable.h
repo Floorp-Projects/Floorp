@@ -88,8 +88,7 @@ class StringTableBuilder {
   void Write(const RangedPtr<uint8_t>& aBuffer) {
     auto buffer = aBuffer.ReinterpretCast<ElemType>();
 
-    for (auto iter = mEntries.Iter(); !iter.Done(); iter.Next()) {
-      auto& entry = iter.Data();
+    for (const auto& entry : mEntries.Values()) {
       memcpy(&buffer[entry.mOffset], entry.mValue.BeginReading(),
              sizeof(ElemType) * (entry.mValue.Length() + 1));
     }

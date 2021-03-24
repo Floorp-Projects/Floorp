@@ -672,8 +672,8 @@ bool FontFaceSet::UpdateRules(const nsTArray<nsFontFaceRuleContainer>& aRules) {
   // the same font entries as before. (The order can affect font selection
   // where multiple faces match the requested style, perhaps with overlapping
   // unicode-range coverage.)
-  for (auto it = mUserFontSet->mFontFamilies.Iter(); !it.Done(); it.Next()) {
-    it.Data()->DetachFontEntries();
+  for (const auto& fontFamily : mUserFontSet->mFontFamilies.Values()) {
+    fontFamily->DetachFontEntries();
   }
 
   // Sometimes aRules has duplicate @font-face rules in it; we should make
@@ -1281,9 +1281,8 @@ void FontFaceSet::CacheFontLoadability() {
   }
 
   // TODO(emilio): We could do it a bit more incrementally maybe?
-  for (auto iter = mUserFontSet->mFontFamilies.Iter(); !iter.Done();
-       iter.Next()) {
-    for (const gfxFontEntry* entry : iter.Data()->GetFontList()) {
+  for (const auto& fontFamily : mUserFontSet->mFontFamilies.Values()) {
+    for (const gfxFontEntry* entry : fontFamily->GetFontList()) {
       if (!entry->mIsUserFontContainer) {
         continue;
       }

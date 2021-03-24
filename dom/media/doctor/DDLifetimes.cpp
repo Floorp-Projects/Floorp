@@ -64,11 +64,10 @@ void DDLifetimes::RemoveLifetime(const DDLifetime* aLifetime) {
 
 void DDLifetimes::RemoveLifetimesFor(
     const dom::HTMLMediaElement* aMediaElement) {
-  for (auto iter = mLifetimes.Iter(); !iter.Done(); iter.Next()) {
-    iter.UserData()->RemoveElementsBy(
-        [aMediaElement](const DDLifetime& lifetime) {
-          return lifetime.mMediaElement == aMediaElement;
-        });
+  for (const auto& lifetimes : mLifetimes.Values()) {
+    lifetimes->RemoveElementsBy([aMediaElement](const DDLifetime& lifetime) {
+      return lifetime.mMediaElement == aMediaElement;
+    });
   }
 }
 
@@ -76,8 +75,8 @@ void DDLifetimes::Clear() { mLifetimes.Clear(); }
 
 size_t DDLifetimes::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const {
   size_t size = mLifetimes.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (auto iter = mLifetimes.ConstIter(); !iter.Done(); iter.Next()) {
-    size += iter.UserData()->ShallowSizeOfExcludingThis(aMallocSizeOf);
+  for (const auto& lifetimes : mLifetimes.Values()) {
+    size += lifetimes->ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
   return size;
 }

@@ -77,8 +77,7 @@ class GMPDiskStorage : public GMPStorage {
 
   ~GMPDiskStorage() {
     // Close all open file handles.
-    for (auto iter = mRecords.ConstIter(); !iter.Done(); iter.Next()) {
-      Record* record = iter.UserData();
+    for (const auto& record : mRecords.Values()) {
       if (record->mFileDesc) {
         PR_Close(record->mFileDesc);
         record->mFileDesc = nullptr;

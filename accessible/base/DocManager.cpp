@@ -76,8 +76,7 @@ DocAccessible* DocManager::GetDocAccessible(const PresShell* aPresShell) {
 }
 
 LocalAccessible* DocManager::FindAccessibleInCache(nsINode* aNode) const {
-  for (const auto& entry : mDocAccessibleCache) {
-    DocAccessible* docAccessible = entry.GetData().get();
+  for (const auto& docAccessible : mDocAccessibleCache.Values()) {
     NS_ASSERTION(docAccessible,
                  "No doc accessible for the object in doc accessible cache!");
 

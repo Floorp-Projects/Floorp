@@ -1354,8 +1354,7 @@ size_t TelemetryEvent::SizeOfIncludingThis(
 
   auto getSizeOfRecords = [aMallocSizeOf](auto& storageMap) {
     size_t partial = storageMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
-    for (auto iter = storageMap.ConstIter(); !iter.Done(); iter.Next()) {
-      EventRecordArray* eventRecords = iter.UserData();
+    for (const auto& eventRecords : storageMap.Values()) {
       partial += eventRecords->ShallowSizeOfIncludingThis(aMallocSizeOf);
 
       const uint32_t len = eventRecords->Length();

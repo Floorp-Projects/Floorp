@@ -375,11 +375,11 @@ uint32_t VariableLengthPrefixSet::CalculatePreallocateSize() const {
   // Store how many prefix string.
   fileSize += sizeof(uint32_t);
 
-  for (auto iter = mVLPrefixSet.ConstIter(); !iter.Done(); iter.Next()) {
+  for (const auto& data : mVLPrefixSet.Values()) {
     // Store prefix size, prefix string length, and prefix string.
     fileSize += sizeof(uint8_t);
     fileSize += sizeof(uint32_t);
-    fileSize += iter.Data()->Length();
+    fileSize += data->Length();
   }
   return fileSize;
 }
@@ -478,8 +478,8 @@ size_t VariableLengthPrefixSet::SizeOfIncludingThis(
        aMallocSizeOf(mFixedPrefixSet);
 
   n += mVLPrefixSet.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (auto iter = mVLPrefixSet.ConstIter(); !iter.Done(); iter.Next()) {
-    n += iter.Data()->SizeOfExcludingThisIfUnshared(aMallocSizeOf);
+  for (const auto& data : mVLPrefixSet.Values()) {
+    n += data->SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
 
   return n;

@@ -1463,10 +1463,9 @@ size_t nsDNSService::SizeOfIncludingThis(
   n += mIPv4OnlyDomains.SizeOfExcludingThisIfUnshared(mallocSizeOf);
   n += mLocalDomains.SizeOfExcludingThis(mallocSizeOf);
   n += mFailedSVCDomainNames.ShallowSizeOfExcludingThis(mallocSizeOf);
-  for (auto iter = mFailedSVCDomainNames.ConstIter(); !iter.Done();
-       iter.Next()) {
-    n += iter.UserData()->ShallowSizeOfExcludingThis(mallocSizeOf);
-    for (const auto& name : *iter.UserData()) {
+  for (const auto& data : mFailedSVCDomainNames.Values()) {
+    n += data->ShallowSizeOfExcludingThis(mallocSizeOf);
+    for (const auto& name : *data) {
       n += name.SizeOfExcludingThisIfUnshared(mallocSizeOf);
     }
   }

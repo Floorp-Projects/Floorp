@@ -1354,8 +1354,7 @@ void NetlinkService::GetGWNeighboursForFamily(
     uint8_t aFamily, nsTArray<NetlinkNeighbor*>& aGwNeighbors) {
   LOG(("NetlinkService::GetGWNeighboursForFamily"));
   // Check only routes on links that are up
-  for (auto iter = mLinks.ConstIter(); !iter.Done(); iter.Next()) {
-    LinkInfo* linkInfo = iter.UserData();
+  for (const auto& linkInfo : mLinks.Values()) {
     nsAutoCString linkName;
     linkInfo->mLink->GetName(linkName);
 
@@ -1629,8 +1628,7 @@ bool NetlinkService::CalculateIDForFamily(uint8_t aFamily, SHA1Sum* aSHA1) {
     // still be detected below.
 
     // TODO: maybe we could get operator name via AndroidBridge
-    for (auto iter = mLinks.ConstIter(); !iter.Done(); iter.Next()) {
-      LinkInfo* linkInfo = iter.UserData();
+    for (const auto& linkInfo : mLinks.Values()) {
       if (linkInfo->mIsUp) {
         nsAutoCString linkName;
         linkInfo->mLink->GetName(linkName);
@@ -1692,7 +1690,7 @@ void NetlinkService::ExtractDNSProperties() {
   nsTArray<NetAddr> resolvers;
 #if defined(HAVE_RES_NINIT)
   [&]() {
-    struct __res_state res{};
+    struct __res_state res {};
     int ret = res_ninit(&res);
     if (ret != 0) {
       LOG(("Call to res_ninit failed: %d", ret));

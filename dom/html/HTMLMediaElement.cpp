@@ -3452,8 +3452,8 @@ void HTMLMediaElement::GetAllEnabledMediaTracks(
 }
 
 void HTMLMediaElement::SetCapturedOutputStreamsEnabled(bool aEnabled) {
-  for (auto& entry : mOutputTrackSources) {
-    entry.GetData()->SetEnabled(aEnabled);
+  for (const auto& entry : mOutputTrackSources.Values()) {
+    entry->SetEnabled(aEnabled);
   }
 }
 
@@ -3463,8 +3463,8 @@ HTMLMediaElement::OutputMuteState HTMLMediaElement::OutputTracksMuted() {
 }
 
 void HTMLMediaElement::UpdateOutputTracksMuting() {
-  for (auto& entry : mOutputTrackSources) {
-    entry.GetData()->SetMutedByElement(OutputTracksMuted());
+  for (const auto& entry : mOutputTrackSources.Values()) {
+    entry->SetMutedByElement(OutputTracksMuted());
   }
 }
 
@@ -3814,8 +3814,8 @@ already_AddRefed<DOMMediaStream> HTMLMediaElement::CaptureStreamInternal(
     mAudioCaptured = true;
   }
 
-  for (const auto& entry : mOutputTrackSources) {
-    const RefPtr<MediaElementTrackSource>& source = entry.GetData();
+  for (const RefPtr<MediaElementTrackSource>& source :
+       mOutputTrackSources.Values()) {
     if (source->Track()->mType == MediaSegment::VIDEO) {
       // Only add video tracks if we're a video element and the output stream
       // wants video.
@@ -6221,8 +6221,8 @@ void HTMLMediaElement::NotifyDecoderPrincipalChanged() {
   if (isSameOrigin) {
     principal = NodePrincipal();
   }
-  for (const auto& entry : mOutputTrackSources) {
-    entry.GetData()->SetPrincipal(principal);
+  for (const auto& entry : mOutputTrackSources.Values()) {
+    entry->SetPrincipal(principal);
   }
   mDecoder->SetOutputTracksPrincipal(principal);
 }

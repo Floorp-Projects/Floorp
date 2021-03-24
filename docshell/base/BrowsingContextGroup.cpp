@@ -234,8 +234,8 @@ void BrowsingContextGroup::Destroy() {
   // Make sure to call `RemoveBrowsingContextGroup` for every entry in both
   // `mHosts` and `mSubscribers`. This will visit most entries twice, but
   // `RemoveBrowsingContextGroup` is safe to call multiple times.
-  for (auto& entry : mHosts) {
-    entry.GetData()->RemoveBrowsingContextGroup(this);
+  for (auto& entry : mHosts.Values()) {
+    entry->RemoveBrowsingContextGroup(this);
   }
   for (auto& entry : mSubscribers) {
     entry.GetKey()->RemoveBrowsingContextGroup(this);
@@ -395,9 +395,7 @@ BrowsingContextGroup* BrowsingContextGroup::GetChromeGroup() {
 
 void BrowsingContextGroup::GetDocGroups(nsTArray<DocGroup*>& aDocGroups) {
   MOZ_ASSERT(NS_IsMainThread());
-  for (const auto& entry : mDocGroups) {
-    aDocGroups.AppendElement(entry.GetData());
-  }
+  AppendToArray(aDocGroups, mDocGroups.Values());
 }
 
 already_AddRefed<DocGroup> BrowsingContextGroup::AddDocument(
@@ -443,10 +441,7 @@ void BrowsingContextGroup::GetAllGroups(
     return;
   }
 
-  aGroups.SetCapacity(sBrowsingContextGroups->Count());
-  for (auto& group : *sBrowsingContextGroups) {
-    aGroups.AppendElement(group.GetData());
-  }
+  aGroups = ToArray(sBrowsingContextGroups->Values());
 }
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(BrowsingContextGroup, mContexts,

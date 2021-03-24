@@ -1069,8 +1069,7 @@ size_t Histogram::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) {
    * do the iteration here.
    */
   n += mStorage.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (auto iter = mStorage.Iter(); !iter.Done(); iter.Next()) {
-    auto& h = iter.Data();
+  for (const auto& h : mStorage.Values()) {
     n += h->SizeOfIncludingThis(aMallocSizeOf);
   }
   if (mSingleStore != nullptr) {
@@ -1312,8 +1311,7 @@ size_t KeyedHistogram::SizeOfIncludingThis(
    * do the iteration here.
    */
   n += mStorage.ShallowSizeOfExcludingThis(aMallocSizeOf);
-  for (auto iter = mStorage.Iter(); !iter.Done(); iter.Next()) {
-    auto& h = iter.Data();
+  for (const auto& h : mStorage.Values()) {
     n += h->SizeOfIncludingThis(aMallocSizeOf);
   }
   if (mSingleStore != nullptr) {
@@ -1341,7 +1339,7 @@ nsresult KeyedHistogram::GetKeys(const StaticMutexAutoLock& aLock,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  for (auto iter = histogramMap->Iter(); !iter.Done(); iter.Next()) {
+  for (auto iter = histogramMap->ConstIter(); !iter.Done(); iter.Next()) {
     if (!aKeys.AppendElement(iter.Key(), mozilla::fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }

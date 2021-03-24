@@ -1498,8 +1498,7 @@ void BrowserChild::FlushAllCoalescedMouseData() {
   MOZ_ASSERT(mCoalesceMouseMoveEvents);
 
   // Move all entries from mCoalescedMouseData to mToBeDispatchedMouseData.
-  for (auto iter = mCoalescedMouseData.Iter(); !iter.Done(); iter.Next()) {
-    CoalescedMouseData* data = iter.UserData();
+  for (const auto& data : mCoalescedMouseData.Values()) {
     if (!data || data->IsEmpty()) {
       continue;
     }
@@ -2971,16 +2970,11 @@ nsresult BrowserChild::DoSendAsyncMessage(const nsAString& aMessage,
 nsTArray<RefPtr<BrowserChild>> BrowserChild::GetAll() {
   StaticMutexAutoLock lock(sBrowserChildrenMutex);
 
-  nsTArray<RefPtr<BrowserChild>> list;
   if (!sBrowserChildren) {
-    return list;
+    return {};
   }
 
-  for (auto iter = sBrowserChildren->Iter(); !iter.Done(); iter.Next()) {
-    list.AppendElement(iter.Data());
-  }
-
-  return list;
+  return ToTArray<nsTArray<RefPtr<BrowserChild>>>(sBrowserChildren->Values());
 }
 
 BrowserChild* BrowserChild::GetFrom(PresShell* aPresShell) {

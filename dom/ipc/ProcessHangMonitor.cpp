@@ -719,8 +719,7 @@ HangMonitorParent::HangMonitorParent(ProcessHangMonitor* aMonitor)
 HangMonitorParent::~HangMonitorParent() {
   MutexAutoLock lock(mBrowserCrashDumpHashLock);
 
-  for (auto iter = mBrowserCrashDumpIds.Iter(); !iter.Done(); iter.Next()) {
-    nsString crashId = iter.UserData();
+  for (const auto& crashId : mBrowserCrashDumpIds.Values()) {
     if (!crashId.IsEmpty()) {
       CrashReporter::DeleteMinidumpFilesForID(crashId);
     }

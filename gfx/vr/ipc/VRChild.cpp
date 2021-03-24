@@ -51,8 +51,7 @@ class OpenVRControllerManifestManager {
     }
     mAction = "";
 
-    for (auto iter = mManifest.Iter(); !iter.Done(); iter.Next()) {
-      nsCString path(iter.Data());
+    for (const auto& path : mManifest.Values()) {
       if (!path.IsEmpty() && remove(path.BeginReading()) != 0) {
         MOZ_ASSERT(false, "Delete controller manifest file failed.");
       }
