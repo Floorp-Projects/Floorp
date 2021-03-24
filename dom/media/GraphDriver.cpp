@@ -791,6 +791,9 @@ void AudioCallbackDriver::Shutdown() {
   LOG(LogLevel::Debug,
       ("%p: Releasing audio driver off main thread (GraphDriver::Shutdown).",
        Graph()));
+
+  cubeb_stream_register_device_changed_callback(mAudioStream, nullptr);
+
   RefPtr<AsyncCubebTask> releaseEvent =
       new AsyncCubebTask(this, AsyncCubebOperation::SHUTDOWN);
   releaseEvent->Dispatch(NS_DISPATCH_SYNC);
