@@ -193,7 +193,7 @@ nsresult mozInlineSpellStatus::InitForEditorChange(
   return NS_OK;
 }
 
-// mozInlineSpellStatis::InitForNavigation
+// mozInlineSpellStatus::InitForNavigation
 //
 //    For navigation events, we just need to store the new and old positions.
 //
