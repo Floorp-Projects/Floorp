@@ -1,4 +1,4 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python
 #
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -10,10 +10,8 @@ from __future__ import absolute_import, print_function, division
 
 import argparse
 import collections
-import functools
 import gzip
 import json
-import io
 import os
 import platform
 import re
@@ -50,10 +48,6 @@ allocatorFns = [
     # functions won't be stripped, as explained above.
     "???",
 ]
-
-
-def cmp(a, b):
-    return (a > b) - (a < b)
 
 
 class Record(object):
@@ -286,7 +280,7 @@ def fixStackTraces(inputFilename, isZipped, opener):
     # get that now in order to move |tmpFile| at the end.
     tmpFilename = tmpFile.name
     if isZipped:
-        tmpFile = gzip.GzipFile(mode="wb", filename="", fileobj=tmpFile)
+        tmpFile = gzip.GzipFile(filename="", fileobj=tmpFile)
 
     with opener(inputFilename, "rb") as inputFile:
         for line in inputFile:
@@ -361,7 +355,7 @@ def getDigestFromFile(args, inputFile):
     # Trim the number of frames.
     for traceKey, frameKeys in traceTable.items():
         if len(frameKeys) > args.max_frames:
-            del frameKeys[args.max_frames :]
+            traceTable[traceKey] = frameKeys[: args.max_frames]
 
     def buildTraceDescription(traceTable, frameTable, traceKey):
         frameKeys = traceTable[traceKey]
@@ -450,7 +444,7 @@ def getDigestFromFile(args, inputFile):
                 return recordKeyPartCache[traceKey]
 
             recordKeyPart = str(
-                list(map(lambda frameKey: frameTable[frameKey], traceTable[traceKey]))
+                map(lambda frameKey: frameTable[frameKey], traceTable[traceKey])
             )
             recordKeyPartCache[traceKey] = recordKeyPart
             return recordKeyPart
@@ -506,7 +500,7 @@ def getDigestFromFile(args, inputFile):
                 def f(k):
                     return buildTraceDescription(traceTable, frameTable, k)
 
-                record.reportedAtDescs = list(map(f, reportedAtTraceKeys))
+                record.reportedAtDescs = map(f, reportedAtTraceKeys)
         record.usableSizes[usableSize] += num
 
     # All the processed data for a single DMD file is called a "digest".
@@ -612,9 +606,7 @@ def printDigest(args, digest):
         out(separator)
         numRecords = len(records)
         cmpRecords = sortByChoices[args.sort_by]
-        sortedRecords = sorted(
-            records.values(), key=functools.cmp_to_key(cmpRecords), reverse=True
-        )
+        sortedRecords = sorted(records.values(), cmp=cmpRecords, reverse=True)
         kindBlocks = 0
         kindUsableSize = 0
         maxRecord = 1000
@@ -821,7 +813,7 @@ def prettyPrintDmdJson(out, j):
 
     out.write(' "traceTable": {')
     first = True
-    for k, l in j["traceTable"].items():
+    for k, l in j["traceTable"].iteritems():
         out.write("" if first else ",")
         out.write('\n  "{0}": {1}'.format(k, json.dumps(l)))
         first = False
@@ -829,7 +821,7 @@ def prettyPrintDmdJson(out, j):
 
     out.write(' "frameTable": {')
     first = True
-    for k, v in j["frameTable"].items():
+    for k, v in j["frameTable"].iteritems():
         out.write("" if first else ",")
         out.write('\n  "{0}": {1}'.format(k, json.dumps(v)))
         first = False
@@ -992,7 +984,7 @@ def clampBlockList(args, inputFileName, isZipped, opener):
     tmpFilename = tmpFile.name
     if isZipped:
         tmpFile = gzip.GzipFile(filename="", fileobj=tmpFile)
-    prettyPrintDmdJson(io.TextIOWrapper(tmpFile, encoding="utf-8"), j)
+    prettyPrintDmdJson(tmpFile, j)
     tmpFile.close()
     shutil.move(tmpFilename, inputFileName)
 
