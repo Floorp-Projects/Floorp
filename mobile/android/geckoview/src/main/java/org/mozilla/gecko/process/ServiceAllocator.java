@@ -22,7 +22,10 @@ import android.util.Log;
 import java.security.SecureRandom;
 import java.util.BitSet;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.UUID;
 
 /* package */ final class ServiceAllocator {
     private static final String LOGTAG = "ServiceAllocator";
@@ -117,7 +120,7 @@ import java.util.Map.Entry;
                 final Intent intent = new Intent();
                 intent.setClassName(context, getServiceName());
                 return bindServiceIsolated(context, intent, getAndroidFlags(priority),
-                                           getIdAsString(), binding);
+                                           getIdInternal(), binding);
             }
 
             @Override
@@ -128,7 +131,7 @@ import java.util.Map.Entry;
 
         private final ServiceAllocator mAllocator;
         private final GeckoProcessType mType;
-        private final Integer mId;
+        private final String mId;
         private final EnumMap<PriorityLevel, Binding> mBindings;
         private final BindServiceDelegate mBindDelegate;
 
@@ -188,19 +191,19 @@ import java.util.Map.Entry;
          * Only content services have unique IDs. This method throws if called for a non-content
          * service type.
          */
-        public int getId() {
+        public String getId() {
             if (mId == null) {
                 throw new RuntimeException("This service does not have a unique id");
             }
 
-            return mId.intValue();
+            return mId;
         }
 
         /**
          * This method is infallible and returns an empty string for non-content services.
          */
-        private String getIdAsString() {
-            return mId == null ? "" : mId.toString();
+        private String getIdInternal() {
+            return mId == null ? "" : mId;
         }
 
         public boolean isContent() {
@@ -383,13 +386,13 @@ import java.util.Map.Entry;
          * Allocate an unused service ID for use by the caller.
          * @return The new service id.
          */
-        int allocate();
+        String allocate();
 
         /**
          * Release a previously used service ID.
          * @param id The service id being released.
          */
-        void release(final int id);
+        void release(final String id);
     }
 
     /**
@@ -414,7 +417,7 @@ import java.util.Map.Entry;
         }
 
         @Override
-        public int allocate() {
+        public String allocate() {
             final int[] available = new int[mMaxNumSvcs];
             int size = 0;
             for (int i = 0; i < mMaxNumSvcs; i++) {
@@ -430,13 +433,14 @@ import java.util.Map.Entry;
 
             final int next = available[mRandom.nextInt(size)];
             mAllocator.set(next);
-            return next;
+            return Integer.toString(next);
         }
 
         @Override
-        public void release(final int id) {
+        public void release(final String stringId) {
+            final int id = Integer.valueOf(stringId);
             if (!mAllocator.get(id)) {
-                throw new IllegalStateException("Releasing an unallocated id!");
+                throw new IllegalStateException("Releasing an unallocated id=" + id);
             }
 
             mAllocator.clear(id);
@@ -458,8 +462,7 @@ import java.util.Map.Entry;
      * generate unique instance IDs in this case.
      */
     private static final class IsolatedContentPolicy implements ContentAllocationPolicy {
-        private int mNextIsolatedSvcId = 0;
-        private int mCurNumIsolatedSvcs = 0;
+        private final Set<String> mRunningServiceIds = new HashSet<>();
 
         @Override
         public BindServiceDelegate getBindServiceDelegate(@NonNull final InstanceInfo info) {
@@ -472,25 +475,24 @@ import java.util.Map.Entry;
          * limit on number of simultaneous content processes.
          */
         @Override
-        public int allocate() {
-            if (mCurNumIsolatedSvcs >= MAX_NUM_ISOLATED_CONTENT_SERVICES) {
+        public String allocate() {
+            if (mRunningServiceIds.size() >= MAX_NUM_ISOLATED_CONTENT_SERVICES) {
                 throw new RuntimeException("No more content services available");
             }
 
-            ++mCurNumIsolatedSvcs;
-            return mNextIsolatedSvcId++;
+            final String newId = UUID.randomUUID().toString();
+            mRunningServiceIds.add(newId);
+            return newId;
         }
 
         /**
          * Just drop the count of active services.
          */
         @Override
-        public void release(final int id) {
-            if (mCurNumIsolatedSvcs <= 0) {
+        public void release(final String id) {
+            if (!mRunningServiceIds.remove(id)) {
                 throw new IllegalStateException("Releasing an unallocated id");
             }
-
-            --mCurNumIsolatedSvcs;
         }
     }
 
@@ -504,7 +506,7 @@ import java.util.Map.Entry;
      * @param type The type of service.
      * @return Integer encapsulating the service ID, or null if no ID is necessary.
      */
-    private Integer allocate(@NonNull final GeckoProcessType type) {
+    private String allocate(@NonNull final GeckoProcessType type) {
         XPCOMEventTarget.assertOnLauncherThread();
         if (type != GeckoProcessType.CONTENT) {
             // No unique id necessary
@@ -521,7 +523,7 @@ import java.util.Map.Entry;
             }
         }
 
-        return Integer.valueOf(mContentAllocPolicy.allocate());
+        return mContentAllocPolicy.allocate();
     }
 
     /**
@@ -565,7 +567,7 @@ import java.util.Map.Entry;
      * Obtain the class name to use for service binding in the default (ie, non-isolated) case.
      */
     private static String getSvcClassNameDefault(@NonNull final InstanceInfo info) {
-        return ServiceUtils.buildSvcName(info.getType(), info.getIdAsString());
+        return ServiceUtils.buildSvcName(info.getType(), info.getIdInternal());
     }
 
     /**
