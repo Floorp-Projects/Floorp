@@ -291,6 +291,7 @@ public class GeckoThread extends Thread {
             args.addAll(Arrays.asList(mInitInfo.args));
         }
 
+        // Legacy "args" parameter
         final String extraArgs = mInitInfo.extras.getString(EXTRA_ARGS, null);
         if (extraArgs != null) {
             final StringTokenizer st = new StringTokenizer(extraArgs);
@@ -305,6 +306,12 @@ public class GeckoThread extends Thread {
                 }
                 args.add(token);
             }
+        }
+
+        // "argX" parameters
+        for (int i = 0; mInitInfo.extras.containsKey("arg" + i); i++) {
+            final String arg = mInitInfo.extras.getString("arg" + i);
+            args.add(arg);
         }
 
         return args.toArray(new String[args.size()]);

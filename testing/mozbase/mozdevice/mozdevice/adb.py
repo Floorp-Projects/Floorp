@@ -4207,7 +4207,9 @@ class ADBDevice(ADBCommand):
         # Additional command line arguments that the app will read and use (e.g.
         # with a custom profile)
         if extra_args:
-            extras["args"] = " ".join(extra_args)
+            for (arg_count, arg) in enumerate(extra_args):
+                extras["arg" + str(arg_count)] = arg
+
         extras["use_multiprocess"] = e10s
         self.launch_application(
             app_name,
