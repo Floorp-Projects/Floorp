@@ -181,7 +181,6 @@
 #include "nsNetCID.h"
 #include "nsPrintfCString.h"
 #include "nsProxyRelease.h"
-#include "nsRefPtrHashtable.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStreamUtils.h"
 #include "nsString.h"
@@ -2195,7 +2194,7 @@ class Database final
   RefPtr<DirectoryLock> mDirectoryLock;
   nsTHashSet<TransactionBase*> mTransactions;
   nsTHashSet<MutableFile*> mMutableFiles;
-  nsRefPtrHashtable<nsIDHashKey, FileInfo> mMappedBlobs;
+  nsTHashMap<nsIDHashKey, SafeRefPtr<FileInfo>> mMappedBlobs;
   RefPtr<DatabaseConnection> mConnection;
   const PrincipalInfo mPrincipalInfo;
   const Maybe<ContentParentId> mOptionalContentParentId;
@@ -9623,8 +9622,8 @@ void Database::MapBlob(const IPCBlob& aIPCBlob,
       static_cast<RemoteLazyInputStreamParent*>(
           stream.get_PRemoteLazyInputStreamParent());
 
-  MOZ_ASSERT(!mMappedBlobs.GetWeak(actor->ID()));
-  mMappedBlobs.InsertOrUpdate(actor->ID(), AsRefPtr(std::move(aFileInfo)));
+  MOZ_ASSERT(!mMappedBlobs.Contains(actor->ID()));
+  mMappedBlobs.InsertOrUpdate(actor->ID(), std::move(aFileInfo));
 
   RefPtr<UnmapBlobCallback> callback =
       new UnmapBlobCallback(SafeRefPtrFromThis());
@@ -9689,18 +9688,14 @@ SafeRefPtr<FileInfo> Database::GetBlob(const IPCBlob& aIPCBlob) {
 
   const nsID& id = ipcBlobInputStreamParams.get_RemoteLazyInputStreamRef().id();
 
-  RefPtr<FileInfo> fileInfo;
-  if (!mMappedBlobs.Get(id, getter_AddRefs(fileInfo))) {
-    return nullptr;
-  }
-
-  return SafeRefPtr{std::move(fileInfo)};
+  const auto fileInfo = mMappedBlobs.Lookup(id);
+  return fileInfo ? fileInfo->clonePtr() : nullptr;
 }
 
 void Database::UnmapBlob(const nsID& aID) {
   AssertIsOnBackgroundThread();
 
-  MOZ_ASSERT_IF(!mAllBlobsUnmapped, mMappedBlobs.GetWeak(aID));
+  MOZ_ASSERT_IF(!mAllBlobsUnmapped, mMappedBlobs.Contains(aID));
   mMappedBlobs.Remove(aID);
 }
 
