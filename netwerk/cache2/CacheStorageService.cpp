@@ -255,14 +255,14 @@ class WalkMemoryCacheRunnable : public WalkCacheRunnable {
 
       if (!CacheStorageService::IsRunning()) return NS_ERROR_NOT_INITIALIZED;
 
-      for (auto iterGlobal = sGlobalEntryTables->Iter(); !iterGlobal.Done();
-           iterGlobal.Next()) {
+      for (auto iterGlobal = sGlobalEntryTables->ConstIter();
+           !iterGlobal.Done(); iterGlobal.Next()) {
         CacheEntryTable* entries = iterGlobal.UserData();
         if (entries->Type() != CacheEntryTable::MEMORY_ONLY) {
           continue;
         }
 
-        for (auto iter = entries->Iter(); !iter.Done(); iter.Next()) {
+        for (auto iter = entries->ConstIter(); !iter.Done(); iter.Next()) {
           CacheEntry* entry = iter.UserData();
 
           MOZ_ASSERT(!entry->IsUsingDisk());
@@ -545,8 +545,7 @@ void CacheStorageService::DropPrivateBrowsingEntries() {
   if (mShutdown) return;
 
   nsTArray<nsCString> keys;
-  for (auto iter = sGlobalEntryTables->Iter(); !iter.Done(); iter.Next()) {
-    const nsACString& key = iter.Key();
+  for (const nsACString& key : sGlobalEntryTables->Keys()) {
     nsCOMPtr<nsILoadContextInfo> info = CacheFileUtils::ParseKey(key);
     if (info && info->IsPrivate()) {
       keys.AppendElement(key);
@@ -801,13 +800,9 @@ NS_IMETHODIMP CacheStorageService::Clear() {
 
   NS_ENSURE_TRUE(!mShutdown, NS_ERROR_NOT_INITIALIZED);
 
-  nsTArray<nsCString> keys;
-  for (auto iter = sGlobalEntryTables->Iter(); !iter.Done(); iter.Next()) {
-    keys.AppendElement(iter.Key());
-  }
-
-  for (uint32_t i = 0; i < keys.Length(); ++i) {
-    DoomStorageEntries(keys[i], nullptr, true, false, nullptr);
+  const auto keys = ToTArray<nsTArray<nsCString>>(sGlobalEntryTables->Keys());
+  for (const auto& key : keys) {
+    DoomStorageEntries(key, nullptr, true, false, nullptr);
   }
 
   // Passing null as a load info means to evict all contexts.
@@ -904,7 +899,7 @@ nsresult CacheStorageService::ClearOriginInternal(
 
       nsTArray<RefPtr<CacheEntry>> entriesToDelete;
 
-      for (auto entryIter = table->Iter(); !entryIter.Done();
+      for (auto entryIter = table->ConstIter(); !entryIter.Done();
            entryIter.Next()) {
         CacheEntry* entry = entryIter.UserData();
 
