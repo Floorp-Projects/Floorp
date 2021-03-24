@@ -17,9 +17,11 @@ import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.constructor.Constructor;
 import org.yaml.snakeyaml.error.YAMLException;
 
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -65,7 +67,11 @@ public class DebugConfig {
         } catch (final YAMLException e) {
             throw new ConfigException(e.getMessage());
         } finally {
-            IOUtils.safeStreamClose(fileInputStream);
+            try {
+                if (fileInputStream != null) {
+                    ((Closeable) fileInputStream).close();
+                }
+            } catch (final IOException e) { }
         }
     }
 

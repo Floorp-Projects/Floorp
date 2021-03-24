@@ -6,6 +6,7 @@ package org.mozilla.gecko.util;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -51,7 +52,11 @@ public final class INIParser extends INISection {
         } catch (final IOException e) {
             e.printStackTrace();
         } finally {
-            IOUtils.safeStreamClose(writer);
+            try {
+                if (writer != null) {
+                    ((Closeable) writer).close();
+                }
+            } catch (final IOException e) { }
         }
     }
 
