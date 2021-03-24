@@ -161,9 +161,16 @@ class nsTHashtableKeyRange {
   auto cbegin() const { return begin(); }
   auto cend() const { return end(); }
 
+  uint32_t Count() const { return mHashtable.EntryCount(); }
+
  private:
   const PLDHashTable& mHashtable;
 };
+
+template <typename EntryType>
+auto RangeSize(const ::detail::nsTHashtableKeyRange<EntryType>& aRange) {
+  return aRange.Count();
+}
 
 }  // namespace detail
 
