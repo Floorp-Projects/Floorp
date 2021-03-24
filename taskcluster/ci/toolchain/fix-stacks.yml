@@ -43,6 +43,19 @@ macosx64-fix-stacks:
             - linux64-rust-macos-1.47
             - macosx64-sdk-10.12
 
+macosx64-aarch64-fix-stacks:
+    treeherder:
+        symbol: TM(fix-stacks-arm64)
+    run:
+        arguments: ['aarch64-apple-darwin']
+        toolchain-artifact: public/build/fix-stacks.tar.xz
+    fetches:
+        toolchain:
+            - linux64-cctools-port-clang-11
+            - linux64-clang-11
+            - linux64-rust-macos-1.49
+            - macosx64-sdk-11.0
+
 win32-fix-stacks:
     treeherder:
         symbol: TW32(fix-stacks)

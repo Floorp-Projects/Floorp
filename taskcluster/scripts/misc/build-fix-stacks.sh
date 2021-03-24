@@ -18,7 +18,7 @@ x86_64-unknown-linux-gnu)
     export CFLAGS_x86_64_unknown_linux_gnu="--sysroot=$MOZ_FETCHES_DIR/sysroot"
     export RUSTFLAGS="-C linker=$CXX -C link-arg=--sysroot=$MOZ_FETCHES_DIR/sysroot"
     ;;
-x86_64-apple-darwin)
+*-apple-darwin)
     # Cross-compiling for Mac on Linux.
     EXE=
     COMPRESS_EXT=xz
@@ -28,8 +28,11 @@ x86_64-apple-darwin)
     export CXX=$MOZ_FETCHES_DIR/clang/bin/clang++
     export PATH="$MOZ_FETCHES_DIR/cctools/bin:$PATH"
     export RUSTFLAGS="-C linker=$GECKO_PATH/taskcluster/scripts/misc/osx-cross-linker"
-    export TARGET_CC="$CC -isysroot $MOZ_FETCHES_DIR/MacOSX10.12.sdk"
-    export TARGET_CXX="$CXX -isysroot $MOZ_FETCHES_DIR/MacOSX10.12.sdk"
+    if test "$TARGET" = "aarch64-apple-darwin"; then
+        export SDK_VER=11.0
+    fi
+    export TARGET_CC="$CC -isysroot $MOZ_FETCHES_DIR/MacOSX${SDK_VER:-10.12}.sdk"
+    export TARGET_CXX="$CXX -isysroot $MOZ_FETCHES_DIR/MacOSX${SDK_VER:-10.12}.sdk"
     ;;
 i686-pc-windows-msvc)
     # Cross-compiling for Windows on Linux.
