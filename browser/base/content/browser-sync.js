@@ -327,6 +327,7 @@ this.SyncedTabsPanelList = class SyncedTabsPanelList {
 
 var gSync = {
   _initialized: false,
+  _isCurrentlySyncing: false,
   // The last sync start time. Used to calculate the leftover animation time
   // once syncing completes (bug 1239042).
   _syncStartTime: 0,
@@ -540,7 +541,11 @@ var gSync = {
 
   onFxAPanelViewShowing(panelview) {
     let syncNowBtn = panelview.querySelector(".syncnow-label");
-    let l10nId = syncNowBtn.getAttribute("sync-now-data-l10n-id");
+    let l10nId = syncNowBtn.getAttribute(
+      this._isCurrentlySyncing
+        ? "syncing-data-l10n-id"
+        : "sync-now-data-l10n-id"
+    );
     syncNowBtn.setAttribute("data-l10n-id", l10nId);
 
     panelview.syncedTabsPanelList = new SyncedTabsPanelList(
@@ -1661,6 +1666,7 @@ var gSync = {
 
   // Functions called by observers
   onActivityStart() {
+    this._isCurrentlySyncing = true;
     clearTimeout(this._syncAnimationTimer);
     this._syncStartTime = Date.now();
 
@@ -1682,6 +1688,7 @@ var gSync = {
   },
 
   _onActivityStop() {
+    this._isCurrentlySyncing = false;
     if (!gBrowser) {
       return;
     }
