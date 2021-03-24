@@ -1665,9 +1665,8 @@ nsCompatibility nsPresContext::CompatibilityMode() const {
 }
 
 void nsPresContext::SetPaginatedScrolling(bool aPaginated) {
-  if (mType == eContext_PrintPreview || mType == eContext_PageLayout) {
+  if (mType == eContext_PrintPreview || mType == eContext_PageLayout)
     mCanPaginatedScroll = aPaginated;
-  }
 }
 
 void nsPresContext::SetPrintSettings(nsIPrintSettings* aPrintSettings) {
