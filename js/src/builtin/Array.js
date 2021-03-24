@@ -706,9 +706,6 @@ function ArrayIteratorNext() {
     result.value = index;
     return result;
 }
-// We want to inline this to do scalar replacement of the result object.
-_SetIsInlinableLargeFunction(ArrayIteratorNext);
-
 
 // Uncloned functions with `$` prefix are allocated as extended function
 // to store the original name in `_SetCanonicalName`.
