@@ -196,11 +196,6 @@ const DEFAULT_WELCOME_CONTENT = {
   ],
 };
 
-const DEFAULT_PROTON_WELCOME_CONTENT = {
-  ...DEFAULT_WELCOME_CONTENT,
-  id: "DEFAULT_ABOUTWELCOME_PROTON",
-};
-
 // Helper function to determine if Windows platform supports
 // automated pinning to taskbar.
 // See https://searchfox.org/mozilla-central/rev/002023eb262be9db3479142355e1675645d52d52/browser/components/shell/nsIWindowsShellService.idl#17
@@ -283,16 +278,6 @@ async function getAttributionContent() {
 
 const RULES = [
   {
-    description: "Proton Default AW content",
-    getDefaults(featureConfig) {
-      if (featureConfig?.design === "proton") {
-        return { ...DEFAULT_PROTON_WELCOME_CONTENT };
-      }
-
-      return null;
-    },
-  },
-  {
     description: "Windows pin to task bar screen",
     getDefaults() {
       if (
@@ -313,9 +298,9 @@ const RULES = [
   },
 ];
 
-function getDefaults(featureConfig) {
+function getDefaults() {
   for (const rule of RULES) {
-    const result = rule.getDefaults(featureConfig);
+    const result = rule.getDefaults();
     if (result) {
       return result;
     }
