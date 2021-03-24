@@ -24,6 +24,7 @@ import org.mozilla.geckoview.BuildConfig;
 import org.mozilla.geckoview.R;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -80,6 +81,9 @@ public class GeckoAppShell {
     // We have static members only.
     private GeckoAppShell() { }
 
+    // Name for app-scoped prefs
+    public static final String APP_PREFS_NAME = "GeckoApp";
+
     private static class GeckoCrashHandler extends CrashHandler {
 
         public GeckoCrashHandler(final Class<? extends Service> handlerService) {
@@ -105,7 +109,7 @@ public class GeckoAppShell {
             try {
                 if (exc instanceof OutOfMemoryError) {
                     final SharedPreferences prefs =
-                            GeckoSharedPrefs.forApp(getApplicationContext());
+                            getApplicationContext().getSharedPreferences(APP_PREFS_NAME, 0);
                     final SharedPreferences.Editor editor = prefs.edit();
                     editor.putBoolean(PREFS_OOM_EXCEPTION, true);
 
