@@ -156,6 +156,7 @@ already_AddRefed<WindowGlobalChild> WindowGlobalChild::CreateDisconnected(
 
   RefPtr<WindowGlobalChild> windowChild = new WindowGlobalChild(
       windowContext, aInit.principal(), aInit.documentURI());
+  windowContext->mIsInProcess = true;
   windowContext->mWindowGlobalChild = windowChild;
   return windowChild.forget();
 }
@@ -681,8 +682,9 @@ nsISupports* WindowGlobalChild::GetParentObject() {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
 }
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(WindowGlobalChild, mWindowGlobal,
-                                      mContainerFeaturePolicy, mWindowContext)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(WindowGlobalChild, mWindowGlobal,
+                                               mContainerFeaturePolicy,
+                                               mWindowContext)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WindowGlobalChild)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
