@@ -358,6 +358,7 @@ class WorkerFetchResolver final : public FetchDriverObserver {
 
     if (mSignalProxy) {
       mSignalProxy->Shutdown();
+      mSignalProxy = nullptr;
     }
 
     mWorkerRef = nullptr;
