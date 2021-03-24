@@ -1558,7 +1558,7 @@ nsresult mozInlineSpellChecker::ResumeCheck(
   if (!aStatus->mRange) return NS_OK;  // empty range, nothing to do
 
   bool doneChecking = true;
-  if (aStatus->mOp == mozInlineSpellStatus::eOpSelection)
+  if (aStatus->GetOperation() == mozInlineSpellStatus::eOpSelection)
     rv = DoSpellCheckSelection(wordUtil, spellCheckSelection);
   else
     rv = DoSpellCheck(wordUtil, spellCheckSelection, aStatus, &doneChecking);
