@@ -1036,10 +1036,10 @@ const gStoragePressureObserver = {
       // The firefox-used space >= 5GB, then guide users to about:preferences
       // to clear some data stored on firefox by websites.
       [msg] = await document.l10n.formatValues([
-        { id: "space-alert-over-5gb-message" },
+        { id: "space-alert-over-5gb-message2" },
       ]);
       buttons.push({
-        "l10n-id": "space-alert-over-5gb-pref-button",
+        "l10n-id": "space-alert-over-5gb-settings-button",
         callback(notificationBar, button) {
           // The advanced subpanes are only supported in the old organization, which will
           // be removed by bug 1349689.

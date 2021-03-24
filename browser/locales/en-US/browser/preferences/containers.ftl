@@ -7,8 +7,8 @@ containers-window-new =
     .style = width: 45em
 # Variables
 #   $name (String) - Name of the container
-containers-window-update =
-    .title = { $name } Container Preferences
+containers-window-update-settings =
+    .title = { $name } Container Settings
     .style = width: 45em
 
 containers-window-close =

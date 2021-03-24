@@ -14,7 +14,7 @@ function setTitle() {
 
   let winElem = document.documentElement;
   if (params.userContextId) {
-    document.l10n.setAttributes(winElem, "containers-window-update", {
+    document.l10n.setAttributes(winElem, "containers-window-update-settings", {
       name: params.identity.name,
     });
   } else {

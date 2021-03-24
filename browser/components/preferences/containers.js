@@ -71,7 +71,7 @@ let gContainersPane = {
         gContainersPane.onPreferenceCommand(event.originalTarget);
       });
       prefsButton.setAttribute("value", container.userContextId);
-      document.l10n.setAttributes(prefsButton, "containers-preferences-button");
+      document.l10n.setAttributes(prefsButton, "containers-settings-button");
       containerButtons.appendChild(prefsButton);
 
       let removeButton = document.createXULElement("button");
