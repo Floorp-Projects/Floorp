@@ -1917,9 +1917,9 @@ var gMainPane = {
 
   async reportUpdatePrefWriteError(error) {
     let [title, message] = await document.l10n.formatValues([
-      { id: "update-setting-write-failure-title2" },
+      { id: "update-setting-write-failure-title" },
       {
-        id: "update-setting-write-failure-message2",
+        id: "update-setting-write-failure-message",
         args: { path: error.path },
       },
     ]);
