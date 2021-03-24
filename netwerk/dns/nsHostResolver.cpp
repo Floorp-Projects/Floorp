@@ -629,6 +629,7 @@ TypeHostRecord::GetAllRecordsWithEchConfig(
 NS_IMETHODIMP
 TypeHostRecord::GetHasIPAddresses(bool* aResult) {
   NS_ENSURE_ARG(aResult);
+  MutexAutoLock lock(mResultsLock);
 
   if (!mResults.is<TypeRecordHTTPSSVC>()) {
     return NS_ERROR_NOT_AVAILABLE;
@@ -642,6 +643,7 @@ TypeHostRecord::GetHasIPAddresses(bool* aResult) {
 NS_IMETHODIMP
 TypeHostRecord::GetAllRecordsExcluded(bool* aResult) {
   NS_ENSURE_ARG(aResult);
+  MutexAutoLock lock(mResultsLock);
 
   if (!mResults.is<TypeRecordHTTPSSVC>()) {
     return NS_ERROR_NOT_AVAILABLE;
