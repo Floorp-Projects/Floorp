@@ -483,7 +483,6 @@ nsresult nsAppShell::Init() {
     obsServ->AddObserver(this, "profile-after-change", false);
     obsServ->AddObserver(this, "quit-application", false);
     obsServ->AddObserver(this, "quit-application-granted", false);
-    obsServ->AddObserver(this, "xpcom-shutdown", false);
 
     if (XRE_IsParentProcess()) {
       obsServ->AddObserver(this, "chrome-document-loaded", false);
@@ -500,23 +499,25 @@ nsresult nsAppShell::Init() {
 }
 
 NS_IMETHODIMP
+nsAppShell::Exit(void) {
+  {
+    // Release any thread waiting for a sync call to finish.
+    mozilla::MutexAutoLock shellLock(*sAppShellLock);
+    mSyncRunQuit = true;
+    mSyncRunFinished.NotifyAll();
+  }
+  // We need to ensure no observers stick around after XPCOM shuts down
+  // or we'll see crashes, as the app shell outlives XPConnect.
+  mObserversHash.Clear();
+  return nsBaseAppShell::Exit();
+}
+
+NS_IMETHODIMP
 nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
                     const char16_t* aData) {
   bool removeObserver = false;
 
-  if (!strcmp(aTopic, "xpcom-shutdown")) {
-    {
-      // Release any thread waiting for a sync call to finish.
-      mozilla::MutexAutoLock shellLock(*sAppShellLock);
-      mSyncRunQuit = true;
-      mSyncRunFinished.NotifyAll();
-    }
-    // We need to ensure no observers stick around after XPCOM shuts down
-    // or we'll see crashes, as the app shell outlives XPConnect.
-    mObserversHash.Clear();
-    return nsBaseAppShell::Observe(aSubject, aTopic, aData);
-
-  } else if (!strcmp(aTopic, "browser-delayed-startup-finished")) {
+  if (!strcmp(aTopic, "browser-delayed-startup-finished")) {
     NS_CreateServicesFromCategory("browser-delayed-startup-finished", nullptr,
                                   "browser-delayed-startup-finished");
   } else if (!strcmp(aTopic, "geckoview-startup-complete")) {
@@ -595,6 +596,8 @@ nsAppShell::Observe(nsISupports* aSubject, const char* aTopic,
     nsCOMPtr<nsIDocShell> docShell = do_QueryInterface(aSubject);
     widget::GeckoEditableSupport::SetOnBrowserChild(
         dom::BrowserChild::GetFrom(docShell));
+  } else {
+    return nsBaseAppShell::Observe(aSubject, aTopic, aData);
   }
 
   if (removeObserver) {

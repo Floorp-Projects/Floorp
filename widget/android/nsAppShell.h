@@ -145,6 +145,7 @@ class nsAppShell : public nsBaseAppShell {
 
   virtual ~nsAppShell();
 
+  NS_IMETHOD Exit() override;
   nsresult AddObserver(const nsAString& aObserverKey, nsIObserver* aObserver);
 
   class NativeCallbackEvent : public Event {
