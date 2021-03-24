@@ -628,7 +628,11 @@ if (Services.prefs.getBoolPref("identity.fxaccounts.enabled")) {
       }
 
       let syncNowBtn = panelview.querySelector(".syncnow-label");
-      let l10nId = syncNowBtn.getAttribute("sync-now-data-l10n-id");
+      let l10nId = syncNowBtn.getAttribute(
+        panelview.ownerGlobal.gSync._isCurrentlySyncing
+          ? "syncing-data-l10n-id"
+          : "sync-now-data-l10n-id"
+      );
       syncNowBtn.setAttribute("data-l10n-id", l10nId);
 
       let SyncedTabsPanelList = doc.defaultView.SyncedTabsPanelList;
