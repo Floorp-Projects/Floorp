@@ -17,7 +17,6 @@
 #include "nsPresContext.h"
 #include "nsPresContextInlines.h"  // XXX Shouldn't be included by header though
 #include "nsStringFwd.h"
-#include "nsTHashSet.h"
 
 class nsAttrValue;
 class nsCSSFrameConstructor;
@@ -246,7 +245,7 @@ class RestyleManager {
     // If ProcessRestyledFrames is tracking frames which have been
     // destroyed (to avoid re-visiting them), add this one to its set.
     if (mDestroyedFrames) {
-      mDestroyedFrames->Insert(aFrame);
+      mDestroyedFrames->PutEntry(aFrame);
     }
   }
 
@@ -516,7 +515,8 @@ class RestyleManager {
   // Used to keep track of frames that have been destroyed during
   // ProcessRestyledFrames, so we don't try to touch them again even if
   // they're referenced again later in the changelist.
-  mozilla::UniquePtr<nsTHashSet<const nsIFrame*>> mDestroyedFrames;
+  mozilla::UniquePtr<nsTHashtable<nsPtrHashKey<const nsIFrame>>>
+      mDestroyedFrames;
 
  protected:
   // True if we're in the middle of a nsRefreshDriver refresh

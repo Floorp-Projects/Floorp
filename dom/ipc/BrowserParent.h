@@ -214,9 +214,9 @@ class BrowserParent final : public PBrowserParent,
   template <typename Callback>
   void VisitAllDescendants(Callback aCallback) {
     const auto& browserBridges = ManagedPBrowserBridgeParent();
-    for (const auto& key : browserBridges) {
+    for (auto iter = browserBridges.ConstIter(); !iter.Done(); iter.Next()) {
       BrowserBridgeParent* browserBridge =
-          static_cast<BrowserBridgeParent*>(key);
+          static_cast<BrowserBridgeParent*>(iter.Get()->GetKey());
       BrowserParent* browserParent = browserBridge->GetBrowserParent();
 
       aCallback(browserParent);
@@ -230,9 +230,9 @@ class BrowserParent final : public PBrowserParent,
   template <typename Callback>
   void VisitChildren(Callback aCallback) {
     const auto& browserBridges = ManagedPBrowserBridgeParent();
-    for (const auto& key : browserBridges) {
+    for (auto iter = browserBridges.ConstIter(); !iter.Done(); iter.Next()) {
       BrowserBridgeParent* browserBridge =
-          static_cast<BrowserBridgeParent*>(key);
+          static_cast<BrowserBridgeParent*>(iter.Get()->GetKey());
       aCallback(browserBridge);
     }
   }

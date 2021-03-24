@@ -8,7 +8,7 @@
 #include "nsAtom.h"
 #include "nsHashKeys.h"
 #include "nsIPrincipal.h"
-#include "nsTHashSet.h"
+#include "nsTHashtable.h"
 
 class nsIContent;
 class nsINode;
@@ -102,10 +102,10 @@ class MOZ_STACK_CLASS nsTreeSanitizer {
   /**
    * We have various tables of static atoms for elements and attributes.
    */
-  class AtomsTable : public nsTHashSet<const nsStaticAtom*> {
+  class AtomsTable : public nsTHashtable<nsPtrHashKey<const nsStaticAtom>> {
    public:
     explicit AtomsTable(uint32_t aLength)
-        : nsTHashSet<const nsStaticAtom*>(aLength) {}
+        : nsTHashtable<nsPtrHashKey<const nsStaticAtom>>(aLength) {}
 
     bool Contains(nsAtom* aAtom) {
       // Because this table only contains static atoms, if aAtom isn't

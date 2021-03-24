@@ -92,7 +92,7 @@
 #include "nsRefPtrHashtable.h"
 #include "nsString.h"
 #include "nsTArray.h"
-#include "nsTHashSet.h"
+#include "nsTHashtable.h"
 #include "nsTLiteralString.h"
 #include "nsTObserverArray.h"
 #include "nsThreadUtils.h"
@@ -1369,13 +1369,13 @@ class Document : public nsINode,
    * is removed.
    */
   void ScheduleSVGForPresAttrEvaluation(SVGElement* aSVG) {
-    mLazySVGPresElements.Insert(aSVG);
+    mLazySVGPresElements.PutEntry(aSVG);
   }
 
   // Unschedule an element scheduled by ScheduleFrameRequestCallback (e.g. for
   // when it is destroyed)
   void UnscheduleSVGForPresAttrEvaluation(SVGElement* aSVG) {
-    mLazySVGPresElements.Remove(aSVG);
+    mLazySVGPresElements.RemoveEntry(aSVG);
   }
 
   // Resolve all SVG pres attrs scheduled in ScheduleSVGForPresAttrEvaluation
@@ -2431,11 +2431,11 @@ class Document : public nsINode,
   void AddStyleRelevantLink(Link* aLink) {
     NS_ASSERTION(aLink, "Passing in a null link.  Expect crashes RSN!");
 #ifdef DEBUG
-    NS_ASSERTION(!mStyledLinks.Contains(aLink),
-                 "Document already knows about this Link!");
+    nsPtrHashKey<Link>* entry = mStyledLinks.GetEntry(aLink);
+    NS_ASSERTION(!entry, "Document already knows about this Link!");
     mStyledLinksCleared = false;
 #endif
-    mStyledLinks.Insert(aLink);
+    mStyledLinks.PutEntry(aLink);
   }
 
   /**
@@ -2447,11 +2447,11 @@ class Document : public nsINode,
   void ForgetLink(Link* aLink) {
     NS_ASSERTION(aLink, "Passing in a null link.  Expect crashes RSN!");
 #ifdef DEBUG
-    bool linkContained = mStyledLinks.Contains(aLink);
-    NS_ASSERTION(linkContained || mStyledLinksCleared,
+    nsPtrHashKey<Link>* entry = mStyledLinks.GetEntry(aLink);
+    NS_ASSERTION(entry || mStyledLinksCleared,
                  "Document knows nothing about this Link!");
 #endif
-    mStyledLinks.Remove(aLink);
+    mStyledLinks.RemoveEntry(aLink);
   }
 
   // Refreshes the hrefs of all the links in the document.
@@ -3100,14 +3100,14 @@ class Document : public nsINode,
   // added to the tree.
   void AddPlugin(nsIObjectLoadingContent* aPlugin) {
     MOZ_ASSERT(aPlugin);
-    mPlugins.Insert(aPlugin);
+    mPlugins.PutEntry(aPlugin);
   }
 
   // RemovePlugin removes a plugin-related element to mPlugins when the
   // element is removed from the tree.
   void RemovePlugin(nsIObjectLoadingContent* aPlugin) {
     MOZ_ASSERT(aPlugin);
-    mPlugins.Remove(aPlugin);
+    mPlugins.RemoveEntry(aPlugin);
   }
 
   // GetPlugins returns the plugin-related elements from
@@ -3118,33 +3118,33 @@ class Document : public nsINode,
   // added to the tree.
   void AddResponsiveContent(HTMLImageElement* aContent) {
     MOZ_ASSERT(aContent);
-    mResponsiveContent.Insert(aContent);
+    mResponsiveContent.PutEntry(aContent);
   }
 
   // Removes an element from mResponsiveContent when the element is
   // removed from the tree.
   void RemoveResponsiveContent(HTMLImageElement* aContent) {
     MOZ_ASSERT(aContent);
-    mResponsiveContent.Remove(aContent);
+    mResponsiveContent.RemoveEntry(aContent);
   }
 
   void ScheduleSVGUseElementShadowTreeUpdate(SVGUseElement&);
   void UnscheduleSVGUseElementShadowTreeUpdate(SVGUseElement& aElement) {
-    mSVGUseElementsNeedingShadowTreeUpdate.Remove(&aElement);
+    mSVGUseElementsNeedingShadowTreeUpdate.RemoveEntry(&aElement);
   }
 
   bool SVGUseElementNeedsShadowTreeUpdate(SVGUseElement& aElement) const {
-    return mSVGUseElementsNeedingShadowTreeUpdate.Contains(&aElement);
+    return mSVGUseElementsNeedingShadowTreeUpdate.GetEntry(&aElement);
   }
 
-  using ShadowRootSet = nsTHashSet<ShadowRoot*>;
+  using ShadowRootSet = nsTHashtable<nsPtrHashKey<ShadowRoot>>;
 
   void AddComposedDocShadowRoot(ShadowRoot& aShadowRoot) {
-    mComposedShadowRoots.Insert(&aShadowRoot);
+    mComposedShadowRoots.PutEntry(&aShadowRoot);
   }
 
   void RemoveComposedDocShadowRoot(ShadowRoot& aShadowRoot) {
-    mComposedShadowRoots.Remove(&aShadowRoot);
+    mComposedShadowRoots.RemoveEntry(&aShadowRoot);
   }
 
   // If you're considering using this, you probably want to use
@@ -3710,11 +3710,11 @@ class Document : public nsINode,
   void AddIntersectionObserver(DOMIntersectionObserver* aObserver) {
     MOZ_ASSERT(!mIntersectionObservers.Contains(aObserver),
                "Intersection observer already in the list");
-    mIntersectionObservers.Insert(aObserver);
+    mIntersectionObservers.PutEntry(aObserver);
   }
 
   void RemoveIntersectionObserver(DOMIntersectionObserver* aObserver) {
-    mIntersectionObservers.Remove(aObserver);
+    mIntersectionObservers.RemoveEntry(aObserver);
   }
 
   bool HasIntersectionObservers() const {
@@ -4414,7 +4414,7 @@ class Document : public nsINode,
   // See ShadowRoot::Bind and ShadowRoot::Unbind.
   ShadowRootSet mComposedShadowRoots;
 
-  using SVGUseElementSet = nsTHashSet<SVGUseElement*>;
+  using SVGUseElementSet = nsTHashtable<nsPtrHashKey<SVGUseElement>>;
 
   // The set of <svg:use> elements that need a shadow tree reclone because the
   // tree they map to has changed.
@@ -4426,10 +4426,10 @@ class Document : public nsINode,
   //
   // These are non-owning pointers, the elements are responsible for removing
   // themselves when they go away.
-  UniquePtr<nsTHashSet<nsISupports*>> mActivityObservers;
+  UniquePtr<nsTHashtable<nsPtrHashKey<nsISupports>>> mActivityObservers;
 
   // A hashtable of styled links keyed by address pointer.
-  nsTHashSet<Link*> mStyledLinks;
+  nsTHashtable<nsPtrHashKey<Link>> mStyledLinks;
 #ifdef DEBUG
   // Indicates whether mStyledLinks was cleared or not.  This is used to track
   // state so we can provide useful assertions to consumers of ForgetLink and
@@ -5029,7 +5029,7 @@ class Document : public nsINode,
   // The set of all the tracking script URLs.  URLs are added to this set by
   // calling NoteScriptTrackingStatus().  Currently we assume that a URL not
   // existing in the set means the corresponding script isn't a tracking script.
-  nsTHashSet<nsCString> mTrackingScripts;
+  nsTHashtable<nsCStringHashKey> mTrackingScripts;
 
   // Pointer to our parser if we're currently in the process of being
   // parsed into.
@@ -5095,7 +5095,7 @@ class Document : public nsINode,
   nsWeakPtr mScopeObject;
 
   // Array of intersection observers
-  nsTHashSet<DOMIntersectionObserver*> mIntersectionObservers;
+  nsTHashtable<nsPtrHashKey<DOMIntersectionObserver>> mIntersectionObservers;
 
   RefPtr<DOMIntersectionObserver> mLazyLoadImageObserver;
   // Used to measure how effective the lazyload thresholds are.
@@ -5113,10 +5113,10 @@ class Document : public nsINode,
   RefPtr<nsContentList> mImageMaps;
 
   // A set of responsive images keyed by address pointer.
-  nsTHashSet<HTMLImageElement*> mResponsiveContent;
+  nsTHashtable<nsPtrHashKey<HTMLImageElement>> mResponsiveContent;
 
   // Tracking for plugins in the document.
-  nsTHashSet<nsIObjectLoadingContent*> mPlugins;
+  nsTHashtable<nsPtrHashKey<nsIObjectLoadingContent>> mPlugins;
 
   RefPtr<DocumentTimeline> mDocumentTimeline;
   LinkedList<DocumentTimeline> mTimelines;
@@ -5182,9 +5182,9 @@ class Document : public nsINode,
   // We lazily calculate declaration blocks for SVG elements with mapped
   // attributes in Servo mode. This list contains all elements which need lazy
   // resolution.
-  nsTHashSet<SVGElement*> mLazySVGPresElements;
+  nsTHashtable<nsPtrHashKey<SVGElement>> mLazySVGPresElements;
 
-  nsTHashSet<RefPtr<nsAtom>> mLanguagesUsed;
+  nsTHashtable<nsRefPtrHashKey<nsAtom>> mLanguagesUsed;
 
   // TODO(emilio): Is this hot enough to warrant to be cached?
   RefPtr<nsAtom> mLanguageFromCharset;

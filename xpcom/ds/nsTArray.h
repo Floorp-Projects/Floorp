@@ -3170,26 +3170,20 @@ class nsTArrayBackInserter
     : public std::iterator<std::output_iterator_tag, void, void, void, void> {
   ArrayT* mArray;
 
-  class Proxy {
-    ArrayT& mArray;
-
-   public:
-    explicit Proxy(ArrayT& aArray) : mArray{aArray} {}
-
-    template <typename E2>
-    void operator=(E2&& aValue) {
-      mArray.AppendElement(std::forward<E2>(aValue));
-    }
-  };
-
  public:
   explicit nsTArrayBackInserter(ArrayT& aArray) : mArray{&aArray} {}
 
-  // Return a proxy so that nsTArrayBackInserter has the default special member
-  // functions, and the operator= template is defined in Proxy rather than this
-  // class (which otherwise breaks with recent MS STL versions).
-  // See also Bug 1331137, comment 11.
-  Proxy operator*() { return Proxy(*mArray); }
+  nsTArrayBackInserter& operator=(const E& aValue) {
+    mArray->AppendElement(aValue);
+    return *this;
+  }
+
+  nsTArrayBackInserter& operator=(E&& aValue) {
+    mArray->AppendElement(std::move(aValue));
+    return *this;
+  }
+
+  nsTArrayBackInserter& operator*() { return *this; }
 
   nsTArrayBackInserter& operator++() { return *this; }
   nsTArrayBackInserter& operator++(int) { return *this; }
@@ -3246,57 +3240,6 @@ class nsTArrayView {
   nsTArray<element_type> mArray;
   const Span<element_type> mSpan;
 };
-
-template <typename Range, typename = std::enable_if_t<std::is_same_v<
-                              typename std::iterator_traits<
-                                  typename Range::iterator>::iterator_category,
-                              std::random_access_iterator_tag>>>
-auto RangeSize(const Range& aRange) {
-  // See https://en.cppreference.com/w/cpp/iterator/begin, section 'User-defined
-  // overloads'.
-  using std::begin;
-  using std::end;
-
-  return std::distance(begin(aRange), end(aRange));
-}
-
-/**
- * Materialize a range as a nsTArray (or a compatible variant, like AutoTArray)
- * of an explicitly specified type. The array value type must be implicitly
- * convertible from the range's value type.
- */
-template <typename Array, typename Range>
-auto ToTArray(const Range& aRange) {
-  using std::begin;
-  using std::end;
-
-  Array res;
-  res.SetCapacity(RangeSize(aRange));
-  std::copy(begin(aRange), end(aRange), MakeBackInserter(res));
-  return res;
-}
-
-/**
- * Materialize a range as a nsTArray of its (decayed) value type.
- */
-template <typename Range>
-auto ToArray(const Range& aRange) {
-  return ToTArray<nsTArray<std::decay_t<
-      typename std::iterator_traits<typename Range::iterator>::value_type>>>(
-      aRange);
-}
-
-/**
- * Appends all elements from a range to an array.
- */
-template <typename Array, typename Range>
-void AppendToArray(Array& aArray, const Range& aRange) {
-  using std::begin;
-  using std::end;
-
-  aArray.SetCapacity(aArray.Length() + RangeSize(aRange));
-  std::copy(begin(aRange), end(aRange), MakeBackInserter(aArray));
-}
 
 }  // namespace mozilla
 

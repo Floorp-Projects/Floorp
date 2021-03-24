@@ -26,7 +26,7 @@
 #include "nsICryptoHash.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/WeakPtr.h"
-#include "nsTHashSet.h"
+#include "nsTHashtable.h"
 #include "nsHashKeys.h"
 
 namespace mozilla {
@@ -352,7 +352,7 @@ class nsOfflineCacheUpdateService final : public nsIOfflineCacheUpdateService,
 
   static nsresult OfflineAppPinnedForURI(nsIURI* aDocumentURI, bool* aPinned);
 
-  static nsTHashSet<nsCString>* AllowedDomains();
+  static nsTHashtable<nsCStringHashKey>* AllowedDomains();
 
  private:
   ~nsOfflineCacheUpdateService();
@@ -360,7 +360,7 @@ class nsOfflineCacheUpdateService final : public nsIOfflineCacheUpdateService,
   nsresult ProcessNextUpdate();
 
   nsTArray<RefPtr<nsOfflineCacheUpdate> > mUpdates;
-  static nsTHashSet<nsCString>* mAllowedDomains;
+  static nsTHashtable<nsCStringHashKey>* mAllowedDomains;
 
   bool mDisabled;
   bool mUpdateRunning;

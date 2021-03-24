@@ -354,10 +354,10 @@ nsresult nsFloatManager::RemoveTrailingRegions(nsIFrame* aFrameList) {
   // floats given were at the end of our list, so we could just search
   // for the head of aFrameList.  (But we can't;
   // layout/reftests/bugs/421710-1.html crashes.)
-  nsTHashSet<nsIFrame*> frameSet(1);
+  nsTHashtable<nsPtrHashKey<nsIFrame> > frameSet(1);
 
   for (nsIFrame* f = aFrameList; f; f = f->GetNextSibling()) {
-    frameSet.Insert(f);
+    frameSet.PutEntry(f);
   }
 
   uint32_t newLength = mFloats.Length();

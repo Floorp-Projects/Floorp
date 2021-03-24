@@ -351,6 +351,8 @@ class nsRange final : public mozilla::dom::AbstractRange,
    */
   MOZ_CAN_RUN_SCRIPT void NotifySelectionListenersAfterRangeSet();
 
+  typedef nsTHashtable<nsPtrHashKey<nsRange>> RangeHashTable;
+
  protected:
   /**
    * https://dom.spec.whatwg.org/#concept-tree-inclusive-ancestor

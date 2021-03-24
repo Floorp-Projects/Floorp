@@ -19,7 +19,6 @@
 #include "nsTreeStyleCache.h"
 #include "nsTreeColumns.h"
 #include "nsTHashMap.h"
-#include "nsTHashSet.h"
 #include "imgIRequest.h"
 #include "imgINotificationObserver.h"
 #include "nsScrollbarFrame.h"
@@ -607,9 +606,9 @@ class nsTreeBodyFrame final : public nsLeafBoxFrame,
   // overflow/underflow event handlers
   bool mCheckingOverflow;
 
-  // Hash set to keep track of which listeners we created and thus
+  // Hash table to keep track of which listeners we created and thus
   // have pointers to us.
-  nsTHashSet<nsTreeImageListener*> mCreatedListeners;
+  nsTHashtable<nsPtrHashKey<nsTreeImageListener> > mCreatedListeners;
 
 };  // class nsTreeBodyFrame
 

@@ -12,7 +12,6 @@
 #include "mozilla/Keyframe.h"
 #include "mozilla/MemoryReporting.h"
 #include "nsISupportsImpl.h"
-#include "nsTHashSet.h"
 
 struct nsStyleDisplay;
 class ServoCSSAnimationBuilder;
@@ -88,7 +87,7 @@ class nsAnimationManager final
   // It may contain names which are no longer referenced, but it should always
   // contain names which are currently referenced, so that it is usable for
   // style invalidation.
-  nsTHashSet<RefPtr<nsAtom>> mMaybeReferencedAnimations;
+  nsTHashtable<nsRefPtrHashKey<nsAtom>> mMaybeReferencedAnimations;
 
   void DoUpdateAnimations(const mozilla::NonOwningAnimationTarget& aTarget,
                           const nsStyleDisplay& aStyleDisplay,

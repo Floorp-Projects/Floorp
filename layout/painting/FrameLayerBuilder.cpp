@@ -77,7 +77,7 @@ namespace mozilla {
 
 class PaintedDisplayItemLayerUserData;
 
-static nsTHashSet<DisplayItemData*>* sAliveDisplayItemDatas;
+static nsTHashtable<nsPtrHashKey<DisplayItemData>>* sAliveDisplayItemDatas;
 
 // DO NOT MODIFY THE ARRAY RETURNED BY THIS FUNCTION.
 // It might be the static empty array.
@@ -288,10 +288,10 @@ DisplayItemData::DisplayItemData(LayerManagerData* aParent, uint32_t aKey,
   MOZ_COUNT_CTOR(DisplayItemData);
 
   if (!sAliveDisplayItemDatas) {
-    sAliveDisplayItemDatas = new nsTHashSet<DisplayItemData*>();
+    sAliveDisplayItemDatas = new nsTHashtable<nsPtrHashKey<DisplayItemData>>();
   }
   MOZ_RELEASE_ASSERT(!sAliveDisplayItemDatas->Contains(this));
-  sAliveDisplayItemDatas->Insert(this);
+  sAliveDisplayItemDatas->PutEntry(this);
 
   MOZ_RELEASE_ASSERT(mLayer);
   if (aFrame) {
@@ -443,8 +443,11 @@ DisplayItemData::~DisplayItemData() {
   }
 
   MOZ_RELEASE_ASSERT(sAliveDisplayItemDatas);
-  const bool removed = sAliveDisplayItemDatas->EnsureRemoved(this);
-  MOZ_RELEASE_ASSERT(removed);
+  nsPtrHashKey<mozilla::DisplayItemData>* entry =
+      sAliveDisplayItemDatas->GetEntry(this);
+  MOZ_RELEASE_ASSERT(entry);
+
+  sAliveDisplayItemDatas->RemoveEntry(entry);
 
   if (sAliveDisplayItemDatas->Count() == 0) {
     delete sAliveDisplayItemDatas;
@@ -1666,7 +1669,8 @@ class ContainerState {
    */
   typedef AutoTArray<NewLayerEntry, 1> AutoLayersArray;
   AutoLayersArray mNewChildLayers;
-  nsTHashSet<RefPtr<PaintedLayer>> mPaintedLayersAvailableForRecycling;
+  nsTHashtable<nsRefPtrHashKey<PaintedLayer>>
+      mPaintedLayersAvailableForRecycling;
   nscoord mAppUnitsPerDevPixel;
   bool mSnappingEnabled;
 
@@ -5597,7 +5601,7 @@ void ContainerState::CollectOldLayers() {
                  "Mask layers should not be part of the layer tree.");
     if (layer->HasUserData(&gPaintedDisplayItemLayerUserData)) {
       NS_ASSERTION(layer->AsPaintedLayer(), "Wrong layer type");
-      mPaintedLayersAvailableForRecycling.Insert(
+      mPaintedLayersAvailableForRecycling.PutEntry(
           static_cast<PaintedLayer*>(layer));
     }
 

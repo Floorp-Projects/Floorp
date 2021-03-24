@@ -738,8 +738,8 @@ void PresShell::AddWeakFrame(WeakFrame* aWeakFrame) {
   if (aWeakFrame->GetFrame()) {
     aWeakFrame->GetFrame()->AddStateBits(NS_FRAME_EXTERNAL_REFERENCE);
   }
-  MOZ_ASSERT(!mWeakFrames.Contains(aWeakFrame));
-  mWeakFrames.Insert(aWeakFrame);
+  MOZ_ASSERT(!mWeakFrames.GetEntry(aWeakFrame));
+  mWeakFrames.PutEntry(aWeakFrame);
 }
 
 void PresShell::RemoveAutoWeakFrame(AutoWeakFrame* aWeakFrame) {
@@ -757,8 +757,8 @@ void PresShell::RemoveAutoWeakFrame(AutoWeakFrame* aWeakFrame) {
 }
 
 void PresShell::RemoveWeakFrame(WeakFrame* aWeakFrame) {
-  MOZ_ASSERT(mWeakFrames.Contains(aWeakFrame));
-  mWeakFrames.Remove(aWeakFrame);
+  MOZ_ASSERT(mWeakFrames.GetEntry(aWeakFrame));
+  mWeakFrames.RemoveEntry(aWeakFrame);
 }
 
 already_AddRefed<nsFrameSelection> PresShell::FrameSelection() {
@@ -1458,8 +1458,11 @@ void PresShell::Destroy() {
   while (mAutoWeakFrames) {
     mAutoWeakFrames->Clear(this);
   }
-  const nsTArray<WeakFrame*> weakFrames = ToArray(mWeakFrames);
-  for (WeakFrame* weakFrame : weakFrames) {
+  nsTArray<WeakFrame*> toRemove(mWeakFrames.Count());
+  for (auto iter = mWeakFrames.ConstIter(); !iter.Done(); iter.Next()) {
+    toRemove.AppendElement(iter.Get()->GetKey());
+  }
+  for (WeakFrame* weakFrame : toRemove) {
     weakFrame->Clear(this);
   }
 
@@ -2239,12 +2242,12 @@ void PresShell::NotifyDestroyingFrame(nsIFrame* aFrame) {
       }
     }
 
-    mFramesToDirty.Remove(aFrame);
+    mFramesToDirty.RemoveEntry(aFrame);
 
     nsIScrollableFrame* scrollableFrame = do_QueryFrame(aFrame);
     if (scrollableFrame) {
-      mPendingScrollAnchorSelection.Remove(scrollableFrame);
-      mPendingScrollAnchorAdjustment.Remove(scrollableFrame);
+      mPendingScrollAnchorSelection.RemoveEntry(scrollableFrame);
+      mPendingScrollAnchorAdjustment.RemoveEntry(scrollableFrame);
     }
   }
 }
@@ -2666,11 +2669,13 @@ void PresShell::VerifyHasDirtyRootAncestor(nsIFrame* aFrame) {
 
 void PresShell::PostPendingScrollAnchorSelection(
     mozilla::layout::ScrollAnchorContainer* aContainer) {
-  mPendingScrollAnchorSelection.Insert(aContainer->ScrollableFrame());
+  mPendingScrollAnchorSelection.PutEntry(aContainer->ScrollableFrame());
 }
 
 void PresShell::FlushPendingScrollAnchorSelections() {
-  for (nsIScrollableFrame* scroll : mPendingScrollAnchorSelection) {
+  for (auto iter = mPendingScrollAnchorSelection.ConstIter(); !iter.Done();
+       iter.Next()) {
+    nsIScrollableFrame* scroll = iter.Get()->GetKey();
     scroll->Anchor()->SelectAnchor();
   }
   mPendingScrollAnchorSelection.Clear();
@@ -2678,11 +2683,13 @@ void PresShell::FlushPendingScrollAnchorSelections() {
 
 void PresShell::PostPendingScrollAnchorAdjustment(
     ScrollAnchorContainer* aContainer) {
-  mPendingScrollAnchorAdjustment.Insert(aContainer->ScrollableFrame());
+  mPendingScrollAnchorAdjustment.PutEntry(aContainer->ScrollableFrame());
 }
 
 void PresShell::FlushPendingScrollAnchorAdjustments() {
-  for (nsIScrollableFrame* scroll : mPendingScrollAnchorAdjustment) {
+  for (auto iter = mPendingScrollAnchorAdjustment.ConstIter(); !iter.Done();
+       iter.Next()) {
+    nsIScrollableFrame* scroll = iter.Get()->GetKey();
     scroll->Anchor()->ApplyAdjustments();
   }
   mPendingScrollAnchorAdjustment.Clear();
@@ -2872,7 +2879,7 @@ void PresShell::FrameNeedsToContinueReflow(nsIFrame* aFrame) {
   NS_ASSERTION(aFrame->HasAnyStateBits(NS_FRAME_IN_REFLOW),
                "Frame passed in not in reflow?");
 
-  mFramesToDirty.Insert(aFrame);
+  mFramesToDirty.PutEntry(aFrame);
 }
 
 already_AddRefed<nsIContent> PresShell::GetContentForScrolling() const {
@@ -3069,7 +3076,8 @@ void PresShell::ClearFrameRefs(nsIFrame* aFrame) {
   }
 
   AutoTArray<WeakFrame*, 4> toRemove;
-  for (WeakFrame* weakFrame : mWeakFrames) {
+  for (auto iter = mWeakFrames.ConstIter(); !iter.Done(); iter.Next()) {
+    WeakFrame* weakFrame = iter.Get()->GetKey();
     if (weakFrame->GetFrame() == aFrame) {
       toRemove.AppendElement(weakFrame);
     }
@@ -5823,7 +5831,8 @@ void PresShell::MarkFramesInListApproximatelyVisible(
 void PresShell::DecApproximateVisibleCount(
     VisibleFrames& aFrames, const Maybe<OnNonvisible>& aNonvisibleAction
     /* = Nothing() */) {
-  for (nsIFrame* frame : aFrames) {
+  for (auto iter = aFrames.ConstIter(); !iter.Done(); iter.Next()) {
+    nsIFrame* frame = iter.Get()->GetKey();
     // Decrement the frame's visible count if we're still tracking its
     // visibility. (We may not be, if the frame disabled visibility tracking
     // after we added it to the visible frames list.)
@@ -9649,9 +9658,11 @@ bool PresShell::DoReflow(nsIFrame* target, bool aInterruptible,
   bool interrupted = mPresContext->HasPendingInterrupt();
   if (interrupted) {
     // Make sure target gets reflowed again.
-    for (const auto& key : mFramesToDirty) {
+    for (auto iter = mFramesToDirty.ConstIter(); !iter.Done(); iter.Next()) {
       // Mark frames dirty until target frame.
-      for (nsIFrame* f = key; f && !f->IsSubtreeDirty(); f = f->GetParent()) {
+      const nsPtrHashKey<nsIFrame>* p = iter.Get();
+      for (nsIFrame* f = p->GetKey(); f && !f->IsSubtreeDirty();
+           f = f->GetParent()) {
         f->AddStateBits(NS_FRAME_HAS_DIRTY_CHILDREN);
         if (f->IsFlexItem()) {
           nsFlexContainerFrame::MarkCachedFlexMeasurementsDirty(f);
@@ -10988,8 +10999,10 @@ nsresult PresShell::UpdateImageLockingState() {
   if (locked) {
     // Request decodes for visible image frames; we want to start decoding as
     // quickly as possible when we get foregrounded to minimize flashing.
-    for (const auto& key : mApproximatelyVisibleFrames) {
-      if (nsImageFrame* imageFrame = do_QueryFrame(key)) {
+    for (auto iter = mApproximatelyVisibleFrames.ConstIter(); !iter.Done();
+         iter.Next()) {
+      nsImageFrame* imageFrame = do_QueryFrame(iter.Get()->GetKey());
+      if (imageFrame) {
         imageFrame->MaybeDecodeForPredictedSize();
       }
     }

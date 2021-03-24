@@ -80,7 +80,6 @@
 #include "mozilla/gfx/MatrixFwd.h"
 #include "nsDisplayItemTypes.h"
 #include "nsPresContext.h"
-#include "nsTHashSet.h"
 
 #ifdef ACCESSIBILITY
 #  include "mozilla/a11y/AccTypes.h"
@@ -5444,7 +5443,8 @@ class nsIFrame : public nsQueryFrame {
                     ListFlags aFlags = ListFlags()) const;
 
   void ListTextRuns(FILE* out = stderr) const;
-  virtual void ListTextRuns(FILE* out, nsTHashSet<const void*>& aSeen) const;
+  virtual void ListTextRuns(FILE* out,
+                            nsTHashtable<nsVoidPtrHashKey>& aSeen) const;
 
   virtual void ListWithMatchedRules(FILE* out = stderr,
                                     const char* aPrefix = "") const;

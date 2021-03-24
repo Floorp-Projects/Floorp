@@ -325,7 +325,9 @@ bool StorageDBThread::ShouldPreloadOrigin(const nsACString& aOrigin) {
 
 void StorageDBThread::GetOriginsHavingData(nsTArray<nsCString>* aOrigins) {
   MonitorAutoLock monitor(mThreadObserver->GetMonitor());
-  AppendToArray(*aOrigins, mOriginsHavingData);
+  for (auto iter = mOriginsHavingData.Iter(); !iter.Done(); iter.Next()) {
+    aOrigins->AppendElement(iter.Get()->GetKey());
+  }
 }
 
 nsresult StorageDBThread::InsertDBOp(
@@ -618,7 +620,7 @@ nsresult StorageDBThread::InitDatabase() {
     NS_ENSURE_SUCCESS(rv, rv);
 
     MonitorAutoLock monitor(mThreadObserver->GetMonitor());
-    mOriginsHavingData.Insert(foundOrigin);
+    mOriginsHavingData.PutEntry(foundOrigin);
   }
 
   return NS_OK;
@@ -1087,7 +1089,7 @@ nsresult StorageDBThread::DBOperation::Perform(StorageDBThread* aThread) {
       NS_ENSURE_SUCCESS(rv, rv);
 
       MonitorAutoLock monitor(aThread->mThreadObserver->GetMonitor());
-      aThread->mOriginsHavingData.Insert(Origin());
+      aThread->mOriginsHavingData.PutEntry(Origin());
       break;
     }
 
@@ -1138,7 +1140,7 @@ nsresult StorageDBThread::DBOperation::Perform(StorageDBThread* aThread) {
       NS_ENSURE_SUCCESS(rv, rv);
 
       MonitorAutoLock monitor(aThread->mThreadObserver->GetMonitor());
-      aThread->mOriginsHavingData.Remove(Origin());
+      aThread->mOriginsHavingData.RemoveEntry(Origin());
       break;
     }
 

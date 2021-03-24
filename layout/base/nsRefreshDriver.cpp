@@ -1315,10 +1315,10 @@ void nsRefreshDriver::RemovePostRefreshObserver(
 bool nsRefreshDriver::AddImageRequest(imgIRequest* aRequest) {
   uint32_t delay = GetFirstFrameDelay(aRequest);
   if (delay == 0) {
-    mRequests.Insert(aRequest);
+    mRequests.PutEntry(aRequest);
   } else {
     auto* const start = mStartTable.GetOrInsertNew(delay);
-    start->mEntries.Insert(aRequest);
+    start->mEntries.PutEntry(aRequest);
   }
 
   EnsureTimerStarted();
@@ -1329,12 +1329,12 @@ bool nsRefreshDriver::AddImageRequest(imgIRequest* aRequest) {
 void nsRefreshDriver::RemoveImageRequest(imgIRequest* aRequest) {
   // Try to remove from both places, just in case, because we can't tell
   // whether RemoveEntry() succeeds.
-  mRequests.Remove(aRequest);
+  mRequests.RemoveEntry(aRequest);
   uint32_t delay = GetFirstFrameDelay(aRequest);
   if (delay != 0) {
     ImageStartData* start = mStartTable.Get(delay);
     if (start) {
-      start->mEntries.Remove(aRequest);
+      start->mEntries.RemoveEntry(aRequest);
     }
   }
 }
@@ -2261,8 +2261,9 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     // images to refresh, and then we refresh each image in that array.
     nsCOMArray<imgIContainer> imagesToRefresh(mRequests.Count());
 
-    for (nsISupports* entry : mRequests) {
-      auto* req = static_cast<imgIRequest*>(entry);
+    for (auto iter = mRequests.ConstIter(); !iter.Done(); iter.Next()) {
+      const nsISupportsHashKey* entry = iter.Get();
+      auto req = static_cast<imgIRequest*>(entry->GetKey());
       MOZ_ASSERT(req, "Unable to retrieve the image request");
       nsCOMPtr<imgIContainer> image;
       if (NS_SUCCEEDED(req->GetImage(getter_AddRefs(image)))) {
@@ -2410,11 +2411,11 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
 
 void nsRefreshDriver::BeginRefreshingImages(RequestTable& aEntries,
                                             mozilla::TimeStamp aDesired) {
-  for (const auto& key : aEntries) {
-    auto* req = static_cast<imgIRequest*>(key);
+  for (auto iter = aEntries.ConstIter(); !iter.Done(); iter.Next()) {
+    auto req = static_cast<imgIRequest*>(iter.Get()->GetKey());
     MOZ_ASSERT(req, "Unable to retrieve the image request");
 
-    mRequests.Insert(req);
+    mRequests.PutEntry(req);
 
     nsCOMPtr<imgIContainer> image;
     if (NS_SUCCEEDED(req->GetImage(getter_AddRefs(image)))) {
