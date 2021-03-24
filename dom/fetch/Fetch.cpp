@@ -173,7 +173,7 @@ NS_INTERFACE_MAP_END
 
 // This class orchestrates the proxying of AbortSignal operations between the
 // main thread and a worker thread.
-class AbortSignalProxy final : public nsISupports {
+class AbortSignalProxy final {
   // An AbortFollower, created/accessed/destroyed only on the worker thread,
   // that follows the worker-thread AbortSignal and propagates signaling abort
   // back to the main thread.
@@ -198,7 +198,7 @@ class AbortSignalProxy final : public nsISupports {
   const bool mAborted;
 
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(AbortSignalProxy)
 
   AbortSignalProxy(AbortSignalImpl* aSignalImpl,
                    nsIEventTarget* aMainThreadEventTarget)
@@ -240,8 +240,6 @@ class AbortSignalProxy final : public nsISupports {
                     mMainThreadEventTarget, mSignalImplMainThread.forget());
   }
 };
-
-NS_IMPL_ISUPPORTS0(AbortSignalProxy)
 
 NS_IMETHODIMP WorkerSignalFollower::AbortSignalProxyRunnable::Run() {
   MOZ_ASSERT(NS_IsMainThread());
