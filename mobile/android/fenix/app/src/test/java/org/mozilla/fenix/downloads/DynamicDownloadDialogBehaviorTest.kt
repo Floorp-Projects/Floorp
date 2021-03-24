@@ -7,10 +7,14 @@ package org.mozilla.fenix.downloads
 import android.animation.ValueAnimator
 import android.view.View
 import androidx.core.view.ViewCompat
+import io.mockk.Runs
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.spyk
 import io.mockk.verify
+import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.InputResultDetail
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -179,5 +183,66 @@ class DynamicDownloadDialogBehaviorTest {
                 DynamicDownloadDialogBehavior.SnapDirection.UP
             )
         }
+    }
+
+    @Test
+    fun `GIVEN a null InputResultDetail from the EngineView WHEN shouldScroll is called THEN it returns false`() {
+        val behavior = DynamicDownloadDialogBehavior<View>(testContext, null, 10f)
+
+        behavior.engineView = null
+        assertFalse(behavior.shouldScroll)
+
+        behavior.engineView = mockk()
+        every { behavior.engineView?.getInputResultDetail() } returns null
+        assertFalse(behavior.shouldScroll)
+    }
+
+    @Test
+    fun `GIVEN an InputResultDetail with the right values WHEN shouldScroll is called THEN it returns true`() {
+        val behavior = DynamicDownloadDialogBehavior<View>(testContext, null, 10f)
+        val engineView: EngineView = mockk()
+        behavior.engineView = engineView
+        val validInputResultDetail: InputResultDetail = mockk()
+        every { engineView.getInputResultDetail() } returns validInputResultDetail
+
+        every { validInputResultDetail.canScrollToBottom() } returns true
+        every { validInputResultDetail.canScrollToTop() } returns false
+        assertTrue(behavior.shouldScroll)
+
+        every { validInputResultDetail.canScrollToBottom() } returns false
+        every { validInputResultDetail.canScrollToTop() } returns true
+        assertTrue(behavior.shouldScroll)
+
+        every { validInputResultDetail.canScrollToBottom() } returns true
+        every { validInputResultDetail.canScrollToTop() } returns true
+        assertTrue(behavior.shouldScroll)
+    }
+
+    @Test
+    fun `GIVEN a gesture that doesn't scroll the toolbar WHEN startNestedScroll THEN toolbar is expanded and nested scroll not accepted`() {
+        val behavior = spyk(DynamicDownloadDialogBehavior<View>(testContext, null, 10f))
+        val engineView: EngineView = mockk()
+        behavior.engineView = engineView
+        val inputResultDetail: InputResultDetail = mockk()
+        val animator: ValueAnimator = mockk(relaxed = true)
+        behavior.snapAnimator = animator
+        every { behavior.shouldScroll } returns false
+        every { behavior.forceExpand(any()) } just Runs
+        every { engineView.getInputResultDetail() } returns inputResultDetail
+        every { inputResultDetail.isTouchUnhandled() } returns true
+
+        val childView: View = mockk()
+        val acceptsNestedScroll = behavior.onStartNestedScroll(
+            coordinatorLayout = mockk(),
+            child = childView,
+            directTargetChild = mockk(),
+            target = mockk(),
+            axes = ViewCompat.SCROLL_AXIS_VERTICAL,
+            type = ViewCompat.TYPE_TOUCH
+        )
+
+        verify { behavior.forceExpand(childView) }
+        verify { animator.cancel() }
+        assertFalse(acceptsNestedScroll)
     }
 }

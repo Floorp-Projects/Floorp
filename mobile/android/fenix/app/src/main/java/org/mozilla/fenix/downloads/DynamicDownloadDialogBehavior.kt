@@ -50,7 +50,8 @@ class DynamicDownloadDialogBehavior<V : View>(
     /**
      * Reference to [EngineView] used to check user's [android.view.MotionEvent]s.
      */
-    private var engineView: EngineView? = null
+    @VisibleForTesting
+    internal var engineView: EngineView? = null
 
     /**
      * Depending on how user's touch was consumed by EngineView / current website,
@@ -64,7 +65,9 @@ class DynamicDownloadDialogBehavior<V : View>(
      */
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val shouldScroll: Boolean
-        get() = engineView?.getInputResult() == EngineView.InputResult.INPUT_RESULT_HANDLED
+        get() = engineView?.getInputResultDetail()?.let {
+            (it.canScrollToBottom() || it.canScrollToTop())
+        } ?: false
 
     override fun onStartNestedScroll(
         coordinatorLayout: CoordinatorLayout,
@@ -78,7 +81,7 @@ class DynamicDownloadDialogBehavior<V : View>(
             shouldSnapAfterScroll = type == ViewCompat.TYPE_TOUCH
             snapAnimator.cancel()
             true
-        } else if (engineView?.getInputResult() == EngineView.InputResult.INPUT_RESULT_UNHANDLED) {
+        } else if (engineView?.getInputResultDetail()?.isTouchUnhandled() == true) {
             // Force expand the notification dialog if event is unhandled, otherwise user could get stuck in a
             // state where they cannot show it
             forceExpand(child)
