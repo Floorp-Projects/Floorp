@@ -3286,6 +3286,18 @@ auto ToArray(const Range& aRange) {
       aRange);
 }
 
+/**
+ * Appends all elements from a range to an array.
+ */
+template <typename Array, typename Range>
+void AppendToArray(Array& aArray, const Range& aRange) {
+  using std::begin;
+  using std::end;
+
+  aArray.SetCapacity(aArray.Length() + RangeSize(aRange));
+  std::copy(begin(aRange), end(aRange), MakeBackInserter(aArray));
+}
+
 }  // namespace mozilla
 
 // MOZ_DBG support
