@@ -1335,6 +1335,28 @@ void nsGenericHTMLElement::MapHeightAttributeInto(
   }
 }
 
+static void DoMapAspectRatio(const nsAttrValue& aWidth,
+                             const nsAttrValue& aHeight,
+                             MappedDeclarations& aDecls) {
+  Maybe<double> w;
+  if (aWidth.Type() == nsAttrValue::eInteger) {
+    w.emplace(aWidth.GetIntegerValue());
+  } else if (aWidth.Type() == nsAttrValue::eDoubleValue) {
+    w.emplace(aWidth.GetDoubleValue());
+  }
+
+  Maybe<double> h;
+  if (aHeight.Type() == nsAttrValue::eInteger) {
+    h.emplace(aHeight.GetIntegerValue());
+  } else if (aHeight.Type() == nsAttrValue::eDoubleValue) {
+    h.emplace(aHeight.GetDoubleValue());
+  }
+
+  if (w && h) {
+    aDecls.SetAspectRatio(*w, *h);
+  }
+}
+
 void nsGenericHTMLElement::MapImageSizeAttributesInto(
     const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls,
     MapAspectRatio aMapAspectRatio) {
@@ -1346,25 +1368,17 @@ void nsGenericHTMLElement::MapImageSizeAttributesInto(
   if (height) {
     MapDimensionAttributeInto(aDecls, eCSSProperty_height, *height);
   }
-  if (StaticPrefs::layout_css_width_and_height_map_to_aspect_ratio_enabled() &&
-      aMapAspectRatio == MapAspectRatio::Yes && width && height) {
-    Maybe<double> w;
-    if (width->Type() == nsAttrValue::eInteger) {
-      w.emplace(width->GetIntegerValue());
-    } else if (width->Type() == nsAttrValue::eDoubleValue) {
-      w.emplace(width->GetDoubleValue());
-    }
+  if (aMapAspectRatio == MapAspectRatio::Yes && width && height) {
+    DoMapAspectRatio(*width, *height, aDecls);
+  }
+}
 
-    Maybe<double> h;
-    if (height->Type() == nsAttrValue::eInteger) {
-      h.emplace(height->GetIntegerValue());
-    } else if (height->Type() == nsAttrValue::eDoubleValue) {
-      h.emplace(height->GetDoubleValue());
-    }
-
-    if (w && h && *w != 0 && *h != 0) {
-      aDecls.SetAspectRatio(*w, *h);
-    }
+void nsGenericHTMLElement::MapAspectRatioInto(
+    const nsMappedAttributes* aAttributes, MappedDeclarations& aDecls) {
+  auto* width = aAttributes->GetAttr(nsGkAtoms::width);
+  auto* height = aAttributes->GetAttr(nsGkAtoms::height);
+  if (width && height) {
+    DoMapAspectRatio(*width, *height, aDecls);
   }
 }
 

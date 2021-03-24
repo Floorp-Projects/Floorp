@@ -281,13 +281,18 @@ class HTMLCanvasElement final : public nsGenericHTMLElement,
                               const nsAString& aValue,
                               nsIPrincipal* aMaybeScriptedPrincipal,
                               nsAttrValue& aResult) override;
+  NS_IMETHOD_(bool) IsAttributeMapped(const nsAtom* aAttribute) const override;
   nsChangeHint GetAttributeChangeHint(const nsAtom* aAttribute,
                                       int32_t aModType) const override;
+  nsMapRuleToAttributesFunc GetAttributeMappingFunction() const override;
 
   virtual nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
   nsresult CopyInnerTo(HTMLCanvasElement* aDest);
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
+
+  static void MapAttributesIntoRule(const nsMappedAttributes* aAttributes,
+                                    MappedDeclarations&);
 
   /*
    * Helpers called by various users of Canvas
