@@ -99,10 +99,8 @@ mozilla::ipc::IPCResult CacheStorageParent::RecvPCacheOpConstructor(
 }
 
 mozilla::ipc::IPCResult CacheStorageParent::RecvTeardown() {
-  if (!Send__delete__(this)) {
-    // child process is gone, warn and allow actor to clean up normally
-    NS_WARNING("CacheStorage failed to delete actor.");
-  }
+  // If child process is gone, warn and allow actor to clean up normally
+  QM_WARNONLY_TRY(OkIf(Send__delete__(this)));
   return IPC_OK();
 }
 

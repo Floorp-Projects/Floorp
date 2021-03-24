@@ -94,23 +94,24 @@ class CacheQuotaClient final : public quota::Client {
       // the next action recalculate the padding size.
       CACHE_TRY(aCommitHook());
 
-      CACHE_TRY(
-          ToResult(LockedDirectoryPaddingFinalizeWrite(aBaseDir))
-              .orElse([&aBaseDir](const nsresult) -> Result<Ok, nsresult> {
-                // Force restore file next time.
-                Unused << LockedDirectoryPaddingDeleteFile(
-                    aBaseDir, DirPaddingFile::FILE);
+      QM_TRY(QM_OR_ELSE_WARN(
+          ToResult(LockedDirectoryPaddingFinalizeWrite(aBaseDir)),
+          ([&aBaseDir](const nsresult) -> Result<Ok, nsresult> {
+            // Force restore file next time.
+            Unused << LockedDirectoryPaddingDeleteFile(aBaseDir,
+                                                       DirPaddingFile::FILE);
 
-                // Ensure that we are able to force the padding file to be
-                // restored.
-                MOZ_ASSERT(DirectoryPaddingFileExists(
-                    aBaseDir, DirPaddingFile::TMP_FILE));
+            // Ensure that we are able to force the padding file to
+            // be restored.
+            MOZ_ASSERT(
+                DirectoryPaddingFileExists(aBaseDir, DirPaddingFile::TMP_FILE));
 
-                // Since both the body file and header have been stored in the
-                // file-system, just make the action be resolve and let the
-                // padding file be restored in the next action.
-                return Ok{};
-              }));
+            // Since both the body file and header have been stored
+            // in the file-system, just make the action be resolve
+            // and let the padding file be restored in the next
+            // action.
+            return Ok{};
+          })));
     }
 
     return NS_OK;

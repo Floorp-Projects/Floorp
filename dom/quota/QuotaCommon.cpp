@@ -164,27 +164,26 @@ Result<nsCOMPtr<nsIFile>, nsresult> CloneFileAndAppend(
 }
 
 Result<nsIFileKind, nsresult> GetDirEntryKind(nsIFile& aFile) {
-  QM_TRY_RETURN(
-      MOZ_TO_RESULT_INVOKE(aFile, IsDirectory)
-          .map([](const bool isDirectory) {
-            return isDirectory ? nsIFileKind::ExistsAsDirectory
-                               : nsIFileKind::ExistsAsFile;
-          })
-          .orElse([](const nsresult rv) -> Result<nsIFileKind, nsresult> {
-            if (rv == NS_ERROR_FILE_NOT_FOUND ||
-                rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
+  QM_TRY_RETURN(QM_OR_ELSE_WARN(
+      MOZ_TO_RESULT_INVOKE(aFile, IsDirectory).map([](const bool isDirectory) {
+        return isDirectory ? nsIFileKind::ExistsAsDirectory
+                           : nsIFileKind::ExistsAsFile;
+      }),
+      ([](const nsresult rv) -> Result<nsIFileKind, nsresult> {
+        if (rv == NS_ERROR_FILE_NOT_FOUND ||
+            rv == NS_ERROR_FILE_TARGET_DOES_NOT_EXIST
 #ifdef WIN32
-                // We treat ERROR_FILE_CORRUPT as if the file did not exist at
-                // all.
-                || (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_WIN32 &&
-                    NS_ERROR_GET_CODE(rv) == ERROR_FILE_CORRUPT)
+            // We treat ERROR_FILE_CORRUPT as if the file did not exist at
+            // all.
+            || (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_WIN32 &&
+                NS_ERROR_GET_CODE(rv) == ERROR_FILE_CORRUPT)
 #endif
-            ) {
-              return nsIFileKind::DoesNotExist;
-            }
+        ) {
+          return nsIFileKind::DoesNotExist;
+        }
 
-            return Err(rv);
-          }));
+        return Err(rv);
+      })));
 }
 
 Result<nsCOMPtr<mozIStorageStatement>, nsresult> CreateStatement(
@@ -348,9 +347,9 @@ nsDependentCSubstring MakeRelativeSourceFileName(
 
 }  // namespace detail
 
-void LogError(const nsACString& aExpr, const nsACString& aSourceFile,
-              const int32_t aSourceLine, const Maybe<nsresult> aRv,
-              const bool aIsWarning) {
+void LogError(const nsACString& aExpr, const Maybe<nsresult> aRv,
+              const nsACString& aSourceFile, const int32_t aSourceLine,
+              const Severity aSeverity) {
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
   nsAutoCString extraInfosString;
 
@@ -371,6 +370,18 @@ void LogError(const nsACString& aExpr, const nsACString& aSourceFile,
 
   const auto relativeSourceFile =
       detail::MakeRelativeSourceFileName(aSourceFile);
+
+  const auto severityString = [&aSeverity]() -> nsLiteralCString {
+    switch (aSeverity) {
+      case Severity::Error:
+        return "ERROR"_ns;
+      case Severity::Warning:
+        return "WARNING"_ns;
+      case Severity::Note:
+        return "NOTE"_ns;
+    }
+    MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Bad severity value!");
+  }();
 #endif
 
 #ifdef QM_ENABLE_SCOPED_LOG_EXTRA_INFO
@@ -382,20 +393,22 @@ void LogError(const nsACString& aExpr, const nsACString& aSourceFile,
 #endif
 
 #ifdef DEBUG
-  NS_DebugBreak(NS_DEBUG_WARNING, nsAutoCString("QM_TRY failure"_ns).get(),
-                (extraInfosString.IsEmpty()
-                     ? nsPromiseFlatCString(aExpr)
-                     : static_cast<const nsCString&>(
-                           nsAutoCString(aExpr + extraInfosString)))
-                    .get(),
-                nsPromiseFlatCString(relativeSourceFile).get(), aSourceLine);
+  NS_DebugBreak(
+      NS_DEBUG_WARNING,
+      nsAutoCString("QM_TRY failure ("_ns + severityString + ")"_ns).get(),
+      (extraInfosString.IsEmpty() ? nsPromiseFlatCString(aExpr)
+                                  : static_cast<const nsCString&>(nsAutoCString(
+                                        aExpr + extraInfosString)))
+          .get(),
+      nsPromiseFlatCString(relativeSourceFile).get(), aSourceLine);
 #endif
 
 #if defined(EARLY_BETA_OR_EARLIER) || defined(DEBUG)
   nsCOMPtr<nsIConsoleService> console =
       do_GetService(NS_CONSOLESERVICE_CONTRACTID);
   if (console) {
-    NS_ConvertUTF8toUTF16 message("QM_TRY failure: '"_ns + aExpr + "' at "_ns +
+    NS_ConvertUTF8toUTF16 message("QM_TRY failure ("_ns + severityString +
+                                  ")"_ns + ": '"_ns + aExpr + "' at "_ns +
                                   relativeSourceFile + ":"_ns +
                                   IntToCString(aSourceLine) + extraInfosString);
 
@@ -423,8 +436,7 @@ void LogError(const nsACString& aExpr, const nsACString& aSourceFile,
           EventExtraEntry{"source_line"_ns, IntToCString(aSourceLine)});
       res.AppendElement(EventExtraEntry{
           "context"_ns, nsPromiseFlatCString{*contextIt->second}});
-      res.AppendElement(EventExtraEntry{
-          "severity"_ns, aIsWarning ? "WARNING"_ns : "ERROR"_ns});
+      res.AppendElement(EventExtraEntry{"severity"_ns, severityString});
 
       if (!rvName.IsEmpty()) {
         res.AppendElement(EventExtraEntry{"result"_ns, nsCString{rvName}});
