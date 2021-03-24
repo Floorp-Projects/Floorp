@@ -10756,7 +10756,7 @@
 # entry in python/mozbuild/mozbuild/mozinfo.py and test_fission_autostart.py
 - name: widget.non-native-theme.enabled
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # The size in CSS pixels at full zoom of the minimum scrollbar width.
