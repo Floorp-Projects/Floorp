@@ -12,6 +12,10 @@ permalink: /changelog/
 * [Gecko](https://github.com/mozilla-mobile/android-components/blob/master/buildSrc/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
+* **browser-toolbar**
+* **feature-session**
+  * 🚒️ **Various issues related to the dynamic toolbar and pull to refresh will be fixed with with GeckoView offering more details about how the touch event will be handled.
+
 * **concept-engine**
   * ⚠️ **EngineView#InputResult is deprecated in favor of InputResultDetail which offers more details about how a touch event will be handled.
 

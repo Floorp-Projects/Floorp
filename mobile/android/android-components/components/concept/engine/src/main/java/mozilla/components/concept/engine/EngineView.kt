@@ -102,7 +102,7 @@ interface EngineView {
     /**
      * @return [InputResultDetail] indicating how user's last [android.view.MotionEvent] was handled.
      */
-    fun getInputResultDetail(): InputResultDetail = InputResultDetail()
+    fun getInputResultDetail(): InputResultDetail = InputResultDetail.newInstance()
 
     /**
      * Request a screenshot of the visible portion of the web page currently being rendered.

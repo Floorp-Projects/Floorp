@@ -11,16 +11,18 @@ import android.view.MotionEvent.ACTION_UP
 import androidx.core.view.NestedScrollingChildHelper
 import androidx.core.view.ViewCompat.SCROLL_AXIS_VERTICAL
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import mozilla.components.support.test.any
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.mockMotionEvent
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.Mockito.any
 import org.mockito.Mockito.anyInt
 import org.mockito.Mockito.doReturn
+import org.mockito.Mockito.spy
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
 
@@ -112,5 +114,46 @@ class NestedWebViewTest {
 
         nestedWebView.onTouchEvent(mockMotionEvent(ACTION_CANCEL))
         verify(mockChildHelper, times(2)).stopNestedScroll()
+    }
+
+    @Test
+    fun `GIVEN NestedWebView WHEN a new instance is created THEN a properly configured InputResultDetail is created`() {
+        val nestedWebView = NestedWebView(testContext)
+
+        assertTrue(nestedWebView.inputResultDetail.isTouchUnhandled())
+        assertFalse(nestedWebView.inputResultDetail.canScrollToLeft())
+        assertFalse(nestedWebView.inputResultDetail.canScrollToTop())
+        assertFalse(nestedWebView.inputResultDetail.canScrollToRight())
+        assertFalse(nestedWebView.inputResultDetail.canScrollToBottom())
+        assertFalse(nestedWebView.inputResultDetail.canOverscrollLeft())
+        assertFalse(nestedWebView.inputResultDetail.canOverscrollTop())
+        assertFalse(nestedWebView.inputResultDetail.canOverscrollRight())
+        assertFalse(nestedWebView.inputResultDetail.canOverscrollBottom())
+    }
+
+    @Test
+    fun `GIVEN NestedWebView WHEN onTouchEvent is called THEN updateInputResult is called with the result of whether the touch is handled or not`() {
+        val nestedWebView = spy(NestedWebView(testContext))
+
+        doReturn(true).`when`(nestedWebView).callSuperOnTouchEvent(any())
+        nestedWebView.onTouchEvent(mockMotionEvent(ACTION_DOWN))
+        verify(nestedWebView).updateInputResult(true)
+
+        doReturn(false).`when`(nestedWebView).callSuperOnTouchEvent(any())
+        nestedWebView.onTouchEvent(mockMotionEvent(ACTION_DOWN))
+        verify(nestedWebView).updateInputResult(false)
+    }
+
+    @Test
+    fun `GIVEN an instance of InputResultDetail WHEN updateInputResult called THEN it sets whether the touch was handled`() {
+        val nestedWebView = NestedWebView(testContext)
+
+        assertTrue(nestedWebView.inputResultDetail.isTouchUnhandled())
+
+        nestedWebView.updateInputResult(true)
+        assertTrue(nestedWebView.inputResultDetail.isTouchHandledByBrowser())
+
+        nestedWebView.updateInputResult(false)
+        assertTrue(nestedWebView.inputResultDetail.isTouchUnhandled())
     }
 }

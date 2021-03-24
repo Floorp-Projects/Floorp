@@ -53,6 +53,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.InputResultDetail
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.request.RequestInterceptor.InterceptionResponse
@@ -694,15 +695,9 @@ class SystemEngineView @JvmOverloads constructor(
 
     override fun canScrollVerticallyDown() = session?.webView?.canScrollVertically(1) ?: false
 
-    @Suppress("Deprecation")
-    override fun getInputResult(): EngineView.InputResult {
-        (session?.webView as? NestedWebView)?.let { nestedWebView ->
-            // Direct mapping of WebView's returned values.
-            // There should be a 1-1 relation. If not fail fast to allow for a quick fix.
-            return EngineView.InputResult.values().first { it.value == nestedWebView.inputResult }
-        }
-        // Let's be preventive about not knowing if user's touch was handled and say no.
-        return EngineView.InputResult.INPUT_RESULT_UNHANDLED
+    override fun getInputResultDetail(): InputResultDetail {
+        return (session?.webView as? NestedWebView)?.inputResultDetail
+            ?: InputResultDetail.newInstance()
     }
 
     override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) {

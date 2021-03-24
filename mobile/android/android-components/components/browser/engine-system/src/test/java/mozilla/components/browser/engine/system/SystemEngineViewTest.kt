@@ -36,6 +36,7 @@ import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy
 import mozilla.components.concept.engine.EngineSession.TrackingProtectionPolicy.TrackingCategory
 import mozilla.components.concept.engine.HitResult
+import mozilla.components.concept.engine.InputResultDetail
 import mozilla.components.concept.engine.content.blocking.Tracker
 import mozilla.components.concept.engine.history.HistoryTrackingDelegate
 import mozilla.components.concept.engine.permission.PermissionRequest
@@ -58,6 +59,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Test
@@ -1564,5 +1566,36 @@ class SystemEngineViewTest {
         val authRequest = request as PromptRequest.Authentication
         assertEquals(authRequest.userName, userName)
         assertEquals(authRequest.password, password)
+    }
+
+    @Test
+    fun `GIVEN SystemEngineView WHEN getInputResultDetail is called THEN it returns the instance from webView`() {
+        val engineView = SystemEngineView(testContext)
+        val engineSession = SystemEngineSession(testContext)
+        val webView = spy(NestedWebView(testContext))
+        engineSession.webView = webView
+        engineView.render(engineSession)
+        val inputResult = InputResultDetail.newInstance()
+        doReturn(inputResult).`when`(webView).inputResultDetail
+
+        assertSame(inputResult, engineView.getInputResultDetail())
+    }
+
+    @Test
+    fun `GIVEN SystemEngineView WHEN getInputResultDetail is called THEN it returns a new default instance if not available from webView`() {
+        val engineView = spy(SystemEngineView(testContext))
+
+        val result = engineView.getInputResultDetail()
+
+        assertNotNull(result)
+        assertTrue(result.isTouchUnhandled())
+        assertFalse(result.canScrollToLeft())
+        assertFalse(result.canScrollToTop())
+        assertFalse(result.canScrollToRight())
+        assertFalse(result.canScrollToBottom())
+        assertFalse(result.canOverscrollLeft())
+        assertFalse(result.canOverscrollTop())
+        assertFalse(result.canOverscrollRight())
+        assertFalse(result.canOverscrollBottom())
     }
 }

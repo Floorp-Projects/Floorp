@@ -14,24 +14,21 @@ import androidx.annotation.VisibleForTesting
  *
  * @see [InputResultDetail.isTouchUnhandled]
  */
-@VisibleForTesting
-internal const val INPUT_UNHANDLED = 0
+const val INPUT_UNHANDLED = 0
 
 /**
  * The touch event is consumed by the [EngineView]
  *
  * @see [InputResultDetail.isTouchHandledByBrowser]
  */
-@VisibleForTesting
-internal const val INPUT_HANDLED = 1
+const val INPUT_HANDLED = 1
 
 /**
  * The touch event is consumed by the website through it's own touch listeners.
  *
  * @see [InputResultDetail.isTouchHandledByWebsite]
  */
-@VisibleForTesting
-internal const val INPUT_HANDLED_CONTENT = 2
+const val INPUT_HANDLED_CONTENT = 2
 
 /**
  * The website content is not scrollable.

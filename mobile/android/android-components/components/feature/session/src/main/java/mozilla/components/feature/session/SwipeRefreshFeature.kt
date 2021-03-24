@@ -75,8 +75,7 @@ class SwipeRefreshFeature(
     @Suppress("Deprecation")
     override fun canChildScrollUp(parent: SwipeRefreshLayout, child: View?) =
         if (child is EngineView) {
-            child.canScrollVerticallyUp() ||
-                (child.getInputResult() == EngineView.InputResult.INPUT_RESULT_HANDLED_CONTENT)
+            !child.getInputResultDetail().canOverscrollTop()
         } else {
             true
         }

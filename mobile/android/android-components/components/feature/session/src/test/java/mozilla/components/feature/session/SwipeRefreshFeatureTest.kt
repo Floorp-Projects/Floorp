@@ -6,7 +6,6 @@ package mozilla.components.feature.session
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.view.ViewGroup
 import android.widget.FrameLayout
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -22,17 +21,18 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.concept.engine.EngineView
+import mozilla.components.concept.engine.InputResultDetail
 import mozilla.components.concept.engine.selection.SelectionActionDelegate
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.mock
-import mozilla.components.support.test.robolectric.testContext
 import org.junit.After
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.reset
 import org.mockito.Mockito.times
 import org.mockito.Mockito.verify
@@ -74,15 +74,15 @@ class SwipeRefreshFeatureTest {
     }
 
     @Test
-    fun `gesture should only work if EngineView cannot be scrolled up`() {
-        val engineView = DummyEngineView(testContext).apply {
-            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-        }
+    fun `gesture should only work if the content can be overscrolled`() {
+        val engineView: DummyEngineView = mock()
+        val inputResultDetail: InputResultDetail = mock()
+        doReturn(inputResultDetail).`when`(engineView).getInputResultDetail()
 
-        engineView.scrollY = 0
+        doReturn(true).`when`(inputResultDetail).canOverscrollTop()
         assertFalse(refreshFeature.canChildScrollUp(mockLayout, engineView))
 
-        engineView.scrollY = 100
+        doReturn(false).`when`(inputResultDetail).canOverscrollTop()
         assertTrue(refreshFeature.canChildScrollUp(mockLayout, engineView))
     }
 
@@ -134,7 +134,6 @@ class SwipeRefreshFeatureTest {
     }
 
     private open class DummyEngineView(context: Context) : FrameLayout(context), EngineView {
-        override fun canScrollVerticallyUp() = scrollY > 0
         override fun setVerticalClipping(clippingHeight: Int) {}
         override fun setDynamicToolbarMaxHeight(height: Int) {}
         override fun captureThumbnail(onFinish: (Bitmap?) -> Unit) = Unit

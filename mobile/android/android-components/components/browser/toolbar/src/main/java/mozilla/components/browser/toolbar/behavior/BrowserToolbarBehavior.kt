@@ -77,10 +77,11 @@ class BrowserToolbarBehavior(
      * - the website is not scrollable
      * - the website handles the touch events itself through it's own touch event listeners.
      */
-    @Suppress("Deprecation")
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal val shouldScroll: Boolean
-        get() = engineView?.getInputResult() == EngineView.InputResult.INPUT_RESULT_HANDLED && isScrollEnabled
+        get() = engineView?.getInputResultDetail()?.let {
+                (it.canScrollToBottom() || it.canScrollToTop()) && isScrollEnabled
+            } ?: false
 
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     internal var gesturesDetector: BrowserGestureDetector = createGestureDetector()
@@ -233,7 +234,6 @@ class BrowserToolbarBehavior(
             }
         ))
 
-    @Suppress("Deprecation")
     @VisibleForTesting
     internal fun startNestedScroll(axes: Int, type: Int, toolbar: BrowserToolbar): Boolean {
         return if (shouldScroll && axes == ViewCompat.SCROLL_AXIS_VERTICAL) {
@@ -241,7 +241,7 @@ class BrowserToolbarBehavior(
             shouldSnapAfterScroll = type == ViewCompat.TYPE_TOUCH
             yTranslator.cancelInProgressTranslation()
             true
-        } else if (engineView?.getInputResult() == EngineView.InputResult.INPUT_RESULT_UNHANDLED) {
+        } else if (engineView?.getInputResultDetail()?.isTouchUnhandled() == true) {
             // Force expand the toolbar if event is unhandled, otherwise user could get stuck in a
             // state where they cannot show the toolbar
             yTranslator.cancelInProgressTranslation()
