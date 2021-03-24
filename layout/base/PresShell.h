@@ -44,7 +44,7 @@
 #include "nsRefreshObservers.h"
 #include "nsStringFwd.h"
 #include "nsStubDocumentObserver.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 #include "nsThreadUtils.h"
 #include "nsWeakReference.h"
 
@@ -157,7 +157,7 @@ class PresShell final : public nsStubDocumentObserver,
 
   // A set type for tracking visible frames, for use by the visibility code in
   // PresShell. The set contains nsIFrame* pointers.
-  typedef nsTHashtable<nsPtrHashKey<nsIFrame>> VisibleFrames;
+  typedef nsTHashSet<nsIFrame*> VisibleFrames;
 
  public:
   explicit PresShell(Document* aDocument);
@@ -1705,14 +1705,14 @@ class PresShell final : public nsStubDocumentObserver,
   void RecordAlloc(void* aPtr) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     MOZ_DIAGNOSTIC_ASSERT(!mAllocatedPointers.Contains(aPtr));
-    mAllocatedPointers.PutEntry(aPtr);
+    mAllocatedPointers.Insert(aPtr);
 #endif
   }
 
   void RecordFree(void* aPtr) {
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
     MOZ_DIAGNOSTIC_ASSERT(mAllocatedPointers.Contains(aPtr));
-    mAllocatedPointers.RemoveEntry(aPtr);
+    mAllocatedPointers.Remove(aPtr);
 #endif
   }
 
@@ -2810,7 +2810,7 @@ class PresShell final : public nsStubDocumentObserver,
 #ifdef MOZ_DIAGNOSTIC_ASSERT_ENABLED
   // We track allocated pointers in a debug-only hashtable to assert against
   // missing/double frees.
-  nsTHashtable<nsPtrHashKey<void>> mAllocatedPointers;
+  nsTHashSet<void*> mAllocatedPointers;
 #endif
 
   // A list of stack weak frames. This is a pointer to the last item in the
@@ -2818,7 +2818,7 @@ class PresShell final : public nsStubDocumentObserver,
   AutoWeakFrame* mAutoWeakFrames;
 
   // A hash table of heap allocated weak frames.
-  nsTHashtable<nsPtrHashKey<WeakFrame>> mWeakFrames;
+  nsTHashSet<WeakFrame*> mWeakFrames;
 
   class DirtyRootsList {
    public:
@@ -2912,9 +2912,9 @@ class PresShell final : public nsStubDocumentObserver,
   nsCOMArray<nsIContent> mCurrentEventContentStack;
   // Set of frames that we should mark with NS_FRAME_HAS_DIRTY_CHILDREN after
   // we finish reflowing mCurrentReflowRoot.
-  nsTHashtable<nsPtrHashKey<nsIFrame>> mFramesToDirty;
-  nsTHashtable<nsPtrHashKey<nsIScrollableFrame>> mPendingScrollAnchorSelection;
-  nsTHashtable<nsPtrHashKey<nsIScrollableFrame>> mPendingScrollAnchorAdjustment;
+  nsTHashSet<nsIFrame*> mFramesToDirty;
+  nsTHashSet<nsIScrollableFrame*> mPendingScrollAnchorSelection;
+  nsTHashSet<nsIScrollableFrame*> mPendingScrollAnchorAdjustment;
 
   nsCallbackEventRequest* mFirstCallbackEventRequest = nullptr;
   nsCallbackEventRequest* mLastCallbackEventRequest = nullptr;

@@ -55,7 +55,7 @@
 
 #include <stdint.h>
 #include "nsClassHashtable.h"
-#include "nsTHashtable.h"
+#include "nsTHashSet.h"
 #include "nsTHashMap.h"
 
 #include <stdlib.h>
@@ -1776,7 +1776,7 @@ class nsDisplayListBuilder {
       void* mFrame;
     };
 
-    nsTHashtable<nsPtrHashKey<void>> mFrameSet;
+    nsTHashSet<void*> mFrameSet;
     nsTArray<WeakFrameWrapper> mFrames;
     nsTArray<pixman_box32_t> mRects;
 
@@ -1786,7 +1786,7 @@ class nsDisplayListBuilder {
         return;
       }
 
-      mFrameSet.PutEntry(aFrame);
+      mFrameSet.Insert(aFrame);
       mFrames.AppendElement(WeakFrameWrapper(aFrame));
       mRects.AppendElement(nsRegion::RectToBox(aRect));
     }
@@ -1936,7 +1936,7 @@ class nsDisplayListBuilder {
   // Area of animated geometry root budget already allocated
   uint32_t mUsedAGRBudget;
   // Set of frames already counted in budget
-  nsTHashtable<nsPtrHashKey<nsIFrame>> mAGRBudgetSet;
+  nsTHashSet<nsIFrame*> mAGRBudgetSet;
 
   nsTHashMap<nsPtrHashKey<RemoteBrowser>, EffectsInfo> mEffectsUpdates;
 
