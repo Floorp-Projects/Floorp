@@ -327,6 +327,20 @@ Function un.OpenRefreshHelpURL
   ExecShell "open" "${URLProfileRefreshHelp}"
 FunctionEnd
 
+; Returns the common directory (typically "C:\ProgramData\Mozilla") on the stack.
+Function un.GetCommonDirectory
+  Push $0   ; Save $0
+
+  ; This gets C:\ProgramData or the equivalent.
+  ; 0x23 is CSIDL_COMMON_APPDATA, see CreateUpdateDir in common.nsh.
+  System::Call "Shell32::SHGetSpecialFolderPathW(p 0, t.r0, i 0x23, i 0)"
+  ; Add our subdirectory, this is hardcoded as grandparent of the update directory in
+  ; several other places.
+  StrCpy $0 "$0\Mozilla"
+
+  Exch $0   ; Restore original $0 and put our $0 on the stack.
+FunctionEnd
+
 Function un.SendUninstallPing
   ${If} $AppUserModelID == ""
     Return
@@ -340,12 +354,8 @@ Function un.SendUninstallPing
   Push $5   ; $5 = URL, POST result
   Push $6   ; $6 = Full path to the ping file
 
-  ; This gets C:\ProgramData or the equivalent.
-  ; 0x23 is CSIDL_COMMON_APPDATA, see CreateUpdateDir in common.nsh.
-  System::Call "Shell32::SHGetSpecialFolderPathW(p 0, t.r2, i 0x23, i 0)"
-  ; Add our subdirectory, this is hardcoded as grandparent of the update directory in
-  ; several other places.
-  StrCpy $2 "$2\Mozilla"
+  Call un.GetCommonDirectory
+  Pop $2
 
   ; The ping ID is in the file name, so that we can get it for the submission URL
   ; without having to parse the ping. Since we don't know the exact name, use FindFirst
@@ -439,6 +449,13 @@ Section "Uninstall"
   ${If} ${AtLeastWin7}
   ${AndIf} "$AppUserModelID" != ""
     ApplicationID::UninstallJumpLists "$AppUserModelID"
+  ${EndIf}
+
+  ; Remove the update sync manager's multi-instance lock file
+  ${If} "$AppUserModelID" != ""
+    Call un.GetCommonDirectory
+    Pop $0
+    Delete /REBOOTOK "$0\UpdateLock-$AppUserModelID"
   ${EndIf}
 
   ; Remove the updates directory

@@ -14,26 +14,15 @@ add_task(async function test_backgroundtask_update_sync_manager() {
   // This can also be achieved by overriding directory providers, but
   // that's not particularly robust in the face of parallel testing.
   // Doing it this way exercises `resetLock` with a path.
-  let syncManager = Cc["@mozilla.org/updates/update-sync-manager;1"].getService(
-    Ci.nsIUpdateSyncManager
-  );
-
-  let file = do_get_profile();
-  file.append("customExePath1");
-  file.append("customExe");
-
-  // The background task will see our process.
-  syncManager.resetLock(file);
-
   let exitCode = await do_backgroundtask("update_sync_manager", {
-    extraArgs: [file.path],
+    extraArgs: [Services.dirsvc.get("XREExeF", Ci.nsIFile).path],
   });
   Assert.equal(80, exitCode, "Another instance is running");
 
   // If we tell the backgroundtask to use a unique appPath, the
   // background task won't see any other instances running.
-  file = do_get_profile();
-  file.append("customExePath2");
+  let file = do_get_profile();
+  file.append("customExePath");
   file.append("customExe");
 
   exitCode = await do_backgroundtask("update_sync_manager", {

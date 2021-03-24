@@ -65,7 +65,7 @@ MultiInstLockHandle OpenMultiInstanceLock(const char* nameToken,
       ::CreateFileW(PromiseFlatString(NS_ConvertUTF8toUTF16(filePath)).get(),
                     GENERIC_READ | GENERIC_WRITE,
                     FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                    nullptr, OPEN_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, nullptr);
+                    nullptr, OPEN_ALWAYS, 0, nullptr);
   if (h != INVALID_HANDLE_VALUE) {
     // The LockFileEx functions always require an OVERLAPPED structure even
     // though we did not open the lock file for overlapped I/O.
@@ -108,8 +108,6 @@ void ReleaseMultiInstanceLock(MultiInstLockHandle lock) {
 #ifdef XP_WIN
     OVERLAPPED o = {0};
     ::UnlockFileEx(lock, 0, 1, 0, &o);
-    // We've used FILE_FLAG_DELETE_ON_CLOSE, so if we are the last instance
-    // with a handle on the lock file, closing it here will delete it.
     ::CloseHandle(lock);
 
 #else
