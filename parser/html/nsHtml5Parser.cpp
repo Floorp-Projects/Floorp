@@ -462,6 +462,8 @@ nsresult nsHtml5Parser::Parse(const nsAString& aSourceBuffer, void* aKey,
 
 NS_IMETHODIMP
 nsHtml5Parser::Terminate() {
+  // Prevent a second call to DidBuildModel via document.close()
+  mDocumentClosed = true;
   // We should only call DidBuildModel once, so don't do anything if this is
   // the second time that Terminate has been called.
   if (mExecutor->IsComplete()) {
