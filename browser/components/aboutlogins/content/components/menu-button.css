@@ -57,6 +57,10 @@
   background-position-x: right 8px;
 }
 
+.menuitem-button:focus-visible {
+  outline-offset: -2px;
+}
+
 .menuitem-separator {
   border-top-width: 2px;
   margin-block: 5px;
