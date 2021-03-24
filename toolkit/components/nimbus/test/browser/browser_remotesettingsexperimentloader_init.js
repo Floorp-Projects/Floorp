@@ -3,15 +3,6 @@
 
 "use strict";
 
-const {
-  RemoteSettingsExperimentLoader,
-  _RemoteSettingsExperimentLoader,
-} = ChromeUtils.import(
-  "resource://nimbus/lib/RemoteSettingsExperimentLoader.jsm"
-);
-const { RemoteSettings } = ChromeUtils.import(
-  "resource://services-settings/remote-settings.js"
-);
 const { ExperimentFakes } = ChromeUtils.import(
   "resource://testing-common/NimbusTestUtils.jsm"
 );
@@ -40,55 +31,32 @@ function getRecipe(slug) {
   });
 }
 
-let rsClient = RemoteSettings("nimbus-desktop-experiments");
-
-add_task(async function setup() {
-  RemoteSettingsExperimentLoader._updating = true;
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["messaging-system.log", "all"],
-      ["app.shield.optoutstudies.enabled", true],
-    ],
-  });
-
-  registerCleanupFunction(async () => {
-    await SpecialPowers.popPrefEnv();
-  });
-});
-
 add_task(async function test_double_feature_enrollment() {
-  await rsClient.db.importChanges(
-    {},
-    42,
-    [getRecipe("foo" + Math.random()), getRecipe("foo" + Math.random())],
-    {
-      clear: true,
-    }
-  );
-  let { doExperimentCleanup } = ExperimentFakes.enrollmentHelper();
-  RemoteSettingsExperimentLoader.uninit();
-  await doExperimentCleanup();
   let sandbox = sinon.createSandbox();
-  sandbox.stub(RemoteSettingsExperimentLoader, "setTimer");
-  sandbox.stub(RemoteSettingsExperimentLoader, "onEnabledPrefChange");
+  let { doExperimentCleanup } = ExperimentFakes.enrollmentHelper();
   let sendFailureTelemetryStub = sandbox.stub(
     ExperimentManager,
     "sendFailureTelemetry"
   );
-  let enrolledPromise = ExperimentFakes.waitForExperimentUpdate(ExperimentAPI, {
-    featureId: "test-feature",
-  });
+  await ExperimentAPI.ready();
+  await doExperimentCleanup();
 
   Assert.ok(ExperimentManager.store.getAllActive().length === 0, "Clean state");
 
-  await RemoteSettingsExperimentLoader.init();
+  let recipe1 = getRecipe("foo" + Math.random());
+  let recipe2 = getRecipe("foo" + Math.random());
 
-  await enrolledPromise;
+  let enrollPromise1 = ExperimentFakes.waitForExperimentUpdate(ExperimentAPI, {
+    slug: recipe1.slug,
+  });
+  let enrollPromise2 = ExperimentFakes.waitForExperimentUpdate(ExperimentAPI, {
+    slug: recipe2.slug,
+  });
 
-  Assert.ok(
-    RemoteSettingsExperimentLoader._initialized,
-    "It should initialize and process the recipes"
-  );
+  ExperimentManager.enroll(recipe1);
+  ExperimentManager.enroll(recipe2);
+
+  await Promise.any([enrollPromise1, enrollPromise2]);
 
   Assert.equal(
     ExperimentManager.store.getAllActive().length,
@@ -97,12 +65,26 @@ add_task(async function test_double_feature_enrollment() {
   );
 
   await BrowserTestUtils.waitForCondition(
-    () => sendFailureTelemetryStub.callCount,
+    () => sendFailureTelemetryStub.callCount === 1,
     "Expected to fail one of the recipes"
   );
 
+  Assert.equal(
+    sendFailureTelemetryStub.firstCall.args[0],
+    "enrollFailed",
+    "Check expected event"
+  );
+  Assert.ok(
+    sendFailureTelemetryStub.firstCall.args[1] === recipe1.slug ||
+      sendFailureTelemetryStub.firstCall.args[1] === recipe2.slug,
+    "Failed one of the two recipes"
+  );
+  Assert.equal(
+    sendFailureTelemetryStub.firstCall.args[2],
+    "feature-conflict",
+    "Check expected reason"
+  );
+
   await doExperimentCleanup();
-  await SpecialPowers.popPrefEnv();
-  await rsClient.db.clear();
   sandbox.restore();
 });
