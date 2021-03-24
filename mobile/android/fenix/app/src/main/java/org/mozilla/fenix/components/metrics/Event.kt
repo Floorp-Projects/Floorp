@@ -325,6 +325,11 @@ sealed class Event {
             get() = hashMapOf(Addons.openAddonInToolbarMenuKeys.addonId to addonId)
     }
 
+    data class AddonOpenSetting(val addonId: String) : Event() {
+        override val extras: Map<Addons.openAddonSettingKeys, String>?
+            get() = hashMapOf(Addons.openAddonSettingKeys.addonId to addonId)
+    }
+
     data class TipDisplayed(val identifier: String) : Event() {
         override val extras: Map<Tip.displayedKeys, String>?
             get() = hashMapOf(Tip.displayedKeys.identifier to identifier)

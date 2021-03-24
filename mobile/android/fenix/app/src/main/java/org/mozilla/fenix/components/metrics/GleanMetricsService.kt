@@ -586,6 +586,10 @@ private val Event.wrapper: EventWrapper<*>?
             { Addons.openAddonInToolbarMenu.record(it) },
             { Addons.openAddonInToolbarMenuKeys.valueOf(it) }
         )
+        is Event.AddonOpenSetting -> EventWrapper(
+            { Addons.openAddonSetting.record(it) },
+            { Addons.openAddonSettingKeys.valueOf(it) }
+        )
         is Event.TipDisplayed -> EventWrapper(
             { Tip.displayed.record(it) },
             { Tip.displayedKeys.valueOf(it) }

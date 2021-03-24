@@ -3938,6 +3938,23 @@ addons:
     notification_emails:
       - fenix-core@mozilla.com
     expires: "2021-07-01"
+  open_addon_setting:
+    type: event
+    description: |
+      A user opened an add-on's setting
+    extra_keys:
+      addon_id:
+        description: |
+          The id of the add-on that was interacted with
+    bugs:
+      - https://github.com/mozilla-mobile/fenix/issues/17644
+    data_reviews:
+      - https://github.com/mozilla-mobile/fenix/pull/18504
+    data_sensitivity:
+      - interaction
+    notification_emails:
+      - fenix-core@mozilla.com
+    expires: "2022-08-01"
   has_installed_addons:
     type: boolean
     description: |
