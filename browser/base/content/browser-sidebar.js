@@ -43,7 +43,6 @@ var SidebarUI = {
           url: "chrome://browser/content/syncedtabs/sidebar.xhtml",
           menuId: "menu_tabsSidebar",
           buttonId: "sidebar-switcher-tabs",
-          triggerButtonId: "PanelUI-remotetabs-view-sidebar",
         },
       ],
     ]));
