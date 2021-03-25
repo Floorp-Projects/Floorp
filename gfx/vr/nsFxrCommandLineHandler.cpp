@@ -23,7 +23,7 @@
 #include "nsCOMPtr.h"
 #include "mozilla/StaticPrefs_extensions.h"
 
-#include "windows.h"
+#include <windows.h>
 #include "WinUtils.h"
 
 #include "VRShMem.h"

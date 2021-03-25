@@ -13,8 +13,7 @@
 #include <shellapi.h>
 #include "nsIMutableArray.h"
 #include "nsTArray.h"
-#include "shlobj.h"
-#include "windows.h"
+#include <shlobj.h>
 #include "nsIWindowsRegKey.h"
 #include "nsUnicharUtils.h"
 #include "nsITextToSubURI.h"

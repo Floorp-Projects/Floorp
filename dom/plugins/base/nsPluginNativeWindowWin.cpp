@@ -7,8 +7,8 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/WeakPtr.h"
 
-#include "windows.h"
-#include "windowsx.h"
+#include <windows.h>
+#include <windowsx.h>
 
 // XXXbz windowsx.h defines GetFirstChild, GetNextSibling,
 // GetPrevSibling are macros, apparently... Eeevil.  We have functions

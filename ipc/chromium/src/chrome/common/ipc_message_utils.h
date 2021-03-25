@@ -25,7 +25,7 @@
 #  include "chrome/common/file_descriptor_set_posix.h"
 #endif
 #if defined(OS_WIN)
-#  include "windows.h"
+#  include <windows.h>
 #endif
 
 template <typename T>

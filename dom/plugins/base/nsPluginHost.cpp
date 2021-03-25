@@ -109,8 +109,8 @@
 #if defined(XP_WIN)
 #  include "nsIWindowMediator.h"
 #  include "nsIBaseWindow.h"
-#  include "windows.h"
-#  include "winbase.h"
+#  include <windows.h>
+#  include <winbase.h>
 #endif
 #if (MOZ_WIDGET_GTK)
 #  include "mozilla/WidgetUtilsGtk.h"

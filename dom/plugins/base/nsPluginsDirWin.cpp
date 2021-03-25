@@ -19,8 +19,8 @@
 #include "prlink.h"
 #include "plstr.h"
 
-#include "windows.h"
-#include "winbase.h"
+#include <windows.h>
+#include <winbase.h>
 
 #include "nsString.h"
 #include "nsIFile.h"
