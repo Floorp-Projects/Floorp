@@ -98,7 +98,7 @@ class WebConsole {
   }
 
   get currentTarget() {
-    return this.toolbox.target;
+    return this.targetList.targetFront;
   }
 
   get targetList() {
