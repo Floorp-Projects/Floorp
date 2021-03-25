@@ -171,7 +171,18 @@ impl AndroidHandler {
                 buf
             }
             AndroidStorage::Internal => PathBuf::from("/data/local/tmp/test_root"),
-            AndroidStorage::Sdcard => PathBuf::from("/mnt/sdcard/test_root"),
+            AndroidStorage::Sdcard => {
+                // We need to push the profile to a location on the device that can also
+                // be read and write by the application, and works for unrooted devices.
+                // The only location that meets this criteria is under:
+                //     $EXTERNAL_STORAGE/Android/data/%options.package%/files
+                let response = device.execute_host_shell_command("echo $EXTERNAL_STORAGE")?;
+                let mut buf = PathBuf::from(response.trim_end_matches('\n'));
+                buf.push("Android/data");
+                buf.push(&options.package);
+                buf.push("files/test_root");
+                buf
+            }
         };
 
         debug!(
@@ -431,7 +442,19 @@ mod test {
                 buf
             }
             AndroidStorage::Internal => PathBuf::from("/data/local/tmp/test_root"),
-            AndroidStorage::Sdcard => PathBuf::from("/mnt/sdcard/test_root"),
+            AndroidStorage::Sdcard => {
+                let response = handler
+                    .process
+                    .device
+                    .execute_host_shell_command("echo $EXTERNAL_STORAGE")
+                    .unwrap();
+
+                let mut buf = PathBuf::from(response.trim_end_matches('\n'));
+                buf.push("Android/data/");
+                buf.push(&package);
+                buf.push("files/test_root");
+                buf
+            }
         };
         assert_eq!(handler.test_root, test_root);
 
