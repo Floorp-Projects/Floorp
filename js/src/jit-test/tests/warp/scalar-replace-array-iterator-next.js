@@ -1,3 +1,5 @@
+//|jit-test| --ion-pruning=on
+
 // Verify that we can inline ArrayIteratorNext,
 // and scalar-replace the result object.
 

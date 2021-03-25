@@ -11087,13 +11087,13 @@ static bool SetContextOptions(JSContext* cx, const OptionParser& op) {
     }
   }
 
-  if (const char* str = op.getStringOption("ion-pgo")) {
+  if (const char* str = op.getStringOption("ion-pruning")) {
     if (strcmp(str, "on") == 0) {
-      jit::JitOptions.disablePgo = false;
+      jit::JitOptions.disablePruning = false;
     } else if (strcmp(str, "off") == 0) {
-      jit::JitOptions.disablePgo = true;
+      jit::JitOptions.disablePruning = true;
     } else {
-      return OptionFailure("ion-pgo", str);
+      return OptionFailure("ion-pruning", str);
     }
   }
 
@@ -12012,9 +12012,8 @@ int main(int argc, char** argv, char** envp) {
       !op.addStringOption('\0', "ion-edgecase-analysis", "on/off",
                           "Find edge cases where Ion can avoid bailouts "
                           "(default: on, off to disable)") ||
-      !op.addStringOption(
-          '\0', "ion-pgo", "on/off",
-          "Profile guided optimization (default: on, off to disable)") ||
+      !op.addStringOption('\0', "ion-pruning", "on/off",
+                          "Branch pruning (default: on, off to disable)") ||
       !op.addStringOption('\0', "ion-range-analysis", "on/off",
                           "Range analysis (default: on, off to disable)") ||
       !op.addStringOption('\0', "ion-sink", "on/off",

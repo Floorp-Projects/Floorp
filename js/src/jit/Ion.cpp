@@ -1003,7 +1003,7 @@ bool OptimizeMIR(MIRGenerator* mir) {
   DumpMIRExpressions(graph, mir->outerInfo(),
                      "BuildSSA (== input to OptimizeMIR)");
 
-  if (!JitOptions.disablePgo && !mir->compilingWasm()) {
+  if (!JitOptions.disablePruning && !mir->compilingWasm()) {
     AutoTraceLog log(logger, TraceLogger_PruneUnusedBranches);
     JitSpewCont(JitSpew_Prune, "\n");
     if (!PruneUnusedBranches(mir, graph)) {

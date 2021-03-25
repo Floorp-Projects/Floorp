@@ -27,8 +27,8 @@
 --ion-offthread-compile=off
 --ion-osr=off
 --ion-osr=on
---ion-pgo=off
---ion-pgo=on
+--ion-pruning=off
+--ion-pruning=on
 --ion-range-analysis=off
 --ion-range-analysis=on
 --ion-regalloc=testbed

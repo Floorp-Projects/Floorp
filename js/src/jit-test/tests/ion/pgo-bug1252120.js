@@ -1,4 +1,4 @@
-// |jit-test| --ion-pgo=on;
+// |jit-test| --ion-pruning=on;
 
 target = handler = {}
 for (p of[new Proxy(target, handler)])
