@@ -26,15 +26,6 @@ add_task(async function() {
   );
   ok(tabDescriptor, "Should have a descriptor actor for the tab");
 
-  const firstCommands = await tabDescriptor.getCommands();
-  ok(firstCommands, "Got commands");
-  const secondCommands = await tabDescriptor.getCommands();
-  is(
-    firstCommands,
-    secondCommands,
-    "Multiple calls to getCommands return the same commands object"
-  );
-
   is(
     target.descriptorFront,
     tabDescriptor,

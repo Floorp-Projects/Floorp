@@ -17,8 +17,6 @@ add_task(async function() {
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
 
   info("Setup the test page with workers of all types");
-  const client = await createLocalClient();
-  const mainRoot = client.mainRoot;
 
   const tab = await addTab(FISSION_TEST_URL);
 
@@ -29,8 +27,7 @@ add_task(async function() {
   const sharedWorker = new SharedWorker(CHROME_WORKER_URL + "#shared-worker");
 
   info("Create a target list for the main process target");
-  const targetDescriptor = await mainRoot.getMainProcess();
-  const commands = await targetDescriptor.getCommands();
+  const commands = await CommandsFactory.forMainProcess();
   const targetList = commands.targetCommand;
   const { TYPES } = targetList;
   await targetList.startListening();
@@ -97,7 +94,7 @@ add_task(async function() {
   // Wait for all the targets to be fully attached so we don't have pending requests.
   await waitForAllTargetsToBeAttached(targetList);
 
-  await client.close();
+  await commands.destroy();
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     // registrationPromise is set by the test page.
     const registration = await content.wrappedJSObject.registrationPromise;

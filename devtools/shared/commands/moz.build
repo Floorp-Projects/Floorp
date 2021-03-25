@@ -7,5 +7,6 @@ DIRS += [
 ]
 
 DevToolsModules(
+    "commands-factory.js",
     "index.js",
 )

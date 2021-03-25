@@ -18,8 +18,6 @@ add_task(async function() {
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
 
-  const client = await createLocalClient();
-  const mainRoot = client.mainRoot;
   const tab = await addTab(FISSION_TEST_URL);
 
   info("Test TargetCommand against workers via the parent process target");
@@ -30,8 +28,7 @@ add_task(async function() {
   // eslint-disable-next-line no-unused-vars
   const sharedWorker = new SharedWorker(CHROME_WORKER_URL + "#shared-worker");
 
-  const targetDescriptor = await mainRoot.getMainProcess();
-  const commands = await targetDescriptor.getCommands();
+  const commands = await CommandsFactory.forMainProcess();
   const targetList = commands.targetCommand;
   const { TYPES } = targetList;
   await targetList.startListening();
@@ -105,7 +102,7 @@ add_task(async function() {
     "Check that watchTargets will call the create callback for all existing workers"
   );
   const targets = [];
-  const topLevelTarget = await targetDescriptor.getTarget();
+  const topLevelTarget = await commands.targetCommand.targetFront;
   const onAvailable = async ({ targetFront }) => {
     ok(
       targetFront.targetType === TYPES.WORKER ||
@@ -180,9 +177,9 @@ add_task(async function() {
   targetList.destroy();
 
   info("Unregister service workers so they don't appear in other tests.");
-  await unregisterAllServiceWorkers(client);
+  await unregisterAllServiceWorkers(commands.client);
 
-  await client.close();
+  await commands.destroy();
 
   await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
     // registrationPromise is set by the test page.

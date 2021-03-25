@@ -24,12 +24,13 @@ let gResourceWatcher = null;
 
 addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
-  const { target, doc } = await attachURL(url);
+  const { commands, doc } = await attachURL(url);
+  const target = commands.targetCommand.targetFront;
   const inspector = await target.getFront("inspector");
   gInspectee = doc;
   const walker = inspector.walker;
   gWalker = await inspector.getWalker();
-  gResourceWatcher = await createResourceWatcher(target);
+  gResourceWatcher = await createResourceWatcher(commands);
 
   ok(walker === gWalker, "getWalker() twice should return the same walker.");
   runNextTest();

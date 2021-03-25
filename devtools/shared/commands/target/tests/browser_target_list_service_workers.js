@@ -16,13 +16,11 @@ add_task(async function() {
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
 
   info("Setup the test page with workers of all types");
-  const client = await createLocalClient();
 
   const tab = await addTab(FISSION_TEST_URL);
 
   info("Create a target list for a tab target");
-  const descriptor = await client.mainRoot.getTab({ tab });
-  const commands = await descriptor.getCommands();
+  const commands = await CommandsFactory.forTab(tab);
   const targetList = commands.targetCommand;
   const { TYPES } = targetList;
 
@@ -74,7 +72,7 @@ add_task(async function() {
   // Stop listening to avoid worker related requests
   targetList.destroy();
 
-  await client.waitForRequestsToSettle();
+  await commands.waitForRequestsToSettle();
 
-  await client.close();
+  await commands.destroy();
 });

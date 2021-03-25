@@ -51,6 +51,9 @@ const { gDevTools } = require("devtools/client/framework/devtools");
 const {
   TabDescriptorFactory,
 } = require("devtools/client/framework/tab-descriptor-factory");
+const {
+  CommandsFactory,
+} = require("devtools/shared/commands/commands-factory");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 // This is overridden in files that load shared-head via loadSubScript.
@@ -534,8 +537,13 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
 async function createAndAttachTargetForTab(tab) {
   info("Creating and attaching to a local tab target");
 
-  const descriptor = await TabDescriptorFactory.createDescriptorForTab(tab);
-  const target = await descriptor.getTarget();
+  const commands = await CommandsFactory.forTab(tab);
+
+  // Initialize the TargetCommands which require some async stuff to be done
+  // before being fully ready. This will define the `targetCommand.targetFront` attribute.
+  await commands.targetCommand.startListening();
+
+  const target = commands.targetCommand.targetFront;
   await target.attach();
   return target;
 }
