@@ -236,7 +236,7 @@ class AboutWelcomeChild extends JSWindowActorChild {
         featureConfig = { ...attributionData, ...featureConfig };
       } else {
         log.debug("Loading about:welcome with default data");
-        let defaults = AboutWelcomeDefaults.getDefaults();
+        let defaults = AboutWelcomeDefaults.getDefaults(featureConfig);
         // FeatureConfig (from prefs or experiments) has higher precendence
         // to defaults. But the `screens` property isn't defined we shouldn't
         // override the default with `null`
