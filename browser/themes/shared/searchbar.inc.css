@@ -12,14 +12,12 @@
 
 .search-one-offs {
   -moz-box-orient: vertical;
-  border-top: 1px solid var(--panel-separator-color);
   width: 100%;
 }
 
 .search-panel-header {
   font-weight: normal;
   margin: 0;
-  padding: 3px;
 }
 
 .search-panel-header > label {
@@ -45,13 +43,22 @@
 .search-panel-current-engine {
   -moz-box-align: center;
   border-top: none !important;
-  border-bottom: 1px solid var(--panel-separator-color);
-  padding-inline-start: 6px;
+  padding-inline: 8px;
 }
 
-.search-panel-tree[collapsed=true] + .search-one-offs {
-  border-top: none;
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+.search-panel-header {
+  padding-block: 3px;
 }
+
+.search-panel-current-engine {
+  border-bottom: 1px solid var(--panel-separator-color);
+}
+
+.search-panel-tree:not([collapsed=true]) ~ .search-one-offs {
+  border-top: 1px solid var(--panel-separator-color);
+}
+} /*** END !proton ***/
 
 .search-panel-one-offs:not([hidden]),
 .search-panel-one-offs-container {
@@ -72,12 +79,20 @@
 .searchbar-engine-one-off-item {
   appearance: none;
   display: inline-block;
-  min-width: 48px;
+  min-width: 32px;
   height: 32px;
-  margin: 0;
+  margin: var(--arrowpanel-menuitem-margin);
   padding: 0;
   color: inherit;
+  border-radius: var(--toolbarbutton-border-radius);
 }
+
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+.searchbar-engine-one-off-item {
+  border-radius: 0;
+  min-width: 48px;
+}
+} /*** END !proton ***/
 
 .searchbar-engine-one-off-item:not([selected]):hover,
 .addengine-item:hover {
@@ -109,13 +124,20 @@
   appearance: none;
   color: inherit;
   height: 32px;
-  margin: 0;
+  margin: var(--arrowpanel-menuitem-margin);
+  border-radius: var(--toolbarbutton-border-radius);
   padding: 0 10px;
+}
+
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+.addengine-item {
+  border-radius: 0;
 }
 
 .addengine-item:first-of-type {
   border-top: 1px solid var(--panel-separator-color);
 }
+} /*** END !proton ***/
 
 .addengine-item[selected] {
   background-color: var(--autocomplete-popup-highlight-background);
@@ -173,13 +195,14 @@
 }
 
 .search-panel-tree > .autocomplete-richlistitem {
-  padding: 1px;
+  padding: 1px 3px;
 }
 
 .search-panel-tree > .autocomplete-richlistitem > .ac-type-icon {
   display: -moz-box;
   width: 14px;
   height: 14px;
+  margin-inline-end: 7px;
 }
 
 .search-panel-tree > .autocomplete-richlistitem[originaltype="fromhistory"] > .ac-type-icon {
@@ -195,11 +218,34 @@
 
 .search-setting-button {
   appearance: none;
-  margin: 0;
+  margin: var(--arrowpanel-menuitem-margin);
   min-height: 32px;
+  color: inherit !important; /* Overriding toolbarbutton.css on Linux. */
+  border-radius: var(--toolbarbutton-border-radius);
+}
+
+.searchbar-separator {
+  appearance: none;
+  margin: var(--panel-separator-margin);
+  padding: 0;
   border-top: 1px solid var(--panel-separator-color);
   color: inherit;
 }
+
+.search-panel-tree[collapsed=true] + .searchbar-separator {
+  display: none;
+}
+
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+.search-setting-button {
+  border-top: 1px solid var(--panel-separator-color);
+  border-radius: 0;
+}
+
+.searchbar-separator {
+  display: none;
+}
+} /*** END !proton ***/
 
 .search-setting-button-compact {
   max-height: 32px;
