@@ -2,6 +2,27 @@
  * Test that doorhanger submit telemetry is sent when the user saves/updates.
  */
 
+add_task(function setup() {
+  // This test used to rely on the initial timer of
+  // TestUtils.waitForCondition. See bug 1695395.
+  // The test is perma-fail on Linux asan opt without this.
+  let originalWaitForCondition = TestUtils.waitForCondition;
+  TestUtils.waitForCondition = async function(
+    condition,
+    msg,
+    interval = 100,
+    maxTries = 50
+  ) {
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    return originalWaitForCondition(condition, msg, interval, maxTries);
+  };
+  registerCleanupFunction(function() {
+    TestUtils.waitForCondition = originalWaitForCondition;
+  });
+});
+
 const PAGE_USERNAME_SELECTOR = "#form-basic-username";
 const PAGE_PASSWORD_SELECTOR = "#form-basic-password";
 
