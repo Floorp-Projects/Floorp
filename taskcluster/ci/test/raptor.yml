@@ -233,6 +233,7 @@ raptor-webaudio-firefox:
     variants: ["fission"]
     try-name: raptor-webaudio-firefox
     treeherder-symbol: Rap(wa)
+    run-on-projects: []
     tier: 1
     mozharness:
         extra-options:
@@ -242,6 +243,7 @@ raptor-webaudio-firefox-profiling:
     description: "Raptor WebAudio on Firefox with Gecko Profiling"
     try-name: raptor-webaudio-firefox
     treeherder-symbol: Rap-Prof(wa)
+    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:

@@ -222,7 +222,9 @@ class Browsertime(Perftest):
         browsertime_script.extend(["--browsertime.url", test["test_url"]])
 
         # Raptor's `pageCycleDelay` delay (ms) between pageload cycles
-        browsertime_script.extend(["--browsertime.page_cycle_delay", "1000"])
+        browsertime_script.extend(
+            ["--browsertime.page_cycle_delay", str(self.post_startup_delay)]
+        )
 
         # Raptor's `post startup delay` is settle time after the browser has started
         browsertime_script.extend(

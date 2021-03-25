@@ -142,6 +142,10 @@ browsertime-benchmark:
         - [motionmark-animometer, mm-a]
         - [motionmark-htmlsuite, mm-h]
         - [stylebench, sb]
+        - [webaudio, wa]
+    variants: ["fission"]
+    apps: ["firefox"]
+    treeherder-symbol: Btime()
     tier:
         by-app:
             firefox:
@@ -168,8 +172,6 @@ browsertime-benchmark:
                     windows10.*shippable.*: ["trunk", "mozilla-beta"]
                     default: []
             default: []
-    apps: ["firefox"]
-    treeherder-symbol: Btime()
 
 browsertime-tp6-live:
     <<: *tp6-defaults
