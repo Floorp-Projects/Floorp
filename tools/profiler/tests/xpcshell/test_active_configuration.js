@@ -23,13 +23,13 @@ function run_test() {
     const interval = 1;
     const threads = ["GeckoMain"];
     const features = ["js", "leaf", "threads"];
-    const activeBrowsingContextID = 123;
+    const activeTabID = 123;
     Services.profiler.StartProfiler(
       entries,
       interval,
       features,
       threads,
-      activeBrowsingContextID
+      activeTabID
     );
 
     info("Generate the activeConfiguration.");
@@ -38,7 +38,7 @@ function run_test() {
       interval,
       threads,
       features,
-      activeBrowsingContextID,
+      activeTabID,
       // The buffer is created as a power of two that can fit all of the entires
       // into it. If the ratio of entries to buffer size ever changes, this setting
       // will need to be updated.
@@ -65,7 +65,7 @@ function run_test() {
     const interval = 0.5;
     const threads = ["GeckoMain", "DOM Worker"];
     const features = ["threads"];
-    const activeBrowsingContextID = 111;
+    const activeTabID = 111;
     const duration = 20;
 
     info("Restart the profiler with a new configuration.");
@@ -74,7 +74,7 @@ function run_test() {
       interval,
       features,
       threads,
-      activeBrowsingContextID,
+      activeTabID,
       // Also start it with duration, this property is optional.
       duration
     );
@@ -85,7 +85,7 @@ function run_test() {
       interval,
       threads,
       features,
-      activeBrowsingContextID,
+      activeTabID,
       duration,
       // The buffer is created as a power of two that can fit all of the entires
       // into it. If the ratio of entries to buffer size ever changes, this setting

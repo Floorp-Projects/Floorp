@@ -28,7 +28,7 @@ void PageInformation::StreamJSON(SpliceableJSONWriter& aWriter) const {
   // which is specifically designed to only use 53 of the 64 bits to be lossless
   // when passed into and out of JS as a double.
   aWriter.StartObjectElement();
-  aWriter.DoubleProperty("browsingContextID", TabID());
+  aWriter.DoubleProperty("tabID", TabID());
   aWriter.DoubleProperty("innerWindowID", InnerWindowID());
   aWriter.StringProperty("url", Url());
   aWriter.DoubleProperty("embedderInnerWindowID", EmbedderInnerWindowID());
