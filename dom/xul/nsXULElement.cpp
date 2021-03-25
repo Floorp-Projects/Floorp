@@ -485,8 +485,6 @@ void nsXULElement::OpenMenu(bool aOpenFlag) {
 
 bool nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
                                     bool aIsTrustedEvent) {
-  RefPtr<Element> element(this);
-
   if (IsXULElement(nsGkAtoms::label)) {
     nsAutoString control;
     GetAttr(kNameSpaceID_None, nsGkAtoms::control, control);
@@ -496,57 +494,63 @@ bool nsXULElement::PerformAccesskey(bool aKeyCausesActivation,
 
     // XXXsmaug Should we use ShadowRoot::GetElementById in case
     //          element is in Shadow DOM?
-    nsCOMPtr<Document> document = element->GetUncomposedDoc();
+    RefPtr<Document> document = GetUncomposedDoc();
     if (!document) {
       return false;
     }
 
-    element = document->GetElementById(control);
+    RefPtr<Element> element = document->GetElementById(control);
     if (!element) {
       return false;
     }
+
+    // XXXedgar, This is mainly for HTMLElement which doesn't do visible
+    // check in PerformAccesskey. We probably should always do visible
+    // check on HTMLElement even if the PerformAccesskey is not redirected from
+    // label XULelement per spec.
+    nsIFrame* frame = element->GetPrimaryFrame();
+    if (!frame || !frame->IsVisibleConsideringAncestors()) {
+      return false;
+    }
+
+    return element->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
   }
 
-  nsIFrame* frame = element->GetPrimaryFrame();
+  nsIFrame* frame = GetPrimaryFrame();
   if (!frame || !frame->IsVisibleConsideringAncestors()) {
     return false;
   }
 
   bool focused = false;
-  if (nsXULElement* elm = FromNode(element)) {
-    // Define behavior for each type of XUL element.
-    if (!elm->IsXULElement(nsGkAtoms::toolbarbutton)) {
-      if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
-        nsCOMPtr<Element> elementToFocus;
-        // for radio buttons, focus the radiogroup instead
-        if (elm->IsXULElement(nsGkAtoms::radio)) {
-          nsCOMPtr<nsIDOMXULSelectControlItemElement> controlItem =
-              elm->AsXULSelectControlItem();
-          if (controlItem) {
-            bool disabled;
-            controlItem->GetDisabled(&disabled);
-            if (!disabled) {
-              controlItem->GetControl(getter_AddRefs(elementToFocus));
-            }
+  // Define behavior for each type of XUL element.
+  if (!IsXULElement(nsGkAtoms::toolbarbutton)) {
+    if (RefPtr<nsFocusManager> fm = nsFocusManager::GetFocusManager()) {
+      RefPtr<Element> elementToFocus = this;
+      // for radio buttons, focus the radiogroup instead
+      if (IsXULElement(nsGkAtoms::radio)) {
+        if (nsCOMPtr<nsIDOMXULSelectControlItemElement> controlItem =
+                AsXULSelectControlItem()) {
+          bool disabled;
+          controlItem->GetDisabled(&disabled);
+          if (!disabled) {
+            controlItem->GetControl(getter_AddRefs(elementToFocus));
           }
-        } else {
-          elementToFocus = elm;
-        }
-        if (elementToFocus) {
-          fm->SetFocus(elementToFocus, nsIFocusManager::FLAG_BYKEY);
-
-          // Return true if the element became focused.
-          nsPIDOMWindowOuter* window = OwnerDoc()->GetWindow();
-          focused = (window && window->GetFocusedElement());
         }
       }
+
+      if (elementToFocus) {
+        fm->SetFocus(elementToFocus, nsIFocusManager::FLAG_BYKEY);
+
+        // Return true if the element became focused.
+        nsPIDOMWindowOuter* window = OwnerDoc()->GetWindow();
+        focused = (window && window->GetFocusedElement());
+      }
     }
-    if (aKeyCausesActivation && !elm->IsXULElement(nsGkAtoms::menulist)) {
-      elm->ClickWithInputSource(MouseEvent_Binding::MOZ_SOURCE_KEYBOARD,
-                                aIsTrustedEvent);
-    }
-  } else {
-    return element->PerformAccesskey(aKeyCausesActivation, aIsTrustedEvent);
+  }
+
+  if (aKeyCausesActivation && !IsXULElement(nsGkAtoms::menulist)) {
+    ClickWithInputSource(MouseEvent_Binding::MOZ_SOURCE_KEYBOARD,
+                         aIsTrustedEvent);
   }
 
   return focused;
