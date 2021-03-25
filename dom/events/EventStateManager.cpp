@@ -1102,28 +1102,31 @@ bool EventStateManager::LookForAccessKeyAndExecute(
           shouldActivate = false;
         }
 
-        while (shouldActivate && ++count <= length) {
-          Element* el = mAccessKeys[(start + count) % length];
+        // XXXedgar, Bug 1700646, maybe we could use other data structure to
+        // make searching target with same accesskey easier, and current setup
+        // could not ensure we cycle the target with tree order.
+        int32_t j = 0;
+        while (shouldActivate && ++j < length) {
+          Element* el = mAccessKeys[(start + count + j) % length];
           if (IsAccessKeyTarget(el, accessKey)) {
             shouldActivate = false;
           }
         }
 
-        bool focusChanged =
-            element->PerformAccesskey(shouldActivate, aIsTrustedEvent);
-        if (focusChanged && aIsTrustedEvent) {
-          // If this is a child process, inform the parent that we want the
-          // focus, but pass false since we don't want to change the window
-          // order.
-          nsIDocShell* docShell = mPresContext->GetDocShell();
-          nsCOMPtr<nsIBrowserChild> child =
-              docShell ? docShell->GetBrowserChild() : nullptr;
-          if (child) {
-            child->SendRequestFocus(false, CallerType::System);
+        if (element->PerformAccesskey(shouldActivate, aIsTrustedEvent)) {
+          if (aIsTrustedEvent) {
+            // If this is a child process, inform the parent that we want the
+            // focus, but pass false since we don't want to change the window
+            // order.
+            nsIDocShell* docShell = mPresContext->GetDocShell();
+            nsCOMPtr<nsIBrowserChild> child =
+                docShell ? docShell->GetBrowserChild() : nullptr;
+            if (child) {
+              child->SendRequestFocus(false, CallerType::System);
+            }
           }
+          return true;
         }
-
-        return true;
       }
     }
   }
