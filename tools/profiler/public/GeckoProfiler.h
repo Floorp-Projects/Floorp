@@ -160,7 +160,7 @@ static constexpr mozilla::PowerOfTwo32 PROFILER_DEFAULT_STARTUP_ENTRIES =
 // https://searchfox.org/mozilla-central/source/mobile/android/geckoview/src/main/java/org/mozilla/gecko/GeckoThread.java
 #  define PROFILER_DEFAULT_INTERVAL 1  /* millisecond */
 #  define PROFILER_MAX_INTERVAL 5000   /* milliseconds */
-#  define PROFILER_DEFAULT_ACTIVE_BROWSING_CONTEXT_ID 0
+#  define PROFILER_DEFAULT_ACTIVE_TAB_ID 0
 
 // Initialize the profiler. If MOZ_PROFILER_STARTUP is set the profiler will
 // also be started. This call must happen before any other profiler calls
@@ -199,14 +199,13 @@ void profiler_shutdown(IsFastShutdown aIsFastShutdown = IsFastShutdown::No);
 //                  substring, or
 //              (b) the filter is of the form "pid:<n>" where n is the process
 //                  id of the process that the thread is running in.
-//   "aActiveBrowsingContextID" Browsing Context of the active browser screen's
-//               active tab. It's being used to determine the profiled tab.
-//               It's "0" if we failed to get the ID.
+//   "aActiveTabID" BrowserId of the active browser screen's active tab.
+//               It's being used to determine the profiled tab. It's "0" if
+//               we failed to get the ID.
 //   "aDuration" is the duration of entries in the profiler's circular buffer.
 void profiler_start(
     mozilla::PowerOfTwo32 aCapacity, double aInterval, uint32_t aFeatures,
-    const char** aFilters, uint32_t aFilterCount,
-    uint64_t aActiveBrowsingContextID,
+    const char** aFilters, uint32_t aFilterCount, uint64_t aActiveTabID,
     const mozilla::Maybe<double>& aDuration = mozilla::Nothing());
 
 // Stop the profiler and discard the profile without saving it. A no-op if the
@@ -220,8 +219,7 @@ void profiler_stop();
 // not discarded if the profiler is already running with the requested settings.
 void profiler_ensure_started(
     mozilla::PowerOfTwo32 aCapacity, double aInterval, uint32_t aFeatures,
-    const char** aFilters, uint32_t aFilterCount,
-    uint64_t aActiveBrowsingContextID,
+    const char** aFilters, uint32_t aFilterCount, uint64_t aActiveTabID,
     const mozilla::Maybe<double>& aDuration = mozilla::Nothing());
 
 //---------------------------------------------------------------------------
@@ -241,26 +239,24 @@ void profiler_unregister_thread();
 
 // Registers a DOM Window (the JS global `window`) with the profiler. Each
 // Window _roughly_ corresponds to a single document loaded within a
-// BrowsingContext. The unique IDs for both the Window and BrowsingContext are
-// recorded to allow correlating different Windows loaded within the same tab or
-// frame element.
+// browsing context. Both the Window Id and Browser Id are recorded to allow
+// correlating different Windows loaded within the same tab or frame element.
 //
 // We register pages for each navigations but we do not register
 // history.pushState or history.replaceState since they correspond to the same
-// Inner Window ID. When a Browsing context is first loaded, the first url
+// Inner Window ID. When a browsing context is first loaded, the first url
 // loaded in it will be about:blank. Because of that, this call keeps the first
 // non-about:blank registration of window and discards the previous one.
 //
-//   "aBrowsingContextID"     is the ID of the browsing context that document
-//                            belongs to. That's used to determine the tab of
-//                            that page.
+//   "aTabID"                 is the BrowserId of that document belongs to.
+//                            That's used to determine the tab of that page.
 //   "aInnerWindowID"         is the ID of the `window` global object of that
 //                            document.
 //   "aUrl"                   is the URL of the page.
 //   "aEmbedderInnerWindowID" is the inner window id of embedder. It's used to
 //                            determine sub documents of a page.
-void profiler_register_page(uint64_t aBrowsingContextID,
-                            uint64_t aInnerWindowID, const nsCString& aUrl,
+void profiler_register_page(uint64_t aTabID, uint64_t aInnerWindowID,
+                            const nsCString& aUrl,
                             uint64_t aEmbedderInnerWindowID);
 // Unregister page with the profiler.
 //
@@ -352,7 +348,7 @@ void profiler_get_start_params(
     int* aEntrySize, mozilla::Maybe<double>* aDuration, double* aInterval,
     uint32_t* aFeatures,
     mozilla::Vector<const char*, 0, mozilla::MallocAllocPolicy>* aFilters,
-    uint64_t* aActiveBrowsingContextID);
+    uint64_t* aActiveTabID);
 
 // Get the chunk manager used in the current profiling session, or null.
 mozilla::ProfileBufferControlledChunkManager*

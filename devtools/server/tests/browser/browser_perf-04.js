@@ -24,19 +24,18 @@ add_task(async function() {
 
   // Getting the active BrowsingContext ID to assert in the "profiler-started" event.
   const win = Services.wm.getMostRecentWindow("navigator:browser");
-  const activeBrowsingContextID =
-    win.gBrowser.selectedBrowser.browsingContext.id;
+  const activeTabID = win.gBrowser.selectedBrowser.browsingContext.id;
 
   front.once(
     "profiler-started",
-    (entries, interval, features, duration, activeBCID) => {
+    (entries, interval, features, duration, activeTID) => {
       is(entries, 1024, "Should apply entries by startProfiler");
       is(interval, 0.1, "Should apply interval by startProfiler");
       is(typeof features, "number", "Should apply features by startProfiler");
       is(duration, 2, "Should apply duration by startProfiler");
       is(
-        activeBCID,
-        activeBrowsingContextID,
+        activeTID,
+        activeTabID,
         "Should apply active browsing context ID by startProfiler"
       );
     }

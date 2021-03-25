@@ -13,11 +13,10 @@
 namespace mozilla {
 namespace baseprofiler {
 
-PageInformation::PageInformation(uint64_t aBrowsingContextID,
-                                 uint64_t aInnerWindowID,
+PageInformation::PageInformation(uint64_t aTabID, uint64_t aInnerWindowID,
                                  const std::string& aUrl,
                                  uint64_t aEmbedderInnerWindowID)
-    : mBrowsingContextID(aBrowsingContextID),
+    : mTabID(aTabID),
       mInnerWindowID(aInnerWindowID),
       mUrl(aUrl),
       mEmbedderInnerWindowID(aEmbedderInnerWindowID),
@@ -25,17 +24,17 @@ PageInformation::PageInformation(uint64_t aBrowsingContextID,
 
 bool PageInformation::Equals(PageInformation* aOtherPageInfo) const {
   // It's enough to check inner window IDs because they are unique for each
-  // page. Therefore, we don't have to check browsing context ID or url.
+  // page. Therefore, we don't have to check the tab ID or url.
   return InnerWindowID() == aOtherPageInfo->InnerWindowID();
 }
 
 void PageInformation::StreamJSON(SpliceableJSONWriter& aWriter) const {
   aWriter.StartObjectElement();
-  // Here, we are converting uint64_t to double. Both Browsing Context and Inner
-  // Window IDs are creating using `nsContentUtils::GenerateProcessSpecificId`,
+  // Here, we are converting uint64_t to double. Both tab and Inner
+  // Window IDs are created using `nsContentUtils::GenerateProcessSpecificId`,
   // which is specifically designed to only use 53 of the 64 bits to be lossless
   // when passed into and out of JS as a double.
-  aWriter.DoubleProperty("browsingContextID", BrowsingContextID());
+  aWriter.DoubleProperty("browsingContextID", TabID());
   aWriter.DoubleProperty("innerWindowID", InnerWindowID());
   aWriter.StringProperty("url", Url());
   aWriter.DoubleProperty("embedderInnerWindowID", EmbedderInnerWindowID());

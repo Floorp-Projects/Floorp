@@ -11,13 +11,13 @@ NS_IMPL_ISUPPORTS(nsProfilerStartParams, nsIProfilerStartParams)
 nsProfilerStartParams::nsProfilerStartParams(
     uint32_t aEntries, const mozilla::Maybe<double>& aDuration,
     double aInterval, uint32_t aFeatures, nsTArray<nsCString>&& aFilters,
-    uint64_t aActiveBrowsingContextID)
+    uint64_t aActiveTabID)
     : mEntries(aEntries),
       mDuration(aDuration),
       mInterval(aInterval),
       mFeatures(aFeatures),
       mFilters(std::move(aFilters)),
-      mActiveBrowsingContextID(aActiveBrowsingContextID) {}
+      mActiveTabID(aActiveTabID) {}
 
 nsProfilerStartParams::~nsProfilerStartParams() {}
 
@@ -58,9 +58,8 @@ const nsTArray<nsCString>& nsProfilerStartParams::GetFilters() {
 }
 
 NS_IMETHODIMP
-nsProfilerStartParams::GetActiveBrowsingContextID(
-    uint64_t* aActiveBrowsingContextID) {
-  NS_ENSURE_ARG_POINTER(aActiveBrowsingContextID);
-  *aActiveBrowsingContextID = mActiveBrowsingContextID;
+nsProfilerStartParams::GetActiveTabID(uint64_t* aActiveTabID) {
+  NS_ENSURE_ARG_POINTER(aActiveTabID);
+  *aActiveTabID = mActiveTabID;
   return NS_OK;
 }

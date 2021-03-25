@@ -119,7 +119,7 @@ NS_IMETHODIMP
 nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
                           const nsTArray<nsCString>& aFeatures,
                           const nsTArray<nsCString>& aFilters,
-                          uint64_t aActiveBrowsingContextID, double aDuration) {
+                          uint64_t aActiveTabID, double aDuration) {
   if (mLockedForPrivateBrowsing) {
     return NS_ERROR_NOT_AVAILABLE;
   }
@@ -142,7 +142,7 @@ nsProfiler::StartProfiler(uint32_t aEntries, double aInterval,
   }
   profiler_start(PowerOfTwo32(aEntries), aInterval, features,
                  filterStringVector.begin(), filterStringVector.length(),
-                 aActiveBrowsingContextID, duration);
+                 aActiveTabID, duration);
 
   return NS_OK;
 }
