@@ -210,11 +210,13 @@ void main(void) {
 
 #ifdef WR_FRAGMENT_SHADER
 
+float antialias_brush() {
 #if (defined(WR_FEATURE_ALPHA_PASS) || defined(WR_FEATURE_ANTIALIASING)) && !defined(SWGL_ANTIALIAS)
-    #define antialias_brush() init_transform_fs(v_local_pos)
+    return init_transform_fs(v_local_pos);
 #else
-    #define antialias_brush() 1.0
+    return 1.0;
 #endif
+}
 
 Fragment brush_fs();
 
