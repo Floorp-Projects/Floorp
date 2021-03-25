@@ -32,8 +32,8 @@
 #include "mozilla/gfx/2D.h"
 #include "WindowsDefaultBrowser.h"
 
-#include "windows.h"
-#include "shellapi.h"
+#include <windows.h>
+#include <shellapi.h>
 #include <propvarutil.h>
 #include <propkey.h>
 
