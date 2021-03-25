@@ -6,8 +6,8 @@
 
 #ifdef XP_WIN
 // Include Windows headers required for enabling high precision timers.
-#  include "windows.h"
-#  include "mmsystem.h"
+#  include <windows.h>
+#  include <mmsystem.h>
 #endif
 
 #include "VideoSink.h"

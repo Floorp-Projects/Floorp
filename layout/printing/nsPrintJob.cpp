@@ -2739,9 +2739,9 @@ void nsPrintJob::DisconnectPagePrintTimer() {
 //---------------------------------------------------------------
 //---------------------------------------------------------------
 #if defined(XP_WIN) && defined(EXTENDED_DEBUG_PRINTING)
-#  include "windows.h"
-#  include "process.h"
-#  include "direct.h"
+#  include <windows.h>
+#  include <process.h>
+#  include <direct.h>
 
 #  define MY_FINDFIRST(a, b) FindFirstFile(a, b)
 #  define MY_FINDNEXT(a, b) FindNextFile(a, b)
