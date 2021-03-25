@@ -136,6 +136,16 @@ add_test(function test_defineLazyPreferenceGetter()
     Preferences.reset(PREF);
     deepEqual(obj.pref, ["a", "b"], "transform is applied to reset default");
 
+    if (AppConstants.DEBUG) {
+      // Need to use a 'real' pref so it will have a valid prefType
+      obj = {};
+      Assert.throws(
+        () => XPCOMUtils.defineLazyPreferenceGetter(obj, "pref", "javascript.enabled", 1),
+        /Default value does not match preference type/,
+        "Providing a default value of a different type than the preference throws an exception"
+      );
+    }
+
     run_next_test();
 });
 

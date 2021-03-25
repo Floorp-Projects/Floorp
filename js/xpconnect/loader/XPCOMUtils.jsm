@@ -6,6 +6,10 @@
 
 var EXPORTED_SYMBOLS = ["XPCOMUtils"];
 
+const { AppConstants } = ChromeUtils.import(
+  "resource://gre/modules/AppConstants.jsm"
+);
+
 let global = Cu.getGlobalForObject({});
 
 // Some global imports expose additional symbols; for example,
@@ -273,6 +277,24 @@ var XPCOMUtils = {
                                    aOnUpdate = null,
                                    aTransform = val => val)
   {
+    if (AppConstants.DEBUG && aDefaultValue !== null) {
+      let prefType = Services.prefs.getPrefType(aPreference);
+      if (prefType != Ci.nsIPrefBranch.PREF_INVALID) {
+        // The pref may get defined after the lazy getter is called
+        // at which point the code here won't know the expected type.
+        let prefTypeForDefaultValue = {
+          boolean: Ci.nsIPrefBranch.PREF_BOOL,
+          number: Ci.nsIPrefBranch.PREF_INT,
+          string: Ci.nsIPrefBranch.PREF_STRING,
+        }[typeof aDefaultValue];
+        if (prefTypeForDefaultValue != prefType) {
+          throw new Error(
+            `Default value does not match preference type (Got ${prefTypeForDefaultValue}, expected ${prefType}) for ${aPreference}`
+          );
+        }
+      }
+    }
+
     // Note: We need to keep a reference to this observer alive as long
     // as aObject is alive. This means that all of our getters need to
     // explicitly close over the variable that holds the object, and we
