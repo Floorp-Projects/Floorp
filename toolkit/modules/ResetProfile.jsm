@@ -49,17 +49,44 @@ var ResetProfile = {
   /**
    * Ask the user if they wish to restart the application to reset the profile.
    */
-  openConfirmationDialog(window) {
-    // Prompt the user to confirm.
+  async openConfirmationDialog(window) {
+    let win = window;
+    // If we are, for instance, on an about page, get the chrome window to
+    // access its gDialogBox.
+    if (win.docShell.chromeEventHandler) {
+      win = win.browsingContext?.topChromeWindow;
+    }
+
     let params = {
+      learnMore: false,
       reset: false,
     };
-    window.browsingContext.topChromeWindow.openDialog(
-      "chrome://global/content/resetProfile.xhtml",
-      null,
-      "modal,centerscreen,titlebar",
-      params
-    );
+
+    if (win.gDialogBox) {
+      await win.gDialogBox.open(
+        "chrome://global/content/resetProfile.xhtml",
+        params
+      );
+    } else {
+      win.openDialog(
+        "chrome://global/content/resetProfile.xhtml",
+        null,
+        "modal,centerscreen,titlebar",
+        params
+      );
+    }
+
+    if (params.learnMore) {
+      win.openTrustedLinkIn(
+        "https://support.mozilla.org/kb/refresh-firefox-reset-add-ons-and-settings",
+        "tab",
+        {
+          fromChrome: true,
+        }
+      );
+      return;
+    }
+
     if (!params.reset) {
       return;
     }
