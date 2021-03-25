@@ -24,6 +24,9 @@ interface nsIPropertyBag2 : nsIPropertyBag
 
   /**
    * This method returns null if the value exists, but is null.
+   *
+   * Note: C++ callers should not use this method. They should use the
+   * typesafe `do_GetProperty` wrapper instead.
    */
   void        getPropertyAsInterface   (in AString prop,
                                         in nsIIDRef iid,
@@ -40,3 +43,38 @@ interface nsIPropertyBag2 : nsIPropertyBag
    */
   boolean     hasKey                   (in AString prop);
 };
+
+
+%{C++
+#include "nsCOMPtr.h"
+#include "nsAString.h"
+
+class MOZ_STACK_CLASS nsGetProperty final : public nsCOMPtr_helper {
+ public:
+  nsGetProperty(nsIPropertyBag2* aPropBag, const nsAString& aPropName, nsresult* aError)
+      : mPropBag(aPropBag), mPropName(aPropName), mErrorPtr(aError) {}
+
+  virtual nsresult NS_FASTCALL operator()(const nsIID&, void**) const override;
+
+ private:
+  nsIPropertyBag2* MOZ_NON_OWNING_REF mPropBag;
+  const nsAString& mPropName;
+  nsresult* mErrorPtr;
+};
+
+/**
+ * A typesafe wrapper around nsIPropertyBag2::GetPropertyAsInterface. Similar
+ * to the `do_QueryInterface` family of functions, when assigned to a
+ * `nsCOMPtr` of a given type, attempts to query the given property to that
+ * type.
+ *
+ * If `aError` is passed, the return value of `GetPropertyAsInterface` is
+ * stored in it.
+ */
+inline const nsGetProperty do_GetProperty(nsIPropertyBag2* aPropBag,
+                                          const nsAString& aPropName,
+                                          nsresult* aError = 0) {
+  return nsGetProperty(aPropBag, aPropName, aError);
+}
+
+%}
