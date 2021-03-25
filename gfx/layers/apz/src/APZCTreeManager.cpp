@@ -1488,42 +1488,43 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
         FlushRepaintsToClearScreenToGeckoTransform();
       }
 
-      HitTestResult hit = GetTargetAPZC(mouseInput.mOrigin);
-      aEvent.mLayersId = hit.mLayersId;
-      bool hitScrollbar = (bool)hit.mScrollbarNode;
+      state.mHit = GetTargetAPZC(mouseInput.mOrigin);
+      aEvent.mLayersId = state.mHit.mLayersId;
+      bool hitScrollbar = (bool)state.mHit.mScrollbarNode;
 
       // When the mouse is outside the window we still want to handle dragging
       // but we won't find an APZC. Fallback to root APZC then.
       {  // scope lock
         RecursiveMutexAutoLock lock(mTreeLock);
-        if (!hit.mTargetApzc && mRootNode) {
-          hit.mTargetApzc = mRootNode->GetApzc();
+        if (!state.mHit.mTargetApzc && mRootNode) {
+          state.mHit.mTargetApzc = mRootNode->GetApzc();
         }
       }
 
-      if (hit.mTargetApzc) {
+      if (state.mHit.mTargetApzc) {
         if (StaticPrefs::apz_test_logging_enabled() &&
             mouseInput.mType == MouseInput::MOUSE_HITTEST) {
-          ScrollableLayerGuid guid = hit.mTargetApzc->GetGuid();
+          ScrollableLayerGuid guid = state.mHit.mTargetApzc->GetGuid();
 
           MutexAutoLock lock(mTestDataLock);
           auto it = mTestData.find(guid.mLayersId);
           MOZ_ASSERT(it != mTestData.end());
-          it->second->RecordHitResult(mouseInput.mOrigin, hit.mHitResult,
+          it->second->RecordHitResult(mouseInput.mOrigin, state.mHit.mHitResult,
                                       guid.mLayersId, guid.mScrollId);
         }
 
-        TargetConfirmationFlags confFlags{hit.mHitResult};
-        state.mResult = mInputQueue->ReceiveInputEvent(hit.mTargetApzc,
+        TargetConfirmationFlags confFlags{state.mHit.mHitResult};
+        state.mResult = mInputQueue->ReceiveInputEvent(state.mHit.mTargetApzc,
                                                        confFlags, mouseInput);
 
         // If we're starting an async scrollbar drag
         bool apzDragEnabled = StaticPrefs::apz_drag_enabled();
-        if (apzDragEnabled && startsDrag && hit.mScrollbarNode &&
-            hit.mScrollbarNode->IsScrollThumbNode() &&
-            hit.mScrollbarNode->GetScrollbarData().mThumbIsAsyncDraggable) {
-          SetupScrollbarDrag(mouseInput, hit.mScrollbarNode,
-                             hit.mTargetApzc.get());
+        if (apzDragEnabled && startsDrag && state.mHit.mScrollbarNode &&
+            state.mHit.mScrollbarNode->IsScrollThumbNode() &&
+            state.mHit.mScrollbarNode->GetScrollbarData()
+                .mThumbIsAsyncDraggable) {
+          SetupScrollbarDrag(mouseInput, state.mHit.mScrollbarNode,
+                             state.mHit.mTargetApzc.get());
         }
 
         if (state.mResult.GetStatus() == nsEventStatus_eConsumeDoDefault) {
@@ -1539,9 +1540,9 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
           // have special handling in AsyncCompositionManager when resolution is
           // applied. TODO: we should find a better way to deal with this.
           ScreenToParentLayerMatrix4x4 transformToApzc =
-              GetScreenToApzcTransform(hit.mTargetApzc);
+              GetScreenToApzcTransform(state.mHit.mTargetApzc);
           ParentLayerToScreenMatrix4x4 transformToGecko =
-              GetApzcToGeckoTransform(hit.mTargetApzc);
+              GetApzcToGeckoTransform(state.mHit.mTargetApzc);
           ScreenToScreenMatrix4x4 outTransform =
               transformToApzc * transformToGecko;
           Maybe<ScreenPoint> untransformedRefPoint =
@@ -1565,8 +1566,8 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
 
       // Do this before early return for Fission hit testing.
       ScrollWheelInput& wheelInput = aEvent.AsScrollWheelInput();
-      HitTestResult hit = GetTargetAPZC(wheelInput.mOrigin);
-      aEvent.mLayersId = hit.mLayersId;
+      state.mHit = GetTargetAPZC(wheelInput.mOrigin);
+      aEvent.mLayersId = state.mHit.mLayersId;
 
       wheelInput.mHandledByAPZ = WillHandleInput(wheelInput);
       if (!wheelInput.mHandledByAPZ) {
@@ -1575,19 +1576,20 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
 
       mOvershootDetector.Update(wheelInput);
 
-      if (hit.mTargetApzc) {
-        MOZ_ASSERT(hit.mHitResult != CompositorHitTestInvisibleToHit);
+      if (state.mHit.mTargetApzc) {
+        MOZ_ASSERT(state.mHit.mHitResult != CompositorHitTestInvisibleToHit);
 
         if (wheelInput.mAPZAction == APZWheelAction::PinchZoom) {
           // The mousewheel may have hit a subframe, but we want to send the
           // pinch-zoom events to the root-content APZC.
           {
             RecursiveMutexAutoLock lock(mTreeLock);
-            hit.mTargetApzc =
-                FindRootContentApzcForLayersId(hit.mTargetApzc->GetLayersId());
+            state.mHit.mTargetApzc = FindRootContentApzcForLayersId(
+                state.mHit.mTargetApzc->GetLayersId());
           }
-          if (hit.mTargetApzc) {
-            SynthesizePinchGestureFromMouseWheel(wheelInput, hit.mTargetApzc);
+          if (state.mHit.mTargetApzc) {
+            SynthesizePinchGestureFromMouseWheel(wheelInput,
+                                                 state.mHit.mTargetApzc);
           }
           state.mResult.SetStatusAsConsumeNoDefault();
           return state.mResult;
@@ -1603,8 +1605,8 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
         // events). Since we just flushed the pending repaints the transform to
         // gecko space should only consist of overscroll-cancelling transforms.
         ScreenToScreenMatrix4x4 transformToGecko =
-            GetScreenToApzcTransform(hit.mTargetApzc) *
-            GetApzcToGeckoTransform(hit.mTargetApzc);
+            GetScreenToApzcTransform(state.mHit.mTargetApzc) *
+            GetApzcToGeckoTransform(state.mHit.mTargetApzc);
         Maybe<ScreenPoint> untransformedOrigin =
             UntransformBy(transformToGecko, wheelInput.mOrigin);
 
@@ -1613,8 +1615,8 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
         }
 
         state.mResult = mInputQueue->ReceiveInputEvent(
-            hit.mTargetApzc, TargetConfirmationFlags{hit.mHitResult},
-            wheelInput);
+            state.mHit.mTargetApzc,
+            TargetConfirmationFlags{state.mHit.mHitResult}, wheelInput);
 
         // Update the out-parameters so they are what the caller expects.
         wheelInput.mOrigin = *untransformedOrigin;
@@ -1626,8 +1628,8 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
 
       // Do this before early return for Fission hit testing.
       PanGestureInput& panInput = aEvent.AsPanGestureInput();
-      HitTestResult hit = GetTargetAPZC(panInput.mPanStartPoint);
-      aEvent.mLayersId = hit.mLayersId;
+      state.mHit = GetTargetAPZC(panInput.mPanStartPoint);
+      aEvent.mLayersId = state.mHit.mLayersId;
 
       panInput.mHandledByAPZ = WillHandleInput(panInput);
       if (!panInput.mHandledByAPZ) {
@@ -1644,8 +1646,8 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
           &wheelEvent, &panInput.mUserDeltaMultiplierX,
           &panInput.mUserDeltaMultiplierY);
 
-      if (hit.mTargetApzc) {
-        MOZ_ASSERT(hit.mHitResult != CompositorHitTestInvisibleToHit);
+      if (state.mHit.mTargetApzc) {
+        MOZ_ASSERT(state.mHit.mHitResult != CompositorHitTestInvisibleToHit);
 
         // For pan gesture events, the call to ReceiveInputEvent below may
         // result in scrolling, which changes the async transform. However, the
@@ -1656,8 +1658,8 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
         // transform to gecko space should only consist of overscroll-cancelling
         // transforms.
         ScreenToScreenMatrix4x4 transformToGecko =
-            GetScreenToApzcTransform(hit.mTargetApzc) *
-            GetApzcToGeckoTransform(hit.mTargetApzc);
+            GetScreenToApzcTransform(state.mHit.mTargetApzc) *
+            GetApzcToGeckoTransform(state.mHit.mTargetApzc);
         Maybe<ScreenPoint> untransformedStartPoint =
             UntransformBy(transformToGecko, panInput.mPanStartPoint);
         Maybe<ScreenPoint> untransformedDisplacement =
@@ -1669,14 +1671,15 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
         }
 
         state.mResult = mInputQueue->ReceiveInputEvent(
-            hit.mTargetApzc, TargetConfirmationFlags{hit.mHitResult}, panInput);
+            state.mHit.mTargetApzc,
+            TargetConfirmationFlags{state.mHit.mHitResult}, panInput);
 
         // Update the out-parameters so they are what the caller expects.
         panInput.mPanStartPoint = *untransformedStartPoint;
         panInput.mPanDisplacement = *untransformedDisplacement;
 
         panInput.mOverscrollBehaviorAllowsSwipe =
-            hit.mTargetApzc->OverscrollBehaviorAllowsSwipe();
+            state.mHit.mTargetApzc->OverscrollBehaviorAllowsSwipe();
       }
       break;
     }
@@ -1688,24 +1691,24 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
         return state.mResult;
       }
 
-      HitTestResult hit = GetTargetAPZC(pinchInput.mFocusPoint);
-      aEvent.mLayersId = hit.mLayersId;
+      state.mHit = GetTargetAPZC(pinchInput.mFocusPoint);
+      aEvent.mLayersId = state.mHit.mLayersId;
 
       // We always handle pinch gestures as pinch zooms.
       pinchInput.mHandledByAPZ = true;
 
-      if (hit.mTargetApzc) {
-        MOZ_ASSERT(hit.mHitResult != CompositorHitTestInvisibleToHit);
+      if (state.mHit.mTargetApzc) {
+        MOZ_ASSERT(state.mHit.mHitResult != CompositorHitTestInvisibleToHit);
 
-        if (!hit.mTargetApzc->IsRootContent()) {
-          hit.mTargetApzc = FindZoomableApzc(hit.mTargetApzc);
+        if (!state.mHit.mTargetApzc->IsRootContent()) {
+          state.mHit.mTargetApzc = FindZoomableApzc(state.mHit.mTargetApzc);
         }
       }
 
-      if (hit.mTargetApzc) {
+      if (state.mHit.mTargetApzc) {
         ScreenToScreenMatrix4x4 outTransform =
-            GetScreenToApzcTransform(hit.mTargetApzc) *
-            GetApzcToGeckoTransform(hit.mTargetApzc);
+            GetScreenToApzcTransform(state.mHit.mTargetApzc) *
+            GetApzcToGeckoTransform(state.mHit.mTargetApzc);
         Maybe<ScreenPoint> untransformedFocusPoint =
             UntransformBy(outTransform, pinchInput.mFocusPoint);
 
@@ -1714,8 +1717,8 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
         }
 
         state.mResult = mInputQueue->ReceiveInputEvent(
-            hit.mTargetApzc, TargetConfirmationFlags{hit.mHitResult},
-            pinchInput);
+            state.mHit.mTargetApzc,
+            TargetConfirmationFlags{state.mHit.mHitResult}, pinchInput);
 
         // Update the out-parameters so they are what the caller expects.
         pinchInput.mFocusPoint = *untransformedFocusPoint;
@@ -1724,15 +1727,15 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
     }
     case TAPGESTURE_INPUT: {  // note: no one currently sends these
       TapGestureInput& tapInput = aEvent.AsTapGestureInput();
-      HitTestResult hit = GetTargetAPZC(tapInput.mPoint);
-      aEvent.mLayersId = hit.mLayersId;
+      state.mHit = GetTargetAPZC(tapInput.mPoint);
+      aEvent.mLayersId = state.mHit.mLayersId;
 
-      if (hit.mTargetApzc) {
-        MOZ_ASSERT(hit.mHitResult != CompositorHitTestInvisibleToHit);
+      if (state.mHit.mTargetApzc) {
+        MOZ_ASSERT(state.mHit.mHitResult != CompositorHitTestInvisibleToHit);
 
         ScreenToScreenMatrix4x4 outTransform =
-            GetScreenToApzcTransform(hit.mTargetApzc) *
-            GetApzcToGeckoTransform(hit.mTargetApzc);
+            GetScreenToApzcTransform(state.mHit.mTargetApzc) *
+            GetApzcToGeckoTransform(state.mHit.mTargetApzc);
         Maybe<ScreenIntPoint> untransformedPoint =
             UntransformBy(outTransform, tapInput.mPoint);
 
@@ -1741,7 +1744,8 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
         }
 
         state.mResult = mInputQueue->ReceiveInputEvent(
-            hit.mTargetApzc, TargetConfirmationFlags{hit.mHitResult}, tapInput);
+            state.mHit.mTargetApzc,
+            TargetConfirmationFlags{state.mHit.mHitResult}, tapInput);
 
         // Update the out-parameters so they are what the caller expects.
         tapInput.mPoint = *untransformedPoint;
@@ -1940,15 +1944,15 @@ void APZCTreeManager::ProcessTouchInput(InputHandlingState& aState,
       return;
     }
 
-    HitTestResult hit = GetTouchInputBlockAPZC(aInput, &touchBehaviors);
+    aState.mHit = GetTouchInputBlockAPZC(aInput, &touchBehaviors);
     // Repopulate mTouchBlockHitResult with the fields we care about.
-    mTouchBlockHitResult = hit.CopyWithoutScrollbarNode();
-    if (hit.mLayersId.IsValid()) {
+    mTouchBlockHitResult = aState.mHit.CopyWithoutScrollbarNode();
+    if (aState.mHit.mLayersId.IsValid()) {
       // Check for validity because we won't get a layers id for multi-touch
       // events.
-      aInput.mLayersId = hit.mLayersId;
+      aInput.mLayersId = aState.mHit.mLayersId;
     }
-    hitScrollbarNode = std::move(hit.mScrollbarNode);
+    hitScrollbarNode = std::move(aState.mHit.mScrollbarNode);
 
     // Check if this event starts a scrollbar touch-drag. The conditions
     // checked are similar to the ones we check for MOUSE_INPUT starting
@@ -1973,6 +1977,7 @@ void APZCTreeManager::ProcessTouchInput(InputHandlingState& aState,
   } else if (mTouchBlockHitResult.mTargetApzc) {
     APZCTM_LOG("Re-using APZC %p as continuation of event block\n",
                mTouchBlockHitResult.mTargetApzc.get());
+    aState.mHit = mTouchBlockHitResult.CopyWithoutScrollbarNode();
   }
 
   if (mInScrollbarTouchDrag) {
