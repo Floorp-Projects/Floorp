@@ -3055,10 +3055,6 @@ static void PrintUsageThenExit(int aExitCode) {
       "  Ignored if  MOZ_PROFILER_STARTUP_FEATURES_BITFIELD is set.\n"
       "  If unset, the platform default is used.\n"
       "\n"
-      "  MOZ_PROFILER_STARTUP_ACTIVE_BROWSING_CONTEXT_ID=<Number>\n"
-      "  This variable is used to propagate the activeBrowsingContextID of\n"
-      "  the profiler init params to subprocesses.\n"
-      "\n"
       "    Features: (x=unavailable, D/d=default/unavailable,\n"
       "               S/s=MOZ_PROFILER_STARTUP extra default/unavailable)\n",
       unsigned(ActivePS::scMinimumBufferEntries),
@@ -3086,6 +3082,10 @@ static void PrintUsageThenExit(int aExitCode) {
       "  comma-separated list of strings. A given thread will be sampled if\n"
       "  any of the filters is a case-insensitive substring of the thread\n"
       "  name. If unset, a default is used.\n"
+      "\n"
+      "  MOZ_PROFILER_STARTUP_ACTIVE_BROWSING_CONTEXT_ID=<Number>\n"
+      "  This variable is used to propagate the activeBrowsingContextID of\n"
+      "  the profiler init params to subprocesses.\n"
       "\n"
       "  MOZ_PROFILER_SHUTDOWN\n"
       "  If set, the profiler saves a profile to the named file on shutdown.\n"
