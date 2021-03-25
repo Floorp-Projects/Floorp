@@ -23,3 +23,11 @@ FINAL_LIBRARY = "xul"
 
 with Files("**"):
     BUG_COMPONENT = ("Core", "Audio/Video")
+
+include("/ipc/chromium/chromium-config.mozbuild")
+
+LOCAL_INCLUDES += [
+    # For nsHttpChannel.h
+    "/netwerk/base",
+    "/netwerk/protocol/http",
+]

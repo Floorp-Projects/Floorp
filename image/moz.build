@@ -119,6 +119,8 @@ LOCAL_INCLUDES += [
     "/image/decoders",
     # For URI-related functionality
     "/netwerk/base",
+    # For nsHttpChannel.h
+    "/netwerk/protocol/http",
     # DecodePool uses thread-related facilities.
     "/xpcom/threads",
 ]
