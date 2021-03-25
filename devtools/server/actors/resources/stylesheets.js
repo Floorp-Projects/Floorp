@@ -35,7 +35,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  ["UPDATE_GENERAL", "UPDATE_PRESERVING_RULES"],
+  ["getSheetOwnerNode", "UPDATE_GENERAL", "UPDATE_PRESERVING_RULES"],
   "devtools/server/actors/style-sheet",
   true
 );
@@ -342,10 +342,11 @@ class StyleSheetWatcher {
     const excludedProtocolsRe = /^(chrome|file|resource|moz-extension):\/\//;
     if (!excludedProtocolsRe.test(href)) {
       // Stylesheets using other protocols should use the content principal.
-      if (styleSheet.ownerNode) {
+      const ownerNode = getSheetOwnerNode(styleSheet);
+      if (ownerNode) {
         // eslint-disable-next-line mozilla/use-ownerGlobal
-        options.window = styleSheet.ownerNode.ownerDocument.defaultView;
-        options.principal = styleSheet.ownerNode.ownerDocument.nodePrincipal;
+        options.window = ownerNode.ownerDocument.defaultView;
+        options.principal = ownerNode.ownerDocument.nodePrincipal;
       }
     }
 
@@ -499,18 +500,12 @@ class StyleSheetWatcher {
   }
 
   _getSourcemapBaseURL(styleSheet) {
-    // When the style is imported, `styleSheet.ownerNode` is null,
-    // so retrieve the topmost parent style sheet which has an ownerNode
-    let parentStyleSheet = styleSheet;
-    while (parentStyleSheet.parentStyleSheet) {
-      parentStyleSheet = parentStyleSheet.parentStyleSheet;
-    }
-
     // When the style is injected via nsIDOMWindowUtils.loadSheet, even
     // the parent style sheet has no owner, so default back to target actor
     // document
-    const ownerDocument = parentStyleSheet.ownerNode
-      ? parentStyleSheet.ownerNode.ownerDocument
+    const ownerNode = getSheetOwnerNode(styleSheet);
+    const ownerDocument = ownerNode
+      ? ownerNode.ownerDocument
       : this._targetActor.window;
 
     return getSourcemapBaseURL(

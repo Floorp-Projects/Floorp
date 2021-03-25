@@ -83,6 +83,34 @@ function getSheetText(sheet) {
 exports.getSheetText = getSheetText;
 
 /**
+ * For imported stylesheets, `ownerNode` is null.
+ * To resolve the ownerNode for an imported stylesheet, loop on `parentStylesheet`
+ * until we reach the topmost stylesheet, which should have a valid ownerNode.
+ *
+ * @param {StyleSheet}
+ *        The stylesheet for which we want to retrieve the ownerNode.
+ * @return {DOMNode} The ownerNode
+ */
+function getSheetOwnerNode(sheet) {
+  // If this is not an imported stylesheet and we have an ownerNode available
+  // bail out immediately.
+  if (sheet.ownerNode) {
+    return sheet.ownerNode;
+  }
+
+  let parentStyleSheet = sheet;
+  while (
+    parentStyleSheet.parentStyleSheet &&
+    parentStyleSheet !== parentStyleSheet.parentStyleSheet
+  ) {
+    parentStyleSheet = parentStyleSheet.parentStyleSheet;
+  }
+
+  return parentStyleSheet.ownerNode;
+}
+exports.getSheetOwnerNode = getSheetOwnerNode;
+
+/**
  * Get the charset of the stylesheet.
  */
 function getCSSCharset(sheet) {
@@ -132,10 +160,11 @@ async function fetchStylesheet(sheet) {
   const excludedProtocolsRe = /^(chrome|file|resource|moz-extension):\/\//;
   if (!excludedProtocolsRe.test(href)) {
     // Stylesheets using other protocols should use the content principal.
-    if (sheet.ownerNode) {
+    const ownerNode = getSheetOwnerNode(sheet);
+    if (ownerNode) {
       // eslint-disable-next-line mozilla/use-ownerGlobal
-      options.window = sheet.ownerNode.ownerDocument.defaultView;
-      options.principal = sheet.ownerNode.ownerDocument.nodePrincipal;
+      options.window = ownerNode.ownerDocument.defaultView;
+      options.principal = ownerNode.ownerDocument.nodePrincipal;
     }
   }
 
