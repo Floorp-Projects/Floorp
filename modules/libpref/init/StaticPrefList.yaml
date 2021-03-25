@@ -1188,7 +1188,7 @@
 # JavaScript.
 - name: browser.opaqueResponseBlocking
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 # When true, zooming will be enabled on all sites, even ones that declare
