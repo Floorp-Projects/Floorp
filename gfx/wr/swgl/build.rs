@@ -150,7 +150,6 @@ fn main() {
         .flag("-fno-exceptions")
         .flag("-fno-rtti")
         .flag("-fno-math-errno")
-        .flag("-ffast-math") // most GLSL compilers assume something similar
         .define("_GLIBCXX_USE_CXX11_ABI", Some("0"))
         .include(shader_dir)
         .include("src")
