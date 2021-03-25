@@ -1,4 +1,4 @@
-// |jit-test| --no-ion; --ion-pgo=on
+// |jit-test| --no-ion; --ion-pruning=on
 // Warp lacks Scalar Replacement support (bug 1650233). Re-evaluate after that
 // bug has been fixed.
 
