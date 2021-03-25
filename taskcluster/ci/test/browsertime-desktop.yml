@@ -150,6 +150,9 @@ browsertime-benchmark:
         - [assorted-dom, dom]
         - [jetstream2, js2]
         - [unity-webgl, ugl]
+        - [wasm-misc, wm]
+        - [wasm-misc-baseline, wm-b]
+        - [wasm-misc-optimizing, wm-i]
     variants: ["fission"]
     apps: ["firefox"]
     treeherder-symbol: Btime()
@@ -209,6 +212,7 @@ browsertime-benchmark:
             - assorted-dom
             - jetstream2
             - unity-webgl
+            - wasm-misc
 
 browsertime-tp6-live:
     <<: *tp6-defaults
