@@ -377,7 +377,7 @@ properties, supported by all of the results.
                              selection.
     autofill.selectionEnd: {integer} The last index in the autofill selection.
     suggestedIndex: {integer} Suggest a preferred position for this result
-                    within the result set.
+                    within the result set. Undefined if none.
   }
 
 The following RESULT_TYPEs are supported:

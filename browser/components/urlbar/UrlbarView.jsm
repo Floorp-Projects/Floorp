@@ -909,7 +909,7 @@ class UrlbarView {
       return true;
     }
     let row = this._rows.children[rowIndex];
-    if (result.suggestedIndex >= 0) {
+    if (result.hasSuggestedIndex) {
       // Always allow a result with a suggested index to replace any other
       // result.  Otherwise it can briefly end up at some larger index due to
       // the presence of visible stale rows.  Then, if the user makes a
@@ -917,7 +917,7 @@ class UrlbarView {
       // the suggested-index row in the wrong spot.
       return true;
     }
-    if (row.result.suggestedIndex >= 0) {
+    if (row.result.hasSuggestedIndex) {
       // Never allow a result without a suggested index to replace a result with
       // a suggested index.  If the suggested-index row is not stale, then it
       // needs to remain in the same spot to avoid flicker.

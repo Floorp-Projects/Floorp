@@ -617,20 +617,6 @@ class Query {
       return;
     }
 
-    // Crop results to the requested number, taking their result spans into
-    // account.
-    let resultCount = this.context.maxResults;
-    for (let i = 0; i < this.context.results.length; i++) {
-      resultCount -= UrlbarUtils.getSpanForResult(this.context.results[i]);
-      if (resultCount < 0) {
-        logger.debug(
-          `Splicing results from ${i} to crop results to ${this.context.maxResults}`
-        );
-        this.context.results.splice(i, this.context.results.length - i);
-        break;
-      }
-    }
-
     this.context.firstResultChanged = !ObjectUtils.deepEqual(
       this.context.firstResult,
       this.context.results[0]
