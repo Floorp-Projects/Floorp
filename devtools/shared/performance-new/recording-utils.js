@@ -10,7 +10,7 @@
  */
 
 /**
- * @typedef {import("../../client/performance-new/@types/perf").GetActiveBrowsingContextID} GetActiveBrowsingContextID
+ * @typedef {import("../../client/performance-new/@types/perf").GetActiveBrowserID} GetActiveBrowserID
  */
 
 /**
@@ -38,26 +38,26 @@ const lazyServices = requireLazy(() =>
 );
 
 /**
- * Gets the ID of active BrowsingContext from the browser.
+ * Gets the ID of active tab from the browser.
  *
- * @type {GetActiveBrowsingContextID}
+ * @type {GetActiveBrowserID}
  */
-function getActiveBrowsingContextID() {
+function getActiveBrowserID() {
   const { Services } = lazyServices();
   const win = Services.wm.getMostRecentWindow("navigator:browser");
 
-  if (win?.gBrowser?.selectedBrowser?.browsingContext?.id) {
-    return win.gBrowser.selectedBrowser.browsingContext.id;
+  if (win?.gBrowser?.selectedBrowser?.browsingContext?.browserId) {
+    return win.gBrowser.selectedBrowser.browsingContext.browserId;
   }
 
   console.error(
-    "Failed to get the active BrowsingContext ID while starting the profiler."
+    "Failed to get the active browserId while starting the profiler."
   );
-  // `0` mean that we failed to ge the active BrowsingContext ID, and it's
+  // `0` mean that we failed to ge the active browserId, and it's
   // treated as null value in the platform.
   return 0;
 }
 
 module.exports = {
-  getActiveBrowsingContextID,
+  getActiveBrowserID,
 };

@@ -16,7 +16,7 @@
  * @typedef {import("./@types/perf").RecordingStateFromPreferences} RecordingStateFromPreferences
  * @typedef {import("./@types/perf").RestartBrowserWithEnvironmentVariable} RestartBrowserWithEnvironmentVariable
  * @typedef {import("./@types/perf").GetEnvironmentVariable} GetEnvironmentVariable
- * @typedef {import("./@types/perf").GetActiveBrowsingContextID} GetActiveBrowsingContextID
+ * @typedef {import("./@types/perf").GetActiveBrowserID} GetActiveBrowserID
  * @typedef {import("./@types/perf").MinimallyTypedGeckoProfile} MinimallyTypedGeckoProfile
  * * @typedef {import("./@types/perf").ProfilerViewMode} ProfilerViewMode
  */
