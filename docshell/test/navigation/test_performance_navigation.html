@@ -29,7 +29,10 @@ bc.onmessage = function(msgEvent) {
 };
 
 function runTest() {
-  window.open("test_bug145971.html", "", "width=360,height=480,noopener");
+  // If Fission is disabled, the pref is no-op.
+  SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+    window.open("test_bug145971.html", "", "width=360,height=480,noopener");
+  });
 }
 
 </script>
