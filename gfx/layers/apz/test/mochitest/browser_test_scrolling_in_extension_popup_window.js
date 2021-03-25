@@ -12,57 +12,14 @@ Services.scriptloader.loadSubScript(
 );
 
 Services.scriptloader.loadSubScript(
-  "chrome://mochitests/content/browser/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js",
+  "chrome://mochitests/content/browser/gfx/layers/apz/test/mochitest/apz_test_utils.js",
   this
 );
 
-// This is a simplified/combined version of promiseOnlyApzControllerFlushed and
-// promiseAllPaintsDone.  We need this function because, unfortunately, there is
-// no easy way to use paint_listeners.js' functions and apz_test_utils.js'
-// functions in popup contents opened by extensions either as scripts in the
-// popup contents or scripts inside SpecialPowers.spawn because we can't use
-// privileged functions in the popup contents' script, we can't use functions
-// basically as it as in the sandboxed context either.
-async function flushApzRepaintsInPopup(popup) {
-  // Flush APZ repaints and waits for MozAfterPaint.
-  await SpecialPowers.spawn(popup, [], async () => {
-    return new Promise(resolve => {
-      const utils = SpecialPowers.getDOMWindowUtils(content.window);
-      var repaintDone = function() {
-        dump("APZ flush done\n");
-        SpecialPowers.Services.obs.removeObserver(
-          repaintDone,
-          "apz-repaints-flushed"
-        );
-        if (utils.isMozAfterPaintPending) {
-          dump("Waits for a MozAfterPaint event\n");
-          content.window.addEventListener(
-            "MozAfterPaint",
-            () => {
-              dump("Got a MozAfterPaint event\n");
-              resolve();
-            },
-            { once: true }
-          );
-        } else {
-          content.window.setTimeout(resolve, 0);
-        }
-      };
-      SpecialPowers.Services.obs.addObserver(
-        repaintDone,
-        "apz-repaints-flushed"
-      );
-      if (utils.flushApzRepaints()) {
-        dump("Flushed APZ repaints, waiting for callback...\n");
-      } else {
-        dump(
-          "Flushing APZ repaints was a no-op, triggering callback directly...\n"
-        );
-        repaintDone();
-      }
-    });
-  });
-}
+Services.scriptloader.loadSubScript(
+  "chrome://mochitests/content/browser/gfx/layers/apz/test/mochitest/apz_test_native_event_utils.js",
+  this
+);
 
 add_task(async () => {
   let extension = ExtensionTestUtils.loadExtension({
