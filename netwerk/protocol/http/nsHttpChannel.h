@@ -201,6 +201,9 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   bool DataSentToChildProcess() { return LoadDataSentToChildProcess(); }
 
+  enum class SnifferType { Media, Image };
+  void DisableIsOpaqueResponseAllowedAfterSniffCheck(SnifferType aType);
+
  public: /* internal necko use only */
   uint32_t GetRequestTime() const { return mRequestTime; }
 
