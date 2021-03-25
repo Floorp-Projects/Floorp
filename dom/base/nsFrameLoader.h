@@ -73,7 +73,6 @@ class BrowserBridgeChild;
 class RemoteBrowser;
 struct RemotenessOptions;
 struct RemotenessChangeOptions;
-class SessionStoreChangeListener;
 
 namespace ipc {
 class StructuredCloneData;
@@ -223,7 +222,7 @@ class nsFrameLoader final : public nsStubMutationObserver,
 
   void RequestUpdatePosition(mozilla::ErrorResult& aRv);
 
-  already_AddRefed<Promise> RequestTabStateFlush(mozilla::ErrorResult& aRv);
+  bool RequestTabStateFlush(uint32_t aFlushId, bool aIsFinal = false);
 
   void RequestEpochUpdate(uint32_t aEpoch);
 
@@ -494,8 +493,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
   // browsing context for a newly opened tab/window is ready.
   void InvokeBrowsingContextReadyCallback();
 
-  void RequestTabStateFlush();
-
   RefPtr<mozilla::dom::BrowsingContext> mPendingBrowsingContext;
   nsCOMPtr<nsIURI> mURIToLoad;
   nsCOMPtr<nsIPrincipal> mTriggeringPrincipal;
@@ -531,8 +528,6 @@ class nsFrameLoader final : public nsStubMutationObserver,
   mozilla::ScreenIntSize mLazySize;
 
   RefPtr<mozilla::dom::TabListener> mSessionStoreListener;
-
-  RefPtr<mozilla::dom::SessionStoreChangeListener> mSessionStoreChangeListener;
 
   nsCString mRemoteType;
 

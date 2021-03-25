@@ -20,7 +20,6 @@
 #  endif
 #endif
 #include "mozilla/dom/CanonicalBrowsingContext.h"
-#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowserParent.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
 #include "mozilla/dom/BrowsingContextBinding.h"
@@ -35,7 +34,6 @@
 #include "mozilla/dom/PopupBlocker.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/SessionStorageManager.h"
-#include "mozilla/dom/SessionStoreDataCollector.h"
 #include "mozilla/dom/StructuredCloneTags.h"
 #include "mozilla/dom/UserActivationIPCUtils.h"
 #include "mozilla/dom/WindowBinding.h"
@@ -976,7 +974,7 @@ void BrowsingContext::UnregisterWindowContext(WindowContext* aWindow) {
   }
 }
 
-void BrowsingContext::PreOrderWalkVoid(
+void BrowsingContext::PreOrderWalk(
     const std::function<void(BrowsingContext*)>& aCallback) {
   aCallback(this);
 
@@ -984,35 +982,8 @@ void BrowsingContext::PreOrderWalkVoid(
   children.AppendElements(Children());
 
   for (auto& child : children) {
-    child->PreOrderWalkVoid(aCallback);
+    child->PreOrderWalk(aCallback);
   }
-}
-
-BrowsingContext::WalkFlag BrowsingContext::PreOrderWalkFlag(
-    const std::function<WalkFlag(BrowsingContext*)>& aCallback) {
-  switch (aCallback(this)) {
-    case WalkFlag::Skip:
-      return WalkFlag::Next;
-    case WalkFlag::Stop:
-      return WalkFlag::Stop;
-    case WalkFlag::Next:
-    default:
-      break;
-  }
-
-  AutoTArray<RefPtr<BrowsingContext>, 8> children;
-  children.AppendElements(Children());
-
-  for (auto& child : children) {
-    switch (child->PreOrderWalkFlag(aCallback)) {
-      case WalkFlag::Stop:
-        return WalkFlag::Stop;
-      default:
-        break;
-    }
-  }
-
-  return WalkFlag::Next;
 }
 
 void BrowsingContext::PostOrderWalk(
@@ -2140,44 +2111,6 @@ PopupBlocker::PopupControlState BrowsingContext::RevisePopupAbuseLevel(
 
 void BrowsingContext::IncrementHistoryEntryCountForBrowsingContext() {
   Unused << SetHistoryEntryCount(GetHistoryEntryCount() + 1);
-}
-
-void BrowsingContext::FlushSessionStore() {
-  nsTArray<RefPtr<BrowserChild>> nestedBrowserChilds;
-
-  PreOrderWalk([&](BrowsingContext* aContext) {
-    BrowserChild* browserChild = BrowserChild::GetFrom(aContext->GetDocShell());
-    if (browserChild && browserChild->GetBrowsingContext() == aContext) {
-      nestedBrowserChilds.AppendElement(browserChild);
-    }
-
-    if (aContext->CreatedDynamically()) {
-      return WalkFlag::Skip;
-    }
-
-    WindowContext* windowContext = aContext->GetCurrentWindowContext();
-    if (!windowContext) {
-      return WalkFlag::Skip;
-    }
-
-    WindowGlobalChild* windowChild = windowContext->GetWindowGlobalChild();
-    if (!windowChild) {
-      return WalkFlag::Next;
-    }
-
-    RefPtr<SessionStoreDataCollector> collector =
-        windowChild->GetSessionStoreDataCollector();
-    if (!collector) {
-      return WalkFlag::Next;
-    }
-
-    collector->Flush();
-    return WalkFlag::Next;
-  });
-
-  for (auto& child : nestedBrowserChilds) {
-    child->UpdateSessionStore();
-  }
 }
 
 std::tuple<bool, bool> BrowsingContext::CanFocusCheck(CallerType aCallerType) {
