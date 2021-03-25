@@ -1,8 +1,11 @@
 import { GlobalOverrider } from "test/unit/utils";
 import {
   MultiStageAboutWelcome,
+  SecondaryCTA,
+  StepsIndicator,
   WelcomeScreen,
 } from "content-src/aboutwelcome/components/MultiStageAboutWelcome";
+import { MultiStageScreen } from "content-src/aboutwelcome/components/MultiStageScreen";
 import React from "react";
 import { shallow, mount } from "enzyme";
 import { AboutWelcomeDefaults } from "aboutwelcome/lib/AboutWelcomeDefaults.jsm";
@@ -30,6 +33,9 @@ describe("MultiStageAboutWelcome module", () => {
       AWSendEventTelemetry: () => {},
       AWWaitForRegionChange: () => Promise.resolve(),
       AWGetRegion: () => Promise.resolve(),
+      AWIsDefaultBrowser: () => Promise.resolve("true"),
+      AWWaitForMigrationClose: () => Promise.resolve(),
+      AWSelectTheme: () => Promise.resolve(),
     });
     sandbox = sinon.createSandbox();
   });
@@ -131,6 +137,31 @@ describe("MultiStageAboutWelcome module", () => {
         assert.ok(wrapper.exists());
       });
 
+      it("should render secondary.top button", () => {
+        let SCREEN_PROPS = {
+          content: {
+            title: "Step",
+            secondary_button_top: {
+              text: "test",
+              label: "test label",
+            },
+          },
+          position: "top",
+        };
+        const wrapper = mount(<SecondaryCTA {...SCREEN_PROPS} />);
+        assert.ok(wrapper.find("div.secondary_button_top"));
+      });
+
+      it("should render steps indicator", () => {
+        let SCREEN_PROPS = {
+          totalNumberOfScreens: 1,
+          order: 0,
+        };
+        <StepsIndicator {...SCREEN_PROPS} />;
+        const wrapper = mount(<StepsIndicator {...SCREEN_PROPS} />);
+        assert.ok(wrapper.find("div.indicator"));
+      });
+
       it("should have a primary, secondary and secondary.top button in the rendered input", () => {
         const wrapper = mount(<WelcomeScreen {...GET_STARTED_SCREEN_PROPS} />);
         assert.ok(wrapper.find(".primary"));
@@ -140,6 +171,70 @@ describe("MultiStageAboutWelcome module", () => {
         );
       });
     });
+
+    describe("multistagescreen tiles", () => {
+      let SCREEN_PROPS = {
+        content: {
+          title: "test title",
+        },
+        totalNumberOfScreens: 1,
+        order: 0,
+        id: "test",
+        topSites: {
+          data: [],
+        },
+      };
+      it("should render multistage Screen", () => {
+        const wrapper = mount(<MultiStageScreen {...SCREEN_PROPS} />);
+        assert.ok(wrapper.exists());
+      });
+      it("no image displayed without source", () => {
+        SCREEN_PROPS.content.tiles = {
+          type: "image",
+          media_type: "test-img",
+        };
+        const wrapper = mount(<MultiStageScreen {...SCREEN_PROPS} />);
+        assert.isFalse(wrapper.find("div.test-img").exists());
+      });
+      it("should have image displayed with source", () => {
+        SCREEN_PROPS.content.tiles = {
+          type: "image",
+          media_type: "test-img",
+          source: {
+            default: "",
+          },
+        };
+        const wrapper = mount(<MultiStageScreen {...SCREEN_PROPS} />);
+        assert.ok(wrapper.find("div.test-img").exists());
+      });
+      it("should have video container displayed", () => {
+        SCREEN_PROPS.content.tiles = {
+          type: "video",
+          media_type: "test-video",
+          source: {
+            default: "",
+          },
+        };
+        const wrapper = mount(<MultiStageScreen {...SCREEN_PROPS} />);
+        assert.ok(wrapper.find("div.test-video").exists());
+      });
+      it("should have topsites section displayed", () => {
+        SCREEN_PROPS.content.tiles = {
+          type: "topsites",
+        };
+        const wrapper = mount(<MultiStageScreen {...SCREEN_PROPS} />);
+        assert.ok(wrapper.find("div.tiles-topsites-section").exists());
+      });
+      it("should have theme container displayed", () => {
+        SCREEN_PROPS.content.tiles = {
+          type: "theme",
+          data: [],
+        };
+        const wrapper = mount(<MultiStageScreen {...SCREEN_PROPS} />);
+        assert.ok(wrapper.find("div.tiles-theme-container").exists());
+      });
+    });
+
     describe("theme screen", () => {
       const themeScreen = DEFAULT_WELCOME_CONTENT.screens.find(screen => {
         return screen.id === "AW_CHOOSE_THEME";
@@ -165,7 +260,7 @@ describe("MultiStageAboutWelcome module", () => {
       });
 
       it("should select this.props.activeTheme in the rendered input", () => {
-        const wrapper = shallow(<WelcomeScreen {...THEME_SCREEN_PROPS} />);
+        const wrapper = shallow(<MultiStageScreen {...THEME_SCREEN_PROPS} />);
 
         const selectedThemeInput = wrapper.find(".theme.selected input");
         assert.strictEqual(
@@ -175,7 +270,7 @@ describe("MultiStageAboutWelcome module", () => {
       });
 
       it("should check this.props.activeTheme in the rendered input", () => {
-        const wrapper = shallow(<WelcomeScreen {...THEME_SCREEN_PROPS} />);
+        const wrapper = shallow(<MultiStageScreen {...THEME_SCREEN_PROPS} />);
 
         const selectedThemeInput = wrapper.find(".theme input[checked=true]");
         assert.strictEqual(
