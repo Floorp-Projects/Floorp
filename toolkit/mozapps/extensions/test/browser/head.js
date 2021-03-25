@@ -302,7 +302,7 @@ async function wait_for_view_load(
     }
 
     aManagerWindow.document.addEventListener(
-      "ViewChanged",
+      "view-loaded",
       function() {
         resolve(aManagerWindow);
       },
