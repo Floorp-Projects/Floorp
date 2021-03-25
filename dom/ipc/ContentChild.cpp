@@ -2840,7 +2840,8 @@ void ContentChild::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure) {
 mozilla::ipc::IPCResult ContentChild::RecvShutdown() {
   // Signal the ongoing shutdown to AppShutdown, this
   // will make abort nested SpinEventLoopUntilOrQuit loops
-  AppShutdown::AdvanceShutdownPhase(ShutdownPhase::AppShutdownConfirmed);
+  AppShutdown::AdvanceShutdownPhaseWithoutNotify(
+      ShutdownPhase::AppShutdownConfirmed);
 
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
