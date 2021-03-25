@@ -464,8 +464,38 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
 
   // Helpers to traverse this BrowsingContext subtree. Note that these will only
   // traverse active contexts, and will ignore ones in the BFCache.
-  void PreOrderWalk(const std::function<void(BrowsingContext*)>& aCallback);
+  enum class WalkFlag {
+    Next,
+    Skip,
+    Stop,
+  };
+
+  /**
+   * Walk the browsing context tree in pre-order and call `aCallback`
+   * for every node in the tree. PreOrderWalk accepts two types of
+   * callbacks, either of the type `void(BrowsingContext*)` or
+   * `WalkFlag(BrowsingContext*)`. The former traverses the entire
+   * tree, but the latter let's you control if a sub-tree should be
+   * skipped by returning `WalkFlag::Skip`, completely abort traversal
+   * by returning `WalkFlag::Stop` or continue as normal with
+   * `WalkFlag::Next`.
+   */
+  template <typename F>
+  void PreOrderWalk(F&& aCallback) {
+    if constexpr (std::is_void_v<
+                      typename std::invoke_result_t<F, BrowsingContext*>>) {
+      PreOrderWalkVoid(std::forward<F>(aCallback));
+    } else {
+      PreOrderWalkFlag(std::forward<F>(aCallback));
+    }
+  }
+
+  void PreOrderWalkVoid(const std::function<void(BrowsingContext*)>& aCallback);
+  WalkFlag PreOrderWalkFlag(
+      const std::function<WalkFlag(BrowsingContext*)>& aCallback);
+
   void PostOrderWalk(const std::function<void(BrowsingContext*)>& aCallback);
+
   void GetAllBrowsingContextsInSubtree(
       nsTArray<RefPtr<BrowsingContext>>& aBrowsingContexts);
 
