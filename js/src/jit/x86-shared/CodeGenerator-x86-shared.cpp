@@ -2378,7 +2378,7 @@ void CodeGenerator::visitWasmBinarySimd128(LWasmBinarySimd128* ins) {
       masm.subInt64x2(rhs, lhsDest);
       break;
     case wasm::SimdOp::I64x2Mul:
-      masm.mulInt64x2(rhs, lhsDest, temp1);
+      masm.mulInt64x2(lhsDest, rhs, lhsDest, temp1);
       break;
     case wasm::SimdOp::F32x4Add:
       masm.addFloat32x4(rhs, lhsDest);
@@ -2978,20 +2978,20 @@ void CodeGenerator::visitWasmShuffleSimd128(LWasmShuffleSimd128* ins) {
   switch (ins->op()) {
     case LWasmShuffleSimd128::BLEND_8x16: {
       masm.blendInt8x16(reinterpret_cast<const uint8_t*>(control.asInt8x16()),
-                        rhs, lhsDest, ToFloatRegister(ins->temp()));
+                        lhsDest, rhs, lhsDest, ToFloatRegister(ins->temp()));
       break;
     }
     case LWasmShuffleSimd128::BLEND_16x8: {
       MOZ_ASSERT(ins->temp()->isBogusTemp());
       masm.blendInt16x8(reinterpret_cast<const uint16_t*>(control.asInt16x8()),
-                        rhs, lhsDest);
+                        lhsDest, rhs, lhsDest);
       break;
     }
     case LWasmShuffleSimd128::CONCAT_RIGHT_SHIFT_8x16: {
       MOZ_ASSERT(ins->temp()->isBogusTemp());
       int8_t count = 16 - control.asInt8x16()[0];
       MOZ_ASSERT(count > 0, "Should have been a MOVE operation");
-      masm.concatAndRightShiftInt8x16(rhs, lhsDest, count);
+      masm.concatAndRightShiftSimd128(rhs, lhsDest, count);
       break;
     }
     case LWasmShuffleSimd128::INTERLEAVE_HIGH_8x16: {
@@ -3155,7 +3155,7 @@ void CodeGenerator::visitWasmPermuteSimd128(LWasmPermuteSimd128* ins) {
       }
       int8_t count = control.asInt8x16()[0];
       MOZ_ASSERT(count > 0, "Should have been a MOVE operation");
-      masm.concatAndRightShiftInt8x16(dest, dest, count);
+      masm.concatAndRightShiftSimd128(dest, dest, count);
       break;
     }
     case LWasmPermuteSimd128::SHIFT_LEFT_8x16: {

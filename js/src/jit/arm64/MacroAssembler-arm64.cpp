@@ -54,15 +54,15 @@ void MacroAssemblerCompat::boxValue(JSValueType type, Register src,
 
 #ifdef ENABLE_WASM_SIMD
 bool MacroAssembler::MustScalarizeShiftSimd128(wasm::SimdOp op) {
-  MOZ_CRASH("NYI - ion porting interface not in use");
+  return false;
 }
 
 bool MacroAssembler::MustMaskShiftCountSimd128(wasm::SimdOp op, int32_t* mask) {
-  MOZ_CRASH("NYI - ion porting interface not in use");
+  return false;
 }
 
 bool MacroAssembler::MustScalarizeShiftSimd128(wasm::SimdOp op, Imm32 imm) {
-  MOZ_CRASH("NYI - ion porting interface not in use");
+  return false;
 }
 #endif
 
@@ -413,9 +413,13 @@ void MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
 void MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
                                         MemOperand srcAddr, AnyRegister outany,
                                         Register64 out64) {
-  // Not yet supported: not used by baseline compiler
-  MOZ_ASSERT(!access.isSplatSimd128Load());
-  MOZ_ASSERT(!access.isWidenSimd128Load());
+  auto instructionsExpected = 1;
+  if (access.isSplatSimd128Load() || access.isWidenSimd128Load()) {
+    MOZ_ASSERT(access.type() == Scalar::Float64);
+    // Cannot use single splat and widen ops below due to lack of
+    // Reg+Reg addressing.
+    instructionsExpected = 2;
+  }
 
   asMasm().memoryBarrierBefore(access.sync());
 
@@ -425,8 +429,7 @@ void MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
     // emitted at the address of the Load.  The AutoForbidPoolsAndNops will
     // assert if we emit more than one instruction.
 
-    AutoForbidPoolsAndNops afp(this,
-                               /* max number of instructions in scope = */ 1);
+    AutoForbidPoolsAndNops afp(this, instructionsExpected);
 
     append(access, asMasm().currentOffset());
     switch (access.type()) {
@@ -460,8 +463,41 @@ void MacroAssemblerCompat::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
         Ldr(SelectFPReg(outany, out64, 32), srcAddr);
         break;
       case Scalar::Float64:
-        // LDR does the right thing also for access.isZeroExtendSimd128Load()
-        Ldr(SelectFPReg(outany, out64, 64), srcAddr);
+        if (access.isSplatSimd128Load() || access.isWidenSimd128Load()) {
+          ScratchSimd128Scope scratch_(asMasm());
+          ARMFPRegister scratch = Simd1D(scratch_);
+          Ldr(scratch, srcAddr);
+          if (access.isSplatSimd128Load()) {
+            Dup(SelectFPReg(outany, out64, 128).V2D(), scratch, 0);
+          } else {
+            MOZ_ASSERT(access.isWidenSimd128Load());
+            switch (access.widenSimdOp()) {
+              case wasm::SimdOp::I16x8LoadS8x8:
+                Sshll(SelectFPReg(outany, out64, 128).V8H(), scratch.V8B(), 0);
+                break;
+              case wasm::SimdOp::I16x8LoadU8x8:
+                Ushll(SelectFPReg(outany, out64, 128).V8H(), scratch.V8B(), 0);
+                break;
+              case wasm::SimdOp::I32x4LoadS16x4:
+                Sshll(SelectFPReg(outany, out64, 128).V4S(), scratch.V4H(), 0);
+                break;
+              case wasm::SimdOp::I32x4LoadU16x4:
+                Ushll(SelectFPReg(outany, out64, 128).V4S(), scratch.V4H(), 0);
+                break;
+              case wasm::SimdOp::I64x2LoadS32x2:
+                Sshll(SelectFPReg(outany, out64, 128).V2D(), scratch.V2S(), 0);
+                break;
+              case wasm::SimdOp::I64x2LoadU32x2:
+                Ushll(SelectFPReg(outany, out64, 128).V2D(), scratch.V2S(), 0);
+                break;
+              default:
+                MOZ_CRASH("Unexpected widening op for wasmLoad");
+            }
+          }
+        } else {
+          // LDR does the right thing also for access.isZeroExtendSimd128Load()
+          Ldr(SelectFPReg(outany, out64, 64), srcAddr);
+        }
         break;
       case Scalar::Simd128:
         Ldr(SelectFPReg(outany, out64, 128), srcAddr);
@@ -558,7 +594,7 @@ void MacroAssemblerCompat::compareSimd128Int(Assembler::Condition cond,
       break;
     case Assembler::NotEqual:
       Cmeq(dest, lhs, rhs);
-      Mvn(lhs, lhs);
+      Mvn(dest, dest);
       break;
     case Assembler::GreaterThan:
       Cmgt(dest, lhs, rhs);
@@ -599,7 +635,7 @@ void MacroAssemblerCompat::compareSimd128Float(Assembler::Condition cond,
       break;
     case Assembler::NotEqual:
       Fcmeq(dest, lhs, rhs);
-      Mvn(lhs, lhs);
+      Mvn(dest, dest);
       break;
     case Assembler::GreaterThan:
       Fcmgt(dest, lhs, rhs);
@@ -782,6 +818,9 @@ void MacroAssembler::PushRegsInMask(LiveRegisterSet set) {
     vixl::CPURegister src[4] = {vixl::NoCPUReg, vixl::NoCPUReg, vixl::NoCPUReg,
                                 vixl::NoCPUReg};
 
+#ifdef JS_CODEGEN_ARM64
+    MOZ_ASSERT(sizeof(FloatRegisters::RegisterContent) == 8);
+#endif
     for (size_t i = 0; i < 4 && iter.more(); i++) {
       src[i] = ARMFPRegister(*iter, 64);
       ++iter;
