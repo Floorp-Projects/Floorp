@@ -377,6 +377,7 @@
 
 				_data = ['raptor-benchmark', 'wasm-godot', results];
 				window.postMessage(_data, '*');
+				window.sessionStorage.setItem('benchmark_results',  JSON.stringify(_data));
 			};
 
 			game.start(BASENAME + '.pck').then(() => {
