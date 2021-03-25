@@ -1008,6 +1008,10 @@ already_AddRefed<GLContext> GLContextProviderEGL::CreateForCompositorWidget(
 #if defined(MOZ_WIDGET_GTK)
     depth = aCompositorWidget->AsX11()->GetDepth();
 #endif
+  } else {
+#if defined(MOZ_WIDGET_GTK)
+    depth = 32;
+#endif
   }
   return GLContextEGLFactory::Create(window, aWebRender, depth);
 }
