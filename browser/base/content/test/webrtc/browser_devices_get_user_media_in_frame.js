@@ -152,6 +152,102 @@ var gTests = [
 
   {
     desc:
+      "getUserMedia audio+video: Revoking active devices in frame does not add grace period.",
+    run: async function checkStopSharingGracePeriod(aBrowser, aSubFrames) {
+      let { bc: frame1BC, id: frame1ID, observeBC: frame1ObserveBC } = (
+        await getBrowsingContextsAndFrameIdsForSubFrames(
+          aBrowser.browsingContext,
+          aSubFrames
+        )
+      )[0];
+
+      let observerPromise = expectObserverCalled(
+        "getUserMedia:request",
+        1,
+        frame1ObserveBC
+      );
+      let promise = promisePopupNotificationShown("webRTC-shareDevices");
+      await promiseRequestDevice(true, true, frame1ID, undefined, frame1BC);
+      await promise;
+      await observerPromise;
+      checkDeviceSelectors(true, true);
+
+      let indicator = promiseIndicatorWindow();
+      let observerPromise1 = expectObserverCalled(
+        "getUserMedia:response:allow",
+        1,
+        frame1ObserveBC
+      );
+      let observerPromise2 = expectObserverCalled(
+        "recording-device-events",
+        1,
+        frame1ObserveBC
+      );
+      await promiseMessage("ok", () => {
+        PopupNotifications.panel.firstElementChild.button.click();
+      });
+      await observerPromise1;
+      await observerPromise2;
+      Assert.deepEqual(
+        await getMediaCaptureState(),
+        { audio: true, video: true },
+        "expected camera and microphone to be shared"
+      );
+
+      await indicator;
+      await checkSharingUI({ video: true, audio: true });
+
+      // Stop sharing for camera and test that we stopped sharing.
+      await stopSharing("camera", false, frame1ObserveBC);
+
+      // There shouldn't be any grace period permissions at this point.
+      ok(
+        !SitePermissions.getAllForBrowser(aBrowser).length,
+        "Should not set any permissions."
+      );
+
+      // A new request should result in a prompt.
+      observerPromise = expectObserverCalled(
+        "getUserMedia:request",
+        1,
+        frame1ObserveBC
+      );
+      let notificationPromise = promisePopupNotificationShown(
+        "webRTC-shareDevices"
+      );
+      await promiseRequestDevice(true, true, frame1ID, undefined, frame1BC);
+      await notificationPromise;
+      await observerPromise;
+
+      let denyPromise = expectObserverCalled(
+        "getUserMedia:response:deny",
+        1,
+        frame1ObserveBC
+      );
+      let recordingEndedPromise = expectObserverCalled(
+        "recording-window-ended",
+        1,
+        frame1ObserveBC
+      );
+      const permissionError =
+        "error: NotAllowedError: The request is not allowed " +
+        "by the user agent or the platform in the current context.";
+      await promiseMessage(permissionError, () => {
+        activateSecondaryAction(kActionDeny);
+      });
+      await denyPromise;
+      await recordingEndedPromise;
+
+      // Clean up the temporary blocks from the prompt deny.
+      SitePermissions.clearTemporaryBlockPermissions(aBrowser);
+
+      // the stream is already closed, but this will do some cleanup anyway
+      await closeStream(true, frame1ID, undefined, frame1BC, frame1ObserveBC);
+    },
+  },
+
+  {
+    desc:
       "getUserMedia audio+video: reloading the frame removes all sharing UI",
     run: async function checkReloading(aBrowser, aSubFrames) {
       let { bc: frame1BC, id: frame1ID, observeBC: frame1ObserveBC } = (
