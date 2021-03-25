@@ -532,7 +532,9 @@ class PLDHashTable {
   class EntryHandle {
    public:
     EntryHandle(EntryHandle&& aOther) noexcept;
+#ifdef MOZ_HASH_TABLE_CHECKS_ENABLED
     ~EntryHandle();
+#endif
 
     EntryHandle(const EntryHandle&) = delete;
     EntryHandle& operator=(const EntryHandle&) = delete;
@@ -568,8 +570,19 @@ class PLDHashTable {
       return Entry();
     }
 
+    /** Removes the entry. Note that the table won't shrink on destruction of
+     * the EntryHandle.
+     *
+     * \pre HasEntry()
+     * \post !HasEntry()
+     */
     void Remove();
 
+    /** Removes the entry, if it exists. Note that the table won't shrink on
+     * destruction of the EntryHandle.
+     *
+     * \post !HasEntry()
+     */
     void OrRemove();
 
    private:
