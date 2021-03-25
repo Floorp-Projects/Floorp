@@ -12222,22 +12222,23 @@ nsDocShell::MakeEditable(bool aInWaitForUriLoad) {
     return;
   }
 
-  nsresult rv = props->GetPropertyAsInterface(u"docshell.previousURI"_ns,
-                                              NS_GET_IID(nsIURI),
-                                              reinterpret_cast<void**>(aURI));
+  nsresult rv;
+  nsCOMPtr<nsIURI> uri(do_GetProperty(props, u"docshell.previousURI"_ns, &rv));
+  if (NS_SUCCEEDED(rv)) {
+    uri.forget(aURI);
 
-  if (NS_FAILED(rv)) {
-    // There is no last visit for this channel, so this must be the first
-    // link.  Link the visit to the referrer of this request, if any.
-    // Treat referrer as null if there is an error getting it.
-    (void)NS_GetReferrerFromChannel(aChannel, aURI);
-  } else {
     rv = props->GetPropertyAsUint32(u"docshell.previousFlags"_ns,
                                     aChannelRedirectFlags);
 
     NS_WARNING_ASSERTION(
         NS_SUCCEEDED(rv),
         "Could not fetch previous flags, URI will be treated like referrer");
+
+  } else {
+    // There is no last visit for this channel, so this must be the first
+    // link.  Link the visit to the referrer of this request, if any.
+    // Treat referrer as null if there is an error getting it.
+    NS_GetReferrerFromChannel(aChannel, aURI);
   }
 }
 
