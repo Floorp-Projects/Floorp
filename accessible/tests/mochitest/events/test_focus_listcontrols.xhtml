@@ -46,7 +46,8 @@
       gQueue.push(new synthFocus("emptyrichlistbox", new focusChecker("emptyrichlistbox")));
 
       gQueue.push(new synthFocus("menulist"));
-      gQueue.push(new synthClick("menulist", new focusChecker("ml_tangerine")));
+      gQueue.push(new synthClick("menulist", new focusChecker("ml_tangerine"),
+        { where: "center" }));
       gQueue.push(new synthDownKey("ml_tangerine", new focusChecker("ml_marmalade")));
       gQueue.push(new synthEscapeKey("ml_marmalade", new focusChecker("menulist")));
 

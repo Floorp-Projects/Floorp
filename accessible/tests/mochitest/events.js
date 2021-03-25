@@ -1251,11 +1251,21 @@ function synthClick(aNodeOrID, aCheckerOrEventSeq, aArgs) {
 
     var x = 1,
       y = 1;
-    if (aArgs && "where" in aArgs && aArgs.where == "right") {
-      if (isHTMLElement(targetNode)) {
-        x = targetNode.offsetWidth - 1;
-      } else if (isXULElement(targetNode)) {
-        x = targetNode.getBoundingClientRect().width - 1;
+    if (aArgs && "where" in aArgs) {
+      if (aArgs.where == "right") {
+        if (isHTMLElement(targetNode)) {
+          x = targetNode.offsetWidth - 1;
+        } else if (isXULElement(targetNode)) {
+          x = targetNode.getBoundingClientRect().width - 1;
+        }
+      } else if (aArgs.where == "center") {
+        if (isHTMLElement(targetNode)) {
+          x = targetNode.offsetWidth / 2;
+          y = targetNode.offsetHeight / 2;
+        } else if (isXULElement(targetNode)) {
+          x = targetNode.getBoundingClientRect().width / 2;
+          y = targetNode.getBoundingClientRect().height / 2;
+        }
       }
     }
     synthesizeMouse(targetNode, x, y, aArgs ? aArgs : {});
