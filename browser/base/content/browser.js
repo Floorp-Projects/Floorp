@@ -9304,9 +9304,9 @@ TabModalPromptBox.prototype = {
       !browser.hasAttribute("tabmodalChromePromptShowing")
     ) {
       browser.setAttribute("tabmodalChromePromptShowing", true);
-      // Notify PopupNotifications of the UI change so it hides the notification
-      // panel.
-      PopupNotifications.anchorVisibilityChange();
+      // Notify popup notifications of the UI change so they hide their
+      // notification panels.
+      UpdatePopupNotificationsVisibility();
     }
 
     let prompts = this.listPrompts(args.modalType);
@@ -9374,9 +9374,9 @@ TabModalPromptBox.prototype = {
       // If we remove the last tab chrome prompt, also remove the browser
       // attribute.
       browser.removeAttribute("tabmodalChromePromptShowing");
-      // Notify PopupNotifications of the UI change so it shows the notification
-      // panel again.
-      PopupNotifications.anchorVisibilityChange();
+      // Notify popup notifications of the UI change so they show notification
+      // panels again.
+      UpdatePopupNotificationsVisibility();
     }
     // Check if all prompts are closed
     if (!this._hasPrompts()) {
