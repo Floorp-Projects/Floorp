@@ -73,12 +73,6 @@ fn translate_shader(shader_key: &str, shader_dir: &str) {
     std::fs::write(&imp_name, imported).unwrap();
 
     let mut build = cc::Build::new();
-    // Use SWGLPP target to avoid pulling CFLAGS/CXXFLAGS.
-    if let Ok(tool) = build.try_get_compiler() {
-        // Force the compiler of the existing target before overriding it.
-        build.compiler(tool.path());
-    }
-    build.target("SWGLPP");
     build.no_default_flags(true);
     if build.get_compiler().is_like_msvc() {
         build.flag("/EP").flag("/clang:-undef");
@@ -125,12 +119,6 @@ fn main() {
     }
 
     shaders.sort();
-
-    // We need to ensure that the C preprocessor does not pull compiler flags from
-    // the host or target environment. Set up a SWGLPP target with empty flags to
-    // work around this.
-    std::env::set_var("CFLAGS_SWGLPP", "");
-    std::env::set_var("CXXFLAGS_SWGLPP", "");
 
     for shader in &shaders {
         translate_shader(shader, &shader_dir);
