@@ -1745,8 +1745,6 @@ void CanonicalBrowsingContext::SetRestoreData(SessionStoreRestoreData* aData) {
 
 void CanonicalBrowsingContext::RequestRestoreTabContent(
     WindowGlobalParent* aWindow) {
-  MOZ_DIAGNOSTIC_ASSERT(IsTop());
-
   if (IsDiscarded() || !mRestoreData || mRestoreData->IsEmpty()) {
     return;
   }

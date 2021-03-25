@@ -1087,9 +1087,9 @@ void WindowGlobalParent::FinishAccumulatingPageUseCounters() {
 }
 
 mozilla::ipc::IPCResult WindowGlobalParent::RecvRequestRestoreTabContent() {
-  CanonicalBrowsingContext* bc = BrowsingContext();
-  if (bc && bc->AncestorsAreCurrent()) {
-    bc->Top()->RequestRestoreTabContent(this);
+  CanonicalBrowsingContext* bc = BrowsingContext()->Top();
+  if (bc && !bc->IsDiscarded()) {
+    bc->RequestRestoreTabContent(this);
   }
   return IPC_OK();
 }
