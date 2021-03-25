@@ -1521,20 +1521,6 @@ uint64_t JSScript::getHitCount(jsbytecode* pc) {
   } while (true);
 }
 
-void JSScript::incHitCount(jsbytecode* pc) {
-  MOZ_ASSERT(containsPC(pc));
-  if (pc < main()) {
-    pc = main();
-  }
-
-  ScriptCounts& sc = getScriptCounts();
-  js::PCCounts* baseCount = sc.getImmediatePrecedingPCCounts(pcToOffset(pc));
-  if (!baseCount) {
-    return;
-  }
-  baseCount->numExec()++;
-}
-
 void JSScript::addIonCounts(jit::IonScriptCounts* ionCounts) {
   ScriptCounts& sc = getScriptCounts();
   if (sc.ionCounts_) {
