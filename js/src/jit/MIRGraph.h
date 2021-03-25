@@ -48,7 +48,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
                              MBasicBlock* maybePred, uint32_t popped);
 
   // This block cannot be reached by any means.
-  bool unreachable_;
+  bool unreachable_ = false;
+
+  // This block will unconditionally bail out.
+  bool alwaysBails_ = false;
 
   // Pushes a copy of a local variable or argument.
   void pushVariable(uint32_t slot) { push(slots_[slot]); }
@@ -131,6 +134,10 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock> {
   }
   void setUnreachableUnchecked() { unreachable_ = true; }
   bool unreachable() const { return unreachable_; }
+
+  void setAlwaysBails() { alwaysBails_ = true; }
+  bool alwaysBails() const { return alwaysBails_; }
+
   // Move the definition to the top of the stack.
   void pick(int32_t depth);
 
