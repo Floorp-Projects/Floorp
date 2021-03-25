@@ -1462,7 +1462,7 @@ static bool HasNonLockModifier(Modifiers aModifiers) {
 
 APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
   APZThreadUtils::AssertOnControllerThread();
-  APZEventResult result;
+  InputHandlingState state;
 
   // Use a RAII class for updating the focus sequence number of this event
   AutoFocusSequenceNumberSetter focusSetter(mFocusState, aEvent);
@@ -1471,7 +1471,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
   switch (aEvent.mInputType) {
     case MULTITOUCH_INPUT: {
       MultiTouchInput& touchInput = aEvent.AsMultiTouchInput();
-      result = ProcessTouchInput(touchInput);
+      ProcessTouchInput(state, touchInput);
       break;
     }
     case MOUSE_INPUT: {
@@ -1516,8 +1516,8 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
         }
 
         TargetConfirmationFlags confFlags{hitResult};
-        result = mInputQueue->ReceiveInputEvent(hit.mTargetApzc, confFlags,
-                                                mouseInput);
+        state.mResult = mInputQueue->ReceiveInputEvent(hit.mTargetApzc,
+                                                       confFlags, mouseInput);
 
         // If we're starting an async scrollbar drag
         bool apzDragEnabled = StaticPrefs::apz_drag_enabled();
@@ -1528,7 +1528,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
                              hit.mTargetApzc.get());
         }
 
-        if (result.GetStatus() == nsEventStatus_eConsumeDoDefault) {
+        if (state.mResult.GetStatus() == nsEventStatus_eConsumeDoDefault) {
           // This input event is part of a drag block, so whether or not it is
           // directed at a scrollbar depends on whether the drag block started
           // on a scrollbar.
@@ -1556,7 +1556,8 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
           // to apply the callback transform in the main thread, so we remove
           // the scrollid from the guid. We need to keep the layersId intact so
           // that the response from the child process doesn't get discarded.
-          result.mTargetGuid.mScrollId = ScrollableLayerGuid::NULL_SCROLL_ID;
+          state.mResult.mTargetGuid.mScrollId =
+              ScrollableLayerGuid::NULL_SCROLL_ID;
         }
       }
       break;
@@ -1572,7 +1573,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
 
       wheelInput.mHandledByAPZ = WillHandleInput(wheelInput);
       if (!wheelInput.mHandledByAPZ) {
-        return result;
+        return state.mResult;
       }
 
       mOvershootDetector.Update(wheelInput);
@@ -1591,8 +1592,8 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
           if (hit.mTargetApzc) {
             SynthesizePinchGestureFromMouseWheel(wheelInput, hit.mTargetApzc);
           }
-          result.SetStatusAsConsumeNoDefault();
-          return result;
+          state.mResult.SetStatusAsConsumeNoDefault();
+          return state.mResult;
         }
 
         MOZ_ASSERT(wheelInput.mAPZAction == APZWheelAction::Scroll);
@@ -1611,10 +1612,10 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
             UntransformBy(transformToGecko, wheelInput.mOrigin);
 
         if (!untransformedOrigin) {
-          return result;
+          return state.mResult;
         }
 
-        result = mInputQueue->ReceiveInputEvent(
+        state.mResult = mInputQueue->ReceiveInputEvent(
             hit.mTargetApzc, TargetConfirmationFlags{hitResult}, wheelInput);
 
         // Update the out-parameters so they are what the caller expects.
@@ -1633,7 +1634,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
 
       panInput.mHandledByAPZ = WillHandleInput(panInput);
       if (!panInput.mHandledByAPZ) {
-        return result;
+        return state.mResult;
       }
 
       // If/when we enable support for pan inputs off-main-thread, we'll need
@@ -1667,10 +1668,10 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
                               panInput.mPanStartPoint);
 
         if (!untransformedStartPoint || !untransformedDisplacement) {
-          return result;
+          return state.mResult;
         }
 
-        result = mInputQueue->ReceiveInputEvent(
+        state.mResult = mInputQueue->ReceiveInputEvent(
             hit.mTargetApzc, TargetConfirmationFlags{hitResult}, panInput);
 
         // Update the out-parameters so they are what the caller expects.
@@ -1687,7 +1688,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       if (HasNonLockModifier(pinchInput.modifiers)) {
         APZCTM_LOG("Discarding pinch input due to modifiers 0x%x\n",
                    pinchInput.modifiers);
-        return result;
+        return state.mResult;
       }
 
       HitTestResult hit = GetTargetAPZC(pinchInput.mFocusPoint);
@@ -1713,10 +1714,10 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
             UntransformBy(outTransform, pinchInput.mFocusPoint);
 
         if (!untransformedFocusPoint) {
-          return result;
+          return state.mResult;
         }
 
-        result = mInputQueue->ReceiveInputEvent(
+        state.mResult = mInputQueue->ReceiveInputEvent(
             hit.mTargetApzc, TargetConfirmationFlags{hitResult}, pinchInput);
 
         // Update the out-parameters so they are what the caller expects.
@@ -1740,10 +1741,10 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
             UntransformBy(outTransform, tapInput.mPoint);
 
         if (!untransformedPoint) {
-          return result;
+          return state.mResult;
         }
 
-        result = mInputQueue->ReceiveInputEvent(
+        state.mResult = mInputQueue->ReceiveInputEvent(
             hit.mTargetApzc, TargetConfirmationFlags{hitResult}, tapInput);
 
         // Update the out-parameters so they are what the caller expects.
@@ -1757,7 +1758,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       if (!StaticPrefs::apz_keyboard_enabled_AtStartup() ||
           StaticPrefs::accessibility_browsewithcaret()) {
         APZ_KEY_LOG("Skipping key input from invalid prefs\n");
-        return result;
+        return state.mResult;
       }
 
       KeyboardInput& keyInput = aEvent.AsKeyboardInput();
@@ -1774,14 +1775,14 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
         if (mFocusState.CanIgnoreKeyboardShortcutMisses()) {
           focusSetter.MarkAsNonFocusChanging();
         }
-        return result;
+        return state.mResult;
       }
 
       // Check if this shortcut needs to be dispatched to content. Anything
       // matching this is assumed to be able to change focus.
       if (shortcut->mDispatchToContent) {
         APZ_KEY_LOG("Skipping key input with dispatch-to-content shortcut\n");
-        return result;
+        return state.mResult;
       }
 
       // We know we have an action to execute on whatever is the current focus
@@ -1810,7 +1811,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       // to content.
       if (!targetGuid) {
         APZ_KEY_LOG("Skipping key input with no current focus target\n");
-        return result;
+        return state.mResult;
       }
 
       RefPtr<AsyncPanZoomController> targetApzc =
@@ -1818,7 +1819,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
 
       if (!targetApzc) {
         APZ_KEY_LOG("Skipping key input with focus target but no APZC\n");
-        return result;
+        return state.mResult;
       }
 
       // Attach the keyboard scroll action to the input event for processing
@@ -1828,13 +1829,13 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       APZ_KEY_LOG("Dispatching key input with apzc=%p\n", targetApzc.get());
 
       // Dispatch the event to the input queue.
-      result = mInputQueue->ReceiveInputEvent(
+      state.mResult = mInputQueue->ReceiveInputEvent(
           targetApzc, TargetConfirmationFlags{true}, keyInput);
 
       // Any keyboard event that is dispatched to the input queue at this point
       // should have been consumed
-      MOZ_ASSERT(result.GetStatus() == nsEventStatus_eConsumeDoDefault ||
-                 result.GetStatus() == nsEventStatus_eConsumeNoDefault);
+      MOZ_ASSERT(state.mResult.GetStatus() == nsEventStatus_eConsumeDoDefault ||
+                 state.mResult.GetStatus() == nsEventStatus_eConsumeNoDefault);
 
       keyInput.mHandledByAPZ = true;
       focusSetter.MarkAsNonFocusChanging();
@@ -1842,7 +1843,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       break;
     }
   }
-  return result;
+  return state.mResult;
 }
 
 static TouchBehaviorFlags ConvertToTouchBehavior(
@@ -1917,8 +1918,8 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetTouchInputBlockAPZC(
   return hit;
 }
 
-APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
-  APZEventResult result;  // mStatus == eIgnore
+void APZCTreeManager::ProcessTouchInput(InputHandlingState& aState,
+                                        MultiTouchInput& aInput) {
   aInput.mHandledByAPZ = true;
   nsTArray<TouchBehaviorFlags> touchBehaviors;
   HitTestingTreeNodeAutoLock hitScrollbarNode;
@@ -1939,8 +1940,8 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
             mTouchBlockHitResult.mTargetApzc->GetLastTouchIdentifier();
       }
 
-      result.SetStatusAsConsumeNoDefault();
-      return result;
+      aState.mResult.SetStatusAsConsumeNoDefault();
+      return;
     }
 
     HitTestResult hit = GetTouchInputBlockAPZC(aInput, &touchBehaviors);
@@ -1982,8 +1983,8 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
   }
 
   if (mInScrollbarTouchDrag) {
-    result = ProcessTouchInputForScrollbarDrag(aInput, hitScrollbarNode,
-                                               mTouchBlockHitResult.mHitResult);
+    aState.mResult = ProcessTouchInputForScrollbarDrag(
+        aInput, hitScrollbarNode, mTouchBlockHitResult.mHitResult);
   } else {
     // If we receive a touch-cancel, it means all touches are finished, so we
     // can stop ignoring any that we were ignoring.
@@ -2007,8 +2008,8 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
         }
       }
       if (aInput.mTouches.IsEmpty()) {
-        result.SetStatusAsConsumeNoDefault();
-        return result;
+        aState.mResult.SetStatusAsConsumeNoDefault();
+        return;
       }
     }
 
@@ -2016,7 +2017,7 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
       MOZ_ASSERT(mTouchBlockHitResult.mHitResult !=
                  CompositorHitTestInvisibleToHit);
 
-      result = mInputQueue->ReceiveInputEvent(
+      aState.mResult = mInputQueue->ReceiveInputEvent(
           mTouchBlockHitResult.mTargetApzc,
           TargetConfirmationFlags{mTouchBlockHitResult.mHitResult}, aInput,
           touchBehaviors.IsEmpty() ? Nothing()
@@ -2039,8 +2040,8 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
         Maybe<ScreenIntPoint> untransformedScreenPoint =
             UntransformBy(outTransform, touchData.mScreenPoint);
         if (!untransformedScreenPoint) {
-          result.SetStatusAsIgnore();
-          return result;
+          aState.mResult.SetStatusAsIgnore();
+          return;
         }
         touchData.mScreenPoint = *untransformedScreenPoint;
         if (mTouchBlockHitResult.mFixedPosSides != SideBits::eNone) {
@@ -2062,8 +2063,6 @@ APZEventResult APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput) {
     mRetainedTouchIdentifier = -1;
     mInScrollbarTouchDrag = false;
   }
-
-  return result;
 }
 
 static MouseInput::MouseType MultiTouchTypeToMouseType(
