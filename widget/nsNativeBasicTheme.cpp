@@ -1832,15 +1832,20 @@ void nsNativeBasicTheme::PaintAutoStyleOutline(nsIFrame* aFrame,
       LayoutDeviceCoord(SnapBorderWidth(kInnerFocusOutlineWidth, aDpiRatio));
   rect.Inflate(width);
 
+  const nscoord offset = aFrame->StyleOutline()->mOutlineOffset.ToAppUnits();
   nscoord cssRadii[8];
   if (!aFrame->GetBorderRadii(cssRadii)) {
+    const CSSCoord cssOffset = CSSCoord::FromAppUnits(offset);
+    const CSSCoord radius =
+        cssOffset >= 0.0f
+            ? kInnerFocusOutlineWidth
+            : std::max(kInnerFocusOutlineWidth + cssOffset, CSSCoord(0.0f));
     return PaintRoundedRectWithRadius(aPaintData, rect, sRGBColor::White(0.0f),
                                       innerColor, kInnerFocusOutlineWidth,
-                                      /* aRadius = */ 0.0f, aDpiRatio);
+                                      radius, aDpiRatio);
   }
 
   nsPresContext* pc = aFrame->PresContext();
-  const nscoord offset = aFrame->StyleOutline()->mOutlineOffset.ToAppUnits();
   const Float devPixelOffset = pc->AppUnitsToFloatDevPixels(offset);
 
   RectCornerRadii innerRadii;
