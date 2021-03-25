@@ -74,6 +74,7 @@ class AboutWelcome extends React.PureComponent {
         metricsFlowUri={this.state.metricsFlowUri}
         message_id={props.messageId}
         utm_term={props.UTMTerm}
+        design={props.design}
       />
     );
   }

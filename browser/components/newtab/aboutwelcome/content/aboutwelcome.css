@@ -358,3 +358,9 @@ body {
       opacity: 0.25; }
       .onboardingContainer .steps .indicator.current {
         opacity: 1; }
+  .onboardingContainer.proton {
+    background-image: url("chrome://branding/content/about-logo.svg");
+    background-repeat: no-repeat;
+    background-size: 25em; }
+    .onboardingContainer.proton .welcome-text {
+      margin-top: 10vw; }
