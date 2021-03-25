@@ -17,6 +17,11 @@ bool IsOpaqueBlockListedMIMEType(const nsACString& aContentType);
 
 bool IsOpaqueBlockListedNeverSniffedMIMEType(const nsACString& aContentType);
 
+// Returns a tuple of (rangeStart, rangeEnd, rangeTotal) from the input range
+// header string if succeed.
+Result<std::tuple<int64_t, int64_t, int64_t>, nsresult>
+ParseContentRangeHeaderString(const nsAutoCString& aRangeStr);
+
 }  // namespace net
 }  // namespace mozilla
 
