@@ -7,13 +7,10 @@
 
 add_task(async function() {
   info("Setup the test page with workers of all types");
-  const client = await createLocalClient();
-  const mainRoot = client.mainRoot;
   const tab = await addTab("data:text/html;charset=utf-8,Configuration actor");
 
   info("Create a target list for a tab target");
-  const descriptor = await mainRoot.getTab({ tab });
-  const commands = await descriptor.getCommands();
+  const commands = await CommandsFactory.forTab(tab);
   const targetList = commands.targetCommand;
   await targetList.startListening();
 
@@ -68,7 +65,7 @@ add_task(async function() {
   );
 
   targetList.destroy();
-  await client.close();
+  await commands.destroy();
 });
 
 function compareOptions(options, expected, message) {

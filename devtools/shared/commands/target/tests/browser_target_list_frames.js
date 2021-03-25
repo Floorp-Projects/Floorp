@@ -18,23 +18,17 @@ add_task(async function() {
   // This preference helps destroying the content process when we close the tab
   await pushPref("dom.ipc.keepProcessesAlive.web", 1);
 
-  const client = await createLocalClient();
-  const mainRoot = client.mainRoot;
-
   // Test fetching the frames from the main process target
-  await testBrowserFrames(mainRoot);
+  await testBrowserFrames();
 
   // Test fetching the frames from a tab target
-  await testTabFrames(mainRoot);
-
-  await client.close();
+  await testTabFrames();
 });
 
-async function testBrowserFrames(mainRoot) {
+async function testBrowserFrames() {
   info("Test TargetCommand against frames via the parent process target");
 
-  const targetDescriptor = await mainRoot.getMainProcess();
-  const commands = await targetDescriptor.getCommands();
+  const commands = await CommandsFactory.forMainProcess();
   const targetList = commands.targetCommand;
   const { TYPES } = targetList;
   await targetList.startListening();
@@ -61,7 +55,7 @@ async function testBrowserFrames(mainRoot) {
 
   // Assert that watchTargets will call the create callback for all existing frames
   const targets = [];
-  const topLevelTarget = await targetDescriptor.getTarget();
+  const topLevelTarget = targetList.targetFront;
   const onAvailable = ({ targetFront }) => {
     is(
       targetFront.targetType,
@@ -108,6 +102,8 @@ async function testBrowserFrames(mainRoot) {
 
   targetList.destroy();
   await waitForAllTargetsToBeAttached(targetList);
+
+  await commands.destroy();
 }
 
 async function testTabFrames(mainRoot) {
@@ -115,8 +111,7 @@ async function testTabFrames(mainRoot) {
 
   // Create a TargetCommand for a given test tab
   const tab = await addTab(FISSION_TEST_URL);
-  const descriptor = await mainRoot.getTab({ tab });
-  const commands = await descriptor.getCommands();
+  const commands = await CommandsFactory.forTab(tab);
   const targetList = commands.targetCommand;
   const { TYPES } = targetList;
 
@@ -135,7 +130,7 @@ async function testTabFrames(mainRoot) {
   // Assert that watchTargets will call the create callback for all existing frames
   const targets = [];
   const destroyedTargets = [];
-  const topLevelTarget = await descriptor.getTarget();
+  const topLevelTarget = targetList.targetFront;
   const onAvailable = ({ targetFront, isTargetSwitching }) => {
     is(
       targetFront.targetType,
@@ -290,4 +285,6 @@ async function testTabFrames(mainRoot) {
   targetList.destroy();
 
   BrowserTestUtils.removeTab(tab);
+
+  await commands.destroy();
 }

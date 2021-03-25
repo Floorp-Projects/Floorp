@@ -5,7 +5,8 @@
 
 const {
   STUBS_UPDATE_ENV,
-  createResourceWatcherForDescriptor,
+  createCommandsForMainProcess,
+  createResourceWatcherForCommands,
   getCleanedPacket,
   getSerializedPacket,
   getStubFile,
@@ -59,22 +60,8 @@ add_task(async function() {
 async function generatePlatformMessagesStubs() {
   const stubs = new Map();
 
-  // Instantiate a minimal server
-  const { DevToolsClient } = require("devtools/client/devtools-client");
-  const { DevToolsServer } = require("devtools/server/devtools-server");
-  DevToolsServer.init();
-  DevToolsServer.allowChromeProcess = true;
-  if (!DevToolsServer.createRootActor) {
-    DevToolsServer.registerAllActors();
-  }
-  const transport = DevToolsServer.connectPipe();
-  const client = new DevToolsClient(transport);
-  await client.connect();
-  const mainProcessDescriptor = await client.mainRoot.getMainProcess();
-
-  const resourceWatcher = await createResourceWatcherForDescriptor(
-    mainProcessDescriptor
-  );
+  const commands = await createCommandsForMainProcess();
+  const resourceWatcher = await createResourceWatcherForCommands(commands);
 
   // The resource-watcher only supports a single call to watch/unwatch per
   // instance, so we attach a unique watch callback, which will forward the
@@ -105,7 +92,7 @@ async function generatePlatformMessagesStubs() {
   }
 
   resourceWatcher.targetList.destroy();
-  await client.close();
+  await commands.destroy();
 
   return stubs;
 }

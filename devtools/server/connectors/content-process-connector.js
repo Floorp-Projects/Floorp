@@ -104,7 +104,11 @@ function connectToContentProcess(connection, mm, onDestroy) {
         if (subject == mm) {
           // Send the "tabDetached" event before closing the connection which
           // will destroy fronts on the client.
-          connection.send({ from: actor.actor, type: "tabDetached" });
+          // Note that the content process may be destroyed before the actor is created.
+          // Avoid trying to send any tabDetached in such situation.
+          if (actor) {
+            connection.send({ from: actor.actor, type: "tabDetached" });
+          }
           onClose();
         }
       }

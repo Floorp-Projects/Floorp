@@ -12,6 +12,9 @@ const { require } = ChromeUtils.import("resource://devtools/shared/Loader.jsm");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 // eslint-disable-next-line mozilla/reject-some-requires
 const { DevToolsClient } = require("devtools/client/devtools-client");
+const {
+  CommandsFactory,
+} = require("devtools/shared/commands/commands-factory");
 
 const Services = require("Services");
 
@@ -113,18 +116,15 @@ var _attachConsole = async function(listeners, attachToTab, attachToWorker) {
 };
 
 async function createResourceWatcherForTab() {
-  const client = await connectToDebugger();
-  const targetDescriptor = await client.mainRoot.getMainProcess();
-  const target = await targetDescriptor.getTarget();
-
   // Avoid mocha to try to load these module and fail while doing it when running node tests
   const {
     ResourceWatcher,
   } = require("devtools/shared/resources/resource-watcher");
 
-  const commands = await targetDescriptor.getCommands();
+  const commands = await CommandsFactory.forMainProcess();
   const targetList = commands.targetCommand;
   await targetList.startListening();
+  const target = commands.targetCommand.targetFront;
   const resourceWatcher = new ResourceWatcher(targetList);
 
   return { resourceWatcher, target };

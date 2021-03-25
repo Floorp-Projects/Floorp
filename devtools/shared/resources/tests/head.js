@@ -15,29 +15,14 @@ Services.scriptloader.loadSubScript(
 const { DevToolsClient } = require("devtools/client/devtools-client");
 const { DevToolsServer } = require("devtools/server/devtools-server");
 
-async function createLocalClient() {
-  // Instantiate a minimal server
-  DevToolsServer.init();
-  DevToolsServer.allowChromeProcess = true;
-  if (!DevToolsServer.createRootActor) {
-    DevToolsServer.registerAllActors();
-  }
-  const transport = DevToolsServer.connectPipe();
-  const client = new DevToolsClient(transport);
-  await client.connect();
-  return client;
-}
-
-async function _initResourceWatcherFromDescriptor(
-  client,
-  descriptor,
+async function _initResourceWatcherFromCommands(
+  commands,
   { listenForWorkers = false } = {}
 ) {
   const {
     ResourceWatcher,
   } = require("devtools/shared/resources/resource-watcher");
 
-  const commands = await descriptor.getCommands();
   const targetList = commands.targetCommand;
   if (listenForWorkers) {
     targetList.listenForWorkers = true;
@@ -47,7 +32,7 @@ async function _initResourceWatcherFromDescriptor(
   // Now create a ResourceWatcher
   const resourceWatcher = new ResourceWatcher(targetList);
 
-  return { client, resourceWatcher, targetList };
+  return { client: commands.client, commands, resourceWatcher, targetList };
 }
 
 /**
@@ -58,34 +43,36 @@ async function _initResourceWatcherFromDescriptor(
  * @param {Object} options
  * @param {Boolean} options.listenForWorkers
  * @return {Object} object
- * @return {ResourceWatcher} object.client
- *         The underlying client instance.
+ * @return {ResourceWatcher} object.resourceWatcher
+ *         The underlying resource watcher interface.
+ * @return {Object} object.commands
+ *         The commands object defined by modules from devtools/shared/commands.
  * @return {DevToolsClient} object.client
  *         The underlying client instance.
  * @return {DevToolsClient} object.targetList
  *         The underlying target list instance.
  */
 async function initResourceWatcher(tab, options) {
-  const client = await createLocalClient();
-  const descriptor = await client.mainRoot.getTab({ tab });
-  return _initResourceWatcherFromDescriptor(client, descriptor, options);
+  const commands = await CommandsFactory.forTab(tab);
+  return _initResourceWatcherFromCommands(commands, options);
 }
 
 /**
  * Instantiate a multi-process ResourceWatcher, watching all type of targets.
  *
  * @return {Object} object
- * @return {ResourceWatcher} object.client
- *         The underlying client instance.
+ * @return {ResourceWatcher} object.resourceWatcher
+ *         The underlying resource watcher interface.
+ * @return {Object} object.commands
+ *         The commands object defined by modules from devtools/shared/commands.
  * @return {DevToolsClient} object.client
  *         The underlying client instance.
  * @return {DevToolsClient} object.targetList
  *         The underlying target list instance.
  */
 async function initMultiProcessResourceWatcher() {
-  const client = await createLocalClient();
-  const descriptor = await client.mainRoot.getMainProcess();
-  return _initResourceWatcherFromDescriptor(client, descriptor);
+  const commands = await CommandsFactory.forMainProcess();
+  return _initResourceWatcherFromCommands(commands);
 }
 
 // Copied from devtools/shared/webconsole/test/chrome/common.js

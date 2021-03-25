@@ -14,19 +14,10 @@ const Constants = require("devtools/client/responsive/constants");
 const {
   ResourceWatcher,
 } = require("devtools/shared/resources/resource-watcher");
+const {
+  CommandsFactory,
+} = require("devtools/shared/commands/commands-factory");
 
-loader.lazyRequireGetter(
-  this,
-  "DevToolsClient",
-  "devtools/client/devtools-client",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "DevToolsServer",
-  "devtools/server/devtools-server",
-  true
-);
 loader.lazyRequireGetter(
   this,
   "throttlingProfiles",
@@ -364,34 +355,22 @@ class ResponsiveUI {
     this.resizeHandleY = null;
     this.resizeToolbarObserver = null;
 
-    // Close the devtools client used to speak with responsive emulation actor.
+    // Destroying the commands will close the devtools client used to speak with responsive emulation actor.
     // The actor handles clearing any overrides itself, so it's not necessary to clear
     // anything on shutdown client side.
-    const clientClosed = this.client.close();
+    const commandsDestroyed = this.commands.destroy();
     if (!isTabContentDestroying) {
-      await clientClosed;
+      await commandsDestroyed;
     }
-    this.client = this.responsiveFront = null;
+    this.commands = this.responsiveFront = null;
     this.destroyed = true;
 
     return true;
   }
 
   async connectToServer() {
-    // The client being instantiated here is separate from the toolbox. It is being used
-    // separately and has a life cycle that doesn't correspond to the toolbox.
-    DevToolsServer.init();
-    DevToolsServer.registerAllActors();
-    this.client = new DevToolsClient(DevToolsServer.connectPipe());
-    await this.client.connect();
-
-    // Pass a proper `tab` filter option to getTab in order to create a
-    // "local" TabDescriptor, which handles target switching autonomously with
-    // its corresponding target-list.
-    const descriptor = await this.client.mainRoot.getTab({ tab: this.tab });
-
-    const commands = await descriptor.getCommands();
-    this.targetList = commands.targetCommand;
+    this.commands = await CommandsFactory.forTab(this.tab);
+    this.targetList = this.commands.targetCommand;
     this.resourceWatcher = new ResourceWatcher(this.targetList);
 
     await this.targetList.startListening();

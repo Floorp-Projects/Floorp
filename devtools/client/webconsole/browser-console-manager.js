@@ -5,18 +5,11 @@
 "use strict";
 
 var Services = require("Services");
-const ChromeUtils = require("ChromeUtils");
-const { DevToolsLoader } = ChromeUtils.import(
-  "resource://devtools/shared/Loader.jsm"
-);
+const {
+  CommandsFactory,
+} = require("devtools/shared/commands/commands-factory");
 
 loader.lazyRequireGetter(this, "Tools", "devtools/client/definitions", true);
-loader.lazyRequireGetter(
-  this,
-  "DevToolsClient",
-  "devtools/client/devtools-client",
-  true
-);
 loader.lazyRequireGetter(this, "l10n", "devtools/client/webconsole/utils/l10n");
 loader.lazyRequireGetter(
   this,
@@ -38,7 +31,6 @@ class BrowserConsoleManager {
     this._browserConsole = null;
     this._browserConsoleInitializing = null;
     this._browerConsoleSessionState = false;
-    this._devToolsClient = null;
   }
 
   storeBrowserConsoleSessionState() {
@@ -50,17 +42,15 @@ class BrowserConsoleManager {
   }
 
   /**
-   * Open a Browser Console for the given commands context.
+   * Open a Browser Console for the current commands context.
    *
-   * @param object commands
-   *        The commands object with all interfaces defined from devtools/shared/commands/
    * @param nsIDOMWindow iframeWindow
    *        The window where the browser console UI is already loaded.
    * @return object
    *         A promise object for the opening of the new BrowserConsole instance.
    */
-  async openBrowserConsole(commands, win) {
-    const hud = new BrowserConsole(commands, win, win);
+  async openBrowserConsole(win) {
+    const hud = new BrowserConsole(this.commands, win, win);
     this._browserConsole = hud;
     await hud.init();
     return hud;
@@ -77,8 +67,8 @@ class BrowserConsoleManager {
     await this._browserConsole.destroy();
     this._browserConsole = null;
 
-    await this._devToolsClient.close();
-    this._devToolsClient = null;
+    await this.commands.destroy();
+    this.commands = null;
   }
 
   /**
@@ -96,60 +86,15 @@ class BrowserConsoleManager {
     // Temporarily cache the async startup sequence so that if toggleBrowserConsole
     // gets called again we can return this console instead of opening another one.
     this._browserConsoleInitializing = (async () => {
-      const commands = await this.connect();
+      this.commands = await CommandsFactory.forBrowserConsole();
       const win = await this.openWindow();
-      const browserConsole = await this.openBrowserConsole(commands, win);
+      const browserConsole = await this.openBrowserConsole(win);
       return browserConsole;
     })();
 
     const browserConsole = await this._browserConsoleInitializing;
     this._browserConsoleInitializing = null;
     return browserConsole;
-  }
-
-  /**
-   * One method to handle the whole setup sequence to connect to RDP backend.
-   *
-   * This will instantiate a special DevTools module loader for the DevToolsServer.
-   * Then spawn a DevToolsClient to connect to it.
-   * Get a Main Process Descriptor from it.
-   * Finally spawn a commands object for this descriptor.
-   */
-  async connect() {
-    // The Browser console ends up using the debugger in autocomplete.
-    // Because the debugger can't be running in the same compartment than its debuggee,
-    // we have to load the server in a dedicated Loader, flagged with
-    // `freshCompartment`, which will force it to be loaded in another compartment.
-    // We aren't using `invisibleToDebugger` in order to allow the Browser toolbox to
-    // debug the Browser console. This is fine as they will spawn distinct Loaders and
-    // so distinct `DevToolsServer` and actor modules.
-    const loader = new DevToolsLoader({
-      freshCompartment: true,
-    });
-    const { DevToolsServer } = loader.require(
-      "devtools/server/devtools-server"
-    );
-
-    DevToolsServer.init();
-
-    // We want all the actors (root, browser and target-scoped) to be registered on the
-    // DevToolsServer. This is needed so the Browser Console can retrieve:
-    // - the console actors, which are target-scoped (See Bug 1416105)
-    // - the screenshotActor, which is browser-scoped (for the `:screenshot` command)
-    DevToolsServer.registerAllActors();
-
-    DevToolsServer.allowChromeProcess = true;
-
-    this._devToolsClient = new DevToolsClient(DevToolsServer.connectPipe());
-    await this._devToolsClient.connect();
-
-    const descriptor = await this._devToolsClient.mainRoot.getMainProcess();
-
-    // Hack something in order to help TargetMixinFront to distinguish the BrowserConsole
-    descriptor.createdForBrowserConsole = true;
-
-    const commands = await descriptor.getCommands();
-    return commands;
   }
 
   async openWindow() {
