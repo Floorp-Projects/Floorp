@@ -1,4 +1,4 @@
-// |jit-test| --ion-pgo=on;
+// |jit-test| --ion-pruning=on;
 
 function test() {
   foo(startTest("", c(""),

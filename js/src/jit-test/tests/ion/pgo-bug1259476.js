@@ -1,4 +1,4 @@
-// |jit-test| --ion-pgo=on;
+// |jit-test| --ion-pruning=on;
 
 try {
     x = evalcx('');

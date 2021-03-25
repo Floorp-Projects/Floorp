@@ -1,4 +1,4 @@
-// |jit-test| --ion-pgo=on; skip-if: !('oomTest' in this)
+// |jit-test| --ion-pruning=on; skip-if: !('oomTest' in this)
 
 oomTest(() => {
     var g = newGlobal({sameZoneAs: this});
