@@ -1,0 +1,33 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+---
+loader: taskgraph.loader.transform:loader
+
+transforms:
+    - taskgraph.transforms.sentry:transforms
+    - taskgraph.transforms.job:transforms
+    - taskgraph.transforms.task:transforms
+
+jobs:
+    mach-release:
+        description: Inform Sentry of new revisions (aka Mach releases)
+        worker-type: b-linux
+        worker:
+            taskcluster-proxy: true
+            max-run-time: 3600
+            docker-image: {in-tree: sentry}
+            env:
+                HG_PUSHLOG_URL: "{head_repository}/json-pushes?version=2&changeset={head_rev}"
+        scopes:
+            - secrets:get:project/engwf/gecko/3/tokens
+        run:
+            using: run-task
+            checkout: false
+            command: /bin/bash /usr/bin/submit_sentry_release.sh
+        run-on-projects: ['mozilla-central']
+        treeherder:
+            symbol: Sentry(mach-release)
+            platform: other/opt
+            tier: 2
+            kind: other

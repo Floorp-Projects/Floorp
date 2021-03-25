@@ -705,6 +705,10 @@ merge-automation
 ----------------
 Hook-driven tasks that automate "Merge Day" tasks during the release cycle.
 
+sentry
+------
+Interact with Sentry, such as by publishing new project releases.
+
 system-symbols
 --------------
 Generate missing macOS and windows system symbols from crash reports.
