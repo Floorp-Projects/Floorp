@@ -5642,7 +5642,7 @@ static OpaqueRegionEntry* FindOpaqueRegionEntry(
 static const ActiveScrolledRoot* FindDirectChildASR(
     const ActiveScrolledRoot* aParent, const ActiveScrolledRoot* aDescendant) {
   MOZ_ASSERT(aDescendant, "can't start at the root when looking for a child");
-  MOZ_ASSERT(ActiveScrolledRoot::IsAncestor(aParent, aDescendant));
+  MOZ_DIAGNOSTIC_ASSERT(ActiveScrolledRoot::IsAncestor(aParent, aDescendant));
   const ActiveScrolledRoot* directChild = aDescendant;
   while (directChild->mParent != aParent) {
     directChild = directChild->mParent;
