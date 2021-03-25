@@ -1028,8 +1028,7 @@ class ActivePS {
       // being created using `nsContentUtils::GenerateProcessSpecificId`, which
       // is specifically designed to only use 53 of the 64 bits to be lossless
       // when passed into and out of JS as a double.
-      aWriter.DoubleProperty("activeBrowsingContextID",
-                             sInstance->mActiveTabID);
+      aWriter.DoubleProperty("activeTabID", sInstance->mActiveTabID);
     }
     aWriter.EndObject();
   }
@@ -2538,7 +2537,7 @@ static void StreamMetaJSCustomObject(
     const PreRecordedMetaInformation& aPreRecordedMetaInformation) {
   MOZ_RELEASE_ASSERT(CorePS::Exists() && ActivePS::Exists(aLock));
 
-  aWriter.IntProperty("version", 22);
+  aWriter.IntProperty("version", 23);
 
   // The "startTime" field holds the number of milliseconds since midnight
   // January 1, 1970 GMT. This grotty code computes (Now - (Now -

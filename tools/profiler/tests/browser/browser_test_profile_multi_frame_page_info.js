@@ -61,8 +61,8 @@ add_task(async function test_profile_multi_frame_page_info() {
       // Parent page
       if (page.url == url) {
         Assert.equal(page.url, url);
-        Assert.equal(typeof page.browsingContextID, "number");
-        Assert.equal(page.browsingContextID, activeTabID);
+        Assert.equal(typeof page.tabID, "number");
+        Assert.equal(page.tabID, activeTabID);
         Assert.equal(typeof page.innerWindowID, "number");
         // Top level document will have no embedder.
         Assert.equal(page.embedderInnerWindowID, 0);
@@ -78,8 +78,8 @@ add_task(async function test_profile_multi_frame_page_info() {
       // Child page (iframe)
       if (page.url == BASE_URL + "single_frame.html") {
         Assert.equal(page.url, BASE_URL + "single_frame.html");
-        Assert.equal(typeof page.browsingContextID, "number");
-        Assert.equal(page.browsingContextID, activeTabID);
+        Assert.equal(typeof page.tabID, "number");
+        Assert.equal(page.tabID, activeTabID);
         Assert.equal(typeof page.innerWindowID, "number");
         Assert.equal(typeof page.embedderInnerWindowID, "number");
         Assert.notEqual(typeof parentPage, "undefined");
