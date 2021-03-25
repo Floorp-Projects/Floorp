@@ -993,9 +993,7 @@ JSObject* js::CloneRegExpObject(JSContext* cx, Handle<RegExpObject*> regex) {
 
   clone->clearShared();
 
-  if (!EmptyShape::ensureInitialCustomShape<RegExpObject>(cx, clone)) {
-    return nullptr;
-  }
+  clone->setShape(regex->shape());
 
   RegExpShared* shared = RegExpObject::getShared(cx, regex);
   if (!shared) {
