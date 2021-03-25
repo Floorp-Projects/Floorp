@@ -324,8 +324,7 @@ MBasicBlock* MBasicBlock::New(MIRGraph& graph, const CompileInfo& info,
 
 MBasicBlock::MBasicBlock(MIRGraph& graph, const CompileInfo& info,
                          BytecodeSite* site, Kind kind)
-    : unreachable_(false),
-      graph_(graph),
+    : graph_(graph),
       info_(info),
       predecessors_(graph.alloc()),
       stackPosition_(info_.firstStackSlot()),
