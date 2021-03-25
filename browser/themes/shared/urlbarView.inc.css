@@ -18,7 +18,6 @@
   --autocomplete-popup-highlight-color: HighlightText;
 
   --urlbar-result-hover-bgcolor: var(--arrowpanel-dimmed);
-  --urlbar-popup-url-color: hsl(210, 77%, 47%);
   --urlbar-popup-action-color: hsl(178, 100%, 28%);
 
   /* Colors copied from in-content button styling */
@@ -33,6 +32,18 @@
 
   --urlbarView-item-inline-padding: calc(var(--urlbar-icon-padding) / 2 + 3px);
 }
+
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+:root {
+  --urlbar-popup-url-color: hsl(210, 77%, 47%);
+}
+} /*** END !proton ***/
+
+@supports -moz-bool-pref("browser.proton.urlbar.enabled") {
+:root:-moz-lwtheme {
+  --urlbar-popup-url-color: rgb(0,97,224);
+}
+} /*** END proton ***/
 
 :root[lwt-toolbar-field-focus-brighttext] {
   --urlbar-popup-url-color: var(--lwt-popup-brighttext-url-color);
@@ -54,6 +65,7 @@
   --autocomplete-popup-highlight-background: rgb(0, 99, 255);
   --autocomplete-popup-highlight-color: white;
 }
+
 :root[lwt-toolbar-field-brighttext] {
   --autocomplete-popup-highlight-background: rgb(0, 99, 225);
 }
