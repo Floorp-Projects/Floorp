@@ -102,11 +102,9 @@ interface FrameLoader {
 
   /**
    * Force a TabStateFlush from native sessionStoreListeners.
-   * Returns a promise that resolves when all session store data has been
-   * flushed.
+   * Return true if the flush requires async ipc call.
    */
-  [Throws]
-  Promise<void> requestTabStateFlush();
+  boolean requestTabStateFlush(unsigned long aFlushId);
 
   /**
    * Force Epoch update in native sessionStoreListeners.

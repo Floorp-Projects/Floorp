@@ -18,7 +18,6 @@ include protocol PBrowserBridge;
 include DOMTypes;
 include ClientIPCTypes;
 include NeckoChannelParams;
-include SessionStoreTypes;
 
 include "mozilla/layers/LayersMessageUtils.h";
 
@@ -175,11 +174,6 @@ parent:
   async AccumulatePageUseCounters(UseCounters aUseCounters);
 
   async RequestRestoreTabContent();
-  
-  async UpdateSessionStore(FormData? aFormData, nsPoint? aScrollPosition,
-                           uint32_t aEpoch);
-
-  async ResetSessionStore(uint32_t aEpoch);
 
   async Destroy();
 };
