@@ -51,7 +51,8 @@ const PanelUI = {
   _notifications: null,
   _notificationPanel: null,
 
-  init() {
+  init(shouldSuppress) {
+    this._shouldSuppress = shouldSuppress;
     this._initElements();
 
     this.menuButton.addEventListener("mousedown", this);
@@ -82,7 +83,7 @@ const PanelUI = {
           window.removeEventListener("fullscreen", this);
         }
 
-        this._updateNotifications(false);
+        this.updateNotifications(false);
       },
       autoHidePref => autoHidePref && Services.appinfo.OS !== "Darwin"
     );
@@ -265,7 +266,7 @@ const PanelUI = {
     switch (topic) {
       case "fullscreen-nav-toolbox":
         if (this._notifications) {
-          this._updateNotifications(false);
+          this.updateNotifications(false);
         }
         break;
       case "appMenu-notifications":
@@ -274,7 +275,7 @@ const PanelUI = {
           break;
         }
         this._notifications = AppMenuNotifications.notifications;
-        this._updateNotifications(true);
+        this.updateNotifications(true);
         break;
       case "show-update-progress":
         openAboutDialog();
@@ -302,7 +303,7 @@ const PanelUI = {
         }
       // Fall through
       case "popuphidden":
-        this._updateNotifications();
+        this.updateNotifications();
         this._updatePanelButton(aEvent.target);
         if (aEvent.type == "popuphidden") {
           CustomizableUI.removePanelCloseListeners(this.panel);
@@ -328,7 +329,7 @@ const PanelUI = {
       case "MozDOMFullscreen:Exited":
       case "fullscreen":
       case "activate":
-        this._updateNotifications();
+        this.updateNotifications();
         break;
       case "ViewShowing":
         if (aEvent.target == this.whatsNewPanel) {
@@ -769,7 +770,7 @@ const PanelUI = {
     }
   },
 
-  _updateNotifications(notificationsChanged) {
+  updateNotifications(notificationsChanged) {
     let notifications = this._notifications;
     if (!notifications || !notifications.length) {
       if (notificationsChanged) {
@@ -781,7 +782,8 @@ const PanelUI = {
 
     if (
       (window.fullScreen && FullScreen.navToolboxHidden) ||
-      document.fullscreenElement
+      document.fullscreenElement ||
+      this._shouldSuppress()
     ) {
       this._hidePopup();
       return;
