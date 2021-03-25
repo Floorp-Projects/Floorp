@@ -2308,11 +2308,13 @@ var BrowserTestUtils = {
   async promiseAlertDialogOpen(
     buttonAction,
     uri = "chrome://global/content/commonDialog.xhtml",
-    func = null
+    options = { callback: null, isSubDialog: false }
   ) {
     let win;
     if (uri == "chrome://global/content/commonDialog.xhtml") {
       [win] = await TestUtils.topicObserved("common-dialog-loaded");
+    } else if (options.isSubDialog) {
+      [win] = await TestUtils.topicObserved("subdialog-loaded");
     } else {
       // The test listens for the "load" event which guarantees that the alert
       // class has already been added (it is added when "DOMContentLoaded" is
@@ -2322,8 +2324,8 @@ var BrowserTestUtils = {
       });
     }
 
-    if (func) {
-      await func(win);
+    if (options.callback) {
+      await options.callback(win);
       return win;
     }
 
@@ -2351,9 +2353,9 @@ var BrowserTestUtils = {
   async promiseAlertDialog(
     buttonAction,
     uri = "chrome://global/content/commonDialog.xhtml",
-    func
+    options = { callback: null, isSubDialog: false }
   ) {
-    let win = await this.promiseAlertDialogOpen(buttonAction, uri, func);
+    let win = await this.promiseAlertDialogOpen(buttonAction, uri, options);
     if (!win.docShell.browsingContext.embedderElement) {
       return this.windowClosed(win);
     }
