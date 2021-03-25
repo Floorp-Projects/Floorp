@@ -1813,17 +1813,6 @@
             </box>
           </toolbarbutton>
         </toolbaritem>
-        <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
-                       removable="true"
-                       label="&homeButton.label;"
-                       ondragover="homeButtonObserver.onDragOver(event)"
-                       ondragenter="homeButtonObserver.onDragOver(event)"
-                       ondrop="homeButtonObserver.onDrop(event)"
-                       ondragexit="homeButtonObserver.onDragExit(event)"
-                       key="goHome"
-                       onclick="BrowserHome(event);"
-                       cui-areatype="toolbar"
-                       tooltiptext="&homeButton.defaultPage.tooltip;"/>
         <toolbarspring cui-areatype="toolbar" class="chromeclass-toolbar-additional"/>
         <toolbaritem id="urlbar-container" flex="400" persist="width"
                      removable="false"
@@ -2074,15 +2063,6 @@
               </stack>
             </stack>
           </toolbarbutton>
-
-        <toolbarbutton id="library-button" class="toolbarbutton-1 chromeclass-toolbar-additional subviewbutton-nav"
-                       removable="true"
-                       onmousedown="PanelUI.showSubView('appMenu-libraryView', this, event);"
-                       onkeypress="PanelUI.showSubView('appMenu-libraryView', this, event);"
-                       closemenu="none"
-                       cui-areatype="toolbar"
-                       tooltiptext="&libraryButton.tooltip;"
-                       label="&places.library.title;"/>
 
         <toolbarbutton id="fxa-toolbar-menu-button" class="toolbarbutton-1 chromeclass-toolbar-additional subviewbutton-nav"
                        badged="true"
@@ -2358,6 +2338,27 @@
         <searchbar id="searchbar" flex="1"/>
         <toolbartabstop/>
       </toolbaritem>
+
+      <toolbarbutton id="home-button" class="toolbarbutton-1 chromeclass-toolbar-additional"
+                     removable="true"
+                     label="&homeButton.label;"
+                     ondragover="homeButtonObserver.onDragOver(event)"
+                     ondragenter="homeButtonObserver.onDragOver(event)"
+                     ondrop="homeButtonObserver.onDrop(event)"
+                     ondragexit="homeButtonObserver.onDragExit(event)"
+                     key="goHome"
+                     onclick="BrowserHome(event);"
+                     cui-areatype="toolbar"
+                     tooltiptext="&homeButton.defaultPage.tooltip;"/>
+
+      <toolbarbutton id="library-button" class="toolbarbutton-1 chromeclass-toolbar-additional subviewbutton-nav"
+                     removable="true"
+                     onmousedown="PanelUI.showSubView('appMenu-libraryView', this, event);"
+                     onkeypress="PanelUI.showSubView('appMenu-libraryView', this, event);"
+                     closemenu="none"
+                     cui-areatype="toolbar"
+                     tooltiptext="&libraryButton.tooltip;"
+                     label="&places.library.title;"/>
     </html:template>
   </toolbox>
   </box>
