@@ -22,8 +22,12 @@ gcloud:
   # see: https://github.com/TestArmada/flank/issues/341
   #results-history-name: tmp_parallel 
 
+  # The number of times a test execution should be re-attempted if one or more failures occur.
+  # The maximum number of reruns allowed is 10. Default is 0, which implies no reruns.
+  num-flaky-test-attempts: 1
+
   # test and app are the only required args
-  app: /opt/focus-android/app/build/outputs/apk/focus/debug/app-focus-arm64-v8a-debug.apk
+  app: /opt/focus-android/app/build/outputs/apk/focus/debug/app-focus-x86-debug.apk
   test: /opt/focus-android/app/build/outputs/apk/androidTest/focus/debug/app-focus-debug-androidTest.apk
   auto-google-login: true
   use-orchestrator: true
@@ -33,19 +37,23 @@ gcloud:
     - /sdcard/screenshots
   performance-metrics: true
 
+  test-targets:
+    - package org.mozilla.focus.activity
+    - package org.mozilla.focus.screenshots
+
   device:
-    - model: blueline
-      version: 28
+    - model: Pixel2
+      version: 29
 
 flank:
   project: moz-fx-mobile-firebase-testlab
 
   # test shards - the amount of groups to split the test suite into
   # set to -1 to use one shard per test.
-  testShards: 4
+  max-test-shards: 4
   # repeat tests - the amount of times to run the tests.
   # 1 runs the tests once. 10 runs all the tests 10x
-  repeatTests: 1
+  num-test-runs: 1
   # always run - these tests are inserted at the beginning of every shard
   # useful if you need to grant permissions or login before other tests run
   #test-targets-always-run:

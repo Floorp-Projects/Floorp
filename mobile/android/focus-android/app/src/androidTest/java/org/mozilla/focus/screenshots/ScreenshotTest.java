@@ -2,11 +2,12 @@ package org.mozilla.focus.screenshots;
 
 import android.app.Instrumentation;
 import android.content.Context;
+import android.text.format.DateUtils;
+
 import androidx.annotation.StringRes;
 import androidx.test.InstrumentationRegistry;
 import androidx.test.rule.ActivityTestRule;
 import androidx.test.uiautomator.UiDevice;
-import android.text.format.DateUtils;
 
 import org.junit.Before;
 import org.junit.Ignore;
@@ -17,7 +18,6 @@ import org.junit.runner.Description;
 import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule;
 import org.mozilla.focus.helpers.SessionLoadedIdlingResource;
-import org.mozilla.focus.utils.AppConstants;
 
 import tools.fastlane.screengrab.Screengrab;
 import tools.fastlane.screengrab.UiAutomatorScreenshotStrategy;
@@ -25,7 +25,7 @@ import tools.fastlane.screengrab.UiAutomatorScreenshotStrategy;
 /**
  * Base class for tests that take screenshots.
  */
-@Ignore("This test was written specifically for WebView and needs to be adapted for GeckoView")
+@Ignore("This test was written specifically for WebView and needs to be adapted for GeckoView, see: https://github.com/mozilla-mobile/mobile-test-eng/issues/305")
 abstract class ScreenshotTest {
     final long waitingTime = DateUtils.SECOND_IN_MILLIS * 10;
 

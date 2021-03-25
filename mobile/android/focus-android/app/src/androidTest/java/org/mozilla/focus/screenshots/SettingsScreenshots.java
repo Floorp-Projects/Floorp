@@ -17,6 +17,7 @@ import androidx.test.uiautomator.UiSelector;
 
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
@@ -44,6 +45,7 @@ import static org.mozilla.focus.fragment.FirstrunFragment.FIRSTRUN_PREF;
 import static org.mozilla.focus.helpers.EspressoHelper.assertToolbarMatchesText;
 import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
 
+@Ignore("See: https://github.com/mozilla-mobile/mobile-test-eng/issues/305")
 @RunWith(AndroidJUnit4.class)
 public class SettingsScreenshots extends ScreenshotTest {
 

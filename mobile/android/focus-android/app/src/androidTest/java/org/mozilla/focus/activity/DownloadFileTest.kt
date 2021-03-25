@@ -16,6 +16,7 @@ import org.junit.After
 import org.junit.Assert
 import org.junit.Assume
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,6 +29,7 @@ import org.mozilla.focus.helpers.TestHelper.waitForWebContent
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 import java.io.IOException
 
+@Ignore("Flaky test, will be refactored")
 @RunWith(AndroidJUnit4ClassRunner::class)
 // @Ignore("This test was written specifically for WebView and needs to be adapted for GeckoView") // https://testrail.stage.mozaws.net/index.php?/cases/view/53141
 class DownloadFileTest {

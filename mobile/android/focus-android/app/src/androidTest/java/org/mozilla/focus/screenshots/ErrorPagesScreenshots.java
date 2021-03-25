@@ -5,12 +5,14 @@
 package org.mozilla.focus.screenshots;
 
 import android.os.Build;
+
 import androidx.test.espresso.web.webdriver.Locator;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiObject;
 import androidx.test.uiautomator.UiSelector;
 
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
@@ -33,6 +35,7 @@ import static androidx.test.espresso.web.webdriver.DriverAtoms.webClick;
 import static androidx.test.espresso.web.webdriver.DriverAtoms.webScrollIntoView;
 import static junit.framework.Assert.assertTrue;
 
+@Ignore("See: https://github.com/mozilla-mobile/mobile-test-eng/issues/305")
 @RunWith(AndroidJUnit4.class)
 public class ErrorPagesScreenshots extends ScreenshotTest {
 

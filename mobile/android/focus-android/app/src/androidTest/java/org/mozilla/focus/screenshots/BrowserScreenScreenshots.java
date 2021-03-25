@@ -5,6 +5,7 @@
 package org.mozilla.focus.screenshots;
 
 import android.os.SystemClock;
+
 import androidx.test.espresso.NoMatchingViewException;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.By;
@@ -16,6 +17,7 @@ import androidx.test.uiautomator.Until;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
@@ -44,6 +46,7 @@ import static org.hamcrest.Matchers.allOf;
 import static org.hamcrest.Matchers.containsString;
 import static org.mozilla.focus.helpers.EspressoHelper.openSettings;
 
+@Ignore("See: https://github.com/mozilla-mobile/mobile-test-eng/issues/305")
 @RunWith(AndroidJUnit4.class)
 public class BrowserScreenScreenshots extends ScreenshotTest {
 

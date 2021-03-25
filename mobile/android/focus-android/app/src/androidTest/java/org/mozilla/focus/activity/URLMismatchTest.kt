@@ -15,6 +15,7 @@ import androidx.test.uiautomator.UiSelector
 import org.hamcrest.Matchers
 import org.junit.After
 import org.junit.Assert
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -37,6 +38,7 @@ class URLMismatchTest {
         mActivityTestRule.activity.finishAndRemoveTask()
     }
 
+    @Ignore("Flaky test, will be refactored")
     @Test
     @Throws(UiObjectNotFoundException::class)
     fun MismatchTest() {

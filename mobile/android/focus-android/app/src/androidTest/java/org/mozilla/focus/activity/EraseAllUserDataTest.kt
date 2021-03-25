@@ -16,6 +16,7 @@ import org.hamcrest.core.IsNull
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -31,6 +32,7 @@ import java.io.IOException
 
 // This test erases URL and checks for message
 // https://testrail.stage.mozaws.net/index.php?/cases/view/40068
+@Ignore("Flaky test, will be refactored")
 @RunWith(AndroidJUnit4ClassRunner::class)
 class EraseAllUserDataTest {
     private var webServer: MockWebServer? = null

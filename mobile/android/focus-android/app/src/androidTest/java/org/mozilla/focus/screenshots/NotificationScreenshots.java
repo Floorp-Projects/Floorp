@@ -11,6 +11,7 @@ import androidx.test.uiautomator.UiSelector;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.ClassRule;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.focus.R;
@@ -39,6 +40,7 @@ import static org.hamcrest.Matchers.containsString;
  * This test has been super flaky in the past so we moved it to its own test. This way we wat least
  * only lose screenshots of this test in case it fails.
  */
+@Ignore("See: https://github.com/mozilla-mobile/mobile-test-eng/issues/305")
 @RunWith(AndroidJUnit4.class)
 public class NotificationScreenshots extends ScreenshotTest {
 

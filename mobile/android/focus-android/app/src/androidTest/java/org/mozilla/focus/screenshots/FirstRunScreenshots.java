@@ -5,6 +5,7 @@
 package org.mozilla.focus.screenshots;
 
 import android.os.SystemClock;
+
 import androidx.test.rule.ActivityTestRule;
 import androidx.test.runner.AndroidJUnit4;
 import androidx.test.uiautomator.UiObjectNotFoundException;
@@ -19,7 +20,6 @@ import org.mozilla.focus.R;
 import org.mozilla.focus.activity.MainActivity;
 import org.mozilla.focus.helpers.MainActivityFirstrunTestRule;
 import org.mozilla.focus.helpers.TestHelper;
-import org.mozilla.focus.utils.AppConstants;
 
 import tools.fastlane.screengrab.Screengrab;
 import tools.fastlane.screengrab.locale.LocaleTestRule;
@@ -31,7 +31,7 @@ import static androidx.test.espresso.matcher.ViewMatchers.withText;
 import static junit.framework.Assert.assertTrue;
 
 @RunWith(AndroidJUnit4.class)
-@Ignore("This test was written specifically for WebView and needs to be adapted for GeckoView")
+@Ignore("This test was written specifically for WebView and needs to be adapted for GeckoView, see: https://github.com/mozilla-mobile/mobile-test-eng/issues/305")
 public class FirstRunScreenshots extends ScreenshotTest {
     @Rule
     public ActivityTestRule<MainActivity> mActivityTestRule = new MainActivityFirstrunTestRule(true,true) {
