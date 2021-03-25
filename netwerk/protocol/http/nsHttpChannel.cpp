@@ -124,6 +124,7 @@
 #include "mozilla/net/AsyncUrlChannelClassifier.h"
 #include "mozilla/net/CookieJarSettings.h"
 #include "mozilla/net/NeckoChannelParams.h"
+#include "mozilla/net/OpaqueResponseUtils.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "HttpTrafficAnalyzer.h"
 #include "mozilla/net/SocketProcessParent.h"
@@ -1618,6 +1619,16 @@ nsresult nsHttpChannel::CallOnStartRequest() {
     return mStatus;
   }
 
+  // EnsureOpaqueResponseIsAllowed and EnsureOpauqeResponseIsAllowedAfterSniff
+  // are the checks for Opaque Response Blocking to ensure that we block as many
+  // cross-origin responses with CORS headers as possible that are not either
+  // Javascript or media to avoid leaking their contents through side channels.
+  if (!EnsureOpaqueResponseIsAllowed()) {
+    // XXXtt: Return an error code or make the response body null.
+    // We silence the error result now because we only want to get how many
+    // response will get allowed or blocked by ORB.
+  }
+
   // Allow consumers to override our content type
   if (mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) {
     // NOTE: We can have both a txn pump and a cache pump when the cache
@@ -1644,6 +1655,13 @@ nsresult nsHttpChannel::CallOnStartRequest() {
         trans->SetSniffedTypeToChannel(CallTypeSniffers, thisChannel);
       }
     }
+  }
+
+  auto isAllowedOrErr = EnsureOpaqueResponseIsAllowedAfterSniff();
+  if (isAllowedOrErr.isErr() || !isAllowedOrErr.inspect()) {
+    // XXXtt: Return an error code or make the response body null.
+    // We silence the error result now because we only want to get how many
+    // response will get allowed or blocked by ORB.
   }
 
   // Note that the code below should be synced with the code in
@@ -9961,6 +9979,20 @@ HttpChannelSecurityWarningReporter* nsHttpChannel::GetWarningReporter() {
   LOG(("nsHttpChannel [this=%p] GetWarningReporter [%p]", this,
        mWarningReporter.get()));
   return mWarningReporter.get();
+}
+
+// Should only be called by nsMediaSniffer::GetMIMETypeFromContent and
+// nsMediaSniffer::GetMIMETypeFromContent when the content type can be
+// recognized by these sniffers.
+void nsHttpChannel::DisableIsOpaqueResponseAllowedAfterSniffCheck(
+    SnifferType aType) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (mCheckIsOpaqueResponseAllowedAfterSniff) {
+    MOZ_ASSERT(mCachedOpaqueResponseBlockingPref);
+
+    mCheckIsOpaqueResponseAllowedAfterSniff = false;
+  }
 }
 
 namespace {

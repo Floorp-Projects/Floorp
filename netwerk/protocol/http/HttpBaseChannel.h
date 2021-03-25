@@ -616,6 +616,10 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   nsresult ValidateMIMEType();
 
+  bool EnsureOpaqueResponseIsAllowed();
+
+  Result<bool, nsresult> EnsureOpaqueResponseIsAllowedAfterSniff();
+
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;
 
@@ -880,6 +884,9 @@ class HttpBaseChannel : public nsHashPropertyBag,
   int8_t mRedirectCount;
   // Number of internal redirects that has occurred.
   int8_t mInternalRedirectCount;
+
+  const bool mCachedOpaqueResponseBlockingPref;
+  bool mCheckIsOpaqueResponseAllowedAfterSniff;
 
   // clang-format off
   MOZ_ATOMIC_BITFIELDS(mAtomicBitfields3, 8, (
