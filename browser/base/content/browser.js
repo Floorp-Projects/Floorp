@@ -1021,7 +1021,9 @@ const gStoragePressureObserver = {
       Services.prefs.getIntPref(
         "browser.storageManager.pressureNotification.usageThresholdGB"
       );
-    let msg = "";
+    let messageFragment = document.createDocumentFragment();
+    let message = document.createElement("span");
+
     let buttons = [{ supportPage: "storage-permissions" }];
     let usage = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
     if (usage < USAGE_THRESHOLD_BYTES) {
@@ -1029,15 +1031,11 @@ const gStoragePressureObserver = {
       // This is because this usage is small and not the main cause for space issue.
       // In order to avoid the bad and wrong impression among users that
       // firefox eats disk space a lot, indicate users to clean up other disk space.
-      [msg] = await document.l10n.formatValues([
-        { id: "space-alert-under-5gb-message" },
-      ]);
+      document.l10n.setAttributes(message, "space-alert-under-5gb-message2");
     } else {
       // The firefox-used space >= 5GB, then guide users to about:preferences
       // to clear some data stored on firefox by websites.
-      [msg] = await document.l10n.formatValues([
-        { id: "space-alert-over-5gb-message" },
-      ]);
+      document.l10n.setAttributes(message, "space-alert-over-5gb-message2");
       buttons.push({
         "l10n-id": "space-alert-over-5gb-pref-button",
         callback(notificationBar, button) {
@@ -1047,9 +1045,10 @@ const gStoragePressureObserver = {
         },
       });
     }
+    messageFragment.appendChild(message);
 
     gHighPriorityNotificationBox.appendNotification(
-      msg,
+      messageFragment,
       NOTIFICATION_VALUE,
       null,
       gHighPriorityNotificationBox.PRIORITY_WARNING_HIGH,
