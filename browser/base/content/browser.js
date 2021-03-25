@@ -548,7 +548,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "gFxaMonitorLoginUrl",
   "identity.fxaccounts.service.monitorLoginUrl",
-  false,
+  null,
   (aPref, aOldVal, aNewVal) => {
     updateFxaToolbarMenu(gFxaToolbarEnabled);
   }
