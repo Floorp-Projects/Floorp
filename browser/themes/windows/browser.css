@@ -572,7 +572,6 @@ menuitem.bookmark-item {
 
 @media (-moz-windows-default-theme: 0) {
   :root:not(:-moz-lwtheme) {
-    --urlbar-popup-url-color: -moz-nativehyperlinktext;
     --urlbar-popup-action-color: -moz-nativehyperlinktext;
 
     --urlbarView-button-text: buttontext;
@@ -586,6 +585,12 @@ menuitem.bookmark-item {
     --urlbarView-primary-button-background-active: highlight;
   }
 }
+
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+:root:not(:-moz-lwtheme) {
+  --urlbar-popup-url-color: -moz-nativehyperlinktext;
+}
+} /*** END !proton ***/
 
 /* Autocomplete */
 
