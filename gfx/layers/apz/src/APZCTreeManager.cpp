@@ -3525,7 +3525,7 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
   //  * On the scrollable layers bearing the root content APZC's scroll
   //    metadata, the "layout" portion of the root content APZC's async
   //    transform (which includes async scrolling of the layout viewport
-  //    relative to the visual viewport).
+  //    relative to the scrollable rect origin).
   if (AsyncPanZoomController* apzc = aNode->GetApzc()) {
     // If the node represents scrollable content, apply the async transform
     // from its APZC.
