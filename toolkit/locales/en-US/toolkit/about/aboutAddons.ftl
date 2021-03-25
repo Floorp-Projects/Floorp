@@ -30,60 +30,15 @@ help-button = Add-ons Support
 sidebar-help-button-title =
     .title = Add-ons Support
 
-preferences =
-    { PLATFORM() ->
-        [windows] { -brand-short-name } Options
-       *[other] { -brand-short-name } Preferences
-    }
-sidebar-preferences-button-title =
-    .title =
-        { PLATFORM() ->
-            [windows] { -brand-short-name } Options
-           *[other] { -brand-short-name } Preferences
-        }
+addons-settings-button = { -brand-short-name } Settings
+sidebar-settings-button-title =
+    .title = { -brand-short-name } Settings
 
 show-unsigned-extensions-button =
     .label = Some extensions could not be verified
 
 show-all-extensions-button =
     .label = Show all extensions
-
-cmd-show-details =
-    .label = Show More Information
-    .accesskey = S
-
-cmd-find-updates =
-    .label = Find Updates
-    .accesskey = F
-
-cmd-preferences =
-    .label =
-        { PLATFORM() ->
-            [windows] Options
-           *[other] Preferences
-        }
-    .accesskey =
-        { PLATFORM() ->
-            [windows] O
-           *[other] P
-        }
-
-cmd-enable-theme =
-    .label = Wear Theme
-    .accesskey = W
-
-cmd-disable-theme =
-    .label = Stop Wearing Theme
-    .accesskey = W
-
-cmd-install-addon =
-    .label = Install
-    .accesskey = I
-
-cmd-contribute =
-    .label = Contribute
-    .accesskey = C
-    .tooltiptext = Contribute to the development of this add-on
 
 detail-version =
     .label = Version
