@@ -140,6 +140,11 @@ var gViewController = {
   },
 
   defineView(viewName, renderFunction) {
+    if (this.views[viewName]) {
+      throw new Error(
+        `about:addons view ${viewName} should not be defined twice`
+      );
+    }
     this.views[viewName] = renderFunction;
   },
 
@@ -174,7 +179,7 @@ var gViewController = {
   async renderState(state) {
     let { param, type } = this.parseViewId(state.view);
 
-    if (!type || !this.views.hasOwnProperty(type)) {
+    if (!type || this.views[type] == null) {
       console.warn(`No view for ${type} ${param}, switching to default`);
       this.resetState();
       return;
