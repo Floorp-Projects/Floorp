@@ -1183,6 +1183,14 @@
 #endif
   mirror: always
 
+# When this pref is enabled, opaque response is only allowed to enter the
+# content process if it's a response for media (audio, image, video), CSS, or
+# JavaScript.
+- name: browser.opaqueResponseBlocking
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # When true, zooming will be enabled on all sites, even ones that declare
 # user-scalable=no.
 - name: browser.ui.zoom.force-user-scalable
