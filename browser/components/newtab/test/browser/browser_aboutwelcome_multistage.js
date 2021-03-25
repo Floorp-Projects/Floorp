@@ -16,6 +16,7 @@ const { TelemetryTestUtils } = ChromeUtils.import(
 const SEPARATE_ABOUT_WELCOME_PREF = "browser.aboutwelcome.enabled";
 const ABOUT_WELCOME_OVERRIDE_CONTENT_PREF = "browser.aboutwelcome.screens";
 const DID_SEE_ABOUT_WELCOME_PREF = "trailhead.firstrun.didSeeAboutWelcome";
+const ABOUT_WELCOME_DESIGN_PREF = "browser.aboutwelcome.design";
 
 const TEST_MULTISTAGE_CONTENT = [
   {
@@ -129,6 +130,10 @@ async function setAboutWelcomePref(value) {
 
 async function setAboutWelcomeMultiStage(value = "") {
   return pushPrefs([ABOUT_WELCOME_OVERRIDE_CONTENT_PREF, value]);
+}
+
+async function setAboutWelcomeDesign(value = "") {
+  return pushPrefs([ABOUT_WELCOME_DESIGN_PREF, value]);
 }
 
 async function openAboutWelcome() {
@@ -886,3 +891,55 @@ test_newtab(
   },
   "about:welcome"
 );
+
+/**
+ * Test the multistage welcome Proton UI
+ */
+add_task(async function test_multistage_aboutwelcome_proton() {
+  const sandbox = sinon.createSandbox();
+  await setAboutWelcomePref(true);
+  await setAboutWelcomeDesign("proton");
+
+  let tab = await BrowserTestUtils.openNewForegroundTab(
+    gBrowser,
+    "about:welcome",
+    true
+  );
+
+  const browser = tab.linkedBrowser;
+
+  let aboutWelcomeActor = await getAboutWelcomeParent(browser);
+  // Stub AboutWelcomeParent Content Message Handler
+  sandbox.spy(aboutWelcomeActor, "onContentMessage");
+  registerCleanupFunction(() => {
+    BrowserTestUtils.removeTab(tab);
+    sandbox.restore();
+  });
+
+  await test_screen_content(
+    browser,
+    "multistage proton step 1",
+    // Expected selectors:
+    ["div.onboardingContainer"],
+    // Unexpected selectors:
+    ["main.AW_STEP2", "main.AW_STEP3"]
+  );
+
+  await onButtonClick(browser, "button.primary");
+
+  const { callCount } = aboutWelcomeActor.onContentMessage;
+  ok(callCount >= 1, `${callCount} Stub was called`);
+  let clickCall;
+  for (let i = 0; i < callCount; i++) {
+    const call = aboutWelcomeActor.onContentMessage.getCall(i);
+    info(`Call #${i}: ${call.args[0]} ${JSON.stringify(call.args[1])}`);
+    if (call.calledWithMatch("", { event: "CLICK_BUTTON" })) {
+      clickCall = call;
+    }
+  }
+
+  Assert.ok(
+    clickCall.args[1].message_id === "DEFAULT_ABOUTWELCOME_PROTON_AW_STEP1",
+    "AboutWelcome proton message id joined with screen id"
+  );
+});
