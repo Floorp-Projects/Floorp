@@ -397,48 +397,20 @@ static bool hasNonDominatingPredecessor(MBasicBlock* block,
 
 // A loop is about to be made reachable only through an OSR entry into one of
 // its nested loops. Fix everything up.
-bool ValueNumberer::fixupOSROnlyLoop(MBasicBlock* block,
-                                     MBasicBlock* backedge) {
+bool ValueNumberer::fixupOSROnlyLoop(MBasicBlock* block) {
   // Create an empty and unreachable(!) block which jumps to |block|. This
   // allows |block| to remain marked as a loop header, so we don't have to
   // worry about moving a different block into place as the new loop header,
   // which is hard, especially if the OSR is into a nested loop. Doing all
   // that would produce slightly more optimal code, but this is so
   // extraordinarily rare that it isn't worth the complexity.
-  MBasicBlock* fake =
-      MBasicBlock::New(graph_, block->info(), nullptr, MBasicBlock::NORMAL);
-  if (fake == nullptr) {
+  MBasicBlock* fake = MBasicBlock::NewFakeLoopPredecessor(graph_, block);
+  if (!fake) {
     return false;
   }
-
-  graph_.insertBlockBefore(block, fake);
   fake->setImmediateDominator(fake);
   fake->addNumDominated(1);
   fake->setDomIndex(fake->id());
-  fake->setUnreachable();
-
-  // Create zero-input phis to use as inputs for any phis in |block|.
-  // Again, this is a little odd, but it's the least-odd thing we can do
-  // without significant complexity.
-  for (MPhiIterator iter(block->phisBegin()), end(block->phisEnd());
-       iter != end; ++iter) {
-    MPhi* phi = *iter;
-    MPhi* fakePhi = MPhi::New(graph_.alloc(), phi->type());
-    fake->addPhi(fakePhi);
-    if (!phi->addInputSlow(fakePhi)) {
-      return false;
-    }
-  }
-
-  fake->end(MGoto::New(graph_.alloc(), block));
-
-  if (!block->addPredecessorWithoutPhis(fake)) {
-    return false;
-  }
-
-  // Restore |backedge| as |block|'s loop backedge.
-  block->clearLoopHeader();
-  block->setLoopHeader(backedge);
 
   JitSpew(JitSpew_GVN, "        Created fake block%u", fake->id());
   hasOSRFixups_ = true;
@@ -1163,7 +1135,7 @@ bool ValueNumberer::insertOSRFixups() {
       continue;
     }
 
-    if (!fixupOSROnlyLoop(block, block->backedge())) {
+    if (!fixupOSROnlyLoop(block)) {
       return false;
     }
   }
