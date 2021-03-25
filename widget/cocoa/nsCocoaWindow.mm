@@ -2552,6 +2552,13 @@ bool nsCocoaWindow::GetEditCommands(NativeKeyBindingsType aType, const WidgetKey
   return true;
 }
 
+bool nsCocoaWindow::AsyncPanZoomEnabled() const {
+  if (mPopupContentView) {
+    return mPopupContentView->AsyncPanZoomEnabled();
+  }
+  return nsBaseWidget::AsyncPanZoomEnabled();
+}
+
 already_AddRefed<nsIWidget> nsIWidget::CreateTopLevelWindow() {
   nsCOMPtr<nsIWidget> window = new nsCocoaWindow();
   return window.forget();
