@@ -255,6 +255,7 @@ raptor-sunspider-firefox:
     variants: ["fission"]
     try-name: raptor-sunspider-firefox
     treeherder-symbol: Rap(ss)
+    run-on-projects: []
     mozharness:
         extra-options:
             - --test=raptor-sunspider
@@ -263,6 +264,7 @@ raptor-sunspider-firefox-profiling:
     description: "Raptor SunSpider on Firefox with Gecko Profiling"
     try-name: raptor-sunspider-firefox-profiling
     treeherder-symbol: Rap-Prof(ss)
+    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
