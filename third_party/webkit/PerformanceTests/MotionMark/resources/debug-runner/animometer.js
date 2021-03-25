@@ -680,6 +680,7 @@ Utilities.extendObject(window.benchmarkController, {
         if (this.raptor) {
           _data = ['raptor-benchmark', 'motionmark', item['testsResults']];
           window.postMessage(_data, '*');
+          window.sessionStorage.setItem('benchmark_results',  JSON.stringify(_data));
         }
 
         var confidence = ((dashboard.scoreLowerBound / score - 1) * 100).toFixed(2) +
