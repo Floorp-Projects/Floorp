@@ -835,6 +835,18 @@
 #define NS_DATA_SNIFFER_CATEGORY "content-sniffing-services"
 
 /**
+ * Services in this category similar to "net-content-sniffers" but it's
+ * initiated by the opaque response blocking algorithm.
+ */
+#define NS_ORB_SNIFFER_CATEGORY "orb-content-sniffers"
+
+/**
+ * Services in this category are the union of "net-content-sniffers" and
+ * "orb-content-sniffers".
+ */
+#define NS_CONTENT_AND_ORB_SNIFFER_CATEGORY "net-and-orb-content-sniffers"
+
+/**
  * Must implement nsINSSErrorsService.
  */
 #define NS_NSS_ERRORS_SERVICE_CONTRACTID "@mozilla.org/nss_errors_service;1"
