@@ -1630,9 +1630,9 @@ class AsyncPanZoomController {
   // its composition bounds.
   bool Contains(const ScreenIntPoint& aPoint) const;
 
-  bool IsOverscrolled() const {
-    return mX.IsOverscrolled() || mY.IsOverscrolled();
-  }
+  bool IsInOverscrollGutter(const ScreenPoint& aPoint) const;
+
+  bool IsOverscrolled() const;
 
   bool IsInPanningState() const;
 

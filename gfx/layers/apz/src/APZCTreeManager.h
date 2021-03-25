@@ -560,6 +560,9 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
     // If content that is fixed to the root-content APZC was hit,
     // the sides of the viewport to which the content is fixed.
     SideBits mFixedPosSides = SideBits::eNone;
+    // This is set to true If mTargetApzc is overscrolled and the
+    // event targeted the gap space ("gutter") created by the overscroll.
+    bool mHitOverscrollGutter = false;
 
     HitTestResult() = default;
     // Make it move-only.
@@ -697,7 +700,7 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
 
     // Called at the end of ReceiveInputEvent() to perform any final
     // computations, and then return mResult.
-    APZEventResult Finish() const;
+    APZEventResult Finish();
   };
 
   void ProcessTouchInput(InputHandlingState& aState, MultiTouchInput& aInput);

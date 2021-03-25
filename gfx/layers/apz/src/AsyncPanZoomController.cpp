@@ -3006,6 +3006,33 @@ bool AsyncPanZoomController::Contains(const ScreenIntPoint& aPoint) const {
   return cb.Contains(*point);
 }
 
+bool AsyncPanZoomController::IsInOverscrollGutter(
+    const ScreenPoint& aHitTestPoint) const {
+  if (!IsOverscrolled()) {
+    return false;
+  }
+
+  Maybe<ParentLayerPoint> apzcPoint =
+      UntransformBy(GetTransformToThis(), aHitTestPoint);
+  if (!apzcPoint) return false;
+
+  auto overscrollTransform = GetOverscrollTransform(eForHitTesting);
+  ParentLayerPoint overscrollUntransformed =
+      overscrollTransform.Inverse().TransformPoint(*apzcPoint);
+
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  return !GetFrameMetrics().GetCompositionBounds().Contains(
+      overscrollUntransformed);
+}
+
+bool AsyncPanZoomController::IsOverscrolled() const {
+  RecursiveMutexAutoLock lock(mRecursiveMutex);
+  // XXX: Should we try harder to avoid applying test attributes
+  // every time this is called (e.g. restrict it to a test-specific pref)?
+  AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
+  return mX.IsOverscrolled() || mY.IsOverscrolled();
+}
+
 ParentLayerPoint AsyncPanZoomController::PanStart() const {
   return ParentLayerPoint(mX.PanStart(), mY.PanStart());
 }

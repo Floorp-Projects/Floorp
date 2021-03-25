@@ -1913,7 +1913,7 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetTouchInputBlockAPZC(
   return hit;
 }
 
-APZEventResult APZCTreeManager::InputHandlingState::Finish() const {
+APZEventResult APZCTreeManager::InputHandlingState::Finish() {
   // The validity check here handles both the case where mHit was
   // never populated (because this event did not trigger a hit-test),
   // and the case where it was populated with an invalid LayersId
@@ -1921,6 +1921,12 @@ APZEventResult APZCTreeManager::InputHandlingState::Finish() const {
   if (mHit.mLayersId.IsValid()) {
     mEvent.mLayersId = mHit.mLayersId;
   }
+
+  // If the event is over an overscroll gutter, do not dispatch it to Gecko.
+  if (mHit.mHitOverscrollGutter) {
+    mResult.SetStatusAsConsumeNoDefault();
+  }
+
   return mResult;
 }
 
@@ -2506,6 +2512,7 @@ APZCTreeManager::HitTestResult::CopyWithoutScrollbarNode() const {
   result.mHitResult = mHitResult;
   result.mLayersId = mLayersId;
   result.mFixedPosSides = mFixedPosSides;
+  result.mHitOverscrollGutter = mHitOverscrollGutter;
   return result;
 }
 
@@ -2869,6 +2876,9 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPointWR(
 
   hit.mFixedPosSides = sideBits;
 
+  hit.mHitOverscrollGutter =
+      hit.mTargetApzc && hit.mTargetApzc->IsInOverscrollGutter(aHitTestPoint);
+
   return hit;
 }
 
@@ -3093,9 +3103,10 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPoint(
     APZCTM_LOG("Successfully matched APZC %p via node %p (hit result 0x%x)\n",
                hit.mTargetApzc.get(), resultNode, hit.mHitResult.serialize());
     hit.mLayersId = resultNode->GetLayersId();
-
-    return hit;
   }
+
+  hit.mHitOverscrollGutter =
+      hit.mTargetApzc && hit.mTargetApzc->IsInOverscrollGutter(aHitTestPoint);
 
   return hit;
 }
