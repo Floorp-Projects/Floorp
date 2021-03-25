@@ -19,6 +19,7 @@
 #include "mozilla/dom/WindowContext.h"
 #include "nsDOMMutationObserver.h"
 #include "nsIDirectTaskDispatcher.h"
+#include "nsIXULRuntime.h"
 #include "nsProxyRelease.h"
 #include "nsThread.h"
 #if defined(XP_WIN)
@@ -181,6 +182,9 @@ void DocGroup::AddDocument(Document* aDocument) {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mDocuments.Contains(aDocument));
   MOZ_ASSERT(mBrowsingContextGroup);
+  MOZ_ASSERT_IF(
+      FissionAutostart() && !mDocuments.IsEmpty(),
+      mDocuments[0]->CrossOriginIsolated() == aDocument->CrossOriginIsolated());
   mDocuments.AppendElement(aDocument);
 }
 
