@@ -87,5 +87,13 @@ ipc::IPCResult ExtensionsParent::RecvCreatedNavigationTarget(
   return IPC_OK();
 }
 
+ipc::IPCResult ExtensionsParent::RecvDOMContentLoaded(
+    MaybeDiscardedBrowsingContext&& aBC, nsIURI* aDocumentURI) {
+  if (aBC.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+  return IPC_OK();
+}
+
 }  // namespace extensions
 }  // namespace mozilla
