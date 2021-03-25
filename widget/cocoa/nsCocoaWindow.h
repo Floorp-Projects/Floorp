@@ -357,6 +357,8 @@ class nsCocoaWindow final : public nsBaseWidget, public nsPIWidgetCocoa {
   void PauseCompositor();
   void ResumeCompositor();
 
+  bool AsyncPanZoomEnabled() const override;
+
  protected:
   virtual ~nsCocoaWindow();
 
