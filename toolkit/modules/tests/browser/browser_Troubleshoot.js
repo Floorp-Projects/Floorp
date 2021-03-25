@@ -140,14 +140,22 @@ var tests = [
   },
 
   function printingPreferences(done) {
-    let prefs = ["javascript.print_to_filename", "print.print_to_filename"];
+    let prefs = [
+      "javascript.print_to_filename",
+      "print.print_bgimages",
+      "print.print_to_filename",
+    ];
     prefs.forEach(function(p) {
       Services.prefs.setBoolPref(p, true);
       is(Services.prefs.getBoolPref(p), true, "The pref should be set: " + p);
     });
     Troubleshoot.snapshot(function(snapshot) {
       let p = snapshot.printingPreferences;
-      is(p["print.print_to_filename"], true, "The pref should be present");
+      is(p["print.print_bgimages"], true, "The pref should be present");
+      ok(
+        !("print.print_to_filename" in p),
+        "The pref should not be present (sensitive)"
+      );
       ok(
         !("javascript.print_to_filename" in p),
         "The pref should be absent because it's not a print pref."
