@@ -32,10 +32,6 @@
   --buttons-destructive-active-bgcolor: #810220;
   --buttons-destructive-color: #fbfbfe;
 
-  --arrowpanel-dimmed: color-mix(in srgb, currentColor 17%, transparent);
-  --arrowpanel-dimmed-further: color-mix(in srgb, currentColor 30%, transparent);
-  --arrowpanel-dimmed-even-further: color-mix(in srgb, currentColor 35%, transparent);
-
   --identity-box-margin-inline: 4px;
   --identity-box-label-opacity: .8;
   --urlbar-box-bgcolor: var(--button-bgcolor);
