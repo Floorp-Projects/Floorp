@@ -210,5 +210,12 @@ void OpaqueResponseBlockingInfo::Report(const nsCString& aKey) {
   AccumulateTimeDelta(Telemetry::OPAQUE_RESPONSE_BLOCKING_TIME_MS, mStartTime);
 }
 
+void OpaqueResponseBlockingInfo::ReportContentLength(int64_t aContentLength) {
+  // XXX: We might want to filter negative cases (when the content length is
+  // unknown).
+  Telemetry::ScalarAdd(
+      Telemetry::ScalarID::OPAQUE_RESPONSE_BLOCKING_PARSING_SIZE_KB,
+      aContentLength > 0 ? aContentLength >> 10 : aContentLength);
+}
 }  // namespace net
 }  // namespace mozilla
