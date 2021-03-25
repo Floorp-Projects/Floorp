@@ -179,12 +179,15 @@ function PollPromise(func, { timeout = null, interval = 10 } = {}) {
  *     callback invoked after the ``timeout`` duration is reached.
  *     It is given two callbacks: ``resolve(value)`` and
  *     ``reject(error)``.
- * @param {timeout=} timeout
+ * @param {Object=} options
+ * @param {String} [options.errorMessage]
+ *     Message to use for the thrown error.
+ * @param {number=} options.timeout
  *     ``condition``'s ``reject`` callback will be called
  *     after this timeout, given in milliseconds.
  *     By default 1500 ms in an optimised build and 4500 ms in
  *     debug builds.
- * @param {Error=} [throws=TimeoutError] throws
+ * @param {Error=} [options.throws=TimeoutError]
  *     When the ``timeout`` is hit, this error class will be
  *     thrown.  If it is null, no error is thrown and the promise is
  *     instead resolved on timeout.
@@ -197,10 +200,13 @@ function PollPromise(func, { timeout = null, interval = 10 } = {}) {
  * @throws {RangeError}
  *     If `timeout` is not an unsigned integer.
  */
-function TimedPromise(
-  fn,
-  { timeout = PROMISE_TIMEOUT, throws = error.TimeoutError } = {}
-) {
+function TimedPromise(fn, options = {}) {
+  const {
+    errorMessage = "TimedPromise timed out",
+    timeout = PROMISE_TIMEOUT,
+    throws = error.TimeoutError,
+  } = options;
+
   const timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
   if (typeof fn != "function") {
@@ -220,10 +226,10 @@ function TimedPromise(
     // the user is OK with the promise timing out.
     let bail = () => {
       if (throws !== null) {
-        let err = new throws();
+        let err = new throws(`${errorMessage} after ${timeout} ms`);
         reject(err);
       } else {
-        logger.warn(`TimedPromise timed out after ${timeout} ms`, trace);
+        logger.warn(`${errorMessage} after ${timeout} ms`, trace);
         resolve();
       }
     };

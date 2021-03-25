@@ -273,6 +273,33 @@ add_test(function test_TimedPromise_timeoutTypes() {
   run_next_test();
 });
 
+add_test(async function test_TimedPromise_errorMessage() {
+  try {
+    await new TimedPromise(resolve => {}, { timeout: 0 });
+    ok(false, "Expected Timeout error not raised");
+  } catch (e) {
+    ok(
+      e.message.includes("TimedPromise timed out after"),
+      "Expected default error message found"
+    );
+  }
+
+  try {
+    await new TimedPromise(resolve => {}, {
+      errorMessage: "Not found",
+      timeout: 0,
+    });
+    ok(false, "Expected Timeout error not raised");
+  } catch (e) {
+    ok(
+      e.message.includes("Not found after"),
+      "Expected custom error message found"
+    );
+  }
+
+  run_next_test();
+});
+
 add_task(async function test_Sleep() {
   await Sleep(0);
   for (let type of ["foo", true, null, undefined]) {

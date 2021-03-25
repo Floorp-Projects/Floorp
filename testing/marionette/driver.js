@@ -534,61 +534,69 @@ GeckoDriver.prototype.newSession = async function(cmd) {
   registerEventsActor();
 
   // Wait until the initial application window has been loaded
-  await new Promise(resolve => {
-    const waitForWindow = () => {
-      let windowTypes;
-      if (AppInfo.isThunderbird) {
-        windowTypes = ["mail:3pane"];
-      } else {
-        // We assume that an app either has GeckoView windows, or
-        // Firefox/Fennec windows, but not both.
-        windowTypes = ["navigator:browser", "navigator:geckoview"];
-      }
-
-      let win;
-      for (const windowType of windowTypes) {
-        win = Services.wm.getMostRecentWindow(windowType);
-        if (win) {
-          break;
+  await new TimedPromise(
+    resolve => {
+      const waitForWindow = () => {
+        let windowTypes;
+        if (AppInfo.isThunderbird) {
+          windowTypes = ["mail:3pane"];
+        } else {
+          // We assume that an app either has GeckoView windows, or
+          // Firefox/Fennec windows, but not both.
+          windowTypes = ["navigator:browser", "navigator:geckoview"];
         }
-      }
 
-      if (!win) {
-        // if the window isn't even created, just poll wait for it
-        let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
-        checkTimer.initWithCallback(
-          waitForWindow,
-          100,
-          Ci.nsITimer.TYPE_ONE_SHOT
-        );
-      } else if (win.document.readyState != "complete") {
-        // otherwise, wait for it to be fully loaded before proceeding
-        let listener = ev => {
-          // ensure that we proceed, on the top level document load event
-          // (not an iframe one...)
-          if (ev.target != win.document) {
-            return;
+        let win;
+        for (const windowType of windowTypes) {
+          win = Services.wm.getMostRecentWindow(windowType);
+          if (win) {
+            break;
           }
-          win.removeEventListener("load", listener);
-          waitForWindow();
-        };
-        win.addEventListener("load", listener, true);
-      } else {
-        if (MarionettePrefs.clickToStart) {
-          Services.prompt.alert(
-            win,
-            "",
-            "Click to start execution of marionette tests"
-          );
         }
-        this.addBrowser(win);
-        this.mainFrame = win;
-        resolve();
-      }
-    };
 
-    waitForWindow();
-  });
+        if (!win) {
+          // if the window isn't even created, just poll wait for it
+          let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(
+            Ci.nsITimer
+          );
+          checkTimer.initWithCallback(
+            waitForWindow,
+            100,
+            Ci.nsITimer.TYPE_ONE_SHOT
+          );
+        } else if (win.document.readyState != "complete") {
+          // otherwise, wait for it to be fully loaded before proceeding
+          let listener = ev => {
+            // ensure that we proceed, on the top level document load event
+            // (not an iframe one...)
+            if (ev.target != win.document) {
+              return;
+            }
+            win.removeEventListener("load", listener);
+            waitForWindow();
+          };
+          win.addEventListener("load", listener, true);
+        } else {
+          if (MarionettePrefs.clickToStart) {
+            Services.prompt.alert(
+              win,
+              "",
+              "Click to start execution of marionette tests"
+            );
+          }
+          this.addBrowser(win);
+          this.mainFrame = win;
+          resolve();
+        }
+      };
+
+      waitForWindow();
+    },
+    {
+      throws: error.SessionNotCreatedError,
+      errorMessage: "No applicable application windows found",
+    }
+  );
 
   for (let win of this.windows) {
     const tabBrowser = browser.getTabBrowser(win);
