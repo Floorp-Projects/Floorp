@@ -73,7 +73,7 @@ WindowGlobalChild::WindowGlobalChild(dom::WindowContext* aWindowContext,
   if (BrowsingContext()->GetParent()) {
     embedderInnerWindowID = BrowsingContext()->GetEmbedderInnerWindowId();
   }
-  profiler_register_page(BrowsingContext()->Id(), InnerWindowId(),
+  profiler_register_page(BrowsingContext()->BrowserId(), InnerWindowId(),
                          aDocumentURI->GetSpecOrDefault(),
                          embedderInnerWindowID);
 #endif
@@ -591,7 +591,7 @@ void WindowGlobalChild::SetDocumentURI(nsIURI* aDocumentURI) {
   if (BrowsingContext()->GetParent()) {
     embedderInnerWindowID = BrowsingContext()->GetEmbedderInnerWindowId();
   }
-  profiler_register_page(BrowsingContext()->Id(), InnerWindowId(),
+  profiler_register_page(BrowsingContext()->BrowserId(), InnerWindowId(),
                          aDocumentURI->GetSpecOrDefault(),
                          embedderInnerWindowID);
 #endif
