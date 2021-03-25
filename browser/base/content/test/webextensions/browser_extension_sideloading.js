@@ -216,12 +216,7 @@ add_task(async function test_sideloading() {
   await gCUITestUtils.hideMainMenu();
 
   win = await BrowserOpenAddonsMgr(VIEW);
-
-  if (win.gViewController.isLoading) {
-    await new Promise(resolve =>
-      win.document.addEventListener("ViewChanged", resolve, { once: true })
-    );
-  }
+  await waitAboutAddonsViewLoaded(win.document);
 
   // about:addons addon entry element.
   const addonElement = await getAddonElement(win, ID2);

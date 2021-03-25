@@ -26,16 +26,7 @@ function promiseViewLoaded(tab, viewid) {
     return Promise.resolve();
   }
 
-  return new Promise(resolve => {
-    function listener() {
-      if (win.gViewController.currentViewId != viewid) {
-        return;
-      }
-      win.document.removeEventListener("ViewChanged", listener);
-      resolve();
-    }
-    win.document.addEventListener("ViewChanged", listener);
-  });
+  return waitAboutAddonsViewLoaded(win.document);
 }
 
 function getBadgeStatus() {
