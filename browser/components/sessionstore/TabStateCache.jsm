@@ -140,6 +140,77 @@ var TabStateCacheInternal = {
   },
 
   /**
+   * Helper function used by update (see below). To be fission compatible
+   * we need to be able to update scroll and formdata per entry in the
+   * cache. This is done by looking up the desired position and applying
+   * the update for that node only.
+   *
+   * @param data (object)
+   *        The cached data where we want to update the changes.
+   * @param path (object)
+   *        The path to the node to update specified by a list of indices
+   *        to follow from the root downwards.
+   * @param includeChildren (booelan)
+   *        Determines if the children of the changed node should be kept
+   *        or not.
+   * @param change (object)
+   *        Object containing the optional formdata and optional scroll
+   *        position to be updated as well as information if the node
+   *        should keep the data for its children.
+   */
+  updatePartialWindowStateChange(data, path, includeChildren, change) {
+    if (!path.length) {
+      for (let key of Object.keys(change)) {
+        let children = includeChildren ? data[key]?.children : null;
+
+        if (!Object.keys(change[key]).length) {
+          data[key] = null;
+        } else {
+          data[key] = change[key];
+        }
+
+        if (children) {
+          data[key] = { ...data[key], children };
+        }
+      }
+
+      return data;
+    }
+
+    let index = path.pop();
+    let scroll = data?.scroll?.children?.[index];
+    let formdata = data?.formdata?.children?.[index];
+    change = this.updatePartialWindowStateChange(
+      { scroll, formdata },
+      path,
+      includeChildren,
+      change
+    );
+
+    for (let key of Object.keys(change)) {
+      let value = change[key];
+      let children = data[key]?.children;
+
+      if (children) {
+        if (value) {
+          children[index] = value;
+        } else {
+          delete children[index];
+        }
+
+        if (!children.some(e => e)) {
+          data[key] = null;
+        }
+      } else if (value) {
+        children = new Array(index + 1);
+        children[index] = value;
+        data[key] = { ...data[key], children };
+      }
+    }
+    return data;
+  },
+
+  /**
    * Updates cached data for a given |tab| or associated |browser|.
    *
    * @param browserOrTab (xul:tab or xul:browser)
@@ -159,6 +230,22 @@ var TabStateCacheInternal = {
 
       if (key == "historychange") {
         this.updatePartialHistoryChange(data, newData.historychange);
+        continue;
+      }
+
+      if (key == "windowstatechange") {
+        let { path, hasChildren, ...change } = newData.windowstatechange;
+        this.updatePartialWindowStateChange(data, path, hasChildren, change);
+
+        for (key of Object.keys(change)) {
+          let value = data[key];
+          if (value === null) {
+            delete data[key];
+          } else {
+            data[key] = value;
+          }
+        }
+
         continue;
       }
 

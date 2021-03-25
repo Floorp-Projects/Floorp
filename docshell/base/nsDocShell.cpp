@@ -74,6 +74,9 @@
 #include "mozilla/dom/ServiceWorkerUtils.h"
 #include "mozilla/dom/SessionHistoryEntry.h"
 #include "mozilla/dom/SessionStorageManager.h"
+#include "mozilla/dom/SessionStoreChangeListener.h"
+#include "mozilla/dom/SessionStoreDataCollector.h"
+#include "mozilla/dom/SessionStoreUtils.h"
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/dom/UserActivation.h"
@@ -5892,6 +5895,12 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
           mainWidget->SetCursor(eCursor_spinning, nullptr, 0, 0);
         }
       }
+
+      if constexpr (SessionStoreUtils::NATIVE_LISTENER) {
+        if (IsForceReloadType(mLoadType)) {
+          SessionStoreUtils::ResetSessionStore(mBrowsingContext);
+        }
+      }
     }
   } else if ((~aStateFlags & (STATE_TRANSFERRING | STATE_IS_DOCUMENT)) == 0) {
     // Page is loading
@@ -5909,6 +5918,7 @@ nsDocShell::OnStateChange(nsIWebProgress* aProgress, nsIRequest* aRequest,
       }
     }
   }
+
   if ((~aStateFlags & (STATE_IS_DOCUMENT | STATE_STOP)) == 0) {
     nsCOMPtr<nsIWebProgress> webProgress =
         do_QueryInterface(GetAsSupports(this));
@@ -6650,6 +6660,17 @@ nsresult nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     // If we have a host
     nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
     PredictorLearnRedirect(url, aChannel, loadInfo->GetOriginAttributes());
+  }
+
+  if constexpr (SessionStoreUtils::NATIVE_LISTENER) {
+    if (Document* document = GetDocument()) {
+      if (WindowGlobalChild* windowChild = document->GetWindowGlobalChild()) {
+        RefPtr<SessionStoreDataCollector> collector =
+            SessionStoreDataCollector::CollectSessionStoreData(windowChild);
+        collector->RecordInputChange();
+        collector->RecordScrollChange();
+      }
+    }
   }
 
   return NS_OK;

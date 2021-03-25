@@ -1294,13 +1294,6 @@ var SessionStoreInternal = {
     TabState.update(aBrowser, aData);
     let win = aBrowser.ownerGlobal;
     this.saveStateDelayed(win);
-
-    if (aData.flushID) {
-      // This is an update kicked off by an async flush request. Notify the
-      // TabStateFlusher so that it can finish the request and notify its
-      // consumer that's waiting for the flush to be done.
-      TabStateFlusher.resolve(aBrowser, aData.flushID);
-    }
   },
 
   /**
