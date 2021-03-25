@@ -4,13 +4,88 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/extensions/ExtensionsParent.h"
+#include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/RefPtr.h"
+#include "jsapi.h"
+#include "xpcpublic.h"
 
 namespace mozilla {
 namespace extensions {
 
 void ExtensionsParent::ActorDestroy(ActorDestroyReason aWhy) {}
+
+static inline JS::Handle<JS::Value> ToJSBoolean(bool aValue) {
+  return aValue ? JS::TrueHandleValue : JS::FalseHandleValue;
+}
+
+JS::Value FrameTransitionDataToJSValue(const FrameTransitionData& aData) {
+  JS::Rooted<JS::Value> ret(dom::RootingCx(), JS::UndefinedValue());
+  {
+    dom::AutoJSAPI jsapi;
+    MOZ_ALWAYS_TRUE(jsapi.Init(xpc::PrivilegedJunkScope()));
+    JSContext* cx = jsapi.cx();
+
+    JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
+    if (obj &&
+        JS_SetProperty(cx, obj, "forward_back",
+                       ToJSBoolean(aData.forwardBack())) &&
+        JS_SetProperty(cx, obj, "form_submit",
+                       ToJSBoolean(aData.formSubmit())) &&
+        JS_SetProperty(cx, obj, "reload", ToJSBoolean(aData.reload())) &&
+        JS_SetProperty(cx, obj, "server_redirect",
+                       ToJSBoolean(aData.serverRedirect())) &&
+        JS_SetProperty(cx, obj, "client_redirect",
+                       ToJSBoolean(aData.clientRedirect()))) {
+      ret.setObject(*obj);
+    }
+  }
+  return ret;
+}
+
+ipc::IPCResult ExtensionsParent::RecvDocumentChange(
+    MaybeDiscardedBrowsingContext&& aBC, FrameTransitionData&& aTransitionData,
+    nsIURI* aLocation) {
+  if (aBC.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
+  JS::Rooted<JS::Value> transitionData(
+      dom::RootingCx(), FrameTransitionDataToJSValue(aTransitionData));
+  return IPC_OK();
+}
+
+ipc::IPCResult ExtensionsParent::RecvHistoryChange(
+    MaybeDiscardedBrowsingContext&& aBC, FrameTransitionData&& aTransitionData,
+    nsIURI* aLocation, bool aIsHistoryStateUpdated,
+    bool aIsReferenceFragmentUpdated) {
+  if (aBC.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
+  JS::Rooted<JS::Value> transitionData(
+      dom::RootingCx(), FrameTransitionDataToJSValue(aTransitionData));
+  return IPC_OK();
+}
+
+ipc::IPCResult ExtensionsParent::RecvStateChange(
+    MaybeDiscardedBrowsingContext&& aBC, nsIURI* aRequestURI, nsresult aStatus,
+    uint32_t aStateFlags) {
+  if (aBC.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+  return IPC_OK();
+}
+
+ipc::IPCResult ExtensionsParent::RecvCreatedNavigationTarget(
+    MaybeDiscardedBrowsingContext&& aBC,
+    MaybeDiscardedBrowsingContext&& aSourceBC, const nsCString& aURI) {
+  if (aBC.IsNullOrDiscarded() || aSourceBC.IsNull()) {
+    return IPC_OK();
+  }
+  return IPC_OK();
+}
 
 }  // namespace extensions
 }  // namespace mozilla
