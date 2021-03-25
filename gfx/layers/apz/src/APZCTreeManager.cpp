@@ -1942,10 +1942,7 @@ void APZCTreeManager::ProcessTouchInput(InputHandlingState& aState,
 
     HitTestResult hit = GetTouchInputBlockAPZC(aInput, &touchBehaviors);
     // Repopulate mTouchBlockHitResult with the fields we care about.
-    mTouchBlockHitResult = HitTestResult();
-    mTouchBlockHitResult.mTargetApzc = hit.mTargetApzc;
-    mTouchBlockHitResult.mHitResult = hit.mHitResult;
-    mTouchBlockHitResult.mFixedPosSides = hit.mFixedPosSides;
+    mTouchBlockHitResult = hit.CopyWithoutScrollbarNode();
     if (hit.mLayersId.IsValid()) {
       // Check for validity because we won't get a layers id for multi-touch
       // events.
@@ -2494,6 +2491,16 @@ void APZCTreeManager::ClearTree() {
         self->mFlushObserver->Unregister();
         self->mFlushObserver = nullptr;
       }));
+}
+
+APZCTreeManager::HitTestResult
+APZCTreeManager::HitTestResult::CopyWithoutScrollbarNode() const {
+  HitTestResult result;
+  result.mTargetApzc = mTargetApzc;
+  result.mHitResult = mHitResult;
+  result.mLayersId = mLayersId;
+  result.mFixedPosSides = mFixedPosSides;
+  return result;
 }
 
 RefPtr<HitTestingTreeNode> APZCTreeManager::GetRootNode() const {
