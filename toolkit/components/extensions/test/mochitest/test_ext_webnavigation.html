@@ -261,8 +261,7 @@ add_task(async function webnav_transitions_props() {
     win.location = CLIENT_REDIRECT_HTTPHEADER;
   });
 
-  found = received.find((data) => (data.event == "onCommitted" &&
-                                   data.url == CLIENT_REDIRECT_HTTPHEADER));
+  found = received.find((data) => (data.event == "onCommitted" && data.url == REDIRECTED));
 
   ok(found, "Got the onCommitted event");
 
