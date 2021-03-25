@@ -239,44 +239,43 @@ static void InactiveFeaturesAndParamsCheck() {
   double interval;
   uint32_t features;
   StrVec filters;
-  uint64_t activeBrowsingContextID;
+  uint64_t activeTabID;
 
   ASSERT_TRUE(!profiler_is_active());
   ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::MainThreadIO));
   ASSERT_TRUE(!profiler_feature_active(ProfilerFeature::NativeAllocations));
 
   profiler_get_start_params(&entries, &duration, &interval, &features, &filters,
-                            &activeBrowsingContextID);
+                            &activeTabID);
 
   ASSERT_TRUE(entries == 0);
   ASSERT_TRUE(duration == Nothing());
   ASSERT_TRUE(interval == 0);
   ASSERT_TRUE(features == 0);
   ASSERT_TRUE(filters.empty());
-  ASSERT_TRUE(activeBrowsingContextID == 0);
+  ASSERT_TRUE(activeTabID == 0);
 }
 
 static void ActiveParamsCheck(int aEntries, double aInterval,
                               uint32_t aFeatures, const char** aFilters,
-                              size_t aFiltersLen,
-                              uint64_t aActiveBrowsingContextID,
+                              size_t aFiltersLen, uint64_t aActiveTabID,
                               const Maybe<double>& aDuration = Nothing()) {
   int entries;
   Maybe<double> duration;
   double interval;
   uint32_t features;
   StrVec filters;
-  uint64_t activeBrowsingContextID;
+  uint64_t activeTabID;
 
   profiler_get_start_params(&entries, &duration, &interval, &features, &filters,
-                            &activeBrowsingContextID);
+                            &activeTabID);
 
   ASSERT_TRUE(entries == aEntries);
   ASSERT_TRUE(duration == aDuration);
   ASSERT_TRUE(interval == aInterval);
   ASSERT_TRUE(features == aFeatures);
   ASSERT_TRUE(filters.length() == aFiltersLen);
-  ASSERT_TRUE(activeBrowsingContextID == aActiveBrowsingContextID);
+  ASSERT_TRUE(activeTabID == aActiveTabID);
   for (size_t i = 0; i < aFiltersLen; i++) {
     ASSERT_TRUE(strcmp(filters[i], aFilters[i]) == 0);
   }

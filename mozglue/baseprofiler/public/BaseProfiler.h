@@ -198,26 +198,23 @@ MFBT_API void profiler_unregister_thread();
 
 // Registers a DOM Window (the JS global `window`) with the profiler. Each
 // Window _roughly_ corresponds to a single document loaded within a
-// BrowsingContext. The unique IDs for both the Window and BrowsingContext are
-// recorded to allow correlating different Windows loaded within the same tab or
-// frame element.
+// browsing context. Both the Window Id and Browser Id are recorded to allow
+// correlating different Windows loaded within the same tab or frame element.
 //
 // We register pages for each navigations but we do not register
 // history.pushState or history.replaceState since they correspond to the same
-// Inner Window ID. When a Browsing context is first loaded, the first url
+// Inner Window ID. When a browsing context is first loaded, the first url
 // loaded in it will be about:blank. Because of that, this call keeps the first
 // non-about:blank registration of window and discards the previous one.
 //
-//   "aBrowsingContextID"     is the ID of the browsing context that document
-//                            belongs to. That's used to determine the tab of
-//                            that page.
+//   "aTabID"                 is the BrowserId of that document belongs to.
+//                            That's used to determine the tab of that page.
 //   "aInnerWindowID"         is the ID of the `window` global object of that
 //                            document.
 //   "aUrl"                   is the URL of the page.
 //   "aEmbedderInnerWindowID" is the inner window id of embedder. It's used to
 //                            determine sub documents of a page.
-MFBT_API void profiler_register_page(uint64_t aBrowsingContextID,
-                                     uint64_t aInnerWindowID,
+MFBT_API void profiler_register_page(uint64_t aTabD, uint64_t aInnerWindowID,
                                      const std::string& aUrl,
                                      uint64_t aEmbedderInnerWindowID);
 // Unregister page with the profiler.

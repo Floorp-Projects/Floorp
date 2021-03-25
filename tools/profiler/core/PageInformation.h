@@ -28,7 +28,7 @@ class SpliceableJSONWriter;
 class PageInformation final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(PageInformation)
-  PageInformation(uint64_t aBrowsingContextID, uint64_t aInnerWindowID,
+  PageInformation(uint64_t aTabID, uint64_t aInnerWindowID,
                   const nsCString& aUrl, uint64_t aEmbedderInnerWindowID);
 
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -36,7 +36,7 @@ class PageInformation final {
   void StreamJSON(mozilla::baseprofiler::SpliceableJSONWriter& aWriter) const;
 
   uint64_t InnerWindowID() const { return mInnerWindowID; }
-  uint64_t BrowsingContextID() const { return mBrowsingContextID; }
+  uint64_t TabID() const { return mTabID; }
   const nsCString& Url() const { return mUrl; }
   uint64_t EmbedderInnerWindowID() const { return mEmbedderInnerWindowID; }
 
@@ -49,7 +49,7 @@ class PageInformation final {
   }
 
  private:
-  const uint64_t mBrowsingContextID;
+  const uint64_t mTabID;
   const uint64_t mInnerWindowID;
   const nsCString mUrl;
   const uint64_t mEmbedderInnerWindowID;

@@ -163,8 +163,7 @@ mozilla::ipc::IPCResult ProfilerChild::RecvStart(
 
   profiler_start(PowerOfTwo32(params.entries()), params.interval(),
                  params.features(), filterArray.Elements(),
-                 filterArray.Length(), params.activeBrowsingContextID(),
-                 params.duration());
+                 filterArray.Length(), params.activeTabID(), params.duration());
 
   SetupChunkManager();
 
@@ -180,8 +179,8 @@ mozilla::ipc::IPCResult ProfilerChild::RecvEnsureStarted(
 
   profiler_ensure_started(PowerOfTwo32(params.entries()), params.interval(),
                           params.features(), filterArray.Elements(),
-                          filterArray.Length(),
-                          params.activeBrowsingContextID(), params.duration());
+                          filterArray.Length(), params.activeTabID(),
+                          params.duration());
 
   SetupChunkManager();
 
