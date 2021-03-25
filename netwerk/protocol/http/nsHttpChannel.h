@@ -216,6 +216,10 @@ class nsHttpChannel final : public HttpBaseChannel,
 
   [[nodiscard]] nsresult StartRedirectChannelToURI(nsIURI*, uint32_t);
 
+  SnifferCategoryType GetSnifferCategoryType() const {
+    return mSnifferCategoryType;
+  }
+
   // This allows cache entry to be marked as foreign even after channel itself
   // is gone.  Needed for e10s (see
   // HttpChannelParent::RecvDocumentChannelCleanup)

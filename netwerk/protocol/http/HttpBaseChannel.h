@@ -885,6 +885,12 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // Number of internal redirects that has occurred.
   int8_t mInternalRedirectCount;
 
+  enum class SnifferCategoryType {
+    NetContent = 0,
+    OpaqueResponseBlocking,
+    All
+  };
+  SnifferCategoryType mSnifferCategoryType = SnifferCategoryType::NetContent;
   const bool mCachedOpaqueResponseBlockingPref;
   bool mBlockOpaqueResponseAfterSniff;
   bool mCheckIsOpaqueResponseAllowedAfterSniff;
