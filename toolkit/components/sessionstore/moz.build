@@ -5,7 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
+    "SessionStoreChangeListener.h",
     "SessionStoreData.h",
+    "SessionStoreDataCollector.h",
     "SessionStoreListener.h",
     "SessionStoreMessageUtils.h",
     "SessionStoreRestoreData.h",
@@ -14,6 +16,8 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     "RestoreTabContentObserver.cpp",
+    "SessionStoreChangeListener.cpp",
+    "SessionStoreDataCollector.cpp",
     "SessionStoreListener.cpp",
     "SessionStoreRestoreData.cpp",
     "SessionStoreUtils.cpp",

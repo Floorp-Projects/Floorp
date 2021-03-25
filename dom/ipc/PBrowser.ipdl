@@ -579,12 +579,9 @@ parent:
     async NavigationFinished();
 
     async SessionStoreUpdate(nsCString? aDocShellCaps, bool? aPrivatedMode,
-                             nsCString[] aPositions, int32_t[] aPositionDescendants,
-                             InputFormData[] aInputs, CollectedInputDataValue[] aIdVals,
-                             CollectedInputDataValue[] aXPathVals,
                              nsCString[] aOrigins, nsString[] aKeys,
                              nsString[] aValues, bool aIsFullStorage,
-                             bool aNeedCollectSHistory, uint32_t aFlushId,
+                             bool aNeedCollectSHistory,
                              bool aIsFinal, uint32_t aEpoch);
 
     async IntrinsicSizeOrRatioChanged(IntrinsicSize? aIntrinsicSize,
@@ -604,7 +601,6 @@ parent:
 
 child:
     async NativeSynthesisResponse(uint64_t aObserverId, nsCString aResponse);
-    async FlushTabState(uint32_t aFlushId, bool aIsFinal);
     async UpdateEpoch(uint32_t aEpoch);
     async UpdateSHistory(bool aImmediately);
     async CloneDocumentTreeIntoSelf(MaybeDiscardedBrowsingContext aBc);

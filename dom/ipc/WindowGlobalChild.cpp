@@ -18,6 +18,7 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/SecurityPolicyViolationEvent.h"
 #include "mozilla/dom/SessionStoreRestoreData.h"
+#include "mozilla/dom/SessionStoreDataCollector.h"
 #include "mozilla/dom/WindowGlobalActorsBinding.h"
 #include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/WindowContext.h"
@@ -338,6 +339,11 @@ void WindowGlobalChild::Destroy() {
   RefPtr<BrowserChild> browserChild = GetBrowserChild();
   if (!browserChild || !browserChild->IsDestroyed()) {
     SendDestroy();
+  }
+
+  if (mSessionStoreDataCollector) {
+    mSessionStoreDataCollector->Cancel();
+    mSessionStoreDataCollector = nullptr;
   }
 }
 
@@ -682,9 +688,20 @@ nsISupports* WindowGlobalChild::GetParentObject() {
   return xpc::NativeGlobal(xpc::PrivilegedJunkScope());
 }
 
+void WindowGlobalChild::SetSessionStoreDataCollector(
+    SessionStoreDataCollector* aCollector) {
+  mSessionStoreDataCollector = aCollector;
+}
+
+SessionStoreDataCollector* WindowGlobalChild::GetSessionStoreDataCollector()
+    const {
+  return mSessionStoreDataCollector;
+}
+
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_WEAK_PTR(WindowGlobalChild, mWindowGlobal,
                                                mContainerFeaturePolicy,
-                                               mWindowContext)
+                                               mWindowContext,
+                                               mSessionStoreDataCollector)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(WindowGlobalChild)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY

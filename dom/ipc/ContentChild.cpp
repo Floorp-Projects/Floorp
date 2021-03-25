@@ -4297,6 +4297,21 @@ mozilla::ipc::IPCResult ContentChild::RecvCanSavePresentation(
   }
 }
 
+mozilla::ipc::IPCResult ContentChild::RecvFlushTabState(
+    const MaybeDiscarded<BrowsingContext>& aContext,
+    FlushTabStateResolver&& aResolver) {
+  if (aContext.IsNullOrDiscarded()) {
+    aResolver(false);
+    return IPC_OK();
+  }
+
+  aContext->FlushSessionStore();
+
+  aResolver(true);
+
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult ContentChild::RecvGoBack(
     const MaybeDiscarded<BrowsingContext>& aContext,
     const Maybe<int32_t>& aCancelContentJSEpoch, bool aRequireUserInteraction) {
