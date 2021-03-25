@@ -90,6 +90,7 @@
                     _data = ['raptor-benchmark', 'speedometer', measuredValuesByFullName];
                     console.log('speedometer source about to post results to the raptor webext');
                     window.postMessage(_data, '*');
+                    window.sessionStorage.setItem('benchmark_results',  JSON.stringify(_data));
                 } else {
                     tpRecordTime(values.join(','), 0, allNames.join(','));
                 }
