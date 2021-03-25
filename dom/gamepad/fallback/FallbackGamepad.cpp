@@ -15,10 +15,8 @@ void StartGamepadMonitoring() {}
 void StopGamepadMonitoring() {}
 
 void SetGamepadLightIndicatorColor(const Tainted<GamepadHandle>&,
-                                   const Tainted<uint32_t>&,
-                                   const Tainted<uint8_t>&,
-                                   const Tainted<uint8_t>&,
-                                   const Tainted<uint8_t>&) {}
+                                   const Tainted<uint32_t>&, const uint8_t&,
+                                   const uint8_t&, const uint8_t&) {}
 
 }  // namespace dom
 }  // namespace mozilla
