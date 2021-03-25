@@ -5,14 +5,18 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://global/content/commonDialog.css"?>
+<?xml-stylesheet href="chrome://global/skin/commonDialog.css"?>
 <?xml-stylesheet href="chrome://global/content/resetProfile.css"?>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<window id="resetProfileDialogWindow"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
-        data-l10n-id="refresh-profile-dialog">
+        xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        aria-describedby="infoBody">
 <dialog id="resetProfileDialog"
         buttons="accept,cancel"
-        defaultButton="cancel"
+        defaultButton="accept"
         buttonidaccept="refresh-profile-dialog-button">
   <!-- The empty onload event handler is a hack to get the accept button text applied by Fluent. -->
 
@@ -21,14 +25,22 @@
     <html:link rel="localization" href="toolkit/global/resetProfile.ftl"/>
   </linkset>
 
+  <!-- The <div> was added in bug 1606617 to workaround bug 1614447 -->
+  <div xmlns="http://www.w3.org/1999/xhtml">
+    <div id="dialogGrid">
+      <div class="dialogRow" id="infoRow">
+        <div id="iconContainer">
+          <xul:image id="infoIcon"/>
+        </div>
+        <div id="infoContainer">
+          <xul:description id="infoTitle" data-l10n-id="refresh-profile-dialog-title"/>
+          <xul:description id="infoBody" context="contentAreaContextMenu" noinitialfocus="true" data-l10n-id="refresh-profile-dialog-description"/>
+          <xul:description id="learnMoreDescription"><a id="refreshProfileLearnMore" data-l10n-id="refresh-profile-learn-more" href=""></a></xul:description>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="chrome://global/content/resetProfile.js"/>
-
-  <description data-l10n-id="refresh-profile-description"/>
-  <label data-l10n-id="refresh-profile-description-details"/>
-
-  <vbox id="migratedItems">
-    <label class="migratedLabel" data-l10n-id="refresh-profile-remove"/>
-    <label class="migratedLabel" data-l10n-id="refresh-profile-restore"/>
-  </vbox>
 </dialog>
 </window>

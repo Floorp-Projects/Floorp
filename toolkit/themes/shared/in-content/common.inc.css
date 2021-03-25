@@ -34,6 +34,9 @@
   --in-content-primary-button-background: #0061e0;
   --in-content-primary-button-background-hover: #0250bb;
   --in-content-primary-button-background-active: #053e94;
+  --in-content-danger-button-background: #e22850;
+  --in-content-danger-button-background-hover: #c50042;
+  --in-content-danger-button-background-active: #810220;
   --in-content-focus-outline-color: var(--in-content-primary-button-background);
 
   /* Note: 1px smaller than we want because we have a 1px transparent border. */
@@ -137,6 +140,10 @@
     --in-content-button-background: rgba(249,249,250,0.1);
     --in-content-button-background-hover: rgba(249,249,250,0.15);
     --in-content-button-background-active: rgba(249,249,250,0.2);
+
+    --in-content-danger-button-background: #ff848b;
+    --in-content-danger-button-background-hover: #ffbdc5;
+    --in-content-danger-button-background-active: #ffdfe7;
 
     --in-content-table-background: #202023;
     --in-content-table-border-dark-color: rgba(249,249,250,0.2);
@@ -388,17 +395,11 @@ xul|button.primary:not([disabled="true"]):hover:active {
   background-color: var(--in-content-primary-button-background-active);
 }
 
-html|button.danger-button {
-  background-color: var(--red-60);
-  color: white !important;
-}
-
-html|button.danger-button:enabled:hover {
-  background-color: var(--red-70);
-}
-
-html|button.danger-button:enabled:hover:active {
-  background-color: var(--red-80);
+.danger-button {
+  --in-content-primary-button-background: var(--in-content-danger-button-background);
+  --in-content-primary-button-background-hover: var(--in-content-danger-button-background-hover);
+  --in-content-primary-button-background-active: var(--in-content-danger-button-background-active);
+  --in-content-focus-outline-color: var(--in-content-danger-button-background);
 }
 
 html|button.ghost-button {
