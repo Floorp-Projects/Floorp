@@ -554,7 +554,7 @@ class BrowsertimeResultsHandler(PerftestResultsHandler):
                 vismet_result["statistics"] = raw_result["statistics"]["visualMetrics"]
                 results.append(vismet_result)
 
-            custom_types = raw_result["browserScripts"][0].get("custom")
+            custom_types = raw_result["extras"][0]
             if custom_types:
                 for custom_type in custom_types:
                     bt_result["measurements"].update(
