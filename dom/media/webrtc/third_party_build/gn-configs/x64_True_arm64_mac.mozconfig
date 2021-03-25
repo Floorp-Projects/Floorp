@@ -1,0 +1,6 @@
+ac_add_options --enable-debug
+ac_add_options --target=aarch64
+ac_add_options --with-macos-sdk=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX11.0.sdk
+
+mk_add_options MOZ_OBJDIR=obj-x64_True_arm64_mac
+
