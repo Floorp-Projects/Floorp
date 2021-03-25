@@ -22,9 +22,9 @@ assorted-dom:
     description: assorted-dom benchmark
     fetch:
         type: static-url
-        url: https://github.com/mozilla/perf-automation/releases/download/assorted-dom-v1/assorted-dom-4befd28725c6.zip
-        sha256: e4eafe4a8e70c7ae6d42d668d3b1640b9fd9b696c486ff35aab754c368f78c2c
-        size: 402665
+        url: https://github.com/mozilla/perf-automation/releases/download/assorted-dom-v2/assorted-dom-54c3c3d9d3f6.zip
+        sha256: d3580b06123212f163eeb355e3e37b8abd998606397b66cbe960646884537c68
+        size: 402074
 
 wasm-misc:
     description: wasm-misc benchmark

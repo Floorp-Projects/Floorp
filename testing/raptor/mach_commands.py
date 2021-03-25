@@ -29,7 +29,7 @@ from mozbuild.base import MachCommandConditions as Conditions
 HERE = os.path.dirname(os.path.realpath(__file__))
 
 BENCHMARK_REPOSITORY = "https://github.com/mozilla/perf-automation"
-BENCHMARK_REVISION = "e19a0865c946ae2f9a64dd25614b1c275a3996b2"
+BENCHMARK_REVISION = "54c3c3d9d3f651f0d8ebb809d25232f72b5b06f2"
 
 ANDROID_BROWSERS = ["geckoview", "refbrow", "fenix", "chrome-m"]
 
@@ -94,7 +94,6 @@ class RaptorRunner(MozbuildObject):
         external_repo_path = os.path.join(get_state_dir(), "performance-tests")
 
         print("Updating external benchmarks from {}".format(BENCHMARK_REPOSITORY))
-        print("Cloning the benchmarks to {}".format(external_repo_path))
 
         try:
             subprocess.check_output(["git", "--version"])
@@ -106,6 +105,7 @@ class RaptorRunner(MozbuildObject):
             raise ex
 
         if not os.path.isdir(external_repo_path):
+            print("Cloning the benchmarks to {}".format(external_repo_path))
             subprocess.check_call(
                 ["git", "clone", BENCHMARK_REPOSITORY, external_repo_path]
             )
