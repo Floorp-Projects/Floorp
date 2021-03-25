@@ -1109,16 +1109,8 @@ bool EventStateManager::LookForAccessKeyAndExecute(
           }
         }
 
-        bool focusChanged = false;
-        if (shouldActivate) {
-          focusChanged =
-              element->PerformAccesskey(shouldActivate, aIsTrustedEvent);
-        } else if (RefPtr<nsFocusManager> fm =
-                       nsFocusManager::GetFocusManager()) {
-          fm->SetFocus(element, nsIFocusManager::FLAG_BYKEY);
-          focusChanged = true;
-        }
-
+        bool focusChanged =
+            element->PerformAccesskey(shouldActivate, aIsTrustedEvent);
         if (focusChanged && aIsTrustedEvent) {
           // If this is a child process, inform the parent that we want the
           // focus, but pass false since we don't want to change the window
