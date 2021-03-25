@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["WebNavigation"];
+const EXPORTED_SYMBOLS = ["WebNavigation", "WebNavigationManager"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { AppConstants } = ChromeUtils.import(
@@ -28,6 +28,11 @@ ChromeUtils.defineModuleGetter(
 );
 ChromeUtils.defineModuleGetter(
   this,
+  "WebNavigationFrames",
+  "resource://gre/modules/WebNavigationFrames.jsm"
+);
+ChromeUtils.defineModuleGetter(
+  this,
   "ClickHandlerParent",
   "resource:///actors/ClickHandlerParent.jsm"
 );
@@ -37,7 +42,11 @@ ChromeUtils.defineModuleGetter(
 // e.g. nsNavHistory::CheckIsRecentEvent, but with a lower threshold value).
 const RECENT_DATA_THRESHOLD = 5 * 1000000;
 
-var Manager = {
+function getBrowser(bc) {
+  return bc.top.embedderElement;
+}
+
+var WebNavigationManager = {
   // Map[string -> Map[listener -> URLFilter]]
   listeners: new Map(),
 
@@ -46,11 +55,6 @@ var Manager = {
     //   browser -> tabTransitionData
     this.recentTabTransitionData = new WeakMap();
 
-    // Collect the pending created navigation target events that still have to
-    // pair the message received from the source tab to the one received from
-    // the new tab.
-    this.createdNavigationTargetByOuterWindowId = new Map();
-
     Services.obs.addObserver(this, "urlbar-user-start-navigation", true);
 
     Services.obs.addObserver(this, "webNavigation-createdNavigationTarget");
@@ -58,17 +62,6 @@ var Manager = {
     if (AppConstants.MOZ_BUILD_APP == "browser") {
       ClickHandlerParent.addContentClickListener(this);
     }
-
-    Services.mm.addMessageListener("Extension:DOMContentLoaded", this);
-    Services.mm.addMessageListener("Extension:StateChange", this);
-    Services.mm.addMessageListener("Extension:DocumentChange", this);
-    Services.mm.addMessageListener("Extension:HistoryChange", this);
-    Services.mm.addMessageListener("Extension:CreatedNavigationTarget", this);
-
-    Services.mm.loadFrameScript(
-      "resource://gre/modules/WebNavigationContent.js",
-      true
-    );
   },
 
   uninit() {
@@ -80,22 +73,7 @@ var Manager = {
       ClickHandlerParent.removeContentClickListener(this);
     }
 
-    Services.mm.removeMessageListener("Extension:StateChange", this);
-    Services.mm.removeMessageListener("Extension:DocumentChange", this);
-    Services.mm.removeMessageListener("Extension:HistoryChange", this);
-    Services.mm.removeMessageListener("Extension:DOMContentLoaded", this);
-    Services.mm.removeMessageListener(
-      "Extension:CreatedNavigationTarget",
-      this
-    );
-
-    Services.mm.removeDelayedFrameScript(
-      "resource://gre/modules/WebNavigationContent.js"
-    );
-    Services.mm.broadcastAsyncMessage("Extension:DisableWebNavigation");
-
     this.recentTabTransitionData = new WeakMap();
-    this.createdNavigationTargetByOuterWindowId.clear();
   },
 
   addListener(type, listener, filters, context) {
@@ -130,6 +108,7 @@ var Manager = {
    * to keep track of the urlbar user interaction.
    */
   QueryInterface: ChromeUtils.generateQI([
+    "extIWebNavigation",
     "nsIObserver",
     "nsISupportsWeakReference",
   ]),
@@ -156,16 +135,11 @@ var Manager = {
         sourceTabBrowser,
       } = subject.wrappedJSObject;
 
-      this.fire(
-        "onCreatedNavigationTarget",
-        createdTabBrowser,
-        {},
-        {
-          sourceTabBrowser,
-          sourceFrameId: sourceFrameID,
-          url,
-        }
-      );
+      this.fire("onCreatedNavigationTarget", createdTabBrowser, null, {
+        sourceTabBrowser,
+        sourceFrameId: sourceFrameID,
+        url,
+      });
     }
   },
 
@@ -295,34 +269,6 @@ var Manager = {
     return data;
   },
 
-  /**
-   * Receive messages from the WebNavigationContent.js framescript
-   * over message manager events.
-   */
-  receiveMessage({ name, data, target }) {
-    switch (name) {
-      case "Extension:StateChange":
-        this.onStateChange(target, data);
-        break;
-
-      case "Extension:DocumentChange":
-        this.onDocumentChange(target, data);
-        break;
-
-      case "Extension:HistoryChange":
-        this.onHistoryChange(target, data);
-        break;
-
-      case "Extension:DOMContentLoaded":
-        this.onLoad(target, data);
-        break;
-
-      case "Extension:CreatedNavigationTarget":
-        this.onCreatedNavigationTarget(target, data);
-        break;
-    }
-  },
-
   onContentClick(target, data) {
     // We are interested only on clicks to links which are not "add to bookmark" commands
     if (data.href && !data.bookmark) {
@@ -334,128 +280,101 @@ var Manager = {
     }
   },
 
-  onCreatedNavigationTarget(browser, data) {
-    const { createdOuterWindowId, isSourceTab, sourceFrameId, url } = data;
-
-    // We are going to receive two message manager messages for a single
-    // onCreatedNavigationTarget event related to a window.open that is happening
-    // in the child process (one from the source tab and one from the created tab),
-    // the unique createdWindowId (the outerWindowID of the created docShell)
-    // to pair them together.
-    const pairedMessage = this.createdNavigationTargetByOuterWindowId.get(
-      createdOuterWindowId
-    );
-
-    if (!isSourceTab) {
-      if (pairedMessage) {
-        // This should not happen, print a warning before overwriting the unexpected pending data.
-        Services.console.logStringMessage(
-          `Discarding onCreatedNavigationTarget for ${createdOuterWindowId}: ` +
-            "unexpected pending data while receiving the created tab data"
-        );
-      }
-
-      // Store a weak reference to the browser XUL element, so that we don't prevent
-      // it to be garbage collected if it has been destroyed.
-      const browserWeakRef = Cu.getWeakReference(browser);
-
-      this.createdNavigationTargetByOuterWindowId.set(createdOuterWindowId, {
-        browserWeakRef,
-        data,
-      });
-
+  onCreatedNavigationTarget(bc, sourceBC, url) {
+    if (!this.listeners.size) {
       return;
     }
 
-    if (!pairedMessage) {
-      // The sourceTab should always be received after the message coming from the created
-      // top level frame because the "webNavigation-createdNavigationTarget-from-js" observers
-      // subscribed by WebNavigationContent.js are going to be executed in reverse order
-      // (See http://searchfox.org/mozilla-central/rev/f54c1723be/xpcom/ds/nsObserverList.cpp#76)
-      // and the observer subscribed to the created target will be the last one subscribed
-      // to the ObserverService (and the first one to be triggered).
-      Services.console.logStringMessage(
-        `Discarding onCreatedNavigationTarget for ${createdOuterWindowId}: ` +
-          "received source tab data without any created tab data available"
-      );
+    let browser = getBrowser(bc);
 
-      return;
-    }
-
-    this.createdNavigationTargetByOuterWindowId.delete(createdOuterWindowId);
-
-    let sourceTabBrowser = browser;
-    let createdTabBrowser = pairedMessage.browserWeakRef.get();
-
-    if (!createdTabBrowser) {
-      Services.console.logStringMessage(
-        `Discarding onCreatedNavigationTarget for ${createdOuterWindowId}: ` +
-          "the created tab has been already destroyed"
-      );
-
-      return;
-    }
-
-    this.fire(
-      "onCreatedNavigationTarget",
-      createdTabBrowser,
-      {},
-      {
-        sourceTabBrowser,
-        sourceFrameId,
-        url,
-      }
-    );
+    this.fire("onCreatedNavigationTarget", browser, null, {
+      sourceTabBrowser: getBrowser(sourceBC),
+      sourceFrameId: WebNavigationFrames.getFrameId(sourceBC),
+      url,
+    });
   },
 
-  onStateChange(browser, data) {
-    let stateFlags = data.stateFlags;
+  onStateChange(bc, requestURI, status, stateFlags) {
+    if (!this.listeners.size) {
+      return;
+    }
+
+    let browser = getBrowser(bc);
+
     if (stateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
-      let url = data.requestURL;
+      let url = requestURI.spec;
       if (stateFlags & Ci.nsIWebProgressListener.STATE_START) {
-        this.fire("onBeforeNavigate", browser, data, { url });
+        this.fire("onBeforeNavigate", browser, bc, { url });
       } else if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-        if (Components.isSuccessCode(data.status)) {
-          this.fire("onCompleted", browser, data, { url });
+        if (Components.isSuccessCode(status)) {
+          this.fire("onCompleted", browser, bc, { url });
         } else {
-          let error = `Error code ${data.status}`;
-          this.fire("onErrorOccurred", browser, data, { error, url });
+          let error = `Error code ${status}`;
+          this.fire("onErrorOccurred", browser, bc, { error, url });
         }
       }
     }
   },
 
-  onDocumentChange(browser, data) {
+  onDocumentChange(bc, frameTransitionData, location) {
+    if (!this.listeners.size) {
+      return;
+    }
+
+    let browser = getBrowser(bc);
+
     let extra = {
-      url: data.location,
+      url: location ? location.spec : "",
       // Transition data which is coming from the content process.
-      frameTransitionData: data.frameTransitionData,
+      frameTransitionData,
       tabTransitionData: this.getAndForgetRecentTabTransitionData(browser),
     };
 
-    this.fire("onCommitted", browser, data, extra);
+    this.fire("onCommitted", browser, bc, extra);
   },
 
-  onHistoryChange(browser, data) {
+  onHistoryChange(
+    bc,
+    frameTransitionData,
+    location,
+    isHistoryStateUpdated,
+    isReferenceFragmentUpdated
+  ) {
+    if (!this.listeners.size) {
+      return;
+    }
+
+    let browser = getBrowser(bc);
+
     let extra = {
-      url: data.location,
+      url: location ? location.spec : "",
       // Transition data which is coming from the content process.
-      frameTransitionData: data.frameTransitionData,
+      frameTransitionData,
       tabTransitionData: this.getAndForgetRecentTabTransitionData(browser),
     };
 
-    if (data.isReferenceFragmentUpdated) {
-      this.fire("onReferenceFragmentUpdated", browser, data, extra);
-    } else if (data.isHistoryStateUpdated) {
-      this.fire("onHistoryStateUpdated", browser, data, extra);
+    if (isReferenceFragmentUpdated) {
+      this.fire("onReferenceFragmentUpdated", browser, bc, extra);
+    } else if (isHistoryStateUpdated) {
+      this.fire("onHistoryStateUpdated", browser, bc, extra);
     }
   },
 
-  onLoad(browser, data) {
-    this.fire("onDOMContentLoaded", browser, data, { url: data.url });
+  onDOMContentLoaded(bc, documentURI) {
+    if (!this.listeners.size) {
+      return;
+    }
+
+    let browser = getBrowser(bc);
+
+    this.fire("onDOMContentLoaded", browser, bc, { url: documentURI.spec });
   },
 
-  fire(type, browser, data, extra) {
+  fire(type, browser, bc, extra) {
+    if (!browser) {
+      return;
+    }
+
     let listeners = this.listeners.get(type);
     if (!listeners) {
       return;
@@ -463,11 +382,11 @@ var Manager = {
 
     let details = {
       browser,
-      frameId: data.frameId,
     };
 
-    if (data.parentFrameId !== undefined) {
-      details.parentFrameId = data.parentFrameId;
+    if (bc) {
+      details.frameId = WebNavigationFrames.getFrameId(bc);
+      details.parentFrameId = WebNavigationFrames.getParentFrameId(bc);
     }
 
     for (let prop in extra) {
@@ -505,7 +424,13 @@ var WebNavigation = {};
 
 for (let event of EVENTS) {
   WebNavigation[event] = {
-    addListener: Manager.addListener.bind(Manager, event),
-    removeListener: Manager.removeListener.bind(Manager, event),
+    addListener: WebNavigationManager.addListener.bind(
+      WebNavigationManager,
+      event
+    ),
+    removeListener: WebNavigationManager.removeListener.bind(
+      WebNavigationManager,
+      event
+    ),
   };
 }

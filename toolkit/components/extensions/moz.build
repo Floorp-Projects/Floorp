@@ -43,7 +43,6 @@ EXTRA_JS_MODULES += [
     "ProxyChannelFilter.jsm",
     "Schemas.jsm",
     "WebNavigation.jsm",
-    "WebNavigationContent.js",
     "WebNavigationFrames.jsm",
 ]
 
@@ -74,6 +73,7 @@ IPDL_SOURCES += [
 ]
 
 XPIDL_SOURCES += [
+    "extIWebNavigation.idl",
     "mozIExtensionProcessScript.idl",
 ]
 
