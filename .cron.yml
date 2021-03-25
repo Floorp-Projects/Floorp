@@ -96,17 +96,6 @@ jobs:
           by-project:
               mozilla-central: [{hour: 10, minute: 0}]
 
-    - name: tp6m-fennec-v68
-      job:
-          type: decision-task
-          treeherder-symbol: f68
-          target-tasks-method: fennec_v68
-          include-push-tasks: true
-      run-on-projects:
-          - mozilla-central
-      when:
-          - {weekday: 'Saturday', hour: 5, minute: 0}
-
     - name: live-site-perf-testing
       job:
           type: decision-task

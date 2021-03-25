@@ -747,50 +747,6 @@ def target_tasks_ship_geckoview(full_task_graph, parameters, graph_config):
     return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
 
 
-@_target_task("fennec_v68")
-def target_tasks_fennec_v68(full_task_graph, parameters, graph_config):
-    """
-    Select tasks required for running weekly fennec v68 tests
-    """
-
-    def filter(task):
-        test_platform = task.attributes.get("test_platform")
-        try_name = task.attributes.get("raptor_try_name")
-
-        vismet = task.attributes.get("kind") == "visual-metrics-dep"
-        if vismet:
-            test_platform = task.task.get("extra").get("treeherder-platform")
-            try_name = task.label
-
-        if task.attributes.get("unittest_suite") != "raptor" and not vismet:
-            return False
-        if not accept_raptor_android_build(test_platform):
-            return False
-        if "-wr" not in try_name:
-            return False
-
-        if "-fennec" in try_name:
-            if "-power" in try_name:
-                return True
-            if "browsertime" in try_name:
-                if "tp6m" in try_name:
-                    return True
-                elif "speedometer" in try_name:
-                    return True
-                else:
-                    return False
-            if "-youtube-playback" in try_name:
-                # Bug 1627898: VP9 tests don't work on G5
-                if "-g5-" in test_platform and "-vp9-" in try_name:
-                    return False
-                # Bug 1639193: AV1 tests are currently broken
-                if "-av1-" in try_name:
-                    return False
-            return True
-
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
-
-
 @_target_task("live_site_perf_testing")
 def target_tasks_live_site_perf_testing(full_task_graph, parameters, graph_config):
     """
