@@ -198,8 +198,7 @@ var TestUtils = {
         setTimeout(tryOnce, interval);
       }
 
-      // FIXME(bug 1596165): This could be a direct call, ideally.
-      setTimeout(tryOnce, interval);
+      TestUtils.executeSoon(tryOnce);
     });
   },
 
