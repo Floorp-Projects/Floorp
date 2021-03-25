@@ -276,13 +276,8 @@ raptor-unity-webgl-firefox:
     variants: ["fission"]
     try-name: raptor-unity-webgl-firefox
     treeherder-symbol: Rap(ugl)
-    run-on-projects:
-        by-variant:
-            fission: []
-            default:
-                by-test-platform:
-                    (linux|windows|macos)(?!.*shippable).*: []
-                    default: ["autoland"]
+    run-on-projects: []
+    fission-run-on-projects: []
     tier: 3
     mozharness:
         extra-options:
@@ -295,6 +290,7 @@ raptor-unity-webgl-firefox-profiling:
     description: "Raptor Unity WebGL on Firefox with Gecko Profiling"
     try-name: raptor-unity-webgl-firefox-profiling
     treeherder-symbol: Rap-Prof(ugl)
+    run-on-projects: []
     mozharness:
         extra-options:
             - --test=raptor-unity-webgl
