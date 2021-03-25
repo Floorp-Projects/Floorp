@@ -43,6 +43,9 @@ async function recordViewTelemetry(param) {
 
 // Used by external callers to load a specific view into the manager
 function loadView(viewId) {
+  if (!gViewController.readyForLoadView) {
+    throw new Error("loadView called before about:addons is initialized");
+  }
   gViewController.loadView(viewId);
 }
 
@@ -82,6 +85,7 @@ var ScrollOffsets = {
 
 var gViewController = {
   currentViewId: null,
+  readyForLoadView: false,
   get defaultViewId() {
     if (!isDiscoverEnabled()) {
       return "addons://list/extension";
@@ -120,11 +124,13 @@ var gViewController = {
 
   observe(subject, topic, data) {
     if (topic == "EM-ping") {
+      this.readyForLoadView = true;
       Services.obs.notifyObservers(window, "EM-pong");
     }
   },
 
   notifyEMLoaded() {
+    this.readyForLoadView = true;
     Services.obs.notifyObservers(window, "EM-loaded");
   },
 
