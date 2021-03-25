@@ -1346,13 +1346,9 @@ space-alert-over-5gb-pref-button =
            *[other] O
         }
 
-space-alert-over-5gb-message =
-    { PLATFORM() ->
-        [windows] { -brand-short-name } is running out of disk space. Website contents may not display properly. You can clear stored data in Options > Privacy & Security > Cookies and Site Data.
-       *[other] { -brand-short-name } is running out of disk space. Website contents may not display properly. You can clear stored data in Preferences > Privacy & Security > Cookies and Site Data.
-    }
+space-alert-over-5gb-message2 = <strong>{ -brand-short-name } is running out of disk space.</strong> Website contents may not display properly. You can clear stored data in Settings > Privacy & Security > Cookies and Site Data.
 
-space-alert-under-5gb-message = { -brand-short-name } is running out of disk space. Website contents may not display properly. Visit “Learn More” to optimize your disk usage for better browsing experience.
+space-alert-under-5gb-message2 = <strong>{ -brand-short-name } is running out of disk space.</strong> Website contents may not display properly. Visit “Learn More” to optimize your disk usage for better browsing experience.
 
 ## Privacy Section - HTTPS-Only
 
