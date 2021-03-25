@@ -41,6 +41,7 @@ class SearchOneOffs {
         <button class="searchbar-engine-one-off-item search-setting-button-compact" tabindex="-1" data-l10n-id="search-one-offs-change-settings-compact-button"/>
       </box>
       <vbox class="search-add-engines"/>
+      <menuseparator class="searchbar-separator"/>
       <button class="search-setting-button" data-l10n-id="search-one-offs-change-settings-button"/>
       <box>
         <menupopup class="search-one-offs-context-menu">
