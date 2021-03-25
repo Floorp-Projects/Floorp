@@ -7415,6 +7415,23 @@ cache:
     record_in_processes:
       - 'main'
 
+opaque.response.blocking:
+  parsing_size_kb:
+    bug_numbers:
+      - 1695987
+    description: >
+      How many KB of response bodies are parsed by ORB?
+    expires: "93"
+    kind: uint
+    notification_emails:
+      - echuang@mozilla.com
+      - necko@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
+
 # NOTE: Please don't add new definitions below this point. Consider adding
 # them earlier in the file and leave the telemetry.test category as the last
 # one for readability.
