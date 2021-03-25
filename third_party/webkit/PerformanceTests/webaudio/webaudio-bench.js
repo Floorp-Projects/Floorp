@@ -151,6 +151,7 @@ function allDone() {
   if (location.search.includes("raptor")) {
     var _data = ['raptor-benchmark', 'webaudio', JSON.stringify(results)];
     window.postMessage(_data, '*');
+    window.sessionStorage.setItem('benchmark_results',  JSON.stringify(_data));
   } else {
     var xhr = new XMLHttpRequest();
     xhr.open("POST", "/results", true);
