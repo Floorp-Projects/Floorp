@@ -24,7 +24,7 @@ add_task(async function() {
   // Unset "prefers reduced motion", otherwise the dot animation preview won't be created.
   // See Bug 1637842
   // https://developer.mozilla.org/en-US/docs/Web/CSS/@media/prefers-reduced-motion
-  Services.prefs.setIntPref("ui.prefersReducedMotion", 0);
+  await pushPref("ui.prefersReducedMotion", 0);
 
   const container = doc.querySelector("#cubic-bezier-container");
   const w = new CubicBezierWidget(container, PREDEFINED.linear);
