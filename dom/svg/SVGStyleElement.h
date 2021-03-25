@@ -61,8 +61,6 @@ class SVGStyleElement final : public SVGStyleElementBase,
   NS_DECL_NSIMUTATIONOBSERVER_CONTENTREMOVED
 
   // WebIDL
-  void GetXmlspace(nsAString& aXmlspace);
-  void SetXmlspace(const nsAString& aXmlspace, ErrorResult& rv);
   void GetMedia(nsAString& aMedia);
   void SetMedia(const nsAString& aMedia, ErrorResult& rv);
   void GetType(nsAString& aType);
