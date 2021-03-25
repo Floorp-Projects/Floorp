@@ -496,7 +496,7 @@ var UrlbarUtils = {
    *   The reuslt's group.
    */
   getResultGroup(result) {
-    if (result.suggestedIndex >= 0) {
+    if (result.hasSuggestedIndex) {
       return UrlbarUtils.RESULT_GROUP.SUGGESTED_INDEX;
     }
     if (result.heuristic) {
