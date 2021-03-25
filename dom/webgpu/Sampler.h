@@ -6,6 +6,7 @@
 #ifndef GPU_SAMPLER_H_
 #define GPU_SAMPLER_H_
 
+#include "mozilla/webgpu/WebGPUTypes.h"
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
 

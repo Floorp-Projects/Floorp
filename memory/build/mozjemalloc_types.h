@@ -36,6 +36,8 @@
 #ifndef _JEMALLOC_TYPES_H_
 #define _JEMALLOC_TYPES_H_
 
+#include <stdint.h>
+
 // grab size_t
 #ifdef _MSC_VER
 #  include <crtdefs.h>

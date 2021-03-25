@@ -28,6 +28,8 @@ class ContentParent;
 
 namespace extensions {
 
+class ChannelWrapper;
+
 class WebRequestChannelEntry final {
  public:
   ~WebRequestChannelEntry();

@@ -7,8 +7,9 @@
 #define txKey_h__
 
 #include "nsTHashtable.h"
-#include "txNodeSet.h"
+#include "txExpandedNameMap.h"
 #include "txList.h"
+#include "txNodeSet.h"
 #include "txXSLTPatterns.h"
 #include "txXMLUtils.h"
 

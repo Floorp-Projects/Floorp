@@ -7,6 +7,7 @@
 #define GPU_CommandBuffer_H_
 
 #include "mozilla/WeakPtr.h"
+#include "mozilla/webgpu/WebGPUTypes.h"
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
 

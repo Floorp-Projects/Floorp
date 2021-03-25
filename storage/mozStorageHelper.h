@@ -15,6 +15,8 @@
 #include "mozIStorageConnection.h"
 #include "mozIStorageStatement.h"
 #include "mozIStoragePendingStatement.h"
+#include "mozilla/DebugOnly.h"
+#include "nsCOMPtr.h"
 #include "nsError.h"
 
 /**

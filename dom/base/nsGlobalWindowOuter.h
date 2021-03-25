@@ -50,6 +50,7 @@
 #include "mozilla/dom/ImageBitmapSource.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/BrowsingContext.h"
+#include "X11UndefineNone.h"
 
 class nsDocShell;
 class nsIArray;

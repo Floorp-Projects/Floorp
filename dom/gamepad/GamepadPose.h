@@ -10,6 +10,7 @@
 #include "mozilla/TypedEnumBits.h"
 #include "mozilla/dom/Pose.h"
 #include "mozilla/dom/GamepadPoseState.h"
+#include "nsCOMPtr.h"
 
 namespace mozilla {
 namespace dom {

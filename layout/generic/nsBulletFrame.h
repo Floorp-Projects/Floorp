@@ -14,6 +14,7 @@
 
 class imgIContainer;
 class nsBulletFrame;
+class nsFontMetrics;
 class BulletRenderer;
 class nsFontMetrics;
 

@@ -6,6 +6,7 @@
 #ifndef GPU_DEVICE_H_
 #define GPU_DEVICE_H_
 
+#include "ObjectModel.h"
 #include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/webgpu/WebGPUTypes.h"

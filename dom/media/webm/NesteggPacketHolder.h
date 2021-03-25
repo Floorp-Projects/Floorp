@@ -6,6 +6,7 @@
 #if !defined(NesteggPacketHolder_h_)
 #  define NesteggPacketHolder_h_
 
+#  include <deque>
 #  include <stdint.h>
 #  include "nsAutoRef.h"
 #  include "nestegg/nestegg.h"

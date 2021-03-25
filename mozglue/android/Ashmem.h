@@ -6,6 +6,7 @@
 #define Ashmem_h__
 
 #include <linux/ashmem.h>
+#include "mozilla/Types.h"
 
 namespace mozilla {
 namespace android {

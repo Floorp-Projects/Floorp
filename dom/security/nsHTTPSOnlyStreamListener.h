@@ -11,6 +11,8 @@
 #include "nsCOMPtr.h"
 #include "nsIStreamListener.h"
 
+class nsILoadInfo;
+
 /**
  * This event listener gets registered for requests that have been upgraded
  * using the HTTPS-only mode to log failed upgrades to the console.

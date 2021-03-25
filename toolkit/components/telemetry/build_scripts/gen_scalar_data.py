@@ -32,6 +32,7 @@ file_header = """\
 #ifndef mozilla_TelemetryScalarData_h
 #define mozilla_TelemetryScalarData_h
 #include "core/ScalarInfo.h"
+#include "nsITelemetry.h"
 namespace {
 """
 

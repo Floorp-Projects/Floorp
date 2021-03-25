@@ -10,6 +10,7 @@
 
 #include "nsICommandLineRunner.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 
 // This version defines the format of COPYDATASTRUCT::lpData in a message of
 // WM_COPYDATA.

@@ -7,7 +7,8 @@
 #ifndef RegionBuilder_h__
 #define RegionBuilder_h__
 
-#include <nsTArray.h>
+#include "nsTArray.h"
+#include "pixman.h"
 
 template <typename RegionType>
 class RegionBuilder {

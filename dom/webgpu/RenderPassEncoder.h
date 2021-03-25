@@ -11,8 +11,11 @@
 #include "ObjectModel.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 class DoubleSequenceOrGPUColorDict;
+struct GPURenderPassDescriptor;
 template <typename T>
 class Sequence;
 namespace binding_detail {
@@ -25,9 +28,12 @@ namespace ffi {
 struct WGPURenderPass;
 }  // namespace ffi
 
+class BindGroup;
+class Buffer;
 class CommandEncoder;
 class RenderBundle;
 class RenderPipeline;
+class TextureView;
 
 struct ScopedFfiRenderTraits {
   typedef ffi::WGPURenderPass* type;

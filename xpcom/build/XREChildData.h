@@ -13,8 +13,9 @@
 #  include "mozilla/sandboxing/loggingTypes.h"
 
 namespace sandbox {
+class BrokerServices;
 class TargetServices;
-}
+}  // namespace sandbox
 #endif
 
 /**

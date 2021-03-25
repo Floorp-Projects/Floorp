@@ -10,6 +10,7 @@
 #include "2D.h"
 #include "Filters.h"
 #include <vector>
+#include <windows.h>
 #include <d2d1_1.h>
 #include <cguid.h>
 

@@ -17,8 +17,10 @@
 #include "nsWeakReference.h"
 #include "nsString.h"
 #include "nsCycleCollectionParticipant.h"
+#include "nsTArray.h"
 #include "mozilla/RefPtr.h"
 
+class nsPIDOMWindowOuter;
 class nsPIWindowRoot;
 
 namespace mozilla {

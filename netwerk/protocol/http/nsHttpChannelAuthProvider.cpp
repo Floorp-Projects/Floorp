@@ -27,6 +27,7 @@
 #include "nsIHttpAuthenticableChannel.h"
 #include "nsIURI.h"
 #include "nsContentUtils.h"
+#include "nsHttp.h"
 #include "nsHttpBasicAuth.h"
 #include "nsHttpDigestAuth.h"
 #include "nsHttpNegotiateAuth.h"

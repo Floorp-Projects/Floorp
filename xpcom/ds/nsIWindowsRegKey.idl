@@ -6,6 +6,10 @@
 
 #include "nsISupports.idl"
 
+%{C++
+#include <windows.h>
+%}
+
 native HKEY(HKEY);
 
 /**

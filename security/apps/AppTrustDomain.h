@@ -9,8 +9,10 @@
 
 #include "mozilla/Span.h"
 #include "mozpkix/pkixtypes.h"
+#include "nsCOMPtr.h"
 #include "nsDebug.h"
 #include "nsICertStorage.h"
+#include "nsIX509CertDB.h"
 #include "nsTArray.h"
 
 namespace mozilla {
