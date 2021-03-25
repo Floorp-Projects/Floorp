@@ -149,7 +149,7 @@ class PermissionDelegateTest : BaseSessionTest() {
                 hasPermission(Manifest.permission.ACCESS_FINE_LOCATION),
                 equalTo(true))
 
-        val url = "https://example.com/"
+        val url = createTestUrl(HELLO_HTML_PATH)
         mainSession.loadUri(url)
         mainSession.waitForPageStop()
 
@@ -188,10 +188,40 @@ class PermissionDelegateTest : BaseSessionTest() {
             assertThat("Error should not because the permission was denied.",
                     ex.reason as String, not("1"))
         }
+
+        val perms = sessionRule.waitForResult(sessionRule.runtime.storageController.getPermissions(url))
+
+        assertThat("Permissions should not be null", perms, notNullValue())
+        var permFound : Boolean = false
+        for (perm in perms) {
+            if (perm.permission == GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION &&
+                    url.startsWith(perm.uri) && perm.value == GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW) {
+                permFound = true
+            }
+        }
+
+        assertThat("Geolocation permission should be set to allow", permFound, equalTo(true))
+
+        mainSession.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1)
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
+                var permFound2 : Boolean = false
+                for (perm in perms) {
+                    if (perm.permission == GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION &&
+                            perm.value == GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW) {
+                        permFound2 = true
+                    }
+                }
+                assertThat("Geolocation permission must be present on refresh", permFound2, equalTo(true))
+            }
+        })
+        mainSession.reload()
+        mainSession.waitForPageStop()
     }
 
     @Test fun geolocation_reject() {
-        mainSession.loadTestPath(HELLO_HTML_PATH)
+        val url = createTestUrl(HELLO_HTML_PATH)
+        mainSession.loadUri(url)
         mainSession.waitForPageStop()
 
         mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
@@ -216,11 +246,41 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         // Error code 1 means permission denied.
         assertThat("Request should fail", errorCode as Double, equalTo(1.0))
+
+        val perms = sessionRule.waitForResult(sessionRule.runtime.storageController.getPermissions(url))
+
+        assertThat("Permissions should not be null", perms, notNullValue())
+        var permFound : Boolean = false
+        for (perm in perms) {
+            if (perm.permission == GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION &&
+                    url.startsWith(perm.uri) && perm.value == GeckoSession.PermissionDelegate.ContentPermission.VALUE_DENY) {
+                permFound = true
+            }
+        }
+
+        assertThat("Geolocation permission should be set to allow", permFound, equalTo(true))
+
+        mainSession.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1)
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
+                var permFound2 : Boolean = false
+                for (perm in perms) {
+                    if (perm.permission == GeckoSession.PermissionDelegate.PERMISSION_GEOLOCATION &&
+                            perm.value == GeckoSession.PermissionDelegate.ContentPermission.VALUE_DENY) {
+                        permFound2 = true
+                    }
+                }
+                assertThat("Geolocation permission must be present on refresh", permFound2, equalTo(true))
+            }
+        })
+        mainSession.reload()
+        mainSession.waitForPageStop()
     }
 
     @Test fun notification() {
         sessionRule.setPrefsUntilTestEnd(mapOf("dom.webnotifications.requireuserinteraction" to false))
-        mainSession.loadTestPath(HELLO_HTML_PATH)
+        val url = createTestUrl(HELLO_HTML_PATH)
+        mainSession.loadUri(url)
         mainSession.waitForPageStop()
 
         mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
@@ -228,7 +288,7 @@ class PermissionDelegateTest : BaseSessionTest() {
             override fun onContentPermissionRequest(
                     session: GeckoSession, uri: String?, type: Int,
                     callback: GeckoSession.PermissionDelegate.Callback) {
-                assertThat("URI should match", uri, endsWith(HELLO_HTML_PATH))
+                assertThat("URI should match", uri, endsWith(url))
                 assertThat("Type should match", type,
                         equalTo(GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION))
                 callback.grant()
@@ -239,11 +299,41 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         assertThat("Permission should be granted",
                 result as String, equalTo("granted"))
+
+        val perms = sessionRule.waitForResult(sessionRule.runtime.storageController.getPermissions(url))
+
+        assertThat("Permissions should not be null", perms, notNullValue())
+        var permFound : Boolean = false
+        for (perm in perms) {
+            if (perm.permission == GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION &&
+                    url.startsWith(perm.uri) && perm.value == GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW) {
+                permFound = true
+            }
+        }
+
+        assertThat("Notification permission should be set to allow", permFound, equalTo(true))
+
+        mainSession.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1)
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
+                var permFound2 : Boolean = false
+                for (perm in perms) {
+                    if (perm.permission == GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION &&
+                            perm.value == GeckoSession.PermissionDelegate.ContentPermission.VALUE_ALLOW) {
+                        permFound2 = true
+                    }
+                }
+                assertThat("Notification permission must be present on refresh", permFound2, equalTo(true))
+            }
+        })
+        mainSession.reload()
+        mainSession.waitForPageStop()
     }
 
     @Ignore("disable test for frequently failing Bug 1542525")
     @Test fun notification_reject() {
-        mainSession.loadTestPath(HELLO_HTML_PATH)
+        val url = createTestUrl(HELLO_HTML_PATH)
+        mainSession.loadUri(url)
         mainSession.waitForPageStop()
 
         mainSession.delegateDuringNextWait(object : Callbacks.PermissionDelegate {
@@ -259,6 +349,35 @@ class PermissionDelegateTest : BaseSessionTest() {
 
         assertThat("Permission should not be granted",
                 result as String, equalTo("denied"))
+
+        val perms = sessionRule.waitForResult(sessionRule.runtime.storageController.getPermissions(url))
+
+        assertThat("Permissions should not be null", perms, notNullValue())
+        var permFound : Boolean = false
+        for (perm in perms) {
+            if (perm.permission == GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION &&
+                    url.startsWith(perm.uri) && perm.value == GeckoSession.PermissionDelegate.ContentPermission.VALUE_DENY) {
+                permFound = true
+            }
+        }
+
+        assertThat("Notification permission should be set to allow", permFound, equalTo(true))
+
+        mainSession.delegateDuringNextWait(object : Callbacks.NavigationDelegate {
+            @AssertCalled(count = 1)
+            override fun onLocationChange(session: GeckoSession, url: String?, perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
+                var permFound2 : Boolean = false
+                for (perm in perms) {
+                    if (perm.permission == GeckoSession.PermissionDelegate.PERMISSION_DESKTOP_NOTIFICATION &&
+                            perm.value == GeckoSession.PermissionDelegate.ContentPermission.VALUE_DENY) {
+                        permFound2 = true
+                    }
+                }
+                assertThat("Notification permission must be present on refresh", permFound2, equalTo(true))
+            }
+        })
+        mainSession.reload()
+        mainSession.waitForPageStop()
     }
 
     @Test
