@@ -268,14 +268,30 @@ static bool FlagPhiInputsAsHavingRemovedUses(MIRGenerator* mir,
   return true;
 }
 
-static bool FlagAllOperandsAsHavingRemovedUses(MIRGenerator* mir,
-                                               MBasicBlock* block) {
+static MInstructionIterator FindFirstInstructionAfterBail(MBasicBlock* block) {
+  MOZ_ASSERT(block->alwaysBails());
+  for (MInstructionIterator it = block->begin(); it != block->end(); it++) {
+    MInstruction* ins = *it;
+    if (ins->isBail()) {
+      it++;
+      return it;
+    }
+  }
+  MOZ_CRASH("Expected MBail in alwaysBails block");
+}
+
+// Given an iterator pointing to the first removed instruction, mark
+// the operands of each removed instruction as having removed uses.
+static bool FlagOperandsAsHavingRemovedUsesAfter(
+    MIRGenerator* mir, MBasicBlock* block, MInstructionIterator firstRemoved) {
+  MOZ_ASSERT(firstRemoved->block() == block);
+
   const CompileInfo& info = block->info();
 
-  // Flag all instructions operands as having removed uses.
+  // Flag operands of removed instructions as having removed uses.
   MInstructionIterator end = block->end();
-  for (MInstructionIterator it = block->begin(); it != end; it++) {
-    if (mir->shouldCancel("FlagAllOperandsAsHavingRemovedUses loop 1")) {
+  for (MInstructionIterator it = firstRemoved; it != end; it++) {
+    if (mir->shouldCancel("FlagOperandsAsHavingRemovedUsesAfter (loop 1)")) {
       return false;
     }
 
@@ -297,10 +313,28 @@ static bool FlagAllOperandsAsHavingRemovedUses(MIRGenerator* mir,
     }
   }
 
+  // Flag Phi inputs of the successors as having removed uses.
+  MPhiUseIteratorStack worklist;
+  for (size_t i = 0, e = block->numSuccessors(); i < e; i++) {
+    if (mir->shouldCancel("FlagOperandsAsHavingRemovedUsesAfter (loop 2)")) {
+      return false;
+    }
+
+    if (!FlagPhiInputsAsHavingRemovedUses(mir, block, block->getSuccessor(i),
+                                          worklist)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+static bool FlagEntryResumePointOperands(MIRGenerator* mir,
+                                         MBasicBlock* block) {
   // Flag observable operands of the entry resume point as having removed uses.
   MResumePoint* rp = block->entryResumePoint();
   while (rp) {
-    if (mir->shouldCancel("FlagAllOperandsAsHavingRemovedUses loop 2")) {
+    if (mir->shouldCancel("FlagEntryResumePointOperands")) {
       return false;
     }
 
@@ -314,20 +348,13 @@ static bool FlagAllOperandsAsHavingRemovedUses(MIRGenerator* mir,
     rp = rp->caller();
   }
 
-  // Flag Phi inputs of the successors has having removed uses.
-  MPhiUseIteratorStack worklist;
-  for (size_t i = 0, e = block->numSuccessors(); i < e; i++) {
-    if (mir->shouldCancel("FlagAllOperandsAsHavingRemovedUses loop 3")) {
-      return false;
-    }
-
-    if (!FlagPhiInputsAsHavingRemovedUses(mir, block, block->getSuccessor(i),
-                                          worklist)) {
-      return false;
-    }
-  }
-
   return true;
+}
+
+static bool FlagAllOperandsAsHavingRemovedUses(MIRGenerator* mir,
+                                               MBasicBlock* block) {
+  return FlagEntryResumePointOperands(mir, block) &&
+         FlagOperandsAsHavingRemovedUsesAfter(mir, block, block->begin());
 }
 
 // WarpBuilder sets the alwaysBails flag on blocks that contain an
@@ -407,12 +434,16 @@ bool jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph) {
     }
 
     MBasicBlock* block = *it++;
-    if (block->isMarked() && !block->alwaysBails()) {
-      continue;
+    if (!block->isMarked()) {
+      // If we are removing the block entirely, mark the operands of every
+      // instruction as being removed.
+      FlagAllOperandsAsHavingRemovedUses(mir, block);
+    } else if (block->alwaysBails()) {
+      // If we are only trimming instructions after a bail, only mark operands
+      // of removed instructions.
+      MInstructionIterator firstRemoved = FindFirstInstructionAfterBail(block);
+      FlagOperandsAsHavingRemovedUsesAfter(mir, block, firstRemoved);
     }
-
-    // TODO: This may over-mark when not removing the entire block.
-    FlagAllOperandsAsHavingRemovedUses(mir, block);
   }
 
   // Remove the blocks in post-order such that consumers are visited before
@@ -447,19 +478,11 @@ bool jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph) {
       graph.removeBlock(block);
     } else {
       // Remove unreachable instructions after unconditional bailouts.
-      MOZ_ASSERT(block->alwaysBails());
       JitSpew(JitSpew_Prune, "Trim block %u.", block->id());
-      DebugOnly<bool> sawBail = false;
-      for (MInstructionIterator it = block->begin(); it != block->end(); it++) {
-        MInstruction* ins = *it;
-        if (ins->isBail()) {
-          sawBail = true;
-          it++;
-          block->discardAllInstructionsStartingAt(it);
-          break;
-        }
-      }
-      MOZ_ASSERT(sawBail);
+
+      // Discard all instructions after the first MBail.
+      MInstructionIterator firstRemoved = FindFirstInstructionAfterBail(block);
+      block->discardAllInstructionsStartingAt(firstRemoved);
 
       if (block->outerResumePoint()) {
         block->clearOuterResumePoint();
