@@ -128,6 +128,10 @@ async function assertSearchSourcesTelemetry(
   let histSnapshot = {};
   let scalars = {};
 
+  // This used to rely on the implied 100ms initial timer of
+  // TestUtils.waitForCondition. See bug 1515466.
+  await new Promise(resolve => setTimeout(resolve, 100));
+
   await TestUtils.waitForCondition(() => {
     histSnapshot = searchCounts.snapshot();
     return (
