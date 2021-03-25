@@ -16,6 +16,11 @@ add_task(async function() {
     CustomizableUI.AREA_FIXED_OVERFLOW_PANEL
   );
 
+  // This test used to rely on the implied 100ms initial timer of the
+  // TestUtils.waitForCondition call made within waitForOverflowButtonShown.
+  // See bug 1498063.
+  // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+  await new Promise(resolve => setTimeout(resolve, 100));
   await waitForOverflowButtonShown();
   registerCleanupFunction(() => CustomizableUI.reset());
 

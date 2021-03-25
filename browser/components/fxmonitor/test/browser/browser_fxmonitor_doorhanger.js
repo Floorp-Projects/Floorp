@@ -50,6 +50,26 @@ async function clearWarnedHosts() {
   });
 }
 
+add_task(function setup() {
+  // This test used to rely on the initial timer of
+  // TestUtils.waitForCondition. See bug 1700683.
+  let originalWaitForCondition = TestUtils.waitForCondition;
+  TestUtils.waitForCondition = async function(
+    condition,
+    msg,
+    interval = 100,
+    maxTries = 50
+  ) {
+    // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    return originalWaitForCondition(condition, msg, interval, maxTries);
+  };
+  registerCleanupFunction(function() {
+    TestUtils.waitForCondition = originalWaitForCondition;
+  });
+});
+
 add_task(async function test_main_flow() {
   info("Test that we show the first alert correctly for a recent breach.");
 
