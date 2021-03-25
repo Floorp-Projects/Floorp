@@ -138,14 +138,6 @@ void SVGStyleElement::ContentChanged(nsIContent* aContent) {
 
 //----------------------------------------------------------------------
 
-void SVGStyleElement::GetXmlspace(nsAString& aXmlspace) {
-  GetAttr(kNameSpaceID_XML, nsGkAtoms::space, aXmlspace);
-}
-
-void SVGStyleElement::SetXmlspace(const nsAString& aXmlspace, ErrorResult& rv) {
-  rv = SetAttr(kNameSpaceID_XML, nsGkAtoms::space, aXmlspace, true);
-}
-
 void SVGStyleElement::GetMedia(nsAString& aMedia) {
   GetAttr(nsGkAtoms::media, aMedia);
 }
