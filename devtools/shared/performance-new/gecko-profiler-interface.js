@@ -100,7 +100,7 @@ class ActorReadyGeckoProfilerInterface {
         "leaf",
       ],
       threads: options.threads || ["GeckoMain", "Compositor"],
-      activeTabID: RecordingUtils.getActiveBrowsingContextID(),
+      activeTabID: RecordingUtils.getActiveBrowserID(),
     };
 
     try {
