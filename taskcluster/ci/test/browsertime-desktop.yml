@@ -146,6 +146,7 @@ browsertime-benchmark:
         - [wasm-godot, godot]
         - [wasm-godot-baseline, godot-b]
         - [wasm-godot-optimizing, godot-i]
+        - [sunspider, ss]
     variants: ["fission"]
     apps: ["firefox"]
     treeherder-symbol: Btime()

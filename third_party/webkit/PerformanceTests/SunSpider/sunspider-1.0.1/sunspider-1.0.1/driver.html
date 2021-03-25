@@ -113,6 +113,7 @@ function finish()
 
         const _data = ['raptor-benchmark', 'sunspider', benchmarkResults];
         window.postMessage(_data, '*');
+        window.sessionStorage.setItem('benchmark_results',  JSON.stringify(_data));
     }
 
     location = "results.html?" + encodeURI(outputString);
