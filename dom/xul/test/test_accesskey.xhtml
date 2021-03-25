@@ -12,7 +12,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1699284
 <label id="label1" accesskey="a">Label 1</label><button id="button1" accesskey="a">Button 1</button>
 <label id="label2" accesskey="a" tabindex="0">Label 2</label><button id="button2">Button 2</button>
 <label id="label3">Label 3</label><button id="button3" accesskey="a">Button 3</button>
-<label id="label4" accesskey="a" control="button4">Label 4</label><button id="button4">Button 4</button>
+<label id="label4" accesskey="a" control="button4">Label 4</label><button id="button4" disabled="true">Button 4</button>
+<label id="label5" accesskey="a" control="button5">Label 5</label><button id="button5">Button 5</button>
 <!-- Tests code -->
 <script type="application/javascript">
 <![CDATA[
@@ -25,11 +26,11 @@ function PerformAccessKey(aKey) {
 };
 
 add_task(async function test_accesskey() {
-  let [label1, label2, label3, label4] = document.querySelectorAll("label");
-  let [button1, button2, button3, button4] = document.querySelectorAll("button");
+  let [label1, label2, label3, label4, label5] = document.querySelectorAll("label");
+  let [button1, button2, button3, button4, button5] = document.querySelectorAll("button");
 
   [
-    label1, label2, label3, label4, button1, button2, button3, button4
+    label1, label2, label3, label4, label5, button1, button2, button3, button4, button5
   ].forEach(function(ele) {
     ele.addEventListener("click", function(e) {
       ok(false, `${e.target.id} should not receive click event`);
@@ -43,7 +44,7 @@ add_task(async function test_accesskey() {
   is(document.activeElement.id, button3.id, `focus should move to ${button3.id}`);
 
   PerformAccessKey("a");
-  is(document.activeElement.id, button4.id, `focus should move to ${button4.id}`);
+  is(document.activeElement.id, button5.id, `focus should move to ${button5.id}`);
 
   // Cycle back to first element
   PerformAccessKey("a");

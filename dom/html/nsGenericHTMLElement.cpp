@@ -2418,11 +2418,8 @@ bool nsGenericHTMLElement::PerformAccesskey(bool aKeyCausesActivation,
     fm->SetFocus(this, nsIFocusManager::FLAG_BYKEY);
 
     // Return true if the element became the current focus within its window.
-    //
-    // FIXME(emilio): Shouldn't this check `window->GetFocusedElement() == this`
-    // based on the above comment?
     nsPIDOMWindowOuter* window = OwnerDoc()->GetWindow();
-    focused = window && window->GetFocusedElement();
+    focused = window && window->GetFocusedElement() == this;
   }
 
   if (aKeyCausesActivation) {
