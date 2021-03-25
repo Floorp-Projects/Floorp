@@ -6,6 +6,7 @@
 #define SINEWAVEGENERATOR_H_
 
 #include "MediaSegment.h"
+#include "prtime.h"
 
 namespace mozilla {
 

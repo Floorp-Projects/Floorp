@@ -7,6 +7,8 @@
 #ifndef mozilla_LoadTainting_h
 #define mozilla_LoadTainting_h
 
+#include <stdint.h>
+
 namespace mozilla {
 
 // Define an enumeration to reflect the concept of response tainting from the

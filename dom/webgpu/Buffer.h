@@ -10,9 +10,17 @@
 #include "mozilla/dom/Nullable.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/webgpu/WebGPUTypes.h"
+#include "nsTArray.h"
 #include "ObjectModel.h"
 
 namespace mozilla {
+class ErrorResult;
+
+namespace dom {
+template <typename T>
+class Optional;
+}
+
 namespace ipc {
 class Shmem;
 }  // namespace ipc

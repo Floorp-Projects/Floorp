@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_Pose_h
 #define mozilla_dom_Pose_h
 
+#include "js/RootingAPI.h"
+#include "nsCOMPtr.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {

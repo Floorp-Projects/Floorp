@@ -902,6 +902,8 @@ def main(fd, conf_file, template_file):
 #ifndef StaticComponentData_h
 #define StaticComponentData_h
 
+#include <stddef.h>
+
 namespace mozilla {
 namespace xpcom {
 

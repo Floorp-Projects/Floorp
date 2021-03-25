@@ -39,6 +39,7 @@
 #include "nsPrintfCString.h"
 #include "mozilla/Services.h"
 #include "nsCRT.h"
+#include "nsThreadPool.h"
 #include "mozilla/StaticPrefs_network.h"
 #include "mozilla/SHA1.h"
 #include "mozilla/Base64.h"

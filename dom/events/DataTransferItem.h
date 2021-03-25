@@ -16,6 +16,7 @@ class ErrorResult;
 
 namespace dom {
 
+class DataTransfer;
 class FileSystemEntry;
 class FunctionStringCallback;
 

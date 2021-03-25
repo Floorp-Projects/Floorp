@@ -5,6 +5,8 @@
 #ifndef Elfxx_h
 #define Elfxx_h
 
+#include "Utils.h"
+
 /**
  * Android system headers have two different elf.h file. The one under linux/
  * is the most complete on older Android API versions without unified headers.

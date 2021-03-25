@@ -6,6 +6,8 @@
 #ifndef TelemetryUserInteraction_h__
 #define TelemetryUserInteraction_h__
 
+#include "nsStringFwd.h"
+
 namespace TelemetryUserInteraction {
 
 void InitializeGlobalState(bool canRecordBase, bool canRecordExtended);

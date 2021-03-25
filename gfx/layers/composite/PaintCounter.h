@@ -7,19 +7,24 @@
 #ifndef mozilla_layers_PaintCounter_h_
 #define mozilla_layers_PaintCounter_h_
 
-#include <map>  // for std::map
+#include <memory>
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"     // for already_AddRefed, RefCounted
 #include "mozilla/TimeStamp.h"  // for TimeStamp, TimeDuration
-#include "skia/include/core/SkCanvas.h"
+#include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Point.h"
+#include "mozilla/gfx/Rect.h"
+#include "mozilla/gfx/Types.h"
+#include "nsISupports.h"
+
+class SkCanvas;
 
 namespace mozilla {
 namespace layers {
 
 class Compositor;
-
-using namespace mozilla::gfx;
-using namespace mozilla::gl;
+class DataTextureSource;
+struct TexturedEffect;
 
 // Keeps track and paints how long a full invalidation paint takes to rasterize
 // and composite.
@@ -30,21 +35,21 @@ class PaintCounter {
   PaintCounter();
   void Draw(Compositor* aCompositor, TimeDuration aPaintTime,
             TimeDuration aCompositeTime);
-  static IntRect GetPaintRect() { return PaintCounter::mRect; }
+  static gfx::IntRect GetPaintRect() { return PaintCounter::mRect; }
 
  private:
   virtual ~PaintCounter();
 
-  SurfaceFormat mFormat;
+  gfx::SurfaceFormat mFormat;
   std::unique_ptr<SkCanvas> mCanvas;
-  IntSize mSize;
+  gfx::IntSize mSize;
   int mStride;
 
-  RefPtr<DataSourceSurface> mSurface;
+  RefPtr<gfx::DataSourceSurface> mSurface;
   RefPtr<DataTextureSource> mTextureSource;
   RefPtr<TexturedEffect> mTexturedEffect;
-  Maybe<DataSourceSurface::ScopedMap> mMap;
-  static IntRect mRect;
+  Maybe<gfx::DataSourceSurface::ScopedMap> mMap;
+  static gfx::IntRect mRect;
 };
 
 }  // namespace layers

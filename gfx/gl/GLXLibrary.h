@@ -7,6 +7,7 @@
 #define GFX_GLXLIBRARY_H
 
 #include "GLContextTypes.h"
+#include "mozilla/Assertions.h"
 #include "prlink.h"
 typedef realGLboolean GLboolean;
 

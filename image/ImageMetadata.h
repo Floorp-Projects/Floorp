@@ -8,11 +8,14 @@
 #define mozilla_image_ImageMetadata_h
 
 #include <stdint.h>
+#include <utility>
+#include "FrameTimeout.h"
+#include "Orientation.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/gfx/Point.h"
+#include "mozilla/gfx/Rect.h"
 #include "nsSize.h"
 #include "nsTArray.h"
-#include "Orientation.h"
-#include "FrameTimeout.h"
 
 namespace mozilla {
 namespace image {

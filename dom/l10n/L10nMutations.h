@@ -7,6 +7,8 @@
 #ifndef mozilla_dom_l10n_L10nMutations_h
 #define mozilla_dom_l10n_L10nMutations_h
 
+#include "nsCycleCollectionParticipant.h"
+#include "nsHashKeys.h"
 #include "nsRefreshObservers.h"
 #include "nsStubMutationObserver.h"
 #include "nsTHashSet.h"

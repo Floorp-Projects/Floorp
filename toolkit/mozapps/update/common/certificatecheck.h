@@ -5,6 +5,7 @@
 #ifndef _CERTIFICATECHECK_H_
 #define _CERTIFICATECHECK_H_
 
+#include <windows.h>
 #include <wincrypt.h>
 
 struct CertificateCheckInfo {

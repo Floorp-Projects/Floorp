@@ -10,6 +10,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Mutex.h"
 #include "nsCOMPtr.h"
+#include "nsString.h"
 #include "prio.h"
 
 class nsIEventTarget;

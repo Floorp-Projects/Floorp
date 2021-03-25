@@ -25,6 +25,8 @@
 namespace mozilla {
 namespace dom {
 
+class GamepadHapticActuator;
+
 // Per spec:
 // https://dvcs.w3.org/hg/gamepad/raw-file/default/gamepad.html#remapping
 const int kStandardGamepadButtons = 17;

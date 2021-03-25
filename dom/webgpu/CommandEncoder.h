@@ -13,6 +13,8 @@
 #include "ObjectModel.h"
 
 namespace mozilla {
+class ErrorResult;
+
 namespace dom {
 struct GPUComputePassDescriptor;
 struct GPUTextureDataLayout;

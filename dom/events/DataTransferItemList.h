@@ -11,9 +11,12 @@
 #include "mozilla/dom/DataTransferItem.h"
 #include "mozilla/dom/FileList.h"
 
+class nsIVariant;
+
 namespace mozilla {
 namespace dom {
 
+class DataTransfer;
 class DataTransferItem;
 
 class DataTransferItemList final : public nsISupports, public nsWrapperCache {

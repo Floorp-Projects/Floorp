@@ -10,6 +10,9 @@
 #ifndef RustFuzzingTargets_h__
 #define RustFuzzingTargets_h__
 
+#include <stddef.h>
+#include <stdint.h>
+
 extern "C" {
 
 int fuzz_rkv_db_file(const uint8_t* raw_data, size_t size);

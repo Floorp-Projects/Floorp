@@ -20,6 +20,7 @@
 
 #include "api/video/video_frame.h"
 #include "common_video/libyuv/include/webrtc_libyuv.h"
+#include "modules/video_capture/video_capture.h"
 #include "modules/video_capture/video_capture_config.h"
 #include "modules/desktop_capture/shared_memory.h"
 #include "modules/desktop_capture/desktop_device_info.h"
