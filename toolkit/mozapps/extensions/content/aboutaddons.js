@@ -1771,6 +1771,38 @@ class CategoriesBox extends customElements.get("button-group") {
     });
   }
 
+  handleEvent(e) {
+    if (e.target == document && e.type == "view-selected") {
+      const { type, param } = e.detail;
+      this.select(`addons://${type}/${param}`);
+      return;
+    }
+
+    if (e.target == this && e.type == "button-group:key-selected") {
+      this.activeChild.load();
+      return;
+    }
+
+    if (e.type == "click") {
+      const button = e.target.closest("[viewid]");
+      if (button) {
+        button.load();
+        return;
+      }
+    }
+
+    // Forward the unhandled events to the button-group custom element.
+    super.handleEvent(e);
+  }
+
+  disconnectedCallback() {
+    document.removeEventListener("view-selected", this);
+    this.removeEventListener("button-group:key-selected", this);
+    this.removeEventListener("click", this);
+    AddonManagerListenerHandler.removeListener(this);
+    super.disconnectedCallback();
+  }
+
   async initialize() {
     let addonTypesObjects = AddonManager.addonTypes;
     let addonTypes = new Set();
@@ -1797,20 +1829,9 @@ class CategoriesBox extends customElements.get("button-group") {
 
     this.updateAvailableCount();
 
-    document.addEventListener("view-selected", e => {
-      const { type, param } = e.detail;
-      this.select(`addons://${type}/${param}`);
-    });
-    this.addEventListener("click", e => {
-      let button = e.target.closest("[viewid]");
-      if (button) {
-        button.load();
-      }
-    });
-    this.addEventListener("button-group:key-selected", e => {
-      this.activeChild.load();
-    });
-
+    document.addEventListener("view-selected", this);
+    this.addEventListener("button-group:key-selected", this);
+    this.addEventListener("click", this);
     AddonManagerListenerHandler.addListener(this);
 
     this._resolveRendered();
