@@ -4655,6 +4655,8 @@ nsTextFrame* nsTextFrame::LastContinuation() const {
 
 void nsTextFrame::InvalidateFrame(uint32_t aDisplayItemKey,
                                   bool aRebuildDisplayItems) {
+  InvalidateSelectionState();
+
   if (SVGUtils::IsInSVGTextSubtree(this)) {
     nsIFrame* svgTextFrame = nsLayoutUtils::GetClosestFrameOfType(
         GetParent(), LayoutFrameType::SVGText);
@@ -4667,6 +4669,8 @@ void nsTextFrame::InvalidateFrame(uint32_t aDisplayItemKey,
 void nsTextFrame::InvalidateFrameWithRect(const nsRect& aRect,
                                           uint32_t aDisplayItemKey,
                                           bool aRebuildDisplayItems) {
+  InvalidateSelectionState();
+
   if (SVGUtils::IsInSVGTextSubtree(this)) {
     nsIFrame* svgTextFrame = nsLayoutUtils::GetClosestFrameOfType(
         GetParent(), LayoutFrameType::SVGText);
@@ -4899,12 +4903,10 @@ void nsTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
   bool isTextTransparent =
       NS_GET_A(st->mWebkitTextFillColor.CalcColor(this)) == 0 &&
       NS_GET_A(st->mWebkitTextStrokeColor.CalcColor(this)) == 0;
-  Maybe<bool> isSelected;
   if ((HasAnyStateBits(TEXT_NO_RENDERED_GLYPHS) ||
        (isTextTransparent && !StyleText()->HasTextShadow())) &&
       aBuilder->IsForPainting() && !SVGUtils::IsInSVGTextSubtree(this)) {
-    isSelected.emplace(IsSelected());
-    if (!isSelected.value()) {
+    if (!IsSelected()) {
       TextDecorations textDecs;
       GetTextDecorations(PresContext(), eResolvedColors, textDecs);
       if (!textDecs.HasDecorationLines()) {
@@ -4916,7 +4918,7 @@ void nsTextFrame::BuildDisplayList(nsDisplayListBuilder* aBuilder,
     }
   }
 
-  aLists.Content()->AppendNewToTop<nsDisplayText>(aBuilder, this, isSelected);
+  aLists.Content()->AppendNewToTop<nsDisplayText>(aBuilder, this);
 }
 
 UniquePtr<SelectionDetails> nsTextFrame::GetSelectionDetails() {
@@ -7430,7 +7432,22 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
 bool nsTextFrame::IsFrameSelected() const {
   NS_ASSERTION(!GetContent() || GetContent()->IsMaybeSelected(),
                "use the public IsSelected() instead");
-  return GetContent()->IsSelected(GetContentOffset(), GetContentEnd());
+  if (mIsSelected == nsTextFrame::SelectionState::Unknown) {
+    const bool isSelected =
+        GetContent()->IsSelected(GetContentOffset(), GetContentEnd());
+    mIsSelected = isSelected ? nsTextFrame::SelectionState::Selected
+                             : nsTextFrame::SelectionState::NotSelected;
+  } else {
+#ifdef DEBUG
+    // Assert that the selection caching works.
+    const bool isReallySelected =
+        GetContent()->IsSelected(GetContentOffset(), GetContentEnd());
+    MOZ_ASSERT((mIsSelected == nsTextFrame::SelectionState::Selected) ==
+               isReallySelected);
+#endif
+  }
+
+  return mIsSelected == nsTextFrame::SelectionState::Selected;
 }
 
 void nsTextFrame::SelectionStateChanged(uint32_t aStart, uint32_t aEnd,
@@ -7439,6 +7456,8 @@ void nsTextFrame::SelectionStateChanged(uint32_t aStart, uint32_t aEnd,
   NS_ASSERTION(!GetPrevContinuation(),
                "Should only be called for primary frame");
   DEBUG_VERIFY_NOT_DIRTY(mState);
+
+  InvalidateSelectionState();
 
   // Selection is collapsed, which can't affect text frame rendering
   if (aStart == aEnd) return;
@@ -9005,6 +9024,8 @@ void nsTextFrame::Reflow(nsPresContext* aPresContext, ReflowOutput& aMetrics,
   DISPLAY_REFLOW(aPresContext, this, aReflowInput, aMetrics, aStatus);
   MOZ_ASSERT(aStatus.IsEmpty(), "Caller should pass a fresh reflow status!");
 
+  InvalidateSelectionState();
+
   // XXX If there's no line layout, we shouldn't even have created this
   // frame. This may happen if, for example, this is text inside a table
   // but not inside a cell. For now, just don't reflow.
@@ -9081,6 +9102,8 @@ void nsTextFrame::ReflowText(nsLineLayout& aLineLayout, nscoord aAvailableWidth,
   // textrun we look at. Note that next-in-flows may be mapping the same
   // content; gfxTextRun construction logic will ensure that we take priority.
   int32_t maxContentLength = GetInFlowContentLength();
+
+  InvalidateSelectionState();
 
   // We don't need to reflow if there is no content.
   if (!maxContentLength) {
