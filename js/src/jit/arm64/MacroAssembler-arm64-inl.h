@@ -2003,7 +2003,9 @@ static inline ARMFPRegister SimdQ(FloatRegister r) { return SimdReg(r).Q(); }
 // Moves
 
 void MacroAssembler::moveSimd128(FloatRegister src, FloatRegister dest) {
-  Mov(SimdReg(dest), SimdReg(src));
+  if (src != dest) {
+    Mov(SimdReg(dest), SimdReg(src));
+  }
 }
 
 void MacroAssembler::zeroSimd128(FloatRegister dest) {
@@ -2025,8 +2027,18 @@ void MacroAssembler::splatX16(Register src, FloatRegister dest) {
   Dup(Simd16B(dest), ARMRegister(src, 32));
 }
 
+void MacroAssembler::splatX16(uint32_t srcLane, FloatRegister src,
+                              FloatRegister dest) {
+  Dup(Simd16B(dest), Simd16B(src), srcLane);
+}
+
 void MacroAssembler::splatX8(Register src, FloatRegister dest) {
   Dup(Simd8H(dest), ARMRegister(src, 32));
+}
+
+void MacroAssembler::splatX8(uint32_t srcLane, FloatRegister src,
+                             FloatRegister dest) {
+  Dup(Simd8H(dest), Simd8H(src), srcLane);
 }
 
 void MacroAssembler::splatX4(Register src, FloatRegister dest) {
@@ -2115,10 +2127,24 @@ void MacroAssembler::replaceLaneInt8x16(unsigned lane, Register rhs,
   Mov(Simd16B(lhsDest), lane, ARMRegister(rhs, 32));
 }
 
+void MacroAssembler::replaceLaneInt8x16(unsigned lane, FloatRegister lhs,
+                                        Register rhs, FloatRegister dest) {
+  MOZ_ASSERT(lane < 16);
+  moveSimd128(lhs, dest);
+  Mov(Simd16B(dest), lane, ARMRegister(rhs, 32));
+}
+
 void MacroAssembler::replaceLaneInt16x8(unsigned lane, Register rhs,
                                         FloatRegister lhsDest) {
   MOZ_ASSERT(lane < 8);
   Mov(Simd8H(lhsDest), lane, ARMRegister(rhs, 32));
+}
+
+void MacroAssembler::replaceLaneInt16x8(unsigned lane, FloatRegister lhs,
+                                        Register rhs, FloatRegister dest) {
+  MOZ_ASSERT(lane < 8);
+  moveSimd128(lhs, dest);
+  Mov(Simd8H(dest), lane, ARMRegister(rhs, 32));
 }
 
 void MacroAssembler::replaceLaneInt32x4(unsigned lane, Register rhs,
@@ -2127,10 +2153,24 @@ void MacroAssembler::replaceLaneInt32x4(unsigned lane, Register rhs,
   Mov(Simd4S(lhsDest), lane, ARMRegister(rhs, 32));
 }
 
+void MacroAssembler::replaceLaneInt32x4(unsigned lane, FloatRegister lhs,
+                                        Register rhs, FloatRegister dest) {
+  MOZ_ASSERT(lane < 4);
+  moveSimd128(lhs, dest);
+  Mov(Simd4S(dest), lane, ARMRegister(rhs, 32));
+}
+
 void MacroAssembler::replaceLaneInt64x2(unsigned lane, Register64 rhs,
                                         FloatRegister lhsDest) {
   MOZ_ASSERT(lane < 2);
   Mov(Simd2D(lhsDest), lane, ARMRegister(rhs.reg, 64));
+}
+
+void MacroAssembler::replaceLaneInt64x2(unsigned lane, FloatRegister lhs,
+                                        Register64 rhs, FloatRegister dest) {
+  MOZ_ASSERT(lane < 2);
+  moveSimd128(lhs, dest);
+  Mov(Simd2D(dest), lane, ARMRegister(rhs.reg, 64));
 }
 
 void MacroAssembler::replaceLaneFloat32x4(unsigned lane, FloatRegister rhs,
@@ -2139,18 +2179,34 @@ void MacroAssembler::replaceLaneFloat32x4(unsigned lane, FloatRegister rhs,
   Mov(Simd4S(lhsDest), lane, ARMFPRegister(rhs).V4S(), 0);
 }
 
+void MacroAssembler::replaceLaneFloat32x4(unsigned lane, FloatRegister lhs,
+                                          FloatRegister rhs,
+                                          FloatRegister dest) {
+  MOZ_ASSERT(lane < 4);
+  moveSimd128(lhs, dest);
+  Mov(Simd4S(dest), lane, ARMFPRegister(rhs).V4S(), 0);
+}
+
 void MacroAssembler::replaceLaneFloat64x2(unsigned lane, FloatRegister rhs,
                                           FloatRegister lhsDest) {
   MOZ_ASSERT(lane < 2);
   Mov(Simd2D(lhsDest), lane, ARMFPRegister(rhs).V2D(), 0);
 }
 
+void MacroAssembler::replaceLaneFloat64x2(unsigned lane, FloatRegister lhs,
+                                          FloatRegister rhs,
+                                          FloatRegister dest) {
+  MOZ_ASSERT(lane < 2);
+  moveSimd128(lhs, dest);
+  Mov(Simd2D(dest), lane, ARMFPRegister(rhs).V2D(), 0);
+}
+
 // Shuffle - blend and permute with immediate indices, and its many
 // specializations.  Lane values other than those mentioned are illegal.
 
 // lane values 0..31
-void MacroAssembler::shuffleInt8x16(const uint8_t lanes[16], FloatRegister rhs,
-                                    FloatRegister lhsDest) {
+void MacroAssembler::shuffleInt8x16(const uint8_t lanes[16], FloatRegister lhs,
+                                    FloatRegister rhs, FloatRegister dest) {
   // The general solution generates ho-hum code.  Realistic programs will use
   // patterns that can be specialized, and this will be much better.  That will
   // be handled by bug 1656834, so don't worry about it here.
@@ -2159,13 +2215,199 @@ void MacroAssembler::shuffleInt8x16(const uint8_t lanes[16], FloatRegister rhs,
   // selects from rhs.
   ScratchSimd128Scope scratch(*this);
   int8_t idx[16];
-  for (unsigned i = 0; i < 16; i++) {
-    idx[i] = lanes[i] < 16 ? lanes[i] : ~(lanes[i] - 16);
+
+  if (lhs == rhs) {
+    for (unsigned i = 0; i < 16; i++) {
+      idx[i] = lanes[i] < 16 ? lanes[i] : (lanes[i] - 16);
+    }
+    loadConstantSimd128(SimdConstant::CreateX16(idx), scratch);
+    Tbl(Simd16B(dest), Simd16B(lhs), Simd16B(scratch));
+    return;
+  }
+
+  if (rhs != dest) {
+    for (unsigned i = 0; i < 16; i++) {
+      idx[i] = lanes[i] < 16 ? lanes[i] : ~(lanes[i] - 16);
+    }
+  } else {
+    MOZ_ASSERT(lhs != dest);
+    for (unsigned i = 0; i < 16; i++) {
+      idx[i] = lanes[i] < 16 ? ~lanes[i] : (lanes[i] - 16);
+    }
+    std::swap(lhs, rhs);
   }
   loadConstantSimd128(SimdConstant::CreateX16(idx), scratch);
-  Tbl(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(scratch));
+  Tbl(Simd16B(dest), Simd16B(lhs), Simd16B(scratch));
   Not(Simd16B(scratch), Simd16B(scratch));
-  Tbx(Simd16B(lhsDest), Simd16B(rhs), Simd16B(scratch));
+  Tbx(Simd16B(dest), Simd16B(rhs), Simd16B(scratch));
+}
+
+void MacroAssembler::shuffleInt8x16(const uint8_t lanes[16], FloatRegister rhs,
+                                    FloatRegister lhsDest) {
+  shuffleInt8x16(lanes, lhsDest, rhs, lhsDest);
+}
+
+void MacroAssembler::blendInt8x16(const uint8_t lanes[16], FloatRegister lhs,
+                                  FloatRegister rhs, FloatRegister dest) {
+  uint8_t lanes_[16];
+  for (unsigned i = 0; i < 16; i++) {
+    lanes_[i] = lanes[i] == 0 ? i : 16 + i;
+  }
+  shuffleInt8x16(lanes_, lhs, rhs, dest);
+}
+
+void MacroAssembler::blendInt16x8(const uint16_t lanes[8], FloatRegister lhs,
+                                  FloatRegister rhs, FloatRegister dest) {
+  uint8_t lanes_[16];
+  for (unsigned i = 0; i < 16; i++) {
+    lanes_[i] = lanes[i] == 0 ? i : 16 + i;
+  }
+  shuffleInt8x16(lanes_, lhs, rhs, dest);
+}
+
+void MacroAssembler::interleaveHighInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister dest) {
+  Zip2(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
+}
+
+void MacroAssembler::interleaveHighInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister dest) {
+  Zip2(Simd4S(dest), Simd4S(lhs), Simd4S(rhs));
+}
+
+void MacroAssembler::interleaveHighInt64x2(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister dest) {
+  Zip2(Simd2D(dest), Simd2D(lhs), Simd2D(rhs));
+}
+
+void MacroAssembler::interleaveHighInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister dest) {
+  Zip2(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
+}
+
+void MacroAssembler::interleaveLowInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                          FloatRegister dest) {
+  Zip1(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
+}
+
+void MacroAssembler::interleaveLowInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                          FloatRegister dest) {
+  Zip1(Simd4S(dest), Simd4S(lhs), Simd4S(rhs));
+}
+
+void MacroAssembler::interleaveLowInt64x2(FloatRegister lhs, FloatRegister rhs,
+                                          FloatRegister dest) {
+  Zip1(Simd2D(dest), Simd2D(lhs), Simd2D(rhs));
+}
+
+void MacroAssembler::interleaveLowInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                          FloatRegister dest) {
+  Zip1(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
+}
+
+void MacroAssembler::permuteInt8x16(const uint8_t lanes[16], FloatRegister src,
+                                    FloatRegister dest) {
+  ScratchSimd128Scope scratch(*this);
+  loadConstantSimd128(SimdConstant::CreateX16((const int8_t*)lanes), scratch);
+  Tbl(Simd16B(dest), Simd16B(src), Simd16B(scratch));
+}
+
+void MacroAssembler::permuteLowInt16x8(const uint16_t lanes[4],
+                                       FloatRegister src, FloatRegister dest) {
+  MOZ_ASSERT(lanes[0] < 4 && lanes[1] < 4 && lanes[2] < 4 && lanes[3] < 4);
+  const int8_t lanes_[16] = {
+      (int8_t)(lanes[0] << 1),
+      (int8_t)((lanes[0] << 1) + 1),
+      (int8_t)(lanes[1] << 1),
+      (int8_t)((lanes[1] << 1) + 1),
+      (int8_t)(lanes[2] << 1),
+      (int8_t)((lanes[2] << 1) + 1),
+      (int8_t)(lanes[3] << 1),
+      (int8_t)((lanes[3] << 1) + 1),
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+  };
+  ScratchSimd128Scope scratch(*this);
+  loadConstantSimd128(SimdConstant::CreateX16(lanes_), scratch);
+  Tbl(Simd16B(dest), Simd16B(src), Simd16B(scratch));
+}
+
+void MacroAssembler::permuteHighInt16x8(const uint16_t lanes[4],
+                                        FloatRegister src, FloatRegister dest) {
+  MOZ_ASSERT(lanes[0] < 4 && lanes[1] < 4 && lanes[2] < 4 && lanes[3] < 4);
+  const int8_t lanes_[16] = {
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      (int8_t)((lanes[0] << 1) + 8),
+      (int8_t)((lanes[0] << 1) + 9),
+      (int8_t)((lanes[1] << 1) + 8),
+      (int8_t)((lanes[1] << 1) + 9),
+      (int8_t)((lanes[2] << 1) + 8),
+      (int8_t)((lanes[2] << 1) + 9),
+      (int8_t)((lanes[3] << 1) + 8),
+      (int8_t)((lanes[3] << 1) + 9),
+  };
+  ScratchSimd128Scope scratch(*this);
+  loadConstantSimd128(SimdConstant::CreateX16(lanes_), scratch);
+  Tbl(Simd16B(dest), Simd16B(src), Simd16B(scratch));
+}
+
+void MacroAssembler::permuteInt32x4(const uint32_t lanes[4], FloatRegister src,
+                                    FloatRegister dest) {
+  ScratchSimd128Scope scratch(*this);
+  const int8_t lanes_[16] = {
+      (int8_t)(lanes[0] << 2),       (int8_t)((lanes[0] << 2) + 1),
+      (int8_t)((lanes[0] << 2) + 2), (int8_t)((lanes[0] << 2) + 3),
+      (int8_t)(lanes[1] << 2),       (int8_t)((lanes[1] << 2) + 1),
+      (int8_t)((lanes[1] << 2) + 2), (int8_t)((lanes[1] << 2) + 3),
+      (int8_t)(lanes[2] << 2),       (int8_t)((lanes[2] << 2) + 1),
+      (int8_t)((lanes[2] << 2) + 2), (int8_t)((lanes[2] << 2) + 3),
+      (int8_t)(lanes[3] << 2),       (int8_t)((lanes[3] << 2) + 1),
+      (int8_t)((lanes[3] << 2) + 2), (int8_t)((lanes[3] << 2) + 3),
+  };
+  loadConstantSimd128(SimdConstant::CreateX16(lanes_), scratch);
+  Tbl(Simd16B(dest), Simd16B(src), Simd16B(scratch));
+}
+
+void MacroAssembler::rotateRightSimd128(FloatRegister src, FloatRegister dest,
+                                        uint32_t shift) {
+  Ext(Simd16B(dest), Simd16B(src), Simd16B(src), shift);
+}
+
+void MacroAssembler::leftShiftSimd128(Imm32 count, FloatRegister src,
+                                      FloatRegister dest) {
+  MOZ_ASSERT(count.value < 16);
+  ScratchSimd128Scope scratch(*this);
+  Movi(Simd16B(scratch), 0);
+  Ext(Simd16B(dest), Simd16B(scratch), Simd16B(src), 16 - count.value);
+}
+
+void MacroAssembler::rightShiftSimd128(Imm32 count, FloatRegister src,
+                                       FloatRegister dest) {
+  MOZ_ASSERT(count.value < 16);
+  ScratchSimd128Scope scratch(*this);
+  Movi(Simd16B(scratch), 0);
+  Ext(Simd16B(dest), Simd16B(src), Simd16B(scratch), count.value);
+}
+
+void MacroAssembler::concatAndRightShiftSimd128(FloatRegister lhs,
+                                                FloatRegister rhs,
+                                                FloatRegister dest,
+                                                uint32_t shift) {
+  MOZ_ASSERT(shift < 16);
+  Ext(Simd16B(dest), Simd16B(rhs), Simd16B(lhs), shift);
 }
 
 // Swizzle - permute with variable indices.  `rhs` holds the lanes parameter.
@@ -2174,22 +2416,47 @@ void MacroAssembler::swizzleInt8x16(FloatRegister rhs, FloatRegister lhsDest) {
   Tbl(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
 }
 
+void MacroAssembler::swizzleInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                    FloatRegister dest) {
+  Tbl(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
+}
+
 // Integer Add
 
 void MacroAssembler::addInt8x16(FloatRegister rhs, FloatRegister lhsDest) {
   Add(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
 }
 
+void MacroAssembler::addInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  Add(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
+}
+
 void MacroAssembler::addInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   Add(Simd8H(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
+}
+
+void MacroAssembler::addInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  Add(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
 }
 
 void MacroAssembler::addInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
   Add(Simd4S(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
 }
 
+void MacroAssembler::addInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  Add(Simd4S(dest), Simd4S(lhs), Simd4S(rhs));
+}
+
 void MacroAssembler::addInt64x2(FloatRegister rhs, FloatRegister lhsDest) {
   Add(Simd2D(lhsDest), Simd2D(lhsDest), Simd2D(rhs));
+}
+
+void MacroAssembler::addInt64x2(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  Add(Simd2D(dest), Simd2D(lhs), Simd2D(rhs));
 }
 
 // Integer Subtract
@@ -2198,16 +2465,36 @@ void MacroAssembler::subInt8x16(FloatRegister rhs, FloatRegister lhsDest) {
   Sub(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
 }
 
+void MacroAssembler::subInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  Sub(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
+}
+
 void MacroAssembler::subInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   Sub(Simd8H(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
+}
+
+void MacroAssembler::subInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  Sub(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
 }
 
 void MacroAssembler::subInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
   Sub(Simd4S(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
 }
 
+void MacroAssembler::subInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  Sub(Simd4S(dest), Simd4S(lhs), Simd4S(rhs));
+}
+
 void MacroAssembler::subInt64x2(FloatRegister rhs, FloatRegister lhsDest) {
   Sub(Simd2D(lhsDest), Simd2D(lhsDest), Simd2D(rhs));
+}
+
+void MacroAssembler::subInt64x2(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  Sub(Simd2D(dest), Simd2D(lhs), Simd2D(rhs));
 }
 
 // Integer Multiply
@@ -2216,8 +2503,23 @@ void MacroAssembler::mulInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   Mul(Simd8H(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
 }
 
+void MacroAssembler::mulInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  Mul(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
+}
+
 void MacroAssembler::mulInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
   Mul(Simd4S(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
+}
+
+void MacroAssembler::mulInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  Mul(Simd4S(dest), Simd4S(lhs), Simd4S(rhs));
+}
+
+void MacroAssembler::mulInt64x2(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  Mul(Simd2D(dest), Simd2D(lhs), Simd2D(rhs));
 }
 
 void MacroAssembler::extMulLowInt8x16(FloatRegister rhs,
@@ -2225,9 +2527,19 @@ void MacroAssembler::extMulLowInt8x16(FloatRegister rhs,
   Smull(Simd8H(lhsDest), Simd8B(lhsDest), Simd8B(rhs));
 }
 
+void MacroAssembler::extMulLowInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                      FloatRegister dest) {
+  Smull(Simd8H(dest), Simd8B(lhs), Simd8B(rhs));
+}
+
 void MacroAssembler::extMulHighInt8x16(FloatRegister rhs,
                                        FloatRegister lhsDest) {
   Smull2(Simd8H(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
+}
+
+void MacroAssembler::extMulHighInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                       FloatRegister dest) {
+  Smull2(Simd8H(dest), Simd16B(lhs), Simd16B(rhs));
 }
 
 void MacroAssembler::unsignedExtMulLowInt8x16(FloatRegister rhs,
@@ -2235,9 +2547,21 @@ void MacroAssembler::unsignedExtMulLowInt8x16(FloatRegister rhs,
   Umull(Simd8H(lhsDest), Simd8B(lhsDest), Simd8B(rhs));
 }
 
+void MacroAssembler::unsignedExtMulLowInt8x16(FloatRegister lhs,
+                                              FloatRegister rhs,
+                                              FloatRegister dest) {
+  Umull(Simd8H(dest), Simd8B(lhs), Simd8B(rhs));
+}
+
 void MacroAssembler::unsignedExtMulHighInt8x16(FloatRegister rhs,
                                                FloatRegister lhsDest) {
   Umull2(Simd8H(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
+}
+
+void MacroAssembler::unsignedExtMulHighInt8x16(FloatRegister lhs,
+                                               FloatRegister rhs,
+                                               FloatRegister dest) {
+  Umull2(Simd8H(dest), Simd16B(lhs), Simd16B(rhs));
 }
 
 void MacroAssembler::extMulLowInt16x8(FloatRegister rhs,
@@ -2245,9 +2569,19 @@ void MacroAssembler::extMulLowInt16x8(FloatRegister rhs,
   Smull(Simd4S(lhsDest), Simd4H(lhsDest), Simd4H(rhs));
 }
 
+void MacroAssembler::extMulLowInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                      FloatRegister dest) {
+  Smull(Simd4S(dest), Simd4H(lhs), Simd4H(rhs));
+}
+
 void MacroAssembler::extMulHighInt16x8(FloatRegister rhs,
                                        FloatRegister lhsDest) {
   Smull2(Simd4S(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
+}
+
+void MacroAssembler::extMulHighInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                       FloatRegister dest) {
+  Smull2(Simd4S(dest), Simd8H(lhs), Simd8H(rhs));
 }
 
 void MacroAssembler::unsignedExtMulLowInt16x8(FloatRegister rhs,
@@ -2255,9 +2589,21 @@ void MacroAssembler::unsignedExtMulLowInt16x8(FloatRegister rhs,
   Umull(Simd4S(lhsDest), Simd4H(lhsDest), Simd4H(rhs));
 }
 
+void MacroAssembler::unsignedExtMulLowInt16x8(FloatRegister lhs,
+                                              FloatRegister rhs,
+                                              FloatRegister dest) {
+  Umull(Simd4S(dest), Simd4H(lhs), Simd4H(rhs));
+}
+
 void MacroAssembler::unsignedExtMulHighInt16x8(FloatRegister rhs,
                                                FloatRegister lhsDest) {
   Umull2(Simd4S(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
+}
+
+void MacroAssembler::unsignedExtMulHighInt16x8(FloatRegister lhs,
+                                               FloatRegister rhs,
+                                               FloatRegister dest) {
+  Umull2(Simd4S(dest), Simd8H(lhs), Simd8H(rhs));
 }
 
 void MacroAssembler::extMulLowInt32x4(FloatRegister rhs,
@@ -2265,9 +2611,19 @@ void MacroAssembler::extMulLowInt32x4(FloatRegister rhs,
   Smull(Simd2D(lhsDest), Simd2S(lhsDest), Simd2S(rhs));
 }
 
+void MacroAssembler::extMulLowInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                      FloatRegister dest) {
+  Smull(Simd2D(dest), Simd2S(lhs), Simd2S(rhs));
+}
+
 void MacroAssembler::extMulHighInt32x4(FloatRegister rhs,
                                        FloatRegister lhsDest) {
   Smull2(Simd2D(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
+}
+
+void MacroAssembler::extMulHighInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                       FloatRegister dest) {
+  Smull2(Simd2D(dest), Simd4S(lhs), Simd4S(rhs));
 }
 
 void MacroAssembler::unsignedExtMulLowInt32x4(FloatRegister rhs,
@@ -2275,14 +2631,31 @@ void MacroAssembler::unsignedExtMulLowInt32x4(FloatRegister rhs,
   Umull(Simd2D(lhsDest), Simd2S(lhsDest), Simd2S(rhs));
 }
 
+void MacroAssembler::unsignedExtMulLowInt32x4(FloatRegister lhs,
+                                              FloatRegister rhs,
+                                              FloatRegister dest) {
+  Umull(Simd2D(dest), Simd2S(lhs), Simd2S(rhs));
+}
+
 void MacroAssembler::unsignedExtMulHighInt32x4(FloatRegister rhs,
                                                FloatRegister lhsDest) {
   Umull2(Simd2D(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
 }
 
+void MacroAssembler::unsignedExtMulHighInt32x4(FloatRegister lhs,
+                                               FloatRegister rhs,
+                                               FloatRegister dest) {
+  Umull2(Simd2D(dest), Simd4S(lhs), Simd4S(rhs));
+}
+
 void MacroAssembler::q15MulrSatInt16x8(FloatRegister rhs,
                                        FloatRegister lhsDest) {
   Sqrdmulh(Simd8H(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
+}
+
+void MacroAssembler::q15MulrSatInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                       FloatRegister dest) {
+  Sqrdmulh(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
 }
 
 // Integer Negate
@@ -2309,18 +2682,38 @@ void MacroAssembler::addSatInt8x16(FloatRegister rhs, FloatRegister lhsDest) {
   Sqadd(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
 }
 
+void MacroAssembler::addSatInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                   FloatRegister dest) {
+  Sqadd(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
+}
+
 void MacroAssembler::unsignedAddSatInt8x16(FloatRegister rhs,
                                            FloatRegister lhsDest) {
   Uqadd(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
+}
+
+void MacroAssembler::unsignedAddSatInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister dest) {
+  Uqadd(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
 }
 
 void MacroAssembler::addSatInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   Sqadd(Simd8H(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
 }
 
+void MacroAssembler::addSatInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                   FloatRegister dest) {
+  Sqadd(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
+}
+
 void MacroAssembler::unsignedAddSatInt16x8(FloatRegister rhs,
                                            FloatRegister lhsDest) {
   Uqadd(Simd8H(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
+}
+
+void MacroAssembler::unsignedAddSatInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister dest) {
+  Uqadd(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
 }
 
 // Saturating integer subtract
@@ -2329,18 +2722,38 @@ void MacroAssembler::subSatInt8x16(FloatRegister rhs, FloatRegister lhsDest) {
   Sqsub(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
 }
 
+void MacroAssembler::subSatInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                   FloatRegister dest) {
+  Sqsub(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
+}
+
 void MacroAssembler::unsignedSubSatInt8x16(FloatRegister rhs,
                                            FloatRegister lhsDest) {
   Uqsub(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
+}
+
+void MacroAssembler::unsignedSubSatInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister dest) {
+  Uqsub(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
 }
 
 void MacroAssembler::subSatInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   Sqsub(Simd8H(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
 }
 
+void MacroAssembler::subSatInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                   FloatRegister dest) {
+  Sqsub(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
+}
+
 void MacroAssembler::unsignedSubSatInt16x8(FloatRegister rhs,
                                            FloatRegister lhsDest) {
   Uqsub(Simd8H(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
+}
+
+void MacroAssembler::unsignedSubSatInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister dest) {
+  Uqsub(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
 }
 
 // Lane-wise integer minimum
@@ -2349,13 +2762,28 @@ void MacroAssembler::minInt8x16(FloatRegister rhs, FloatRegister lhsDest) {
   Smin(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
 }
 
+void MacroAssembler::minInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  Smin(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
+}
+
 void MacroAssembler::unsignedMinInt8x16(FloatRegister rhs,
                                         FloatRegister lhsDest) {
   Umin(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
 }
 
+void MacroAssembler::unsignedMinInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                        FloatRegister dest) {
+  Umin(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
+}
+
 void MacroAssembler::minInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   Smin(Simd8H(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
+}
+
+void MacroAssembler::minInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  Smin(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
 }
 
 void MacroAssembler::unsignedMinInt16x8(FloatRegister rhs,
@@ -2363,13 +2791,28 @@ void MacroAssembler::unsignedMinInt16x8(FloatRegister rhs,
   Umin(Simd8H(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
 }
 
+void MacroAssembler::unsignedMinInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                        FloatRegister dest) {
+  Umin(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
+}
+
 void MacroAssembler::minInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
   Smin(Simd4S(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
+}
+
+void MacroAssembler::minInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  Smin(Simd4S(dest), Simd4S(lhs), Simd4S(rhs));
 }
 
 void MacroAssembler::unsignedMinInt32x4(FloatRegister rhs,
                                         FloatRegister lhsDest) {
   Umin(Simd4S(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
+}
+
+void MacroAssembler::unsignedMinInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                        FloatRegister dest) {
+  Umin(Simd4S(dest), Simd4S(lhs), Simd4S(rhs));
 }
 
 // Lane-wise integer maximum
@@ -2378,13 +2821,28 @@ void MacroAssembler::maxInt8x16(FloatRegister rhs, FloatRegister lhsDest) {
   Smax(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
 }
 
+void MacroAssembler::maxInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  Smax(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
+}
+
 void MacroAssembler::unsignedMaxInt8x16(FloatRegister rhs,
                                         FloatRegister lhsDest) {
   Umax(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
 }
 
+void MacroAssembler::unsignedMaxInt8x16(FloatRegister lhs, FloatRegister rhs,
+                                        FloatRegister dest) {
+  Umax(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
+}
+
 void MacroAssembler::maxInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   Smax(Simd8H(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
+}
+
+void MacroAssembler::maxInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  Smax(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
 }
 
 void MacroAssembler::unsignedMaxInt16x8(FloatRegister rhs,
@@ -2392,13 +2850,28 @@ void MacroAssembler::unsignedMaxInt16x8(FloatRegister rhs,
   Umax(Simd8H(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
 }
 
+void MacroAssembler::unsignedMaxInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                        FloatRegister dest) {
+  Umax(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
+}
+
 void MacroAssembler::maxInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
   Smax(Simd4S(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
+}
+
+void MacroAssembler::maxInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest) {
+  Smax(Simd4S(dest), Simd4S(lhs), Simd4S(rhs));
 }
 
 void MacroAssembler::unsignedMaxInt32x4(FloatRegister rhs,
                                         FloatRegister lhsDest) {
   Umax(Simd4S(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
+}
+
+void MacroAssembler::unsignedMaxInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                        FloatRegister dest) {
+  Umax(Simd4S(dest), Simd4S(lhs), Simd4S(rhs));
 }
 
 // Lane-wise integer rounding average
@@ -2408,9 +2881,21 @@ void MacroAssembler::unsignedAverageInt8x16(FloatRegister rhs,
   Urhadd(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
 }
 
+void MacroAssembler::unsignedAverageInt8x16(FloatRegister lhs,
+                                            FloatRegister rhs,
+                                            FloatRegister dest) {
+  Urhadd(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
+}
+
 void MacroAssembler::unsignedAverageInt16x8(FloatRegister rhs,
                                             FloatRegister lhsDest) {
   Urhadd(Simd8H(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
+}
+
+void MacroAssembler::unsignedAverageInt16x8(FloatRegister lhs,
+                                            FloatRegister rhs,
+                                            FloatRegister dest) {
+  Urhadd(Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
 }
 
 // Lane-wise integer absolute value
@@ -2517,9 +3002,19 @@ void MacroAssembler::bitwiseAndSimd128(FloatRegister rhs,
   And(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
 }
 
+void MacroAssembler::bitwiseAndSimd128(FloatRegister lhs, FloatRegister rhs,
+                                       FloatRegister dest) {
+  And(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
+}
+
 void MacroAssembler::bitwiseOrSimd128(FloatRegister rhs,
                                       FloatRegister lhsDest) {
   Orr(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
+}
+
+void MacroAssembler::bitwiseOrSimd128(FloatRegister lhs, FloatRegister rhs,
+                                      FloatRegister dest) {
+  Orr(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
 }
 
 void MacroAssembler::bitwiseXorSimd128(FloatRegister rhs,
@@ -2527,8 +3022,18 @@ void MacroAssembler::bitwiseXorSimd128(FloatRegister rhs,
   Eor(Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
 }
 
+void MacroAssembler::bitwiseXorSimd128(FloatRegister lhs, FloatRegister rhs,
+                                       FloatRegister dest) {
+  Eor(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
+}
+
 void MacroAssembler::bitwiseNotSimd128(FloatRegister src, FloatRegister dest) {
   Not(Simd16B(dest), Simd16B(src));
+}
+
+void MacroAssembler::bitwiseAndNotSimd128(FloatRegister lhs, FloatRegister rhs,
+                                          FloatRegister dest) {
+  Bic(Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
 }
 
 // Bitwise AND with complement: dest = ~lhs & rhs, note this is not what Wasm
@@ -2668,9 +3173,21 @@ void MacroAssembler::compareInt8x16(Assembler::Condition cond,
   compareSimd128Int(cond, Simd16B(lhsDest), Simd16B(lhsDest), Simd16B(rhs));
 }
 
+void MacroAssembler::compareInt8x16(Assembler::Condition cond,
+                                    FloatRegister lhs, FloatRegister rhs,
+                                    FloatRegister dest) {
+  compareSimd128Int(cond, Simd16B(dest), Simd16B(lhs), Simd16B(rhs));
+}
+
 void MacroAssembler::compareInt16x8(Assembler::Condition cond,
                                     FloatRegister rhs, FloatRegister lhsDest) {
   compareSimd128Int(cond, Simd8H(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
+}
+
+void MacroAssembler::compareInt16x8(Assembler::Condition cond,
+                                    FloatRegister lhs, FloatRegister rhs,
+                                    FloatRegister dest) {
+  compareSimd128Int(cond, Simd8H(dest), Simd8H(lhs), Simd8H(rhs));
 }
 
 void MacroAssembler::compareInt32x4(Assembler::Condition cond,
@@ -2678,9 +3195,21 @@ void MacroAssembler::compareInt32x4(Assembler::Condition cond,
   compareSimd128Int(cond, Simd4S(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
 }
 
+void MacroAssembler::compareInt32x4(Assembler::Condition cond,
+                                    FloatRegister lhs, FloatRegister rhs,
+                                    FloatRegister dest) {
+  compareSimd128Int(cond, Simd4S(dest), Simd4S(lhs), Simd4S(rhs));
+}
+
 void MacroAssembler::compareInt64x2(Assembler::Condition cond,
                                     FloatRegister rhs, FloatRegister lhsDest) {
   compareSimd128Int(cond, Simd2D(lhsDest), Simd2D(lhsDest), Simd2D(rhs));
+}
+
+void MacroAssembler::compareInt64x2(Assembler::Condition cond,
+                                    FloatRegister lhs, FloatRegister rhs,
+                                    FloatRegister dest) {
+  compareSimd128Int(cond, Simd2D(dest), Simd2D(lhs), Simd2D(rhs));
 }
 
 void MacroAssembler::compareFloat32x4(Assembler::Condition cond,
@@ -2689,10 +3218,22 @@ void MacroAssembler::compareFloat32x4(Assembler::Condition cond,
   compareSimd128Float(cond, Simd4S(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
 }
 
+void MacroAssembler::compareFloat32x4(Assembler::Condition cond,
+                                      FloatRegister lhs, FloatRegister rhs,
+                                      FloatRegister dest) {
+  compareSimd128Float(cond, Simd4S(dest), Simd4S(lhs), Simd4S(rhs));
+}
+
 void MacroAssembler::compareFloat64x2(Assembler::Condition cond,
                                       FloatRegister rhs,
                                       FloatRegister lhsDest) {
   compareSimd128Float(cond, Simd2D(lhsDest), Simd2D(lhsDest), Simd2D(rhs));
+}
+
+void MacroAssembler::compareFloat64x2(Assembler::Condition cond,
+                                      FloatRegister lhs, FloatRegister rhs,
+                                      FloatRegister dest) {
+  compareSimd128Float(cond, Simd2D(dest), Simd2D(lhs), Simd2D(rhs));
 }
 
 // Load
@@ -2741,6 +3282,11 @@ void MacroAssembler::absFloat64x2(FloatRegister src, FloatRegister dest) {
 
 // NaN-propagating minimum
 
+void MacroAssembler::minFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest) {
+  Fmin(Simd4S(dest), Simd4S(lhs), Simd4S(rhs));
+}
+
 void MacroAssembler::minFloat32x4(FloatRegister rhs, FloatRegister lhsDest) {
   Fmin(Simd4S(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
 }
@@ -2749,10 +3295,25 @@ void MacroAssembler::minFloat64x2(FloatRegister rhs, FloatRegister lhsDest) {
   Fmin(Simd2D(lhsDest), Simd2D(lhsDest), Simd2D(rhs));
 }
 
+void MacroAssembler::minFloat64x2(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest) {
+  Fmin(Simd2D(dest), Simd2D(lhs), Simd2D(rhs));
+}
+
 // NaN-propagating maximum
+
+void MacroAssembler::maxFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest) {
+  Fmax(Simd4S(dest), Simd4S(lhs), Simd4S(rhs));
+}
 
 void MacroAssembler::maxFloat32x4(FloatRegister rhs, FloatRegister lhsDest) {
   Fmax(Simd4S(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
+}
+
+void MacroAssembler::maxFloat64x2(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest) {
+  Fmax(Simd2D(dest), Simd2D(lhs), Simd2D(rhs));
 }
 
 void MacroAssembler::maxFloat64x2(FloatRegister rhs, FloatRegister lhsDest) {
@@ -2765,8 +3326,18 @@ void MacroAssembler::addFloat32x4(FloatRegister rhs, FloatRegister lhsDest) {
   Fadd(Simd4S(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
 }
 
+void MacroAssembler::addFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest) {
+  Fadd(Simd4S(dest), Simd4S(lhs), Simd4S(rhs));
+}
+
 void MacroAssembler::addFloat64x2(FloatRegister rhs, FloatRegister lhsDest) {
   Fadd(Simd2D(lhsDest), Simd2D(lhsDest), Simd2D(rhs));
+}
+
+void MacroAssembler::addFloat64x2(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest) {
+  Fadd(Simd2D(dest), Simd2D(lhs), Simd2D(rhs));
 }
 
 // Floating subtract
@@ -2775,8 +3346,18 @@ void MacroAssembler::subFloat32x4(FloatRegister rhs, FloatRegister lhsDest) {
   Fsub(Simd4S(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
 }
 
+void MacroAssembler::subFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest) {
+  Fsub(Simd4S(dest), Simd4S(lhs), Simd4S(rhs));
+}
+
 void MacroAssembler::subFloat64x2(FloatRegister rhs, FloatRegister lhsDest) {
   Fsub(Simd2D(lhsDest), Simd2D(lhsDest), Simd2D(rhs));
+}
+
+void MacroAssembler::subFloat64x2(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest) {
+  Fsub(Simd2D(dest), Simd2D(lhs), Simd2D(rhs));
 }
 
 // Floating division
@@ -2785,8 +3366,18 @@ void MacroAssembler::divFloat32x4(FloatRegister rhs, FloatRegister lhsDest) {
   Fdiv(Simd4S(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
 }
 
+void MacroAssembler::divFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest) {
+  Fdiv(Simd4S(dest), Simd4S(lhs), Simd4S(rhs));
+}
+
 void MacroAssembler::divFloat64x2(FloatRegister rhs, FloatRegister lhsDest) {
   Fdiv(Simd2D(lhsDest), Simd2D(lhsDest), Simd2D(rhs));
+}
+
+void MacroAssembler::divFloat64x2(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest) {
+  Fdiv(Simd2D(dest), Simd2D(lhs), Simd2D(rhs));
 }
 
 // Floating Multiply
@@ -2795,8 +3386,18 @@ void MacroAssembler::mulFloat32x4(FloatRegister rhs, FloatRegister lhsDest) {
   Fmul(Simd4S(lhsDest), Simd4S(lhsDest), Simd4S(rhs));
 }
 
+void MacroAssembler::mulFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest) {
+  Fmul(Simd4S(dest), Simd4S(lhs), Simd4S(rhs));
+}
+
 void MacroAssembler::mulFloat64x2(FloatRegister rhs, FloatRegister lhsDest) {
   Fmul(Simd2D(lhsDest), Simd2D(lhsDest), Simd2D(rhs));
+}
+
+void MacroAssembler::mulFloat64x2(FloatRegister lhs, FloatRegister rhs,
+                                  FloatRegister dest) {
+  Fmul(Simd2D(dest), Simd2D(lhs), Simd2D(rhs));
 }
 
 // Pairwise add
@@ -2863,8 +3464,7 @@ void MacroAssembler::truncSatFloat32x4ToInt32x4(FloatRegister src,
 }
 
 void MacroAssembler::unsignedTruncSatFloat32x4ToInt32x4(FloatRegister src,
-                                                        FloatRegister dest,
-                                                        FloatRegister temp) {
+                                                        FloatRegister dest) {
   Fcvtzu(Simd4S(dest), Simd4S(src));
 }
 
@@ -2882,12 +3482,14 @@ void MacroAssembler::unsignedTruncSatFloat64x2ToInt32x4(FloatRegister src,
   Uqxtn(Simd2S(dest), Simd2D(dest));
 }
 
-// Floating point widening
+// Floating point narrowing
 
 void MacroAssembler::convertFloat64x2ToFloat32x4(FloatRegister src,
                                                  FloatRegister dest) {
   Fcvtn(Simd2S(dest), Simd2D(src));
 }
+
+// Floating point widening
 
 void MacroAssembler::convertFloat32x4ToFloat64x2(FloatRegister src,
                                                  FloatRegister dest) {
@@ -2906,6 +3508,17 @@ void MacroAssembler::narrowInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
   Sqxtn2(Simd16B(lhsDest), Simd8H(rhs));
 }
 
+void MacroAssembler::narrowInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                   FloatRegister dest) {
+  if (rhs == dest) {
+    Sqxtn2(Simd16B(dest), Simd8H(rhs));
+    Sqxtn(Simd8B(dest), Simd8H(lhs));
+  } else {
+    Sqxtn(Simd8B(dest), Simd8H(lhs));
+    Sqxtn2(Simd16B(dest), Simd8H(rhs));
+  }
+}
+
 void MacroAssembler::unsignedNarrowInt16x8(FloatRegister rhs,
                                            FloatRegister lhsDest) {
   ScratchSimd128Scope scratch(*this);
@@ -2915,6 +3528,17 @@ void MacroAssembler::unsignedNarrowInt16x8(FloatRegister rhs,
   }
   Sqxtun(Simd8B(lhsDest), Simd8H(lhsDest));
   Sqxtun2(Simd16B(lhsDest), Simd8H(rhs));
+}
+
+void MacroAssembler::unsignedNarrowInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister dest) {
+  if (rhs == dest) {
+    Sqxtun2(Simd16B(dest), Simd8H(rhs));
+    Sqxtun(Simd8B(dest), Simd8H(lhs));
+  } else {
+    Sqxtun(Simd8B(dest), Simd8H(lhs));
+    Sqxtun2(Simd16B(dest), Simd8H(rhs));
+  }
 }
 
 void MacroAssembler::narrowInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
@@ -2927,6 +3551,17 @@ void MacroAssembler::narrowInt32x4(FloatRegister rhs, FloatRegister lhsDest) {
   Sqxtn2(Simd8H(lhsDest), Simd4S(rhs));
 }
 
+void MacroAssembler::narrowInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                   FloatRegister dest) {
+  if (rhs == dest) {
+    Sqxtn2(Simd8H(dest), Simd4S(rhs));
+    Sqxtn(Simd4H(dest), Simd4S(lhs));
+  } else {
+    Sqxtn(Simd4H(dest), Simd4S(lhs));
+    Sqxtn2(Simd8H(dest), Simd4S(rhs));
+  }
+}
+
 void MacroAssembler::unsignedNarrowInt32x4(FloatRegister rhs,
                                            FloatRegister lhsDest) {
   ScratchSimd128Scope scratch(*this);
@@ -2936,6 +3571,17 @@ void MacroAssembler::unsignedNarrowInt32x4(FloatRegister rhs,
   }
   Sqxtun(Simd4H(lhsDest), Simd4S(lhsDest));
   Sqxtun2(Simd8H(lhsDest), Simd4S(rhs));
+}
+
+void MacroAssembler::unsignedNarrowInt32x4(FloatRegister lhs, FloatRegister rhs,
+                                           FloatRegister dest) {
+  if (rhs == dest) {
+    Sqxtun2(Simd8H(dest), Simd4S(rhs));
+    Sqxtun(Simd4H(dest), Simd4S(lhs));
+  } else {
+    Sqxtun(Simd4H(dest), Simd4S(lhs));
+    Sqxtun2(Simd8H(dest), Simd4S(rhs));
+  }
 }
 
 // Integer to integer widening
@@ -3009,6 +3655,14 @@ void MacroAssembler::pseudoMinFloat32x4(FloatRegister rhsOrRhsDest,
   Mov(SimdReg(lhsDest), scratch);
 }
 
+void MacroAssembler::pseudoMinFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                        FloatRegister dest) {
+  ScratchSimd128Scope scratch(*this);
+  Fcmgt(Simd4S(scratch), Simd4S(lhs), Simd4S(rhs));
+  Bsl(Simd16B(scratch), Simd16B(rhs), Simd16B(lhs));
+  Mov(SimdReg(dest), scratch);
+}
+
 void MacroAssembler::pseudoMinFloat64x2(FloatRegister rhsOrRhsDest,
                                         FloatRegister lhsOrLhsDest) {
   FloatRegister rhs = rhsOrRhsDest;
@@ -3017,6 +3671,14 @@ void MacroAssembler::pseudoMinFloat64x2(FloatRegister rhsOrRhsDest,
   Fcmgt(Simd2D(scratch), Simd2D(lhsDest), Simd2D(rhs));
   Bsl(Simd16B(scratch), Simd16B(rhs), Simd16B(lhsDest));
   Mov(SimdReg(lhsDest), scratch);
+}
+
+void MacroAssembler::pseudoMinFloat64x2(FloatRegister lhs, FloatRegister rhs,
+                                        FloatRegister dest) {
+  ScratchSimd128Scope scratch(*this);
+  Fcmgt(Simd2D(scratch), Simd2D(lhs), Simd2D(rhs));
+  Bsl(Simd16B(scratch), Simd16B(rhs), Simd16B(lhs));
+  Mov(SimdReg(dest), scratch);
 }
 
 void MacroAssembler::pseudoMaxFloat32x4(FloatRegister rhsOrRhsDest,
@@ -3029,6 +3691,14 @@ void MacroAssembler::pseudoMaxFloat32x4(FloatRegister rhsOrRhsDest,
   Mov(SimdReg(lhsDest), scratch);
 }
 
+void MacroAssembler::pseudoMaxFloat32x4(FloatRegister lhs, FloatRegister rhs,
+                                        FloatRegister dest) {
+  ScratchSimd128Scope scratch(*this);
+  Fcmgt(Simd4S(scratch), Simd4S(rhs), Simd4S(lhs));
+  Bsl(Simd16B(scratch), Simd16B(rhs), Simd16B(lhs));
+  Mov(SimdReg(dest), scratch);
+}
+
 void MacroAssembler::pseudoMaxFloat64x2(FloatRegister rhsOrRhsDest,
                                         FloatRegister lhsOrLhsDest) {
   FloatRegister rhs = rhsOrRhsDest;
@@ -3039,14 +3709,27 @@ void MacroAssembler::pseudoMaxFloat64x2(FloatRegister rhsOrRhsDest,
   Mov(SimdReg(lhsDest), scratch);
 }
 
+void MacroAssembler::pseudoMaxFloat64x2(FloatRegister lhs, FloatRegister rhs,
+                                        FloatRegister dest) {
+  ScratchSimd128Scope scratch(*this);
+  Fcmgt(Simd2D(scratch), Simd2D(rhs), Simd2D(lhs));
+  Bsl(Simd16B(scratch), Simd16B(rhs), Simd16B(lhs));
+  Mov(SimdReg(dest), scratch);
+}
+
 // Widening/pairwise integer dot product (experimental as of August, 2020)
 // https://github.com/WebAssembly/simd/pull/127
 
 void MacroAssembler::widenDotInt16x8(FloatRegister rhs, FloatRegister lhsDest) {
+  widenDotInt16x8(lhsDest, rhs, lhsDest);
+}
+
+void MacroAssembler::widenDotInt16x8(FloatRegister lhs, FloatRegister rhs,
+                                     FloatRegister dest) {
   ScratchSimd128Scope scratch(*this);
-  Smull(Simd4S(scratch), Simd4H(lhsDest), Simd4H(rhs));
-  Smull2(Simd4S(lhsDest), Simd8H(lhsDest), Simd8H(rhs));
-  Addp(Simd4S(lhsDest), Simd4S(scratch), Simd4S(lhsDest));
+  Smull(Simd4S(scratch), Simd4H(lhs), Simd4H(rhs));
+  Smull2(Simd4S(dest), Simd8H(lhs), Simd8H(rhs));
+  Addp(Simd4S(dest), Simd4S(scratch), Simd4S(dest));
 }
 
 // Floating point rounding (experimental as of August, 2020)

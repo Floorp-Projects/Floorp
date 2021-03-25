@@ -1251,6 +1251,10 @@ class MacroAssemblerCompat : public vixl::MacroAssembler {
     MOZ_CRASH("moveFloatAsDouble");
   }
 
+  void moveSimd128(FloatRegister src, FloatRegister dest) {
+    fmov(ARMFPRegister(dest, 128), ARMFPRegister(src, 128));
+  }
+
   void splitSignExtTag(const ValueOperand& operand, Register dest) {
     splitSignExtTag(operand.valueReg(), dest);
   }

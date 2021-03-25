@@ -14661,7 +14661,7 @@ static void MulF32x4(MacroAssembler& masm, RegV128 rs, RegV128 rsd) {
 #  if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
 static void MulI64x2(MacroAssembler& masm, RegV128 rs, RegV128 rsd,
                      RegV128 temp) {
-  masm.mulInt64x2(rs, rsd, temp);
+  masm.mulInt64x2(rsd, rs, rsd, temp);
 }
 #  endif
 
@@ -15395,10 +15395,16 @@ static void ConvertF32x4ToI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
   masm.truncSatFloat32x4ToInt32x4(rs, rd);
 }
 
+#  if defined(JS_CODEGEN_ARM64)
+static void ConvertF32x4ToUI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
+  masm.unsignedTruncSatFloat32x4ToInt32x4(rs, rd);
+}
+#  else
 static void ConvertF32x4ToUI32x4(MacroAssembler& masm, RegV128 rs, RegV128 rd,
                                  RegV128 temp) {
   masm.unsignedTruncSatFloat32x4ToInt32x4(rs, rd, temp);
 }
+#  endif  // JS_CODEGEN_ARM64
 
 static void ConvertI32x4ToF64x2(MacroAssembler& masm, RegV128 rs, RegV128 rd) {
   masm.convertInt32x4ToFloat64x2(rs, rd);
