@@ -558,12 +558,29 @@ class GeckoViewNavigation extends GeckoViewModule {
       return;
     }
 
+    let permissions;
+    if (this.browser.contentPrincipal) {
+      const rawPerms = Services.perms.getAllForPrincipal(
+        this.browser.contentPrincipal
+      );
+      permissions = rawPerms.map(p => {
+        return {
+          uri: Services.io.createExposableURI(p.principal.URI).displaySpec,
+          principal: E10SUtils.serializePrincipal(p.principal),
+          type: p.type,
+          value: p.capability,
+          privateMode: p.principal.privateBrowsingId != 0,
+        };
+      });
+    }
+
     const message = {
       type: "GeckoView:LocationChange",
       uri: fixedURI.displaySpec,
       canGoBack: this.browser.canGoBack,
       canGoForward: this.browser.canGoForward,
       isTopLevel: aWebProgress.isTopLevel,
+      permissions,
     };
 
     this.eventDispatcher.sendRequest(message);

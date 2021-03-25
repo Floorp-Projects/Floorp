@@ -107,6 +107,8 @@ class GeckoViewStartup {
             "GeckoView:ClearData",
             "GeckoView:ClearSessionContextData",
             "GeckoView:ClearHostData",
+            "GeckoView:GetAllPermissions",
+            "GeckoView:GetPermissionsByURI",
           ],
         });
 

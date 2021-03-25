@@ -13,6 +13,20 @@ exclude: true
 
 ⚠️  breaking change and deprecation notices
 
+## v89
+- Added [`ContentPermission`][89.1], which is used to report what permissions content
+  is loaded with in `onLocationChange`.
+- Added [`StorageController.getPermissions`][89.2] and [`StorageController.getAllPermissions`][89.3],
+  allowing inspection of what permissions have been set for a given URI and for all URIs.
+- ⚠️ Deprecated [`NavigationDelegate.onLocationChange`][89.4], to be removed in v92. The
+  new `onLocationChange` callback simply adds permissions information, migration of existing
+  functionality should only require updating the function signature.
+
+[89.1]: {{javadoc_uri}}/GeckoSession.PermissionDelegate.ContentPermission.html
+[89.2]: {{javadoc_uri}}/StorageController.html#getPermissions-java.lang.String-
+[89.3]: {{javadoc_uri}}/StorageController.html#getAllPermissions--
+[89.4]: {{javadoc_uri}}/GeckoSession.NavigationDelegate.html#onLocationChange-org.mozilla.geckoview.GeckoSession-java.lang.String-
+
 ## v88
 - Added [`WebExtension.Download#update`][88.1] that can be used to
   implement the WebExtension `downloads` API. This method is used to communicate
@@ -934,4 +948,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport-android.content.Context-android.os.Bundle-java.lang.String-
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: f6ad9d26fbb3880d60970a1f25e406096c9efca0
+[api-version]: 638023f7c8ddb3ccf732df09b0bdee4416c04237

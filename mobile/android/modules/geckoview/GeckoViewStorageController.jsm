@@ -13,6 +13,9 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { PrincipalsCollector } = ChromeUtils.import(
   "resource://gre/modules/PrincipalsCollector.jsm"
 );
+const { E10SUtils } = ChromeUtils.import(
+  "resource://gre/modules/E10SUtils.jsm"
+);
 
 const { debug, warn } = GeckoViewUtils.initLogging(
   "GeckoViewStorageController"
@@ -105,6 +108,39 @@ const GeckoViewStorageController = {
       }
       case "GeckoView:ClearHostData": {
         this.clearHostData(aData.host, aData.flags, aCallback);
+        break;
+      }
+      case "GeckoView:GetAllPermissions": {
+        const rawPerms = Services.perms.all;
+        const permissions = rawPerms.map(p => {
+          return {
+            uri: Services.io.createExposableURI(p.principal.URI).displaySpec,
+            principal: E10SUtils.serializePrincipal(p.principal),
+            type: p.type,
+            value: p.capability,
+            privateMode: p.principal.privateBrowsingId != 0,
+          };
+        });
+        aCallback.onSuccess({ permissions });
+        break;
+      }
+      case "GeckoView:GetPermissionsByURI": {
+        const uri = Services.io.newURI(aData.uri);
+        const prin = Services.scriptSecurityManager.createContentPrincipal(
+          uri,
+          {}
+        );
+        const rawPerms = Services.perms.getAllForPrincipal(prin);
+        const permissions = rawPerms.map(p => {
+          return {
+            uri: Services.io.createExposableURI(p.principal.URI).displaySpec,
+            principal: E10SUtils.serializePrincipal(p.principal),
+            type: p.type,
+            value: p.capability,
+            privateMode: p.principal.privateBrowsingId != 0,
+          };
+        });
+        aCallback.onSuccess({ permissions });
         break;
       }
     }
