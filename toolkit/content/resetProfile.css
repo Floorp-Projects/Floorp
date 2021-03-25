@@ -2,14 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#migratedItems {
-  margin-inline-start: 1.5em;
-}
-
-#resetProfileFooter {
-  font-weight: bold;
-}
-
 #resetProfileProgressDialog {
   padding: 10px;
+}
+
+#learnMoreDescription {
+  margin-block: 16px 0;
 }
