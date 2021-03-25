@@ -37,6 +37,8 @@ class OpaqueResponseBlockingInfo final {
 
   void Report(const nsCString& aKey);
 
+  void ReportContentLength(int64_t aContentLength);
+
  private:
   ~OpaqueResponseBlockingInfo() = default;
 };
