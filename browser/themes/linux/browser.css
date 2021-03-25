@@ -203,11 +203,16 @@ menuitem.bookmark-item {
 %include ../shared/urlbarView.inc.css
 
 :root:not(:-moz-lwtheme) {
-  --urlbar-popup-url-color: -moz-nativehyperlinktext;
   --urlbar-popup-action-color: -moz-nativehyperlinktext;
   --autocomplete-popup-highlight-background: Highlight;
   --autocomplete-popup-highlight-color: HighlightText;
 }
+
+@supports not -moz-bool-pref("browser.proton.urlbar.enabled") {
+:root:not(:-moz-lwtheme) {
+  --urlbar-popup-url-color: -moz-nativehyperlinktext;
+}
+} /*** END !proton ***/
 
 /* Translation infobar */
 

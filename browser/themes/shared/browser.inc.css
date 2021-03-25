@@ -45,6 +45,7 @@
   --urlbar-min-height: 32px;
   --urlbar-icon-padding: 6px; /* (32px - 2px border - 2px padding - 16px icon) / 2 */
   --urlbar-separator-color: var(--panel-separator-color);
+  --urlbar-popup-url-color: -moz-nativehyperlinktext;
 
   --lwt-additional-images: none;
   --lwt-background-alignment: right top;
