@@ -495,14 +495,8 @@ void PaymentRequestManager::CreatePayment(
   IPCPaymentOptions options;
   ConvertOptions(aOptions, options);
 
-  nsCOMPtr<nsPIDOMWindowOuter> outerWindow = aWindow->GetOuterWindow();
-  MOZ_ASSERT(outerWindow);
-  if (nsCOMPtr<nsPIDOMWindowOuter> topOuterWindow =
-          outerWindow->GetInProcessTop()) {
-    outerWindow = topOuterWindow;
-  }
-  uint64_t topOuterWindowId = outerWindow->WindowID();
-
+  uint64_t topOuterWindowId =
+      aWindow->GetWindowContext()->TopWindowContext()->OuterWindowId();
   IPCPaymentCreateActionRequest action(topOuterWindowId, internalId,
                                        aTopLevelPrincipal, methodData, details,
                                        options, shippingOption);
