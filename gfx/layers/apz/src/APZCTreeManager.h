@@ -565,6 +565,10 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
     // Make it move-only.
     HitTestResult(HitTestResult&&) = default;
     HitTestResult& operator=(HitTestResult&&) = default;
+
+    // Make a copy of all the fields except mScrollbarNode (the field
+    // that makes this move-only).
+    HitTestResult CopyWithoutScrollbarNode() const;
   };
 
   /* Some helper functions to find an APZC given some identifying input. These
