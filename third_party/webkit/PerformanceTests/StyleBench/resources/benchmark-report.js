@@ -81,6 +81,7 @@
             if (location.search == '?raptor') {
                 var data = ['raptor-benchmark', 'speedometer', measuredValuesByFullName];
                 window.postMessage(data, '*');
+                window.sessionStorage.setItem('benchmark_results',  JSON.stringify(data));
             } else if (typeof tpRecordTime !== "undefined") {
                 var values = new Array;
                 var allNames = new Array;
