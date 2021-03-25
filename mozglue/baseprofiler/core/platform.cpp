@@ -3460,12 +3460,11 @@ void profiler_unregister_thread() {
   }
 }
 
-void profiler_register_page(uint64_t aBrowsingContextID,
-                            uint64_t aInnerWindowID, const std::string& aUrl,
+void profiler_register_page(uint64_t aTabID, uint64_t aInnerWindowID,
+                            const std::string& aUrl,
                             uint64_t aEmbedderInnerWindowID) {
   DEBUG_LOG("profiler_register_page(%" PRIu64 ", %" PRIu64 ", %s, %" PRIu64 ")",
-            aBrowsingContextID, aInnerWindowID, aUrl.c_str(),
-            aEmbedderInnerWindowID);
+            aTabID, aInnerWindowID, aUrl.c_str(), aEmbedderInnerWindowID);
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
@@ -3474,8 +3473,8 @@ void profiler_register_page(uint64_t aBrowsingContextID,
   // When a Browsing context is first loaded, the first url loaded in it will be
   // about:blank. Because of that, this call keeps the first non-about:blank
   // registration of window and discards the previous one.
-  RefPtr<PageInformation> pageInfo = new PageInformation(
-      aBrowsingContextID, aInnerWindowID, aUrl, aEmbedderInnerWindowID);
+  RefPtr<PageInformation> pageInfo =
+      new PageInformation(aTabID, aInnerWindowID, aUrl, aEmbedderInnerWindowID);
   CorePS::AppendRegisteredPage(lock, std::move(pageInfo));
 
   // After appending the given page to CorePS, look for the expired

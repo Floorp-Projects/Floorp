@@ -27,7 +27,7 @@ class SpliceableJSONWriter;
 // it in the next page registration.
 class PageInformation final {
  public:
-  PageInformation(uint64_t aBrowsingContextID, uint64_t aInnerWindowID,
+  PageInformation(uint64_t aTabID, uint64_t aInnerWindowID,
                   const std::string& aUrl, uint64_t aEmbedderInnerWindowID);
 
   // Using hand-rolled ref-counting, because RefCounted.h macros don't produce
@@ -45,7 +45,7 @@ class PageInformation final {
   void StreamJSON(SpliceableJSONWriter& aWriter) const;
 
   uint64_t InnerWindowID() const { return mInnerWindowID; }
-  uint64_t BrowsingContextID() const { return mBrowsingContextID; }
+  uint64_t TabID() const { return mTabID; }
   const std::string& Url() const { return mUrl; }
   uint64_t EmbedderInnerWindowID() const { return mEmbedderInnerWindowID; }
 
@@ -58,7 +58,7 @@ class PageInformation final {
   }
 
  private:
-  const uint64_t mBrowsingContextID;
+  const uint64_t mTabID;
   const uint64_t mInnerWindowID;
   const std::string mUrl;
   const uint64_t mEmbedderInnerWindowID;

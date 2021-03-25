@@ -799,13 +799,13 @@ class ActivePS {
 
   ActivePS(PSLockRef aLock, PowerOfTwo32 aCapacity, double aInterval,
            uint32_t aFeatures, const char** aFilters, uint32_t aFilterCount,
-           uint64_t aActiveBrowsingContextID, const Maybe<double>& aDuration)
+           uint64_t aActiveTabID, const Maybe<double>& aDuration)
       : mGeneration(sNextGeneration++),
         mCapacity(aCapacity),
         mDuration(aDuration),
         mInterval(aInterval),
         mFeatures(AdjustFeatures(aFeatures, aFilterCount)),
-        mActiveBrowsingContextID(aActiveBrowsingContextID),
+        mActiveTabID(aActiveTabID),
         mProfileBufferChunkManager(
             size_t(ClampToAllowedEntries(aCapacity.Value())) * scBytesPerEntry,
             ChunkSizeForEntries(aCapacity.Value())),
@@ -913,11 +913,11 @@ class ActivePS {
  public:
   static void Create(PSLockRef aLock, PowerOfTwo32 aCapacity, double aInterval,
                      uint32_t aFeatures, const char** aFilters,
-                     uint32_t aFilterCount, uint64_t aActiveBrowsingContextID,
+                     uint32_t aFilterCount, uint64_t aActiveTabID,
                      const Maybe<double>& aDuration) {
     MOZ_ASSERT(!sInstance);
     sInstance = new ActivePS(aLock, aCapacity, aInterval, aFeatures, aFilters,
-                             aFilterCount, aActiveBrowsingContextID, aDuration);
+                             aFilterCount, aActiveTabID, aDuration);
   }
 
   [[nodiscard]] static SamplerThread* Destroy(PSLockRef aLock) {
@@ -934,14 +934,14 @@ class ActivePS {
   static bool Equals(PSLockRef, PowerOfTwo32 aCapacity,
                      const Maybe<double>& aDuration, double aInterval,
                      uint32_t aFeatures, const char** aFilters,
-                     uint32_t aFilterCount, uint64_t aActiveBrowsingContextID) {
+                     uint32_t aFilterCount, uint64_t aActiveTabID) {
     MOZ_ASSERT(sInstance);
     if (sInstance->mCapacity != aCapacity ||
         sInstance->mDuration != aDuration ||
         sInstance->mInterval != aInterval ||
         sInstance->mFeatures != aFeatures ||
         sInstance->mFilters.length() != aFilterCount ||
-        sInstance->mActiveBrowsingContextID != aActiveBrowsingContextID) {
+        sInstance->mActiveTabID != aActiveTabID) {
       return false;
     }
 
@@ -1024,12 +1024,12 @@ class ActivePS {
       if (sInstance->mDuration) {
         aWriter.DoubleProperty("duration", sInstance->mDuration.value());
       }
-      // Here, we are converting uint64_t to double. Browsing Context IDs are
+      // Here, we are converting uint64_t to double. Tab IDs are
       // being created using `nsContentUtils::GenerateProcessSpecificId`, which
       // is specifically designed to only use 53 of the 64 bits to be lossless
       // when passed into and out of JS as a double.
       aWriter.DoubleProperty("activeBrowsingContextID",
-                             sInstance->mActiveBrowsingContextID);
+                             sInstance->mActiveTabID);
     }
     aWriter.EndObject();
   }
@@ -1044,7 +1044,7 @@ class ActivePS {
 
   PS_GET(uint32_t, Features)
 
-  PS_GET(uint64_t, ActiveBrowsingContextID)
+  PS_GET(uint64_t, ActiveTabID)
 
 #define PS_GET_FEATURE(n_, str_, Name_, desc_)                \
   static bool Feature##Name_(PSLockRef) {                     \
@@ -1379,10 +1379,10 @@ class ActivePS {
   // Substrings of names of threads we want to profile.
   Vector<std::string> mFilters;
 
-  // Browsing Context ID of the active active browser screen's active tab.
+  // ID of the active browser screen's active tab.
   // It's being used to determine the profiled tab. It's "0" if we failed to
   // get the ID.
-  const uint64_t mActiveBrowsingContextID;
+  const uint64_t mActiveTabID;
 
   // The chunk manager used by `mProfileBuffer` below.
   ProfileBufferChunkManagerWithLocalLimit mProfileBufferChunkManager;
@@ -3083,8 +3083,8 @@ static void PrintUsageThenExit(int aExitCode) {
       "  any of the filters is a case-insensitive substring of the thread\n"
       "  name. If unset, a default is used.\n"
       "\n"
-      "  MOZ_PROFILER_STARTUP_ACTIVE_BROWSING_CONTEXT_ID=<Number>\n"
-      "  This variable is used to propagate the activeBrowsingContextID of\n"
+      "  MOZ_PROFILER_STARTUP_ACTIVE_TAB_ID=<Number>\n"
+      "  This variable is used to propagate the activeTabID of\n"
       "  the profiler init params to subprocesses.\n"
       "\n"
       "  MOZ_PROFILER_SHUTDOWN\n"
@@ -4037,7 +4037,7 @@ static void NotifyProfilerStarted(const PowerOfTwo32& aCapacity,
                                   const Maybe<double>& aDuration,
                                   double aInterval, uint32_t aFeatures,
                                   const char** aFilters, uint32_t aFilterCount,
-                                  uint64_t aActiveBrowsingContextID) {
+                                  uint64_t aActiveTabID) {
   nsTArray<nsCString> filtersArray;
   for (size_t i = 0; i < aFilterCount; ++i) {
     filtersArray.AppendElement(aFilters[i]);
@@ -4045,7 +4045,7 @@ static void NotifyProfilerStarted(const PowerOfTwo32& aCapacity,
 
   nsCOMPtr<nsIProfilerStartParams> params = new nsProfilerStartParams(
       aCapacity.Value(), aDuration, aInterval, aFeatures,
-      std::move(filtersArray), aActiveBrowsingContextID);
+      std::move(filtersArray), aActiveTabID);
 
   ProfilerParent::ProfilerStarted(params);
   NotifyObservers("profiler-started", params);
@@ -4054,7 +4054,7 @@ static void NotifyProfilerStarted(const PowerOfTwo32& aCapacity,
 static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
                                   double aInterval, uint32_t aFeatures,
                                   const char** aFilters, uint32_t aFilterCount,
-                                  uint64_t aActiveBrowsingContextID,
+                                  uint64_t aActiveTabID,
                                   const Maybe<double>& aDuration);
 
 // This basically duplicates AutoProfilerLabel's constructor.
@@ -4142,8 +4142,7 @@ void profiler_init(void* aStackTop) {
   PowerOfTwo32 capacity = PROFILER_DEFAULT_ENTRIES;
   Maybe<double> duration = Nothing();
   double interval = PROFILER_DEFAULT_INTERVAL;
-  uint64_t activeBrowsingContextID =
-      PROFILER_DEFAULT_ACTIVE_BROWSING_CONTEXT_ID;
+  uint64_t activeTabID = PROFILER_DEFAULT_ACTIVE_TAB_ID;
 
   {
     PSAutoLock lock(gPSMutex);
@@ -4271,25 +4270,23 @@ void profiler_init(void* aStackTop) {
       LOG("- MOZ_PROFILER_STARTUP_FILTERS = %s", startupFilters);
     }
 
-    const char* startupActiveBrowsingContextID =
-        getenv("MOZ_PROFILER_STARTUP_ACTIVE_BROWSING_CONTEXT_ID");
-    if (startupActiveBrowsingContextID &&
-        startupActiveBrowsingContextID[0] != '\0') {
-      std::istringstream iss(startupActiveBrowsingContextID);
-      iss >> activeBrowsingContextID;
+    const char* startupActiveTabID =
+        getenv("MOZ_PROFILER_STARTUP_ACTIVE_TAB_ID");
+    if (startupActiveTabID && startupActiveTabID[0] != '\0') {
+      std::istringstream iss(startupActiveTabID);
+      iss >> activeTabID;
       if (!iss.fail()) {
-        LOG("- MOZ_PROFILER_STARTUP_ACTIVE_BROWSING_CONTEXT_ID = %" PRIu64,
-            activeBrowsingContextID);
+        LOG("- MOZ_PROFILER_STARTUP_ACTIVE_TAB_ID = %" PRIu64, activeTabID);
       } else {
-        LOG("- MOZ_PROFILER_STARTUP_ACTIVE_BROWSING_CONTEXT_ID not a valid "
+        LOG("- MOZ_PROFILER_STARTUP_ACTIVE_TAB_ID not a valid "
             "uint64_t: %s",
-            startupActiveBrowsingContextID);
+            startupActiveTabID);
         PrintUsageThenExit(1);
       }
     }
 
     locked_profiler_start(lock, capacity, interval, features, filters.begin(),
-                          filters.length(), activeBrowsingContextID, duration);
+                          filters.length(), activeTabID, duration);
   }
 
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
@@ -4438,7 +4435,7 @@ void profiler_get_profile_json_into_lazily_allocated_buffer(
 void profiler_get_start_params(int* aCapacity, Maybe<double>* aDuration,
                                double* aInterval, uint32_t* aFeatures,
                                Vector<const char*>* aFilters,
-                               uint64_t* aActiveBrowsingContextID) {
+                               uint64_t* aActiveTabID) {
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
   if (NS_WARN_IF(!aCapacity) || NS_WARN_IF(!aDuration) ||
@@ -4454,7 +4451,7 @@ void profiler_get_start_params(int* aCapacity, Maybe<double>* aDuration,
     *aDuration = Nothing();
     *aInterval = 0;
     *aFeatures = 0;
-    *aActiveBrowsingContextID = 0;
+    *aActiveTabID = 0;
     aFilters->clear();
     return;
   }
@@ -4463,7 +4460,7 @@ void profiler_get_start_params(int* aCapacity, Maybe<double>* aDuration,
   *aDuration = ActivePS::Duration(lock);
   *aInterval = ActivePS::Interval(lock);
   *aFeatures = ActivePS::Features(lock);
-  *aActiveBrowsingContextID = ActivePS::ActiveBrowsingContextID(lock);
+  *aActiveTabID = ActivePS::ActiveTabID(lock);
 
   const Vector<std::string>& filters = ActivePS::Filters(lock);
   MOZ_ALWAYS_TRUE(aFilters->resize(filters.length()));
@@ -4528,10 +4525,8 @@ void GetProfilerEnvVarsForChildProcess(
   }
   aSetEnv("MOZ_PROFILER_STARTUP_FILTERS", filtersString.c_str());
 
-  auto activeBrowsingContextIDString =
-      Smprintf("%" PRIu64, ActivePS::ActiveBrowsingContextID(lock));
-  aSetEnv("MOZ_PROFILER_STARTUP_ACTIVE_BROWSING_CONTEXT_ID",
-          activeBrowsingContextIDString.get());
+  auto activeTabIDString = Smprintf("%" PRIu64, ActivePS::ActiveTabID(lock));
+  aSetEnv("MOZ_PROFILER_STARTUP_ACTIVE_TAB_ID", activeTabIDString.get());
 }
 
 }  // namespace mozilla
@@ -4673,14 +4668,14 @@ static bool HasMinimumLength(const char* aString, size_t aMinimumLength) {
 static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
                                   double aInterval, uint32_t aFeatures,
                                   const char** aFilters, uint32_t aFilterCount,
-                                  uint64_t aActiveBrowsingContextID,
+                                  uint64_t aActiveTabID,
                                   const Maybe<double>& aDuration) {
   if (LOG_TEST) {
     LOG("locked_profiler_start");
     LOG("- capacity  = %u", unsigned(aCapacity.Value()));
     LOG("- duration  = %.2f", aDuration ? *aDuration : -1);
     LOG("- interval = %.2f", aInterval);
-    LOG("- browsing context ID = %" PRIu64, aActiveBrowsingContextID);
+    LOG("- tab ID = %" PRIu64, aActiveTabID);
 
 #define LOG_FEATURE(n_, str_, Name_, desc_)     \
   if (ProfilerFeature::Has##Name_(aFeatures)) { \
@@ -4743,7 +4738,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
   double interval = aInterval > 0 ? aInterval : PROFILER_DEFAULT_INTERVAL;
 
   ActivePS::Create(aLock, capacity, interval, aFeatures, aFilters, aFilterCount,
-                   aActiveBrowsingContextID, duration);
+                   aActiveTabID, duration);
 
   // ActivePS::Create can only succeed or crash.
   MOZ_ASSERT(ActivePS::Exists(aLock));
@@ -4846,7 +4841,7 @@ static void locked_profiler_start(PSLockRef aLock, PowerOfTwo32 aCapacity,
 
 void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
                     uint32_t aFeatures, const char** aFilters,
-                    uint32_t aFilterCount, uint64_t aActiveBrowsingContextID,
+                    uint32_t aFilterCount, uint64_t aActiveTabID,
                     const Maybe<double>& aDuration) {
   LOG("profiler_start");
 
@@ -4867,7 +4862,7 @@ void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
     }
 
     locked_profiler_start(lock, aCapacity, aInterval, aFeatures, aFilters,
-                          aFilterCount, aActiveBrowsingContextID, aDuration);
+                          aFilterCount, aActiveTabID, aDuration);
   }
 
 #if defined(MOZ_REPLACE_MALLOC) && defined(MOZ_PROFILER_MEMORY)
@@ -4884,13 +4879,12 @@ void profiler_start(PowerOfTwo32 aCapacity, double aInterval,
     delete samplerThread;
   }
   NotifyProfilerStarted(aCapacity, aDuration, aInterval, aFeatures, aFilters,
-                        aFilterCount, aActiveBrowsingContextID);
+                        aFilterCount, aActiveTabID);
 }
 
 void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
                              uint32_t aFeatures, const char** aFilters,
-                             uint32_t aFilterCount,
-                             uint64_t aActiveBrowsingContextID,
+                             uint32_t aFilterCount, uint64_t aActiveTabID,
                              const Maybe<double>& aDuration) {
   LOG("profiler_ensure_started");
 
@@ -4909,18 +4903,17 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
     if (ActivePS::Exists(lock)) {
       // The profiler is active.
       if (!ActivePS::Equals(lock, aCapacity, aDuration, aInterval, aFeatures,
-                            aFilters, aFilterCount, aActiveBrowsingContextID)) {
+                            aFilters, aFilterCount, aActiveTabID)) {
         // Stop and restart with different settings.
         samplerThread = locked_profiler_stop(lock);
         locked_profiler_start(lock, aCapacity, aInterval, aFeatures, aFilters,
-                              aFilterCount, aActiveBrowsingContextID,
-                              aDuration);
+                              aFilterCount, aActiveTabID, aDuration);
         startedProfiler = true;
       }
     } else {
       // The profiler is stopped.
       locked_profiler_start(lock, aCapacity, aInterval, aFeatures, aFilters,
-                            aFilterCount, aActiveBrowsingContextID, aDuration);
+                            aFilterCount, aActiveTabID, aDuration);
       startedProfiler = true;
     }
   }
@@ -4935,7 +4928,7 @@ void profiler_ensure_started(PowerOfTwo32 aCapacity, double aInterval,
 
   if (startedProfiler) {
     NotifyProfilerStarted(aCapacity, aDuration, aInterval, aFeatures, aFilters,
-                          aFilterCount, aActiveBrowsingContextID);
+                          aFilterCount, aActiveTabID);
   }
 }
 
@@ -5358,12 +5351,11 @@ void profiler_unregister_thread() {
   }
 }
 
-void profiler_register_page(uint64_t aBrowsingContextID,
-                            uint64_t aInnerWindowID, const nsCString& aUrl,
+void profiler_register_page(uint64_t aTabID, uint64_t aInnerWindowID,
+                            const nsCString& aUrl,
                             uint64_t aEmbedderInnerWindowID) {
   DEBUG_LOG("profiler_register_page(%" PRIu64 ", %" PRIu64 ", %s, %" PRIu64 ")",
-            aBrowsingContextID, aInnerWindowID, aUrl.get(),
-            aEmbedderInnerWindowID);
+            aTabID, aInnerWindowID, aUrl.get(), aEmbedderInnerWindowID);
 
   MOZ_RELEASE_ASSERT(CorePS::Exists());
 
@@ -5372,8 +5364,8 @@ void profiler_register_page(uint64_t aBrowsingContextID,
   // When a Browsing context is first loaded, the first url loaded in it will be
   // about:blank. Because of that, this call keeps the first non-about:blank
   // registration of window and discards the previous one.
-  RefPtr<PageInformation> pageInfo = new PageInformation(
-      aBrowsingContextID, aInnerWindowID, aUrl, aEmbedderInnerWindowID);
+  RefPtr<PageInformation> pageInfo =
+      new PageInformation(aTabID, aInnerWindowID, aUrl, aEmbedderInnerWindowID);
   CorePS::AppendRegisteredPage(lock, std::move(pageInfo));
 
   // After appending the given page to CorePS, look for the expired
