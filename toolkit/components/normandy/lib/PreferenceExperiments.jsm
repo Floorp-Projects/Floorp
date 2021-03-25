@@ -156,7 +156,16 @@ function ensureStorage() {
       EXPERIMENT_FILE
     );
     const storage = new JSONFile({ path });
+    // `storage.load()` is defined as being infallible: It won't ever throw an
+    // error. However, if there are are I/O errors, such as a corrupt, missing,
+    // or unreadable file the data loaded will be an empty object. This can
+    // happen ever after our migrations have run. If that happens, edit the
+    // storage to match our expected schema before returning it to the rest of
+    // the module.
     gStorePromise = storage.load().then(() => {
+      if (!storage.data.experiments) {
+        storage.data = { ...storage.data, experiments: {} };
+      }
       return storage;
     });
   }
