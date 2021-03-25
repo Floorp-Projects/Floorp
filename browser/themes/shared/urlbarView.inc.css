@@ -750,18 +750,22 @@
 /* search bar popup */
 
 #PopupSearchAutoComplete {
-  background: var(--autocomplete-popup-background);
+  background-color: var(--autocomplete-popup-background);
   color: var(--autocomplete-popup-color);
   border-color: var(--arrowpanel-border-color);
 }
 
 @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
 #PopupSearchAutoComplete {
+  background-color: var(--lwt-toolbar-field-focus);
   border: 1px solid var(--arrowpanel-border-color);
   /* Remove the top border since the panel is flush with the input. */
   border-top-width: 0;
+  border-radius: var(--arrowpanel-border-radius);
+  /* override autocomplete.css padding */
+  padding: var(--panel-subview-body-padding) !important;
 }
-} /*** END !proton ***/
+} /*** END proton ***/
 
 #PopupSearchAutoComplete .autocomplete-richlistitem[selected] {
   background: var(--autocomplete-popup-highlight-background);

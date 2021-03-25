@@ -105,7 +105,9 @@
         <image class="searchbar-engine-image"></image>
         <label class="searchbar-engine-name" flex="1" crop="end" role="presentation"></label>
       </hbox>
+      <menuseparator class="searchbar-separator"/>
       <richlistbox class="autocomplete-richlistbox search-panel-tree" flex="1"></richlistbox>
+      <menuseparator class="searchbar-separator"/>
       <hbox class="search-one-offs"></hbox>
     `;
     }
