@@ -148,6 +148,7 @@ browsertime-benchmark:
         - [wasm-godot-optimizing, godot-i]
         - [sunspider, ss]
         - [assorted-dom, dom]
+        - [jetstream2, js2]
     variants: ["fission"]
     apps: ["firefox"]
     treeherder-symbol: Btime()
@@ -168,15 +169,25 @@ browsertime-benchmark:
             windows7.*: []
             default: [mozilla-central]
     run-on-projects:
-        by-app:
-            firefox:
-                by-test-platform:
-                    (linux|windows|macos)(?!.*shippable).*: []
-                    linux.*shippable.*: ["trunk", "mozilla-beta"]
-                    macos.*shippable.*: ["trunk", "mozilla-beta"]
-                    windows10.*shippable.*: ["trunk", "mozilla-beta"]
+        by-subtest:
+            jetstream2:
+                by-app:
+                    firefox:
+                        by-test-platform:
+                            windows7-32.*/opt: []
+                            (linux|windows10|macos)(?!.*shippable).*: []
+                            default: ['mozilla-central']
                     default: []
-            default: []
+            default:
+                by-app:
+                    firefox:
+                        by-test-platform:
+                            (linux|windows|macos)(?!.*shippable).*: []
+                            linux.*shippable.*: ["trunk", "mozilla-beta"]
+                            macos.*shippable.*: ["trunk", "mozilla-beta"]
+                            windows10.*shippable.*: ["trunk", "mozilla-beta"]
+                            default: []
+                    default: []
     max-run-time:
         by-subtest:
             assorted-dom:
@@ -184,10 +195,12 @@ browsertime-benchmark:
                     .*-qr/.*: 2100
                     .*-ref-hw-2017/.*: 2100
                     default: 1500
+            jetstream2: 8000
             default: 900
     fetches:
         fetch:
             - assorted-dom
+            - jetstream2
 
 browsertime-tp6-live:
     <<: *tp6-defaults

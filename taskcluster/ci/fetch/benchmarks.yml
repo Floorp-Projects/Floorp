@@ -47,6 +47,6 @@ jetstream2:
     description: JetStream2 Benchmark
     fetch:
         type: static-url
-        url: https://github.com/mozilla/perf-automation/releases/download/jetstream2-v1.1/jetstream2-e19a0865c946.zip
-        sha256: 808e67528c114d45d0cf34aedbf71f8ecc8cefa99323879fc503678a32d8c407
-        size: 25486847
+        url: https://github.com/mozilla/perf-automation/releases/download/jetstream2-v1.2/jetstream2-54c3c3d9d3f6.zip
+        sha256: 978f5920f27099d4a6b854c5e4a50d2a706fad8b5082a6fdcab95bb71fb6dc12
+        size: 25481279

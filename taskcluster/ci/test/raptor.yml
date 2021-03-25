@@ -769,22 +769,7 @@ raptor-jetstream2-firefox:
     variants: ["fission"]
     try-name: raptor-jetstream2-firefox
     treeherder-symbol: Rap(js2)
-    run-on-projects:
-        by-variant:
-            fission:
-                by-app:
-                    chrome: []
-                    chromium: []
-                    default:
-                        by-test-platform:
-                            linux64-shippable-qr/opt: ["mozilla-central"]
-                            windows10-64-shippable-qr/opt: ["mozilla-central"]
-                            default: []
-            default:
-                by-test-platform:
-                    windows7-32.*/opt: []
-                    (linux|windows10|macos)(?!.*shippable).*: []
-                    default: ['mozilla-central']
+    run-on-projects: []
     tier: 3
     max-run-time: 8000
     mozharness:
@@ -798,6 +783,7 @@ raptor-jetstream2-firefox-profiling:
     description: "Raptor Jetstream2 on Firefox with Gecko Profiling"
     try-name: raptor-jetstream2-firefox-profiling
     treeherder-symbol: Rap-Prof(js2)
+    run-on-projects: []
     max-run-time: 8000
     tier: 3
     mozharness:
