@@ -105,28 +105,21 @@ var gViewController = {
   nextHistoryEntryId: Math.floor(Math.random() * 2 ** 32),
 
   async initialize() {
-    await initializeView({
-      loadViewFn: async view => {
-        let viewId = view.startsWith("addons://") ? view : `addons://${view}`;
-        await this.loadView(viewId);
-      },
-      replaceWithDefaultViewFn: async () => {
-        await this.resetState();
-      },
-    });
+    await initializeView();
 
     window.addEventListener("popstate", e => {
       this.renderState(e.state);
     });
   },
 
-  parseViewId(aViewId) {
+  parseViewId(viewId) {
     const matchRegex = /^addons:\/\/([^\/]+)\/(.*)$/;
-    const [, viewType, viewParam] = aViewId.match(matchRegex) || [];
+    const [, viewType, viewParam] = viewId.match(matchRegex) || [];
     return { type: viewType, param: decodeURIComponent(viewParam) };
   },
 
   loadView(viewId, replace = false) {
+    viewId = viewId.startsWith("addons://") ? viewId : `addons://${viewId}`;
     if (viewId == this.currentViewId) {
       return Promise.resolve();
     }

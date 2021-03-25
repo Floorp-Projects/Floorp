@@ -5,6 +5,7 @@
 /* exported initializeView, showView */
 /* import-globals-from aboutaddonsCommon.js */
 /* import-globals-from abuse-reports.js */
+/* import-globals-from view-controller.js */
 /* global MozXULElement, MessageBarStackElement, windowRoot */
 
 "use strict";
@@ -480,22 +481,6 @@ async function isAddonOptionsUIAllowed(addon) {
     isAllowedInPrivateBrowsing(addon)
   );
 }
-
-/**
- * This function is set in initialize() by the parent about:addons window. It
- * is a helper for gViewController.loadView().
- *
- * @param {string} type The view type to load.
- * @param {string} param The (optional) param for the view.
- */
-let loadViewFn;
-
-/**
- * This function is set in initialize() by the parent about:addons window. It
- * is a helper for gViewController.resetView(). This should be
- * used to reset the view if we try to load an invalid view.
- */
-let replaceWithDefaultViewFn;
 
 let _templates = {};
 
@@ -1462,7 +1447,7 @@ class AddonUpdatesMessage extends HTMLElement {
     this.button = document.createElement("button");
     this.button.addEventListener("click", e => {
       if (e.button === 0) {
-        loadViewFn("updates/available");
+        gViewController.loadView("updates/available");
       }
     });
     this.button.hidden = true;
@@ -1558,7 +1543,7 @@ class AddonPageOptions extends HTMLElement {
         await this.checkForUpdates();
         break;
       case "view-recent-updates":
-        loadViewFn("updates/recent");
+        gViewController.loadView("updates/recent");
         break;
       case "install-from-file":
         if (XPINSTALL_ENABLED) {
@@ -1582,7 +1567,7 @@ class AddonPageOptions extends HTMLElement {
         await this.resetAutomaticUpdates();
         break;
       case "manage-shortcuts":
-        loadViewFn("shortcuts/shortcuts");
+        gViewController.loadView("shortcuts/shortcuts");
         break;
     }
   }
@@ -1715,7 +1700,7 @@ class CategoryButton extends HTMLButtonElement {
   }
 
   load() {
-    loadViewFn(this.viewId);
+    gViewController.loadView(this.viewId);
   }
 
   get isVisible() {
@@ -1957,7 +1942,7 @@ class CategoriesBox extends customElements.get("button-group") {
       let button = this.getButtonByName(type);
       if (button.selected) {
         // Cancel the load if this view should be hidden.
-        replaceWithDefaultViewFn();
+        gViewController.resetState();
       }
       this.setShouldHideCategory(type, true);
       button.hidden = true;
@@ -3110,7 +3095,7 @@ class AddonCard extends HTMLElement {
             openOptionsInTab(addon.optionsURL);
           } else if (getOptionsType(addon) == "inline") {
             this.recordActionEvent("preferences", "inline");
-            loadViewFn(`detail/${this.addon.id}/preferences`);
+            gViewController.loadView(`detail/${this.addon.id}/preferences`);
           }
           break;
         case "remove":
@@ -3137,7 +3122,7 @@ class AddonCard extends HTMLElement {
           }
           break;
         case "expand":
-          loadViewFn(`detail/${this.addon.id}`);
+          gViewController.loadView(`detail/${this.addon.id}`);
           break;
         case "more-options":
           // Open panel on click from the keyboard.
@@ -3164,7 +3149,7 @@ class AddonCard extends HTMLElement {
             (e.target === this.addonNameEl || !e.target.closest("a"))
           ) {
             e.preventDefault();
-            loadViewFn(`detail/${this.addon.id}`);
+            gViewController.loadView(`detail/${this.addon.id}`);
           } else if (
             e.target.localName == "a" &&
             e.target.getAttribute("data-telemetry-name")
@@ -3707,7 +3692,7 @@ class RecommendedAddonCard extends HTMLElement {
           action: "manage",
           addon: this.discoAddon,
         });
-        loadViewFn(`detail/${this.addonId}`);
+        gViewController.loadView(`detail/${this.addonId}`);
         break;
       default:
         if (event.target.matches(".disco-addon-author a[href]")) {
@@ -4549,7 +4534,7 @@ class ListView {
 
   async render() {
     if (!(this.type in AddonManager.addonTypes)) {
-      replaceWithDefaultViewFn();
+      gViewController.resetState();
       return;
     }
 
@@ -4606,7 +4591,7 @@ class DetailView {
     let addon = await AddonManager.getAddonByID(this.id);
 
     if (!addon) {
-      replaceWithDefaultViewFn();
+      gViewController.resetState();
       return;
     }
 
@@ -4616,7 +4601,9 @@ class DetailView {
     categoriesBox.selectType(addon.type);
 
     // Go back to the list view when the add-on is removed.
-    card.addEventListener("remove", () => loadViewFn(`list/${addon.type}`));
+    card.addEventListener("remove", () =>
+      gViewController.loadView(`list/${addon.type}`)
+    );
 
     card.setAddon(addon);
     card.expand();
@@ -4765,13 +4752,10 @@ var ScrollOffsets = {
 /**
  * Called automatically when about:addons is loading by view-controller.js.
  */
-async function initializeView(opts) {
+async function initializeView() {
   mainEl = document.getElementById("main");
   addonPageHeader = document.getElementById("page-header");
   categoriesBox = document.querySelector("categories-box");
-
-  loadViewFn = opts.loadViewFn;
-  replaceWithDefaultViewFn = opts.replaceWithDefaultViewFn;
 
   categoriesBox.initialize();
 
@@ -4823,7 +4807,7 @@ async function showView(type, param, { historyEntryId }) {
     container.appendChild(view);
   } else {
     console.warn(`No view for ${type} ${param}, switching to default`);
-    replaceWithDefaultViewFn();
+    gViewController.resetState();
   }
 
   ScrollOffsets.save();
