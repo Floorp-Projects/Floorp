@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.tabtray
 
+import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -12,7 +13,12 @@ import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatImageButton
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
+import androidx.recyclerview.selection.ItemDetailsLookup
+import kotlinx.android.synthetic.main.checkbox_item.view.*
 import kotlinx.android.synthetic.main.tab_tray_grid_item.view.*
+import kotlinx.android.synthetic.main.tab_tray_grid_item.view.mozac_browser_tabstray_close
+import kotlinx.android.synthetic.main.tab_tray_item.view.*
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabViewHolder
@@ -35,6 +41,7 @@ import org.mozilla.fenix.ext.removeTouchDelegate
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.ext.toShortUrl
+import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import kotlin.math.max
 
 /**
@@ -44,7 +51,8 @@ class TabTrayViewHolder(
     itemView: View,
     private val imageLoader: ImageLoader,
     private val store: BrowserStore = itemView.context.components.core.store,
-    private val metrics: MetricController = itemView.context.components.analytics.metrics
+    private val metrics: MetricController = itemView.context.components.analytics.metrics,
+    private val browserTrayInteractor: BrowserTrayInteractor? = null
 ) : TabViewHolder(itemView) {
 
     private val faviconView: ImageView? =
@@ -194,6 +202,20 @@ class TabTrayViewHolder(
                 color
             )
         )
+    }
+
+    fun getItemDetails() = object : ItemDetailsLookup.ItemDetails<Long>() {
+        override fun getPosition(): Int = bindingAdapterPosition
+        override fun getSelectionKey(): Long = itemId
+        override fun inSelectionHotspot(e: MotionEvent): Boolean {
+            return browserTrayInteractor?.isMultiSelectMode() == true
+        }
+    }
+
+    fun showTabIsMultiSelectEnabled(isSelected: Boolean) {
+        itemView.selected_mask.isVisible = isSelected
+        itemView.mozac_browser_tabstray_close.isVisible =
+            browserTrayInteractor?.isMultiSelectMode() == false
     }
 
     private fun updateCloseButtonDescription(title: String) {

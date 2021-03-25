@@ -18,14 +18,12 @@ import mozilla.components.support.base.observer.ObserverRegistry
 // for Android UI APIs.
 //
 // TODO Let's upstream this to AC with tests.
-abstract class TabsAdapter(
+abstract class TabsAdapter<T : TabViewHolder>(
     delegate: Observable<TabsTray.Observer> = ObserverRegistry()
-) : RecyclerView.Adapter<TabViewHolder>(), TabsTray, Observable<TabsTray.Observer> by delegate {
-    private var tabs: Tabs? = null
+) : RecyclerView.Adapter<T>(), TabsTray, Observable<TabsTray.Observer> by delegate {
 
-    var styling: TabsTrayStyling = TabsTrayStyling()
-
-    override fun getItemCount(): Int = tabs?.list?.size ?: 0
+    protected var tabs: Tabs? = null
+    protected var styling: TabsTrayStyling = TabsTrayStyling()
 
     @CallSuper
     override fun updateTabs(tabs: Tabs) {
@@ -35,11 +33,13 @@ abstract class TabsAdapter(
     }
 
     @CallSuper
-    override fun onBindViewHolder(holder: TabViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: T, position: Int) {
         val tabs = tabs ?: return
 
         holder.bind(tabs.list[position], isTabSelected(tabs, position), styling, this)
     }
+
+    override fun getItemCount(): Int = tabs?.list?.size ?: 0
 
     final override fun isTabSelected(tabs: Tabs, position: Int): Boolean =
         tabs.selectedIndex == position

@@ -9,7 +9,8 @@ import mozilla.components.feature.tabs.TabsUseCases
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 
 /**
- * For interacting with UI that extends from [BaseBrowserTrayList] and other browser tab tray views.
+ * For interacting with UI that is specifically for [BaseBrowserTrayList] and other browser
+ * tab tray views.
  */
 interface BrowserTrayInteractor {
 
@@ -24,9 +25,9 @@ interface BrowserTrayInteractor {
     fun onCloseTab(tab: Tab)
 
     /**
-     * Enable or disable multi-select mode.
+     * If multi-select mode is enabled or disabled.
      */
-    fun onMultiSelect(enabled: Boolean)
+    fun isMultiSelectMode(): Boolean
 }
 
 /**
@@ -54,9 +55,10 @@ class DefaultBrowserTrayInteractor(
     }
 
     /**
-     * See [BrowserTrayInteractor.onMultiSelect].
+     * See [BrowserTrayInteractor.isMultiSelectMode].
      */
-    override fun onMultiSelect(enabled: Boolean) {
-        // TODO https://github.com/mozilla-mobile/fenix/issues/18443
+    override fun isMultiSelectMode(): Boolean {
+        // Needs https://github.com/mozilla-mobile/fenix/issues/18513 to change this value
+        return false
     }
 }

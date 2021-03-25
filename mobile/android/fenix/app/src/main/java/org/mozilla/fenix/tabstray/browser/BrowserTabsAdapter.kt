@@ -6,6 +6,7 @@ package org.mozilla.fenix.tabstray.browser
 
 import android.content.Context
 import android.view.ViewGroup
+import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.GridLayoutManager
 import kotlinx.android.synthetic.main.tab_tray_item.view.*
@@ -27,7 +28,7 @@ class BrowserTabsAdapter(
     private val interactor: BrowserTrayInteractor,
     private val layoutManager: (() -> GridLayoutManager)? = null,
     delegate: Observable<TabsTray.Observer> = ObserverRegistry()
-) : TabsAdapter(delegate) {
+) : TabsAdapter<TabViewHolder>(delegate) {
 
     /**
      * The layout types for the tabs.
@@ -37,7 +38,16 @@ class BrowserTabsAdapter(
         GRID
     }
 
+    /**
+     * Tracks the selected tabs in multi-select mode.
+     */
+    var tracker: SelectionTracker<Long>? = null
+
     private val imageLoader = ThumbnailLoader(context.components.core.thumbnailStorage)
+
+    init {
+        setHasStableIds(true)
+    }
 
     override fun getItemViewType(position: Int): Int {
         return if (context.settings().gridTabView) {
@@ -54,25 +64,22 @@ class BrowserTabsAdapter(
         }
     }
 
+    override fun getItemId(position: Int) = position.toLong()
+
     override fun onBindViewHolder(holder: TabViewHolder, position: Int) {
         super.onBindViewHolder(holder, position)
 
         holder.tab?.let { tab ->
-            if (!tab.private) {
-                holder.itemView.setOnLongClickListener {
-                    interactor.onMultiSelect(true)
-                    true
-                }
-            } else {
-                holder.itemView.setOnLongClickListener(null)
-            }
-
             holder.itemView.setOnClickListener {
                 interactor.onOpenTab(tab)
             }
 
             holder.itemView.mozac_browser_tabstray_close.setOnClickListener {
                 interactor.onCloseTab(tab)
+            }
+
+            tracker?.let {
+                holder.showTabIsMultiSelectEnabled(it.isSelected(position.toLong()))
             }
         }
     }

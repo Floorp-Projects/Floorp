@@ -53,7 +53,7 @@ abstract class BaseBrowserTrayList @JvmOverloads constructor(
     private val tabsFeature by lazy {
         ViewBoundFeatureWrapper(
             feature = TabsFeature(
-                adapter as TabsAdapter,
+                adapter as BrowserTabsAdapter,
                 context.components.core.store,
                 selectTabUseCase,
                 removeTabUseCase,

@@ -9,8 +9,6 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import org.mozilla.fenix.tabstray.BrowserTabViewHolder.Companion.LAYOUT_ID_NORMAL_TAB
-import org.mozilla.fenix.tabstray.BrowserTabViewHolder.Companion.LAYOUT_ID_PRIVATE_TAB
 import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 
@@ -27,8 +25,14 @@ class TrayPagerAdapter(
         val itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
 
         return when (viewType) {
-            LAYOUT_ID_NORMAL_TAB -> BrowserTabViewHolder(itemView, interactor)
-            LAYOUT_ID_PRIVATE_TAB -> BrowserTabViewHolder(itemView, interactor)
+            NormalBrowserTabViewHolder.LAYOUT_ID -> NormalBrowserTabViewHolder(
+                itemView,
+                interactor
+            )
+            PrivateBrowserTabViewHolder.LAYOUT_ID -> PrivateBrowserTabViewHolder(
+                itemView,
+                interactor
+            )
             else -> throw IllegalStateException("Unknown viewType.")
         }
     }
@@ -45,8 +49,8 @@ class TrayPagerAdapter(
 
     override fun getItemViewType(position: Int): Int {
         return when (position) {
-            POSITION_NORMAL_TABS -> LAYOUT_ID_NORMAL_TAB
-            POSITION_PRIVATE_TABS -> LAYOUT_ID_PRIVATE_TAB
+            POSITION_NORMAL_TABS -> NormalBrowserTabViewHolder.LAYOUT_ID
+            POSITION_PRIVATE_TABS -> PrivateBrowserTabViewHolder.LAYOUT_ID
             else -> throw IllegalStateException("Unknown position.")
         }
     }
