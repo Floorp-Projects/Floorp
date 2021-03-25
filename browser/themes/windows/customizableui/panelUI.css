@@ -16,6 +16,18 @@
   padding-inline-start: 3px;
 }
 
+@supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
+@media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+  /* Prevent the global arrowscrollbox rules from replacing our background,
+     or adding more padding that would misalign our submenus. */
+  #BMB_bookmarksPopup::part(arrowscrollbox),
+  #BMB_bookmarksPopup menupopup[placespopup=true]::part(arrowscrollbox) {
+    background-color: var(--arrowpanel-background);
+    padding-block-start: 0;
+  }
+}
+}
+
 #BMB_bookmarksPopup menupopup[placespopup=true]::part(innerbox) {
   /* emulating MozPlacesPopupArrow but without the arrow */
   box-shadow: 0 0 4px rgba(0,0,0,0.2);
