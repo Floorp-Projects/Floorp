@@ -154,6 +154,7 @@ treeherder:
         'rust': 'Rust checks'
         'Static-Analysis': 'Full tree static-analysis'
         'SS': 'Shadow scheduler'
+        'Sentry': 'Sentry synchronization'
         'test-info': 'Test manifest skip/fail information'
         'condprof': 'Conditioned Profile Builder'
         'doc': 'Documentation'
