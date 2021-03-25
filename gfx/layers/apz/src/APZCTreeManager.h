@@ -675,7 +675,16 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   HitTestResult GetTouchInputBlockAPZC(
       const MultiTouchInput& aEvent,
       nsTArray<TouchBehaviorFlags>* aOutTouchBehaviors);
-  APZEventResult ProcessTouchInput(MultiTouchInput& aInput);
+
+  /**
+   * A helper structure for use by ReceiveInputEvent() and its helpers.
+   */
+  struct InputHandlingState {
+    // The value that will be returned by ReceiveInputEvent().
+    APZEventResult mResult;
+  };
+
+  void ProcessTouchInput(InputHandlingState& aState, MultiTouchInput& aInput);
   /**
    * Given a mouse-down event that hit a scroll thumb node, set up APZ
    * dragging of the scroll thumb.
