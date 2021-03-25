@@ -6,6 +6,7 @@
 
 #include "mozilla/net/OpaqueResponseUtils.h"
 
+#include "nsHttpResponseHead.h"
 #include "nsMimeTypes.h"
 
 namespace mozilla {
@@ -115,6 +116,21 @@ ParseContentRangeHeaderString(const nsAutoCString& aRangeStr) {
   }
 
   return std::make_tuple(rangeStart, rangeEnd, rangeTotal);
+}
+
+bool IsFirstPartialResponse(nsHttpResponseHead& aResponseHead) {
+  MOZ_ASSERT(aResponseHead.Status() == 206);
+
+  nsAutoCString contentRange;
+  Unused << aResponseHead.GetHeader(nsHttp::Content_Range, contentRange);
+
+  auto rangeOrErr = ParseContentRangeHeaderString(contentRange);
+  if (rangeOrErr.isErr()) {
+    return false;
+  }
+
+  const int64_t responseFirstBytePos = std::get<0>(rangeOrErr.unwrap());
+  return responseFirstBytePos == 0;
 }
 
 }  // namespace net
