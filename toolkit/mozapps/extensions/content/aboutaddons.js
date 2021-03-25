@@ -431,7 +431,7 @@ async function checkForUpdates() {
   let addons = await AddonManager.getAddonsByTypes(null);
   addons = addons.filter(addon => hasPermission(addon, "upgrade"));
   let updates = await Promise.all(addons.map(addon => checkForUpdate(addon)));
-  Services.obs.notifyObservers(null, "EM-update-check-finished");
+  gViewController.notifyEMUpdateCheckFinished();
   return updates.reduce(
     (counts, update) => ({
       installed: counts.installed + (update.installed ? 1 : 0),
@@ -4700,21 +4700,13 @@ function openAmoInTab(el) {
   windowRoot.ownerGlobal.openTrustedLinkIn(amoUrl, "tab");
 }
 
-function sendEMPong(aSubject, aTopic, aData) {
-  Services.obs.notifyObservers(window, "EM-pong");
-}
-
 /**
  * Called when about:addons is loaded.
  */
 async function initialize() {
-  Services.obs.addObserver(sendEMPong, "EM-ping");
-
   window.addEventListener(
     "unload",
     () => {
-      Services.obs.removeObserver(sendEMPong, "EM-ping");
-
       // Clear out the document so the disconnectedCallback will trigger
       // properly and all of the custom elements can cleanup.
       document.body.textContent = "";
@@ -4730,7 +4722,7 @@ async function initialize() {
   AddonManagerListenerHandler.startup();
 
   // browser.js may call loadView here if it expects an EM-loaded notification
-  Services.obs.notifyObservers(window, "EM-loaded");
+  gViewController.notifyEMLoaded();
 
   // Select an initial view if no listener has set one so far
   if (!gViewController.currentViewId) {
