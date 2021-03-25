@@ -394,6 +394,8 @@ SubDialog.prototype = {
       this._frame.contentDocument.body ||
       this._frame.contentDocument.documentElement;
     a11yDoc.setAttribute("role", "dialog");
+
+    Services.obs.notifyObservers(this._frame.contentWindow, "subdialog-loaded");
   },
 
   async _onLoad(aEvent) {
