@@ -6,7 +6,6 @@
 
 /* import-globals-from ../../../content/customElements.js */
 /* import-globals-from aboutaddonsCommon.js */
-/* import-globals-from aboutaddons.js */
 /* exported loadView */
 
 const { AddonManager } = ChromeUtils.import(
@@ -46,6 +45,40 @@ async function recordViewTelemetry(param) {
 function loadView(viewId) {
   gViewController.loadView(viewId);
 }
+
+/**
+ * Helper for saving and restoring the scroll offsets when a previously loaded
+ * view is accessed again.
+ */
+var ScrollOffsets = {
+  _key: null,
+  _offsets: new Map(),
+  canRestore: true,
+
+  setView(historyEntryId) {
+    this._key = historyEntryId;
+    this.canRestore = true;
+  },
+
+  getPosition() {
+    if (!this.canRestore) {
+      return { top: 0, left: 0 };
+    }
+    let { scrollTop: top, scrollLeft: left } = document.documentElement;
+    return { top, left };
+  },
+
+  save() {
+    if (this._key) {
+      this._offsets.set(this._key, this.getPosition());
+    }
+  },
+
+  restore() {
+    let { top = 0, left = 0 } = this._offsets.get(this._key) || {};
+    window.scrollTo({ top, left, behavior: "auto" });
+  },
+};
 
 var gViewController = {
   currentViewId: null,
