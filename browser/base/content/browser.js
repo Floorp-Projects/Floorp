@@ -690,7 +690,8 @@ function shouldSuppressPopupNotifications() {
   return (
     window.windowState == window.STATE_MINIMIZED ||
     gBrowser?.selectedBrowser.hasAttribute("tabmodalChromePromptShowing") ||
-    gBrowser?.selectedBrowser.hasAttribute("tabDialogShowing")
+    gBrowser?.selectedBrowser.hasAttribute("tabDialogShowing") ||
+    gDialogBox?.isOpen
   );
 }
 
@@ -9515,6 +9516,7 @@ var gDialogBox = {
       dialog.removeEventListener("close", this);
       this._updateMenuAndCommandState(true /* to enable */);
       this._dialog = null;
+      UpdatePopupNotificationsVisibility();
     }
     if (this._queued.length) {
       setTimeout(() => this._openNextDialog(), 0);
@@ -9592,6 +9594,7 @@ var gDialogBox = {
       },
       args
     );
+    UpdatePopupNotificationsVisibility();
     return closedPromise;
   },
 
