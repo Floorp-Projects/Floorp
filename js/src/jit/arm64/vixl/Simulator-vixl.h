@@ -1574,6 +1574,9 @@ class Simulator : public DecoderVisitor {
   LogicVRegister dup_immediate(VectorFormat vform,
                                LogicVRegister dst,
                                uint64_t imm);
+  LogicVRegister mov(VectorFormat vform,
+                     LogicVRegister dst,
+                     const LogicVRegister& src);                               
   LogicVRegister movi(VectorFormat vform,
                       LogicVRegister dst,
                       uint64_t imm);
