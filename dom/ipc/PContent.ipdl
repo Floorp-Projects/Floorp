@@ -10,6 +10,7 @@ include protocol PCompositorManager;
 include protocol PContentPermissionRequest;
 include protocol PCycleCollectWithLogs;
 include protocol PDocumentChannel;
+include protocol PExtensions;
 include protocol PExternalHelperApp;
 include protocol PHandlerService;
 include protocol PFileDescriptorSet;
@@ -406,6 +407,7 @@ nested(upto inside_cpow) sync protocol PContent
     manages PBrowser;
     manages PContentPermissionRequest;
     manages PCycleCollectWithLogs;
+    manages PExtensions;
     manages PExternalHelperApp;
     manages PFileDescriptorSet;
     manages PHal;
@@ -469,6 +471,8 @@ parent:
     // this should be enough...
     async CloneDocumentTreeInto(MaybeDiscardedBrowsingContext aSourceBc,
                                 MaybeDiscardedBrowsingContext aTargetBc);
+
+    async PExtensions();
 
 child:
     async ConstructBrowser(ManagedEndpoint<PBrowserChild> browserEp,
