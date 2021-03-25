@@ -1279,14 +1279,15 @@ void MacroAssembler::shuffleInt8x16(const uint8_t lanes[16], FloatRegister rhs,
   MacroAssemblerX86Shared::shuffleInt8x16(lhsDest, rhs, lhsDest, lanes);
 }
 
-void MacroAssembler::blendInt8x16(const uint8_t lanes[16], FloatRegister rhs,
-                                  FloatRegister lhsDest, FloatRegister temp) {
-  MacroAssemblerX86Shared::blendInt8x16(lhsDest, rhs, lhsDest, temp, lanes);
+void MacroAssembler::blendInt8x16(const uint8_t lanes[16], FloatRegister lhs,
+                                  FloatRegister rhs, FloatRegister dest,
+                                  FloatRegister temp) {
+  MacroAssemblerX86Shared::blendInt8x16(lhs, rhs, dest, temp, lanes);
 }
 
-void MacroAssembler::blendInt16x8(const uint16_t lanes[8], FloatRegister rhs,
-                                  FloatRegister lhsDest) {
-  MacroAssemblerX86Shared::blendInt16x8(lhsDest, rhs, lhsDest, lanes);
+void MacroAssembler::blendInt16x8(const uint16_t lanes[8], FloatRegister lhs,
+                                  FloatRegister rhs, FloatRegister dest) {
+  MacroAssemblerX86Shared::blendInt16x8(lhs, rhs, dest, lanes);
 }
 
 void MacroAssembler::interleaveHighInt16x8(FloatRegister rhs,
@@ -1355,7 +1356,7 @@ void MacroAssembler::permuteInt32x4(const uint32_t lanes[4], FloatRegister src,
           dest);
 }
 
-void MacroAssembler::concatAndRightShiftInt8x16(FloatRegister rhs,
+void MacroAssembler::concatAndRightShiftSimd128(FloatRegister rhs,
                                                 FloatRegister lhsDest,
                                                 uint32_t shift) {
   vpalignr(Operand(rhs), lhsDest, shift);
@@ -1573,26 +1574,27 @@ void MacroAssembler::mulInt32x4(const SimdConstant& rhs,
                 &MacroAssembler::vpmulldSimd128);
 }
 
-void MacroAssembler::mulInt64x2(FloatRegister rhs, FloatRegister lhsDest,
-                                FloatRegister temp) {
+void MacroAssembler::mulInt64x2(FloatRegister lhs, FloatRegister rhs,
+                                FloatRegister dest, FloatRegister temp) {
+  MOZ_ASSERT(lhs == dest);
   ScratchSimd128Scope temp2(*this);
-  // lhsDest = <D C> <B A>
+  // lhs = <D C> <B A>
   // rhs = <H G> <F E>
   // result = <(DG+CH)_low+CG_high CG_low> <(BE+AF)_low+AE_high AE_low>
-  moveSimd128(lhsDest, temp);                // temp  = <D C> <B A>
-  vpsrlq(Imm32(32), temp, temp);             // temp  = <0 D> <0 B>
-  vpmuludq(rhs, temp, temp);                 // temp  = <DG> <BE>
-  moveSimd128(rhs, temp2);                   // temp2 = <H G> <F E>
-  vpsrlq(Imm32(32), temp2, temp2);           // temp2 = <0 H> <0 F>
-  vpmuludq(lhsDest, temp2, temp2);           // temp2 = <CH> <AF>
-  vpaddq(Operand(temp), temp2, temp2);       // temp2 = <DG+CH> <BE+AF>
-  vpsllq(Imm32(32), temp2, temp2);           // temp2 = <(DG+CH)_low 0>
-                                             //         <(BE+AF)_low 0>
-  vpmuludq(rhs, lhsDest, lhsDest);           // lhsDest = <CG_high CG_low>
-                                             //           <AE_high AE_low>
-  vpaddq(Operand(temp2), lhsDest, lhsDest);  // lhsDest =
-                                             //    <(DG+CH)_low+CG_high CG_low>
-                                             //    <(BE+AF)_low+AE_high AE_low>
+  moveSimd128(lhs, temp);               // temp  = <D C> <B A>
+  vpsrlq(Imm32(32), temp, temp);        // temp  = <0 D> <0 B>
+  vpmuludq(rhs, temp, temp);            // temp  = <DG> <BE>
+  moveSimd128(rhs, temp2);              // temp2 = <H G> <F E>
+  vpsrlq(Imm32(32), temp2, temp2);      // temp2 = <0 H> <0 F>
+  vpmuludq(lhs, temp2, temp2);          // temp2 = <CH> <AF>
+  vpaddq(Operand(temp), temp2, temp2);  // temp2 = <DG+CH> <BE+AF>
+  vpsllq(Imm32(32), temp2, temp2);      // temp2 = <(DG+CH)_low 0>
+                                        //         <(BE+AF)_low 0>
+  vpmuludq(rhs, dest, dest);            // dest = <CG_high CG_low>
+                                        //        <AE_high AE_low>
+  vpaddq(Operand(temp2), dest, dest);   // dest =
+                                        //    <(DG+CH)_low+CG_high CG_low>
+                                        //    <(BE+AF)_low+AE_high AE_low>
 }
 
 // Code generation from the PR: https://github.com/WebAssembly/simd/pull/376.
