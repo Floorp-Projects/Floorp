@@ -36,6 +36,9 @@ class ExtensionsParent final : public PExtensionsParent {
       MaybeDiscardedBrowsingContext&& aBC,
       MaybeDiscardedBrowsingContext&& aSourceBC, const nsCString& aURI);
 
+  ipc::IPCResult RecvDOMContentLoaded(MaybeDiscardedBrowsingContext&& aBC,
+                                      nsIURI* aDocumentURI);
+
  private:
   ~ExtensionsParent() = default;
 

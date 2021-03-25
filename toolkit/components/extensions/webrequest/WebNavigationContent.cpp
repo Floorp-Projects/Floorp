@@ -9,9 +9,11 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
+#include "mozilla/dom/Document.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventTarget.h"
 #include "mozilla/extensions/ExtensionsChild.h"
+#include "mozilla/EventListenerManager.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
@@ -42,8 +44,8 @@ already_AddRefed<WebNavigationContent> WebNavigationContent::GetSingleton() {
   return do_AddRef(sSingleton);
 }
 
-NS_IMPL_ISUPPORTS(WebNavigationContent, nsIObserver, nsIWebProgressListener,
-                  nsISupportsWeakReference)
+NS_IMPL_ISUPPORTS(WebNavigationContent, nsIObserver, nsIDOMEventListener,
+                  nsIWebProgressListener, nsISupportsWeakReference)
 
 void WebNavigationContent::Init() {
   nsCOMPtr<nsIObserverService> obs = services::GetObserverService();
@@ -88,11 +90,27 @@ NS_IMETHODIMP WebNavigationContent::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-void WebNavigationContent::AttachListeners(
-    mozilla::dom::EventTarget* aEventTarget) {}
+void WebNavigationContent::AttachListeners(dom::EventTarget* aEventTarget) {
+  EventListenerManager* elm = aEventTarget->GetOrCreateListenerManager();
+  NS_ENSURE_TRUE_VOID(elm);
+
+  elm->AddEventListenerByType(this, u"DOMContentLoaded"_ns,
+                              TrustedEventsAtCapture());
+}
 
 NS_IMETHODIMP
-WebNavigationContent::HandleEvent(dom::Event* aEvent) { return NS_OK; }
+WebNavigationContent::HandleEvent(dom::Event* aEvent) {
+  nsString type;
+  aEvent->GetType(type);
+
+  if (type.EqualsLiteral(u"DOMContentLoaded")) {
+    if (RefPtr<dom::Document> doc = do_QueryObject(aEvent->GetTarget())) {
+      ExtensionsChild::Get().SendDOMContentLoaded(doc->GetBrowsingContext(),
+                                                  doc->GetDocumentURI());
+    }
+  }
+  return NS_OK;
+}
 
 static dom::BrowsingContext* GetBrowsingContext(nsIWebProgress* aWebProgress) {
   // FIXME: Get this via nsIWebNavigation instead.

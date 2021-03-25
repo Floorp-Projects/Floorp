@@ -52,6 +52,9 @@ refcounted protocol PExtensions
     async CreatedNavigationTarget(MaybeDiscardedBrowsingContext bc,
                                   MaybeDiscardedBrowsingContext sourceBC,
                                   nsCString url);
+
+    async DOMContentLoaded(MaybeDiscardedBrowsingContext bc,
+                           nsIURI documentURI);
 };
 
 } // namespace extensions
