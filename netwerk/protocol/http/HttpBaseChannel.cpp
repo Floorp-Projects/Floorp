@@ -2827,21 +2827,26 @@ bool HttpBaseChannel::EnsureOpaqueResponseIsAllowed() {
     }
   }
 
+  InitiateORBTelemetry();
+
   nsAutoCString contentType;
   mResponseHead->ContentType(contentType);
   if (!contentType.IsEmpty()) {
     if (IsOpaqueSafeListedMIMEType(contentType)) {
+      ReportORBTelemetry("Allowed_SafeListed"_ns);
       return true;
     }
 
     if (IsOpaqueBlockListedNeverSniffedMIMEType(contentType)) {
       // XXXtt: Report To Console.
+      ReportORBTelemetry("Blocked_BlockListedNeverSniffed"_ns);
       return false;
     }
 
     if (mResponseHead->Status() == 206 &&
         IsOpaqueBlockListedMIMEType(contentType)) {
       // XXXtt: Report To Console.
+      ReportORBTelemetry("Blocked_206AndBlockListed"_ns);
       return false;
     }
 
@@ -2851,6 +2856,7 @@ bool HttpBaseChannel::EnsureOpaqueResponseIsAllowed() {
         (IsOpaqueBlockListedMIMEType(contentType) ||
          contentType.EqualsLiteral(TEXT_PLAIN))) {
       // XXXtt: Report To Console.
+      ReportORBTelemetry("Blocked_NosniffAndEitherBlockListedOrTextPlain"_ns);
       return false;
     }
   }
@@ -2863,6 +2869,7 @@ bool HttpBaseChannel::EnsureOpaqueResponseIsAllowed() {
     bool isMediaInitialRequest;
     mLoadInfo->GetIsMediaInitialRequest(&isMediaInitialRequest);
     if (!isMediaInitialRequest) {
+      ReportORBTelemetry("Allowed_SubsequentMediaRequest"_ns);
       return true;
     }
   }
@@ -2899,16 +2906,19 @@ HttpBaseChannel::EnsureOpaqueResponseIsAllowedAfterSniff() {
   mLoadInfo->GetIsMediaRequest(&isMediaRequest);
   if (isMediaRequest) {
     // XXXtt: Report To Console.
+    ReportORBTelemetry("Blocked_UnexpectedMediaRequest"_ns);
     return false;
   }
 
   nsAutoCString contentType;
   nsresult rv = GetContentType(contentType);
   if (NS_FAILED(rv)) {
+    ReportORBTelemetry("Blocked_UnexpectedContentType"_ns);
     return Err(rv);
   }
 
   if (!mResponseHead) {
+    ReportORBTelemetry("Allowed_UnexpectedResponseHead"_ns);
     return true;
   }
 
@@ -2916,16 +2926,19 @@ HttpBaseChannel::EnsureOpaqueResponseIsAllowedAfterSniff() {
   if (mResponseHead->GetContentTypeOptionsHeader(contentTypeOptionsHeader) &&
       contentTypeOptionsHeader.EqualsIgnoreCase("nosniff")) {
     // XXXtt: Report To Console.
+    ReportORBTelemetry("Blocked_NoSniffHeaderAfterSniff"_ns);
     return false;
   }
 
   if (mResponseHead->Status() < 200 || mResponseHead->Status() > 299) {
     // XXXtt: Report To Console.
+    ReportORBTelemetry("Blocked_ResponseNotOk"_ns);
     return false;
   }
 
   if (contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE) ||
       contentType.EqualsLiteral(APPLICATION_OCTET_STREAM)) {
+    ReportORBTelemetry("Allowed_FailtoGetMIMEType"_ns);
     return true;
   }
 
@@ -2933,11 +2946,14 @@ HttpBaseChannel::EnsureOpaqueResponseIsAllowedAfterSniff() {
       StringBeginsWith(contentType, "video/"_ns) ||
       StringBeginsWith(contentType, "audio/"_ns)) {
     // XXXtt: Report To Console.
+    ReportORBTelemetry("Blocked_ContentTypeBeginsWithImageOrVideoOrAudio"_ns);
     return false;
   }
 
   // XXXtt: If response's body parses as JavaScript and does not parse as JSON,
   // then return true.
+
+  ReportORBTelemetry("Allowed_NotImplementOrPass"_ns);
 
   return true;
 }
@@ -5175,6 +5191,21 @@ void HttpBaseChannel::EnsureTopLevelOuterContentWindowId() {
 
   mTopLevelOuterContentWindowId =
       nsPIDOMWindowOuter::From(topWindow)->WindowID();
+}
+
+void HttpBaseChannel::InitiateORBTelemetry() {
+  MOZ_ASSERT(!mOpaqueResponseBlockingInfo);
+  MOZ_RELEASE_ASSERT(mLoadInfo);
+
+  mOpaqueResponseBlockingInfo = MakeRefPtr<OpaqueResponseBlockingInfo>(
+      mLoadInfo->GetExternalContentPolicyType());
+}
+
+void HttpBaseChannel::ReportORBTelemetry(const nsCString& aKey) {
+  MOZ_ASSERT(mOpaqueResponseBlockingInfo);
+
+  mOpaqueResponseBlockingInfo->Report(aKey);
+  mOpaqueResponseBlockingInfo = nullptr;
 }
 
 void HttpBaseChannel::SetCorsPreflightParameters(

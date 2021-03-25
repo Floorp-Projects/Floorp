@@ -26,6 +26,21 @@ ParseContentRangeHeaderString(const nsAutoCString& aRangeStr);
 
 bool IsFirstPartialResponse(nsHttpResponseHead& aResponseHead);
 
+class OpaqueResponseBlockingInfo final {
+  const TimeStamp mStartTime;
+  Telemetry::LABELS_OPAQUE_RESPONSE_BLOCKING mDestination;
+
+ public:
+  NS_INLINE_DECL_REFCOUNTING(OpaqueResponseBlockingInfo);
+
+  explicit OpaqueResponseBlockingInfo(ExtContentPolicyType aContentPolicyType);
+
+  void Report(const nsCString& aKey);
+
+ private:
+  ~OpaqueResponseBlockingInfo() = default;
+};
+
 }  // namespace net
 }  // namespace mozilla
 

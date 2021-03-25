@@ -65,6 +65,7 @@ class LogCollector;
 namespace net {
 extern mozilla::LazyLogModule gHttpLog;
 
+class OpaqueResponseBlockingInfo;
 class PreferredAlternativeDataTypeParams;
 
 enum CacheDisposition : uint8_t {
@@ -702,6 +703,8 @@ class HttpBaseChannel : public nsHashPropertyBag,
   UniquePtr<nsTArray<nsCString>> mRedirectedCachekeys;
   nsCOMPtr<nsIRequestContext> mRequestContext;
 
+  RefPtr<OpaqueResponseBlockingInfo> mOpaqueResponseBlockingInfo;
+
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
 
@@ -957,6 +960,10 @@ class HttpBaseChannel : public nsHashPropertyBag,
   void RemoveAsNonTailRequest();
 
   void EnsureTopLevelOuterContentWindowId();
+
+  void InitiateORBTelemetry();
+
+  void ReportORBTelemetry(const nsCString& aKey);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpBaseChannel, HTTP_BASE_CHANNEL_IID)
