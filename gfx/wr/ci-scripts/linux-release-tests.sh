@@ -16,6 +16,10 @@ set -o xtrace
 CARGOFLAGS=${CARGOFLAGS:-""}  # default to empty if not set
 
 pushd wrench
+# Test that all shaders compile successfully.
+python script/headless.py --precache test_init
+python script/headless.py --precache --use-unoptimized-shaders test_init
+
 python script/headless.py reftest
 python script/headless.py rawtest
 python script/headless.py test_invalidation

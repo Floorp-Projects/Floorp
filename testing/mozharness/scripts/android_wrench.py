@@ -7,6 +7,7 @@
 
 from __future__ import absolute_import
 import datetime
+import enum
 import os
 import subprocess
 import sys
@@ -23,6 +24,12 @@ from mozharness.mozilla.automation import (
 from mozharness.mozilla.mozbase import MozbaseMixin
 from mozharness.mozilla.testing.android import AndroidMixin
 from mozharness.mozilla.testing.testbase import TestingMixin
+
+
+class TestMode(enum.Enum):
+    OPTIMIZED_SHADER_COMPILATION = 0
+    UNOPTIMIZED_SHADER_COMPILATION = 1
+    REFTEST = 2
 
 
 class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
@@ -122,30 +129,46 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         end_time = datetime.datetime.now() + datetime.timedelta(seconds=timeout)
         while self.device.process_exist(process_name, timeout=timeout):
             if datetime.datetime.now() > end_time:
+                stop_cmd = [
+                    self.adb_path,
+                    "-s",
+                    self.device_serial,
+                    "shell",
+                    "am",
+                    "force-stop",
+                    process_name,
+                ]
+                subprocess.check_call(stop_cmd)
                 return False
             time.sleep(5)
 
         return True
 
-    def setup_sdcard(self):
+    def setup_sdcard(self, test_mode):
         # Note that we hard-code /sdcard/wrench as the path here, rather than
         # using something like self.device.test_root, because it needs to be
         # kept in sync with the path hard-coded inside the wrench source code.
         self.device.rm("/sdcard/wrench", recursive=True, force=True)
         self.device.mkdir("/sdcard/wrench", parents=True)
-        self.device.push(
-            self.query_abs_dirs()["abs_reftests_path"], "/sdcard/wrench/reftests"
-        )
+        if test_mode == TestMode.REFTEST:
+            self.device.push(
+                self.query_abs_dirs()["abs_reftests_path"], "/sdcard/wrench/reftests"
+            )
         args_file = os.path.join(self.query_abs_dirs()["abs_work_dir"], "wrench_args")
         with open(args_file, "w") as argfile:
             if self.is_emulator:
                 argfile.write("env: WRENCH_REFTEST_CONDITION_EMULATOR=1\n")
             else:
                 argfile.write("env: WRENCH_REFTEST_CONDITION_DEVICE=1\n")
-            argfile.write("reftest")
+            if test_mode == TestMode.OPTIMIZED_SHADER_COMPILATION:
+                argfile.write("--precache test_init")
+            elif test_mode == TestMode.UNOPTIMIZED_SHADER_COMPILATION:
+                argfile.write("--precache --use-unoptimized-shaders test_init")
+            elif test_mode == TestMode.REFTEST:
+                argfile.write("reftest")
         self.device.push(args_file, "/sdcard/wrench/args")
 
-    def run_tests(self):
+    def run_tests(self, timeout):
         self.timed_screenshots(None)
         self.device.launch_application(
             app_name="org.mozilla.wrench",
@@ -153,7 +176,7 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
             intent=None,
         )
         self.info("App launched")
-        done = self.wait_until_process_done("org.mozilla.wrench", timeout=60 * 30)
+        done = self.wait_until_process_done("org.mozilla.wrench", timeout=timeout)
         if not done:
             self._errored = True
             self.error("Wrench still running after timeout")
@@ -235,10 +258,25 @@ class AndroidWrench(TestingMixin, BaseScript, MozbaseMixin, AndroidMixin):
         self.info(self.shell_output("getprop"))
         self.info("Installing APK...")
         self.install_apk(self.query_abs_dirs()["abs_apk_path"], replace=True)
-        self.info("Setting up SD card...")
-        self.setup_sdcard()
-        self.info("Running tests...")
-        self.run_tests()
+
+        if not self._errored:
+            self.info("Setting up SD card...")
+            self.setup_sdcard(TestMode.OPTIMIZED_SHADER_COMPILATION)
+            self.info("Running optimized shader compilation tests...")
+            self.run_tests(60)
+
+        if not self._errored:
+            self.info("Setting up SD card...")
+            self.setup_sdcard(TestMode.UNOPTIMIZED_SHADER_COMPILATION)
+            self.info("Running unoptimized shader compilation tests...")
+            self.run_tests(60)
+
+        if not self._errored:
+            self.info("Setting up SD card...")
+            self.setup_sdcard(TestMode.REFTEST)
+            self.info("Running reftests...")
+            self.run_tests(60 * 30)
+
         self.info("Tests done; parsing logcat...")
         self.logcat_stop()
         self.scrape_logcat()
