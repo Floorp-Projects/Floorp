@@ -100,9 +100,37 @@ var gViewController = {
   initialize(container) {
     this.container = container;
 
-    window.addEventListener("popstate", e => {
+    window.addEventListener("popstate", this);
+    window.addEventListener("unload", this, { once: true });
+    Services.obs.addObserver(this, "EM-ping");
+  },
+
+  handleEvent(e) {
+    if (e.type == "popstate") {
       this.renderState(e.state);
-    });
+      return;
+    }
+
+    if (e.type == "unload") {
+      Services.obs.removeObserver(this, "EM-ping");
+      // eslint-disable-next-line no-useless-return
+      return;
+    }
+  },
+
+  observe(subject, topic, data) {
+    if (topic == "EM-ping") {
+      Services.obs.notifyObservers(window, "EM-pong");
+    }
+  },
+
+  notifyEMLoaded() {
+    Services.obs.notifyObservers(window, "EM-loaded");
+  },
+
+  notifyEMUpdateCheckFinished() {
+    // Notify the observer about a completed update check (currently only used in tests).
+    Services.obs.notifyObservers(null, "EM-update-check-finished");
   },
 
   defineView(viewName, renderFunction) {
