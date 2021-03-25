@@ -187,6 +187,16 @@ class Browsertime(Perftest):
                 "--browsertime.background_app",
                 test.get("background_app", "false"),
             ]
+        elif test.get("type", "") == "benchmark":
+            browsertime_script = [
+                os.path.join(
+                    os.path.dirname(__file__),
+                    "..",
+                    "..",
+                    "browsertime",
+                    "browsertime_benchmark.js",
+                )
+            ]
         else:
             browsertime_script = [
                 os.path.join(
@@ -358,20 +368,6 @@ class Browsertime(Perftest):
         # timeout is a single page-load timeout value (ms) from the test INI
         # this will be used for btime --timeouts.pageLoad
         cmd = self._compose_cmd(test, timeout)
-
-        if test.get("type", "") == "benchmark":
-            cmd.extend(
-                [
-                    "--script",
-                    os.path.join(
-                        os.path.dirname(__file__),
-                        "..",
-                        "..",
-                        "browsertime",
-                        "browsertime_benchmark.js",
-                    ),
-                ]
-            )
 
         if test.get("type", "") == "scenario":
             # Change the timeout for scenarios since they
