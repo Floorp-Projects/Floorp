@@ -2475,6 +2475,12 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
   fill: #0556cd;
 }
 
+/* Override themes for the Pocket panel, because the Pocket
+   panel doesn't currently support multiple themes. */
+#customizationui-widget-panel[viewId="PanelUI-savetopocket"] {
+  --arrowpanel-background: #fbfbfb;
+}
+
 /* Hide the unused box that gets added here. */
 #PanelUI-profiler-learn-more > hbox {
   display: none;
