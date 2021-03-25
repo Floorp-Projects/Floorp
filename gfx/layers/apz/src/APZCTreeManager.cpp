@@ -1467,7 +1467,6 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
   // Use a RAII class for updating the focus sequence number of this event
   AutoFocusSequenceNumberSetter focusSetter(mFocusState, aEvent);
 
-  CompositorHitTestInfo hitResult = CompositorHitTestInvisibleToHit;
   switch (aEvent.mInputType) {
     case MULTITOUCH_INPUT: {
       MultiTouchInput& touchInput = aEvent.AsMultiTouchInput();
@@ -1491,7 +1490,6 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
 
       HitTestResult hit = GetTargetAPZC(mouseInput.mOrigin);
       aEvent.mLayersId = hit.mLayersId;
-      hitResult = hit.mHitResult;
       bool hitScrollbar = (bool)hit.mScrollbarNode;
 
       // When the mouse is outside the window we still want to handle dragging
@@ -1511,11 +1509,11 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
           MutexAutoLock lock(mTestDataLock);
           auto it = mTestData.find(guid.mLayersId);
           MOZ_ASSERT(it != mTestData.end());
-          it->second->RecordHitResult(mouseInput.mOrigin, hitResult,
+          it->second->RecordHitResult(mouseInput.mOrigin, hit.mHitResult,
                                       guid.mLayersId, guid.mScrollId);
         }
 
-        TargetConfirmationFlags confFlags{hitResult};
+        TargetConfirmationFlags confFlags{hit.mHitResult};
         state.mResult = mInputQueue->ReceiveInputEvent(hit.mTargetApzc,
                                                        confFlags, mouseInput);
 
@@ -1569,7 +1567,6 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       ScrollWheelInput& wheelInput = aEvent.AsScrollWheelInput();
       HitTestResult hit = GetTargetAPZC(wheelInput.mOrigin);
       aEvent.mLayersId = hit.mLayersId;
-      hitResult = hit.mHitResult;
 
       wheelInput.mHandledByAPZ = WillHandleInput(wheelInput);
       if (!wheelInput.mHandledByAPZ) {
@@ -1579,7 +1576,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       mOvershootDetector.Update(wheelInput);
 
       if (hit.mTargetApzc) {
-        MOZ_ASSERT(hitResult != CompositorHitTestInvisibleToHit);
+        MOZ_ASSERT(hit.mHitResult != CompositorHitTestInvisibleToHit);
 
         if (wheelInput.mAPZAction == APZWheelAction::PinchZoom) {
           // The mousewheel may have hit a subframe, but we want to send the
@@ -1616,7 +1613,8 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
         }
 
         state.mResult = mInputQueue->ReceiveInputEvent(
-            hit.mTargetApzc, TargetConfirmationFlags{hitResult}, wheelInput);
+            hit.mTargetApzc, TargetConfirmationFlags{hit.mHitResult},
+            wheelInput);
 
         // Update the out-parameters so they are what the caller expects.
         wheelInput.mOrigin = *untransformedOrigin;
@@ -1630,7 +1628,6 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       PanGestureInput& panInput = aEvent.AsPanGestureInput();
       HitTestResult hit = GetTargetAPZC(panInput.mPanStartPoint);
       aEvent.mLayersId = hit.mLayersId;
-      hitResult = hit.mHitResult;
 
       panInput.mHandledByAPZ = WillHandleInput(panInput);
       if (!panInput.mHandledByAPZ) {
@@ -1648,7 +1645,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
           &panInput.mUserDeltaMultiplierY);
 
       if (hit.mTargetApzc) {
-        MOZ_ASSERT(hitResult != CompositorHitTestInvisibleToHit);
+        MOZ_ASSERT(hit.mHitResult != CompositorHitTestInvisibleToHit);
 
         // For pan gesture events, the call to ReceiveInputEvent below may
         // result in scrolling, which changes the async transform. However, the
@@ -1672,7 +1669,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
         }
 
         state.mResult = mInputQueue->ReceiveInputEvent(
-            hit.mTargetApzc, TargetConfirmationFlags{hitResult}, panInput);
+            hit.mTargetApzc, TargetConfirmationFlags{hit.mHitResult}, panInput);
 
         // Update the out-parameters so they are what the caller expects.
         panInput.mPanStartPoint = *untransformedStartPoint;
@@ -1693,13 +1690,12 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
 
       HitTestResult hit = GetTargetAPZC(pinchInput.mFocusPoint);
       aEvent.mLayersId = hit.mLayersId;
-      hitResult = hit.mHitResult;
 
       // We always handle pinch gestures as pinch zooms.
       pinchInput.mHandledByAPZ = true;
 
       if (hit.mTargetApzc) {
-        MOZ_ASSERT(hitResult != CompositorHitTestInvisibleToHit);
+        MOZ_ASSERT(hit.mHitResult != CompositorHitTestInvisibleToHit);
 
         if (!hit.mTargetApzc->IsRootContent()) {
           hit.mTargetApzc = FindZoomableApzc(hit.mTargetApzc);
@@ -1718,7 +1714,8 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
         }
 
         state.mResult = mInputQueue->ReceiveInputEvent(
-            hit.mTargetApzc, TargetConfirmationFlags{hitResult}, pinchInput);
+            hit.mTargetApzc, TargetConfirmationFlags{hit.mHitResult},
+            pinchInput);
 
         // Update the out-parameters so they are what the caller expects.
         pinchInput.mFocusPoint = *untransformedFocusPoint;
@@ -1729,10 +1726,9 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
       TapGestureInput& tapInput = aEvent.AsTapGestureInput();
       HitTestResult hit = GetTargetAPZC(tapInput.mPoint);
       aEvent.mLayersId = hit.mLayersId;
-      hitResult = hit.mHitResult;
 
       if (hit.mTargetApzc) {
-        MOZ_ASSERT(hitResult != CompositorHitTestInvisibleToHit);
+        MOZ_ASSERT(hit.mHitResult != CompositorHitTestInvisibleToHit);
 
         ScreenToScreenMatrix4x4 outTransform =
             GetScreenToApzcTransform(hit.mTargetApzc) *
@@ -1745,7 +1741,7 @@ APZEventResult APZCTreeManager::ReceiveInputEvent(InputData& aEvent) {
         }
 
         state.mResult = mInputQueue->ReceiveInputEvent(
-            hit.mTargetApzc, TargetConfirmationFlags{hitResult}, tapInput);
+            hit.mTargetApzc, TargetConfirmationFlags{hit.mHitResult}, tapInput);
 
         // Update the out-parameters so they are what the caller expects.
         tapInput.mPoint = *untransformedPoint;
