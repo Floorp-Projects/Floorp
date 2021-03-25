@@ -77,11 +77,23 @@ var TabStateFlusherInternal = {
   // Stores the last request ID.
   _lastRequestID: 0,
 
-  // A map storing all active requests per browser.
+  // A map storing all active requests per browser. A request is a
+  // triple of a map containing all flush requests, a promise that
+  // resolve when a request for a browser is canceled, and the
+  // function to call to cancel a reqeust.
   _requests: new WeakMap(),
 
-  // A map storing if there is requests to native listener per browser.
-  _requestsToNativeListener: new WeakMap(),
+  initEntry(entry) {
+    entry.perBrowserRequests = new Map();
+    entry.cancelPromise = new Promise(resolve => {
+      entry.cancel = resolve;
+    }).then(result => {
+      TabStateFlusherInternal.initEntry(entry);
+      return result;
+    });
+
+    return entry;
+  },
 
   /**
    * Requests an async flush for the given browser. Returns a promise that will
@@ -90,13 +102,13 @@ var TabStateFlusherInternal = {
    */
   flush(browser) {
     let id = ++this._lastRequestID;
-    let requestNativeListener = false;
+    let nativePromise = Promise.resolve();
     if (browser && browser.frameLoader) {
       /*
         Request native listener to flush the tabState.
-        True if the flush is involved async ipc call.
-       */
-      requestNativeListener = browser.frameLoader.requestTabStateFlush(id);
+        Resolves when flush is complete.
+      */
+      nativePromise = browser.frameLoader.requestTabStateFlush();
     }
     /*
       In the event that we have to trigger a process switch and thus change
@@ -113,22 +125,23 @@ var TabStateFlusherInternal = {
 
     // Retrieve active requests for given browser.
     let permanentKey = browser.permanentKey;
-    let perBrowserRequests = this._requests.get(permanentKey) || new Map();
-    let perBrowserRequestsToNative =
-      this._requestsToNativeListener.get(permanentKey) || new Map();
+    let request = this._requests.get(permanentKey);
+    if (!request) {
+      // If we don't have any requests for this browser, create a new
+      // entry for browser.
+      request = this.initEntry({});
+      this._requests.set(permanentKey, request);
+    }
 
-    return new Promise(resolve => {
+    let promise = new Promise(resolve => {
       // Store resolve() so that we can resolve the promise later.
-      perBrowserRequests.set(id, resolve);
-      perBrowserRequestsToNative.set(id, requestNativeListener);
-
-      // Update the flush requests stored per browser.
-      this._requests.set(permanentKey, perBrowserRequests);
-      this._requestsToNativeListener.set(
-        permanentKey,
-        perBrowserRequestsToNative
-      );
+      request.perBrowserRequests.set(id, resolve);
     });
+
+    return Promise.race([
+      nativePromise.then(_ => promise),
+      request.cancelPromise,
+    ]);
   },
 
   /**
@@ -164,25 +177,8 @@ var TabStateFlusherInternal = {
       return;
     }
 
-    // Check if there is request to native listener for given browser.
-    let perBrowserRequestsForNativeListener = this._requestsToNativeListener.get(
-      browser.permanentKey
-    );
-    if (!perBrowserRequestsForNativeListener.has(flushID)) {
-      return;
-    }
-    let waitForNextResolve = perBrowserRequestsForNativeListener.get(flushID);
-    if (waitForNextResolve) {
-      perBrowserRequestsForNativeListener.set(flushID, false);
-      this._requestsToNativeListener.set(
-        browser.permanentKey,
-        perBrowserRequestsForNativeListener
-      );
-      return;
-    }
-
     // Retrieve active requests for given browser.
-    let perBrowserRequests = this._requests.get(browser.permanentKey);
+    let { perBrowserRequests } = this._requests.get(browser.permanentKey);
     if (!perBrowserRequests.has(flushID)) {
       return;
     }
@@ -217,19 +213,14 @@ var TabStateFlusherInternal = {
       return;
     }
 
-    // Retrieve active requests for given browser.
-    let perBrowserRequests = this._requests.get(browser.permanentKey);
+    // Retrieve the cancel function for a given browser.
+    let { cancel } = this._requests.get(browser.permanentKey);
 
     if (!success) {
       Cu.reportError("Failed to flush browser: " + message);
     }
 
     // Resolve all requests.
-    for (let resolve of perBrowserRequests.values()) {
-      resolve(success);
-    }
-
-    // Clear active requests.
-    perBrowserRequests.clear();
+    cancel(success);
   },
 };

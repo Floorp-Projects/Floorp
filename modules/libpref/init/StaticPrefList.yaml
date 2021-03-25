@@ -1137,11 +1137,25 @@
   value: 512*1024
   mirror: always
 
-# ContentSessionStore prefs
+# SessionStore prefs
 # Maximum number of bytes of DOMSessionStorage data we collect per origin.
 - name: browser.sessionstore.dom_storage_limit
   type: uint32_t
   value: 2048
+  mirror: always
+
+# Minimal interval between two save operations in milliseconds (while the user is active).
+- name: browser.sessionstore.interval
+  type: uint32_t
+  value: 15000
+  mirror: always
+
+# Causes SessionStore to ignore non-final update messages from
+# browser tabs that were not caused by a flush from the parent.
+# This is a testing flag and should not be used by end-users.
+- name: browser.sessionstore.debug.no_auto_updates
+  type: bool
+  value: false
   mirror: always
 
 # If set, use DocumentChannel to directly initiate loads entirely

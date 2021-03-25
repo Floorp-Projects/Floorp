@@ -198,7 +198,8 @@ enum class ExplicitActiveStatus : uint8_t {
    * browsing context. */                                                     \
   FIELD(HistoryEntryCount, uint32_t)                                          \
   FIELD(IsInBFCache, bool)                                                    \
-  FIELD(HasRestoreData, bool)
+  FIELD(HasRestoreData, bool)                                                 \
+  FIELD(SessionStoreEpoch, uint32_t)
 
 // BrowsingContext, in this context, is the cross process replicated
 // environment in which information about documents is stored. In
@@ -391,12 +392,14 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool IsInSubtreeOf(BrowsingContext* aContext);
 
   bool IsContentSubframe() const { return IsContent() && IsFrame(); }
+
   // non-zero
   uint64_t Id() const { return mBrowsingContextId; }
 
   BrowsingContext* GetParent() const;
   BrowsingContext* Top();
   const BrowsingContext* Top() const;
+
   int32_t IndexOf(BrowsingContext* aChild);
 
   // NOTE: Unlike `GetEmbedderWindowGlobal`, `GetParentWindowContext` does not
@@ -844,6 +847,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
     return GetPrefersColorSchemeOverride();
   }
 
+  void FlushSessionStore();
+
  protected:
   virtual ~BrowsingContext();
   BrowsingContext(WindowContext* aParentWindow, BrowsingContextGroup* aGroup,
@@ -921,6 +926,11 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
                              const BaseTransaction& aTxn, uint64_t aEpoch);
   void SendCommitTransaction(ContentChild* aChild, const BaseTransaction& aTxn,
                              uint64_t aEpoch);
+
+  bool CanSet(FieldIndex<IDX_SessionStoreEpoch>, uint32_t aEpoch,
+              ContentParent* aSource) {
+    return IsTop() && !aSource;
+  }
 
   using CanSetResult = syncedcontext::CanSetResult;
 

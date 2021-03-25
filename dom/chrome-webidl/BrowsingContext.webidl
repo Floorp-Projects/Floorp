@@ -108,6 +108,7 @@ interface BrowsingContext {
 
   readonly attribute DOMString embedderElementType;
 
+  readonly attribute boolean createdDynamically;
   /**
    * The sandbox flags on the browsing context. These reflect the value of the
    * sandbox attribute of the associated IFRAME or CSP-protectable content, if
