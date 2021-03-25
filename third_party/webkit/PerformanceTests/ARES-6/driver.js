@@ -248,6 +248,7 @@ class Driver {
             var _data = ['raptor-benchmark', 'ares6', measuredValuesByFullName];
             console.log('ares6 source is about to post results to the raptor webext');
             window.postMessage(_data, '*');
+            window.sessionStorage.setItem('benchmark_results',  JSON.stringify(_data));
         }
 
     }
