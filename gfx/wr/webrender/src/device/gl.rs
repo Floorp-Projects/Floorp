@@ -1928,7 +1928,12 @@ impl Device {
             self.gl.get_shader_iv(id, gl::COMPILE_STATUS, &mut status);
         }
         if status[0] == 0 {
-            error!("Failed to compile shader: {}\n{}", name, log);
+            let type_str = match shader_type {
+                gl::VERTEX_SHADER => "vertex",
+                gl::FRAGMENT_SHADER => "fragment",
+                _ => panic!("Unexpected shader type {:x}", shader_type),
+            };
+            error!("Failed to compile {} shader: {}\n{}", type_str, name, log);
             #[cfg(debug_assertions)]
             Self::print_shader_errors(source, &log);
             Err(ShaderError::Compilation(name.to_string(), log))
@@ -2241,7 +2246,7 @@ impl Device {
         if build_program {
             // Compile the vertex shader
             let vs_source = info.compute_source(self, ShaderKind::Vertex);
-            let vs_id = match self.compile_shader(&info.base_filename, gl::VERTEX_SHADER, &vs_source) {
+            let vs_id = match self.compile_shader(&info.full_name(), gl::VERTEX_SHADER, &vs_source) {
                     Ok(vs_id) => vs_id,
                     Err(err) => return Err(err),
                 };
@@ -2249,7 +2254,7 @@ impl Device {
             // Compile the fragment shader
             let fs_source = info.compute_source(self, ShaderKind::Fragment);
             let fs_id =
-                match self.compile_shader(&info.base_filename, gl::FRAGMENT_SHADER, &fs_source) {
+                match self.compile_shader(&info.full_name(), gl::FRAGMENT_SHADER, &fs_source) {
                     Ok(fs_id) => fs_id,
                     Err(err) => {
                         self.gl.delete_shader(vs_id);

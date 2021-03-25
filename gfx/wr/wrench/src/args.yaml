@@ -192,3 +192,5 @@ subcommands:
               help: second benchmark file to compare
               required: true
               index: 2
+    - test_init:
+        about: Test for successful initialization then exit immediately
