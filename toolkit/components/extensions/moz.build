@@ -69,6 +69,10 @@ DIRS += [
     "webrequest",
 ]
 
+IPDL_SOURCES += [
+    "PExtensions.ipdl",
+]
+
 XPIDL_SOURCES += [
     "mozIExtensionProcessScript.idl",
 ]
@@ -81,6 +85,8 @@ EXPORTS.mozilla = [
 
 EXPORTS.mozilla.extensions = [
     "DocumentObserver.h",
+    "ExtensionsChild.h",
+    "ExtensionsParent.h",
     "MatchGlob.h",
     "MatchPattern.h",
     "WebExtensionContentScript.h",
@@ -89,8 +95,14 @@ EXPORTS.mozilla.extensions = [
 
 UNIFIED_SOURCES += [
     "ExtensionPolicyService.cpp",
+    "ExtensionsChild.cpp",
+    "ExtensionsParent.cpp",
     "MatchPattern.cpp",
     "WebExtensionPolicy.cpp",
+]
+
+XPCOM_MANIFESTS += [
+    "components.conf",
 ]
 
 FINAL_LIBRARY = "xul"
