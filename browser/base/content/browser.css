@@ -790,10 +790,10 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
 }
 @media (max-width: 550px) {
   #urlbar-container {
-    min-width: calc(225px + 24px + 2 * var(--toolbarbutton-inner-padding));
+    min-width: calc(216px + 24px + 2 * var(--toolbarbutton-inner-padding));
   }
   #nav-bar[downloadsbuttonshown] #urlbar-container {
-    min-width: 225px;
+    min-width: 216px;
   }
   #identity-icon-box {
     max-width: 70px;
@@ -802,6 +802,17 @@ toolbar:not(#TabsToolbar) > #personal-bookmarks {
     display: none;
   }
 }
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+@media (max-width: 550px) {
+  #urlbar-container {
+    min-width: calc(225px + 24px + 2 * var(--toolbarbutton-inner-padding));
+  }
+  #nav-bar[downloadsbuttonshown] #urlbar-container {
+    min-width: 225px;
+  }
+}
+} /*** END !proton ***/
 
 /* Flexible spacer sizing (gets overridden in the navbar) */
 toolbarpaletteitem[place=toolbar][id^=wrapper-customizableui-special-spring],
