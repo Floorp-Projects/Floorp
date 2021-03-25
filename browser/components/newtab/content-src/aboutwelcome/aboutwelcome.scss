@@ -109,8 +109,6 @@ body {
         background-image:  url('chrome://activity-stream/content/data/content/assets/long-zap.svg');
       }
     }
-
-
   }
 
   .welcome-text {
@@ -508,6 +506,17 @@ body {
       &.current {
         opacity: 1;
       }
+    }
+  }
+
+  // TBD: Styles specific to Proton multistage welcome UI
+  &.proton {
+    background-image: url('chrome://branding/content/about-logo.svg');
+    background-repeat: no-repeat;
+    background-size: 25em;
+
+    .welcome-text {
+      margin-top: 10vw;
     }
   }
 }
