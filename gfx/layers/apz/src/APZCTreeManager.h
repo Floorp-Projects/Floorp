@@ -684,6 +684,9 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
    * A helper structure for use by ReceiveInputEvent() and its helpers.
    */
   struct InputHandlingState {
+    // A reference to the event being handled.
+    InputData& mEvent;
+
     // The value that will be returned by ReceiveInputEvent().
     APZEventResult mResult;
 
@@ -691,6 +694,10 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
     // reused the result of a previous hit-test in the input block,
     // this is populated with the result of the hit test.
     HitTestResult mHit;
+
+    // Called at the end of ReceiveInputEvent() to perform any final
+    // computations, and then return mResult.
+    APZEventResult Finish() const;
   };
 
   void ProcessTouchInput(InputHandlingState& aState, MultiTouchInput& aInput);
