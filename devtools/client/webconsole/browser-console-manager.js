@@ -50,20 +50,17 @@ class BrowserConsoleManager {
   }
 
   /**
-   * Open a Browser Console for the given target.
+   * Open a Browser Console for the given commands context.
    *
-   * @see devtools/framework/target.js for details about targets.
-   *
-   * @param object target
-   *        The target that the browser console will connect to.
+   * @param object commands
+   *        The commands object with all interfaces defined from devtools/shared/commands/
    * @param nsIDOMWindow iframeWindow
    *        The window where the browser console UI is already loaded.
    * @return object
    *         A promise object for the opening of the new BrowserConsole instance.
    */
-  async openBrowserConsole(target, win) {
-    const commands = await target.descriptorFront.getCommands();
-    const hud = new BrowserConsole(target, commands, win, win);
+  async openBrowserConsole(commands, win) {
+    const hud = new BrowserConsole(commands, win, win);
     this._browserConsole = hud;
     await hud.init();
     return hud;
@@ -99,13 +96,9 @@ class BrowserConsoleManager {
     // Temporarily cache the async startup sequence so that if toggleBrowserConsole
     // gets called again we can return this console instead of opening another one.
     this._browserConsoleInitializing = (async () => {
-      const target = await this.connect();
-      // Hack something in order to help TargetMixinFront to distinguish targets
-      // related to the BrowserConsole.
-      target.isBrowserConsoleTarget = true;
-      await target.attach();
+      const commands = await this.connect();
       const win = await this.openWindow();
-      const browserConsole = await this.openBrowserConsole(target, win);
+      const browserConsole = await this.openBrowserConsole(commands, win);
       return browserConsole;
     })();
 
@@ -114,6 +107,14 @@ class BrowserConsoleManager {
     return browserConsole;
   }
 
+  /**
+   * One method to handle the whole setup sequence to connect to RDP backend.
+   *
+   * This will instantiate a special DevTools module loader for the DevToolsServer.
+   * Then spawn a DevToolsClient to connect to it.
+   * Get a Main Process Descriptor from it.
+   * Finally spawn a commands object for this descriptor.
+   */
   async connect() {
     // The Browser console ends up using the debugger in autocomplete.
     // Because the debugger can't be running in the same compartment than its debuggee,
@@ -141,8 +142,14 @@ class BrowserConsoleManager {
 
     this._devToolsClient = new DevToolsClient(DevToolsServer.connectPipe());
     await this._devToolsClient.connect();
+
     const descriptor = await this._devToolsClient.mainRoot.getMainProcess();
-    return descriptor.getTarget();
+
+    // Hack something in order to help TargetMixinFront to distinguish the BrowserConsole
+    descriptor.createdForBrowserConsole = true;
+
+    const commands = await descriptor.getCommands();
+    return commands;
   }
 
   async openWindow() {
