@@ -10,7 +10,6 @@ import androidx.recyclerview.selection.SelectionTracker
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.GridLayoutManager
 import kotlinx.android.synthetic.main.tab_tray_item.view.*
-import mozilla.components.browser.tabstray.TabViewHolder
 import mozilla.components.browser.thumbnails.loader.ThumbnailLoader
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
@@ -19,6 +18,7 @@ import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.tabstray.TabsTrayGridViewHolder
 import org.mozilla.fenix.tabstray.TabsTrayListViewHolder
+import org.mozilla.fenix.tabstray.TabsTrayViewHolder
 
 /**
  * A [RecyclerView.Adapter] for browser tabs.
@@ -28,7 +28,7 @@ class BrowserTabsAdapter(
     private val interactor: BrowserTrayInteractor,
     private val layoutManager: (() -> GridLayoutManager)? = null,
     delegate: Observable<TabsTray.Observer> = ObserverRegistry()
-) : TabsAdapter<TabViewHolder>(delegate) {
+) : TabsAdapter<TabsTrayViewHolder>(delegate) {
 
     /**
      * The layout types for the tabs.
@@ -57,16 +57,16 @@ class BrowserTabsAdapter(
         }
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabsTrayViewHolder {
         return when (viewType) {
-            ViewType.GRID.ordinal -> TabsTrayGridViewHolder(parent, imageLoader)
-            else -> TabsTrayListViewHolder(parent, imageLoader)
+            ViewType.GRID.ordinal -> TabsTrayGridViewHolder(parent, imageLoader, interactor)
+            else -> TabsTrayListViewHolder(parent, imageLoader, interactor)
         }
     }
 
     override fun getItemId(position: Int) = position.toLong()
 
-    override fun onBindViewHolder(holder: TabViewHolder, position: Int) {
+    override fun onBindViewHolder(holder: TabsTrayViewHolder, position: Int) {
         super.onBindViewHolder(holder, position)
 
         holder.tab?.let { tab ->

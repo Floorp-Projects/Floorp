@@ -67,7 +67,7 @@ class NormalBrowserTabViewHolder(
         selectionTracker = SelectionTracker.Builder(
             "mySelection",
             trayList,
-            StableIdKeyProvider(trayList),
+            TabsItemKeyProvider(trayList),
             TabsDetailsLookup(trayList),
             StorageStrategy.createLongStorage()
         ).withSelectionPredicate(

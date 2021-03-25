@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import mozilla.components.concept.base.images.ImageLoader
 import org.mozilla.fenix.R
+import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 import kotlin.math.max
 
 /**
@@ -18,14 +19,15 @@ import kotlin.math.max
 class TabsTrayListViewHolder(
     parent: ViewGroup,
     imageLoader: ImageLoader,
-    private val itemView: View =
+    browserTrayInteractor: BrowserTrayInteractor? = null,
+    itemView: View =
         LayoutInflater.from(parent.context).inflate(R.layout.tab_tray_item, parent, false),
     thumbnailSize: Int =
         max(
             itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_list_item_thumbnail_height),
             itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_list_item_thumbnail_width)
         )
-) : TabsTrayViewHolder(itemView, imageLoader, thumbnailSize) {
+) : TabsTrayViewHolder(itemView, imageLoader, thumbnailSize, browserTrayInteractor) {
 
     override fun updateSelectedTabIndicator(showAsSelected: Boolean) {
         val color = if (showAsSelected) {

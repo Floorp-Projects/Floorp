@@ -8,10 +8,10 @@ import android.view.MotionEvent
 import androidx.recyclerview.selection.ItemDetailsLookup
 import androidx.recyclerview.selection.ItemDetailsLookup.ItemDetails
 import androidx.recyclerview.widget.RecyclerView
-import org.mozilla.fenix.tabtray.TabTrayViewHolder
+import org.mozilla.fenix.tabstray.TabsTrayViewHolder
 
 /**
- * An [ItemDetailsLookup] for retrieving the [ItemDetails] of a [TabTrayViewHolder].
+ * An [ItemDetailsLookup] for retrieving the [ItemDetails] of a [TabsTrayViewHolder].
  */
 class TabsDetailsLookup(
     private val recyclerView: RecyclerView
@@ -20,7 +20,7 @@ class TabsDetailsLookup(
     override fun getItemDetails(event: MotionEvent): ItemDetails<Long>? {
         val view = recyclerView.findChildViewUnder(event.x, event.y)
         if (view != null) {
-            val viewHolder = recyclerView.getChildViewHolder(view) as TabTrayViewHolder
+            val viewHolder = recyclerView.getChildViewHolder(view) as TabsTrayViewHolder
             return viewHolder.getItemDetails()
         }
         return null

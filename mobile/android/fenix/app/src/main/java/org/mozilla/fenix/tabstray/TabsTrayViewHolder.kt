@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.tabstray
 
+import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -11,6 +12,9 @@ import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatImageButton
+import androidx.core.view.isVisible
+import androidx.recyclerview.selection.ItemDetailsLookup
+import kotlinx.android.synthetic.main.checkbox_item.view.*
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.tabstray.TabViewHolder
@@ -32,14 +36,16 @@ import org.mozilla.fenix.ext.removeAndDisable
 import org.mozilla.fenix.ext.removeTouchDelegate
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.ext.toShortUrl
+import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 
 /**
  * A RecyclerView ViewHolder implementation for "tab" items.
  */
 abstract class TabsTrayViewHolder(
-    private val itemView: View,
+    itemView: View,
     private val imageLoader: ImageLoader,
     private val thumbnailSize: Int,
+    private val browserTrayInteractor: BrowserTrayInteractor?,
     private val store: BrowserStore = itemView.context.components.core.store,
     private val metrics: MetricController = itemView.context.components.analytics.metrics
 ) : TabViewHolder(itemView) {
@@ -134,6 +140,21 @@ abstract class TabsTrayViewHolder(
         closeView.setOnClickListener {
             observable.notifyObservers { onTabClosed(tab) }
         }
+    }
+
+    fun getItemDetails() = object : ItemDetailsLookup.ItemDetails<Long>() {
+        override fun getPosition(): Int = bindingAdapterPosition
+        override fun getSelectionKey(): Long = itemId
+        override fun inSelectionHotspot(e: MotionEvent): Boolean {
+            return browserTrayInteractor?.isMultiSelectMode() == true
+        }
+    }
+
+    fun showTabIsMultiSelectEnabled(isSelected: Boolean) {
+        itemView.selected_mask.isVisible = isSelected
+        // TODO Enable this with https://github.com/mozilla-mobile/fenix/issues/18656
+        // itemView.mozac_browser_tabstray_close.isVisible =
+        //    browserTrayInteractor?.isMultiSelectMode() == false
     }
 
     private fun updateFavicon(tab: Tab) {
