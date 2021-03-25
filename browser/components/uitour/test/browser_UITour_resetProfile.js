@@ -13,32 +13,13 @@ add_UITour_task(async function test_resetFirefox() {
     !canReset,
     "Shouldn't be able to reset from mochitest's temporary profile."
   );
-  let dialogPromise = new Promise(resolve => {
-    Services.ww.registerNotification(function onOpen(subj, topic, data) {
-      if (topic == "domwindowopened" && subj instanceof Ci.nsIDOMWindow) {
-        subj.addEventListener(
-          "load",
-          function() {
-            if (
-              subj.document.documentURI ==
-              "chrome://global/content/resetProfile.xhtml"
-            ) {
-              Services.ww.unregisterNotification(onOpen);
-              ok(true, "Observed search manager window open");
-              is(
-                subj.opener,
-                window,
-                "Reset Firefox event opened a reset profile window."
-              );
-              subj.close();
-              resolve();
-            }
-          },
-          { once: true }
-        );
-      }
-    });
-  });
+  let dialogPromise = BrowserTestUtils.promiseAlertDialog(
+    "cancel",
+    "chrome://global/content/resetProfile.xhtml",
+    {
+      isSubDialog: true,
+    }
+  );
 
   // make reset possible.
   let profileService = Cc["@mozilla.org/toolkit/profile-service;1"].getService(

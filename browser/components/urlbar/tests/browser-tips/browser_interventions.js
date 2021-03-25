@@ -25,7 +25,8 @@ add_task(async function refresh() {
     awaitCallback() {
       return BrowserTestUtils.promiseAlertDialog(
         "cancel",
-        "chrome://global/content/resetProfile.xhtml"
+        "chrome://global/content/resetProfile.xhtml",
+        { isSubDialog: true }
       );
     },
   });
