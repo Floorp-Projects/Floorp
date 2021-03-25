@@ -149,6 +149,7 @@ browsertime-benchmark:
         - [sunspider, ss]
         - [assorted-dom, dom]
         - [jetstream2, js2]
+        - [unity-webgl, ugl]
     variants: ["fission"]
     apps: ["firefox"]
     treeherder-symbol: Btime()
@@ -178,6 +179,12 @@ browsertime-benchmark:
                             (linux|windows10|macos)(?!.*shippable).*: []
                             default: ['mozilla-central']
                     default: []
+            unity-webgl:
+                by-app:
+                    firefox:
+                        by-test-platform:
+                            (linux|windows|macos)(?!.*shippable).*: []
+                            default: ["autoland"]
             default:
                 by-app:
                     firefox:
@@ -201,6 +208,7 @@ browsertime-benchmark:
         fetch:
             - assorted-dom
             - jetstream2
+            - unity-webgl
 
 browsertime-tp6-live:
     <<: *tp6-defaults
