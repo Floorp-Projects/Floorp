@@ -188,11 +188,7 @@ fn host_device_or_default_storage_as_auto() {
     let device = host
         .device_or_default::<String>(None, AndroidStorageInput::Auto)
         .expect("connected device");
-    if device.is_rooted {
-        assert_eq!(device.storage, AndroidStorage::Internal);
-    } else {
-        assert_eq!(device.storage, AndroidStorage::App);
-    }
+    assert_eq!(device.storage, AndroidStorage::Sdcard);
 }
 
 #[test]
