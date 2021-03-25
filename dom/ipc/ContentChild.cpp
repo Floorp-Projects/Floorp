@@ -81,6 +81,7 @@
 #include "mozilla/dom/WorkerDebugger.h"
 #include "mozilla/dom/WorkerDebuggerManager.h"
 #include "mozilla/dom/ipc/SharedMap.h"
+#include "mozilla/extensions/ExtensionsChild.h"
 #include "mozilla/extensions/StreamFilterParent.h"
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/gfxVars.h"
