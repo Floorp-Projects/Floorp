@@ -366,7 +366,7 @@ add_task(async function test_onProviderResultsRequested() {
     },
   ];
 
-  Assert.ok(context.results.every(r => r.suggestedIndex == -1));
+  Assert.ok(context.results.every(r => !r.hasSuggestedIndex));
   let actualResults = context.results.map(r => ({
     type: r.type,
     source: r.source,
