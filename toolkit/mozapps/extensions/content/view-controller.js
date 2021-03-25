@@ -226,7 +226,7 @@ var gViewController = {
 
     this.isLoading = false;
 
-    document.dispatchEvent(new CustomEvent("ViewChanged"));
+    document.dispatchEvent(new CustomEvent("view-loaded"));
   },
 
   resetState() {

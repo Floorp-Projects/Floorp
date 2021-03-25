@@ -174,6 +174,10 @@ async function waitForUpdate(addon) {
   return newAddon;
 }
 
+function waitAboutAddonsViewLoaded(doc) {
+  return BrowserTestUtils.waitForEvent(doc, "view-loaded");
+}
+
 /**
  * Trigger an action from the page options menu.
  */
@@ -506,7 +510,7 @@ async function interactiveUpdateTest(autoUpdate, checkFn) {
         await TestUtils.waitForCondition(() => {
           return !showUpdatesBtn.hidden;
         }, "Wait for show updates button");
-        let viewChanged = BrowserTestUtils.waitForEvent(doc, "ViewChanged");
+        let viewChanged = waitAboutAddonsViewLoaded(doc);
         showUpdatesBtn.click();
         await viewChanged;
       }
@@ -535,7 +539,7 @@ async function interactiveUpdateTest(autoUpdate, checkFn) {
 
   let win = await BrowserOpenAddonsMgr("addons://list/extension");
 
-  await BrowserTestUtils.waitForEvent(win.document, "ViewChanged");
+  await waitAboutAddonsViewLoaded(win.document);
 
   // Trigger an update check
   let popupPromise = promisePopupNotificationShown("addon-webext-permissions");

@@ -432,10 +432,7 @@ add_task(async function test_addon_preferences_button() {
       // details page.
       info(`Opening addon details for ${id}`);
       const hasInlinePrefs = !definition.manifest.options_ui.open_in_tab;
-      const onceViewChanged = BrowserTestUtils.waitForEvent(
-        gManagerWindow.document,
-        "ViewChanged"
-      );
+      const onceViewChanged = wait_for_view_load(gManagerWindow, null, true);
       gManagerWindow.loadView(`addons://detail/${encodeURIComponent(id)}`);
       await onceViewChanged;
 
