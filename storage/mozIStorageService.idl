@@ -5,6 +5,12 @@
 
 #include "nsISupports.idl"
 
+%{C++
+
+#include "nsLiteralString.h"
+
+%}
+
 interface mozIStorageConnection;
 interface nsIFile;
 interface nsIFileURL;

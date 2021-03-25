@@ -7,6 +7,9 @@
 #ifndef mozilla_dom_SharedMemoryFuzzer_h
 #define mozilla_dom_SharedMemoryFuzzer_h
 
+#include <stddef.h>
+#include <stdint.h>
+
 namespace mozilla {
 namespace ipc {
 

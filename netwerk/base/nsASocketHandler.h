@@ -5,6 +5,10 @@
 #ifndef nsASocketHandler_h__
 #define nsASocketHandler_h__
 
+#include "nsError.h"
+#include "nsISupports.h"
+#include "prio.h"
+
 // socket handler used by nsISocketTransportService.
 // methods are only called on the socket thread.
 

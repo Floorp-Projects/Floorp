@@ -12,6 +12,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/TypedEnumBits.h"
 #include "nsCoord.h"
+#include "X11UndefineNone.h"
 
 struct RawServoFontFaceRule;
 

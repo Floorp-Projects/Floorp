@@ -5,6 +5,8 @@
 #ifndef _PATHHASH_H_
 #define _PATHHASH_H_
 
+#include <windows.h>
+
 /**
  * Converts a file path into a unique registry location for cert storage
  *

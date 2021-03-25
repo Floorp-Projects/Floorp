@@ -7,12 +7,19 @@
 #ifndef dom_base_MessageManagerCallback_h__
 #define dom_base_MessageManagerCallback_h__
 
+#include "nsError.h"
 #include "nsStringFwd.h"
 #include "nsTArrayForwardDeclare.h"
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
 
+class ClonedMessageData;
+class ContentChild;
+class ContentParent;
 class ProcessMessageManager;
 
 namespace ipc {

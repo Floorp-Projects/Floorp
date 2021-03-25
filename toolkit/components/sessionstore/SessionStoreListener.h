@@ -7,10 +7,12 @@
 #ifndef mozilla_dom_SessionStoreListener_h
 #define mozilla_dom_SessionStoreListener_h
 
+#include "SessionStoreData.h"
 #include "nsIDOMEventListener.h"
+#include "nsIObserver.h"
 #include "nsIPrivacyTransitionObserver.h"
 #include "nsIWebProgressListener.h"
-#include "SessionStoreData.h"
+#include "nsWeakReference.h"
 
 class nsITimer;
 

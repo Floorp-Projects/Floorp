@@ -9,8 +9,9 @@
 
 #include "VRSession.h"
 
-#include "mozilla/gfx/2D.h"
 #include "moz_external_vr.h"
+#include "mozilla/TimeStamp.h"
+#include "mozilla/gfx/2D.h"
 #include "nsTArray.h"
 #include "oculus/ovr_capi_dynamic.h"
 #include "prlink.h"

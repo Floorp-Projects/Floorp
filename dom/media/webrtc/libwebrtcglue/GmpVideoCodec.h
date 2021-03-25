@@ -5,9 +5,11 @@
 #ifndef GMPVIDEOCODEC_H_
 #define GMPVIDEOCODEC_H_
 
-#include "MediaConduitInterface.h"
-
 namespace mozilla {
+
+class WebrtcVideoDecoder;
+class WebrtcVideoEncoder;
+
 class GmpVideoCodec {
  public:
   static WebrtcVideoEncoder* CreateEncoder();

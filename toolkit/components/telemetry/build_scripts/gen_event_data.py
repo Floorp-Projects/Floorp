@@ -32,6 +32,7 @@ file_header = """\
 #ifndef mozilla_TelemetryEventData_h
 #define mozilla_TelemetryEventData_h
 #include "core/EventInfo.h"
+#include "nsITelemetry.h"
 namespace {
 """
 

@@ -8,6 +8,7 @@
 #define MOZILLA_GFX_2D_SSSE3_SCALER_H_
 
 #include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

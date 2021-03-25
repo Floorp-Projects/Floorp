@@ -18,6 +18,9 @@
 #include "nsIChannel.h"
 #include "nsCOMArray.h"
 #include "nsITimer.h"
+#include "nsIURI.h"
+#include "nsString.h"
+#include "nsWindowsHelpers.h"
 
 class nsICookieJarSettings;
 class nsIThread;

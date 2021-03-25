@@ -6,6 +6,7 @@
 #ifndef nsHTMLTags_h___
 #define nsHTMLTags_h___
 
+#include "nsAtom.h"
 #include "nsString.h"
 #include "nsTHashMap.h"
 #include "nsHashKeys.h"

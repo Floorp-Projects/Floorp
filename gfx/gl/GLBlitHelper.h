@@ -7,21 +7,28 @@
 #ifndef GLBLITHELPER_H_
 #define GLBLITHELPER_H_
 
-#include "GLContextTypes.h"
+#include <cstdint>
+#include <map>
 #include "GLConsts.h"
-#include "mozilla/gfx/Rect.h"
+#include "GLContextTypes.h"
+#include "GLTypes.h"
 #include "nsSize.h"
+#include "nsString.h"
 #include "nsTString.h"
 #include "mozilla/ipc/IPCTypes.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/gfx/Point.h"
-#include "../layers/ImageTypes.h"
-#include "nsStringFwd.h"
+#include "mozilla/gfx/Rect.h"
+#include "mozilla/gfx/Types.h"
 
 #include <map>
 
 #ifdef XP_WIN
 #  include <windows.h>
+#  include "mozilla/RefPtr.h"
+#  include "mozilla/ipc/IPCTypes.h"
+struct ID3D11Device;
 struct ID3D11Texture2D;
 #endif
 
@@ -32,16 +39,25 @@ class MacIOSurface;
 namespace mozilla {
 
 namespace layers {
-class D3D11ShareHandleImage;
-class D3D11YCbCrImage;
 class Image;
 class GPUVideoImage;
 class PlanarYCbCrImage;
-class SurfaceTextureImage;
-class MacIOSurfaceImage;
 class SurfaceDescriptor;
+
+#ifdef XP_WIN
+class D3D11ShareHandleImage;
+class D3D11YCbCrImage;
 class SurfaceDescriptorD3D10;
 class SurfaceDescriptorDXGIYCbCr;
+#endif
+
+#ifdef MOZ_WIDGET_ANDROID
+class SurfaceTextureImage;
+#endif
+
+#ifdef XP_MACOSX
+class MacIOSurfaceImage;
+#endif
 }  // namespace layers
 
 namespace gl {

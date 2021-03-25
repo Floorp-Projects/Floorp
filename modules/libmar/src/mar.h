@@ -9,6 +9,7 @@
 
 #include <assert.h>  // for C11 static_assert
 #include <stdint.h>
+#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {

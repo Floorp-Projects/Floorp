@@ -11,6 +11,12 @@
 #include "ObjectModel.h"
 
 namespace mozilla {
+class ErrorResult;
+
+namespace dom {
+struct GPUComputePassDescriptor;
+}
+
 namespace webgpu {
 namespace ffi {
 struct WGPUComputePass;

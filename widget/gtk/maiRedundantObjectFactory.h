@@ -8,6 +8,9 @@
 #ifndef __MAI_REDUNDANT_OBJECT_FACTORY_H__
 #define __MAI_REDUNDANT_OBJECT_FACTORY_H__
 
+#include <atk/atk.h>
+#include <glib-object.h>
+
 G_BEGIN_DECLS
 
 typedef struct _maiRedundantObjectFactory maiRedundantObjectFactory;

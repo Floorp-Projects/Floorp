@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include "mozilla/widget/mozwayland.h"
 #include "wayland-client.h"
 
 #ifdef  __cplusplus

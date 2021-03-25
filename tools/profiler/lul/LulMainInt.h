@@ -16,6 +16,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/HashFunctions.h"
 #include "mozilla/HashTable.h"
+#include "mozilla/Sprintf.h"
 
 // This file provides an internal interface inside LUL.  If you are an
 // end-user of LUL, do not include it in your code.  The end-user

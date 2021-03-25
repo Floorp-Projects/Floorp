@@ -9,6 +9,7 @@
 
 #include "nsAHttpTransaction.h"
 #include "prinrval.h"
+#include "nsHttp.h"
 #include "nsString.h"
 
 class nsISocketTransport;

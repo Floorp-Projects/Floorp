@@ -6,6 +6,7 @@
 #ifndef nsClipboard_h_
 #define nsClipboard_h_
 
+#include "nsCOMPtr.h"
 #include "nsIClipboard.h"
 #include "nsString.h"
 #include "mozilla/Maybe.h"

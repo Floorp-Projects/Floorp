@@ -5,6 +5,10 @@
 #ifndef nsAHtml5TreeOpSink_h
 #define nsAHtml5TreeOpSink_h
 
+#include "nsTArrayForwardDeclare.h"
+
+class nsHtml5TreeOperation;
+
 /**
  * The purpose of this interface is to connect a tree op executor
  * (main-thread case), a tree op stage (non-speculative off-the-main-thread

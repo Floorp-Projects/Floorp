@@ -9,6 +9,7 @@
 #include "nsWrapperCache.h"
 #include "ObjectModel.h"
 #include "mozilla/dom/TypedArray.h"
+#include "mozilla/webgpu/WebGPUTypes.h"
 
 namespace mozilla {
 class ErrorResult;
@@ -19,6 +20,8 @@ template <typename T>
 class Optional;
 template <typename T>
 class Sequence;
+struct GPUTextureCopyView;
+struct GPUTextureDataLayout;
 struct TextureCopyView;
 struct TextureDataLayout;
 typedef RangeEnforcedUnsignedLongSequenceOrGPUExtent3DDict GPUExtent3D;

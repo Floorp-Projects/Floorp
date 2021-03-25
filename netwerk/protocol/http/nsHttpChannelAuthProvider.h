@@ -25,6 +25,7 @@ namespace mozilla {
 namespace net {
 
 class nsHttpHandler;
+struct nsHttpAtom;
 
 class nsHttpChannelAuthProvider final : public nsIHttpChannelAuthProvider,
                                         public nsIAuthPromptCallback,

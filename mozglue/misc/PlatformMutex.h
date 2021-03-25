@@ -10,6 +10,7 @@
 #include <utility>
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Types.h"
 
 #if !defined(XP_WIN)
 #  include <pthread.h>

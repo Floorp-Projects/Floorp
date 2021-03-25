@@ -6,6 +6,7 @@
 #define mozilla_embedding_PrintProgressDialogChild_h
 
 #include "mozilla/embedding/PPrintProgressDialogChild.h"
+#include "nsIPrintProgressParams.h"
 #include "nsIPrintSettings.h"
 #include "nsIWebProgressListener.h"
 

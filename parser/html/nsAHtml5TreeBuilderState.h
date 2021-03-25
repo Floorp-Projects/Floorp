@@ -5,7 +5,12 @@
 #ifndef nsAHtml5TreeBuilderState_h
 #define nsAHtml5TreeBuilderState_h
 
+#include <cstdint>
 #include "nsIContentHandle.h"
+
+template <class T, class L>
+class jArray;
+class nsHtml5StackNode;
 
 /**
  * Interface for exposing the internal state of the HTML5 tree builder.

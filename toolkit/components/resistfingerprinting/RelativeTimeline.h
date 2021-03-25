@@ -6,6 +6,8 @@
 #ifndef __RelativeTimeline_h__
 #define __RelativeTimeline_h__
 
+#include <cstdint>
+
 namespace mozilla {
 
 class RelativeTimeline {

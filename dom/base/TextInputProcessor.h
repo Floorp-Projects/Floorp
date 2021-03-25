@@ -8,6 +8,7 @@
 #define mozilla_dom_textinputprocessor_h_
 
 #include "mozilla/Attributes.h"
+#include "mozilla/BasicEvents.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/TextEventDispatcher.h"

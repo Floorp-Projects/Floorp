@@ -39,6 +39,10 @@
 
 namespace mozilla {
 
+namespace gl {
+enum class OriginPos : uint8_t;
+}
+
 bool ConvertImage(size_t width, size_t height, const void* srcBegin,
                   size_t srcStride, gl::OriginPos srcOrigin,
                   WebGLTexelFormat srcFormat, bool srcPremultiplied,

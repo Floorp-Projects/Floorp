@@ -10,12 +10,15 @@
 #include "mozilla/Mutex.h"
 #include "mozilla/net/DNS.h"
 #include "nsIOutputStream.h"
+#include "nsASocketHandler.h"
 #include "nsCycleCollectionParticipant.h"
 
 //-----------------------------------------------------------------------------
 
 namespace mozilla {
 namespace net {
+
+class nsSocketTransportService;
 
 class nsUDPSocket final : public nsASocketHandler, public nsIUDPSocket {
  public:
