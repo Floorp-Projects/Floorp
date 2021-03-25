@@ -979,6 +979,39 @@ class PerftestOutput(object):
 
         return subtests, vals
 
+    def parseJetstreamTwoOutput(self, test):
+        # https://browserbench.org/JetStream/
+
+        _subtests = {}
+        data = test["measurements"]["jetstream2"]
+        for page_cycle in data:
+            for sub, replicates in page_cycle[0].items():
+                # for each pagecycle, build a list of subtests and append all related replicates
+                if sub not in _subtests:
+                    # subtest not added yet, first pagecycle, so add new one
+                    _subtests[sub] = {
+                        "unit": test["subtest_unit"],
+                        "alertThreshold": float(test["alert_threshold"]),
+                        "lowerIsBetter": test["subtest_lower_is_better"],
+                        "name": sub,
+                        "replicates": [],
+                    }
+                # pylint: disable=W1633
+                _subtests[sub]["replicates"].extend(
+                    [float(round(x, 3)) for x in replicates]
+                )
+
+        vals = []
+        subtests = []
+        names = list(_subtests)
+        names.sort(reverse=True)
+        for name in names:
+            _subtests[name]["value"] = filters.mean(_subtests[name]["replicates"])
+            subtests.append(_subtests[name])
+            vals.append([_subtests[name]["value"], name])
+
+        return subtests, vals
+
 
 class RaptorOutput(PerftestOutput):
     """class for raptor output"""
@@ -1272,39 +1305,6 @@ class RaptorOutput(PerftestOutput):
             if item.get("to_be_deleted") is not True
         ]
 
-    def parseJetstreamTwoOutput(self, test):
-        # https://browserbench.org/JetStream/
-
-        _subtests = {}
-        data = test["measurements"]["jetstream2"]
-        for page_cycle in data:
-            for sub, replicates in page_cycle[0].items():
-                # for each pagecycle, build a list of subtests and append all related replicates
-                if sub not in _subtests:
-                    # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {
-                        "unit": test["subtest_unit"],
-                        "alertThreshold": float(test["alert_threshold"]),
-                        "lowerIsBetter": test["subtest_lower_is_better"],
-                        "name": sub,
-                        "replicates": [],
-                    }
-                # pylint: disable=W1633
-                _subtests[sub]["replicates"].extend(
-                    [float(round(x, 3)) for x in replicates]
-                )
-
-        vals = []
-        subtests = []
-        names = list(_subtests)
-        names.sort(reverse=True)
-        for name in names:
-            _subtests[name]["value"] = filters.mean(_subtests[name]["replicates"])
-            subtests.append(_subtests[name])
-            vals.append([_subtests[name]["value"], name])
-
-        return subtests, vals
-
     def parseWASMMiscOutput(self, test):
         """
         {u'wasm-misc': [
@@ -1568,6 +1568,8 @@ class BrowsertimeOutput(PerftestOutput):
                     subtests, vals = self.parseSunspiderOutput(test)
                 if "assorted-dom" in test["measurements"]:
                     subtests, vals = self.parseAssortedDomOutput(test)
+                if "jetstream2" in test["measurements"]:
+                    subtests, vals = self.parseJetstreamTwoOutput(test)
 
                 if subtests is None:
                     raise Exception("No benchmark metrics found in browsertime results")
