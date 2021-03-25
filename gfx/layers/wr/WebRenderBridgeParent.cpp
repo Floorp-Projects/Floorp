@@ -2476,6 +2476,7 @@ void WebRenderBridgeParent::ClearResources() {
 
   if (IsRootWebRenderBridgeParent()) {
     mCompositorScheduler->Destroy();
+    mApi->DestroyRenderer();
   }
 
   mCompositorScheduler = nullptr;

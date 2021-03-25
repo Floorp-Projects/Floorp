@@ -245,6 +245,8 @@ class WebRenderAPI final {
 
   already_AddRefed<WebRenderAPI> Clone();
 
+  void DestroyRenderer();
+
   wr::WindowId GetId() const { return mId; }
 
   /// Do a non-blocking hit-testing query on a shared version of the hit
@@ -343,6 +345,7 @@ class WebRenderAPI final {
   bool mSupportsExternalBufferTextures;
   bool mCaptureSequence;
   layers::SyncHandle mSyncHandle;
+  bool mRendererDestroyed;
 
   // We maintain alive the root api to know when to shut the render backend
   // down, and the root api for the document to know when to delete the
