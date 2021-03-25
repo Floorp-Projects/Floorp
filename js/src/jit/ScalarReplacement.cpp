@@ -156,8 +156,6 @@ static inline bool IsOptimizableObjectInstruction(MInstruction* ins) {
 // changing shape, and which are known by TI at the object creation.
 static bool IsObjectEscaped(MInstruction* ins, JSObject* objDefault) {
   MOZ_ASSERT(ins->type() == MIRType::Object);
-  MOZ_ASSERT(IsOptimizableObjectInstruction(ins) || ins->isGuardShape() ||
-             ins->isFunctionEnvironment());
 
   JitSpewDef(JitSpew_Escape, "Check object\n", ins);
   JitSpewIndent spewIndent(JitSpew_Escape);
@@ -223,6 +221,26 @@ static bool IsObjectEscaped(MInstruction* ins, JSObject* objDefault) {
         MOZ_ASSERT(!ins->isGuardShape());
         if (obj->shape() != guard->shape()) {
           JitSpewDef(JitSpew_Escape, "has a non-matching guard shape\n", guard);
+          return true;
+        }
+        if (IsObjectEscaped(def->toInstruction(), obj)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
+      case MDefinition::Opcode::CheckIsObj: {
+        if (IsObjectEscaped(def->toInstruction(), obj)) {
+          JitSpewDef(JitSpew_Escape, "is indirectly escaped by\n", def);
+          return true;
+        }
+        break;
+      }
+
+      case MDefinition::Opcode::Unbox: {
+        if (def->type() != MIRType::Object) {
+          JitSpewDef(JitSpew_Escape, "has an invalid unbox\n", def);
           return true;
         }
         if (IsObjectEscaped(def->toInstruction(), obj)) {
@@ -301,6 +319,8 @@ class ObjectMemoryView : public MDefinitionVisitorDefaultNoop {
   void visitStoreDynamicSlot(MStoreDynamicSlot* ins);
   void visitLoadDynamicSlot(MLoadDynamicSlot* ins);
   void visitGuardShape(MGuardShape* ins);
+  void visitCheckIsObj(MCheckIsObj* ins);
+  void visitUnbox(MUnbox* ins);
   void visitFunctionEnvironment(MFunctionEnvironment* ins);
   void visitLambda(MLambda* ins);
   void visitLambdaArrow(MLambdaArrow* ins);
@@ -619,6 +639,33 @@ void ObjectMemoryView::visitObjectGuard(MInstruction* ins,
 
 void ObjectMemoryView::visitGuardShape(MGuardShape* ins) {
   visitObjectGuard(ins, ins->object());
+}
+
+void ObjectMemoryView::visitCheckIsObj(MCheckIsObj* ins) {
+  // Skip checks on other objects.
+  if (ins->input() != obj_) {
+    return;
+  }
+
+  // Replace the check by its object.
+  ins->replaceAllUsesWith(obj_);
+
+  // Remove original instruction.
+  ins->block()->discard(ins);
+}
+
+void ObjectMemoryView::visitUnbox(MUnbox* ins) {
+  // Skip unrelated unboxes.
+  if (ins->input() != obj_) {
+    return;
+  }
+  MOZ_ASSERT(ins->type() == MIRType::Object);
+
+  // Replace the unbox with the object.
+  ins->replaceAllUsesWith(obj_);
+
+  // Remove the unbox.
+  ins->block()->discard(ins);
 }
 
 void ObjectMemoryView::visitFunctionEnvironment(MFunctionEnvironment* ins) {
