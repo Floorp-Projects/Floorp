@@ -697,20 +697,15 @@ PLDHashTable::EntryHandle::EntryHandle(EntryHandle&& aOther) noexcept
       mKeyHash(aOther.mKeyHash),
       mSlot(aOther.mSlot) {}
 
+#ifdef MOZ_HASH_TABLE_CHECKS_ENABLED
 PLDHashTable::EntryHandle::~EntryHandle() {
   if (!mTable) {
     return;
   }
 
-  // If our slot is empty when this `EntryHandle` is destroyed, we may want to
-  // resize our table, as we just removed an entry.
-  if (!HasEntry()) {
-    mTable->ShrinkIfAppropriate();
-  }
-#ifdef MOZ_HASH_TABLE_CHECKS_ENABLED
   mTable->mChecker.EndWriteOp();
-#endif
 }
+#endif
 
 void PLDHashTable::EntryHandle::Remove() {
   MOZ_ASSERT(HasEntry());
