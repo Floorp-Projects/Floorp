@@ -32,7 +32,7 @@ class ProgressDelegateTest : BaseSessionTest() {
         sessionRule.forCallbacksDuringWait(object : Callbacks.ProgressDelegate,
                 Callbacks.NavigationDelegate {
             @AssertCalled
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
                 assertThat("LocationChange is called", url, endsWith(path))
             }
             @AssertCalled
@@ -361,7 +361,7 @@ class ProgressDelegateTest : BaseSessionTest() {
 
         session.forCallbacksDuringWait(object : Callbacks.NavigationDelegate {
             @AssertCalled
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
                 assertThat("URI should match", url, equalTo(startUri))
             }
         })
@@ -379,7 +379,7 @@ class ProgressDelegateTest : BaseSessionTest() {
         session.goBack()
 
         session.waitUntilCalled(object: Callbacks.NavigationDelegate {
-            override fun onLocationChange(session: GeckoSession, url: String?) {
+            override fun onLocationChange(session: GeckoSession, url: String?, perms : MutableList<GeckoSession.PermissionDelegate.ContentPermission>) {
                 assertThat("History should be preserved", url, equalTo(helloUri))
             }
         })
