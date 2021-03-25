@@ -1012,6 +1012,45 @@ class PerftestOutput(object):
 
         return subtests, vals
 
+    def parseWASMMiscOutput(self, test):
+        """
+        {u'wasm-misc': [
+          [[{u'name': u'validate', u'time': 163.44000000000005},
+            ...
+            {u'name': u'__total__', u'time': 63308.434904788155}]],
+          ...
+          [[{u'name': u'validate', u'time': 129.42000000000002},
+            {u'name': u'__total__', u'time': 63181.24089257814}]]
+         ]}
+        """
+        _subtests = {}
+        data = test["measurements"]["wasm-misc"]
+        for page_cycle in data:
+            for item in page_cycle[0]:
+                # for each pagecycle, build a list of subtests and append all related replicates
+                sub = item["name"]
+                if sub not in _subtests:
+                    # subtest not added yet, first pagecycle, so add new one
+                    _subtests[sub] = {
+                        "unit": test["subtest_unit"],
+                        "alertThreshold": float(test["alert_threshold"]),
+                        "lowerIsBetter": test["subtest_lower_is_better"],
+                        "name": sub,
+                        "replicates": [],
+                    }
+                _subtests[sub]["replicates"].append(item["time"])
+
+        vals = []
+        subtests = []
+        names = list(_subtests)
+        names.sort(reverse=True)
+        for name in names:
+            _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
+            subtests.append(_subtests[name])
+            vals.append([_subtests[name]["value"], name])
+
+        return subtests, vals
+
 
 class RaptorOutput(PerftestOutput):
     """class for raptor output"""
@@ -1305,45 +1344,6 @@ class RaptorOutput(PerftestOutput):
             if item.get("to_be_deleted") is not True
         ]
 
-    def parseWASMMiscOutput(self, test):
-        """
-        {u'wasm-misc': [
-          [[{u'name': u'validate', u'time': 163.44000000000005},
-            ...
-            {u'name': u'__total__', u'time': 63308.434904788155}]],
-          ...
-          [[{u'name': u'validate', u'time': 129.42000000000002},
-            {u'name': u'__total__', u'time': 63181.24089257814}]]
-         ]}
-        """
-        _subtests = {}
-        data = test["measurements"]["wasm-misc"]
-        for page_cycle in data:
-            for item in page_cycle[0]:
-                # for each pagecycle, build a list of subtests and append all related replicates
-                sub = item["name"]
-                if sub not in _subtests:
-                    # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {
-                        "unit": test["subtest_unit"],
-                        "alertThreshold": float(test["alert_threshold"]),
-                        "lowerIsBetter": test["subtest_lower_is_better"],
-                        "name": sub,
-                        "replicates": [],
-                    }
-                _subtests[sub]["replicates"].append(item["time"])
-
-        vals = []
-        subtests = []
-        names = list(_subtests)
-        names.sort(reverse=True)
-        for name in names:
-            _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
-            subtests.append(_subtests[name])
-            vals.append([_subtests[name]["value"], name])
-
-        return subtests, vals
-
     def summarize_screenshots(self, screenshots):
         if len(screenshots) == 0:
             return
@@ -1564,6 +1564,8 @@ class BrowsertimeOutput(PerftestOutput):
                     subtests, vals = self.parseWebaudioOutput(test)
                 if "wasm-godot" in test["measurements"]:
                     subtests, vals = self.parseWASMGodotOutput(test)
+                if "wasm-misc" in test["measurements"]:
+                    subtests, vals = self.parseWASMMiscOutput(test)
                 if "sunspider" in test["measurements"]:
                     subtests, vals = self.parseSunspiderOutput(test)
                 if "assorted-dom" in test["measurements"]:

@@ -31,9 +31,9 @@ wasm-misc:
     fetch:
         type: static-url
         artifact-name: wasm-misc.zip
-        url: https://github.com/mozilla/perf-automation/releases/download/wasm-misc-v1/wasm-misc-c55c3c7690b2.zip
-        sha256: 0ba273b748b872117a4b230c776bbd73550398da164025a735c28a16c0224397
-        size: 4433793
+        url: https://github.com/mozilla/perf-automation/releases/download/wasm-misc-v2/wasm-misc-54c3c3d9d3f6.zip
+        sha256: 9149b31c781fd5ac9a62a7a92d8cd39536f1a6d82e1335966773d412344704b8
+        size: 4425799
 
 web-tooling-benchmark:
     description: Web Tooling Benchmark
