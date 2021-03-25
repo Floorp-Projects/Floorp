@@ -342,6 +342,9 @@ class WebRTCParent extends JSWindowActorParent {
     aId,
     aPermissionPrincipal
   ) {
+    // If we don't have active permissions for the given window anymore don't
+    // set a grace period. This happens if there has been a user revoke and
+    // webrtcUI clears the permissions.
     if (!webrtcUI.activePerms.has(this.manager.outerWindowId)) {
       return;
     }
