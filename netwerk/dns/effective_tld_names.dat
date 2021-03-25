@@ -7125,7 +7125,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-03-04T15:37:38Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2021-03-24T15:07:35Z
 // This list is auto-generated, don't edit it manually.
 // aaa : 2015-02-26 American Automobile Association, Inc.
 aaa
@@ -9644,7 +9644,7 @@ saxo
 // sbi : 2015-03-12 STATE BANK OF INDIA
 sbi
 
-// sbs : 2014-11-07 SPECIAL BROADCASTING SERVICE CORPORATION
+// sbs : 2014-11-07 ShortDot SA
 sbs
 
 // sca : 2014-03-13 SVENSKA CELLULOSA AKTIEBOLAGET SCA (publ)
@@ -11137,6 +11137,11 @@ cupcake.is
 // Submitted by Marvin Wiesner <Marvin@curv-labs.de>
 curv.dev
 
+// Curvegrid Inc. : https://www.curvegrid.com/
+// Submitted by Pierre Rousset <security@curvegrid.com>
+multibaas.app
+multibaas.com
+
 // Customer OCI - Oracle Dyn https://cloud.oracle.com/home https://dyn.com/dns/
 // Submitted by Gregory Drake <support@dyn.com>
 // Note: This is intended to also include customer-oci.com due to wildcards implicitly including the current label
@@ -12311,8 +12316,6 @@ jelastic.saveincloud.net
 nordeste-idc.saveincloud.net
 j.scaleforce.net
 jelastic.tsukaeru.net
-atl.jelastic.vps-host.net
-njs.jelastic.vps-host.net
 unicloud.pl
 mircloud.ru
 jelastic.regruhosting.ru
@@ -12502,6 +12505,10 @@ mcdir.me
 mcdir.ru
 mcpre.ru
 vps.mcdir.ru
+
+// Medicom Health : https://medicomhealth.com
+// Submitted by Michael Olson <molson@medicomhealth.com>
+hra.health
 
 // Memset hosting : https://www.memset.com
 // Submitted by Tom Whitwell <domains@memset.com>
@@ -12907,6 +12914,10 @@ pagefrontapp.com
 // Submitted by Yann Guichard <yann@pagexl.com>
 pagexl.com
 
+// Paywhirl, Inc : https://paywhirl.com/
+// Submitted by Daniel Netzer <dan@paywhirl.com>
+*.paywhirl.com
+
 // pcarrier.ca Software Inc: https://pcarrier.ca/
 // Submitted by Pierre Carrier <pc@rrier.ca>
 bar0.net
@@ -13158,6 +13169,11 @@ magnet.page
 biz.ua
 co.ua
 pp.ua
+
+// Shift Crypto AG : https://shiftcrypto.ch
+// Submitted by alex <alex@shiftcrypto.ch>
+shiftcrypto.dev
+shiftcrypto.io
 
 // ShiftEdit : https://shiftedit.net/
 // Submitted by Adam Jimenez <adam@shiftcreate.com>
@@ -13632,4 +13648,12 @@ gsj.bz
 сочи.рус
 спб.рус
 я.рус
+
+// Strategic System Consulting (eApps Hosting): https://www.eapps.com/
+// Submitted by Alex Oancea <aoancea@cloudscale365.com>
+vps-host.net
+atl.jelastic.vps-host.net
+njs.jelastic.vps-host.net
+ric.jelastic.vps-host.net
 // ===END PRIVATE DOMAINS===
+
