@@ -143,6 +143,9 @@ browsertime-benchmark:
         - [motionmark-htmlsuite, mm-h]
         - [stylebench, sb]
         - [webaudio, wa]
+        - [wasm-godot, godot]
+        - [wasm-godot-baseline, godot-b]
+        - [wasm-godot-optimizing, godot-i]
     variants: ["fission"]
     apps: ["firefox"]
     treeherder-symbol: Btime()
