@@ -1040,6 +1040,8 @@ class nsDocShell final : public nsDocLoader,
   nsresult HandleSameDocumentNavigation(nsDocShellLoadState* aLoadState,
                                         SameDocumentNavigationState& aState);
 
+  uint32_t GetSameDocumentNavigationFlags(nsIURI* aNewURI);
+
   // Called when the Private Browsing state of a nsDocShell changes.
   void NotifyPrivateBrowsingChanged();
 

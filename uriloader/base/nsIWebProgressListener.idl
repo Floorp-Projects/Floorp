@@ -441,10 +441,16 @@ interface nsIWebProgressListener : nsISupports
    * LOCATION_CHANGE_RELOAD
    *   This flag is on when reloading the current page, either from
    *   location.reload() or the browser UI.
+   *
+   * LOCATION_CHANGE_HASHCHANGE
+   *   This flag is on for same-document location changes where only the URI's
+   *   reference fragment has changed. This flag implies
+   *   LOCATION_CHANGE_SAME_DOCUMENT.
    */
   const unsigned long LOCATION_CHANGE_SAME_DOCUMENT   = 0x00000001;
   const unsigned long LOCATION_CHANGE_ERROR_PAGE      = 0x00000002;
   const unsigned long LOCATION_CHANGE_RELOAD          = 0x00000004;
+  const unsigned long LOCATION_CHANGE_HASHCHANGE      = 0x00000008;
 
   /**
    * Called when the location of the window being watched changes.  This is not
