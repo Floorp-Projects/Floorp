@@ -3,6 +3,47 @@
     {
       "stash": {
         "blocked": [
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:4.0",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:2.2",
+          "onlineprot@live:1.1",
+          "web@guard:1",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:2.8",
+          "protweb@live:1.2",
+          "{0d37b4a5-c2e0-445a-82ea-719d66d124d1}:1.0.5",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:3.7",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:2.6",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:3.0",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:2.4",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:2.5",
+          "{81152bc0-fc41-4851-98d6-fccb47a3e56a}:1.0",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:3.3",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:2.9",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:3.8",
+          "protweb@live:1.3",
+          "protweb@live:1.1",
+          "protweb@live:1.0",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:4.1",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:3.9",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:3.4",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:2.3",
+          "onlineprot@live:1.0",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:3.5",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:3.1",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:2.7",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:3.6",
+          "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:3.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1616179070210,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1616610908086,
+      "id": "476336f4-da68-447f-a07e-a08ee76cf729",
+      "last_modified": 1616611069817
+    },
+    {
+      "stash": {
+        "blocked": [
           "newtabhome@newtab.com:1.0.3",
           "tag_search@net:1.0",
           "{c9d58e3e-3e0b-45d8-b179-5f7c57003a18}:0.9.8",
