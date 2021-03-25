@@ -39,7 +39,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "separatedMozillaDomains",
   "browser.tabs.remote.separatedMozillaDomains",
-  false,
+  "",
   false,
   val => val.split(",")
 );

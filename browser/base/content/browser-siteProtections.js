@@ -380,13 +380,13 @@ var TrackingProtection = {
       this,
       "trackingTable",
       this.PREF_TRACKING_TABLE,
-      false
+      ""
     );
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
       "trackingAnnotationTable",
       this.PREF_TRACKING_ANNOTATION_TABLE,
-      false
+      ""
     );
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
@@ -1062,7 +1062,7 @@ var SocialTracking = {
       this,
       "rejectTrackingCookies",
       this.PREF_COOKIE_BEHAVIOR,
-      false,
+      null,
       this.updateCategoryItem.bind(this),
       val =>
         [
@@ -1473,7 +1473,7 @@ var gProtectionsHandler = {
       this,
       "milestoneListPref",
       "browser.contentblocking.cfr-milestone.milestones",
-      [],
+      "[]",
       () => this.maybeSetMilestoneCounterText(),
       val => JSON.parse(val)
     );
@@ -1490,7 +1490,7 @@ var gProtectionsHandler = {
       this,
       "milestoneTimestampPref",
       "browser.contentblocking.cfr-milestone.milestone-shown-time",
-      0,
+      "0",
       null,
       val => parseInt(val)
     );

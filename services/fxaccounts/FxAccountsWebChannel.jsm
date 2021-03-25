@@ -94,7 +94,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "separatedMozillaDomains",
   "browser.tabs.remote.separatedMozillaDomains",
-  false,
+  "",
   false,
   val => val.split(",")
 );
@@ -102,7 +102,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
   this,
   "accountServer",
   "identity.fxaccounts.remote.root",
-  false,
+  null,
   false,
   val => Services.io.newURI(val)
 );
