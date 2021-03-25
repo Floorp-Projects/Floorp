@@ -306,6 +306,7 @@ raptor-wasm-misc-firefox:
     variants: ["fission"]
     try-name: raptor-wasm-misc-firefox
     treeherder-symbol: Rap(wm)
+    run-on-projects: []
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc
@@ -317,6 +318,7 @@ raptor-wasm-misc-firefox-profiling:
     description: "Raptor WASM Misc on Firefox with Gecko Profiling"
     try-name: raptor-wasm-misc-firefox-profiling
     treeherder-symbol: Rap-Prof(wm)
+    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -331,6 +333,7 @@ raptor-wasm-misc-baseline-firefox:
     variants: ["fission"]
     try-name: raptor-wasm-misc-baseline-firefox
     treeherder-symbol: Rap(wm-b)
+    run-on-projects: []
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc-baseline
@@ -342,6 +345,7 @@ raptor-wasm-misc-baseline-firefox-profiling:
     description: "Raptor WASM Misc on Firefox with baseline JIT and Gecko Profiling"
     try-name: raptor-wasm-misc-baseline-firefox-profiling
     treeherder-symbol: Rap-Prof(wm-b)
+    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -356,6 +360,7 @@ raptor-wasm-misc-optimizing-firefox:
     variants: ["fission"]
     try-name: raptor-wasm-misc-optimizing-firefox
     treeherder-symbol: Rap(wm-i)
+    run-on-projects: []
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc-optimizing
@@ -367,6 +372,7 @@ raptor-wasm-misc-optimizing-firefox-profiling:
     description: "Raptor WASM Misc on Firefox with optimizing JIT and Gecko Profiling"
     try-name: raptor-wasm-misc-optimizing-firefox-profiling
     treeherder-symbol: Rap-Prof(wm-i)
+    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -411,6 +417,7 @@ raptor-wasm-godot-firefox:
     variants: ["fission"]
     try-name: raptor-wasm-godot-firefox
     treeherder-symbol: Rap(godot)
+    run-on-projects: []
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2100
@@ -424,6 +431,7 @@ raptor-wasm-godot-firefox-profiling:
     description: "Raptor Wasm Godot on Firefox with Gecko Profiling"
     try-name: raptor-wasm-godot-firefox-profiling
     treeherder-symbol: Rap-Prof(godot)
+    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -435,6 +443,7 @@ raptor-wasm-godot-baseline-firefox:
     variants: ["fission"]
     try-name: raptor-wasm-godot-baseline-firefox
     treeherder-symbol: Rap(godot-b)
+    run-on-projects: []
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2100
@@ -448,6 +457,7 @@ raptor-wasm-godot-baseline-firefox-profiling:
     description: "Raptor Wasm Godot on Firefox with baseline JIT and Gecko Profiling"
     try-name: raptor-wasm-godot-baseline-firefox-profiling
     treeherder-symbol: Rap-Prof(godot-b)
+    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -459,6 +469,7 @@ raptor-wasm-godot-optimizing-firefox:
     variants: ["fission"]
     try-name: raptor-wasm-godot-optimizing-firefox
     treeherder-symbol: Rap(godot-i)
+    run-on-projects: []
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2100
@@ -472,6 +483,7 @@ raptor-wasm-godot-optimizing-firefox-profiling:
     description: "Raptor WASM godot on Firefox with optimizing JIT and Gecko Profiling"
     try-name: raptor-wasm-godot-optimizing-firefox-profiling
     treeherder-symbol: Rap-Prof(godot-i)
+    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:

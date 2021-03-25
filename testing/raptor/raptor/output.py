@@ -859,6 +859,47 @@ class PerftestOutput(object):
         print(subtests)
         return subtests, vals
 
+    def parseWASMGodotOutput(self, test):
+        """
+        {u'wasm-godot': [
+            {
+              "name": "wasm-instantiate",
+              "time": 349
+            },{
+              "name": "engine-instantiate",
+              "time": 1263
+            ...
+            }]}
+        """
+        _subtests = {}
+        data = test["measurements"]["wasm-godot"]
+        print(data)
+        for page_cycle in data:
+            for item in page_cycle[0]:
+                # for each pagecycle, build a list of subtests and append all related replicates
+                sub = item["name"]
+                if sub not in _subtests:
+                    # subtest not added yet, first pagecycle, so add new one
+                    _subtests[sub] = {
+                        "unit": test["subtest_unit"],
+                        "alertThreshold": float(test["alert_threshold"]),
+                        "lowerIsBetter": test["subtest_lower_is_better"],
+                        "name": sub,
+                        "replicates": [],
+                    }
+                _subtests[sub]["replicates"].append(item["time"])
+
+        vals = []
+        subtests = []
+        names = list(_subtests)
+        names.sort(reverse=True)
+        for name in names:
+            _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
+            subtests.append(_subtests[name])
+            vals.append([_subtests[name]["value"], name])
+
+        return subtests, vals
+
 
 class RaptorOutput(PerftestOutput):
     """class for raptor output"""
@@ -1224,47 +1265,6 @@ class RaptorOutput(PerftestOutput):
 
         return subtests, vals
 
-    def parseWASMGodotOutput(self, test):
-        """
-        {u'wasm-godot': [
-            {
-              "name": "wasm-instantiate",
-              "time": 349
-            },{
-              "name": "engine-instantiate",
-              "time": 1263
-            ...
-            }]}
-        """
-        _subtests = {}
-        data = test["measurements"]["wasm-godot"]
-        print(data)
-        for page_cycle in data:
-            for item in page_cycle[0]:
-                # for each pagecycle, build a list of subtests and append all related replicates
-                sub = item["name"]
-                if sub not in _subtests:
-                    # subtest not added yet, first pagecycle, so add new one
-                    _subtests[sub] = {
-                        "unit": test["subtest_unit"],
-                        "alertThreshold": float(test["alert_threshold"]),
-                        "lowerIsBetter": test["subtest_lower_is_better"],
-                        "name": sub,
-                        "replicates": [],
-                    }
-                _subtests[sub]["replicates"].append(item["time"])
-
-        vals = []
-        subtests = []
-        names = list(_subtests)
-        names.sort(reverse=True)
-        for name in names:
-            _subtests[name]["value"] = filters.median(_subtests[name]["replicates"])
-            subtests.append(_subtests[name])
-            vals.append([_subtests[name]["value"], name])
-
-        return subtests, vals
-
     def parseSunspiderOutput(self, test):
         _subtests = {}
         data = test["measurements"]["sunspider"]
@@ -1562,6 +1562,8 @@ class BrowsertimeOutput(PerftestOutput):
                     subtests, vals = self.parseUnityWebGLOutput(test)
                 if "webaudio" in test["measurements"]:
                     subtests, vals = self.parseWebaudioOutput(test)
+                if "wasm-godot" in test["measurements"]:
+                    subtests, vals = self.parseWASMGodotOutput(test)
 
                 if subtests is None:
                     raise Exception("No benchmark metrics found in browsertime results")
