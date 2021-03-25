@@ -651,8 +651,13 @@ var webrtcUI = {
     let actor = sharingState.browsingContext.currentWindowGlobal.getActor(
       "WebRTC"
     );
-    windowIds.forEach(id => actor.sendAsyncMessage("webrtc:StopSharing", id));
+
+    // Delete activePerms for all outerWindowIds under the current browser. We
+    // need to do this prior to sending the stopSharing message, so WebRTCParent
+    // can skip adding grace periods for these devices.
     webrtcUI.forgetActivePermissionsFromBrowser(browser);
+
+    windowIds.forEach(id => actor.sendAsyncMessage("webrtc:StopSharing", id));
   },
 
   updateIndicators(aTopBrowsingContext) {
@@ -682,8 +687,20 @@ var webrtcUI = {
     }
   },
 
+  /**
+   * Remove all entries from the activePerms map for a browser, including all
+   * child frames.
+   * Note: activePerms is an internal WebRTC UI permission map and does not
+   * reflect the PermissionManager or SitePermissions state.
+   * @param aBrowser - Browser to clear active permissions for.
+   */
   forgetActivePermissionsFromBrowser(aBrowser) {
-    this.activePerms.delete(aBrowser.outerWindowID);
+    let browserWindowIds = aBrowser.browsingContext
+      .getAllBrowsingContextsInSubtree()
+      .map(bc => bc.currentWindowGlobal?.outerWindowId)
+      .filter(id => id != null);
+    browserWindowIds.push(aBrowser.outerWindowId);
+    browserWindowIds.forEach(id => this.activePerms.delete(id));
   },
 
   showSharingDoorhanger(aActiveStream) {
