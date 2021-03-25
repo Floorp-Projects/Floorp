@@ -4,7 +4,7 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["Branch", "MarionettePrefs"];
+const EXPORTED_SYMBOLS = ["Branch", "EnvironmentPrefs", "MarionettePrefs"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
