@@ -18,24 +18,18 @@ add_task(async function() {
   // This preference helps destroying the content process when we close the tab
   await pushPref("dom.ipc.keepProcessesAlive.web", 1);
 
-  const client = await createLocalClient();
-  const mainRoot = client.mainRoot;
-
-  await testLocalTab(mainRoot);
-  await testRemoteTab(mainRoot);
-  await testParentProcess(mainRoot);
-  await testContentProcess(mainRoot);
-  await testWorker(mainRoot);
-  await testWebExtension(mainRoot);
-
-  await client.close();
+  await testLocalTab();
+  await testRemoteTab();
+  await testParentProcess();
+  await testContentProcess();
+  await testWorker();
+  await testWebExtension();
 });
 
-async function testParentProcess(rootFront) {
+async function testParentProcess() {
   info("Test TargetCommand against parent process descriptor");
 
-  const descriptor = await rootFront.getMainProcess();
-  const commands = await descriptor.getCommands();
+  const commands = await CommandsFactory.forMainProcess();
   const targetList = commands.targetCommand;
   await targetList.startListening();
 
@@ -55,14 +49,15 @@ async function testParentProcess(rootFront) {
 
   targetList.destroy();
   await waitForAllTargetsToBeAttached(targetList);
+
+  await commands.destroy();
 }
 
-async function testLocalTab(rootFront) {
+async function testLocalTab() {
   info("Test TargetCommand against local tab descriptor (via getTab({ tab }))");
 
   const tab = await addTab(TEST_URL);
-  const descriptor = await rootFront.getTab({ tab });
-  const commands = await descriptor.getCommands();
+  const commands = await CommandsFactory.forTab(tab);
   const targetList = commands.targetCommand;
   await targetList.startListening();
   // Avoid the target to close the client when we destroy the target list and the target
@@ -82,18 +77,19 @@ async function testLocalTab(rootFront) {
   targetList.destroy();
 
   BrowserTestUtils.removeTab(tab);
+
+  await commands.destroy();
 }
 
-async function testRemoteTab(rootFront) {
+async function testRemoteTab() {
   info(
     "Test TargetCommand against remote tab descriptor (via getTab({ outerWindowID }))"
   );
 
   const tab = await addTab(TEST_URL);
-  const descriptor = await rootFront.getTab({
+  const commands = await CommandsFactory.forRemoteTabInTest({
     outerWindowID: tab.linkedBrowser.outerWindowID,
   });
-  const commands = await descriptor.getCommands();
   const targetList = commands.targetCommand;
   await targetList.startListening();
 
@@ -120,7 +116,7 @@ async function testRemoteTab(rootFront) {
   if (isFissionEnabled()) {
     info("With fission, cross process switching destroy everything");
     ok(targetFront.isDestroyed(), "Top level target is destroyed");
-    ok(descriptor.isDestroyed(), "Descriptor is also destroyed");
+    ok(commands.descriptorFront.isDestroyed(), "Descriptor is also destroyed");
   } else {
     is(
       targetList.targetFront,
@@ -132,9 +128,11 @@ async function testRemoteTab(rootFront) {
   targetList.destroy();
 
   BrowserTestUtils.removeTab(tab);
+
+  await commands.destroy();
 }
 
-async function testWebExtension(rootFront) {
+async function testWebExtension() {
   info("Test TargetCommand against webextension descriptor");
 
   const extension = ExtensionTestUtils.loadExtension({
@@ -146,8 +144,7 @@ async function testWebExtension(rootFront) {
 
   await extension.startup();
 
-  const descriptor = await rootFront.getAddon({ id: extension.id });
-  const commands = await descriptor.getCommands();
+  const commands = await CommandsFactory.forAddon(extension.id);
   const targetList = commands.targetCommand;
   await targetList.startListening();
 
@@ -165,9 +162,11 @@ async function testWebExtension(rootFront) {
   targetList.destroy();
 
   await extension.unload();
+
+  await commands.destroy();
 }
 
-async function testContentProcess(rootFront) {
+async function testContentProcess() {
   info("Test TargetCommand against content process descriptor");
 
   const tab = await BrowserTestUtils.openNewForegroundTab({
@@ -178,8 +177,7 @@ async function testContentProcess(rootFront) {
 
   const { osPid } = tab.linkedBrowser.browsingContext.currentWindowGlobal;
 
-  const descriptor = await rootFront.getProcess(osPid);
-  const commands = await descriptor.getCommands();
+  const commands = await CommandsFactory.forProcess(osPid);
   const targetList = commands.targetCommand;
   await targetList.startListening();
 
@@ -197,17 +195,35 @@ async function testContentProcess(rootFront) {
   targetList.destroy();
 
   BrowserTestUtils.removeTab(tab);
+
+  await commands.destroy();
 }
 
-async function testWorker(rootFront) {
+// CommandsFactory expect the worker id, which is computed from the nsIWorkerDebugger.id attribute
+function getWorkerDebuggerId(url) {
+  const wdm = Cc[
+    "@mozilla.org/dom/workers/workerdebuggermanager;1"
+  ].createInstance(Ci.nsIWorkerDebuggerManager);
+  const workers = wdm.getWorkerDebuggerEnumerator();
+  while (workers.hasMoreElements()) {
+    const worker = workers.getNext();
+    worker.QueryInterface(Ci.nsIWorkerDebugger);
+    if (worker.url == url) {
+      return worker.id;
+    }
+  }
+  return null;
+}
+
+async function testWorker() {
   info("Test TargetCommand against worker descriptor");
 
   const workerUrl = CHROME_WORKER_URL + "#descriptor";
   new Worker(workerUrl);
 
-  const { workers } = await rootFront.listWorkers();
-  const descriptor = workers.find(w => w.url == workerUrl);
-  const commands = await descriptor.getCommands();
+  const workerId = getWorkerDebuggerId(workerUrl);
+  ok(workerId, "Found the worker Debugger ID");
+  const commands = await CommandsFactory.forWorker(workerId);
   const targetList = commands.targetCommand;
   await targetList.startListening();
 
@@ -223,4 +239,11 @@ async function testWorker(rootFront) {
   is(targetFront.isTopLevel, true, "This is flagged as top level");
 
   targetList.destroy();
+
+  // Calling CommandsFactory.forWorker, will call RootFront.getWorker
+  // which will spawn lots of worker legacy code, firing lots of requests,
+  // which may still be pending
+  await commands.waitForRequestsToSettle();
+
+  await commands.destroy();
 }

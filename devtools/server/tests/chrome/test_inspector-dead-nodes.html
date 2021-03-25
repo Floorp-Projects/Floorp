@@ -31,11 +31,12 @@ async function reloadTarget() {
 
 addAsyncTest(async function() {
   const url = document.getElementById("inspectorContent").href;
-  const { target, doc } = await attachURL(url);
+  const { commands, doc } = await attachURL(url);
+  const target = commands.targetCommand.targetFront;
   gDoc = doc;
   const inspector = await target.getFront("inspector");
   gWalker = inspector.walker;
-  gResourceWatcher = await createResourceWatcher(target);
+  gResourceWatcher = await createResourceWatcher(commands);
 
   info("Start watching for root nodes and wait for the initial root node");
   const rootNodePromise = new Promise(r => (gRootNodeResolve = r));

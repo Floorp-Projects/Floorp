@@ -17,10 +17,7 @@ add_task(async function() {
   // This preference helps destroying the content process when we close the tab
   await pushPref("dom.ipc.keepProcessesAlive.web", 1);
 
-  const client = await createLocalClient();
-  const targetDescriptor = await client.mainRoot.getMainProcess();
-
-  const commands = await targetDescriptor.getCommands();
+  const commands = await CommandsFactory.forMainProcess();
   const targetList = commands.targetCommand;
   await targetList.startListening();
 
@@ -34,14 +31,11 @@ add_task(async function() {
       .map(t => t.attachAndInitThread(targetList))
   );
 
-  await client.close();
+  await commands.destroy();
 });
 
 add_task(async function() {
-  const client = await createLocalClient();
-  const targetDescriptor = await client.mainRoot.getMainProcess();
-
-  const commands = await targetDescriptor.getCommands();
+  const commands = await CommandsFactory.forMainProcess();
   const targetList = commands.targetCommand;
   await targetList.startListening();
 
@@ -80,7 +74,7 @@ add_task(async function() {
       .map(t => t.attachAndInitThread(targetList))
   );
 
-  await client.close();
+  await commands.destroy();
 });
 
 async function testProcesses(targetList, target) {

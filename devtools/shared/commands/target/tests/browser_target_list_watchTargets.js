@@ -17,21 +17,15 @@ add_task(async function() {
   // This preference helps destroying the content process when we close the tab
   await pushPref("dom.ipc.keepProcessesAlive.web", 1);
 
-  const client = await createLocalClient();
-  const mainRoot = client.mainRoot;
-
-  await testWatchTargets(mainRoot);
-  await testContentProcessTarget(mainRoot);
-  await testThrowingInOnAvailable(mainRoot);
-
-  await client.close();
+  await testWatchTargets();
+  await testContentProcessTarget();
+  await testThrowingInOnAvailable();
 });
 
-async function testWatchTargets(mainRoot) {
+async function testWatchTargets() {
   info("Test TargetCommand watchTargets function");
 
-  const targetDescriptor = await mainRoot.getMainProcess();
-  const commands = await targetDescriptor.getCommands();
+  const commands = await CommandsFactory.forMainProcess();
   const targetList = commands.targetCommand;
   const { TYPES } = targetList;
 
@@ -44,7 +38,7 @@ async function testWatchTargets(mainRoot) {
     "Check that onAvailable is called for processes already created *before* the call to watchTargets"
   );
   const targets = new Set();
-  const topLevelTarget = await targetDescriptor.getTarget();
+  const topLevelTarget = targetList.targetFront;
   const onAvailable = ({ targetFront }) => {
     if (targets.has(targetFront)) {
       ok(false, "The same target is notified multiple times via onAvailable");
@@ -157,16 +151,16 @@ async function testWatchTargets(mainRoot) {
 
   targetList.destroy();
 
-  // Also destroy the descriptor so that testThrowingInOnAvailable can get a fresh
-  // commands object and also a fresh TargetList instance
-  targetDescriptor.destroy();
+  await commands.destroy();
 }
 
-async function testContentProcessTarget(mainRoot) {
+async function testContentProcessTarget() {
   info("Test TargetCommand watchTargets with a content process target");
 
-  const processes = await mainRoot.listProcesses();
-  const commands = await processes[1].getCommands();
+  const {
+    osPid,
+  } = gBrowser.selectedBrowser.browsingContext.currentWindowGlobal;
+  const commands = await CommandsFactory.forProcess(osPid);
   const targetList = commands.targetCommand;
   const { TYPES } = targetList;
 
@@ -176,7 +170,7 @@ async function testContentProcessTarget(mainRoot) {
   // as listening for additional target is only enable for the parent process target.
   // See bug 1593928.
   const targets = new Set();
-  const topLevelTarget = await processes[1].getTarget();
+  const topLevelTarget = targetList.targetFront;
   const onAvailable = ({ targetFront }) => {
     if (targets.has(targetFront)) {
       // This may fail if the top level target is reported by LegacyImplementation
@@ -206,15 +200,16 @@ async function testContentProcessTarget(mainRoot) {
 
   targetList.unwatchTargets([TYPES.PROCESS], onAvailable, onDestroyed);
   targetList.destroy();
+
+  await commands.destroy();
 }
 
-async function testThrowingInOnAvailable(mainRoot) {
+async function testThrowingInOnAvailable() {
   info(
     "Test TargetCommand watchTargets function when an exception is thrown in onAvailable callback"
   );
 
-  const targetDescriptor = await mainRoot.getMainProcess();
-  const commands = await targetDescriptor.getCommands();
+  const commands = await CommandsFactory.forMainProcess();
   const targetList = commands.targetCommand;
   const { TYPES } = targetList;
 
@@ -243,4 +238,6 @@ async function testThrowingInOnAvailable(mainRoot) {
   );
 
   targetList.destroy();
+
+  await commands.destroy();
 }

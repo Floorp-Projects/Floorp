@@ -12,29 +12,23 @@ add_task(async function() {
   // This preference helps destroying the content process when we close the tab
   await pushPref("dom.ipc.keepProcessesAlive.web", 1);
 
-  const client = await createLocalClient();
-  const mainRoot = client.mainRoot;
-
   // Assert the limited behavior of this API with fission preffed off
   await pushPref("devtools.browsertoolbox.fission", false);
 
   // Test with Main process targets as top level target
-  await testPreffedOffMainProcess(mainRoot);
-
-  await client.close();
+  await testPreffedOffMainProcess();
 });
 
-async function testPreffedOffMainProcess(mainRoot) {
+async function testPreffedOffMainProcess() {
   info(
     "Test TargetCommand when devtools's fission pref is false, via the parent process target"
   );
 
-  const targetDescriptor = await mainRoot.getMainProcess();
-  const mainProcess = await targetDescriptor.getTarget();
-  const commands = await targetDescriptor.getCommands();
+  const commands = await CommandsFactory.forMainProcess();
   const targetList = commands.targetCommand;
   const { TYPES } = targetList;
   await targetList.startListening();
+  const mainProcess = targetList.targetFront;
 
   // The API should only report the top level target,
   // i.e. the Main process target, which is considered as frame
@@ -88,4 +82,6 @@ async function testPreffedOffMainProcess(mainRoot) {
   targetList.unwatchTargets([TYPES.FRAME], onFrameAvailable);
 
   targetList.destroy();
+
+  await commands.destroy();
 }

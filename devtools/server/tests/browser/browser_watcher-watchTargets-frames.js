@@ -8,6 +8,9 @@
 "use strict";
 
 const TEST_DOC_URL = MAIN_DOMAIN + "doc_iframe.html";
+const {
+  createLocalClientForTests,
+} = require("devtools/shared/commands/commands-factory");
 
 // URL of the <iframe> already loaded in doc_iframe.html (the top level test document)
 const TEST_DOC_URL1 =
@@ -19,15 +22,18 @@ const TEST_DOC_URL2 =
   MAIN_DOMAIN.replace("test1.example.org", "example.net") + "doc_iframe2.html";
 
 add_task(async function() {
-  const tabTarget = await addTabTarget(TEST_DOC_URL);
-  const { mainRoot } = tabTarget.client;
+  const browser = await addTab(TEST_DOC_URL);
+  const tab = gBrowser.getTabForBrowser(browser);
+
+  const client = await createLocalClientForTests();
 
   // First test watching all frames. Really all of them.
   // From all top level windows, tabs, and any inner remoted iframe.
-  await testWatchAllFrames(mainRoot);
+  await testWatchAllFrames(client.mainRoot);
 
   // Then use the Watcher to watch only frames of a given tab.
-  await testWatchOneTabFrames(tabTarget);
+  const tabDescriptor = await client.mainRoot.getTab({ tab });
+  await testWatchOneTabFrames(tabDescriptor);
 });
 
 async function testWatchAllFrames(mainRoot) {
@@ -83,12 +89,12 @@ async function testWatchAllFrames(mainRoot) {
   watcher.off("target-available", onNewTarget);
 }
 
-async function testWatchOneTabFrames(tabTarget) {
+async function testWatchOneTabFrames(tabDescriptor) {
   info("Assert watchTargets against a given Tab");
   const targets = [];
 
-  const tabDescriptor = tabTarget.descriptorFront;
   const watcher = await tabDescriptor.getWatcher();
+  const tabTarget = await tabDescriptor.getTarget();
 
   is(
     await tabTarget.getWatcherFront(),

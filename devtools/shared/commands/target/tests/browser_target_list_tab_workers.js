@@ -18,9 +18,6 @@ add_task(async function() {
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
 
-  const client = await createLocalClient();
-  const mainRoot = client.mainRoot;
-
   // The WorkerDebuggerManager#getWorkerDebuggerEnumerator method we're using to retrieve
   // workers loops through _all_ the workers in the process, which means it goes over workers
   // from other tabs as well. Here we add a few tabs that are not going to be used in the
@@ -32,16 +29,15 @@ add_task(async function() {
   const tab = await addTab(`${FISSION_TEST_URL}?&noServiceWorker`);
 
   // Create a TargetCommand for the tab
-  const descriptor = await mainRoot.getTab({ tab });
-  const target = await descriptor.getTarget();
-
+  const commands = await CommandsFactory.forTab(tab);
+  await commands.targetCommand.startListening();
   // Ensure attaching the target as BrowsingContextTargetActor.listWorkers
   // assert that the target actor is attached.
   // It isn't clear if this assertion is meaningful?
+  const target = commands.targetCommand.targetFront;
   await target.attach();
-
-  const commands = await descriptor.getCommands();
   const targetList = commands.targetCommand;
+
   const { TYPES } = targetList;
 
   // Workaround to allow listening for workers in the content toolbox
@@ -322,8 +318,8 @@ add_task(async function() {
   targetList.destroy();
 
   info("Unregister service workers so they don't appear in other tests.");
-  await unregisterAllServiceWorkers(client);
+  await unregisterAllServiceWorkers(commands.client);
 
   BrowserTestUtils.removeTab(tab);
-  await client.close();
+  await commands.destroy();
 });

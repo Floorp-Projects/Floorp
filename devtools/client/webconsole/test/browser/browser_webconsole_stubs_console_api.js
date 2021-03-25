@@ -5,7 +5,8 @@
 
 const {
   STUBS_UPDATE_ENV,
-  createResourceWatcherForTab,
+  createCommandsForTab,
+  createResourceWatcherForCommands,
   getStubFile,
   getCleanedPacket,
   getSerializedPacket,
@@ -55,15 +56,14 @@ add_task(async function() {
   } else {
     ok(true, "Stubs are up to date");
   }
-
-  await closeTabAndToolbox().catch(() => {});
 });
 
 async function generateConsoleApiStubs() {
   const stubs = new Map();
 
   const tab = await addTab(TEST_URI);
-  const resourceWatcher = await createResourceWatcherForTab(tab);
+  const commands = await createCommandsForTab(tab);
+  const resourceWatcher = await createResourceWatcherForCommands(commands);
 
   // The resource-watcher only supports a single call to watch/unwatch per
   // instance, so we attach a unique watch callback, which will forward the
@@ -114,6 +114,8 @@ async function generateConsoleApiStubs() {
   resourceWatcher.unwatchResources([resourceWatcher.TYPES.CONSOLE_MESSAGE], {
     onAvailable: onConsoleMessage,
   });
+
+  await commands.destroy();
 
   return stubs;
 }
