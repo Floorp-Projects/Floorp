@@ -78,13 +78,16 @@ static int RunDecodeToSurfaceFuzzing(nsCOMPtr<nsIInputStream> inputStream,
     return 0;
   }
 
+  // Ensure CMS state is initialized on the main thread.
+  gfxPlatform::GetCMSMode();
+
   nsCOMPtr<nsIThread> thread;
   nsresult rv =
       NS_NewNamedThread("Decoder Test", getter_AddRefs(thread), nullptr);
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
 
   // We run the DecodeToSurface tests off-main-thread to ensure that
-  // DecodeToSurface doesn't require any main-thread-only code.
+  // DecodeToSurface doesn't require any other main-thread-only code.
   RefPtr<SourceSurface> surface;
   nsCOMPtr<nsIRunnable> runnable =
       new DecodeToSurfaceRunnableFuzzing(surface, inputStream, mimeType);
