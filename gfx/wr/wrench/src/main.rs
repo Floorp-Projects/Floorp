@@ -762,11 +762,19 @@ fn main() {
         let second_filename = subargs.value_of("second_filename").unwrap();
         perf::compare(first_filename, second_filename);
         return;
+    } else if let Some(_) = args.subcommand_matches("test_init") {
+        // Wrench::new() unwraps the Renderer initialization, so if
+        // we reach this point then we have initialized successfully.
+        println!("Initialization successful");
     } else {
         panic!("Should never have gotten here! {:?}", args);
     };
 
     wrench.renderer.deinit();
+
+    // On android force-exit the process otherwise it stays running forever.
+    #[cfg(target_os = "android")]
+    process::exit(0);
 }
 
 fn render<'a>(
