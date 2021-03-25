@@ -31,7 +31,7 @@ raptor_description_schema = Schema(
         Optional("binary-path"): optionally_keyed_by("app", text_type),
         # Configs defined in the 'test_description_schema'.
         Optional("max-run-time"): optionally_keyed_by(
-            "app", test_description_schema["max-run-time"]
+            "app", "subtest", "test-platform", test_description_schema["max-run-time"]
         ),
         Optional("run-on-projects"): optionally_keyed_by(
             "app",

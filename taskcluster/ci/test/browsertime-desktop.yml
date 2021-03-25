@@ -147,6 +147,7 @@ browsertime-benchmark:
         - [wasm-godot-baseline, godot-b]
         - [wasm-godot-optimizing, godot-i]
         - [sunspider, ss]
+        - [assorted-dom, dom]
     variants: ["fission"]
     apps: ["firefox"]
     treeherder-symbol: Btime()
@@ -176,6 +177,17 @@ browsertime-benchmark:
                     windows10.*shippable.*: ["trunk", "mozilla-beta"]
                     default: []
             default: []
+    max-run-time:
+        by-subtest:
+            assorted-dom:
+                by-test-platform:
+                    .*-qr/.*: 2100
+                    .*-ref-hw-2017/.*: 2100
+                    default: 1500
+            default: 900
+    fetches:
+        fetch:
+            - assorted-dom
 
 browsertime-tp6-live:
     <<: *tp6-defaults

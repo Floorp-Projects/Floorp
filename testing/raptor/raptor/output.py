@@ -933,6 +933,52 @@ class PerftestOutput(object):
 
         return subtests, vals
 
+    def parseAssortedDomOutput(self, test):
+        # each benchmark 'index' becomes a subtest; each pagecycle / iteration
+        # of the test has multiple values
+
+        # this is the format we receive the results in from the benchmark
+        # i.e. this is ONE pagecycle of assorted-dom ('test' is a valid subtest name btw):
+
+        # {u'worker-getname-performance-getter': 5.9, u'window-getname-performance-getter': 6.1,
+        # u'window-getprop-performance-getter': 6.1, u'worker-getprop-performance-getter': 6.1,
+        # u'test': 5.8, u'total': 30}
+
+        # the 'total' is provided for us from the benchmark; the overall score will be the mean of
+        # the totals from all pagecycles; but keep all the subtest values for the logs/json
+
+        _subtests = {}
+        data = test["measurements"]["assorted-dom"]
+        for pagecycle in data:
+            for _sub, _value in pagecycle[0].items():
+                # build a list of subtests and append all related replicates
+                if _sub not in _subtests:
+                    # subtest not added yet, first pagecycle, so add new one
+                    _subtests[_sub] = {
+                        "unit": test["subtest_unit"],
+                        "alertThreshold": float(test["alert_threshold"]),
+                        "lowerIsBetter": test["subtest_lower_is_better"],
+                        "name": _sub,
+                        "replicates": [],
+                    }
+                _subtests[_sub]["replicates"].extend([_value])
+
+        vals = []
+        subtests = []
+        names = list(_subtests)
+        names.sort(reverse=True)
+        for name in names:
+            # pylint: disable=W1633
+            _subtests[name]["value"] = float(
+                round(filters.median(_subtests[name]["replicates"]), 2)
+            )
+            subtests.append(_subtests[name])
+            # only use the 'total's to compute the overall result
+            if name == "total":
+                vals.append([_subtests[name]["value"], name])
+
+        return subtests, vals
+
 
 class RaptorOutput(PerftestOutput):
     """class for raptor output"""
@@ -1298,52 +1344,6 @@ class RaptorOutput(PerftestOutput):
 
         return subtests, vals
 
-    def parseAssortedDomOutput(self, test):
-        # each benchmark 'index' becomes a subtest; each pagecycle / iteration
-        # of the test has multiple values
-
-        # this is the format we receive the results in from the benchmark
-        # i.e. this is ONE pagecycle of assorted-dom ('test' is a valid subtest name btw):
-
-        # {u'worker-getname-performance-getter': 5.9, u'window-getname-performance-getter': 6.1,
-        # u'window-getprop-performance-getter': 6.1, u'worker-getprop-performance-getter': 6.1,
-        # u'test': 5.8, u'total': 30}
-
-        # the 'total' is provided for us from the benchmark; the overall score will be the mean of
-        # the totals from all pagecycles; but keep all the subtest values for the logs/json
-
-        _subtests = {}
-        data = test["measurements"]["assorted-dom"]
-        for pagecycle in data:
-            for _sub, _value in pagecycle[0].items():
-                # build a list of subtests and append all related replicates
-                if _sub not in _subtests:
-                    # subtest not added yet, first pagecycle, so add new one
-                    _subtests[_sub] = {
-                        "unit": test["subtest_unit"],
-                        "alertThreshold": float(test["alert_threshold"]),
-                        "lowerIsBetter": test["subtest_lower_is_better"],
-                        "name": _sub,
-                        "replicates": [],
-                    }
-                _subtests[_sub]["replicates"].extend([_value])
-
-        vals = []
-        subtests = []
-        names = list(_subtests)
-        names.sort(reverse=True)
-        for name in names:
-            # pylint: disable=W1633
-            _subtests[name]["value"] = float(
-                round(filters.median(_subtests[name]["replicates"]), 2)
-            )
-            subtests.append(_subtests[name])
-            # only use the 'total's to compute the overall result
-            if name == "total":
-                vals.append([_subtests[name]["value"], name])
-
-        return subtests, vals
-
     def summarize_screenshots(self, screenshots):
         if len(screenshots) == 0:
             return
@@ -1566,6 +1566,8 @@ class BrowsertimeOutput(PerftestOutput):
                     subtests, vals = self.parseWASMGodotOutput(test)
                 if "sunspider" in test["measurements"]:
                     subtests, vals = self.parseSunspiderOutput(test)
+                if "assorted-dom" in test["measurements"]:
+                    subtests, vals = self.parseAssortedDomOutput(test)
 
                 if subtests is None:
                     raise Exception("No benchmark metrics found in browsertime results")

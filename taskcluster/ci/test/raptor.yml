@@ -389,6 +389,7 @@ raptor-assorted-dom-firefox:
     variants: ["fission"]
     try-name: raptor-assorted-dom-firefox
     treeherder-symbol: Rap(dom)
+    run-on-projects: []
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2100
@@ -405,6 +406,7 @@ raptor-assorted-dom-firefox-profiling:
     description: "Raptor Assorted-Dom on Firefox with Gecko Profiling"
     try-name: raptor-assorted-dom-firefox-profiling
     treeherder-symbol: Rap-Prof(dom)
+    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
