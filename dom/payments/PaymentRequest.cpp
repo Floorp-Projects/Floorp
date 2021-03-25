@@ -14,6 +14,7 @@
 #include "mozilla/dom/PaymentRequestManager.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/UserActivation.h"
+#include "mozilla/dom/WindowContext.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/intl/MozLocale.h"
 #include "mozilla/StaticPrefs_dom.h"
@@ -1154,20 +1155,24 @@ bool PaymentRequest::InFullyActiveDocument() {
   }
 
   nsCOMPtr<nsPIDOMWindowInner> win = do_QueryInterface(global);
+
   Document* doc = win->GetExtantDoc();
   if (!doc || !doc->IsCurrentActiveDocument()) {
     return false;
   }
 
-  // According to the definition of the fully active document, recursive
-  // checking the parent document are all IsCurrentActiveDocument
-  Document* parentDoc = doc->GetInProcessParentDocument();
-  while (parentDoc) {
-    if (parentDoc && !parentDoc->IsCurrentActiveDocument()) {
+  WindowContext* winContext = win->GetWindowContext();
+  if (!winContext) {
+    return false;
+  }
+
+  while (winContext) {
+    if (winContext->IsCached()) {
       return false;
     }
-    parentDoc = parentDoc->GetInProcessParentDocument();
+    winContext = winContext->GetParentWindowContext();
   }
+
   return true;
 }
 
