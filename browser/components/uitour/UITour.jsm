@@ -120,7 +120,7 @@ var UITour = {
       "accountStatus",
       {
         query: aDocument => {
-          let id = UITour.protonAppMenuEnabled
+          let id = UITour.protonEnabled
             ? "appMenu-fxa-label2"
             : "appMenu-fxa-label";
           // Use the sync setup icon.
@@ -136,7 +136,7 @@ var UITour = {
       "addons",
       {
         query: aDocument => {
-          return UITour.protonAppMenuEnabled
+          return UITour.protonEnabled
             ? UITour.getNodeFromDocument(
                 aDocument,
                 "#appMenu-extensions-themes-button"
@@ -183,7 +183,7 @@ var UITour = {
       "logins",
       {
         query: aDocument => {
-          return UITour.protonAppMenuEnabled
+          return UITour.protonEnabled
             ? UITour.getNodeFromDocument(aDocument, "#appMenu-passwords-button")
             : UITour.getNodeFromDocument(aDocument, "#appMenu-logins-button");
         },
@@ -200,7 +200,7 @@ var UITour = {
       "privateWindow",
       {
         query: aDocument => {
-          return UITour.protonAppMenuEnabled
+          return UITour.protonEnabled
             ? UITour.getNodeFromDocument(
                 aDocument,
                 "#appMenu-new-private-window-button2"
@@ -216,7 +216,7 @@ var UITour = {
       "quit",
       {
         query: aDocument => {
-          return UITour.protonAppMenuEnabled
+          return UITour.protonEnabled
             ? UITour.getNodeFromDocument(aDocument, "#appMenu-quit-button2")
             : UITour.getNodeFromDocument(aDocument, "#appMenu-quit-button");
         },
@@ -277,6 +277,9 @@ var UITour = {
         },
       },
     ],
+  ]),
+
+  nonProtonActions: [
     [
       "pageAction-copyURL",
       {
@@ -325,7 +328,7 @@ var UITour = {
         },
       },
     ],
-  ]),
+  ],
 
   init() {
     log.debug("Initializing UITour");
@@ -338,10 +341,17 @@ var UITour = {
 
     XPCOMUtils.defineLazyPreferenceGetter(
       this,
-      "protonAppMenuEnabled",
+      "protonEnabled",
       "browser.proton.enabled",
       false
     );
+
+    // Add non-proton actions if necessary.
+    if (!this.protonEnabled) {
+      for (let [id, target] of this.nonProtonActions) {
+        this.actions.set(id, target);
+      }
+    }
 
     // Clear the availableTargetsCache on widget changes.
     let listenerMethods = [
@@ -413,7 +423,7 @@ var UITour = {
       }
 
       case "showHighlight": {
-        if (data.target.startsWith("pageAction-")) {
+        if (!UITour.protonEnabled && data.target.startsWith("pageAction-")) {
           // The page action panel is lazily loaded, so we will need to initialize it
           // and place actions in the panel before showing the highlight for a panel
           // node.
