@@ -49,6 +49,8 @@ class SharedMemoryBasic final
     return ok;
   }
 
+  virtual void Unmap() override { mSharedMemory.Unmap(); }
+
   virtual void CloseHandle() override { mSharedMemory.Close(false); }
 
   virtual void* memory() const override {
