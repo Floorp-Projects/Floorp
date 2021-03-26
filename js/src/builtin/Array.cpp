@@ -613,13 +613,6 @@ static bool array_length_setter(JSContext* cx, HandleObject obj, HandleId id,
                                 HandleValue v, ObjectOpResult& result) {
   MOZ_ASSERT(id == NameToId(cx->names().length));
 
-  if (!obj->is<ArrayObject>()) {
-    // This array .length property was found on the prototype
-    // chain. Ideally the setter should not have been called, but since
-    // we're here, do an impression of SetPropertyByDefining.
-    return DefineDataProperty(cx, obj, id, v, JSPROP_ENUMERATE, result);
-  }
-
   HandleArrayObject arr = obj.as<ArrayObject>();
   MOZ_ASSERT(arr->lengthIsWritable(),
              "setter shouldn't be called if property is non-writable");
