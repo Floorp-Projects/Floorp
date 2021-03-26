@@ -25,15 +25,6 @@ StaticAutoPtr<SharedSurfacesParent> SharedSurfacesParent::sInstance;
 
 SharedSurfacesParent::SharedSurfacesParent() = default;
 
-SharedSurfacesParent::~SharedSurfacesParent() {
-  for (const auto& key : mSurfaces.Keys()) {
-    // There may be lingering consumers of the surfaces that didn't get shutdown
-    // yet but since we are here, we know the render thread is finished and we
-    // can unregister everything.
-    wr::RenderThread::Get()->UnregisterExternalImageDuringShutdown(key);
-  }
-}
-
 /* static */
 void SharedSurfacesParent::Initialize() {
   MOZ_ASSERT(NS_IsMainThread());
@@ -44,10 +35,27 @@ void SharedSurfacesParent::Initialize() {
 }
 
 /* static */
-void SharedSurfacesParent::Shutdown() {
+void SharedSurfacesParent::ShutdownRenderThread() {
   // The main thread should blocked on waiting for the render thread to
   // complete so this should be safe to release off the main thread.
   MOZ_ASSERT(wr::RenderThread::IsInRenderThread());
+  StaticMutexAutoLock lock(sMutex);
+  MOZ_ASSERT(sInstance);
+
+  for (const auto& key : mSurfaces.Keys()) {
+    // There may be lingering consumers of the surfaces that didn't get shutdown
+    // yet but since we are here, we know the render thread is finished and we
+    // can unregister everything.
+    wr::RenderThread::Get()->UnregisterExternalImageDuringShutdown(key);
+  }
+}
+
+/* static */
+void SharedSurfacesParent::Shutdown() {
+  // The compositor thread and render threads are shutdown, so this is the last
+  // thread that could use it. The expiration tracker needs to be freed on the
+  // main thread.
+  MOZ_ASSERT(NS_IsMainThread());
   StaticMutexAutoLock lock(sMutex);
   sInstance = nullptr;
 }
