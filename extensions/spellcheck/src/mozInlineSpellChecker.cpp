@@ -97,24 +97,30 @@ static const PRTime kMaxSpellCheckTimeInUsec =
 mozInlineSpellStatus::mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker)
     : mSpellChecker(aSpellChecker) {}
 
-// mozInlineSpellStatus::InitForEditorChange
+// mozInlineSpellStatus::CreateForEditorChange
 //
 //    This is the most complicated case. For changes, we need to compute the
 //    range of stuff that changed based on the old and new caret positions,
 //    as well as use a range possibly provided by the editor (start and end,
 //    which are usually nullptr) to get a range with the union of these.
 
-nsresult mozInlineSpellStatus::InitForEditorChange(
-    EditSubAction aEditSubAction, nsINode* aAnchorNode, uint32_t aAnchorOffset,
-    nsINode* aPreviousNode, uint32_t aPreviousOffset, nsINode* aStartNode,
-    uint32_t aStartOffset, nsINode* aEndNode, uint32_t aEndOffset) {
+// static
+nsresult mozInlineSpellStatus::CreateForEditorChange(
+    mozilla::UniquePtr<mozInlineSpellStatus>& aStatus,
+    mozInlineSpellChecker& aSpellChecker, EditSubAction aEditSubAction,
+    nsINode* aAnchorNode, uint32_t aAnchorOffset, nsINode* aPreviousNode,
+    uint32_t aPreviousOffset, nsINode* aStartNode, uint32_t aStartOffset,
+    nsINode* aEndNode, uint32_t aEndOffset) {
   if (NS_WARN_IF(!aAnchorNode) || NS_WARN_IF(!aPreviousNode)) {
     return NS_ERROR_FAILURE;
   }
 
+  aStatus = MakeUnique<mozInlineSpellStatus>(&aSpellChecker);
+
   // save the anchor point as a range so we can find the current word later
-  mAnchorRange = PositionToCollapsedRange(aAnchorNode, aAnchorOffset);
-  if (NS_WARN_IF(!mAnchorRange)) {
+  aStatus->mAnchorRange =
+      aStatus->PositionToCollapsedRange(aAnchorNode, aAnchorOffset);
+  if (NS_WARN_IF(!aStatus->mAnchorRange)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -129,35 +135,35 @@ nsresult mozInlineSpellStatus::InitForEditorChange(
     // Deletes are easy, the range is just the current anchor. We set the range
     // to check to be empty, FinishInitOnEvent will fill in the range to be
     // the current word.
-    mOp = eOpChangeDelete;
-    mRange = nullptr;
+    aStatus->mOp = eOpChangeDelete;
+    aStatus->mRange = nullptr;
     return NS_OK;
   }
 
-  mOp = eOpChange;
+  aStatus->mOp = eOpChange;
 
   // range to check
-  mRange = nsRange::Create(aPreviousNode);
+  aStatus->mRange = nsRange::Create(aPreviousNode);
 
   // ...we need to put the start and end in the correct order
   ErrorResult errorResult;
-  int16_t cmpResult =
-      mAnchorRange->ComparePoint(*aPreviousNode, aPreviousOffset, errorResult);
+  int16_t cmpResult = aStatus->mAnchorRange->ComparePoint(
+      *aPreviousNode, aPreviousOffset, errorResult);
   if (NS_WARN_IF(errorResult.Failed())) {
     return errorResult.StealNSResult();
   }
   nsresult rv;
   if (cmpResult < 0) {
     // previous anchor node is before the current anchor
-    rv = mRange->SetStartAndEnd(aPreviousNode, aPreviousOffset, aAnchorNode,
-                                aAnchorOffset);
+    rv = aStatus->mRange->SetStartAndEnd(aPreviousNode, aPreviousOffset,
+                                         aAnchorNode, aAnchorOffset);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
   } else {
     // previous anchor node is after (or the same as) the current anchor
-    rv = mRange->SetStartAndEnd(aAnchorNode, aAnchorOffset, aPreviousNode,
-                                aPreviousOffset);
+    rv = aStatus->mRange->SetStartAndEnd(aAnchorNode, aAnchorOffset,
+                                         aPreviousNode, aPreviousOffset);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
@@ -166,26 +172,28 @@ nsresult mozInlineSpellStatus::InitForEditorChange(
   // On insert save this range: DoSpellCheck optimizes things in this range.
   // Otherwise, just leave this nullptr.
   if (aEditSubAction == EditSubAction::eInsertText) {
-    mCreatedRange = mRange;
+    aStatus->mCreatedRange = aStatus->mRange;
   }
 
   // if we were given a range, we need to expand our range to encompass it
   if (aStartNode && aEndNode) {
-    cmpResult = mRange->ComparePoint(*aStartNode, aStartOffset, errorResult);
+    cmpResult =
+        aStatus->mRange->ComparePoint(*aStartNode, aStartOffset, errorResult);
     if (NS_WARN_IF(errorResult.Failed())) {
       return errorResult.StealNSResult();
     }
     if (cmpResult < 0) {  // given range starts before
-      rv = mRange->SetStart(aStartNode, aStartOffset);
+      rv = aStatus->mRange->SetStart(aStartNode, aStartOffset);
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
-    cmpResult = mRange->ComparePoint(*aEndNode, aEndOffset, errorResult);
+    cmpResult =
+        aStatus->mRange->ComparePoint(*aEndNode, aEndOffset, errorResult);
     if (NS_WARN_IF(errorResult.Failed())) {
       return errorResult.StealNSResult();
     }
     if (cmpResult > 0) {  // given range ends after
-      rv = mRange->SetEnd(aEndNode, aEndOffset);
+      rv = aStatus->mRange->SetEnd(aEndNode, aEndOffset);
       NS_ENSURE_SUCCESS(rv, rv);
     }
   }
@@ -292,7 +300,7 @@ nsresult mozInlineSpellStatus::FinishInitOnEvent(
         NS_ENSURE_SUCCESS(rv, rv);
       }
       // Delete events will have no range for the changed text (because it was
-      // deleted), and InitForEditorChange will set it to nullptr. Here, we
+      // deleted), and CreateForEditorChange will set it to nullptr. Here, we
       // select the entire word to cause any underlining to be removed.
       mRange = mNoCheckRange;
       break;
@@ -798,11 +806,11 @@ nsresult mozInlineSpellChecker::SpellCheckAfterEditorChange(
   mNeedsCheckAfterNavigation = true;
 
   // the anchor node is the position of the caret
-  auto status = MakeUnique<mozInlineSpellStatus>(this);
-  rv = status->InitForEditorChange(
-      aEditSubAction, aSelection.GetAnchorNode(), aSelection.AnchorOffset(),
-      aPreviousSelectedNode, aPreviousSelectedOffset, aStartNode, aStartOffset,
-      aEndNode, aEndOffset);
+  UniquePtr<mozInlineSpellStatus> status;
+  rv = mozInlineSpellStatus::CreateForEditorChange(
+      status, *this, aEditSubAction, aSelection.GetAnchorNode(),
+      aSelection.AnchorOffset(), aPreviousSelectedNode, aPreviousSelectedOffset,
+      aStartNode, aStartOffset, aEndNode, aEndOffset);
   NS_ENSURE_SUCCESS(rv, rv);
   rv = ScheduleSpellCheck(std::move(status));
   NS_ENSURE_SUCCESS(rv, rv);
