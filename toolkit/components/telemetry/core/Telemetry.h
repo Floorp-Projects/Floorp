@@ -36,7 +36,11 @@ struct KeyedHistogramAccumulation;
 struct ScalarAction;
 struct KeyedScalarAction;
 struct ChildEventData;
-struct EventExtraEntry;
+
+struct EventExtraEntry {
+  nsCString key;
+  nsCString value;
+};
 
 /**
  * Initialize the Telemetry service on the main thread at startup.

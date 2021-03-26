@@ -15,17 +15,6 @@
 using namespace mozilla;
 using namespace TelemetryTestHelpers;
 
-namespace mozilla {
-namespace Telemetry {
-
-struct EventExtraEntry {
-  nsCString key;
-  nsCString value;
-};
-
-}  // namespace Telemetry
-}  // namespace mozilla
-
 // Test that we can properly record events using the C++ API.
 TEST_F(TelemetryTestFixture, RecordEventNative) {
   AutoJSContextWithGlobal cx(mCleanGlobal);
