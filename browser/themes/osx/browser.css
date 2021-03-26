@@ -88,7 +88,7 @@
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
-:root[OSXLionFullscreen]:not(:-moz-lwtheme) :is(#navigator-toolbox, #sidebar-box) {
+:root[macOSNativeFullscreen]:not(:-moz-lwtheme) :is(#navigator-toolbox, #sidebar-box) {
   /* Make the toolbar opaque using this color that simulates the
   -moz-mac-vibrant-toolbar-dark effect. This hides vibrancy, but it also
   ensures that we can't see #browser through the transparent toolbar. */
