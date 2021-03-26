@@ -1,0 +1,47 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$ref": "#/definitions/Feature",
+  "definitions": {
+    "RemoteFeatureConfigurations": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Feature name for which the defaults are provided."
+        },
+        "description": {
+          "type": "string",
+          "description": "Where the configuration is used"
+        },
+        "configurations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "variables": {
+                "type": "object",
+                "description": "Key value pairs that should match the feature manifest definition."
+              },
+              "targeting": {
+                "type": "string",
+                "description": "Target the configuration only to specific clients."
+              },
+              "enabled": {
+                "type": "boolean",
+                "description": "Is the feature off or on."
+              },
+              "description": {
+                "type": "string",
+                "description": "Explanation for configuration and targeting"
+              }
+            },
+            "required": ["variables", "enabled", "targeting"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["id", "configurations", "description"],
+      "additionalProperties": false
+    }
+  }
+}

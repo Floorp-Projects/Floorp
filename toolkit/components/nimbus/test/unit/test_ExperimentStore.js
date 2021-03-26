@@ -375,3 +375,27 @@ add_task(async function test_sync_access_unenroll_2() {
     "Cleared pref 2"
   );
 });
+
+add_task(async function test_updateRemoteConfigs() {
+  const sandbox = sinon.createSandbox();
+  const store = ExperimentFakes.store();
+  const stub = sandbox.stub();
+  const value = { bar: true };
+
+  store._onFeatureUpdate("featureId", stub);
+
+  await store.init();
+  store.updateRemoteConfigs("featureId", value);
+
+  Assert.deepEqual(
+    store.getRemoteConfig("featureId"),
+    value,
+    "should return the stored value"
+  );
+  Assert.equal(stub.callCount, 1, "Called once on update");
+  Assert.equal(
+    stub.firstCall.args[1],
+    "remote-defaults-update",
+    "Called for correct reason"
+  );
+});

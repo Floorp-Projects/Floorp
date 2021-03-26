@@ -4,13 +4,10 @@
 
 "use strict";
 
-/**
- * @typedef {import("../experiments/@types/ExperimentManager").Recipe} Recipe
- */
-
 const EXPORTED_SYMBOLS = [
   "_RemoteSettingsExperimentLoader",
   "RemoteSettingsExperimentLoader",
+  "RemoteDefaultsLoader",
 ];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
@@ -42,6 +39,8 @@ XPCOMUtils.defineLazyServiceGetter(
 
 const COLLECTION_ID_PREF = "messaging-system.rsexperimentloader.collection_id";
 const COLLECTION_ID_FALLBACK = "nimbus-desktop-experiments";
+// TODO: Create a real collection
+const COLLECTION_REMOTE_DEFAULTS = "messaging-system";
 const ENABLED_PREF = "messaging-system.rsexperimentloader.enabled";
 const STUDIES_OPT_OUT_PREF = "app.shield.optoutstudies.enabled";
 
@@ -55,6 +54,66 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "COLLECTION_ID",
   COLLECTION_ID_PREF,
   COLLECTION_ID_FALLBACK
+);
+
+/**
+ * Responsible for pre-fetching remotely defined configurations from
+ * Remote Settings.
+ */
+const RemoteDefaultsLoader = {
+  _initialized: false,
+
+  async loadRemoteDefaults() {
+    if (!this._initialized) {
+      log.debug("Fetching remote defaults for NimbusFeatures.");
+      this._initialized = true;
+      try {
+        this._onUpdatesReady(await this._remoteSettingsClient.get());
+      } catch (e) {
+        Cu.reportError(e);
+      }
+      log.debug("Finished fetching remote defaults.");
+    }
+  },
+
+  async _onUpdatesReady(remoteDefaults = []) {
+    if (!remoteDefaults.length) {
+      return;
+    }
+    await ExperimentManager.store.ready();
+    const targetingContext = new TargetingContext();
+    // Iterate over remote defaults: at most 1 per feature
+    for (let remoteDefault of remoteDefaults) {
+      if (!remoteDefault.configurations) {
+        continue;
+      }
+      // Iterate over feature configurations and apply first which matches targeting
+      for (let configuration of remoteDefault.configurations) {
+        let result;
+        try {
+          result = await targetingContext.eval(configuration.targeting);
+        } catch (e) {
+          Cu.reportError(e);
+        }
+        if (result) {
+          log.debug(
+            `Setting remote defaults for feature: ${
+              remoteDefault.id
+            }: ${JSON.stringify(configuration)}`
+          );
+          ExperimentManager.store.updateRemoteConfigs(
+            remoteDefault.id,
+            configuration
+          );
+          break;
+        }
+      }
+    }
+  },
+};
+
+XPCOMUtils.defineLazyGetter(RemoteDefaultsLoader, "_remoteSettingsClient", () =>
+  RemoteSettings(COLLECTION_REMOTE_DEFAULTS)
 );
 
 class _RemoteSettingsExperimentLoader {
@@ -105,7 +164,10 @@ class _RemoteSettingsExperimentLoader {
     CleanupManager.addCleanupHandler(() => this.uninit());
     this._initialized = true;
 
-    await this.updateRecipes();
+    await Promise.all([
+      this.updateRecipes(),
+      RemoteDefaultsLoader.loadRemoteDefaults(),
+    ]);
   }
 
   uninit() {

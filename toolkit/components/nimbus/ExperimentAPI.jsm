@@ -4,7 +4,11 @@
 
 "use strict";
 
-const EXPORTED_SYMBOLS = ["ExperimentAPI", "ExperimentFeature"];
+const EXPORTED_SYMBOLS = [
+  "ExperimentAPI",
+  "ExperimentFeature",
+  "NimbusFeatures",
+];
 
 /**
  * FEATURE MANIFEST
@@ -329,6 +333,19 @@ const ExperimentAPI = {
   },
 };
 
+/**
+ * Singleton that holds lazy references to ExperimentFeature instances
+ * defined by the MANIFEST.
+ */
+const NimbusFeatures = {};
+for (let feature in MANIFEST) {
+  XPCOMUtils.defineLazyGetter(
+    NimbusFeatures,
+    feature,
+    () => new ExperimentFeature(feature)
+  );
+}
+
 class ExperimentFeature {
   static MANIFEST = MANIFEST;
   constructor(featureId, manifest) {
@@ -340,6 +357,11 @@ class ExperimentFeature {
         `No manifest entry for ${featureId}. Please add one to toolkit/components/messaging-system/experiments/ExperimentAPI.jsm`
       );
     }
+    this._onRemoteReady = null;
+    this._waitForRemote = new Promise(
+      resolve => (this._onRemoteReady = resolve)
+    );
+    this._remoteReady = false;
     const variables = this.manifest?.variables || {};
 
     // Add special enabled flag
@@ -394,8 +416,33 @@ class ExperimentFeature {
     return userPrefs;
   }
 
-  ready() {
-    return ExperimentAPI.ready();
+  async ready() {
+    await ExperimentAPI.ready();
+    // If Remote Defaults or Experiment Value are already available
+    // we can proceed
+    if (
+      // We need to check for remote configs using the store directly
+      // this instance won't do it until `ready()` completed.
+      ExperimentAPI._store.getRemoteConfig(this.featureId) ||
+      ExperimentAPI.activateBranch({ featureId: this.featureId })
+    ) {
+      this._remoteReady = true;
+      this._onRemoteReady();
+    } else {
+      // We need to wait for the updates to come in
+      let resolveEvent = (featureId, reason) => {
+        if (
+          reason === "remote-defaults-update" ||
+          reason === "experiment-updated"
+        ) {
+          this._remoteReady = true;
+          this._onRemoteReady();
+          this.off(resolveEvent);
+        }
+      };
+      this.onUpdate(resolveEvent);
+    }
+    return this._waitForRemote;
   }
 
   /**
@@ -413,6 +460,10 @@ class ExperimentFeature {
     // First, try to return an experiment value if it exists.
     if (isBooleanValueDefined(branch?.feature.enabled)) {
       return branch.feature.enabled;
+    }
+
+    if (isBooleanValueDefined(this.getRemoteConfig()?.enabled)) {
+      return this.getRemoteConfig().enabled;
     }
 
     // Then check the fallback pref, if it is defined
@@ -441,7 +492,23 @@ class ExperimentFeature {
       return { ...branch.feature.value, ...userPrefs };
     }
 
-    return this.prefGetters;
+    return {
+      ...this.prefGetters,
+      ...this.getRemoteConfig()?.variables,
+      ...userPrefs,
+    };
+  }
+
+  getRemoteConfig() {
+    if (this._remoteReady) {
+      let remoteConfig = ExperimentAPI._store.getRemoteConfig(this.featureId);
+      // Used to select a matching client config
+      delete remoteConfig.targeting;
+
+      return remoteConfig;
+    }
+
+    return null;
   }
 
   recordExposureEvent() {
@@ -461,6 +528,7 @@ class ExperimentFeature {
 
   debug() {
     return {
+      _remoteReady: this._remoteReady,
       enabled: this.isEnabled(),
       value: this.getValue(),
       experiment: ExperimentAPI.getExperimentMetaData({
@@ -473,6 +541,7 @@ class ExperimentFeature {
           this.prefGetters[prefName],
         ]),
       userPrefs: this._getUserPrefsValues(),
+      remoteDefaults: this.getRemoteConfig(),
     };
   }
 }

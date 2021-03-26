@@ -4,12 +4,6 @@
 
 "use strict";
 
-/**
- * @typedef {import("./@types/ExperimentManager").RecipeArgs} RecipeArgs
- * @typedef {import("./@types/ExperimentManager").Enrollment} Enrollment
- * @typedef {import("./@types/ExperimentManager").Branch} Branch
- */
-
 const EXPORTED_SYMBOLS = ["ExperimentManager", "_ExperimentManager"];
 
 const { XPCOMUtils } = ChromeUtils.import(

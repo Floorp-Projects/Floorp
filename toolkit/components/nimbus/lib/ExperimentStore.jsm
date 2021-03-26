@@ -4,11 +4,6 @@
 
 "use strict";
 
-/**
- * @typedef {import("./@types/ExperimentManager").Enrollment} Enrollment
- * @typedef {import("./@types/ExperimentManager").FeatureConfig} FeatureConfig
- */
-
 const EXPORTED_SYMBOLS = ["ExperimentStore"];
 
 const { SharedDataMap } = ChromeUtils.import(
@@ -21,6 +16,7 @@ const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
 const IS_MAIN_PROCESS =
   Services.appinfo.processType === Services.appinfo.PROCESS_TYPE_DEFAULT;
+const REMOTE_DEFAULTS_KEY = "__REMOTE_DEFAULTS";
 
 const SYNC_DATA_PREF_BRANCH = "nimbus.syncdatastore.";
 let tryJSONParse = data => {
@@ -199,5 +195,28 @@ class ExperimentStore extends SharedDataMap {
     this.set(slug, updatedExperiment);
     this._updateSyncStore(updatedExperiment);
     this._emitExperimentUpdates(updatedExperiment);
+  }
+
+  /**
+   * Store the remote configuration once loaded from Remote Settings.
+   * @param {string} featureId The feature we want to update with remote defaults
+   * @param {object} configuration The remote value
+   */
+  updateRemoteConfigs(featureId, configuration) {
+    const remoteConfigState = this.get(REMOTE_DEFAULTS_KEY);
+    this.setNonPersistent(REMOTE_DEFAULTS_KEY, {
+      ...remoteConfigState,
+      [featureId]: { ...configuration },
+    });
+    this._emitFeatureUpdate(featureId, "remote-defaults-update");
+  }
+
+  /**
+   * Query the store for the remote configuration of a feature
+   * @param {string} featureId The feature we want to query for
+   * @returns {{RemoteDefaults}|undefined} Remote defaults if available
+   */
+  getRemoteConfig(featureId) {
+    return this.get(REMOTE_DEFAULTS_KEY)?.[featureId];
   }
 }
