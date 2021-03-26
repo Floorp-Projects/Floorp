@@ -1181,7 +1181,7 @@ fuzzy-if(skiaContent,0-1,0-45) fuzzy-if(webrender,0-10,0-8) == 456219-2.html 456
 == 456484-1.html 456484-1-ref.html
 == 457398-1.html 457398-1-ref.html
 == 457398-2.html 457398-2-ref.html
-== 458296-1a.html 458296-1a-ref.html
+== 458296-1a.html 458296-1-ref.html
 == 458296-1b.html 458296-1-ref.html
 == 458296-1c.html 458296-1-ref.html
 == 458296-1d.html 458296-1-ref.html
@@ -1649,7 +1649,7 @@ fuzzy-if(skiaContent,0-1,0-65536) == 654950-1.html 654950-1-ref.html # Quartz al
 fuzzy-if(skiaContent,0-10,0-919) fuzzy-if(webrender&&cocoaWidget,2-2,4-4) fuzzy-if(swgl&&cocoaWidget,2-2,148-148) == 660682-1.html 660682-1-ref.html
 fuzzy-if(d2d,0-1,0-256) fuzzy-if(skiaContent,0-1,0-68000) == chrome://reftest/content/bugs/664127-1.xhtml chrome://reftest/content/bugs/664127-1-ref.xhtml
 == 665597-1.html 665597-1-ref.html
-== 665597-2.html 665597-2-ref.html
+!= 665597-2.html 665597-2-ref.html
 == 667079-1.html 667079-1-ref.html
 == chrome://reftest/content/bugs/668319-1.xhtml about:blank
 != chrome://reftest/content/bugs/669015-1.xhtml chrome://reftest/content/bugs/669015-1-notref.xhtml
