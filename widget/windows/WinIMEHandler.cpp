@@ -16,6 +16,7 @@
 
 #include "OSKInputPaneManager.h"
 #include "OSKTabTipManager.h"
+#include "OSKVRManager.h"
 #include "nsLookAndFeel.h"
 #include "nsWindow.h"
 #include "WinUtils.h"
@@ -33,7 +34,6 @@
 #include "cfgmgr32.h"
 
 #include "FxRWindowManager.h"
-#include "VRShMem.h"
 #include "moz_external_vr.h"
 
 const char* kOskEnabled = "ui.osk.enabled";
@@ -759,9 +759,7 @@ void IMEHandler::MaybeShowOnScreenKeyboard(nsWindow* aWindow,
 void IMEHandler::MaybeDismissOnScreenKeyboard(nsWindow* aWindow, Sync aSync) {
 #ifdef NIGHTLY_BUILD
   if (FxRWindowManager::GetInstance()->IsFxRWindow(aWindow)) {
-    mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
-    shmem.SendIMEState(FxRWindowManager::GetInstance()->GetWindowID(),
-                       mozilla::gfx::VRFxEventState::BLUR);
+    OSKVRManager::DismissOnScreenKeyboard();
   }
 #endif  // NIGHTLY_BUILD
   if (!IsWin8OrLater()) {
@@ -1010,9 +1008,7 @@ bool IMEHandler::AutoInvokeOnScreenKeyboardInDesktopMode() {
 void IMEHandler::ShowOnScreenKeyboard(nsWindow* aWindow) {
 #ifdef NIGHTLY_BUILD
   if (FxRWindowManager::GetInstance()->IsFxRWindow(sFocusedWindow)) {
-    mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
-    shmem.SendIMEState(FxRWindowManager::GetInstance()->GetWindowID(),
-                       mozilla::gfx::VRFxEventState::FOCUS);
+    OSKVRManager::ShowOnScreenKeyboard();
     return;
   }
 #endif  // NIGHTLY_BUILD
