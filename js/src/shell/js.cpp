@@ -12272,43 +12272,6 @@ int main(int argc, char** argv, char** envp) {
   OOM_printAllocationCount = op.getBoolOption('O');
 #endif
 
-#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-  if (op.getBoolOption("no-sse3")) {
-    js::jit::CPUInfo::SetSSE3Disabled();
-    if (!sCompilerProcessFlags.append("--no-sse3")) {
-      return EXIT_FAILURE;
-    }
-  }
-  if (op.getBoolOption("no-ssse3")) {
-    js::jit::CPUInfo::SetSSSE3Disabled();
-    if (!sCompilerProcessFlags.append("--no-ssse3")) {
-      return EXIT_FAILURE;
-    }
-  }
-  if (op.getBoolOption("no-sse4") || op.getBoolOption("no-sse41")) {
-    js::jit::CPUInfo::SetSSE41Disabled();
-    if (!sCompilerProcessFlags.append("--no-sse41")) {
-      return EXIT_FAILURE;
-    }
-  }
-  if (op.getBoolOption("no-sse42")) {
-    js::jit::CPUInfo::SetSSE42Disabled();
-    if (!sCompilerProcessFlags.append("--no-sse42")) {
-      return EXIT_FAILURE;
-    }
-  }
-  if (op.getBoolOption("enable-avx")) {
-    js::jit::CPUInfo::SetAVXEnabled();
-    if (!sCompilerProcessFlags.append("--enable-avx")) {
-      return EXIT_FAILURE;
-    }
-    // Disable AVX completely for now.  We're not supporting AVX and things
-    // break easily if asking for AVX.
-    fprintf(stderr, "Error: AVX encodings are currently disabled\n");
-    return EXIT_FAILURE;
-  }
-#endif
-
   if (op.getBoolOption("no-threads")) {
     js::DisableExtraThreads();
   }
@@ -12518,12 +12481,109 @@ int main(int argc, char** argv, char** envp) {
   js::SetPreserveWrapperCallbacks(cx, DummyPreserveWrapperCallback,
                                   DummyHasReleasedWrapperCallback);
 
+  // Fish around in `op` for various important compiler-configuration flags
+  // and make sure they get handed on to any child processes we might create.
+  // See bug 1700900.  Semantically speaking, this is all rather dubious:
+  //
+  // * What set of flags need to be propagated in order to guarantee that the
+  //   child produces code that is "compatible" (in whatever sense) with that
+  //   produced by the parent?  This isn't always easy to determine.
+  //
+  // * There's nothing that ensures that flags given to the child are
+  //   presented in the same order that they exist in the parent's `argv[]`.
+  //   That could be a problem in the case where two flags with contradictory
+  //   meanings are given, and they are presented to the child in the opposite
+  //   order.  For example: --wasm-compiler=cranelift --wasm-force-ion.
+
+#if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
+  if (op.getBoolOption("no-sse3")) {
+    js::jit::CPUInfo::SetSSE3Disabled();
+    if (!sCompilerProcessFlags.append("--no-sse3")) {
+      return EXIT_FAILURE;
+    }
+  }
+  if (op.getBoolOption("no-ssse3")) {
+    js::jit::CPUInfo::SetSSSE3Disabled();
+    if (!sCompilerProcessFlags.append("--no-ssse3")) {
+      return EXIT_FAILURE;
+    }
+  }
+  if (op.getBoolOption("no-sse4") || op.getBoolOption("no-sse41")) {
+    js::jit::CPUInfo::SetSSE41Disabled();
+    if (!sCompilerProcessFlags.append("--no-sse41")) {
+      return EXIT_FAILURE;
+    }
+  }
+  if (op.getBoolOption("no-sse42")) {
+    js::jit::CPUInfo::SetSSE42Disabled();
+    if (!sCompilerProcessFlags.append("--no-sse42")) {
+      return EXIT_FAILURE;
+    }
+  }
+  if (op.getBoolOption("enable-avx")) {
+    js::jit::CPUInfo::SetAVXEnabled();
+    if (!sCompilerProcessFlags.append("--enable-avx")) {
+      return EXIT_FAILURE;
+    }
+    // Disable AVX completely for now.  We're not supporting AVX and things
+    // break easily if asking for AVX.
+    fprintf(stderr, "Error: AVX encodings are currently disabled\n");
+    return EXIT_FAILURE;
+  }
+#endif
+
+  // --disable-wasm-huge-memory needs to be propagated.  See bug 1518210.
   if (op.getBoolOption("disable-wasm-huge-memory")) {
     if (!sCompilerProcessFlags.append("--disable-wasm-huge-memory")) {
       return EXIT_FAILURE;
     }
     bool disabledHugeMemory = JS::DisableWasmHugeMemory();
     MOZ_RELEASE_ASSERT(disabledHugeMemory);
+  }
+
+  // Also the following are to be propagated.
+  const char* to_propagate[] = {
+      // Feature selection options
+      "--wasm-gc", "--wasm-simd-wormhole", "--wasm-exceptions",
+      "--wasm-function-references", "--no-wasm-simd", "--no-wasm-reftypes",
+      "--no-wasm-multi-value",
+      // Compiler selection options
+      "--test-wasm-await-tier2",
+#ifdef JS_CODEGEN_ARM64
+      "--wasm-force-ion",
+#endif
+      NULL};
+  for (const char** p = &to_propagate[0]; *p; p++) {
+    if (op.getBoolOption(&(*p)[2] /* 2 => skip the leading '--' */)) {
+      if (!sCompilerProcessFlags.append(*p)) {
+        return EXIT_FAILURE;
+      }
+    }
+  }
+
+  // Also --wasm-compiler= is to be propagated.  This is tricky because it is
+  // necessary to reconstitute the --wasm-compiler=<whatever> string from its
+  // pieces, without causing a leak.  Hence it is copied into a static buffer.
+  // This is thread-unsafe, but we're in `main()` and on the process' root
+  // thread.  Also, we do this only once -- it wouldn't work properly if we
+  // handled multiple --wasm-compiler= flags in a loop.
+  const char* wasm_compiler = op.getStringOption("wasm-compiler");
+  if (wasm_compiler) {
+    size_t n_needed =
+        2 + strlen("wasm-compiler") + 1 + strlen(wasm_compiler) + 1;
+    const size_t n_avail = 128;
+    static char buf[n_avail];
+    // `n_needed` depends on the compiler name specified.  However, it can't
+    // be arbitrarily long, since previous flag-checking should have limited
+    // it to a set of known possibilities: "baseline", "ion", "cranelift",
+    // "baseline+ion", "baseline+cranelift", etc.  Still, assert this for
+    // safety.
+    MOZ_RELEASE_ASSERT(n_needed < n_avail);
+    memset(buf, 0, sizeof(buf));
+    SprintfBuf(buf, n_avail, "--%s=%s", "wasm-compiler", wasm_compiler);
+    if (!sCompilerProcessFlags.append(buf)) {
+      return EXIT_FAILURE;
+    }
   }
 
   result = Shell(cx, &op, envp);
