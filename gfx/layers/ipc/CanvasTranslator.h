@@ -218,11 +218,6 @@ class CanvasTranslator final : public gfx::InlineTranslator,
   UniquePtr<gfx::DataSourceSurface::ScopedMap> GetPreparedMap(
       gfx::ReferencePtr aSurface);
 
-  /**
-   * @return the BackendType being used for translation
-   */
-  gfx::BackendType GetBackendType() { return mBackendType; }
-
  private:
   explicit CanvasTranslator(
       already_AddRefed<CanvasThreadHolder> aCanvasThreadHolder);
