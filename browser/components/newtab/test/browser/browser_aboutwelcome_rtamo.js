@@ -45,7 +45,16 @@ async function openRTAMOWelcomePage() {
       Ci.nsIEnvironment
     );
     env.set("XPCSHELL_TEST_PROFILE_DIR", "testing");
-
+    await ASRouter.forceAttribution({
+      source: "",
+      medium: "",
+      campaign: "",
+      content: "",
+      experiment: "",
+      variation: "",
+      ua: "",
+      dltoken: "",
+    });
     // Clear and refresh Attribution, and then fetch the messages again to update
     AttributionCode._clearCache();
     await AttributionCode.getAttrDataAsync();
