@@ -118,12 +118,10 @@ DIRS += [
     "/third_party/libwebrtc/call/simulated_network_gn",
     "/third_party/libwebrtc/call/simulated_packet_receiver_gn",
     "/third_party/libwebrtc/call/video_stream_api_gn",
-    "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
     "/third_party/libwebrtc/common_audio/common_audio_c_arm_asm_gn",
     "/third_party/libwebrtc/common_audio/common_audio_c_gn",
     "/third_party/libwebrtc/common_audio/common_audio_cc_gn",
     "/third_party/libwebrtc/common_audio/common_audio_gn",
-    "/third_party/libwebrtc/common_audio/common_audio_sse2_gn",
     "/third_party/libwebrtc/common_audio/fir_filter_factory_gn",
     "/third_party/libwebrtc/common_audio/fir_filter_gn",
     "/third_party/libwebrtc/common_audio/sinc_resampler_gn",
@@ -184,7 +182,6 @@ DIRS += [
     "/third_party/libwebrtc/modules/audio_mixer/audio_mixer_impl_gn",
     "/third_party/libwebrtc/modules/audio_processing/aec3/adaptive_fir_filter_erl_gn",
     "/third_party/libwebrtc/modules/audio_processing/aec3/adaptive_fir_filter_gn",
-    "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_avx2_gn",
     "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_common_gn",
     "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_fft_gn",
     "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_gn",
@@ -240,7 +237,6 @@ DIRS += [
     "/third_party/libwebrtc/modules/congestion_controller/goog_cc/pushback_controller_gn",
     "/third_party/libwebrtc/modules/congestion_controller/rtp/control_handler_gn",
     "/third_party/libwebrtc/modules/congestion_controller/rtp/transport_feedback_gn",
-    "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
     "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_generic_gn",
     "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_gn",
     "/third_party/libwebrtc/modules/desktop_capture/primitives_gn",
@@ -276,7 +272,6 @@ DIRS += [
     "/third_party/libwebrtc/modules/video_coding/webrtc_vp9_helpers_gn",
     "/third_party/libwebrtc/modules/video_processing/denoiser_filter_gn",
     "/third_party/libwebrtc/modules/video_processing/video_processing_gn",
-    "/third_party/libwebrtc/modules/video_processing/video_processing_sse2_gn",
     "/third_party/libwebrtc/rtc_base/atomicops_gn",
     "/third_party/libwebrtc/rtc_base/audio_format_to_string_gn",
     "/third_party/libwebrtc/rtc_base/checks_gn",
@@ -422,4 +417,32 @@ if CONFIG["OS_TARGET"] == "Darwin":
         "/third_party/libwebrtc/rtc_base/system/cocoa_threading_gn",
         "/third_party/libwebrtc/sdk/base_objc_gn",
         "/third_party/libwebrtc/sdk/helpers_objc_gn"
+    ]
+
+if CONFIG["OS_TARGET"] == "Linux":
+
+    DIRS += [
+        "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
+        "/third_party/libwebrtc/common_audio/common_audio_sse2_gn",
+        "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_avx2_gn",
+        "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
+        "/third_party/libwebrtc/modules/video_processing/video_processing_sse2_gn"
+    ]
+
+if CONFIG["CPU_ARCH"] == "aarch64" and CONFIG["OS_TARGET"] == "Darwin":
+
+    DIRS += [
+        "/third_party/libwebrtc/common_audio/common_audio_neon_c_gn",
+        "/third_party/libwebrtc/common_audio/common_audio_neon_gn",
+        "/third_party/libwebrtc/modules/video_processing/video_processing_neon_gn"
+    ]
+
+if CONFIG["CPU_ARCH"] == "x86_64" and CONFIG["OS_TARGET"] == "Darwin":
+
+    DIRS += [
+        "/third_party/libwebrtc/common_audio/common_audio_avx2_gn",
+        "/third_party/libwebrtc/common_audio/common_audio_sse2_gn",
+        "/third_party/libwebrtc/modules/audio_processing/aec3/aec3_avx2_gn",
+        "/third_party/libwebrtc/modules/desktop_capture/desktop_capture_differ_sse2_gn",
+        "/third_party/libwebrtc/modules/video_processing/video_processing_sse2_gn"
     ]

@@ -51,7 +51,7 @@ if CONFIG["MOZ_DEBUG"] == "1":
 
 if CONFIG["OS_TARGET"] == "Darwin":
 
-    DEFINES["CR_XCODE_VERSION"] = "1240"
+    DEFINES["CR_XCODE_VERSION"] = "1220"
     DEFINES["WEBRTC_MAC"] = True
     DEFINES["_LIBCPP_HAS_NO_ALIGNED_ALLOCATION"] = True
     DEFINES["__ASSERT_MACROS_DEFINE_VERSIONS_WITHOUT_UNDERSCORES"] = "0"
@@ -74,5 +74,10 @@ if CONFIG["OS_TARGET"] == "Linux":
     OS_LIBS += [
         "atomic"
     ]
+
+if CONFIG["CPU_ARCH"] == "aarch64":
+
+    DEFINES["WEBRTC_ARCH_ARM64"] = True
+    DEFINES["WEBRTC_HAS_NEON"] = True
 
 Library("primitives_gn")
