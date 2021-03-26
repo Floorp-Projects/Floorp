@@ -76,7 +76,12 @@ fn translate_shader(shader_key: &str, shader_dir: &str) {
     build.no_default_flags(true);
     if let Ok(tool) = build.try_get_compiler() {
         if tool.is_like_msvc() {
-            build.flag("/EP").flag("/clang:-undef");
+            build.flag("/EP");
+            if tool.path().to_str().map_or(false, |p| p.contains("clang")) {
+                build.flag("/clang:-undef");
+            } else {
+                build.flag("/u");
+            }
         } else {
             build.flag("-xc").flag("-P").flag("-undef");
         }
@@ -154,17 +159,26 @@ fn main() {
     let mut build = cc::Build::new();
     build.cpp(true);
 
-    // SWGL relies heavily on inlining for performance so override -Oz with -O2
-    if build.get_compiler().args().contains(&std::ffi::OsString::from("-Oz")) {
-        build.flag("-O2");
+    if let Ok(tool) = build.try_get_compiler() {
+        if tool.is_like_msvc() {
+            build.flag("/std:c++17")
+                 .flag("/EHs-")
+                 .flag("/GR-")
+                 .flag("/UMOZILLA_CONFIG_H");
+        } else {
+            build.flag("-std=c++17")
+                 .flag("-fno-exceptions")
+                 .flag("-fno-rtti")
+                 .flag("-fno-math-errno")
+                 .flag("-UMOZILLA_CONFIG_H");
+        }
+        // SWGL relies heavily on inlining for performance so override -Oz with -O2
+        if tool.args().contains(&"-Oz".into()) {
+            build.flag("-O2");
+        }
     }
 
     build.file("src/gl.cc")
-        .flag("-std=c++17")
-        .flag("-UMOZILLA_CONFIG_H")
-        .flag("-fno-exceptions")
-        .flag("-fno-rtti")
-        .flag("-fno-math-errno")
         .define("_GLIBCXX_USE_CXX11_ABI", Some("0"))
         .include(shader_dir)
         .include("src")
