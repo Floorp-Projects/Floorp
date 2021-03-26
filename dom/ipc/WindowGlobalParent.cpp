@@ -1301,9 +1301,9 @@ mozilla::ipc::IPCResult WindowGlobalParent::RecvResetSessionStore(
 }
 
 mozilla::ipc::IPCResult WindowGlobalParent::RecvRequestRestoreTabContent() {
-  CanonicalBrowsingContext* bc = BrowsingContext()->Top();
-  if (bc && !bc->IsDiscarded()) {
-    bc->RequestRestoreTabContent(this);
+  CanonicalBrowsingContext* bc = BrowsingContext();
+  if (bc && bc->AncestorsAreCurrent()) {
+    bc->Top()->RequestRestoreTabContent(this);
   }
   return IPC_OK();
 }
