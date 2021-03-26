@@ -145,6 +145,8 @@ add_task(async function init() {
   await SpecialPowers.pushPrefEnv({
     set: [["browser.urlbar.suggest.searches", true]],
   });
+  // Wait for Experiment Store to initialize before trying to enroll
+  await ExperimentAPI.ready();
   let {
     enrollmentPromise,
     doExperimentCleanup,

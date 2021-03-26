@@ -15,6 +15,7 @@ var { XPCOMUtils } = ChromeUtils.import(
 XPCOMUtils.defineLazyModuleGetters(this, {
   AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
+  ExperimentAPI: "resource://nimbus/ExperimentAPI.jsm",
   ExperimentFakes: "resource://testing-common/NimbusTestUtils.jsm",
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
