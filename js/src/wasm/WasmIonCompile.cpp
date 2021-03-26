@@ -962,7 +962,7 @@ class FunctionCompiler {
                            ? AliasSet::None()
                            : AliasSet::Load(AliasSet::WasmHeapMeta);
     auto* load = MWasmLoadTls::New(alloc(), tlsPointer_,
-                                   offsetof(wasm::TlsData, boundsCheckLimit32),
+                                   offsetof(wasm::TlsData, boundsCheckLimit),
                                    MIRType::Int32, aliases);
     curBlock_->add(load);
     return load;
