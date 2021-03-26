@@ -116,6 +116,8 @@ android {
         // This makes no sense for GeckoView and should be removed as soon as possible.
         buildConfigField 'boolean', 'MOZ_CRASHREPORTER', mozconfig.substs.MOZ_CRASHREPORTER ? 'true' : 'false';
 
+        buildConfigField 'int', 'MOZ_ANDROID_CONTENT_SERVICE_COUNT', mozconfig.substs.MOZ_ANDROID_CONTENT_SERVICE_COUNT;
+
         // Official corresponds, roughly, to whether this build is performed on
         // Mozilla's continuous integration infrastructure. You should disable
         // developer-only functionality when this flag is set.
