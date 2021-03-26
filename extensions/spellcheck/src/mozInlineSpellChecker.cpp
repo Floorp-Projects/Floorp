@@ -259,14 +259,18 @@ mozInlineSpellStatus::CreateForNavigation(
   return status;
 }
 
-// mozInlineSpellStatus::InitForSelection
+// mozInlineSpellStatus::CreateForSelection
 //
 //    It is easy for selections since we always re-check the spellcheck
 //    selection.
 
-nsresult mozInlineSpellStatus::InitForSelection() {
-  mOp = eOpSelection;
-  return NS_OK;
+// static
+UniquePtr<mozInlineSpellStatus> mozInlineSpellStatus::CreateForSelection(
+    mozInlineSpellChecker& aSpellChecker) {
+  UniquePtr<mozInlineSpellStatus> status =
+      MakeUnique<mozInlineSpellStatus>(&aSpellChecker);
+  status->mOp = eOpSelection;
+  return status;
 }
 
 // mozInlineSpellStatus::InitForRange
@@ -913,9 +917,8 @@ mozInlineSpellChecker::AddWordToDictionary(const nsAString& word) {
   nsresult rv = mSpellCheck->AddWordToDictionary(word);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  auto status = MakeUnique<mozInlineSpellStatus>(this);
-  rv = status->InitForSelection();
-  NS_ENSURE_SUCCESS(rv, rv);
+  UniquePtr<mozInlineSpellStatus> status =
+      mozInlineSpellStatus::CreateForSelection(*this);
   return ScheduleSpellCheck(std::move(status));
 }
 
@@ -943,9 +946,8 @@ mozInlineSpellChecker::IgnoreWord(const nsAString& word) {
   nsresult rv = mSpellCheck->IgnoreWordAllOccurrences(word);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  auto status = MakeUnique<mozInlineSpellStatus>(this);
-  rv = status->InitForSelection();
-  NS_ENSURE_SUCCESS(rv, rv);
+  UniquePtr<mozInlineSpellStatus> status =
+      mozInlineSpellStatus::CreateForSelection(*this);
   return ScheduleSpellCheck(std::move(status));
 }
 
@@ -960,9 +962,8 @@ mozInlineSpellChecker::IgnoreWords(const nsTArray<nsString>& aWordsToIgnore) {
     mSpellCheck->IgnoreWordAllOccurrences(word);
   }
 
-  auto status = MakeUnique<mozInlineSpellStatus>(this);
-  nsresult rv = status->InitForSelection();
-  NS_ENSURE_SUCCESS(rv, rv);
+  UniquePtr<mozInlineSpellStatus> status =
+      mozInlineSpellStatus::CreateForSelection(*this);
   return ScheduleSpellCheck(std::move(status));
 }
 

@@ -48,7 +48,10 @@ class mozInlineSpellStatus {
                       int32_t aNewPositionOffset, nsINode* aOldAnchorNode,
                       uint32_t aOldAnchorOffset, nsINode* aNewAnchorNode,
                       uint32_t aNewAnchorOffset, bool* aContinue);
-  nsresult InitForSelection();
+
+  static mozilla::UniquePtr<mozInlineSpellStatus> CreateForSelection(
+      mozInlineSpellChecker& aSpellChecker);
+
   nsresult InitForRange(nsRange* aRange);
 
   nsresult FinishInitOnEvent(mozInlineSpellWordUtil& aWordUtil);
