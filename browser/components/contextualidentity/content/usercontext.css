@@ -140,7 +140,6 @@
 }
 
 .userContext-icon,
-.menuitem-iconic[data-usercontextid] > .menu-iconic-left > .menu-iconic-icon,
 .subviewbutton[usercontextid] > .toolbarbutton-icon,
 #userContext-indicator {
   background-image: var(--identity-icon);
@@ -149,4 +148,10 @@
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center center;
+}
+
+.menuitem-iconic[data-usercontextid] {
+  list-style-image: var(--identity-icon);
+  -moz-context-properties: fill;
+  fill: var(--identity-icon-color);
 }
