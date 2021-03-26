@@ -22,8 +22,14 @@ class ErrorResult;
 
 namespace dom {
 
+class CanonicalBrowsingContext;
 class GlobalObject;
 struct SSScrollPositionDict;
+
+namespace sessionstore {
+class FormData;
+class FormEntry;
+}  // namespace sessionstore
 
 class SessionStoreUtils {
  public:
@@ -59,6 +65,9 @@ class SessionStoreUtils {
                                     const CollectedData& data);
   static void RestoreScrollPosition(nsGlobalWindowInner& aWindow,
                                     const nsCString& aScrollPosition);
+
+  static void CollectFormData(Document* aDocument,
+                              sessionstore::FormData& aFormData);
 
   /*
     @param aDocument: DOMDocument instance to obtain form data for.
@@ -109,6 +118,21 @@ class SessionStoreUtils {
                              nsISessionStoreRestoreData* aData);
 
   static nsresult CallRestoreTabContentComplete(Element* aBrowser);
+
+  static nsresult ConstructFormDataValues(
+      JSContext* aCx, const nsTArray<sessionstore::FormEntry>& aValues,
+      nsTArray<Record<nsString, OwningStringOrBooleanOrObject>::EntryType>&
+          aEntries,
+      bool aParseSessionData = false);
+
+  static void ResetSessionStore(BrowsingContext* aContext);
+
+#if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_THUNDERBIRD) || \
+    defined(MOZ_SUITE)
+  static constexpr bool NATIVE_LISTENER = false;
+#else
+  static constexpr bool NATIVE_LISTENER = true;
+#endif
 };
 
 }  // namespace dom

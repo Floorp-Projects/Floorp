@@ -821,6 +821,10 @@ class ContentChild final : public PContentChild,
       Maybe<uint64_t> aDocumentChannelId,
       CanSavePresentationResolver&& aResolve);
 
+  mozilla::ipc::IPCResult RecvFlushTabState(
+      const MaybeDiscarded<BrowsingContext>& aContext,
+      FlushTabStateResolver&& aResolver);
+
  public:
   static void DispatchBeforeUnloadToSubtree(
       BrowsingContext* aStartingAt,
