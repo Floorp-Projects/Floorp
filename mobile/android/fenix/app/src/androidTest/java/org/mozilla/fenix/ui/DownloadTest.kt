@@ -10,6 +10,7 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -73,6 +74,7 @@ class DownloadTest {
         }.closePrompt {}
     }
 
+    @Ignore("Temporary disabled. See https://github.com/mozilla-mobile/fenix/issues/18644")
     @Test
     fun testDownloadNotification() {
         val defaultWebPage = TestAssetHelper.getDownloadAsset(mockWebServer)
