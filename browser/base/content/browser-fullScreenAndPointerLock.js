@@ -323,12 +323,12 @@ var FullScreen = {
         (alwaysUsesNativeFullscreen || !document.fullscreenElement) &&
         AppConstants.platform == "macosx"
       ) {
-        document.documentElement.setAttribute("OSXLionFullscreen", true);
+        document.documentElement.setAttribute("macOSNativeFullscreen", true);
       }
     } else {
       gNavToolbox.removeAttribute("inFullscreen");
       document.documentElement.removeAttribute("inFullscreen");
-      document.documentElement.removeAttribute("OSXLionFullscreen");
+      document.documentElement.removeAttribute("macOSNativeFullscreen");
     }
 
     if (!document.fullscreenElement) {

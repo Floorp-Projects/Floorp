@@ -402,7 +402,7 @@ toolbarpaletteitem {
 :root[inDOMFullscreen] #fullscr-toggler,
 :root[inDOMFullscreen] #sidebar-box,
 :root[inDOMFullscreen] #sidebar-splitter,
-:root[inFullscreen]:not([OSXLionFullscreen]) toolbar:not([fullscreentoolbar=true]),
+:root[inFullscreen]:not([macOSNativeFullscreen]) toolbar:not([fullscreentoolbar=true]),
 :root[inFullscreen] .global-notificationbox {
   visibility: collapse;
 }
@@ -940,7 +940,7 @@ menupopup[emptyplacesresult="true"] > .hide-if-empty-places-result {
   /* Use -10px to hide the border and border-radius on the top */
   transform: translate(-50%, -10px);
 }
-:root[OSXLionFullscreen] .pointerlockfswarning[ontop] {
+:root[macOSNativeFullscreen] .pointerlockfswarning[ontop] {
   transform: translate(-50%, 80px);
 }
 
