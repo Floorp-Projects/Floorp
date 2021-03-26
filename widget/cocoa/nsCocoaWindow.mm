@@ -3497,11 +3497,11 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
                                  forKeyPath:@"revealAmount"
                                     options:NSKeyValueObservingOptionNew
                                     context:nil];
-    // TODO: Adding this accessory view controller allows us to shift the
-    // toolbar down when the user mouses to the top of the screen in fullscreen.
-    // It also draws a flickering 1px white line at the top of the window in
-    // fullscreen mode. This pref can be removed when the latter issue is fixed.
-    if (Preferences::GetBool("full-screen-api.macos.shiftToolbar", false)) {
+    // Adding this accessory view controller allows us to shift the toolbar down
+    // when the user mouses to the top of the screen in fullscreen.
+    // TODO bug 1700211: Remove this if statement.
+    if (!nsCocoaFeatures::OnBigSurOrLater() ||
+        Preferences::GetBool("full-screen-api.macos.shiftToolbar", false)) {
       [(NSWindow*)self addTitlebarAccessoryViewController:mFullscreenTitlebarTracker];
     }
   }
