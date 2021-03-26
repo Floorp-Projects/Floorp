@@ -29,7 +29,6 @@ job-defaults:
         extra-options:
             - --browsertime
             - --no-conditioned-profile
-    fission-run-on-projects: []
     variants:
         by-app:
             firefox:
@@ -43,10 +42,6 @@ browsertime-tp6:
     <<: &tp6-defaults
         apps: [firefox, chrome, chromium]
         description: Raptor (browsertime) tp6 page-load tests
-        fission-run-on-projects:
-            by-test-platform:
-                windows7.*: []
-                default: [mozilla-central]
         limit-platforms:
             by-app:
                 chrome:
@@ -69,14 +64,20 @@ browsertime-tp6:
                         - --no-conditioned-profile
         raptor-test: tp6
         run-on-projects:
-            by-app:
-                firefox:
+            by-variant:
+                fission:
                     by-test-platform:
-                        linux.*shippable.*: [trunk, mozilla-beta]
-                        macos.*shippable.*: [trunk, mozilla-beta]
-                        windows10.*shippable.*: [trunk, mozilla-beta]
+                        windows7.*: []
+                        default: [mozilla-central]
+                default:
+                    by-app:
+                        firefox:
+                            by-test-platform:
+                                linux.*shippable.*: [trunk, mozilla-beta]
+                                macos.*shippable.*: [trunk, mozilla-beta]
+                                windows10.*shippable.*: [trunk, mozilla-beta]
+                                default: []
                         default: []
-                default: []
         run-visual-metrics: true
         treeherder-symbol: Btime(tp6)
     raptor-subtests:
@@ -122,14 +123,20 @@ browsertime-tp6-essential:
         - twitch
         - twitter
     run-on-projects:
-        by-app:
-            firefox:
+        by-variant:
+            fission:
                 by-test-platform:
-                    linux.*shippable.*: [trunk, mozilla-beta]
-                    macos.*shippable-qr.*: [trunk, mozilla-beta]
-                    windows10.*shippable.*: [trunk, mozilla-beta]
+                    windows7.*: []
+                    default: [mozilla-central]
+            default:
+                by-app:
+                    firefox:
+                        by-test-platform:
+                            linux.*shippable.*: ["trunk", "mozilla-beta"]
+                            macos.*shippable-qr.*: ["trunk", "mozilla-beta"]
+                            windows10.*shippable.*: ["trunk", "mozilla-beta"]
+                            default: []
                     default: []
-            default: []
     tier:
         by-app:
             firefox: 1
@@ -172,36 +179,39 @@ browsertime-benchmark:
                                     linux64-ccov.*/.*: 3
                                     default: 2
                     default: 2
-    fission-run-on-projects:
-        by-test-platform:
-            windows7.*: []
-            default: [mozilla-central]
     run-on-projects:
-        by-subtest:
-            jetstream2:
-                by-app:
-                    firefox:
-                        by-test-platform:
-                            windows7-32.*/opt: []
-                            (linux|windows10|macos)(?!.*shippable).*: []
-                            default: ['mozilla-central']
-                    default: []
-            unity-webgl:
-                by-app:
-                    firefox:
-                        by-test-platform:
-                            (linux|windows|macos)(?!.*shippable).*: []
-                            default: ["autoland"]
+        by-variant:
+            fission:
+                by-test-platform:
+                    windows7.*: []
+                    default: [mozilla-central]
             default:
-                by-app:
-                    firefox:
-                        by-test-platform:
-                            (linux|windows|macos)(?!.*shippable).*: []
-                            linux.*shippable.*: ["trunk", "mozilla-beta"]
-                            macos.*shippable.*: ["trunk", "mozilla-beta"]
-                            windows10.*shippable.*: ["trunk", "mozilla-beta"]
+                by-subtest:
+                    jetstream2:
+                        by-app:
+                            firefox:
+                                by-test-platform:
+                                    windows7-32.*/opt: []
+                                    (linux|windows10|macos)(?!.*shippable).*: []
+                                    default: ['mozilla-central']
                             default: []
-                    default: []
+                    unity-webgl:
+                        by-app:
+                            firefox:
+                                by-test-platform:
+                                    (linux|windows|macos)(?!.*shippable).*: []
+                                    default: ["autoland"]
+                            default: []
+                    default:
+                        by-app:
+                            firefox:
+                                by-test-platform:
+                                    (linux|windows|macos)(?!.*shippable).*: []
+                                    linux.*shippable.*: ["trunk", "mozilla-beta"]
+                                    macos.*shippable.*: ["trunk", "mozilla-beta"]
+                                    windows10.*shippable.*: ["trunk", "mozilla-beta"]
+                                    default: []
+                            default: []
     max-run-time:
         by-subtest:
             assorted-dom:
@@ -221,7 +231,6 @@ browsertime-benchmark:
 browsertime-tp6-live:
     <<: *tp6-defaults
     description: Raptor (browsertime) tp6 on live-sites
-    fission-run-on-projects: []
     mozharness:
         extra-options:
             - --browser-cycles=15
@@ -266,7 +275,6 @@ browsertime-tp6-live-sheriffed:
     <<: *tp6-defaults
     apps: [firefox]
     description: Raptor (browsertime) tp6 on live-sites
-    fission-run-on-projects: []
     mozharness:
         extra-options:
             - --chimera
@@ -274,10 +282,13 @@ browsertime-tp6-live-sheriffed:
     raptor-subtests:
         - [cnn-ampstories, cnn-amp]
     run-on-projects:
-        by-test-platform:
-            (linux|windows|macos)(?!.*shippable).*: []
-            windows7.*shippable.*: []
-            default: [autoland]
+        by-variant:
+            fission: []
+            default:
+                by-test-platform:
+                    (linux|windows|macos)(?!.*shippable).*: []
+                    windows7.*shippable.*: []
+                    default: [autoland]
     tier: 2
     treeherder-symbol: Btime-live(tp6)
 
@@ -285,16 +296,18 @@ browsertime-tp6-profiling:
     <<: *tp6-defaults
     apps: [firefox]
     description: Raptor (browsertime) tp6 page-load tests with Gecko Profiling
-    fission-run-on-projects: []
     mozharness:
         extra-options:
             - --chimera
             - --gecko-profile
     raptor-subtests: [amazon]
     run-on-projects:
-        by-test-platform:
-            linux.*shippable[^-qr].*: ['mozilla-central']
-            default: []
+        by-variant:
+            fission: []
+            default:
+                by-test-platform:
+                    linux.*shippable[^-qr].*: ['mozilla-central']
+                    default: []
     tier:
         by-variant:
             fission: 2
