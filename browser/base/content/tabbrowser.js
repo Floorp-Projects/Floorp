@@ -4133,7 +4133,10 @@
       if (aOtherTab.hasAttribute("muted")) {
         aOurTab.setAttribute("muted", "true");
         aOurTab.muteReason = aOtherTab.muteReason;
-        ourBrowser.mute();
+        // For non-lazy tabs, mute() must be called.
+        if (aOurTab.linkedPanel) {
+          ourBrowser.mute();
+        }
         modifiedAttrs.push("muted");
       }
       if (aOtherTab.hasAttribute("soundplaying")) {
@@ -4170,6 +4173,7 @@
         // are triggered amidst the tab/browser restoration process
         // (TabHide, TabPinned, TabUnpinned, "muted" attribute changes, etc.).
         aOurTab.initializingTab = true;
+        delete ourBrowser._cachedCurrentURI;
         SessionStore.setTabState(aOurTab, SessionStore.getTabState(aOtherTab));
         delete aOurTab.initializingTab;
 
