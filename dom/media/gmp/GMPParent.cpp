@@ -884,7 +884,7 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
   //
   // Google's code to parse manifests can be used as a reference for strings
   // the manifest may contain
-  // https://cs.chromium.org/chromium/src/chrome/common/media/cdm_manifest.cc?l=73&rcl=393e60bfc2299449db7ef374c0ef1c324716e562
+  // https://source.chromium.org/chromium/chromium/src/+/master:components/cdm/common/cdm_manifest.cc;l=74;drc=775880ced8a989191281e93854c7f2201f25068f
   //
   // Gecko's internal strings can be found at
   // https://searchfox.org/mozilla-central/rev/ea63a0888d406fae720cf24f4727d87569a8cab5/dom/media/eme/MediaKeySystemAccess.cpp#149-155
@@ -892,7 +892,8 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
     nsCString codec;
     if (chromiumCodec.EqualsASCII("vp8")) {
       codec = "vp8"_ns;
-    } else if (chromiumCodec.EqualsASCII("vp9.0")) {
+    } else if (chromiumCodec.EqualsASCII("vp9.0") ||  // Legacy string.
+               chromiumCodec.EqualsASCII("vp09")) {
       codec = "vp9"_ns;
     } else if (chromiumCodec.EqualsASCII("avc1")) {
       codec = "h264"_ns;
