@@ -317,6 +317,9 @@ const ProxyMessenger = {
   async normalizeArgs(arg, sender) {
     arg.extensionId = arg.extensionId || sender.extensionId;
     let extension = GlobalManager.extensionMap.get(arg.extensionId);
+    if (!extension) {
+      return Promise.reject({ message: ERROR_NO_RECEIVERS });
+    }
     await extension.wakeupBackground?.();
 
     arg.sender = this.getSender(extension, sender);
