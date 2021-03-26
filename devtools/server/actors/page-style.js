@@ -16,10 +16,10 @@ const {
   style: { ELEMENT_STYLE },
 } = require("devtools/shared/constants");
 
+const { TYPES } = require("devtools/server/actors/resources/index");
 const {
-  TYPES,
-  getResourceWatcher,
-} = require("devtools/server/actors/resources/index");
+  hasStyleSheetWatcherSupportForTarget,
+} = require("devtools/server/actors/utils/stylesheets-manager");
 
 loader.lazyRequireGetter(
   this,
@@ -112,13 +112,12 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
     this._styleApplied = this._styleApplied.bind(this);
     this._watchedSheets = new Set();
 
-    const watcher = getResourceWatcher(
-      this.inspector.targetActor,
-      TYPES.STYLESHEET
+    this.styleSheetsManager = this.inspector.targetActor.getStyleSheetManager();
+    this.hasStyleSheetWatcherSupport = hasStyleSheetWatcherSupportForTarget(
+      this.inspector.targetActor
     );
 
-    if (watcher) {
-      this.styleSheetWatcher = watcher;
+    if (this.hasStyleSheetWatcherSupport) {
       this.onResourceUpdated = this.onResourceUpdated.bind(this);
       this.inspector.targetActor.on(
         "resource-updated-form",
@@ -232,7 +231,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
    *         The actor for this style sheet
    */
   _sheetRef: function(sheet) {
-    if (this.styleSheetWatcher) {
+    if (this.hasStyleSheetWatcherSupport) {
       // We need to clean up this function in bug 1672090 when server-side stylesheet
       // watcher is enabled.
       console.warn(
@@ -961,7 +960,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
 
     // We need to clean up the following codes when server-side stylesheet
     // watcher is enabled in bug 1672090.
-    if (this.styleSheetWatcher) {
+    if (this.hasStyleSheetWatcherSupport) {
       return;
     }
 
@@ -1103,7 +1102,7 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
       kinds.add(kind);
 
       for (const styleActor of [...this.refMap.values()]) {
-        const resourceId = this.styleSheetWatcher.getResourceId(
+        const resourceId = this.styleSheetsManager.getStyleSheetResourceId(
           styleActor._parentSheet
         );
         if (resource.resourceId === resourceId) {
@@ -1160,12 +1159,12 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
    */
   async addNewRule(node, pseudoClasses) {
     let sheet = null;
-    if (this.styleSheetWatcher) {
+    if (this.hasStyleSheetWatcherSupport) {
       const doc = node.rawNode.ownerDocument;
       if (this.styleElements.has(doc)) {
         sheet = this.styleElements.get(doc);
       } else {
-        sheet = await this.styleSheetWatcher.addStyleSheet(doc);
+        sheet = await this.styleSheetsManager.addStyleSheet(doc);
         this.styleElements.set(doc, sheet);
       }
     } else {
@@ -1192,11 +1191,11 @@ var PageStyleActor = protocol.ActorClassWithSpec(pageStyleSpec, {
 
     const index = sheet.insertRule(selector + " {}", cssRules.length);
 
-    if (this.styleSheetWatcher) {
-      const resourceId = this.styleSheetWatcher.getResourceId(sheet);
-      let authoredText = await this.styleSheetWatcher.getText(resourceId);
+    if (this.hasStyleSheetWatcherSupport) {
+      const resourceId = this.styleSheetsManager.getStyleSheetResourceId(sheet);
+      let authoredText = await this.styleSheetsManager.getText(resourceId);
       authoredText += "\n" + selector + " {\n" + "}";
-      await this.styleSheetWatcher.update(resourceId, authoredText, false);
+      await this.styleSheetsManager.update(resourceId, authoredText, false);
     } else {
       // If inserting the rule succeeded, go ahead and edit the source
       // text if requested.
