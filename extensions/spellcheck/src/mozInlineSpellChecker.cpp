@@ -115,8 +115,9 @@ mozInlineSpellStatus::CreateForEditorChange(
     return Err(NS_ERROR_FAILURE);
   }
 
-  UniquePtr<mozInlineSpellStatus> status =
-      MakeUnique<mozInlineSpellStatus>(&aSpellChecker);
+  UniquePtr<mozInlineSpellStatus> status{
+      /* The constructor is `private`, hence the explicit allocation. */
+      new mozInlineSpellStatus{&aSpellChecker}};
 
   // save the anchor point as a range so we can find the current word later
   status->mAnchorRange =
@@ -220,8 +221,9 @@ mozInlineSpellStatus::CreateForNavigation(
     int32_t aNewPositionOffset, nsINode* aOldAnchorNode,
     uint32_t aOldAnchorOffset, nsINode* aNewAnchorNode,
     uint32_t aNewAnchorOffset, bool* aContinue) {
-  UniquePtr<mozInlineSpellStatus> status =
-      MakeUnique<mozInlineSpellStatus>(&aSpellChecker);
+  UniquePtr<mozInlineSpellStatus> status{
+      /* The constructor is `private`, hence the explicit allocation. */
+      new mozInlineSpellStatus{&aSpellChecker}};
 
   status->mOp = eOpNavigation;
 
@@ -267,8 +269,9 @@ mozInlineSpellStatus::CreateForNavigation(
 // static
 UniquePtr<mozInlineSpellStatus> mozInlineSpellStatus::CreateForSelection(
     mozInlineSpellChecker& aSpellChecker) {
-  UniquePtr<mozInlineSpellStatus> status =
-      MakeUnique<mozInlineSpellStatus>(&aSpellChecker);
+  UniquePtr<mozInlineSpellStatus> status{
+      /* The constructor is `private`, hence the explicit allocation. */
+      new mozInlineSpellStatus{&aSpellChecker}};
   status->mOp = eOpSelection;
   return status;
 }
@@ -284,8 +287,9 @@ UniquePtr<mozInlineSpellStatus> mozInlineSpellStatus::CreateForRange(
   MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Debug,
           ("%s: range=%p", __FUNCTION__, aRange));
 
-  UniquePtr<mozInlineSpellStatus> status =
-      MakeUnique<mozInlineSpellStatus>(&aSpellChecker);
+  UniquePtr<mozInlineSpellStatus> status{
+      /* The constructor is `private`, hence the explicit allocation. */
+      new mozInlineSpellStatus{&aSpellChecker}};
 
   status->mOp = eOpChange;
   status->mRange = aRange;
