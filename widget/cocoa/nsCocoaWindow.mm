@@ -1851,7 +1851,6 @@ void nsCocoaWindow::BackingScaleFactorChanged() {
     presShell->BackingScaleFactorChanged();
   }
   mWidgetListener->UIResolutionChanged();
-
 }
 
 int32_t nsCocoaWindow::RoundsWidgetCoordinatesTo() {

@@ -36,8 +36,6 @@ using namespace mozilla;
 typedef nsCategoryCache<nsIContentSniffer> ContentSnifferCache;
 ContentSnifferCache* gNetSniffers = nullptr;
 ContentSnifferCache* gDataSniffers = nullptr;
-ContentSnifferCache* gORBSniffers = nullptr;
-ContentSnifferCache* gNetAndORBSniffers = nullptr;
 
 #define static
 typedef mozilla::net::nsLoadGroup nsLoadGroup;
@@ -341,10 +339,6 @@ void nsNetShutdown() {
   gNetSniffers = nullptr;
   delete gDataSniffers;
   gDataSniffers = nullptr;
-  delete gORBSniffers;
-  gORBSniffers = nullptr;
-  delete gNetAndORBSniffers;
-  gNetAndORBSniffers = nullptr;
 }
 
 extern const mozilla::Module kNeckoModule = {
