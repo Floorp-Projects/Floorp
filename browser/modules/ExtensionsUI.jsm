@@ -521,7 +521,7 @@ var ExtensionsUI = {
     let { window } = getTabBrowser(target);
     let bundle = window.gNavigatorBundle;
 
-    let message = bundle.getFormattedString("addonPostInstall.message2", [
+    let message = bundle.getFormattedString("addonPostInstall.message3", [
       "<>",
     ]);
     const permissionName = "internal:privateBrowsingAllowed";
