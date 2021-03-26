@@ -149,6 +149,8 @@ already_AddRefed<nsIURI> nsMenuItemIconX::GetIconURI(nsIContent* aContent) {
   } else {
     mImageRegionRect = r.ToNearestPixels(mozilla::AppUnitsPerCSSPixel());
   }
+  mComputedStyle = std::move(sc);
+
   return iconURI.forget();
 }
 
@@ -166,8 +168,11 @@ nsresult nsMenuItemIconX::OnComplete(imgIContainer* aImage) {
 
   mIconImage = [[MOZIconHelper iconImageFromImageContainer:aImage
                                                   withSize:NSMakeSize(kIconSize, kIconSize)
+                                             computedStyle:mComputedStyle
                                                    subrect:mImageRegionRect
                                                scaleFactor:0.0f] retain];
+  mComputedStyle = nullptr;
+
   if (mListener) {
     mListener->IconUpdated();
   }
