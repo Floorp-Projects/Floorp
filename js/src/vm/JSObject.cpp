@@ -1019,14 +1019,6 @@ static bool CopyPropertyFrom(JSContext* cx, HandleId id, HandleObject target,
   }
   MOZ_ASSERT(desc.object());
 
-  // Silently skip JSGetterOp/JSSetterOp-implemented accessors.
-  if (desc.getter() && !desc.hasGetterObject()) {
-    return true;
-  }
-  if (desc.setter() && !desc.hasSetterObject()) {
-    return true;
-  }
-
   JSAutoRealm ar(cx, target);
   cx->markId(id);
   RootedId wrappedId(cx, id);
@@ -2396,12 +2388,7 @@ bool js::DefineAccessorProperty(JSContext* cx, HandleObject obj, HandleId id,
                                 HandleObject getter, HandleObject setter,
                                 unsigned attrs, ObjectOpResult& result) {
   Rooted<PropertyDescriptor> desc(cx);
-
-  {
-    GetterOp getterOp = JS_DATA_TO_FUNC_PTR(GetterOp, getter.get());
-    SetterOp setterOp = JS_DATA_TO_FUNC_PTR(SetterOp, setter.get());
-    desc.initFields(nullptr, UndefinedHandleValue, attrs, getterOp, setterOp);
-  }
+  desc.initFields(nullptr, UndefinedHandleValue, attrs, getter, setter);
 
   if (DefinePropertyOp op = obj->getOpsDefineProperty()) {
     MOZ_ASSERT(!cx->isHelperThreadContext());

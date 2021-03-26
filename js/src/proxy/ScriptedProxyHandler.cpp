@@ -57,10 +57,14 @@ static bool IsCompatiblePropertyDescriptor(JSContext* cx, bool extensible,
   }
 
   // Step 4.
+  JSObject* currentGetter =
+      current.hasGetterObject() ? current.getterObject() : nullptr;
+  JSObject* currentSetter =
+      current.hasSetterObject() ? current.setterObject() : nullptr;
   if ((!desc.hasWritable() ||
        (current.hasWritable() && desc.writable() == current.writable())) &&
-      (!desc.hasGetterObject() || desc.getter() == current.getter()) &&
-      (!desc.hasSetterObject() || desc.setter() == current.setter()) &&
+      (!desc.hasGetterObject() || desc.getterObject() == currentGetter) &&
+      (!desc.hasSetterObject() || desc.setterObject() == currentSetter) &&
       (!desc.hasEnumerable() || desc.enumerable() == current.enumerable()) &&
       (!desc.hasConfigurable() ||
        desc.configurable() == current.configurable())) {
@@ -153,12 +157,12 @@ static bool IsCompatiblePropertyDescriptor(JSContext* cx, bool extensible,
   if (current.configurable()) {
     return true;
   }
-  if (desc.hasSetterObject() && (desc.setter() != current.setter())) {
+  if (desc.hasSetterObject() && desc.setterObject() != currentSetter) {
     static const char DETAILS_SETTERS_DIFFERENT[] =
         "proxy can't report different setters for a currently non-configurable "
         "property";
     *errorDetails = DETAILS_SETTERS_DIFFERENT;
-  } else if (desc.hasGetterObject() && (desc.getter() != current.getter())) {
+  } else if (desc.hasGetterObject() && desc.getterObject() != currentGetter) {
     static const char DETAILS_GETTERS_DIFFERENT[] =
         "proxy can't report different getters for a currently non-configurable "
         "property";
