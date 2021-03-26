@@ -23,6 +23,7 @@
 #include "nsIRedirectHistoryEntry.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
+#include "nsSandboxFlags.h"
 #include "nsIXPConnect.h"
 
 #include "mozilla/BasePrincipal.h"
@@ -266,6 +267,33 @@ static nsresult ValidateSecurityFlags(nsILoadInfo* aLoadInfo) {
   return NS_OK;
 }
 
+static already_AddRefed<nsIPrincipal> GetExtensionSandboxPrincipal(
+    nsILoadInfo* aLoadInfo) {
+  // An extension is allowed to load resources from itself when its pages are
+  // loaded into a sandboxed frame.  Extension resources in a sandbox have
+  // a null principal and no access to extension APIs.  See "sandbox" in
+  // MDN extension docs for more information.
+  if (!aLoadInfo->TriggeringPrincipal()->GetIsNullPrincipal()) {
+    return nullptr;
+  }
+  RefPtr<Document> doc;
+  aLoadInfo->GetLoadingDocument(getter_AddRefs(doc));
+  if (!doc || !(doc->GetSandboxFlags() & SANDBOXED_ORIGIN)) {
+    return nullptr;
+  }
+
+  // node principal is also a null principal here, so we need to
+  // create a principal using documentURI, which is the moz-extension
+  // uri for the page if this is an extension sandboxed page.
+  nsCOMPtr<nsIPrincipal> docPrincipal = BasePrincipal::CreateContentPrincipal(
+      doc->GetDocumentURI(), doc->NodePrincipal()->OriginAttributesRef());
+
+  if (!BasePrincipal::Cast(docPrincipal)->AddonPolicy()) {
+    return nullptr;
+  }
+  return docPrincipal.forget();
+}
+
 static bool IsImageLoadInEditorAppType(nsILoadInfo* aLoadInfo) {
   // Editor apps get special treatment here, editors can load images
   // from anywhere.  This allows editor to insert images from file://
@@ -329,11 +357,20 @@ static nsresult DoCheckLoadURIChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo) {
     return NS_OK;
   }
 
+  nsCOMPtr<nsIPrincipal> triggeringPrincipal = aLoadInfo->TriggeringPrincipal();
+  nsCOMPtr<nsIPrincipal> addonPrincipal =
+      GetExtensionSandboxPrincipal(aLoadInfo);
+  if (addonPrincipal) {
+    // call CheckLoadURIWithPrincipal() as below to continue other checks, but
+    // with the addon principal.
+    triggeringPrincipal = addonPrincipal;
+  }
+
   // Only call CheckLoadURIWithPrincipal() using the TriggeringPrincipal and not
   // the LoadingPrincipal when SEC_ALLOW_CROSS_ORIGIN_* security flags are set,
   // to allow, e.g. user stylesheets to load chrome:// URIs.
   return nsContentUtils::GetSecurityManager()->CheckLoadURIWithPrincipal(
-      aLoadInfo->TriggeringPrincipal(), aURI, aLoadInfo->CheckLoadURIFlags(),
+      triggeringPrincipal, aURI, aLoadInfo->CheckLoadURIFlags(),
       aLoadInfo->GetInnerWindowID());
 }
 
