@@ -133,7 +133,6 @@ js/public/
 js/xpconnect/
 js/src/devtools/
 js/src/jit-test/
-js/src/jsapi-tests/binast/
 js/src/tests/
 js/src/Y.js
 
