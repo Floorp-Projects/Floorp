@@ -50,19 +50,19 @@ async function isHiddenAfterHide(highlighterFront, inspector, testActor) {
 }
 
 async function hasRightLabelsContent(highlighterFront, inspector, testActor) {
-  info("Checking the rulers dimension tooltip have the proper text");
-
-  const dimensionText = await testActor.getHighlighterNodeTextContent(
-    `${ID}viewport-infobar-container`,
-    highlighterFront
-  );
-
   const windowDimensions = await testActor.getWindowDimensions();
   const windowHeight = Math.round(windowDimensions.height);
   const windowWidth = Math.round(windowDimensions.width);
   const windowText = windowWidth + "px \u00D7 " + windowHeight + "px";
 
-  is(dimensionText, windowText, "Dimension text was created successfully");
+  info("Wait until the rulers dimension tooltip have the proper text");
+  await asyncWaitUntil(async () => {
+    const dimensionText = await testActor.getHighlighterNodeTextContent(
+      `${ID}viewport-infobar-container`,
+      highlighterFront
+    );
+    return dimensionText == windowText;
+  }, 100);
 }
 
 async function resizeInspector(highlighterFront, inspector, testActor) {
@@ -71,6 +71,9 @@ async function resizeInspector(highlighterFront, inspector, testActor) {
   );
   const toolbox = inspector.toolbox;
   await toolbox.switchHost(Toolbox.HostType.RIGHT);
+
+  // Wait for some time to avoid measuring outdated window dimensions.
+  await wait(100);
 }
 
 async function isViewportInfobarHidden(highlighterFront, testActor) {
