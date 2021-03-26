@@ -510,6 +510,10 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
         "dom.security.https_only_mode", false);
     /* package */ final Pref<Boolean> mHttpsOnlyPrivateMode = new Pref<Boolean>(
         "dom.security.https_only_mode_pbm", false);
+    /* package */ final Pref<Integer> mProcessCount = new Pref<>(
+            "dom.ipc.processCount", BuildConfig.RELEASE_OR_BETA
+                ? 1
+                : BuildConfig.MOZ_ANDROID_CONTENT_SERVICE_COUNT);
 
     /* package */ int mPreferredColorScheme = COLOR_SCHEME_SYSTEM;
 
@@ -1205,6 +1209,12 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
             default:
                 throw new IllegalArgumentException("Invalid setting for setAllowInsecureConnections");
         }
+        return this;
+    }
+
+    // For internal use only
+    /* protected */ @NonNull GeckoRuntimeSettings setProcessCount(final int processCount) {
+        mProcessCount.commit(processCount);
         return this;
     }
 
