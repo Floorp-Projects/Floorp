@@ -40,8 +40,7 @@ struct RemotenessChangeOptions;
 }  // namespace dom
 namespace net {
 using ChildEndpointPromise =
-    MozPromise<mozilla::ipc::Endpoint<extensions::PStreamFilterChild>, bool,
-               true>;
+    MozPromise<ipc::Endpoint<extensions::PStreamFilterChild>, bool, true>;
 
 // If we've been asked to attach a stream filter to our channel,
 // then we return this promise and defer until we know the final
@@ -60,7 +59,7 @@ struct StreamFilterRequest {
   }
   RefPtr<ChildEndpointPromise::Private> mPromise;
   base::ProcessId mChildProcessId;
-  mozilla::ipc::Endpoint<extensions::PStreamFilterChild> mChildEndpoint;
+  ipc::Endpoint<extensions::PStreamFilterChild> mChildEndpoint;
 };
 }  // namespace net
 }  // namespace mozilla
@@ -104,7 +103,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
                        bool aIsDocumentLoad);
 
   struct OpenPromiseSucceededType {
-    nsTArray<mozilla::ipc::Endpoint<extensions::PStreamFilterParent>>
+    nsTArray<ipc::Endpoint<extensions::PStreamFilterParent>>
         mStreamFilterEndpoints;
     uint32_t mRedirectFlags;
     uint32_t mLoadFlags;
@@ -328,8 +327,7 @@ class DocumentLoadListener : public nsIInterfaceRequestor,
   // A helper for TriggerRedirectToRealChannel that abstracts over
   // the same-process and cross-process switch cases and returns
   // a single promise to wait on.
-  using ParentEndpoint =
-      mozilla::ipc::Endpoint<extensions::PStreamFilterParent>;
+  using ParentEndpoint = ipc::Endpoint<extensions::PStreamFilterParent>;
   RefPtr<PDocumentChannelParent::RedirectToRealChannelPromise>
   RedirectToRealChannel(uint32_t aRedirectFlags, uint32_t aLoadFlags,
                         const Maybe<uint64_t>& aDestinationProcess,
