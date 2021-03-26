@@ -4386,8 +4386,11 @@ static const ActiveScrolledRoot* GetASRForPerspective(
     const ActiveScrolledRoot* aASR, nsIFrame* aPerspectiveFrame) {
   for (const ActiveScrolledRoot* asr = aASR; asr; asr = asr->mParent) {
     nsIFrame* scrolledFrame = asr->mScrollableFrame->GetScrolledFrame();
-    if (nsLayoutUtils::IsAncestorFrameCrossDoc(scrolledFrame,
-                                               aPerspectiveFrame)) {
+    // In OOP documents, the root scrollable frame of the in-process root
+    // document is always active, so using IsAncestorFrameCrossDocInProcess
+    // should be fine here.
+    if (nsLayoutUtils::IsAncestorFrameCrossDocInProcess(scrolledFrame,
+                                                        aPerspectiveFrame)) {
       return asr;
     }
   }
