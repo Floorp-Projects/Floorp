@@ -43,26 +43,21 @@ fn lerp(a: f32, b: f32, t: f32) -> f32 {
     a * (1.0 - t) + b * t
 }
 
-fn build_lut_matrix(lut: Option<&lutType>) -> Matrix {
+fn build_lut_matrix(lut: &lutType) -> Matrix {
     let mut result: Matrix = Matrix {
         m: [[0.; 3]; 3],
         invalid: false,
     };
-    if let Some(lut) = lut {
-        result.m[0][0] = s15Fixed16Number_to_float(lut.e00);
-        result.m[0][1] = s15Fixed16Number_to_float(lut.e01);
-        result.m[0][2] = s15Fixed16Number_to_float(lut.e02);
-        result.m[1][0] = s15Fixed16Number_to_float(lut.e10);
-        result.m[1][1] = s15Fixed16Number_to_float(lut.e11);
-        result.m[1][2] = s15Fixed16Number_to_float(lut.e12);
-        result.m[2][0] = s15Fixed16Number_to_float(lut.e20);
-        result.m[2][1] = s15Fixed16Number_to_float(lut.e21);
-        result.m[2][2] = s15Fixed16Number_to_float(lut.e22);
-        result.invalid = false
-    } else {
-        result.m = Default::default();
-        result.invalid = true
-    }
+    result.m[0][0] = s15Fixed16Number_to_float(lut.e00);
+    result.m[0][1] = s15Fixed16Number_to_float(lut.e01);
+    result.m[0][2] = s15Fixed16Number_to_float(lut.e02);
+    result.m[1][0] = s15Fixed16Number_to_float(lut.e10);
+    result.m[1][1] = s15Fixed16Number_to_float(lut.e11);
+    result.m[1][2] = s15Fixed16Number_to_float(lut.e12);
+    result.m[2][0] = s15Fixed16Number_to_float(lut.e20);
+    result.m[2][1] = s15Fixed16Number_to_float(lut.e21);
+    result.m[2][2] = s15Fixed16Number_to_float(lut.e22);
+    result.invalid = false;
     result
 }
 fn build_mAB_matrix(lut: &lutmABType) -> Matrix {
@@ -619,7 +614,7 @@ fn modular_transform_create_lut(lut: &lutType) -> Option<Vec<Box<dyn ModularTran
     let clut_length: usize;
     let mut transform = Box::new(MatrixTransform::default());
 
-    transform.matrix = build_lut_matrix(Some(lut));
+    transform.matrix = build_lut_matrix(lut);
     if !transform.matrix.invalid {
         transforms.push(transform);
 
