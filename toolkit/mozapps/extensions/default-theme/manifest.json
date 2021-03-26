@@ -19,22 +19,78 @@
 
   "dark_theme": {
     "colors": {
-      "tab_background_text": "rgb(249, 249, 250)",
+      "tab_background_text": "#fbfbfe",
+      "tab_selected": "rgb(66,65,77)",
+      "tab_text": "rgb(251,251,254)",
       "icons": "rgb(249, 249, 250, 0.7)",
-      "frame": "hsl(240, 5%, 5%)",
-      "popup": "#4a4a4f",
-      "popup_text": "rgb(249, 249, 250)",
-      "popup_border": "#27272b",
+      "frame": "#1c1b22",
+      "popup": "rgb(66,65,77)",
+      "popup_text": "rgb(251,251,254)",
+      "popup_border": "rgb(82,82,94)",
+      "popup_highlight": "rgb(43,42,51)",
       "tab_line": "#0a84ff",
-      "toolbar": "hsl(240, 1%, 20%)",
+      "toolbar": "#2b2a33",
       "toolbar_bottom_separator": "hsl(240, 5%, 5%)",
-      "toolbar_field": "rgb(71, 71, 73)",
-      "toolbar_field_border": "rgba(249, 249, 250, 0.2)",
+      "toolbar_field": "rgb(28,27,34)",
+      "toolbar_field_border": "transparent",
+      "toolbar_field_text": "rgb(251,251,254)",
+      "toolbar_field_focus": "rgb(66,65,77)",
       "toolbar_field_separator": "#5F6670",
-      "toolbar_field_text": "rgb(249, 249, 250)",
+      "toolbar_text": "#BFBFC9",
+      "ntp_background": "#2A2A2E",
+      "ntp_text": "rgb(249, 249, 250)",
       "sidebar": "#38383D",
       "sidebar_text": "rgb(249, 249, 250)",
-      "sidebar_border": "rgba(255, 255, 255, 0.1)"
+      "sidebar_border": "rgba(255, 255, 255, 0.1)",
+      "button": "rgb(43,42,51)",
+      "button_hover": "rgb(82,82,94)",
+      "button_active": "rgb(91,91,102)",
+      "checkbox_border_color": "rgb(143, 143, 157)",
+      "checkbox_unchecked_background": "rgb(43, 42, 51)",
+      "checkbox_unchecked_background_hover": "rgb(82, 82, 94)",
+      "checkbox_unchecked_background_active": "rgb(91, 91, 102)",
+      "checkbox_checked_background": "rgb(0, 221, 255)",
+      "checkbox_checked_color": "rgb(43, 42, 51)",
+      "checkbox_checked_background_hover": "rgb(128, 235, 255)",
+      "checkbox_checked_background_active": "rgb(170, 242, 255)",
+      "error_text_color": "rgb(255, 154, 162)",
+      "input_background": "#42414D",
+      "input_color": "#BFBFC9",
+      "input_border": "#8f8f9d",
+      "input_border_error": "rgb(255, 132, 138)",
+      "zoom_controls": "rgb(74,74,85)"
+    },
+    "properties": {
+      "panel_hover": "color-mix(in srgb, currentColor 9%, transparent)",
+      "panel_active": "color-mix(in srgb, currentColor 14%, transparent)",
+      "panel_active_darker": "color-mix(in srgb, currentColor 25%, transparent)"
+    }
+  },
+
+  "theme_experiment": {
+    "colors": {
+      "button": "--button-bgcolor",
+      "button_hover": "--button-hover-bgcolor",
+      "button_active": "--button-active-bgcolor",
+      "checkbox_border_color": "--checkbox-border-color",
+      "checkbox_unchecked_background": "--checkbox-unchecked-bgcolor",
+      "checkbox_unchecked_background_hover": "--checkbox-unchecked-hover-bgcolor",
+      "checkbox_unchecked_background_active": "--checkbox-unchecked-active-bgcolor",
+      "checkbox_checked_background": "--checkbox-checked-bgcolor",
+      "checkbox_checked_color": "--checkbox-checked-color",
+      "checkbox_checked_background_hover": "--checkbox-checked-hover-bgcolor",
+      "checkbox_checked_background_active": "--checkbox-checked-active-bgcolor",
+      "error_text_color": "--error-text-color",
+      "input_background": "--input-bgcolor",
+      "input_color": "--input-color",
+      "input_border": "--input-border-color",
+      "input_border_error": "--input-error-border-color",
+      "zoom_controls": "--zoom-controls-bgcolor"
+    },
+    "properties": {
+      "panel_hover": "--arrowpanel-dimmed",
+      "panel_active": "--arrowpanel-dimmed-further",
+      "panel_active_darker": "--arrowpanel-dimmed-even-further"
     }
   }
 }

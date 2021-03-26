@@ -21,6 +21,7 @@
   --panel-separator-color: ThreeDLightShadow;
 
   --chrome-content-separator-color: ThreeDShadow;
+  --tabs-border-color: threedshadow;
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
@@ -28,10 +29,6 @@
   --toolbarbutton-border-radius: 2px;
 }
 } /* END !proton */
-
-#navigator-toolbox {
-  --tabs-border-color: threedshadow;
-}
 
 #tabbrowser-tabs {
   --tab-line-color: highlight;
@@ -52,9 +49,11 @@
     --toolbar-field-non-lwt-bgcolor: #f0f0f4;
   }
 
+  @supports not -moz-bool-pref("browser.proton.tabs.enabled") {
   #navigator-toolbox {
     --tabs-border-color: rgba(0,0,0,.3);
   }
+  } /* END !proton */
 
   #tabbrowser-tabs {
     --tab-line-color: #0a84ff;
@@ -71,9 +70,11 @@
   --panel-separator-color: rgba(249,249,250,.1);
 }
 
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 #navigator-toolbox:-moz-lwtheme {
   --tabs-border-color: rgba(0,0,0,.3);
 }
+} /* END !proton */
 
 #menubar-items {
   -moz-box-orient: vertical; /* for flex hack */
