@@ -388,6 +388,10 @@ menuitem.bookmark-item {
   margin-inline-end: 0 !important;
 }
 
+.cui-widget-panelview[id^=PanelUI-webext-] {
+  border-radius: var(--arrowpanel-border-radius);
+}
+
 .webextension-popup-browser,
 .webextension-popup-stack {
   border-radius: inherit;
