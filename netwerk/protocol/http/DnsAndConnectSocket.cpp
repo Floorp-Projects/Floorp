@@ -1229,11 +1229,21 @@ nsresult DnsAndConnectSocket::TransportSetup::ResolveHost(
         nullptr, NS_NET_STATUS_RESOLVING_HOST, 0);
   }
 
-  return dns->AsyncResolveNative(
+  nsresult rv = dns->AsyncResolveNative(
       mHost, nsIDNSService::RESOLVE_TYPE_DEFAULT, mDnsFlags, nullptr,
       dnsAndSock, gSocketTransportService,
       dnsAndSock->mEnt->mConnInfo->GetOriginAttributes(),
       getter_AddRefs(mDNSRequest));
+  if (NS_FAILED(rv) && (mDnsFlags & nsIDNSService::RESOLVE_IP_HINT)) {
+    mDnsFlags &= ~nsIDNSService::RESOLVE_IP_HINT;
+    return dns->AsyncResolveNative(
+        mHost, nsIDNSService::RESOLVE_TYPE_DEFAULT, mDnsFlags, nullptr,
+        dnsAndSock, gSocketTransportService,
+        dnsAndSock->mEnt->mConnInfo->GetOriginAttributes(),
+        getter_AddRefs(mDNSRequest));
+  }
+
+  return rv;
 }
 
 nsresult DnsAndConnectSocket::TransportSetup::OnLookupComplete(
