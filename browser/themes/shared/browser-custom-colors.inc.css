@@ -42,6 +42,7 @@
     --input-border-color: rgb(143,143,157);
     --input-error-border-color: #E22850;
 
+    --tab-line-color: rgba(128,128,142,0.9);
     --tab-selected-bgcolor: rgb(255,255,255);
     --tabs-border-color: transparent;
     --toolbar-color: rgb(21,20,26);
