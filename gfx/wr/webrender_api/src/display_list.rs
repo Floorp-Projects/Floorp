@@ -938,6 +938,7 @@ impl<'de> Deserialize<'de> for BuiltDisplayList {
         Ok(BuiltDisplayList {
             data,
             descriptor: BuiltDisplayListDescriptor {
+                gecko_display_list_time: 0.0,
                 builder_start_time: 0,
                 builder_finish_time: 1,
                 send_start_time: 1,
