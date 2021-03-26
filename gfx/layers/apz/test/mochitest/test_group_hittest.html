@@ -26,7 +26,10 @@ var prefs = [
   ["apz.test.logging_enabled", true],
 ];
 
-var overscroll_prefs = [...prefs, ["apz.overscroll.enabled", true]];
+var overscroll_prefs = [...prefs,
+                        ["apz.overscroll.enabled", true],
+                        ["apz.overscroll.test_async_scroll_offset.enabled", true],
+                       ];
 
 var subtests = [
   {"file": "helper_hittest_basic.html", "prefs": prefs},

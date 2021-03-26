@@ -4556,8 +4556,11 @@ void AsyncPanZoomController::ApplyAsyncTestAttributes(
       CSSPoint difference = mTestAsyncScrollOffset - clampedPoint;
 
       ScrollByAndClamp(mTestAsyncScrollOffset);
-      ParentLayerPoint overscroll = difference * Metrics().GetZoom();
-      OverscrollBy(overscroll);
+
+      if (StaticPrefs::apz_overscroll_test_async_scroll_offset_enabled()) {
+        ParentLayerPoint overscroll = difference * Metrics().GetZoom();
+        OverscrollBy(overscroll);
+      }
       ResampleCompositedAsyncTransform(aProofOfLock);
     }
   }
