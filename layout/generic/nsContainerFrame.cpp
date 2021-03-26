@@ -830,7 +830,13 @@ void nsContainerFrame::SetSizeConstraints(nsPresContext* aPresContext,
   if (devMinSize.height > devMaxSize.height)
     devMaxSize.height = devMinSize.height;
 
-  widget::SizeConstraints constraints(devMinSize, devMaxSize);
+  nsIWidget* rootWidget = aPresContext->GetNearestWidget();
+  DesktopToLayoutDeviceScale constraintsScale(MOZ_WIDGET_INVALID_SCALE);
+  if (rootWidget) {
+    constraintsScale = rootWidget->GetDesktopToDeviceScale();
+  }
+
+  widget::SizeConstraints constraints(devMinSize, devMaxSize, constraintsScale);
 
   // The sizes are in inner window sizes, so convert them into outer window
   // sizes. Use a size of (200, 200) as only the difference between the inner
