@@ -394,6 +394,7 @@ test_description_schema = Schema(
         # that are built.
         Optional("run-on-projects"): optionally_keyed_by(
             "app",
+            "subtest",
             "test-platform",
             "test-name",
             "variant",
