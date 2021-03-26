@@ -11,17 +11,20 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
+import org.mozilla.fenix.tabstray.viewholders.AbstractTrayViewHolder
+import org.mozilla.fenix.tabstray.viewholders.NormalBrowserTabViewHolder
+import org.mozilla.fenix.tabstray.viewholders.PrivateBrowserTabViewHolder
 
 class TrayPagerAdapter(
     val context: Context,
     val interactor: TabsTrayInteractor,
     val browserInteractor: BrowserTrayInteractor
-) : RecyclerView.Adapter<TrayViewHolder>() {
+) : RecyclerView.Adapter<AbstractTrayViewHolder>() {
 
     private val normalAdapter by lazy { BrowserTabsAdapter(context, browserInteractor) }
     private val privateAdapter by lazy { BrowserTabsAdapter(context, browserInteractor) }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TrayViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AbstractTrayViewHolder {
         val itemView = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
 
         return when (viewType) {
@@ -37,7 +40,7 @@ class TrayPagerAdapter(
         }
     }
 
-    override fun onBindViewHolder(viewHolder: TrayViewHolder, position: Int) {
+    override fun onBindViewHolder(viewHolder: AbstractTrayViewHolder, position: Int) {
         val adapter = when (position) {
             POSITION_NORMAL_TABS -> normalAdapter
             POSITION_PRIVATE_TABS -> privateAdapter
