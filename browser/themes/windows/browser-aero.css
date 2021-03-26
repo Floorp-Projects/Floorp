@@ -44,7 +44,6 @@
   @media not (-moz-os-version: windows-win7) {
     @media not (-moz-os-version: windows-win8) {
       @media (-moz-windows-default-theme) {
-        @supports not -moz-bool-pref("browser.proton.enabled") {
         :root:not(:-moz-lwtheme) {
           background-color: hsl(0, 0%, 78%);
         }
@@ -76,18 +75,9 @@
             --toolbarbutton-icon-fill-opacity: .7;
           }
         }
-        } /*** end !proton ***/
-
-        @supports -moz-bool-pref("browser.proton.enabled") {
-        @media (-moz-windows-accent-color-in-titlebar) {
-          :root[sizemode=normal][tabsintitlebar] {
-            border-top: .5px solid -moz-accent-color;
-          }
-        }
-        } /*** END proton ***/
 
         :root[sizemode=normal][tabsintitlebar]:-moz-window-inactive {
-          border-top-color: rgb(57,57,57);
+          border-top-color: rgba(0,0,0,.3);
         }
 
         :root[tabsintitlebar] .tab-label:-moz-window-inactive {
@@ -97,7 +87,7 @@
         }
 
         @supports -moz-bool-pref("browser.proton.tabs.enabled") {
-        :root[tabsintitlebar] .tab-secondary-label:-moz-window-inactive {
+        :root[tabsintitlebar] .tab-icon-sound:-moz-window-inactive {
           opacity: .6;
         }
         } /*** END proton ***/

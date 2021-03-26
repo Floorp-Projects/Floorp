@@ -30,7 +30,13 @@ add_task(async function test_support_tab_line() {
       ".tabbrowser-tab[selected]"
     );
     let line = selectedTab.querySelector(".tab-line");
-    if (!protonTabsEnabled) {
+    if (protonTabsEnabled) {
+      Assert.equal(
+        newWin.getComputedStyle(line).display,
+        "none",
+        "Tab line should not be displayed when Proton is enabled"
+      );
+    } else {
       Assert.equal(
         newWin.getComputedStyle(line).backgroundColor,
         `rgb(${hexToRGB(TAB_LINE_COLOR).join(", ")})`,
