@@ -995,6 +995,21 @@ void MacroAssembler::storeCallResultValue(TypedOrValueRegister dest) {
   }
 }
 
+#ifdef JS_64BIT
+void MacroAssembler::assertCanonicalInt32(Register r) {
+#  ifdef DEBUG
+#    if defined(JS_CODEGEN_X64) || defined(JS_CODEGEN_ARM64)
+  Label ok;
+  branchPtr(Assembler::BelowOrEqual, r, ImmWord(UINT32_MAX), &ok);
+  breakpoint();
+  bind(&ok);
+#    else
+  MOZ_CRASH("IMPLEMENT ME");
+#    endif
+#  endif
+}
+#endif
+
 }  // namespace jit
 }  // namespace js
 

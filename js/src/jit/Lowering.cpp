@@ -2362,6 +2362,32 @@ void LIRGenerator::visitNonNegativeIntPtrToInt32(
 #endif
 }
 
+void LIRGenerator::visitWasmExtendU32Index(MWasmExtendU32Index* ins) {
+#ifdef JS_64BIT
+  MDefinition* input = ins->input();
+  MOZ_ASSERT(input->type() == MIRType::Int32);
+  MOZ_ASSERT(ins->type() == MIRType::Int64);
+
+  auto* lir = new (alloc()) LWasmExtendU32Index(useRegisterAtStart(input));
+  defineReuseInput(lir, ins, 0);
+#else
+  MOZ_CRASH("64-bit only");
+#endif
+}
+
+void LIRGenerator::visitWasmWrapU32Index(MWasmWrapU32Index* ins) {
+#ifdef JS_64BIT
+  MDefinition* input = ins->input();
+  MOZ_ASSERT(input->type() == MIRType::Int64);
+  MOZ_ASSERT(ins->type() == MIRType::Int32);
+
+  auto* lir = new (alloc()) LWasmWrapU32Index(useRegisterAtStart(input));
+  defineReuseInput(lir, ins, 0);
+#else
+  MOZ_CRASH("64-bit only");
+#endif
+}
+
 void LIRGenerator::visitIntPtrToDouble(MIntPtrToDouble* ins) {
   MDefinition* input = ins->input();
   MOZ_ASSERT(input->type() == MIRType::IntPtr);
@@ -4616,19 +4642,33 @@ void LIRGenerator::visitWasmBoundsCheck(MWasmBoundsCheck* ins) {
   MOZ_ASSERT(!ins->isRedundant());
 
   MDefinition* index = ins->index();
-  MOZ_ASSERT(index->type() == MIRType::Int32);
-
   MDefinition* boundsCheckLimit = ins->boundsCheckLimit();
-  MOZ_ASSERT(boundsCheckLimit->type() == MIRType::Int32);
 
-  if (JitOptions.spectreIndexMasking) {
-    auto* lir = new (alloc()) LWasmBoundsCheck(useRegisterAtStart(index),
-                                               useRegister(boundsCheckLimit));
-    defineReuseInput(lir, ins, 0);
+  MOZ_ASSERT(boundsCheckLimit->type() == index->type());
+
+  if (index->type() == MIRType::Int64) {
+    if (JitOptions.spectreIndexMasking) {
+      auto* lir = new (alloc()) LWasmBoundsCheck64(
+          useInt64RegisterAtStart(index), useInt64Register(boundsCheckLimit));
+      defineInt64ReuseInput(lir, ins, 0);
+    } else {
+      auto* lir = new (alloc())
+          LWasmBoundsCheck64(useInt64RegisterAtStart(index),
+                             useInt64RegisterAtStart(boundsCheckLimit));
+      add(lir, ins);
+    }
   } else {
-    auto* lir = new (alloc()) LWasmBoundsCheck(
-        useRegisterAtStart(index), useRegisterAtStart(boundsCheckLimit));
-    add(lir, ins);
+    MOZ_ASSERT(index->type() == MIRType::Int32);
+
+    if (JitOptions.spectreIndexMasking) {
+      auto* lir = new (alloc()) LWasmBoundsCheck(useRegisterAtStart(index),
+                                                 useRegister(boundsCheckLimit));
+      defineReuseInput(lir, ins, 0);
+    } else {
+      auto* lir = new (alloc()) LWasmBoundsCheck(
+          useRegisterAtStart(index), useRegisterAtStart(boundsCheckLimit));
+      add(lir, ins);
+    }
   }
 }
 

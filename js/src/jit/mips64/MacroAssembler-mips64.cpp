@@ -2269,6 +2269,17 @@ void MacroAssembler::wasmBoundsCheck32(Condition cond, Register index,
   ma_b(index, SecondScratchReg, label, cond);
 }
 
+void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
+                                       Register64 boundsCheckLimit,
+                                       Label* label) {
+  MOZ_CRASH("IMPLEMENTME");
+}
+
+void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
+                                       Address boundsCheckLimit, Label* label) {
+  MOZ_CRASH("IMPLEMENTME");
+}
+
 void MacroAssembler::wasmTruncateDoubleToUInt32(FloatRegister input,
                                                 Register output,
                                                 bool isSaturating,

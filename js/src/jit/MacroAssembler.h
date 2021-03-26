@@ -309,6 +309,8 @@ constexpr uint32_t WasmCalleeTLSOffsetBeforeCall =
 // All optimizations are necessarily platform-specific and should only be used
 // in platform-specific code.  We may add architectures in the future that do
 // not follow the patterns of the few architectures we already have.
+//
+// Also see MacroAssembler::assertCanonicalInt32().
 
 // The public entrypoint for emitting assembly. Note that a MacroAssembler can
 // use cx->lifoAlloc, so take care not to interleave masm use with other
@@ -3414,9 +3416,15 @@ class MacroAssembler : public MacroAssemblerSpecific {
   std::pair<CodeOffset, uint32_t> wasmReserveStackChecked(
       uint32_t amount, wasm::BytecodeOffset trapOffset);
 
-  // Emit a bounds check against the wasm heap limit for 32-bit memory, jumping
-  // to 'label' if 'cond' holds. If JitOptions.spectreMaskIndex is true, in
-  // speculative executions 'index' is saturated in-place to 'boundsCheckLimit'.
+  // Emit a bounds check against the wasm heap limit, jumping to 'label' if
+  // 'cond' holds. If JitOptions.spectreMaskIndex is true, in speculative
+  // executions 'index' is saturated in-place to 'boundsCheckLimit'.
+  //
+  // On 32-bit systems for both wasm and asm.js, and on 64-bit systems for
+  // asm.js, heap lengths are limited to 2GB.  On 64-bit systems for wasm,
+  // 32-bit heap lengths are limited to 4GB, and 64-bit heap lengths will be
+  // limited to something much larger.
+
   void wasmBoundsCheck32(Condition cond, Register index,
                          Register boundsCheckLimit, Label* label)
       DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
@@ -3424,6 +3432,14 @@ class MacroAssembler : public MacroAssemblerSpecific {
   void wasmBoundsCheck32(Condition cond, Register index,
                          Address boundsCheckLimit, Label* label)
       DEFINED_ON(arm, arm64, mips32, mips64, x86_shared);
+
+  void wasmBoundsCheck64(Condition cond, Register64 index,
+                         Register64 boundsCheckLimit, Label* label)
+      DEFINED_ON(arm64, mips64, x64);
+
+  void wasmBoundsCheck64(Condition cond, Register64 index,
+                         Address boundsCheckLimit, Label* label)
+      DEFINED_ON(arm64, mips64, x64);
 
   // Each wasm load/store instruction appends its own wasm::Trap::OutOfBounds.
   void wasmLoad(const wasm::MemoryAccessDesc& access, Operand srcAddr,
@@ -4938,6 +4954,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void touchFrameValues(Register numStackValues, Register scratch1,
                         Register scratch2);
+
+#ifdef JS_64BIT
+  // See comment block "64-bit GPRs carrying 32-bit values" above.  This asserts
+  // that the high bits of the register are appropriate for the architecture and
+  // the value in the low bits.
+  inline void assertCanonicalInt32(Register r);
+#endif
 };
 
 // StackMacroAssembler checks no GC will happen while it's on the stack.
