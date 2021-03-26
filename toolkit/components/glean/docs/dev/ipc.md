@@ -76,9 +76,14 @@ There are a few cases where we provide more firm guarantees:
 #### Tests
 
 There are test-only APIs in Rust, C++, and Javascript.
-We intend to make these await a flush of child process metric values.
-This ensures that the value you get via `test_get_value` is always the most up-to-date.
-See [the test documentation](testing.md) for more details.
+These do not await a flush of child process metric values.
+You can use the test-only method `testFlushAllChildren` on the `FOG`
+XPCOM component to await child data's arrival:
+```js
+let FOG = Cc["@mozilla.org/toolkit/glean;1"].createInstance(Ci.nsIFOG);
+await FOG.testFlushAllChildren();
+```
+See [the test documentation](testing.md) for more details on testing.
 
 #### Built-in Pings
 
