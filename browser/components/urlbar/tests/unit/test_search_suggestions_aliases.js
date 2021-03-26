@@ -7,7 +7,6 @@
  */
 
 const DEFAULT_ENGINE_NAME = "TestDefaultEngine";
-const SUGGESTIONS_ENGINE_NAME = "engine-suggestions.xml";
 const SUGGEST_PREF = "browser.urlbar.suggest.searches";
 const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
 const HISTORY_TITLE = "fire";
@@ -19,9 +18,11 @@ const HISTORY_TITLE = "fire";
 const TEST_SPACES = [" ", "\u3000", " \u3000", "\u3000 "];
 
 let engine;
+let port;
 
 add_task(async function setup() {
   engine = await addTestSuggestionsEngine();
+  port = engine.getSubmission("").uri.port;
 
   // Set a mock engine as the default so we don't hit the network below when we
   // do searches that return the default engine heuristic result.
@@ -75,6 +76,7 @@ add_task(async function nonTokenAlias_trailingSpace() {
   let alias = "moz";
   engine.alias = alias;
   Assert.equal(engine.alias, alias);
+
   for (let isPrivate of [false, true]) {
     for (let spaces of TEST_SPACES) {
       info(
@@ -91,7 +93,7 @@ add_task(async function nonTokenAlias_trailingSpace() {
             heuristic: true,
           }),
           makeVisitResult(context, {
-            uri: "http://localhost:9000/search?terms=",
+            uri: `http://localhost:${port}/search?q=`,
             title: HISTORY_TITLE,
           }),
         ],
@@ -133,7 +135,7 @@ add_task(async function nonTokenAlias_history_nonPrivate() {
           suggestion: `${HISTORY_TITLE} bar`,
         }),
         makeVisitResult(context, {
-          uri: "http://localhost:9000/search?terms=",
+          uri: `http://localhost:${port}/search?q=`,
           title: HISTORY_TITLE,
         }),
       ],
@@ -162,7 +164,7 @@ add_task(async function nonTokenAlias_history_private() {
           heuristic: true,
         }),
         makeVisitResult(context, {
-          uri: "http://localhost:9000/search?terms=",
+          uri: `http://localhost:${port}/search?q=`,
           title: HISTORY_TITLE,
         }),
       ],

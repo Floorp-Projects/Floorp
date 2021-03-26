@@ -293,8 +293,10 @@ var SearchTestUtils = {
    *   The POST search URL parameters to use for the search engine
    * @param {string} [options.suggest_url]
    *   The suggestion URL to use for the search engine.
-   * @param {string} [options.suggest_url]
+   * @param {string} [options.suggest_url_get_params]
    *   The suggestion URL parameters to use for the search engine.
+   * @param {string} [options.search_form]
+   *   The search form to use for the search engine.
    * @returns {object}
    *   The generated manifest.
    */
@@ -347,6 +349,10 @@ var SearchTestUtils = {
     if (options.suggest_url) {
       manifest.chrome_settings_overrides.search_provider.suggest_url_get_params =
         options.suggest_url_get_params;
+    }
+    if (options.search_form) {
+      manifest.chrome_settings_overrides.search_provider.search_form =
+        options.search_form;
     }
     return manifest;
   },

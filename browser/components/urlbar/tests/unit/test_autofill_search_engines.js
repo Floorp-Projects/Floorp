@@ -27,8 +27,6 @@ add_task(async function searchEngines() {
     );
   });
 
-  let server = makeTestServer();
-
   // Bug 1149672: Once we drop support for http with OpenSearch engines,
   // we should be able to drop the http part of this.
   for (let scheme of ["https", "http"]) {
@@ -42,7 +40,12 @@ add_task(async function searchEngines() {
         true
       );
     } else {
-      await addTestEngine("engine.xml", server);
+      let httpServer = makeTestServer();
+      httpServer.registerDirectory("/", do_get_cwd());
+      await Services.search.addOpenSearchEngine(
+        `http://localhost:${httpServer.identity.primaryPort}/data/engine.xml`,
+        null
+      );
     }
 
     let context = createContext("ex", { isPrivate: false });

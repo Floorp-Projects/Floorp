@@ -12,7 +12,6 @@ let controller = Cc["@mozilla.org/autocomplete/controller;1"].getService(
   Ci.nsIAutoCompleteController
 );
 
-const ENGINE_NAME = "engine-suggestions.xml";
 const SUGGEST_PREF = "browser.urlbar.suggest.searches";
 const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
 
@@ -792,19 +791,19 @@ add_task(async function conflicting_alias() {
       }),
       makeSearchResult(context, {
         query: "unmatched",
-        engineName: ENGINE_NAME,
+        engineName: SUGGESTIONS_ENGINE_NAME,
         alias: keyword,
         suggestion: "unmatched",
       }),
       makeSearchResult(context, {
         query: "unmatched",
-        engineName: ENGINE_NAME,
+        engineName: SUGGESTIONS_ENGINE_NAME,
         alias: keyword,
         suggestion: "unmatched foo",
       }),
       makeSearchResult(context, {
         query: "unmatched",
-        engineName: ENGINE_NAME,
+        engineName: SUGGESTIONS_ENGINE_NAME,
         alias: keyword,
         suggestion: "unmatched bar",
       }),

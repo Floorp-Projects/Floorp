@@ -4,8 +4,6 @@
 
 "use strict";
 
-const ENGINE_NAME = "engine-suggestions.xml";
-
 testEngine_setup();
 
 // "about:ab" should match "about:about"
@@ -91,7 +89,7 @@ add_task(async function aboutColonHasNoMatch() {
     search: "about:",
     matches: [
       makeSearchResult(context, {
-        engineName: ENGINE_NAME,
+        engineName: SUGGESTIONS_ENGINE_NAME,
         providerName: "HeuristicFallback",
         heuristic: true,
       }),
