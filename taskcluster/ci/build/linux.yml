@@ -964,6 +964,7 @@ linux64-fuzzing-ccov/opt:
             - linux64-clang-12
             - linux64-cbindgen
             - linux64-dump-syms
+            - linux64-llvm-symbolizer
             - linux64-rust
             - linux64-rust-size
             - linux64-sccache
