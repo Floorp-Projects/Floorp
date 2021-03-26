@@ -17,7 +17,7 @@ async function isExtensionLocked(win, addonID) {
 }
 
 add_task(async function test_addon_install() {
-  let installPromise = wait_for_addon_install();
+  let installPromise = waitForAddonInstall(ADDON_ID);
   await setupPolicyEngineWithJson({
     policies: {
       Extensions: {
@@ -51,8 +51,8 @@ add_task(async function test_addon_reinstall() {
   // Test that uninstalling and reinstalling the same addon ID works as expected.
   // This can be used to update an addon.
 
-  let uninstallPromise = wait_for_addon_uninstall();
-  let installPromise = wait_for_addon_install();
+  let uninstallPromise = waitForAddonUninstall(ADDON_ID);
+  let installPromise = waitForAddonInstall(ADDON_ID);
   await setupPolicyEngineWithJson({
     policies: {
       Extensions: {
@@ -80,7 +80,7 @@ add_task(async function test_addon_reinstall() {
 add_task(async function test_addon_uninstall() {
   EnterprisePolicyTesting.resetRunOnceState();
 
-  let uninstallPromise = wait_for_addon_uninstall();
+  let uninstallPromise = waitForAddonUninstall(ADDON_ID);
   await setupPolicyEngineWithJson({
     policies: {
       Extensions: {
@@ -97,7 +97,7 @@ add_task(async function test_addon_download_failure() {
   // Test that if the download fails, the runOnce pref
   // is cleared so that the download will happen again.
 
-  let installPromise = wait_for_addon_install();
+  let installPromise = waitForAddonInstall(ADDON_ID);
   await setupPolicyEngineWithJson({
     policies: {
       Extensions: {
@@ -115,38 +115,3 @@ add_task(async function test_addon_download_failure() {
     "runOnce pref should be unset"
   );
 });
-
-function wait_for_addon_install() {
-  return new Promise(resolve => {
-    let listener = {
-      onInstallEnded(install, addon) {
-        if (addon.id == ADDON_ID) {
-          AddonManager.removeInstallListener(listener);
-          resolve();
-        }
-      },
-      onDownloadFailed() {
-        AddonManager.removeInstallListener(listener);
-        resolve();
-      },
-      onInstallFailed() {
-        AddonManager.removeInstallListener(listener);
-        resolve();
-      },
-    };
-    AddonManager.addInstallListener(listener);
-  });
-}
-
-function wait_for_addon_uninstall() {
-  return new Promise(resolve => {
-    let listener = {};
-    listener.onUninstalled = addon => {
-      if (addon.id == ADDON_ID) {
-        AddonManager.removeAddonListener(listener);
-        resolve();
-      }
-    };
-    AddonManager.addAddonListener(listener);
-  });
-}
