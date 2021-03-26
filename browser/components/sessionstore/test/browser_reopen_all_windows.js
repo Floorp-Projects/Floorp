@@ -72,23 +72,16 @@ add_task(async () => {
   );
   appMenu.click();
   await PopupShownPromise;
+  info("About to click on the Library option");
 
-  let promise;
-  if (!gProton) {
-    info("About to click on the Library option");
-
-    document.getElementById("appMenu-library-button").click();
-    let libraryView = document.getElementById("appMenu-libraryView");
-    promise = BrowserTestUtils.waitForEvent(libraryView, "ViewShown");
-    await promise;
-  }
+  document.getElementById("appMenu-library-button").click();
+  let libraryView = document.getElementById("appMenu-libraryView");
+  let promise = BrowserTestUtils.waitForEvent(libraryView, "ViewShown");
+  await promise;
 
   // Navigate to the History subview.
   info("About to click on the History option");
-  let historyId = gProton
-    ? "appMenu-history-button"
-    : "appMenu-library-history-button";
-  document.getElementById(historyId).click();
+  document.getElementById("appMenu-library-history-button").click();
   let historyView = document.getElementById("PanelUI-history");
   promise = BrowserTestUtils.waitForEvent(historyView, "ViewShown");
   await promise;
