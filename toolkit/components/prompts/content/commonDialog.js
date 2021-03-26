@@ -61,6 +61,8 @@ function commonDialogOnLoad() {
         title = { l10nId: "common-dialog-title-unknown" };
       }
     }
+
+    dialog.setAttribute("buttonpack", "end");
   }
   root.setAttribute("headertitle", JSON.stringify(title));
 
