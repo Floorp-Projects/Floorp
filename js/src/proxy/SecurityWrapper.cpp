@@ -99,7 +99,7 @@ bool SecurityWrapper<Base>::defineProperty(JSContext* cx, HandleObject wrapper,
                                            HandleId id,
                                            Handle<PropertyDescriptor> desc,
                                            ObjectOpResult& result) const {
-  if (desc.getter() || desc.setter()) {
+  if (desc.isAccessorDescriptor()) {
     return Throw(cx, id, JSMSG_ACCESSOR_DEF_DENIED);
   }
 

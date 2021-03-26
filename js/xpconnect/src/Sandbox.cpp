@@ -674,25 +674,14 @@ static JSObject* WrapCallable(JSContext* cx, HandleObject callable,
   return obj;
 }
 
-template <typename Op>
-bool WrapAccessorFunction(JSContext* cx, Op& op, PropertyDescriptor* desc,
-                          unsigned attrFlag, HandleObject sandboxProtoProxy) {
-  if (!op) {
+bool WrapAccessorFunction(JSContext* cx, MutableHandleObject accessor,
+                          HandleObject sandboxProtoProxy) {
+  if (!accessor) {
     return true;
   }
 
-  if (!(desc->attrs & attrFlag)) {
-    XPCThrower::Throw(NS_ERROR_UNEXPECTED, cx);
-    return false;
-  }
-
-  RootedObject func(cx, JS_FUNC_TO_DATA_PTR(JSObject*, op));
-  func = WrapCallable(cx, func, sandboxProtoProxy);
-  if (!func) {
-    return false;
-  }
-  op = JS_DATA_TO_FUNC_PTR(Op, func.get());
-  return true;
+  accessor.set(WrapCallable(cx, accessor, sandboxProtoProxy));
+  return !!accessor;
 }
 
 static bool IsMaybeWrappedDOMConstructor(JSObject* obj) {
@@ -729,12 +718,14 @@ bool SandboxProxyHandler::getPropertyDescriptorImpl(
   }
 
   // Now fix up the getter/setter/value as needed to be bound to desc->obj.
-  if (!WrapAccessorFunction(cx, desc.getter(), desc.address(), JSPROP_GETTER,
-                            proxy))
+  if (desc.hasGetterObject() &&
+      !WrapAccessorFunction(cx, desc.getterObject(), proxy)) {
     return false;
-  if (!WrapAccessorFunction(cx, desc.setter(), desc.address(), JSPROP_SETTER,
-                            proxy))
+  }
+  if (desc.hasSetterObject() &&
+      !WrapAccessorFunction(cx, desc.setterObject(), proxy)) {
     return false;
+  }
   if (desc.value().isObject()) {
     RootedObject val(cx, &desc.value().toObject());
     if (JS::IsCallable(val) &&

@@ -1283,10 +1283,10 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
   }
 
   // Use dense storage for new indexed properties where possible.
-  if (JSID_IS_INT(id) && !desc.getter() && !desc.setter() &&
-      desc.attributes() == JSPROP_ENUMERATE &&
+  if (JSID_IS_INT(id) && desc.attributes() == JSPROP_ENUMERATE &&
       (!obj->isIndexed() || !obj->containsPure(id)) &&
       !obj->is<TypedArrayObject>()) {
+    MOZ_ASSERT(!desc.isAccessorDescriptor());
     uint32_t index = JSID_TO_INT(id);
     DenseElementResult edResult = obj->ensureDenseElements(cx, index, 1);
     if (edResult == DenseElementResult::Failure) {
@@ -1304,34 +1304,40 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
   // If we know this is a new property we can call addProperty instead of
   // the slower putProperty.
   if constexpr (AddOrChange == IsAddOrChange::Add) {
-    if (Shape::isDataProperty(desc.attributes(), desc.getter(),
-                              desc.setter())) {
+    if (desc.isAccessorDescriptor()) {
+      GetterOp getter =
+          JS_DATA_TO_FUNC_PTR(GetterOp, desc.getterObject().get());
+      SetterOp setter =
+          JS_DATA_TO_FUNC_PTR(SetterOp, desc.setterObject().get());
+      if (!NativeObject::addAccessorProperty(cx, obj, id, getter, setter,
+                                             desc.attributes())) {
+        return false;
+      }
+    } else {
       Shape* shape = NativeObject::addDataProperty(
           cx, obj, id, SHAPE_INVALID_SLOT, desc.attributes());
       if (!shape) {
         return false;
       }
       obj->initSlot(shape->slot(), desc.value());
-    } else {
-      if (!NativeObject::addAccessorProperty(
-              cx, obj, id, desc.getter(), desc.setter(), desc.attributes())) {
-        return false;
-      }
     }
   } else {
-    if (Shape::isDataProperty(desc.attributes(), desc.getter(),
-                              desc.setter())) {
+    if (desc.isAccessorDescriptor()) {
+      GetterOp getter =
+          JS_DATA_TO_FUNC_PTR(GetterOp, desc.getterObject().get());
+      SetterOp setter =
+          JS_DATA_TO_FUNC_PTR(SetterOp, desc.setterObject().get());
+      if (!NativeObject::putAccessorProperty(cx, obj, id, getter, setter,
+                                             desc.attributes())) {
+        return false;
+      }
+    } else {
       Shape* shape =
           NativeObject::putDataProperty(cx, obj, id, desc.attributes());
       if (!shape) {
         return false;
       }
       obj->setSlot(shape->slot(), desc.value());
-    } else {
-      if (!NativeObject::putAccessorProperty(
-              cx, obj, id, desc.getter(), desc.setter(), desc.attributes())) {
-        return false;
-      }
     }
   }
 
@@ -1346,7 +1352,7 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
       return false;
     }
     if (edResult == DenseElementResult::Success) {
-      MOZ_ASSERT(!desc.setter());
+      MOZ_ASSERT(!desc.isAccessorDescriptor());
       return CallAddPropertyHookDense(cx, obj, index, desc.value());
     }
   }
@@ -1470,15 +1476,10 @@ static bool DefinePropertyIsRedundant(JSContext* cx, HandleNativeObject obj,
       }
     }
 
-    GetterOp existingGetterOp =
-        prop.isNativeProperty() ? prop.shape()->getter() : nullptr;
-    if (desc.getter() != existingGetterOp) {
-      return true;
-    }
-
-    SetterOp existingSetterOp =
-        prop.isNativeProperty() ? prop.shape()->setter() : nullptr;
-    if (desc.setter() != existingSetterOp) {
+    // Check for GetterOp/SetterOp. PropertyDescriptor can't represent these so
+    // they're never redundant.
+    if (prop.isNativeProperty() &&
+        (prop.shape()->getterOp() || prop.shape()->setterOp())) {
       return true;
     }
   } else {
@@ -1766,11 +1767,7 @@ bool js::NativeDefineAccessorProperty(JSContext* cx, HandleNativeObject obj,
                                       HandleId id, HandleObject getter,
                                       HandleObject setter, unsigned attrs) {
   Rooted<PropertyDescriptor> desc(cx);
-  {
-    GetterOp getterOp = JS_DATA_TO_FUNC_PTR(GetterOp, getter.get());
-    SetterOp setterOp = JS_DATA_TO_FUNC_PTR(SetterOp, setter.get());
-    desc.initFields(nullptr, UndefinedHandleValue, attrs, getterOp, setterOp);
-  }
+  desc.initFields(nullptr, UndefinedHandleValue, attrs, getter, setter);
 
   ObjectOpResult result;
   if (!NativeDefineProperty(cx, obj, id, desc, result)) {
