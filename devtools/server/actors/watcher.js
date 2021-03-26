@@ -5,6 +5,7 @@
 "use strict";
 const protocol = require("devtools/shared/protocol");
 const { watcherSpec } = require("devtools/shared/specs/watcher");
+const Services = require("Services");
 
 const Resources = require("devtools/server/actors/resources/index");
 const {
@@ -118,6 +119,11 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   },
 
   form() {
+    const enableServerWatcher = Services.prefs.getBoolPref(
+      "devtools.testing.enableServerWatcherSupport",
+      false
+    );
+
     const hasBrowserElement = !!this.browserElement;
 
     return {
@@ -154,7 +160,8 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           [Resources.TYPES.PLATFORM_MESSAGE]: true,
           [Resources.TYPES.NETWORK_EVENT]: hasBrowserElement,
           [Resources.TYPES.NETWORK_EVENT_STACKTRACE]: hasBrowserElement,
-          [Resources.TYPES.STYLESHEET]: hasBrowserElement,
+          [Resources.TYPES.STYLESHEET]:
+            enableServerWatcher && hasBrowserElement,
           [Resources.TYPES.SOURCE]: hasBrowserElement,
           [Resources.TYPES.THREAD_STATE]: hasBrowserElement,
           [Resources.TYPES.SERVER_SENT_EVENT]: hasBrowserElement,

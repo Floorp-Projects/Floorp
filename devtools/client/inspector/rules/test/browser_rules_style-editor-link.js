@@ -55,28 +55,17 @@ const EXAMPLE_ORG_DOCUMENT_URL =
 
 add_task(async function() {
   await addTab(DOCUMENT_DATA_URL);
-  const { toolbox, inspector, view } = await openRuleView();
+  let { toolbox, inspector, view, testActor } = await openRuleView();
 
-  await testAllStylesheets(inspector, view, toolbox);
+  await testAllStylesheets(inspector, view, toolbox, testActor);
 
   info("Navigate to the example.org document");
   await navigateTo(EXAMPLE_ORG_DOCUMENT_URL);
-  await testAllStylesheets(inspector, view, toolbox);
+  testActor = await getTestActor(toolbox);
+  await testAllStylesheets(inspector, view, toolbox, testActor);
 });
 
-add_task(async function() {
-  info("Check that link to the style editor works after tab reload");
-  await addTab(EXAMPLE_ORG_DOCUMENT_URL);
-  const { toolbox, inspector, view } = await openRuleView();
-
-  info("Reload the example.org document");
-  // Use navigateTo as it waits for the inspector to be ready.
-  await navigateTo(EXAMPLE_ORG_DOCUMENT_URL);
-  await testAllStylesheets(inspector, view, toolbox);
-});
-
-async function testAllStylesheets(inspector, view, toolbox) {
-  const testActor = await getTestActor(toolbox);
+async function testAllStylesheets(inspector, view, toolbox, testActor) {
   await selectNode("div", inspector);
   await testRuleViewLinkLabel(view);
   await testDisabledStyleEditor(view, toolbox);
@@ -86,7 +75,6 @@ async function testAllStylesheets(inspector, view, toolbox) {
 
   info("Switch back to the inspector panel");
   await toolbox.selectTool("inspector");
-  await selectNode("body", inspector);
 }
 
 async function testFirstInlineStyleSheet(view, toolbox, testActor) {

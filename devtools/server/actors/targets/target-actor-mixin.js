@@ -19,13 +19,6 @@ const {
   XHR_BREAKPOINTS,
 } = WatchedDataHelpers.SUPPORTED_DATA;
 
-loader.lazyRequireGetter(
-  this,
-  "StyleSheetsManager",
-  "devtools/server/actors/utils/stylesheets-manager",
-  true
-);
-
 module.exports = function(targetType, targetActorSpec, implementation) {
   const proto = {
     /**
@@ -189,22 +182,6 @@ module.exports = function(targetType, targetActorSpec, implementation) {
         return;
       }
       this.emit(name, resources);
-    },
-
-    getStyleSheetManager() {
-      if (!this._styleSheetManager) {
-        this._styleSheetManager = new StyleSheetsManager(this);
-      }
-      return this._styleSheetManager;
-    },
-
-    destroy() {
-      if (this._styleSheetManager) {
-        this._styleSheetManager.destroy();
-        this._styleSheetManager = null;
-      }
-
-      implementation.destroy.call(this);
     },
   };
   // Use getOwnPropertyDescriptors in order to prevent calling getter from implementation

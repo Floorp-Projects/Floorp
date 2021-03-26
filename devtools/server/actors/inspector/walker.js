@@ -14,6 +14,10 @@ const InspectorUtils = require("InspectorUtils");
 const {
   EXCLUDED_LISTENER,
 } = require("devtools/server/actors/inspector/constants");
+const {
+  TYPES,
+  getResourceWatcher,
+} = require("devtools/server/actors/resources/index");
 
 loader.lazyRequireGetter(
   this,
@@ -92,12 +96,6 @@ loader.lazyRequireGetter(
   this,
   "WalkerSearch",
   "devtools/server/actors/utils/walker-search",
-  true
-);
-loader.lazyRequireGetter(
-  this,
-  "hasStyleSheetWatcherSupportForTarget",
-  "devtools/server/actors/utils/stylesheets-manager",
   true
 );
 
@@ -2678,9 +2676,9 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    * Note that getNodeFromActor was added later and can now be used instead.
    */
   getStyleSheetOwnerNode: function(resourceId) {
-    if (hasStyleSheetWatcherSupportForTarget(this.targetActor)) {
-      const manager = this.targetActor.getStyleSheetManager();
-      const ownerNode = manager.getOwnerNode(resourceId);
+    const watcher = getResourceWatcher(this.targetActor, TYPES.STYLESHEET);
+    if (watcher) {
+      const ownerNode = watcher.getOwnerNode(resourceId);
       return this.attachElement(ownerNode);
     }
 
