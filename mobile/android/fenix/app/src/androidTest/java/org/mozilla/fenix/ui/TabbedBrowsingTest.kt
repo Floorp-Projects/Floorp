@@ -103,7 +103,6 @@ class TabbedBrowsingTest {
         }
     }
 
-    @Ignore("Temporary disabled. See https://github.com/mozilla-mobile/fenix/issues/18644")
     @Test
     fun closeAllTabsTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)

@@ -190,7 +190,6 @@ class StrictEnhancedTrackingProtectionTest {
         }
     }
 
-    @Ignore("Temporary disabled. See https://github.com/mozilla-mobile/fenix/issues/18644")
     @Test
     fun testStrictVisitSheetDetails() {
         val trackingProtectionTest =
