@@ -15,7 +15,6 @@ const { ExperimentAPI } = ChromeUtils.import(
 const { BrowserTestUtils } = ChromeUtils.import(
   "resource://testing-common/BrowserTestUtils.jsm"
 );
-const { sinon } = ChromeUtils.import("resource://testing-common/Sinon.jsm");
 
 function getRecipe(slug) {
   return ExperimentFakes.recipe(slug, {

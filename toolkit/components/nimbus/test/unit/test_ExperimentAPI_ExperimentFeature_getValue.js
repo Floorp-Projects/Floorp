@@ -65,6 +65,9 @@ add_task(async function test_ExperimentFeature_getValue_prefsOverDefaults() {
 
 add_task(async function test_ExperimentFeature_getValue_prefsOverExperiment() {
   const { sandbox, manager } = await setupForExperimentFeature();
+  const { doExperimentCleanup } = ExperimentFakes.enrollmentHelper(undefined, {
+    manager,
+  });
   const recipe = ExperimentFakes.experiment("awexperiment", {
     branch: {
       slug: "treatment",
@@ -105,6 +108,50 @@ add_task(async function test_ExperimentFeature_getValue_prefsOverExperiment() {
   );
 
   Services.prefs.clearUserPref(TEST_FALLBACK_PREF);
-  manager.store._deleteForTests(recipe.slug);
+  await doExperimentCleanup();
   sandbox.restore();
 });
+
+add_task(
+  async function test_ExperimentFeature_getValue_remoteOverPrefDefaults() {
+    const { manager } = await setupForExperimentFeature();
+    const featureInstance = new ExperimentFeature(
+      FEATURE_ID,
+      FAKE_FEATURE_MANIFEST
+    );
+    // We're using the store in this test we need to wait for it to load
+    await manager.store.ready();
+
+    Services.prefs.clearUserPref(TEST_FALLBACK_PREF);
+
+    Assert.equal(
+      featureInstance.getValue().screens?.length,
+      undefined,
+      "Pref is not set"
+    );
+
+    // Load remote defaults
+    manager.store.updateRemoteConfigs(FEATURE_ID, {
+      variables: { screens: [] },
+    });
+
+    // Wait for feature to load remote defaults
+    await featureInstance.ready();
+
+    Assert.deepEqual(
+      featureInstance.getValue().screens?.length,
+      0,
+      "Should return the remote value over the defaults"
+    );
+
+    Services.prefs.setStringPref(TEST_FALLBACK_PREF, "[1,2,3]");
+
+    Assert.deepEqual(
+      featureInstance.getValue().screens.length,
+      3,
+      "should return the user pref value over the remote"
+    );
+
+    Services.prefs.clearUserPref(TEST_FALLBACK_PREF);
+  }
+);
