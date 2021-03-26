@@ -8719,10 +8719,7 @@ bool nsDisplayPerspective::CreateWebRenderCommands(
 
   Maybe<uint64_t> scrollingRelativeTo;
   for (auto* asr = GetActiveScrolledRoot(); asr; asr = asr->mParent) {
-    // In OOP documents, the root scrollable frame of the in-process root
-    // document is always active, so using IsAncestorFrameCrossDocInProcess
-    // should be fine here.
-    if (nsLayoutUtils::IsAncestorFrameCrossDocInProcess(
+    if (nsLayoutUtils::IsAncestorFrameCrossDoc(
             asr->mScrollableFrame->GetScrolledFrame(), perspectiveFrame)) {
       scrollingRelativeTo.emplace(asr->GetViewId());
       break;
