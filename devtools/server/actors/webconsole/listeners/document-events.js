@@ -27,17 +27,39 @@ exports.DocumentEventsListener = DocumentEventsListener;
 DocumentEventsListener.prototype = {
   listen() {
     EventEmitter.on(this.targetActor, "window-ready", this.onWindowReady);
-    this.onWindowReady({ window: this.targetActor.window, isTopLevel: true });
+    this.onWindowReady({
+      window: this.targetActor.window,
+      isTopLevel: true,
+      // Flag the very first dom-loading event, which is about the top target and may come
+      // after some other already existing resources.
+      shouldBeIgnoredAsRedundantWithTargetAvailable: true,
+    });
   },
 
-  onWindowReady({ window, isTopLevel }) {
+  onWindowReady({
+    window,
+    isTopLevel,
+    shouldBeIgnoredAsRedundantWithTargetAvailable,
+  }) {
     // Ignore iframes
     if (!isTopLevel) {
       return;
     }
 
     const time = window.performance.timing.navigationStart;
-    this.emit("dom-loading", time);
+    this.emit(
+      "dom-loading",
+      time,
+      // As dom-loading is often used to clear the panel on navigation, and is typically
+      // sent before any other resource, we need to add a hint so the client knows when
+      // then event can be ignored.
+      // We should also ignore them if the Target was created via a JSWindowActor and is
+      // destroyed when the WindowGlobal is destroyed (i.e. when we navigate or reload),
+      // as this will come late and is redundant with onTargetAvailable.
+      shouldBeIgnoredAsRedundantWithTargetAvailable ||
+        (this.targetActor.isTopLevel &&
+          this.targetActor.followWindowGlobalLifecycle)
+    );
 
     const { readyState } = window.document;
     if (readyState != "interactive" && readyState != "complete") {
