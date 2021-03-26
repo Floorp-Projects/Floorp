@@ -462,7 +462,7 @@ impl SceneBuilderThread {
                 notifications: Vec::new(),
                 interner_updates,
                 profile: TransactionProfile::new(),
-                frame_stats: FrameStats::default(),
+                frame_stats: FullFrameStats::default(),
             })];
 
             self.forward_built_transactions(txns);

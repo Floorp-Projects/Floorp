@@ -24,7 +24,7 @@ use crate::renderer::DebugRenderer;
 use crate::device::query::GpuTimer;
 use euclid::{Point2D, Rect, Size2D, vec2, default};
 use crate::internal_types::FastHashMap;
-use crate::renderer::{MAX_VERTEX_TEXTURE_WIDTH, wr_has_been_initialized};
+use crate::renderer::{FullFrameStats, MAX_VERTEX_TEXTURE_WIDTH, wr_has_been_initialized};
 use api::units::DeviceIntSize;
 use std::collections::vec_deque::VecDeque;
 use std::fmt::{Write, Debug};
@@ -54,7 +54,7 @@ const ONE_SECOND_NS: u64 = 1_000_000_000;
 /// Profiler UI string presets. Defined in the profiler UI string syntax, can contain other presets.
 static PROFILER_PRESETS: &'static[(&'static str, &'static str)] = &[
     // Default view, doesn't show everything, but still shows quite a bit.
-    (&"Default", &"FPS,|,Slow indicators,_,Time graphs,|,Frame times, ,Transaction times, ,Frame stats, ,Memory, ,Interners,_,GPU time queries"),
+    (&"Default", &"FPS,|,Slow indicators,_,Time graphs,|,Frame times, ,Transaction times, ,Frame stats, ,Memory, ,Interners,_,GPU time queries,_,Paint phase graph"),
     // Smaller, less intrusive overview
     (&"Compact", &"FPS, ,Frame times, ,Frame stats"),
     // Even less intrusive, only slow transactions and frame indicators.
@@ -84,7 +84,7 @@ static PROFILER_PRESETS: &'static[(&'static str, &'static str)] = &[
     // Graphs:
 
     // Graph overview of time spent in WebRender's main stages.
-    (&"Time graphs", &"#DisplayList,#Scene building,#Blob rasterization, ,#Frame CPU total,#Frame building,#Renderer,#Texture cache update, ,#GPU"),
+    (&"Time graphs", &"#DisplayList,#Scene building,#Blob rasterization, ,#Frame CPU total,#Frame building,#Renderer,#Texture cache update, ,#GPU,"),
     // Useful when investigating render backend bottlenecks.
     (&"Backend graphs", &"#Frame building, #Visibility, #Prepare, #Batching, #Glyph resolve"),
     // Useful when investigating renderer bottlenecks.
@@ -230,7 +230,8 @@ pub const NUM_PROFILER_EVENTS: usize = 96;
 
 pub struct Profiler {
     counters: Vec<Counter>,
-    gpu_frames: GpuFrameCollection,
+    gpu_frames: ProfilerFrameCollection,
+    frame_stats: ProfilerFrameCollection,
 
     start: u64,
     avg_over_period: u64,
@@ -387,7 +388,8 @@ impl Profiler {
         }
 
         Profiler {
-            gpu_frames: GpuFrameCollection::new(),
+            gpu_frames: ProfilerFrameCollection::new(),
+            frame_stats: ProfilerFrameCollection::new(),
 
             counters,
             start: precise_time_ns(),
@@ -443,13 +445,22 @@ impl Profiler {
         }
     }
 
+    pub fn update_frame_stats(&mut self, stats: FullFrameStats) {
+        if stats.gecko_display_list_time != 0.0 {
+          self.frame_stats.push(stats.into());
+        }
+    }
+
     pub fn set_gpu_time_queries(&mut self, gpu_queries: Vec<GpuTimer>) {
         let mut gpu_time_ns = 0;
         for sample in &gpu_queries {
             gpu_time_ns += sample.time_ns;
         }
 
-        self.gpu_frames.push(gpu_time_ns, gpu_queries);
+        self.gpu_frames.push(ProfilerFrame {
+          total_time: gpu_time_ns,
+          samples: gpu_queries
+        });
 
         self.counters[GPU_TIME].set_f64(ns_to_ms(gpu_time_ns));
     }
@@ -526,6 +537,10 @@ impl Profiler {
                 "GPU cache bars" => {
                     flush_counters(&mut counters, selection);
                     selection.push(Item::GpuCacheBars);
+                }
+                "Paint phase graph" => {
+                    flush_counters(&mut counters, selection);
+                    selection.push(Item::PaintPhaseGraph);
                 }
                 _ => {
                     if let Some(idx) = self.index_of(name) {
@@ -896,13 +911,14 @@ impl Profiler {
         total_rect
     }
 
-    fn draw_gpu_time_queries(
-        time_queries: &GpuFrameCollection,
+    // Draws a frame graph for a given frame collection.
+    fn draw_frame_graph(
+        frame_collection: &ProfilerFrameCollection,
         x: f32, y: f32,
         debug_renderer: &mut DebugRenderer,
     ) -> default::Rect<f32> {
         let mut has_data = false;
-        for frame in &time_queries.frames {
+        for frame in &frame_collection.frames {
             if !frame.samples.is_empty() {
                 has_data = true;
                 break;
@@ -931,7 +947,7 @@ impl Profiler {
         let w = graph_rect.size.width;
         let mut y0 = graph_rect.origin.y;
 
-        let mut max_time = time_queries.frames
+        let mut max_time = frame_collection.frames
             .iter()
             .max_by_key(|f| f.total_time)
             .unwrap()
@@ -944,7 +960,7 @@ impl Profiler {
 
         let mut tags_present = FastHashMap::default();
 
-        for frame in &time_queries.frames {
+        for frame in &frame_collection.frames {
             let y1 = y0 + GRAPH_FRAME_HEIGHT;
 
             let mut current_ns = 0;
@@ -974,7 +990,7 @@ impl Profiler {
         // 16ms mark.
         if max_time > baseline_ns {
             let x = graph_rect.origin.x + w * baseline_ns as f32 / max_time;
-            let height = time_queries.frames.len() as f32 * GRAPH_FRAME_HEIGHT;
+            let height = frame_collection.frames.len() as f32 * GRAPH_FRAME_HEIGHT;
 
             debug_renderer.add_quad(
                 x,
@@ -1055,10 +1071,13 @@ impl Profiler {
                     Profiler::draw_change_indicator(&self.counters[*idx], x, y, debug_renderer)
                 }
                 Item::GpuTimeQueries => {
-                    Profiler::draw_gpu_time_queries(&self.gpu_frames, x, y, debug_renderer)
+                    Profiler::draw_frame_graph(&self.gpu_frames, x, y, debug_renderer)
                 }
                 Item::GpuCacheBars => {
                     self.draw_gpu_cache_bars(x, y, &mut text_buffer, debug_renderer)
+                }
+                Item::PaintPhaseGraph => {
+                    Profiler::draw_frame_graph(&self.frame_stats, x, y, debug_renderer)
                 }
                 Item::Text(text) => {
                     let p = 10.0;
@@ -1654,35 +1673,65 @@ pub enum ShowAs {
     Int,
 }
 
-struct GpuFrame {
+struct ProfilerFrame {
     total_time: u64,
     samples: Vec<GpuTimer>,
 }
 
-struct GpuFrameCollection {
-    frames: VecDeque<GpuFrame>,
+struct ProfilerFrameCollection {
+    frames: VecDeque<ProfilerFrame>,
 }
 
-impl GpuFrameCollection {
+impl ProfilerFrameCollection {
     fn new() -> Self {
-        GpuFrameCollection {
+        ProfilerFrameCollection {
             frames: VecDeque::new(),
         }
     }
 
-    fn push(&mut self, total_time: u64, samples: Vec<GpuTimer>) {
+    fn push(&mut self, frame: ProfilerFrame) {
         if self.frames.len() == 20 {
             self.frames.pop_back();
         }
-        self.frames.push_front(GpuFrame {
-            total_time,
-            samples,
-        });
+        self.frames.push_front(frame);
     }
+}
+
+impl From<FullFrameStats> for ProfilerFrame {
+  fn from(stats: FullFrameStats) -> ProfilerFrame {
+    let new_sample = |time, label, color| -> GpuTimer {
+      let tag = GpuProfileTag {
+        label,
+        color
+      };
+
+      let time_ns = ms_to_ns(time);
+
+      GpuTimer {
+        tag, time_ns
+      }
+    };
+
+    let samples = vec![
+      new_sample(stats.gecko_display_list_time, "Gecko DL", ColorF { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }),
+      new_sample(stats.wr_display_list_time, "WR DL", ColorF { r: 0.0, g: 1.0, b: 1.0, a: 1.0 }),
+      new_sample(stats.scene_build_time, "Scene Build", ColorF { r: 1.0, g: 0.0, b: 1.0, a: 1.0 }),
+      new_sample(stats.frame_build_time, "Frame Build", ColorF { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }),
+    ];
+
+    ProfilerFrame {
+      total_time: ms_to_ns(stats.total()),
+      samples
+    }
+  }
 }
 
 pub fn ns_to_ms(ns: u64) -> f64 {
     ns as f64 / 1_000_000.0
+}
+
+pub fn ms_to_ns(ms: f64) -> u64 {
+  (ms * 1_000_000.0) as u64
 }
 
 pub fn bytes_to_mb(bytes: usize) -> f64 {
@@ -1697,6 +1746,7 @@ enum Item {
     Fps,
     GpuTimeQueries,
     GpuCacheBars,
+    PaintPhaseGraph,
     Text(String),
     Space,
     Column,
