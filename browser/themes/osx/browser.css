@@ -658,7 +658,7 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 }
 
 .cui-widget-panelview[id^=PanelUI-webext-] {
-  border-radius: 3.5px;
+  border-radius: var(--arrowpanel-border-radius);
 }
 
 .webextension-popup-browser,

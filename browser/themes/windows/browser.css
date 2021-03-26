@@ -812,10 +812,16 @@ panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic
 
 %include browser-aero.css
 
+.cui-widget-panelview[id^=PanelUI-webext-] {
+  border-radius: var(--arrowpanel-border-radius);
+}
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
 @media (-moz-os-version: windows-win7) {
   .cui-widget-panelview[id^=PanelUI-webext-] {
     border-radius: 4px;
   }
+}
 }
 
 .webextension-popup-browser,
