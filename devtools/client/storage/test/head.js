@@ -932,10 +932,11 @@ async function checkState(state) {
     }
 
     for (const name of names) {
+      ok(items.has(name), `There is item with name '${name}' in ${storeName}`);
+
       if (!items.has(name)) {
         showAvailableIds();
       }
-      ok(items.has(name), `There is item with name '${name}' in ${storeName}`);
     }
   }
 }
@@ -1117,20 +1118,4 @@ function checkStorageData(name, value) {
  */
 function buildURLWithContent(domain, html) {
   return `http://${domain}/document-builder.sjs?html=${encodeURI(html)}`;
-}
-
-/**
- * Asserts that the given cookie holds the provided value in the data table
- * @param {String} name
- * @param {String} value
- */
-function checkCookieData(name, value) {
-  const rows = Array.from(gUI.table.items);
-  const cookie = rows.map(([, data]) => data).find(x => x.name === name);
-
-  is(
-    cookie?.value,
-    value,
-    `Table row has an entry for: ${name} with value: ${value}`
-  );
 }

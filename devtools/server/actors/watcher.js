@@ -148,8 +148,6 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           [Resources.TYPES.CSS_MESSAGE]: true,
           [Resources.TYPES.DOCUMENT_EVENT]: hasBrowserElement,
           [Resources.TYPES.CACHE_STORAGE]: hasBrowserElement,
-          // TODO: Bug 1700904 remove the enableServerWatcher guard
-          [Resources.TYPES.COOKIE]: hasBrowserElement && enableServerWatcher,
           [Resources.TYPES.ERROR_MESSAGE]: true,
           [Resources.TYPES.LOCAL_STORAGE]: hasBrowserElement,
           [Resources.TYPES.SESSION_STORAGE]: hasBrowserElement,

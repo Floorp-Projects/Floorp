@@ -104,7 +104,6 @@ createStorageSpec({
       addItem: {
         request: {
           guid: Arg(0, "string"),
-          host: Arg(1, "nullable:string"),
         },
         response: {},
       },
