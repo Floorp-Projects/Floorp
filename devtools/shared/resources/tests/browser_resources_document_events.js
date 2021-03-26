@@ -39,6 +39,12 @@ async function testDocumentEventResources() {
     true,
     "Document events are fired even when the document was already loaded"
   );
+  let domLoadingResource = await onLoadingAtInit;
+  is(
+    domLoadingResource.shouldBeIgnoredAsRedundantWithTargetAvailable,
+    true,
+    "shouldBeIgnoredAsRedundantWithTargetAvailable is true for already loaded page"
+  );
 
   info("Check whether the document events are fired correctly when reloading");
   const onLoadingAtReloaded = listener.once("dom-loading");
@@ -51,6 +57,13 @@ async function testDocumentEventResources() {
     onCompleteAtReloaded
   );
   ok(true, "Document events are fired after reloading");
+
+  domLoadingResource = await onLoadingAtReloaded;
+  is(
+    domLoadingResource.shouldBeIgnoredAsRedundantWithTargetAvailable,
+    undefined,
+    "shouldBeIgnoredAsRedundantWithTargetAvailable is not set after reloading"
+  );
 
   targetList.destroy();
   await client.close();
