@@ -481,6 +481,9 @@
             },
             "blocked_install_message": {
               "type": "string"
+            },
+            "updates_disabled": {
+              "type": "boolean"
             }
           }
         }
