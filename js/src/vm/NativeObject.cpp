@@ -1169,6 +1169,16 @@ template bool js::NativeLookupOwnProperty<NoGC>(
 
 /*** [[DefineOwnProperty]] **************************************************/
 
+static bool CallJSAddPropertyOp(JSContext* cx, JSAddPropertyOp op,
+                                HandleObject obj, HandleId id, HandleValue v) {
+  if (!CheckRecursionLimit(cx)) {
+    return false;
+  }
+
+  cx->check(obj, id, v);
+  return op(cx, obj, id, v);
+}
+
 static MOZ_ALWAYS_INLINE bool CallAddPropertyHook(JSContext* cx,
                                                   HandleNativeObject obj,
                                                   HandleId id,
@@ -2068,6 +2078,20 @@ bool js::NativeGetOwnPropertyDescriptor(
 
 /*** [[Get]] ****************************************************************/
 
+static bool CallJSGetterOp(JSContext* cx, GetterOp op, HandleObject obj,
+                           HandleId id, MutableHandleValue vp) {
+  if (!CheckRecursionLimit(cx)) {
+    return false;
+  }
+
+  cx->check(obj, id, vp);
+  bool ok = op(cx, obj, id, vp);
+  if (ok) {
+    cx->check(vp);
+  }
+  return ok;
+}
+
 static inline bool CallGetter(JSContext* cx, HandleObject obj,
                               HandleValue receiver, HandleShape shape,
                               MutableHandleValue vp) {
@@ -2331,6 +2355,16 @@ bool js::GetNameBoundInEnvironment(JSContext* cx, HandleObject envArg,
 }
 
 /*** [[Set]] ****************************************************************/
+
+static bool CallJSSetterOp(JSContext* cx, SetterOp op, HandleObject obj,
+                           HandleId id, HandleValue v, ObjectOpResult& result) {
+  if (!CheckRecursionLimit(cx)) {
+    return false;
+  }
+
+  cx->check(obj, id, v);
+  return op(cx, obj, id, v, result);
+}
 
 static bool MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleId id) {
   {
@@ -2688,6 +2722,20 @@ bool js::NativeSetElement(JSContext* cx, HandleNativeObject obj, uint32_t index,
 }
 
 /*** [[Delete]] *************************************************************/
+
+static bool CallJSDeletePropertyOp(JSContext* cx, JSDeletePropertyOp op,
+                                   HandleObject receiver, HandleId id,
+                                   ObjectOpResult& result) {
+  if (!CheckRecursionLimit(cx)) {
+    return false;
+  }
+
+  cx->check(receiver, id);
+  if (op) {
+    return op(cx, receiver, id, result);
+  }
+  return result.succeed();
+}
 
 // ES6 draft rev31 9.1.10 [[Delete]]
 bool js::NativeDeleteProperty(JSContext* cx, HandleNativeObject obj,
