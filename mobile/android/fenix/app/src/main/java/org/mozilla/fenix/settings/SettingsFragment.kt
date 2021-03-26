@@ -19,6 +19,7 @@ import android.view.LayoutInflater
 import android.widget.Toast
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AlertDialog
+import androidx.core.os.bundleOf
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavDirections
 import androidx.navigation.findNavController
@@ -501,6 +502,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private fun navigateUserToDefaultAppsSettings() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             val intent = Intent(android.provider.Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
+            intent.putExtra(SETTINGS_SELECT_OPTION_KEY, DEFAULT_BROWSER_APP_OPTION)
+            intent.putExtra(SETTINGS_SHOW_FRAGMENT_ARGS,
+                bundleOf(SETTINGS_SELECT_OPTION_KEY to DEFAULT_BROWSER_APP_OPTION))
             startActivity(intent)
         }
     }
@@ -572,5 +576,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
         private const val SCROLL_INDICATOR_DELAY = 10L
         private const val FXA_SYNC_OVERRIDE_EXIT_DELAY = 2000L
         private const val AMO_COLLECTION_OVERRIDE_EXIT_DELAY = 3000L
+        private const val SETTINGS_SELECT_OPTION_KEY = ":settings:fragment_args_key"
+        private const val SETTINGS_SHOW_FRAGMENT_ARGS = ":settings:show_fragment_args"
+        private const val DEFAULT_BROWSER_APP_OPTION = "default_browser"
     }
 }

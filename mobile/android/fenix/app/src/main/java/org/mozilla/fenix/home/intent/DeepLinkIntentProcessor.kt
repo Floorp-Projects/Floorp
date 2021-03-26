@@ -10,6 +10,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Build.VERSION.SDK_INT
 import android.provider.Settings
+import androidx.core.os.bundleOf
 import androidx.navigation.NavController
 import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.base.log.logger.Logger
@@ -88,6 +89,9 @@ class DeepLinkIntentProcessor(
             "make_default_browser" -> {
                 if (SDK_INT >= Build.VERSION_CODES.N) {
                     val settingsIntent = Intent(Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS)
+                    settingsIntent.putExtra(SETTINGS_SELECT_OPTION_KEY, DEFAULT_BROWSER_APP_OPTION)
+                    settingsIntent.putExtra(SETTINGS_SHOW_FRAGMENT_ARGS,
+                        bundleOf(SETTINGS_SELECT_OPTION_KEY to DEFAULT_BROWSER_APP_OPTION))
                     activity.startActivity(settingsIntent)
                 }
             }
@@ -149,5 +153,11 @@ class DeepLinkIntentProcessor(
          * rejected deep links.
          */
         fun verifyDeepLink(deepLink: Uri): Boolean
+    }
+
+    companion object {
+        private const val SETTINGS_SELECT_OPTION_KEY = ":settings:fragment_args_key"
+        private const val SETTINGS_SHOW_FRAGMENT_ARGS = ":settings:show_fragment_args"
+        private const val DEFAULT_BROWSER_APP_OPTION = "default_browser"
     }
 }
