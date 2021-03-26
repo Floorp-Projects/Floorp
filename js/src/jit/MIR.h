@@ -12265,7 +12265,8 @@ class MWasmLoadTls : public MUnaryInstruction, public NoTypePolicy::Data {
                aliases_.flags() == AliasSet::None().flags());
 
     // The only types supported at the moment.
-    MOZ_ASSERT(type == MIRType::Pointer || type == MIRType::Int32);
+    MOZ_ASSERT(type == MIRType::Pointer || type == MIRType::Int32 ||
+               type == MIRType::Int64);
 
     setMovable();
     setResultType(type);
@@ -12311,6 +12312,14 @@ class MWasmHeapBase : public MUnaryInstruction, public NoTypePolicy::Data {
   AliasSet getAliasSet() const override { return aliases_; }
 };
 
+// Bounds check nodes are of type Int32 on 32-bit systems for both wasm and
+// asm.js code, as well as on 64-bit systems for asm.js code and for wasm code
+// that is known to have a bounds check limit that fits into 32 bits.  They are
+// of type Int64 only on 64-bit systems for wasm code with 4GB (or larger)
+// heaps.  There is no way for nodes of both types to be present in the same
+// function.  Should this change, then BCE must be updated to take type into
+// account.
+
 class MWasmBoundsCheck : public MBinaryInstruction, public NoTypePolicy::Data {
   wasm::BytecodeOffset bytecodeOffset_;
 
@@ -12322,7 +12331,7 @@ class MWasmBoundsCheck : public MBinaryInstruction, public NoTypePolicy::Data {
     setGuard();
 
     if (JitOptions.spectreIndexMasking) {
-      setResultType(MIRType::Int32);
+      setResultType(index->type());
     }
   }
 
@@ -12393,6 +12402,33 @@ class MWasmAlignmentCheck : public MUnaryInstruction,
   uint32_t byteSize() const { return byteSize_; }
 
   wasm::BytecodeOffset bytecodeOffset() const { return bytecodeOffset_; }
+};
+
+class MWasmExtendU32Index : public MUnaryInstruction,
+                            public NoTypePolicy::Data {
+  explicit MWasmExtendU32Index(MDefinition* input)
+      : MUnaryInstruction(classOpcode, input) {
+    setResultType(MIRType::Int64);
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmExtendU32Index)
+  TRIVIAL_NEW_WRAPPERS
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
+};
+
+class MWasmWrapU32Index : public MUnaryInstruction, public NoTypePolicy::Data {
+  explicit MWasmWrapU32Index(MDefinition* input)
+      : MUnaryInstruction(classOpcode, input) {
+    setResultType(MIRType::Int32);
+  }
+
+ public:
+  INSTRUCTION_HEADER(WasmWrapU32Index)
+  TRIVIAL_NEW_WRAPPERS
+
+  AliasSet getAliasSet() const override { return AliasSet::None(); }
 };
 
 class MWasmLoad
