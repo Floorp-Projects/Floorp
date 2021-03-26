@@ -2596,9 +2596,9 @@
   "NETWORK_BACK_PRESSURE_SUSPENSION_RATE_V2": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "90",
+    "expires_in_version": "never",
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
-    "bug_numbers": [1280629, 1494133, 1524552, 1616069, 1668513],
+    "bug_numbers": [1280629, 1494133, 1524552, 1616069, 1668513, 1700824],
     "kind": "categorical",
     "labels": ["Suspended", "NotSuspended", "SuspendedLocal", "NotSuspendedLocal"],
     "description": "Collect whether the resource is suspended by back pressure. And split by local-ness."
@@ -2606,9 +2606,9 @@
   "NETWORK_BACK_PRESSURE_SUSPENSION_CP_TYPE": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "90",
+    "expires_in_version": "never",
     "alert_emails": ["necko@mozilla.com", "ddamjanovic@mozilla.com"],
-    "bug_numbers": [1487559, 1524552, 1616069, 1668513],
+    "bug_numbers": [1487559, 1524552, 1616069, 1668513, 1700824],
     "kind": "enumerated",
     "n_values": 64,
     "description": "Collect the content policy when the resource is non-local and suspended by back pressure (0-44 from nsContentPolicyType in nsIContentPolicy.idl)."
@@ -2616,9 +2616,9 @@
   "NETWORK_BACK_PRESSURE_SUSPENSION_DELAY_TIME_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
-    "expires_in_version": "90",
+    "expires_in_version": "never",
     "alert_emails": ["necko@mozilla.com", "damjanovic@mozilla.com"],
-    "bug_numbers": [1498434, 1524552, 1616069, 1668513],
+    "bug_numbers": [1498434, 1524552, 1616069, 1668513, 1700824],
     "kind": "exponential",
     "high": 60000,
     "n_buckets": 100,
