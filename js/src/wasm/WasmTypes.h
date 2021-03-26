@@ -3761,9 +3761,22 @@ struct TlsData {
   // Pointer to the base of the default memory (or null if there is none).
   uint8_t* memoryBase;
 
-  // Bounds check limit of 32-bit memory, in bytes (or zero if there is no
-  // memory).
-  uint32_t boundsCheckLimit32;
+  // Bounds check limit in bytes (or zero if there is no memory).  This is
+  // 64-bits on 64-bit systems so as to allow for heap lengths up to and beyond
+  // 4GB, and 32-bits on 32-bit systems, where heaps are limited to 2GB.
+  //
+  // On 64-bit systems, the upper bits of this value will be zero and 32-bit
+  // bounds checks can be used under the following circumstances:
+  //
+  // - The heap is for asm.js; asm.js heaps are limited to 2GB
+  // - The max size of the heap is encoded in the module and is less than 4GB
+  // - Cranelift is present in the system; Cranelift-compatible heaps are
+  //   limited to 4GB-128K
+  //
+  // All our jits require little-endian byte order, so the address of the 32-bit
+  // heap limit is the same as the address of the 64-bit heap limit: the address
+  // of this member.
+  uintptr_t boundsCheckLimit;
 
   // Pointer to the Instance that contains this TLS data.
   Instance* instance;

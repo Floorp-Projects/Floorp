@@ -797,7 +797,17 @@ impl<'static_env, 'module_env> FuncEnvironment for TransEnv<'static_env, 'module
             let bound = bound.into();
             ir::HeapStyle::Static { bound }
         } else {
-            // Get the `TlsData::boundsCheckLimit` field.
+            // Get the `TlsData::boundsCheckLimit` field.  An assertion in the C++ code
+            // ensures that the offset of this field is POINTER_SIZE bytes away from the
+            // start of the Tls.  The size of the field is the size of a pointer: on
+            // 32-bit systems, heaps are <= 2GB, while on 64-bit systems even 32-bit heaps
+            // can grow to 4GB, and 64-bit heaps can be larger still.
+            //
+            // Note that SpiderMonkey limits 64-bit heaps to 4GB-128K when Cranelift is
+            // present so that Cranelift can continue to treat the boundsCheckLimit as a
+            // 32-bit quantity.  This situation will persist until we get around to
+            // updating Cranelift, at which point Cranelift-compiled code can have true
+            // 4GB heaps.
             let bound_gv = func.create_global_value(ir::GlobalValueData::Load {
                 base: vcmtx,
                 offset: (POINTER_SIZE as i32).into(),

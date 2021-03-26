@@ -6937,9 +6937,9 @@ class BaseCompiler final : public BaseCompilerInterface {
 
     if (!moduleEnv_.hugeMemoryEnabled() && !check->omitBoundsCheck) {
       Label ok;
-      masm.wasmBoundsCheck32(
-          Assembler::Below, ptr,
-          Address(tls, offsetof(TlsData, boundsCheckLimit32)), &ok);
+      masm.wasmBoundsCheck32(Assembler::Below, ptr,
+                             Address(tls, offsetof(TlsData, boundsCheckLimit)),
+                             &ok);
       masm.wasmTrap(Trap::OutOfBounds, bytecodeOffset());
       masm.bind(&ok);
     }

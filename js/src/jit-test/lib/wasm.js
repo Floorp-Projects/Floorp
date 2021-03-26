@@ -3,11 +3,25 @@ if (!wasmIsSupported())
 
 load(libdir + "asserts.js");
 
-// 65534 allocated pages is our current upper limit for reasons having to do
-// with avoiding arithmetic overflow.  Eventually this will become 65536.
+// On 64-bit systems with explicit bounds checking, ion and baseline can handle
+// 65536 pages but cranelift can handle only 65534 pages; thus the presence of
+// cranelift forces the max for the system as a whole to 65534.  We will
+// probably fix this eventually.
 
 var PageSizeInBytes = 65536;
-var MaxBytesIn32BitMemory = largeArrayBufferEnabled() ? 65534*PageSizeInBytes : 0x7FFF_FFFF;
+var MaxBytesIn32BitMemory = 0;
+if (largeArrayBufferEnabled()) {
+    if (wasmCompilersPresent().indexOf("cranelift") != -1) {
+        MaxBytesIn32BitMemory = 65534*PageSizeInBytes;
+    } else {
+        MaxBytesIn32BitMemory = 65536*PageSizeInBytes;
+    }
+} else {
+    // This is an overestimate twice: first, the max byte value is divisible by
+    // the page size; second, it must be a valid bounds checking immediate.  But
+    // INT32_MAX is fine for testing.
+    MaxBytesIn32BitMemory = 0x7FFF_FFFF;
+}
 var MaxPagesIn32BitMemory = Math.floor(MaxBytesIn32BitMemory / PageSizeInBytes);
 
 // "options" is an extension to facilitate the SIMD wormhole

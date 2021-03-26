@@ -8,9 +8,9 @@ var pages_limit = MaxPagesIn32BitMemory;
 var pages_vanilla = 40000;
 
 for ( let [pages,maxpages] of [[pages_vanilla, pages_vanilla+100],
+                               [pages_limit - 3, pages_limit],
                                [pages_limit, pages_limit]] ) {
     assertEq(pages == maxpages || maxpages - pages >= 3, true)
-
     let ins = wasmEvalText(`
 (module
   (memory (export "mem") ${pages} ${maxpages})
@@ -103,9 +103,11 @@ for ( let [pages,maxpages] of [[pages_vanilla, pages_vanilla+100],
     ins.exports.set_varaddr_small_offset((pages-1)*pagesz, 0xcafebab5);
     assertEq(buf[pages*pagesz/4-7], 0xcafebab5|0);
 
-    assertErrorMessage(() => ins.exports.get_varaddr(pages*pagesz),
-                       WebAssembly.RuntimeError,
-                       /index out of bounds/);
+    if (pages*pagesz < 0x1_0000_0000) {
+        assertErrorMessage(() => ins.exports.get_varaddr(pages*pagesz),
+                           WebAssembly.RuntimeError,
+                           /index out of bounds/);
+    }
 
     assertErrorMessage(() => ins.exports.get_varaddr_large_offset(pagesz*100+4),
                        WebAssembly.RuntimeError,
@@ -116,9 +118,11 @@ for ( let [pages,maxpages] of [[pages_vanilla, pages_vanilla+100],
                        /index out of bounds/);
 
     ins.exports.set_varaddr(pages*pagesz-4, 0); // Should work
-    assertErrorMessage(() => ins.exports.set_varaddr(pages*pagesz, 0),
-                       WebAssembly.RuntimeError,
-                       /index out of bounds/);
+    if (pages*pagesz < 0x1_0000_0000) {
+        assertErrorMessage(() => ins.exports.set_varaddr(pages*pagesz, 0),
+                           WebAssembly.RuntimeError,
+                           /index out of bounds/);
+    }
 
     ins.exports.set_varaddr_large_offset(pagesz*100+16, 0); // Should work
     assertErrorMessage(() => ins.exports.set_varaddr_large_offset(pagesz*100+20, 0),
@@ -302,7 +306,7 @@ if (pages_limit < 65536) {
 }
 
 // Fail to instantiate when the minimum is larger than the max heap size
-{
+if (pages_limit < 65536) {
     assertErrorMessage(() => wasmEvalText(`
 (module (memory (export "mem") ${pages_limit+1} ${pages_limit+1}))
 `),
