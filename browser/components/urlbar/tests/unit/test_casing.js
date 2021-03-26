@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const ENGINE_NAME = "engine-suggestions.xml";
 const AUTOFILL_PROVIDERNAME = "Autofill";
 const HEURISTIC_FALLBACK_PROVIDERNAME = "HeuristicFallback";
 const UNIFIEDCOMPLETE_PROVIDERNAME = "UnifiedComplete";
@@ -287,7 +286,10 @@ add_task(async function test_searching() {
   await check_results({
     context,
     matches: [
-      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
       makeVisitResult(context, {
         uri: uri2.spec,
         title: "lowercase lambda \u03BB",
@@ -304,7 +306,10 @@ add_task(async function test_searching() {
   await check_results({
     context,
     matches: [
-      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
       makeVisitResult(context, {
         uri: uri2.spec,
         title: "lowercase lambda \u03BB",
@@ -321,7 +326,10 @@ add_task(async function test_searching() {
   await check_results({
     context,
     matches: [
-      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
       makeVisitResult(context, { uri: uri5.spec, title: "lowercase k" }),
       makeVisitResult(context, { uri: uri4.spec, title: "uppercase K" }),
       makeVisitResult(context, { uri: uri3.spec, title: "symbol \u212A" }),
@@ -333,7 +341,10 @@ add_task(async function test_searching() {
   await check_results({
     context,
     matches: [
-      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
       makeVisitResult(context, { uri: uri5.spec, title: "lowercase k" }),
       makeVisitResult(context, { uri: uri4.spec, title: "uppercase K" }),
       makeVisitResult(context, { uri: uri3.spec, title: "symbol \u212A" }),
@@ -345,7 +356,10 @@ add_task(async function test_searching() {
   await check_results({
     context,
     matches: [
-      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
       makeVisitResult(context, { uri: uri5.spec, title: "lowercase k" }),
       makeVisitResult(context, { uri: uri4.spec, title: "uppercase K" }),
       makeVisitResult(context, { uri: uri3.spec, title: "symbol \u212A" }),

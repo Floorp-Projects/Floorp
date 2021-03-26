@@ -10,7 +10,6 @@ const { FormHistory } = ChromeUtils.import(
   "resource://gre/modules/FormHistory.jsm"
 );
 
-const ENGINE_NAME = "engine-tail-suggestions.xml";
 const SUGGEST_PREF = "browser.urlbar.suggest.searches";
 const SUGGEST_ENABLED_PREF = "browser.search.suggest.enabled";
 const PRIVATE_SEARCH_PREF = "browser.search.separatePrivateDefault.ui.enabled";
@@ -96,15 +95,15 @@ add_task(async function normal_suggestions_provider() {
     context,
     matches: [
       makeSearchResult(context, {
-        engineName: "engine-suggestions.xml",
+        engineName: SUGGESTIONS_ENGINE_NAME,
         heuristic: true,
       }),
       makeSearchResult(context, {
-        engineName: "engine-suggestions.xml",
+        engineName: SUGGESTIONS_ENGINE_NAME,
         suggestion: query + " foo",
       }),
       makeSearchResult(context, {
-        engineName: "engine-suggestions.xml",
+        engineName: SUGGESTIONS_ENGINE_NAME,
         suggestion: query + " bar",
       }),
     ],
@@ -123,14 +122,17 @@ add_task(async function basic_tail() {
   await check_results({
     context,
     matches: [
-      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
       makeSearchResult(context, {
-        engineName: ENGINE_NAME,
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
+      makeSearchResult(context, {
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
         suggestion: query + "oronto",
         tail: "toronto",
       }),
       makeSearchResult(context, {
-        engineName: ENGINE_NAME,
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
         suggestion: query + "unisia",
         tail: "tunisia",
       }),
@@ -171,9 +173,12 @@ add_task(async function mixed_suggestions() {
   await check_results({
     context,
     matches: [
-      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
       makeSearchResult(context, {
-        engineName: ENGINE_NAME,
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
+      makeSearchResult(context, {
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
         suggestion: "what is the time today texas",
         tail: undefined,
       }),
@@ -214,9 +219,12 @@ add_task(async function mixed_suggestions_tail_first() {
   await check_results({
     context,
     matches: [
-      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
       makeSearchResult(context, {
-        engineName: ENGINE_NAME,
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
+      makeSearchResult(context, {
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
         suggestion: "what is the time today texas",
         tail: undefined,
       }),
@@ -249,7 +257,10 @@ add_task(async function mixed_results() {
   await check_results({
     context,
     matches: [
-      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchResult(context, {
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
       makeBookmarkResult(context, {
         uri: "http://example.com/2",
         title: "what time is",
@@ -268,14 +279,17 @@ add_task(async function mixed_results() {
   await check_results({
     context,
     matches: [
-      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
       makeSearchResult(context, {
-        engineName: ENGINE_NAME,
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
+      makeSearchResult(context, {
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
         suggestion: tQuery + "oronto",
         tail: "toronto",
       }),
       makeSearchResult(context, {
-        engineName: ENGINE_NAME,
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
         suggestion: tQuery + "unisia",
         tail: "tunisia",
       }),
@@ -299,9 +313,12 @@ add_task(async function dedupe_local() {
   await check_results({
     context,
     matches: [
-      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchResult(context, {
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
       makeFormHistoryResult(context, {
-        engineName: ENGINE_NAME,
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
         suggestion: query + "oronto",
       }),
     ],
@@ -323,9 +340,12 @@ add_task(async function limit_results() {
   await check_results({
     context,
     matches: [
-      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
       makeSearchResult(context, {
-        engineName: ENGINE_NAME,
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
+      makeSearchResult(context, {
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
         suggestion: query + "oronto",
         tail: "toronto",
       }),
@@ -345,7 +365,10 @@ add_task(async function disable_pref() {
   await check_results({
     context,
     matches: [
-      makeSearchResult(context, { engineName: ENGINE_NAME, heuristic: true }),
+      makeSearchResult(context, {
+        engineName: TAIL_SUGGESTIONS_ENGINE_NAME,
+        heuristic: true,
+      }),
     ],
   });
 

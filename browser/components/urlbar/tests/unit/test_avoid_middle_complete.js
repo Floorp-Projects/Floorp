@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const ENGINE_NAME = "engine-suggestions.xml";
-
 testEngine_setup();
 
 add_task(async function test_prefix_space_noautofill() {
@@ -17,7 +15,7 @@ add_task(async function test_prefix_space_noautofill() {
     context,
     matches: [
       makeSearchResult(context, {
-        engineName: ENGINE_NAME,
+        engineName: SUGGESTIONS_ENGINE_NAME,
         query: " mo",
         heuristic: true,
       }),
@@ -42,7 +40,7 @@ add_task(async function test_trailing_space_noautofill() {
     context,
     matches: [
       makeSearchResult(context, {
-        engineName: ENGINE_NAME,
+        engineName: SUGGESTIONS_ENGINE_NAME,
         query: "mo ",
         heuristic: true,
       }),
@@ -95,7 +93,7 @@ add_task(async function test_searchEngine_prefix_space_noautofill() {
     context,
     matches: [
       makeSearchResult(context, {
-        engineName: ENGINE_NAME,
+        engineName: SUGGESTIONS_ENGINE_NAME,
         query: " cu",
         heuristic: true,
       }),
@@ -120,7 +118,7 @@ add_task(async function test_searchEngine_trailing_space_noautofill() {
     context,
     matches: [
       makeSearchResult(context, {
-        engineName: ENGINE_NAME,
+        engineName: SUGGESTIONS_ENGINE_NAME,
         query: "ba ",
         heuristic: true,
       }),
@@ -152,7 +150,7 @@ add_task(async function test_searchEngine_www_noautofill() {
         heuristic: true,
       }),
       makeSearchResult(context, {
-        engineName: ENGINE_NAME,
+        engineName: SUGGESTIONS_ENGINE_NAME,
         query: "www.ham",
       }),
     ],
