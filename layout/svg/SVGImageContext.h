@@ -54,7 +54,7 @@ class SVGImageContext {
                                      imgIContainer* aImgContainer);
 
   static void MaybeStoreContextPaint(Maybe<SVGImageContext>& aContext,
-                                     ComputedStyle* aFromComputedStyle,
+                                     const ComputedStyle* aFromComputedStyle,
                                      imgIContainer* aImgContainer);
 
   const Maybe<CSSIntSize>& GetViewportSize() const { return mViewportSize; }

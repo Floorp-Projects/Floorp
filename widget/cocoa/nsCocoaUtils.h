@@ -257,6 +257,8 @@ class nsCocoaUtils {
       Combines the two methods above. The caller owns the <code>NSImage</code>.
       @param aImage the image to extract a frame from
       @param aWhichFrame the frame to extract (see imgIContainer FRAME_*)
+      @param aComputedStyle the ComputedStyle of the element that the image is for, to support SVG
+                            context paint properties, can be null
       @param aResult the resulting NSImage
       @param scaleFactor the desired scale factor of the NSImage (2 for a retina display)
       @param aIsEntirelyBlack an outparam that, if non-null, will be set to a
@@ -265,6 +267,7 @@ class nsCocoaUtils {
       @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
    */
   static nsresult CreateNSImageFromImageContainer(imgIContainer* aImage, uint32_t aWhichFrame,
+                                                  const mozilla::ComputedStyle* aComputedStyle,
                                                   NSImage** aResult, CGFloat scaleFactor,
                                                   bool* aIsEntirelyBlack = nullptr);
 
@@ -273,6 +276,8 @@ class nsCocoaUtils {
       The caller owns the <code>NSImage</code>.
       @param aImage the image to extract a frame from
       @param aWhichFrame the frame to extract (see imgIContainer FRAME_*)
+      @param aComputedStyle the ComputedStyle of the element that the image is for, to support SVG
+                            context paint properties, can be null
       @param aResult the resulting NSImage
       @param aIsEntirelyBlack an outparam that, if non-null, will be set to a
                               bool that indicates whether the RGB values on all
@@ -280,8 +285,8 @@ class nsCocoaUtils {
       @return NS_OK if the conversion worked, NS_ERROR_FAILURE otherwise
    */
   static nsresult CreateDualRepresentationNSImageFromImageContainer(
-      imgIContainer* aImage, uint32_t aWhichFrame, NSImage** aResult,
-      bool* aIsEntirelyBlack = nullptr);
+      imgIContainer* aImage, uint32_t aWhichFrame, const mozilla::ComputedStyle* aComputedStyle,
+      NSImage** aResult, bool* aIsEntirelyBlack = nullptr);
 
   /**
    * Returns nsAString for aSrc.

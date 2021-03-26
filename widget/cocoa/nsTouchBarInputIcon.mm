@@ -119,6 +119,7 @@ nsresult nsTouchBarInputIcon::OnComplete(imgIContainer* aImage) {
   // displays and we have no need for icons @1x.
   NSImage* image = [MOZIconHelper iconImageFromImageContainer:aImage
                                                      withSize:NSMakeSize(kIconSize, kIconSize)
+                                                computedStyle:nullptr
                                                       subrect:mImageRegionRect
                                                   scaleFactor:kHiDPIScalingFactor];
   [mButton setImage:image];

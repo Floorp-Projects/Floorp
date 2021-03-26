@@ -12,6 +12,10 @@
 
 class imgIContainer;
 
+namespace mozilla {
+class ComputedStyle;
+}
+
 @interface MOZIconHelper : NSObject
 
 // Returns an autoreleased empty NSImage.
@@ -20,6 +24,7 @@ class imgIContainer;
 // Returns an autoreleased NSImage.
 + (NSImage*)iconImageFromImageContainer:(imgIContainer*)aImage
                                withSize:(NSSize)aSize
+                          computedStyle:(const mozilla::ComputedStyle*)aComputedStyle
                                 subrect:(const nsIntRect&)aSubRect
                             scaleFactor:(CGFloat)aScaleFactor;
 
