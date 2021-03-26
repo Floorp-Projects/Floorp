@@ -52,7 +52,8 @@ class mozInlineSpellStatus {
   static mozilla::UniquePtr<mozInlineSpellStatus> CreateForSelection(
       mozInlineSpellChecker& aSpellChecker);
 
-  nsresult InitForRange(nsRange* aRange);
+  static mozilla::UniquePtr<mozInlineSpellStatus> CreateForRange(
+      mozInlineSpellChecker& aSpellChecker, nsRange* aRange);
 
   nsresult FinishInitOnEvent(mozInlineSpellWordUtil& aWordUtil);
 
