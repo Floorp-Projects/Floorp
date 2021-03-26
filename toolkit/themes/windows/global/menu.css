@@ -242,7 +242,7 @@ menuitem[_moz-menuactive="true"] {
   menu[_moz-menuactive="true"]:not([disabled="true"]),
   menuitem[_moz-menuactive="true"]:not([disabled="true"]) {
     background-color: var(--menuitem-hover-background-color);
-    color: var(--menuitem-color);
+    color: var(--menu-color);
   }
 }
 }
