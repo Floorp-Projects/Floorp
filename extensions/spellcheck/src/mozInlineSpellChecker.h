@@ -31,13 +31,17 @@ class Event;
 
 class mozInlineSpellStatus {
  public:
+  // @param aSpellChecker must be non-nullptr.
   explicit mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker);
 
-  nsresult InitForEditorChange(mozilla::EditSubAction aEditSubAction,
-                               nsINode* aAnchorNode, uint32_t aAnchorOffset,
-                               nsINode* aPreviousNode, uint32_t aPreviousOffset,
-                               nsINode* aStartNode, uint32_t aStartOffset,
-                               nsINode* aEndNode, uint32_t aEndOffset);
+  // @param aStatus only valid if this method returns no error.
+  static nsresult CreateForEditorChange(
+      mozilla::UniquePtr<mozInlineSpellStatus>& aStatus,
+      mozInlineSpellChecker& aSpellChecker,
+      mozilla::EditSubAction aEditSubAction, nsINode* aAnchorNode,
+      uint32_t aAnchorOffset, nsINode* aPreviousNode, uint32_t aPreviousOffset,
+      nsINode* aStartNode, uint32_t aStartOffset, nsINode* aEndNode,
+      uint32_t aEndOffset);
   nsresult InitForNavigation(bool aForceCheck, int32_t aNewPositionOffset,
                              nsINode* aOldAnchorNode, uint32_t aOldAnchorOffset,
                              nsINode* aNewAnchorNode, uint32_t aNewAnchorOffset,
