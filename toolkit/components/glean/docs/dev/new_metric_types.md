@@ -76,6 +76,13 @@ The C++ and JS APIs are implemented [atop the Rust API](code_organization.md).
 We treat them both together since, though they're different languages,
 they're both implemented in C++ and share much of their implementation.
 
+The overall design is to build the C++ API atop the Multi-Language Architecture's
+(MLA's) FFI, then build the JS API atop the C++ API.
+This allows features like the
+[Glean Interface For Firefox Telemetry (GIFFT)](gifft.md)
+that target only C++ and JS to be more simply implemented in the C++ layer.
+Exceptions to this (where the JS uses the FFI directly) are discouraged.
+
 Each metric type has six pieces you'll need to cover:
 
 ### 1. MLA FFI
