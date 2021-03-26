@@ -140,7 +140,6 @@ class PictureInPictureParent extends JSWindowActorParent {
  * This module is responsible for creating a Picture in Picture window to host
  * a clone of a video element running in web content.
  */
-
 var PictureInPicture = {
   // Maps PictureInPictureParent actors to their corresponding PiP player windows
   weakPipToWin: new WeakMap(),
@@ -151,7 +150,7 @@ var PictureInPicture = {
   /**
    * Returns the player window if one exists and if it hasn't yet been closed.
    *
-   * @param pipActorRef (PictureInPictureParent)
+   * @param {PictureInPictureParent} pipActorRef
    * 	Reference to the calling PictureInPictureParent actor
    *
    * @return {DOM Window} the player window if it exists and is not in the
@@ -188,6 +187,8 @@ var PictureInPicture = {
   /**
    * Called when the browser UI handles the View:PictureInPicture command via
    * the keyboard.
+   *
+   * @param {Event} event
    */
   onCommand(event) {
     if (!Services.prefs.getBoolPref(PIP_ENABLED_PREF, false)) {
@@ -218,7 +219,7 @@ var PictureInPicture = {
   /**
    * Remove attribute which enables pip icon in tab
    *
-   * @param window {Window}
+   * @param {Window} window
    *   A PictureInPicture player's window, used to resolve the player's
    *   associated originating content browser
    */
@@ -249,7 +250,7 @@ var PictureInPicture = {
   /**
    * Closes and waits for passed PiP player window to finish closing.
    *
-   * @param pipWin {Window}
+   * @param {Window} pipWin
    *   Player window to close
    */
   async closePipWindow(pipWin) {
@@ -317,11 +318,11 @@ var PictureInPicture = {
    * A request has come up from content to open a Picture in Picture
    * window.
    *
-   * @param wgp (WindowGlobalParent)
+   * @param {WindowGlobalParent} wgps
    *   The WindowGlobalParent that is requesting the Picture in Picture
    *   window.
    *
-   * @param videoData (object)
+   * @param {object} videoData
    *   An object containing the following properties:
    *
    *   videoHeight (int):
@@ -330,7 +331,7 @@ var PictureInPicture = {
    *   videoWidth (int):
    *     The preferred width of the video.
    *
-   * @returns Promise
+   * @returns {Promise}
    *   Resolves once the Picture in Picture window has been created, and
    *   the player component inside it has finished loading.
    */
@@ -380,6 +381,8 @@ var PictureInPicture = {
   /**
    * unload event has been called in player.js, cleanup our preserved
    * browser object.
+   *
+   * @param {Window} window
    */
   unload(window) {
     TelemetryStopwatch.finish(
@@ -403,11 +406,11 @@ var PictureInPicture = {
    * Open a Picture in Picture window on the same screen as parentWin,
    * sized based on the information in videoData.
    *
-   * @param parentWin (chrome window)
+   * @param {ChromeWindow} parentWin
    *   The window hosting the browser that requested the Picture in
    *   Picture window.
    *
-   * @param videoData (object)
+   * @param {object} videoData
    *   An object containing the following properties:
    *
    *   videoHeight (int):
@@ -416,10 +419,10 @@ var PictureInPicture = {
    *   videoWidth (int):
    *     The preferred width of the video.
    *
-   * @param actorReference (PictureInPictureParent)
+   * @param {PictureInPictureParent} actorReference
    * 	Reference to the calling PictureInPictureParent
    *
-   * @returns Promise
+   * @returns {Promise}
    *   Resolves once the window has opened and loaded the player component.
    */
   async openPipWindow(parentWin, videoData) {
@@ -461,13 +464,13 @@ var PictureInPicture = {
    * and size. If those values are unknown or offscreen, then a default
    * location and size is used.
    *
-   * @param requestingWin (chrome window|player window)
+   * @param {ChromeWindow|PlayerWindow} requestingWin
    *   The window hosting the browser that requested the Picture in
    *   Picture window. If this is an existing player window then the returned
    *   player size and position will be determined based on the existing
    *   player window's size and position.
    *
-   * @param videoData (object)
+   * @param {object} videoData
    *   An object containing the following properties:
    *
    *   videoHeight (int):
@@ -476,7 +479,7 @@ var PictureInPicture = {
    *   videoWidth (int):
    *     The preferred width of the video.
    *
-   * @returns (object)
+   * @returns {object}
    *   The size and position for the player window.
    *
    *   top (int):
@@ -654,6 +657,14 @@ var PictureInPicture = {
     return { top, left, width, height };
   },
 
+  /**
+   * Resizes the the PictureInPicture player window.
+   *
+   * @param {object} videoData
+   *    The source video's data.
+   * @param {PictureInPictureParent} actorRef
+   *    Reference to the PictureInPicture parent actor.
+   */
   resizePictureInPictureWindow(videoData, actorRef) {
     let win = this.getWeakPipPlayer(actorRef);
 
@@ -666,6 +677,13 @@ var PictureInPicture = {
     win.moveTo(left, top);
   },
 
+  /**
+   * Opens the context menu for toggling PictureInPicture.
+   *
+   * @param {Window} window
+   * @param {object} data
+   *  Message data from the PictureInPictureToggleParent
+   */
   openToggleContextMenu(window, data) {
     let document = window.document;
     let popup = document.getElementById("pictureInPictureToggleContextMenu");
@@ -702,10 +720,10 @@ var PictureInPicture = {
   /**
    * This function takes a screen and will return the left, top, width and
    * height of the screen
-   * @param screen
+   * @param {Screen} screen
    * The screen we need to get the sizec and coordinates of
    *
-   * @returns array
+   * @returns {array}
    * Size and location of screen
    *
    *   screenLeft.value (int):
@@ -759,14 +777,17 @@ var PictureInPicture = {
   /**
    * This function takes in a left and top value and returns the screen they
    * are located on.
+   *
    * If the left and top are not on any screen, it will return the
    * default screen
-   * @param left
+   *
+   * @param {int} left
    *  left or x coordinate
-   * @param top
+   *
+   * @param {int} top
    *  top or y coordinate
    *
-   * @returns screen
+   * @returns {Screen} screen
    *  the screen the left and top are on otherwise, default screen
    */
   getWorkingScreen(left, top, width = 1, height = 1) {
@@ -784,7 +805,7 @@ var PictureInPicture = {
 
   /**
    * Saves position and size of Picture-in-Picture window
-   * @param win The Picture-in-Picture window
+   * @param {Window} win The Picture-in-Picture window
    */
   savePosition(win) {
     let xulStore = Services.xulStore;
@@ -802,7 +823,7 @@ var PictureInPicture = {
 
   /**
    * Load last Picture in Picture location and size
-   * @returns object
+   * @returns {object}
    *   The size and position of the last Picture in Picture window.
    *
    *   top (int):
