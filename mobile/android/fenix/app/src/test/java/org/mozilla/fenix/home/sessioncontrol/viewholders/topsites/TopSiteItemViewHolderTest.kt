@@ -6,14 +6,19 @@ package org.mozilla.fenix.home.sessioncontrol.viewholders.topsites
 
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.FrameLayout
+import androidx.core.view.isVisible
 import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.android.synthetic.main.top_site_item.view.*
 import mozilla.components.feature.top.sites.TopSite
 import mozilla.components.support.test.robolectric.testContext
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.home.sessioncontrol.TopSiteInteractor
 
@@ -51,5 +56,53 @@ class TopSiteItemViewHolderTest {
 
         view.top_site_item.performLongClick()
         verify { interactor.onTopSiteMenuOpened() }
+    }
+
+    @Test
+    fun `pin indicator is visible for default top sites`() {
+        val defaultTopSite = TopSite(
+            id = 1L,
+            title = "Pocket",
+            url = "https://getpocket.com",
+            createdAt = 0,
+            type = TopSite.Type.DEFAULT
+        )
+
+        TopSiteItemViewHolder(view, interactor).bind(defaultTopSite)
+        val pinIndicator = view.findViewById<FrameLayout>(R.id.pin_indicator)
+
+        assertTrue(pinIndicator.isVisible)
+    }
+
+    @Test
+    fun `pin indicator is visible for pinned top sites`() {
+        val pinnedTopSite = TopSite(
+            id = 1L,
+            title = "Mozilla",
+            url = "https://www.mozilla.org",
+            createdAt = 0,
+            type = TopSite.Type.PINNED
+        )
+
+        TopSiteItemViewHolder(view, interactor).bind(pinnedTopSite)
+        val pinIndicator = view.findViewById<FrameLayout>(R.id.pin_indicator)
+
+        assertTrue(pinIndicator.isVisible)
+    }
+
+    @Test
+    fun `pin indicator is not visible for frecent top sites`() {
+        val frecentTopSite = TopSite(
+            id = 1L,
+            title = "Mozilla",
+            url = "https://www.mozilla.org",
+            createdAt = 0,
+            type = TopSite.Type.FRECENT
+        )
+
+        TopSiteItemViewHolder(view, interactor).bind(frecentTopSite)
+        val pinIndicator = view.findViewById<FrameLayout>(R.id.pin_indicator)
+
+        assertFalse(pinIndicator.isVisible)
     }
 }

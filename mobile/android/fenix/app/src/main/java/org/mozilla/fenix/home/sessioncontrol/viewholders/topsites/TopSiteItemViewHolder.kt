@@ -14,6 +14,7 @@ import kotlinx.android.synthetic.main.top_site_item.*
 import mozilla.components.browser.menu.BrowserMenuBuilder
 import mozilla.components.browser.menu.item.SimpleBrowserMenuItem
 import mozilla.components.feature.top.sites.TopSite
+import mozilla.components.feature.top.sites.TopSite.Type.DEFAULT
 import mozilla.components.feature.top.sites.TopSite.Type.FRECENT
 import mozilla.components.feature.top.sites.TopSite.Type.PINNED
 import org.mozilla.fenix.R
@@ -63,7 +64,7 @@ class TopSiteItemViewHolder(
     fun bind(topSite: TopSite) {
         top_site_title.text = topSite.title
 
-        pin_indicator.visibility = if (topSite.type == PINNED) {
+        pin_indicator.visibility = if (topSite.type == PINNED || topSite.type == DEFAULT) {
             View.VISIBLE
         } else {
             View.GONE
