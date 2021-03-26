@@ -51,6 +51,7 @@ class SharedMemory {
 
   virtual bool Create(size_t size) = 0;
   virtual bool Map(size_t nBytes, void* fixed_address = nullptr) = 0;
+  virtual void Unmap() = 0;
 
   virtual void CloseHandle() = 0;
 
