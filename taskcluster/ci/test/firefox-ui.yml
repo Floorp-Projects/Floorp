@@ -19,6 +19,7 @@ job-defaults:
                 linux.*:
                     - firefox_ui_tests/taskcluster.py
                     - remove_executables.py
+    python-3: true
 
 firefox-ui-functional-local:
     description: "Firefox-ui-tests functional run"
