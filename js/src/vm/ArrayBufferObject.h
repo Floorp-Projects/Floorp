@@ -169,13 +169,18 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared {
   static constexpr size_t MaxByteLengthForSmallBuffer = INT32_MAX;
 
   // The length of an ArrayBuffer or SharedArrayBuffer can be at most
-  // INT32_MAX. Allow a larger limit on 64-bit platforms if the experimental
-  // large-buffers flag is used.
+  // INT32_MAX. Allow a larger limit on friendly 64-bit platforms if the
+  // experimental large-buffers flag is used.
   static size_t maxBufferByteLength() {
 #ifdef JS_64BIT
+#  ifdef JS_CODEGEN_MIPS64
+    // Fallthrough to the "small" case because there's no evidence that the
+    // platform code can handle buffers > 2GB.
+#  else
     if (supportLargeBuffers) {
       return size_t(8) * 1024 * 1024 * 1024;  // 8 GB.
     }
+#  endif
 #endif
     return MaxByteLengthForSmallBuffer;
   }

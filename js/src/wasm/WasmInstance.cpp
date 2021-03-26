@@ -1216,9 +1216,11 @@ bool Instance::init(JSContext* cx, const JSFunctionVector& funcImports,
   tlsData()->memoryBase =
       memory_ ? memory_->buffer().dataPointerEither().unwrap() : nullptr;
   size_t limit = memory_ ? memory_->boundsCheckLimit().get() : 0;
-  // Assert that the cast will not fail
+#if !defined(JS_64BIT) || defined(ENABLE_WASM_CRANELIFT)
+  // We assume that the limit is a 32-bit quantity
   MOZ_ASSERT(limit <= UINT32_MAX);
-  tlsData()->boundsCheckLimit32 = uint32_t(limit);
+#endif
+  tlsData()->boundsCheckLimit = limit;
   tlsData()->instance = this;
   tlsData()->realm = realm_;
   tlsData()->cx = cx;
@@ -2067,9 +2069,11 @@ void Instance::onMovingGrowMemory() {
   ArrayBufferObject& buffer = memory_->buffer().as<ArrayBufferObject>();
   tlsData()->memoryBase = buffer.dataPointer();
   size_t limit = memory_->boundsCheckLimit().get();
-  // Assert that the cast will not fail
+#if !defined(JS_64BIT) || defined(ENABLE_WASM_CRANELIFT)
+  // We assume that the limit is a 32-bit quantity
   MOZ_ASSERT(limit <= UINT32_MAX);
-  tlsData()->boundsCheckLimit32 = uint32_t(limit);
+#endif
+  tlsData()->boundsCheckLimit = limit;
 }
 
 void Instance::onMovingGrowTable(const Table* theTable) {
