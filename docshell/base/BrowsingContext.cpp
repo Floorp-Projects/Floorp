@@ -974,7 +974,7 @@ void BrowsingContext::UnregisterWindowContext(WindowContext* aWindow) {
   }
 }
 
-void BrowsingContext::PreOrderWalk(
+void BrowsingContext::PreOrderWalkVoid(
     const std::function<void(BrowsingContext*)>& aCallback) {
   aCallback(this);
 
@@ -982,8 +982,35 @@ void BrowsingContext::PreOrderWalk(
   children.AppendElements(Children());
 
   for (auto& child : children) {
-    child->PreOrderWalk(aCallback);
+    child->PreOrderWalkVoid(aCallback);
   }
+}
+
+BrowsingContext::WalkFlag BrowsingContext::PreOrderWalkFlag(
+    const std::function<WalkFlag(BrowsingContext*)>& aCallback) {
+  switch (aCallback(this)) {
+    case WalkFlag::Skip:
+      return WalkFlag::Next;
+    case WalkFlag::Stop:
+      return WalkFlag::Stop;
+    case WalkFlag::Next:
+    default:
+      break;
+  }
+
+  AutoTArray<RefPtr<BrowsingContext>, 8> children;
+  children.AppendElements(Children());
+
+  for (auto& child : children) {
+    switch (child->PreOrderWalkFlag(aCallback)) {
+      case WalkFlag::Stop:
+        return WalkFlag::Stop;
+      default:
+        break;
+    }
+  }
+
+  return WalkFlag::Next;
 }
 
 void BrowsingContext::PostOrderWalk(
