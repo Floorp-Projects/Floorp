@@ -177,12 +177,12 @@ class InlineTranslator : public Translator {
 
  protected:
   RefPtr<DrawTarget> mBaseDT;
+  nsRefPtrHashtable<nsPtrHashKey<void>, DrawTarget> mDrawTargets;
 
  private:
   void* mFontContext;
   std::string mError;
 
-  nsRefPtrHashtable<nsPtrHashKey<void>, DrawTarget> mDrawTargets;
   nsRefPtrHashtable<nsPtrHashKey<void>, Path> mPaths;
   nsRefPtrHashtable<nsPtrHashKey<void>, SourceSurface> mSourceSurfaces;
   nsRefPtrHashtable<nsPtrHashKey<void>, FilterNode> mFilterNodes;
