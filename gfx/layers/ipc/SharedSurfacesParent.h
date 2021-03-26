@@ -7,23 +7,23 @@
 #ifndef MOZILLA_GFX_SHAREDSURFACESPARENT_H
 #define MOZILLA_GFX_SHAREDSURFACESPARENT_H
 
-#include <stdint.h>                         // for uint32_t
-#include "mozilla/Attributes.h"             // for override
-#include "mozilla/StaticMutex.h"            // for StaticMutex
-#include "mozilla/StaticPtr.h"              // for StaticAutoPtr
-#include "mozilla/RefPtr.h"                 // for already_AddRefed
-#include "mozilla/ipc/SharedMemory.h"       // for SharedMemory, etc
-#include "mozilla/gfx/2D.h"                 // for SurfaceFormat
-#include "mozilla/gfx/Point.h"              // for IntSize
-#include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptorShared
-#include "mozilla/layers/SourceSurfaceSharedData.h"
+#include <stdint.h>                            // for uint32_t
+#include "mozilla/Attributes.h"                // for override
+#include "mozilla/StaticMutex.h"               // for StaticMutex
+#include "mozilla/StaticPtr.h"                 // for StaticAutoPtr
+#include "mozilla/RefPtr.h"                    // for already_AddRefed
+#include "mozilla/ipc/SharedMemory.h"          // for SharedMemory, etc
+#include "mozilla/gfx/2D.h"                    // for SurfaceFormat
+#include "mozilla/gfx/Point.h"                 // for IntSize
+#include "mozilla/layers/LayersSurfaces.h"     // for SurfaceDescriptorShared
 #include "mozilla/webrender/WebRenderTypes.h"  // for wr::ExternalImageId
-#include "nsExpirationTracker.h"
 #include "nsRefPtrHashtable.h"
 
 namespace mozilla {
 namespace gfx {
 class DataSourceSurface;
+class SourceSurfaceSharedData;
+class SourceSurfaceSharedDataWrapper;
 }  // namespace gfx
 
 namespace layers {
@@ -34,7 +34,6 @@ class SharedSurfacesMemoryReport;
 class SharedSurfacesParent final {
  public:
   static void Initialize();
-  static void ShutdownRenderThread();
   static void Shutdown();
 
   // Get without increasing the consumer count.
@@ -59,37 +58,15 @@ class SharedSurfacesParent final {
 
   static bool AccumulateMemoryReport(SharedSurfacesMemoryReport& aReport);
 
-  static void AddTracking(gfx::SourceSurfaceSharedDataWrapper* aSurface);
-
-  static void RemoveTracking(gfx::SourceSurfaceSharedDataWrapper* aSurface);
-
-  static bool AgeOneGeneration(
-      nsTArray<RefPtr<gfx::SourceSurfaceSharedDataWrapper>>& aExpired);
-
-  static bool AgeAndExpireOneGeneration();
+  ~SharedSurfacesParent();
 
  private:
   friend class SharedSurfacesChild;
-  friend class gfx::SourceSurfaceSharedDataWrapper;
 
   SharedSurfacesParent();
 
   static void AddSameProcess(const wr::ExternalImageId& aId,
                              gfx::SourceSurfaceSharedData* aSurface);
-
-  static void AddTrackingLocked(gfx::SourceSurfaceSharedDataWrapper* aSurface,
-                                const StaticMutexAutoLock& aAutoLock);
-
-  static void RemoveTrackingLocked(
-      gfx::SourceSurfaceSharedDataWrapper* aSurface,
-      const StaticMutexAutoLock& aAutoLock);
-
-  static bool AgeOneGenerationLocked(
-      nsTArray<RefPtr<gfx::SourceSurfaceSharedDataWrapper>>& aExpired,
-      const StaticMutexAutoLock& aAutoLock);
-
-  static void ExpireMap(
-      nsTArray<RefPtr<gfx::SourceSurfaceSharedDataWrapper>>& aExpired);
 
   static StaticMutex sMutex;
 
@@ -97,36 +74,6 @@ class SharedSurfacesParent final {
 
   nsRefPtrHashtable<nsUint64HashKey, gfx::SourceSurfaceSharedDataWrapper>
       mSurfaces;
-
-  class MappingTracker final
-      : public ExpirationTrackerImpl<gfx::SourceSurfaceSharedDataWrapper, 4,
-                                     StaticMutex, StaticMutexAutoLock> {
-   public:
-    explicit MappingTracker(uint32_t aExpirationTimeoutMS,
-                            nsIEventTarget* aEventTarget)
-        : ExpirationTrackerImpl<gfx::SourceSurfaceSharedDataWrapper, 4,
-                                StaticMutex, StaticMutexAutoLock>(
-              aExpirationTimeoutMS, "SharedMappingTracker", aEventTarget) {}
-
-    void TakeExpired(
-        nsTArray<RefPtr<gfx::SourceSurfaceSharedDataWrapper>>& aExpired,
-        const StaticMutexAutoLock& aAutoLock);
-
-   protected:
-    void NotifyExpiredLocked(gfx::SourceSurfaceSharedDataWrapper* aSurface,
-                             const StaticMutexAutoLock& aAutoLock) override;
-
-    void NotifyHandlerEndLocked(const StaticMutexAutoLock& aAutoLock) override {
-    }
-
-    void NotifyHandlerEnd() override;
-
-    StaticMutex& GetMutex() override { return sMutex; }
-
-    nsTArray<RefPtr<gfx::SourceSurfaceSharedDataWrapper>> mExpired;
-  };
-
-  MappingTracker mTracker;
 };
 
 }  // namespace layers
