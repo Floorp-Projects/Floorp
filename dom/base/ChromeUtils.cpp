@@ -339,7 +339,7 @@ void ChromeUtils::ShallowClone(GlobalObject& aGlobal, JS::HandleObject aObj,
       if (!JS_GetOwnPropertyDescriptorById(cx, obj, id, &desc)) {
         continue;
       }
-      if (desc.setter() || desc.getter()) {
+      if (desc.isAccessorDescriptor()) {
         continue;
       }
       valuesIds.infallibleAppend(id);
