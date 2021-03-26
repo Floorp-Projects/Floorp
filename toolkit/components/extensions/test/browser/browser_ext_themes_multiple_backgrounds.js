@@ -39,17 +39,19 @@ add_task(async function test_support_backgrounds_position() {
     "LWT text color attribute should be set"
   );
 
-  let toolboxCS = window.getComputedStyle(toolbox);
-  let bgImage = toolboxCS.backgroundImage.split(",")[0].trim();
+  let computedStyle = window.getComputedStyle(
+    backgroundColorSetOnRoot() ? docEl : toolbox
+  );
+  let bgImage = computedStyle.backgroundImage.split(",")[0].trim();
   Assert.equal(
-    toolboxCS.backgroundImage,
+    computedStyle.backgroundImage,
     [1, 2, 2, 2]
       .map(num => bgImage.replace(/face[\d]*/, `face${num}`))
       .join(", "),
     "The backgroundImage should use face1.png once and face2.png three times."
   );
   Assert.equal(
-    toolboxCS.backgroundPosition,
+    computedStyle.backgroundPosition,
     "100% 0%, 0% 0%, 50% 0%, 100% 100%",
     "The backgroundPosition should use the three values provided, preceded by the default for theme_frame."
   );
@@ -59,7 +61,7 @@ add_task(async function test_support_backgrounds_position() {
    * --lwt-background-tiling.
    */
   Assert.equal(
-    toolboxCS.backgroundRepeat,
+    computedStyle.backgroundRepeat,
     "no-repeat, no-repeat",
     "The backgroundPosition should use the default value."
   );
@@ -67,12 +69,14 @@ add_task(async function test_support_backgrounds_position() {
   await extension.unload();
 
   Assert.ok(!docEl.hasAttribute("lwtheme"), "LWT attribute should not be set");
-  toolboxCS = window.getComputedStyle(toolbox);
+  computedStyle = window.getComputedStyle(
+    backgroundColorSetOnRoot() ? docEl : toolbox
+  );
 
   // Styles should've reverted to their initial values.
-  Assert.equal(toolboxCS.backgroundImage, "none");
-  Assert.equal(toolboxCS.backgroundPosition, "0% 0%");
-  Assert.equal(toolboxCS.backgroundRepeat, "repeat");
+  Assert.equal(computedStyle.backgroundImage, "none");
+  Assert.equal(computedStyle.backgroundPosition, "0% 0%");
+  Assert.equal(computedStyle.backgroundRepeat, "repeat");
 });
 
 add_task(async function test_support_backgrounds_repeat() {
@@ -112,13 +116,15 @@ add_task(async function test_support_backgrounds_repeat() {
     "LWT text color attribute should be set"
   );
 
-  let toolboxCS = window.getComputedStyle(toolbox);
-  let bgImage = toolboxCS.backgroundImage.split(",")[0].trim();
+  let computedStyle = window.getComputedStyle(
+    backgroundColorSetOnRoot() ? docEl : toolbox
+  );
+  let bgImage = computedStyle.backgroundImage.split(",")[0].trim();
   Assert.equal(
     [0, 1, 2, 3]
       .map(num => bgImage.replace(/face[\d]*/, `face${num}`))
       .join(", "),
-    toolboxCS.backgroundImage,
+    computedStyle.backgroundImage,
     "The backgroundImage should use face.png four times."
   );
   /**
@@ -127,12 +133,12 @@ add_task(async function test_support_backgrounds_repeat() {
    * --lwt-background-alignment.
    */
   Assert.equal(
-    toolboxCS.backgroundPosition,
+    computedStyle.backgroundPosition,
     "100% 0%, 100% 0%",
     "The backgroundPosition should use the default value for navigator-toolbox."
   );
   Assert.equal(
-    toolboxCS.backgroundRepeat,
+    computedStyle.backgroundRepeat,
     "no-repeat, repeat-x, repeat-y, repeat",
     "The backgroundRepeat should use the three values provided for --lwt-background-tiling, preceeded by the default for theme_frame."
   );
@@ -175,19 +181,21 @@ add_task(async function test_additional_images_check() {
     "LWT text color attribute should be set"
   );
 
-  let toolboxCS = window.getComputedStyle(toolbox);
-  let bgImage = toolboxCS.backgroundImage.split(",")[0];
+  let computedStyle = window.getComputedStyle(
+    backgroundColorSetOnRoot() ? docEl : toolbox
+  );
+  let bgImage = computedStyle.backgroundImage.split(",")[0].trim();
   Assert.ok(
     bgImage.includes("face.png"),
     `The backgroundImage should use face.png. Actual value is: ${bgImage}`
   );
   Assert.equal(
-    toolboxCS.backgroundPosition,
+    computedStyle.backgroundPosition,
     "100% 0%, 100% 0%",
     "The backgroundPosition should use the default value."
   );
   Assert.equal(
-    toolboxCS.backgroundRepeat,
+    computedStyle.backgroundRepeat,
     "no-repeat, no-repeat",
     "The backgroundRepeat should use the default value."
   );
