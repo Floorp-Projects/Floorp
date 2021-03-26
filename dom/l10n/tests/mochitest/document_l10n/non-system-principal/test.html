@@ -22,8 +22,8 @@
         );
 
         const customMsg = await document.l10n.formatValue("custom-message");
-        const l10nArgs = document.l10n.getAttributes(label);
-        resolve({customMsg, l10nArgs});
+        document.getElementById("customMessage").textContent = customMsg;
+        resolve();
       }, {once: true});
     });
   </script>
@@ -32,5 +32,6 @@
   <h1 id="main-desc" data-l10n-id="page-title"></h1>
 
   <p id="label1"></p>
+  <p id="customMessage"></p>
 </body>
 </html>
