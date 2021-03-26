@@ -446,6 +446,7 @@ var PKT_SAVED_OVERLAY = function(options) {
       thePKT_SAVED.sendMessage("PKT_openTabWithUrl", {
         url: $(this).attr("href"),
         activate: true,
+        source: "view_list",
       });
     });
   };
@@ -550,6 +551,7 @@ var PKT_SAVED_OVERLAY = function(options) {
         thePKT_SAVED.sendMessage("PKT_openTabWithUrl", {
           url: $(this).attr("href"),
           activate: true,
+          source: "recs_learn_more",
         });
       });
       $(".pkt_ext_item_recs_link").click(function(e) {
