@@ -679,10 +679,10 @@ class PresShell final : public nsStubDocumentObserver,
    */
   bool IsPaintingSuppressed() const { return mPaintingSuppressed; }
 
-  /**
-   * Unsuppress painting.
-   */
   void UnsuppressPainting();
+  void UnsuppressPaintingFromTimer();
+  void InitPaintSuppressionTimer();
+  void CancelPaintSuppressionTimer();
 
   /**
    * Reconstruct frames for all elements in the document
@@ -2720,9 +2720,6 @@ class PresShell final : public nsStubDocumentObserver,
 
   nscolor GetDefaultBackgroundColorToDraw();
 
-  // The callback for the mPaintSuppressionTimer timer.
-  static void sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell);
-
   //////////////////////////////////////////////////////////////////////////////
   // Approximate frame visibility tracking implementation.
   //////////////////////////////////////////////////////////////////////////////
@@ -2991,6 +2988,9 @@ class PresShell final : public nsStubDocumentObserver,
   // changes in a way that prevents us from being able to (usefully)
   // re-use old pixels.
   RenderingStateFlags mRenderingStateFlags;
+
+  // The amount of times that we have tried to unsuppress painting off a timer.
+  int32_t mPaintSuppressionAttempts = 0;
 
   // Whether we're currently under a FlushPendingNotifications.
   // This is used to handle flush reentry correctly.
