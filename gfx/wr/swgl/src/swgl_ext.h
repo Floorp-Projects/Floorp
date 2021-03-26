@@ -413,7 +413,7 @@ static int blendTextureLinear(S sampler, vec2 uv, int span,
     float insideDist =
         min(max_uv.x, float((int(sampler->width) - swgl_StepSize) << 7)) -
         uv.x.x;
-    if (insideDist >= uv_step.x) {
+    if (uv_step.x > 0.0f && insideDist >= uv_step.x) {
       int inside =
           clamp(int(insideDist / uv_step.x) * swgl_StepSize, 0, int(end - buf));
       if (filter == LINEAR_FILTER_FAST) {
@@ -529,7 +529,7 @@ static inline LinearFilter needsTextureLinear(S sampler, T P, int span) {
   if (int scale = spanNeedsScale(span, P)) {
     // If the source region is not flipped and smaller than the destination,
     // then we can use the upscaling filter since row Y is constant.
-    return P.x.x <= P.x.y && P.x.y - P.x.x <= 1
+    return P.x.x < P.x.y && P.x.y - P.x.x <= 1
                ? LINEAR_FILTER_UPSCALE
                : (scale == 2 ? LINEAR_FILTER_DOWNSCALE
                              : LINEAR_FILTER_FALLBACK);
