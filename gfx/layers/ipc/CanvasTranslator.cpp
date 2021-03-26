@@ -29,6 +29,9 @@ namespace layers {
 // other content processes are waiting for events to process.
 static const TimeDuration kReadEventTimeout = TimeDuration::FromMilliseconds(5);
 
+static const TimeDuration kDescriptorTimeout =
+    TimeDuration::FromMilliseconds(10000);
+
 class RingBufferReaderServices final
     : public CanvasEventRingBuffer::ReaderServices {
  public:
@@ -107,9 +110,10 @@ CanvasTranslator::CanvasTranslator(
 }
 
 CanvasTranslator::~CanvasTranslator() {
-  if (mReferenceTextureData) {
-    mReferenceTextureData->Unlock();
-  }
+  // The textures need to be the last thing holding their DrawTargets, so that
+  // they can destroy them within a lock.
+  mDrawTargets.Clear();
+  mBaseDT = nullptr;
 }
 
 void CanvasTranslator::Bind(Endpoint<PCanvasParent>&& aEndpoint) {
@@ -222,12 +226,9 @@ void CanvasTranslator::Deactivate() {
       NewRunnableMethod("CanvasTranslator::SendDeactivate", this,
                         &CanvasTranslator::SendDeactivate));
 
-  {
-    // Unlock all of our textures.
-    gfx::AutoSerializeWithMoz2D serializeWithMoz2D(GetBackendType());
-    for (auto const& entry : mTextureDatas) {
-      entry.second->Unlock();
-    }
+  // Unlock all of our textures.
+  for (auto const& entry : mTextureDatas) {
+    entry.second->Unlock();
   }
 
   // Also notify anyone waiting for a surface descriptor. This must be done
@@ -330,7 +331,7 @@ void CanvasTranslator::Flush() {
     return;
   }
 
-  gfx::AutoSerializeWithMoz2D serializeWithMoz2D(GetBackendType());
+  gfx::AutoSerializeWithMoz2D serializeWithMoz2D(mBackendType);
   RefPtr<ID3D11DeviceContext> deviceContext;
   mDevice->GetImmediateContext(getter_AddRefs(deviceContext));
   deviceContext->Flush();
@@ -439,10 +440,6 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
     gfx::SurfaceFormat aFormat) {
   RefPtr<gfx::DrawTarget> dt;
   do {
-    // It is important that AutoSerializeWithMoz2D is called within the loop
-    // and doesn't hold during calls to CheckForFreshCanvasDevice, because that
-    // might cause a deadlock with device reset code on the main thread.
-    gfx::AutoSerializeWithMoz2D serializeWithMoz2D(GetBackendType());
     TextureData* textureData = CreateTextureData(mTextureType, aSize, aFormat);
     if (textureData) {
       MOZ_DIAGNOSTIC_ASSERT(mNextTextureId >= 0, "No texture ID set");
@@ -459,7 +456,6 @@ already_AddRefed<gfx::DrawTarget> CanvasTranslator::CreateDrawTarget(
 }
 
 void CanvasTranslator::RemoveTexture(int64_t aTextureId) {
-  gfx::AutoSerializeWithMoz2D serializeWithMoz2D(GetBackendType());
   mTextureDatas.erase(aTextureId);
 
   // It is possible that the texture from the content process has never been
@@ -487,7 +483,12 @@ UniquePtr<SurfaceDescriptor> CanvasTranslator::WaitForSurfaceDescriptor(
       return nullptr;
     }
 
-    mSurfaceDescriptorsMonitor.Wait();
+    CVStatus status = mSurfaceDescriptorsMonitor.Wait(kDescriptorTimeout);
+    if (status == CVStatus::Timeout) {
+      // If something has gone wrong and the texture has already been destroyed,
+      // it will have cleaned up its descriptor.
+      return nullptr;
+    }
   }
 
   UniquePtr<SurfaceDescriptor> descriptor = std::move(result->second);

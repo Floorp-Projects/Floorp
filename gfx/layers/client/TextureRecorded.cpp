@@ -28,6 +28,9 @@ RecordedTextureData::RecordedTextureData(
 }
 
 RecordedTextureData::~RecordedTextureData() {
+  // We need the translator to drop its reference for the DrawTarget first,
+  // because the TextureData might need to destroy its DrawTarget within a lock.
+  mDT = nullptr;
   mCanvasChild->RecordEvent(RecordedTextureDestruction(mTextureId));
 }
 
