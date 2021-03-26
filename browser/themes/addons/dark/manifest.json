@@ -3,11 +3,11 @@
 
   "applications": {
     "gecko": {
-      "id": "firefox-compact-proton-dark@mozilla.org"
+      "id": "firefox-compact-dark@mozilla.org"
     }
   },
 
-  "name": "Proton Dark",
+  "name": "Dark",
   "description": "A theme with a dark color scheme.",
   "author": "Mozilla",
   "version": "1.2",
