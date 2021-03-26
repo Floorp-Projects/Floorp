@@ -9,7 +9,7 @@ use api;
 use crate::render_api::DebugCommand;
 use crate::composite::NativeSurfaceOperation;
 use crate::device::TextureFilter;
-use crate::renderer::PipelineInfo;
+use crate::renderer::{FullFrameStats, PipelineInfo};
 use crate::gpu_cache::GpuCacheUpdateList;
 use crate::frame_builder::Frame;
 use crate::profiler::TransactionProfile;
@@ -504,6 +504,7 @@ pub struct RenderedDocument {
     pub frame: Frame,
     pub is_new_scene: bool,
     pub profile: TransactionProfile,
+    pub frame_stats: Option<FullFrameStats>
 }
 
 pub enum DebugOutput {

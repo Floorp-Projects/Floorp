@@ -82,10 +82,11 @@ class WebRenderLayerManager final : public LayerManager {
                                   const nsCString& aURL) override;
   bool BeginTransaction(const nsCString& aURL) override;
   bool EndEmptyTransaction(EndTransactionFlags aFlags = END_DEFAULT) override;
-  void EndTransactionWithoutLayer(
-      nsDisplayList* aDisplayList, nsDisplayListBuilder* aDisplayListBuilder,
-      WrFiltersHolder&& aFilters = WrFiltersHolder(),
-      WebRenderBackgroundData* aBackground = nullptr);
+  void EndTransactionWithoutLayer(nsDisplayList* aDisplayList,
+                                  nsDisplayListBuilder* aDisplayListBuilder,
+                                  WrFiltersHolder&& aFilters,
+                                  WebRenderBackgroundData* aBackground,
+                                  const double aGeckoDLBuildTime);
   void EndTransaction(DrawPaintedLayerCallback aCallback, void* aCallbackData,
                       EndTransactionFlags aFlags = END_DEFAULT) override;
 
