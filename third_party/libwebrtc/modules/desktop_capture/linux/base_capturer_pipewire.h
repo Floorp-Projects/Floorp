@@ -18,6 +18,7 @@
 
 #include "modules/desktop_capture/desktop_capture_options.h"
 #include "modules/desktop_capture/desktop_capturer.h"
+#include "rtc_base/synchronization/mutex.h"
 
 namespace webrtc {
 
@@ -83,7 +84,7 @@ class BaseCapturerPipeWire : public DesktopCapturer {
   DesktopSize desktop_size_ = {};
   DesktopCaptureOptions options_ = {};
 
-  rtc::CriticalSection current_frame_lock_;
+  webrtc::Mutex current_frame_lock_;
   std::unique_ptr<uint8_t[]> current_frame_;
   Callback* callback_ = nullptr;
 
