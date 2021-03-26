@@ -1370,7 +1370,7 @@ BrowserGlue.prototype = {
 
     AddonManager.maybeInstallBuiltinAddon(
       "firefox-alpenglow@mozilla.org",
-      "1.2",
+      "1.4",
       "resource://builtin-themes/alpenglow/"
     );
 
