@@ -30,9 +30,11 @@
 }
 } /* END !proton */
 
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 #tabbrowser-tabs {
   --tab-line-color: highlight;
 }
+} /* end !proton */
 
 @media (-moz-windows-default-theme) {
   :root {
@@ -53,11 +55,11 @@
   #navigator-toolbox {
     --tabs-border-color: rgba(0,0,0,.3);
   }
-  } /* END !proton */
 
   #tabbrowser-tabs {
     --tab-line-color: #0a84ff;
   }
+  } /* END !proton */
 }
 
 :root:-moz-lwtheme {
