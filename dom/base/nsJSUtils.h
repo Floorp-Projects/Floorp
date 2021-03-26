@@ -63,8 +63,6 @@ class nsJSUtils {
                                   const nsAString& aBody,
                                   JSObject** aFunctionObject);
 
-  static bool BinASTEncodingEnabled() { return false; }
-
   static nsresult CompileModule(JSContext* aCx,
                                 JS::SourceText<char16_t>& aSrcBuf,
                                 JS::Handle<JSObject*> aEvaluationGlobal,

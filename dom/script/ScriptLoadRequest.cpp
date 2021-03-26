@@ -221,22 +221,14 @@ void ScriptLoadRequest::SetTextSource() {
   }
 }
 
-void ScriptLoadRequest::SetBinASTSource() { MOZ_CRASH("BinAST not supported"); }
-
 void ScriptLoadRequest::SetBytecode() {
   MOZ_ASSERT(IsUnknownDataType());
   mDataType = DataType::eBytecode;
 }
 
-bool ScriptLoadRequest::ShouldAcceptBinASTEncoding() const {
-  MOZ_CRASH("BinAST not supported");
-}
-
 void ScriptLoadRequest::ClearScriptSource() {
   if (IsTextSource()) {
     ClearScriptText();
-  } else if (IsBinASTSource()) {
-    ScriptBinASTData().clearAndFree();
   }
 }
 

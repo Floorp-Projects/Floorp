@@ -137,12 +137,6 @@ class MOZ_STACK_CLASS JSExecutionContext final {
   // thread.
   nsresult JoinDecode(JS::OffThreadToken** aOffThreadToken);
 
-  nsresult JoinDecodeBinAST(JS::OffThreadToken** aOffThreadToken);
-
-  // Decode a BinAST encoded script contained in a buffer.
-  nsresult DecodeBinAST(JS::CompileOptions& aCompileOptions,
-                        const uint8_t* aBuf, size_t aLength);
-
   // Get a successfully compiled script.
   JSScript* GetScript();
 
