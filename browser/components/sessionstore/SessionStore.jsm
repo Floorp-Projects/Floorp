@@ -4456,24 +4456,11 @@ var SessionStoreInternal = {
     // Update the tab state in case we shut down without being notified.
     this._windows[window.__SSi].tabs[tab._tPos] = tabData;
 
-    // Prepare the tab so that it can be properly restored. We'll pin/unpin
-    // and show/hide tabs as necessary. We'll also attach a copy of the tab's
-    // data in case we close it before it's been restored.
-    if (tabData.pinned) {
-      tabbrowser.pinTab(tab);
-    } else {
-      tabbrowser.unpinTab(tab);
-    }
-
-    if (tabData.hidden) {
-      tabbrowser.hideTab(tab);
-    } else {
-      tabbrowser.showTab(tab);
-    }
-
-    if (!!tabData.muted != browser.audioMuted) {
-      tab.toggleMuteAudio(tabData.muteReason);
-    }
+    // Prepare the tab so that it can be properly restored.  We'll also attach
+    // a copy of the tab's data in case we close it before it's been restored.
+    // Anything that dispatches an event to external consumers must happen at
+    // the end of this method, to make sure that the tab/browser object is in a
+    // reliable and consistent state.
 
     if (tabData.lastAccessed) {
       tab.updateLastAccessed(tabData.lastAccessed);
@@ -4604,6 +4591,25 @@ var SessionStoreInternal = {
         userTypedValue: tabData.userTypedValue || "",
         userTypedClear: tabData.userTypedClear || 0,
       });
+    }
+
+    // Most of tabData has been restored, now continue with restoring
+    // attributes that may trigger external events.
+
+    if (tabData.pinned) {
+      tabbrowser.pinTab(tab);
+    } else {
+      tabbrowser.unpinTab(tab);
+    }
+
+    if (tabData.hidden) {
+      tabbrowser.hideTab(tab);
+    } else {
+      tabbrowser.showTab(tab);
+    }
+
+    if (!!tabData.muted != browser.audioMuted) {
+      tab.toggleMuteAudio(tabData.muteReason);
     }
 
     if (tab.hasAttribute("customizemode")) {
