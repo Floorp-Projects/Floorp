@@ -70,7 +70,7 @@ void* js::GetNativeStackBaseImpl() {
   // pthread struct, but the main thread must go parse /proc/self/maps to figure
   // the mapped stack address space ranges.  We want to avoid reading from
   // /proc/ so that firefox can run in sandboxed environments where /proc may
-  // not be mounted
+  // not be mounted.
   if (gettid() == getpid()) {
     void** pLibcStackEnd = (void**)dlsym(RTLD_DEFAULT, "__libc_stack_end");
 
