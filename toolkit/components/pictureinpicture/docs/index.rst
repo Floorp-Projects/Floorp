@@ -188,3 +188,12 @@ If ``video`` is being cloned visually to another element, calling this method wi
     boolean video.isCloningElementVisually;
 
 A read-only value that returns ``true`` if ``video`` is being cloned visually.
+
+API References
+====================================
+.. toctree::
+   :maxdepth: 1
+
+   picture-in-picture-api
+   player-api
+

@@ -63,6 +63,8 @@ js_source_path = [
     "../toolkit/components/featuregates",
     "../toolkit/mozapps/extensions",
     "../toolkit/components/prompts/src",
+    "../toolkit/components/pictureinpicture",
+    "../toolkit/components/pictureinpicture/content",
 ]
 root_for_relative_js_paths = ".."
 jsdoc_config_path = "jsdoc.json"

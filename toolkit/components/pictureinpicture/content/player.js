@@ -36,11 +36,11 @@ const BOTTOM_RIGHT_QUADRANT = 4;
  * Public function to be called from PictureInPicture.jsm. This is the main
  * entrypoint for initializing the player window.
  *
- * @param id (Number)
+ * @param {Number} id
  *   A unique numeric ID for the window, used for Telemetry Events.
- * @param wgp (WindowGlobalParent)
+ * @param {WindowGlobalParent} wgp
  *   The WindowGlobalParent that is hosting the originating video.
- * @param videoRef {ContentDOMReference}
+ * @param {ContentDOMReference} videoRef
  *    A reference to the video element that a Picture-in-Picture window
  *    is being created for
  */
@@ -52,7 +52,7 @@ function setupPlayer(id, wgp, videoRef) {
  * Public function to be called from PictureInPicture.jsm. This update the
  * controls based on whether or not the video is playing.
  *
- * @param isPlaying (Boolean)
+ * @param {Boolean} isPlaying
  *   True if the Picture-in-Picture video is playing.
  */
 function setIsPlayingState(isPlaying) {
@@ -63,7 +63,7 @@ function setIsPlayingState(isPlaying) {
  * Public function to be called from PictureInPicture.jsm. This update the
  * controls based on whether or not the video is muted.
  *
- * @param isMuted (Boolean)
+ * @param {Boolean} isMuted
  *   True if the Picture-in-Picture video is muted.
  */
 function setIsMutedState(isMuted) {
@@ -117,11 +117,11 @@ let Player = {
   /**
    * Initializes the player browser, and sets up the initial state.
    *
-   * @param id (Number)
+   * @param {Number} id
    *   A unique numeric ID for the window, used for Telemetry Events.
-   * @param wgp (WindowGlobalParent)
+   * @param {WindowGlobalParent} wgp
    *   The WindowGlobalParent that is hosting the originating video.
-   * @param videoRef {ContentDOMReference}
+   * @param {ContentDOMReference} videoRef
    *    A reference to the video element that a Picture-in-Picture window
    *    is being created for
    */
@@ -427,6 +427,10 @@ let Player = {
     );
   },
 
+  /**
+   * Uses the PiP window's change in position to determine which direction
+   * the window has been moved in.
+   */
   determineDirectionDragged() {
     // Determine change in window location.
     let deltaX = this.oldMouseUpWindowX - window.screenX;
@@ -445,6 +449,12 @@ let Player = {
     return dragDirection;
   },
 
+  /**
+   * Event handler for "mouseup" events on the PiP window.
+   *
+   * @param {Event} event
+   *  Event context details
+   */
   onMouseUp(event) {
     if (
       window.screenX != this.lastScreenX ||
@@ -536,11 +546,23 @@ let Player = {
     this.oldMouseUpWindowY = window.screenY;
   },
 
+  /**
+   * Event handler for resizing the PiP Window
+   *
+   * @param {Event} event
+   *  Event context data object
+   */
   onResize(event) {
     this.resizeDebouncer.disarm();
     this.resizeDebouncer.arm();
   },
 
+  /**
+   * Event handler for user issued commands
+   *
+   * @param {Event} event
+   *  Event context data object
+   */
   onCommand(event) {
     this.closePipWindow({ reason: "player-shortcut" });
   },
@@ -552,18 +574,17 @@ let Player = {
 
   _isPlaying: false,
   /**
-   * isPlaying returns true if the video is currently playing.
+   * GET isPlaying returns true if the video is currently playing.
    *
-   * @return Boolean
+   * SET isPlaying to true if the video is playing, false otherwise. This will
+   * update the internal state and displayed controls.
+   *
+   * @type {Boolean}
    */
   get isPlaying() {
     return this._isPlaying;
   },
 
-  /**
-   * Set isPlaying to true if the video is playing, false otherwise. This will
-   * update the internal state and displayed controls.
-   */
   set isPlaying(isPlaying) {
     this._isPlaying = isPlaying;
     this.controls.classList.toggle("playing", isPlaying);
@@ -574,18 +595,17 @@ let Player = {
 
   _isMuted: false,
   /**
-   * isMuted returns true if the video is currently muted.
+   * GET isMuted returns true if the video is currently muted.
    *
-   * @return Boolean
+   * SET isMuted to true if the video is muted, false otherwise. This will
+   * update the internal state and displayed controls.
+   *
+   * @type {Boolean}
    */
   get isMuted() {
     return this._isMuted;
   },
 
-  /**
-   * Set isMuted to true if the video is muted, false otherwise. This will
-   * update the internal state and displayed controls.
-   */
   set isMuted(isMuted) {
     this._isMuted = isMuted;
     this.controls.classList.toggle("muted", isMuted);
@@ -594,6 +614,14 @@ let Player = {
     document.l10n.setAttributes(audioButton, strId);
   },
 
+  /**
+   * Used for recording telemetry in Picture-in-Picture.
+   *
+   * @param {string} type
+   *   The type of PiP event being recorded.
+   * @param {object} args
+   *   The data to pass to telemetry when the event is recorded.
+   */
   recordEvent(type, args) {
     Services.telemetry.recordEvent(
       "pictureinpicture",
@@ -607,7 +635,7 @@ let Player = {
   /**
    * Makes the player controls visible.
    *
-   * @param revealIndefinitely (Boolean)
+   * @param {Boolean} revealIndefinitely
    *   If false, this will hide the controls again after
    *   CONTROLS_FADE_TIMEOUT_MS milliseconds has passed. If true, the controls
    *   will remain visible until revealControls is called again with
@@ -633,9 +661,9 @@ let Player = {
    * impose a minimum window size. For other platforms, this function is a
    * no-op.
    *
-   * @param width (Number)
+   * @param {Number} width
    *   The width of the video being played.
-   * @param height (Number)
+   * @param {Number} height
    *   The height of the video being played.
    */
   computeAndSetMinimumSize(width, height) {
