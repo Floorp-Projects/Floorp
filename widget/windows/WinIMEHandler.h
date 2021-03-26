@@ -233,12 +233,6 @@ class IMEHandler final {
    * Windows 8 and higher.
    */
   static void DismissOnScreenKeyboard(nsWindow* aWindow);
-
-  /**
-   * Get the HWND for the on-screen keyboard, if it's up. Only
-   * allowed for Windows 8 and higher.
-   */
-  static HWND GetOnScreenKeyboardWindow();
 };
 
 }  // namespace widget
