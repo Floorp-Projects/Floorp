@@ -3429,11 +3429,8 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
   MOZ_ASSERT(updateState != PartialUpdateResult::Failed);
   builder->Check();
 
-  const double geckoDLBuildTime =
-      (TimeStamp::Now() - startBuildDisplayList).ToMilliseconds();
-
-  Telemetry::Accumulate(Telemetry::PAINT_BUILD_DISPLAYLIST_TIME,
-                        geckoDLBuildTime);
+  Telemetry::AccumulateTimeDelta(Telemetry::PAINT_BUILD_DISPLAYLIST_TIME,
+                                 startBuildDisplayList);
 
   bool consoleNeedsDisplayList =
       (gfxUtils::DumpDisplayList() || gfxEnv::DumpPaint()) &&
@@ -3486,8 +3483,8 @@ nsresult nsLayoutUtils::PaintFrame(gfxContext* aRenderingContext,
 #endif
 
   TimeStamp paintStart = TimeStamp::Now();
-  RefPtr<LayerManager> layerManager = list->PaintRoot(
-      builder, aRenderingContext, flags, Some(geckoDLBuildTime));
+  RefPtr<LayerManager> layerManager =
+      list->PaintRoot(builder, aRenderingContext, flags);
   Telemetry::AccumulateTimeDelta(Telemetry::PAINT_RASTERIZE_TIME, paintStart);
 
   if (builder->IsPaintingToWindow()) {
