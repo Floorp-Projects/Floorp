@@ -403,20 +403,9 @@ test_description_schema = Schema(
         # This ensures tasks where this is True won't be the cause of the build
         # running on a project it otherwise wouldn't have.
         Optional("built-projects-only"): bool,
-        # Same as `run-on-projects` except it only applies to Fission tasks. Fission
-        # tasks will ignore `run_on_projects` and non-Fission tasks will ignore
-        # `fission-run-on-projects`.
-        Optional("fission-run-on-projects"): optionally_keyed_by(
-            "test-name", "test-platform", Any([text_type], "built-projects")
-        ),
         # the sheriffing tier for this task (default: set based on test platform)
         Optional("tier"): optionally_keyed_by(
             "test-platform", "variant", "app", "subtest", Any(int, "default")
-        ),
-        # Same as `tier` except it only applies to Fission tasks. Fission tasks
-        # will ignore `tier` and non-Fission tasks will ignore `fission-tier`.
-        Optional("fission-tier"): optionally_keyed_by(
-            "test-platform", Any(int, "default")
         ),
         # number of chunks to create for this task.  This can be keyed by test
         # platform by passing a dictionary in the `by-test-platform` key.  If the
@@ -938,7 +927,6 @@ def handle_keyed_by(config, tasks):
         "e10s",
         "suite",
         "run-on-projects",
-        "fission-run-on-projects",
         "os-groups",
         "run-as-administrator",
         "workdir",
@@ -1330,9 +1318,6 @@ def handle_tier(config, tasks):
         if "tier" in task:
             resolve_keyed_by(task, "tier", item_name=task["test-name"])
 
-        if "fission-tier" in task:
-            resolve_keyed_by(task, "fission-tier", item_name=task["test-name"])
-
         # only override if not set for the test
         if "tier" not in task or task["tier"] == "default":
             if task["test-platform"] in [
@@ -1407,33 +1392,12 @@ def apply_raptor_tier_optimization(config, tasks):
 
 
 @transforms.add
-def handle_fission_attributes(config, tasks):
-    """Handle run_on_projects for fission tasks."""
-    for task in tasks:
-
-        for attr in ("run-on-projects", "tier"):
-            fission_attr = task.pop("fission-{}".format(attr), None)
-
-            if (
-                task["attributes"].get("unittest_variant")
-                not in ("fission", "geckoview-fission", "fission-xorigin")
-            ) or fission_attr is None:
-                continue
-
-            task[attr] = fission_attr
-
-        yield task
-
-
-@transforms.add
 def disable_try_only_platforms(config, tasks):
     """Turns off platforms that should only run on try."""
     try_only_platforms = ("windows7-32-qr/.*",)
     for task in tasks:
         if any(re.match(k + "$", task["test-platform"]) for k in try_only_platforms):
             task["run-on-projects"] = []
-            if "fission-run-on-projects" in task:
-                task["fission-run-on-projects"] = []
         yield task
 
 
