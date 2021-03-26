@@ -109,6 +109,8 @@ const ERR_BACKUP_CREATE_7 = "backup_create failed: 7";
 const ERR_LOADSOURCEFILE_FAILED = "LoadSourceFile failed";
 const ERR_PARENT_PID_PERSISTS =
   "The parent process didn't exit! Continuing with update.";
+const ERR_BGTASK_EXCLUSIVE =
+  "failed to exclusively open executable file from background task: ";
 
 const LOG_SVC_SUCCESSFUL_LAUNCH = "Process was started... waiting on result.";
 

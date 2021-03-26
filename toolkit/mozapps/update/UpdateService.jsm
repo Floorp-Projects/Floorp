@@ -170,6 +170,17 @@ const WRITE_ERROR_DIR_ACCESS_DENIED = 68;
 const WRITE_ERROR_DELETE_BACKUP = 69;
 const WRITE_ERROR_EXTRACT = 70;
 
+// Error codes 80 through 99 are reserved for UpdateService.jsm and are not
+// defined in common/updatererrors.h
+const ERR_OLDER_VERSION_OR_SAME_BUILD = 90;
+const ERR_UPDATE_STATE_NONE = 91;
+const ERR_CHANNEL_CHANGE = 92;
+const INVALID_UPDATER_STATE_CODE = 98;
+const INVALID_UPDATER_STATUS_CODE = 99;
+
+const BACKGROUND_TASK_NEEDED_ELEVATION_ERROR = 105;
+const WRITE_ERROR_BACKGROUND_TASK_SHARING_VIOLATION = 106;
+
 // Array of write errors to simplify checks for write errors
 const WRITE_ERRORS = [
   WRITE_ERROR,
@@ -185,6 +196,7 @@ const WRITE_ERRORS = [
   WRITE_ERROR_DIR_ACCESS_DENIED,
   WRITE_ERROR_DELETE_BACKUP,
   WRITE_ERROR_EXTRACT,
+  WRITE_ERROR_BACKGROUND_TASK_SHARING_VIOLATION,
 ];
 
 // Array of write errors to simplify checks for service errors
@@ -204,16 +216,6 @@ const SERVICE_ERRORS = [
   SERVICE_STILL_APPLYING_NO_EXIT_CODE,
   SERVICE_COULD_NOT_IMPERSONATE,
 ];
-
-// Error codes 80 through 99 are reserved for nsUpdateService.js and are not
-// defined in common/updatererrors.h
-const ERR_OLDER_VERSION_OR_SAME_BUILD = 90;
-const ERR_UPDATE_STATE_NONE = 91;
-const ERR_CHANNEL_CHANGE = 92;
-const INVALID_UPDATER_STATE_CODE = 98;
-const INVALID_UPDATER_STATUS_CODE = 99;
-
-const BACKGROUND_TASK_NEEDED_ELEVATION_ERROR = 105;
 
 // Custom update error codes
 const BACKGROUNDCHECK_MULTIPLE_FAILURES = 110;
