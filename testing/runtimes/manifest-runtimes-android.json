@@ -493,7 +493,6 @@
     "/WebIDL/ecmascript-binding": 16.57,
     "/WebIDL/ecmascript-binding/es-exceptions": 7.48,
     "/WebIDL/ecmascript-binding/legacy-platform-object": 3.14,
-    "/_mozilla/binast": 5.83,
     "/_mozilla/dom": 1.52,
     "/_mozilla/dom/throttling": 15.98,
     "/_mozilla/editor": 2.72,

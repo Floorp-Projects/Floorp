@@ -891,7 +891,6 @@
     "/WebIDL/ecmascript-binding/es-exceptions": 2.4,
     "/WebIDL/ecmascript-binding/legacy-platform-object": 1.08,
     "/_mozilla/baselinecoverage": 30.66,
-    "/_mozilla/binast": 2.46,
     "/_mozilla/dom": 1.06,
     "/_mozilla/dom/throttling": 10.76,
     "/_mozilla/editor": 1.71,
