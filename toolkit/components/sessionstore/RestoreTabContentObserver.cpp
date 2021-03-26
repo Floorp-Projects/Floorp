@@ -100,7 +100,7 @@ RestoreTabContentObserver::Observe(nsISupports* aSubject, const char* aTopic,
   }
   if (XRE_IsParentProcess()) {
     if (WindowGlobalParent* wgp = bc->Canonical()->GetCurrentWindowGlobal()) {
-      bc->Canonical()->RequestRestoreTabContent(wgp);
+      bc->Canonical()->Top()->RequestRestoreTabContent(wgp);
     }
   } else if (WindowContext* windowContext = bc->GetCurrentWindowContext()) {
     if (WindowGlobalChild* wgc = windowContext->GetWindowGlobalChild()) {
