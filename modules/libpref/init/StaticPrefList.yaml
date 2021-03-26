@@ -5180,27 +5180,6 @@
   value: true
   mirror: always
 
-# Force unmapping of unused shared surfaces after a timeout period or when we
-# encounter virtual memory pressure. By default this is only enabled on 32-bit
-# Firefox.
-- name: image.mem.shared.unmap.force-enabled
-  type: bool
-  value: false
-  mirror: once
-
-# Minimum timeout to unmap shared surfaces since they have been last used,
-# in milliseconds.
-- name: image.mem.shared.unmap.min_expiration_ms
-  type: uint32_t
-  value: 60*1000
-  mirror: once
-
-# Mininum size for shared surfaces to consider unmapping, in kilobytes.
-- name: image.mem.shared.unmap.min_threshold_kb
-  type: uint32_t
-  value: 100
-  mirror: once
-
 # How much of the data in the surface cache is discarded when we get a memory
 # pressure notification, as a fraction. The discard factor is interpreted as a
 # reciprocal, so a discard factor of 1 means to discard everything in the
