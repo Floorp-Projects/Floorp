@@ -204,6 +204,12 @@
         this.setAttribute("panelopen", "true");
       }
 
+      if (this.isAnchored && this.anchorNode) {
+        let anchorRoot =
+          this.anchorNode.closest("toolbarbutton") || this.anchorNode;
+        anchorRoot.setAttribute("open", "true");
+      }
+
       // Fire event for accessibility APIs
       let alertEvent = document.createEvent("Events");
       alertEvent.initEvent("AlertActive", true, true);
@@ -222,6 +228,12 @@
         } else if (animate) {
           this.setAttribute("animate", "cancel");
         }
+      }
+
+      if (this.isAnchored && this.anchorNode) {
+        let anchorRoot =
+          this.anchorNode.closest("toolbarbutton") || this.anchorNode;
+        anchorRoot.removeAttribute("open");
       }
 
       try {

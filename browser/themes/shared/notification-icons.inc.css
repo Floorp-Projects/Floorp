@@ -4,17 +4,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
+@supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
+#notification-popup-box {
+  background-color: var(--toolbarbutton-active-background);
+  color: inherit;
+  padding: 5px 0;
+  margin: -1px 0;
+  padding-inline-end: 5px;
+  border-radius: var(--toolbarbutton-border-radius);
+}
+}
+
 .popup-notification-icon,
 .permission-popup-permission-icon {
   -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
   fill-opacity: 0.6;
-}
-
-#notification-popup-box {
-  padding: 5px 0;
-  margin: -5px 0;
-  padding-inline-end: 5px;
 }
 
 .blocked-permission-icon:-moz-focusring,
@@ -238,6 +243,12 @@
 } /** END Proton **/
 
 @supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
+#notification-popup-box {
+  padding: 5px 0;
+  margin: -5px 0;
+  padding-inline-end: 5px;
+}
+
 #webRTC-preview:not([hidden]) {
   border-radius: 4px;
   border: 1px solid var(--panel-separator-color);
