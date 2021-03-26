@@ -520,13 +520,18 @@ function _execute_test() {
   }
 
   if (runningInParent && _AppConstants.platform == "android") {
-    _Services.obs.notifyObservers(null, "profile-after-change");
-    // Wake up GeckoViewStartup
-    let geckoViewStartup = Cc["@mozilla.org/geckoview/startup;1"].getService(
-      Ci.nsIObserver
-    );
-    geckoViewStartup.observe(null, "profile-after-change", null);
-    geckoViewStartup.observe(null, "app-startup", null);
+    try {
+      // GeckoView initialization needs the profile
+      do_get_profile(true);
+      // Wake up GeckoViewStartup
+      let geckoViewStartup = Cc["@mozilla.org/geckoview/startup;1"].getService(
+        Ci.nsIObserver
+      );
+      geckoViewStartup.observe(null, "profile-after-change", null);
+      geckoViewStartup.observe(null, "app-startup", null);
+    } catch (ex) {
+      do_throw(`Failed to initialize GeckoView: ${ex}`, ex.stack);
+    }
   }
 
   // _JSDEBUGGER_PORT is dynamically defined by <runxpcshelltests.py>.
