@@ -51,6 +51,21 @@ class InspectorFront extends FrontClassWithSpec(inspectorSpec) {
       return this.initialized;
     }
 
+    // If the server-side support for stylesheet resources is enabled, we need to start
+    // to watch for them before instanciating the pageStyle actor (which does use the
+    // watcher and assume we're already watching for stylesheets).
+    const { resourceWatcher } = this.targetFront;
+    if (
+      resourceWatcher?.hasResourceWatcherSupport(
+        resourceWatcher.TYPES.STYLESHEET
+      )
+    ) {
+      await resourceWatcher.watchResources([resourceWatcher.TYPES.STYLESHEET], {
+        // we simply want to start the watcher, we don't have to do anything with those resources.
+        onAvailable: () => {},
+      });
+    }
+
     this.initialized = await Promise.all([
       this._getWalker(),
       this._getPageStyle(),
