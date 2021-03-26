@@ -578,6 +578,14 @@
   value: false
   mirror: always
 
+# The "test async scroll offset" (used via reftest-async-scroll
+# or nsIDOMWindowUtils.setAsyncScrollOffset()) can be used to
+# trigger overscroll. Used for tests only.
+- name: apz.overscroll.test_async_scroll_offset.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: apz.overscroll.min_pan_distance_ratio
   type: AtomicFloat
   value: 1.0f
