@@ -261,8 +261,12 @@ class PropertyTree {
 
 class TenuringTracer;
 
-using GetterOp = JSGetterOp;
-using SetterOp = JSSetterOp;
+// GetterOp and SetterOp are used to implement the special ArrayObject
+// length-property and ArgumentsObject properties.
+using GetterOp = bool (*)(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
+                          JS::MutableHandleValue vp);
+using SetterOp = bool (*)(JSContext* cx, JS::HandleObject obj, JS::HandleId id,
+                          JS::HandleValue v, JS::ObjectOpResult& result);
 
 /* Limit on the number of slotful properties in an object. */
 static const uint32_t SHAPE_INVALID_SLOT = Bit(24) - 1;
