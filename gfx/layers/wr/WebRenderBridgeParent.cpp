@@ -485,8 +485,13 @@ bool WebRenderBridgeParent::UpdateResources(
   wr::ShmSegmentsReader reader(aSmallShmems, aLargeShmems);
   UniquePtr<ScheduleSharedSurfaceRelease> scheduleRelease;
 
-  if (!aResourceUpdates.IsEmpty()) {
-    GPUParent::MaybeFlushMemory();
+  while (GPUParent::MaybeFlushMemory()) {
+    // If the GPU process has memory pressure, preemptively unmap some of our
+    // shared memory images. If we are in the parent process, the expiration
+    // tracker itself will listen for the memory pressure event.
+    if (!SharedSurfacesParent::AgeAndExpireOneGeneration()) {
+      break;
+    }
   }
 
   for (const auto& cmd : aResourceUpdates) {
