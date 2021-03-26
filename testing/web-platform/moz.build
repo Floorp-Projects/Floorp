@@ -438,6 +438,9 @@ with Files("tests/element-timing/**"):
 with Files("tests/encoding/**"):
     BUG_COMPONENT = ("Core", "Internationalization")
 
+with Files("tests/encoding-detection/**"):
+    BUG_COMPONENT = ("Core", "Internationalization")
+
 with Files("tests/encrypted-media/**"):
     BUG_COMPONENT = ("Core", "Audio/Video: Playback")
 
