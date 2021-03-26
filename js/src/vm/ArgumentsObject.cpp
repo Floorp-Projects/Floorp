@@ -551,9 +551,6 @@ static bool MappedArgGetter(JSContext* cx, HandleObject obj, HandleId id,
 
 static bool MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
                             HandleValue v, ObjectOpResult& result) {
-  if (!obj->is<MappedArgumentsObject>()) {
-    return result.succeed();
-  }
   Handle<MappedArgumentsObject*> argsobj = obj.as<MappedArgumentsObject>();
 
   Rooted<PropertyDescriptor> desc(cx);
@@ -903,9 +900,6 @@ static bool UnmappedArgGetter(JSContext* cx, HandleObject obj, HandleId id,
 
 static bool UnmappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
                               HandleValue v, ObjectOpResult& result) {
-  if (!obj->is<UnmappedArgumentsObject>()) {
-    return result.succeed();
-  }
   Handle<UnmappedArgumentsObject*> argsobj = obj.as<UnmappedArgumentsObject>();
 
   Rooted<PropertyDescriptor> desc(cx);
