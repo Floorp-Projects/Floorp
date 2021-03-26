@@ -78,8 +78,17 @@ add_task(async function test_autocomplete_https_downgrade() {
   });
   // from a HTTP page, look for matching logins, we should never offer a login with an HTTPS scheme
   // we're expecting just login2 as a match
-  // Make sure initial form is empty.
-  await checkLoginFormInFrame(iframe, "form-basic-username", "name1", "form-basic-password", "pass1");
+  let isCrossOrigin = false;
+  try {
+    // If this is a cross-origin test, the parent will be inaccessible. The fields
+    // should not be filled in.
+    window.parent;
+  } catch(ex) {
+    isCrossOrigin = true;
+  }
+
+  await checkLoginFormInFrame(iframe, "form-basic-username", isCrossOrigin ? "" : "name1",
+                                      "form-basic-password", isCrossOrigin ? "" : "pass1");
 
   // Trigger autocomplete popup
   await restoreForm();
