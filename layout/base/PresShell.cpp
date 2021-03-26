@@ -1345,10 +1345,7 @@ void PresShell::Destroy() {
   }
 
   // If our paint suppression timer is still active, kill it.
-  if (mPaintSuppressionTimer) {
-    mPaintSuppressionTimer->Cancel();
-    mPaintSuppressionTimer = nullptr;
-  }
+  CancelPaintSuppressionTimer();
 
   // Same for our reflow continuation timer
   if (mReflowContinueTimer) {
@@ -1814,6 +1811,29 @@ void PresShell::EndObservingDocument() {
 char* nsPresShell_ReflowStackPointerTop;
 #endif
 
+void PresShell::InitPaintSuppressionTimer() {
+  // Default to PAINTLOCK_EVENT_DELAY if we can't get the pref value.
+  Document* doc = mDocument->GetDisplayDocument()
+                      ? mDocument->GetDisplayDocument()
+                      : mDocument.get();
+  const bool inProcess = !doc->GetBrowsingContext() ||
+                         doc->GetBrowsingContext()->Top()->IsInProcess();
+  int32_t delay = inProcess
+                      ? StaticPrefs::nglayout_initialpaint_delay()
+                      : StaticPrefs::nglayout_initialpaint_delay_in_oopif();
+  if (mPaintSuppressionAttempts) {
+    delay += mPaintSuppressionAttempts *
+             StaticPrefs::nglayout_initialpaint_retry_extra_delay();
+  }
+  mPaintSuppressionTimer->InitWithNamedFuncCallback(
+      [](nsITimer* aTimer, void* aPresShell) {
+        RefPtr<PresShell> self = static_cast<PresShell*>(aPresShell);
+        self->UnsuppressPaintingFromTimer();
+      },
+      this, delay, nsITimer::TYPE_ONE_SHOT,
+      "PresShell::sPaintSuppressionCallback");
+}
+
 nsresult PresShell::Initialize() {
   if (mIsDestroying) {
     return NS_OK;
@@ -1929,23 +1949,9 @@ nsresult PresShell::Initialize() {
       mPaintingSuppressed = false;
     } else {
       // Initialize the timer.
-
-      // Default to PAINTLOCK_EVENT_DELAY if we can't get the pref value.
-      Document* doc = mDocument->GetDisplayDocument()
-                          ? mDocument->GetDisplayDocument()
-                          : mDocument.get();
-      int32_t delay = Preferences::GetInt(
-          !doc->GetBrowsingContext() ||
-                  doc->GetBrowsingContext()->Top()->IsInProcess()
-              ? "nglayout.initialpaint.delay"
-              : "nglayout.initialpaint.delay_in_oopif",
-          PAINTLOCK_EVENT_DELAY);
-
       mPaintSuppressionTimer->SetTarget(
           mDocument->EventTargetFor(TaskCategory::Other));
-      mPaintSuppressionTimer->InitWithNamedFuncCallback(
-          sPaintSuppressionCallback, this, delay, nsITimer::TYPE_ONE_SHOT,
-          "PresShell::sPaintSuppressionCallback");
+      InitPaintSuppressionTimer();
     }
   }
 
@@ -1956,11 +1962,6 @@ nsresult PresShell::Initialize() {
   }
 
   return NS_OK;  // XXX this needs to be real. MMP
-}
-
-void PresShell::sPaintSuppressionCallback(nsITimer* aTimer, void* aPresShell) {
-  RefPtr<PresShell> self = static_cast<PresShell*>(aPresShell);
-  if (self) self->UnsuppressPainting();
 }
 
 nsresult PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight,
@@ -3893,7 +3894,9 @@ void PresShell::UnsuppressAndInvalidate() {
   }
 
   // now that painting is unsuppressed, focus may be set on the document
-  if (nsPIDOMWindowOuter* win = mDocument->GetWindow()) win->SetReadyForFocus();
+  if (nsPIDOMWindowOuter* win = mDocument->GetWindow()) {
+    win->SetReadyForFocus();
+  }
 
   if (!mHaveShutDown) {
     SynthesizeMouseMove(false);
@@ -3901,13 +3904,41 @@ void PresShell::UnsuppressAndInvalidate() {
   }
 }
 
-void PresShell::UnsuppressPainting() {
+void PresShell::CancelPaintSuppressionTimer() {
   if (mPaintSuppressionTimer) {
     mPaintSuppressionTimer->Cancel();
     mPaintSuppressionTimer = nullptr;
   }
+}
 
-  if (mIsDocumentGone || !mPaintingSuppressed) return;
+void PresShell::UnsuppressPaintingFromTimer() {
+  if (mIsDocumentGone || !mPaintingSuppressed) {
+    CancelPaintSuppressionTimer();
+    return;
+  }
+  if (!StaticPrefs::nglayout_initialpaint_unsuppress_with_no_background()) {
+    if (mPresContext->IsRootContentDocumentCrossProcess()) {
+      UpdateCanvasBackground();
+      if (!mHasCSSBackgroundColor) {
+        // We don't unsuppress painting if the page has a transparent
+        // background, as that usually means that the page is unstyled.
+        if (mPaintSuppressionAttempts++ <
+            StaticPrefs::nglayout_initialpaint_retry_max_retry_count()) {
+          InitPaintSuppressionTimer();
+          return;
+        }
+      }
+    }
+  }
+  UnsuppressPainting();
+}
+
+void PresShell::UnsuppressPainting() {
+  CancelPaintSuppressionTimer();
+
+  if (mIsDocumentGone || !mPaintingSuppressed) {
+    return;
+  }
 
   // If we have reflows pending, just wait until we process
   // the reflows and get all the frames where we want them
