@@ -325,6 +325,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(R.string.pref_key_secret_debug_info) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToSecretInfoSettingsFragment()
             }
+            resources.getString(R.string.pref_key_nimbus_experiments) -> {
+                SettingsFragmentDirections.actionSettingsFragmentToNimbusExperimentsFragment()
+            }
             resources.getString(R.string.pref_key_override_amo_collection) -> {
                 val context = requireContext()
                 val dialogView = LayoutInflater.from(context).inflate(R.layout.amo_collection_override_dialog, null)
@@ -432,6 +435,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
             findPreference<Preference>(
                 getPreferenceKey(R.string.pref_key_credit_cards)
             )?.isVisible = creditCardsFeature
+            findPreference<Preference>(
+                getPreferenceKey(R.string.pref_key_nimbus_experiments)
+            )?.isVisible = showSecretDebugMenuThisSession
             findPreference<Preference>(
                 getPreferenceKey(R.string.pref_key_debug_settings)
             )?.isVisible = showSecretDebugMenuThisSession

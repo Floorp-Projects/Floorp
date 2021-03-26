@@ -196,5 +196,10 @@
             android:key="@string/pref_key_secret_debug_info"
             android:title="@string/preferences_debug_info"
             app:isPreferenceVisible="false" />
+        <androidx.preference.Preference
+            android:icon="@drawable/ic_info"
+            android:key="@string/pref_key_nimbus_experiments"
+            android:title="@string/preferences_nimbus_experiments"
+            app:isPreferenceVisible="false" />
     </androidx.preference.PreferenceCategory>
 </androidx.preference.PreferenceScreen>

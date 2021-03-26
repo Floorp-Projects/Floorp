@@ -267,4 +267,5 @@
     <!-- Secret Settings -->
     <string name="pref_key_show_credit_cards_feature" translatable="false">pref_key_show_credit_cards_feature</string>
     <string name="pref_key_show_address_feature" translatable="false">pref_key_show_address_feature</string>
+    <string name="pref_key_nimbus_experiments" translatable="false">pref_key_nimbus_experiments</string>
 </resources>

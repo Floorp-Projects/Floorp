@@ -500,6 +500,13 @@
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
         <action
+            android:id="@+id/action_settingsFragment_to_nimbusExperimentsFragment"
+            app:destination="@id/nimbus_experiment_graph"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+        <action
             android:id="@+id/action_settingsFragment_to_customizationFragment"
             app:destination="@id/customizationFragment"
             app:enterAnim="@anim/slide_in_right"
@@ -997,6 +1004,28 @@
             tools:layout="@layout/fragment_add_search_engine">
             <argument
                 android:name="searchEngineIdentifier"
+                app:argType="string" />
+        </fragment>
+    </navigation>
+
+    <navigation
+        android:id="@+id/nimbus_experiment_graph"
+        app:startDestination="@id/nimbusExperimentsFragment">
+        <fragment
+            android:id="@+id/nimbusExperimentsFragment"
+            android:name="org.mozilla.fenix.nimbus.NimbusExperimentsFragment"
+            android:label="@string/preferences_nimbus_experiments"
+            tools:layout="@layout/mozac_service_nimbus_experiments">
+            <action
+                android:id="@+id/action_nimbusExperimentsFragment_to_nimbusDetailsFragment"
+                app:destination="@+id/nimbusDetailsFragment" />
+        </fragment>
+        <fragment
+            android:id="@+id/nimbusDetailsFragment"
+            android:name="org.mozilla.fenix.nimbus.NimbusDetailsFragment"
+            tools:layout="@layout/mozac_service_nimbus_experiment_details">
+            <argument
+                android:name="experiment"
                 app:argType="string" />
         </fragment>
     </navigation>
