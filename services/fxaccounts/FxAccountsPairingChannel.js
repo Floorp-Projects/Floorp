@@ -14,9 +14,13 @@
  * This uses the event-target-shim node library published under the MIT license:
  * https://github.com/mysticatea/event-target-shim/blob/master/LICENSE
  * 
- * Bundle generated from https://github.com/mozilla/fxa-pairing-channel.git. Hash:348f3cf3e80cf7f54f9e, Chunkhash:d34c4d4ec81a46304a5d.
+ * Bundle generated from https://github.com/mozilla/fxa-pairing-channel.git. Hash:c8ec3119920b4ffa833b, Chunkhash:378a5f51445e7aa7630e.
  * 
  */
+
+// This header provides a little bit of plumbing to use `FxAccountsPairingChannel`
+// from Firefox browser code, hence the presence of these privileged browser APIs.
+// If you're trying to use this from ordinary web content you're in for a bad time.
 
 const {Services} = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const {setTimeout} = ChromeUtils.import("resource://gre/modules/Timer.jsm");
@@ -119,7 +123,20 @@ var FxAccountsPairingChannel =
 /***/ (function(module, __webpack_exports__, __webpack_require__) {
 
 "use strict";
+// ESM COMPAT FLAG
 __webpack_require__.r(__webpack_exports__);
+
+// EXPORTS
+__webpack_require__.d(__webpack_exports__, "PairingChannel", function() { return /* binding */ src_PairingChannel; });
+__webpack_require__.d(__webpack_exports__, "base64urlToBytes", function() { return /* reexport */ base64urlToBytes; });
+__webpack_require__.d(__webpack_exports__, "bytesToBase64url", function() { return /* reexport */ bytesToBase64url; });
+__webpack_require__.d(__webpack_exports__, "bytesToHex", function() { return /* reexport */ bytesToHex; });
+__webpack_require__.d(__webpack_exports__, "bytesToUtf8", function() { return /* reexport */ bytesToUtf8; });
+__webpack_require__.d(__webpack_exports__, "hexToBytes", function() { return /* reexport */ hexToBytes; });
+__webpack_require__.d(__webpack_exports__, "TLSCloseNotify", function() { return /* reexport */ TLSCloseNotify; });
+__webpack_require__.d(__webpack_exports__, "TLSError", function() { return /* reexport */ TLSError; });
+__webpack_require__.d(__webpack_exports__, "utf8ToBytes", function() { return /* reexport */ utf8ToBytes; });
+__webpack_require__.d(__webpack_exports__, "_internals", function() { return /* binding */ _internals; });
 
 // CONCATENATED MODULE: ./src/alerts.js
 /* This Source Code Form is subject to the terms of the Mozilla Public
@@ -627,7 +644,9 @@ class utils_BufferWriter extends utils_BufferWithPointer {
 // Low-level crypto primitives.
 //
 // This file implements the AEAD encrypt/decrypt and hashing routines
-// for the TLS_AES_128_GCM_SHA256 ciphersuite.
+// for the TLS_AES_128_GCM_SHA256 ciphersuite. They are (thankfully)
+// fairly light-weight wrappers around what's available via the WebCrypto
+// API.
 //
 
 
@@ -749,6 +768,11 @@ async function getRandomBytes(size) {
 //
 // This file contains some helpers for reading/writing the various kinds
 // of Extension that might appear in a HandshakeMessage.
+//
+// "Extensions" are how TLS signals the presence of particular bits of optional
+// functionality in the protocol. Lots of parts of TLS1.3 that don't seem like
+// they're optional are implemented in terms of an extension, IIUC because that's
+// what was needed for a clean deployment in amongst earlier versions of the protocol.
 //
 
 
@@ -1026,8 +1050,8 @@ const PSK_MODE_KE = 0;
 //
 // Message parsing.
 //
-// Herein we need code for reading and writing the various Handshake
-// messages involved in the protocol.
+// Herein we have code for reading and writing the various Handshake
+// messages involved in the TLS protocol.
 //
 
 
@@ -3418,23 +3442,15 @@ if (
 
 
 // CONCATENATED MODULE: ./src/index.js
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "PairingChannel", function() { return src_PairingChannel; });
-/* harmony export (binding) */ __webpack_require__.d(__webpack_exports__, "_internals", function() { return _internals; });
-/* concated harmony reexport base64urlToBytes */__webpack_require__.d(__webpack_exports__, "base64urlToBytes", function() { return base64urlToBytes; });
-/* concated harmony reexport bytesToBase64url */__webpack_require__.d(__webpack_exports__, "bytesToBase64url", function() { return bytesToBase64url; });
-/* concated harmony reexport bytesToHex */__webpack_require__.d(__webpack_exports__, "bytesToHex", function() { return bytesToHex; });
-/* concated harmony reexport bytesToUtf8 */__webpack_require__.d(__webpack_exports__, "bytesToUtf8", function() { return bytesToUtf8; });
-/* concated harmony reexport hexToBytes */__webpack_require__.d(__webpack_exports__, "hexToBytes", function() { return hexToBytes; });
-/* concated harmony reexport TLSCloseNotify */__webpack_require__.d(__webpack_exports__, "TLSCloseNotify", function() { return TLSCloseNotify; });
-/* concated harmony reexport TLSError */__webpack_require__.d(__webpack_exports__, "TLSError", function() { return TLSError; });
-/* concated harmony reexport utf8ToBytes */__webpack_require__.d(__webpack_exports__, "utf8ToBytes", function() { return utf8ToBytes; });
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // A wrapper that combines a WebSocket to the channelserver
 // with some client-side encryption for securing the channel.
-// We'll improve the encryption before initial release...
+//
+// This code is responsible for the event handling and the consumer API.
+// All the details of encrypting the messages are delegated to`./tlsconnection.js`.
 
 
 
@@ -3460,21 +3476,32 @@ class src_PairingChannel extends EventTarget {
   /**
    * Create a new pairing channel.
    *
+   * This will open a channel on the channelserver, and generate a random client-side
+   * encryption key. When the promise resolves, `this.channelId` and `this.channelKey`
+   * can be transferred to another client to allow it to securely connect to the channel.
+   *
    * @returns Promise<PairingChannel>
    */
   static create(channelServerURI) {
     const wsURI = new URL('/v1/ws/', channelServerURI).href;
     const channelKey = crypto.getRandomValues(new Uint8Array(32));
+    // The one who creates the channel plays the role of 'server' in the underlying TLS exchange.
     return this._makePairingChannel(wsURI, tlsconnection_ServerConnection, channelKey);
   }
 
   /**
    * Connect to an existing pairing channel.
    *
+   * This will connect to a channel on the channelserver previously established by
+   * another client calling `create`. The `channelId` and `channelKey` must have been
+   * obtained via some out-of-band mechanism (such as by scanning from a QR code).
+   *
    * @returns Promise<PairingChannel>
    */
   static connect(channelServerURI, channelId, channelKey) {
     const wsURI = new URL(`/v1/ws/${channelId}`, channelServerURI).href;
+    // The one who connects to an existing channel plays the role of 'client'
+    // in the underlying TLS exchange.
     return this._makePairingChannel(wsURI, tlsconnection_ClientConnection, channelKey);
   }
 
@@ -3490,11 +3517,14 @@ class src_PairingChannel extends EventTarget {
       const onFirstMessage = async event => {
         stopListening();
         try {
+          // The channelserver echos back the channel id, and we use it as an
+          // additional input to the TLS handshake via the "psk id" field.
           const {channelid: channelId} = JSON.parse(event.data);
           const pskId = utf8ToBytes(channelId);
           const connection = await ConnectionClass.create(psk, pskId, data => {
-            // The channelserver websocket handler epxects b64urlsafe strings
-            // rather than raw bytes, because it wraps them in a JSON object envelope.
+            // Send data by forwarding it via the channelserver websocket.
+            // The TLS connection gives us `data` as raw bytes, but channelserver
+            // expects b64urlsafe strings, because it wraps them in a JSON object envelope.
             socket.send(bytesToBase64url(data));
           });
           const instance = new this(channelId, psk, socket, connection);
@@ -3504,9 +3534,11 @@ class src_PairingChannel extends EventTarget {
         }
       };
       stopListening = () => {
+        socket.removeEventListener('close', onConnectionError);
         socket.removeEventListener('error', onConnectionError);
         socket.removeEventListener('message', onFirstMessage);
       };
+      socket.addEventListener('close', onConnectionError);
       socket.addEventListener('error', onConnectionError);
       socket.addEventListener('message', onFirstMessage);
     });
@@ -3515,6 +3547,8 @@ class src_PairingChannel extends EventTarget {
   _setupListeners() {
     this._socket.addEventListener('message', async event => {
       try {
+        // When we receive data from the channelserver, pump it through the TLS connection
+        // to decrypt it, then echo it back out to consumers as an event.
         const channelServerEnvelope = JSON.parse(event.data);
         const payload = await this._connection.recv(base64urlToBytes(channelServerEnvelope.message));
         if (payload !== null) {
@@ -3528,6 +3562,9 @@ class src_PairingChannel extends EventTarget {
         }
       } catch (error) {
         let event;
+        // The underlying TLS connection will signal a clean shutdown of the channel
+        // by throwing a special error, because it doesn't really have a better
+        // signally mechanism available.
         if (error instanceof TLSCloseNotify) {
           this._peerClosed = true;
           if (this._selfClosed) {
