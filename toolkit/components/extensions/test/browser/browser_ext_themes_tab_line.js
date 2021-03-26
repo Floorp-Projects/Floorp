@@ -6,7 +6,7 @@
 add_task(async function test_support_tab_line() {
   for (let protonTabsEnabled of [true, false]) {
     SpecialPowers.pushPrefEnv({
-      set: [["browser.proton.tabs.enabled", protonTabsEnabled]],
+      set: [["browser.proton.enabled", protonTabsEnabled]],
     });
     let newWin = await BrowserTestUtils.openNewWindowWithFlushedXULCacheForMozSupports();
 

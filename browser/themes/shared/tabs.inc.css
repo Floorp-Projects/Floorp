@@ -12,7 +12,7 @@
   --inline-tab-padding: 9px;
 }
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 :root {
   --tab-min-height: 36px;
   --tab-border-radius: 4px;
@@ -36,7 +36,7 @@
   --tab-loading-fill: #0A84FF;
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 #tabbrowser-tabs:-moz-lwtheme {
   --tab-line-color: currentColor;
 }
@@ -70,7 +70,7 @@
   min-height: inherit;
 }
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox::part(scrollbox) {
   /* Add padding to match the shadow's blur radius so the
     shadow doesn't get clipped when either the first or
@@ -103,7 +103,7 @@
   -moz-box-align: stretch;
 }
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 .tabbrowser-tab {
   min-height: var(--tab-min-height);
   padding-inline: 2px !important;
@@ -141,7 +141,7 @@
   padding: 0 10px;
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 :root:not([uidensity=compact]) .tab-content[pinned] {
   padding: 0 12px;
 }
@@ -211,7 +211,7 @@
   }
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .tab-icon-stack,
 .tab-icon-sound,
 .tab-close-button {
@@ -230,7 +230,7 @@
   width: 16px;
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .tab-throbber:not([pinned]),
 .tab-icon-pending:not([pinned]),
 .tab-icon-image:not([pinned]),
@@ -240,7 +240,7 @@
 }
 } /*** END !proton ***/
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 .tab-throbber:not([pinned]),
 .tab-icon-pending:not([pinned]),
 .tab-icon-image:not([pinned]),
@@ -379,7 +379,7 @@
   z-index: 1; /* Overlay tab title */
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .tab-icon-overlay[pictureinpicture] {
   top: -4.5px;
   inset-inline-end: -9px;
@@ -387,7 +387,7 @@
 }
 } /*** END !proton ***/
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 #tabbrowser-tabs[secondarytext-unsupported] .tab-icon-stack@tabIndicatorReplacesIcon@ > :not(.tab-icon-overlay),
 #toolbar-menubar:not(:hover) + #TabsToolbar:not(:hover) #tabbrowser-tabs:not([secondarytext-unsupported]) .tab-icon-overlay@tabIndicatorReplacesIcon@,
 :is(#toolbar-menubar:hover + #TabsToolbar, #TabsToolbar:hover) .tab-icon-stack@tabIndicatorReplacesIcon@ > :not(.tab-icon-overlay) {
@@ -410,14 +410,14 @@
   color: black;
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .tab-icon-overlay[pictureinpicture]:hover {
   background-color: white;
   color: black;
 }
 } /*** END !proton ***/
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 .tab-icon-overlay@tabIndicatorReplacesIcon@ {
   border-radius: 2px;
   fill-opacity: 0.75;
@@ -497,7 +497,7 @@
   fill-opacity: var(--toolbarbutton-icon-fill-opacity);
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .tab-label {
   /* Maintain consistent alignment in case of font fallback for non-Latin characters. */
   line-height: 1.7em;
@@ -508,7 +508,7 @@
 }
 } /*** END !proton ***/
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 .tab-close-button {
   margin-inline-end: calc(var(--inline-tab-padding) / -2);
   width: 24px;
@@ -529,7 +529,7 @@
 }
 } /*** END proton ***/
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 :root[uidensity=touch] .tab-close-button {
   margin-inline-end: calc(var(--inline-tab-padding) / -2);
   width: 24px;
@@ -538,7 +538,7 @@
 }
 } /*** END !proton ***/
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .tab-label-container.proton {
   display: none;
 }
@@ -553,7 +553,7 @@
 }
 } /*** END !proton ***/
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 #tabbrowser-tabs[secondarytext-unsupported] .tab-secondary-label,
 .tab-label-container:not(.proton),
 .tab-label-container:not(.proton) + .tab-icon-sound {
@@ -573,7 +573,7 @@
 }
 } /*** END proton ***/
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .tab-icon-sound[soundplaying],
 .tab-icon-sound[muted],
 .tab-icon-sound[activemedia-blocked] {
@@ -625,7 +625,7 @@
 }
 } /*** END !proton ***/
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 .tab-secondary-label[soundplaying-scheduledremoval]:not([muted]):not(:hover) {
   transition: opacity .3s linear var(--soundplaying-removal-delay);
   opacity: 0;
@@ -657,7 +657,7 @@
   margin-inline: -6.5px -.5px;
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 #tabbrowser-arrowscrollbox:not([scrolledtostart])::part(overflow-start-indicator),
 #tabbrowser-arrowscrollbox:not([scrolledtoend])::part(overflow-end-indicator) {
   width: 18px;
@@ -676,7 +676,7 @@
   transform: scaleX(-1);
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 #tabbrowser-arrowscrollbox:not([scrolledtostart])::part(overflow-start-indicator) {
   margin-inline: -1px -17px;
 }
@@ -706,7 +706,7 @@
   color: var(--lwt-tab-text, var(--toolbar-color));
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .tab-line {
   height: 2px;
 }
@@ -719,7 +719,7 @@
   background-clip: padding-box;
 }
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 .tab-background {
   border-radius: var(--tab-border-radius);
   margin-block: var(--proton-tab-block-margin);
@@ -743,7 +743,7 @@
   border-radius: inherit;
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 
 %ifdef MENUBAR_CAN_AUTOHIDE
 #toolbar-menubar:not([autohide=true]) + #TabsToolbar,
@@ -776,7 +776,7 @@
   opacity: .1;
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .tab-line[multiselected],
 .tab-line[selected=true] {
   background-color: var(--tab-line-color);
@@ -803,7 +803,7 @@
 
 /* Tab hover */
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true], [multiselected]) {
   background-color: rgba(0,0,0,.1);
 }
@@ -813,13 +813,13 @@
 }
 } /* END !proton */
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected=true], [multiselected]) {
   background-color: color-mix(in srgb, currentColor 11%, transparent);
 }
 } /* END proton */
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 @media (prefers-reduced-motion: no-preference) {
   .tab-line:not([selected=true], [multiselected]) {
     transition: transform 250ms var(--animation-easing-function), opacity 250ms var(--animation-easing-function);
@@ -848,7 +848,7 @@
 
 /* Pinned tabs */
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 /* Pinned tab separators need position: absolute when positioned (during overflow). */
 #tabbrowser-tabs[positionpinnedtabs] > #tabbrowser-arrowscrollbox > .tabbrowser-tab[pinned]::after {
   display: block;
@@ -869,7 +869,7 @@
   background-repeat: no-repeat;
 }
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 .tabbrowser-tab:is([image], [pinned]) > .tab-stack > .tab-content[attention]:not([selected="true"]),
 .tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([selected="true"]) {
   /* Only show the top half of the 12px tall indicator-tab-attention.svg. */
@@ -921,7 +921,7 @@
 
 /* Tab separators */
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .titlebar-spacer[type="pre-tabs"] {
   border-inline-end: 1px solid var(--lwt-background-tab-separator-color, currentColor);
   opacity: 0.2;

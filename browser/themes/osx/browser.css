@@ -34,14 +34,14 @@
   --arrowpanel-field-background: rgba(12,12,13,.3);
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 #navigator-toolbox {
   appearance: none;
   --tabs-border-color: rgba(0,0,0,.2);
 }
 } /*** end !proton ***/
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 #navigator-toolbox {
   appearance: none;
 }
@@ -51,7 +51,7 @@
 }
 } /*** END proton ***/
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 #navigator-toolbox:not(:-moz-lwtheme):-moz-window-inactive {
   --tabs-border-color: rgba(0,0,0,.05);
 }
@@ -78,7 +78,7 @@
   opacity: 0.001;
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 #tabbrowser-tabs {
   --tab-line-color: -moz-accent-color;
 }
@@ -546,7 +546,7 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   text-shadow: inherit;
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 :is(.keyboard-focused-tab, .tabbrowser-tab:focus:not([aria-activedescendant])) > .tab-stack > .tab-content > .tab-label-container:not([pinned]),
 :is(.keyboard-focused-tab, .tabbrowser-tab:focus:not([aria-activedescendant])) > .tab-stack > .tab-content > .tab-icon-image[pinned],
 :is(.keyboard-focused-tab, .tabbrowser-tab:focus:not([aria-activedescendant])) > .tab-stack > .tab-content > .tab-throbber[pinned] {
