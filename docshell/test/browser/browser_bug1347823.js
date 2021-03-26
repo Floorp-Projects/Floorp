@@ -7,7 +7,11 @@
 add_task(async function testValidCache() {
   // Make an unrealistic large timeout.
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.sessionhistory.contentViewerTimeout", 86400]],
+    set: [
+      ["browser.sessionhistory.contentViewerTimeout", 86400],
+      // If Fission is disabled, the pref is no-op.
+      ["fission.bfcacheInParent", true],
+    ],
   });
 
   await BrowserTestUtils.withNewTab(
@@ -40,7 +44,11 @@ add_task(async function testValidCache() {
 add_task(async function testExpiredCache() {
   // Make bfcache timeout in 1 sec.
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.sessionhistory.contentViewerTimeout", 1]],
+    set: [
+      ["browser.sessionhistory.contentViewerTimeout", 1],
+      // If Fission is disabled, the pref is no-op.
+      ["fission.bfcacheInParent", true],
+    ],
   });
 
   await BrowserTestUtils.withNewTab(
@@ -58,7 +66,7 @@ add_task(async function testExpiredCache() {
       // Wait for 3 times of expiration timeout, hopefully it's evicted...
       await SpecialPowers.spawn(browser, [], () => {
         return new Promise(resolve => {
-          content.setTimeout(resolve, 3000);
+          content.setTimeout(resolve, 5000);
         });
       });
 
