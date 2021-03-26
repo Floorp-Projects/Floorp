@@ -111,6 +111,19 @@ def gifft_map(output_fd, *args):
     probe_type = args[-1]
     args = args[DEPS_LEN:-1]
     all_objs, options = parse(args)
+
+    # Events also need to output maps from event extra enum to strings.
+    # Sadly we need to generate code for all possible events, not just mirrored.
+    # Otherwise we won't compile.
+    if probe_type == "Event":
+        output_path = Path(os.path.dirname(output_fd.name))
+        with FileAvoidWrite(output_path / "EventExtraGIFFTMaps.cpp") as cpp_fd:
+            output_gifft_map(output_fd, probe_type, all_objs, cpp_fd)
+    else:
+        output_gifft_map(output_fd, probe_type, all_objs, None)
+
+
+def output_gifft_map(output_fd, probe_type, all_objs, cpp_fd):
     get_metric_id = generate_metric_ids(all_objs)
     ids_to_probes = {}
     for category_name, objs in all_objs.items():
@@ -163,10 +176,8 @@ def gifft_map(output_fd, *args):
     # Otherwise we won't compile.
     if probe_type == "Event":
         template = env.get_template("gifft_events.jinja2")
-        output_path = Path(os.path.dirname(output_fd.name))
-        with FileAvoidWrite(output_path / "EventExtraGIFFTMaps.cpp") as cpp_fd:
-            cpp_fd.write(template.render(all_objs=all_objs))
-            cpp_fd.write("\n")
+        cpp_fd.write(template.render(all_objs=all_objs))
+        cpp_fd.write("\n")
 
 
 if __name__ == "__main__":

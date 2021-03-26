@@ -12,7 +12,7 @@
 # you can find that one in toolkit/components/telemetry/geckoview/streaming.
 
 ---
-$schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
 
 test:
   boolean_metric:
@@ -28,6 +28,7 @@ test:
       - https://bugzilla.mozilla.org/1635260/
     data_reviews:
       - https://example.com
+    telemetry_mirror: SOME_BOOL_SCALAR
 
   labeled_boolean_metric:
     type: labeled_boolean
@@ -42,6 +43,7 @@ test:
       - https://bugzilla.mozilla.org/1635260/
     data_reviews:
       - https://example.com
+    telemetry_mirror: SOME_KEYED_BOOL_SCALAR
 
   labeled_boolean_metric_labels:
     type: labeled_boolean
@@ -59,6 +61,7 @@ test:
     labels:
       - one_label
       - two_labels
+    telemetry_mirror: SOME_OTHER_KEYED_BOOL_SCALAR
 
   counter_metric:
     type: counter
@@ -73,6 +76,7 @@ test:
       - https://bugzilla.mozilla.org/1635260/
     data_reviews:
       - https://example.com
+    telemetry_mirror: SOME_UINT_SCALAR
 
   labeled_counter_metric:
     type: labeled_counter
@@ -87,6 +91,7 @@ test:
       - https://bugzilla.mozilla.org/1635260/
     data_reviews:
       - https://example.com
+    telemetry_mirror: SOME_KEYED_UINT_SCALAR
 
   labeled_counter_metric_labels:
     type: labeled_counter
@@ -104,6 +109,7 @@ test:
     labels:
       - one_label
       - two_labels
+    telemetry_mirror: SOME_OTHER_KEYED_UINT_SCALAR
 
   string_metric:
     type: string
@@ -118,6 +124,7 @@ test:
       - https://bugzilla.mozilla.org/1635260/
     data_reviews:
       - https://example.com
+    telemetry_mirror: SOME_STRING_SCALAR
 
   labeled_string_metric:
     type: labeled_string
@@ -163,6 +170,7 @@ test:
       - https://bugzilla.mozilla.org/1635260/
     data_reviews:
       - https://example.com
+    telemetry_mirror: SOME_KEYED_BOOL_SCALAR
 
   timespan_metric:
     type: timespan
@@ -177,6 +185,7 @@ test:
       - https://bugzilla.mozilla.org/1635260/
     data_reviews:
       - https://example.com
+    telemetry_mirror: SOME_OTHER_UINT_SCALAR
 
   timing_distribution_metric:
     type: timing_distribution
@@ -191,6 +200,7 @@ test:
       - https://bugzilla.mozilla.org/1635260/
     data_reviews:
       - https://example.com
+    telemetry_mirror: SOME_TIME_HISTOGRAM_MS
 
   memory_distribution_metric:
     type: memory_distribution
@@ -206,6 +216,7 @@ test:
     data_reviews:
       - https://example.com
     memory_unit: kilobyte
+    telemetry_mirror: SOME_MEM_HISTOGRAM_KB
 
 test.nested:
   uuid_metric:
@@ -221,6 +232,7 @@ test.nested:
       - https://bugzilla.mozilla.org/1635260/
     data_reviews:
       - https://example.com
+    telemetry_mirror: SOME_OTHER_STRING_SCALAR
 
   datetime_metric:
     type: datetime
@@ -235,6 +247,7 @@ test.nested:
       - https://bugzilla.mozilla.org/1635260/
     data_reviews:
       - https://example.com
+    telemetry_mirror: SOME_STILL_OTHER_STRING_SCALAR
 
   event_metric:
     type: event
@@ -249,6 +262,7 @@ test.nested:
       - https://bugzilla.mozilla.org/1635260/
     data_reviews:
       - https://example.com
+    telemetry_mirror: EventMetric_EnumNames_AreStrange
 
   event_metric_with_extra:
     type: event
@@ -268,3 +282,4 @@ test.nested:
         description: An extra key description
       another_extra_key:
         description: Another extra key description
+    telemetry_mirror: EventMetric_EnumName_WithExtra
