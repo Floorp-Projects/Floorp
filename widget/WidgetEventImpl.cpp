@@ -651,6 +651,30 @@ bool WidgetMouseEvent::IsMiddleClickPasteEnabled() {
   return Preferences::GetBool("middlemouse.paste", false);
 }
 
+#ifdef DEBUG
+void WidgetMouseEvent::AssertContextMenuEventButtonConsistency() const {
+  if (mMessage != eContextMenu) {
+    return;
+  }
+
+  if (mContextMenuTrigger == eNormal) {
+    NS_WARNING_ASSERTION(mButton == MouseButton::eSecondary,
+                         "eContextMenu events with eNormal trigger should use "
+                         "secondary mouse button");
+  } else {
+    NS_WARNING_ASSERTION(mButton == MouseButton::ePrimary,
+                         "eContextMenu events with non-eNormal trigger should "
+                         "use primary mouse button");
+  }
+
+  if (mContextMenuTrigger == eControlClick) {
+    NS_WARNING_ASSERTION(IsControl(),
+                         "eContextMenu events with eControlClick trigger "
+                         "should return true from IsControl()");
+  }
+}
+#endif
+
 /******************************************************************************
  * mozilla::WidgetDragEvent (MouseEvents.h)
  ******************************************************************************/

@@ -2053,6 +2053,19 @@ void nsBlockFrame::ConsiderBlockEndEdgeOfChildren(
   // REVIEW: For now, we do this for both visual and scrollable area,
   // although when we make scrollable overflow area not be a subset of
   // visual, we can change this.
+
+  if (Style()->GetPseudoType() == PseudoStyleType::scrolledContent) {
+    // If we are a scrolled inner frame, add our block-end padding to our
+    // children's block-end edge.
+    //
+    // Note: aBEndEdgeOfChildren already includes our own block-start padding
+    // because it is relative to our block-start edge of our border-box, which
+    // is the same as our padding-box here.
+    MOZ_ASSERT(GetLogicalUsedBorderAndPadding(wm) == GetLogicalUsedPadding(wm),
+               "A scrolled inner frame shouldn't have any border!");
+    aBEndEdgeOfChildren += GetLogicalUsedPadding(wm).BEnd(wm);
+  }
+
   // XXX Currently, overflow areas are stored as physical rects, so we have
   // to handle writing modes explicitly here. If we change overflow rects
   // to be stored logically, this can be simplified again.

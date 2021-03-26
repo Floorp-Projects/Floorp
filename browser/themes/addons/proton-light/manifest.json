@@ -10,13 +10,15 @@
   "name": "Proton Light",
   "description": "A theme with a light color scheme.",
   "author": "Mozilla",
-  "version": "1.1",
+  "version": "1.2",
 
   "icons": {"32": "icon.svg"},
 
   "theme": {
     "colors": {
-      "tab_background_text": "#15141a",
+      "tab_background_text": "rgb(21,20,26)",
+      "tab_selected": "#fff",
+      "tab_text": "rgb(21,20,26)",
       "icons": "rgb(24, 25, 26, 0.7)",
       "frame": "#f0f0f4",
       "popup": "#fff",

@@ -172,6 +172,7 @@ typedef void* nsNativeWidget;
 #endif
 
 #define MOZ_WIDGET_MAX_SIZE 16384
+#define MOZ_WIDGET_INVALID_SCALE 0.0
 
 // Must be kept in sync with xpcom/rust/xpcom/src/interfaces/nonidl.rs
 #define NS_IWIDGET_IID                               \
@@ -293,11 +294,14 @@ namespace widget {
  * Values are in device pixels.
  */
 struct SizeConstraints {
-  SizeConstraints() : mMaxSize(MOZ_WIDGET_MAX_SIZE, MOZ_WIDGET_MAX_SIZE) {}
+  SizeConstraints()
+      : mMaxSize(MOZ_WIDGET_MAX_SIZE, MOZ_WIDGET_MAX_SIZE),
+        mScale(MOZ_WIDGET_INVALID_SCALE) {}
 
   SizeConstraints(mozilla::LayoutDeviceIntSize aMinSize,
-                  mozilla::LayoutDeviceIntSize aMaxSize)
-      : mMinSize(aMinSize), mMaxSize(aMaxSize) {
+                  mozilla::LayoutDeviceIntSize aMaxSize,
+                  mozilla::DesktopToLayoutDeviceScale aScale)
+      : mMinSize(aMinSize), mMaxSize(aMaxSize), mScale(aScale) {
     if (mMaxSize.width > MOZ_WIDGET_MAX_SIZE) {
       mMaxSize.width = MOZ_WIDGET_MAX_SIZE;
     }
@@ -308,6 +312,16 @@ struct SizeConstraints {
 
   mozilla::LayoutDeviceIntSize mMinSize;
   mozilla::LayoutDeviceIntSize mMaxSize;
+
+  /*
+   * The scale used to convert from desktop to device dimensions.
+   * MOZ_WIDGET_INVALID_SCALE if the value is not known.
+   *
+   * Bug 1701109 is filed to revisit adding of 'mScale' and deal
+   * with multi-monitor scaling issues in more complete way across
+   * all widget implementations.
+   */
+  mozilla::DesktopToLayoutDeviceScale mScale;
 };
 
 struct AutoObserverNotifier {

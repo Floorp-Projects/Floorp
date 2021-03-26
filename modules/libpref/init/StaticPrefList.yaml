@@ -578,6 +578,14 @@
   value: false
   mirror: always
 
+# The "test async scroll offset" (used via reftest-async-scroll
+# or nsIDOMWindowUtils.setAsyncScrollOffset()) can be used to
+# trigger overscroll. Used for tests only.
+- name: apz.overscroll.test_async_scroll_offset.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 - name: apz.overscroll.min_pan_distance_ratio
   type: AtomicFloat
   value: 1.0f
@@ -9247,6 +9255,41 @@
 - name: nglayout.debug.widget_update_flashing
   type: RelaxedAtomicBool
   value: false
+  mirror: always
+
+- name: nglayout.initialpaint.delay
+  type: int32_t
+  value: 5
+  mirror: always
+
+- name: nglayout.initialpaint.delay_in_oopif
+  type: int32_t
+  value: 5
+  mirror: always
+
+# Whether we should unsuppress painting from the initial paint timer when
+# there's no CSS background specified on the page.
+- name: nglayout.initialpaint.unsuppress_with_no_background
+  type: bool
+  value: false
+  mirror: always
+
+# If we retried, what is the extra delay we should use.
+# Note that this increment is multiplied for the current retry number.
+- name: nglayout.initialpaint.retry.extra_delay
+  type: int32_t
+  # Somewhat arbitrary, but not too high so as to miss lots of frames if the
+  # page begins to get styled. Note that we forcefully unsuppress when the load
+  # event arrives too, or on max retries, so this won't block painting if the
+  # page has loaded.
+  value: 25
+  mirror: always
+
+- name: nglayout.initialpaint.retry.max_retry_count
+  type: int32_t
+  # This gives us 5 + 30 + 55 + ... 380 == 2705ms before forcibly
+  # unsuppressing, which seems plenty.
+  value: 15
   mirror: always
 
 #---------------------------------------------------------------------------

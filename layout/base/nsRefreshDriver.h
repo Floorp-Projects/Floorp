@@ -478,6 +478,8 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
 
   void FinishedWaitingForTransaction();
 
+  bool CanDoCatchUpTick();
+
   mozilla::RefreshDriverTimer* ChooseTimer();
   mozilla::RefreshDriverTimer* mActiveTimer;
   RefPtr<mozilla::RefreshDriverTimer> mOwnTimer;

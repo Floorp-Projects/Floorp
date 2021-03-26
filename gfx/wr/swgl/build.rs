@@ -74,11 +74,20 @@ fn translate_shader(shader_key: &str, shader_dir: &str) {
 
     let mut build = cc::Build::new();
     build.no_default_flags(true);
-    if build.get_compiler().is_like_msvc() {
-        build.flag("/EP").flag("/clang:-undef");
-    } else {
-        build.flag("-xc").flag("-P").flag("-undef");
+    if let Ok(tool) = build.try_get_compiler() {
+        if tool.is_like_msvc() {
+            build.flag("/EP");
+            if tool.path().to_str().map_or(false, |p| p.contains("clang")) {
+                build.flag("/clang:-undef");
+            } else {
+                build.flag("/u");
+            }
+        } else {
+            build.flag("-xc").flag("-P").flag("-undef");
+        }
     }
+    // Use SWGLPP target to avoid pulling CFLAGS/CXXFLAGS.
+    build.target("SWGLPP");
     build.file(&imp_name);
     let vs = build.clone()
         .define("WR_VERTEX_SHADER", Some("1"))
@@ -120,6 +129,17 @@ fn main() {
 
     shaders.sort();
 
+    // We need to ensure that the C preprocessor does not pull compiler flags from
+    // the host or target environment. Set up a SWGLPP target with empty flags to
+    // work around this.
+    if let Ok(target) = std::env::var("TARGET") {
+        if let Ok(cc) = std::env::var(format!("CC_{}", target))
+                        .or(std::env::var(format!("CC_{}", target.replace("-", "_")))) {
+            std::env::set_var("CC_SWGLPP", cc);
+        }
+    }
+    std::env::set_var("CFLAGS_SWGLPP", "");
+
     for shader in &shaders {
         translate_shader(shader, &shader_dir);
     }
@@ -139,17 +159,26 @@ fn main() {
     let mut build = cc::Build::new();
     build.cpp(true);
 
-    // SWGL relies heavily on inlining for performance so override -Oz with -O2
-    if build.get_compiler().args().contains(&std::ffi::OsString::from("-Oz")) {
-        build.flag("-O2");
+    if let Ok(tool) = build.try_get_compiler() {
+        if tool.is_like_msvc() {
+            build.flag("/std:c++17")
+                 .flag("/EHs-")
+                 .flag("/GR-")
+                 .flag("/UMOZILLA_CONFIG_H");
+        } else {
+            build.flag("-std=c++17")
+                 .flag("-fno-exceptions")
+                 .flag("-fno-rtti")
+                 .flag("-fno-math-errno")
+                 .flag("-UMOZILLA_CONFIG_H");
+        }
+        // SWGL relies heavily on inlining for performance so override -Oz with -O2
+        if tool.args().contains(&"-Oz".into()) {
+            build.flag("-O2");
+        }
     }
 
     build.file("src/gl.cc")
-        .flag("-std=c++17")
-        .flag("-UMOZILLA_CONFIG_H")
-        .flag("-fno-exceptions")
-        .flag("-fno-rtti")
-        .flag("-fno-math-errno")
         .define("_GLIBCXX_USE_CXX11_ABI", Some("0"))
         .include(shader_dir)
         .include("src")
