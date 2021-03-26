@@ -26,8 +26,15 @@ let gInspectee = null;
 
 addTest(async function setup() {
   const url = document.getElementById("inspectorContent").href;
-  const { target, doc } = await attachURL(url);
+  const { commands, target, doc } = await attachURL(url);
   gInspectee = doc;
+
+  // We need an active resource watcher before initializing the inspector front.
+  const resourceWatcher = await createResourceWatcher(commands);
+  // We don't listen for specific resources, we only need to trigger the resource watcher
+  // onTargetAvailable callback so the resourceWatcher is set on the target front.
+  await resourceWatcher.watchResources([], { onAvailable: () => {} });
+
   const inspector = await target.getFront("inspector");
   gWalker = inspector.walker;
   gStyles = await inspector.getPageStyle();
