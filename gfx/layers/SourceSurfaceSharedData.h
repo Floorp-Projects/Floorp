@@ -10,6 +10,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/ipc/SharedMemoryBasic.h"
+#include "nsExpirationTracker.h"
 
 namespace mozilla {
 namespace gfx {
@@ -45,7 +46,7 @@ class SourceSurfaceSharedDataWrapper final : public DataSourceSurface {
         mCreatorPid(0),
         mCreatorRef(true) {}
 
-  bool Init(const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat,
+  void Init(const IntSize& aSize, int32_t aStride, SurfaceFormat aFormat,
             const SharedMemoryBasic::Handle& aHandle,
             base::ProcessId aCreatorPid);
 
@@ -62,6 +63,12 @@ class SourceSurfaceSharedDataWrapper final : public DataSourceSurface {
   uint8_t* GetData() override { return static_cast<uint8_t*>(mBuf->memory()); }
 
   bool OnHeap() const override { return false; }
+
+  bool Map(MapType, MappedSurface* aMappedSurface) final;
+
+  void Unmap() final;
+
+  void ExpireMap();
 
   bool AddConsumer() { return ++mConsumers == 1; }
 
@@ -84,6 +91,8 @@ class SourceSurfaceSharedDataWrapper final : public DataSourceSurface {
 
   bool HasCreatorRef() const { return mCreatorRef; }
 
+  nsExpirationState* GetExpirationState() { return &mExpirationState; }
+
  private:
   size_t GetDataLength() const {
     return static_cast<size_t>(mStride) * mSize.height;
@@ -93,6 +102,11 @@ class SourceSurfaceSharedDataWrapper final : public DataSourceSurface {
     return mozilla::ipc::SharedMemory::PageAlignedSize(GetDataLength());
   }
 
+  void EnsureMapped(size_t aLength);
+
+  // Protects mapping and unmapping of mBuf.
+  Maybe<Mutex> mHandleLock;
+  nsExpirationState mExpirationState;
   int32_t mStride;
   uint32_t mConsumers;
   IntSize mSize;
