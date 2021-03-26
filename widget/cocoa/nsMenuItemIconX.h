@@ -10,6 +10,8 @@
 #ifndef nsMenuItemIconX_h_
 #define nsMenuItemIconX_h_
 
+#import <Cocoa/Cocoa.h>
+
 #include "mozilla/widget/IconLoader.h"
 
 class nsIconLoaderService;
@@ -19,7 +21,9 @@ class nsIPrincipal;
 class imgRequestProxy;
 class nsMenuParentX;
 
-#import <Cocoa/Cocoa.h>
+namespace mozilla {
+class ComputedStyle;
+}
 
 class nsMenuItemIconX final : public mozilla::widget::IconLoader::Listener {
  public:
@@ -57,6 +61,7 @@ class nsMenuItemIconX final : public mozilla::widget::IconLoader::Listener {
   nsCOMPtr<nsIContent> mContent;  // always non-null
   Listener* mListener;            // [weak]
   nsIntRect mImageRegionRect;
+  RefPtr<mozilla::ComputedStyle> mComputedStyle;
   NSImage* mIconImage = nil;  // [strong]
   RefPtr<mozilla::widget::IconLoader> mIconLoader;
 };

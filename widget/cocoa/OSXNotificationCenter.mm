@@ -507,8 +507,9 @@ OSXNotificationCenter::OnImageReady(nsISupports* aUserData, imgIRequest* aReques
   }
 
   NSImage* cocoaImage = nil;
+  // TODO: Pass ComputedStyle here to support context paint properties
   nsCocoaUtils::CreateDualRepresentationNSImageFromImageContainer(image, imgIContainer::FRAME_FIRST,
-                                                                  &cocoaImage);
+                                                                  nullptr, &cocoaImage);
   (osxni->mPendingNotification).contentImage = cocoaImage;
   [cocoaImage release];
   ShowPendingNotification(osxni);
