@@ -7,11 +7,18 @@ package org.mozilla.focus.activity.robots
 import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
+import org.junit.Assert.assertTrue
 import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.mDevice
 import org.mozilla.focus.helpers.TestHelper.waitingTime
 
 class SearchSettingsRobot {
+
+    fun verifySearchSettingsItems() {
+        assertTrue(searchEngineSubMenu.exists())
+        assertTrue(searchSuggestionsSwitch.exists())
+        assertTrue(urlAutocompleteSubMenu.exists())
+    }
 
     fun openSearchEngineSubMenu() {
         searchEngineSubMenu.waitForExists(waitingTime)
@@ -47,3 +54,7 @@ private val searchSuggestionsSwitch: UiObject =
         UiSelector()
             .resourceId("$appName:id/switchWidget")
     )
+
+private val urlAutocompleteSubMenu =
+    UiScrollable(UiSelector().resourceId("$appName:id/recycler_view"))
+        .getChild(UiSelector().text("URL Autocomplete"))
