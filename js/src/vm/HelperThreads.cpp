@@ -505,7 +505,6 @@ AutoSetHelperThreadContext::AutoSetHelperThreadContext(
   cx = HelperThreadState().getFirstUnusedContext(lock);
   MOZ_ASSERT(cx);
   cx->setHelperThread(lock);
-  cx->nativeStackBase = GetNativeStackBase();
   // When we set the JSContext, we need to reset the computed stack limits for
   // the current thread, so we also set the native stack quota.
   JS_SetNativeStackQuota(cx, HELPER_STACK_QUOTA);
