@@ -7,9 +7,10 @@
 #ifndef mozilla_glean_GleanString_h
 #define mozilla_glean_GleanString_h
 
+#include "mozilla/glean/bindings/ScalarGIFFTMap.h"
+#include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/Maybe.h"
 #include "nsIGleanMetrics.h"
-#include "mozilla/glean/fog_ffi_generated.h"
 #include "nsString.h"
 
 namespace mozilla::glean {
@@ -29,6 +30,10 @@ class StringMetric {
    * @param aValue The string to set the metric to.
    */
   void Set(const nsACString& aValue) const {
+    auto scalarId = ScalarIdForMetric(mId);
+    if (scalarId) {
+      Telemetry::ScalarSet(scalarId.extract(), NS_ConvertUTF8toUTF16(aValue));
+    }
 #ifndef MOZ_GLEAN_ANDROID
     fog_string_set(mId, &aValue);
 #endif

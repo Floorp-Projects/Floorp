@@ -52,15 +52,29 @@ static already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
   }
 }
 
-static already_AddRefed<nsISupports> NewSubMetricFromIds(uint32_t aParentTypeId, uint32_t aParentMetricId, const nsACString& aLabel) {
+/**
+ * Create a submetric instance for a labeled metric of the provided type and id for the given label.
+ * Assigns or retrieves an id for the submetric from the SDK.
+ *
+ * @param aParentTypeId - The type of the parent labeled metric identified as a number generated during codegen.
+ *                        Only used to identify which X of LabeledX you are so that X can be created here.
+ * @param aParentMetricId - The metric id for the parent labeled metric.
+ * @param aLabel - The label for the submetric. Might not adhere to the SDK label format.
+ * @param aSubmetricId - **On Android:** a pointer to the id to assign to this submetric since we can't ask the SDK for one.
+ *                       **Elsewhere:** an outparam which is assigned the submetric's SDK-generated submetric id.
+ *                       Used only by GIFFT. Ideally will be removed as soon as either
+ *                       Android special handling goes away (bug 1670261), or GIFFT is removed.
+ */
+static already_AddRefed<nsISupports> NewSubMetricFromIds(uint32_t aParentTypeId, uint32_t aParentMetricId, const nsACString& aLabel, uint32_t* aSubmetricId) {
   switch (aParentTypeId) {
     {% for (type_name, subtype_name), (type_id, original_type) in metric_type_ids.items() %}
     {% if subtype_name|length > 0 %}
     case {{ type_id }}: { /* {{ original_type }} */
 #ifdef MOZ_GLEAN_ANDROID
-      auto id = 0;
+      auto id = *aSubmetricId;
 #else
       auto id = impl::fog_{{original_type}}_get(aParentMetricId, &aLabel);
+      *aSubmetricId = id;
 #endif
       return MakeAndAddRef<{{subtype_name}}>(id);
     }

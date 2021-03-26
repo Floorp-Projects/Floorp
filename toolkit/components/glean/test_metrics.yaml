@@ -9,7 +9,7 @@
 # This file is for Internal FOG Test Use Only.
 
 ---
-$schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
 
 test_only:
   bad_code:
@@ -216,6 +216,44 @@ test_only:
     send_in_pings:
       - test-ping
 
+  mirror_time:
+    type: timespan
+    time_unit: nanosecond
+    description: |
+      Mirrored metric for a timespan.
+      This is a test-only metric.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1685406
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1685406#c1
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - glean-team@mozilla.com
+    expires: never
+    send_in_pings:
+      - test-ping
+    telemetry_mirror: TELEMETRY_TEST_MIRROR_FOR_TIMESPAN
+
+  mirrors_for_labeled_bools:
+    type: labeled_boolean
+    description: |
+      Mirrored metric.
+      This is a test-only metric.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1675277
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1675277#c1
+    data_sensitivity:
+      - technical
+    expires: never
+    notification_emails:
+      - glean-team@mozilla.com
+    send_in_pings:
+      - test-ping
+    telemetry_mirror: TELEMETRY_TEST_MIRROR_FOR_LABELED_BOOL
+
+
 test_only.ipc:
   a_counter:
     type: counter
@@ -224,6 +262,7 @@ test_only.ipc:
       Just counting things.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1685406
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165#c1
     data_sensitivity:
@@ -235,6 +274,7 @@ test_only.ipc:
       - store1
     no_lint:
       - COMMON_PREFIX
+    telemetry_mirror: TELEMETRY_TEST_UNSIGNED_INT_KIND
   a_bool:
     type: boolean
     description: |
@@ -242,6 +282,7 @@ test_only.ipc:
       Just flagging things.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1685406
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165#c1
     data_sensitivity:
@@ -253,6 +294,7 @@ test_only.ipc:
       - store1
     no_lint:
       - COMMON_PREFIX
+    telemetry_mirror: TELEMETRY_TEST_BOOLEAN_KIND
   a_date:
     type: datetime
     time_unit: second
@@ -261,6 +303,7 @@ test_only.ipc:
       Just putting things on the calendar.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1685406
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165#c1
     data_sensitivity:
@@ -272,6 +315,7 @@ test_only.ipc:
       - store1
     no_lint:
       - COMMON_PREFIX
+    telemetry_mirror: TELEMETRY_TEST_MIRROR_FOR_DATE
   a_string:
     type: string
     description: |
@@ -279,6 +323,7 @@ test_only.ipc:
       Just setting some strings.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1685406
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165#c1
     data_sensitivity:
@@ -290,6 +335,7 @@ test_only.ipc:
       - store1
     no_lint:
       - COMMON_PREFIX
+    telemetry_mirror: TELEMETRY_TEST_MULTIPLE_STORES_STRING
   a_memory_dist:
     type: memory_distribution
     memory_unit: kilobyte
@@ -298,6 +344,7 @@ test_only.ipc:
       Just measuring memory.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1685406
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165#c1
     data_sensitivity:
@@ -309,6 +356,7 @@ test_only.ipc:
       - store1
     no_lint:
       - COMMON_PREFIX
+    telemetry_mirror: TELEMETRY_TEST_LINEAR
   a_timing_dist:
     type: timing_distribution
     description: |
@@ -316,6 +364,7 @@ test_only.ipc:
       Just measuring time.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1685406
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165#c1
     data_sensitivity:
@@ -327,6 +376,7 @@ test_only.ipc:
       - store1
     no_lint:
       - COMMON_PREFIX
+    telemetry_mirror: TELEMETRY_TEST_EXPONENTIAL
   a_string_list:
     type: string_list
     description: |
@@ -334,6 +384,7 @@ test_only.ipc:
       Just appending some strings.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1685406
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165#c1
     data_sensitivity:
@@ -345,6 +396,7 @@ test_only.ipc:
       - store1
     no_lint:
       - COMMON_PREFIX
+    telemetry_mirror: TELEMETRY_TEST_KEYED_BOOLEAN_KIND
   an_event:
     type: event
     extra_keys:
@@ -357,6 +409,7 @@ test_only.ipc:
       Just recording some events.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1685406
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165#c1
     data_sensitivity:
@@ -368,6 +421,7 @@ test_only.ipc:
       - store1
     no_lint:
       - COMMON_PREFIX
+    telemetry_mirror: TelemetryTest_MirrorWithExtra_Object1
   no_extra_event:
     type: event
     description: |
@@ -375,6 +429,7 @@ test_only.ipc:
       Just recording some events without the extra fuss.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1685406
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165#c1
     data_sensitivity:
@@ -384,6 +439,7 @@ test_only.ipc:
     expires: never
     send_in_pings:
       - store1
+    telemetry_mirror: TelemetryTest_NotExpiredOptout_Object1
   a_uuid:
     type: uuid
     description: |
@@ -391,6 +447,7 @@ test_only.ipc:
       Just recording some unique identifiers.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1685406
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1646165#c1
     data_sensitivity:
@@ -402,6 +459,7 @@ test_only.ipc:
       - store1
     no_lint:
       - COMMON_PREFIX
+    telemetry_mirror: TELEMETRY_TEST_STRING_KIND
   a_labeled_counter:
     type: labeled_counter
     description: |
@@ -409,6 +467,7 @@ test_only.ipc:
       Just counting labeled things.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1688281
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1685406
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1688281#c1
     data_sensitivity:
@@ -420,3 +479,4 @@ test_only.ipc:
       - store1
     no_lint:
       - COMMON_PREFIX
+    telemetry_mirror: TELEMETRY_TEST_KEYED_UNSIGNED_INT

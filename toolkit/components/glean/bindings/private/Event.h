@@ -8,6 +8,7 @@
 #define mozilla_glean_GleanEvent_h
 
 #include "nsIGleanMetrics.h"
+#include "mozilla/glean/bindings/EventGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/Tuple.h"
 #include "nsString.h"
@@ -48,6 +49,20 @@ class EventMetric {
    *                an error is report and no event is recorded.
    */
   void Record(const Span<const Tuple<T, nsCString>>& aExtras = {}) const {
+    auto id = EventIdForMetric(mId);
+    if (id) {
+      Maybe<CopyableTArray<Telemetry::EventExtraEntry>> telExtras;
+      if (!aExtras.IsEmpty()) {
+        CopyableTArray<Telemetry::EventExtraEntry> extras;
+        for (auto& entry : aExtras) {
+          auto extraString = ExtraStringForKey(Get<0>(entry));
+          extras.EmplaceBack(
+              Telemetry::EventExtraEntry{extraString, Get<1>(entry)});
+        }
+        telExtras = Some(extras);
+      }
+      Telemetry::RecordEvent(id.extract(), Nothing(), telExtras);
+    }
 #ifndef MOZ_GLEAN_ANDROID
     static_assert(sizeof(T) <= sizeof(int32_t),
                   "Extra keys need to fit into 32 bits");
@@ -118,10 +133,14 @@ class EventMetric {
   }
 
  private:
+  static const nsCString ExtraStringForKey(T aKey);
+
   const uint32_t mId;
 };
 
 }  // namespace impl
+
+enum class NoExtraKeys;
 
 class GleanEvent final : public nsIGleanEvent {
  public:
@@ -133,7 +152,7 @@ class GleanEvent final : public nsIGleanEvent {
  private:
   virtual ~GleanEvent() = default;
 
-  const impl::EventMetric<uint32_t> mEvent;
+  const impl::EventMetric<NoExtraKeys> mEvent;
 };
 
 }  // namespace mozilla::glean

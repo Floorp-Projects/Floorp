@@ -37,6 +37,7 @@ GleanEvent::Record(JS::HandleValue aExtra, JSContext* aCx) {
 
   nsTArray<nsCString> extraKeys;
   nsTArray<nsCString> extraValues;
+  CopyableTArray<Telemetry::EventExtraEntry> telExtras;
 
   JS::RootedObject obj(aCx, &aExtra.toObject());
   JS::Rooted<JS::IdVector> ids(aCx, JS::IdVector(aCx));
@@ -71,6 +72,15 @@ GleanEvent::Record(JS::HandleValue aExtra, JSContext* aCx) {
 
     extraKeys.AppendElement(jsKey);
     extraValues.AppendElement(jsValue);
+    telExtras.EmplaceBack(Telemetry::EventExtraEntry{jsKey, jsValue});
+  }
+
+  // Since this calls the implementation directly, we need to implement GIFFT
+  // here as well as in EventMetric::Record.
+  auto id = EventIdForMetric(mEvent.mId);
+  if (id) {
+    Telemetry::RecordEvent(id.extract(), Nothing(),
+                           telExtras.IsEmpty() ? Nothing() : Some(telExtras));
   }
 
   // Calling the implementation directly, because we have a `string->string`

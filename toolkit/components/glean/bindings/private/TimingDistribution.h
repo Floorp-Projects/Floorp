@@ -19,6 +19,11 @@ typedef uint64_t TimerId;
 
 namespace impl {
 
+#ifdef MOZ_GLEAN_ANDROID
+// No Glean around to generate these for us.
+static Atomic<uint64_t> gNextTimerId(1);
+#endif
+
 class TimingDistributionMetric {
  public:
   constexpr explicit TimingDistributionMetric(uint32_t aId) : mId(aId) {}
@@ -30,10 +35,17 @@ class TimingDistributionMetric {
    */
   TimerId Start() const {
 #ifdef MOZ_GLEAN_ANDROID
-    return 0;
+    TimerId id = gNextTimerId++;
 #else
-    return fog_timing_distribution_start(mId);
+    TimerId id = fog_timing_distribution_start(mId);
 #endif
+    auto mirrorId = HistogramIdForMetric(mId);
+    if (mirrorId) {
+      auto map = gTimerIdToStarts.Lock();
+      (void)NS_WARN_IF(map->Remove(id));
+      map->InsertOrUpdate(id, TimeStamp::Now());
+    }
+    return id;
   }
 
   /*
@@ -47,6 +59,14 @@ class TimingDistributionMetric {
    *            concurrent timing of events associated with different ids.
    */
   void StopAndAccumulate(const TimerId&& aId) const {
+    auto mirrorId = HistogramIdForMetric(mId);
+    if (mirrorId) {
+      auto map = gTimerIdToStarts.Lock();
+      auto optStart = map->Extract(aId);
+      if (!NS_WARN_IF(!optStart)) {
+        AccumulateTimeDelta(mirrorId.extract(), optStart.extract());
+      }
+    }
 #ifndef MOZ_GLEAN_ANDROID
     fog_timing_distribution_stop_and_accumulate(mId, aId);
 #endif
@@ -59,6 +79,11 @@ class TimingDistributionMetric {
    * @param aId The TimerId whose `Start` you wish to abort.
    */
   void Cancel(const TimerId&& aId) const {
+    auto mirrorId = HistogramIdForMetric(mId);
+    if (mirrorId) {
+      auto map = gTimerIdToStarts.Lock();
+      (void)NS_WARN_IF(!map->Remove(aId));
+    }
 #ifndef MOZ_GLEAN_ANDROID
     fog_timing_distribution_cancel(mId, aId);
 #endif
