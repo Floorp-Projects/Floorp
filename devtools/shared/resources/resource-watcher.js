@@ -301,12 +301,6 @@ class ResourceWatcher {
    *        composed of a BrowsingContextTargetFront or ContentProcessTargetFront.
    */
   async _onTargetAvailable({ targetFront, isTargetSwitching }) {
-    // We put the resourceWatcher on the targetFront so it can be retrieved in the
-    // inspector and style-rule fronts. This might be removed in the future if/when we
-    // turn the resourceWatcher into a Command.
-    // ⚠️ This shouldn't be used anywhere else ⚠️
-    targetFront.resourceWatcher = this;
-
     const resources = [];
     if (isTargetSwitching) {
       this._onWillNavigate(targetFront);

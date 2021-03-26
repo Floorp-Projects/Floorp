@@ -102,7 +102,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         this.line = InspectorUtils.getRelativeRuleLine(this.rawRule);
         this.column = InspectorUtils.getRuleColumn(this.rawRule);
         this._parentSheet = this.rawRule.parentStyleSheet;
-        if (!this.pageStyle.hasStyleSheetWatcherSupport) {
+        if (!this.pageStyle.styleSheetWatcher) {
           this.sheetActor = this.pageStyle._sheetRef(this._parentSheet);
           this.sheetActor.on("style-applied", this._onStyleApplied);
         }
@@ -249,15 +249,12 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       // Used to differentiate between changes to rules with identical selectors.
       data.ruleIndex = this._ruleIndex;
 
-      if (this.pageStyle.hasStyleSheetWatcherSupport) {
+      if (this.pageStyle.styleSheetWatcher) {
+        const watcher = this.pageStyle.styleSheetWatcher;
         const sheet = this._parentSheet;
         const inspectorActor = this.pageStyle.inspector;
-        const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
-          sheet
-        );
-        const styleSheetIndex = this.pageStyle.styleSheetsManager.getStyleSheetIndex(
-          resourceId
-        );
+        const resourceId = watcher.getResourceId(sheet);
+        const styleSheetIndex = watcher.getStyleSheetIndex(resourceId);
         data.source = {
           // Inline stylesheets have a null href; Use window URL instead.
           type: sheet.href ? "stylesheet" : "inline",
@@ -332,8 +329,8 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       }
     }
     if (this._parentSheet) {
-      if (this.pageStyle.hasStyleSheetWatcherSupport) {
-        form.parentStyleSheet = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
+      if (this.pageStyle.styleSheetWatcher) {
+        form.parentStyleSheet = this.pageStyle.styleSheetWatcher.getResourceId(
           this._parentSheet
         );
       } else {
@@ -581,11 +578,14 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       return Promise.resolve(this.authoredText);
     }
 
-    if (this.pageStyle.hasStyleSheetWatcherSupport) {
-      const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
+    if (this.pageStyle.styleSheetWatcher) {
+      await this.pageStyle.styleSheetWatcher.ensureResourceAvailable(
         this._parentSheet
       );
-      const cssText = await this.pageStyle.styleSheetsManager.getText(
+      const resourceId = this.pageStyle.styleSheetWatcher.getResourceId(
+        this._parentSheet
+      );
+      const cssText = await this.pageStyle.styleSheetWatcher.getText(
         resourceId
       );
       const { text } = getRuleText(cssText, this.line, this.column);
@@ -637,11 +637,14 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       ruleBodyText = await this.getAuthoredCssText(true);
 
       let stylesheetText = null;
-      if (this.pageStyle.hasStyleSheetWatcherSupport) {
-        const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
+      if (this.pageStyle.styleSheetWatcher) {
+        await this.pageStyle.styleSheetWatcher.ensureResourceAvailable(
           this._parentSheet
         );
-        stylesheetText = await this.pageStyle.styleSheetsManager.getText(
+        const resourceId = this.pageStyle.styleSheetWatcher.getResourceId(
+          this._parentSheet
+        );
+        stylesheetText = await this.pageStyle.styleSheetWatcher.getText(
           resourceId
         );
       } else {
@@ -706,11 +709,14 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
     if (this.type === ELEMENT_STYLE) {
       // For element style rules, set the node's style attribute.
       this.rawNode.setAttributeDevtools("style", newText);
-    } else if (this.pageStyle.hasStyleSheetWatcherSupport) {
-      const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
+    } else if (this.pageStyle.styleSheetWatcher) {
+      await this.pageStyle.styleSheetWatcher.ensureResourceAvailable(
         this._parentSheet
       );
-      let cssText = await this.pageStyle.styleSheetsManager.getText(resourceId);
+      const resourceId = this.pageStyle.styleSheetWatcher.getResourceId(
+        this._parentSheet
+      );
+      let cssText = await this.pageStyle.styleSheetWatcher.getText(resourceId);
 
       const { offset, text } = getRuleText(cssText, this.line, this.column);
       cssText =
@@ -718,7 +724,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         newText +
         cssText.substring(offset + text.length);
 
-      await this.pageStyle.styleSheetsManager.update(
+      await this.pageStyle.styleSheetWatcher.update(
         resourceId,
         cssText,
         false,
@@ -832,11 +838,14 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
         return null;
       }
 
-      if (this.pageStyle.hasStyleSheetWatcherSupport) {
-        const resourceId = this.pageStyle.styleSheetsManager.getStyleSheetResourceId(
+      if (this.pageStyle.styleSheetWatcher) {
+        await this.pageStyle.styleSheetWatcher.ensureResourceAvailable(
           this._parentSheet
         );
-        let authoredText = await this.pageStyle.styleSheetsManager.getText(
+        const resourceId = this.pageStyle.styleSheetWatcher.getResourceId(
+          this._parentSheet
+        );
+        let authoredText = await this.pageStyle.styleSheetWatcher.getText(
           resourceId
         );
 
@@ -850,7 +859,7 @@ const StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
           value +
           authoredText.substring(endOffset);
 
-        await this.pageStyle.styleSheetsManager.update(
+        await this.pageStyle.styleSheetWatcher.update(
           resourceId,
           authoredText,
           false,
