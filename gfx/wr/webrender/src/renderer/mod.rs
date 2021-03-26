@@ -2234,6 +2234,7 @@ impl Renderer {
           // Copy the full frame stats to RendererStats
           results.stats.merge(&stats);
 
+          self.profiler.update_frame_stats(stats);
         }
 
         // Note: this clears the values in self.profile.
