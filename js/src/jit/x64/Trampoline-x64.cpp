@@ -152,6 +152,10 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.bind(&footer);
   }
 
+  // Create the frame descriptor.
+  masm.subq(rsp, r14);
+  masm.makeFrameDescriptor(r14, FrameType::CppToJSJit, JitFrameLayout::Size());
+
   // Push the number of actual arguments.  |result| is used to store the
   // actual number of arguments without adding an extra argument to the enter
   // JIT.
@@ -162,13 +166,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   // Push the callee token.
   masm.push(token);
 
-  /*****************************************************************
-  Push the number of bytes we've pushed so far on the stack and call
-  *****************************************************************/
-  masm.subq(rsp, r14);
-
-  // Create a frame descriptor.
-  masm.makeFrameDescriptor(r14, FrameType::CppToJSJit, JitFrameLayout::Size());
+  // Push the descriptor.
   masm.push(r14);
 
   CodeLabel returnLabel;
@@ -295,6 +293,8 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   // Pop arguments and padding from stack.
   masm.pop(r14);  // Pop and decode descriptor.
   masm.shrq(Imm32(FRAMESIZE_SHIFT), r14);
+  masm.pop(r12);        // Discard calleeToken.
+  masm.pop(r12);        // Discard numActualArgs.
   masm.addq(r14, rsp);  // Remove arguments.
 
   /*****************************************************************
