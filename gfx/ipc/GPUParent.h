@@ -34,7 +34,7 @@ class GPUParent final : public PGPUParent {
   static void GetGPUProcessName(nsACString& aStr);
 
   // Check for memory pressure and notify the parent process if necessary.
-  static void MaybeFlushMemory();
+  static bool MaybeFlushMemory();
 
   bool Init(base::ProcessId aParentPid, const char* aParentBuildID,
             MessageLoop* aIOLoop, UniquePtr<IPC::Channel> aChannel);

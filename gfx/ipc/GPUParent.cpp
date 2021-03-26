@@ -100,17 +100,17 @@ GPUParent* GPUParent::GetSingleton() {
   return sGPUParent;
 }
 
-/* static */ void GPUParent::MaybeFlushMemory() {
+/* static */ bool GPUParent::MaybeFlushMemory() {
 #if defined(XP_WIN) && !defined(HAVE_64BIT_BUILD)
   MOZ_ASSERT(CompositorThreadHolder::IsInCompositorThread());
   if (!XRE_IsGPUProcess()) {
-    return;
+    return false;
   }
 
   MEMORYSTATUSEX stat;
   stat.dwLength = sizeof(stat);
   if (!GlobalMemoryStatusEx(&stat)) {
-    return;
+    return false;
   }
 
   // We only care about virtual process memory space in the GPU process because
@@ -131,6 +131,9 @@ GPUParent* GPUParent::GetSingleton() {
         }));
   }
   sLowMemory = lowMemory;
+  return lowMemory;
+#else
+  return false;
 #endif
 }
 
