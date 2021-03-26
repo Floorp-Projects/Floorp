@@ -932,11 +932,10 @@ async function checkState(state) {
     }
 
     for (const name of names) {
-      ok(items.has(name), `There is item with name '${name}' in ${storeName}`);
-
       if (!items.has(name)) {
         showAvailableIds();
       }
+      ok(items.has(name), `There is item with name '${name}' in ${storeName}`);
     }
   }
 }

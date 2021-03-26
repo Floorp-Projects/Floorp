@@ -938,7 +938,7 @@ ResourceWatcher.TYPES = ResourceWatcher.prototype.TYPES = {
   STYLESHEET: "stylesheet",
   NETWORK_EVENT: "network-event",
   WEBSOCKET: "websocket",
-  COOKIE: "cookie",
+  COOKIE: "cookies",
   LOCAL_STORAGE: "local-storage",
   SESSION_STORAGE: "session-storage",
   CACHE_STORAGE: "Cache",
@@ -1025,6 +1025,8 @@ const ResourceTransformers = {
     .ERROR_MESSAGE]: require("devtools/shared/resources/transformers/error-messages"),
   [ResourceWatcher.TYPES
     .CACHE_STORAGE]: require("devtools/shared/resources/transformers/storage-cache.js"),
+  [ResourceWatcher.TYPES
+    .COOKIE]: require("devtools/shared/resources/transformers/storage-cookie.js"),
   [ResourceWatcher.TYPES
     .LOCAL_STORAGE]: require("devtools/shared/resources/transformers/storage-local-storage.js"),
   [ResourceWatcher.TYPES
