@@ -40,7 +40,7 @@ use crate::prim_store::{PrimitiveInstanceKind, PrimTemplateCommonData, Primitive
 use crate::prim_store::interned::*;
 use crate::profiler::{self, TransactionProfile};
 use crate::render_task_graph::RenderTaskGraphBuilder;
-use crate::renderer::{AsyncPropertySampler, FullFrameStats, PipelineInfo};
+use crate::renderer::{AsyncPropertySampler, PipelineInfo};
 use crate::resource_cache::ResourceCache;
 #[cfg(feature = "replay")]
 use crate::resource_cache::PlainCacheOwn;
@@ -471,7 +471,6 @@ struct Document {
     dirty_rects_are_valid: bool,
 
     profile: TransactionProfile,
-    frame_stats: Option<FullFrameStats>,
 }
 
 impl Document {
@@ -513,7 +512,6 @@ impl Document {
             dirty_rects_are_valid: true,
             profile: TransactionProfile::new(),
             rg_builder: RenderTaskGraphBuilder::new(),
-            frame_stats: None,
         }
     }
 
@@ -608,9 +606,8 @@ impl Document {
         debug_flags: DebugFlags,
         tile_cache_logger: &mut TileCacheLogger,
         tile_caches: &mut FastHashMap<SliceId, Box<TileCacheInstance>>,
-        frame_stats: Option<FullFrameStats>
     ) -> RenderedDocument {
-        let frame_build_start_time = precise_time_ns();
+        self.profile.start_time(profiler::FRAME_BUILDING_TIME);
 
         let accumulated_scale_factor = self.view.accumulated_scale_factor();
         let pan = self.view.frame.pan.to_f32() / accumulated_scale_factor;
@@ -650,20 +647,12 @@ impl Document {
         let is_new_scene = self.has_built_scene;
         self.has_built_scene = false;
 
-        let frame_build_time_ms =
-            profiler::ns_to_ms(precise_time_ns() - frame_build_start_time);
-        self.profile.set(profiler::FRAME_BUILDING_TIME, frame_build_time_ms);
-
-        let frame_stats = frame_stats.map(|mut stats| {
-            stats.frame_build_time += frame_build_time_ms;
-            stats
-        });
+        self.profile.end_time(profiler::FRAME_BUILDING_TIME);
 
         RenderedDocument {
             frame,
             is_new_scene,
             profile: self.profile.take_and_reset(),
-            frame_stats: frame_stats
         }
     }
 
@@ -953,15 +942,10 @@ impl RenderBackend {
            let has_built_scene = txn.built_scene.is_some();
 
             if let Some(doc) = self.documents.get_mut(&txn.document_id) {
+
                 doc.removed_pipelines.append(&mut txn.removed_pipelines);
                 doc.view.scene = txn.view;
                 doc.profile.merge(&mut txn.profile);
-
-                doc.frame_stats = if let Some(stats) = &doc.frame_stats {
-                    Some(stats.merge(&txn.frame_stats))
-                } else {
-                    Some(txn.frame_stats)
-                };
 
                 if let Some(built_scene) = txn.built_scene.take() {
                     doc.new_async_scene_ready(
@@ -1521,15 +1505,12 @@ impl RenderBackend {
             let (pending_update, rendered_document) = {
                 let frame_build_start_time = precise_time_ns();
 
-                let frame_stats = doc.frame_stats.take();
-
                 let rendered_document = doc.build_frame(
                     &mut self.resource_cache,
                     &mut self.gpu_cache,
                     self.debug_flags,
                     &mut self.tile_cache_logger,
                     &mut self.tile_caches,
-                    frame_stats
                 );
 
                 debug!("generated frame for document {:?} with {} passes",
@@ -1741,7 +1722,6 @@ impl RenderBackend {
                     self.debug_flags,
                     &mut self.tile_cache_logger,
                     &mut self.tile_caches,
-                    None,
                 );
                 // After we rendered the frames, there are pending updates to both
                 // GPU cache and resources. Instead of serializing them, we are going to make sure
@@ -1984,7 +1964,6 @@ impl RenderBackend {
                         dirty_rects_are_valid: false,
                         profile: TransactionProfile::new(),
                         rg_builder: RenderTaskGraphBuilder::new(),
-                        frame_stats: FullFrameStats
                     };
                     entry.insert(doc);
                 }

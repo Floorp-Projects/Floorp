@@ -28,7 +28,7 @@ use crate::prim_store::picture::Picture;
 use crate::prim_store::text_run::TextRun;
 use crate::profiler::{self, TransactionProfile};
 use crate::render_backend::SceneView;
-use crate::renderer::{FullFrameStats, PipelineInfo, SceneBuilderHooks};
+use crate::renderer::{PipelineInfo, SceneBuilderHooks};
 use crate::scene::{Scene, BuiltScene, SceneStats};
 use std::iter;
 use time::precise_time_ns;
@@ -72,7 +72,6 @@ pub struct BuiltTransaction {
     pub invalidate_rendered_frame: bool,
     pub discard_frame_state_for_pipelines: Vec<PipelineId>,
     pub profile: TransactionProfile,
-    pub frame_stats: FullFrameStats,
 }
 
 #[cfg(feature = "replay")]
@@ -462,7 +461,6 @@ impl SceneBuilderThread {
                 notifications: Vec::new(),
                 interner_updates,
                 profile: TransactionProfile::new(),
-                frame_stats: FrameStats::default(),
             })];
 
             self.forward_built_transactions(txns);
@@ -574,12 +572,11 @@ impl SceneBuilderThread {
 
         let mut profile = txn.profile.take();
 
-        let scene_build_start = precise_time_ns();
+        profile.start_time(profiler::SCENE_BUILD_TIME);
+
         let mut discard_frame_state_for_pipelines = Vec::new();
         let mut removed_pipelines = Vec::new();
         let mut rebuild_scene = false;
-        let mut frame_stats = FullFrameStats::default();
-
         for message in txn.scene_ops.drain(..) {
             match message {
                 SceneMsg::UpdateEpoch(pipeline_id, epoch) => {
@@ -603,17 +600,14 @@ impl SceneBuilderThread {
                     display_list,
                     preserve_frame_state,
                 } => {
-                    let (gecko_display_list_time, builder_start_time_ns,
-                         builder_end_time_ns, send_time_ns) = display_list.times();
+                    let (builder_start_time_ns, builder_end_time_ns, send_time_ns) =
+                        display_list.times();
 
                     let content_send_time = profiler::ns_to_ms(precise_time_ns() - send_time_ns);
                     let dl_build_time = profiler::ns_to_ms(builder_end_time_ns - builder_start_time_ns);
                     profile.set(profiler::CONTENT_SEND_TIME, content_send_time);
                     profile.set(profiler::DISPLAY_LIST_BUILD_TIME, dl_build_time);
                     profile.set(profiler::DISPLAY_LIST_MEM, profiler::bytes_to_mb(display_list.data().len()));
-
-                    frame_stats.gecko_display_list_time += gecko_display_list_time;
-                    frame_stats.wr_display_list_time += dl_build_time;
 
                     if self.removed_pipelines.contains(&pipeline_id) {
                         continue;
@@ -676,11 +670,8 @@ impl SceneBuilderThread {
             built_scene = Some(built);
         }
 
-        let scene_build_time_ms =
-            profiler::ns_to_ms(precise_time_ns() - scene_build_start);
-        profile.set(profiler::SCENE_BUILD_TIME, scene_build_time_ms);
+        profile.end_time(profiler::SCENE_BUILD_TIME);
 
-        frame_stats.scene_build_time += scene_build_time_ms;
 
         if !txn.blob_requests.is_empty() {
             profile.start_time(profiler::BLOB_RASTERIZATION_TIME);
@@ -716,7 +707,6 @@ impl SceneBuilderThread {
             notifications: txn.notifications,
             interner_updates,
             profile,
-            frame_stats,
         })
     }
 

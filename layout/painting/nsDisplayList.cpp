@@ -2385,8 +2385,7 @@ FrameLayerBuilder* nsDisplayList::BuildLayers(nsDisplayListBuilder* aBuilder,
  * root of the layer manager, drawing into the PaintedLayers.
  */
 already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
-    nsDisplayListBuilder* aBuilder, gfxContext* aCtx, uint32_t aFlags,
-    mozilla::Maybe<double> aDisplayListBuildTime) {
+    nsDisplayListBuilder* aBuilder, gfxContext* aCtx, uint32_t aFlags) {
   AUTO_PROFILER_LABEL("nsDisplayList::PaintRoot", GRAPHICS);
 
   RefPtr<LayerManager> layerManager;
@@ -2450,8 +2449,7 @@ already_AddRefed<LayerManager> nsDisplayList::PaintRoot(
       }
 
       wrManager->EndTransactionWithoutLayer(this, aBuilder,
-                                            std::move(wrFilters), nullptr,
-                                            aDisplayListBuildTime.valueOr(0.0));
+                                            std::move(wrFilters));
     }
 
     // For layers-free mode, we check the invalidation state bits in the
