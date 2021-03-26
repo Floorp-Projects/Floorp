@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -7,6 +9,7 @@
 #include "jsapi.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/AutocompleteInfoBinding.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
 #include "mozilla/dom/HTMLInputElement.h"
@@ -16,10 +19,12 @@
 #include "mozilla/dom/SessionStorageManager.h"
 #include "mozilla/dom/SessionStoreUtils.h"
 #include "mozilla/dom/txIXPathContext.h"
+#include "mozilla/dom/WindowGlobalParent.h"
 #include "mozilla/dom/WindowProxyHolder.h"
 #include "mozilla/dom/XPathResult.h"
 #include "mozilla/dom/XPathEvaluator.h"
 #include "mozilla/dom/XPathExpression.h"
+#include "mozilla/ReverseIterator.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsContentList.h"
@@ -374,25 +379,6 @@ AppendEntryToCollectedData(nsINode* aNode, const nsAString& aId,
   return entry;
 }
 
-// A helper function to append a element into aXPathVals or aIdVals
-static void AppendEntryToCollectedData(
-    nsINode* aNode, const nsAString& aId, CollectedInputDataValue& aEntry,
-    uint16_t& aNumXPath, uint16_t& aNumId,
-    nsTArray<CollectedInputDataValue>& aXPathVals,
-    nsTArray<CollectedInputDataValue>& aIdVals) {
-  if (!aId.IsEmpty()) {
-    aEntry.id = aId;
-    aIdVals.AppendElement(aEntry);
-    aNumId++;
-  } else {
-    nsAutoString xpath;
-    aNode->GenerateXPath(xpath);
-    aEntry.id = xpath;
-    aXPathVals.AppendElement(aEntry);
-    aNumXPath++;
-  }
-}
-
 /* for bool value */
 static void AppendValueToCollectedData(nsINode* aNode, const nsAString& aId,
                                        const bool& aValue,
@@ -404,19 +390,6 @@ static void AppendValueToCollectedData(nsINode* aNode, const nsAString& aId,
   entry->mValue.SetAsBoolean() = aValue;
 }
 
-/* for bool value */
-static void AppendValueToCollectedData(
-    nsINode* aNode, const nsAString& aId, const bool& aValue,
-    uint16_t& aNumXPath, uint16_t& aNumId,
-    nsTArray<CollectedInputDataValue>& aXPathVals,
-    nsTArray<CollectedInputDataValue>& aIdVals) {
-  CollectedInputDataValue entry;
-  entry.type = u"bool"_ns;
-  entry.value = AsVariant(aValue);
-  AppendEntryToCollectedData(aNode, aId, entry, aNumXPath, aNumId, aXPathVals,
-                             aIdVals);
-}
-
 /* for nsString value */
 static void AppendValueToCollectedData(nsINode* aNode, const nsAString& aId,
                                        const nsString& aValue,
@@ -425,19 +398,6 @@ static void AppendValueToCollectedData(nsINode* aNode, const nsAString& aId,
   Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
       AppendEntryToCollectedData(aNode, aId, aGeneratedCount, aRetVal);
   entry->mValue.SetAsString() = aValue;
-}
-
-/* for nsString value */
-static void AppendValueToCollectedData(
-    nsINode* aNode, const nsAString& aId, const nsString& aValue,
-    uint16_t& aNumXPath, uint16_t& aNumId,
-    nsTArray<CollectedInputDataValue>& aXPathVals,
-    nsTArray<CollectedInputDataValue>& aIdVals) {
-  CollectedInputDataValue entry;
-  entry.type = u"string"_ns;
-  entry.value = AsVariant(aValue);
-  AppendEntryToCollectedData(aNode, aId, entry, aNumXPath, aNumId, aXPathVals,
-                             aIdVals);
 }
 
 /* for single select value */
@@ -453,19 +413,6 @@ static void AppendValueToCollectedData(
   Record<nsString, OwningStringOrBooleanOrObject>::EntryType* entry =
       AppendEntryToCollectedData(aNode, aId, aGeneratedCount, aRetVal);
   entry->mValue.SetAsObject() = &jsval.toObject();
-}
-
-/* for single select value */
-static void AppendValueToCollectedData(
-    nsINode* aNode, const nsAString& aId,
-    const CollectedNonMultipleSelectValue& aValue, uint16_t& aNumXPath,
-    uint16_t& aNumId, nsTArray<CollectedInputDataValue>& aXPathVals,
-    nsTArray<CollectedInputDataValue>& aIdVals) {
-  CollectedInputDataValue entry;
-  entry.type = u"singleSelect"_ns;
-  entry.value = AsVariant(aValue);
-  AppendEntryToCollectedData(aNode, aId, entry, aNumXPath, aNumId, aXPathVals,
-                             aIdVals);
 }
 
 /* special handing for input element with string type */
@@ -500,18 +447,6 @@ static void AppendValueToCollectedData(Document& aDocument, nsINode* aNode,
   AppendValueToCollectedData(aNode, aId, aValue, aGeneratedCount, aRetVal);
 }
 
-static void AppendValueToCollectedData(
-    Document& aDocument, nsINode* aNode, const nsAString& aId,
-    const nsString& aValue, uint16_t& aNumXPath, uint16_t& aNumId,
-    nsTArray<CollectedInputDataValue>& aXPathVals,
-    nsTArray<CollectedInputDataValue>& aIdVals) {
-  CollectedInputDataValue entry;
-  entry.type = u"string"_ns;
-  entry.value = AsVariant(aValue);
-  AppendEntryToCollectedData(aNode, aId, entry, aNumXPath, aNumId, aXPathVals,
-                             aIdVals);
-}
-
 /* for nsTArray<nsString>: file and multipleSelect */
 static void AppendValueToCollectedData(nsINode* aNode, const nsAString& aId,
                                        const nsAString& aValueType,
@@ -539,17 +474,214 @@ static void AppendValueToCollectedData(nsINode* aNode, const nsAString& aId,
   entry->mValue.SetAsObject() = &jsval.toObject();
 }
 
-/* for nsTArray<nsString>: file and multipleSelect */
-static void AppendValueToCollectedData(
-    nsINode* aNode, const nsAString& aId, const nsAString& aValueType,
-    const nsTArray<nsString>& aValue, uint16_t& aNumXPath, uint16_t& aNumId,
-    nsTArray<CollectedInputDataValue>& aXPathVals,
-    nsTArray<CollectedInputDataValue>& aIdVals) {
-  CollectedInputDataValue entry;
-  entry.type = aValueType;
-  entry.value = AsVariant(CopyableTArray(aValue.Clone()));
-  AppendEntryToCollectedData(aNode, aId, entry, aNumXPath, aNumId, aXPathVals,
-                             aIdVals);
+static void AppendEntry(nsINode* aNode, const nsString& aId,
+                        const FormEntryValue& aValue,
+                        sessionstore::FormData& aFormData) {
+  if (aId.IsEmpty()) {
+    FormEntry* entry = aFormData.xpath().AppendElement();
+    entry->value() = aValue;
+    aNode->GenerateXPath(entry->id());
+  } else {
+    aFormData.id().AppendElement(FormEntry{aId, aValue});
+  }
+}
+
+static void CollectTextAreaElement(Document* aDocument,
+                                   sessionstore::FormData& aFormData) {
+  RefPtr<nsContentList> textlist =
+      NS_GetContentList(aDocument, kNameSpaceID_XHTML, u"textarea"_ns);
+  uint32_t length = textlist->Length();
+  for (uint32_t i = 0; i < length; ++i) {
+    MOZ_ASSERT(textlist->Item(i), "null item in node list!");
+
+    HTMLTextAreaElement* textArea =
+        HTMLTextAreaElement::FromNodeOrNull(textlist->Item(i));
+    if (!textArea) {
+      continue;
+    }
+    DOMString autocomplete;
+    textArea->GetAutocomplete(autocomplete);
+    if (autocomplete.AsAString().EqualsLiteral("off")) {
+      continue;
+    }
+    nsAutoString id;
+    textArea->GetId(id);
+    if (id.IsEmpty() && (aFormData.xpath().Length() > kMaxTraversedXPaths)) {
+      continue;
+    }
+    nsString value;
+    textArea->GetValue(value);
+    // In order to reduce XPath generation (which is slow), we only save data
+    // for form fields that have been changed. (cf. bug 537289)
+    if (textArea->AttrValueIs(kNameSpaceID_None, nsGkAtoms::value, value,
+                              eCaseMatters)) {
+      continue;
+    }
+
+    AppendEntry(textArea, id, TextField{value}, aFormData);
+  }
+}
+
+static void CollectInputElement(Document* aDocument,
+                                sessionstore::FormData& aFormData) {
+  RefPtr<nsContentList> inputlist =
+      NS_GetContentList(aDocument, kNameSpaceID_XHTML, u"input"_ns);
+  uint32_t length = inputlist->Length();
+  for (uint32_t i = 0; i < length; ++i) {
+    MOZ_ASSERT(inputlist->Item(i), "null item in node list!");
+    nsCOMPtr<nsIFormControl> formControl =
+        do_QueryInterface(inputlist->Item(i));
+    if (formControl) {
+      uint8_t controlType = formControl->ControlType();
+      if (controlType == NS_FORM_INPUT_PASSWORD ||
+          controlType == NS_FORM_INPUT_HIDDEN ||
+          controlType == NS_FORM_INPUT_BUTTON ||
+          controlType == NS_FORM_INPUT_IMAGE ||
+          controlType == NS_FORM_INPUT_SUBMIT ||
+          controlType == NS_FORM_INPUT_RESET) {
+        continue;
+      }
+    }
+    RefPtr<HTMLInputElement> input =
+        HTMLInputElement::FromNodeOrNull(inputlist->Item(i));
+    if (!input || !nsContentUtils::IsAutocompleteEnabled(input)) {
+      continue;
+    }
+    nsAutoString id;
+    input->GetId(id);
+    if (id.IsEmpty() && (aFormData.xpath().Length() > kMaxTraversedXPaths)) {
+      continue;
+    }
+    Nullable<AutocompleteInfo> aInfo;
+    input->GetAutocompleteInfo(aInfo);
+    if (!aInfo.IsNull() && !aInfo.Value().mCanAutomaticallyPersist) {
+      continue;
+    }
+
+    FormEntryValue value;
+    if (input->ControlType() == NS_FORM_INPUT_CHECKBOX ||
+        input->ControlType() == NS_FORM_INPUT_RADIO) {
+      bool checked = input->Checked();
+      if (checked == input->DefaultChecked()) {
+        continue;
+      }
+      AppendEntry(input, id, Checkbox{checked}, aFormData);
+    } else if (input->ControlType() == NS_FORM_INPUT_FILE) {
+      IgnoredErrorResult rv;
+      sessionstore::FileList file;
+      input->MozGetFileNameArray(file.valueList(), rv);
+      if (rv.Failed() || file.valueList().IsEmpty()) {
+        continue;
+      }
+      AppendEntry(input, id, file, aFormData);
+    } else {
+      TextField field;
+      input->GetValue(field.value(), CallerType::System);
+      auto& value = field.value();
+      // In order to reduce XPath generation (which is slow), we only save data
+      // for form fields that have been changed. (cf. bug 537289)
+      // Also, don't want to collect credit card number.
+      if (value.IsEmpty() || IsValidCCNumber(value) ||
+          input->HasBeenTypePassword() ||
+          input->AttrValueIs(kNameSpaceID_None, nsGkAtoms::value, value,
+                             eCaseMatters)) {
+        continue;
+      }
+      AppendEntry(input, id, field, aFormData);
+    }
+  }
+}
+
+static void CollectSelectElement(Document* aDocument,
+                                 sessionstore::FormData& aFormData) {
+  RefPtr<nsContentList> selectlist =
+      NS_GetContentList(aDocument, kNameSpaceID_XHTML, u"select"_ns);
+  uint32_t length = selectlist->Length();
+  for (uint32_t i = 0; i < length; ++i) {
+    MOZ_ASSERT(selectlist->Item(i), "null item in node list!");
+    RefPtr<HTMLSelectElement> select =
+        HTMLSelectElement::FromNodeOrNull(selectlist->Item(i));
+    if (!select) {
+      continue;
+    }
+    nsAutoString id;
+    select->GetId(id);
+    if (id.IsEmpty() && (aFormData.xpath().Length() > kMaxTraversedXPaths)) {
+      continue;
+    }
+    AutocompleteInfo aInfo;
+    select->GetAutocompleteInfo(aInfo);
+    if (!aInfo.mCanAutomaticallyPersist) {
+      continue;
+    }
+
+    if (!select->Multiple()) {
+      HTMLOptionsCollection* options = select->GetOptions();
+      if (!options) {
+        continue;
+      }
+
+      uint32_t numOptions = options->Length();
+      int32_t defaultIndex = 0;
+      for (uint32_t idx = 0; idx < numOptions; idx++) {
+        HTMLOptionElement* option = options->ItemAsOption(idx);
+        if (option->DefaultSelected()) {
+          defaultIndex = option->Index();
+        }
+      }
+
+      int32_t selectedIndex = select->SelectedIndex();
+      if (selectedIndex == defaultIndex || selectedIndex < 0) {
+        continue;
+      }
+
+      DOMString selectVal;
+      select->GetValue(selectVal);
+      AppendEntry(select, id,
+                  SingleSelect{static_cast<uint32_t>(selectedIndex),
+                               selectVal.AsAString()},
+                  aFormData);
+    } else {
+      HTMLOptionsCollection* options = select->GetOptions();
+      if (!options) {
+        continue;
+      }
+      bool hasDefaultValue = true;
+      nsTArray<nsString> selectslist;
+      uint32_t numOptions = options->Length();
+      for (uint32_t idx = 0; idx < numOptions; idx++) {
+        HTMLOptionElement* option = options->ItemAsOption(idx);
+        bool selected = option->Selected();
+
+        hasDefaultValue =
+            hasDefaultValue && (selected == option->DefaultSelected());
+
+        if (!selected) {
+          continue;
+        }
+        option->GetValue(*selectslist.AppendElement());
+      }
+      // In order to reduce XPath generation (which is slow), we only save data
+      // for form fields that have been changed. (cf. bug 537289)
+      if (hasDefaultValue) {
+        continue;
+      }
+
+      AppendEntry(select, id, MultipleSelect{selectslist}, aFormData);
+    }
+  }
+}
+
+/* static */
+void SessionStoreUtils::CollectFormData(Document* aDocument,
+                                        sessionstore::FormData& aFormData) {
+  MOZ_DIAGNOSTIC_ASSERT(aDocument);
+  CollectTextAreaElement(aDocument, aFormData);
+  CollectInputElement(aDocument, aFormData);
+  CollectSelectElement(aDocument, aFormData);
+
+  aFormData.hasData() =
+      !aFormData.id().IsEmpty() || !aFormData.xpath().IsEmpty();
 }
 
 /* static */
@@ -1048,6 +1180,7 @@ bool SessionStoreUtils::RestoreFormData(const GlobalObject& aGlobal,
       }
     }
   }
+
   if (aData.mXpath.WasPassed()) {
     for (auto& entry : aData.mXpath.Value().Entries()) {
       RefPtr<Element> node = FindNodeByXPath(aDocument, entry.mKey);
@@ -1065,6 +1198,7 @@ bool SessionStoreUtils::RestoreFormData(const GlobalObject& aGlobal,
       }
     }
   }
+
   return true;
 }
 
@@ -1455,4 +1589,100 @@ nsresult SessionStoreUtils::CallRestoreTabContentComplete(Element* aBrowser) {
       do_ImportModule("resource://gre/modules/SessionStoreFunctions.jsm");
   NS_ENSURE_TRUE(funcs, NS_ERROR_FAILURE);
   return funcs->RestoreTabContentComplete(aBrowser);
+}
+
+/* static */
+nsresult SessionStoreUtils::ConstructFormDataValues(
+    JSContext* aCx, const nsTArray<sessionstore::FormEntry>& aValues,
+    nsTArray<Record<nsString, OwningStringOrBooleanOrObject>::EntryType>&
+        aEntries,
+    bool aParseSessionData) {
+  using EntryType = Record<nsString, OwningStringOrBooleanOrObject>::EntryType;
+
+  if (!aEntries.SetCapacity(aValues.Length(), fallible)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  for (const auto& value : aValues) {
+    EntryType* entry = aEntries.AppendElement();
+
+    using Type = sessionstore::FormEntryValue::Type;
+    switch (value.value().type()) {
+      case Type::TCheckbox:
+        entry->mValue.SetAsBoolean() = value.value().get_Checkbox().value();
+        break;
+      case Type::TTextField: {
+        if (aParseSessionData && value.id() == u"sessionData"_ns) {
+          JS::Rooted<JS::Value> jsval(aCx);
+          const auto& fieldValue = value.value().get_TextField().value();
+          if (!JS_ParseJSON(aCx, fieldValue.get(), fieldValue.Length(),
+                            &jsval) ||
+              !jsval.isObject()) {
+            return NS_ERROR_FAILURE;
+          }
+          entry->mValue.SetAsObject() = &jsval.toObject();
+        } else {
+          entry->mValue.SetAsString() = value.value().get_TextField().value();
+        }
+        break;
+      }
+      case Type::TFileList: {
+        CollectedFileListValue file;
+        file.mFileList = value.value().get_FileList().valueList().Clone();
+
+        JS::Rooted<JS::Value> jsval(aCx);
+        if (!ToJSValue(aCx, file, &jsval) || !jsval.isObject()) {
+          return NS_ERROR_FAILURE;
+        }
+        entry->mValue.SetAsObject() = &jsval.toObject();
+        break;
+      }
+      case Type::TSingleSelect: {
+        CollectedNonMultipleSelectValue select;
+        select.mSelectedIndex = value.value().get_SingleSelect().index();
+        select.mValue = value.value().get_SingleSelect().value();
+
+        JS::Rooted<JS::Value> jsval(aCx);
+        if (!ToJSValue(aCx, select, &jsval) || !jsval.isObject()) {
+          return NS_ERROR_FAILURE;
+        }
+        entry->mValue.SetAsObject() = &jsval.toObject();
+        break;
+      }
+      case Type::TMultipleSelect: {
+        JS::Rooted<JS::Value> jsval(aCx);
+        if (!ToJSValue(aCx, value.value().get_MultipleSelect().valueList(),
+                       &jsval) ||
+            !jsval.isObject()) {
+          return NS_ERROR_FAILURE;
+        }
+        entry->mValue.SetAsObject() = &jsval.toObject();
+        break;
+      }
+      default:
+        break;
+    }
+
+    entry->mKey = value.id();
+  }
+
+  return NS_OK;
+}
+
+/* static */ void SessionStoreUtils::ResetSessionStore(
+    BrowsingContext* aContext) {
+  MOZ_RELEASE_ASSERT(NATIVE_LISTENER);
+  WindowContext* windowContext = aContext->GetCurrentWindowContext();
+  if (!windowContext) {
+    return;
+  }
+
+  WindowGlobalChild* windowChild = windowContext->GetWindowGlobalChild();
+  if (!windowChild || !windowChild->CanSend()) {
+    return;
+  }
+
+  uint32_t epoch = aContext->GetSessionStoreEpoch();
+
+  Unused << windowChild->SendResetSessionStore(epoch);
 }

@@ -2906,48 +2906,16 @@ bool BrowserParent::ReconstructWebProgressAndRequest(
 
 mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
     const Maybe<nsCString>& aDocShellCaps, const Maybe<bool>& aPrivatedMode,
-    nsTArray<nsCString>&& aPositions, nsTArray<int32_t>&& aPositionDescendants,
-    const nsTArray<InputFormData>& aInputs,
-    const nsTArray<CollectedInputDataValue>& aIdVals,
-    const nsTArray<CollectedInputDataValue>& aXPathVals,
     nsTArray<nsCString>&& aOrigins, nsTArray<nsString>&& aKeys,
     nsTArray<nsString>&& aValues, const bool aIsFullStorage,
-    const bool aNeedCollectSHistory, const uint32_t& aFlushId,
-    const bool& aIsFinal, const uint32_t& aEpoch) {
+    const bool aNeedCollectSHistory, const bool& aIsFinal,
+    const uint32_t& aEpoch) {
   UpdateSessionStoreData data;
   if (aDocShellCaps.isSome()) {
     data.mDocShellCaps.Construct() = aDocShellCaps.value();
   }
   if (aPrivatedMode.isSome()) {
     data.mIsPrivate.Construct() = aPrivatedMode.value();
-  }
-  if (aPositions.Length() != 0) {
-    data.mPositions.Construct(std::move(aPositions));
-    data.mPositionDescendants.Construct(std::move(aPositionDescendants));
-  }
-  if (aIdVals.Length() != 0) {
-    SessionStoreUtils::ComposeInputData(aIdVals, data.mId.Construct());
-  }
-  if (aXPathVals.Length() != 0) {
-    SessionStoreUtils::ComposeInputData(aXPathVals, data.mXpath.Construct());
-  }
-  if (aInputs.Length() != 0) {
-    nsTArray<int> descendants, numId, numXPath;
-    nsTArray<nsString> innerHTML;
-    nsTArray<nsCString> url;
-    for (const InputFormData& input : aInputs) {
-      descendants.AppendElement(input.descendants);
-      numId.AppendElement(input.numId);
-      numXPath.AppendElement(input.numXPath);
-      innerHTML.AppendElement(input.innerHTML);
-      url.AppendElement(input.url);
-    }
-
-    data.mInputDescendants.Construct(std::move(descendants));
-    data.mNumId.Construct(std::move(numId));
-    data.mNumXPath.Construct(std::move(numXPath));
-    data.mInnerHTML.Construct(std::move(innerHTML));
-    data.mUrl.Construct(std::move(url));
   }
   // In normal case, we only update the storage when needed.
   // However, we need to reset the session storage(aOrigins.Length() will be 0)
@@ -2970,9 +2938,9 @@ mozilla::ipc::IPCResult BrowserParent::RecvSessionStoreUpdate(
   bool ok = ToJSValue(jsapi.cx(), data, &dataVal);
   NS_ENSURE_TRUE(ok, IPC_OK());
 
-  nsresult rv = funcs->UpdateSessionStore(mFrameElement, mBrowsingContext,
-                                          aFlushId, aIsFinal, aEpoch, dataVal,
-                                          aNeedCollectSHistory);
+  nsresult rv = funcs->UpdateSessionStore(
+      mFrameElement, mBrowsingContext, aEpoch, dataVal, aNeedCollectSHistory);
+
   NS_ENSURE_SUCCESS(rv, IPC_OK());
 
   return IPC_OK();
