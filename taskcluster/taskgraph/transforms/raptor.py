@@ -41,14 +41,6 @@ raptor_description_schema = Schema(
             "variant",
             test_description_schema["run-on-projects"],
         ),
-        Optional("fission-run-on-projects"): optionally_keyed_by(
-            "app",
-            "test-name",
-            "raptor-test",
-            "subtest",
-            "test-platform",
-            test_description_schema["fission-run-on-projects"],
-        ),
         Optional("webrender-run-on-projects"): optionally_keyed_by(
             "app",
             "test-name",
@@ -175,7 +167,6 @@ def handle_keyed_by(config, tests):
         "activity",
         "binary-path",
         "fetches.fetch",
-        "fission-run-on-projects",
         "max-run-time",
         "run-on-projects",
         "target",
