@@ -91,7 +91,7 @@ class OpenSearchEngine extends SearchEngine {
         Cr.NS_ERROR_UNEXPECTED
       );
     }
-    if (!/^(?:https?|ftp)$/i.test(loadURI.scheme)) {
+    if (!/^https?$/i.test(loadURI.scheme)) {
       throw Components.Exception(
         "Invalid URI passed to SearchEngine constructor",
         Cr.NS_ERROR_INVALID_ARG
