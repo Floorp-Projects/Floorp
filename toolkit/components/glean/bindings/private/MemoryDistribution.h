@@ -8,6 +8,7 @@
 #define mozilla_glean_GleanMemoryDistribution_h
 
 #include "mozilla/glean/bindings/DistributionData.h"
+#include "mozilla/glean/bindings/HistogramGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/Maybe.h"
 #include "nsIGleanMetrics.h"
@@ -31,6 +32,10 @@ class MemoryDistributionMetric {
    * InvalidValue error is recorded.
    */
   void Accumulate(uint64_t aSample) const {
+    auto hgramId = HistogramIdForMetric(mId);
+    if (hgramId) {
+      Telemetry::Accumulate(hgramId.extract(), aSample);
+    }
 #ifndef MOZ_GLEAN_ANDROID
     fog_memory_distribution_accumulate(mId, aSample);
 #endif

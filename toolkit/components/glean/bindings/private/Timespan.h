@@ -27,6 +27,13 @@ class TimespanMetric {
    * start time will be preserved.
    */
   void Start() const {
+    auto optScalarId = ScalarIdForMetric(mId);
+    if (optScalarId) {
+      auto scalarId = optScalarId.extract();
+      auto map = gTimespanStarts.Lock();
+      (void)NS_WARN_IF(map->Remove(scalarId));
+      map->InsertOrUpdate(scalarId, TimeStamp::Now());
+    }
 #ifndef MOZ_GLEAN_ANDROID
     fog_timespan_start(mId);
 #endif
@@ -41,6 +48,17 @@ class TimespanMetric {
    * existing value.
    */
   void Stop() const {
+    auto optScalarId = ScalarIdForMetric(mId);
+    if (optScalarId) {
+      auto scalarId = optScalarId.extract();
+      auto map = gTimespanStarts.Lock();
+      auto optStart = map->Extract(scalarId);
+      if (!NS_WARN_IF(!optStart)) {
+        uint32_t delta = static_cast<uint32_t>(
+            (TimeStamp::Now() - optStart.extract()).ToMilliseconds());
+        Telemetry::ScalarSet(scalarId, delta);
+      }
+    }
 #ifndef MOZ_GLEAN_ANDROID
     fog_timespan_stop(mId);
 #endif

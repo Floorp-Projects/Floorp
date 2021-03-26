@@ -9402,7 +9402,7 @@
     "low": 1,
     "high": 2147483646,
     "n_buckets": 10,
-    "bug_numbers": [1288745],
+    "bug_numbers": [1288745, 1685406],
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_LINEAR": {
@@ -9414,7 +9414,7 @@
     "low": 1,
     "high": 2147483646,
     "n_buckets": 10,
-    "bug_numbers": [1288745],
+    "bug_numbers": [1288745, 1685406],
     "description": "a testing histogram; not meant to be touched"
   },
   "TELEMETRY_TEST_BOOLEAN": {

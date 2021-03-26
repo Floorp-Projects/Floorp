@@ -7,9 +7,10 @@
 #ifndef mozilla_glean_GleanDatetime_h
 #define mozilla_glean_GleanDatetime_h
 
+#include "mozilla/glean/bindings/ScalarGIFFTMap.h"
+#include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/Maybe.h"
 #include "nsIGleanMetrics.h"
-#include "mozilla/glean/fog_ffi_generated.h"
 #include "nsString.h"
 #include "prtime.h"
 
@@ -27,7 +28,6 @@ class DatetimeMetric {
    * @param amount The date value to set.
    */
   void Set(const PRExplodedTime* aValue = nullptr) const {
-#ifndef MOZ_GLEAN_ANDROID
     PRExplodedTime exploded;
     if (!aValue) {
       PR_ExplodeTime(PR_Now(), PR_LocalTimeParameters, &exploded);
@@ -35,6 +35,23 @@ class DatetimeMetric {
       exploded = *aValue;
     }
 
+    auto id = ScalarIdForMetric(mId);
+    if (id) {
+      const uint32_t buflen = 64;  // More than enough for now.
+      char buf[buflen];
+      uint32_t written = PR_FormatTime(buf, buflen, "%FT%T%z", &exploded);
+      if (written > 2 && written < 64) {
+        // Format's still not quite there. Gotta put a `:` between timezone
+        // hours and minutes
+        buf[written] = '\0';
+        buf[written - 1] = buf[written - 2];
+        buf[written - 2] = buf[written - 3];
+        buf[written - 3] = ':';
+        Telemetry::ScalarSet(id.extract(), NS_ConvertASCIItoUTF16(buf));
+      }
+    }
+
+#ifndef MOZ_GLEAN_ANDROID
     int32_t offset =
         exploded.tm_params.tp_gmt_offset + exploded.tm_params.tp_dst_offset;
     fog_datetime_set(mId, exploded.tm_year, exploded.tm_month + 1,

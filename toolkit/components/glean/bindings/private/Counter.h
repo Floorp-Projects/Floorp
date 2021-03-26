@@ -7,9 +7,10 @@
 #ifndef mozilla_glean_GleanCounter_h
 #define mozilla_glean_GleanCounter_h
 
+#include "mozilla/glean/bindings/ScalarGIFFTMap.h"
+#include "mozilla/glean/fog_ffi_generated.h"
 #include "mozilla/Maybe.h"
 #include "nsIGleanMetrics.h"
-#include "mozilla/glean/fog_ffi_generated.h"
 
 namespace mozilla::glean {
 
@@ -25,6 +26,17 @@ class CounterMetric {
    * @param aAmount The amount to increase by. Should be positive.
    */
   void Add(int32_t aAmount = 1) const {
+    auto scalarId = ScalarIdForMetric(mId);
+    if (scalarId) {
+      Telemetry::ScalarAdd(scalarId.extract(), aAmount);
+    } else if (IsSubmetricId(mId)) {
+      auto map = gLabeledMirrors.Lock();
+      auto tuple = map->MaybeGet(mId);
+      if (tuple && aAmount > 0) {
+        Telemetry::ScalarSet(Get<0>(*tuple.ref()), Get<1>(*tuple.ref()),
+                             (uint32_t)aAmount);
+      }
+    }
 #ifndef MOZ_GLEAN_ANDROID
     fog_counter_add(mId, aAmount);
 #endif
