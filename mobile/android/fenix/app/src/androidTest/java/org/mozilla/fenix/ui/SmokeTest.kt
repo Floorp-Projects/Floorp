@@ -386,6 +386,7 @@ class SmokeTest {
         }
     }
 
+    @Ignore("Failing, see https://github.com/mozilla-mobile/fenix/issues/18647")
     @Test
     fun customTrackingProtectionSettingsTest() {
         val trackingPage = TestAssetHelper.getEnhancedTrackingProtectionAsset(mockWebServer)
