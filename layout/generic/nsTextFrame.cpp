@@ -5308,7 +5308,8 @@ nsRect nsTextFrame::UpdateTextEmphasis(WritingMode aWM,
 // Returns the thickness in device pixels.
 static gfxFloat ComputeDecorationLineThickness(
     const StyleTextDecorationLength& aThickness, const gfxFloat aAutoValue,
-    const gfxFont::Metrics& aFontMetrics, const gfxFloat aAppUnitsPerDevPixel) {
+    const gfxFont::Metrics& aFontMetrics, const gfxFloat aAppUnitsPerDevPixel,
+    const nsIFrame* aFrame) {
   if (aThickness.IsAuto()) {
     return aAutoValue;
   }
@@ -5316,9 +5317,7 @@ static gfxFloat ComputeDecorationLineThickness(
   if (aThickness.IsFromFont()) {
     return aFontMetrics.underlineSize;
   }
-  auto em = [&] {
-    return nscoord(NS_round(aFontMetrics.emHeight * aAppUnitsPerDevPixel));
-  };
+  auto em = [&] { return aFrame->StyleFont()->mSize.ToAppUnits(); };
   return aThickness.AsLengthPercentage().Resolve(em) / aAppUnitsPerDevPixel;
 }
 
@@ -5329,13 +5328,10 @@ static gfxFloat ComputeDecorationLineOffset(
     StyleTextDecorationLine aLineType,
     const StyleTextUnderlinePosition& aPosition,
     const LengthPercentageOrAuto& aOffset, const gfxFont::Metrics& aFontMetrics,
-    const gfxFloat aAppUnitsPerDevPixel, bool aIsCentralBaseline,
-    bool aSwappedUnderline) {
+    const gfxFloat aAppUnitsPerDevPixel, const nsIFrame* aFrame,
+    bool aIsCentralBaseline, bool aSwappedUnderline) {
   // Em value to use if we need to resolve a percentage length.
-  auto em = [&] {
-    return nscoord(NS_round(aFontMetrics.emHeight * aAppUnitsPerDevPixel));
-  };
-
+  auto em = [&] { return aFrame->StyleFont()->mSize.ToAppUnits(); };
   // If we're in vertical-upright typographic mode, we need to compute the
   // offset of the decoration line from the default central baseline.
   if (aIsCentralBaseline) {
@@ -5446,14 +5442,14 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
     params.defaultLineThickness = metrics.underlineSize;
     params.lineSize.height = ComputeDecorationLineThickness(
         aBlock->Style()->StyleTextReset()->mTextDecorationThickness,
-        params.defaultLineThickness, metrics, appUnitsPerDevUnit);
+        params.defaultLineThickness, metrics, appUnitsPerDevUnit, this);
 
     const auto* styleText = aBlock->StyleText();
     bool swapUnderline =
         wm.IsCentralBaseline() && IsUnderlineRight(*aBlock->Style());
     params.offset = ComputeDecorationLineOffset(
         StyleTextDecorationLine::UNDERLINE, styleText->mTextUnderlinePosition,
-        styleText->mTextUnderlineOffset, metrics, appUnitsPerDevUnit,
+        styleText->mTextUnderlineOffset, metrics, appUnitsPerDevUnit, this,
         wm.IsCentralBaseline(), swapUnderline);
 
     nscoord maxAscent =
@@ -5543,13 +5539,13 @@ void nsTextFrame::UnionAdditionalOverflow(nsPresContext* aPresContext,
             params.defaultLineThickness = metrics.*lineSize;
             params.lineSize.height = ComputeDecorationLineThickness(
                 dec.mTextDecorationThickness, params.defaultLineThickness,
-                metrics, appUnitsPerDevUnit);
+                metrics, appUnitsPerDevUnit, this);
 
             bool swapUnderline =
                 parentWM.IsCentralBaseline() && IsUnderlineRight(*Style());
             params.offset = ComputeDecorationLineOffset(
                 lineType, dec.mTextUnderlinePosition, dec.mTextUnderlineOffset,
-                metrics, appUnitsPerDevUnit, parentWM.IsCentralBaseline(),
+                metrics, appUnitsPerDevUnit, this, parentWM.IsCentralBaseline(),
                 swapUnderline);
 
             const nsRect decorationRect =
@@ -5779,14 +5775,14 @@ void nsTextFrame::DrawSelectionDecorations(
           aTextPaintStyle.PresContext(), aFontMetrics, aSelectionType);
       params.lineSize.height = ComputeDecorationLineThickness(
           decThickness, params.defaultLineThickness, aFontMetrics,
-          appUnitsPerDevPixel);
+          appUnitsPerDevPixel, this);
 
       bool swapUnderline = wm.IsCentralBaseline() && IsUnderlineRight(*Style());
       const auto* styleText = StyleText();
       params.offset = ComputeDecorationLineOffset(
           aDecoration, styleText->mTextUnderlinePosition,
           styleText->mTextUnderlineOffset, aFontMetrics, appUnitsPerDevPixel,
-          wm.IsCentralBaseline(), swapUnderline);
+          this, wm.IsCentralBaseline(), swapUnderline);
 
       bool isIMEType = aSelectionType != SelectionType::eSpellCheck;
 
@@ -5861,7 +5857,7 @@ void nsTextFrame::DrawSelectionDecorations(
       params.defaultLineThickness = metrics.strikeoutSize;
       params.lineSize.height = ComputeDecorationLineThickness(
           decThickness, params.defaultLineThickness, metrics,
-          appUnitsPerDevPixel);
+          appUnitsPerDevPixel, this);
       // TODO(jfkthame): ComputeDecorationLineOffset? check vertical mode!
       params.offset = metrics.strikeoutOffset + 0.5;
       params.decoration = StyleTextDecorationLine::LINE_THROUGH;
@@ -7042,7 +7038,7 @@ void nsTextFrame::DrawTextRunAndDecorations(
   typedef gfxFont::Metrics Metrics;
   auto paintDecorationLine = [&](const LineDecoration& dec,
                                  gfxFloat Metrics::*lineSize,
-                                 mozilla::StyleTextDecorationLine lineType) {
+                                 StyleTextDecorationLine lineType) {
     if (dec.mStyle == NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
       return;
     }
@@ -7058,13 +7054,13 @@ void nsTextFrame::DrawTextRunAndDecorations(
     params.baselineOffset = dec.mBaselineOffset / app;
     params.defaultLineThickness = metrics.*lineSize;
     params.lineSize.height = ComputeDecorationLineThickness(
-        dec.mTextDecorationThickness, params.defaultLineThickness, metrics,
-        app);
+        dec.mTextDecorationThickness, params.defaultLineThickness, metrics, app,
+        dec.mFrame);
 
     bool swapUnderline = wm.IsCentralBaseline() && IsUnderlineRight(*Style());
     params.offset = ComputeDecorationLineOffset(
         lineType, dec.mTextUnderlinePosition, dec.mTextUnderlineOffset, metrics,
-        app, wm.IsCentralBaseline(), swapUnderline);
+        app, dec.mFrame, wm.IsCentralBaseline(), swapUnderline);
 
     params.style = dec.mStyle;
     PaintDecorationLine(params);
@@ -7407,7 +7403,7 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
 
     params.lineSize.height = ComputeDecorationLineThickness(
         decThickness, params.defaultLineThickness, metrics,
-        aPresContext->AppUnitsPerDevPixel());
+        aPresContext->AppUnitsPerDevPixel(), this);
 
     bool swapUnderline = wm.IsCentralBaseline() && IsUnderlineRight(*Style());
     const auto* styleText = StyleText();
@@ -7415,8 +7411,8 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
         textDecs.HasUnderline() ? StyleTextDecorationLine::UNDERLINE
                                 : StyleTextDecorationLine::OVERLINE,
         styleText->mTextUnderlinePosition, styleText->mTextUnderlineOffset,
-        metrics, aPresContext->AppUnitsPerDevPixel(), wm.IsCentralBaseline(),
-        swapUnderline);
+        metrics, aPresContext->AppUnitsPerDevPixel(), this,
+        wm.IsCentralBaseline(), swapUnderline);
 
     relativeSize = std::max(relativeSize, 1.0f);
     params.lineSize.height *= relativeSize;
