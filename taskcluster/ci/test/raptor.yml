@@ -66,6 +66,7 @@ job-defaults:
             default:
                 - .*
     tier: 2
+    fission-tier: 2
     virtualization: hardware
     mozharness:
         script: raptor_script.py
@@ -211,10 +212,7 @@ raptor-motionmark-animometer-firefox:
                             windows10-64-shippable-qr/opt: ["mozilla-central"]
                             default: []
             default: []
-    tier:
-        by-variant:
-            fission: 2
-            default: 1
+    tier: 1
     mozharness:
         extra-options:
             - --test=raptor-motionmark-animometer
@@ -236,10 +234,7 @@ raptor-webaudio-firefox:
     try-name: raptor-webaudio-firefox
     treeherder-symbol: Rap(wa)
     run-on-projects: []
-    tier:
-        by-variant:
-            fission: 2
-            default: 1
+    tier: 1
     mozharness:
         extra-options:
             - --test=raptor-webaudio
@@ -282,10 +277,8 @@ raptor-unity-webgl-firefox:
     try-name: raptor-unity-webgl-firefox
     treeherder-symbol: Rap(ugl)
     run-on-projects: []
-    tier:
-        by-variant:
-            fission: 2
-            default: 3
+    fission-run-on-projects: []
+    tier: 3
     mozharness:
         extra-options:
             - --test=raptor-unity-webgl
@@ -506,10 +499,7 @@ raptor-youtube-playback-v9-power-firefox:
             (linux|windows|macos)(?!.*shippable).*: []
             default: ["mozilla-central"]
     max-run-time: 2700
-    tier:
-        by-variant:
-            fission: 2
-            default: 3
+    tier: 3
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-v9
@@ -524,10 +514,7 @@ raptor-youtube-playback-h264-power-firefox:
             (linux|windows|macos)(?!.*shippable).*: []
             default: ["mozilla-central"]
     max-run-time: 2700
-    tier:
-        by-variant:
-            fission: 2
-            default: 3
+    tier: 3
     mozharness:
         extra-options:
             - --test=raptor-youtube-playback-h264
@@ -767,10 +754,7 @@ raptor-ares6-firefox-profiling:
     treeherder-symbol: Rap-Prof(ares6)
     run-on-projects: []
     max-run-time: 2500
-    tier:
-        by-variant:
-            fission: 2
-            default: 3
+    tier: 3
     mozharness:
         extra-options:
             - --test=raptor-ares6
@@ -782,10 +766,7 @@ raptor-jetstream2-firefox:
     try-name: raptor-jetstream2-firefox
     treeherder-symbol: Rap(js2)
     run-on-projects: []
-    tier:
-        by-variant:
-            fission: 2
-            default: 3
+    tier: 3
     max-run-time: 8000
     mozharness:
         extra-options:
@@ -800,10 +781,7 @@ raptor-jetstream2-firefox-profiling:
     treeherder-symbol: Rap-Prof(js2)
     run-on-projects: []
     max-run-time: 8000
-    tier:
-        by-variant:
-            fission: 2
-            default: 3
+    tier: 3
     mozharness:
         extra-options:
             - --test=raptor-jetstream2
