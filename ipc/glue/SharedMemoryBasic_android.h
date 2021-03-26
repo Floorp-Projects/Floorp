@@ -34,6 +34,8 @@ class SharedMemoryBasic final
 
   virtual bool Map(size_t nBytes, void* fixed_address = nullptr) override;
 
+  virtual void Unmap() override;
+
   virtual void CloseHandle() override;
 
   virtual void* memory() const override {
@@ -59,8 +61,6 @@ class SharedMemoryBasic final
 
  private:
   ~SharedMemoryBasic();
-
-  void Unmap();
 
   // The /dev/ashmem fd we allocate.
   int mShmFd;
