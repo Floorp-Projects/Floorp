@@ -1984,7 +1984,7 @@ impl RenderBackend {
                         dirty_rects_are_valid: false,
                         profile: TransactionProfile::new(),
                         rg_builder: RenderTaskGraphBuilder::new(),
-                        frame_stats: FullFrameStats
+                        frame_stats: None,
                     };
                     entry.insert(doc);
                 }
@@ -2001,7 +2001,7 @@ impl RenderBackend {
 
                     let msg_publish = ResultMsg::PublishDocument(
                         id,
-                        RenderedDocument { frame, is_new_scene: true, profile: TransactionProfile::new() },
+                        RenderedDocument { frame, is_new_scene: true, profile: TransactionProfile::new(), frame_stats: None },
                         self.resource_cache.pending_updates(),
                     );
                     self.result_tx.send(msg_publish).unwrap();
