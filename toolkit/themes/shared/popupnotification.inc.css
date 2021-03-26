@@ -245,4 +245,8 @@ popupnotification {
   max-width: 32px;
   padding: 8px;
 }
+
+.popup-notification-learnmore-link {
+  text-decoration: underline;
+}
 } /*** END proton ***/
