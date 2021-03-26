@@ -75,7 +75,6 @@
 #define APPLICATION_RDF_XML "application/rdf+xml"
 #define APPLICATION_WAPXHTML_XML "application/vnd.wap.xhtml+xml"
 #define APPLICATION_PACKAGE "application/package"
-#define APPLICATION_JAVASCRIPT_BINAST "application/javascript-binast"
 #define APPLICATION_WASM "application/wasm"
 
 #define AUDIO_BASIC "audio/basic"

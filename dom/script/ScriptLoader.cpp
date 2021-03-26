@@ -324,7 +324,6 @@ static void CollectScriptTelemetry(ScriptLoadRequest* aRequest) {
     } else if (aRequest->IsTextSource()) {
       AccumulateCategorical(LABELS_DOM_SCRIPT_LOADING_SOURCE::SourceFallback);
     }
-    // TODO: Add telemetry for BinAST encoded source.
   } else {
     MOZ_ASSERT(aRequest->IsLoading());
     if (aRequest->IsTextSource()) {
@@ -332,7 +331,6 @@ static void CollectScriptTelemetry(ScriptLoadRequest* aRequest) {
     } else if (aRequest->IsBytecode()) {
       AccumulateCategorical(LABELS_DOM_SCRIPT_LOADING_SOURCE::AltData);
     }
-    // TODO: Add telemetry for BinAST encoded source.
   }
 }
 
@@ -1667,10 +1665,6 @@ nsresult ScriptLoader::StartLoad(ScriptLoadRequest* aRequest) {
   if (httpChannel) {
     // HTTP content negotation has little value in this context.
     nsAutoCString acceptTypes("*/*");
-    if (nsJSUtils::BinASTEncodingEnabled() &&
-        aRequest->ShouldAcceptBinASTEncoding()) {
-      acceptTypes = APPLICATION_JAVASCRIPT_BINAST ", */*";
-    }
     rv = httpChannel->SetRequestHeader("Accept"_ns, acceptTypes, false);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
 
@@ -2446,8 +2440,6 @@ NotifyOffThreadScriptLoadCompletedRunnable::Run() {
     ProfilerString8View scriptSourceString;
     if (request->IsTextSource()) {
       scriptSourceString = "ScriptCompileOffThread";
-    } else if (request->IsBinASTSource()) {
-      scriptSourceString = "BinASTDecodeOffThread";
     } else {
       MOZ_ASSERT(request->IsBytecode());
       scriptSourceString = "BytecodeDecodeOffThread";
@@ -2955,7 +2947,6 @@ bool ScriptLoader::ShouldCacheBytecode(ScriptLoadRequest* aRequest) {
   bool hasSourceLengthMin = false;
   bool hasFetchCountMin = false;
   size_t sourceLengthMin = 100;
-  size_t binASTLengthMin = 70;
   int32_t fetchCountMin = 4;
 
   LOG(("ScriptLoadRequest (%p): Bytecode-cache: strategy = %d.", aRequest,
@@ -2978,7 +2969,6 @@ bool ScriptLoader::ShouldCacheBytecode(ScriptLoadRequest* aRequest) {
       hasSourceLengthMin = true;
       hasFetchCountMin = true;
       sourceLengthMin = 1024;
-      binASTLengthMin = 700;
       // If we were to optimize only for speed, without considering the impact
       // on memory, we should set this threshold to 2. (Bug 900784 comment 120)
       fetchCountMin = 4;
@@ -2992,14 +2982,9 @@ bool ScriptLoader::ShouldCacheBytecode(ScriptLoadRequest* aRequest) {
   if (hasSourceLengthMin) {
     size_t sourceLength;
     size_t minLength;
-    if (aRequest->IsTextSource()) {
-      sourceLength = aRequest->mScriptTextLength;
-      minLength = sourceLengthMin;
-    } else {
-      MOZ_ASSERT(aRequest->IsBinASTSource());
-      sourceLength = aRequest->ScriptBinASTData().length();
-      minLength = binASTLengthMin;
-    }
+    MOZ_ASSERT(aRequest->IsTextSource());
+    sourceLength = aRequest->mScriptTextLength;
+    minLength = sourceLengthMin;
     if (sourceLength < minLength) {
       LOG(("ScriptLoadRequest (%p): Bytecode-cache: Script is too small.",
            aRequest));
@@ -3292,42 +3277,26 @@ nsresult ScriptLoader::EvaluateScript(ScriptLoadRequest* aRequest) {
                   ("ScriptLoadRequest (%p): Join (off-thread parsing) and "
                    "Execute",
                    aRequest));
-              if (aRequest->IsBinASTSource()) {
-                rv = exec.JoinDecodeBinAST(&aRequest->mOffThreadToken);
-              } else {
-                MOZ_ASSERT(aRequest->IsTextSource());
-                rv = exec.JoinCompile(&aRequest->mOffThreadToken);
-              }
+              MOZ_ASSERT(aRequest->IsTextSource());
+              rv = exec.JoinCompile(&aRequest->mOffThreadToken);
             } else {
               // Main thread parsing (inline and small scripts)
               LOG(("ScriptLoadRequest (%p): Compile And Exec", aRequest));
-              if (aRequest->IsBinASTSource()) {
+              MOZ_ASSERT(aRequest->IsTextSource());
+              MaybeSourceText maybeSource;
+              rv = GetScriptSource(cx, aRequest, &maybeSource);
+              if (NS_SUCCEEDED(rv)) {
                 AUTO_PROFILER_MARKER_TEXT(
-                    "BinASTDecodeMainThread", JS,
+                    "ScriptCompileMainThread", JS,
                     MarkerInnerWindowIdFromDocShell(docShell),
                     profilerLabelString);
 
-                rv = exec.DecodeBinAST(options,
-                                       aRequest->ScriptBinASTData().begin(),
-                                       aRequest->ScriptBinASTData().length());
-              } else {
-                MOZ_ASSERT(aRequest->IsTextSource());
-                MaybeSourceText maybeSource;
-                rv = GetScriptSource(cx, aRequest, &maybeSource);
-                if (NS_SUCCEEDED(rv)) {
-                  AUTO_PROFILER_MARKER_TEXT(
-                      "ScriptCompileMainThread", JS,
-                      MarkerInnerWindowIdFromDocShell(docShell),
-                      profilerLabelString);
-
-                  rv = maybeSource.constructed<SourceText<char16_t>>()
-                           ? exec.Compile(
-                                 options,
-                                 maybeSource.ref<SourceText<char16_t>>())
-                           : exec.Compile(
-                                 options,
-                                 maybeSource.ref<SourceText<Utf8Unit>>());
-                }
+                rv =
+                    maybeSource.constructed<SourceText<char16_t>>()
+                        ? exec.Compile(options,
+                                       maybeSource.ref<SourceText<char16_t>>())
+                        : exec.Compile(options,
+                                       maybeSource.ref<SourceText<Utf8Unit>>());
               }
             }
 

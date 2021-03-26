@@ -247,16 +247,6 @@ nsresult JSExecutionContext::JoinDecode(JS::OffThreadToken** aOffThreadToken) {
   return NS_OK;
 }
 
-nsresult JSExecutionContext::JoinDecodeBinAST(
-    JS::OffThreadToken** aOffThreadToken) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-nsresult JSExecutionContext::DecodeBinAST(JS::CompileOptions& aCompileOptions,
-                                          const uint8_t* aBuf, size_t aLength) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 JSScript* JSExecutionContext::GetScript() {
 #ifdef DEBUG
   MOZ_ASSERT(!mSkip);

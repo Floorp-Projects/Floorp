@@ -162,22 +162,15 @@ class ScriptLoadRequest
   }
 
   // Type of data provided by the nsChannel.
-  enum class DataType : uint8_t {
-    eUnknown,
-    eTextSource,
-    eBinASTSource,
-    eBytecode
-  };
+  enum class DataType : uint8_t { eUnknown, eTextSource, eBytecode };
 
   bool IsUnknownDataType() const { return mDataType == DataType::eUnknown; }
   bool IsTextSource() const { return mDataType == DataType::eTextSource; }
-  bool IsBinASTSource() const { return false; }
-  bool IsSource() const { return IsTextSource() || IsBinASTSource(); }
+  bool IsSource() const { return IsTextSource(); }
   bool IsBytecode() const { return mDataType == DataType::eBytecode; }
 
   void SetUnknownDataType();
   void SetTextSource();
-  void SetBinASTSource();
   void SetBytecode();
 
   // Use a vector backed by the JS allocator for script text so that contents
@@ -185,10 +178,6 @@ class ScriptLoadRequest
   // time.
   template <typename Unit>
   using ScriptTextBuffer = Vector<Unit, 0, js::MallocAllocPolicy>;
-
-  // BinAST data isn't transferred to the JS engine, so it doesn't need to use
-  // the JS allocator.
-  using BinASTSourceBuffer = Vector<uint8_t>;
 
   bool IsUTF16Text() const {
     return mScriptData->is<ScriptTextBuffer<char16_t>>();
@@ -206,15 +195,6 @@ class ScriptLoadRequest
   ScriptTextBuffer<Unit>& ScriptText() {
     MOZ_ASSERT(IsTextSource());
     return mScriptData->as<ScriptTextBuffer<Unit>>();
-  }
-
-  const BinASTSourceBuffer& ScriptBinASTData() const {
-    MOZ_ASSERT(IsBinASTSource());
-    return mScriptData->as<BinASTSourceBuffer>();
-  }
-  BinASTSourceBuffer& ScriptBinASTData() {
-    MOZ_ASSERT(IsBinASTSource());
-    return mScriptData->as<BinASTSourceBuffer>();
   }
 
   size_t ScriptTextLength() const {
@@ -288,8 +268,6 @@ class ScriptLoadRequest
     return element->GetParserCreated();
   }
 
-  bool ShouldAcceptBinASTEncoding() const;
-
   void ClearScriptSource();
 
   void SetScript(JSScript* aScript);
@@ -334,8 +312,7 @@ class ScriptLoadRequest
   JS::Heap<JSScript*> mScript;
 
   // Holds script source data for non-inline scripts.
-  Maybe<Variant<ScriptTextBuffer<char16_t>, ScriptTextBuffer<Utf8Unit>,
-                BinASTSourceBuffer>>
+  Maybe<Variant<ScriptTextBuffer<char16_t>, ScriptTextBuffer<Utf8Unit>>>
       mScriptData;
 
   // The length of script source text, set when reading completes. This is used
