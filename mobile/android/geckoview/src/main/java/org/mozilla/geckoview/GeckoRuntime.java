@@ -354,6 +354,8 @@ public final class GeckoRuntime implements Parcelable {
         setArguments(context, info, settings.getArguments());
         if (info.xpcshell) {
             info.outFilePath = settings.getExtras().getString("out_file");
+            // Xpcshell tests need multi-e10s to work properly
+            settings.setProcessCount(BuildConfig.MOZ_ANDROID_CONTENT_SERVICE_COUNT);
         }
         info.extras = settings.getExtras();
         info.flags = flags;
