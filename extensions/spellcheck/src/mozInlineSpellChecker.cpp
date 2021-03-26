@@ -105,23 +105,24 @@ mozInlineSpellStatus::mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker)
 //    which are usually nullptr) to get a range with the union of these.
 
 // static
-nsresult mozInlineSpellStatus::CreateForEditorChange(
-    mozilla::UniquePtr<mozInlineSpellStatus>& aStatus,
+Result<UniquePtr<mozInlineSpellStatus>, nsresult>
+mozInlineSpellStatus::CreateForEditorChange(
     mozInlineSpellChecker& aSpellChecker, EditSubAction aEditSubAction,
     nsINode* aAnchorNode, uint32_t aAnchorOffset, nsINode* aPreviousNode,
     uint32_t aPreviousOffset, nsINode* aStartNode, uint32_t aStartOffset,
     nsINode* aEndNode, uint32_t aEndOffset) {
   if (NS_WARN_IF(!aAnchorNode) || NS_WARN_IF(!aPreviousNode)) {
-    return NS_ERROR_FAILURE;
+    return Err(NS_ERROR_FAILURE);
   }
 
-  aStatus = MakeUnique<mozInlineSpellStatus>(&aSpellChecker);
+  UniquePtr<mozInlineSpellStatus> status =
+      MakeUnique<mozInlineSpellStatus>(&aSpellChecker);
 
   // save the anchor point as a range so we can find the current word later
-  aStatus->mAnchorRange =
-      aStatus->PositionToCollapsedRange(aAnchorNode, aAnchorOffset);
-  if (NS_WARN_IF(!aStatus->mAnchorRange)) {
-    return NS_ERROR_FAILURE;
+  status->mAnchorRange =
+      status->PositionToCollapsedRange(aAnchorNode, aAnchorOffset);
+  if (NS_WARN_IF(!status->mAnchorRange)) {
+    return Err(NS_ERROR_FAILURE);
   }
 
   bool deleted = aEditSubAction == EditSubAction::eDeleteSelectedContent;
@@ -135,70 +136,74 @@ nsresult mozInlineSpellStatus::CreateForEditorChange(
     // Deletes are easy, the range is just the current anchor. We set the range
     // to check to be empty, FinishInitOnEvent will fill in the range to be
     // the current word.
-    aStatus->mOp = eOpChangeDelete;
-    aStatus->mRange = nullptr;
-    return NS_OK;
+    status->mOp = eOpChangeDelete;
+    status->mRange = nullptr;
+    return status;
   }
 
-  aStatus->mOp = eOpChange;
+  status->mOp = eOpChange;
 
   // range to check
-  aStatus->mRange = nsRange::Create(aPreviousNode);
+  status->mRange = nsRange::Create(aPreviousNode);
 
   // ...we need to put the start and end in the correct order
   ErrorResult errorResult;
-  int16_t cmpResult = aStatus->mAnchorRange->ComparePoint(
+  int16_t cmpResult = status->mAnchorRange->ComparePoint(
       *aPreviousNode, aPreviousOffset, errorResult);
   if (NS_WARN_IF(errorResult.Failed())) {
-    return errorResult.StealNSResult();
+    return Err(errorResult.StealNSResult());
   }
   nsresult rv;
   if (cmpResult < 0) {
     // previous anchor node is before the current anchor
-    rv = aStatus->mRange->SetStartAndEnd(aPreviousNode, aPreviousOffset,
-                                         aAnchorNode, aAnchorOffset);
+    rv = status->mRange->SetStartAndEnd(aPreviousNode, aPreviousOffset,
+                                        aAnchorNode, aAnchorOffset);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return Err(rv);
     }
   } else {
     // previous anchor node is after (or the same as) the current anchor
-    rv = aStatus->mRange->SetStartAndEnd(aAnchorNode, aAnchorOffset,
-                                         aPreviousNode, aPreviousOffset);
+    rv = status->mRange->SetStartAndEnd(aAnchorNode, aAnchorOffset,
+                                        aPreviousNode, aPreviousOffset);
     if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
+      return Err(rv);
     }
   }
 
   // On insert save this range: DoSpellCheck optimizes things in this range.
   // Otherwise, just leave this nullptr.
   if (aEditSubAction == EditSubAction::eInsertText) {
-    aStatus->mCreatedRange = aStatus->mRange;
+    status->mCreatedRange = status->mRange;
   }
 
   // if we were given a range, we need to expand our range to encompass it
   if (aStartNode && aEndNode) {
     cmpResult =
-        aStatus->mRange->ComparePoint(*aStartNode, aStartOffset, errorResult);
+        status->mRange->ComparePoint(*aStartNode, aStartOffset, errorResult);
     if (NS_WARN_IF(errorResult.Failed())) {
-      return errorResult.StealNSResult();
+      return Err(errorResult.StealNSResult());
     }
     if (cmpResult < 0) {  // given range starts before
-      rv = aStatus->mRange->SetStart(aStartNode, aStartOffset);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = status->mRange->SetStart(aStartNode, aStartOffset);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
     }
 
     cmpResult =
-        aStatus->mRange->ComparePoint(*aEndNode, aEndOffset, errorResult);
+        status->mRange->ComparePoint(*aEndNode, aEndOffset, errorResult);
     if (NS_WARN_IF(errorResult.Failed())) {
-      return errorResult.StealNSResult();
+      return Err(errorResult.StealNSResult());
     }
     if (cmpResult > 0) {  // given range ends after
-      rv = aStatus->mRange->SetEnd(aEndNode, aEndOffset);
-      NS_ENSURE_SUCCESS(rv, rv);
+      rv = status->mRange->SetEnd(aEndNode, aEndOffset);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return Err(rv);
+      }
     }
   }
 
-  return NS_OK;
+  return status;
 }
 
 // mozInlineSpellStatus::InitForNavigation
@@ -806,13 +811,17 @@ nsresult mozInlineSpellChecker::SpellCheckAfterEditorChange(
   mNeedsCheckAfterNavigation = true;
 
   // the anchor node is the position of the caret
-  UniquePtr<mozInlineSpellStatus> status;
-  rv = mozInlineSpellStatus::CreateForEditorChange(
-      status, *this, aEditSubAction, aSelection.GetAnchorNode(),
-      aSelection.AnchorOffset(), aPreviousSelectedNode, aPreviousSelectedOffset,
-      aStartNode, aStartOffset, aEndNode, aEndOffset);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = ScheduleSpellCheck(std::move(status));
+  Result<UniquePtr<mozInlineSpellStatus>, nsresult> res =
+      mozInlineSpellStatus::CreateForEditorChange(
+          *this, aEditSubAction, aSelection.GetAnchorNode(),
+          aSelection.AnchorOffset(), aPreviousSelectedNode,
+          aPreviousSelectedOffset, aStartNode, aStartOffset, aEndNode,
+          aEndOffset);
+  if (NS_WARN_IF(res.isErr())) {
+    return res.unwrapErr();
+  }
+
+  rv = ScheduleSpellCheck(res.unwrap());
   NS_ENSURE_SUCCESS(rv, rv);
 
   // remember the current caret position after every change

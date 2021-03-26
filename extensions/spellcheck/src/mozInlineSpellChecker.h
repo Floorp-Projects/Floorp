@@ -11,6 +11,7 @@
 #include "nsIEditorSpellCheck.h"
 #include "nsIInlineSpellChecker.h"
 #include "mozInlineSpellWordUtil.h"
+#include "mozilla/Result.h"
 #include "nsRange.h"
 #include "nsWeakReference.h"
 
@@ -34,14 +35,13 @@ class mozInlineSpellStatus {
   // @param aSpellChecker must be non-nullptr.
   explicit mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker);
 
-  // @param aStatus only valid if this method returns no error.
-  static nsresult CreateForEditorChange(
-      mozilla::UniquePtr<mozInlineSpellStatus>& aStatus,
-      mozInlineSpellChecker& aSpellChecker,
-      mozilla::EditSubAction aEditSubAction, nsINode* aAnchorNode,
-      uint32_t aAnchorOffset, nsINode* aPreviousNode, uint32_t aPreviousOffset,
-      nsINode* aStartNode, uint32_t aStartOffset, nsINode* aEndNode,
-      uint32_t aEndOffset);
+  static mozilla::Result<mozilla::UniquePtr<mozInlineSpellStatus>, nsresult>
+  CreateForEditorChange(mozInlineSpellChecker& aSpellChecker,
+                        mozilla::EditSubAction aEditSubAction,
+                        nsINode* aAnchorNode, uint32_t aAnchorOffset,
+                        nsINode* aPreviousNode, uint32_t aPreviousOffset,
+                        nsINode* aStartNode, uint32_t aStartOffset,
+                        nsINode* aEndNode, uint32_t aEndOffset);
   nsresult InitForNavigation(bool aForceCheck, int32_t aNewPositionOffset,
                              nsINode* aOldAnchorNode, uint32_t aOldAnchorOffset,
                              nsINode* aNewAnchorNode, uint32_t aNewAnchorOffset,
