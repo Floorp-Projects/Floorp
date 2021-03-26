@@ -148,7 +148,7 @@ class LinkHandlerChild extends JSWindowActorChild {
 
             // Note: This protocol list should be kept in sync with
             // the one in OpenSearchEngine's install function.
-            let re = /^https?/i;
+            let re = /^(?:https?|ftp):/i;
             if (
               type == "application/opensearchdescription+xml" &&
               link.title &&
