@@ -771,9 +771,8 @@
 }
 
 /* Add a translucent color on top of multiselected tabs */
-.tab-background[multiselected=true]:not([selected=true]) > .tab-background-inner {
-  background: currentColor;
-  opacity: .1;
+.tab-background[multiselected=true]:not([selected=true]) {
+  opacity: .9;
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
