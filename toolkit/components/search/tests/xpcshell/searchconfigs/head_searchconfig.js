@@ -289,11 +289,17 @@ class SearchConfigTest {
    *   The list of engines to check.
    * @param {string} identifier
    *   The identifier to look for in the list.
+   * @param {boolean} exactMatch
+   *   Whether to use an exactMatch for the identifier.
    * @returns {Engine}
    *   Returns the engine if found, null otherwise.
    */
-  _findEngine(engines, identifier) {
-    return engines.find(engine => engine.identifier.startsWith(identifier));
+  _findEngine(engines, identifier, exactMatch) {
+    return engines.find(engine =>
+      exactMatch
+        ? engine.identifier == identifier
+        : engine.identifier.startsWith(identifier)
+    );
   }
 
   /**
@@ -317,7 +323,8 @@ class SearchConfigTest {
     const hasExcluded = "excluded" in config;
     const identifierIncluded = !!this._findEngine(
       engines,
-      this._config.identifier
+      this._config.identifier,
+      this._config.identifierExactMatch ?? false
     );
 
     // If there's not included/excluded, then this shouldn't be the default anywhere.
@@ -423,7 +430,11 @@ class SearchConfigTest {
       `Should have just one details section for region: ${region} locale: ${locale}`
     );
 
-    const engine = this._findEngine(engines, this._config.identifier);
+    const engine = this._findEngine(
+      engines,
+      this._config.identifier,
+      this._config.identifierExactMatch ?? false
+    );
     this.assertOk(engine, "Should have an engine present");
 
     if (this._config.aliases) {
@@ -555,6 +566,13 @@ class SearchConfigTest {
       this.assertOk(
         submission.uri.query.split("&").includes(rule.searchUrlCode),
         `Expected "${rule.searchUrlCode}" in search url "${submission.uri.spec}"`
+      );
+    }
+    if (rule.searchUrlCodeNotInQuery) {
+      const submission = engine.getSubmission("test", URLTYPE_SEARCH_HTML);
+      this.assertOk(
+        submission.uri.includes(rule.searchUrlCodeNotInQuery),
+        `Expected "${rule.searchUrlCodeNotInQuery}" in search url "${submission.uri.spec}"`
       );
     }
     if (rule.searchFormUrlCode) {
