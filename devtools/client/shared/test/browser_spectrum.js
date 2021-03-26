@@ -34,7 +34,6 @@ add_task(async function() {
   const { host, doc } = await createHost("bottom", TEST_URI);
 
   const container = doc.getElementById("spectrum-container");
-
   await testCreateAndDestroyShouldAppendAndRemoveElements(container);
   await testPassingAColorAtInitShouldSetThatColor(container);
   await testSettingAndGettingANewColor(container);
@@ -104,23 +103,21 @@ function testColorPreviewDisplay(
   );
 }
 
-function testCreateAndDestroyShouldAppendAndRemoveElements(container) {
+async function testCreateAndDestroyShouldAppendAndRemoveElements(container) {
   ok(container, "We have the root node to append spectrum to");
   is(container.childElementCount, 0, "Root node is empty");
 
-  const s = new Spectrum(container, cssColors.white);
-  s.show();
+  const s = await createSpectrum(container, cssColors.white);
   ok(container.childElementCount > 0, "Spectrum has appended elements");
 
   s.destroy();
   is(container.childElementCount, 0, "Destroying spectrum removed all nodes");
 }
 
-function testPassingAColorAtInitShouldSetThatColor(container) {
+async function testPassingAColorAtInitShouldSetThatColor(container) {
   const initRgba = cssColors.white;
 
-  const s = new Spectrum(container, initRgba);
-  s.show();
+  const s = await createSpectrum(container, initRgba);
 
   const setRgba = s.rgb;
 
@@ -132,9 +129,8 @@ function testPassingAColorAtInitShouldSetThatColor(container) {
   s.destroy();
 }
 
-function testSettingAndGettingANewColor(container) {
-  const s = new Spectrum(container, cssColors.black);
-  s.show();
+async function testSettingAndGettingANewColor(container) {
+  const s = await createSpectrum(container, cssColors.black);
 
   const colorToSet = cssColors.white;
   s.rgb = colorToSet;
@@ -166,9 +162,8 @@ async function testChangingColorShouldEmitEventsHelper(
   ok(true, "Changed event was emitted on color change");
 }
 
-function testChangingColorShouldEmitEvents(container, doc) {
-  const s = new Spectrum(container, cssColors.white);
-  s.show();
+async function testChangingColorShouldEmitEvents(container, doc) {
+  const s = await createSpectrum(container, cssColors.white);
 
   const sendUpKey = () => EventUtils.sendKey("Up");
   const sendDownKey = () => EventUtils.sendKey("Down");
@@ -273,9 +268,8 @@ function testAriaAttributesOnSpectrumElements(
   );
 }
 
-function testSettingColorShoudUpdateTheUI(container) {
-  const s = new Spectrum(container, cssColors.white);
-  s.show();
+async function testSettingColorShoudUpdateTheUI(container) {
+  const s = await createSpectrum(container, cssColors.white);
   const dragHelperOriginalPos = [
     s.dragHelper.style.top,
     s.dragHelper.style.left,
@@ -315,9 +309,8 @@ function testSettingColorShoudUpdateTheUI(container) {
   s.destroy();
 }
 
-function testChangingColorShouldUpdateColorPreview(container) {
-  const s = new Spectrum(container, [0, 0, 1, 1]);
-  s.show();
+async function testChangingColorShouldUpdateColorPreview(container) {
+  const s = await createSpectrum(container, [0, 0, 1, 1]);
 
   info("Test that color preview is black.");
   testColorPreviewDisplay(s, "rgb(0, 0, 1)", "transparent");
@@ -337,9 +330,8 @@ function testChangingColorShouldUpdateColorPreview(container) {
   s.destroy();
 }
 
-function testNotSettingTextPropsShouldNotShowContrastSection(container) {
-  const s = new Spectrum(container, cssColors.white);
-  s.show();
+async function testNotSettingTextPropsShouldNotShowContrastSection(container) {
+  const s = await createSpectrum(container, cssColors.white);
 
   setSpectrumProps(s, { rgb: cssColors.black });
   ok(
@@ -379,9 +371,10 @@ function testSpectrumContrast(
   );
 }
 
-function testSettingTextPropsAndColorShouldUpdateContrastValue(container) {
-  const s = new Spectrum(container, cssColors.white);
-  s.show();
+async function testSettingTextPropsAndColorShouldUpdateContrastValue(
+  container
+) {
+  const s = await createSpectrum(container, cssColors.white);
 
   ok(
     !s.spectrumContrast.classList.contains("visible"),
@@ -412,11 +405,10 @@ function testSettingTextPropsAndColorShouldUpdateContrastValue(container) {
   s.destroy();
 }
 
-function testOnlySelectingLargeTextWithNonZeroAlphaShouldShowIndicator(
+async function testOnlySelectingLargeTextWithNonZeroAlphaShouldShowIndicator(
   container
 ) {
-  let s = new Spectrum(container, cssColors.white);
-  s.show();
+  let s = await createSpectrum(container, cssColors.white);
 
   ok(
     s.contrastLabel.childNodes.length !== 3,
@@ -452,8 +444,7 @@ function testOnlySelectingLargeTextWithNonZeroAlphaShouldShowIndicator(
 
   // Spectrum should be closed and opened again to reflect changes in text size
   s.destroy();
-  s = new Spectrum(container, cssColors.white);
-  s.show();
+  s = await createSpectrum(container, cssColors.white);
 
   info("Test that selecting regular text does not show large text indicator.");
   setSpectrumProps(
@@ -466,9 +457,10 @@ function testOnlySelectingLargeTextWithNonZeroAlphaShouldShowIndicator(
   s.destroy();
 }
 
-function testSettingMultiColoredBackgroundShouldShowContrastRange(container) {
-  const s = new Spectrum(container, cssColors.white);
-  s.show();
+async function testSettingMultiColoredBackgroundShouldShowContrastRange(
+  container
+) {
+  const s = await createSpectrum(container, cssColors.white);
 
   info(
     "Test setting text with non-zero alpha and multi-colored bg shows contrast range and empty single contrast."
@@ -501,4 +493,11 @@ function testSettingMultiColoredBackgroundShouldShowContrastRange(container) {
   );
 
   s.destroy();
+}
+
+async function createSpectrum(...spectrumConstructorParams) {
+  const s = new Spectrum(...spectrumConstructorParams);
+  await waitFor(() => s.dragger.offsetHeight > 0);
+  s.show();
+  return s;
 }
