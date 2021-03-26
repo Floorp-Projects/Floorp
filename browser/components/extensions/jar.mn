@@ -4,6 +4,9 @@
 
 browser.jar:
     content/browser/extension.css
+#ifdef XP_LINUX
+    content/browser/extension-linux-panel.css
+#endif
 #ifdef XP_MACOSX
     content/browser/extension-mac.css
     content/browser/extension-mac-panel.css
