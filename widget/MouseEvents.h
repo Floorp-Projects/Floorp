@@ -217,6 +217,10 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
         mUseLegacyNonPrimaryDispatch(false),
         mClickEventPrevented(false) {}
 
+#ifdef DEBUG
+  void AssertContextMenuEventButtonConsistency() const;
+#endif
+
  public:
   virtual WidgetMouseEvent* AsMouseEvent() override { return this; }
 
@@ -237,15 +241,7 @@ class WidgetMouseEvent : public WidgetMouseEventBase,
   }
 
 #ifdef DEBUG
-  virtual ~WidgetMouseEvent() {
-    NS_WARNING_ASSERTION(
-        mMessage != eContextMenu ||
-            (mButton == ((mContextMenuTrigger == eNormal)
-                             ? MouseButton::eSecondary
-                             : MouseButton::ePrimary) &&
-             (mContextMenuTrigger != eControlClick || IsControl())),
-        "Wrong button set to eContextMenu event?");
-  }
+  virtual ~WidgetMouseEvent() { AssertContextMenuEventButtonConsistency(); }
 #endif
 
   virtual WidgetEvent* Duplicate() const override {
