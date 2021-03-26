@@ -106,7 +106,13 @@ void MacroAssemblerX86Shared::extractLaneInt8x16(FloatRegister input,
                                                  SimdSign sign) {
   vpextrb(lane, input, Operand(output));
   if (sign == SimdSign::Signed) {
-    movsbl(output, output);
+    if (!AllocatableGeneralRegisterSet(Registers::SingleByteRegs).has(output)) {
+      xchgl(eax, output);
+      movsbl(eax, eax);
+      xchgl(eax, output);
+    } else {
+      movsbl(output, output);
+    }
   }
 }
 
