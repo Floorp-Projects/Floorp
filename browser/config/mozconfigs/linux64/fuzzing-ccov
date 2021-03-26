@@ -1,5 +1,12 @@
 . "$topsrcdir/browser/config/mozconfigs/linux64/code-coverage"
 
+export LLVM_SYMBOLIZER="$MOZ_FETCHES_DIR/llvm-symbolizer/llvm-symbolizer"
+
+# Even in fuzzing builds without sanitizers, the UBSan runtime is pulled
+# in as a dependency to allow libFuzzer to have rudimentary stacks.
+# Hence we need to disable jemalloc until bug 1435148 is fully resolved.
+ac_add_options --disable-jemalloc
+
 ac_add_options --enable-debug-symbols=-g1
 ac_add_options --enable-fuzzing
 
