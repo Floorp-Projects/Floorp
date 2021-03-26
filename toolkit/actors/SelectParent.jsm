@@ -10,12 +10,20 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
+);
 
 // Maximum number of rows to display in the select dropdown.
 const MAX_ROWS = 20;
 
 // Minimum elements required to show select search
 const SEARCH_MINIMUM_ELEMENTS = 40;
+
+// Media query to check if we're on the default win 10 theme. Should match
+// what we use in the toolkit theme to apply custom styling to menulists.
+const DEFAULT_WIN10_THEME =
+  "(-moz-windows-default-theme) and (-moz-os-version: windows-win10)";
 
 // The properties that we should respect only when the item is not active.
 const PROPERTIES_RESET_WHEN_ACTIVE = [
@@ -46,6 +54,24 @@ const SUPPORTED_SELECT_PROPERTIES = [
 const customStylingEnabled = Services.prefs.getBoolPref(
   "dom.forms.select.customstyling"
 );
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gProton",
+  "browser.proton.contextmenus.enabled",
+  false
+);
+
+function _rgbaToString(parsedColor) {
+  if (!parsedColor) {
+    return null;
+  }
+  let { r, g, b, a } = parsedColor;
+  if (a == 1) {
+    return `rgb(${r}, ${g}, ${b})`;
+  }
+  return `rgba(${r}, ${g}, ${b}, ${a})`;
+}
 
 var SelectParentHelper = {
   /**
@@ -93,6 +119,23 @@ var SelectParentHelper = {
     let stylesheet = menulist.querySelector("#ContentSelectDropdownStylesheet");
     if (stylesheet) {
       stylesheet.remove();
+    }
+
+    // Take dark mode into account on Windows
+    if (
+      gProton &&
+      AppConstants.platform == "win" &&
+      menulist.ownerGlobal.matchMedia(DEFAULT_WIN10_THEME)
+    ) {
+      let rootCS = menulist.ownerGlobal.getComputedStyle(menulist);
+      let { InspectorUtils } = menulist.ownerGlobal;
+      // We parse out the colour and produce an rgb/rgba value.
+      let normalize = v => _rgbaToString(InspectorUtils.colorToRGBA(v));
+      uaStyle["background-color"] =
+        normalize(rootCS.getPropertyValue("--menu-background-color")) ||
+        uaStyle["background-color"];
+      uaStyle.color =
+        normalize(rootCS.getPropertyValue("--menu-color")) || uaStyle.color;
     }
 
     let doc = menulist.ownerDocument;

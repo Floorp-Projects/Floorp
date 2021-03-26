@@ -32,6 +32,10 @@ menupopup {
     background-color: transparent;
     border-color: transparent;
 
+    /* Set this here rather than on the scrollbox so it is more easily
+     * overridden by e.g. ContentSelectDropdown */
+    color: var(--menu-color);
+
     --nested-margin: -6px;
   }
 
@@ -45,7 +49,6 @@ menupopup {
      defined here to keep it inside of the shadow. */
   .menupopup-arrowscrollbox {
     background-color: var(--menu-background-color);
-    color: var(--menu-color);
 
     border: 1px solid var(--menu-border-color);
     border-radius: 4px;
