@@ -3132,7 +3132,7 @@ BrowserGlue.prototype = {
   _migrateUI: function BG__migrateUI() {
     // Use an increasing number to keep track of the current migration state.
     // Completely unrelated to the current Firefox release number.
-    const UI_VERSION = 107;
+    const UI_VERSION = 108;
     const BROWSER_DOCURL = AppConstants.BROWSER_CHROME_URL;
 
     if (!Services.prefs.prefHasUserValue("browser.migration.version")) {
@@ -3704,6 +3704,29 @@ BrowserGlue.prototype = {
         .filter(x => !!x);
       migrations.push("secure-mail");
       Services.prefs.setCharPref(kPref, migrations.join(","));
+    }
+
+    if (currentUIVersion < 108) {
+      // Migrate old ctrlTab pref to new ctrlTab pref
+      let defaultValue = false;
+      let oldPrefName = "browser.ctrlTab.recentlyUsedOrder";
+      // Use old pref value if the user used Ctrl+Tab before, elsewise use new default value
+      if (Services.prefs.getBoolPref("browser.engagement.ctrlTab.has-used")) {
+        let newPrefValue = Services.prefs.getBoolPref(
+          oldPrefName,
+          defaultValue
+        );
+        Services.prefs.setBoolPref(
+          "browser.ctrlTab.sortByRecentlyUsed",
+          newPrefValue
+        );
+      } else {
+        Services.prefs.setBoolPref(
+          "browser.ctrlTab.sortByRecentlyUsed",
+          defaultValue
+        );
+      }
+      Services.prefs.clearUserPref(oldPrefName);
     }
 
     // Update the migration version.

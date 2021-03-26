@@ -15,7 +15,7 @@ add_task(async function test() {
   let tab3 = await BrowserTestUtils.openNewForegroundTab(gBrowser, testPage3);
 
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.ctrlTab.recentlyUsedOrder", false]],
+    set: [["browser.ctrlTab.sortByRecentlyUsed", false]],
   });
 
   // Disable tab animations

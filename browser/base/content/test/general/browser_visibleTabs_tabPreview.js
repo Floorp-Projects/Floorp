@@ -4,7 +4,7 @@
 
 add_task(async function test() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.ctrlTab.recentlyUsedOrder", true]],
+    set: [["browser.ctrlTab.sortByRecentlyUsed", true]],
   });
 
   let [origTab] = gBrowser.visibleTabs;

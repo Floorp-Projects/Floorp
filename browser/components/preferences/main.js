@@ -134,7 +134,7 @@ Preferences.addAll([
   { id: "browser.tabs.loadInBackground", type: "bool", inverted: true },
   { id: "browser.tabs.warnOnClose", type: "bool" },
   { id: "browser.tabs.warnOnOpen", type: "bool" },
-  { id: "browser.ctrlTab.recentlyUsedOrder", type: "bool" },
+  { id: "browser.ctrlTab.sortByRecentlyUsed", type: "bool" },
 
   // CFR
   {

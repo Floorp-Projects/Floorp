@@ -1,6 +1,6 @@
 add_task(async function() {
   await SpecialPowers.pushPrefEnv({
-    set: [["browser.ctrlTab.recentlyUsedOrder", true]],
+    set: [["browser.ctrlTab.sortByRecentlyUsed", true]],
   });
 
   BrowserTestUtils.addTab(gBrowser);
@@ -185,7 +185,7 @@ add_task(async function() {
 
   function canOpen() {
     return (
-      Services.prefs.getBoolPref("browser.ctrlTab.recentlyUsedOrder") &&
+      Services.prefs.getBoolPref("browser.ctrlTab.sortByRecentlyUsed") &&
       gBrowser.tabs.length > 2
     );
   }
