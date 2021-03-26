@@ -173,8 +173,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
       sizeof(JitFrameLayout) % JitStackAlignment == 0,
       "No need to consider the JitFrameLayout for aligning the stack");
   // sp' = ~(JitStackAlignment - 1) & (sp - argc * sizeof(Value))
-  //       - sizeof(JitFrameLayout)
-  aasm->as_sub(sp, r4, Imm8(sizeof(JitFrameLayout)));
+  masm.movePtr(r4, sp);
 
   // Get a copy of the number of args to use as a decrement counter, also set
   // the zero condition code.
@@ -201,8 +200,11 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.bind(&footer);
   }
 
+  // Create the frame descriptor.
   masm.ma_sub(r8, sp, r8);
   masm.makeFrameDescriptor(r8, FrameType::CppToJSJit, JitFrameLayout::Size());
+
+  aasm->as_sub(sp, sp, Imm8(sizeof(JitFrameLayout)));
 
   masm.startDataTransferM(IsStore, sp, IB, NoWriteBack);
   // [sp]    = return address (written later)
@@ -342,13 +344,13 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   // Interpreter -> Baseline OSR will return here.
   masm.bind(&returnLabel);
 
-  // The top of the stack now points to the address of the field following the
-  // return address because the return address is popped for the return, so we
-  // need to remove the size of the return address field.
-  aasm->as_sub(sp, sp, Imm8(4));
+  // Pop descriptor.
+  masm.pop(r5);
 
-  // Load off of the stack the size of our local stack.
-  masm.loadPtr(Address(sp, JitFrameLayout::offsetOfDescriptor()), r5);
+  // Discard calleeToken, numActualArgs.
+  masm.addPtr(Imm32(2 * sizeof(uintptr_t)), sp);
+
+  // Discard arguments and the stack alignment padding.
   aasm->as_add(sp, sp, lsr(r5, FRAMESIZE_SHIFT));
 
   // Store the returned value into the slot_vp

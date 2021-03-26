@@ -140,6 +140,10 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
     masm.bind(&footer);
   }
 
+  // Create the frame descriptor.
+  masm.subl(esp, esi);
+  masm.makeFrameDescriptor(esi, FrameType::CppToJSJit, JitFrameLayout::Size());
+
   // Push the number of actual arguments.  |result| is used to store the
   // actual number of arguments without adding an extra argument to the enter
   // JIT.
@@ -154,12 +158,7 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   // This address is also used for setting the constructing bit on all paths.
   masm.loadPtr(Address(ebp, ARG_STACKFRAME), OsrFrameReg);
 
-  /*****************************************************************
-  Push the number of bytes we've pushed so far on the stack and call
-  *****************************************************************/
-  // Create a frame descriptor.
-  masm.subl(esp, esi);
-  masm.makeFrameDescriptor(esi, FrameType::CppToJSJit, JitFrameLayout::Size());
+  // Push the descriptor.
   masm.push(esi);
 
   CodeLabel returnLabel;
@@ -287,6 +286,8 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   // eax <- 8*argc (size of all arguments we pushed on the stack)
   masm.pop(eax);
   masm.shrl(Imm32(FRAMESIZE_SHIFT), eax);  // Unmark EntryFrame.
+  masm.pop(ebx);                           // Discard calleeToken.
+  masm.pop(ebx);                           // Discard numActualArgs.
   masm.addl(eax, esp);
 
   // |ebp| could have been clobbered by the inner function.
