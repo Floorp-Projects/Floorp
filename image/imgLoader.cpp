@@ -37,7 +37,6 @@
 #include "nsComponentManagerUtils.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
-#include "nsHttpChannel.h"
 #include "nsIApplicationCache.h"
 #include "nsIApplicationCacheContainer.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
@@ -2710,21 +2709,7 @@ imgLoader::GetMIMETypeFromContent(nsIRequest* aRequest,
       return NS_ERROR_NOT_AVAILABLE;
     }
   }
-
-  nsresult rv =
-      GetMimeTypeFromContent((const char*)aContents, aLength, aContentType);
-  if (NS_SUCCEEDED(rv) && channel && XRE_IsParentProcess()) {
-    if (RefPtr<mozilla::net::nsHttpChannel> httpChannel =
-            do_QueryObject(channel)) {
-      // If the image type pattern matching algorithm given bytes does not
-      // return undefined, then disable the further check and allow the
-      // response.
-      httpChannel->DisableIsOpaqueResponseAllowedAfterSniffCheck(
-          mozilla::net::nsHttpChannel::SnifferType::Image);
-    }
-  }
-
-  return rv;
+  return GetMimeTypeFromContent((const char*)aContents, aLength, aContentType);
 }
 
 /* static */
