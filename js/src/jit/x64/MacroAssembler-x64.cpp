@@ -1476,4 +1476,23 @@ void MacroAssembler::patchNearAddressMove(CodeLocationLabel loc,
   PatchWrite_Imm32(loc, Imm32(off));
 }
 
+void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
+                                       Register64 boundsCheckLimit,
+                                       Label* label) {
+  cmpPtr(index.reg, boundsCheckLimit.reg);
+  j(cond, label);
+  if (JitOptions.spectreIndexMasking) {
+    cmovCCq(cond, Operand(boundsCheckLimit.reg), index.reg);
+  }
+}
+
+void MacroAssembler::wasmBoundsCheck64(Condition cond, Register64 index,
+                                       Address boundsCheckLimit, Label* label) {
+  cmpPtr(index.reg, Operand(boundsCheckLimit));
+  j(cond, label);
+  if (JitOptions.spectreIndexMasking) {
+    cmovCCq(cond, Operand(boundsCheckLimit), index.reg);
+  }
+}
+
 //}}} check_macroassembler_style

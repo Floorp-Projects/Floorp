@@ -7192,7 +7192,7 @@ class LWasmBoundsCheck : public LInstructionHelper<1, 2, 0> {
  public:
   LIR_HEADER(WasmBoundsCheck);
   explicit LWasmBoundsCheck(const LAllocation& ptr,
-                            const LAllocation& boundsCheckLimit = LAllocation())
+                            const LAllocation& boundsCheckLimit)
       : LInstructionHelper(classOpcode) {
     setOperand(0, ptr);
     setOperand(1, boundsCheckLimit);
@@ -7200,6 +7200,45 @@ class LWasmBoundsCheck : public LInstructionHelper<1, 2, 0> {
   MWasmBoundsCheck* mir() const { return mir_->toWasmBoundsCheck(); }
   const LAllocation* ptr() { return getOperand(0); }
   const LAllocation* boundsCheckLimit() { return getOperand(1); }
+};
+
+class LWasmBoundsCheck64
+    : public LInstructionHelper<INT64_PIECES, 2 * INT64_PIECES, 0> {
+ public:
+  LIR_HEADER(WasmBoundsCheck64);
+  explicit LWasmBoundsCheck64(const LInt64Allocation& ptr,
+                              const LInt64Allocation& boundsCheckLimit)
+      : LInstructionHelper(classOpcode) {
+    setInt64Operand(0, ptr);
+    setInt64Operand(INT64_PIECES, boundsCheckLimit);
+  }
+  MWasmBoundsCheck* mir() const { return mir_->toWasmBoundsCheck(); }
+  LInt64Allocation ptr() { return getInt64Operand(0); }
+  LInt64Allocation boundsCheckLimit() { return getInt64Operand(INT64_PIECES); }
+};
+
+class LWasmExtendU32Index : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(WasmExtendU32Index)
+
+  explicit LWasmExtendU32Index(const LAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, input);
+  }
+
+  MWasmExtendU32Index* mir() const { return mir_->toWasmExtendU32Index(); }
+};
+
+class LWasmWrapU32Index : public LInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(WasmWrapU32Index)
+
+  explicit LWasmWrapU32Index(const LAllocation& input)
+      : LInstructionHelper(classOpcode) {
+    setOperand(0, input);
+  }
+
+  MWasmWrapU32Index* mir() const { return mir_->toWasmWrapU32Index(); }
 };
 
 class LWasmAlignmentCheck : public LInstructionHelper<0, 1, 0> {
