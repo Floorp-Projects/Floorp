@@ -460,12 +460,9 @@ const nsTArray<GfxDriverInfo>& GfxInfo::GetGfxDriverInfo() {
 
     // FEATURE_WEBRENDER_SOFTWARE - ALLOWLIST
 #ifdef EARLY_BETA_OR_EARLIER
-#  if defined(_M_IX86) || defined(_M_X64) || defined(__i386__) || defined(__i386) || \
-      defined(__amd64__)
     IMPLEMENT_MAC_DRIVER_BLOCKLIST(
         OperatingSystem::OSX, DeviceFamily::All, nsIGfxInfo::FEATURE_WEBRENDER_SOFTWARE,
         nsIGfxInfo::FEATURE_ALLOW_ALWAYS, "FEATURE_ROLLOUT_EARLY_BETA_SOFTWARE_WR");
-#  endif
 #endif
   }
   return *sDriverInfo;
