@@ -65,7 +65,6 @@ class LogCollector;
 namespace net {
 extern mozilla::LazyLogModule gHttpLog;
 
-class OpaqueResponseBlockingInfo;
 class PreferredAlternativeDataTypeParams;
 
 enum CacheDisposition : uint8_t {
@@ -617,10 +616,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
 
   nsresult ValidateMIMEType();
 
-  bool EnsureOpaqueResponseIsAllowed();
-
-  Result<bool, nsresult> EnsureOpaqueResponseIsAllowedAfterSniff();
-
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;
 
@@ -702,8 +697,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   RefPtr<nsHttpHandler> mHttpHandler;  // keep gHttpHandler alive
   UniquePtr<nsTArray<nsCString>> mRedirectedCachekeys;
   nsCOMPtr<nsIRequestContext> mRequestContext;
-
-  RefPtr<OpaqueResponseBlockingInfo> mOpaqueResponseBlockingInfo;
 
   NetAddr mSelfAddr;
   NetAddr mPeerAddr;
@@ -888,16 +881,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   // Number of internal redirects that has occurred.
   int8_t mInternalRedirectCount;
 
-  enum class SnifferCategoryType {
-    NetContent = 0,
-    OpaqueResponseBlocking,
-    All
-  };
-  SnifferCategoryType mSnifferCategoryType = SnifferCategoryType::NetContent;
-  const bool mCachedOpaqueResponseBlockingPref;
-  bool mBlockOpaqueResponseAfterSniff;
-  bool mCheckIsOpaqueResponseAllowedAfterSniff;
-
   // clang-format off
   MOZ_ATOMIC_BITFIELDS(mAtomicBitfields3, 8, (
     (bool, AsyncOpenTimeOverriden, 1),
@@ -960,11 +943,6 @@ class HttpBaseChannel : public nsHashPropertyBag,
   void RemoveAsNonTailRequest();
 
   void EnsureTopLevelOuterContentWindowId();
-
-  void InitiateORBTelemetry();
-
-  void ReportORBTelemetry(const nsCString& aKey);
-  void ReportORBTelemetry(int64_t aContentLength);
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(HttpBaseChannel, HTTP_BASE_CHANNEL_IID)
