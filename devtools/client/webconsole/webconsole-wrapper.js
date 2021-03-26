@@ -157,7 +157,7 @@ class WebConsoleWrapper {
     this.queuedMessageAdds = [];
     this.queuedMessageUpdates = [];
     this.queuedRequestUpdates = [];
-    store.dispatch(actions.messagesClear());
+    store?.dispatch(actions.messagesClear());
     this.webConsoleUI.emitForTests("messages-cleared");
   }
 
