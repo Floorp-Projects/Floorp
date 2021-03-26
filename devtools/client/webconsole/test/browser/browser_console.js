@@ -26,7 +26,7 @@ add_task(async function() {
   // Needed for the execute() function below
   await pushPref("security.allow_parent_unrestricted_js_loads", true);
   await pushPref("devtools.browserconsole.contentMessages", true);
-  await addTab(TEST_URI);
+  const tab = await addTab(TEST_URI);
 
   info(
     "Check browser console messages with devtools.browsertoolbox.fission set to false"
@@ -39,6 +39,9 @@ add_task(async function() {
   );
   await pushPref("devtools.browsertoolbox.fission", true);
   await testMessages();
+
+  info("Close tab");
+  await removeTab(tab);
 });
 
 async function testMessages() {
@@ -99,18 +102,15 @@ async function testMessages() {
 
   // Add a message from a content window.
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
-    content.console.log("message from content window");
-    content.setTimeout(() => {
-      // eslint-disable-next-line no-undef
-      content.wrappedJSObject.throwError("error from content window");
-    }, 0);
+    content.wrappedJSObject.console.log("message from content window");
+    content.wrappedJSObject.throwError("error from content window");
 
-    const worker = new content.Worker("./test-worker.js");
-    worker.postMessage({
+    content.testWorker = new content.Worker("./test-worker.js");
+    content.testWorker.postMessage({
       type: "log",
       message: "message in content worker",
     });
-    worker.postMessage({
+    content.testWorker.postMessage({
       type: "error",
       message: "error in content worker",
     });
@@ -218,6 +218,10 @@ async function testMessages() {
 
   await resetFilters(hud);
 
+  await SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
+    content.testWorker.terminate();
+    delete content.testWorker;
+  });
   chromeSpawnedWorker.terminate();
   info("Close the Browser Console");
   await safeCloseBrowserConsole();
