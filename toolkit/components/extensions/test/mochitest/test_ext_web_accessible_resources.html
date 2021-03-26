@@ -18,9 +18,12 @@ SimpleTest.registerCleanupFunction(() => {
   SpecialPowers.clearUserPref("security.mixed_content.block_display_content");
 });
 
-let image = atob("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
-                 "ACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII=");
-const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0)).buffer;
+let image = atob(
+  "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABAQMAAAAl21bKAAAAA1BMVEUAA" +
+    "ACnej3aAAAAAXRSTlMAQObYZgAAAApJREFUCNdjYAAAAAIAAeIhvDMAAAAASUVORK5CYII="
+);
+const IMAGE_ARRAYBUFFER = Uint8Array.from(image, byte => byte.charCodeAt(0))
+  .buffer;
 
 async function testImageLoading(src, expectedAction) {
   let imageLoadingPromise = new Promise((resolve, reject) => {
@@ -52,37 +55,94 @@ async function testImageLoading(src, expectedAction) {
   });
 
   let success = await imageLoadingPromise;
-  browser.runtime.sendMessage({name: "image-loading", expectedAction, success});
+  browser.runtime.sendMessage({
+    name: "image-loading",
+    expectedAction,
+    success,
+  });
 }
 
 add_task(async function test_web_accessible_resources() {
   function background() {
     let gotURL;
     let tabId;
+    let expectBrowserAPI;
 
-    function loadFrame(url) {
+    function loadFrame(url, sandbox = null, srcdoc = false) {
       return new Promise(resolve => {
-        browser.tabs.sendMessage(tabId, ["load-iframe", url], reply => {
-          resolve(reply);
-        });
+        browser.tabs.sendMessage(
+          tabId,
+          ["load-iframe", url, sandbox, srcdoc],
+          reply => {
+            resolve(reply);
+          }
+        );
       });
     }
 
     let urls = [
-      [browser.extension.getURL("accessible.html"), true],
-      [browser.extension.getURL("accessible.html") + "?foo=bar", true],
-      [browser.extension.getURL("accessible.html") + "#!foo=bar", true],
-      [browser.extension.getURL("forbidden.html"), false],
-      [browser.extension.getURL("wild1.html"), true],
-      [browser.extension.getURL("wild2.htm"), false],
+      // { url, shouldLoad, sandbox, srcdoc }
+      {
+        url: browser.extension.getURL("accessible.html"),
+        shouldLoad: true,
+      },
+      {
+        url: browser.extension.getURL("accessible.html") + "?foo=bar",
+        shouldLoad: true,
+      },
+      {
+        url: browser.extension.getURL("accessible.html") + "#!foo=bar",
+        shouldLoad: true,
+      },
+      {
+        url: browser.extension.getURL("accessible.html"),
+        shouldLoad: true,
+        sandbox: "allow-scripts",
+      },
+      {
+        url: browser.extension.getURL("accessible.html"),
+        shouldLoad: true,
+        sandbox: "allow-same-origin allow-scripts",
+      },
+      {
+        url: browser.extension.getURL("accessible.html"),
+        shouldLoad: true,
+        sandbox: "allow-scripts",
+        srcdoc: true,
+      },
+      {
+        url: browser.extension.getURL("inaccessible.html"),
+        shouldLoad: false,
+      },
+      {
+        url: browser.extension.getURL("inaccessible.html"),
+        shouldLoad: false,
+        sandbox: "allow-same-origin allow-scripts",
+      },
+      {
+        url: browser.extension.getURL("inaccessible.html"),
+        shouldLoad: false,
+        sandbox: "allow-same-origin allow-scripts",
+        srcdoc: true,
+      },
+      {
+        url: browser.extension.getURL("wild1.html"),
+        shouldLoad: true,
+      },
+      {
+        url: browser.extension.getURL("wild2.htm"),
+        shouldLoad: false,
+      },
     ];
 
     async function runTests() {
-      for (let [url, shouldLoad] of urls) {
-        let success = await loadFrame(url);
+      for (let { url, shouldLoad, sandbox, srcdoc } of urls) {
+        // Sandboxed pages with an opaque origin do not get browser api.
+        expectBrowserAPI = !sandbox || sandbox.includes("allow-same-origin");
+        let success = await loadFrame(url, sandbox, srcdoc);
 
         browser.test.assertEq(shouldLoad, success, "Load was successful");
-        if (shouldLoad) {
+        if (shouldLoad && !srcdoc) {
           browser.test.assertEq(url, gotURL, "Got expected url");
         } else {
           browser.test.assertEq(undefined, gotURL, "Got no url");
@@ -93,33 +153,76 @@ add_task(async function test_web_accessible_resources() {
       browser.test.notifyPass("web-accessible-resources");
     }
 
-    browser.runtime.onMessage.addListener(([msg, url], sender) => {
-      if (msg == "content-script-ready") {
-        tabId = sender.tab.id;
-        runTests();
-      } else if (msg == "page-script") {
-        browser.test.assertEq(undefined, gotURL, "Should have gotten only one message");
-        browser.test.assertEq("string", typeof(url), "URL should be a string");
-        gotURL = url;
+    browser.runtime.onMessage.addListener(
+      ([msg, url, hasBrowserAPI], sender) => {
+        if (msg == "content-script-ready") {
+          tabId = sender.tab.id;
+          runTests();
+        } else if (msg == "page-script") {
+          browser.test.assertEq(
+            undefined,
+            gotURL,
+            "Should have gotten only one message"
+          );
+          browser.test.assertEq("string", typeof url, "URL should be a string");
+          browser.test.assertEq(
+            expectBrowserAPI,
+            hasBrowserAPI,
+            "has access to browser api"
+          );
+          gotURL = url;
+        }
       }
-    });
+    );
 
     browser.test.sendMessage("ready");
   }
 
   function contentScript() {
-    browser.runtime.onMessage.addListener(([msg, url], sender, respond) => {
-      if (msg == "load-iframe") {
-        let iframe = document.createElement("iframe");
-        // Set the src via wrappedJSObject so the load is triggered with the
-        // content page's principal rather than ours.
-        iframe.wrappedJSObject.setAttribute("src", url);
-        iframe.addEventListener("load", () => { respond(true); });
-        iframe.addEventListener("error", () => { respond(false); });
-        document.body.appendChild(iframe);
-        return true;
+    window.addEventListener("message", event => {
+      // bounce the postmessage to the background script
+      if (event.data[0] == "page-script") {
+        browser.runtime.sendMessage(event.data);
       }
     });
+
+    browser.runtime.onMessage.addListener(
+      ([msg, url, sandboxed, srcdoc], sender, respond) => {
+        if (msg == "load-iframe") {
+          // construct the frame using srcdoc if requested.
+          if (srcdoc) {
+            sandboxed = sandboxed !== null ? `sandbox="${sandboxed}"` : "";
+            let frameSrc = `<iframe ${sandboxed} src="${url}" onload="parent.postMessage(true, '*')" onerror="parent.postMessage(false, '*')">`;
+            let frame = document.createElement("iframe");
+            frame.wrappedJSObject.setAttribute("srcdoc", frameSrc);
+            window.addEventListener("message", function listener(event) {
+              if (event.source === frame.contentWindow) {
+                window.removeEventListener("message", listener);
+                respond(event.data);
+              }
+            });
+            document.body.appendChild(frame);
+            return true;
+          }
+
+          let iframe = document.createElement("iframe");
+          if (sandboxed !== null) {
+            iframe.wrappedJSObject.setAttribute("sandbox", sandboxed);
+          }
+          // Set the src via wrappedJSObject so the load is triggered with the
+          // content page's principal rather than ours.
+          iframe.wrappedJSObject.setAttribute("src", url);
+          iframe.addEventListener("load", () => {
+            respond(true);
+          });
+          iframe.addEventListener("error", () => {
+            respond(false);
+          });
+          document.body.appendChild(iframe);
+          return true;
+        }
+      }
+    );
     browser.runtime.sendMessage(["content-script-ready"]);
   }
 
@@ -127,16 +230,13 @@ add_task(async function test_web_accessible_resources() {
     manifest: {
       content_scripts: [
         {
-          "matches": ["http://example.com/"],
-          "js": ["content_script.js"],
-          "run_at": "document_idle",
+          matches: ["http://example.com/"],
+          js: ["content_script.js"],
+          run_at: "document_idle",
         },
       ],
 
-      "web_accessible_resources": [
-        "/accessible.html",
-        "wild*.html",
-      ],
+      web_accessible_resources: ["/accessible.html", "wild*.html"],
     },
 
     background,
@@ -146,29 +246,27 @@ add_task(async function test_web_accessible_resources() {
 
       "accessible.html": `<html><head>
         <meta charset="utf-8">
-        <script src="accessible.js"><\/script>
+        <script src="pagescript.js"><\/script>
       </head></html>`,
-
-      "accessible.js": 'browser.runtime.sendMessage(["page-script", location.href]);',
 
       "inaccessible.html": `<html><head>
         <meta charset="utf-8">
-        <script src="inaccessible.js"><\/script>
+        <script src="pagescript.js"><\/script>
       </head></html>`,
-
-      "inaccessible.js": 'browser.runtime.sendMessage(["page-script", location.href]);',
 
       "wild1.html": `<html><head>
         <meta charset="utf-8">
-        <script src="wild.js"><\/script>
+        <script src="pagescript.js"><\/script>
       </head></html>`,
 
       "wild2.htm": `<html><head>
         <meta charset="utf-8">
-        <script src="wild.js"><\/script>
+        <script src="pagescript.js"><\/script>
       </head></html>`,
 
-      "wild.js": 'browser.runtime.sendMessage(["page-script", location.href]);',
+      "pagescript.js":
+        // We postmessage so we can determine when browser is not available
+        'window.parent.postMessage(["page-script", location.href, typeof browser !== "undefined"], "*");',
     },
   });
 
@@ -202,14 +300,20 @@ add_task(async function test_web_accessible_resources_mixed_content() {
     browser.test.sendMessage("background-ready");
   }
 
-  function content() {
-    testImageLoading("http://example.com/tests/toolkit/components/extensions/test/mochitest/file_image_bad.png", "blocked");
-    testImageLoading(browser.extension.getURL("image.png"), "loaded");
+  async function content() {
+    await testImageLoading(
+      "http://example.com/tests/toolkit/components/extensions/test/mochitest/file_image_bad.png",
+      "blocked"
+    );
+    await testImageLoading(browser.extension.getURL("image.png"), "loaded");
 
     let testScriptElement = document.createElement("script");
     // Set the src via wrappedJSObject so the load is triggered with the
     // content page's principal rather than ours.
-    testScriptElement.wrappedJSObject.setAttribute("src", browser.extension.getURL("test_script.js"));
+    testScriptElement.wrappedJSObject.setAttribute(
+      "src",
+      browser.extension.getURL("test_script.js")
+    );
     document.head.appendChild(testScriptElement);
 
     window.addEventListener("message", event => {
@@ -223,15 +327,14 @@ add_task(async function test_web_accessible_resources_mixed_content() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "content_scripts": [{
-        "matches": ["https://example.com/*/file_mixed.html"],
-        "run_at": "document_end",
-        "js": ["content_script_helper.js", "content_script.js"],
-      }],
-      "web_accessible_resources": [
-        "image.png",
-        "test_script.js",
+      content_scripts: [
+        {
+          matches: ["https://example.com/*/file_mixed.html"],
+          run_at: "document_end",
+          js: ["content_script_helper.js", "content_script.js"],
+        },
       ],
+      web_accessible_resources: ["image.png", "test_script.js"],
     },
     background,
     files: {
@@ -242,11 +345,23 @@ add_task(async function test_web_accessible_resources_mixed_content() {
     },
   });
 
-  SpecialPowers.setBoolPref("security.mixed_content.block_display_content", true);
+  SpecialPowers.setBoolPref(
+    "security.mixed_content.upgrade_display_content",
+    false
+  );
+  SpecialPowers.setBoolPref(
+    "security.mixed_content.block_display_content",
+    true
+  );
 
-  await Promise.all([extension.startup(), extension.awaitMessage("background-ready")]);
+  await Promise.all([
+    extension.startup(),
+    extension.awaitMessage("background-ready"),
+  ]);
 
-  let win = window.open("https://example.com/tests/toolkit/components/extensions/test/mochitest/file_mixed.html");
+  let win = window.open(
+    "https://example.com/tests/toolkit/components/extensions/test/mochitest/file_mixed.html"
+  );
 
   await Promise.all([
     extension.awaitMessage("image-blocked"),
@@ -258,7 +373,6 @@ add_task(async function test_web_accessible_resources_mixed_content() {
 
   await extension.unload();
 });
-
 </script>
 
 </body>
