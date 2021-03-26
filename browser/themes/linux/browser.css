@@ -36,9 +36,11 @@
 }
 } /*** END proton ***/
 
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 #tabbrowser-tabs {
   --tab-line-color: -moz-accent-color;
 }
+} /*** end !proton ***/
 
 :root:-moz-lwtheme {
   --chrome-content-separator-color: rgba(0,0,0,.3);

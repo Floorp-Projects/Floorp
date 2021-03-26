@@ -78,9 +78,11 @@
   opacity: 0.001;
 }
 
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 #tabbrowser-tabs {
   --tab-line-color: -moz-accent-color;
 }
+} /* END !proton */
 
 #navigator-toolbox toolbarbutton:-moz-lwtheme {
   color: inherit;

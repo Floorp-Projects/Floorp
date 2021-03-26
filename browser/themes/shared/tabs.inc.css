@@ -36,9 +36,11 @@
   --tab-loading-fill: #0A84FF;
 }
 
+@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 #tabbrowser-tabs:-moz-lwtheme {
   --tab-line-color: currentColor;
 }
+} /* end !proton */
 
 #tabbrowser-tabpanels {
   /* Value for --in-content-page-background in in-content/common.inc.css */
@@ -727,7 +729,12 @@
 }
 
 #TabsToolbar:not([brighttext]) .tabbrowser-tab[visuallyselected=true] > .tab-stack > .tab-background {
-  box-shadow: 0 0 1.5px rgba(128,128,142,0.9), 0 0 4px rgba(128,128,142,0.5);
+  box-shadow: 0 0 1.5px var(--tab-line-color, var(--tabs-border-color, rgba(128,128,142,0.9))),
+              0 0 4px rgba(128,128,142,0.5);
+}
+
+#TabsToolbar[brighttext] .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background:-moz-lwtheme {
+  box-shadow: 0 0 1.5px var(--tab-line-color, var(--tabs-border-color, rgba(128,128,142,0.9)));
 }
 } /*** END proton ***/
 
