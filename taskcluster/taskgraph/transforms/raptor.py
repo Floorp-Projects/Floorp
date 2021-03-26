@@ -197,7 +197,9 @@ def split_page_load_by_url(config, tests):
         # `chunk-number` and 'subtest' only exists when the task had a
         # definition for `raptor-subtests`
         chunk_number = test.pop("chunk-number", None)
-        subtest = test.pop("subtest", None)
+        subtest = test.get(
+            "subtest"
+        )  # don't pop as some tasks need this value after splitting variants
         subtest_symbol = test.pop("subtest-symbol", None)
 
         if not chunk_number or not subtest:
@@ -252,7 +254,9 @@ def add_extra_options(config, tests):
             test["attributes"]["run-visual-metrics"] = True
 
         if "app" in test:
-            extra_options.append("--app={}".format(test.pop("app")))
+            extra_options.append(
+                "--app={}".format(test["app"])
+            )  # don't pop as some tasks need this value after splitting variants
 
         if "activity" in test:
             extra_options.append("--activity={}".format(test.pop("activity")))
