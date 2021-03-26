@@ -21,9 +21,13 @@ function getExpectedTargets() {
     "library",
     "logins",
     "pageAction-bookmark",
-    "pageAction-copyURL",
-    "pageAction-emailLink",
-    "pageAction-sendToDevice",
+    ...(gProton
+      ? []
+      : [
+          "pageAction-copyURL",
+          "pageAction-emailLink",
+          "pageAction-sendToDevice",
+        ]),
     ...(hasPocket ? ["pocket"] : []),
     "privateWindow",
     ...(hasQuit ? ["quit"] : []),
@@ -81,6 +85,13 @@ add_UITour_task(async function test_availableTargets_search() {
 
 add_UITour_task(
   async function test_availableTargets_removeUrlbarPageActionsAll() {
+    if (gProton) {
+      ok(
+        true,
+        "In proton actions cannot be removed from or added to the URL bar."
+      );
+      return;
+    }
     pageActionsHelper.setActionsUrlbarState(false);
     UITour.clearAvailableTargetsCache();
     let data = await getConfigurationPromise("availableTargets");
@@ -100,6 +111,13 @@ add_UITour_task(
 );
 
 add_UITour_task(async function test_availableTargets_addUrlbarPageActionsAll() {
+  if (gProton) {
+    ok(
+      true,
+      "In proton actions cannot be removed from or added to the URL bar."
+    );
+    return;
+  }
   pageActionsHelper.setActionsUrlbarState(true);
   UITour.clearAvailableTargetsCache();
   let data = await getConfigurationPromise("availableTargets");
@@ -127,11 +145,25 @@ function ok_targets(actualData, expectedTargets) {
   }
 
   ok(Array.isArray(actualData.targets), "data.targets should be an array");
-  is(
-    actualData.targets.sort().toString(),
-    expectedTargets.sort().toString(),
+  actualData.targets.sort();
+  expectedTargets.sort();
+  Assert.deepEqual(
+    actualData.targets,
+    expectedTargets,
     "Targets should be as expected"
   );
+  if (actualData.targets.toString() != expectedTargets.toString()) {
+    for (let actualItem of actualData.targets) {
+      if (!expectedTargets.includes(actualItem)) {
+        ok(false, `${actualItem} was an unexpected target.`);
+      }
+    }
+    for (let expectedItem of expectedTargets) {
+      if (!actualData.targets.includes(expectedItem)) {
+        ok(false, `${expectedItem} should have been a target.`);
+      }
+    }
+  }
 }
 
 async function assertTargetNode(targetName, expectedNodeId) {
