@@ -411,7 +411,7 @@ test_description_schema = Schema(
         ),
         # the sheriffing tier for this task (default: set based on test platform)
         Optional("tier"): optionally_keyed_by(
-            "test-platform", "variant", Any(int, "default")
+            "test-platform", "variant", "app", "subtest", Any(int, "default")
         ),
         # Same as `tier` except it only applies to Fission tasks. Fission tasks
         # will ignore `tier` and non-Fission tasks will ignore `fission-tier`.
@@ -599,6 +599,12 @@ test_description_schema = Schema(
         },
         # Opt-in to Python 3 support
         Optional("python-3"): bool,
+        # Raptor / browsertime specific keys that need to be here to support
+        # using `by-key` after `by-variant`. Ideally these keys should not exist
+        # in the tests.py schema and instead we'd split variants before the raptor
+        # transforms need them. See bug 1700774.
+        Optional("app"): text_type,
+        Optional("subtest"): text_type,
     }
 )
 
