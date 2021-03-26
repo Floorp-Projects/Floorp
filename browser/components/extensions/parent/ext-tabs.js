@@ -277,6 +277,7 @@ class TabsUpdateFilterEventManager extends EventManager {
 
       let listener = event => {
         // Ignore any events prior to TabOpen
+        // and events that are triggered while tabs are swapped between windows.
         if (event.originalTarget.initializingTab) {
           return;
         }

@@ -46,6 +46,18 @@ add_task(async function move_hidden_discarded_to_window() {
           browser.test.sendMessage("onUpdated_checked");
         }
       });
+      // Listener with "urls" filter, regression test for
+      // https://bugzilla.mozilla.org/show_bug.cgi?id=1695346
+      browser.tabs.onUpdated.addListener(
+        (tabId, changeInfo, tab) => {
+          browser.test.assertTrue(changeInfo.hidden, "tab was hidden");
+          browser.test.sendMessage("onUpdated_urls_filter");
+        },
+        {
+          properties: ["hidden"],
+          urls: ["http://example.com/?hideme"],
+        }
+      );
     },
   });
   await extensionWithoutTabsPermission.startup();
@@ -77,6 +89,6 @@ add_task(async function move_hidden_discarded_to_window() {
   await extension.unload();
 
   await extensionWithoutTabsPermission.awaitMessage("onUpdated_checked");
-  await extensionWithoutTabsPermission.awaitMessage("onUpdated_checked");
+  await extensionWithoutTabsPermission.awaitMessage("onUpdated_urls_filter");
   await extensionWithoutTabsPermission.unload();
 });
