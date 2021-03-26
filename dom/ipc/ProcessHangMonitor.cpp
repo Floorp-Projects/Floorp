@@ -449,9 +449,7 @@ bool HangMonitorChild::InterruptCallback() {
     if (NS_SUCCEEDED(rv) && canCancel) {
       // Don't add this page to the BF cache, since we're cancelling its JS.
       if (Document* doc = win->GetExtantDoc()) {
-        if (Document* topLevelDoc = doc->GetTopLevelContentDocument()) {
-          topLevelDoc->DisallowBFCaching();
-        }
+        doc->DisallowBFCaching();
       }
 
       return false;
