@@ -716,22 +716,15 @@ void IMEHandler::AppendInputScopeFromType(const nsAString& aHTMLInputType,
 }
 
 // static
-void IMEHandler::MaybeShowOnScreenKeyboard(nsWindow* aWindow,
-                                           const InputContext& aInputContext) {
-  if (aInputContext.mHTMLInputInputmode.EqualsLiteral("none")) {
-    return;
-  }
+bool IMEHandler::IsOnScreenKeyboardSupported() {
 #ifdef NIGHTLY_BUILD
   if (FxRWindowManager::GetInstance()->IsFxRWindow(sFocusedWindow)) {
-    mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
-    shmem.SendIMEState(FxRWindowManager::GetInstance()->GetWindowID(),
-                       mozilla::gfx::VRFxEventState::FOCUS);
-    return;
+    return true;
   }
 #endif  // NIGHTLY_BUILD
   if (!IsWin8OrLater() || !Preferences::GetBool(kOskEnabled, true) ||
-      GetOnScreenKeyboardWindow() || !IMEHandler::NeedOnScreenKeyboard()) {
-    return;
+      !IMEHandler::NeedOnScreenKeyboard()) {
+    return false;
   }
 
   // On Windows 10 we require tablet mode, unless the user has set the relevant
@@ -739,9 +732,23 @@ void IMEHandler::MaybeShowOnScreenKeyboard(nsWindow* aWindow,
   // We might be disabled specifically on Win8(.1), so we check that afterwards.
   if (IsWin10OrLater()) {
     if (!IsInTabletMode() && !AutoInvokeOnScreenKeyboardInDesktopMode()) {
-      return;
+      return false;
     }
   } else if (Preferences::GetBool(kOskRequireWin10, true)) {
+    return false;
+  }
+
+  return true;
+}
+
+// static
+void IMEHandler::MaybeShowOnScreenKeyboard(nsWindow* aWindow,
+                                           const InputContext& aInputContext) {
+  if (aInputContext.mHTMLInputInputmode.EqualsLiteral("none")) {
+    return;
+  }
+
+  if (!IsOnScreenKeyboardSupported()) {
     return;
   }
 
@@ -1001,11 +1008,23 @@ bool IMEHandler::AutoInvokeOnScreenKeyboardInDesktopMode() {
 // Based on DisplayVirtualKeyboard() in Chromium's base/win/win_util.cc.
 // static
 void IMEHandler::ShowOnScreenKeyboard(nsWindow* aWindow) {
+#ifdef NIGHTLY_BUILD
+  if (FxRWindowManager::GetInstance()->IsFxRWindow(sFocusedWindow)) {
+    mozilla::gfx::VRShMem shmem(nullptr, true /*aRequiresMutex*/);
+    shmem.SendIMEState(FxRWindowManager::GetInstance()->GetWindowID(),
+                       mozilla::gfx::VRFxEventState::FOCUS);
+    return;
+  }
+#endif  // NIGHTLY_BUILD
+
   if (IsWin10AnniversaryUpdateOrLater()) {
     OSKInputPaneManager::ShowOnScreenKeyboard(aWindow->GetWindowHandle());
     return;
   }
 
+  if (GetOnScreenKeyboardWindow()) {
+    return;
+  }
   nsAutoString cachedPath;
   nsresult result = Preferences::GetString(kOskPathPrefName, cachedPath);
   if (NS_FAILED(result) || cachedPath.IsEmpty()) {

@@ -207,6 +207,8 @@ class IMEHandler final {
   static bool IsTSFAvailable() { return sIsInTSFMode; }
   static bool IsIMMActive();
 
+  static bool IsOnScreenKeyboardSupported();
+
   static void MaybeShowOnScreenKeyboard(nsWindow* aWindow,
                                         const InputContext& aInputContext);
   enum class Sync { Yes, No };
