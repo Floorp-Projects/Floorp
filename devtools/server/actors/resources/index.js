@@ -22,7 +22,6 @@ const TYPES = {
   WEBSOCKET: "websocket",
   // storage types
   CACHE_STORAGE: "Cache",
-  COOKIE: "cookies",
   LOCAL_STORAGE: "local-storage",
   SESSION_STORAGE: "session-storage",
 };
@@ -121,9 +120,6 @@ const WorkerTargetResources = augmentResourceDictionary({
 const ParentProcessResources = augmentResourceDictionary({
   [TYPES.NETWORK_EVENT]: {
     path: "devtools/server/actors/resources/network-events",
-  },
-  [TYPES.COOKIE]: {
-    path: "devtools/server/actors/resources/storage-cookie",
   },
 });
 

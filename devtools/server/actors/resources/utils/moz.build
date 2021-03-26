@@ -7,7 +7,6 @@
 DevToolsModules(
     "content-process-storage.js",
     "nsi-console-listener-watcher.js",
-    "parent-process-storage.js",
 )
 
 with Files("nsi-console-listener-watcher.js"):

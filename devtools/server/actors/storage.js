@@ -190,10 +190,6 @@ StorageActors.defaults = function(typeName, observationTopics) {
         return null;
       }
 
-      if (this.storageActor.getHostName) {
-        return this.storageActor.getHostName(location);
-      }
-
       switch (location.protocol) {
         case "about:":
           return `${location.protocol}${location.pathname}`;
@@ -790,10 +786,12 @@ StorageActors.createActor(
       this.editCookie(data);
     },
 
-    async addItem(guid, host) {
-      const window = this.storageActor.getWindowFromHost(host);
-      const principal = window.document.effectiveStoragePrincipal;
-      this.addCookie(guid, principal);
+    async addItem(guid) {
+      const doc = this.storageActor.document;
+      const time = new Date().getTime();
+      const expiry = new Date(time + 3600 * 24 * 1000).toGMTString();
+
+      doc.cookie = `${guid}=${DEFAULT_VALUE};expires=${expiry}`;
     },
 
     async removeItem(host, name) {
@@ -824,7 +822,6 @@ StorageActors.createActor(
         this.removeCookieObservers = cookieHelpers.removeCookieObservers.bind(
           cookieHelpers
         );
-        this.addCookie = cookieHelpers.addCookie.bind(cookieHelpers);
         this.editCookie = cookieHelpers.editCookie.bind(cookieHelpers);
         this.removeCookie = cookieHelpers.removeCookie.bind(cookieHelpers);
         this.removeAllCookies = cookieHelpers.removeAllCookies.bind(
@@ -856,7 +853,6 @@ StorageActors.createActor(
         null,
         "removeCookieObservers"
       );
-      this.addCookie = callParentProcess.bind(null, "addCookie");
       this.editCookie = callParentProcess.bind(null, "editCookie");
       this.removeCookie = callParentProcess.bind(null, "removeCookie");
       this.removeAllCookies = callParentProcess.bind(null, "removeAllCookies");
@@ -909,37 +905,6 @@ var cookieHelpers = {
     host = trimHttpHttpsPort(host);
 
     return Services.cookies.getCookiesFromHost(host, originAttributes);
-  },
-
-  addCookie(guid, principal) {
-    // Set expiry time for cookie 1 day into the future
-    // NOTE: Services.cookies.add expects the time in seconds.
-    const ONE_DAY_IN_SECONDS = 60 * 60 * 24;
-    const time = Math.floor(Date.now() / 1000);
-    const expiry = time + ONE_DAY_IN_SECONDS;
-
-    // principal throws an error when we try to access principal.host if it
-    // does not exist (which happens at about: pages).
-    // We check for asciiHost instead, which is always present, and has a
-    // value of "" when the host is not available.
-    const domain = principal.asciiHost ? principal.host : principal.baseDomain;
-    const path = principal.filePath.startsWith("/") ? principal.filePath : "/";
-
-    Services.cookies.add(
-      domain,
-      path,
-      guid, // name
-      DEFAULT_VALUE, // value
-      false, // isSecure
-      false, // isHttpOnly,
-      false, // isSession,
-      expiry, // expires,
-      principal.originAttributes, // originAttributes
-      Ci.nsICookie.SAMESITE_LAX, // sameSite
-      principal.scheme === "https" // schemeMap
-        ? Ci.nsICookie.SCHEME_HTTPS
-        : Ci.nsICookie.SCHEME_HTTP
-    );
   },
 
   /**
@@ -1184,11 +1149,6 @@ var cookieHelpers = {
       }
       case "removeCookieObservers": {
         return cookieHelpers.removeCookieObservers();
-      }
-      case "addCookie": {
-        const guid = msg.data.args[0];
-        const principal = msg.data.args[1];
-        return cookieHelpers.addCookie(guid, principal);
       }
       case "editCookie": {
         const rowdata = msg.data.args[0];
@@ -3468,13 +3428,8 @@ const StorageActor = protocol.ActorClassWithSpec(specs.storageSpec, {
       "devtools.storage.test.forceLegacyActors",
       false
     );
-    const isServerWatcherSupportEnabled = Services.prefs.getBoolPref(
-      "devtools.testing.enableServerWatcherSupport",
-      false
-    );
     const resourcesInWatcher = {
       Cache: isWatcherEnabled,
-      cookies: isWatcherEnabled && isServerWatcherSupportEnabled,
       localStorage: isWatcherEnabled,
       sessionStorage: isWatcherEnabled,
     };
