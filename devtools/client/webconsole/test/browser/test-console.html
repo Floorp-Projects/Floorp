@@ -27,7 +27,9 @@
       }
 
       function throwError(errorMessage) {
-        throw errorMessage;
+        setTimeout(() => {
+          throw errorMessage;
+        }, 0);
       }
     </script>
   </body>
