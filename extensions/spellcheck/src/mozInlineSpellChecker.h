@@ -42,10 +42,13 @@ class mozInlineSpellStatus {
                         nsINode* aPreviousNode, uint32_t aPreviousOffset,
                         nsINode* aStartNode, uint32_t aStartOffset,
                         nsINode* aEndNode, uint32_t aEndOffset);
-  nsresult InitForNavigation(bool aForceCheck, int32_t aNewPositionOffset,
-                             nsINode* aOldAnchorNode, uint32_t aOldAnchorOffset,
-                             nsINode* aNewAnchorNode, uint32_t aNewAnchorOffset,
-                             bool* aContinue);
+
+  static nsresult CreateForNavigation(
+      mozilla::UniquePtr<mozInlineSpellStatus>& aStatus,
+      mozInlineSpellChecker& aSpellChecker, bool aForceCheck,
+      int32_t aNewPositionOffset, nsINode* aOldAnchorNode,
+      uint32_t aOldAnchorOffset, nsINode* aNewAnchorNode,
+      uint32_t aNewAnchorOffset, bool* aContinue);
   nsresult InitForSelection();
   nsresult InitForRange(nsRange* aRange);
 
