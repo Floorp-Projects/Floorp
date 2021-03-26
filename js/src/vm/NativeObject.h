@@ -1581,9 +1581,6 @@ extern bool NativeDefineDataProperty(JSContext* cx, HandleNativeObject obj,
                                      unsigned attrs, ObjectOpResult& result);
 
 /* If the result out-param is omitted, throw on failure. */
-extern bool NativeDefineAccessorProperty(JSContext* cx, HandleNativeObject obj,
-                                         HandleId id, GetterOp getter,
-                                         SetterOp setter, unsigned attrs);
 
 extern bool NativeDefineAccessorProperty(JSContext* cx, HandleNativeObject obj,
                                          HandleId id, HandleObject getter,
