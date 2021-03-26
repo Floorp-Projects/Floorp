@@ -768,6 +768,9 @@ class AddonInternal {
       if (!Services.policies.isAllowed(`disable-extension:${this.id}`)) {
         permissions &= ~AddonManager.PERM_CAN_DISABLE;
       }
+      if (Services.policies.getExtensionSettings(this.id)?.updates_disabled) {
+        permissions &= ~AddonManager.PERM_CAN_UPGRADE;
+      }
     }
 
     return permissions;
