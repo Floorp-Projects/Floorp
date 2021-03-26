@@ -218,10 +218,8 @@ add_task(async function testDeletingMenuItems() {
   await popupEventPromise;
 
   info("Delete bookmark menu item from popup.");
-  let deleteMenuBookmark = document.getElementById(
-    "placesContext_deleteBookmark"
-  );
-  EventUtils.synthesizeMouseAtCenter(deleteMenuBookmark, {});
+  let deleteMenuItem = document.getElementById("placesContext_delete");
+  EventUtils.synthesizeMouseAtCenter(deleteMenuItem, {});
 
   await TestUtils.waitForCondition(() => {
     let popup = document.querySelector("#OtherBookmarksPopup");
