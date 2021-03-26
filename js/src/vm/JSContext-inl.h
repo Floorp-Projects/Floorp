@@ -248,56 +248,6 @@ MOZ_ALWAYS_INLINE bool CallNativeImpl(JSContext* cx, NativeImpl impl,
   return ok;
 }
 
-MOZ_ALWAYS_INLINE bool CallJSGetterOp(JSContext* cx, GetterOp op,
-                                      HandleObject obj, HandleId id,
-                                      MutableHandleValue vp) {
-  if (!CheckRecursionLimit(cx)) {
-    return false;
-  }
-
-  cx->check(obj, id, vp);
-  bool ok = op(cx, obj, id, vp);
-  if (ok) {
-    cx->check(vp);
-  }
-  return ok;
-}
-
-MOZ_ALWAYS_INLINE bool CallJSSetterOp(JSContext* cx, SetterOp op,
-                                      HandleObject obj, HandleId id,
-                                      HandleValue v, ObjectOpResult& result) {
-  if (!CheckRecursionLimit(cx)) {
-    return false;
-  }
-
-  cx->check(obj, id, v);
-  return op(cx, obj, id, v, result);
-}
-
-inline bool CallJSAddPropertyOp(JSContext* cx, JSAddPropertyOp op,
-                                HandleObject obj, HandleId id, HandleValue v) {
-  if (!CheckRecursionLimit(cx)) {
-    return false;
-  }
-
-  cx->check(obj, id, v);
-  return op(cx, obj, id, v);
-}
-
-inline bool CallJSDeletePropertyOp(JSContext* cx, JSDeletePropertyOp op,
-                                   HandleObject receiver, HandleId id,
-                                   ObjectOpResult& result) {
-  if (!CheckRecursionLimit(cx)) {
-    return false;
-  }
-
-  cx->check(receiver, id);
-  if (op) {
-    return op(cx, receiver, id, result);
-  }
-  return result.succeed();
-}
-
 MOZ_ALWAYS_INLINE bool CheckForInterrupt(JSContext* cx) {
   MOZ_ASSERT(!cx->isExceptionPending());
   // Add an inline fast-path since we have to check for interrupts in some hot
