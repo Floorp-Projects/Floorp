@@ -25,7 +25,6 @@
 
   --panel-separator-color: ThreeDShadow;
 
-  --tabs-border-color: rgba(0,0,0,.3);
 
   --chrome-content-separator-color: ThreeDShadow;
 }
@@ -35,6 +34,10 @@
   --focus-outline-color: -moz-accent-color;
 }
 } /*** END proton ***/
+
+#navigator-toolbox {
+  --tabs-border-color: rgba(0,0,0,.3);
+}
 
 #tabbrowser-tabs {
   --tab-line-color: -moz-accent-color;
