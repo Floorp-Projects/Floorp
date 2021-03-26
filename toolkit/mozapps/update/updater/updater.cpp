@@ -3684,7 +3684,9 @@ int NS_main(int argc, NS_tchar** argv) {
 
       // CreateFileW will fail if the callback executable is already in use.
       if (callbackFile == INVALID_HANDLE_VALUE) {
-        // Only fail the update if the last error was not a sharing violation.
+        bool proceedWithoutExclusive = true;
+
+        // Fail the update if the last error was not a sharing violation.
         if (lastWriteError != ERROR_SHARING_VIOLATION) {
           LOG(
               ("NS_main: callback app file in use, failed to exclusively open "
@@ -3696,6 +3698,25 @@ int NS_main(int argc, NS_tchar** argv) {
             WriteStatusFile(WRITE_ERROR_CALLBACK_APP);
           }
 
+          proceedWithoutExclusive = false;
+        }
+
+        // Fail even on sharing violation from a background task, since a
+        // background task has a higher risk of interfering with a running app.
+        // Note that this does not apply when staging (when an exclusive lock
+        // isn't necessary), as there is no callback.
+        if (lastWriteError == ERROR_SHARING_VIOLATION &&
+            sCallbackIsBackgroundTask) {
+          LOG(
+              ("NS_main: callback app file in use, failed to exclusively open "
+               "executable file from background task: " LOG_S,
+               argv[callbackIndex]));
+          WriteStatusFile(WRITE_ERROR_BACKGROUND_TASK_SHARING_VIOLATION);
+
+          proceedWithoutExclusive = false;
+        }
+
+        if (!proceedWithoutExclusive) {
           if (NS_tremove(gCallbackBackupPath) && errno != ENOENT) {
             LOG(
                 ("NS_main: unable to remove backup of callback app file, "
@@ -3708,6 +3729,7 @@ int NS_main(int argc, NS_tchar** argv) {
                             sUsingService);
           return 1;
         }
+
         LOG(
             ("NS_main: callback app file in use, continuing without "
              "exclusive access for executable file: " LOG_S,
