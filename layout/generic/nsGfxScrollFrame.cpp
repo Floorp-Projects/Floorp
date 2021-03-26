@@ -782,26 +782,25 @@ void nsHTMLScrollFrame::ReflowScrolledFrame(ScrollReflowInput* aState,
   aMetrics->UnionOverflowAreasWithDesiredBounds();
 
   auto* disp = StyleDisplay();
-  if (MOZ_UNLIKELY(
-          disp->mOverflowClipBoxBlock == StyleOverflowClipBox::ContentBox ||
-          disp->mOverflowClipBoxInline == StyleOverflowClipBox::ContentBox)) {
-    OverflowAreas childOverflow;
-    nsLayoutUtils::UnionChildOverflow(mHelper.mScrolledFrame, childOverflow);
-    nsRect childScrollableOverflow = childOverflow.ScrollableOverflow();
-    if (disp->mOverflowClipBoxBlock == StyleOverflowClipBox::PaddingBox) {
-      padding.BStart(wm) = nscoord(0);
-      padding.BEnd(wm) = nscoord(0);
-    }
-    if (disp->mOverflowClipBoxInline == StyleOverflowClipBox::PaddingBox) {
-      padding.IStart(wm) = nscoord(0);
-      padding.IEnd(wm) = nscoord(0);
-    }
-    childScrollableOverflow.Inflate(padding.GetPhysicalMargin(wm));
-    nsRect contentArea = wm.IsVertical()
-                             ? nsRect(0, 0, computedBSize, availISize)
-                             : nsRect(0, 0, availISize, computedBSize);
-    if (!contentArea.Contains(childScrollableOverflow)) {
-      aMetrics->mOverflowAreas.ScrollableOverflow() = childScrollableOverflow;
+  if (MOZ_UNLIKELY(disp->mOverflowClipBoxInline ==
+                   StyleOverflowClipBox::ContentBox)) {
+    // If the scrolled frame can be scrolled in the inline axis, inflate its
+    // scrollable overflow areas with its inline-end padding to prevent its
+    // content from being clipped at scroll container's inline-end padding
+    // edge.
+    //
+    // Note: Inflating scrolled frame's overflow areas is generally wrong if the
+    // scrolled frame's children themselves has any scrollable overflow areas.
+    // However, we can only be here in production for <textarea> and <input>.
+    // Both elements can only have text children, which shouldn't have
+    // scrollable overflow areas themselves, so its fine.
+    nsRect& so = aMetrics->ScrollableOverflow();
+    const nscoord soInlineSize = wm.IsVertical() ? so.Height() : so.Width();
+    if (soInlineSize > availISize) {
+      const LogicalMargin inlinePaddingEnd =
+          padding.ApplySkipSides(LogicalSides(wm, eLogicalSideBitsBBoth) |
+                                 LogicalSides(wm, eLogicalSideBitsIStart));
+      so.Inflate(inlinePaddingEnd.GetPhysicalMargin(wm));
     }
   }
 
