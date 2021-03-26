@@ -98,7 +98,6 @@ class GradientStopsSkia : public GradientStops {
 static void ReleaseTemporarySurface(const void* aPixels, void* aContext) {
   DataSourceSurface* surf = static_cast<DataSourceSurface*>(aContext);
   if (surf) {
-    surf->Unmap();
     surf->Release();
   }
 }
@@ -242,27 +241,19 @@ static sk_sp<SkImage> GetSkImageForSurface(SourceSurface* aSurface,
     return static_cast<SourceSurfaceSkia*>(aSurface)->GetImage(aLock);
   }
 
-  RefPtr<DataSourceSurface> dataSurface = aSurface->GetDataSurface();
-  if (!dataSurface) {
+  DataSourceSurface* surf = aSurface->GetDataSurface().take();
+  if (!surf) {
     gfxWarning() << "Failed getting DataSourceSurface for Skia image";
     return nullptr;
   }
 
-  DataSourceSurface::MappedSurface map;
-  if (!dataSurface->Map(DataSourceSurface::MapType::READ, &map)) {
-    gfxWarning() << "Failed mapping DataSourceSurface for Skia image";
-    return nullptr;
-  }
-
-  DataSourceSurface* surf = aSurface->GetDataSurface().take();
-
   // Skia doesn't support RGBX surfaces so ensure that the alpha value is opaque
   // white.
-  MOZ_ASSERT(VerifyRGBXCorners(map.mData, surf->GetSize(), map.mStride,
+  MOZ_ASSERT(VerifyRGBXCorners(surf->GetData(), surf->GetSize(), surf->Stride(),
                                surf->GetFormat(), aBounds, aMatrix));
 
   SkPixmap pixmap(MakeSkiaImageInfo(surf->GetSize(), surf->GetFormat()),
-                  map.mData, map.mStride);
+                  surf->GetData(), surf->Stride());
   sk_sp<SkImage> image =
       SkImage::MakeFromRaster(pixmap, ReleaseTemporarySurface, surf);
   if (!image) {
