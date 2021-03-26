@@ -29,20 +29,45 @@ registerCleanupFunction(() => {
   });
 });
 
+const kChildPage = getRootDirectory(gTestPath) + "test.html";
+
+const kAboutPagesRegistered = Promise.all([
+  BrowserTestUtils.registerAboutPage(
+    registerCleanupFunction,
+    "test-about-l10n-child",
+    kChildPage,
+    Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD |
+      Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT |
+      Ci.nsIAboutModule.URI_CONTENT_LINKABLE |
+      Ci.nsIAboutModule.ALLOW_SCRIPT
+  ),
+]);
+
 add_task(async () => {
   // Bug 1640333 - windows fails (sometimes) to ever get document.l10n.ready
   // if e10s process caching is enabled
   await SpecialPowers.pushPrefEnv({
-    set: [["dom.ipc.processPrelaunch.enabled", false]],
+    set: [
+      ["dom.ipc.processPrelaunch.enabled", false],
+      ["dom.security.skip_about_page_has_csp_assert", true],
+    ],
   });
+  await kAboutPagesRegistered;
   await BrowserTestUtils.withNewTab(
-    "resource://l10n-test/test.html",
+    "about:test-about-l10n-child",
     async browser => {
       await SpecialPowers.spawn(browser, [], async function() {
         let document = content.document;
         let window = document.defaultView;
 
-        let { customMsg, l10nArgs } = await document.testsReadyPromise;
+        await document.testsReadyPromise;
+
+        let principal = SpecialPowers.wrap(document).nodePrincipal;
+        is(
+          principal.spec,
+          "about:test-about-l10n-child",
+          "correct content principal"
+        );
 
         let desc = document.getElementById("main-desc");
 
@@ -57,10 +82,12 @@ add_task(async () => {
 
         // Test for l10n.getAttributes
         let label = document.getElementById("label1");
+        let l10nArgs = document.l10n.getAttributes(label);
         is(l10nArgs.id, "subtitle");
         is(l10nArgs.args.name, "Firefox");
 
         // Test for manual value formatting
+        let customMsg = document.getElementById("customMessage").textContent;
         is(customMsg, "This is a custom message formatted from JS.");
 
         // Since we applied the `data-l10n-id` attribute
