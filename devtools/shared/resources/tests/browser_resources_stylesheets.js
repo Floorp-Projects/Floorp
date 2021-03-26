@@ -95,12 +95,6 @@ const ADDITIONAL_FROM_ACTOR_RESOURCE = {
 };
 
 add_task(async function() {
-  await pushPref("devtools.testing.enableServerWatcherSupport", false);
-  await testResourceAvailableFeature();
-  await testResourceUpdateFeature();
-  await testNestedResourceUpdateFeature();
-
-  await pushPref("devtools.testing.enableServerWatcherSupport", true);
   await testResourceAvailableFeature();
   await testResourceUpdateFeature();
   await testNestedResourceUpdateFeature();
@@ -358,9 +352,6 @@ async function testNestedResourceUpdateFeature() {
   await waitUntil(() => updates.length === 4);
 
   // Check the update content.
-  const isServerWatcher = Services.prefs.getBoolPref(
-    "devtools.testing.enableServerWatcherSupport"
-  );
   const targetUpdate = updates[3];
   assertUpdate(targetUpdate.update, {
     resourceId: resource.resourceId,
@@ -368,29 +359,16 @@ async function testNestedResourceUpdateFeature() {
   });
   ok(resource === targetUpdate.resource, "Update object has the same resource");
 
-  if (isServerWatcher) {
-    is(
-      JSON.stringify(targetUpdate.update.nestedResourceUpdates[0].path),
-      JSON.stringify(["mediaRules", 0, "matches"]),
-      "path of nestedResourceUpdates is correct"
-    );
-    is(
-      targetUpdate.update.nestedResourceUpdates[0].value,
-      true,
-      "value of nestedResourceUpdates is correct"
-    );
-  } else {
-    is(
-      JSON.stringify(targetUpdate.update.nestedResourceUpdates[0].path),
-      JSON.stringify(["mediaRules", 0]),
-      "path of nestedResourceUpdates is correct"
-    );
-    is(
-      targetUpdate.update.nestedResourceUpdates[0].value.matches,
-      true,
-      "value of nestedResourceUpdates is correct"
-    );
-  }
+  is(
+    JSON.stringify(targetUpdate.update.nestedResourceUpdates[0].path),
+    JSON.stringify(["mediaRules", 0, "matches"]),
+    "path of nestedResourceUpdates is correct"
+  );
+  is(
+    targetUpdate.update.nestedResourceUpdates[0].value,
+    true,
+    "value of nestedResourceUpdates is correct"
+  );
 
   // Check the resource.
   const expectedMediaRules = [
