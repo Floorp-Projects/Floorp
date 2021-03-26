@@ -99,3 +99,20 @@ add_task(async function() {
 
   await Promise.all([extension1.unload(), extension2.unload()]);
 });
+
+add_task(async function test_sendMessage_to_badid() {
+  const extension = ExtensionTestUtils.loadExtension({
+    async background() {
+      await browser.test.assertRejects(
+        browser.runtime.sendMessage("badid@test-extension", "fake-message"),
+        /Could not establish connection. Receiving end does not exist./,
+        "Got the expected error message on sendMessage to badid ext"
+      );
+      browser.test.sendMessage("test-done");
+    },
+  });
+
+  await extension.startup();
+  await extension.awaitMessage("test-done");
+  await extension.unload();
+});
