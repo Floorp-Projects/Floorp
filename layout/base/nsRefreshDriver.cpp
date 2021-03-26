@@ -1440,19 +1440,17 @@ void nsRefreshDriver::EnsureTimerStarted(EnsureTimerStartedFlags aFlags) {
 
   // Since the different timers are sampled at different rates, when switching
   // timers, the most recent refresh of the new timer may be *before* the
-  // most recent refresh of the old timer. However, the refresh driver time
-  // should not go backwards so we clamp the most recent refresh time.
-  //
-  // The one exception to this is when we are restoring the refresh driver
-  // from test control in which case the time is expected to go backwards
-  // (see bug 1043078).
-  TimeStamp newMostRecentRefresh =
-      aFlags & eAllowTimeToGoBackwards
-          ? mActiveTimer->MostRecentRefresh()
-          : std::max(mActiveTimer->MostRecentRefresh(), mMostRecentRefresh);
+  // most recent refresh of the old timer.
+  // If we are restoring the refresh driver from test control, the time is
+  // expected to go backwards (see bug 1043078), otherwise we just keep the most
+  // recent tick of this driver (which may be older than the most recent tick of
+  // the timer).
+  if (!(aFlags & eAllowTimeToGoBackwards)) {
+    return;
+  }
 
-  if (mMostRecentRefresh != newMostRecentRefresh) {
-    mMostRecentRefresh = newMostRecentRefresh;
+  if (mMostRecentRefresh != mActiveTimer->MostRecentRefresh()) {
+    mMostRecentRefresh = mActiveTimer->MostRecentRefresh();
 
     for (nsATimerAdjustmentObserver* obs :
          mTimerAdjustmentObservers.EndLimitedRange()) {
