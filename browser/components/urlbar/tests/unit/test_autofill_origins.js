@@ -4,7 +4,6 @@
 
 "use strict";
 
-const ENGINE_NAME = "engine-suggestions.xml";
 const HEURISTIC_FALLBACK_PROVIDERNAME = "HeuristicFallback";
 
 const origin = "example.com";
@@ -468,7 +467,7 @@ add_task(async function suggestHistoryFalse_bookmark_multiple() {
     context,
     matches: [
       makeSearchResult(context, {
-        engineName: ENGINE_NAME,
+        engineName: SUGGESTIONS_ENGINE_NAME,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
         heuristic: true,
       }),
@@ -485,7 +484,7 @@ add_task(async function suggestHistoryFalse_bookmark_multiple() {
     context,
     matches: [
       makeSearchResult(context, {
-        engineName: ENGINE_NAME,
+        engineName: SUGGESTIONS_ENGINE_NAME,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
         heuristic: true,
       }),
@@ -502,7 +501,7 @@ add_task(async function suggestHistoryFalse_bookmark_multiple() {
     context,
     matches: [
       makeSearchResult(context, {
-        engineName: ENGINE_NAME,
+        engineName: SUGGESTIONS_ENGINE_NAME,
         providerName: HEURISTIC_FALLBACK_PROVIDERNAME,
         heuristic: true,
       }),
