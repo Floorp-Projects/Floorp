@@ -96,7 +96,7 @@
           opacity: .6;
         }
 
-        @supports -moz-bool-pref("browser.proton.tabs.enabled") {
+        @supports -moz-bool-pref("browser.proton.enabled") {
         :root[tabsintitlebar] .tab-secondary-label:-moz-window-inactive {
           opacity: .6;
         }

@@ -36,7 +36,7 @@
 }
 } /*** END proton ***/
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 #tabbrowser-tabs {
   --tab-line-color: -moz-accent-color;
 }
@@ -274,7 +274,7 @@ menuitem.bookmark-item {
   }
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .keyboard-focused-tab > .tab-stack > .tab-content,
 .tabbrowser-tab:focus:not([aria-activedescendant]) > .tab-stack > .tab-content {
   outline: 1px dotted;

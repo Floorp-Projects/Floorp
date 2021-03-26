@@ -30,7 +30,7 @@
 }
 } /* END !proton */
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 #tabbrowser-tabs {
   --tab-line-color: highlight;
 }
@@ -51,7 +51,7 @@
     --toolbar-field-non-lwt-bgcolor: #f0f0f4;
   }
 
-  @supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+  @supports not -moz-bool-pref("browser.proton.enabled") {
   #navigator-toolbox {
     --tabs-border-color: rgba(0,0,0,.3);
   }
@@ -72,7 +72,7 @@
   --panel-separator-color: rgba(249,249,250,.1);
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 #navigator-toolbox:-moz-lwtheme {
   --tabs-border-color: rgba(0,0,0,.3);
 }
@@ -142,7 +142,7 @@
   color: var(--toolbar-color);
 }
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 /* Add a fog for background tabs to be visible on Windows 7 glass window background */
 @media (-moz-os-version: windows-win7) {
   @media (-moz-windows-default-theme) {
@@ -153,7 +153,7 @@
 }
 } /*** END proton ***/
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 /*
  * Windows 7 draws the chrome background color as the tab background
  * instead of in the tabs toolbar.
@@ -632,7 +632,7 @@ menuitem.bookmark-item {
   }
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 /* tabbrowser-tab focus ring */
 .keyboard-focused-tab > .tab-stack > .tab-content,
 .tabbrowser-tab:focus:not([aria-activedescendant]) > .tab-stack > .tab-content {
