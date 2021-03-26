@@ -41,10 +41,6 @@
     --input-bgcolor: rgb(255,255,255);
     --input-border-color: rgb(143,143,157);
     --input-error-border-color: #E22850;
-
-    --tab-selected-bgcolor: rgb(255,255,255);
-    --tabs-border-color: transparent;
-    --toolbar-color: rgb(21,20,26);
   }
   } /** END Proton **/
 

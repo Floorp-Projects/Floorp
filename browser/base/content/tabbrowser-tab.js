@@ -13,6 +13,7 @@
         ? `
         <vbox class="tab-background">
           <hbox class="tab-context-line"/>
+          <hbox class="tab-line"/>
           <spacer flex="1" class="tab-background-inner"/>
         </vbox>
 `

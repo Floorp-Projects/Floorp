@@ -34,24 +34,17 @@
   --arrowpanel-field-background: rgba(12,12,13,.3);
 }
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 #navigator-toolbox {
   appearance: none;
   --tabs-border-color: rgba(0,0,0,.2);
 }
-} /*** end !proton ***/
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
-#navigator-toolbox {
-  appearance: none;
-}
-
+@supports -moz-bool-pref("browser.proton.enabled") {
 #navigator-toolbox:not(:-moz-lwtheme) {
   background-color: #f0f0f4;
 }
 } /*** END proton ***/
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
 #navigator-toolbox:not(:-moz-lwtheme):-moz-window-inactive {
   --tabs-border-color: rgba(0,0,0,.05);
 }
@@ -59,7 +52,6 @@
 #navigator-toolbox:-moz-lwtheme {
   --tabs-border-color: rgba(0,0,0,.3);
 }
-} /*** end !proton ***/
 
 /*
   This is a workaround for Bug 1482157
