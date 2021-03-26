@@ -1359,12 +1359,12 @@ BrowserGlue.prototype = {
 
     AddonManager.maybeInstallBuiltinAddon(
       "firefox-compact-light@mozilla.org",
-      "1.1",
+      "1.2",
       "resource://builtin-themes/light/"
     );
     AddonManager.maybeInstallBuiltinAddon(
       "firefox-compact-dark@mozilla.org",
-      "1.1",
+      "1.2",
       "resource://builtin-themes/dark/"
     );
 

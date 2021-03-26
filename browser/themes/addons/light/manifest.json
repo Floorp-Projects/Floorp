@@ -3,11 +3,11 @@
 
   "applications": {
     "gecko": {
-      "id": "firefox-compact-proton-light@mozilla.org"
+      "id": "firefox-compact-light@mozilla.org"
     }
   },
 
-  "name": "Proton Light",
+  "name": "Light",
   "description": "A theme with a light color scheme.",
   "author": "Mozilla",
   "version": "1.2",
