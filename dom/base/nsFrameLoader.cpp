@@ -3169,7 +3169,7 @@ already_AddRefed<Promise> nsFrameLoader::RequestTabStateFlush(
     return nullptr;
   }
 
-  BrowsingContext* context = GetExtantBrowsingContext();
+  RefPtr<BrowsingContext> context = GetExtantBrowsingContext();
   if (!context) {
     promise->MaybeResolveWithUndefined();
     return promise.forget();
@@ -3184,21 +3184,36 @@ already_AddRefed<Promise> nsFrameLoader::RequestTabStateFlush(
     return promise.forget();
   }
 
-  nsTArray<RefPtr<ContentParent::FlushTabStatePromise>> flushPromises;
-  context->Group()->EachParent([&](ContentParent* aParent) {
-    if (aParent->CanSend()) {
-      flushPromises.AppendElement(aParent->SendFlushTabState(context));
-    }
-  });
+  // XXX(farre): We hack around not having fully implemented session
+  // store session storage collection in the parent. What we need to
+  // do is to make sure that we always flush the toplevel context
+  // first. And also to wait for that flush to resolve. This will be
+  // fixed by moving session storage collection to the parent, which
+  // will happen in Bug 1700623.
+  RefPtr<ContentParent> contentParent =
+      context->Canonical()->GetContentParent();
+  using FlushPromise = ContentParent::FlushTabStatePromise;
+  contentParent->SendFlushTabState(context)->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [promise, context,
+       contentParent](const FlushPromise::ResolveOrRejectValue&) {
+        nsTArray<RefPtr<FlushPromise>> flushPromises;
+        context->Group()->EachOtherParent(
+            contentParent, [&](ContentParent* aParent) {
+              if (aParent->CanSend()) {
+                flushPromises.AppendElement(
+                    aParent->SendFlushTabState(context));
+              }
+            });
 
-  using ResultType =
-      ContentParent::FlushTabStatePromise::AllPromiseType::ResolveOrRejectValue;
-  ContentParent::FlushTabStatePromise::All(GetCurrentSerialEventTarget(),
-                                           flushPromises)
-      ->Then(GetCurrentSerialEventTarget(), __func__,
-             [promise](const ResultType&) {
-               promise->MaybeResolveWithUndefined();
-             });
+        FlushPromise::All(GetCurrentSerialEventTarget(), flushPromises)
+            ->Then(
+                GetCurrentSerialEventTarget(), __func__,
+                [promise](
+                    const FlushPromise::AllPromiseType::ResolveOrRejectValue&) {
+                  promise->MaybeResolveWithUndefined();
+                });
+      });
 
   return promise.forget();
 }
