@@ -2984,8 +2984,9 @@ Maybe<nsRect> nsDisplayItem::GetClipWithRespectToASR(
           DisplayItemClipChain::ClipForASR(GetClipChain(), aASR)) {
     return Some(clip->GetClipRect());
   }
-  MOZ_DIAGNOSTIC_ASSERT(false,
-                        "item should have finite clip with respect to aASR");
+#ifdef DEBUG
+  MOZ_ASSERT(false, "item should have finite clip with respect to aASR");
+#endif
   return Nothing();
 }
 
