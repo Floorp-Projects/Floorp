@@ -4166,7 +4166,12 @@
       // then do not switch docShells but retrieve the other tab's state
       // and apply it to our tab.
       if (isPending) {
+        // Tag tab so that the extension framework can ignore tab events that
+        // are triggered amidst the tab/browser restoration process
+        // (TabHide, TabPinned, TabUnpinned, "muted" attribute changes, etc.).
+        aOurTab.initializingTab = true;
         SessionStore.setTabState(aOurTab, SessionStore.getTabState(aOtherTab));
+        delete aOurTab.initializingTab;
 
         // Make sure to unregister any open URIs.
         this._swapRegisteredOpenURIs(ourBrowser, otherBrowser);
