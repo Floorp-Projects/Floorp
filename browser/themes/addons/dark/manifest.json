@@ -27,6 +27,7 @@
       "popup_highlight": "rgb(43,42,51)",
       "tab_line": "#0a84ff",
       "toolbar": "rgb(43,42,51)",
+      "toolbar_top_separator": "transparent",
       "toolbar_bottom_separator": "hsl(240, 5%, 5%)",
       "toolbar_field": "rgb(28,27,34)",
       "toolbar_field_border": "transparent",
