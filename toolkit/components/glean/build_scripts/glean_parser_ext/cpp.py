@@ -17,7 +17,7 @@ from glean_parser import util
 
 def cpp_datatypes_filter(value):
     """
-    A Jinja2 filter that renders Rust literals.
+    A Jinja2 filter that renders C++ literals.
 
     Based on Python's JSONEncoder, but overrides:
       - lists to array literals {}
