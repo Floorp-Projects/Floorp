@@ -19,4 +19,12 @@
     <string name="privacy_notice_positive_button">同意并继续</string>
     <!-- Privacy Notice neutral button-->
     <string name="privacy_notice_neutral_button">退出应用</string>
+
+    <!-- Topsites-->
+    <!-- Default title for pinned Baidu top site that links to Baidu home page  -->
+    <string name="default_top_site_baidu">百度</string>
+    <!-- Default title for pinned JD top site that links to JD home page  -->
+    <string name="default_top_site_jd">京东</string>
+    <!-- Default title for pinned JD top site that links to PDD home page  -->
+    <string name="default_top_site_pdd">拼多多</string>
 </resources>
