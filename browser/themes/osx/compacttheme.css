@@ -10,7 +10,7 @@
  * the effect. We disable transparency in fullscreen so #browser can't be seen
  * through the toolbar if the latter shifts over the former.
  */
-:root:not([OSXLionFullscreen]) #navigator-toolbox:-moz-lwtheme-darktext {
+:root:not([macOSNativeFullscreen]) #navigator-toolbox:-moz-lwtheme-darktext {
   background-color: transparent;
 }
 
