@@ -9,15 +9,16 @@ const { LongStringActor } = require("devtools/server/actors/string");
 const { styleSheetsSpec } = require("devtools/shared/specs/style-sheets");
 const InspectorUtils = require("InspectorUtils");
 
-const {
-  TYPES,
-  getResourceWatcher,
-} = require("devtools/server/actors/resources/index");
-
 loader.lazyRequireGetter(
   this,
   "UPDATE_GENERAL",
   "devtools/server/actors/style-sheet",
+  true
+);
+loader.lazyRequireGetter(
+  this,
+  "hasStyleSheetWatcherSupportForTarget",
+  "devtools/server/actors/utils/stylesheets-manager",
   true
 );
 
@@ -293,9 +294,9 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
    *         Object with 'styelSheet' property for form on new actor.
    */
   async addStyleSheet(text, fileName = null) {
-    const styleSheetsWatcher = this._getStyleSheetsWatcher();
-    if (styleSheetsWatcher) {
-      await styleSheetsWatcher.addStyleSheet(this.document, text, fileName);
+    if (this._hasStyleSheetWatcherSupport()) {
+      const styleSheetsManager = this._getStyleSheetsManager();
+      await styleSheetsManager.addStyleSheet(this.document, text, fileName);
       return;
     }
 
@@ -333,14 +334,18 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
     return this.parentActor._targetScopedActorPool.getActorByID(resourceId);
   },
 
-  _getStyleSheetsWatcher() {
-    return getResourceWatcher(this.parentActor, TYPES.STYLESHEET);
+  _hasStyleSheetWatcherSupport() {
+    return hasStyleSheetWatcherSupportForTarget(this.parentActor);
+  },
+
+  _getStyleSheetsManager() {
+    return this.parentActor.getStyleSheetManager();
   },
 
   toggleDisabled(resourceId) {
-    const styleSheetsWatcher = this._getStyleSheetsWatcher();
-    if (styleSheetsWatcher) {
-      return styleSheetsWatcher.toggleDisabled(resourceId);
+    if (this._hasStyleSheetWatcherSupport()) {
+      const styleSheetsManager = this._getStyleSheetsManager();
+      return styleSheetsManager.toggleDisabled(resourceId);
     }
 
     // Following code can be removed once we enable STYLESHEET resource on the watcher/server
@@ -351,9 +356,9 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   },
 
   async getText(resourceId) {
-    const styleSheetsWatcher = this._getStyleSheetsWatcher();
-    if (styleSheetsWatcher) {
-      const text = await styleSheetsWatcher.getText(resourceId);
+    if (this._hasStyleSheetWatcherSupport()) {
+      const styleSheetsManager = this._getStyleSheetsManager();
+      const text = await styleSheetsManager.getText(resourceId);
       return new LongStringActor(this.conn, text || "");
     }
 
@@ -365,9 +370,9 @@ var StyleSheetsActor = protocol.ActorClassWithSpec(styleSheetsSpec, {
   },
 
   update(resourceId, text, transition, cause = "") {
-    const styleSheetsWatcher = this._getStyleSheetsWatcher();
-    if (styleSheetsWatcher) {
-      return styleSheetsWatcher.update(
+    if (this._hasStyleSheetWatcherSupport()) {
+      const styleSheetsManager = this._getStyleSheetsManager();
+      return styleSheetsManager.update(
         resourceId,
         text,
         transition,
