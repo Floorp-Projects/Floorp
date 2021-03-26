@@ -557,6 +557,15 @@ var gPlayTests = [
     height: 240,
     duration: 3.13,
   },
+  // A file that has no codec delay at the container level, but has a delay at
+  // the codec level.
+  {
+    name: "no-container-codec-delay.webm",
+    type: "video/webm",
+  },
+  // A file that has a codec delay at a container level of 0, but as a delay at
+  // the codec level that is non-zero.
+  { name: "invalid-preskip.webm", type: "audio/webm; codecs=opus" },
 
   // Invalid file
   { name: "bogus.duh", type: "bogus/duh", duration: Number.NaN },
@@ -711,7 +720,6 @@ var gInvalidTests = [
   { name: "invalid-cmap-s0c0.opus", type: "audio/ogg; codecs=opus" },
   { name: "invalid-cmap-s0c2.opus", type: "audio/ogg; codecs=opus" },
   { name: "invalid-cmap-s1c2.opus", type: "audio/ogg; codecs=opus" },
-  { name: "invalid-preskip.webm", type: "audio/webm; codecs=opus" },
 ];
 
 var gInvalidPlayTests = [
