@@ -322,7 +322,8 @@ void WebRenderLayerManager::EndTransaction(DrawPaintedLayerCallback aCallback,
 
 void WebRenderLayerManager::EndTransactionWithoutLayer(
     nsDisplayList* aDisplayList, nsDisplayListBuilder* aDisplayListBuilder,
-    WrFiltersHolder&& aFilters, WebRenderBackgroundData* aBackground) {
+    WrFiltersHolder&& aFilters, WebRenderBackgroundData* aBackground,
+    const double aGeckoDLBuildTime) {
   AUTO_PROFILER_TRACING_MARKER("Paint", "RenderLayers", GRAPHICS);
 
   // Since we don't do repeat transactions right now, just set the time
@@ -459,6 +460,7 @@ void WebRenderLayerManager::EndTransactionWithoutLayer(
     dlData.mRect =
         LayoutDeviceRect(LayoutDevicePoint(), LayoutDeviceSize(size));
     dlData.mScrollData.emplace(std::move(mScrollData));
+    dlData.mDLDesc.gecko_display_list_time = aGeckoDLBuildTime;
 
     bool ret = WrBridge()->EndTransaction(
         std::move(dlData), mLatestTransactionId, containsSVGGroup,

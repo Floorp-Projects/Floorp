@@ -3624,8 +3624,9 @@ class nsDisplayList {
     PAINT_COMPRESSED = 0x10,
     PAINT_IDENTICAL_DISPLAY_LIST = 0x20
   };
-  already_AddRefed<LayerManager> PaintRoot(nsDisplayListBuilder* aBuilder,
-                                           gfxContext* aCtx, uint32_t aFlags);
+  already_AddRefed<LayerManager> PaintRoot(
+      nsDisplayListBuilder* aBuilder, gfxContext* aCtx, uint32_t aFlags,
+      mozilla::Maybe<double> aDisplayListBuildTime);
 
   mozilla::FrameLayerBuilder* BuildLayers(nsDisplayListBuilder* aBuilder,
                                           LayerManager* aLayerManager,

@@ -2230,6 +2230,12 @@ impl Renderer {
         results.stats.gpu_cache_upload_time = self.gpu_cache_upload_time;
         self.gpu_cache_upload_time = 0.0;
 
+        if let Some(stats) = active_doc.frame_stats.take() {
+          // Copy the full frame stats to RendererStats
+          results.stats.merge(&stats);
+
+        }
+
         // Note: this clears the values in self.profile.
         self.profiler.set_counters(&mut self.profile);
 
@@ -5580,6 +5586,30 @@ fn new_debug_server(_enable: bool, api_tx: Sender<ApiMsg>) -> Box<dyn DebugServe
     Box::new(NoopDebugServer::new(api_tx))
 }
 
+/// The cumulative times spent in each painting phase to generate this frame.
+#[derive(Debug, Default)]
+pub struct FullFrameStats {
+    pub gecko_display_list_time: f64,
+    pub wr_display_list_time: f64,
+    pub scene_build_time: f64,
+    pub frame_build_time: f64,
+}
+
+impl FullFrameStats {
+    pub fn merge(&self, other: &FullFrameStats) -> Self {
+        Self {
+            gecko_display_list_time: self.gecko_display_list_time + other.gecko_display_list_time,
+            wr_display_list_time: self.wr_display_list_time + other.wr_display_list_time,
+            scene_build_time: self.scene_build_time + other.scene_build_time,
+            frame_build_time: self.frame_build_time + other.frame_build_time
+        }
+    }
+
+    pub fn total(&self) -> f64 {
+      self.gecko_display_list_time + self.wr_display_list_time + self.scene_build_time + self.frame_build_time
+    }
+}
+
 /// Some basic statistics about the rendered scene, used in Gecko, as
 /// well as in wrench reftests to ensure that tests are batching and/or
 /// allocating on render targets as we expect them to.
@@ -5592,6 +5622,21 @@ pub struct RendererStats {
     pub texture_upload_mb: f64,
     pub resource_upload_time: f64,
     pub gpu_cache_upload_time: f64,
+    pub gecko_display_list_time: f64,
+    pub wr_display_list_time: f64,
+    pub scene_build_time: f64,
+    pub frame_build_time: f64,
+    pub full_frame: bool,
+}
+
+impl RendererStats {
+    pub fn merge(&mut self, stats: &FullFrameStats) {
+        self.gecko_display_list_time = stats.gecko_display_list_time;
+        self.wr_display_list_time = stats.wr_display_list_time;
+        self.scene_build_time = stats.scene_build_time;
+        self.frame_build_time = stats.frame_build_time;
+        self.full_frame = true;
+    }
 }
 
 /// Return type from render(), which contains some repr(C) statistics as well as
