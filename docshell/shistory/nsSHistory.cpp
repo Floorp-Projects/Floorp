@@ -276,7 +276,11 @@ nsSHistory::nsSHistory(BrowsingContext* aRootBC)
       GetCurrentSerialEventTarget());
 }
 
-nsSHistory::~nsSHistory() {}
+nsSHistory::~nsSHistory() {
+  // Clear mEntries explicitly here so that the destructor of the entries
+  // can still access nsSHistory in a reasonable way.
+  mEntries.Clear();
+}
 
 NS_IMPL_ADDREF(nsSHistory)
 NS_IMPL_RELEASE(nsSHistory)
@@ -1467,7 +1471,7 @@ class EntryAndDistance {
     if (she) {
       mFrameLoader = she->GetFrameLoader();
     }
-    NS_ASSERTION(mViewer || (mozilla::BFCacheInParent() && mFrameLoader),
+    NS_ASSERTION(mViewer || mFrameLoader,
                  "Entry should have a content viewer or frame loader.");
   }
 
