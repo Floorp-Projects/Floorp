@@ -195,19 +195,6 @@ mingw-cap:
             - '**/*.h'
             - 'tools/lint/mingw-capitalization.yml'
 
-py-compat:
-    description: lint for python 2/3 compatibility issues
-    treeherder:
-        symbol: py(py-compat)
-    run:
-        mach: lint -v -l py2 -l py3 -f treeherder -f json:/builds/worker/mozlint.json *
-    when:
-        files-changed:
-            - '**/*.py'
-            - '**/.flake8'
-            - 'tools/lint/py2.yml'
-            - 'tools/lint/py3.yml'
-
 py-flake8:
     description: flake8 run over the gecko codebase
     treeherder:
