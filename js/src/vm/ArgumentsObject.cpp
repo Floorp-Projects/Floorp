@@ -634,6 +634,24 @@ bool ArgumentsObject::reifyIterator(JSContext* cx,
   return true;
 }
 
+static bool ResolveArgumentsProperty(JSContext* cx,
+                                     Handle<ArgumentsObject*> obj, HandleId id,
+                                     GetterOp getter, SetterOp setter,
+                                     unsigned attrs, bool* resolvedp) {
+  // Note: we don't need to call ReshapeForShadowedProp here because we're just
+  // resolving an existing property instead of defining a new property.
+
+  MOZ_ASSERT(id.isInt() || id.isAtom(cx->names().length) ||
+             id.isAtom(cx->names().callee));
+
+  if (!NativeObject::addAccessorProperty(cx, obj, id, getter, setter, attrs)) {
+    return false;
+  }
+
+  *resolvedp = true;
+  return true;
+}
+
 /* static */
 bool MappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
                                         HandleId id, bool* resolvedp) {
@@ -674,13 +692,8 @@ bool MappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
     }
   }
 
-  if (!NativeDefineAccessorProperty(cx, argsobj, id, MappedArgGetter,
-                                    MappedArgSetter, attrs)) {
-    return false;
-  }
-
-  *resolvedp = true;
-  return true;
+  return ResolveArgumentsProperty(cx, argsobj, id, MappedArgGetter,
+                                  MappedArgSetter, attrs, resolvedp);
 }
 
 /* static */
@@ -716,6 +729,80 @@ bool MappedArgumentsObject::obj_enumerate(JSContext* cx, HandleObject obj) {
   return true;
 }
 
+static bool DefineMappedIndex(JSContext* cx, Handle<MappedArgumentsObject*> obj,
+                              HandleId id,
+                              MutableHandle<PropertyDescriptor> desc,
+                              ObjectOpResult& result) {
+  // The MappedArgGetter/MappedArgSetter property has to be defined manually
+  // because PropertyDescriptor and NativeDefineProperty don't support
+  // PropertyOp accessors.
+  //
+  // This exists in order to let code change the configurable/enumerable
+  // attributes for the mapped element properties.
+  //
+  // Note: because this preserves the default mapped-arguments behavior, we
+  // don't need to mark elements as overridden or deleted.
+
+  MOZ_ASSERT(id.isInt());
+  MOZ_ASSERT(!obj->isElementDeleted(id.toInt()));
+  MOZ_ASSERT(!obj->containsDenseElement(id.toInt()));
+
+  MOZ_ASSERT(!desc.isAccessorDescriptor());
+
+  // Mapped properties aren't used when defining a non-writable property.
+  MOZ_ASSERT(!desc.hasWritable() || desc.writable());
+
+  // First, resolve the property to simplify the code below.
+  Rooted<PropertyResult> prop(cx);
+  if (!NativeLookupOwnProperty<CanGC>(cx, obj, id, &prop)) {
+    return false;
+  }
+
+  MOZ_ASSERT(prop.isNativeProperty());
+
+  Shape* shape = prop.shape();
+  MOZ_ASSERT(shape);
+  MOZ_ASSERT(shape->writable());
+  MOZ_ASSERT(shape->getter() == MappedArgGetter);
+  MOZ_ASSERT(shape->setter() == MappedArgSetter);
+
+  // Change the property's attributes by implementing the relevant parts of
+  // ValidateAndApplyPropertyDescriptor (ES2021 draft, 10.1.6.3), in particular
+  // steps 4 and 9.
+
+  // Determine whether the property should be configurable and/or enumerable.
+  bool configurable = shape->configurable();
+  bool enumerable = shape->enumerable();
+  if (configurable) {
+    if (desc.hasConfigurable()) {
+      configurable = desc.configurable();
+    }
+    if (desc.hasEnumerable()) {
+      enumerable = desc.enumerable();
+    }
+  } else {
+    // Property is not configurable so disallow any attribute changes.
+    if ((desc.hasConfigurable() && desc.configurable()) ||
+        (desc.hasEnumerable() && enumerable != desc.enumerable())) {
+      return result.fail(JSMSG_CANT_REDEFINE_PROP);
+    }
+  }
+
+  unsigned attrs = 0;
+  if (!configurable) {
+    attrs |= JSPROP_PERMANENT;
+  }
+  if (enumerable) {
+    attrs |= JSPROP_ENUMERATE;
+  }
+  if (!NativeObject::putAccessorProperty(cx, obj, id, MappedArgGetter,
+                                         MappedArgSetter, attrs)) {
+    return false;
+  }
+
+  return result.succeed();
+}
+
 // ES 2017 draft 9.4.4.2
 /* static */
 bool MappedArgumentsObject::obj_defineProperty(JSContext* cx, HandleObject obj,
@@ -737,6 +824,7 @@ bool MappedArgumentsObject::obj_defineProperty(JSContext* cx, HandleObject obj,
   Rooted<PropertyDescriptor> newArgDesc(cx, desc);
 
   // Step 5.
+  bool defineMapped = false;
   if (!desc.isAccessorDescriptor() && isMapped) {
     // Step 5.a.
     if (desc.hasWritable() && !desc.writable()) {
@@ -747,20 +835,21 @@ bool MappedArgumentsObject::obj_defineProperty(JSContext* cx, HandleObject obj,
       newArgDesc.setGetter(nullptr);
       newArgDesc.setSetter(nullptr);
     } else {
-      // In this case the live mapping is supposed to keep working,
-      // we have to pass along the Getter/Setter otherwise they are
-      // overwritten.
-      newArgDesc.setGetter(MappedArgGetter);
-      newArgDesc.setSetter(MappedArgSetter);
-      newArgDesc.value().setUndefined();
-      newArgDesc.attributesRef() |= JSPROP_IGNORE_VALUE;
+      // In this case the live mapping is supposed to keep working.
+      defineMapped = true;
     }
   }
 
   // Step 6. NativeDefineProperty will lookup [[Value]] for us.
-  if (!NativeDefineProperty(cx, obj.as<NativeObject>(), id, newArgDesc,
-                            result)) {
-    return false;
+  if (defineMapped) {
+    if (!DefineMappedIndex(cx, argsobj, id, &newArgDesc, result)) {
+      return false;
+    }
+  } else {
+    if (!NativeDefineProperty(cx, obj.as<NativeObject>(), id, newArgDesc,
+                              result)) {
+      return false;
+    }
   }
   // Step 7.
   if (!result.ok()) {
@@ -901,13 +990,8 @@ bool UnmappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj,
     return true;
   }
 
-  if (!NativeDefineAccessorProperty(cx, argsobj, id, UnmappedArgGetter,
-                                    UnmappedArgSetter, attrs)) {
-    return false;
-  }
-
-  *resolvedp = true;
-  return true;
+  return ResolveArgumentsProperty(cx, argsobj, id, UnmappedArgGetter,
+                                  UnmappedArgSetter, attrs, resolvedp);
 }
 
 /* static */

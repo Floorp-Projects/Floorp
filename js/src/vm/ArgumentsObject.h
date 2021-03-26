@@ -262,7 +262,7 @@ class ArgumentsObject : public NativeObject {
     return argc;
   }
 
-  /* True iff arguments.length has been assigned or its attributes changed. */
+  // True iff arguments.length has been assigned or deleted.
   bool hasOverriddenLength() const {
     const Value& v = getFixedSlot(INITIAL_LENGTH_SLOT);
     return v.toInt32() & LENGTH_OVERRIDDEN_BIT;
@@ -279,8 +279,7 @@ class ArgumentsObject : public NativeObject {
    */
   static bool reifyLength(JSContext* cx, Handle<ArgumentsObject*> obj);
 
-  /* True iff arguments[@@iterator] has been assigned or its attributes
-   * changed. */
+  // True iff arguments[@@iterator] has been assigned or deleted.
   bool hasOverriddenIterator() const {
     const Value& v = getFixedSlot(INITIAL_LENGTH_SLOT);
     return v.toInt32() & ITERATOR_OVERRIDDEN_BIT;
@@ -302,9 +301,7 @@ class ArgumentsObject : public NativeObject {
    */
   static bool getArgumentsIterator(JSContext* cx, MutableHandleValue val);
 
-  /* True iff any element has been assigned, deleted, or had its
-   * attributes changed.
-   */
+  // True iff any element has been assigned or deleted.
   bool hasOverriddenElement() const {
     const Value& v = getFixedSlot(INITIAL_LENGTH_SLOT);
     return v.toInt32() & ELEMENT_OVERRIDDEN_BIT;
