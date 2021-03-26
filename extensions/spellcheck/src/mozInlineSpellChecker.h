@@ -32,9 +32,6 @@ class Event;
 
 class mozInlineSpellStatus {
  public:
-  // @param aSpellChecker must be non-nullptr.
-  explicit mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker);
-
   static mozilla::Result<mozilla::UniquePtr<mozInlineSpellStatus>, nsresult>
   CreateForEditorChange(mozInlineSpellChecker& aSpellChecker,
                         mozilla::EditSubAction aEditSubAction,
@@ -86,6 +83,9 @@ class mozInlineSpellStatus {
   const nsRange* GetNoCheckRange() const { return mNoCheckRange; }
 
  private:
+  // @param aSpellChecker must be non-nullptr.
+  explicit mozInlineSpellStatus(mozInlineSpellChecker* aSpellChecker);
+
   // For resuming a previously started check.
   Operation mOp;
 
