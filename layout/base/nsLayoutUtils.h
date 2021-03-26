@@ -496,8 +496,26 @@ class nsLayoutUtils {
    *
    * Just like IsProperAncestorFrameCrossDoc, except that it returns true when
    * aFrame == aAncestorFrame.
+   *
+   * TODO: Bug 1700245, all call sites of this function will be eventually
+   * replaced by IsAncestorFrameCrossDocInProcess.
    */
   static bool IsAncestorFrameCrossDoc(
+      const nsIFrame* aAncestorFrame, const nsIFrame* aFrame,
+      const nsIFrame* aCommonAncestor = nullptr);
+
+  /**
+   * IsAncestorFrameCrossDocInProcess checks whether aAncestorFrame is an
+   * ancestor of aFrame or equal to aFrame, looking across document boundaries
+   * in the same process.
+   * @param aCommonAncestor nullptr, or a common ancestor of aFrame and
+   * aAncestorFrame. If non-null, this can bound the search and speed up
+   * the function.
+   *
+   * Just like IsProperAncestorFrameCrossDoc, except that it returns true when
+   * aFrame == aAncestorFrame.
+   */
+  static bool IsAncestorFrameCrossDocInProcess(
       const nsIFrame* aAncestorFrame, const nsIFrame* aFrame,
       const nsIFrame* aCommonAncestor = nullptr);
 

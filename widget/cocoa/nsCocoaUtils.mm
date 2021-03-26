@@ -388,6 +388,7 @@ nsresult nsCocoaUtils::CreateNSImageFromCGImage(CGImageRef aInputImage, NSImage*
 }
 
 nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer* aImage, uint32_t aWhichFrame,
+                                                       const ComputedStyle* aComputedStyle,
                                                        NSImage** aResult, CGFloat scaleFactor,
                                                        bool* aIsEntirelyBlack) {
   RefPtr<SourceSurface> surface;
@@ -396,7 +397,7 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer* aImage, ui
   aImage->GetHeight(&height);
 
   // Render a vector image at the correct resolution on a retina display
-  if (aImage->GetType() == imgIContainer::TYPE_VECTOR && scaleFactor != 1.0f) {
+  if (aImage->GetType() == imgIContainer::TYPE_VECTOR) {
     IntSize scaledSize = IntSize::Ceil(width * scaleFactor, height * scaleFactor);
 
     RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
@@ -409,9 +410,13 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer* aImage, ui
     RefPtr<gfxContext> context = gfxContext::CreateOrNull(drawTarget);
     MOZ_ASSERT(context);
 
-    mozilla::image::ImgDrawResult res = aImage->Draw(
-        context, scaledSize, ImageRegion::Create(scaledSize), aWhichFrame, SamplingFilter::POINT,
-        /* no SVGImageContext */ Nothing(), imgIContainer::FLAG_SYNC_DECODE, 1.0);
+    Maybe<SVGImageContext> svgContext;
+    if (aComputedStyle) {
+      SVGImageContext::MaybeStoreContextPaint(svgContext, aComputedStyle, aImage);
+    }
+    mozilla::image::ImgDrawResult res =
+        aImage->Draw(context, scaledSize, ImageRegion::Create(scaledSize), aWhichFrame,
+                     SamplingFilter::POINT, svgContext, imgIContainer::FLAG_SYNC_DECODE, 1.0);
 
     if (res != mozilla::image::ImgDrawResult::SUCCESS) {
       return NS_ERROR_FAILURE;
@@ -444,10 +449,9 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer* aImage, ui
   return NS_OK;
 }
 
-nsresult nsCocoaUtils::CreateDualRepresentationNSImageFromImageContainer(imgIContainer* aImage,
-                                                                         uint32_t aWhichFrame,
-                                                                         NSImage** aResult,
-                                                                         bool* aIsEntirelyBlack) {
+nsresult nsCocoaUtils::CreateDualRepresentationNSImageFromImageContainer(
+    imgIContainer* aImage, uint32_t aWhichFrame, const ComputedStyle* aComputedStyle,
+    NSImage** aResult, bool* aIsEntirelyBlack) {
   int32_t width = 0, height = 0;
   aImage->GetWidth(&width);
   aImage->GetHeight(&height);
@@ -457,7 +461,7 @@ nsresult nsCocoaUtils::CreateDualRepresentationNSImageFromImageContainer(imgICon
 
   NSImage* newRepresentation = nil;
   nsresult rv = nsCocoaUtils::CreateNSImageFromImageContainer(
-      aImage, aWhichFrame, &newRepresentation, 1.0f, aIsEntirelyBlack);
+      aImage, aWhichFrame, aComputedStyle, &newRepresentation, 1.0f, aIsEntirelyBlack);
   if (NS_FAILED(rv) || !newRepresentation) {
     return NS_ERROR_FAILURE;
   }
@@ -467,8 +471,8 @@ nsresult nsCocoaUtils::CreateDualRepresentationNSImageFromImageContainer(imgICon
   [newRepresentation release];
   newRepresentation = nil;
 
-  rv = nsCocoaUtils::CreateNSImageFromImageContainer(aImage, aWhichFrame, &newRepresentation, 2.0f,
-                                                     aIsEntirelyBlack);
+  rv = nsCocoaUtils::CreateNSImageFromImageContainer(aImage, aWhichFrame, aComputedStyle,
+                                                     &newRepresentation, 2.0f, aIsEntirelyBlack);
   if (NS_FAILED(rv) || !newRepresentation) {
     return NS_ERROR_FAILURE;
   }

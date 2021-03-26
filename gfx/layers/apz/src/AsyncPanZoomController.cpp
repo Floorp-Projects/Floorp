@@ -3026,10 +3026,14 @@ bool AsyncPanZoomController::IsInOverscrollGutter(
 }
 
 bool AsyncPanZoomController::IsOverscrolled() const {
+  // As an optimization, avoid calling Apply/UnapplyAsyncTestAttributes
+  // unless we're in a test environment where we need it.
+  if (StaticPrefs::apz_overscroll_test_async_scroll_offset_enabled()) {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
+    return mX.IsOverscrolled() || mY.IsOverscrolled();
+  }
   RecursiveMutexAutoLock lock(mRecursiveMutex);
-  // XXX: Should we try harder to avoid applying test attributes
-  // every time this is called (e.g. restrict it to a test-specific pref)?
-  AutoApplyAsyncTestAttributes testAttributeApplier(this, lock);
   return mX.IsOverscrolled() || mY.IsOverscrolled();
 }
 
@@ -4556,8 +4560,11 @@ void AsyncPanZoomController::ApplyAsyncTestAttributes(
       CSSPoint difference = mTestAsyncScrollOffset - clampedPoint;
 
       ScrollByAndClamp(mTestAsyncScrollOffset);
-      ParentLayerPoint overscroll = difference * Metrics().GetZoom();
-      OverscrollBy(overscroll);
+
+      if (StaticPrefs::apz_overscroll_test_async_scroll_offset_enabled()) {
+        ParentLayerPoint overscroll = difference * Metrics().GetZoom();
+        OverscrollBy(overscroll);
+      }
       ResampleCompositedAsyncTransform(aProofOfLock);
     }
   }
