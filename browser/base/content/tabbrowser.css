@@ -18,7 +18,7 @@
   display: none;
 }
 
-@supports -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports -moz-bool-pref("browser.proton.enabled") {
 :root[uidensity=compact] .tab-secondary-label,
 .tab-secondary-label:not([soundplaying], [muted], [activemedia-blocked], [pictureinpicture]),
 .tab-secondary-label:not([activemedia-blocked]) > .tab-icon-sound-blocked-label,
@@ -40,7 +40,7 @@
 }
 } /*** END proton ***/
 
-@supports not -moz-bool-pref("browser.proton.tabs.enabled") {
+@supports not -moz-bool-pref("browser.proton.enabled") {
 .tab-icon-sound:not([activemedia-blocked]) > .tab-icon-sound-blocked-label,
 .tab-icon-sound[muted][activemedia-blocked] > .tab-icon-sound-blocked-label,
 .tab-icon-sound[activemedia-blocked] > .tab-icon-sound-playing-label,

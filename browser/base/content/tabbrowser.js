@@ -5356,7 +5356,7 @@
       // When Picture-in-Picture is open, we repurpose '.tab-icon-sound' as
       // an inert Picture-in-Picture indicator, so we should display
       // the default tooltip
-      else if (!gProtonTabs && tab._overPlayingIcon && !tab.pictureinpicture) {
+      else if (!gProton && tab._overPlayingIcon && !tab.pictureinpicture) {
         let stringID;
         if (tab.selected) {
           stringID = tab.linkedBrowser.audioMuted

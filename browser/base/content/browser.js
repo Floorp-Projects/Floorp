@@ -587,15 +587,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   }
 );
 
-/* Temporary pref while we settle some questions around new tab design.
-   This will eventually be removed and browser.proton.enabled will be used instead. */
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gProtonTabs",
-  "browser.proton.tabs.enabled",
-  false
-);
-
 /* Temporary pref while the dust settles around the updated tooltip design
    for tabs and bookmarks toolbar. This will eventually be removed and
    browser.proton.enabled will be used instead. */

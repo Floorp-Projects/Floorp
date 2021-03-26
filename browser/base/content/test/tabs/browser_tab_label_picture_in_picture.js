@@ -5,7 +5,7 @@
 
 add_task(async function test_pip_label_changes_tab() {
   SpecialPowers.pushPrefEnv({
-    set: [["browser.proton.tabs.enabled", true]],
+    set: [["browser.proton.enabled", true]],
   });
   let newWin = await BrowserTestUtils.openNewWindowWithFlushedXULCacheForMozSupports();
 
