@@ -6,12 +6,35 @@
 
 import cpp
 import js
+import os
 import re
 import rust
 import sys
 
+import jinja2
+
+from util import generate_metric_ids
 from glean_parser import lint, parser, util
+from mozbuild.util import FileAvoidWrite
 from pathlib import Path
+
+
+GIFFT_TYPES = {
+    "Event": ["event"],
+    "Histogram": ["timing_distribution", "memory_distribution"],
+    "Scalar": [
+        "boolean",
+        "labeled_boolean",
+        "counter",
+        "labeled_counter",
+        "string",
+        "string_list",
+        "timespan",
+        "uuid",
+        "datetime",
+        "quantity",
+    ],
+}
 
 
 def get_parser_options(moz_app_version):
@@ -63,7 +86,7 @@ def parse(args):
 
 
 # Must be kept in sync with the length of `deps` in moz.build.
-DEPS_LEN = 13
+DEPS_LEN = 15
 
 
 def main(output_fd, *args):
@@ -82,6 +105,68 @@ def js_metrics(output_fd, *args):
     args = args[DEPS_LEN:]
     all_objs, options = parse(args)
     js.output_js(all_objs, output_fd, options)
+
+
+def gifft_map(output_fd, *args):
+    probe_type = args[-1]
+    args = args[DEPS_LEN:-1]
+    all_objs, options = parse(args)
+    get_metric_id = generate_metric_ids(all_objs)
+    ids_to_probes = {}
+    for category_name, objs in all_objs.items():
+        for metric in objs.values():
+            if (
+                hasattr(metric, "telemetry_mirror")
+                and metric.telemetry_mirror is not None
+            ):
+                info = (metric.telemetry_mirror, f"{category_name}.{metric.name}")
+                if metric.type in GIFFT_TYPES[probe_type]:
+                    if info in ids_to_probes.values():
+                        print(
+                            f"Telemetry mirror {metric.telemetry_mirror} already registered",
+                            file=sys.stderr,
+                        )
+                        sys.exit(1)
+                    ids_to_probes[get_metric_id(metric)] = info
+                # If we don't support a mirror for this metric type: build error.
+                elif not any(
+                    [
+                        metric.type in types_for_probe
+                        for types_for_probe in GIFFT_TYPES.values()
+                    ]
+                ):
+                    print(
+                        f"Glean metric {category_name}.{metric.name} is of type {metric.type}"
+                        "which can't be mirrored (we don't know how).",
+                        file=sys.stderr,
+                    )
+                    sys.exit(1)
+
+    env = jinja2.Environment(
+        loader=jinja2.PackageLoader("run_glean_parser", "templates"),
+        trim_blocks=True,
+        lstrip_blocks=True,
+    )
+    env.filters["snake_case"] = lambda value: value.replace(".", "_").replace("-", "_")
+    env.filters["Camelize"] = util.Camelize
+    template = env.get_template("gifft.jinja2")
+    output_fd.write(
+        template.render(
+            ids_to_probes=ids_to_probes,
+            probe_type=probe_type,
+        )
+    )
+    output_fd.write("\n")
+
+    # Events also need to output maps from event extra enum to strings.
+    # Sadly we need to generate code for all possible events, not just mirrored.
+    # Otherwise we won't compile.
+    if probe_type == "Event":
+        template = env.get_template("gifft_events.jinja2")
+        output_path = Path(os.path.dirname(output_fd.name))
+        with FileAvoidWrite(output_path / "EventExtraGIFFTMaps.cpp") as cpp_fd:
+            cpp_fd.write(template.render(all_objs=all_objs))
+            cpp_fd.write("\n")
 
 
 if __name__ == "__main__":

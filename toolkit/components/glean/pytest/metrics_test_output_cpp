@@ -161,7 +161,7 @@ namespace test_nested {
      * A multi-line
      * description
      */
-    constexpr impl::EventMetric<uint32_t> event_metric(16);
+    constexpr impl::EventMetric<NoExtraKeys> event_metric(16);
 
     /**
      * generated from test.nested.event_metric_with_extra

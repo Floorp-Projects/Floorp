@@ -96,29 +96,45 @@ static already_AddRefed<nsISupports> NewMetricFromId(uint32_t id) {
   }
 }
 
-static already_AddRefed<nsISupports> NewSubMetricFromIds(uint32_t aParentTypeId, uint32_t aParentMetricId, const nsACString& aLabel) {
+/**
+ * Create a submetric instance for a labeled metric of the provided type and id for the given label.
+ * Assigns or retrieves an id for the submetric from the SDK.
+ *
+ * @param aParentTypeId - The type of the parent labeled metric identified as a number generated during codegen.
+ *                        Only used to identify which X of LabeledX you are so that X can be created here.
+ * @param aParentMetricId - The metric id for the parent labeled metric.
+ * @param aLabel - The label for the submetric. Might not adhere to the SDK label format.
+ * @param aSubmetricId - **On Android:** a pointer to the id to assign to this submetric since we can't ask the SDK for one.
+ *                       **Elsewhere:** an outparam which is assigned the submetric's SDK-generated submetric id.
+ *                       Used only by GIFFT. Ideally will be removed as soon as either
+ *                       Android special handling goes away (bug 1670261), or GIFFT is removed.
+ */
+static already_AddRefed<nsISupports> NewSubMetricFromIds(uint32_t aParentTypeId, uint32_t aParentMetricId, const nsACString& aLabel, uint32_t* aSubmetricId) {
   switch (aParentTypeId) {
     case 2: { /* labeled_boolean */
 #ifdef MOZ_GLEAN_ANDROID
-      auto id = 0;
+      auto id = *aSubmetricId;
 #else
       auto id = impl::fog_labeled_boolean_get(aParentMetricId, &aLabel);
+      *aSubmetricId = id;
 #endif
       return MakeAndAddRef<GleanBoolean>(id);
     }
     case 4: { /* labeled_counter */
 #ifdef MOZ_GLEAN_ANDROID
-      auto id = 0;
+      auto id = *aSubmetricId;
 #else
       auto id = impl::fog_labeled_counter_get(aParentMetricId, &aLabel);
+      *aSubmetricId = id;
 #endif
       return MakeAndAddRef<GleanCounter>(id);
     }
     case 6: { /* labeled_string */
 #ifdef MOZ_GLEAN_ANDROID
-      auto id = 0;
+      auto id = *aSubmetricId;
 #else
       auto id = impl::fog_labeled_string_get(aParentMetricId, &aLabel);
+      *aSubmetricId = id;
 #endif
       return MakeAndAddRef<GleanString>(id);
     }

@@ -25,8 +25,11 @@ EXPORTS.mozilla.glean += [
 ]
 
 EXPORTS.mozilla.glean.bindings += [
+    "!EventGIFFTMap.h",
     "!GleanJSMetricsLookup.h",
     "!GleanJSPingsLookup.h",
+    "!HistogramGIFFTMap.h",
+    "!ScalarGIFFTMap.h",
     "bindings/Category.h",
     "bindings/Glean.h",
     "bindings/GleanPings.h",
@@ -73,6 +76,10 @@ UNIFIED_SOURCES += [
     "ipc/FOGIPC.cpp",
 ]
 
+SOURCES += [
+    "!EventExtraGIFFTMaps.cpp",
+]
+
 TEST_DIRS += [
     "gtest",
 ]
@@ -96,6 +103,8 @@ deps = [
     "build_scripts/glean_parser_ext/util.py",
     "build_scripts/glean_parser_ext/templates/cpp.jinja2",
     "build_scripts/glean_parser_ext/templates/cpp_pings.jinja2",
+    "build_scripts/glean_parser_ext/templates/gifft.jinja2",
+    "build_scripts/glean_parser_ext/templates/gifft_events.jinja2",
     "build_scripts/glean_parser_ext/templates/js.jinja2",
     "build_scripts/glean_parser_ext/templates/js_pings.jinja2",
     "build_scripts/glean_parser_ext/templates/rust.jinja2",
@@ -146,6 +155,32 @@ GeneratedFile(
     entry_point="js_metrics",
     flags=[CONFIG["MOZ_APP_VERSION"]],
     inputs=deps + pings_yamls,
+)
+
+# Glean Interface For Firefox Telemetry Maps from Glean MetricId to Telemetry ProbeId
+# We split it one map per header to avoid unused function warnings on build.
+GeneratedFile(
+    "EventGIFFTMap.h",
+    script="build_scripts/glean_parser_ext/run_glean_parser.py",
+    entry_point="gifft_map",
+    flags=[CONFIG["MOZ_APP_VERSION"], "Event"],
+    inputs=deps + metrics_yamls,
+)
+
+GeneratedFile(
+    "HistogramGIFFTMap.h",
+    script="build_scripts/glean_parser_ext/run_glean_parser.py",
+    entry_point="gifft_map",
+    flags=[CONFIG["MOZ_APP_VERSION"], "Histogram"],
+    inputs=deps + metrics_yamls,
+)
+
+GeneratedFile(
+    "ScalarGIFFTMap.h",
+    script="build_scripts/glean_parser_ext/run_glean_parser.py",
+    entry_point="gifft_map",
+    flags=[CONFIG["MOZ_APP_VERSION"], "Scalar"],
+    inputs=deps + metrics_yamls,
 )
 
 DIRS += [

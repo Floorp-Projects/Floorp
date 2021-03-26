@@ -8,8 +8,10 @@
 #define mozilla_glean_GleanUuid_h
 
 #include "mozilla/Maybe.h"
+#include "nsDebug.h"
 #include "nsIGleanMetrics.h"
 #include "nsString.h"
+#include "mozilla/glean/bindings/ScalarGIFFTMap.h"
 #include "mozilla/glean/fog_ffi_generated.h"
 
 namespace mozilla::glean {
@@ -26,6 +28,10 @@ class UuidMetric {
    * @param aValue The UUID to set the metric to.
    */
   void Set(const nsACString& aValue) const {
+    auto scalarId = ScalarIdForMetric(mId);
+    if (scalarId) {
+      Telemetry::ScalarSet(scalarId.extract(), NS_ConvertUTF8toUTF16(aValue));
+    }
 #ifndef MOZ_GLEAN_ANDROID
     fog_uuid_set(mId, &aValue);
 #endif
@@ -35,6 +41,9 @@ class UuidMetric {
    * Generate a new random UUID and set the metric to it.
    */
   void GenerateAndSet() const {
+    // We don't have the generated value to mirror to the scalar,
+    // so calling this function on a mirrored metric is likely an error.
+    (void)NS_WARN_IF(ScalarIdForMetric(mId).isSome());
 #ifndef MOZ_GLEAN_ANDROID
     fog_uuid_generate_and_set(mId);
 #endif
