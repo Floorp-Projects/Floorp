@@ -7,6 +7,7 @@ DevToolsModules(
     "error-messages.js",
     "network-events.js",
     "storage-cache.js",
+    "storage-cookie.js",
     "storage-local-storage.js",
     "storage-session-storage.js",
     "thread-states.js",

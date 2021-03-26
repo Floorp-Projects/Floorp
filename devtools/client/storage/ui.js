@@ -287,7 +287,6 @@ class StorageUI {
     this._onResourceListAvailable = this._onResourceListAvailable.bind(this);
 
     const { resourceWatcher } = this._toolbox;
-
     await this._toolbox.resourceWatcher.watchResources(
       [
         // The first item in this list will be the first selected storage item
@@ -367,6 +366,7 @@ class StorageUI {
       return;
     }
 
+    this.storageResources = {};
     this.table.clear();
     this.hideSidebar();
     this.tree.clear();
@@ -510,6 +510,10 @@ class StorageUI {
   }
 
   editItem(data) {
+    const selectedItem = this.tree.selectedItem;
+    if (!selectedItem) {
+      return;
+    }
     const front = this.getCurrentFront();
 
     front.editItem(data);
