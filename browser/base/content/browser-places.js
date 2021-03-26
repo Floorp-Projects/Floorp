@@ -1688,7 +1688,7 @@ var BookmarkingUI = {
 
     // Used by the Places context menu in the Bookmarks Toolbar
     // when nothing is selected
-    menu.setAttribute("selectiontype", "none|single");
+    menu.setAttribute("selectiontype", "none");
 
     MozXULElement.insertFTLIfNeeded("browser/toolbarContextMenu.ftl");
     let menuItems = [
