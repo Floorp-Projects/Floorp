@@ -723,6 +723,15 @@ function getCanApplyUpdates() {
       // in nsXULAppInfo::GetUserCanElevate which is located in nsAppRunner.cpp.
       let userCanElevate = Services.appinfo.QueryInterface(Ci.nsIWinAppHelper)
         .userCanElevate;
+      const bts =
+        "@mozilla.org/backgroundtasks;1" in Cc &&
+        Cc["@mozilla.org/backgroundtasks;1"].getService(Ci.nsIBackgroundTasks);
+      if (bts && bts.isBackgroundTaskMode) {
+        LOG(
+          "getCanApplyUpdates - in background task mode, assuming user can't elevate"
+        );
+        userCanElevate = false;
+      }
       if (!userCanElevate) {
         // if we're unable to create the test file this will throw an exception.
         let appDirTestFile = getAppBaseDir();
