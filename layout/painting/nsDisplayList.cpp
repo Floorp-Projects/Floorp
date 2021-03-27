@@ -1454,8 +1454,7 @@ const DisplayItemClipChain* nsDisplayListBuilder::CreateClipChainIntersection(
       clip2 = clip2->mParent;
     }
     if (!asr) {
-      MOZ_DIAGNOSTIC_ASSERT(!aAncestor,
-                            "We should have exited this loop earlier");
+      MOZ_ASSERT(!aAncestor, "We should have exited this loop earlier");
       break;
     }
     asr = asr->mParent;
@@ -9568,8 +9567,9 @@ Maybe<nsRect> nsDisplayMasksAndClipPaths::GetClipWithRespectToASR(
   if (childList) {
     return Some(childList->GetClippedBoundsWithRespectToASR(aBuilder, aASR));
   }
-  MOZ_DIAGNOSTIC_ASSERT(false,
-                        "item should have finite clip with respect to aASR");
+#ifdef DEBUG
+  MOZ_ASSERT(false, "item should have finite clip with respect to aASR");
+#endif
   return Nothing();
 }
 
