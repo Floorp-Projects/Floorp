@@ -8,8 +8,17 @@
 
 // interpolated UV coordinates to sample.
 varying vec2 vUv;
-// flag to allow perspective interpolation of UV.
+
+#if defined(PLATFORM_ANDROID) && !defined(SWGL)
+// Work around Adreno 3xx driver bug. See the v_perspective comment in
+// brush_image or bug 1630356 for details.
+flat varying vec2 vPerspectiveVec;
+#define vPerspective vPerspectiveVec.x
+#else
+// Flag to allow perspective interpolation of UV.
 flat varying float vPerspective;
+#endif
+
 flat varying vec4 vUvSampleBounds;
 
 #ifdef WR_VERTEX_SHADER
