@@ -161,7 +161,7 @@ thead th {
 
 th {
   background-color: var(--in-content-table-header-background);
-  color: var(--in-content-selected-text);
+  color: rgb(255,255,255);
 }
 
 th.column {
