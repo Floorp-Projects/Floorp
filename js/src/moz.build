@@ -401,7 +401,6 @@ UNIFIED_SOURCES += [
     "vm/MemoryMetrics.cpp",
     "vm/Modules.cpp",
     "vm/NativeObject.cpp",
-    "vm/ObjectGroup.cpp",
     "vm/OffThreadPromiseRuntimeState.cpp",
     "vm/OffThreadScriptCompilation.cpp",
     "vm/PIC.cpp",
