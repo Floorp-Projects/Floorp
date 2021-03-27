@@ -38,14 +38,3 @@ add_task(async function() {
   await selectTreeItem(["cookies", "http://example.net"]);
   checkCookieData("foo", "bar");
 });
-
-function checkCookieData(name, value) {
-  const rows = Array.from(gUI.table.items);
-  const cookie = rows.map(([, data]) => data).find(x => x.name === name);
-
-  is(
-    cookie?.value,
-    value,
-    `Table row has an entry for: ${name} with value: ${value}`
-  );
-}
