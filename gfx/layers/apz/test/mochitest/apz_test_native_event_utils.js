@@ -464,6 +464,8 @@ async function synthesizeTouchpadPinch(scales, focusX, focusY, options) {
     options.waitForTransformEnd !== undefined
       ? options.waitForTransformEnd
       : true;
+  let waitForFrames =
+    options.waitForFrames !== undefined ? options.waitForFrames : false;
 
   // Register the listener for the TransformEnd observer topic
   let transformEndPromise = promiseTransformEnd();
@@ -485,6 +487,9 @@ async function synthesizeTouchpadPinch(scales, focusX, focusY, options) {
       phase = SpecialPowers.DOMWindowUtils.PHASE_UPDATE;
     }
     utils.sendNativeTouchpadPinch(phase, scales[i], pt.x, pt.y, modifierFlags);
+    if (waitForFrames) {
+      await promiseFrame();
+    }
   }
 
   // Wait for TransformEnd to fire.
@@ -1200,9 +1205,14 @@ async function pinchZoomInWithTouchpad(focusX, focusY, options = {}) {
     1.0,
     1.019531,
     1.035156,
+    1.037156,
+    1.039156,
     1.054688,
+    1.056688,
     1.070312,
+    1.072312,
     1.089844,
+    1.091844,
     1.109375,
     1.128906,
     1.144531,
