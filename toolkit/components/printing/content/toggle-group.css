@@ -63,7 +63,7 @@
 
 .toggle-group-input:enabled:checked + .toggle-group-label {
   background-color: var(--in-content-primary-button-background);
-  color: var(--in-content-selected-text);
+  color: var(--in-content-primary-button-text-color);
 }
 
 .toggle-group-input:enabled:checked + .toggle-group-label:hover {
