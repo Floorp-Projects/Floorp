@@ -27,7 +27,6 @@
 #include "vm/JSContext.h"                 // for JSContext (ptr only)
 #include "vm/JSObject.h"                  // for JSObject, RequireObject
 #include "vm/JSScript.h"          // for ScriptSource, ScriptSourceObject
-#include "vm/ObjectGroup.h"       // for TenuredObject
 #include "vm/StringType.h"        // for NewStringCopyZ, JSString (ptr only)
 #include "vm/TypedArrayObject.h"  // for TypedArrayObject, JSObject::is
 #include "wasm/WasmCode.h"        // for Metadata

@@ -54,9 +54,9 @@
 #include "vm/JSAtom.h"                   // for Atomize
 #include "vm/JSContext.h"                // for JSContext, ReportValueError
 #include "vm/JSFunction.h"               // for JSFunction
+#include "vm/JSObject.h"                 // for GenericObject, NewObjectKind
 #include "vm/JSScript.h"                 // for JSScript
 #include "vm/NativeObject.h"             // for NativeObject, JSObject::is
-#include "vm/ObjectGroup.h"              // for GenericObject, NewObjectKind
 #include "vm/ObjectOperations.h"         // for DefineProperty
 #include "vm/PlainObject.h"              // for js::PlainObject
 #include "vm/PromiseObject.h"            // for js::PromiseObject

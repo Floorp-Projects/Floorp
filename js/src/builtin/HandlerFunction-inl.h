@@ -14,15 +14,14 @@
 
 #include <stddef.h>  // size_t
 
-#include "gc/AllocKind.h"    // js::gc::AllocKind
-#include "js/CallArgs.h"     // JS::CallArgs
-#include "js/RootingAPI.h"   // JS::Handle, JS::Rooted
-#include "js/Value.h"        // JS::ObjectValue
-#include "vm/JSContext.h"    // JSContext
-#include "vm/JSFunction.h"   // JSFunction, js::Native, js::NewNativeFunction
-#include "vm/JSObject.h"     // JSObject
-#include "vm/ObjectGroup.h"  // js::GenericObject
-#include "vm/StringType.h"   // js::PropertyName
+#include "gc/AllocKind.h"   // js::gc::AllocKind
+#include "js/CallArgs.h"    // JS::CallArgs
+#include "js/RootingAPI.h"  // JS::Handle, JS::Rooted
+#include "js/Value.h"       // JS::ObjectValue
+#include "vm/JSContext.h"   // JSContext
+#include "vm/JSFunction.h"  // JSFunction, js::Native, js::NewNativeFunction
+#include "vm/JSObject.h"    // JSObject, js::GenericObject
+#include "vm/StringType.h"  // js::PropertyName
 
 #include "vm/JSContext-inl.h"  // JSContext::check
 
