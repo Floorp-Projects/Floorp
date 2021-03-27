@@ -22,9 +22,8 @@ class PrintingSelectionChild extends JSWindowActorChild {
     let focusedWindow = Services.focus.focusedWindow;
     if (focusedWindow) {
       let selection = focusedWindow.getSelection();
-      return selection.type == "Range";
+      return selection && selection.type == "Range";
     }
-
     return false;
   }
 }
