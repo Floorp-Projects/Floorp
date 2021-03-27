@@ -444,13 +444,9 @@ bool DManipEventHandler::SendPinch(Phase aPhase, float aScale) {
                           100.0 * ((aPhase == Phase::eEnd) ? 1.f : mLastScale),
                           mods};
 
-  double deltaY = event.ComputeDeltaY(mWindow);
-  if (deltaY == 0.0) {
+  if (!event.SetLineOrPageDeltaY(mWindow)) {
     return false;
   }
-  gfx::IntPoint lineOrPageDelta = PinchGestureInput::GetIntegerDeltaForEvent(
-      (aPhase == Phase::eStart), 0, deltaY);
-  event.mLineOrPageDeltaY = lineOrPageDelta.y;
 
   mWindow->SendAnAPZEvent(event);
 
