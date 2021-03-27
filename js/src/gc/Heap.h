@@ -661,15 +661,34 @@ class TenuredChunk : public TenuredChunkBase {
 #endif
 
  private:
-  /* Search for a decommitted arena to allocate. */
-  unsigned findDecommittedArenaOffset();
-  Arena* fetchNextDecommittedArena();
+  /* Search for a decommitted page to allocate. */
+  unsigned findDecommittedPageOffset();
+  void commitOnePage(GCRuntime* gc);
 
   void addArenaToFreeList(GCRuntime* gc, Arena* arena);
-  void addArenaToDecommittedList(const Arena* arena);
+
+  // Add Arenas located in the page of pageIndex to the free list.
+  void addArenasInPageToFreeList(GCRuntime* gc, size_t pageIndex);
+  // Mark areans located in the same page of arena as decommitted.
+  void markArenasInPageDecommitted(size_t pageIndex);
 
   void updateChunkListAfterAlloc(GCRuntime* gc, const AutoLockGC& lock);
   void updateChunkListAfterFree(GCRuntime* gc, const AutoLockGC& lock);
+
+  // Check if the page is free.
+  bool isPageFree(size_t pageIndex) const;
+
+  // Get the page index of the arena.
+  size_t pageIndex(const Arena* arena) const {
+    return pageIndex(arenaIndex(arena->address()));
+  }
+  size_t pageIndex(size_t arenaIndex) const {
+    return arenaIndex / ArenasPerPage;
+  }
+
+  Arena* pageAddress(size_t pageIndex) {
+    return &arenas[pageIndex * ArenasPerPage];
+  }
 };
 
 inline void Arena::checkAddress() const {
