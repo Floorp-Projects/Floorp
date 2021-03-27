@@ -63,9 +63,8 @@ async function test() {
   // Give APZ a chance to become aware of the listener, so it knows
   // to queue events while it waits for a content response.
   await promiseApzFlushedRepaints();
-  // Do not use `await` because calling preventDefault() means
-  // the APZ:TransformEnd notification will never be sent.
-  pinchZoomInWithTouchpad(641, 465);
+  // Calling preventDefault() means the APZ:TransformEnd notification will never be sent.
+  await pinchZoomInWithTouchpad(641, 465, { waitForTransformEnd: false });
   await wheelPromise;
 
   // Scenario 5: check that page receives DOMMouseScroll event
