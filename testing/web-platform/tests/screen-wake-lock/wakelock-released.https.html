@@ -6,7 +6,7 @@
 <script src="/resources/testdriver-vendor.js"></script>
 <script>
 promise_test(async t => {
-  await test_driver.set_permission({ name: 'screen-wake-lock' }, 'granted', false);
+  await test_driver.set_permission({ name: 'screen-wake-lock' }, 'granted');
 
   const lock = await navigator.wakeLock.request("screen");
   assert_false(lock.released, "lock.released must be false on creation");
