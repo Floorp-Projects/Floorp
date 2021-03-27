@@ -19,10 +19,9 @@ namespace gl {
 class GLContextGLX : public GLContext {
  public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextGLX, override)
-  static RefPtr<GLContextGLX> CreateGLContext(const GLContextDesc&,
-                                              Display* display,
-                                              GLXDrawable drawable,
-                                              GLXFBConfig cfg);
+  static already_AddRefed<GLContextGLX> CreateGLContext(
+      const GLContextDesc&, Display* display, GLXDrawable drawable,
+      GLXFBConfig cfg, bool deleteDrawable, gfxXlibSurface* pixmap);
 
   static bool FindVisual(Display* display, int screen, bool useWebRender,
                          bool useAlpha, int* const out_visualId);
@@ -69,16 +68,19 @@ class GLContextGLX : public GLContext {
   friend class GLContextProviderGLX;
 
   GLContextGLX(const GLContextDesc&, Display* aDisplay, GLXDrawable aDrawable,
-               GLXContext aContext, bool aDoubleBuffered);
+               GLXContext aContext, bool aDeleteDrawable, bool aDoubleBuffered,
+               gfxXlibSurface* aPixmap);
 
-  const GLXContext mContext;
-  Display* const mDisplay;
-  const GLXDrawable mDrawable;
-  const bool mDoubleBuffered;
+  GLXContext mContext;
+  Display* mDisplay;
+  GLXDrawable mDrawable;
+  bool mDeleteDrawable;
+  bool mDoubleBuffered;
 
-  GLXLibrary* const mGLX;
+  GLXLibrary* mGLX;
 
-  GLXPbuffer mPbuffer = 0;
+  RefPtr<gfxXlibSurface> mPixmap;
+  bool mOwnsContext = true;
 };
 
 }  // namespace gl
