@@ -23,22 +23,6 @@ namespace js {
 
 class PlainObject;
 
-/*
- * The NewObjectKind allows an allocation site to specify the lifetime
- * requirements that must be fixed at allocation time.
- */
-enum NewObjectKind {
-  /* This is the default. Most objects are generic. */
-  GenericObject,
-
-  /*
-   * Objects which will not benefit from being allocated in the nursery
-   * (e.g. because they are known to have a long lifetime) may be allocated
-   * with this kind to place them immediately into the tenured generation.
-   */
-  TenuredObject
-};
-
 }  // namespace js
 
 #endif /* vm_ObjectGroup_h */

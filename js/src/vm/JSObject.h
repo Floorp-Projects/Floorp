@@ -45,6 +45,22 @@ class NewObjectCache;
 
 enum class IntegrityLevel { Sealed, Frozen };
 
+/*
+ * The NewObjectKind allows an allocation site to specify the lifetime
+ * requirements that must be fixed at allocation time.
+ */
+enum NewObjectKind {
+  /* This is the default. Most objects are generic. */
+  GenericObject,
+
+  /*
+   * Objects which will not benefit from being allocated in the nursery
+   * (e.g. because they are known to have a long lifetime) may be allocated
+   * with this kind to place them immediately into the tenured generation.
+   */
+  TenuredObject
+};
+
 // Forward declarations, required for later friend declarations.
 bool PreventExtensions(JSContext* cx, JS::HandleObject obj,
                        JS::ObjectOpResult& result);
