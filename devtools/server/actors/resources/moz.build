@@ -21,6 +21,7 @@ DevToolsModules(
     "server-sent-events.js",
     "sources.js",
     "storage-cache.js",
+    "storage-cookie.js",
     "storage-local-storage.js",
     "storage-session-storage.js",
     "stylesheets.js",
