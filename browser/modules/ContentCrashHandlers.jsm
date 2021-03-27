@@ -461,9 +461,7 @@ var TabCrashHandler = {
 
           closeAllNotifications();
         }
-      },
-      null,
-      "browser/browser.ftl"
+      }
     );
 
     let existingItem = this.notificationsMap.get(childID);
