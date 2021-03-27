@@ -4302,7 +4302,6 @@ gboolean nsWindow::OnTouchpadPinchEvent(GdkEventTouchpadPinch* aEvent) {
         // to not equal Zero as our discussion because we observed that the
         // scale of the PHASE_BEGIN event is 1.
         PreviousSpan = 0.999;
-        mLastPinchEventSpan = aEvent->scale;
         break;
 
       case GDK_TOUCHPAD_GESTURE_PHASE_UPDATE:
@@ -4312,7 +4311,6 @@ gboolean nsWindow::OnTouchpadPinchEvent(GdkEventTouchpadPinch* aEvent) {
         }
         CurrentSpan = aEvent->scale;
         PreviousSpan = mLastPinchEventSpan;
-        mLastPinchEventSpan = aEvent->scale;
         break;
 
       case GDK_TOUCHPAD_GESTURE_PHASE_END:
@@ -4338,10 +4336,11 @@ gboolean nsWindow::OnTouchpadPinchEvent(GdkEventTouchpadPinch* aEvent) {
                      : PreviousSpan),
         KeymapWrapper::ComputeKeyModifiers(aEvent->state));
 
-    double deltaY = event.ComputeDeltaY(this);
-    gfx::IntPoint lineOrPageDelta = PinchGestureInput::GetIntegerDeltaForEvent(
-        (aEvent->phase == GDK_TOUCHPAD_GESTURE_PHASE_BEGIN), 0, deltaY);
-    event.mLineOrPageDeltaY = lineOrPageDelta.y;
+    if (!event.SetLineOrPageDeltaY(this)) {
+      return FALSE;
+    }
+
+    mLastPinchEventSpan = aEvent->scale;
     DispatchPinchGestureInput(event);
   }
   return TRUE;
