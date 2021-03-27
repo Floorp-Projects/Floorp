@@ -45,10 +45,6 @@ class BrowserTabsAdapter(
 
     private val imageLoader = ThumbnailLoader(context.components.core.thumbnailStorage)
 
-    init {
-        setHasStableIds(true)
-    }
-
     override fun getItemViewType(position: Int): Int {
         return if (context.settings().gridTabView) {
             ViewType.GRID.ordinal
@@ -64,8 +60,6 @@ class BrowserTabsAdapter(
         }
     }
 
-    override fun getItemId(position: Int) = position.toLong()
-
     override fun onBindViewHolder(holder: TabsTrayViewHolder, position: Int) {
         super.onBindViewHolder(holder, position)
 
@@ -79,7 +73,7 @@ class BrowserTabsAdapter(
             }
 
             tracker?.let {
-                holder.showTabIsMultiSelectEnabled(it.isSelected(position.toLong()))
+                holder.showTabIsMultiSelectEnabled(it.isSelected(getItemId(position)))
             }
         }
     }
