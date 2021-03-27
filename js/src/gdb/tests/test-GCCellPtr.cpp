@@ -13,7 +13,6 @@
 #include "js/TypeDecls.h"
 #include "vm/BigIntType.h"
 #include "vm/JSObject.h"
-#include "vm/ObjectGroup.h"
 #include "vm/RegExpObject.h"
 #include "vm/Shape.h"
 

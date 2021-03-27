@@ -34,7 +34,6 @@
 #include "js/UbiNode.h"
 #include "util/EnumFlags.h"
 #include "vm/JSAtom.h"
-#include "vm/ObjectGroup.h"
 #include "vm/Printer.h"
 #include "vm/StringType.h"
 #include "vm/SymbolType.h"
