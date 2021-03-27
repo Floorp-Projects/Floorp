@@ -34,33 +34,3 @@
 #include "vm/NativeObject-inl.h"
 
 using namespace js;
-
-static bool AddPlainObjectProperties(JSContext* cx, HandlePlainObject obj,
-                                     IdValuePair* properties,
-                                     size_t nproperties) {
-  RootedId propid(cx);
-  RootedValue value(cx);
-
-  for (size_t i = 0; i < nproperties; i++) {
-    propid = properties[i].id;
-    value = properties[i].value;
-    if (!NativeDefineDataProperty(cx, obj, propid, value, JSPROP_ENUMERATE)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
-PlainObject* js::NewPlainObjectWithProperties(JSContext* cx,
-                                              IdValuePair* properties,
-                                              size_t nproperties,
-                                              NewObjectKind newKind) {
-  gc::AllocKind allocKind = gc::GetGCObjectKind(nproperties);
-  RootedPlainObject obj(
-      cx, NewBuiltinClassInstance<PlainObject>(cx, allocKind, newKind));
-  if (!obj || !AddPlainObjectProperties(cx, obj, properties, nproperties)) {
-    return nullptr;
-  }
-  return obj;
-}
