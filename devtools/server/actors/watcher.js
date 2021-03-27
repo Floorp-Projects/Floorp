@@ -6,6 +6,7 @@
 const protocol = require("devtools/shared/protocol");
 const { watcherSpec } = require("devtools/shared/specs/watcher");
 
+const Services = require("Services");
 const Resources = require("devtools/server/actors/resources/index");
 const {
   TargetActorRegistry,
@@ -118,6 +119,11 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
   },
 
   form() {
+    const enableServerWatcher = Services.prefs.getBoolPref(
+      "devtools.testing.enableServerWatcherSupport",
+      false
+    );
+
     const hasBrowserElement = !!this.browserElement;
 
     return {
@@ -148,6 +154,8 @@ exports.WatcherActor = protocol.ActorClassWithSpec(watcherSpec, {
           [Resources.TYPES.CSS_MESSAGE]: true,
           [Resources.TYPES.DOCUMENT_EVENT]: hasBrowserElement,
           [Resources.TYPES.CACHE_STORAGE]: hasBrowserElement,
+          // TODO: Bug 1700904 remove the enableServerWatcher guard
+          [Resources.TYPES.COOKIE]: hasBrowserElement && enableServerWatcher,
           [Resources.TYPES.ERROR_MESSAGE]: true,
           [Resources.TYPES.LOCAL_STORAGE]: hasBrowserElement,
           [Resources.TYPES.SESSION_STORAGE]: hasBrowserElement,
