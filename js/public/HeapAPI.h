@@ -44,6 +44,16 @@ const size_t ArenaShift = 12;
 const size_t ArenaSize = size_t(1) << ArenaShift;
 const size_t ArenaMask = ArenaSize - 1;
 
+#if defined(XP_MACOSX) && defined(__aarch64__)
+const size_t PageShift = 14;
+#else
+const size_t PageShift = 12;
+#endif
+// Expected page size, so we could initialze ArenasPerPage at compile-time.
+// The actual system page size should be queried by SystemPageSize().
+const size_t PageSize = size_t(1) << PageShift;
+constexpr size_t ArenasPerPage = PageSize / ArenaSize;
+
 #ifdef JS_GC_SMALL_CHUNK_SIZE
 const size_t ChunkShift = 18;
 #else
@@ -132,16 +142,20 @@ struct TenuredChunkInfo {
  * approximation turns out to be correct. If it were not we might need to adjust
  * the arena count down by one to allow more space for the padding.
  */
-const size_t BitsPerArenaWithHeaders =
-    (ArenaSize + ArenaBitmapBytes) * CHAR_BIT + 1;
+const size_t BitsPerPageWithHeaders =
+    (ArenaSize + ArenaBitmapBytes) * ArenasPerPage * CHAR_BIT + 1;
 const size_t ChunkBitsAvailable =
     (ChunkSize - sizeof(ChunkBase) - sizeof(TenuredChunkInfo)) * CHAR_BIT;
-const size_t ArenasPerChunk = ChunkBitsAvailable / BitsPerArenaWithHeaders;
+const size_t PagesPerChunk = ChunkBitsAvailable / BitsPerPageWithHeaders;
+const size_t DecommitBits = PagesPerChunk;
+const size_t ArenasPerChunk = PagesPerChunk * ArenasPerPage;
+const size_t BitsPerArenaWithHeaders =
+    (ArenaSize + ArenaBitmapBytes) * CHAR_BIT + (DecommitBits / ArenasPerChunk);
 
 const size_t CalculatedChunkSizeRequired =
     sizeof(ChunkBase) + sizeof(TenuredChunkInfo) +
     RoundUp(ArenasPerChunk * ArenaBitmapBytes, sizeof(uintptr_t)) +
-    RoundUp(ArenasPerChunk, sizeof(uint32_t) * CHAR_BIT) / CHAR_BIT +
+    RoundUp(DecommitBits, sizeof(uint32_t) * CHAR_BIT) / CHAR_BIT +
     ArenasPerChunk * ArenaSize;
 static_assert(CalculatedChunkSizeRequired <= ChunkSize,
               "Calculated ArenasPerChunk is too large");
