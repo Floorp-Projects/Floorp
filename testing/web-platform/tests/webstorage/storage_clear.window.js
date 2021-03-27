@@ -1,10 +1,3 @@
-<!DOCTYPE HTML>
-<meta charset=utf-8>
-<title>WebStorage Test: Storage - clear()</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<div id="log"></div>
-<script>
 ["localStorage", "sessionStorage"].forEach(function(name) {
     test(function() {
         var storage = window[name];
@@ -21,4 +14,3 @@
         assert_equals(storage.length, 0, "storage.length");
     }, "Clear in " + name);
 });
-</script>

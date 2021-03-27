@@ -1,10 +1,3 @@
-<!DOCTYPE HTML>
-<meta charset=utf-8>
-<title>WebStorage Test: Storage - key(index)</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<div id="log"></div>
-<script>
 ["localStorage", "sessionStorage"].forEach(function(name) {
     test(function() {
         var storage = window[name];
@@ -56,4 +49,3 @@
         assert_array_equals(get_keys(storage), expected_keys);
     }, name + ".key with value changes");
 });
-</script>
