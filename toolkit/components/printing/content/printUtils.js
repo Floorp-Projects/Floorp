@@ -235,9 +235,11 @@ var PrintUtils = {
       let sourceActor = aBrowsingContext.currentWindowGlobal.getActor(
         "PrintingSelection"
       );
-      hasSelection = await sourceActor.sendQuery(
-        "PrintingSelection:HasSelection"
-      );
+      try {
+        hasSelection = await sourceActor.sendQuery(
+          "PrintingSelection:HasSelection"
+        );
+      } catch (ex) {}
     }
 
     let sourceBrowser = aBrowsingContext.top.embedderElement;
