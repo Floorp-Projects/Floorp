@@ -532,9 +532,8 @@ RefPtr<WebGLContext> WebGLContext::Create(HostWebGLContext& host,
           Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_FAILURE_ID, cur.key);
         }
 
-        const auto str = nsPrintfCString("\n* %s (%s)", cur.info.BeginReading(),
-                                         cur.key.BeginReading());
-        text.Append(str);
+        text.AppendLiteral("\n* ");
+        text.Append(cur.info);
       }
       failureId = "FEATURE_FAILURE_REASON"_ns;
       return Err(text.BeginReading());

@@ -649,8 +649,8 @@ class GtkVsyncSource final : public VsyncSource {
         return;
       }
 
-      mGLContext =
-          gl::GLContextGLX::CreateGLContext({}, mXDisplay, root, config);
+      mGLContext = gl::GLContextGLX::CreateGLContext({}, mXDisplay, root,
+                                                     config, false, nullptr);
 
       if (!mGLContext) {
         lock.NotifyAll();
