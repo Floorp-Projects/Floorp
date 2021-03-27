@@ -2003,8 +2003,7 @@ void ReportJSRuntimeExplicitTreeStats(const JS::RuntimeStats& rtStats,
   rtPath2.ReplaceLiteral(0, strlen("explicit"), "decommitted");
 
   REPORT_GC_BYTES(
-      rtPath2 + "gc-heap/decommitted-arenas"_ns,
-      rtStats.gcHeapDecommittedArenas,
+      rtPath2 + "gc-heap/decommitted-pages"_ns, rtStats.gcHeapDecommittedPages,
       "GC arenas in non-empty chunks that is decommitted, i.e. it takes up "
       "address space but no physical memory or swap space.");
 
