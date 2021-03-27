@@ -16,6 +16,7 @@ typedef realGLboolean GLboolean;
 #include "X11/Xutil.h"  // for XVisualInfo
 #include "X11UndefineNone.h"
 typedef struct __GLXcontextRec* GLXContext;
+typedef XID GLXPbuffer;
 typedef XID GLXPixmap;
 typedef XID GLXDrawable;
 /* GLX 1.3 and later */
@@ -37,29 +38,29 @@ class GLXLibrary final {
 
  private:
   void BeforeGLXCall() const;
-  void AfterGLXCall() const;
+  void AfterGLXCall(const char*) const;
 
  public:
 #ifdef DEBUG
 #  define BEFORE_CALL BeforeGLXCall();
-#  define AFTER_CALL AfterGLXCall();
+#  define AFTER_CALL(S) AfterGLXCall(S);
 #else
 #  define BEFORE_CALL
-#  define AFTER_CALL
+#  define AFTER_CALL(S)
 #endif
 
 #define WRAP(X)                  \
   {                              \
     BEFORE_CALL                  \
     const auto ret = mSymbols.X; \
-    AFTER_CALL                   \
+    AFTER_CALL(__func__)         \
     return ret;                  \
   }
-#define VOID_WRAP(X) \
-  {                  \
-    BEFORE_CALL      \
-    mSymbols.X;      \
-    AFTER_CALL       \
+#define VOID_WRAP(X)     \
+  {                      \
+    BEFORE_CALL          \
+    mSymbols.X;          \
+    AFTER_CALL(__func__) \
   }
 
   void fDestroyContext(Display* display, GLXContext context) const
@@ -110,6 +111,10 @@ class GLXLibrary final {
       char* fQueryServerString(Display* display, int screen, int name) const
       WRAP(fQueryServerString(display, screen, name))
 
+          GLXPbuffer fCreatePbuffer(Display* display, GLXFBConfig config,
+                                    const int* attrib_list) const
+      WRAP(fCreatePbuffer(display, config, attrib_list))
+
           GLXPixmap fCreatePixmap(Display* display, GLXFBConfig config,
                                   Pixmap pixmap, const int* attrib_list) const
       WRAP(fCreatePixmap(display, config, pixmap, attrib_list))
@@ -118,6 +123,9 @@ class GLXLibrary final {
       fCreateGLXPixmapWithConfig(Display* display, GLXFBConfig config,
                                  Pixmap pixmap) const
       WRAP(fCreateGLXPixmapWithConfig(display, config, pixmap))
+
+          void fDestroyPbuffer(Display* display, GLXPbuffer pbuffer) const
+      VOID_WRAP(fDestroyPbuffer(display, pbuffer))
 
           void fDestroyPixmap(Display* display, GLXPixmap pixmap) const
       VOID_WRAP(fDestroyPixmap(display, pixmap))
@@ -207,10 +215,12 @@ class GLXLibrary final {
     const char*(GLAPIENTRY* fQueryExtensionsString)(Display*, int);
     const char*(GLAPIENTRY* fGetClientString)(Display*, int);
     const char*(GLAPIENTRY* fQueryServerString)(Display*, int, int);
+    GLXPbuffer(GLAPIENTRY* fCreatePbuffer)(Display*, GLXFBConfig, const int*);
     GLXPixmap(GLAPIENTRY* fCreatePixmap)(Display*, GLXFBConfig, Pixmap,
                                          const int*);
     GLXPixmap(GLAPIENTRY* fCreateGLXPixmapWithConfig)(Display*, GLXFBConfig,
                                                       Pixmap);
+    void(GLAPIENTRY* fDestroyPbuffer)(Display*, GLXPbuffer);
     void(GLAPIENTRY* fDestroyPixmap)(Display*, GLXPixmap);
     Bool(GLAPIENTRY* fQueryVersion)(Display*, int*, int*);
     void(GLAPIENTRY* fWaitGL)();
