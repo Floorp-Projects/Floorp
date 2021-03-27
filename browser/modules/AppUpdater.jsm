@@ -585,4 +585,40 @@ AppUpdater.STATUS = {
 
   // An update is downloaded and staged and will be applied on restart.
   READY_FOR_RESTART: 12,
+
+  /**
+   * Is the given `status` a terminal state in the update state machine?
+   *
+   * A terminal state means that the `check()` method has completed.
+   *
+   * N.b.: `DOWNLOAD_AND_INSTALL` is not considered terminal because the normal
+   * flow is that Firefox will show UI prompting the user to install, and when
+   * the user interacts, the `check()` method will continue through the update
+   * state machine.
+   *
+   * @returns {boolean} `true` if `status` is terminal.
+   */
+  isTerminalStatus(status) {
+    return ![
+      AppUpdater.STATUS.CHECKING,
+      AppUpdater.STATUS.DOWNLOAD_AND_INSTALL,
+      AppUpdater.STATUS.DOWNLOADING,
+      AppUpdater.STATUS.NEVER_CHECKED,
+      AppUpdater.STATUS.STAGING,
+    ].includes(status);
+  },
+
+  /**
+   * Turn the given `status` into a string for debugging.
+   *
+   * @returns {?string} representation of given numerical `status`.
+   */
+  debugStringFor(status) {
+    for (let [k, v] of Object.entries(AppUpdater.STATUS)) {
+      if (v == status) {
+        return k;
+      }
+    }
+    return null;
+  },
 };
