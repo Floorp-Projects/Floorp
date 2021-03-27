@@ -1,10 +1,3 @@
-<!DOCTYPE HTML>
-<meta charset=utf-8>
-<title>WebStorage Test: Storage - indexed getter</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<div id="log"></div>
-<script>
 ["localStorage", "sessionStorage"].forEach(function(name) {
     test(function() {
         var storage = window[name];
@@ -33,4 +26,3 @@
         }, "Getting existing number-valued properties on " + name);
     }, "Indexed getter on " + name);
 });
-</script>
