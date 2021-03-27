@@ -202,7 +202,7 @@ td {
 
 #dispatch-tbody > tr[selected] > td {
   background-color: var(--in-content-item-selected);
-  color: var(--in-content-selected-text);
+  color: var(--in-content-item-selected-text);
 }
 #dispatch-tbody > tr:hover {
   background-color: var(--in-content-item-hover);
