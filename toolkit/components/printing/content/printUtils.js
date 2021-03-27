@@ -338,7 +338,12 @@ var PrintUtils = {
         printInitiationTime,
         printSelectionOnly,
         printFrameOnly
-      ).catch(() => {});
+      ).catch(e => {
+        Cu.reportError(e);
+        if (browser) {
+          browser.remove();
+        }
+      });
       return browser;
     }
 
