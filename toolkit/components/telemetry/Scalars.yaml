@@ -6745,7 +6745,7 @@ migration:
       - 1672585
     description: >
       Set when a profile refresh is initiated from the uninstaller.
-    expires: "90"
+    expires: never
     kind: boolean
     notification_emails:
       - agashlin@mozilla.com
