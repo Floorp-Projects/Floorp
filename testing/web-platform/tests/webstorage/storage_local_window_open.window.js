@@ -1,14 +1,3 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-<title>WebStorage Test: localStorage - open a existing browsing context</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
-<div id="log"></div>
-<script>
-
 async_test(function(t) {
 
     var storage = window.localStorage;
@@ -25,7 +14,3 @@ async_test(function(t) {
     }));
 
 }, "A new window to make sure there is a copy of the previous window's localStorage, and that they do not diverge after a change");
-
-</script>
-</body>
-</html>

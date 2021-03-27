@@ -1,14 +1,3 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-<title>WebStorage Test: sessionStorage - open a existing browsing context</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
-<div id="log"></div>
-<script>
-
 async_test(function(t) {
 
     var storage = window.sessionStorage;
@@ -26,7 +15,3 @@ async_test(function(t) {
     }));
 
 }, "A new window to make sure there is a copy of the previous window's sessionStorage, and that they diverge after a change");
-
-</script>
-</body>
-</html>

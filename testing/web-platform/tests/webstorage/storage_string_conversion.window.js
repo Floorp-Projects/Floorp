@@ -1,13 +1,3 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-<title>WebStorage Test: Storage only store strings</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
-<div id="log"></div>
-<script>
 ["localStorage", "sessionStorage"].forEach(function(name) {
     test(function() {
         assert_true(name in window, name + " exist");
@@ -40,7 +30,3 @@
 
     }, name + " only stores strings");
 });
-
-</script>
-</body>
-</html>

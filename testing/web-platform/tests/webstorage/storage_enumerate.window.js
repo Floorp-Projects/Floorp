@@ -1,13 +1,3 @@
-<!DOCTYPE HTML>
-<html>
-<head>
-<title>WebStorage Test: Storage - enumerate and built-in properties</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-</head>
-<body>
-<div id="log"></div>
-<script>
 ["localStorage", "sessionStorage"].forEach(function(name) {
     test(function() {
         assert_true(name in window, name + " exist");
@@ -63,7 +53,3 @@
         assert_array_equals(values, ["alpha", "bar", "beta", "quux"]);
     }, name + ": test enumeration of numeric and non-numeric keys");
 });
-</script>
-</body>
-</html>
-

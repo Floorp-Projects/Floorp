@@ -1,10 +1,3 @@
-<!DOCTYPE HTML>
-<meta charset=utf-8>
-<title>WebStorage Test: Storage - setItem(key, value)</title>
-<script src="/resources/testharness.js"></script>
-<script src="/resources/testharnessreport.js"></script>
-<div id="log"></div>
-<script>
 ["localStorage", "sessionStorage"].forEach(function(name) {
     var test_error = { name: "test" };
     var interesting_strs = ["\uD7FF", "\uD800", "\uDBFF", "\uDC00",
@@ -220,4 +213,3 @@
         }, name + "[] = " + format_value(str));
     }
 });
-</script>
