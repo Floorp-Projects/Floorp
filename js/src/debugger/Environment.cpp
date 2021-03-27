@@ -27,9 +27,8 @@
 #include "vm/JSAtom.h"                // for Atomize, PinAtom
 #include "vm/JSContext.h"             // for JSContext
 #include "vm/JSFunction.h"            // for JSFunction
-#include "vm/JSObject.h"              // for JSObject, RequireObject
+#include "vm/JSObject.h"              // for JSObject, RequireObject,
 #include "vm/NativeObject.h"          // for NativeObject, JSObject::is
-#include "vm/ObjectGroup.h"           // for GenericObject, NewObjectKind
 #include "vm/Realm.h"                 // for AutoRealm, ErrorCopier
 #include "vm/Scope.h"                 // for ScopeKind, ScopeKindString
 #include "vm/StringType.h"            // for JSAtom

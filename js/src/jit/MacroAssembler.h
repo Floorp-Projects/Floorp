@@ -39,7 +39,6 @@
 #include "vm/BytecodeUtil.h"
 #include "vm/FunctionFlags.h"
 #include "vm/JSObject.h"
-#include "vm/ObjectGroup.h"
 #include "vm/StringType.h"
 
 // [SMDOC] MacroAssembler multi-platform overview

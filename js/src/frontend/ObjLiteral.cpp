@@ -21,9 +21,9 @@
 #include "js/RootingAPI.h"                         // Rooted
 #include "js/TypeDecls.h"                          // RootedId, RootedValue
 #include "vm/JSAtom.h"                             // JSAtom
+#include "vm/JSObject.h"                           // TenuredObject
 #include "vm/JSONPrinter.h"                        // js::JSONPrinter
 #include "vm/NativeObject.h"                       // NativeDefineDataProperty
-#include "vm/ObjectGroup.h"                        // TenuredObject
 #include "vm/PlainObject.h"                        // PlainObject
 #include "vm/Printer.h"                            // js::Fprinter
 

@@ -19,7 +19,6 @@
 #include "vm/JSContext.h"    // JSContext
 #include "vm/JSFunction.h"   // JSFunction
 #include "vm/JSObject.h"     // JSObject, js::GetPrototypeFromConstructor
-#include "vm/ObjectGroup.h"  // js::ObjectGroup, js::{Generic,Tenured}Object
 #include "vm/TaggedProto.h"  // js::TaggedProto
 
 #include "vm/JSObject-inl.h"  // js::NewObjectWithGroup, js::NewObjectGCKind

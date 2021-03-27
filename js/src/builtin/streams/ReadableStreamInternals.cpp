@@ -26,8 +26,8 @@
 #include "js/Value.h"  // JS::Value, JS::{Boolean,Object}Value, JS::UndefinedHandleValue
 #include "vm/JSContext.h"     // JSContext
 #include "vm/JSFunction.h"    // JSFunction, js::NewNativeFunction
+#include "vm/JSObject.h"      // js::GenericObject
 #include "vm/NativeObject.h"  // js::NativeObject, js::PlainObject
-#include "vm/ObjectGroup.h"   // js::GenericObject
 #include "vm/PromiseObject.h"  // js::PromiseObject, js::PromiseResolvedWithUndefined
 #include "vm/Realm.h"          // JS::Realm
 #include "vm/StringType.h"  // js::PropertyName
