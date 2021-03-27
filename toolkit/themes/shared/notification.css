@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+@namespace html "http://www.w3.org/1999/xhtml";
 
 .notificationbox-stack {
   /* Prevent the animation from overlapping the navigation toolbar */
@@ -13,7 +14,12 @@
   /* Create a stacking context for the box-shadow */
   position: relative;
   z-index: 1;
+}
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+.notificationbox-stack[notificationside="top"] {
   box-shadow: 0 3px 10px -7px #00000080;
+}
 }
 
 notification {
@@ -48,6 +54,7 @@ notification[type="info"]:-moz-lwtheme-brighttext {
   --notification-button-background-active: rgba(249,249,250,.3);
 }
 
+html|notification-message.animated,
 notification.animated {
   transition: margin-top 300ms var(--animation-easing-function), opacity 300ms var(--animation-easing-function);
 }
@@ -185,8 +192,8 @@ notification[type="critical"] > hbox > .messageImage {
 }
 
 @supports -moz-bool-pref("browser.proton.infobars.enabled") {
-.notificationbox-stack,
-notification {
+.notificationbox-stack {
+  background-color: var(--toolbar-bgcolor);
   width: 100%;
 }
 }

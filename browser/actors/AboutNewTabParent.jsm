@@ -32,6 +32,13 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "PROTON_INFOBARS_ENABLED",
+  "browser.proton.infobars.enabled",
+  false
+);
+
 class AboutNewTabParent extends JSWindowActorParent {
   async receiveMessage(message) {
     switch (message.name) {
@@ -155,7 +162,9 @@ var DefaultBrowserNotification = {
 
     let iconPixels = win.devicePixelRatio > 1 ? "64" : "32";
     let iconURL = "chrome://branding/content/icon" + iconPixels + ".png";
-    const priority = win.gNotificationBox.PRIORITY_INFO_MEDIUM;
+    const priority = PROTON_INFOBARS_ENABLED
+      ? win.gNotificationBox.PRIORITY_SYSTEM
+      : win.gNotificationBox.PRIORITY_INFO_MEDIUM;
     let callback = this._onNotificationEvent.bind(this);
     this._notification = gBrowser
       .getNotificationBox(browser)
@@ -165,7 +174,9 @@ var DefaultBrowserNotification = {
         iconURL,
         priority,
         buttons,
-        callback
+        callback,
+        null,
+        ["browser/defaultBrowserNotification.ftl"]
       );
   },
 
