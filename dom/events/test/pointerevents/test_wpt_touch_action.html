@@ -24,7 +24,7 @@ var apz_touch_action_prefs = [
   // The subtests in this test do touch-drags to pan the page, but we don't
   // want those pans to turn into fling animations, so we increase the
   // fling-stop threshold velocity to absurdly high.
-  ["apz.fling_stopped_threshold", "10000"],
+  ["apz.fling_stopped_threshold", Number.MAX_VALUE],
   // The helper_div_pan's div gets a displayport on scroll, but if the
   // test takes too long the displayport can expire before the new scroll
   // position is synced back to the main thread. So we disable displayport
