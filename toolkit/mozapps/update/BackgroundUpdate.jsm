@@ -12,9 +12,11 @@ const { XPCOMUtils } = ChromeUtils.import(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
   AppConstants: "resource://gre/modules/AppConstants.jsm",
   FileUtils: "resource://gre/modules/FileUtils.jsm",
   Services: "resource://gre/modules/Services.jsm",
+  TaskScheduler: "resource://gre/modules/TaskScheduler.jsm",
   UpdateUtils: "resource://gre/modules/UpdateUtils.jsm",
 });
 
@@ -36,6 +38,13 @@ XPCOMUtils.defineLazyServiceGetter(
   "@mozilla.org/toolkit/profile-service;1",
   "nsIToolkitProfileService"
 );
+
+XPCOMUtils.defineLazyGetter(this, "localization", () => {
+  return new Localization(
+    ["branding/brand.ftl", "toolkit/updates/backgroundupdate.ftl"],
+    true
+  );
+});
 
 var BackgroundUpdate = {
   _initialized: false,
@@ -168,6 +177,298 @@ var BackgroundUpdate = {
     }
 
     return reasons;
+  },
+
+  /**
+   * Check if this particular profile should schedule tasks to update this installation using the
+   * background updater.
+   *
+   * Only the browser proper should invoke this function, not background tasks, so this is the place
+   * to use profile specifics.
+   *
+   * @returns [string] - descriptions of failed criteria; empty if all criteria were met.
+   */
+  async _reasonsToNotScheduleUpdates() {
+    let SLUG = "_reasonsToNotScheduleUpdates";
+    let reasons = [];
+
+    const bts =
+      "@mozilla.org/backgroundtasks;1" in Cc &&
+      Cc["@mozilla.org/backgroundtasks;1"].getService(Ci.nsIBackgroundTasks);
+
+    if (bts && bts.isBackgroundTaskMode) {
+      throw new Components.Exception(
+        `Not available in --backgroundtask mode`,
+        Cr.NS_ERROR_NOT_AVAILABLE
+      );
+    }
+
+    if (!this._currentProfileIsDefaultProfile()) {
+      reasons.push(this.REASON.NOT_DEFAULT_PROFILE);
+    }
+
+    log.debug(`${SLUG}: checking app.update.langpack.enabled`);
+    let updateLangpack = Services.prefs.getBoolPref(
+      "app.update.langpack.enabled",
+      true
+    );
+    if (updateLangpack) {
+      log.debug(
+        `${SLUG}: app.update.langpack.enabled=true, checking that no langpacks are installed`
+      );
+
+      let langpacks = await AddonManager.getAddonsByTypes(["locale"]);
+      log.debug(`${langpacks.length} langpacks installed`);
+      if (langpacks.length) {
+        reasons.push(this.REASON.LANGPACK_INSTALLED);
+      }
+    }
+
+    return reasons;
+  },
+
+  /**
+   * Register a background update task.
+   *
+   * @param {string} [taskId]
+   *        The task identifier; defaults to the platform-specific background update task ID.
+   * @return {object} non-null if the background task was registered.
+   */
+  async _registerBackgroundUpdateTask(taskId = this.taskId) {
+    let binary = Services.dirsvc.get("XREExeF", Ci.nsIFile);
+    let args = [
+      "--MOZ_LOG",
+      "prependheader,timestamp,append,maxsize:1,Dump:5",
+      "--MOZ_LOG_FILE",
+      // The full path might hit command line length limits, but also makes it
+      // much easier to find the relevant log file when starting from the
+      // Windows Task Scheduler UI.
+      FileUtils.getFile("UpdRootD", ["backgroundupdate.moz_log"]).path,
+      "--backgroundtask",
+      "backgroundupdate",
+    ];
+
+    let workingDirectory = FileUtils.getDir("UpdRootD", [], true).path;
+
+    let description = await localization.formatValue(
+      "backgroundupdate-task-description"
+    );
+
+    let result = await TaskScheduler.registerTask(
+      taskId,
+      binary.path,
+      // Keep this default in sync with the preference in firefox.js.
+      Services.prefs.getIntPref("app.update.background.interval", 60 * 60 * 7),
+      {
+        workingDirectory,
+        args,
+        description,
+      }
+    );
+
+    return result;
+  },
+
+  async _mirrorToPerInstallationPref() {
+    try {
+      let scheduling = Services.prefs
+        .getDefaultBranch("")
+        .getBoolPref("app.update.background.scheduling.enabled");
+      await UpdateUtils.writeUpdateConfigSetting(
+        "app.update.background.enabled",
+        scheduling,
+        { setDefaultOnly: true }
+      );
+      log.debug(
+        `mirrored per-profile pref "app.update.background.scheduling.enabled" default ` +
+          `to per-installation pref default "app.update.background.enabled": ${scheduling}`
+      );
+    } catch (e) {
+      if (
+        !(e instanceof Ci.nsIException && e.result == Cr.NS_ERROR_UNEXPECTED)
+      ) {
+        throw e;
+      }
+    }
+  },
+
+  async observe(subject, topic, data) {
+    let whatChanged;
+    switch (topic) {
+      case "nsPref:changed":
+        whatChanged = `per-profile pref ${data}`;
+        break;
+
+      case "auto-update-config-change":
+        whatChanged = `per-installation pref app.update.auto`;
+        break;
+
+      case "background-update-config-change":
+        whatChanged = `per-installation pref app.update.background.enabled`;
+        break;
+    }
+
+    log.debug(
+      `observe: ${whatChanged} may have changed; invoking maybeScheduleBackgroundUpdateTask`
+    );
+    return this.maybeScheduleBackgroundUpdateTask();
+  },
+
+  /**
+   * Maybe schedule (or unschedule) background tasks using OS-level task scheduling mechanisms.
+   *
+   * @return {boolean} true if a task is now scheduled, false otherwise.
+   */
+  async maybeScheduleBackgroundUpdateTask() {
+    let SLUG = "maybeScheduleBackgroundUpdateTask";
+
+    if (this._force() || this._currentProfileIsDefaultProfile()) {
+      await this._mirrorToPerInstallationPref();
+    }
+
+    log.info(
+      `${SLUG}: checking eligibility before scheduling background update task`
+    );
+
+    const previousEnabled = Services.prefs.getBoolPref(
+      "app.update.background.previous.enabled",
+      false
+    );
+    const previousReasons = Services.prefs.getCharPref(
+      "app.update.background.previous.reasons",
+      null
+    );
+
+    if (!this._initialized) {
+      Services.obs.addObserver(this, "auto-update-config-change");
+      Services.obs.addObserver(this, "background-update-config-change");
+
+      // Witness when our own prefs change.
+      Services.prefs.addObserver("app.update.background.force", this);
+      Services.prefs.addObserver("app.update.background.interval", this);
+
+      // To accommodate forcing with "app.update.background.force"
+      // dynamically, we always observe
+      // "app.update.background.scheduling.enabled", even though we act on it
+      // (usually) only when we're the default profile.
+      Services.prefs.addObserver(
+        "app.update.background.scheduling.enabled",
+        this
+      );
+
+      // Witness when the langpack updating feature is changed.
+      Services.prefs.addObserver("app.update.langpack.enabled", this);
+
+      // Witness when langpacks come and go.
+      const onAddonEvent = async addon => {
+        if (addon.type != "locale") {
+          return;
+        }
+        log.debug(
+          `${SLUG}: langpacks may have changed; invoking maybeScheduleBackgroundUpdateTask`
+        );
+        // No need to await this promise.
+        this.maybeScheduleBackgroundUpdateTask();
+      };
+      const addonsListener = {
+        onEnabled: onAddonEvent,
+        onDisabled: onAddonEvent,
+        onInstalled: onAddonEvent,
+        onUninstalled: onAddonEvent,
+      };
+      AddonManager.addAddonListener(addonsListener);
+
+      this._initialized = true;
+    }
+
+    log.debug(`${SLUG}: checking for reasons to not update this installation`);
+    let reasons = await this._reasonsToNotUpdateInstallation();
+
+    log.debug(
+      `${SLUG}: checking for reasons to not schedule background updates with this profile`
+    );
+    let moreReasons = await this._reasonsToNotScheduleUpdates();
+    reasons.push(...moreReasons);
+
+    let enabled = !reasons.length;
+
+    if (this._force()) {
+      // We want to allow developers and testers to monkey with the system.
+      log.debug(
+        `${SLUG}: app.update.background.force=true, ignoring reasons: ${JSON.stringify(
+          reasons
+        )}`
+      );
+      reasons = [];
+      enabled = true;
+    }
+
+    let updatePreviousPrefs = () => {
+      // Squirrel away our previous values: keeping them allows us to witness both the rising edge
+      // (disabled -> enabled) and the falling (enabled -> disabled) edge.
+      Services.prefs.setBoolPref(
+        "app.update.background.previous.enabled",
+        !reasons.length
+      );
+      if (reasons.length) {
+        Services.prefs.setCharPref(
+          "app.update.background.previous.reasons",
+          JSON.stringify(reasons)
+        );
+      } else {
+        Services.prefs.clearUserPref("app.update.background.previous.reasons");
+      }
+    };
+
+    try {
+      // Interacting with `TaskScheduler.jsm` can throw, so we'll catch.
+      if (!enabled) {
+        log.info(
+          `${SLUG}: not scheduling background update: '${JSON.stringify(
+            reasons
+          )}'`
+        );
+
+        if (previousEnabled) {
+          await TaskScheduler.deleteTask(this.taskId);
+          log.debug(
+            `${SLUG}: witnessed falling (enabled -> disabled) edge; deleted task ${this.taskId}.`
+          );
+        }
+
+        updatePreviousPrefs();
+
+        return false;
+      }
+
+      if (previousEnabled) {
+        log.info(
+          `${SLUG}: background update was previously enabled; not registering task.`
+        );
+
+        return true;
+      }
+
+      log.info(
+        `${SLUG}: background update was previously disabled for reasons: '${previousReasons}'`
+      );
+
+      await this._registerBackgroundUpdateTask(this.taskId);
+      log.info(
+        `${SLUG}: witnessed rising (disabled -> enabled) edge; registered task ${this.taskId}`
+      );
+
+      updatePreviousPrefs();
+
+      return true;
+    } catch (e) {
+      log.error(
+        `${SLUG}: exiting after uncaught exception in maybeScheduleBackgroundUpdateTask!`,
+        e
+      );
+
+      return false;
+    }
   },
 };
 
