@@ -9,54 +9,45 @@
 <body>
   <script type="application/javascript">
 
-  /* This test is hard to follow so here a quick description of what it is about.
-   * We want to test that when BroadcastChannel is used in a bfcached page,
-   * this page is fully removed by bfcache.
-   *
-   * To test it we have 2 pages (testUrl1 and testUrl2).
-   * The steps are:
-   * - we show testUrl1. When this is shown page1Shown is called.
-   * - page1Shown creates a BroadcastChannel object, then it loads testUrl2.
-   * - page2Shown is called by testUrl2.
-   * - Based on expectedPersisted we use or not the BroadcastChannel object of
-   *   testUrl1.
-   * - Then we call history.back() and testUrl1 will be loaded again.
-   * - when page1Shown is called by testUrl1, if BroadcastChannel has been used
-   *   when testUrl2 was shown, we want event.persisted be false, otherwise
-   *   true.
+  /*
+   * The test opens a new window. Then a message 'load' is sent there to load
+   * another page. If expectedPersisted is false, a dummy message is sent
+   * through a BroadcastChannel which the first has registered to use.
+   * That should evict the page from bfcache.
+   * 'back' message is sent to call history.back().
+   * The page which is loaded from session history should be persisted if
+   * expectedPersisted is true.
    */
   var testUrl1 = "testUrl1_bfcache.html";
-  var testUrl2 = "testUrl2_bfcache.html";
+  var bc1 = new BroadcastChannel("testUrl1_bfcache");
+  var bc2 = new BroadcastChannel("testUrl2_bfcache");
+  bc1.onmessage = function(event) {
+    if (event.data == "closed") {
+      info("Closed");
+      runTest();
+      return;
+    }
+    page1Shown(event.data);
+  };
+  bc2.onmessage = function(event) { page2Shown(event.data); };
 
-  var testWin;
   var counter = 0;
   var expectedPersisted = false;
-  var bc;
+  var bc = new BroadcastChannel("a");
 
   function page1Shown(e) {
-    info("Page1Shown: " + testWin.location.href);
-
     if (counter == 0) {
       ok(!e.persisted, "test page should have been persisted initially");
-
-      bc = new testWin.BroadcastChannel("a");
-
-      SimpleTest.executeSoon(function() {
-        info("New location: " + testUrl2);
-        testWin.location.href = testUrl2;
-      });
+      bc1.postMessage("load");
     } else {
       is(e.persisted, expectedPersisted, "test page should have been persisted in pageshow");
-      testWin.close();
-      runTest();
+      bc1.postMessage("close");
     }
 
     counter++;
   }
 
   function page2Shown(e) {
-    info("Page2Shown: " + testWin.location.href);
-
     if (!expectedPersisted) {
       SimpleTest.executeSoon(function() {
         info("Posting a message.");
@@ -66,7 +57,7 @@
 
     SimpleTest.executeSoon(function() {
       info("Going back");
-      testWin.history.back();
+      bc2.postMessage("back");
     });
   }
 
@@ -77,6 +68,9 @@
 
   function runTest() {
     if (!tests.length) {
+      bc.close();
+      bc1.close();
+      bc2.close();
       SimpleTest.finish();
       return;
     }
@@ -85,11 +79,15 @@
 
     counter = 0;
     expectedPersisted = test.expectedPersisted;
-    testWin = window.open(testUrl1);
+    window.open(testUrl1, "", "noopener");
   }
 
   SimpleTest.waitForExplicitFinish();
-  runTest();
+
+  // If Fission is disabled, the pref is no-op.
+  SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+    runTest();
+  });
 
   </script>
 </body>
