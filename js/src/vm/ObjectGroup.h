@@ -39,11 +39,6 @@ enum NewObjectKind {
   TenuredObject
 };
 
-PlainObject* NewPlainObjectWithProperties(JSContext* cx,
-                                          IdValuePair* properties,
-                                          size_t nproperties,
-                                          NewObjectKind newKind);
-
 }  // namespace js
 
 #endif /* vm_ObjectGroup_h */

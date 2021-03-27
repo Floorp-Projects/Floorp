@@ -20,6 +20,8 @@ class JS_PUBLIC_API JSObject;
 
 namespace js {
 
+struct IdValuePair;
+
 // Object class for plain native objects created using '{}' object literals,
 // 'new Object()', 'Object.create', etc.
 class PlainObject : public NativeObject {
@@ -61,6 +63,11 @@ extern PlainObject* CreateThisForFunction(JSContext* cx,
                                           JS::Handle<JSFunction*> callee,
                                           JS::Handle<JSObject*> newTarget,
                                           NewObjectKind newKind);
+
+extern PlainObject* NewPlainObjectWithProperties(JSContext* cx,
+                                                 IdValuePair* properties,
+                                                 size_t nproperties,
+                                                 NewObjectKind newKind);
 
 }  // namespace js
 
