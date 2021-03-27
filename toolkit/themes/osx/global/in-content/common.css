@@ -35,8 +35,6 @@ xul|*.radio-icon {
 }
 
 xul|*.text-link:-moz-focusring {
-  color: var(--in-content-link-highlight);
-  text-decoration: underline;
   box-shadow: none;
 }
 

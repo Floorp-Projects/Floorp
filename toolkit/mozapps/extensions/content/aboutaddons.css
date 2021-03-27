@@ -309,6 +309,12 @@ addon-card[expanded] .update-postponed-bar + .addon-card-message {
   text-decoration: none;
 }
 
+.addon-name-link:-moz-focusring {
+  /* Since the parent is overflow:hidden to ellipsize the regular outline is hidden. */
+  outline-offset: -1px;
+  outline-width: 1px;
+}
+
 .addon-badge {
   display: inline-block;
   margin-inline-end: 8px;
@@ -445,9 +451,7 @@ recommended-addon-card .addon-description:not(:empty) {
 }
 
 .discopane-notice-content {
-  align-items: center;
-  display: flex;
-  width: 100%;
+  padding-block: 6px;
 }
 
 .discopane-notice-content > span {
