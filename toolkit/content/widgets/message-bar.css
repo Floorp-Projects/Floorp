@@ -1,0 +1,293 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+:host {
+  --info-icon-url: url("chrome://global/skin/icons/info.svg");
+  --warn-icon-url: url("chrome://global/skin/icons/warning.svg");
+  --success-icon-url: url("chrome://global/skin/icons/success.svg");
+  --error-icon-url: url("chrome://global/skin/icons/error.svg");
+  --close-icon-url: url("chrome://global/skin/icons/close.svg");
+  --icon-size: 16px;
+  --close-icon-size: 32px;
+}
+
+:host([message-bar-type=infobar]) {
+  --close-icon-size: 24px;
+}
+
+/* MessageBar colors by message type */
+/* Colors from: https://design.firefox.com/photon/components/message-bars.html#type-specific-style */
+
+:host {
+  --message-bar-background-color: var(--in-content-box-info-background);
+  --message-bar-text-color: var(--in-content-text-color);
+  --message-bar-icon-url: var(--info-icon-url);
+  /* The default values of --in-content-button* are sufficient, even for dark themes */
+}
+
+:host([type=warning]:not([message-bar-type=infobar])) {
+  --message-bar-background-color: var(--yellow-50);
+  --message-bar-text-color: var(--yellow-90);
+
+  --in-content-button-background: var(--yellow-60);
+  --in-content-button-background-hover: var(--yellow-70);
+  --in-content-button-background-active: var(--yellow-80);
+}
+:host([type=warning]) {
+  --message-bar-icon-url: var(--warn-icon-url);
+}
+
+:host([type=success]:not([message-bar-type=infobar])) {
+  --message-bar-background-color: var(--green-50);
+  --message-bar-text-color: var(--green-90);
+
+  --message-bar-icon-url: var(--success-icon-url);
+  --in-content-button-background: var(--green-60);
+  --in-content-button-background-hover: var(--green-70);
+  --in-content-button-background-active: var(--green-80);
+}
+
+:host([type=error]:not([message-bar-type=infobar])) {
+  --message-bar-background-color: var(--red-60);
+  --message-bar-text-color: #ffffff;
+
+  --in-content-button-background: var(--red-70);
+  --in-content-button-background-hover: var(--red-80);
+  --in-content-button-background-active: var(--red-90);
+}
+:host([type=error]),
+:host([type=critical]) {
+  --message-bar-icon-url: var(--error-icon-url);
+}
+
+:host {
+  border-radius: 4px;
+}
+
+/* Make the host to behave as a block by default, but allow hidden to hide it. */
+:host(:not([hidden])) {
+  display: block;
+}
+
+::slotted(button) {
+  /* Enforce micro-button width. */
+  min-width: -moz-fit-content !important;
+}
+
+/* MessageBar Grid Layout */
+
+.container {
+  background: var(--message-bar-background-color);
+  color: var(--message-bar-text-color);
+
+  padding: 4px 8px;
+  position: relative;
+
+  border-radius: 4px;
+
+  display: flex;
+  /* Ensure that the message bar shadow dom elements are vertically aligned. */
+  align-items: center;
+}
+
+:host([align="center"]) .container {
+  justify-content: center;
+}
+
+.content {
+  margin: 0 4px;
+  display: inline-block;
+  /* Ensure that the message bar content is vertically aligned. */
+  align-items: center;
+  /* Ensure that the message bar content is wrapped. */
+  word-break: break-word;
+}
+
+/* MessageBar icon style */
+
+.icon {
+  padding: 4px;
+  width: var(--icon-size);
+  height: var(--icon-size);
+  flex-shrink: 0;
+}
+
+.icon::after {
+  appearance: none;
+  -moz-context-properties: fill, stroke;
+  fill: currentColor;
+  stroke: currentColor;
+  content: var(--message-bar-icon-url);
+}
+
+/* Use a spacer to position the close button at the end, but also support
+ * centering if required. */
+.spacer {
+  flex-grow: 1;
+}
+
+/* Close icon styles */
+
+:host(:not([dismissable])) .close {
+  display: none;
+}
+
+.close {
+  background-image: var(--close-icon-url);
+  background-repeat: no-repeat;
+  background-position: center center;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  min-width: auto;
+  min-height: auto;
+  width: var(--close-icon-size);
+  height: var(--close-icon-size);
+  margin: 0;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+@supports -moz-bool-pref("browser.proton.infobars.enabled") {
+@media not (prefers-contrast) {
+  .container.infobar {
+    box-shadow: 0 1px 2px rgba(58, 57, 68, 0.1);
+    background: var(--in-content-page-background);
+  }
+}
+
+.close {
+  fill: var(--in-content-icon-color);
+}
+
+@media (prefers-color-scheme: dark) {
+  .container.infobar {
+    background: rgb(66,65,77);
+  }
+}
+
+:host([message-bar-type=infobar]:first-of-type) {
+  margin-top: 4px;
+}
+
+:host([message-bar-type=infobar]) {
+  margin: 0 4px 4px;
+}
+
+.container.infobar {
+  /* Don't let lwthemes set a text-shadow. */
+  text-shadow: none;
+  padding: 0;
+}
+
+.container.infobar::before {
+  content: "";
+  display: block;
+  width: 2px;
+  position: absolute;
+  background-image: linear-gradient(0, #9059ff 0%, #ff4aa2 52.08%, #ffbd4f 100%);
+  top: 0;
+  inset-inline-start: 0;
+  height: 100%;
+  border-start-start-radius: 4px;
+  border-end-start-radius: 4px;
+}
+
+.container.infobar {
+  align-items: flex-start;
+}
+
+/* Infobars styling. */
+.notification-content {
+  margin: 0;
+  margin-inline-start: 8px;
+}
+
+.notification-message {
+  min-height: 16px; /* min-height: 32px with block padding */
+  padding-block: 8px;
+  margin-inline-end: 20px;
+}
+
+.notification-button-container,
+.notification-message {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.close {
+  margin: 4px 8px;
+  background-size: 16px;
+}
+
+.notification-button {
+  margin: 4px;
+  /* This is supposed to be 6px but then the buttons are 26px tall by default
+   * on Windows. Drop it down to 4px (with the 1px border) */
+  padding-block: 3px;
+}
+
+.notification-button:first-of-type {
+  /* When the buttons wrap to their own line we want to match the 8px on the message. */
+  margin-inline-start: 0;
+}
+
+strong {
+  font-weight: 600;
+}
+
+.text-link:hover {
+  cursor: pointer;
+}
+
+.infobar > .icon {
+  padding: 0;
+  margin: 8px 0;
+}
+
+.infobar > .icon,
+:host([type=system]) .notification-content {
+  margin-inline-start: 16px;
+}
+
+:host([type=system]) .icon {
+  display: none;
+}
+:host([type=info]) .icon {
+  color: rgb(128,235,255);
+}
+:host([type=warning]) .icon {
+  color: rgb(255,164,54);
+}
+:host([type=critical]) .icon {
+  color: rgb(226,40,80);
+}
+
+@media (prefers-color-scheme: dark) {
+  :host([type=info]) .icon {
+    color: rgb(0,221,255);
+  }
+  :host([type=warning]) .icon {
+    color: rgb(255,189,79);
+  }
+  :host([type=critical]) .icon {
+    color: rgb(255,154,162);
+  }
+}
+}
+
+@supports not -moz-bool-pref("browser.proton.infobars.enabled") {
+:host {
+  /* Colors used by default, and for [type=generic] message bars.*/
+  background-color: var(--in-content-box-info-background);
+  color: var(--in-content-text-color);
+}
+.container {
+  padding: 8px;
+  min-height: 32px;
+}
+
+.close {
+  margin-inline-end: 4px;
+}
+}
