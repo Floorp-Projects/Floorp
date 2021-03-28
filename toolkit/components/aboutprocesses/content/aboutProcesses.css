@@ -117,7 +117,7 @@ td:first-child {
 
 tr[selected] > td {
   background-color: var(--in-content-item-selected);
-  color: var(--in-content-selected-text);
+  color: var(--in-content-item-selected-text);
 }
 #process-tbody > tr:hover {
   background-color: var(--in-content-item-hover);
