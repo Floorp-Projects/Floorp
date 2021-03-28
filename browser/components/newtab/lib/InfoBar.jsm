@@ -13,6 +13,11 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
+const FTL_PATHS = [
+  "browser/newtab/asrouter.ftl",
+  "browser/defaultBrowserNotification.ftl",
+];
+
 class InfoBarNotification {
   constructor(message, dispatch) {
     this._dispatch = dispatch;
@@ -45,7 +50,9 @@ class InfoBarNotification {
       content.icon || "chrome://branding/content/icon64.png",
       notificationContainer.PRIORITY_INFO_MEDIUM,
       content.buttons.map(b => this.formatButtonConfig(b)),
-      this.infobarCallback
+      this.infobarCallback,
+      null,
+      FTL_PATHS
     );
 
     this.addImpression();
@@ -131,10 +138,9 @@ const InfoBar = {
   },
 
   maybeInsertFTL(win) {
-    win.MozXULElement.insertFTLIfNeeded("browser/newtab/asrouter.ftl");
-    win.MozXULElement.insertFTLIfNeeded(
-      "browser/defaultBrowserNotification.ftl"
-    );
+    for (let filepath of FTL_PATHS) {
+      win.MozXULElement.insertFTLIfNeeded(filepath);
+    }
   },
 
   showInfoBarMessage(browser, message, dispatch) {

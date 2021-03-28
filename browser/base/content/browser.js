@@ -396,7 +396,7 @@ XPCOMUtils.defineLazyGetter(this, "gHighPriorityNotificationBox", () => {
   return new MozElements.NotificationBox(element => {
     element.classList.add("global-notificationbox");
     element.setAttribute("notificationside", "top");
-    if (Services.prefs.getBoolPref("browser.proton.infobars.enabled", false)) {
+    if (gProtonInfobarsEnabled) {
       // With Proton enabled all notification boxes are at the top, built into the browser chrome.
       let tabNotifications = document.getElementById("tab-notification-deck");
       gNavToolbox.insertBefore(element, tabNotifications);
@@ -408,7 +408,7 @@ XPCOMUtils.defineLazyGetter(this, "gHighPriorityNotificationBox", () => {
 
 // Regular notification bars shown at the bottom of the window.
 XPCOMUtils.defineLazyGetter(this, "gNotificationBox", () => {
-  return Services.prefs.getBoolPref("browser.proton.infobars.enabled", false)
+  return gProtonInfobarsEnabled
     ? gHighPriorityNotificationBox
     : new MozElements.NotificationBox(element => {
         element.classList.add("global-notificationbox");
@@ -585,6 +585,14 @@ XPCOMUtils.defineLazyPreferenceGetter(
       doc.documentElement.toggleAttribute("proton", newValue);
     }
   }
+);
+
+/* Temporary pref while the Proton infobars work stabilizes. */
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "gProtonInfobarsEnabled",
+  "browser.proton.infobars.enabled",
+  false
 );
 
 /* Temporary pref while the dust settles around the updated tooltip design
@@ -1047,7 +1055,9 @@ const gStoragePressureObserver = {
       null,
       gHighPriorityNotificationBox.PRIORITY_WARNING_HIGH,
       buttons,
-      null
+      null,
+      null,
+      ["branding/brand.ftl", "browser/preferences/preferences.ftl"]
     );
 
     // This seems to be necessary to get the buttons to display correctly
