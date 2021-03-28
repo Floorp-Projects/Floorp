@@ -43,8 +43,14 @@ body {
   -moz-box-flex: 1;
 }
 
+#navigator-toolbox:-moz-lwtheme {
+  background-image: var(--lwt-additional-images);
+  background-repeat: var(--lwt-background-tiling);
+  background-position: var(--lwt-background-alignment);
+}
+
 /* TODO bug 1695280: Remove these media selectors and merge the rule below
-   with the ruleset above. We must set background properties on :root and not
+   with the ruleset above. We must set background-color on :root and not
    #navigator-toolbox on Windows 7/8 due to a WebRender bug that hides the
    minimize/maximize/close buttons. */
 @media not (-moz-os-version: windows-win7) {
@@ -52,18 +58,6 @@ body {
     #navigator-toolbox:-moz-lwtheme {
       background-color: var(--lwt-accent-color);
     }
-
-    /* When a theme defines both theme_frame and additional_backgrounds, show
-       the latter atop the former. */
-   :root[lwtheme-image] #navigator-toolbox {
-     background-image: var(--lwt-header-image), var(--lwt-additional-images);
-     background-repeat: no-repeat, var(--lwt-background-tiling);
-     background-position: right top, var(--lwt-background-alignment);
-   }
-
-   #navigator-toolbox:-moz-window-inactive:-moz-lwtheme {
-     background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
-   }
   }
 }
 /* TODO bug 1695280: Remove this block. */
@@ -72,16 +66,19 @@ body {
   :root:-moz-lwtheme {
     background-color: var(--lwt-accent-color);
   }
+}
 
-  :root[lwtheme-image] {
-    background-image: var(--lwt-header-image), var(--lwt-additional-images);
-    background-repeat: no-repeat, var(--lwt-background-tiling);
-    background-position: right top, var(--lwt-background-alignment);
-  }
 
-  :root:-moz-lwtheme:-moz-window-inactive {
-    background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
-  }
+/* When a theme defines both theme_frame and additional_backgrounds, show
+   the latter atop the former. */
+:root[lwtheme-image] #navigator-toolbox {
+  background-image: var(--lwt-header-image), var(--lwt-additional-images);
+  background-repeat: no-repeat, var(--lwt-background-tiling);
+  background-position: right top, var(--lwt-background-alignment);
+}
+
+#navigator-toolbox:-moz-window-inactive:-moz-lwtheme {
+  background-color: var(--lwt-accent-color-inactive, var(--lwt-accent-color));
 }
 
 .search-one-offs[compact=true] .search-setting-button,
