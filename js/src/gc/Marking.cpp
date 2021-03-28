@@ -1290,10 +1290,10 @@ void Shape::traceChildren(JSTracer* trc) {
   cache_.trace(trc);
 
   if (hasGetterObject()) {
-    TraceManuallyBarrieredEdge(trc, &asAccessorShape().getterObj, "getter");
+    TraceManuallyBarrieredEdge(trc, &asAccessorShape().getter_, "getter");
   }
   if (hasSetterObject()) {
-    TraceManuallyBarrieredEdge(trc, &asAccessorShape().setterObj, "setter");
+    TraceManuallyBarrieredEdge(trc, &asAccessorShape().setter_, "setter");
   }
 }
 inline void js::GCMarker::eagerlyMarkChildren(Shape* shape) {
