@@ -64,8 +64,7 @@ class OverscrollEffectBase {
  public:
   virtual ~OverscrollEffectBase() = default;
   virtual void ConsumeOverscroll(ParentLayerPoint& aOverscroll,
-                                 bool aShouldOverscrollX,
-                                 bool aShouldOverscrollY) = 0;
+                                 ScrollDirections aOverscrolableDirections) = 0;
   virtual void HandleFlingOverscroll(const ParentLayerPoint& aVelocity) = 0;
 };
 
@@ -75,19 +74,19 @@ class GenericOverscrollEffect : public OverscrollEffectBase {
   explicit GenericOverscrollEffect(AsyncPanZoomController& aApzc)
       : mApzc(aApzc) {}
 
-  void ConsumeOverscroll(ParentLayerPoint& aOverscroll, bool aShouldOverscrollX,
-                         bool aShouldOverscrollY) override {
-    if (aShouldOverscrollX) {
+  void ConsumeOverscroll(ParentLayerPoint& aOverscroll,
+                         ScrollDirections aOverscrolableDirections) override {
+    if (aOverscrolableDirections.contains(ScrollDirection::eHorizontal)) {
       mApzc.mX.OverscrollBy(aOverscroll.x);
       aOverscroll.x = 0;
     }
 
-    if (aShouldOverscrollY) {
+    if (aOverscrolableDirections.contains(ScrollDirection::eVertical)) {
       mApzc.mY.OverscrollBy(aOverscroll.y);
       aOverscroll.y = 0;
     }
 
-    if (aShouldOverscrollX || aShouldOverscrollY) {
+    if (!aOverscrolableDirections.isEmpty()) {
       mApzc.ScheduleComposite();
     }
   }
@@ -107,11 +106,11 @@ class WidgetOverscrollEffect : public OverscrollEffectBase {
   explicit WidgetOverscrollEffect(AsyncPanZoomController& aApzc)
       : mApzc(aApzc) {}
 
-  void ConsumeOverscroll(ParentLayerPoint& aOverscroll, bool aShouldOverscrollX,
-                         bool aShouldOverscrollY) override {
+  void ConsumeOverscroll(ParentLayerPoint& aOverscroll,
+                         ScrollDirections aOverscrolableDirections) override {
     RefPtr<GeckoContentController> controller =
         mApzc.GetGeckoContentController();
-    if (controller && (aShouldOverscrollX || aShouldOverscrollY)) {
+    if (controller && !aOverscrolableDirections.isEmpty()) {
       controller->UpdateOverscrollOffset(mApzc.GetGuid(), aOverscroll.x,
                                          aOverscroll.y, mApzc.IsRootContent());
       aOverscroll = ParentLayerPoint();
