@@ -2108,6 +2108,8 @@ static inline bool CallGetter(JSContext* cx, HandleObject obj,
     return js::CallGetter(cx, receiver, getter, vp);
   }
 
+  MOZ_ASSERT(shape->isCustomDataProperty());
+
   RootedId id(cx, shape->propid());
   return GetCustomDataProperty(cx, obj, id, vp);
 }
