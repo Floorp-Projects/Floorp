@@ -733,7 +733,10 @@ var AboutLogins = {
         id,
         iconURL,
         notificationBox[priority],
-        buttons
+        buttons,
+        null,
+        null,
+        ["browser/aboutLogins.ftl"]
       );
     }
   },
