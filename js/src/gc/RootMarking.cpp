@@ -237,12 +237,12 @@ void StackShape::trace(JSTracer* trc) {
 
   TraceRoot(trc, (jsid*)&propid, "StackShape id");
 
-  if ((attrs & JSPROP_GETTER) && rawGetter) {
-    TraceRoot(trc, (JSObject**)&rawGetter, "StackShape getter");
+  if (getter) {
+    TraceRoot(trc, &getter, "StackShape getter");
   }
 
-  if ((attrs & JSPROP_SETTER) && rawSetter) {
-    TraceRoot(trc, (JSObject**)&rawSetter, "StackShape setter");
+  if (setter) {
+    TraceRoot(trc, &setter, "StackShape setter");
   }
 }
 

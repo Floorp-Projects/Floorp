@@ -3151,18 +3151,18 @@ static void DumpProperty(const NativeObject* obj, Shape& shape,
 
   if (shape.hasGetterValue()) {
     out.printf(" getterValue %p", shape.getterObject());
-  } else if (!shape.hasDefaultGetter()) {
-    out.printf(" getterOp %p", JS_FUNC_TO_DATA_PTR(void*, shape.getterOp()));
   }
 
   if (shape.hasSetterValue()) {
     out.printf(" setterValue %p", shape.setterObject());
-  } else if (!shape.hasDefaultSetter()) {
-    out.printf(" setterOp %p", JS_FUNC_TO_DATA_PTR(void*, shape.setterOp()));
+  }
+
+  if (shape.isCustomDataProperty()) {
+    out.printf(" <custom-data-prop>");
   }
 
   if (shape.isDataProperty()) {
-    out.printf(" slot %u", shape.maybeSlot());
+    out.printf(" slot %u", shape.slot());
   }
 
   out.printf(")\n");

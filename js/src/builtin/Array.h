@@ -149,6 +149,12 @@ extern bool ObjectMayHaveExtraIndexedProperties(JSObject* obj);
 // JS::IsArray has multiple overloads, use js::IsArrayFromJit to disambiguate.
 extern bool IsArrayFromJit(JSContext* cx, HandleObject obj, bool* isArray);
 
+extern bool ArrayLengthGetter(JSContext* cx, HandleObject obj, HandleId id,
+                              MutableHandleValue vp);
+
+extern bool ArrayLengthSetter(JSContext* cx, HandleObject obj, HandleId id,
+                              HandleValue v, ObjectOpResult& result);
+
 class MOZ_NON_TEMPORARY_CLASS ArraySpeciesLookup final {
   /*
    * An ArraySpeciesLookup holds the following:
