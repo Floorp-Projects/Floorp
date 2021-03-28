@@ -523,6 +523,18 @@ class UnmappedArgumentsObject : public ArgumentsObject {
                           bool* resolvedp);
 };
 
+extern bool MappedArgGetter(JSContext* cx, HandleObject obj, HandleId id,
+                            MutableHandleValue vp);
+
+extern bool MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
+                            HandleValue v, ObjectOpResult& result);
+
+extern bool UnmappedArgGetter(JSContext* cx, HandleObject obj, HandleId id,
+                              MutableHandleValue vp);
+
+extern bool UnmappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
+                              HandleValue v, ObjectOpResult& result);
+
 }  // namespace js
 
 template <>

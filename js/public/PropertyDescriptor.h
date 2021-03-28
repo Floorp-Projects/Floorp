@@ -44,7 +44,17 @@ static constexpr uint8_t JSPROP_READONLY = 0x02;
  */
 static constexpr uint8_t JSPROP_PERMANENT = 0x04;
 
-/* (0x08 is unused; add to JSPROP_FLAGS_MASK if ever defined) */
+/**
+ * The property is exposed as a data property to JS code, but instead of an
+ * object slot it uses custom get/set logic.
+ *
+ * This is used to implement the special array.length and ArgumentsObject
+ * properties.
+ *
+ * This attribute is deprecated (we don't want to add more uses) and for
+ * internal use only. This attribute never shows up in a PropertyDescriptor.
+ */
+static constexpr uint8_t JSPROP_CUSTOM_DATA_PROP = 0x08;
 
 /** The property has a getter function. */
 static constexpr uint8_t JSPROP_GETTER = 0x10;
@@ -97,9 +107,10 @@ static constexpr unsigned JSPROP_IGNORE_VALUE = 0x20000;
 /* (higher flags are unused; add to JSPROP_FLAGS_MASK if ever defined) */
 
 static constexpr unsigned JSPROP_FLAGS_MASK =
-    JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT | JSPROP_GETTER |
-    JSPROP_SETTER | JSPROP_RESOLVING | JSPROP_IGNORE_ENUMERATE |
-    JSPROP_IGNORE_READONLY | JSPROP_IGNORE_PERMANENT | JSPROP_IGNORE_VALUE;
+    JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT |
+    JSPROP_CUSTOM_DATA_PROP | JSPROP_GETTER | JSPROP_SETTER | JSPROP_RESOLVING |
+    JSPROP_IGNORE_ENUMERATE | JSPROP_IGNORE_READONLY | JSPROP_IGNORE_PERMANENT |
+    JSPROP_IGNORE_VALUE;
 
 namespace JS {
 

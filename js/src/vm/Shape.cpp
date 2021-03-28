@@ -622,28 +622,28 @@ MOZ_ALWAYS_INLINE void Shape::updateDictionaryTable(
   parent->handoffTableTo(this);
 }
 
-static void AssertValidPropertyOp(NativeObject* obj, GetterOp getter,
-                                  SetterOp setter, unsigned attrs) {
-  // We only support PropertyOp accessors on ArrayObject and ArgumentsObject
-  // and we don't want to add more of these properties (bug 1404885).
-
+static void AssertValidCustomDataProp(NativeObject* obj, HandleObject getter,
+                                      HandleObject setter, unsigned attrs) {
+  // We only support custom data properties on ArrayObject and ArgumentsObject.
+  // The mechanism is deprecated so we don't want to add new uses.
 #ifdef DEBUG
-  if ((getter && !(attrs & JSPROP_GETTER)) ||
-      (setter && !(attrs & JSPROP_SETTER))) {
+  if (attrs & JSPROP_CUSTOM_DATA_PROP) {
     MOZ_ASSERT(obj->is<ArrayObject>() || obj->is<ArgumentsObject>());
+    MOZ_ASSERT((attrs & (JSPROP_GETTER | JSPROP_SETTER)) == 0);
+    MOZ_ASSERT(!getter);
+    MOZ_ASSERT(!setter);
   }
 #endif
 }
 
 /* static */
 Shape* NativeObject::addAccessorPropertyInternal(
-    JSContext* cx, HandleNativeObject obj, HandleId id, GetterOp getter,
-    SetterOp setter, unsigned attrs, ShapeTable* table,
+    JSContext* cx, HandleNativeObject obj, HandleId id, HandleObject getter,
+    HandleObject setter, unsigned attrs, ShapeTable* table,
     ShapeTable::Entry* entry, const AutoKeepShapeCaches& keep) {
   AutoCheckShapeConsistency check(obj);
-  AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
 
-  AssertValidPropertyOp(obj, getter, setter, attrs);
+  AssertValidCustomDataProp(obj, getter, setter, attrs);
 
   if (!maybeConvertToOrGrowDictionaryForAdd(cx, obj, id, &table, &entry,
                                             keep)) {
@@ -1043,15 +1043,13 @@ Shape* NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj,
 
 /* static */
 Shape* NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj,
-                                         HandleId id, GetterOp getter,
-                                         SetterOp setter, unsigned attrs) {
+                                         HandleId id, HandleObject getter,
+                                         HandleObject setter, unsigned attrs) {
   MOZ_ASSERT(!JSID_IS_VOID(id));
 
   AutoCheckShapeConsistency check(obj);
   AssertValidArrayIndex(obj, id);
-  AssertValidPropertyOp(obj, getter, setter, attrs);
-
-  AutoRooterGetterSetter gsRoot(cx, attrs, &getter, &setter);
+  AssertValidCustomDataProp(obj, getter, setter, attrs);
 
   // Search for id in order to claim its entry if table has been allocated.
   AutoKeepShapeCaches keep(cx);
@@ -1124,8 +1122,8 @@ Shape* NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj,
 
     AccessorShape& accShape = shape->asAccessorShape();
     GetterSetterPreWriteBarrier(&accShape);
-    accShape.rawGetter = getter;
-    accShape.rawSetter = setter;
+    accShape.getter_ = getter;
+    accShape.setter_ = setter;
     GetterSetterPostWriteBarrier(&accShape);
   } else {
     // Updating the last property in a non-dictionary-mode object. Find an
@@ -1157,31 +1155,6 @@ Shape* NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj,
 
   MOZ_ASSERT(!shape->isDataProperty());
   return shape;
-}
-
-/* static */
-Shape* NativeObject::changeProperty(JSContext* cx, HandleNativeObject obj,
-                                    HandleShape shape, unsigned attrs,
-                                    GetterOp getter, SetterOp setter) {
-  MOZ_ASSERT(obj->containsPure(shape));
-
-  AutoCheckShapeConsistency check(obj);
-
-  /* Allow only shared (slotless) => unshared (slotful) transition. */
-#ifdef DEBUG
-  bool needSlot = Shape::isDataProperty(attrs, getter, setter);
-  MOZ_ASSERT_IF(shape->isDataProperty() != needSlot, needSlot);
-#endif
-
-  AssertCanChangeAttrs(shape, attrs);
-
-  if (shape->attrs == attrs && shape->getter() == getter &&
-      shape->setter() == setter) {
-    return shape;
-  }
-
-  RootedId propid(cx, shape->propid());
-  return putAccessorProperty(cx, obj, propid, getter, setter, attrs);
 }
 
 /* static */
@@ -1831,14 +1804,14 @@ void Shape::fixupShapeTreeAfterMovingGC() {
     Shape* key = MaybeForwarded(e.front());
     BaseShape* base = MaybeForwarded(key->base());
 
-    GetterOp getter = key->getter();
-    if (key->hasGetterObject()) {
-      getter = GetterOp(MaybeForwarded(key->getterObject()));
+    JSObject* getter = key->maybeGetterObject();
+    if (getter) {
+      getter = MaybeForwarded(getter);
     }
 
-    SetterOp setter = key->setter();
-    if (key->hasSetterObject()) {
-      setter = SetterOp(MaybeForwarded(key->setterObject()));
+    JSObject* setter = key->maybeSetterObject();
+    if (setter) {
+      setter = MaybeForwarded(setter);
     }
 
     StackShape lookup(base, key->objectFlags(), key->propidRef(),
@@ -1869,8 +1842,8 @@ void Shape::fixupGetterSetterForBarrier(JSTracer* trc) {
     return;
   }
 
-  JSObject* priorGetter = asAccessorShape().getterObj;
-  JSObject* priorSetter = asAccessorShape().setterObj;
+  JSObject* priorGetter = asAccessorShape().getterObject();
+  JSObject* priorSetter = asAccessorShape().setterObject();
   if (!priorGetter && !priorSetter) {
     return;
   }
@@ -1895,15 +1868,15 @@ void Shape::fixupGetterSetterForBarrier(JSTracer* trc) {
 
     StackShape original(this);
     StackShape updated(this);
-    updated.rawGetter = reinterpret_cast<GetterOp>(postGetter);
-    updated.rawSetter = reinterpret_cast<SetterOp>(postSetter);
+    updated.getter = postGetter;
+    updated.setter = postSetter;
 
     ShapeSet* set = parent->children.toShapeSet();
     MOZ_ALWAYS_TRUE(set->rekeyAs(original, updated, this));
   }
 
-  asAccessorShape().getterObj = postGetter;
-  asAccessorShape().setterObj = postSetter;
+  asAccessorShape().getter_ = postGetter;
+  asAccessorShape().setter_ = postSetter;
 
   MOZ_ASSERT_IF(
       parent && !parent->inDictionary() && parent->children.isShapeSet(),
@@ -1941,10 +1914,9 @@ void Shape::dump(js::GenericPrinter& out) const {
     JSID_TO_SYMBOL(propid)->dump(out);
   }
 
-  out.printf(" g/s %p/%p slot %d attrs %x ",
-             JS_FUNC_TO_DATA_PTR(void*, getter()),
-             JS_FUNC_TO_DATA_PTR(void*, setter()),
-             isDataProperty() ? int32_t(slot()) : -1, attrs);
+  out.printf(" g/s %p/%p slot %d attrs %x ", maybeGetterObject(),
+             maybeSetterObject(), isDataProperty() ? int32_t(slot()) : -1,
+             attrs);
 
   if (attrs) {
     int first = 1;
@@ -2137,15 +2109,6 @@ void Zone::fixupInitialShapeTable() {
       e.mutableFront().shape.set(shape);
     }
     shape->updateBaseShapeAfterMovingGC();
-  }
-}
-
-void AutoRooterGetterSetter::Inner::trace(JSTracer* trc) {
-  if ((attrs & JSPROP_GETTER) && *pgetter) {
-    TraceRoot(trc, (JSObject**)pgetter, "AutoRooterGetterSetter getter");
-  }
-  if ((attrs & JSPROP_SETTER) && *psetter) {
-    TraceRoot(trc, (JSObject**)psetter, "AutoRooterGetterSetter setter");
   }
 }
 
