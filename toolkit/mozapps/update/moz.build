@@ -27,6 +27,23 @@ EXTRA_JS_MODULES += [
     "UpdateTelemetry.jsm",
 ]
 
+# This is Firefox-only for now simply because the `backgroundupdate` uses
+# `AppUpdater.jsm`, which is Firefox-only.  But there's nothing truly specific
+# to Firefox here: that module could be generalized to toolkit/, or the
+# functionality rewritten to consume App Update Service directly.
+if (
+    CONFIG["MOZ_BUILD_APP"] == "browser"
+    and CONFIG["MOZ_BACKGROUNDTASKS"]
+    and CONFIG["MOZ_UPDATE_AGENT"]
+):
+    EXTRA_JS_MODULES += [
+        "BackgroundUpdate.jsm",
+    ]
+
+    EXTRA_JS_MODULES.backgroundtasks += [
+        "BackgroundTask_backgroundupdate.jsm",
+    ]
+
 XPCOM_MANIFESTS += [
     "components.conf",
 ]

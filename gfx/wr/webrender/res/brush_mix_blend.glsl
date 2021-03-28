@@ -15,8 +15,17 @@ flat varying vec4 v_src_uv_sample_bounds;
 varying vec2 v_backdrop_uv;
 flat varying vec4 v_backdrop_uv_sample_bounds;
 
-// mix-blend op, and perspective interpolation control
+#if defined(PLATFORM_ANDROID) && !defined(SWGL)
+// Work around Adreno 3xx driver bug. See the v_perspective comment in
+// brush_image or bug 1630356 for details.
+flat varying vec2 v_perspective_vec;
+#define v_perspective v_perspective_vec.x
+#else
+// Flag to allow perspective interpolation of UV.
 flat varying float v_perspective;
+#endif
+
+// mix-blend op
 flat varying int v_op;
 
 #ifdef WR_VERTEX_SHADER

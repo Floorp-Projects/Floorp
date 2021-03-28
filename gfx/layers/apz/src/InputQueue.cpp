@@ -794,7 +794,8 @@ void InputQueue::ContentReceivedInputBlock(uint64_t aInputBlockId,
                                            bool aPreventDefault) {
   APZThreadUtils::AssertOnControllerThread();
 
-  INPQ_LOG("got a content response; block=%" PRIu64 "\n", aInputBlockId);
+  INPQ_LOG("got a content response; block=%" PRIu64 " preventDefault=%d\n",
+           aInputBlockId, aPreventDefault);
   bool success = false;
   InputBlockState* inputBlock = FindBlockForId(aInputBlockId, nullptr);
   if (inputBlock && inputBlock->AsCancelableBlock()) {
