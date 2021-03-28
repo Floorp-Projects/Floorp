@@ -3689,7 +3689,11 @@ void AsyncPanZoomController::SmoothMsdScrollTo(const CSSPoint& aDestination) {
 void AsyncPanZoomController::StartOverscrollAnimation(
     const ParentLayerPoint& aVelocity) {
   SetState(OVERSCROLL_ANIMATION);
-  StartAnimation(new OverscrollAnimation(*this, aVelocity));
+
+  ParentLayerPoint velocity = aVelocity;
+  AdjustDeltaForAllowedScrollDirections(velocity,
+                                        GetOverscrollableDirections());
+  StartAnimation(new OverscrollAnimation(*this, velocity));
 }
 
 bool AsyncPanZoomController::CallDispatchScroll(
