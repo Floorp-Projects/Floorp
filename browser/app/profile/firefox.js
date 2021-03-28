@@ -169,6 +169,20 @@ pref("app.update.staging.enabled", true);
 
 pref("app.update.langpack.enabled", true);
 
+#if defined(MOZ_BACKGROUNDTASKS) && defined(MOZ_UPDATE_AGENT) && defined(NIGHTLY_BUILD)
+  // If set to true, on Windows, the browser will attempt to schedule OS-level
+  // background tasks to update itself even when it is not running.  This pref
+  // is special: any profile that believes itself the default profile will
+  // mirror this pref's default value to the per-installation pref
+  // `app.update.background.enabled`.  This pref will be used to stage the roll
+  // out of the background update feature via Normandy.  (The per-installation
+  // pref allows profiles beyond the default profile to enable and disable the
+  // background update feature manually.)
+  pref("app.update.background.scheduling.enabled", false);
+  // By default, check for updates when the browser is not running every 7 hours.
+  pref("app.update.background.interval", 25200);
+#endif
+
 // Symmetric (can be overridden by individual extensions) update preferences.
 // e.g.
 //  extensions.{GUID}.update.enabled

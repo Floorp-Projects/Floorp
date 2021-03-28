@@ -35,10 +35,10 @@ When invoked like `--backgroundtask TASKNAME EXITCODE`, this task will simply co
 
 The exit codes 2 and 3 have special meaning:
 
-* Exit code 2 means the background task with the given `TASKNAME` was not found or could not be loaded.
-* Exit code 3 means the background task invocation rejected with an exception.
+* Exit code 2 (`EXIT_CODE.NOT_FOUND`) means the background task with the given `TASKNAME` was not found or could not be loaded.
+* Exit code 3 (`EXIT_CODE.EXCEPTION`) means the background task invocation rejected with an exception.
 
-See [`BackgroundTasksManager.jsm`](https://searchfox.org/mozilla-central/source/toolkit/components/backgroundtasks/BackgroundTasksManager.jsm) for details.
+See [`BackgroundTasksManager.EXIT_CODE`](https://searchfox.org/mozilla-central/source/toolkit/components/backgroundtasks/BackgroundTasksManager.jsm) for details.
 
 ## Test-only Background Tasks
 

@@ -723,6 +723,15 @@ function getCanApplyUpdates() {
       // in nsXULAppInfo::GetUserCanElevate which is located in nsAppRunner.cpp.
       let userCanElevate = Services.appinfo.QueryInterface(Ci.nsIWinAppHelper)
         .userCanElevate;
+      const bts =
+        "@mozilla.org/backgroundtasks;1" in Cc &&
+        Cc["@mozilla.org/backgroundtasks;1"].getService(Ci.nsIBackgroundTasks);
+      if (bts && bts.isBackgroundTaskMode) {
+        LOG(
+          "getCanApplyUpdates - in background task mode, assuming user can't elevate"
+        );
+        userCanElevate = false;
+      }
       if (!userCanElevate) {
         // if we're unable to create the test file this will throw an exception.
         let appDirTestFile = getAppBaseDir();
@@ -808,9 +817,11 @@ XPCOMUtils.defineLazyGetter(
 /**
  * Whether or not the application can stage an update.
  *
+ * @param {boolean} [transient] Whether transient factors such as the update
+ *        mutex should be considered.
  * @return true if updates can be staged.
  */
-function getCanStageUpdates() {
+function getCanStageUpdates(transient = true) {
   // If staging updates are disabled, then just bail out!
   if (!Services.prefs.getBoolPref(PREF_APP_UPDATE_STAGING_ENABLED, false)) {
     LOG(
@@ -827,7 +838,7 @@ function getCanStageUpdates() {
     return true;
   }
 
-  if (!hasUpdateMutex()) {
+  if (transient && !hasUpdateMutex()) {
     LOG(
       "getCanStageUpdates - unable to apply updates because another " +
         "instance of the application is already handling updates for this " +
@@ -842,6 +853,8 @@ function getCanStageUpdates() {
 /*
  * Whether or not the application can use BITS to download updates.
  *
+ * @param {boolean} [transient] Whether transient factors such as the update
+ *        mutex should be considered.
  * @return A string with one of these values:
  *           CanUseBits
  *           NoBits_NotWindows
@@ -854,7 +867,7 @@ function getCanStageUpdates() {
  *         probes. If this function is made to return other values, they should
  *         also be added to the labels lists for those probes in Histograms.json
  */
-function getCanUseBits() {
+function getCanUseBits(transient = true) {
   if (AppConstants.platform != "win") {
     LOG("getCanUseBits - Not using BITS because this is not Windows");
     return "NoBits_NotWindows";
@@ -868,10 +881,6 @@ function getCanUseBits() {
     LOG("getCanUseBits - Not using BITS. Disabled by pref.");
     return "NoBits_Pref";
   }
-  if (gBITSInUseByAnotherUser) {
-    LOG("getCanUseBits - Not using BITS. Already in use by another user");
-    return "NoBits_OtherUser";
-  }
   // Firefox support for passing proxies to BITS is still rudimentary.
   // For now, disable BITS support on configurations that are not using the
   // standard system proxy.
@@ -883,6 +892,10 @@ function getCanUseBits() {
   ) {
     LOG("getCanUseBits - Not using BITS because of proxy usage");
     return "NoBits_Proxy";
+  }
+  if (transient && gBITSInUseByAnotherUser) {
+    LOG("getCanUseBits - Not using BITS. Already in use by another user");
+    return "NoBits_OtherUser";
   }
   LOG("getCanUseBits - BITS can be used to download updates");
   return "CanUseBits";
@@ -3639,10 +3652,10 @@ UpdateService.prototype = {
   /**
    * See nsIUpdateService.idl
    */
-  get canCheckForUpdates() {
+  get canUsuallyCheckForUpdates() {
     if (this.disabledByPolicy) {
       LOG(
-        "UpdateService.canCheckForUpdates - unable to automatically check " +
+        "UpdateService.canUsuallyCheckForUpdates - unable to automatically check " +
           "for updates, the option has been disabled by the administrator."
       );
       return false;
@@ -3651,7 +3664,7 @@ UpdateService.prototype = {
     // If we don't know the binary platform we're updating, we can't update.
     if (!UpdateUtils.ABI) {
       LOG(
-        "UpdateService.canCheckForUpdates - unable to check for updates, " +
+        "UpdateService.canUsuallyCheckForUpdates - unable to check for updates, " +
           "unknown ABI"
       );
       return false;
@@ -3660,9 +3673,21 @@ UpdateService.prototype = {
     // If we don't know the OS version we're updating, we can't update.
     if (!UpdateUtils.OSVersion) {
       LOG(
-        "UpdateService.canCheckForUpdates - unable to check for updates, " +
+        "UpdateService.canUsuallyCheckForUpdates - unable to check for updates, " +
           "unknown OS version"
       );
+      return false;
+    }
+
+    LOG("UpdateService.canUsuallyCheckForUpdates - able to check for updates");
+    return true;
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  get canCheckForUpdates() {
+    if (!this.canUsuallyCheckForUpdates) {
       return false;
     }
 
@@ -3697,10 +3722,26 @@ UpdateService.prototype = {
   /**
    * See nsIUpdateService.idl
    */
+  get canUsuallyApplyUpdates() {
+    return getCanApplyUpdates();
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
   get canApplyUpdates() {
     return (
-      getCanApplyUpdates() && hasUpdateMutex() && !isOtherInstanceRunning()
+      this.canUsuallyApplyUpdates &&
+      hasUpdateMutex() &&
+      !isOtherInstanceRunning()
     );
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  get canUsuallyStageUpdates() {
+    return getCanStageUpdates(false);
   },
 
   /**
@@ -3708,6 +3749,20 @@ UpdateService.prototype = {
    */
   get canStageUpdates() {
     return getCanStageUpdates();
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  get canUsuallyUseBits() {
+    return getCanUseBits(false) == "CanUseBits";
+  },
+
+  /**
+   * See nsIUpdateService.idl
+   */
+  get canUseBits() {
+    return getCanUseBits() == "CanUseBits";
   },
 
   /**
