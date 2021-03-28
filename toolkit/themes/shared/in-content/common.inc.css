@@ -6,6 +6,7 @@
 @namespace html "http://www.w3.org/1999/xhtml";
 @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
+:host,
 :root {
   --in-content-page-color: #0c0c0d;
   --in-content-page-background: #fff;
@@ -18,6 +19,7 @@
   --in-content-item-hover: rgba(69, 161, 255, 0.2); /* blue 40 a20 */
   --in-content-item-selected: #0a84ff;
   --in-content-item-selected-text: #fff;
+  --in-content-icon-color: rgb(91,91,102);
   --in-content-accent-color: #0a84ff;
   --in-content-accent-color-active: #0060df;
   --in-content-border-hover: var(--grey-90-a50);
@@ -103,6 +105,7 @@
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
+:host,
 :root {
   --in-content-page-background: #f9f9fa;
   --in-content-box-info-background: var(--grey-20);
@@ -123,6 +126,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  :host,
   :root {
     /* Keep these in sync with layout/base/PresShell.cpp, and plaintext.css */
     --in-content-page-background: rgb(28,27,34);
@@ -142,6 +146,7 @@
     --in-content-button-background: rgb(43,42,51);
     --in-content-button-background-hover: rgb(82,82,94);
     --in-content-button-background-active: rgb(91,91,102);
+    --in-content-icon-color: rgb(251,251,254);
 
     --in-content-primary-button-text-color: rgb(21,20,26);
     --in-content-primary-button-background: rgb(0,221,255);
@@ -174,6 +179,7 @@
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
 @media (prefers-color-scheme: dark) {
+  :host,
   :root {
     --in-content-page-background: #2A2A2E;
     --in-content-page-color: rgb(249, 249, 250);
@@ -197,6 +203,7 @@
   }
 }
 }
+
 :root {
   font: message-box;
   appearance: none;
@@ -444,6 +451,16 @@ html|button.ghost-button:enabled:hover {
 
 html|button.ghost-button:enabled:hover:active {
   background-color: var(--in-content-button-background-hover);
+}
+
+@supports -moz-bool-pref("browser.proton.enabled") {
+html|button.ghost-button:enabled:hover {
+  background-color: var(--in-content-button-background-hover);
+}
+
+html|button.ghost-button:enabled:hover:active {
+  background-color: var(--in-content-button-background-active);
+}
 }
 
 html|input[type="color"] {
