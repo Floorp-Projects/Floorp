@@ -6,20 +6,18 @@
 @namespace html "http://www.w3.org/1999/xhtml";
 @namespace xul "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
-:host,
 :root {
   --in-content-page-color: #0c0c0d;
   --in-content-page-background: #fff;
   --in-content-text-color: var(--grey-90);
   --in-content-deemphasized-text: var(--grey-60);
+  --in-content-selected-text: #fff;
   --in-content-box-background: #fff;
   --in-content-box-background-odd: rgba(12, 12, 13, 0.05); /* grey 90 a05 */
   --in-content-box-border-color: var(--grey-90-a30);
   --in-content-box-info-background: #f0f0f4;
   --in-content-item-hover: rgba(69, 161, 255, 0.2); /* blue 40 a20 */
   --in-content-item-selected: #0a84ff;
-  --in-content-item-selected-text: #fff;
-  --in-content-icon-color: rgb(91,91,102);
   --in-content-accent-color: #0a84ff;
   --in-content-accent-color-active: #0060df;
   --in-content-border-hover: var(--grey-90-a50);
@@ -33,7 +31,6 @@
   --in-content-button-background: rgba(207, 207, 216, 0.33);
   --in-content-button-background-hover: rgba(207, 207, 216, 0.66);
   --in-content-button-background-active: rgba(207, 207, 216, 1);
-  --in-content-primary-button-text-color: rgb(255,255,255);
   --in-content-primary-button-background: #0061e0;
   --in-content-primary-button-background-hover: #0250bb;
   --in-content-primary-button-background-active: #053e94;
@@ -105,7 +102,6 @@
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
-:host,
 :root {
   --in-content-page-background: #f9f9fa;
   --in-content-box-info-background: var(--grey-20);
@@ -126,32 +122,24 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :host,
   :root {
     /* Keep these in sync with layout/base/PresShell.cpp, and plaintext.css */
-    --in-content-page-background: rgb(28,27,34);
-    --in-content-page-color: rgb(251,251,254);
-    --in-content-text-color: var(--in-content-page-color);
-    --in-content-deemphasized-text: rgb(191,191,201);
+    --in-content-page-background: #2A2A2E;
+    --in-content-page-color: rgb(249, 249, 250);
 
+    --in-content-text-color: var(--in-content-page-color);
+    --in-content-deemphasized-text: var(--grey-40);
     --in-content-box-background: #202023;
     --in-content-box-background-odd: rgba(249,249,250,0.05);
     --in-content-box-info-background: rgba(249,249,250,0.15);
 
     --in-content-border-color: rgba(249,249,250,0.2);
     --in-content-border-hover: rgba(249,249,250,0.3);
-    --in-content-border-invalid: rgb(255,132,139);
     --in-content-box-border-color: rgba(249,249,250,0.2);
 
-    --in-content-button-background: rgb(43,42,51);
-    --in-content-button-background-hover: rgb(82,82,94);
-    --in-content-button-background-active: rgb(91,91,102);
-    --in-content-icon-color: rgb(251,251,254);
-
-    --in-content-primary-button-text-color: rgb(21,20,26);
-    --in-content-primary-button-background: rgb(0,221,255);
-    --in-content-primary-button-background-hover: rgb(128,235,255);
-    --in-content-primary-button-background-active: rgb(170,242,255);
+    --in-content-button-background: rgba(249,249,250,0.1);
+    --in-content-button-background-hover: rgba(249,249,250,0.15);
+    --in-content-button-background-active: rgba(249,249,250,0.2);
 
     --in-content-danger-button-background: #ff848b;
     --in-content-danger-button-background-hover: #ffbdc5;
@@ -162,12 +150,12 @@
     --in-content-table-header-background: #002b57;
     --in-content-dialog-header-background: rgba(249,249,250,0.05);
 
-    --in-content-accent-color: var(--in-content-primary-button-background);
-    --in-content-accent-color-active: var(--in-content-primary-button-background-hover);
-    --in-content-link-color: var(--in-content-primary-button-background);
-    --in-content-link-color-hover: var(--in-content-primary-button-background-hover);
-    --in-content-link-color-active: var(--in-content-primary-button-background-active);
-    --in-content-link-color-visited: var(--in-content-link-color);
+    --in-content-accent-color: var(--blue-40);
+    --in-content-accent-color-active: var(--blue-50);
+    --in-content-link-color: var(--blue-40);
+    --in-content-link-color-hover: var(--blue-50);
+    --in-content-link-color-active: var(--blue-60);
+    --in-content-link-color-visited: var(--blue-40);
 
     --card-outline-color: var(--grey-60);
 
@@ -175,33 +163,6 @@
 
     scrollbar-color: rgba(249,249,250,.4) rgba(20,20,25,.3);
   }
-}
-
-@supports not -moz-bool-pref("browser.proton.enabled") {
-@media (prefers-color-scheme: dark) {
-  :host,
-  :root {
-    --in-content-page-background: #2A2A2E;
-    --in-content-page-color: rgb(249, 249, 250);
-    --in-content-deemphasized-text: var(--grey-40);
-
-    --in-content-button-background: rgba(249,249,250,0.1);
-    --in-content-button-background-hover: rgba(249,249,250,0.15);
-    --in-content-button-background-active: rgba(249,249,250,0.2);
-
-    --in-content-primary-button-text-color: rgb(255,255,255);
-    --in-content-primary-button-background: var(--blue-60);
-    --in-content-primary-button-background-hover: var(--blue-70);
-    --in-content-primary-button-background-active: var(--blue-80);
-
-    --in-content-accent-color: var(--blue-40);
-    --in-content-accent-color-active: var(--blue-50);
-    --in-content-link-color: var(--blue-40);
-    --in-content-link-color-hover: var(--blue-50);
-    --in-content-link-color-active: var(--blue-60);
-    --in-content-link-color-visited: var(--blue-40);
-  }
-}
 }
 
 :root {
@@ -415,7 +376,7 @@ html|button[type="submit"],
 xul|button[default],
 button.primary {
   background-color: var(--in-content-primary-button-background);
-  color: var(--in-content-primary-button-text-color) !important;
+  color: var(--in-content-selected-text) !important;
 }
 
 html|button[autofocus]:enabled:hover,
@@ -451,16 +412,6 @@ html|button.ghost-button:enabled:hover {
 
 html|button.ghost-button:enabled:hover:active {
   background-color: var(--in-content-button-background-hover);
-}
-
-@supports -moz-bool-pref("browser.proton.enabled") {
-html|button.ghost-button:enabled:hover {
-  background-color: var(--in-content-button-background-hover);
-}
-
-html|button.ghost-button:enabled:hover:active {
-  background-color: var(--in-content-button-background-active);
-}
 }
 
 html|input[type="color"] {
@@ -517,7 +468,7 @@ xul|menulist > xul|menupopup > xul|menuitem:not([disabled="true"])[_moz-menuacti
 
 xul|menulist > xul|menupopup > xul|menu:not([disabled="true"])[selected="true"],
 xul|menulist > xul|menupopup > xul|menuitem:not([disabled="true"])[selected="true"] {
-  color: var(--in-content-item-selected-text);
+  color: var(--in-content-selected-text);
   background-color: var(--in-content-item-selected);
 }
 
@@ -623,13 +574,6 @@ html|a:hover:active,
   text-decoration: none;
 }
 
-html|a:-moz-focusring,
-.text-link:-moz-focusring {
-  outline: 2px solid var(--in-content-focus-outline-color);
-  outline-offset: 1px;
-  -moz-outline-radius: 2px;
-}
-
 /* Checkboxes and radio buttons */
 
 xul|checkbox {
@@ -668,8 +612,8 @@ xul|checkbox[checked] > xul|*.checkbox-check,
 html|input[type="checkbox"]:checked {
   -moz-context-properties: fill;
   fill: currentColor;
-  color: var(--in-content-primary-button-text-color);
-  background-color: var(--in-content-primary-button-background);
+  color: white;
+  background-color: var(--blue-60);
   border-color: transparent;
 
   /* Style the button also when printing with "Print Backgrounds" unchecked */
@@ -686,12 +630,12 @@ html|input[type="checkbox"]:checked {
 
 xul|checkbox:not([disabled="true"])[checked]:hover > xul|*.checkbox-check,
 html|input[type="checkbox"]:enabled:checked:hover {
-  background-color: var(--in-content-primary-button-background-hover);
+  background-color: var(--blue-70);
 }
 
 xul|checkbox:not([disabled="true"])[checked]:hover:active > xul|*.checkbox-check,
 html|input[type="checkbox"]:enabled:checked:hover:active {
-  background-color: var(--in-content-primary-button-background-active);
+  background-color: var(--blue-80);
 }
 
 xul|richlistitem > xul|*.checkbox-check {
@@ -738,8 +682,8 @@ html|input[type="radio"]:checked,
 xul|*.radio-check[selected] {
   -moz-context-properties: fill;
   fill: currentColor;
-  color: var(--in-content-primary-button-text-color);
-  background-color: var(--in-content-primary-button-background);
+  color: white;
+  background-color: var(--blue-60);
   border-color: transparent;
 
   /* Style the button also when printing with "Print Backgrounds" unchecked */
@@ -756,12 +700,12 @@ xul|*.radio-check[selected] {
 
 html|input[type="radio"]:enabled:checked:hover,
 xul|radio:not([disabled="true"])[selected]:hover > xul|*.radio-check {
-  background-color: var(--in-content-primary-button-background-hover);
+  background-color: var(--blue-70);
 }
 
 html|input[type="radio"]:enabled:checked:hover:active,
 xul|radio:not([disabled="true"])[selected]:hover:active > xul|*.radio-check {
-  background-color: var(--in-content-primary-button-background-active);
+  background-color: var(--blue-80);
 }
 
 xul|*.radio-label-box {
@@ -1090,7 +1034,7 @@ xul|treechildren::-moz-tree-row {
 xul|treechildren::-moz-tree-cell-text(selected),
 xul|treechildren::-moz-tree-twisty(selected),
 xul|treechildren::-moz-tree-image(selected) {
-  color: var(--in-content-item-selected-text);
+  color: var(--in-content-selected-text);
 }
 
 /* Message bars */
