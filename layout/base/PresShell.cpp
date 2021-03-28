@@ -33,6 +33,7 @@
 #include "mozilla/Sprintf.h"
 #include "mozilla/StaticAnalysisFunctions.h"
 #include "mozilla/StaticPrefs_apz.h"
+#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_dom.h"
 #include "mozilla/StaticPrefs_font.h"
 #include "mozilla/StaticPrefs_layout.h"
@@ -5317,7 +5318,8 @@ nscolor PresShell::GetDefaultBackgroundColorToDraw() {
       doc->PrefersColorScheme(Document::IgnoreRFP::Yes) ==
           StylePrefersColorScheme::Dark) {
     // Use --in-content-page-background for prefers-color-scheme: dark.
-    return NS_RGB(0x2A, 0x2A, 0x2E);
+    return StaticPrefs::browser_proton_enabled() ? NS_RGB(0x1C, 0x1B, 0x22)
+                                                 : NS_RGB(0x2A, 0x2A, 0x2E);
   }
 
   return backgroundColor;

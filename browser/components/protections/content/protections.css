@@ -855,7 +855,7 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 
 #monitor-breaches-link,
 #monitor-partial-breaches-link {
-  color: var(--in-content-selected-text);
+  color: inherit;
   outline: none;
   text-decoration: none;
   width: 157.267px;
@@ -1002,8 +1002,21 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
   border: 1px solid transparent;
   border-radius: 2px;
   text-decoration: none;
-  color: var(--in-content-selected-text);
+  color: var(--in-content-primary-button-text-color);
+  font-weight: 600;
 }
+
+@supports not -moz-bool-pref("browser.proton.enabled") {
+#manage-protections,
+#sign-up-for-monitor-link,
+#get-proxy-extension-link,
+#get-vpn-link,
+#vpn-banner-link,
+.monitor-partial-breaches-link-wrapper,
+.monitor-breaches-link-wrapper {
+  font-weight: inherit;
+}
+} /** END !proton **/
 
 #manage-protections:active,
 #sign-up-for-monitor-link:active,
@@ -1033,8 +1046,9 @@ label[for="tab-cryptominer"]:hover ~ #highlight-hover {
 #monitor-partial-breaches-link:focus,
 .monitor-block > a:focus,
 #monitor-breaches-link:focus {
-  box-shadow: 0 0 0 1px #0a84ff inset, 0 0 0 1px #0a84ff, 0 0 0 4px rgba(10, 132, 255, 0.3);
-  outline: none;
+  outline: 2px solid var(--in-content-focus-outline-color);
+  outline-offset: 2px;
+  -moz-outline-radius: 6px;
 }
 
 .monitor-card.loading::after,
