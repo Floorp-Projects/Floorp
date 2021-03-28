@@ -34,6 +34,7 @@ class GLContext;
 }  // namespace gl
 namespace layers {
 class CompositorBridgeParent;
+class ShaderProgramOGLsHolder;
 class SurfacePool;
 }  // namespace layers
 namespace wr {
@@ -261,6 +262,8 @@ class RenderThread final {
   RefPtr<layers::SurfacePool> SharedSurfacePool();
   void ClearSharedSurfacePool();
 
+  RefPtr<layers::ShaderProgramOGLsHolder> GetProgramsForCompositorOGL();
+
   /// Can only be called from the render thread.
   void HandleDeviceReset(const char* aWhere, GLenum aReason);
   /// Can only be called from the render thread.
@@ -319,6 +322,7 @@ class RenderThread final {
 
   UniquePtr<WebRenderProgramCache> mProgramCache;
   UniquePtr<WebRenderShaders> mShaders;
+  RefPtr<layers::ShaderProgramOGLsHolder> mProgramsForCompositorOGL;
 
   // An optional shared GLContext to be used for all
   // windows.

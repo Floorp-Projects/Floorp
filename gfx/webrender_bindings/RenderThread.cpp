@@ -25,6 +25,7 @@
 #include "mozilla/webrender/RendererOGL.h"
 #include "mozilla/webrender/RenderTextureHost.h"
 #include "mozilla/widget/CompositorWidget.h"
+#include "OGLShaderProgram.h"
 
 #ifdef XP_WIN
 #  include "GLContextEGL.h"
@@ -925,8 +926,25 @@ void RenderThread::ClearSingletonGL() {
   if (mSurfacePool) {
     mSurfacePool->DestroyGLResourcesForContext(mSingletonGL);
   }
+  if (mProgramsForCompositorOGL) {
+    mProgramsForCompositorOGL->Clear();
+    mProgramsForCompositorOGL = nullptr;
+  }
   mShaders = nullptr;
   mSingletonGL = nullptr;
+}
+
+RefPtr<layers::ShaderProgramOGLsHolder>
+RenderThread::GetProgramsForCompositorOGL() {
+  if (!mSingletonGL) {
+    return nullptr;
+  }
+
+  if (!mProgramsForCompositorOGL) {
+    mProgramsForCompositorOGL =
+        MakeAndAddRef<layers::ShaderProgramOGLsHolder>(mSingletonGL);
+  }
+  return mProgramsForCompositorOGL;
 }
 
 RefPtr<layers::SurfacePool> RenderThread::SharedSurfacePool() {
