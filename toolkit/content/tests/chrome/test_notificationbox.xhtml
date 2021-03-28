@@ -411,7 +411,7 @@ var tests =
     test(nb, ntf) {
       var exh = false;
       try {
-        nb.appendNotification("no", "no", "no", 0, null);
+        nb.appendNotification("no", "no", "no", -1, null);
       } catch (ex) { exh = true; }
       SimpleTest.is(exh, true, "appendNotification priority too low");
 
