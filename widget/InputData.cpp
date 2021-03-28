@@ -635,6 +635,38 @@ double PinchGestureInput::ComputeDeltaY(nsIWidget* aWidget) const {
 #endif
 }
 
+bool PinchGestureInput::SetLineOrPageDeltaY(nsIWidget* aWidget) {
+  double deltaY = ComputeDeltaY(aWidget);
+  if (deltaY == 0 && mType != PINCHGESTURE_END) {
+    return false;
+  }
+  gfx::IntPoint lineOrPageDelta = PinchGestureInput::GetIntegerDeltaForEvent(
+      (mType == PINCHGESTURE_START), 0, deltaY);
+  mLineOrPageDeltaY = lineOrPageDelta.y;
+  if (mLineOrPageDeltaY == 0) {
+    // For PINCHGESTURE_SCALE events, don't dispatch them. Note that the delta
+    // isn't lost; it remains in the accumulator in GetIntegerDeltaForEvent().
+    if (mType == PINCHGESTURE_SCALE) {
+      return false;
+    }
+    // On Windows, drop PINCHGESTURE_START as well (the Windows widget code will
+    // defer the START event until we accumulate enough delta).
+    // The Linux widget code doesn't support this, so instead set the event's
+    // mLineOrPageDeltaY to the smallest nonzero amount in the relevant
+    // direction.
+    if (mType == PINCHGESTURE_START) {
+#ifdef XP_WIN
+      return false;
+#else
+      mLineOrPageDeltaY = (deltaY >= 0) ? 1 : -1;
+#endif
+    }
+    // For PINCHGESTURE_END events, not dispatching a DOMMouseScroll for them is
+    // fine.
+  }
+  return true;
+}
+
 /* static */ gfx::IntPoint PinchGestureInput::GetIntegerDeltaForEvent(
     bool aIsStart, float x, float y) {
   static gfx::Point sAccumulator(0.0f, 0.0f);

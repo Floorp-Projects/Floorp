@@ -51,9 +51,6 @@ async function test() {
       // We observed that deltaSum will be around -42 by the time all wheel events have arrived.
       if (deltaSum < -40) {
         ok(true, "Accumulated a deltaY of -40");
-        document.removeEventListener("wheel", onWheel, { passive: false });
-        final_resolution = getResolution();
-        ok(final_resolution === initial_resolution, "The final resolution (" + final_resolution + ") is equal after prevent default");
         resolveWheelPromise();
       }
     }
@@ -63,28 +60,40 @@ async function test() {
   // Give APZ a chance to become aware of the listener, so it knows
   // to queue events while it waits for a content response.
   await promiseApzFlushedRepaints();
-  // Do not use `await` because calling preventDefault() means
-  // the APZ:TransformEnd notification will never be sent.
-  pinchZoomInWithTouchpad(641, 465);
+  // Calling preventDefault() means the APZ:TransformEnd notification will never be sent.
+  await pinchZoomInWithTouchpad(641, 465, { waitForTransformEnd: false });
   await wheelPromise;
+  document.removeEventListener("wheel", onWheel, { passive: false });
+  final_resolution = getResolution();
+  is(final_resolution, initial_resolution,
+     "Calling preventDefault() on wheel event successfully prevents zooming");
 
   // Scenario 5: check that page receives DOMMouseScroll event
   var resolveDOMMouseScrollPromise;
   var DOMMouseScrollPromise = new Promise(resolve => { resolveDOMMouseScrollPromise = resolve; });
   deltaSum = 0;
+  initial_resolution = final_resolution;
   var onDOMMouseScroll = function(e) {
     if (e.ctrlKey) {
+      e.preventDefault();
       deltaSum += e.detail;
       if (deltaSum < -40) {
         ok(true, "Accumulated a deltaSum of -40");
-        document.removeEventListener("DOMMouseScroll", onDOMMouseScroll, { passive: false });
         resolveDOMMouseScrollPromise();
       }
     }
   };
   document.addEventListener("DOMMouseScroll", onDOMMouseScroll, { passive: false });
-  pinchZoomInWithTouchpad(641, 465);
+  await promiseApzFlushedRepaints();
+  await pinchZoomInWithTouchpad(641, 465, {
+    waitForTransformEnd: false,
+    waitForFrames: true
+  });
   await DOMMouseScrollPromise;
+  document.removeEventListener("DOMMouseScroll", onDOMMouseScroll, { passive: false });
+  final_resolution = getResolution();
+  is(final_resolution, initial_resolution,
+     "Calling preventDefault() on DOMMouseScroll event successfully prevents zooming");
 }
 
 waitUntilApzStable()

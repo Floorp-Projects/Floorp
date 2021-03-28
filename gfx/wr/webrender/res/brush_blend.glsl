@@ -37,7 +37,10 @@ flat varying vec4 v_uv_sample_bounds;
 
 flat varying vec4 v_color_offset;
 
-// Flag to allow perspective interpolation of UV.
+// x: Flag to allow perspective interpolation of UV.
+// y: Filter-dependent "amount" parameter.
+// Please ensure that perspective remains packed in a vector. If refactoring,
+// see the v_perspective declaration in brush_image, and bug 1630356.
 flat varying vec2 v_perspective_amount;
 
 flat varying int v_op;

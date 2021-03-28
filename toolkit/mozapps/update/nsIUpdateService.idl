@@ -350,9 +350,17 @@ interface nsIApplicationUpdateService : nsISupports
   readonly attribute boolean isDownloading;
 
   /**
-   * Whether or not the Update Service can check for updates. This is a function
-   * of whether or not application update is disabled by the application and the
-   * platform the application is running on.
+   * Whether or not the Update Service can usually check for updates. This is a
+   * function of whether or not application update is disabled by the
+   * application and the platform the application is running on.
+   */
+  readonly attribute boolean canUsuallyCheckForUpdates;
+
+  /**
+   * Whether or not the Update Service can check for updates right now. This is
+   * a function of whether or not application update is disabled by the
+   * application, the platform the application is running on, and transient
+   * factors such as whether other instances are running.
    */
   readonly attribute boolean canCheckForUpdates;
 
@@ -363,11 +371,21 @@ interface nsIApplicationUpdateService : nsISupports
   readonly attribute boolean elevationRequired;
 
   /**
-   * Whether or not the Update Service can download and install updates.
+   * Whether or not the Update Service can usually download and install updates.
    * On Windows, this is a function of whether or not the maintenance service
    * is installed and enabled. On other systems, and as a fallback on Windows,
    * this depends on whether the current user has write access to the install
    * directory.
+   */
+  readonly attribute boolean canUsuallyApplyUpdates;
+
+  /**
+   * Whether or not the Update Service can download and install updates right now.
+   * On Windows, this is a function of whether or not the maintenance service
+   * is installed and enabled. On other systems, and as a fallback on Windows,
+   * this depends on whether the current user has write access to the install
+   * directory. On all systems, this includes transient factors such as whether
+   * other instances are running.
    */
   readonly attribute boolean canApplyUpdates;
 
@@ -380,9 +398,27 @@ interface nsIApplicationUpdateService : nsISupports
   readonly attribute boolean isOtherInstanceHandlingUpdates;
 
   /**
-   * Whether the Update Service is able to stage updates.
+   * Whether the Update Service is usually able to stage updates.
+   */
+  readonly attribute boolean canUsuallyStageUpdates;
+
+  /**
+   * Whether the Update Service is able to stage updates right now.  On all
+   * systems, this includes transient factors such as whether other instances
+   * are running.
    */
   readonly attribute boolean canStageUpdates;
+
+  /**
+   * On Windows, whether the Update Service can usually use BITS.
+   */
+  readonly attribute boolean canUsuallyUseBits;
+
+  /**
+   * On Windows, whether the Update Service can use BITS right now.  This
+   * includes transient factors such as whether other instances are running.
+   */
+  readonly attribute boolean canUseBits;
 
   /**
    * Indicates whether or not the enterprise policy that allows only manual
