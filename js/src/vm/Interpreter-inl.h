@@ -159,9 +159,8 @@ inline bool FetchName(JSContext* cx, HandleObject receiver, HandleObject holder,
     }
   } else {
     RootedShape shape(cx, prop.shape());
-    if (shape->isDataDescriptor() && shape->hasDefaultGetter()) {
+    if (shape->isDataProperty()) {
       /* Fast path for Object instance properties. */
-      MOZ_ASSERT(shape->isDataProperty());
       vp.set(holder->as<NativeObject>().getSlot(shape->slot()));
     } else {
       // Unwrap 'with' environments for reasons given in
@@ -190,7 +189,7 @@ inline bool FetchNameNoGC(NativeObject* pobj, PropertyResult prop, Value* vp) {
   }
 
   Shape* shape = prop.shape();
-  if (!shape->isDataDescriptor() || !shape->hasDefaultGetter()) {
+  if (!shape->isDataProperty()) {
     return false;
   }
 

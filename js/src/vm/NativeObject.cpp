@@ -565,8 +565,8 @@ DenseElementResult NativeObject::maybeDensifySparseElements(
   while (!shape->isEmptyShape()) {
     uint32_t index;
     if (IdIsIndex(shape->propid(), &index)) {
-      if (shape->attributes() == JSPROP_ENUMERATE &&
-          shape->hasDefaultGetter() && shape->hasDefaultSetter()) {
+      if (shape->attributes() == JSPROP_ENUMERATE) {
+        MOZ_ASSERT(shape->isDataProperty());
         numDenseElements++;
         newInitializedLength = std::max(newInitializedLength, index + 1);
       } else {
@@ -1315,11 +1315,8 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
   // the slower putProperty.
   if constexpr (AddOrChange == IsAddOrChange::Add) {
     if (desc.isAccessorDescriptor()) {
-      GetterOp getter =
-          JS_DATA_TO_FUNC_PTR(GetterOp, desc.getterObject().get());
-      SetterOp setter =
-          JS_DATA_TO_FUNC_PTR(SetterOp, desc.setterObject().get());
-      if (!NativeObject::addAccessorProperty(cx, obj, id, getter, setter,
+      if (!NativeObject::addAccessorProperty(cx, obj, id, desc.getterObject(),
+                                             desc.setterObject(),
                                              desc.attributes())) {
         return false;
       }
@@ -1333,11 +1330,8 @@ static MOZ_ALWAYS_INLINE bool AddOrChangeProperty(
     }
   } else {
     if (desc.isAccessorDescriptor()) {
-      GetterOp getter =
-          JS_DATA_TO_FUNC_PTR(GetterOp, desc.getterObject().get());
-      SetterOp setter =
-          JS_DATA_TO_FUNC_PTR(SetterOp, desc.setterObject().get());
-      if (!NativeObject::putAccessorProperty(cx, obj, id, getter, setter,
+      if (!NativeObject::putAccessorProperty(cx, obj, id, desc.getterObject(),
+                                             desc.setterObject(),
                                              desc.attributes())) {
         return false;
       }
@@ -1486,10 +1480,10 @@ static bool DefinePropertyIsRedundant(JSContext* cx, HandleNativeObject obj,
       }
     }
 
-    // Check for GetterOp/SetterOp. PropertyDescriptor can't represent these so
-    // they're never redundant.
-    if (prop.isNativeProperty() &&
-        (prop.shape()->getterOp() || prop.shape()->setterOp())) {
+    // Check for custom data properties for ArrayObject/ArgumentsObject.
+    // PropertyDescriptor can't represent these properties so they're never
+    // redundant.
+    if (prop.isNativeProperty() && prop.shape()->isCustomDataProperty()) {
       return true;
     }
   } else {
@@ -2048,13 +2042,6 @@ bool js::NativeGetOwnPropertyDescriptor(
 
     desc.value().setUndefined();
   } else {
-    // This is either a straight-up data property or (rarely) a
-    // property with a JSGetterOp/JSSetterOp. The latter must be
-    // reported to the caller as a plain data property, so clear
-    // desc.getter/setter, and mask away the SHARED bit.
-    desc.setGetter(nullptr);
-    desc.setSetter(nullptr);
-
     if (prop.isDenseElement()) {
       desc.value().set(obj->getDenseElement(prop.denseElementIndex()));
     } else if (prop.isTypedArrayElement()) {
@@ -2064,6 +2051,11 @@ bool js::NativeGetOwnPropertyDescriptor(
         return false;
       }
     } else {
+      // This is either a straight-up data property or (rarely) a custom data
+      // property. The latter must be reported to the caller as a plain data
+      // property, so mask away the JSPROP_CUSTOM_DATA_PROP flag.
+      desc.attributesRef() &= ~JSPROP_CUSTOM_DATA_PROP;
+
       RootedShape shape(cx, prop.shape());
       if (!NativeGetExistingProperty(cx, obj, obj, shape, desc.value())) {
         return false;
@@ -2078,33 +2070,48 @@ bool js::NativeGetOwnPropertyDescriptor(
 
 /*** [[Get]] ****************************************************************/
 
-static bool CallJSGetterOp(JSContext* cx, GetterOp op, HandleObject obj,
-                           HandleId id, MutableHandleValue vp) {
+static bool GetCustomDataProperty(JSContext* cx, HandleObject obj, HandleId id,
+                                  MutableHandleValue vp) {
   if (!CheckRecursionLimit(cx)) {
     return false;
   }
 
   cx->check(obj, id, vp);
-  bool ok = op(cx, obj, id, vp);
-  if (ok) {
-    cx->check(vp);
+
+  const JSClass* clasp = obj->getClass();
+  if (clasp == &ArrayObject::class_) {
+    if (!ArrayLengthGetter(cx, obj, id, vp)) {
+      return false;
+    }
+  } else if (clasp == &MappedArgumentsObject::class_) {
+    if (!MappedArgGetter(cx, obj, id, vp)) {
+      return false;
+    }
+  } else {
+    MOZ_RELEASE_ASSERT(clasp == &UnmappedArgumentsObject::class_);
+    if (!UnmappedArgGetter(cx, obj, id, vp)) {
+      return false;
+    }
   }
-  return ok;
+
+  cx->check(vp);
+  return true;
 }
 
 static inline bool CallGetter(JSContext* cx, HandleObject obj,
                               HandleValue receiver, HandleShape shape,
                               MutableHandleValue vp) {
-  MOZ_ASSERT(!shape->hasDefaultGetter());
+  MOZ_ASSERT(!shape->isDataProperty());
 
   if (shape->hasGetterValue()) {
     RootedValue getter(cx, shape->getterValue());
     return js::CallGetter(cx, receiver, getter, vp);
   }
 
-  // In contrast to normal getters JSGetterOps always want the holder.
+  MOZ_ASSERT(shape->isCustomDataProperty());
+
   RootedId id(cx, shape->propid());
-  return CallJSGetterOp(cx, shape->getterOp(), obj, id, vp);
+  return GetCustomDataProperty(cx, obj, id, vp);
 }
 
 template <AllowGC allowGC>
@@ -2114,15 +2121,13 @@ static MOZ_ALWAYS_INLINE bool GetExistingProperty(
     typename MaybeRooted<Shape*, allowGC>::HandleType shape,
     typename MaybeRooted<Value, allowGC>::MutableHandleType vp) {
   if (shape->isDataProperty()) {
-    MOZ_ASSERT(shape->hasDefaultGetter());
-
     vp.set(obj->getSlot(shape->slot()));
     return true;
   }
 
   vp.setUndefined();
 
-  if (shape->hasDefaultGetter()) {
+  if (!shape->isCustomDataProperty() && !shape->getterObject()) {
     return true;
   }
 
@@ -2356,14 +2361,23 @@ bool js::GetNameBoundInEnvironment(JSContext* cx, HandleObject envArg,
 
 /*** [[Set]] ****************************************************************/
 
-static bool CallJSSetterOp(JSContext* cx, SetterOp op, HandleObject obj,
-                           HandleId id, HandleValue v, ObjectOpResult& result) {
+static bool SetCustomDataProperty(JSContext* cx, HandleObject obj, HandleId id,
+                                  HandleValue v, ObjectOpResult& result) {
   if (!CheckRecursionLimit(cx)) {
     return false;
   }
 
   cx->check(obj, id, v);
-  return op(cx, obj, id, v, result);
+
+  const JSClass* clasp = obj->getClass();
+  if (clasp == &ArrayObject::class_) {
+    return ArrayLengthSetter(cx, obj, id, v, result);
+  }
+  if (clasp == &MappedArgumentsObject::class_) {
+    return MappedArgSetter(cx, obj, id, v, result);
+  }
+  MOZ_RELEASE_ASSERT(clasp == &UnmappedArgumentsObject::class_);
+  return UnmappedArgSetter(cx, obj, id, v, result);
 }
 
 static bool MaybeReportUndeclaredVarAssignment(JSContext* cx, HandleId id) {
@@ -2400,23 +2414,17 @@ static bool NativeSetExistingDataProperty(JSContext* cx, HandleNativeObject obj,
   MOZ_ASSERT(obj->is<NativeObject>());
   MOZ_ASSERT(shape->isDataDescriptor());
 
-  if (shape->hasDefaultSetter()) {
-    if (shape->isDataProperty()) {
-      // The common path. Standard data property.
-      obj->setSlot(shape->slot(), v);
-      return result.succeed();
-    }
-
-    // Bizarre: shared (slotless) property that's writable but has no
-    // JSSetterOp. JS code can't define such a property, but it can be done
-    // through the JSAPI. Treat it as non-writable.
-    return result.fail(JSMSG_GETTER_ONLY);
+  if (shape->isDataProperty()) {
+    // The common path. Standard data property.
+    obj->setSlot(shape->slot(), v);
+    return result.succeed();
   }
 
+  MOZ_ASSERT(shape->isCustomDataProperty());
   MOZ_ASSERT(!obj->is<WithEnvironmentObject>());  // See bug 1128681.
 
   RootedId id(cx, shape->propid());
-  return CallJSSetterOp(cx, shape->setterOp(), obj, id, v, result);
+  return SetCustomDataProperty(cx, obj, id, v, result);
 }
 
 /*
@@ -2615,8 +2623,8 @@ static bool SetExistingProperty(JSContext* cx, HandleId id, HandleValue v,
 
   // Steps 6-11.
   MOZ_ASSERT(shape->isAccessorDescriptor());
-  MOZ_ASSERT_IF(!shape->hasSetterObject(), shape->hasDefaultSetter());
-  if (shape->hasDefaultSetter()) {
+
+  if (!shape->setterObject()) {
     return result.fail(JSMSG_GETTER_ONLY);
   }
 
