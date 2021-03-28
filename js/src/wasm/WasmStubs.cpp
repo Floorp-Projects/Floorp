@@ -65,6 +65,28 @@ static uint32_t ResultStackSize(ValType type) {
   }
 }
 
+uint32_t js::wasm::MIRTypeToABIResultSize(jit::MIRType type) {
+  switch (type) {
+    case MIRType::Int32:
+      return ABIResult::StackSizeOfInt32;
+    case MIRType::Int64:
+      return ABIResult::StackSizeOfInt64;
+    case MIRType::Float32:
+      return ABIResult::StackSizeOfFloat;
+    case MIRType::Double:
+      return ABIResult::StackSizeOfDouble;
+#ifdef ENABLE_WASM_SIMD
+    case MIRType::Simd128:
+      return ABIResult::StackSizeOfV128;
+#endif
+    case MIRType::Pointer:
+    case MIRType::RefOrNull:
+      return ABIResult::StackSizeOfPtr;
+    default:
+      MOZ_CRASH("MIRTypeToABIResultSize - unhandled case");
+  }
+}
+
 uint32_t ABIResult::size() const { return ResultStackSize(type()); }
 
 void ABIResultIter::settleRegister(ValType type) {
