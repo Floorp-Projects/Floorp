@@ -48,6 +48,7 @@ class CompositingRenderTarget;
 class CompositingRenderTargetOGL;
 class DataTextureSource;
 class ShaderProgramOGL;
+class ShaderProgramOGLsHolder;
 class TextureSource;
 class TextureSourceOGL;
 class BufferTextureHost;
@@ -108,7 +109,7 @@ class CompositorOGL final : public Compositor {
 
   friend class CompositingRenderTargetOGL;
 
-  std::map<ShaderConfigOGL, ShaderProgramOGL*> mPrograms;
+  RefPtr<ShaderProgramOGLsHolder> mProgramsHolder;
 
  public:
   CompositorOGL(CompositorBridgeParent* aParent,
@@ -130,7 +131,9 @@ class CompositorOGL final : public Compositor {
   already_AddRefed<DataTextureSource> CreateDataTextureSourceAround(
       gfx::DataSourceSurface* aSurface) override;
 
-  bool Initialize(GLContext* aGLContext, nsCString* const out_failureReason);
+  bool Initialize(GLContext* aGLContext,
+                  RefPtr<ShaderProgramOGLsHolder> aProgramsHolder,
+                  nsCString* const out_failureReason);
 
   bool Initialize(nsCString* const out_failureReason) override;
 

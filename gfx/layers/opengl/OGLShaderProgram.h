@@ -7,10 +7,12 @@
 #ifndef GFX_OGLSHADERPROGRAM_H
 #define GFX_OGLSHADERPROGRAM_H
 
+#include <map>
 #include <string>
 #include <utility>
 
 #include "GLContext.h"  // for fast inlines of glUniform*
+#include "mozilla/UniquePtr.h"
 #include "OGLShaderConfig.h"
 
 namespace mozilla {
@@ -404,6 +406,22 @@ class ShaderProgramOGL {
                         const gfx::Matrix4x4& aMatrix) {
     SetMatrixUniform(aKnownUniform, &aMatrix._11);
   }
+};
+
+class ShaderProgramOGLsHolder final {
+ public:
+  NS_INLINE_DECL_REFCOUNTING(ShaderProgramOGLsHolder)
+
+  explicit ShaderProgramOGLsHolder(gl::GLContext* aGL);
+
+  ShaderProgramOGL* GetShaderProgramFor(const ShaderConfigOGL& aConfig);
+  void Clear();
+
+ protected:
+  ~ShaderProgramOGLsHolder();
+
+  const RefPtr<gl::GLContext> mGL;
+  std::map<ShaderConfigOGL, UniquePtr<ShaderProgramOGL>> mPrograms;
 };
 
 }  // namespace layers
