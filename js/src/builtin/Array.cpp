@@ -868,9 +868,9 @@ bool js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
   if (attrs & JSPROP_READONLY) {
     RootedShape lengthShape(cx, arr->lookup(cx, id));
     MOZ_ASSERT(lengthShape->isCustomDataProperty());
-    if (!NativeObject::changeProperty(
-            cx, arr, lengthShape, lengthShape->attributes() | JSPROP_READONLY,
-            nullptr, nullptr)) {
+    unsigned attrs = lengthShape->attributes() | JSPROP_READONLY;
+    if (!NativeObject::putAccessorProperty(cx, arr, id, nullptr, nullptr,
+                                           attrs)) {
       return false;
     }
   }
