@@ -177,16 +177,14 @@ static inline void GetterSetterPostWriteBarrier(AccessorShape* shape) {
 }
 
 inline AccessorShape::AccessorShape(const StackShape& other, uint32_t nfixed)
-    : Shape(other, nfixed),
-      rawGetter(other.rawGetter),
-      rawSetter(other.rawSetter) {
+    : Shape(other, nfixed), getter_(other.getter), setter_(other.setter) {
   MOZ_ASSERT(getAllocKind() == gc::AllocKind::ACCESSOR_SHAPE);
   GetterSetterPostWriteBarrier(this);
 }
 
 inline AccessorShape::AccessorShape(BaseShape* base, ObjectFlags objectFlags,
                                     uint32_t nfixed)
-    : Shape(base, objectFlags, nfixed), rawGetter(nullptr), rawSetter(nullptr) {
+    : Shape(base, objectFlags, nfixed), getter_(nullptr), setter_(nullptr) {
   MOZ_ASSERT(getAllocKind() == gc::AllocKind::ACCESSOR_SHAPE);
 }
 
@@ -273,19 +271,6 @@ template <class ObjectSubclass>
   // shape.
   EmptyShape::insertInitialShape(cx, shape);
   return true;
-}
-
-inline AutoRooterGetterSetter::Inner::Inner(uint8_t attrs, GetterOp* pgetter_,
-                                            SetterOp* psetter_)
-    : attrs(attrs), pgetter(pgetter_), psetter(psetter_) {}
-
-inline AutoRooterGetterSetter::AutoRooterGetterSetter(JSContext* cx,
-                                                      uint8_t attrs,
-                                                      GetterOp* pgetter,
-                                                      SetterOp* psetter) {
-  if (attrs & (JSPROP_GETTER | JSPROP_SETTER)) {
-    inner.emplace(cx, Inner(attrs, pgetter, psetter));
-  }
 }
 
 static inline uint8_t GetPropertyAttributes(JSObject* obj,
@@ -452,8 +437,8 @@ MOZ_ALWAYS_INLINE Shape* Shape::searchNoHashify(Shape* start, jsid id) {
 }
 
 /* static */ MOZ_ALWAYS_INLINE Shape* NativeObject::addAccessorProperty(
-    JSContext* cx, HandleNativeObject obj, HandleId id, GetterOp getter,
-    SetterOp setter, unsigned attrs) {
+    JSContext* cx, HandleNativeObject obj, HandleId id, HandleObject getter,
+    HandleObject setter, unsigned attrs) {
   MOZ_ASSERT(!JSID_IS_VOID(id));
   MOZ_ASSERT_IF(!id.isPrivateName(), obj->uninlinedNonProxyIsExtensible());
   MOZ_ASSERT(!obj->containsPure(id));
