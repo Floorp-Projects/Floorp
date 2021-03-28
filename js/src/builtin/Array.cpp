@@ -603,14 +603,16 @@ bool js::SetLengthProperty(JSContext* cx, HandleObject obj, uint32_t length) {
   return SetProperty(cx, obj, cx->names().length, v);
 }
 
-static bool array_length_getter(JSContext* cx, HandleObject obj, HandleId id,
-                                MutableHandleValue vp) {
+bool js::ArrayLengthGetter(JSContext* cx, HandleObject obj, HandleId id,
+                           MutableHandleValue vp) {
+  MOZ_ASSERT(id == NameToId(cx->names().length));
+
   vp.setNumber(obj->as<ArrayObject>().length());
   return true;
 }
 
-static bool array_length_setter(JSContext* cx, HandleObject obj, HandleId id,
-                                HandleValue v, ObjectOpResult& result) {
+bool js::ArrayLengthSetter(JSContext* cx, HandleObject obj, HandleId id,
+                           HandleValue v, ObjectOpResult& result) {
   MOZ_ASSERT(id == NameToId(cx->names().length));
 
   HandleArrayObject arr = obj.as<ArrayObject>();
@@ -864,14 +866,11 @@ bool js::ArraySetLength(JSContext* cx, Handle<ArrayObject*> arr, HandleId id,
 
   // Step 20.
   if (attrs & JSPROP_READONLY) {
-    // Yes, we totally drop a non-stub getter/setter from a defineProperty
-    // API call on the floor here.  Given that getter/setter will go away in
-    // the long run, with accessors replacing them both internally and at the
-    // API level, just run with this.
     RootedShape lengthShape(cx, arr->lookup(cx, id));
-    if (!NativeObject::changeProperty(
-            cx, arr, lengthShape, lengthShape->attributes() | JSPROP_READONLY,
-            array_length_getter, array_length_setter)) {
+    MOZ_ASSERT(lengthShape->isCustomDataProperty());
+    unsigned attrs = lengthShape->attributes() | JSPROP_READONLY;
+    if (!NativeObject::putAccessorProperty(cx, arr, id, nullptr, nullptr,
+                                           attrs)) {
       return false;
     }
   }
@@ -981,8 +980,8 @@ static bool AddLengthProperty(JSContext* cx, HandleArrayObject obj) {
 
   RootedId lengthId(cx, NameToId(cx->names().length));
   return NativeObject::addAccessorProperty(
-      cx, obj, lengthId, array_length_getter, array_length_setter,
-      JSPROP_PERMANENT);
+      cx, obj, lengthId, nullptr, nullptr,
+      JSPROP_CUSTOM_DATA_PROP | JSPROP_PERMANENT);
 }
 
 static bool IsArrayConstructor(const JSObject* obj) {
@@ -3210,7 +3209,7 @@ static bool GetIndexedPropertiesInRange(JSContext* cx, HandleObject obj,
         }
 
         // Watch out for getters, they can add new properties.
-        if (!shape.hasDefaultGetter()) {
+        if (!shape.isDataProperty()) {
           return true;
         }
 
