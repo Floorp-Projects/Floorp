@@ -944,5 +944,5 @@ popupnotificationcontent {
 } /** END Proton **/
 
 #tab-notification-deck {
-  display: block;
+  display: flex;
 }
