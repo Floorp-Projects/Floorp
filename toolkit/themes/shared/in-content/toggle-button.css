@@ -19,7 +19,6 @@ input[type="checkbox"].toggle-button {
   appearance: none;
   padding: 0;
   margin: 0;
-  outline: 0;
   border: var(--button-border-width) solid var(--border-color);
   height: var(--button-height);
   width: var(--button-width);
@@ -34,10 +33,6 @@ input[type="checkbox"].toggle-button:enabled:hover {
 input[type="checkbox"].toggle-button:enabled:active {
   background: var(--in-content-button-background-active);
   border-color: var(--border-color);
-}
-input[type="checkbox"].toggle-button:focus {
-  outline: 2px solid var(--in-content-focus-outline-color);
-  outline-offset: var(--in-content-focus-outline-offset);
 }
 
 input[type="checkbox"].toggle-button:checked {

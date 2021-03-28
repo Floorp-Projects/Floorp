@@ -846,7 +846,6 @@ pref("browser.preferences.experimental", false);
 pref("browser.preferences.experimental.hidden", false);
 pref("browser.preferences.defaultPerformanceSettings.enabled", true);
 
-pref("browser.proton.enabled", false);
 pref("browser.proton.toolbar.version", 0);
 
 // Backspace and Shift+Backspace behavior

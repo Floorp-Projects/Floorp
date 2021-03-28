@@ -57,6 +57,7 @@ h1 {
 
 .certificate-tab:focus-visible {
   z-index: 1;
+  outline: 2px solid var(--in-content-focus-outline-color);
 }
 
 .tab:hover {
