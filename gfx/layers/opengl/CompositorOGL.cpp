@@ -306,19 +306,14 @@ void CompositorOGL::CleanupResources() {
     mTriangleVBO = 0;
     mPreviousFrameDoneSync = nullptr;
     mThisFrameDoneSync = nullptr;
+    mProgramsHolder = nullptr;
     mGLContext = nullptr;
-    mPrograms.clear();
     mNativeLayersReferenceRT = nullptr;
     mFullWindowRenderTarget = nullptr;
     return;
   }
 
-  for (std::map<ShaderConfigOGL, ShaderProgramOGL*>::iterator iter =
-           mPrograms.begin();
-       iter != mPrograms.end(); iter++) {
-    delete iter->second;
-  }
-  mPrograms.clear();
+  mProgramsHolder = nullptr;
   mNativeLayersReferenceRT = nullptr;
   mFullWindowRenderTarget = nullptr;
 
@@ -371,11 +366,13 @@ void CompositorOGL::CleanupResources() {
 }
 
 bool CompositorOGL::Initialize(GLContext* aGLContext,
+                               RefPtr<ShaderProgramOGLsHolder> aProgramsHolder,
                                nsCString* const out_failureReason) {
   MOZ_ASSERT(!mDestroyed);
   MOZ_ASSERT(!mGLContext);
 
   mGLContext = aGLContext;
+  mProgramsHolder = aProgramsHolder;
   mOwnsGLContext = false;
 
   return Initialize(out_failureReason);
@@ -403,6 +400,10 @@ bool CompositorOGL::Initialize(nsCString* const out_failureReason) {
   if (!mGLContext) {
     *out_failureReason = "FEATURE_FAILURE_OPENGL_CREATE_CONTEXT";
     return false;
+  }
+
+  if (!mProgramsHolder) {
+    mProgramsHolder = new ShaderProgramOGLsHolder(mGLContext);
   }
 
   MakeCurrent();
@@ -1329,22 +1330,7 @@ ShaderConfigOGL CompositorOGL::GetShaderConfigFor(Effect* aEffect,
 
 ShaderProgramOGL* CompositorOGL::GetShaderProgramFor(
     const ShaderConfigOGL& aConfig) {
-  std::map<ShaderConfigOGL, ShaderProgramOGL*>::iterator iter =
-      mPrograms.find(aConfig);
-  if (iter != mPrograms.end()) return iter->second;
-
-  ProgramProfileOGL profile = ProgramProfileOGL::GetProfileFor(aConfig);
-  ShaderProgramOGL* shader = new ShaderProgramOGL(gl(), profile);
-  if (!shader->Initialize()) {
-    gfxCriticalError() << "Shader compilation failure, cfg:"
-                       << " features: " << gfx::hexa(aConfig.mFeatures)
-                       << " multiplier: " << aConfig.mMultiplier
-                       << " op: " << aConfig.mCompositionOp;
-    delete shader;
-    return nullptr;
-  }
-
-  mPrograms[aConfig] = shader;
+  ShaderProgramOGL* shader = mProgramsHolder->GetShaderProgramFor(aConfig);
   return shader;
 }
 
