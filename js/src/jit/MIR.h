@@ -54,7 +54,8 @@ namespace js {
 
 namespace wasm {
 class FuncExport;
-}
+extern uint32_t MIRTypeToABIResultSize(jit::MIRType);
+}  // namespace wasm
 
 class GenericPrinter;
 class StringObject;
@@ -13081,7 +13082,9 @@ class MWasmStackResultArea : public MNullaryInstruction {
       MOZ_ASSERT(initialized());
       return type_;
     }
-    uint32_t endOffset() const { return offset() + MIRTypeToSize(type()); }
+    uint32_t endOffset() const {
+      return offset() + wasm::MIRTypeToABIResultSize(type());
+    }
   };
 
  private:
