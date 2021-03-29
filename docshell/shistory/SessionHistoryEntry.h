@@ -76,6 +76,12 @@ class SessionHistoryInfo {
     *aScrollPositionX = mScrollPositionX;
     *aScrollPositionY = mScrollPositionY;
   }
+
+  void SetScrollPosition(int32_t aScrollPositionX, int32_t aScrollPositionY) {
+    mScrollPositionX = aScrollPositionX;
+    mScrollPositionY = aScrollPositionY;
+  }
+
   bool GetScrollRestorationIsManual() const {
     return mScrollRestorationIsManual;
   }
