@@ -68,7 +68,6 @@ class PingServer(Layer):
             "toolkit.telemetry.enabled": True,
             "toolkit.telemetry.unified": True,
             "toolkit.telemetry.shutdownPingSender.enabled": True,
-            "toolkit.telemetry.ecosystemtelemetry.enabled": True,
             "datareporting.policy.dataSubmissionPolicyBypassNotification": True,
             "toolkit.telemetry.send.overrideOfficialCheck": True,
         }

@@ -527,13 +527,6 @@ if (runningInParent) {
   // Speed up child process accumulations
   Services.prefs.setIntPref(TelemetryUtils.Preferences.IPCBatchTimeout, 10);
 
-  // Make sure ecosystem telemetry is disabled, no matter which build
-  // Individual tests will enable it when appropriate
-  Services.prefs.setBoolPref(
-    TelemetryUtils.Preferences.EcosystemTelemetryEnabled,
-    false
-  );
-
   // Non-unified Telemetry (e.g. Fennec on Android) needs the preference to be set
   // in order to enable Telemetry.
   if (Services.prefs.getBoolPref(TelemetryUtils.Preferences.Unified, false)) {

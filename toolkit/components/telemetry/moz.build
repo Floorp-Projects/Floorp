@@ -106,7 +106,6 @@ EXTRA_JS_MODULES += [
     "app/TelemetryTimestamps.jsm",
     "app/TelemetryUtils.jsm",
     "pings/CoveragePing.jsm",
-    "pings/EcosystemTelemetry.jsm",
     "pings/EventPing.jsm",
     "pings/HealthPing.jsm",
     "pings/ModulesPing.jsm",

@@ -21,9 +21,6 @@ const { clearTimeout, setTimeout } = ChromeUtils.import(
   "resource://gre/modules/Timer.jsm"
 );
 // Other pings
-const { EcosystemTelemetry } = ChromeUtils.import(
-  "resource://gre/modules/EcosystemTelemetry.jsm"
-);
 const { TelemetryPrioPing } = ChromeUtils.import(
   "resource://gre/modules/PrioPing.jsm"
 );
@@ -374,7 +371,6 @@ var TelemetryScheduler = {
       this._log.trace("_schedulerTickLogic - Periodic ping due.");
       this._lastPeriodicPingTime = now;
       // Send other pings.
-      EcosystemTelemetry.periodicPing();
       TelemetryPrioPing.periodicPing();
     }
 
