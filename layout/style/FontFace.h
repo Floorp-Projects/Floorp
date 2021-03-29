@@ -183,6 +183,8 @@ class FontFace final : public nsISupports, public nsWrapperCache {
   void SetDescentOverride(const nsACString& aValue, ErrorResult& aRv);
   void GetLineGapOverride(nsACString& aResult);
   void SetLineGapOverride(const nsACString& aValue, ErrorResult& aRv);
+  void GetSizeAdjust(nsACString& aResult);
+  void SetSizeAdjust(const nsACString& aValue, ErrorResult& aRv);
 
   FontFaceLoadStatus Status();
   Promise* Load(ErrorResult& aRv);
