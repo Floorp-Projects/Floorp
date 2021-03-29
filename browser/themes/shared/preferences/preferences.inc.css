@@ -382,6 +382,10 @@ button > hbox > label {
   margin-inline-end: 8px !important;
 }
 
+.actionsMenu:focus-visible {
+  outline-offset: -2px;
+}
+
 /* Home Pane */
 
 #homepageGroup menulist,
