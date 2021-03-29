@@ -17,6 +17,11 @@ using namespace js::jit;
 // which can't be implemented in headers.
 
 void JitRuntime::generateEnterJIT(JSContext*, MacroAssembler&) { MOZ_CRASH(); }
+// static
+mozilla::Maybe<::JS::ProfilingFrameIterator::RegisterState>
+JitRuntime::getCppEntryRegisters(JitFrameLayout* frameStackAddress) {
+  return mozilla::Nothing{};
+}
 void JitRuntime::generateInvalidator(MacroAssembler&, Label*) { MOZ_CRASH(); }
 void JitRuntime::generateArgumentsRectifier(MacroAssembler&,
                                             ArgumentsRectifierKind kind) {
