@@ -10,5 +10,3 @@
 %placesDTD;
 <!ENTITY % syncBrandDTD SYSTEM "chrome://browser/locale/syncBrand.dtd">
 %syncBrandDTD;
-<!ENTITY % brandingsDTD SYSTEM "chrome://browser/locale/brandings.dtd">
-%brandingsDTD;
