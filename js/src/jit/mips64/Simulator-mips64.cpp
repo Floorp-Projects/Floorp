@@ -409,6 +409,7 @@ SimInstruction::Type SimInstruction::instructionType() const {
         case ff_dextm:
         case ff_dextu:
         case ff_bshfl:
+        case ff_dbshfl:
           return kRegisterType;
         default:
           return kUnsupported;
@@ -1921,38 +1922,70 @@ typedef int64_t (*Prototype_General7)(int64_t arg0, int64_t arg1, int64_t arg2,
 typedef int64_t (*Prototype_General8)(int64_t arg0, int64_t arg1, int64_t arg2,
                                       int64_t arg3, int64_t arg4, int64_t arg5,
                                       int64_t arg6, int64_t arg7);
-typedef int32_t (*Prototype_Int_GeneralGeneralGeneralInt64)(int64_t arg0,
-                                                            int64_t arg1,
-                                                            int64_t arg2,
-                                                            int64_t arg3);
-typedef int32_t (*Prototype_Int_GeneralGeneralInt64Int64)(int64_t arg0,
-                                                          int64_t arg1,
-                                                          int64_t arg2,
-                                                          int64_t arg3);
-typedef double (*Prototype_Double_None)();
-typedef double (*Prototype_Double_Double)(double arg0);
-typedef double (*Prototype_Double_Int)(int64_t arg0);
+typedef int64_t (*Prototype_GeneralGeneralGeneralInt64)(int64_t arg0,
+                                                        int64_t arg1,
+                                                        int64_t arg2,
+                                                        int64_t arg3);
+typedef int64_t (*Prototype_GeneralGeneralInt64Int64)(int64_t arg0,
+                                                      int64_t arg1,
+                                                      int64_t arg2,
+                                                      int64_t arg3);
+
 typedef int64_t (*Prototype_Int_Double)(double arg0);
+typedef int64_t (*Prototype_Int_IntDouble)(int64_t arg0, double arg1);
+typedef int64_t (*Prototype_Int_DoubleInt)(double arg0, int64_t arg1);
 typedef int64_t (*Prototype_Int_DoubleIntInt)(double arg0, int64_t arg1,
                                               int64_t arg2);
 typedef int64_t (*Prototype_Int_IntDoubleIntInt)(int64_t arg0, double arg1,
                                                  int64_t arg2, int64_t arg3);
+
 typedef float (*Prototype_Float32_Float32)(float arg0);
 typedef int64_t (*Prototype_Int_Float32)(float arg0);
 typedef float (*Prototype_Float32_Float32Float32)(float arg0, float arg1);
-typedef float (*Prototype_Float32_IntInt)(int64_t arg0, int64_t arg1);
 
+typedef double (*Prototype_Double_None)();
+typedef double (*Prototype_Double_Double)(double arg0);
+typedef double (*Prototype_Double_Int)(int64_t arg0);
 typedef double (*Prototype_Double_DoubleInt)(double arg0, int64_t arg1);
 typedef double (*Prototype_Double_IntDouble)(int64_t arg0, double arg1);
 typedef double (*Prototype_Double_DoubleDouble)(double arg0, double arg1);
-typedef int64_t (*Prototype_Int_IntDouble)(int64_t arg0, double arg1);
-
 typedef double (*Prototype_Double_DoubleDoubleDouble)(double arg0, double arg1,
                                                       double arg2);
 typedef double (*Prototype_Double_DoubleDoubleDoubleDouble)(double arg0,
                                                             double arg1,
                                                             double arg2,
                                                             double arg3);
+
+typedef int32_t (*Prototype_Int32_General)(int64_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32)(int64_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32)(int64_t, int32_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32Int32Int32)(int64_t, int32_t,
+                                                               int32_t, int32_t,
+                                                               int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32Int32Int32Int32)(
+    int64_t, int32_t, int32_t, int32_t, int32_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32Int32General)(
+    int64_t, int32_t, int32_t, int32_t, int64_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32Int64)(int64_t, int32_t,
+                                                          int32_t, int64_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32Int32General)(int64_t, int32_t,
+                                                            int32_t, int64_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32Int64Int64)(int64_t, int32_t,
+                                                          int64_t, int64_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32GeneralInt32)(int64_t, int32_t,
+                                                            int64_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralInt32GeneralInt32Int32)(
+    int64_t, int32_t, int64_t, int32_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralGeneral)(int64_t, int64_t);
+typedef int32_t (*Prototype_Int32_GeneralGeneralGeneral)(int64_t, int64_t,
+                                                         int64_t);
+typedef int32_t (*Prototype_Int32_GeneralGeneralInt32Int32)(int64_t, int64_t,
+                                                            int32_t, int32_t);
+typedef int64_t (*Prototype_General_GeneralInt32)(int64_t, int32_t);
+typedef int64_t (*Prototype_General_GeneralInt32Int32)(int64_t, int32_t,
+                                                       int32_t);
+typedef int64_t (*Prototype_General_GeneralInt32General)(int64_t, int32_t,
+                                                         int64_t);
 
 // Software interrupt instructions are used by the simulator to call into C++.
 void Simulator::softwareInterrupt(SimInstruction* instr) {
@@ -1965,6 +1998,9 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
     MOZ_CRASH("Only N64 ABI supported.");
 #else
     Redirection* redirection = Redirection::FromSwiInstruction(instr);
+    uintptr_t nativeFn =
+        reinterpret_cast<uintptr_t>(redirection->nativeFunction());
+
     int64_t arg0 = getRegister(a0);
     int64_t arg1 = getRegister(a1);
     int64_t arg2 = getRegister(a2);
@@ -2078,9 +2114,8 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
         break;
       }
       case Args_Int_GeneralGeneralGeneralInt64: {
-        Prototype_Int_GeneralGeneralGeneralInt64 target =
-            reinterpret_cast<Prototype_Int_GeneralGeneralGeneralInt64>(
-                external);
+        Prototype_GeneralGeneralGeneralInt64 target =
+            reinterpret_cast<Prototype_GeneralGeneralGeneralInt64>(external);
         int64_t result = target(arg0, arg1, arg2, arg3);
         if (external == intptr_t(&js::wasm::Instance::wait_i32)) {
           result = int32_t(result);
@@ -2089,12 +2124,20 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
         break;
       }
       case Args_Int_GeneralGeneralInt64Int64: {
-        Prototype_Int_GeneralGeneralInt64Int64 target =
-            reinterpret_cast<Prototype_Int_GeneralGeneralInt64Int64>(external);
+        Prototype_GeneralGeneralInt64Int64 target =
+            reinterpret_cast<Prototype_GeneralGeneralInt64Int64>(external);
         int64_t result = target(arg0, arg1, arg2, arg3);
         if (external == intptr_t(&js::wasm::Instance::wait_i64)) {
           result = int32_t(result);
         }
+        setRegister(v0, result);
+        break;
+      }
+      case Args_Int_DoubleInt: {
+        double dval = getFpuRegisterDouble(12);
+        Prototype_Int_DoubleInt target =
+            reinterpret_cast<Prototype_Int_DoubleInt>(external);
+        int64_t result = target(dval, arg1);
         setRegister(v0, result);
         break;
       }
@@ -2148,13 +2191,6 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
         Prototype_Float32_Float32Float32 target =
             reinterpret_cast<Prototype_Float32_Float32Float32>(external);
         float fresult = target(fval0, fval1);
-        setCallResultFloat(fresult);
-        break;
-      }
-      case Args_Float32_IntInt: {
-        Prototype_Float32_IntInt target =
-            reinterpret_cast<Prototype_Float32_IntInt>(external);
-        float fresult = target(arg0, arg1);
         setCallResultFloat(fresult);
         break;
       }
@@ -2220,8 +2256,118 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
         setCallResultDouble(dresult);
         break;
       }
+      case Args_Int32_General: {
+        int32_t ret = reinterpret_cast<Prototype_Int32_General>(nativeFn)(arg0);
+        setRegister(v0, I64(ret));
+        break;
+      }
+      case Args_Int32_GeneralInt32: {
+        int32_t ret = reinterpret_cast<Prototype_Int32_GeneralInt32>(nativeFn)(
+            arg0, I32(arg1));
+        setRegister(v0, I64(ret));
+        break;
+      }
+      case Args_Int32_GeneralInt32Int32: {
+        int32_t ret = reinterpret_cast<Prototype_Int32_GeneralInt32Int32>(
+            nativeFn)(arg0, I32(arg1), I32(arg2));
+        setRegister(v0, I64(ret));
+        break;
+      }
+      case Args_Int32_GeneralInt32Int32Int32Int32: {
+        int32_t ret =
+            reinterpret_cast<Prototype_Int32_GeneralInt32Int32Int32Int32>(
+                nativeFn)(arg0, I32(arg1), I32(arg2), I32(arg3), I32(arg4));
+        setRegister(v0, I64(ret));
+        break;
+      }
+      case Args_Int32_GeneralInt32Int32Int32Int32Int32: {
+        int32_t ret =
+            reinterpret_cast<Prototype_Int32_GeneralInt32Int32Int32Int32Int32>(
+                nativeFn)(arg0, I32(arg1), I32(arg2), I32(arg3), I32(arg4),
+                          I32(arg5));
+        setRegister(v0, I64(ret));
+        break;
+      }
+      case Args_Int32_GeneralInt32Int32Int32General: {
+        int32_t ret =
+            reinterpret_cast<Prototype_Int32_GeneralInt32Int32Int32General>(
+                nativeFn)(arg0, I32(arg1), I32(arg2), I32(arg3), arg4);
+        setRegister(v0, I64(ret));
+        break;
+      }
+      case Args_Int32_GeneralInt32Int32Int64: {
+        int32_t ret = reinterpret_cast<Prototype_Int32_GeneralInt32Int32Int64>(
+            nativeFn)(arg0, I32(arg1), I32(arg2), arg3);
+        setRegister(v0, I64(ret));
+        break;
+      }
+      case Args_Int32_GeneralInt32Int32General: {
+        int32_t ret =
+            reinterpret_cast<Prototype_Int32_GeneralInt32Int32General>(
+                nativeFn)(arg0, I32(arg1), I32(arg2), arg3);
+        setRegister(v0, I64(ret));
+        break;
+      }
+      case Args_Int32_GeneralInt32Int64Int64: {
+        int32_t ret = reinterpret_cast<Prototype_Int32_GeneralInt32Int64Int64>(
+            nativeFn)(arg0, I32(arg1), arg2, arg3);
+        setRegister(v0, I64(ret));
+        break;
+      }
+      case Args_Int32_GeneralInt32GeneralInt32: {
+        int32_t ret =
+            reinterpret_cast<Prototype_Int32_GeneralInt32GeneralInt32>(
+                nativeFn)(arg0, I32(arg1), arg2, I32(arg3));
+        setRegister(v0, I64(ret));
+        break;
+      }
+      case Args_Int32_GeneralInt32GeneralInt32Int32: {
+        int32_t ret =
+            reinterpret_cast<Prototype_Int32_GeneralInt32GeneralInt32Int32>(
+                nativeFn)(arg0, I32(arg1), arg2, I32(arg3), I32(arg4));
+        setRegister(v0, I64(ret));
+        break;
+      }
+      case Args_Int32_GeneralGeneral: {
+        int32_t ret = reinterpret_cast<Prototype_Int32_GeneralGeneral>(
+            nativeFn)(arg0, arg1);
+        setRegister(v0, I64(ret));
+        break;
+      }
+      case Args_Int32_GeneralGeneralGeneral: {
+        int32_t ret = reinterpret_cast<Prototype_Int32_GeneralGeneralGeneral>(
+            nativeFn)(arg0, arg1, arg2);
+        setRegister(v0, I64(ret));
+        break;
+      }
+      case Args_Int32_GeneralGeneralInt32Int32: {
+        int32_t ret =
+            reinterpret_cast<Prototype_Int32_GeneralGeneralInt32Int32>(
+                nativeFn)(arg0, arg1, I32(arg2), I32(arg3));
+        setRegister(v0, I64(ret));
+        break;
+      }
+      case Args_General_GeneralInt32: {
+        int64_t ret = reinterpret_cast<Prototype_General_GeneralInt32>(
+            nativeFn)(arg0, I32(arg1));
+        setRegister(v0, ret);
+        break;
+      }
+      case Args_General_GeneralInt32Int32: {
+        int64_t ret = reinterpret_cast<Prototype_General_GeneralInt32Int32>(
+            nativeFn)(arg0, I32(arg1), I32(arg2));
+        setRegister(v0, ret);
+        break;
+      }
+      case Args_General_GeneralInt32General: {
+        int64_t ret = reinterpret_cast<Prototype_General_GeneralInt32General>(
+            nativeFn)(arg0, I32(arg1), arg2);
+        setRegister(v0, ret);
+        break;
+      }
+
       default:
-        MOZ_CRASH("call");
+        MOZ_CRASH("Unknown function type.");
     }
 
     if (single_stepping_) {
@@ -2686,8 +2832,8 @@ void Simulator::configureTypeRegister(SimInstruction* instr, int64_t& alu_out,
           if (lsb > msb) {
             alu_out = Unpredictable;
           } else {
-            alu_out = (U32(I32_CHECK(rt)) & ~(mask << lsb)) |
-                      ((U32(I32_CHECK(rs)) & mask) << lsb);
+            alu_out = I32((U32(I32_CHECK(rt)) & ~(mask << lsb)) |
+                          ((U32(I32_CHECK(rs)) & mask) << lsb));
           }
           break;
         }
@@ -2786,7 +2932,63 @@ void Simulator::configureTypeRegister(SimInstruction* instr, int64_t& alu_out,
             alu_out = I64(I8(I32_CHECK(rt)));
           } else if (24 == sa) {  // seh
             alu_out = I64(I16(I32_CHECK(rt)));
+          } else if (2 == sa) {  // wsbh
+            uint32_t input = U32(I32_CHECK(rt));
+            uint64_t output = 0;
+
+            uint32_t mask = 0xFF000000;
+            for (int i = 0; i < 4; i++) {
+              uint32_t tmp = mask & input;
+              if (i % 2 == 0) {
+                tmp = tmp >> 8;
+              } else {
+                tmp = tmp << 8;
+              }
+              output = output | tmp;
+              mask = mask >> 8;
+            }
+            alu_out = I64(I32(output));
+          } else {
+            MOZ_CRASH();
           }
+          break;
+        }
+        case ff_dbshfl: {  // Mips64r2 instruction.
+          uint64_t input = U64(rt);
+          uint64_t output = 0;
+
+          if (2 == sa) {  // dsbh
+            uint64_t mask = 0xFF00000000000000;
+            for (int i = 0; i < 8; i++) {
+              uint64_t tmp = mask & input;
+              if (i % 2 == 0)
+                tmp = tmp >> 8;
+              else
+                tmp = tmp << 8;
+
+              output = output | tmp;
+              mask = mask >> 8;
+            }
+          } else if (5 == sa) {  // dshd
+            uint64_t mask = 0xFFFF000000000000;
+            for (int i = 0; i < 4; i++) {
+              uint64_t tmp = mask & input;
+              if (i == 0)
+                tmp = tmp >> 48;
+              else if (i == 1)
+                tmp = tmp >> 16;
+              else if (i == 2)
+                tmp = tmp << 16;
+              else
+                tmp = tmp << 48;
+              output = output | tmp;
+              mask = mask >> 16;
+            }
+          } else {
+            MOZ_CRASH();
+          }
+
+          alu_out = I64(output);
           break;
         }
         default:
@@ -3415,6 +3617,9 @@ void Simulator::decodeTypeRegister(SimInstruction* instr) {
         case ff_bshfl:
           setRegister(rd_reg, alu_out);
           break;
+        case ff_dbshfl:
+          setRegister(rd_reg, alu_out);
+          break;
         default:
           MOZ_CRASH();
       };
@@ -3624,6 +3829,7 @@ void Simulator::decodeTypeImmediate(SimInstruction* instr) {
       alu_out = readW(addr, instr);
       alu_out = U32(alu_out) >> al_offset * 8;
       alu_out |= rt & mask;
+      alu_out = I32(alu_out);
       break;
     }
     case op_ll:
