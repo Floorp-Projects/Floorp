@@ -150,6 +150,40 @@ add_task(async function test_print_on_sandboxed_frame() {
   );
 });
 
+add_task(async function test_print_another_iframe_and_remove() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["print.tab_modal.enabled", true]],
+  });
+
+  is(
+    document.querySelector(".printPreviewBrowser"),
+    null,
+    "There shouldn't be any print preview browser"
+  );
+
+  await BrowserTestUtils.withNewTab(
+    `${TEST_PATH}file_window_print_another_iframe_and_remove.html`,
+    async function(browser) {
+      let firstFrame = browser.browsingContext.children[0];
+      info("Clicking on the button in the first iframe");
+      BrowserTestUtils.synthesizeMouse("button", 0, 0, {}, firstFrame);
+
+      info("Waiting for dialog");
+      await BrowserTestUtils.waitForCondition(
+        () => !!document.querySelector(".printPreviewBrowser")
+      );
+
+      isnot(
+        document.querySelector(".printPreviewBrowser"),
+        null,
+        "Should open the print preview correctly"
+      );
+      gBrowser.getTabDialogBox(browser).abortAllDialogs();
+    }
+  );
+});
+
+// FIXME(emilio): This test doesn't use window.print(), why is it on this file?
 add_task(async function test_focused_browsing_context() {
   await SpecialPowers.pushPrefEnv({
     set: [["print.tab_modal.enabled", true]],
