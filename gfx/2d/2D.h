@@ -453,6 +453,7 @@ class SourceSurface : public external::AtomicRefCounted<SourceSurface> {
       case SurfaceType::DATA_SHARED:
       case SurfaceType::DATA_RECYCLING_SHARED:
       case SurfaceType::DATA_ALIGNED:
+      case SurfaceType::DATA_SHARED_WRAPPER:
         return true;
       default:
         return false;
