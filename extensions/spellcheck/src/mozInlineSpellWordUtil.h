@@ -106,7 +106,8 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
                            nsRange** aRange);
 
   // Convenience functions, object must be initialized
-  nsresult MakeRange(NodeOffset aBegin, NodeOffset aEnd, nsRange** aRange);
+  nsresult MakeRange(NodeOffset aBegin, NodeOffset aEnd,
+                     nsRange** aRange) const;
   static already_AddRefed<nsRange> MakeRange(const NodeOffsetRange& aRange);
 
   // Moves to the the next word in the range, and retrieves it's text and range.
