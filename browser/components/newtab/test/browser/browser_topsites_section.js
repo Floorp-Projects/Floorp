@@ -202,6 +202,7 @@ test_newtab({
         engineName: engine.name,
         entry: "topsites_newtab",
         isPreview: false,
+        isGeneralPurposeEngine: false,
       },
       "The Urlbar is in search mode."
     );

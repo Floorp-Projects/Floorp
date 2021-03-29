@@ -471,6 +471,15 @@ var UrlbarTestUtils = {
       expectedSearchMode.isPreview = false;
     }
 
+    let isGeneralPurposeEngine = false;
+    if (expectedSearchMode.engineName) {
+      let engine = Services.search.getEngineByName(
+        expectedSearchMode.engineName
+      );
+      isGeneralPurposeEngine = engine.isGeneralPurposeEngine;
+      expectedSearchMode.isGeneralPurposeEngine = isGeneralPurposeEngine;
+    }
+
     // expectedSearchMode may come from UrlbarUtils.LOCAL_SEARCH_MODES.  The
     // objects in that array include useful metadata like icon URIs and pref
     // names that are not usually included in actual search mode objects.  For
@@ -527,7 +536,7 @@ var UrlbarTestUtils = {
     let expectedPlaceholderL10n;
     if (expectedSearchMode.engineName) {
       expectedPlaceholderL10n = {
-        id: UrlbarUtils.WEB_ENGINE_NAMES.has(expectedSearchMode.engineName)
+        id: isGeneralPurposeEngine
           ? "urlbar-placeholder-search-mode-web-2"
           : "urlbar-placeholder-search-mode-other-engine",
         args: { name: expectedSearchMode.engineName },
@@ -611,7 +620,8 @@ var UrlbarTestUtils = {
     let buttons = oneOffs.getSelectableButtons(true);
     if (!searchMode) {
       searchMode = { engineName: buttons[0].engine.name };
-      if (UrlbarUtils.WEB_ENGINE_NAMES.has(searchMode.engineName)) {
+      let engine = Services.search.getEngineByName(searchMode.engineName);
+      if (engine.isGeneralPurposeEngine) {
         searchMode.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
       }
     }

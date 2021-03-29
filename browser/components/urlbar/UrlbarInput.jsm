@@ -1328,7 +1328,7 @@ class UrlbarInput {
    * @param {string} value
    *   The input's value will be set to this value, and the search will
    *   use it as its query.
-   * @param {UrlbarUtils.WEB_ENGINE_NAMES} [options.searchEngine]
+   * @param {nsISearchEngine} [options.searchEngine]
    *   Search engine to use when the search is using a known alias.
    * @param {UrlbarUtils.SEARCH_MODE_ENTRY} [options.searchModeEntry]
    *   If provided, we will record this parameter as the search mode entry point
@@ -1473,11 +1473,12 @@ class UrlbarInput {
       ObjectUtils.deepEqual(currentSearchMode, searchMode);
 
     // Exit search mode if the passed-in engine is invalid or hidden.
+    let engine;
     if (searchMode?.engineName) {
       if (!Services.search.isInitialized) {
         await Services.search.init();
       }
-      let engine = Services.search.getEngineByName(searchMode.engineName);
+      engine = Services.search.getEngineByName(searchMode.engineName);
       if (!engine || engine.hidden) {
         searchMode = null;
       }
@@ -1488,10 +1489,13 @@ class UrlbarInput {
     searchMode = null;
 
     if (engineName) {
-      searchMode = { engineName };
+      searchMode = {
+        engineName,
+        isGeneralPurposeEngine: engine.isGeneralPurposeEngine,
+      };
       if (source) {
         searchMode.source = source;
-      } else if (UrlbarUtils.WEB_ENGINE_NAMES.has(engineName)) {
+      } else if (searchMode.isGeneralPurposeEngine) {
         // History results for general-purpose search engines are often not
         // useful, so we hide them in search mode. See bug 1658646 for
         // discussion.
@@ -2621,7 +2625,7 @@ class UrlbarInput {
    *   See setSearchMode documentation.  If null, then search mode is exited.
    */
   _updateSearchModeUI(searchMode) {
-    let { engineName, source } = searchMode || {};
+    let { engineName, source, isGeneralPurposeEngine } = searchMode || {};
 
     // As an optimization, bail if the given search mode is null but search mode
     // is already inactive.  Otherwise browser_preferences_usage.js fails due to
@@ -2655,7 +2659,7 @@ class UrlbarInput {
       this._searchModeLabel.textContent = engineName;
       this.document.l10n.setAttributes(
         this.inputField,
-        UrlbarUtils.WEB_ENGINE_NAMES.has(engineName)
+        isGeneralPurposeEngine
           ? "urlbar-placeholder-search-mode-web-2"
           : "urlbar-placeholder-search-mode-other-engine",
         { name: engineName }

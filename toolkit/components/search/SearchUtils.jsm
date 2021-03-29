@@ -202,6 +202,8 @@ var SearchUtils = {
     "ddg@search.mozilla.org",
     "bing@search.mozilla.org",
     "baidu@search.mozilla.org",
+    "ecosia@search.mozilla.org",
+    "qwant@search.mozilla.org",
     "yahoo-jp@search.mozilla.org",
     "yandex@search.mozilla.org",
   ]),

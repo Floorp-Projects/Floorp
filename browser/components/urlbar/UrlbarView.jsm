@@ -676,7 +676,7 @@ class UrlbarView {
     ) {
       let engine = secondResult.payload.engine;
       this.window.A11yUtils.announce({
-        id: UrlbarUtils.WEB_ENGINE_NAMES.has(engine)
+        id: secondResult.payload.isGeneralPurposeEngine
           ? "urlbar-result-action-before-tabtosearch-web"
           : "urlbar-result-action-before-tabtosearch-other",
         args: { engine },
@@ -1344,7 +1344,7 @@ class UrlbarView {
           actionSetter = () => {
             this.document.l10n.setAttributes(
               action,
-              UrlbarUtils.WEB_ENGINE_NAMES.has(result.payload.engine)
+              result.payload.isGeneralPurposeEngine
                 ? "urlbar-result-action-tabtosearch-web"
                 : "urlbar-result-action-tabtosearch-other-engine",
               { engine: result.payload.engine }

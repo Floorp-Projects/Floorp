@@ -35,7 +35,8 @@ function getExpectedSearchMode(button, isPreview = true) {
   };
   if (button.engine) {
     expectedSearchMode.engineName = button.engine.name;
-    if (UrlbarUtils.WEB_ENGINE_NAMES.has(button.engine.name)) {
+    let engine = Services.search.getEngineByName(button.engine.name);
+    if (engine.isGeneralPurposeEngine) {
       expectedSearchMode.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
     }
   } else {
@@ -62,7 +63,8 @@ add_task(async function tokenAlias() {
       isPreview: true,
       entry: "keywordoffer",
     };
-    if (UrlbarUtils.WEB_ENGINE_NAMES.has(result.searchParams.engine)) {
+    let engine = Services.search.getEngineByName(result.searchParams.engine);
+    if (engine.isGeneralPurposeEngine) {
       expectedSearchMode.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
     }
     await UrlbarTestUtils.assertSearchMode(window, expectedSearchMode);

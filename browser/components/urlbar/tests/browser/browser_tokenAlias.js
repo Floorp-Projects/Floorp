@@ -389,7 +389,7 @@ add_task(async function nonHeuristicAliases() {
       entry: "keywordoffer",
       isPreview: true,
     };
-    if (UrlbarUtils.WEB_ENGINE_NAMES.has(engineName)) {
+    if (Services.search.getEngineByName(engineName).isGeneralPurposeEngine) {
       expectedSearchMode.source = UrlbarUtils.RESULT_SOURCE.SEARCH;
     }
     await UrlbarTestUtils.assertSearchMode(window, expectedSearchMode);

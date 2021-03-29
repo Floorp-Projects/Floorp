@@ -189,22 +189,6 @@ var UrlbarUtils = {
   // path-like chars are admitted.
   REGEXP_SINGLE_WORD: /^[^\s@:/?#]+(:\d+)?$/,
 
-  // Names of engines shipped in Firefox that search the web in general.  These
-  // are used to update the input placeholder when entering search mode.
-  // TODO (Bug 1658661): Don't hardcode this list; store search engine category
-  // information someplace better.
-  WEB_ENGINE_NAMES: new Set([
-    "百度", // Baidu
-    "百度搜索", // "Baidu Search", the name of Baidu's OpenSearch engine.
-    "Bing",
-    "DuckDuckGo",
-    "Ecosia",
-    "Google",
-    "Qwant",
-    "Yandex",
-    "Яндекс", // Yandex, non-EN
-  ]),
-
   // Valid entry points for search mode. If adding a value here, please update
   // telemetry documentation and Scalars.yaml.
   SEARCH_MODE_ENTRY: new Set([
@@ -1176,6 +1160,9 @@ UrlbarUtils.RESULT_PAYLOAD_SCHEMA = {
         type: "boolean",
       },
       isPrivateEngine: {
+        type: "boolean",
+      },
+      isGeneralPurposeEngine: {
         type: "boolean",
       },
       keyword: {

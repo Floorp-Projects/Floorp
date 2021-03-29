@@ -78,9 +78,9 @@ add_task(async function basic() {
   );
   let [actionTabToSearch] = await document.l10n.formatValues([
     {
-      id: UrlbarUtils.WEB_ENGINE_NAMES.has(
+      id: Services.search.getEngineByName(
         tabToSearchDetails.searchParams.engine
-      )
+      ).isGeneralPurposeEngine
         ? "urlbar-result-action-tabtosearch-web"
         : "urlbar-result-action-tabtosearch-other-engine",
       args: { engine: tabToSearchDetails.searchParams.engine },
@@ -383,9 +383,9 @@ add_task(async function onboard() {
       },
     },
     {
-      id: UrlbarUtils.WEB_ENGINE_NAMES.has(
+      id: Services.search.getEngineByName(
         onboardingElement.result.payload.engine
-      )
+      ).isGeneralPurposeEngine
         ? "urlbar-result-action-tabtosearch-web"
         : "urlbar-result-action-tabtosearch-other-engine",
       args: { engine: onboardingElement.result.payload.engine },
@@ -642,55 +642,4 @@ add_task(async function onboard_multipleEnginesForHostname() {
   UrlbarPrefs.set("tabToSearch.onboard.interactionsLeft", 3);
   delete UrlbarProviderTabToSearch.onboardingInteractionAtTime;
   await SpecialPowers.popPrefEnv();
-});
-
-// Tests that engines with names containing extended Unicode characters can be
-// recognized as general-web engines and that their tab-to-search results
-// display the correct string.
-add_task(async function extended_unicode_in_engine() {
-  // Baidu's localized name. We expect this tab-to-search result shows the
-  // general-web engine string because Baidu is included in WEB_ENGINE_NAMES.
-  let engineName = "百度";
-  let engineDomain = "example-2.com";
-  let extension = await SearchTestUtils.installSearchExtension(
-    {
-      id: "testunicode",
-      name: engineName,
-      search_url: `https://${engineDomain}/`,
-    },
-    true
-  );
-  for (let i = 0; i < 3; i++) {
-    await PlacesTestUtils.addVisits([`https://${engineDomain}/`]);
-  }
-
-  await UrlbarTestUtils.promiseAutocompleteResultPopup({
-    window,
-    value: engineDomain.slice(0, 4),
-    fireInputEvent: true,
-  });
-  let tabToSearchDetails = await UrlbarTestUtils.getDetailsOfResultAt(
-    window,
-    1
-  );
-  Assert.equal(
-    tabToSearchDetails.searchParams.engine,
-    engineName,
-    "The tab-to-search engine name contains extended Unicode characters."
-  );
-  let [actionTabToSearch] = await document.l10n.formatValues([
-    {
-      id: "urlbar-result-action-tabtosearch-web",
-      args: { engine: tabToSearchDetails.searchParams.engine },
-    },
-  ]);
-  Assert.equal(
-    tabToSearchDetails.displayed.action,
-    actionTabToSearch,
-    "The correct action text is displayed in the tab-to-search result."
-  );
-
-  await UrlbarTestUtils.promisePopupClose(window, () => gURLBar.blur());
-  await PlacesUtils.history.clear();
-  await extension.unload();
 });
