@@ -583,7 +583,7 @@ impl FirefoxOptions {
                 ));
             }
 
-            let mut android = AndroidOptions::new(package.clone(), storage);
+            let mut android = AndroidOptions::new(package, storage);
 
             android.activity = match options.get("androidActivity") {
                 Some(json) => {
@@ -889,7 +889,13 @@ mod tests {
             firefox_opts.insert("androidPackage".into(), json!(value));
 
             let opts = make_options(firefox_opts).expect("valid firefox options");
-            assert_eq!(opts.android.unwrap().package, value.to_string());
+            assert_eq!(
+                opts.android,
+                Some(AndroidOptions::new(
+                    value.to_string(),
+                    AndroidStorageInput::Auto
+                ))
+            );
         }
     }
 
@@ -926,7 +932,8 @@ mod tests {
 
         for package in packages {
             let mut firefox_opts = Capabilities::new();
-            firefox_opts.insert("androidPackage".into(), json!(package));
+            firefox_opts.insert("androidPackage".into(), json!("foo.bar"));
+            firefox_opts.insert("androidActivity".into(), json!(value));
 
             let opts = make_options(firefox_opts).expect("valid firefox options");
             assert!(opts
@@ -995,14 +1002,16 @@ mod tests {
         firefox_opts.insert("androidDeviceSerial".into(), json!("cheese"));
 
         let opts = make_options(firefox_opts).expect("valid firefox options");
-        assert_eq!(
-            opts.android.unwrap().device_serial,
-            Some("cheese".to_string())
-        );
+        let android_opts = AndroidOptions {
+            package: "foo.bar".to_owned(),
+            device_serial: Some("cheese".to_owned()),
+            ..Default::default()
+        };
+        assert_eq!(opts.android, Some(android_opts));
     }
 
     #[test]
-    fn fx_options_android_device_serial_invalid() {
+    fn fx_options_android_serial_invalid() {
         let mut firefox_opts = Capabilities::new();
         firefox_opts.insert("androidPackage".into(), json!("foo.bar"));
         firefox_opts.insert("androidDeviceSerial".into(), json!(42));
@@ -1017,10 +1026,12 @@ mod tests {
         firefox_opts.insert("androidIntentArguments".into(), json!(["lorem", "ipsum"]));
 
         let opts = make_options(firefox_opts).expect("valid firefox options");
-        assert_eq!(
-            opts.android.unwrap().intent_arguments,
-            Some(vec!["lorem".to_string(), "ipsum".to_string()])
-        );
+        let android_opts = AndroidOptions {
+            package: "foo.bar".to_owned(),
+            intent_arguments: Some(vec!["lorem".to_owned(), "ipsum".to_owned()]),
+            ..Default::default()
+        };
+        assert_eq!(opts.android, Some(android_opts));
     }
 
     #[test]
