@@ -363,7 +363,7 @@ bool mozInlineSpellWordUtil::GetNextWord(nsAString& aText,
 //    Convenience function for creating a range over the current document.
 
 nsresult mozInlineSpellWordUtil::MakeRange(NodeOffset aBegin, NodeOffset aEnd,
-                                           nsRange** aRange) {
+                                           nsRange** aRange) const {
   NS_ENSURE_ARG_POINTER(aBegin.mNode);
   if (!mDocument) {
     return NS_ERROR_NOT_INITIALIZED;
