@@ -2229,6 +2229,37 @@ JSObject* GlobalHelperThreadState::finishModuleParseTask(
   return script->module();
 }
 
+frontend::CompilationStencil* GlobalHelperThreadState::finishStencilParseTask(
+    JSContext* cx, JS::OffThreadToken* token) {
+  // TODO: The Script and Module task kinds should be combined in future since
+  //       they both generate the same Stencil type.
+  auto task = static_cast<ParseTask*>(token);
+  MOZ_RELEASE_ASSERT(task->kind == ParseTaskKind::Script ||
+                     task->kind == ParseTaskKind::Module);
+
+  Rooted<UniquePtr<ParseTask>> parseTask(
+      cx, finishParseTaskCommon(cx, task->kind, token));
+  if (!parseTask) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(!parseTask->options.useOffThreadParseGlobal);
+  MOZ_ASSERT(parseTask->extensibleStencil_);
+
+  UniquePtr<frontend::CompilationStencil> stencil =
+      cx->make_unique<frontend::CompilationStencil>(
+          parseTask->stencilInput_->source);
+  if (!stencil) {
+    return nullptr;
+  }
+
+  if (!stencil->steal(cx, std::move(*parseTask->extensibleStencil_))) {
+    return nullptr;
+  }
+
+  return stencil.release();
+}
+
 void GlobalHelperThreadState::cancelParseTask(JSRuntime* rt, ParseTaskKind kind,
                                               JS::OffThreadToken* token) {
   AutoLockHelperThreadState lock;

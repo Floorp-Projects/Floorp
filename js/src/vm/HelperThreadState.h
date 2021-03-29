@@ -369,6 +369,9 @@ class GlobalHelperThreadState {
                                     MutableHandle<ScriptVector> scripts);
   JSObject* finishModuleParseTask(JSContext* cx, JS::OffThreadToken* token);
 
+  frontend::CompilationStencil* finishStencilParseTask(
+      JSContext* cx, JS::OffThreadToken* token);
+
   bool hasActiveThreads(const AutoLockHelperThreadState&);
   bool hasQueuedTasks(const AutoLockHelperThreadState& locked);
   void waitForAllThreads();
