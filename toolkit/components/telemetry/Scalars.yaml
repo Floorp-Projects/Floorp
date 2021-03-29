@@ -3327,6 +3327,52 @@ telemetry:
     record_in_processes:
       - main
 
+  state_file_read_errors:
+    bug_numbers:
+      - 1700835
+    description: >
+      How many times we errored out trying to load state.json
+    expires: "94"
+    kind: uint
+    notification_emails:
+      - chutten@mozilla.com
+    products:
+      - 'firefox'
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+
+  using_pref_client_id:
+    bug_numbers:
+      - 1700835
+    description: >
+      How often we loaded the client_id from prefs instead of state.json.
+    expires: "94"
+    kind: uint
+    notification_emails:
+      - chutten@mozilla.com
+    products:
+      - 'firefox'
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+
+  removed_client_ids:
+    bug_numbers:
+      - 1700835
+    description: >
+      How many times we removed the client ids.
+    expires: "94"
+    kind: uint
+    notification_emails:
+      - chutten@mozilla.com
+    products:
+      - 'firefox'
+    release_channel_collection: opt-out
+    record_in_processes:
+      - main
+
+
 telemetry.discarded:
   accumulations:
     bug_numbers:
