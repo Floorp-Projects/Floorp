@@ -583,7 +583,7 @@ impl FirefoxOptions {
                 ));
             }
 
-            let mut android = AndroidOptions::new(package, storage);
+            let mut android = AndroidOptions::new(package.clone(), storage);
 
             android.activity = match options.get("androidActivity") {
                 Some(json) => {
@@ -606,7 +606,25 @@ impl FirefoxOptions {
 
                     Some(activity)
                 }
-                None => None,
+                None => {
+                    match package.as_str() {
+                        "org.mozilla.firefox"
+                        | "org.mozilla.firefox_beta"
+                        | "org.mozilla.fenix"
+                        | "org.mozilla.fenix.debug"
+                        | "org.mozilla.reference.browser" => {
+                            Some("org.mozilla.fenix.IntentReceiverActivity".to_string())
+                        }
+                        "org.mozilla.focus"
+                        | "org.mozilla.focus.debug"
+                        | "org.mozilla.klar"
+                        | "org.mozilla.klar.debug" => {
+                            Some("org.mozilla.focus.activity.IntentReceiverActivity".to_string())
+                        }
+                        // For all other applications fallback to auto-detection.
+                        _ => None,
+                    }
+                }
             };
 
             android.device_serial = match options.get("androidDeviceSerial") {
@@ -871,13 +889,7 @@ mod tests {
             firefox_opts.insert("androidPackage".into(), json!(value));
 
             let opts = make_options(firefox_opts).expect("valid firefox options");
-            assert_eq!(
-                opts.android,
-                Some(AndroidOptions::new(
-                    value.to_string(),
-                    AndroidStorageInput::Auto
-                ))
-            );
+            assert_eq!(opts.android.unwrap().package, value.to_string());
         }
     }
 
@@ -899,20 +911,63 @@ mod tests {
     }
 
     #[test]
-    fn fx_options_android_activity_valid_value() {
-        for value in ["cheese", "Cheese_9"].iter() {
+    fn fx_options_android_activity_default_known_apps() {
+        let packages = vec![
+            "org.mozilla.firefox",
+            "org.mozilla.firefox_beta",
+            "org.mozilla.fenix",
+            "org.mozilla.fenix.debug",
+            "org.mozilla.focus",
+            "org.mozilla.focus.debug",
+            "org.mozilla.klar",
+            "org.mozilla.klar.debug",
+            "org.mozilla.reference.browser",
+        ];
+
+        for package in packages {
             let mut firefox_opts = Capabilities::new();
-            firefox_opts.insert("androidPackage".into(), json!("foo.bar"));
-            firefox_opts.insert("androidActivity".into(), json!(value));
+            firefox_opts.insert("androidPackage".into(), json!(package));
 
             let opts = make_options(firefox_opts).expect("valid firefox options");
-            let android_opts = AndroidOptions {
-                package: "foo.bar".to_owned(),
-                activity: Some(value.to_string()),
-                ..Default::default()
-            };
-            assert_eq!(opts.android, Some(android_opts));
+            assert!(opts
+                .android
+                .unwrap()
+                .activity
+                .unwrap()
+                .contains("IntentReceiverActivity"));
         }
+    }
+
+    #[test]
+    fn fx_options_android_activity_default_unknown_apps() {
+        let packages = vec!["org.mozilla.geckoview_example", "com.some.other.app"];
+
+        for package in packages {
+            let mut firefox_opts = Capabilities::new();
+            firefox_opts.insert("androidPackage".into(), json!(package));
+
+            let opts = make_options(firefox_opts).expect("valid firefox options");
+            assert_eq!(opts.android.unwrap().activity, None);
+        }
+
+        let mut firefox_opts = Capabilities::new();
+        firefox_opts.insert(
+            "androidPackage".into(),
+            json!("org.mozilla.geckoview_example"),
+        );
+
+        let opts = make_options(firefox_opts).expect("valid firefox options");
+        assert_eq!(opts.android.unwrap().activity, None);
+    }
+
+    #[test]
+    fn fx_options_android_activity_override() {
+        let mut firefox_opts = Capabilities::new();
+        firefox_opts.insert("androidPackage".into(), json!("foo.bar"));
+        firefox_opts.insert("androidActivity".into(), json!("foo"));
+
+        let opts = make_options(firefox_opts).expect("valid firefox options");
+        assert_eq!(opts.android.unwrap().activity, Some("foo".to_string()));
     }
 
     #[test]
@@ -940,16 +995,14 @@ mod tests {
         firefox_opts.insert("androidDeviceSerial".into(), json!("cheese"));
 
         let opts = make_options(firefox_opts).expect("valid firefox options");
-        let android_opts = AndroidOptions {
-            package: "foo.bar".to_owned(),
-            device_serial: Some("cheese".to_owned()),
-            ..Default::default()
-        };
-        assert_eq!(opts.android, Some(android_opts));
+        assert_eq!(
+            opts.android.unwrap().device_serial,
+            Some("cheese".to_string())
+        );
     }
 
     #[test]
-    fn fx_options_android_serial_invalid() {
+    fn fx_options_android_device_serial_invalid() {
         let mut firefox_opts = Capabilities::new();
         firefox_opts.insert("androidPackage".into(), json!("foo.bar"));
         firefox_opts.insert("androidDeviceSerial".into(), json!(42));
@@ -964,12 +1017,10 @@ mod tests {
         firefox_opts.insert("androidIntentArguments".into(), json!(["lorem", "ipsum"]));
 
         let opts = make_options(firefox_opts).expect("valid firefox options");
-        let android_opts = AndroidOptions {
-            package: "foo.bar".to_owned(),
-            intent_arguments: Some(vec!["lorem".to_owned(), "ipsum".to_owned()]),
-            ..Default::default()
-        };
-        assert_eq!(opts.android, Some(android_opts));
+        assert_eq!(
+            opts.android.unwrap().intent_arguments,
+            Some(vec!["lorem".to_string(), "ipsum".to_string()])
+        );
     }
 
     #[test]
