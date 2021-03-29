@@ -235,7 +235,6 @@ raptor-webaudio-firefox:
     variants: ["fission"]
     try-name: raptor-webaudio-firefox
     treeherder-symbol: Rap(wa)
-    run-on-projects: []
     tier:
         by-variant:
             fission: 2
@@ -260,7 +259,6 @@ raptor-sunspider-firefox:
     variants: ["fission"]
     try-name: raptor-sunspider-firefox
     treeherder-symbol: Rap(ss)
-    run-on-projects: []
     mozharness:
         extra-options:
             - --test=raptor-sunspider
@@ -281,7 +279,13 @@ raptor-unity-webgl-firefox:
     variants: ["fission"]
     try-name: raptor-unity-webgl-firefox
     treeherder-symbol: Rap(ugl)
-    run-on-projects: []
+    run-on-projects:
+        by-variant:
+            fission: []
+            default:
+                by-test-platform:
+                    (linux|windows|macos)(?!.*shippable).*: []
+                    default: ["autoland"]
     tier:
         by-variant:
             fission: 2
@@ -311,7 +315,6 @@ raptor-wasm-misc-firefox:
     variants: ["fission"]
     try-name: raptor-wasm-misc-firefox
     treeherder-symbol: Rap(wm)
-    run-on-projects: []
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc
@@ -338,7 +341,6 @@ raptor-wasm-misc-baseline-firefox:
     variants: ["fission"]
     try-name: raptor-wasm-misc-baseline-firefox
     treeherder-symbol: Rap(wm-b)
-    run-on-projects: []
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc-baseline
@@ -365,7 +367,6 @@ raptor-wasm-misc-optimizing-firefox:
     variants: ["fission"]
     try-name: raptor-wasm-misc-optimizing-firefox
     treeherder-symbol: Rap(wm-i)
-    run-on-projects: []
     mozharness:
         extra-options:
             - --test=raptor-wasm-misc-optimizing
@@ -392,7 +393,6 @@ raptor-assorted-dom-firefox:
     variants: ["fission"]
     try-name: raptor-assorted-dom-firefox
     treeherder-symbol: Rap(dom)
-    run-on-projects: []
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2100
@@ -424,7 +424,6 @@ raptor-wasm-godot-firefox:
     variants: ["fission"]
     try-name: raptor-wasm-godot-firefox
     treeherder-symbol: Rap(godot)
-    run-on-projects: []
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2100
@@ -450,7 +449,6 @@ raptor-wasm-godot-baseline-firefox:
     variants: ["fission"]
     try-name: raptor-wasm-godot-baseline-firefox
     treeherder-symbol: Rap(godot-b)
-    run-on-projects: []
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2100
@@ -476,7 +474,6 @@ raptor-wasm-godot-optimizing-firefox:
     variants: ["fission"]
     try-name: raptor-wasm-godot-optimizing-firefox
     treeherder-symbol: Rap(godot-i)
-    run-on-projects: []
     max-run-time:
         by-test-platform:
             .*-qr/.*: 2100
@@ -490,7 +487,6 @@ raptor-wasm-godot-optimizing-firefox-profiling:
     description: "Raptor WASM godot on Firefox with optimizing JIT and Gecko Profiling"
     try-name: raptor-wasm-godot-optimizing-firefox-profiling
     treeherder-symbol: Rap-Prof(godot-i)
-    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -781,7 +777,22 @@ raptor-jetstream2-firefox:
     variants: ["fission"]
     try-name: raptor-jetstream2-firefox
     treeherder-symbol: Rap(js2)
-    run-on-projects: []
+    run-on-projects:
+        by-variant:
+            fission:
+                by-app:
+                    chrome: []
+                    chromium: []
+                    default:
+                        by-test-platform:
+                            linux64-shippable-qr/opt: ["mozilla-central"]
+                            windows10-64-shippable-qr/opt: ["mozilla-central"]
+                            default: []
+            default:
+                by-test-platform:
+                    windows7-32.*/opt: []
+                    (linux|windows10|macos)(?!.*shippable).*: []
+                    default: ['mozilla-central']
     tier:
         by-variant:
             fission: 2
