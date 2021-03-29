@@ -110,6 +110,18 @@ class nsHTTPSOnlyUtils {
    */
   static bool IsSafeToAcceptCORSOrMixedContent(nsILoadInfo* aLoadInfo);
 
+  /**
+   * Checks if two URIs are same origin modulo the difference that
+   * aHTTPSchemeURI uses and http scheme.
+   * @param aHTTPSSchemeURI nsIURI using scheme of https
+   * @param aOtherURI nsIURI using scheme of http
+   * @param aLoadInfo nsILoadInfo of the request
+   * @return true, if URIs are equal except scheme and ref
+   */
+  static bool IsEqualURIExceptSchemeAndRef(nsIURI* aHTTPSSchemeURI,
+                                           nsIURI* aOtherURI,
+                                           nsILoadInfo* aLoadInfo);
+
  private:
   /**
    * Logs localized message to either content console or browser console

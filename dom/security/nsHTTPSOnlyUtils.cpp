@@ -19,6 +19,8 @@
 #include "nsIPrincipal.h"
 #include "nsIRedirectHistoryEntry.h"
 #include "nsIScriptError.h"
+#include "nsIURIMutator.h"
+#include "nsNetUtil.h"
 #include "prnetdb.h"
 
 // Set the timer to 3 seconds. If the https request has not received
@@ -480,6 +482,61 @@ bool nsHTTPSOnlyUtils::LoopbackOrLocalException(nsIURI* aURI) {
   bool upgradeLocal =
       mozilla::StaticPrefs::dom_security_https_only_mode_upgrade_local();
   return (!upgradeLocal && addr.IsIPAddrLocal());
+}
+
+/* static */
+bool nsHTTPSOnlyUtils::IsEqualURIExceptSchemeAndRef(nsIURI* aHTTPSSchemeURI,
+                                                    nsIURI* aOtherURI,
+                                                    nsILoadInfo* aLoadInfo) {
+  // 1. Check if one of parameters is null then webpage can't be loaded yet
+  // and no further inspections are needed
+  if (!aHTTPSSchemeURI || !aOtherURI || !aLoadInfo) {
+    return false;
+  }
+
+  // 2. If the URI to be loaded is not http, then same origin will be detected
+  // already
+  if (!mozilla::net::SchemeIsHTTP(aOtherURI)) {
+    return false;
+  }
+
+  // 3. Check if the HTTPS-Only Mode is even enabled, before we do anything else
+  bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+  if (!IsHttpsOnlyModeEnabled(isPrivateWin)) {
+    return false;
+  }
+
+  // 4. If the load is exempt, then it's defintely not related to https-only
+  uint32_t httpsOnlyStatus = aLoadInfo->GetHttpsOnlyStatus();
+  if (httpsOnlyStatus & nsILoadInfo::HTTPS_ONLY_EXEMPT) {
+    return false;
+  }
+
+  // 5. Create a new target URI with 'https' instead of 'http' and compare it
+  // to the current URI
+  int32_t port = 0;
+  nsresult rv = aOtherURI->GetPort(&port);
+  NS_ENSURE_SUCCESS(rv, false);
+  // a port of -1 indicates the default port, hence we upgrade from port 80 to
+  // port 443
+  // otherwise we keep the port.
+  if (port == -1) {
+    port = NS_GetDefaultPort("https");
+  }
+  nsCOMPtr<nsIURI> newHTTPSchemeURI;
+  rv = NS_MutateURI(aOtherURI)
+           .SetScheme("https"_ns)
+           .SetPort(port)
+           .Finalize(newHTTPSchemeURI);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  bool uriEquals = false;
+  if (NS_FAILED(
+          aHTTPSSchemeURI->EqualsExceptRef(newHTTPSchemeURI, &uriEquals))) {
+    return false;
+  }
+
+  return uriEquals;
 }
 
 /////////////////////////////////////////////////////////////////////
