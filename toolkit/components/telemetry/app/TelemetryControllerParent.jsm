@@ -423,11 +423,6 @@ var Impl = {
     if (aOptions.addEnvironment) {
       pingData.environment =
         aOptions.overrideEnvironment || TelemetryEnvironment.currentEnvironment;
-
-      // On Android store a flag if the client ID was reset from a canary ID.
-      if (AppConstants.platform == "android" && ClientID.wasCanaryClientID()) {
-        pingData.environment.profile.wasCanary = true;
-      }
     }
 
     return pingData;

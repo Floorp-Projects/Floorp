@@ -100,7 +100,6 @@ Structure:
         creationDate: <integer>, // integer days since UNIX epoch, e.g. 16446
         resetDate: <integer>, // integer days since UNIX epoch, e.g. 16446 - optional
         firstUseDate: <integer>, // integer days since UNIX epoch, e.g. 16446 - optional
-        wasCanary: <bool>, // Android only: true if this profile previously had a canary client ID
       },
       partner: { // This section may not be immediately available on startup
         distributionId: <string>, // pref "distribution.id", null on failure
@@ -461,12 +460,6 @@ firstUseDate
 The time of the first use of profile. If this is an old profile where we can't
 determine this this field will not be present.
 It's read from a file-stored timestamp from the client's profile directory.
-
-wasCanary
-~~~~~~~~~
-
-Android-only. This attribute is set to ``true`` if the client ID was erroneously set to a canary client ID before
-and later reset to a new random client ID. The attribute is not included if the client ID was not changed.
 
 partner
 -------
