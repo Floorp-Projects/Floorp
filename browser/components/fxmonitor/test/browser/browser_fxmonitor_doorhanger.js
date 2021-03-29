@@ -50,7 +50,7 @@ async function clearWarnedHosts() {
   });
 }
 
-add_task(function setup() {
+add_task(async function setup() {
   // This test used to rely on the initial timer of
   // TestUtils.waitForCondition. See bug 1700683.
   let originalWaitForCondition = TestUtils.waitForCondition;
@@ -67,6 +67,16 @@ add_task(function setup() {
   };
   registerCleanupFunction(function() {
     TestUtils.waitForCondition = originalWaitForCondition;
+  });
+
+  // Disable Proton. The Firefox Monitor doorhanger is disabled with Proton
+  // enabled, so most of these tests won't work in that configuration. We are,
+  // however, keeping these tests around for now until Proton ships.
+  //
+  // There is a test later in this file that checks that the panel doesn't appear
+  // with Proton enabled.
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.proton.doorhangers.enabled", false]],
   });
 });
 

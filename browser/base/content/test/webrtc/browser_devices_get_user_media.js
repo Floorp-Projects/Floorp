@@ -24,10 +24,14 @@ var gTests = [
         "anchored to device icon"
       );
       checkDeviceSelectors(true, true);
-      let iconclass = PopupNotifications.panel.firstElementChild.getAttribute(
-        "iconclass"
-      );
-      ok(iconclass.includes("camera-icon"), "panel using devices icon");
+
+      // With Proton enabled, the icon does not appear in the panel.
+      if (!gProtonDoorhangers) {
+        let iconclass = PopupNotifications.panel.firstElementChild.getAttribute(
+          "iconclass"
+        );
+        ok(iconclass.includes("camera-icon"), "panel using devices icon");
+      }
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
@@ -69,10 +73,17 @@ var gTests = [
         "anchored to mic icon"
       );
       checkDeviceSelectors(true);
-      let iconclass = PopupNotifications.panel.firstElementChild.getAttribute(
-        "iconclass"
-      );
-      ok(iconclass.includes("microphone-icon"), "panel using microphone icon");
+
+      // With Proton enabled, the icon does not appear in the panel.
+      if (!gProtonDoorhangers) {
+        let iconclass = PopupNotifications.panel.firstElementChild.getAttribute(
+          "iconclass"
+        );
+        ok(
+          iconclass.includes("microphone-icon"),
+          "panel using microphone icon"
+        );
+      }
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
@@ -113,10 +124,14 @@ var gTests = [
         "anchored to device icon"
       );
       checkDeviceSelectors(false, true);
-      let iconclass = PopupNotifications.panel.firstElementChild.getAttribute(
-        "iconclass"
-      );
-      ok(iconclass.includes("camera-icon"), "panel using devices icon");
+
+      // With Proton enabled, the icon does not appear in the panel.
+      if (!gProtonDoorhangers) {
+        let iconclass = PopupNotifications.panel.firstElementChild.getAttribute(
+          "iconclass"
+        );
+        ok(iconclass.includes("camera-icon"), "panel using devices icon");
+      }
 
       let indicator = promiseIndicatorWindow();
       let observerPromise1 = expectObserverCalled(
