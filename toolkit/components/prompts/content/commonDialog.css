@@ -111,16 +111,23 @@ dialog[subdialog] {
 }
 
 /* Use an ID selector for the dialog to win on specificity... */
-#commonDialog[subdialog] label,
 #commonDialog[subdialog] description,
-#commonDialog[subdialog] checkbox,
-#commonDialog[subdialog] input {
+#commonDialog[subdialog] checkbox {
   margin: 0 4px;
+}
+
+#commonDialog[subdialog] label {
+  margin: 4px;
+}
+
+
+#commonDialog[subdialog] input {
+  margin: 0 4px 4px 4px;
 }
 
 /* Add vertical spaces between rows: */
 dialog[subdialog] .dialogRow {
-  margin-block: 0 20px;
+  margin-block: 0 16px;
 }
 
 /* Start-align labels: */

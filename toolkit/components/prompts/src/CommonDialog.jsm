@@ -175,6 +175,11 @@ CommonDialog.prototype = {
     if (this.args.text) {
       // Bug 317334 - crop string length as a workaround.
       croppedMessage = this.args.text.substr(0, 10000);
+      // TabModalPrompts don't have an infoRow to hide / not hide here, so
+      // guard on that here so long as they are in use.
+      if (this.ui.infoRow) {
+        this.ui.infoRow.hidden = false;
+      }
     }
     let infoBody = this.ui.infoBody;
     infoBody.appendChild(infoBody.ownerDocument.createTextNode(croppedMessage));
