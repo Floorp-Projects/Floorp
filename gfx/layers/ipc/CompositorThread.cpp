@@ -6,6 +6,7 @@
 #include "CompositorThread.h"
 
 #include "CompositorBridgeParent.h"
+#include "gfxGradientCache.h"
 #include "MainThreadUtils.h"
 #include "VRManagerParent.h"
 #include "mozilla/BackgroundHangMonitor.h"
@@ -110,6 +111,7 @@ void CompositorThreadHolder::Shutdown() {
   MediaSystemResourceService::Shutdown();
   CompositorManagerParent::Shutdown();
   CanvasTranslator::Shutdown();
+  gfx::gfxGradientCache::Shutdown();
 
   // Ensure there are no pending tasks that would cause an access to the
   // thread's HangMonitor. APZ and Canvas can keep a reference to the compositor

@@ -109,6 +109,19 @@ class Translator {
   virtual void AddFilterNode(mozilla::gfx::ReferencePtr aRefPtr,
                              FilterNode* aSurface) = 0;
   virtual void RemoveFilterNode(mozilla::gfx::ReferencePtr aRefPtr) = 0;
+
+  /**
+   * Get GradientStops compatible with the translation DrawTarget type.
+   * @param aRawStops array of raw gradient stops required
+   * @param aNumStops length of aRawStops
+   * @param aExtendMode extend mode required
+   * @return an already addrefed GradientStops for our DrawTarget type
+   */
+  virtual already_AddRefed<GradientStops> GetOrCreateGradientStops(
+      GradientStop* aRawStops, uint32_t aNumStops, ExtendMode aExtendMode) {
+    return GetReferenceDrawTarget()->CreateGradientStops(aRawStops, aNumStops,
+                                                         aExtendMode);
+  }
   virtual void AddGradientStops(ReferencePtr aRefPtr, GradientStops* aPath) = 0;
   virtual void RemoveGradientStops(ReferencePtr aRefPtr) = 0;
   virtual void AddScaledFont(ReferencePtr aRefPtr, ScaledFont* aScaledFont) = 0;
