@@ -343,8 +343,8 @@ main-context-menu-suggest-strong-password =
     .label = Suggest Strong Password…
     .accesskey = S
 
-main-context-menu-manage-logins =
-    .label = Manage Logins…
+main-context-menu-manage-logins2 =
+    .label = Manage Logins
     .accesskey = M
 
 main-context-menu-keyword =
