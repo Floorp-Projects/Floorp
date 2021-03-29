@@ -84,6 +84,25 @@ add_task(async function has_used_ctrl_tab_and_its_on() {
   );
 });
 
+add_task(async function has_used_ctrl_tab_and_its_default() {
+  Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
+  Services.prefs.setBoolPref("browser.engagement.ctrlTab.has-used", true);
+  Services.prefs.clearUserPref("browser.ctrlTab.recentlyUsedOrder");
+
+  // Simulate a migration.
+  gBrowserGlue.observe(
+    null,
+    TOPIC_BROWSERGLUE_TEST,
+    TOPICDATA_BROWSERGLUE_TEST
+  );
+
+  // Default had been true
+  Assert.equal(
+    true,
+    Services.prefs.getBoolPref("browser.ctrlTab.sortByRecentlyUsed")
+  );
+});
+
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref("browser.migration.version");
   Services.prefs.clearUserPref("browser.engagement.ctrlTab.has-used");
