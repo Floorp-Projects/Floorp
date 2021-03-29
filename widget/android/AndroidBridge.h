@@ -175,21 +175,6 @@ class AndroidBridge final {
   AndroidBridge();
   ~AndroidBridge();
 
-  // intput stream
-  jclass jReadableByteChannel;
-  jclass jChannels;
-  jmethodID jChannelCreate;
-  jmethodID jByteBufferRead;
-
-  jclass jInputStream;
-  jmethodID jClose;
-  jmethodID jAvailable;
-
-  jmethodID jCalculateLength;
-
-  // some convinient types to have around
-  jclass jStringClass;
-
   jni::Object::GlobalRef mMessageQueue;
   jfieldID mMessageQueueMessages;
   jmethodID mMessageQueueNext;
