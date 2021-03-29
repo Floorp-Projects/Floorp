@@ -122,6 +122,8 @@ void RenderThread::ShutDown() {
   sRenderThread->Loop()->PostTask(runnable.forget());
   task.Wait();
 
+  layers::SharedSurfacesParent::Shutdown();
+
   sRenderThread = nullptr;
 #ifdef XP_WIN
   if (widget::WinCompositorWindowThread::Get()) {
@@ -142,7 +144,7 @@ void RenderThread::ShutDownTask(layers::SynchronousTask* aTask) {
 
   // Releasing on the render thread will allow us to avoid dispatching to remove
   // remaining textures from the texture map.
-  layers::SharedSurfacesParent::Shutdown();
+  layers::SharedSurfacesParent::ShutdownRenderThread();
 
   ClearAllBlobImageResources();
   ClearSingletonGL();
