@@ -36,20 +36,13 @@ ChromeUtils.defineModuleGetter(
   "resource://gre/modules/Services.jsm"
 );
 ChromeUtils.defineModuleGetter(this, "Log", "resource://gre/modules/Log.jsm");
-ChromeUtils.defineModuleGetter(
-  this,
-  "Preferences",
-  "resource://gre/modules/Preferences.jsm"
+const { XPCOMUtils } = ChromeUtils.import(
+  "resource://gre/modules/XPCOMUtils.jsm"
 );
 
 const Utils = TelemetryUtils;
 
 const MS_IN_A_MINUTE = 60 * 1000;
-const IS_HEALTH_PING_ENABLED = Preferences.get(
-  TelemetryUtils.Preferences.HealthPingEnabled,
-  true
-);
-
 // Send health ping every hour
 const SEND_TICK_DELAY = 60 * MS_IN_A_MINUTE;
 
@@ -170,7 +163,7 @@ var TelemetryHealthPing = {
    * @returns {Promise} Test-only promise that resolves when the ping was stored or sent (if any).
    */
   _submitPing(reason) {
-    if (!IS_HEALTH_PING_ENABLED || !this._hasDataToSend()) {
+    if (!TelemetryHealthPing.enabled || !this._hasDataToSend()) {
       return Promise.resolve();
     }
 
@@ -289,3 +282,10 @@ var TelemetryHealthPing = {
     return this._logger;
   },
 };
+
+XPCOMUtils.defineLazyPreferenceGetter(
+  TelemetryHealthPing,
+  "enabled",
+  TelemetryUtils.Preferences.HealthPingEnabled,
+  true
+);
