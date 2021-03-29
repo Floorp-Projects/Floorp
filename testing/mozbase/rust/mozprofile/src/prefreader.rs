@@ -255,7 +255,7 @@ impl<'a> PrefTokenizer<'a> {
                 let value = match buf.borrow() {
                     "true" => true,
                     "false" => false,
-                    x => panic!(format!("Boolean wasn't 'true' or 'false' (was {})", x)),
+                    x => panic!("Boolean wasn't 'true' or 'false' (was {})", x),
                 };
                 PrefToken::Bool(value, position)
             }
