@@ -135,11 +135,7 @@
                 <menuseparator/>
                 <menuitem id="menu_preferences"
                           oncommand="openPreferences(undefined);"
-#ifdef NIGHTLY_BUILD
                           data-l10n-id="menu-settings"
-#else
-                          data-l10n-id="menu-preferences"
-#endif
                           />
 #endif
 #endif
@@ -431,11 +427,7 @@
 #ifndef XP_UNIX
               <menuseparator id="prefSep"/>
               <menuitem id="menu_preferences"
-#ifdef NIGHTLY_BUILD
                         data-l10n-id="menu-settings"
-#else
-                        data-l10n-id="menu-preferences"
-#endif
                         oncommand="openPreferences(undefined);"/>
 #endif
 #ifdef MOZ_DEBUG
