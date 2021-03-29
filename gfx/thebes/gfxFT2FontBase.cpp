@@ -37,7 +37,7 @@ gfxFT2FontBase::gfxFT2FontBase(
       mFTLoadFlags(aLoadFlags | FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH |
                    FT_LOAD_COLOR),
       mEmbolden(aEmbolden),
-      mFTSize(0.0) {}
+      mFTSize(1.0) {}
 
 gfxFT2FontBase::~gfxFT2FontBase() { mFTFace->ForgetLockOwner(this); }
 
@@ -217,22 +217,6 @@ void gfxFT2FontBase::InitMetrics() {
     memset(&mMetrics, 0, sizeof(mMetrics));  // zero initialize
     mSpaceGlyph = GetGlyph(' ');
     return;
-  }
-
-  if (GetStyle()->sizeAdjust > 0.0 && mFTSize == 0.0) {
-    // If font-size-adjust is in effect, we need to get metrics in order to
-    // determine the aspect ratio, then compute the final adjusted size and
-    // re-initialize metrics.
-    // This will clamp mFTSize to a minimum of 1.0, and therefore prevent
-    // further recursion when calling InitMetrics here.
-    mFTSize = FindClosestSize(mFTFace->GetFace(), GetAdjustedSize());
-    InitMetrics();
-    // Now do the font-size-adjust calculation and set the final size.
-    gfxFloat aspect = mMetrics.xHeight / mMetrics.emHeight;
-    mAdjustedSize = GetStyle()->GetAdjustedSize(aspect);
-    // Ensure the FT_Face will be reconfigured for the new size next time we
-    // need to use it.
-    mFTFace->ForgetLockOwner(this);
   }
 
   // Cairo metrics are normalized to em-space, so that whatever fixed size
