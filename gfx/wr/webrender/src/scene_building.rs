@@ -1275,7 +1275,7 @@ impl<'a> SceneBuilder<'a> {
                 // which can cause issues.
                 simplify_repeated_primitive(&tile_size, &mut tile_spacing, &mut prim_rect);
 
-                if !tile_size.is_empty() {
+                if !tile_size.to_i32().is_empty() {
                     layout.rect = prim_rect;
                     let prim_key_kind = self.create_radial_gradient_prim(
                         &layout,
@@ -1313,26 +1313,28 @@ impl<'a> SceneBuilder<'a> {
                     info.tile_size,
                 );
 
-                let prim_key_kind = self.create_conic_gradient_prim(
-                    &layout,
-                    info.gradient.center,
-                    info.gradient.angle,
-                    info.gradient.start_offset,
-                    info.gradient.end_offset,
-                    item.gradient_stops(),
-                    info.gradient.extend_mode,
-                    tile_size,
-                    info.tile_spacing,
-                    None,
-                );
+                if !tile_size.to_i32().is_empty() {
+                    let prim_key_kind = self.create_conic_gradient_prim(
+                        &layout,
+                        info.gradient.center,
+                        info.gradient.angle,
+                        info.gradient.start_offset,
+                        info.gradient.end_offset,
+                        item.gradient_stops(),
+                        info.gradient.extend_mode,
+                        tile_size,
+                        info.tile_spacing,
+                        None,
+                    );
 
-                self.add_nonshadowable_primitive(
-                    spatial_node_index,
-                    clip_chain_id,
-                    &layout,
-                    Vec::new(),
-                    prim_key_kind,
-                );
+                    self.add_nonshadowable_primitive(
+                        spatial_node_index,
+                        clip_chain_id,
+                        &layout,
+                        Vec::new(),
+                        prim_key_kind,
+                    );
+                }
             }
             DisplayItem::BoxShadow(ref info) => {
                 profile_scope!("box_shadow");
