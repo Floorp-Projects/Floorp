@@ -900,9 +900,11 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
     } else if (chromiumCodec.EqualsASCII("av01")) {
       codec = "av1"_ns;
     } else {
-      GMP_PARENT_LOG_DEBUG("%s: Unrecognized codec: %s, failing.", __FUNCTION__,
+      GMP_PARENT_LOG_DEBUG("%s: Unrecognized codec: %s.", __FUNCTION__,
                            chromiumCodec.get());
-      return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+      MOZ_ASSERT_UNREACHABLE(
+          "Unhandled codec string! Need to add it to the parser.");
+      continue;
     }
 
     video.mAPITags.AppendElement(codec);
