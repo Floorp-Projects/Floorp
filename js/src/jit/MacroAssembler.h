@@ -3666,11 +3666,13 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void compareExchange64(const Synchronization& sync, const Address& mem,
                          Register64 expected, Register64 replacement,
-                         Register64 output) DEFINED_ON(arm, arm64, x64, x86);
+                         Register64 output)
+      DEFINED_ON(arm, arm64, x64, x86, mips64);
 
   void compareExchange64(const Synchronization& sync, const BaseIndex& mem,
                          Register64 expected, Register64 replacement,
-                         Register64 output) DEFINED_ON(arm, arm64, x64, x86);
+                         Register64 output)
+      DEFINED_ON(arm, arm64, x64, x86, mips64);
 
   // Exchange with memory.  Return the value initially in memory.
   // MIPS: `valueTemp`, `offsetTemp` and `maskTemp` must be defined for 8-bit
@@ -3700,11 +3702,11 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void atomicExchange64(const Synchronization& sync, const Address& mem,
                         Register64 value, Register64 output)
-      DEFINED_ON(arm, arm64, x64, x86);
+      DEFINED_ON(arm, arm64, x64, x86, mips64);
 
   void atomicExchange64(const Synchronization& sync, const BaseIndex& mem,
                         Register64 value, Register64 output)
-      DEFINED_ON(arm, arm64, x64, x86);
+      DEFINED_ON(arm, arm64, x64, x86, mips64);
 
   // Read-modify-write with memory.  Return the value in memory before the
   // operation.
@@ -3759,7 +3761,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void atomicFetchOp64(const Synchronization& sync, AtomicOp op,
                        Register64 value, const Address& mem, Register64 temp,
-                       Register64 output) DEFINED_ON(arm, arm64, x64);
+                       Register64 output) DEFINED_ON(arm, arm64, x64, mips64);
 
   void atomicFetchOp64(const Synchronization& sync, AtomicOp op,
                        const Address& value, const Address& mem,
@@ -3767,7 +3769,7 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void atomicFetchOp64(const Synchronization& sync, AtomicOp op,
                        Register64 value, const BaseIndex& mem, Register64 temp,
-                       Register64 output) DEFINED_ON(arm, arm64, x64);
+                       Register64 output) DEFINED_ON(arm, arm64, x64, mips64);
 
   void atomicFetchOp64(const Synchronization& sync, AtomicOp op,
                        const Address& value, const BaseIndex& mem,
@@ -3785,14 +3787,14 @@ class MacroAssembler : public MacroAssemblerSpecific {
 
   void atomicEffectOp64(const Synchronization& sync, AtomicOp op,
                         Register64 value, const Address& mem, Register64 temp)
-      DEFINED_ON(arm, arm64);
+      DEFINED_ON(arm, arm64, mips64);
 
   void atomicEffectOp64(const Synchronization& sync, AtomicOp op,
                         Register64 value, const BaseIndex& mem) DEFINED_ON(x64);
 
   void atomicEffectOp64(const Synchronization& sync, AtomicOp op,
                         Register64 value, const BaseIndex& mem, Register64 temp)
-      DEFINED_ON(arm, arm64);
+      DEFINED_ON(arm, arm64, mips64);
 
   // 64-bit atomic load. On 64-bit systems, use regular load with
   // Synchronization::Load, not this method.
