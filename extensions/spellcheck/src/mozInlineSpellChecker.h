@@ -220,7 +220,8 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   // examines the dom node in question and returns true if the inline spell
   // checker should skip the node (i.e. the text is inside of a block quote
   // or an e-mail signature...)
-  bool ShouldSpellCheckNode(mozilla::TextEditor* aTextEditor, nsINode* aNode);
+  bool ShouldSpellCheckNode(mozilla::TextEditor* aTextEditor,
+                            nsINode* aNode) const;
 
   // spell check the text contained within aRange, potentially scheduling
   // another check in the future if the time threshold is reached
@@ -237,7 +238,7 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
 
   // helper routine to determine if a point is inside of the passed in
   // selection.
-  nsresult IsPointInSelection(mozilla::dom::Selection& aSelection,
+  static nsresult IsPointInSelection(mozilla::dom::Selection& aSelection,
                               nsINode* aNode, int32_t aOffset,
                               nsRange** aRange);
 
@@ -258,7 +259,7 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
 
   nsresult MakeSpellCheckRange(nsINode* aStartNode, int32_t aStartOffset,
                                nsINode* aEndNode, int32_t aEndOffset,
-                               nsRange** aRange);
+                               nsRange** aRange) const;
 
   // DOM and editor event registration helper routines
   nsresult RegisterEventListeners();
