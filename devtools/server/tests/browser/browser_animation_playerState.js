@@ -45,6 +45,7 @@ async function playerHasAnInitialState(walker, animations) {
     "documentCurrentTime" in player.initialState,
     "Player's state has documentCurrentTime"
   );
+  ok("properties" in player.initialState, "Player's state has properties");
 }
 
 async function playerStateIsCorrect(walker, animations) {
@@ -88,7 +89,7 @@ async function playerStateIsCorrect(walker, animations) {
   is(state.playbackRate, 1, "Transition playbackRate is correct");
   is(state.type, "csstransition", "Transition type is correct");
   // check easing in properties
-  let properties = await player.getProperties();
+  let properties = state.properties;
   is(properties.length, 1, "Length of animated properties is correct");
   let keyframes = properties[0].values;
   is(keyframes.length, 2, "Transition length of keyframe is correct");
@@ -113,7 +114,7 @@ async function playerStateIsCorrect(walker, animations) {
   is(state.playState, "running", "The 2nd animation's playState is correct");
   is(state.playbackRate, 1, "The 2nd animation's playbackRate is correct");
   // chech easing in keyframe
-  properties = await player.getProperties();
+  properties = state.properties;
   keyframes = properties[0].values;
   is(keyframes.length, 2, "The 2nd animation's length of keyframe is correct");
   is(

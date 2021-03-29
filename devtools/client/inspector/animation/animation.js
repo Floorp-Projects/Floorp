@@ -251,8 +251,11 @@ class AnimationInspector {
    *         }
    */
   async getAnimatedPropertyMap(animation) {
-    // getProperties might throw an error.
-    const properties = await animation.getProperties();
+    // @backward-compat { version 89 } properties are included in the state returned by
+    // the actor, we can remove the fallback call to `getProperties` when Firefox 89 is
+    // on the release channel.
+    const properties =
+      animation.state.properties || (await animation.getProperties());
     const animatedPropertyMap = new Map();
 
     for (const { name, values } of properties) {
