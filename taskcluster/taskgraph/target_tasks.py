@@ -846,15 +846,15 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                 if "linux" in platform:
                     if "speedometer" in try_name:
                         return True
-                # Run browsertime benchmark tests on chrome/chromium
-                if "-chrome" in try_name:
-                    return True
-                if "-chromium" in try_name:
-                    return True
             else:
                 # Don't run tp6 raptor tests
                 if "tp6" in try_name:
                     return False
+                # Run raptor-webext benchmark tests on chrome/chromium
+                if "-chrome" in try_name:
+                    return True
+                if "-chromium" in try_name:
+                    return True
         # Android selection
         elif accept_raptor_android_build(platform):
             # Ignore all fennec tests here, we run those weekly
