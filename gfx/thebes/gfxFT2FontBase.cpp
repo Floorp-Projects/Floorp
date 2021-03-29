@@ -223,9 +223,9 @@ void gfxFT2FontBase::InitMetrics() {
     // If font-size-adjust is in effect, we need to get metrics in order to
     // determine the aspect ratio, then compute the final adjusted size and
     // re-initialize metrics.
-    // This will clamp mFTSize to a minimum of 1.0, and therefore prevent
-    // further recursion when calling InitMetrics here.
-    mFTSize = FindClosestSize(mFTFace->GetFace(), GetAdjustedSize());
+    // Setting mFTSize nonzero here ensures we will not recurse again; the
+    // actual value will be overridden by FindClosestSize below.
+    mFTSize = 1.0;
     InitMetrics();
     // Now do the font-size-adjust calculation and set the final size.
     gfxFloat aspect = mMetrics.xHeight / mMetrics.emHeight;
@@ -234,6 +234,10 @@ void gfxFT2FontBase::InitMetrics() {
     // need to use it.
     mFTFace->ForgetLockOwner(this);
   }
+
+  // Set mAdjustedSize if it hasn't already been set by a font-size-adjust
+  // computation.
+  mAdjustedSize = GetAdjustedSize();
 
   // Cairo metrics are normalized to em-space, so that whatever fixed size
   // might actually be chosen is factored out. They are then later scaled by

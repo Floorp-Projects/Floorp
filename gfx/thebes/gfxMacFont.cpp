@@ -244,7 +244,9 @@ void gfxMacFont::InitMetrics() {
     return;
   }
 
-  mAdjustedSize = std::max(mStyle.size, 1.0);
+  // Apply any size-adjust from the font enty to the given size; this may be
+  // re-adjusted below if font-size-adjust is in effect.
+  mAdjustedSize = std::max(GetAdjustedSize(), 1.0);
   mFUnitsConvFactor = mAdjustedSize / upem;
 
   // For CFF fonts, when scaling values read from CGFont* APIs, we need to
@@ -275,9 +277,9 @@ void gfxMacFont::InitMetrics() {
     mMetrics.capHeight = ::CGFontGetCapHeight(mCGFont) * cgConvFactor;
   }
 
-  if (mStyle.sizeAdjust > 0.0 && mStyle.size > 0.0 && mMetrics.xHeight > 0.0) {
+  if (mStyle.sizeAdjust > 0.0 && mMetrics.xHeight > 0.0) {
     // apply font-size-adjust, and recalculate metrics
-    gfxFloat aspect = mMetrics.xHeight / mStyle.size;
+    gfxFloat aspect = mMetrics.xHeight / mAdjustedSize;
     mAdjustedSize = mStyle.GetAdjustedSize(aspect);
     mFUnitsConvFactor = mAdjustedSize / upem;
     if (static_cast<MacOSFontEntry*>(mFontEntry.get())->IsCFF()) {

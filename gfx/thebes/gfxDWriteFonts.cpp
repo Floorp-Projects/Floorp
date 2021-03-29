@@ -158,7 +158,7 @@ void gfxDWriteFont::ComputeMetrics(AntialiasOption anAAOption) {
         (gfxFloat)fontMetrics.xHeight / fontMetrics.designUnitsPerEm;
     mAdjustedSize = mStyle.GetAdjustedSize(aspect);
   } else {
-    mAdjustedSize = mStyle.size;
+    mAdjustedSize = GetAdjustedSize();
   }
 
   // Note that GetMeasuringMode depends on mAdjustedSize
