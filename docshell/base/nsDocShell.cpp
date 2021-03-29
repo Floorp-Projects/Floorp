@@ -9047,6 +9047,23 @@ nsresult nsDocShell::HandleSameDocumentNavigation(
       }
     }
   } else {
+    if (mActiveEntry) {
+      mActiveEntry->SetScrollPosition(scrollPos.x, scrollPos.y);
+      if (mBrowsingContext) {
+        if (XRE_IsParentProcess()) {
+          SessionHistoryEntry* entry =
+              mBrowsingContext->Canonical()->GetActiveSessionHistoryEntry();
+          if (entry) {
+            entry->SetScrollPosition(scrollPos.x, scrollPos.y);
+          }
+        } else {
+          mozilla::Unused << ContentChild::GetSingleton()
+                                 ->SendSessionHistoryEntryScrollPosition(
+                                     mBrowsingContext, scrollPos.x,
+                                     scrollPos.y);
+        }
+      }
+    }
     if (mLoadingEntry) {
       if (!mLoadingEntry->mLoadIsFromSessionHistory) {
         // If we're not doing a history load, scroll restoration

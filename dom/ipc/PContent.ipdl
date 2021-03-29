@@ -956,6 +956,8 @@ parent:
 
     async SessionHistoryEntryScrollRestorationIsManual(MaybeDiscardedBrowsingContext aContext,
                                                        bool aIsManual);
+    async SessionHistoryEntryScrollPosition(MaybeDiscardedBrowsingContext aContext,
+                                            int32_t aX, int32_t aY);
 
     async SessionHistoryEntryCacheKey(MaybeDiscardedBrowsingContext aContext,
                                       uint32_t aCacheKey);
