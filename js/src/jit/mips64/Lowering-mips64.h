@@ -43,6 +43,9 @@ class LIRGeneratorMIPS64 : public LIRGeneratorMIPSShared {
 
   void lowerBigIntDiv(MBigIntDiv* ins);
   void lowerBigIntMod(MBigIntMod* ins);
+
+  void lowerAtomicLoad64(MLoadUnboxedScalar* ins);
+  void lowerAtomicStore64(MStoreUnboxedScalar* ins);
 };
 
 typedef LIRGeneratorMIPS64 LIRGeneratorSpecific;
