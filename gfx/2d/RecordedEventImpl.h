@@ -3195,8 +3195,7 @@ inline RecordedGradientStopsCreation::~RecordedGradientStopsCreation() {
 inline bool RecordedGradientStopsCreation::PlayEvent(
     Translator* aTranslator) const {
   RefPtr<GradientStops> src =
-      aTranslator->GetReferenceDrawTarget()->CreateGradientStops(
-          mStops, mNumStops, mExtendMode);
+      aTranslator->GetOrCreateGradientStops(mStops, mNumStops, mExtendMode);
   aTranslator->AddGradientStops(mRefPtr, src);
   return true;
 }

@@ -136,6 +136,10 @@ class CanvasTranslator final : public gfx::InlineTranslator,
       gfx::ReferencePtr aRefPtr, const gfx::IntSize& aSize,
       gfx::SurfaceFormat aFormat) final;
 
+  already_AddRefed<gfx::GradientStops> GetOrCreateGradientStops(
+      gfx::GradientStop* aRawStops, uint32_t aNumStops,
+      gfx::ExtendMode aExtendMode) final;
+
   /**
    * Get the TextureData associated with a TextureData from another process.
    *
