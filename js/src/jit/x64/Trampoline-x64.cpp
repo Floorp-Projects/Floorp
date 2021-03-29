@@ -381,10 +381,29 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
 // static
 mozilla::Maybe<::JS::ProfilingFrameIterator::RegisterState>
 JitRuntime::getCppEntryRegisters(JitFrameLayout* frameStackAddress) {
-  // Not supported, or not implemented yet.
-  // TODO: Implement along with the corresponding stack-walker changes, in
-  // coordination with the Gecko Profiler, see bug 1635987 and follow-ups.
-  return mozilla::Nothing{};
+  if (frameStackAddress->prevType() != FrameType::CppToJSJit) {
+    // This is not a CppToJSJit frame, there are no C++ registers here.
+    return mozilla::Nothing{};
+  }
+
+  // The entry is (frame size stored in descriptor) bytes past the header.
+  MOZ_ASSERT(frameStackAddress->headerSize() == JitFrameLayout::Size());
+  const size_t offsetToCppEntry =
+      JitFrameLayout::Size() + frameStackAddress->prevFrameLocalSize();
+  EnterJITStackEntry* enterJITStackEntry =
+      reinterpret_cast<EnterJITStackEntry*>(
+          reinterpret_cast<uint8_t*>(frameStackAddress) + offsetToCppEntry);
+
+  // Extract native function call registers.
+  ::JS::ProfilingFrameIterator::RegisterState registerState;
+  registerState.fp = enterJITStackEntry->rbp;
+  registerState.pc = enterJITStackEntry->rip;
+  // sp should be inside the caller's frame, so set sp to the value of the stack
+  // pointer before the call to the EnterJit trampoline.
+  registerState.sp = &enterJITStackEntry->rip + 1;
+  // No lr in this world.
+  registerState.lr = nullptr;
+  return mozilla::Some(registerState);
 }
 
 // Push AllRegs in a way that is compatible with RegisterDump, regardless of
