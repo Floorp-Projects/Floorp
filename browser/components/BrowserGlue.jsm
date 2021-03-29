@@ -416,6 +416,8 @@ let JSWINDOWACTORS = {
         DOMMetaAdded: {},
       },
     },
+
+    messageManagerGroups: ["browsers"],
   },
 
   ContentSearch: {
@@ -549,6 +551,8 @@ let JSWINDOWACTORS = {
         pagehide: {},
       },
     },
+
+    messageManagerGroups: ["browsers"],
   },
 
   NetError: {
@@ -737,6 +741,8 @@ let JSWINDOWACTORS = {
         mozUITour: { wantUntrusted: true },
       },
     },
+
+    messageManagerGroups: ["browsers"],
   },
 
   WebRTC: {
