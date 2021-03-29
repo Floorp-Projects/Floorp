@@ -18,9 +18,24 @@ BEGIN_TEST(testStencil_Basic) {
   const char* chars =
       "function f() { return 42; }"
       "f();";
+  auto result = basic_test<char, mozilla::Utf8Unit>(chars);
+  CHECK(result);
 
-  JS::SourceText<mozilla::Utf8Unit> srcBuf;
-  CHECK(srcBuf.init(cx, chars, strlen(chars), JS::SourceOwnership::Borrowed));
+  const char16_t* chars16 =
+      u"function f() { return 42; }"
+      u"f();";
+  auto result16 = basic_test<char16_t, char16_t>(chars16);
+  CHECK(result16);
+
+  return true;
+}
+
+template <typename CharT, typename SourceT>
+bool basic_test(const CharT* chars) {
+  size_t length = std::char_traits<CharT>::length(chars);
+
+  JS::SourceText<SourceT> srcBuf;
+  CHECK(srcBuf.init(cx, chars, length, JS::SourceOwnership::Borrowed));
 
   JS::CompileOptions options(cx);
   RefPtr<JS::Stencil> stencil =
