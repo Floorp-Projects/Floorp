@@ -3,12 +3,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "gfxGradientCache.h"
+
+#include "MainThreadUtils.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/DataMutex.h"
 #include "nsTArray.h"
 #include "PLDHashTable.h"
 #include "nsExpirationTracker.h"
 #include "nsClassHashtable.h"
-#include "gfxGradientCache.h"
 #include <time.h>
 
 namespace mozilla {
@@ -93,85 +96,172 @@ struct GradientCacheData {
 };
 
 /**
- * This class implements a cache with no maximum size, that retains the
- * gfxPatterns used to draw the gradients.
+ * This class implements a cache, that retains the GradientStops used to draw
+ * the gradients.
  *
- * The key is the nsStyleGradient that defines the gradient, and the size of the
- * gradient.
- *
- * The value is the gfxPattern, and whether or not we perform an optimization
- * based on the actual gradient property.
- *
- * An entry stays in the cache as long as it is used often. As long as a cache
- * entry is in the cache, all the references it has are guaranteed to be valid:
- * the nsStyleRect for the key, the gfxPattern for the value.
+ * An entry stays in the cache as long as it is used often and we don't exceed
+ * the maximum, in which case the most recently used will be kept.
  */
-class GradientCache final : public nsExpirationTracker<GradientCacheData, 4> {
+class GradientCache;
+using GradientCacheMutex = StaticDataMutex<UniquePtr<GradientCache>>;
+class MOZ_RAII LockedInstance {
+ public:
+  explicit LockedInstance(GradientCacheMutex& aDataMutex)
+      : mAutoLock(aDataMutex.Lock()) {}
+  UniquePtr<GradientCache>& operator->() const& { return mAutoLock.ref(); }
+  UniquePtr<GradientCache>& operator->() const&& = delete;
+  UniquePtr<GradientCache>& operator*() const& { return mAutoLock.ref(); }
+  UniquePtr<GradientCache>& operator*() const&& = delete;
+  explicit operator bool() const { return !!mAutoLock.ref(); }
+
+ private:
+  GradientCacheMutex::AutoLock mAutoLock;
+};
+
+class GradientCache final
+    : public ExpirationTrackerImpl<GradientCacheData, 4, GradientCacheMutex,
+                                   LockedInstance> {
  public:
   GradientCache()
-      : nsExpirationTracker<GradientCacheData, 4>(MAX_GENERATION_MS,
-                                                  "GradientCache") {
-    srand(time(nullptr));
+      : ExpirationTrackerImpl<GradientCacheData, 4, GradientCacheMutex,
+                              LockedInstance>(MAX_GENERATION_MS,
+                                              "GradientCache") {}
+  static bool EnsureInstance() {
+    LockedInstance lockedInstance(sInstanceMutex);
+    return EnsureInstanceLocked(lockedInstance);
   }
 
-  virtual void NotifyExpired(GradientCacheData* aObject) override {
-    // This will free the gfxPattern.
-    RemoveObject(aObject);
-    mHashEntries.Remove(aObject->mKey);
-  }
-
-  GradientCacheData* Lookup(const nsTArray<GradientStop>& aStops,
-                            ExtendMode aExtend, BackendType aBackendType) {
-    GradientCacheData* gradient =
-        mHashEntries.Get(GradientCacheKey(aStops, aExtend, aBackendType));
-
-    if (gradient) {
-      MarkUsed(gradient);
+  static void DestroyInstance() {
+    LockedInstance lockedInstance(sInstanceMutex);
+    if (lockedInstance) {
+      *lockedInstance = nullptr;
     }
-
-    return gradient;
   }
 
-  void RegisterEntry(UniquePtr<GradientCacheData> aValue) {
-    nsresult rv = AddObject(aValue.get());
-    if (NS_FAILED(rv)) {
-      // We are OOM, and we cannot track this object. We don't want stall
-      // entries in the hash table (since the expiration tracker is responsible
-      // for removing the cache entries), so we avoid putting that entry in the
-      // table, which is a good thing considering we are short on memory
-      // anyway, we probably don't want to retain things.
+  static void AgeAllGenerations() {
+    LockedInstance lockedInstance(sInstanceMutex);
+    if (!lockedInstance) {
       return;
     }
-    mHashEntries.InsertOrUpdate(aValue->mKey, std::move(aValue));
+    lockedInstance->AgeAllGenerationsLocked(lockedInstance);
+    lockedInstance->NotifyHandlerEndLocked(lockedInstance);
   }
 
- protected:
+  static GradientCacheData* Lookup(const nsTArray<GradientStop>& aStops,
+                                   ExtendMode aExtend,
+                                   BackendType aBackendType) {
+    LockedInstance lockedInstance(sInstanceMutex);
+    if (!EnsureInstanceLocked(lockedInstance)) {
+      return nullptr;
+    }
+
+    GradientCacheData* gradientData = lockedInstance->mHashEntries.Get(
+        GradientCacheKey(aStops, aExtend, aBackendType));
+    if (!gradientData) {
+      return nullptr;
+    }
+
+    if (!gradientData->mStops || !gradientData->mStops->IsValid()) {
+      lockedInstance->NotifyExpiredLocked(gradientData, lockedInstance);
+      return nullptr;
+    }
+
+    lockedInstance->MarkUsedLocked(gradientData, lockedInstance);
+    return gradientData;
+  }
+
+  static void RegisterEntry(UniquePtr<GradientCacheData> aValue) {
+    uint32_t numberOfEntries;
+    {
+      LockedInstance lockedInstance(sInstanceMutex);
+      if (!EnsureInstanceLocked(lockedInstance)) {
+        return;
+      }
+
+      nsresult rv =
+          lockedInstance->AddObjectLocked(aValue.get(), lockedInstance);
+      if (NS_FAILED(rv)) {
+        // We are OOM, and we cannot track this object. We don't want to store
+        // entries in the hash table (since the expiration tracker is
+        // responsible for removing the cache entries), so we avoid putting that
+        // entry in the table, which is a good thing considering we are short on
+        // memory anyway, we probably don't want to retain things.
+        return;
+      }
+      lockedInstance->mHashEntries.InsertOrUpdate(aValue->mKey,
+                                                  std::move(aValue));
+      numberOfEntries = lockedInstance->mHashEntries.Count();
+    }
+    if (numberOfEntries > MAX_ENTRIES) {
+      // We have too many entries force the cache to age a generation.
+      NS_DispatchToMainThread(
+          NS_NewRunnableFunction("GradientCache::OnMaxEntriesBreached", [] {
+            LockedInstance lockedInstance(sInstanceMutex);
+            if (!lockedInstance) {
+              return;
+            }
+            lockedInstance->AgeOneGenerationLocked(lockedInstance);
+            lockedInstance->NotifyHandlerEndLocked(lockedInstance);
+          }));
+    }
+  }
+
+  GradientCacheMutex& GetMutex() final { return sInstanceMutex; }
+
+  void NotifyExpiredLocked(GradientCacheData* aObject,
+                           const LockedInstance& aLockedInstance) final {
+    // Remove the gradient from the tracker.
+    RemoveObjectLocked(aObject, aLockedInstance);
+
+    // If entry exists move the data to mRemovedGradientData because we want to
+    // drop it outside of the lock.
+    Maybe<UniquePtr<GradientCacheData>> gradientData =
+        mHashEntries.Extract(aObject->mKey);
+    if (gradientData.isSome()) {
+      mRemovedGradientData.AppendElement(std::move(*gradientData));
+    }
+  }
+
+  void NotifyHandlerEndLocked(const LockedInstance&) final {
+    NS_DispatchToCurrentThread(
+        NS_NewRunnableFunction("GradientCache::DestroyRemovedGradientStops",
+                               [stops = std::move(mRemovedGradientData)] {}));
+  }
+
+ private:
   static const uint32_t MAX_GENERATION_MS = 10000;
+
+  // On Windows some of the Direct2D objects associated with the gradient stops
+  // can be quite large, so we limit the number of cache entries.
+  static const uint32_t MAX_ENTRIES = 4000;
+  static GradientCacheMutex sInstanceMutex;
+
+  [[nodiscard]] static bool EnsureInstanceLocked(
+      LockedInstance& aLockedInstance) {
+    if (!aLockedInstance) {
+      // GradientCache must be created on the main thread.
+      if (!NS_IsMainThread()) {
+        // This should only happen at shutdown, we fall back to not caching.
+        return false;
+      }
+      *aLockedInstance = MakeUnique<GradientCache>();
+    }
+    return true;
+  }
+
   /**
    * FIXME use nsTHashtable to avoid duplicating the GradientCacheKey.
    * https://bugzilla.mozilla.org/show_bug.cgi?id=761393#c47
    */
   nsClassHashtable<GradientCacheKey, GradientCacheData> mHashEntries;
+  nsTArray<UniquePtr<GradientCacheData>> mRemovedGradientData;
 };
 
-static GradientCache* gGradientCache = nullptr;
+GradientCacheMutex GradientCache::sInstanceMutex("GradientCache");
 
-GradientStops* gfxGradientCache::GetGradientStops(
-    const DrawTarget* aDT, nsTArray<GradientStop>& aStops, ExtendMode aExtend) {
-  if (!gGradientCache) {
-    gGradientCache = new GradientCache();
-  }
-  GradientCacheData* cached =
-      gGradientCache->Lookup(aStops, aExtend, aDT->GetBackendType());
-  if (cached && cached->mStops) {
-    if (!cached->mStops->IsValid()) {
-      gGradientCache->NotifyExpired(cached);
-    } else {
-      return cached->mStops;
-    }
-  }
-
-  return nullptr;
+void gfxGradientCache::Init() {
+  MOZ_RELEASE_ASSERT(GradientCache::EnsureInstance(),
+                     "First call must be on main thread.");
 }
 
 already_AddRefed<GradientStops> gfxGradientCache::GetOrCreateGradientStops(
@@ -181,28 +271,25 @@ already_AddRefed<GradientStops> gfxGradientCache::GetOrCreateGradientStops(
                                     aExtend);
   }
 
-  RefPtr<GradientStops> gs = GetGradientStops(aDT, aStops, aExtend);
-  if (!gs) {
-    gs = aDT->CreateGradientStops(aStops.Elements(), aStops.Length(), aExtend);
-    if (!gs) {
-      return nullptr;
-    }
-    gGradientCache->RegisterEntry(MakeUnique<GradientCacheData>(
-        gs, GradientCacheKey(aStops, aExtend, aDT->GetBackendType())));
+  GradientCacheData* cached =
+      GradientCache::Lookup(aStops, aExtend, aDT->GetBackendType());
+  if (cached) {
+    return do_AddRef(cached->mStops);
   }
+
+  RefPtr<GradientStops> gs =
+      aDT->CreateGradientStops(aStops.Elements(), aStops.Length(), aExtend);
+  if (!gs) {
+    return nullptr;
+  }
+  GradientCache::RegisterEntry(MakeUnique<GradientCacheData>(
+      gs, GradientCacheKey(aStops, aExtend, aDT->GetBackendType())));
   return gs.forget();
 }
 
-void gfxGradientCache::PurgeAllCaches() {
-  if (gGradientCache) {
-    gGradientCache->AgeAllGenerations();
-  }
-}
+void gfxGradientCache::PurgeAllCaches() { GradientCache::AgeAllGenerations(); }
 
-void gfxGradientCache::Shutdown() {
-  delete gGradientCache;
-  gGradientCache = nullptr;
-}
+void gfxGradientCache::Shutdown() { GradientCache::DestroyInstance(); }
 
 }  // namespace gfx
 }  // namespace mozilla
