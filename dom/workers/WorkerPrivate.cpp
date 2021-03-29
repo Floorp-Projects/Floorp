@@ -2777,7 +2777,8 @@ nsresult WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindowInner* aWindow,
       loadInfo.mStorageAccess = StorageAccess::eAllow;
       loadInfo.mUseRegularPrincipal = true;
       loadInfo.mHasStorageAccessPermissionGranted = false;
-      loadInfo.mCookieJarSettings = mozilla::net::CookieJarSettings::Create();
+      loadInfo.mCookieJarSettings =
+          mozilla::net::CookieJarSettings::Create(loadInfo.mLoadingPrincipal);
       MOZ_ASSERT(loadInfo.mCookieJarSettings);
 
       loadInfo.mOriginAttributes = OriginAttributes();
