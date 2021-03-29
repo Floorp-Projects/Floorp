@@ -662,7 +662,16 @@ impl FirefoxOptions {
 
                     Some(args)
                 }
-                None => None,
+                None => {
+                    // All GeckoView based applications support this view,
+                    // and allow to open a blank page in a Gecko window.
+                    Some(vec![
+                        "-a".to_string(),
+                        "android.intent.action.VIEW".to_string(),
+                        "-d".to_string(),
+                        "about:blank".to_string(),
+                    ])
+                },
             };
 
             Ok(Some(android))
@@ -1011,7 +1020,36 @@ mod tests {
     }
 
     #[test]
-    fn fx_options_android_intent_arguments() {
+    fn fx_options_android_intent_arguments_defaults() {
+        let packages = vec![
+            "org.mozilla.firefox",
+            "org.mozilla.firefox_beta",
+            "org.mozilla.fenix",
+            "org.mozilla.fenix.debug",
+            "org.mozilla.geckoview_example",
+            "org.mozilla.reference.browser",
+            "com.some.other.app",
+        ];
+
+        for package in packages {
+            let mut firefox_opts = Capabilities::new();
+            firefox_opts.insert("androidPackage".into(), json!(package));
+
+            let opts = make_options(firefox_opts).expect("valid firefox options");
+            assert_eq!(
+                opts.android.unwrap().intent_arguments,
+                Some(vec![
+                    "-a".to_string(),
+                    "android.intent.action.VIEW".to_string(),
+                    "-d".to_string(),
+                    "about:blank".to_string(),
+                ])
+            );
+        }
+    }
+
+    #[test]
+    fn fx_options_android_intent_arguments_override() {
         let mut firefox_opts = Capabilities::new();
         firefox_opts.insert("androidPackage".into(), json!("foo.bar"));
         firefox_opts.insert("androidIntentArguments".into(), json!(["lorem", "ipsum"]));
