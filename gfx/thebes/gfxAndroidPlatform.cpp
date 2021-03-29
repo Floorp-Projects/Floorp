@@ -378,8 +378,7 @@ already_AddRefed<mozilla::gfx::VsyncSource>
 gfxAndroidPlatform::CreateHardwareVsyncSource() {
   // Vsync was introduced since JB (API 16~18) but inaccurate. Enable only for
   // KK (API 19) and later.
-  if (AndroidBridge::Bridge() &&
-      AndroidBridge::Bridge()->GetAPIVersion() >= 19) {
+  if (jni::GetAPIVersion() >= 19) {
     RefPtr<AndroidVsyncSource> vsyncSource = new AndroidVsyncSource();
     return vsyncSource.forget();
   }

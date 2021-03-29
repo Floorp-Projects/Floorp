@@ -161,8 +161,6 @@ AndroidBridge::AndroidBridge() {
   AutoJNIClass string(jEnv, "java/lang/String");
   jStringClass = string.getGlobalRef();
 
-  mAPIVersion = jni::GetAPIVersion();
-
   AutoJNIClass channels(jEnv, "java/nio/channels/Channels");
   jChannels = channels.getGlobalRef();
   jChannelCreate = channels.getStaticMethod(
