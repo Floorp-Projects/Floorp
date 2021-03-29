@@ -7,11 +7,13 @@ package mozilla.components.ui.tabcounter
 import android.animation.AnimatorSet
 import android.animation.ObjectAnimator
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.Typeface
 import android.util.AttributeSet
 import android.util.TypedValue
 import android.view.LayoutInflater
 import android.widget.RelativeLayout
+import androidx.annotation.VisibleForTesting
 import androidx.core.content.ContextCompat
 import androidx.core.view.updatePadding
 import kotlinx.android.synthetic.main.mozac_ui_tabcounter_layout.view.*
@@ -33,11 +35,13 @@ open class TabCounter @JvmOverloads constructor(
         setCount(INTERNAL_COUNT)
 
         context.obtainStyledAttributes(attrs, R.styleable.TabCounter, defStyle, 0).apply {
-            val counterColor = getColor(
-                R.styleable.TabCounter_tabCounterTintColor,
-                ContextCompat.getColor(context, R.color.mozac_ui_tabcounter_default_tint)
-            )
-            setColor(counterColor)
+            val counterColor = getColorStateList(
+                R.styleable.TabCounter_tabCounterTintColor
+            ) ?: ContextCompat.getColorStateList(context, R.color.mozac_ui_tabcounter_default_tint)
+
+            counterColor?.let {
+                setColor(it)
+            }
 
             recycle()
         }
@@ -48,11 +52,12 @@ open class TabCounter @JvmOverloads constructor(
     /**
      * Sets the colors of the tab counter box and text.
      */
-    private fun setColor(color: Int) {
+    @VisibleForTesting
+    internal fun setColor(colorStateList: ColorStateList) {
         val tabCounterBox =
-            DrawableUtils.loadAndTintDrawable(context, R.drawable.mozac_ui_tabcounter_box, color)
+            DrawableUtils.loadAndTintDrawable(context, R.drawable.mozac_ui_tabcounter_box, colorStateList)
         counter_box.setImageDrawable(tabCounterBox)
-        counter_text.setTextColor(color)
+        counter_text.setTextColor(colorStateList)
     }
 
     private fun updateContentDescription(count: Int) {

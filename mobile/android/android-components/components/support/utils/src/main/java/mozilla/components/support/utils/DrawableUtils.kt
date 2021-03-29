@@ -5,6 +5,7 @@
 package mozilla.components.support.utils
 
 import android.content.Context
+import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import androidx.annotation.ColorInt
 import androidx.annotation.DrawableRes
@@ -15,10 +16,28 @@ object DrawableUtils {
     /**
      * Return a tinted drawable object associated with a particular resource ID.
      */
-    fun loadAndTintDrawable(context: Context, @DrawableRes resourceId: Int, @ColorInt color: Int): Drawable {
+    fun loadAndTintDrawable(
+        context: Context,
+        @DrawableRes resourceId: Int,
+        @ColorInt color: Int
+    ): Drawable {
         val drawable = ResourcesCompat.getDrawable(context.resources, resourceId, context.theme)
         val wrapped = DrawableCompat.wrap(drawable!!.mutate())
         DrawableCompat.setTint(wrapped, color)
+        return wrapped
+    }
+
+    /**
+     * Return a color state tinted drawable object associated with a particular resource ID.
+     */
+    fun loadAndTintDrawable(
+        context: Context,
+        @DrawableRes resourceId: Int,
+        colorStateList: ColorStateList
+    ): Drawable {
+        val drawable = ResourcesCompat.getDrawable(context.resources, resourceId, context.theme)
+        val wrapped = DrawableCompat.wrap(drawable!!.mutate())
+        DrawableCompat.setTintList(wrapped, colorStateList)
         return wrapped
     }
 }

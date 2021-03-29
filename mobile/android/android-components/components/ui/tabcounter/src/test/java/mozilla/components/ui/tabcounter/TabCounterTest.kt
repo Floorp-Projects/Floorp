@@ -4,8 +4,10 @@
 
 package mozilla.components.ui.tabcounter
 
+import android.content.res.ColorStateList
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.android.synthetic.main.mozac_ui_tabcounter_layout.view.*
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.ui.tabcounter.TabCounter.Companion.SO_MANY_TABS_OPEN
 import org.junit.Assert.assertEquals
@@ -39,5 +41,14 @@ class TabCounterTest {
         val tabCounter = TabCounter(testContext)
         tabCounter.setCount(100)
         assertEquals(SO_MANY_TABS_OPEN, tabCounter.counter_text.text)
+    }
+
+    @Test
+    fun `Setting tab color shows correct icon`() {
+        val tabCounter = TabCounter(testContext)
+        val colorStateList: ColorStateList = mock()
+
+        tabCounter.setColor(colorStateList)
+        assertEquals(tabCounter.counter_text.textColors, colorStateList)
     }
 }
