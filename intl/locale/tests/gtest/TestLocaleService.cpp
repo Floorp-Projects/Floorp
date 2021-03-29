@@ -145,10 +145,4 @@ TEST(Intl_Locale_LocaleService, IsAppLocaleRTL)
   mozilla::Preferences::SetCString("intl.l10n.pseudo", "bidi");
   ASSERT_TRUE(LocaleService::GetInstance()->IsAppLocaleRTL());
   mozilla::Preferences::ClearUser("intl.l10n.pseudo");
-
-  mozilla::Preferences::SetInt("intl.uidirection", 0);
-  ASSERT_FALSE(LocaleService::GetInstance()->IsAppLocaleRTL());
-  mozilla::Preferences::SetInt("intl.uidirection", 1);
-  ASSERT_TRUE(LocaleService::GetInstance()->IsAppLocaleRTL());
-  mozilla::Preferences::SetInt("intl.uidirection", -1);
 }
