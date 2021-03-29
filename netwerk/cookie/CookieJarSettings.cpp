@@ -98,13 +98,37 @@ already_AddRefed<nsICookieJarSettings> CookieJarSettings::GetBlockingAll() {
 }
 
 // static
-already_AddRefed<nsICookieJarSettings> CookieJarSettings::Create() {
+already_AddRefed<nsICookieJarSettings> CookieJarSettings::Create(
+    CreateMode aMode) {
   MOZ_ASSERT(NS_IsMainThread());
 
-  RefPtr<CookieJarSettings> cookieJarSettings = new CookieJarSettings(
-      nsICookieManager::GetCookieBehavior(),
-      OriginAttributes::IsFirstPartyEnabled(), eProgressive);
+  RefPtr<CookieJarSettings> cookieJarSettings;
+
+  switch (aMode) {
+    case eRegular:
+    case ePrivate:
+      cookieJarSettings = new CookieJarSettings(
+          nsICookieManager::GetCookieBehavior(aMode == ePrivate),
+          OriginAttributes::IsFirstPartyEnabled(), eProgressive);
+      break;
+
+    default:
+      MOZ_CRASH("Unexpected create mode.");
+  }
+
   return cookieJarSettings.forget();
+}
+
+// static
+already_AddRefed<nsICookieJarSettings> CookieJarSettings::Create(
+    nsIPrincipal* aPrincipal) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (aPrincipal && aPrincipal->OriginAttributesRef().mPrivateBrowsingId > 0) {
+    return Create(ePrivate);
+  }
+
+  return Create(eRegular);
 }
 
 // static
@@ -120,6 +144,12 @@ already_AddRefed<nsICookieJarSettings> CookieJarSettings::Create(
       aIsOnContentBlockingAllowList;
 
   return cookieJarSettings.forget();
+}
+
+// static
+already_AddRefed<nsICookieJarSettings> CookieJarSettings::CreateForXPCOM() {
+  MOZ_ASSERT(NS_IsMainThread());
+  return Create(eRegular);
 }
 
 CookieJarSettings::CookieJarSettings(uint32_t aCookieBehavior,

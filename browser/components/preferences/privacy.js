@@ -1213,7 +1213,7 @@ var gPrivacyPane = {
    * Selects the right items of the new Cookies & Site Data UI.
    */
   networkCookieBehaviorReadPrefs() {
-    let behavior = Services.cookies.cookieBehavior;
+    let behavior = Services.cookies.getCookieBehavior(false);
     let blockCookiesMenu = document.getElementById("blockCookiesMenu");
     let deleteOnCloseCheckbox = document.getElementById("deleteOnClose");
     let deleteOnCloseNote = document.getElementById("deleteOnCloseNote");
@@ -1691,7 +1691,8 @@ var gPrivacyPane = {
   readBlockCookies() {
     let bcControl = document.getElementById("blockCookiesMenu");
     bcControl.disabled =
-      Services.cookies.cookieBehavior == Ci.nsICookieService.BEHAVIOR_ACCEPT;
+      Services.cookies.getCookieBehavior(false) ==
+      Ci.nsICookieService.BEHAVIOR_ACCEPT;
   },
 
   /**
@@ -1711,7 +1712,7 @@ var gPrivacyPane = {
   },
 
   readBlockCookiesFrom() {
-    switch (Services.cookies.cookieBehavior) {
+    switch (Services.cookies.getCookieBehavior(false)) {
       case Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN:
         return "all-third-parties";
       case Ci.nsICookieService.BEHAVIOR_REJECT:

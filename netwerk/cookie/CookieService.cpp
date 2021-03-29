@@ -32,18 +32,29 @@
 
 using namespace mozilla::dom;
 
-// static
-uint32_t nsICookieManager::GetCookieBehavior() {
+namespace {
+
+uint32_t MakeCookieBehavior(uint32_t aCookieBehavior) {
   bool isFirstPartyIsolated = OriginAttributes::IsFirstPartyEnabled();
-  uint32_t cookieBehavior =
-      mozilla::StaticPrefs::network_cookie_cookieBehavior();
 
   if (isFirstPartyIsolated &&
-      cookieBehavior ==
+      aCookieBehavior ==
           nsICookieService::BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN) {
-    cookieBehavior = nsICookieService::BEHAVIOR_REJECT_TRACKER;
+    return nsICookieService::BEHAVIOR_REJECT_TRACKER;
   }
-  return cookieBehavior;
+  return aCookieBehavior;
+}
+
+}  // anonymous namespace
+
+// static
+uint32_t nsICookieManager::GetCookieBehavior(bool aIsPrivate) {
+  if (aIsPrivate) {
+    return MakeCookieBehavior(
+        mozilla::StaticPrefs::network_cookie_cookieBehavior_pbmode());
+  }
+  return MakeCookieBehavior(
+      mozilla::StaticPrefs::network_cookie_cookieBehavior());
 }
 
 namespace mozilla {
@@ -265,9 +276,9 @@ CookieService::Observe(nsISupports* /*aSubject*/, const char* aTopic,
 }
 
 NS_IMETHODIMP
-CookieService::GetCookieBehavior(uint32_t* aCookieBehavior) {
+CookieService::GetCookieBehavior(bool aIsPrivate, uint32_t* aCookieBehavior) {
   NS_ENSURE_ARG_POINTER(aCookieBehavior);
-  *aCookieBehavior = nsICookieManager::GetCookieBehavior();
+  *aCookieBehavior = nsICookieManager::GetCookieBehavior(aIsPrivate);
   return NS_OK;
 }
 

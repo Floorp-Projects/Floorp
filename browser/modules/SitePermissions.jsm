@@ -1157,7 +1157,8 @@ let gPermissions = {
       ],
       getDefault() {
         if (
-          Services.cookies.cookieBehavior == Ci.nsICookieService.BEHAVIOR_REJECT
+          Services.cookies.getCookieBehavior(false) ==
+          Ci.nsICookieService.BEHAVIOR_REJECT
         ) {
           return SitePermissions.BLOCK;
         }
