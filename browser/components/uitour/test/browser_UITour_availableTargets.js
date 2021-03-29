@@ -11,7 +11,7 @@ requestLongerTimeout(2);
 
 function getExpectedTargets() {
   return [
-    ...(CustomizableUI.protonToolbarEnabled ? [] : ["accountStatus"]),
+    "accountStatus",
     "addons",
     "appMenu",
     "backForward",
@@ -21,7 +21,7 @@ function getExpectedTargets() {
     "library",
     "logins",
     "pageAction-bookmark",
-    ...(gProton
+    ...(UrlbarPrefs.get("browser.proton.urlbar.enabled")
       ? []
       : [
           "pageAction-copyURL",
