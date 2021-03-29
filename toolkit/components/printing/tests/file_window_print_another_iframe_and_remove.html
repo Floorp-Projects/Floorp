@@ -1,0 +1,9 @@
+<!doctype html>
+<script>
+function handlePrint() {
+  frames[0].frameElement.style.display = "none";
+  frames[1].print();
+}
+</script>
+<iframe srcdoc='<button onclick="parent.handlePrint()">Print the other iframe, then hide me</button>'></iframe>
+<iframe id="iframe2" srcdoc="Print me"></iframe>
