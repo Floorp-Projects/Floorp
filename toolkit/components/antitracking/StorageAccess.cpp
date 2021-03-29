@@ -262,7 +262,7 @@ StorageAccess StorageAllowedForNewWindow(nsIPrincipal* aPrincipal, nsIURI* aURI,
   if (aParent && aParent->GetExtantDoc()) {
     cjs = aParent->GetExtantDoc()->CookieJarSettings();
   } else {
-    cjs = net::CookieJarSettings::Create();
+    cjs = net::CookieJarSettings::Create(aPrincipal);
   }
   return InternalStorageAllowedCheck(aPrincipal, aParent, aURI, nullptr, cjs,
                                      rejectedReason);
@@ -312,7 +312,7 @@ bool StorageDisabledByAntiTracking(nsPIDOMWindowInner* aWindow,
     Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cookieJarSettings));
   }
   if (!cookieJarSettings) {
-    cookieJarSettings = net::CookieJarSettings::Create();
+    cookieJarSettings = net::CookieJarSettings::Create(aPrincipal);
   }
   bool disabled = StorageDisabledByAntiTrackingInternal(
       aWindow, aChannel, aPrincipal, aURI, cookieJarSettings, aRejectedReason);
