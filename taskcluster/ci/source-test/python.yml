@@ -72,7 +72,7 @@ mach:
         - linux1804-64/opt
         - macosx1014-64/opt
         - windows10-64/opt
-    python-version: [2, 3]
+    python-version: [3]
     treeherder:
         symbol: mach
     run:
@@ -87,7 +87,7 @@ marionette-harness:
     platform:
         - linux1804-64/opt
         - windows10-64/opt
-    python-version: [2, 3]
+    python-version: [3]
     treeherder:
         symbol: mnh
     run:
@@ -159,7 +159,7 @@ mozbase:
         - linux1804-64/opt
         - macosx1014-64/opt
         - windows10-64/opt
-    python-version: [2, 3]
+    python-version: [3]
     treeherder:
         symbol: mb
     run:
@@ -228,7 +228,7 @@ mozlint:
 
 mozrelease:
     description: python/mozrelease unit tests
-    python-version: [2, 3]
+    python-version: [3]
     treeherder:
         symbol: release
     run:
@@ -243,7 +243,7 @@ mozterm:
     platform:
         - linux1804-64/opt
         - windows10-64/opt
-    python-version: [2, 3]
+    python-version: [3]
     treeherder:
         symbol: term
     run:
@@ -255,7 +255,7 @@ mozterm:
 
 mozversioncontrol:
     description: python/mozversioncontrol unit tests
-    python-version: [2, 3]
+    python-version: [3]
     treeherder:
         symbol: vcs
     run:
@@ -271,7 +271,7 @@ raptor:
         - linux1804-64/opt
         - macosx1014-64/opt
         - windows10-64/opt
-    python-version: [2, 3]
+    python-version: [3]
     treeherder:
         symbol: rap
     run:
@@ -368,7 +368,7 @@ mozbuild:
         - linux1804-64/opt
         - macosx1014-64/opt
         - windows10-64/opt
-    python-version: [2, 3]
+    python-version: [3]
     treeherder:
         symbol: mbu
     run:
@@ -445,7 +445,7 @@ featuregates:
     platform:
         - linux1804-64/opt
         - windows10-64/opt
-    python-version: [2, 3]
+    python-version: [3]
     treeherder:
         symbol: fg
     run:
