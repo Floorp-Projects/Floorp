@@ -102,6 +102,14 @@ static void ReleaseTemporarySurface(const void* aPixels, void* aContext) {
   }
 }
 
+static void ReleaseTemporaryMappedSurface(const void* aPixels, void* aContext) {
+  DataSourceSurface* surf = static_cast<DataSourceSurface*>(aContext);
+  if (surf) {
+    surf->Unmap();
+    surf->Release();
+  }
+}
+
 static void WriteRGBXFormat(uint8_t* aData, const IntSize& aSize,
                             const int32_t aStride, SurfaceFormat aFormat) {
   if (aFormat != SurfaceFormat::B8G8R8X8 || aSize.IsEmpty()) {
@@ -241,21 +249,40 @@ static sk_sp<SkImage> GetSkImageForSurface(SourceSurface* aSurface,
     return static_cast<SourceSurfaceSkia*>(aSurface)->GetImage(aLock);
   }
 
-  DataSourceSurface* surf = aSurface->GetDataSurface().take();
-  if (!surf) {
+  RefPtr<DataSourceSurface> dataSurface = aSurface->GetDataSurface();
+  if (!dataSurface) {
     gfxWarning() << "Failed getting DataSourceSurface for Skia image";
     return nullptr;
   }
 
+  DataSourceSurface::MappedSurface map;
+  SkImage::RasterReleaseProc releaseProc;
+  if (dataSurface->GetType() == SurfaceType::DATA_SHARED_WRAPPER) {
+    // Technically all surfaces should be mapped and unmapped explicitly but it
+    // appears SourceSurfaceSkia and DataSourceSurfaceWrapper have issues with
+    // this. For now, we just map SourceSurfaceSharedDataWrapper to ensure we
+    // don't unmap the data during the transaction (for blob images).
+    if (!dataSurface->Map(DataSourceSurface::MapType::READ, &map)) {
+      gfxWarning() << "Failed mapping DataSourceSurface for Skia image";
+      return nullptr;
+    }
+    releaseProc = ReleaseTemporaryMappedSurface;
+  } else {
+    map.mData = dataSurface->GetData();
+    map.mStride = dataSurface->Stride();
+    releaseProc = ReleaseTemporarySurface;
+  }
+
+  DataSourceSurface* surf = aSurface->GetDataSurface().take();
+
   // Skia doesn't support RGBX surfaces so ensure that the alpha value is opaque
   // white.
-  MOZ_ASSERT(VerifyRGBXCorners(surf->GetData(), surf->GetSize(), surf->Stride(),
+  MOZ_ASSERT(VerifyRGBXCorners(map.mData, surf->GetSize(), map.mStride,
                                surf->GetFormat(), aBounds, aMatrix));
 
   SkPixmap pixmap(MakeSkiaImageInfo(surf->GetSize(), surf->GetFormat()),
-                  surf->GetData(), surf->Stride());
-  sk_sp<SkImage> image =
-      SkImage::MakeFromRaster(pixmap, ReleaseTemporarySurface, surf);
+                  map.mData, map.mStride);
+  sk_sp<SkImage> image = SkImage::MakeFromRaster(pixmap, releaseProc, surf);
   if (!image) {
     ReleaseTemporarySurface(nullptr, surf);
     gfxDebug() << "Failed making Skia raster image for temporary surface";
