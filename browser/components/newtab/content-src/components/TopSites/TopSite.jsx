@@ -358,7 +358,7 @@ export class TopSiteLink extends React.PureComponent {
             )}
             <div
               className={`title${link.isPinned ? " has-icon pinned" : ""}${
-                link.type === SPOC_TYPE || link.sponsored_position
+                link.type === SPOC_TYPE || link.show_sponsored_label
                   ? " sponsored"
                   : ""
               }`}
