@@ -694,6 +694,14 @@ Maybe<StylePercentage> FontFace::GetLineGapOverride() const {
   return Some(lineGap);
 }
 
+Maybe<StylePercentage> FontFace::GetSizeAdjust() const {
+  StylePercentage sizeAdjust;
+  if (!Servo_FontFaceRule_GetSizeAdjust(GetData(), &sizeAdjust)) {
+    return Nothing();
+  }
+  return Some(sizeAdjust);
+}
+
 bool FontFace::HasLocalSrc() const {
   AutoTArray<StyleFontFaceSourceListComponent, 8> components;
   GetSources(components);
