@@ -508,7 +508,7 @@ load 810726.html
 load 812822-1.html
 load 812879-1.html
 load 812879-2.html
-asserts-if(winWidget,4-26) asserts-if(Android,4-34) load 812893.html # bug 1581653
+asserts-if(winWidget,4-26) load 812893.html # bug 1581653
 load 814995.html
 load 822910.xhtml
 load 824297-1.html
