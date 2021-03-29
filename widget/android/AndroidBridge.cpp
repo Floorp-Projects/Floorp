@@ -157,26 +157,6 @@ AndroidBridge::AndroidBridge() {
   // mMessageQueueMessages may be null (e.g. due to proguard optimization)
   mMessageQueueMessages = jEnv->GetFieldID(msgQueueClass.Get(), "mMessages",
                                            "Landroid/os/Message;");
-
-  AutoJNIClass string(jEnv, "java/lang/String");
-  jStringClass = string.getGlobalRef();
-
-  AutoJNIClass channels(jEnv, "java/nio/channels/Channels");
-  jChannels = channels.getGlobalRef();
-  jChannelCreate = channels.getStaticMethod(
-      "newChannel",
-      "(Ljava/io/InputStream;)Ljava/nio/channels/ReadableByteChannel;");
-
-  AutoJNIClass readableByteChannel(jEnv,
-                                   "java/nio/channels/ReadableByteChannel");
-  jReadableByteChannel = readableByteChannel.getGlobalRef();
-  jByteBufferRead =
-      readableByteChannel.getMethod("read", "(Ljava/nio/ByteBuffer;)I");
-
-  AutoJNIClass inputStream(jEnv, "java/io/InputStream");
-  jInputStream = inputStream.getGlobalRef();
-  jClose = inputStream.getMethod("close", "()V");
-  jAvailable = inputStream.getMethod("available", "()I");
 }
 
 bool AndroidBridge::HasHWVP8Encoder() {
