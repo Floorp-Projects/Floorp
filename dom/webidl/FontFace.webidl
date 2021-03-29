@@ -19,12 +19,12 @@ dictionary FontFaceDescriptors {
   UTF8String unicodeRange = "U+0-10FFFF";
   UTF8String variant = "normal";
   UTF8String featureSettings = "normal";
-  UTF8String variationSettings = "normal";
-  UTF8String display = "auto";
-  UTF8String ascentOverride = "normal";
-  UTF8String descentOverride = "normal";
-  UTF8String lineGapOverride = "normal";
-  UTF8String sizeAdjust = "100%";
+  [Pref="layout.css.font-variations.enabled"] UTF8String variationSettings = "normal";
+  [Pref="layout.css.font-display.enabled"] UTF8String display = "auto";
+  [Pref="layout.css.font-metrics-overrides.enabled"] UTF8String ascentOverride = "normal";
+  [Pref="layout.css.font-metrics-overrides.enabled"] UTF8String descentOverride = "normal";
+  [Pref="layout.css.font-metrics-overrides.enabled"] UTF8String lineGapOverride = "normal";
+  [Pref="layout.css.size-adjust.enabled"] UTF8String sizeAdjust = "100%";
 };
 
 enum FontFaceLoadStatus { "unloaded", "loading", "loaded", "error" };
