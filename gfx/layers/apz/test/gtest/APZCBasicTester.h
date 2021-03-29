@@ -69,8 +69,6 @@ class APZCBasicTester : public APZCTesterBase {
                                                 CSSToParentLayerScale(1.0f)));
   }
 
-  void PanIntoOverscroll();
-
   /**
    * Sample animations once, 1 ms later than the last sample.
    */
@@ -91,37 +89,6 @@ class APZCBasicTester : public APZCTesterBase {
     mcc->AdvanceBy(increment);
     apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut);
   }
-
-  /**
-   * Sample animations until we recover from overscroll.
-   * @param aExpectedScrollOffset the expected reported scroll offset
-   *                              throughout the animation
-   */
-  void SampleAnimationUntilRecoveredFromOverscroll(
-      const ParentLayerPoint& aExpectedScrollOffset) {
-    const TimeDuration increment = TimeDuration::FromMilliseconds(1);
-    bool recoveredFromOverscroll = false;
-    ParentLayerPoint pointOut;
-    AsyncTransform viewTransformOut;
-    while (apzc->SampleContentTransformForFrame(&viewTransformOut, pointOut)) {
-      // The reported scroll offset should be the same throughout.
-      EXPECT_EQ(aExpectedScrollOffset, pointOut);
-
-      // Trigger computation of the overscroll tranform, to make sure
-      // no assetions fire during the calculation.
-      apzc->GetOverscrollTransform(AsyncPanZoomController::eForHitTesting);
-
-      if (!apzc->IsOverscrolled()) {
-        recoveredFromOverscroll = true;
-      }
-
-      mcc->AdvanceBy(increment);
-    }
-    EXPECT_TRUE(recoveredFromOverscroll);
-    apzc->AssertStateIsReset();
-  }
-
-  void TestOverscroll();
 
   AsyncPanZoomController::GestureBehavior mGestureBehavior;
   RefPtr<TestAPZCTreeManager> tm;
