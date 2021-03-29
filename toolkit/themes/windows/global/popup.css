@@ -103,9 +103,11 @@ panel[type="arrow"][side="right"] {
   -moz-box-orient: vertical;
 }
 
+@supports not -moz-bool-pref("browser.proton.enabled") {
 @media (-moz-os-version: windows-win7) {
 .panel-arrowcontent {
   border-radius: 4px;
+}
 }
 }
 
