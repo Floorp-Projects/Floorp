@@ -39,7 +39,8 @@ already_AddRefed<XMLHttpRequest> XMLHttpRequest::Constructor(
       cookieJarSettings = document->CookieJarSettings();
     } else {
       // We are here because this is a sandbox.
-      cookieJarSettings = net::CookieJarSettings::Create();
+      cookieJarSettings =
+          net::CookieJarSettings::Create(principal->GetPrincipal());
     }
 
     RefPtr<XMLHttpRequestMainThread> req = new XMLHttpRequestMainThread(global);
