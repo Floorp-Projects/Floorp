@@ -242,7 +242,8 @@ class LinearGradientPattern : public Pattern {
  public:
   /// For constructor parameter description, see member data documentation.
   LinearGradientPattern(const Point& aBegin, const Point& aEnd,
-                        GradientStops* aStops, const Matrix& aMatrix = Matrix())
+                        already_AddRefed<GradientStops> aStops,
+                        const Matrix& aMatrix = Matrix())
       : mBegin(aBegin), mEnd(aEnd), mStops(aStops), mMatrix(aMatrix) {}
 
   PatternType GetType() const override { return PatternType::LINEAR_GRADIENT; }
@@ -268,7 +269,8 @@ class RadialGradientPattern : public Pattern {
  public:
   /// For constructor parameter description, see member data documentation.
   RadialGradientPattern(const Point& aCenter1, const Point& aCenter2,
-                        Float aRadius1, Float aRadius2, GradientStops* aStops,
+                        Float aRadius1, Float aRadius2,
+                        already_AddRefed<GradientStops> aStops,
                         const Matrix& aMatrix = Matrix())
       : mCenter1(aCenter1),
         mCenter2(aCenter2),
@@ -299,7 +301,7 @@ class ConicGradientPattern : public Pattern {
  public:
   /// For constructor parameter description, see member data documentation.
   ConicGradientPattern(const Point& aCenter, Float aAngle, Float aStartOffset,
-                       Float aEndOffset, GradientStops* aStops,
+                       Float aEndOffset, already_AddRefed<GradientStops> aStops,
                        const Matrix& aMatrix = Matrix())
       : mCenter(aCenter),
         mAngle(aAngle),
