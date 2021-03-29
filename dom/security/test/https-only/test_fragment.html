@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Bug 1694932: Https-only mode reloads the page in certain cases when there should be just a fragment navigation </title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<script class="testbody" type="text/javascript">
+"use strict";
+/*
+ * Description of the test:
+ * Perform a test where a button click leads to scroll the page. Test if https-only detects
+ * that the redirection address of the button is on the same page. Instead of a reload https-only
+ * should only scroll.
+ *
+ * Test:
+ * Enable https-only and load the url
+ * Load: http://mozilla.pettay.fi/moztests/fragment.html
+ * Click "Click me"
+ * The page should be  scrolled down to 'foo' without a reload
+ * It shouldn't receive a message 'before unload' because the on before unload
+ *  function in file_fragment.html should not be called
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+const REQUEST_URL = "http://example.com/tests/dom/security/test/https-only/file_fragment.html";
+let winTest = null;
+let checkButtonClicked = false;
+
+async function receiveMessage(event) {
+  let data = event.data;
+  // checks if click was successful
+  if (!checkButtonClicked){
+    // expected window location ( expected URL)
+    ok(data.result == "https://example.com/tests/dom/security/test/https-only/file_fragment.html", "location is correct");
+    ok(data.button == true, "button is clicked");
+    // checks if loading was successful
+    ok(data.info == "onload", "Onloading worked");
+    // button was clicked
+    checkButtonClicked = true;
+    return;
+  }
+  // if Button was clicked once -> test finished
+  // check if hash exist and if hash of location is correct
+  ok(data.button == true, "button is clicked");
+  ok(data.result == "#foo", "location (hash) is correct");
+  // check that page is scrolled not reloaded
+  ok(data.info == "scrolled-to-foo","Scrolled successfully without reloading!");
+  // complete test and close window
+  window.removeEventListener("message",receiveMessage);
+  winTest.close();
+  SimpleTest.finish();
+}
+
+async function runTest() {
+  //Test: With https-only mode activated
+  await SpecialPowers.pushPrefEnv({ set: [
+    ["dom.security.https_only_mode", true],
+  ]});
+  winTest = window.open(REQUEST_URL);
+}
+window.addEventListener("message", receiveMessage);
+runTest();
+
+</script>
+</body>
+</html>
