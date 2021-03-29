@@ -88,6 +88,41 @@ static bool IsVP9Forced(DecoderDoctorDiagnostics* aDiagnostics) {
 
 namespace dom {
 
+static void RecordTypeForTelemetry(const nsAString& aType,
+                                   nsPIDOMWindowInner* aWindow) {
+  Maybe<MediaContainerType> containerType = MakeMediaContainerType(aType);
+  if (!containerType) {
+    return;
+  }
+
+  const MediaMIMEType& mimeType = containerType->Type();
+  if (mimeType == MEDIAMIMETYPE(VIDEO_WEBM)) {
+    AccumulateCategorical(
+        mozilla::Telemetry::LABELS_MSE_SOURCE_BUFFER_TYPE::VideoWebm);
+  } else if (mimeType == MEDIAMIMETYPE(AUDIO_WEBM)) {
+    AccumulateCategorical(
+        mozilla::Telemetry::LABELS_MSE_SOURCE_BUFFER_TYPE::AudioWebm);
+  } else if (mimeType == MEDIAMIMETYPE(VIDEO_MP4)) {
+    AccumulateCategorical(
+        mozilla::Telemetry::LABELS_MSE_SOURCE_BUFFER_TYPE::VideoMp4);
+  } else if (mimeType == MEDIAMIMETYPE(AUDIO_MP4)) {
+    AccumulateCategorical(
+        mozilla::Telemetry::LABELS_MSE_SOURCE_BUFFER_TYPE::AudioMp4);
+  } else if (mimeType == MEDIAMIMETYPE(VIDEO_MPEG_TS)) {
+    AccumulateCategorical(
+        mozilla::Telemetry::LABELS_MSE_SOURCE_BUFFER_TYPE::VideoMp2t);
+  } else if (mimeType == MEDIAMIMETYPE(AUDIO_MPEG_TS)) {
+    AccumulateCategorical(
+        mozilla::Telemetry::LABELS_MSE_SOURCE_BUFFER_TYPE::AudioMp2t);
+  } else if (mimeType == MEDIAMIMETYPE(AUDIO_MP3)) {
+    AccumulateCategorical(
+        mozilla::Telemetry::LABELS_MSE_SOURCE_BUFFER_TYPE::AudioMpeg);
+  } else if (mimeType == MEDIAMIMETYPE(AUDIO_AAC)) {
+    AccumulateCategorical(
+        mozilla::Telemetry::LABELS_MSE_SOURCE_BUFFER_TYPE::AudioAac);
+  }
+}
+
 /* static */
 void MediaSource::IsTypeSupported(const nsAString& aType,
                                   DecoderDoctorDiagnostics* aDiagnostics,
@@ -241,6 +276,7 @@ already_AddRefed<SourceBuffer> MediaSource::AddSourceBuffer(
   MOZ_ASSERT(NS_IsMainThread());
   DecoderDoctorDiagnostics diagnostics;
   IsTypeSupported(aType, &diagnostics, aRv);
+  RecordTypeForTelemetry(aType, GetOwner());
   bool supported = !aRv.Failed();
   diagnostics.StoreFormatDiagnostics(
       GetOwner() ? GetOwner()->GetExtantDoc() : nullptr, aType, supported,
@@ -394,6 +430,7 @@ bool MediaSource::IsTypeSupported(const GlobalObject& aOwner,
   bool supported = !rv.Failed();
   nsCOMPtr<nsPIDOMWindowInner> window =
       do_QueryInterface(aOwner.GetAsSupports());
+  RecordTypeForTelemetry(aType, window);
   diagnostics.StoreFormatDiagnostics(window ? window->GetExtantDoc() : nullptr,
                                      aType, supported, __func__);
   MOZ_LOG(GetMediaSourceAPILog(), mozilla::LogLevel::Debug,

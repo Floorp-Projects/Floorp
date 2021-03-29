@@ -90,6 +90,7 @@
 #define AUDIO_MIDI "audio/x-midi"
 #define AUDIO_MATROSKA "audio/x-matroska"
 #define AUDIO_AAC "audio/aac"
+#define AUDIO_MPEG_TS "audio/mp2t"
 
 #define BINARY_OCTET_STREAM "binary/octet-stream"
 
