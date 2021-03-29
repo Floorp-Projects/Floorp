@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Telemetry : test permanent probe MSE_SOURCE_BUFFER_TYPE</title>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="application/javascript">
+
+/**
+ * This test is used for the permanent Telemetry probe MSE_SOURCE_BUFFER_TYPE.
+ * which is used to measure the usage of mime type used in MSE.
+ */
+const VIDEO_WEBM = "video/webm";
+const AUDIO_WEBM = "audio/webm";
+const VIDEO_MP4 = "video/mp4";
+const AUDIO_MP4 = "audio/mp4";
+const VIDEO_MP2T = "video/mp2t";
+const AUDIO_MP2T = "audio/mp2t";
+const AUDIO_MP3 = "audio/mpeg";
+const AUDIO_AAC = "audio/aac";
+
+// The order follows `MSE_SOURCE_BUFFER_TYPE` in `Histogram.json`.
+const gLabelNames = [VIDEO_WEBM, AUDIO_WEBM, VIDEO_MP4, AUDIO_MP4,
+                     VIDEO_MP2T, AUDIO_MP2T, AUDIO_MP3, AUDIO_AAC];
+
+add_task(async function setTestPref() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["media.testing-only-events", true]]});
+});
+
+add_task(async function testSourceBufferTypeProbe() {
+  for (let label of gLabelNames) {
+    info(`calling 'isTypeSupported()' should increase the probe value`);
+    MediaSource.isTypeSupported(label);
+    assertLabelValueEqualTo(label, 1);
+
+    info(`calling 'addSourceBuffer()' should increase the probe value`);
+    try {
+      const source = new MediaSource();
+      source.addSourceBuffer(label);
+    } catch (e) {
+      info(`ignore error for unsupported type ${label}`);
+    }
+    assertLabelValueEqualTo(label, 2);
+  }
+});
+
+/**
+ * Following are helper functions
+ */
+async function assertLabelValueEqualTo(labelName, value) {
+  const hist = SpecialPowers.Services.telemetry.getHistogramById("MSE_SOURCE_BUFFER_TYPE");
+  /**
+   * Histogram's snapshot looks like that
+   * {
+   *    "bucket_count": X,
+   *    "histogram_type": Y,
+   *    "sum": Z,
+   *    "range": [min, max],
+   *    "values": { "value1" : "num1", "value2" : "num2", ...}
+   * }
+   */
+  if (!gLabelNames.includes(labelName)) {
+    ok(false, `undefined label name=${labelName}`);
+    return;
+  }
+  const labelIdx = gLabelNames.indexOf(labelName);
+  is(hist.snapshot().values[labelIdx], value, `${labelName} equal to ${value}`);
+}
+
+</script>
+</head>
+<body>
+</body>
+</html>
