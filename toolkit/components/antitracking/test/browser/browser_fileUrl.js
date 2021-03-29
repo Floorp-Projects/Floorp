@@ -7,7 +7,10 @@
 
 add_task(async function setup() {
   await SpecialPowers.pushPrefEnv({
-    set: [["network.cookie.cookieBehavior", 1]],
+    set: [
+      ["network.cookie.cookieBehavior", 1],
+      ["network.cookie.cookieBehavior.pbmode", 1],
+    ],
   });
 });
 

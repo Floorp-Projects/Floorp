@@ -7,12 +7,18 @@ AntiTracking.runTestInNormalAndPrivateMode(
     /* import-globals-from storageAccessAPIHelpers.js */
     await noStorageAccessInitially();
 
+    let effectiveCookieBehavior = SpecialPowers.isContentWindowPrivate(window)
+      ? SpecialPowers.Services.prefs.getIntPref(
+          "network.cookie.cookieBehavior.pbmode"
+        )
+      : SpecialPowers.Services.prefs.getIntPref(
+          "network.cookie.cookieBehavior"
+        );
+
     let shouldThrow = [
       SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT,
       SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
-    ].includes(
-      SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior")
-    );
+    ].includes(effectiveCookieBehavior);
 
     let hasThrown;
     try {

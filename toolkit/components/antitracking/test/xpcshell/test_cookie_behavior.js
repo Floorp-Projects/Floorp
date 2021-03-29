@@ -8,6 +8,7 @@
 
 const PREF_FPI = "privacy.firstparty.isolate";
 const PREF_COOKIE_BEHAVIOR = "network.cookie.cookieBehavior";
+const PREF_COOKIE_BEHAVIOR_PBMODE = "network.cookie.cookieBehavior.pbmode";
 
 registerCleanupFunction(() => {
   Services.prefs.clearUserPref(PREF_FPI);
@@ -20,7 +21,13 @@ add_task(function test_FPI_off() {
   for (let i = 0; i <= Ci.nsICookieService.BEHAVIOR_LAST; ++i) {
     Services.prefs.setIntPref(PREF_COOKIE_BEHAVIOR, i);
     equal(Services.prefs.getIntPref(PREF_COOKIE_BEHAVIOR), i);
-    equal(Services.cookies.cookieBehavior, i);
+    equal(Services.cookies.getCookieBehavior(false), i);
+  }
+
+  for (let i = 0; i <= Ci.nsICookieService.BEHAVIOR_LAST; ++i) {
+    Services.prefs.setIntPref(PREF_COOKIE_BEHAVIOR_PBMODE, i);
+    equal(Services.prefs.getIntPref(PREF_COOKIE_BEHAVIOR_PBMODE), i);
+    equal(Services.cookies.getCookieBehavior(true), i);
   }
 });
 
@@ -31,7 +38,18 @@ add_task(function test_FPI_on() {
     Services.prefs.setIntPref(PREF_COOKIE_BEHAVIOR, i);
     equal(Services.prefs.getIntPref(PREF_COOKIE_BEHAVIOR), i);
     equal(
-      Services.cookies.cookieBehavior,
+      Services.cookies.getCookieBehavior(false),
+      i == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
+        ? Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
+        : i
+    );
+  }
+
+  for (let i = 0; i <= Ci.nsICookieService.BEHAVIOR_LAST; ++i) {
+    Services.prefs.setIntPref(PREF_COOKIE_BEHAVIOR_PBMODE, i);
+    equal(Services.prefs.getIntPref(PREF_COOKIE_BEHAVIOR_PBMODE), i);
+    equal(
+      Services.cookies.getCookieBehavior(true),
       i == Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN
         ? Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER
         : i

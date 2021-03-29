@@ -97,3 +97,28 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/toolkit/components/antitracking/test/browser/partitionedstorage_head.js",
   this
 );
+
+function setCookieBehaviorPref(cookieBehavior, runInPrivateWindow) {
+  let cbRegular;
+  let cbPrivate;
+
+  // Set different cookieBehaviors to regular mode and private mode so that we
+  // can make sure these two prefs don't interfere with each other for all
+  // tests.
+  if (runInPrivateWindow) {
+    cbPrivate = cookieBehavior;
+    cbRegular =
+      cookieBehavior == BEHAVIOR_ACCEPT ? BEHAVIOR_REJECT : BEHAVIOR_ACCEPT;
+  } else {
+    cbRegular = cookieBehavior;
+    cbPrivate =
+      cookieBehavior == BEHAVIOR_ACCEPT ? BEHAVIOR_REJECT : BEHAVIOR_ACCEPT;
+  }
+
+  return SpecialPowers.pushPrefEnv({
+    set: [
+      ["network.cookie.cookieBehavior", cbRegular],
+      ["network.cookie.cookieBehavior.pbmode", cbPrivate],
+    ],
+  });
+}

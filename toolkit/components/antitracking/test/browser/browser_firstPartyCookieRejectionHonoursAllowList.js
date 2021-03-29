@@ -5,6 +5,10 @@ add_task(async function() {
   await SpecialPowers.pushPrefEnv({
     set: [
       ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_REJECT],
+      [
+        "network.cookie.cookieBehavior.pbmode",
+        Ci.nsICookieService.BEHAVIOR_REJECT,
+      ],
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.pbmode.enabled", false],
       ["privacy.trackingprotection.annotate_channels", true],

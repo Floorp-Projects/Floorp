@@ -30,8 +30,9 @@ onmessage = function(e) {
     // 'block third-party trackers or 'block third-party trackers and partition
     // third-party cookies', since otherwise we won't obtain storage access by
     // default, which is what this data is used for in tests.
-    let cookieBehavior =
-      SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior");
+    let cookieBehavior = SpecialPowers.isContentWindowPrivate(window)
+      ? SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior.pbmode")
+      : SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior");
     window.allowListed =
       parts[0] === "true" &&
       (cookieBehavior == SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER ||

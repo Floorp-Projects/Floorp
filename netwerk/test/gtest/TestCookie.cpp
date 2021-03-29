@@ -88,7 +88,7 @@ void SetACookieInternal(nsICookieService* aCookieService, const char* aSpec,
                 nsIContentPolicy::TYPE_OTHER);
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
-      aAllowed ? CookieJarSettings::Create()
+      aAllowed ? CookieJarSettings::Create(CookieJarSettings::eRegular)
                : CookieJarSettings::GetBlockingAll();
   MOZ_ASSERT(cookieJarSettings);
 
