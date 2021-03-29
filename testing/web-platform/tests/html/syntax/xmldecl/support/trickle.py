@@ -8,5 +8,5 @@ def main(request, response):
 
     for b in b'<?xml version="1.0" encoding="windows-1251"?':
         response.writer.write(bytes([b]))
-        time.sleep(0.1)
+        time.sleep(0.05)
     response.writer.write(b'>\n<p>Normal XML declation as slow byte-by-byte trickle</p>\n<p>Test: \xE6</p>\n<p>If &#x0436;, XML decl takes effect</p>')
