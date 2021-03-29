@@ -785,7 +785,7 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
     padding: 0;
   }
 
-  #appMenu-fxa-status2[fxastatus] > #appMenu-fxa-label2,
+  #appMenu-fxa-status2[fxastatus] > #appMenu-fxa-label2 > vbox > #appMenu-header-description,
   #appMenu-fxa-text {
     font-weight: 600;
   }
@@ -819,6 +819,10 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
   #PanelUI-fxa-menu-syncnow-button > hbox > label,
   #PanelUI-remotetabs-syncnow > hbox > label {
     margin-inline-start: 0;
+  }
+
+  #appMenu-fxa-label2 > vbox > label {
+    margin-inline: 0;
   }
 
   .syncNowBtn {
