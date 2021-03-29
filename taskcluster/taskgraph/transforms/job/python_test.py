@@ -26,7 +26,7 @@ python_test_schema = Schema(
 
 
 defaults = {
-    "python-version": 2,
+    "python-version": 3,
     "subsuite": "default",
 }
 
