@@ -173,9 +173,6 @@ class ContentParent final
 
   static void ReleaseCachedProcesses();
 
-  static void LogAndAssertFailedPrincipalValidationInfo(
-      nsIPrincipal* aPrincipal, const char* aMethod);
-
   /**
    * Picks a random content parent from |aContentParents| respecting the index
    * limit set by |aMaxContentParents|.
