@@ -333,6 +333,16 @@ void FontFace::SetLineGapOverride(const nsACString& aValue, ErrorResult& aRv) {
   }
 }
 
+void FontFace::GetSizeAdjust(nsACString& aResult) {
+  GetDesc(eCSSFontDesc_SizeAdjust, aResult);
+}
+
+void FontFace::SetSizeAdjust(const nsACString& aValue, ErrorResult& aRv) {
+  if (SetDescriptor(eCSSFontDesc_SizeAdjust, aValue, aRv)) {
+    DescriptorUpdated();
+  }
+}
+
 void FontFace::DescriptorUpdated() {
   // If we haven't yet initialized mUserFontEntry, no need to do anything here;
   // we'll respect the updated descriptor when the time comes to create it.
@@ -566,7 +576,9 @@ bool FontFace::SetDescriptors(const nsACString& aFamily,
        (!setDesc(eCSSFontDesc_AscentOverride, aDescriptors.mAscentOverride) ||
         !setDesc(eCSSFontDesc_DescentOverride, aDescriptors.mDescentOverride) ||
         !setDesc(eCSSFontDesc_LineGapOverride,
-                 aDescriptors.mLineGapOverride)))) {
+                 aDescriptors.mLineGapOverride))) ||
+      (StaticPrefs::layout_css_size_adjust_enabled() &&
+       !setDesc(eCSSFontDesc_SizeAdjust, aDescriptors.mSizeAdjust))) {
     // XXX Handle font-variant once we support it (bug 1055385).
 
     // If any of the descriptors failed to parse, none of them should be set
