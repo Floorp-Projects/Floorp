@@ -3432,6 +3432,13 @@ ScrollDirections AsyncPanZoomController::GetOverscrollableDirections() const {
   ScrollDirections result;
 
   RecursiveMutexAutoLock lock(mRecursiveMutex);
+
+  // If the target has the disregarded direction, it means it's single line
+  // text control, thus we don't want to overscroll in both directions.
+  if (mScrollMetadata.GetDisregardedDirection()) {
+    return result;
+  }
+
   if (mX.CanScroll() && mX.OverscrollBehaviorAllowsOverscrollEffect()) {
     result += ScrollDirection::eHorizontal;
   }
