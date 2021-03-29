@@ -8458,6 +8458,12 @@
   value: false
   mirror: always
 
+# The cookieBehavior to be used in Private Browsing mode.
+- name: network.cookie.cookieBehavior.pbmode
+  type: RelaxedAtomicInt32
+  value: 0 # accept all cookies
+  mirror: always
+
 # Stale threshold for cookies in seconds.
 - name: network.cookie.staleThreshold
   type: uint32_t
