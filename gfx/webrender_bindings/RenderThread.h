@@ -258,6 +258,7 @@ class RenderThread final {
   /// Can only be called from the render thread.
   gl::GLContext* SingletonGL(nsACString& aError);
   gl::GLContext* SingletonGL();
+  gl::GLContext* SingletonGLForCompositorOGL();
   void ClearSingletonGL();
   RefPtr<layers::SurfacePool> SharedSurfacePool();
   void ClearSharedSurfacePool();
@@ -313,6 +314,8 @@ class RenderThread final {
 
   void AddRenderTextureOp(RenderTextureOp aOp, uint64_t aExternalImageId);
 
+  void CreateSingletonGL(nsACString& aError);
+
   ~RenderThread();
 
   base::Thread* const mThread;
@@ -327,6 +330,7 @@ class RenderThread final {
   // An optional shared GLContext to be used for all
   // windows.
   RefPtr<gl::GLContext> mSingletonGL;
+  bool mSingletonGLIsForHardwareWebRender;
 
   RefPtr<layers::SurfacePool> mSurfacePool;
 
