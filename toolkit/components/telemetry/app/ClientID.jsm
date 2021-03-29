@@ -242,6 +242,7 @@ var ClientIDImpl = {
         }
       }
     } catch (e) {
+      Services.telemetry.scalarAdd("telemetry.state_file_read_errors", 1);
       // fall through to next option
     }
 
@@ -250,6 +251,7 @@ var ClientIDImpl = {
       const cachedID = this.getCachedClientID();
       // Calling `updateClientID` with `null` logs an error, which breaks tests.
       if (cachedID) {
+        Services.telemetry.scalarAdd("telemetry.using_pref_client_id", 1);
         hasCurrentClientID = this.updateClientID(cachedID);
       }
     }
@@ -454,6 +456,7 @@ var ClientIDImpl = {
 
   async removeClientIDs() {
     this._log.trace("removeClientIDs");
+    Services.telemetry.scalarAdd("telemetry.removed_client_ids", 1);
     let oldClientId = this._clientID;
 
     // Wait for the removal.
