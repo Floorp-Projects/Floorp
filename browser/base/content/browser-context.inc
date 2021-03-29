@@ -270,7 +270,7 @@
                hidden="true"
                oncommand="gContextMenu.useGeneratedPassword();"/>
      <menuitem id="manage-saved-logins"
-               data-l10n-id="main-context-menu-manage-logins"
+               data-l10n-id="main-context-menu-manage-logins2"
                hidden = "true"
                oncommand="gContextMenu.openPasswordManager();"/>
       <menuseparator id="passwordmgr-items-separator"/>
