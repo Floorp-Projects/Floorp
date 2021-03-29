@@ -13291,6 +13291,17 @@
     "releaseChannelCollection": "opt-out",
     "description": "Count of use of audio/video codecs in HTMLMediaElements and WebAudio. Those with 'resource' prefix are approximate; report based on HTTP ContentType or sniffing. Those with 'webaudio' prefix are for WebAudio."
   },
+  "MSE_SOURCE_BUFFER_TYPE": {
+    "products": ["firefox", "geckoview_streaming"],
+    "record_in_processes": ["main", "content"],
+    "alert_emails": ["alwu@mozilla.com", "bryce@mozilla.com"],
+    "bug_numbers": [1699249],
+    "expires_in_version": "never",
+    "kind": "categorical",
+    "labels": ["VideoWebm", "AudioWebm", "VideoMp4", "AudioMp4", "VideoMp2t", "AudioMp2t", "AudioMpeg", "AudioAac"],
+    "releaseChannelCollection": "opt-out",
+    "description": "Count the actual or possible (because we don't support some of them for now) usage amount for each media mime type used in MSE. We collect this data in MediaSource's `AddSourceBuffer()` and `IsTypeSupported()`."
+  },
   "FX_SANITIZE_TOTAL": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
