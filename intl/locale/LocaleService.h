@@ -163,9 +163,8 @@ class LocaleService final : public mozILocaleService,
   /**
    * Returns whether the current app locale is RTL.
    *
-   * This method respects two overrides:
+   * This method respects this override:
    *  - `intl.l10n.pseudo`
-   *  - `intl.uidirection`
    */
   bool IsAppLocaleRTL();
 

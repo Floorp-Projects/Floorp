@@ -15,10 +15,8 @@
 
 #define INTL_APP_LOCALES_CHANGED "intl:app-locales-changed"
 #define L10N_PSEUDO_PREF "intl.l10n.pseudo"
-#define INTL_UI_DIRECTION_PREF "intl.uidirection"
 
-static const char* kObservedPrefs[] = {L10N_PSEUDO_PREF, INTL_UI_DIRECTION_PREF,
-                                       nullptr};
+static const char* kObservedPrefs[] = {L10N_PSEUDO_PREF, nullptr};
 
 using namespace mozilla::intl;
 using namespace mozilla::dom;
@@ -172,8 +170,7 @@ Localization::Observe(nsISupports* aSubject, const char* aTopic,
   } else {
     MOZ_ASSERT(!strcmp("nsPref:changed", aTopic));
     nsDependentString pref(aData);
-    if (pref.EqualsLiteral(L10N_PSEUDO_PREF) ||
-        pref.EqualsLiteral(INTL_UI_DIRECTION_PREF)) {
+    if (pref.EqualsLiteral(L10N_PSEUDO_PREF)) {
       OnChange();
     }
   }
