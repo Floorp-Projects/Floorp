@@ -128,7 +128,7 @@ impl TileCacheBuilder {
         // should be considered the scroll root of this tile cache, in order to
         // minimize the invalidations that occur due to scrolling. It's often the
         // case that a blend container will have only a single scroll root.
-        let mut found_scroll_roots = FastHashMap::default();
+        let mut scroll_root_occurrences = FastHashMap::default();
 
         for cluster in &prim_list.clusters {
             let scroll_root = self.find_scroll_root(
@@ -136,15 +136,36 @@ impl TileCacheBuilder {
                 spatial_tree,
             );
 
-            *found_scroll_roots.entry(scroll_root).or_insert(0) += 1;
+            *scroll_root_occurrences.entry(scroll_root).or_insert(0) += 1;
         }
 
+        // We can't just select the most commonly occurring scroll root in this
+        // primitive list. If that is a nested scroll root, there may be
+        // primitives in the list that are outside that scroll root, which
+        // can cause panics when calculating relative transforms. To ensure
+        // this doesn't happen, only retain scroll root candidates that are
+        // also ancestors of every other scroll root candidate.
+        let scroll_roots: Vec<SpatialNodeIndex> = scroll_root_occurrences
+            .keys()
+            .cloned()
+            .collect();
+
+        scroll_root_occurrences.retain(|parent_spatial_node_index, _| {
+            scroll_roots.iter().all(|child_spatial_node_index| {
+                parent_spatial_node_index == child_spatial_node_index ||
+                spatial_tree.is_ancestor(
+                    *parent_spatial_node_index,
+                    *child_spatial_node_index,
+                )
+            })
+        });
+
         // Select the scroll root by finding the most commonly occurring one
-        let scroll_root = *found_scroll_roots
+        let scroll_root = scroll_root_occurrences
             .iter()
             .max_by_key(|entry | entry.1)
-            .unwrap()
-            .0;
+            .map(|(spatial_node_index, _)| *spatial_node_index)
+            .unwrap_or(ROOT_SPATIAL_NODE_INDEX);
 
         let mut first = true;
         let prim_clips_buffer = &mut self.prim_clips_buffer;
