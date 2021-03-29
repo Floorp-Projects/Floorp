@@ -1054,17 +1054,6 @@ def target_tasks_chromium_update(full_task_graph, parameters, graph_config):
     ]
 
 
-@_target_task("python_dependency_update")
-def target_tasks_python_update(full_task_graph, parameters, graph_config):
-    """Select the set of tasks required to perform nightly in-tree pipfile updates"""
-
-    def filter(task):
-        # For now any task in the repo-update kind is ok
-        return task.kind in ["python-dependency-update"]
-
-    return [l for l, t in six.iteritems(full_task_graph.tasks) if filter(t)]
-
-
 @_target_task("file_update")
 def target_tasks_file_update(full_task_graph, parameters, graph_config):
     """Select the set of tasks required to perform nightly in-tree file updates"""
