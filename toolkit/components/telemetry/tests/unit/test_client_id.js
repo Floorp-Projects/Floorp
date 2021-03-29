@@ -88,6 +88,8 @@ add_task(async function test_client_id() {
   Assert.equal(snapshot["telemetry.generated_new_client_id"], true);
   // No file to read means no value to mismatch with pref.
   Assert.ok(!("telemetry.loaded_client_id_doesnt_match_pref" in snapshot));
+  Assert.equal(snapshot["telemetry.state_file_read_errors"], 1);
+  Assert.ok(!("telemetry.using_pref_client_id" in snapshot));
 
   // We should be guarded against invalid DRS json.
   await ClientID._reset();
@@ -103,6 +105,8 @@ add_task(async function test_client_id() {
   Assert.equal(snapshot["telemetry.generated_new_client_id"], true);
   // Invalid file means no value to mismatch with pref.
   Assert.ok(!("telemetry.loaded_client_id_doesnt_match_pref" in snapshot));
+  Assert.equal(snapshot["telemetry.state_file_read_errors"], 1);
+  Assert.ok(!("telemetry.using_pref_client_id" in snapshot));
 
   // If the DRS data is broken, we should end up with the cached ID.
   let oldClientID = clientID;
@@ -114,6 +118,8 @@ add_task(async function test_client_id() {
     snapshot = Services.telemetry.getSnapshotForScalars("main", true).parent;
     Assert.ok(!("telemetry.generated_new_client_id" in snapshot));
     Assert.equal(snapshot["telemetry.loaded_client_id_doesnt_match_pref"], 1);
+    Assert.ok(!("telemetry.state_file_read_errors" in snapshot));
+    Assert.equal(snapshot["telemetry.using_pref_client_id"], 1);
   }
 
   // Test that valid DRS actually works.
@@ -125,6 +131,8 @@ add_task(async function test_client_id() {
   snapshot = Services.telemetry.getSnapshotForScalars("main", true).parent;
   Assert.ok(!("telemetry.generated_new_client_id" in snapshot));
   Assert.equal(snapshot["telemetry.loaded_client_id_doesnt_match_pref"], 1);
+  Assert.ok(!("telemetry.state_file_read_errors" in snapshot));
+  Assert.ok(!("telemetry.using_pref_client_id" in snapshot));
 
   // Test that reloading a valid DRS works.
   await ClientID._reset();
@@ -136,6 +144,8 @@ add_task(async function test_client_id() {
     Services.telemetry.getSnapshotForScalars("main", true).parent || {};
   Assert.ok(!("telemetry.generated_new_client_id" in snapshot));
   Assert.ok(!("telemetry.loaded_client_id_doesnt_match_pref" in snapshot));
+  Assert.ok(!("telemetry.state_file_read_errors" in snapshot));
+  Assert.ok(!("telemetry.using_pref_client_id" in snapshot));
 
   // Assure that cached IDs are being checked for validity.
   for (let [invalidID, prefFunc] of invalidIDs) {
