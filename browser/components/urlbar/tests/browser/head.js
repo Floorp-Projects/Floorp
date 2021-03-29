@@ -20,6 +20,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   ObjectUtils: "resource://gre/modules/ObjectUtils.jsm",
   PromiseUtils: "resource://gre/modules/PromiseUtils.jsm",
   ResetProfile: "resource://gre/modules/ResetProfile.jsm",
+  SearchUtils: "resource://gre/modules/SearchUtils.jsm",
   TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
   UrlbarController: "resource:///modules/UrlbarController.jsm",
   UrlbarQueryContext: "resource:///modules/UrlbarUtils.jsm",
