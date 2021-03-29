@@ -577,7 +577,7 @@ already_AddRefed<Promise> FetchRequest(nsIGlobalObject* aGlobal,
         return nullptr;
       }
 
-      cookieJarSettings = mozilla::net::CookieJarSettings::Create();
+      cookieJarSettings = mozilla::net::CookieJarSettings::Create(principal);
     }
 
     if (!loadGroup) {
