@@ -28,13 +28,19 @@
 
     get stack() {
       if (!this._stack) {
-        let stack = document.createXULElement("legacy-stack");
+        let stack;
+        stack = document.createXULElement(
+          this.protonInfobarsEnabled ? "vbox" : "legacy-stack"
+        );
         stack._notificationBox = this;
         stack.className = "notificationbox-stack";
-        stack.appendChild(document.createXULElement("spacer"));
+        if (!this.protonInfobarsEnabled) {
+          stack.appendChild(document.createXULElement("spacer"));
+        }
         stack.addEventListener("transitionend", event => {
           if (
-            event.target.localName == "notification" &&
+            (event.target.localName == "notification" ||
+              event.target.localName == "notification-message") &&
             event.propertyName == "margin-top"
           ) {
             this._finishAnimation();
@@ -58,7 +64,9 @@
       }
 
       var closedNotification = this._closedNotification;
-      var notifications = this.stack.getElementsByTagName("notification");
+      var notifications = this.stack.getElementsByTagName(
+        this.protonInfobarsEnabled ? "notification-message" : "notification"
+      );
       return Array.prototype.filter.call(
         notifications,
         n => n != closedNotification
@@ -140,10 +148,11 @@
       aPriority,
       aButtons,
       aEventCallback,
-      aNotificationIs
+      aNotificationIs,
+      aFtlFilePaths
     ) {
       if (
-        aPriority < this.PRIORITY_INFO_LOW ||
+        aPriority < this.PRIORITY_SYSTEM ||
         aPriority > this.PRIORITY_CRITICAL_HIGH
       ) {
         throw new Error("Invalid notification priority " + aPriority);
@@ -163,10 +172,24 @@
       MozXULElement.insertFTLIfNeeded("toolkit/global/notification.ftl");
 
       // Create the Custom Element and connect it to the document immediately.
-      var newitem = document.createXULElement(
-        "notification",
-        aNotificationIs ? { is: aNotificationIs } : {}
-      );
+      var newitem;
+      if (this.protonInfobarsEnabled) {
+        if (!customElements.get("notification-message")) {
+          // There's some weird timing stuff when this element is created at
+          // script load time, we don't need it until now anyway so be lazy.
+          createNotificationMessageElement();
+        }
+        newitem = document.createElement("notification-message");
+        newitem.setAttribute("message-bar-type", "infobar");
+        if (aFtlFilePaths) {
+          newitem.addFtl(aFtlFilePaths);
+        }
+      } else {
+        newitem = document.createXULElement(
+          "notification",
+          aNotificationIs ? { is: aNotificationIs } : {}
+        );
+      }
       this.stack.insertBefore(newitem, insertPos);
 
       // Custom notification classes may not have the messageText property.
@@ -184,65 +207,20 @@
         }
       }
       newitem.setAttribute("value", aValue);
-      if (aImage) {
+
+      if (aImage && !this.protonInfobarsEnabled) {
         newitem.messageImage.setAttribute("src", aImage);
       }
       newitem.eventCallback = aEventCallback;
 
       if (aButtons) {
-        for (var b = 0; b < aButtons.length; b++) {
-          let button = aButtons[b];
-          let buttonElem;
-
-          let link = button.link;
-          let localeId = button["l10n-id"];
-          if (!link && button.supportPage) {
-            link =
-              Services.urlFormatter.formatURLPref("app.support.baseURL") +
-              button.supportPage;
-            if (!button.label && !localeId) {
-              localeId = "notification-learnmore-default-label";
-            }
-          }
-
-          if (link) {
-            buttonElem = document.createXULElement("label", {
-              is: "text-link",
-            });
-            buttonElem.setAttribute("href", link);
-            buttonElem.classList.add("notification-link");
-          } else {
-            buttonElem = document.createXULElement(
-              "button",
-              button.is ? { is: button.is } : {}
-            );
-            buttonElem.classList.add("notification-button");
-
-            if (button.primary) {
-              buttonElem.classList.add("primary");
-            }
-          }
-
-          if (localeId) {
-            buttonElem.setAttribute("data-l10n-id", localeId);
-          } else {
-            buttonElem.setAttribute(link ? "value" : "label", button.label);
-            if (typeof button.accessKey == "string") {
-              buttonElem.setAttribute("accesskey", button.accessKey);
-            }
-          }
-
-          if (link) {
-            newitem.messageText.appendChild(buttonElem);
-          } else {
-            newitem.messageDetails.appendChild(buttonElem);
-          }
-          buttonElem.buttonInfo = button;
-        }
+        newitem.setButtons(aButtons);
       }
 
       newitem.priority = aPriority;
-      if (aPriority >= this.PRIORITY_CRITICAL_LOW) {
+      if (aPriority == this.PRIORITY_SYSTEM) {
+        newitem.setAttribute("type", "system");
+      } else if (aPriority >= this.PRIORITY_CRITICAL_LOW) {
         newitem.setAttribute("type", "critical");
       } else if (aPriority <= this.PRIORITY_INFO_HIGH) {
         newitem.setAttribute("type", "info");
@@ -271,7 +249,10 @@
       if (!aItem.parentNode) {
         return;
       }
-      if (aItem == this.currentNotification) {
+      if (this.protonInfobarsEnabled) {
+        this.currentNotification = aItem;
+        this.removeCurrentNotification(aSkipAnimation);
+      } else if (aItem == this.currentNotification) {
         this.removeCurrentNotification(aSkipAnimation);
       } else if (aItem != this._closedNotification) {
         this._removeNotificationElement(aItem);
@@ -336,9 +317,12 @@
     _showNotification(aNotification, aSlideIn, aSkipAnimation) {
       this._finishAnimation();
 
-      var height = aNotification.getBoundingClientRect().height;
+      let { marginTop, marginBottom } = getComputedStyle(aNotification);
+      let baseHeight = aNotification.getBoundingClientRect().height;
+      var height =
+        baseHeight + parseInt(marginTop, 10) + parseInt(marginBottom, 10);
       var skipAnimation =
-        aSkipAnimation || height == 0 || !this._allowAnimation;
+        aSkipAnimation || baseHeight == 0 || !this._allowAnimation;
       aNotification.classList.toggle("animated", !skipAnimation);
 
       if (aSlideIn) {
@@ -380,10 +364,18 @@
         }
       }
     }
+
+    get protonInfobarsEnabled() {
+      return Services.prefs.getBoolPref(
+        "browser.proton.infobars.enabled",
+        false
+      );
+    }
   };
 
   // These are defined on the instance prototype for backwards compatibility.
   Object.assign(MozElements.NotificationBox.prototype, {
+    PRIORITY_SYSTEM: 0,
     PRIORITY_INFO_LOW: 1,
     PRIORITY_INFO_MEDIUM: 2,
     PRIORITY_INFO_HIGH: 3,
@@ -438,6 +430,57 @@
     disconnectedCallback() {
       if (this.eventCallback) {
         this.eventCallback("disconnected");
+      }
+    }
+
+    setButtons(aButtons) {
+      for (let button of aButtons) {
+        let buttonElem;
+
+        let link = button.link;
+        let localeId = button["l10n-id"];
+        if (!link && button.supportPage) {
+          link =
+            Services.urlFormatter.formatURLPref("app.support.baseURL") +
+            button.supportPage;
+          if (!button.label && !localeId) {
+            localeId = "notification-learnmore-default-label";
+          }
+        }
+
+        if (link) {
+          buttonElem = document.createXULElement("label", {
+            is: "text-link",
+          });
+          buttonElem.setAttribute("href", link);
+          buttonElem.classList.add("notification-link");
+        } else {
+          buttonElem = document.createXULElement(
+            "button",
+            button.is ? { is: button.is } : {}
+          );
+          buttonElem.classList.add("notification-button");
+
+          if (button.primary) {
+            buttonElem.classList.add("primary");
+          }
+        }
+
+        if (localeId) {
+          buttonElem.setAttribute("data-l10n-id", localeId);
+        } else {
+          buttonElem.setAttribute(link ? "value" : "label", button.label);
+          if (typeof button.accessKey == "string") {
+            buttonElem.setAttribute("accesskey", button.accessKey);
+          }
+        }
+
+        if (link) {
+          this.messageText.appendChild(buttonElem);
+        } else {
+          this.messageDetails.appendChild(buttonElem);
+        }
+        buttonElem.buttonInfo = button;
       }
     }
 
@@ -502,7 +545,159 @@
         }
       }
     }
+
+    get protonInfobarsEnabled() {
+      return Services.prefs.getBoolPref(
+        "browser.proton.infobars.enabled",
+        false
+      );
+    }
   };
 
   customElements.define("notification", MozElements.Notification);
+
+  function createNotificationMessageElement() {
+    // Get a reference to MessageBarElement from a created element so the import
+    // gets handled automatically if needed.
+    class NotificationMessage extends document.createElement("message-bar")
+      .constructor {
+      connectedCallback() {
+        this.toggleAttribute("dismissable", true);
+        this.closeButton.classList.add("notification-close");
+        this.shadowRoot.querySelector(".container").classList.add("infobar");
+        let messageContent = this.shadowRoot.querySelector(".content");
+        messageContent.classList.add("notification-content");
+
+        // Remove the <slot>, API surface is `set label()` and `setButtons()`.
+        messageContent.textContent = "";
+
+        this.messageText = document.createElement("span");
+        this.messageText.classList.add("notification-message");
+        this.buttonContainer = document.createElement("span");
+        this.buttonContainer.classList.add("notification-button-container");
+
+        messageContent.append(this.messageText, this.buttonContainer);
+        this.shadowRoot.addEventListener("click", this);
+      }
+
+      disconnectedCallback() {
+        if (this.eventCallback) {
+          this.eventCallback("disconnected");
+        }
+      }
+
+      close() {
+        this.closest(
+          ".notificationbox-stack"
+        )._notificationBox.removeNotification(this);
+      }
+
+      addFtl(filepaths) {
+        for (let filepath of filepaths) {
+          let link = document.createElement("link");
+          link.setAttribute("rel", "localization");
+          link.href = filepath;
+          this.shadowRoot.append(link);
+        }
+        document.l10n.connectRoot(this.shadowRoot);
+      }
+
+      _insertNotificationFtl() {
+        if (!this._insertedNotificationFtl) {
+          this._insertedNotificationFtl = true;
+          this.addFtl(["toolkit/global/notification.ftl"]);
+        }
+      }
+
+      handleEvent(e) {
+        if (e.type == "click" && "buttonInfo" in e.target) {
+          let { buttonInfo } = e.target;
+          let { callback, popup } = buttonInfo;
+          if (callback) {
+            if (!callback(this, buttonInfo, e.target, e)) {
+              this.close();
+            }
+            e.stopPropagation();
+          } else if (popup) {
+            document
+              .getElementById(popup)
+              .openPopup(
+                e.originalTarget,
+                "after_start",
+                0,
+                0,
+                false,
+                false,
+                e
+              );
+            e.stopPropagation();
+          }
+        }
+      }
+
+      set label(value) {
+        this.messageText.textContent = value;
+      }
+
+      setButtons(buttons) {
+        this._buttons = buttons;
+        for (let button of buttons) {
+          let link = button.link;
+          let localeId = button["l10n-id"];
+          if (!link && button.supportPage) {
+            link =
+              Services.urlFormatter.formatURLPref("app.support.baseURL") +
+              button.supportPage;
+            if (!button.label && !localeId) {
+              localeId = "notification-learnmore-default-label";
+            }
+            this._insertNotificationFtl();
+          }
+
+          let buttonElem;
+          if (link) {
+            buttonElem = document.createXULElement("label", {
+              is: "text-link",
+            });
+            buttonElem.setAttribute("href", link);
+            buttonElem.classList.add("notification-link");
+          } else {
+            buttonElem = document.createXULElement(
+              "button",
+              button.is ? { is: button.is } : {}
+            );
+            buttonElem.classList.add("notification-button", "small");
+
+            if (button.primary) {
+              buttonElem.classList.add("primary");
+            }
+          }
+
+          if (localeId) {
+            document.l10n.setAttributes(buttonElem, localeId);
+          } else {
+            buttonElem.textContent = button.label;
+            if (typeof button.accessKey == "string") {
+              buttonElem.setAttribute("accesskey", button.accessKey);
+            }
+          }
+
+          if (link) {
+            this.messageText.append(new Text(" "), buttonElem);
+          } else {
+            this.buttonContainer.appendChild(buttonElem);
+          }
+          buttonElem.buttonInfo = button;
+        }
+      }
+
+      dismiss() {
+        if (this.eventCallback) {
+          this.eventCallback("dismissed");
+        }
+        super.dismiss();
+      }
+    }
+    customElements.define("notification-message", NotificationMessage);
+  }
 }
