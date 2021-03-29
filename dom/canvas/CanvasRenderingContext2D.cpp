@@ -751,8 +751,6 @@ void CanvasGradient::AddColorStop(float aOffset, const nsACString& aColorstr,
     return aRv.ThrowSyntaxError("Invalid color");
   }
 
-  mStops = nullptr;
-
   GradientStop newStop;
 
   newStop.offset = aOffset;

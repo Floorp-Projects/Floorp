@@ -73,29 +73,32 @@ class GeneralPattern final {
   }
 
   LinearGradientPattern* InitLinearGradientPattern(
-      const Point& aBegin, const Point& aEnd, GradientStops* aStops,
+      const Point& aBegin, const Point& aEnd,
+      already_AddRefed<GradientStops> aStops,
       const Matrix& aMatrix = Matrix()) {
     MOZ_ASSERT(!mPattern);
     mPattern = new (mLinearGradientPattern.addr())
-        LinearGradientPattern(aBegin, aEnd, aStops, aMatrix);
+        LinearGradientPattern(aBegin, aEnd, std::move(aStops), aMatrix);
     return mLinearGradientPattern.addr();
   }
 
   RadialGradientPattern* InitRadialGradientPattern(
       const Point& aCenter1, const Point& aCenter2, Float aRadius1,
-      Float aRadius2, GradientStops* aStops, const Matrix& aMatrix = Matrix()) {
+      Float aRadius2, already_AddRefed<GradientStops> aStops,
+      const Matrix& aMatrix = Matrix()) {
     MOZ_ASSERT(!mPattern);
     mPattern = new (mRadialGradientPattern.addr()) RadialGradientPattern(
-        aCenter1, aCenter2, aRadius1, aRadius2, aStops, aMatrix);
+        aCenter1, aCenter2, aRadius1, aRadius2, std::move(aStops), aMatrix);
     return mRadialGradientPattern.addr();
   }
 
   ConicGradientPattern* InitConicGradientPattern(
       const Point& aCenter, Float aAngle, Float aStartOffset, Float aEndOffset,
-      GradientStops* aStops, const Matrix& aMatrix = Matrix()) {
+      already_AddRefed<GradientStops> aStops,
+      const Matrix& aMatrix = Matrix()) {
     MOZ_ASSERT(!mPattern);
     mPattern = new (mConicGradientPattern.addr()) ConicGradientPattern(
-        aCenter, aAngle, aStartOffset, aEndOffset, aStops, aMatrix);
+        aCenter, aAngle, aStartOffset, aEndOffset, std::move(aStops), aMatrix);
     return mConicGradientPattern.addr();
   }
 

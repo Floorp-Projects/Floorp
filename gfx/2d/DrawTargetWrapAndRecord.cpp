@@ -133,12 +133,13 @@ static SourceSurface* GetSourceSurface(SourceSurface* aSurface) {
   return static_cast<SourceSurfaceWrapAndRecord*>(aSurface)->mFinalSurface;
 }
 
-static GradientStops* GetGradientStops(GradientStops* aStops) {
+static already_AddRefed<GradientStops> GetGradientStops(GradientStops* aStops) {
   if (aStops->GetBackendType() != BackendType::RECORDING) {
-    return aStops;
+    return do_AddRef(aStops);
   }
 
-  return static_cast<GradientStopsWrapAndRecord*>(aStops)->mFinalGradientStops;
+  return do_AddRef(
+      static_cast<GradientStopsWrapAndRecord*>(aStops)->mFinalGradientStops);
 }
 
 class FilterNodeWrapAndRecord : public FilterNode {

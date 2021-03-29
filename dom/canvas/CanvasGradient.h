@@ -26,16 +26,10 @@ class CanvasGradient : public nsWrapperCache {
 
   Type GetType() { return mType; }
 
-  mozilla::gfx::GradientStops* GetGradientStopsForTarget(
+  already_AddRefed<mozilla::gfx::GradientStops> GetGradientStopsForTarget(
       mozilla::gfx::DrawTarget* aRT) {
-    if (mStops && mStops->GetBackendType() == aRT->GetBackendType()) {
-      return mStops;
-    }
-
-    mStops = gfx::gfxGradientCache::GetOrCreateGradientStops(
+    return gfx::gfxGradientCache::GetOrCreateGradientStops(
         aRT, mRawStops, gfx::ExtendMode::CLAMP);
-
-    return mStops;
   }
 
   // WebIDL
@@ -57,7 +51,6 @@ class CanvasGradient : public nsWrapperCache {
 
   RefPtr<CanvasRenderingContext2D> mContext;
   nsTArray<mozilla::gfx::GradientStop> mRawStops;
-  RefPtr<mozilla::gfx::GradientStops> mStops;
   Type mType;
 };
 
