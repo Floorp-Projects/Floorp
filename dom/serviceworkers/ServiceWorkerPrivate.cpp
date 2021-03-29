@@ -1708,8 +1708,9 @@ nsresult ServiceWorkerPrivate::SpawnWorkerIfNeeded(WakeUpReason aWhy,
   // PartitionedPrincipal for ServiceWorkers is equal to mPrincipal because, at
   // the moment, ServiceWorkers are not exposed in partitioned contexts.
   info.mPartitionedPrincipal = info.mPrincipal;
+  info.mCookieJarSettings =
+      mozilla::net::CookieJarSettings::Create(info.mPrincipal);
 
-  info.mCookieJarSettings = mozilla::net::CookieJarSettings::Create();
   MOZ_ASSERT(info.mCookieJarSettings);
 
   net::CookieJarSettings::Cast(info.mCookieJarSettings)

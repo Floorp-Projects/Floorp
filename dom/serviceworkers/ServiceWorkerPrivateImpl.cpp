@@ -155,7 +155,7 @@ nsresult ServiceWorkerPrivateImpl::Initialize() {
   }
 
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings =
-      net::CookieJarSettings::Create();
+      net::CookieJarSettings::Create(principal);
   MOZ_ASSERT(cookieJarSettings);
 
   net::CookieJarSettings::Cast(cookieJarSettings)->SetPartitionKey(uri);
