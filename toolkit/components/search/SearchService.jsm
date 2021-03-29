@@ -1681,7 +1681,13 @@ SearchService.prototype = {
       extension.startupReason == "ADDON_UPGRADE" ||
       extension.startupReason == "ADDON_DOWNGRADE"
     ) {
-      return this._upgradeExtensionEngine(extension);
+      // Bug 1679861 An a upgrade or downgrade could be adding a search engine
+      // that was not in a prior version, or the addon may have been blocklisted.
+      // In either case, there will not be an existing engine.
+      let existing = await this._upgradeExtensionEngine(extension);
+      if (existing?.length) {
+        return existing;
+      }
     }
 
     if (extension.isAppProvided) {
