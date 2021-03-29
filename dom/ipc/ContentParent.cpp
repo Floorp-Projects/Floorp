@@ -7301,6 +7301,21 @@ ContentParent::RecvSessionHistoryEntryScrollRestorationIsManual(
   return IPC_OK();
 }
 
+mozilla::ipc::IPCResult ContentParent::RecvSessionHistoryEntryScrollPosition(
+    const MaybeDiscarded<BrowsingContext>& aContext, const int32_t& aX,
+    const int32_t& aY) {
+  if (aContext.IsNullOrDiscarded()) {
+    return IPC_OK();
+  }
+
+  SessionHistoryEntry* entry =
+      aContext.get_canonical()->GetActiveSessionHistoryEntry();
+  if (entry) {
+    entry->SetScrollPosition(aX, aY);
+  }
+  return IPC_OK();
+}
+
 mozilla::ipc::IPCResult
 ContentParent::RecvSessionHistoryEntryStoreWindowNameInContiguousEntries(
     const MaybeDiscarded<BrowsingContext>& aContext, const nsString& aName) {

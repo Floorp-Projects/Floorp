@@ -143,7 +143,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
     }
 
     function runTest() {
-      test1();
+      // If Fission is disabled, the pref is no-op.
+      SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+        test1();
+      });
     }
 
   </script>

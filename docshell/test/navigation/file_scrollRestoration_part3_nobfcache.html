@@ -89,7 +89,8 @@
             bc.postMessage({command: "nextCase"});
             callTest = true;
             nextCase = currentCase + 1;
-            history.back(); // go back to state 4
+            // go back to state 3 (state 4 was removed when state 5 was pushed)
+            history.back();
             break;
           }
           case 6: {
