@@ -154,11 +154,7 @@ add_task(async function test_extension_setting_default_engine_external() {
   let { panel, extension } = await startExtension();
   panel.secondaryButton.click();
 
-  // There is no explicit event we can wait for to know when the click
-  // callback has been fully processed.  One spin through the Promise
-  // microtask queue should be enough.  If this wait isn't long enough,
-  // the test below where we accept the prompt will fail.
-  await Promise.resolve();
+  await TestUtils.topicObserved("webextension-defaultsearch-prompt-response");
 
   is(
     (await Services.search.getDefault()).name,
@@ -172,7 +168,7 @@ add_task(async function test_extension_setting_default_engine_external() {
   ({ panel, extension } = await startExtension());
 
   panel.button.click();
-  await Promise.resolve();
+  await TestUtils.topicObserved("webextension-defaultsearch-prompt-response");
 
   is(
     (await Services.search.getDefault()).name,
@@ -181,7 +177,9 @@ add_task(async function test_extension_setting_default_engine_external() {
   );
 
   // Do this twice to make sure we're definitely handling disable/enable
-  // correctly.
+  // correctly.  Disabling and enabling the addon here like this also
+  // replicates the behavior when an addon is added then removed in the
+  // blocklist.
   let disabledPromise = awaitEvent("shutdown", EXTENSION1_ID);
   let addon = await AddonManager.getAddonByID(EXTENSION1_ID);
   await addon.disable();
@@ -193,9 +191,14 @@ add_task(async function test_extension_setting_default_engine_external() {
     "Default engine is Google after disabling"
   );
 
-  let processedPromise = awaitEvent("searchEngineProcessed", EXTENSION1_ID);
+  let opened = promisePopupNotificationShown(
+    "addon-webext-defaultsearch",
+    window
+  );
   await addon.enable();
-  await processedPromise;
+  panel = await opened;
+  panel.button.click();
+  await TestUtils.topicObserved("webextension-defaultsearch-prompt-response");
 
   is(
     (await Services.search.getDefault()).name,
@@ -552,6 +555,15 @@ add_task(async function test_two_addons_with_first_disabled_before_second() {
   );
   await ext2.unload();
 
+  let opened = promisePopupNotificationShown(
+    "addon-webext-defaultsearch",
+    window
+  );
+
+  let panel = await opened;
+  panel.button.click();
+  await TestUtils.topicObserved("webextension-defaultsearch-prompt-response");
+
   is(
     (await Services.search.getDefault()).name,
     "DuckDuckGo",
@@ -646,6 +658,15 @@ add_task(async function test_two_addons_with_first_disabled() {
   );
   await ext2.unload();
 
+  let opened = promisePopupNotificationShown(
+    "addon-webext-defaultsearch",
+    window
+  );
+
+  let panel = await opened;
+  panel.button.click();
+  await TestUtils.topicObserved("webextension-defaultsearch-prompt-response");
+
   is(
     (await Services.search.getDefault()).name,
     "DuckDuckGo",
@@ -734,8 +755,16 @@ add_task(async function test_two_addons_with_second_disabled() {
     "browser-search-engine-modified"
   );
   let enabledPromise = awaitEvent("ready", EXTENSION2_ID);
+  let opened = promisePopupNotificationShown(
+    "addon-webext-defaultsearch",
+    window
+  );
+
   await addon2.enable();
   await enabledPromise;
+  let panel = await opened;
+  panel.button.click();
+  await TestUtils.topicObserved("webextension-defaultsearch-prompt-response");
   await defaultPromise;
 
   is(
