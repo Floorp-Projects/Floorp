@@ -6,6 +6,7 @@
 
 #include "CanvasTranslator.h"
 
+#include "gfxGradientCache.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/GPUParent.h"
 #include "mozilla/gfx/Logging.h"
@@ -494,6 +495,14 @@ UniquePtr<SurfaceDescriptor> CanvasTranslator::WaitForSurfaceDescriptor(
   UniquePtr<SurfaceDescriptor> descriptor = std::move(result->second);
   mSurfaceDescriptors.erase(aTextureId);
   return descriptor;
+}
+
+already_AddRefed<gfx::GradientStops> CanvasTranslator::GetOrCreateGradientStops(
+    gfx::GradientStop* aRawStops, uint32_t aNumStops,
+    gfx::ExtendMode aExtendMode) {
+  nsTArray<gfx::GradientStop> rawStopArray(aRawStops, aNumStops);
+  return gfx::gfxGradientCache::GetOrCreateGradientStops(
+      GetReferenceDrawTarget(), rawStopArray, aExtendMode);
 }
 
 gfx::DataSourceSurface* CanvasTranslator::LookupDataSurface(

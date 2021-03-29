@@ -12,6 +12,7 @@
 #include "GPUParent.h"
 #include "GPUProcessHost.h"
 #include "GPUProcessManager.h"
+#include "gfxGradientCache.h"
 #include "GfxInfoBase.h"
 #include "ProcessUtils.h"
 #include "VRGPUChild.h"
@@ -181,6 +182,7 @@ bool GPUParent::Init(base::ProcessId aParentPid, const char* aParentBuildID,
   apz::InitializeGlobalState();
   LayerTreeOwnerTracker::Initialize();
   CompositorBridgeParent::InitializeStatics();
+  gfxGradientCache::Init();
   mozilla::ipc::SetThisProcessName("GPU Process");
 
   return true;
