@@ -32,7 +32,9 @@
 #include "vm/BindingKind.h"             // BindingKind
 #include "vm/EnvironmentObject.h"
 #include "vm/GeneratorAndAsyncKind.h"  // GeneratorKind, FunctionAsyncKind
-#include "vm/JSContext.h"              // JSContext
+#include "vm/HelperThreads.h"          // js::StartOffThreadParseScript
+#include "vm/HelperThreadState.h"
+#include "vm/JSContext.h"  // JSContext
 #include "vm/JSFunction.h"  // JSFunction, GetFunctionPrototype, NewFunctionWithProto
 #include "vm/JSObject.h"      // JSObject, TenuredObject
 #include "vm/JSONPrinter.h"   // js::JSONPrinter
@@ -3568,4 +3570,11 @@ JS::TranscodeResult JS::DecodeStencil(JSContext* cx,
   }
   stencilOut = do_AddRef(stencil.release());
   return TranscodeResult::Ok;
+}
+
+already_AddRefed<JS::Stencil> JS::FinishOffThreadStencil(
+    JSContext* cx, JS::OffThreadToken* token) {
+  MOZ_ASSERT(cx);
+  MOZ_ASSERT(CurrentThreadCanAccessRuntime(cx->runtime()));
+  return do_AddRef(HelperThreadState().finishStencilParseTask(cx, token));
 }

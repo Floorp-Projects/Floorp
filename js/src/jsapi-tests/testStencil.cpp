@@ -12,8 +12,10 @@
 #include "js/CompilationAndEvaluation.h"
 #include "js/experimental/JSStencil.h"
 #include "js/Modules.h"
+#include "js/OffThreadScriptCompilation.h"
 #include "js/Transcoding.h"
 #include "jsapi-tests/tests.h"
+#include "vm/Monitor.h"  // js::Monitor, js::AutoLockMonitor
 
 BEGIN_TEST(testStencil_Basic) {
   const char* chars =
@@ -240,3 +242,104 @@ static bool TestGetBuildId(JS::BuildIdCharVector* buildId) {
   return buildId->append(buildid, sizeof(buildid));
 }
 END_TEST(testStencil_Transcode)
+
+BEGIN_TEST(testStencil_OffThread) {
+  const char* chars =
+      "function f() { return 42; }"
+      "f();";
+
+  JS::SourceText<mozilla::Utf8Unit> srcBuf;
+  CHECK(srcBuf.init(cx, chars, strlen(chars), JS::SourceOwnership::Borrowed));
+
+  js::Monitor monitor(js::mutexid::ShellOffThreadState);
+  JS::CompileOptions options(cx);
+  JS::OffThreadToken* token;
+
+  // Force off-thread even though if this is a small file.
+  options.forceAsync = true;
+
+  CHECK(token = JS::CompileOffThread(cx, options, srcBuf, callback, &monitor));
+
+  {
+    // Finish any active GC in case it is blocking off-thread work.
+    js::gc::FinishGC(cx);
+
+    js::AutoLockMonitor lock(monitor);
+    lock.wait();
+  }
+
+  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(cx, token);
+  CHECK(stencil);
+
+  JS::RootedScript script(cx,
+                          JS::InstantiateGlobalStencil(cx, options, stencil));
+  CHECK(script);
+
+  JS::RootedValue rval(cx);
+  CHECK(JS_ExecuteScript(cx, script, &rval));
+  CHECK(rval.isNumber() && rval.toNumber() == 42);
+
+  return true;
+}
+
+static void callback(JS::OffThreadToken* token, void* context) {
+  js::Monitor& monitor = *static_cast<js::Monitor*>(context);
+
+  js::AutoLockMonitor lock(monitor);
+  lock.notify();
+}
+
+END_TEST(testStencil_OffThread)
+
+BEGIN_TEST(testStencil_OffThreadModule) {
+  const char* chars =
+      "export function f() { return 42; }"
+      "globalThis.x = f();";
+
+  JS::SourceText<mozilla::Utf8Unit> srcBuf;
+  CHECK(srcBuf.init(cx, chars, strlen(chars), JS::SourceOwnership::Borrowed));
+
+  js::Monitor monitor(js::mutexid::ShellOffThreadState);
+  JS::CompileOptions options(cx);
+  JS::OffThreadToken* token;
+
+  // Force off-thread even though if this is a small file.
+  options.forceAsync = true;
+
+  CHECK(token = JS::CompileOffThreadModule(cx, options, srcBuf, callback,
+                                           &monitor));
+
+  {
+    // Finish any active GC in case it is blocking off-thread work.
+    js::gc::FinishGC(cx);
+
+    js::AutoLockMonitor lock(monitor);
+    lock.wait();
+  }
+
+  RefPtr<JS::Stencil> stencil = JS::FinishOffThreadStencil(cx, token);
+  CHECK(stencil);
+
+  JS::RootedObject moduleObject(
+      cx, JS::InstantiateModuleStencil(cx, options, stencil));
+  CHECK(moduleObject);
+
+  JS::RootedValue rval(cx);
+  CHECK(JS::ModuleInstantiate(cx, moduleObject));
+  CHECK(JS::ModuleEvaluate(cx, moduleObject, &rval));
+  CHECK(rval.isUndefined());
+
+  CHECK(JS_GetProperty(cx, global, "x", &rval));
+  CHECK(rval.isNumber() && rval.toNumber() == 42);
+
+  return true;
+}
+
+static void callback(JS::OffThreadToken* token, void* context) {
+  js::Monitor& monitor = *static_cast<js::Monitor*>(context);
+
+  js::AutoLockMonitor lock(monitor);
+  lock.notify();
+}
+
+END_TEST(testStencil_OffThreadModule)
