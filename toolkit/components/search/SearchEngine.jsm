@@ -1349,6 +1349,13 @@ class SearchEngine {
     return !!(this._extensionID && this._isAppProvided);
   }
 
+  get isGeneralPurposeEngine() {
+    return !!(
+      this._extensionID &&
+      SearchUtils.GENERAL_SEARCH_ENGINE_IDS.has(this._extensionID)
+    );
+  }
+
   get _hasUpdates() {
     return false;
   }
