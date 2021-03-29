@@ -11,6 +11,7 @@
 
 #include "js/CompilationAndEvaluation.h"
 #include "js/experimental/JSStencil.h"
+#include "js/Modules.h"
 #include "js/Transcoding.h"
 #include "jsapi-tests/tests.h"
 
@@ -53,6 +54,52 @@ bool basic_test(const CharT* chars) {
   return true;
 }
 END_TEST(testStencil_Basic)
+
+BEGIN_TEST(testStencil_Module) {
+  const char* chars =
+      "export function f() { return 42; }"
+      "globalThis.x = f();";
+  auto result = basic_test<char, mozilla::Utf8Unit>(chars);
+  CHECK(result);
+
+  const char16_t* chars16 =
+      u"export function f() { return 42; }"
+      u"globalThis.x = f();";
+  auto result16 = basic_test<char16_t, char16_t>(chars16);
+  CHECK(result16);
+
+  return true;
+}
+
+template <typename CharT, typename SourceT>
+bool basic_test(const CharT* chars) {
+  size_t length = std::char_traits<CharT>::length(chars);
+
+  JS::SourceText<SourceT> srcBuf;
+  CHECK(srcBuf.init(cx, chars, length, JS::SourceOwnership::Borrowed));
+
+  JS::CompileOptions options(cx);
+  RefPtr<JS::Stencil> stencil =
+      JS::CompileModuleScriptToStencil(cx, options, srcBuf);
+  CHECK(stencil);
+
+  JS::RootedObject moduleObject(
+      cx, JS::InstantiateModuleStencil(cx, options, stencil));
+  CHECK(moduleObject);
+
+  // Link and evaluate the module graph. The link step used to be call
+  // "instantiate" but is unrelated to the concept in Stencil with same name.
+  JS::RootedValue rval(cx);
+  CHECK(JS::ModuleInstantiate(cx, moduleObject));
+  CHECK(JS::ModuleEvaluate(cx, moduleObject, &rval));
+  CHECK(rval.isUndefined());
+
+  CHECK(JS_GetProperty(cx, global, "x", &rval));
+  CHECK(rval.isNumber() && rval.toNumber() == 42);
+
+  return true;
+}
+END_TEST(testStencil_Module)
 
 BEGIN_TEST(testStencil_NonSyntactic) {
   const char* chars =

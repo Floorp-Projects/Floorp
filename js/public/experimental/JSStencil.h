@@ -56,8 +56,25 @@ extern JS_PUBLIC_API already_AddRefed<Stencil> CompileGlobalScriptToStencil(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     SourceText<char16_t>& srcBuf);
 
+// Compile the source text into a JS::Stencil using "module" parse goal. The
+// ECMAScript spec defines special semantics so we use a seperate entry point
+// here for clarity. The result is still a JS::Stencil, but should use the
+// appropriate instantiate API below.
+extern JS_PUBLIC_API already_AddRefed<Stencil> CompileModuleScriptToStencil(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<mozilla::Utf8Unit>& srcBuf);
+extern JS_PUBLIC_API already_AddRefed<Stencil> CompileModuleScriptToStencil(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    SourceText<char16_t>& srcBuf);
+
 // Instantiate the Stencil into current Realm and return the JSScript.
 extern JS_PUBLIC_API JSScript* InstantiateGlobalStencil(
+    JSContext* cx, const ReadOnlyCompileOptions& options,
+    RefPtr<Stencil> stencil);
+
+// Instantiate a module Stencil and return the associated object. Inside the
+// engine this is a js::ModuleObject.
+extern JS_PUBLIC_API JSObject* InstantiateModuleStencil(
     JSContext* cx, const ReadOnlyCompileOptions& options,
     RefPtr<Stencil> stencil);
 
