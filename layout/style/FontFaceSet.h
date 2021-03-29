@@ -99,7 +99,7 @@ class FontFaceSet final : public DOMEventTargetHelper,
         uint32_t aLanguageOverride, gfxCharacterMap* aUnicodeRanges,
         StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags,
         float aAscentOverride, float aDescentOverride,
-        float aLineGapOverride) override;
+        float aLineGapOverride, float aSizeAdjust) override;
 
    private:
     RefPtr<FontFaceSet> mFontFaceSet;
