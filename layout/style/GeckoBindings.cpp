@@ -715,6 +715,9 @@ static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
 
     case ColorID::Field:
     case ColorID::Fieldtext:
+
+    case ColorID::Graytext:
+
       return !PreferenceSheet::PrefsFor(aDoc)
                   .NonNativeThemeShouldUseSystemColors();
 
