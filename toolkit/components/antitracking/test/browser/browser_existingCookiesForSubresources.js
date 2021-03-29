@@ -101,6 +101,10 @@ add_task(async function() {
         Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
       ],
       [
+        "network.cookie.cookieBehavior.pbmode",
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+      ],
+      [
         "privacy.restrict3rdpartystorage.userInteractionRequiredForHosts",
         "tracking.example.com,tracking.example.org",
       ],

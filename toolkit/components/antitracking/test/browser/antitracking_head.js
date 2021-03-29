@@ -484,12 +484,13 @@ this.AntiTracking = {
     await BrowserTestUtils.closeWindow(win);
   },
 
-  async _setupTest(win, cookieBehavior, extraPrefs) {
+  async _setupTest(win, cookieBehavior, runInPrivateWindow, extraPrefs) {
     await SpecialPowers.flushPrefEnv();
+
+    await setCookieBehaviorPref(cookieBehavior, runInPrivateWindow);
     await SpecialPowers.pushPrefEnv({
       set: [
         ["dom.storage_access.enabled", true],
-        ["network.cookie.cookieBehavior", cookieBehavior],
         ["privacy.trackingprotection.enabled", false],
         ["privacy.trackingprotection.pbmode.enabled", false],
         [
@@ -587,6 +588,7 @@ this.AntiTracking = {
       await AntiTracking._setupTest(
         win,
         options.cookieBehavior,
+        options.runInPrivateWindow,
         options.extraPrefs
       );
 
@@ -987,7 +989,12 @@ this.AntiTracking = {
         await TestUtils.topicObserved("browser-delayed-startup-finished");
       }
 
-      await AntiTracking._setupTest(win, cookieBehavior, extraPrefs);
+      await AntiTracking._setupTest(
+        win,
+        cookieBehavior,
+        runInPrivateWindow,
+        extraPrefs
+      );
 
       info("Creating a new tab");
       let tab = BrowserTestUtils.addTab(win.gBrowser, TEST_TOP_PAGE);
@@ -1103,7 +1110,12 @@ this.AntiTracking = {
         await TestUtils.topicObserved("browser-delayed-startup-finished");
       }
 
-      await AntiTracking._setupTest(win, cookieBehavior, extraPrefs);
+      await AntiTracking._setupTest(
+        win,
+        cookieBehavior,
+        runInPrivateWindow,
+        extraPrefs
+      );
 
       info("Creating a new tab");
       let tab = BrowserTestUtils.addTab(win.gBrowser, TEST_TOP_PAGE);

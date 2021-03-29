@@ -3,12 +3,18 @@
 AntiTracking.runTest(
   "localStorage with a tracker that is entitylisted via a pref",
   async _ => {
+    let effectiveCookieBehavior = SpecialPowers.isContentWindowPrivate(window)
+      ? SpecialPowers.Services.prefs.getIntPref(
+          "network.cookie.cookieBehavior.pbmode"
+        )
+      : SpecialPowers.Services.prefs.getIntPref(
+          "network.cookie.cookieBehavior"
+        );
+
     let shouldThrow = [
       SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT,
       SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
-    ].includes(
-      SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior")
-    );
+    ].includes(effectiveCookieBehavior);
 
     let hasThrown;
     try {
@@ -41,12 +47,18 @@ AntiTracking.runTest(
 AntiTracking.runTest(
   "localStorage with a tracker that is entitylisted via a fancy pref",
   async _ => {
+    let effectiveCookieBehavior = SpecialPowers.isContentWindowPrivate(window)
+      ? SpecialPowers.Services.prefs.getIntPref(
+          "network.cookie.cookieBehavior.pbmode"
+        )
+      : SpecialPowers.Services.prefs.getIntPref(
+          "network.cookie.cookieBehavior"
+        );
+
     let shouldThrow = [
       SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT,
       SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
-    ].includes(
-      SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior")
-    );
+    ].includes(effectiveCookieBehavior);
 
     let hasThrown;
     try {

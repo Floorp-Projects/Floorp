@@ -4,6 +4,7 @@ add_task(async function() {
     set: [
       ["dom.storage_access.enabled", true],
       ["network.cookie.cookieBehavior", BEHAVIOR_REJECT],
+      ["network.cookie.cookieBehavior.pbmode", BEHAVIOR_REJECT],
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.pbmode.enabled", false],
       ["privacy.trackingprotection.annotate_channels", true],
