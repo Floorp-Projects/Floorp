@@ -178,7 +178,7 @@ class ProviderTabToSearch extends UrlbarProvider {
       },
       action: {
         l10n: {
-          id: UrlbarUtils.WEB_ENGINE_NAMES.has(result.payload.engine)
+          id: result.payload.isGeneralPurposeEngine
             ? "urlbar-result-action-tabtosearch-web"
             : "urlbar-result-action-tabtosearch-other-engine",
           args: {
@@ -470,6 +470,7 @@ function makeResult(context, engine, satisfiesAutofillThreshold = false) {
     UrlbarUtils.RESULT_SOURCE.SEARCH,
     ...UrlbarResult.payloadAndSimpleHighlights(context.tokens, {
       engine: engine.name,
+      isGeneralPurposeEngine: engine.isGeneralPurposeEngine,
       url,
       providesSearchMode: true,
       icon: UrlbarUtils.ICON.SEARCH_GLASS_INVERTED,

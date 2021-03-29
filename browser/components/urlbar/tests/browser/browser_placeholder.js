@@ -8,9 +8,6 @@
 
 "use strict";
 
-const TEST_ENGINE_BASENAME = "searchSuggestionEngine.xml";
-const TEST_PRIVATE_ENGINE_BASENAME = "searchSuggestionEngine2.xml";
-
 var originalEngine, extraEngine, extraPrivateEngine, expectedString;
 var tabs = [];
 
@@ -28,13 +25,22 @@ add_task(async function setup() {
     ])
   ).map(msg => msg.attributes[0].value);
 
-  let rootDir = getRootDirectory(gTestPath);
-  extraEngine = await SearchTestUtils.promiseNewSearchEngine(
-    rootDir + TEST_ENGINE_BASENAME
+  let rootUrl = getRootDirectory(gTestPath).replace(
+    "chrome://mochitests/content",
+    "https://mochi.test:8888/"
   );
-  extraPrivateEngine = await SearchTestUtils.promiseNewSearchEngine(
-    rootDir + TEST_PRIVATE_ENGINE_BASENAME
-  );
+  await SearchTestUtils.installSearchExtension({
+    name: "extraEngine",
+    search_url: "https://mochi.test:8888/",
+    suggest_url: `${rootUrl}/searchSuggestionEngine.sjs`,
+  });
+  extraEngine = Services.search.getEngineByName("extraEngine");
+  await SearchTestUtils.installSearchExtension({
+    name: "extraPrivateEngine",
+    search_url: "https://mochi.test:8888/",
+    suggest_url: `${rootUrl}/searchSuggestionEngine.sjs`,
+  });
+  extraPrivateEngine = Services.search.getEngineByName("extraPrivateEngine");
 
   // Force display of a tab with a URL bar, to clear out any possible placeholder
   // initialization listeners that happen on startup.
@@ -215,7 +221,9 @@ add_task(async function test_private_window_separate_engine() {
 add_task(async function test_search_mode_engine_web() {
   // Add our test engine to WEB_ENGINE_NAMES so that it's recognized as a web
   // engine.
-  UrlbarUtils.WEB_ENGINE_NAMES.add(extraEngine.name);
+  SearchUtils.GENERAL_SEARCH_ENGINE_IDS.add(
+    extraEngine.wrappedJSObject._extensionID
+  );
 
   await doSearchModeTest(
     {
@@ -228,7 +236,9 @@ add_task(async function test_search_mode_engine_web() {
     }
   );
 
-  UrlbarUtils.WEB_ENGINE_NAMES.delete(extraEngine.name);
+  SearchUtils.GENERAL_SEARCH_ENGINE_IDS.delete(
+    extraEngine.wrappedJSObject._extensionID
+  );
 });
 
 add_task(async function test_search_mode_engine_other() {

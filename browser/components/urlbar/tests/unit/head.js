@@ -622,6 +622,7 @@ function makeSearchResult(
     if (payload.url.startsWith("www.")) {
       payload.url = payload.url.substring(4);
     }
+    payload.isGeneralPurposeEngine = false;
   }
 
   let result = new UrlbarResult(
