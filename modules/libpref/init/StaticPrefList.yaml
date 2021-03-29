@@ -1014,7 +1014,7 @@
 # Whether focus rings are always shown by default.
 #
 # This is the initial value of nsWindowRoot::mShowFocusRings, but it can be
-# overridden by system preferences. 
+# overridden by system preferences.
 - name: browser.display.show_focus_rings
   type: bool
   value: false
@@ -1779,7 +1779,7 @@
 # Whether event timing will be gathered and returned by performance observer*
 - name: dom.enable_event_timing
   type: RelaxedAtomicBool
-  value: @IS_NIGHTLY_BUILD@
+  value: true
   mirror: always
 
 # Whether performance.GetEntries* will contain an entry for the active document
