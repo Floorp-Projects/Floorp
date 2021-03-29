@@ -34,6 +34,9 @@ import org.mozilla.focus.notification.PrivateNotificationMiddleware
 import org.mozilla.focus.search.BingSearchEngineFilter
 import org.mozilla.focus.search.CustomSearchEngineProvider
 import org.mozilla.focus.search.HiddenSearchEngineFilter
+import org.mozilla.focus.state.AppState
+import org.mozilla.focus.state.AppStore
+import org.mozilla.focus.state.Screen
 import org.mozilla.focus.telemetry.TelemetryMiddleware
 import org.mozilla.focus.utils.Settings
 
@@ -45,6 +48,12 @@ class Components(
     private val engineOverride: Engine? = null,
     private val clientOverride: Client? = null
 ) {
+    val appStore: AppStore by lazy {
+        AppStore(AppState(
+            screen = determineInitialScreen(context)
+        ))
+    }
+
     val engineDefaultSettings by lazy {
         val settings = Settings.getInstance(context)
 
@@ -121,5 +130,13 @@ class Components(
         val customProvider = CustomSearchEngineProvider()
 
         SearchEngineManager(listOf(assetsProvider, customProvider))
+    }
+}
+
+private fun determineInitialScreen(context: Context): Screen {
+    return if (Settings.getInstance(context).shouldShowFirstrun()) {
+        Screen.FirstRun
+    } else {
+        Screen.Home
     }
 }

@@ -80,7 +80,7 @@ import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
 import org.mozilla.focus.locale.LocaleAwareFragment
 import org.mozilla.focus.open.OpenWithFragment
 import org.mozilla.focus.popup.PopupUtils
-import org.mozilla.focus.session.ui.TabSheetFragment
+import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.CrashReporterWrapper
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.AppPermissionCodes.REQUEST_CODE_DOWNLOAD_PERMISSIONS
@@ -764,13 +764,20 @@ class BrowserFragment :
     override fun onClick(view: View) {
         when (view.id) {
             R.id.display_url -> if (!crashReporterIsVisible()) {
-                val urlFragment = UrlInputFragment
-                    .createWithTab(tab.id, urlView!!)
+                val urlView = urlView!!
 
-                requireActivity().supportFragmentManager
-                    .beginTransaction()
-                    .add(R.id.container, urlFragment, UrlInputFragment.FRAGMENT_TAG)
-                    .commit()
+                val screenLocation = IntArray(2)
+                urlView.getLocationOnScreen(screenLocation)
+
+                requireComponents.appStore.dispatch(
+                    AppAction.EditAction(
+                        tab.id,
+                        screenLocation[0],
+                        screenLocation[1],
+                        urlView.width,
+                        urlView.height
+                    )
+                )
             }
 
             R.id.erase -> {
@@ -780,10 +787,7 @@ class BrowserFragment :
             }
 
             R.id.tabs -> {
-                requireActivity().supportFragmentManager
-                    .beginTransaction()
-                    .add(R.id.container, TabSheetFragment(), TabSheetFragment.FRAGMENT_TAG)
-                    .commit()
+                requireComponents.appStore.dispatch(AppAction.ShowTabs)
 
                 TelemetryWrapper.openTabsTrayEvent()
             }

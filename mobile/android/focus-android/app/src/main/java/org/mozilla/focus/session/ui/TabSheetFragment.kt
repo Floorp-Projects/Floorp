@@ -7,22 +7,22 @@ package org.mozilla.focus.session.ui
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.os.Bundle
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewAnimationUtils
 import android.view.ViewGroup
 import android.view.animation.AccelerateInterpolator
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.lib.state.ext.flowScoped
-
 import org.mozilla.focus.R
-import org.mozilla.focus.activity.MainActivity
 import org.mozilla.focus.ext.components
+import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.locale.LocaleAwareFragment
+import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.OneShotOnPreDrawListener
 
@@ -113,8 +113,7 @@ class TabSheetFragment : LocaleAwareFragment(), View.OnClickListener {
 
         animator.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
-                val activity = activity as MainActivity?
-                activity?.supportFragmentManager?.beginTransaction()?.remove(this@TabSheetFragment)?.commit()
+                requireComponents.appStore.dispatch(AppAction.HideTabs)
             }
         })
 

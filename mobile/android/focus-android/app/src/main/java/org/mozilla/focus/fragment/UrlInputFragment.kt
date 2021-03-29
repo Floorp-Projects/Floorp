@@ -50,6 +50,7 @@ import org.mozilla.focus.locale.LocaleAwareFragment
 import org.mozilla.focus.menu.home.HomeMenu
 import org.mozilla.focus.searchsuggestions.SearchSuggestionsViewModel
 import org.mozilla.focus.searchsuggestions.ui.SearchSuggestionsFragment
+import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.tips.Tip
 import org.mozilla.focus.tips.TipManager
@@ -109,19 +110,22 @@ class UrlInputFragment :
         }
 
         @JvmStatic
-        fun createWithTab(tabId: String, urlView: View): UrlInputFragment {
+        fun createWithTab(
+            tabId: String,
+            x: Int,
+            y: Int,
+            width: Int,
+            height: Int
+        ): UrlInputFragment {
             val arguments = Bundle()
 
             arguments.putString(ARGUMENT_SESSION_UUID, tabId)
             arguments.putString(ARGUMENT_ANIMATION, ANIMATION_BROWSER_SCREEN)
 
-            val screenLocation = IntArray(2)
-            urlView.getLocationOnScreen(screenLocation)
-
-            arguments.putInt(ARGUMENT_X, screenLocation[0])
-            arguments.putInt(ARGUMENT_Y, screenLocation[1])
-            arguments.putInt(ARGUMENT_WIDTH, urlView.width)
-            arguments.putInt(ARGUMENT_HEIGHT, urlView.height)
+            arguments.putInt(ARGUMENT_X, x)
+            arguments.putInt(ARGUMENT_Y, y)
+            arguments.putInt(ARGUMENT_WIDTH, width)
+            arguments.putInt(ARGUMENT_HEIGHT, height)
 
             val fragment = UrlInputFragment()
             fragment.arguments = arguments
@@ -350,6 +354,7 @@ class UrlInputFragment :
 
     override fun applyLocale() {
         if (isOverlay) {
+            /*
             activity?.supportFragmentManager
                     ?.beginTransaction()
                     ?.replace(
@@ -357,6 +362,7 @@ class UrlInputFragment :
                         createWithTab(tab!!.id, urlView),
                         FRAGMENT_TAG)
                     ?.commit()
+             */
         } else {
             activity?.supportFragmentManager
                     ?.beginTransaction()
@@ -650,10 +656,8 @@ class UrlInputFragment :
         // IllegalStateException because we already saved the state (of the activity / fragment) before
         // this transaction is committed. To avoid this we commit while allowing a state loss here.
         // We do not save any state in this fragment (It's getting destroyed) so this should not be a problem.
-        activity?.supportFragmentManager
-            ?.beginTransaction()
-            ?.remove(this)
-            ?.commitAllowingStateLoss()
+
+        requireComponents.appStore.dispatch(AppAction.FinishEdit(tab!!.id))
     }
 
     private fun onCommit() {
@@ -748,14 +752,11 @@ class UrlInputFragment :
             }
         }
 
-        val fragmentManager = requireActivity().supportFragmentManager
-
+        val tab = tab
         if (tab != null) {
-            requireComponents.sessionUseCases.loadUrl(url, tab?.id)
+            requireComponents.sessionUseCases.loadUrl(url, tab.id)
 
-            fragmentManager.beginTransaction()
-                .remove(this)
-                .commit()
+            requireComponents.appStore.dispatch(AppAction.FinishEdit(tab.id))
         } else {
             val tabId = requireComponents.tabsUseCases.addPrivateTab(
                 url,

@@ -16,6 +16,7 @@ import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.ktx.android.content.isMainProcess
 import org.mozilla.focus.locale.LocaleAwareApplication
+import org.mozilla.focus.navigation.StoreLink
 import org.mozilla.focus.session.VisibilityLifeCycleCallback
 import org.mozilla.focus.telemetry.CrashReporterWrapper
 import org.mozilla.focus.telemetry.TelemetryWrapper
@@ -32,6 +33,8 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
 
     var visibilityLifeCycleCallback: VisibilityLifeCycleCallback? = null
         private set
+
+    private val storeLink by lazy { StoreLink(components.appStore, components.store) }
 
     override fun onCreate() {
         super.onCreate()
@@ -60,6 +63,8 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
             registerActivityLifecycleCallbacks(visibilityLifeCycleCallback)
 
             components.engine.warmUp()
+
+            storeLink.start()
         }
     }
 

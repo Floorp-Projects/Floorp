@@ -11,7 +11,6 @@ import android.util.AttributeSet
 import android.view.View
 import androidx.preference.PreferenceManager
 import mozilla.components.browser.state.selector.findCustomTab
-import mozilla.components.browser.state.selector.privateTabs
 import mozilla.components.browser.state.selector.selectedTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.EngineView
@@ -20,19 +19,18 @@ import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.CustomTabActivity.Companion.CUSTOM_TAB_ID
 import org.mozilla.focus.biometrics.Biometrics
-import org.mozilla.focus.browser.binding.NavigationBinding
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.fragment.BrowserFragment
-import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.fragment.UrlInputFragment
 import org.mozilla.focus.locale.LocaleAwareAppCompatActivity
+import org.mozilla.focus.navigation.MainActivityNavigation
+import org.mozilla.focus.navigation.Navigator
 import org.mozilla.focus.session.IntentProcessor
 import org.mozilla.focus.session.ui.TabSheetFragment
 import org.mozilla.focus.shortcut.HomeScreen
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
-import org.mozilla.focus.utils.ViewUtils
 
 @Suppress("TooManyFunctions")
 open class MainActivity : LocaleAwareAppCompatActivity() {
@@ -46,9 +44,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         IntentProcessor(this, components.tabsUseCases, components.customTabsUseCases)
     }
 
-    private var previousSessionCount = 0
-
-    private val navigation by lazy { NavigationBinding(components.store, activity = this) }
+    private val navigator by lazy { Navigator(components.appStore, MainActivityNavigation(this)) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -89,6 +85,8 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
                 .edit()
                 .putInt(getString(R.string.app_launch_count), launchCount + 1)
                 .apply()
+
+        lifecycle.addObserver(navigator)
     }
 
     override fun applyLocale() {
@@ -117,15 +115,7 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         TelemetryWrapper.stopSession()
     }
 
-    override fun onStart() {
-        super.onStart()
-
-        navigation.start()
-    }
-
     override fun onStop() {
-        navigation.stop()
-
         super.onStop()
 
         TelemetryWrapper.stopMainActivity()
@@ -180,77 +170,6 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         } else if (fromNotification) {
             TelemetryWrapper.eraseAndOpenNotificationActionEvent()
         }
-    }
-
-    internal fun showUrlInputScreen() {
-        val fragmentManager = supportFragmentManager
-        val browserFragment = fragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG) as BrowserFragment?
-
-        val isShowingBrowser = browserFragment != null
-        val crashReporterIsVisible = browserFragment?.crashReporterIsVisible() ?: false
-
-        if (isShowingBrowser && !crashReporterIsVisible) {
-            ViewUtils.showBrandedSnackbar(findViewById(android.R.id.content),
-                    R.string.feedback_erase,
-                    resources.getInteger(R.integer.erase_snackbar_delay))
-        }
-
-        // We add the url input fragment to the layout if it doesn't exist yet.
-        val transaction = fragmentManager
-                .beginTransaction()
-
-        // We only want to play the animation if a browser fragment is added and resumed.
-        // If it is not resumed then the application is currently in the process of resuming
-        // and the session was removed while the app was in the background (e.g. via the
-        // notification). In this case we do not want to show the content and remove the
-        // browser fragment immediately.
-        val shouldAnimate = isShowingBrowser && browserFragment!!.isResumed
-
-        if (shouldAnimate) {
-            transaction.setCustomAnimations(0, R.anim.erase_animation)
-        }
-
-        // Currently this callback can get invoked while the app is in the background. Therefore we are using
-        // commitAllowingStateLoss() here because we can't do a fragment transaction while the app is in the
-        // background - like we already do in showBrowserScreenForCurrentSession().
-        // Ideally we'd make it possible to pause observers while the app is in the background:
-        // https://github.com/mozilla-mobile/android-components/issues/876
-        transaction
-                .replace(R.id.container, UrlInputFragment.createWithoutSession(), UrlInputFragment.FRAGMENT_TAG)
-                .commitAllowingStateLoss()
-    }
-
-    internal fun showFirstrun(tabId: String? = null) {
-        supportFragmentManager
-                .beginTransaction()
-                .add(R.id.container, FirstrunFragment.create(tabId), FirstrunFragment.FRAGMENT_TAG)
-                .commit()
-    }
-
-    internal fun showBrowserScreenForCurrentSession() {
-        val fragmentManager = supportFragmentManager
-        val tab = currentTabForActivity ?: return
-
-        val fragment = fragmentManager.findFragmentByTag(BrowserFragment.FRAGMENT_TAG) as BrowserFragment?
-        if (fragment != null && fragment.tab.id == tab.id) {
-            // There's already a BrowserFragment displaying this session.
-            return
-        }
-
-        val browserFragment = BrowserFragment.createForTab(tab.id)
-        val isNewSession = previousSessionCount < components.store.state.privateTabs.size && previousSessionCount > 0
-
-        if ((tab.source == SessionState.Source.ACTION_SEND ||
-                tab.source == SessionState.Source.HOME_SCREEN) && isNewSession) {
-            browserFragment.openedFromExternalLink = true
-        }
-
-        fragmentManager
-                .beginTransaction()
-                .replace(R.id.container, browserFragment, BrowserFragment.FRAGMENT_TAG)
-            .commitAllowingStateLoss()
-
-        previousSessionCount = components.store.state.privateTabs.size
     }
 
     override fun onCreateView(name: String, context: Context, attrs: AttributeSet): View? {
@@ -309,7 +228,5 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
         const val EXTRA_NOTIFICATION = "notification"
 
         private const val EXTRA_SHORTCUT = "shortcut"
-
-        const val EXPERIMENTS_JOB_ID: Int = 4141
     }
 }

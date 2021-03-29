@@ -16,7 +16,9 @@ import androidx.preference.PreferenceManager
 import androidx.viewpager.widget.ViewPager
 import com.google.android.material.tabs.TabLayout
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.firstrun.FirstrunPagerAdapter
+import org.mozilla.focus.state.AppAction
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.StatusBarUtils
 
@@ -101,28 +103,13 @@ class FirstrunFragment : Fragment(), View.OnClickListener {
     }
 
     private fun finishFirstrun() {
-        val fragmentManager = requireActivity().supportFragmentManager
-
         PreferenceManager.getDefaultSharedPreferences(requireContext())
             .edit()
             .putBoolean(FIRSTRUN_PREF, true)
             .apply()
 
-        val sessionUUID = requireArguments().getString(ARGUMENT_SESSION_UUID)
-
-        val fragment: Fragment = if (sessionUUID == null) {
-            UrlInputFragment.createWithoutSession()
-        } else {
-            BrowserFragment.createForTab(sessionUUID)
-        }
-
-        val fragmentTag =
-            if (fragment is BrowserFragment) BrowserFragment.FRAGMENT_TAG else UrlInputFragment.FRAGMENT_TAG
-
-        fragmentManager
-            .beginTransaction()
-            .replace(R.id.container, fragment, fragmentTag)
-            .commit()
+        val selectedTabId = requireComponents.store.state.selectedTabId
+        requireComponents.appStore.dispatch(AppAction.FinishFirstRun(selectedTabId))
     }
 
     override fun onResume() {
@@ -141,11 +128,8 @@ class FirstrunFragment : Fragment(), View.OnClickListener {
         const val FRAGMENT_TAG = "firstrun"
         const val FIRSTRUN_PREF = "firstrun_shown"
 
-        private const val ARGUMENT_SESSION_UUID = "sessionUUID"
-
-        fun create(tabId: String?): FirstrunFragment {
+        fun create(): FirstrunFragment {
             val arguments = Bundle()
-            arguments.putString(ARGUMENT_SESSION_UUID, tabId)
 
             val fragment = FirstrunFragment()
             fragment.arguments = arguments
