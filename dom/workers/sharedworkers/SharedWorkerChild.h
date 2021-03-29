@@ -15,6 +15,10 @@ namespace dom {
 
 class SharedWorker;
 
+/**
+ * Held by SharedWorker bindings to remotely control sharedworker lifecycle and
+ * receive error and termination reports.
+ */
 class SharedWorkerChild final : public mozilla::dom::PSharedWorkerChild {
   friend class PSharedWorkerChild;
 

@@ -105,6 +105,18 @@ class RemoteWorkerObserver {
   virtual void Terminated() = 0;
 };
 
+/**
+ * PBackground instance created by static RemoteWorkerController::Create that
+ * builds on RemoteWorkerManager. Interface to control the remote worker as well
+ * as receive events via the RemoteWorkerObserver interface that the owner
+ * (SharedWorkerManager in this case) must implement to hear about errors,
+ * termination, and whether the initial spawning succeeded/failed.
+ *
+ * Its methods may be called immediately after creation even though the worker
+ * is created asynchronously; an internal operation queue makes this work.
+ * Communicates with the remote worker via owned RemoteWorkerParent over
+ * PRemoteWorker protocol.
+ */
 class RemoteWorkerController final {
   friend class RemoteWorkerControllerParent;
   friend class RemoteWorkerManager;

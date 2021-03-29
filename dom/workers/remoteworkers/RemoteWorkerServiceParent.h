@@ -15,6 +15,10 @@ namespace dom {
 
 class RemoteWorkerManager;
 
+/**
+ * PBackground parent actor that registers with the PBackground
+ * RemoteWorkerManager and used to relay spawn requests.
+ */
 class RemoteWorkerServiceParent final : public PRemoteWorkerServiceParent {
  public:
   RemoteWorkerServiceParent();

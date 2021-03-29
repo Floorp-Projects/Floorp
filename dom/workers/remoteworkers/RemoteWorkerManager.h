@@ -21,7 +21,14 @@ namespace dom {
 class RemoteWorkerController;
 class RemoteWorkerServiceParent;
 
-// This class is used on PBackground thread, on the parent process only.
+/**
+ * PBackground instance that keeps tracks of RemoteWorkerServiceParent actors
+ * (1 per process, including the main process) and pending
+ * RemoteWorkerController requests to spawn remote workers if the spawn request
+ * can't be immediately fulfilled. Decides which RemoteWorkerServerParent to use
+ * internally via SelectTargetActor in order to select a BackgroundParent
+ * manager on which to create a RemoteWorkerParent.
+ */
 class RemoteWorkerManager final {
  public:
   NS_INLINE_DECL_REFCOUNTING(RemoteWorkerManager)
