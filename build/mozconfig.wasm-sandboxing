@@ -4,6 +4,6 @@ base-toolchains*)
     # Clang versions < 8.0 don't support wasm.
     ;;
 *)
-    export WASM_SANDBOXED_LIBRARIES=graphite,ogg
+    export WASM_SANDBOXED_LIBRARIES=graphite,ogg,hunspell
     ;;
 esac
