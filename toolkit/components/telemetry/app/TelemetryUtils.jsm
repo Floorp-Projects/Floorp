@@ -82,11 +82,6 @@ var TelemetryUtils = {
     EventPingMinimumFrequency: "toolkit.telemetry.eventping.minimumFrequency",
     EventPingMaximumFrequency: "toolkit.telemetry.eventping.maximumFrequency",
 
-    // Ecosystem Telemetry Preferences
-    EcosystemTelemetryEnabled: "toolkit.telemetry.ecosystemtelemetry.enabled",
-    EcosystemTelemetryAllowForNonProductionFxA:
-      "toolkit.telemetry.ecosystemtelemetry.allowForNonProductionFxA",
-
     // Prio Ping Preferences
     PrioPingEnabled: "toolkit.telemetry.prioping.enabled",
     PrioPingDataLimit: "toolkit.telemetry.prioping.dataLimit",

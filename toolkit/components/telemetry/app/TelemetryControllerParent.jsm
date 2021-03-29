@@ -78,7 +78,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   UpdatePing: "resource://gre/modules/UpdatePing.jsm",
   TelemetryHealthPing: "resource://gre/modules/HealthPing.jsm",
   TelemetryEventPing: "resource://gre/modules/EventPing.jsm",
-  EcosystemTelemetry: "resource://gre/modules/EcosystemTelemetry.jsm",
   TelemetryPrioPing: "resource://gre/modules/PrioPing.jsm",
   UninstallPing: "resource://gre/modules/UninstallPing.jsm",
   OS: "resource://gre/modules/osfile.jsm",
@@ -850,13 +849,13 @@ var Impl = {
             this._log.trace(
               "Upload enabled, but got canary client ID. Resetting."
             );
-            await ClientID.removeClientIDs();
+            await ClientID.removeClientID();
             this._clientID = await ClientID.getClientID();
           } else if (!uploadEnabled && this._clientID != Utils.knownClientID) {
             this._log.trace(
               "Upload disabled, but got a valid client ID. Setting canary client ID."
             );
-            await ClientID.setCanaryClientIDs();
+            await ClientID.setCanaryClientID();
             this._clientID = await ClientID.getClientID();
           }
 
@@ -904,7 +903,6 @@ var Impl = {
           }
 
           TelemetryEventPing.startup();
-          EcosystemTelemetry.startup();
           TelemetryPrioPing.startup();
 
           if (uploadEnabled) {
@@ -962,8 +960,6 @@ var Impl = {
 
       this._shutdownStep = "Event" + now();
       TelemetryEventPing.shutdown();
-      this._shutdownStep = "Ecosystem" + now();
-      EcosystemTelemetry.shutdown();
       this._shutdownStep = "Prio" + now();
       await TelemetryPrioPing.shutdown();
 
@@ -1118,7 +1114,7 @@ var Impl = {
 
       // Generate a new client ID and make sure this module uses the new version
       let p = (async () => {
-        await ClientID.removeClientIDs();
+        await ClientID.removeClientID();
         let id = await ClientID.getClientID();
         this._clientID = id;
         Telemetry.scalarSet("telemetry.data_upload_optin", true);
@@ -1164,7 +1160,7 @@ var Impl = {
 
         // 6. Set ClientID to a known value
         let oldClientId = await ClientID.getClientID();
-        await ClientID.setCanaryClientIDs();
+        await ClientID.setCanaryClientID();
         this._clientID = await ClientID.getClientID();
 
         // 7. Send the deletion-request ping.

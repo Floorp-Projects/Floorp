@@ -12,7 +12,6 @@ pref("toolkit.telemetry.firstShutdownPing.enabled", false);
 pref("toolkit.telemetry.healthping.enabled", false);
 pref("toolkit.telemetry.newProfilePing.enabled", false);
 pref("toolkit.telemetry.eventping.enabled", false);
-pref("toolkit.telemetry.ecosystemtelemetry.enabled", false);
 pref("toolkit.telemetry.prioping.enabled", false);
 pref("datareporting.policy.dataSubmissionEnabled", false);
 pref("datareporting.healthreport.uploadEnabled", false);

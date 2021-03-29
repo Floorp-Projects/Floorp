@@ -612,7 +612,6 @@ module.exports = {
         "toolkit/components/passwordmgr/test/unit/test_getUserNameAndPasswordFields.js",
         "toolkit/components/processsingleton/MainProcessSingleton.jsm",
         "toolkit/components/telemetry/tests/unit/head.js",
-        "toolkit/components/telemetry/tests/unit/test_EcosystemTelemetry.js",
         "toolkit/components/telemetry/tests/unit/test_EventPing.js",
         "toolkit/components/telemetry/tests/unit/test_HealthPing.js",
         "toolkit/components/telemetry/tests/unit/test_PingAPI.js",
