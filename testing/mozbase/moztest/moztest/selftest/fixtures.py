@@ -30,7 +30,7 @@ environment variable is required.
 """.lstrip()
 
 
-def _get_test_harness(suite, install_dir):
+def _get_test_harness(suite, install_dir, flavor="plain"):
     # Check if there is a local build
     if build:
         harness_root = os.path.join(build.topobjdir, "_tests", install_dir)
@@ -47,7 +47,7 @@ def _get_test_harness(suite, install_dir):
 
 
 @pytest.fixture(scope="session")
-def setup_test_harness(request):
+def setup_test_harness(request, flavor="plain"):
     """Fixture for setting up a mozharness-based test harness like
     mochitest or reftest"""
 
@@ -60,11 +60,17 @@ def setup_test_harness(request):
             # picked up. Fallback to copy on Windows.
             if files_dir:
                 test_root = os.path.join(harness_root, "tests", "selftests")
+                if kwargs.get("flavor") == "browser-chrome":
+                    test_root = os.path.join(
+                        harness_root, "browser", "tests", "selftests"
+                    )
                 if not os.path.exists(test_root):
                     if os.path.lexists(test_root):
                         os.remove(test_root)
 
                     if hasattr(os, "symlink"):
+                        if not os.path.isdir(os.path.dirname(test_root)):
+                            os.makedirs(os.path.dirname(test_root))
                         os.symlink(files_dir, test_root)
                     else:
                         shutil.copytree(files_dir, test_root)

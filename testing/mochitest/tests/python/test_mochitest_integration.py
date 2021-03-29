@@ -19,8 +19,22 @@ here = os.path.abspath(os.path.dirname(__file__))
 get_mozharness_status = partial(get_mozharness_status, "mochitest")
 
 
-def test_output_pass(runtests):
-    status, lines = runtests("test_pass.html")
+@pytest.fixture
+def test_name(request):
+    flavor = request.getfixturevalue("flavor")
+
+    def inner(name):
+        if flavor == "plain":
+            return f"test_{name}.html"
+        elif flavor == "browser-chrome":
+            return f"browser_{name}.js"
+
+    return inner
+
+
+@pytest.mark.parametrize("flavor", ["plain", "browser-chrome"])
+def test_output_pass(flavor, runtests, test_name):
+    status, lines = runtests(test_name("pass"))
     assert status == 0
 
     tbpl_status, log_level, summary = get_mozharness_status(lines, status)
@@ -32,8 +46,9 @@ def test_output_pass(runtests):
     assert lines[0]["status"] == "PASS"
 
 
-def test_output_fail(runtests):
-    status, lines = runtests("test_fail.html")
+@pytest.mark.parametrize("flavor", ["plain", "browser-chrome"])
+def test_output_fail(flavor, runtests, test_name):
+    status, lines = runtests(test_name("fail"))
     assert status == 1
 
     tbpl_status, log_level, summary = get_mozharness_status(lines, status)
@@ -47,9 +62,10 @@ def test_output_fail(runtests):
 
 
 @pytest.mark.skip_mozinfo("!crashreporter")
-def test_output_crash(runtests):
+@pytest.mark.parametrize("flavor", ["plain", "browser-chrome"])
+def test_output_crash(flavor, runtests, test_name):
     status, lines = runtests(
-        "test_crash.html", environment=["MOZ_CRASHREPORTER_SHUTDOWN=1"]
+        test_name("crash"), environment=["MOZ_CRASHREPORTER_SHUTDOWN=1"]
     )
     assert status == 1
 
@@ -68,9 +84,10 @@ def test_output_crash(runtests):
 
 
 @pytest.mark.skip_mozinfo("!asan")
-def test_output_asan(runtests):
+@pytest.mark.parametrize("flavor", ["plain"])
+def test_output_asan(flavor, runtests, test_name):
     status, lines = runtests(
-        "test_crash.html", environment=["MOZ_CRASHREPORTER_SHUTDOWN=1"]
+        test_name("crash"), environment=["MOZ_CRASHREPORTER_SHUTDOWN=1"]
     )
     assert status == 1
 
@@ -86,8 +103,9 @@ def test_output_asan(runtests):
 
 
 @pytest.mark.skip_mozinfo("!debug")
-def test_output_assertion(runtests):
-    status, lines = runtests("test_assertion.html")
+@pytest.mark.parametrize("flavor", ["plain"])
+def test_output_assertion(flavor, runtests, test_name):
+    status, lines = runtests(test_name("assertion"))
     # TODO: mochitest should return non-zero here
     assert status == 0
 
@@ -107,8 +125,9 @@ def test_output_assertion(runtests):
 
 
 @pytest.mark.skip_mozinfo("!debug")
-def test_output_leak(runtests):
-    status, lines = runtests("test_leak.html")
+@pytest.mark.parametrize("flavor", ["plain"])
+def test_output_leak(flavor, runtests, test_name):
+    status, lines = runtests(test_name("leak"))
     # TODO: mochitest should return non-zero here
     assert status == 0
 
