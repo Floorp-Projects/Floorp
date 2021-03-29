@@ -94,6 +94,9 @@ struct nsExpirationState {
  * For creating a thread-safe tracker, you can define a subclass inheriting this
  * base class and specialize the Mutex and AutoLock to be used.
  *
+ * For an example of using ExpirationTrackerImpl with a DataMutex
+ * @see mozilla::gfx::GradientCache.
+ *
  */
 template <typename T, uint32_t K, typename Mutex, typename AutoLock>
 class ExpirationTrackerImpl {
