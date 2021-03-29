@@ -131,9 +131,7 @@ module.exports = {
     {
       ...removeOverrides(mochitestTestConfig),
       files: mochitestTestPaths.map(path => `${path}**`),
-      excludedFiles: [
-        "security/manager/ssl/tests/mochitest/browser/**",
-      ],
+      excludedFiles: ["security/manager/ssl/tests/mochitest/browser/**"],
     },
     {
       ...removeOverrides(chromeTestConfig),
