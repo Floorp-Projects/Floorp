@@ -8,7 +8,7 @@
 # disabled and not supposed to collect any data.
 ---
 
-$schema: moz://mozilla.org/schemas/glean/metrics/1-0-0
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
 
 test.glean.geckoview:
   streaming:
