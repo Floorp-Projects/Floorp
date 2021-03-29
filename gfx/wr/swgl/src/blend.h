@@ -405,7 +405,7 @@ static ALWAYS_INLINE void restore_aa() {
   blend_key = BlendKey(AA_BLEND_KEY_NONE + blend_key);
 }
 
-static ALWAYS_INLINE WideRGBA8 blend_pixels(uint32_t* buf, PackedRGBA8 pdst,
+static PREFER_INLINE WideRGBA8 blend_pixels(uint32_t* buf, PackedRGBA8 pdst,
                                             WideRGBA8 src, int span = 4) {
   WideRGBA8 dst = unpack(pdst);
   const WideRGBA8 RGB_MASK = {0xFFFF, 0xFFFF, 0xFFFF, 0,      0xFFFF, 0xFFFF,
@@ -686,7 +686,7 @@ static ALWAYS_INLINE WideRGBA8 blend_pixels(uint32_t* buf, PackedRGBA8 pdst,
   // clang-format on
 }
 
-static ALWAYS_INLINE WideR8 blend_pixels(uint8_t* buf, WideR8 dst, WideR8 src,
+static PREFER_INLINE WideR8 blend_pixels(uint8_t* buf, WideR8 dst, WideR8 src,
                                          int span = 4) {
 // clang-format off
 #define BLEND_CASE_KEY(key)                          \
