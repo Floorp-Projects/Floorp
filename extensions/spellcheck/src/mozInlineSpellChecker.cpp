@@ -488,7 +488,8 @@ class mozInlineSpellResume : public Runnable {
   NS_IMETHOD Run() override {
     // Discard the resumption if the spell checker was disabled after the
     // resumption was scheduled.
-    if (mDisabledAsyncToken == mStatus->mSpellChecker->mDisabledAsyncToken) {
+    if (mDisabledAsyncToken ==
+        mStatus->mSpellChecker->GetDisabledAsyncToken()) {
       mStatus->mSpellChecker->ResumeCheck(std::move(mStatus));
     }
     return NS_OK;
@@ -1481,7 +1482,7 @@ void mozInlineSpellChecker::CheckCurrentWordsNoSuggest(
       GetMainThreadSerialEventTarget(), __func__,
       [self, spellCheckerSelection, ranges = std::move(aRanges),
        token](const nsTArray<bool>& aIsMisspelled) {
-        if (token != self->mDisabledAsyncToken) {
+        if (token != self->GetDisabledAsyncToken()) {
           // This result is never used
           return;
         }
@@ -1515,7 +1516,7 @@ void mozInlineSpellChecker::CheckCurrentWordsNoSuggest(
           return;
         }
 
-        if (token != self->mDisabledAsyncToken) {
+        if (token != self->GetDisabledAsyncToken()) {
           // This result is never used
           return;
         }
@@ -1848,7 +1849,7 @@ class UpdateCurrentDictionaryCallback final
   NS_IMETHOD EditorSpellCheckDone() override {
     // Ignore this callback if SetEnableRealTimeSpell(false) was called after
     // the UpdateCurrentDictionary call that triggered it.
-    return mSpellChecker->mDisabledAsyncToken > mDisabledAsyncToken
+    return mSpellChecker->GetDisabledAsyncToken() > mDisabledAsyncToken
                ? NS_OK
                : mSpellChecker->CurrentDictionaryUpdated();
   }
