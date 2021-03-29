@@ -671,13 +671,13 @@ const PanelUI = {
       this.menuButton.open = true;
       document.l10n.setAttributes(
         this.menuButton,
-        "appmenu-menu-button-opened"
+        "appmenu-menu-button-opened2"
       );
     } else {
       this.menuButton.open = false;
       document.l10n.setAttributes(
         this.menuButton,
-        "appmenu-menu-button-closed"
+        "appmenu-menu-button-closed2"
       );
     }
   },
