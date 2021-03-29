@@ -99,7 +99,6 @@ SyncedTabsDeckComponent.prototype = {
 
     // Add app locale change support for HTML sidebar
     Services.obs.addObserver(this, "intl:app-locales-changed");
-    Services.prefs.addObserver("intl.uidirection", this);
     Services.prefs.addObserver("intl.l10n.pseudo", this);
     this.updateDir();
 
@@ -125,7 +124,6 @@ SyncedTabsDeckComponent.prototype = {
     Services.obs.removeObserver(this, this._SyncedTabs.TOPIC_TABS_CHANGED);
     Services.obs.removeObserver(this, UIState.ON_UPDATE);
     Services.obs.removeObserver(this, "intl:app-locales-changed");
-    Services.prefs.removeObserver("intl.uidirection", this);
     Services.prefs.removeObserver("intl.l10n.pseudo", this);
     this._deckView.destroy();
   },
@@ -143,7 +141,7 @@ SyncedTabsDeckComponent.prototype = {
         this.updateDir();
         break;
       case "nsPref:changed":
-        if (data == "intl.uidirection" || data == "intl.l10n.pseudo") {
+        if (data == "intl.l10n.pseudo") {
           this.updateDir();
         }
         break;
