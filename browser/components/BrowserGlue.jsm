@@ -3730,11 +3730,12 @@ BrowserGlue.prototype = {
       // Migrate old ctrlTab pref to new ctrlTab pref
       let defaultValue = false;
       let oldPrefName = "browser.ctrlTab.recentlyUsedOrder";
+      let oldPrefDefault = true;
       // Use old pref value if the user used Ctrl+Tab before, elsewise use new default value
       if (Services.prefs.getBoolPref("browser.engagement.ctrlTab.has-used")) {
         let newPrefValue = Services.prefs.getBoolPref(
           oldPrefName,
-          defaultValue
+          oldPrefDefault
         );
         Services.prefs.setBoolPref(
           "browser.ctrlTab.sortByRecentlyUsed",
