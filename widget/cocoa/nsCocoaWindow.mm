@@ -3542,11 +3542,7 @@ typedef NS_ENUM(NSInteger, NSTitlebarSeparatorStyle) {
                                     context:nil];
     // Adding this accessory view controller allows us to shift the toolbar down
     // when the user mouses to the top of the screen in fullscreen.
-    // TODO bug 1700211: Remove this if statement.
-    if (!nsCocoaFeatures::OnBigSurOrLater() ||
-        Preferences::GetBool("full-screen-api.macos.shiftToolbar", false)) {
-      [(NSWindow*)self addTitlebarAccessoryViewController:mFullscreenTitlebarTracker];
-    }
+    [(NSWindow*)self addTitlebarAccessoryViewController:mFullscreenTitlebarTracker];
   }
   return self;
 
