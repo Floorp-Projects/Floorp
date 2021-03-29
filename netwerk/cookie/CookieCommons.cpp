@@ -457,7 +457,7 @@ already_AddRefed<nsICookieJarSettings> CookieCommons::GetCookieJarSettings(
       cookieJarSettings = CookieJarSettings::GetBlockingAll();
     }
   } else {
-    cookieJarSettings = CookieJarSettings::Create();
+    cookieJarSettings = CookieJarSettings::Create(CookieJarSettings::eRegular);
   }
 
   MOZ_ASSERT(cookieJarSettings);
