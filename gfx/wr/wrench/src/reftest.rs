@@ -497,7 +497,7 @@ impl ReftestManifest {
             let op = match op {
                 Some(op) => op,
                 None => {
-                    assert!(paths.is_empty(), format!("paths = {:?}", paths));
+                    assert!(paths.is_empty(), "paths = {:?}", paths);
                     continue;
                 }
             };
@@ -970,7 +970,7 @@ impl<'a> ReftestHarness<'a> {
         assert!(
             size.width <= window_size.width &&
             size.height <= window_size.height,
-            format!("size={:?} ws={:?}", size, window_size)
+            "size={:?} ws={:?}", size, window_size
         );
 
         // taking the bottom left sub-rectangle
