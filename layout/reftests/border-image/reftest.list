@@ -73,7 +73,7 @@ fuzzy(0-1,0-19200) fails-if(OSX) fuzzy-if(skiaContent,0-3,0-20000) fuzzy-if(webr
 fuzzy(0-1,0-912) fuzzy-if(webrender,0-3,0-3008) == border-image-repeating-radial-gradient.html border-image-repeating-radial-gradient-ref.html
 fuzzy(0-1,0-1720) fuzzy-if(skiaContent,0-3,0-1044) fuzzy-if(webrender,0-3,0-62078) == border-image-repeating-radial-gradient-slice-1.html border-image-repeating-radial-gradient-slice-1-ref.html
 fuzzy(0-1,0-2119) fuzzy-if(skiaContent,0-3,0-936) fuzzy-if(webrender,0-3,0-40536) == border-image-repeating-radial-gradient-slice-2.html border-image-repeating-radial-gradient-slice-2-ref.html
-fuzzy(0-1,0-3170) fuzzy-if(skiaContent,0-3,0-1794) fuzzy-if(webrender&&!geckoview,1-3,30-12193) == border-image-repeating-radial-gradient-slice-fill-1.html border-image-repeating-radial-gradient-slice-fill-1-ref.html
+fuzzy(0-1,0-3170) fuzzy-if(skiaContent,0-3,0-1794) fuzzy-if(webrender&&!geckoview,1-3,30-12194) == border-image-repeating-radial-gradient-slice-fill-1.html border-image-repeating-radial-gradient-slice-fill-1-ref.html
 fuzzy(0-1,0-3281) fails-if(OSX) fuzzy-if(skiaContent,0-3,0-1435) fuzzy-if(webrender&&!geckoview,1-2,20-8000) == border-image-repeating-radial-gradient-slice-fill-2.html border-image-repeating-radial-gradient-slice-fill-2-ref.html
 fuzzy(0-1,0-1328) fuzzy-if(webrender,0-3,0-7441) == border-image-repeating-radial-gradient-width.html border-image-repeating-radial-gradient-width-ref.html
 fuzzy(0-4,0-21628) fails-if(OSX) fuzzy-if(webrender,0-8,0-99728) == border-image-repeating-radial-gradient-slice-width.html border-image-repeating-radial-gradient-slice-width-ref.html
