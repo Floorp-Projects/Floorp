@@ -236,6 +236,10 @@ ALL_PROCESSES += [
 
     # Old version of Panda Security, bug 1637984
     DllBlocklistEntry("PavLspHook64.dll", (9, 2, 2, 1), BLOCK_WIN7_AND_OLDER),
+
+    # Webroot SecureAnywhere causes crashes, bug 1700281
+    DllBlocklistEntry("WRDll.x64.dll", (1, 1, 0, 227)),
+    DllBlocklistEntry("WRDll.x86.dll", (1, 1, 0, 227)),
 ]
 
 ALL_PROCESSES_TESTS += [
