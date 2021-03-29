@@ -272,8 +272,7 @@ class NPZCSupport final
 
     // Use vsync for touch resampling on API level 19 and above.
     // See gfxAndroidPlatform::CreateHardwareVsyncSource() for comparison.
-    if (AndroidBridge::Bridge() &&
-        AndroidBridge::Bridge()->GetAPIVersion() >= 19) {
+    if (jni::GetAPIVersion() >= 19) {
       mAndroidVsync = AndroidVsync::GetInstance();
     }
   }
