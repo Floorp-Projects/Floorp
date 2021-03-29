@@ -16980,7 +16980,7 @@ nsICookieJarSettings* Document::CookieJarSettings() {
                       ->GetIsFirstPartyIsolated(),
                   inProcessParent->CookieJarSettings()
                       ->GetIsOnContentBlockingAllowList())
-            : net::CookieJarSettings::Create();
+            : net::CookieJarSettings::Create(NodePrincipal());
 
     if (auto* wgc = GetWindowGlobalChild()) {
       net::CookieJarSettingsArgs csArgs;
