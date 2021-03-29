@@ -27,6 +27,11 @@ class SharedWorkerManager;
 class SharedWorkerParent;
 class UniqueMessagePortId;
 
+/**
+ * PBackground service that creates and tracks the per-worker
+ * SharedWorkerManager instances, allowing rendezvous between SharedWorkerParent
+ * instances and the SharedWorkerManagers they want to talk to (1:1).
+ */
 class SharedWorkerService final {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedWorkerService);

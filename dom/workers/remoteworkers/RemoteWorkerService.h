@@ -17,6 +17,20 @@ namespace dom {
 
 class RemoteWorkerServiceChild;
 
+/**
+ * Every process has a RemoteWorkerService which does the actual spawning of
+ * RemoteWorkerChild instances. The RemoteWorkerService creates a "Worker
+ * Launcher" thread at initialization on which it creates a
+ * RemoteWorkerServiceChild to service spawn requests. The thread is exposed as
+ * RemoteWorkerService::Thread(). A new/distinct thread is used because we
+ * (eventually) don't want to deal with main-thread contention, content
+ * processes have no equivalent of a PBackground thread, and actors are bound to
+ * specific threads.
+ *
+ * (Disclaimer: currently most RemoteWorkerOps need to happen on the main thread
+ * because the main-thread ends up as the owner of the worker and all
+ * manipulation of the worker must happen from the owning thread.)
+ */
 class RemoteWorkerService final : public nsIObserver {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS

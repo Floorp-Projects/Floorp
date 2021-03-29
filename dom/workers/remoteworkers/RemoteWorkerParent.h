@@ -14,6 +14,11 @@ namespace dom {
 
 class RemoteWorkerController;
 
+/**
+ * PBackground-managed parent actor that is mutually associated with a single
+ * RemoteWorkerController.  Relays error/close events to the controller and in
+ * turns is told life-cycle events.
+ */
 class RemoteWorkerParent final : public PRemoteWorkerParent {
   friend class PRemoteWorkerParent;
 
