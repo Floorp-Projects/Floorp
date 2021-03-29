@@ -65,6 +65,7 @@ class AnimationPlayerFront extends FrontClassWithSpec(animationPlayerSpec) {
       createdTime: this._form.createdTime,
       currentTimeAtCreated: this._form.currentTimeAtCreated,
       absoluteValues: this.calculateAbsoluteValues(this._form),
+      properties: this._form.properties,
     };
   }
 
