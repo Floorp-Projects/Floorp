@@ -9,11 +9,6 @@
   --default-arrowpanel-background: #fff;
   --default-arrowpanel-color: hsl(0,0%,10%);
   --default-arrowpanel-border-color: hsla(210,4%,10%,.05);
-  --arrowpanel-background: var(--default-arrowpanel-background);
-  --arrowpanel-color: var(--default-arrowpanel-color);
-  --arrowpanel-border-color: var(--default-arrowpanel-border-color);
-  --arrowpanel-border-radius: 8px;
-  --panel-disabled-color: GrayText;
   --panel-description-color: hsl(0,0%,50%);
 
   --focus-ring-box-shadow: 0 0 0 1px -moz-mac-focusring inset, 0 0 0 1px -moz-mac-focusring;
