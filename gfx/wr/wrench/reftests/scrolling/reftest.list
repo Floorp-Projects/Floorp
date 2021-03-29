@@ -18,4 +18,4 @@
 == viewport-offset.yaml viewport-offset-ref.yaml
 == ext-scroll-offset-1.yaml ext-scroll-offset-1-ref.yaml
 == scroll-frame-order.yaml scroll-frame-order-ref.yaml
-
+!= ancestor-scroll-frames.yaml blank.yaml
