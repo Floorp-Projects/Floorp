@@ -2868,6 +2868,7 @@ macro_rules! apply_font_desc_list {
                 eCSSFontDesc_AscentOverride => ascent_override,
                 eCSSFontDesc_DescentOverride => descent_override,
                 eCSSFontDesc_LineGapOverride => line_gap_override,
+                eCSSFontDesc_SizeAdjust => size_adjust,
             ]
             invalid: [
                 eCSSFontDesc_UNKNOWN,
@@ -3011,6 +3012,14 @@ pub extern "C" fn Servo_FontFaceRule_GetLineGapOverride(
     out: &mut computed::Percentage,
 ) -> bool {
     simple_font_descriptor_getter_impl!(rule, out, line_gap_override, compute)
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_FontFaceRule_GetSizeAdjust(
+    rule: &RawServoFontFaceRule,
+    out: &mut computed::Percentage,
+) -> bool {
+    simple_font_descriptor_getter_impl!(rule, out, size_adjust, compute)
 }
 
 #[no_mangle]
