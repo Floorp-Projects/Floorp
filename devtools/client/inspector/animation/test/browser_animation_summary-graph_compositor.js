@@ -22,7 +22,7 @@ add_task(async function() {
   } = await openAnimationInspector();
 
   info("Check animation whose all properties are running on compositor");
-  const summaryGraphAllEl = findSummaryGraph(".compositor-all", panel);
+  const summaryGraphAllEl = await findSummaryGraph(".compositor-all", panel);
   ok(
     summaryGraphAllEl.classList.contains("compositor"),
     "The element has the compositor css class"
@@ -36,7 +36,7 @@ add_task(async function() {
   );
 
   info("Check animation is not running on compositor");
-  const summaryGraphNoEl = findSummaryGraph(".no-compositor", panel);
+  const summaryGraphNoEl = await findSummaryGraph(".no-compositor", panel);
   ok(
     !summaryGraphNoEl.classList.contains("compositor"),
     "The element does not have the compositor css class"
@@ -59,8 +59,8 @@ add_task(async function() {
   info(
     "Select a node has animation whose some properties are running on compositor"
   );
-  await selectNodeAndWaitForAnimations(".compositor-notall", inspector);
-  const summaryGraphEl = panel.querySelector(".animation-summary-graph");
+  await selectNode(".compositor-notall", inspector);
+  const summaryGraphEl = await findSummaryGraph(".compositor-notall", panel);
   ok(
     summaryGraphEl.classList.contains("compositor"),
     "The element has the compositor css class"
@@ -74,47 +74,44 @@ add_task(async function() {
   );
 
   info("Check compositor sign after pausing");
-  await clickOnPauseResumeButton(animationInspector, panel);
+  clickOnPauseResumeButton(animationInspector, panel);
+  await waitUntil(() => !summaryGraphEl.classList.contains("compositor"));
   ok(
-    !summaryGraphEl.classList.contains("compositor"),
+    true,
     "The element should not have the compositor css class after pausing"
   );
 
   info("Check compositor sign after resuming");
-  await clickOnPauseResumeButton(animationInspector, panel);
-  ok(
-    summaryGraphEl.classList.contains("compositor"),
-    "The element should have the compositor css class after resuming"
-  );
+  clickOnPauseResumeButton(animationInspector, panel);
+  await waitUntil(() => summaryGraphEl.classList.contains("compositor"));
+  ok(true, "The element should have the compositor css class after resuming");
 
   info("Check compositor sign after rewind");
-  await clickOnRewindButton(animationInspector, panel);
+  clickOnRewindButton(animationInspector, panel);
+  await waitUntil(() => !summaryGraphEl.classList.contains("compositor"));
   ok(
-    !summaryGraphEl.classList.contains("compositor"),
+    true,
     "The element should not have the compositor css class after rewinding"
   );
-  await clickOnPauseResumeButton(animationInspector, panel);
-  ok(
-    summaryGraphEl.classList.contains("compositor"),
-    "The element should have the compositor css class after resuming"
-  );
+  clickOnPauseResumeButton(animationInspector, panel);
+  await waitUntil(() => summaryGraphEl.classList.contains("compositor"));
+  ok(true, "The element should have the compositor css class after resuming");
 
   info("Check compositor sign after setting the current time");
-  await clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
+  clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
+  await waitUntil(() => !summaryGraphEl.classList.contains("compositor"));
   ok(
-    !summaryGraphEl.classList.contains("compositor"),
+    true,
     "The element should not have the compositor css class " +
       "after setting the current time"
   );
-  await clickOnPauseResumeButton(animationInspector, panel);
-  ok(
-    summaryGraphEl.classList.contains("compositor"),
-    "The element should have the compositor css class after resuming"
-  );
+  clickOnPauseResumeButton(animationInspector, panel);
+  await waitUntil(() => summaryGraphEl.classList.contains("compositor"));
+  ok(true, "The element should have the compositor css class after resuming");
 });
 
-function findSummaryGraph(selector, panel) {
-  const animationItemEl = findAnimationItemElementsByTargetSelector(
+async function findSummaryGraph(selector, panel) {
+  const animationItemEl = await findAnimationItemByTargetSelector(
     panel,
     selector
   );

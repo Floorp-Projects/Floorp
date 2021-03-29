@@ -8,20 +8,34 @@
 add_task(async function() {
   await addTab(URL_ROOT + "doc_simple_animation.html");
   await removeAnimatedElementsExcept([".animated", ".end-delay"]);
-  const { inspector, panel } = await openAnimationInspector();
+  const {
+    animationInspector,
+    inspector,
+    panel,
+  } = await openAnimationInspector();
 
   info("Checking the path for different time scale");
-  await selectNodeAndWaitForAnimations(".animated", inspector);
-  const pathStringA = panel
+  let onDetailRendered = animationInspector.once(
+    "animation-keyframes-rendered"
+  );
+  await selectNode(".animated", inspector);
+  await onDetailRendered;
+  const itemA = await findAnimationItemByTargetSelector(panel, ".animated");
+  const pathStringA = itemA
     .querySelector(".animation-iteration-path")
     .getAttribute("d");
 
   info("Select animation which has different time scale from no-compositor");
-  await selectNodeAndWaitForAnimations(".end-delay", inspector);
+  onDetailRendered = animationInspector.once("animation-keyframes-rendered");
+  await selectNode(".end-delay", inspector);
+  await onDetailRendered;
 
   info("Select no-compositor again");
-  await selectNodeAndWaitForAnimations(".animated", inspector);
-  const pathStringB = panel
+  onDetailRendered = animationInspector.once("animation-keyframes-rendered");
+  await selectNode(".animated", inspector);
+  await onDetailRendered;
+  const itemB = await findAnimationItemByTargetSelector(panel, ".animated");
+  const pathStringB = itemB
     .querySelector(".animation-iteration-path")
     .getAttribute("d");
   is(

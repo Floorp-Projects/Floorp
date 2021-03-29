@@ -11,13 +11,18 @@ add_task(async function() {
   const { animationInspector, panel } = await openAnimationInspector();
 
   info("Set initial state");
-  await clickOnCurrentTimeScrubberController(animationInspector, panel, 0);
+  clickOnCurrentTimeScrubberController(animationInspector, panel, 0);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
   const initialCurrentTime =
     animationInspector.state.animations[0].state.currentTime;
   const initialProgressBarX = getProgressBarX(panel);
 
   info("Check whether the animation currentTime was decreased");
-  await clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
+  clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
+  await waitUntilCurrentTimeChangedAt(
+    animationInspector,
+    animationInspector.state.timeScale.getDuration() * 0.5
+  );
   ok(
     initialCurrentTime >
       animationInspector.state.animations[0].state.currentTime,

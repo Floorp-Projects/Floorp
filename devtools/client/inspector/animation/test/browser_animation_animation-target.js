@@ -32,6 +32,9 @@ add_task(async function() {
 
   for (let i = 0; i < animationItemEls.length; i++) {
     const animationItemEl = animationItemEls[i];
+    animationItemEl.scrollIntoView(false);
+    await waitUntil(() => animationItemEl.querySelector(".animation-target"));
+
     const animationTargetEl = animationItemEl.querySelector(
       ".animation-target"
     );

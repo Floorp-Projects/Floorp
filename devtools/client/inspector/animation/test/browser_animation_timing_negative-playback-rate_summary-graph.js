@@ -162,7 +162,7 @@ add_task(async function() {
       expectedViewboxWidth,
     } = testData;
 
-    const animationItemEl = findAnimationItemElementsByTargetSelector(
+    const animationItemEl = await findAnimationItemByTargetSelector(
       panel,
       targetSelector
     );

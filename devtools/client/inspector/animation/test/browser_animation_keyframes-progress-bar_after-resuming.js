@@ -26,7 +26,7 @@ add_task(async function() {
       "after a bit time passed and resuming"
   );
   await wait(500);
-  await clickOnPauseResumeButton(animationInspector, panel);
+  clickOnPauseResumeButton(animationInspector, panel);
   await assertPosition(
     panel,
     scrubberPositions,
@@ -47,11 +47,12 @@ async function assertPosition(
 
   for (let i = 0; i < scrubberPositions.length; i++) {
     info(`Scrubber position is ${scrubberPositions[i]}`);
-    await clickOnCurrentTimeScrubberController(
+    clickOnCurrentTimeScrubberController(
       animationInspector,
       panel,
       scrubberPositions[i]
     );
+    await waitUntilAnimationsPlayState(animationInspector, "paused");
     const barBounds = barEl.getBoundingClientRect();
     const barX = barBounds.x + barBounds.width / 2 - controllerBounds.x;
     const expected = controllerBounds.width * expectedPositions[i];

@@ -17,7 +17,8 @@ add_task(async function() {
   } = await openAnimationInspector();
 
   info("Checking timeline tick item elements after enlarge sidebar width");
-  await clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
+  clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
   await setSidebarWidth("100%", inspector);
   assertPosition(".current-time-scrubber", panel, 0.5);
   assertPosition(".keyframes-progress-bar", panel, 0.5);

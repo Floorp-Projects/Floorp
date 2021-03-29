@@ -22,20 +22,16 @@ add_task(async function() {
   } = await openAnimationInspector();
 
   info("Checking the UIs update after selecting another inspector");
-  await selectNodeAndWaitForAnimations("head", inspector);
+  await selectNode("head", inspector);
   inspector.sidebar.select("ruleview");
   await selectNode("div", inspector);
-  is(
-    animationInspector.state.animations.length,
-    0,
-    "Should not update after selecting another inspector"
-  );
+  await waitUntil(() => !animationInspector.state.animations.length);
+  ok(true, "Should not update after selecting another inspector");
+
   await selectAnimationInspector(inspector);
-  is(
-    animationInspector.state.animations.length,
-    1,
-    "Should update after selecting animation inspector"
-  );
+  await waitUntil(() => animationInspector.state.animations.length);
+  ok(true, "Should update after selecting animation inspector");
+
   await assertCurrentTimeUpdated(animationInspector, panel, true);
   inspector.sidebar.select("ruleview");
   is(
@@ -47,7 +43,8 @@ add_task(async function() {
 
   info("Checking the UIs update after selecting another tool");
   await selectAnimationInspector(inspector);
-  await selectNodeAndWaitForAnimations("head", inspector);
+  await selectNode("head", inspector);
+  await waitUntil(() => !animationInspector.state.animations.length);
   await inspector.toolbox.selectTool("webconsole");
   await selectNode("div", inspector);
   is(
@@ -56,6 +53,7 @@ add_task(async function() {
     "Should not update after selecting another tool"
   );
   await selectAnimationInspector(inspector);
+  await waitUntil(() => animationInspector.state.animations.length);
   is(
     animationInspector.state.animations.length,
     1,
@@ -63,6 +61,7 @@ add_task(async function() {
   );
   await assertCurrentTimeUpdated(animationInspector, panel, true);
   await inspector.toolbox.selectTool("webconsole");
+  await waitUntil(() => animationInspector.state.animations.length);
   is(
     animationInspector.state.animations.length,
     1,

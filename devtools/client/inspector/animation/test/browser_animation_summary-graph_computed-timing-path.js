@@ -380,7 +380,7 @@ add_task(async function() {
       targetClass,
     } = testData;
 
-    const animationItemEl = findAnimationItemElementsByTargetSelector(
+    const animationItemEl = await findAnimationItemByTargetSelector(
       panel,
       `.${targetClass}`
     );

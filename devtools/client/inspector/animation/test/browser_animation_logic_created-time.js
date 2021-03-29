@@ -19,23 +19,31 @@ add_task(async function() {
   );
 
   info("Check created time after selecting '.div1'");
-  await selectNodeAndWaitForAnimations(".div1", inspector);
-  is(
-    animationInspector.state.animations[0].state.createdTime,
-    baseCreatedTime,
+  await selectNode(".div1", inspector);
+  await waitUntil(
+    () =>
+      animationInspector.state.animations[0].state.createdTime ===
+      baseCreatedTime
+  );
+  ok(
+    true,
     "The created time of animation on element of .div1 should unchanged"
   );
 
   info("Check created time after selecting '.div2'");
-  await selectNodeAndWaitForAnimations(".div2", inspector);
-  is(
-    animationInspector.state.animations[0].state.createdTime,
-    baseCreatedTime,
+  await selectNode(".div2", inspector);
+  await waitUntil(
+    () =>
+      animationInspector.state.animations[0].state.createdTime ===
+      baseCreatedTime
+  );
+  ok(
+    true,
     "The created time of animation on element of .div2 should unchanged"
   );
 
   info("Check created time after selecting 'body' again");
-  await selectNodeAndWaitForAnimations("body", inspector);
+  await selectNode("body", inspector);
   is(
     animationInspector.state.animations[0].state.createdTime,
     baseCreatedTime,

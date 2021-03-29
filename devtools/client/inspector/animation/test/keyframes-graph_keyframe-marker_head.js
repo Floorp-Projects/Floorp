@@ -186,11 +186,15 @@ async function testKeyframesGraphKeyframesMarker() {
 
   for (const { properties, targetClass } of KEYFRAMES_TEST_DATA) {
     info(`Checking keyframe marker for ${targetClass}`);
+    const onDetailRendered = animationInspector.once(
+      "animation-keyframes-rendered"
+    );
     await clickOnAnimationByTargetSelector(
       animationInspector,
       panel,
       `.${targetClass}`
     );
+    await onDetailRendered;
 
     for (const { name, expectedValues } of properties) {
       const testTarget = `${name} in ${targetClass}`;

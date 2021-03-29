@@ -17,20 +17,20 @@ add_task(async function() {
   ok(labelEl, "current time label should exist");
 
   info("Checking current time label content");
-  await clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
-  assertLabelContent(
-    labelEl,
-    animationInspector.state.animations[0].state.currentTime
-  );
-  await clickOnCurrentTimeScrubberController(animationInspector, panel, 0.2);
-  assertLabelContent(
-    labelEl,
-    animationInspector.state.animations[0].state.currentTime
-  );
+  const duration = animationInspector.state.timeScale.getDuration();
+  clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
+  await waitUntilCurrentTimeChangedAt(animationInspector, duration * 0.5);
+  const targetAnimation = animationInspector.state.animations[0];
+  assertLabelContent(labelEl, targetAnimation.state.currentTime);
+
+  clickOnCurrentTimeScrubberController(animationInspector, panel, 0.2);
+  await waitUntilCurrentTimeChangedAt(animationInspector, duration * 0.2);
+  assertLabelContent(labelEl, targetAnimation.state.currentTime);
 
   info("Checking current time label content during running");
   // Resume
-  await clickOnPauseResumeButton(animationInspector, panel);
+  clickOnPauseResumeButton(animationInspector, panel);
   const previousContent = labelEl.textContent;
   await wait(1000);
   const currentContent = labelEl.textContent;

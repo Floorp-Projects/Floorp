@@ -11,17 +11,19 @@ add_task(async function() {
   const { animationInspector, panel } = await openAnimationInspector();
 
   info("Set initial state");
-  await clickOnCurrentTimeScrubberController(animationInspector, panel, 0);
+  clickOnCurrentTimeScrubberController(animationInspector, panel, 0);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
   const initialCurrentTime =
     animationInspector.state.animations[0].state.currentTime;
 
   info("Check whether the animation currentTime was increased");
-  await clickOnCurrentTimeScrubberController(animationInspector, panel, 1);
-  ok(
-    initialCurrentTime <=
-      animationInspector.state.animations[0].state.currentTime,
-    "currentTime should be increased"
+  clickOnCurrentTimeScrubberController(animationInspector, panel, 1);
+  await waitUntil(
+    () =>
+      initialCurrentTime <
+      animationInspector.state.animations[0].state.currentTime
   );
+  ok(true, "currentTime should be increased");
 
   info("Check whether the progress bar was moved");
   const areaEl = panel.querySelector(".keyframes-progress-bar-area");

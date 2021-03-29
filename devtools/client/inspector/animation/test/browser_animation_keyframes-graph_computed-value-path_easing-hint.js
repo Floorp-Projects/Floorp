@@ -267,11 +267,15 @@ add_task(async function() {
 
   for (const { properties, targetClass } of TEST_DATA) {
     info(`Checking keyframes graph for ${targetClass}`);
+    const onDetailRendered = animationInspector.once(
+      "animation-keyframes-rendered"
+    );
     await clickOnAnimationByTargetSelector(
       animationInspector,
       panel,
       `.${targetClass}`
     );
+    await onDetailRendered;
 
     for (const { name, expectedHints } of properties) {
       const testTarget = `${name} in ${targetClass}`;
