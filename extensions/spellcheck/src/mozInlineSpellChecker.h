@@ -253,7 +253,7 @@ class mozInlineSpellChecker final : public nsIInlineSpellChecker,
   RemoveRange(mozilla::dom::Selection* aSpellCheckSelection, nsRange* aRange);
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult
   AddRange(mozilla::dom::Selection* aSpellCheckSelection, nsRange* aRange);
-  bool SpellCheckSelectionIsFull() {
+  bool IsSpellCheckSelectionFull() const {
     return mNumWordsInSpellSelection >= mMaxNumWordsInSpellSelection;
   }
 
