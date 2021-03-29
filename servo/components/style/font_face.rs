@@ -21,7 +21,7 @@ use crate::values::specified::font::SpecifiedFontStyle;
 use crate::values::specified::font::SpecifiedFontVariationSettings;
 use crate::values::specified::font::{AbsoluteFontWeight, FontStretch, MetricsOverride};
 use crate::values::specified::url::SpecifiedUrl;
-use crate::values::specified::Angle;
+use crate::values::specified::{Angle, NonNegativePercentage};
 #[cfg(feature = "gecko")]
 use cssparser::UnicodeRange;
 use cssparser::{AtRuleParser, DeclarationListParser, DeclarationParser, Parser};
@@ -428,6 +428,9 @@ macro_rules! is_descriptor_enabled {
     ("line-gap-override") => {
         static_prefs::pref!("layout.css.font-metrics-overrides.enabled")
     };
+    ("size-adjust") => {
+        static_prefs::pref!("layout.css.size-adjust.enabled")
+    };
     ($name:tt) => {
         true
     };
@@ -595,6 +598,9 @@ font_face_descriptors! {
 
         /// The line-gap override for this font face.
         "line-gap-override" line_gap_override / mLineGapOverride: MetricsOverride,
+
+        /// The size adjustment for this font face.
+        "size-adjust" size_adjust / mSizeAdjust: NonNegativePercentage,
     ]
 }
 
