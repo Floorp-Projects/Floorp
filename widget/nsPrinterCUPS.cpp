@@ -115,6 +115,9 @@ const char* nsPrinterCUPS::LocalizeMediaName(http_t& aConnection,
                                              cups_size_t& aMedia) const {
   // The returned string is owned by mPrinterInfo.
   // https://www.cups.org/doc/cupspm.html#cupsLocalizeDestMedia
+  if (!mShim.cupsLocalizeDestMedia) {
+    return aMedia.media;
+  }
   auto printerInfoLock = TryEnsurePrinterInfo();
   cups_dinfo_t* const printerInfo = printerInfoLock->mPrinterInfo;
   return mShim.cupsLocalizeDestMedia(&aConnection, mPrinter, printerInfo,
@@ -228,22 +231,30 @@ PrintSettingsInitializer nsPrinterCUPS::DefaultSettings(
 
   cups_size_t media;
 
+  bool hasDefaultMedia = false;
 // cupsGetDestMediaDefault appears to return more accurate defaults on macOS,
 // and the IPP attribute appears to return more accurate defaults on Linux.
 #ifdef XP_MACOSX
-  bool hasDefaultMedia =
+  hasDefaultMedia =
       mShim.cupsGetDestMediaDefault(CUPS_HTTP_DEFAULT, mPrinter, printerInfo,
                                     CUPS_MEDIA_FLAGS_DEFAULT, &media);
 #else
-  ipp_attribute_t* defaultMediaIPP = mShim.cupsFindDestDefault(
-      CUPS_HTTP_DEFAULT, mPrinter, printerInfo, "media");
+  {
+    ipp_attribute_t* defaultMediaIPP =
+        mShim.cupsFindDestDefault
+            ? mShim.cupsFindDestDefault(CUPS_HTTP_DEFAULT, mPrinter,
+                                        printerInfo, "media")
+            : nullptr;
 
-  const char* defaultMediaName =
-      mShim.ippGetString(defaultMediaIPP, 0, nullptr);
+    const char* defaultMediaName =
+        defaultMediaIPP ? mShim.ippGetString(defaultMediaIPP, 0, nullptr)
+                        : nullptr;
 
-  bool hasDefaultMedia = mShim.cupsGetDestMediaByName(
-      CUPS_HTTP_DEFAULT, mPrinter, printerInfo, defaultMediaName,
-      CUPS_MEDIA_FLAGS_DEFAULT, &media);
+    hasDefaultMedia = defaultMediaName &&
+                      mShim.cupsGetDestMediaByName(
+                          CUPS_HTTP_DEFAULT, mPrinter, printerInfo,
+                          defaultMediaName, CUPS_MEDIA_FLAGS_DEFAULT, &media);
+  }
 #endif
 
   if (!hasDefaultMedia) {
@@ -289,8 +300,11 @@ nsTArray<mozilla::PaperInfo> nsPrinterCUPS::PaperList(
     return {};
   }
 
-  const int paperCount = mShim.cupsGetDestMediaCount(
-      connection, mPrinter, printerInfo, CUPS_MEDIA_FLAGS_DEFAULT);
+  const int paperCount =
+      mShim.cupsGetDestMediaCount
+          ? mShim.cupsGetDestMediaCount(connection, mPrinter, printerInfo,
+                                        CUPS_MEDIA_FLAGS_DEFAULT)
+          : 0;
   nsTArray<PaperInfo> paperList;
   nsTHashtable<nsCharPtrHashKey> paperSet(std::max(paperCount, 0));
 

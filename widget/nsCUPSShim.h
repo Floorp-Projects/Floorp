@@ -28,48 +28,55 @@ class nsCUPSShim {
   bool InitOkay() { return true; }
 #endif
 
+  // We allow some functions to be missing, to degrade as gracefully as possible
+  // for older versions of CUPS.
+  //
+  // The current target is CUPS 1.6 (bug 1701019).
+  enum class Optional : bool { No, Yes };
+
   /**
    * Function pointers for supported functions. These are only
    * valid after successful initialization.
    */
-#define CUPS_SHIM_ALL_FUNCS(X) \
-  X(cupsAddOption)             \
-  X(cupsCheckDestSupported)    \
-  X(cupsConnectDest)           \
-  X(cupsCopyDest)              \
-  X(cupsCopyDestInfo)          \
-  X(cupsDoRequest)             \
-  X(cupsEnumDests)             \
-  X(cupsFindDestDefault)       \
-  X(cupsFreeDestInfo)          \
-  X(cupsFreeDests)             \
-  X(cupsGetDestMediaDefault)   \
-  X(cupsGetDestMediaCount)     \
-  X(cupsGetDestMediaByIndex)   \
-  X(cupsGetDestMediaByName)    \
-  X(cupsGetDest)               \
-  X(cupsGetDests)              \
-  X(cupsGetNamedDest)          \
-  X(cupsGetOption)             \
-  X(cupsLocalizeDestMedia)     \
-  X(cupsPrintFile)             \
-  X(cupsTempFd)                \
-  X(httpClose)                 \
-  X(ippAddString)              \
-  X(ippAddStrings)             \
-  X(ippDelete)                 \
-  X(ippFindAttribute)          \
-  X(ippGetCount)               \
-  X(ippGetString)              \
-  X(ippNewRequest)
+#define CUPS_SHIM_ALL_FUNCS(X)              \
+  X(Optional::No, cupsAddOption)            \
+  X(Optional::No, cupsCheckDestSupported)   \
+  X(Optional::No, cupsConnectDest)          \
+  X(Optional::No, cupsCopyDest)             \
+  X(Optional::No, cupsCopyDestInfo)         \
+  X(Optional::No, cupsDoRequest)            \
+  X(Optional::No, cupsEnumDests)            \
+  X(Optional::No, cupsFreeDestInfo)         \
+  X(Optional::No, cupsFreeDests)            \
+  X(Optional::No, cupsGetDestMediaByName)   \
+  X(Optional::Yes, cupsFindDestDefault)     \
+  X(Optional::Yes, cupsGetDestMediaDefault) \
+  X(Optional::Yes, cupsGetDestMediaCount)   \
+  X(Optional::Yes, cupsGetDestMediaByIndex) \
+  X(Optional::Yes, cupsLocalizeDestMedia)   \
+  X(Optional::No, cupsGetDest)              \
+  X(Optional::No, cupsGetDests)             \
+  X(Optional::No, cupsGetNamedDest)         \
+  X(Optional::No, cupsGetOption)            \
+  X(Optional::No, cupsPrintFile)            \
+  X(Optional::No, cupsTempFd)               \
+  X(Optional::No, httpClose)                \
+  X(Optional::No, ippAddString)             \
+  X(Optional::No, ippAddStrings)            \
+  X(Optional::No, ippDelete)                \
+  X(Optional::No, ippFindAttribute)         \
+  X(Optional::No, ippGetCount)              \
+  X(Optional::No, ippGetString)             \
+  X(Optional::No, ippNewRequest)
 
 #ifdef CUPS_SHIM_RUNTIME_LINK
   // Define a single field which holds a function pointer.
-#  define CUPS_SHIM_FUNC_DECL(X) decltype(::X)* X = nullptr;
+#  define CUPS_SHIM_FUNC_DECL(opt_, fn_) decltype(::fn_)* fn_ = nullptr;
 #else
   // Define a static constexpr function pointer. GCC can sometimes optimize
   // away the pointer fetch for this.
-#  define CUPS_SHIM_FUNC_DECL(X) static constexpr decltype(::X)* const X = ::X;
+#  define CUPS_SHIM_FUNC_DECL(opt_, fn_) \
+    static constexpr decltype(::fn_)* const fn_ = ::fn_;
 #endif
 
   CUPS_SHIM_ALL_FUNCS(CUPS_SHIM_FUNC_DECL)
