@@ -140,6 +140,10 @@ add_task(async function testPermissionGrantedOn3rdParty() {
         "network.cookie.cookieBehavior",
         Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
       ],
+      [
+        "network.cookie.cookieBehavior.pbmode",
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+      ],
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.pbmode.enabled", false],
       ["privacy.trackingprotection.annotate_channels", true],
@@ -298,6 +302,10 @@ add_task(async function testPermissionGrantedOnFirstParty() {
       ["dom.storage_access.enabled", true],
       [
         "network.cookie.cookieBehavior",
+        Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+      ],
+      [
+        "network.cookie.cookieBehavior.pbmode",
         Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
       ],
       ["privacy.trackingprotection.enabled", false],

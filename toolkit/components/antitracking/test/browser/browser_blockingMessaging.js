@@ -120,13 +120,19 @@ AntiTracking.runTestInNormalAndPrivateMode(
     /* import-globals-from storageAccessAPIHelpers.js */
     await callRequestStorageAccess();
 
+    let effectiveCookieBehavior = SpecialPowers.isContentWindowPrivate(window)
+      ? SpecialPowers.Services.prefs.getIntPref(
+          "network.cookie.cookieBehavior.pbmode"
+        )
+      : SpecialPowers.Services.prefs.getIntPref(
+          "network.cookie.cookieBehavior"
+        );
+
     if (
       [
         SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT,
         SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
-      ].includes(
-        SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior")
-      )
+      ].includes(effectiveCookieBehavior)
     ) {
       try {
         new BroadcastChannel("hello");
@@ -210,13 +216,19 @@ AntiTracking.runTestInNormalAndPrivateMode(
     /* import-globals-from storageAccessAPIHelpers.js */
     await callRequestStorageAccess();
 
+    let effectiveCookieBehavior = SpecialPowers.isContentWindowPrivate(window)
+      ? SpecialPowers.Services.prefs.getIntPref(
+          "network.cookie.cookieBehavior.pbmode"
+        )
+      : SpecialPowers.Services.prefs.getIntPref(
+          "network.cookie.cookieBehavior"
+        );
+
     if (
       [
         SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT,
         SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN,
-      ].includes(
-        SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior")
-      )
+      ].includes(effectiveCookieBehavior)
     ) {
       blob = new Blob([blockingCode.toString() + "; blockingCode();"]);
     } else {

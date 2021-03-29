@@ -20,6 +20,10 @@ add_task(async function() {
       ["browser.cache.disk.enable", false],
       ["browser.cache.memory.enable", false],
       ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_ACCEPT],
+      [
+        "network.cookie.cookieBehavior.pbmode",
+        Ci.nsICookieService.BEHAVIOR_ACCEPT,
+      ],
       ["network.http.altsvc.proxy_checks", false],
       ["privacy.trackingprotection.enabled", false],
       ["privacy.trackingprotection.pbmode.enabled", false],

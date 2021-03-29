@@ -10,6 +10,10 @@ function runTest(obj) {
           "network.cookie.cookieBehavior",
           Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
         ],
+        [
+          "network.cookie.cookieBehavior.pbmode",
+          Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
+        ],
         ["privacy.trackingprotection.enabled", false],
         ["privacy.trackingprotection.pbmode.enabled", false],
         ["privacy.trackingprotection.annotate_channels", true],

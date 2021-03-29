@@ -10,6 +10,10 @@ add_task(async function test_aboutblankInIframe() {
         "network.cookie.cookieBehavior",
         BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
       ],
+      [
+        "network.cookie.cookieBehavior.pbmode",
+        BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
+      ],
     ],
   });
 

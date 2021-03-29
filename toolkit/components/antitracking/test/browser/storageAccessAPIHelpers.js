@@ -16,6 +16,12 @@ async function callRequestStorageAccess(callback, expectFail) {
 
   let origin = new URL(location.href).origin;
 
+  let effectiveCookieBehavior = SpecialPowers.isContentWindowPrivate(window)
+    ? SpecialPowers.Services.prefs.getIntPref(
+        "network.cookie.cookieBehavior.pbmode"
+      )
+    : SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior");
+
   let success = true;
   // We only grant storage exceptions when the reject tracker behavior is enabled.
   let rejectTrackers =
@@ -23,9 +29,7 @@ async function callRequestStorageAccess(callback, expectFail) {
       SpecialPowers.Ci.nsICookieService.BEHAVIOR_REJECT_TRACKER,
       SpecialPowers.Ci.nsICookieService
         .BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN,
-    ].includes(
-      SpecialPowers.Services.prefs.getIntPref("network.cookie.cookieBehavior")
-    ) && !isOnContentBlockingAllowList();
+    ].includes(effectiveCookieBehavior) && !isOnContentBlockingAllowList();
   const TEST_ANOTHER_3RD_PARTY_ORIGIN = SpecialPowers.useRemoteSubframes
     ? "http://another-tracking.example.net"
     : "https://another-tracking.example.net";
@@ -65,9 +69,8 @@ async function callRequestStorageAccess(callback, expectFail) {
       helper = dwu.setHandlingUserInput(true);
     }
     if (
-      SpecialPowers.Services.prefs.getIntPref(
-        "network.cookie.cookieBehavior"
-      ) == SpecialPowers.Ci.nsICookieService.BEHAVIOR_ACCEPT &&
+      effectiveCookieBehavior ==
+        SpecialPowers.Ci.nsICookieService.BEHAVIOR_ACCEPT &&
       !isOnContentBlockingAllowList()
     ) {
       try {

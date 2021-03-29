@@ -64,6 +64,7 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
       set: [
         ["dom.ipc.processCount", 1],
         ["network.cookie.cookieBehavior", prefValue],
+        ["network.cookie.cookieBehavior.pbmode", prefValue],
         ["privacy.trackingprotection.enabled", false],
         ["privacy.trackingprotection.pbmode.enabled", false],
         ["privacy.trackingprotection.annotate_channels", true],
@@ -192,6 +193,7 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
       set: [
         ["dom.ipc.processCount", 1],
         ["network.cookie.cookieBehavior", prefValue],
+        ["network.cookie.cookieBehavior.pbmode", prefValue],
         ["privacy.trackingprotection.enabled", false],
         ["privacy.trackingprotection.pbmode.enabled", false],
         ["privacy.trackingprotection.annotate_channels", true],
@@ -317,6 +319,10 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
       set: [
         ["dom.ipc.processCount", 1],
         ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_ACCEPT],
+        [
+          "network.cookie.cookieBehavior.pbmode",
+          Ci.nsICookieService.BEHAVIOR_ACCEPT,
+        ],
         ["privacy.trackingprotection.enabled", false],
         ["privacy.trackingprotection.pbmode.enabled", false],
         ["privacy.trackingprotection.annotate_channels", true],
@@ -428,6 +434,7 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
       set: [
         ["dom.ipc.processCount", 1],
         ["network.cookie.cookieBehavior", prefValue],
+        ["network.cookie.cookieBehavior.pbmode", prefValue],
         ["privacy.trackingprotection.enabled", false],
         ["privacy.trackingprotection.pbmode.enabled", false],
         ["privacy.trackingprotection.annotate_channels", true],
@@ -526,6 +533,10 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
       set: [
         ["dom.ipc.processCount", 1],
         ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_ACCEPT],
+        [
+          "network.cookie.cookieBehavior.pbmode",
+          Ci.nsICookieService.BEHAVIOR_ACCEPT,
+        ],
         ["privacy.trackingprotection.enabled", false],
         ["privacy.trackingprotection.pbmode.enabled", false],
         ["privacy.trackingprotection.annotate_channels", true],
@@ -620,6 +631,7 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
       set: [
         ["dom.ipc.processCount", 1],
         ["network.cookie.cookieBehavior", prefValue],
+        ["network.cookie.cookieBehavior.pbmode", prefValue],
         ["privacy.trackingprotection.enabled", false],
         ["privacy.trackingprotection.pbmode.enabled", false],
         ["privacy.trackingprotection.annotate_channels", true],
@@ -718,6 +730,10 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
       set: [
         ["dom.ipc.processCount", 1],
         ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_ACCEPT],
+        [
+          "network.cookie.cookieBehavior.pbmode",
+          Ci.nsICookieService.BEHAVIOR_ACCEPT,
+        ],
         ["privacy.trackingprotection.enabled", false],
         ["privacy.trackingprotection.pbmode.enabled", false],
         ["privacy.trackingprotection.annotate_channels", true],
@@ -810,6 +826,7 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
       set: [
         ["dom.ipc.processCount", 1],
         ["network.cookie.cookieBehavior", prefValue],
+        ["network.cookie.cookieBehavior.pbmode", prefValue],
         ["privacy.firstparty.isolate", false],
         ["privacy.trackingprotection.enabled", false],
         ["privacy.trackingprotection.pbmode.enabled", false],
@@ -927,6 +944,10 @@ function runAllTests(withStoragePrincipalEnabled, prefValue) {
       set: [
         ["dom.ipc.processCount", 1],
         ["network.cookie.cookieBehavior", Ci.nsICookieService.BEHAVIOR_ACCEPT],
+        [
+          "network.cookie.cookieBehavior.pbmode",
+          Ci.nsICookieService.BEHAVIOR_ACCEPT,
+        ],
         ["privacy.firstparty.isolate", false],
         ["privacy.trackingprotection.enabled", false],
         ["privacy.trackingprotection.pbmode.enabled", false],
