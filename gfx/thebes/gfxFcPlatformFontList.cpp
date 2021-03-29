@@ -756,7 +756,7 @@ gfxFontconfigFontEntry::UnscaledFontCache::Lookup(const std::string& aFile,
 static inline gfxFloat SizeForStyle(gfxFontconfigFontEntry* aEntry,
                                     const gfxFontStyle& aStyle) {
   return aStyle.sizeAdjust >= 0.0 ? aStyle.GetAdjustedSize(aEntry->GetAspect())
-                                  : aStyle.size;
+                                  : aStyle.size * aEntry->mSizeAdjust;
 }
 
 static double ChooseFontSize(gfxFontconfigFontEntry* aEntry,

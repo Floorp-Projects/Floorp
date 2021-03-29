@@ -964,6 +964,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(
   float ascentOverride = -1.0;
   float descentOverride = -1.0;
   float lineGapOverride = -1.0;
+  float sizeAdjust = 1.0;
 
   gfxFontEntry::RangeFlags rangeFlags = gfxFontEntry::RangeFlags::eNoFlags;
 
@@ -995,6 +996,11 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(
     lineGapOverride = lineGap->_0;
   }
 
+  // set up size-adjust scaling factor
+  if (Maybe<StylePercentage> percentage = aFontFace->GetSizeAdjust()) {
+    sizeAdjust = percentage->_0;
+  }
+
   // set up font features
   nsTArray<gfxFontFeature> featureSettings;
   aFontFace->GetFontFeatureSettings(featureSettings);
@@ -1019,7 +1025,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(
     existingEntry->UpdateAttributes(
         weight, stretch, italicStyle, featureSettings, variationSettings,
         languageOverride, unicodeRanges, fontDisplay, rangeFlags,
-        ascentOverride, descentOverride, lineGapOverride);
+        ascentOverride, descentOverride, lineGapOverride, sizeAdjust);
     // If the family name has changed, remove the entry from its current family
     // and clear the mFamilyName field so it can be reset when added to a new
     // family.
@@ -1155,7 +1161,7 @@ FontFaceSet::FindOrCreateUserFontEntryFromFontFace(
   RefPtr<gfxUserFontEntry> entry = set->mUserFontSet->FindOrCreateUserFontEntry(
       aFamilyName, srcArray, weight, stretch, italicStyle, featureSettings,
       variationSettings, languageOverride, unicodeRanges, fontDisplay,
-      rangeFlags, ascentOverride, descentOverride, lineGapOverride);
+      rangeFlags, ascentOverride, descentOverride, lineGapOverride, sizeAdjust);
 
   return entry.forget();
 }
@@ -1827,11 +1833,13 @@ FontFaceSet::UserFontSet::CreateUserFontEntry(
     const nsTArray<gfxFontVariation>& aVariationSettings,
     uint32_t aLanguageOverride, gfxCharacterMap* aUnicodeRanges,
     StyleFontDisplay aFontDisplay, RangeFlags aRangeFlags,
-    float aAscentOverride, float aDescentOverride, float aLineGapOverride) {
+    float aAscentOverride, float aDescentOverride, float aLineGapOverride,
+    float aSizeAdjust) {
   RefPtr<gfxUserFontEntry> entry = new FontFace::Entry(
       this, aFontFaceSrcList, aWeight, aStretch, aStyle, aFeatureSettings,
       aVariationSettings, aLanguageOverride, aUnicodeRanges, aFontDisplay,
-      aRangeFlags, aAscentOverride, aDescentOverride, aLineGapOverride);
+      aRangeFlags, aAscentOverride, aDescentOverride, aLineGapOverride,
+      aSizeAdjust);
   return entry.forget();
 }
 

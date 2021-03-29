@@ -1490,8 +1490,13 @@ class gfxFont {
   }
 
   gfxFloat GetAdjustedSize() const {
-    return mAdjustedSize > 0.0 ? mAdjustedSize
-                               : (mStyle.sizeAdjust == 0.0 ? 0.0 : mStyle.size);
+    // mAdjustedSize is cached here if not already set to a non-zero value;
+    // but it may be overridden by a value computed in metrics initialization
+    // from font-size-adjust.
+    if (mAdjustedSize < 0.0) {
+      mAdjustedSize = mStyle.sizeAdjust == 0.0 ? 0.0 : mStyle.size * mFontEntry->mSizeAdjust;
+    }
+    return mAdjustedSize;
   }
 
   float FUnitsToDevUnitsFactor() const {
@@ -2155,7 +2160,7 @@ class gfxFont {
   mozilla::UniquePtr<gfxMathTable> mMathTable;
 
   gfxFontStyle mStyle;
-  gfxFloat mAdjustedSize;
+  mutable gfxFloat mAdjustedSize;
 
   // Conversion factor from font units to dev units; note that this may be
   // zero (in the degenerate case where mAdjustedSize has become zero).
