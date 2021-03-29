@@ -357,7 +357,7 @@ Here is the list of current deep links available, which can be found here in the
   </tr>
   <tr>
     <td>`fenix://make_default_browser`</td>
-    <td>Opens to the Android default apps settings screen. **Only works on Android API >=24**</td>
+    <td>Opens to the Android default apps settings screen. If Android API <= 23 opens tab to support page defined in SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER</td>
   </tr>
   <tr>
     <td>`fenix://settings_notifications`</td>

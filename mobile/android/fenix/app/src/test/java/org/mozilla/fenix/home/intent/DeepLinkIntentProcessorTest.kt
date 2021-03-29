@@ -6,6 +6,9 @@ package org.mozilla.fenix.home.intent
 
 import android.content.Intent
 import android.net.Uri
+import android.os.Build.VERSION_CODES.M
+import android.os.Build.VERSION_CODES.N
+import android.os.Build.VERSION_CODES.P
 import androidx.core.net.toUri
 import androidx.navigation.NavController
 import io.mockk.Called
@@ -27,6 +30,8 @@ import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.SearchWidgetCreator
 import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
+import org.mozilla.fenix.settings.SupportUtils
+import org.robolectric.annotation.Config
 
 @RunWith(FenixRobolectricTestRunner::class)
 class DeepLinkIntentProcessorTest {
@@ -244,9 +249,31 @@ class DeepLinkIntentProcessorTest {
     }
 
     @Test
-    fun `process make_default_browser deep link`() {
+    @Config(minSdk = N, maxSdk = P)
+    fun `process make_default_browser deep link for above API 23`() {
         assertTrue(processor.process(testIntent("make_default_browser"), navController, out))
 
+        verify { activity.startActivity(any()) }
+        verify { navController wasNot Called }
+        verify { out wasNot Called }
+    }
+
+    @Test
+    @Config(maxSdk = M)
+    fun `process make_default_browser deep link for API 23 and below`() {
+        assertTrue(processor.process(testIntent("make_default_browser"), navController, out))
+
+        verify {
+            activity.openToBrowserAndLoad(
+                searchTermOrURL = SupportUtils.getSumoURLForTopic(
+                    activity,
+                    SupportUtils.SumoTopic.SET_AS_DEFAULT_BROWSER
+                ),
+                newTab = true,
+                from = BrowserDirection.FromGlobal,
+                flags = EngineSession.LoadUrlFlags.external()
+            )
+        }
         verify { navController wasNot Called }
         verify { out wasNot Called }
     }
