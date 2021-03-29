@@ -872,6 +872,12 @@ add_task(async function test_persistCurrentPingsOnShutdown() {
 add_task(async function test_sendCheckOverride() {
   const TEST_PING_TYPE = "test-sendCheckOverride";
 
+  // Disable "health" ping. It can sneak into the test.
+  Services.prefs.setBoolPref(
+    TelemetryUtils.Preferences.HealthPingEnabled,
+    false
+  );
+
   // Clear any pending pings.
   await TelemetryController.testShutdown();
   await TelemetryStorage.testClearPendingPings();
