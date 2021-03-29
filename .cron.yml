@@ -239,19 +239,6 @@ jobs:
           - {weekday: 'Monday', hour: 10, minute: 0}
           - {weekday: 'Thursday', hour: 10, minute: 0}
 
-    - name: python-dependency-update
-      job:
-          type: decision-task
-          treeherder-symbol: Nfile
-          target-tasks-method: python_dependency_update
-      run-on-projects:
-          - mozilla-central
-      when:
-          by-project:
-              # No default branch
-              mozilla-central:
-                  - {weekday: 'Monday', hour: 10, minute: 0}
-
     - name: raptor-tp6m
       job:
           type: decision-task

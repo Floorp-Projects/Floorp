@@ -146,8 +146,6 @@ jobs:
         parent: push-to-try
     periodic-updates:
         symbol: I(file)
-    python-dependency-update:
-        symbol: I(pip)
     firefox-snap:
         symbol: I(snap)
     firefox-flatpak:
