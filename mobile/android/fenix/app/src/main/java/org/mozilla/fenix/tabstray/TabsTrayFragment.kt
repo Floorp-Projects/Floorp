@@ -13,7 +13,6 @@ import androidx.appcompat.app.AppCompatDialogFragment
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.navigation.fragment.findNavController
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.component_tabstray2.*
 import kotlinx.android.synthetic.main.component_tabstray2.view.*
 import org.mozilla.fenix.R
@@ -72,6 +71,12 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         )
 
         setupPager(view.context, this, browserTrayInteractor)
+
+        TabLayoutMediator(
+            tabLayout = tab_layout,
+            interactor = this,
+            store = requireComponents.core.store
+        ).attach()
     }
 
     override fun setCurrentTrayPosition(position: Int) {
@@ -110,21 +115,5 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             adapter = TrayPagerAdapter(context, trayInteractor, browserInteractor)
             isUserInputEnabled = false
         }
-
-        tab_layout.addOnTabSelectedListener(TabLayoutObserver(trayInteractor))
     }
-}
-
-/**
- * An observer for the [TabLayout] used for the Tabs Tray.
- */
-internal class TabLayoutObserver(
-    private val interactor: TabsTrayInteractor
-) : TabLayout.OnTabSelectedListener {
-    override fun onTabSelected(tab: TabLayout.Tab) {
-        interactor.setCurrentTrayPosition(tab.position)
-    }
-
-    override fun onTabUnselected(tab: TabLayout.Tab) = Unit
-    override fun onTabReselected(tab: TabLayout.Tab) = Unit
 }
