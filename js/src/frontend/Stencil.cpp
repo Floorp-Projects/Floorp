@@ -3449,9 +3449,10 @@ void JS::StencilRelease(JS::Stencil* stencil) {
   }
 }
 
-already_AddRefed<JS::Stencil> JS::CompileGlobalScriptToStencil(
-    JSContext* cx, const ReadOnlyCompileOptions& options,
-    SourceText<mozilla::Utf8Unit>& srcBuf) {
+template <typename CharT>
+static already_AddRefed<JS::Stencil> CompileGlobalScriptToStencilImpl(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<CharT>& srcBuf) {
   ScopeKind scopeKind =
       options.nonSyntacticScope ? ScopeKind::NonSyntactic : ScopeKind::Global;
 
@@ -3464,6 +3465,18 @@ already_AddRefed<JS::Stencil> JS::CompileGlobalScriptToStencil(
 
   // Convert the UniquePtr to a RefPtr and increment the count (to 1).
   return do_AddRef(stencil.release());
+}
+
+already_AddRefed<JS::Stencil> JS::CompileGlobalScriptToStencil(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<mozilla::Utf8Unit>& srcBuf) {
+  return CompileGlobalScriptToStencilImpl(cx, options, srcBuf);
+}
+
+already_AddRefed<JS::Stencil> JS::CompileGlobalScriptToStencil(
+    JSContext* cx, const JS::ReadOnlyCompileOptions& options,
+    JS::SourceText<char16_t>& srcBuf) {
+  return CompileGlobalScriptToStencilImpl(cx, options, srcBuf);
 }
 
 JSScript* JS::InstantiateGlobalStencil(
