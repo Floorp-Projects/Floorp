@@ -148,20 +148,6 @@ Preferences
   The maximum frequency at which an :doc:`../data/event-ping` will be sent.
   Default is 10 (minutes).
 
-``toolkit.telemetry.ecosystemtelemetry.enabled``
-
-  Whether :doc:`../data/ecosystem-telemetry` is enabled.
-  Default is false. Change requires restart.
-
-``toolkit.telemetry.ecosystemtelemetry.allowForNonProductionFx``
-
-  Whether :doc:`../data/ecosystem-telemetry` will be submitted if Firefox is
-  configured to use non-production FxA servers. Non-production servers includes
-  servers run by Mozilla (eg, the "staging" or "dev" instances) and servers run
-  externally (eg, self-hosted users). The expectation is that this will
-  primarily be used for QA.
-  Default is false. Change requires restart.
-
 ``toolkit.telemetry.overrideUpdateChannel``
 
   Override the ``channel`` value that is reported via Telemetry.
