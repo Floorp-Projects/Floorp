@@ -606,25 +606,7 @@ impl FirefoxOptions {
 
                     Some(activity)
                 }
-                None => {
-                    match package.as_str() {
-                        "org.mozilla.firefox"
-                        | "org.mozilla.firefox_beta"
-                        | "org.mozilla.fenix"
-                        | "org.mozilla.fenix.debug"
-                        | "org.mozilla.reference.browser" => {
-                            Some("org.mozilla.fenix.IntentReceiverActivity".to_string())
-                        }
-                        "org.mozilla.focus"
-                        | "org.mozilla.focus.debug"
-                        | "org.mozilla.klar"
-                        | "org.mozilla.klar.debug" => {
-                            Some("org.mozilla.focus.activity.IntentReceiverActivity".to_string())
-                        }
-                        // For all other applications fallback to auto-detection.
-                        _ => None,
-                    }
-                }
+                None => None,
             };
 
             android.device_serial = match options.get("androidDeviceSerial") {
@@ -917,64 +899,20 @@ mod tests {
     }
 
     #[test]
-    fn fx_options_android_activity_default_known_apps() {
-        let packages = vec![
-            "org.mozilla.firefox",
-            "org.mozilla.firefox_beta",
-            "org.mozilla.fenix",
-            "org.mozilla.fenix.debug",
-            "org.mozilla.focus",
-            "org.mozilla.focus.debug",
-            "org.mozilla.klar",
-            "org.mozilla.klar.debug",
-            "org.mozilla.reference.browser",
-        ];
-
-        for package in packages {
+    fn fx_options_android_activity_valid_value() {
+        for value in ["cheese", "Cheese_9"].iter() {
             let mut firefox_opts = Capabilities::new();
             firefox_opts.insert("androidPackage".into(), json!("foo.bar"));
             firefox_opts.insert("androidActivity".into(), json!(value));
 
             let opts = make_options(firefox_opts).expect("valid firefox options");
-            assert!(opts
-                .android
-                .unwrap()
-                .activity
-                .unwrap()
-                .contains("IntentReceiverActivity"));
+            let android_opts = AndroidOptions {
+                package: "foo.bar".to_owned(),
+                activity: Some(value.to_string()),
+                ..Default::default()
+            };
+            assert_eq!(opts.android, Some(android_opts));
         }
-    }
-
-    #[test]
-    fn fx_options_android_activity_default_unknown_apps() {
-        let packages = vec!["org.mozilla.geckoview_example", "com.some.other.app"];
-
-        for package in packages {
-            let mut firefox_opts = Capabilities::new();
-            firefox_opts.insert("androidPackage".into(), json!(package));
-
-            let opts = make_options(firefox_opts).expect("valid firefox options");
-            assert_eq!(opts.android.unwrap().activity, None);
-        }
-
-        let mut firefox_opts = Capabilities::new();
-        firefox_opts.insert(
-            "androidPackage".into(),
-            json!("org.mozilla.geckoview_example"),
-        );
-
-        let opts = make_options(firefox_opts).expect("valid firefox options");
-        assert_eq!(opts.android.unwrap().activity, None);
-    }
-
-    #[test]
-    fn fx_options_android_activity_override() {
-        let mut firefox_opts = Capabilities::new();
-        firefox_opts.insert("androidPackage".into(), json!("foo.bar"));
-        firefox_opts.insert("androidActivity".into(), json!("foo"));
-
-        let opts = make_options(firefox_opts).expect("valid firefox options");
-        assert_eq!(opts.android.unwrap().activity, Some("foo".to_string()));
     }
 
     #[test]
