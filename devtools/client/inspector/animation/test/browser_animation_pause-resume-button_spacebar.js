@@ -22,22 +22,28 @@ add_task(async function() {
 
   info("Checking spacebar works with other UI components");
   // To pause
-  await clickOnPauseResumeButton(animationInspector, panel);
+  clickOnPauseResumeButton(animationInspector, panel);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
   // To resume
-  await sendSpaceKeyEvent(animationInspector, panel);
-  assertAnimationsRunning(animationInspector);
+  sendSpaceKeyEvent(animationInspector, panel);
+  await waitUntilAnimationsPlayState(animationInspector, "running");
   // To pause
-  await clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
+  clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
   // To resume
-  await clickOnPauseResumeButton(animationInspector, panel);
+  clickOnPauseResumeButton(animationInspector, panel);
+  await waitUntilAnimationsPlayState(animationInspector, "running");
   // To pause
-  await sendSpaceKeyEvent(animationInspector, panel);
-  assertAnimationsPausing(animationInspector);
+  sendSpaceKeyEvent(animationInspector, panel);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
+  ok(true, "All components that can make animations pause/resume works fine");
 });
 
 async function testPauseAndResumeBySpacebar(animationInspector, element) {
   await sendSpaceKeyEvent(animationInspector, element);
-  assertAnimationsPausing(animationInspector);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
+  ok(true, "Space key can pause animations");
   await sendSpaceKeyEvent(animationInspector, element);
-  assertAnimationsRunning(animationInspector);
+  await waitUntilAnimationsPlayState(animationInspector, "running");
+  ok(true, "Space key can resume animations");
 }

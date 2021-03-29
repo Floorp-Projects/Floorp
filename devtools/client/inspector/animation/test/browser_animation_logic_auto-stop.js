@@ -20,25 +20,28 @@ add_task(async function() {
   } = await openAnimationInspector();
 
   info("Checking state after end of animation duration");
-  await selectNodeAndWaitForAnimations(".long", inspector);
+  await selectNode(".long", inspector);
+  await waitUntil(() => panel.querySelectorAll(".animation-item").length === 1);
   const pixelsData = getDurationAndRate(animationInspector, panel, 5);
-  await clickOnCurrentTimeScrubberController(
+  clickOnCurrentTimeScrubberController(
     animationInspector,
     panel,
     1 - pixelsData.rate
   );
-  await clickOnPauseResumeButton(animationInspector, panel);
-  // Must be able to catch rendering event after stopping the animation.
-  await waitForSummaryAndDetail(animationInspector);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
+  clickOnPauseResumeButton(animationInspector, panel);
   await assertStates(animationInspector, panel, false);
 
   info(
     "Checking state after end of animation duration and infinity iterations"
   );
-  await clickOnPauseResumeButton(animationInspector, panel);
-  await selectNodeAndWaitForAnimations(".compositor-all", inspector);
-  await clickOnCurrentTimeScrubberController(animationInspector, panel, 1);
-  await clickOnPauseResumeButton(animationInspector, panel);
+  clickOnPauseResumeButton(animationInspector, panel);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
+  await selectNode(".compositor-all", inspector);
+  await waitUntil(() => panel.querySelectorAll(".animation-item").length === 1);
+  clickOnCurrentTimeScrubberController(animationInspector, panel, 1);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
+  clickOnPauseResumeButton(animationInspector, panel);
   await assertStates(animationInspector, panel, true);
 });
 
@@ -49,7 +52,12 @@ async function assertStates(animationInspector, panel, shouldRunning) {
 
   const previousLabelContent = labelEl.textContent;
   const previousScrubberX = scrubberEl.getBoundingClientRect().x;
-  await wait(100);
+
+  await waitUntilAnimationsPlayState(
+    animationInspector,
+    shouldRunning ? "running" : "paused"
+  );
+
   const currentLabelContent = labelEl.textContent;
   const currentScrubberX = scrubberEl.getBoundingClientRect().x;
 

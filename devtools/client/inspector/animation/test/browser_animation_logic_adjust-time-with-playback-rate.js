@@ -17,8 +17,9 @@ add_task(async function() {
     "Pause the all animation and set current time to middle in order to check " +
       "the adjusting time"
   );
-  await clickOnPauseResumeButton(animationInspector, panel);
-  await clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
+  clickOnPauseResumeButton(animationInspector, panel);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
+  clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
 
   info("Check the created times of all animation are same");
   checkAdjustingTheTime(
@@ -27,24 +28,26 @@ add_task(async function() {
   );
 
   info("Change the playback rate to x10 after selecting '.div2'");
-  await selectNodeAndWaitForAnimations(".div2", inspector);
-  await clickOnPlaybackRateSelector(animationInspector, panel, 10);
+  await selectNode(".div2", inspector);
+  await waitUntil(() => panel.querySelectorAll(".animation-item").length === 1);
+  clickOnPlaybackRateSelector(animationInspector, panel, 10);
 
   info("Check each adjusted result of animations after selecting 'body' again");
-  await selectNodeAndWaitForAnimations("body", inspector);
+  await selectNode("body", inspector);
+  await waitUntil(() => panel.querySelectorAll(".animation-item").length === 2);
 
   checkAdjustingTheTime(
     animationInspector.state.animations[0].state,
     animationInspector.state.animations[1].state
   );
-  is(
-    animationInspector.state.animations[0].state.currentTime,
-    50000,
-    "The current time of '.div1' animation is 50%"
+
+  await waitUntil(
+    () => animationInspector.state.animations[0].state.currentTime === 50000
   );
-  is(
-    animationInspector.state.animations[1].state.currentTime,
-    50000,
-    "The current time of '.div2' animation is 50%"
+  ok(true, "The current time of '.div1' animation is 50%");
+
+  await waitUntil(
+    () => animationInspector.state.animations[1].state.currentTime === 50000
   );
+  ok(true, "The current time of '.div2' animation is 50%");
 });

@@ -48,14 +48,10 @@ add_task(async function() {
   );
 
   info("Checking content of each animation item");
-  const animationItemEls = panel.querySelectorAll(
-    ".animation-list .animation-item"
-  );
-
-  for (let i = 0; i < animationItemEls.length; i++) {
+  for (let i = 0; i < TEST_DATA.length; i++) {
     const testData = TEST_DATA[i];
     info(`Checking pseudo element for ${testData.expectedTargetLabel}`);
-    const animationItemEl = animationItemEls[i];
+    const animationItemEl = await findAnimationItemByIndex(panel, i);
 
     info("Checking text content of animation target");
     const animationTargetEl = animationItemEl.querySelector(
@@ -80,7 +76,11 @@ add_task(async function() {
     "Checking whether node is selected correctly " +
       "when click on the first inspector icon on Reps component"
   );
+  let onDetailRendered = animationInspector.once(
+    "animation-keyframes-rendered"
+  );
   await clickOnTargetNode(animationInspector, panel, 0);
+  await onDetailRendered;
   assertAnimationCount(panel, 1);
   assertAnimationNameLabel(panel, TEST_DATA[0].expectedAnimationNameLabel);
   assertKeyframesGraphPathSegments(
@@ -89,13 +89,15 @@ add_task(async function() {
   );
 
   info("Select <body> again to reset the animation list");
-  await selectNodeAndWaitForAnimations("body", inspector);
+  await selectNode("body", inspector);
 
   info(
     "Checking whether node is selected correctly " +
       "when click on the second inspector icon on Reps component"
   );
+  onDetailRendered = animationInspector.once("animation-keyframes-rendered");
   await clickOnTargetNode(animationInspector, panel, 1);
+  await onDetailRendered;
   assertAnimationCount(panel, 1);
   assertAnimationNameLabel(panel, TEST_DATA[1].expectedAnimationNameLabel);
   assertKeyframesGraphPathSegments(

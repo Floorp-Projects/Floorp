@@ -18,7 +18,8 @@ add_task(async function() {
   info("Get initial coordinates result as test data");
   const initialCoordinatesResult = [];
 
-  for (const itemEl of panel.querySelectorAll(".animation-item")) {
+  for (let i = 0; i < animationInspector.state.animations.length; i++) {
+    const itemEl = await findAnimationItemByIndex(panel, i);
     const svgEl = itemEl.querySelector("svg");
     const svgViewBoxX = svgEl.viewBox.baseVal.x;
     const svgViewBoxWidth = svgEl.viewBox.baseVal.width;
@@ -59,9 +60,16 @@ add_task(async function() {
   }
 
   info("Set currentTime to rear of the end of animation of .delay-negative.");
-  await clickOnCurrentTimeScrubberController(animationInspector, panel, 0.75);
+  clickOnCurrentTimeScrubberController(animationInspector, panel, 0.75);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
   info("Resume animations");
-  await clickOnPauseResumeButton(animationInspector, panel);
+  clickOnPauseResumeButton(animationInspector, panel);
+  // As some animations may be finished, we check if some animations will be running.
+  await waitUntil(() =>
+    animationInspector.state.animations.some(
+      a => a.state.playState === "running"
+    )
+  );
 
   info("Check the layout");
   const itemEls = panel.querySelectorAll(".animation-item");

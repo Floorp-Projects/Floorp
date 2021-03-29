@@ -180,7 +180,7 @@ add_task(async function() {
   const { panel } = await openAnimationInspector();
 
   for (const { targetClass, expectedResult } of TEST_DATA) {
-    const animationItemEl = findAnimationItemElementsByTargetSelector(
+    const animationItemEl = await findAnimationItemByTargetSelector(
       panel,
       `.${targetClass}`
     );

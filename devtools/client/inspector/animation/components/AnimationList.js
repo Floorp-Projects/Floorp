@@ -21,7 +21,6 @@ class AnimationList extends PureComponent {
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
       dispatch: PropTypes.func.isRequired,
       displayableRange: PropTypes.object.isRequired,
-      emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
       selectAnimation: PropTypes.func.isRequired,
@@ -37,7 +36,6 @@ class AnimationList extends PureComponent {
       animations,
       dispatch,
       displayableRange,
-      emitEventForTest,
       getAnimatedPropertyMap,
       getNodeFromActor,
       selectAnimation,
@@ -57,7 +55,6 @@ class AnimationList extends PureComponent {
         AnimationItem({
           animation,
           dispatch,
-          emitEventForTest,
           getAnimatedPropertyMap,
           getNodeFromActor,
           isDisplayable: startIndex <= index && index <= endIndex,

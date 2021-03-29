@@ -19,11 +19,12 @@ add_task(async function() {
     "Check '.compositor-all' animation is still running " +
       "after even pausing '.animated' animation"
   );
-  await selectNodeAndWaitForAnimations(".animated", inspector);
-  await clickOnPauseResumeButton(animationInspector, panel);
+  await selectNode(".animated", inspector);
+  clickOnPauseResumeButton(animationInspector, panel);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
   ok(buttonEl.classList.contains("paused"), "State of button should be paused");
-  await selectNodeAndWaitForAnimations("body", inspector);
-  assertStatus(
+  await selectNode("body", inspector);
+  await assertStatus(
     animationInspector.state.animations,
     buttonEl,
     ["paused", "running"],
@@ -34,8 +35,8 @@ add_task(async function() {
     "Check both animations are paused after clicking pause/resume " +
       "while displaying both animations"
   );
-  await clickOnPauseResumeButton(animationInspector, panel);
-  assertStatus(
+  clickOnPauseResumeButton(animationInspector, panel);
+  await assertStatus(
     animationInspector.state.animations,
     buttonEl,
     ["paused", "paused"],
@@ -46,14 +47,19 @@ add_task(async function() {
     "Check '.animated' animation is still paused " +
       "after even resuming '.compositor-all' animation"
   );
-  await selectNodeAndWaitForAnimations(".compositor-all", inspector);
-  await clickOnPauseResumeButton(animationInspector, panel);
+  await selectNode(".compositor-all", inspector);
+  clickOnPauseResumeButton(animationInspector, panel);
+  await waitUntil(() =>
+    animationInspector.state.animations.some(
+      a => a.state.playState === "running"
+    )
+  );
   ok(
     !buttonEl.classList.contains("paused"),
     "State of button should be running"
   );
-  await selectNodeAndWaitForAnimations("body", inspector);
-  assertStatus(
+  await selectNode("body", inspector);
+  await assertStatus(
     animationInspector.state.animations,
     buttonEl,
     ["paused", "running"],
@@ -61,12 +67,22 @@ add_task(async function() {
   );
 });
 
-function assertStatus(
+async function assertStatus(
   animations,
   buttonEl,
   expectedAnimationStates,
   shouldButtonPaused
 ) {
+  await waitUntil(() => {
+    for (let i = 0; i < expectedAnimationStates.length; i++) {
+      const animation = animations[i];
+      const state = expectedAnimationStates[i];
+      if (animation.state.playState !== state) {
+        return false;
+      }
+    }
+    return true;
+  });
   expectedAnimationStates.forEach((state, index) => {
     is(
       animations[index].state.playState,

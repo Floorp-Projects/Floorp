@@ -30,7 +30,6 @@ class AnimationTarget extends Component {
     return {
       animation: PropTypes.object.isRequired,
       dispatch: PropTypes.func.isRequired,
-      emitEventForTest: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
       highlightedNode: PropTypes.string.isRequired,
       setHighlightedNode: PropTypes.func.isRequired,
@@ -116,13 +115,7 @@ class AnimationTarget extends Component {
   }
 
   render() {
-    const {
-      emitEventForTest,
-      dispatch,
-      highlightedNode,
-      setHighlightedNode,
-    } = this.props;
-
+    const { dispatch, highlightedNode, setHighlightedNode } = this.props;
     const { nodeFront } = this.state;
 
     if (!nodeFront) {
@@ -130,8 +123,6 @@ class AnimationTarget extends Component {
         className: "animation-target",
       });
     }
-
-    emitEventForTest("animation-target-rendered");
 
     const isHighlighted = nodeFront.actorID === highlightedNode;
 

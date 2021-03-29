@@ -25,54 +25,60 @@ add_task(async function() {
     "Checking playback rate existence which includes custom rate of animations"
   );
   const expectedPlaybackRates = [0.1, 0.25, 0.5, 1, 1.5, 2, 5, 10];
-  assertPlaybackRateOptions(selectEl, expectedPlaybackRates);
+  await assertPlaybackRateOptions(selectEl, expectedPlaybackRates);
 
   info("Checking selected playback rate");
   is(Number(selectEl.value), 1.5, "Selected option should be 1.5");
 
   info("Checking playback rate of animations");
-  await clickOnPlaybackRateSelector(animationInspector, panel, 0.5);
-  assertPlaybackRate(animationInspector, 0.5);
+  clickOnPlaybackRateSelector(animationInspector, panel, 0.5);
+  await assertPlaybackRate(animationInspector, 0.5);
 
   info("Checking mixed playback rate");
-  await selectNodeAndWaitForAnimations("div", inspector);
-  await clickOnPlaybackRateSelector(animationInspector, panel, 2);
-  assertPlaybackRate(animationInspector, 2);
-  await selectNodeAndWaitForAnimations("body", inspector);
-  is(selectEl.value, "", "Selected option should be empty");
+  await selectNode("div", inspector);
+  await waitUntil(() => panel.querySelectorAll(".animation-item").length === 1);
+  clickOnPlaybackRateSelector(animationInspector, panel, 2);
+  await assertPlaybackRate(animationInspector, 2);
+  await selectNode("body", inspector);
+  await waitUntil(() => panel.querySelectorAll(".animation-item").length === 2);
+  await waitUntil(() => selectEl.value === "");
+  ok(true, "Selected option should be empty");
 
   info("Checking playback rate after re-setting");
-  await clickOnPlaybackRateSelector(animationInspector, panel, 1);
-  assertPlaybackRate(animationInspector, 1);
+  clickOnPlaybackRateSelector(animationInspector, panel, 1);
+  await assertPlaybackRate(animationInspector, 1);
 
   info(
     "Checking whether custom playback rate exist " +
       "after selecting another playback rate"
   );
-  assertPlaybackRateOptions(selectEl, expectedPlaybackRates);
+  await assertPlaybackRateOptions(selectEl, expectedPlaybackRates);
 });
 
 async function assertPlaybackRate(animationInspector, rate) {
-  const isRateEqual = animationInspector.state.animations.every(
-    ({ state }) => state.playbackRate === rate
+  await waitUntil(() =>
+    animationInspector.state?.animations.every(
+      ({ state }) => state.playbackRate === rate
+    )
   );
-  ok(isRateEqual, `Playback rate of animations should be ${rate}`);
+  ok(true, `Playback rate of animations should be ${rate}`);
 }
 
-function assertPlaybackRateOptions(selectEl, expectedPlaybackRates) {
-  is(
-    selectEl.options.length,
-    expectedPlaybackRates.length,
-    `Length of options should be ${expectedPlaybackRates.length}`
-  );
+async function assertPlaybackRateOptions(selectEl, expectedPlaybackRates) {
+  await waitUntil(() => {
+    if (selectEl.options.length !== expectedPlaybackRates.length) {
+      return false;
+    }
 
-  for (let i = 0; i < selectEl.options.length; i++) {
-    const optionEl = selectEl.options[i];
-    const expectedPlaybackRate = expectedPlaybackRates[i];
-    is(
-      Number(optionEl.value),
-      expectedPlaybackRate,
-      `Option of index[${i}] should be ${expectedPlaybackRate}`
-    );
-  }
+    for (let i = 0; i < selectEl.options.length; i++) {
+      const optionEl = selectEl.options[i];
+      const expectedPlaybackRate = expectedPlaybackRates[i];
+      if (Number(optionEl.value) !== expectedPlaybackRate) {
+        return false;
+      }
+    }
+
+    return true;
+  });
+  ok(true, "Content of playback rate options are correct");
 }

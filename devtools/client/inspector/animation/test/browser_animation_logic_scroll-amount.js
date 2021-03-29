@@ -23,12 +23,18 @@ add_task(async function() {
   info(
     "Set the scroll amount of animation and animated property to the bottom"
   );
+  const onDetailRendered = animationInspector.once(
+    "animation-keyframes-rendered"
+  );
   await clickOnAnimationByTargetSelector(
     animationInspector,
     panel,
     ".longhand"
   );
-  const bottomAnimationEl = panel.querySelector(".animation-item:last-child");
+  await onDetailRendered;
+
+  await waitUntil(() => panel.querySelectorAll(".animation-item").length === 5);
+  const bottomAnimationEl = await findAnimationItemByIndex(panel, 4);
   const bottomAnimatedPropertyEl = panel.querySelector(
     ".animated-property-item:last-child"
   );
@@ -49,14 +55,19 @@ add_task(async function() {
   info(
     "Check whether the scroll amount re-calculate after changing the count of items"
   );
-  await selectNodeAndWaitForAnimations(".negative-delay", inspector);
+  await selectNode(".negative-delay", inspector);
+  await waitUntil(
+    () =>
+      initialScrollTopOfAnimation > animationInspectionPanel.scrollTop &&
+      initialScrollTopOfAnimatedProperty >
+        animatedPropertyInspectionPanel.scrollTop
+  );
   ok(
-    initialScrollTopOfAnimation > animationInspectionPanel.scrollTop,
+    true,
     "Scroll amount for animation list should be less than previous state"
   );
   ok(
-    initialScrollTopOfAnimatedProperty >
-      animatedPropertyInspectionPanel.scrollTop,
+    true,
     "Scroll amount for animated property list should be less than previous state"
   );
 });

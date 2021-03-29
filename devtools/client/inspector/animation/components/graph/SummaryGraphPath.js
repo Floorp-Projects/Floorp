@@ -35,7 +35,6 @@ class SummaryGraphPath extends Component {
   static get propTypes() {
     return {
       animation: PropTypes.object.isRequired,
-      emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.object.isRequired,
       simulateAnimation: PropTypes.func.isRequired,
       timeScale: PropTypes.object.isRequired,
@@ -169,12 +168,7 @@ class SummaryGraphPath extends Component {
   }
 
   async updateState(props) {
-    const {
-      animation,
-      emitEventForTest,
-      getAnimatedPropertyMap,
-      timeScale,
-    } = props;
+    const { animation, getAnimatedPropertyMap, timeScale } = props;
 
     let animatedPropertyMap = null;
     let thisEl = null;
@@ -201,8 +195,6 @@ class SummaryGraphPath extends Component {
       isStateUpdating: false,
       keyframesList,
     });
-
-    emitEventForTest("animation-summary-graph-rendered");
   }
 
   render() {

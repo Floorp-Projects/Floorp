@@ -64,7 +64,7 @@ add_task(async function() {
       expectedTooltip,
     } = testData;
 
-    const animationItemEl = findAnimationItemElementsByTargetSelector(
+    const animationItemEl = await findAnimationItemByTargetSelector(
       panel,
       `.${targetClass}`
     );

@@ -131,7 +131,6 @@ class App extends Component {
                 animations,
                 direction,
                 dispatch,
-                emitEventForTest,
                 getAnimatedPropertyMap,
                 getNodeFromActor,
                 removeAnimationsCurrentTimeListener,
