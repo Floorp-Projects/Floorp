@@ -134,72 +134,22 @@ fn compute_curve_gamma_table_type2(gamma_table: &mut Vec<f32>, table: &[u16]) {
     }
 }
 fn compute_curve_gamma_table_type_parametric(gamma_table: &mut Vec<f32>, params: &[f32]) {
-    let interval: f32;
-    let a: f32;
-    let b: f32;
-    let c: f32;
-    let e: f32;
-    let f: f32;
-    let y: f32 = params[0];
-    // XXX: this could probably be cleaner with slice patterns
-    if params.len() == 1 {
-        a = 1.;
-        b = 0.;
-        c = 0.;
-        e = 0.;
-        f = 0.;
-        interval = -1.
-    } else if params.len() == 3 {
-        a = params[1];
-        b = params[2];
-        c = 0.;
-        e = 0.;
-        f = 0.;
-        interval = -1. * params[2] / params[1]
-    } else if params.len() == 4 {
-        a = params[1];
-        b = params[2];
-        c = 0.;
-        e = params[3];
-        f = params[3];
-        interval = -1. * params[2] / params[1]
-    } else if params.len() == 5 {
-        a = params[1];
-        b = params[2];
-        c = params[3];
-        e = -c;
-        f = 0.;
-        interval = params[4]
-    } else if params.len() == 7 {
-        a = params[1];
-        b = params[2];
-        c = params[3];
-        e = params[5] - c;
-        f = params[6];
-        interval = params[4]
-    } else {
-        debug_assert!(false, "invalid parametric function type.");
-        a = 1.;
-        b = 0.;
-        c = 0.;
-        e = 0.;
-        f = 0.;
-        interval = -1.
-    }
-    for X in 0..256 {
-        if X as f32 >= interval {
-            // XXX The equations are not exactly as defined in the spec but are
-            //     algebraically equivalent.
-            // TODO Should division by 255 be for the whole expression.
-            gamma_table.push(clamp_float(
-                (((a * X as f32) as f64 / 255.0f64 + b as f64).powf(y as f64) + c as f64 + e as f64)
-                    as f32,
-            ));
+    let g: f32 = params[0];
+    let (a, b, c, d, e, f) = match &params[1..] {
+        [] => (1., 0., 0., -1., 0., 0.),
+        [a, b] => (*a, *b, 0., -b / a, 0., 0.),
+        [a, b, c] => (*a, *b, 0., -b / a, *c, *c),
+        [a, b, c, d] => (*a, *b, *c, *d, 0., 0.),
+        [a, b, c, d, e, f] => (*a, *b, *c, *d, *e, *f),
+        _ => panic!(),
+    };
+    for i in 0..256 {
+        let X = i as f32 / 255.;
+        gamma_table.push(clamp_float(if X >= d {
+            (a * X + b).powf(g) + e
         } else {
-            gamma_table.push(clamp_float(
-                ((c * X as f32) as f64 / 255.0f64 + f as f64) as f32,
-            ));
-        }
+            c * X + f
+        }))
     }
 }
 

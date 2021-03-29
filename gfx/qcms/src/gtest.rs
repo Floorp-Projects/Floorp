@@ -882,24 +882,47 @@ mod gtest {
 
 #[cfg(test)]
 mod test {
+    use crate::{Profile, Transform};
     #[test]
     fn identity() {
-        let p1 = crate::Profile::new_sRGB();
-        let p2 = crate::Profile::new_sRGB();
-        let xfm = crate::Transform::new(&p1, &p2, crate::DataType::RGB8, crate::Intent::default())
-            .unwrap();
+        let p1 = Profile::new_sRGB();
+        let p2 = Profile::new_sRGB();
+        let xfm =
+            Transform::new(&p1, &p2, crate::DataType::RGB8, crate::Intent::default()).unwrap();
         let mut data = [4, 30, 80];
         xfm.apply(&mut data);
         assert_eq!(data, [4, 30, 80]);
     }
     #[test]
     fn D50() {
-        let p1 = crate::Profile::new_sRGB();
-        let p2 = crate::Profile::new_XYZD50();
-        let xfm = crate::Transform::new(&p1, &p2, crate::DataType::RGB8, crate::Intent::default())
-            .unwrap();
+        let p1 = Profile::new_sRGB();
+        let p2 = Profile::new_XYZD50();
+        let xfm =
+            Transform::new(&p1, &p2, crate::DataType::RGB8, crate::Intent::default()).unwrap();
         let mut data = [4, 30, 80];
         xfm.apply(&mut data);
         assert_eq!(data, [4, 4, 15]);
+    }
+
+    fn profile_from_path(file: &str) -> Box<Profile> {
+        use std::io::Read;
+        let mut path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        path.push("profiles");
+        path.push(file);
+        let mut file = std::fs::File::open(path).unwrap();
+        let mut data = Vec::new();
+        file.read_to_end(&mut data).unwrap();
+        Profile::new_from_slice(&data).unwrap()
+    }
+
+    #[test]
+    fn parametric_threshold() {
+        let src = profile_from_path("parametric-thresh.icc");
+        let dst = crate::Profile::new_sRGB();
+        let xfm =
+            Transform::new(&src, &dst, crate::DataType::RGB8, crate::Intent::default()).unwrap();
+        let mut data = [4, 30, 80];
+        xfm.apply(&mut data);
+        assert_eq!(data, [188, 188, 189]);
     }
 }
