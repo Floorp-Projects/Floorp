@@ -273,7 +273,9 @@ add_task(async function insertBeforeFirstItemInOverflow() {
     CustomizableUI.addWidgetToArea(
       kLibraryButton,
       "nav-bar",
-      CustomizableUI.getWidgetIdsInArea("nav-bar").indexOf(kDownloadsBtn)
+      CustomizableUI.getWidgetIdsInArea("nav-bar").indexOf(
+        "save-to-pocket-button"
+      )
     );
   }
   let libraryButton = document.getElementById(kLibraryButton);
@@ -292,6 +294,11 @@ add_task(async function insertBeforeFirstItemInOverflow() {
     libraryButton.nextElementSibling.getBoundingClientRect().left -
     PanelUI.menuButton.parentNode.getBoundingClientRect().left +
     10; // Leave some margin for the margins between buttons etc.;
+  info(
+    "Resizing to " +
+      resizeWidthToMakeLibraryLast +
+      " , waiting for library to overflow."
+  );
   window.resizeBy(resizeWidthToMakeLibraryLast, 0);
   await TestUtils.waitForCondition(() => {
     return (

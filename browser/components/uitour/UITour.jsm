@@ -279,7 +279,7 @@ var UITour = {
     ],
   ]),
 
-  nonProtonTargets: [
+  nonProtonURLBarTargets: [
     [
       "pageAction-copyURL",
       {
@@ -347,8 +347,8 @@ var UITour = {
     );
 
     // Add non-proton targets if necessary.
-    if (!this.protonEnabled) {
-      for (let [id, target] of this.nonProtonTargets) {
+    if (!Services.prefs.getBoolPref("browser.proton.urlbar.enabled", false)) {
+      for (let [id, target] of this.nonProtonURLBarTargets) {
         this.targets.set(id, target);
       }
     }
