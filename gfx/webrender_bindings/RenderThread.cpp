@@ -64,6 +64,7 @@ RenderThread::RenderThread(base::Thread* aThread)
     : mThread(aThread),
       mThreadPool(false),
       mThreadPoolLP(true),
+      mSingletonGLIsForHardwareWebRender(true),
       mWindowInfos("RenderThread.mWindowInfos"),
       mRenderTextureMapLock("RenderThread.mRenderTextureMapLock"),
       mHasShutdown(false),
@@ -773,7 +774,7 @@ void RenderThread::InitDeviceTask() {
   }
 
   nsAutoCString err;
-  mSingletonGL = CreateGLContext(err);
+  CreateSingletonGL(err);
   if (gfx::gfxVars::UseWebRenderProgramBinaryDisk()) {
     mProgramCache = MakeUnique<WebRenderProgramCache>(ThreadPool().Raw());
   }
@@ -908,10 +909,15 @@ gl::GLContext* RenderThread::SingletonGL() {
   return gl;
 }
 
+void RenderThread::CreateSingletonGL(nsACString& aError) {
+  mSingletonGL = CreateGLContext(aError);
+  mSingletonGLIsForHardwareWebRender = !gfx::gfxVars::UseSoftwareWebRender();
+}
+
 gl::GLContext* RenderThread::SingletonGL(nsACString& aError) {
   MOZ_ASSERT(IsInRenderThread());
   if (!mSingletonGL) {
-    mSingletonGL = CreateGLContext(aError);
+    CreateSingletonGL(aError);
     mShaders = nullptr;
   }
   if (mSingletonGL && !mShaders) {
@@ -919,6 +925,16 @@ gl::GLContext* RenderThread::SingletonGL(nsACString& aError) {
   }
 
   return mSingletonGL.get();
+}
+
+gl::GLContext* RenderThread::SingletonGLForCompositorOGL() {
+  MOZ_RELEASE_ASSERT(gfx::gfxVars::UseSoftwareWebRender());
+
+  if (mSingletonGLIsForHardwareWebRender) {
+    // Clear singleton GL, since GLContext is for hardware WebRender.
+    ClearSingletonGL();
+  }
+  return SingletonGL();
 }
 
 void RenderThread::ClearSingletonGL() {
