@@ -1005,7 +1005,7 @@ nsresult mozInlineSpellChecker::MakeSpellCheckRange(nsINode* aStartNode,
                                                     int32_t aStartOffset,
                                                     nsINode* aEndNode,
                                                     int32_t aEndOffset,
-                                                    nsRange** aRange) {
+                                                    nsRange** aRange) const {
   nsresult rv;
   *aRange = nullptr;
 
@@ -1085,7 +1085,7 @@ nsresult mozInlineSpellChecker::SpellCheckBetweenNodes(nsINode* aStartNode,
 //    for these cases.
 
 bool mozInlineSpellChecker::ShouldSpellCheckNode(TextEditor* aTextEditor,
-                                                 nsINode* aNode) {
+                                                 nsINode* aNode) const {
   MOZ_ASSERT(aNode);
   if (!aNode->IsContent()) return false;
 
@@ -1607,6 +1607,7 @@ nsresult mozInlineSpellChecker::ResumeCheck(
 //
 //    If there is no intersection, *aRange will be nullptr.
 
+// static
 nsresult mozInlineSpellChecker::IsPointInSelection(Selection& aSelection,
                                                    nsINode* aNode,
                                                    int32_t aOffset,
