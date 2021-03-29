@@ -976,7 +976,14 @@
           <label id="appMenu-fxa-text" class="toolbarbutton-text" data-l10n-id="appmenu-fxa-sync-and-save-data"/>
           <toolbarbutton id="appMenu-fxa-label2"
                         class="subviewbutton"
-                        oncommand="gSync.toggleAccountPanel(this, event)"/>
+                        oncommand="gSync.toggleAccountPanel(this, event)">
+            <vbox flex="1">
+              <label id="appMenu-header-title"
+                     crop="end"/>
+              <label id="appMenu-header-description"
+                     crop="end"/>
+            </vbox>
+          </toolbarbutton>
         </toolbaritem>
         <toolbarseparator id="appMenu-fxa-separator" class="proton-zap"/>
         <toolbarbutton id="appMenu-new-tab-button2"
