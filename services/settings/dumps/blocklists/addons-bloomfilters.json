@@ -3,6 +3,32 @@
     {
       "stash": {
         "blocked": [
+          "{c33c69a7-f889-647c-9d9b-7694be8035bc}:1.0.0",
+          "{c22c69a7-f889-447c-9d6b-7694be8035bc}:1.2.0",
+          "{9371d531-4dc1-4537-a9e7-dbffd5fe8238}:1.0.0",
+          "{c23c69a7-f889-547c-9d9b-7694be8035bc}:10.0.0",
+          "{c22c69a7-f889-447c-9d6b-7694be8035bc}:1.0.0",
+          "{c22c69a7-f887-687c-6d9b-9675be8035bc}:1.0.0",
+          "{c22c69a7-f889-447c-9d6b-7694be8035bc}:1.1.0",
+          "{c33c69a7-f889-857c-9d9b-9675be8035bc}:1.0.0",
+          "{9371d531-4dc1-4537-a9e7-dbffd5fe8238}:1.3.0",
+          "{c33c69a7-f889-647c-9d9b-7675be8035bc}:1.0.0",
+          "{c33c69a7-f889-657c-9d9b-9675be8035bc}:1.0.0",
+          "{c33c69a7-f889-687c-1d9b-9675be8035bc}:1.0.0",
+          "{9371d531-4dc1-4537-a9e7-dbffd5fe8238}:1.2.0",
+          "{9371d531-4dc1-4537-a9e7-dbffd5fe8238}:1.1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1616611069940,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1617021309805,
+      "id": "8d492476-b7de-45ce-b6cd-7e26d18a39ca",
+      "last_modified": 1617021473170
+    },
+    {
+      "stash": {
+        "blocked": [
           "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:4.0",
           "{baba4eaa-1a4f-41af-b7b2-68ecb7d5dddd}:2.2",
           "onlineprot@live:1.1",
