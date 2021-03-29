@@ -8822,6 +8822,21 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
               aLoadState->URI(), &aState.mSameExceptHashes))) {
         aState.mSameExceptHashes = false;
       }
+      // HTTPS-Only Mode upgrades schemes from http to https in Necko, hence we
+      // have to perform a special check here to avoid an actual navigation. If
+      // HTTPS-Only Mode is enabled and the two URIs are same-origin (modulo the
+      // fact that the new URI is currently http), then set mSameExceptHashes to
+      // true and only perform a fragment navigation.
+      nsCOMPtr<nsIChannel> docChannel = GetCurrentDocChannel();
+      nsCOMPtr<nsILoadInfo> loadInfo;
+      if (docChannel) {
+        loadInfo = docChannel->LoadInfo();
+      }
+      if (!aState.mSameExceptHashes &&
+          nsHTTPSOnlyUtils::IsEqualURIExceptSchemeAndRef(
+              currentExposableURI, aLoadState->URI(), loadInfo)) {
+        aState.mSameExceptHashes = true;
+      }
     }
   }
 
@@ -8874,7 +8889,6 @@ bool nsDocShell::IsSameDocumentNavigation(nsDocShellLoadState* aLoadState,
         (aState.mHistoryNavBetweenSameDoc && mOSHE != aLoadState->SHEntry()) ||
         (!aLoadState->SHEntry() && !aLoadState->PostDataStream() &&
          aState.mSameExceptHashes && aState.mNewURIHasRef);
-
     MOZ_LOG(gSHLog, LogLevel::Debug,
             ("nsDocShell %p NavBetweenSameDoc=%d is same doc = %d", this,
              aState.mHistoryNavBetweenSameDoc, doSameDocumentNavigation));
