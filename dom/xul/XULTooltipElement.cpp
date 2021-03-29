@@ -77,7 +77,9 @@ nsresult XULTooltipElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   if (aVisitor.mEvent->mMessage == eXULPopupShowing &&
       aVisitor.mEvent->IsTrusted() && !aVisitor.mEvent->DefaultPrevented() &&
       AttrValueIs(kNameSpaceID_None, nsGkAtoms::page, nsGkAtoms::_true,
-                  eCaseMatters)) {
+                  eCaseMatters) &&
+      !AttrValueIs(kNameSpaceID_None, nsGkAtoms::titletip, nsGkAtoms::_true,
+                   eCaseMatters)) {
     // When the tooltip node has the "page" attribute set to "true" the
     // tooltip text provider is used to find the tooltip text from page where
     // mouse is hovering over.
