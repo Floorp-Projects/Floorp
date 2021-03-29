@@ -45,11 +45,14 @@ interface nsICookieManager : nsISupports
   readonly attribute Array<nsICookie> sessionCookies;
 
   /**
-   * Returns current effective value of the "network.cookie.cookieBehavior".
+   * Returns current effective value of the cookieBehavior. It will return the
+   * different pref according to the aIsPrivate. If aIsPrivate is true, it will
+   * return the pref "network.cookie.cookieBehavior". Otherwise, it will return
+   * the pref "network.cookie.cookieBehavior.pbmode"
    */
-  readonly attribute uint32_t cookieBehavior;
+  uint32_t getCookieBehavior(in boolean aIsPrivate);
   %{C++
-    static uint32_t GetCookieBehavior();
+    static uint32_t GetCookieBehavior(bool aIsPrivate);
   %}
 
   /**

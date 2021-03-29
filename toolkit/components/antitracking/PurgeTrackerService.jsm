@@ -319,7 +319,7 @@ PurgeTrackerService.prototype = {
     //   * BEHAVIOR_LIMIT_FOREIGN
     //   * BEHAVIOR_REJECT_TRACKER (ETP)
     //   * BEHAVIOR_REJECT_TRACKER_AND_PARTITION_FOREIGN (dFPI)
-    let cookieBehavior = Services.cookies.cookieBehavior;
+    let cookieBehavior = Services.cookies.getCookieBehavior(false);
 
     let activeWithCookieBehavior =
       cookieBehavior == Ci.nsICookieService.BEHAVIOR_REJECT_FOREIGN ||

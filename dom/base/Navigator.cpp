@@ -513,8 +513,10 @@ StorageManager* Navigator::Storage() {
 }
 
 bool Navigator::CookieEnabled() {
-  bool cookieEnabled = (nsICookieManager::GetCookieBehavior() !=
-                        nsICookieService::BEHAVIOR_REJECT);
+  nsCOMPtr<nsILoadContext> loadContext = do_GetInterface(mWindow);
+  bool cookieEnabled =
+      nsICookieManager::GetCookieBehavior(loadContext->UsePrivateBrowsing()) !=
+      nsICookieService::BEHAVIOR_REJECT;
 
   // Check whether an exception overrides the global cookie behavior
   // Note that the code for getting the URI here matches that in
