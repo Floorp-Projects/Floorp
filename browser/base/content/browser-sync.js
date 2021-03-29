@@ -490,13 +490,21 @@ var gSync = {
     ).hidden = false;
 
     if (PanelUI.protonAppMenuEnabled) {
+      const appMenuHeaderTitle = PanelMultiView.getViewNode(
+        document,
+        "appMenu-header-title"
+      );
+      const appMenuHeaderDescription = PanelMultiView.getViewNode(
+        document,
+        "appMenu-header-description"
+      );
+      appMenuHeaderTitle.hidden = true;
       // We must initialize the label attribute here instead of the markup
       // due to a timing error. The fluent label attribute was being applied
       // after we had updated appMenuLabel and thus displayed an incorrect
       // label for signed in users.
-      appMenuLabel.setAttribute(
-        "label",
-        this.fluentStrings.formatValueSync("appmenu-fxa-signed-in-label")
+      appMenuHeaderDescription.value = this.fluentStrings.formatValueSync(
+        "appmenu-fxa-signed-in-label"
       );
     }
 
@@ -804,7 +812,7 @@ var gSync = {
       "PanelUI-sign-out-separator"
     );
     fxaSignOutButtonEl.hidden = fxaSignOutSeparator.hidden =
-      fxaStatus != "signedin";
+      UIState.get() === UIState.STATUS_NOT_CONFIGURED;
 
     this.enableSendTabIfValidTab();
 
@@ -873,7 +881,6 @@ var gSync = {
     );
 
     if (PanelUI.protonAppMenuEnabled) {
-      // TODO: sign out button icon is still showing despite removing class
       let toolbarbuttons = fxaMenuPanel.querySelectorAll("toolbarbutton");
       for (let toolbarbutton of toolbarbuttons) {
         toolbarbutton.classList.remove("subviewbutton-iconic");
@@ -895,17 +902,15 @@ var gSync = {
       }
     } else if (state.status === UIState.STATUS_LOGIN_FAILED) {
       stateValue = "login-failed";
-      headerTitle = state.email;
-      headerDescription = this.fluentStrings.formatValueSync(
-        "account-reconnect-to-fxa"
-      );
+      headerTitle = this.fluentStrings.formatValueSync("account-disconnected");
+      headerDescription = state.email;
       mainWindowEl.style.removeProperty("--avatar-image-url");
     } else if (state.status === UIState.STATUS_NOT_VERIFIED) {
       stateValue = "unverified";
-      headerTitle = state.email;
-      headerDescription = this.fluentStrings.formatValueSync(
+      headerTitle = this.fluentStrings.formatValueSync(
         "account-finish-account-setup"
       );
+      headerDescription = state.email;
     } else if (state.status === UIState.STATUS_SIGNED_IN) {
       stateValue = "signedin";
       if (state.avatarURL && !state.avatarIsDefault) {
@@ -1012,6 +1017,14 @@ var gSync = {
       document,
       "appMenu-fxa-text"
     );
+    const appMenuHeaderTitle = PanelMultiView.getViewNode(
+      document,
+      "appMenu-header-title"
+    );
+    const appMenuHeaderDescription = PanelMultiView.getViewNode(
+      document,
+      "appMenu-header-description"
+    );
 
     let defaultLabel = PanelUI.protonAppMenuEnabled
       ? this.fluentStrings.formatValueSync("appmenu-fxa-signed-in-label")
@@ -1028,10 +1041,17 @@ var gSync = {
         appMenuHeaderText.style.visibility = "visible";
         appMenuStatus.classList.add("toolbaritem-combined-buttons");
         appMenuLabel.classList.remove("subviewbutton-nav");
+        appMenuHeaderTitle.hidden = true;
+        appMenuHeaderDescription.value = defaultLabel;
       }
       return;
     }
     appMenuLabel.classList.remove("subviewbutton-nav");
+
+    if (PanelUI.protonAppMenuEnabled) {
+      appMenuHeaderText.style.visibility = "collapse";
+      appMenuStatus.classList.remove("toolbaritem-combined-buttons");
+    }
 
     // At this point we consider sync to be configured (but still can be in an error state).
     if (status == UIState.STATUS_LOGIN_FAILED) {
@@ -1041,10 +1061,17 @@ var gSync = {
       );
       appMenuStatus.setAttribute("fxastatus", "login-failed");
       let errorLabel = this.fluentStrings.formatValueSync(
-        "account-reconnect-to-fxa"
+        "account-disconnected"
       );
-      appMenuLabel.setAttribute("label", errorLabel);
       appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
+      if (PanelUI.protonAppMenuEnabled) {
+        appMenuLabel.classList.add("subviewbutton-nav");
+        appMenuHeaderTitle.hidden = false;
+        appMenuHeaderTitle.value = errorLabel;
+        appMenuHeaderDescription.value = state.email;
+      } else {
+        appMenuLabel.setAttribute("label", errorLabel);
+      }
       return;
     } else if (status == UIState.STATUS_NOT_VERIFIED) {
       let tooltipDescription = this.fxaStrings.formatStringFromName(
@@ -1055,19 +1082,25 @@ var gSync = {
       let unverifiedLabel = this.fluentStrings.formatValueSync(
         "account-finish-account-setup"
       );
-      appMenuLabel.setAttribute("label", unverifiedLabel);
       appMenuStatus.setAttribute("tooltiptext", tooltipDescription);
+      if (PanelUI.protonAppMenuEnabled) {
+        appMenuLabel.classList.add("subviewbutton-nav");
+        appMenuHeaderTitle.hidden = false;
+        appMenuHeaderTitle.value = unverifiedLabel;
+        appMenuHeaderDescription.value = state.email;
+      } else {
+        appMenuLabel.setAttribute("label", unverifiedLabel);
+      }
       return;
     }
 
+    // At this point we consider sync to be logged-in.
     if (PanelUI.protonAppMenuEnabled) {
-      appMenuHeaderText.style.visibility = "collapse";
-      appMenuStatus.classList.remove("toolbaritem-combined-buttons");
+      appMenuHeaderTitle.hidden = true;
+      appMenuHeaderDescription.value = state.email;
     } else {
       appMenuLabel.classList.add("subviewbutton-iconic");
     }
-
-    // At this point we consider sync to be logged-in.
     appMenuStatus.setAttribute("fxastatus", "signedin");
     appMenuLabel.setAttribute("label", state.email);
     appMenuLabel.classList.add("subviewbutton-nav");
