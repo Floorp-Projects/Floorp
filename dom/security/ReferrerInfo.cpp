@@ -196,7 +196,9 @@ ReferrerPolicy ReferrerInfo::GetDefaultReferrerPolicy(nsIHttpChannel* aChannel,
     nsCOMPtr<nsICookieJarSettings> cjs;
     Unused << loadInfo->GetCookieJarSettings(getter_AddRefs(cjs));
     if (!cjs) {
-      cjs = net::CookieJarSettings::Create();
+      cjs = privateBrowsing
+                ? net::CookieJarSettings::Create(CookieJarSettings::ePrivate)
+                : net::CookieJarSettings::Create(CookieJarSettings::eRegular);
     }
 
     // We only check if the channel is isolated if it's in the parent process
