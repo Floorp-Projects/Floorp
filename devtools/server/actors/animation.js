@@ -329,6 +329,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
    * @return {Object}
    */
   getState: function() {
+    const compositorStatus = this.getPropertiesCompositorStatus();
     // Note that if you add a new property to the state object, make sure you
     // add the corresponding property in the AnimationPlayerFront' initialState
     // getter.
@@ -351,10 +352,10 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       animationTimingFunction: this.getAnimationTimingFunction(),
       // animation is hitting the fast path or not. Returns false whenever the
       // animation is paused as it is taken off the compositor then.
-      isRunningOnCompositor: this.getPropertiesCompositorStatus().some(
+      isRunningOnCompositor: compositorStatus.some(
         propState => propState.runningOnCompositor
       ),
-      propertyState: this.getPropertiesCompositorStatus(),
+      propertyState: compositorStatus,
       // The document timeline's currentTime is being sent along too. This is
       // not strictly related to the node's animationPlayer, but is useful to
       // know the current time of the animation with respect to the document's.
@@ -363,6 +364,7 @@ var AnimationPlayerActor = protocol.ActorClassWithSpec(animationPlayerSpec, {
       createdTime: this.createdTime,
       // The time which an animation's current time when this animation has created.
       currentTimeAtCreated: this.currentTimeAtCreated,
+      properties: this.getProperties(),
     };
   },
 
