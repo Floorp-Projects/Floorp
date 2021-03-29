@@ -1354,6 +1354,26 @@ IPCResult BrowserParent::RecvNewWindowGlobal(
     return IPC_FAIL(this, "Cannot create without valid principal");
   }
 
+  // Ensure we never load a document with a content principal in
+  // the wrong type of webIsolated process
+  EnumSet<ContentParent::ValidatePrincipalOptions> validationOptions = {};
+  nsCOMPtr<nsIURI> docURI = aInit.documentURI();
+  if (docURI->SchemeIs("about") || docURI->SchemeIs("chrome")) {
+    // XXXckerschb TODO - Do not use SystemPrincipal for:
+    // Bug 1700639: about:plugins
+    // Bug 1698087: chrome://devtools/content/shared/webextension-fallback.html
+    // chrome reftests, e.g.
+    //   * chrome://reftest/content/writing-mode/ua-style-sheet-button-1a-ref.html
+    //   * chrome://reftest/content/xul-document-load/test003.xhtml
+    //   * chrome://reftest/content/forms/input/text/centering-1.xhtml
+    validationOptions = {ContentParent::ValidatePrincipalOptions::AllowSystem};
+  }
+
+  if (!mManager->ValidatePrincipal(aInit.principal(), validationOptions)) {
+    ContentParent::LogAndAssertFailedPrincipalValidationInfo(aInit.principal(),
+                                                             __func__);
+  }
+
   // Construct our new WindowGlobalParent, bind, and initialize it.
   RefPtr<WindowGlobalParent> wgp =
       WindowGlobalParent::CreateDisconnected(aInit);
