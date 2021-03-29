@@ -66,4 +66,5 @@ add_task(async function test_help_menu_app_menu() {
     "T",
     "The policy menu should have the correct access key."
   );
+  window.PanelUI.hide();
 });
