@@ -166,11 +166,18 @@ interface nsISearchEngine : nsISupports
   readonly attribute AString identifier;
 
   /**
-   * Whether or not this extension is provided by the application, e.g. it is
+   * Whether or not this engine is provided by the application, e.g. it is
    * in the list of configured search engines, or provided by a distribution
    * set-up.
    */
   readonly attribute boolean isAppProvided;
+
+  /**
+   * Whether or not this engine is a "general" search engine, e.g. is it for
+   * generally searching the web, or does it have a specific purpose like
+   * shopping.
+   */
+  readonly attribute boolean isGeneralPurposeEngine;
 
   /**
    * Gets a string representing the hostname from which search results for a

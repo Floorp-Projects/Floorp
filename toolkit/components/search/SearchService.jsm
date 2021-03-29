@@ -185,26 +185,6 @@ SearchService.prototype = {
   // A reference to the handler for the default override allow list.
   _defaultOverrideAllowlist: null,
 
-  // This is a list of search engines that we currently consider to be "General"
-  // search, as opposed to a vertical search engine such as one used for
-  // shopping, book search, etc.
-  //
-  // Currently these are a list of hard-coded application provided ones. At some
-  // point in the future we expect to allow WebExtensions to specify by themselves,
-  // however this needs more definition on the "vertical" search terms, and the
-  // effects before we enable it.
-  //
-  // TODO: Bug 1697477 will move this to SearchEngine and combine it with the
-  // urlbar lists.
-  GENERAL_SEARCH_ENGINE_IDS: new Set([
-    "google@search.mozilla.org",
-    "ddg@search.mozilla.org",
-    "bing@search.mozilla.org",
-    "baidu@search.mozilla.org",
-    "yahoo-jp@search.mozilla.org",
-    "yandex@search.mozilla.org",
-  ]),
-
   // This reflects the combined values of the prefs for enabling the separate
   // private default UI, and for the user choosing a separate private engine.
   // If either one is disabled, then we don't enable the separate private default.
@@ -2119,9 +2099,10 @@ SearchService.prototype = {
       newDefault.name == excludeEngineName
     ) {
       let sortedEngines = this._getSortedEngines(false);
-      let generalSearchEngines = sortedEngines.filter(e =>
-        this.GENERAL_SEARCH_ENGINE_IDS.has(e._extensionID)
+      let generalSearchEngines = sortedEngines.filter(
+        e => e.isGeneralPurposeEngine
       );
+
       // then to the first visible general search engine that isn't excluded...
       let firstVisible = generalSearchEngines.find(
         e => e.name != excludeEngineName
@@ -2142,9 +2123,7 @@ SearchService.prototype = {
       if (!newDefault) {
         if (!firstVisible) {
           sortedEngines = this._getSortedEngines(true);
-          firstVisible = sortedEngines.find(e =>
-            this.GENERAL_SEARCH_ENGINE_IDS.has(e._extensionID)
-          );
+          firstVisible = sortedEngines.find(e => e.isGeneralPurposeEngine);
           if (!firstVisible) {
             firstVisible = sortedEngines[0];
           }
