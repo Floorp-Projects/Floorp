@@ -93,7 +93,8 @@ class Translator {
   virtual Path* LookupPath(ReferencePtr aRefPtr) = 0;
   virtual SourceSurface* LookupSourceSurface(ReferencePtr aRefPtr) = 0;
   virtual FilterNode* LookupFilterNode(ReferencePtr aRefPtr) = 0;
-  virtual GradientStops* LookupGradientStops(ReferencePtr aRefPtr) = 0;
+  virtual already_AddRefed<GradientStops> LookupGradientStops(
+      ReferencePtr aRefPtr) = 0;
   virtual ScaledFont* LookupScaledFont(ReferencePtr aRefPtr) = 0;
   virtual UnscaledFont* LookupUnscaledFont(ReferencePtr aRefPtr) = 0;
   virtual NativeFontResource* LookupNativeFontResource(uint64_t aKey) = 0;

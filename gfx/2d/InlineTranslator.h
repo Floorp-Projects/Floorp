@@ -70,17 +70,9 @@ class InlineTranslator : public Translator {
     return result;
   }
 
-  GradientStops* LookupGradientStops(ReferencePtr aRefPtr) final {
-    DebugOnly<bool> found;
-    GradientStops* result = mGradientStops.GetWeak(aRefPtr
-#if defined(DEBUG)
-                                                   ,
-                                                   &found
-#endif
-    );
-    // GradientStops can be null in some circumstances.
-    MOZ_ASSERT(found);
-    return result;
+  already_AddRefed<GradientStops> LookupGradientStops(
+      ReferencePtr aRefPtr) final {
+    return mGradientStops.Get(aRefPtr);
   }
 
   ScaledFont* LookupScaledFont(ReferencePtr aRefPtr) final {
