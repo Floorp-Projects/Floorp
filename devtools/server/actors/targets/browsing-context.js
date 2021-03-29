@@ -1305,7 +1305,15 @@ const browsingContextTargetPrototype = {
     this._setServiceWorkersTestingEnabled(false);
     this._setPaintFlashingEnabled(false);
     this._setPrintSimulationEnabled(false);
-    this._setColorSchemeSimulation(null);
+
+    if (this._resetColorSchemeSimulationOnDestroy) {
+      // Restore the color scheme simulation only if it was explicitly updated
+      // by this target actor. This will avoid side effects caused when destroying
+      // additional targets (eg RDM target, WebExtension target, …).
+      // TODO: We may want to review other configuration values to see if we should use
+      // the same pattern (Bug 1701553).
+      this._setColorSchemeSimulation(null);
+    }
 
     if (this._restoreFocus && this.browsingContext?.isActive) {
       this.window.focus();
@@ -1381,6 +1389,7 @@ const browsingContextTargetPrototype = {
     const value = override || "none";
     if (this.browsingContext.prefersColorSchemeOverride != value) {
       this.browsingContext.prefersColorSchemeOverride = value;
+      this._resetColorSchemeSimulationOnDestroy = true;
     }
   },
 
