@@ -122,7 +122,7 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   static void NormalizeWord(nsAString& aWord);
 
   mozilla::dom::Document* GetDocument() const { return mDocument; }
-  nsINode* GetRootNode() { return mRootNode; }
+  const nsINode* GetRootNode() const { return mRootNode; }
 
  private:
   // cached stuff for the editor, set by Init

@@ -1316,7 +1316,7 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
 
     // Now check that we're still looking at a range that's under
     // aWordUtil.GetRootNode()
-    nsINode* rootNode = aWordUtil.GetRootNode();
+    const nsINode* rootNode = aWordUtil.GetRootNode();
     if (!beginNode->IsInComposedDoc() || !endNode->IsInComposedDoc() ||
         !beginNode->IsShadowIncludingInclusiveDescendantOf(rootNode) ||
         !endNode->IsShadowIncludingInclusiveDescendantOf(rootNode)) {
