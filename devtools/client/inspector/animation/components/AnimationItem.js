@@ -24,7 +24,6 @@ class AnimationItem extends Component {
     return {
       animation: PropTypes.object.isRequired,
       dispatch: PropTypes.func.isRequired,
-      emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
       isDisplayable: PropTypes.bool.isRequired,
@@ -71,7 +70,6 @@ class AnimationItem extends Component {
     const {
       animation,
       dispatch,
-      emitEventForTest,
       getAnimatedPropertyMap,
       getNodeFromActor,
       isDisplayable,
@@ -94,14 +92,12 @@ class AnimationItem extends Component {
             AnimationTarget({
               animation,
               dispatch,
-              emitEventForTest,
               getNodeFromActor,
               setHighlightedNode,
               setSelectedNode,
             }),
             SummaryGraph({
               animation,
-              emitEventForTest,
               getAnimatedPropertyMap,
               selectAnimation,
               simulateAnimation,

@@ -50,22 +50,12 @@ add_task(async function() {
   await clickOnInspectIcon(animationInspector, panel, 0);
   data = await onHighlighterShown;
   assertNodeFront(data.nodeFront, "DIV", "ball animated");
-  ok(
-    panel
-      .querySelectorAll(".animation-target")[0]
-      .classList.contains("highlighting"),
-    "The highlighted animation target element should have 'highlighting' class"
-  );
+  await assertHighlight(panel, 0, true);
 
   info("Check if the animation target is still highlighted on mouse out");
   mouseOutOnTargetNode(animationInspector, panel, 0);
   await wait(500);
-  ok(
-    panel
-      .querySelectorAll(".animation-target")[0]
-      .classList.contains("highlighting"),
-    "The highlighted element still should have 'highlighting' class"
-  );
+  await assertHighlight(panel, 0, true);
 
   info("Check no highlight event occur by mouse over locked target");
   let highlightEventCount = 0;
@@ -89,19 +79,9 @@ add_task(async function() {
   assertNodeFront(data.nodeFront, "DIV", "ball multi");
 
   info("Check the highlighted state of the animation targets");
-  const animationTargetEls = panel.querySelectorAll(".animation-target");
-  ok(
-    !animationTargetEls[0].classList.contains("highlighting"),
-    "The animation target[0] should not have 'highlighting' class"
-  );
-  ok(
-    animationTargetEls[1].classList.contains("highlighting"),
-    "The animation target[1] should have 'highlighting' class"
-  );
-  ok(
-    animationTargetEls[2].classList.contains("highlighting"),
-    "The animation target[2] should have 'highlighting' class"
-  );
+  await assertHighlight(panel, 0, false);
+  await assertHighlight(panel, 1, true);
+  await assertHighlight(panel, 2, true);
 
   info("Hide persistent highlighter");
   const onPersistentHighlighterHidden = waitForHighlighterTypeHidden(
@@ -111,15 +91,22 @@ add_task(async function() {
   await onPersistentHighlighterHidden;
 
   info("Check the highlighted state of the animation targets");
-  ok(
-    !animationTargetEls[1].classList.contains("highlighting"),
-    "The animation target[1] should not have 'highlighting' class"
-  );
-  ok(
-    !animationTargetEls[2].classList.contains("highlighting"),
-    "The animation target[2] should not have 'highlighting' class"
-  );
+  await assertHighlight(panel, 0, false);
+  await assertHighlight(panel, 1, false);
+  await assertHighlight(panel, 2, false);
 });
+
+async function assertHighlight(panel, index, isHighlightExpected) {
+  const animationItemEl = await findAnimationItemByIndex(panel, index);
+  const animationTargetEl = animationItemEl.querySelector(".animation-target");
+
+  await waitUntil(
+    () =>
+      animationTargetEl.classList.contains("highlighting") ===
+      isHighlightExpected
+  );
+  ok(true, `Highlighting class of animation target[${index}] is correct`);
+}
 
 function assertNodeFront(nodeFront, tagName, classValue) {
   is(nodeFront.tagName, "DIV", "The highlighted node has the correct tagName");

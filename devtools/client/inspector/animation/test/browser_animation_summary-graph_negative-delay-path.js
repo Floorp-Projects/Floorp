@@ -73,7 +73,7 @@ add_task(async function() {
     expectedIterationPathList,
     expectedNegativePath,
   } of TEST_DATA) {
-    const animationItemEl = findAnimationItemElementsByTargetSelector(
+    const animationItemEl = await findAnimationItemByTargetSelector(
       panel,
       `.${targetClass}`
     );

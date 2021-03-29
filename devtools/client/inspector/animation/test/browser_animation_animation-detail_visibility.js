@@ -16,40 +16,40 @@ add_task(async function() {
   info("Checking animation detail visibility if animation was unselected");
   const detailEl = panel.querySelector("#animation-container .controlled");
   ok(detailEl, "The detail pane should be in the DOM");
-  const win = panel.ownerGlobal;
-  is(
-    win.getComputedStyle(detailEl).display,
-    "none",
-    "detailEl should be unvisibled"
-  );
+  await assertDisplayStyle(detailEl, true, "detailEl should be unvisibled");
 
   info(
     "Checking animation detail visibility if animation was selected by click"
   );
   await clickOnAnimation(animationInspector, panel, 0);
-  isnot(
-    win.getComputedStyle(detailEl).display,
-    "none",
-    "detailEl should be visibled"
-  );
+  await assertDisplayStyle(detailEl, false, "detailEl should be visibled");
 
   info(
     "Checking animation detail visibility when choose node which has animations"
   );
-  await selectNodeAndWaitForAnimations("html", inspector);
-  is(
-    win.getComputedStyle(detailEl).display,
-    "none",
+  await selectNode("html", inspector);
+  await assertDisplayStyle(
+    detailEl,
+    true,
     "detailEl should be unvisibled after choose html node"
   );
 
   info(
     "Checking animation detail visibility when choose node which has an animation"
   );
-  await selectNodeAndWaitForAnimations("div", inspector);
-  isnot(
-    win.getComputedStyle(detailEl).display,
-    "none",
+  await selectNode("div", inspector);
+  await assertDisplayStyle(
+    detailEl,
+    false,
     "detailEl should be visibled after choose .cssanimation-normal node"
   );
 });
+
+async function assertDisplayStyle(detailEl, isNoneExpected, description) {
+  const win = detailEl.ownerGlobal;
+  await waitUntil(() => {
+    const isNone = win.getComputedStyle(detailEl).display === "none";
+    return isNone === isNoneExpected;
+  });
+  ok(true, description);
+}

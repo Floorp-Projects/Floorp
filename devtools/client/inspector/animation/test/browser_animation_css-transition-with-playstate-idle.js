@@ -33,8 +33,6 @@ add_task(async function() {
 
   info("Toggle the visible class to start the animation");
   await toggleVisibleClass(tab);
-  info("Wait for all renderings");
-  await waitForRendering(animationInspector);
 
   info("Wait until the scrubber is displayed");
   await waitUntil(() => panel.querySelector(".current-time-scrubber"));
@@ -48,10 +46,6 @@ add_task(async function() {
 
   info("Toggle the visible class to start the animation");
   await toggleVisibleClass(tab);
-  info("Wait for all renderings");
-  await waitForRendering(animationInspector);
-
-  info("scrubberX after: " + scrubberEl.getBoundingClientRect().x);
 
   info("Wait until the scrubber starts moving");
   await waitUntil(() => scrubberEl.getBoundingClientRect().x != scrubberX);

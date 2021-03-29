@@ -28,10 +28,12 @@ add_task(async function() {
   info(
     "Checking list and items existence after select a element which has an animation"
   );
-  await selectNodeAndWaitForAnimations(".animated", inspector);
-  is(
-    panel.querySelectorAll(".animation-list .animation-item").length,
-    1,
+  await selectNode(".animated", inspector);
+  await waitUntil(
+    () => panel.querySelectorAll(".animation-list .animation-item").length === 1
+  );
+  ok(
+    true,
     "The number of animations displayed should be 1 for .animated element"
   );
 });

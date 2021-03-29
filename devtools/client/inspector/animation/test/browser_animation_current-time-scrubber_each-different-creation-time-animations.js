@@ -17,9 +17,11 @@ add_task(async function() {
   );
   await wait(WAIT_TIME);
   await setClassAttribute(animationInspector, ".still", "ball compositor-all");
+  await waitUntil(() => panel.querySelectorAll(".animation-item").length === 2);
 
   info("Move the scrubber");
-  await clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
+  clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
 
   info("Check existed animations have different currentTime");
   const animations = animationInspector.state.animations;

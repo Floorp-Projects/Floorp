@@ -25,13 +25,15 @@ add_task(async function() {
   );
 
   info("Checking button makes animations to pause");
-  await clickOnPauseResumeButton(animationInspector, panel);
-  assertAnimationsPausing(animationInspector);
+  clickOnPauseResumeButton(animationInspector, panel);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
+  ok(true, "All of animtion are paused");
   ok(buttonEl.classList.contains("paused"), "State of button should be paused");
 
   info("Checking button makes animations to resume");
-  await clickOnPauseResumeButton(animationInspector, panel);
-  assertAnimationsRunning(animationInspector);
+  clickOnPauseResumeButton(animationInspector, panel);
+  await waitUntilAnimationsPlayState(animationInspector, "running");
+  ok(true, "All of animtion are running");
   ok(
     !buttonEl.classList.contains("paused"),
     "State of button should be resumed"

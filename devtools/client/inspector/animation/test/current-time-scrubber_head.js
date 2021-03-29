@@ -27,24 +27,26 @@ async function testCurrentTimeScrubber(isRTL) {
 
   info("Checking scrubber changes current time of animation and the position");
   const duration = animationInspector.state.timeScale.getDuration();
-  await clickOnCurrentTimeScrubberController(
+  clickOnCurrentTimeScrubberController(
     animationInspector,
     panel,
     isRTL ? 1 : 0
   );
-  assertAnimationsCurrentTime(animationInspector, 0);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
+  await waitUntilCurrentTimeChangedAt(animationInspector, 0);
   assertPosition(
     scrubberEl,
     controllerEl,
     isRTL ? duration : 0,
     animationInspector
   );
-  await clickOnCurrentTimeScrubberController(
+
+  clickOnCurrentTimeScrubberController(
     animationInspector,
     panel,
     isRTL ? 0 : 1
   );
-  assertAnimationsCurrentTime(animationInspector, duration);
+  await waitUntilCurrentTimeChangedAt(animationInspector, duration);
   assertPosition(
     scrubberEl,
     controllerEl,
@@ -52,20 +54,22 @@ async function testCurrentTimeScrubber(isRTL) {
     animationInspector
   );
 
-  await clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
-  assertAnimationsCurrentTime(animationInspector, duration * 0.5);
+  clickOnCurrentTimeScrubberController(animationInspector, panel, 0.5);
+  await waitUntilCurrentTimeChangedAt(animationInspector, duration * 0.5);
   assertPosition(scrubberEl, controllerEl, duration * 0.5, animationInspector);
 
   info("Checking current time scrubber position during running");
   // Running again
-  await clickOnPauseResumeButton(animationInspector, panel);
+  clickOnPauseResumeButton(animationInspector, panel);
+  await waitUntilAnimationsPlayState(animationInspector, "running");
   let previousX = scrubberEl.getBoundingClientRect().x;
-  await wait(100);
+  await wait(1000);
   let currentX = scrubberEl.getBoundingClientRect().x;
   isnot(previousX, currentX, "Scrubber should be moved");
 
   info("Checking draggable on scrubber over animation list");
-  await clickOnPauseResumeButton(animationInspector, panel);
+  clickOnPauseResumeButton(animationInspector, panel);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
   previousX = scrubberEl.getBoundingClientRect().x;
   await dragOnCurrentTimeScrubber(animationInspector, panel, 5, 30);
   currentX = scrubberEl.getBoundingClientRect().x;

@@ -18,9 +18,10 @@ add_task(async function() {
 
   info("Check animations state after resuming with infinite animation");
   info("Make the current time of animation to be over its end time");
-  await clickOnCurrentTimeScrubberController(animationInspector, panel, 1);
+  clickOnCurrentTimeScrubberController(animationInspector, panel, 1);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
   info("Resume animations");
-  await clickOnPauseResumeButton(animationInspector, panel);
+  clickOnPauseResumeButton(animationInspector, panel);
   await wait(1000);
   assertPlayState(animationInspector.state.animations, [
     "running",
@@ -28,21 +29,21 @@ add_task(async function() {
     "finished",
     "finished",
   ]);
-  await clickOnCurrentTimeScrubberController(animationInspector, panel, 0);
+  clickOnCurrentTimeScrubberController(animationInspector, panel, 0);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
 
   info("Check animations state after resuming without infinite animation");
   info("Remove infinite animation");
   await setClassAttribute(animationInspector, ".animated", "ball still");
+  await waitUntil(() => panel.querySelectorAll(".animation-item").length === 3);
+
   info("Make the current time of animation to be over its end time");
-  await clickOnCurrentTimeScrubberController(animationInspector, panel, 1);
-  await clickOnPlaybackRateSelector(animationInspector, panel, 0.1);
+  clickOnCurrentTimeScrubberController(animationInspector, panel, 1.1);
+  await waitUntilAnimationsPlayState(animationInspector, "paused");
+  clickOnPlaybackRateSelector(animationInspector, panel, 0.1);
   info("Resume animations");
-  await clickOnPauseResumeButton(animationInspector, panel);
-  assertPlayState(animationInspector.state.animations, [
-    "running",
-    "running",
-    "running",
-  ]);
+  clickOnPauseResumeButton(animationInspector, panel);
+  await waitUntilAnimationsPlayState(animationInspector, "running");
   assertCurrentTimeLessThanDuration(animationInspector.state.animations);
   assertScrubberPosition(panel);
 });
