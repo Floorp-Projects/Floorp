@@ -16,6 +16,10 @@
 namespace mozilla {
 namespace dom {
 
+/**
+ * Parent-process main-thread proxy used by ServiceWorkerManager to control
+ * RemoteWorkerController instances on the parent-process PBackground thread.
+ */
 class RemoteWorkerControllerChild final : public PRemoteWorkerControllerChild {
   friend class PRemoteWorkerControllerChild;
 

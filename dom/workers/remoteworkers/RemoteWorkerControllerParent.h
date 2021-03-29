@@ -18,6 +18,12 @@
 namespace mozilla {
 namespace dom {
 
+/**
+ * PBackground-resident proxy used by ServiceWorkerManager because canonical
+ * ServiceWorkerManager state exists on the parent process main thread but the
+ * RemoteWorkerController API is used from the parent process PBackground
+ * thread.
+ */
 class RemoteWorkerControllerParent final : public PRemoteWorkerControllerParent,
                                            public RemoteWorkerObserver {
   friend class PRemoteWorkerControllerParent;

@@ -34,6 +34,13 @@ class WeakWorkerRef;
 class WorkerErrorReport;
 class WorkerPrivate;
 
+/**
+ * Background-managed "Worker Launcher"-thread-resident created via the
+ * RemoteWorkerManager to actually spawn the worker. Currently, the worker will
+ * be spawned from the main thread due to nsIPrincipal not being able to be
+ * created on background threads and other ownership invariants, most of which
+ * can be relaxed in the future.
+ */
 class RemoteWorkerChild final
     : public SupportsThreadSafeWeakPtr<RemoteWorkerChild>,
       public PRemoteWorkerChild {

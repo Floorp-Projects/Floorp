@@ -19,6 +19,11 @@ class MessagePortIdentifier;
 class RemoteWorkerData;
 class SharedWorkerManagerWrapper;
 
+/**
+ * PBackground actor that relays life-cycle events (freeze/thaw, suspend/resume,
+ * close) to the PBackground SharedWorkerManager and relays error/termination
+ * back to the child.
+ */
 class SharedWorkerParent final
     : public mozilla::dom::PSharedWorkerParent,
       public SupportsCheckedUnsafePtr<CheckIf<DiagnosticAssertEnabled>> {

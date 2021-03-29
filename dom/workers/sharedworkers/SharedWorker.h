@@ -27,6 +27,10 @@ class Event;
 
 class SharedWorkerChild;
 
+/**
+ * DOM binding. Holds a SharedWorkerChild. Must exist on the main thread because
+ * we only allow top-level windows to create SharedWorkers.
+ */
 class SharedWorker final : public DOMEventTargetHelper {
   typedef mozilla::ErrorResult ErrorResult;
   typedef mozilla::dom::GlobalObject GlobalObject;

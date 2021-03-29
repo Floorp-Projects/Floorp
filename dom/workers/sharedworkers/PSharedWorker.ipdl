@@ -9,6 +9,12 @@ include RemoteWorkerTypes;
 namespace mozilla {
 namespace dom {
 
+/**
+ * Protocol for SharedWorker bindings to communicate with per-worker
+ * SharedWorkerManager instances in the parent via SharedWorkerChild /
+ * SharedWorkerParent and SharedWorkerService getting/creating the
+ * SharedWorkerManager if it doesn't already exist. Main-thread to PBackground.
+ */
 protocol PSharedWorker
 {
   manager PBackground;

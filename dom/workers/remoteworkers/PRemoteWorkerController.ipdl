@@ -11,6 +11,12 @@ include ServiceWorkerOpArgs;
 namespace mozilla {
 namespace dom {
 
+/**
+ * Proxy protocol used by ServiceWorkerManager whose canonical state exists on
+ * the main thread to control/receive feedback from RemoteWorkers which are
+ * canonically controlled from the PBackground thread.  Exclusively for use from
+ * the parent process main thread to the parent process PBackground thread.
+ */
 protocol PRemoteWorkerController {
   manager PBackground;
 

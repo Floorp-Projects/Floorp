@@ -16,6 +16,10 @@ namespace dom {
 class RemoteWorkerController;
 class RemoteWorkerData;
 
+/**
+ * "Worker Launcher"-thread child actor created by the RemoteWorkerService to
+ * register itself with the PBackground RemoteWorkerManager in the parent.
+ */
 class RemoteWorkerServiceChild final : public PRemoteWorkerServiceChild {
  public:
   NS_INLINE_DECL_REFCOUNTING(RemoteWorkerServiceChild)

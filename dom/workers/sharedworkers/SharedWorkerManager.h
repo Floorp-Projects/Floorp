@@ -61,6 +61,15 @@ class SharedWorkerManagerWrapper final {
   RefPtr<SharedWorkerManagerHolder> mHolder;
 };
 
+/**
+ * PBackground instance that corresponds to a single logical Shared Worker that
+ * exists somewhere in the process tree. Referenced/owned by multiple
+ * SharedWorkerParent instances on the PBackground thread. Holds/owns a single
+ * RemoteWorkerController to interact with the actual shared worker thread,
+ * wherever it is located. Creates the RemoteWorkerController via
+ * RemoteWorkerController::Create which uses RemoteWorkerManager::Launch under
+ * the hood.
+ */
 class SharedWorkerManager final : public RemoteWorkerObserver {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(SharedWorkerManager, override);
