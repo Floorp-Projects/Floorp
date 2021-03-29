@@ -1,4 +1,3 @@
-include gradient/reftest.list
 include vector/reftest.list
 
 == layers-stacking-order.xhtml layers-stacking-order-ref.xhtml
