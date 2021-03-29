@@ -38,61 +38,10 @@ playback_settings = [
     "playback_recordings",
 ]
 
-whitelist_live_site_tests = [
-    "booking-sf",
-    "cnn-ampstories",
-    "discord",
-    "expedia",
-    "fashionbeans",
-    "google-accounts",
-    "imdb-firefox",
-    "medium-article",
-    "nytimes",
-    "people-article",
-    "raptor-youtube-playback",
-    "youtube-playback",
-    "reddit-thread",
-    "rumble-fox",
-    "stackoverflow-question",
-    "urbandictionary-define",
-    "wikia-marvel",
-]
-
 
 def filter_app(tests, values):
     for test in tests:
         if values["app"] in test["apps"]:
-            yield test
-
-
-def filter_live_sites(tests, values):
-    # if a test uses live sites only allow it to run if running locally or on try
-    # this prevents inadvertently submitting live site data to perfherder
-    for test in tests:
-        if test.get("use_live_sites", "false") == "true":
-            # can run with live sites when running locally
-            if values["run_local"] is True:
-                yield test
-            # can run with live sites if running on try
-            elif "hg.mozilla.org/try" in os.environ.get("GECKO_HEAD_REPOSITORY", "n/a"):
-                yield test
-
-            # can run with live sites when white-listed
-            # pylint --py3k: W1639
-            elif list(
-                filter(
-                    lambda name: test["name"].startswith(name),
-                    whitelist_live_site_tests,
-                )
-            ):
-                yield test
-
-            else:
-                LOG.warning(
-                    "%s is not allowed to run with use_live_sites" % test["name"]
-                )
-        else:
-            # not using live-sites so go ahead
             yield test
 
 
@@ -101,7 +50,7 @@ def get_browser_test_list(browser_app, run_local):
     test_manifest = TestManifest([raptor_ini], strict=False)
     info = {"app": browser_app, "run_local": run_local}
     return test_manifest.active_tests(
-        exists=False, disabled=False, filters=[filter_app, filter_live_sites], **info
+        exists=False, disabled=False, filters=[filter_app], **info
     )
 
 
