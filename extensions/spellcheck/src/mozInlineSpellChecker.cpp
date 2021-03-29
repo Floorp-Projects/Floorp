@@ -1288,7 +1288,7 @@ nsresult mozInlineSpellChecker::DoSpellCheck(
     return NS_ERROR_NOT_INITIALIZED;
   }
 
-  if (SpellCheckSelectionIsFull()) {
+  if (IsSpellCheckSelectionFull()) {
     return NS_OK;
   }
 
@@ -1493,7 +1493,7 @@ void mozInlineSpellChecker::CheckCurrentWordsNoSuggest(
 
         AutoChangeNumPendingSpellChecks pendingChecks(self, -1);
 
-        if (self->SpellCheckSelectionIsFull()) {
+        if (self->IsSpellCheckSelectionFull()) {
           return;
         }
 
@@ -1684,7 +1684,7 @@ nsresult mozInlineSpellChecker::AddRange(Selection* aSpellCheckSelection,
 
   nsresult rv = NS_OK;
 
-  if (!SpellCheckSelectionIsFull()) {
+  if (!IsSpellCheckSelectionFull()) {
     IgnoredErrorResult err;
     aSpellCheckSelection->AddRangeAndSelectFramesAndNotifyListeners(*aRange,
                                                                     err);
