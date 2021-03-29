@@ -174,21 +174,22 @@ async function testFrameCrash(numTabs) {
   // Press the ignore button on the visible notification.
   let notificationBox = gBrowser.getNotificationBox(gBrowser.selectedBrowser);
   let notification = notificationBox.currentNotification;
-  notification.dismiss();
 
+  // Make sure all of the notifications were closed when one of them was closed.
+  let closedPromises = [];
   for (let count = 1; count <= numTabs; count++) {
     let nb = gBrowser.getNotificationBox(gBrowser.browsers[count]);
-
-    await TestUtils.waitForCondition(
-      () => !nb.currentNotification,
-      "notification closed"
-    );
-
-    ok(
-      !nb.currentNotification,
-      "notification " + count + " closed when dismiss button is pressed"
+    closedPromises.push(
+      BrowserTestUtils.waitForMutationCondition(
+        nb.stack,
+        { childList: true },
+        () => !nb.currentNotification
+      )
     );
   }
+
+  notification.dismiss();
+  await Promise.all(closedPromises);
 
   for (let count = 1; count <= numTabs; count++) {
     BrowserTestUtils.removeTab(gBrowser.selectedTab);
