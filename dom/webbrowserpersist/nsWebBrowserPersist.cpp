@@ -1347,7 +1347,10 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
   // current state of the prefs/permissions.
   nsCOMPtr<nsICookieJarSettings> cookieJarSettings = aCookieJarSettings;
   if (!cookieJarSettings) {
-    cookieJarSettings = mozilla::net::CookieJarSettings::Create();
+    cookieJarSettings =
+        aIsPrivate
+            ? net::CookieJarSettings::Create(net::CookieJarSettings::ePrivate)
+            : net::CookieJarSettings::Create(net::CookieJarSettings::eRegular);
   }
 
   // Open a channel to the URI
