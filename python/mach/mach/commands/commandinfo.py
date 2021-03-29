@@ -206,10 +206,14 @@ class BuiltinCommands(MachCommandBase):
     def _zsh_describe(self, value, description=None):
         value = '"' + value.replace(":", "\\:")
         if description:
-            description = re.sub(
-                r'(["\'#&;`|*?~<>^()\[\]{}$\\\x0A\xFF])', r"\\\1", description
-            )
-            value += ":{}".format(subprocess.list2cmdline([description]).strip('"'))
+            description = subprocess.list2cmdline(
+                [re.sub(r'(["\'#&;`|*?~<>^()\[\]{}$\\\x0A\xFF])', r"\\\1", description)]
+            ).lstrip('"')
+
+            if description.endswith('"') and not description.endswith(r"\""):
+                description = description[:-1]
+
+            value += ":{}".format(description)
 
         value += '"'
 
