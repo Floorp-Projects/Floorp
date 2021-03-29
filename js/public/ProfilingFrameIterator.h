@@ -142,6 +142,11 @@ class MOZ_NON_PARAM JS_PUBLIC_API ProfilingFrameIterator {
 
   mozilla::Maybe<Frame> getPhysicalFrameWithoutLabel() const;
 
+  // Return the registers from the native caller frame.
+  // Nothing{} if this iterator is NOT pointing at a native-to-JIT entry frame,
+  // or if the information is not accessible/implemented on this platform.
+  mozilla::Maybe<RegisterState> getCppEntryRegisters() const;
+
  private:
   mozilla::Maybe<Frame> getPhysicalFrameAndEntry(
       js::jit::JitcodeGlobalEntry* entry) const;

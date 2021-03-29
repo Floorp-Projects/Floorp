@@ -282,7 +282,6 @@ class JSJitProfilingFrameIterator {
   FrameType type_;
   void* resumePCinCurrentFrame_;
 
-  inline JitFrameLayout* framePtr() const;
   inline JSScript* frameScript() const;
   [[nodiscard]] bool tryInitWithPC(void* pc);
   [[nodiscard]] bool tryInitWithTable(JitcodeGlobalTable* table, void* pc,
@@ -307,6 +306,7 @@ class JSJitProfilingFrameIterator {
     MOZ_ASSERT(!done());
     return fp_;
   }
+  inline JitFrameLayout* framePtr() const;
   void* stackAddress() const { return fp(); }
   FrameType frameType() const {
     MOZ_ASSERT(!done());

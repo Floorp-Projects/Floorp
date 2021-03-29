@@ -332,6 +332,15 @@ void JitRuntime::generateEnterJIT(JSContext* cx, MacroAssembler& masm) {
   masm.ret();
 }
 
+// static
+mozilla::Maybe<::JS::ProfilingFrameIterator::RegisterState>
+JitRuntime::getCppEntryRegisters(JitFrameLayout* frameStackAddress) {
+  // Not supported, or not implemented yet.
+  // TODO: Implement along with the corresponding stack-walker changes, in
+  // coordination with the Gecko Profiler, see bug 1635987 and follow-ups.
+  return mozilla::Nothing{};
+}
+
 // Push AllRegs in a way that is compatible with RegisterDump, regardless of
 // what PushRegsInMask might do to reduce the set size.
 static void DumpAllRegs(MacroAssembler& masm) {

@@ -749,3 +749,11 @@ bool JS::ProfilingFrameIterator::isWasm() const {
 bool JS::ProfilingFrameIterator::isJSJit() const {
   return kind_ == Kind::JSJit;
 }
+
+mozilla::Maybe<JS::ProfilingFrameIterator::RegisterState>
+JS::ProfilingFrameIterator::getCppEntryRegisters() const {
+  if (!isJSJit()) {
+    return mozilla::Nothing{};
+  }
+  return jit::JitRuntime::getCppEntryRegisters(jsJitIter().framePtr());
+}
