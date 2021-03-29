@@ -20,6 +20,7 @@ class AnimationList extends PureComponent {
     return {
       animations: PropTypes.arrayOf(PropTypes.object).isRequired,
       dispatch: PropTypes.func.isRequired,
+      displayableRange: PropTypes.object.isRequired,
       emitEventForTest: PropTypes.func.isRequired,
       getAnimatedPropertyMap: PropTypes.func.isRequired,
       getNodeFromActor: PropTypes.func.isRequired,
@@ -35,6 +36,7 @@ class AnimationList extends PureComponent {
     const {
       animations,
       dispatch,
+      displayableRange,
       emitEventForTest,
       getAnimatedPropertyMap,
       getNodeFromActor,
@@ -45,17 +47,20 @@ class AnimationList extends PureComponent {
       timeScale,
     } = this.props;
 
+    const { startIndex, endIndex } = displayableRange;
+
     return dom.ul(
       {
         className: "animation-list",
       },
-      animations.map(animation =>
+      animations.map((animation, index) =>
         AnimationItem({
           animation,
           dispatch,
           emitEventForTest,
           getAnimatedPropertyMap,
           getNodeFromActor,
+          isDisplayable: startIndex <= index && index <= endIndex,
           selectAnimation,
           setHighlightedNode,
           setSelectedNode,
