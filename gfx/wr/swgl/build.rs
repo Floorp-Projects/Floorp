@@ -176,6 +176,22 @@ fn main() {
         if tool.args().contains(&"-Oz".into()) {
             build.flag("-O2");
         }
+
+        // Most GLSL compilers assume something like fast-math so we turn it on.
+        // However, reciprocal division makes it so 1/1 = 0.999994 which can produce a lot of fuzz
+        // in reftests and the use of reciprocal instructions usually involves a refinement step
+        // which bloats our already bloated code. Further, our shader code is sufficiently parallel
+        // that we're more likely to be throughput bound vs latency bound. Having fewer
+        // instructions makes things easier on the processor and in places where it matters we can
+        // probably explicitly use reciprocal instructions and avoid the refinement step.
+        if tool.is_like_msvc() {
+            build.flag("/fp:fast")
+                 .flag("-Xclang")
+                 .flag("-mrecip=none");
+        } else {
+            build.flag("-ffast-math")
+                 .flag("-mrecip=none");
+        }
     }
 
     build.file("src/gl.cc")
