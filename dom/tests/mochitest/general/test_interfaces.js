@@ -363,7 +363,7 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "Event", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "EventCounts", insecureContext: true, nightly: true },
+  { name: "EventCounts", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "EventSource", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -849,7 +849,7 @@ var interfaceNamesInGlobalScope = [
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "PerformanceEntry", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
-  { name: "PerformanceEventTiming", insecureContext: true, nightly: true },
+  { name: "PerformanceEventTiming", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
   { name: "PerformanceMark", insecureContext: true },
   // IMPORTANT: Do not change this list without review from a DOM peer!
