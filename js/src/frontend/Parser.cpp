@@ -1268,7 +1268,11 @@ Maybe<FunctionScope::ParserData*> NewFunctionScopeData(
           return Nothing();
         }
         break;
+      case BindingKind::Let:
+      case BindingKind::Const:
+        break;
       default:
+        MOZ_CRASH("bad function scope BindingKind");
         break;
     }
   }
@@ -1344,6 +1348,10 @@ Maybe<VarScope::ParserData*> NewVarScopeData(JSContext* cx,
       if (!vars.append(binding)) {
         return Nothing();
       }
+    } else {
+      MOZ_ASSERT(
+          bi.kind() == BindingKind::Let || bi.kind() == BindingKind::Const,
+          "bad var scope BindingKind");
     }
   }
 
@@ -1403,7 +1411,11 @@ Maybe<LexicalScope::ParserData*> NewLexicalScopeData(JSContext* cx,
           return Nothing();
         }
         break;
+      case BindingKind::Var:
+      case BindingKind::FormalParameter:
+        break;
       default:
+        MOZ_CRASH("Bad lexical scope BindingKind");
         break;
     }
   }
@@ -1458,8 +1470,7 @@ Maybe<LexicalScope::ParserData*> ParserBase::newLexicalScopeData(
 Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
     JSContext* cx, ParseContext::Scope& scope, LifoAlloc& alloc,
     ParseContext* pc) {
-  ParserBindingNameVector lets(cx);
-  ParserBindingNameVector consts(cx);
+  ParserBindingNameVector synthetics(cx);
 
   bool allBindingsClosedOver =
       pc->sc()->allBindingsClosedOver() || scope.tooBigToOptimize();
@@ -1468,23 +1479,19 @@ Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
     ParserBindingName binding(bi.name(),
                               allBindingsClosedOver || bi.closedOver());
     switch (bi.kind()) {
-      case BindingKind::Let:
-        if (!lets.append(binding)) {
-          return Nothing();
-        }
-        break;
-      case BindingKind::Const:
-        if (!consts.append(binding)) {
+      case BindingKind::Synthetic:
+        if (!synthetics.append(binding)) {
           return Nothing();
         }
         break;
       default:
+        MOZ_CRASH("bad class body scope BindingKind");
         break;
     }
   }
 
   ClassBodyScope::ParserData* bindings = nullptr;
-  uint32_t numBindings = lets.length() + consts.length();
+  uint32_t numBindings = synthetics.length();
 
   if (numBindings > 0) {
     bindings = NewEmptyBindingData<ClassBodyScope>(cx, alloc, numBindings);
@@ -1493,8 +1500,7 @@ Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
     }
 
     // The ordering here is important. See comments in ClassBodyScope.
-    InitializeBindingData(bindings, numBindings, lets,
-                          &ParserClassBodyScopeSlotInfo::constStart, consts);
+    InitializeBindingData(bindings, numBindings, synthetics);
   }
 
   return Some(bindings);
@@ -7662,7 +7668,8 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       if (!storedMethodProp) {
         return false;
       }
-      if (!noteDeclaredName(storedMethodProp, DeclarationKind::Const, pos())) {
+      if (!noteDeclaredName(storedMethodProp, DeclarationKind::Synthetic,
+                            pos())) {
         return false;
       }
 
@@ -7879,14 +7886,14 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
         // time, we don't necessarily know if the class has a private brand.
         if (!noteDeclaredName(
                 TaggedParserAtomIndex::WellKnown::dotPrivateBrand(),
-                DeclarationKind::Let, namePos, ClosedOver::Yes)) {
+                DeclarationKind::Synthetic, namePos, ClosedOver::Yes)) {
           return null();
         }
       }
 
       if (classInitializedMembers.instanceFieldKeys > 0) {
         if (!noteDeclaredName(TaggedParserAtomIndex::WellKnown::dotFieldKeys(),
-                              DeclarationKind::Let, namePos)) {
+                              DeclarationKind::Synthetic, namePos)) {
           return null();
         }
       }
@@ -7894,7 +7901,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
       if (classInitializedMembers.staticFields > 0) {
         if (!noteDeclaredName(
                 TaggedParserAtomIndex::WellKnown::dotStaticInitializers(),
-                DeclarationKind::Let, namePos)) {
+                DeclarationKind::Synthetic, namePos)) {
           return null();
         }
       }
@@ -7902,7 +7909,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
       if (classInitializedMembers.staticFieldKeys > 0) {
         if (!noteDeclaredName(
                 TaggedParserAtomIndex::WellKnown::dotStaticFieldKeys(),
-                DeclarationKind::Let, namePos)) {
+                DeclarationKind::Synthetic, namePos)) {
           return null();
         }
       }
