@@ -871,8 +871,14 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                  uint8_t(msgKind));
   }
 
+  [[nodiscard]] bool emitNewPrivateName(TaggedParserAtomIndex bindingName,
+                                        TaggedParserAtomIndex symbolName);
+
   template <class ClassMemberType>
   [[nodiscard]] bool emitNewPrivateNames(ListNode* classMembers);
+
+  [[nodiscard]] bool emitNewPrivateNames(TaggedParserAtomIndex privateBrandName,
+                                         ListNode* classMembers);
 
   [[nodiscard]] bool emitInstrumentation(InstrumentationKind kind,
                                          uint32_t npopped = 0) {
