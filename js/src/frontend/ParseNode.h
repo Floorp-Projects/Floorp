@@ -39,9 +39,9 @@
 //
 // - This bulk-deallocation DOES NOT run destructors.
 //
-// - Instances of `LexicalScope::ParserData` MUST BE allocated as
-//   instances of `ParseNode`, in the same `LifoAlloc`. They are bulk-
-//   deallocated alongside the rest of the tree.
+// - Instances of `LexicalScope::ParserData` and `ClassBodyScope::ParserData`
+//   MUST BE allocated as instances of `ParseNode`, in the same `LifoAlloc`.
+//   They are bulk-deallocated alongside the rest of the tree.
 
 struct JSContext;
 
@@ -160,6 +160,7 @@ class FunctionBox;
   F(MutateProto, UnaryNode)                                      \
   F(ClassDecl, ClassNode)                                        \
   F(DefaultConstructor, ClassMethod)                             \
+  F(ClassBodyScope, ClassBodyScopeNode)                          \
   F(ClassMethod, ClassMethod)                                    \
   F(ClassField, ClassField)                                      \
   F(ClassMemberList, ListNode)                                   \
@@ -618,6 +619,7 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
   MACRO(ModuleNode, ModuleNodeType, asModule)                                \
                                                                              \
   MACRO(LexicalScopeNode, LexicalScopeNodeType, asLexicalScope)              \
+  MACRO(ClassBodyScopeNode, ClassBodyScopeNodeType, asClassBodyScope)        \
                                                                              \
   MACRO(ListNode, ListNodeType, asList)                                      \
   MACRO(CallSiteNode, CallSiteNodeType, asCallSite)                          \
@@ -1616,22 +1618,22 @@ class BigIntLiteral : public ParseNode {
   bool isZero() const { return isZero_; }
 };
 
-class LexicalScopeNode : public ParseNode {
-  LexicalScope::ParserData* bindings;
+template <ParseNodeKind NodeKind, typename ScopeType>
+class BaseScopeNode : public ParseNode {
+  using ParserData = typename ScopeType::ParserData;
+  ParserData* bindings;
   ParseNode* body;
   ScopeKind kind_;
 
  public:
-  LexicalScopeNode(LexicalScope::ParserData* bindings, ParseNode* body,
-                   ScopeKind kind = ScopeKind::Lexical)
-      : ParseNode(ParseNodeKind::LexicalScope, body->pn_pos),
+  BaseScopeNode(ParserData* bindings, ParseNode* body,
+                ScopeKind kind = ScopeKind::Lexical)
+      : ParseNode(NodeKind, body->pn_pos),
         bindings(bindings),
         body(body),
         kind_(kind) {}
 
-  static bool test(const ParseNode& node) {
-    return node.isKind(ParseNodeKind::LexicalScope);
-  }
+  static bool test(const ParseNode& node) { return node.isKind(NodeKind); }
 
   static constexpr TypeCode classTypeCode() { return TypeCode::Other; }
 
@@ -1644,7 +1646,7 @@ class LexicalScopeNode : public ParseNode {
   void dumpImpl(ParserBase* parser, GenericPrinter& out, int indent);
 #endif
 
-  LexicalScope::ParserData* scopeBindings() const {
+  ParserData* scopeBindings() const {
     MOZ_ASSERT(!isEmptyScope());
     return bindings;
   }
@@ -1656,6 +1658,21 @@ class LexicalScopeNode : public ParseNode {
   bool isEmptyScope() const { return !bindings; }
 
   ScopeKind kind() const { return kind_; }
+};
+
+class LexicalScopeNode
+    : public BaseScopeNode<ParseNodeKind::LexicalScope, LexicalScope> {
+ public:
+  LexicalScopeNode(LexicalScope::ParserData* bindings, ParseNode* body,
+                   ScopeKind kind = ScopeKind::Lexical)
+      : BaseScopeNode(bindings, body, kind) {}
+};
+
+class ClassBodyScopeNode
+    : public BaseScopeNode<ParseNodeKind::ClassBodyScope, ClassBodyScope> {
+ public:
+  ClassBodyScopeNode(ClassBodyScope::ParserData* bindings, ParseNode* body)
+      : BaseScopeNode(bindings, body, ScopeKind::ClassBody) {}
 };
 
 class LabeledStatement : public NameNode {
@@ -2249,8 +2266,8 @@ class ClassNode : public TernaryNode {
     return &kid3()->as<LexicalScopeNode>();
   }
 
-  LexicalScopeNode* bodyScope() const {
-    return &innerScope()->scopeBody()->as<LexicalScopeNode>();
+  ClassBodyScopeNode* bodyScope() const {
+    return &innerScope()->scopeBody()->as<ClassBodyScopeNode>();
   }
 
  public:
@@ -2258,6 +2275,7 @@ class ClassNode : public TernaryNode {
             LexicalScopeNode* memberBlock, const TokenPos& pos)
       : TernaryNode(ParseNodeKind::ClassDecl, names, heritage, memberBlock,
                     pos) {
+    MOZ_ASSERT(innerScope()->scopeBody()->is<ClassBodyScopeNode>());
     MOZ_ASSERT_IF(names, names->is<ClassNames>());
   }
 
@@ -2284,8 +2302,8 @@ class ClassNode : public TernaryNode {
     return scope->isEmptyScope() ? nullptr : scope;
   }
 
-  LexicalScopeNode* bodyScopeBindings() const {
-    LexicalScopeNode* scope = bodyScope();
+  ClassBodyScopeNode* bodyScopeBindings() const {
+    ClassBodyScopeNode* scope = bodyScope();
     return scope->isEmptyScope() ? nullptr : scope;
   }
 };

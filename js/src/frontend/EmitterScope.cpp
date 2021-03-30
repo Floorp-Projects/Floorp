@@ -390,6 +390,70 @@ bool EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind,
   return checkEnvironmentChainLength(bce);
 }
 
+bool EmitterScope::enterClassBody(BytecodeEmitter* bce, ScopeKind kind,
+                                  ClassBodyScope::ParserData* bindings) {
+  MOZ_ASSERT(kind == ScopeKind::ClassBody);
+  MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
+
+  if (!ensureCache(bce)) {
+    return false;
+  }
+
+  // Resolve bindings.
+  TDZCheckCache* tdzCache = bce->innermostTDZCheckCache;
+  uint32_t firstFrameSlot = frameSlotStart();
+  ParserBindingIter bi(*bindings, firstFrameSlot);
+  for (; bi; bi++) {
+    if (!checkSlotLimits(bce, bi)) {
+      return false;
+    }
+
+    NameLocation loc = bi.nameLocation();
+    if (!putNameInCache(bce, bi.name(), loc)) {
+      return false;
+    }
+
+    if (!tdzCache->noteTDZCheck(bce, bi.name(), CheckTDZ)) {
+      return false;
+    }
+  }
+
+  updateFrameFixedSlots(bce, bi);
+
+  ScopeIndex scopeIndex;
+  if (!ScopeStencil::createForClassBodyScope(
+          bce->cx, bce->compilationState, kind, bindings, firstFrameSlot,
+          enclosingScopeIndex(bce), &scopeIndex)) {
+    return false;
+  }
+  if (!internScopeStencil(bce, scopeIndex)) {
+    return false;
+  }
+
+  if (ScopeKindIsInBody(kind) && hasEnvironment()) {
+    // After interning the VM scope we can get the scope index.
+    if (!bce->emitInternedScopeOp(index(), JSOp::PushLexicalEnv)) {
+      return false;
+    }
+  }
+
+  // Lexical scopes need notes to be mapped from a pc.
+  if (!appendScopeNote(bce)) {
+    return false;
+  }
+
+  // Put frame slots in TDZ. Environment slots are poisoned during environment
+  // creation. XXX TODO: Change. This makes no sense for class body slots.
+  //
+  // This must be done after appendScopeNote to be considered in the extent
+  // of the scope.
+  if (!deadZoneFrameSlotRange(bce, firstFrameSlot, frameSlotEnd())) {
+    return false;
+  }
+
+  return checkEnvironmentChainLength(bce);
+}
+
 bool EmitterScope::enterNamedLambda(BytecodeEmitter* bce, FunctionBox* funbox) {
   MOZ_ASSERT(this == bce->innermostEmitterScopeNoCheck());
   MOZ_ASSERT(funbox->namedLambdaBindings());
