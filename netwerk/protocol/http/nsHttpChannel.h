@@ -274,7 +274,8 @@ class nsHttpChannel final : public HttpBaseChannel,
   base::ProcessId ProcessId();
 
   using ChildEndpointPromise =
-      MozPromise<ipc::Endpoint<extensions::PStreamFilterChild>, bool, true>;
+      MozPromise<mozilla::ipc::Endpoint<extensions::PStreamFilterChild>, bool,
+                 true>;
   [[nodiscard]] RefPtr<ChildEndpointPromise> AttachStreamFilter(
       base::ProcessId aChildProcessId);
 
