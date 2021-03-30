@@ -93,6 +93,34 @@ you might find that this isn't working on large source code files, but triggerin
    "editor.formatOnSaveTimeout": 5000
 
 
+Remote Development over SSH
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+VS Code provides an `extension <https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-ssh>`__ that lets you use any remote machine with a SSH server as your development environment. No matter if it's Linux based, macOS or Windows, as long as the target machine offers a SSH connection, it can be used for development.
+
+No source code needs to be on your local machine to use VS Code remotely since the extension runs commands and other extensions directly on the remote machine.
+
+In order to setup a connection please follow these steps:
+
+**1.** Open VS Code and select from the left side panel ``Remote Explorer``
+
+.. image:: img/remote_explorer.png
+
+**2.** From the ``Remote Explorer`` panel select ``SSH Targets`` and click on ``Add`` and enter the connection details
+
+.. image:: img/remote_explorer_add.png
+
+.. image:: img/remote_explorer_add_wind.png
+
+**3.** Click on the connection that you just configured at the previous step
+
+**4.** Finally you should be connected to the desired remote SSH server
+
+.. image:: img/connection_done.png
+
+Please note that during the first connection VS Code will install itself remotely and also install all of the needed dependencies.
+
+
 Recommended extensions
 ~~~~~~~~~~~~~~~~~~~~~~
 

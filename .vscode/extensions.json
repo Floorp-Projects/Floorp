@@ -19,6 +19,8 @@
     // IDL language support
     "mythmon.idl",
     // Mercurial support
-    "mrcrowl.hg"
+    "mrcrowl.hg",
+    // VSCode Remote Development over SSH
+    "ms-vscode-remote.remote-ssh",
   ]
 }
