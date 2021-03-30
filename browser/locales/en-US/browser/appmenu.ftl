@@ -53,6 +53,11 @@ appmenuitem-fullscreen =
 
 ## Firefox Account toolbar button and Sync panel in App menu.
 
+appmenu-remote-tabs-sign-into-sync =
+  .label = Sign in to Sync…
+appmenu-remote-tabs-turn-on-sync =
+  .label = Turn on Sync…
+
 appmenuitem-fxa-toolbar-sync-now2 = Sync Now
 appmenuitem-fxa-manage-account = Manage Account
 appmenu-fxa-header =

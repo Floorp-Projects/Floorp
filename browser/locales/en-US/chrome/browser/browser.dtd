@@ -29,13 +29,10 @@ this container is a toolbar. This avoids double-speaking. -->
 <!-- LOCALIZATION NOTE (fxa.menu) Used to define the different labels
      for the Firefox Account toolbar menu screen. The `Signed in as` text is
      followed by the user's email. -->
-<!ENTITY fxa.menu.syncSettings2.label "&syncBrand.shortName.label; Settings">
 <!ENTITY fxa.menu.connectAnotherDevice2.label "Connect Another Device…">
 <!ENTITY fxa.menu.firefoxAccount "&syncBrand.fxAccount.label;">
 <!ENTITY fxa.menu.signin.label "Sign in to &brandProductName;">
-<!ENTITY fxa.menu.turnOnSync.label "Turn on &syncBrand.shortName.label;">
 <!ENTITY fxa.menu.signOut.label "Sign Out…">
-<!ENTITY fxa.menu.setupSync.label "Set Up &syncBrand.shortName.label;…">
 
 <!-- LOCALIZATION NOTE (fxa.service) Used to define the different FxA services
      for the Firefox Account toolbar menu screen.  -->
@@ -100,8 +97,6 @@ this container is a toolbar. This avoids double-speaking. -->
 <!ENTITY appMenuRemoteTabs.opensyncprefs.label "Open Sync Preferences">
 <!ENTITY appMenuRemoteTabs.welcome.label "View a list of tabs from your other devices.">
 <!ENTITY appMenuRemoteTabs.unverified.label "Your account needs to be verified.">
-<!ENTITY appMenuRemoteTabs.signintosync.label "Sign in to &syncBrand.shortName.label;…">
-<!ENTITY appMenuRemoteTabs.turnonsync.label "Turn on &syncBrand.shortName.label;…">
 <!ENTITY appMenuRemoteTabs.connectdevice.label "Connect Another Device">
 
 <!ENTITY customizeMenu.addToToolbar.label "Add to Toolbar">
