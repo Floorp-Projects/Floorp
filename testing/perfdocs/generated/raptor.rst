@@ -82,6 +82,52 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **use live sites**: false
 
 
+.. dropdown:: buzzfeed (BT, FF, CH, CU)
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **browser cycles**: 25
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm5-linux-firefox-{subtest}.manifest
+   * **playback recordings**: mitm5-linux-firefox-{subtest}.mp
+   * **playback version**: 5.1.1
+   * **test url**: `<https://www.buzzfeed.com/>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+
+
+.. dropdown:: cnn (BT, FF, CH, CU)
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **browser cycles**: 25
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm5-linux-firefox-{subtest}.manifest
+   * **playback recordings**: mitm5-linux-firefox-{subtest}.mp
+   * **playback version**: 5.1.1
+   * **test url**: `<https://www.cnn.com/2021/03/22/weather/climate-change-warm-waters-lake-michigan/index.html>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+
+
 .. dropdown:: ebay (BT, FF, CH, CU)
 
    * **alert on**: fcp, loadtime
@@ -100,6 +146,52 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **playback recordings**: mitm5-linux-firefox-{subtest}.mp
    * **playback version**: 5.1.1
    * **test url**: `<https://www.ebay.com/>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+
+
+.. dropdown:: espn (BT, FF, CH, CU)
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **browser cycles**: 25
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm5-linux-firefox-{subtest}.manifest
+   * **playback recordings**: mitm5-linux-firefox-{subtest}.mp
+   * **playback version**: 5.1.1
+   * **test url**: `<http://www.espn.com/nba/story/_/page/allstarweekend25788027/the-comparison-lebron-james-michael-jordan-their-own-words>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+
+
+.. dropdown:: expedia (BT, FF, CH, CU)
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **browser cycles**: 25
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm5-linux-firefox-{subtest}.manifest
+   * **playback recordings**: mitm5-linux-firefox-{subtest}.mp
+   * **playback version**: 5.1.1
+   * **test url**: `<https://expedia.com/Hotel-Search?destination=New+York%2C+New+York&latLong=40.756680%2C-73.986470&regionId=178293&startDate=&endDate=&rooms=1&_xpid=11905%7C1&adults=2>`__
    * **type**: pageload
    * **unit**: ms
    * **use live sites**: false
@@ -404,6 +496,29 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **use live sites**: false
 
 
+.. dropdown:: nytimes (BT, FF, CH, CU)
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **browser cycles**: 25
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm5-linux-firefox-{subtest}.manifest
+   * **playback recordings**: mitm5-linux-firefox-{subtest}.mp
+   * **playback version**: 5.1.1
+   * **test url**: `<https://www.nytimes.com/2020/02/19/opinion/surprise-medical-bill.html>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+
+
 .. dropdown:: office (BT, FF, CH, CU)
 
    * **alert on**: fcp, loadtime
@@ -583,6 +698,29 @@ Tests for page-load performance. The links direct to the actual websites that ar
    * **playback recordings**: mitm5-linux-firefox-{subtest}.mp
    * **playback version**: 5.1.1
    * **test url**: `<https://twitter.com/BarackObama>`__
+   * **type**: pageload
+   * **unit**: ms
+   * **use live sites**: false
+
+
+.. dropdown:: wikia (BT, FF, CH, CU)
+
+   * **alert on**: fcp, loadtime
+   * **alert threshold**: 2.0
+   * **apps**: firefox, chrome, chromium
+   * **browser cycles**: 25
+   * **expected**: pass
+   * **gecko profile entries**: 14000000
+   * **gecko profile interval**: 1
+   * **lower is better**: true
+   * **measure**: fnbpaint, fcp, dcf, loadtime
+   * **page cycles**: 25
+   * **page timeout**: 60000
+   * **playback**: mitmproxy
+   * **playback pageset manifest**: mitm5-linux-firefox-{subtest}.manifest
+   * **playback recordings**: mitm5-linux-firefox-{subtest}.mp
+   * **playback version**: 5.1.1
+   * **test url**: `<https://marvel.fandom.com/wiki/Black_Panther>`__
    * **type**: pageload
    * **unit**: ms
    * **use live sites**: false
