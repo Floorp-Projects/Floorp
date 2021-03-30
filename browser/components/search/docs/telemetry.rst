@@ -104,9 +104,13 @@ SEARCH_COUNTS - SERP results
   For in-content searches, the format is
   ``<provider>.in-content:[sap|sap-follow-on|organic]:[code|none]``.
 
-browser.search.withads.*
-  These keyed scalar track counts of SERP pages with adverts displayed. The key
-  format is ``<provider>:<tagged|organic>``.
+  This is obsolete, browser.search.content.* should be preferred.
+
+browser.search.content.*
+  These keyed scalar track counts of SERP page loads. The key format is
+  ``<provider>:[tagged|tagged-follow-on|organic]:[<code>|none]``.
+
+  These will eventually replace the SEARCH_COUNTS - SERP results.
 
   They are broken down by the originating SAP where known:
 
@@ -119,6 +123,13 @@ browser.search.withads.*
   - ``webextension``
   - ``system`` Indicates a search from the command line.
   - ``unknown`` Indicates the origin was unknown.
+
+browser.search.withads.*
+  These keyed scalar track counts of SERP pages with adverts displayed. The key
+  format is ``<provider>:<tagged|organic>``.
+
+  They are broken down by the originating SAP where known, the list of SAP
+  is the same as for ``browser.search.content.*``.
 
 browser.search.adclicks.*
   This is the same as ```browser.search.withads.*`` but tracks counts for them

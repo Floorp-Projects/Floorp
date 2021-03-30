@@ -24,6 +24,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 // The values of this map are used in the names of scalars for the following
 // scalar groups:
 // browser.engagement.navigation.*
+// browser.search.content.*
 // browser.search.withads.*
 // browser.search.adclicks.*
 const KNOWN_SEARCH_SOURCES = new Map([

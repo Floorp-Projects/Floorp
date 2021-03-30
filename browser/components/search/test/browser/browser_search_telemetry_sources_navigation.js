@@ -139,6 +139,7 @@ add_task(async function test_search() {
       "other-Example.urlbar": 1,
     },
     {
+      "browser.search.content.urlbar": { "example:tagged:ff": 1 },
       "browser.search.with_ads": { "example:sap": 1 },
       "browser.search.withads.urlbar": { "example:tagged": 1 },
     }
@@ -157,6 +158,8 @@ add_task(async function test_reload() {
       "other-Example.urlbar": 1,
     },
     {
+      "browser.search.content.urlbar": { "example:tagged:ff": 1 },
+      "browser.search.content.unknown": { "example:tagged:ff": 1 },
       "browser.search.with_ads": { "example:sap": 2 },
       "browser.search.withads.urlbar": { "example:tagged": 1 },
       "browser.search.withads.unknown": { "example:tagged": 1 },
@@ -181,6 +184,7 @@ add_task(async function test_fresh_search() {
       "other-Example.urlbar": 1,
     },
     {
+      "browser.search.content.urlbar": { "example:tagged:ff": 1 },
       "browser.search.with_ads": { "example:sap": 1 },
       "browser.search.withads.urlbar": { "example:tagged": 1 },
     }
@@ -200,6 +204,7 @@ add_task(async function test_click_ad() {
       "other-Example.urlbar": 1,
     },
     {
+      "browser.search.content.urlbar": { "example:tagged:ff": 1 },
       "browser.search.with_ads": { "example:sap": 1 },
       "browser.search.withads.urlbar": { "example:tagged": 1 },
       "browser.search.ad_clicks": { "example:sap": 1 },
@@ -220,6 +225,8 @@ add_task(async function test_go_back() {
       "other-Example.urlbar": 1,
     },
     {
+      "browser.search.content.urlbar": { "example:tagged:ff": 1 },
+      "browser.search.content.unknown": { "example:tagged:ff": 1 },
       "browser.search.with_ads": { "example:sap": 2 },
       "browser.search.withads.urlbar": { "example:tagged": 1 },
       "browser.search.withads.unknown": { "example:tagged": 1 },
