@@ -1822,14 +1822,10 @@ void PresShell::InitPaintSuppressionTimer() {
   int32_t delay = inProcess
                       ? StaticPrefs::nglayout_initialpaint_delay()
                       : StaticPrefs::nglayout_initialpaint_delay_in_oopif();
-  if (mPaintSuppressionAttempts) {
-    delay += mPaintSuppressionAttempts *
-             StaticPrefs::nglayout_initialpaint_retry_extra_delay();
-  }
   mPaintSuppressionTimer->InitWithNamedFuncCallback(
       [](nsITimer* aTimer, void* aPresShell) {
         RefPtr<PresShell> self = static_cast<PresShell*>(aPresShell);
-        self->UnsuppressPaintingFromTimer();
+        self->UnsuppressPainting();
       },
       this, delay, nsITimer::TYPE_ONE_SHOT,
       "PresShell::sPaintSuppressionCallback");
@@ -3910,28 +3906,6 @@ void PresShell::CancelPaintSuppressionTimer() {
     mPaintSuppressionTimer->Cancel();
     mPaintSuppressionTimer = nullptr;
   }
-}
-
-void PresShell::UnsuppressPaintingFromTimer() {
-  if (mIsDocumentGone || !mPaintingSuppressed) {
-    CancelPaintSuppressionTimer();
-    return;
-  }
-  if (!StaticPrefs::nglayout_initialpaint_unsuppress_with_no_background()) {
-    if (mPresContext->IsRootContentDocumentCrossProcess()) {
-      UpdateCanvasBackground();
-      if (!mHasCSSBackgroundColor) {
-        // We don't unsuppress painting if the page has a transparent
-        // background, as that usually means that the page is unstyled.
-        if (mPaintSuppressionAttempts++ <
-            StaticPrefs::nglayout_initialpaint_retry_max_retry_count()) {
-          InitPaintSuppressionTimer();
-          return;
-        }
-      }
-    }
-  }
-  UnsuppressPainting();
 }
 
 void PresShell::UnsuppressPainting() {
