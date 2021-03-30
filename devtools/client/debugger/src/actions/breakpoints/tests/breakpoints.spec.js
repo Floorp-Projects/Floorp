@@ -482,4 +482,30 @@ describe("breakpoints", () => {
     ).toBe(true);
     expect(breakpoint).toMatchSnapshot();
   });
+
+  it("should remove the pretty-printed breakpoint that was added", async () => {
+    const { dispatch, getState, cx } = createStore(mockClient({ "1": [0] }));
+
+    const loc = {
+      sourceId: "a.js",
+      line: 1,
+      column: 0,
+      sourceUrl: "http://localhost:8000/examples/a.js",
+    };
+
+    const source = await dispatch(
+      actions.newGeneratedSource(makeSource("a.js"))
+    );
+    await dispatch(actions.loadSourceText({ cx, source }));
+
+    await dispatch(actions.addBreakpoint(cx, loc));
+    await dispatch(actions.togglePrettyPrint(cx, "a.js"));
+
+    const breakpoint = selectors.getBreakpointsList(getState())[0];
+
+    await dispatch(actions.removeBreakpoint(cx, breakpoint));
+
+    const breakpointList = selectors.getPendingBreakpointList(getState());
+    expect(breakpointList.length).toBe(0);
+  });
 });

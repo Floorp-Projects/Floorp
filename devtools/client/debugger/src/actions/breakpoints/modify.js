@@ -197,7 +197,7 @@ export function removeBreakpoint(cx, initialBreakpoint) {
     return dispatch({
       type: "REMOVE_BREAKPOINT",
       cx,
-      location: breakpoint.location,
+      breakpoint,
       // If the breakpoint is disabled then it is not installed in the server.
       [PROMISE]: breakpoint.disabled
         ? Promise.resolve()
@@ -227,7 +227,8 @@ export function removeBreakpointAtGeneratedLocation(cx, target) {
     );
     // Remove any breakpoints matching the generated location.
     const breakpoints = getBreakpointsList(getState());
-    for (const { location, generatedLocation } of breakpoints) {
+    for (const breakpoint of breakpoints) {
+      const { generatedLocation } = breakpoint;
       if (
         generatedLocation.sourceId == target.sourceId &&
         comparePosition(generatedLocation, target)
@@ -235,7 +236,7 @@ export function removeBreakpointAtGeneratedLocation(cx, target) {
         dispatch({
           type: "REMOVE_BREAKPOINT",
           cx,
-          location,
+          breakpoint,
           [PROMISE]: onBreakpointRemoved,
         });
       }
@@ -243,7 +244,8 @@ export function removeBreakpointAtGeneratedLocation(cx, target) {
 
     // Remove any remaining pending breakpoints matching the generated location.
     const pending = getPendingBreakpointList(getState());
-    for (const { location, generatedLocation } of pending) {
+    for (const breakpoint of pending) {
+      const { generatedLocation } = breakpoint;
       if (
         generatedLocation.sourceUrl == target.sourceUrl &&
         comparePosition(generatedLocation, target)
@@ -251,7 +253,7 @@ export function removeBreakpointAtGeneratedLocation(cx, target) {
         dispatch({
           type: "REMOVE_PENDING_BREAKPOINT",
           cx,
-          location,
+          breakpoint,
         });
       }
     }
