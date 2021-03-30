@@ -35,7 +35,7 @@ bool CallOrNewEmitter::emitNameCallee(TaggedParserAtomIndex name) {
       bce_, name,
       isCall() ? NameOpEmitter::Kind::Call : NameOpEmitter::Kind::Get);
   if (!noe.emitGet()) {
-    //              [stack] CALLEE THIS
+    //              [stack] CALLEE THIS?
     return false;
   }
 
