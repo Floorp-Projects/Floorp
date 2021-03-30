@@ -24,6 +24,8 @@ JSErrNum js::ThrowMsgKindToErrNum(ThrowMsgKind kind) {
       return JSMSG_GET_MISSING_PRIVATE;
     case ThrowMsgKind::MissingPrivateOnSet:
       return JSMSG_SET_MISSING_PRIVATE;
+    case ThrowMsgKind::AssignToPrivateMethod:
+      return JSMSG_ASSIGN_TO_PRIVATE_METHOD;
   }
 
   MOZ_CRASH("Unexpected message kind");

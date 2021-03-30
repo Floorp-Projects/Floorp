@@ -21,6 +21,7 @@ enum class ThrowMsgKind : uint8_t {
   PrivateDoubleInit,
   MissingPrivateOnGet,
   MissingPrivateOnSet,
+  AssignToPrivateMethod,
 };
 
 JSErrNum ThrowMsgKindToErrNum(ThrowMsgKind kind);

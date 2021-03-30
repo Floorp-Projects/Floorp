@@ -55,6 +55,7 @@ UNIFIED_SOURCES += [
     "ParseNode.cpp",
     "ParseNodeVerify.cpp",
     "ParserAtom.cpp",
+    "PrivateOpEmitter.cpp",
     "PropOpEmitter.cpp",
     "SharedContext.cpp",
     "SourceNotes.cpp",
