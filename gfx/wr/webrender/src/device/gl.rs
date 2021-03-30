@@ -1056,6 +1056,7 @@ pub struct Device {
     // device state
     bound_textures: [gl::GLuint; 16],
     bound_program: gl::GLuint,
+    bound_program_name: String,
     bound_vao: gl::GLuint,
     bound_read_fbo: (FBOId, DeviceIntPoint),
     bound_draw_fbo: FBOId,
@@ -1746,6 +1747,7 @@ impl Device {
 
             bound_textures: [0; 16],
             bound_program: 0,
+            bound_program_name: String::new(),
             bound_vao: 0,
             bound_read_fbo: (FBOId(0), DeviceIntPoint::zero()),
             bound_draw_fbo: FBOId(0),
@@ -2361,6 +2363,7 @@ impl Device {
         if self.bound_program != program.id {
             self.gl.use_program(program.id);
             self.bound_program = program.id;
+            self.bound_program_name = program.source_info.full_name();
             self.program_mode_id = UniformLocation(program.u_mode);
         }
         true
@@ -3415,6 +3418,12 @@ impl Device {
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
 
+        let _guard = CrashAnnotatorGuard::new(
+            &self.crash_annotator,
+            CrashAnnotation::DrawShader,
+            &self.bound_program_name,
+        );
+
         self.gl.draw_elements(
             gl::TRIANGLES,
             index_count,
@@ -3427,6 +3436,12 @@ impl Device {
         debug_assert!(self.inside_frame);
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
+
+        let _guard = CrashAnnotatorGuard::new(
+            &self.crash_annotator,
+            CrashAnnotation::DrawShader,
+            &self.bound_program_name,
+        );
 
         self.gl.draw_elements(
             gl::TRIANGLES,
@@ -3441,6 +3456,12 @@ impl Device {
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
 
+        let _guard = CrashAnnotatorGuard::new(
+            &self.crash_annotator,
+            CrashAnnotation::DrawShader,
+            &self.bound_program_name,
+        );
+
         self.gl.draw_arrays(gl::POINTS, first_vertex, vertex_count);
     }
 
@@ -3449,6 +3470,12 @@ impl Device {
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
 
+        let _guard = CrashAnnotatorGuard::new(
+            &self.crash_annotator,
+            CrashAnnotation::DrawShader,
+            &self.bound_program_name,
+        );
+
         self.gl.draw_arrays(gl::LINES, first_vertex, vertex_count);
     }
 
@@ -3456,6 +3483,12 @@ impl Device {
         debug_assert!(self.inside_frame);
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
+
+        let _guard = CrashAnnotatorGuard::new(
+            &self.crash_annotator,
+            CrashAnnotation::DrawShader,
+            &self.bound_program_name,
+        );
 
         self.gl.draw_elements(
             gl::TRIANGLES,
@@ -3469,6 +3502,12 @@ impl Device {
         debug_assert!(self.inside_frame);
         #[cfg(debug_assertions)]
         debug_assert!(self.shader_is_ready);
+
+        let _guard = CrashAnnotatorGuard::new(
+            &self.crash_annotator,
+            CrashAnnotation::DrawShader,
+            &self.bound_program_name,
+        );
 
         self.gl.draw_elements_instanced(
             gl::TRIANGLES,
