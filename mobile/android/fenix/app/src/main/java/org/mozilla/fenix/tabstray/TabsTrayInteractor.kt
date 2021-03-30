@@ -7,8 +7,11 @@ package org.mozilla.fenix.tabstray
 interface TabsTrayInteractor {
     /**
      * Set the current tray item to the clamped [position].
+     *
+     * @param position The position on the tray to focus.
+     * @param smoothScroll If true, animate the scrolling from the current tab to [position].
      */
-    fun setCurrentTrayPosition(position: Int)
+    fun setCurrentTrayPosition(position: Int, smoothScroll: Boolean)
 
     /**
      * Dismisses the tabs tray and navigates to the browser.

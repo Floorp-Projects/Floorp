@@ -21,6 +21,21 @@ class TabLayoutObserverTest {
 
         observer.onTabSelected(tab)
 
-        verify { interactor.setCurrentTrayPosition(1) }
+        verify { interactor.setCurrentTrayPosition(1, false) }
+    }
+
+    @Test
+    fun `WHEN observer is first started THEN do not smooth scroll`() {
+        val observer = TabLayoutObserver(interactor)
+        val tab = mockk<TabLayout.Tab>()
+        every { tab.position } returns 1
+
+        observer.onTabSelected(tab)
+
+        verify { interactor.setCurrentTrayPosition(1, false) }
+
+        observer.onTabSelected(tab)
+
+        verify { interactor.setCurrentTrayPosition(1, true) }
     }
 }

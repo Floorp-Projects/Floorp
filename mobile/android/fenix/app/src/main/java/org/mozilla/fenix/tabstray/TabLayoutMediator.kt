@@ -57,8 +57,19 @@ class TabLayoutMediator(
 internal class TabLayoutObserver(
     private val interactor: TabsTrayInteractor
 ) : TabLayout.OnTabSelectedListener {
+
+    private var initialScroll = true
+
     override fun onTabSelected(tab: TabLayout.Tab) {
-        interactor.setCurrentTrayPosition(tab.position)
+        // Do not animate the initial scroll when opening the tabs tray.
+        val animate = if (initialScroll) {
+            initialScroll = false
+            false
+        } else {
+            true
+        }
+
+        interactor.setCurrentTrayPosition(tab.position, animate)
     }
 
     override fun onTabUnselected(tab: TabLayout.Tab) = Unit

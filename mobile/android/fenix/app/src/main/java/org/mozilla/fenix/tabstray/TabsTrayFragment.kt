@@ -104,8 +104,8 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         }
     }
 
-    override fun setCurrentTrayPosition(position: Int) {
-        tabsTray.currentItem = position
+    override fun setCurrentTrayPosition(position: Int, smoothScroll: Boolean) {
+        tabsTray.setCurrentItem(position, smoothScroll)
     }
 
     override fun navigateToBrowser() {
