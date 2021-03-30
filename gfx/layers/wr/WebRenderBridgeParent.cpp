@@ -173,6 +173,8 @@ static CrashReporter::Annotation FromWrCrashAnnotation(
   switch (aAnnotation) {
     case mozilla::wr::CrashAnnotation::CompileShader:
       return CrashReporter::Annotation::GraphicsCompileShader;
+    case mozilla::wr::CrashAnnotation::DrawShader:
+      return CrashReporter::Annotation::GraphicsDrawShader;
     default:
       MOZ_ASSERT_UNREACHABLE("Unhandled annotation!");
       return CrashReporter::Annotation::Count;
