@@ -864,7 +864,7 @@ pub fn dump_render_tasks_as_svg(
         size: Text,
     }
 
-    for pass in &render_tasks.passes {
+    for pass in render_tasks.passes.iter().rev() {
         let mut layout = VerticalLayout::new(x, margin, node_width);
 
         for task_id in &pass.task_ids {
