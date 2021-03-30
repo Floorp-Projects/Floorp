@@ -2,11 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
 #editBookmarkPanelRows > vbox {
   margin-bottom: .5em;
 }
-} /** END not Proton **/
 
 /* Folder menulist */
 
@@ -34,8 +32,9 @@
   margin: 0;
   margin-inline-end: 4px;
   list-style-image: url("chrome://global/skin/icons/arrow-dropdown-16.svg");
-  -moz-context-properties: fill;
+  -moz-context-properties: fill, fill-opacity;
   fill: currentColor;
+  fill-opacity: 0.8;
 }
 
 .expander-up {
