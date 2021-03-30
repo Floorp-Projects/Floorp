@@ -1903,9 +1903,19 @@ nsresult WhiteSpaceVisibilityKeeper::
   if (replaceRangeDataAtEnd.IsSet() && !replaceRangeDataAtEnd.Collapsed()) {
     MOZ_ASSERT(rangeToDelete.EndRef().EqualsOrIsBefore(
         replaceRangeDataAtEnd.EndRef()));
-    MOZ_ASSERT_IF(rangeToDelete.EndRef().IsInTextNode(),
+    // If there is some text after deleting range, replacing range start must
+    // equal or be before end of the deleting range.
+    MOZ_ASSERT_IF(rangeToDelete.EndRef().IsInTextNode() &&
+                      !rangeToDelete.EndRef().IsEndOfContainer(),
                   replaceRangeDataAtEnd.StartRef().EqualsOrIsBefore(
                       rangeToDelete.EndRef()));
+    // If the deleting range end is end of a text node, the replacing range
+    // starts with another node if the following text node starts with white-
+    // spaces.
+    MOZ_ASSERT_IF(rangeToDelete.EndRef().IsInTextNode() &&
+                      rangeToDelete.EndRef().IsEndOfContainer(),
+                  rangeToDelete.EndRef() == replaceRangeDataAtEnd.StartRef() ||
+                      replaceRangeDataAtEnd.StartRef().IsStartOfContainer());
     MOZ_ASSERT(rangeToDelete.StartRef().EqualsOrIsBefore(
         replaceRangeDataAtEnd.StartRef()));
     if (!replaceRangeDataAtEnd.HasReplaceString()) {
