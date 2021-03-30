@@ -344,7 +344,7 @@ bool EmitterScope::enterLexical(BytecodeEmitter* bce, ScopeKind kind,
       return false;
     }
 
-    NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
+    NameLocation loc = bi.nameLocation();
     if (!putNameInCache(bce, bi.name(), loc)) {
       return false;
     }
@@ -404,7 +404,7 @@ bool EmitterScope::enterNamedLambda(BytecodeEmitter* bce, FunctionBox* funbox) {
 
   // The lambda name, if not closed over, is accessed via JSOp::Callee and
   // not a frame slot. Do not update frame slot information.
-  NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
+  NameLocation loc = bi.nameLocation();
   if (!putNameInCache(bce, bi.name(), loc)) {
     return false;
   }
@@ -452,7 +452,7 @@ bool EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox) {
         return false;
       }
 
-      NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
+      NameLocation loc = bi.nameLocation();
       NameLocationMap::AddPtr p = cache.lookupForAdd(bi.name());
 
       // The only duplicate bindings that occur are simple formal
@@ -503,7 +503,7 @@ bool EmitterScope::enterFunction(BytecodeEmitter* bce, FunctionBox* funbox) {
         break;
       }
 
-      NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
+      NameLocation loc = bi.nameLocation();
       if (loc.kind() == NameLocation::Kind::FrameSlot) {
         MOZ_ASSERT(paramFrameSlotEnd <= loc.frameSlot());
         paramFrameSlotEnd = loc.frameSlot() + 1;
@@ -554,7 +554,7 @@ bool EmitterScope::enterFunctionExtraBodyVar(BytecodeEmitter* bce,
         return false;
       }
 
-      NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
+      NameLocation loc = bi.nameLocation();
       MOZ_ASSERT(bi.kind() == BindingKind::Var);
       if (!putNameInCache(bce, bi.name(), loc)) {
         return false;
@@ -660,7 +660,7 @@ bool EmitterScope::enterGlobal(BytecodeEmitter* bce,
   //       redeclaration check and initialize these bindings.
   if (globalsc->bindings) {
     for (ParserBindingIter bi(*globalsc->bindings); bi; bi++) {
-      NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
+      NameLocation loc = bi.nameLocation();
       if (!putNameInCache(bce, bi.name(), loc)) {
         return false;
       }
@@ -711,7 +711,7 @@ bool EmitterScope::enterEval(BytecodeEmitter* bce, EvalSharedContext* evalsc) {
           return false;
         }
 
-        NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
+        NameLocation loc = bi.nameLocation();
         if (!putNameInCache(bce, bi.name(), loc)) {
           return false;
         }
@@ -765,7 +765,7 @@ bool EmitterScope::enterModule(BytecodeEmitter* bce,
         return false;
       }
 
-      NameLocation loc = NameLocation::fromBinding(bi.kind(), bi.location());
+      NameLocation loc = bi.nameLocation();
       if (!putNameInCache(bce, bi.name(), loc)) {
         return false;
       }
