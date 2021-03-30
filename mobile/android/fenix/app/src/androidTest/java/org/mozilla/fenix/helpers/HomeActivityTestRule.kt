@@ -9,6 +9,7 @@ import androidx.test.espresso.intent.rule.IntentsTestRule
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.ActivityTestRule
 import androidx.test.uiautomator.UiDevice
+import androidx.test.uiautomator.UiSelector
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.onboarding.FenixOnboarding
 import org.mozilla.fenix.ui.robots.appContext
@@ -37,6 +38,7 @@ class HomeActivityTestRule(
     override fun afterActivityFinished() {
         super.afterActivityFinished()
         setLongTapTimeout(longTapUserPreference)
+        closeNotificationShade()
     }
 }
 
@@ -65,6 +67,7 @@ class HomeActivityIntentTestRule(
     override fun afterActivityFinished() {
         super.afterActivityFinished()
         setLongTapTimeout(longTapUserPreference)
+        closeNotificationShade()
     }
 }
 
@@ -78,4 +81,14 @@ private fun skipOnboardingBeforeLaunch() {
     // The production code isn't aware that we're using
     // this API so it can be fragile.
     FenixOnboarding(appContext).finish()
+}
+
+private fun closeNotificationShade() {
+    val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
+    if (mDevice.findObject(
+            UiSelector().resourceId("com.android.systemui:id/notification_stack_scroller")
+        ).exists()
+    ) {
+        mDevice.pressHome()
+    }
 }

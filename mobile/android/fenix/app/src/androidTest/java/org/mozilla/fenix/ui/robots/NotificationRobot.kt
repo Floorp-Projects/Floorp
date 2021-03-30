@@ -13,27 +13,23 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
 class NotificationRobot {
 
     fun verifySystemNotificationExists(notificationMessage: String) {
-
         fun notificationTray() = UiScrollable(
             UiSelector().resourceId("com.android.systemui:id/notification_stack_scroller")
         )
 
-        val notificationFound: Boolean
+        var notificationFound = false
 
-        notificationFound = try {
-            notificationTray().getChildByText(
-                UiSelector().text(notificationMessage), notificationMessage, true
-            ).exists()
-        } catch (e: UiObjectNotFoundException) {
-            false
-        }
-
-        if (!notificationFound) {
-            // swipe 2 times to expand the silent notifications on API 28 and higher, single-swipe doesn't do it
-            notificationTray().swipeUp(2)
-            val notification = mDevice.findObject(UiSelector().textContains(notificationMessage))
-            assertTrue(notification.exists())
-        }
+        do {
+            try {
+                notificationFound = notificationTray().getChildByText(
+                    UiSelector().text(notificationMessage), notificationMessage, true
+                ).waitForExists(waitingTime)
+                assertTrue(notificationFound)
+            } catch (e: UiObjectNotFoundException) {
+                notificationTray().scrollForward()
+                mDevice.waitForIdle()
+            }
+        } while (!notificationFound)
     }
 
     fun verifySystemNotificationGone(notificationMessage: String) {
