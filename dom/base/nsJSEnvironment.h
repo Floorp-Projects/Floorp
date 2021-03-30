@@ -112,7 +112,7 @@ class nsJSContext : public nsIScriptContext {
                              mozilla::TimeDuration aBudget);
   static void KillCCRunner();
   static void KillFullGCTimer();
-  static void KillGCRunner();
+  static void KillInterSliceGCRunner();
 
   // Calling LikelyShortLivingObjectCreated() makes a GC more likely.
   static void LikelyShortLivingObjectCreated();
