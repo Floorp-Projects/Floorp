@@ -49,6 +49,7 @@ using namespace js;
 
 using js::frontend::IsIdentifier;
 
+using mozilla::Maybe;
 using mozilla::Range;
 using mozilla::RangedPtr;
 
@@ -125,13 +126,19 @@ bool js::obj_propertyIsEnumerable(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   /* Step 3. */
-  Rooted<PropertyDescriptor> desc(cx);
+  Rooted<Maybe<PropertyDescriptor>> desc(cx);
   if (!GetOwnPropertyDescriptor(cx, obj, idRoot, &desc)) {
     return false;
   }
 
-  /* Steps 4-5. */
-  args.rval().setBoolean(desc.object() && desc.enumerable());
+  /* Step 4. */
+  if (desc.isNothing()) {
+    args.rval().setBoolean(false);
+    return true;
+  }
+
+  /* Step 5. */
+  args.rval().setBoolean(desc->enumerable());
   return true;
 }
 
@@ -444,7 +451,7 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
   };
 
   RootedId id(cx);
-  Rooted<PropertyDescriptor> desc(cx);
+  Rooted<Maybe<PropertyDescriptor>> desc(cx);
   RootedValue val(cx);
   for (size_t i = 0; i < idv.length(); ++i) {
     id = idv[i];
@@ -452,19 +459,19 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
       return nullptr;
     }
 
-    if (!desc.object()) {
+    if (desc.isNothing()) {
       continue;
     }
 
-    if (desc.isAccessorDescriptor()) {
-      if (desc.hasGetterObject() && desc.getterObject()) {
-        val.setObject(*desc.getterObject());
+    if (desc->isAccessorDescriptor()) {
+      if (desc->hasGetterObject() && desc->getterObject()) {
+        val.setObject(*desc->getterObject());
         if (!AddProperty(id, val, PropertyKind::Getter)) {
           return nullptr;
         }
       }
-      if (desc.hasSetterObject() && desc.setterObject()) {
-        val.setObject(*desc.setterObject());
+      if (desc->hasSetterObject() && desc->setterObject()) {
+        val.setObject(*desc->setterObject());
         if (!AddProperty(id, val, PropertyKind::Setter)) {
           return nullptr;
         }
@@ -472,7 +479,7 @@ JSString* js::ObjectToSource(JSContext* cx, HandleObject obj) {
       continue;
     }
 
-    val.set(desc.value());
+    val.set(desc->value());
 
     JSFunction* fun;
     if (IsFunctionObject(val, &fun) && fun->isMethod()) {
@@ -788,12 +795,12 @@ static bool PropertyIsEnumerable(JSContext* cx, HandleObject obj, HandleId id,
     return true;
   }
 
-  Rooted<PropertyDescriptor> desc(cx);
+  Rooted<Maybe<PropertyDescriptor>> desc(cx);
   if (!GetOwnPropertyDescriptor(cx, obj, id, &desc)) {
     return false;
   }
 
-  *enumerable = desc.object() && desc.enumerable();
+  *enumerable = desc.isSome() && desc->enumerable();
   return true;
 }
 
@@ -1191,6 +1198,7 @@ static bool ObjectDefineProperties(JSContext* cx, HandleObject obj,
   }
 
   RootedId nextKey(cx);
+  Rooted<Maybe<PropertyDescriptor>> keyDesc(cx);
   Rooted<PropertyDescriptor> desc(cx);
   RootedValue descObj(cx);
 
@@ -1204,12 +1212,12 @@ static bool ObjectDefineProperties(JSContext* cx, HandleObject obj,
     nextKey = keys[i];
 
     // Step 5.a.
-    if (!GetOwnPropertyDescriptor(cx, props, nextKey, &desc)) {
+    if (!GetOwnPropertyDescriptor(cx, props, nextKey, &keyDesc)) {
       return false;
     }
 
     // Step 5.b.
-    if (desc.object() && desc.enumerable()) {
+    if (keyDesc.isSome() && keyDesc->enumerable()) {
       if (!GetProperty(cx, props, props, nextKey, &descObj) ||
           !ToPropertyDescriptor(cx, descObj, true, &desc) ||
           !descriptors.append(desc) || !descriptorKeys.append(nextKey)) {
@@ -1285,11 +1293,11 @@ bool js::obj_create(JSContext* cx, unsigned argc, Value* vp) {
 
 // ES2017 draft rev 6859bb9ccaea9c6ede81d71e5320e3833b92cb3e
 // 6.2.4.4 FromPropertyDescriptor ( Desc )
-static bool FromPropertyDescriptorToArray(JSContext* cx,
-                                          Handle<PropertyDescriptor> desc,
-                                          MutableHandleValue vp) {
+static bool FromPropertyDescriptorToArray(
+    JSContext* cx, Handle<Maybe<PropertyDescriptor>> desc,
+    MutableHandleValue vp) {
   // Step 1.
-  if (!desc.object()) {
+  if (desc.isNothing()) {
     vp.setUndefined();
     return true;
   }
@@ -1300,14 +1308,14 @@ static bool FromPropertyDescriptorToArray(JSContext* cx,
   // performance reasons.
 
   int32_t attrsAndKind = 0;
-  if (desc.enumerable()) {
+  if (desc->enumerable()) {
     attrsAndKind |= ATTR_ENUMERABLE;
   }
-  if (desc.configurable()) {
+  if (desc->configurable()) {
     attrsAndKind |= ATTR_CONFIGURABLE;
   }
-  if (!desc.isAccessorDescriptor()) {
-    if (desc.writable()) {
+  if (!desc->isAccessorDescriptor()) {
+    if (desc->writable()) {
       attrsAndKind |= ATTR_WRITABLE;
     }
     attrsAndKind |= DATA_DESCRIPTOR_KIND;
@@ -1316,7 +1324,7 @@ static bool FromPropertyDescriptorToArray(JSContext* cx,
   }
 
   RootedArrayObject result(cx);
-  if (!desc.isAccessorDescriptor()) {
+  if (!desc->isAccessorDescriptor()) {
     result = NewDenseFullyAllocatedArray(cx, 2);
     if (!result) {
       return false;
@@ -1325,7 +1333,7 @@ static bool FromPropertyDescriptorToArray(JSContext* cx,
 
     result->initDenseElement(PROP_DESC_ATTRS_AND_KIND_INDEX,
                              Int32Value(attrsAndKind));
-    result->initDenseElement(PROP_DESC_VALUE_INDEX, desc.value());
+    result->initDenseElement(PROP_DESC_VALUE_INDEX, desc->value());
   } else {
     result = NewDenseFullyAllocatedArray(cx, 3);
     if (!result) {
@@ -1336,13 +1344,13 @@ static bool FromPropertyDescriptorToArray(JSContext* cx,
     result->initDenseElement(PROP_DESC_ATTRS_AND_KIND_INDEX,
                              Int32Value(attrsAndKind));
 
-    if (JSObject* get = desc.getterObject()) {
+    if (JSObject* get = desc->getterObject()) {
       result->initDenseElement(PROP_DESC_GETTER_INDEX, ObjectValue(*get));
     } else {
       result->initDenseElement(PROP_DESC_GETTER_INDEX, UndefinedValue());
     }
 
-    if (JSObject* set = desc.setterObject()) {
+    if (JSObject* set = desc->setterObject()) {
       result->initDenseElement(PROP_DESC_SETTER_INDEX, ObjectValue(*set));
     } else {
       result->initDenseElement(PROP_DESC_SETTER_INDEX, UndefinedValue());
@@ -1373,14 +1381,10 @@ bool js::GetOwnPropertyDescriptorToArray(JSContext* cx, unsigned argc,
   }
 
   // Step 3.
-  Rooted<PropertyDescriptor> desc(cx);
+  Rooted<Maybe<PropertyDescriptor>> desc(cx);
   if (!GetOwnPropertyDescriptor(cx, obj, id, &desc)) {
     return false;
   }
-
-  // [[GetOwnProperty]] is spec'ed to always return a complete property
-  // descriptor record (ES2017, 6.1.7.3, invariants of [[GetOwnProperty]]).
-  desc.assertCompleteIfFound();
 
   // Step 4.
   return FromPropertyDescriptorToArray(cx, desc, args.rval());
@@ -1713,7 +1717,7 @@ static bool EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args) {
   RootedValue key(cx);
   RootedValue value(cx);
   RootedShape shape(cx);
-  Rooted<PropertyDescriptor> desc(cx);
+  Rooted<Maybe<PropertyDescriptor>> desc(cx);
   // Step 4.
   size_t out = 0;
   for (size_t i = 0; i < len; i++) {
@@ -1752,7 +1756,7 @@ static bool EnumerableOwnProperties(JSContext* cx, const JS::CallArgs& args) {
       }
 
       // Step 4.a.ii. (inverted.)
-      if (!desc.object() || !desc.enumerable()) {
+      if (desc.isNothing() || !desc->enumerable()) {
         continue;
       }
 
