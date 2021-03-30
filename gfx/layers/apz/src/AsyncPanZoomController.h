@@ -1634,6 +1634,7 @@ class AsyncPanZoomController {
   bool Contains(const ScreenIntPoint& aPoint) const;
 
   bool IsInOverscrollGutter(const ScreenPoint& aPoint) const;
+  bool IsInOverscrollGutter(const ParentLayerPoint& aPoint) const;
 
   bool IsOverscrolled() const;
 
