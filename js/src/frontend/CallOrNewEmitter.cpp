@@ -63,8 +63,7 @@ bool CallOrNewEmitter::emitNameCallee(TaggedParserAtomIndex name) {
   eoe_.emplace(bce_,
                isCall() ? ElemOpEmitter::Kind::Call : ElemOpEmitter::Kind::Get,
                isSuperElem ? ElemOpEmitter::ObjKind::Super
-                           : ElemOpEmitter::ObjKind::Other,
-               NameVisibility::Public);
+                           : ElemOpEmitter::ObjKind::Other);
 
   state_ = State::ElemCallee;
   return *eoe_;
