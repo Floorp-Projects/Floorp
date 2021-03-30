@@ -116,7 +116,6 @@ class ChromeLauncher implements ProductLauncher {
 
     const usePipe = chromeArguments.includes('--remote-debugging-pipe');
     const runner = new BrowserRunner(
-      this.product,
       chromeExecutable,
       chromeArguments,
       temporaryUserDataDir
@@ -282,7 +281,6 @@ class FirefoxLauncher implements ProductLauncher {
     }
 
     const runner = new BrowserRunner(
-      this.product,
       firefoxExecutable,
       firefoxArguments,
       temporaryUserDataDir
