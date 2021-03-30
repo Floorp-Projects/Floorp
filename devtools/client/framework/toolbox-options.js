@@ -66,11 +66,12 @@ function InfallibleGetBoolPref(key) {
 /**
  * Represents the Options Panel in the Toolbox.
  */
-function OptionsPanel(iframeWindow, toolbox) {
+function OptionsPanel(iframeWindow, toolbox, commands) {
   this.panelDoc = iframeWindow.document;
   this.panelWin = iframeWindow;
 
   this.toolbox = toolbox;
+  this.commands = commands;
   this.telemetry = toolbox.telemetry;
   this.isReady = false;
 
@@ -570,7 +571,7 @@ OptionsPanel.prototype = {
     }
 
     if (!this.target.chrome) {
-      const isJavascriptEnabled = await this.toolbox.commands.targetConfigurationCommand.isJavascriptEnabled();
+      const isJavascriptEnabled = await this.commands.targetConfigurationCommand.isJavascriptEnabled();
       this.disableJSNode.checked = !isJavascriptEnabled;
       this.disableJSNode.addEventListener("click", this._disableJSClicked);
     } else {
@@ -618,7 +619,7 @@ OptionsPanel.prototype = {
   _disableJSClicked: function(event) {
     const checked = event.target.checked;
 
-    this.toolbox.commands.targetConfigurationCommand.updateConfiguration({
+    this.commands.targetConfigurationCommand.updateConfiguration({
       javascriptEnabled: !checked,
     });
   },
