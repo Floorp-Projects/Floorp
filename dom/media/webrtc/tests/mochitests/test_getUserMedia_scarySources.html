@@ -25,7 +25,7 @@ let getDevices = async constraints => {
   let devices = await new Promise((resolve, reject) => {
       resolve = SpecialPowers.wrapCallback(resolve);
       reject = SpecialPowers.wrapCallback(reject);
-      window.navigator.mozGetUserMediaDevices({}, resolve, reject,
+      window.navigator.mozGetUserMediaDevices(resolve, reject,
                                               innerWindowID, callID);
   });
   return devices.map(SpecialPowers.wrapCallback(d => d.QueryInterface(Ci.nsIMediaDevice)));

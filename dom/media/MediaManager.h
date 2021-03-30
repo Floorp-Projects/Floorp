@@ -233,7 +233,6 @@ class MediaManager final : public nsIMediaManagerService,
   MOZ_CAN_RUN_SCRIPT
   nsresult GetUserMediaDevices(
       nsPIDOMWindowInner* aWindow,
-      const dom::MediaStreamConstraints& aConstraints,
       dom::MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
       uint64_t aInnerWindowID = 0, const nsAString& aCallID = nsString());
   RefPtr<DevicesPromise> EnumerateDevices(nsPIDOMWindowInner* aWindow,
