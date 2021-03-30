@@ -12,7 +12,6 @@ import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.view.Gravity
 import android.view.LayoutInflater
@@ -26,7 +25,6 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
-import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
 import androidx.preference.PreferenceManager
 import com.google.android.material.appbar.AppBarLayout
@@ -57,9 +55,6 @@ import mozilla.components.support.utils.DrawableUtils
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.InstallFirefoxActivity
 import org.mozilla.focus.activity.MainActivity
-import org.mozilla.focus.biometrics.BiometricAuthenticationDialogFragment
-import org.mozilla.focus.biometrics.BiometricAuthenticationHandler
-import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.browser.DisplayToolbar
 import org.mozilla.focus.browser.binding.BlockingThemeBinding
 import org.mozilla.focus.browser.binding.LoadingBinding
@@ -99,8 +94,7 @@ import org.mozilla.focus.widget.FloatingSessionsButton
 class BrowserFragment :
     LocaleAwareFragment(),
     View.OnClickListener,
-    View.OnLongClickListener,
-    BiometricAuthenticationDialogFragment.BiometricAuthenticationListener {
+    View.OnLongClickListener {
 
     private var urlView: TextView? = null
     private var statusBar: View? = null
@@ -127,10 +121,6 @@ class BrowserFragment :
     private val blockingThemeBinding = ViewBoundFeatureWrapper<BlockingThemeBinding>()
     private val tabCountBinding = ViewBoundFeatureWrapper<TabCountBinding>()
 
-    private var biometricController: BiometricAuthenticationHandler? = null
-
-    var openedFromExternalLink: Boolean = false
-
     /**
      * The ID of the tab associated with this fragment.
      */
@@ -148,11 +138,6 @@ class BrowserFragment :
 
     override fun onPause() {
         super.onPause()
-
-        if (Biometrics.isBiometricsEnabled(requireContext())) {
-            biometricController?.stopListening()
-            requireView().alpha = 0f
-        }
 
         menuBinding.get()?.pause()
     }
@@ -614,76 +599,11 @@ class BrowserFragment :
         }
     }
 
-    override fun biometricCreateNewSessionWithLink() {
-        val state = requireComponents.store.state
-        val tabs = state.privateTabs
-            .map { tab -> tab.id }
-            .filter { tabId -> tabId != state.selectedTabId }
-
-        requireComponents.tabsUseCases.removeTabs(tabs)
-
-        // Purposefully not calling onAuthSuccess in case we add to that function in the future
-        requireView().alpha = 1f
-    }
-
-    override fun biometricCreateNewSession() {
-        requireComponents.tabsUseCases.removeAllTabs()
-    }
-
-    override fun onAuthSuccess() {
-        requireView().alpha = 1f
-    }
-
     override fun onResume() {
         super.onResume()
 
         StatusBarUtils.getStatusBarHeight(statusBar) { statusBarHeight ->
             statusBar!!.layoutParams.height = statusBarHeight
-        }
-
-        if (Biometrics.isBiometricsEnabled(requireContext())) {
-            if (biometricController == null) {
-                biometricController = BiometricAuthenticationHandler(requireContext())
-            }
-
-            displayBiometricPromptIfNeeded()
-        } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                biometricController?.stopListening()
-            }
-
-            biometricController = null
-            requireView().alpha = 1f
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    private fun displayBiometricPromptIfNeeded() {
-        val fragmentManager = childFragmentManager
-
-        // Check that we need to auth and that the fragment isn't already displayed
-        if (biometricController!!.needsAuth || openedFromExternalLink) {
-            requireView().alpha = 0f
-            biometricController!!.startAuthentication(openedFromExternalLink)
-            openedFromExternalLink = false
-
-            // Are we already displaying the biometric fragment?
-            if (fragmentManager.findFragmentByTag(BiometricAuthenticationDialogFragment.FRAGMENT_TAG) != null) {
-                return
-            }
-
-            try {
-                biometricController!!.biometricFragment!!.show(
-                    fragmentManager,
-                    BiometricAuthenticationDialogFragment.FRAGMENT_TAG
-                )
-            } catch (e: IllegalStateException) {
-                // It can happen that at this point in time the activity is already in the background
-                // and onSaveInstanceState() has already been called. Fragment transactions are not
-                // allowed after that anymore.
-            }
-        } else {
-            requireView().alpha = 1f
         }
     }
 

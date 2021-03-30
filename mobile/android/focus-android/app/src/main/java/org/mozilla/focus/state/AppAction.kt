@@ -34,7 +34,7 @@ sealed class AppAction : Action {
     object NoTabs : AppAction()
 
     /**
-     * The user finished edition the URL of the tab with the given [tabId].
+     * The user finished editing the URL of the tab with the given [tabId].
      */
     data class FinishEdit(
         val tabId: String
@@ -54,4 +54,14 @@ sealed class AppAction : Action {
      * The user finished the first run onboarding.
      */
     data class FinishFirstRun(val tabId: String?) : AppAction()
+
+    /**
+     * The app should get locked.
+     */
+    object Lock : AppAction()
+
+    /**
+     * The app should get unlocked.
+     */
+    data class Unlock(val tabId: String?) : AppAction()
 }

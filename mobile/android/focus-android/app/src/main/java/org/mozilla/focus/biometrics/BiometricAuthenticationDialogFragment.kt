@@ -4,30 +4,27 @@
 
 package org.mozilla.focus.biometrics
 
-import androidx.lifecycle.LifecycleObserver
 import android.content.DialogInterface
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import androidx.annotation.RequiresApi
-import androidx.fragment.app.DialogFragment
-import androidx.core.content.ContextCompat
-import androidx.appcompat.app.AppCompatDialogFragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.view.fingerprintIcon
-import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.view.newSessionButton
-import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.view.description
-import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.biometricErrorText
+import androidx.annotation.RequiresApi
+import androidx.appcompat.app.AppCompatDialogFragment
+import androidx.core.content.ContextCompat
+import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.LifecycleObserver
+import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.*
+import kotlinx.android.synthetic.main.biometric_prompt_dialog_content.view.*
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.requireComponents
+import org.mozilla.focus.state.AppAction
 
 @RequiresApi(api = Build.VERSION_CODES.M)
 class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), LifecycleObserver {
-
-    var openedFromExternalLink = false
-    var newSessionButton: Button? = null
+    private var handler: BiometricAuthenticationHandler? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,7 +44,6 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-
         val v = inflater.inflate(
             R.layout.biometric_prompt_dialog_content,
             container,
@@ -58,16 +54,11 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
         this.isCancelable = true
         biometricDialog?.setCanceledOnTouchOutside(false)
         biometricDialog?.setTitle(
-            requireContext().getString(
-                R.string.biometric_auth_title,
-                requireContext().getString(R.string.app_name)
-            )
+            getString(R.string.biometric_auth_title, getString(R.string.app_name))
         )
 
         v.description.setText(R.string.biometric_auth_description)
-        newSessionButton = v.newSessionButton
-
-        updateNewSessionButton()
+        v.newSessionButton.setText(R.string.biometric_auth_new_session)
         v.newSessionButton.setOnClickListener {
             biometricNewSessionButtonClicked()
             dismiss()
@@ -79,23 +70,22 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
 
     override fun onResume() {
         super.onResume()
+
         resetErrorText()
+
+        handler = BiometricAuthenticationHandler(requireContext(), this)
+        handler?.startAuthentication()
     }
 
-    interface BiometricAuthenticationListener {
-        fun biometricCreateNewSession()
-        fun onAuthSuccess()
-        fun biometricCreateNewSessionWithLink()
+    override fun onPause() {
+        super.onPause()
+
+        handler?.stopListening()
+        handler = null
     }
 
     private fun biometricNewSessionButtonClicked() {
-        val listener = parentFragment as BiometricAuthenticationListener?
-
-        if (openedFromExternalLink) {
-            listener?.biometricCreateNewSessionWithLink()
-        } else {
-            listener?.biometricCreateNewSession()
-        }
+        requireComponents.tabsUseCases.removePrivateTabs()
         dismiss()
     }
 
@@ -111,23 +101,13 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
     }
 
     fun onAuthenticated() {
-        val listener = parentFragment as BiometricAuthenticationListener?
-        if (listener != null) {
-            listener.onAuthSuccess()
-            dismiss()
-        }
+        val tabId = requireComponents.store.state.selectedTabId
+        requireComponents.appStore.dispatch(AppAction.Unlock(tabId))
+        dismiss()
     }
 
     fun onFailure() {
-        displayError(requireContext().getString(R.string.biometric_auth_not_recognized_error))
-    }
-
-    fun updateNewSessionButton() {
-        if (openedFromExternalLink) {
-            newSessionButton?.setText(R.string.biometric_auth_open_link_new_session)
-        } else {
-            newSessionButton?.setText(R.string.biometric_auth_new_session)
-        }
+        displayError(getString(R.string.biometric_auth_not_recognized_error))
     }
 
     private fun resetErrorText() {
@@ -135,6 +115,6 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
     }
 
     companion object {
-        val FRAGMENT_TAG = "biometric-dialog-fragment"
+        const val FRAGMENT_TAG = "biometric-dialog-fragment"
     }
 }

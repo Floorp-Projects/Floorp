@@ -66,9 +66,4 @@ sealed class Screen {
      * The application is locked (and requires unlocking).
      */
     object Locked : Screen()
-
-    /**
-     * Tabs have crashed and the user needs to decide whether to restore or close them.
-     */
-    object Crashed : Screen()
 }

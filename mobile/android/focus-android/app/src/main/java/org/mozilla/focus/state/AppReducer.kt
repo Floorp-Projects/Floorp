@@ -19,6 +19,8 @@ object AppReducer : Reducer<AppState, AppAction> {
             is AppAction.ShowTabs -> showTabs(state)
             is AppAction.HideTabs -> hideTabs(state)
             is AppAction.FinishFirstRun -> finishFirstRun(state, action)
+            is AppAction.Lock -> lock(state)
+            is AppAction.Unlock -> unlock(state, action)
         }
     }
 }
@@ -27,7 +29,7 @@ object AppReducer : Reducer<AppState, AppAction> {
  * The currently selected tab has changed.
  */
 private fun selectionChanged(state: AppState, action: AppAction.SelectionChanged): AppState {
-    if (state.screen is Screen.FirstRun) {
+    if (state.screen is Screen.FirstRun || state.screen is Screen.Locked) {
         return state
     }
 
@@ -97,6 +99,28 @@ private fun hideTabs(state: AppState): AppState {
  * The user finished the first run onboarding.
  */
 private fun finishFirstRun(state: AppState, action: AppAction.FinishFirstRun): AppState {
+    return if (action.tabId != null) {
+        state.copy(screen = Screen.Browser(action.tabId, showTabs = false))
+    } else {
+        state.copy(screen = Screen.Home)
+    }
+}
+
+/**
+ * Lock the application.
+ */
+private fun lock(state: AppState): AppState {
+    return state.copy(screen = Screen.Locked)
+}
+
+/**
+ * Unlock the application.
+ */
+private fun unlock(state: AppState, action: AppAction.Unlock): AppState {
+    if (state.screen !is Screen.Locked) {
+        return state
+    }
+
     return if (action.tabId != null) {
         state.copy(screen = Screen.Browser(action.tabId, showTabs = false))
     } else {

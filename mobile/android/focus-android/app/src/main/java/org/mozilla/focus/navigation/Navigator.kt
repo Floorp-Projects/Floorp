@@ -53,7 +53,6 @@ class Navigator(
             )
             is Screen.FirstRun -> navigation.firstRun()
             is Screen.Locked -> navigation.lock()
-            is Screen.Crashed -> TODO()
         }
     }
 }

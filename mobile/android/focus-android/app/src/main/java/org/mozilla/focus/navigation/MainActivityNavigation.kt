@@ -6,6 +6,7 @@ package org.mozilla.focus.navigation
 
 import org.mozilla.focus.R
 import org.mozilla.focus.activity.MainActivity
+import org.mozilla.focus.biometrics.BiometricAuthenticationDialogFragment
 import org.mozilla.focus.fragment.BrowserFragment
 import org.mozilla.focus.fragment.FirstrunFragment
 import org.mozilla.focus.fragment.UrlInputFragment
@@ -128,6 +129,23 @@ class MainActivityNavigation(
      * Lock app.
      */
     fun lock() {
-        TODO()
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.M) {
+            throw IllegalStateException("Trying to lock unsupported device")
+        }
+
+        val fragmentManager = activity.supportFragmentManager
+        if (fragmentManager.findFragmentByTag(BiometricAuthenticationDialogFragment.FRAGMENT_TAG) != null) {
+            return
+        }
+
+        val transaction = fragmentManager
+            .beginTransaction()
+
+        fragmentManager.fragments.forEach { fragment ->
+            transaction.remove(fragment)
+        }
+
+        BiometricAuthenticationDialogFragment()
+            .show(transaction, BiometricAuthenticationDialogFragment.FRAGMENT_TAG)
     }
 }

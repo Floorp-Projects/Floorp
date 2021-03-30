@@ -6,10 +6,6 @@
 
 package org.mozilla.focus.biometrics
 
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.OnLifecycleEvent
-import androidx.lifecycle.ProcessLifecycleOwner
 import android.content.Context
 import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
@@ -24,8 +20,10 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 
 @RequiresApi(Build.VERSION_CODES.M)
-class BiometricAuthenticationHandler(private val context: Context) :
-    FingerprintManagerCompat.AuthenticationCallback(), LifecycleObserver {
+class BiometricAuthenticationHandler(
+    context: Context,
+    private val fragment: BiometricAuthenticationDialogFragment
+) : FingerprintManagerCompat.AuthenticationCallback() {
 
     private val fingerprintManager = FingerprintManagerCompat.from(context)
 
@@ -34,9 +32,6 @@ class BiometricAuthenticationHandler(private val context: Context) :
     private var keyStore: KeyStore? = null
     private var keyGenerator: KeyGenerator? = null
     private var cryptoObject: FingerprintManagerCompat.CryptoObject? = null
-
-    var needsAuth = false; private set
-    var biometricFragment: BiometricAuthenticationDialogFragment? = null; private set
 
     init {
         keyStore = KeyStore.getInstance("AndroidKeyStore")
@@ -50,8 +45,6 @@ class BiometricAuthenticationHandler(private val context: Context) :
         if (initCipher(defaultCipher, DEFAULT_KEY_NAME)) {
             cryptoObject = FingerprintManagerCompat.CryptoObject(defaultCipher)
         }
-
-        ProcessLifecycleOwner.get().lifecycle.addObserver(this)
     }
 
     private fun initCipher(cipher: Cipher, keyName: String): Boolean {
@@ -82,14 +75,7 @@ class BiometricAuthenticationHandler(private val context: Context) :
     }
 
     // Create the prompt and begin listening
-    private fun startListening(cryptoObject: FingerprintManagerCompat.CryptoObject, openedFromExternalLink: Boolean) {
-        if (biometricFragment == null) {
-            biometricFragment = BiometricAuthenticationDialogFragment()
-        }
-
-        biometricFragment?.openedFromExternalLink = openedFromExternalLink
-        biometricFragment?.updateNewSessionButton()
-
+    private fun startListening(cryptoObject: FingerprintManagerCompat.CryptoObject) {
         cancellationSignal = CancellationSignal()
         selfCancelled = false
         fingerprintManager.authenticate(cryptoObject, 0, cancellationSignal, this, null)
@@ -97,44 +83,35 @@ class BiometricAuthenticationHandler(private val context: Context) :
 
     fun stopListening() {
         cancellationSignal?.let {
-            biometricFragment?.dismiss()
             selfCancelled = true
             it.cancel()
             cancellationSignal = null
         }
     }
 
-    fun startAuthentication(openedFromLink: Boolean) {
+    fun startAuthentication() {
         val cryptoObject = cryptoObject
-        if (openedFromLink) needsAuth = true
-        if (needsAuth && cryptoObject != null) {
-            startListening(cryptoObject, openedFromLink)
+        if (cryptoObject != null) {
+            startListening(cryptoObject)
         }
     }
 
     override fun onAuthenticationError(errMsgId: Int, errString: CharSequence?) {
         if (!selfCancelled) {
-            biometricFragment?.displayError(errString.toString())
+            fragment.displayError(errString.toString())
         }
     }
 
     override fun onAuthenticationSucceeded(result: FingerprintManagerCompat.AuthenticationResult?) {
-        needsAuth = false
-        biometricFragment?.onAuthenticated()
+        fragment.onAuthenticated()
     }
 
     override fun onAuthenticationHelp(helpMsgId: Int, helpString: CharSequence?) {
-        biometricFragment?.displayError(helpString.toString())
+        fragment.displayError(helpString.toString())
     }
 
     override fun onAuthenticationFailed() {
-        biometricFragment?.onFailure()
-    }
-
-    @OnLifecycleEvent(Lifecycle.Event.ON_PAUSE)
-    fun onPause() {
-        needsAuth = true && Biometrics.hasFingerprintHardware(context)
-        stopListening()
+        fragment.onFailure()
     }
 
     companion object {
