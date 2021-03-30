@@ -1018,7 +1018,7 @@ nsAppStartup::CreateInstanceWithProfile(nsIToolkitProfile* aProfile) {
   NS_ConvertUTF8toUTF16 wideName(profileName);
 
   const char16_t* args[] = {u"-P", wideName.get()};
-  rv = process->Runw(false, args, 3);
+  rv = process->Runw(false, args, 2);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
