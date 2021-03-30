@@ -593,7 +593,7 @@ class nsIWidget : public nsISupports {
   /**
    * Return the top (non-sheet) parent of this Widget if it's a sheet,
    * or nullptr if this isn't a sheet (or some other error occurred).
-   * Sheets are only supported on some platforms (currently only OS X).
+   * Sheets are only supported on some platforms (currently only macOS).
    *
    * @return the top (non-sheet) parent widget or nullptr
    *
@@ -732,8 +732,8 @@ class nsIWidget : public nsISupports {
    * following Move and Resize widget APIs.
    *
    * The display-/device-pixel distinction becomes important for (at least)
-   * Mac OS X with Hi-DPI (retina) displays, and Windows when the UI scale
-   * factor is set to other than 100%.
+   * macOS with Hi-DPI (retina) displays, and Windows when the UI scale factor
+   * is set to other than 100%.
    *
    * The Move and Resize methods take floating-point parameters, rather than
    * integer ones. This is important when manipulating top-level widgets,
@@ -1160,7 +1160,7 @@ class nsIWidget : public nsISupports {
   virtual void SetWindowMouseTransparent(bool aIsTransparent) {}
 
   /*
-   * On Mac OS X, this method shows or hides the pill button in the titlebar
+   * On macOS, this method shows or hides the pill button in the titlebar
    * that's used to collapse the toolbar.
    *
    * Ignored on child widgets and on non-Mac platforms.
@@ -1184,8 +1184,8 @@ class nsIWidget : public nsISupports {
   };
 
   /**
-   * Sets the kind of top-level window animation this widget should have.  On
-   * Mac OS X, this causes a particular kind of animation to be shown when the
+   * Sets the kind of top-level window animation this widget should have. On
+   * macOS, this causes a particular kind of animation to be shown when the
    * window is first made visible.
    *
    * Ignored on child widgets and on non-Mac platforms.
@@ -1195,7 +1195,7 @@ class nsIWidget : public nsISupports {
   /**
    * Specifies whether the window title should be drawn even if the window
    * contents extend into the titlebar. Ignored on windows that don't draw
-   * in the titlebar. Only implemented on OS X.
+   * in the titlebar. Only implemented on macOS.
    */
   virtual void SetDrawsTitle(bool aDrawTitle) {}
 
@@ -1284,7 +1284,7 @@ class nsIWidget : public nsISupports {
    * Same as MakeFullScreen, except that, on systems which natively
    * support fullscreen transition, calling this method explicitly
    * requests that behavior.
-   * It is currently only supported on OS X 10.7+.
+   * It is currently only supported on macOS 10.7+.
    */
   virtual nsresult MakeFullScreenWithNativeTransition(
       bool aFullScreen, nsIScreen* aTargetScreen = nullptr) {
