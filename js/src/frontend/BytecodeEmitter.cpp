@@ -2834,128 +2834,126 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
   } else if (target->isKind(ParseNodeKind::AssignExpr)) {
     target = target->as<AssignmentNode>().left();
   }
-  if (target->isKind(ParseNodeKind::ArrayExpr) ||
-      target->isKind(ParseNodeKind::ObjectExpr)) {
-    if (!emitDestructuringOps(&target->as<ListNode>(), flav)) {
-      return false;
-    }
-    // Per its post-condition, emitDestructuringOps has left the
-    // to-be-destructured value on top of the stack.
-    if (!emit1(JSOp::Pop)) {
-      return false;
-    }
-  } else {
-    switch (target->getKind()) {
-      case ParseNodeKind::Name: {
-        auto name = target->as<NameNode>().name();
-        NameLocation loc = lookupName(name);
-        NameOpEmitter::Kind kind;
-        switch (flav) {
-          case DestructuringFlavor::Declaration:
-            kind = NameOpEmitter::Kind::Initialize;
-            break;
 
-          case DestructuringFlavor::Assignment:
-            kind = NameOpEmitter::Kind::SimpleAssignment;
-            break;
-        }
+  switch (target->getKind()) {
+    case ParseNodeKind::ArrayExpr:
+    case ParseNodeKind::ObjectExpr:
+      if (!emitDestructuringOps(&target->as<ListNode>(), flav)) {
+        return false;
+      }
+      // emitDestructuringOps leaves the assigned (to-be-destructured) value on
+      // top of the stack.
+      break;
 
-        NameOpEmitter noe(this, name, loc, kind);
-        if (!noe.prepareForRhs()) {
-          //        [stack] V ENV?
-          return false;
-        }
-        if (noe.emittedBindOp()) {
-          // This is like ordinary assignment, but with one difference.
-          //
-          // In `a = b`, we first determine a binding for `a` (using
-          // JSOp::BindName or JSOp::BindGName), then we evaluate `b`, then
-          // a JSOp::SetName instruction.
-          //
-          // In `[a] = [b]`, per spec, `b` is evaluated first, then we
-          // determine a binding for `a`. Then we need to do assignment--
-          // but the operands are on the stack in the wrong order for
-          // JSOp::SetProp, so we have to add a JSOp::Swap.
-          //
-          // In the cases where we are emitting a name op, emit a swap
-          // because of this.
-          if (!emit1(JSOp::Swap)) {
-            //      [stack] ENV V
-            return false;
-          }
-        } else {
-          // In cases of emitting a frame slot or environment slot,
-          // nothing needs be done.
-        }
-        if (!noe.emitAssignment()) {
-          //        [stack] V
-          return false;
-        }
+    case ParseNodeKind::Name: {
+      auto name = target->as<NameNode>().name();
+      NameLocation loc = lookupName(name);
+      NameOpEmitter::Kind kind;
+      switch (flav) {
+        case DestructuringFlavor::Declaration:
+          kind = NameOpEmitter::Kind::Initialize;
+          break;
 
-        break;
+        case DestructuringFlavor::Assignment:
+          kind = NameOpEmitter::Kind::SimpleAssignment;
+          break;
       }
 
-      case ParseNodeKind::DotExpr: {
-        // The reference is already pushed by emitDestructuringLHSRef.
-        //          [stack] # if Super
-        //          [stack] THIS SUPERBASE VAL
-        //          [stack] # otherwise
-        //          [stack] OBJ VAL
-        PropertyAccess* prop = &target->as<PropertyAccess>();
-        bool isSuper = prop->isSuper();
-        PropOpEmitter poe(this, PropOpEmitter::Kind::SimpleAssignment,
-                          isSuper ? PropOpEmitter::ObjKind::Super
-                                  : PropOpEmitter::ObjKind::Other);
-        if (!poe.skipObjAndRhs()) {
+      NameOpEmitter noe(this, name, loc, kind);
+      if (!noe.prepareForRhs()) {
+        //        [stack] V ENV?
+        return false;
+      }
+      if (noe.emittedBindOp()) {
+        // This is like ordinary assignment, but with one difference.
+        //
+        // In `a = b`, we first determine a binding for `a` (using
+        // JSOp::BindName or JSOp::BindGName), then we evaluate `b`, then
+        // a JSOp::SetName instruction.
+        //
+        // In `[a] = [b]`, per spec, `b` is evaluated first, then we
+        // determine a binding for `a`. Then we need to do assignment--
+        // but the operands are on the stack in the wrong order for
+        // JSOp::SetProp, so we have to add a JSOp::Swap.
+        //
+        // In the cases where we are emitting a name op, emit a swap
+        // because of this.
+        if (!emit1(JSOp::Swap)) {
+          //      [stack] ENV V
           return false;
         }
-        //          [stack] # VAL
-        if (!poe.emitAssignment(prop->key().atom())) {
-          return false;
-        }
-        break;
+      } else {
+        // In cases of emitting a frame slot or environment slot,
+        // nothing needs be done.
+      }
+      if (!noe.emitAssignment()) {
+        //        [stack] V
+        return false;
       }
 
-      case ParseNodeKind::ElemExpr: {
-        // The reference is already pushed by emitDestructuringLHSRef.
-        //          [stack] # if Super
-        //          [stack] THIS KEY SUPERBASE VAL
-        //          [stack] # otherwise
-        //          [stack] OBJ KEY VAL
-        PropertyByValue* elem = &target->as<PropertyByValue>();
-        bool isSuper = elem->isSuper();
-        bool isPrivate = elem->key().isKind(ParseNodeKind::PrivateName);
-        ElemOpEmitter eoe(
-            this, ElemOpEmitter::Kind::SimpleAssignment,
-            isSuper ? ElemOpEmitter::ObjKind::Super
-                    : ElemOpEmitter::ObjKind::Other,
-            isPrivate ? NameVisibility::Private : NameVisibility::Public);
-        if (!eoe.skipObjAndKeyAndRhs()) {
-          return false;
-        }
-        if (!eoe.emitAssignment()) {
-          //        [stack] VAL
-          return false;
-        }
-        break;
+      break;
+    }
+
+    case ParseNodeKind::DotExpr: {
+      // The reference is already pushed by emitDestructuringLHSRef.
+      //          [stack] # if Super
+      //          [stack] THIS SUPERBASE VAL
+      //          [stack] # otherwise
+      //          [stack] OBJ VAL
+      PropertyAccess* prop = &target->as<PropertyAccess>();
+      bool isSuper = prop->isSuper();
+      PropOpEmitter poe(this, PropOpEmitter::Kind::SimpleAssignment,
+                        isSuper ? PropOpEmitter::ObjKind::Super
+                                : PropOpEmitter::ObjKind::Other);
+      if (!poe.skipObjAndRhs()) {
+        return false;
       }
-
-      case ParseNodeKind::CallExpr:
-        MOZ_ASSERT_UNREACHABLE(
-            "Parser::reportIfNotValidSimpleAssignmentTarget "
-            "rejects function calls as assignment "
-            "targets in destructuring assignments");
-        break;
-
-      default:
-        MOZ_CRASH("emitSetOrInitializeDestructuring: bad lhs kind");
+      //          [stack] # VAL
+      if (!poe.emitAssignment(prop->key().atom())) {
+        return false;
+      }
+      break;
     }
 
-    // Pop the assigned value.
-    if (!emit1(JSOp::Pop)) {
-      //            [stack] # empty
-      return false;
+    case ParseNodeKind::ElemExpr: {
+      // The reference is already pushed by emitDestructuringLHSRef.
+      //          [stack] # if Super
+      //          [stack] THIS KEY SUPERBASE VAL
+      //          [stack] # otherwise
+      //          [stack] OBJ KEY VAL
+      PropertyByValue* elem = &target->as<PropertyByValue>();
+      bool isSuper = elem->isSuper();
+      bool isPrivate = elem->key().isKind(ParseNodeKind::PrivateName);
+      ElemOpEmitter eoe(
+          this, ElemOpEmitter::Kind::SimpleAssignment,
+          isSuper ? ElemOpEmitter::ObjKind::Super
+                  : ElemOpEmitter::ObjKind::Other,
+          isPrivate ? NameVisibility::Private : NameVisibility::Public);
+      if (!eoe.skipObjAndKeyAndRhs()) {
+        return false;
+      }
+      if (!eoe.emitAssignment()) {
+        //        [stack] VAL
+        return false;
+      }
+      break;
     }
+
+    case ParseNodeKind::CallExpr:
+      MOZ_ASSERT_UNREACHABLE(
+          "Parser::reportIfNotValidSimpleAssignmentTarget "
+          "rejects function calls as assignment "
+          "targets in destructuring assignments");
+      break;
+
+    default:
+      MOZ_CRASH("emitSetOrInitializeDestructuring: bad lhs kind");
+  }
+
+  // Pop the assigned value.
+  if (!emit1(JSOp::Pop)) {
+    //            [stack] # empty
+    return false;
   }
 
   return true;
