@@ -98,7 +98,7 @@ export async function bootstrap({
     actions,
     selectors,
     workers,
-    targetList: commands.targetCommand,
+    targetCommand: commands.targetCommand,
     client: firefox.clientCommands,
   });
 

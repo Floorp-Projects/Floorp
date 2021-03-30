@@ -7,7 +7,7 @@ import { prefs, asyncStore, features } from "./prefs";
 import { getDocument } from "./editor/source-documents";
 
 function getThreadFront(dbg) {
-  return dbg.targetList.targetFront.threadFront;
+  return dbg.targetCommand.targetFront.threadFront;
 }
 
 function findSource(dbg, url) {
