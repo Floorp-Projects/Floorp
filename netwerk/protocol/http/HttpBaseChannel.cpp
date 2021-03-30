@@ -205,6 +205,7 @@ HttpBaseChannel::HttpBaseChannel()
       mInternalRedirectCount(0),
       mCachedOpaqueResponseBlockingPref(
           StaticPrefs::browser_opaqueResponseBlocking()),
+      mBlockOpaqueResponseAfterSniff(false),
       mCheckIsOpaqueResponseAllowedAfterSniff(false) {
   StoreApplyConversion(true);
   StoreAllowSTS(true);
@@ -2854,6 +2855,18 @@ bool HttpBaseChannel::EnsureOpaqueResponseIsAllowed() {
     }
   }
 
+  // If it's a media subsequent request, we assume that it will only be made
+  // after a successful initial request.
+  bool isMediaRequest;
+  mLoadInfo->GetIsMediaRequest(&isMediaRequest);
+  if (isMediaRequest) {
+    bool isMediaInitialRequest;
+    mLoadInfo->GetIsMediaInitialRequest(&isMediaInitialRequest);
+    if (!isMediaInitialRequest) {
+      return true;
+    }
+  }
+
   mLoadFlags |= (nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |
                  nsIChannel::LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE);
   mCheckIsOpaqueResponseAllowedAfterSniff = true;
@@ -2870,6 +2883,18 @@ HttpBaseChannel::EnsureOpaqueResponseIsAllowedAfterSniff() {
   }
 
   MOZ_ASSERT(mCachedOpaqueResponseBlockingPref);
+
+  if (mBlockOpaqueResponseAfterSniff) {
+    // XXXtt: Report To Console.
+    return false;
+  }
+
+  bool isMediaRequest;
+  mLoadInfo->GetIsMediaRequest(&isMediaRequest);
+  if (isMediaRequest) {
+    // XXXtt: Report To Console.
+    return false;
+  }
 
   nsAutoCString contentType;
   nsresult rv = GetContentType(contentType);
