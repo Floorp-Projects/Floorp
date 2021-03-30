@@ -448,6 +448,7 @@ nsresult nsZipArchive::Test(const char* aEntryName) {
 //  nsZipArchive::CloseArchive
 //---------------------------------------------
 nsresult nsZipArchive::CloseArchive() {
+  MutexAutoLock lock(mLock);
   if (mFd) {
     mArena.Clear();
     mFd = nullptr;
@@ -469,6 +470,8 @@ nsresult nsZipArchive::CloseArchive() {
 // nsZipArchive::GetItem
 //---------------------------------------------
 nsZipItem* nsZipArchive::GetItem(const char* aEntryName) {
+  MutexAutoLock lock(mLock);
+
   if (aEntryName) {
     uint32_t len = strlen(aEntryName);
     //-- If the request is for a directory, make sure that synthetic entries
@@ -552,6 +555,8 @@ nsresult nsZipArchive::ExtractFile(nsZipItem* item, nsIFile* outFile,
 nsresult nsZipArchive::FindInit(const char* aPattern, nsZipFind** aFind) {
   if (!aFind) return NS_ERROR_ILLEGAL_VALUE;
 
+  MutexAutoLock lock(mLock);
+
   // null out param in case an error happens
   *aFind = nullptr;
 
@@ -601,6 +606,7 @@ nsresult nsZipArchive::FindInit(const char* aPattern, nsZipFind** aFind) {
 nsresult nsZipFind::FindNext(const char** aResult, uint16_t* aNameLen) {
   if (!mArchive || !aResult || !aNameLen) return NS_ERROR_ILLEGAL_VALUE;
 
+  MutexAutoLock lock(mArchive->mLock);
   *aResult = 0;
   *aNameLen = 0;
   MMAP_FAULT_HANDLER_BEGIN_HANDLE(mArchive->GetFD())
@@ -649,6 +655,8 @@ nsZipItem* nsZipArchive::CreateZipItem() {
 //  nsZipArchive::BuildFileList
 //---------------------------------------------
 nsresult nsZipArchive::BuildFileList(PRFileDesc* aFd) {
+  MutexAutoLock lock(mLock);
+
   // Get archive size using end pos
   const uint8_t* buf;
   const uint8_t* startp = mFd->mFileData;
@@ -754,6 +762,8 @@ nsresult nsZipArchive::BuildFileList(PRFileDesc* aFd) {
 //  nsZipArchive::BuildSynthetics
 //---------------------------------------------
 nsresult nsZipArchive::BuildSynthetics() {
+  mLock.AssertCurrentThreadOwns();
+
   if (mBuiltSynthetics) return NS_OK;
   mBuiltSynthetics = true;
 

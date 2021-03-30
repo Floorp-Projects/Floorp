@@ -19,6 +19,7 @@
 #include "mozilla/ArenaAllocator.h"
 #include "mozilla/FileUtils.h"
 #include "mozilla/FileLocation.h"
+#include "mozilla/Mutex.h"
 #include "mozilla/UniquePtr.h"
 
 class nsZipFind;
@@ -218,6 +219,8 @@ class nsZipArchive final {
   // Is true if we use zipLog to log accesses in jar/zip archives. This helper
   // variable avoids grabbing zipLog's lock when not necessary.
   bool mUseZipLog;
+
+  mozilla::Mutex mLock{"nsZipArchive"};
 
  private:
   //--- private methods ---
