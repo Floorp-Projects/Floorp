@@ -120,9 +120,8 @@ dialog[subdialog] {
   margin: 4px;
 }
 
-
 #commonDialog[subdialog] input {
-  margin: 0 4px 4px 4px;
+  margin: 0 4px 4px;
 }
 
 /* Add vertical spaces between rows: */
