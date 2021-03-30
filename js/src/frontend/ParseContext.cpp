@@ -52,6 +52,8 @@ const char* DeclarationKindString(DeclarationKind kind) {
       return "catch parameter";
     case DeclarationKind::PrivateName:
       return "private name";
+    case DeclarationKind::Synthetic:
+      return "synthetic";
   }
 
   MOZ_CRASH("Bad DeclarationKind");
@@ -441,6 +443,9 @@ bool ParseContext::isVarRedeclaredInEval(TaggedParserAtomIndex name,
       break;
     case ScopeContext::EnclosingLexicalBindingKind::CatchParameter:
       *out = Some(DeclarationKind::CatchParameter);
+      break;
+    case ScopeContext::EnclosingLexicalBindingKind::Synthetic:
+      *out = Some(DeclarationKind::Synthetic);
       break;
   }
   return true;

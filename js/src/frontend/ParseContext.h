@@ -225,7 +225,7 @@ class ParseContext : public Nestable<ParseContext> {
 
     // An iterator for the set of names a scope binds: the set of all
     // declared names for 'var' scopes, and the set of lexically declared
-    // names for non-'var' scopes.
+    // names, plus synthetic names, for non-'var' scopes.
     class BindingIter {
       friend class Scope;
 
@@ -250,7 +250,8 @@ class ParseContext : public Nestable<ParseContext> {
         // Otherwise, pop only lexically declared names are
         // binding. Pop the range until we find such a name.
         while (!declaredRange_.empty()) {
-          if (BindingKindIsLexical(kind())) {
+          if (BindingKindIsLexical(kind()) ||
+              kind() == BindingKind::Synthetic) {
             break;
           }
           declaredRange_.popFront();
