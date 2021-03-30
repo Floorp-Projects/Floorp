@@ -15,13 +15,11 @@ add_task(async function doorhanger_bc_patch_partialBadSize() {
       notificationId: "update-available",
       button: "button",
       checkActiveUpdate: null,
-      pageURLs: { whatsNew: gDefaultWhatsNewURL },
     },
     {
       notificationId: "update-available",
       button: "button",
       checkActiveUpdate: null,
-      pageURLs: { whatsNew: gDefaultWhatsNewURL },
     },
     {
       // If the update process is unable to install the update show the manual
@@ -29,7 +27,7 @@ add_task(async function doorhanger_bc_patch_partialBadSize() {
       notificationId: "update-manual",
       button: "button",
       checkActiveUpdate: null,
-      pageURLs: { whatsNew: gDefaultWhatsNewURL, manual: URL_MANUAL_UPDATE },
+      pageURLs: { manual: URL_MANUAL_UPDATE },
     },
   ]);
 });
