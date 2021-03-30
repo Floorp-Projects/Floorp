@@ -632,9 +632,6 @@ class ClassBodyScope : public Scope {
     //
     //     synthetic - [0, privateMethodStart)
     // privateMethod - [privateMethodStart, length)
-    //
-    // MG:XXX: Const is removed in next patch.
-    uint32_t constStart = 0;
     uint32_t privateMethodStart = 0;
     uint32_t length = 0;
   };

@@ -988,7 +988,6 @@ XDRResult ClassBodyScope::XDR(XDRState<mode>* xdr, ScopeKind kind,
       nextFrameSlot = data->slotInfo.nextFrameSlot;
     }
 
-    MOZ_TRY(xdr->codeUint32(&data->slotInfo.constStart));
     MOZ_TRY(xdr->codeUint32(&firstFrameSlot));
     MOZ_TRY(xdr->codeUint32(&nextFrameSlot));
 
@@ -1835,9 +1834,6 @@ void BaseAbstractBindingIter<NameT>::init(
   //             consts - [0, 0)
   //          synthetic - [0, slotInfo.privateMethodStart)
   //    private methods - [slotInfo.privateMethodStart, data.length)
-  //
-  // MG:XXX: Const bindings are reported as synthetic, but this is fixed next
-  // patch where const bindings are removed entirely.
   init(0, 0, 0, 0, 0, 0, slotInfo.privateMethodStart,
        CanHaveFrameSlots | CanHaveEnvironmentSlots, firstFrameSlot,
        JSSLOT_FREE(&LexicalEnvironmentObject::class_),
