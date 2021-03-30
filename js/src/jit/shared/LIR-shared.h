@@ -5821,6 +5821,22 @@ class LCopyLexicalEnvironmentObject : public LCallInstructionHelper<1, 1, 0> {
   }
 };
 
+// Allocate a new ClassBodyLexicalEnvironmentObject.
+class LNewClassBodyEnvironmentObject : public LCallInstructionHelper<1, 1, 0> {
+ public:
+  LIR_HEADER(NewClassBodyEnvironmentObject)
+
+  explicit LNewClassBodyEnvironmentObject(const LAllocation& enclosing)
+      : LCallInstructionHelper(classOpcode) {
+    setOperand(0, enclosing);
+  }
+  const LAllocation* enclosing() { return getOperand(0); }
+
+  MNewClassBodyEnvironmentObject* mir() const {
+    return mir_->toNewClassBodyEnvironmentObject();
+  }
+};
+
 class LCallSetElement
     : public LCallInstructionHelper<0, 1 + 2 * BOX_PIECES, 0> {
  public:
