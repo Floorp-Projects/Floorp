@@ -910,7 +910,6 @@ popupnotificationcontent {
   border-radius: 4px;
   border: 0;
   outline: 1px solid var(--input-border-color, ThreeDShadow);
-  outline-offset: -1px;
   background-color: var(--input-bgcolor, Field);
   color: var(--input-color, FieldText);
 }
