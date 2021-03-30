@@ -1265,6 +1265,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
     // The number of instance class private methods.
     size_t privateMethods = 0;
+
+    bool hasPrivateBrand() const { return privateMethods > 0; }
   };
   [[nodiscard]] bool classMember(
       YieldHandling yieldHandling,
@@ -1437,7 +1439,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   bool matchOrInsertSemicolon(Modifier modifier = TokenStream::SlashIsRegExp);
 
   bool noteDeclaredName(TaggedParserAtomIndex name, DeclarationKind kind,
-                        TokenPos pos);
+                        TokenPos pos, ClosedOver isClosedOver = ClosedOver::No);
 
   bool noteDeclaredPrivateName(Node nameNode, TaggedParserAtomIndex name,
                                PropertyType propType, TokenPos pos);

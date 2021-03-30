@@ -263,15 +263,14 @@ XDRResult BaseScript::XDRLazyScriptData(XDRState<mode>* xdr,
   RootedFunction func(cx);
 
   if (lazy->useMemberInitializers()) {
-    uint32_t numMemberInitializers;
+    uint32_t bits;
     if (mode == XDR_ENCODE) {
       MOZ_ASSERT(lazy->getMemberInitializers().valid);
-      numMemberInitializers =
-          lazy->getMemberInitializers().numMemberInitializers;
+      bits = lazy->getMemberInitializers().serialize();
     }
-    MOZ_TRY(xdr->codeUint32(&numMemberInitializers));
+    MOZ_TRY(xdr->codeUint32(&bits));
     if (mode == XDR_DECODE) {
-      lazy->setMemberInitializers(MemberInitializers(numMemberInitializers));
+      lazy->setMemberInitializers(MemberInitializers::deserialize(bits));
     }
   }
 
@@ -819,15 +818,14 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
 
   // Code the field initializer data.
   if (script->useMemberInitializers()) {
-    uint32_t numMemberInitializers;
+    uint32_t bits;
     if (mode == XDR_ENCODE) {
       MOZ_ASSERT(data->getMemberInitializers().valid);
-      numMemberInitializers =
-          data->getMemberInitializers().numMemberInitializers;
+      bits = data->getMemberInitializers().serialize();
     }
-    MOZ_TRY(xdr->codeUint32(&numMemberInitializers));
+    MOZ_TRY(xdr->codeUint32(&bits));
     if (mode == XDR_DECODE) {
-      data->setMemberInitializers(MemberInitializers(numMemberInitializers));
+      data->setMemberInitializers(MemberInitializers::deserialize(bits));
     }
   }
 
