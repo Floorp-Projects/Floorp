@@ -432,6 +432,7 @@ restart:
     case ParseNodeKind::ForOf:
     case ParseNodeKind::ForHead:
     case ParseNodeKind::DefaultConstructor:
+    case ParseNodeKind::ClassBodyScope:
     case ParseNodeKind::ClassMethod:
     case ParseNodeKind::ClassField:
     case ParseNodeKind::ClassMemberList:

@@ -1530,6 +1530,7 @@ restart:
     case ParseNodeKind::ForOf:                // by ParseNodeKind::For
     case ParseNodeKind::ForHead:              // by ParseNodeKind::For
     case ParseNodeKind::DefaultConstructor:   // by ParseNodeKind::ClassDecl
+    case ParseNodeKind::ClassBodyScope:       // by ParseNodeKind::ClassDecl
     case ParseNodeKind::ClassMethod:          // by ParseNodeKind::ClassDecl
     case ParseNodeKind::ClassField:           // by ParseNodeKind::ClassDecl
     case ParseNodeKind::ClassNames:           // by ParseNodeKind::ClassDecl
@@ -10359,7 +10360,7 @@ bool BytecodeEmitter::emitClass(
   // The class body scope holds any private names. Those mustn't be visible in
   // the heritage expression and hence the scope must be emitted after the
   // heritage expression.
-  if (LexicalScopeNode* bodyScopeBindings = classNode->bodyScopeBindings()) {
+  if (ClassBodyScopeNode* bodyScopeBindings = classNode->bodyScopeBindings()) {
     if (!ce.emitBodyScope(bodyScopeBindings->scopeBindings())) {
       //            [stack] HERITAGE
       return false;
