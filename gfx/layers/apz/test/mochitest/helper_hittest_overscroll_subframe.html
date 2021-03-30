@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test APZ hit-testing while overscrolled</title>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script src="/tests/SimpleTest/paint_listener.js"></script>
+  <meta name="viewport" content="width=device-width"/>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+    }
+    #subframe {
+      width: 100px;
+      height: 100px;
+      overflow: scroll;
+    }
+    .spacer {
+      height: 5000px;
+    }
+    #target {
+      margin-left: 20px;
+      margin-top: 2px;
+      height: 4px;
+      width: 4px;
+      background: red;
+    }
+  </style>
+</head>
+<body>
+ <div id="subframe">
+   <div id="target"></div>
+   <div class="spacer"></div>
+ </div>
+ <div class="spacer"></div>
+</body>
+<script type="application/javascript">
+
+async function test() {
+  var config = getHitTestConfig();
+  var utils = config.utils;
+
+  // Subframe hit testing of overscrolled APZCs does not yet work with WebRender,
+  // so bail out early.
+  if (config.isWebRender) {
+    SimpleTest.todo(false, "This test does not currently pass with WebRender");
+    return;
+  }
+
+  // For some reason, this test sometimes hits an assertion in ContainerState::Finish()
+  // https://searchfox.org/mozilla-central/rev/74d0efd1107a26f178b108b6a18a179e9b06547c/layout/painting/FrameLayerBuilder.cpp#5983
+  // and related assertions in Layers.cpp.
+  SimpleTest.expectAssertions(0, 5);
+
+  // Activate the subframe. This both matches reality (if you're
+  // scrolling the subframe, it's active), and makes it easier
+  // to check for expected hit test outcomes.
+  utils.setDisplayPortForElement(0, 0, 500, 500, subframe, 1);
+  await promiseApzFlushedRepaints();
+
+  // Overscroll the subframe at the top, creating a gutter.
+  // Note that the size of the gutter will only be 8px, because
+  // setAsyncScrollOffset() applies the overscroll as a single delta,
+  // and current APZ logic that transforms a delta into an overscroll
+  // amount limits each delta to at most 8px.
+  utils.setAsyncScrollOffset(subframe, 0, -200);
+
+  // Check that the event hits the subframe frame in APZ.
+  // This is important because additional pan-gesture events in the gutter
+  // should continue to be handled and cause further overscroll (or
+  // relieving overscroll, depending on their direction).
+  let subframeBounds = subframe.getBoundingClientRect();
+  hitResult = hitTest({
+    x: subframeBounds.x + 50,
+    y: subframeBounds.y + 4
+  });
+  let subframeViewId = utils.getViewId(subframe);
+  checkHitResult(hitResult,
+                 APZHitResultFlags.VISIBLE,
+                 subframeViewId,
+                 utils.getLayersId(),
+                 "APZ hit-test in the subframe gutter");
+
+  // Now, perform a click in the gutter and check that APZ prevents
+  // the event from reaching Gecko.
+  // To be sure that no event was dispatched to Gecko, install the listener
+  // on the document, not the subframe.
+  // This makes sure we catch the case where the overscroll transform causes
+  // the event to incorrectly target the document.
+  let receivedClick = false;
+  let listener = function(e) {
+    receivedClick = true;
+  };
+  document.addEventListener("click", listener);
+  synthesizeNativeMouseEventWithAPZ({
+    type: "click",
+    target: subframe,
+    offsetX: 50,
+    offsetY: 4
+  });
+  // Wait 10 frames for the event to maybe arrive, and if it
+  // hasn't, assume it won't.
+  for (let i = 0; i < 10; i++) {
+    await promiseFrame();
+  }
+  info("Finished waiting around for click event");
+  ok(!receivedClick, "Gecko received click event when it shouldn't have");
+  document.removeEventListener("click", listener);
+
+  // Finally, while still overscrolled, perform a click not in the gutter.
+  // This event should successfully go through to the web content, and
+  // be untransformed by the overscroll transform (such that it hits the
+  // content that is visually under the cursor).
+  let clickPromise = new Promise(resolve => {
+    document.addEventListener("click", function(e) {
+      info("event clientX = " + e.clientX);
+      info("event clientY = " + e.clientY);
+      is(e.target, target, "Click while overscrolled hit intended target");
+      resolve();
+    }, { once: true });
+  });
+  synthesizeNativeMouseEventWithAPZ({
+    type: "click",
+    target: window,
+    offsetX: 22,
+    offsetY: 12
+  });
+  await clickPromise;
+}
+
+waitUntilApzStable()
+.then(test)
+.then(subtestDone, subtestFailed);
+
+</script>
+</html>
