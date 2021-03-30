@@ -616,6 +616,7 @@ impl ZoomFactor {
 #[derive(Clone, Copy)]
 pub enum CrashAnnotation {
     CompileShader = 0,
+    DrawShader = 1,
 }
 
 /// Handler to expose support for annotating crash reports.
