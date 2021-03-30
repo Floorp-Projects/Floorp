@@ -4,17 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-using mozilla::LookAndFeel::IntID from "mozilla/widget/WidgetMessageUtils.h";
-using mozilla::LookAndFeel::ColorID from "mozilla/widget/WidgetMessageUtils.h";
 using nscolor from "nsColor.h";
 
 namespace mozilla {
 namespace widget {
-
-struct LookAndFeelInt {
-    IntID id;
-    int32_t value;
-};
 
 [Comparable] struct LookAndFeelFont {
     bool haveFont;
@@ -22,17 +15,6 @@ struct LookAndFeelInt {
     float size;
     float weight;
     bool italic;
-};
-
-struct LookAndFeelColor {
-    ColorID id;
-    nscolor color;
-};
-
-struct LookAndFeelCache {
-    LookAndFeelInt[] mInts;
-    LookAndFeelFont[] mFonts;
-    LookAndFeelColor[] mColors;
 };
 
 /**
@@ -83,11 +65,6 @@ struct FullLookAndFeel {
 #ifdef MOZ_WIDGET_GTK
     LookAndFeelTheme theme;
 #endif
-};
-
-union LookAndFeelData {
-    LookAndFeelCache;
-    FullLookAndFeel;
 };
 
 } // namespace widget

@@ -8,14 +8,11 @@
 #include "mozilla/FontPropertyTypes.h"
 #include "nsIContent.h"
 
-using mozilla::LookAndFeel;
-
-namespace mozilla {
-namespace widget {
+namespace mozilla::widget {
 
 static const char16_t UNICODE_BULLET = 0x2022;
 
-HeadlessLookAndFeel::HeadlessLookAndFeel(const LookAndFeelCache* aCache) {}
+HeadlessLookAndFeel::HeadlessLookAndFeel() {}
 
 HeadlessLookAndFeel::~HeadlessLookAndFeel() = default;
 
@@ -363,5 +360,4 @@ void HeadlessLookAndFeel::RefreshImpl() { nsXPLookAndFeel::RefreshImpl(); }
 
 bool HeadlessLookAndFeel::GetEchoPasswordImpl() { return false; }
 
-}  // namespace widget
-}  // namespace mozilla
+}  // namespace mozilla::widget

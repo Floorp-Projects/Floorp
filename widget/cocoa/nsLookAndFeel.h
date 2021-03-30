@@ -9,7 +9,7 @@
 
 class nsLookAndFeel final : public nsXPLookAndFeel {
  public:
-  explicit nsLookAndFeel(const LookAndFeelCache* aCache);
+  nsLookAndFeel();
   virtual ~nsLookAndFeel();
 
   void NativeInit() final;
@@ -27,11 +27,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   static bool UseOverlayScrollbars();
 
-  LookAndFeelCache GetCacheImpl() override;
-  void SetCacheImpl(const LookAndFeelCache& aCache) override;
-
  protected:
-  void DoSetCache(const LookAndFeelCache& aCache);
   static bool AllowOverlayScrollbarsOverlap();
 
   static bool SystemWantsDarkTheme();

@@ -322,41 +322,28 @@ nsXPLookAndFeel* nsXPLookAndFeel::GetInstance() {
   NS_ENSURE_TRUE(!sShutdown, nullptr);
 
   // If we're in a content process, then the parent process will have supplied
-  // us with an initial FullLookAndFeel object (for when the RemoteLookAndFeel
-  // is to be used) or an initial LookAndFeelCache object (for regular
-  // LookAndFeel implementations).  We grab this data from the ContentChild,
+  // us with an initial FullLookAndFeel object.
+  // We grab this data from the ContentChild,
   // where it's been temporarily stashed, and initialize our new LookAndFeel
   // object with it.
 
-  LookAndFeelCache* lnfCache = nullptr;
-  FullLookAndFeel* fullLnf = nullptr;
-  widget::LookAndFeelData* lnfData = nullptr;
+  FullLookAndFeel* lnf = nullptr;
 
   if (auto* cc = mozilla::dom::ContentChild::GetSingleton()) {
-    lnfData = &cc->BorrowLookAndFeelData();
-    switch (lnfData->type()) {
-      case widget::LookAndFeelData::TLookAndFeelCache:
-        lnfCache = &lnfData->get_LookAndFeelCache();
-        break;
-      case widget::LookAndFeelData::TFullLookAndFeel:
-        fullLnf = &lnfData->get_FullLookAndFeel();
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("unexpected LookAndFeelData type");
-    }
+    lnf = &cc->BorrowLookAndFeelData();
   }
 
-  if (fullLnf) {
-    sInstance = new widget::RemoteLookAndFeel(std::move(*fullLnf));
+  if (lnf) {
+    sInstance = new widget::RemoteLookAndFeel(std::move(*lnf));
   } else if (gfxPlatform::IsHeadless()) {
-    sInstance = new widget::HeadlessLookAndFeel(lnfCache);
+    sInstance = new widget::HeadlessLookAndFeel();
   } else {
-    sInstance = new nsLookAndFeel(lnfCache);
+    sInstance = new nsLookAndFeel();
   }
 
   // This is only ever used once during initialization, and can be cleared now.
-  if (lnfData) {
-    *lnfData = widget::LookAndFeelData{};
+  if (lnf) {
+    *lnf = {};
   }
 
   nsNativeBasicTheme::Init();
@@ -1029,10 +1016,6 @@ void nsXPLookAndFeel::RefreshImpl() {
   }
 }
 
-widget::LookAndFeelCache nsXPLookAndFeel::GetCacheImpl() {
-  return LookAndFeelCache{};
-}
-
 static bool sRecordedLookAndFeelTelemetry = false;
 
 void nsXPLookAndFeel::RecordTelemetry() {
@@ -1120,16 +1103,6 @@ void LookAndFeel::Refresh() {
 
 // static
 void LookAndFeel::NativeInit() { nsLookAndFeel::GetInstance()->NativeInit(); }
-
-// static
-widget::LookAndFeelCache LookAndFeel::GetCache() {
-  return nsLookAndFeel::GetInstance()->GetCacheImpl();
-}
-
-// static
-void LookAndFeel::SetCache(const widget::LookAndFeelCache& aCache) {
-  nsLookAndFeel::GetInstance()->SetCacheImpl(aCache);
-}
 
 // static
 void LookAndFeel::SetData(widget::FullLookAndFeel&& aTables) {
