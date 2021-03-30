@@ -17,8 +17,8 @@ class SearchDialogInteractor(
     private val searchController: SearchDialogController
 ) : AwesomeBarInteractor, ToolbarInteractor {
 
-    override fun onUrlCommitted(url: String) {
-        searchController.handleUrlCommitted(url)
+    override fun onUrlCommitted(url: String, fromHomeScreen: Boolean) {
+        searchController.handleUrlCommitted(url, fromHomeScreen)
     }
 
     override fun onEditingCanceled() {

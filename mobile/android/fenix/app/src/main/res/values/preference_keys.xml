@@ -257,6 +257,8 @@
 
     <string name="pref_key_return_to_browser" translatable="false">pref_key_return_to_browser</string>
 
+    <string name="pref_key_open_next_tab_desktop_mode" translatable="false">pref_key_open_next_tab_desktop_mode</string>
+
     <!-- Secret Info Setting Keys -->
     <string name="pref_key_secret_debug_info" translatable="false">pref_key_secret_debug_info</string>
     <string name="pref_key_leanplum_user_id" translatable="false">pref_key_leanplum_user_id</string>

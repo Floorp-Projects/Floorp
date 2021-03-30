@@ -40,6 +40,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import mozilla.appservices.places.BookmarkRoot
+import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.getNormalOrPrivateTabs
 import mozilla.components.browser.state.state.SessionState
@@ -122,7 +123,7 @@ import java.lang.ref.WeakReference
  * - browser screen
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-@SuppressWarnings("TooManyFunctions", "LargeClass")
+@SuppressWarnings("TooManyFunctions", "LargeClass", "LongParameterList")
 open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
     // DO NOT MOVE ANYTHING ABOVE THIS, GETTING INIT TIME IS CRITICAL
     // we need to store startup timestamp for warm startup. we cant directly store
@@ -747,10 +748,11 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         customTabSessionId: String? = null,
         engine: SearchEngine? = null,
         forceSearch: Boolean = false,
-        flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()
+        flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
+        requestDesktopMode: Boolean = false
     ) {
         openToBrowser(from, customTabSessionId)
-        load(searchTermOrURL, newTab, engine, forceSearch, flags)
+        load(searchTermOrURL, newTab, engine, forceSearch, flags, requestDesktopMode)
     }
 
     fun openToBrowser(from: BrowserDirection, customTabSessionId: String? = null) {
@@ -816,7 +818,8 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         newTab: Boolean,
         engine: SearchEngine?,
         forceSearch: Boolean,
-        flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none()
+        flags: EngineSession.LoadUrlFlags = EngineSession.LoadUrlFlags.none(),
+        requestDesktopMode: Boolean = false
     ) {
         val startTime = components.core.engine.profiler?.getProfilerTime()
         val mode = browsingModeManager.mode
@@ -833,6 +836,10 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
         // and let it try to load whatever was entered.
         if ((!forceSearch && searchTermOrURL.isUrl()) || engine == null) {
             loadUrlUseCase.invoke(searchTermOrURL.toNormalizedUrl(), flags)
+
+            if (requestDesktopMode) {
+                handleRequestDesktopMode()
+            }
         } else {
             if (newTab) {
                 components.useCases.searchUseCases.newTabSearch
@@ -857,6 +864,19 @@ open class HomeActivity : LocaleAwareAppCompatActivity(), NavHostActivity {
                 "newTab: $newTab"
             )
         }
+    }
+
+    internal fun handleRequestDesktopMode() {
+        val requestDesktopSiteUseCase =
+            components.useCases.sessionUseCases.requestDesktopSite
+        requestDesktopSiteUseCase.invoke(true)
+        components.core.store.dispatch(
+            ContentAction.UpdateDesktopModeAction(
+                components.core.store.state.selectedTabId.toString(), true
+            )
+        )
+        // Reset preference value after opening the tab in desktop mode
+        settings().openNextTabInDesktopMode = false
     }
 
     open fun navigateToBrowserOnColdStart() {

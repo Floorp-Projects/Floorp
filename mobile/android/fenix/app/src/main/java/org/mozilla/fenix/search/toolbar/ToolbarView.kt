@@ -31,8 +31,9 @@ interface ToolbarInteractor {
     /**
      * Called when a user hits the return key while [ToolbarView] has focus.
      * @param url the text inside the [ToolbarView] when committed
+     * @param fromHomeScreen true if the toolbar has been opened from home screen
      */
-    fun onUrlCommitted(url: String)
+    fun onUrlCommitted(url: String, fromHomeScreen: Boolean = false)
 
     /**
      * Called when a user removes focus from the [ToolbarView]
@@ -49,13 +50,15 @@ interface ToolbarInteractor {
 /**
  * View that contains and configures the BrowserToolbar to only be used in its editing mode.
  */
+@Suppress("LongParameterList")
 class ToolbarView(
     private val context: Context,
     private val interactor: ToolbarInteractor,
     private val historyStorage: HistoryStorage?,
     private val isPrivate: Boolean,
     val view: BrowserToolbar,
-    engine: Engine
+    engine: Engine,
+    fromHomeFragment: Boolean
 ) {
 
     @VisibleForTesting
@@ -70,7 +73,7 @@ class ToolbarView(
                 // from resizing in case the BrowserFragment is being displayed before the
                 // keyboard is gone: https://github.com/mozilla-mobile/fenix/issues/8399
                 hideKeyboard()
-                interactor.onUrlCommitted(it)
+                interactor.onUrlCommitted(it, fromHomeFragment)
                 false
             }
 

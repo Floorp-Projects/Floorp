@@ -179,6 +179,7 @@ class ToolbarViewTest {
         historyStorage = null,
         isPrivate = isPrivate,
         view = toolbar,
-        engine = engine
+        engine = engine,
+        fromHomeFragment = false
     )
 }

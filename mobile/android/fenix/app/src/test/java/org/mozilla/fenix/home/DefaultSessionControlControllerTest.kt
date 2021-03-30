@@ -140,6 +140,7 @@ class DefaultSessionControlControllerTest {
         every { analytics.metrics } returns metrics
 
         val restoreUseCase: TabsUseCases.RestoreUseCase = mockk(relaxed = true)
+        val requestDesktopSiteUseCase: SessionUseCases.RequestDesktopSiteUseCase = mockk(relaxed = true)
 
         controller = spyk(DefaultSessionControlController(
             activity = activity,
@@ -152,6 +153,7 @@ class DefaultSessionControlControllerTest {
             reloadUrlUseCase = reloadUrlUseCase.reload,
             selectTabUseCase = selectTabUseCase.selectTab,
             restoreUseCase = restoreUseCase,
+            requestDesktopSiteUseCase = requestDesktopSiteUseCase,
             fragmentStore = fragmentStore,
             navController = navController,
             viewLifecycleScope = scope,

@@ -252,6 +252,7 @@ class HomeFragment : Fragment() {
                 restoreUseCase = components.useCases.tabsUseCases.restore,
                 reloadUrlUseCase = components.useCases.sessionUseCases.reload,
                 selectTabUseCase = components.useCases.tabsUseCases.selectTab,
+                requestDesktopSiteUseCase = components.useCases.sessionUseCases.requestDesktopSite,
                 fragmentStore = homeFragmentStore,
                 navController = findNavController(),
                 viewLifecycleScope = viewLifecycleOwner.lifecycleScope,
@@ -853,6 +854,9 @@ class HomeFragment : Fragment() {
                             R.id.homeFragment,
                             HomeFragmentDirections.actionGlobalAddonsManagementFragment()
                         )
+                    }
+                    is HomeMenu.Item.DesktopMode -> {
+                        context.settings().openNextTabInDesktopMode = it.checked
                     }
                 }
             },

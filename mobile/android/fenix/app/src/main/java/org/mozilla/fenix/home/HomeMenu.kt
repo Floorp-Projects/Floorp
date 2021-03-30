@@ -16,6 +16,7 @@ import mozilla.components.browser.menu.BrowserMenuHighlight
 import mozilla.components.browser.menu.ext.getHighlight
 import mozilla.components.browser.menu.item.BrowserMenuDivider
 import mozilla.components.browser.menu.item.BrowserMenuHighlightableItem
+import mozilla.components.browser.menu.item.BrowserMenuImageSwitch
 import mozilla.components.browser.menu.item.BrowserMenuImageText
 import mozilla.components.concept.sync.AccountObserver
 import mozilla.components.concept.sync.AuthType
@@ -48,6 +49,7 @@ class HomeMenu(
         object Downloads : Item()
         object Quit : Item()
         object Sync : Item()
+        data class DesktopMode(val checked: Boolean) : Item()
     }
 
     private val primaryTextColor =
@@ -176,6 +178,14 @@ class HomeMenu(
             onItemTapped.invoke(Item.Downloads)
         }
 
+        val desktopItem = BrowserMenuImageSwitch(
+            imageResource = R.drawable.ic_desktop,
+            label = context.getString(R.string.browser_menu_desktop_site),
+            initialState = { context.settings().openNextTabInDesktopMode }
+        ) { checked ->
+            onItemTapped.invoke(Item.DesktopMode(checked))
+        }
+
         // Only query account manager if it has been initialized.
         // We don't want to cause its initialization just for this check.
         val accountAuthItem = if (context.components.backgroundServices.accountManagerAvailableQueue.isReady()) {
@@ -193,6 +203,9 @@ class HomeMenu(
             syncedTabsItem,
             bookmarksItem,
             historyItem,
+            BrowserMenuDivider(),
+            desktopItem,
+            BrowserMenuDivider(),
             downloadsItem,
             BrowserMenuDivider(),
             addons,

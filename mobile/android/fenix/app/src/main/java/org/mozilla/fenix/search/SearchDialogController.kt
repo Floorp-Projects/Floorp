@@ -24,6 +24,7 @@ import org.mozilla.fenix.components.metrics.MetricController
 import org.mozilla.fenix.components.metrics.MetricsUtils
 import org.mozilla.fenix.crashes.CrashListActivity
 import org.mozilla.fenix.ext.navigateSafe
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 
@@ -32,7 +33,7 @@ import org.mozilla.fenix.utils.Settings
  */
 @Suppress("TooManyFunctions")
 interface SearchController {
-    fun handleUrlCommitted(url: String)
+    fun handleUrlCommitted(url: String, fromHomeScreen: Boolean = false)
     fun handleEditingCancelled()
     fun handleTextChanged(text: String)
     fun handleUrlTapped(url: String)
@@ -60,7 +61,7 @@ class SearchDialogController(
     private val clearToolbar: () -> Unit
 ) : SearchController {
 
-    override fun handleUrlCommitted(url: String) {
+    override fun handleUrlCommitted(url: String, fromHomeScreen: Boolean) {
         when (url) {
             "about:crashes" -> {
                 // The list of past crashes can be accessed via "settings > about", but desktop and
@@ -73,16 +74,19 @@ class SearchDialogController(
                     SearchDialogFragmentDirections.actionGlobalAddonsManagementFragment()
                 navController.navigateSafe(R.id.searchDialogFragment, directions)
             }
-            "moz://a" -> openSearchOrUrl(SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.MANIFESTO))
+            "moz://a" -> openSearchOrUrl(
+                SupportUtils.getMozillaPageUrl(SupportUtils.MozillaPage.MANIFESTO),
+                fromHomeScreen
+            )
             else ->
                 if (url.isNotBlank()) {
-                    openSearchOrUrl(url)
+                    openSearchOrUrl(url, fromHomeScreen)
                 }
         }
         dismissDialog()
     }
 
-    private fun openSearchOrUrl(url: String) {
+    private fun openSearchOrUrl(url: String, fromHomeScreen: Boolean) {
         clearToolbarFocus()
 
         val searchEngine = fragmentStore.state.searchEngineSource.searchEngine
@@ -91,7 +95,8 @@ class SearchDialogController(
             searchTermOrURL = url,
             newTab = fragmentStore.state.tabId == null,
             from = BrowserDirection.FromSearchDialog,
-            engine = searchEngine
+            engine = searchEngine,
+            requestDesktopMode = fromHomeScreen && activity.settings().openNextTabInDesktopMode
         )
 
         val event = if (url.isUrl() || searchEngine == null) {
