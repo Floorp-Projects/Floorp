@@ -44,9 +44,9 @@ pane-privacy-title = Privacy & Security
 category-privacy =
     .tooltiptext = { pane-privacy-title }
 
-pane-sync-title2 = { -sync-brand-short-name }
-category-sync2 =
-    .tooltiptext = { pane-sync-title2 }
+pane-sync-title3 = Sync
+category-sync3 =
+    .tooltiptext = { pane-sync-title3 }
 
 pane-experimental-title = { -brand-short-name } Experiments
 category-experimental =
@@ -753,8 +753,8 @@ containers-remove-button =
 sync-signedout-caption = Take Your Web With You
 sync-signedout-description2 = Synchronize your bookmarks, history, tabs, passwords, add-ons, and settings across all your devices.
 
-sync-signedout-account-signin2 =
-    .label = Sign in to { -sync-brand-short-name }…
+sync-signedout-account-signin3 =
+    .label = Sign in to sync…
     .accesskey = i
 
 # This message contains two links and two icon images.
@@ -800,9 +800,9 @@ prefs-syncing-on = Syncing: ON
 
 prefs-syncing-off = Syncing: OFF
 
-prefs-sync-setup =
-    .label = Set Up { -sync-brand-short-name }…
-    .accesskey = S
+prefs-sync-turn-on-syncing =
+    .label = Turn on syncing…
+    .accesskey = s
 
 prefs-sync-offer-setup-label2 = Synchronize your bookmarks, history, tabs, passwords, add-ons, and settings across all your devices.
 
