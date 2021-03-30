@@ -72,7 +72,12 @@ bool GetUserMediaRequest::IsHandlingUserInput() const {
 }
 
 void GetUserMediaRequest::GetConstraints(MediaStreamConstraints& result) {
-  result = *mConstraints;
+  MOZ_ASSERT(result.mAudio.IsBoolean() && !result.mAudio.GetAsBoolean() &&
+                 result.mVideo.IsBoolean() && !result.mVideo.GetAsBoolean(),
+             "result should be default initialized");
+  if (mConstraints) {
+    result = *mConstraints;
+  }
 }
 
 }  // namespace mozilla::dom
