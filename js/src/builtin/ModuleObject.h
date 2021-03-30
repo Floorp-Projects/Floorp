@@ -273,7 +273,7 @@ class ModuleObject : public NativeObject {
     DFSIndexSlot,
     DFSAncestorIndexSlot,
     AsyncSlot,
-    AsyncEvaluatingSlot,
+    AsyncEvaluatingPostOrderSlot,
     TopLevelCapabilitySlot,
     AsyncParentModulesSlot,
     PendingAsyncDependenciesSlot,
@@ -291,7 +291,8 @@ class ModuleObject : public NativeObject {
                 "DFSIndexSlot must match self-hosting define");
   static_assert(DFSAncestorIndexSlot == MODULE_OBJECT_DFS_ANCESTOR_INDEX_SLOT,
                 "DFSAncestorIndexSlot must match self-hosting define");
-  static_assert(AsyncEvaluatingSlot == MODULE_OBJECT_ASYNC_EVALUATING_SLOT,
+  static_assert(AsyncEvaluatingPostOrderSlot ==
+                    MODULE_OBJECT_ASYNC_EVALUATING_POST_ORDER_SLOT,
                 "AsyncEvaluatingSlot must match self-hosting define");
   static_assert(TopLevelCapabilitySlot ==
                     MODULE_OBJECT_TOP_LEVEL_CAPABILITY_SLOT,
@@ -349,7 +350,7 @@ class ModuleObject : public NativeObject {
   bool isAsync() const;
   void setAsync(bool isAsync);
   bool isAsyncEvaluating() const;
-  void setAsyncEvaluating(bool isEvaluating);
+  void setAsyncEvaluatingFalse();
   void setEvaluationError(HandleValue newValue);
   void setPendingAsyncDependencies(uint32_t newValue);
   void setInitialTopLevelCapability(HandleObject promiseObj);
@@ -357,6 +358,7 @@ class ModuleObject : public NativeObject {
   JSObject* topLevelCapability() const;
   ListObject* asyncParentModules() const;
   uint32_t pendingAsyncDependencies() const;
+  uint32_t getAsyncEvaluatingPostOrder() const;
   void setCycleRoot(ModuleObject* cycleRoot);
   ModuleObject* getCycleRoot() const;
 
@@ -397,6 +399,11 @@ class ModuleObject : public NativeObject {
   bool initAsyncSlots(JSContext* cx, bool isAsync,
                       HandleObject asyncParentModulesList);
 
+  bool initAsyncEvaluatingSlot();
+
+  static bool GatherAsyncParentCompletions(JSContext* cx,
+                                           HandleModuleObject module,
+                                           MutableHandleArrayObject execList);
   // NOTE: accessor for FunctionDeclarationsSlot is defined inside
   // ModuleObject.cpp as static function.
 

@@ -183,6 +183,8 @@
   MACRO2(futexOK, futexOK, "ok")                                               \
   MACRO_(futexTimedOut, futexTimedOut, "timed-out")                            \
   MACRO_(gcCycleNumber, gcCycleNumber, "gcCycleNumber")                        \
+  MACRO_(GatherAsyncParentCompletions, GatherAsyncParentCompletions,           \
+         "GatherAsyncParentCompletions")                                       \
   MACRO_(Generator, Generator, "Generator")                                    \
   MACRO_(GeneratorNext, GeneratorNext, "GeneratorNext")                        \
   MACRO_(GeneratorReturn, GeneratorReturn, "GeneratorReturn")                  \
