@@ -208,10 +208,14 @@ class TelemetryHandler {
    * partner, and it has a code, then we'll start tracking it. This will aid
    * determining if it is a page we should be tracking for adverts.
    *
-   * @param {object} browser The browser associated with the page.
-   * @param {string} url The url that was loaded in the browser.
+   * @param {object} browser
+   *   The browser associated with the page.
+   * @param {string} url
+   *   The url that was loaded in the browser.
+   * @param {nsIDocShell.LoadCommand} loadType
+   *   The load type associated with the page load.
    */
-  updateTrackingStatus(browser, url) {
+  updateTrackingStatus(browser, url, loadType) {
     if (
       !BrowserSearchTelemetry.shouldRecordSearchCount(browser.getTabBrowser())
     ) {
@@ -224,7 +228,11 @@ class TelemetryHandler {
     }
 
     let source = "unknown";
-    if (this._browserSourceMap.has(browser)) {
+    if (loadType & Ci.nsIDocShell.LOAD_CMD_RELOAD) {
+      source = "reload";
+    } else if (loadType & Ci.nsIDocShell.LOAD_CMD_HISTORY) {
+      source = "tabhistory";
+    } else if (this._browserSourceMap.has(browser)) {
       source = this._browserSourceMap.get(browser);
       this._browserSourceMap.delete(browser);
     }

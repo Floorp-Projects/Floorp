@@ -344,7 +344,11 @@ let URICountListener = {
     }
 
     if (!(flags & Ci.nsIWebProgressListener.LOCATION_CHANGE_SAME_DOCUMENT)) {
-      SearchSERPTelemetry.updateTrackingStatus(browser, uriSpec);
+      SearchSERPTelemetry.updateTrackingStatus(
+        browser,
+        uriSpec,
+        webProgress.loadType
+      );
     }
 
     // Update total URI count, including when in private mode.
