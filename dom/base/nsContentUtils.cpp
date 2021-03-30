@@ -1675,16 +1675,24 @@ bool nsContentUtils::IsAlphanumeric(uint32_t aChar) {
 }
 
 // static
-bool nsContentUtils::IsAlphanumericAt(const nsTextFragment* aFrag,
-                                      uint32_t aOffset) {
+bool nsContentUtils::IsAlphanumericOrSymbol(uint32_t aChar) {
+  nsUGenCategory cat = mozilla::unicode::GetGenCategory(aChar);
+
+  return cat == nsUGenCategory::kLetter || cat == nsUGenCategory::kNumber ||
+         cat == nsUGenCategory::kSymbol;
+}
+
+// static
+bool nsContentUtils::IsAlphanumericOrSymbolAt(const nsTextFragment* aFrag,
+                                              uint32_t aOffset) {
   char16_t h = aFrag->CharAt(aOffset);
   if (!IS_SURROGATE(h)) {
-    return IsAlphanumeric(h);
+    return IsAlphanumericOrSymbol(h);
   }
   if (NS_IS_HIGH_SURROGATE(h) && aOffset + 1 < aFrag->GetLength()) {
     char16_t l = aFrag->CharAt(aOffset + 1);
     if (NS_IS_LOW_SURROGATE(l)) {
-      return IsAlphanumeric(SURROGATE_TO_UCS4(h, l));
+      return IsAlphanumericOrSymbol(SURROGATE_TO_UCS4(h, l));
     }
   }
   return false;
