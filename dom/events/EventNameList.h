@@ -326,6 +326,8 @@ WINDOW_ONLY_EVENT(deviceorientation, eDeviceOrientation, EventNameType_None,
                   eBasicEventClass)
 WINDOW_ONLY_EVENT(absolutedeviceorientation, eAbsoluteDeviceOrientation,
                   EventNameType_None, eBasicEventClass)
+WINDOW_ONLY_EVENT(userproximity, eUserProximity, EventNameType_None,
+                  eBasicEventClass)
 WINDOW_ONLY_EVENT(devicelight, eDeviceLight, EventNameType_None,
                   eBasicEventClass)
 WINDOW_ONLY_EVENT(vrdisplayactivate, eVRDisplayActivate, EventNameType_None,
