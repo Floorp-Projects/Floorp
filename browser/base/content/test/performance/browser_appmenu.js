@@ -12,7 +12,7 @@ let gCUITestUtils = new CustomizableUITestUtils(window);
  * away as we improve the performance of the front-end. Instead of adding more
  * reflows to the list, you should be modifying your code to avoid the reflow.
  *
- * See https://developer.mozilla.org/en-US/Firefox/Performance_best_practices_for_Firefox_fe_engineers
+ * See https://firefox-source-docs.mozilla.org/performance/bestpractices.html
  * for tips on how to do that.
  */
 const EXPECTED_APPMENU_OPEN_REFLOWS = [

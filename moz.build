@@ -195,4 +195,6 @@ SPHINX_TREES["setup"] = "docs/setup"
 
 SPHINX_TREES["crash-reporting"] = "docs/crash-reporting"
 
+SPHINX_TREES["performance"] = "docs/performance"
+
 include("build/templates.mozbuild")
