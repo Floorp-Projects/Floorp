@@ -886,6 +886,7 @@ class HttpBaseChannel : public nsHashPropertyBag,
   int8_t mInternalRedirectCount;
 
   const bool mCachedOpaqueResponseBlockingPref;
+  bool mBlockOpaqueResponseAfterSniff;
   bool mCheckIsOpaqueResponseAllowedAfterSniff;
 
   // clang-format off

@@ -9991,6 +9991,44 @@ void nsHttpChannel::DisableIsOpaqueResponseAllowedAfterSniffCheck(
   if (mCheckIsOpaqueResponseAllowedAfterSniff) {
     MOZ_ASSERT(mCachedOpaqueResponseBlockingPref);
 
+    // If the sniifer type is media and the request comes from a media element,
+    // we would like to check:
+    // - Whether the information provided by the media element shows it's an
+    // initial request.
+    // - Whether the response's status is either 200 or 206.
+    // - Whether the response's header shows it's the first partial response
+    // when the response's status is 206.
+    //
+    // If any of the results is false, then we set
+    // mBlockOpaqueResponseAfterSniff to true and block the response later.
+    if (aType == SnifferType::Media) {
+      MOZ_ASSERT(mLoadInfo);
+
+      bool isMediaRequest;
+      mLoadInfo->GetIsMediaRequest(&isMediaRequest);
+      if (isMediaRequest) {
+        bool isInitialRequest;
+        mLoadInfo->GetIsMediaInitialRequest(&isInitialRequest);
+        MOZ_ASSERT(isInitialRequest);
+
+        if (!isInitialRequest) {
+          mBlockOpaqueResponseAfterSniff = true;
+          return;
+        }
+
+        if (mResponseHead->Status() != 200 && mResponseHead->Status() != 206) {
+          mBlockOpaqueResponseAfterSniff = true;
+          return;
+        }
+
+        if (mResponseHead->Status() == 206 &&
+            !IsFirstPartialResponse(*mResponseHead)) {
+          mBlockOpaqueResponseAfterSniff = true;
+          return;
+        }
+      }
+    }
+
     mCheckIsOpaqueResponseAllowedAfterSniff = false;
   }
 }
