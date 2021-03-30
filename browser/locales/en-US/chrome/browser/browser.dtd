@@ -148,8 +148,6 @@ this container is a toolbar. This avoids double-speaking. -->
      The word "toolbar" is appended automatically and should not be contained below! -->
 <!ENTITY tabsToolbar.label "Browser tabs">
 
-<!ENTITY syncBrand.shortName.label    "Sync">
-
 <!ENTITY customizeMode.autoHideDownloadsButton.label "Auto-hide">
 
 
