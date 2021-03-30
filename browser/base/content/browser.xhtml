@@ -1459,7 +1459,7 @@
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.welcome.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-button"
                            id="PanelUI-remotetabs-setupsync-button"
-                           label="&appMenuRemoteTabs.signintosync.label;"
+                           data-l10n-id="appmenu-remote-tabs-sign-into-sync"
                            oncommand="gSync.openPrefs('synced-tabs');"/>
           </vbox>
           <!-- When Sync is not enabled -->
@@ -1472,7 +1472,7 @@
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.welcome.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-button"
                            id="PanelUI-remotetabs-syncdisabled-button"
-                           label="&appMenuRemoteTabs.turnonsync.label;"
+                           data-l10n-id="appmenu-remote-tabs-turn-on-sync"
                            oncommand="gSync.openPrefs('synced-tabs');"/>
           </vbox>
           <!-- When Sync needs re-authentication -->
@@ -1485,7 +1485,7 @@
             <label class="PanelUI-remotetabs-instruction-label">&appMenuRemoteTabs.welcome.label;</label>
             <toolbarbutton class="PanelUI-remotetabs-button"
                            id="PanelUI-remotetabs-reauthsync-button"
-                           label="&appMenuRemoteTabs.signintosync.label;"
+                           data-l10n-id="appmenu-remote-tabs-sign-into-sync"
                            oncommand="gSync.openPrefs('synced-tabs');"/>
           </vbox>
           <!-- When Sync needs verification -->
@@ -1519,8 +1519,7 @@
                    defaultLabel="&fxa.menu.signin.label;"/>
             <label id="fxa-menu-header-description"
                    crop="end"
-                   value="&fxa.menu.turnOnSync.label;"
-                   defaultLabel="&fxa.menu.turnOnSync.label;"/>
+                   data-l10n-id="fxa-menu-turn-on-sync"/>
           </vbox>
         </toolbarbutton>
         <toolbarbutton id="PanelUI-fxa-menu-syncnow-button"
@@ -1555,7 +1554,7 @@
                         oncommand="gSync.showSendToDeviceViewFromFxaMenu(this);"/>
         <toolbarbutton id="PanelUI-fxa-menu-sync-prefs-button"
                         class="subviewbutton subviewbutton-iconic"
-                        label="&fxa.menu.syncSettings2.label;"
+                        data-l10n-id="fxa-menu-sync-settings"
                         hidden="true"
                         oncommand="gSync.openPrefsFromFxaMenu('sync_settings', this);"/>
         <toolbarseparator id="PanelUI-sign-out-separator"/>
