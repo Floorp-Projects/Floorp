@@ -59,8 +59,8 @@ add_task(async function test_add_bookmark_tags_from_bookmarkProperties() {
     // Click the bookmark star to bookmark the page.
     await clickBookmarkStar();
     Assert.equal(
-      bookmarkPanelTitle.textContent,
-      gNavigatorBundle.getString("editBookmarkPanel.newBookmarkTitle"),
+      bookmarkPanelTitle.dataset.l10nId,
+      "bookmarks-add-bookmark",
       "Bookmark title is correct"
     );
     Assert.equal(
@@ -73,8 +73,8 @@ add_task(async function test_add_bookmark_tags_from_bookmarkProperties() {
   // Click the bookmark star again to add tags.
   await clickBookmarkStar();
   Assert.equal(
-    bookmarkPanelTitle.textContent,
-    gNavigatorBundle.getString("editBookmarkPanel.editBookmarkTitle"),
+    bookmarkPanelTitle.dataset.l10nId,
+    "bookmarks-edit-bookmark",
     "Bookmark title is correct"
   );
   let promiseNotification = PlacesTestUtils.waitForNotification(
