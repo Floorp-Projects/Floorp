@@ -1016,7 +1016,7 @@ void nsLookAndFeel::ConfigureTheme(const LookAndFeelTheme& aTheme) {
 }
 
 void nsLookAndFeel::WithThemeConfiguredForContent(
-    const std::function<void(const LookAndFeelTheme& aTheme)>& aFn) {
+    const std::function<void(const LookAndFeelTheme&, bool)>& aFn) {
   nsWindow::WithSettingsChangesIgnored([&]() {
     // Available on Gtk 3.20+.
     static auto sGtkSettingsResetProperty =
@@ -1046,7 +1046,7 @@ void nsLookAndFeel::WithThemeConfiguredForContent(
     theme.themeName() = GetGtkTheme();
     theme.preferDarkTheme() = GetPreferDarkTheme();
 
-    aFn(theme);
+    aFn(theme, changed);
 
     if (changed) {
       GtkSettings* settings = gtk_settings_get_default();
@@ -1062,6 +1062,24 @@ void nsLookAndFeel::WithThemeConfiguredForContent(
       RefreshImpl();
     }
   });
+}
+
+bool nsLookAndFeel::FromParentTheme(IntID aID) {
+  switch (aID) {
+    case IntID::SystemUsesDarkTheme:
+    case IntID::UseAccessibilityTheme:
+      // We want to take SystemUsesDarkTheme and UseAccessibilityTheme from the
+      // parent process theme rather than the content configured theme.
+      //
+      // This ensures that media queries like (prefers-color-scheme: dark) will
+      // match correctly in content processes.
+      //
+      // (When the RemoteLookAndFeel is not in use, the LookAndFeelCache ensures
+      // we get these values from the parent process theme.)
+      return true;
+    default:
+      return false;
+  }
 }
 
 bool nsLookAndFeel::ConfigureContentGtkTheme() {

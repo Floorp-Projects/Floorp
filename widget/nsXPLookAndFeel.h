@@ -68,8 +68,17 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
   virtual void NativeInit() = 0;
 
   virtual void WithThemeConfiguredForContent(
-      const std::function<void(const LookAndFeelTheme& aTheme)>& aFn) {
-    aFn(LookAndFeelTheme{});
+      const std::function<void(const LookAndFeelTheme&, bool aChanged)>& aFn) {
+    aFn(LookAndFeelTheme{}, false);
+  }
+
+  // Whether the color should be from the parent theme, if the theme differs
+  // between parent and content processes.
+  virtual bool FromParentTheme(IntID) {
+    MOZ_ASSERT_UNREACHABLE(
+        "Should override if WithThemeConfiguredForContent can change the "
+        "theme");
+    return false;
   }
 
  protected:
