@@ -53,7 +53,6 @@ let gOriginalUpdateAutoValue = null;
 // Some elements append a trailing /. After the chrome tests are removed this
 // code can be changed so URL_HOST already has a trailing /.
 const gDetailsURL = URL_HOST + "/";
-const gDefaultWhatsNewURL = URL_HTTP_UPDATE_SJS + "?uiURL=DETAILS";
 
 // Set to true to log additional information for debugging. To log additional
 // information for individual tests set gDebugTest to false here and to true
@@ -290,23 +289,6 @@ function getNotificationButton(win, notificationId, button) {
   );
   ok(!notification.hidden, `${notificationId} notification is showing`);
   return notification[button];
-}
-
-/**
- * Ensures that the "What's new" link with the provided ID is displayed and
- * matches the url parameter provided.
- *
- * @param  win
- *         The window to get the "What's new" link for.
- * @param  id
- *         The ID of the "What's new" link element.
- * @param  url
- *         The URL to check against.
- */
-function checkWhatsNewLink(win, id, url) {
-  let whatsNewLink = win.document.getElementById(id);
-  ok(!whatsNewLink.hidden, "What's new link is not hidden.");
-  is(whatsNewLink.href, url, `What's new link href should equal ${url}`);
 }
 
 /**
@@ -594,14 +576,6 @@ function runDoorhangerUpdateTest(params, steps) {
           "There should not be a downloading update"
         );
         ok(!gUpdateManager.readyUpdate, "There should not be a ready update");
-      }
-
-      if (pageURLs && pageURLs.whatsNew !== undefined) {
-        checkWhatsNewLink(
-          window,
-          `${notificationId}-whats-new`,
-          pageURLs.whatsNew
-        );
       }
 
       let buttonEl = getNotificationButton(window, notificationId, button);

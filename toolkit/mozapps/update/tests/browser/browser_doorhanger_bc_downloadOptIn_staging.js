@@ -19,7 +19,6 @@ add_task(async function doorhanger_bc_downloadOptIn_staging() {
       notificationId: "update-available",
       button: "button",
       checkActiveUpdate: null,
-      pageURLs: { whatsNew: gDefaultWhatsNewURL },
     },
     {
       notificationId: "update-restart",
