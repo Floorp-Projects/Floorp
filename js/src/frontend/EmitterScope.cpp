@@ -990,15 +990,43 @@ NameLocation EmitterScope::lookup(BytecodeEmitter* bce,
   return searchAndCache(bce, name);
 }
 
-NameLocation EmitterScope::lookupPrivate(
-    BytecodeEmitter* bce, TaggedParserAtomIndex name,
-    mozilla::Maybe<NameLocation>& brandLoc) {
-  NameLocation loc = lookup(bce, name);
+bool EmitterScope::lookupPrivate(BytecodeEmitter* bce,
+                                 TaggedParserAtomIndex name, NameLocation& loc,
+                                 mozilla::Maybe<NameLocation>& brandLoc) {
+  loc = lookup(bce, name);
 
-  // The parser ensures that `name` is the name of a private member in the
-  // current scope. Since classes are strict mode code, we're certain to find
-  // that scope statically; there will be no intervening dynamic scope.
-  MOZ_RELEASE_ASSERT(loc.kind() == NameLocation::Kind::EnvironmentCoordinate);
+  // Private Brand checking relies on the ability to construct a new
+  // environment coordinate for a name at a fixed offset, which will
+  // correspond to the private brand for that class.
+  //
+  // Despite easily being able to gather the information required to
+  // synthesize an environment coordinate (see cachePrivateFieldsForEval, and
+  // Bug 1638309), we don't have bytecode that is able to bypass the
+  // DebugEnvironmentProxy on the environment to load the right value. As a
+  // result, we cannot currently correctly brand check a private method.
+  //
+  // See also Bug 793345 which argues that we should remove the
+  // DebugEnvironmentProxy.
+  if (loc.kind() != NameLocation::Kind::EnvironmentCoordinate) {
+    MOZ_ASSERT(loc.kind() == NameLocation::Kind::Dynamic ||
+               loc.kind() == NameLocation::Kind::Global);
+    // Private fields don't require brand checking and can be correctly
+    // code-generated with dynamic name lookup bytecode we have today.
+    //
+    // In an ideal world, we could check if we have a private field or a private
+    // method, relying  on the private field eval cache; if we have dynamic or
+    // global name location kind, and we successfully parsed the private
+    // identifier, then it must be in the eval cache, which tracks binding kind.
+    // However, we don't initialize the eval cache on delazifications that are
+    // nested inside an eval execution, so we can't rely on it.
+    //
+    // Instead, at this point we throw up our hands and tell the user their
+    // invocation isn't supported (even if it's actually the invocation of a
+    // private field, which conceptually -should- work, but we cannot
+    // disambiguate from a private method invocation without the binding kind.)
+    bce->reportError(nullptr, JSMSG_DEBUG_NO_PRIVATE_METHOD);
+    return false;
+  }
 
   if (loc.bindingKind() == BindingKind::PrivateMethod) {
     brandLoc = Some(NameLocation::EnvironmentCoordinate(
@@ -1007,7 +1035,7 @@ NameLocation EmitterScope::lookupPrivate(
   } else {
     brandLoc = Nothing();
   }
-  return loc;
+  return true;
 }
 
 Maybe<NameLocation> EmitterScope::locationBoundInScope(
