@@ -101,9 +101,6 @@ lockwise-scanned-text-no-breached-logins =
   }
 lockwise-how-it-works-link = How it works
 
-turn-on-sync = Turn on { -sync-brand-short-name }…
-  .title = Go to sync preferences
-
 monitor-title = Look out for data breaches
 monitor-link = How it works
 monitor-header-content-no-account = Check { -monitor-brand-name } to see if you’ve been part of a known data breach, and get alerts about new breaches.
