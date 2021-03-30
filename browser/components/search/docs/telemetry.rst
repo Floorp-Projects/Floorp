@@ -122,6 +122,8 @@ browser.search.content.*
   - ``contextmenu``
   - ``webextension``
   - ``system`` Indicates a search from the command line.
+  - ``tabhistory`` Indicates a search was counted as a result of the user loading it from the tab history.
+  - ``reload`` Indicates a search was counted as a result of reloading the page.
   - ``unknown`` Indicates the origin was unknown.
 
 browser.search.withads.*
