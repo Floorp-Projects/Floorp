@@ -5,6 +5,7 @@ description:  Firefox is a powerful, extensible web browser with support for mod
 confinement: strict
 grade: stable
 base: core18
+compression: lzo
 
 apps:
   firefox:
