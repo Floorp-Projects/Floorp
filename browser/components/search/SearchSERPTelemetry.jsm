@@ -19,6 +19,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
 
 // The various histograms and scalars that we report to.
 const SEARCH_COUNTS_HISTOGRAM_KEY = "SEARCH_COUNTS";
+const SEARCH_CONTENT_SCALAR_BASE = "browser.search.content.";
 const SEARCH_WITH_ADS_SCALAR_OLD = "browser.search.with_ads";
 const SEARCH_WITH_ADS_SCALAR_BASE = "browser.search.withads.";
 const SEARCH_AD_CLICKS_SCALAR_OLD = "browser.search.ad_clicks";
@@ -222,13 +223,13 @@ class TelemetryHandler {
       return;
     }
 
-    this._reportSerpPage(info, url);
-
     let source = "unknown";
     if (this._browserSourceMap.has(browser)) {
       source = this._browserSourceMap.get(browser);
       this._browserSourceMap.delete(browser);
     }
+
+    this._reportSerpPage(info, source, url);
 
     let item = this._browserInfoByURL.get(url);
     if (item) {
@@ -531,9 +532,18 @@ class TelemetryHandler {
    * @param {string} info.provider The name of the provider.
    * @param {string} info.oldType The type of search.
    * @param {string} [info.code] The code for the provider.
+   * @param {string} source Where the search originated from.
    * @param {string} url The url that was matched (for debug logging only).
    */
-  _reportSerpPage(info, url) {
+  _reportSerpPage(info, source, url) {
+    Services.telemetry.keyedScalarAdd(
+      SEARCH_CONTENT_SCALAR_BASE + source,
+      `${info.provider}:${info.type}:${info.code || "none"}`,
+      1
+    );
+
+    // SEARCH_COUNTS is now obsolete with the new scalar above, but is being
+    // kept whilst data is verified and telemetry is transitioned.
     let payload = `${info.provider}.in-content:${info.oldType}:${info.code ||
       "none"}`;
     let histogram = Services.telemetry.getKeyedHistogramById(

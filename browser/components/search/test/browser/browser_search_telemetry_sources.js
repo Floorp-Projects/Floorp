@@ -115,10 +115,12 @@ async function track_ad_click(
   searchCounts.clear();
   Services.telemetry.clearScalars();
 
+  let expectedContentScalarKey = "example:tagged:ff";
   let expectedScalarKeyOld = "example:sap";
   let expectedScalarKey = "example:tagged";
   let expectedHistogramKey = "example.in-content:sap:ff";
   let expectedHistogramSAPSourceKey = `other-Example.${expectedHistogramSource}`;
+  let expectedContentScalar = `browser.search.content.${expectedScalarSource}`;
   let expectedWithAdsScalar = `browser.search.withads.${expectedScalarSource}`;
   let expectedAdClicksScalar = `browser.search.adclicks.${expectedScalarSource}`;
 
@@ -130,6 +132,7 @@ async function track_ad_click(
       [expectedHistogramSAPSourceKey]: 1,
     },
     {
+      [expectedContentScalar]: { [expectedContentScalarKey]: 1 },
       "browser.search.with_ads": { [expectedScalarKeyOld]: 1 },
       [expectedWithAdsScalar]: { [expectedScalarKey]: 1 },
     }
@@ -148,6 +151,7 @@ async function track_ad_click(
       [expectedHistogramSAPSourceKey]: 1,
     },
     {
+      [expectedContentScalar]: { [expectedContentScalarKey]: 1 },
       "browser.search.with_ads": { [expectedScalarKeyOld]: 1 },
       [expectedWithAdsScalar]: { [expectedScalarKey]: 1 },
       "browser.search.ad_clicks": { [expectedScalarKeyOld]: 1 },
