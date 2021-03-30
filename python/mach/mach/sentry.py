@@ -59,12 +59,21 @@ def register_sentry(argv, settings, topsrcdir):
 
 
 def _process_event(sentry_event, topsrcdir):
-    if not _is_unmodified_mach_core(topsrcdir):
-        # Returning None causes the event to be dropped:
-        # https://docs.sentry.io/platforms/python/configuration/filtering/#using-beforesend
-        return None
+    # Returning nothing causes the event to be dropped:
+    # https://docs.sentry.io/platforms/python/configuration/filtering/#using-beforesend
+    repo = _get_repository_object(topsrcdir)
+    if repo is None:
+        # We don't know the repo state, so we don't know if mach files are
+        # unmodified.
+        return
+
+    if not _is_unmodified_mach_core(repo):
+        return
+
     for map_fn in (_settle_mach_module_id, _patch_absolute_paths, _delete_server_name):
         sentry_event = map_fn(sentry_event, topsrcdir)
+
+    sentry_event["release"] = "hg-rev-{}".format(repo.base_ref_as_hg())
     return sentry_event
 
 
@@ -159,7 +168,7 @@ def _get_repository_object(topsrcdir):
         return None
 
 
-def _is_unmodified_mach_core(topsrcdir):
+def _is_unmodified_mach_core(repo):
     """True if mach is unmodified compared to the public tree.
 
     To avoid submitting Sentry events for errors caused by user's
@@ -172,12 +181,6 @@ def _is_unmodified_mach_core(topsrcdir):
     pretty confident that the Mach behaviour that caused the exception
     also exists in the public tree.
     """
-    repo = _get_repository_object(topsrcdir)
-    if repo is None:
-        # We don't know the repo state, so we don't know if mach files are
-        # unmodified.
-        return False
-
     try:
         files = set(repo.get_outgoing_files()) | set(repo.get_changed_files())
     except MissingUpstreamRepo:
