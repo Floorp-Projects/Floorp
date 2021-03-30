@@ -23,10 +23,19 @@ SpecialPowers.pushPrefEnv({"set": [
   ["device.sensors.enabled", true],
   ["device.sensors.orientation.enabled", true],
   ["device.sensors.motion.enabled", true],
+  ["device.sensors.proximity.enabled", true],
   ["device.sensors.ambientLight.enabled", true]
 ]}, () => {
   let receivedEvent;
   document.addEventListener("hello", function(e) { receivedEvent = e; }, true);
+
+  // UserProximityEvent
+  e = new UserProximityEvent("hello", {near: true});
+  is(e.type, "hello", "Wrong event type!");
+  ok(!e.isTrusted, "Event should not be trusted");
+  is(e.near, true, "near should be true");
+  document.dispatchEvent(e);
+  is(receivedEvent, e, "Wrong event!");
 
   // DeviceLightEvent
   e = new DeviceLightEvent("hello", {value: 1} );

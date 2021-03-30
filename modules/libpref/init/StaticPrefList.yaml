@@ -1473,6 +1473,12 @@
   value: true
   mirror: always
 
+# KaiOS-only, see https://bugzilla.mozilla.org/show_bug.cgi?id=1699707#c10
+- name: device.sensors.proximity.enabled
+  type: bool
+  value: false
+  mirror: always
+
 - name: device.sensors.test.events
   type: bool
   value: false

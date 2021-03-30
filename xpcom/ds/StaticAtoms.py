@@ -1886,6 +1886,7 @@ STATIC_ATOMS = [
     Atom("ondeviceorientation", "ondeviceorientation"),
     Atom("onabsolutedeviceorientation", "onabsolutedeviceorientation"),
     Atom("onmozorientationchange", "onmozorientationchange"),
+    Atom("onuserproximity", "onuserproximity"),
     # light sensor support
     Atom("ondevicelight", "ondevicelight"),
     # MediaDevices device change event

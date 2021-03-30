@@ -334,6 +334,9 @@ with Files("UIEvent.webidl"):
 with Files("URL.webidl"):
     BUG_COMPONENT = ("Core", "Audio/Video")
 
+with Files("UserProximityEvent.webidl"):
+    BUG_COMPONENT = ("Core", "DOM: UI Events & Focus Handling")
+
 with Files("VTT*"):
     BUG_COMPONENT = ("Core", "Audio/Video")
 
@@ -1106,6 +1109,7 @@ GENERATED_EVENTS_WEBIDL_FILES = [
     "TCPSocketEvent.webidl",
     "TrackEvent.webidl",
     "UDPMessageEvent.webidl",
+    "UserProximityEvent.webidl",
     "WebGLContextEvent.webidl",
     "XRInputSourceEvent.webidl",
     "XRInputSourcesChangeEvent.webidl",
