@@ -64,7 +64,7 @@ add_task(async function test_change_title_from_BookmarkStar() {
   let bookmarkPanelTitle = document.getElementById("editBookmarkPanelTitle");
   Assert.equal(
     bookmarkPanelTitle.textContent,
-    gNavigatorBundle.getString("editBookmarkPanel.editBookmarkTitle"),
+    gFluentStrings.formatValueSync("bookmarks-edit-bookmark"),
     "Bookmark title is correct"
   );
 
