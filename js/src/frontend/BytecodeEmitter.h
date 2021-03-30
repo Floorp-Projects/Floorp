@@ -754,7 +754,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                                PropOpEmitter& poe, bool isSuper,
                                                OptionalEmitter& oe);
   [[nodiscard]] bool emitOptionalElemExpression(PropertyByValueBase* elem,
-                                                ElemOpEmitter& poe,
+                                                ElemOpEmitter& eoe,
                                                 bool isSuper,
                                                 OptionalEmitter& oe);
   [[nodiscard]] bool emitOptionalPrivateExpression(
