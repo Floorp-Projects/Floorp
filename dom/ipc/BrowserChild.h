@@ -242,6 +242,10 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
 
   bool IsTopLevel() const { return mIsTopLevel; }
 
+  bool ShouldSendWebProgressEventsToParent() const {
+    return mShouldSendWebProgressEventsToParent;
+  }
+
   /**
    * MessageManagerCallback methods that we override.
    */
