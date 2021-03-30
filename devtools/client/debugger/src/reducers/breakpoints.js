@@ -128,8 +128,8 @@ function setBreakpoint(state, { breakpoint }) {
   return { ...state, breakpoints };
 }
 
-function removeBreakpoint(state, { location }) {
-  const id = makeBreakpointId(location);
+function removeBreakpoint(state, { breakpoint }) {
+  const id = makeBreakpointId(breakpoint.location);
   const breakpoints = { ...state.breakpoints };
   delete breakpoints[id];
   return { ...state, breakpoints };

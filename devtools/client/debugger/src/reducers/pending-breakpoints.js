@@ -39,22 +39,31 @@ function update(state = {}, action) {
   return state;
 }
 
-function setBreakpoint(state, { breakpoint }) {
-  if (breakpoint.options.hidden) {
-    return state;
-  }
+/**
+ * Return a location id representing a breakpoint's original location, or for
+ * pretty-printed sources, its generated location.
+ * @param {{ location: Location, originalLocation?: Location }} breakpoint
+ */
+function makePendingLocationIdFromBreakpoint(breakpoint) {
   const location =
     !breakpoint.location.sourceUrl || isPrettyURL(breakpoint.location.sourceUrl)
       ? breakpoint.generatedLocation
       : breakpoint.location;
-  const locationId = makePendingLocationId(location);
+  return makePendingLocationId(location);
+}
+
+function setBreakpoint(state, { breakpoint }) {
+  if (breakpoint.options.hidden) {
+    return state;
+  }
+  const locationId = makePendingLocationIdFromBreakpoint(breakpoint);
   const pendingBreakpoint = createPendingBreakpoint(breakpoint);
 
   return { ...state, [locationId]: pendingBreakpoint };
 }
 
-function removeBreakpoint(state, { location }) {
-  const locationId = makePendingLocationId(location);
+function removeBreakpoint(state, { breakpoint }) {
+  const locationId = makePendingLocationIdFromBreakpoint(breakpoint);
   state = { ...state };
 
   delete state[locationId];
