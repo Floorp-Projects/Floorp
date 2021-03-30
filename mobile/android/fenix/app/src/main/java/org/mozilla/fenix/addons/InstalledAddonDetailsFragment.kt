@@ -21,7 +21,6 @@ import kotlinx.coroutines.launch
 import mozilla.components.feature.addons.Addon
 import mozilla.components.feature.addons.AddonManagerException
 import mozilla.components.feature.addons.ui.translateName
-import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
@@ -129,7 +128,6 @@ class InstalledAddonDetailsFragment : Fragment() {
                                     )
                                 )
                             }
-                            Addons.hasEnabledAddons.set(true)
                         }
                     },
                     onError = {

@@ -31,7 +31,6 @@ import mozilla.components.feature.addons.ui.PermissionsDialogFragment
 import mozilla.components.feature.addons.ui.translateName
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.Config
-import org.mozilla.fenix.GleanMetrics.Addons
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.components.metrics.Event
@@ -293,7 +292,6 @@ class AddonsManagementFragment : Fragment(R.layout.fragment_add_ons_management) 
                     adapter?.updateAddon(it)
                     addonProgressOverlay?.visibility = View.GONE
                     showInstallationDialog(it)
-                    Addons.hasInstalledAddons.set(true)
                 }
             },
             onError = { _, e ->
