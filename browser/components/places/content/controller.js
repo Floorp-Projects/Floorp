@@ -735,7 +735,7 @@ PlacesController.prototype = {
       throw Components.Exception("", Cr.NS_ERROR_NOT_AVAILABLE);
     }
 
-    let bookmarkGuid = PlacesUIUtils.showBookmarkDialog(
+    let bookmarkGuid = await PlacesUIUtils.showBookmarkDialog(
       {
         action: "add",
         type: aType,
