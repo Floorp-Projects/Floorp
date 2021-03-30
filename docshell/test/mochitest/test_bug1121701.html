@@ -71,7 +71,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1121701
   SimpleTest.waitForExplicitFinish();
   addLoadEvent(async function() {
     scheduleFinish();
-    window.open(testUrl1, "", "noopener");
+    // If Fission is disabled, the pref is no-op.
+    SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+      window.open(testUrl1, "", "noopener");
+    });
   });
 
   </script>
