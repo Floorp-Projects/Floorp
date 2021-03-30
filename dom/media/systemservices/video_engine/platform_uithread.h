@@ -29,11 +29,6 @@ class PlatformUIThread : public PlatformThread {
   void Stop() override;
 
   /**
-   * Request an async callback soon.
-   */
-  void RequestCallback();
-
-  /**
    * Request a recurring callback.
    */
   bool RequestCallbackTimer(unsigned int milliseconds);
