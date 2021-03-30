@@ -17,16 +17,16 @@ lost = <b>You have not lost any personal data or customizations.</b> If you’ve
 
 options-title = What are my options?
 options-do-nothing = If you do nothing, your profile data in { -brand-short-name } will be different from profile data in other installations of Firefox.
-options-use-sync = If you would like all of your profile data to be the same on all installations of Firefox, you can use a { -fxaccount-brand-name } to keep them in sync.
+options-use-sync = If you would like all of your profile data to be the same on all installations of Firefox, you can use a { -fxaccount-brand-name(capitalization: "sentence") } to keep them in sync.
 
 resources = Resources:
 support-link = Using the Profile Manager - Support Article
 
-sync-header = Sign in or create a { -fxaccount-brand-name }
+sync-header = Sign in or create a { -fxaccount-brand-name(capitalization: "sentence") }
 sync-label = Enter your email
 sync-input =
   .placeholder = Email
 sync-button = Continue
 sync-terms = By proceeding, you agree to the <a data-l10n-name="terms">Terms of Service</a> and <a data-l10n-name="privacy">Privacy Notice</a>.
-sync-first = First time using { -sync-brand-name }? You’ll need to sign in to every installation of Firefox to sync your information.
+new-install-sync-first = First time using sync? You’ll need to sign in to every installation of Firefox to sync your information.
 sync-learn = Learn more
