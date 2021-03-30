@@ -764,9 +764,16 @@ class APZCTreeManager : public IAPZCTreeManager, public APZInputBridge {
   void NotifyScrollbarDragRejected(const ScrollableLayerGuid& aGuid) const;
   void NotifyAutoscrollRejected(const ScrollableLayerGuid& aGuid) const;
 
+  // Returns the transform that converts from |aNode|'s coordinates to
+  // the coordinates of |aNode|'s parent in the hit-testing tree.
+  // If the returned transform includes an overscroll transform,
+  // |aOutSourceOfOverscrollTransform| (if not nullptr) is populated
+  // with the APZC which is the source of that overscroll transform.
   // Requires the caller to hold mTreeLock.
   LayerToParentLayerMatrix4x4 ComputeTransformForNode(
-      const HitTestingTreeNode* aNode) const;
+      const HitTestingTreeNode* aNode,
+      const AsyncPanZoomController** aOutSourceOfOverscrollTransform =
+          nullptr) const;
 
   // Look up the GeckoContentController for the given layers id.
   static already_AddRefed<GeckoContentController> GetContentController(
