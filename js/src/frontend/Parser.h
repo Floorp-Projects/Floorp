@@ -515,7 +515,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   LexicalScopeNodeType finishLexicalScope(ParseContext::Scope& scope, Node body,
                                           ScopeKind kind = ScopeKind::Lexical);
   ClassBodyScopeNodeType finishClassBodyScope(ParseContext::Scope& scope,
-                                              Node body);
+                                              ListNodeType body);
   bool finishFunction(bool isStandaloneFunction = false);
 
   inline NameNodeType newName(TaggedParserAtomIndex name);
