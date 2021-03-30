@@ -1982,6 +1982,28 @@ static bool intrinsic_AppendAsyncParentModule(JSContext* cx, unsigned argc,
   return ModuleObject::appendAsyncParentModule(cx, self, parent);
 }
 
+static bool intrinsic_InitAsyncEvaluating(JSContext* cx, unsigned argc,
+                                          Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+  if (!module->initAsyncEvaluatingSlot()) {
+    return false;
+  }
+  args.rval().setUndefined();
+  return true;
+}
+
+static bool intrinsic_IsAsyncEvaluating(JSContext* cx, unsigned argc,
+                                        Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  RootedModuleObject module(cx, &args[0].toObject().as<ModuleObject>());
+  bool isAsyncEvaluating = module->isAsyncEvaluating();
+  args.rval().setBoolean(isAsyncEvaluating);
+  return true;
+}
+
 static bool intrinsic_CreateTopLevelCapability(JSContext* cx, unsigned argc,
                                                Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
@@ -2609,6 +2631,8 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("SetCycleRoot", intrinsic_SetCycleRoot, 2, 0),
     JS_FN("GetCycleRoot", intrinsic_GetCycleRoot, 1, 0),
     JS_FN("AppendAsyncParentModule", intrinsic_AppendAsyncParentModule, 2, 0),
+    JS_FN("InitAsyncEvaluating", intrinsic_InitAsyncEvaluating, 1, 0),
+    JS_FN("IsAsyncEvaluating", intrinsic_IsAsyncEvaluating, 1, 0),
     JS_FN("CreateTopLevelCapability", intrinsic_CreateTopLevelCapability, 1, 0),
     JS_FN("ModuleTopLevelCapabilityResolve",
           intrinsic_ModuleTopLevelCapabilityResolve, 1, 0),
