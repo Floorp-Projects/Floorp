@@ -1,7 +1,7 @@
 <!doctype html>
 <head>
-<title>Test getDisplayMedia() after user activation is consumed</title>
-<link rel="help" href="https://w3c.github.io/mediacapture-screen-share/#dom-mediadevices-getdisplaymedia">
+<title>Test selectAudioOutput() after user activation is consumed</title>
+<link rel="help" href="https://github.com/w3c/mediacapture-output/issues/107">
 </head>
 <script src="/resources/testharness.js"></script>
 <script src="/resources/testharnessreport.js"></script>
@@ -20,11 +20,11 @@ promise_test(async t => {
         SpecialPowers.wrap(document).consumeTransientUserGestureActivation();
   assert_true(had_transient_activation,
               'should have had transient activation');
-  const p = navigator.mediaDevices.getDisplayMedia();
+  const p = navigator.mediaDevices.selectAudioOutput();
   // Race a settled promise to check that the returned promise is already
   // rejected.
   await promise_rejects_dom(
     t, 'InvalidStateError', Promise.race([p, Promise.resolve()]),
-    'getDisplayMedia should have returned an already-rejected promise.');
+    'selectAudioOutput should have returned an already-rejected promise.');
 });
 </script>
