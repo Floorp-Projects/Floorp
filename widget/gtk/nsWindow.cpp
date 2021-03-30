@@ -7917,7 +7917,7 @@ int nsWindow::GdkCoordToDevicePixels(gint coord) {
 LayoutDeviceIntPoint nsWindow::GdkEventCoordsToDevicePixels(gdouble x,
                                                             gdouble y) {
   gint scale = GdkScaleFactor();
-  return LayoutDeviceIntPoint::Round(x * scale, y * scale);
+  return LayoutDeviceIntPoint::Floor(x * scale, y * scale);
 }
 
 LayoutDeviceIntPoint nsWindow::GdkPointToDevicePixels(GdkPoint point) {
