@@ -136,7 +136,7 @@ var BookmarkPropertiesPanel = {
   _getDialogTitle: function BPP__getDialogTitle() {
     if (this._action == ACTION_ADD) {
       if (this._itemType == BOOKMARK_ITEM) {
-        return this._strings.getString("dialogTitleAddBookmark");
+        return this._strings.getString("dialogTitleAddNewBookmark");
       }
 
       // add folder
@@ -147,10 +147,16 @@ var BookmarkPropertiesPanel = {
         return this._strings.getString("dialogTitleAddMulti");
       }
 
-      return this._strings.getString("dialogTitleAddFolder");
+      return this._strings.getString("dialogTitleAddBookmarksFolder");
     }
     if (this._action == ACTION_EDIT) {
-      return this._strings.getFormattedString("dialogTitleEdit", [this._title]);
+      if (this._itemType === BOOKMARK_ITEM) {
+        return this._strings.getFormattedString("dialogTitleEditBookmark", [
+          this._title,
+        ]);
+      }
+
+      return this._strings.getString("dialogTitleEditBookmarksFolder");
     }
     return "";
   },
@@ -260,11 +266,29 @@ var BookmarkPropertiesPanel = {
     let title = { raw: document.title };
     document.documentElement.setAttribute("headertitle", JSON.stringify(title));
 
+    let iconUrl = this._getIconUrl();
+    if (iconUrl) {
+      document.documentElement.style.setProperty(
+        "--icon-url",
+        `url(${iconUrl})`
+      );
+    }
+
     // Allow initialization to complete in a truely async manner so that we're
     // not blocking the main thread.
     document.mozSubdialogReady = this._initDialog().catch(ex => {
       Cu.reportError(`Failed to initialize dialog: ${ex}`);
     });
+  },
+
+  _getIconUrl() {
+    let url = "chrome://browser/skin/bookmark-hollow.svg";
+
+    if (this._action === ACTION_EDIT && this._itemType === BOOKMARK_ITEM) {
+      url = window.arguments[0]?.node?.icon;
+    }
+
+    return url;
   },
 
   /**

@@ -64,6 +64,7 @@ function commonDialogOnLoad() {
 
     dialog.setAttribute("buttonpack", "end");
   }
+  title.shouldUseMaskFade = true;
   root.setAttribute("headertitle", JSON.stringify(title));
 
   let ui = {

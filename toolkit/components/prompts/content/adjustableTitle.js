@@ -60,6 +60,12 @@ const AdjustableTitle = {
       white-space: nowrap;
     }
 
+    #titleText[nomaskfade] {
+      width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
     #titleContainer[overflown] {
       mask-image: linear-gradient(to right, black, black 20px, transparent 20px, black 120px);
       mask-repeat: no-repeat;
@@ -116,8 +122,10 @@ const AdjustableTitle = {
 
     if (!document.documentElement.hasAttribute("neediconheader")) {
       this._containerEl.setAttribute("noicon", "true");
-    } else {
+    } else if (title.shouldUseMaskFade) {
       this._overflowHandler();
+    } else {
+      this._titleEl.toggleAttribute("nomaskfade", true);
     }
   },
 

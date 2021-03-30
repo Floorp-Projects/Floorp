@@ -63,7 +63,7 @@ async function checkAlert(
       let longerDomain = "extravagantly.long.".repeat(10) + "example.com";
       doc.documentElement.setAttribute(
         "headertitle",
-        JSON.stringify({ raw: longerDomain })
+        JSON.stringify({ raw: longerDomain, shouldUseMaskFade: true })
       );
       info("Wait for the prompt title to update.");
       await BrowserTestUtils.waitForMutationCondition(
