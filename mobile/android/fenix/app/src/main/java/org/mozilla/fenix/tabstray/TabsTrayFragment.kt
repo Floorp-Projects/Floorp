@@ -77,7 +77,8 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         val browserTrayInteractor = DefaultBrowserTrayInteractor(
             this,
             selectTabUseCase,
-            removeUseCases
+            removeUseCases,
+            requireComponents.settings
         )
 
         val syncedTabsTrayInteractor = SyncedTabsInteractor(

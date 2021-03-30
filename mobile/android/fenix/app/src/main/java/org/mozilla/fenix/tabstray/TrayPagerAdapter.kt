@@ -7,7 +7,6 @@ package org.mozilla.fenix.tabstray
 import android.content.Context
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
@@ -57,7 +56,7 @@ class TrayPagerAdapter(
             else -> throw IllegalStateException("View type does not exist.")
         }
 
-        viewHolder.bind(adapter, GridLayoutManager(context, 1))
+        viewHolder.bind(adapter, browserInteractor.getLayoutManagerForPosition(context, position))
     }
 
     override fun getItemViewType(position: Int): Int {
