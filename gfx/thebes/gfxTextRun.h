@@ -1049,7 +1049,9 @@ class gfxFontGroup final : public gfxTextRunFactory {
   uint64_t GetRebuildGeneration();
 
   // used when logging text performance
-  gfxTextPerfMetrics* GetTextPerfMetrics() { return mTextPerf; }
+  gfxTextPerfMetrics* GetTextPerfMetrics() const { return mTextPerf; }
+
+  FontMatchingStats* GetFontMatchingStats() const { return mFontMatchingStats; }
 
   // This will call UpdateUserFonts() if the user font set is changed.
   void SetUserFontSet(gfxUserFontSet* aUserFontSet);
