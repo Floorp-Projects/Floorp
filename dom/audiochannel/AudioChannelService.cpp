@@ -266,7 +266,6 @@ AudioPlaybackConfig AudioChannelService::GetMediaConfig(
       config.mCapturedAudio = winData->mIsAudioCaptured;
     }
 
-    config.mVolume *= window->GetAudioVolume();
     config.mMuted = config.mMuted || window->GetAudioMuted();
     if (window->GetMediaSuspend() != nsISuspendedTypes::NONE_SUSPENDED) {
       config.mSuspend = window->GetMediaSuspend();
