@@ -872,6 +872,13 @@ already_AddRefed<Promise> WindowGlobalParent::PermitUnload(
   return promise.forget();
 }
 
+void WindowGlobalParent::PermitUnload(std::function<void(bool)>&& aResolver) {
+  RefPtr<CheckPermitUnloadRequest> request = new CheckPermitUnloadRequest(
+      this, /* aHasInProcessBlocker */ false,
+      nsIContentViewer::PermitUnloadAction::ePrompt, std::move(aResolver));
+  request->Run();
+}
+
 already_AddRefed<mozilla::dom::Promise> WindowGlobalParent::DrawSnapshot(
     const DOMRect* aRect, double aScale, const nsACString& aBackgroundColor,
     mozilla::ErrorResult& aRv) {
