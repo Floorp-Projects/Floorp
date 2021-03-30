@@ -204,8 +204,8 @@ class MediaManager final : public nsIMediaManagerService,
   static bool IsOn(const dom::OwningBooleanOrMediaTrackConstraints& aUnion) {
     return !aUnion.IsBoolean() || aUnion.GetAsBoolean();
   }
-  typedef dom::NavigatorUserMediaSuccessCallback GetUserMediaSuccessCallback;
-  typedef dom::NavigatorUserMediaErrorCallback GetUserMediaErrorCallback;
+  using GetUserMediaSuccessCallback = dom::NavigatorUserMediaSuccessCallback;
+  using GetUserMediaErrorCallback = dom::NavigatorUserMediaErrorCallback;
 
   MOZ_CAN_RUN_SCRIPT
   static void CallOnError(GetUserMediaErrorCallback& aCallback,
@@ -214,16 +214,16 @@ class MediaManager final : public nsIMediaManagerService,
   static void CallOnSuccess(GetUserMediaSuccessCallback& aCallback,
                             DOMMediaStream& aTrack);
 
-  typedef nsTArray<RefPtr<MediaDevice>> MediaDeviceSet;
-  typedef media::Refcountable<MediaDeviceSet> MediaDeviceSetRefCnt;
+  using MediaDeviceSet = nsTArray<RefPtr<MediaDevice>>;
+  using MediaDeviceSetRefCnt = media::Refcountable<MediaDeviceSet>;
 
-  typedef MozPromise<RefPtr<DOMMediaStream>, RefPtr<MediaMgrError>, true>
-      StreamPromise;
-  typedef MozPromise<RefPtr<MediaDeviceSetRefCnt>, RefPtr<MediaMgrError>, true>
-      DevicesPromise;
-  typedef MozPromise<bool, RefPtr<MediaMgrError>, true> MgrPromise;
-  typedef MozPromise<const char*, RefPtr<MediaMgrError>, true>
-      BadConstraintsPromise;
+  using StreamPromise =
+      MozPromise<RefPtr<DOMMediaStream>, RefPtr<MediaMgrError>, true>;
+  using DevicesPromise =
+      MozPromise<RefPtr<MediaDeviceSetRefCnt>, RefPtr<MediaMgrError>, true>;
+  using MgrPromise = MozPromise<bool, RefPtr<MediaMgrError>, true>;
+  using BadConstraintsPromise =
+      MozPromise<const char*, RefPtr<MediaMgrError>, true>;
 
   RefPtr<StreamPromise> GetUserMedia(
       nsPIDOMWindowInner* aWindow,
