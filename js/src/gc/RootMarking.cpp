@@ -252,7 +252,7 @@ void PropertyDescriptor::trace(JSTracer* trc) {
   if (obj) {
     TraceRoot(trc, &obj, "Descriptor::obj");
   }
-  TraceRoot(trc, &value, "Descriptor::value");
+  TraceRoot(trc, &value_, "Descriptor::value");
   if (getter) {
     TraceRoot(trc, &getter, "Descriptor::getter");
   }
