@@ -49,12 +49,13 @@
 #include "frontend/NameOpEmitter.h"        // NameOpEmitter
 #include "frontend/ObjectEmitter.h"  // PropertyEmitter, ObjectEmitter, ClassEmitter
 #include "frontend/OptionalEmitter.h"  // OptionalEmitter
-#include "frontend/ParseNode.h"      // ParseNodeKind, ParseNode and subclasses
-#include "frontend/Parser.h"         // Parser
-#include "frontend/ParserAtom.h"     // ParserAtomsTable
-#include "frontend/PropOpEmitter.h"  // PropOpEmitter
-#include "frontend/SourceNotes.h"    // SrcNote, SrcNoteType, SrcNoteWriter
-#include "frontend/SwitchEmitter.h"  // SwitchEmitter
+#include "frontend/ParseNode.h"   // ParseNodeKind, ParseNode and subclasses
+#include "frontend/Parser.h"      // Parser
+#include "frontend/ParserAtom.h"  // ParserAtomsTable
+#include "frontend/PrivateOpEmitter.h"  // PrivateOpEmitter
+#include "frontend/PropOpEmitter.h"     // PropOpEmitter
+#include "frontend/SourceNotes.h"       // SrcNote, SrcNoteType, SrcNoteWriter
+#include "frontend/SwitchEmitter.h"     // SwitchEmitter
 #include "frontend/TaggedParserAtomIndexHasher.h"  // TaggedParserAtomIndexHasher
 #include "frontend/TDZCheckCache.h"                // TDZCheckCache
 #include "frontend/TryEmitter.h"                   // TryEmitter
@@ -2090,14 +2091,17 @@ bool BytecodeEmitter::emitCallIncDec(UnaryNode* incDec) {
 bool BytecodeEmitter::emitPrivateIncDec(UnaryNode* incDec) {
   PrivateMemberAccess* privateExpr = &incDec->kid()->as<PrivateMemberAccess>();
   ParseNodeKind kind = incDec->getKind();
-  ElemOpEmitter eoe(this, ConvertIncDecKind(kind),
-                    ElemOpEmitter::ObjKind::Other, NameVisibility::Private);
-  if (!emitObjAndKey(&privateExpr->expression(), &privateExpr->privateName(),
-                     eoe)) {
-    //              [stack] OBJ KEY
+  PrivateOpEmitter xoe(this, ConvertIncDecKind(kind),
+                       privateExpr->privateName().name());
+  if (!emitTree(&privateExpr->expression())) {
+    //              [stack] OBJ
     return false;
   }
-  if (!eoe.emitIncDec()) {
+  if (!xoe.emitReference()) {
+    //              [stack] OBJ NAME
+    return false;
+  }
+  if (!xoe.emitIncDec()) {
     //              [stack] RESULT
     return false;
   }
@@ -2847,18 +2851,17 @@ bool BytecodeEmitter::emitDestructuringLHSRef(ParseNode* target,
 
     case ParseNodeKind::PrivateMemberExpr: {
       PrivateMemberAccess* privateExpr = &target->as<PrivateMemberAccess>();
-      ElemOpEmitter eoe(this, ElemOpEmitter::Kind::SimpleAssignment,
-                        ElemOpEmitter::ObjKind::Other, NameVisibility::Private);
-      if (!emitObjAndKey(&privateExpr->expression(),
-                         &privateExpr->privateName(), eoe)) {
-        //          [stack] OBJ KEY
+      PrivateOpEmitter xoe(this, PrivateOpEmitter::Kind::SimpleAssignment,
+                           privateExpr->privateName().name());
+      if (!emitTree(&privateExpr->expression())) {
+        //          [stack] OBJ
         return false;
       }
-      *emitted = 2;
-      if (!eoe.prepareForRhs()) {
-        //          [stack] OBJ KEY
+      if (!xoe.emitReference()) {
+        //          [stack] OBJ NAME
         return false;
       }
+      *emitted = xoe.numReferenceSlots();
       break;
     }
 
@@ -2995,13 +2998,14 @@ bool BytecodeEmitter::emitSetOrInitializeDestructuring(
 
     case ParseNodeKind::PrivateMemberExpr: {
       // The reference is already pushed by emitDestructuringLHSRef.
-      //          [stack] OBJ KEY VAL
-      ElemOpEmitter eoe(this, ElemOpEmitter::Kind::SimpleAssignment,
-                        ElemOpEmitter::ObjKind::Other, NameVisibility::Private);
-      if (!eoe.skipObjAndKeyAndRhs()) {
+      //          [stack] OBJ NAME VAL
+      PrivateMemberAccess* privateExpr = &target->as<PrivateMemberAccess>();
+      PrivateOpEmitter xoe(this, PrivateOpEmitter::Kind::SimpleAssignment,
+                           privateExpr->privateName().name());
+      if (!xoe.skipReference()) {
         return false;
       }
-      if (!eoe.emitAssignment()) {
+      if (!xoe.emitAssignment()) {
         //        [stack] VAL
         return false;
       }
@@ -4356,6 +4360,7 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
   Maybe<NameOpEmitter> noe;
   Maybe<PropOpEmitter> poe;
   Maybe<ElemOpEmitter> eoe;
+  Maybe<PrivateOpEmitter> xoe;
 
   // Deal with non-name assignments.
   uint8_t offset = 1;
@@ -4441,17 +4446,20 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
     }
     case ParseNodeKind::PrivateMemberExpr: {
       PrivateMemberAccess* privateExpr = &lhs->as<PrivateMemberAccess>();
-      eoe.emplace(this,
-                  isCompound ? ElemOpEmitter::Kind::CompoundAssignment
-                  : isInit   ? ElemOpEmitter::Kind::PropInit
-                             : ElemOpEmitter::Kind::SimpleAssignment,
-                  ElemOpEmitter::ObjKind::Other, NameVisibility::Private);
-      if (!emitObjAndKey(&privateExpr->expression(),
-                         &privateExpr->privateName(), *eoe)) {
+      xoe.emplace(this,
+                  isCompound ? PrivateOpEmitter::Kind::CompoundAssignment
+                  : isInit   ? PrivateOpEmitter::Kind::PropInit
+                             : PrivateOpEmitter::Kind::SimpleAssignment,
+                  privateExpr->privateName().name());
+      if (!emitTree(&privateExpr->expression())) {
+        //          [stack] OBJ
+        return false;
+      }
+      if (!xoe->emitReference()) {
         //          [stack] OBJ KEY
         return false;
       }
-      offset += 2;
+      offset += xoe->numReferenceSlots();
       break;
     }
     case ParseNodeKind::ArrayExpr:
@@ -4491,10 +4499,16 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
         }
         break;
       }
-      case ParseNodeKind::ElemExpr:
-      case ParseNodeKind::PrivateMemberExpr: {
+      case ParseNodeKind::ElemExpr: {
         if (!eoe->emitGet()) {
           //        [stack] KEY THIS OBJ ELEM
+          return false;
+        }
+        break;
+      }
+      case ParseNodeKind::PrivateMemberExpr: {
+        if (!xoe->emitGet()) {
+          //        [stack] OBJ KEY VALUE
           return false;
         }
         break;
@@ -4534,7 +4548,6 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
       }
       break;
     case ParseNodeKind::ElemExpr:
-    case ParseNodeKind::PrivateMemberExpr:
       if (!eoe->prepareForRhs()) {
         //          [stack] # if Simple Assignment with Super
         //          [stack] THIS KEY SUPERBASE
@@ -4546,6 +4559,9 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
         //          [stack] OBJ KEY ELEM
         return false;
       }
+      break;
+    case ParseNodeKind::PrivateMemberExpr:
+      // no stack adjustment needed
       break;
     default:
       break;
@@ -4595,14 +4611,19 @@ bool BytecodeEmitter::emitAssignmentOrInit(ParseNodeKind kind, ParseNode* lhs,
     case ParseNodeKind::CallExpr:
       // We threw above, so nothing to do here.
       break;
-    case ParseNodeKind::ElemExpr:
-    case ParseNodeKind::PrivateMemberExpr: {
+    case ParseNodeKind::ElemExpr: {
       if (!eoe->emitAssignment()) {
         //          [stack] VAL
         return false;
       }
       break;
     }
+    case ParseNodeKind::PrivateMemberExpr:
+      if (!xoe->emitAssignment()) {
+        //          [stack] VAL
+        return false;
+      }
+      break;
     case ParseNodeKind::ArrayExpr:
     case ParseNodeKind::ObjectExpr:
       if (!emitDestructuringOps(&lhs->as<ListNode>(),
@@ -4644,6 +4665,7 @@ bool BytecodeEmitter::emitShortCircuitAssignment(AssignmentNode* node) {
   Maybe<NameOpEmitter> noe;
   Maybe<PropOpEmitter> poe;
   Maybe<ElemOpEmitter> eoe;
+  Maybe<PrivateOpEmitter> xoe;
 
   int32_t depth = bytecodeSection().stackDepth();
 
@@ -4750,24 +4772,21 @@ bool BytecodeEmitter::emitShortCircuitAssignment(AssignmentNode* node) {
 
     case ParseNodeKind::PrivateMemberExpr: {
       PrivateMemberAccess* privateExpr = &lhs->as<PrivateMemberAccess>();
-      eoe.emplace(this, ElemOpEmitter::Kind::CompoundAssignment,
-                  ElemOpEmitter::ObjKind::Other, NameVisibility::Private);
-
-      if (!emitObjAndKey(&privateExpr->expression(),
-                         &privateExpr->privateName(), *eoe)) {
-        //          [stack] OBJ KEY
+      xoe.emplace(this, PrivateOpEmitter::Kind::CompoundAssignment,
+                  privateExpr->privateName().name());
+      if (!emitTree(&privateExpr->expression())) {
+        //          [stack] OBJ
         return false;
       }
-      if (!eoe->emitGet()) {
-        //          [stack] OBJ KEY LHS
+      if (!xoe->emitReference()) {
+        //          [stack] OBJ NAME
         return false;
       }
-      if (!eoe->prepareForRhs()) {
-        //          [stack] OBJ KEY LHS
+      if (!xoe->emitGet()) {
+        //          [stack] OBJ NAME LHS
         return false;
       }
-
-      numPushed = 2;
+      numPushed = xoe->numReferenceSlots();
       break;
     }
 
@@ -4816,14 +4835,20 @@ bool BytecodeEmitter::emitShortCircuitAssignment(AssignmentNode* node) {
       break;
     }
 
-    case ParseNodeKind::ElemExpr:
-    case ParseNodeKind::PrivateMemberExpr: {
+    case ParseNodeKind::ElemExpr: {
       if (!eoe->emitAssignment()) {
         //          [stack] RHS
         return false;
       }
       break;
     }
+
+    case ParseNodeKind::PrivateMemberExpr:
+      if (!xoe->emitAssignment()) {
+        //          [stack] RHS
+        return false;
+      }
+      break;
 
     default:
       MOZ_CRASH();
@@ -7740,8 +7765,8 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
     case ParseNodeKind::OptionalElemExpr: {
       OptionalPropertyByValue* elem = &callee->as<OptionalPropertyByValue>();
       bool isSuper = false;
-      bool isPrivate = elem->key().isKind(ParseNodeKind::PrivateName);
-      ElemOpEmitter& eoe = cone.prepareForElemCallee(isSuper, isPrivate);
+      MOZ_ASSERT(!elem->key().isKind(ParseNodeKind::PrivateName));
+      ElemOpEmitter& eoe = cone.prepareForElemCallee(isSuper);
       if (!emitOptionalElemExpression(elem, eoe, isSuper, oe)) {
         //          [stack] CALLEE THIS
         return false;
@@ -7751,8 +7776,8 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
     case ParseNodeKind::ElemExpr: {
       PropertyByValue* elem = &callee->as<PropertyByValue>();
       bool isSuper = elem->isSuper();
-      bool isPrivate = elem->key().isKind(ParseNodeKind::PrivateName);
-      ElemOpEmitter& eoe = cone.prepareForElemCallee(isSuper, isPrivate);
+      MOZ_ASSERT(!elem->key().isKind(ParseNodeKind::PrivateName));
+      ElemOpEmitter& eoe = cone.prepareForElemCallee(isSuper);
       if (!emitOptionalElemExpression(elem, eoe, isSuper, oe)) {
         //          [stack] CALLEE THIS
         return false;
@@ -7764,10 +7789,9 @@ bool BytecodeEmitter::emitOptionalCalleeAndThis(ParseNode* callee,
     case ParseNodeKind::OptionalPrivateMemberExpr: {
       PrivateMemberAccessBase* privateExpr =
           &callee->as<PrivateMemberAccessBase>();
-      bool isSuper = false;
-      bool isPrivate = true;
-      ElemOpEmitter& eoe = cone.prepareForElemCallee(isSuper, isPrivate);
-      if (!emitOptionalPrivateExpression(privateExpr, eoe, oe)) {
+      PrivateOpEmitter& xoe =
+          cone.prepareForPrivateCallee(privateExpr->privateName().name());
+      if (!emitOptionalPrivateExpression(privateExpr, xoe, oe)) {
         //          [stack] CALLEE THIS
         return false;
       }
@@ -7853,8 +7877,8 @@ bool BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call,
       MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting);
       PropertyByValue* elem = &callee->as<PropertyByValue>();
       bool isSuper = elem->isSuper();
-      bool isPrivate = elem->key().isKind(ParseNodeKind::PrivateName);
-      ElemOpEmitter& eoe = cone.prepareForElemCallee(isSuper, isPrivate);
+      MOZ_ASSERT(!elem->key().isKind(ParseNodeKind::PrivateName));
+      ElemOpEmitter& eoe = cone.prepareForElemCallee(isSuper);
       if (!emitElemObjAndKey(elem, isSuper, eoe)) {
         //          [stack] # if Super
         //          [stack] THIS? THIS KEY
@@ -7873,16 +7897,18 @@ bool BytecodeEmitter::emitCalleeAndThis(ParseNode* callee, ParseNode* call,
       MOZ_ASSERT(emitterMode != BytecodeEmitter::SelfHosting);
       PrivateMemberAccessBase* privateExpr =
           &callee->as<PrivateMemberAccessBase>();
-      bool isSuper = false;
-      bool isPrivate = true;
-      ElemOpEmitter& eoe = cone.prepareForElemCallee(isSuper, isPrivate);
-      if (!emitObjAndKey(&privateExpr->expression(),
-                         &privateExpr->privateName(), eoe)) {
-        //          [stack] OBJ? OBJ KEY
+      PrivateOpEmitter& xoe =
+          cone.prepareForPrivateCallee(privateExpr->privateName().name());
+      if (!emitTree(&privateExpr->expression())) {
+        //          [stack] OBJ
         return false;
       }
-      if (!eoe.emitGet()) {
-        //          [stack] CALLEE THIS?
+      if (!xoe.emitReference()) {
+        //          [stack] OBJ NAME
+        return false;
+      }
+      if (!xoe.emitGetForCallOrNew()) {
+        //          [stack] CALLEE THIS
         return false;
       }
 
@@ -8357,9 +8383,9 @@ bool BytecodeEmitter::emitOptionalTree(
     case ParseNodeKind::PrivateMemberExpr:
     case ParseNodeKind::OptionalPrivateMemberExpr: {
       PrivateMemberAccessBase* privateExpr = &pn->as<PrivateMemberAccessBase>();
-      ElemOpEmitter eoe(this, ElemOpEmitter::Kind::Get,
-                        ElemOpEmitter::ObjKind::Other, NameVisibility::Private);
-      if (!emitOptionalPrivateExpression(privateExpr, eoe, oe)) {
+      PrivateOpEmitter xoe(this, PrivateOpEmitter::Kind::Get,
+                           privateExpr->privateName().name());
+      if (!emitOptionalPrivateExpression(privateExpr, xoe, oe)) {
         return false;
       }
       break;
@@ -8556,13 +8582,8 @@ bool BytecodeEmitter::emitOptionalElemExpression(PropertyByValueBase* elem,
 }
 
 bool BytecodeEmitter::emitOptionalPrivateExpression(
-    PrivateMemberAccessBase* privateExpr, ElemOpEmitter& eoe,
+    PrivateMemberAccessBase* privateExpr, PrivateOpEmitter& xoe,
     OptionalEmitter& oe) {
-  if (!eoe.prepareForObj()) {
-    //              [stack]
-    return false;
-  }
-
   if (!emitOptionalTree(&privateExpr->expression(), oe)) {
     //            [stack] OBJ
     return false;
@@ -8578,18 +8599,13 @@ bool BytecodeEmitter::emitOptionalPrivateExpression(
     }
   }
 
-  if (!eoe.prepareForKey()) {
-    //              [stack] OBJ? OBJ
+  if (!xoe.emitReference()) {
+    //              [stack] OBJ NAME
     return false;
   }
-
-  if (!emitTree(&privateExpr->privateName())) {
-    //              [stack] OBJ? OBJ KEY
-    return false;
-  }
-
-  if (!eoe.emitGet()) {
-    //              [stack] ELEM
+  if (!xoe.emitGet()) {
+    //              [stack] CALLEE THIS  # if call
+    //              [stack] VALUE        # otherwise
     return false;
   }
 
@@ -11300,14 +11316,17 @@ bool BytecodeEmitter::emitTree(
 
     case ParseNodeKind::PrivateMemberExpr: {
       PrivateMemberAccess* privateExpr = &pn->as<PrivateMemberAccess>();
-      ElemOpEmitter eoe(this, ElemOpEmitter::Kind::Get,
-                        ElemOpEmitter::ObjKind::Other, NameVisibility::Private);
-      if (!emitObjAndKey(&privateExpr->expression(),
-                         &privateExpr->privateName(), eoe)) {
-        //          [stack] OBJ KEY
+      PrivateOpEmitter xoe(this, PrivateOpEmitter::Kind::Get,
+                           privateExpr->privateName().name());
+      if (!emitTree(&privateExpr->expression())) {
+        //          [stack] OBJ
         return false;
       }
-      if (!eoe.emitGet()) {
+      if (!xoe.emitReference()) {
+        //          [stack] OBJ NAME
+        return false;
+      }
+      if (!xoe.emitGet()) {
         //          [stack] VALUE
         return false;
       }

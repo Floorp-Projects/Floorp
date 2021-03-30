@@ -17,6 +17,15 @@ class A {
     return o?.#x;
   }
 
+  static orEqual(o, v) {
+    o.#x ||= v;
+    return o.#x;
+  }
+
+  setX(v) {
+    this.#x = v;
+  }
+
   compoundInc() {
     this.#x += 1;
     return this.#x;
@@ -65,6 +74,9 @@ for (var i = 0; i < 1000; i++) {
   assertEq(a.x(), 11);
   assertEq(A.readx(a), 11);
   assertEq(a.compoundInc(), 12);
+  assertEq(A.orEqual(a, 13), 12);
+  a.setX(null);
+  assertEq(A.orEqual(a, 12), 12);
   assertEq(a.compoundDec(), 11);
   assertEq(a.invoke(), 'hi');
   assertEq(a.gz(), 'static');

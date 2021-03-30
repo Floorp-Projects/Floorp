@@ -37,6 +37,7 @@
 #include "frontend/ParseNode.h"            // ParseNode and subclasses
 #include "frontend/Parser.h"               // Parser, PropListType
 #include "frontend/ParserAtom.h"           // TaggedParserAtomIndex
+#include "frontend/PrivateOpEmitter.h"     // PrivateOpEmitter
 #include "frontend/ScriptIndex.h"          // ScriptIndex
 #include "frontend/SharedContext.h"        // SharedContext, TopLevelFunction
 #include "frontend/SourceNotes.h"          // SrcNoteType
@@ -757,7 +758,7 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                                 bool isSuper,
                                                 OptionalEmitter& oe);
   [[nodiscard]] bool emitOptionalPrivateExpression(
-      PrivateMemberAccessBase* privateExpr, ElemOpEmitter& eoe,
+      PrivateMemberAccessBase* privateExpr, PrivateOpEmitter& xoe,
       OptionalEmitter& oe);
   [[nodiscard]] bool emitOptionalCall(CallNode* callNode, OptionalEmitter& oe,
                                       ValueUsage valueUsage);
