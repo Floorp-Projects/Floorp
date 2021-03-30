@@ -384,6 +384,12 @@ GraphicsCriticalError:
     Information of a critical error that occurred within the graphics code.
   type: string
 
+GraphicsDrawShader:
+  description: >
+    Name of the shader that is currently bound for a draw call, if applicable.
+    See file names in gfx/wr/webrender/res/* for the possible values.
+  type: string
+
 GraphicsSanityTest:
   description: >
     Annotation used in tests.
