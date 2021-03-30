@@ -10,14 +10,10 @@ import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
 import androidx.preference.PreferenceManager
-import mozilla.components.browser.state.selector.findCustomTab
-import mozilla.components.browser.state.selector.selectedTab
-import mozilla.components.browser.state.state.SessionState
 import mozilla.components.concept.engine.EngineView
 import mozilla.components.lib.crash.Crash
 import mozilla.components.support.utils.SafeIntent
 import org.mozilla.focus.R
-import org.mozilla.focus.activity.CustomTabActivity.Companion.CUSTOM_TAB_ID
 import org.mozilla.focus.biometrics.Biometrics
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.fragment.BrowserFragment
@@ -34,12 +30,6 @@ import org.mozilla.focus.utils.SupportUtils
 
 @Suppress("TooManyFunctions")
 open class MainActivity : LocaleAwareAppCompatActivity() {
-    internal open val isCustomTabMode: Boolean
-        get() = false
-
-    protected open val currentTabForActivity: SessionState?
-        get() = components.store.state.selectedTab
-
     private val intentProcessor by lazy {
         IntentProcessor(this, components.tabsUseCases, components.customTabsUseCases)
     }
@@ -48,16 +38,6 @@ open class MainActivity : LocaleAwareAppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        val customTabId = intent.getStringExtra(CUSTOM_TAB_ID)
-
-        // The session for this ID, no longer exists. This usually happens because we were gc-d
-        // and since we do not save custom tab sessions, the activity is re-created and we no longer
-        // have a session with us to restore. It's safer to finish the activity instead.
-        if (customTabId != null && components.store.state.findCustomTab(customTabId) == null) {
-            finish()
-            return
-        }
 
         if (!isTaskRoot) {
             if (intent.hasCategory(Intent.CATEGORY_LAUNCHER) && Intent.ACTION_MAIN == intent.action) {
