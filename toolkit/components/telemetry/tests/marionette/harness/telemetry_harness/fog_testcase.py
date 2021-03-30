@@ -45,6 +45,15 @@ class FOGTestCase(TelemetryTestCase):
         self.marionette.enforce_gecko_prefs(
             {
                 "telemetry.fog.test.localhost_port": self.fog_ping_server.port,
+                # Enable FOG logging. 5 means "Verbose". See
+                # https://developer.mozilla.org/en-US/docs/Mozilla/Developer_guide/Gecko_Logging
+                # for details.
+                "logging.config.clear_on_startup": False,
+                "logging.config.sync": True,
+                "logging.fog::*": 5,
+                "logging.fog_control::*": 5,
+                "logging.glean::*": 5,
+                "logging.glean_core::*": 5,
             }
         )
 
