@@ -561,7 +561,10 @@ var PlacesCommandHook = {
     let bm = await PlacesUtils.bookmarks.fetch({ url });
     if (bm) {
       let node = await PlacesUIUtils.promiseNodeLikeFromFetchInfo(bm);
-      PlacesUIUtils.showBookmarkDialog({ action: "edit", node }, window.top);
+      await PlacesUIUtils.showBookmarkDialog(
+        { action: "edit", node },
+        window.top
+      );
       return;
     }
 
@@ -571,7 +574,7 @@ var PlacesCommandHook = {
       parentId,
       parentGuid,
     });
-    PlacesUIUtils.showBookmarkDialog(
+    await PlacesUIUtils.showBookmarkDialog(
       {
         action: "add",
         type: "bookmark",

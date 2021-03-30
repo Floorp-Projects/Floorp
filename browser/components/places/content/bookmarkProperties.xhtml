@@ -5,6 +5,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
+<?xml-stylesheet href="chrome://global/content/commonDialog.css" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/commonDialog.css" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/editBookmark.css"?>
 <?xml-stylesheet href="chrome://browser/skin/places/tree-icons.css"?>
 <?xml-stylesheet href="chrome://browser/content/places/places.css"?>
@@ -14,7 +16,8 @@
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         xmlns:html="http://www.w3.org/1999/xhtml"
         id="bookmarkproperties"
-        onload="BookmarkPropertiesPanel.onDialogLoad();"
+        headerparent="bookmarkpropertiesdialog"
+        neediconheader="true"
         onunload="BookmarkPropertiesPanel.onDialogUnload();"
         style="min-width: 30em;"
         persist="screenX screenY width">
@@ -36,6 +39,7 @@
   <script src="chrome://global/content/editMenuOverlay.js"/>
   <script src="chrome://browser/content/utilityOverlay.js"/>
   <script src="chrome://browser/content/places/places-tree.js"/>
+  <script src="chrome://global/content/adjustableTitle.js"/>
 
 #include editBookmarkPanel.inc.xhtml
 
