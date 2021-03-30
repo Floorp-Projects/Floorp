@@ -44,7 +44,12 @@ StyleEditorPanel.prototype = {
     );
 
     // Initialize the UI
-    this.UI = new StyleEditorUI(this._toolbox, this._panelDoc, cssProperties);
+    this.UI = new StyleEditorUI(
+      this._toolbox,
+      this._commands,
+      this._panelDoc,
+      cssProperties
+    );
     this.UI.on("error", this._showError);
     await this.UI.initialize();
 
