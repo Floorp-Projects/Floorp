@@ -67,6 +67,10 @@ class FindInPageIntegration(
             } else {
                 engineViewParent.translationY = 0f
             }
+        } else {
+            if (toolbarInfo.isToolbarDynamic) {
+                engineViewParentParams.bottomMargin = 0
+            }
         }
     }
 
@@ -86,6 +90,10 @@ class FindInPageIntegration(
                 // With a fixed toolbar the EngineView is anchored below the toolbar with 0 Y translation.
                 engineViewParent.translationY = -toolbarInfo.toolbar.height.toFloat()
             }
+        } else {
+            // With a bottom toolbar the EngineView is already anchored to the top of the screen.
+            // Need just to ensure space for the find in page bar under the engineView.
+            engineViewParentParams.bottomMargin = toolbarInfo.toolbar.height
         }
     }
 
