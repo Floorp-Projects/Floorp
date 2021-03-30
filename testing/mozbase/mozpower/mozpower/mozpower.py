@@ -7,6 +7,7 @@ import platform
 import os
 import subprocess
 import re
+import six
 
 from .macintelpower import MacIntelPower
 from .mozpowerutils import average_summary, frequency_summary, get_logger, sum_summary
@@ -105,7 +106,7 @@ class MozPower(object):
             raise NotImplementedError
         else:
             self._os = self._get_os().lower()
-            cpu = self._get_processor_info().lower()
+            cpu = six.text_type(self._get_processor_info().lower())
 
             if "intel" in cpu:
                 self._cpu = "intel"
