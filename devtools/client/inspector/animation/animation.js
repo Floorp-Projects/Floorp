@@ -147,8 +147,8 @@ class AnimationInspector {
   }
 
   async initListeners() {
-    await this.inspector.toolbox.targetList.watchTargets(
-      [this.inspector.toolbox.targetList.TYPES.FRAME],
+    await this.inspector.commands.targetCommand.watchTargets(
+      [this.inspector.commands.targetCommand.TYPES.FRAME],
       this.onTargetAvailable
     );
 
