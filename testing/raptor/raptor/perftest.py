@@ -6,7 +6,6 @@
 
 from __future__ import absolute_import
 
-import six
 import json
 import os
 import re
@@ -19,11 +18,11 @@ from abc import ABCMeta, abstractmethod
 
 import mozinfo
 import mozprocess
-import mozversion
 import mozproxy.utils as mpu
+import mozversion
+import six
 from mozprofile import create_profile
 from mozproxy import get_playback
-
 
 # need this so raptor imports work both from /raptor and via mach
 here = os.path.abspath(os.path.dirname(__file__))
@@ -36,7 +35,6 @@ for path in paths:
     if not os.path.exists(path):
         raise IOError("%s does not exist. " % path)
     sys.path.insert(0, path)
-
 
 from cmdline import FIREFOX_ANDROID_APPS
 from condprof.client import get_profile, ProfileNotFoundError

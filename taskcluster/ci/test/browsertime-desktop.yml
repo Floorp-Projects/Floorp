@@ -83,7 +83,11 @@ browsertime-tp6:
     raptor-subtests:
         - apple
         - [bing-search, bing]
+        - buzzfeed
+        - cnn
         - ebay
+        - espn
+        - expedia
         - [facebook, fb]
         - fandom
         - [google-docs, gdocs]
@@ -94,11 +98,13 @@ browsertime-tp6:
         - linkedin
         - microsoft
         - netflix
+        - nytimes
         - office
         - outlook
         - paypal
         - pinterest
         - reddit
+        - wikia
         - wikipedia
         - yahoo-mail
         - yahoo-news
