@@ -743,15 +743,20 @@ dialog > .sync-engines-list + hbox {
 .sync-engines-list checkbox .checkbox-icon,
 .sync-engine-image {
   margin-inline: 4px 8px;
-  min-width: 16px;
-  min-height: 16px;
+  width: 16px;
+  height: 16px;
   -moz-context-properties: fill;
   fill: currentColor;
+  align-self: center;
 }
 
 .sync-engines-list checkbox {
   min-width: max-content;
   max-width: calc(50vw - 10px);
+}
+
+.sync-engines-list .checkbox-label-box {
+  -moz-box-align: center;
 }
 
 .sync-engines-list {
