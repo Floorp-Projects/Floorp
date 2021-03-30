@@ -38,6 +38,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   void WithThemeConfiguredForContent(
       const std::function<void(const LookAndFeelTheme&, bool)>& aFn) override;
   bool FromParentTheme(IntID) override;
+  bool FromParentTheme(ColorID) override;
 
   static void ConfigureTheme(const LookAndFeelTheme& aTheme);
 
