@@ -900,7 +900,7 @@ class ScriptStencilExtra {
 
   MemberInitializers memberInitializers() const {
     MOZ_ASSERT(useMemberInitializers());
-    return MemberInitializers(memberInitializers_);
+    return MemberInitializers::deserialize(memberInitializers_);
   }
 
 #if defined(DEBUG) || defined(JS_JITSPEW)
