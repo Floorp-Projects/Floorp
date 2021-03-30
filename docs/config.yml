@@ -28,6 +28,7 @@ categories:
         - code-quality
         - writing-rust-code
         - tools/profiler
+        - performance
         - xpcom
     build_doc:
         - mach
