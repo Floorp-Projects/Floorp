@@ -1836,7 +1836,7 @@ void BaseAbstractBindingIter<NameT>::init(
   //    private methods - [slotInfo.privateMethodStart, data.length)
   init(0, 0, 0, 0, 0, 0, slotInfo.privateMethodStart,
        CanHaveFrameSlots | CanHaveEnvironmentSlots, firstFrameSlot,
-       JSSLOT_FREE(&LexicalEnvironmentObject::class_),
+       JSSLOT_FREE(&ClassBodyLexicalEnvironmentObject::class_),
        GetScopeDataTrailingNames(&data));
 }
 
