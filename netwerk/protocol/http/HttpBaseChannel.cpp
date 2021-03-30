@@ -2963,6 +2963,15 @@ HttpBaseChannel::EnsureOpaqueResponseIsAllowedAfterSniff() {
   // XXXtt: If response's body parses as JavaScript and does not parse as JSON,
   // then return true.
 
+  int64_t contentLength;
+  rv = GetContentLength(&contentLength);
+  if (NS_FAILED(rv)) {
+    // XXXtt: Report To Console.
+    ReportORBTelemetry("Blocked_GetContentLengthFailed"_ns);
+    return false;
+  }
+
+  ReportORBTelemetry(contentLength);
   ReportORBTelemetry("Allowed_NotImplementOrPass"_ns);
 
   return true;
@@ -5216,6 +5225,12 @@ void HttpBaseChannel::ReportORBTelemetry(const nsCString& aKey) {
 
   mOpaqueResponseBlockingInfo->Report(aKey);
   mOpaqueResponseBlockingInfo = nullptr;
+}
+
+void HttpBaseChannel::ReportORBTelemetry(int64_t aContentLength) {
+  MOZ_ASSERT(mOpaqueResponseBlockingInfo);
+
+  mOpaqueResponseBlockingInfo->ReportContentLength(aContentLength);
 }
 
 void HttpBaseChannel::SetCorsPreflightParameters(
