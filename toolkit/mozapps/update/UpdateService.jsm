@@ -1485,11 +1485,13 @@ function handleUpdateFailure(update, errorCode) {
     // available (or not functioning) and the installation requires privileges
     // to update.
 
+    let bestState = getBestPendingState();
     LOG(
       "handleUpdateFailure - witnessed BACKGROUND_TASK_NEEDED_ELEVATION_ERROR, " +
-        "returning to STATE_PENDING"
+        "returning to " +
+        bestState
     );
-    writeStatusFile(getReadyUpdateDir(), (update.state = STATE_PENDING));
+    writeStatusFile(getReadyUpdateDir(), (update.state = bestState));
 
     // Return true to indicate a recoverable error.
     return true;
@@ -2543,6 +2545,13 @@ UpdateService.prototype = {
    *          Additional data
    */
   observe: async function AUS_observe(subject, topic, data) {
+    // Background tasks do not notify any delayed startup notificatons.  The
+    // intentional fallthrough blocks below make it awkward to define this locally.
+    let bts = Cc["@mozilla.org/backgroundtasks;1"].getService(
+      Ci.nsIBackgroundTasks
+    );
+    let isBackgroundTaskMode = bts && bts.isBackgroundTaskMode;
+
     switch (topic) {
       case "post-update-processing":
         // This pref was not cleared out of profiles after it stopped being used
@@ -2551,7 +2560,7 @@ UpdateService.prototype = {
         Services.prefs.clearUserPref("app.update.enabled");
         Services.prefs.clearUserPref("app.update.BITS.inTrialGroup");
 
-        if (Services.appinfo.ID in APPID_TO_TOPIC) {
+        if (!isBackgroundTaskMode && Services.appinfo.ID in APPID_TO_TOPIC) {
           // Delay post-update processing to ensure that possible update
           // dialogs are shown in front of the app window, if possible.
           // See bug 311614.
@@ -2561,7 +2570,7 @@ UpdateService.prototype = {
       // intentional fallthrough
       case "sessionstore-windows-restored":
       case "mail-startup-done":
-        if (Services.appinfo.ID in APPID_TO_TOPIC) {
+        if (!isBackgroundTaskMode && Services.appinfo.ID in APPID_TO_TOPIC) {
           Services.obs.removeObserver(
             this,
             APPID_TO_TOPIC[Services.appinfo.ID]

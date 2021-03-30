@@ -48,6 +48,18 @@ XPCOMUtils.defineLazyGetter(this, "log", () => {
 async function _attemptBackgroundUpdate() {
   let SLUG = "_attemptBackgroundUpdate";
 
+  // Here's where we do `post-update-processing`.  Creating the stub invokes the
+  // `UpdateServiceStub()` constructor, which handles various migrations (which should not be
+  // necessary, but we want to run for consistency and any migrations added in the future) and then
+  // dispatches `post-update-processing` (if appropriate).  We want to do this very early, so that
+  // the real update service is in its fully initialized state before any usage.
+  log.debug(
+    `${SLUG}: creating UpdateServiceStub() for "post-update-processing"`
+  );
+  Cc["@mozilla.org/updates/update-service-stub;1"].createInstance(
+    Ci.nsISupports
+  );
+
   log.debug(
     `${SLUG}: checking for preconditions necessary to update this installation`
   );
