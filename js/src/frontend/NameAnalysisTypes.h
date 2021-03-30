@@ -95,6 +95,7 @@ enum class DeclarationKind : uint8_t {
   CatchParameter,
   PrivateName,
   Synthetic,
+  PrivateMethod,  // slot to store nonstatic private method
 };
 
 static inline BindingKind DeclarationKindToBindingKind(DeclarationKind kind) {
@@ -127,6 +128,9 @@ static inline BindingKind DeclarationKindToBindingKind(DeclarationKind kind) {
 
     case DeclarationKind::Synthetic:
       return BindingKind::Synthetic;
+
+    case DeclarationKind::PrivateMethod:
+      return BindingKind::PrivateMethod;
   }
 
   MOZ_CRASH("Bad DeclarationKind");
@@ -343,6 +347,10 @@ class NameLocation {
   bool isConst() const { return bindingKind() == BindingKind::Const; }
 
   bool isSynthetic() const { return bindingKind() == BindingKind::Synthetic; }
+
+  bool isPrivateMethod() const {
+    return bindingKind() == BindingKind::PrivateMethod;
+  }
 
   bool hasKnownSlot() const {
     return kind_ == Kind::ArgumentSlot || kind_ == Kind::FrameSlot ||
