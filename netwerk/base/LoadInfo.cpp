@@ -594,6 +594,8 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
       mHasStoragePermission(rhs.mHasStoragePermission),
       mIsMetaRefresh(rhs.mIsMetaRefresh),
       mIsFromProcessingFrameAttributes(rhs.mIsFromProcessingFrameAttributes),
+      mIsMediaRequest(rhs.mIsMediaRequest),
+      mIsMediaInitialRequest(rhs.mIsMediaInitialRequest),
       mLoadingEmbedderPolicy(rhs.mLoadingEmbedderPolicy) {}
 
 LoadInfo::LoadInfo(
@@ -701,6 +703,8 @@ LoadInfo::LoadInfo(
       mHasStoragePermission(aHasStoragePermission),
       mIsMetaRefresh(aIsMetaRefresh),
       mIsFromProcessingFrameAttributes(false),
+      mIsMediaRequest(false),
+      mIsMediaInitialRequest(false),
       mLoadingEmbedderPolicy(aLoadingEmbedderPolicy) {
   // Only top level TYPE_DOCUMENT loads can have a null loadingPrincipal
   MOZ_ASSERT(mLoadingPrincipal ||
@@ -1675,6 +1679,32 @@ LoadInfo::GetIsFromProcessingFrameAttributes(
     bool* aIsFromProcessingFrameAttributes) {
   MOZ_ASSERT(aIsFromProcessingFrameAttributes);
   *aIsFromProcessingFrameAttributes = mIsFromProcessingFrameAttributes;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetIsMediaRequest(bool aIsMediaRequest) {
+  mIsMediaRequest = aIsMediaRequest;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetIsMediaRequest(bool* aIsMediaRequest) {
+  MOZ_ASSERT(aIsMediaRequest);
+  *aIsMediaRequest = mIsMediaRequest;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::SetIsMediaInitialRequest(bool aIsMediaInitialRequest) {
+  mIsMediaInitialRequest = aIsMediaInitialRequest;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetIsMediaInitialRequest(bool* aIsMediaInitialRequest) {
+  MOZ_ASSERT(aIsMediaInitialRequest);
+  *aIsMediaInitialRequest = mIsMediaInitialRequest;
   return NS_OK;
 }
 

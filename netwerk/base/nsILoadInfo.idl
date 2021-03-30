@@ -1359,4 +1359,16 @@ interface nsILoadInfo : nsISupports
    */
   [infallible] attribute nsILoadInfo_CrossOriginEmbedderPolicy
         loadingEmbedderPolicy;
+
+  /**
+   * This attribute will be true if this is a load triggered by a media
+   * element.
+   */
+  [infallible] attribute boolean isMediaRequest;
+
+  /**
+   * This attribute will be true if this is a load triggered by a media
+   * element and it's an initial request.
+   */
+  [infallible] attribute boolean isMediaInitialRequest;
 };
