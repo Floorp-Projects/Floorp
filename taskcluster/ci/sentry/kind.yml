@@ -19,8 +19,9 @@ jobs:
             docker-image: {in-tree: sentry}
             env:
                 HG_PUSHLOG_URL: "{head_repository}/json-pushes?version=2&changeset={head_rev}"
+                SENTRY_SECRET: "project/engwf/gecko/{level}/tokens"
         scopes:
-            - secrets:get:project/engwf/gecko/3/tokens
+            - "secrets:get:project/engwf/gecko/{level}/tokens"
         run:
             using: run-task
             checkout: false

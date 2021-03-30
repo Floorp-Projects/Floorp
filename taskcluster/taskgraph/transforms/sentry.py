@@ -13,10 +13,18 @@ transforms = TransformSequence()
 def sentry(config, tasks):
     """Do transforms specific to github-sync tasks."""
     for task in tasks:
-        task["worker"]["env"]["HG_PUSHLOG_URL"] = task["worker"]["env"][
-            "HG_PUSHLOG_URL"
-        ].format(
-            head_repository=config.params["head_repository"],
-            head_rev=config.params["head_rev"],
-        )
+        scopes = [
+            scope.format(level=config.params["level"]) for scope in task["scopes"]
+        ]
+        task["scopes"] = scopes
+
+        env = {
+            key: value.format(
+                level=config.params["level"],
+                head_repository=config.params["head_repository"],
+                head_rev=config.params["head_rev"],
+            )
+            for (key, value) in task["worker"]["env"].items()
+        }
+        task["worker"]["env"] = env
         yield task
