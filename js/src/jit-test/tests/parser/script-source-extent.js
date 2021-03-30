@@ -293,7 +293,6 @@ testSourceExtent(`class C { static #field = 1 }`,
 // NOTE: These generate both a field initializer lambda and a method script.
 testSourceExtent(` class C { #field() { } }`,
                  `                 ^-----^ `,
-                 `           ^-----------^ `,
                  ` ^-----------------------`);
 testSourceExtent(` class C { get #field() { } }`,
                  `                     ^-----^ `,
@@ -305,15 +304,12 @@ testSourceExtent(` class C { set #field(v) { } }`,
                  ` ^----------------------------`);
 testSourceExtent(` class C { * #field() { } }`,
                  `                   ^-----^ `,
-                 `           ^-------------^ `,
                  ` ^-------------------------`);
 testSourceExtent(` class C { async #field() { } }`,
                  `                       ^-----^ `,
-                 `           ^-----------------^ `,
                  ` ^-----------------------------`);
 testSourceExtent(` class C { async * #field() { } }`,
                  `                         ^-----^ `,
-                 `           ^-------------------^ `,
                  ` ^-------------------------------`);
 
 // Private static class methods.
