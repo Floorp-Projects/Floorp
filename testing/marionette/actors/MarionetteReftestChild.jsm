@@ -54,7 +54,7 @@ class MarionetteReftestChild extends JSWindowActorChild {
     let result;
     switch (name) {
       case "MarionetteReftestParent:flushRendering":
-        result = await this.flushRendering();
+        result = await this.flushRendering(data);
         break;
       case "MarionetteReftestParent:reftestWait":
         result = await this.reftestWait(data);
@@ -98,14 +98,14 @@ class MarionetteReftestChild extends JSWindowActorChild {
       this.document.defaultView.setTimeout(resolve, 0)
     );
 
-    await this.paintComplete(useRemote);
+    await this.paintComplete({ useRemote, ignoreThrottledAnimations: true });
 
     if (hasReftestWait) {
       const event = new Event("TestRendered", { bubbles: true });
       documentElement.dispatchEvent(event);
       logger.info("Emitted TestRendered event");
       await this.reftestWaitRemoved();
-      await this.paintComplete(useRemote);
+      await this.paintComplete({ useRemote, ignoreThrottledAnimations: false });
     }
     if (
       this.document.defaultView.innerWidth < documentElement.scrollWidth ||
@@ -118,12 +118,12 @@ class MarionetteReftestChild extends JSWindowActorChild {
     return true;
   }
 
-  paintComplete(useRemote) {
+  paintComplete({ useRemote, ignoreThrottledAnimations }) {
     logger.debug("Waiting for rendering");
     let windowUtils = this.document.defaultView.windowUtils;
     return new Promise(resolve => {
       let maybeResolve = () => {
-        this.flushRendering();
+        this.flushRendering({ ignoreThrottledAnimations });
         if (useRemote) {
           // Flush display (paint)
           logger.debug("Force update of layer tree");
@@ -170,7 +170,23 @@ class MarionetteReftestChild extends JSWindowActorChild {
     });
   }
 
-  flushRendering() {
+  /**
+   * Ensure layout is flushed in each frame
+   *
+   * @param {Object} options
+   * @param {Boolean} options.ignoreThrottledAnimations Don't flush
+   *        the layout of throttled animations. We can end up in a
+   *        situation where flushing a throttled animation causes
+   *        mozAfterPaint events even when all rendering we care about
+   *        should have ceased. See
+   *        https://searchfox.org/mozilla-central/rev/d58860eb739af613774c942c3bb61754123e449b/layout/tools/reftest/reftest-content.js#723-729
+   *        for more detail.
+   */
+  flushRendering(options = {}) {
+    let { ignoreThrottledAnimations } = options;
+    logger.debug(
+      `flushRendering ignoreThrottledAnimations:${ignoreThrottledAnimations}`
+    );
     let anyPendingPaintsGeneratedInDescendants = false;
 
     let windowUtils = this.document.defaultView.windowUtils;
@@ -182,8 +198,11 @@ class MarionetteReftestChild extends JSWindowActorChild {
       let root = win.document.documentElement;
       if (root) {
         try {
-          // Flush pending restyles and reflows for this window (layout)
-          root.getBoundingClientRect();
+          if (ignoreThrottledAnimations) {
+            utils.flushLayoutWithoutThrottledAnimations();
+          } else {
+            root.getBoundingClientRect();
+          }
         } catch (e) {
           logger.error("flushWindow failed", e);
         }
