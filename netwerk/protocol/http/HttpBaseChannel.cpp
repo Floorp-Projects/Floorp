@@ -2867,6 +2867,12 @@ bool HttpBaseChannel::EnsureOpaqueResponseIsAllowed() {
     }
   }
 
+  if (mLoadFlags & nsIChannel::LOAD_CALL_CONTENT_SNIFFERS) {
+    mSnifferCategoryType = SnifferCategoryType::All;
+  } else {
+    mSnifferCategoryType = SnifferCategoryType::OpaqueResponseBlocking;
+  }
+
   mLoadFlags |= (nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |
                  nsIChannel::LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE);
   mCheckIsOpaqueResponseAllowedAfterSniff = true;
@@ -5284,9 +5290,25 @@ nsresult HttpBaseChannel::CheckRedirectLimit(uint32_t aRedirectFlags) const {
 void HttpBaseChannel::CallTypeSniffers(void* aClosure, const uint8_t* aData,
                                        uint32_t aCount) {
   nsIChannel* chan = static_cast<nsIChannel*>(aClosure);
+  const char* snifferType = [chan]() {
+    if (RefPtr<nsHttpChannel> httpChannel = do_QueryObject(chan)) {
+      switch (httpChannel->GetSnifferCategoryType()) {
+        case SnifferCategoryType::NetContent:
+          return NS_CONTENT_SNIFFER_CATEGORY;
+        case SnifferCategoryType::OpaqueResponseBlocking:
+          return NS_ORB_SNIFFER_CATEGORY;
+        case SnifferCategoryType::All:
+          return NS_CONTENT_AND_ORB_SNIFFER_CATEGORY;
+        default:
+          MOZ_ASSERT_UNREACHABLE("Unexpected SnifferCategoryType!");
+      }
+    }
+
+    return NS_CONTENT_SNIFFER_CATEGORY;
+  }();
 
   nsAutoCString newType;
-  NS_SniffContent(NS_CONTENT_SNIFFER_CATEGORY, chan, aData, aCount, newType);
+  NS_SniffContent(snifferType, chan, aData, aCount, newType);
   if (!newType.IsEmpty()) {
     chan->SetContentType(newType);
   }
