@@ -220,9 +220,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   NameLocation lookupName(TaggedParserAtomIndex name);
 
-  // See EmitterScope::lookupPrivate for details around brandLoc.
-  NameLocation lookupPrivate(TaggedParserAtomIndex name,
-                             mozilla::Maybe<NameLocation>& brandLoc);
+  // See EmitterScope::lookupPrivate for details around brandLoc
+  bool lookupPrivate(TaggedParserAtomIndex name, NameLocation& loc,
+                     mozilla::Maybe<NameLocation>& brandLoc);
 
   // To implement Annex B and the formal parameter defaults scope semantics
   // requires accessing names that would otherwise be shadowed. This method
