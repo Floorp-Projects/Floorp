@@ -35,6 +35,7 @@
 #include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceStorage.h"
 #include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/net/OpaqueResponseUtils.h"
 #include "mozilla/net/PartiallySeekableInputStream.h"
 #include "mozilla/net/UrlClassifierCommon.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
@@ -201,7 +202,10 @@ HttpBaseChannel::HttpBaseChannel()
       mPriority(PRIORITY_NORMAL),
       mRedirectionLimit(gHttpHandler->RedirectionLimit()),
       mRedirectCount(0),
-      mInternalRedirectCount(0) {
+      mInternalRedirectCount(0),
+      mCachedOpaqueResponseBlockingPref(
+          StaticPrefs::browser_opaqueResponseBlocking()),
+      mCheckIsOpaqueResponseAllowedAfterSniff(false) {
   StoreApplyConversion(true);
   StoreAllowSTS(true);
   StoreInheritApplicationCache(true);
@@ -2772,6 +2776,139 @@ nsresult HttpBaseChannel::ValidateMIMEType() {
 
   WarnWrongMIMEOfScript(this, mURI, mResponseHead.get(), mLoadInfo);
   return NS_OK;
+}
+
+bool HttpBaseChannel::EnsureOpaqueResponseIsAllowed() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (!mCachedOpaqueResponseBlockingPref) {
+    return true;
+  }
+
+  if (!mURI || !mResponseHead || !mLoadInfo) {
+    // if there is no uri, no response head or no loadInfo, then there is
+    // nothing to do
+    return true;
+  }
+
+  nsCOMPtr<nsIPrincipal> principal = mLoadInfo->GetLoadingPrincipal();
+  if (!principal || principal->IsSystemPrincipal()) {
+    // If it's a top-level load or a system principal, then there is nothing to
+    // do.
+    return true;
+  }
+
+  // Check if it's cross-origin without CORS.
+  const bool isPrivateWin =
+      mLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
+  bool isSameOrigin = false;
+  principal->IsSameOrigin(mURI, isPrivateWin, &isSameOrigin);
+  if (isSameOrigin) {
+    return true;
+  }
+
+  nsAutoCString corsOrigin;
+  nsresult rv = mResponseHead->GetHeader(
+      nsHttp::ResolveAtom("Access-Control-Allow-Origin"), corsOrigin);
+  if (NS_SUCCEEDED(rv)) {
+    if (corsOrigin.Equals("*")) {
+      return true;
+    }
+
+    nsCOMPtr<nsIURI> corsOriginURI;
+    rv = NS_NewURI(getter_AddRefs(corsOriginURI), corsOrigin);
+    if (NS_SUCCEEDED(rv)) {
+      bool isSameOrigin = false;
+      principal->IsSameOrigin(corsOriginURI, isPrivateWin, &isSameOrigin);
+      if (isSameOrigin) {
+        return true;
+      }
+    }
+  }
+
+  nsAutoCString contentType;
+  mResponseHead->ContentType(contentType);
+  if (!contentType.IsEmpty()) {
+    if (IsOpaqueSafeListedMIMEType(contentType)) {
+      return true;
+    }
+
+    if (IsOpaqueBlockListedNeverSniffedMIMEType(contentType)) {
+      // XXXtt: Report To Console.
+      return false;
+    }
+
+    if (mResponseHead->Status() == 206 &&
+        IsOpaqueBlockListedMIMEType(contentType)) {
+      // XXXtt: Report To Console.
+      return false;
+    }
+
+    nsAutoCString contentTypeOptionsHeader;
+    if (mResponseHead->GetContentTypeOptionsHeader(contentTypeOptionsHeader) &&
+        contentTypeOptionsHeader.EqualsIgnoreCase("nosniff") &&
+        (IsOpaqueBlockListedMIMEType(contentType) ||
+         contentType.EqualsLiteral(TEXT_PLAIN))) {
+      // XXXtt: Report To Console.
+      return false;
+    }
+  }
+
+  mLoadFlags |= (nsIChannel::LOAD_CALL_CONTENT_SNIFFERS |
+                 nsIChannel::LOAD_MEDIA_SNIFFER_OVERRIDES_CONTENT_TYPE);
+  mCheckIsOpaqueResponseAllowedAfterSniff = true;
+
+  return true;
+}
+
+Result<bool, nsresult>
+HttpBaseChannel::EnsureOpaqueResponseIsAllowedAfterSniff() {
+  MOZ_ASSERT(XRE_IsParentProcess());
+
+  if (!mCheckIsOpaqueResponseAllowedAfterSniff) {
+    return true;
+  }
+
+  MOZ_ASSERT(mCachedOpaqueResponseBlockingPref);
+
+  nsAutoCString contentType;
+  nsresult rv = GetContentType(contentType);
+  if (NS_FAILED(rv)) {
+    return Err(rv);
+  }
+
+  if (!mResponseHead) {
+    return true;
+  }
+
+  nsAutoCString contentTypeOptionsHeader;
+  if (mResponseHead->GetContentTypeOptionsHeader(contentTypeOptionsHeader) &&
+      contentTypeOptionsHeader.EqualsIgnoreCase("nosniff")) {
+    // XXXtt: Report To Console.
+    return false;
+  }
+
+  if (mResponseHead->Status() < 200 || mResponseHead->Status() > 299) {
+    // XXXtt: Report To Console.
+    return false;
+  }
+
+  if (contentType.EqualsLiteral(UNKNOWN_CONTENT_TYPE) ||
+      contentType.EqualsLiteral(APPLICATION_OCTET_STREAM)) {
+    return true;
+  }
+
+  if (StringBeginsWith(contentType, "image/"_ns) ||
+      StringBeginsWith(contentType, "video/"_ns) ||
+      StringBeginsWith(contentType, "audio/"_ns)) {
+    // XXXtt: Report To Console.
+    return false;
+  }
+
+  // XXXtt: If response's body parses as JavaScript and does not parse as JSON,
+  // then return true.
+
+  return true;
 }
 
 NS_IMETHODIMP

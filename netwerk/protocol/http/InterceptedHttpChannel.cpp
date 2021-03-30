@@ -1016,8 +1016,21 @@ InterceptedHttpChannel::OnStartRequest(nsIRequest* aRequest) {
     GetCallback(mProgressSink);
   }
 
+  if (!EnsureOpaqueResponseIsAllowed()) {
+    // XXXtt: Return an error code or make the response body null.
+    // We silence the error result now because we only want to get how many
+    // response will get allowed or blocked by ORB.
+  }
+
   if (mPump && mLoadFlags & LOAD_CALL_CONTENT_SNIFFERS) {
     mPump->PeekStream(CallTypeSniffers, static_cast<nsIChannel*>(this));
+  }
+
+  auto isAllowedOrErr = EnsureOpaqueResponseIsAllowedAfterSniff();
+  if (isAllowedOrErr.isErr() || !isAllowedOrErr.inspect()) {
+    // XXXtt: Return an error code or make the response body null.
+    // We silence the error result now because we only want to get how many
+    // response will get allowed or blocked by ORB.
   }
 
   nsresult rv = ProcessCrossOriginEmbedderPolicyHeader();
