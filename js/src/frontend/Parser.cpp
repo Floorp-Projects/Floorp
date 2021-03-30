@@ -1471,6 +1471,7 @@ Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
     JSContext* cx, ParseContext::Scope& scope, LifoAlloc& alloc,
     ParseContext* pc) {
   ParserBindingNameVector synthetics(cx);
+  ParserBindingNameVector privateMethods(cx);
 
   bool allBindingsClosedOver =
       pc->sc()->allBindingsClosedOver() || scope.tooBigToOptimize();
@@ -1484,6 +1485,13 @@ Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
           return Nothing();
         }
         break;
+
+      case BindingKind::PrivateMethod:
+        if (!privateMethods.append(binding)) {
+          return Nothing();
+        }
+        break;
+
       default:
         MOZ_CRASH("bad class body scope BindingKind");
         break;
@@ -1491,7 +1499,7 @@ Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
   }
 
   ClassBodyScope::ParserData* bindings = nullptr;
-  uint32_t numBindings = synthetics.length();
+  uint32_t numBindings = synthetics.length() + privateMethods.length();
 
   if (numBindings > 0) {
     bindings = NewEmptyBindingData<ClassBodyScope>(cx, alloc, numBindings);
@@ -1500,7 +1508,9 @@ Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
     }
 
     // The ordering here is important. See comments in ClassBodyScope.
-    InitializeBindingData(bindings, numBindings, synthetics);
+    InitializeBindingData(bindings, numBindings, synthetics,
+                          &ParserClassBodyScopeSlotInfo::privateMethodStart,
+                          privateMethods);
   }
 
   return Some(bindings);
