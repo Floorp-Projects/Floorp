@@ -10,7 +10,7 @@
 
 class nsLookAndFeel final : public nsXPLookAndFeel {
  public:
-  explicit nsLookAndFeel(const LookAndFeelCache* aCache);
+  nsLookAndFeel();
   virtual ~nsLookAndFeel();
 
   void NativeInit() final;

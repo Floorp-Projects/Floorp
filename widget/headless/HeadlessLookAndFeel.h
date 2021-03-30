@@ -23,10 +23,6 @@ namespace widget {
 //
 //   * in the parent process, when full headless mode (MOZ_HEADLESS=1) is
 //     enabled
-//   * in content processes, when full headless mode or headless content
-//     mode (security.sandbox.content.headless) is enabled, unless
-//     widget.remote-look-and-feel is also enabled, in which case
-//     RemoteLookAndFeel is used instead.
 //
 // The result of this is that when headless content mode is enabled, content
 // processes use values derived from the parent's nsLookAndFeel (i.e., values
@@ -35,7 +31,7 @@ namespace widget {
 
 class HeadlessLookAndFeel : public nsXPLookAndFeel {
  public:
-  explicit HeadlessLookAndFeel(const LookAndFeelCache* aCache);
+  explicit HeadlessLookAndFeel();
   virtual ~HeadlessLookAndFeel();
 
   void NativeInit() final{};

@@ -10,7 +10,7 @@
 
 class nsLookAndFeel final : public nsXPLookAndFeel {
  public:
-  explicit nsLookAndFeel(const LookAndFeelCache* aCache);
+  explicit nsLookAndFeel();
   virtual ~nsLookAndFeel();
 
   void NativeInit() final;
@@ -23,11 +23,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   virtual bool GetEchoPasswordImpl() override;
   virtual uint32_t GetPasswordMaskDelayImpl() override;
   virtual char16_t GetPasswordCharacterImpl() override;
-  LookAndFeelCache GetCacheImpl() override;
-  void SetCacheImpl(const LookAndFeelCache& aCache) override;
-
  protected:
-  void DoSetCache(const LookAndFeelCache& aCache);
 
   bool mInitializedSystemColors = false;
   mozilla::AndroidSystemColors mSystemColors;

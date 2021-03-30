@@ -605,7 +605,7 @@ NS_INTERFACE_MAP_END
 
 mozilla::ipc::IPCResult ContentChild::RecvSetXPCOMProcessAttributes(
     XPCOMInitData&& aXPCOMInit, const StructuredCloneData& aInitialData,
-    LookAndFeelData&& aLookAndFeelData,
+    FullLookAndFeel&& aLookAndFeelData,
     nsTArray<SystemFontListEntry>&& aFontList,
     const Maybe<SharedMemoryHandle>& aSharedUASheetHandle,
     const uintptr_t& aSharedUASheetAddress,
@@ -2247,17 +2247,8 @@ mozilla::ipc::IPCResult ContentChild::RecvNotifyVisited(
 }
 
 mozilla::ipc::IPCResult ContentChild::RecvThemeChanged(
-    LookAndFeelData&& aLookAndFeelData, widget::ThemeChangeKind aKind) {
-  switch (aLookAndFeelData.type()) {
-    case LookAndFeelData::TLookAndFeelCache:
-      LookAndFeel::SetCache(aLookAndFeelData.get_LookAndFeelCache());
-      break;
-    case LookAndFeelData::TFullLookAndFeel:
-      LookAndFeel::SetData(std::move(aLookAndFeelData.get_FullLookAndFeel()));
-      break;
-    default:
-      MOZ_ASSERT(false, "unreachable");
-  }
+    FullLookAndFeel&& aLookAndFeelData, widget::ThemeChangeKind aKind) {
+  LookAndFeel::SetData(std::move(aLookAndFeelData));
   LookAndFeel::NotifyChangedAllWindows(aKind);
   return IPC_OK();
 }

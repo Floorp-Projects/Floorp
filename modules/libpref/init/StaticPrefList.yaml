@@ -11034,15 +11034,6 @@
   mirror: always
 #endif
 
-# Enable the RemoteLookAndFeel in content processes, which will cause all
-# LookAndFeel values to be queried in the parent process and sent to content
-# processes using IPC.  This is required for widgets to paint and behave
-# correctly when `security.sandbox.content.headless` is enabled.
-- name: widget.remote-look-and-feel
-  type: bool
-  value: true
-  mirror: once
-
 #---------------------------------------------------------------------------
 # Prefs starting with "xul."
 #---------------------------------------------------------------------------
