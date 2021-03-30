@@ -3401,10 +3401,15 @@ bool gfxPlatform::FallbackFromAcceleration(FeatureStatus aStatus,
     return false;
   }
 
-  // Continue using Software WebRender.
-  gfxCriticalNoteOnce << "Fallback remains SW-WR";
+  if (gfxVars::UseSoftwareWebRender()) {
+    // Continue using Software WebRender (disabled fallback to Basic).
+    gfxCriticalNoteOnce << "Fallback remains SW-WR";
+  } else {
+    // Continue using WebRender (disabled fallback to Basic and Software
+    // WebRender).
+    gfxCriticalNoteOnce << "Fallback remains WR";
+  }
   MOZ_ASSERT(gfxVars::UseWebRender());
-  MOZ_ASSERT(gfxVars::UseSoftwareWebRender());
   return false;
 }
 
