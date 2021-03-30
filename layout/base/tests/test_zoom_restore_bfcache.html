@@ -52,7 +52,13 @@ bc.onmessage = (msgEvent) => {
     case "case3data": {
       is(loadCount, 2, "Case 3");
       is(msg.devicePixelRatio, originalDPR * 2, "Should preserve zoom when restored");
-      todo_is(msg.frameDevicePixelRatio, originalDPR * 2, "Should preserve zoom on frames too");
+      if (SpecialPowers.Services.appinfo.fissionAutostart) {
+        // When bfcache lives in the parent process, we get a proper zoom level
+        // update on the browsing context.
+        is(msg.frameDevicePixelRatio, originalDPR * 2, "Should preserve zoom on frames too");
+      } else {
+        todo_is(msg.frameDevicePixelRatio, originalDPR * 2, "Should preserve zoom on frames too");
+      }
       bc.postMessage({command: "close"});
       // Now we wait for "closed"
       break;
@@ -119,5 +125,8 @@ function handlePageShow(persisted) {
   }
 }
 
-window.open('file_zoom_restore_bfcache.html', '_blank', 'noopener');
+// If Fission is disabled, the pref is no-op.
+SpecialPowers.pushPrefEnv({set: [["fission.bfcacheInParent", true]]}, () => {
+  window.open('file_zoom_restore_bfcache.html', '_blank', 'noopener');
+});
 </script>
