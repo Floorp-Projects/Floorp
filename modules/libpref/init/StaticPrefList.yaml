@@ -10938,6 +10938,27 @@
   value: false
   mirror: always
 
+# Whether selection colors get passed from the real GTK theme even if
+# allow-gtk-dark-theme is false.
+- name: widget.content.allow-gtk-dark-theme.selection
+  type: bool
+  value: true
+  mirror: always
+
+# Whether form control accent colors get passed from the real GTK theme even if
+# allow-gtk-dark-theme is false.
+- name: widget.content.allow-gtk-dark-theme.accent
+  type: bool
+  value: true
+  mirror: always
+
+# Whether scrollbars colors get passed from the real GTK theme even if
+# allow-gtk-dark-theme is false.
+- name: widget.content.allow-gtk-dark-theme.scrollbars
+  type: bool
+  value: true
+  mirror: always
+
 # Whether to use gtk high contrast themes to disable content styling like on
 # windows high contrast mode.
 - name: widget.content.gtk-high-contrast.enabled
