@@ -23,10 +23,12 @@ struct MediaStreamConstraints;
 
 class GetUserMediaRequest : public nsISupports, public nsWrapperCache {
  public:
+  // For "getUserMedia:request"
   GetUserMediaRequest(nsPIDOMWindowInner* aInnerWindow,
                       const nsAString& aCallID,
                       const MediaStreamConstraints& aConstraints,
                       bool aIsSecure, bool aIsHandlingUserInput);
+  // For "recording-device-stopped"
   GetUserMediaRequest(nsPIDOMWindowInner* aInnerWindow, const nsAString& aRawId,
                       const nsAString& aMediaSource, bool aIsHandlingUserInput);
 
