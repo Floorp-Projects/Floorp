@@ -7,6 +7,7 @@
 
 #include "mozilla/Assertions.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/ContentFrameMessageManager.h"
 #include "mozilla/dom/Document.h"
@@ -269,11 +270,19 @@ WebNavigationContent::OnLocationChange(nsIWebProgress* aWebProgress,
           isHistoryStateUpdated, isReferenceFragmentUpdated);
     }
   } else if (bc->IsTop()) {
-    // We have to catch the document changes from top level frames here,
-    // where we can detect the "server redirect" transition.
-    // (bug 1264936 and bug 125662)
-    ExtensionsChild::Get().SendDocumentChange(
-        bc, GetFrameTransitionData(aWebProgress, aRequest), aLocation);
+    MOZ_ASSERT(bc->IsInProcess());
+    if (RefPtr browserChild = dom::BrowserChild::GetFrom(bc->GetDocShell())) {
+      // Only send progress events which happen after we've started loading
+      // things into the BrowserChild. This matches the behavior of the remote
+      // WebProgress implementation.
+      if (browserChild->ShouldSendWebProgressEventsToParent()) {
+        // We have to catch the document changes from top level frames here,
+        // where we can detect the "server redirect" transition.
+        // (bug 1264936 and bug 125662)
+        ExtensionsChild::Get().SendDocumentChange(
+            bc, GetFrameTransitionData(aWebProgress, aRequest), aLocation);
+      }
+    }
   }
 
   return NS_OK;
