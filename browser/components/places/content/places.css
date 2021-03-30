@@ -2,6 +2,23 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@supports -moz-bool-pref("browser.proton.modals.enabled") {
+.expander-up,
+.expander-down {
+  border-radius: 4px;
+  align-self: center;
+}
+
+#editBMPanel_tagsField {
+  margin-inline-end: 16px;
+}
+
+#editBMPanel_tagsRow > hbox {
+  display: grid;
+  grid-template-columns: 1fr auto;
+}
+}
+
 tree[is="places-tree"] > treechildren::-moz-tree-cell {
   /* ensure we use the direction of the website title / url instead of the
    * browser locale */
@@ -30,4 +47,13 @@ tree[is="places-tree"] > treechildren::-moz-tree-cell {
 
 #searchFilter {
   max-width: 23em;
+}
+
+.caption-label {
+  font-size: 10px;
+  line-height: 12px;
+  margin: 2px 4px;
+  color: #5B5B66;
+  /* Text should span all columns */
+  grid-column: 1/-1;
 }

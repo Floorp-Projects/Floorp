@@ -40,3 +40,7 @@ bookmark-overlay-tags-expander =
 bookmark-overlay-keyword-2 =
   .value = Keyword
   .accesskey = K
+
+bookmark-overlay-tags-caption-label = Use tags to organize and search for bookmarks from the address bar
+
+bookmark-overlay-keyword-caption-label = Use keywords to open bookmarks directly from the address bar
