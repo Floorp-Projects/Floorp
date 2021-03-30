@@ -606,6 +606,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
 
   [[nodiscard]] bool emitComputedPropertyName(UnaryNode* computedPropName);
 
+  [[nodiscard]] bool emitObjAndKey(ParseNode* exprOrSuper, ParseNode* key,
+                                   ElemOpEmitter& eoe);
+
   // Emit bytecode to put operands for a JSOp::GetElem/CallElem/SetElem/DelElem
   // opcode onto the stack in the right order. In the case of SetElem, the
   // value to be assigned must already be pushed.
@@ -617,8 +620,11 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                        ElemOpEmitter& eoe);
   [[nodiscard]] bool emitElemOpBase(
       JSOp op, ShouldInstrument shouldInstrument = ShouldInstrument::No);
-  [[nodiscard]] bool emitElemOp(PropertyByValue* elem, JSOp op);
+
   [[nodiscard]] bool emitElemIncDec(UnaryNode* incDec);
+  [[nodiscard]] bool emitObjAndPrivateName(PrivateMemberAccess* elem,
+                                           ElemOpEmitter& eoe);
+  [[nodiscard]] bool emitPrivateIncDec(UnaryNode* incDec);
 
   [[nodiscard]] bool emitCatch(BinaryNode* catchClause);
   [[nodiscard]] bool emitIf(TernaryNode* ifNode);
@@ -750,6 +756,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
                                                 ElemOpEmitter& poe,
                                                 bool isSuper,
                                                 OptionalEmitter& oe);
+  [[nodiscard]] bool emitOptionalPrivateExpression(
+      PrivateMemberAccessBase* privateExpr, ElemOpEmitter& eoe,
+      OptionalEmitter& oe);
   [[nodiscard]] bool emitOptionalCall(CallNode* callNode, OptionalEmitter& oe,
                                       ValueUsage valueUsage);
   [[nodiscard]] bool emitDeletePropertyInOptChain(PropertyAccessBase* propExpr,

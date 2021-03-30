@@ -69,14 +69,16 @@ class FullParseHandler {
 
   using NullNode = std::nullptr_t;
 
-  bool isPropertyAccess(Node node) {
+  bool isPropertyOrPrivateMemberAccess(Node node) {
     return node->isKind(ParseNodeKind::DotExpr) ||
-           node->isKind(ParseNodeKind::ElemExpr);
+           node->isKind(ParseNodeKind::ElemExpr) ||
+           node->isKind(ParseNodeKind::PrivateMemberExpr);
   }
 
-  bool isOptionalPropertyAccess(Node node) {
+  bool isOptionalPropertyOrPrivateMemberAccess(Node node) {
     return node->isKind(ParseNodeKind::OptionalDotExpr) ||
-           node->isKind(ParseNodeKind::OptionalElemExpr);
+           node->isKind(ParseNodeKind::OptionalElemExpr) ||
+           node->isKind(ParseNodeKind::PrivateMemberExpr);
   }
 
   bool isFunctionCall(Node node) {
@@ -809,6 +811,18 @@ class FullParseHandler {
     return new_<OptionalPropertyByValue>(lhs, index, lhs->pn_pos.begin, end);
   }
 
+  PrivateMemberAccessType newPrivateMemberAccess(Node lhs,
+                                                 NameNodeType privateName,
+                                                 uint32_t end) {
+    return new_<PrivateMemberAccess>(lhs, privateName, lhs->pn_pos.begin, end);
+  }
+
+  OptionalPrivateMemberAccessType newOptionalPrivateMemberAccess(
+      Node lhs, NameNodeType privateName, uint32_t end) {
+    return new_<OptionalPrivateMemberAccess>(lhs, privateName,
+                                             lhs->pn_pos.begin, end);
+  }
+
   bool setupCatchScope(LexicalScopeNodeType lexicalScope, Node catchName,
                        Node catchBody) {
     BinaryNode* catchClause;
@@ -1047,18 +1061,11 @@ class FullParseHandler {
     return node->isKind(ParseNodeKind::PrivateName);
   }
 
-  bool isPrivateField(Node node) {
-    if (node->isKind(ParseNodeKind::ElemExpr) ||
-        node->isKind(ParseNodeKind::OptionalElemExpr)) {
-      PropertyByValueBase& pbv = node->as<PropertyByValueBase>();
-      if (isPrivateName(&pbv.key())) {
-        return true;
-      }
-    }
+  bool isPrivateMemberAccess(Node node) {
     if (node->isKind(ParseNodeKind::OptionalChain)) {
-      return isPrivateField(node->as<UnaryNode>().kid());
+      return isPrivateMemberAccess(node->as<UnaryNode>().kid());
     }
-    return false;
+    return node->is<PrivateMemberAccessBase>();
   }
 
   TaggedParserAtomIndex maybeDottedProperty(Node pn) {

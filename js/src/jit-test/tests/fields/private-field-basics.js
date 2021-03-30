@@ -17,6 +17,16 @@ class A {
     return o?.#x;
   }
 
+  compoundInc() {
+    this.#x += 1;
+    return this.#x;
+  }
+
+  compoundDec() {
+    this.#x -= 1;
+    return this.#x;
+  }
+
   #y = () => 'hi';
   invoke() {
     return this.#y();
@@ -54,6 +64,8 @@ for (var i = 0; i < 1000; i++) {
   a.ix();
   assertEq(a.x(), 11);
   assertEq(A.readx(a), 11);
+  assertEq(a.compoundInc(), 12);
+  assertEq(a.compoundDec(), 11);
   assertEq(a.invoke(), 'hi');
   assertEq(a.gz(), 'static');
   assertEq(A.sgz(), 'static');
@@ -94,14 +106,14 @@ testTypeErrors({});         // Random object
 testTypeErrors(1);          // Random primitive
 
 assertThrows(
-    () => eval('class B extends class { #x; } { g() { return super.#x; } }'),
-    SyntaxError);  // Access super.#private
+  () => eval('class B extends class { #x; } { g() { return super.#x; } }'),
+  SyntaxError);  // Access super.#private
 assertThrows(
-    () => eval('class C { #x = 10; static #x = 14; }'),
-    SyntaxError);  // Duplicate name declaration.
+  () => eval('class C { #x = 10; static #x = 14; }'),
+  SyntaxError);  // Duplicate name declaration.
 assertThrows(
-    () => eval('delete this.#x'),
-    SyntaxError);  // deleting a private field in non-strict mode.
+  () => eval('delete this.#x'),
+  SyntaxError);  // deleting a private field in non-strict mode.
 
 class B extends class {
   constructor(o) {
@@ -224,7 +236,7 @@ for (var index in elements) {
 
 // Megamorphic Cache Testing:
 for (var i = 0; i < 100; i++) {
-  var inputs = [{a: 1}, {b: 2}, {c: 3}, {d: 4}, {e: 5}, new Proxy({}, {})];
+  var inputs = [{ a: 1 }, { b: 2 }, { c: 3 }, { d: 4 }, { e: 5 }, new Proxy({}, {})];
   for (var o of inputs) {
     assertThrows(() => B.gx(o), TypeError);
     assertThrows(() => B.sx(o), TypeError);
