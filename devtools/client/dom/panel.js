@@ -66,8 +66,8 @@ DomPanel.prototype = {
 
     this._toolbox.on("select", this.onPanelVisibilityChange);
 
-    this._toolbox.targetList.watchTargets(
-      [this._toolbox.targetList.TYPES.FRAME],
+    this._commands.targetCommand.watchTargets(
+      [this._commands.targetCommand.TYPES.FRAME],
       this.onTargetAvailable
     );
 

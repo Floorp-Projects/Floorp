@@ -34,7 +34,7 @@ MemoryPanel.prototype = {
 
     await this.initializer.initialize();
 
-    await this._toolbox.targetList.watchTargets(
+    await this._commands.targetCommand.watchTargets(
       [this._toolbox.targetList.TYPES.FRAME],
       this._onTargetAvailable
     );
