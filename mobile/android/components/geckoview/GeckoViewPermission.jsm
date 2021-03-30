@@ -99,6 +99,7 @@ class GeckoViewPermission {
     const win = Services.wm.getOuterWindowWithId(aRequest.windowID);
     new Promise((resolve, reject) => {
       win.navigator.mozGetUserMediaDevices(
+        constraints,
         resolve,
         reject,
         aRequest.innerWindowID,
