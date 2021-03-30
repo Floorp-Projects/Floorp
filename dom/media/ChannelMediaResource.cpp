@@ -750,12 +750,14 @@ nsresult ChannelMediaResource::RecreateChannel() {
       loadFlags);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
   if (setAttrs) {
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->LoadInfo();
     // The function simply returns NS_OK, so we ignore the return value.
     Unused << loadInfo->SetOriginAttributes(
         triggeringPrincipal->OriginAttributesRef());
   }
+
+  Unused << loadInfo->SetIsMediaRequest(true);
 
   nsCOMPtr<nsIClassOfService> cos(do_QueryInterface(mChannel));
   if (cos) {
