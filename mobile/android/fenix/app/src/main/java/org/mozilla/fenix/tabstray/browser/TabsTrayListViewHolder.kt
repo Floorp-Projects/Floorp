@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-package org.mozilla.fenix.tabstray
+package org.mozilla.fenix.tabstray.browser
 
 import android.view.LayoutInflater
 import android.view.View
@@ -10,7 +10,7 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import mozilla.components.concept.base.images.ImageLoader
 import org.mozilla.fenix.R
-import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
+import org.mozilla.fenix.tabstray.TabsTrayViewHolder
 import kotlin.math.max
 
 /**
