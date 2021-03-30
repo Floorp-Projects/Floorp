@@ -7,6 +7,7 @@
 
 #include "nsLayoutUtils.h"
 #include "nsIFrame.h"
+#include "nsContainerFrame.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/StaticPrefs_widget.h"
@@ -24,15 +25,17 @@ already_AddRefed<nsITheme> do_GetBasicNativeThemeDoNotUseDirectly() {
 
 nsITheme::Transparency nsNativeBasicThemeGTK::GetWidgetTransparency(
     nsIFrame* aFrame, StyleAppearance aAppearance) {
-  if (aAppearance == StyleAppearance::ScrollbarVertical ||
-      aAppearance == StyleAppearance::ScrollbarHorizontal) {
-    nsPresContext* pc = aFrame->PresContext();
-    auto docState = pc->Document()->GetDocumentState();
-    const auto useSystemColors = ShouldUseSystemColors(*pc->Document());
-    const auto* style = nsLayoutUtils::StyleForScrollbar(aFrame);
-    auto trackColor =
-        ComputeScrollbarColor(aFrame, *style, docState, useSystemColors);
-    return trackColor.a == 1.0 ? eOpaque : eTransparent;
+  if (!sOverlayScrollbars) {
+    if (aAppearance == StyleAppearance::ScrollbarVertical ||
+        aAppearance == StyleAppearance::ScrollbarHorizontal) {
+      nsPresContext* pc = aFrame->PresContext();
+      auto docState = pc->Document()->GetDocumentState();
+      const auto useSystemColors = ShouldUseSystemColors(*pc->Document());
+      const auto* style = nsLayoutUtils::StyleForScrollbar(aFrame);
+      auto trackColor =
+          ComputeScrollbarColor(aFrame, *style, docState, useSystemColors);
+      return trackColor.a == 1.0 ? eOpaque : eTransparent;
+    }
   }
   return nsNativeBasicTheme::GetWidgetTransparency(aFrame, aAppearance);
 }
@@ -79,6 +82,28 @@ nsNativeBasicThemeGTK::GetMinimumWidgetSize(nsPresContext* aPresContext,
   return NS_OK;
 }
 
+static nsIFrame* GetParentScrollbarFrame(nsIFrame* aFrame) {
+  // Walk our parents to find a scrollbar frame
+  nsIFrame* scrollbarFrame = aFrame;
+  do {
+    if (scrollbarFrame->IsScrollbarFrame()) {
+      break;
+    }
+  } while ((scrollbarFrame = scrollbarFrame->GetParent()));
+
+  // We return null if we can't find a parent scrollbar frame
+  return scrollbarFrame;
+}
+
+static bool IsParentScrollbarHoveredOrActive(nsIFrame* aFrame) {
+  nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
+  return scrollbarFrame && scrollbarFrame->GetContent()
+                               ->AsElement()
+                               ->State()
+                               .HasAtLeastOneOfStates(NS_EVENT_STATE_HOVER |
+                                                      NS_EVENT_STATE_ACTIVE);
+}
+
 template <typename PaintBackendData>
 bool nsNativeBasicThemeGTK::DoPaintScrollbarThumb(
     PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
@@ -90,11 +115,24 @@ bool nsNativeBasicThemeGTK::DoPaintScrollbarThumb(
 
   LayoutDeviceRect thumbRect(aRect);
 
+  if (sOverlayScrollbars && !IsParentScrollbarHoveredOrActive(aFrame)) {
+    if (aHorizontal) {
+      thumbRect.height *= 0.5;
+      thumbRect.y += thumbRect.height;
+    } else {
+      thumbRect.width *= 0.5;
+      if (aFrame->GetWritingMode().IsPhysicalLTR()) {
+        thumbRect.x += thumbRect.width;
+      }
+    }
+  }
+
   {
     float factor = std::max(
         0.0f,
         1.0f - StaticPrefs::widget_non_native_theme_gtk_scrollbar_thumb_size());
-    thumbRect.Deflate((aHorizontal ? aRect.height : aRect.width) * factor);
+    thumbRect.Deflate((aHorizontal ? thumbRect.height : thumbRect.width) *
+                      factor);
   }
 
   LayoutDeviceCoord radius =

@@ -92,6 +92,7 @@ sRGBColor nsNativeBasicTheme::sAccentColorDark = sRGBColor::OpaqueWhite();
 sRGBColor nsNativeBasicTheme::sAccentColorDarker = sRGBColor::OpaqueWhite();
 CSSIntCoord nsNativeBasicTheme::sHorizontalScrollbarHeight = CSSIntCoord(0);
 CSSIntCoord nsNativeBasicTheme::sVerticalScrollbarWidth = CSSIntCoord(0);
+bool nsNativeBasicTheme::sOverlayScrollbars = false;
 
 static constexpr nsLiteralCString kPrefs[] = {
     "widget.non-native-theme.use-theme-accent"_ns,
@@ -114,7 +115,7 @@ void nsNativeBasicTheme::Shutdown() {
 
 void nsNativeBasicTheme::LookAndFeelChanged() {
   RecomputeAccentColors();
-  RecomputeScrollbarSizes();
+  RecomputeScrollbarParams();
 }
 
 void nsNativeBasicTheme::RecomputeAccentColors() {
@@ -164,7 +165,10 @@ void nsNativeBasicTheme::RecomputeAccentColors() {
       RelativeLuminanceUtils::Adjust(accent, darkerLuminanceAdjust));
 }
 
-void nsNativeBasicTheme::RecomputeScrollbarSizes() {
+void nsNativeBasicTheme::RecomputeScrollbarParams() {
+  sOverlayScrollbars =
+      LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars);
+
   uint32_t defaultSize = StaticPrefs::widget_non_native_theme_scrollbar_size();
   if (StaticPrefs::widget_non_native_theme_win_scrollbar_use_system_size()) {
     sHorizontalScrollbarHeight = LookAndFeel::GetInt(
@@ -1473,35 +1477,36 @@ template <typename PaintBackendData>
 bool nsNativeBasicTheme::DoPaintDefaultScrollbar(
     PaintBackendData& aPaintData, const LayoutDeviceRect& aRect,
     bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
-    const EventStates& aDocumentState, UseSystemColors aUseSystemColors,
-    DPIRatio aDpiRatio) {
+    const EventStates& aElementState, const EventStates& aDocumentState,
+    UseSystemColors aUseSystemColors, DPIRatio aDpiRatio) {
+  if (sOverlayScrollbars && !aElementState.HasAtLeastOneOfStates(
+                                NS_EVENT_STATE_HOVER | NS_EVENT_STATE_ACTIVE)) {
+    return true;
+  }
   auto scrollbarColor =
       ComputeScrollbarColor(aFrame, aStyle, aDocumentState, aUseSystemColors);
   FillRect(aPaintData, aRect, scrollbarColor);
   return true;
 }
 
-bool nsNativeBasicTheme::PaintScrollbar(DrawTarget& aDrawTarget,
-                                        const LayoutDeviceRect& aRect,
-                                        bool aHorizontal, nsIFrame* aFrame,
-                                        const ComputedStyle& aStyle,
-                                        const EventStates& aDocumentState,
-                                        UseSystemColors aUseSystemColors,
-                                        DPIRatio aDpiRatio) {
+bool nsNativeBasicTheme::PaintScrollbar(
+    DrawTarget& aDrawTarget, const LayoutDeviceRect& aRect, bool aHorizontal,
+    nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aElementState, const EventStates& aDocumentState,
+    UseSystemColors aUseSystemColors, DPIRatio aDpiRatio) {
   return DoPaintDefaultScrollbar(aDrawTarget, aRect, aHorizontal, aFrame,
-                                 aStyle, aDocumentState, aUseSystemColors,
-                                 aDpiRatio);
+                                 aStyle, aElementState, aDocumentState,
+                                 aUseSystemColors, aDpiRatio);
 }
 
-bool nsNativeBasicTheme::PaintScrollbar(WebRenderBackendData& aWrData,
-                                        const LayoutDeviceRect& aRect,
-                                        bool aHorizontal, nsIFrame* aFrame,
-                                        const ComputedStyle& aStyle,
-                                        const EventStates& aDocumentState,
-                                        UseSystemColors aUseSystemColors,
-                                        DPIRatio aDpiRatio) {
+bool nsNativeBasicTheme::PaintScrollbar(
+    WebRenderBackendData& aWrData, const LayoutDeviceRect& aRect,
+    bool aHorizontal, nsIFrame* aFrame, const ComputedStyle& aStyle,
+    const EventStates& aElementState, const EventStates& aDocumentState,
+    UseSystemColors aUseSystemColors, DPIRatio aDpiRatio) {
   return DoPaintDefaultScrollbar(aWrData, aRect, aHorizontal, aFrame, aStyle,
-                                 aDocumentState, aUseSystemColors, aDpiRatio);
+                                 aElementState, aDocumentState,
+                                 aUseSystemColors, aDpiRatio);
 }
 
 template <typename PaintBackendData>
@@ -1773,8 +1778,8 @@ bool nsNativeBasicTheme::DoDrawWidgetBackground(PaintBackendData& aPaintData,
     case StyleAppearance::ScrollbarVertical: {
       bool isHorizontal = aAppearance == StyleAppearance::ScrollbarHorizontal;
       return PaintScrollbar(aPaintData, devPxRect, isHorizontal, aFrame,
-                            *nsLayoutUtils::StyleForScrollbar(aFrame), docState,
-                            useSystemColors, dpiRatio);
+                            *nsLayoutUtils::StyleForScrollbar(aFrame),
+                            eventState, docState, useSystemColors, dpiRatio);
     }
     case StyleAppearance::Scrollcorner:
       return PaintScrollCorner(aPaintData, devPxRect, aFrame,

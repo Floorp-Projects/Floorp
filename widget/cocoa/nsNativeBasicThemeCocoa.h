@@ -65,6 +65,7 @@ class nsNativeBasicThemeCocoa : public nsNativeBasicTheme {
   bool PaintScrollbar(DrawTarget&, const LayoutDeviceRect& aRect,
                       bool aHorizontal, nsIFrame* aFrame,
                       const ComputedStyle& aStyle,
+                      const EventStates& aElementState,
                       const EventStates& aDocumentState, UseSystemColors,
                       DPIRatio) override {
     // Draw nothing; the scrollbar track is drawn in PaintScrollbarTrack.
@@ -73,6 +74,7 @@ class nsNativeBasicThemeCocoa : public nsNativeBasicTheme {
   bool PaintScrollbar(WebRenderBackendData&, const LayoutDeviceRect& aRect,
                       bool aHorizontal, nsIFrame* aFrame,
                       const ComputedStyle& aStyle,
+                      const EventStates& aElementState,
                       const EventStates& aDocumentState, UseSystemColors,
                       DPIRatio) override {
     // Draw nothing; the scrollbar track is drawn in PaintScrollbarTrack.
