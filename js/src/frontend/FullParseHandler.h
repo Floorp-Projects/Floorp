@@ -875,7 +875,7 @@ class FullParseHandler {
   }
 
   ClassBodyScopeNodeType newClassBodyScope(ClassBodyScope::ParserData* bindings,
-                                           Node body) {
+                                           ListNodeType body) {
     return new_<ClassBodyScopeNode>(bindings, body);
   }
 
