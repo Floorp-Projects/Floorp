@@ -3515,7 +3515,8 @@ SideBits APZCTreeManager::SidesStuckToRootContent(
 }
 
 LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
-    const HitTestingTreeNode* aNode) const {
+    const HitTestingTreeNode* aNode,
+    const AsyncPanZoomController** aOutSourceOfOverscrollTransform) const {
   mTreeLock.AssertCurrentThreadIn();
   // The async transforms applied here for hit-testing purposes, are intended
   // to match the ones AsyncCompositionManager (or equivalent WebRender code)
@@ -3552,12 +3553,19 @@ LayerToParentLayerMatrix4x4 APZCTreeManager::ComputeTransformForNode(
         visualTransformIsInheritedFromAncestor
             ? AsyncTransformComponents{AsyncTransformComponent::eLayout}
             : LayoutAndVisual;
+    if (aOutSourceOfOverscrollTransform &&
+        components.contains(AsyncTransformComponent::eVisual)) {
+      *aOutSourceOfOverscrollTransform = apzc;
+    }
     return aNode->GetTransform() *
            CompleteAsyncTransform(apzc->GetCurrentAsyncTransformWithOverscroll(
                AsyncPanZoomController::eForHitTesting, components));
   } else if (aNode->IsAsyncZoomContainer()) {
     if (AsyncPanZoomController* rootContent =
             FindRootContentApzcForLayersId(aNode->GetLayersId())) {
+      if (aOutSourceOfOverscrollTransform) {
+        *aOutSourceOfOverscrollTransform = rootContent;
+      }
       return aNode->GetTransform() *
              CompleteAsyncTransform(
                  rootContent->GetCurrentAsyncTransformWithOverscroll(
