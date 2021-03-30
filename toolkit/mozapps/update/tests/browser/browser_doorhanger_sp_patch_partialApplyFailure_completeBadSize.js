@@ -25,7 +25,7 @@ add_task(
         notificationId: "update-manual",
         button: "button",
         checkActiveUpdate: null,
-        pageURLs: { whatsNew: gDefaultWhatsNewURL, manual: URL_MANUAL_UPDATE },
+        pageURLs: { manual: URL_MANUAL_UPDATE },
       },
     ]);
   }

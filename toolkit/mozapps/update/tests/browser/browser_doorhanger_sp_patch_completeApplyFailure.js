@@ -17,7 +17,7 @@ add_task(async function doorhanger_sp_patch_completeApplyFailure() {
       notificationId: "update-manual",
       button: "button",
       checkActiveUpdate: null,
-      pageURLs: { whatsNew: gDefaultWhatsNewURL, manual: URL_MANUAL_UPDATE },
+      pageURLs: { manual: URL_MANUAL_UPDATE },
     },
   ]);
 });

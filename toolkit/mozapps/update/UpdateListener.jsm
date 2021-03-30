@@ -84,23 +84,6 @@ var UpdateListener = {
     );
   },
 
-  replaceReleaseNotes(doc, update, whatsNewId) {
-    let whatsNewLinkId = Services.prefs.getCharPref(
-      `app.update.link.${whatsNewId}`,
-      ""
-    );
-    if (whatsNewLinkId) {
-      let whatsNewLink = doc.getElementById(whatsNewLinkId);
-      if (update && update.detailsURL) {
-        whatsNewLink.href = update.detailsURL;
-      } else {
-        whatsNewLink.href = Services.urlFormatter.formatURLPref(
-          "app.update.url.details"
-        );
-      }
-    }
-  },
-
   requestRestart() {
     let cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].createInstance(
       Ci.nsISupportsPRBool
@@ -188,24 +171,14 @@ var UpdateListener = {
   },
 
   showUpdateAvailableNotification(update, dismissed) {
-    this.showUpdateNotification(
-      "available",
-      false,
-      dismissed,
-      () => {
-        AppUpdateService.downloadUpdate(update, true);
-      },
-      doc => this.replaceReleaseNotes(doc, update, "updateAvailableWhatsNew")
-    );
+    this.showUpdateNotification("available", false, dismissed, () => {
+      AppUpdateService.downloadUpdate(update, true);
+    });
   },
 
   showManualUpdateNotification(update, dismissed) {
-    this.showUpdateNotification(
-      "manual",
-      false,
-      dismissed,
-      win => this.openManualUpdateUrl(win),
-      doc => this.replaceReleaseNotes(doc, update, "updateManualWhatsNew")
+    this.showUpdateNotification("manual", false, dismissed, win =>
+      this.openManualUpdateUrl(win)
     );
   },
 

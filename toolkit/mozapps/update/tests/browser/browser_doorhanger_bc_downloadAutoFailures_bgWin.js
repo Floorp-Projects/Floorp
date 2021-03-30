@@ -30,11 +30,6 @@ add_task(async function doorhanger_bc_downloadAutoFailures_bgWin() {
         "The badge is showing for the background window"
       );
 
-      checkWhatsNewLink(
-        extraWindow,
-        "update-available-whats-new",
-        gDefaultWhatsNewURL
-      );
       let buttonEl = getNotificationButton(
         extraWindow,
         "update-available",
@@ -79,7 +74,7 @@ add_task(async function doorhanger_bc_downloadAutoFailures_bgWin() {
       notificationId: "update-manual",
       button: "button",
       checkActiveUpdate: null,
-      pageURLs: { whatsNew: gDefaultWhatsNewURL, manual: URL_MANUAL_UPDATE },
+      pageURLs: { manual: URL_MANUAL_UPDATE },
     },
   ]);
 });
