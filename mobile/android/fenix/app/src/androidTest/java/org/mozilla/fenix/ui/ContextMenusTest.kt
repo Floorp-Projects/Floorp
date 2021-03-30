@@ -32,6 +32,7 @@ import org.mozilla.fenix.ui.robots.navigationToolbar
  *
  */
 
+@Ignore("Test failures: https://github.com/mozilla-mobile/fenix/issues/18421")
 class ContextMenusTest {
     private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
     private lateinit var mockWebServer: MockWebServer
