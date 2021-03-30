@@ -9189,7 +9189,9 @@ mozilla::Maybe<MemberInitializers> BytecodeEmitter::setupMemberInitializers(
   if (numFields + numPrivateMethods > MemberInitializers::MaxInitializers) {
     return Nothing();
   }
-  return Some(MemberInitializers(numFields + numPrivateMethods));
+  bool hasPrivateBrand = numPrivateMethods > 0;
+  return Some(
+      MemberInitializers(hasPrivateBrand, numFields + numPrivateMethods));
 }
 
 // Purpose of .fieldKeys:
@@ -9577,8 +9579,36 @@ bool BytecodeEmitter::emitInitializeInstanceMembers() {
   const MemberInitializers& memberInitializers =
       findMemberInitializersForCall();
   MOZ_ASSERT(memberInitializers.valid);
-  size_t numInitializers = memberInitializers.numMemberInitializers;
 
+  if (memberInitializers.hasPrivateBrand) {
+    // Stamp the class's private brand onto the instance.  We use a getter
+    // instead of a field to save a slot per object, but the getter is never
+    // called, so it doesn't matter what function we use.
+
+    // This is guaranteed to run after super(), so we don't need TDZ checks.
+    if (!emitGetName(TaggedParserAtomIndex::WellKnown::dotThis())) {
+      //            [stack] THIS
+      return false;
+    }
+    if (!emitGetName(TaggedParserAtomIndex::WellKnown::dotPrivateBrand())) {
+      //            [stack] THIS BRAND
+      return false;
+    }
+    if (!emitBuiltinObject(BuiltinObjectKind::FunctionPrototype)) {
+      //            [stack] THIS BRAND GETTER
+      return false;
+    }
+    if (!emit1(JSOp::InitHiddenElemGetter)) {
+      //            [stack] THIS
+      return false;
+    }
+    if (!emit1(JSOp::Pop)) {
+      //            [stack]
+      return false;
+    }
+  }
+
+  size_t numInitializers = memberInitializers.numMemberInitializers;
   if (numInitializers == 0) {
     return true;
   }

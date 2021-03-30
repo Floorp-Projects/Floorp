@@ -53,7 +53,7 @@ struct CompilationStencil;
 struct CompilationGCOutput;
 class ScriptStencilIterable;
 
-// ScopeContext hold information derivied from the scope and environment chains
+// ScopeContext holds information derived from the scope and environment chains
 // to try to avoid the parser needing to traverse VM structures directly.
 struct ScopeContext {
   // Class field initializer info if we are nested within a class constructor.
