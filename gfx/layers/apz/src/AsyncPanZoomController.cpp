@@ -4496,9 +4496,14 @@ AsyncTransform AsyncPanZoomController::GetCurrentAsyncTransform(
 AsyncTransformComponentMatrix
 AsyncPanZoomController::GetCurrentAsyncTransformWithOverscroll(
     AsyncTransformConsumer aMode, AsyncTransformComponents aComponents) const {
-  return AsyncTransformComponentMatrix(
-             GetCurrentAsyncTransform(aMode, aComponents)) *
-         GetOverscrollTransform(aMode);
+  AsyncTransformComponentMatrix asyncTransform =
+      GetCurrentAsyncTransform(aMode, aComponents);
+  // The overscroll transform is considered part of the visual component of
+  // the async transform, because it should apply to fixed content as well.
+  if (aComponents.contains(AsyncTransformComponent::eVisual)) {
+    return asyncTransform * GetOverscrollTransform(aMode);
+  }
+  return asyncTransform;
 }
 
 LayoutDeviceToParentLayerScale AsyncPanZoomController::GetCurrentPinchZoomScale(
