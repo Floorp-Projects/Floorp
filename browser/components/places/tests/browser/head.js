@@ -9,6 +9,10 @@ ChromeUtils.defineModuleGetter(
   "resource://testing-common/TestUtils.jsm"
 );
 
+XPCOMUtils.defineLazyGetter(this, "gFluentStrings", function() {
+  return new Localization(["branding/brand.ftl", "browser/browser.ftl"], true);
+});
+
 if (AppConstants.TSAN) {
   // A test in this folder used to rely on the initial timer of
   // TestUtils.waitForCondition. Removing these timers makes
