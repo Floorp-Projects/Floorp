@@ -313,23 +313,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
 
 %include ../shared/places/editBookmarkPanel.inc.css
 
-#editBookmarkPanelRows > vbox > html|input,
-#editBookmarkPanelRows > vbox > hbox > html|input {
-  appearance: none;
-  background-color: var(--arrowpanel-field-background);
-  color: inherit;
-  border-radius: 2px;
-  border: 1px solid var(--panel-separator-color) !important;
-  margin: 0;
-  padding: 3px 6px;
-}
-
-#editBookmarkPanelRows > vbox > html|input:focus,
-#editBookmarkPanelRows > vbox > hbox > html|input:focus {
-  border-color: -moz-mac-focusring !important;
-  box-shadow: var(--focus-ring-box-shadow);
-}
-
 /* The following elements come from editBookmarkPanel.inc.xhtml. Styling that's
    specific to the editBookmarkPanel should be in browser.css. Styling that
    should be shared by all editBookmarkPanel.inc.xhtml consumers should be in
@@ -377,6 +360,24 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   text-align: start;
 }
 
+@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
+#editBookmarkPanelRows > vbox > html|input,
+#editBookmarkPanelRows > vbox > hbox > html|input {
+  appearance: none;
+  background-color: var(--arrowpanel-field-background);
+  color: inherit;
+  border-radius: 2px;
+  border: 1px solid var(--panel-separator-color) !important;
+  margin: 0;
+  padding: 3px 6px;
+}
+
+#editBookmarkPanelRows > vbox > html|input:focus,
+#editBookmarkPanelRows > vbox > hbox > html|input:focus {
+  border-color: -moz-mac-focusring !important;
+  box-shadow: var(--focus-ring-box-shadow);
+}
+
 #editBMPanel_folderMenuList {
   margin: 0;
   min-height: 22px;
@@ -399,6 +400,39 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   padding-inline-end: 4px;
   width: 7px;
 }
+
+/**** expanders ****/
+
+#editBookmarkPanel .expander-up {
+  list-style-image: url("chrome://global/skin/icons/arrow-up-12.svg");
+}
+
+#editBookmarkPanel .expander-down {
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
+}
+
+#editBookmarkPanel .expander-up,
+#editBookmarkPanel .expander-down {
+  appearance: none; /* override button.css */
+  -moz-context-properties: fill, fill-opacity;
+  fill: currentColor;
+  fill-opacity: 0.8;
+  margin: 0;
+  margin-inline-start: 4px;
+  min-width: 27px;
+  min-height: 22px;
+}
+
+#editBookmarkPanel .expander-up > .button-box > .button-icon,
+#editBookmarkPanel .expander-down > .button-box > .button-icon {
+  margin: 1px 0 0;
+}
+
+#editBookmarkPanel .expander-up > .button-box > .button-text,
+#editBookmarkPanel .expander-down > .button-box > .button-text {
+  display: none;
+}
+} /** END not Proton **/
 
 /**** folder tree and tag selector ****/
 
@@ -438,38 +472,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   margin: 0 !important;
   min-width: 27em;
   position: relative;
-}
-
-/**** expanders ****/
-
-#editBookmarkPanel .expander-up,
-#editBookmarkPanel .expander-down {
-  appearance: none; /* override button.css */
-  -moz-context-properties: fill, fill-opacity;
-  fill: currentColor;
-  fill-opacity: 0.8;
-  margin: 0;
-  margin-inline-start: 4px;
-  min-width: 27px;
-  min-height: 22px;
-}
-
-#editBookmarkPanel .expander-up > .button-box > .button-icon,
-#editBookmarkPanel .expander-down > .button-box > .button-icon {
-  margin: 1px 0 0;
-}
-
-#editBookmarkPanel .expander-up > .button-box > .button-text,
-#editBookmarkPanel .expander-down > .button-box > .button-text {
-  display: none;
-}
-
-#editBookmarkPanel .expander-up {
-  list-style-image: url("chrome://global/skin/icons/arrow-up-12.svg");
-}
-
-#editBookmarkPanel .expander-down {
-  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-12.svg");
 }
 
 /* ----- SIDEBAR ELEMENTS ----- */
