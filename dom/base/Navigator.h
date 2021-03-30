@@ -200,8 +200,7 @@ class Navigator final : public nsISupports, public nsWrapperCache {
                        NavigatorUserMediaErrorCallback& aOnError,
                        CallerType aCallerType, ErrorResult& aRv);
   MOZ_CAN_RUN_SCRIPT
-  void MozGetUserMediaDevices(const MediaStreamConstraints& aConstraints,
-                              MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
+  void MozGetUserMediaDevices(MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
                               NavigatorUserMediaErrorCallback& aOnError,
                               uint64_t aInnerWindowID, const nsAString& aCallID,
                               ErrorResult& aRv);
