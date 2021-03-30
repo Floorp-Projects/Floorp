@@ -25,7 +25,12 @@ enum class BindingKind : uint8_t {
 
   // So you think named lambda callee names are consts? Nope! They don't
   // throw when being assigned to in sloppy mode.
-  NamedLambdaCallee
+  NamedLambdaCallee,
+
+  // ClassBodyScope bindings that aren't bindings in the spec, but are put into
+  // a scope as an implementation detail: `.privateBrand`,
+  // `.staticInitializers`, private names, and private method slots.
+  Synthetic
 };
 
 static inline bool BindingKindIsLexical(BindingKind kind) {
