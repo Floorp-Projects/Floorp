@@ -25,7 +25,9 @@ add_task(async function test_multiple_windows() {
 
   let docEl = window.document.documentElement;
   let toolbox = document.querySelector("#navigator-toolbox");
-  let toolboxCS = window.getComputedStyle(toolbox);
+  let computedStyle = window.getComputedStyle(
+    backgroundColorSetOnRoot() ? docEl : toolbox
+  );
 
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(
@@ -34,7 +36,7 @@ add_task(async function test_multiple_windows() {
     "LWT text color attribute should be set"
   );
   Assert.ok(
-    toolboxCS.backgroundImage.includes("image1.png"),
+    computedStyle.backgroundImage.includes("image1.png"),
     "Expected background image"
   );
 
@@ -42,7 +44,9 @@ add_task(async function test_multiple_windows() {
   let window2 = await BrowserTestUtils.openNewBrowserWindow();
   docEl = window2.document.documentElement;
   toolbox = window2.document.querySelector("#navigator-toolbox");
-  toolboxCS = window2.getComputedStyle(toolbox);
+  computedStyle = window.getComputedStyle(
+    backgroundColorSetOnRoot() ? docEl : toolbox
+  );
 
   Assert.ok(docEl.hasAttribute("lwtheme"), "LWT attribute should be set");
   Assert.equal(
@@ -51,7 +55,7 @@ add_task(async function test_multiple_windows() {
     "LWT text color attribute should be set"
   );
   Assert.ok(
-    toolboxCS.backgroundImage.includes("image1.png"),
+    computedStyle.backgroundImage.includes("image1.png"),
     "Expected background image"
   );
 
