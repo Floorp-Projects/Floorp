@@ -731,7 +731,12 @@ void nsXULPopupManager::ShowPopupAtScreen(nsIContent* aPopup, int32_t aXPos,
     bool haveNativeMenu = popupFrame->InitializePopupAsNativeContextMenu(
         triggerContent, aXPos, aYPos);
     if (haveNativeMenu) {
+      // Show the menu. ShowNativeMenu synchronously fires a popupshowing event.
+      // Make sure mOpeningPopup is set to aPopup during the event, so that
+      // document.popupNode can find the popup.
+      mOpeningPopup = aPopup;
       popupFrame->ShowNativeMenu();
+      mOpeningPopup = nullptr;
       return;
     }
   }
