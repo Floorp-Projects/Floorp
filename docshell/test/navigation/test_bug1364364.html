@@ -14,6 +14,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1364364
   let testWin, testDoc;
   async function test() {
     SimpleTest.waitForExplicitFinish();
+    if (SpecialPowers.Services.appinfo.fissionAutostart) {
+      // This test relies on the possibility to modify the bfcached document.
+      // The new implementation is more restricted and thus works only
+      // when the bfcached browsing context is the only top level one
+      // in the browsing context group.
+      ok(true, "This test is for the old bfcache implementation only.");
+      SimpleTest.finish();
+      return;
+    }
     testWin = window.open("file_bug1364364-1.html");
     await waitForLoad(testWin);
     testDoc = testWin.document;
