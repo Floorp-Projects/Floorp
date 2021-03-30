@@ -33,9 +33,7 @@ server.registerPathHandler("/inline-cache.html", (request, response) => {
   `);
 });
 
-const SOURCE_URL = `http://localhost:${
-  server.identity.primaryPort
-}/inline-cache.html`;
+const SOURCE_URL = `http://localhost:${server.identity.primaryPort}/inline-cache.html`;
 
 add_task(async function() {
   info("Load document with inline script");
@@ -59,7 +57,9 @@ add_task(async function() {
   );
 
   info("Disable HTTP cache for page");
-  await toolbox.targetList.updateConfiguration({ cacheDisabled: true });
+  await toolbox.commands.targetConfigurationCommand.updateConfiguration({
+    cacheDisabled: true,
+  });
   makeChanges();
 
   info("Reload inside debugger with toolbox caching disabled (attempt 1)");
@@ -90,7 +90,9 @@ add_task(async function() {
   );
 
   info("Enable HTTP cache for page");
-  await toolbox.targetList.updateConfiguration({ cacheDisabled: false });
+  await toolbox.commands.targetConfigurationCommand.updateConfiguration({
+    cacheDisabled: false,
+  });
   makeChanges();
 
   // Even though the HTTP cache is now enabled, Gecko sets the VALIDATE_ALWAYS flag when

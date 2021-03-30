@@ -467,7 +467,9 @@ class Connector {
 
     // Reconfigures the tab, optionally triggering a reload.
     const reconfigureTab = options => {
-      return this.toolbox.targetList.updateConfiguration(options);
+      return this.toolbox.commands.targetConfigurationCommand.updateConfiguration(
+        options
+      );
     };
 
     // Reconfigures the tab and waits for the target to finish navigating.

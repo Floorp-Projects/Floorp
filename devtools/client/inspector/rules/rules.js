@@ -1766,9 +1766,11 @@ CssRuleView.prototype = {
       this.colorSchemeDarkSimulationButton.classList.toggle("checked");
     }
 
-    this.inspector.toolbox.targetList.updateConfiguration({
-      colorSchemeSimulation: shouldSimulateLightScheme ? "light" : null,
-    });
+    await this.inspector.toolbox.commands.targetConfigurationCommand.updateConfiguration(
+      {
+        colorSchemeSimulation: shouldSimulateLightScheme ? "light" : null,
+      }
+    );
     // Refresh the current element's rules in the panel.
     this.refreshPanel();
   },
@@ -1785,18 +1787,22 @@ CssRuleView.prototype = {
       this.colorSchemeLightSimulationButton.classList.toggle("checked");
     }
 
-    this.inspector.toolbox.targetList.updateConfiguration({
-      colorSchemeSimulation: shouldSimulateDarkScheme ? "dark" : null,
-    });
+    await this.inspector.toolbox.commands.targetConfigurationCommand.updateConfiguration(
+      {
+        colorSchemeSimulation: shouldSimulateDarkScheme ? "dark" : null,
+      }
+    );
     // Refresh the current element's rules in the panel.
     this.refreshPanel();
   },
 
   async _onTogglePrintSimulation() {
     const enabled = this.printSimulationButton.classList.toggle("checked");
-    this.inspector.toolbox.targetList.updateConfiguration({
-      printSimulationEnabled: enabled,
-    });
+    await this.inspector.toolbox.commands.targetConfigurationCommand.updateConfiguration(
+      {
+        printSimulationEnabled: enabled,
+      }
+    );
     // Refresh the current element's rules in the panel.
     this.refreshPanel();
   },

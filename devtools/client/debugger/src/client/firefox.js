@@ -17,18 +17,12 @@ let actions;
 let targetList;
 let resourceWatcher;
 
-export async function onConnect(
-  devToolsClient,
-  _targetList,
-  _resourceWatcher,
-  _actions,
-  store
-) {
+export async function onConnect(commands, _resourceWatcher, _actions, store) {
   actions = _actions;
-  targetList = _targetList;
+  targetList = commands.targetCommand;
   resourceWatcher = _resourceWatcher;
 
-  setupCommands({ devToolsClient, targetList });
+  setupCommands(commands);
   setupCreate({ store });
   sourceQueue.initialize(actions);
   const { targetFront } = targetList;
