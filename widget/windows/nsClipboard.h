@@ -61,8 +61,8 @@ class nsClipboard : public nsBaseClipboard, public nsIObserver {
   // of Gecko.
   static UINT GetFormat(const char* aMimeStr, bool aMapHTMLMime = true);
 
-  static UINT CF_HTML;
-  static UINT CF_CUSTOMTYPES;
+  static UINT GetHtmlClipboardFormat();
+  static UINT GetCustomClipboardFormat();
 
  protected:
   NS_IMETHOD SetNativeClipboardData(int32_t aWhichClipboard) override;
