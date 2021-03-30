@@ -586,47 +586,6 @@ class TargetCommand extends EventEmitter {
     return this._isDestroyed;
   }
 
-  /**
-   * Update the DevTools configuration on the server.
-   * TODO: This API is temporarily on the TargetCommand but should move to a
-   * command as soon as https://bugzilla.mozilla.org/show_bug.cgi?id=1691681
-   * lands.
-   */
-  async updateConfiguration(configuration) {
-    if (this.hasTargetWatcherSupport("target-configuration")) {
-      const targetConfigurationFront = await this.watcherFront.getTargetConfigurationActor();
-      await targetConfigurationFront.updateConfiguration(configuration);
-    } else {
-      await this.targetFront.reconfigure({ options: configuration });
-    }
-  }
-
-  /**
-   * Check if JavaScript is currently enabled.
-   * TODO: This API is temporarily on the TargetCommand but should move to a
-   * command as soon as https://bugzilla.mozilla.org/show_bug.cgi?id=1691681
-   * lands.
-   */
-  async isJavascriptEnabled(configuration) {
-    if (this.hasTargetWatcherSupport("target-configuration")) {
-      const targetConfigurationFront = await this.watcherFront.getTargetConfigurationActor();
-
-      const { javascriptEnabled } = targetConfigurationFront.configuration;
-      if (typeof javascriptEnabled === "undefined") {
-        // `javascriptEnabled` is first read by the target and then forwarded by
-        // the toolbox to the TargetConfigurationActor.
-        // If the TargetConfigurationActor does not know the value yet, fallback
-        // on the initial value cached by the target front.
-        return this.targetFront._javascriptEnabled;
-      }
-      return targetConfigurationFront.configuration.javascriptEnabled;
-    }
-
-    // For targets which don't support the Watcher + configuration actor, the
-    // javascriptEnabled setting can be read on the target front.
-    return this.targetFront._javascriptEnabled;
-  }
-
   destroy() {
     this.stopListening();
     this._createListeners.off();

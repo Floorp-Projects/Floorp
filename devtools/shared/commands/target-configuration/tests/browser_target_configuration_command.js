@@ -11,51 +11,49 @@ add_task(async function() {
 
   info("Create a target list for a tab target");
   const commands = await CommandsFactory.forTab(tab);
+
+  const targetConfigurationCommand = commands.targetConfigurationCommand;
   const targetList = commands.targetCommand;
   await targetList.startListening();
 
-  const { watcherFront } = targetList;
-  ok(watcherFront, "A watcherFront is available on targetList");
-
-  const targetConfigurationFront = await watcherFront.getTargetConfigurationActor();
   compareOptions(
-    targetConfigurationFront.configuration,
+    targetConfigurationCommand.configuration,
     {},
     "Initial configuration is empty"
   );
 
-  await targetConfigurationFront.updateConfiguration({
+  await targetConfigurationCommand.updateConfiguration({
     cacheDisabled: true,
   });
   compareOptions(
-    targetConfigurationFront.configuration,
+    targetConfigurationCommand.configuration,
     { cacheDisabled: true },
     "Option cacheDisabled was set"
   );
 
-  await targetConfigurationFront.updateConfiguration({
+  await targetConfigurationCommand.updateConfiguration({
     javascriptEnabled: false,
   });
   compareOptions(
-    targetConfigurationFront.configuration,
+    targetConfigurationCommand.configuration,
     { cacheDisabled: true, javascriptEnabled: false },
     "Option javascriptEnabled was set"
   );
 
-  await targetConfigurationFront.updateConfiguration({
+  await targetConfigurationCommand.updateConfiguration({
     cacheDisabled: false,
   });
   compareOptions(
-    targetConfigurationFront.configuration,
+    targetConfigurationCommand.configuration,
     { cacheDisabled: false, javascriptEnabled: false },
     "Option cacheDisabled was updated"
   );
 
-  await targetConfigurationFront.updateConfiguration({
+  await targetConfigurationCommand.updateConfiguration({
     colorSchemeSimulation: "dark",
   });
   compareOptions(
-    targetConfigurationFront.configuration,
+    targetConfigurationCommand.configuration,
     {
       cacheDisabled: false,
       colorSchemeSimulation: "dark",

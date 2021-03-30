@@ -948,7 +948,7 @@ Toolbox.prototype = {
         // Request the actor to restore the focus to the content page once the
         // target is detached. This typically happens when the console closes.
         // We restore the focus as it may have been stolen by the console input.
-        await this.commands.targetCommand.updateConfiguration({
+        await this.commands.targetConfigurationCommand.updateConfiguration({
           restoreFocus: true,
         });
       }
@@ -2083,7 +2083,9 @@ Toolbox.prototype = {
     const pref = "devtools.cache.disabled";
     const cacheDisabled = Services.prefs.getBoolPref(pref);
 
-    await this.commands.targetCommand.updateConfiguration({ cacheDisabled });
+    await this.commands.targetConfigurationCommand.updateConfiguration({
+      cacheDisabled,
+    });
 
     // This event is only emitted for tests in order to know when to reload
     if (flags.testing) {
@@ -2098,7 +2100,7 @@ Toolbox.prototype = {
   _applyServiceWorkersTestingSettings: function() {
     const pref = "devtools.serviceWorkers.testing.enabled";
     const serviceWorkersTestingEnabled = Services.prefs.getBoolPref(pref);
-    this.commands.targetCommand.updateConfiguration({
+    this.commands.targetConfigurationCommand.updateConfiguration({
       serviceWorkersTestingEnabled,
     });
   },
@@ -2109,7 +2111,9 @@ Toolbox.prototype = {
    */
   _applyJavascriptEnabledSettings: function() {
     const javascriptEnabled = this.target._javascriptEnabled;
-    this.commands.targetCommand.updateConfiguration({ javascriptEnabled });
+    this.commands.targetConfigurationCommand.updateConfiguration({
+      javascriptEnabled,
+    });
   },
 
   /**
@@ -2154,7 +2158,7 @@ Toolbox.prototype = {
       this.telemetry.toolClosed("paintflashing", this.sessionId, this);
     }
     this.isPaintFlashing = !this.isPaintFlashing;
-    return this.commands.targetCommand.updateConfiguration({
+    return this.commands.targetConfigurationCommand.updateConfiguration({
       paintFlashing: this.isPaintFlashing,
     });
   },
