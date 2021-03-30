@@ -289,6 +289,14 @@ bool ScopeContext::cacheEnclosingScopeBindingForEval(
           }
           break;
 
+        case BindingKind::PrivateMethod:
+          if (!addToEnclosingLexicalBindingCache(
+                  cx, input, parserAtoms, bi.name(),
+                  EnclosingLexicalBindingKind::PrivateMethod)) {
+            return false;
+          }
+          break;
+
         case BindingKind::Import:
         case BindingKind::FormalParameter:
         case BindingKind::Var:
@@ -2269,6 +2277,7 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
           static_cast<const ClassBodyScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
       json.property("constStart", data->slotInfo.constStart);
+      json.property("privateMethodStart", data->slotInfo.privateMethodStart);
 
       trailingNames = GetScopeDataTrailingNames(data);
       break;

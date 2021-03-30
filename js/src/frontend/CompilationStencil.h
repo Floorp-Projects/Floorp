@@ -65,6 +65,7 @@ struct ScopeContext {
     Const,
     CatchParameter,
     Synthetic,
+    PrivateMethod,
   };
 
   using EnclosingLexicalBindingCache =

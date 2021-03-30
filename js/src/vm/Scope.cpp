@@ -51,6 +51,8 @@ const char* js::BindingKindString(BindingKind kind) {
       return "named lambda callee";
     case BindingKind::Synthetic:
       return "synthetic";
+    case BindingKind::PrivateMethod:
+      return "private method";
   }
   MOZ_CRASH("Bad BindingKind");
 }
@@ -1794,8 +1796,9 @@ void BaseAbstractBindingIter<NameT>::init(
   if (flags & IsNamedLambda) {
     // Named lambda binding is weird. Normal BindingKind ordering rules
     // don't apply.
-    init(0, 0, 0, 0, 0, data.length, CanHaveEnvironmentSlots | flags,
-         firstFrameSlot, JSSLOT_FREE(&LexicalEnvironmentObject::class_),
+    init(0, 0, 0, 0, 0, data.length, data.length,
+         CanHaveEnvironmentSlots | flags, firstFrameSlot,
+         JSSLOT_FREE(&LexicalEnvironmentObject::class_),
          GetScopeDataTrailingNames(&data));
   } else {
     //            imports - [0, 0)
@@ -1805,7 +1808,8 @@ void BaseAbstractBindingIter<NameT>::init(
     //               lets - [0, slotInfo.constStart)
     //             consts - [slotInfo.constStart, data.length)
     //          synthetic - [data.length, data.length)
-    init(0, 0, 0, 0, slotInfo.constStart, data.length,
+    //    private methods - [slotInfo.length, slotInfo.length)
+    init(0, 0, 0, 0, slotInfo.constStart, data.length, data.length,
          CanHaveFrameSlots | CanHaveEnvironmentSlots | flags, firstFrameSlot,
          JSSLOT_FREE(&LexicalEnvironmentObject::class_),
          GetScopeDataTrailingNames(&data));
@@ -1827,10 +1831,14 @@ void BaseAbstractBindingIter<NameT>::init(
   // positional formals - [0, 0)
   //      other formals - [0, 0)
   //               vars - [0, 0)
-  //               lets - [0, slotInfo.constStart)
-  //             consts - [slotInfo.constStart, data.length)
-  //          synthetic - [data.length, data.length)
-  init(0, 0, 0, 0, slotInfo.constStart, data.length,
+  //               lets - [0, 0)
+  //             consts - [0, 0)
+  //          synthetic - [0, slotInfo.privateMethodStart)
+  //    private methods - [slotInfo.privateMethodStart, data.length)
+  //
+  // MG:XXX: Const bindings are reported as synthetic, but this is fixed next
+  // patch where const bindings are removed entirely.
+  init(0, 0, 0, 0, 0, 0, slotInfo.privateMethodStart,
        CanHaveFrameSlots | CanHaveEnvironmentSlots, firstFrameSlot,
        JSSLOT_FREE(&LexicalEnvironmentObject::class_),
        GetScopeDataTrailingNames(&data));
@@ -1859,8 +1867,9 @@ void BaseAbstractBindingIter<NameT>::init(
   //               lets - [length, length)
   //             consts - [length, length)
   //          synthetic - [length, length)
+  //    private methods - [length, length)
   init(0, slotInfo.nonPositionalFormalStart, slotInfo.varStart, length, length,
-       length, flags, 0, JSSLOT_FREE(&CallObject::class_),
+       length, length, flags, 0, JSSLOT_FREE(&CallObject::class_),
        GetScopeDataTrailingNames(&data));
 }
 template void BaseAbstractBindingIter<JSAtom>::init(
@@ -1880,7 +1889,8 @@ void BaseAbstractBindingIter<NameT>::init(VarScope::AbstractData<NameT>& data,
   //               lets - [length, length)
   //             consts - [length, length)
   //          synthetic - [length, length)
-  init(0, 0, 0, length, length, length,
+  //    private methods - [length, length)
+  init(0, 0, 0, length, length, length, length,
        CanHaveFrameSlots | CanHaveEnvironmentSlots, firstFrameSlot,
        JSSLOT_FREE(&VarEnvironmentObject::class_),
        GetScopeDataTrailingNames(&data));
@@ -1902,8 +1912,9 @@ void BaseAbstractBindingIter<NameT>::init(
   //               lets - [slotInfo.letStart, slotInfo.constStart)
   //             consts - [slotInfo.constStart, data.length)
   //          synthetic - [data.length, data.length)
+  //    private methods - [data.length, data.length)
   init(0, 0, 0, slotInfo.letStart, slotInfo.constStart, data.length,
-       CannotHaveSlots, UINT32_MAX, UINT32_MAX,
+       data.length, CannotHaveSlots, UINT32_MAX, UINT32_MAX,
        GetScopeDataTrailingNames(&data));
 }
 template void BaseAbstractBindingIter<JSAtom>::init(
@@ -1936,7 +1947,8 @@ void BaseAbstractBindingIter<NameT>::init(EvalScope::AbstractData<NameT>& data,
   //               lets - [length, length)
   //             consts - [length, length)
   //          synthetic - [length, length)
-  init(0, 0, 0, length, length, length, flags, firstFrameSlot,
+  //    private methods - [length, length)
+  init(0, 0, 0, length, length, length, length, flags, firstFrameSlot,
        firstEnvironmentSlot, GetScopeDataTrailingNames(&data));
 }
 template void BaseAbstractBindingIter<JSAtom>::init(
@@ -1956,8 +1968,9 @@ void BaseAbstractBindingIter<NameT>::init(
   //               lets - [slotInfo.letStart, slotInfo.constStart)
   //             consts - [slotInfo.constStart, data.length)
   //          synthetic - [data.length, data.length)
+  //    private methods - [data.length, data.length)
   init(slotInfo.varStart, slotInfo.varStart, slotInfo.varStart,
-       slotInfo.letStart, slotInfo.constStart, data.length,
+       slotInfo.letStart, slotInfo.constStart, data.length, data.length,
        CanHaveFrameSlots | CanHaveEnvironmentSlots, 0,
        JSSLOT_FREE(&ModuleEnvironmentObject::class_),
        GetScopeDataTrailingNames(&data));
@@ -1979,7 +1992,8 @@ void BaseAbstractBindingIter<NameT>::init(
   //               lets - [length, length)
   //             consts - [length, length)
   //          synthetic - [length, length)
-  init(0, 0, 0, length, length, length,
+  //    private methods - [length, length)
+  init(0, 0, 0, length, length, length, length,
        CanHaveFrameSlots | CanHaveEnvironmentSlots, UINT32_MAX, UINT32_MAX,
        GetScopeDataTrailingNames(&data));
 }
@@ -2000,7 +2014,8 @@ void BaseAbstractBindingIter<NameT>::init(
   //               lets - [length, length)
   //             consts - [length, length)
   //          synthetic - [length, length)
-  init(0, 0, 0, length, length, length,
+  //    private methods - [length, length)
+  init(0, 0, 0, length, length, length, length,
        CanHaveFrameSlots | CanHaveEnvironmentSlots, UINT32_MAX, UINT32_MAX,
        GetScopeDataTrailingNames(&data));
 }

@@ -29,8 +29,12 @@ enum class BindingKind : uint8_t {
 
   // ClassBodyScope bindings that aren't bindings in the spec, but are put into
   // a scope as an implementation detail: `.privateBrand`,
-  // `.staticInitializers`, private names, and private method slots.
-  Synthetic
+  // `.staticInitializers`, private names, and private accessor functions.
+  Synthetic,
+
+  // ClassBodyScope binding that stores the function object for a non-static
+  // private method.
+  PrivateMethod,
 };
 
 static inline bool BindingKindIsLexical(BindingKind kind) {

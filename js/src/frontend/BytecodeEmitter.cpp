@@ -10248,7 +10248,8 @@ bool BytecodeEmitter::emitLexicalInitialization(TaggedParserAtomIndex name) {
   // The caller has pushed the RHS to the top of the stack. Assert that the
   // binding can be initialized without a binding object on the stack, and that
   // no BIND[G]NAME ops were emitted.
-  MOZ_ASSERT(noe.loc().isLexical() || noe.loc().isSynthetic());
+  MOZ_ASSERT(noe.loc().isLexical() || noe.loc().isSynthetic() ||
+             noe.loc().isPrivateMethod());
   MOZ_ASSERT(!noe.emittedBindOp());
 
   if (!noe.emitAssignment()) {
