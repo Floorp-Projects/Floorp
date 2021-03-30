@@ -1943,7 +1943,6 @@ pref("signon.management.page.sort", "name");
 // the utm_creative param be last.
 pref("signon.management.page.breachAlertUrl",
      "https://monitor.firefox.com/breach-details/");
-pref("signon.management.page.showPasswordSyncNotification", true);
 pref("signon.passwordEditCapture.enabled", true);
 pref("signon.relatedRealms.enabled", false);
 pref("signon.showAutoCompleteFooter", true);
