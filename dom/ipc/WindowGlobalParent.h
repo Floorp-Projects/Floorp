@@ -151,6 +151,8 @@ class WindowGlobalParent final : public WindowContext,
   already_AddRefed<mozilla::dom::Promise> PermitUnload(
       PermitUnloadAction aAction, uint32_t aTimeout, mozilla::ErrorResult& aRv);
 
+  void PermitUnload(std::function<void(bool)>&& aResolver);
+
   already_AddRefed<mozilla::dom::Promise> DrawSnapshot(
       const DOMRect* aRect, double aScale, const nsACString& aBackgroundColor,
       mozilla::ErrorResult& aRv);
