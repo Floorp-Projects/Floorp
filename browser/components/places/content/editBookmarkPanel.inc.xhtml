@@ -13,6 +13,7 @@
       <label data-l10n-id="bookmark-overlay-name"
              control="editBMPanel_namePicker"/>
       <html:input id="editBMPanel_namePicker"
+                  type="text"
                   onchange="gEditItemOverlay.onNamePickerChange().catch(Cu.reportError);"/>
     </vbox>
 
@@ -21,6 +22,7 @@
       <label data-l10n-id="bookmark-overlay-location"
              control="editBMPanel_locationField"/>
       <html:input id="editBMPanel_locationField"
+                  type="text"
                   class="uri-element"
                   onchange="gEditItemOverlay.onLocationFieldChange();"/>
     </vbox>
@@ -73,6 +75,7 @@
              control="editBMPanel_tagsField"/>
       <hbox flex="1" align="center" role="combobox">
         <html:input id="editBMPanel_tagsField"
+                 type="text"
                  is="autocomplete-input"
                  style="-moz-box-flex: 1;"
                  autocompletesearch="places-tag-autocomplete"
@@ -114,6 +117,7 @@
       <label data-l10n-id="bookmark-overlay-keyword"
              control="editBMPanel_keywordField"/>
       <html:input id="editBMPanel_keywordField"
+                  type="text"
                   onchange="gEditItemOverlay.onKeywordFieldChange();"/>
     </vbox>
   </vbox>
