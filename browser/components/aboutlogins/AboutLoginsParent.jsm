@@ -61,10 +61,6 @@ XPCOMUtils.defineLazyGetter(this, "AboutLoginsL10n", () => {
 
 const ABOUT_LOGINS_ORIGIN = "about:logins";
 const MASTER_PASSWORD_NOTIFICATION_ID = "master-password-login-required";
-const PASSWORD_SYNC_NOTIFICATION_ID = "enable-password-sync";
-
-const SHOW_PASSWORD_SYNC_NOTIFICATION_PREF =
-  "signon.management.page.showPasswordSyncNotification";
 
 // about:logins will always use the privileged content process,
 // even if it is disabled for other consumers such as about:newtab.
@@ -256,9 +252,6 @@ class AboutLoginsParent extends JSWindowActorParent {
         const logins = await AboutLogins.getAllLogins();
         try {
           let syncState = AboutLogins.getSyncState();
-          if (FXA_ENABLED) {
-            AboutLogins.updatePasswordSyncNotificationState(syncState);
-          }
 
           let selectedSort = Services.prefs.getCharPref(
             "signon.management.page.sort",
@@ -654,37 +647,6 @@ var AboutLogins = {
     this.messageSubscribers("AboutLogins:MasterPasswordAuthRequired");
   },
 
-  showPasswordSyncNotifications() {
-    if (
-      !Services.prefs.getBoolPref(SHOW_PASSWORD_SYNC_NOTIFICATION_PREF, true)
-    ) {
-      return;
-    }
-
-    this.showNotifications({
-      id: PASSWORD_SYNC_NOTIFICATION_ID,
-      priority: "PRIORITY_INFO_MEDIUM",
-      iconURL: "chrome://browser/skin/login.svg",
-      messageId: "enable-password-sync-notification-message",
-      buttonIds: [
-        "enable-password-sync-preferences-button",
-        "about-logins-enable-password-sync-dont-ask-again-button",
-      ],
-      onClicks: [
-        function onSyncPreferencesClick(browser) {
-          browser.ownerGlobal.gSync.openPrefs("password-manager");
-        },
-        function onDontAskAgainClick(browser) {
-          Services.prefs.setBoolPref(
-            SHOW_PASSWORD_SYNC_NOTIFICATION_PREF,
-            false
-          );
-        },
-      ],
-      extraFtl: ["branding/brand.ftl", "browser/branding/sync-brand.ftl"],
-    });
-  },
-
   showNotifications({
     id,
     priority,
@@ -859,22 +821,7 @@ var AboutLogins = {
     };
   },
 
-  updatePasswordSyncNotificationState(
-    syncState,
-    // Need to explicitly call the getter on lazy preference getters
-    // to activate their observer.
-    passwordSyncEnabled = PASSWORD_SYNC_ENABLED
-  ) {
-    if (syncState.loggedIn && !passwordSyncEnabled) {
-      this.showPasswordSyncNotifications();
-      return;
-    }
-    this.removeNotifications(PASSWORD_SYNC_NOTIFICATION_ID);
-  },
-
   onPasswordSyncEnabledPreferenceChange(data, previous, latest) {
-    Services.prefs.clearUserPref(SHOW_PASSWORD_SYNC_NOTIFICATION_PREF);
-    this.updatePasswordSyncNotificationState(this.getSyncState(), latest);
     this.messageSubscribers("AboutLogins:SyncState", this.getSyncState());
   },
 };

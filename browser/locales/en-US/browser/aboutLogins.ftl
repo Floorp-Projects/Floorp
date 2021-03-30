@@ -134,24 +134,6 @@ master-password-reload-button =
   .label = Log in
   .accesskey = L
 
-## Password Sync notification
-
-enable-password-sync-notification-message =
-  { PLATFORM() ->
-      [windows] Want your logins everywhere you use { -brand-product-name }? Go to your { -sync-brand-short-name } Options and select the Logins checkbox.
-     *[other] Want your logins everywhere you use { -brand-product-name }? Go to your { -sync-brand-short-name } Preferences and select the Logins checkbox.
-  }
-enable-password-sync-preferences-button =
-  .label =
-    { PLATFORM() ->
-        [windows] Visit { -sync-brand-short-name } Options
-       *[other] Visit { -sync-brand-short-name } Preferences
-    }
-  .accesskey = V
-about-logins-enable-password-sync-dont-ask-again-button =
-  .label = Don’t ask me again
-  .accesskey = D
-
 ## Dialogs
 
 confirmation-dialog-cancel-button = Cancel
