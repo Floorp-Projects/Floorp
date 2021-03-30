@@ -16,14 +16,14 @@ class AutoScrollParent extends JSWindowActorParent {
     }
 
     // If another tab is activated, we shouldn't start autoscroll requested
-    // for the previous active window.
-    // XXX browsingContext.isActive is not available here because it returns
-    //     true when running
-    //     browser_cancel_starting_autoscrolling_requested_by_background_tab.js.
-    //     Therefore, this checks whether the browser element is focused.
-    //     If it's clicked and no new tab is opened foreground, it should have
-    //     focus as a default action of the mousedown event.
-    const requestedInForegroundTab = Services.focus.focusedElement == browser;
+    // for the previous active window if and only if the browser is a remote
+    // browser.  This is required for web apps which don't prevent default of
+    // middle click after opening a new window.  If the active tab is our
+    // documents like about:*, we don't need this check since our documents
+    // should do it correctly.
+    const requestedInForegroundTab = browser.isRemoteBrowser
+      ? Services.focus.focusedElement == browser
+      : true;
 
     let data = msg.data;
     switch (msg.name) {
