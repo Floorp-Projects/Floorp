@@ -8229,9 +8229,10 @@ static bool FindFirstLetterRange(const nsTextFragment* aFrag,
     return false;
   }
 
-  // If the next character is not a letter or number, there is no first-letter.
+  // If the next character is not a letter, number or symbol, there is no
+  // first-letter.
   // Return true so that we don't go on looking, but set aLength to 0.
-  if (!nsContentUtils::IsAlphanumericAt(aFrag, aOffset + i)) {
+  if (!nsContentUtils::IsAlphanumericOrSymbolAt(aFrag, aOffset + i)) {
     *aLength = 0;
     return true;
   }
