@@ -132,11 +132,11 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
         mSoftTextValid(false) {}
 
   // cached stuff for the editor
-  RefPtr<mozilla::dom::Document> mDocument;
-  bool mIsContentEditableOrDesignMode;
+  const RefPtr<mozilla::dom::Document> mDocument;
+  const bool mIsContentEditableOrDesignMode;
 
   // range to check, see SetPosition and SetEnd
-  nsINode* mRootNode;
+  const nsINode* mRootNode;
   NodeOffset mSoftBegin;
   NodeOffset mSoftEnd;
 

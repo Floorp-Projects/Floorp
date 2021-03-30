@@ -134,7 +134,7 @@ typedef void (*OnLeaveNodeFunPtr)(nsINode* aNode, void* aClosure);
 // Find the next node in the DOM tree in preorder.
 // Calls OnLeaveNodeFunPtr when the traversal leaves a node, which is
 // why we can't just use GetNextNode here, sadly.
-static nsINode* FindNextNode(nsINode* aNode, nsINode* aRoot,
+static nsINode* FindNextNode(nsINode* aNode, const nsINode* aRoot,
                              OnLeaveNodeFunPtr aOnLeaveNode, void* aClosure) {
   MOZ_ASSERT(aNode, "Null starting node?");
 
@@ -165,7 +165,7 @@ static nsINode* FindNextNode(nsINode* aNode, nsINode* aRoot,
 // aNode is not a text node. Find the first text node starting at aNode/aOffset
 // in a preorder DOM traversal.
 static nsINode* FindNextTextNode(nsINode* aNode, int32_t aOffset,
-                                 nsINode* aRoot) {
+                                 const nsINode* aRoot) {
   MOZ_ASSERT(aNode, "Null starting node?");
   NS_ASSERTION(!IsSpellCheckingTextNode(aNode),
                "FindNextTextNode should start with a non-text node");
