@@ -8,21 +8,19 @@ import { makePendingLocationId } from "../../utils/breakpoint";
 import Reps from "devtools/client/shared/components/reps/index";
 
 let targets;
-let devToolsClient;
-let targetList;
+let commands;
 let breakpoints;
 
 const CALL_STACK_PAGE_SIZE = 1000;
 
-function setupCommands(dependencies) {
-  devToolsClient = dependencies.devToolsClient;
-  targetList = dependencies.targetList;
+function setupCommands(innerCommands) {
+  commands = innerCommands;
   targets = {};
   breakpoints = {};
 }
 
 function currentTarget() {
-  return targetList.targetFront;
+  return commands.targetCommand.targetFront;
 }
 
 function currentThreadFront() {
@@ -34,14 +32,14 @@ function createObjectFront(grip) {
     throw new Error("Actor is missing");
   }
 
-  return devToolsClient.createObjectFront(grip, currentThreadFront());
+  return commands.client.createObjectFront(grip, currentThreadFront());
 }
 
 async function loadObjectProperties(root, threadActorID) {
   const { utils } = Reps.objectInspector;
   const properties = await utils.loadProperties.loadItemProperties(
     root,
-    devToolsClient,
+    commands.client,
     undefined,
     threadActorID
   );
@@ -55,7 +53,7 @@ function releaseActor(actor) {
   if (!actor) {
     return;
   }
-  const objFront = devToolsClient.getFrontByID(actor);
+  const objFront = commands.client.getFrontByID(actor);
 
   if (objFront) {
     return objFront.release().catch(() => {});
@@ -138,31 +136,31 @@ async function sourceContents({ actor, thread }) {
 }
 
 async function setXHRBreakpoint(path, method) {
-  const hasWatcherSupport = targetList.hasTargetWatcherSupport(
+  const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport(
     "set-xhr-breakpoints"
   );
   if (!hasWatcherSupport) {
     // Without watcher support, forward setXHRBreakpoint to all threads.
     return forEachThread(thread => thread.setXHRBreakpoint(path, method));
   }
-  const breakpointsFront = await targetList.watcherFront.getBreakpointListActor();
+  const breakpointsFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
   await breakpointsFront.setXHRBreakpoint(path, method);
 }
 
 async function removeXHRBreakpoint(path, method) {
-  const hasWatcherSupport = targetList.hasTargetWatcherSupport(
+  const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport(
     "set-xhr-breakpoints"
   );
   if (!hasWatcherSupport) {
     // Without watcher support, forward setXHRBreakpoint to all threads.
     return forEachThread(thread => thread.removeXHRBreakpoint(path, method));
   }
-  const breakpointsFront = await targetList.watcherFront.getBreakpointListActor();
+  const breakpointsFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
   await breakpointsFront.removeXHRBreakpoint(path, method);
 }
 
 export function toggleJavaScriptEnabled(enabled) {
-  return targetList.updateConfiguration({
+  return commands.targetConfigurationCommand.updateConfiguration({
     javascriptEnabled: enabled,
   });
 }
@@ -204,7 +202,7 @@ async function setBreakpoint(location, options) {
     condition: options.condition,
     logValue: options.logValue,
   };
-  const hasWatcherSupport = targetList.hasTargetWatcherSupport(
+  const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport(
     "set-breakpoints"
   );
   if (!hasWatcherSupport) {
@@ -213,13 +211,17 @@ async function setBreakpoint(location, options) {
       thread.setBreakpoint(location, serverOptions)
     );
   }
-  const breakpointsFront = await targetList.watcherFront.getBreakpointListActor();
+  const breakpointsFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
   await breakpointsFront.setBreakpoint(location, serverOptions);
 
   // Call setBreakpoint for threads linked to targets
   // not managed by the watcher.
   return forEachThread(async thread => {
-    if (!targetList.hasTargetWatcherSupport(thread.targetFront.targetType)) {
+    if (
+      !commands.targetCommand.hasTargetWatcherSupport(
+        thread.targetFront.targetType
+      )
+    ) {
       return thread.setBreakpoint(location, serverOptions);
     }
   });
@@ -228,20 +230,24 @@ async function setBreakpoint(location, options) {
 async function removeBreakpoint(location) {
   delete breakpoints[makePendingLocationId(location)];
 
-  const hasWatcherSupport = targetList.hasTargetWatcherSupport(
+  const hasWatcherSupport = commands.targetCommand.hasTargetWatcherSupport(
     "set-breakpoints"
   );
   if (!hasWatcherSupport) {
     // Without watcher support, unconditionally forward removeBreakpoint to all threads.
     return forEachThread(async thread => thread.removeBreakpoint(location));
   }
-  const breakpointsFront = await targetList.watcherFront.getBreakpointListActor();
+  const breakpointsFront = await commands.targetCommand.watcherFront.getBreakpointListActor();
   await breakpointsFront.removeBreakpoint(location);
 
   // Call removeBreakpoint for threads linked to targets
   // not managed by the watcher.
   return forEachThread(async thread => {
-    if (!targetList.hasTargetWatcherSupport(thread.targetFront.targetType)) {
+    if (
+      !commands.targetCommand.hasTargetWatcherSupport(
+        thread.targetFront.targetType
+      )
+    ) {
       return thread.removeBreakpoint(location);
     }
   });
@@ -328,8 +334,8 @@ async function pauseOnExceptions(
   shouldPauseOnExceptions,
   shouldPauseOnCaughtExceptions
 ) {
-  if (targetList.hasTargetWatcherSupport("thread-configuration")) {
-    const threadConfigurationActor = await targetList.watcherFront.getThreadConfigurationActor();
+  if (commands.targetCommand.hasTargetWatcherSupport("thread-configuration")) {
+    const threadConfigurationActor = await commands.targetCommand.watcherFront.getThreadConfigurationActor();
     await threadConfigurationActor.updateConfiguration({
       pauseOnExceptions: shouldPauseOnExceptions,
       ignoreCaughtExceptions: !shouldPauseOnCaughtExceptions,
@@ -445,7 +451,7 @@ async function getSourceActorBreakableLines({ thread, actor }) {
 }
 
 function getFrontByID(actorID) {
-  return devToolsClient.getFrontByID(actorID);
+  return commands.client.getFrontByID(actorID);
 }
 
 function fetchAncestorFramePositions(index) {

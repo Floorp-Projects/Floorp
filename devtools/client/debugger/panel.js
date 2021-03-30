@@ -51,7 +51,7 @@ class DebuggerPanel {
       selectors,
       client,
     } = await this.panelWin.Debugger.bootstrap({
-      targetList: this.toolbox.targetList,
+      commands: this.toolbox.commands,
       resourceWatcher: this.toolbox.resourceWatcher,
       devToolsClient: this.toolbox.target.client,
       workers: {

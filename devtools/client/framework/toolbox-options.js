@@ -570,7 +570,7 @@ OptionsPanel.prototype = {
     }
 
     if (!this.target.chrome) {
-      const isJavascriptEnabled = await this.toolbox.targetList.isJavascriptEnabled();
+      const isJavascriptEnabled = await this.toolbox.commands.targetConfigurationCommand.isJavascriptEnabled();
       this.disableJSNode.checked = !isJavascriptEnabled;
       this.disableJSNode.addEventListener("click", this._disableJSClicked);
     } else {
@@ -618,7 +618,7 @@ OptionsPanel.prototype = {
   _disableJSClicked: function(event) {
     const checked = event.target.checked;
 
-    this.toolbox.targetList.updateConfiguration({
+    this.toolbox.commands.targetConfigurationCommand.updateConfiguration({
       javascriptEnabled: !checked,
     });
   },

@@ -65,29 +65,25 @@ async function loadInitialState() {
 }
 
 export async function bootstrap({
-  targetList,
+  commands,
   resourceWatcher,
-  devToolsClient,
   workers: panelWorkers,
   panel,
 }) {
   verifyPrefSchema();
 
-  const commands = firefox.clientCommands;
-
   const initialState = await loadInitialState();
   const workers = bootstrapWorkers(panelWorkers);
 
   const { store, actions, selectors } = bootstrapStore(
-    commands,
+    firefox.clientCommands,
     workers,
     panel,
     initialState
   );
 
   const connected = firefox.onConnect(
-    devToolsClient,
-    targetList,
+    commands,
     resourceWatcher,
     actions,
     store
@@ -102,13 +98,13 @@ export async function bootstrap({
     actions,
     selectors,
     workers,
-    targetList,
+    targetList: commands.targetCommand,
     client: firefox.clientCommands,
   });
 
   bootstrapApp(store, panel);
   await connected;
-  return { store, actions, selectors, client: commands };
+  return { store, actions, selectors, client: firefox.clientCommands };
 }
 
 export async function destroy() {
