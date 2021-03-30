@@ -327,9 +327,11 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       aColor = mColorGrid;
       break;
     case ColorID::Window:
+      aColor = NS_RGB(0xff, 0xff, 0xff);
+      break;
     case ColorID::Field:
     case ColorID::MozCombobox:
-      aColor = NS_RGB(0xff, 0xff, 0xff);
+      aColor = mColorControlBackground;
       break;
     case ColorID::Fieldtext:
     case ColorID::MozComboboxtext:
