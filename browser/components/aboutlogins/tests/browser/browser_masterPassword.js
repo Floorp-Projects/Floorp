@@ -55,7 +55,7 @@ add_task(async function test() {
   );
 
   let notification;
-  await BrowserTestUtils.waitForCondition(
+  await TestUtils.waitForCondition(
     () =>
       (notification = gBrowser
         .getNotificationBox()
