@@ -4789,7 +4789,11 @@
 # Whether or not to fallback from WebRender/WebRender Software to Basic.
 - name: gfx.webrender.fallback.basic
   type: bool
+#if defined(MOZ_WIDGET_ANDROID)
   value: true
+#else
+  value: @IS_NOT_EARLY_BETA_OR_EARLIER@
+#endif
   mirror: once
 
 # Whether or not to fallback from WebRender to Software WebRender.
@@ -4798,7 +4802,7 @@
 #if defined(MOZ_WIDGET_ANDROID)
   value: false
 #else
-  value: @IS_NIGHTLY_BUILD@
+  value: @IS_EARLY_BETA_OR_EARLIER@
 #endif
   mirror: once
 
