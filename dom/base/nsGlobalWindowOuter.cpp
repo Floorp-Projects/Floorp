@@ -3067,29 +3067,14 @@ void nsPIDOMWindowOuter::MaybeNotifyMediaResumedFromBlock(
 
 bool nsPIDOMWindowOuter::GetAudioMuted() const {
   BrowsingContext* bc = GetBrowsingContext();
-  return bc ? bc->Top()->GetMuted() : false;
-}
-
-float nsPIDOMWindowOuter::GetAudioVolume() const { return mAudioVolume; }
-
-nsresult nsPIDOMWindowOuter::SetAudioVolume(float aVolume) {
-  if (aVolume < 0.0) {
-    return NS_ERROR_DOM_INDEX_SIZE_ERR;
-  }
-
-  if (mAudioVolume == aVolume) {
-    return NS_OK;
-  }
-
-  mAudioVolume = aVolume;
-  RefreshMediaElementsVolume();
-  return NS_OK;
+  return bc && bc->Top()->GetMuted();
 }
 
 void nsPIDOMWindowOuter::RefreshMediaElementsVolume() {
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (service) {
-    service->RefreshAgentsVolume(this, GetAudioVolume(), GetAudioMuted());
+    // TODO: RefreshAgentsVolume can probably be simplified further.
+    service->RefreshAgentsVolume(this, 1.0f, GetAudioMuted());
   }
 }
 
@@ -7659,7 +7644,6 @@ nsPIDOMWindowOuter::nsPIDOMWindowOuter(uint64_t aWindowID)
       mMediaSuspend(StaticPrefs::media_block_autoplay_until_in_foreground()
                         ? nsISuspendedTypes::SUSPENDED_BLOCK
                         : nsISuspendedTypes::NONE_SUSPENDED),
-      mAudioVolume(1.0),
       mDesktopModeViewport(false),
       mIsRootOuterWindow(false),
       mInnerWindow(nullptr),
