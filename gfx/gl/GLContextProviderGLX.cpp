@@ -445,21 +445,23 @@ static int GLXErrorHandler(Display* display, XErrorEvent* ev) {
   return 0;
 }
 
-void GLXLibrary::BeforeGLXCall() const {
-  if (mDebug) {
+GLXLibrary::WrapperScope::WrapperScope(const GLXLibrary& glx,
+                                       const char* const funcName)
+    : mGlx(glx), mFuncName(funcName) {
+  if (mGlx.mDebug) {
     sOldErrorHandler = XSetErrorHandler(GLXErrorHandler);
   }
 }
 
-void GLXLibrary::AfterGLXCall() const {
-  if (mDebug) {
+GLXLibrary::WrapperScope::~WrapperScope() {
+  if (mGlx.mDebug) {
     FinishX(DefaultXDisplay());
     if (sErrorEvent.mError.error_code) {
-      char buffer[2048];
+      char buffer[100] = {};
       XGetErrorText(DefaultXDisplay(), sErrorEvent.mError.error_code, buffer,
                     sizeof(buffer));
-      printf_stderr("X ERROR: %s (%i) - Request: %i.%i, Serial: %lu", buffer,
-                    sErrorEvent.mError.error_code,
+      printf_stderr("X ERROR after %s: %s (%i) - Request: %i.%i, Serial: %lu",
+                    mFuncName, buffer, sErrorEvent.mError.error_code,
                     sErrorEvent.mError.request_code,
                     sErrorEvent.mError.minor_code, sErrorEvent.mError.serial);
       MOZ_ASSERT_UNREACHABLE("AfterGLXCall sErrorEvent");
