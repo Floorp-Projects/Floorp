@@ -5,6 +5,9 @@
 
 #include "mozInlineSpellWordUtil.h"
 
+#include <algorithm>
+#include <utility>
+
 #include "mozilla/BinarySearch.h"
 #include "mozilla/HTMLEditor.h"
 #include "mozilla/Logging.h"
@@ -21,7 +24,6 @@
 #include "nsRange.h"
 #include "nsContentUtils.h"
 #include "nsIFrame.h"
-#include <algorithm>
 
 using namespace mozilla;
 
@@ -97,23 +99,24 @@ static bool IsDOMWordSeparator(char16_t ch) {
   return false;
 }
 
-// mozInlineSpellWordUtil::Init
-
-nsresult mozInlineSpellWordUtil::Init(const TextEditor& aTextEditor) {
-  mDocument = aTextEditor.GetDocument();
-  if (NS_WARN_IF(!mDocument)) {
-    return NS_ERROR_FAILURE;
+// static
+Maybe<mozInlineSpellWordUtil> mozInlineSpellWordUtil::Create(
+    const TextEditor& aTextEditor) {
+  mozInlineSpellWordUtil util;
+  util.mDocument = aTextEditor.GetDocument();
+  if (NS_WARN_IF(!util.mDocument)) {
+    return Nothing();
   }
 
-  mIsContentEditableOrDesignMode = !!aTextEditor.AsHTMLEditor();
+  util.mIsContentEditableOrDesignMode = !!aTextEditor.AsHTMLEditor();
 
   // Find the root node for the editor. For contenteditable the mRootNode could
   // change to shadow root if the begin and end are inside the shadowDOM.
-  mRootNode = aTextEditor.GetRoot();
-  if (NS_WARN_IF(!mRootNode)) {
-    return NS_ERROR_FAILURE;
+  util.mRootNode = aTextEditor.GetRoot();
+  if (NS_WARN_IF(!util.mRootNode)) {
+    return Nothing();
   }
-  return NS_OK;
+  return Some(std::move(util));
 }
 
 static inline bool IsSpellCheckingTextNode(nsINode* aNode) {

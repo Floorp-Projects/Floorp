@@ -7,6 +7,7 @@
 #define mozInlineSpellWordUtil_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/Maybe.h"
 #include "mozilla/dom/Document.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -78,15 +79,8 @@ class NodeOffsetRange {
 
 class MOZ_STACK_CLASS mozInlineSpellWordUtil {
  public:
-  mozInlineSpellWordUtil()
-      : mIsContentEditableOrDesignMode(false),
-        mRootNode(nullptr),
-        mSoftBegin(nullptr, 0),
-        mSoftEnd(nullptr, 0),
-        mNextWordIndex(-1),
-        mSoftTextValid(false) {}
-
-  nsresult Init(const mozilla::TextEditor& aTextEditor);
+  static mozilla::Maybe<mozInlineSpellWordUtil> Create(
+      const mozilla::TextEditor& aTextEditor);
 
   // sets the current position, this should be inside the range. If we are in
   // the middle of a word, we'll move to its start.
@@ -125,7 +119,15 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   const nsINode* GetRootNode() const { return mRootNode; }
 
  private:
-  // cached stuff for the editor, set by Init
+  mozInlineSpellWordUtil()
+      : mIsContentEditableOrDesignMode(false),
+        mRootNode(nullptr),
+        mSoftBegin(nullptr, 0),
+        mSoftEnd(nullptr, 0),
+        mNextWordIndex(-1),
+        mSoftTextValid(false) {}
+
+  // cached stuff for the editor
   RefPtr<mozilla::dom::Document> mDocument;
   bool mIsContentEditableOrDesignMode;
 

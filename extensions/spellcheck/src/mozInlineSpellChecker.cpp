@@ -1555,9 +1555,11 @@ nsresult mozInlineSpellChecker::ResumeCheck(
     return NS_OK;
   }
 
-  mozInlineSpellWordUtil wordUtil;
-  nsresult rv = wordUtil.Init(*mTextEditor);
-  if (NS_FAILED(rv)) return NS_OK;  // editor doesn't like us, don't assert
+  Maybe<mozInlineSpellWordUtil> wordUtil{
+      mozInlineSpellWordUtil::Create(*mTextEditor)};
+  if (!wordUtil) {
+    return NS_OK;  // editor doesn't like us, don't assert
+  }
 
   RefPtr<Selection> spellCheckSelection = GetSpellCheckSelection();
   if (NS_WARN_IF(!spellCheckSelection)) {
@@ -1565,7 +1567,7 @@ nsresult mozInlineSpellChecker::ResumeCheck(
   }
 
   nsAutoCString currentDictionary;
-  rv = mSpellCheck->GetCurrentDictionary(currentDictionary);
+  nsresult rv = mSpellCheck->GetCurrentDictionary(currentDictionary);
   if (NS_FAILED(rv)) {
     MOZ_LOG(sInlineSpellCheckerLog, LogLevel::Debug,
             ("%s: no active dictionary.", __FUNCTION__));
@@ -1583,15 +1585,15 @@ nsresult mozInlineSpellChecker::ResumeCheck(
 
   CleanupRangesInSelection(spellCheckSelection);
 
-  rv = aStatus->FinishInitOnEvent(wordUtil);
+  rv = aStatus->FinishInitOnEvent(*wordUtil);
   NS_ENSURE_SUCCESS(rv, rv);
   if (!aStatus->mRange) return NS_OK;  // empty range, nothing to do
 
   bool doneChecking = true;
   if (aStatus->GetOperation() == mozInlineSpellStatus::eOpSelection)
-    rv = DoSpellCheckSelection(wordUtil, spellCheckSelection);
+    rv = DoSpellCheckSelection(*wordUtil, spellCheckSelection);
   else
-    rv = DoSpellCheck(wordUtil, spellCheckSelection, aStatus, &doneChecking);
+    rv = DoSpellCheck(*wordUtil, spellCheckSelection, aStatus, &doneChecking);
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (!doneChecking) rv = ScheduleSpellCheck(std::move(aStatus));
