@@ -101,6 +101,7 @@ EXPORTS += [
     "nsStubMutationObserver.h",
     "nsStyledElement.h",
     "nsTextFragment.h",
+    "nsTextNode.h",
     "nsTraversal.h",
     "nsTreeSanitizer.h",
     "nsViewportInfo.h",
