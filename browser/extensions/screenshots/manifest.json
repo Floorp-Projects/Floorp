@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Firefox Screenshots",
-  "version": "39.0.0",
+  "version": "39.0.1",
   "description": "Take clips and screenshots from the Web and save them temporarily or permanently.",
   "author": "Mozilla <screenshots-feedback@mozilla.com>",
   "homepage_url": "https://github.com/mozilla-services/screenshots",
