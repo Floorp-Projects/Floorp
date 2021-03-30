@@ -28,6 +28,7 @@ class ApplicationPanel {
   async open() {
     await this.panelWin.Application.bootstrap({
       toolbox: this.toolbox,
+      commands: this.commands,
       panel: this,
     });
 
