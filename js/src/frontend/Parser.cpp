@@ -1448,6 +1448,56 @@ Maybe<LexicalScope::ParserData*> ParserBase::newLexicalScopeData(
   return NewLexicalScopeData(cx_, scope, stencilAlloc(), pc_);
 }
 
+Maybe<ClassBodyScope::ParserData*> NewClassBodyScopeData(
+    JSContext* cx, ParseContext::Scope& scope, LifoAlloc& alloc,
+    ParseContext* pc) {
+  ParserBindingNameVector lets(cx);
+  ParserBindingNameVector consts(cx);
+
+  bool allBindingsClosedOver =
+      pc->sc()->allBindingsClosedOver() || scope.tooBigToOptimize();
+
+  for (BindingIter bi = scope.bindings(pc); bi; bi++) {
+    ParserBindingName binding(bi.name(),
+                              allBindingsClosedOver || bi.closedOver());
+    switch (bi.kind()) {
+      case BindingKind::Let:
+        if (!lets.append(binding)) {
+          return Nothing();
+        }
+        break;
+      case BindingKind::Const:
+        if (!consts.append(binding)) {
+          return Nothing();
+        }
+        break;
+      default:
+        break;
+    }
+  }
+
+  ClassBodyScope::ParserData* bindings = nullptr;
+  uint32_t numBindings = lets.length() + consts.length();
+
+  if (numBindings > 0) {
+    bindings = NewEmptyBindingData<ClassBodyScope>(cx, alloc, numBindings);
+    if (!bindings) {
+      return Nothing();
+    }
+
+    // The ordering here is important. See comments in ClassBodyScope.
+    InitializeBindingData(bindings, numBindings, lets,
+                          &ParserClassBodyScopeSlotInfo::constStart, consts);
+  }
+
+  return Some(bindings);
+}
+
+Maybe<ClassBodyScope::ParserData*> ParserBase::newClassBodyScopeData(
+    ParseContext::Scope& scope) {
+  return NewClassBodyScopeData(cx_, scope, stencilAlloc(), pc_);
+}
+
 template <>
 SyntaxParseHandler::LexicalScopeNodeType
 PerHandlerParser<SyntaxParseHandler>::finishLexicalScope(
@@ -1472,6 +1522,32 @@ LexicalScopeNode* PerHandlerParser<FullParseHandler>::finishLexicalScope(
   }
 
   return handler_.newLexicalScope(*bindings, body, kind);
+}
+
+template <>
+SyntaxParseHandler::ClassBodyScopeNodeType
+PerHandlerParser<SyntaxParseHandler>::finishClassBodyScope(
+    ParseContext::Scope& scope, Node body) {
+  if (!propagateFreeNamesAndMarkClosedOverBindings(scope)) {
+    return null();
+  }
+
+  return handler_.newClassBodyScope(body);
+}
+
+template <>
+ClassBodyScopeNode* PerHandlerParser<FullParseHandler>::finishClassBodyScope(
+    ParseContext::Scope& scope, ParseNode* body) {
+  if (!propagateFreeNamesAndMarkClosedOverBindings(scope)) {
+    return nullptr;
+  }
+
+  Maybe<ClassBodyScope::ParserData*> bindings = newClassBodyScopeData(scope);
+  if (!bindings) {
+    return nullptr;
+  }
+
+  return handler_.newClassBodyScope(*bindings, body);
 }
 
 template <class ParseHandler>
@@ -7732,7 +7808,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
   Node nameNode = null();
   Node classHeritage = null();
   LexicalScopeNodeType classBlock = null();
-  LexicalScopeNodeType classBodyBlock = null();
+  ClassBodyScopeNodeType classBodyBlock = null();
   uint32_t classEndOffset;
   {
     // A named class creates a new lexical scope with a const binding of the
@@ -7818,7 +7894,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
         return null();
       }
 
-      classBodyBlock = finishLexicalScope(bodyScope, classMembers);
+      classBodyBlock = finishClassBodyScope(bodyScope, classMembers);
       if (!classBodyBlock) {
         return null();
       }

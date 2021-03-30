@@ -443,7 +443,7 @@ bool ClassEmitter::emitScope(LexicalScope::ParserData* scopeBindings) {
   return true;
 }
 
-bool ClassEmitter::emitBodyScope(LexicalScope::ParserData* scopeBindings) {
+bool ClassEmitter::emitBodyScope(ClassBodyScope::ParserData* scopeBindings) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start);
   MOZ_ASSERT(classState_ == ClassState::Start ||
              classState_ == ClassState::Scope);
@@ -451,7 +451,7 @@ bool ClassEmitter::emitBodyScope(LexicalScope::ParserData* scopeBindings) {
   bodyTdzCache_.emplace(bce_);
 
   bodyScope_.emplace(bce_);
-  if (!bodyScope_->enterLexical(bce_, ScopeKind::ClassBody, scopeBindings)) {
+  if (!bodyScope_->enterClassBody(bce_, ScopeKind::ClassBody, scopeBindings)) {
     return false;
   }
 

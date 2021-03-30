@@ -4055,11 +4055,15 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
     END_CASE(PopLexicalEnv)
 
     CASE(DebugLeaveLexicalEnv) {
-      MOZ_ASSERT(script->lookupScope(REGS.pc));
-      MOZ_ASSERT(script->lookupScope(REGS.pc)->is<LexicalScope>());
-      MOZ_ASSERT(
-          !script->lookupScope(REGS.pc)->as<LexicalScope>().hasEnvironment());
-
+#ifdef DEBUG
+      Scope* scope = script->lookupScope(REGS.pc);
+      MOZ_ASSERT(scope);
+      MOZ_ASSERT(scope->is<LexicalScope>() || scope->is<ClassBodyScope>());
+      MOZ_ASSERT_IF(scope->is<LexicalScope>(),
+                    !scope->as<LexicalScope>().hasEnvironment());
+      MOZ_ASSERT_IF(scope->is<ClassBodyScope>(),
+                    !scope->as<ClassBodyScope>().hasEnvironment());
+#endif
       // FIXME: This opcode should not be necessary.  The debugger shouldn't
       // need help from bytecode to do its job.  See bug 927782.
 

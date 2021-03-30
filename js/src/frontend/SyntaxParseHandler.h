@@ -327,6 +327,10 @@ class SyntaxParseHandler {
     return NodeLexicalDeclaration;
   }
 
+  ClassBodyScopeNodeType newClassBodyScope(Node body) {
+    return NodeLexicalDeclaration;
+  }
+
   BinaryNodeType newNewTarget(NullaryNodeType newHolder,
                               NullaryNodeType targetHolder) {
     return NodeGeneric;
