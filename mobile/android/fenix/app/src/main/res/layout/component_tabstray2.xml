@@ -109,8 +109,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:contentDescription="@string/tab_header_label"
-            android:layout="@layout/tabs_tray_tab_counter"
-            app:tabIconTint="@color/tab_icon" />
+            android:layout="@layout/tabs_tray_tab_counter2" />
 
         <com.google.android.material.tabs.TabItem
             android:id="@+id/private_tab_item"

@@ -16,6 +16,10 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import kotlinx.android.synthetic.main.component_tabstray2.*
 import kotlinx.android.synthetic.main.component_tabstray2.view.*
 import org.mozilla.fenix.HomeActivity
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import mozilla.components.browser.state.selector.normalTabs
+import mozilla.components.lib.state.ext.consumeFrom
+import mozilla.components.ui.tabcounter.TabCounter
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
@@ -63,6 +67,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         return containerView
     }
 
+    @ExperimentalCoroutinesApi
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -85,6 +90,12 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             interactor = this,
             store = requireComponents.core.store
         ).attach()
+
+        consumeFrom(requireComponents.core.store) {
+            view.findViewById<TabCounter>(R.id.tab_counter)?.apply {
+                setCount(requireComponents.core.store.state.normalTabs.size)
+            }
+        }
     }
 
     override fun setCurrentTrayPosition(position: Int) {
