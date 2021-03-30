@@ -102,20 +102,22 @@ static bool IsDOMWordSeparator(char16_t ch) {
 // static
 Maybe<mozInlineSpellWordUtil> mozInlineSpellWordUtil::Create(
     const TextEditor& aTextEditor) {
-  mozInlineSpellWordUtil util;
-  util.mDocument = aTextEditor.GetDocument();
-  if (NS_WARN_IF(!util.mDocument)) {
+  dom::Document* document = aTextEditor.GetDocument();
+  if (NS_WARN_IF(!document)) {
     return Nothing();
   }
 
-  util.mIsContentEditableOrDesignMode = !!aTextEditor.AsHTMLEditor();
+  const bool isContentEditableOrDesignMode = !!aTextEditor.AsHTMLEditor();
 
   // Find the root node for the editor. For contenteditable the mRootNode could
   // change to shadow root if the begin and end are inside the shadowDOM.
-  util.mRootNode = aTextEditor.GetRoot();
-  if (NS_WARN_IF(!util.mRootNode)) {
+  nsINode* rootNode = aTextEditor.GetRoot();
+  if (NS_WARN_IF(!rootNode)) {
     return Nothing();
   }
+
+  mozInlineSpellWordUtil util{*document, isContentEditableOrDesignMode,
+                              *rootNode};
   return Some(std::move(util));
 }
 

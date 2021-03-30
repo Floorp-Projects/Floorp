@@ -119,9 +119,13 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   const nsINode* GetRootNode() const { return mRootNode; }
 
  private:
-  mozInlineSpellWordUtil()
-      : mIsContentEditableOrDesignMode(false),
-        mRootNode(nullptr),
+  mozInlineSpellWordUtil(mozilla::dom::Document& aDocument,
+                         bool aIsContentEditableOrDesignMode, nsINode& aRootNode
+
+                         )
+      : mDocument(&aDocument),
+        mIsContentEditableOrDesignMode(aIsContentEditableOrDesignMode),
+        mRootNode(&aRootNode),
         mSoftBegin(nullptr, 0),
         mSoftEnd(nullptr, 0),
         mNextWordIndex(-1),
