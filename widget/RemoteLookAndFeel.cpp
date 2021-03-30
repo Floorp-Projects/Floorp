@@ -154,16 +154,20 @@ static bool AddIDsToMap(nsXPLookAndFeel* aImpl, FullLookAndFeel* aLf,
              NS_SUCCEEDED(rv) ? Some(theInt) : Nothing{});
   }
 
-  // The rest of IDs only come from the child content theme.
-  if (aFromParentTheme) {
-    return anyFromOtherTheme;
-  }
-
   for (auto id : MakeEnumeratedRange(ColorID::End)) {
+    if (aDifferentTheme && aImpl->FromParentTheme(id) != aFromParentTheme) {
+      anyFromOtherTheme = true;
+      continue;
+    }
     nscolor theColor;
     nsresult rv = aImpl->NativeGetColor(id, theColor);
     AddToMap(aLf->tables().colors(), aLf->tables().colorMap(), id,
              NS_SUCCEEDED(rv) ? Some(theColor) : Nothing{});
+  }
+
+  // The rest of IDs only come from the child content theme.
+  if (aFromParentTheme) {
+    return anyFromOtherTheme;
   }
 
   for (auto id : MakeEnumeratedRange(FloatID::End)) {

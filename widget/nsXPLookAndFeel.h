@@ -80,6 +80,12 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
         "theme");
     return false;
   }
+  virtual bool FromParentTheme(ColorID) {
+    MOZ_ASSERT_UNREACHABLE(
+        "Should override if WithThemeConfiguredForContent can change the "
+        "theme");
+    return false;
+  }
 
  protected:
   nsXPLookAndFeel() = default;
