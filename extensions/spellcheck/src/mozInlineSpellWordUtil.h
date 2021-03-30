@@ -183,7 +183,7 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   void InvalidateWords() { mSoftTextValid = false; }
   nsresult EnsureWords();
 
-  int32_t MapDOMPositionToSoftTextOffset(NodeOffset aNodeOffset);
+  int32_t MapDOMPositionToSoftTextOffset(NodeOffset aNodeOffset) const;
   // Map an offset into mSoftText to a DOM position. Note that two DOM positions
   // can map to the same mSoftText offset, e.g. given nodes A=aaaa and B=bbbb
   // forming aaaabbbb, (A,4) and (B,0) give the same string offset. So,
@@ -192,7 +192,7 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   // Otherwise the position indicates the START of a range so we return (B,0).
   enum DOMMapHint { HINT_BEGIN, HINT_END };
   NodeOffset MapSoftTextOffsetToDOMPosition(int32_t aSoftTextOffset,
-                                            DOMMapHint aHint);
+                                            DOMMapHint aHint) const;
 
   static void ToString(DOMMapHint aHint, nsACString& aResult);
 
@@ -213,7 +213,7 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
 
   nsresult SplitDOMWord(int32_t aStart, int32_t aEnd);
 
-  nsresult MakeRangeForWord(const RealWord& aWord, nsRange** aRange);
+  nsresult MakeRangeForWord(const RealWord& aWord, nsRange** aRange) const;
   void MakeNodeOffsetRangeForWord(const RealWord& aWord,
                                   NodeOffsetRange* aNodeOffsetRange);
 };

@@ -275,7 +275,7 @@ nsresult mozInlineSpellWordUtil::EnsureWords() {
 }
 
 nsresult mozInlineSpellWordUtil::MakeRangeForWord(const RealWord& aWord,
-                                                  nsRange** aRange) {
+                                                  nsRange** aRange) const {
   NodeOffset begin =
       MapSoftTextOffsetToDOMPosition(aWord.mSoftTextOffset, HINT_BEGIN);
   NodeOffset end = MapSoftTextOffsetToDOMPosition(aWord.EndOffset(), HINT_END);
@@ -923,7 +923,7 @@ nsresult mozInlineSpellWordUtil::BuildRealWords() {
 /*********** DOM/realwords<->mSoftText mapping functions ************/
 
 int32_t mozInlineSpellWordUtil::MapDOMPositionToSoftTextOffset(
-    NodeOffset aNodeOffset) {
+    NodeOffset aNodeOffset) const {
   if (!mSoftTextValid) {
     NS_ERROR("Soft text must be valid if we're to map into it");
     return -1;
@@ -984,7 +984,7 @@ bool FindLastNongreaterOffset(const nsTArray<T>& aContainer,
 }  // namespace
 
 NodeOffset mozInlineSpellWordUtil::MapSoftTextOffsetToDOMPosition(
-    int32_t aSoftTextOffset, DOMMapHint aHint) {
+    int32_t aSoftTextOffset, DOMMapHint aHint) const {
   NS_ASSERTION(mSoftTextValid,
                "Soft text must be valid if we're to map out of it");
   if (!mSoftTextValid) return NodeOffset(nullptr, -1);
