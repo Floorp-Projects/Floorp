@@ -101,9 +101,6 @@ var SelectParentHelper = {
    *
    * FIXME(emilio): injecting a stylesheet is a somewhat inefficient way to do
    * this, can we use more style attributes?
-   *
-   * FIXME(emilio, bug 1530709): At the very least we should use CSSOM to avoid
-   * trusting the IPC message too much.
    */
   populate(
     menulist,

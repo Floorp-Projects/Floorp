@@ -206,33 +206,10 @@ const gSelects = {
 `,
 };
 
-function getSystemColor(color) {
-  // Need to convert system color to RGB color.
-  let textarea = document.createElementNS(
-    "http://www.w3.org/1999/xhtml",
-    "textarea"
-  );
-  textarea.style.display = "none";
-  textarea.style.color = color;
-  document.documentElement.appendChild(textarea);
-  let computed = getComputedStyle(textarea).color;
-  textarea.remove();
-  return computed;
-}
-
 function testOptionColors(index, item, menulist) {
   // The label contains a JSON string of the expected colors for
   // `color` and `background-color`.
   let expected = JSON.parse(item.label);
-
-  for (let color of Object.keys(expected)) {
-    if (
-      color.toLowerCase().includes("color") &&
-      !expected[color].startsWith("rgb")
-    ) {
-      expected[color] = getSystemColor(expected[color]);
-    }
-  }
 
   // Press Down to move the selected item to the next item in the
   // list and check the colors of this item when it's not selected.
@@ -268,9 +245,61 @@ function testOptionColors(index, item, menulist) {
   }
 }
 
+function computeLabels(tab, colorsToComputeParent = null) {
+  return SpecialPowers.spawn(
+    tab.linkedBrowser,
+    [colorsToComputeParent],
+    function(colorsToCompute) {
+      function _rgbaToString(parsedColor) {
+        let { r, g, b, a } = parsedColor;
+        if (a == 1) {
+          return `rgb(${r}, ${g}, ${b})`;
+        }
+        return `rgba(${r}, ${g}, ${b}, ${a})`;
+      }
+      function computeColors(expected) {
+        let any = false;
+        for (let color of Object.keys(expected)) {
+          if (
+            color.toLowerCase().includes("color") &&
+            !expected[color].startsWith("rgb")
+          ) {
+            any = true;
+            expected[color] = _rgbaToString(
+              InspectorUtils.colorToRGBA(expected[color], content.document)
+            );
+          }
+        }
+        return any;
+      }
+      if (colorsToCompute) {
+        computeColors(colorsToCompute);
+        return colorsToCompute;
+      }
+      for (let option of content.document.querySelectorAll("option,optgroup")) {
+        if (!option.label) {
+          continue;
+        }
+        let expected;
+        try {
+          expected = JSON.parse(option.label);
+        } catch (ex) {
+          continue;
+        }
+        if (computeColors(expected)) {
+          option.label = JSON.stringify(expected);
+        }
+      }
+      return null;
+    }
+  );
+}
+
 async function openSelectPopup(select) {
   const pageUrl = "data:text/html," + escape(select);
   let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
+
+  await computeLabels(tab);
 
   let menulist = document.getElementById("ContentSelectDropdown");
   let selectPopup = menulist.menupopup;
@@ -291,6 +320,9 @@ async function openSelectPopup(select) {
 async function testSelectColors(selectID, itemCount, options) {
   let select = gSelects[selectID];
   let { tab, menulist, selectPopup } = await openSelectPopup(select);
+  if (options.compute) {
+    options = await computeLabels(tab, options);
+  }
   let arrowSB = selectPopup.shadowRoot.querySelector(
     ".menupopup-arrowscrollbox"
   );
@@ -408,8 +440,9 @@ add_task(async function test_colors_applied_to_popup() {
 // This test checks when a <select> element has a transparent background applied to itself.
 add_task(async function test_transparent_applied_to_popup() {
   let options = {
-    selectColor: getSystemColor("-moz-ComboboxText"),
-    selectBgColor: getSystemColor("-moz-Combobox"),
+    selectColor: "-moz-ComboboxText",
+    selectBgColor: "-moz-Combobox",
+    compute: true,
   };
   await testSelectColors("TRANSPARENT_SELECT", 2, options);
 });
