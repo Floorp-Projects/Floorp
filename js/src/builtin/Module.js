@@ -612,7 +612,7 @@ function ModuleEvaluate()
     try {
         InnerModuleEvaluation(module, stack, 0);
         if (isTopLevelAwaitEnabled) {
-          if (!module.asyncEvaluating) {
+          if (!IsAsyncEvaluating(module)) {
             ModuleTopLevelCapabilityResolve(module);
           }
           // Steps 7-8
@@ -716,13 +716,13 @@ function InnerModuleEvaluation(module, stack, index)
             requiredModule = GetCycleRoot(requiredModule);
             assert(requiredModule.status >= MODULE_STATUS_EVALUATED,
                   `Bad module status in InnerModuleEvaluation: ${requiredModule.status}`);
-            if (requiredModule.evaluationError) {
+            if (requiredModule.status == MODULE_STATUS_EVALUATED_ERROR) {
               throw GetModuleEvaluationError(requiredModule);
             }
           }
         }
         if (isTopLevelAwaitEnabled) {
-          if (requiredModule.asyncEvaluating) {
+          if (IsAsyncEvaluating(requiredModule)) {
               UnsafeSetReservedSlot(module,
                                     MODULE_OBJECT_PENDING_ASYNC_DEPENDENCIES_SLOT,
                                     module.pendingAsyncDependencies + 1);
@@ -732,15 +732,13 @@ function InnerModuleEvaluation(module, stack, index)
     }
 
     if (isTopLevelAwaitEnabled) {
-      if (module.pendingAsyncDependencies > 0) {
-        UnsafeSetReservedSlot(module, MODULE_OBJECT_ASYNC_EVALUATING_SLOT, true);
-      } else {
-        if (module.async) {
+      if (module.pendingAsyncDependencies > 0 || module.async) {
+        InitAsyncEvaluating(module);
+        if (module.pendingAsyncDependencies === 0) {
           ExecuteAsyncModule(module);
-        } else {
-          // Step 11
-          ExecuteModule(module);
         }
+      } else {
+        ExecuteModule(module);
       }
     } else {
       // Step 11
@@ -770,14 +768,43 @@ function InnerModuleEvaluation(module, stack, index)
     return index;
 }
 
+// https://tc39.es/proposal-top-level-await/#sec-gather-async-parent-completions
+function GatherAsyncParentCompletions(module, execList = []) {
+  assert(module.status == MODULE_STATUS_EVALUATED, "bad status for async module");
+
+  // Step 5.
+  // asyncParentModules is a list, and doesn't have a .length. Might be worth changing
+  // later on.
+  let i = 0;
+  while (module.asyncParentModules[i]) {
+    const m = module.asyncParentModules[i];
+    if (GetCycleRoot(m).status != MODULE_STATUS_EVALUATED_ERROR &&
+        !callFunction(ArrayIncludes, execList, m)) {
+      assert(!m.evaluationError, "should not have evaluation error");
+      assert(m.pendingAsyncDependencies > 0, "should have at least one dependency");
+      UnsafeSetReservedSlot(m,
+                            MODULE_OBJECT_PENDING_ASYNC_DEPENDENCIES_SLOT,
+                            m.pendingAsyncDependencies - 1);
+      if (m.pendingAsyncDependencies === 0) {
+        callFunction(std_Array_push, execList, m);
+        if (!m.async) {
+          execList = GatherAsyncParentCompletions(m, execList);
+        }
+      }
+    }
+    i++;
+  }
+  callFunction(ArraySort,
+               execList,
+               (a, b) => a.asyncEvaluatingPostOrder - b.asyncEvaluatingPostOrder);
+  return execList
+}
+
 // https://tc39.es/proposal-top-level-await/#sec-execute-async-module
 function ExecuteAsyncModule(module) {
   // Steps 1-3.
   assert(module.status == MODULE_STATUS_EVALUATING ||
          module.status == MODULE_STATUS_EVALUATED, "bad status for async module");
-  assert(module.async, "module is not async");
-  UnsafeSetReservedSlot(module, MODULE_OBJECT_ASYNC_EVALUATING_SLOT, true);
-
   // Step 4-11 done in AsyncAwait opcode
 
   ExecuteModule(module);
