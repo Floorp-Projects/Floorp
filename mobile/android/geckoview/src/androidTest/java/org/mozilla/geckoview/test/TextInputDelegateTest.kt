@@ -460,7 +460,9 @@ class TextInputDelegateTest : BaseSessionTest() {
 
     // Test deleteSurroundingText
     @WithDisplay(width = 512, height = 512) // Child process updates require having a display.
+    // disable test on debug for frequent failures in bug 1655896
     @Test fun inputConnection_deleteSurroundingText() {
+        assumeThat(sessionRule.env.isDebugBuild, equalTo(false))
         setupContent("foobarfoo")
 
         val ic = mainSession.textInput.onCreateInputConnection(EditorInfo())!!
