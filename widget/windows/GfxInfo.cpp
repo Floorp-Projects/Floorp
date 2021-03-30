@@ -75,6 +75,9 @@ GfxInfo::GetDWriteVersion(nsAString& aDwriteVersion) {
 
 NS_IMETHODIMP
 GfxInfo::GetHasBattery(bool* aHasBattery) {
+  MOZ_RELEASE_ASSERT(!XRE_IsContentProcess(),
+                     "Win32k Lockdown doesn't support querying the battery in "
+                     "content process");
   *aHasBattery = mHasBattery;
   return NS_OK;
 }
@@ -361,6 +364,10 @@ static bool HasBattery() {
     HANDLE mHandle;
   };
 
+  MOZ_ASSERT(!XRE_IsContentProcess(),
+             "Win32k Lockdown doesn't support querying the battery in content "
+             "process");
+
   HDEVINFO hdev =
       ::SetupDiGetClassDevs(&GUID_DEVCLASS_BATTERY, nullptr, nullptr,
                             DIGCF_PRESENT | DIGCF_DEVICEINTERFACE);
@@ -450,7 +457,10 @@ static bool HasBattery() {
 #define DEVICE_KEY_PREFIX L"\\Registry\\Machine\\"
 nsresult GfxInfo::Init() {
   nsresult rv = GfxInfoBase::Init();
-  mHasBattery = HasBattery();
+
+  if (!XRE_IsContentProcess()) {
+    mHasBattery = HasBattery();
+  }
 
   DISPLAY_DEVICEW displayDevice;
   displayDevice.cb = sizeof(displayDevice);
