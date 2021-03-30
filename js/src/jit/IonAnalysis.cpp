@@ -1356,6 +1356,7 @@ class TypeAnalyzer {
   bool respecialize(MPhi* phi, MIRType type);
   bool propagateSpecialization(MPhi* phi);
   bool specializePhis();
+  bool specializeOsrOnlyPhis();
   void replaceRedundantPhi(MPhi* phi);
   bool adjustPhiInputs(MPhi* phi);
   bool adjustInputs(MDefinition* def);
@@ -1593,6 +1594,34 @@ bool TypeAnalyzer::propagateAllPhiSpecializations() {
   return true;
 }
 
+// If branch pruning removes the path from the entry block to the OSR
+// preheader, we may have phis (or chains of phis) with no operands
+// other than OsrValues. These phis will still have MIRType::None.
+// Since we don't have any information about them, we specialize them
+// as MIRType::Value.
+bool TypeAnalyzer::specializeOsrOnlyPhis() {
+  MOZ_ASSERT(graph.osrBlock());
+  MOZ_ASSERT(graph.osrPreHeaderBlock()->numPredecessors() == 1);
+
+  for (PostorderIterator block(graph.poBegin()); block != graph.poEnd();
+       block++) {
+    if (mir->shouldCancel("Specialize osr-only phis (main loop)")) {
+      return false;
+    }
+
+    for (MPhiIterator phi(block->phisBegin()); phi != block->phisEnd(); phi++) {
+      if (mir->shouldCancel("Specialize osr-only phis (inner loop)")) {
+        return false;
+      }
+
+      if (phi->type() == MIRType::None) {
+        phi->specialize(MIRType::Value);
+      }
+    }
+  }
+  return true;
+}
+
 bool TypeAnalyzer::specializePhis() {
   for (PostorderIterator block(graph.poBegin()); block != graph.poEnd();
        block++) {
@@ -1631,9 +1660,12 @@ bool TypeAnalyzer::specializePhis() {
     MBasicBlock* header = preHeader->getSingleSuccessor();
 
     if (preHeader->numPredecessors() == 1) {
-      // Branch pruning has removed the path from the entry block
-      // to the preheader. There is nothing to do in this case.
       MOZ_ASSERT(preHeader->getPredecessor(0) == graph.osrBlock());
+      // Branch pruning has removed the path from the entry block
+      // to the preheader. Specialize any phis with no non-osr inputs.
+      if (!specializeOsrOnlyPhis()) {
+        return false;
+      }
     } else if (header->isLoopHeader()) {
       for (MPhiIterator phi(header->phisBegin()); phi != header->phisEnd();
            phi++) {
@@ -1851,18 +1883,6 @@ bool TypeAnalyzer::insertConversions() {
         replaceRedundantPhi(phi);
         block->discardPhi(phi);
       } else {
-        if (phi->type() == MIRType::None) {
-          MOZ_ASSERT(graph.osrBlock());
-          MOZ_ASSERT(graph.osrPreHeaderBlock()->numPredecessors() == 1);
-          // If branch pruning removes the path from the entry block
-          // to the OSR preheader, we may have phis (or chains of
-          // phis) with no operands other than OsrValues. These phis
-          // will still have MIRType::None. Since we don't have any
-          // information about them, we specialize them as
-          // MIRType::Value.
-          phi->specialize(MIRType::Value);
-        }
-
         if (!adjustPhiInputs(phi)) {
           return false;
         }
