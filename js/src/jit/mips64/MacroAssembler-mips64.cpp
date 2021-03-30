@@ -426,7 +426,6 @@ void MacroAssemblerMIPS64::ma_add32TestOverflow(Register rd, Register rs,
 void MacroAssemblerMIPS64::ma_addPtrTestOverflow(Register rd, Register rs,
                                                  Register rt, Label* overflow) {
   SecondScratchRegisterScope scratch2(asMasm());
-  MOZ_ASSERT_IF(rs == rd, rs != rt);
   MOZ_ASSERT(rd != rt);
   MOZ_ASSERT(rd != scratch2);
 
@@ -435,17 +434,16 @@ void MacroAssemblerMIPS64::ma_addPtrTestOverflow(Register rd, Register rs,
     as_xor(scratch2, rs, rd);
   } else {
     ScratchRegisterScope scratch(asMasm());
-    MOZ_ASSERT(rs != scratch);
-    MOZ_ASSERT(rt != scratch);
-    MOZ_ASSERT(rd != scratch);
+    MOZ_ASSERT(rs != scratch2);
+    MOZ_ASSERT(rt != scratch2);
 
     // If the sign of rs and rt are different, no overflow
-    as_xor(scratch, rs, rt);
-    as_nor(scratch, scratch, zero);
+    as_xor(scratch2, rs, rt);
+    as_nor(scratch2, scratch2, zero);
 
     as_daddu(rd, rs, rt);
-    as_xor(scratch2, rd, rt);
-    as_and(scratch2, scratch2, scratch);
+    as_xor(scratch, rd, rt);
+    as_and(scratch, scratch, scratch2);
   }
 
   ma_b(scratch2, zero, overflow, Assembler::LessThan);
