@@ -19,30 +19,27 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 
-namespace mozilla {
-namespace extensions {
+namespace mozilla::extensions {
 
-using namespace JS;
-using namespace mozilla::dom;
-
-class StreamFilterDataEvent : public Event {
+class StreamFilterDataEvent : public dom::Event {
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(StreamFilterDataEvent,
                                                          Event)
 
-  explicit StreamFilterDataEvent(EventTarget* aEventTarget)
+  explicit StreamFilterDataEvent(dom::EventTarget* aEventTarget)
       : Event(aEventTarget, nullptr, nullptr) {
     mozilla::HoldJSObjects(this);
   }
 
   static already_AddRefed<StreamFilterDataEvent> Constructor(
-      EventTarget* aEventTarget, const nsAString& aType,
-      const StreamFilterDataEventInit& aParam);
+      dom::EventTarget* aEventTarget, const nsAString& aType,
+      const dom::StreamFilterDataEventInit& aParam);
 
   static already_AddRefed<StreamFilterDataEvent> Constructor(
-      GlobalObject& aGlobal, const nsAString& aType,
-      const StreamFilterDataEventInit& aParam) {
-    nsCOMPtr<EventTarget> target = do_QueryInterface(aGlobal.GetAsSupports());
+      dom::GlobalObject& aGlobal, const nsAString& aType,
+      const dom::StreamFilterDataEventInit& aParam) {
+    nsCOMPtr<dom::EventTarget> target =
+        do_QueryInterface(aGlobal.GetAsSupports());
     return Constructor(target, aType, aParam);
   }
 
@@ -59,10 +56,9 @@ class StreamFilterDataEvent : public Event {
  private:
   JS::Heap<JSObject*> mData;
 
-  void SetData(const ArrayBuffer& aData) { mData = aData.Obj(); }
+  void SetData(const dom::ArrayBuffer& aData) { mData = aData.Obj(); }
 };
 
-}  // namespace extensions
-}  // namespace mozilla
+}  // namespace mozilla::extensions
 
 #endif  // mozilla_extensions_StreamFilterEvents_h
