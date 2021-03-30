@@ -10,16 +10,19 @@
   background-color: var(--button-bgcolor, ButtonFace);
   color: var(--button-color, ButtonText);
   border-radius: 4px;
-  padding: 4px 8px 4px 12px;
+  padding-block: 4px;
+  padding-inline: 12px 8px;
   margin: 5px 2px 3px;
 }
 
 :host(:not([native])[size="medium"]) {
-  padding: 6px 10px 6px 16px;
+  padding-block: 6px;
+  padding-inline: 16px 10px;
 }
 
 :host(:not([native])[size="large"]) {
-  padding: 8px 12px 8px 16px;
+  padding-block: 8px;
+  padding-inline: 16px 12px;
 }
 
 :host(:not([native]):hover) {

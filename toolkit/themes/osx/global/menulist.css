@@ -8,7 +8,7 @@
 
 @supports -moz-bool-pref("browser.proton.enabled") {
 label:not([native]) {
-  margin: 2px 3px !important;
+  margin: 0 3px !important;
 }
 
 :host([native]) {

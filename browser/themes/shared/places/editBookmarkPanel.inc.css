@@ -11,7 +11,6 @@
 #editBookmarkPanelInfoArea {
   overflow: hidden;
   position: relative;
-  margin: 6px 8px 0;
 }
 
 #editBookmarkPanelRecommendation {
@@ -127,7 +126,7 @@ html|img#editBookmarkPanelFavicon[src] {
   background-image: -moz-element(#editBookmarkPanelImageCanvas);
   background-repeat: no-repeat;
   background-size: cover;
-  margin: 0 2px;
+  margin: 0;
   /* When adjusting the height for long CFR messages we want the animations
    * to align. The delay is used to force the animation to start when the
    * panel message has finished sliding down. */
@@ -144,10 +143,6 @@ html|img#editBookmarkPanelFavicon[src] {
   padding-bottom: 0;
 }
 
-#editBookmarkPanelBottomContent {
-  padding-top: 0;
-}
-
 /* Implements editBookmarkPanel resizing on folderTree un-collapse. */
 #editBMPanel_folderTree {
   min-width: 27em;
@@ -157,12 +152,133 @@ html|img#editBookmarkPanelFavicon[src] {
   display: flex;
 }
 
-@supports not -moz-bool-pref("browser.proton.enabled") {
+@supports -moz-bool-pref("browser.proton.doorhangers.enabled") {
+#editBookmarkPanel {
+  font: caption;
+}
+
+#editBookmarkPanelInfoArea {
+  padding: 6px var(--arrowpanel-padding) 0;
+}
+
+#editBookmarkPanelRows > vbox {
+  padding-block: var(--arrowpanel-padding) 0;
+}
+
+#editBookmarkPanelContent label[control] {
+  margin-inline-start: 0;
+  margin-block-start: 0;
+}
+
+#editBookmarkPanel .caption-label {
+  display: none;
+}
+
+#editBookmarkPanelRows {
+  padding: calc(var(--arrowpanel-padding) / 2) var(--arrowpanel-padding) var(--arrowpanel-padding);
+}
+
+#editBookmarkPanelBottomContent {
+  padding: 0 var(--arrowpanel-padding) calc(var(--arrowpanel-padding) / 2);
+}
+
+#editBookmarkPanel_showForNewBookmarks > .checkbox-label-box > .checkbox-label {
+  opacity: 0.7;
+}
+
+#editBookmarkPanelBottomButtons > button {
+  margin-block: 0;
+}
+
+#editBookmarkPanel .expander-up > .button-box > .button-text,
+#editBookmarkPanel .expander-down > .button-box > .button-text {
+  display: none;
+}
+
+#editBookmarkPanel .expander-up,
+#editBookmarkPanel .expander-down {
+  appearance: none; /* override button.css */
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin: 0;
+  margin-inline-start: 4px;
+  min-width: 32px;
+  min-height: 32px;
+  color: var(--button-color, ButtonText);
+  background-color: var(--button-bgcolor);
+}
+
+#editBookmarkPanel .expander-up:hover,
+#editBookmarkPanel .expander-down:hover {
+  background-color: var(--button-hover-bgcolor);
+}
+
+#editBookmarkPanel .expander-up:hover:active,
+#editBookmarkPanel .expander-down:hover:active {
+  /**
+   * We override the colour here because on macOS, buttons default to
+   * having :hover:active buttons have color -moz-mac-buttonactivetext
+   */
+  color: var(--button-color);
+  background-color: var(--button-active-bgcolor);
+}
+
+#editBookmarkPanel .expander-up:focus-visible,
+#editBookmarkPanel .expander-down:focus-visible {
+  outline: 2px solid var(--focus-outline-color);
+  outline-offset: 0;
+}
+
+#editBookmarkPanel .expander-up {
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-16.svg");
+  transform: scaleY(-1);
+}
+
+#editBookmarkPanel .expander-down {
+  list-style-image: url("chrome://global/skin/icons/arrow-dropdown-16.svg");
+}
+
+#editBMPanel_folderMenuList {
+  margin: 0;
+}
+
+#editBookmarkPanelRows > vbox > html|input,
+#editBookmarkPanelRows > vbox > hbox > html|input {
+  appearance: none;
+  padding: 8px;
+  border-radius: 4px;
+  border: 0;
+  outline: 1px solid var(--input-border-color, ThreeDShadow);
+  outline-offset: -1px;
+  background-color: var(--input-bgcolor, Field);
+  color: var(--input-color, FieldText);
+  margin: 0;
+}
+
+#editBookmarkPanelRows > vbox > html|input:focus-visible,
+#editBookmarkPanelRows > vbox > hbox > html|input:focus-visible {
+  outline: 2px solid var(--focus-outline-color);
+}
+} /** END Proton **/
+
+@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
+#editBookmarkPanelInfoArea {
+  margin: 6px 8px 0;
+}
+
+#editBookmarkPanelBottomContent {
+  padding-top: 0;
+}
+
 .editBookmarkPanelBottomButton {
   flex: 1;
 }
 
 .editBookmarkPanelBottomButton:not(:last-child) {
   border-inline-end: 1px solid var(--panel-separator-color);
+}
+
+#editBookmarkPanelImage {
+  margin: 0 2px;
 }
 } /** END not Proton **/

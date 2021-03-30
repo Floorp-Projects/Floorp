@@ -2,9 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@supports not -moz-bool-pref("browser.proton.doorhangers.enabled") {
 #editBookmarkPanelRows > vbox {
   margin-bottom: .5em;
 }
+} /** END not Proton **/
 
 /**** folder menulist ****/
 #editBMPanel_folderMenuList::part(icon),

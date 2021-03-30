@@ -33,8 +33,9 @@
              control="editBMPanel_folderMenuList"/>
       <hbox flex="1" align="center">
         <menulist id="editBMPanel_folderMenuList"
-                  class="folder-icon panel-button"
+                  class="folder-icon"
                   flex="1"
+                  size="large"
                   oncommand="gEditItemOverlay.onFolderMenuListCommand(event).catch(Cu.reportError);">
           <menupopup>
             <!-- Static item for special folders -->
