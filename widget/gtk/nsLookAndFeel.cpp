@@ -1124,9 +1124,11 @@ bool nsLookAndFeel::FromParentTheme(ColorID aID) {
     case ColorID::ThemedScrollbarInactive:
     case ColorID::ThemedScrollbarThumb:
     case ColorID::ThemedScrollbarThumbHover:
-    case ColorID::ThemedScrollbarThumbActive:
     case ColorID::ThemedScrollbarThumbInactive:
-      return StaticPrefs::widget_content_allow_gtk_dark_theme_scrollbars();
+      return StaticPrefs::widget_content_allow_gtk_dark_theme_scrollbar();
+    case ColorID::ThemedScrollbarThumbActive:
+      return StaticPrefs::
+          widget_content_allow_gtk_dark_theme_scrollbar_active();
     case ColorID::MozAccentColor:
     case ColorID::MozAccentColorForeground:
       return StaticPrefs::widget_content_allow_gtk_dark_theme_accent();
