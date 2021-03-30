@@ -10854,6 +10854,13 @@
 #endif
   mirror: always
 
+# Whether the active thumb color should always use the themed colors, even if
+# dark scrollbars are in use.
+- name: widget.non-native-theme.scrollbar.active-always-themed
+  type: bool
+  value: true
+  mirror: always
+
 # Whether we use the Windows CSS scrollbar sizes, or the scrollbar sizes
 # defined above.
 - name: widget.non-native-theme.win.scrollbar.use-system-size
@@ -10952,11 +10959,21 @@
   value: true
   mirror: always
 
-# Whether scrollbars colors get passed from the real GTK theme even if
-# allow-gtk-dark-theme is false.
-- name: widget.content.allow-gtk-dark-theme.scrollbars
+# Whether the scrollbar thumb active color gets passed from the real GTK theme
+# even if allow-gtk-dark-theme is false.
+- name: widget.content.allow-gtk-dark-theme.scrollbar_active
   type: bool
   value: true
+  mirror: always
+
+# Whether other scrollbar colors get passed from the real GTK theme even if
+# allow-gtk-dark-theme is false.
+#
+# This is default false because light scrollbars usually match better websites,
+# and we have automatic scrollbar darkening.
+- name: widget.content.allow-gtk-dark-theme.scrollbar
+  type: bool
+  value: false
   mirror: always
 
 # Whether to use gtk high contrast themes to disable content styling like on

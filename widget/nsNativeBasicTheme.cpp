@@ -664,9 +664,15 @@ sRGBColor nsNativeBasicTheme::ComputeScrollbarThumbColor(
     const EventStates& aElementState, const EventStates& aDocumentState,
     UseSystemColors aUseSystemColors) {
   if (!bool(aUseSystemColors) && ShouldUseDarkScrollbar(aFrame, aStyle)) {
-    return sRGBColor::FromABGR(AdjustUnthemedScrollbarThumbColor(
-        NS_RGBA(249, 249, 250, 102), aElementState));
+    const bool forceThemed =
+        aElementState.HasState(NS_EVENT_STATE_ACTIVE) &&
+        StaticPrefs::widget_non_native_theme_scrollbar_active_always_themed();
+    if (!forceThemed) {
+      return sRGBColor::FromABGR(AdjustUnthemedScrollbarThumbColor(
+          NS_RGBA(249, 249, 250, 102), aElementState));
+    }
   }
+
   const nsStyleUI* ui = aStyle.StyleUI();
   nscolor color;
   if (ui->mScrollbarColor.IsColors()) {
