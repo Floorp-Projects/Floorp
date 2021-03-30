@@ -14,29 +14,29 @@ import { recordEvent } from "../utils/telemetry";
 import sourceQueue from "../utils/source-queue";
 
 let actions;
-let targetList;
+let targetCommand;
 let resourceWatcher;
 
 export async function onConnect(commands, _resourceWatcher, _actions, store) {
   actions = _actions;
-  targetList = commands.targetCommand;
+  targetCommand = commands.targetCommand;
   resourceWatcher = _resourceWatcher;
 
   setupCommands(commands);
   setupCreate({ store });
   sourceQueue.initialize(actions);
-  const { targetFront } = targetList;
+  const { targetFront } = targetCommand;
   if (targetFront.isBrowsingContext || targetFront.isParentProcess) {
-    targetList.listenForWorkers = true;
+    targetCommand.listenForWorkers = true;
     if (targetFront.localTab && features.windowlessServiceWorkers) {
-      targetList.listenForServiceWorkers = true;
-      targetList.destroyServiceWorkersOnNavigation = true;
+      targetCommand.listenForServiceWorkers = true;
+      targetCommand.destroyServiceWorkersOnNavigation = true;
     }
-    await targetList.startListening();
+    await targetCommand.startListening();
   }
 
-  await targetList.watchTargets(
-    targetList.ALL_TYPES,
+  await targetCommand.watchTargets(
+    targetCommand.ALL_TYPES,
     onTargetAvailable,
     onTargetDestroyed
   );
@@ -55,8 +55,8 @@ export async function onConnect(commands, _resourceWatcher, _actions, store) {
 }
 
 export function onDisconnect() {
-  targetList.unwatchTargets(
-    targetList.ALL_TYPES,
+  targetCommand.unwatchTargets(
+    targetCommand.ALL_TYPES,
     onTargetAvailable,
     onTargetDestroyed
   );
@@ -73,10 +73,10 @@ export function onDisconnect() {
 }
 
 async function onTargetAvailable({ targetFront, isTargetSwitching }) {
-  const isBrowserToolbox = targetList.targetFront.isParentProcess;
+  const isBrowserToolbox = targetCommand.targetFront.isParentProcess;
   const isNonTopLevelFrameTarget =
     !targetFront.isTopLevel &&
-    targetFront.targetType === targetList.TYPES.FRAME;
+    targetFront.targetType === targetCommand.TYPES.FRAME;
 
   if (isBrowserToolbox && isNonTopLevelFrameTarget) {
     // In the BrowserToolbox, non-top-level frame targets are already
