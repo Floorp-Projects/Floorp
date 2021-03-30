@@ -106,7 +106,7 @@ AccessibilityPanel.prototype = {
 
     this.shouldRefresh = true;
 
-    this.accessibilityProxy = new AccessibilityProxy(this._toolbox);
+    this.accessibilityProxy = new AccessibilityProxy(this._commands);
     this.accessibilityProxy.startListeningForTargetUpdated(
       this.onTargetUpdated
     );

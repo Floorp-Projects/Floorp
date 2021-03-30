@@ -23,8 +23,8 @@ const { FILTERS } = require("devtools/client/accessibility/constants");
  * content processes.
  */
 class AccessibilityProxy {
-  constructor(toolbox) {
-    this.toolbox = toolbox;
+  constructor(commands) {
+    this.commands = commands;
 
     this._accessibilityWalkerFronts = new Set();
     this.lifecycleEvents = new Map();
@@ -92,7 +92,7 @@ class AccessibilityProxy {
   }
 
   get currentTarget() {
-    return this.toolbox.targetList.targetFront;
+    return this.commands.targetCommand.targetFront;
   }
 
   /**
@@ -109,8 +109,8 @@ class AccessibilityProxy {
    */
   async audit(filter, onProgress) {
     const types = filter === FILTERS.ALL ? Object.values(AUDIT_TYPE) : [filter];
-    const totalFrames = this.toolbox.targetList.getAllTargets([
-      this.toolbox.targetList.TYPES.FRAME,
+    const totalFrames = this.commands.targetCommand.getAllTargets([
+      this.commands.targetCommand.TYPES.FRAME,
     ]).length;
     const progress = new CombinedProgress({
       onProgress,
@@ -195,8 +195,8 @@ class AccessibilityProxy {
    *        Function to execute with each accessiblity front.
    */
   async withAllAccessibilityFronts(taskFn) {
-    const accessibilityFronts = await this.toolbox.targetList.getAllFronts(
-      this.toolbox.targetList.TYPES.FRAME,
+    const accessibilityFronts = await this.commands.targetCommand.getAllFronts(
+      this.commands.targetCommand.TYPES.FRAME,
       "accessibility"
     );
     const tasks = [];
@@ -378,9 +378,9 @@ class AccessibilityProxy {
     accessibleWalkerFront
       .highlightAccessible(accessibleFront, options)
       .catch(error => {
-        // Only report an error where there's still a toolbox. Ignore cases
-        // where toolbox is already destroyed.
-        if (this.toolbox) {
+        // Only report an error where there's still a commands instance.
+        // Ignore cases where toolbox is already destroyed.
+        if (this.commands) {
           console.error(error);
         }
       });
@@ -397,28 +397,28 @@ class AccessibilityProxy {
     }
 
     accessibleWalkerFront.unhighlight().catch(error => {
-      // Only report an error where there's still a toolbox. Ignore cases
-      // where toolbox is already destroyed.
-      if (this.toolbox) {
+      // Only report an error where there's still a commands instance.
+      // Ignore cases where toolbox is already destroyed.
+      if (this.commands) {
         console.error(error);
       }
     });
   }
 
   async initialize() {
-    await this.toolbox.targetList.watchTargets(
-      [this.toolbox.targetList.TYPES.FRAME],
+    await this.commands.targetCommand.watchTargets(
+      [this.commands.targetCommand.TYPES.FRAME],
       this.onTargetAvailable,
       this.onTargetDestroyed
     );
-    this.parentAccessibilityFront = await this.toolbox.targetList.rootFront.getFront(
+    this.parentAccessibilityFront = await this.commands.targetCommand.rootFront.getFront(
       "parentaccessibility"
     );
   }
 
   destroy() {
-    this.toolbox.targetList.unwatchTargets(
-      [this.toolbox.targetList.TYPES.FRAME],
+    this.commands.targetCommand.unwatchTargets(
+      [this.commands.targetCommand.TYPES.FRAME],
       this.onTargetAvailable,
       this.onTargetDestroyed
     );
@@ -431,7 +431,7 @@ class AccessibilityProxy {
     this.parentAccessibilityFront = null;
     this.simulatorFront = null;
     this.simulate = null;
-    this.toolbox = null;
+    this.commands = null;
   }
 
   _getEvents(front) {
