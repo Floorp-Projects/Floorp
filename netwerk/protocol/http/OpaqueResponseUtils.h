@@ -11,6 +11,8 @@
 namespace mozilla {
 namespace net {
 
+class nsHttpResponseHead;
+
 bool IsOpaqueSafeListedMIMEType(const nsACString& aContentType);
 
 bool IsOpaqueBlockListedMIMEType(const nsACString& aContentType);
@@ -21,6 +23,8 @@ bool IsOpaqueBlockListedNeverSniffedMIMEType(const nsACString& aContentType);
 // header string if succeed.
 Result<std::tuple<int64_t, int64_t, int64_t>, nsresult>
 ParseContentRangeHeaderString(const nsAutoCString& aRangeStr);
+
+bool IsFirstPartialResponse(nsHttpResponseHead& aResponseHead);
 
 }  // namespace net
 }  // namespace mozilla
