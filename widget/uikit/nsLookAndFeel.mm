@@ -13,7 +13,7 @@
 #include "gfxFont.h"
 #include "gfxFontConstants.h"
 
-nsLookAndFeel::nsLookAndFeel(LookAndFeelCache* aCache) : nsXPLookAndFeel(), mInitialized(false) {}
+nsLookAndFeel::nsLookAndFeel() : mInitialized(false) {}
 
 nsLookAndFeel::~nsLookAndFeel() {}
 

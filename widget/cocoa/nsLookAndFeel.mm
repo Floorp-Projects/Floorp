@@ -46,7 +46,7 @@ using NSAppearanceName = NSString*;
 
 static void RegisterRespectSystemAppearancePrefListenerOnce();
 
-nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache)
+nsLookAndFeel::nsLookAndFeel()
     : nsXPLookAndFeel(),
       mUseOverlayScrollbars(-1),
       mUseOverlayScrollbarsCached(false),
@@ -86,9 +86,6 @@ nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache)
       mColorSourceListSelectionFontSmoothingBg(0),
       mColorActiveSourceListSelectionFontSmoothingBg(0),
       mInitialized(false) {
-  if (aCache) {
-    DoSetCache(*aCache);
-  }
   RegisterRespectSystemAppearancePrefListenerOnce();
 }
 
@@ -675,159 +672,6 @@ bool nsLookAndFeel::NativeGetFont(FontID aID, nsString& aFontName, gfxFontStyle&
   return true;
 
   NS_OBJC_END_TRY_BLOCK_RETURN(false);
-}
-
-mozilla::widget::LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
-  LookAndFeelCache cache = nsXPLookAndFeel::GetCacheImpl();
-
-  constexpr IntID kIntIdsToCache[] = {
-      IntID::UseOverlayScrollbars, IntID::AllowOverlayScrollbarsOverlap,
-      IntID::PrefersReducedMotion, IntID::SystemUsesDarkTheme, IntID::UseAccessibilityTheme};
-
-  constexpr ColorID kColorIdsToCache[] = {
-      ColorID::Highlight,
-      ColorID::Highlighttext,
-      ColorID::Menutext,
-      ColorID::TextSelectBackground,
-      ColorID::TextSelectBackgroundDisabled,
-      ColorID::TextSelectForeground,
-      ColorID::Windowtext,
-      ColorID::Activecaption,
-      ColorID::Activeborder,
-      ColorID::Graytext,
-      ColorID::Inactiveborder,
-      ColorID::Scrollbar,
-      ColorID::Threedhighlight,
-      ColorID::Fieldtext,
-      ColorID::MozDialog,
-      ColorID::MozDragtargetzone,
-      ColorID::MozMacChromeActive,
-      ColorID::MozMacChromeInactive,
-      ColorID::MozMacFocusring,
-      ColorID::MozMacMenutextselect,
-      ColorID::MozMacDisabledtoolbartext,
-      ColorID::MozMacMenuselect,
-      ColorID::MozCellhighlight,
-      ColorID::MozEventreerow,
-      ColorID::MozOddtreerow,
-      ColorID::MozMacMenupopup,
-      ColorID::MozMacSourceList,
-      ColorID::MozMacSourceListSelection,
-      ColorID::MozMacActiveMenuitem,
-  };
-
-  for (IntID id : kIntIdsToCache) {
-    cache.mInts().AppendElement(LookAndFeelInt(id, GetInt(id)));
-  }
-
-  for (ColorID id : kColorIdsToCache) {
-    nscolor color = 0;
-    NativeGetColor(id, color);
-    cache.mColors().AppendElement(LookAndFeelColor(id, color));
-  }
-
-  return cache;
-}
-
-void nsLookAndFeel::SetCacheImpl(const LookAndFeelCache& aCache) { DoSetCache(aCache); }
-
-void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
-  for (auto entry : aCache.mInts()) {
-    switch (entry.id()) {
-      case IntID::UseOverlayScrollbars:
-        mUseOverlayScrollbars = entry.value();
-        mUseOverlayScrollbarsCached = true;
-        break;
-      case IntID::AllowOverlayScrollbarsOverlap:
-        mAllowOverlayScrollbarsOverlap = entry.value();
-        mAllowOverlayScrollbarsOverlapCached = true;
-        break;
-      case IntID::SystemUsesDarkTheme:
-        mSystemUsesDarkTheme = entry.value();
-        mSystemUsesDarkThemeCached = true;
-        break;
-      case IntID::PrefersReducedMotion:
-        mPrefersReducedMotion = entry.value();
-        mPrefersReducedMotionCached = true;
-        break;
-      case IntID::UseAccessibilityTheme:
-        mUseAccessibilityTheme = entry.value();
-        mUseAccessibilityThemeCached = true;
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Bogus Int ID in cache");
-        break;
-    }
-  }
-  for (const auto& entry : aCache.mColors()) {
-    nscolor& slot = [&]() -> nscolor& {
-      switch (entry.id()) {
-        case ColorID::Highlight:
-          return mColorHighlight;
-        case ColorID::Highlighttext:
-          return mColorAlternateSelectedControlText;
-        case ColorID::Menutext:
-          return mColorText;
-        case ColorID::TextSelectBackground:
-          return mColorTextSelectBackground;
-        case ColorID::TextSelectBackgroundDisabled:
-          return mColorTextSelectBackgroundDisabled;
-        case ColorID::TextSelectForeground:
-          return mColorTextSelectForeground;
-        case ColorID::Windowtext:
-          return mColorWindowText;
-        case ColorID::Activecaption:
-          return mColorGrid;
-        case ColorID::Activeborder:
-          return mColorActiveBorder;
-        case ColorID::Graytext:
-          return mColorGrayText;
-        case ColorID::Inactiveborder:
-          return mColorControlBackground;
-        case ColorID::Scrollbar:
-          return mColorScrollbar;
-        case ColorID::Threedhighlight:
-          return mColorThreeDHighlight;
-        case ColorID::Fieldtext:
-          return mColorControlText;
-        case ColorID::MozDialog:
-          return mColorDialog;
-        case ColorID::MozDragtargetzone:
-          return mColorDragTargetZone;
-        case ColorID::MozMacChromeActive:
-          return mColorChromeActive;
-        case ColorID::MozMacChromeInactive:
-          return mColorChromeInactive;
-        case ColorID::MozMacFocusring:
-          return mColorFocusRing;
-        case ColorID::MozMacMenutextselect:
-          return mColorTextSelect;
-        case ColorID::MozMacDisabledtoolbartext:
-          return mColorDisabledToolbarText;
-        case ColorID::MozMacMenuselect:
-          return mColorMenuSelect;
-        case ColorID::MozCellhighlight:
-          return mColorCellHighlight;
-        case ColorID::MozEventreerow:
-          return mColorEvenTreeRow;
-        case ColorID::MozOddtreerow:
-          return mColorOddTreeRow;
-        case ColorID::MozMacMenupopup:
-          return mColorMenuFontSmoothingBg;
-        case ColorID::MozMacSourceList:
-          return mColorSourceListFontSmoothingBg;
-        case ColorID::MozMacSourceListSelection:
-          return mColorSourceListSelectionFontSmoothingBg;
-        case ColorID::MozMacActiveMenuitem:
-          return mColorActiveSourceListSelectionFontSmoothingBg;
-        default:
-          MOZ_ASSERT_UNREACHABLE("Unknown color in the cache");
-          return mColorOddTreeRow;
-      }
-    }();
-    slot = entry.color();
-  }
-  mInitialized = true;
 }
 
 void nsLookAndFeel::EnsureInit() {

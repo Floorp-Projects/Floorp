@@ -18,7 +18,7 @@ struct _GtkStyle;
 
 class nsLookAndFeel final : public nsXPLookAndFeel {
  public:
-  explicit nsLookAndFeel(const LookAndFeelCache* aCache);
+  nsLookAndFeel();
   virtual ~nsLookAndFeel();
 
   void NativeInit() final;
@@ -31,9 +31,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   char16_t GetPasswordCharacterImpl() override;
   bool GetEchoPasswordImpl() override;
-
-  LookAndFeelCache GetCacheImpl() override;
-  void SetCacheImpl(const LookAndFeelCache& aCache) override;
 
   void WithThemeConfiguredForContent(
       const std::function<void(const LookAndFeelTheme&, bool)>& aFn) override;
@@ -48,7 +45,6 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   static const nscolor kWhite = NS_RGB(255, 255, 255);
 
  protected:
-  void DoSetCache(const LookAndFeelCache& aCache);
   bool WidgetUsesImage(WidgetNodeType aNodeType);
   void RecordLookAndFeelSpecificTelemetry() override;
   bool ShouldHonorThemeScrollbarColors();

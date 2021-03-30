@@ -89,7 +89,7 @@ static nsresult SystemWantsDarkTheme(int32_t& darkThemeEnabled) {
   return rv;
 }
 
-nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache)
+nsLookAndFeel::nsLookAndFeel()
     : nsXPLookAndFeel(),
       mUseAccessibilityTheme(0),
       mUseDefaultTheme(0),
@@ -103,9 +103,6 @@ nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache)
       mInitialized(false) {
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::TOUCH_ENABLED_DEVICE,
                                  WinUtils::IsTouchDeviceSupportPresent());
-  if (aCache) {
-    DoSetCache(*aCache);
-  }
 }
 
 nsLookAndFeel::~nsLookAndFeel() {}
@@ -830,77 +827,6 @@ bool nsLookAndFeel::NativeGetFont(FontID anID, nsString& aFontName,
 char16_t nsLookAndFeel::GetPasswordCharacterImpl() {
 #define UNICODE_BLACK_CIRCLE_CHAR 0x25cf
   return UNICODE_BLACK_CIRCLE_CHAR;
-}
-
-LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
-  MOZ_ASSERT(XRE_IsParentProcess());
-
-  LookAndFeelCache cache = nsXPLookAndFeel::GetCacheImpl();
-
-  LookAndFeelInt lafInt;
-  lafInt.id() = IntID::UseAccessibilityTheme;
-  lafInt.value() = GetInt(IntID::UseAccessibilityTheme);
-  cache.mInts().AppendElement(lafInt);
-
-  lafInt.id() = IntID::WindowsDefaultTheme;
-  lafInt.value() = GetInt(IntID::WindowsDefaultTheme);
-  cache.mInts().AppendElement(lafInt);
-
-  lafInt.id() = IntID::WindowsThemeIdentifier;
-  lafInt.value() = GetInt(IntID::WindowsThemeIdentifier);
-  cache.mInts().AppendElement(lafInt);
-
-  lafInt.id() = IntID::PrimaryPointerCapabilities;
-  lafInt.value() = GetInt(IntID::PrimaryPointerCapabilities);
-  cache.mInts().AppendElement(lafInt);
-
-  lafInt.id() = IntID::AllPointerCapabilities;
-  lafInt.value() = GetInt(IntID::AllPointerCapabilities);
-  cache.mInts().AppendElement(lafInt);
-
-  for (auto id : mozilla::MakeEnumeratedRange(LookAndFeel::FontID::End)) {
-    cache.mFonts().AppendElement(GetLookAndFeelFont(id));
-  }
-
-  return cache;
-}
-
-void nsLookAndFeel::SetCacheImpl(const LookAndFeelCache& aCache) {
-  DoSetCache(aCache);
-}
-
-void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
-  MOZ_ASSERT(XRE_IsContentProcess());
-  MOZ_RELEASE_ASSERT(aCache.mFonts().Length() == FontCache::kSize);
-
-  for (auto entry : aCache.mInts()) {
-    switch (entry.id()) {
-      case IntID::UseAccessibilityTheme:
-        mUseAccessibilityTheme = entry.value();
-        break;
-      case IntID::WindowsDefaultTheme:
-        mUseDefaultTheme = entry.value();
-        break;
-      case IntID::WindowsThemeIdentifier:
-        mNativeThemeId = entry.value();
-        break;
-      case IntID::PrimaryPointerCapabilities:
-        mPrimaryPointerCapabilities = entry.value();
-        break;
-      case IntID::AllPointerCapabilities:
-        mAllPointerCapabilities = entry.value();
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Bogus Int ID in cache");
-        break;
-    }
-  }
-
-  size_t i = 0;
-  for (const auto& font : aCache.mFonts()) {
-    mFontCache[FontID(i)] = font;
-    ++i;
-  }
 }
 
 /* static */

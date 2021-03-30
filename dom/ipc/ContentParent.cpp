@@ -1642,18 +1642,10 @@ void ContentParent::BroadcastFontListChanged() {
   }
 }
 
-static LookAndFeelData GetLookAndFeelData() {
-  if (StaticPrefs::widget_remote_look_and_feel_AtStartup()) {
-    return *RemoteLookAndFeel::ExtractData();
-  }
-  return LookAndFeel::GetCache();
-}
-
 void ContentParent::BroadcastThemeUpdate(widget::ThemeChangeKind aKind) {
-  LookAndFeelData lnfData = GetLookAndFeelData();
-
+  const FullLookAndFeel& lnf = *RemoteLookAndFeel::ExtractData();
   for (auto* cp : AllProcesses(eLive)) {
-    Unused << cp->SendThemeChanged(lnfData, aKind);
+    Unused << cp->SendThemeChanged(lnf, aKind);
   }
 }
 
@@ -2908,7 +2900,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   nsTArray<SystemFontListEntry> fontList;
   gfxPlatform::GetPlatform()->ReadSystemFontList(&fontList);
 
-  LookAndFeelData lnfData = GetLookAndFeelData();
+  const FullLookAndFeel& lnf = *RemoteLookAndFeel::ExtractData();
 
   // If the shared fontlist is in use, collect its shmem block handles to pass
   // to the child.
@@ -2969,7 +2961,7 @@ bool ContentParent::InitInternal(ProcessPriority aInitialPriority) {
   }
 
   Unused << SendSetXPCOMProcessAttributes(
-      xpcomInit, initialData, lnfData, fontList, sharedUASheetHandle,
+      xpcomInit, initialData, lnf, fontList, sharedUASheetHandle,
       sharedUASheetAddress, sharedFontListBlocks);
 
   ipc::WritableSharedMap* sharedData =

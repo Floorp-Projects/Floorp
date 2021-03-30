@@ -15,10 +15,7 @@ class nsLookAndFeel;
 class nsXPLookAndFeel : public mozilla::LookAndFeel {
  public:
   using FullLookAndFeel = mozilla::widget::FullLookAndFeel;
-  using LookAndFeelCache = mozilla::widget::LookAndFeelCache;
-  using LookAndFeelInt = mozilla::widget::LookAndFeelInt;
   using LookAndFeelFont = mozilla::widget::LookAndFeelFont;
-  using LookAndFeelColor = mozilla::widget::LookAndFeelColor;
   using LookAndFeelTheme = mozilla::widget::LookAndFeelTheme;
 
   virtual ~nsXPLookAndFeel();
@@ -61,8 +58,6 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
   static LookAndFeelFont StyleToLookAndFeelFont(const nsAString& aName,
                                                 const gfxFontStyle&);
 
-  virtual LookAndFeelCache GetCacheImpl();
-  virtual void SetCacheImpl(const LookAndFeelCache& aCache) {}
   virtual void SetDataImpl(FullLookAndFeel&& aTables) {}
 
   virtual void NativeInit() = 0;

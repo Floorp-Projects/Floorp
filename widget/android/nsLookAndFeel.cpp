@@ -20,11 +20,7 @@ using mozilla::dom::ContentChild;
 
 static const char16_t UNICODE_BULLET = 0x2022;
 
-nsLookAndFeel::nsLookAndFeel(const LookAndFeelCache* aCache) {
-  if (aCache) {
-    DoSetCache(*aCache);
-  }
-}
+nsLookAndFeel::nsLookAndFeel() = default;
 
 nsLookAndFeel::~nsLookAndFeel() {}
 
@@ -494,40 +490,5 @@ void nsLookAndFeel::EnsureInitShowPassword() {
   if (!mInitializedShowPassword && jni::IsAvailable()) {
     mShowPassword = java::GeckoAppShell::GetShowPasswordSetting();
     mInitializedShowPassword = true;
-  }
-}
-
-widget::LookAndFeelCache nsLookAndFeel::GetCacheImpl() {
-  LookAndFeelCache cache = nsXPLookAndFeel::GetCacheImpl();
-
-  const IntID kIdsToCache[] = {IntID::PrefersReducedMotion,
-                               IntID::SystemUsesDarkTheme};
-
-  for (IntID id : kIdsToCache) {
-    cache.mInts().AppendElement(LookAndFeelInt(id, GetInt(id)));
-  }
-
-  return cache;
-}
-
-void nsLookAndFeel::SetCacheImpl(const LookAndFeelCache& aCache) {
-  DoSetCache(aCache);
-}
-
-void nsLookAndFeel::DoSetCache(const LookAndFeelCache& aCache) {
-  for (const auto& entry : aCache.mInts()) {
-    switch (entry.id()) {
-      case IntID::PrefersReducedMotion:
-        mPrefersReducedMotion = entry.value();
-        mPrefersReducedMotionCached = true;
-        break;
-      case IntID::SystemUsesDarkTheme:
-        mSystemUsesDarkTheme = !!entry.value();
-        mSystemUsesDarkThemeCached = true;
-        break;
-      default:
-        MOZ_ASSERT_UNREACHABLE("Bogus Int ID in cache");
-        break;
-    }
   }
 }
