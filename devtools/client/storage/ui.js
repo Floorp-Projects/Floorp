@@ -264,7 +264,7 @@ class StorageUI {
   }
 
   get currentTarget() {
-    return this._toolbox.targetList.targetFront;
+    return this._commands.targetCommand.targetFront;
   }
 
   async init() {
@@ -275,11 +275,10 @@ class StorageUI {
     //   but rather the storage specific front, i.e. a storage resource. Storage resources are fronts.
     this.storageResources = {};
 
-    const { targetList } = this._toolbox;
     this._onTargetAvailable = this._onTargetAvailable.bind(this);
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
-    await targetList.watchTargets(
-      [targetList.TYPES.FRAME],
+    await this._commands.targetCommand.watchTargets(
+      [this._commands.targetCommand.TYPES.FRAME],
       this._onTargetAvailable,
       this._onTargetDestroyed
     );

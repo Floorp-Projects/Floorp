@@ -50,8 +50,8 @@ PerformancePanel.prototype = {
     // the `watchTargets` function.
     // So this `await` waits for initialization with current target, happening
     // in `_onTargetAvailable`.
-    await this.toolbox.targetList.watchTargets(
-      [this.toolbox.targetList.TYPES.FRAME],
+    await this.commands.targetCommand.watchTargets(
+      [this.commands.targetCommand.TYPES.FRAME],
       this._onTargetAvailable
     );
 
@@ -91,8 +91,8 @@ PerformancePanel.prototype = {
       this._checkRecordingStatus
     );
 
-    this.toolbox.targetList.unwatchTargets(
-      [this.toolbox.targetList.TYPES.FRAME],
+    this.commands.targetCommand.unwatchTargets(
+      [this.commands.targetCommand.TYPES.FRAME],
       this._onTargetAvailable
     );
     await PerformanceController.destroy();
