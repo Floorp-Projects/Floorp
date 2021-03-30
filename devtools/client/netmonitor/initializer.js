@@ -75,11 +75,15 @@ if (window.location.protocol === "chrome:" && url.search.length > 1) {
   const {
     descriptorFromURL,
   } = require("devtools/client/framework/descriptor-from-url");
+  const {
+    createCommandsDictionary,
+  } = require("devtools/shared/commands/index");
 
   (async function() {
     try {
       const descriptor = await descriptorFromURL(url);
       const target = await descriptor.getTarget();
+      const commands = await createCommandsDictionary(descriptor);
       // Create a fake toolbox object
       const toolbox = {
         target,
@@ -88,6 +92,7 @@ if (window.location.protocol === "chrome:" && url.search.length > 1) {
             "toolbox.viewSourceInDebugger is not implement from a tab"
           );
         },
+        commands,
       };
 
       const api = new NetMonitorAPI();
