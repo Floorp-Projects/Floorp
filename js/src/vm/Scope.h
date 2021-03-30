@@ -1486,6 +1486,28 @@ class BaseAbstractBindingIter {
     return BindingKind::Const;
   }
 
+  js::frontend::NameLocation nameLocation() const {
+    using js::frontend::NameLocation;
+
+    BindingKind bindKind = kind();
+    BindingLocation bl = location();
+    switch (bl.kind()) {
+      case BindingLocation::Kind::Global:
+        return NameLocation::Global(bindKind);
+      case BindingLocation::Kind::Argument:
+        return NameLocation::ArgumentSlot(bl.argumentSlot());
+      case BindingLocation::Kind::Frame:
+        return NameLocation::FrameSlot(bindKind, bl.slot());
+      case BindingLocation::Kind::Environment:
+        return NameLocation::EnvironmentCoordinate(bindKind, 0, bl.slot());
+      case BindingLocation::Kind::Import:
+        return NameLocation::Import();
+      case BindingLocation::Kind::NamedLambdaCallee:
+        return NameLocation::NamedLambdaCallee();
+    }
+    MOZ_CRASH("Bad BindingKind");
+  }
+
   bool isTopLevelFunction() const {
     MOZ_ASSERT(!done());
     bool result = names_[index_].isTopLevelFunction();
