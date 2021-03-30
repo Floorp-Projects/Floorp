@@ -1,12 +1,12 @@
 // |jit-test| --enable-private-methods;
 
 class C {
-    #x() { }
-    constructor() { this.#x = 1; }
+  #x() { }
+  constructor() { this.#x = 1; }
 }
 
 try {
-    new C
+  new C
 } catch (e) {
-    assertEq(e.message, "#x is read-only")
+  assertEq(e.message, "cannot assign to private method");
 }
