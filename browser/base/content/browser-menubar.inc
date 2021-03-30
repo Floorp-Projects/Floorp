@@ -396,7 +396,7 @@
               <menuitem id="sync-enable"
                         class="sync-ui-item"
                         hidden="true"
-                        oncommand="gSync.openPrefs('menubar')" data-l10n-id="menu-tools-turn-on-sync"/>
+                        oncommand="gSync.openPrefs('menubar')" data-l10n-id="menu-tools-turn-on-sync2"/>
               <menuitem id="sync-unverifieditem"
                         class="sync-ui-item"
                         hidden="true"
