@@ -2246,10 +2246,19 @@ void ScopeStencil::dumpFields(js::JSONPrinter& json,
     case ScopeKind::Catch:
     case ScopeKind::NamedLambda:
     case ScopeKind::StrictNamedLambda:
-    case ScopeKind::FunctionLexical:
-    case ScopeKind::ClassBody: {
+    case ScopeKind::FunctionLexical: {
       const auto* data =
           static_cast<const LexicalScope::ParserData*>(baseScopeData);
+      json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
+      json.property("constStart", data->slotInfo.constStart);
+
+      trailingNames = GetScopeDataTrailingNames(data);
+      break;
+    }
+
+    case ScopeKind::ClassBody: {
+      const auto* data =
+          static_cast<const ClassBodyScope::ParserData*>(baseScopeData);
       json.property("nextFrameSlot", data->slotInfo.nextFrameSlot);
       json.property("constStart", data->slotInfo.constStart);
 

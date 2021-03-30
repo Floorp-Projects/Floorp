@@ -2774,6 +2774,18 @@ void LIRGenerator::visitCopyLexicalEnvironmentObject(
   assignSafepoint(lir, ins);
 }
 
+void LIRGenerator::visitNewClassBodyEnvironmentObject(
+    MNewClassBodyEnvironmentObject* ins) {
+  MDefinition* enclosing = ins->enclosing();
+  MOZ_ASSERT(enclosing->type() == MIRType::Object);
+
+  LNewClassBodyEnvironmentObject* lir = new (alloc())
+      LNewClassBodyEnvironmentObject(useRegisterAtStart(enclosing));
+
+  defineReturn(lir, ins);
+  assignSafepoint(lir, ins);
+}
+
 void LIRGenerator::visitKeepAliveObject(MKeepAliveObject* ins) {
   MDefinition* obj = ins->object();
   MOZ_ASSERT(obj->type() == MIRType::Object);
