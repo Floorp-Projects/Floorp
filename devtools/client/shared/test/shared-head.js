@@ -468,7 +468,9 @@ async function navigateTo(uri, { isErrorPage = false } = {}) {
   // Navigating from/to pages loaded in the parent process, like about:robots,
   // also spawn new targets.
   // (If target switching is disabled, the toolbox will reboot)
-  const onTargetSwitched = toolbox.targetList.once("switched-target");
+  const onTargetSwitched = toolbox.commands.targetCommand.once(
+    "switched-target"
+  );
   // Otherwise, if we don't switch target, it is safe to wait for navigate event.
   const onNavigate = target.once("navigate");
 
