@@ -7864,6 +7864,14 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
         }
       }
 
+      if (classInitializedMembers.privateMethods > 0) {
+        if (!noteDeclaredName(
+                TaggedParserAtomIndex::WellKnown::dotPrivateBrand(),
+                DeclarationKind::Let, namePos)) {
+          return null();
+        }
+      }
+
       if (classInitializedMembers.instanceFieldKeys > 0) {
         if (!noteDeclaredName(TaggedParserAtomIndex::WellKnown::dotFieldKeys(),
                               DeclarationKind::Let, namePos)) {

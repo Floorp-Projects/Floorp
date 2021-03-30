@@ -10249,53 +10249,78 @@ static MOZ_ALWAYS_INLINE ParseNode* FindConstructor(JSContext* cx,
   return nullptr;
 }
 
-template <class ClassMemberType>
-bool BytecodeEmitter::emitNewPrivateNames(ListNode* classMembers) {
+bool BytecodeEmitter::emitNewPrivateName(TaggedParserAtomIndex bindingName,
+                                         TaggedParserAtomIndex symbolName) {
+  // TODO: Add a new bytecode to create private names.
+  if (!emitAtomOp(JSOp::GetIntrinsic,
+                  TaggedParserAtomIndex::WellKnown::NewPrivateName())) {
+    //            [stack] HERITAGE NEWPRIVATENAME
+    return false;
+  }
+
+  // Push `undefined` as `this` parameter for call.
+  if (!emit1(JSOp::Undefined)) {
+    //            [stack] HERITAGE NEWPRIVATENAME UNDEFINED
+    return false;
+  }
+
+  if (!emitAtomOp(JSOp::String, symbolName)) {
+    //            [stack] HERITAGE NEWPRIVATENAME UNDEFINED NAME
+    return false;
+  }
+
+  int argc = 1;
+  if (!emitCall(JSOp::Call, argc)) {
+    //            [stack] HERITAGE PRIVATENAME
+    return false;
+  }
+
+  // Add a binding for #name => privatename
+  if (!emitLexicalInitialization(bindingName)) {
+    //            [stack] HERITAGE PRIVATENAME
+    return false;
+  }
+
+  // Pop Private name off the stack.
+  if (!emit1(JSOp::Pop)) {
+    //            [stack] HERITAGE
+    return false;
+  }
+
+  return true;
+}
+
+bool BytecodeEmitter::emitNewPrivateNames(
+    TaggedParserAtomIndex privateBrandName, ListNode* classMembers) {
+  bool emittedPrivateBrand = false;
+
   for (ParseNode* classElement : classMembers->contents()) {
-    if (!classElement->is<ClassMemberType>()) {
+    ParseNode* elementName;
+    if (classElement->is<ClassMethod>()) {
+      elementName = &classElement->as<ClassMethod>().name();
+    } else if (classElement->is<ClassField>()) {
+      elementName = &classElement->as<ClassField>().name();
+    } else {
       continue;
     }
 
-    ParseNode* elementName = &classElement->as<ClassMemberType>().name();
     if (!elementName->isKind(ParseNodeKind::PrivateName)) {
       continue;
     }
 
+    if (!emittedPrivateBrand && classElement->is<ClassMethod>() &&
+        !classElement->as<ClassMethod>().isStatic()) {
+      // First nonstatic private method of this class.
+      if (!emitNewPrivateName(
+              TaggedParserAtomIndex::WellKnown::dotPrivateBrand(),
+              privateBrandName)) {
+        return false;
+      }
+      emittedPrivateBrand = true;
+    }
+
     auto privateName = elementName->as<NameNode>().name();
-
-    // TODO: Add a new bytecode to create private names.
-    if (!emitAtomOp(JSOp::GetIntrinsic,
-                    TaggedParserAtomIndex::WellKnown::NewPrivateName())) {
-      //            [stack] HERITAGE NEWPRIVATENAME
-      return false;
-    }
-
-    // Push `undefined` as `this` parameter for call.
-    if (!emit1(JSOp::Undefined)) {
-      //            [stack] HERITAGE NEWPRIVATENAME UNDEFINED
-      return false;
-    }
-
-    if (!emitAtomOp(JSOp::String, privateName)) {
-      //            [stack] HERITAGE NEWPRIVATENAME UNDEFINED NAME
-      return false;
-    }
-
-    int argc = 1;
-    if (!emitCall(JSOp::Call, argc)) {
-      //            [stack] HERITAGE PRIVATENAME
-      return false;
-    }
-
-    // Add a binding for #name => privatename
-    if (!emitLexicalInitialization(privateName)) {
-      //            [stack] HERITAGE PRIVATENAME
-      return false;
-    }
-
-    // Pop Private name off the stack.
-    if (!emit1(JSOp::Pop)) {
-      //            [stack] HERITAGE
+    if (!emitNewPrivateName(privateName, privateName)) {
       return false;
     }
   }
@@ -10366,10 +10391,17 @@ bool BytecodeEmitter::emitClass(
       return false;
     }
 
-    if (!emitNewPrivateNames<ClassField>(classMembers)) {
-      return false;
+    // The spec does not say anything about private brands being symbols.  It's
+    // an implementation detail. So we can give the special private brand
+    // symbol any description we want and users won't normally see it. For
+    // debugging, use the class name.
+    auto privateBrandName = innerName;
+    if (!innerName) {
+      privateBrandName = nameForAnonymousClass
+                             ? nameForAnonymousClass
+                             : TaggedParserAtomIndex::WellKnown::anonymous();
     }
-    if (!emitNewPrivateNames<ClassMethod>(classMembers)) {
+    if (!emitNewPrivateNames(privateBrandName, classMembers)) {
       return false;
     }
   }
