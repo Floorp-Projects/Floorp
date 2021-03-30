@@ -23,14 +23,32 @@ class LocaleViewHolder(
         if (locale.toString().equals("vec", ignoreCase = true)) {
             locale.toString()
         }
-        // Capitalisation is done using the rules of the appropriate locale (endonym and exonym).
-        locale_title_text.text = getDisplayName(locale)
-        // Show the given locale using the device locale for the subtitle.
-        locale_subtitle_text.text = locale.getProperDisplayName()
+        if (locale.language == "zh") {
+            bindChineseLocale(locale)
+        } else {
+            // Capitalisation is done using the rules of the appropriate locale (endonym and exonym).
+            locale_title_text.text = getDisplayName(locale)
+            // Show the given locale using the device locale for the subtitle.
+            locale_subtitle_text.text = locale.getProperDisplayName()
+        }
         locale_selected_icon.isVisible = isCurrentLocaleSelected(locale, isDefault = false)
 
         itemView.setOnClickListener {
             interactor.onLocaleSelected(locale)
+        }
+    }
+
+    private fun bindChineseLocale(locale: Locale) {
+        if (locale.country == "CN") {
+            locale_title_text.text =
+                Locale.forLanguageTag("zh-Hans").getDisplayName(locale).capitalize(locale)
+            locale_subtitle_text.text =
+                Locale.forLanguageTag("zh-Hans").displayName.capitalize(Locale.getDefault())
+        } else if (locale.country == "TW") {
+            locale_title_text.text =
+                Locale.forLanguageTag("zh-Hant").getDisplayName(locale).capitalize(locale)
+            locale_subtitle_text.text =
+                Locale.forLanguageTag("zh-Hant").displayName.capitalize(Locale.getDefault())
         }
     }
 
@@ -255,8 +273,16 @@ class SystemLocaleViewHolder(
 
     override fun bind(locale: Locale) {
         locale_title_text.text = itemView.context.getString(R.string.default_locale_text)
-        // Use the device locale for the system locale subtitle.
-        locale_subtitle_text.text = locale.getDisplayName(locale).capitalize(locale)
+        if (locale.script == "Hant") {
+            locale_subtitle_text.text =
+                Locale.forLanguageTag("zh-Hant").displayName.capitalize(Locale.getDefault())
+        } else if (locale.script == "Hans") {
+            locale_subtitle_text.text =
+                Locale.forLanguageTag("zh-Hans").displayName.capitalize(Locale.getDefault())
+        } else {
+            // Use the device locale for the system locale subtitle.
+            locale_subtitle_text.text = locale.getDisplayName(locale).capitalize(locale)
+        }
         locale_selected_icon.isVisible = isCurrentLocaleSelected(locale, isDefault = true)
         itemView.setOnClickListener {
             interactor.onDefaultLocaleSelected()
