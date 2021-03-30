@@ -2,6 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+@namespace url("http://www.w3.org/1999/xhtml");
+@namespace svg url("http://www.w3.org/2000/svg");
+
 .datetimebox {
   display: flex;
   /* TODO: Enable selection once bug 1455893 is fixed */
@@ -46,21 +49,14 @@
 
 .datetime-reset-button {
   color: inherit;
-  font-size: inherit;
   fill: currentColor;
   opacity: .5;
   background-color: transparent;
   border: none;
   flex: none;
   padding-inline: 2px;
-  padding-block: 0;
-  line-height: 0;
 }
 
-.datetime-reset-button-svg {
+svg|svg.datetime-reset-button-svg {
   pointer-events: none;
-  /* When using a very small font-size, we don't want the button to take extra
-   * space (which will affect the baseline of the form control) */
-  width: 1em;
-  height: 1em;
 }
