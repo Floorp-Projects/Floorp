@@ -5,6 +5,7 @@
 
 #include "WidgetUtilsGtk.h"
 #include "nsWindow.h"
+#include "prenv.h"
 #include <gtk/gtk.h>
 #include <dlfcn.h>
 
@@ -42,6 +43,15 @@ int32_t WidgetUtilsGTK::IsTouchDeviceSupportPresent() {
   }
 
   return result;
+}
+
+const char* WidgetUtilsGTK::GetSnapInstanceName() {
+  char* instanceName = PR_GetEnv("SNAP_INSTANCE_NAME");
+  if (instanceName != nullptr) {
+    return instanceName;
+  }
+  // Compatibility for snapd <= 2.35:
+  return PR_GetEnv("SNAP_NAME");
 }
 
 bool IsMainWindowTransparent() {
