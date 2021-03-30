@@ -11,7 +11,6 @@
 #include "vm/JSObject-inl.h"
 
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TemplateLib.h"
 
@@ -2366,6 +2365,23 @@ bool js::GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
   }
 
   return NativeGetOwnPropertyDescriptor(cx, obj.as<NativeObject>(), id, desc);
+}
+
+bool js::GetOwnPropertyDescriptor(
+    JSContext* cx, HandleObject obj, HandleId id,
+    MutableHandle<mozilla::Maybe<PropertyDescriptor>> desc) {
+  Rooted<PropertyDescriptor> descriptor(cx);
+  if (!GetOwnPropertyDescriptor(cx, obj, id, &descriptor)) {
+    return false;
+  }
+
+  if (descriptor.object()) {
+    // descriptor is not *undefined*.
+    desc.set(mozilla::Some(descriptor.get()));
+  } else {
+    desc.reset();
+  }
+  return true;
 }
 
 bool js::DefineProperty(JSContext* cx, HandleObject obj, HandleId id,

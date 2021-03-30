@@ -7,6 +7,7 @@
 #ifndef vm_JSObject_h
 #define vm_JSObject_h
 
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 
 #include "gc/Barrier.h"
@@ -890,8 +891,13 @@ bool GetOwnNativeGetterPure(JSContext* cx, JSObject* obj, jsid id,
 bool HasOwnDataPropertyPure(JSContext* cx, JSObject* obj, jsid id,
                             bool* result);
 
+// Deprecated: Use the Maybe<PropertyDescriptor> overload!
 bool GetOwnPropertyDescriptor(JSContext* cx, HandleObject obj, HandleId id,
                               MutableHandle<JS::PropertyDescriptor> desc);
+
+bool GetOwnPropertyDescriptor(
+    JSContext* cx, HandleObject obj, HandleId id,
+    MutableHandle<mozilla::Maybe<JS::PropertyDescriptor>> desc);
 
 /*
  * Like JS::FromPropertyDescriptor, but ignore desc.object() and always set vp
