@@ -296,25 +296,6 @@ class NameLocation {
     return NameLocation(Kind::DynamicAnnexBVar, BindingKind::Var);
   }
 
-  static NameLocation fromBinding(BindingKind bindKind,
-                                  const BindingLocation& bl) {
-    switch (bl.kind()) {
-      case BindingLocation::Kind::Global:
-        return Global(bindKind);
-      case BindingLocation::Kind::Argument:
-        return ArgumentSlot(bl.argumentSlot());
-      case BindingLocation::Kind::Frame:
-        return FrameSlot(bindKind, bl.slot());
-      case BindingLocation::Kind::Environment:
-        return EnvironmentCoordinate(bindKind, 0, bl.slot());
-      case BindingLocation::Kind::Import:
-        return Import();
-      case BindingLocation::Kind::NamedLambdaCallee:
-        return NamedLambdaCallee();
-    }
-    MOZ_CRASH("Bad BindingKind");
-  }
-
   bool operator==(const NameLocation& other) const {
     return kind_ == other.kind_ && bindingKind_ == other.bindingKind_ &&
            hops_ == other.hops_ && slot_ == other.slot_;
