@@ -1,6 +1,4 @@
-// |jit-test| --no-ion; --ion-pruning=on
-// Warp lacks Scalar Replacement support (bug 1650233). Re-evaluate after that
-// bug has been fixed.
+// |jit-test| --ion-pruning=on; --fast-warmup
 
 var max = 200;
 
@@ -185,7 +183,11 @@ for (var i = 0; i < max; i++) {
     observeArg(i);
     complexPhi(i);
     withinIf(i);
-    unknownLoad(i);
     dynamicSlots(i);
-    createThisWithTemplate(i);
+
+    // TODO: support undefined properties in scalar replacement (bug 1701711)
+    // unknownLoad(i);
+
+    // TODO: support constructors in scalar replacement (bug 1700422)
+    // createThisWithTemplate(i);
 }
