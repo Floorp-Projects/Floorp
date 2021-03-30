@@ -3015,14 +3015,31 @@ bool AsyncPanZoomController::IsInOverscrollGutter(
   Maybe<ParentLayerPoint> apzcPoint =
       UntransformBy(GetTransformToThis(), aHitTestPoint);
   if (!apzcPoint) return false;
+  return IsInOverscrollGutter(*apzcPoint);
+}
 
+bool AsyncPanZoomController::IsInOverscrollGutter(
+    const ParentLayerPoint& aHitTestPoint) const {
+  ParentLayerRect compositionBounds;
+  {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    compositionBounds = GetFrameMetrics().GetCompositionBounds();
+  }
+  if (!compositionBounds.Contains(aHitTestPoint)) {
+    // Point is outside of scrollable element's bounds altogether.
+    return false;
+  }
   auto overscrollTransform = GetOverscrollTransform(eForHitTesting);
   ParentLayerPoint overscrollUntransformed =
-      overscrollTransform.Inverse().TransformPoint(*apzcPoint);
+      overscrollTransform.Inverse().TransformPoint(aHitTestPoint);
 
-  RecursiveMutexAutoLock lock(mRecursiveMutex);
-  return !GetFrameMetrics().GetCompositionBounds().Contains(
-      overscrollUntransformed);
+  if (compositionBounds.Contains(overscrollUntransformed)) {
+    // Point is over scrollable content.
+    return false;
+  }
+
+  // Point is in gutter.
+  return true;
 }
 
 bool AsyncPanZoomController::IsOverscrolled() const {
