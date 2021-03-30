@@ -101,8 +101,10 @@ async function test_bookmarks_popup({
         "Page is starred"
       );
       Assert.equal(
-        bookmarkPanelTitle.dataset.l10nId,
-        isNewBookmark ? "bookmarks-add-bookmark" : "bookmarks-edit-bookmark",
+        bookmarkPanelTitle.textContent,
+        isNewBookmark
+          ? gNavigatorBundle.getString("editBookmarkPanel.newBookmarkTitle")
+          : gNavigatorBundle.getString("editBookmarkPanel.editBookmarkTitle"),
         "title should match isEditingBookmark state"
       );
       Assert.equal(

@@ -267,13 +267,12 @@ search-one-offs-history =
 
 ## Bookmark Panel
 
-bookmarks-add-bookmark = Add Bookmark
-bookmarks-edit-bookmark = Edit Bookmark
 bookmark-panel-show-editor-checkbox =
     .label = Show editor when saving
     .accesskey = S
-bookmark-panel-save-button =
-    .label = Save
+
+bookmark-panel-done-button =
+    .label = Done
 
 # Width of the bookmark panel.
 # Should be large enough to fully display the Done and
