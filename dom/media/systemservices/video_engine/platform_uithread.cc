@@ -13,9 +13,7 @@
 namespace rtc {
 
 #if defined(WEBRTC_WIN)
-// For use in ThreadWindowsUI callbacks
-static UINT static_reg_windows_msg =
-    RegisterWindowMessageW(L"WebrtcWindowsUIThreadEvent");
+
 // timer id used in delayed callbacks
 static const UINT_PTR kTimerId = 1;
 static const wchar_t kThisProperty[] = L"ThreadWindowsUIPtr";
@@ -46,12 +44,6 @@ bool PlatformUIThread::InternalInit() {
     }
   }
   return !!hwnd_;
-}
-
-void PlatformUIThread::RequestCallback() {
-  RTC_DCHECK(hwnd_);
-  RTC_DCHECK(static_reg_windows_msg);
-  PostMessage(hwnd_, static_reg_windows_msg, 0, 0);
 }
 
 bool PlatformUIThread::RequestCallbackTimer(unsigned int milliseconds) {
@@ -138,8 +130,7 @@ LRESULT CALLBACK PlatformUIThread::EventWindowProc(HWND hwnd, UINT uMsg,
     return DefWindowProc(hwnd, uMsg, wParam, lParam);
   }
 
-  if ((uMsg == static_reg_windows_msg && uMsg != WM_NULL) ||
-      (uMsg == WM_TIMER && wParam == kTimerId)) {
+  if (uMsg == WM_TIMER && wParam == kTimerId) {
     twui->NativeEventCallback();
     return 0;
   }
