@@ -32,14 +32,14 @@ class WalkerEventListener {
    * Clean up function.
    */
   destroy() {
-    this._inspector.toolbox.targetList.unwatchTargets(
-      [this._inspector.toolbox.targetList.TYPES.FRAME],
+    this._inspector.commands.targetCommand.unwatchTargets(
+      [this._inspector.commands.targetCommand.TYPES.FRAME],
       this._onTargetAvailable,
       this._onTargetDestroyed
     );
 
-    const targets = this._inspector.toolbox.targetList.getAllTargets([
-      this._inspector.toolbox.targetList.TYPES.FRAME,
+    const targets = this._inspector.commands.targetCommand.getAllTargets([
+      this._inspector.commands.targetCommand.TYPES.FRAME,
     ]);
     for (const targetFront of targets) {
       this._onTargetDestroyed({
@@ -52,8 +52,8 @@ class WalkerEventListener {
   }
 
   _init() {
-    this._inspector.toolbox.targetList.watchTargets(
-      [this._inspector.toolbox.targetList.TYPES.FRAME],
+    this._inspector.commands.targetCommand.watchTargets(
+      [this._inspector.commands.targetCommand.TYPES.FRAME],
       this._onTargetAvailable,
       this._onTargetDestroyed
     );

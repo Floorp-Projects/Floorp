@@ -1766,7 +1766,7 @@ CssRuleView.prototype = {
       this.colorSchemeDarkSimulationButton.classList.toggle("checked");
     }
 
-    await this.inspector.toolbox.commands.targetConfigurationCommand.updateConfiguration(
+    await this.inspector.commands.targetConfigurationCommand.updateConfiguration(
       {
         colorSchemeSimulation: shouldSimulateLightScheme ? "light" : null,
       }
@@ -1787,7 +1787,7 @@ CssRuleView.prototype = {
       this.colorSchemeLightSimulationButton.classList.toggle("checked");
     }
 
-    await this.inspector.toolbox.commands.targetConfigurationCommand.updateConfiguration(
+    await this.inspector.commands.targetConfigurationCommand.updateConfiguration(
       {
         colorSchemeSimulation: shouldSimulateDarkScheme ? "dark" : null,
       }
@@ -1798,7 +1798,7 @@ CssRuleView.prototype = {
 
   async _onTogglePrintSimulation() {
     const enabled = this.printSimulationButton.classList.toggle("checked");
-    await this.inspector.toolbox.commands.targetConfigurationCommand.updateConfiguration(
+    await this.inspector.commands.targetConfigurationCommand.updateConfiguration(
       {
         printSimulationEnabled: enabled,
       }

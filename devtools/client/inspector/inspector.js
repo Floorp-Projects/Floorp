@@ -203,8 +203,8 @@ Inspector.prototype = {
       r => (this._resolveMarkupViewInitialized = r)
     );
 
-    await this.toolbox.targetList.watchTargets(
-      [this.toolbox.targetList.TYPES.FRAME],
+    await this.commands.targetCommand.watchTargets(
+      [this.commands.targetCommand.TYPES.FRAME],
       this._onTargetAvailable,
       this._onTargetDestroyed
     );
@@ -274,8 +274,8 @@ Inspector.prototype = {
    * @return {Array} The list of InspectorFront instances.
    */
   async getAllInspectorFronts() {
-    return this.toolbox.targetList.getAllFronts(
-      this.toolbox.targetList.TYPES.FRAME,
+    return this.commands.targetCommand.getAllFronts(
+      this.commands.targetCommand.TYPES.FRAME,
       "inspector"
     );
   },
@@ -482,7 +482,7 @@ Inspector.prototype = {
    * Top level target front getter.
    */
   get currentTarget() {
-    return this.toolbox.targetList.targetFront;
+    return this.commands.targetCommand.targetFront;
   },
 
   /**
@@ -1678,12 +1678,12 @@ Inspector.prototype = {
     this.styleChangeTracker.destroy();
     this.searchboxShortcuts.destroy();
 
-    const { targetList, resourceWatcher } = this.toolbox;
-    targetList.unwatchTargets(
-      [targetList.TYPES.FRAME],
+    this.commands.targetCommand.unwatchTargets(
+      [this.commands.targetCommand.TYPES.FRAME],
       this._onTargetAvailable,
       this._onTargetDestroyed
     );
+    const { resourceWatcher } = this.toolbox;
     resourceWatcher.unwatchResources(
       [resourceWatcher.TYPES.ROOT_NODE, resourceWatcher.TYPES.CSS_CHANGE],
       { onAvailable: this.onResourceAvailable }
