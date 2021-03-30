@@ -155,6 +155,13 @@ class Repository(object):
         """Hash of revision the current topic branch is based on."""
 
     @abc.abstractmethod
+    def base_ref_as_hg(self):
+        """Mercurial hash of revision the current topic branch is based on.
+
+        Return None if the hg hash of the base ref could not be calculated.
+        """
+
+    @abc.abstractmethod
     def get_commit_time(self):
         """Return the Unix time of the HEAD revision."""
 
@@ -318,6 +325,9 @@ class HgRepository(Repository):
     @property
     def base_ref(self):
         return self._run("log", "-r", "last(ancestors(.) and public())", "-T", "{node}")
+
+    def base_ref_as_hg(self):
+        return self.base_ref
 
     def __enter__(self):
         if self._client.server is None:
@@ -523,6 +533,13 @@ class GitRepository(Repository):
         if refs:
             return refs[-1][1:]  # boundary starts with a prefix `-`
         return self.head_ref
+
+    def base_ref_as_hg(self):
+        base_ref = self.base_ref
+        try:
+            return self._run("cinnabar", "git2hg", base_ref)
+        except subprocess.CalledProcessError:
+            return
 
     @property
     def has_git_cinnabar(self):
