@@ -71,16 +71,16 @@ class GLContextGLX : public GLContext {
                GLXContext aContext, bool aDeleteDrawable, bool aDoubleBuffered,
                gfxXlibSurface* aPixmap);
 
-  GLXContext mContext;
-  Display* mDisplay;
-  GLXDrawable mDrawable;
-  bool mDeleteDrawable;
-  bool mDoubleBuffered;
+  const GLXContext mContext;
+  Display* const mDisplay;
+  const GLXDrawable mDrawable;
+  const bool mDeleteDrawable;
+  const bool mDoubleBuffered;
 
-  GLXLibrary* mGLX;
+  GLXLibrary* const mGLX;
 
-  RefPtr<gfxXlibSurface> mPixmap;
-  bool mOwnsContext = true;
+  const RefPtr<gfxXlibSurface> mPixmap;
+  const bool mOwnsContext = true;
 };
 
 }  // namespace gl
