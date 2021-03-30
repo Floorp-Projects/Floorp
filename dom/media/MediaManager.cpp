@@ -3211,7 +3211,7 @@ RefPtr<SinkInfoPromise> MediaManager::GetSinkDevice(nsPIDOMWindowInner* aWindow,
  */
 
 nsresult MediaManager::GetUserMediaDevices(
-    nsPIDOMWindowInner* aWindow,
+    nsPIDOMWindowInner* aWindow, const MediaStreamConstraints& aConstraints,
     MozGetUserMediaDevicesSuccessCallback& aOnSuccess, uint64_t aWindowId,
     const nsAString& aCallID) {
   MOZ_ASSERT(NS_IsMainThread());
@@ -3219,7 +3219,8 @@ nsresult MediaManager::GetUserMediaDevices(
     aWindowId = aWindow->WindowID();
   }
 
-  // Locate + return already-constrained list.
+  // Ignore passed-in constraints, instead locate + return already-constrained
+  // list.
 
   nsTArray<nsString>* callIDs;
   if (!mCallIds.Get(aWindowId, &callIDs)) {

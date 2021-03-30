@@ -271,6 +271,7 @@ function handleGUMRequest(aSubject, aTopic, aData) {
   let contentWindow = Services.wm.getOuterWindowWithId(aSubject.windowID);
 
   contentWindow.navigator.mozGetUserMediaDevices(
+    constraints,
     function(devices) {
       // If the window has been closed while we were waiting for the list of
       // devices, there's nothing to do in the callback anymore.

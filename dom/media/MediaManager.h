@@ -204,8 +204,8 @@ class MediaManager final : public nsIMediaManagerService,
   static bool IsOn(const dom::OwningBooleanOrMediaTrackConstraints& aUnion) {
     return !aUnion.IsBoolean() || aUnion.GetAsBoolean();
   }
-  using GetUserMediaSuccessCallback = dom::NavigatorUserMediaSuccessCallback;
-  using GetUserMediaErrorCallback = dom::NavigatorUserMediaErrorCallback;
+  typedef dom::NavigatorUserMediaSuccessCallback GetUserMediaSuccessCallback;
+  typedef dom::NavigatorUserMediaErrorCallback GetUserMediaErrorCallback;
 
   MOZ_CAN_RUN_SCRIPT
   static void CallOnError(GetUserMediaErrorCallback& aCallback,
@@ -214,16 +214,16 @@ class MediaManager final : public nsIMediaManagerService,
   static void CallOnSuccess(GetUserMediaSuccessCallback& aCallback,
                             DOMMediaStream& aTrack);
 
-  using MediaDeviceSet = nsTArray<RefPtr<MediaDevice>>;
-  using MediaDeviceSetRefCnt = media::Refcountable<MediaDeviceSet>;
+  typedef nsTArray<RefPtr<MediaDevice>> MediaDeviceSet;
+  typedef media::Refcountable<MediaDeviceSet> MediaDeviceSetRefCnt;
 
-  using StreamPromise =
-      MozPromise<RefPtr<DOMMediaStream>, RefPtr<MediaMgrError>, true>;
-  using DevicesPromise =
-      MozPromise<RefPtr<MediaDeviceSetRefCnt>, RefPtr<MediaMgrError>, true>;
-  using MgrPromise = MozPromise<bool, RefPtr<MediaMgrError>, true>;
-  using BadConstraintsPromise =
-      MozPromise<const char*, RefPtr<MediaMgrError>, true>;
+  typedef MozPromise<RefPtr<DOMMediaStream>, RefPtr<MediaMgrError>, true>
+      StreamPromise;
+  typedef MozPromise<RefPtr<MediaDeviceSetRefCnt>, RefPtr<MediaMgrError>, true>
+      DevicesPromise;
+  typedef MozPromise<bool, RefPtr<MediaMgrError>, true> MgrPromise;
+  typedef MozPromise<const char*, RefPtr<MediaMgrError>, true>
+      BadConstraintsPromise;
 
   RefPtr<StreamPromise> GetUserMedia(
       nsPIDOMWindowInner* aWindow,
@@ -233,6 +233,7 @@ class MediaManager final : public nsIMediaManagerService,
   MOZ_CAN_RUN_SCRIPT
   nsresult GetUserMediaDevices(
       nsPIDOMWindowInner* aWindow,
+      const dom::MediaStreamConstraints& aConstraints,
       dom::MozGetUserMediaDevicesSuccessCallback& aOnSuccess,
       uint64_t aInnerWindowID = 0, const nsAString& aCallID = nsString());
   RefPtr<DevicesPromise> EnumerateDevices(nsPIDOMWindowInner* aWindow,

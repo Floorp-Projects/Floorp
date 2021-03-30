@@ -25,6 +25,6 @@ promise_test(async t => {
   // rejected.
   await promise_rejects_dom(
     t, 'InvalidStateError', Promise.race([p, Promise.resolve()]),
-    'getDisplayMedia should have returned an already-rejected promise.');
+    'selectAudioOutput should have returned an already-rejected promise.');
 });
 </script>

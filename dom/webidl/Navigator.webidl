@@ -260,7 +260,8 @@ partial interface Navigator {
 callback MozGetUserMediaDevicesSuccessCallback = void (nsIVariant? devices);
 partial interface Navigator {
   [Throws, ChromeOnly]
-  void mozGetUserMediaDevices(MozGetUserMediaDevicesSuccessCallback onsuccess,
+  void mozGetUserMediaDevices(MediaStreamConstraints constraints,
+                              MozGetUserMediaDevicesSuccessCallback onsuccess,
                               NavigatorUserMediaErrorCallback onerror,
                               // The originating innerWindowID is needed to
                               // avoid calling the callbacks if the window has

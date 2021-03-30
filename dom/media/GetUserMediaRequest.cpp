@@ -5,7 +5,6 @@
 #include "GetUserMediaRequest.h"
 
 #include "base/basictypes.h"
-#include "mozilla/dom/MediaDevicesBinding.h"
 #include "mozilla/dom/MediaStreamBinding.h"
 #include "mozilla/dom/GetUserMediaRequestBinding.h"
 #include "nsIScriptGlobalObject.h"
@@ -21,19 +20,6 @@ GetUserMediaRequest::GetUserMediaRequest(
       mOuterWindowID(aInnerWindow->GetOuterWindow()->WindowID()),
       mCallID(aCallID),
       mConstraints(new MediaStreamConstraints(aConstraints)),
-      mType(GetUserMediaRequestType::Getusermedia),
-      mIsSecure(aIsSecure),
-      mIsHandlingUserInput(aIsHandlingUserInput) {}
-
-GetUserMediaRequest::GetUserMediaRequest(
-    nsPIDOMWindowInner* aInnerWindow, const nsAString& aCallID,
-    const AudioOutputOptions& aAudioOutputOptions, bool aIsSecure,
-    bool aIsHandlingUserInput)
-    : mInnerWindowID(aInnerWindow->WindowID()),
-      mOuterWindowID(aInnerWindow->GetOuterWindow()->WindowID()),
-      mCallID(aCallID),
-      mAudioOutputOptions(new AudioOutputOptions(aAudioOutputOptions)),
-      mType(GetUserMediaRequestType::Selectaudiooutput),
       mIsSecure(aIsSecure),
       mIsHandlingUserInput(aIsHandlingUserInput) {}
 
@@ -45,7 +31,6 @@ GetUserMediaRequest::GetUserMediaRequest(nsPIDOMWindowInner* aInnerWindow,
       mOuterWindowID(0),
       mRawID(aRawId),
       mMediaSource(aMediaSource),
-      mType(GetUserMediaRequestType::Recording_device_stopped),
       mIsSecure(false),
       mIsHandlingUserInput(aIsHandlingUserInput) {
   if (aInnerWindow && aInnerWindow->GetOuterWindow()) {
@@ -68,8 +53,6 @@ JSObject* GetUserMediaRequest::WrapObject(JSContext* aCx,
 
 nsISupports* GetUserMediaRequest::GetParentObject() { return nullptr; }
 
-GetUserMediaRequestType GetUserMediaRequest::Type() { return mType; }
-
 void GetUserMediaRequest::GetCallID(nsString& retval) { retval = mCallID; }
 
 void GetUserMediaRequest::GetRawID(nsString& retval) { retval = mRawID; }
@@ -89,20 +72,7 @@ bool GetUserMediaRequest::IsHandlingUserInput() const {
 }
 
 void GetUserMediaRequest::GetConstraints(MediaStreamConstraints& result) {
-  MOZ_ASSERT(result.mAudio.IsBoolean() && !result.mAudio.GetAsBoolean() &&
-                 result.mVideo.IsBoolean() && !result.mVideo.GetAsBoolean(),
-             "result should be default initialized");
-  if (mConstraints) {
-    result = *mConstraints;
-  }
-}
-
-void GetUserMediaRequest::GetAudioOutputOptions(AudioOutputOptions& result) {
-  MOZ_ASSERT(result.mDeviceId.IsEmpty(),
-             "result should be default initialized");
-  if (mAudioOutputOptions) {
-    result = *mAudioOutputOptions;
-  }
+  result = *mConstraints;
 }
 
 }  // namespace mozilla::dom
