@@ -347,16 +347,19 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
 
   virtual bool PaintScrollbar(DrawTarget&, const LayoutDeviceRect&,
                               bool aHorizontal, nsIFrame*, const ComputedStyle&,
+                              const EventStates& aElementState,
                               const EventStates& aDocumentState,
                               UseSystemColors, DPIRatio);
   virtual bool PaintScrollbar(WebRenderBackendData&, const LayoutDeviceRect&,
                               bool aHorizontal, nsIFrame*, const ComputedStyle&,
+                              const EventStates& aElementState,
                               const EventStates& aDocumentState,
                               UseSystemColors, DPIRatio);
   template <typename PaintBackendData>
   bool DoPaintDefaultScrollbar(PaintBackendData&, const LayoutDeviceRect&,
                                bool aHorizontal, nsIFrame*,
                                const ComputedStyle&,
+                               const EventStates& aElementState,
                                const EventStates& aDocumentState,
                                UseSystemColors aUseSystemColors, DPIRatio);
 
@@ -401,10 +404,11 @@ class nsNativeBasicTheme : protected nsNativeTheme, public nsITheme {
   static sRGBColor sAccentColorDarker;
   static CSSIntCoord sHorizontalScrollbarHeight;
   static CSSIntCoord sVerticalScrollbarWidth;
+  static bool sOverlayScrollbars;
 
   static void PrefChangedCallback(const char*, void*) { LookAndFeelChanged(); }
   static void RecomputeAccentColors();
-  static void RecomputeScrollbarSizes();
+  static void RecomputeScrollbarParams();
 };
 
 #endif

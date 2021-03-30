@@ -809,6 +809,22 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = mHighContrast;
       break;
     }
+    case IntID::AllowOverlayScrollbarsOverlap: {
+      aResult = 1;
+      break;
+    }
+    case IntID::ScrollbarFadeBeginDelay: {
+      aResult = 1000;
+      break;
+    }
+    case IntID::ScrollbarFadeDuration: {
+      aResult = 400;
+      break;
+    }
+    case IntID::ScrollbarDisplayOnMouseMove: {
+      aResult = 1;
+      break;
+    }
     default:
       aResult = 0;
       res = NS_ERROR_FAILURE;
