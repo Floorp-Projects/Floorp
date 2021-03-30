@@ -1527,7 +1527,7 @@ LexicalScopeNode* PerHandlerParser<FullParseHandler>::finishLexicalScope(
 template <>
 SyntaxParseHandler::ClassBodyScopeNodeType
 PerHandlerParser<SyntaxParseHandler>::finishClassBodyScope(
-    ParseContext::Scope& scope, Node body) {
+    ParseContext::Scope& scope, ListNodeType body) {
   if (!propagateFreeNamesAndMarkClosedOverBindings(scope)) {
     return null();
   }
@@ -1537,7 +1537,7 @@ PerHandlerParser<SyntaxParseHandler>::finishClassBodyScope(
 
 template <>
 ClassBodyScopeNode* PerHandlerParser<FullParseHandler>::finishClassBodyScope(
-    ParseContext::Scope& scope, ParseNode* body) {
+    ParseContext::Scope& scope, ListNode* body) {
   if (!propagateFreeNamesAndMarkClosedOverBindings(scope)) {
     return nullptr;
   }
