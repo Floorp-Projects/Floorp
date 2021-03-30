@@ -3014,7 +3014,7 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPoint(
   HitTestResult hit;
   // This walks the tree in depth-first, reverse order, so that it encounters
   // APZCs front-to-back on the screen.
-  HitTestingTreeNode* resultNode;
+  HitTestingTreeNode* resultNode = nullptr;
   HitTestingTreeNode* root = mRootNode;
   HitTestingTreeNode* scrollbarNode = nullptr;
   std::stack<LayerPoint> hitTestPoints;
@@ -3025,21 +3025,49 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPoint(
 
   ForEachNode<ReverseIterator>(
       root,
-      [&hitTestPoints, this](HitTestingTreeNode* aNode) {
+      [&resultNode, &hitTestPoints, &hit, this](HitTestingTreeNode* aNode) {
         ParentLayerPoint hitTestPointForParent = ViewAs<ParentLayerPixel>(
             hitTestPoints.top(), PixelCastJustification::MovingDownToChildren);
         if (aNode->IsOutsideClip(hitTestPointForParent)) {
           // If the point being tested is outside the clip region for this node
           // then we don't need to test against this node or any of its
           // children. Just skip it and move on.
-          APZCTM_LOG("Point %f %f outside clip for node %p\n",
-                     hitTestPoints.top().x, hitTestPoints.top().y, aNode);
+          APZCTM_LOG("Point %s outside clip for node %p\n",
+                     ToString(hitTestPointForParent).c_str(), aNode);
           return TraversalFlag::Skip;
+        }
+        // If this node has a transform that includes an overscroll transform,
+        // check if the point is inside the corresponding APZC's overscroll
+        // gutter. We do this here in the pre-action because we need the
+        // hit-test point in ParentLayer coordinates for this check. If the
+        // point is in the gutter, we can abort the search and target this node.
+        // (Note that no descendant node would be a match if we're in the
+        // gutter.)
+        const AsyncPanZoomController* sourceOfOverscrollTransform = nullptr;
+        auto transform =
+            ComputeTransformForNode(aNode, &sourceOfOverscrollTransform);
+        if (sourceOfOverscrollTransform &&
+            sourceOfOverscrollTransform->IsInOverscrollGutter(
+                hitTestPointForParent)) {
+          APZCTM_LOG(
+              "ParentLayer point %s in overscroll gutter of APZC %p (node "
+              "%p)\n",
+              ToString(hitTestPointForParent).c_str(), aNode->GetApzc(), aNode);
+          resultNode = aNode;
+          // We want to target the overscrolled APZC, but if we're over the
+          // gutter then we're not over its hit or DTC regions. Use
+          // {eVisibleToHitTest} as the hit result because the event won't be
+          // sent to gecko (so DTC flags are irrelevant), and we do want
+          // browser default actions to work (e.g. scrolling to relieve the
+          // overscroll).
+          hit.mHitResult = {CompositorHitTestFlags::eVisibleToHitTest};
+          hit.mHitOverscrollGutter = true;
+          return TraversalFlag::Abort;
         }
         // First check the subtree rooted at this node, because deeper nodes
         // are more "in front".
-        Maybe<LayerPoint> hitTestPoint = aNode->Untransform(
-            hitTestPointForParent, ComputeTransformForNode(aNode));
+        Maybe<LayerPoint> hitTestPoint =
+            aNode->Untransform(hitTestPointForParent, transform);
         APZCTM_LOG("Transformed ParentLayer point %s to layer %s\n",
                    ToString(hitTestPointForParent).c_str(),
                    hitTestPoint ? ToString(hitTestPoint.ref()).c_str() : "nil");
@@ -3105,8 +3133,13 @@ APZCTreeManager::HitTestResult APZCTreeManager::GetAPZCAtPoint(
     hit.mLayersId = resultNode->GetLayersId();
   }
 
-  hit.mHitOverscrollGutter =
-      hit.mTargetApzc && hit.mTargetApzc->IsInOverscrollGutter(aHitTestPoint);
+  // If we found an APZC that wasn't directly on the result node, we haven't
+  // checked if we're in its overscroll gutter, so check now.
+  if (hit.mTargetApzc && resultNode &&
+      (hit.mTargetApzc != resultNode->GetApzc())) {
+    hit.mHitOverscrollGutter =
+        hit.mTargetApzc->IsInOverscrollGutter(aHitTestPoint);
+  }
 
   return hit;
 }
