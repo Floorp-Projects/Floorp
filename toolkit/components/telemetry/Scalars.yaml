@@ -2965,23 +2965,6 @@ devtools.accessibility:
     record_in_processes:
       - 'main'
 
-  tabbing_order_activated:
-    bug_numbers:
-      - 1675539
-    description: >
-      Number of times a tabbing order overlay was activated in the accessibility
-      panel.
-    expires: "89"
-    kind: uint
-    notification_emails:
-      - dev-developer-tools@lists.mozilla.org
-      - accessibility@mozilla.com
-    release_channel_collection: opt-out
-    products:
-      - 'firefox'
-    record_in_processes:
-      - 'main'
-
 devtools.application:
   opened_count:
     bug_numbers:
