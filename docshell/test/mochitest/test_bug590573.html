@@ -27,6 +27,17 @@ function page1Load() {
   }
 }
 
+var page1PopstateCallbackEnabled = false;
+function page1Popstate() {
+  if (page1PopstateCallbackEnabled) {
+    page1PopstateCallbackEnabled = false;
+    dump("Got page1 popstate.\n");
+    pageLoad();
+  } else {
+    dump("Ignoring page1 popstate.\n");
+  }
+}
+
 var page1PageShowCallbackEnabled = false;
 function page1PageShow() {
   if (page1PageShowCallbackEnabled) {
@@ -89,10 +100,7 @@ function pageLoad() {
 }
 
 function continueAsync() {
-  popup.addEventListener("popstate", function() {
-      setTimeout(function() { gTestContinuation.next(); });
-    },
-    {once: true});
+  setTimeout(function() { gTestContinuation.next(); })
 }
 
 function* testBody() {
