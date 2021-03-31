@@ -21,9 +21,9 @@ async function testSwitchToTarget(commands) {
     `data:text/html,<iframe src="data:text/html,foo"></iframe>`
   );
 
-  const targetList = commands.targetCommand;
-  const { TYPES } = targetList;
-  await targetList.startListening();
+  const targetCommand = commands.targetCommand;
+  const { TYPES } = targetCommand;
+  await targetCommand.startListening();
 
   // Create a second target to switch to, a new tab with an iframe
   const secondTab = await addTab(
@@ -35,8 +35,8 @@ async function testSwitchToTarget(commands) {
   const secondTarget = await secondDescriptor.getTarget();
 
   const frameTargets = [];
-  const firstTarget = targetList.targetFront;
-  let currentTarget = targetList.targetFront;
+  const firstTarget = targetCommand.targetFront;
+  let currentTarget = targetCommand.targetFront;
   const onFrameAvailable = ({ targetFront, isTargetSwitching }) => {
     is(
       targetFront.targetType,
@@ -88,7 +88,7 @@ async function testSwitchToTarget(commands) {
     }
     destroyedTargets.push(targetFront);
   };
-  await targetList.watchTargets(
+  await targetCommand.watchTargets(
     [TYPES.FRAME],
     onFrameAvailable,
     onFrameDestroyed
@@ -100,10 +100,10 @@ async function testSwitchToTarget(commands) {
   frameTargets.length = 0;
 
   currentTarget = secondTarget;
-  await targetList.switchToTarget(secondTarget);
+  await targetCommand.switchToTarget(secondTarget);
 
   is(
-    targetList.targetFront,
+    targetCommand.targetFront,
     currentTarget,
     "After the switch, the top level target has been updated"
   );
@@ -132,7 +132,7 @@ async function testSwitchToTarget(commands) {
     );
   }
 
-  targetList.destroy();
+  targetCommand.destroy();
 
   await commands.destroy();
 

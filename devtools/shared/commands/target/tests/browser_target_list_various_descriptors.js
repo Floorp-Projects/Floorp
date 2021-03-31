@@ -30,25 +30,25 @@ async function testParentProcess() {
   info("Test TargetCommand against parent process descriptor");
 
   const commands = await CommandsFactory.forMainProcess();
-  const targetList = commands.targetCommand;
-  await targetList.startListening();
+  const targetCommand = commands.targetCommand;
+  await targetCommand.startListening();
 
-  const targets = await targetList.getAllTargets(targetList.ALL_TYPES);
+  const targets = await targetCommand.getAllTargets(targetCommand.ALL_TYPES);
   ok(
     targets.length > 1,
     "We get many targets when debugging the parent process"
   );
   const targetFront = targets[0];
-  is(targetFront, targetList.targetFront, "The first is the top level one");
+  is(targetFront, targetCommand.targetFront, "The first is the top level one");
   is(
     targetFront.targetType,
-    targetList.TYPES.FRAME,
+    targetCommand.TYPES.FRAME,
     "the parent process target is of frame type, because it inherits from BrowsingContextTargetActor"
   );
   is(targetFront.isTopLevel, true, "This is flagged as top level");
 
-  targetList.destroy();
-  await waitForAllTargetsToBeAttached(targetList);
+  targetCommand.destroy();
+  await waitForAllTargetsToBeAttached(targetCommand);
 
   await commands.destroy();
 }
@@ -58,23 +58,23 @@ async function testLocalTab() {
 
   const tab = await addTab(TEST_URL);
   const commands = await CommandsFactory.forTab(tab);
-  const targetList = commands.targetCommand;
-  await targetList.startListening();
+  const targetCommand = commands.targetCommand;
+  await targetCommand.startListening();
   // Avoid the target to close the client when we destroy the target list and the target
-  targetList.targetFront.shouldCloseClient = false;
+  targetCommand.targetFront.shouldCloseClient = false;
 
-  const targets = await targetList.getAllTargets(targetList.ALL_TYPES);
+  const targets = await targetCommand.getAllTargets(targetCommand.ALL_TYPES);
   is(targets.length, 1, "Got a unique target");
   const targetFront = targets[0];
-  is(targetFront, targetList.targetFront, "The first is the top level one");
+  is(targetFront, targetCommand.targetFront, "The first is the top level one");
   is(
     targetFront.targetType,
-    targetList.TYPES.FRAME,
+    targetCommand.TYPES.FRAME,
     "the tab target is of frame type"
   );
   is(targetFront.isTopLevel, true, "This is flagged as top level");
 
-  targetList.destroy();
+  targetCommand.destroy();
 
   BrowserTestUtils.removeTab(tab);
 
@@ -90,20 +90,20 @@ async function testRemoteTab() {
   const commands = await CommandsFactory.forRemoteTabInTest({
     outerWindowID: tab.linkedBrowser.outerWindowID,
   });
-  const targetList = commands.targetCommand;
-  await targetList.startListening();
+  const targetCommand = commands.targetCommand;
+  await targetCommand.startListening();
 
-  const targets = await targetList.getAllTargets(targetList.ALL_TYPES);
+  const targets = await targetCommand.getAllTargets(targetCommand.ALL_TYPES);
   is(targets.length, 1, "Got a unique target");
   const targetFront = targets[0];
   is(
     targetFront,
-    targetList.targetFront,
+    targetCommand.targetFront,
     "TargetCommand top target is the same as the first target"
   );
   is(
     targetFront.targetType,
-    targetList.TYPES.FRAME,
+    targetCommand.TYPES.FRAME,
     "the tab target is of frame type"
   );
   is(targetFront.isTopLevel, true, "This is flagged as top level");
@@ -119,13 +119,13 @@ async function testRemoteTab() {
     ok(commands.descriptorFront.isDestroyed(), "Descriptor is also destroyed");
   } else {
     is(
-      targetList.targetFront,
+      targetCommand.targetFront,
       targetFront,
       "Without fission, the top target stays the same"
     );
   }
 
-  targetList.destroy();
+  targetCommand.destroy();
 
   BrowserTestUtils.removeTab(tab);
 
@@ -145,21 +145,21 @@ async function testWebExtension() {
   await extension.startup();
 
   const commands = await CommandsFactory.forAddon(extension.id);
-  const targetList = commands.targetCommand;
-  await targetList.startListening();
+  const targetCommand = commands.targetCommand;
+  await targetCommand.startListening();
 
-  const targets = await targetList.getAllTargets(targetList.ALL_TYPES);
+  const targets = await targetCommand.getAllTargets(targetCommand.ALL_TYPES);
   is(targets.length, 1, "Got a unique target");
   const targetFront = targets[0];
-  is(targetFront, targetList.targetFront, "The first is the top level one");
+  is(targetFront, targetCommand.targetFront, "The first is the top level one");
   is(
     targetFront.targetType,
-    targetList.TYPES.FRAME,
+    targetCommand.TYPES.FRAME,
     "the web extension target is of frame type, because it inherits from BrowsingContextTargetActor"
   );
   is(targetFront.isTopLevel, true, "This is flagged as top level");
 
-  targetList.destroy();
+  targetCommand.destroy();
 
   await extension.unload();
 
@@ -178,21 +178,21 @@ async function testContentProcess() {
   const { osPid } = tab.linkedBrowser.browsingContext.currentWindowGlobal;
 
   const commands = await CommandsFactory.forProcess(osPid);
-  const targetList = commands.targetCommand;
-  await targetList.startListening();
+  const targetCommand = commands.targetCommand;
+  await targetCommand.startListening();
 
-  const targets = await targetList.getAllTargets(targetList.ALL_TYPES);
+  const targets = await targetCommand.getAllTargets(targetCommand.ALL_TYPES);
   is(targets.length, 1, "Got a unique target");
   const targetFront = targets[0];
-  is(targetFront, targetList.targetFront, "The first is the top level one");
+  is(targetFront, targetCommand.targetFront, "The first is the top level one");
   is(
     targetFront.targetType,
-    targetList.TYPES.PROCESS,
+    targetCommand.TYPES.PROCESS,
     "the content process target is of process type"
   );
   is(targetFront.isTopLevel, true, "This is flagged as top level");
 
-  targetList.destroy();
+  targetCommand.destroy();
 
   BrowserTestUtils.removeTab(tab);
 
@@ -224,21 +224,21 @@ async function testWorker() {
   const workerId = getWorkerDebuggerId(workerUrl);
   ok(workerId, "Found the worker Debugger ID");
   const commands = await CommandsFactory.forWorker(workerId);
-  const targetList = commands.targetCommand;
-  await targetList.startListening();
+  const targetCommand = commands.targetCommand;
+  await targetCommand.startListening();
 
-  const targets = await targetList.getAllTargets(targetList.ALL_TYPES);
+  const targets = await targetCommand.getAllTargets(targetCommand.ALL_TYPES);
   is(targets.length, 1, "Got a unique target");
   const targetFront = targets[0];
-  is(targetFront, targetList.targetFront, "The first is the top level one");
+  is(targetFront, targetCommand.targetFront, "The first is the top level one");
   is(
     targetFront.targetType,
-    targetList.TYPES.WORKER,
+    targetCommand.TYPES.WORKER,
     "the worker target is of worker type"
   );
   is(targetFront.isTopLevel, true, "This is flagged as top level");
 
-  targetList.destroy();
+  targetCommand.destroy();
 
   // Calling CommandsFactory.forWorker, will call RootFront.getWorker
   // which will spawn lots of worker legacy code, firing lots of requests,
