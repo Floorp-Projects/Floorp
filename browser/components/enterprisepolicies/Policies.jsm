@@ -118,6 +118,17 @@ var Policies = {
     },
   },
 
+  AllowedDomainsForApps: {
+    onBeforeAddons(manager, param) {
+      Services.obs.addObserver(function(subject, topic, data) {
+        let channel = subject.QueryInterface(Ci.nsIHttpChannel);
+        if (channel.URI.host.endsWith(".google.com")) {
+          channel.setRequestHeader("X-GoogApps-Allowed-Domains", param, true);
+        }
+      }, "http-on-modify-request");
+    },
+  },
+
   AppAutoUpdate: {
     onBeforeUIStartup(manager, param) {
       // Logic feels a bit reversed here, but it's correct. If AppAutoUpdate is
