@@ -6,9 +6,13 @@
 
 const BASE_URL = "http://mochi.test:8888/browser/dom/base/test/";
 
-async function newFocusedWindow() {
+async function newFocusedWindow(trigger) {
+  let winPromise = BrowserTestUtils.domWindowOpenedAndLoaded();
   let delayedStartupPromise = BrowserTestUtils.waitForNewWindow();
-  let win = await BrowserTestUtils.domWindowOpenedAndLoaded();
+
+  await trigger();
+
+  let win = await winPromise;
   // New windows get focused after the first paint, see bug 1262946
   await BrowserTestUtils.waitForContentEvent(
     win.gBrowser.selectedBrowser,
@@ -22,14 +26,10 @@ add_task(async function bug1691214() {
   await BrowserTestUtils.withNewTab(
     BASE_URL + "file_bug1691214.html",
     async function(browser) {
-      let win;
-
-      {
-        let newWindow = newFocusedWindow();
-        await BrowserTestUtils.synthesizeMouseAtCenter("#link-1", {}, browser);
-        win = await newWindow;
-        is(Services.focus.focusedWindow, win, "New window should be focused");
-      }
+      let win = await newFocusedWindow(function() {
+        return BrowserTestUtils.synthesizeMouseAtCenter("#link-1", {}, browser);
+      });
+      is(Services.focus.focusedWindow, win, "New window should be focused");
 
       info("re-focusing the original window");
 
@@ -68,14 +68,11 @@ add_task(async function bug1700871() {
   await BrowserTestUtils.withNewTab(
     BASE_URL + "file_bug1700871.html",
     async function(browser) {
-      let win;
+      let win = await newFocusedWindow(function() {
+        return BrowserTestUtils.synthesizeMouseAtCenter("#link-1", {}, browser);
+      });
 
-      {
-        let newWindow = newFocusedWindow();
-        await BrowserTestUtils.synthesizeMouseAtCenter("#link-1", {}, browser);
-        win = await newWindow;
-        is(Services.focus.focusedWindow, win, "New window should be focused");
-      }
+      is(Services.focus.focusedWindow, win, "New window should be focused");
 
       info("waiting for three submit events and ensuring focus hasn't moved");
 
