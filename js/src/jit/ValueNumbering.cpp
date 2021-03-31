@@ -122,7 +122,7 @@ static void ReplaceAllUsesWith(MDefinition* from, MDefinition* to) {
   MOZ_ASSERT(!to->isDiscarded(),
              "GVN replaces an instruction by a removed instruction");
 
-  // We don't need the extra setting of UseRemoved flags that the regular
+  // We don't need the extra setting of ImplicitlyUsed flags that the regular
   // replaceAllUsesWith does because we do it ourselves.
   from->justReplaceAllUsesWith(to);
 }
@@ -229,15 +229,15 @@ static bool IsDominatorRefined(MBasicBlock* block) {
 // |def| has just had one of its users release it. If it's now dead, enqueue it
 // for discarding, otherwise just make note of it.
 bool ValueNumberer::handleUseReleased(MDefinition* def,
-                                      UseRemovedOption useRemovedOption) {
+                                      ImplicitUseOption implicitUseOption) {
   if (IsDiscardable(def)) {
     values_.forget(def);
     if (!deadDefs_.append(def)) {
       return false;
     }
   } else {
-    if (useRemovedOption == SetUseRemoved) {
-      def->setUseRemovedUnchecked();
+    if (implicitUseOption == SetImplicitUse) {
+      def->setImplicitlyUsedUnchecked();
     }
   }
   return true;
@@ -262,10 +262,10 @@ bool ValueNumberer::releaseResumePointOperands(MResumePoint* resume) {
     MDefinition* op = resume->getOperand(i);
     resume->releaseOperand(i);
 
-    // We set the UseRemoved flag when removing resume point operands,
+    // We set the ImplicitlyUsed flag when removing resume point operands,
     // because even though we may think we're certain that a particular
     // branch might not be taken, the type information might be incomplete.
-    if (!handleUseReleased(op, SetUseRemoved)) {
+    if (!handleUseReleased(op, SetImplicitUse)) {
       return false;
     }
   }
@@ -279,7 +279,7 @@ bool ValueNumberer::releaseAndRemovePhiOperands(MPhi* phi) {
   for (int o = phi->numOperands() - 1; o >= 0; --o) {
     MDefinition* op = phi->getOperand(o);
     phi->removeOperand(o);
-    if (!handleUseReleased(op, DontSetUseRemoved)) {
+    if (!handleUseReleased(op, DontSetImplicitUse)) {
       return false;
     }
   }
@@ -292,7 +292,7 @@ bool ValueNumberer::releaseOperands(MDefinition* def) {
   for (size_t o = 0, e = def->numOperands(); o < e; ++o) {
     MDefinition* op = def->getOperand(o);
     def->releaseOperand(o);
-    if (!handleUseReleased(op, DontSetUseRemoved)) {
+    if (!handleUseReleased(op, DontSetImplicitUse)) {
       return false;
     }
   }
@@ -440,7 +440,7 @@ bool ValueNumberer::removePredecessorAndDoDCE(MBasicBlock* block,
     phi->removeOperand(predIndex);
 
     nextDef_ = iter != end ? *iter : nullptr;
-    if (!handleUseReleased(op, DontSetUseRemoved) || !processDeadDefs()) {
+    if (!handleUseReleased(op, DontSetImplicitUse) || !processDeadDefs()) {
       return false;
     }
 

@@ -37,7 +37,7 @@ using namespace js::jit;
 
 using mozilla::DebugOnly;
 
-// Stack used by FlagPhiInputsAsHavingRemovedUses. It stores the Phi instruction
+// Stack used by FlagPhiInputsAsImplicitlyUsed. It stores the Phi instruction
 // pointer and the MUseIterator which should be visited next.
 using MPhiUseIteratorStack =
     Vector<std::pair<MPhi*, MUseIterator>, 16, SystemAllocPolicy>;
@@ -81,7 +81,7 @@ static bool DepthFirstSearchUse(MIRGenerator* mir,
 #ifdef DEBUG
       useCount++;
 #endif
-      if (mir->shouldCancel("FlagPhiInputsAsHavingRemovedUses inner loop")) {
+      if (mir->shouldCancel("FlagPhiInputsAsImplicitlyUsed inner loop")) {
         return false;
       }
 
@@ -101,10 +101,10 @@ static bool DepthFirstSearchUse(MIRGenerator* mir,
       }
 
       MPhi* cphi = cdef->toPhi();
-      if (cphi->getUsageAnalysis() == PhiUsage::Used || cphi->isUseRemoved() ||
+      if (cphi->getUsageAnalysis() == PhiUsage::Used ||
           cphi->isImplicitlyUsed()) {
         // The information got cached on the Phi the last time it
-        // got visited, or when flagging operands of removed
+        // got visited, or when flagging operands of implicitly used
         // instructions.
         return push(producer, use);
       }
@@ -146,14 +146,13 @@ static bool DepthFirstSearchUse(MIRGenerator* mir,
   return true;
 }
 
-static bool FlagPhiInputsAsHavingRemovedUses(MIRGenerator* mir,
-                                             MBasicBlock* block,
-                                             MBasicBlock* succ,
-                                             MPhiUseIteratorStack& worklist) {
+static bool FlagPhiInputsAsImplicitlyUsed(MIRGenerator* mir, MBasicBlock* block,
+                                          MBasicBlock* succ,
+                                          MPhiUseIteratorStack& worklist) {
   // When removing an edge between 2 blocks, we might remove the ability of
   // later phases to figure out that the uses of a Phi should be considered as
-  // a use of all its inputs. Thus we need to mark the Phi inputs as having
-  // removed uses iff the phi has any uses.
+  // a use of all its inputs. Thus we need to mark the Phi inputs as being
+  // implicitly used iff the phi has any uses.
   //
   //
   //        +--------------------+         +---------------------+
@@ -205,37 +204,36 @@ static bool FlagPhiInputsAsHavingRemovedUses(MIRGenerator* mir,
   //                     +------------------------+
   //
   //
-  // If the inputs of the Phi are not flagged as having removed uses, then
+  // If the inputs of the Phi are not flagged as implicitly used, then
   // later compilation phase might optimize them out. The problem is that a
   // bailout will use this value and give it back to baseline, which will then
   // use the OptimizedOut magic value in a computation.
   //
   // Unfortunately, we cannot be too conservative about flagging Phi inputs as
-  // having removed uses, as this would prevent many optimizations from being
+  // having implicit uses, as this would prevent many optimizations from being
   // used. Thus, the following code is in charge of flagging Phi instructions
-  // as Unused or Used, and setting UseRemoved accordingly.
+  // as Unused or Used, and setting ImplicitlyUsed accordingly.
   size_t predIndex = succ->getPredecessorIndex(block);
   MPhiIterator end = succ->phisEnd();
   MPhiIterator it = succ->phisBegin();
   for (; it != end; it++) {
     MPhi* phi = *it;
 
-    if (mir->shouldCancel("FlagPhiInputsAsHavingRemovedUses outer loop")) {
+    if (mir->shouldCancel("FlagPhiInputsAsImplicitlyUsed outer loop")) {
       return false;
     }
 
     // We are looking to mark the Phi inputs which are used across the edge
     // between the |block| and its successor |succ|.
     MDefinition* def = phi->getOperand(predIndex);
-    if (def->isUseRemoved()) {
+    if (def->isImplicitlyUsed()) {
       continue;
     }
 
-    // If the Phi is either Used or Unused, set the UseRemoved flag
+    // If the Phi is either Used or Unused, set the ImplicitlyUsed flag
     // accordingly.
-    if (phi->getUsageAnalysis() == PhiUsage::Used || phi->isUseRemoved() ||
-        phi->isImplicitlyUsed()) {
-      def->setUseRemoved();
+    if (phi->getUsageAnalysis() == PhiUsage::Used || phi->isImplicitlyUsed()) {
+      def->setImplicitlyUsedUnchecked();
       continue;
     } else if (phi->getUsageAnalysis() == PhiUsage::Unused) {
       continue;
@@ -254,7 +252,7 @@ static bool FlagPhiInputsAsHavingRemovedUses(MIRGenerator* mir,
     if (!worklist.empty()) {
       // One of the Phis is used, set Used flags on all the Phis which are
       // in the use chain.
-      def->setUseRemoved();
+      def->setImplicitlyUsedUnchecked();
       do {
         auto pair = worklist.popCopy();
         MPhi* producer = pair.first;
@@ -281,47 +279,47 @@ static MInstructionIterator FindFirstInstructionAfterBail(MBasicBlock* block) {
 }
 
 // Given an iterator pointing to the first removed instruction, mark
-// the operands of each removed instruction as having removed uses.
-static bool FlagOperandsAsHavingRemovedUsesAfter(
+// the operands of each removed instruction as having implicit uses.
+static bool FlagOperandsAsImplicitlyUsedAfter(
     MIRGenerator* mir, MBasicBlock* block, MInstructionIterator firstRemoved) {
   MOZ_ASSERT(firstRemoved->block() == block);
 
   const CompileInfo& info = block->info();
 
-  // Flag operands of removed instructions as having removed uses.
+  // Flag operands of removed instructions as having implicit uses.
   MInstructionIterator end = block->end();
   for (MInstructionIterator it = firstRemoved; it != end; it++) {
-    if (mir->shouldCancel("FlagOperandsAsHavingRemovedUsesAfter (loop 1)")) {
+    if (mir->shouldCancel("FlagOperandsAsImplicitlyUsedAfter (loop 1)")) {
       return false;
     }
 
     MInstruction* ins = *it;
     for (size_t i = 0, e = ins->numOperands(); i < e; i++) {
-      ins->getOperand(i)->setUseRemovedUnchecked();
+      ins->getOperand(i)->setImplicitlyUsedUnchecked();
     }
 
-    // Flag observable resume point operands as having removed uses.
+    // Flag observable resume point operands as having implicit uses.
     if (MResumePoint* rp = ins->resumePoint()) {
       // Note: no need to iterate over the caller's of the resume point as
       // this is the same as the entry resume point.
       MOZ_ASSERT(&rp->block()->info() == &info);
       for (size_t i = 0, e = rp->numOperands(); i < e; i++) {
         if (info.isObservableSlot(i)) {
-          rp->getOperand(i)->setUseRemovedUnchecked();
+          rp->getOperand(i)->setImplicitlyUsedUnchecked();
         }
       }
     }
   }
 
-  // Flag Phi inputs of the successors as having removed uses.
+  // Flag Phi inputs of the successors as having implicit uses.
   MPhiUseIteratorStack worklist;
   for (size_t i = 0, e = block->numSuccessors(); i < e; i++) {
-    if (mir->shouldCancel("FlagOperandsAsHavingRemovedUsesAfter (loop 2)")) {
+    if (mir->shouldCancel("FlagOperandsAsImplicitlyUsedAfter (loop 2)")) {
       return false;
     }
 
-    if (!FlagPhiInputsAsHavingRemovedUses(mir, block, block->getSuccessor(i),
-                                          worklist)) {
+    if (!FlagPhiInputsAsImplicitlyUsed(mir, block, block->getSuccessor(i),
+                                       worklist)) {
       return false;
     }
   }
@@ -331,7 +329,7 @@ static bool FlagOperandsAsHavingRemovedUsesAfter(
 
 static bool FlagEntryResumePointOperands(MIRGenerator* mir,
                                          MBasicBlock* block) {
-  // Flag observable operands of the entry resume point as having removed uses.
+  // Flag observable operands of the entry resume point as having implicit uses.
   MResumePoint* rp = block->entryResumePoint();
   while (rp) {
     if (mir->shouldCancel("FlagEntryResumePointOperands")) {
@@ -341,7 +339,7 @@ static bool FlagEntryResumePointOperands(MIRGenerator* mir,
     const CompileInfo& info = rp->block()->info();
     for (size_t i = 0, e = rp->numOperands(); i < e; i++) {
       if (info.isObservableSlot(i)) {
-        rp->getOperand(i)->setUseRemovedUnchecked();
+        rp->getOperand(i)->setImplicitlyUsedUnchecked();
       }
     }
 
@@ -351,10 +349,10 @@ static bool FlagEntryResumePointOperands(MIRGenerator* mir,
   return true;
 }
 
-static bool FlagAllOperandsAsHavingRemovedUses(MIRGenerator* mir,
-                                               MBasicBlock* block) {
+static bool FlagAllOperandsAsImplicitlyUsed(MIRGenerator* mir,
+                                            MBasicBlock* block) {
   return FlagEntryResumePointOperands(mir, block) &&
-         FlagOperandsAsHavingRemovedUsesAfter(mir, block, block->begin());
+         FlagOperandsAsImplicitlyUsedAfter(mir, block, block->begin());
 }
 
 // WarpBuilder sets the alwaysBails flag on blocks that contain an
@@ -436,13 +434,13 @@ bool jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph) {
     MBasicBlock* block = *it++;
     if (!block->isMarked()) {
       // If we are removing the block entirely, mark the operands of every
-      // instruction as being removed.
-      FlagAllOperandsAsHavingRemovedUses(mir, block);
+      // instruction as being implicitly used.
+      FlagAllOperandsAsImplicitlyUsed(mir, block);
     } else if (block->alwaysBails()) {
       // If we are only trimming instructions after a bail, only mark operands
       // of removed instructions.
       MInstructionIterator firstRemoved = FindFirstInstructionAfterBail(block);
-      FlagOperandsAsHavingRemovedUsesAfter(mir, block, firstRemoved);
+      FlagOperandsAsImplicitlyUsedAfter(mir, block, firstRemoved);
     }
   }
 
@@ -1005,7 +1003,7 @@ bool jit::EliminateDeadResumePointOperands(MIRGenerator* mir, MIRGraph& graph) {
       // If the instruction's behavior has been constant folded into a
       // separate instruction, we can't determine precisely where the
       // instruction becomes dead and can't eliminate its uses.
-      if (ins->isImplicitlyUsed() || ins->isUseRemoved()) {
+      if (ins->isImplicitlyUsed()) {
         continue;
       }
 
@@ -1144,7 +1142,7 @@ bool jit::EliminateDeadCode(MIRGenerator* mir, MIRGraph& graph) {
 static inline bool IsPhiObservable(MPhi* phi, Observability observe) {
   // If the phi has uses which are not reflected in SSA, then behavior in the
   // interpreter may be affected by removing the phi.
-  if (phi->isImplicitlyUsed() || phi->isUseRemoved()) {
+  if (phi->isImplicitlyUsed()) {
     return true;
   }
 
@@ -2249,7 +2247,7 @@ bool jit::RemoveUnmarkedBlocks(MIRGenerator* mir, MIRGraph& graph,
         continue;
       }
 
-      FlagAllOperandsAsHavingRemovedUses(mir, block);
+      FlagAllOperandsAsImplicitlyUsed(mir, block);
     }
 
     // Find unmarked blocks and remove them.
