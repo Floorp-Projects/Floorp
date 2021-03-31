@@ -213,9 +213,13 @@ TEST(FOG, TestCppTimingDistWorks)
   DistributionData data = test_only::what_time_is_it.TestGetValue().ref();
   const uint64_t NANOS_IN_MILLIS = 1e6;
 
+  // bug 1701847 - Sleeps don't necessarily round up as you'd expect.
+  // Give ourselves a 40000ns (0.04ms) window to be off on fast machines.
+  const uint64_t EPSILON = 40000;
+
   // We don't know exactly how long those sleeps took, only that it was at
   // least 15ms total.
-  ASSERT_GT(data.sum, (uint64_t)(15 * NANOS_IN_MILLIS));
+  ASSERT_GT(data.sum, (uint64_t)(15 * NANOS_IN_MILLIS) - EPSILON);
 
   // We also can't guarantee the buckets, but we can guarantee two samples.
   uint64_t sampleCount = 0;
