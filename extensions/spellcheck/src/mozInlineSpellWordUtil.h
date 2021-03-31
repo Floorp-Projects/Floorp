@@ -208,8 +208,8 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   int32_t FindRealWordContaining(int32_t aSoftTextOffset, DOMMapHint aHint,
                                  bool aSearchForward) const;
 
-  // build mSoftText and mSoftTextDOMMapping
-  void BuildSoftText();
+  // build mSoftText and mSoftTextDOMMapping and adjust mSoftBegin.
+  void AdjustSoftBeginAndBuildSoftText();
 
   mozilla::Result<RealWords, nsresult> BuildRealWords() const;
 
