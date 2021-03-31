@@ -157,8 +157,6 @@ class nsMemoryReporterManager final : public nsIMemoryReporterManager,
 
     mozilla::InfallibleAmountFn mStorageSQLite = nullptr;
 
-    mozilla::InfallibleAmountFn mLowMemoryEventsVirtual = nullptr;
-    mozilla::InfallibleAmountFn mLowMemoryEventsCommitSpace = nullptr;
     mozilla::InfallibleAmountFn mLowMemoryEventsPhysical = nullptr;
 
     mozilla::InfallibleAmountFn mGhostWindows = nullptr;
