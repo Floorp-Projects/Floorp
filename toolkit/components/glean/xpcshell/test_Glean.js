@@ -202,9 +202,11 @@ add_task(async function test_fog_timing_distribution_works() {
 
   let data = Glean.testOnly.whatTimeIsIt.testGetValue();
   const NANOS_IN_MILLIS = 1e6;
+  // bug 1701949 - Sleep gets close, but sometimes doesn't wait long enough.
+  const EPSILON = 40000;
 
   // Variance in timing makes getting the sum impossible to know.
-  Assert.greater(data.sum, 15 * NANOS_IN_MILLIS, "Total time elapsed: > 15ms");
+  Assert.greater(data.sum, 15 * NANOS_IN_MILLIS - EPSILON);
 
   // No guarantees from timers means no guarantees on buckets.
   // But we can guarantee it's only two samples.
