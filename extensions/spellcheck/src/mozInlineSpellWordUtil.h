@@ -211,7 +211,8 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
   // Build mRealWords array
   nsresult BuildRealWords();
 
-  nsresult SplitDOMWord(int32_t aStart, int32_t aEnd);
+  nsresult SplitDOMWordAndAppendTo(int32_t aStart, int32_t aEnd,
+                                   nsTArray<RealWord>& aRealWords) const;
 
   nsresult MakeRangeForWord(const RealWord& aWord, nsRange** aRange) const;
   void MakeNodeOffsetRangeForWord(const RealWord& aWord,
