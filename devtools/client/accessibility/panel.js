@@ -103,6 +103,8 @@ AccessibilityPanel.prototype = {
       EVENTS.ACCESSIBILITY_INSPECTOR_UPDATED,
       this.onAccessibilityInspectorUpdated
     );
+    // Expose a promise so that tests can wait for the UI to be ready.
+    this._accessibilityViewInitialized = this.panelWin.once(EVENTS.INITIALIZED);
 
     this.shouldRefresh = true;
 
