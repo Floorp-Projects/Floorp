@@ -113,6 +113,10 @@ qcms_transform* Decoder::GetCMSsRGBTransform(SurfaceFormat aFormat) const {
     // color management entirely.
     return nullptr;
   }
+  if (qcms_profile_is_sRGB(gfxPlatform::GetCMSOutputProfile())) {
+    // Device space is sRGB so we can skip color management as well.
+    return nullptr;
+  }
 
   switch (aFormat) {
     case SurfaceFormat::B8G8R8A8:
