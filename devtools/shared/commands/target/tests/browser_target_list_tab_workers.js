@@ -36,18 +36,18 @@ add_task(async function() {
   // It isn't clear if this assertion is meaningful?
   const target = commands.targetCommand.targetFront;
   await target.attach();
-  const targetList = commands.targetCommand;
+  const targetCommand = commands.targetCommand;
 
-  const { TYPES } = targetList;
+  const { TYPES } = targetCommand;
 
   // Workaround to allow listening for workers in the content toolbox
   // without the fission preferences
-  targetList.listenForWorkers = true;
+  targetCommand.listenForWorkers = true;
 
-  await targetList.startListening();
+  await targetCommand.startListening();
 
   info("Check that getAllTargets only returns dedicated workers");
-  const workers = await targetList.getAllTargets([
+  const workers = await targetCommand.getAllTargets([
     TYPES.WORKER,
     TYPES.SHARED_WORKER,
   ]);
@@ -89,7 +89,7 @@ add_task(async function() {
     destroyedTargets.push(targetFront);
   };
 
-  await targetList.watchTargets(
+  await targetCommand.watchTargets(
     [TYPES.WORKER, TYPES.SHARED_WORKER],
     onAvailable,
     onDestroy
@@ -310,12 +310,12 @@ add_task(async function() {
     "second spawned remote iframe worker target was destroyed"
   );
 
-  targetList.unwatchTargets(
+  targetCommand.unwatchTargets(
     [TYPES.WORKER, TYPES.SHARED_WORKER],
     onAvailable,
     onDestroy
   );
-  targetList.destroy();
+  targetCommand.destroy();
 
   info("Unregister service workers so they don't appear in other tests.");
   await unregisterAllServiceWorkers(commands.client);

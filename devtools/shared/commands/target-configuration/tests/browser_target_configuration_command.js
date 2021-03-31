@@ -13,8 +13,8 @@ add_task(async function() {
   const commands = await CommandsFactory.forTab(tab);
 
   const targetConfigurationCommand = commands.targetConfigurationCommand;
-  const targetList = commands.targetCommand;
-  await targetList.startListening();
+  const targetCommand = commands.targetCommand;
+  await targetCommand.startListening();
 
   compareOptions(
     targetConfigurationCommand.configuration,
@@ -62,7 +62,7 @@ add_task(async function() {
     "Option colorSchemeSimulation was set, with a string value"
   );
 
-  targetList.destroy();
+  targetCommand.destroy();
   await commands.destroy();
 });
 

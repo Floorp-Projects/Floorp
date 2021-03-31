@@ -13,11 +13,11 @@ add_task(async function() {
 
   info("Create a target list for a tab target");
   const commands = await CommandsFactory.forTab(tab);
-  const targetList = commands.targetCommand;
-  await targetList.startListening();
+  const targetCommand = commands.targetCommand;
+  await targetCommand.startListening();
 
-  const { watcherFront } = targetList;
-  ok(watcherFront, "A watcherFront is available on targetList");
+  const { watcherFront } = targetCommand;
+  ok(watcherFront, "A watcherFront is available on targetCommand");
 
   info("Check that getNetworkParentActor does not create duplicate actors");
   testActorGetter(
@@ -51,7 +51,7 @@ add_task(async function() {
     "thread-configuration"
   );
 
-  targetList.destroy();
+  targetCommand.destroy();
   await commands.waitForRequestsToSettle();
   await commands.destroy();
 });
