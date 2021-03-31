@@ -89,6 +89,10 @@ pub extern "C" fn qcms_profile_get_rendering_intent(profile: &Profile) -> Intent
 pub extern "C" fn qcms_profile_get_color_space(profile: &Profile) -> icColorSpaceSignature {
     profile.color_space
 }
+#[no_mangle]
+pub extern "C" fn qcms_profile_is_sRGB(profile: &Profile) -> bool {
+    profile.is_sRGB()
+}
 
 #[no_mangle]
 pub unsafe extern "C" fn qcms_profile_release(profile: *mut Profile) {
