@@ -350,8 +350,10 @@ class AbstractShot {
     // eslint-disable-next-line no-control-regex
     filenameTitle = filenameTitle.replace(/[:\\<>/!@&?"*.|\x00-\x1F]/g, " ");
     filenameTitle = filenameTitle.replace(/\s{1,4000}/g, " ");
-    const filenameDate = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000).toISOString().substring(0, 10);
-    let clipFilename = `Screenshot_${filenameDate} ${filenameTitle}`;
+    const currentDateTime = new Date(date.getTime() - date.getTimezoneOffset() * 60 * 1000).toISOString();
+    const filenameDate = currentDateTime.substring(0, 10);
+    const filenameTime = currentDateTime.substring(11, 19).replace(/:/g, '-');
+    let clipFilename = `Screenshot ${filenameDate} at ${filenameTime} ${filenameTitle}`;
     const clipFilenameBytesSize = clipFilename.length * 2; // JS STrings are UTF-16
     if (clipFilenameBytesSize > 251) { // 255 bytes (Usual filesystems max) - 4 for the ".png" file extension string
       const excedingchars = (clipFilenameBytesSize - 246) / 2; // 251 - 5 for ellipsis "[...]"
