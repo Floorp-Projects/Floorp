@@ -12,9 +12,12 @@ import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
+import org.mozilla.focus.helpers.SessionLoadedIdlingResource
 import org.mozilla.focus.helpers.TestHelper.appName
 import org.mozilla.focus.helpers.TestHelper.mDevice
+import org.mozilla.focus.helpers.TestHelper.pressEnterKey
 import org.mozilla.focus.helpers.TestHelper.waitingTime
+import org.mozilla.focus.helpers.TestHelper.webPageLoadwaitingTime
 
 class SearchRobot {
 
@@ -29,7 +32,7 @@ class SearchRobot {
     // Would you like to turn on search suggestions? Yes No
     // fresh install only
     fun allowEnableSearchSuggestions() {
-        if (searchSuggestionsTitle.exists()) {
+        if (searchSuggestionsTitle.waitForExists(waitingTime)) {
             searchSuggestionsButtonYes.waitForExists(waitingTime)
             searchSuggestionsButtonYes.click()
         }
@@ -56,7 +59,27 @@ class SearchRobot {
 
     fun clearSearchBar() = clearSearchButton.perform(click())
 
-    class Transition
+    class Transition {
+        fun loadPage(url: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            val sessionLoadedIdlingResource = SessionLoadedIdlingResource()
+
+            searchScreen { typeInSearchBar(url) }
+            pressEnterKey()
+
+            runWithIdleRes(sessionLoadedIdlingResource) {
+                assertTrue(
+                    BrowserRobot().progressBar.waitUntilGone(webPageLoadwaitingTime)
+                )
+                assertTrue(
+                    mDevice.findObject(UiSelector().resourceId("$appName:id/webview"))
+                        .waitForExists(webPageLoadwaitingTime)
+                )
+            }
+
+            BrowserRobot().interact()
+            return BrowserRobot.Transition()
+        }
+    }
 }
 
 fun searchScreen(interact: SearchRobot.() -> Unit): SearchRobot.Transition {

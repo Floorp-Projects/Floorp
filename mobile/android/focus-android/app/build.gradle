@@ -18,6 +18,7 @@ android {
                        // override this with a generated versionCode at build time.
         versionName "8.13.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments clearPackageData: 'true'
 
         multiDexEnabled true
     }
@@ -182,6 +183,7 @@ dependencies {
     androidTestImplementation "androidx.test.espresso:espresso-web:$espresso_version", {
         exclude group: 'com.android.support', module: 'support-annotations'
     }
+    androidTestImplementation "androidx.test.espresso:espresso-intents:$espresso_version"
 
     androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.11.0'
     testImplementation 'com.squareup.okhttp3:mockwebserver:3.11.0'

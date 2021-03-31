@@ -1,13 +1,14 @@
-/* -*- Mode: Java; c-basic-offset: 4; tab-width: 20; indent-tabs-mode: nil; -*-
- * This Source Code Form is subject to the terms of the Mozilla Public
+/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 package org.mozilla.focus.helpers
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.text.format.DateUtils
 import android.util.DisplayMetrics
+import android.util.Log
 import android.view.KeyEvent
 import androidx.test.espresso.Espresso
 import androidx.test.espresso.matcher.ViewMatchers
@@ -22,6 +23,7 @@ import okio.Buffer
 import okio.Okio
 import org.hamcrest.Matchers
 import org.junit.Assert
+import org.junit.Assert.assertTrue
 import org.mozilla.focus.R
 import org.mozilla.focus.utils.AppConstants.isKlarBuild
 import java.io.BufferedReader
@@ -33,7 +35,6 @@ import java.io.InputStreamReader
 import java.nio.charset.StandardCharsets
 
 @Suppress("TooManyFunctions")
-// This test visits each page and checks whether some essential elements are being displayed
 object TestHelper {
     @JvmField
     var mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
@@ -44,6 +45,29 @@ object TestHelper {
     val appName: String
         get() = InstrumentationRegistry.getInstrumentation()
             .targetContext.packageName
+
+    @JvmStatic
+    val appContext = InstrumentationRegistry.getInstrumentation().targetContext.applicationContext
+
+    fun getStringResource(id: Int) = appContext.getString(id)
+
+    fun verifySnackBarText(text: String) {
+        val snackbarText = mDevice.findObject(
+            UiSelector().resourceId("$appName:id/snackbar_text")
+        )
+        snackbarText.waitForExists(waitingTime)
+        assertTrue(snackbarText.text.contains(text))
+    }
+
+    fun isPackageInstalled(packageName: String): Boolean {
+        return try {
+            val packageManager = InstrumentationRegistry.getInstrumentation().context.packageManager
+            packageManager.getApplicationInfo(packageName, 0).enabled
+        } catch (exception: PackageManager.NameNotFoundException) {
+            Log.d("TestLog", exception.message.toString())
+            false
+        }
+    }
 
     // wait for web area to be visible
     @JvmStatic
@@ -121,7 +145,7 @@ object TestHelper {
     @JvmField
     var permAllowBtn = mDevice.findObject(
         UiSelector()
-            .resourceId("com.android.packageinstaller:id/permission_allow_button")
+            .textContains("Allow")
             .clickable(true)
     )
 
@@ -321,37 +345,9 @@ object TestHelper {
     )
 
     @JvmField
-    var downloadFileName = mDevice.findObject(
-        UiSelector()
-            .resourceId(appName + ":id/download_dialog_file_name")
-            .enabled(true)
-    )
-
-    @JvmField
-    var downloadWarning = mDevice.findObject(
-        UiSelector()
-            .resourceId(appName + ":id/download_dialog_warning")
-            .enabled(true)
-    )
-
-    @JvmField
-    var downloadCancelBtn = mDevice.findObject(
-        UiSelector()
-            .resourceId(appName + ":id/download_dialog_cancel")
-            .enabled(true)
-    )
-
-    @JvmField
     var downloadBtn = mDevice.findObject(
         UiSelector()
             .resourceId(appName + ":id/download_dialog_download")
-            .enabled(true)
-    )
-
-    @JvmField
-    var completedMsg = mDevice.findObject(
-        UiSelector()
-            .resourceId(appName + ":id/snackbar_text")
             .enabled(true)
     )
 
