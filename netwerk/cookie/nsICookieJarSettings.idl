@@ -8,6 +8,7 @@
 #include "nsISerializable.idl"
 
 interface nsIPrincipal;
+interface nsIURI;
 
 /**
  * Cookie jar settings for top-level documents. Please see CookieJarSettings.h
@@ -56,4 +57,17 @@ interface nsICookieJarSettings : nsISerializable
    * during the life-time of the top document.
    */
   unsigned long cookiePermission(in nsIPrincipal aPrincipal);
+
+  /**
+   * Initiate the cookieJarSettings with a URI. The aURI will be used to build
+   * the partition key for this cookieJarSettings. This function is added for
+   * js code to be able to set the partitionKey from a first-party URI.
+   *
+   * The aIsPrivate indicates if this cookieJarSettings is initiated for the
+   * private browsing mode or not. If aIsPrivate was true, it will get
+   * cookieBehavior from the pref "network.cookie.cookieBehavior" which is for
+   * the regular browsing mode. Otherwise, it will get from the pref
+   * "network.cookie.cookieBehavior.pbmode" for the private browsing mode.
+   */
+  void initWithURI(in nsIURI aURI, in boolean aIsPrivate);
 };

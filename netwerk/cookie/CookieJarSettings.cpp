@@ -177,6 +177,16 @@ CookieJarSettings::~CookieJarSettings() {
 }
 
 NS_IMETHODIMP
+CookieJarSettings::InitWithURI(nsIURI* aURI, bool aIsPrivate) {
+  NS_ENSURE_ARG(aURI);
+
+  mCookieBehavior = nsICookieManager::GetCookieBehavior(aIsPrivate);
+
+  SetPartitionKey(aURI);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 CookieJarSettings::GetCookieBehavior(uint32_t* aCookieBehavior) {
   *aCookieBehavior = mCookieBehavior;
   return NS_OK;
