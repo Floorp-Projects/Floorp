@@ -958,10 +958,12 @@ BrowserChild::~BrowserChild() {
   mozilla::DropJSObjects(this);
 }
 
-mozilla::ipc::IPCResult BrowserChild::RecvWillChangeProcess() {
+mozilla::ipc::IPCResult BrowserChild::RecvWillChangeProcess(
+    WillChangeProcessResolver&& aResolve) {
   if (mWebBrowser) {
     mWebBrowser->SetWillChangeProcess();
   }
+  aResolve(true);
   return IPC_OK();
 }
 

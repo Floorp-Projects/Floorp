@@ -1015,7 +1015,7 @@ child:
      */
     async SetWidgetNativeData(WindowsHandle aHandle);
 
-    async WillChangeProcess();
+    async WillChangeProcess() returns (bool success);
 
 parent:
     /**
