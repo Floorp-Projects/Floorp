@@ -21,14 +21,16 @@ add_task(async function() {
 
   info("Create a target list for a tab target");
   const commands = await CommandsFactory.forTab(tab);
-  const targetList = commands.targetCommand;
-  const { TYPES } = targetList;
+  const targetCommand = commands.targetCommand;
+  const { TYPES } = targetCommand;
 
   // Enable Service Worker listening.
-  targetList.listenForServiceWorkers = true;
-  await targetList.startListening();
+  targetCommand.listenForServiceWorkers = true;
+  await targetCommand.startListening();
 
-  const serviceWorkerTargets = targetList.getAllTargets([TYPES.SERVICE_WORKER]);
+  const serviceWorkerTargets = targetCommand.getAllTargets([
+    TYPES.SERVICE_WORKER,
+  ]);
   is(
     serviceWorkerTargets.length,
     1,
@@ -46,7 +48,7 @@ add_task(async function() {
   const onDestroyed = ({ targetFront }) =>
     targets.splice(targets.indexOf(targetFront), 1);
 
-  await targetList.watchTargets(
+  await targetCommand.watchTargets(
     [TYPES.SERVICE_WORKER],
     onAvailable,
     onDestroyed
@@ -70,7 +72,7 @@ add_task(async function() {
   await waitUntil(() => targets.length === 0);
 
   // Stop listening to avoid worker related requests
-  targetList.destroy();
+  targetCommand.destroy();
 
   await commands.waitForRequestsToSettle();
 

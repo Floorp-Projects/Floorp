@@ -29,25 +29,29 @@ add_task(async function() {
   const sharedWorker = new SharedWorker(CHROME_WORKER_URL + "#shared-worker");
 
   const commands = await CommandsFactory.forMainProcess();
-  const targetList = commands.targetCommand;
-  const { TYPES } = targetList;
-  await targetList.startListening();
+  const targetCommand = commands.targetCommand;
+  const { TYPES } = targetCommand;
+  await targetCommand.startListening();
 
   // Very naive sanity check against getAllTargets([workerType])
   info("Check that getAllTargets returned the expected targets");
-  const workers = await targetList.getAllTargets([TYPES.WORKER]);
+  const workers = await targetCommand.getAllTargets([TYPES.WORKER]);
   const hasWorker = workers.find(workerTarget => {
     return workerTarget.url == CHROME_WORKER_URL + "#simple-worker";
   });
   ok(hasWorker, "retrieve the target for the worker");
 
-  const sharedWorkers = await targetList.getAllTargets([TYPES.SHARED_WORKER]);
+  const sharedWorkers = await targetCommand.getAllTargets([
+    TYPES.SHARED_WORKER,
+  ]);
   const hasSharedWorker = sharedWorkers.find(workerTarget => {
     return workerTarget.url == CHROME_WORKER_URL + "#shared-worker";
   });
   ok(hasSharedWorker, "retrieve the target for the shared worker");
 
-  const serviceWorkers = await targetList.getAllTargets([TYPES.SERVICE_WORKER]);
+  const serviceWorkers = await targetCommand.getAllTargets([
+    TYPES.SERVICE_WORKER,
+  ]);
   const hasServiceWorker = serviceWorkers.find(workerTarget => {
     return workerTarget.url == SERVICE_WORKER_URL;
   });
@@ -56,9 +60,11 @@ add_task(async function() {
   info(
     "Check that calling getAllTargets again return the same target instances"
   );
-  const workers2 = await targetList.getAllTargets([TYPES.WORKER]);
-  const sharedWorkers2 = await targetList.getAllTargets([TYPES.SHARED_WORKER]);
-  const serviceWorkers2 = await targetList.getAllTargets([
+  const workers2 = await targetCommand.getAllTargets([TYPES.WORKER]);
+  const sharedWorkers2 = await targetCommand.getAllTargets([
+    TYPES.SHARED_WORKER,
+  ]);
+  const serviceWorkers2 = await targetCommand.getAllTargets([
     TYPES.SERVICE_WORKER,
   ]);
   is(workers2.length, workers.length, "retrieved the same number of workers");
@@ -118,7 +124,7 @@ add_task(async function() {
     );
     targets.push(targetFront);
   };
-  await targetList.watchTargets(
+  await targetCommand.watchTargets(
     [TYPES.WORKER, TYPES.SHARED_WORKER, TYPES.SERVICE_WORKER],
     onAvailable
   );
@@ -141,7 +147,7 @@ add_task(async function() {
     );
   }
 
-  targetList.unwatchTargets(
+  targetCommand.unwatchTargets(
     [TYPES.WORKER, TYPES.SHARED_WORKER, TYPES.SERVICE_WORKER],
     onAvailable
   );
@@ -152,10 +158,10 @@ add_task(async function() {
       if (targets.includes(targetFront)) {
         return;
       }
-      targetList.unwatchTargets([TYPES.WORKER], onAvailable2);
+      targetCommand.unwatchTargets([TYPES.WORKER], onAvailable2);
       resolve(targetFront);
     };
-    targetList.watchTargets([TYPES.WORKER], onAvailable2);
+    targetCommand.watchTargets([TYPES.WORKER], onAvailable2);
   });
   // eslint-disable-next-line no-unused-vars
   const worker2 = new Worker(CHROME_WORKER_URL + "#second");
@@ -168,13 +174,13 @@ add_task(async function() {
     "This worker target is about the new worker"
   );
 
-  const workers3 = await targetList.getAllTargets([TYPES.WORKER]);
+  const workers3 = await targetCommand.getAllTargets([TYPES.WORKER]);
   const hasWorker2 = workers3.find(
     ({ url }) => url == `${CHROME_WORKER_URL}#second`
   );
   ok(hasWorker2, "retrieve the target for tab via getAllTargets");
 
-  targetList.destroy();
+  targetCommand.destroy();
 
   info("Unregister service workers so they don't appear in other tests.");
   await unregisterAllServiceWorkers(commands.client);
