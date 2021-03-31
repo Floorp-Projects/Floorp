@@ -373,9 +373,9 @@ interface nsIMemoryReporterManager : nsISupports
    *
    * |storageSQLite| (UNITS_BYTES)  Memory used by SQLite.
    *
-   * |lowMemoryEvents{Virtual,CommitSpace,Physical}| (UNITS_COUNT_CUMULATIVE)
-   * The number of low-{virtual,commit-space,physical}-memory events that have
-   * occurred since the process started.
+   * |lowMemoryEventsPhysical| (UNITS_COUNT_CUMULATIVE)
+   * The number of low-physical-memory events that have occurred since the
+   * process started.
    *
    * |ghostWindows| (UNITS_COUNT)  A cached value of the number of ghost
    * windows. This should have been updated within the past 60s.
@@ -404,8 +404,6 @@ interface nsIMemoryReporterManager : nsISupports
 
   [must_use] readonly attribute int64_t storageSQLite;
 
-  [must_use] readonly attribute int64_t lowMemoryEventsVirtual;
-  [must_use] readonly attribute int64_t lowMemoryEventsCommitSpace;
   [must_use] readonly attribute int64_t lowMemoryEventsPhysical;
 
   [must_use] readonly attribute int64_t ghostWindows;
@@ -506,8 +504,6 @@ DECL_UNREGISTER_DISTINGUISHED_AMOUNT(ImagesContentUsedUncompressed)
 DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, StorageSQLite)
 DECL_UNREGISTER_DISTINGUISHED_AMOUNT(StorageSQLite)
 
-DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, LowMemoryEventsVirtual)
-DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, LowMemoryEventsCommitSpace)
 DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, LowMemoryEventsPhysical)
 
 DECL_REGISTER_DISTINGUISHED_AMOUNT(Infallible, GhostWindows)
