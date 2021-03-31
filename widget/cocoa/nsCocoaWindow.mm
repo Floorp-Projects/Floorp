@@ -140,7 +140,6 @@ nsCocoaWindow::nsCocoaWindow()
       mAspectRatioLocked(false),
       mNumModalDescendents(0),
       mWindowAnimationBehavior(NSWindowAnimationBehaviorDefault),
-      mWindowAppearance(nsIWidget::WindowAppearance::eSystem),
       mWasShown(false) {
   // Disable automatic tabbing. We need to do this before we
   // orderFront any of our windows.
@@ -550,8 +549,6 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
 
   [[WindowDataMap sharedWindowDataMap] ensureDataForWindow:mWindow];
   mWindowMadeHere = true;
-
-  [mWindow setWindowAppearance:mWindowAppearance];
 
   return NS_OK;
 
@@ -2426,15 +2423,6 @@ void nsCocoaWindow::SetDrawsTitle(bool aDrawTitle) {
   NS_OBJC_END_TRY_IGNORE_BLOCK;
 }
 
-/* virtual */ void nsCocoaWindow::SetWindowAppearance(nsIWidget::WindowAppearance aAppearance) {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
-
-  mWindowAppearance = aAppearance;
-  [mWindow setWindowAppearance:mWindowAppearance];
-
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
-}
-
 nsresult nsCocoaWindow::SetNonClientMargins(LayoutDeviceIntMargin& margins) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
@@ -3218,23 +3206,6 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
 
 - (BOOL)wantsTitleDrawn {
   return mDrawTitle;
-}
-
-#if !defined(MAC_OS_X_VERSION_10_13) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_13
-typedef NSString* NSAppearanceName;
-#endif
-#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
-const NSAppearanceName NSAppearanceNameDarkAqua = @"NSAppearanceNameDarkAqua";
-#endif
-
-- (void)setWindowAppearance:(nsIWidget::WindowAppearance)aAppearance {
-  if (@available(macOS 10.14, *)) {
-    if (aAppearance == nsIWidget::WindowAppearance::eLight) {
-      self.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
-    } else {
-      self.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
-    }
-  }
 }
 
 - (NSView*)trackingAreaView {
