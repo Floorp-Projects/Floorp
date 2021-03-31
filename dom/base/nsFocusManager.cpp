@@ -2560,10 +2560,7 @@ void nsFocusManager::Focus(
         aWindow->UpdateCommands(u"focus"_ns, nullptr, 0);
       }
 
-      // XXX Bug 1675484, We should consider the possibility that something
-      // expects the event to fire on iframe element as in Blink compat-wise by
-      // now.
-      if (aFocusChanged || !focusInOtherContentProcess) {
+      if (!focusInOtherContentProcess) {
         SendFocusOrBlurEvent(
             eFocus, presShell, aElement->GetComposedDoc(), aElement,
             aFlags & FOCUSMETHOD_MASK, aWindowRaised, isRefocus,
