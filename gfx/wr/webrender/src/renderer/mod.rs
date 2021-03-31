@@ -2077,15 +2077,15 @@ impl Renderer {
                     true
                 }
                 (current_compositor_kind, active_doc_compositor_kind) => {
-                    dbg!(current_compositor_kind, active_doc_compositor_kind);
-                    unreachable!();
+                    warn!("Compositor mismatch, assuming this is Wrench running. Current {:?}, active {:?}",
+                        current_compositor_kind, active_doc_compositor_kind);
+                    false
                 }
             };
 
-            self.compositor_config
-                .compositor()
-                .unwrap()
-                .enable_native_compositor(enable);
+            if let Some(config) = self.compositor_config.compositor() {
+                config.enable_native_compositor(enable);
+            }
             self.current_compositor_kind = compositor_kind;
         }
 
