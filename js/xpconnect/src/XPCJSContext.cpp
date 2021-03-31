@@ -885,6 +885,10 @@ static void LoadStartupJSPrefs(XPCJSContext* xpccx) {
       cx, JSJITCOMPILER_ION_FREQUENT_BAILOUT_THRESHOLD,
       StaticPrefs::
           javascript_options_ion_frequent_bailout_threshold_DoNotUseDirectly());
+  JS_SetGlobalJitCompilerOption(
+      cx, JSJITCOMPILER_INLINING_BYTECODE_MAX_LENGTH,
+      StaticPrefs::
+          javascript_options_inlining_bytecode_max_length_DoNotUseDirectly());
 
 #ifdef DEBUG
   JS_SetGlobalJitCompilerOption(

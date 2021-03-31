@@ -5283,6 +5283,13 @@ JS_PUBLIC_API void JS_SetGlobalJitCompilerOption(JSContext* cx,
         JitSpew(js::jit::JitSpew_IonScripts, "Disable offthread compilation");
       }
       break;
+    case JSJITCOMPILER_INLINING_BYTECODE_MAX_LENGTH:
+      if (value == uint32_t(-1)) {
+        jit::DefaultJitOptions defaultValues;
+        value = defaultValues.smallFunctionMaxBytecodeLength;
+      }
+      jit::JitOptions.smallFunctionMaxBytecodeLength = value;
+      break;
     case JSJITCOMPILER_JUMP_THRESHOLD:
       if (value == uint32_t(-1)) {
         jit::DefaultJitOptions defaultValues;
@@ -5363,6 +5370,9 @@ JS_PUBLIC_API bool JS_GetGlobalJitCompilerOption(JSContext* cx,
       break;
     case JSJITCOMPILER_ION_FREQUENT_BAILOUT_THRESHOLD:
       *valueOut = jit::JitOptions.frequentBailoutThreshold;
+      break;
+    case JSJITCOMPILER_INLINING_BYTECODE_MAX_LENGTH:
+      *valueOut = jit::JitOptions.smallFunctionMaxBytecodeLength;
       break;
     case JSJITCOMPILER_BASELINE_INTERPRETER_ENABLE:
       *valueOut = jit::JitOptions.baselineInterpreter;
