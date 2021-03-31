@@ -560,7 +560,9 @@ nsTArray<uint8_t> gfxPlatformGtk::GetPlatformCMSOutputProfileData() {
   result.AppendElements(static_cast<uint8_t*>(mem), size);
   free(mem);
 
-  return result;
+  // XXX: It seems like we get wrong colors when using this constructed profile:
+  // See bug 1696819. For now just forget that we made it.
+  return nsTArray<uint8_t>();
 }
 
 #else  // defined(MOZ_X11)
