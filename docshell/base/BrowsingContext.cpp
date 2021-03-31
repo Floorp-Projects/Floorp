@@ -2555,9 +2555,13 @@ void BrowsingContext::DidSet(FieldIndex<IDX_ExplicitActive>,
   });
 }
 
-bool BrowsingContext::CanSet(FieldIndex<IDX_HasMainMediaController>,
-                             bool aNewValue, ContentParent* aSource) {
-  return IsTop() && LegacyCheckOnlyOwningProcessCanSet(aSource);
+auto BrowsingContext::CanSet(FieldIndex<IDX_HasMainMediaController>,
+                             bool aNewValue, ContentParent* aSource)
+    -> CanSetResult {
+  if (!IsTop()) {
+    return CanSetResult::Deny;
+  }
+  return LegacyRevertIfNotOwningOrParentProcess(aSource);
 }
 
 void BrowsingContext::DidSet(FieldIndex<IDX_HasMainMediaController>,
@@ -2741,25 +2745,6 @@ void BrowsingContext::DidSet(FieldIndex<IDX_PlatformOverride>) {
   });
 }
 
-bool BrowsingContext::LegacyCheckOnlyOwningProcessCanSet(
-    ContentParent* aSource) {
-  if (aSource) {
-    MOZ_ASSERT(XRE_IsParentProcess());
-
-    // Double-check ownership if we aren't the setter.
-    if (!Canonical()->IsOwnedByProcess(aSource->ChildID()) &&
-        aSource->ChildID() != Canonical()->GetInFlightProcessId()) {
-      return false;
-    }
-  } else if (!IsInProcess() && !XRE_IsParentProcess()) {
-    // Don't allow this to be set from content processes that
-    // don't own the BrowsingContext.
-    return false;
-  }
-
-  return true;
-}
-
 auto BrowsingContext::LegacyRevertIfNotOwningOrParentProcess(
     ContentParent* aSource) -> CanSetResult {
   if (aSource) {
@@ -2819,10 +2804,10 @@ auto BrowsingContext::CanSet(FieldIndex<IDX_AllowContentRetargetingOnChildren>,
   return LegacyRevertIfNotOwningOrParentProcess(aSource);
 }
 
-bool BrowsingContext::CanSet(FieldIndex<IDX_AllowPlugins>,
-                             const bool& aAllowPlugins,
-                             ContentParent* aSource) {
-  return LegacyCheckOnlyOwningProcessCanSet(aSource);
+auto BrowsingContext::CanSet(FieldIndex<IDX_AllowPlugins>,
+                             const bool& aAllowPlugins, ContentParent* aSource)
+    -> CanSetResult {
+  return LegacyRevertIfNotOwningOrParentProcess(aSource);
 }
 
 bool BrowsingContext::CanSet(FieldIndex<IDX_FullscreenAllowedByOwner>,
