@@ -2549,16 +2549,26 @@ toolbar#nav-bar {
             # record post-test information
             if status:
                 self.message_logger.dump_buffered()
-                if crashAsPass:
-                    self.log.info(
-                        "TEST-PASS | %s | application terminated with exit code %s"
-                        % (self.lastTestSeen, status)
-                    )
+                msg = ("application terminated with exit code %s" % status,)
+                # self.message_logger.is_test_running indicates we need to send a test_end
+                if crashAsPass and self.message_logger.is_test_running:
+                    # this works for browser-chrome, mochitest-plain has status=0
+                    message = {
+                        "action": "test_end",
+                        "status": "CRASH",
+                        "expected": "CRASH",
+                        "thread": None,
+                        "pid": None,
+                        "source": "mochitest",
+                        "time": int(time.time()) * 1000,
+                        "test": self.lastTestSeen,
+                        "message": msg,
+                    }
+                    # need to send a test_end in order to have mozharness process messages properly
+                    # this requires a custom message vs log.error/log.warning/etc.
+                    self.message_logger.process_message(message)
                 else:
-                    self.log.error(
-                        "TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s"
-                        % (self.lastTestSeen, status)
-                    )
+                    self.log.error(msg)
             else:
                 self.lastTestSeen = "Main app process exited normally"
 
@@ -2576,6 +2586,7 @@ toolbar#nav-bar {
             quiet = False
             if crashAsPass:
                 quiet = True
+
             minidump_path = os.path.join(self.profile.profile, "minidumps")
             crash_count = mozcrash.log_crashes(
                 self.log,
@@ -2585,12 +2596,27 @@ toolbar#nav-bar {
                 quiet=quiet,
             )
 
-            if crash_count or zombieProcesses:
-                status = 1
-
             if crashAsPass:
+                # self.message_logger.is_test_running indicates we need a test_end message
+                if crash_count > 0 and self.message_logger.is_test_running:
+                    # this works for browser-chrome, mochitest-plain has status=0
+                    message = {
+                        "action": "test_end",
+                        "status": "CRASH",
+                        "expected": "CRASH",
+                        "thread": None,
+                        "pid": None,
+                        "source": "mochitest",
+                        "time": int(time.time()) * 1000,
+                        "test": self.lastTestSeen,
+                        "message": "application terminated with exit code 0",
+                    }
+                    # need to send a test_end in order to have mozharness process messages properly
+                    # this requires a custom message vs log.error/log.warning/etc.
+                    self.message_logger.process_message(message)
                 status = 0
-
+            elif crash_count or zombieProcesses:
+                status = 1
         finally:
             # cleanup
             if os.path.exists(processLog):
@@ -2934,6 +2960,14 @@ toolbar#nav-bar {
 
         e10s_mode = "e10s" if options.e10s else "non-e10s"
 
+        # for failure mode: where browser window has crashed and we have no reported results
+        if (
+            self.countpass == self.countfail == self.counttodo == 0
+            and options.crashAsPass
+        ):
+            self.countpass = 1
+            self.result = 0
+
         # printing total number of tests
         if options.flavor == "browser":
             print("TEST-INFO | checking window state")
@@ -3101,6 +3135,7 @@ toolbar#nav-bar {
                     mozinfo.info["debug"]
                     and options.flavor == "browser"
                     and options.subsuite != "thunderbird"
+                    and not options.crashAsPass
                 )
 
             self.start_script_kwargs["flavor"] = self.normflavor(options.flavor)
@@ -3200,6 +3235,10 @@ toolbar#nav-bar {
 
         ignoreMissingLeaks = options.ignoreMissingLeaks
         leakThresholds = options.leakThresholds
+
+        if options.crashAsPass:
+            ignoreMissingLeaks.append("tab")
+            ignoreMissingLeaks.append("socket")
 
         # Stop leak detection if m-bc code coverage is enabled
         # by maxing out the leak threshold for all processes.
