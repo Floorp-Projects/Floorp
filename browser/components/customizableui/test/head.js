@@ -526,3 +526,34 @@ function waitForElementShown(element) {
     return rect.width > 0 && rect.height > 0;
   });
 }
+
+/**
+ * Opens the history panel through the history toolbarbutton in the
+ * navbar and returns a promise that resolves as soon as the panel is open
+ * is showing.
+ */
+async function openHistoryPanel(doc = document) {
+  await waitForOverflowButtonShown();
+  await doc.getElementById("nav-bar").overflowable.show();
+  info("Menu panel was opened");
+
+  let historyButton = doc.getElementById("history-panelmenu");
+  Assert.ok(historyButton, "History button appears in Panel Menu");
+
+  historyButton.click();
+
+  let historyPanel = doc.getElementById("PanelUI-history");
+  return BrowserTestUtils.waitForEvent(historyPanel, "ViewShown");
+}
+
+/**
+ * Closes the history panel and returns a promise that resolves as sooon
+ * as the panel is closed.
+ */
+async function hideHistoryPanel(doc = document) {
+  let historyView = doc.getElementById("PanelUI-history");
+  let historyPanel = historyView.closest("panel");
+  let promise = BrowserTestUtils.waitForEvent(historyPanel, "popuphidden");
+  historyPanel.hidePopup();
+  return promise;
+}
