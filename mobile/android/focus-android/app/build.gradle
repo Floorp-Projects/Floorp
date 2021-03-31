@@ -135,28 +135,28 @@ dependencies {
     compileOnly 'net.jcip:jcip-annotations:1.0'
     implementation("com.google.code.findbugs:jsr305:3.0.2")
 
-    implementation "org.mozilla.components:browser-engine-gecko:$mozilla_components_version"
-    implementation "org.mozilla.components:browser-domains:$mozilla_components_version"
-    implementation "org.mozilla.components:browser-errorpages:$mozilla_components_version"
-    implementation "org.mozilla.components:browser-search:$mozilla_components_version"
-    implementation "org.mozilla.components:browser-session:$mozilla_components_version"
-    implementation "org.mozilla.components:browser-state:$mozilla_components_version"
-    implementation "org.mozilla.components:concept-engine:$mozilla_components_version"
-    implementation "org.mozilla.components:concept-fetch:$mozilla_components_version"
-    implementation "org.mozilla.components:feature-app-links:$mozilla_components_version"
-    implementation "org.mozilla.components:feature-customtabs:$mozilla_components_version"
-    implementation "org.mozilla.components:feature-contextmenu:$mozilla_components_version"
-    implementation "org.mozilla.components:feature-downloads:$mozilla_components_version"
-    implementation "org.mozilla.components:feature-findinpage:$mozilla_components_version"
-    implementation "org.mozilla.components:feature-prompts:$mozilla_components_version"
-    implementation "org.mozilla.components:feature-session:$mozilla_components_version"
-    implementation "org.mozilla.components:feature-tabs:$mozilla_components_version"
-    implementation "org.mozilla.components:lib-crash:$mozilla_components_version"
+    implementation "org.mozilla.components:browser-engine-gecko:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:browser-domains:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:browser-errorpages:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:browser-search:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:browser-session:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:browser-state:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:concept-engine:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:concept-fetch:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:feature-app-links:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:feature-customtabs:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:feature-contextmenu:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:feature-downloads:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:feature-findinpage:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:feature-prompts:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:feature-session:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:feature-tabs:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:lib-crash:${AndroidComponents.VERSION}"
     implementation "org.mozilla.components:service-telemetry:$mozilla_components_version_telemetry"
-    implementation "org.mozilla.components:support-ktx:$mozilla_components_version"
-    implementation "org.mozilla.components:support-utils:$mozilla_components_version"
-    implementation "org.mozilla.components:ui-autocomplete:$mozilla_components_version"
-    implementation "org.mozilla.components:ui-colors:$mozilla_components_version"
+    implementation "org.mozilla.components:support-ktx:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:support-utils:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:ui-autocomplete:${AndroidComponents.VERSION}"
+    implementation "org.mozilla.components:ui-colors:${AndroidComponents.VERSION}"
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:${coroutines_version}"
@@ -185,7 +185,7 @@ dependencies {
 
     androidTestImplementation 'com.squareup.okhttp3:mockwebserver:3.11.0'
     testImplementation 'com.squareup.okhttp3:mockwebserver:3.11.0'
-    testImplementation "org.mozilla.components:lib-fetch-okhttp:$mozilla_components_version"
+    testImplementation "org.mozilla.components:lib-fetch-okhttp:${AndroidComponents.VERSION}"
 
     androidTestImplementation "tools.fastlane:screengrab:2.0.0", {
         exclude group: 'com.android.support', module: 'support-annotations'
