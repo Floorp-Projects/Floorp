@@ -26,6 +26,7 @@
 #include "nsStyleConsts.h"
 #include "nsWidgetInitData.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/widget/NativeMenu.h"
 #include "Units.h"
 
 // XXX Avoid including this here by moving function bodies to the cpp file.
@@ -317,7 +318,8 @@ class nsXULMenuCommandEvent : public mozilla::Runnable {
 
 class nsXULPopupManager final : public nsIDOMEventListener,
                                 public nsIRollupListener,
-                                public nsIObserver {
+                                public nsIObserver,
+                                public mozilla::widget::NativeMenu::Observer {
  public:
   friend class nsXULPopupShowingEvent;
   friend class nsXULPopupHidingEvent;
@@ -340,6 +342,10 @@ class nsXULPopupManager final : public nsIDOMEventListener,
       nsTArray<nsIWidget*>* aWidgetChain) override;
   virtual void NotifyGeometryChange() override {}
   virtual nsIWidget* GetRollupWidget() override;
+
+  // NativeMenu::Observer
+  void OnNativeMenuOpened() override {}
+  void OnNativeMenuClosed() override;
 
   static nsXULPopupManager* sInstance;
 
@@ -458,6 +464,18 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   void ShowPopupAtScreenRect(nsIContent* aPopup, const nsAString& aPosition,
                              const nsIntRect& aRect, bool aIsContextMenu,
                              bool aAttributesOverride,
+                             mozilla::dom::Event* aTriggerEvent);
+
+  /**
+   * Open a popup as a native menu, at a specific screen position specified by
+   * aXPos and aYPos, measured in CSS pixels.
+   *
+   * This fires the popupshowing event synchronously.
+   *
+   * Returns whether native menus are supported for aPopup on this platform.
+   */
+  bool ShowPopupAsNativeMenu(nsIContent* aPopup, int32_t aXPos, int32_t aYPos,
+                             bool aIsContextMenu,
                              mozilla::dom::Event* aTriggerEvent);
 
   void ShowTooltipAtPosition(nsIContent* aPopup, nsIContent* aTriggerContent,
@@ -819,6 +837,11 @@ class nsXULPopupManager final : public nsIDOMEventListener,
   // the popup that is currently being opened, stored only during the
   // popupshowing event
   nsCOMPtr<nsIContent> mOpeningPopup;
+
+  // If a popup is displayed as a native menu, this is non-null while the
+  // native menu is open.
+  // mNativeMenu has a strong reference to the menupopup nsIContent.
+  RefPtr<mozilla::widget::NativeMenu> mNativeMenu;
 };
 
 #endif
