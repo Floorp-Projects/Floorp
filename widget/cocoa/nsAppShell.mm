@@ -44,6 +44,7 @@
 
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
+#include "mozilla/StaticPrefs_widget.h"
 
 using namespace mozilla;
 using namespace mozilla::widget;
@@ -190,7 +191,6 @@ void OnUncaughtException(NSException* aException) {
 
 - (id)initWithAppShell:(nsAppShell*)aAppShell;
 - (void)applicationWillTerminate:(NSNotification*)aNotification;
-- (void)beginMenuTracking:(NSNotification*)aNotification;
 @end
 
 // nsAppShell implementation
@@ -858,11 +858,6 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal* aThread, bool aEventWasProc
                                              selector:@selector(applicationDidBecomeActive:)
                                                  name:NSApplicationDidBecomeActiveNotification
                                                object:NSApp];
-    [[NSDistributedNotificationCenter defaultCenter]
-        addObserver:self
-           selector:@selector(beginMenuTracking:)
-               name:@"com.apple.HIToolbox.beginMenuTrackingNotification"
-             object:nil];
   }
 
   return self;
@@ -910,24 +905,6 @@ nsAppShell::AfterProcessNextEvent(nsIThreadInternal* aThread, bool aEventWasProc
   nsCOMPtr<nsIObserverService> observerService = services::GetObserverService();
   if (observerService) {
     observerService->NotifyObservers(nullptr, NS_WIDGET_MAC_APP_ACTIVATE_OBSERVER_TOPIC, nullptr);
-  }
-
-  NS_OBJC_END_TRY_IGNORE_BLOCK;
-}
-
-// beginMenuTracking
-//
-// Roll up our context menu (if any) when some other app (or the OS) opens
-// any sort of menu.  But make sure we don't do this for notifications we
-// send ourselves (whose 'sender' will be @"org.mozilla.gecko.PopupWindow").
-- (void)beginMenuTracking:(NSNotification*)aNotification {
-  NS_OBJC_BEGIN_TRY_IGNORE_BLOCK;
-
-  NSString* sender = [aNotification object];
-  if (!sender || ![sender isEqualToString:@"org.mozilla.gecko.PopupWindow"]) {
-    nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
-    nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
-    if (rollupWidget) rollupListener->Rollup(0, true, nullptr, nullptr);
   }
 
   NS_OBJC_END_TRY_IGNORE_BLOCK;
