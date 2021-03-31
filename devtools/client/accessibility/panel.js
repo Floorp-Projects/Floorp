@@ -132,7 +132,7 @@ AccessibilityPanel.prototype = {
     });
 
     this.isPanelReady = true;
-    this.emit("ready");
+    this.emit("devtools-panel-ready");
     resolver(this);
     return this._opening;
   },

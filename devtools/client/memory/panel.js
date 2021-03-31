@@ -40,7 +40,7 @@ MemoryPanel.prototype = {
     );
 
     this.isPanelReady = true;
-    this.emit("ready");
+    this.emit("devtools-panel-ready");
 
     return this;
   },

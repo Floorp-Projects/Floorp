@@ -50,7 +50,7 @@ DomPanel.prototype = {
     await onGetProperties;
 
     this.isPanelReady = true;
-    this.emit("ready");
+    this.emit("devtools-panel-ready");
 
     return this;
   },

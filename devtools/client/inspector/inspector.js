@@ -407,7 +407,7 @@ Inspector.prototype = {
       1
     );
 
-    this.emit("ready");
+    this.emit("devtools-panel-ready");
     return this;
   },
 

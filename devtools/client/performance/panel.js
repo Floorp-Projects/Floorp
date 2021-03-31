@@ -61,7 +61,7 @@ PerformancePanel.prototype = {
     this._checkRecordingStatus();
 
     this.isPanelReady = true;
-    this.emit("ready");
+    this.emit("devtools-panel-ready");
 
     this._opening = new Promise(resolve => {
       resolve(this);

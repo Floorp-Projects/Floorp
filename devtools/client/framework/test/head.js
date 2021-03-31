@@ -158,7 +158,7 @@ DevToolPanel.prototype = {
     return new Promise(resolve => {
       executeSoon(() => {
         this._isReady = true;
-        this.emit("ready");
+        this.emit("devtools-panel-ready");
         resolve(this);
       });
     });
