@@ -342,6 +342,7 @@ class nsXULPopupManager final : public nsIDOMEventListener,
       nsTArray<nsIWidget*>* aWidgetChain) override;
   virtual void NotifyGeometryChange() override {}
   virtual nsIWidget* GetRollupWidget() override;
+  virtual bool RollupNativeMenu() override;
 
   // NativeMenu::Observer
   void OnNativeMenuOpened() override {}
