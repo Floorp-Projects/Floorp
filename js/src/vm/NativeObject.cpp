@@ -2447,22 +2447,22 @@ bool js::SetPropertyByDefining(JSContext* cx, HandleId id, HandleValue v,
   bool existing;
   {
     // Steps 5.c-d.
-    Rooted<PropertyDescriptor> desc(cx);
+    Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
     if (!GetOwnPropertyDescriptor(cx, receiver, id, &desc)) {
       return false;
     }
 
-    existing = !!desc.object();
+    existing = desc.isSome();
 
     // Step 5.e.
     if (existing) {
       // Step 5.e.i.
-      if (desc.isAccessorDescriptor()) {
+      if (desc->isAccessorDescriptor()) {
         return result.fail(JSMSG_OVERWRITING_ACCESSOR);
       }
 
       // Step 5.e.ii.
-      if (!desc.writable()) {
+      if (!desc->writable()) {
         return result.fail(JSMSG_READ_ONLY);
       }
     }
