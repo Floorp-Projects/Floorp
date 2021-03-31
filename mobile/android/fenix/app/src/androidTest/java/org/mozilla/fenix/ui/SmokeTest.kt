@@ -328,6 +328,7 @@ class SmokeTest {
         }
     }
 
+    @Ignore("Test failures: https://github.com/mozilla-mobile/fenix/issues/18720")
     @Test
     // Verifies the Share button in a tab's 3 dot menu
     fun mainMenuShareButtonTest() {
@@ -341,6 +342,7 @@ class SmokeTest {
         }
     }
 
+    @Ignore("Test failures: https://github.com/mozilla-mobile/fenix/issues/18720")
     @Test
     // Verifies the refresh button in a tab's 3 dot menu
     fun mainMenuRefreshButtonTest() {

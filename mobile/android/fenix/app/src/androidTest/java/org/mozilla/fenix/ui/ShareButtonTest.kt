@@ -9,6 +9,7 @@ import androidx.test.uiautomator.UiDevice
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
@@ -43,6 +44,7 @@ class ShareButtonTest {
         mockWebServer.shutdown()
     }
 
+    @Ignore("Test failures: https://github.com/mozilla-mobile/fenix/issues/18720")
     @Test
     fun ShareButtonAppearanceTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)

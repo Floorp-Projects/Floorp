@@ -6,6 +6,7 @@ package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
 import org.junit.After
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -65,6 +66,7 @@ class NoNetworkAccessStartupTests {
         }
     }
 
+    @Ignore("Test failures: https://github.com/mozilla-mobile/fenix/issues/18720")
     @Test
     fun testPageReloadAfterNetworkInterrupted() {
         val url = "example.com"

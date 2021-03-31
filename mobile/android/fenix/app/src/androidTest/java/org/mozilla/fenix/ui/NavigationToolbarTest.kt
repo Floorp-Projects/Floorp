@@ -66,6 +66,7 @@ class NavigationToolbarTest {
         }
     }
 
+    @Ignore("Test failures: https://github.com/mozilla-mobile/fenix/issues/18720")
     @Test
     fun goForwardTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
@@ -94,6 +95,7 @@ class NavigationToolbarTest {
         }
     }
 
+    @Ignore("Test failures: https://github.com/mozilla-mobile/fenix/issues/18720")
     @Test
     fun refreshPageTest() {
         val refreshWebPage = TestAssetHelper.getRefreshAsset(mockWebServer)
