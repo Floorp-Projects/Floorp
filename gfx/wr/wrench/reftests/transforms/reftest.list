@@ -40,6 +40,7 @@ platform(linux,mac) fuzzy(1,74) == border-scale-4.yaml border-scale-4.png
 != large-raster-root.yaml blank.yaml
 == flatten-preserve-3d-root.yaml flatten-preserve-3d-root-ref.yaml
 == flatten-twice.yaml flatten-twice-ref.yaml
+fuzzy(1,10) == flatten-all-flat.yaml flatten-all-flat-ref.yaml
 == strange-w.yaml strange-w-ref.yaml
 == big-axis-aligned-scale.yaml big-axis-aligned-scale-ref.yaml
 # Compare ~8K raster root (>MAX_SURFACE_SIZE) with ~2K raster root. fuzzy due to lerping on edges.
