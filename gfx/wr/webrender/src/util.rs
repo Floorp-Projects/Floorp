@@ -150,14 +150,12 @@ impl ScaleOffset {
         // To check that we have a pure scale / translation:
         // Every field must match an identity matrix, except:
         //  - Any value present in tx,ty
-        //  - Any non-neg value present in sx,sy (avoid negative for reflection/rotation)
+        //  - Any value present in sx,sy
 
-        if m.m11 < 0.0 ||
-           m.m12.abs() > NEARLY_ZERO ||
+        if m.m12.abs() > NEARLY_ZERO ||
            m.m13.abs() > NEARLY_ZERO ||
            m.m14.abs() > NEARLY_ZERO ||
            m.m21.abs() > NEARLY_ZERO ||
-           m.m22 < 0.0 ||
            m.m23.abs() > NEARLY_ZERO ||
            m.m24.abs() > NEARLY_ZERO ||
            m.m31.abs() > NEARLY_ZERO ||
@@ -230,28 +228,80 @@ impl ScaleOffset {
     }
 
     pub fn map_rect<F, T>(&self, rect: &Rect<f32, F>) -> Rect<f32, T> {
+        // TODO(gw): The logic below can return an unexpected result if the supplied
+        //           rect is invalid (has size < 0). Since Gecko currently supplied
+        //           invalid rects in some cases, adding a max(0) here ensures that
+        //           mapping an invalid rect retains the property that rect.is_empty()
+        //           will return true (the mapped rect output will have size 0 instead
+        //           of a negative size). In future we could catch / assert / fix
+        //           these invalid rects earlier, and assert here instead.
+
+        let w = rect.size.width.max(0.0);
+        let h = rect.size.height.max(0.0);
+
+        let mut x0 = rect.origin.x * self.scale.x + self.offset.x;
+        let mut y0 = rect.origin.y * self.scale.y + self.offset.y;
+
+        let mut sx = w * self.scale.x;
+        let mut sy = h * self.scale.y;
+
+        // Handle negative scale. Previously, branchless float math was used to find the
+        // min / max vertices and size. However, that sequence of operations was producind
+        // additional floating point accuracy on android emulator builds, causing one test
+        // to fail an assert. Instead, we retain the same math as previously, and adjust
+        // the origin / size if required.
+
+        if self.scale.x < 0.0 {
+            x0 += sx;
+            sx = -sx;
+        }
+        if self.scale.y < 0.0 {
+            y0 += sy;
+            sy = -sy;
+        }
+
         Rect::new(
-            Point2D::new(
-                rect.origin.x * self.scale.x + self.offset.x,
-                rect.origin.y * self.scale.y + self.offset.y,
-            ),
-            Size2D::new(
-                rect.size.width * self.scale.x,
-                rect.size.height * self.scale.y,
-            )
+            Point2D::new(x0, y0),
+            Size2D::new(sx, sy),
         )
     }
 
     pub fn unmap_rect<F, T>(&self, rect: &Rect<f32, F>) -> Rect<f32, T> {
+        // TODO(gw): The logic below can return an unexpected result if the supplied
+        //           rect is invalid (has size < 0). Since Gecko currently supplied
+        //           invalid rects in some cases, adding a max(0) here ensures that
+        //           mapping an invalid rect retains the property that rect.is_empty()
+        //           will return true (the mapped rect output will have size 0 instead
+        //           of a negative size). In future we could catch / assert / fix
+        //           these invalid rects earlier, and assert here instead.
+
+        let w = rect.size.width.max(0.0);
+        let h = rect.size.height.max(0.0);
+
+        let mut x0 = (rect.origin.x - self.offset.x) / self.scale.x;
+        let mut y0 = (rect.origin.y - self.offset.y) / self.scale.y;
+
+        let mut sx = w / self.scale.x;
+        let mut sy = h / self.scale.y;
+
+        // Handle negative scale. Previously, branchless float math was used to find the
+        // min / max vertices and size. However, that sequence of operations was producind
+        // additional floating point accuracy on android emulator builds, causing one test
+        // to fail an assert. Instead, we retain the same math as previously, and adjust
+        // the origin / size if required.
+
+        if self.scale.x < 0.0 {
+            x0 += sx;
+            sx = -sx;
+        }
+        if self.scale.y < 0.0 {
+            y0 += sy;
+            sy = -sy;
+        }
+
         Rect::new(
-            Point2D::new(
-                (rect.origin.x - self.offset.x) / self.scale.x,
-                (rect.origin.y - self.offset.y) / self.scale.y,
-            ),
-            Size2D::new(
-                rect.size.width / self.scale.x,
-                rect.size.height / self.scale.y,
-            )
+            Point2D::new(x0, y0),
+            Size2D::new(sx, sy),
         )
     }
 
@@ -679,6 +729,35 @@ pub mod test {
         let so = ScaleOffset::from_transform(xref).unwrap();
         let xf = so.to_transform();
         assert!(xref.approx_eq(&xf));
+    }
+
+    #[test]
+    fn negative_scale_map_unmap() {
+        let xref = LayoutTransform::scale(1.0, -1.0, 1.0)
+                        .pre_translate(LayoutVector3D::new(124.0, 38.0, 0.0));
+        let so = ScaleOffset::from_transform(&xref).unwrap();
+        let local_rect = LayoutRect::new(
+            LayoutPoint::new(50.0, -100.0),
+            LayoutSize::new(200.0, 400.0),
+        );
+
+        let mapped_rect: LayoutRect = so.map_rect(&local_rect);
+        let xf_rect = project_rect(
+            &xref,
+            &local_rect,
+            &LayoutRect::max_rect(),
+        ).unwrap();
+
+        assert!(mapped_rect.origin.x.approx_eq(&xf_rect.origin.x));
+        assert!(mapped_rect.origin.y.approx_eq(&xf_rect.origin.y));
+        assert!(mapped_rect.size.width.approx_eq(&xf_rect.size.width));
+        assert!(mapped_rect.size.height.approx_eq(&xf_rect.size.height));
+
+        let unmapped_rect: LayoutRect = so.unmap_rect(&mapped_rect);
+        assert!(unmapped_rect.origin.x.approx_eq(&local_rect.origin.x));
+        assert!(unmapped_rect.origin.y.approx_eq(&local_rect.origin.y));
+        assert!(unmapped_rect.size.width.approx_eq(&local_rect.size.width));
+        assert!(unmapped_rect.size.height.approx_eq(&local_rect.size.height));
     }
 
     #[test]

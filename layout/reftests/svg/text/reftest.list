@@ -79,7 +79,7 @@ fuzzy-if(Android,0-192,0-82) == multiple-x-holes-rtl.svg multiple-x-holes-rtl-re
 
 fails-if(geckoview) == multiple-chunks-bidi.svg multiple-chunks-bidi-ref.svg # Bug 1558513 for GV
 fails-if(geckoview) == multiple-chunks-different-anchor-bidi.svg multiple-chunks-different-anchor-bidi-ref.svg # Bug 1558513 for GV
-fuzzy-if(Android,0-128,0-130) == multiple-chunks-different-anchor-rtl.svg multiple-chunks-different-anchor-rtl-ref.svg
+fuzzy-if(Android,0-128,0-170) == multiple-chunks-different-anchor-rtl.svg multiple-chunks-different-anchor-rtl-ref.svg
 == multiple-chunks-different-anchor.svg multiple-chunks-different-anchor-ref.svg
 fuzzy-if(Android,0-242,0-81) == multiple-chunks-directions-and-anchor.svg multiple-chunks-directions-and-anchor-ref.svg
 == multiple-chunks-directions-and-anchor-dx.svg multiple-chunks-directions-and-anchor-dx-ref.svg
