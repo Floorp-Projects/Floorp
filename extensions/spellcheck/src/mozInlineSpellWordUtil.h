@@ -8,6 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Result.h"
 #include "mozilla/dom/Document.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
@@ -175,7 +176,8 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
 
     int32_t EndOffset() const { return mSoftTextOffset + mLength; }
   };
-  nsTArray<RealWord> mRealWords;
+  using RealWords = nsTArray<RealWord>;
+  RealWords mRealWords;
   int32_t mNextWordIndex;
 
   bool mSoftTextValid;
@@ -208,8 +210,8 @@ class MOZ_STACK_CLASS mozInlineSpellWordUtil {
 
   // build mSoftText and mSoftTextDOMMapping
   void BuildSoftText();
-  // Build mRealWords array
-  nsresult BuildRealWords();
+
+  mozilla::Result<RealWords, nsresult> BuildRealWords() const;
 
   nsresult SplitDOMWordAndAppendTo(int32_t aStart, int32_t aEnd,
                                    nsTArray<RealWord>& aRealWords) const;
