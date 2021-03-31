@@ -41,16 +41,18 @@ class KeyPath {
   friend class IndexMetadata;
   friend class ObjectStoreMetadata;
 
-  KeyPath() : mType(NONEXISTENT) { MOZ_COUNT_CTOR(KeyPath); }
+  KeyPath() : mType(KeyPathType::NonExistent) { MOZ_COUNT_CTOR(KeyPath); }
 
  public:
-  enum KeyPathType { NONEXISTENT, STRING, ARRAY, ENDGUARD };
+  enum class KeyPathType { NonExistent, String, Array, EndGuard };
 
   void SetType(KeyPathType aType);
 
   bool AppendStringWithValidation(const nsAString& aString);
 
-  explicit KeyPath(int aDummy) : mType(NONEXISTENT) { MOZ_COUNT_CTOR(KeyPath); }
+  explicit KeyPath(int aDummy) : mType(KeyPathType::NonExistent) {
+    MOZ_COUNT_CTOR(KeyPath);
+  }
 
   KeyPath(KeyPath&& aOther) {
     MOZ_COUNT_CTOR(KeyPath);
@@ -85,14 +87,14 @@ class KeyPath {
                               Key& aKey, ExtractOrCreateKeyCallback aCallback,
                               void* aClosure) const;
 
-  inline bool IsValid() const { return mType != NONEXISTENT; }
+  inline bool IsValid() const { return mType != KeyPathType::NonExistent; }
 
-  inline bool IsArray() const { return mType == ARRAY; }
+  inline bool IsArray() const { return mType == KeyPathType::Array; }
 
-  inline bool IsString() const { return mType == STRING; }
+  inline bool IsString() const { return mType == KeyPathType::String; }
 
   inline bool IsEmpty() const {
-    return mType == STRING && mStrings[0].IsEmpty();
+    return mType == KeyPathType::String && mStrings[0].IsEmpty();
   }
 
   bool operator==(const KeyPath& aOther) const {
