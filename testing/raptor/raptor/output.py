@@ -316,9 +316,7 @@ class PerftestOutput(object):
         if testname.startswith("raptor-v8_7"):
             return 100 * filters.geometric_mean(_filter(vals))
 
-        if testname.startswith("raptor-speedometer") or testname.startswith(
-            "speedometer"
-        ):
+        if "speedometer" in testname:
             correctionFactor = 3
             results = _filter(vals)
             # speedometer has 16 tests, each of these are made of up 9 subtests
@@ -334,7 +332,7 @@ class PerftestOutput(object):
             score = 60 * 1000 / filters.geometric_mean(results) / correctionFactor
             return score
 
-        if testname.startswith("raptor-stylebench"):
+        if "stylebench" in testname:
             # see https://bug-172968-attachments.webkit.org/attachment.cgi?id=319888
             correctionFactor = 3
             results = _filter(vals)
@@ -379,22 +377,22 @@ class PerftestOutput(object):
             # pylint --py3k W1619
             return 60 * 1000 / filters.geometric_mean(results) / correctionFactor
 
-        if testname.startswith(("raptor-kraken", "raptor-sunspider")):
+        if testname.startswith("raptor-kraken") or "sunspider" in testname:
             return sum(_filter(vals))
 
-        if testname.startswith(("raptor-unity-webgl", "raptor-webaudio")):
+        if "unity-webgl" in testname or "webaudio" in testname:
             # webaudio_score and unity_webgl_score: self reported as 'Geometric Mean'
             return filters.mean(_filter(vals, "Geometric Mean"))
 
-        if testname.startswith("raptor-assorted-dom"):
+        if "assorted-dom" in testname:
             # pylint: disable=W1633
             return round(filters.geometric_mean(_filter(vals)), 2)
 
-        if testname.startswith("raptor-wasm-misc"):
+        if "wasm-misc" in testname:
             # wasm_misc_score: self reported as '__total__'
             return filters.mean(_filter(vals, "__total__"))
 
-        if testname.startswith("raptor-wasm-godot"):
+        if "wasm-godot" in testname:
             # wasm_godot_score: first-interactive mean
             return filters.mean(_filter(vals, "first-interactive"))
 
