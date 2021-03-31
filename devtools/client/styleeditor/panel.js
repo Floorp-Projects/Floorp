@@ -53,8 +53,6 @@ StyleEditorPanel.prototype = {
     this.UI.on("error", this._showError);
     await this.UI.initialize();
 
-    this.isPanelReady = true;
-
     return this;
   },
 

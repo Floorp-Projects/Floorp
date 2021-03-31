@@ -39,9 +39,6 @@ MemoryPanel.prototype = {
       this._onTargetAvailable
     );
 
-    this.isPanelReady = true;
-    this.emit("devtools-panel-ready");
-
     return this;
   },
 

@@ -48,7 +48,7 @@ function runTools(tab) {
       is(toolbox.currentToolId, toolId, "currentToolId should be " + toolId);
 
       const panel = toolbox.getCurrentPanel();
-      ok(panel.isPanelReady, toolId + " panel should be ready");
+      ok(panel, toolId + " panel has been registered in the toolbox");
     }
 
     const client = toolbox.target.client;
