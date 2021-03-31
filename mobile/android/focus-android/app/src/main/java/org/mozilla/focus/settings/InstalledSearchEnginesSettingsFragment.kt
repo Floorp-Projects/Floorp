@@ -5,12 +5,16 @@
 package org.mozilla.focus.settings
 
 import android.os.Bundle
-import androidx.preference.Preference
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import androidx.preference.Preference
+import mozilla.components.browser.state.state.SearchState
+import mozilla.components.browser.state.state.availableSearchEngines
+import mozilla.components.browser.state.store.BrowserStore
+import mozilla.components.feature.search.SearchUseCases
 import org.mozilla.focus.R
-import org.mozilla.focus.search.CustomSearchEngineStore
+import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.search.RadioSearchEngineListPreference
 import org.mozilla.focus.telemetry.TelemetryWrapper
 
@@ -45,7 +49,7 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
     override fun onPrepareOptionsMenu(menu: Menu) {
         super.onPrepareOptionsMenu(menu)
         menu.findItem(R.id.menu_restore_default_engines)?.let {
-            it.isEnabled = !CustomSearchEngineStore.hasAllDefaultSearchEngines(requireActivity())
+            it.isEnabled = !requireComponents.store.state.search.hasDefaultSearchEnginesOnly()
         }
     }
 
@@ -65,7 +69,7 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
     }
 
     private fun restoreSearchEngines() {
-        CustomSearchEngineStore.restoreDefaultSearchEngines(requireActivity())
+        restoreSearchDefaults(requireComponents.store, requireComponents.searchUseCases)
         refetchSearchEngines()
         TelemetryWrapper.menuRestoreEnginesEvent()
         languageChanged = false
@@ -95,4 +99,13 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
         val pref = preferenceScreen.findPreference(resources.getString(R.string.pref_key_radio_search_engine_list))
         (pref as RadioSearchEngineListPreference).refetchSearchEngines()
     }
+}
+
+private fun SearchState.hasDefaultSearchEnginesOnly(): Boolean {
+    return availableSearchEngines.isEmpty() && additionalSearchEngines.isEmpty() && customSearchEngines.isEmpty()
+}
+
+private fun restoreSearchDefaults(store: BrowserStore, useCases: SearchUseCases) {
+    store.state.search.customSearchEngines.forEach { searchEngine -> useCases.removeSearchEngine(searchEngine) }
+    store.state.search.hiddenSearchEngines.forEach { searchEngine -> useCases.addSearchEngine(searchEngine) }
 }

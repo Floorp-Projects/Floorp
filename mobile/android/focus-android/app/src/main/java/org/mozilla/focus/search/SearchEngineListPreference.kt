@@ -7,23 +7,22 @@ package org.mozilla.focus.search
 import android.content.Context
 import android.content.res.Resources
 import android.graphics.drawable.BitmapDrawable
-import androidx.preference.Preference
-import androidx.preference.PreferenceViewHolder
-import androidx.recyclerview.widget.RecyclerView
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import android.widget.CompoundButton
 import android.widget.RadioGroup
+import androidx.preference.Preference
+import androidx.preference.PreferenceViewHolder
+import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
-import mozilla.components.browser.search.SearchEngine
+import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.state.searchEngines
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.utils.Settings
 import kotlin.coroutines.CoroutineContext
 
 abstract class SearchEngineListPreference : Preference, CoroutineScope {
@@ -48,8 +47,7 @@ abstract class SearchEngineListPreference : Preference, CoroutineScope {
         searchEngineGroup = holder!!.itemView.findViewById(R.id.search_engine_group)
         val context = searchEngineGroup!!.context
 
-        searchEngines = context.components.searchEngineManager.getSearchEngines(context)
-            .sortedBy { it.name }
+        searchEngines = context.components.store.state.search.searchEngines
 
         refreshSearchEngineViews(context)
     }
@@ -62,14 +60,8 @@ abstract class SearchEngineListPreference : Preference, CoroutineScope {
     protected abstract fun updateDefaultItem(defaultButton: CompoundButton)
 
     fun refetchSearchEngines() {
-        launch(Main) {
-            searchEngines = context.components.searchEngineManager
-                    .loadAsync(this@SearchEngineListPreference.context)
-                    .await()
-                    .list
-                    .sortedBy { it.name }
-            refreshSearchEngineViews(this@SearchEngineListPreference.context)
-        }
+        searchEngines = context.components.store.state.search.searchEngines
+        refreshSearchEngineViews(this@SearchEngineListPreference.context)
     }
 
     private fun refreshSearchEngineViews(context: Context) {
@@ -80,10 +72,7 @@ abstract class SearchEngineListPreference : Preference, CoroutineScope {
             return
         }
 
-        val defaultSearchEngine = context.components.searchEngineManager.getDefaultSearchEngine(
-                context,
-                Settings.getInstance(context).defaultSearchEngineName
-        ).identifier
+        val defaultSearchEngine = context.components.store.state.search.selectedOrDefaultSearchEngine?.id
 
         searchEngineGroup!!.removeAllViews()
 
@@ -94,7 +83,7 @@ abstract class SearchEngineListPreference : Preference, CoroutineScope {
 
         for (i in searchEngines.indices) {
             val engine = searchEngines[i]
-            val engineId = engine.identifier
+            val engineId = engine.id
             val engineItem = makeButtonFromSearchEngine(engine, layoutInflater, context.resources)
             engineItem.id = i
             engineItem.tag = engineId

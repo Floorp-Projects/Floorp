@@ -83,9 +83,6 @@ class ManualAddSearchEnginePreference(context: Context, attrs: AttributeSet) :
             TextUtils.isEmpty(engineName) ->
                 context.getString(R.string.search_add_error_empty_name)
 
-            !CustomSearchEngineStore.isSearchEngineNameUnique(context, engineName) ->
-                context.getString(R.string.search_add_error_duplicate_name)
-
             else -> null
         }
 

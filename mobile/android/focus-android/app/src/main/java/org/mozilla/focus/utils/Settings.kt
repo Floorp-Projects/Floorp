@@ -89,6 +89,7 @@ class Settings private constructor(
     val hasAddedToHomeScreen: Boolean
         get() = preferences.getBoolean(getPreferenceKey(R.string.has_added_to_home_screen), false)
 
+    @Deprecated("This is no longer used. Read search engines from BrowserStore instead")
     val defaultSearchEngineName: String
         get() = preferences.getString(getPreferenceKey(R.string.pref_key_search_engine), "")!!
 

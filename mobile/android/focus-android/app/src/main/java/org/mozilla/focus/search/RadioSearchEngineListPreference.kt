@@ -5,13 +5,17 @@
 package org.mozilla.focus.search
 
 import android.content.Context
-import androidx.preference.PreferenceViewHolder
 import android.util.AttributeSet
 import android.widget.CompoundButton
 import android.widget.RadioGroup
+import androidx.preference.PreferenceViewHolder
+import mozilla.components.browser.state.search.SearchEngine
 import org.mozilla.focus.R
+import org.mozilla.focus.ext.components
 import org.mozilla.focus.telemetry.TelemetryWrapper
-import org.mozilla.focus.utils.Settings
+
+private const val ENGINE_TYPE_CUSTOM = "custom"
+private const val ENGINE_TYPE_BUNDLED = "bundled"
 
 class RadioSearchEngineListPreference : SearchEngineListPreference, RadioGroup.OnCheckedChangeListener {
 
@@ -34,7 +38,6 @@ class RadioSearchEngineListPreference : SearchEngineListPreference, RadioGroup.O
     }
 
     override fun onCheckedChanged(group: RadioGroup, checkedId: Int) {
-
         /* onCheckedChanged is called intermittently before the search engine table is full, so we
            must check these conditions to prevent crashes and inconsistent states. */
         if (group.childCount != searchEngines.count() || group.getChildAt(checkedId) == null ||
@@ -43,11 +46,14 @@ class RadioSearchEngineListPreference : SearchEngineListPreference, RadioGroup.O
         }
 
         val newDefaultEngine = searchEngines[checkedId]
-        Settings.getInstance(group.context).setDefaultSearchEngineByName(newDefaultEngine.name)
-        val source = if (CustomSearchEngineStore.isCustomSearchEngine(newDefaultEngine.identifier, context))
-            CustomSearchEngineStore.ENGINE_TYPE_CUSTOM
+
+        context.components.searchUseCases.selectSearchEngine(newDefaultEngine)
+
+        val source = if (newDefaultEngine.type == SearchEngine.Type.CUSTOM)
+            ENGINE_TYPE_CUSTOM
         else
-            CustomSearchEngineStore.ENGINE_TYPE_BUNDLED
+            ENGINE_TYPE_BUNDLED
+
         TelemetryWrapper.setDefaultSearchEngineEvent(source)
     }
 }

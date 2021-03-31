@@ -18,6 +18,7 @@ import mozilla.components.support.utils.WebURLFinder
 import org.mozilla.focus.activity.TextActionActivity
 import org.mozilla.focus.ext.components
 import org.mozilla.focus.shortcut.HomeScreen
+import org.mozilla.focus.utils.SearchUtils
 import org.mozilla.focus.utils.UrlUtils
 
 /**
@@ -115,7 +116,7 @@ class IntentProcessor(
                     } else {
                         createSearchSession(
                             SessionState.Source.ACTION_SEND,
-                            UrlUtils.createSearchUrl(context, dataString),
+                            SearchUtils.createSearchUrl(context, dataString ?: ""),
                             dataString ?: "")
                     }
                 } else {

@@ -7,11 +7,11 @@
 package org.mozilla.focus.telemetry
 
 import android.content.Context
+import mozilla.components.browser.state.search.SearchEngine
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.search.CustomSearchEngineStore
 import org.mozilla.focus.utils.Browsers
-import org.mozilla.focus.utils.Settings
 import org.mozilla.telemetry.TelemetryHolder
 import org.mozilla.telemetry.measurement.SettingsMeasurement
 
@@ -51,20 +51,14 @@ internal class TelemetrySettingsProvider(
                 java.lang.Boolean.toString(browsers.isDefaultBrowser(context))
             }
             prefKeySearchEngine -> {
-                var value: Any? = super.getValue(key)
-                if (value == null) {
-                    // If the user has never selected a search engine then this value is null.
-                    // However we still want to report the current search engine of the user.
-                    // Therefore we inject this value at runtime.
-                    value = context.components.searchEngineManager.getDefaultSearchEngine(
-                            context,
-                            Settings.getInstance(context).defaultSearchEngineName
-                    ).name
-                } else if (CustomSearchEngineStore.isCustomSearchEngine((value as String?)!!, context)) {
-                    // Don't collect possibly sensitive info for custom search engines, send "custom" instead
-                    value = CustomSearchEngineStore.ENGINE_TYPE_CUSTOM
+                // The default search engine is no longer saved using this pref. But we will continue
+                // to report it here until we switch to our new telemetry system (glean).
+                val searchEngine = context.components.store.state.search.selectedOrDefaultSearchEngine
+                if (searchEngine?.type == SearchEngine.Type.CUSTOM) {
+                    "custom"
+                } else {
+                    searchEngine?.name ?: "<none>"
                 }
-                value
             }
             else -> super.getValue(key)
         }

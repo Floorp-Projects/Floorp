@@ -10,10 +10,8 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import androidx.annotation.RequiresApi
-
-import org.mozilla.focus.utils.UrlUtils
-
 import mozilla.components.support.utils.SafeIntent
+import org.mozilla.focus.utils.SearchUtils
 
 /**
  * Activity for receiving and processing an ACTION_PROCESS_TEXT intent.
@@ -28,7 +26,7 @@ class TextActionActivity : Activity() {
         val searchTextCharSequence = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)
         val searchText = searchTextCharSequence?.toString() ?: ""
 
-        val searchUrl = UrlUtils.createSearchUrl(this, searchText)
+        val searchUrl = SearchUtils.createSearchUrl(this, searchText)
 
         val searchIntent = Intent(this, IntentReceiverActivity::class.java)
         searchIntent.action = Intent.ACTION_VIEW

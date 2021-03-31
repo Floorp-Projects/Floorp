@@ -10,9 +10,7 @@ import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
 import mozilla.components.support.base.log.Log
 import mozilla.components.support.base.log.sink.AndroidLogSink
 import mozilla.components.support.ktx.android.content.isMainProcess
@@ -51,14 +49,6 @@ open class FocusApplication : LocaleAwareApplication(), CoroutineScope {
             TelemetryWrapper.init(this)
 
             enableStrictMode()
-
-            components.searchEngineManager.apply {
-                launch(IO) {
-                    loadAsync(this@FocusApplication).await()
-                }
-
-                registerForLocaleUpdates(this@FocusApplication)
-            }
 
             AdjustHelper.setupAdjustIfNeeded(this@FocusApplication)
 

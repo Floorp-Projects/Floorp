@@ -16,16 +16,16 @@ import androidx.annotation.CheckResult
 import androidx.annotation.VisibleForTesting
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.runBlocking
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.browser.state.selector.privateTabs
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import org.json.JSONObject
 import org.mozilla.focus.BuildConfig
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.components
-import org.mozilla.focus.search.CustomSearchEngineStore
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.MobileMetricsPingStorage
-import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.UrlUtils
 import org.mozilla.telemetry.Telemetry
 import org.mozilla.telemetry.TelemetryHolder
@@ -501,16 +501,11 @@ object TelemetryWrapper {
     }
 
     private fun getDefaultSearchEngineIdentifierForTelemetry(context: Context): String {
-        val searchEngine = context.components.searchEngineManager.getDefaultSearchEngine(
-            context,
-            Settings.getInstance(context).defaultSearchEngineName
-        ).identifier
-
-        return if (CustomSearchEngineStore.isCustomSearchEngine(searchEngine, context)) {
-            // Don't collect possibly sensitive info for custom search engines, send "custom" instead
-            CustomSearchEngineStore.ENGINE_TYPE_CUSTOM
+        val searchEngine = context.components.store.state.search.selectedOrDefaultSearchEngine
+        return if (searchEngine?.type == SearchEngine.Type.CUSTOM) {
+            "custom"
         } else {
-            searchEngine
+            searchEngine?.name ?: "<none>"
         }
     }
 

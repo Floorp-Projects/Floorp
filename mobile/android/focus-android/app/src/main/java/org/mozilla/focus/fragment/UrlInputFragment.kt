@@ -39,6 +39,7 @@ import mozilla.components.browser.state.action.ContentAction
 import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.SessionState
 import mozilla.components.browser.state.state.TabSessionState
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import mozilla.components.support.utils.ThreadUtils
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import mozilla.components.ui.autocomplete.InlineAutocompleteEditText.AutocompleteResult
@@ -57,6 +58,7 @@ import org.mozilla.focus.tips.TipManager
 import org.mozilla.focus.utils.AppConstants
 import org.mozilla.focus.utils.Features
 import org.mozilla.focus.utils.OneShotOnPreDrawListener
+import org.mozilla.focus.utils.SearchUtils
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.StatusBarUtils
 import org.mozilla.focus.utils.SupportUtils
@@ -325,7 +327,7 @@ class UrlInputFragment :
         urlView?.setOnCommitListener(::onCommit)
 
         val isDDG: Boolean =
-            Settings.getInstance(requireContext()).defaultSearchEngineName == duckDuckGo
+            requireComponents.store.state.search.selectedOrDefaultSearchEngine?.name == duckDuckGo
 
         tab?.let { tab ->
             urlView?.setText(
@@ -722,7 +724,7 @@ class UrlInputFragment :
         val url = if (isUrl)
             UrlUtils.normalize(input)
         else
-            UrlUtils.createSearchUrl(context, input)
+            SearchUtils.createSearchUrl(context, input)
 
         val searchTerms = if (isUrl)
             null
@@ -733,11 +735,15 @@ class UrlInputFragment :
 
     private fun onSearch(query: String, isSuggestion: Boolean = false, alwaysSearch: Boolean = false) {
         if (alwaysSearch) {
-            openUrl(UrlUtils.createSearchUrl(context, query), query)
+            val url = SearchUtils.createSearchUrl(context, query)
+            openUrl(url, query)
         } else {
             val searchTerms = if (UrlUtils.isUrl(query)) null else query
-            val searchUrl =
-                if (searchTerms != null) UrlUtils.createSearchUrl(context, searchTerms) else UrlUtils.normalize(query)
+            val searchUrl = if (searchTerms != null) {
+                SearchUtils.createSearchUrl(context, searchTerms)
+            } else {
+                UrlUtils.normalize(query)
+            }
 
             openUrl(searchUrl, searchTerms)
         }

@@ -59,15 +59,6 @@ public class UrlUtils {
 
     }
 
-    public static String createSearchUrl(Context context, String searchTerm) {
-        final String defaultIdentifier = Settings.getInstance(context).getDefaultSearchEngineName();
-
-        final SearchEngine searchEngine = ContextKt.getComponents(context).getSearchEngineManager()
-                .getDefaultSearchEngine(context, defaultIdentifier);
-
-        return searchEngine.buildSearchUrl(searchTerm);
-    }
-
     public static String stripUserInfo(@Nullable String url) {
         if (TextUtils.isEmpty(url)) {
             return "";

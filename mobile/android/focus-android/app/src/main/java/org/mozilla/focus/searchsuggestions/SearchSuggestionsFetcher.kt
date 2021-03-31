@@ -8,16 +8,15 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
-import mozilla.components.browser.search.SearchEngine
 import mozilla.components.browser.search.suggestions.SearchSuggestionClient
+import mozilla.components.browser.state.search.SearchEngine
 import mozilla.components.concept.fetch.Client
+import mozilla.components.feature.search.ext.legacy
 import mozilla.components.support.ktx.kotlin.sanitizeURL
 import mozilla.components.concept.fetch.Request as FetchRequest
 import org.mozilla.focus.utils.debounce
@@ -25,7 +24,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
 
 class SearchSuggestionsFetcher(
-    searchEngine: SearchEngine,
+    searchEngine: SearchEngine?,
     private val fetchClient: Client
 ) : CoroutineScope {
     private var job = Job()
@@ -47,7 +46,7 @@ class SearchSuggestionsFetcher(
 
     init {
         updateSearchEngine(searchEngine)
-        launch(IO) {
+        launch(Dispatchers.IO) {
             debounce(THROTTLE_AMOUNT, fetchChannel)
                 .consumeEach { getSuggestions(it) }
         }
@@ -58,9 +57,13 @@ class SearchSuggestionsFetcher(
         fetchChannel.offer(query)
     }
 
-    fun updateSearchEngine(searchEngine: SearchEngine) {
-        canProvideSearchSuggestions = searchEngine.canProvideSearchSuggestions
-        client = if (canProvideSearchSuggestions) SearchSuggestionClient(searchEngine) { fetch(it) } else null
+    fun updateSearchEngine(searchEngine: SearchEngine?) {
+        canProvideSearchSuggestions = searchEngine?.suggestUrl != null
+        client = if (canProvideSearchSuggestions) {
+            SearchSuggestionClient(searchEngine!!.legacy()) { fetch(it) }
+        } else {
+            null
+        }
     }
 
     private suspend fun getSuggestions(query: String) = coroutineScope {
@@ -72,7 +75,7 @@ class SearchSuggestionsFetcher(
             listOf<String>()
         }
 
-        launch(Main) {
+        launch(Dispatchers.Main) {
             _results.value = SuggestionResult(query, suggestions)
         }
     }

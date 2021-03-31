@@ -5,9 +5,6 @@
 package org.mozilla.focus
 
 import android.content.Context
-import mozilla.components.browser.search.SearchEngineManager
-import mozilla.components.browser.search.provider.AssetsSearchEngineProvider
-import mozilla.components.browser.search.provider.localization.LocaleSearchLocalizationProvider
 import mozilla.components.browser.session.Session
 import mozilla.components.browser.session.SessionManager
 import mozilla.components.browser.session.engine.EngineMiddleware
@@ -20,20 +17,24 @@ import mozilla.components.feature.contextmenu.ContextMenuUseCases
 import mozilla.components.feature.customtabs.store.CustomTabsServiceStore
 import mozilla.components.feature.downloads.DownloadMiddleware
 import mozilla.components.feature.downloads.DownloadsUseCases
+import mozilla.components.feature.search.SearchUseCases
+import mozilla.components.feature.search.ext.toDefaultSearchEngineProvider
+import mozilla.components.feature.search.middleware.SearchMiddleware
+import mozilla.components.feature.search.region.RegionMiddleware
 import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.session.SettingsUseCases
 import mozilla.components.feature.session.TrackingProtectionUseCases
 import mozilla.components.feature.tabs.CustomTabsUseCases
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.service.location.LocationService
 import org.mozilla.focus.components.EngineProvider
 import org.mozilla.focus.downloads.DownloadService
 import org.mozilla.focus.engine.ClientWrapper
 import org.mozilla.focus.engine.LocalizedContentInterceptor
 import org.mozilla.focus.engine.SanityCheckMiddleware
 import org.mozilla.focus.notification.PrivateNotificationMiddleware
-import org.mozilla.focus.search.BingSearchEngineFilter
-import org.mozilla.focus.search.CustomSearchEngineProvider
-import org.mozilla.focus.search.HiddenSearchEngineFilter
+import org.mozilla.focus.search.SearchFilterMiddleware
+import org.mozilla.focus.search.SearchMigration
 import org.mozilla.focus.state.AppState
 import org.mozilla.focus.state.AppStore
 import org.mozilla.focus.state.Screen
@@ -86,7 +87,13 @@ class Components(
                 PrivateNotificationMiddleware(context),
                 TelemetryMiddleware(),
                 DownloadMiddleware(context, DownloadService::class.java),
-                SanityCheckMiddleware()
+                SanityCheckMiddleware(),
+                // We are currently using the default location service. We should consider using
+                // an actual implementation:
+                // https://github.com/mozilla-mobile/focus-android/issues/4781
+                RegionMiddleware(context, LocationService.default()),
+                SearchMiddleware(context, migration = SearchMigration(context)),
+                SearchFilterMiddleware()
             ) + EngineMiddleware.create(engine, ::findSessionById)
         )
     }
@@ -107,6 +114,10 @@ class Components(
     @Suppress("DEPRECATION")
     val tabsUseCases: TabsUseCases by lazy { TabsUseCases(store, sessionManager) }
 
+    val searchUseCases: SearchUseCases by lazy {
+        SearchUseCases(store, store.toDefaultSearchEngineProvider(), tabsUseCases)
+    }
+
     val contextMenuUseCases: ContextMenuUseCases by lazy { ContextMenuUseCases(store) }
 
     val downloadsUseCases: DownloadsUseCases by lazy { DownloadsUseCases(store) }
@@ -119,17 +130,6 @@ class Components(
     @Deprecated("Use BrowserStore instead")
     private val sessionManager by lazy {
         SessionManager(engine, store)
-    }
-
-    val searchEngineManager by lazy {
-        val assetsProvider = AssetsSearchEngineProvider(
-                LocaleSearchLocalizationProvider(),
-                filters = listOf(BingSearchEngineFilter(), HiddenSearchEngineFilter()),
-                additionalIdentifiers = listOf("ddg"))
-
-        val customProvider = CustomSearchEngineProvider()
-
-        SearchEngineManager(listOf(assetsProvider, customProvider))
     }
 }
 

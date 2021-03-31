@@ -8,8 +8,9 @@ import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
+import mozilla.components.browser.state.state.searchEngines
 import org.mozilla.focus.R
-import org.mozilla.focus.search.CustomSearchEngineStore
+import org.mozilla.focus.ext.requireComponents
 import org.mozilla.focus.search.MultiselectSearchEngineListPreference
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.ViewUtils
@@ -60,7 +61,13 @@ class RemoveSearchEnginesSettingsFragment : BaseSettingsFragment() {
                 val enginesToRemove =
                     (pref as MultiselectSearchEngineListPreference).checkedEngineIds
                 TelemetryWrapper.removeSearchEnginesEvent(enginesToRemove.size)
-                CustomSearchEngineStore.removeSearchEngines(requireActivity(), enginesToRemove as MutableSet<String>)
+
+                requireComponents.store.state.search.searchEngines.filter { searchEngine ->
+                    searchEngine.id in enginesToRemove
+                }.forEach { searchEngine ->
+                    requireComponents.searchUseCases.removeSearchEngine(searchEngine)
+                }
+
                 @Suppress("DEPRECATION")
                 requireFragmentManager().popBackStack()
                 true

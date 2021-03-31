@@ -13,6 +13,7 @@ import android.graphics.Typeface
 import android.text.Spannable
 import android.text.SpannableStringBuilder
 import android.text.style.StyleSpan
+import mozilla.components.browser.state.state.selectedOrDefaultSearchEngine
 import org.mozilla.focus.ext.components
 
 sealed class State {
@@ -40,7 +41,7 @@ class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(ap
 
     init {
         fetcher = SearchSuggestionsFetcher(
-            preferences.getSearchEngine(),
+            components.store.state.search.selectedOrDefaultSearchEngine,
             application.applicationContext.components.client
         )
 
@@ -86,7 +87,7 @@ class SearchSuggestionsViewModel(application: Application) : AndroidViewModel(ap
     }
 
     fun refresh() {
-        val engine = preferences.getSearchEngine()
+        val engine = components.store.state.search.selectedOrDefaultSearchEngine
         fetcher.updateSearchEngine(engine)
         updateState()
     }

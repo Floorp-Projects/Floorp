@@ -19,10 +19,11 @@ import com.google.android.material.snackbar.Snackbar
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.Request
 import mozilla.components.concept.fetch.Request.Redirect.FOLLOW
+import mozilla.components.feature.search.ext.createSearchEngine
 import org.mozilla.focus.R
 import org.mozilla.focus.ext.requireComponents
-import org.mozilla.focus.search.CustomSearchEngineStore
 import org.mozilla.focus.search.ManualAddSearchEnginePreference
+import org.mozilla.focus.shortcut.IconGenerator
 import org.mozilla.focus.telemetry.TelemetryWrapper
 import org.mozilla.focus.utils.Settings
 import org.mozilla.focus.utils.SupportUtils
@@ -241,7 +242,14 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
             }
 
             if (isValidSearchQuery) {
-                CustomSearchEngineStore.addSearchEngine(fragment.requireActivity(), engineName, query)
+                fragment.requireComponents.searchUseCases.addSearchEngine(
+                    createSearchEngine(
+                        engineName,
+                        query.toSearchUrl(),
+                        IconGenerator.generateSearchEngineIcon(fragment.requireContext())
+                    )
+                )
+
                 Snackbar.make(fragment.requireView(), R.string.search_add_confirmation, Snackbar.LENGTH_SHORT).show()
                 Settings.getInstance(fragment.requireActivity()).setDefaultSearchEngineByName(engineName)
                 @Suppress("DEPRECATION")
@@ -260,4 +268,8 @@ class ManualAddSearchEngineSettingsFragment : BaseSettingsFragment() {
             pref.setSearchQueryErrorText(that.getString(R.string.error_hostLookup_title))
         }
     }
+}
+
+private fun String.toSearchUrl(): String {
+    return replace("%s", "{searchTerms}")
 }
