@@ -2590,6 +2590,16 @@ NSEvent* gLastDragMouseDownEvent = nil;  // [strong]
 
   nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
   NS_ENSURE_TRUE(rollupListener, false);
+
+  if (rollupListener->RollupNativeMenu()) {
+    // A native menu was rolled up.
+    // Don't consume this event; if the menu wanted to consume this event it would already have done
+    // so and we wouldn't even get here. For example, we won't get here for left clicks that close
+    // native menus (because the native menu consumes it), but we will get here for right clicks
+    // that close native menus, and we do not want to consume those right clicks.
+    return NO;
+  }
+
   nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
   if (rollupWidget) {
     NSWindow* currentPopup = static_cast<NSWindow*>(rollupWidget->GetNativeData(NS_NATIVE_WINDOW));

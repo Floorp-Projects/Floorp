@@ -192,6 +192,19 @@ nsXULPopupManager* nsXULPopupManager::GetInstance() {
   return sInstance;
 }
 
+bool nsXULPopupManager::RollupNativeMenu() {
+  if (mNativeMenu) {
+    RefPtr<NativeMenu> menu = mNativeMenu;
+    if (menu->Close()) {
+      MOZ_RELEASE_ASSERT(!mNativeMenu,
+                         "OnNativeMenuClosed should have been called");
+      return true;
+    }
+    // menu->Close() returned false. The menu might not be fully open yet.
+  }
+  return false;
+}
+
 bool nsXULPopupManager::Rollup(uint32_t aCount, bool aFlush,
                                const nsIntPoint* pos,
                                nsIContent** aLastRolledUp) {
