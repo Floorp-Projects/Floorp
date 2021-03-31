@@ -67,6 +67,12 @@ class nsIRollupListener {
   virtual void NotifyGeometryChange() = 0;
 
   virtual nsIWidget* GetRollupWidget() = 0;
+
+  /**
+   * If a native menu is currently shown, closes the menu.
+   * Returns true if a native menu was open.
+   */
+  virtual bool RollupNativeMenu() { return false; }
 };
 
 #endif /* __nsIRollupListener_h__ */
