@@ -69,7 +69,7 @@ firefox-accounts-bridge = { path = "../../../../services/fxaccounts/rust-bridge/
 l10nregistry-ffi = { path = "../../../../intl/l10n/rust/l10nregistry-ffi" }
 
 processtools = { path = "../../../components/processtools" }
-qcms = { path = "../../../../gfx/qcms", features = ["c_bindings"] }
+qcms = { path = "../../../../gfx/qcms", features = ["c_bindings"], default-features = false }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
 viaduct = { git = "https://github.com/mozilla/application-services", rev = "8a576fbe79199fa8664f64285524017f74ebcc5f"}
