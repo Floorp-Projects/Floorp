@@ -1,0 +1,10 @@
+[
+  {
+    "filename": "mitmproxy-6.0.2-osx.tar.gz",
+    "size": 40867811,
+    "algorithm": "sha512",
+    "digest": "f162e89073eb73f7cfe458d54157e31e9e6bb7ae42c262e4070d23949888630015c896de8870958e83ad9360fce6758f01813ce581cb1a3c1a8b436109d2f28d",
+    "visibility": "public",
+    "unpack": true
+  }
+]

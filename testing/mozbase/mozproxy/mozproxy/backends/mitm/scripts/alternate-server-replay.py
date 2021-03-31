@@ -126,7 +126,12 @@ class AlternateServerPlayback:
                     "Recorded response is a WebSocketFlow. Removing from recording list as"
                     "  WebSockets are disabled"
                 )
-            elif i.response and self.mitm_version in ("4.0.2", "4.0.4", "5.1.1"):
+            elif i.response and self.mitm_version in (
+                "4.0.2",
+                "4.0.4",
+                "5.1.1",
+                "6.0.2",
+            ):
                 # see: https://github.com/mitmproxy/mitmproxy/issues/3856
                 f = self.flowmap.setdefault(
                     self._hash(i), {"flow": None, "reply_count": 0}

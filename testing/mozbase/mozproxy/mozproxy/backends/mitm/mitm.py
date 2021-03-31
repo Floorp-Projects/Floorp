@@ -310,7 +310,7 @@ class Mitmproxy(Playback):
                     "alternate-server-replay.py",
                 )
 
-                if self.config["playback_version"] in ["4.0.4", "5.1.1"]:
+                if self.config["playback_version"] in ["4.0.4", "5.1.1", "6.0.2"]:
                     args = [
                         "-v",  # Verbose mode
                         "--set",
