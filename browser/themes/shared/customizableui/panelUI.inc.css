@@ -1693,10 +1693,19 @@ menuitem.panel-subview-footer@menuStateActive@,
 }
 
 @supports -moz-bool-pref("browser.proton.enabled") {
+.PanelUI-subView menuseparator {
+  appearance: none;
+  min-height: 0;
+  border-top: 1px solid var(--panel-separator-color);
+  border-bottom: none;
+  margin: var(--panel-separator-margin);
+  padding: 0;
+}
+
 .PanelUI-subView toolbarseparator.proton-zap {
   border-image: var(--panel-separator-zap-gradient) 1;
 }
-}
+} /** END Proton **/
 
 .PanelUI-subView toolbarseparator.small-separator {
   margin-inline: 5px;

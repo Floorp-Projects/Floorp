@@ -17,6 +17,10 @@
 .subviewbutton.download {
   padding-inline-start: 14px;
 }
+
+.PanelUI-subView menuseparator {
+  padding: 0 !important;
+}
 } /** END not Proton **/
 
 panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
@@ -60,11 +64,6 @@ panelmultiview .toolbaritem-combined-buttons > spacer.before-label {
 menu.subviewbutton > .menu-right {
   margin-inline-end: -4px;
   appearance: none;
-}
-
-.PanelUI-subView menuseparator,
-.cui-widget-panelview menuseparator {
-  padding: 0 !important;
 }
 
 .PanelUI-remotetabs-clientcontainer > label[itemtype="client"] {
