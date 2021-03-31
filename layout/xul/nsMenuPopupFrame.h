@@ -14,7 +14,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/StaticPrefs_ui.h"
-#include "mozilla/widget/NativeMenu.h"
 #include "nsAtom.h"
 #include "nsGkAtoms.h"
 #include "nsCOMPtr.h"
@@ -168,8 +167,7 @@ class nsXULPopupShownEvent final : public mozilla::Runnable,
 
 class nsMenuPopupFrame final : public nsBoxFrame,
                                public nsMenuParent,
-                               public nsIReflowCallback,
-                               public mozilla::widget::NativeMenu::Observer {
+                               public nsIReflowCallback {
  public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS(nsMenuPopupFrame)
@@ -321,14 +319,8 @@ class nsMenuPopupFrame final : public nsBoxFrame,
                                int32_t aYPos, bool aIsContextMenu);
 
   // Called if this popup should be displayed as an OS-native context menu.
-  // This is achieved with the help of mNativeMenu.
-  // Returns whether the native context menu was created successfully.
-  bool InitializePopupAsNativeContextMenu(nsIContent* aTriggerContent,
+  void InitializePopupAsNativeContextMenu(nsIContent* aTriggerContent,
                                           int32_t aXPos, int32_t aYPos);
-
-  // Must only be called after a call to InitializePopupAsNativeContextMenu
-  // that returned true.
-  void ShowNativeMenu();
 
   // indicate that the popup should be opened
   void ShowPopup(bool aIsContextMenu);
@@ -456,10 +448,6 @@ class nsMenuPopupFrame final : public nsBoxFrame,
   virtual bool ReflowFinished() override;
   virtual void ReflowCallbackCanceled() override;
 
-  // NativeMenu::Observer
-  void OnNativeMenuOpened() override {}
-  void OnNativeMenuClosed() override;
-
  protected:
   // returns the popup's level.
   nsPopupLevel PopupLevel(bool aIsNoAutoHide) const;
@@ -577,11 +565,6 @@ class nsMenuPopupFrame final : public nsBoxFrame,
 
  protected:
   nsString mIncrementalString;  // for incremental typing navigation
-
-  // If this popup is displayed as a native menu, this is non-null while the
-  // native menu is open.
-  // mNativeMenu has a strong reference to the menupopup nsIContent.
-  RefPtr<mozilla::widget::NativeMenu> mNativeMenu;
 
   // the content that the popup is anchored to, if any, which may be in a
   // different document than the popup.
