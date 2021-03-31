@@ -96,7 +96,7 @@ WebConsolePanel.prototype = {
   },
 
   _isReady: false,
-  get isReady() {
+  get isPanelReady() {
     return this._isReady;
   },
 

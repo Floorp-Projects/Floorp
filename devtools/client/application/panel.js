@@ -33,7 +33,7 @@ class ApplicationPanel {
     });
 
     this.emit("ready");
-    this.isReady = true;
+    this.isPanelReady = true;
     return this;
   }
 

@@ -39,7 +39,7 @@ MemoryPanel.prototype = {
       this._onTargetAvailable
     );
 
-    this.isReady = true;
+    this.isPanelReady = true;
     this.emit("ready");
 
     return this;

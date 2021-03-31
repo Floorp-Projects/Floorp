@@ -31,7 +31,7 @@ class StoragePanel {
 
     await this.UI.init();
 
-    this.isReady = true;
+    this.isPanelReady = true;
     this.emit("ready");
 
     return this;

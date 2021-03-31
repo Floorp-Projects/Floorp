@@ -73,7 +73,7 @@ function OptionsPanel(iframeWindow, toolbox, commands) {
   this.toolbox = toolbox;
   this.commands = commands;
   this.telemetry = toolbox.telemetry;
-  this.isReady = false;
+  this.isPanelReady = false;
 
   this.setupToolsList = this.setupToolsList.bind(this);
   this._prefChanged = this._prefChanged.bind(this);
@@ -102,7 +102,7 @@ OptionsPanel.prototype = {
     this.setupThemeList();
     this.setupAdditionalOptions();
     await this.populatePreferences();
-    this.isReady = true;
+    this.isPanelReady = true;
     this.emit("ready");
     return this;
   },
