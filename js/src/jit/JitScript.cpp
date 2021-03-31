@@ -398,6 +398,7 @@ void JitScript::purgeOptimizedStubs(JSScript* script) {
   }
 #ifdef DEBUG
   failedICHash_.reset();
+  hasPurgedStubs_ = true;
 #endif
 }
 
