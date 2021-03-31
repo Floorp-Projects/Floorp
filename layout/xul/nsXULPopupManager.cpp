@@ -825,9 +825,13 @@ void nsXULPopupManager::OnNativeMenuClosed() {
     return;
   }
 
-  // The native menu has closed.
-  // Null out mNativeMenu so that we don't keep it (and mContent) alive
-  // unnecessarily, and unregister ourselves first.
+  RefPtr<nsXULPopupManager> kungFuDeathGrip(this);
+
+  nsCOMPtr<nsIContent> popup = mNativeMenu->Element();
+  nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(popup, true);
+  if (popupFrame) {
+    popupFrame->ClearTriggerContentIncludingDocument();
+  }
   mNativeMenu->RemoveObserver(this);
   mNativeMenu = nullptr;
 }
