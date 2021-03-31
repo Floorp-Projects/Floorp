@@ -798,13 +798,13 @@ void MBasicBlock::flagOperandsOfPrunedBranches(MInstruction* ins) {
   // SplitEdge blocks.  SplitEdge blocks only have a Goto instruction before
   // Range Analysis phase.  In adjustInputs, we are manipulating instructions
   // which have a TypePolicy.  So, as a Goto has no operand and no type
-  // policy, the entry resume point should exists.
+  // policy, the entry resume point should exist.
   MOZ_ASSERT(rp);
 
-  // Flag all operand as being potentially used.
+  // Flag all operands as being potentially used.
   while (rp) {
     for (size_t i = 0, end = rp->numOperands(); i < end; i++) {
-      rp->getOperand(i)->setUseRemovedUnchecked();
+      rp->getOperand(i)->setImplicitlyUsedUnchecked();
     }
     rp = rp->caller();
   }
