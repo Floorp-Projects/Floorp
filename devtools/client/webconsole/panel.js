@@ -81,7 +81,7 @@ WebConsolePanel.prototype = {
       });
 
       this._isReady = true;
-      this.emit("ready");
+      this.emit("devtools-panel-ready");
     } catch (e) {
       const msg = "WebConsolePanel open failed. " + e.error + ": " + e.message;
       dump(msg + "\n");
