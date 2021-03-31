@@ -265,11 +265,14 @@ nsresult mozInlineSpellWordUtil::SetPositionAndEnd(nsINode* aPositionNode,
 nsresult mozInlineSpellWordUtil::EnsureWords() {
   if (mSoftTextValid) return NS_OK;
   BuildSoftText();
-  nsresult rv = BuildRealWords();
-  if (NS_FAILED(rv)) {
-    mRealWords.Clear();
-    return rv;
+
+  mRealWords.Clear();
+  Result<RealWords, nsresult> realWords = BuildRealWords();
+  if (realWords.isErr()) {
+    return realWords.unwrapErr();
   }
+
+  mRealWords = realWords.unwrap();
   mSoftTextValid = true;
   return NS_OK;
 }
@@ -888,19 +891,20 @@ void mozInlineSpellWordUtil::BuildSoftText() {
            NS_ConvertUTF16toUTF8(mSoftText).get()));
 }
 
-nsresult mozInlineSpellWordUtil::BuildRealWords() {
+auto mozInlineSpellWordUtil::BuildRealWords() const
+    -> Result<RealWords, nsresult> {
   // This is pretty simple. We just have to walk mSoftText, tokenizing it
   // into "real words".
   // We do an outer traversal of words delimited by IsDOMWordSeparator, calling
   // SplitDOMWordAndAppendTo on each of those DOM words
   int32_t wordStart = -1;
-  mRealWords.Clear();
+  RealWords realWords;
   for (int32_t i = 0; i < int32_t(mSoftText.Length()); ++i) {
     if (IsDOMWordSeparator(mSoftText.CharAt(i))) {
       if (wordStart >= 0) {
-        nsresult rv = SplitDOMWordAndAppendTo(wordStart, i, mRealWords);
+        nsresult rv = SplitDOMWordAndAppendTo(wordStart, i, realWords);
         if (NS_FAILED(rv)) {
-          return rv;
+          return Err(rv);
         }
         wordStart = -1;
       }
@@ -912,13 +916,13 @@ nsresult mozInlineSpellWordUtil::BuildRealWords() {
   }
   if (wordStart >= 0) {
     nsresult rv =
-        SplitDOMWordAndAppendTo(wordStart, mSoftText.Length(), mRealWords);
+        SplitDOMWordAndAppendTo(wordStart, mSoftText.Length(), realWords);
     if (NS_FAILED(rv)) {
-      return rv;
+      return Err(rv);
     }
   }
 
-  return NS_OK;
+  return realWords;
 }
 
 /*********** DOM/realwords<->mSoftText mapping functions ************/
