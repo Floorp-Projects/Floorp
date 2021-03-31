@@ -281,11 +281,16 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject, Environment* aEnv,
   HRESULT statResult = S_OK;
   HRESULT getHGlobalResult = S_OK;
 
+#if defined(ACCESSIBILITY)
   nsAutoString manifestPath;
-
   auto marshalFn = [&aIID, aObject, mshlFlags, &stream, &streamSize, &hglobal,
                     &createStreamResult, &marshalResult, &statResult,
                     &getHGlobalResult, aEnv, &manifestPath]() -> void {
+#else
+  auto marshalFn = [&aIID, aObject, mshlFlags, &stream, &streamSize, &hglobal,
+                    &createStreamResult, &marshalResult, &statResult,
+                    &getHGlobalResult, aEnv]() -> void {
+#endif  // defined(ACCESSIBILITY)
     if (aEnv) {
       bool pushOk = aEnv->Push();
       MOZ_DIAGNOSTIC_ASSERT(pushOk);
@@ -355,9 +360,11 @@ ProxyStream::ProxyStream(REFIID aIID, IUnknown* aObject, Environment* aEnv,
     nsPrintfCString hrAsStr("0x%08X", marshalResult);
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::CoMarshalInterfaceFailure, hrAsStr);
+#if defined(ACCESSIBILITY)
     CrashReporter::AnnotateCrashReport(
         CrashReporter::Annotation::MarshalActCtxManifestPath,
         NS_ConvertUTF16toUTF8(manifestPath));
+#endif  // defined(ACCESSIBILITY)
   }
 
   if (FAILED(statResult)) {
