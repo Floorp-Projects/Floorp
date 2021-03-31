@@ -390,12 +390,13 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvMakeFrameRemote(
   MOZ_LOG(BrowsingContext::GetLog(), LogLevel::Debug,
           ("RecvMakeFrameRemote ID=%" PRIx64, aFrameContext.ContextId()));
 
-  // Immediately resolve the promise, acknowledging the request.
-  aResolve(true);
-
   if (!aLayersId.IsValid()) {
     return IPC_FAIL(this, "Received an invalid LayersId");
   }
+
+  // Resolve the promise when this function exits, as we'll have fully unloaded
+  // at that point.
+  auto scopeExit = MakeScopeExit([&] { aResolve(true); });
 
   // Get a BrowsingContext if we're not null or discarded. We don't want to
   // early-return before we connect the BrowserBridgeChild, as otherwise we'll
@@ -415,20 +416,20 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvMakeFrameRemote(
     return IPC_OK();
   }
 
+  auto deleteBridge =
+      MakeScopeExit([&] { BrowserBridgeChild::Send__delete__(bridge); });
+
   // Immediately tear down the actor if we don't have a valid FrameContext.
   if (NS_WARN_IF(aFrameContext.IsNullOrDiscarded())) {
-    BrowserBridgeChild::Send__delete__(bridge);
     return IPC_OK();
   }
 
   RefPtr<Element> embedderElt = frameContext->GetEmbedderElement();
   if (NS_WARN_IF(!embedderElt)) {
-    BrowserBridgeChild::Send__delete__(bridge);
     return IPC_OK();
   }
 
   if (NS_WARN_IF(embedderElt->GetOwnerGlobal() != GetWindowGlobal())) {
-    BrowserBridgeChild::Send__delete__(bridge);
     return IPC_OK();
   }
 
@@ -439,9 +440,11 @@ mozilla::ipc::IPCResult WindowGlobalChild::RecvMakeFrameRemote(
   IgnoredErrorResult rv;
   flo->ChangeRemotenessWithBridge(bridge, rv);
   if (NS_WARN_IF(rv.Failed())) {
-    BrowserBridgeChild::Send__delete__(bridge);
     return IPC_OK();
   }
+
+  // Everything succeeded, so don't delete the bridge.
+  deleteBridge.release();
 
   return IPC_OK();
 }
