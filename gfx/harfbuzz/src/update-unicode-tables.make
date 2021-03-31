@@ -4,7 +4,7 @@ all: packtab \
 	hb-ot-shape-complex-arabic-joining-list.hh \
 	hb-ot-shape-complex-arabic-table.hh hb-unicode-emoji-table.hh \
 	hb-ot-shape-complex-indic-table.cc hb-ot-tag-table.hh \
-	hb-ucd-table.hh hb-ot-shape-complex-use-table.cc \
+	hb-ucd-table.hh hb-ot-shape-complex-use-table.hh \
 	hb-ot-shape-complex-vowel-constraints.cc
 
 .PHONY: all clean packtab
@@ -21,7 +21,7 @@ hb-ot-tag-table.hh: gen-tag-table.py languagetags language-subtag-registry
 	./$^ > $@ || ($(RM) $@; false)
 hb-ucd-table.hh: gen-ucd-table.py ucd.nounihan.grouped.zip hb-common.h
 	./$^ > $@ || ($(RM) $@; false)
-hb-ot-shape-complex-use-table.cc: gen-use-table.py IndicSyllabicCategory.txt IndicPositionalCategory.txt UnicodeData.txt ArabicShaping.txt Blocks.txt ms-use/IndicSyllabicCategory-Additional.txt ms-use/IndicPositionalCategory-Additional.txt
+hb-ot-shape-complex-use-table.hh: gen-use-table.py IndicSyllabicCategory.txt IndicPositionalCategory.txt UnicodeData.txt ArabicShaping.txt Blocks.txt ms-use/IndicSyllabicCategory-Additional.txt ms-use/IndicPositionalCategory-Additional.txt
 	./$^ > $@ || ($(RM) $@; false)
 hb-ot-shape-complex-vowel-constraints.cc: gen-vowel-constraints.py ms-use/IndicShapingInvalidCluster.txt Scripts.txt
 	./$^ > $@ || ($(RM) $@; false)

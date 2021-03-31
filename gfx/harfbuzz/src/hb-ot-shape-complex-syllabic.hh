@@ -1,5 +1,5 @@
 /*
- * Copyright © 2018  Google, Inc.
+ * Copyright © 2021  Behdad Esfahbod.
  *
  *  This is part of HarfBuzz, a text shaping library.
  *
@@ -20,24 +20,22 @@
  * FITNESS FOR A PARTICULAR PURPOSE.  THE SOFTWARE PROVIDED HEREUNDER IS
  * ON AN "AS IS" BASIS, AND THE COPYRIGHT HOLDER HAS NO OBLIGATION TO
  * PROVIDE MAINTENANCE, SUPPORT, UPDATES, ENHANCEMENTS, OR MODIFICATIONS.
- *
- * Google Author(s): Behdad Esfahbod
  */
 
-#include "hb-ot-shape-complex-indic.hh"
+#ifndef HB_OT_SHAPE_COMPLEX_SYLLABIC_HH
+#define HB_OT_SHAPE_COMPLEX_SYLLABIC_HH
 
-int
-main ()
-{
-  for (hb_codepoint_t u = 0; u <= 0x10FFFF; u++)
-  {
-    hb_glyph_info_t info;
-    info.codepoint = u;
-    set_indic_properties (info);
-    if (info.indic_category() != INDIC_SYLLABIC_CATEGORY_OTHER ||
-	info.indic_position() != INDIC_MATRA_CATEGORY_NOT_APPLICABLE)
-      printf("U+%04X	%u	%u\n", u,
-	     info.indic_category(),
-	     info.indic_position());
-  }
-}
+#include "hb.hh"
+
+#include "hb-ot-shape-complex.hh"
+
+
+HB_INTERNAL void
+hb_syllabic_insert_dotted_circles (hb_font_t *font,
+				   hb_buffer_t *buffer,
+				   unsigned int broken_syllable_type,
+				   unsigned int dottedcircle_category,
+				   int repha_category = -1);
+
+
+#endif /* HB_OT_SHAPE_COMPLEX_SYLLABIC_HH */

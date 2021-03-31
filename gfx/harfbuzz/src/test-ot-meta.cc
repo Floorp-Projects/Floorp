@@ -25,9 +25,6 @@
 #include "hb.hh"
 #include "hb-ot.h"
 
-#include <stdlib.h>
-#include <stdio.h>
-
 #ifdef HB_NO_OPEN
 #define hb_blob_create_from_file(x)  hb_blob_get_empty ()
 #endif

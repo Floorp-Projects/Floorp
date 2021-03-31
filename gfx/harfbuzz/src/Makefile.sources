@@ -118,13 +118,13 @@ HB_BASE_sources = \
 	hb-ot-shape-complex-indic.hh \
 	hb-ot-shape-complex-khmer.cc \
 	hb-ot-shape-complex-khmer.hh \
-	hb-ot-shape-complex-machine-index.hh \
 	hb-ot-shape-complex-myanmar.cc \
 	hb-ot-shape-complex-myanmar.hh \
+	hb-ot-shape-complex-syllabic.cc \
+	hb-ot-shape-complex-syllabic.hh \
 	hb-ot-shape-complex-thai.cc \
-	hb-ot-shape-complex-use-table.cc \
+	hb-ot-shape-complex-use-table.hh \
 	hb-ot-shape-complex-use.cc \
-	hb-ot-shape-complex-use.hh \
 	hb-ot-shape-complex-vowel-constraints.cc \
 	hb-ot-shape-complex-vowel-constraints.hh \
 	hb-ot-shape-complex.hh \
@@ -266,9 +266,7 @@ HB_SUBSET_sources = \
 	hb-subset-input.hh \
 	hb-subset-plan.cc \
 	hb-subset-plan.hh \
-	hb-subset-plan.hh \
 	hb-subset.cc \
-	hb-subset.hh \
 	hb-subset.hh \
 	$(NULL)
 

@@ -29,40 +29,47 @@
 
 #include "hb.hh"
 
+enum myanmar_syllable_type_t {
+  myanmar_consonant_syllable,
+  myanmar_punctuation_cluster,
+  myanmar_broken_cluster,
+  myanmar_non_myanmar_cluster,
+};
+
 %%{
   machine myanmar_syllable_machine;
   alphtype unsigned char;
+  write exports;
   write data;
 }%%
 
 %%{
 
-# Same order as enum myanmar_category_t.  Not sure how to avoid duplication.
-A    = 10;
-As   = 18;
-C    = 1;
-D    = 32;
-D0   = 20;
-DB   = 3;
-GB   = 11;
-H    = 4;
-IV   = 2;
-MH   = 21;
-MR   = 22;
-MW   = 23;
-MY   = 24;
-PT   = 25;
-V    = 8;
-VAbv = 26;
-VBlw = 27;
-VPre = 28;
-VPst = 29;
-VS   = 30;
-ZWJ  = 6;
-ZWNJ = 5;
-Ra   = 16;
-P    = 31;
-CS   = 19;
+export A    = 10;
+export As   = 18;
+export C    = 1;
+export D    = 32;
+export D0   = 20;
+export DB   = 3;
+export GB   = 11;
+export H    = 4;
+export IV   = 2;
+export MH   = 21;
+export MR   = 22;
+export MW   = 23;
+export MY   = 24;
+export PT   = 25;
+export V    = 8;
+export VAbv = 26;
+export VBlw = 27;
+export VPre = 28;
+export VPst = 29;
+export VS   = 30;
+export ZWJ  = 6;
+export ZWNJ = 5;
+export Ra   = 16;
+export P    = 31;
+export CS   = 19;
 
 j = ZWJ|ZWNJ;			# Joiners
 k = (Ra As H);			# Kinzi
@@ -83,11 +90,11 @@ broken_cluster =	k? VS? syllable_tail;
 other =			any;
 
 main := |*
-	consonant_syllable	=> { found_syllable (consonant_syllable); };
-	j			=> { found_syllable (non_myanmar_cluster); };
-	punctuation_cluster	=> { found_syllable (punctuation_cluster); };
-	broken_cluster		=> { found_syllable (broken_cluster); };
-	other			=> { found_syllable (non_myanmar_cluster); };
+	consonant_syllable	=> { found_syllable (myanmar_consonant_syllable); };
+	j			=> { found_syllable (myanmar_non_myanmar_cluster); };
+	punctuation_cluster	=> { found_syllable (myanmar_punctuation_cluster); };
+	broken_cluster		=> { found_syllable (myanmar_broken_cluster); };
+	other			=> { found_syllable (myanmar_non_myanmar_cluster); };
 *|;
 
 
@@ -97,7 +104,7 @@ main := |*
   HB_STMT_START { \
     if (0) fprintf (stderr, "syllable %d..%d %s\n", ts, te, #syllable_type); \
     for (unsigned int i = ts; i < te; i++) \
-      info[i].syllable() = (syllable_serial << 4) | myanmar_##syllable_type; \
+      info[i].syllable() = (syllable_serial << 4) | syllable_type; \
     syllable_serial++; \
     if (unlikely (syllable_serial == 16)) syllable_serial = 1; \
   } HB_STMT_END
