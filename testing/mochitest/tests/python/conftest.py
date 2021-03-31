@@ -38,7 +38,12 @@ def runtests(setup_test_harness, binary, parser, request):
     if "flavor" in request.fixturenames:
         flavor = request.getfixturevalue("flavor")
 
+    runFailures = ""
+    if "runFailures" in request.fixturenames:
+        runFailures = request.getfixturevalue("runFailures")
+
     setup_test_harness(*setup_args, flavor=flavor)
+
     runtests = pytest.importorskip("runtests")
 
     mochitest_root = runtests.SCRIPT_DIR
@@ -58,10 +63,15 @@ def runtests(setup_test_harness, binary, parser, request):
         {
             "app": binary,
             "flavor": flavor,
+            "runFailures": runFailures,
             "keep_open": False,
             "log_raw": [buf],
         }
     )
+
+    if runFailures == "selftest":
+        options["crashAsPass"] = True
+        options["timeoutAsPass"] = True
 
     if not os.path.isdir(runtests.build_obj.bindir):
         package_root = os.path.dirname(mochitest_root)
@@ -85,6 +95,7 @@ def runtests(setup_test_harness, binary, parser, request):
             # add a dummy manifest file because mochitest expects it
             "manifest": os.path.join(test_root, manifest_name),
             "manifest_relpath": manifest_name,
+            "skip-if": runFailures,
         }
 
     def inner(*tests, **opts):

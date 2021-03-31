@@ -32,108 +32,172 @@ def test_name(request):
     return inner
 
 
+@pytest.mark.parametrize("runFailures", ["selftest", ""])
 @pytest.mark.parametrize("flavor", ["plain", "browser-chrome"])
-def test_output_pass(flavor, runtests, test_name):
-    status, lines = runtests(test_name("pass"))
-    assert status == 0
+def test_output_pass(flavor, runFailures, runtests, test_name):
+    extra_opts = {}
+    results = {
+        "status": 1 if runFailures else 0,
+        "tbpl_status": TBPL_WARNING if runFailures else TBPL_SUCCESS,
+        "log_level": (INFO, WARNING),
+        "lines": 2 if runFailures else 1,
+        "line_status": "PASS",
+    }
+    if runFailures:
+        extra_opts["runFailures"] = runFailures
+        extra_opts["crashAsPass"] = True
+        extra_opts["timeoutAsPass"] = True
+
+    status, lines = runtests(test_name("pass"), **extra_opts)
+    assert status == results["status"]
 
     tbpl_status, log_level, summary = get_mozharness_status(lines, status)
-    assert tbpl_status == TBPL_SUCCESS
-    assert log_level in (INFO, WARNING)
+    assert tbpl_status == results["tbpl_status"]
+    assert log_level in results["log_level"]
 
     lines = filter_action("test_status", lines)
-    assert len(lines) == 1
-    assert lines[0]["status"] == "PASS"
+    assert len(lines) == results["lines"]
+    assert lines[0]["status"] == results["line_status"]
 
 
+@pytest.mark.parametrize("runFailures", ["selftest", ""])
 @pytest.mark.parametrize("flavor", ["plain", "browser-chrome"])
-def test_output_fail(flavor, runtests, test_name):
-    status, lines = runtests(test_name("fail"))
-    assert status == 1
+def test_output_fail(flavor, runFailures, runtests, test_name):
+    extra_opts = {}
+    results = {
+        "status": 0 if runFailures else 1,
+        "tbpl_status": TBPL_SUCCESS if runFailures else TBPL_WARNING,
+        "log_level": (INFO, WARNING),
+        "lines": 1,
+        "line_status": "PASS" if runFailures else "FAIL",
+    }
+    if runFailures:
+        extra_opts["runFailures"] = runFailures
+        extra_opts["crashAsPass"] = True
+        extra_opts["timeoutAsPass"] = True
+
+    status, lines = runtests(test_name("fail"), **extra_opts)
+    assert status == results["status"]
 
     tbpl_status, log_level, summary = get_mozharness_status(lines, status)
-    assert tbpl_status == TBPL_WARNING
-    assert log_level == WARNING
+    assert tbpl_status == results["tbpl_status"]
+    assert log_level in results["log_level"]
 
     lines = filter_action("test_status", lines)
-
-    assert len(lines) == 1
-    assert lines[0]["status"] == "FAIL"
+    assert len(lines) == results["lines"]
+    assert lines[0]["status"] == results["line_status"]
 
 
 @pytest.mark.skip_mozinfo("!crashreporter")
+@pytest.mark.parametrize("runFailures", ["selftest", ""])
 @pytest.mark.parametrize("flavor", ["plain", "browser-chrome"])
-def test_output_crash(flavor, runtests, test_name):
+def test_output_crash(flavor, runFailures, runtests, test_name):
+    extra_opts = {}
+    results = {
+        "status": 0 if runFailures else 1,
+        "tbpl_status": TBPL_FAILURE,
+        "log_level": ERROR,
+        "lines": 1 if runFailures else 0,
+    }
+    if runFailures:
+        extra_opts["runFailures"] = runFailures
+        extra_opts["crashAsPass"] = True
+        extra_opts["timeoutAsPass"] = True
+        # bug 1443327 - we do not set MOZ_CRASHREPORTER_SHUTDOWN for browser-chrome
+        # the error regex's don't pick this up as a failure
+        if flavor == "browser-chrome":
+            results["tbpl_status"] = TBPL_SUCCESS
+            results["log_level"] = (INFO, WARNING)
+
     status, lines = runtests(
-        test_name("crash"), environment=["MOZ_CRASHREPORTER_SHUTDOWN=1"]
+        test_name("crash"), environment=["MOZ_CRASHREPORTER_SHUTDOWN=1"], **extra_opts
     )
-    assert status == 1
+    assert status == results["status"]
 
     tbpl_status, log_level, summary = get_mozharness_status(lines, status)
-    assert tbpl_status == TBPL_FAILURE
-    assert log_level == ERROR
+    assert tbpl_status == results["tbpl_status"]
+    assert log_level in results["log_level"]
 
-    crash = filter_action("crash", lines)
-    assert len(crash) == 1
-    assert crash[0]["action"] == "crash"
-    assert crash[0]["signature"]
-    assert crash[0]["minidump_path"]
+    if not runFailures:
+        crash = filter_action("crash", lines)
+        assert len(crash) == 1
+        assert crash[0]["action"] == "crash"
+        assert crash[0]["signature"]
+        assert crash[0]["minidump_path"]
 
     lines = filter_action("test_end", lines)
-    assert len(lines) == 0
+    assert len(lines) == results["lines"]
 
 
 @pytest.mark.skip_mozinfo("!asan")
+@pytest.mark.parametrize("runFailures", [""])
 @pytest.mark.parametrize("flavor", ["plain"])
-def test_output_asan(flavor, runtests, test_name):
+def test_output_asan(flavor, runFailures, runtests, test_name):
+    extra_opts = {}
+    results = {"status": 1, "tbpl_status": TBPL_FAILURE, "log_level": ERROR, "lines": 0}
+
     status, lines = runtests(
-        test_name("crash"), environment=["MOZ_CRASHREPORTER_SHUTDOWN=1"]
+        test_name("crash"), environment=["MOZ_CRASHREPORTER_SHUTDOWN=1"], **extra_opts
     )
-    assert status == 1
+    assert status == results["status"]
 
     tbpl_status, log_level, summary = get_mozharness_status(lines, status)
-    assert tbpl_status == TBPL_FAILURE
-    assert log_level == ERROR
+    assert tbpl_status == results["tbpl_status"]
+    assert log_level == results["log_level"]
 
     crash = filter_action("crash", lines)
-    assert len(crash) == 0
+    assert len(crash) == results["lines"]
 
     process_output = filter_action("process_output", lines)
     assert any("ERROR: AddressSanitizer" in l["data"] for l in process_output)
 
 
 @pytest.mark.skip_mozinfo("!debug")
+@pytest.mark.parametrize("runFailures", [""])
 @pytest.mark.parametrize("flavor", ["plain"])
-def test_output_assertion(flavor, runtests, test_name):
-    status, lines = runtests(test_name("assertion"))
+def test_output_assertion(flavor, runFailures, runtests, test_name):
+    extra_opts = {}
+    results = {
+        "status": 0,
+        "tbpl_status": TBPL_WARNING,
+        "log_level": WARNING,
+        "lines": 1,
+        "assertions": 1,
+    }
+
+    status, lines = runtests(test_name("assertion"), **extra_opts)
     # TODO: mochitest should return non-zero here
-    assert status == 0
+    assert status == results["status"]
 
     tbpl_status, log_level, summary = get_mozharness_status(lines, status)
-    assert tbpl_status == TBPL_WARNING
-    assert log_level == WARNING
+    assert tbpl_status == results["tbpl_status"]
+    assert log_level == results["log_level"]
 
     test_end = filter_action("test_end", lines)
-    assert len(test_end) == 1
+    assert len(test_end) == results["lines"]
     # TODO: this should be ASSERT, but moving the assertion check before
     # the test_end action caused a bunch of failures.
     assert test_end[0]["status"] == "OK"
 
     assertions = filter_action("assertion_count", lines)
-    assert len(assertions) == 1
-    assert assertions[0]["count"] == 1
+    assert len(assertions) == results["assertions"]
+    assert assertions[0]["count"] == results["assertions"]
 
 
 @pytest.mark.skip_mozinfo("!debug")
+@pytest.mark.parametrize("runFailures", [""])
 @pytest.mark.parametrize("flavor", ["plain"])
-def test_output_leak(flavor, runtests, test_name):
-    status, lines = runtests(test_name("leak"))
+def test_output_leak(flavor, runFailures, runtests, test_name):
+    extra_opts = {}
+    results = {"status": 0, "tbpl_status": TBPL_WARNING, "log_level": WARNING}
+
+    status, lines = runtests(test_name("leak"), **extra_opts)
     # TODO: mochitest should return non-zero here
-    assert status == 0
+    assert status == results["status"]
 
     tbpl_status, log_level, summary = get_mozharness_status(lines, status)
-    assert tbpl_status == TBPL_WARNING
-    assert log_level == WARNING
+    assert tbpl_status == results["tbpl_status"]
+    assert log_level == results["log_level"]
 
     leak_totals = filter_action("mozleak_total", lines)
     found_leaks = False

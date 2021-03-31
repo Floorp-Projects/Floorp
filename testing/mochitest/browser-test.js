@@ -1259,7 +1259,10 @@ function testResult({ name, pass, todo, ex, stack, allowFailure }) {
   if (allowFailure && !pass) {
     this.allowedFailure = true;
     this.pass = true;
-    this.todo = true;
+    this.todo = false;
+  } else if (allowFailure && pass) {
+    this.pass = true;
+    this.todo = false;
   } else {
     this.pass = !!pass;
     this.todo = todo;
