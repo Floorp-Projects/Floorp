@@ -17,6 +17,10 @@
       }
     },
 
+    "AllowedDomainsForApps": {
+      "type": "string"
+    },
+
     "AppAutoUpdate": {
       "type": "boolean"
     },
