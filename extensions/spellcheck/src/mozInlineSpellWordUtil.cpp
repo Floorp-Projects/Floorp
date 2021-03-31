@@ -264,7 +264,7 @@ nsresult mozInlineSpellWordUtil::SetPositionAndEnd(nsINode* aPositionNode,
 
 nsresult mozInlineSpellWordUtil::EnsureWords() {
   if (mSoftTextValid) return NS_OK;
-  BuildSoftText();
+  AdjustSoftBeginAndBuildSoftText();
 
   mRealWords.Clear();
   Result<RealWords, nsresult> realWords = BuildRealWords();
@@ -764,7 +764,7 @@ void mozInlineSpellWordUtil::NormalizeWord(nsAString& aWord) {
   aWord = result;
 }
 
-void mozInlineSpellWordUtil::BuildSoftText() {
+void mozInlineSpellWordUtil::AdjustSoftBeginAndBuildSoftText() {
   MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug, ("%s", __FUNCTION__));
 
   // First we have to work backwards from mSoftBegin to find a text node
