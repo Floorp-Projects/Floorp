@@ -289,6 +289,10 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   // bailouts, this is a hash of the ICScripts used in that compilation.
   // When recompiling, we assert that the hash has changed.
   mozilla::Maybe<mozilla::HashNumber> failedICHash_;
+
+  // To avoid pathological cases, we skip the check if we have purged
+  // stubs due to GC pressure.
+  bool hasPurgedStubs_ = false;
 #endif
 
   ICScript icScript_;
@@ -494,7 +498,9 @@ class alignas(uintptr_t) JitScript final : public TrailingArray {
   mozilla::HashNumber getFailedICHash() { return failedICHash_.extract(); }
   void setFailedICHash(mozilla::HashNumber hash) {
     MOZ_ASSERT(failedICHash_.isNothing());
-    failedICHash_.emplace(hash);
+    if (!hasPurgedStubs_) {
+      failedICHash_.emplace(hash);
+    }
   }
 #endif
 };
