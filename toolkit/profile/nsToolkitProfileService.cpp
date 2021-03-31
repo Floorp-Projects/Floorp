@@ -50,6 +50,10 @@
 #include "mozilla/Telemetry.h"
 #include "nsProxyRelease.h"
 
+#if defined(MOZ_WIDGET_GTK)
+#  include "mozilla/WidgetUtilsGtk.h"
+#endif
+
 using namespace mozilla;
 
 #define DEV_EDITION_NAME "dev-edition-default"
@@ -1833,14 +1837,19 @@ nsToolkitProfileService::CreateProfile(nsIFile* aRootDir,
  * get essentially the same benefits as dedicated profiles provides.
  */
 bool nsToolkitProfileService::IsSnapEnvironment() {
-  // Copied from IsRunningAsASnap() in
-  // browser/components/shell/nsGNOMEShellService.cpp
-  // TODO: factor out this common code in one place.
-  const char* snap_name = PR_GetEnv("SNAP_NAME");
-  if (snap_name == nullptr) {
+#if defined(MOZ_WIDGET_GTK)
+  const char* snapName = mozilla::widget::WidgetUtilsGTK::GetSnapInstanceName();
+
+  // return early if not set.
+  if (snapName == nullptr) {
     return false;
   }
-  return (strcmp(snap_name, "firefox") == 0);
+
+  // snapName as defined on https://snapcraft.io/firefox
+  return (strcmp(snapName, "firefox") == 0);
+#endif
+
+  return false;
 }
 
 /**
