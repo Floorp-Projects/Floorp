@@ -159,6 +159,7 @@ def release_promotion_action(parameters, graph_config, input, task_group_id, tas
     else:
         raise ValueError("Unsupported version type: {}".format(version.version_type))
     parameters['release_type'] = release_type
+    parameters['tasks_for'] = 'action'
 
     parameters['pull_request_number'] = None
 
