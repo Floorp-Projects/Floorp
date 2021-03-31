@@ -3745,34 +3745,16 @@ void nsFrameLoader::SetWillChangeProcess() {
   mWillChangeProcess = true;
 
   if (IsRemoteFrame()) {
-    // OOP Browser - Go directly over Browser Parent
     if (auto* browserParent = GetBrowserParent()) {
-      // We're going to be synchronously changing the owner of the
-      // BrowsingContext in the parent process while the current owner may still
-      // have in-flight requests which only the owner is allowed to make. Those
-      // requests will typically trigger assertions if they come from a child
-      // other than the owner.
-      //
-      // To work around this, we record the previous owner at the start of the
-      // process switch, and clear it when we've received a reply from the
-      // child, treating ownership mismatches as warnings in the interim.
-      //
-      // In the future, this sort of issue will probably need to be handled
-      // using ownership epochs, which should be more both flexible and
-      // resilient. For the moment, though, the surrounding process switch code
-      // is enough in flux that we're better off with a workable interim
-      // solution.
-      MOZ_DIAGNOSTIC_ASSERT(mPendingBrowsingContext == GetBrowsingContext());
-      RefPtr<CanonicalBrowsingContext> bc(mPendingBrowsingContext->Canonical());
-      uint64_t targetProcessId = browserParent->Manager()->ChildID();
-      bc->SetInFlightProcessId(targetProcessId);
-      auto callback = [bc, targetProcessId](auto) {
-        bc->ClearInFlightProcessId(targetProcessId);
-      };
-      browserParent->SendWillChangeProcess(callback, callback);
-    }
-    // OOP IFrame - Through Browser Bridge Parent, set on browser child
-    else if (auto* browserBridgeChild = GetBrowserBridgeChild()) {
+      if (auto* bc = CanonicalBrowsingContext::Cast(mPendingBrowsingContext);
+          bc && bc->EverAttached()) {
+        bc->StartUnloadingHost(browserParent->Manager()->ChildID());
+        bc->SetCurrentBrowserParent(nullptr);
+      }
+      // OOP Browser - Go directly over Browser Parent
+      Unused << browserParent->SendWillChangeProcess();
+    } else if (auto* browserBridgeChild = GetBrowserBridgeChild()) {
+      // OOP IFrame - Through Browser Bridge Parent, set on browser child
       Unused << browserBridgeChild->SendWillChangeProcess();
     }
     return;
