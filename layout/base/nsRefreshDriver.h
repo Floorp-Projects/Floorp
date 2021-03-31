@@ -427,7 +427,9 @@ class nsRefreshDriver final : public mozilla::layers::TransactionIdAllocator,
     nsARefreshObserver* mObserver;
     const char* mDescription;
     mozilla::TimeStamp mRegisterTime;
-    mozilla::Maybe<uint64_t> mInnerWindowId;
+#ifdef MOZ_GECKO_PROFILER
+    mozilla::MarkerInnerWindowId mInnerWindowId;
+#endif
     mozilla::UniquePtr<mozilla::ProfileChunkedBuffer> mCause;
     mozilla::FlushType mFlushType;
 

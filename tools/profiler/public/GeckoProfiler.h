@@ -120,7 +120,6 @@ enum CacheDisposition : uint8_t;
 }  // namespace net
 }  // namespace mozilla
 class nsIURI;
-class nsIDocShell;
 
 namespace mozilla {
 class MallocAllocPolicy;
@@ -500,24 +499,6 @@ enum TracingKind {
   TRACING_INTERVAL_START,
   TRACING_INTERVAL_END,
 };
-
-// This is a helper function to get the Inner Window ID from DocShell but it's
-// not a recommended method to get it and it's not encouraged to use this
-// function. If there is a computed inner window ID, `window`, or `Document`
-// available in the call site, please use them. Use this function as a last
-// resort.
-mozilla::Maybe<uint64_t> profiler_get_inner_window_id_from_docshell(
-    nsIDocShell* aDocshell);
-
-inline mozilla::MarkerInnerWindowId MarkerInnerWindowIdFromDocShell(
-    nsIDocShell* aDocshell) {
-  mozilla::Maybe<uint64_t> id =
-      profiler_get_inner_window_id_from_docshell(aDocshell);
-  if (!id) {
-    return mozilla::MarkerInnerWindowId::NoId();
-  }
-  return mozilla::MarkerInnerWindowId(*id);
-}
 
 //---------------------------------------------------------------------------
 // Output profiles
