@@ -877,7 +877,6 @@ export default class LoginItem extends HTMLElement {
       window.AboutLoginsUtils.passwordRevealVisible === false
     ) {
       this._revealCheckbox.hidden = true;
-      return;
     }
 
     let { checked } = this._revealCheckbox;
