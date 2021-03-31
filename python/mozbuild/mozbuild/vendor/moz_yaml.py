@@ -349,7 +349,12 @@ def _schema_1():
                 Required("license"): Msg(License(), msg="Unsupported License"),
                 "license-file": All(str, Length(min=1)),
                 Required("release"): All(str, Length(min=1)),
-                Required("revision"): Match(r"^[a-fA-F0-9]{12,40}$"),
+                # The following regex defines a valid git reference
+                # The first group [^ ~^:?*[\]] matches 0 or more times anything
+                # that isn't a Space, ~, ^, :, ?, *, or ]
+                # The second group [^ ~^:?*[\]\.]+ matches 1 or more times
+                # anything that isn't a Space, ~, ^, :, ?, *, [, ], or .
+                Required("revision"): Match(r"^[^ ~^:?*[\]]*[^ ~^:?*[\]\.]+$"),
             },
             "updatebot": {
                 Required("maintainer-phab"): All(str, Length(min=1)),
