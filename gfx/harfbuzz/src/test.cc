@@ -26,10 +26,6 @@
 
 #include "hb.hh"
 
-#include "hb.h"
-
-#include <stdio.h>
-
 #ifdef HAVE_FREETYPE
 #include "hb-ft.h"
 #endif

@@ -829,6 +829,7 @@ disambiguation = {
 	'QWH': 'qwh',
 	'SIG': 'stv',
 	'SRB': 'sr',
+	'SXT': 'xnj',
 	'ZHH': 'zh-HK',
 	'ZHS': 'zh-Hans',
 	'ZHT': 'zh-Hant',

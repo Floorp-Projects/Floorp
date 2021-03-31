@@ -40,8 +40,7 @@ EXTRA_DIST = \
 	perf/texts/en-words.txt \
 	perf/texts/fa-monologue.txt \
 	perf/texts/fa-thelittleprince.txt \
-	meson-cc-tests/intel-atomic-primitives-test.c \
-	meson-cc-tests/solaris-atomic-operations.c \
+	mingw-configure.sh \
 	$(NULL)
 
 MAINTAINERCLEANFILES = \
