@@ -187,7 +187,6 @@ class DefaultBrowserToolbarMenuControllerTest {
     @Test
     fun `WHEN open in Fenix menu item is pressed THEN menu item is handled correctly`() = runBlockingTest {
         if (!FeatureFlags.toolbarMenuFeature) {
-
             val customTab = createCustomTab("https://mozilla.org")
             browserStore.dispatch(CustomTabListAction.AddCustomTabAction(customTab)).joinBlocking()
             val controller = createController(
@@ -207,33 +206,7 @@ class DefaultBrowserToolbarMenuControllerTest {
             verify { activity.finishAndRemoveTask() }
         }
     }
-
-    @Test
-    fun `WHEN quit menu item is pressed THEN menu item is handled correctly`() = runBlockingTest {
-        if (!FeatureFlags.toolbarMenuFeature) {
-            val item = ToolbarMenu.Item.Quit
-            val testScope = this
-
-            val controller = createController(scope = this, store = browserStore)
-
-            controller.handleToolbarItemInteraction(item)
-
-            verify { deleteAndQuit(activity, testScope, null) }
-        }
-    }
-
-    @Test
-    fun handleToolbarOpenInAppPress() = runBlockingTest {
-        if (!FeatureFlags.toolbarMenuFeature) {
-            val item = ToolbarMenu.Item.OpenInApp
-
-            val controller = createController(scope = this, store = browserStore)
-
-            controller.handleToolbarItemInteraction(item)
-
-            verify { settings.openInAppOpened = true }
-        }
-    }
+    // todo === End ===
 
     @Test
     fun `WHEN reader mode menu item is pressed THEN handle appearance change`() = runBlockingTest {
@@ -246,7 +219,18 @@ class DefaultBrowserToolbarMenuControllerTest {
         verify { readerModeController.showControls() }
         verify { metrics.track(Event.ReaderModeAppearanceOpened) }
     }
-    // todo === End ===
+
+    @Test
+    fun `WHEN quit menu item is pressed THEN menu item is handled correctly`() = runBlockingTest {
+        val item = ToolbarMenu.Item.Quit
+        val testScope = this
+
+        val controller = createController(scope = this, store = browserStore)
+
+        controller.handleToolbarItemInteraction(item)
+
+        verify { deleteAndQuit(activity, testScope, null) }
+    }
 
     @Test
     fun `WHEN backwards nav menu item is pressed THEN the session navigates back with active session`() = runBlockingTest {

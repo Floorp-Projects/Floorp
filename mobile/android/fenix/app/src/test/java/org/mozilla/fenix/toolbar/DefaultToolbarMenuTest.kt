@@ -6,38 +6,34 @@ package org.mozilla.fenix.toolbar
 
 import android.content.Context
 import android.net.Uri
-import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LifecycleRegistry
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.spyk
 import io.mockk.unmockkStatic
-import io.mockk.verify
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import mozilla.components.browser.state.action.ContentAction
-import mozilla.components.browser.state.action.TabListAction
-import mozilla.components.browser.state.selector.findTab
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.storage.BookmarksStorage
-import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mozilla.fenix.FeatureFlags
 import org.mozilla.fenix.components.toolbar.DefaultToolbarMenu
+import org.mozilla.fenix.ext.settings
 
 @ExperimentalCoroutinesApi
 class DefaultToolbarMenuTest {
 
     private lateinit var store: BrowserStore
-    private lateinit var lifecycleOwner: MockedLifecycleOwner
+    private lateinit var lifecycleOwner: LifecycleOwner
     private lateinit var toolbarMenu: DefaultToolbarMenu
     private lateinit var context: Context
     private lateinit var bookmarksStorage: BookmarksStorage
@@ -52,8 +48,11 @@ class DefaultToolbarMenuTest {
         mockkStatic(Uri::class)
         every { Uri.parse(any()) } returns mockk(relaxed = true)
 
+        lifecycleOwner = mockk(relaxed = true)
         context = mockk(relaxed = true)
+
         every { context.theme } returns mockk(relaxed = true)
+
         bookmarksStorage = mockk(relaxed = true)
         store = BrowserStore(
             BrowserState(
@@ -63,20 +62,6 @@ class DefaultToolbarMenuTest {
                 ), selectedTabId = "1"
             )
         )
-        lifecycleOwner = MockedLifecycleOwner(Lifecycle.State.STARTED)
-
-        toolbarMenu = spyk(DefaultToolbarMenu(
-            context = context,
-            store = store,
-            hasAccountProblem = false,
-            shouldReverseItems = false,
-            onItemTapped = { },
-            lifecycleOwner = lifecycleOwner,
-            bookmarksStorage = bookmarksStorage,
-            isPinningSupported = false
-        ))
-
-        every { toolbarMenu.updateCurrentUrlIsBookmarked(any()) } returns Unit
     }
 
     @After
@@ -84,32 +69,84 @@ class DefaultToolbarMenuTest {
         unmockkStatic(Uri::class)
     }
 
-    @Test
-    fun `WHEN url changes THEN bookmarked state is updated`() {
-        toolbarMenu.registerForIsBookmarkedUpdates()
+    private fun createMenu() {
+        toolbarMenu = spyk(DefaultToolbarMenu(
+            context = context,
+            store = store,
+            hasAccountProblem = false,
+            onItemTapped = { },
+            lifecycleOwner = lifecycleOwner,
+            bookmarksStorage = bookmarksStorage,
+            isPinningSupported = false
+        ))
 
-        val newUrl = "https://mozilla.org"
-
-        store.dispatch(ContentAction.UpdateUrlAction("1", newUrl)).joinBlocking()
-        verify(exactly = 1) { toolbarMenu.updateCurrentUrlIsBookmarked(newUrl) }
+        every { toolbarMenu.updateCurrentUrlIsBookmarked(any()) } returns mockk()
+        every { toolbarMenu.shouldShowOpenInApp() } returns mockk()
     }
 
     @Test
-    fun `WHEN selected tab changes THEN bookmarked state is updated`() {
-        toolbarMenu.registerForIsBookmarkedUpdates()
+    fun `WHEN the bottom toolbar is set THEN the first item in the list is not the navigation`() {
+        if (FeatureFlags.toolbarMenuFeature) {
+            every { context.settings().shouldUseBottomToolbar } returns true
+            createMenu()
 
-        val newSelectedTab = store.state.findTab("2")
-        assertNotNull(newSelectedTab)
+            val menuItems = toolbarMenu.newCoreMenuItems
+            assertNotNull(menuItems)
 
-        store.dispatch(TabListAction.SelectTabAction(newSelectedTab!!.id)).joinBlocking()
-        verify(exactly = 1) { toolbarMenu.updateCurrentUrlIsBookmarked(newSelectedTab.content.url) }
-    }
+            val firstItem = menuItems[0]
+            val newTabItem = toolbarMenu.newTabItem
 
-    internal class MockedLifecycleOwner(initialState: Lifecycle.State) : LifecycleOwner {
-        val lifecycleRegistry = LifecycleRegistry(this).apply {
-            currentState = initialState
+            assertEquals(newTabItem, firstItem)
         }
+    }
 
-        override fun getLifecycle(): Lifecycle = lifecycleRegistry
+    @Test
+    fun `WHEN the top toolbar is set THEN the first item in the list is the navigation`() {
+        if (FeatureFlags.toolbarMenuFeature) {
+            every { context.settings().shouldUseBottomToolbar } returns false
+            createMenu()
+
+            val menuItems = toolbarMenu.newCoreMenuItems
+            assertNotNull(menuItems)
+
+            val firstItem = menuItems[0]
+            val navToolbar = toolbarMenu.menuToolbar
+
+            assertEquals(navToolbar, firstItem)
+        }
+    }
+
+    @Test
+    fun `WHEN the bottom toolbar is set THEN the nav menu should be the last item`() {
+        if (FeatureFlags.toolbarMenuFeature) {
+            every { context.settings().shouldUseBottomToolbar } returns true
+
+            createMenu()
+
+            val menuItems = toolbarMenu.newCoreMenuItems
+            assertNotNull(menuItems)
+
+            val lastItem = menuItems[menuItems.size - 1]
+            val navToolbar = toolbarMenu.menuToolbar
+
+            assertEquals(navToolbar, lastItem)
+        }
+    }
+
+    @Test
+    fun `WHEN the top toolbar is set THEN settings should be the last item`() {
+        if (FeatureFlags.toolbarMenuFeature) {
+            every { context.settings().shouldUseBottomToolbar } returns false
+
+            createMenu()
+
+            val menuItems = toolbarMenu.newCoreMenuItems
+            assertNotNull(menuItems)
+
+            val lastItem = menuItems[menuItems.size - 1]
+            val settingsItem = toolbarMenu.settingsItem
+
+            assertEquals(settingsItem, lastItem)
+        }
     }
 }

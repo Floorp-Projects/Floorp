@@ -66,8 +66,8 @@ class NoNetworkAccessStartupTests {
         }
     }
 
-    @Ignore("Test failures: https://github.com/mozilla-mobile/fenix/issues/18720")
     @Test
+    @Ignore("To be fixed in https://github.com/mozilla-mobile/fenix/issues/17979")
     fun testPageReloadAfterNetworkInterrupted() {
         val url = "example.com"
 
@@ -80,7 +80,11 @@ class NoNetworkAccessStartupTests {
 
         browserScreen {
         }.openThreeDotMenu {
-        }.refreshPage {}
+            verifyRefreshButton()
+        }
+
+        // we verify that the share button exists, but this fails when trying to click
+//            .refreshPage {}
     }
 
     @Test

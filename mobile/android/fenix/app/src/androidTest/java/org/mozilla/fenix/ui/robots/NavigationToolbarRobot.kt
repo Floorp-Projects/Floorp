@@ -109,8 +109,7 @@ class NavigationToolbarRobot {
                         withResourceName("onboarding_message"), // Req ETP dialog
                         withResourceName("download_button")
                     )
-                )
-                    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+                ).check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
             }
 
             BrowserRobot().interact()

@@ -128,6 +128,18 @@ class DefaultBrowserToolbarMenuController(
                     activity.finishAndRemoveTask()
                 }
             }
+            // todo === End ===
+            is ToolbarMenu.Item.OpenInApp -> {
+                settings.openInAppOpened = true
+
+                val appLinksUseCases = activity.components.useCases.appLinksUseCases
+                val getRedirect = appLinksUseCases.appLinkRedirect
+                currentSession?.let {
+                    val redirect = getRedirect.invoke(it.content.url)
+                    redirect.appIntent?.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                    appLinksUseCases.openAppLink.invoke(redirect.appIntent)
+                }
+            }
             is ToolbarMenu.Item.Quit -> {
                 // We need to show the snackbar while the browsing data is deleting (if "Delete
                 // browsing data on quit" is activated). After the deletion is over, the snackbar
@@ -147,19 +159,6 @@ class DefaultBrowserToolbarMenuController(
                 readerModeController.showControls()
                 metrics.track(Event.ReaderModeAppearanceOpened)
             }
-            is ToolbarMenu.Item.OpenInApp -> {
-                settings.openInAppOpened = true
-
-                val appLinksUseCases = activity.components.useCases.appLinksUseCases
-                val getRedirect = appLinksUseCases.appLinkRedirect
-                currentSession?.let {
-                    val redirect = getRedirect.invoke(it.content.url)
-                    redirect.appIntent?.flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                    appLinksUseCases.openAppLink.invoke(redirect.appIntent)
-                }
-            }
-            // todo === End ===
-
             is ToolbarMenu.Item.Back -> {
                 if (item.viewHistory) {
                     navController.navigate(

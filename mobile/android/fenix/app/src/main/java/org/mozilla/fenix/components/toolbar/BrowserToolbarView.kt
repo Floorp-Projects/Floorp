@@ -163,14 +163,13 @@ class BrowserToolbarView(
             } else {
                 menuToolbar = DefaultToolbarMenu(
                     context = this,
+                    store = components.core.store,
                     hasAccountProblem = components.backgroundServices.accountManager.accountNeedsReauth(),
-                    shouldReverseItems = toolbarPosition == ToolbarPosition.TOP,
                     onItemTapped = {
                         it.performHapticIfNeeded(view)
                         interactor.onBrowserToolbarMenuItemTapped(it)
                     },
                     lifecycleOwner = lifecycleOwner,
-                    store = components.core.store,
                     bookmarksStorage = bookmarkStorage,
                     isPinningSupported = isPinningSupported
                 )

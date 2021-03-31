@@ -779,7 +779,7 @@ class HomeFragment : Fragment() {
                             HomeFragmentDirections.actionGlobalSettingsFragment()
                         )
                     }
-                    HomeMenu.Item.SyncedTabs -> {
+                    HomeMenu.Item.SyncTabs -> {
                         hideOnboardingIfNeeded()
                         nav(
                             R.id.homeFragment,
@@ -842,14 +842,14 @@ class HomeFragment : Fragment() {
                             }
                         )
                     }
-                    HomeMenu.Item.Sync -> {
+                    HomeMenu.Item.ReconnectSync -> {
                         hideOnboardingIfNeeded()
                         nav(
                             R.id.homeFragment,
                             HomeFragmentDirections.actionGlobalAccountProblemFragment()
                         )
                     }
-                    HomeMenu.Item.AddonsManager -> {
+                    HomeMenu.Item.Extensions -> {
                         nav(
                             R.id.homeFragment,
                             HomeFragmentDirections.actionGlobalAddonsManagementFragment()

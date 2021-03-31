@@ -44,8 +44,8 @@ class ShareButtonTest {
         mockWebServer.shutdown()
     }
 
-    @Ignore("Test failures: https://github.com/mozilla-mobile/fenix/issues/18720")
     @Test
+    @Ignore("To be re-implemented with the three dot menu changes https://github.com/mozilla-mobile/fenix/issues/17979")
     fun ShareButtonAppearanceTest() {
         val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 

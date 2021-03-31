@@ -48,6 +48,7 @@ import org.mozilla.fenix.share.ShareFragment
 /**
  * Implementation of Robot Pattern for the three dot (main) menu.
  */
+@Suppress("ForbiddenComment")
 class ThreeDotMenuMainRobot {
     fun verifyTabSettingsButton() = assertTabSettingsButton()
     fun verifyRecentlyClosedTabsButton() = assertRecentlyClosedTabsButton()
@@ -166,7 +167,7 @@ class ThreeDotMenuMainRobot {
         private val mDevice = UiDevice.getInstance(InstrumentationRegistry.getInstrumentation())
 
         fun openSettings(interact: SettingsRobot.() -> Unit): SettingsRobot.Transition {
-            onView(withId(R.id.mozac_browser_menu_recyclerView)).perform(ViewActions.swipeDown())
+            onView(withId(R.id.mozac_browser_menu_recyclerView)).perform(swipeDown())
             onView(allOf(withResourceName("text"), withText(R.string.browser_menu_settings)))
                 .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
                 .check(matches(isCompletelyDisplayed()))
@@ -185,7 +186,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun openSyncedTabs(interact: SyncedTabsRobot.() -> Unit): SyncedTabsRobot.Transition {
-            onView(withId(R.id.mozac_browser_menu_recyclerView)).perform(ViewActions.swipeDown())
+            onView(withId(R.id.mozac_browser_menu_recyclerView)).perform(swipeDown())
             mDevice.waitNotNull(Until.findObject(By.text("Synced tabs")), waitingTime)
             syncedTabsButton().click()
 
@@ -205,7 +206,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun openHistory(interact: HistoryRobot.() -> Unit): HistoryRobot.Transition {
-            onView(withId(R.id.mozac_browser_menu_recyclerView)).perform(ViewActions.swipeDown())
+            onView(withId(R.id.mozac_browser_menu_recyclerView)).perform(swipeDown())
             mDevice.waitNotNull(Until.findObject(By.text("History")), waitingTime)
             historyButton().click()
 
@@ -273,6 +274,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun refreshPage(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
+            // TODO: this is not finding the button correctly
             mDevice.waitNotNull(Until.findObject(By.desc("Refresh")), waitingTime)
             refreshButton().click()
 
@@ -303,7 +305,7 @@ class ThreeDotMenuMainRobot {
         }
 
         fun openFindInPage(interact: FindInPageRobot.() -> Unit): FindInPageRobot.Transition {
-            onView(withId(R.id.mozac_browser_menu_recyclerView)).perform(ViewActions.swipeDown())
+            onView(withId(R.id.mozac_browser_menu_recyclerView)).perform(swipeDown())
             mDevice.waitNotNull(Until.findObject(By.text("Find in page")), waitingTime)
             findInPageButton().click()
 
@@ -463,12 +465,12 @@ private fun assertShareTabButton() = shareTabButton()
 
 private fun shareButton() = onView(ViewMatchers.withContentDescription("Share"))
 private fun assertShareButton() = shareButton()
-    .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
+    .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun browserViewSaveCollectionButton() = onView(
     allOf(
         withText("Save to collection"),
-        withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)
+        withEffectiveVisibility(Visibility.VISIBLE)
     )
 )
 
@@ -493,9 +495,11 @@ private fun assertCollectionNameTextField() = collectionNameTextField()
 private fun reportSiteIssueButton() = onView(withText("Report Site Issue…"))
 
 private fun findInPageButton() = onView(allOf(withText("Find in page")))
+
 private fun assertFindInPageButton() = findInPageButton()
 
 private fun shareScrim() = onView(withResourceName("closeSharingScrim"))
+
 private fun assertShareScrim() =
     shareScrim().check(matches(ViewMatchers.withAlpha(ShareFragment.SHOW_PAGE_ALPHA)))
 
@@ -544,6 +548,7 @@ private fun assertAddToFirefoxHome() {
 
 private fun addToMobileHomeButton() =
     onView(allOf(withText(R.string.browser_menu_add_to_homescreen)))
+
 private fun assertAddToMobileHome() {
     onView(withId(R.id.mozac_browser_menu_recyclerView))
         .perform(
