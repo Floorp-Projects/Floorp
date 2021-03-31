@@ -49,9 +49,6 @@ DomPanel.prototype = {
 
     await onGetProperties;
 
-    this.isPanelReady = true;
-    this.emit("devtools-panel-ready");
-
     return this;
   },
 

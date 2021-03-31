@@ -21,7 +21,6 @@ class LazyDevToolsPanel extends DevToolPanel {
 
   async open() {
     await wait(TOOL_OPEN_DELAY);
-    this.emit("devtools-panel-ready");
     return this;
   }
 }

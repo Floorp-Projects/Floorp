@@ -157,8 +157,6 @@ DevToolPanel.prototype = {
   open: function() {
     return new Promise(resolve => {
       executeSoon(() => {
-        this._isReady = true;
-        this.emit("devtools-panel-ready");
         resolve(this);
       });
     });
@@ -175,12 +173,6 @@ DevToolPanel.prototype = {
   get toolbox() {
     return this._toolbox;
   },
-
-  get isPanelReady() {
-    return this._isReady;
-  },
-
-  _isReady: false,
 
   destroy: function() {
     return Promise.resolve(null);

@@ -73,7 +73,6 @@ function OptionsPanel(iframeWindow, toolbox, commands) {
   this.toolbox = toolbox;
   this.commands = commands;
   this.telemetry = toolbox.telemetry;
-  this.isPanelReady = false;
 
   this.setupToolsList = this.setupToolsList.bind(this);
   this._prefChanged = this._prefChanged.bind(this);
@@ -102,8 +101,6 @@ OptionsPanel.prototype = {
     this.setupThemeList();
     this.setupAdditionalOptions();
     await this.populatePreferences();
-    this.isPanelReady = true;
-    this.emit("devtools-panel-ready");
     return this;
   },
 

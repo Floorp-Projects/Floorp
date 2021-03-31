@@ -131,8 +131,6 @@ AccessibilityPanel.prototype = {
       shutdown: this.onLifecycleEvent,
     });
 
-    this.isPanelReady = true;
-    this.emit("devtools-panel-ready");
     resolver(this);
     return this._opening;
   },

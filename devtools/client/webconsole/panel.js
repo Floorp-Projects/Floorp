@@ -79,9 +79,6 @@ WebConsolePanel.prototype = {
       this.hud.ui.on("reloaded", () => {
         this.emit("reloaded");
       });
-
-      this._isReady = true;
-      this.emit("devtools-panel-ready");
     } catch (e) {
       const msg = "WebConsolePanel open failed. " + e.error + ": " + e.message;
       dump(msg + "\n");
@@ -93,11 +90,6 @@ WebConsolePanel.prototype = {
 
   get currentTarget() {
     return this._toolbox.target;
-  },
-
-  _isReady: false,
-  get isPanelReady() {
-    return this._isReady;
   },
 
   destroy: function() {

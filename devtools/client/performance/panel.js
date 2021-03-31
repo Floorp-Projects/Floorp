@@ -60,9 +60,6 @@ PerformancePanel.prototype = {
     // tab if we need.
     this._checkRecordingStatus();
 
-    this.isPanelReady = true;
-    this.emit("devtools-panel-ready");
-
     this._opening = new Promise(resolve => {
       resolve(this);
     });
