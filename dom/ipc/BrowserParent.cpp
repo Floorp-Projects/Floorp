@@ -738,25 +738,12 @@ void BrowserParent::ActorDestroy(ActorDestroyReason why) {
     if (why == AbnormalShutdown) {
       frameLoader->MaybeNotifyCrashed(mBrowsingContext, Manager()->ChildID(),
                                       GetIPCChannel());
-
-      auto* bridge = GetBrowserBridgeParent();
-      if (bridge && bridge->CanSend() && !mBrowsingContext->IsDiscarded()) {
-        MOZ_ASSERT(!mBrowsingContext->IsTop());
-
-        // Set the owner process of the root context belonging to a crashed
-        // process to the embedding process, since we'll be showing the crashed
-        // page in that process.
-        mBrowsingContext->SetOwnerProcessId(
-            bridge->Manager()->Manager()->ChildID());
-        MOZ_ALWAYS_SUCCEEDS(mBrowsingContext->SetCurrentInnerWindowId(0));
-
-        // Tell the browser bridge to show the subframe crashed page.
-        Unused << bridge->SendSubFrameCrashed();
-      }
     }
   }
 
   mFrameLoader = nullptr;
+
+  mBrowsingContext->BrowserParentDestroyed(this, why == AbnormalShutdown);
 }
 
 mozilla::ipc::IPCResult BrowserParent::RecvMoveFocus(
