@@ -258,7 +258,7 @@ nsresult GetJSValFromKeyPathString(
 // static
 Result<KeyPath, nsresult> KeyPath::Parse(const nsAString& aString) {
   KeyPath keyPath(0);
-  keyPath.SetType(STRING);
+  keyPath.SetType(KeyPathType::String);
 
   if (!keyPath.AppendStringWithValidation(aString)) {
     return Err(NS_ERROR_FAILURE);
@@ -270,7 +270,7 @@ Result<KeyPath, nsresult> KeyPath::Parse(const nsAString& aString) {
 // static
 Result<KeyPath, nsresult> KeyPath::Parse(const Sequence<nsString>& aStrings) {
   KeyPath keyPath(0);
-  keyPath.SetType(ARRAY);
+  keyPath.SetType(KeyPathType::Array);
 
   for (uint32_t i = 0; i < aStrings.Length(); ++i) {
     if (!keyPath.AppendStringWithValidation(aStrings[i])) {
@@ -453,7 +453,7 @@ KeyPath KeyPath::DeserializeFromString(const nsAString& aString) {
   KeyPath keyPath(0);
 
   if (!aString.IsEmpty() && aString.First() == ',') {
-    keyPath.SetType(ARRAY);
+    keyPath.SetType(KeyPathType::Array);
 
     // We use a comma in the beginning to indicate that it's an array of
     // key paths. This is to be able to tell a string-keypath from an
@@ -475,7 +475,7 @@ KeyPath KeyPath::DeserializeFromString(const nsAString& aString) {
     return keyPath;
   }
 
-  keyPath.SetType(STRING);
+  keyPath.SetType(KeyPathType::String);
   keyPath.mStrings.AppendElement(aString);
 
   return keyPath;
