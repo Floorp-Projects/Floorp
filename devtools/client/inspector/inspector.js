@@ -149,7 +149,7 @@ function Inspector(toolbox, commands) {
   this.panelWin.inspector = this;
   this.telemetry = toolbox.telemetry;
   this.store = createStore(this);
-  this.isReady = false;
+  this.isPanelReady = false;
 
   // Map [panel id => panel instance]
   // Stores all the instances of sidebar panels like rule view, computed view, ...
@@ -381,7 +381,7 @@ Inspector.prototype = {
     this.setupSidebar();
 
     await this._onMarkupViewInitialized;
-    this.isReady = true;
+    this.isPanelReady = true;
 
     // All the components are initialized. Take care of the remaining initialization
     // and setup.
