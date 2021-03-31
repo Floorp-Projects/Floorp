@@ -998,9 +998,19 @@ static void PrintStackFrame(uint32_t aFrameNumber, void* aPC, void* aSP,
   EnsureWrite(stream, buf, len);
 }
 
+static bool WalkTheStackEnabled() {
+  static bool result = [] {
+    char* value = getenv("MOZ_DISABLE_WALKTHESTACK");
+    return !(value && value[0]);
+  }();
+  return result;
+}
+
 MFBT_API void MozWalkTheStack(FILE* aStream, uint32_t aSkipFrames,
                               uint32_t aMaxFrames) {
-  MozStackWalk(PrintStackFrame, aSkipFrames + 1, aMaxFrames, aStream);
+  if (WalkTheStackEnabled()) {
+    MozStackWalk(PrintStackFrame, aSkipFrames + 1, aMaxFrames, aStream);
+  }
 }
 
 static void WriteStackFrame(uint32_t aFrameNumber, void* aPC, void* aSP,
@@ -1014,5 +1024,7 @@ static void WriteStackFrame(uint32_t aFrameNumber, void* aPC, void* aSP,
 MFBT_API void MozWalkTheStackWithWriter(void (*aWriter)(const char*),
                                         uint32_t aSkipFrames,
                                         uint32_t aMaxFrames) {
-  MozStackWalk(WriteStackFrame, aSkipFrames + 1, aMaxFrames, (void*)aWriter);
+  if (WalkTheStackEnabled()) {
+    MozStackWalk(WriteStackFrame, aSkipFrames + 1, aMaxFrames, (void*)aWriter);
+  }
 }
