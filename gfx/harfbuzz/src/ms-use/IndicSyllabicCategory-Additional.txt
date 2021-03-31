@@ -13,7 +13,6 @@
 193A          ; Bindu  # Mn       LIMBU SIGN KEMPHRENG
 AA29          ; Bindu  # Mn       CHAM VOWEL SIGN AA
 10A0D         ; Bindu  # Mn       KHAROSHTHI SIGN DOUBLE RING BELOW
-1172B         ; Bindu  # Mn       AHOM SIGN KILLER
 
 # ================================================
 
