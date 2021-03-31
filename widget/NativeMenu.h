@@ -19,6 +19,10 @@ class NativeMenu {
   // Returns false if the popupshowing handler does not want this popup to open.
   virtual bool ShowAsContextMenu(const mozilla::DesktopPoint& aPosition) = 0;
 
+  // Close the menu and synchronously fire popuphiding / popuphidden events.
+  // Returns false if the menu wasn't open.
+  virtual bool Close() = 0;
+
   class Observer {
    public:
     // Called when the menu opened, after popupshown.

@@ -432,6 +432,22 @@ void nsMenuX::MenuClosedAsync() {
   }
 }
 
+bool nsMenuX::Close() {
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  bool wasOpen = mIsOpenForGecko;
+
+  if (mIsOpen) {
+    [mNativeMenu cancelTracking];
+  }
+
+  FlushMenuClosedRunnable();
+
+  return wasOpen;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
 void nsMenuX::RebuildMenu() {
   MOZ_RELEASE_ASSERT(mNeedsRebuild);
   gConstructingMenu = true;
