@@ -32,10 +32,10 @@ BooleanMetric Labeled<BooleanMetric>::Get(const nsACString& aLabel) const {
   // to the label string and mirrored scalar so we can mirror its operations.
   auto mirrorId = ScalarIdForMetric(mId);
   if (mirrorId) {
-    auto map = gLabeledMirrors.Lock();
-    auto tuple = MakeUnique<Tuple<Telemetry::ScalarID, nsString>>(
+    auto lock = GetLabeledMirrorLock();
+    auto tuple = MakeTuple<Telemetry::ScalarID, nsString>(
         mirrorId.extract(), NS_ConvertUTF8toUTF16(aLabel));
-    map->InsertOrUpdate(submetricId, std::move(tuple));
+    lock.ref()->InsertOrUpdate(submetricId, std::move(tuple));
   }
   return BooleanMetric(submetricId);
 }
@@ -51,10 +51,10 @@ CounterMetric Labeled<CounterMetric>::Get(const nsACString& aLabel) const {
   // to the label string and mirrored scalar so we can mirror its operations.
   auto mirrorId = ScalarIdForMetric(mId);
   if (mirrorId) {
-    auto map = gLabeledMirrors.Lock();
-    auto tuple = MakeUnique<Tuple<Telemetry::ScalarID, nsString>>(
+    auto lock = GetLabeledMirrorLock();
+    auto tuple = MakeTuple<Telemetry::ScalarID, nsString>(
         mirrorId.extract(), NS_ConvertUTF8toUTF16(aLabel));
-    map->InsertOrUpdate(submetricId, std::move(tuple));
+    lock.ref()->InsertOrUpdate(submetricId, std::move(tuple));
   }
   return CounterMetric(submetricId);
 }
@@ -66,15 +66,8 @@ StringMetric Labeled<StringMetric>::Get(const nsACString& aLabel) const {
 #else
   auto submetricId = fog_labeled_string_get(mId, &aLabel);
 #endif
-  // If this labeled metric is mirrored, we need to map the submetric id back
-  // to the label string and mirrored scalar so we can mirror its operations.
-  auto mirrorId = ScalarIdForMetric(mId);
-  if (mirrorId) {
-    auto map = gLabeledMirrors.Lock();
-    auto tuple = MakeUnique<Tuple<Telemetry::ScalarID, nsString>>(
-        mirrorId.extract(), NS_ConvertUTF8toUTF16(aLabel));
-    map->InsertOrUpdate(submetricId, std::move(tuple));
-  }
+  // Why no GIFFT map here?
+  // Labeled Strings can't be mirrored. Telemetry has no compatible probe.
   return StringMetric(submetricId);
 }
 }  // namespace impl
@@ -106,10 +99,10 @@ already_AddRefed<nsISupports> GleanLabeled::NamedGetter(const nsAString& aName,
 
   auto mirrorId = ScalarIdForMetric(mId);
   if (mirrorId) {
-    auto map = gLabeledMirrors.Lock();
-    auto tuple = MakeUnique<Tuple<Telemetry::ScalarID, nsString>>(
-        mirrorId.extract(), PromiseFlatString(aName));
-    map->InsertOrUpdate(submetricId, std::move(tuple));
+    auto lock = GetLabeledMirrorLock();
+    auto tuple = MakeTuple<Telemetry::ScalarID, nsString>(mirrorId.extract(),
+                                                          nsString(aName));
+    lock.ref()->InsertOrUpdate(submetricId, std::move(tuple));
   }
   return submetric;
 }

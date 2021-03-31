@@ -30,11 +30,10 @@ class BooleanMetric {
     if (scalarId) {
       Telemetry::ScalarSet(scalarId.extract(), aValue);
     } else if (IsSubmetricId(mId)) {
-      auto map = gLabeledMirrors.Lock();
-      auto tuple = map->MaybeGet(mId);
+      auto lock = GetLabeledMirrorLock();
+      auto tuple = lock.ref()->MaybeGet(mId);
       if (tuple) {
-        Telemetry::ScalarSet(Get<0>(*tuple.ref()), Get<1>(*tuple.ref()),
-                             aValue);
+        Telemetry::ScalarSet(Get<0>(tuple.ref()), Get<1>(tuple.ref()), aValue);
       }
     }
 #ifndef MOZ_GLEAN_ANDROID
