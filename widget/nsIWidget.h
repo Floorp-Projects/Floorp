@@ -593,7 +593,7 @@ class nsIWidget : public nsISupports {
   /**
    * Return the top (non-sheet) parent of this Widget if it's a sheet,
    * or nullptr if this isn't a sheet (or some other error occurred).
-   * Sheets are only supported on some platforms (currently only macOS).
+   * Sheets are only supported on some platforms (currently only OS X).
    *
    * @return the top (non-sheet) parent widget or nullptr
    *
@@ -732,8 +732,8 @@ class nsIWidget : public nsISupports {
    * following Move and Resize widget APIs.
    *
    * The display-/device-pixel distinction becomes important for (at least)
-   * macOS with Hi-DPI (retina) displays, and Windows when the UI scale factor
-   * is set to other than 100%.
+   * Mac OS X with Hi-DPI (retina) displays, and Windows when the UI scale
+   * factor is set to other than 100%.
    *
    * The Move and Resize methods take floating-point parameters, rather than
    * integer ones. This is important when manipulating top-level widgets,
@@ -1160,7 +1160,7 @@ class nsIWidget : public nsISupports {
   virtual void SetWindowMouseTransparent(bool aIsTransparent) {}
 
   /*
-   * On macOS, this method shows or hides the pill button in the titlebar
+   * On Mac OS X, this method shows or hides the pill button in the titlebar
    * that's used to collapse the toolbar.
    *
    * Ignored on child widgets and on non-Mac platforms.
@@ -1184,8 +1184,8 @@ class nsIWidget : public nsISupports {
   };
 
   /**
-   * Sets the kind of top-level window animation this widget should have. On
-   * macOS, this causes a particular kind of animation to be shown when the
+   * Sets the kind of top-level window animation this widget should have.  On
+   * Mac OS X, this causes a particular kind of animation to be shown when the
    * window is first made visible.
    *
    * Ignored on child widgets and on non-Mac platforms.
@@ -1195,33 +1195,9 @@ class nsIWidget : public nsISupports {
   /**
    * Specifies whether the window title should be drawn even if the window
    * contents extend into the titlebar. Ignored on windows that don't draw
-   * in the titlebar. Only implemented on macOS.
+   * in the titlebar. Only implemented on OS X.
    */
   virtual void SetDrawsTitle(bool aDrawTitle) {}
-
-  /**
-   * These values are used to communicate the expected window apperance via
-   * SetWindowAppearance (see function comment below for more info):
-   * eSystem: Use the system default window appearance, which can be light or
-   *          dark.
-   * eLight:  Use the light window appearance, regardless of the current system
-   *          window appearance.
-   * eDark:   Use the dark window appearance, regardless of the current system
-   *          window appearance.
-   */
-  enum WindowAppearance { eSystem, eLight, eDark };
-
-  /**
-   * Allows overriding the window's light/dark appearance. This is used for
-   * windows whose light/dark look can differ from the system-wide look, and
-   * allows the window decorations to better match the window contents, for
-   * example ensuring sufficient contrast for the window buttons. The window
-   * appearance affects the look of the window frame, window buttons, titlebars
-   * and vibrant sidebars, and various -moz-default-appearance types.
-   *
-   * Ignored on non-Mac platforms.
-   */
-  virtual void SetWindowAppearance(WindowAppearance aAppearance) {}
 
   /**
    * Hide window chrome (borders, buttons) for this widget.
@@ -1284,7 +1260,7 @@ class nsIWidget : public nsISupports {
    * Same as MakeFullScreen, except that, on systems which natively
    * support fullscreen transition, calling this method explicitly
    * requests that behavior.
-   * It is currently only supported on macOS 10.7+.
+   * It is currently only supported on OS X 10.7+.
    */
   virtual nsresult MakeFullScreenWithNativeTransition(
       bool aFullScreen, nsIScreen* aTargetScreen = nullptr) {
