@@ -606,10 +606,10 @@ LauncherProcessState:
     mozilla::LauncherRegistryInfo::EnableState enum
   type: integer
 
-LowCommitSpaceEvents:
+LowPhysicalMemoryEvents:
   description: >
-    Number of times the available memory tracker has detected a that
-    commit-space was running low. This is a Windows-specific annotation.
+    Number of times the available memory tracker has detected that free
+    physical memory is running low. This is a Windows-specific annotation.
   type: integer
   ping: true
 

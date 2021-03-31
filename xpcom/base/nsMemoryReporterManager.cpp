@@ -2496,16 +2496,6 @@ nsMemoryReporterManager::GetStorageSQLite(int64_t* aAmount) {
 }
 
 NS_IMETHODIMP
-nsMemoryReporterManager::GetLowMemoryEventsVirtual(int64_t* aAmount) {
-  return GetInfallibleAmount(mAmountFns.mLowMemoryEventsVirtual, aAmount);
-}
-
-NS_IMETHODIMP
-nsMemoryReporterManager::GetLowMemoryEventsCommitSpace(int64_t* aAmount) {
-  return GetInfallibleAmount(mAmountFns.mLowMemoryEventsCommitSpace, aAmount);
-}
-
-NS_IMETHODIMP
 nsMemoryReporterManager::GetLowMemoryEventsPhysical(int64_t* aAmount) {
   return GetInfallibleAmount(mAmountFns.mLowMemoryEventsPhysical, aAmount);
 }
@@ -2749,8 +2739,6 @@ DEFINE_UNREGISTER_DISTINGUISHED_AMOUNT(ImagesContentUsedUncompressed)
 DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, StorageSQLite)
 DEFINE_UNREGISTER_DISTINGUISHED_AMOUNT(StorageSQLite)
 
-DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, LowMemoryEventsVirtual)
-DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, LowMemoryEventsCommitSpace)
 DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, LowMemoryEventsPhysical)
 
 DEFINE_REGISTER_DISTINGUISHED_AMOUNT(Infallible, GhostWindows)

@@ -257,10 +257,6 @@ nsresult MemoryTelemetry::GatherReports(
          UNITS_BYTES);
   RECORD(MEMORY_STORAGE_SQLITE, StorageSQLite, UNITS_BYTES);
 #ifdef XP_WIN
-  RECORD(LOW_MEMORY_EVENTS_VIRTUAL, LowMemoryEventsVirtual,
-         UNITS_COUNT_CUMULATIVE);
-  RECORD(LOW_MEMORY_EVENTS_COMMIT_SPACE, LowMemoryEventsCommitSpace,
-         UNITS_COUNT_CUMULATIVE);
   RECORD(LOW_MEMORY_EVENTS_PHYSICAL, LowMemoryEventsPhysical,
          UNITS_COUNT_CUMULATIVE);
 #endif
