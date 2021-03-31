@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsWaylandDisplay.h"
-#include "WidgetUtilsGtk.h"
 #include "WindowSurfaceWayland.h"
 
 #include "nsPrintfCString.h"
@@ -170,17 +169,9 @@ RefPtr<nsWaylandDisplay> WindowBackBuffer::GetWaylandDisplay() {
 
 static int WaylandAllocateShmMemory(int aSize) {
   int fd = -1;
-
-  nsCString shmPrefix("/");
-  const char* snapName = mozilla::widget::WidgetUtilsGTK::GetSnapInstanceName();
-  if (snapName != nullptr) {
-    shmPrefix.AppendPrintf("snap.%s.", snapName);
-  }
-  shmPrefix.Append("wayland.mozilla.ipc");
-
   do {
     static int counter = 0;
-    nsPrintfCString shmName("%s.%d", shmPrefix.get(), counter++);
+    nsPrintfCString shmName("/wayland.mozilla.ipc.%d", counter++);
     fd = shm_open(shmName.get(), O_CREAT | O_RDWR | O_EXCL, 0600);
     if (fd >= 0) {
       // We don't want to use leaked file
