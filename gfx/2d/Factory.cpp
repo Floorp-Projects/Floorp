@@ -792,9 +792,14 @@ AutoSerializeWithMoz2D::AutoSerializeWithMoz2D(BackendType aBackendType) {
   // down into the TextureD3D11 objects, so that we always use this.
   if (aBackendType == BackendType::DIRECT2D1_1 ||
       aBackendType == BackendType::DIRECT2D) {
-    D2DFactory()->QueryInterface(
-        static_cast<ID2D1Multithread**>(getter_AddRefs(mMT)));
-    mMT->Enter();
+    auto factory = D2DFactory();
+    if (factory) {
+      factory->QueryInterface(
+          static_cast<ID2D1Multithread**>(getter_AddRefs(mMT)));
+      if (mMT) {
+        mMT->Enter();
+      }
+    }
   }
 #endif
 }
