@@ -30,10 +30,10 @@ class CounterMetric {
     if (scalarId) {
       Telemetry::ScalarAdd(scalarId.extract(), aAmount);
     } else if (IsSubmetricId(mId)) {
-      auto map = gLabeledMirrors.Lock();
-      auto tuple = map->MaybeGet(mId);
+      auto lock = GetLabeledMirrorLock();
+      auto tuple = lock.ref()->MaybeGet(mId);
       if (tuple && aAmount > 0) {
-        Telemetry::ScalarSet(Get<0>(*tuple.ref()), Get<1>(*tuple.ref()),
+        Telemetry::ScalarSet(Get<0>(tuple.ref()), Get<1>(tuple.ref()),
                              (uint32_t)aAmount);
       }
     }

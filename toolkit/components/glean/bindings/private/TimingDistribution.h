@@ -41,9 +41,9 @@ class TimingDistributionMetric {
 #endif
     auto mirrorId = HistogramIdForMetric(mId);
     if (mirrorId) {
-      auto map = gTimerIdToStarts.Lock();
-      (void)NS_WARN_IF(map->Remove(id));
-      map->InsertOrUpdate(id, TimeStamp::Now());
+      auto lock = GetTimerIdToStartsLock();
+      (void)NS_WARN_IF(lock.ref()->Remove(id));
+      lock.ref()->InsertOrUpdate(id, TimeStamp::Now());
     }
     return id;
   }
@@ -61,8 +61,8 @@ class TimingDistributionMetric {
   void StopAndAccumulate(const TimerId&& aId) const {
     auto mirrorId = HistogramIdForMetric(mId);
     if (mirrorId) {
-      auto map = gTimerIdToStarts.Lock();
-      auto optStart = map->Extract(aId);
+      auto lock = GetTimerIdToStartsLock();
+      auto optStart = lock.ref()->Extract(aId);
       if (!NS_WARN_IF(!optStart)) {
         AccumulateTimeDelta(mirrorId.extract(), optStart.extract());
       }
@@ -81,8 +81,8 @@ class TimingDistributionMetric {
   void Cancel(const TimerId&& aId) const {
     auto mirrorId = HistogramIdForMetric(mId);
     if (mirrorId) {
-      auto map = gTimerIdToStarts.Lock();
-      (void)NS_WARN_IF(!map->Remove(aId));
+      auto lock = GetTimerIdToStartsLock();
+      (void)NS_WARN_IF(!lock.ref()->Remove(aId));
     }
 #ifndef MOZ_GLEAN_ANDROID
     fog_timing_distribution_cancel(mId, aId);

@@ -30,9 +30,9 @@ class TimespanMetric {
     auto optScalarId = ScalarIdForMetric(mId);
     if (optScalarId) {
       auto scalarId = optScalarId.extract();
-      auto map = gTimespanStarts.Lock();
-      (void)NS_WARN_IF(map->Remove(scalarId));
-      map->InsertOrUpdate(scalarId, TimeStamp::Now());
+      auto lock = GetTimesToStartsLock();
+      (void)NS_WARN_IF(lock.ref()->Remove(scalarId));
+      lock.ref()->InsertOrUpdate(scalarId, TimeStamp::Now());
     }
 #ifndef MOZ_GLEAN_ANDROID
     fog_timespan_start(mId);
@@ -51,8 +51,8 @@ class TimespanMetric {
     auto optScalarId = ScalarIdForMetric(mId);
     if (optScalarId) {
       auto scalarId = optScalarId.extract();
-      auto map = gTimespanStarts.Lock();
-      auto optStart = map->Extract(scalarId);
+      auto lock = GetTimesToStartsLock();
+      auto optStart = lock.ref()->Extract(scalarId);
       if (!NS_WARN_IF(!optStart)) {
         uint32_t delta = static_cast<uint32_t>(
             (TimeStamp::Now() - optStart.extract()).ToMilliseconds());
@@ -61,6 +61,23 @@ class TimespanMetric {
     }
 #ifndef MOZ_GLEAN_ANDROID
     fog_timespan_stop(mId);
+#endif
+  }
+
+  /**
+   * Abort a previous Start.
+   *
+   * No error will be recorded if no Start was called.
+   */
+  void Cancel() const {
+    auto optScalarId = ScalarIdForMetric(mId);
+    if (optScalarId) {
+      auto scalarId = optScalarId.extract();
+      auto lock = GetTimesToStartsLock();
+      lock.ref()->Remove(scalarId);
+    }
+#ifndef MOZ_GLEAN_ANDROID
+    fog_timespan_cancel(mId);
 #endif
   }
 
