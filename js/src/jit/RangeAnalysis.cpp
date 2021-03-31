@@ -2927,9 +2927,9 @@ static bool CloneForDeadBranches(TempAllocator& alloc,
   }
   clone->setRange(nullptr);
 
-  // Set UseRemoved flag on the cloned instruction in order to chain recover
+  // Set ImplicitlyUsed flag on the cloned instruction in order to chain recover
   // instruction for the bailout path.
-  clone->setUseRemovedUnchecked();
+  clone->setImplicitlyUsedUnchecked();
 
   candidate->block()->insertBefore(candidate, clone);
 
@@ -2962,7 +2962,7 @@ static TruncateKind ComputeRequestedTruncateKind(MDefinition* candidate,
   bool isObservableResult =
       false;  // Check if it can be read from another frame.
   bool isRecoverableResult = true;  // Check if it can safely be reconstructed.
-  bool hasUseRemoved = candidate->isUseRemoved();
+  bool isImplicitlyUsed = candidate->isImplicitlyUsed();
 
   TruncateKind kind = TruncateKind::Truncate;
   for (MUseIterator use(candidate->usesBegin()); use != candidate->usesEnd();
@@ -2971,7 +2971,7 @@ static TruncateKind ComputeRequestedTruncateKind(MDefinition* candidate,
       // Truncation is a destructive optimization, as such, we need to pay
       // attention to removed branches and prevent optimization
       // destructive optimizations if we have no alternative. (see
-      // UseRemoved flag)
+      // ImplicitlyUsed flag)
       isCapturedResult = true;
       isObservableResult =
           isObservableResult ||
@@ -2985,7 +2985,7 @@ static TruncateKind ComputeRequestedTruncateKind(MDefinition* candidate,
     MDefinition* consumer = use->consumer()->toDefinition();
     if (consumer->isRecoveredOnBailout()) {
       isCapturedResult = true;
-      hasUseRemoved = hasUseRemoved || consumer->isUseRemoved();
+      isImplicitlyUsed = isImplicitlyUsed || consumer->isImplicitlyUsed();
       continue;
     }
 
@@ -3008,15 +3008,15 @@ static TruncateKind ComputeRequestedTruncateKind(MDefinition* candidate,
   bool needsConversion = !candidate->range() || !candidate->range()->isInt32();
 
   // If the instruction is explicitly truncated (not indirectly) by all its
-  // uses and if it has no removed uses, then we can safely encode its
+  // uses and if it is not implicitly used, then we can safely encode its
   // truncated result as part of the resume point operands.  This is safe,
   // because even if we resume with a truncated double, the next baseline
   // instruction operating on this instruction is going to be a no-op.
   //
   // Note, that if the result can be observed from another frame, then this
   // optimization is not safe.
-  bool safeToConvert =
-      kind == TruncateKind::Truncate && !hasUseRemoved && !isObservableResult;
+  bool safeToConvert = kind == TruncateKind::Truncate && !isImplicitlyUsed &&
+                       !isObservableResult;
 
   // If the candidate instruction appears as operand of a resume point or a
   // recover instruction, and we have to truncate its result, then we might

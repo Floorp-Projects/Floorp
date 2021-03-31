@@ -132,7 +132,8 @@ static inline MIRType MIRTypeFromValue(const js::Value& vp) {
    * graph, and need to be handled specially. As an example, this is used to   \
    * keep the flagged instruction in resume points, not substituting with an   \
    * UndefinedValue. This can be used by call inlining when a function         \
-   * argument is not used by the inlined instructions.                         \
+   * argument is not used by the inlined instructions. It is also used         \
+   * to annotate instructions which were used in removed branches.             \
    */                                                                          \
   _(ImplicitlyUsed)                                                            \
                                                                                \
@@ -140,21 +141,6 @@ static inline MIRType MIRTypeFromValue(const js::Value& vp) {
    * points.                                                                   \
    */                                                                          \
   _(Unused)                                                                    \
-                                                                               \
-  /* When a branch is removed, the uses of multiple instructions are removed.  \
-   * The removal of branches is based on hypotheses.  These hypotheses might   \
-   * fail, in which case we need to bailout from the current code.             \
-   *                                                                           \
-   * When we implement a destructive optimization, we need to consider the     \
-   * failing cases, and consider the fact that we might resume the execution   \
-   * into a branch which was removed from the compiler.  As such, a            \
-   * destructive optimization need to take into acount removed branches.       \
-   *                                                                           \
-   * In order to let destructive optimizations know about removed branches, we \
-   * have to annotate instructions with the UseRemoved flag.  This flag        \
-   * annotates instruction which were used in removed branches.                \
-   */                                                                          \
-  _(UseRemoved)                                                                \
                                                                                \
   /* Marks if the current instruction should go to the bailout paths instead   \
    * of producing code as part of the control flow.  This flag can only be set \
@@ -778,7 +764,8 @@ class MDefinition : public MNode {
   // uses of the current instruction.
   void replaceAllUsesWith(MDefinition* dom);
 
-  // Like replaceAllUsesWith, but doesn't set UseRemoved on |this|'s operands.
+  // Like replaceAllUsesWith, but doesn't set ImplicitlyUsed on |this|'s
+  // operands.
   void justReplaceAllUsesWith(MDefinition* dom);
 
   // Replace the current instruction by an optimized-out constant in all uses
@@ -6322,9 +6309,9 @@ class MArrowNewTarget : public MUnaryInstruction,
   }
 };
 
-// This is a 3 state flag used by FlagPhiInputsAsHavingRemovedUses to record and
+// This is a 3 state flag used by FlagPhiInputsAsImplicitlyUsed to record and
 // propagate the information about the consumers of a Phi instruction. This is
-// then used to set UseRemoved flags on the inputs of such Phi instructions.
+// then used to set ImplicitlyUsed flags on the inputs of such Phi instructions.
 enum class PhiUsage : uint8_t { Unknown, Unused, Used };
 
 using PhiVector = Vector<MPhi*, 4, JitAllocPolicy>;
