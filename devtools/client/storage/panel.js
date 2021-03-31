@@ -31,9 +31,6 @@ class StoragePanel {
 
     await this.UI.init();
 
-    this.isPanelReady = true;
-    this.emit("devtools-panel-ready");
-
     return this;
   }
 

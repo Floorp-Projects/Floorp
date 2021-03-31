@@ -32,8 +32,6 @@ class ApplicationPanel {
       panel: this,
     });
 
-    this.emit("devtools-panel-ready");
-    this.isPanelReady = true;
     return this;
   }
 
