@@ -1037,8 +1037,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   CanSetResult CanSet(FieldIndex<IDX_AllowContentRetargetingOnChildren>,
                       const bool& aAllowContentRetargetingOnChildren,
                       ContentParent* aSource);
-  bool CanSet(FieldIndex<IDX_AllowPlugins>, const bool& aAllowPlugins,
-              ContentParent* aSource);
+  CanSetResult CanSet(FieldIndex<IDX_AllowPlugins>, const bool& aAllowPlugins,
+                      ContentParent* aSource);
   bool CanSet(FieldIndex<IDX_FullscreenAllowedByOwner>, const bool&,
               ContentParent*);
   bool CanSet(FieldIndex<IDX_WatchedByDevToolsInternal>,
@@ -1063,8 +1063,8 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_PendingInitialization>, bool aNewValue,
               ContentParent* aSource);
 
-  bool CanSet(FieldIndex<IDX_HasMainMediaController>, bool aNewValue,
-              ContentParent* aSource);
+  CanSetResult CanSet(FieldIndex<IDX_HasMainMediaController>, bool aNewValue,
+                      ContentParent* aSource);
   void DidSet(FieldIndex<IDX_HasMainMediaController>, bool aOldValue);
 
   bool CanSet(FieldIndex<IDX_HasRestoreData>, bool aNewValue,
@@ -1090,11 +1090,9 @@ class BrowsingContext : public nsILoadContext, public nsWrapperCache {
   bool CanSet(FieldIndex<IDX_IsInBFCache>, bool, ContentParent* aSource);
   void DidSet(FieldIndex<IDX_IsInBFCache>);
 
-  // True if the process attemping to set field is the same as the owning
+  // Allow if the process attemping to set field is the same as the owning
   // process. Deprecated. New code that might use this should generally be moved
   // to WindowContext or be settable only by the parent process.
-  bool LegacyCheckOnlyOwningProcessCanSet(ContentParent* aSource);
-
   CanSetResult LegacyRevertIfNotOwningOrParentProcess(ContentParent* aSource);
 
   // True if the process attempting to set field is the same as the embedder's
