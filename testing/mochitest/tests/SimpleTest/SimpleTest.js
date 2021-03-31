@@ -2289,3 +2289,10 @@ var add_task = (function() {
 if (usesFailurePatterns()) {
   SimpleTest.requestCompleteLog();
 }
+
+addEventListener("message", async event => {
+  if (event.data == "SimpleTest:timeout") {
+    await SimpleTest.timeout();
+    SimpleTest.finish();
+  }
+});
