@@ -62,7 +62,7 @@ class PerformancePanel {
 
     const perfFront = await this.target.client.mainRoot.getFront("perf");
 
-    this.isReady = true;
+    this.isPanelReady = true;
     this.emit("ready");
     this.panelWin.gInit(perfFront, "devtools");
     return this;

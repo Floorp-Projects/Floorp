@@ -176,7 +176,7 @@ DevToolPanel.prototype = {
     return this._toolbox;
   },
 
-  get isReady() {
+  get isPanelReady() {
     return this._isReady;
   },
 

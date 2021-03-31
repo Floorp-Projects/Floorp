@@ -15,7 +15,7 @@ async function performChecks(tab) {
     is(toolbox.currentToolId, toolId, "currentToolId should be " + toolId);
 
     const panel = toolbox.getCurrentPanel();
-    ok(panel.isReady, toolId + " panel should be ready");
+    ok(panel.isPanelReady, toolId + " panel should be ready");
   }
 
   await toolbox.destroy();
