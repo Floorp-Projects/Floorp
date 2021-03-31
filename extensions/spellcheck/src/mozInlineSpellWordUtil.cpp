@@ -767,7 +767,7 @@ void mozInlineSpellWordUtil::NormalizeWord(nsAString& aWord) {
 void mozInlineSpellWordUtil::BuildSoftText() {
   MOZ_LOG(sInlineSpellWordUtilLog, LogLevel::Debug, ("%s", __FUNCTION__));
 
-  // First we have to work backwards from mSoftStart to find a text node
+  // First we have to work backwards from mSoftBegin to find a text node
   // containing a DOM word separator, a non-inline-element
   // boundary, or the hard start node. That's where we'll start building the
   // soft string from.
