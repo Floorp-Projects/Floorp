@@ -5454,6 +5454,17 @@
   mirror: always  # LoadStartupJSPrefs
   do_not_use_directly: true
 
+# A threshold for Warp to decide whether a function can be inlined.
+# If the size of a function is smaller than this threshold, then it
+# may be inlined. 
+#
+# NOTE: These must match JitOptions defaults.
+- name: javascript.options.inlining_bytecode_max_length
+  type: uint32_t
+  value: 130
+  mirror: always
+  do_not_use_directly: true
+
 - name: javascript.options.compact_on_user_inactive
   type: bool
   value: true
