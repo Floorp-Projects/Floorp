@@ -583,28 +583,28 @@ LogicalSize nsTextControlFrame::ComputeAutoSize(
   return autoSize;
 }
 
-void nsTextControlFrame::ComputeBaseline(const ReflowInput& aReflowInput,
-                                         ReflowOutput& aDesiredSize) {
+Maybe<nscoord> nsTextControlFrame::ComputeBaseline(
+    const nsIFrame* aFrame, const ReflowInput& aReflowInput,
+    bool aForSingleLineControl) {
   // If we're layout-contained, we have no baseline.
   if (aReflowInput.mStyleDisplay->IsContainLayout()) {
-    mFirstBaseline = NS_INTRINSIC_ISIZE_UNKNOWN;
-    return;
+    return Nothing();
   }
   WritingMode wm = aReflowInput.GetWritingMode();
 
   // Calculate the baseline and store it in mFirstBaseline.
   nscoord lineHeight = aReflowInput.ComputedBSize();
-  float inflation = nsLayoutUtils::FontSizeInflationFor(this);
-  if (!IsSingleLineTextControl()) {
+  float inflation = nsLayoutUtils::FontSizeInflationFor(aFrame);
+  if (!aForSingleLineControl || lineHeight == NS_UNCONSTRAINEDSIZE) {
     lineHeight = ReflowInput::CalcLineHeight(
-        GetContent(), Style(), PresContext(), NS_UNCONSTRAINEDSIZE, inflation);
+        aFrame->GetContent(), aFrame->Style(), aFrame->PresContext(),
+        NS_UNCONSTRAINEDSIZE, inflation);
   }
   RefPtr<nsFontMetrics> fontMet =
-      nsLayoutUtils::GetFontMetricsForFrame(this, inflation);
-  mFirstBaseline = nsLayoutUtils::GetCenteredFontBaseline(fontMet, lineHeight,
-                                                          wm.IsLineInverted()) +
-                   aReflowInput.ComputedLogicalBorderPadding(wm).BStart(wm);
-  aDesiredSize.SetBlockStartAscent(mFirstBaseline);
+      nsLayoutUtils::GetFontMetricsForFrame(aFrame, inflation);
+  return Some(nsLayoutUtils::GetCenteredFontBaseline(fontMet, lineHeight,
+                                                     wm.IsLineInverted()) +
+              aReflowInput.ComputedLogicalBorderPadding(wm).BStart(wm));
 }
 
 void nsTextControlFrame::Reflow(nsPresContext* aPresContext,
@@ -620,7 +620,14 @@ void nsTextControlFrame::Reflow(nsPresContext* aPresContext,
   WritingMode wm = aReflowInput.GetWritingMode();
   aDesiredSize.SetSize(wm, aReflowInput.ComputedSizeWithBorderPadding(wm));
 
-  ComputeBaseline(aReflowInput, aDesiredSize);
+  {
+    auto baseline =
+        ComputeBaseline(this, aReflowInput, IsSingleLineTextControl());
+    mFirstBaseline = baseline.valueOr(NS_INTRINSIC_ISIZE_UNKNOWN);
+    if (baseline) {
+      aDesiredSize.SetBlockStartAscent(*baseline);
+    }
+  }
 
   // overflow handling
   aDesiredSize.SetOverflowAreasToDesiredBounds();
