@@ -292,7 +292,7 @@ vec2 compute_repeated_uvs(float perspective_divisor) {
 #ifdef WR_FEATURE_REPETITION
     vec2 uv_size = v_uv_bounds.zw - v_uv_bounds.xy;
 
-    #if defined(WR_FEATURE_ALPHA_PASS) && !defined(SWGL_ANTIALIAS)
+    #ifdef WR_FEATURE_ALPHA_PASS
     // This prevents the uv on the top and left parts of the primitive that was inflated
     // for anti-aliasing purposes from going beyound the range covered by the regular
     // (non-inflated) primitive.
@@ -378,7 +378,7 @@ void swgl_drawSpanRGBA8() {
     #ifdef WR_FEATURE_ALPHA_PASS
     if (v_color != vec4(1.0)) {
         #ifdef WR_FEATURE_REPETITION
-            swgl_commitTextureRepeatColorRGBA8(sColor0, uv, v_uv_bounds, v_uv_sample_bounds, v_color);
+            swgl_commitTextureRepeatColorRGBA8(sColor0, uv, v_tile_repeat, v_uv_bounds, v_uv_sample_bounds, v_color);
         #else
             swgl_commitTextureColorRGBA8(sColor0, uv, v_uv_sample_bounds, v_color);
         #endif
@@ -388,7 +388,11 @@ void swgl_drawSpanRGBA8() {
     #endif
 
     #ifdef WR_FEATURE_REPETITION
-        swgl_commitTextureRepeatRGBA8(sColor0, uv, v_uv_bounds, v_uv_sample_bounds);
+        #ifdef WR_FEATURE_ALPHA_PASS
+            swgl_commitTextureRepeatRGBA8(sColor0, uv, v_tile_repeat, v_uv_bounds, v_uv_sample_bounds);
+        #else
+            swgl_commitTextureRepeatRGBA8(sColor0, uv, vec2(0.0), v_uv_bounds, v_uv_sample_bounds);
+        #endif
     #else
         swgl_commitTextureRGBA8(sColor0, uv, v_uv_sample_bounds);
     #endif
