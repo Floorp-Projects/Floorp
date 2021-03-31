@@ -1,0 +1,34 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<meta charset="utf-8">
+<title>test for window focus by window.close() and window.open()</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" href="/tests/SimpleTest/test.css"/>
+<script>
+SimpleTest.waitForExplicitFinish();
+
+function start() {
+  var w = window.open("", "_blank");
+  w.finished = function() {
+    ok(true, "1st new window had focus");
+    w.close();
+    w = window.open("", "_blank");
+    w.finished = function() {
+      ok(true, "2nd new window had focus");
+      w.close();
+      SimpleTest.finish();
+    };
+    w.location = "file_window_focus_by_close_and_open.html";
+  };
+  w.location = "file_window_focus_by_close_and_open.html";
+}
+</script>
+</head>
+<body onload="setTimeout(start)">
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1695135">Mozilla Bug 1695135</a>
+<p id="display"></p>
+<div id="content"></div>
+<pre id="test"></pre>
+</body>
+</html>
