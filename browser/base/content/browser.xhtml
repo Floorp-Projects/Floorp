@@ -1545,7 +1545,7 @@
         <!-- The `Connect Another Device` button is disabled by default until the user logs into Sync. -->
         <toolbarbutton id="PanelUI-fxa-menu-connect-device-button"
                         class="subviewbutton subviewbutton-iconic"
-                        label="&fxa.menu.connectAnotherDevice2.label;"
+                        data-l10n-id="fxa-menu-connect-another-device"
                         disabled="true"
                         oncommand="gSync.openConnectAnotherDeviceFromFxaMenu(this);"/>
         <toolbarbutton id="PanelUI-fxa-menu-sendtab-button"
@@ -1560,7 +1560,7 @@
         <toolbarseparator id="PanelUI-sign-out-separator"/>
         <toolbarbutton id="PanelUI-fxa-menu-account-signout-button"
                 class="subviewbutton subviewbutton-iconic"
-                label="&fxa.menu.signOut.label;"
+                data-l10n-id="fxa-menu-sign-out"
                 oncommand="gSync.disconnect();"/>
         <toolbarseparator id="PanelUI-remote-tabs-separator"/>
         <deck id="PanelUI-fxa-remotetabs-deck">
@@ -2076,8 +2076,7 @@
                        onkeypress="gSync.toggleAccountPanel(this, event)"
                        consumeanchor="fxa-toolbar-menu-button"
                        closemenu="none"
-                       label="&fxa.menu.firefoxAccount;"
-                       tooltiptext="&fxa.menu.firefoxAccount;"
+                       data-l10n-id="toolbar-button-fxaccount"
                        cui-areatype="toolbar"
                        removable="true">
                        <vbox>
