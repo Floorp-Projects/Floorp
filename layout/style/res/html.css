@@ -803,6 +803,7 @@ details > summary:first-of-type > *|* {
 
 dialog {
   position: absolute;
+  display: block;
   inset-inline-start: 0;
   inset-inline-end: 0;
   color: black;
