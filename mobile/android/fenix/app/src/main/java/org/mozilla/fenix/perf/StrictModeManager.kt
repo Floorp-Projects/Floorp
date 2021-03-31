@@ -95,21 +95,7 @@ class StrictModeManager(
      * specific fragment.
      */
     fun attachListenerToDisablePenaltyDeath(fragmentManager: FragmentManager) {
-        fragmentManager.registerFragmentLifecycleCallbacks(object :
-            FragmentManager.FragmentLifecycleCallbacks() {
-            override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
-                fm.unregisterFragmentLifecycleCallbacks(this)
-
-                // If we don't post when using penaltyListener on P+, the violation listener is never
-                // called. My best guess is that, unlike penaltyDeath, the violations are not
-                // delivered instantaneously so posting gives time for the violation listeners to
-                // run before they are removed here. This may be a race so we give the listeners a
-                // little extra time to run too though this way we may accidentally trigger
-                // violations for non-startup, which we haven't planned to do yet.
-                Handler(mainLooper).postDelayed({
-                    enableStrictMode(setPenaltyDeath = false)
-                }, DELAY_TO_REMOVE_STRICT_MODE_MILLIS)
-            } }, false)
+        fragmentManager.registerFragmentLifecycleCallbacks(DisableStrictModeFragmentLifecycleCallbacks(), false)
     }
 
     /**
@@ -145,6 +131,26 @@ class StrictModeManager(
             policy.resetAfter(functionBlock)
         } else {
             functionBlock()
+        }
+    }
+
+    // If we use anonymous classes/functions in this class, we get a class load error with a slight perf impact. #18731
+    inner class DisableStrictModeFragmentLifecycleCallbacks : FragmentManager.FragmentLifecycleCallbacks() {
+        override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
+            fm.unregisterFragmentLifecycleCallbacks(this)
+
+            // If we don't post when using penaltyListener on P+, the violation listener is never
+            // called. My best guess is that, unlike penaltyDeath, the violations are not
+            // delivered instantaneously so posting gives time for the violation listeners to
+            // run before they are removed here. This may be a race so we give the listeners a
+            // little extra time to run too though this way we may accidentally trigger
+            // violations for non-startup, which we haven't planned to do yet.
+            Handler(Looper.getMainLooper()).postDelayed(::disableStrictMode, DELAY_TO_REMOVE_STRICT_MODE_MILLIS)
+        }
+
+        // See comment on anonymous functions above.
+        private fun disableStrictMode() {
+            enableStrictMode(setPenaltyDeath = false)
         }
     }
 }
