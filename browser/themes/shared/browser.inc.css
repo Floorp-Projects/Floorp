@@ -890,7 +890,7 @@ popupnotificationcontent {
 .webRTC-selectDevice-icon {
   -moz-context-properties: fill;
   fill: currentColor;
-  margin-inline-end: 6px;
+  margin-inline-end: 8px;
 }
 
 #webRTC-selectCamera-icon {
