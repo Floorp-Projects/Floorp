@@ -825,6 +825,7 @@ nsresult HTMLFormElement::SubmitSubmission(
     loadState->SetTriggeringPrincipal(NodePrincipal());
     loadState->SetPrincipalToInherit(NodePrincipal());
     loadState->SetCsp(GetCsp());
+    loadState->SetAllowFocusMove(UserActivation::IsHandlingUserInput());
 
     rv = nsDocShell::Cast(container)->OnLinkClickSync(this, loadState, false,
                                                       NodePrincipal());
