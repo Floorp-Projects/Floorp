@@ -2646,8 +2646,7 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
 NS_IMETHODIMP
 nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                          StyleAppearance aAppearance, const nsRect& aRect,
-                                         const nsRect& aDirtyRect,
-                                         DrawOverflow) {
+                                         const nsRect& aDirtyRect, DrawOverflow) {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
 
   Maybe<WidgetInfo> widgetInfo = ComputeWidgetInfo(aFrame, aAppearance, aRect);
@@ -2674,6 +2673,16 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
 void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget& aDrawTarget,
                                       const gfx::Rect& aWidgetRect, const gfx::Rect& aDirtyRect,
                                       float aScale) {
+  if (@available(macOS 10.14, *)) {
+    // Some of the drawing below uses NSAppearance.currentAppearance behind the scenes.
+    // Set it to the appearance we want, to overwrite any state that's still around from earlier
+    // paints. We set it to NSApp.effectiveAppearance, which is consistent with what nsLookAndFeel
+    // uses for CSS system colors; it's either the system appearance or our Aqua override.
+    // We could also make nsNativeThemeCocoa respect the per-window appearance, but only once CSS
+    // system colors also respect the window appearance.
+    NSAppearance.currentAppearance = NSApp.effectiveAppearance;
+  }
+
   const Widget widget = aWidgetInfo.Widget();
 
   // Some widgets render using DrawTarget, and some using CGContext.
