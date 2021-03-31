@@ -173,9 +173,15 @@ AccessibilityPanel.prototype = {
    * refreshed immediatelly if it's currently selected or lazily when the user
    * actually selects it.
    */
-  onTabNavigated() {
+  async onTabNavigated() {
     this.shouldRefresh = true;
-    this._opening.then(() => this.refresh());
+    await this._opening;
+
+    const onUpdated = this.panelWin.once(EVENTS.INITIALIZED);
+    this.refresh();
+    await onUpdated;
+
+    this.emit("reloaded");
   },
 
   onTargetUpdated({ isTargetSwitching }) {
