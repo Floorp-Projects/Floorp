@@ -1,0 +1,10 @@
+[
+  {
+    "filename": "mitmproxy-6.0.2-windows.zip",
+    "size": 36482912,
+    "algorithm": "sha512",
+    "digest": "242701b5090fe71526ac887843ca08a674a5b1261c21f9f8cb86d143b16b4bc50fca80b016b140a4c0fd2c6ec5819aee1e145a57b000a293fe290ba1b21bac9f",
+    "visibility": "public",
+    "unpack": true
+  }
+]
