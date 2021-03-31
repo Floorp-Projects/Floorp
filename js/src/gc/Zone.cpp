@@ -924,10 +924,17 @@ void Zone::clearScriptCounts(Realm* realm) {
   // ScriptCounts entries of the given realm.
   for (auto i = scriptCountsMap->modIter(); !i.done(); i.next()) {
     BaseScript* script = i.get().key();
-    if (script->realm() == realm) {
-      script->clearHasScriptCounts();
-      i.remove();
+    if (script->realm() != realm) {
+      continue;
     }
+    // We can't destroy the ScriptCounts yet if the script has Baseline code,
+    // because Baseline code bakes in pointers to the counters. The ScriptCounts
+    // will be destroyed in Zone::discardJitCode when discarding the JitScript.
+    if (script->hasBaselineScript()) {
+      continue;
+    }
+    script->clearHasScriptCounts();
+    i.remove();
   }
 }
 
