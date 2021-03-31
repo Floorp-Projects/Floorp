@@ -527,9 +527,7 @@ impl<Src, Dst> MatrixHelpers<Src, Dst> for Transform3D<f32, Src, Dst> {
         self.m23 = 0.0;
         self.m33 = 1.0;
         self.m43 = 0.0;
-        self.m31 = 0.0;
-        self.m32 = 0.0;
-        self.m34 = 0.0;
+        //Note: we used to zero out m3? as well, see "reftests/flatten-all-flat.yaml" test
     }
 
     fn cast_unit<NewSrc, NewDst>(&self) -> Transform3D<f32, NewSrc, NewDst> {
