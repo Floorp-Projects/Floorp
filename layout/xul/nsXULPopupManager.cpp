@@ -1678,6 +1678,12 @@ already_AddRefed<nsINode> nsXULPopupManager::GetLastTriggerNode(
     nsCOMPtr<nsIContent> openingPopup = mOpeningPopup;
     node = nsMenuPopupFrame::GetTriggerContent(
         GetPopupFrameForContent(openingPopup, false));
+  } else if (mNativeMenu && !aIsTooltip) {
+    RefPtr<dom::Element> popup = mNativeMenu->Element();
+    if (popup->GetUncomposedDoc() == aDocument) {
+      nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(popup, false);
+      node = nsMenuPopupFrame::GetTriggerContent(popupFrame);
+    }
   } else {
     nsMenuChainItem* item = mPopups;
     while (item) {
