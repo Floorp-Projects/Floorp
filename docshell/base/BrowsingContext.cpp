@@ -439,6 +439,9 @@ already_AddRefed<BrowsingContext> BrowsingContext::CreateDetached(
 
 already_AddRefed<BrowsingContext> BrowsingContext::CreateIndependent(
     Type aType) {
+  MOZ_DIAGNOSTIC_ASSERT(XRE_IsParentProcess(),
+                        "BCs created in the content process must be related to "
+                        "some BrowserChild");
   RefPtr<BrowsingContext> bc(
       CreateDetached(nullptr, nullptr, nullptr, u""_ns, aType));
   bc->mWindowless = bc->IsContent();
@@ -695,6 +698,7 @@ void BrowsingContext::Embed() {
 
 void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
   MOZ_DIAGNOSTIC_ASSERT(!mEverAttached);
+  MOZ_DIAGNOSTIC_ASSERT_IF(aFromIPC, aOriginProcess || XRE_IsContentProcess());
   mEverAttached = true;
 
   if (MOZ_LOG_TEST(GetLog(), LogLevel::Debug)) {
@@ -745,6 +749,18 @@ void BrowsingContext::Attach(bool aFromIPC, ContentParent* aOriginProcess) {
     ContentChild::GetSingleton()->SendCreateBrowsingContext(
         mGroup->Id(), GetIPCInitializer());
   } else if (XRE_IsParentProcess()) {
+    // If this window was created as a subframe by a content process, it must be
+    // being hosted within the same BrowserParent as its mParentWindow.
+    // Toplevel BrowsingContexts created by content have their BrowserParent
+    // configured during `RecvConstructPopupBrowser`.
+    if (mParentWindow && aOriginProcess) {
+      MOZ_DIAGNOSTIC_ASSERT(
+          mParentWindow->Canonical()->GetContentParent() == aOriginProcess,
+          "Creator process isn't the same as our embedder?");
+      Canonical()->SetCurrentBrowserParent(
+          mParentWindow->Canonical()->GetBrowserParent());
+    }
+
     mGroup->EachOtherParent(aOriginProcess, [&](ContentParent* aParent) {
       MOZ_DIAGNOSTIC_ASSERT(IsContent(),
                             "chrome BCG cannot be synced to content process");

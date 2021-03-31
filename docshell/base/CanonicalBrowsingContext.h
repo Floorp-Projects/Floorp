@@ -39,6 +39,7 @@ class DocumentLoadListener;
 namespace dom {
 
 class BrowserParent;
+class BrowserBridgeParent;
 class FeaturePolicy;
 struct LoadURIOptions;
 class MediaController;
@@ -83,10 +84,6 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void GetCurrentRemoteType(nsACString& aRemoteType, ErrorResult& aRv) const;
 
   void SetOwnerProcessId(uint64_t aProcessId);
-
-  void SetInFlightProcessId(uint64_t aProcessId);
-  void ClearInFlightProcessId(uint64_t aProcessId);
-  uint64_t GetInFlightProcessId() const { return mInFlightProcessId; }
 
   // The ID of the BrowsingContext which caused this BrowsingContext to be
   // opened, or `0` if this is unknown.
@@ -215,6 +212,7 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void SetCurrentRemoteURI(nsIURI* aCurrentRemoteURI);
 
   BrowserParent* GetBrowserParent() const;
+  void SetCurrentBrowserParent(BrowserParent* aBrowserParent);
 
   // Internal method to change which process a BrowsingContext is being loaded
   // in. The returned promise will resolve when the process switch is completed.
@@ -287,6 +285,14 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   void SetRestoreData(SessionStoreRestoreData* aData);
   void RequestRestoreTabContent(WindowGlobalParent* aWindow);
 
+  // Called when a BrowserParent for this BrowsingContext has been fully
+  // destroyed (i.e. `ActorDestroy` was called).
+  void BrowserParentDestroyed(BrowserParent* aBrowserParent,
+                              bool aAbnormalShutdown);
+
+  void StartUnloadingHost(uint64_t aChildID);
+  void ClearUnloadingHost(uint64_t aChildID);
+
  protected:
   // Called when the browsing context is being discarded.
   void CanonicalDiscard();
@@ -319,9 +325,13 @@ class CanonicalBrowsingContext final : public BrowsingContext {
     friend class CanonicalBrowsingContext;
 
     ~PendingRemotenessChange();
+    void ProcessLaunched();
     void ProcessReady();
     void Finish();
     void Clear();
+
+    nsresult FinishTopContent();
+    nsresult FinishSubframe();
 
     RefPtr<CanonicalBrowsingContext> mTarget;
     RefPtr<RemotenessPromise::Private> mPromise;
@@ -350,16 +360,22 @@ class CanonicalBrowsingContext final : public BrowsingContext {
       const nsID& aChangeID,
       const CallerWillNotifyHistoryIndexAndLengthChanges& aProofOfCaller);
 
+  struct UnloadingHost {
+    uint64_t mChildID;
+    nsTArray<std::function<void()>> mCallbacks;
+  };
+  nsTArray<UnloadingHost>::iterator FindUnloadingHost(uint64_t aChildID);
+
+  // Called when we want to show the subframe crashed UI as our previous browser
+  // has become unloaded for one reason or another.
+  void ShowSubframeCrashedUI(BrowserBridgeParent* aBridge);
+
   // XXX(farre): Store a ContentParent pointer here rather than mProcessId?
   // Indicates which process owns the docshell.
   uint64_t mProcessId;
 
   // Indicates which process owns the embedder element.
   uint64_t mEmbedderProcessId;
-
-  // The ID of the former owner process during an ownership change, which may
-  // have in-flight messages that assume it is still the owner.
-  uint64_t mInFlightProcessId = 0;
 
   uint64_t mCrossGroupOpenerId = 0;
 
@@ -368,6 +384,10 @@ class CanonicalBrowsingContext final : public BrowsingContext {
   // setting user interaction on SH entries. Should be called anytime SH
   // entries are added or replaced.
   void ResetSHEntryHasUserInteractionCache();
+
+  RefPtr<BrowserParent> mCurrentBrowserParent;
+
+  nsTArray<UnloadingHost> mUnloadingHosts;
 
   // The current URI loaded in this BrowsingContext. This value is only set for
   // BrowsingContexts loaded in content processes.
