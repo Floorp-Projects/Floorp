@@ -95,6 +95,9 @@ class nsMenuX final : public nsMenuParentX,
   // references to this object can be dropped during the handling of the DOM event.
   void MenuClosedAsync();
 
+  // Close the menu if it's open, and flush any pending popuphiding / popuphidden events.
+  bool Close();
+
   void SetRebuild(bool aMenuEvent);
   void SetupIcon();
   nsIContent* Content() { return mContent; }

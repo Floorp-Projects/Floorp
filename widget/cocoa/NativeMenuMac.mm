@@ -268,5 +268,7 @@ void NativeMenuMac::OpenMenu(const mozilla::DesktopPoint& aPosition) {
   }
 }
 
+bool NativeMenuMac::Close() { return mMenu->Close(); }
+
 }  // namespace widget
 }  // namespace mozilla
