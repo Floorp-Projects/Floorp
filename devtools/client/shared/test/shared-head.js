@@ -582,6 +582,12 @@ function waitForPanelReload(currentToolId, target, panel) {
       info("Waiting for netmonitor updates after page reload");
       await onReloaded;
     };
+  } else if (currentToolId == "accessibility") {
+    const onReloaded = panel.once("reloaded");
+    return async function() {
+      info("Waiting for accessibility updates after page reload");
+      await onReloaded;
+    };
   }
   return null;
 }

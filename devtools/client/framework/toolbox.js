@@ -3010,11 +3010,12 @@ Toolbox.prototype = {
     this.setErrorCount(0);
     this.updateToolboxButtons();
     const toolId = this.currentToolId;
-    // For now, only inspector, webconsole and netmonitor fire "reloaded" event
+    // For now, only inspector, webconsole, netmonitor and accessibility fire "reloaded" event
     if (
       toolId != "inspector" &&
       toolId != "webconsole" &&
-      toolId != "netmonitor"
+      toolId != "netmonitor" &&
+      toolId != "accessibility"
     ) {
       return;
     }
