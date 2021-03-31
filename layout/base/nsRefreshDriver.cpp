@@ -1204,16 +1204,14 @@ void nsRefreshDriver::AddRefreshObserver(nsARefreshObserver* aObserver,
                                          FlushType aFlushType,
                                          const char* aObserverDescription) {
   ObserverArray& array = ArrayFor(aFlushType);
-  Maybe<uint64_t> innerWindowID;
+  array.AppendElement(ObserverData{
+      aObserver, aObserverDescription, TimeStamp::Now(),
 #ifdef MOZ_GECKO_PROFILER
-  if (mPresContext) {
-    innerWindowID =
-        profiler_get_inner_window_id_from_docshell(mPresContext->GetDocShell());
-  }
+      mPresContext
+          ? MarkerInnerWindowIdFromDocShell(mPresContext->GetDocShell())
+          : MarkerInnerWindowId::NoId(),
 #endif
-  array.AppendElement(ObserverData{aObserver, aObserverDescription,
-                                   TimeStamp::Now(), innerWindowID,
-                                   profiler_capture_backtrace(), aFlushType});
+      profiler_capture_backtrace(), aFlushType});
   EnsureTimerStarted();
 }
 
@@ -1233,7 +1231,7 @@ bool nsRefreshDriver::RemoveRefreshObserver(nsARefreshObserver* aObserver,
         "RefreshObserver", GRAPHICS,
         MarkerOptions(MarkerStack::TakeBacktrace(std::move(data.mCause)),
                       MarkerTiming::IntervalUntilNowFrom(data.mRegisterTime),
-                      MarkerInnerWindowId(data.mInnerWindowId)),
+                      std::move(data.mInnerWindowId)),
         str);
   }
 
@@ -2008,7 +2006,9 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     // We're currently suspended waiting for earlier Tick's to
     // be completed (on the Compositor). Mark that we missed the paint
     // and keep waiting.
-    PROFILER_MARKER_UNTYPED("nsRefreshDriver::Tick waiting for paint", LAYOUT);
+    PROFILER_MARKER_UNTYPED(
+        "RefreshDriverTick waiting for paint", GRAPHICS,
+        MarkerInnerWindowIdFromDocShell(GetDocShell(mPresContext)));
     return;
   }
 
@@ -2043,8 +2043,10 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     // On top level content pages keep the timer running initially so that we
     // paint the page soon enough.
     if (ShouldKeepTimerRunningWhileWaitingForFirstContentfulPaint()) {
-      PROFILER_MARKER("RefreshDriver waiting for first contentful paint",
-                      GRAPHICS, {}, Tracing, "Paint");
+      PROFILER_MARKER(
+          "RefreshDriverTick waiting for first contentful paint", GRAPHICS,
+          MarkerInnerWindowIdFromDocShell(GetDocShell(mPresContext)), Tracing,
+          "Paint");
     } else {
       StopTimer();
     }
@@ -2323,7 +2325,9 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime) {
     }
     AUTO_PROFILER_MARKER_TEXT(
         "ViewManagerFlush", GRAPHICS,
-        MarkerStack::TakeBacktrace(std::move(mViewManagerFlushCause)),
+        MarkerOptions(
+            MarkerInnerWindowIdFromDocShell(GetDocShell(mPresContext)),
+            MarkerStack::TakeBacktrace(std::move(mViewManagerFlushCause))),
         transactionId);
 
     // Forward our composition payloads to the layer manager.

@@ -48,6 +48,41 @@
 #else  // ndef MOZ_GECKO_PROFILER
 
 #  include "mozilla/ProfilerLabels.h"
+#  include "nsJSUtils.h"  // for nsJSUtils::GetCurrentlyRunningCodeInnerWindowID
+
+class nsIDocShell;
+
+namespace geckoprofiler::markers::detail {
+// Please do not use anything from the detail namespace outside the profiler.
+mozilla::Maybe<uint64_t> profiler_get_inner_window_id_from_docshell(
+    nsIDocShell* aDocshell);
+}  // namespace geckoprofiler::markers::detail
+
+// This is a helper function to get the Inner Window ID from DocShell but it's
+// not a recommended method to get it and it's not encouraged to use this
+// function. If there is a computed inner window ID, `window`, or `Document`
+// available in the call site, please use them. Use this function as a last
+// resort.
+inline mozilla::MarkerInnerWindowId MarkerInnerWindowIdFromDocShell(
+    nsIDocShell* aDocshell) {
+  mozilla::Maybe<uint64_t> id = geckoprofiler::markers::detail::
+      profiler_get_inner_window_id_from_docshell(aDocshell);
+  if (!id) {
+    return mozilla::MarkerInnerWindowId::NoId();
+  }
+  return mozilla::MarkerInnerWindowId(*id);
+}
+
+// This is a helper function to get the Inner Window ID from a JS Context but
+// it's not a recommended method to get it and it's not encouraged to use this
+// function. If there is a computed inner window ID, `window`, or `Document`
+// available in the call site, please use them. Use this function as a last
+// resort.
+inline mozilla::MarkerInnerWindowId MarkerInnerWindowIdFromJSContext(
+    JSContext* aContext) {
+  return mozilla::MarkerInnerWindowId(
+      nsJSUtils::GetCurrentlyRunningCodeInnerWindowID(aContext));
+}
 
 // Forward-declaration. TODO: Move to more common header, see bug 1681416.
 bool profiler_capture_backtrace_into(
@@ -263,7 +298,8 @@ class MOZ_RAII AutoProfilerTracing {
                                                 categoryPair, docShell)     \
     AutoProfilerTracing PROFILER_RAII(                                      \
         categoryString, markerName, geckoprofiler::category::categoryPair,  \
-        profiler_get_inner_window_id_from_docshell(docShell))
+        geckoprofiler::markers::detail::                                    \
+            profiler_get_inner_window_id_from_docshell(docShell))
 
 extern template mozilla::ProfileBufferBlockIndex AddMarkerToBuffer(
     mozilla::ProfileChunkedBuffer&, const mozilla::ProfilerString8View&,

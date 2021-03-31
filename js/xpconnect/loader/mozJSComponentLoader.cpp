@@ -1209,8 +1209,11 @@ nsresult mozJSComponentLoader::Import(JSContext* aCx,
                                       bool aIgnoreExports) {
   mInitialized = true;
 
-  AUTO_PROFILER_MARKER_TEXT("ChromeUtils.import", JS, MarkerStack::Capture(),
-                            aLocation);
+  AUTO_PROFILER_MARKER_TEXT(
+      "ChromeUtils.import", JS,
+      MarkerOptions(MarkerStack::Capture(),
+                    MarkerInnerWindowIdFromJSContext(aCx)),
+      aLocation);
 
   ComponentLoaderInfo info(aLocation);
 

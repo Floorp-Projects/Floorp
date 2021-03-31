@@ -46,6 +46,13 @@ dictionary ProfilerMarkerOptions {
   // See ProfilingCategoryList.h for the complete list of valid values.
   // Using an unrecognized value will set the category to "Other".
   ByteString category = "JavaScript";
+
+  // Inner window ID to use for the marker. If the global object is a window,
+  // the inner window id of the marker will be set automatically.
+  // If a marker that relates to a specific window is added from a JS module,
+  // setting the inner window id will allow the profiler to show which window
+  // the marker applies to.
+  unsigned long long innerWindowId = 0;
 };
 
 /**
