@@ -12,8 +12,6 @@
   --toolbar-non-lwt-textcolor: #0c0c0d;
   --toolbar-non-lwt-bgimage: none;
 
-  --toolbar-field-non-lwt-bgcolor: #f0f0f4;
-
   --toolbarbutton-vertical-text-padding: calc(var(--toolbarbutton-inner-padding) + 1px);
   --toolbarbutton-border-radius: 4px;
   --toolbarbutton-icon-fill-opacity: .7;

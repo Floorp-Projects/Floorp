@@ -52,14 +52,17 @@
   @supports -moz-bool-pref("browser.proton.urlbar.enabled") {
   :root:not(:-moz-lwtheme) {
     --urlbar-popup-action-color: rgb(21,20,26);
+    --urlbar-popup-url-color: rgb(0,97,224);
+
     --urlbar-separator-color: rgb(240,240,244);
     --toolbar-field-border-color: transparent;
     --arrowpanel-border-color: transparent;
 
+    --toolbar-field-non-lwt-bgcolor: rgb(240,240,244);
+
     --autocomplete-popup-highlight-background: var(--arrowpanel-dimmed);
     --autocomplete-popup-highlight-color: rgb(21,20,26);
     --urlbar-result-hover-bgcolor: rgb(240,240,244);
-    --urlbar-popup-url-color: rgb(0,97,224);
   }
   } /** END Proton **/
 }
