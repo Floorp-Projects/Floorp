@@ -444,6 +444,11 @@ class ICCacheIRStub : public ICStub {
 
   const CacheIRStubInfo* stubInfo_;
 
+#ifndef JS_64BIT
+  // Ensure stub data is 8-byte aligned on 32-bit.
+  uintptr_t padding_ = 0;
+#endif
+
  public:
   ICCacheIRStub(JitCode* stubCode, const CacheIRStubInfo* stubInfo)
       : ICStub(stubCode->raw(), /* isFallback = */ false),
@@ -475,7 +480,7 @@ static_assert(sizeof(ICFallbackStub) == 4 * sizeof(uintptr_t));
 static_assert(sizeof(ICCacheIRStub) == 4 * sizeof(uintptr_t));
 #else
 static_assert(sizeof(ICFallbackStub) == 5 * sizeof(uintptr_t));
-static_assert(sizeof(ICCacheIRStub) == 5 * sizeof(uintptr_t));
+static_assert(sizeof(ICCacheIRStub) == 6 * sizeof(uintptr_t));
 #endif
 
 inline ICStub* ICStub::maybeNext() const {
