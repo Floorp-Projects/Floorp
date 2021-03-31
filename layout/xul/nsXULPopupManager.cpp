@@ -42,6 +42,7 @@
 #include "mozilla/dom/PopupPositionedEvent.h"
 #include "mozilla/dom/PopupPositionedEventBinding.h"
 #include "mozilla/EventDispatcher.h"
+#include "mozilla/EventStateManager.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
@@ -50,9 +51,13 @@
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/StaticPrefs_xul.h"
 #include "mozilla/widget/nsAutoRollup.h"
+#ifdef XP_MACOSX
+#  include "mozilla/widget/NativeMenuSupport.h"
+#endif
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using mozilla::widget::NativeMenu;
 
 static_assert(KeyboardEvent_Binding::DOM_VK_HOME ==
                       KeyboardEvent_Binding::DOM_VK_END + 1 &&
@@ -146,6 +151,10 @@ nsXULPopupManager::nsXULPopupManager()
 
 nsXULPopupManager::~nsXULPopupManager() {
   NS_ASSERTION(!mPopups, "XUL popups still open");
+
+  if (mNativeMenu) {
+    mNativeMenu->RemoveObserver(this);
+  }
 }
 
 nsresult nsXULPopupManager::Init() {
@@ -721,29 +730,93 @@ static bool ShouldUseNativeContextMenus() {
 void nsXULPopupManager::ShowPopupAtScreen(nsIContent* aPopup, int32_t aXPos,
                                           int32_t aYPos, bool aIsContextMenu,
                                           Event* aTriggerEvent) {
+  if (aIsContextMenu && ShouldUseNativeContextMenus() &&
+      ShowPopupAsNativeMenu(aPopup, aXPos, aYPos, aIsContextMenu,
+                            aTriggerEvent)) {
+    return;
+  }
+
   nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, true);
   if (!popupFrame || !MayShowPopup(popupFrame)) return;
 
   nsCOMPtr<nsIContent> triggerContent;
   InitTriggerEvent(aTriggerEvent, aPopup, getter_AddRefs(triggerContent));
 
-  if (aIsContextMenu && ShouldUseNativeContextMenus()) {
-    bool haveNativeMenu = popupFrame->InitializePopupAsNativeContextMenu(
-        triggerContent, aXPos, aYPos);
-    if (haveNativeMenu) {
-      // Show the menu. ShowNativeMenu synchronously fires a popupshowing event.
-      // Make sure mOpeningPopup is set to aPopup during the event, so that
-      // document.popupNode can find the popup.
-      mOpeningPopup = aPopup;
-      popupFrame->ShowNativeMenu();
-      mOpeningPopup = nullptr;
-      return;
-    }
-  }
-
   popupFrame->InitializePopupAtScreen(triggerContent, aXPos, aYPos,
                                       aIsContextMenu);
   FirePopupShowingEvent(aPopup, aIsContextMenu, false, aTriggerEvent);
+}
+
+bool nsXULPopupManager::ShowPopupAsNativeMenu(nsIContent* aPopup, int32_t aXPos,
+                                              int32_t aYPos,
+                                              bool aIsContextMenu,
+                                              Event* aTriggerEvent) {
+  if (mNativeMenu) {
+    NS_WARNING("Native menu still open when trying to open another");
+    mNativeMenu->RemoveObserver(this);
+    mNativeMenu = nullptr;
+  }
+
+  RefPtr<NativeMenu> menu;
+#ifdef XP_MACOSX
+  if (aPopup->IsElement()) {
+    menu = mozilla::widget::NativeMenuSupport::CreateNativeContextMenu(
+        aPopup->AsElement());
+  }
+#endif
+
+  if (!menu) {
+    return false;
+  }
+
+  nsMenuPopupFrame* popupFrame = GetPopupFrameForContent(aPopup, true);
+  if (!popupFrame) {
+    return true;
+  }
+
+  nsCOMPtr<nsIContent> triggerContent;
+  InitTriggerEvent(aTriggerEvent, aPopup, getter_AddRefs(triggerContent));
+
+  popupFrame->InitializePopupAsNativeContextMenu(triggerContent, aXPos, aYPos);
+
+  // Show the menu. ShowAsContextMenu synchronously fires a popupshowing event.
+  // Make sure mOpeningPopup is set to aPopup during the event, so that
+  // document.popupNode can find the popup.
+  mOpeningPopup = aPopup;
+  bool succeeded = menu->ShowAsContextMenu(DesktopPoint(aXPos, aYPos));
+  mOpeningPopup = nullptr;
+
+  if (!succeeded) {
+    // preventDefault() was called on the popupshowing event.
+    return true;
+  }
+
+  mNativeMenu = menu;
+  mNativeMenu->AddObserver(this);
+
+  // While the native menu is open, it consumes mouseup events.
+  // Clear any :active state and mouse capture now so that we don't get stuck in
+  // that state.
+  EventStateManager* activeESM = static_cast<EventStateManager*>(
+      EventStateManager::GetActiveEventStateManager());
+  if (activeESM) {
+    EventStateManager::ClearGlobalActiveContent(activeESM);
+  }
+  PresShell::ReleaseCapturingContent();
+
+  return true;
+}
+
+void nsXULPopupManager::OnNativeMenuClosed() {
+  if (!mNativeMenu) {
+    return;
+  }
+
+  // The native menu has closed.
+  // Null out mNativeMenu so that we don't keep it (and mContent) alive
+  // unnecessarily, and unregister ourselves first.
+  mNativeMenu->RemoveObserver(this);
+  mNativeMenu = nullptr;
 }
 
 void nsXULPopupManager::ShowPopupAtScreenRect(
