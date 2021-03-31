@@ -83,6 +83,10 @@ var Downloads = {
    *                          referrerInfo of the download source.  Can be
    *                          omitted or null for example when the download
    *                          source is not HTTP.
+   *            cookieJarSettings: The nsICookieJarSettings object represents
+   *                               the cookieJarSetting of the download source.
+   *                               Can be omitted or null if the download source
+   *                               is not from a document.
    *          },
    *          target: String containing the path of the target file.
    *                  Alternatively, may be an nsIFile, a DownloadTarget object,
