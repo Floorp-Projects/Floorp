@@ -11,18 +11,9 @@
 
 #include "nsDateTimeControlFrame.h"
 
-#include "nsContentUtils.h"
-#include "nsCheckboxRadioFrame.h"
-#include "nsGkAtoms.h"
-#include "nsContentCreatorFunctions.h"
-#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/PresShell.h"
-#include "mozilla/dom/HTMLInputElement.h"
-#include "mozilla/dom/MutationEventBinding.h"
-#include "nsNodeInfoManager.h"
-#include "jsapi.h"
-#include "nsJSUtils.h"
-#include "nsThreadUtils.h"
+#include "nsLayoutUtils.h"
+#include "nsTextControlFrame.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -73,6 +64,13 @@ nscoord nsDateTimeControlFrame::GetPrefISize(gfxContext* aRenderingContext) {
   return result;
 }
 
+bool nsDateTimeControlFrame::GetNaturalBaselineBOffset(
+    mozilla::WritingMode aWM, BaselineSharingGroup aBaselineGroup,
+    nscoord* aBaseline) const {
+  return nsTextControlFrame::GetSingleLineTextControlBaseline(
+      this, mFirstBaseline, aWM, aBaselineGroup, aBaseline);
+}
+
 void nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
                                     ReflowOutput& aDesiredSize,
                                     const ReflowInput& aReflowInput,
@@ -91,6 +89,16 @@ void nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
                "There should be no more than 1 frames");
 
   const WritingMode myWM = aReflowInput.GetWritingMode();
+
+  {
+    auto baseline = nsTextControlFrame::ComputeBaseline(
+        this, aReflowInput, /* aForSingleLineControl = */ true);
+    mFirstBaseline = baseline.valueOr(NS_INTRINSIC_ISIZE_UNKNOWN);
+    if (baseline) {
+      printf("SetBlockStartAscent(%d)\n", *baseline);
+      aDesiredSize.SetBlockStartAscent(*baseline);
+    }
+  }
 
   // The ISize of our content box, which is the available ISize
   // for our anonymous content:
@@ -175,17 +183,6 @@ void nsDateTimeControlFrame::Reflow(nsPresContext* aPresContext,
     FinishReflowChild(inputAreaFrame, aPresContext, childDesiredSize,
                       &childReflowInput, myWM, childOffset, borderBoxSize,
                       ReflowChildFlags::Default);
-
-    if (!aReflowInput.mStyleDisplay->IsContainLayout() &&
-        childDesiredSize.BlockStartAscent() != ReflowOutput::ASK_FOR_BASELINE) {
-      nsSize contentBoxSize =
-          LogicalSize(myWM, contentBoxISize, contentBoxBSize)
-              .GetPhysicalSize(myWM);
-      aDesiredSize.SetBlockStartAscent(
-          childDesiredSize.BlockStartAscent() +
-          inputAreaFrame->BStart(aReflowInput.GetWritingMode(),
-                                 contentBoxSize));
-    }  // else, leave ascent unset (we don't have one or don't know it)
   }
 
   LogicalSize logicalDesiredSize(myWM, borderBoxISize, borderBoxBSize);

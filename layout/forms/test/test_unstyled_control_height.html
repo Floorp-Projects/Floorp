@@ -1,33 +1,51 @@
 <!doctype html>
 <script src="/tests/SimpleTest/SimpleTest.js"></script>
 <style>
-  .non-native * {
+  #container * {
+    white-space: nowrap;
     appearance: none;
+  }
+  input[type=date] {
+    /* date by default uses a monospace font, which might have different metrics */
+    font: -moz-field;
+  }
+  .small-font * {
+    font-size: 8px !important; /* important to override rule above */
   }
   .no-padding * {
     padding: 0;
   }
 </style>
-<div id="container" class="non-native">
+<div id="container">
   <input>
+  <input type=date>
   <button>Foo</button>
   <select><option>Foo</option></select>
 </div>
 <script>
 function testHeightMatches(desc) {
   let commonHeight = null;
+  let commonTop = null;
   for (let element of document.querySelectorAll("#container > *")) {
-    let height = element.getBoundingClientRect().height;
+    let rect = element.getBoundingClientRect();
     if (commonHeight === null) {
-      commonHeight = height;
+      commonHeight = rect.height;
+      commonTop = rect.top;
     }
-    is(height, commonHeight, "Height of the controls should match" + desc);
+    is(rect.height, commonHeight, `Height of the controls should match for ${element.outerHTML}${desc}`);
+    is(rect.top, commonTop, `Top of the controls should match for ${element.outerHTML}${desc}`);
   }
 }
 
+const container = document.getElementById("container");
+
 testHeightMatches("");
 
-document.getElementById("container").classList.add("no-padding");
+container.className = "no-padding";
 
 testHeightMatches(" without padding");
+
+container.className = "small-font";
+
+testHeightMatches(" with an small font");
 </script>
