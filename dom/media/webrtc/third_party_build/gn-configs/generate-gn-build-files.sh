@@ -74,6 +74,13 @@ do
   cp obj-$THIS_BUILD/third_party/libwebrtc/gn-output/*.json dom/media/webrtc/third_party_build/gn-configs
 done
 
+# run some fixup (mostly removing dev-machine dependent info) from json files
+for file in `ls dom/media/webrtc/third_party_build/gn-configs/*.json`
+do
+  echo "fixup file: $file"
+  ./dom/media/webrtc/third_party_build/gn-configs/fixup_json.py $file
+done
+
 # The symlinks are no longer needed after generating the .json files.
 rm third_party/libwebrtc/buildtools
 rm third_party/libwebrtc/.git
