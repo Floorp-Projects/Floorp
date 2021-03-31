@@ -12847,6 +12847,7 @@ nsresult nsDocShell::OnLinkClick(
       aTriggeringPrincipal ? aTriggeringPrincipal : aContent->NodePrincipal());
   loadState->SetPrincipalToInherit(aContent->NodePrincipal());
   loadState->SetCsp(aCsp ? aCsp : aContent->GetCsp());
+  loadState->SetAllowFocusMove(UserActivation::IsHandlingUserInput());
 
   nsCOMPtr<nsIRunnable> ev =
       new OnLinkClickEvent(this, aContent, loadState, noOpenerImplied,
@@ -13011,7 +13012,6 @@ nsresult nsDocShell::OnLinkClickSync(nsIContent* aContent,
   aLoadState->SetTypeHint(NS_ConvertUTF16toUTF8(typeHint));
   aLoadState->SetLoadType(loadType);
   aLoadState->SetSourceBrowsingContext(mBrowsingContext);
-  aLoadState->SetAllowFocusMove(true);
   aLoadState->SetHasValidUserGestureActivation(
       context && context->HasValidTransientUserGestureActivation());
 
