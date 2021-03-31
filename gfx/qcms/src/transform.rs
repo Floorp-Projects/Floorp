@@ -21,7 +21,7 @@
 // OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 // WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-#[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
+#[cfg(all(any(target_arch = "arm", target_arch = "aarch64"), feature = "neon"))]
 use crate::transform_neon::{
     qcms_transform_data_bgra_out_lut_neon, qcms_transform_data_rgb_out_lut_neon,
     qcms_transform_data_rgba_out_lut_neon,
@@ -1210,12 +1210,12 @@ pub fn transform_create(
                 }
             }
 
-            #[cfg(target_arch = "arm")]
+            #[cfg(all(target_arch = "arm", feature = "neon"))]
             let neon_supported = is_arm_feature_detected!("neon");
-            #[cfg(target_arch = "aarch64")]
+            #[cfg(all(target_arch = "aarch64", feature = "neon"))]
             let neon_supported = is_aarch64_feature_detected!("neon");
 
-            #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
+            #[cfg(all(any(target_arch = "arm", target_arch = "aarch64"), feature = "neon"))]
             if neon_supported {
                 if in_type == RGB8 {
                     transform.transform_fn = Some(qcms_transform_data_rgb_out_lut_neon)
