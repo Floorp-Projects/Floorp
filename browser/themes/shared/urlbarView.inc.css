@@ -645,7 +645,7 @@
   background-color: var(--urlbar-box-active-bgcolor);
 }
 
-.urlbarView-row:is([type=remotetab]) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
+.urlbarView-row[type=remotetab]:not([selected], :hover) > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator,
 .urlbarView:not([actionoverride]) .urlbarView-row[type=switchtab] > .urlbarView-row-inner > .urlbarView-no-wrap > .urlbarView-title-separator {
   visibility: collapse;
 }
