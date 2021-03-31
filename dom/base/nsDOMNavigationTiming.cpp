@@ -85,7 +85,8 @@ void nsDOMNavigationTiming::NotifyNavigationStart(
   mNavigationStart = TimeStamp::Now();
   mDocShellHasBeenActiveSinceNavigationStart =
       (aDocShellState == DocShellState::eActive);
-  PROFILER_MARKER_UNTYPED("Navigation::Start", DOM);
+  PROFILER_MARKER_UNTYPED("Navigation::Start", DOM,
+                          MarkerInnerWindowIdFromDocShell(mDocShell));
 }
 
 void nsDOMNavigationTiming::NotifyFetchStart(nsIURI* aURI,
@@ -182,10 +183,8 @@ void nsDOMNavigationTiming::NotifyLoadEventEnd() {
       PAGELOAD_LOG(("%s", marker.get()));
       PROFILER_MARKER_TEXT(
           "DocumentLoad", DOM,
-          MarkerOptions(
-              MarkerTiming::Interval(mNavigationStart, mLoadEventEnd),
-              MarkerInnerWindowId(
-                  profiler_get_inner_window_id_from_docshell(mDocShell))),
+          MarkerOptions(MarkerTiming::Interval(mNavigationStart, mLoadEventEnd),
+                        MarkerInnerWindowIdFromDocShell(mDocShell)),
           marker);
     }
     Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_LOAD_EVENT_END_MS,
@@ -209,7 +208,8 @@ void nsDOMNavigationTiming::NotifyDOMLoading(nsIURI* aURI) {
   mLoadedURI = aURI;
   mDOMLoading = TimeStamp::Now();
 
-  PROFILER_MARKER_UNTYPED("Navigation::DOMLoading", DOM);
+  PROFILER_MARKER_UNTYPED("Navigation::DOMLoading", DOM,
+                          MarkerInnerWindowIdFromDocShell(mDocShell));
 }
 
 void nsDOMNavigationTiming::NotifyDOMInteractive(nsIURI* aURI) {
@@ -219,7 +219,8 @@ void nsDOMNavigationTiming::NotifyDOMInteractive(nsIURI* aURI) {
   mLoadedURI = aURI;
   mDOMInteractive = TimeStamp::Now();
 
-  PROFILER_MARKER_UNTYPED("Navigation::DOMInteractive", DOM);
+  PROFILER_MARKER_UNTYPED("Navigation::DOMInteractive", DOM,
+                          MarkerInnerWindowIdFromDocShell(mDocShell));
 }
 
 void nsDOMNavigationTiming::NotifyDOMComplete(nsIURI* aURI) {
@@ -229,7 +230,8 @@ void nsDOMNavigationTiming::NotifyDOMComplete(nsIURI* aURI) {
   mLoadedURI = aURI;
   mDOMComplete = TimeStamp::Now();
 
-  PROFILER_MARKER_UNTYPED("Navigation::DOMComplete", DOM);
+  PROFILER_MARKER_UNTYPED("Navigation::DOMComplete", DOM,
+                          MarkerInnerWindowIdFromDocShell(mDocShell));
 }
 
 void nsDOMNavigationTiming::NotifyDOMContentLoadedStart(nsIURI* aURI) {
@@ -381,10 +383,8 @@ void nsDOMNavigationTiming::TTITimeout(nsITimer* aTimer) {
 
     PROFILER_MARKER_TEXT(
         "TimeToFirstInteractive (TTFI)", DOM,
-        MarkerOptions(
-            MarkerTiming::Interval(mNavigationStart, mTTFI),
-            MarkerInnerWindowId(
-                profiler_get_inner_window_id_from_docshell(mDocShell))),
+        MarkerOptions(MarkerTiming::Interval(mNavigationStart, mTTFI),
+                      MarkerInnerWindowIdFromDocShell(mDocShell)),
         marker);
   }
 }
@@ -415,10 +415,8 @@ void nsDOMNavigationTiming::NotifyNonBlankPaintForRootContentDocument() {
     PAGELOAD_LOG(("%s", marker.get()));
     PROFILER_MARKER_TEXT(
         "FirstNonBlankPaint", DOM,
-        MarkerOptions(
-            MarkerTiming::Interval(mNavigationStart, mNonBlankPaint),
-            MarkerInnerWindowId(
-                profiler_get_inner_window_id_from_docshell(mDocShell))),
+        MarkerOptions(MarkerTiming::Interval(mNavigationStart, mNonBlankPaint),
+                      MarkerInnerWindowIdFromDocShell(mDocShell)),
         marker);
   }
 
@@ -467,8 +465,7 @@ void nsDOMNavigationTiming::NotifyContentfulPaintForRootContentDocument(
         "FirstContentfulPaint", DOM,
         MarkerOptions(
             MarkerTiming::Interval(mNavigationStart, mContentfulPaint),
-            MarkerInnerWindowId(
-                profiler_get_inner_window_id_from_docshell(mDocShell))),
+            MarkerInnerWindowIdFromDocShell(mDocShell)),
         marker);
   }
 
@@ -517,8 +514,7 @@ void nsDOMNavigationTiming::NotifyDOMContentFlushedForRootContentDocument() {
         "DOMContentFlushed", DOM,
         MarkerOptions(
             MarkerTiming::Interval(mNavigationStart, mDOMContentFlushed),
-            MarkerInnerWindowId(
-                profiler_get_inner_window_id_from_docshell(mDocShell))),
+            MarkerInnerWindowIdFromDocShell(mDocShell)),
         marker);
   }
 }

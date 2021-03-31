@@ -190,14 +190,17 @@ void ChromeUtils::AddProfilerMarker(
     const Optional<nsACString>& aText) {
 #ifdef MOZ_GECKO_PROFILER
   MarkerOptions options;
+
   MarkerCategory category = ::geckoprofiler::category::JS;
 
   DOMHighResTimeStamp startTime = 0;
+  uint64_t innerWindowId = 0;
   if (aOptions.IsDouble()) {
     startTime = aOptions.GetAsDouble();
   } else {
     const ProfilerMarkerOptions& opt = aOptions.GetAsProfilerMarkerOptions();
     startTime = opt.mStartTime;
+    innerWindowId = opt.mInnerWindowId;
 
     if (opt.mCaptureStack) {
       options.Set(MarkerStack::Capture());
@@ -242,6 +245,12 @@ void ChromeUtils::AddProfilerMarker(
           TimeStamp::ProcessCreation() +
           TimeDuration::FromMilliseconds(startTime)));
     }
+  }
+
+  if (innerWindowId) {
+    options.Set(MarkerInnerWindowId(innerWindowId));
+  } else {
+    options.Set(MarkerInnerWindowIdFromJSContext(aGlobal.Context()));
   }
 
   {

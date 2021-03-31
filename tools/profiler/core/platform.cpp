@@ -5413,6 +5413,8 @@ void profiler_clear_all_pages() {
   ProfilerParent::ClearAllPages();
 }
 
+namespace geckoprofiler::markers::detail {
+
 Maybe<uint64_t> profiler_get_inner_window_id_from_docshell(
     nsIDocShell* aDocshell) {
   Maybe<uint64_t> innerWindowID = Nothing();
@@ -5427,6 +5429,8 @@ Maybe<uint64_t> profiler_get_inner_window_id_from_docshell(
   }
   return innerWindowID;
 }
+
+}  // namespace geckoprofiler::markers::detail
 
 void profiler_thread_sleep() {
   // This function runs both on and off the main thread.

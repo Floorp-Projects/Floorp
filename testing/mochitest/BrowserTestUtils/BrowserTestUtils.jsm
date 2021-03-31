@@ -273,9 +273,10 @@ var BrowserTestUtils = {
       }
     }
     return Promise.all(promises).then(() => {
+      let { innerWindowId } = tabbrowser.ownerGlobal.windowGlobalChild;
       ChromeUtils.addProfilerMarker(
         "BrowserTestUtils",
-        { startTime, category: "Test" },
+        { startTime, category: "Test", innerWindowId },
         "openNewForegroundTab"
       );
       return tab;
@@ -364,6 +365,8 @@ var BrowserTestUtils = {
    */
   switchTab(tabbrowser, tab) {
     let startTime = Cu.now();
+    let { innerWindowId } = tabbrowser.ownerGlobal.windowGlobalChild;
+
     let promise = new Promise(resolve => {
       tabbrowser.addEventListener(
         "TabSwitchDone",
@@ -371,7 +374,7 @@ var BrowserTestUtils = {
           TestUtils.executeSoon(() => {
             ChromeUtils.addProfilerMarker(
               "BrowserTestUtils",
-              { category: "Test", startTime },
+              { category: "Test", startTime, innerWindowId },
               "switchTab"
             );
             resolve(tabbrowser.selectedTab);
@@ -425,6 +428,7 @@ var BrowserTestUtils = {
     maybeErrorPage = false
   ) {
     let startTime = Cu.now();
+    let { innerWindowId } = browser.ownerGlobal.windowGlobalChild;
 
     // Passing a url as second argument is a common mistake we should prevent.
     if (includeSubFrames && typeof includeSubFrames != "boolean") {
@@ -484,7 +488,7 @@ var BrowserTestUtils = {
 
             ChromeUtils.addProfilerMarker(
               "BrowserTestUtils",
-              { startTime, category: "Test" },
+              { startTime, category: "Test", innerWindowId },
               "browserLoaded: " + internalURL
             );
             resolve(internalURL);
@@ -1230,6 +1234,8 @@ var BrowserTestUtils = {
    */
   waitForEvent(subject, eventName, capture, checkFn, wantsUntrusted) {
     let startTime = Cu.now();
+    let innerWindowId = subject.ownerGlobal?.windowGlobalChild.innerWindowId;
+
     return new Promise((resolve, reject) => {
       subject.addEventListener(
         eventName,
@@ -1242,7 +1248,7 @@ var BrowserTestUtils = {
             TestUtils.executeSoon(() => {
               ChromeUtils.addProfilerMarker(
                 "BrowserTestUtils",
-                { startTime, category: "Test" },
+                { startTime, category: "Test", innerWindowId },
                 "waitForEvent: " + eventName
               );
               resolve(event);

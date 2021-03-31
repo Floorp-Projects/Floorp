@@ -57,9 +57,12 @@ struct AnimationEventInfo {
       aAnimationName->ToUTF8String(markerText);
       PROFILER_MARKER_TEXT(
           "CSS animation", DOM,
-          MarkerTiming::Interval(aScheduledEventTimeStamp -
-                                     TimeDuration::FromSeconds(aElapsedTime),
-                                 aScheduledEventTimeStamp),
+          MarkerOptions(
+              MarkerTiming::Interval(
+                  aScheduledEventTimeStamp -
+                      TimeDuration::FromSeconds(aElapsedTime),
+                  aScheduledEventTimeStamp),
+              MarkerInnerWindowId(aAnimation->GetOwner()->WindowID())),
           markerText);
     }
   }
@@ -90,11 +93,15 @@ struct AnimationEventInfo {
       if (aMessage == eTransitionCancel) {
         markerText.AppendLiteral(" (canceled)");
       }
+
       PROFILER_MARKER_TEXT(
           "CSS transition", DOM,
-          MarkerTiming::Interval(aScheduledEventTimeStamp -
-                                     TimeDuration::FromSeconds(aElapsedTime),
-                                 aScheduledEventTimeStamp),
+          MarkerOptions(
+              MarkerTiming::Interval(
+                  aScheduledEventTimeStamp -
+                      TimeDuration::FromSeconds(aElapsedTime),
+                  aScheduledEventTimeStamp),
+              MarkerInnerWindowId(aAnimation->GetOwner()->WindowID())),
           markerText);
     }
   }
