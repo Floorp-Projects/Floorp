@@ -62,6 +62,7 @@ pub struct Profile {
     pub(crate) output_table_r: Option<Arc<PrecacheOuput>>,
     pub(crate) output_table_g: Option<Arc<PrecacheOuput>>,
     pub(crate) output_table_b: Option<Arc<PrecacheOuput>>,
+    is_srgb: Option<bool>,
 }
 
 #[derive(Default)]
@@ -1009,7 +1010,14 @@ impl Profile {
         let D65 = qcms_white_point_sRGB();
         let table = build_sRGB_gamma_table(1024);
 
-        Profile::new_rgb_with_table(D65, Rec709Primaries, &table).unwrap()
+        let mut srgb = Profile::new_rgb_with_table(D65, Rec709Primaries, &table).unwrap();
+        srgb.is_srgb = Some(true);
+        srgb
+    }
+
+    /// Returns true if this profile is sRGB
+    pub fn is_sRGB(&self) -> bool {
+        matches!(self.is_srgb, Some(true))
     }
 
     /// Create a new profile with D50 adopted white and identity transform functions
