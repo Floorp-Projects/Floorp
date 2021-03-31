@@ -291,19 +291,13 @@ function clickLink(
       waitForLocationChange(targetsFrame, testBrowser, locationChangeNum)
     );
   }
+
+  info("BC children: " + browser.browsingContext.children.length);
   promises.push(
-    SpecialPowers.spawn(
-      browser,
-      [[isFrame, linkId]],
-      ([contentIsFrame, contentLinkId]) => {
-        let doc = content.document;
-        if (contentIsFrame) {
-          let frame = content.document.getElementById("frame");
-          doc = frame.contentDocument;
-        }
-        info("Clicking " + contentLinkId);
-        doc.querySelector(contentLinkId).click();
-      }
+    BrowserTestUtils.synthesizeMouseAtCenter(
+      linkId,
+      {},
+      isFrame ? browser.browsingContext.children[0] : browser
     )
   );
   return Promise.all(promises);
