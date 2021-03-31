@@ -28,6 +28,12 @@ class IonICStub {
   // Info about this stub.
   CacheIRStubInfo* stubInfo_;
 
+#ifndef JS_64BIT
+ protected:  // Silence Clang warning about unused private fields.
+  // Ensure stub data is 8-byte aligned on 32-bit.
+  uintptr_t padding_ = 0;
+#endif
+
  public:
   IonICStub(uint8_t* fallbackCode, CacheIRStubInfo* stubInfo)
       : nextCodeRaw_(fallbackCode), next_(nullptr), stubInfo_(stubInfo) {}

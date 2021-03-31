@@ -1048,7 +1048,7 @@ static GCPtr<T>* AsGCPtr(uintptr_t* ptr) {
 
 uintptr_t CacheIRStubInfo::getStubRawWord(const uint8_t* stubData,
                                           uint32_t offset) const {
-  MOZ_ASSERT(uintptr_t(stubData) % sizeof(uintptr_t) == 0);
+  MOZ_ASSERT(uintptr_t(stubData + offset) % sizeof(uintptr_t) == 0);
   return *reinterpret_cast<const uintptr_t*>(stubData + offset);
 }
 
@@ -1060,7 +1060,7 @@ uintptr_t CacheIRStubInfo::getStubRawWord(ICCacheIRStub* stub,
 
 int64_t CacheIRStubInfo::getStubRawInt64(const uint8_t* stubData,
                                          uint32_t offset) const {
-  MOZ_ASSERT(uintptr_t(stubData) % sizeof(int64_t) == 0);
+  MOZ_ASSERT(uintptr_t(stubData + offset) % sizeof(int64_t) == 0);
   return *reinterpret_cast<const int64_t*>(stubData + offset);
 }
 
@@ -1073,7 +1073,7 @@ int64_t CacheIRStubInfo::getStubRawInt64(ICCacheIRStub* stub,
 void CacheIRStubInfo::replaceStubRawWord(uint8_t* stubData, uint32_t offset,
                                          uintptr_t oldWord,
                                          uintptr_t newWord) const {
-  MOZ_ASSERT(uintptr_t(stubData) % sizeof(uintptr_t) == 0);
+  MOZ_ASSERT(uintptr_t(stubData + offset) % sizeof(uintptr_t) == 0);
   uintptr_t* addr = reinterpret_cast<uintptr_t*>(stubData + offset);
   MOZ_ASSERT(*addr == oldWord);
   *addr = newWord;
@@ -1082,7 +1082,7 @@ void CacheIRStubInfo::replaceStubRawWord(uint8_t* stubData, uint32_t offset,
 template <class Stub, class T>
 GCPtr<T>& CacheIRStubInfo::getStubField(Stub* stub, uint32_t offset) const {
   uint8_t* stubData = (uint8_t*)stub + stubDataOffset_;
-  MOZ_ASSERT(uintptr_t(stubData) % sizeof(uintptr_t) == 0);
+  MOZ_ASSERT(uintptr_t(stubData + offset) % sizeof(uintptr_t) == 0);
 
   return *AsGCPtr<T>((uintptr_t*)(stubData + offset));
 }
@@ -1117,6 +1117,9 @@ void CacheIRWriter::copyStubData(uint8_t* dest) const {
   uintptr_t* destWords = reinterpret_cast<uintptr_t*>(dest);
 
   for (const StubField& field : stubFields_) {
+    MOZ_ASSERT((uintptr_t(destWords) % field.sizeInBytes()) == 0,
+               "Unaligned stub field");
+
     switch (field.type()) {
       case StubField::Type::RawInt32:
       case StubField::Type::RawPointer:

@@ -1968,7 +1968,9 @@ ICCacheIRStub* js::jit::AttachBaselineCacheIRStub(
   MOZ_ASSERT(stub->numOptimizedStubs() < MaxOptimizedCacheIRStubs);
 #endif
 
-  uint32_t stubDataOffset = sizeof(ICCacheIRStub);
+  constexpr uint32_t stubDataOffset = sizeof(ICCacheIRStub);
+  static_assert(stubDataOffset % sizeof(uint64_t) == 0,
+                "Stub fields must be aligned");
 
   JitZone* jitZone = cx->zone()->jitZone();
 

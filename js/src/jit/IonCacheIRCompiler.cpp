@@ -1812,7 +1812,10 @@ void IonIC::attachCacheIRStub(JSContext* cx, const CacheIRWriter& writer,
   }
 
   JitZone* jitZone = cx->zone()->jitZone();
-  uint32_t stubDataOffset = sizeof(IonICStub);
+
+  constexpr uint32_t stubDataOffset = sizeof(IonICStub);
+  static_assert(stubDataOffset % sizeof(uint64_t) == 0,
+                "Stub fields must be aligned");
 
   // Try to reuse a previously-allocated CacheIRStubInfo.
   CacheIRStubKey::Lookup lookup(kind, ICStubEngine::IonIC, writer.codeStart(),
