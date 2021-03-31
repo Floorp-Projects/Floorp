@@ -6,6 +6,7 @@
 
 #include "vm/ArgumentsObject-inl.h"
 
+#include "mozilla/Maybe.h"
 #include "mozilla/PodOperations.h"
 
 #include <algorithm>
@@ -553,12 +554,12 @@ bool js::MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
                          HandleValue v, ObjectOpResult& result) {
   Handle<MappedArgumentsObject*> argsobj = obj.as<MappedArgumentsObject>();
 
-  Rooted<PropertyDescriptor> desc(cx);
+  Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
   if (!GetOwnPropertyDescriptor(cx, argsobj, id, &desc)) {
     return false;
   }
-  MOZ_ASSERT(desc.object());
-  unsigned attrs = desc.attributes();
+  MOZ_ASSERT(desc.isSome());
+  unsigned attrs = desc->attributes();
   MOZ_ASSERT(!(attrs & JSPROP_READONLY));
   attrs &= (JSPROP_ENUMERATE | JSPROP_PERMANENT); /* only valid attributes */
 
@@ -901,12 +902,12 @@ bool js::UnmappedArgSetter(JSContext* cx, HandleObject obj, HandleId id,
                            HandleValue v, ObjectOpResult& result) {
   Handle<UnmappedArgumentsObject*> argsobj = obj.as<UnmappedArgumentsObject>();
 
-  Rooted<PropertyDescriptor> desc(cx);
+  Rooted<mozilla::Maybe<PropertyDescriptor>> desc(cx);
   if (!GetOwnPropertyDescriptor(cx, argsobj, id, &desc)) {
     return false;
   }
-  MOZ_ASSERT(desc.object());
-  unsigned attrs = desc.attributes();
+  MOZ_ASSERT(desc.isSome());
+  unsigned attrs = desc->attributes();
   MOZ_ASSERT(!(attrs & JSPROP_READONLY));
   attrs &= (JSPROP_ENUMERATE | JSPROP_PERMANENT); /* only valid attributes */
 
