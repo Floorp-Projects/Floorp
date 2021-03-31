@@ -41,10 +41,6 @@ nsresult BrowserBridgeParent::InitWithProcess(
     return NS_ERROR_UNEXPECTED;
   }
 
-  MOZ_DIAGNOSTIC_ASSERT(
-      !browsingContext->GetBrowserParent(),
-      "BrowsingContext must have had previous BrowserParent cleared");
-
   // Unfortunately, due to the current racy destruction of BrowsingContext
   // instances when Fission is enabled, while `browsingContext` may not be
   // discarded, an ancestor might be.
@@ -111,8 +107,6 @@ nsresult BrowserBridgeParent::InitWithProcess(
   mBrowserParent = std::move(browserParent);
   mBrowserParent->SetOwnerElement(aParentBrowser->GetOwnerElement());
   mBrowserParent->InitRendering();
-
-  GetBrowsingContext()->SetCurrentBrowserParent(mBrowserParent);
 
   windowParent->Init();
   return NS_OK;
