@@ -11,6 +11,8 @@
 
 policy-3rdparty = Set policies that WebExtensions can access via chrome.storage.managed.
 
+policy-AllowedDomainsForApps = Define domains allowed to access Google Workspace.
+
 policy-AppAutoUpdate = Enable or disable automatic application update.
 
 policy-AppUpdateURL = Set custom app update URL.
