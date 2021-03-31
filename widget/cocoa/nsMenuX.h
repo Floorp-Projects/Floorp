@@ -156,10 +156,6 @@ class nsMenuX final : public nsMenuParentX,
   // number of visible previous siblings of aChild in mMenuChildren.
   NSInteger CalculateNativeInsertionPoint(nsMenuX* aChild);
 
-  // If mPendingAsyncMenuCloseRunnable is non-null, call MenuClosedAsync() to send out pending
-  // popuphiding/popuphidden events.
-  void FlushMenuClosedRunnable();
-
   nsCOMPtr<nsIContent> mContent;  // XUL <menu> or <menupopup>
 
   // Contains nsMenuX and nsMenuItemX objects

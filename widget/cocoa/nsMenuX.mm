@@ -126,14 +126,12 @@ nsMenuX::nsMenuX(nsMenuParentX* aParent, nsMenuGroupOwnerX* aMenuGroupOwner, nsI
 nsMenuX::~nsMenuX() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
-  if (mIsOpen) {
-    [mNativeMenu cancelTracking];
-  }
-
-  // Make sure pending popuphiding/popuphidden events aren't dropped.
-  FlushMenuClosedRunnable();
-
   RemoveAll();
+
+  if (mPendingAsyncMenuCloseRunnable) {
+    mPendingAsyncMenuCloseRunnable->Cancel();
+    mPendingAsyncMenuCloseRunnable = nullptr;
+  }
 
   mNativeMenu.delegate = nil;
   [mNativeMenu release];
@@ -327,8 +325,10 @@ nsEventStatus nsMenuX::MenuOpened() {
 
   mIsOpen = true;
 
-  // Make sure we fire any pending popuphiding / popuphidden events first.
-  FlushMenuClosedRunnable();
+  if (mPendingAsyncMenuCloseRunnable) {
+    // Make sure we fire any pending popuphiding / popuphidden events first.
+    MenuClosedAsync();
+  }
 
   mIsOpenForGecko = true;
 
@@ -396,12 +396,6 @@ void nsMenuX::MenuClosed() {
   };
   mPendingAsyncMenuCloseRunnable = new MenuClosedAsyncRunnable(this);
   NS_DispatchToCurrentThread(mPendingAsyncMenuCloseRunnable);
-}
-
-void nsMenuX::FlushMenuClosedRunnable() {
-  if (mPendingAsyncMenuCloseRunnable) {
-    MenuClosedAsync();
-  }
 }
 
 void nsMenuX::MenuClosedAsync() {
