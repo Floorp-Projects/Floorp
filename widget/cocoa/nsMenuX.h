@@ -31,6 +31,7 @@ class nsIWidget;
   nsMenuX* mGeckoMenu;  // weak ref
 }
 - (id)initWithGeckoMenu:(nsMenuX*)geckoMenu;
+@property BOOL menuIsInMenubar;
 @end
 
 // Once instantiated, this object lives until its DOM node or its parent window is destroyed.
