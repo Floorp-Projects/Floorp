@@ -2168,14 +2168,14 @@ nsresult nsHttpTransaction::HandleContentStart() {
         gHttpHandler->ClearHostMapping(mConnInfo);
 
         m421Received = true;
-
-        // Unsticky the connection to allow restart.  This can get set when an
-        // NTLM proxy is successfully authenticated.
-        mCaps |= (NS_HTTP_REFRESH_DNS | NS_HTTP_CONNECTION_RESTARTABLE);
-        mCaps &= ~NS_HTTP_STICKY_CONNECTION;
+        mCaps |= NS_HTTP_REFRESH_DNS;
 
         // retry on a new connection - just in case
-        if (!mRestartCount) {
+        // See bug 1609410, we can't restart the transaction when
+        // NS_HTTP_STICKY_CONNECTION is set. In the case that a connection
+        // already passed NTLM authentication, restarting the transaction will
+        // cause the connection to be closed.
+        if (!mRestartCount && !(mCaps & NS_HTTP_STICKY_CONNECTION)) {
           mCaps &= ~NS_HTTP_ALLOW_KEEPALIVE;
           mForceRestart = true;  // force restart has built in loop protection
           return NS_ERROR_NET_RESET;
