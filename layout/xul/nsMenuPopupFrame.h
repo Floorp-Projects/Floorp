@@ -294,6 +294,7 @@ class nsMenuPopupFrame final : public nsBoxFrame,
 
   static nsIContent* GetTriggerContent(nsMenuPopupFrame* aMenuPopupFrame);
   void ClearTriggerContent() { mTriggerContent = nullptr; }
+  void ClearTriggerContentIncludingDocument();
 
   // returns true if the popup is in a content shell, or false for a popup in
   // a chrome shell

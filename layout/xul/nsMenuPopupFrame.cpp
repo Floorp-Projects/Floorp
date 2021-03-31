@@ -973,6 +973,25 @@ void nsMenuPopupFrame::ShowPopup(bool aIsContextMenu) {
   mShouldAutoPosition = true;
 }
 
+void nsMenuPopupFrame::ClearTriggerContentIncludingDocument() {
+  // clear the trigger content if the popup is being closed. But don't clear
+  // it if the popup is just being made invisible as a popuphiding or command
+  if (mTriggerContent) {
+    // if the popup had a trigger node set, clear the global window popup node
+    // as well
+    Document* doc = mContent->GetUncomposedDoc();
+    if (doc) {
+      if (nsPIDOMWindowOuter* win = doc->GetWindow()) {
+        nsCOMPtr<nsPIWindowRoot> root = win->GetTopWindowRoot();
+        if (root) {
+          root->SetPopupNode(nullptr);
+        }
+      }
+    }
+  }
+  mTriggerContent = nullptr;
+}
+
 void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState) {
   NS_ASSERTION(aNewState == ePopupClosed || aNewState == ePopupInvisible,
                "popup being set to unexpected state");
@@ -984,24 +1003,11 @@ void nsMenuPopupFrame::HidePopup(bool aDeselectMenu, nsPopupState aNewState) {
       mPopupState == ePopupPositioning)
     return;
 
-  // clear the trigger content if the popup is being closed. But don't clear
-  // it if the popup is just being made invisible as a popuphiding or command
-  // event may want to retrieve it.
   if (aNewState == ePopupClosed) {
-    // if the popup had a trigger node set, clear the global window popup node
-    // as well
-    if (mTriggerContent) {
-      Document* doc = mContent->GetUncomposedDoc();
-      if (doc) {
-        if (nsPIDOMWindowOuter* win = doc->GetWindow()) {
-          nsCOMPtr<nsPIWindowRoot> root = win->GetTopWindowRoot();
-          if (root) {
-            root->SetPopupNode(nullptr);
-          }
-        }
-      }
-    }
-    mTriggerContent = nullptr;
+    // clear the trigger content if the popup is being closed. But don't clear
+    // it if the popup is just being made invisible as a popuphiding or command
+    // event may want to retrieve it.
+    ClearTriggerContentIncludingDocument();
     mAnchorContent = nullptr;
   }
 
