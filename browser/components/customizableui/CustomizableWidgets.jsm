@@ -135,6 +135,11 @@ const CustomizableWidgets = [
         "appMenuRecentlyClosedWindows"
       ).disabled = SessionStore.getClosedWindowCount(window) == 0;
 
+      PanelMultiView.getViewNode(
+        document,
+        "appMenuRestoreSession"
+      ).hidden = !SessionStore.canRestoreLastSession;
+
       // We restrict the amount of results to 42. Not 50, but 42. Why? Because 42.
       let query =
         "place:queryType=" +
