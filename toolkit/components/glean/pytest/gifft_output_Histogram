@@ -16,7 +16,15 @@ namespace mozilla::glean {
 using Telemetry::HistogramID;
 
 typedef uint64_t TimerId; // Same as in TimingDistribution.h.
-static StaticDataMutex<nsTHashMap<TimerId, TimeStamp>> gTimerIdToStarts("gTimerIdToStarts");
+typedef StaticDataMutex<UniquePtr<nsTHashMap<TimerId, TimeStamp>>> TimerToStampMutex;
+static TimerToStampMutex::AutoLock GetTimerIdToStartsLock() {
+  static TimerToStampMutex sTimerIdToStarts("sTimerIdToStarts");
+  auto lock = sTimerIdToStarts.Lock();
+  if (!*lock) {
+    *lock = MakeUnique<nsTHashMap<TimerId, TimeStamp>>();
+  }
+  return lock;
+}
 
 static Maybe<HistogramID> HistogramIdForMetric(uint32_t aId) {
   switch(aId) {

@@ -19,9 +19,18 @@ namespace mozilla::glean {
 using Telemetry::ScalarID;
 
 typedef nsUint32HashKey SubmetricIdHashKey;
-typedef nsClassHashtable<SubmetricIdHashKey, Tuple<ScalarID, nsString>>
+typedef nsTHashMap<SubmetricIdHashKey, Tuple<ScalarID, nsString>>
     SubmetricToLabeledMirrorMapType;
-static StaticDataMutex<SubmetricToLabeledMirrorMapType> gLabeledMirrors("gLabeledMirrors");
+typedef StaticDataMutex<UniquePtr<SubmetricToLabeledMirrorMapType>>
+    SubmetricToMirrorMutex;
+static SubmetricToMirrorMutex::AutoLock GetLabeledMirrorLock() {
+  static SubmetricToMirrorMutex sLabeledMirrors("sLabeledMirrors");
+  auto lock = sLabeledMirrors.Lock();
+  if (!*lock) {
+    *lock = MakeUnique<SubmetricToLabeledMirrorMapType>();
+  }
+  return lock;
+}
 
 namespace {
 class ScalarIDHashKey : public PLDHashEntryHdr {
@@ -47,7 +56,15 @@ class ScalarIDHashKey : public PLDHashEntryHdr {
   const ScalarID mValue;
 };
 }  // namespace
-static StaticDataMutex<nsTHashMap<ScalarIDHashKey, TimeStamp>> gTimespanStarts("gTimespanStarts");
+typedef StaticDataMutex<UniquePtr<nsTHashMap<ScalarIDHashKey, TimeStamp>>> TimesToStartsMutex;
+static TimesToStartsMutex::AutoLock GetTimesToStartsLock() {
+  static TimesToStartsMutex sTimespanStarts("sTimespanStarts");
+  auto lock = sTimespanStarts.Lock();
+  if (!*lock) {
+    *lock = MakeUnique<nsTHashMap<ScalarIDHashKey, TimeStamp>>();
+  }
+  return lock;
+}
 
 static inline bool IsSubmetricId(uint32_t aId) {
   return aId > (1 << 27); // Kept in sync with js.py's ID_BITS, rust.py's min_submetric_id

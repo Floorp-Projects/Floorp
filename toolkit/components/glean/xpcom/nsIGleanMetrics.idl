@@ -306,6 +306,13 @@ interface nsIGleanTimespan : nsISupports
   void stop();
 
   /**
+   * Aborts a previous start.
+   *
+   * Does not record an error if there was no previous call to start.
+   */
+  void cancel();
+
+  /**
    * **Test-only API**
    *
    * Gets the currently stored value as an integer.
