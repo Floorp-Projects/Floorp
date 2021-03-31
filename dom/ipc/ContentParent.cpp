@@ -241,6 +241,7 @@
 #include "private/pprio.h"
 #include "xpcpublic.h"
 #include "nsOpenWindowInfo.h"
+#include "nsFrameLoaderOwner.h"
 
 #ifdef MOZ_WEBRTC
 #  include "jsapi/WebrtcGlobalParent.h"
@@ -1478,6 +1479,11 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
     ContentParent* aOpenerContentParent) {
   AUTO_PROFILER_LABEL("ContentParent::CreateBrowser", OTHER);
 
+  MOZ_DIAGNOSTIC_ASSERT(
+      !aBrowsingContext->Canonical()->GetBrowserParent(),
+      "BrowsingContext must not have BrowserParent, or have previous "
+      "BrowserParent cleared");
+
   if (!sCanLaunchSubprocesses) {
     return nullptr;
   }
@@ -1602,6 +1608,10 @@ already_AddRefed<RemoteBrowser> ContentParent::CreateBrowser(
   if (NS_WARN_IF(!ok)) {
     return nullptr;
   }
+
+  // Ensure that we're marked as the current BrowserParent on our
+  // CanonicalBrowsingContext.
+  aBrowsingContext->Canonical()->SetCurrentBrowserParent(browserParent);
 
   windowParent->Init();
 
@@ -3893,6 +3903,10 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
     return IPC_FAIL(this, "Cannot create without valid initial principal");
   }
 
+  if (browsingContext->GetBrowserParent()) {
+    return IPC_FAIL(this, "BrowsingContext already has a BrowserParent");
+  }
+
   uint32_t chromeFlags = aChromeFlags;
   TabId openerTabId(0);
   ContentParentId openerCpId(0);
@@ -3960,6 +3974,8 @@ mozilla::ipc::IPCResult ContentParent::RecvConstructPopupBrowser(
                                                     initialWindow))) {
     return IPC_FAIL(this, "BindPWindowGlobalEndpoint failed");
   }
+
+  browsingContext->SetCurrentBrowserParent(parent);
 
   initialWindow->Init();
 

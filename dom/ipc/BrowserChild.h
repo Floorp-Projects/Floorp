@@ -558,8 +558,7 @@ class BrowserChild final : public nsMessageManagerScriptExecutor,
   mozilla::ipc::IPCResult RecvUpdateNativeWindowHandle(
       const uintptr_t& aNewHandle);
 
-  mozilla::ipc::IPCResult RecvWillChangeProcess(
-      WillChangeProcessResolver&& aResolve);
+  mozilla::ipc::IPCResult RecvWillChangeProcess();
   /**
    * Native widget remoting protocol for use with windowed plugins with e10s.
    */
