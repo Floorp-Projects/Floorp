@@ -20,7 +20,7 @@
         android:layout_marginEnd="48dp"
         android:singleLine="true"
         android:textAlignment="viewStart"
-        android:textColor="?primaryText"
+        android:textColor="@color/primary_text_normal_theme"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
