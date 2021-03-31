@@ -157,20 +157,20 @@ void swgl_commitTextureLinearR8(sampler, vec2 uv, vec4 uv_bounds);
 void swgl_commitTextureLinearColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color);
 void swgl_commitTextureLinearColorR8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color);
 
-void swgl_commitTextureLinearRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds);
-void swgl_commitTextureLinearRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color);
+void swgl_commitTextureLinearRepeatRGBA8(sampler, vec2 uv, vec2 tile_repeat, vec4 uv_repeat, vec4 uv_bounds);
+void swgl_commitTextureLinearRepeatColorRGBA8(sampler, vec2 uv, vec2 tile_repeat, vec4 uv_repeat, vec4 uv_bounds, vec4|float color);
 
 void swgl_commitTextureNearestRGBA8(sampler, vec2 uv, vec4 uv_bounds);
 void swgl_commitTextureNearestColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color);
 
-void swgl_commitTextureNearestRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds);
-void swgl_commitTextureNearestRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color);
+void swgl_commitTextureNearestRepeatRGBA8(sampler, vec2 uv, vec2 tile_repeat, vec4 uv_repeat, vec4 uv_bounds);
+void swgl_commitTextureNearestRepeatColorRGBA8(sampler, vec2 uv, vec2 tile_repeat, vec4 uv_repeat, vec4 uv_bounds, vec4|float color);
 
 void swgl_commitTextureRGBA8(sampler, vec2 uv, vec4 uv_bounds);
 void swgl_commitTextureColorRGBA8(sampler, vec2 uv, vec4 uv_bounds, vec4|float color);
 
-void swgl_commitTextureRepeatRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds);
-void swgl_commitTextureRepeatColorRGBA8(sampler, vec2 uv, vec4 uv_repeat, vec4 uv_bounds, vec4|float color);
+void swgl_commitTextureRepeatRGBA8(sampler, vec2 uv, vec2 tile_repeat, vec4 uv_repeat, vec4 uv_bounds);
+void swgl_commitTextureRepeatColorRGBA8(sampler, vec2 uv, vec2 tile_repeat, vec4 uv_repeat, vec4 uv_bounds, vec4|float color);
 ```
 
 Samples and commits an entire span of texture starting at the given uv and
@@ -190,7 +190,8 @@ on the sampler's specified filter.
 The Repeat variations require an optional repeat rect that specifies how to
 scale and offset the UVs, assuming the UVs are normalized to repeat in the
 range 0 to 1. For NearestRepeat variations, it is assumed the repeat rect is
-always within the bounds.
+always within the bounds. The tile repeat limit, if non-zero, specifies the
+maximum number of repetitions allowed.
 
 ```
 // Premultiplied alpha over blend, but with source color set to source alpha modulated with a constant color.

@@ -583,6 +583,7 @@ vec2 operator*(vec2_scalar a, Float b) { return vec2(a.x * b, a.y * b); }
 vec2 operator*(Float a, vec2_scalar b) { return vec2(a * b.x, a * b.y); }
 
 SI vec2 min(vec2 a, vec2 b) { return vec2(min(a.x, b.x), min(a.y, b.y)); }
+SI vec2 min(vec2 a, Float b) { return vec2(min(a.x, b), min(a.y, b)); }
 
 SI vec2_scalar min(vec2_scalar a, vec2_scalar b) {
   return vec2_scalar{min(a.x, b.x), min(a.y, b.y)};
@@ -602,8 +603,8 @@ vec2_scalar step(vec2_scalar edge, vec2_scalar x) {
   return vec2_scalar(step(edge.x, x.x), step(edge.y, x.y));
 }
 
-vec2 max(vec2 a, vec2 b) { return vec2(max(a.x, b.x), max(a.y, b.y)); }
-vec2 max(vec2 a, Float b) { return vec2(max(a.x, b), max(a.y, b)); }
+SI vec2 max(vec2 a, vec2 b) { return vec2(max(a.x, b.x), max(a.y, b.y)); }
+SI vec2 max(vec2 a, Float b) { return vec2(max(a.x, b), max(a.y, b)); }
 
 SI vec2_scalar max(vec2_scalar a, vec2_scalar b) {
   return vec2_scalar{max(a.x, b.x), max(a.y, b.y)};
@@ -1801,7 +1802,9 @@ struct vec4 {
   }
   ALWAYS_INLINE Float& sel(XYZW c1) { return select(c1); }
 
-  ALWAYS_INLINE vec2 sel(XYZW c1, XYZW c2) { return vec2(select(c1), select(c2)); }
+  ALWAYS_INLINE vec2 sel(XYZW c1, XYZW c2) {
+    return vec2(select(c1), select(c2));
+  }
 
   ALWAYS_INLINE vec3 sel(XYZW c1, XYZW c2, XYZW c3) {
     return vec3(select(c1), select(c2), select(c3));
@@ -1810,7 +1813,9 @@ struct vec4 {
     return vec3_ref(select(c1), select(c2), select(c3));
   }
 
-  ALWAYS_INLINE vec2_ref lsel(XYZW c1, XYZW c2) { return vec2_ref(select(c1), select(c2)); }
+  ALWAYS_INLINE vec2_ref lsel(XYZW c1, XYZW c2) {
+    return vec2_ref(select(c1), select(c2));
+  }
 
   ALWAYS_INLINE vec4 sel(XYZW c1, XYZW c2, XYZW c3, XYZW c4) {
     return vec4(select(c1), select(c2), select(c3), select(c4));
