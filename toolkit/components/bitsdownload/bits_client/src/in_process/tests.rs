@@ -364,10 +364,10 @@ test! {
                         completed = true;
                     }
                     _ => {
-                        panic!(format!("{:?}", status));
+                        panic!("{:?}", status);
                     }
                 }
-                Ok(Err(e)) => panic!(format!("{:?}", e)),
+                Ok(Err(e)) => panic!("{:?}", e),
             }
 
             // Timeout to prevent waiting forever
