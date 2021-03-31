@@ -7,7 +7,7 @@ run() {
     revisions=$(curl "$HG_PUSHLOG_URL" | jq -c -r ".pushes[].changesets | @sh" | tr -d \') || return 1
     sentry_api_key=$(curl "http://taskcluster/secrets/v1/secret/$SENTRY_SECRET" | jq -r ".secret.sentryToken") || return 1
     for revision in $revisions; do
-        SENTRY_API_KEY=$sentry_api_key SENTRY_ORG=operations sentry-cli --url https://sentry.prod.mozaws.net/ releases --project mach new "$revision" || return 1
+        SENTRY_API_KEY=$sentry_api_key SENTRY_ORG=operations sentry-cli --url https://sentry.prod.mozaws.net/ releases --project mach new "hg-rev-$revision" || return 1
     done
 }
 
