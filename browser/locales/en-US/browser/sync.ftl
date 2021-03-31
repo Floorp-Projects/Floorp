@@ -18,3 +18,9 @@ fxa-menu-sync-settings =
 fxa-menu-turn-on-sync =
     .value = Turn on Sync
 fxa-menu-turn-on-sync-default = Turn on Sync
+
+fxa-menu-connect-another-device =
+    .label = Connect Another Device…
+
+fxa-menu-sign-out =
+    .label = Sign Out…
