@@ -798,6 +798,7 @@ gfx.feature:
   webrender:
     type: string
     description: Whether webrender is enabled or disabled, and why.
+    lifetime: application
     gecko_datapoint: gfx.feature.webrender
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1687312
