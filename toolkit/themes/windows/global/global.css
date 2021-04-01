@@ -43,6 +43,7 @@
   }
 
   /* Override the menu color variables for dark browser themes. */
+  :host(:-moz-lwtheme-brighttext),
   :root:-moz-lwtheme-brighttext {
     --menuitem-hover-background-color: var(--dark-menuitem-hover-background-color);
     --menu-background-color: var(--dark-menu-background-color);
