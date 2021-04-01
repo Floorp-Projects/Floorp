@@ -1921,7 +1921,6 @@ class MOZ_RAII NewObjectIRGenerator : public IRGenerator {
 
   AttachDecision tryAttachStub();
   AttachDecision tryAttachPlainObject();
-  AttachDecision tryAttachTemplateObject();
 };
 
 // Retrieve Xray JIT info set by the embedder.

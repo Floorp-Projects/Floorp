@@ -6014,26 +6014,6 @@ bool CacheIRCompiler::emitLoadValueTruthyResult(ValOperandId inputId) {
   return true;
 }
 
-bool CacheIRCompiler::emitLoadNewObjectFromTemplateResult(
-    uint32_t templateObjectOffset, uint32_t, uint32_t) {
-  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
-  AutoOutputRegister output(*this);
-  AutoScratchRegister obj(allocator, masm);
-  AutoScratchRegisterMaybeOutput scratch(allocator, masm, output);
-
-  TemplateObject templateObj(objectStubFieldUnchecked(templateObjectOffset));
-
-  FailurePath* failure;
-  if (!addFailurePath(&failure)) {
-    return false;
-  }
-
-  masm.createGCObject(obj, scratch, templateObj, gc::DefaultHeap,
-                      failure->label());
-  masm.tagValue(JSVAL_TYPE_OBJECT, obj, output.valueReg());
-  return true;
-}
-
 bool CacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
                                                uint32_t numDynamicSlots,
                                                gc::AllocKind allocKind,

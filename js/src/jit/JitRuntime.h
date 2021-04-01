@@ -229,9 +229,6 @@ class JitRuntime {
   MainThreadData<IonCompileTaskList> ionLazyLinkList_;
   MainThreadData<size_t> ionLazyLinkListSize_{0};
 
-  // Counter used to help dismbiguate stubs in CacheIR
-  MainThreadData<uint64_t> disambiguationId_{0};
-
 #ifdef DEBUG
   // Flag that can be set from JIT code to indicate it's invalid to call
   // arbitrary JS code in a particular region. This is checked in RunScript.
@@ -443,8 +440,6 @@ class JitRuntime {
 
   void ionLazyLinkListRemove(JSRuntime* rt, js::jit::IonCompileTask* task);
   void ionLazyLinkListAdd(JSRuntime* rt, js::jit::IonCompileTask* task);
-
-  uint64_t nextDisambiguationId() { return disambiguationId_++; }
 };
 
 }  // namespace jit
