@@ -25,10 +25,10 @@ XPCOMUtils.defineLazyModuleGetters(this, {
  */
 class MainProcessTarget extends Target {
   /*
-   * @param Targets targets
+   * @param TargetList targetList
    */
-  constructor(targets) {
-    super(targets, MainProcessSession);
+  constructor(targetList) {
+    super(targetList, MainProcessSession);
 
     this.type = "browser";
 
