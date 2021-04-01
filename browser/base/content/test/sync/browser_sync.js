@@ -744,9 +744,9 @@ function checkFxAAvatar(fxaStatus) {
     const avatarURL = getComputedStyle(avatar).listStyleImage;
     const expected = {
       not_configured: 'url("chrome://browser/skin/fxa/avatar-empty.svg")',
-      unverified: 'url("chrome://browser/skin/fxa/avatar-confirm.svg")',
+      unverified: 'url("chrome://browser/skin/fxa/avatar.svg")',
       signedin: 'url("chrome://browser/skin/fxa/avatar.svg")',
-      "login-failed": 'url("chrome://browser/skin/fxa/avatar-alert.svg")',
+      "login-failed": 'url("chrome://browser/skin/fxa/avatar.svg")',
     };
     ok(
       avatarURL == expected[fxaStatus],

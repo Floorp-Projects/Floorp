@@ -60,12 +60,11 @@ add_task(async function test_loginFailed_badge_shown() {
 });
 
 function checkFxABadge(shouldBeShown) {
-  let isShown = false;
-  for (let notification of AppMenuNotifications.notifications) {
-    if (notification.id == "fxa-needs-authentication") {
-      isShown = true;
-      break;
-    }
-  }
+  let fxaButton = document.getElementById("fxa-toolbar-menu-button");
+  let isShown =
+    fxaButton.hasAttribute("badge-status") ||
+    fxaButton
+      .querySelector(".toolbarbutton-badge")
+      .classList.contains("feature-callout");
   is(isShown, shouldBeShown, "Fxa badge shown matches expected value.");
 }
