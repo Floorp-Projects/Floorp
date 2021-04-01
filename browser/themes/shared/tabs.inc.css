@@ -389,7 +389,7 @@
 
 @supports -moz-bool-pref("browser.proton.enabled") {
 #tabbrowser-tabs[secondarytext-unsupported] .tab-icon-stack@tabIndicatorReplacesIcon@ > :not(.tab-icon-overlay),
-#toolbar-menubar:not(:hover) + #TabsToolbar:not(:hover) #tabbrowser-tabs:not([secondarytext-unsupported]) .tab-icon-overlay@tabIndicatorReplacesIcon@,
+#toolbar-menubar:not(:hover) + #TabsToolbar:not(:hover) #tabbrowser-tabs:not([secondarytext-unsupported]) .tab-icon-image[src] ~ .tab-icon-overlay@tabIndicatorReplacesIcon@,
 :is(#toolbar-menubar:hover + #TabsToolbar, #TabsToolbar:hover) .tab-icon-stack@tabIndicatorReplacesIcon@ > :not(.tab-icon-overlay) {
   opacity: 0;
 }
