@@ -962,22 +962,22 @@ impl Renderer {
         let ext_blend_equation_advanced_coherent =
             device.supports_extension("GL_KHR_blend_equation_advanced_coherent");
 
-        // 512 is the minimum that the texture cache can work with.
-        const MIN_TEXTURE_SIZE: i32 = 512;
-        if let Some(user_limit) = options.max_texture_size {
-            assert!(user_limit >= MIN_TEXTURE_SIZE);
-            device.clamp_max_texture_size(user_limit);
-        }
-        if device.max_texture_size() < MIN_TEXTURE_SIZE {
+        // 2048 is the minimum that the texture cache can work with.
+        const MIN_TEXTURE_SIZE: i32 = 2048;
+        let mut max_internal_texture_size = device.max_texture_size();
+        if max_internal_texture_size < MIN_TEXTURE_SIZE {
             // Broken GL contexts can return a max texture size of zero (See #1260).
             // Better to gracefully fail now than panic as soon as a texture is allocated.
             error!(
                 "Device reporting insufficient max texture size ({})",
-                device.max_texture_size()
+                max_internal_texture_size
             );
             return Err(RendererError::MaxTextureSize);
         }
-        let max_texture_size = device.max_texture_size();
+        if let Some(internal_limit) = options.max_internal_texture_size {
+            assert!(internal_limit >= MIN_TEXTURE_SIZE);
+            max_internal_texture_size = max_internal_texture_size.min(internal_limit);
+        }
 
         device.begin_frame();
 
@@ -1145,7 +1145,7 @@ impl Renderer {
             compositor_kind,
             tile_size_override: None,
             max_depth_ids: device.max_depth_ids(),
-            max_target_size: max_texture_size,
+            max_target_size: max_internal_texture_size,
             force_invalidation: false,
         };
         info!("WR {:?}", config);
@@ -1246,7 +1246,7 @@ impl Renderer {
             thread_started(&rb_thread_name);
 
             let texture_cache = TextureCache::new(
-                max_texture_size,
+                max_internal_texture_size,
                 picture_tile_size,
                 color_cache_formats,
                 swizzle_settings,
@@ -5427,7 +5427,7 @@ pub struct RendererOptions {
     pub force_subpixel_aa: bool,
     pub clear_color: Option<ColorF>,
     pub enable_clear_scissor: bool,
-    pub max_texture_size: Option<i32>,
+    pub max_internal_texture_size: Option<i32>,
     pub upload_method: UploadMethod,
     /// The default size in bytes for PBOs used to upload texture data.
     pub upload_pbo_default_size: usize,
@@ -5513,7 +5513,7 @@ impl Default for RendererOptions {
             force_subpixel_aa: false,
             clear_color: Some(ColorF::new(1.0, 1.0, 1.0, 1.0)),
             enable_clear_scissor: true,
-            max_texture_size: None,
+            max_internal_texture_size: None,
             // This is best as `Immediate` on Angle, or `Pixelbuffer(Dynamic)` on GL,
             // but we are unable to make this decision here, so picking the reasonable medium.
             upload_method: UploadMethod::PixelBuffer(ONE_TIME_USAGE_HINT),
