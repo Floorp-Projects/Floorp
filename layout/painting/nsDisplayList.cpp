@@ -4760,17 +4760,10 @@ void nsDisplayOutline::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   MOZ_ASSERT(mFrame->StyleOutline()->ShouldPaintOutline(),
              "Should have not created a nsDisplayOutline!");
 
-  nsRect rect(ToReferenceFrame(), mFrame->GetSize());
-  nsPresContext* pc = mFrame->PresContext();
-  if (IsThemedOutline()) {
-    rect.Inflate(mFrame->StyleOutline()->mOutlineOffset.ToAppUnits());
-    pc->Theme()->DrawWidgetBackground(
-        aCtx, mFrame, StyleAppearance::FocusOutline, rect, GetPaintRect());
-    return;
-  }
-
-  nsCSSRendering::PaintNonThemedOutline(pc, *aCtx, mFrame, GetPaintRect(), rect,
-                                        mFrame->Style());
+  nsPoint offset = ToReferenceFrame();
+  nsCSSRendering::PaintOutline(
+      mFrame->PresContext(), *aCtx, mFrame, GetPaintRect(),
+      nsRect(offset, mFrame->GetSize()), mFrame->Style());
 }
 
 bool nsDisplayOutline::IsThemedOutline() const {
@@ -4791,19 +4784,16 @@ bool nsDisplayOutline::CreateWebRenderCommands(
     const StackingContextHelper& aSc,
     mozilla::layers::RenderRootStateManager* aManager,
     nsDisplayListBuilder* aDisplayListBuilder) {
-  nsPresContext* pc = mFrame->PresContext();
-  nsRect rect(ToReferenceFrame(), mFrame->GetSize());
   if (IsThemedOutline()) {
-    rect.Inflate(mFrame->StyleOutline()->mOutlineOffset.ToAppUnits());
-    return pc->Theme()->CreateWebRenderCommandsForWidget(
-        aBuilder, aResources, aSc, aManager, mFrame,
-        StyleAppearance::FocusOutline, rect);
+    return false;
   }
 
-  Maybe<nsCSSBorderRenderer> borderRenderer =
-      nsCSSRendering::CreateBorderRendererForNonThemedOutline(
-          pc, /* aDrawTarget = */ nullptr, mFrame, GetPaintRect(), rect,
-          mFrame->Style());
+  nsPoint offset = ToReferenceFrame();
+
+  mozilla::Maybe<nsCSSBorderRenderer> borderRenderer =
+      nsCSSRendering::CreateBorderRendererForOutline(
+          mFrame->PresContext(), nullptr, mFrame, GetPaintRect(),
+          nsRect(offset, mFrame->GetSize()), mFrame->Style());
 
   if (!borderRenderer) {
     // No border renderer means "there is no outline".
