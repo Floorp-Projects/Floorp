@@ -14,6 +14,12 @@ use std::hash::Hasher;
 use webrender_build::shader::*;
 use webrender_build::shader_features::{ShaderFeatureFlags, get_shader_features};
 
+// glsopt is known to leak, but we don't particularly care.
+#[no_mangle]
+pub extern "C" fn __lsan_default_options() -> *const u8 {
+    b"detect_leaks=0\0".as_ptr()
+}
+
 /// Compute the shader path for insertion into the include_str!() macro.
 /// This makes for more compact generated code than inserting the literal
 /// shader source into the generated file.
