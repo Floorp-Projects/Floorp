@@ -260,61 +260,6 @@ function useHttpServer(dir = "data") {
   return httpServer;
 }
 
-/**
- * Adds test engines and returns a promise resolved when they are installed.
- *
- * The engines are added in the given order.
- *
- * @param {Array<object>} aItems
- *   Array of objects with the following properties:
- *   {
- *     name: Engine name, used to wait for it to be loaded.
- *     xmlFileName: Name of the XML file in the "data" folder.
- *   }
- */
-var addTestEngines = async function(aItems) {
-  if (!gDataUrl) {
-    do_throw("useHttpServer must be called before addTestEngines.");
-  }
-
-  let engines = [];
-
-  for (let item of aItems) {
-    info("Adding engine: " + item.name);
-    await new Promise((resolve, reject) => {
-      Services.obs.addObserver(function obs(subject, topic, data) {
-        try {
-          let engine = subject.QueryInterface(Ci.nsISearchEngine);
-          info("Observed " + data + " for " + engine.name);
-          if (data != "engine-added" || engine.name != item.name) {
-            return;
-          }
-
-          Services.obs.removeObserver(obs, "browser-search-engine-modified");
-          engines.push(engine);
-          resolve();
-        } catch (ex) {
-          reject(ex);
-        }
-      }, "browser-search-engine-modified");
-
-      Services.search.addOpenSearchEngine(gDataUrl + item.xmlFileName, null);
-    });
-  }
-
-  return engines;
-};
-
-/**
- * Installs a test engine into the test profile.
- *
- * @returns {Array<SearchEngine>}
- */
-function installTestEngine() {
-  useHttpServer();
-  return addTestEngines([{ name: kTestEngineName, xmlFileName: "engine.xml" }]);
-}
-
 // This "enum" from nsSearchService.js
 const TELEMETRY_RESULT_ENUM = {
   SUCCESS: 0,

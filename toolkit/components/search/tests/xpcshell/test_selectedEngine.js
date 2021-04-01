@@ -4,6 +4,7 @@
 const kDefaultEngineName = "engine1";
 
 add_task(async function setup() {
+  useHttpServer();
   await AddonTestUtils.promiseStartupManager();
   await SearchTestUtils.useTestEngines("data1");
   Assert.ok(!Services.search.isInitialized);
@@ -12,7 +13,7 @@ add_task(async function setup() {
 // Check that the default engine matches the defaultenginename pref
 add_task(async function test_defaultEngine() {
   await Services.search.init();
-  await installTestEngine();
+  await SearchTestUtils.promiseNewSearchEngine(`${gDataUrl}engine.xml`);
 
   Assert.equal(Services.search.defaultEngine.name, kDefaultEngineName);
 });
