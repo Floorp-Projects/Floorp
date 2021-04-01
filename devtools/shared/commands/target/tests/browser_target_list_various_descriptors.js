@@ -58,10 +58,12 @@ async function testLocalTab() {
 
   const tab = await addTab(TEST_URL);
   const commands = await CommandsFactory.forTab(tab);
+  // By default, tab descriptor will close the client when destroying the client
+  // Disable this behavior via this boolean
+  // Bug 1698890: The test should probably stop assuming this.
+  commands.descriptorFront.shouldCloseClient = false;
   const targetCommand = commands.targetCommand;
   await targetCommand.startListening();
-  // Avoid the target to close the client when we destroy the target list and the target
-  targetCommand.targetFront.shouldCloseClient = false;
 
   const targets = await targetCommand.getAllTargets(targetCommand.ALL_TYPES);
   is(targets.length, 1, "Got a unique target");
