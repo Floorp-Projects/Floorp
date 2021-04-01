@@ -15,13 +15,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Services: "resource://gre/modules/Services.jsm",
 });
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "contentPromptSubDialog",
-  "prompts.contentPromptSubDialog",
-  false
-);
-
 const DIALOG_TYPES = {
   ALERT: "alert",
   BEFOREUNLOAD: "beforeunload",
@@ -45,13 +38,8 @@ class DialogHandler {
     this._dialog = null;
     this._browser = browser;
 
-    this._onCommonDialogLoaded = this._onCommonDialogLoaded.bind(this);
     this._onTabDialogLoaded = this._onTabDialogLoaded.bind(this);
 
-    Services.obs.addObserver(
-      this._onCommonDialogLoaded,
-      "common-dialog-loaded"
-    );
     Services.obs.addObserver(this._onTabDialogLoaded, "tabmodal-dialog-loaded");
   }
 
@@ -59,10 +47,6 @@ class DialogHandler {
     this._dialog = null;
     this._pageTarget = null;
 
-    Services.obs.removeObserver(
-      this._onCommonDialogLoaded,
-      "common-dialog-loaded"
-    );
     Services.obs.removeObserver(
       this._onTabDialogLoaded,
       "tabmodal-dialog-loaded"
@@ -87,13 +71,7 @@ class DialogHandler {
 
     // 0 corresponds to the OK callback, 1 to the CANCEL callback.
     if (accept) {
-      if (contentPromptSubDialog) {
-        this._dialog.ui.button0.click();
-      } else {
-        this._dialog.onButtonClick(0);
-      }
-    } else if (contentPromptSubDialog) {
-      this._dialog.ui.button1.click();
+      this._dialog.onButtonClick(0);
     } else {
       this._dialog.onButtonClick(1);
     }
@@ -123,23 +101,6 @@ class DialogHandler {
       default:
         throw new Error("Unsupported dialog type: " + promptType);
     }
-  }
-
-  _onCommonDialogLoaded(dialogWindow) {
-    const dialogs = this._browser.tabDialogBox.getContentDialogManager()
-      .dialogs;
-    const dialog = dialogs.find(d => d.frameContentWindow === dialogWindow);
-
-    if (!dialog) {
-      // The dialog is not for the current tab.
-      return;
-    }
-
-    this._dialog = dialogWindow.Dialog;
-    const message = this._dialog.args.text;
-    const type = this._getDialogType();
-
-    this.emit("dialog-loaded", { message, type });
   }
 
   _onTabDialogLoaded(promptContainer) {
