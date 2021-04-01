@@ -29,11 +29,11 @@ XPCOMUtils.defineLazyServiceGetter(
  */
 class TabTarget extends Target {
   /**
-   * @param Targets targets
+   * @param TargetList targetList
    * @param BrowserElement browser
    */
-  constructor(targets, browser) {
-    super(targets, TabSession);
+  constructor(targetList, browser) {
+    super(targetList, TabSession);
 
     this.browser = browser;
 

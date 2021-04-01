@@ -22,7 +22,7 @@ add_task(async function json_version() {
   is(json["WebKit-Version"], "1.0", "Webkit version found");
   is(
     json.webSocketDebuggerUrl,
-    RemoteAgent.targets.getMainProcessTarget().wsDebuggerURL,
+    RemoteAgent.targetList.getMainProcessTarget().wsDebuggerURL,
     "Websocket URL for main process target found"
   );
 });

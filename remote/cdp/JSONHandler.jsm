@@ -31,7 +31,7 @@ class JSONHandler {
   }
 
   getVersion() {
-    const mainProcessTarget = this.agent.targets.getMainProcessTarget();
+    const mainProcessTarget = this.agent.targetList.getMainProcessTarget();
 
     const { userAgent } = Cc[
       "@mozilla.org/network/protocol;1?name=http"
@@ -52,7 +52,7 @@ class JSONHandler {
   }
 
   getTargetList() {
-    return [...this.agent.targets];
+    return [...this.agent.targetList];
   }
 
   // nsIHttpRequestHandler
