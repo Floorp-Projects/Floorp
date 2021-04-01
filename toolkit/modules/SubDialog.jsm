@@ -80,10 +80,6 @@ SubDialog.prototype = {
   _titleElement: null,
   _closeButton: null,
 
-  get frameContentWindow() {
-    return this._frame?.contentWindow;
-  },
-
   get _window() {
     return this._overlay?.ownerGlobal;
   },
@@ -989,10 +985,6 @@ class SubDialogManager {
       return false;
     }
     return this._dialogs.some(dialog => !dialog._isClosing);
-  }
-
-  get dialogs() {
-    return [...this._dialogs];
   }
 
   focusTopDialog() {
