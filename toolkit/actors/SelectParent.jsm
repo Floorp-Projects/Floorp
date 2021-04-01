@@ -10,20 +10,12 @@ const { AppConstants } = ChromeUtils.import(
   "resource://gre/modules/AppConstants.jsm"
 );
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
-const { XPCOMUtils } = ChromeUtils.import(
-  "resource://gre/modules/XPCOMUtils.jsm"
-);
 
 // Maximum number of rows to display in the select dropdown.
 const MAX_ROWS = 20;
 
 // Minimum elements required to show select search
 const SEARCH_MINIMUM_ELEMENTS = 40;
-
-// Media query to check if we're on the default win 10 theme. Should match
-// what we use in the toolkit theme to apply custom styling to menulists.
-const DEFAULT_WIN10_THEME =
-  "(-moz-windows-default-theme) and (-moz-os-version: windows-win10)";
 
 // The properties that we should respect only when the item is not active.
 const PROPERTIES_RESET_WHEN_ACTIVE = [
@@ -54,24 +46,6 @@ const SUPPORTED_SELECT_PROPERTIES = [
 const customStylingEnabled = Services.prefs.getBoolPref(
   "dom.forms.select.customstyling"
 );
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  this,
-  "gProton",
-  "browser.proton.contextmenus.enabled",
-  false
-);
-
-function _rgbaToString(parsedColor) {
-  if (!parsedColor) {
-    return null;
-  }
-  let { r, g, b, a } = parsedColor;
-  if (a == 1) {
-    return `rgb(${r}, ${g}, ${b})`;
-  }
-  return `rgba(${r}, ${g}, ${b}, ${a})`;
-}
 
 var SelectParentHelper = {
   /**
@@ -118,23 +92,6 @@ var SelectParentHelper = {
       stylesheet.remove();
     }
 
-    // Take dark mode into account on Windows
-    if (
-      gProton &&
-      AppConstants.platform == "win" &&
-      menulist.ownerGlobal.matchMedia(DEFAULT_WIN10_THEME)
-    ) {
-      let rootCS = menulist.ownerGlobal.getComputedStyle(menulist);
-      let { InspectorUtils } = menulist.ownerGlobal;
-      // We parse out the colour and produce an rgb/rgba value.
-      let normalize = v => _rgbaToString(InspectorUtils.colorToRGBA(v));
-      uaStyle["background-color"] =
-        normalize(rootCS.getPropertyValue("--menu-background-color")) ||
-        uaStyle["background-color"];
-      uaStyle.color =
-        normalize(rootCS.getPropertyValue("--menu-color")) || uaStyle.color;
-    }
-
     let doc = menulist.ownerDocument;
     let sheet;
     if (customStylingEnabled) {
@@ -147,11 +104,12 @@ var SelectParentHelper = {
       selectStyle = uaStyle;
     }
 
-    let selectBackgroundSet = false;
-
     if (selectStyle["background-color"] == "rgba(0, 0, 0, 0)") {
       selectStyle["background-color"] = uaStyle["background-color"];
     }
+
+    let selectBackgroundSet =
+      selectStyle["background-color"] != uaStyle["background-color"];
 
     if (selectStyle.color == selectStyle["background-color"]) {
       selectStyle.color = uaStyle.color;
@@ -170,8 +128,9 @@ var SelectParentHelper = {
       let addedRule = false;
       for (let property of SUPPORTED_SELECT_PROPERTIES) {
         if (property == "direction") {
+          // Handled above, or before.
           continue;
-        } // Handled above, or before.
+        }
         if (
           !selectStyle[property] ||
           selectStyle[property] == uaStyle[property]
@@ -193,22 +152,21 @@ var SelectParentHelper = {
       // Some webpages set the <select> backgroundColor to transparent,
       // but they don't intend to change the popup to transparent.
       // So we remove the backgroundColor and turn it into an image instead.
-      if (selectStyle["background-color"] != uaStyle["background-color"]) {
+      if (selectBackgroundSet) {
         // We intentionally use the parsed color to prevent color
         // values like `url(..)` being injected into the
         // `background-image` property.
         let parsedColor = sheet.cssRules[0].style["background-color"];
-        // The background color gets dropped unconditionally below.
         sheet.cssRules[0].style.setProperty(
           "--content-select-background-image",
           `linear-gradient(${parsedColor}, ${parsedColor})`
         );
-        selectBackgroundSet = true;
-      }
-      if (addedRule) {
         // Always drop the background color to avoid messing with the custom
         // shadow on Windows 10 styling.
         sheet.cssRules[0].style["background-color"] = "";
+        // If the background is set, we also make sure we set the color, to
+        // prevent contrast issues.
+        sheet.cssRules[0].style.color = selectStyle.color;
       }
       if (addedRule) {
         sheet.insertRule(
@@ -223,7 +181,7 @@ var SelectParentHelper = {
     // We only set the `customoptionstyling` if the background has been
     // manually set. This prevents the overlap between moz-appearance and
     // background-color. `color` and `text-shadow` do not interfere with it.
-    if (selectBackgroundSet) {
+    if (customStylingEnabled && selectBackgroundSet) {
       menulist.menupopup.setAttribute("customoptionstyling", "true");
     } else {
       menulist.menupopup.removeAttribute("customoptionstyling");
@@ -485,10 +443,11 @@ var SelectParentHelper = {
       item.setAttribute("tooltiptext", option.tooltip);
 
       if (style["background-color"] == "rgba(0, 0, 0, 0)") {
-        style["background-color"] = selectStyle["background-color"];
+        delete style["background-color"];
       }
 
       let optionBackgroundSet =
+        style["background-color"] &&
         style["background-color"] != selectStyle["background-color"];
 
       if (style.color == style["background-color"]) {
@@ -519,21 +478,20 @@ var SelectParentHelper = {
           }
         }
 
-        if (addedRule) {
-          if (
-            style["text-shadow"] != "none" &&
-            style["text-shadow"] != selectStyle["text-shadow"]
-          ) {
-            // Need to explicitly disable the possibly inherited
-            // text-shadow rule when _moz-menuactive=true since
-            // _moz-menuactive=true disables custom option styling.
-            sheet.insertRule(
-              `#ContentSelectDropdown > menupopup > :nth-child(${nthChildIndex})[_moz-menuactive="true"] {
-              text-shadow: none;
-            }`,
-              0
-            );
-          }
+        if (
+          addedRule &&
+          style["text-shadow"] != "none" &&
+          style["text-shadow"] != selectStyle["text-shadow"]
+        ) {
+          // Need to explicitly disable the possibly inherited
+          // text-shadow rule when _moz-menuactive=true since
+          // _moz-menuactive=true disables custom option styling.
+          sheet.insertRule(
+            `#ContentSelectDropdown > menupopup > :nth-child(${nthChildIndex})[_moz-menuactive="true"] {
+            text-shadow: none;
+          }`,
+            0
+          );
         }
       }
 
