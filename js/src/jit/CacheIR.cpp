@@ -10997,16 +10997,46 @@ void NewObjectIRGenerator::trackAttached(const char* name) {
 #endif
 }
 
-AttachDecision NewObjectIRGenerator::tryAttachStub() {
-  AutoAssertNoPendingException aanpe(cx_);
-  if (templateObject_->as<NativeObject>().hasDynamicSlots()) {
-    trackAttached(IRGenerator::NotAttached);
+AttachDecision NewObjectIRGenerator::tryAttachPlainObject() {
+  NativeObject* nativeObj = &templateObject_->as<NativeObject>();
+  MOZ_ASSERT(nativeObj->is<PlainObject>());
+
+  // We use an unrolled loop when initializing slots. To avoid generating
+  // too much code, put a limit on the number of dynamic slots.
+  if (nativeObj->numDynamicSlots() > NativeObject::MAX_FIXED_SLOTS) {
     return AttachDecision::NoAction;
   }
 
   // Stub doesn't support metadata builder
   if (cx_->realm()->hasAllocationMetadataBuilder()) {
-    trackAttached(IRGenerator::NotAttached);
+    return AttachDecision::NoAction;
+  }
+
+  MOZ_ASSERT(!nativeObj->hasPrivate());
+  MOZ_ASSERT(!nativeObj->hasDynamicElements());
+  MOZ_ASSERT(!nativeObj->isSharedMemory());
+
+  uint32_t numFixedSlots = nativeObj->numUsedFixedSlots();
+  uint32_t numDynamicSlots = nativeObj->numDynamicSlots();
+  gc::AllocKind allocKind = nativeObj->asTenured().getAllocKind();
+  Shape* shape = nativeObj->lastProperty();
+
+  writer.guardNoAllocationMetadataBuilder();
+  writer.newPlainObjectResult(numFixedSlots, numDynamicSlots, allocKind, shape);
+
+  writer.returnFromIC();
+
+  trackAttached("NewPlainObject");
+  return AttachDecision::Attach;
+}
+
+AttachDecision NewObjectIRGenerator::tryAttachTemplateObject() {
+  if (templateObject_->as<NativeObject>().hasDynamicSlots()) {
+    return AttachDecision::NoAction;
+  }
+
+  // Stub doesn't support metadata builder
+  if (cx_->realm()->hasAllocationMetadataBuilder()) {
     return AttachDecision::NoAction;
   }
 
@@ -11023,6 +11053,16 @@ AttachDecision NewObjectIRGenerator::tryAttachStub() {
 
   trackAttached("NewObjectWithTemplate");
   return AttachDecision::Attach;
+}
+
+AttachDecision NewObjectIRGenerator::tryAttachStub() {
+  AutoAssertNoPendingException aanpe(cx_);
+
+  TRY_ATTACH(tryAttachPlainObject());
+  TRY_ATTACH(tryAttachTemplateObject());
+
+  trackAttached(IRGenerator::NotAttached);
+  return AttachDecision::NoAction;
 }
 
 #ifdef JS_SIMULATOR
