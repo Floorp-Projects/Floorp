@@ -48,12 +48,9 @@ for (const test of tests) {
     };
     // The easiest way to test adding the icon is via a generated xml, otherwise
     // we have to somehow insert the address of the server into it.
-    addTestEngines([
-      {
-        name: test.name,
-        xmlFileName: "engineMaker.sjs?" + JSON.stringify(engineData),
-      },
-    ]);
+    SearchTestUtils.promiseNewSearchEngine(
+      `${gDataUrl}engineMaker.sjs?${JSON.stringify(engineData)}`
+    );
     let engine = await promiseEngineAdded;
     await promiseEngineChanged;
 

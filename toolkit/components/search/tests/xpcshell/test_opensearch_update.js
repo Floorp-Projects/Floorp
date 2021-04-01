@@ -15,9 +15,9 @@ add_task(async function test_engineUpdate() {
   const KEYWORD = "keyword";
   const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
 
-  let [engine] = await addTestEngines([
-    { name: "Test search engine", xmlFileName: "engine.xml" },
-  ]);
+  let engine = await SearchTestUtils.promiseNewSearchEngine(
+    `${gDataUrl}engine.xml`
+  );
 
   engine.alias = KEYWORD;
   await Services.search.moveEngine(engine, 0);

@@ -28,12 +28,9 @@ add_task(async function setup() {
     method: "GET",
   };
 
-  [engine] = await addTestEngines([
-    {
-      name: engineData.name,
-      xmlFileName: "engineMaker.sjs?" + JSON.stringify(engineData),
-    },
-  ]);
+  engine = await SearchTestUtils.promiseNewSearchEngine(
+    `${gDataUrl}engineMaker.sjs?${JSON.stringify(engineData)}`
+  );
 });
 
 add_task(async function test_suggestions_in_private_mode_enabled() {
