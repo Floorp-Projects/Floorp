@@ -501,8 +501,7 @@ panelview:not([mainview]) .toolbarbutton-text,
 
 #appMenu-popup panelview,
 #customizationui-widget-multiview panelview:not([extension]) {
-  min-width: @menuPanelWidth@;
-  max-width: 35em;
+  width: 22.5em;
 }
 
 #customizationui-widget-multiview #appMenu-libraryView,
@@ -682,6 +681,12 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 #appMenu-addon-banners:not(:empty) ~ #appMenu-fxa-status,
 .panel-banner-item:not([hidden]) + #appMenu-fxa-status {
   margin-top: 6px;
+}
+
+#appMenu-popup panelview,
+#customizationui-widget-multiview panelview:not([extension]) {
+  min-width: @menuPanelWidth@;
+  max-width: 35em;
 }
 } /** END not Proton **/
 
