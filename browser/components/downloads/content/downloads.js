@@ -1498,7 +1498,7 @@ var DownloadsFooter = {
     if (this._showingSummary) {
       DownloadsSummary.focus();
     } else {
-      DownloadsView.downloadsHistory.focus();
+      DownloadsView.downloadsHistory.focus({ preventFocusRing: true });
     }
   },
 
