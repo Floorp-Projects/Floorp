@@ -1798,8 +1798,8 @@ void nsDisplayMathMLCharDebug::Paint(nsDisplayListBuilder* aBuilder,
                                         GetPaintRect(), rect, computedStyle,
                                         flags, skipSides);
 
-  nsCSSRendering::PaintOutline(presContext, *aCtx, mFrame, GetPaintRect(), rect,
-                               computedStyle);
+  nsCSSRendering::PaintNonThemedOutline(presContext, *aCtx, mFrame,
+                                        GetPaintRect(), rect, computedStyle);
 }
 #endif
 
