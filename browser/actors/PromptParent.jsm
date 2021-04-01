@@ -124,6 +124,21 @@ class PromptParent extends JSWindowActorParent {
     }
   }
 
+  isAboutAddonsOptionsPage(browsingContext) {
+    const { embedderWindowGlobal, name } = browsingContext;
+    if (!embedderWindowGlobal) {
+      // Return earlier if there is no embedder global, this is definitely
+      // not an about:addons extensions options page.
+      return false;
+    }
+
+    return (
+      embedderWindowGlobal.documentPrincipal.isSystemPrincipal &&
+      embedderWindowGlobal.documentURI.spec === "about:addons" &&
+      name === "addon-inline-options"
+    );
+  }
+
   receiveMessage(message) {
     let args = message.data;
     let id = args._remoteId;
@@ -134,7 +149,8 @@ class PromptParent extends JSWindowActorParent {
           (args.modalType === Ci.nsIPrompt.MODAL_TYPE_CONTENT &&
             !contentPromptSubDialog) ||
           (args.modalType === Ci.nsIPrompt.MODAL_TYPE_TAB &&
-            !tabChromePromptSubDialog)
+            !tabChromePromptSubDialog) ||
+          this.isAboutAddonsOptionsPage(this.browsingContext)
         ) {
           return this.openContentPrompt(args, id);
         }
