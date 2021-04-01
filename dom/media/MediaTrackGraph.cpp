@@ -3080,11 +3080,6 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(
   }
 }
 
-AbstractThread* MediaTrackGraph::AbstractMainThread() {
-  MOZ_ASSERT(static_cast<MediaTrackGraphImpl*>(this)->mAbstractMainThread);
-  return static_cast<MediaTrackGraphImpl*>(this)->mAbstractMainThread;
-}
-
 #ifdef DEBUG
 bool MediaTrackGraphImpl::InDriverIteration(const GraphDriver* aDriver) const {
   return aDriver->OnThread() ||
