@@ -90,7 +90,8 @@ void PreferenceSheet::Prefs::Load(bool aIsChrome) {
   mFocusRingOnAnything = StaticPrefs::browser_display_focus_ring_on_anything();
 
   const bool useStandins = nsContentUtils::UseStandinsForNativeColors();
-  const bool usePrefColors = !useStandins && !aIsChrome && !mUseAccessibilityTheme &&
+  const bool usePrefColors = !useStandins && !aIsChrome &&
+                             !mUseAccessibilityTheme &&
                              !StaticPrefs::browser_display_use_system_colors();
   if (usePrefColors) {
     GetColor("browser.display.background_color", mDefaultBackgroundColor);
@@ -101,13 +102,18 @@ void PreferenceSheet::Prefs::Load(bool aIsChrome) {
     const auto standins = LookAndFeel::UseStandins(useStandins);
     // TODO(emilio): In the future we probably want to keep both sets of colors
     // around or something.
+    //
+    // FIXME(emilio): Why do we look at a different set of colors when using
+    // standins vs. not?
     const auto scheme = LookAndFeel::ColorScheme::Light;
     mDefaultColor = LookAndFeel::Color(
-        ColorID::WindowForeground, scheme, standins, mDefaultColor);
+        useStandins ? ColorID::Windowtext : ColorID::WindowForeground, scheme,
+        standins, mDefaultColor);
     mDefaultBackgroundColor = LookAndFeel::Color(
-        ColorID::WindowBackground, scheme, standins, mDefaultBackgroundColor);
-    mLinkColor = LookAndFeel::Color(
-        ColorID::MozNativehyperlinktext, scheme, standins, mLinkColor);
+        useStandins ? ColorID::Window : ColorID::WindowBackground, scheme,
+        standins, mDefaultBackgroundColor);
+    mLinkColor = LookAndFeel::Color(ColorID::MozNativehyperlinktext, scheme,
+                                    standins, mLinkColor);
   }
 
   if (mUseAccessibilityTheme && !useStandins) {
