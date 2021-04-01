@@ -203,6 +203,8 @@ desktop-screenshot-capture:
 ### Specific platform test sets
 
 # Linux
+linux32-gtest:
+    - gtest
 
 linux32-tests:
     - web-platform-tests
