@@ -8,6 +8,8 @@ const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 
 const BROWSERTOOLBOX_FISSION_ENABLED = "devtools.browsertoolbox.fission";
+const SERVER_TARGET_SWITCHING_ENABLED =
+  "devtools.target-switching.server.enabled";
 
 const {
   LegacyProcessesWatcher,
@@ -157,6 +159,7 @@ class TargetCommand extends EventEmitter {
 
       // Update the reference to the memoized top level target
       this.targetFront = targetFront;
+      this.descriptorFront.setTarget(targetFront);
     }
 
     // Map the descriptor typeName to a target type.
@@ -194,6 +197,9 @@ class TargetCommand extends EventEmitter {
 
     // To be consumed by tests triggering frame navigations, spawning workers...
     this.emitForTests("processed-available-target", targetFront);
+    if (isTargetSwitching) {
+      this.emitForTests("switched-target", targetFront);
+    }
   }
 
   /**
@@ -271,6 +277,16 @@ class TargetCommand extends EventEmitter {
     }
 
     return !!this.watcherFront?.traits[type];
+  }
+
+  isServerTargetSwitchingEnabled() {
+    if (typeof this._isServerTargetSwitchingEnabled == "undefined") {
+      this._isServerTargetSwitchingEnabled = Services.prefs.getBoolPref(
+        SERVER_TARGET_SWITCHING_ENABLED,
+        false
+      );
+    }
+    return this._isServerTargetSwitchingEnabled;
   }
 
   /**
@@ -580,6 +596,12 @@ class TargetCommand extends EventEmitter {
    *        The BrowsingContextTargetFront instance that navigated to another process
    */
   async onLocalTabRemotenessChange(targetFront) {
+    if (this.isServerTargetSwitchingEnabled()) {
+      // For server-side target switchting, everything will be handled by the
+      // _onTargetAvailable callback.
+      return;
+    }
+
     // TabDescriptor may emit the event with a null targetFront, interpret that as if the previous target
     // has already been destroyed
     if (targetFront) {
@@ -602,9 +624,8 @@ class TargetCommand extends EventEmitter {
    */
   async switchToTarget(newTarget) {
     // Notify about this new target to creation listeners
+    // _onTargetAvailable will also destroy all previous target before notifying about this new one.
     await this._onTargetAvailable(newTarget);
-
-    this.emit("switched-target", newTarget);
   }
 
   isTargetRegistered(targetFront) {

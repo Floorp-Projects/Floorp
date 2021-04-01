@@ -27,6 +27,10 @@ const PREFERENCES = [
       "processes at the same time as resources from the parent process",
   ],
   [
+    "devtools.target-switching.server.enabled",
+    "Enable experimental server side target switching",
+  ],
+  [
     "devtools.testing.enableServerWatcherSupport",
     "Enable experimental server-side resources (see watcher actor to get the " +
       "list of impacted resources",

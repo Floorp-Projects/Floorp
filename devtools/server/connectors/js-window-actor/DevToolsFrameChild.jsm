@@ -24,18 +24,22 @@ XPCOMUtils.defineLazyModuleGetters(this, {
     "resource://devtools/server/connectors/js-window-actor/WindowGlobalLogger.jsm",
 });
 
+// Note: this preference should be read from the client and propagated to the
+// server. However since target switching is only supported for local-tab
+// debugging scenarios, it is acceptable to temporarily read it both on the
+// client and server until we can just enable it by default.
+XPCOMUtils.defineLazyGetter(this, "isServerTargetSwitchingEnabled", () =>
+  Services.prefs.getBoolPref("devtools.target-switching.server.enabled", false)
+);
+
 // Name of the attribute into which we save data in `sharedData` object.
 const SHARED_DATA_KEY_NAME = "DevTools:watchedPerWatcher";
-
-// If true, log info about WindowGlobal's being created.
-const DEBUG = false;
 
 /**
  * Helper function to know if a given WindowGlobal should be exposed via watchTargets("frame") API
  */
 function shouldNotifyWindowGlobal(windowGlobal, watchedBrowserId) {
   const browsingContext = windowGlobal.browsingContext;
-
   // Ignore about:blank loads, which spawn a document that never finishes loading
   // and would require somewhat useless Target and all its related overload.
   const window = Services.wm.getCurrentInnerWindowWithId(
@@ -67,12 +71,12 @@ function shouldNotifyWindowGlobal(windowGlobal, watchedBrowserId) {
     return false;
   }
 
-  // For now, we only mention the "remote frames".
+  // For client-side target switching, only mention the "remote frames".
   // i.e. the frames which are in a distinct process compared to their parent document
   // If there is no parent, this is most likely the top level document.
   // Ignore it only if this is the top level target we are watching.
-  // For now we don't expect a target to be created, but we will as TabDescriptors arise.
   if (
+    !isServerTargetSwitchingEnabled &&
     !browsingContext.parent &&
     browsingContext.browserId == watchedBrowserId
   ) {
@@ -106,6 +110,8 @@ function shouldNotifyWindowGlobal(windowGlobal, watchedBrowserId) {
   return true;
 }
 
+// If true, log info about WindowGlobal's being created.
+const DEBUG = false;
 function logWindowGlobal(windowGlobal, message) {
   if (!DEBUG) {
     return;
@@ -143,7 +149,34 @@ class DevToolsFrameChild extends JSWindowActorChild {
         watchedData.targets.includes("frame") &&
         shouldNotifyWindowGlobal(this.manager, browserId)
       ) {
-        this._createTargetActor(watcherActorID, connectionPrefix, watchedData);
+        const browsingContext = this.manager.browsingContext;
+
+        // Bail if there is already an existing BrowsingContextTargetActor.
+        // This means we are reloading or navigating (same-process) a Target
+        // which has not been created using the Watcher, but from the client.
+        // Most likely the initial target of a local-tab toolbox.
+        const existingTarget = this._getTargetActorForWatcherActorID(
+          watcherActorID,
+          browserId
+        );
+
+        // Bail when there is already a target for a watcher + browserId pair,
+        // unless this target was created from a JSWindowActor target. The old JSWindowActor
+        // target will still be around for a short time when the new one is
+        // created.
+        if (existingTarget && !existingTarget.createdFromJsWindowActor) {
+          return;
+        }
+
+        const isTopLevelTarget =
+          !browsingContext.parent && browsingContext.browserId == browserId;
+
+        this._createTargetActor(
+          watcherActorID,
+          connectionPrefix,
+          watchedData,
+          isTopLevelTarget
+        );
       }
     }
   }
@@ -160,8 +193,16 @@ class DevToolsFrameChild extends JSWindowActorChild {
    *        All data managed by the Watcher Actor and WatcherRegistry.jsm, containing
    *        target types, resources types to be listened as well as breakpoints and any
    *        other data meant to be shared across processes and threads.
+   * @param Boolean isTopLevelTarget
+   *        To be set to true if we will instantiate a top level target.
+   *        This will typically be the top level document of a tab for the regular toolbox.
    */
-  _createTargetActor(watcherActorID, parentConnectionPrefix, initialData) {
+  _createTargetActor(
+    watcherActorID,
+    parentConnectionPrefix,
+    initialData,
+    isTopLevelTarget
+  ) {
     if (this._connections.get(watcherActorID)) {
       throw new Error(
         "DevToolsFrameChild _createTargetActor was called more than once" +
@@ -184,8 +225,10 @@ class DevToolsFrameChild extends JSWindowActorChild {
     );
 
     const { connection, targetActor } = this._createConnectionAndActor(
-      forwardingPrefix
+      forwardingPrefix,
+      isTopLevelTarget
     );
+    targetActor.createdFromJsWindowActor = true;
     this._connections.set(watcherActorID, {
       connection,
       actor: targetActor,
@@ -227,7 +270,7 @@ class DevToolsFrameChild extends JSWindowActorChild {
     }
   }
 
-  _createConnectionAndActor(forwardingPrefix) {
+  _createConnectionAndActor(forwardingPrefix, isTopLevelTarget) {
     this.useCustomLoader = this.document.nodePrincipal.isSystemPrincipal;
 
     // When debugging chrome pages, use a new dedicated loader, using a distinct chrome compartment.
@@ -262,8 +305,9 @@ class DevToolsFrameChild extends JSWindowActorChild {
     // Create the actual target actor.
     const targetActor = new FrameTargetActor(connection, {
       docShell: this.docShell,
-      followWindowGlobalLifeCycle: true,
       doNotFireFrameUpdates: true,
+      followWindowGlobalLifeCycle: true,
+      isTopLevelTarget,
     });
     targetActor.manage(targetActor);
 
@@ -339,10 +383,18 @@ class DevToolsFrameChild extends JSWindowActorChild {
     switch (message.name) {
       case "DevToolsFrameParent:instantiate-already-available": {
         const { watcherActorID, connectionPrefix, watchedData } = message.data;
+
+        // XXX: For now we only instantiate remote frame targets via this
+        // mechanism. When we want to support creating the first target via
+        // the Watcher (Bug 1686748), the message data should also provide the
+        // `isTopLevelTarget` information.
+        const isTopLevelTarget = false;
+
         return this._createTargetActor(
           watcherActorID,
           connectionPrefix,
-          watchedData
+          watchedData,
+          isTopLevelTarget
         );
       }
       case "DevToolsFrameParent:destroy": {
