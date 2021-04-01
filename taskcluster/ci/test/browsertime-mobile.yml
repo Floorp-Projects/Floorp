@@ -66,12 +66,22 @@ job-defaults:
             default: []
 
 browsertime-tp6m:
-    description: "Raptor (browsertime) tp6 page-load tests on android"
-    raptor-test: tp6m
+    <<: &tp6m-defaults
+        apps: [geckoview, fenix, chrome-m, refbrow]
+        description: Raptor (browsertime) tp6 page-load tests on android
+        mozharness:
+            extra-options:
+                - --chimera
+        raptor-test: tp6m
+        run-visual-metrics: true
+        tier:
+            by-app:
+                geckoview: 1
+                refbrow: 2
+                default: 3
+        treeherder-symbol: Btime(tp6m)
     raptor-subtests:
-        - allrecipes
         - amazon
-        - [amazon-search, amazon-s]
         - bbc
         - bing
         - [bing-search-restaurants, bing-s-r]
@@ -80,28 +90,36 @@ browsertime-tp6m:
         - [cnn-ampstories, cnn-amp]
         - [ebay-kleinanzeigen, ebay-k]
         - [ebay-kleinanzeigen-search, ebay-k-s]
-        - espn
-        - facebook
         - [facebook-cristiano, fb-cris]
-        - google
         - [google-maps, gmaps]
         - [google-search-restaurants, gsearch-r]
         - instagram
         - imdb
         - jianshu
-        - [microsoft-support, micros-sup]
         - reddit
         - [stackoverflow, stacko]
         - web-de
         - wikipedia
         - youtube
-        - [youtube-watch, youtube-w]
-    apps: ["geckoview", "fenix", "chrome-m", "refbrow"]
-    tier:
+    run-on-projects:
         by-app:
-            geckoview: 1
-            refbrow: 2
-            default: 3
+            geckoview:
+                by-test-platform:
+                    android-hw-g5.*shippable-qr.*: [trunk, mozilla-beta]
+                    android-hw-p2.*aarch64-shippable-qr.*: [trunk, mozilla-beta]
+                    default: []
+            default: []
+
+browsertime-tp6m-essential:
+    <<: *tp6m-defaults
+    raptor-subtests:
+        - allrecipes
+        - [amazon-search, amazon-s]
+        - espn
+        - facebook
+        - google
+        - [microsoft-support, micros-sup]
+        - [youtube-watch, youtube-w]
     run-on-projects:
         by-app:
             geckoview:
@@ -110,11 +128,6 @@ browsertime-tp6m:
                     android-hw-p2.*aarch64-shippable.*: [trunk, mozilla-beta]
                     default: []
             default: []
-    run-visual-metrics: true
-    treeherder-symbol: Btime(tp6m)
-    mozharness:
-        extra-options:
-            - --chimera
 
 browsertime-youtube-playback-mobile:
     description: "Browsertime YouTube Playback on Android"
