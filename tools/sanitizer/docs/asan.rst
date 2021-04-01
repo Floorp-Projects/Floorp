@@ -147,16 +147,6 @@ content in your mozilla-central directory:
    # Enable ASan specific code and build workarounds
    ac_add_options --enable-address-sanitizer
 
-   # Add ASan to our compiler flags
-   export CFLAGS="-fsanitize=address -Dxmalloc=myxmalloc -fPIC"
-   export CXXFLAGS="-fsanitize=address -Dxmalloc=myxmalloc -fPIC"
-
-   # Additionally, we need the ASan flag during linking. Normally, our C/CXXFLAGS would
-   # be used during linking as well but there is at least one place in our build where
-   # our CFLAGS are not added during linking.
-   # Note: The use of this flag causes Clang to automatically link the ASan runtime :)
-   export LDFLAGS="-fsanitize=address"
-
    # These three are required by ASan
    ac_add_options --disable-jemalloc
    ac_add_options --disable-crashreporter
