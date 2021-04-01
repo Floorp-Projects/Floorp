@@ -199,12 +199,6 @@ CheckVertexAttribPointer(const bool isWebgl2,
       calc.baseType = webgl::AttribBaseType::Float;
       break;
 
-    case LOCAL_GL_FIXED:
-      isTypeValid = isWebgl2;
-      bytesPerType = 4;
-      calc.baseType = webgl::AttribBaseType::Float;
-      break;
-
     case LOCAL_GL_INT_2_10_10_10_REV:
     case LOCAL_GL_UNSIGNED_INT_2_10_10_10_REV:
       if (desc.channels != 4) {
