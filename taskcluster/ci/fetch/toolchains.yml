@@ -435,11 +435,11 @@ clang-11:
         revision: 43ff75f2c3feef64f9d73328230d34dac8832a91
 
 clang-12:
-    description: clang 12.0.0-rc2 source code
+    description: clang 12.0.0-rc4 source code
     fetch:
         type: git
         repo: https://github.com/llvm/llvm-project
-        revision: 4918a3d138b907a571f496661b5367e090e1e8bb
+        revision: 31001be371e8f2c74470e727e54503fb2aabec8b
 
 rust-1.47.0-dev:
     description: Rust 1.47.0-dev source code
