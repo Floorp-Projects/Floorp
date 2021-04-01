@@ -111,7 +111,12 @@ Maybe<uint64_t> NowIncludingSuspendMs() {
 #  endif
 }
 
-#endif  // XP_LINUX
+#else  // catch all
+
+Maybe<uint64_t> NowExcludingSuspendMs() { return Nothing(); }
+Maybe<uint64_t> NowIncludingSuspendMs() { return Nothing(); }
+
+#endif
 
 };  // anonymous namespace
 
