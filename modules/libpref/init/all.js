@@ -1411,7 +1411,7 @@ pref("network.http.spdy.websockets", true);
 pref("network.http.spdy.enable-hpack-dump", false);
 
 // Http3 parameters
-#if defined(EARLY_BETA_OR_EARLIER) && !defined(ANDROID)
+#if defined(EARLY_BETA_OR_EARLIER)
 pref("network.http.http3.enabled", true);
 #else
 pref("network.http.http3.enabled", false);
