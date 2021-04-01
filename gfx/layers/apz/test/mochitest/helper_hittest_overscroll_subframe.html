@@ -48,11 +48,6 @@ async function test() {
     return;
   }
 
-  // For some reason, this test sometimes hits an assertion in ContainerState::Finish()
-  // https://searchfox.org/mozilla-central/rev/74d0efd1107a26f178b108b6a18a179e9b06547c/layout/painting/FrameLayerBuilder.cpp#5983
-  // and related assertions in Layers.cpp.
-  SimpleTest.expectAssertions(0, 5);
-
   // Activate the subframe. This both matches reality (if you're
   // scrolling the subframe, it's active), and makes it easier
   // to check for expected hit test outcomes.
