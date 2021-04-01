@@ -15,7 +15,6 @@ module.exports = {
     browserActionFor: true,
     clickModifiersFromEvent: true,
     getContainerForCookieStoreId: true,
-    getInspectedWindowFront: true,
     getTargetTabIdForToolbox: true,
     getToolboxEvalOptions: true,
     isContainerCookieStoreId: true,

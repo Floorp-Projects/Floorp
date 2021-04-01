@@ -139,9 +139,7 @@ add_task(async function testSidebarSetObject() {
 });
 
 add_task(async function testSidebarSetExpressionResult() {
-  const inspectedWindowFront = await toolbox.target.getFront(
-    "webExtensionInspectedWindow"
-  );
+  const { commands } = toolbox;
   const sidebar = inspector.getPanel(SIDEBAR_ID);
   const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
 
@@ -156,7 +154,7 @@ add_task(async function testSidebarSetExpressionResult() {
   `;
 
   const consoleFront = await toolbox.target.getFront("console");
-  let evalResult = await inspectedWindowFront.eval(
+  let evalResult = await commands.inspectedWindowCommand.eval(
     fakeExtCallerInfo,
     expression,
     {
@@ -228,7 +226,7 @@ add_task(async function testSidebarSetExpressionResult() {
   info(
     "Testing sidebar.setExpressionResult for an expression returning a longstring"
   );
-  evalResult = await inspectedWindowFront.eval(
+  evalResult = await commands.inspectedWindowCommand.eval(
     fakeExtCallerInfo,
     `"ab ".repeat(10000)`,
     {
@@ -250,23 +248,23 @@ add_task(async function testSidebarSetExpressionResult() {
   info(
     "Testing sidebar.setExpressionResult for an expression returning a primitive"
   );
-  evalResult = await inspectedWindowFront.eval(fakeExtCallerInfo, `1 + 2`, {
-    consoleFront,
-  });
+  evalResult = await commands.inspectedWindowCommand.eval(
+    fakeExtCallerInfo,
+    `1 + 2`,
+    {
+      consoleFront,
+    }
+  );
   sidebar.setExpressionResult(evalResult);
   const numberEl = await ContentTaskUtils.waitForCondition(
     () => sidebarPanelContent.querySelector(".objectBox-number"),
     "Wait for the result number element to be rendered"
   );
   is(numberEl.textContent, "3", `The "1 + 2" expression was evaluated as "3"`);
-
-  inspectedWindowFront.destroy();
 });
 
 add_task(async function testSidebarDOMNodeHighlighting() {
-  const inspectedWindowFront = await toolbox.target.getFront(
-    "webExtensionInspectedWindow"
-  );
+  const { commands } = toolbox;
   const sidebar = inspector.getPanel(SIDEBAR_ID);
   const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
 
@@ -278,7 +276,7 @@ add_task(async function testSidebarDOMNodeHighlighting() {
   const expression = "({ body: document.body })";
 
   const consoleFront = await toolbox.target.getFront("console");
-  const evalResult = await inspectedWindowFront.eval(
+  const evalResult = await commands.inspectedWindowCommand.eval(
     fakeExtCallerInfo,
     expression,
     {
@@ -329,8 +327,6 @@ add_task(async function testSidebarDOMNodeHighlighting() {
 
   await onNodeUnhighlight;
   info("The node is no longer highlighted");
-
-  inspectedWindowFront.destroy();
 });
 
 add_task(async function testSidebarDOMNodeOpenInspector() {
@@ -387,10 +383,6 @@ add_task(async function testSidebarDOMNodeOpenInspector() {
 });
 
 add_task(async function testSidebarSetExtensionPage() {
-  const inspectedWindowFront = await toolbox.target.getFront(
-    "webExtensionInspectedWindow"
-  );
-
   const sidebar = inspector.getPanel(SIDEBAR_ID);
   const sidebarPanelContent = inspector.sidebar.getTabPanel(SIDEBAR_ID);
 
@@ -407,7 +399,6 @@ add_task(async function testSidebarSetExtensionPage() {
 
   await testSetExtensionPageSidebarPanel(sidebarPanelContent, expectedURL);
 
-  inspectedWindowFront.destroy();
   await SpecialPowers.popPrefEnv();
 });
 

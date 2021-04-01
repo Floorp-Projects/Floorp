@@ -54,13 +54,6 @@ global.getTargetTabIdForToolbox = toolbox => {
   return tabTracker.getId(tab);
 };
 
-// Create an InspectedWindowFront instance for a given context (used in devtoools.inspectedWindow.eval
-// and in sidebar.setExpression API methods).
-global.getInspectedWindowFront = async function(context) {
-  const target = await context.getCurrentDevToolsTarget();
-  return DevToolsShim.createWebExtensionInspectedWindowFront(target);
-};
-
 // Get the WebExtensionInspectedWindowActor eval options (needed to provide the $0 and inspect
 // binding provided to the evaluated js code).
 global.getToolboxEvalOptions = async function(context) {
