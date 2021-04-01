@@ -353,6 +353,8 @@ linux/opt:
     worker-type: b-linux
     worker:
         max-run-time: 7200
+        env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         using: mozharness
         actions: [get-secrets, build]
@@ -393,6 +395,8 @@ linux/debug:
     worker-type: b-linux
     worker:
         max-run-time: 5400
+        env:
+            MOZ_AUTOMATION_PACKAGE_TESTS: "1"
     run:
         using: mozharness
         actions: [get-secrets, build]
