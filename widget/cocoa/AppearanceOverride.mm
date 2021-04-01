@@ -11,13 +11,7 @@
 #include "mozilla/StaticPrefs_widget.h"
 
 #include "nsXULAppAPI.h"
-
-#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
-@interface NSApplication (NSApplicationAppearance3)
-@property(strong) NSAppearance* appearance NS_AVAILABLE_MAC(10_14);
-@property(readonly, strong) NSAppearance* effectiveAppearance NS_AVAILABLE_MAC(10_14);
-@end
-#endif
+#include "SDKDeclarations.h"
 
 static void RespectSystemAppearancePrefChanged(const char* aPref, void* aUserInfo);
 
