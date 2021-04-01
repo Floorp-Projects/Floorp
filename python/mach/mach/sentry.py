@@ -67,13 +67,19 @@ def _process_event(sentry_event, topsrcdir):
         # unmodified.
         return
 
+    base_ref = repo.base_ref_as_hg()
+    if not base_ref:
+        # If we don't know which revision this exception is attached to, then it's
+        # not worth sending
+        return
+
     if not _is_unmodified_mach_core(repo):
         return
 
     for map_fn in (_settle_mach_module_id, _patch_absolute_paths, _delete_server_name):
         sentry_event = map_fn(sentry_event, topsrcdir)
 
-    sentry_event["release"] = "hg-rev-{}".format(repo.base_ref_as_hg())
+    sentry_event["release"] = "hg-rev-{}".format(base_ref)
     return sentry_event
 
 
