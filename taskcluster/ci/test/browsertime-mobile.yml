@@ -10,10 +10,8 @@ job-defaults:
             refbrow: []
             default:
                 by-test-platform:
-                    android-hw-p2-.*aarch64.*/pgo: ["mozilla-central"]
-                    android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central"]
+                    android-hw-p2-.*aarch64-shippable(?!-qr).*: [mozilla-central]
                     default: []
-    webrender-run-on-projects: []
     tier: 3
     test-manifest-loader: null  # don't load tests in the taskgraph
     target:
@@ -60,103 +58,56 @@ job-defaults:
             - --no-conditioned-profile
     optimization:
         skip-unless-backstop: null
-    variants:
-        by-app:
-            chrome-m: []
-            default: ["webrender"]
     python-3: true
+    limit-platforms:
+        by-app:
+            chrome-m:
+                - .*shippable(?!-qr).*
+            default: []
 
 browsertime-tp6m:
     description: "Raptor (browsertime) tp6 page-load tests on android"
     raptor-test: tp6m
     raptor-subtests:
-        by-app:
-            chrome-m:
-                - amazon
-                - youtube
-            default:
-                - allrecipes
-                - amazon
-                - [amazon-search, amazon-s]
-                - bbc
-                - bing
-                - [bing-search-restaurants, bing-s-r]
-                - booking
-                - cnn
-                - [cnn-ampstories, cnn-amp]
-                - [ebay-kleinanzeigen, ebay-k]
-                - [ebay-kleinanzeigen-search, ebay-k-s]
-                - espn
-                - facebook
-                - [facebook-cristiano, fb-cris]
-                - google
-                - [google-maps, gmaps]
-                - [google-search-restaurants, gsearch-r]
-                - instagram
-                - imdb
-                - jianshu
-                - [microsoft-support, micros-sup]
-                - reddit
-                - [stackoverflow, stacko]
-                - web-de
-                - wikipedia
-                - youtube
-                - [youtube-watch, youtube-w]
+        - allrecipes
+        - amazon
+        - [amazon-search, amazon-s]
+        - bbc
+        - bing
+        - [bing-search-restaurants, bing-s-r]
+        - booking
+        - cnn
+        - [cnn-ampstories, cnn-amp]
+        - [ebay-kleinanzeigen, ebay-k]
+        - [ebay-kleinanzeigen-search, ebay-k-s]
+        - espn
+        - facebook
+        - [facebook-cristiano, fb-cris]
+        - google
+        - [google-maps, gmaps]
+        - [google-search-restaurants, gsearch-r]
+        - instagram
+        - imdb
+        - jianshu
+        - [microsoft-support, micros-sup]
+        - reddit
+        - [stackoverflow, stacko]
+        - web-de
+        - wikipedia
+        - youtube
+        - [youtube-watch, youtube-w]
     apps: ["geckoview", "fenix", "chrome-m", "refbrow"]
     tier:
-        by-raptor-test:
-            amazon:
-                by-app:
-                    fenix: 1
-                    geckoview: 1
-                    refbrow: 2
-                    default: 3
-            default:
-                by-app:
-                    geckoview: 1
-                    refbrow: 2
-                    default: 3
-    webrender-run-on-projects:
-        by-raptor-test:
-            amazon:
-                by-app:
-                    fenix: []
-                    chrome-m: []
-                    geckoview:
-                        &sheriffed-platforms
-                        by-test-platform:
-                            android-hw-g5-7-0-arm7-api-16-shippable/opt: ['trunk', 'mozilla-beta']
-                            android-hw-p2-8-0-android-aarch64-shippable/opt: ['trunk', 'mozilla-beta']
-                            default: []
-                    default:
-                        by-test-platform:
-                            android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central"]
-                            default: []
-            youtube:
-                by-app:
-                    fenix: []
-                    chrome-m: []
-                    refbrow: []
-                    geckoview: *sheriffed-platforms
-                    default:
-                        by-test-platform:
-                            android-hw-p2-.*aarch64-shippable/opt: ["mozilla-central", "try"]
-                            default: []
-            default:
-                by-app:
-                    geckoview: *sheriffed-platforms
-                    default: []
+        by-app:
+            geckoview: 1
+            refbrow: 2
+            default: 3
     run-on-projects:
         by-app:
             geckoview:
-                by-subtest:
-                    allrecipes: *sheriffed-platforms
-                    amazon-search: *sheriffed-platforms
-                    espn: *sheriffed-platforms
-                    facebook: *sheriffed-platforms
-                    google: *sheriffed-platforms
-                    microsoft-support: *sheriffed-platforms
-                    youtube-watch: *sheriffed-platforms
+                by-test-platform:
+                    android-hw-g5.*shippable.*: [trunk, mozilla-beta]
+                    android-hw-p2.*aarch64-shippable.*: [trunk, mozilla-beta]
                     default: []
             default: []
     run-visual-metrics: true
@@ -185,12 +136,12 @@ browsertime-youtube-playback-mobile:
                 # - [youtube-playback-widevine-hfr, ytp-widevine-hfr]
                 # - [youtube-playback-widevine-vp9-sfr, ytp-widevine-vp9-sfr]
     apps: ["fenix", "geckoview", "refbrow"]
-    webrender-run-on-projects:
+    run-on-projects:
         by-app:
             geckoview:
                 by-test-platform:
-                    android-hw-g5-7-0-arm7-api-16-shippable/opt: ["mozilla-central"]
-                    android-hw-p2-8-0-android-aarch64-shippable/opt: ["mozilla-central"]
+                    android-hw-g5.*shippable.*: [mozilla-central]
+                    android-hw-p2.*aarch64-shippable.*: [mozilla-central]
                     default: []
             default: []
     test-url-param:
@@ -266,13 +217,12 @@ browsertime-tp6m-live:
                 - youtube
                 - [youtube-watch, youtube-w]
     apps: ["fenix", "chrome-m", "geckoview"]
-    run-on-projects: []
-    webrender-run-on-projects:
+    run-on-projects:
         by-app:
             geckoview:
                 by-test-platform:
-                    android-hw-g5-7-0-arm7-api-16-shippable/opt: ["autoland"]
-                    android-hw-p2-8-0-android-aarch64-shippable/opt: ["autoland"]
+                    android-hw-g5.*shippable-qr.*: [autoland]
+                    android-hw-p2.*aarch64-shippable-qr.*: [autoland]
                     default: []
             default: []
     run-visual-metrics: true
@@ -303,14 +253,19 @@ browsertime-speedometer-mobile:
         by-app:
             fenix: 1
             default: 3
-    webrender-run-on-projects:
+    run-on-projects:
         by-app:
+            refbrow: []
             geckoview:
                 by-test-platform:
-                    android-hw-g5-7-0-arm7-api-16-shippable/opt: ['trunk', 'mozilla-beta']
-                    android-hw-p2-8-0-android-aarch64-shippable/opt: ['trunk', 'mozilla-beta']
+                    android-hw-p2-.*aarch64-shippable(?!-qr).*: [mozilla-central]
+                    android-hw-g5.*shippable-qr.*: [trunk, mozilla-beta]
+                    android-hw-p2.*aarch64-shippable-qr.*: [trunk, mozilla-beta]
                     default: []
-            default: []
+            default:
+                by-test-platform:
+                    android-hw-p2-.*aarch64-shippable(?!-qr).*: [mozilla-central]
+                    default: []
     treeherder-symbol: Btime(sp)
     mozharness:
         extra-options:
@@ -321,14 +276,19 @@ browsertime-unity-webgl-mobile:
     description: "Browsertime Unity WebGL on Android"
     apps: ["geckoview", "refbrow", "fenix", "chrome-m"]
     treeherder-symbol: Btime(ugl)
-    webrender-run-on-projects:
+    run-on-projects:
         by-app:
+            refbrow: []
             geckoview:
                 by-test-platform:
-                    android-hw-g5-7-0-arm7-api-16-shippable/opt: ['trunk', 'mozilla-beta']
-                    android-hw-p2-8-0-android-aarch64-shippable/opt: ['trunk', 'mozilla-beta']
+                    android-hw-p2-.*aarch64-shippable(?!-qr).*: [mozilla-central]
+                    android-hw-g5.*shippable-qr.*: [trunk, mozilla-beta]
+                    android-hw-p2.*aarch64-shippable-qr.*: [trunk, mozilla-beta]
                     default: []
-            default: []
+            default:
+                by-test-platform:
+                    android-hw-p2-.*aarch64-shippable(?!-qr).*: [mozilla-central]
+                    default: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -345,7 +305,6 @@ browsertime-power:
         - idle
         - idle-bg
         - [speedometer, sp]
-    variants: ["webrender"]
     run-on-projects: []
     treeherder-symbol: Btime-P(power)
     mozharness:
