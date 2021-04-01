@@ -338,7 +338,7 @@ decorate_task(async function() {
   const verifySpy = sinon.spy(action, "validateArguments");
   await action.processRecipe(
     recipe,
-    BaseAction.suitability.CAPABILITES_MISMATCH
+    BaseAction.suitability.CAPABILITIES_MISMATCH
   );
   ok(!verifySpy.called, "validateArguments should not be called");
 });

@@ -83,7 +83,7 @@ class PreferenceExperimentAction extends BaseStudyAction {
         break;
       }
 
-      case BaseAction.suitability.CAPABILITES_MISMATCH: {
+      case BaseAction.suitability.CAPABILITIES_MISMATCH: {
         if (experiment && !experiment.expired) {
           await PreferenceExperiments.stop(slug, {
             resetValue: true,
