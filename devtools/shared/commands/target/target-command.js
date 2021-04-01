@@ -583,15 +583,6 @@ class TargetCommand extends EventEmitter {
     // TabDescriptor may emit the event with a null targetFront, interpret that as if the previous target
     // has already been destroyed
     if (targetFront) {
-      // By default, we do close the DevToolsClient when the target is destroyed.
-      // This happens when we close the toolbox (Toolbox.destroy calls Target.destroy),
-      // or when the tab is closes, the server emits tabDetached and the target
-      // destroy itself.
-      // Here, in the context of the process switch, the current target will be destroyed
-      // due to a tabDetached event and a we will create a new one. But we want to reuse
-      // the same client.
-      targetFront.shouldCloseClient = false;
-
       // Wait for the target to be destroyed so that TabDescriptorFactory clears its memoized target for this tab
       await targetFront.once("target-destroyed");
     }

@@ -82,6 +82,12 @@ class TabDescriptorFront extends DescriptorMixin(
   setLocalTab(localTab) {
     this._localTab = localTab;
     this._setupLocalTabListeners();
+
+    // This is pure legacy. We always assumed closing the DevToolsClient
+    // when the tab was closed. It is mostly important for tests,
+    // but also ensure cleaning up the client and everything on tab closing.
+    // (this flag is handled by DescriptorMixin)
+    this.shouldCloseClient = true;
   }
 
   get isLocalTab() {
@@ -134,10 +140,6 @@ class TabDescriptorFront extends DescriptorMixin(
   _createTabTarget(form) {
     const front = new BrowsingContextTargetFront(this._client, null, this);
 
-    if (this.isLocalTab) {
-      front.shouldCloseClient = true;
-    }
-
     // As these fronts aren't instantiated by protocol.js, we have to set their actor ID
     // manually like that:
     front.actorID = form.actor;
@@ -158,7 +160,12 @@ class TabDescriptorFront extends DescriptorMixin(
     // so that we also have to remove the descriptor when the target is destroyed.
     // Should be kept until about:debugging supports target switching and we remove the
     // !isLocalTab check.
-    if (!this.traits.emitDescriptorDestroyed || !this.isLocalTab) {
+    // Also destroy descriptor of web extension as they expect the client to be closed immediately
+    if (
+      !this.traits.emitDescriptorDestroyed ||
+      !this.isLocalTab ||
+      this.isDevToolsExtensionContext
+    ) {
       this.destroy();
     }
   }

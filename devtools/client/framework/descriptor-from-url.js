@@ -66,6 +66,13 @@ exports.descriptorFromURL = async function descriptorFromURL(url) {
     throw e;
   }
 
+  // If this isn't a cached client, it means that we just created a new client
+  // in `clientFromURL` and we have to destroy it at some point.
+  // In such case, force the Descriptor to destroy the client as soon as it gets
+  // destroyed. This typically happens only for about:debugging toolboxes
+  // opened for local Firefox's targets.
+  descriptorFront.shouldCloseClient = !isCachedClient;
+
   return descriptorFront;
 };
 

@@ -26,10 +26,50 @@ function DescriptorMixin(parentClass) {
         "descriptor-destroyed",
         this.destroy.bind(this, { isServerDestroyEvent: true })
       );
+
+      // Boolean flag to know if the DevtoolsClient should be closed
+      // when this descriptor happens to be destroyed.
+      // This is set by:
+      // * target-from-url in case we are opening a toolbox
+      //   with a dedicated DevToolsClient (mostly from about:debugging, when the client isn't "cached").
+      // * TabDescriptor, when we are connecting to a local tab and expect
+      //   the client, toolbox and descriptor to all follow the same lifecycle.
+      this.shouldCloseClient = false;
     }
 
     get client() {
       return this._client;
+    }
+
+    async destroy({ isServerDestroyEvent } = {}) {
+      if (this.isDestroyed()) {
+        return;
+      }
+      // Cache the client attribute as in case of workers, TargetMixin class may nullify `_client`
+      const { client } = this;
+
+      // This workaround is mostly done for Workers, as WorkerDescriptor
+      // extends the Target class, which causes some issue down the road:
+      // In Target.destroy, we call WorkerDescriptorActor.detach *before* calling super.destroy(),
+      // and so hold on before calling Front.destroy() which would reject all pending requests, including detach().
+      // When calling detach, the server will emit "descriptor-destroyed", which will call Target.destroy again,
+      // but will still be blocked on detach resolution and won't call Front.destroy, and won't reject pending requests either.
+      //
+      // So call Front.baseFrontClassDestroyed manually from here, so that we ensure rejecting the pending detach request
+      // and unblock Target.destroy resolution.
+      //
+      // Here is the inheritance chain for WorkerDescriptor:
+      // WorkerDescriptor -> Descriptor (from descriptor-mixin.js) -> Target (from target-mixin.js) -> Front (protocol.js) -> Pool (protocol.js) -> EventEmitter
+      if (isServerDestroyEvent) {
+        this.baseFrontClassDestroy();
+      }
+
+      await super.destroy();
+
+      // See comment in DescriptorMixin constructor
+      if (this.shouldCloseClient) {
+        await client.close();
+      }
     }
   }
   return Descriptor;

@@ -126,14 +126,6 @@ async function initToolbox(url, host) {
         showErrorPage(host.contentDocument, `${error}`);
       }
     });
-
-    // If this isn't a cached client, it means that we just created a new client
-    // in `clientFromURL` and we have to destroy it at some point.
-    // In such case, force the Target to destroy the client as soon as it gets
-    // destroyed. This typically happens only for about:debugging toolboxes
-    // opened for local Firefox's targets.
-    const isCachedClient = url.searchParams.get("remoteId");
-    target.shouldCloseClient = !isCachedClient;
   } catch (error) {
     // When an error occurs, show error page with message.
     console.error("Exception while loading the toolbox", error);
@@ -177,9 +169,7 @@ async function _createTestOnlyDescriptor(host) {
   // XXX: Normally we don't need to fetch the target anymore, but the test
   // listens to an early event `toolbox-ready` which will kick in before
   // the rest of `initToolbox` can be done.
-  const target = await descriptor.getTarget();
-  // Instruct the Target to automatically close the client on destruction.
-  target.shouldCloseClient = true;
+  await descriptor.getTarget();
 
   return descriptor;
 }
