@@ -329,6 +329,7 @@ int32_t DeviceInfoLinux::CreateCapabilityMap(const char* deviceUniqueIdUTF8) {
     if (ioctl(fd, VIDIOC_QUERYCAP, &cap) == 0) {
       // skip devices without video capture capability
       if (!IsVideoCaptureDevice(&cap)) {
+        close(fd);
         continue;
       }
 
