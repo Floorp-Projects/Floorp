@@ -3,7 +3,7 @@
 
 "use strict";
 
-const TEST_RELOAD_URL = `${MAIN_DOMAIN}/inspectedwindow-reload-target.sjs`;
+const TEST_RELOAD_URL = `${URL_ROOT}/inspectedwindow-reload-target.sjs`;
 
 async function setup(pageUrl) {
   const extension = ExtensionTestUtils.loadExtension({
@@ -23,32 +23,31 @@ async function setup(pageUrl) {
     addonId: extension.id,
   };
 
-  const target = await addTabTarget(pageUrl);
+  const tab = await addTab(pageUrl);
 
-  const { client } = target;
-  const webConsoleFront = await target.getFront("console");
-  const inspectedWindowFront = await target.getFront(
-    "webExtensionInspectedWindow"
+  const commands = await CommandsFactory.forTab(tab);
+  await commands.targetCommand.startListening();
+
+  const webConsoleFront = await commands.targetCommand.targetFront.getFront(
+    "console"
   );
 
   return {
-    client,
-    target,
     webConsoleFront,
-    inspectedWindowFront,
+    commands,
     extension,
     fakeExtCallerInfo,
   };
 }
 
-async function teardown({ client, extension }) {
-  await client.close();
-  DevToolsServer.destroy();
+async function teardown({ commands, extension }) {
+  await commands.destroy();
   gBrowser.removeCurrentTab();
   await extension.unload();
 }
 
-function waitForNextTabNavigated(target) {
+function waitForNextTabNavigated(commands) {
+  const target = commands.targetCommand.targetFront;
   return new Promise(resolve => {
     target.on("tabNavigated", function tabNavigatedListener(pkt) {
       if (pkt.state == "stop" && !pkt.isFrameSwitching) {
@@ -92,14 +91,9 @@ function collectEvalResults() {
 }
 
 add_task(async function test_successfull_inspectedWindowEval_result() {
-  const {
-    client,
-    inspectedWindowFront,
-    extension,
-    fakeExtCallerInfo,
-  } = await setup(MAIN_DOMAIN);
+  const { commands, extension, fakeExtCallerInfo } = await setup(URL_ROOT);
 
-  const result = await inspectedWindowFront.eval(
+  const result = await commands.inspectedWindowCommand.eval(
     fakeExtCallerInfo,
     "window.location",
     {}
@@ -108,7 +102,7 @@ add_task(async function test_successfull_inspectedWindowEval_result() {
   ok(result.value, "Got a result from inspectedWindow eval");
   is(
     result.value.href,
-    MAIN_DOMAIN,
+    URL_ROOT,
     "Got the expected window.location.href property value"
   );
   is(
@@ -117,22 +111,25 @@ add_task(async function test_successfull_inspectedWindowEval_result() {
     "Got the expected window.location.protocol property value"
   );
 
-  await teardown({ client, extension });
+  await teardown({ commands, extension });
 });
 
 add_task(async function test_successfull_inspectedWindowEval_resultAsGrip() {
   const {
-    client,
-    inspectedWindowFront,
+    commands,
     extension,
     fakeExtCallerInfo,
     webConsoleFront,
-  } = await setup(MAIN_DOMAIN);
+  } = await setup(URL_ROOT);
 
-  let result = await inspectedWindowFront.eval(fakeExtCallerInfo, "window", {
-    evalResultAsGrip: true,
-    toolboxConsoleActorID: webConsoleFront.actor,
-  });
+  let result = await commands.inspectedWindowCommand.eval(
+    fakeExtCallerInfo,
+    "window",
+    {
+      evalResultAsGrip: true,
+      toolboxConsoleActorID: webConsoleFront.actor,
+    }
+  );
 
   ok(result.valueGrip, "Got a result from inspectedWindow eval");
   ok(result.valueGrip.actor, "Got a object actor as expected");
@@ -144,9 +141,13 @@ add_task(async function test_successfull_inspectedWindowEval_resultAsGrip() {
   );
 
   // Test invalid evalResultAsGrip request.
-  result = await inspectedWindowFront.eval(fakeExtCallerInfo, "window", {
-    evalResultAsGrip: true,
-  });
+  result = await commands.inspectedWindowCommand.eval(
+    fakeExtCallerInfo,
+    "window",
+    {
+      evalResultAsGrip: true,
+    }
+  );
 
   ok(
     !result.value && !result.valueGrip,
@@ -186,18 +187,13 @@ add_task(async function test_successfull_inspectedWindowEval_resultAsGrip() {
     "Got the expected content in the error results's details"
   );
 
-  await teardown({ client, extension });
+  await teardown({ commands, extension });
 });
 
 add_task(async function test_error_inspectedWindowEval_result() {
-  const {
-    client,
-    inspectedWindowFront,
-    extension,
-    fakeExtCallerInfo,
-  } = await setup(MAIN_DOMAIN);
+  const { commands, extension, fakeExtCallerInfo } = await setup(URL_ROOT);
 
-  const result = await inspectedWindowFront.eval(
+  const result = await commands.inspectedWindowCommand.eval(
     fakeExtCallerInfo,
     "window",
     {}
@@ -232,19 +228,16 @@ add_task(async function test_error_inspectedWindowEval_result() {
     "Got the expected content in the error results's details"
   );
 
-  await teardown({ client, extension });
+  await teardown({ commands, extension });
 });
 
 add_task(
   async function test_system_principal_denied_error_inspectedWindowEval_result() {
-    const {
-      client,
-      inspectedWindowFront,
-      extension,
-      fakeExtCallerInfo,
-    } = await setup("about:addons");
+    const { commands, extension, fakeExtCallerInfo } = await setup(
+      "about:addons"
+    );
 
-    const result = await inspectedWindowFront.eval(
+    const result = await commands.inspectedWindowCommand.eval(
       fakeExtCallerInfo,
       "window",
       {}
@@ -276,19 +269,14 @@ add_task(
       "Got the expected content in the error results's details"
     );
 
-    await teardown({ client, extension });
+    await teardown({ commands, extension });
   }
 );
 
 add_task(async function test_exception_inspectedWindowEval_result() {
-  const {
-    client,
-    inspectedWindowFront,
-    extension,
-    fakeExtCallerInfo,
-  } = await setup(MAIN_DOMAIN);
+  const { commands, extension, fakeExtCallerInfo } = await setup(URL_ROOT);
 
-  const result = await inspectedWindowFront.eval(
+  const result = await commands.inspectedWindowCommand.eval(
     fakeExtCallerInfo,
     "throw Error('fake eval error');",
     {}
@@ -314,25 +302,26 @@ add_task(async function test_exception_inspectedWindowEval_result() {
     "Got the expected stack trace in the exception message"
   );
 
-  await teardown({ client, extension });
+  await teardown({ commands, extension });
 });
 
 add_task(async function test_exception_inspectedWindowReload() {
   const {
-    client,
     webConsoleFront,
-    inspectedWindowFront,
+    commands,
     extension,
     fakeExtCallerInfo,
-    target,
   } = await setup(`${TEST_RELOAD_URL}?test=cache`);
 
   // Test reload with bypassCache=false.
 
-  const waitForNoBypassCacheReload = waitForNextTabNavigated(target);
-  const reloadResult = await inspectedWindowFront.reload(fakeExtCallerInfo, {
-    ignoreCache: false,
-  });
+  const waitForNoBypassCacheReload = waitForNextTabNavigated(commands);
+  const reloadResult = await commands.inspectedWindowCommand.reload(
+    fakeExtCallerInfo,
+    {
+      ignoreCache: false,
+    }
+  );
 
   ok(
     !reloadResult,
@@ -353,8 +342,10 @@ add_task(async function test_exception_inspectedWindowReload() {
 
   // Test reload with bypassCache=true.
 
-  const waitForForceBypassCacheReload = waitForNextTabNavigated(target);
-  await inspectedWindowFront.reload(fakeExtCallerInfo, { ignoreCache: true });
+  const waitForForceBypassCacheReload = waitForNextTabNavigated(commands);
+  await commands.inspectedWindowCommand.reload(fakeExtCallerInfo, {
+    ignoreCache: true,
+  });
 
   await waitForForceBypassCacheReload;
 
@@ -368,23 +359,21 @@ add_task(async function test_exception_inspectedWindowReload() {
     "Got the expected result with reload forceBypassCache=true"
   );
 
-  await teardown({ client, extension });
+  await teardown({ commands, extension });
 });
 
 add_task(async function test_exception_inspectedWindowReload_customUserAgent() {
   const {
-    client,
     webConsoleFront,
-    inspectedWindowFront,
+    commands,
     extension,
     fakeExtCallerInfo,
-    target,
   } = await setup(`${TEST_RELOAD_URL}?test=user-agent`);
 
   // Test reload with custom userAgent.
 
-  const waitForCustomUserAgentReload = waitForNextTabNavigated(target);
-  await inspectedWindowFront.reload(fakeExtCallerInfo, {
+  const waitForCustomUserAgentReload = waitForNextTabNavigated(commands);
+  await commands.inspectedWindowCommand.reload(fakeExtCallerInfo, {
     userAgent: "Customized User Agent",
   });
 
@@ -402,8 +391,8 @@ add_task(async function test_exception_inspectedWindowReload_customUserAgent() {
 
   // Test reload with no custom userAgent.
 
-  const waitForNoCustomUserAgentReload = waitForNextTabNavigated(target);
-  await inspectedWindowFront.reload(fakeExtCallerInfo, {});
+  const waitForNoCustomUserAgentReload = waitForNextTabNavigated(commands);
+  await commands.inspectedWindowCommand.reload(fakeExtCallerInfo, {});
 
   await waitForNoCustomUserAgentReload;
 
@@ -417,23 +406,21 @@ add_task(async function test_exception_inspectedWindowReload_customUserAgent() {
     "Got the expected result with reload without a customized userAgent"
   );
 
-  await teardown({ client, extension });
+  await teardown({ commands, extension });
 });
 
 add_task(async function test_exception_inspectedWindowReload_injectedScript() {
   const {
-    client,
     webConsoleFront,
-    inspectedWindowFront,
+    commands,
     extension,
     fakeExtCallerInfo,
-    target,
   } = await setup(`${TEST_RELOAD_URL}?test=injected-script&frames=3`);
 
   // Test reload with an injectedScript.
 
-  const waitForInjectedScriptReload = waitForNextTabNavigated(target);
-  await inspectedWindowFront.reload(fakeExtCallerInfo, {
+  const waitForInjectedScriptReload = waitForNextTabNavigated(commands);
+  await commands.inspectedWindowCommand.reload(fakeExtCallerInfo, {
     injectedScript: `new ${injectedScript}`,
   });
   await waitForInjectedScriptReload;
@@ -452,8 +439,8 @@ add_task(async function test_exception_inspectedWindowReload_injectedScript() {
 
   // Test reload without an injectedScript.
 
-  const waitForNoInjectedScriptReload = waitForNextTabNavigated(target);
-  await inspectedWindowFront.reload(fakeExtCallerInfo, {});
+  const waitForNoInjectedScriptReload = waitForNextTabNavigated(commands);
+  await commands.inspectedWindowCommand.reload(fakeExtCallerInfo, {});
   await waitForNoInjectedScriptReload;
 
   const noInjectedScriptEval = await webConsoleFront.evaluateJSAsync(
@@ -468,28 +455,26 @@ add_task(async function test_exception_inspectedWindowReload_injectedScript() {
     "Got the expected result on reload with no injected script"
   );
 
-  await teardown({ client, extension });
+  await teardown({ commands, extension });
 });
 
 add_task(async function test_exception_inspectedWindowReload_multiple_calls() {
   const {
-    client,
     webConsoleFront,
-    inspectedWindowFront,
+    commands,
     extension,
     fakeExtCallerInfo,
-    target,
   } = await setup(`${TEST_RELOAD_URL}?test=user-agent`);
 
   // Test reload with custom userAgent three times (and then
   // check that only the first one has affected the page reload.
 
-  const waitForCustomUserAgentReload = waitForNextTabNavigated(target);
+  const waitForCustomUserAgentReload = waitForNextTabNavigated(commands);
 
-  inspectedWindowFront.reload(fakeExtCallerInfo, {
+  commands.inspectedWindowCommand.reload(fakeExtCallerInfo, {
     userAgent: "Customized User Agent 1",
   });
-  inspectedWindowFront.reload(fakeExtCallerInfo, {
+  commands.inspectedWindowCommand.reload(fakeExtCallerInfo, {
     userAgent: "Customized User Agent 2",
   });
 
@@ -507,8 +492,8 @@ add_task(async function test_exception_inspectedWindowReload_multiple_calls() {
 
   // Test reload with no custom userAgent.
 
-  const waitForNoCustomUserAgentReload = waitForNextTabNavigated(target);
-  await inspectedWindowFront.reload(fakeExtCallerInfo, {});
+  const waitForNoCustomUserAgentReload = waitForNextTabNavigated(commands);
+  await commands.inspectedWindowCommand.reload(fakeExtCallerInfo, {});
 
   await waitForNoCustomUserAgentReload;
 
@@ -522,23 +507,21 @@ add_task(async function test_exception_inspectedWindowReload_multiple_calls() {
     "Got the expected result with reload without a customized userAgent"
   );
 
-  await teardown({ client, extension });
+  await teardown({ commands, extension });
 });
 
 add_task(async function test_exception_inspectedWindowReload_stopped() {
   const {
-    client,
     webConsoleFront,
-    inspectedWindowFront,
+    commands,
     extension,
     fakeExtCallerInfo,
-    target,
   } = await setup(`${TEST_RELOAD_URL}?test=injected-script&frames=3`);
 
   // Test reload on a page that calls window.stop() immediately during the page loading
 
-  const waitForPageLoad = waitForNextTabNavigated(target);
-  await inspectedWindowFront.eval(
+  const waitForPageLoad = waitForNextTabNavigated(commands);
+  await commands.inspectedWindowCommand.eval(
     fakeExtCallerInfo,
     "window.location += '&stop=windowStop'"
   );
@@ -547,8 +530,8 @@ add_task(async function test_exception_inspectedWindowReload_stopped() {
   await waitForPageLoad;
 
   info("Starting a reload with an injectedScript");
-  const waitForInjectedScriptReload = waitForNextTabNavigated(target);
-  await inspectedWindowFront.reload(fakeExtCallerInfo, {
+  const waitForInjectedScriptReload = waitForNextTabNavigated(commands);
+  await commands.inspectedWindowCommand.reload(fakeExtCallerInfo, {
     injectedScript: `new ${injectedScript}`,
   });
   await waitForInjectedScriptReload;
@@ -570,8 +553,8 @@ add_task(async function test_exception_inspectedWindowReload_stopped() {
   // Reload again with no options.
 
   info("Reload the tab again without any reload options");
-  const waitForNoInjectedScriptReload = waitForNextTabNavigated(target);
-  await inspectedWindowFront.reload(fakeExtCallerInfo, {});
+  const waitForNoInjectedScriptReload = waitForNextTabNavigated(commands);
+  await commands.inspectedWindowCommand.reload(fakeExtCallerInfo, {});
   await waitForNoInjectedScriptReload;
 
   const noInjectedScriptEval = await webConsoleFront.evaluateJSAsync(
@@ -589,7 +572,7 @@ add_task(async function test_exception_inspectedWindowReload_stopped() {
     "No injectedScript should have been evaluated during the second reload"
   );
 
-  await teardown({ client, extension });
+  await teardown({ commands, extension });
 });
 
 // TODO: check eval with $0 binding once implemented (Bug 1300590)

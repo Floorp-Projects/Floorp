@@ -44,10 +44,6 @@ class TabDescriptorFront extends DescriptorMixin(
     // debugging).
     this._localTab = null;
 
-    // Flipped when creating dedicated tab targets for DevTools WebExtensions.
-    // See toolkit/components/extensions/ExtensionParent.jsm .
-    this.isDevToolsExtensionContext = false;
-
     this._onTargetDestroyed = this._onTargetDestroyed.bind(this);
     this._handleTabEvent = this._handleTabEvent.bind(this);
   }
@@ -246,11 +242,6 @@ class TabDescriptorFront extends DescriptorMixin(
    * Process change can go in both ways.
    */
   async _onRemotenessChange() {
-    // The front that was created for DevTools page extension does not have corresponding toolbox.
-    if (this.isDevToolsExtensionContext) {
-      return;
-    }
-
     // In a near future, this client side code should be replaced by actor code,
     // notifying about new tab targets.
     this.emit("remoteness-change", this._targetFront);
