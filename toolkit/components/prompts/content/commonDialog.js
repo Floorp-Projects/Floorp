@@ -48,7 +48,7 @@ function commonDialogOnLoad() {
         title.raw = promptPrincipal.addonPolicy.name;
       } else if (promptPrincipal.isContentPrincipal) {
         try {
-          title.raw = promptPrincipal.hostPort;
+          title.raw = promptPrincipal.URI.displayHostPort;
         } catch (ex) {
           // hostPort getter can throw, e.g. for about URIs.
           title.raw = promptPrincipal.origin;
