@@ -30,8 +30,4 @@ const RecommendedPreferences = new Map([
     "-tp,tpPrivate,cookieBehavior0,-cm,-fp",
   ],
   ["network.cookie.cookieBehavior", 0],
-
-  // Only allow the old modal dialogs. This should be removed when there is
-  // support for the new modal UI (see Bug 1686743).
-  ["prompts.contentPromptSubDialog", false],
 ]);
