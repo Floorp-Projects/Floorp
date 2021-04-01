@@ -264,7 +264,7 @@ impl Wrench {
             blob_image_handler: Some(Box::new(blob::CheckerboardRenderer::new(callbacks.clone()))),
             chase_primitive,
             testing: true,
-            max_texture_size: Some(8196), // Needed for rawtest::test_resize_image.
+            max_internal_texture_size: Some(8196), // Needed for rawtest::test_resize_image.
             allow_dual_source_blending: !disable_dual_source_blending,
             allow_advanced_blend_equation: window.is_software(),
             dump_shader_source,

@@ -1631,7 +1631,7 @@ pub extern "C" fn wr_window_new(
         upload_method,
         scene_builder_hooks: Some(Box::new(APZCallbacks::new(window_id))),
         sampler: Some(Box::new(SamplerCallback::new(window_id))),
-        max_texture_size: Some(11180), // Moz2D won't accept textures bigger than this squared
+        max_internal_texture_size: Some(8192), // We want to tile if larger than this
         clear_color: Some(color),
         precache_flags,
         namespace_alloc_by_client: true,
