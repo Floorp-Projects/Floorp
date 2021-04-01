@@ -745,13 +745,9 @@ void nsSplitterFrameInner::UpdateState() {
   if ((SupportsCollapseDirection(Before) || SupportsCollapseDirection(After)) &&
       mOuter->GetParent()->IsXULBoxFrame()) {
     // Find the splitter's immediate sibling.
-    nsIFrame* splitterSibling;
-    if (newState == CollapsedBefore || mState == CollapsedBefore) {
-      splitterSibling = mOuter->GetPrevSibling();
-    } else {
-      splitterSibling = mOuter->GetNextSibling();
-    }
-
+    const bool prev = newState == CollapsedBefore || mState == CollapsedBefore;
+    nsIFrame* splitterSibling =
+        nsBoxFrame::SlowOrdinalGroupAwareSibling(mOuter, !prev);
     if (splitterSibling) {
       nsCOMPtr<nsIContent> sibling = splitterSibling->GetContent();
       if (sibling && sibling->IsElement()) {
