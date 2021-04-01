@@ -220,7 +220,7 @@ class LoginManagerPrompter {
 
     let changeMsgNames = {
       prompt:
-        login.username === "" ? "updateLoginMsgNoUser2" : "updateLoginMsg2",
+        login.username === "" ? "updateLoginMsgNoUser3" : "updateLoginMsg3",
       buttonLabel: "updateLoginButtonText",
       buttonAccessKey: "updateLoginButtonAccessKey",
       secondaryButtonLabel: "updateLoginButtonDeny.label",
@@ -238,7 +238,7 @@ class LoginManagerPrompter {
     let promptMsg =
       type == "password-save"
         ? this._getLocalizedString(saveMsgNames.prompt, [host])
-        : this._getLocalizedString(changeMsgNames.prompt);
+        : this._getLocalizedString(changeMsgNames.prompt, [host]);
 
     let histogramName =
       type == "password-save"
