@@ -18,6 +18,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
+#include "SDKDeclarations.h"
 
 #import <Cocoa/Cocoa.h>
 
@@ -28,22 +29,6 @@
 @interface NSWorkspace (AvailableSinceSierra)
 @property(readonly) BOOL accessibilityDisplayShouldReduceMotion;
 @end
-
-#if !defined(MAC_OS_X_VERSION_10_13) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_13
-using NSAppearanceName = NSString*;
-#endif
-
-#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
-@interface NSApplication (NSApplicationAppearance)
-@property(strong) NSAppearance* appearance NS_AVAILABLE_MAC(10_14);
-@property(readonly, strong) NSAppearance* effectiveAppearance NS_AVAILABLE_MAC(10_14);
-@end
-
-@interface NSAppearance (NSAppearance1014)
-- (NSAppearanceName)bestMatchFromAppearancesWithNames:(NSArray<NSAppearanceName>*)appearances
-    NS_AVAILABLE_MAC(10_14);
-@end
-#endif
 
 nsLookAndFeel::nsLookAndFeel()
     : nsXPLookAndFeel(),

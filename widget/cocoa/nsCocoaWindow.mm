@@ -34,6 +34,7 @@
 #include "nsCocoaFeatures.h"
 #include "nsIScreenManager.h"
 #include "nsIWidgetListener.h"
+#include "SDKDeclarations.h"
 #include "VibrancyManager.h"
 #include "nsPresContext.h"
 #include "nsDocShell.h"
@@ -97,12 +98,6 @@ static NSString* const CGSSpacesKey = @"Spaces";
 extern CGSConnection _CGSDefaultConnection(void);
 extern CGError CGSSetWindowTransform(CGSConnection cid, CGSWindow wid, CGAffineTransform transform);
 }
-
-#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
-@interface NSWindow (NSWindowAppearanceSource)
-@property(weak) NSObject<NSAppearanceCustomization>* appearanceSource NS_AVAILABLE_MAC(10_14);
-@end
-#endif
 
 #define NS_APPSHELLSERVICE_CONTRACTID "@mozilla.org/appshell/appShellService;1"
 
@@ -2977,12 +2972,6 @@ static NSMutableSet* gSwizzledFrameViewClasses = nil;
 - (void)_setNeedsDisplayInRect:(NSRect)aRect;
 @end
 
-#if !defined(MAC_OS_X_VERSION_10_12_2) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_12_2
-@interface NSView (NSTouchBarProvider)
-- (NSTouchBar*)makeTouchBar;
-@end
-#endif
-
 @interface NSView (NSVisualEffectViewSetMaskImage)
 - (void)setMaskImage:(NSImage*)image;
 @end
@@ -3232,13 +3221,6 @@ static const NSString* kStateWantsTitleDrawn = @"wantsTitleDrawn";
   return mDrawTitle;
 }
 
-#if !defined(MAC_OS_X_VERSION_10_13) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_13
-typedef NSString* NSAppearanceName;
-#endif
-#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
-const NSAppearanceName NSAppearanceNameDarkAqua = @"NSAppearanceNameDarkAqua";
-#endif
-
 - (void)setWindowAppearance:(nsIWidget::WindowAppearance)aAppearance {
   if (@available(macOS 10.14, *)) {
     switch (aAppearance) {
@@ -3452,18 +3434,6 @@ const NSAppearanceName NSAppearanceNameDarkAqua = @"NSAppearanceNameDarkAqua";
 }
 
 @end
-
-#if !defined(MAC_OS_VERSION_11_0) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_VERSION_11_0
-typedef NS_ENUM(NSInteger, NSTitlebarSeparatorStyle) {
-  NSTitlebarSeparatorStyleAutomatic,
-  NSTitlebarSeparatorStyleNone,
-  NSTitlebarSeparatorStyleLine,
-  NSTitlebarSeparatorStyleShadow
-};
-@interface NSWindow (NSTitlebarSeparatorStyle)
-@property NSTitlebarSeparatorStyle titlebarSeparatorStyle;
-@end
-#endif
 
 @interface MOZTitlebarAccessoryView : NSView
 @end
