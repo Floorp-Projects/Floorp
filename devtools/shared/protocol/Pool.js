@@ -110,10 +110,9 @@ class Pool extends EventEmitter {
    * Remove an actor as a child of this pool.
    */
   unmanage(actor) {
-    if (!this.__poolMap) {
-      return;
+    if (this.__poolMap) {
+      this.__poolMap.delete(actor.actorID);
     }
-    this.__poolMap.delete(actor.actorID);
     actor.parentPool = null;
   }
 
@@ -176,7 +175,11 @@ class Pool extends EventEmitter {
     if (!this.__poolMap) {
       return;
     }
-    for (const actor of this.__poolMap.values()) {
+    // Immediately clear the poolmap so that we bail out early if the code is reentrant.
+    const poolMap = this.__poolMap;
+    this.__poolMap = null;
+
+    for (const actor of poolMap.values()) {
       // Self-owned actors are ok, but don't need destroying twice.
       if (actor === this) {
         continue;
@@ -198,8 +201,6 @@ class Pool extends EventEmitter {
       }
     }
     this.conn.removeActorPool(this);
-    this.__poolMap.clear();
-    this.__poolMap = null;
   }
 }
 
