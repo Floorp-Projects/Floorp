@@ -94,8 +94,6 @@ enum class DeclarationKind : uint8_t {
   SimpleCatchParameter,
   CatchParameter,
   PrivateName,
-  Synthetic,
-  PrivateMethod,  // slot to store nonstatic private method
 };
 
 static inline BindingKind DeclarationKindToBindingKind(DeclarationKind kind) {
@@ -120,17 +118,11 @@ static inline BindingKind DeclarationKindToBindingKind(DeclarationKind kind) {
       return BindingKind::Let;
 
     case DeclarationKind::Const:
+    case DeclarationKind::PrivateName:
       return BindingKind::Const;
 
     case DeclarationKind::Import:
       return BindingKind::Import;
-
-    case DeclarationKind::Synthetic:
-    case DeclarationKind::PrivateName:
-      return BindingKind::Synthetic;
-
-    case DeclarationKind::PrivateMethod:
-      return BindingKind::PrivateMethod;
   }
 
   MOZ_CRASH("Bad DeclarationKind");
@@ -304,6 +296,25 @@ class NameLocation {
     return NameLocation(Kind::DynamicAnnexBVar, BindingKind::Var);
   }
 
+  static NameLocation fromBinding(BindingKind bindKind,
+                                  const BindingLocation& bl) {
+    switch (bl.kind()) {
+      case BindingLocation::Kind::Global:
+        return Global(bindKind);
+      case BindingLocation::Kind::Argument:
+        return ArgumentSlot(bl.argumentSlot());
+      case BindingLocation::Kind::Frame:
+        return FrameSlot(bindKind, bl.slot());
+      case BindingLocation::Kind::Environment:
+        return EnvironmentCoordinate(bindKind, 0, bl.slot());
+      case BindingLocation::Kind::Import:
+        return Import();
+      case BindingLocation::Kind::NamedLambdaCallee:
+        return NamedLambdaCallee();
+    }
+    MOZ_CRASH("Bad BindingKind");
+  }
+
   bool operator==(const NameLocation& other) const {
     return kind_ == other.kind_ && bindingKind_ == other.bindingKind_ &&
            hops_ == other.hops_ && slot_ == other.slot_;
@@ -345,12 +356,6 @@ class NameLocation {
   bool isLexical() const { return BindingKindIsLexical(bindingKind()); }
 
   bool isConst() const { return bindingKind() == BindingKind::Const; }
-
-  bool isSynthetic() const { return bindingKind() == BindingKind::Synthetic; }
-
-  bool isPrivateMethod() const {
-    return bindingKind() == BindingKind::PrivateMethod;
-  }
 
   bool hasKnownSlot() const {
     return kind_ == Kind::ArgumentSlot || kind_ == Kind::FrameSlot ||

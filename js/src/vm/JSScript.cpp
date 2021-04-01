@@ -263,14 +263,15 @@ XDRResult BaseScript::XDRLazyScriptData(XDRState<mode>* xdr,
   RootedFunction func(cx);
 
   if (lazy->useMemberInitializers()) {
-    uint32_t bits;
+    uint32_t numMemberInitializers;
     if (mode == XDR_ENCODE) {
       MOZ_ASSERT(lazy->getMemberInitializers().valid);
-      bits = lazy->getMemberInitializers().serialize();
+      numMemberInitializers =
+          lazy->getMemberInitializers().numMemberInitializers;
     }
-    MOZ_TRY(xdr->codeUint32(&bits));
+    MOZ_TRY(xdr->codeUint32(&numMemberInitializers));
     if (mode == XDR_DECODE) {
-      lazy->setMemberInitializers(MemberInitializers::deserialize(bits));
+      lazy->setMemberInitializers(MemberInitializers(numMemberInitializers));
     }
   }
 
@@ -496,10 +497,8 @@ static XDRResult XDRScope(XDRState<mode>* xdr, js::PrivateScriptData* data,
     case ScopeKind::NamedLambda:
     case ScopeKind::StrictNamedLambda:
     case ScopeKind::FunctionLexical:
-      MOZ_TRY(LexicalScope::XDR(xdr, scopeKind, enclosing, scope));
-      break;
     case ScopeKind::ClassBody:
-      MOZ_TRY(ClassBodyScope::XDR(xdr, scopeKind, enclosing, scope));
+      MOZ_TRY(LexicalScope::XDR(xdr, scopeKind, enclosing, scope));
       break;
     case ScopeKind::With:
       MOZ_TRY(WithScope::XDR(xdr, enclosing, scope));
@@ -818,14 +817,15 @@ XDRResult js::PrivateScriptData::XDR(XDRState<mode>* xdr, HandleScript script,
 
   // Code the field initializer data.
   if (script->useMemberInitializers()) {
-    uint32_t bits;
+    uint32_t numMemberInitializers;
     if (mode == XDR_ENCODE) {
       MOZ_ASSERT(data->getMemberInitializers().valid);
-      bits = data->getMemberInitializers().serialize();
+      numMemberInitializers =
+          data->getMemberInitializers().numMemberInitializers;
     }
-    MOZ_TRY(xdr->codeUint32(&bits));
+    MOZ_TRY(xdr->codeUint32(&numMemberInitializers));
     if (mode == XDR_DECODE) {
-      data->setMemberInitializers(MemberInitializers::deserialize(bits));
+      data->setMemberInitializers(MemberInitializers(numMemberInitializers));
     }
   }
 
@@ -4621,8 +4621,6 @@ size_t JSScript::calculateLiveFixed(jsbytecode* pc) {
         nlivefixed = scope->as<LexicalScope>().nextFrameSlot();
       } else if (scope->is<VarScope>()) {
         nlivefixed = scope->as<VarScope>().nextFrameSlot();
-      } else if (scope->is<ClassBodyScope>()) {
-        nlivefixed = scope->as<ClassBodyScope>().nextFrameSlot();
       }
     }
   }

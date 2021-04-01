@@ -964,7 +964,7 @@ static void PopEnvironment(JSContext* cx, EnvironmentIter& ei) {
       }
       if (ei.scope().hasEnvironment()) {
         ei.initialFrame()
-            .popOffEnvironmentChain<ScopedLexicalEnvironmentObject>();
+            .popOffEnvironmentChain<BlockLexicalEnvironmentObject>();
       }
       break;
     case ScopeKind::With:
@@ -4038,13 +4038,11 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
 
     CASE(PopLexicalEnv) {
 #ifdef DEBUG
+      // Pop block from scope chain.
       Scope* scope = script->lookupScope(REGS.pc);
       MOZ_ASSERT(scope);
-      MOZ_ASSERT(scope->is<LexicalScope>() || scope->is<ClassBodyScope>());
-      MOZ_ASSERT_IF(scope->is<LexicalScope>(),
-                    scope->as<LexicalScope>().hasEnvironment());
-      MOZ_ASSERT_IF(scope->is<ClassBodyScope>(),
-                    scope->as<ClassBodyScope>().hasEnvironment());
+      MOZ_ASSERT(scope->is<LexicalScope>());
+      MOZ_ASSERT(scope->as<LexicalScope>().hasEnvironment());
 #endif
 
       if (MOZ_UNLIKELY(cx->realm()->isDebuggee())) {
@@ -4052,20 +4050,16 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       }
 
       // Pop block from scope chain.
-      REGS.fp()->popOffEnvironmentChain<LexicalEnvironmentObject>();
+      REGS.fp()->popOffEnvironmentChain<BlockLexicalEnvironmentObject>();
     }
     END_CASE(PopLexicalEnv)
 
     CASE(DebugLeaveLexicalEnv) {
-#ifdef DEBUG
-      Scope* scope = script->lookupScope(REGS.pc);
-      MOZ_ASSERT(scope);
-      MOZ_ASSERT(scope->is<LexicalScope>() || scope->is<ClassBodyScope>());
-      MOZ_ASSERT_IF(scope->is<LexicalScope>(),
-                    !scope->as<LexicalScope>().hasEnvironment());
-      MOZ_ASSERT_IF(scope->is<ClassBodyScope>(),
-                    !scope->as<ClassBodyScope>().hasEnvironment());
-#endif
+      MOZ_ASSERT(script->lookupScope(REGS.pc));
+      MOZ_ASSERT(script->lookupScope(REGS.pc)->is<LexicalScope>());
+      MOZ_ASSERT(
+          !script->lookupScope(REGS.pc)->as<LexicalScope>().hasEnvironment());
+
       // FIXME: This opcode should not be necessary.  The debugger shouldn't
       // need help from bytecode to do its job.  See bug 927782.
 
@@ -4096,16 +4090,6 @@ static MOZ_NEVER_INLINE JS_HAZ_JSNATIVE_CALLER bool Interpret(JSContext* cx,
       }
     }
     END_CASE(RecreateLexicalEnv)
-
-    CASE(PushClassBodyEnv) {
-      ReservedRooted<Scope*> scope(&rootScope0, script->getScope(REGS.pc));
-
-      if (!REGS.fp()->pushClassBodyEnvironment(cx,
-                                               scope.as<ClassBodyScope>())) {
-        goto error;
-      }
-    }
-    END_CASE(PushClassBodyEnv)
 
     CASE(PushVarEnv) {
       ReservedRooted<Scope*> scope(&rootScope0, script->getScope(REGS.pc));

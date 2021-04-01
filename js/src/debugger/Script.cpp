@@ -1527,7 +1527,6 @@ static bool BytecodeIsEffectful(JSOp op) {
     case JSOp::PopLexicalEnv:
     case JSOp::FreshenLexicalEnv:
     case JSOp::RecreateLexicalEnv:
-    case JSOp::PushClassBodyEnv:
     case JSOp::Iter:
     case JSOp::MoreIter:
     case JSOp::IsNoIter:

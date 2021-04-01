@@ -29,7 +29,6 @@ class AbstractGeneratorObject;
 class GlobalObject;
 class InterpreterFrame;
 class LexicalScope;
-class ClassBodyScope;
 class NativeObject;
 class PropertyName;
 class Shape;
@@ -475,8 +474,6 @@ JSObject* InitRestParameter(JSContext* cx, uint32_t length, Value* rest,
 
 [[nodiscard]] bool PushLexicalEnv(JSContext* cx, BaselineFrame* frame,
                                   Handle<LexicalScope*> scope);
-[[nodiscard]] bool PushClassBodyEnv(JSContext* cx, BaselineFrame* frame,
-                                    Handle<ClassBodyScope*> scope);
 [[nodiscard]] bool PopLexicalEnv(JSContext* cx, BaselineFrame* frame);
 [[nodiscard]] bool DebugLeaveThenPopLexicalEnv(JSContext* cx,
                                                BaselineFrame* frame,
