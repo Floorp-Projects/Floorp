@@ -38,8 +38,8 @@ should be treated with extreme suspicion.
 This should be considered a temporary error, because it may be related to
 server errors, local clocks, or other temporary problems.
 
-``CAPABILITES_MISMATCH``
-~~~~~~~~~~~~~~~~~~~~~~~~
+``CAPABILITIES_MISMATCH``
+~~~~~~~~~~~~~~~~~~~~~~~~~
 The recipe requires capabilities that this recipe runner does not have. Use
 caution when interacting with this recipe, as it may not match the expected
 schema.

@@ -201,7 +201,7 @@ decorate_task(
         capabilities: ["impossible-capability"],
         filter_expression: "true",
       }),
-      BaseAction.suitability.CAPABILITES_MISMATCH,
+      BaseAction.suitability.CAPABILITIES_MISMATCH,
       "Recipes with non-matching capabilities should not pass"
     );
     ok(!evalSpy.called, "Filter should not be evaluated");
@@ -415,7 +415,7 @@ decorate_task(
       processRecipeStub.args,
       [
         [compatibleRecipe, BaseAction.suitability.FILTER_MATCH],
-        [incompatibleRecipe, BaseAction.suitability.CAPABILITES_MISMATCH],
+        [incompatibleRecipe, BaseAction.suitability.CAPABILITIES_MISMATCH],
       ],
       "recipes should be marked if their capabilities aren't compatible"
     );

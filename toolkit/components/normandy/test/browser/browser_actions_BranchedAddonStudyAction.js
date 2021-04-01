@@ -1336,7 +1336,7 @@ decorate_task(
         isTemporaryError: true,
       },
       {
-        suitability: BaseAction.suitability.CAPABILITES_MISMATCH,
+        suitability: BaseAction.suitability.CAPABILITIES_MISMATCH,
         isTemporaryError: false,
       },
       {
@@ -1495,7 +1495,7 @@ decorate_task(
   withStudiesEnabled(),
   async function test_non_temporary_error_clears_temporary_error_deadline() {
     let suitabilitiesThatShouldClearDeadline = [
-      BaseAction.suitability.CAPABILITES_MISMATCH,
+      BaseAction.suitability.CAPABILITIES_MISMATCH,
       BaseAction.suitability.FILTER_MATCH,
       BaseAction.suitability.FILTER_MISMATCH,
       BaseAction.suitability.ARGUMENTS_INVALID,
