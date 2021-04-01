@@ -55,68 +55,49 @@ td:nth-child(4) {
   text-align: end;
 }
 td:nth-child(5) {
-  width: 20px;
+  width: 24px;
+  padding: 2px 4px;
 }
 
 /* Show action icons on selected or hovered rows */
 tr:is([selected], :hover) > td > .action-icon {
-  padding: 1px 10px;
   opacity: 1;
 }
-/* The action icons have a relative position, so that we can use
- * absolutely positioned ::before and ::after pseudo elements.
- * ::before is used to display the square background on hover/active
- * ::after is used to display the icons as a background that can be
- * flipped using a CSS transform in RTL mode. */
-.action-icon {
-  position: relative;
-  opacity: 0;
-}
-/* Ensure both pseudo elements have the same size and position. */
-.action-icon::before, .action-icon::after {
-  height: 200%;
-  position: absolute;
-  top: -50%;
-  inset-inline-start: -3px;
-  padding-inline: 13px;
-}
 
-/* square background */
+.action-icon {
+  opacity: 0;
+  display: flex;
+  align-items: center;
+}
 .action-icon::before {
   content: "";
-  background-color: currentColor;
-  opacity: 0;
+  display: inline-block;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  width: 24px;
+  height: 24px;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 16px;
+  border-radius: 4px;
 }
 .action-icon:hover::before {
-  opacity: 0.1;
+  background-color: var(--in-content-button-background-hover);
 }
 .action-icon:hover:active::before {
-  opacity: 0.2;
+  background-color: var(--in-content-button-background-active);
 }
 
 /* icons */
-.action-icon::after {
-  -moz-context-properties: fill;
-  fill: currentColor;
-  background-repeat: no-repeat;
-  background-position: center;
-  line-height: 100%;
+
+.addon-icon::before {
+  background-image: url("chrome://global/skin/icons/shortcut.svg");
 }
-.addon-icon::after {
-  content: url("chrome://global/skin/icons/shortcut.svg");
-  top: 2px;
-  inset-inline-start: -11px;
-  width: 16px;
-}
-.addon-icon:dir(rtl)::after {
+.addon-icon:dir(rtl)::before {
   transform: scaleX(-1);
 }
-.close-icon::after {
-  content: url("chrome://global/skin/icons/close.svg");
-  height: 100%;
-  top: 0;
-  inset-inline-start: -13px;
-  transform: scale(1.2);
+.close-icon::before {
+  background-image: url("chrome://global/skin/icons/close.svg");
 }
 
 #dispatch-thead > tr {
