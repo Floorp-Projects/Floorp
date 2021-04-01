@@ -909,18 +909,17 @@ class UrlbarView {
       return true;
     }
     let row = this._rows.children[rowIndex];
-    if (result.hasSuggestedIndex) {
-      // Always allow a result with a suggested index to replace any other
-      // result.  Otherwise it can briefly end up at some larger index due to
-      // the presence of visible stale rows.  Then, if the user makes a
-      // selection before the stale-rows timer fires, we'll freeze the rows with
-      // the suggested-index row in the wrong spot.
-      return true;
+    if (result.hasSuggestedIndex != row.result.hasSuggestedIndex) {
+      // Don't replace a suggestedIndex result with a non-suggestedIndex result
+      // or vice versa.
+      return false;
     }
-    if (row.result.hasSuggestedIndex) {
-      // Never allow a result without a suggested index to replace a result with
-      // a suggested index.  If the suggested-index row is not stale, then it
-      // needs to remain in the same spot to avoid flicker.
+    if (
+      result.hasSuggestedIndex &&
+      result.suggestedIndex != row.result.suggestedIndex
+    ) {
+      // Don't replace a suggestedIndex result with another suggestedIndex
+      // result if the suggestedIndex values are different.
       return false;
     }
     let resultIsSearchSuggestion = this._resultIsSearchSuggestion(result);
@@ -949,7 +948,9 @@ class UrlbarView {
     let rowIndex = 0;
     let resultIndex = 0;
     let visibleSpanCount = 0;
+    let seenMisplacedSuggestedIndex = false;
     let seenSearchSuggestion = false;
+
     // We can have more rows than the visible ones.
     for (
       ;
@@ -957,25 +958,29 @@ class UrlbarView {
       ++rowIndex
     ) {
       let row = this._rows.children[rowIndex];
-      let result = results[resultIndex];
-      if (
-        !seenSearchSuggestion &&
-        !row.result.heuristic &&
-        this._resultIsSearchSuggestion(row.result)
-      ) {
-        seenSearchSuggestion = true;
-      }
-      if (this._rowCanUpdateToResult(rowIndex, result, seenSearchSuggestion)) {
-        // We can replace the row's current result with the new one.
-        this._updateRow(row, result);
-        resultIndex++;
-      } else {
-        // We can't reuse the row, so mark it stale, and we'll remove it later.
-        row.setAttribute("stale", "true");
-      }
       if (this._isElementVisible(row)) {
         visibleSpanCount += UrlbarUtils.getSpanForResult(row.result);
       }
+      // As long as we haven't encountered a new suggestedIndex result that
+      // couldn't be placed in the right spot, continue updating rows.
+      if (!seenMisplacedSuggestedIndex) {
+        seenSearchSuggestion =
+          seenSearchSuggestion ||
+          (!row.result.heuristic && this._resultIsSearchSuggestion(row.result));
+        let result = results[resultIndex];
+        if (
+          this._rowCanUpdateToResult(rowIndex, result, seenSearchSuggestion)
+        ) {
+          // We can replace the row's current result with the new one.
+          this._updateRow(row, result);
+          resultIndex++;
+          continue;
+        }
+        if (result.hasSuggestedIndex || row.result.hasSuggestedIndex) {
+          seenMisplacedSuggestedIndex = true;
+        }
+      }
+      row.setAttribute("stale", "true");
     }
 
     // Mark all the remaining rows as stale and update the visible span count.
@@ -995,14 +1000,30 @@ class UrlbarView {
       let row = this._createRow();
       let result = results[resultIndex];
       this._updateRow(row, result);
+      // We still need to check whether the new result has a suggestedIndex and
+      // can't be placed in the right spot.
+      if (!seenMisplacedSuggestedIndex && result.hasSuggestedIndex) {
+        let targetIndex =
+          result.suggestedIndex >= 0
+            ? Math.min(this._rows.children.length, result.suggestedIndex)
+            : Math.max(0, this._rows.children.length + result.suggestedIndex);
+        if (this._rows.children.length != targetIndex) {
+          seenMisplacedSuggestedIndex = true;
+        }
+      }
       let newVisibleSpanCount =
         visibleSpanCount + UrlbarUtils.getSpanForResult(result);
-      if (newVisibleSpanCount <= queryContext.maxResults) {
+      if (
+        newVisibleSpanCount <= queryContext.maxResults &&
+        !seenMisplacedSuggestedIndex
+      ) {
         // The new row can be visible.
         visibleSpanCount = newVisibleSpanCount;
       } else {
         // The new row must be hidden at first because the view is already
-        // showing maxResults spans.  We'll show it when stale rows are removed.
+        // showing maxResults spans, or we encountered a new suggestedIndex
+        // result that couldn't be placed in the right spot. We'll show it when
+        // stale rows are removed.
         this._setRowVisibility(row, false);
       }
       this._rows.appendChild(row);
