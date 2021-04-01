@@ -1,6 +1,11 @@
 "use strict";
 
 add_task(async function test_support_tab_separators() {
+  if (gProton) {
+    ok(true, "Tab separators aren't supported in Proton");
+    return;
+  }
+
   const TAB_SEPARATOR_COLOR = "#FF0000";
 
   let extension = ExtensionTestUtils.loadExtension({
