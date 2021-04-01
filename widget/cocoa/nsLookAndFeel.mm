@@ -3,6 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "AppearanceOverride.h"
 #include "nsLookAndFeel.h"
 #include "nsCocoaFeatures.h"
 #include "nsNativeThemeColors.h"
@@ -44,8 +45,6 @@ using NSAppearanceName = NSString*;
 @end
 #endif
 
-static void RegisterRespectSystemAppearancePrefListenerOnce();
-
 nsLookAndFeel::nsLookAndFeel()
     : nsXPLookAndFeel(),
       mUseOverlayScrollbars(-1),
@@ -85,9 +84,7 @@ nsLookAndFeel::nsLookAndFeel()
       mColorSourceListFontSmoothingBg(0),
       mColorSourceListSelectionFontSmoothingBg(0),
       mColorActiveSourceListSelectionFontSmoothingBg(0),
-      mInitialized(false) {
-  RegisterRespectSystemAppearancePrefListenerOnce();
-}
+      mInitialized(false) {}
 
 nsLookAndFeel::~nsLookAndFeel() {}
 
@@ -691,12 +688,13 @@ void nsLookAndFeel::EnsureInit() {
     // NSAppearance.currentAppearance is global state that can be changed at will to influence the
     // behavior of NSColor and probably others.
     // NSAppearance.currentAppearance does not update automatically if the user switches between
-    // Light Mode and Dark Mode, but NSApp.effectiveAppearance does (unless NSApp.appearance is set
-    // to a non-nil value, which overrides the system appearance).
-    NSAppearance.currentAppearance = NSApp.effectiveAppearance;
+    // Light Mode and Dark Mode, but MOZGlobalAppearance.sharedInstance.effectiveAppearance does
+    // (unless the respect-system-appearance pref is set to false, in which case it will always be
+    // Aqua).
+    NSAppearance.currentAppearance = MOZGlobalAppearance.sharedInstance.effectiveAppearance;
 
     // Check if the current appearance is dark.
-    NSAppearanceName aquaOrDarkAqua = [NSApp.effectiveAppearance
+    NSAppearanceName aquaOrDarkAqua = [MOZGlobalAppearance.sharedInstance.effectiveAppearance
         bestMatchFromAppearancesWithNames:@[ NSAppearanceNameAqua, @"NSAppearanceNameDarkAqua" ]];
     appearanceIsDark = [aquaOrDarkAqua isEqualToString:@"NSAppearanceNameDarkAqua"];
   }
@@ -755,39 +753,4 @@ void nsLookAndFeel::EnsureInit() {
   RecordTelemetry();
 
   NS_OBJC_END_TRY_IGNORE_BLOCK
-}
-
-static void RespectSystemAppearancePrefChanged(const char* aPref, void* UserInfo) {
-  MOZ_RELEASE_ASSERT(XRE_IsParentProcess());
-  MOZ_RELEASE_ASSERT(NS_IsMainThread());
-
-  if (@available(macOS 10.14, *)) {
-    if (StaticPrefs::widget_macos_respect_system_appearance()) {
-      // nil means "no override".
-      NSApp.appearance = nil;
-    } else {
-      // Override with aqua.
-      NSApp.appearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
-    }
-  }
-
-  // Send a notification that ChildView reacts to. This will cause it to call ThemeChanged and
-  // invalidate LookAndFeel colors.
-  [[NSDistributedNotificationCenter defaultCenter]
-      postNotificationName:@"AppleInterfaceThemeChangedNotification"
-                    object:nil
-                  userInfo:nil
-        deliverImmediately:YES];
-}
-
-static void RegisterRespectSystemAppearancePrefListenerOnce() {
-  static bool sRegistered = false;
-  if (sRegistered || !XRE_IsParentProcess()) {
-    return;
-  }
-
-  sRegistered = true;
-  Preferences::RegisterCallbackAndCall(
-      &RespectSystemAppearancePrefChanged,
-      nsDependentCString(StaticPrefs::GetPrefName_widget_macos_respect_system_appearance()));
 }
