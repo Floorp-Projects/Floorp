@@ -1,12 +1,12 @@
-/* global $:false, Handlebars:false */
+/* global $:false, Handlebars:false, thePKT_PANEL:false */
 /* import-globals-from messages.js */
 
 /*
-PKT_SIGNUP_OVERLAY is the view itself and contains all of the methods to manipute the overlay and messaging.
+PKT_PANEL_OVERLAY is the view itself and contains all of the methods to manipute the overlay and messaging.
 It does not contain any logic for saving or communication with the extension or server.
 */
 
-var PKT_SIGNUP_OVERLAY = function(options) {
+var PKT_PANEL_OVERLAY = function(options) {
   this.inited = false;
   this.active = false;
   this.delayedStateSaved = false;
@@ -26,7 +26,7 @@ var PKT_SIGNUP_OVERLAY = function(options) {
   this.initCloseTabEvents = function() {
     function clickHelper(e, linkData) {
       e.preventDefault();
-      thePKT_SIGNUP.sendMessage("PKT_openTabWithUrl", {
+      thePKT_PANEL.sendMessage("PKT_openTabWithUrl", {
         url: linkData.url,
         activate: true,
         source: linkData.source || "",
@@ -82,10 +82,7 @@ var PKT_SIGNUP_OVERLAY = function(options) {
   this.getTranslations = function() {
     this.dictJSON = window.pocketStrings;
   };
-};
-
-PKT_SIGNUP_OVERLAY.prototype = {
-  create() {
+  this.create = function() {
     var controlvariant = window.location.href.match(
       /controlvariant=([\w|\.]*)&?/
     );
@@ -173,94 +170,8 @@ PKT_SIGNUP_OVERLAY.prototype = {
 
     // close events
     this.initCloseTabEvents();
-  },
-};
-
-// Layer between Bookmarklet and Extensions
-var PKT_SIGNUP = function() {};
-
-PKT_SIGNUP.prototype = {
-  init() {
-    if (this.inited) {
-      return;
-    }
-    this.panelId = pktPanelMessaging.panelIdFromURL(window.location.href);
-    this.overlay = new PKT_SIGNUP_OVERLAY();
-    this.setupMutationObserver();
-
-    this.inited = true;
-  },
-
-  sendMessage(messageId, payload, callback) {
-    pktPanelMessaging.sendMessage(messageId, this.panelId, payload, callback);
-  },
-
-  setupMutationObserver() {
-    // Select the node that will be observed for mutations
-    const targetNode = document.body;
-
-    // Options for the observer (which mutations to observe)
-    const config = { attributes: false, childList: true, subtree: true };
-
-    // Callback function to execute when mutations are observed
-    const callback = (mutationList, observer) => {
-      mutationList.forEach(mutation => {
-        switch (mutation.type) {
-          case "childList": {
-            /* One or more children have been added to and/or removed
-               from the tree.
-               (See mutation.addedNodes and mutation.removedNodes.) */
-            thePKT_SIGNUP.sendMessage("PKT_resizePanel", {
-              width: document.body.clientWidth,
-              height: document.body.clientHeight,
-            });
-            break;
-          }
-        }
-      });
-    };
-
-    // Create an observer instance linked to the callback function
-    const observer = new MutationObserver(callback);
-
-    // Start observing the target node for configured mutations
-    observer.observe(targetNode, config);
-  },
-
-  create() {
-    this.overlay.create();
 
     // tell back end we're ready
-    thePKT_SIGNUP.sendMessage("PKT_show_signup");
-  },
+    thePKT_PANEL.sendMessage("PKT_show_signup");
+  };
 };
-
-$(function() {
-  if (!window.thePKT_SIGNUP) {
-    var thePKT_SIGNUP = new PKT_SIGNUP();
-    /* global thePKT_SIGNUP */
-    window.thePKT_SIGNUP = thePKT_SIGNUP;
-    thePKT_SIGNUP.init();
-  }
-
-  var pocketHost = thePKT_SIGNUP.overlay.pockethost;
-  // send an async message to get string data
-  thePKT_SIGNUP.sendMessage(
-    "PKT_initL10N",
-    {
-      tos: [
-        "https://" + pocketHost + "/tos?s=ffi&t=tos&tv=panel_tryit",
-        "https://" +
-          pocketHost +
-          "/privacy?s=ffi&t=privacypolicy&tv=panel_tryit",
-      ],
-    },
-    function(resp) {
-      const { data } = resp;
-      window.pocketStrings = data.strings;
-      // Set the writing system direction
-      document.documentElement.setAttribute("dir", data.dir);
-      window.thePKT_SIGNUP.create();
-    }
-  );
-});
