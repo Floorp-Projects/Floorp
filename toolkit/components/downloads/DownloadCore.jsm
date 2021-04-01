@@ -1430,7 +1430,7 @@ DownloadSource.prototype = {
     if (this.cookieJarSettings) {
       serializable.cookieJarSettings = isString(this.cookieJarSettings)
         ? this.cookieJarSettings
-        : E10SUtils.serializePrincipal(this.cookieJarSettings);
+        : E10SUtils.serializeCookieJarSettings(this.cookieJarSettings);
     }
 
     serializeUnknownProperties(this, serializable);
