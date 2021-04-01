@@ -6,24 +6,6 @@
 #editBookmarkPanelRows > vbox {
   margin-bottom: .5em;
 }
-} /** END not Proton **/
-
-/* Folder menulist */
-
-#editBMPanel_folderMenuList::part(icon) {
-  width: 16px;
-  height: 16px;
-}
-
-.folder-icon > .menu-iconic-left {
-  display: -moz-box;
-}
-
-.folder-icon {
-  list-style-image: url("chrome://browser/skin/places/folder.svg") !important;
-  -moz-context-properties: fill;
-  fill: currentColor;
-}
 
 /* Expanders */
 
@@ -42,6 +24,24 @@
 .expander-down > .button-box {
   appearance: auto;
   -moz-default-appearance: button-arrow-down;
+}
+} /** END not Proton **/
+
+/* Folder menulist */
+
+#editBMPanel_folderMenuList::part(icon) {
+  width: 16px;
+  height: 16px;
+}
+
+.folder-icon > .menu-iconic-left {
+  display: -moz-box;
+}
+
+.folder-icon {
+  list-style-image: url("chrome://browser/skin/places/folder.svg") !important;
+  -moz-context-properties: fill;
+  fill: currentColor;
 }
 
 #editBMPanel_folderTree {
