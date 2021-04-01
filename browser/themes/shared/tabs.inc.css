@@ -729,12 +729,12 @@
   margin-top: 0 !important;
 }
 
-#TabsToolbar:not([brighttext]) .tabbrowser-tab[visuallyselected=true] > .tab-stack > .tab-background {
+#TabsToolbar:not([brighttext]) #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab[visuallyselected=true] > .tab-stack > .tab-background {
   box-shadow: 0 0 1.5px var(--tab-line-color, var(--tabs-border-color, rgba(128,128,142,0.9))),
               0 0 4px rgba(128,128,142,0.5);
 }
 
-#TabsToolbar[brighttext] .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background:-moz-lwtheme {
+#TabsToolbar[brighttext] #tabbrowser-tabs:not([noshadowfortests]) .tabbrowser-tab:is([visuallyselected=true], [multiselected]) > .tab-stack > .tab-background:-moz-lwtheme {
   box-shadow: 0 0 1.5px var(--tab-line-color, var(--tabs-border-color, rgba(128,128,142,0.9)));
 }
 } /*** END proton ***/
