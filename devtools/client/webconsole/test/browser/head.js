@@ -349,6 +349,35 @@ function findMessages(hud, text, selector = ".message") {
   );
   return elements;
 }
+/**
+ * Wait for a message to be logged and ensure it is logged only once.
+ *
+ * @param object hud
+ *        The web console.
+ * @param string text
+ *        A substring that can be found in the message.
+ * @param selector [optional]
+ *        The selector to use in finding the message.
+ * @return {Node} the node corresponding the found message
+ */
+async function checkUniqueMessageExists(hud, msg, selector) {
+  info(`Checking "${msg}" was logged`);
+  let messages;
+  try {
+    messages = await waitFor(() => {
+      const msgs = findMessages(hud, msg, selector);
+      return msgs.length > 0 ? msgs : null;
+    });
+  } catch (e) {
+    ok(false, `Message "${msg}" wasn't logged\n`);
+    return;
+  }
+
+  is(messages.length, 1, `"${msg}" was logged once`);
+  const [messageEl] = messages;
+  const repeatNode = messageEl.querySelector(".message-repeats");
+  is(repeatNode, null, `"${msg}" wasn't repeated`);
+}
 
 /**
  * Simulate a context menu event on the provided element, and wait for the console context
