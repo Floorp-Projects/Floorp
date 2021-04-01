@@ -23,6 +23,11 @@ const EXPECTED_REFLOWS = [
  * tabs that are both fully visible.
  */
 add_task(async function() {
+  // TODO (bug 1702653): Disable tab shadows for tests since the shadow
+  // can extend outside of the boundingClientRect. The tabRect will need
+  // to grow to include the shadow size.
+  gBrowser.tabContainer.setAttribute("noshadowfortests", "true");
+
   await ensureNoPreloadedBrowser();
   await disableFxaBadge();
 
@@ -49,6 +54,11 @@ add_task(async function() {
 
   let tabStripRect = gBrowser.tabContainer.arrowScrollbox.getBoundingClientRect();
   let firstTabRect = origTab.getBoundingClientRect();
+  let tabPaddingStart = parseFloat(
+    getComputedStyle(gBrowser.selectedTab).paddingInlineStart
+  );
+  let minTabWidth = firstTabRect.width - 2 * tabPaddingStart;
+  let maxTabWidth = firstTabRect.width;
   let inRange = (val, min, max) => min <= val && val <= max;
 
   await withPerfObserver(
@@ -75,8 +85,8 @@ add_task(async function() {
                   // width of 2 tabs.
                   inRange(
                     r.w,
-                    (origTab.clientWidth - 1) * 2, // -1 for the border on Win7
-                    origTab.clientWidth * 2
+                    minTabWidth - 1, // -1 for the border on Win7
+                    maxTabWidth * 2
                   )
                 )
               )

@@ -109,14 +109,6 @@
   padding-inline: 2px !important;
 }
 
-.tabbrowser-tab[first-visible-tab] {
-  padding-inline-start: var(--tab-shadow-max-size) !important;
-}
-
-#tabbrowser-arrowscrollbox[overflowing][scrolledtoend] .tabbrowser-tab[last-visible-tab] {
-  padding-inline-end: var(--tab-shadow-max-size) !important;
-}
-
 /* tabbrowser-tab keyboard focus */
 .keyboard-focused-tab > .tab-stack > .tab-background,
 .tabbrowser-tab:focus:not([aria-activedescendant]) > .tab-stack > .tab-background {
