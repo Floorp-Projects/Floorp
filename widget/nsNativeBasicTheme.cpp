@@ -289,28 +289,22 @@ std::pair<sRGBColor, sRGBColor> nsNativeBasicTheme::ComputeCheckboxColors(
   sRGBColor backgroundColor = sColorWhite;
   sRGBColor borderColor = sColorGrey40;
   if (isDisabled) {
+    backgroundColor = sColorWhiteAlpha50;
+    borderColor = sColorGrey40Alpha50;
     if (isChecked || isIndeterminate) {
-      backgroundColor = borderColor = sColorGrey40Alpha50;
-    } else {
-      backgroundColor = sColorWhiteAlpha50;
-      borderColor = sColorGrey40Alpha50;
+      backgroundColor = borderColor;
     }
-  } else {
-    if (isChecked || isIndeterminate) {
-      const auto& color = isPressed   ? sAccentColorDarker
-                          : isHovered ? sAccentColorDark
-                                      : sAccentColor;
-      backgroundColor = borderColor = color;
-    } else if (isPressed) {
-      backgroundColor = sColorGrey20;
-      borderColor = sColorGrey60;
-    } else if (isHovered) {
-      backgroundColor = sColorWhite;
-      borderColor = sColorGrey50;
-    } else {
-      backgroundColor = sColorWhite;
-      borderColor = sColorGrey40;
-    }
+  } else if (isChecked || isIndeterminate) {
+    const auto& color = isPressed   ? sAccentColorDarker
+                        : isHovered ? sAccentColorDark
+                                    : sAccentColor;
+    backgroundColor = borderColor = color;
+  } else if (isPressed) {
+    backgroundColor = sColorGrey20;
+    borderColor = sColorGrey60;
+  } else if (isHovered) {
+    backgroundColor = sColorWhite;
+    borderColor = sColorGrey50;
   }
 
   return std::make_pair(backgroundColor, borderColor);
