@@ -15,7 +15,6 @@
 #include "frontend/ElemOpEmitter.h"
 #include "frontend/IfEmitter.h"
 #include "frontend/ParserAtom.h"  // TaggedParserAtomIndex
-#include "frontend/PrivateOpEmitter.h"
 #include "frontend/PropOpEmitter.h"
 #include "frontend/ValueUsage.h"
 #include "js/TypeDecls.h"
@@ -60,16 +59,6 @@ struct BytecodeEmitter;
 //     ElemOpEmitter& eoe = cone.prepareForElemCallee(false);
 //     ... emit `callee[key]` with `eoe` here...
 //     cone.emitThis();
-//     cone.prepareForNonSpreadArguments();
-//     emit(arg);
-//     cone.emitEnd(1, Some(offset_of_callee));
-//
-//   `callee.#method(arg);`
-//     CallOrNewEmitter cone(this, JSOp::Call,
-//                           CallOrNewEmitter::ArgumentsKind::Other,
-//                           ValueUsage::WantValue);
-//     PrivateOpEmitter& xoe = cone.prepareForPrivateCallee();
-//     ... emit `callee.#method` with `xoe` here...
 //     cone.prepareForNonSpreadArguments();
 //     emit(arg);
 //     cone.emitEnd(1, Some(offset_of_callee));
@@ -170,7 +159,6 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
 
   mozilla::Maybe<PropOpEmitter> poe_;
   mozilla::Maybe<ElemOpEmitter> eoe_;
-  mozilla::Maybe<PrivateOpEmitter> xoe_;
 
   // The state of this emitter.
   //
@@ -185,10 +173,6 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
   //           | prepareForElemCallee     +------------+      v
   //           +------------------------->| ElemCallee |----->+
   //           |                          +------------+      |
-  //           |                                              |
-  //           | prepareForPrivateCallee  +---------------+   v
-  //           +------------------------->| PrivateCallee |-->+
-  //           |                          +---------------+   |
   //           |                                              |
   //           | prepareForFunctionCallee +----------------+  v
   //           +------------------------->| FunctionCallee |->+
@@ -236,9 +220,6 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
 
     // After calling prepareForElemCallee.
     ElemCallee,
-
-    // After calling prepareForPrivateCallee.
-    PrivateCallee,
 
     // After calling prepareForFunctionCallee.
     FunctionCallee,
@@ -306,9 +287,8 @@ class MOZ_STACK_CLASS CallOrNewEmitter {
  public:
   [[nodiscard]] bool emitNameCallee(TaggedParserAtomIndex name);
   [[nodiscard]] PropOpEmitter& prepareForPropCallee(bool isSuperProp);
-  [[nodiscard]] ElemOpEmitter& prepareForElemCallee(bool isSuperElem);
-  [[nodiscard]] PrivateOpEmitter& prepareForPrivateCallee(
-      TaggedParserAtomIndex privateName);
+  [[nodiscard]] ElemOpEmitter& prepareForElemCallee(bool isSuperElem,
+                                                    bool isPrivateElem);
   [[nodiscard]] bool prepareForFunctionCallee();
   [[nodiscard]] bool emitSuperCallee();
   [[nodiscard]] bool prepareForOtherCallee();

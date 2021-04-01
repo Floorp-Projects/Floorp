@@ -127,7 +127,6 @@
   MACRO_(dotThis, dotThis, ".this")                                            \
   MACRO_(dotInitializers, dotInitializers, ".initializers")                    \
   MACRO_(dotFieldKeys, dotFieldKeys, ".fieldKeys")                             \
-  MACRO_(dotPrivateBrand, dotPrivateBrand, ".privateBrand")                    \
   MACRO_(dotStaticInitializers, dotStaticInitializers, ".staticInitializers")  \
   MACRO_(dotStaticFieldKeys, dotStaticFieldKeys, ".staticFieldKeys")           \
   MACRO_(each, each, "each")                                                   \

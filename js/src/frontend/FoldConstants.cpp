@@ -404,12 +404,10 @@ restart:
     case ParseNodeKind::ElemExpr:
     case ParseNodeKind::Arguments:
     case ParseNodeKind::CallExpr:
-    case ParseNodeKind::PrivateMemberExpr:
     case ParseNodeKind::OptionalChain:
     case ParseNodeKind::OptionalDotExpr:
     case ParseNodeKind::OptionalElemExpr:
     case ParseNodeKind::OptionalCallExpr:
-    case ParseNodeKind::OptionalPrivateMemberExpr:
     case ParseNodeKind::Name:
     case ParseNodeKind::PrivateName:
     case ParseNodeKind::TemplateStringExpr:
@@ -434,7 +432,6 @@ restart:
     case ParseNodeKind::ForOf:
     case ParseNodeKind::ForHead:
     case ParseNodeKind::DefaultConstructor:
-    case ParseNodeKind::ClassBodyScope:
     case ParseNodeKind::ClassMethod:
     case ParseNodeKind::ClassField:
     case ParseNodeKind::ClassMemberList:

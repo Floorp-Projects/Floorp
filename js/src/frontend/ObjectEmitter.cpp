@@ -135,16 +135,6 @@ MOZ_ALWAYS_INLINE bool PropertyEmitter::prepareForProp(
   return true;
 }
 
-bool PropertyEmitter::prepareForPrivateMethod() {
-  MOZ_ASSERT(propertyState_ == PropertyState::Start ||
-             propertyState_ == PropertyState::Init);
-
-#ifdef DEBUG
-  propertyState_ = PropertyState::PrivateMethodValue;
-#endif
-  return true;
-}
-
 bool PropertyEmitter::prepareForPropValue(const Maybe<uint32_t>& keyPos,
                                           Kind kind /* = Kind::Prototype */) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start ||
@@ -234,7 +224,6 @@ bool PropertyEmitter::prepareForComputedPropValue() {
 
 bool PropertyEmitter::emitInitHomeObject() {
   MOZ_ASSERT(propertyState_ == PropertyState::PropValue ||
-             propertyState_ == PropertyState::PrivateMethodValue ||
              propertyState_ == PropertyState::IndexValue ||
              propertyState_ == PropertyState::ComputedValue);
 
@@ -265,8 +254,6 @@ bool PropertyEmitter::emitInitHomeObject() {
 #ifdef DEBUG
   if (propertyState_ == PropertyState::PropValue) {
     propertyState_ = PropertyState::InitHomeObj;
-  } else if (propertyState_ == PropertyState::PrivateMethodValue) {
-    propertyState_ = PropertyState::InitHomeObjForPrivateMethod;
   } else if (propertyState_ == PropertyState::IndexValue) {
     propertyState_ = PropertyState::InitHomeObjForIndex;
   } else {
@@ -327,15 +314,6 @@ bool PropertyEmitter::emitInit(JSOp op, TaggedParserAtomIndex key) {
     return false;
   }
 
-#ifdef DEBUG
-  propertyState_ = PropertyState::Init;
-#endif
-  return true;
-}
-
-bool PropertyEmitter::skipInit() {
-  MOZ_ASSERT(propertyState_ == PropertyState::PrivateMethodValue ||
-             propertyState_ == PropertyState::InitHomeObjForPrivateMethod);
 #ifdef DEBUG
   propertyState_ = PropertyState::Init;
 #endif
@@ -465,7 +443,7 @@ bool ClassEmitter::emitScope(LexicalScope::ParserData* scopeBindings) {
   return true;
 }
 
-bool ClassEmitter::emitBodyScope(ClassBodyScope::ParserData* scopeBindings) {
+bool ClassEmitter::emitBodyScope(LexicalScope::ParserData* scopeBindings) {
   MOZ_ASSERT(propertyState_ == PropertyState::Start);
   MOZ_ASSERT(classState_ == ClassState::Start ||
              classState_ == ClassState::Scope);
@@ -473,7 +451,7 @@ bool ClassEmitter::emitBodyScope(ClassBodyScope::ParserData* scopeBindings) {
   bodyTdzCache_.emplace(bce_);
 
   bodyScope_.emplace(bce_);
-  if (!bodyScope_->enterClassBody(bce_, ScopeKind::ClassBody, scopeBindings)) {
+  if (!bodyScope_->enterLexical(bce_, ScopeKind::ClassBody, scopeBindings)) {
     return false;
   }
 

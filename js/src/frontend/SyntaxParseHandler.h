@@ -90,8 +90,7 @@ class SyntaxParseHandler {
     NodeOptionalElement,
     // A distinct node for [PrivateName], to make detecting delete this.#x
     // detectable in syntax parse
-    NodePrivateMemberAccess,
-    NodeOptionalPrivateMemberAccess,
+    NodePrivateElement,
 
     // Destructuring target patterns can't be parenthesized: |([a]) = [3];|
     // must be a syntax error.  (We can't use NodeGeneric instead of these
@@ -143,14 +142,13 @@ class SyntaxParseHandler {
     return node == NodeFunctionExpression;
   }
 
-  bool isPropertyOrPrivateMemberAccess(Node node) {
+  bool isPropertyAccess(Node node) {
     return node == NodeDottedProperty || node == NodeElement ||
-           node == NodePrivateMemberAccess;
+           node == NodePrivateElement;
   }
 
-  bool isOptionalPropertyOrPrivateMemberAccess(Node node) {
-    return node == NodeOptionalDottedProperty || node == NodeOptionalElement ||
-           node == NodeOptionalPrivateMemberAccess;
+  bool isOptionalPropertyAccess(Node node) {
+    return node == NodeOptionalDottedProperty || node == NodeOptionalElement;
   }
 
   bool isFunctionCall(Node node) {
@@ -326,10 +324,6 @@ class SyntaxParseHandler {
   }
 
   LexicalScopeNodeType newLexicalScope(Node body) {
-    return NodeLexicalDeclaration;
-  }
-
-  ClassBodyScopeNodeType newClassBodyScope(Node body) {
     return NodeLexicalDeclaration;
   }
 
@@ -523,24 +517,15 @@ class SyntaxParseHandler {
   }
 
   PropertyByValueType newPropertyByValue(Node lhs, Node index, uint32_t end) {
-    MOZ_ASSERT(!isPrivateName(index));
+    if (isPrivateName(index)) {
+      return NodePrivateElement;
+    }
     return NodeElement;
   }
 
   PropertyByValueType newOptionalPropertyByValue(Node lhs, Node index,
                                                  uint32_t end) {
     return NodeOptionalElement;
-  }
-
-  PrivateMemberAccessType newPrivateMemberAccess(Node lhs, Node privateName,
-                                                 uint32_t end) {
-    return NodePrivateMemberAccess;
-  }
-
-  PrivateMemberAccessType newOptionalPrivateMemberAccess(Node lhs,
-                                                         Node privateName,
-                                                         uint32_t end) {
-    return NodeOptionalPrivateMemberAccess;
   }
 
   [[nodiscard]] bool setupCatchScope(LexicalScopeNodeType lexicalScope,
@@ -719,9 +704,7 @@ class SyntaxParseHandler {
   bool isAsyncKeyword(Node node) { return node == NodePotentialAsyncKeyword; }
 
   bool isPrivateName(Node node) { return node == NodePrivateName; }
-  bool isPrivateMemberAccess(Node node) {
-    return node == NodePrivateMemberAccess;
-  }
+  bool isPrivateField(Node node) { return node == NodePrivateElement; }
 
   TaggedParserAtomIndex maybeDottedProperty(Node node) {
     // Note: |super.apply(...)| is a special form that calls an "apply"
