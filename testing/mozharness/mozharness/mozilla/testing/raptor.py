@@ -617,7 +617,7 @@ class Raptor(
         self.chromium_dist_path = None
         self.firefox_android_browsers = ["fennec", "geckoview", "refbrow", "fenix"]
         self.android_browsers = self.firefox_android_browsers + ["chrome-m"]
-        self.browsertime_visualmetrics = False
+        self.browsertime_visualmetrics = self.config.get("browsertime_visualmetrics")
         self.browsertime_video = False
         self.enable_marionette_trace = self.config.get("enable_marionette_trace")
         self.browser_cycles = self.config.get("browser_cycles")
@@ -996,7 +996,7 @@ class Raptor(
         )
 
         modules = ["pip>=1.5"]
-        if self.run_local:
+        if self.run_local and self.browsertime_visualmetrics:
             # Add modules required for visual metrics
             modules.extend(
                 ["numpy==1.16.1", "Pillow==6.1.0", "scipy==1.2.3", "pyssim==0.4"]

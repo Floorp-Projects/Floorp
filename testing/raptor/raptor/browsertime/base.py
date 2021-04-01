@@ -445,7 +445,9 @@ class Browsertime(Perftest):
                 if self.vismet_failed:
                     raise Exception(
                         "Browsertime visual metrics dependencies were not "
-                        "installed correctly."
+                        "installed correctly. Try removing the virtual environment at "
+                        "%s before running your command again."
+                        % os.environ["VIRTUAL_ENV"]
                     )
 
             proc = self.process_handler(cmd, processOutputLine=_line_handler, env=env)
