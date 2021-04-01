@@ -73,8 +73,13 @@ async function show_tab(tab) {
   return tabShown;
 }
 
-async function test_tooltip(icon, expectedTooltip, isActiveTab) {
+async function test_tooltip(icon, expectedTooltip, isActiveTab, tab) {
   let tooltip = document.getElementById("tabbrowser-tab-tooltip");
+
+  let tabContent = tab.querySelector(".tab-content");
+  if (gProton) {
+    await hover_icon(tabContent, tooltip);
+  }
 
   await hover_icon(icon, tooltip);
   if (isActiveTab) {
@@ -174,7 +179,7 @@ async function test_playing_icon_on_tab(tab, browser, isPinned) {
 
   await play(tab);
 
-  await test_tooltip(icon, "Mute tab", isActiveTab);
+  await test_tooltip(icon, "Mute tab", isActiveTab, tab);
 
   ok(
     !("muted" in get_tab_state(tab)),
@@ -193,7 +198,7 @@ async function test_playing_icon_on_tab(tab, browser, isPinned) {
     "muteReason property should be persisted"
   );
 
-  await test_tooltip(icon, "Unmute tab", isActiveTab);
+  await test_tooltip(icon, "Unmute tab", isActiveTab, tab);
 
   await test_mute_tab(tab, icon, false);
 
@@ -206,7 +211,7 @@ async function test_playing_icon_on_tab(tab, browser, isPinned) {
     "No muteReason property should be persisted"
   );
 
-  await test_tooltip(icon, "Mute tab", isActiveTab);
+  await test_tooltip(icon, "Mute tab", isActiveTab, tab);
 
   await test_mute_tab(tab, icon, true);
 
@@ -221,7 +226,7 @@ async function test_playing_icon_on_tab(tab, browser, isPinned) {
     "Tab should still be muted but not playing"
   );
 
-  await test_tooltip(icon, "Unmute tab", isActiveTab);
+  await test_tooltip(icon, "Unmute tab", isActiveTab, tab);
 
   await test_mute_tab(tab, icon, false);
 
@@ -358,7 +363,7 @@ async function test_swapped_browser_while_playing(oldTab, newBrowser) {
     "Expected the correct soundplaying attribute on the new tab"
   );
 
-  await test_tooltip(newTab.soundPlayingIcon, "Unmute tab", true);
+  await test_tooltip(newTab.soundPlayingIcon, "Unmute tab", true, newTab);
 }
 
 async function test_swapped_browser_while_not_playing(oldTab, newBrowser) {
@@ -431,7 +436,7 @@ async function test_swapped_browser_while_not_playing(oldTab, newBrowser) {
     "Expected the correct soundplaying attribute on the new tab"
   );
 
-  await test_tooltip(newTab.soundPlayingIcon, "Unmute tab", true);
+  await test_tooltip(newTab.soundPlayingIcon, "Unmute tab", true, newTab);
 }
 
 async function test_browser_swapping(tab, browser) {
