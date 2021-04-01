@@ -31,7 +31,7 @@ static NSAppearance* AppearanceForVibrancyType(VibrancyType aType) {
         return [NSAppearance appearanceNamed:NSAppearanceNameAqua];
       case VibrancyType::TITLEBAR_DARK:
         // This must always be dark (dark aqua), regardless of window appearance.
-        return [NSAppearance appearanceNamed:@"NSAppearanceNameDarkAqua"];
+        return [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
       case VibrancyType::TOOLTIP:
       case VibrancyType::MENU:
       case VibrancyType::HIGHLIGHTED_MENUITEM:

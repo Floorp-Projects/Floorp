@@ -626,8 +626,8 @@ bool nsLookAndFeel::SystemWantsDarkTheme() {
   // 10.14+, false otherwise.
   if (@available(macOS 10.14, *)) {
     NSAppearanceName aquaOrDarkAqua = [NSApp.effectiveAppearance
-        bestMatchFromAppearancesWithNames:@[ NSAppearanceNameAqua, @"NSAppearanceNameDarkAqua" ]];
-    return [aquaOrDarkAqua isEqualToString:@"NSAppearanceNameDarkAqua"];
+        bestMatchFromAppearancesWithNames:@[ NSAppearanceNameAqua, NSAppearanceNameDarkAqua ]];
+    return [aquaOrDarkAqua isEqualToString:NSAppearanceNameDarkAqua];
   }
   return false;
 }
