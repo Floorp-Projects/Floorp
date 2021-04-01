@@ -19,7 +19,8 @@ add_task(async function setup() {
     "Should have initialized the service"
   );
 
-  await installTestEngine();
+  useHttpServer();
+  await SearchTestUtils.promiseNewSearchEngine(`${gDataUrl}engine.xml`);
 });
 
 function checkIdentifier(engineName, expectedIdentifier, expectedTelemetryId) {
