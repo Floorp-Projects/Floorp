@@ -669,7 +669,11 @@ if (!screenshotsDisabled) {
       Services.obs.addObserver(this, "toggle-screenshot-disable");
     },
     observe(subj, topic, data) {
-      this.screenshotNode.setAttribute("disabled", data);
+      if (data == "true") {
+        this.screenshotNode.setAttribute("disabled", "true");
+      } else {
+        this.screenshotNode.removeAttribute("disabled");
+      }
     },
   });
 }
