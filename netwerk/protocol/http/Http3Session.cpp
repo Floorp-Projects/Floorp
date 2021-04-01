@@ -516,6 +516,15 @@ nsresult Http3Session::ProcessEvents() {
                           0);
 
         ReportHttp3Connection();
+        // Maybe call ResumeSend:
+        // In case ZeroRtt has been used and it has been rejected, 2 events will
+        // be received: ZeroRttRejected and ConnectionConnected. ZeroRttRejected
+        // that will put all transaction into mReadyForWrite queue and it will
+        // call MaybeResumeSend, but that will not have an effect because the
+        // connection is ont in CONNECTED state. When ConnectionConnected event
+        // is received call MaybeResumeSend to trigger reads for the
+        // zero-rtt-rejected transactions.
+        MaybeResumeSend();
       } break;
       case Http3Event::Tag::GoawayReceived:
         LOG(("Http3Session::ProcessEvents - GoawayReceived"));
