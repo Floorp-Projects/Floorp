@@ -219,6 +219,7 @@ const WatcherRegistry = {
   unregisterWatcher(watcher) {
     watchedDataByWatcherActor.delete(watcher.actorID);
     watcherActors.delete(watcher.actorID);
+    this.maybeUnregisteringJSWindowActor();
   },
 
   /**
