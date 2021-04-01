@@ -141,13 +141,19 @@ def _patch_absolute_paths(sentry_event, topsrcdir):
         for target in (target_path, repr_path):
             # Paths in the Sentry event aren't consistent:
             # * On *nix, they're mostly forward slashes.
+            # * On *nix, not all absolute paths start with a leading forward slash.
             # * On Windows, they're mostly backslashes.
             # * On Windows, `.extra."sys.argv"` uses forward slashes.
             # * The Python variables in-scope captured by the Sentry report may be
             #   inconsistent, even for a single path. For example, on
             #   Windows, Mach calculates the state_dir as "C:\Users\<user>/.mozbuild".
-            #
-            # To resolve this, we have our path-patching match
+
+            # Handle the case where not all absolute paths start with a leading
+            # forward slash: make the initial slash optional in the search string.
+            if target.startswith("/"):
+                target = "/?" + target[1:]
+
+            # Handle all possible slash variants: our search string should match
             # both forward slashes and backslashes. This is done by dynamically
             # replacing each "/" and "\" with the regex "[\/\\]" (match both).
             slash_regex = re.compile(r"[\/\\]")
