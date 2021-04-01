@@ -50,10 +50,14 @@ checkbox:not([disabled="true"]):hover:active > .checkbox-check {
 .checkbox-check[checked] {
   border-color: var(--checkbox-checked-border-color, transparent);
   background-color: var(--checkbox-checked-bgcolor, -moz-accent-color);
-  list-style-image: url("chrome://global/skin/icons/check.svg");
+  background-image: url("chrome://global/skin/icons/check.svg");
+  background-position: center;
+  background-repeat: no-repeat;
   -moz-context-properties: fill;
   fill: currentColor;
   color: var(--checkbox-checked-color, -moz-accent-color-foreground);
+  /* Style the button also when printing with "Print Backgrounds" unchecked */
+  color-adjust: exact;
 }
 
 checkbox:not([disabled="true"]):hover > .checkbox-check[checked] {
