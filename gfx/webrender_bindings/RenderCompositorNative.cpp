@@ -60,7 +60,6 @@ bool RenderCompositorNative::BeginFrame() {
     if (!mNativeLayerForEntireWindow) {
       mNativeLayerForEntireWindow =
           mNativeLayerRoot->CreateLayer(bufferSize, false, mSurfacePoolHandle);
-      mNativeLayerForEntireWindow->SetSurfaceIsFlipped(true);
       mNativeLayerRoot->AppendLayer(mNativeLayerForEntireWindow);
     }
   }
