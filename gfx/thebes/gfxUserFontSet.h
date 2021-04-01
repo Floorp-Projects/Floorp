@@ -618,6 +618,11 @@ class gfxUserFontEntry : public gfxFontEntry {
     mUserFontLoadState = STATUS_NOT_LOADED;
     mFontDataLoadingState = NOT_LOADING;
     mLoader = nullptr;
+    // We must not reset mSrcIndex here because there may be an
+    // off-main-thread font load currently in progress that will
+    // depend on it being correct when it calls CacheFont.
+    // It will get reset to 0 on the next call to LoadNextSrc()
+    // because we have reset mFontDataLoadingState here.
   }
 
   // whether to wait before using fallback font or not
@@ -768,6 +773,7 @@ class gfxUserFontEntry : public gfxFontEntry {
   };
   FontDataLoadingState mFontDataLoadingState;
 
+  bool mSeenLocalSource;
   bool mUnsupportedFormat;
   mozilla::StyleFontDisplay mFontDisplay;  // timing of userfont fallback
 
