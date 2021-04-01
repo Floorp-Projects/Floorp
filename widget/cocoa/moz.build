@@ -34,6 +34,7 @@ EXPORTS.mozilla.widget += [
 ]
 
 UNIFIED_SOURCES += [
+    "AppearanceOverride.mm",
     "GfxInfo.mm",
     "MOZIconHelper.mm",
     "NativeKeyBindings.mm",

@@ -6,6 +6,7 @@
 
 #include "nsCocoaWindow.h"
 
+#include "AppearanceOverride.h"
 #include "NativeKeyBindings.h"
 #include "ScreenHelperCocoa.h"
 #include "TextInputHandler.h"
@@ -96,6 +97,12 @@ static NSString* const CGSSpacesKey = @"Spaces";
 extern CGSConnection _CGSDefaultConnection(void);
 extern CGError CGSSetWindowTransform(CGSConnection cid, CGSWindow wid, CGAffineTransform transform);
 }
+
+#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
+@interface NSWindow (NSWindowAppearanceSource)
+@property(weak) NSObject<NSAppearanceCustomization>* appearanceSource NS_AVAILABLE_MAC(10_14);
+@end
+#endif
 
 #define NS_APPSHELLSERVICE_CONTRACTID "@mozilla.org/appshell/appShellService;1"
 
@@ -551,6 +558,11 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect& aRect, nsBorderStyle aB
   [[WindowDataMap sharedWindowDataMap] ensureDataForWindow:mWindow];
   mWindowMadeHere = true;
 
+  if (@available(macOS 10.14, *)) {
+    // When the window's appearance is set to nil (no override), make sure it respects the global
+    // aqua override.
+    mWindow.appearanceSource = MOZGlobalAppearance.sharedInstance;
+  }
   [mWindow setWindowAppearance:mWindowAppearance];
 
   return NS_OK;
@@ -3237,7 +3249,7 @@ const NSAppearanceName NSAppearanceNameDarkAqua = @"NSAppearanceNameDarkAqua";
         self.appearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
         break;
       default:
-        // nil means "no override".
+        // nil means "inherit effectiveAppearance from self.appearanceSource".
         self.appearance = nil;
         break;
     }
@@ -3593,6 +3605,8 @@ typedef NS_ENUM(NSInteger, NSTitlebarSeparatorStyle) {
     [[self mainChildView] ensureNextCompositeIsAtomicWithMainThreadPaint];
     NSNumber* revealAmount = (change[NSKeyValueChangeNewKey]);
     [self updateTitlebarShownAmount:[revealAmount doubleValue]];
+  } else {
+    [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
   }
 }
 
