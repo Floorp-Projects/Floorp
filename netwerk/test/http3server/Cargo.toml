@@ -23,6 +23,5 @@ features = ["gecko"]
 [build-dependencies]
 bindgen = {version = "0.56", default-features = false, features = ["runtime"] }
 
-[[bin]]
-name = "http3server"
-path = "src/main.rs"
+[lib]
+crate-type = ["staticlib"]
