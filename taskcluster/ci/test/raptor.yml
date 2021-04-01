@@ -104,18 +104,6 @@ raptor-speedometer-firefox:
     variants: ["fission"]
     try-name: raptor-speedometer-firefox
     treeherder-symbol: Rap(sp)
-    run-on-projects:
-        by-variant:
-            fission:
-                by-app:
-                    chrome: []
-                    chromium: []
-                    default:
-                        by-test-platform:
-                            linux64-shippable-qr/opt: ["mozilla-central"]
-                            windows10-64-shippable-qr/opt: ["mozilla-central"]
-                            default: []
-            default: []
     mozharness:
         extra-options:
             - --test=raptor-speedometer
@@ -136,18 +124,6 @@ raptor-stylebench-firefox:
     variants: ["fission"]
     try-name: raptor-stylebench-firefox
     treeherder-symbol: Rap(sb)
-    run-on-projects:
-        by-variant:
-            fission:
-                by-app:
-                    chrome: []
-                    chromium: []
-                    default:
-                        by-test-platform:
-                            linux64-shippable-qr/opt: ["mozilla-central"]
-                            windows10-64-shippable-qr/opt: ["mozilla-central"]
-                            default: []
-            default: []
     mozharness:
         extra-options:
             - --test=raptor-stylebench
@@ -168,18 +144,6 @@ raptor-motionmark-htmlsuite-firefox:
     variants: ["fission"]
     try-name: raptor-motionmark-htmlsuite-firefox
     treeherder-symbol: Rap(mm-h)
-    run-on-projects:
-        by-variant:
-            fission:
-                by-app:
-                    chrome: []
-                    chromium: []
-                    default:
-                        by-test-platform:
-                            linux64-shippable-qr/opt: ["mozilla-central"]
-                            windows10-64-shippable-qr/opt: ["mozilla-central"]
-                            default: []
-            default: []
     mozharness:
         extra-options:
             - --test=raptor-motionmark-htmlsuite
@@ -199,18 +163,6 @@ raptor-motionmark-animometer-firefox:
     variants: ["fission"]
     try-name: raptor-motionmark-animometer-firefox
     treeherder-symbol: Rap(mm-a)
-    run-on-projects:
-        by-variant:
-            fission:
-                by-app:
-                    chrome: []
-                    chromium: []
-                    default:
-                        by-test-platform:
-                            linux64-shippable-qr/opt: ["mozilla-central"]
-                            windows10-64-shippable-qr/opt: ["mozilla-central"]
-                            default: []
-            default: []
     tier:
         by-variant:
             fission: 2
@@ -487,6 +439,7 @@ raptor-wasm-godot-optimizing-firefox-profiling:
     description: "Raptor WASM godot on Firefox with optimizing JIT and Gecko Profiling"
     try-name: raptor-wasm-godot-optimizing-firefox-profiling
     treeherder-symbol: Rap-Prof(godot-i)
+    run-on-projects: []
     max-run-time: 900
     mozharness:
         extra-options:
@@ -740,18 +693,6 @@ raptor-ares6-firefox:
     variants: ["fission"]
     try-name: raptor-ares6-firefox
     treeherder-symbol: Rap(ares6)
-    run-on-projects:
-        by-variant:
-            fission:
-                by-app:
-                    chrome: []
-                    chromium: []
-                    default:
-                        by-test-platform:
-                            linux64-shippable-qr/opt: ["mozilla-central"]
-                            windows10-64-shippable-qr/opt: ["mozilla-central"]
-                            default: []
-            default: []
     max-run-time: 2500
     mozharness:
         extra-options:
