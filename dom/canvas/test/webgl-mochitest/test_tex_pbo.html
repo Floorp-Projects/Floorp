@@ -92,7 +92,7 @@ function glErrorShouldBe(gl, expected, opt_info) {
     tryUpload(null, [0,0,0,0]);
     tryUpload(CPU_DATA, CPU_DATA);
     tryUpload(0, PBO_DATA.slice(0,4));
-    //tryUpload(4, PBO_DATA.slice(4));
+    tryUpload(4, PBO_DATA.slice(4));
   }
 })();
     </script>
