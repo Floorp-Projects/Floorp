@@ -25,11 +25,6 @@
 // This must be included last:
 #include "nsObjCExceptions.h"
 
-// Available from 10.12 onwards; test availability at runtime before using
-@interface NSWorkspace (AvailableSinceSierra)
-@property(readonly) BOOL accessibilityDisplayShouldReduceMotion;
-@end
-
 nsLookAndFeel::nsLookAndFeel()
     : nsXPLookAndFeel(),
       mUseOverlayScrollbars(-1),
@@ -567,10 +562,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       // or when it's the initial query on child processes.  Otherwise we will
       // get the info via LookAndFeel::SetIntCache on child processes.
       if (!mPrefersReducedMotionCached) {
-        mPrefersReducedMotion =
-            [[NSWorkspace sharedWorkspace]
-                respondsToSelector:@selector(accessibilityDisplayShouldReduceMotion)] &&
-            [[NSWorkspace sharedWorkspace] accessibilityDisplayShouldReduceMotion];
+        mPrefersReducedMotion = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
         mPrefersReducedMotionCached = true;
       }
       aResult = mPrefersReducedMotion;
@@ -583,9 +575,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       // get the info via LookAndFeel::SetIntCache on child processes.
       if (!mUseAccessibilityThemeCached) {
         mUseAccessibilityTheme =
-            [[NSWorkspace sharedWorkspace]
-                respondsToSelector:@selector(accessibilityDisplayShouldIncreaseContrast)] &&
-            [[NSWorkspace sharedWorkspace] accessibilityDisplayShouldIncreaseContrast];
+            NSWorkspace.sharedWorkspace.accessibilityDisplayShouldIncreaseContrast;
         mUseAccessibilityThemeCached = true;
       }
       aResult = mUseAccessibilityTheme;
