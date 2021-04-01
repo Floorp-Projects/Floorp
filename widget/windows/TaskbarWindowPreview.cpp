@@ -66,6 +66,9 @@ TaskbarWindowPreview::~TaskbarWindowPreview() {
     mOverlayIcon = nullptr;
   }
 
+  // We need to clean up a hook associated with the "this" pointer.
+  SetVisible(false);
+
   if (IsWindowAvailable()) {
     DetachFromNSWindow();
   } else {
