@@ -1,4 +1,7 @@
-// META: script=websocket.sub.js
+// META: script=constants.sub.js
+// META: variant=
+// META: variant=?wss
+// META: variant=?wpt_flags=h2
 
 async_test(t => {
   const ws = CreateWebSocketWithBlockedPort(__PORT)
