@@ -35,7 +35,8 @@ open class BrowserMenu internal constructor(
     internal val adapter: BrowserMenuAdapter
 ) : View.OnAttachStateChangeListener {
     protected var currentPopup: PopupWindow? = null
-    private var menuList: RecyclerView? = null
+    @VisibleForTesting
+    internal var menuList: RecyclerView? = null
     internal var currAnchor: View? = null
     internal var isShown = false
     @VisibleForTesting
@@ -133,12 +134,20 @@ open class BrowserMenu internal constructor(
 
         // When showing an expandable bottom menu it should always be scrolled to the top (default in LayoutManager).
         // Otherwise try showing the bottom of the menu when not enough space to fit it on the screen.
-        menuList?.let { list ->
-            list.setEndOfMenuAlwaysVisibleCompact(
-                endOfMenuAlwaysVisible, list.layoutManager as LinearLayoutManager
-            )
+        if (endOfMenuAlwaysVisible) {
+            menuList?.let {
+                showMenuBottom(it)
+            }
         }
+
         return view
+    }
+
+    @VisibleForTesting
+    internal fun showMenuBottom(menu: RecyclerView) {
+        menu.layoutManager = LinearLayoutManager(menu.context, RecyclerView.VERTICAL, false).also {
+            menu.setEndOfMenuAlwaysVisibleCompact(true, it)
+        }
     }
 
     @VisibleForTesting

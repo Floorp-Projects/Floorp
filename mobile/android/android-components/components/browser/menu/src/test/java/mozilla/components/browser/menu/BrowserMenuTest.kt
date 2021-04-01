@@ -9,6 +9,7 @@ import android.graphics.Color
 import android.os.Build
 import android.view.Gravity
 import android.view.View
+import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.Button
@@ -29,12 +30,14 @@ import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotSame
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.mockito.Mockito.doNothing
+import org.mockito.Mockito.never
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 import org.robolectric.Shadows
@@ -351,6 +354,44 @@ class BrowserMenuTest {
 
         assertFalse(result is ExpandableLayout)
         assertTrue(result == view)
+    }
+
+    @Test
+    fun `GIVEN a not expandable menu WHEN configureExpandableMenu is called for one which should not be scrolled to bottom THEN the same menu is returned`() {
+        val menu = spy(BrowserMenu(mock()))
+        menu.menuPositioningData = MenuPositioningData(BrowserMenuPlacement.AnchoredToTop.Dropdown(mock()))
+        val viewGroup: ViewGroup = mock()
+
+        val result = menu.configureExpandableMenu(viewGroup, false)
+
+        assertSame(viewGroup, result)
+        verify(menu, never()).showMenuBottom(any())
+    }
+
+    @Test
+    fun `GIVEN a not expandable menu WHEN configureExpandableMenu is called for one which should be scrolled to bottom THEN the layout manager is updated for this`() {
+        val menu = spy(BrowserMenu(mock()))
+        menu.menuPositioningData = MenuPositioningData(BrowserMenuPlacement.AnchoredToTop.Dropdown(mock()))
+        val menuList = RecyclerView(testContext)
+        menu.menuList = menuList
+
+        val result = menu.configureExpandableMenu(menuList, true)
+
+        assertSame(menuList, result)
+        verify(menu).showMenuBottom(menuList)
+    }
+
+    @Test
+    fun `GIVEN a menu that should be scrolled to the bottom WHEN showMenuBottom is called THEN it replaces the layout manager and sets stackFromEnd`() {
+        val menu = spy(BrowserMenu(mock()))
+        // Call show to have a default layout manager set
+        menu.show(View(testContext))
+        val initialLayoutManager = menu.menuList!!.layoutManager
+
+        menu.showMenuBottom(menu.menuList!!)
+
+        assertNotSame(initialLayoutManager, menu.menuList!!.layoutManager)
+        assertTrue((menu.menuList!!.layoutManager as LinearLayoutManager).stackFromEnd)
     }
 
     @Test

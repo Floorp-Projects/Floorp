@@ -13,6 +13,9 @@ permalink: /changelog/
 * [Configuration](https://github.com/mozilla-mobile/android-components/blob/master/.config.yml)
 
 * **browser-menu**:
+  * 🚒 Bug fixed [issue #](https://github.com/mozilla-mobile/android-components/issues/10005) - Fix a recent issue with BrowserMenu#show() - endOfMenuAlwaysVisible not being applied.
+
+* **browser-menu**:
   * 🚒 Bug fixed [issue #](https://github.com/mozilla-mobile/android-components/issues/9922) - The browser menu will have it's dynamic width calculated only once, before the first layout.
 
 * **browser-menu**
