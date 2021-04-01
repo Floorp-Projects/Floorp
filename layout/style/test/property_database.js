@@ -12943,7 +12943,7 @@ if (false) {
     inherited: false,
     type: CSS_TYPE_LONGHAND,
     initial_values: ["default"],
-    other_values: ["none", "menu", "tooltip", "sheet"],
+    other_values: ["none", "menu", "tooltip", "sheet", "cliprounded"],
     invalid_values: [],
   };
 
