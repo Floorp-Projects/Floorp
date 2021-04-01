@@ -27,12 +27,8 @@ findbar[noanim] {
   transition-delay: 0s !important;
 }
 
-.findbar-container > checkbox {
-  margin: 0 8px;
-}
-
-.findbar-closebutton {
-  padding: 0 8px;
+.findbar-container {
+  padding: 6px;
 }
 
 /* Search field */
@@ -81,25 +77,17 @@ html|input.findbar-textbox[flash="true"] {
   color: inherit;
 }
 
-html|input.findbar-textbox.minimal {
-  border-radius: 2px;
-}
+/* Previous/next buttons */
 
 .findbar-find-previous,
 .findbar-find-next {
   margin-inline-start: 0;
   appearance: none;
-  padding: 2px 5px;
-  line-height: 1em;
+  padding: 4px 7px;
   -moz-context-properties: fill;
   fill: currentColor;
   color: inherit;
   border-radius: 4px;
-}
-
-.findbar-find-previous > .toolbarbutton-icon,
-.findbar-find-next > .toolbarbutton-icon {
-  padding: 2px;
 }
 
 .findbar-find-previous:not([disabled]):hover,
@@ -109,7 +97,7 @@ html|input.findbar-textbox.minimal {
 
 .findbar-find-previous:not([disabled]):hover:active,
 .findbar-find-next:not([disabled]):hover:active {
-  background: var(--button-active-bgcolor, rgba(23,50,76,.2));
+  background: var(--button-active-bgcolor, rgba(190,190,190,.4));
 }
 
 .findbar-find-previous {
@@ -123,11 +111,6 @@ html|input.findbar-textbox.minimal {
   list-style-image: url(chrome://global/skin/icons/find-next-arrow.svg);
 }
 
-.findbar-find-next:-moz-lwtheme,
-.findbar-find-previous:-moz-lwtheme {
-  border-color: var(--lwt-toolbar-field-border-color, ThreeDShadow);
-}
-
 .findbar-find-previous > .toolbarbutton-icon,
 .findbar-find-next > .toolbarbutton-icon {
   margin: 0;
@@ -138,37 +121,36 @@ html|input.findbar-textbox.minimal {
   opacity: .4;
 }
 
+/* Checkboxes & Labels */
+
 .findbar-highlight,
 .findbar-case-sensitive,
 .findbar-match-diacritics,
-.findbar-entire-word {
-  margin-inline-start: 5px;
-}
-
-.findbar-highlight > .toolbarbutton-icon,
-.findbar-case-sensitive > .toolbarbutton-icon,
-.findbar-match-diacritics > .toolbarbutton-icon,
-.findbar-entire-word > .toolbarbutton-icon {
-  display: none;
+.findbar-entire-word,
+.findbar-label {
+  margin: 0 8px;
 }
 
 .findbar-find-status,
 .found-matches {
-  color: GrayText;
-  margin: 0 !important;
-  margin-inline-start: 12px !important;
+  margin-inline-start: 12px;
 }
 
-.findbar-find-status:-moz-lwtheme,
-.found-matches:-moz-lwtheme {
-  color: inherit;
-  opacity: .6;
+@supports -moz-bool-pref("browser.proton.enabled") {
+.findbar-find-status[status="notfound"] {
+  color: var(--error-text-color, color-mix(in srgb, currentColor 40%, #C50042));
 }
+
+.find-status-icon {
+  display: none;
+}
+} /*** END proton ***/
+
+/* Close button */
 
 .findbar-closebutton {
   /* Override margin-inline from close-icon.css */
   margin-inline: 4px 8px !important;
-  width: 16px;
 }
 
 @supports not -moz-bool-pref("browser.proton.enabled") {
@@ -177,6 +159,10 @@ html|input.findbar-textbox {
   border-start-start-radius: 2px;
   border-end-start-radius: 2px;
   width: 14em;
+}
+
+html|input.findbar-textbox.minimal {
+  border-radius: 2px;
 }
 
 html|input.findbar-textbox:focus {
@@ -193,7 +179,7 @@ html|input.findbar-textbox[status="notfound"] {
 
 .findbar-container {
   padding-block: 4px;
-  padding-inline-start: 8px;
+  padding-inline: 8px 0;
 }
 
 .findbar-find-previous,
@@ -204,9 +190,9 @@ html|input.findbar-textbox[status="notfound"] {
   border-radius: 0;
 }
 
-.findbar-find-previous > .toolbarbutton-icon,
-.findbar-find-next > .toolbarbutton-icon {
-  padding: 0;
+.findbar-find-next:-moz-lwtheme,
+.findbar-find-previous:-moz-lwtheme {
+  border-color: var(--lwt-toolbar-field-border-color, ThreeDShadow);
 }
 
 .findbar-find-previous {
@@ -216,7 +202,7 @@ html|input.findbar-textbox[status="notfound"] {
 .findbar-find-next {
   border-start-end-radius: 2px;
   border-end-end-radius: 2px;
-  margin-inline-end: 0;
+  margin-inline-end: 8px;
 }
 
 .findbar-find-previous:not([disabled]):hover:active,
@@ -224,9 +210,13 @@ html|input.findbar-textbox[status="notfound"] {
   box-shadow: 0 1px 2px rgba(10,31,51,.2) inset;
 }
 
+.findbar-label:not(:-moz-lwtheme) {
+  color: color-mix(in srgb, currentColor 65%, transparent);
+}
 
 .find-status-icon[status="pending"] {
   list-style-image: url("chrome://global/skin/icons/loading.png");
+  margin-inline-start: 8px;
 }
 
 @media (min-resolution: 1.1dppx) {

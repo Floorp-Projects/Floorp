@@ -45,7 +45,7 @@
         <toolbarbutton anonid="find-closebutton" class="findbar-closebutton tabbable close-icon"
           data-l10n-id="findbar-find-button-close" oncommand="close();" />
         <hbox anonid="findbar-textbox-wrapper" align="stretch">
-          <html:input anonid="findbar-textbox" class="findbar-textbox findbar-find-fast" />
+          <html:input anonid="findbar-textbox" class="findbar-textbox" />
           <toolbarbutton anonid="find-previous" class="findbar-find-previous tabbable"
             data-l10n-attrs="tooltiptext" data-l10n-id="findbar-previous"
             oncommand="onFindAgainCommand(true);" disabled="true" />
@@ -53,19 +53,19 @@
             data-l10n-id="findbar-next" oncommand="onFindAgainCommand(false);" disabled="true" />
         </hbox>
         <checkbox anonid="highlight" class="findbar-highlight tabbable"
-          data-l10n-id="findbar-highlight-all2" oncommand="toggleHighlight(this.checked);" type="checkbox" />
+          data-l10n-id="findbar-highlight-all2" oncommand="toggleHighlight(this.checked);"/>
         <checkbox anonid="find-case-sensitive" class="findbar-case-sensitive tabbable"
-          data-l10n-id="findbar-case-sensitive" oncommand="_setCaseSensitivity(this.checked ? 1 : 0);" type="checkbox" />
+          data-l10n-id="findbar-case-sensitive" oncommand="_setCaseSensitivity(this.checked ? 1 : 0);"/>
         <checkbox anonid="find-match-diacritics" class="findbar-match-diacritics tabbable"
-          data-l10n-id="findbar-match-diacritics" oncommand="_setDiacriticMatching(this.checked ? 1 : 0);" type="checkbox" />
+          data-l10n-id="findbar-match-diacritics" oncommand="_setDiacriticMatching(this.checked ? 1 : 0);"/>
         <checkbox anonid="find-entire-word" class="findbar-entire-word tabbable"
-          data-l10n-id="findbar-entire-word" oncommand="toggleEntireWord(this.checked);" type="checkbox" />
-        <label anonid="match-case-status" class="findbar-find-fast" />
-        <label anonid="match-diacritics-status" class="findbar-find-fast" />
-        <label anonid="entire-word-status" class="findbar-find-fast" />
-        <label anonid="found-matches" class="findbar-find-fast found-matches" hidden="true" />
-        <image anonid="find-status-icon" class="findbar-find-fast find-status-icon" />
-        <description anonid="find-status" control="findbar-textbox" class="findbar-find-fast findbar-find-status" />
+          data-l10n-id="findbar-entire-word" oncommand="toggleEntireWord(this.checked);"/>
+        <label anonid="match-case-status" class="findbar-label" />
+        <label anonid="match-diacritics-status" class="findbar-label" />
+        <label anonid="entire-word-status" class="findbar-label" />
+        <label anonid="found-matches" class="findbar-label found-matches" hidden="true" />
+        <image anonid="find-status-icon" class="find-status-icon" />
+        <description anonid="find-status" control="findbar-textbox" class="findbar-label findbar-find-status" />
       </hbox>
       `;
     }

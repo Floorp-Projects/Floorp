@@ -44,19 +44,4 @@ html|input.findbar-textbox {
 html|input.findbar-textbox:-moz-locale-dir(rtl) {
   background-position-x: right 5px;
 }
-}
-/*** END !proton ***/
-
-.findbar-container {
-  padding-inline-start: 2px;
-}
-
-label.findbar-find-fast {
-  color: #6d6d6d;
-  margin: 0;
-  margin-inline-start: 12px;
-}
-
-label.findbar-find-fast:-moz-lwtheme {
-  color: inherit;
-}
+} /*** END !proton ***/
