@@ -2440,15 +2440,14 @@
   args:
     val: ValueField
 
-- name: NewPlainObjectResult
+- name: LoadNewObjectFromTemplateResult
   shared: true
   transpile: false
   cost_estimate: 4
   args:
-    numFixedSlots: UInt32Imm
-    numDynamicSlots: UInt32Imm
-    allocKind: AllocKindImm
-    shape: ShapeField
+    templateObject: ObjectField
+    disambiguationIdHi: UInt32Imm
+    disambiguationIdLo: UInt32Imm
 
 - name: CallStringConcatResult
   shared: true
