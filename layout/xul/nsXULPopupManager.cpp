@@ -47,7 +47,6 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/Services.h"
-#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/StaticPrefs_xul.h"
@@ -735,7 +734,7 @@ void nsXULPopupManager::ShowPopup(nsIContent* aPopup,
 static bool ShouldUseNativeContextMenus() {
 #ifdef XP_MACOSX
   return StaticPrefs::widget_macos_native_context_menus() &&
-         StaticPrefs::browser_proton_enabled();
+         Preferences::GetBool("browser.proton.contextmenus.enabled", false);
 #else
   return false;
 #endif
