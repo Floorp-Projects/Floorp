@@ -149,19 +149,6 @@ class WindowSurfaceWayland : public WindowSurface {
 
   RefPtr<nsWaylandDisplay> GetWaylandDisplay() { return mWaylandDisplay; };
 
-  // Image cache mode can be set by widget.wayland_cache_mode
-  typedef enum {
-    // Cache and clip all drawings, default. It's slowest
-    // but also without any rendered artifacts.
-    CACHE_ALL = 0,
-    // Cache drawing only when back buffer is missing. May produce
-    // some rendering artifacts and flickering when partial screen update
-    // is rendered.
-    CACHE_MISSING = 1,
-    // Don't cache anything, draw only when back buffer is available.
-    CACHE_NONE = 2
-  } RenderingCacheMode;
-
  private:
   WindowBackBuffer* GetWaylandBuffer();
   WindowBackBuffer* SetNewWaylandBuffer();
@@ -251,9 +238,18 @@ class WindowSurfaceWayland : public WindowSurface {
   // This typically apply to popup windows.
   bool mBufferNeedsClear;
 
+  typedef enum {
+    // Don't cache anything, always draw directly to wl_buffer
+    CACHE_NONE = 0,
+    // Cache only small paints (smaller than 1/2 of screen).
+    CACHE_SMALL = 1,
+    // Cache all painting except fullscreen updates.
+    CACHE_ALL = 2,
+  } RenderingCacheMode;
+
   // Cache all drawings except fullscreen updates.
   // Avoid any rendering artifacts for significant performance penality.
-  bool mSmoothRendering;
+  unsigned int mSmoothRendering;
 
   gint mSurfaceReadyTimerID;
   mozilla::Mutex mSurfaceLock;

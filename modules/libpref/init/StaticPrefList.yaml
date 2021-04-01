@@ -11026,10 +11026,13 @@
   mirror: always
 #endif
 
-# Use smooth rendering for Wayland basic compositor.
+# Smooth rendering mode for Wayland basic compositor.
+# 0 - direct draw
+# 1 - basic caching
+# 2 - all caching
 - name: widget.wayland-smooth-rendering
-  type: RelaxedAtomicBool
-  value: false
+  type: RelaxedAtomicUint32
+  value: 1
   mirror: always
 
 # Use DMABuf backend for WebGL.
