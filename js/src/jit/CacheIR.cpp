@@ -11030,36 +11030,10 @@ AttachDecision NewObjectIRGenerator::tryAttachPlainObject() {
   return AttachDecision::Attach;
 }
 
-AttachDecision NewObjectIRGenerator::tryAttachTemplateObject() {
-  if (templateObject_->as<NativeObject>().hasDynamicSlots()) {
-    return AttachDecision::NoAction;
-  }
-
-  // Stub doesn't support metadata builder
-  if (cx_->realm()->hasAllocationMetadataBuilder()) {
-    return AttachDecision::NoAction;
-  }
-
-  writer.guardNoAllocationMetadataBuilder();
-
-  // Bake in a monotonically increasing number to ensure we differentiate
-  // between different baseline stubs that otherwise might share stub code.
-  uint64_t id = cx_->runtime()->jitRuntime()->nextDisambiguationId();
-  uint32_t idHi = id >> 32;
-  uint32_t idLo = id & UINT32_MAX;
-  writer.loadNewObjectFromTemplateResult(templateObject_, idHi, idLo);
-
-  writer.returnFromIC();
-
-  trackAttached("NewObjectWithTemplate");
-  return AttachDecision::Attach;
-}
-
 AttachDecision NewObjectIRGenerator::tryAttachStub() {
   AutoAssertNoPendingException aanpe(cx_);
 
   TRY_ATTACH(tryAttachPlainObject());
-  TRY_ATTACH(tryAttachTemplateObject());
 
   trackAttached(IRGenerator::NotAttached);
   return AttachDecision::NoAction;
