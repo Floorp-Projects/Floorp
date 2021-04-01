@@ -58,10 +58,10 @@ class Target extends Domain {
   }
 
   getTargets() {
-    const { targets } = this.session.target;
+    const { targetList } = this.session.target;
 
     const targetInfos = [];
-    for (const target of targets) {
+    for (const target of targetList) {
       if (target instanceof MainProcessTarget) {
         continue;
       }
@@ -73,22 +73,22 @@ class Target extends Domain {
   }
 
   setDiscoverTargets({ discover }) {
-    const { targets } = this.session.target;
+    const { targetList } = this.session.target;
     if (discover) {
-      targets.on("target-created", this._onTargetCreated);
-      targets.on("target-destroyed", this._onTargetDestroyed);
+      targetList.on("target-created", this._onTargetCreated);
+      targetList.on("target-destroyed", this._onTargetDestroyed);
     } else {
-      targets.off("target-created", this._onTargetCreated);
-      targets.off("target-destroyed", this._onTargetDestroyed);
+      targetList.off("target-created", this._onTargetCreated);
+      targetList.off("target-destroyed", this._onTargetDestroyed);
     }
-    for (const target of targets) {
+    for (const target of targetList) {
       this._onTargetCreated("target-created", target);
     }
   }
 
   async createTarget({ browserContextId }) {
-    const { targets } = this.session.target;
-    const onTarget = targets.once("target-created");
+    const { targetList } = this.session.target;
+    const onTarget = targetList.once("target-created");
     const tab = TabManager.addTab({ userContextId: browserContextId });
     const target = await onTarget;
     if (tab.linkedBrowser != target.browser) {
@@ -100,8 +100,8 @@ class Target extends Domain {
   }
 
   closeTarget({ targetId }) {
-    const { targets } = this.session.target;
-    const target = targets.getById(targetId);
+    const { targetList } = this.session.target;
+    const target = targetList.getById(targetId);
 
     if (!target) {
       throw new Error(`Unable to find target with id '${targetId}'`);
@@ -111,8 +111,8 @@ class Target extends Domain {
   }
 
   async activateTarget({ targetId }) {
-    const { targets, window } = this.session.target;
-    const target = targets.getById(targetId);
+    const { targetList, window } = this.session.target;
+    const target = targetList.getById(targetId);
 
     if (!target) {
       throw new Error(`Unable to find target with id '${targetId}'`);
@@ -124,8 +124,8 @@ class Target extends Domain {
   }
 
   attachToTarget({ targetId }) {
-    const { targets } = this.session.target;
-    const target = targets.getById(targetId);
+    const { targetList } = this.session.target;
+    const target = targetList.getById(targetId);
 
     if (!target) {
       throw new Error(`Unable to find target with id '${targetId}'`);
