@@ -1186,7 +1186,7 @@ BrowserGlue.prototype = {
         }
         break;
       case "sync-ui-state:update":
-        this._updateFxaBadges();
+        this._updateFxaBadges(BrowserWindowTracker.getTopWindow());
         break;
       case "handlersvc-store-initialized":
         // Initialize PdfJs when running in-process and remote. This only
@@ -4098,16 +4098,31 @@ BrowserGlue.prototype = {
     );
   },
 
-  _updateFxaBadges() {
+  _updateFxaBadges(win) {
+    let fxaButton = win.document.getElementById("fxa-toolbar-menu-button");
+    let badge = fxaButton.querySelector(".toolbarbutton-badge");
+
     let state = UIState.get();
     if (
       state.status == UIState.STATUS_LOGIN_FAILED ||
       state.status == UIState.STATUS_NOT_VERIFIED
     ) {
-      AppMenuNotifications.showBadgeOnlyNotification(
-        "fxa-needs-authentication"
-      );
+      // If the fxa toolbar button is in the toolbox, we display the notification
+      // on the fxa button instead of the app menu.
+      let navToolbox = win.document.getElementById("navigator-toolbox");
+      let isFxAButtonShown = navToolbox.contains(fxaButton);
+      if (isFxAButtonShown) {
+        state.status == UIState.STATUS_LOGIN_FAILED
+          ? fxaButton.setAttribute("badge-status", state.status)
+          : badge.classList.add("feature-callout");
+      } else {
+        AppMenuNotifications.showBadgeOnlyNotification(
+          "fxa-needs-authentication"
+        );
+      }
     } else {
+      fxaButton.removeAttribute("badge-status");
+      badge.classList.remove("feature-callout");
       AppMenuNotifications.removeNotification("fxa-needs-authentication");
     }
   },

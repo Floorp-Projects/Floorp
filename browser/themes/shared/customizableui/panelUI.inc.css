@@ -160,13 +160,18 @@
 } /** END not Proton **/
 
 #PanelUI-menu-button[badge-status="addon-alert"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
-#PanelUI-menu-button[badge-status="fxa-needs-authentication"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+#PanelUI-menu-button[badge-status="fxa-needs-authentication"] > .toolbarbutton-badge-stack > .toolbarbutton-badge,
+#fxa-toolbar-menu-button[badge-status="login_failed"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
   height: 13px;
   background: url(chrome://browser/skin/warning.svg) center / contain no-repeat transparent;
   box-shadow: none;
   border-radius: 0;
   /* Use the included fallbacks defined in the SVG file instead of inheriting from .toolbarbutton-1. */
   -moz-context-properties: none;
+}
+
+#fxa-toolbar-menu-button[badge-status="login_failed"] > .toolbarbutton-badge-stack > .toolbarbutton-badge {
+  display: flex;
 }
 
 #PanelUI-menu-button[badge-status] > .toolbarbutton-badge-stack > .toolbarbutton-badge:-moz-window-inactive {
@@ -944,14 +949,6 @@ toolbarbutton[constrain-size="true"][cui-areatype="menu-panel"] > .toolbarbutton
 
 :root {
   --avatar-image-url: url(chrome://browser/skin/fxa/avatar.svg);
-}
-
-:root[fxastatus="unverified"] {
-  --avatar-image-url: url(chrome://browser/skin/fxa/avatar-confirm.svg);
-}
-
-:root[fxastatus="login-failed"] {
-  --avatar-image-url: url(chrome://browser/skin/fxa/avatar-alert.svg);
 }
 
 :root[fxastatus="not_configured"] {
