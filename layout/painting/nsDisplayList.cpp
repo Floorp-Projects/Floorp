@@ -571,7 +571,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mUsedAGRBudget(0),
       mDirtyRect(-1, -1, -1, -1),
       mGlassDisplayItem(nullptr),
-      mHasGlassItemDuringPartial(false),
       mCaretFrame(nullptr),
       mScrollInfoItemsForHoisting(nullptr),
       mFirstClipChainToDestroy(nullptr),
@@ -617,8 +616,7 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
       mBuildAsyncZoomContainer(false),
       mContainsBackdropFilter(false),
       mIsRelativeToLayoutViewport(false),
-      mUseOverlayScrollbars(false),
-      mAlwaysLayerizeScrollbars(false) {
+      mUseOverlayScrollbars(false) {
   MOZ_COUNT_CTOR(nsDisplayListBuilder);
 
   mBuildCompositorHitTestInfo = mAsyncPanZoomEnabled && IsForPainting();
@@ -627,9 +625,6 @@ nsDisplayListBuilder::nsDisplayListBuilder(nsIFrame* aReferenceFrame,
 
   mUseOverlayScrollbars =
       (LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0);
-
-  mAlwaysLayerizeScrollbars =
-      StaticPrefs::layout_scrollbars_always_layerize_track();
 
   static_assert(
       static_cast<uint32_t>(DisplayItemType::TYPE_MAX) < (1 << TYPE_BITS),
@@ -877,19 +872,11 @@ bool nsDisplayListBuilder::ShouldRebuildDisplayListDueToPrefChange() {
   mUseOverlayScrollbars =
       (LookAndFeel::GetInt(LookAndFeel::IntID::UseOverlayScrollbars) != 0);
 
-  bool alwaysLayerizedScrollbarsLastTime = mAlwaysLayerizeScrollbars;
-  mAlwaysLayerizeScrollbars =
-      StaticPrefs::layout_scrollbars_always_layerize_track();
-
   if (didBuildAsyncZoomContainer != mBuildAsyncZoomContainer) {
     return true;
   }
 
   if (hadOverlayScrollbarsLastTime != mUseOverlayScrollbars) {
-    return true;
-  }
-
-  if (alwaysLayerizedScrollbarsLastTime == mAlwaysLayerizeScrollbars) {
     return true;
   }
 

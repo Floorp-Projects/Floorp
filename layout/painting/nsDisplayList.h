@@ -2035,7 +2035,6 @@ class nsDisplayListBuilder {
   bool mContainsBackdropFilter;
   bool mIsRelativeToLayoutViewport;
   bool mUseOverlayScrollbars;
-  bool mAlwaysLayerizeScrollbars;
 
   mozilla::Maybe<float> mVisibleThreshold;
   mozilla::gfx::CompositorHitTestInfo mCompositorHitTestInfo;
