@@ -172,7 +172,7 @@ class BranchedAddonStudyAction extends BaseStudyAction {
         break;
       }
 
-      case BaseAction.suitability.CAPABILITES_MISMATCH: {
+      case BaseAction.suitability.CAPABILITIES_MISMATCH: {
         if (study?.active) {
           await this.unenroll(recipe.id, "capability-mismatch");
         }

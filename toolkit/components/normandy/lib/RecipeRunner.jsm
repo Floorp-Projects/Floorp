@@ -469,7 +469,7 @@ var RecipeRunner = {
         break;
       }
 
-      case BaseAction.suitability.CAPABILITES_MISMATCH: {
+      case BaseAction.suitability.CAPABILITIES_MISMATCH: {
         await Uptake.reportRecipe(
           recipe,
           Uptake.RECIPE_INCOMPATIBLE_CAPABILITIES
@@ -541,7 +541,7 @@ var RecipeRunner = {
                 Array.from(runnerCapabilities)
               )}`
           );
-          yield BaseAction.suitability.CAPABILITES_MISMATCH;
+          yield BaseAction.suitability.CAPABILITIES_MISMATCH;
         }
       }
     }
