@@ -6034,6 +6034,32 @@ bool CacheIRCompiler::emitLoadNewObjectFromTemplateResult(
   return true;
 }
 
+bool CacheIRCompiler::emitNewPlainObjectResult(uint32_t numFixedSlots,
+                                               uint32_t numDynamicSlots,
+                                               gc::AllocKind allocKind,
+                                               uint32_t shapeOffset) {
+  JitSpew(JitSpew_Codegen, "%s", __FUNCTION__);
+  AutoOutputRegister output(*this);
+  AutoScratchRegister obj(allocator, masm);
+  AutoScratchRegister scratch(allocator, masm);
+  AutoScratchRegisterMaybeOutput shape(allocator, masm, output);
+
+  StubFieldOffset shapeSlot(shapeOffset, StubField::Type::Shape);
+
+  FailurePath* failure;
+  if (!addFailurePath(&failure)) {
+    return false;
+  }
+
+  emitLoadStubField(shapeSlot, shape);
+  masm.createPlainGCObject(obj, shape, scratch, shape, numFixedSlots,
+                           numDynamicSlots, allocKind, gc::DefaultHeap,
+                           failure->label());
+
+  masm.tagValue(JSVAL_TYPE_OBJECT, obj, output.valueReg());
+  return true;
+}
+
 bool CacheIRCompiler::emitComparePointerResultShared(JSOp op,
                                                      TypedOperandId lhsId,
                                                      TypedOperandId rhsId) {
