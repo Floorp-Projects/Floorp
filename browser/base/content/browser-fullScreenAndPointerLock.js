@@ -744,7 +744,7 @@ var FullScreen = {
     }
 
     // Track whether mouse is near the toolbox
-    if (trackMouse && AppConstants.platform != "macosx") {
+    if (trackMouse) {
       let rect = gBrowser.tabpanels.getBoundingClientRect();
       this._mouseTargetRect = {
         top: rect.top + 50,
@@ -768,10 +768,6 @@ var FullScreen = {
     }
     // a popup menu is open in chrome: don't collapse chrome
     if (this._isPopupOpen) {
-      return;
-    }
-    // On macOS we don't want to hide toolbars.
-    if (AppConstants.platform == "macosx") {
       return;
     }
 
