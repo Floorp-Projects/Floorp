@@ -130,7 +130,7 @@
                 style="?android:attr/listSeparatorTextViewStyle"
                 android:text="@string/devices" />
 
-            <FragmentContainerView android:name="org.mozilla.samples.sync.DeviceFragment"
+            <androidx.fragment.app.FragmentContainerView android:name="org.mozilla.samples.sync.DeviceFragment"
                 android:id="@+id/devices_fragment"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
