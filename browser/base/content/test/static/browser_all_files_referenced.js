@@ -258,6 +258,13 @@ if (AppConstants.MOZ_BACKGROUNDTASKS && !AppConstants.MOZ_UPDATE_AGENT) {
   });
 }
 
+if (AppConstants.MOZ_UPDATE_AGENT && !AppConstants.MOZ_BACKGROUNDTASKS) {
+  // Task scheduling is only used for background updates right now.
+  whitelist.push({
+    file: "resource://gre/modules/TaskScheduler.jsm",
+  });
+}
+
 whitelist = new Set(
   whitelist
     .filter(
