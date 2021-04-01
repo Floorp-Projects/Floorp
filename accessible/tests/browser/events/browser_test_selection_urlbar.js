@@ -8,7 +8,6 @@ loadScripts({ name: "role.js", dir: MOCHITESTS_DIR });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   BrowserTestUtils: "resource://testing-common/BrowserTestUtils.jsm",
-  PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
   UrlbarTestUtils: "resource://testing-common/UrlbarTestUtils.jsm",
 });
 
@@ -21,11 +20,15 @@ async function runTests() {
   );
   info("Creating new window");
   let newWin = await BrowserTestUtils.openNewBrowserWindow();
-  await PlacesTestUtils.addVisits("http://addons.mozilla.org");
+  let bookmark = await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    title: "addons",
+    url: Services.io.newURI("http://www.addons.mozilla.org/"),
+  });
 
   registerCleanupFunction(async function() {
     await BrowserTestUtils.closeWindow(newWin);
-    await PlacesUtils.history.clear();
+    await PlacesUtils.bookmarks.remove(bookmark);
   });
   info("Focusing window");
   newWin.focus();
