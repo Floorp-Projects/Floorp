@@ -639,6 +639,23 @@ save-to-pocket-button =
   .label = Save to { -pocket-brand-name }
   .tooltiptext = Save to { -pocket-brand-name }
 
+## Customize Toolbar Buttons
+
+# Variables:
+#  $shortcut (String): keyboard shortcut to open the add-ons manager
+toolbar-addons-themes-button =
+  .label = Add-ons and themes
+  .tooltiptext = Manage your add-ons and themes ({ $shortcut })
+
+# Variables:
+#  $shortcut (String): keyboard shortcut to open settings (only on macOS)
+toolbar-settings-button =
+  .label = Settings
+  .tooltiptext = { PLATFORM() ->
+      [macos] Open settings ({ $shortcut })
+     *[other] Open settings
+  }
+
 ## More items
 
 more-menu-go-offline =

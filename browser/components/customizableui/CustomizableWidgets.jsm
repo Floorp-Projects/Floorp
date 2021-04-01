@@ -282,7 +282,7 @@ const CustomizableWidgets = [
   {
     id: "add-ons-button",
     shortcutId: "key_openAddons",
-    tooltiptext: "add-ons-button.tooltiptext3",
+    l10nId: "toolbar-addons-themes-button",
     onCommand(aEvent) {
       let win = aEvent.target.ownerGlobal;
       win.BrowserOpenAddonsMgr();
@@ -676,19 +676,14 @@ if (!screenshotsDisabled) {
 
 let preferencesButton = {
   id: "preferences-button",
+  l10nId: "toolbar-settings-button",
   onCommand(aEvent) {
     let win = aEvent.target.ownerGlobal;
     win.openPreferences(undefined);
   },
 };
-if (AppConstants.platform == "win") {
-  preferencesButton.label = "preferences-button.labelWin";
-  preferencesButton.tooltiptext = "preferences-button.tooltipWin2";
-} else if (AppConstants.platform == "macosx") {
-  preferencesButton.tooltiptext = "preferences-button.tooltiptext.withshortcut";
+if (AppConstants.platform == "macosx") {
   preferencesButton.shortcutId = "key_preferencesCmdMac";
-} else {
-  preferencesButton.tooltiptext = "preferences-button.tooltiptext2";
 }
 CustomizableWidgets.push(preferencesButton);
 
