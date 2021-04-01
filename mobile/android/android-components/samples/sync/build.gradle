@@ -46,5 +46,6 @@ dependencies {
     implementation project(':lib-dataprotect')
 
     implementation Dependencies.kotlin_reflect
+    implementation Dependencies.androidx_fragment
     implementation Dependencies.androidx_recyclerview
 }
