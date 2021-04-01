@@ -498,6 +498,10 @@ var gSync = {
         document,
         "appMenu-header-description"
       );
+      const appMenuHeaderText = PanelMultiView.getViewNode(
+        document,
+        "appMenu-fxa-text"
+      );
       appMenuHeaderTitle.hidden = true;
       // We must initialize the label attribute here instead of the markup
       // due to a timing error. The fluent label attribute was being applied
@@ -505,6 +509,9 @@ var gSync = {
       // label for signed in users.
       appMenuHeaderDescription.value = this.fluentStrings.formatValueSync(
         "appmenu-fxa-signed-in-label"
+      );
+      appMenuHeaderText.textContent = this.fluentStrings.formatValueSync(
+        "appmenu-fxa-sync-and-save-data2"
       );
     }
 

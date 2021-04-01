@@ -67,8 +67,7 @@ appmenu-fxa-header =
 # 3 hours ago, etc.)
 appmenu-fxa-last-sync = Last synced { $time }
     .label = Last synced { $time }
-appmenu-fxa-sync-and-save-data =
-    .value = Sync and save data
+appmenu-fxa-sync-and-save-data2 = Sync and save data
 appmenu-fxa-signed-in-label = Sign In
 appmenu-fxa-setup-sync =
     .label = Turn On Syncing…
