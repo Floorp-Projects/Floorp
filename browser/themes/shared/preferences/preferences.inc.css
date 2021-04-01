@@ -116,8 +116,8 @@ button > hbox > label {
   margin-inline-start: 28px !important;
 }
 
-xul|checkbox {
-  margin-inline: 0;
+.checkbox-check {
+  margin-inline-end: 8px;
 }
 
 .tail-with-learn-more {
