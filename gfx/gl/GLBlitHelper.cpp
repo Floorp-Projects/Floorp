@@ -706,6 +706,12 @@ bool GLBlitHelper::BlitSdToFramebuffer(const layers::SurfaceDescriptor& asd,
     case layers::SurfaceDescriptor::TSurfaceDescriptorMacIOSurface: {
       const auto& sd = asd.get_SurfaceDescriptorMacIOSurface();
       const auto surf = LookupSurface(sd);
+      if (!surf) {
+        NS_WARNING("LookupSurface(MacIOSurface) failed");
+        // Sometimes that frame for our handle gone already. That's life, for
+        // now.
+        return false;
+      }
       return BlitImage(surf, destSize, destOrigin);
     }
 #endif
@@ -979,6 +985,19 @@ bool GLBlitHelper::BlitImage(layers::MacIOSurfaceImage* const srcImage,
   return BlitImage(srcImage->GetSurface(), destSize, destOrigin);
 }
 
+static std::string IntAsAscii(const int x) {
+  std::string str;
+  str.reserve(6);
+  auto u = static_cast<unsigned int>(x);
+  while (u) {
+    str.insert(str.begin(), u & 0xff);
+    u >>= 8;
+  }
+  str.insert(str.begin(), '\'');
+  str.push_back('\'');
+  return str;
+}
+
 bool GLBlitHelper::BlitImage(MacIOSurface* const iosurf,
                              const gfx::IntSize& destSize,
                              const OriginPos destOrigin) const {
@@ -1002,7 +1021,7 @@ bool GLBlitHelper::BlitImage(MacIOSurface* const iosurf,
   // TODO: The colorspace is known by the IOSurface, why override it?
   // See GetYUVColorSpace/GetFullRange()
   DrawBlitProg::YUVArgs yuvArgs;
-  yuvArgs.colorSpace = gfx::YUVColorSpace::BT601;
+  yuvArgs.colorSpace = iosurf->GetYUVColorSpace();
 
   const DrawBlitProg::YUVArgs* pYuvArgs = nullptr;
 
@@ -1021,18 +1040,45 @@ bool GLBlitHelper::BlitImage(MacIOSurface* const iosurf,
   const GLuint texs[3] = {tex0, tex1, tex2};
 
   const auto pixelFormat = iosurf->GetPixelFormat();
-  const auto formatChars = (const char*)&pixelFormat;
-  const char formatStr[] = {formatChars[3], formatChars[2], formatChars[1],
-                            formatChars[0], 0};
   if (mGL->ShouldSpew()) {
-    printf_stderr("iosurf format: %s (0x%08x)\n", formatStr,
-                  uint32_t(pixelFormat));
+    const auto formatStr = IntAsAscii(pixelFormat);
+    printf_stderr("iosurf format: %s (0x%08x)\n", formatStr.c_str(),
+                  pixelFormat);
   }
 
   const char* fragBody;
   switch (planes) {
     case 1:
-      fragBody = kFragBody_RGBA;
+      switch (pixelFormat) {
+        case kCVPixelFormatType_24RGB:
+        case kCVPixelFormatType_24BGR:
+        case kCVPixelFormatType_32ARGB:
+        case kCVPixelFormatType_32BGRA:
+        case kCVPixelFormatType_32ABGR:
+        case kCVPixelFormatType_32RGBA:
+        case kCVPixelFormatType_64ARGB:
+        case kCVPixelFormatType_48RGB:
+          fragBody = kFragBody_RGBA;
+          break;
+        case kCVPixelFormatType_422YpCbCr8:
+        case kCVPixelFormatType_422YpCbCr8_yuvs:
+          fragBody = kFragBody_CrYCb;
+          pYuvArgs = &yuvArgs;
+          break;
+        default: {
+          std::string str;
+          if (pixelFormat <= 0xff) {
+            str = std::to_string(pixelFormat);
+          } else {
+            str = IntAsAscii(pixelFormat);
+          }
+          gfxCriticalError() << "Unhandled kCVPixelFormatType_*: " << str;
+        }
+          // Probably YUV though
+          fragBody = kFragBody_CrYCb;
+          pYuvArgs = &yuvArgs;
+          break;
+      }
       break;
     case 2:
       fragBody = kFragBody_NV12;
@@ -1045,11 +1091,6 @@ bool GLBlitHelper::BlitImage(MacIOSurface* const iosurf,
     default:
       gfxCriticalError() << "Unexpected plane count: " << planes;
       return false;
-  }
-
-  if (pixelFormat == kCVPixelFormatType_422YpCbCr8) {
-    fragBody = kFragBody_CrYCb;
-    pYuvArgs = &yuvArgs;
   }
 
   for (uint32_t p = 0; p < planes; p++) {
