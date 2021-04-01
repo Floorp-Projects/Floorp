@@ -235,6 +235,7 @@ popupnotification {
 .popup-notification-icon {
   height: 16px;
   width: 16px;
+  margin-inline-end: 6px;
 }
 
 .popup-notification-checkbox > .checkbox-label-box > .checkbox-label {
