@@ -13,6 +13,7 @@ import androidx.annotation.CallSuper
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.content.getSystemService
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.work.Configuration.Builder
 import androidx.work.Configuration.Provider
 import kotlinx.coroutines.Deferred
@@ -59,6 +60,7 @@ import org.mozilla.fenix.push.PushFxaIntegration
 import org.mozilla.fenix.push.WebPushEngineIntegration
 import org.mozilla.fenix.session.PerformanceActivityLifecycleCallbacks
 import org.mozilla.fenix.session.VisibilityLifecycleCallback
+import org.mozilla.fenix.telemetry.TelemetryLifecycleObserver
 import org.mozilla.fenix.utils.BrowsersCache
 import java.util.concurrent.TimeUnit
 
@@ -193,6 +195,8 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             components.appStartReasonProvider.registerInAppOnCreate(this)
             components.startupActivityStateProvider.registerInAppOnCreate(this)
             initVisualCompletenessQueueAndQueueTasks()
+
+            ProcessLifecycleOwner.get().lifecycle.addObserver(TelemetryLifecycleObserver(components.core.store))
 
             components.appStartupTelemetry.onFenixApplicationOnCreate()
         }

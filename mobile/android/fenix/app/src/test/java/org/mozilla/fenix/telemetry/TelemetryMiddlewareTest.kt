@@ -391,7 +391,7 @@ class TelemetryMiddlewareTest {
     }
 }
 
-private class FakeClock : Clock.Delegate {
+internal class FakeClock : Clock.Delegate {
     var elapsedTime: Long = 0
     override fun elapsedRealtime(): Long = elapsedTime
 }
