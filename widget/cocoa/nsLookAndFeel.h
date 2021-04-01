@@ -25,30 +25,11 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     return 0x2022;
   }
 
-  static bool UseOverlayScrollbars();
-
  protected:
-  static bool AllowOverlayScrollbarsOverlap();
-
   static bool SystemWantsDarkTheme();
   static nscolor ProcessSelectionBackground(nscolor aColor);
 
  private:
-  int32_t mUseOverlayScrollbars;
-  bool mUseOverlayScrollbarsCached;
-
-  int32_t mAllowOverlayScrollbarsOverlap;
-  bool mAllowOverlayScrollbarsOverlapCached;
-
-  int32_t mSystemUsesDarkTheme;
-  bool mSystemUsesDarkThemeCached;
-
-  int32_t mPrefersReducedMotion = -1;
-  bool mPrefersReducedMotionCached = false;
-
-  int32_t mUseAccessibilityTheme;
-  bool mUseAccessibilityThemeCached;
-
   nscolor mColorTextSelectBackground;
   nscolor mColorTextSelectBackgroundDisabled;
   nscolor mColorHighlight;
