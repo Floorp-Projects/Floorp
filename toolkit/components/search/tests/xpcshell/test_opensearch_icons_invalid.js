@@ -11,10 +11,13 @@ add_task(async function setup() {
 });
 
 add_task(async function test_installedresourceicon() {
-  let [engine1, engine2] = await addTestEngines([
-    { name: "engine-resourceicon", xmlFileName: "engine-resourceicon.xml" },
-    { name: "engine-chromeicon", xmlFileName: "engine-chromeicon.xml" },
-  ]);
+  let engine1 = await SearchTestUtils.promiseNewSearchEngine(
+    `${gDataUrl}engine-resourceicon.xml`
+  );
+  let engine2 = await SearchTestUtils.promiseNewSearchEngine(
+    `${gDataUrl}engine-chromeicon.xml`
+  );
+
   Assert.equal(null, engine1.iconURI);
   Assert.equal(null, engine2.iconURI);
 });

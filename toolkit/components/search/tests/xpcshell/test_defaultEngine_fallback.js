@@ -351,9 +351,9 @@ async function checkNonBuiltinFallback(private) {
     : SearchUtils.MODIFIED_TYPE.DEFAULT;
   Services.search.restoreDefaultEngines();
 
-  const [addedEngine] = await addTestEngines([
-    { name: "A second test engine", xmlFileName: "engine2.xml" },
-  ]);
+  let addedEngine = await SearchTestUtils.promiseNewSearchEngine(
+    `${gDataUrl}engine2.xml`
+  );
 
   await setDefault(private, addedEngine);
 

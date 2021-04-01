@@ -13,10 +13,12 @@ add_task(async function setup() {
 });
 
 add_task(async function test_parseSubmissionURL() {
-  let [engine1, engine2] = await addTestEngines([
-    { name: "Test search engine", xmlFileName: "engine.xml" },
-    { name: "Test search engine (fr)", xmlFileName: "engine-fr.xml" },
-  ]);
+  let engine1 = await SearchTestUtils.promiseNewSearchEngine(
+    `${gDataUrl}engine.xml`
+  );
+  let engine2 = await SearchTestUtils.promiseNewSearchEngine(
+    `${gDataUrl}engine-fr.xml`
+  );
 
   await SearchTestUtils.installSearchExtension({
     name: "bacon_addParam",
@@ -33,9 +35,7 @@ add_task(async function test_parseSubmissionURL() {
   let engine4 = Services.search.getEngineByName("idn_addParam");
 
   // The following engines cannot identify the search parameter.
-  await addTestEngines([
-    { name: "A second test engine", xmlFileName: "engine2.xml" },
-  ]);
+  await SearchTestUtils.promiseNewSearchEngine(`${gDataUrl}engine2.xml`);
   await SearchTestUtils.installSearchExtension({
     name: "bacon",
     keyword: "bacon",
@@ -53,7 +53,7 @@ add_task(async function test_parseSubmissionURL() {
   // Test the first engine, whose URLs use UTF-8 encoding.
   let url = "https://www.google.com/search?foo=bar&q=caff%C3%A8";
   let result = Services.search.parseSubmissionURL(url);
-  Assert.equal(result.engine, engine1);
+  Assert.equal(result.engine.wrappedJSObject, engine1);
   Assert.equal(result.terms, "caff\u00E8");
   Assert.ok(url.slice(result.termsOffset).startsWith("caff%C3%A8"));
   Assert.equal(result.termsLength, "caff%C3%A8".length);
@@ -63,7 +63,7 @@ add_task(async function test_parseSubmissionURL() {
   // The URL used with this engine uses ISO-8859-1 encoding instead.
   url = "https://www.google.fr/search?q=caff%E8";
   result = Services.search.parseSubmissionURL(url);
-  Assert.equal(result.engine, engine2);
+  Assert.equal(result.engine.wrappedJSObject, engine2);
   Assert.equal(result.terms, "caff\u00E8");
   Assert.ok(url.slice(result.termsOffset).startsWith("caff%E8"));
   Assert.equal(result.termsLength, "caff%E8".length);
@@ -72,7 +72,7 @@ add_task(async function test_parseSubmissionURL() {
   // the first matching engine from the ordered list should be returned.
   url = "https://www.google.co.uk/search?q=caff%C3%A8";
   result = Services.search.parseSubmissionURL(url);
-  Assert.equal(result.engine, engine1);
+  Assert.equal(result.engine.wrappedJSObject, engine1);
   Assert.equal(result.terms, "caff\u00E8");
   Assert.ok(url.slice(result.termsOffset).startsWith("caff%C3%A8"));
   Assert.equal(result.termsLength, "caff%C3%A8".length);
@@ -88,7 +88,7 @@ add_task(async function test_parseSubmissionURL() {
   // Test URLs with unescaped unicode characters.
   url = "https://www.google.com/search?q=foo+b\u00E4r";
   result = Services.search.parseSubmissionURL(url);
-  Assert.equal(result.engine, engine1);
+  Assert.equal(result.engine.wrappedJSObject, engine1);
   Assert.equal(result.terms, "foo b\u00E4r");
   Assert.ok(url.slice(result.termsOffset).startsWith("foo+b\u00E4r"));
   Assert.equal(result.termsLength, "foo+b\u00E4r".length);
@@ -127,7 +127,7 @@ add_task(async function test_parseSubmissionURL() {
   // HTTP and HTTPS schemes are interchangeable.
   url = "https://www.google.com/search?q=caff%C3%A8";
   result = Services.search.parseSubmissionURL(url);
-  Assert.equal(result.engine, engine1);
+  Assert.equal(result.engine.wrappedJSObject, engine1);
   Assert.equal(result.terms, "caff\u00E8");
   Assert.ok(url.slice(result.termsOffset).startsWith("caff%C3%A8"));
 
@@ -135,13 +135,13 @@ add_task(async function test_parseSubmissionURL() {
   result = Services.search.parseSubmissionURL(
     "https://www.google.com/search?q=+with++spaces+"
   );
-  Assert.equal(result.engine, engine1);
+  Assert.equal(result.engine.wrappedJSObject, engine1);
   Assert.equal(result.terms, " with  spaces ");
 
   // An empty query parameter should work the same.
   url = "https://www.google.com/search?q=";
   result = Services.search.parseSubmissionURL(url);
-  Assert.equal(result.engine, engine1);
+  Assert.equal(result.engine.wrappedJSObject, engine1);
   Assert.equal(result.terms, "");
   Assert.equal(result.termsOffset, url.length);
 
