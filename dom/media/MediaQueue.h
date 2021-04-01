@@ -124,27 +124,10 @@ class MediaQueue : private nsRefPtrDeque<T> {
     nsRefPtrDeque<T>::ForEach(aFunctor);
   }
 
-  // Extracts elements from the queue into aResult, in order.
-  // Elements whose start time is before aTime are ignored.
-  void GetElementsAfter(int64_t aTime, nsTArray<RefPtr<T>>* aResult) {
-    RecursiveMutexAutoLock lock(mRecursiveMutex);
-    if (GetSize() == 0) return;
-    size_t i;
-    for (i = GetSize() - 1; i > 0; --i) {
-      T* v = nsRefPtrDeque<T>::ObjectAt(i);
-      if (v->GetEndTime().ToMicroseconds() < aTime) break;
-    }
-    // Elements less than i have a end time before aTime. It's also possible
-    // that the element at i has a end time before aTime, but that's OK.
-    for (; i < GetSize(); ++i) {
-      RefPtr<T> elem = nsRefPtrDeque<T>::ObjectAt(i);
-      aResult->AppendElement(elem);
-    }
-  }
-
+  // Fill aResult with the elements which end later than the given time aTime.
   void GetElementsAfter(const media::TimeUnit& aTime,
                         nsTArray<RefPtr<T>>* aResult) {
-    GetElementsAfter(aTime.ToMicroseconds(), aResult);
+    GetElementsAfterStrict(aTime.ToMicroseconds(), aResult);
   }
 
   void GetFirstElements(uint32_t aMaxElements, nsTArray<RefPtr<T>>* aResult) {
@@ -173,6 +156,24 @@ class MediaQueue : private nsRefPtrDeque<T> {
   MediaEventSource<void>& FinishEvent() { return mFinishEvent; }
 
  private:
+  // Extracts elements from the queue into aResult, in order.
+  // Elements whose end time is before or equal to aTime are ignored.
+  void GetElementsAfterStrict(int64_t aTime, nsTArray<RefPtr<T>>* aResult) {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+    if (GetSize() == 0) return;
+    size_t i;
+    for (i = GetSize() - 1; i > 0; --i) {
+      T* v = nsRefPtrDeque<T>::ObjectAt(i);
+      if (v->GetEndTime().ToMicroseconds() < aTime) break;
+    }
+    for (; i < GetSize(); ++i) {
+      RefPtr<T> elem = nsRefPtrDeque<T>::ObjectAt(i);
+      if (elem->GetEndTime().ToMicroseconds() > aTime) {
+        aResult->AppendElement(elem);
+      }
+    }
+  }
+
   mutable RecursiveMutex mRecursiveMutex;
   MediaEventProducer<RefPtr<T>> mPopFrontEvent;
   MediaEventProducer<RefPtr<T>> mPushEvent;
