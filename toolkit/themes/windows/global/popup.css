@@ -27,10 +27,13 @@ menupopup {
   menupopup {
     /* Disable the default appearance so we can override the native styling. */
     appearance: none;
+    /* Force a rounded-rect dropshadow to appear. */
+    -moz-window-shadow: cliprounded;
 
     /* Prevent any background or border around the outside of the shadow. */
     background-color: transparent;
     border-color: transparent;
+    border-radius: 4px;
 
     /* Set this here rather than on the scrollbox so it is more easily
      * overridden by e.g. ContentSelectDropdown */
