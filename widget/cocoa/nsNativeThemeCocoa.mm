@@ -5,6 +5,7 @@
 
 #include "nsNativeThemeCocoa.h"
 
+#include "AppearanceOverride.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/PathHelpers.h"
@@ -73,12 +74,6 @@ void CUIDraw(CUIRendererRef r, CGRect rect, CGContextRef ctx, CFDictionaryRef op
   return [self controlTint];
 }
 @end
-
-#if !defined(MAC_OS_X_VERSION_10_14) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_14
-@interface NSApplication (NSApplicationAppearance)
-@property(readonly, strong) NSAppearance* effectiveAppearance NS_AVAILABLE_MAC(10_14);
-@end
-#endif
 
 // This is the window for our MOZCellDrawView. When an NSCell is drawn, some NSCell implementations
 // look at the draw view's window to determine whether the cell should draw with the active look.
@@ -779,10 +774,11 @@ static void DrawCellWithSnapping(NSCell* cell, CGContextRef cgContext, const HIR
 @end
 
 static id GetAppAppearance() {
-  if (@available(macOS 10.14, *)) {
-    return NSApp.effectiveAppearance;
-  }
-  return [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+  // Use MOZGlobalAppearance.sharedInstance.effectiveAppearance, which is consistent with
+  // what nsLookAndFeel uses for CSS system colors; it's either the system appearance or our Aqua
+  // override. We could also make nsNativeThemeCocoa respect the per-window appearance, but only
+  // once CSS system colors also respect the window appearance.
+  return MOZGlobalAppearance.sharedInstance.effectiveAppearance;
 }
 
 @interface NSObject (NSAppearanceCoreUIRendering)
@@ -2676,11 +2672,8 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
   if (@available(macOS 10.14, *)) {
     // Some of the drawing below uses NSAppearance.currentAppearance behind the scenes.
     // Set it to the appearance we want, to overwrite any state that's still around from earlier
-    // paints. We set it to NSApp.effectiveAppearance, which is consistent with what nsLookAndFeel
-    // uses for CSS system colors; it's either the system appearance or our Aqua override.
-    // We could also make nsNativeThemeCocoa respect the per-window appearance, but only once CSS
-    // system colors also respect the window appearance.
-    NSAppearance.currentAppearance = NSApp.effectiveAppearance;
+    // paints.
+    NSAppearance.currentAppearance = GetAppAppearance();
   }
 
   const Widget widget = aWidgetInfo.Widget();
