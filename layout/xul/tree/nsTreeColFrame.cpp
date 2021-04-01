@@ -10,6 +10,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/dom/XULTreeElement.h"
+#include "mozilla/CSSOrderAwareFrameIterator.h"
 #include "nsCOMPtr.h"
 #include "nsGkAtoms.h"
 #include "nsIContent.h"
@@ -81,21 +82,30 @@ void nsDisplayXULTreeColSplitterTarget::HitTest(
 
   // Swap left and right for RTL trees in order to find the correct splitter
   if (mFrame->StyleVisibility()->mDirection == StyleDirection::Rtl) {
-    bool tmp = left;
-    left = right;
-    right = tmp;
+    std::swap(left, right);
   }
 
   if (left || right) {
-    // We are a header. Look for the correct splitter.
-    nsIFrame* child;
-    if (left)
-      child = mFrame->GetPrevSibling();
-    else
-      child = mFrame->GetNextSibling();
+    CSSOrderAwareFrameIterator iter(
+        mFrame->GetParent(), layout::kPrincipalList,
+        CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
+        CSSOrderAwareFrameIterator::OrderState::Unknown,
+        CSSOrderAwareFrameIterator::OrderingProperty::BoxOrdinalGroup);
 
-    if (child && child->GetContent()->NodeInfo()->Equals(nsGkAtoms::splitter,
-                                                         kNameSpaceID_XUL)) {
+    nsIFrame* child = nullptr;
+    for (; !iter.AtEnd(); iter.Next()) {
+      if (left && iter.get() == mFrame) {
+        break;
+      }
+      if (right && child == mFrame) {
+        child = iter.get();
+        break;
+      }
+      child = iter.get();
+    }
+
+    // We are a header. Look for the correct splitter.
+    if (child && child->GetContent()->IsXULElement(nsGkAtoms::splitter)) {
       aOutFrames->AppendElement(child);
     }
   }
