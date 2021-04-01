@@ -30,11 +30,23 @@ add_task(async function() {
   let numTabs = gBrowser.tabs.length / 2;
   while (gBrowser.tabs.length > numTabs) {
     let lastCloseButtonLocation = getLastCloseButtonLocation();
-    Assert.deepEqual(
-      lastCloseButtonLocation,
-      originalCloseButtonLocation,
-      "Close button hasn't moved"
+    Assert.equal(
+      lastCloseButtonLocation.top,
+      originalCloseButtonLocation.top,
+      "The top of all close buttons should be equal"
     );
+    Assert.equal(
+      lastCloseButtonLocation.bottom,
+      originalCloseButtonLocation.bottom,
+      "The bottom of all close buttons should be equal"
+    );
+    Assert.equal(
+      lastCloseButtonLocation.right,
+      originalCloseButtonLocation.right,
+      "The right side of the close button should remain consistent"
+    );
+    // Ignore 'left' since non-hovered tabs have their close button
+    // narrower to display more tab label.
 
     EventUtils.synthesizeMouseAtCenter(getLastCloseButton(), {});
     await new Promise(r => requestAnimationFrame(r));
