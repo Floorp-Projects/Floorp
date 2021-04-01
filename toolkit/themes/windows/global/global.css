@@ -23,6 +23,7 @@
 
 @supports -moz-bool-pref("browser.proton.contextmenus.enabled") {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
+  :host,
   :root {
     /* Override some menu color variables for light browser themes. */
     --menuitem-hover-background-color: #e0e0e6;
@@ -56,6 +57,7 @@
      system color scheme. Some of these occur in-content (for example
      about:preferences), but some do not (like the library/places window). */
   @media (prefers-color-scheme: dark) {
+    :host:not(:-moz-lwtheme),
     :root:not(:-moz-lwtheme) {
       --menuitem-hover-background-color: var(--dark-menuitem-hover-background-color);
       --menu-background-color: var(--dark-menu-background-color);
