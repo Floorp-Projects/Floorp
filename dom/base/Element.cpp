@@ -4486,7 +4486,7 @@ void Element::RegUnRegAccessKey(bool aDoReg) {
   }
 
   // We have an access key, so get the ESM from the pres context.
-  if (nsPresContext* presContext = GetPresContext(eForUncomposedDoc)) {
+  if (nsPresContext* presContext = GetPresContext(eForComposedDoc)) {
     EventStateManager* esm = presContext->EventStateManager();
 
     // Register or unregister as appropriate.
