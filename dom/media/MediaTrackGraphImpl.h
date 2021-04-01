@@ -117,7 +117,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
                                GraphRunType aRunTypeRequested,
                                TrackRate aSampleRate, uint32_t aChannelCount,
                                CubebUtils::AudioDeviceID aOutputDeviceID,
-                               AbstractThread* aWindow);
+                               nsISerialEventTarget* aWindow);
 
   // Intended only for assertions, either on graph thread or not running (in
   // which case we must be on the main thread).
@@ -970,7 +970,7 @@ class MediaTrackGraphImpl : public MediaTrackGraph,
    * blocking order.
    */
   bool mTrackOrderDirty;
-  const RefPtr<AbstractThread> mAbstractMainThread;
+  const RefPtr<nsISerialEventTarget> mMainThread;
 
   // used to limit graph shutdown time
   // Only accessed on the main thread.
