@@ -42,6 +42,7 @@ TESTING_JS_MODULES += [
 BROWSER_CHROME_MANIFESTS += [
     "tests/browser-proton/browser.ini",
     "tests/browser-tips/browser.ini",
+    "tests/browser-updateResults/browser.ini",
     "tests/browser/browser.ini",
     "tests/ext/browser/browser.ini",
 ]
