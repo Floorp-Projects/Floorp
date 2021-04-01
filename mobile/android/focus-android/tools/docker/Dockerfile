@@ -59,7 +59,7 @@ RUN git clone https://github.com/mozilla-mobile/focus-android.git
 WORKDIR /opt/focus-android
 RUN ./gradlew assembleFocusDebug \
   && ./gradlew testFocusDebugUnitTest \
-  && ./gradlew detektCheck \
+  && ./gradlew detekt \
   && ./gradlew ktlint \
   && ./gradlew clean
 

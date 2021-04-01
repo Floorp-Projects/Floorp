@@ -15,7 +15,7 @@
 # output of `./gradlew tasks`.
 ./gradlew -q \
         ktlint \
-        detektCheck \
+        detekt \
         assembleFocusDebugAndroidTest \
         testFocusDebugUnitTest
 

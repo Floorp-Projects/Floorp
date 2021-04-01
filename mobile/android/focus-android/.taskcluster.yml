@@ -34,7 +34,7 @@ tasks:
             && git checkout ${event.pull_request.head.sha}
             && echo "--" > .adjust_token
             && python tools/l10n/check_locales.py
-            && ./gradlew --no-daemon clean assembleFocusDebug assembleKlarNightly assembleRelease detektCheck ktlint lintFocusDebug lintKlarNightly assembleFocusDebugAndroidTest testFocusDebugUnitTest testKlarNightlyUnitTest
+            && ./gradlew --no-daemon clean assembleFocusDebug assembleKlarNightly assembleRelease detekt ktlint lintFocusDebug lintKlarNightly assembleFocusDebugAndroidTest testFocusDebugUnitTest testKlarNightlyUnitTest
             && pip install "compare-locales>=5.0.2,<6.0"
             && compare-locales --validate l10n.toml .
         artifacts:

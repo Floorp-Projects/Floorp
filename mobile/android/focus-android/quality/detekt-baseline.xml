@@ -1,0 +1,208 @@
+<?xml version="1.0" ?>
+<SmellBaseline>
+  <ManuallySuppressedIssues></ManuallySuppressedIssues>
+  <CurrentIssues>
+    <ID>EmptyFunctionBlock:AnimatedProgressBar.kt$AnimatedProgressBar.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:AutocompleteListFragment.kt$AutocompleteListFragment.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:CustomTabTest.kt$CustomTabTest${}</ID>
+    <ID>EmptyFunctionBlock:ExceptionsListFragment.kt$ExceptionsListFragment.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:FirstrunFragment.kt$FirstrunFragment.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.&lt;no name provided&gt;${}</ID>
+    <ID>EmptyFunctionBlock:TabSheetFragment.kt$TabSheetFragment${}</ID>
+    <ID>FunctionOnlyReturningConstant:Settings.kt$Settings$fun shouldBlockImages(): Boolean</ID>
+    <ID>ImplicitDefaultLocale:LocalizedContent.kt$LocalizedContent$String.format( "%s (Build #%s)", packageInfo.versionName, packageInfo.versionCode.toString() + engineIndicator )</ID>
+    <ID>ImplicitDefaultLocale:URLMismatchTest.kt$URLMismatchTest$String.format("mozilla focus - %s Search", "google")</ID>
+    <ID>LongMethod:BrowserFragment.kt$BrowserFragment$@Suppress("ComplexMethod") override fun onClick(view: View)</ID>
+    <ID>LongMethod:BrowserMenuAdapter.kt$BrowserMenuAdapter$private fun initializeMenu(url: String, customTabConfig: CustomTabConfig?)</ID>
+    <ID>LongMethod:MultitaskingTest.kt$MultitaskingTest$@Test fun testVisitingMultipleSites()</ID>
+    <ID>LongMethod:UrlInputFragment.kt$UrlInputFragment$ // This method correctly triggers a complexity warning. This method is indeed very and too complex. // However refactoring it is not trivial at this point so we ignore the warning for now. @Suppress("ComplexMethod") private fun playVisibilityAnimation(reverse: Boolean)</ID>
+    <ID>MatchingDeclarationName:SettingsSearchMenuRobot.kt$SearchSettingsRobot</ID>
+    <ID>MaxLineLength:MobileMetricsPingStorageTest.kt$MobileMetricsPingStorageTest$private val file = File("${(ApplicationProvider.getApplicationContext() as FocusApplication).cacheDir}/${MobileMetricsPingStorage.STORAGE_FOLDER}/${MobileMetricsPingStorage.FILE_NAME}")</ID>
+    <ID>MaxLineLength:StringTest.kt$StringTest$"http://amazon.com/Mockingjay-Hunger-Games-Suzanne-Collins/dp/0545663261/ref=pd_sim_14_2?_encoding=UTF8&amp;psc=1&amp;refRID=90ZHE3V976TKBGDR9VAM"</ID>
+    <ID>MaxLineLength:StringTest.kt$StringTest$"https://www.nytimes.com/2017/08/30/world/europe/princess-diana-death-anniversary.html?hp&amp;action=click&amp;pgtype=Homepage&amp;clickSource=story-heading&amp;module=second-column-region&amp;region=top-news&amp;WT.nav=top-news"</ID>
+    <ID>MaxLineLength:StringTest.kt$StringTest$"https://www.wsj.com/articles/mexican-presidential-candidate-calls-for-nafta-talks-to-be-suspended-1504137175"</ID>
+    <ID>MaxLineLength:SwitchLocaleTest.kt$SwitchLocaleTest$/* re-enter settings and general settings, change it back to system locale, verify the locale is changed */</ID>
+    <ID>MaxLineLength:UriTest.kt$UriTest$assertTruncatedHost("yahoo.com", "https://de.search.yahoo.com/search?p=mozilla&amp;fr=yfp-t&amp;fp=1&amp;toggle=1&amp;cop=mss&amp;ei=UTF-8")</ID>
+    <ID>MayBeConst:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment.Companion$private val BLOCKING_ENABLED = "blocking_enabled"</ID>
+    <ID>MayBeConst:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment.Companion$private val REQUEST_DESKTOP = "request_desktop"</ID>
+    <ID>MayBeConst:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment.Companion$private val TITLE = "title"</ID>
+    <ID>MayBeConst:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment.Companion$private val URL = "url"</ID>
+    <ID>MayBeConst:AddToHomescreenDialogFragment.kt$AddToHomescreenDialogFragment.Companion$val FRAGMENT_TAG = "add-to-homescreen-prompt-dialog"</ID>
+    <ID>MayBeConst:AnimatedProgressBar.kt$AnimatedProgressBar.Companion$private val CLOSING_DELAY = 300</ID>
+    <ID>MayBeConst:AnimatedProgressBar.kt$AnimatedProgressBar.Companion$private val CLOSING_DURATION = 300</ID>
+    <ID>MayBeConst:AnimatedProgressBar.kt$AnimatedProgressBar.Companion$private val DEFAULT_DURATION = 1000</ID>
+    <ID>MayBeConst:AnimatedProgressBar.kt$AnimatedProgressBar.Companion$private val DEFAULT_RESOURCE_ID = 0</ID>
+    <ID>MayBeConst:AnimatedProgressBar.kt$AnimatedProgressBar.Companion$private val PROGRESS_DURATION = 200</ID>
+    <ID>MayBeConst:BiometricAuthenticationDialogFragment.kt$BiometricAuthenticationDialogFragment.Companion$val FRAGMENT_TAG = "biometric-dialog-fragment"</ID>
+    <ID>MayBeConst:CrashReporterFragment.kt$CrashReporterFragment.Companion$val FRAGMENT_TAG = "crash-reporter"</ID>
+    <ID>MayBeConst:Features.kt$Features.Companion$val SEARCH_TERMS_OR_URL: Boolean = true</ID>
+    <ID>MayBeConst:IconGenerator.kt$IconGenerator.Companion$private val DEFAULT_ICON_CHAR = '?'</ID>
+    <ID>MayBeConst:IconGenerator.kt$IconGenerator.Companion$private val TEXT_SIZE_DP = 36f</ID>
+    <ID>MayBeConst:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.Companion$private val SEARCH_ENGINE_NAME_KEY = "search-engine-name"</ID>
+    <ID>MayBeConst:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.Companion$private val SEARCH_QUERY_KEY = "search-query"</ID>
+    <ID>MayBeConst:ManualAddSearchEnginePreference.kt$ManualAddSearchEnginePreference.Companion$private val SUPER_STATE_KEY = "super-state"</ID>
+    <ID>MayBeConst:SettingsActivity.kt$SettingsActivity.Companion$@JvmField val ACTIVITY_RESULT_LOCALE_CHANGED = 1</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Category$val ACTION = "action"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Category$val ERROR = "error"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Category$val HISTOGRAM = "histogram"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val AUTOCOMPLETE = "autocomplete"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val ERROR_CODE = "error_code"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val FROM = "from"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val HIGHLIGHTED = "highlighted"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val SEARCH_SUGGESTION = "search_suggestion"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val SELECTED = "selected"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val SOURCE = "source"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val SUBMIT_CRASH = "submit_crash"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val SUCCESS = "success"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val TO = "to"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val TOTAL = "total"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val TOTAL_URI_COUNT = "total_uri_count"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Extra$val UNIQUE_DOMAINS_COUNT = "unique_domains_count"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val BACKGROUND = "background"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val CANCEL = "cancel"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val CHANGE = "change"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val CLICK = "click"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val COPY = "copy"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val FOREGROUND = "foreground"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val HIDE = "hide"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val INSTALL = "install"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val INTENT_CUSTOM_TAB = "intent_custom_tab"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val INTENT_URL = "intent_url"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val LONG_PRESS = "long_press"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val OPEN = "open"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val PAGE = "page"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val REMOVE = "remove"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val REMOVE_ALL = "remove_all"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val REORDER = "reorder"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val RESOURCE = "resource"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val RESTORE = "restore"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val SAVE = "save"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val SHARE = "share"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val SHARE_INTENT = "share_intent"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val SHOW = "show"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val SWIPE = "swipe"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val TEXT_SELECTION_INTENT = "text_selection_intent"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val TYPE_QUERY = "type_query"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val TYPE_SELECT_QUERY = "select_query"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Method$val TYPE_URL = "type_url"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val ADD_SEARCH_ENGINE_LEARN_MORE = "search_engine_learn_more"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val ADD_TO_HOMESCREEN_DIALOG = "add_to_homescreen_dialog"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val ALLOWLIST = "allowlist"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val APP = "app"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val APP_ICON = "app_icon"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val AUTOCOMPLETE_DOMAIN = "autocomplete_domain"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val AUTOFILL = "autofill"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val BACK_BUTTON = "back_button"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val BLOCKING_SWITCH = "blocking_switch"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val BROWSER = "browser"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val BROWSER_CONTEXTMENU = "browser_contextmenu"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val CRASH_REPORTER = "crash_reporter"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val CUSTOM_SEARCH_ENGINE = "custom_search_engine"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val CUSTOM_TAB_ACTION_BUTTON = "custom_tab_action_bu"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val CUSTOM_TAB_CLOSE_BUTTON = "custom_tab_close_but"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val DESKTOP_REQUEST_CHECK = "desktop_request_check"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val DOWNLOAD_DIALOG = "download_dialog"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val ERASE_BUTTON = "erase_button"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val FIRSTRUN = "firstrun"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val GECKO_ENGINE = "gecko_engine"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val HOMESCREEN_SHORTCUT = "homescreen_shortcut"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val MAKE_DEFAULT_BROWSER_OPEN_WITH = "make_default_browser_open_with"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val MAKE_DEFAULT_BROWSER_SETTINGS = "make_default_browser_settings"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val MENU = "menu"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val NOTIFICATION = "notification"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val NOTIFICATION_ACTION = "notification_action"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val RECENT_APPS = "recent_apps"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val REMOVE_SEARCH_ENGINES = "remove_search_engines"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val SEARCH_BAR = "search_bar"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val SEARCH_ENGINE_SETTING = "search_engine_setting"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val SEARCH_SUGGESTION_PROMPT = "search_suggestion_prompt"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val SETTING = "setting"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val SHORTCUT = "shortcut"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val TABS_TRAY = "tabs_tray"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Object$val TIP = "tip"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val ADD_TO_HOMESCREEN = "add_to_homescreen"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val ADD_TO_HOMESCREEN_TIP = "add_to_homescreen_tip"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val AUTOCOMPLETE_URL_TIP = "autocomplete_url_tip"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val CANCEL = "cancel"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val CLOSE_TAB = "close_tab"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val CUSTOM_TAB = "custom_tab"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val DEFAULT = "default"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val DEFAULT_BROWSER_TIP = "default_browser_tip"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val DISABLE_TIPS_TIP = "disable_tips_tip"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val DISABLE_TRACKING_PROTECTION_TIP = "disable_tracking_protection_tip"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val DOWNLOAD = "download"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val ERASE = "erase"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val ERASE_AND_OPEN = "erase_open"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val ERASE_TO_APP = "erase_app"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val ERASE_TO_HOME = "erase_home"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val FIND_IN_PAGE = "find_in_page"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val FINISH = "finish"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val FIREFOX = "firefox"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val FULL_BROWSER = "full_browser"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val IMAGE = "image"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val IMAGE_WITH_LINK = "image+link"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val LINK = "link"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val OPEN = "open"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val OPEN_IN_NEW_TAB_TIP = "open_in_new_tab_tip"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val QUICK_ADD = "quick_add"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val RELOAD = "refresh"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val REPORT_ISSUE = "report_issue"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val RESUME = "resume"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val SEARCH = "search"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val SELECTION = "selection"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val SETTINGS = "settings"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val SKIP = "skip"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val SURVEY_TIP = "survey_tip"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val SURVEY_TIP_ES = "survey_tip_es"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val SURVEY_TIP_FR = "survey_tip_fr"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val TAB = "tab"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val URL = "url"</ID>
+    <ID>MayBeConst:TelemetryWrapper.kt$TelemetryWrapper.Value$val WHATS_NEW = "whats_new"</ID>
+    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$@JvmField val FRAGMENT_TAG = "url_input"</ID>
+    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ANIMATION_BROWSER_SCREEN = "browser_screen"</ID>
+    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ANIMATION_DURATION = 200</ID>
+    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ARGUMENT_ANIMATION = "animation"</ID>
+    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ARGUMENT_HEIGHT = "height"</ID>
+    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ARGUMENT_SESSION_UUID = "sesssion_uuid"</ID>
+    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ARGUMENT_WIDTH = "width"</ID>
+    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ARGUMENT_X = "x"</ID>
+    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val ARGUMENT_Y = "y"</ID>
+    <ID>MayBeConst:UrlInputFragment.kt$UrlInputFragment.Companion$private val TIPS_ALPHA = 0.65f</ID>
+    <ID>MemberNameEqualsClassName:AddToHomescreenTest.kt$AddToHomescreenTest$@Ignore("Flaky test, will be refactored") @Test @Throws(UiObjectNotFoundException::class) @Suppress("LongMethod") fun AddToHomeScreenTest()</ID>
+    <ID>MemberNameEqualsClassName:FirstRunDialogueTest.kt$FirstRunDialogueTest$@Test fun FirstRunDialogueTest()</ID>
+    <ID>NewLineAtEndOfFile:Components.kt$org.mozilla.focus.Components.kt</ID>
+    <ID>NewLineAtEndOfFile:SupportUtilsTest.kt$org.mozilla.focus.utils.SupportUtilsTest.kt</ID>
+    <ID>NewLineAtEndOfFile:TestFocusApplication.kt$org.mozilla.focus.TestFocusApplication.kt</ID>
+    <ID>ReturnCount:IconGenerator.kt$IconGenerator.Companion$ private fun getRepresentativeSnippet(url: String?): String?</ID>
+    <ID>ReturnCount:IntentProcessor.kt$IntentProcessor$ fun handleIntent(context: Context, intent: SafeIntent, savedInstanceState: Bundle?): Result</ID>
+    <ID>ReturnCount:IntentUtils.kt$IntentUtils$private fun handleUnsupportedLink(context: Context, intent: Intent): Boolean</ID>
+    <ID>ReturnCount:MainActivity.kt$MainActivity$override fun onBackPressed()</ID>
+    <ID>ReturnCount:SearchEngineWriter.kt$SearchEngineWriter.Companion$private fun xmlToString(doc: Document): String?</ID>
+    <ID>ReturnCount:String.kt$ fun String.beautifyUrl(): String</ID>
+    <ID>SwallowedException:BiometricAuthenticationHandler.kt$BiometricAuthenticationHandler$catch (err: KeyPermanentlyInvalidatedException) { false }</ID>
+    <ID>SwallowedException:BrowserFragment.kt$BrowserFragment$catch (e: IllegalStateException) { // It can happen that at this point in time the activity is already in the background // and onSaveInstanceState() has already been called. Fragment transactions are not // allowed after that anymore. It's probably safe to guess that the user might not // be interested in adding to homescreen now. }</ID>
+    <ID>SwallowedException:BrowserFragment.kt$BrowserFragment$catch (e: IllegalStateException) { // It can happen that at this point in time the activity is already in the background // and onSaveInstanceState() has already been called. Fragment transactions are not // allowed after that anymore. }</ID>
+    <ID>SwallowedException:BrowserFragment.kt$BrowserFragment$catch (e: PendingIntent.CanceledException) { // There's really nothing we can do here... }</ID>
+    <ID>SwallowedException:IntentUtils.kt$IntentUtils$catch (e: URISyntaxException) { return false }</ID>
+    <ID>SwallowedException:LocalizedContent.kt$LocalizedContent$catch (e: PackageManager.NameNotFoundException) { // Nothing to do if we can't find the package name. }</ID>
+    <ID>SwallowedException:ManualAddSearchEngineSettingsFragment.kt$ManualAddSearchEngineSettingsFragment.Companion$catch (e: IOException) { Log.d(LOGTAG, "Failure to get response code from server: returning invalid search query") false }</ID>
+    <ID>SwallowedException:MobileMetricsPingStorage.kt$MobileMetricsPingStorage$catch (e: FileNotFoundException) { null }</ID>
+    <ID>SwallowedException:MobileMetricsPingStorage.kt$MobileMetricsPingStorage$catch (e: IOException) { atomicFile.failWrite(stream) }</ID>
+    <ID>SwallowedException:MobileMetricsPingStorage.kt$MobileMetricsPingStorage$catch (e: JSONException) { null }</ID>
+    <ID>SwallowedException:SearchEngineWriter.kt$SearchEngineWriter.Companion$catch (e: TransformerConfigurationException) { return null }</ID>
+    <ID>SwallowedException:SearchEngineWriter.kt$SearchEngineWriter.Companion$catch (e: TransformerException) { return null }</ID>
+    <ID>SwallowedException:SearchSuggestionsFetcher.kt$SearchSuggestionsFetcher$catch (ex: SearchSuggestionClient.FetchException) { listOf&lt;String&gt;() }</ID>
+    <ID>SwallowedException:SearchSuggestionsFetcher.kt$SearchSuggestionsFetcher$catch (ex: SearchSuggestionClient.ResponseParserException) { listOf&lt;String&gt;() }</ID>
+    <ID>SwallowedException:SupportUtils.kt$SupportUtils$catch (e: ActivityNotFoundException) { // In some cases, a matching Activity may not exist (according to the Android docs). openDefaultBrowserSumoPage(context) }</ID>
+    <ID>UnusedPrivateMember:CustomTabTest.kt$CustomTabTest$private val TEST_PAGE_HEADER_ID = "header"</ID>
+    <ID>UnusedPrivateMember:CustomTabTest.kt$CustomTabTest$private val TEST_PAGE_HEADER_TEXT = "focus test page"</ID>
+    <ID>UnusedPrivateMember:URLAutocompleteTest.kt$URLAutocompleteTest$// From API 23 and below private val CustomURLRow_old = Espresso.onData(Matchers.anything()) .inAdapterView( AllOf.allOf( ViewMatchers.withId(android.R.id.list), childAtPosition( ViewMatchers.withClassName(Matchers.`is`("android.widget.LinearLayout")), 0 ) ) ) .atPosition(4)</ID>
+    <ID>UnusedPrivateMember:URLAutocompleteTest.kt$URLAutocompleteTest$// From API 24 and above private val CustomURLRow = Espresso.onData(Matchers.anything()) .inAdapterView( AllOf.allOf( ViewMatchers.withId(android.R.id.list), childAtPosition( ViewMatchers.withId(android.R.id.list_container), 0 ) ) ) .atPosition(4)</ID>
+    <ID>UnusedPrivateMember:URLAutocompleteTest.kt$URLAutocompleteTest$private fun toggleTopsiteAC()</ID>
+    <ID>UnusedPrivateMember:WhatsNewTest.kt$WhatsNewTest$i</ID>
+    <ID>UtilityClassWithPublicConstructor:Features.kt$Features</ID>
+    <ID>UtilityClassWithPublicConstructor:FileUtils.kt$FileUtils</ID>
+    <ID>UtilityClassWithPublicConstructor:IconGenerator.kt$IconGenerator</ID>
+    <ID>UtilityClassWithPublicConstructor:SearchEngineWriter.kt$SearchEngineWriter</ID>
+  </CurrentIssues>
+</SmellBaseline>
