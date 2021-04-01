@@ -439,7 +439,7 @@ nsresult nsGenericHTMLElement::BindToTree(BindContext& aContext,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (IsInUncomposedDoc()) {
-    RegAccessKey();
+    RegUnRegAccessKey(true);
     if (HasName() && CanHaveName(NodeInfo()->NameAtom())) {
       aContext.OwnerDoc().AddToNameTable(
           this, GetParsedAttr(nsGkAtoms::name)->GetAtomValue());
@@ -478,7 +478,7 @@ nsresult nsGenericHTMLElement::BindToTree(BindContext& aContext,
 
 void nsGenericHTMLElement::UnbindFromTree(bool aNullParent) {
   if (IsInUncomposedDoc()) {
-    UnregAccessKey();
+    RegUnRegAccessKey(false);
   }
 
   RemoveFromNameTable();
@@ -604,7 +604,7 @@ nsresult nsGenericHTMLElement::BeforeSetAttr(int32_t aNamespaceID,
   if (aNamespaceID == kNameSpaceID_None) {
     if (aName == nsGkAtoms::accesskey) {
       // Have to unregister before clearing flag. See UnregAccessKey
-      UnregAccessKey();
+      RegUnRegAccessKey(false);
       if (!aValue) {
         UnsetFlags(NODE_HAS_ACCESSKEY);
       }
@@ -704,7 +704,7 @@ nsresult nsGenericHTMLElement::AfterSetAttr(
     } else if (aName == nsGkAtoms::accesskey) {
       if (aValue && !aValue->Equals(u""_ns, eIgnoreCase)) {
         SetFlags(NODE_HAS_ACCESSKEY);
-        RegAccessKey();
+        RegUnRegAccessKey(true);
       }
     } else if (aName == nsGkAtoms::inert &&
                StaticPrefs::html5_inert_enabled()) {
