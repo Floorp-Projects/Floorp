@@ -58,6 +58,15 @@
 
   --panel-border-radius: 2px; /* This is overridden on Windows */
 
+  --checkbox-border-color: rgb(143,143,157);
+  --checkbox-unchecked-bgcolor: rgb(240,240,244);
+  --checkbox-unchecked-hover-bgcolor: rgb(224,224,230);
+  --checkbox-unchecked-active-bgcolor: rgb(207,207,216);
+  --checkbox-checked-bgcolor: rgb(0,97,224);
+  --checkbox-checked-color: rgb(251,251,254);
+  --checkbox-checked-hover-bgcolor: rgb(2,80,187);
+  --checkbox-checked-active-bgcolor: rgb(5,62,148);
+
   --blue-40: #45a1ff;
   --blue-40-a10: rgb(69, 161, 255, 0.1);
   --blue-50: #0a84ff;
@@ -172,6 +181,14 @@
     --card-outline-color: var(--grey-60);
 
     --dialog-warning-text-color: var(--red-40);
+
+    --checkbox-unchecked-bgcolor: rgb(43, 42, 51);
+    --checkbox-unchecked-hover-bgcolor: rgb(82, 82, 94);
+    --checkbox-unchecked-active-bgcolor: rgb(91, 91, 102);
+    --checkbox-checked-bgcolor: rgb(0, 221, 255);
+    --checkbox-checked-color: rgb(43, 42, 51);
+    --checkbox-checked-hover-bgcolor: rgb(128, 235, 255);
+    --checkbox-checked-active-bgcolor: rgb(170, 242, 255);
 
     scrollbar-color: rgba(249,249,250,.4) rgba(20,20,25,.3);
   }
@@ -591,46 +608,8 @@ html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [t
 html|textarea:-moz-ui-invalid {
   box-shadow: 0 0 0 4px var(--red-50-a30);
 }
-} /*** END !proton ***/
 
-html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):disabled,
-html|textarea:disabled,
-xul|search-textbox[disabled="true"] {
-  opacity: 0.4;
-}
-
-/* Links */
-
-html|a,
-.text-link {
-  color: var(--in-content-link-color);
-  text-decoration: none;
-}
-
-html|a:hover,
-.text-link:hover {
-  color: var(--in-content-link-color-hover);
-  text-decoration: underline;
-}
-
-html|a:visited {
-  color: var(--in-content-link-color-visited);
-}
-
-html|a:hover:active,
-.text-link:hover:active {
-  color: var(--in-content-link-color-active);
-  text-decoration: none;
-}
-
-html|a:-moz-focusring,
-.text-link:-moz-focusring {
-  outline: 2px solid var(--in-content-focus-outline-color);
-  outline-offset: 1px;
-  -moz-outline-radius: 2px;
-}
-
-/* Checkboxes and radio buttons */
+/** Pre-Proton XUL and HTML checkboxes **/
 
 xul|checkbox {
   appearance: none;
@@ -693,6 +672,94 @@ xul|checkbox:not([disabled="true"])[checked]:hover:active > xul|*.checkbox-check
 html|input[type="checkbox"]:enabled:checked:hover:active {
   background-color: var(--in-content-primary-button-background-active);
 }
+} /*** END !proton ***/
+
+html|input:is([type="email"], [type="tel"], [type="text"], [type="password"], [type="url"], [type="number"]):disabled,
+html|textarea:disabled,
+xul|search-textbox[disabled="true"] {
+  opacity: 0.4;
+}
+
+/* Links */
+
+html|a,
+.text-link {
+  color: var(--in-content-link-color);
+  text-decoration: none;
+}
+
+html|a:hover,
+.text-link:hover {
+  color: var(--in-content-link-color-hover);
+  text-decoration: underline;
+}
+
+html|a:visited {
+  color: var(--in-content-link-color-visited);
+}
+
+html|a:hover:active,
+.text-link:hover:active {
+  color: var(--in-content-link-color-active);
+  text-decoration: none;
+}
+
+html|a:-moz-focusring,
+.text-link:-moz-focusring {
+  outline: 2px solid var(--in-content-focus-outline-color);
+  outline-offset: 1px;
+  -moz-outline-radius: 2px;
+}
+
+/* Checkboxes and radio buttons */
+
+@supports -moz-bool-pref("browser.proton.enabled") {
+/* Add invisible vertical click-target */
+xul|*.checkbox-check,
+html|input[type="checkbox"] {
+  margin-block: 2px;
+}
+
+html|input[type="checkbox"] {
+  appearance: none;
+  height: 16px;
+  width: 16px;
+  border: 1px solid var(--checkbox-border-color);
+  background-color: var(--checkbox-unchecked-bgcolor);
+  border-radius: 2px;
+  margin-inline-end: 6px;
+  flex-shrink: 0; /* avoid shrinking inside flex container */
+}
+
+html|input[type="checkbox"]:enabled:hover {
+  background-color: var(--checkbox-unchecked-hover-bgcolor);
+}
+
+html|input[type="checkbox"]:enabled:hover:active {
+  background-color: var(--checkbox-unchecked-active-bgcolor);
+}
+
+html|input[type="checkbox"]:checked {
+  border-color: var(--checkbox-checked-border-color);
+  background-color: var(--checkbox-checked-bgcolor);
+  background-image: url("chrome://global/skin/icons/check.svg");
+  background-position: center;
+  background-repeat: no-repeat;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  color: var(--checkbox-checked-color);
+  /* Style the button also when printing with "Print Backgrounds" unchecked */
+  color-adjust: exact;
+}
+
+html|input[type="checkbox"]:enabled:checked:hover {
+  background-color: var(--checkbox-checked-hover-bgcolor);
+}
+
+html|input[type="checkbox"]:enabled:checked:hover:active {
+  background-color: var(--checkbox-checked-active-bgcolor);
+}
+} /** END Proton **/
 
 xul|richlistitem > xul|*.checkbox-check {
   margin: 3px 6px;
