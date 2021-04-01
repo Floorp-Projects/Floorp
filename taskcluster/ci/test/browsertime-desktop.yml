@@ -13,6 +13,13 @@ job-defaults:
         by-test-platform:
             linux.*shippable[^-qr].*: ['mozilla-central']
             default: []
+    limit-platforms:
+        by-app:
+            chrome:
+                - .*shippable(?!-qr).*
+            chromium:
+                - .*shippable(?!-qr).*
+            default: []
     test-manifest-loader: null  # don't load tests in the taskgraph
     tier: 3
     virtualization: hardware
@@ -167,8 +174,7 @@ browsertime-benchmark:
         - [wasm-misc, wm]
         - [wasm-misc-baseline, wm-b]
         - [wasm-misc-optimizing, wm-i]
-    variants: ["fission"]
-    apps: ["firefox"]
+    apps: [firefox, chrome, chromium]
     treeherder-symbol: Btime()
     tier:
         by-variant:
