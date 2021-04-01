@@ -25,13 +25,25 @@ add_task(async function({ client }) {
 
   // Create a promise that resolve when dialog prompt is created.
   // It will also take care of closing the dialog.
-  const onOtherPageDialog = new Promise(r => {
-    Services.obs.addObserver(function onDialogLoaded(promptContainer) {
-      Services.obs.removeObserver(onDialogLoaded, "tabmodal-dialog-loaded");
-      promptContainer.querySelector(".tabmodalprompt-button0").click();
-      r();
-    }, "tabmodal-dialog-loaded");
-  });
+  let onOtherPageDialog;
+
+  if (Services.prefs.getBoolPref("prompts.contentPromptSubDialog", false)) {
+    onOtherPageDialog = new Promise(r => {
+      Services.obs.addObserver(function onDialogLoaded(promptWindow) {
+        Services.obs.removeObserver(onDialogLoaded, "common-dialog-loaded");
+        promptWindow.Dialog.ui.button0.click();
+        r();
+      }, "common-dialog-loaded");
+    });
+  } else {
+    onOtherPageDialog = new Promise(r => {
+      Services.obs.addObserver(function onDialogLoaded(promptContainer) {
+        Services.obs.removeObserver(onDialogLoaded, "tabmodal-dialog-loaded");
+        promptContainer.querySelector(".tabmodalprompt-button0").click();
+        r();
+      }, "tabmodal-dialog-loaded");
+    });
+  }
 
   info("Trigger an alert in the second page");
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], () => {
