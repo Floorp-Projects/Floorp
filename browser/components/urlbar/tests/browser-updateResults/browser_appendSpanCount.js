@@ -9,31 +9,6 @@
 
 "use strict";
 
-XPCOMUtils.defineLazyModuleGetters(this, {
-  UrlbarView: "resource:///modules/UrlbarView.jsm",
-});
-
-add_task(async function init() {
-  await PlacesUtils.history.clear();
-  await PlacesUtils.bookmarks.eraseEverything();
-
-  // Make absolutely sure the panel stays open during the test.  There are
-  // spurious blurs on WebRender TV tests as the test starts that cause the
-  // panel to close and the query to be canceled, resulting in intermittent
-  // failures without this.
-  await SpecialPowers.pushPrefEnv({
-    set: [["ui.popup.disable_autohide", true]],
-  });
-
-  // Increase the timeout of the remove-stale-rows timer so that it doesn't
-  // interfere with the test.
-  let originalRemoveStaleRowsTimeout = UrlbarView.removeStaleRowsTimeout;
-  UrlbarView.removeStaleRowsTimeout = 30000;
-  registerCleanupFunction(() => {
-    UrlbarView.removeStaleRowsTimeout = originalRemoveStaleRowsTimeout;
-  });
-});
-
 add_task(async function viewUpdateAppendHidden() {
   // We'll use this test provider to test specific results.  We assume that
   // history and bookmarks have been cleared (by init() above).
@@ -203,17 +178,3 @@ add_task(async function viewUpdateAppendHidden() {
   // more tasks to this test.  It's harmless to call more than once.
   UrlbarProvidersManager.unregisterProvider(provider);
 });
-
-/**
- * A test provider that doesn't finish startQuery() until `finishQueryPromise`
- * is resolved.
- */
-class DelayingTestProvider extends UrlbarTestUtils.TestProvider {
-  finishQueryPromise = null;
-  async startQuery(context, addCallback) {
-    for (let result of this._results) {
-      addCallback(this, result);
-    }
-    await this.finishQueryPromise;
-  }
-}

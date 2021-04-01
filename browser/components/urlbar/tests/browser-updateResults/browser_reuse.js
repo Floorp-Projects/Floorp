@@ -7,11 +7,6 @@
 
 let TEST_BASE_URL = "http://example.com/";
 
-add_task(async function init() {
-  await PlacesUtils.history.clear();
-  await PlacesUtils.bookmarks.eraseEverything();
-});
-
 // A URL result is replaced with a tip result and then vice versa.
 add_task(async function urlToTip() {
   // Add some visits that will be matched by a "test" search string.
