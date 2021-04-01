@@ -27,14 +27,6 @@
 
 nsLookAndFeel::nsLookAndFeel()
     : nsXPLookAndFeel(),
-      mUseOverlayScrollbars(-1),
-      mUseOverlayScrollbarsCached(false),
-      mAllowOverlayScrollbarsOverlap(-1),
-      mAllowOverlayScrollbarsOverlapCached(false),
-      mSystemUsesDarkTheme(-1),
-      mSystemUsesDarkThemeCached(false),
-      mUseAccessibilityTheme(-1),
-      mUseAccessibilityThemeCached(false),
       mColorTextSelectBackground(0),
       mColorTextSelectBackgroundDisabled(0),
       mColorHighlight(0),
@@ -88,18 +80,8 @@ void nsLookAndFeel::NativeInit() { EnsureInit(); }
 void nsLookAndFeel::RefreshImpl() {
   nsXPLookAndFeel::RefreshImpl();
 
-  // We should only clear the cache if we're in the main browser process.
-  // Otherwise, we should wait for the parent to inform us of new values to
-  // cache via SetCacheImpl.
-  if (XRE_IsParentProcess()) {
-    mUseOverlayScrollbarsCached = false;
-    mAllowOverlayScrollbarsOverlapCached = false;
-    mPrefersReducedMotionCached = false;
-    mSystemUsesDarkThemeCached = false;
-    mUseAccessibilityThemeCached = false;
-    // Fetch colors next time they are requested.
-    mInitialized = false;
-  }
+  // Fetch colors next time they are requested.
+  mInitialized = false;
 }
 
 // Turns an opaque selection color into a partially transparent selection color,
@@ -459,18 +441,8 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = eScrollThumbStyle_Proportional;
       break;
     case IntID::UseOverlayScrollbars:
-      if (!mUseOverlayScrollbarsCached) {
-        mUseOverlayScrollbars = NSScroller.preferredScrollerStyle == NSScrollerStyleOverlay ? 1 : 0;
-        mUseOverlayScrollbarsCached = true;
-      }
-      aResult = mUseOverlayScrollbars;
-      break;
     case IntID::AllowOverlayScrollbarsOverlap:
-      if (!mAllowOverlayScrollbarsOverlapCached) {
-        mAllowOverlayScrollbarsOverlap = AllowOverlayScrollbarsOverlap() ? 1 : 0;
-        mAllowOverlayScrollbarsOverlapCached = true;
-      }
-      aResult = mAllowOverlayScrollbarsOverlap;
+      aResult = NSScroller.preferredScrollerStyle == NSScrollerStyleOverlay;
       break;
     case IntID::ScrollbarDisplayOnMouseMove:
       aResult = 0;
@@ -539,7 +511,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::SwipeAnimationEnabled:
       aResult = 0;
       if ([NSEvent respondsToSelector:@selector(isSwipeTrackingFromScrollEventsEnabled)]) {
-        aResult = [NSEvent isSwipeTrackingFromScrollEventsEnabled] ? 1 : 0;
+        aResult = [NSEvent isSwipeTrackingFromScrollEventsEnabled];
       }
       break;
     case IntID::ContextMenuOffsetVertical:
@@ -549,36 +521,14 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 1;
       break;
     case IntID::SystemUsesDarkTheme:
-      if (!mSystemUsesDarkThemeCached) {
-        mSystemUsesDarkTheme = SystemWantsDarkTheme();
-        mSystemUsesDarkThemeCached = true;
-      }
-      aResult = mSystemUsesDarkTheme;
+      aResult = SystemWantsDarkTheme();
       break;
     case IntID::PrefersReducedMotion:
-      // Without native event loops,
-      // NSWorkspace.accessibilityDisplayShouldReduceMotion returns stale
-      // information, so we get the information only on the parent processes
-      // or when it's the initial query on child processes.  Otherwise we will
-      // get the info via LookAndFeel::SetIntCache on child processes.
-      if (!mPrefersReducedMotionCached) {
-        mPrefersReducedMotion = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
-        mPrefersReducedMotionCached = true;
-      }
-      aResult = mPrefersReducedMotion;
+      aResult = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldReduceMotion;
       break;
     case IntID::UseAccessibilityTheme:
-      // Without native event loops,
-      // NSWorkspace.accessibilityDisplayShouldIncreaseContrast returns stale
-      // information, so we get the information only on the parent processes
-      // or when it's the initial query on child processes.  Otherwise we will
-      // get the info via LookAndFeel::SetIntCache on child processes.
-      if (!mUseAccessibilityThemeCached) {
-        mUseAccessibilityTheme =
-            NSWorkspace.sharedWorkspace.accessibilityDisplayShouldIncreaseContrast;
-        mUseAccessibilityThemeCached = true;
-      }
-      aResult = mUseAccessibilityTheme;
+      aResult = NSWorkspace.sharedWorkspace.accessibilityDisplayShouldIncreaseContrast;
+      break;
       break;
     default:
       aResult = 0;
@@ -606,10 +556,6 @@ nsresult nsLookAndFeel::NativeGetFloat(FloatID aID, float& aResult) {
 
   return res;
 }
-
-bool nsLookAndFeel::UseOverlayScrollbars() { return GetInt(IntID::UseOverlayScrollbars) != 0; }
-
-bool nsLookAndFeel::AllowOverlayScrollbarsOverlap() { return (UseOverlayScrollbars()); }
 
 bool nsLookAndFeel::SystemWantsDarkTheme() {
   // This returns true if the macOS system appearance is set to dark mode on

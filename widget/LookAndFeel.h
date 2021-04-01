@@ -347,6 +347,11 @@ class LookAndFeel {
     End,
   };
 
+  // This is a common enough integer that seems worth the shortcut.
+  static bool UseOverlayScrollbars() {
+    return GetInt(IntID::UseOverlayScrollbars);
+  }
+
   /**
    * Windows themes we currently detect.
    */
