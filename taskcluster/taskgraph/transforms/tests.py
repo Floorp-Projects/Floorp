@@ -248,6 +248,23 @@ TEST_VARIANTS = {
             },
         },
     },
+    "fission-webgl-ipc": {
+        # TODO: After 2021-05-01, verify this variant is still needed.
+        "description": "{description} with fission and WebGL IPC process enabled",
+        "suffix": "fis-gli",
+        "replace": {
+            "e10s": True,
+        },
+        "merge": {
+            "mozharness": {
+                "extra-options": [
+                    "--setpref=fission.autostart=true",
+                    "--setpref=dom.serviceWorkers.parent_intercept=true",
+                    "--setpref=webgl.out-of-process=true",
+                ],
+            },
+        },
+    },
     "socketprocess": {
         "description": "{description} with socket process enabled",
         "suffix": "spi",
