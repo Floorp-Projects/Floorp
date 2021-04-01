@@ -322,7 +322,7 @@ sRGBColor nsNativeBasicTheme::ComputeCheckmarkColor(
     return SystemColor(StyleSystemColor::Highlighttext);
   }
   if (aState.HasState(NS_EVENT_STATE_DISABLED)) {
-    return sColorWhiteAlpha50;
+    return sColorWhiteAlpha80;
   }
   return sAccentColorForeground;
 }
