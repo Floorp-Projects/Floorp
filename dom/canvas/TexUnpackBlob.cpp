@@ -782,9 +782,16 @@ bool TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec,
         (unpacking.mFlipY ? gl::OriginPos::TopLeft : gl::OriginPos::BottomLeft);
     if (!gl->BlitHelper()->BlitSdToFramebuffer(sd, {size.x, size.y},
                                                dstOrigin)) {
-      webgl->ErrorImplementationBug("BlitSdToFramebuffer failed for type %i.",
-                                    int(sd.type()));
-      return false;
+      gfxCriticalNote << "BlitSdToFramebuffer failed for type "
+                      << int(sd.type());
+      // Maybe the resource isn't valid anymore?
+      gl->fClearColor(0.2, 0.0, 0.2, 1.0);
+      gl->fClear(LOCAL_GL_COLOR_BUFFER_BIT);
+      const auto& cur = webgl->mColorClearValue;
+      gl->fClearColor(cur[0], cur[1], cur[2], cur[3]);
+      webgl->GenerateWarning(
+          "Fast Tex(Sub)Image upload failed without recourse, clearing to "
+          "[0.2, 0.0, 0.2, 1.0]. Please file a bug!");
     }
   }
 
