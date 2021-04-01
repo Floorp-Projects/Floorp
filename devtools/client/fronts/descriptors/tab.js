@@ -145,7 +145,6 @@ class TabDescriptorFront extends DescriptorMixin(
     front.actorID = form.actor;
     front.form(form);
     this.manage(front);
-    front.on("target-destroyed", this._onTargetDestroyed);
     return front;
   }
 
@@ -188,6 +187,25 @@ class TabDescriptorFront extends DescriptorMixin(
     }
   }
 
+  /**
+   * Top-level targets created on the server will not be created and managed
+   * by a descriptor front. Instead they are created by the Watcher actor.
+   * On the client side we manually re-establish a link between the descriptor
+   * and the new top-level target.
+   */
+  setTarget(targetFront) {
+    // Completely ignore the previous target.
+    // We might nullify the _targetFront unexpectely due to previous target
+    // being destroyed after the new is created
+    if (this._targetFront) {
+      this._targetFront.off("target-destroyed", this._onTargetDestroyed);
+    }
+    this._targetFront = targetFront;
+    targetFront.setDescriptor(this);
+
+    targetFront.on("target-destroyed", this._onTargetDestroyed);
+  }
+
   async getTarget() {
     if (this._targetFront && !this._targetFront.isDestroyed()) {
       return this._targetFront;
@@ -209,13 +227,7 @@ class TabDescriptorFront extends DescriptorMixin(
         );
       }
 
-      // Completely ignore the previous target.
-      // We might nullify the _targetFront unexpectely due to previous target
-      // being destroyed after the new is created
-      if (this._targetFront) {
-        this._targetFront.off("target-destroyed", this._onTargetDestroyed);
-      }
-      this._targetFront = newTargetFront;
+      this.setTarget(newTargetFront);
       this._targetFrontPromise = null;
       return newTargetFront;
     })();

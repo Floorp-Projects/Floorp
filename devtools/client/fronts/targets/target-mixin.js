@@ -98,10 +98,25 @@ function TargetMixin(parentClass) {
       if (this.isWorkerTarget) {
         return this;
       }
+
+      if (this._descriptorFront) {
+        return this._descriptorFront;
+      }
+
       if (this.parentFront.typeName.endsWith("Descriptor")) {
         return this.parentFront;
       }
       throw new Error("Missing descriptor for target: " + this);
+    }
+
+    /**
+     * Top-level targets created on the server will not be created and managed
+     * by a descriptor front. Instead they are created by the Watcher actor.
+     * On the client side we manually re-establish a link between the descriptor
+     * and the new top-level target.
+     */
+    setDescriptor(descriptorFront) {
+      this._descriptorFront = descriptorFront;
     }
 
     get targetType() {
