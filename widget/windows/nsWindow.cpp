@@ -1757,28 +1757,60 @@ bool nsWindow::IsVisible() const { return mIsVisible; }
  *
  **************************************************************/
 
+static bool ShouldHaveRoundedMenuDropShadow(nsWindow* aWindow) {
+  nsView* view = nsView::GetViewFor(aWindow);
+  return view && view->GetFrame() &&
+         view->GetFrame()->StyleUIReset()->mWindowShadow ==
+             StyleWindowShadow::Cliprounded;
+}
+
 // XP and Vista visual styles sometimes require window clipping regions to be
 // applied for proper transparency. These routines are called on size and move
 // operations.
 // XXX this is apparently still needed in Windows 7 and later
 void nsWindow::ClearThemeRegion() {
-  if (!HasGlass() &&
-      (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
-       (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel))) {
+  if (mWindowType == eWindowType_popup && mPopupType == ePopupTypeMenu &&
+      ShouldHaveRoundedMenuDropShadow(this)) {
+    SetWindowRgn(mWnd, nullptr, false);
+  } else if (!HasGlass() &&
+             (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
+              (mPopupType == ePopupTypeTooltip ||
+               mPopupType == ePopupTypePanel))) {
     SetWindowRgn(mWnd, nullptr, false);
   }
 }
 
 void nsWindow::SetThemeRegion() {
+  // Clip the window to the rounded rect area of the popup if needed.
+  if (mWindowType == eWindowType_popup && mPopupType == ePopupTypeMenu) {
+    nsView* view = nsView::GetViewFor(this);
+    if (view) {
+      LayoutDeviceIntSize size =
+          nsLayoutUtils::GetBorderRadiusForMenuDropShadow(view->GetFrame());
+      if (size.width || size.height) {
+        int32_t width =
+            NSToIntRound(size.width * GetDesktopToDeviceScale().scale);
+        int32_t height =
+            NSToIntRound(size.height * GetDesktopToDeviceScale().scale);
+        HRGN region = CreateRoundRectRgn(0, 0, mBounds.Width(),
+                                         mBounds.Height(), width, height);
+        if (!SetWindowRgn(mWnd, region, false)) {
+          DeleteObject(region);  // region setting failed so delete the region.
+        }
+      }
+    }
+  }
+
   // Popup types that have a visual styles region applied (bug 376408). This can
   // be expanded for other window types as needed. The regions are applied
   // generically to the base window so default constants are used for part and
   // state. At some point we might need part and state values from
   // nsNativeThemeWin's GetThemePartAndState, but currently windows that change
   // shape based on state haven't come up.
-  if (!HasGlass() &&
-      (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
-       (mPopupType == ePopupTypeTooltip || mPopupType == ePopupTypePanel))) {
+  else if (!HasGlass() &&
+           (mWindowType == eWindowType_popup && !IsPopupWithTitleBar() &&
+            (mPopupType == ePopupTypeTooltip ||
+             mPopupType == ePopupTypePanel))) {
     HRGN hRgn = nullptr;
     RECT rect = {0, 0, mBounds.Width(), mBounds.Height()};
 
