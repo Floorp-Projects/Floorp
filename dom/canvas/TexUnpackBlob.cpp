@@ -532,6 +532,8 @@ bool TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec,
     if (!uploadPtr) {
       MOZ_ASSERT(!range.length());
     }
+  } else if (mDesc.pboOffset) {
+    uploadPtr = reinterpret_cast<const uint8_t*>(*mDesc.pboOffset);
   }
 
   UniqueBuffer tempBuffer;
@@ -551,8 +553,7 @@ bool TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec,
     const uint32_t rowCount = size.y * size.z;
     const auto stride = RoundUpToMultipleOf(rowLength * bytesPerPixel,
                                             unpacking.mUnpackAlignment);
-    const auto srcPtr = uploadPtr;
-    if (!ConvertIfNeeded(webgl, rowLength, rowCount, format, srcPtr, stride,
+    if (!ConvertIfNeeded(webgl, rowLength, rowCount, format, uploadPtr, stride,
                          format, stride, &uploadPtr, &tempBuffer)) {
       return false;
     }
@@ -575,18 +576,12 @@ bool TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec,
   }
 
   if (!useParanoidHandling) {
-    if (webgl->mBoundPixelUnpackBuffer) {
-      gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER,
-                      webgl->mBoundPixelUnpackBuffer->mGLName);
-    }
+    const ScopedLazyBind bindPBO(gl, LOCAL_GL_PIXEL_UNPACK_BUFFER,
+      webgl->mBoundPixelUnpackBuffer);
 
     *out_error =
         DoTexOrSubImage(isSubImage, gl, target, level, dui, xOffset, yOffset,
                         zOffset, size.x, size.y, size.z, uploadPtr);
-
-    if (webgl->mBoundPixelUnpackBuffer) {
-      gl->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
-    }
     return true;
   }
 
@@ -596,7 +591,7 @@ bool TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec,
 
   if (!isSubImage) {
     // Alloc first to catch OOMs.
-    AssertUintParamCorrect(gl, LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
+    AssertUintParamCorrect(gl, LOCAL_GL_PIXEL_UNPACK_BUFFER_BINDING, 0);
     *out_error =
         DoTexOrSubImage(false, gl, target, level, dui, xOffset, yOffset,
                         zOffset, size.x, size.y, size.z, nullptr);
