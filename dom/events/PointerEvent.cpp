@@ -104,6 +104,9 @@ already_AddRefed<PointerEvent> PointerEvent::Constructor(
   if (!aParam.mCoalescedEvents.IsEmpty()) {
     e->mCoalescedEvents.AppendElements(aParam.mCoalescedEvents);
   }
+  if (!aParam.mPredictedEvents.IsEmpty()) {
+    e->mPredictedEvents.AppendElements(aParam.mPredictedEvents);
+  }
   e->SetTrusted(trusted);
   e->SetComposed(aParam.mComposed);
   return e.forget();
@@ -121,10 +124,12 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(PointerEvent)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PointerEvent, MouseEvent)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mCoalescedEvents)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPredictedEvents)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PointerEvent, MouseEvent)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mCoalescedEvents)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPredictedEvents)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PointerEvent)
@@ -249,6 +254,20 @@ void PointerEvent::GetCoalescedEvents(
     }
   }
   aPointerEvents.AppendElements(mCoalescedEvents);
+}
+
+void PointerEvent::GetPredictedEvents(
+    nsTArray<RefPtr<PointerEvent>>& aPointerEvents) {
+  // XXX Add support for native predicted events, bug 1550461
+  if (mEvent->mTarget) {
+    for (RefPtr<PointerEvent>& pointerEvent : mPredictedEvents) {
+      // Only set event target when it's null.
+      if (!pointerEvent->mEvent->mTarget) {
+        pointerEvent->mEvent->mTarget = mEvent->mTarget;
+      }
+    }
+  }
+  aPointerEvents.AppendElements(mPredictedEvents);
 }
 
 bool PointerEvent::ShouldResistFingerprinting(CallerType aCallerType) {

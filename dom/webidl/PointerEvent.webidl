@@ -36,6 +36,7 @@ interface PointerEvent : MouseEvent
   readonly attribute DOMString pointerType;
   readonly attribute boolean isPrimary;
   sequence<PointerEvent> getCoalescedEvents();
+  sequence<PointerEvent> getPredictedEvents();
 };
 
 dictionary PointerEventInit : MouseEventInit
@@ -51,4 +52,5 @@ dictionary PointerEventInit : MouseEventInit
   DOMString pointerType = "";
   boolean isPrimary = false;
   sequence<PointerEvent> coalescedEvents = [];
+  sequence<PointerEvent> predictedEvents = [];
 };

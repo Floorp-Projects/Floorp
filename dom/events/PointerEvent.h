@@ -49,6 +49,7 @@ class PointerEvent : public MouseEvent {
   bool IsPrimary();
   void GetPointerType(nsAString& aPointerType, CallerType aCallerType);
   void GetCoalescedEvents(nsTArray<RefPtr<PointerEvent>>& aPointerEvents);
+  void GetPredictedEvents(nsTArray<RefPtr<PointerEvent>>& aPointerEvents);
 
  protected:
   ~PointerEvent() = default;
@@ -59,6 +60,7 @@ class PointerEvent : public MouseEvent {
   bool ShouldResistFingerprinting(CallerType aCallerType);
 
   nsTArray<RefPtr<PointerEvent>> mCoalescedEvents;
+  nsTArray<RefPtr<PointerEvent>> mPredictedEvents;
 };
 
 void ConvertPointerTypeToString(uint16_t aPointerTypeSrc,
