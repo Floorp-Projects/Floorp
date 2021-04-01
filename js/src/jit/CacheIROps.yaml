@@ -2440,15 +2440,6 @@
   args:
     val: ValueField
 
-- name: LoadNewObjectFromTemplateResult
-  shared: true
-  transpile: false
-  cost_estimate: 4
-  args:
-    templateObject: ObjectField
-    disambiguationIdHi: UInt32Imm
-    disambiguationIdLo: UInt32Imm
-
 - name: NewPlainObjectResult
   shared: true
   transpile: false
