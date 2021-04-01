@@ -22,7 +22,7 @@ async function focusAndWaitForFieldsIdentified(
   input,
   mustBeIdentified = false
 ) {
-  info("expecting the target input being focused and identified");
+  info("expecting the target input being focused and indentified");
   if (typeof input === "string") {
     input = document.querySelector(input);
   }

@@ -47,7 +47,6 @@ var HeuristicsRegExp = {
       "address-line3": "addrline3|address_3",
       "address-level1": "land", // de-DE
       "additional-name": "apellido.?materno|lastlastname",
-      "cc-name": "account.*holder.*name",
       "cc-number": "(cc|kk)nr", // de-DE
       "cc-exp-month": "(cc|kk)month", // de-DE
       "cc-exp-year": "(cc|kk)year", // de-DE
@@ -163,23 +162,27 @@ var HeuristicsRegExp = {
         "|(^family-?n$)" +
         "|(^last-?n$)",
 
-      /* eslint-disable */
-      // Let us keep our consistent wrapping.
       "cc-name":
         "cc-?name" +
         "|card-?name" +
         "|cardholder-?name" +
+        "|cardholder" +
+        // "|(^name$)" + // Removed to avoid overwriting "name", above.
         "|(^nom$)",
-      /* eslint-enable */
 
       "cc-number":
         "cc-?number" +
         "|cc-?num" +
         "|card-?number" +
         "|card-?num" +
+        "|(^number$)" +
+        "|(^cc$)" +
         "|cc-?no" +
         "|card-?no" +
+        "|(^credit-?card$)" +
         "|numero-?carte" +
+        "|(^carte$)" +
+        "|(^carte-?credit$)" +
         "|num-?carte" +
         "|cb-?num",
 
@@ -452,7 +455,7 @@ var HeuristicsRegExp = {
       "cc-name":
         "card.?(?:holder|owner)|name.*(\\b)?on(\\b)?.*card" +
         "|(?:card|cc).?name|cc.?full.?name" +
-        "|(?:card|cc).?owner" +
+        "|karteninhaber" + // de-DE
         "|nombre.*tarjeta" + // es
         "|nom.*carte" + // fr-FR
         "|nome.*cart" + // it-IT
@@ -509,8 +512,8 @@ var HeuristicsRegExp = {
       // Note: `cc-name` expression has been moved up, above `name`, in
       // order to handle specialization through ordering.
       "cc-number":
-        "(add)?(?:card|cc|acct).?(?:number|#|no|num)" +
-        "|(?<!telefon|haus|person|fødsels|zimmer)nummer" + // de-DE, sv-SE, no
+        "(add)?(?:card|cc|acct).?(?:number|#|no|num|field)" +
+        "|(?<!telefon|haus|person|fødsels)nummer" + // de-DE, sv-SE, no
         "|カード番号" + // ja-JP
         "|Номер.*карты" + // ru
         "|信用卡号|信用卡号码" + // zh-CN
@@ -520,29 +523,29 @@ var HeuristicsRegExp = {
         "|(numero|número|numéro)(?!.*(document|fono|phone|réservation))",
 
       "cc-exp-month":
-        "exp.*mo|ccmonth|cardmonth|addmonth" +
-        "|monat" + // de-DE
-        // "|fecha" + // es
-        // "|date.*exp" + // fr-FR
-        // "|scadenza" + // it-IT
-        // "|有効期限" + // ja-JP
-        // "|validade" + // pt-BR, pt-PT
-        // "|Срок действия карты" + // ru
+        "expir|exp.*mo|exp.*date|ccmonth|cardmonth|addmonth" +
+        "|gueltig|gültig|monat" + // de-DE
+        "|fecha" + // es
+        "|date.*exp" + // fr-FR
+        "|scadenza" + // it-IT
+        "|有効期限" + // ja-JP
+        "|validade" + // pt-BR, pt-PT
+        "|Срок действия карты" + // ru
         "|月", // zh-CN
 
       "cc-exp-year":
-        "(add)?year" +
-        "|jahr" + // de-DE
-        // "|fecha" + // es
-        // "|scadenza" + // it-IT
-        // "|有効期限" + // ja-JP
-        // "|validade" + // pt-BR, pt-PT
-        // "|Срок действия карты" + // ru
+        "exp|^/|(add)?year" +
+        "|ablaufdatum|gueltig|gültig|jahr" + // de-DE
+        "|fecha" + // es
+        "|scadenza" + // it-IT
+        "|有効期限" + // ja-JP
+        "|validade" + // pt-BR, pt-PT
+        "|Срок действия карты" + // ru
         "|年|有效期", // zh-CN
 
       "cc-exp":
         "expir|exp.*date|^expfield$" +
-        "|ablaufdatum|gueltig|gültig" + // de-DE
+        "|gueltig|gültig" + // de-DE
         "|fecha" + // es
         "|date.*exp" + // fr-FR
         "|scadenza" + // it-IT

@@ -8,7 +8,7 @@
 
 "use strict";
 
-var EXPORTED_SYMBOLS = ["FormAutofillHeuristics"];
+var EXPORTED_SYMBOLS = ["FormAutofillHeuristics", "LabelUtils"];
 
 const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 const { XPCOMUtils } = ChromeUtils.import(
@@ -25,8 +25,6 @@ ChromeUtils.defineModuleGetter(
 
 XPCOMUtils.defineLazyModuleGetters(this, {
   CreditCard: "resource://gre/modules/CreditCard.jsm",
-  creditCardRuleset: "resource://formautofill/CreditCardRuleset.jsm",
-  LabelUtils: "resource://formautofill/FormAutofillUtils.jsm",
 });
 
 this.log = null;
@@ -181,27 +179,7 @@ class FieldScanner {
    *
    * @returns {Array<Object>}
    *          The array with the sections, and the belonging fieldDetails are in
-   *          each section. For example, it may return something like this:
-   *          [{
-   *             type: FormAutofillUtils.SECTION_TYPES.ADDRESS,  // section type
-   *             fieldDetails: [{  // a record for each field
-   *                 fieldName: "email",
-   *                 section: "",
-   *                 addressType: "",
-   *                 contactType: "",
-   *                 elementWeakRef: the element
-   *               }, ...]
-   *           },
-   *           {
-   *             type: FormAutofillUtils.SECTION_TYPES.CREDIT_CARD,
-   *             fieldDetails: [{
-   *                fieldName: "cc-exp-month",
-   *                section: "",
-   *                addressType: "",
-   *                contactType: "",
-   *                 elementWeakRef: the element
-   *               }, ...]
-   *           }]
+   *          each section.
    */
   getSectionFieldDetails() {
     // When the section feature is disabled, `getSectionFieldDetails` should
@@ -353,6 +331,116 @@ class FieldScanner {
     return index < this._elements.length;
   }
 }
+
+var LabelUtils = {
+  // The tag name list is from Chromium except for "STYLE":
+  // eslint-disable-next-line max-len
+  // https://cs.chromium.org/chromium/src/components/autofill/content/renderer/form_autofill_util.cc?l=216&rcl=d33a171b7c308a64dc3372fac3da2179c63b419e
+  EXCLUDED_TAGS: ["SCRIPT", "NOSCRIPT", "OPTION", "STYLE"],
+
+  // A map object, whose keys are the id's of form fields and each value is an
+  // array consisting of label elements correponding to the id.
+  // @type {Map<string, array>}
+  _mappedLabels: null,
+
+  // An array consisting of label elements whose correponding form field doesn't
+  // have an id attribute.
+  // @type {Array<HTMLLabelElement>}
+  _unmappedLabels: null,
+
+  // A weak map consisting of label element and extracted strings pairs.
+  // @type {WeakMap<HTMLLabelElement, array>}
+  _labelStrings: null,
+
+  /**
+   * Extract all strings of an element's children to an array.
+   * "element.textContent" is a string which is merged of all children nodes,
+   * and this function provides an array of the strings contains in an element.
+   *
+   * @param  {Object} element
+   *         A DOM element to be extracted.
+   * @returns {Array}
+   *          All strings in an element.
+   */
+  extractLabelStrings(element) {
+    if (this._labelStrings.has(element)) {
+      return this._labelStrings.get(element);
+    }
+    let strings = [];
+    let _extractLabelStrings = el => {
+      if (this.EXCLUDED_TAGS.includes(el.tagName)) {
+        return;
+      }
+
+      if (el.nodeType == el.TEXT_NODE || !el.childNodes.length) {
+        let trimmedText = el.textContent.trim();
+        if (trimmedText) {
+          strings.push(trimmedText);
+        }
+        return;
+      }
+
+      for (let node of el.childNodes) {
+        let nodeType = node.nodeType;
+        if (nodeType != node.ELEMENT_NODE && nodeType != node.TEXT_NODE) {
+          continue;
+        }
+        _extractLabelStrings(node);
+      }
+    };
+    _extractLabelStrings(element);
+    this._labelStrings.set(element, strings);
+    return strings;
+  },
+
+  generateLabelMap(doc) {
+    let mappedLabels = new Map();
+    let unmappedLabels = [];
+
+    for (let label of doc.querySelectorAll("label")) {
+      let id = label.htmlFor;
+      if (!id) {
+        let control = label.control;
+        if (!control) {
+          continue;
+        }
+        id = control.id;
+      }
+      if (id) {
+        let labels = mappedLabels.get(id);
+        if (labels) {
+          labels.push(label);
+        } else {
+          mappedLabels.set(id, [label]);
+        }
+      } else {
+        unmappedLabels.push(label);
+      }
+    }
+
+    this._mappedLabels = mappedLabels;
+    this._unmappedLabels = unmappedLabels;
+    this._labelStrings = new WeakMap();
+  },
+
+  clearLabelMap() {
+    this._mappedLabels = null;
+    this._unmappedLabels = null;
+    this._labelStrings = null;
+  },
+
+  findLabelElements(element) {
+    if (!this._mappedLabels) {
+      this.generateLabelMap(element.ownerDocument);
+    }
+
+    let id = element.id;
+    if (!id) {
+      return this._unmappedLabels.filter(label => label.control == element);
+    }
+    return this._mappedLabels.get(id) || [];
+  },
+};
 
 /**
  * Returns the autocomplete information of fields according to heuristics.
@@ -838,7 +926,7 @@ this.FormAutofillHeuristics = {
         fieldScanner
       );
 
-      // If there is no field parsed, the parsing cursor can be moved
+      // If there is no any field parsed, the parsing cursor can be moved
       // forward to the next one.
       if (
         !parsedPhoneFields &&
@@ -925,63 +1013,7 @@ this.FormAutofillHeuristics = {
     return regexps;
   },
 
-  /**
-   * Using Fathom, say what kind of CC field an element is most likely to be.
-   *
-   * @param {HTMLElement} element
-   * @returns {Array} A tuple of [field name, probability] describing the
-   *   highest-confidence classification
-   */
-  _topFathomField(element) {
-    // Field names are also the names of Fathom ruleset types:
-    const fieldNames = [
-      "cc-name",
-      "cc-number",
-      "cc-exp-month",
-      "cc-exp-year",
-      "cc-exp",
-      "cc-type",
-    ];
-
-    /**
-     * Return how confident our ML model is that `element` is a field of the
-     * given type.
-     *
-     * @param {string} fieldName The Fathom type to check against. This is
-     *   conveniently the same as the autocomplete attribute value that means
-     *   the same thing.
-     * @returns {number} Confidence in range [0, 1]
-     */
-    function confidence(fieldName) {
-      const fnodes = creditCardRuleset.against(element).get(fieldName);
-      // fnodes is either 0 or 1 item long, since we ran the ruleset
-      // against a single element:
-      return fnodes.length ? fnodes[0].scoreFor(fieldName) : 0;
-    }
-
-    // Bang the element against the ruleset for every type of field:
-    const fieldsAndConfidences = fieldNames.map(fieldName => [
-      fieldName,
-      confidence(fieldName),
-    ]);
-
-    // Sort descending by confidence:
-    fieldsAndConfidences.sort(
-      ([_1, confidence1], [_2, confidence2]) => confidence2 - confidence1
-    );
-    return fieldsAndConfidences[0];
-  },
-
   getInfo(element) {
-    function infoRecordWithFieldName(fieldName) {
-      return {
-        fieldName,
-        section: "",
-        addressType: "",
-        contactType: "",
-      };
-    }
-
     let info = element.getAutocompleteInfo();
     // An input[autocomplete="on"] will not be early return here since it stll
     // needs to find the field name.
@@ -1008,27 +1040,29 @@ this.FormAutofillHeuristics = {
     // (e.g. HomeDepot, BestBuy), so "tel" type should be not used for "tel"
     // prediction.
     if (element.type == "email" && !isAutoCompleteOff) {
-      return infoRecordWithFieldName("email");
+      return {
+        fieldName: "email",
+        section: "",
+        addressType: "",
+        contactType: "",
+      };
     }
 
-    // See if Fathom is confident in anything, and return it if so:
-    const [mostConfidentFieldName, mostConfidentScore] = this._topFathomField(
-      element
-    );
-    if (mostConfidentScore > 0.5) {
-      return infoRecordWithFieldName(mostConfidentFieldName);
-    }
-
-    // Since Fathom isn't confident, try the old heuristics. I've removed all
-    // the CC-specific ones, so this should be almost a mutually exclusive
-    // set of fields.
     let regexps = this._getRegExpList(isAutoCompleteOff, element.tagName);
-    if (regexps.length) {
-      let matchedFieldName = this._findMatchedFieldName(element, regexps);
-      if (matchedFieldName) {
-        return infoRecordWithFieldName(matchedFieldName);
-      }
+    if (!regexps.length) {
+      return null;
     }
+
+    let matchedFieldName = this._findMatchedFieldName(element, regexps);
+    if (matchedFieldName) {
+      return {
+        fieldName: matchedFieldName,
+        section: "",
+        addressType: "",
+        contactType: "",
+      };
+    }
+
     return null;
   },
 
