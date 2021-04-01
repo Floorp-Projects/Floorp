@@ -69,30 +69,20 @@ add_task(async function add_test_engines() {
     alternativeJSONType: true,
   };
 
-  [
-    getEngine,
-    postEngine,
-    unresolvableEngine,
-    alternateJSONEngine,
-  ] = await addTestEngines([
-    {
-      name: getEngineData.name,
-      xmlFileName: "engineMaker.sjs?" + JSON.stringify(getEngineData),
-    },
-    {
-      name: postEngineData.name,
-      xmlFileName: "engineMaker.sjs?" + JSON.stringify(postEngineData),
-    },
-    {
-      name: unresolvableEngineData.name,
-      xmlFileName: "engineMaker.sjs?" + JSON.stringify(unresolvableEngineData),
-    },
-    {
-      name: alternateJSONSuggestEngineData.name,
-      xmlFileName:
-        "engineMaker.sjs?" + JSON.stringify(alternateJSONSuggestEngineData),
-    },
-  ]);
+  getEngine = await SearchTestUtils.promiseNewSearchEngine(
+    `${gDataUrl}engineMaker.sjs?${JSON.stringify(getEngineData)}`
+  );
+  postEngine = await SearchTestUtils.promiseNewSearchEngine(
+    `${gDataUrl}engineMaker.sjs?${JSON.stringify(postEngineData)}`
+  );
+  unresolvableEngine = await SearchTestUtils.promiseNewSearchEngine(
+    `${gDataUrl}engineMaker.sjs?${JSON.stringify(unresolvableEngineData)}`
+  );
+  alternateJSONEngine = await SearchTestUtils.promiseNewSearchEngine(
+    `${gDataUrl}engineMaker.sjs?${JSON.stringify(
+      alternateJSONSuggestEngineData
+    )}`
+  );
 });
 
 // Begin tests

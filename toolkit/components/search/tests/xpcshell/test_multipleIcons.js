@@ -13,9 +13,9 @@ add_task(async function setup() {
 });
 
 add_task(async function test_multipleIcons() {
-  let [engine] = await addTestEngines([
-    { name: "IconsTest", xmlFileName: "engineImages.xml" },
-  ]);
+  let engine = await SearchTestUtils.promiseNewSearchEngine(
+    `${gDataUrl}engineImages.xml`
+  );
 
   info("The default should be the 16x16 icon");
   Assert.ok(engine.iconURI.spec.includes("ico16"));
