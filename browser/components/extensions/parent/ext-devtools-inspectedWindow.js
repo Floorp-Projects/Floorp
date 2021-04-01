@@ -22,11 +22,11 @@ this.devtools_inspectedWindow = class extends ExtensionAPI {
       devtools: {
         inspectedWindow: {
           async eval(expression, options) {
-            const front = await getInspectedWindowFront(context);
             const toolboxEvalOptions = await getToolboxEvalOptions(context);
             const evalOptions = Object.assign({}, options, toolboxEvalOptions);
 
-            const evalResult = await front.eval(
+            const commands = await context.getDevToolsCommands();
+            const evalResult = await commands.inspectedWindowCommand.eval(
               callerInfo,
               expression,
               evalOptions
@@ -39,8 +39,8 @@ this.devtools_inspectedWindow = class extends ExtensionAPI {
           async reload(options) {
             const { ignoreCache, userAgent, injectedScript } = options || {};
 
-            const front = await getInspectedWindowFront(context);
-            front.reload(callerInfo, {
+            const commands = await context.getDevToolsCommands();
+            commands.inspectedWindowCommand.reload(callerInfo, {
               ignoreCache,
               userAgent,
               injectedScript,

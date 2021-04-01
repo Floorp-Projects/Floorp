@@ -19,6 +19,12 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
+  "CommandsFactory",
+  "devtools/shared/commands/commands-factory",
+  true
+);
+loader.lazyRequireGetter(
+  this,
   "ToolboxHostManager",
   "devtools/client/framework/toolbox-host-manager",
   true
@@ -706,21 +712,13 @@ DevTools.prototype = {
    * Compatibility layer for web-extensions. Used by DevToolsShim for
    * browser/components/extensions/ext-devtools.js
    *
-   * web-extensions need to use dedicated instances of Target and cannot reuse the
-   * cached instances managed by DevTools target factory.
+   * web-extensions need to use dedicated instances of Commands and cannot reuse the
+   * cached instances managed by DevTools.
+   * Note that is will end up being cached in WebExtension codebase, via
+   * DevToolsExtensionPageContextParent.getDevToolsCommands.
    */
-  createDescriptorForTabForWebExtension: function(tab) {
-    return TabDescriptorFactory.createDescriptorForTab(tab, {
-      forceCreationForWebextension: true,
-    });
-  },
-
-  /**
-   * Compatibility layer for web-extensions. Used by DevToolsShim for
-   * browser/components/extensions/ext-devtools-inspectedWindow.js
-   */
-  createWebExtensionInspectedWindowFront: function(tabTarget) {
-    return tabTarget.getFront("webExtensionInspectedWindow");
+  createCommandsForTabForWebExtension: function(tab) {
+    return CommandsFactory.forTab(tab);
   },
 
   /**

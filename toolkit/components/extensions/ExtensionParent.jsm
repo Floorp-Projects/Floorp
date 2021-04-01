@@ -626,13 +626,13 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
   constructor(...params) {
     super(...params);
 
-    // We want to explicitly set `this._devToolsToolbox` as well to `null` here, but the
-    // toolbox is set during the processing of the parent's constructor, so it is currently
-    // not possible to set.
-    this._currentDevToolsTarget = null;
+    // Set all attributes that are lazily defined to `null` here.
+    //
+    // Note that we can't do that for `this._devToolsToolbox` because it will
+    // be defined when calling our parent constructor and so would override it back to `null`.
+    this._devToolsCommands = null;
     this._onNavigatedListeners = null;
 
-    this._onTargetAvailable = this._onTargetAvailable.bind(this);
     this._onResourceAvailable = this._onResourceAvailable.bind(this);
   }
 
@@ -671,30 +671,31 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
   }
 
   /**
-   * The returned target may be destroyed when navigating to another process and so,
-   * should only be used accordingly. That is to say, we can do an immediate action on it,
-   * but not listen to RDP events.
-   * @returns {Promise<TabTarget>}
-   *   The current devtools target associated to the context.
+   * The returned "commands" object, exposing modules implemented from devtools/shared/commands.
+   * Each attribute being a static interface to communicate with the server backend.
+   *
+   * @returns {Promise<Object>}
    */
-  async getCurrentDevToolsTarget() {
-    if (!this._currentDevToolsTarget) {
-      if (!this._pendingWatchTargetsPromise) {
-        // When _onTargetAvailable is called, it will create a new target,
-        // via DevToolsShim.createDescriptorForTabForWebExtension. If this function
-        // is called multiple times before this._currentDevToolsTarget is populated,
-        // we don't want to create X new, duplicated targets, so we store the Promise
-        // returned by watchTargets, in order to properly wait on subsequent calls.
-        this._pendingWatchTargetsPromise = this.devToolsToolbox.targetList.watchTargets(
-          [this.devToolsToolbox.targetList.TYPES.FRAME],
-          this._onTargetAvailable
-        );
-      }
-      await this._pendingWatchTargetsPromise;
-      this._pendingWatchTargetsPromise = null;
+  async getDevToolsCommands() {
+    // Ensure that we try to instantiate a commands only once,
+    // even if createCommandsForTabForWebExtension is async.
+    if (this._devToolsCommandsPromise) {
+      return this._devToolsCommandsPromise;
+    }
+    if (this._devToolsCommands) {
+      return this._devToolsCommands;
     }
 
-    return this._currentDevToolsTarget;
+    this._devToolsCommandsPromise = (async () => {
+      const commands = await DevToolsShim.createCommandsForTabForWebExtension(
+        this.devToolsToolbox.descriptorFront.localTab
+      );
+      await commands.targetCommand.startListening();
+      this._devToolsCommands = commands;
+      this._devToolsCommandsPromise = null;
+      return commands;
+    })();
+    return this._devToolsCommandsPromise;
   }
 
   unload() {
@@ -703,11 +704,6 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
       return;
     }
 
-    this.devToolsToolbox.targetList.unwatchTargets(
-      [this.devToolsToolbox.targetList.TYPES.FRAME],
-      this._onTargetAvailable
-    );
-
     if (this._onNavigatedListeners) {
       this.devToolsToolbox.resourceWatcher.unwatchResources(
         [this.devToolsToolbox.resourceWatcher.TYPES.DOCUMENT_EVENT],
@@ -715,9 +711,9 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
       );
     }
 
-    if (this._currentDevToolsTarget) {
-      this._currentDevToolsTarget.destroy();
-      this._currentDevToolsTarget = null;
+    if (this._devToolsCommands) {
+      this._devToolsCommands.destroy();
+      this._devToolsCommands = null;
     }
 
     if (this._onNavigatedListeners) {
@@ -728,25 +724,6 @@ class DevToolsExtensionPageContextParent extends ExtensionPageContextParent {
     this._devToolsToolbox = null;
 
     super.unload();
-  }
-
-  async _onTargetAvailable({ targetFront }) {
-    if (!targetFront.isTopLevel) {
-      return;
-    }
-
-    const descriptorFront = await DevToolsShim.createDescriptorForTabForWebExtension(
-      targetFront.localTab
-    );
-
-    // Update the TabDescriptor `isDevToolsExtensionContext` flag.
-    // This is a duplicated target, attached to no toolbox, DevTools needs to
-    // handle it differently compared to a regular top-level target.
-    descriptorFront.isDevToolsExtensionContext = true;
-
-    this._currentDevToolsTarget = await descriptorFront.getTarget();
-
-    await this._currentDevToolsTarget.attach();
   }
 
   async _onResourceAvailable(resources) {
