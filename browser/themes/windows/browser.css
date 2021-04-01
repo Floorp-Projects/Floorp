@@ -778,14 +778,81 @@ panel[touchmode] .PanelUI-subView #appMenu-zoom-controls > .subviewbutton-iconic
 
 @supports (-moz-bool-pref("browser.proton.contextmenus.enabled")) {
 @media (-moz-windows-default-theme) and (-moz-os-version: windows-win10) {
-  #context-navigation {
+  /* :not([hidden]) to avoid the display: flex unhiding the item. */
+  #context-navigation:not([hidden]) {
     /* The Windows 10 version of the navigation area needs the scrollbox's
        background color, not the builtin "menu" color. */
     background-color: inherit;
-    /* The Win10 context menu wants the icons centered vertically in the
-       navigation group, not with a gap on the bottom. */
-    padding-bottom: 0;
+    padding: 0 0 4px;
+    /* Use modern flex box so we can use percentage widths to redistribute
+     * spacing manually. */
+    display: flex;
+    flex-direction: row;
+    /* We want the first and last icons to align with the text items which
+     * have 1em inline padding, and for icons to be centered within their
+     * hover state, so each icon of 16px needs 1em padding on both sides:
+     */
+    --menuitem-min-width: calc(2em + 16px);
+    /* The total width of the container should then be at least 4 times that: */
+    min-width: calc(4 * var(--menuitem-min-width));
   }
+
+  #context-navigation > .menuitem-iconic {
+    flex: 1 0 auto;
+  }
+
+  #context-navigation > .menuitem-iconic[_moz-menuactive="true"] {
+    /* We only show hover state on the icons. This ensures there is no
+     * dead space between icons, but the visible hover state is only
+     * around the icons, and all the icons' hover states match each other.
+     */
+    background-color: transparent;
+  }
+
+  #context-navigation > .menuitem-iconic > .menu-iconic-left {
+    margin: 0;
+    padding: 0;
+  }
+
+  /* override styles from shared/contextmenu.inc.css */
+  #context-navigation > .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon {
+    width: var(--menuitem-min-width);
+    height: 32px;
+    padding: 8px 1em;
+    margin: 0;
+  }
+  #context-navigation > .menuitem-iconic[_moz-menuactive="true"]:not([disabled="true"]) > .menu-iconic-left > .menu-iconic-icon {
+    background-color: var(--menuitem-hover-background-color);
+  }
+
+  /* If the menu is wider than the icons strictly need, the <menuitem> elements
+   * will stretch to pick up the extra space. In that case, the outer icons
+   * should align to the start/end of their containing <menuitem>: */
+  #context-navigation > .menuitem-iconic:first-child {
+    -moz-box-pack: start;
+  }
+
+  #context-navigation > .menuitem-iconic:last-child {
+    -moz-box-pack: end;
+  }
+
+  #context-navigation > .menuitem-iconic:last-child,
+  #context-navigation > .menuitem-iconic:first-child {
+    flex-grow: 0;
+    /* The first and last items start off as 16px + 2em, like the other ones.
+     * 100% is the width of the parent, which will be at least 4 * the width of
+     * an individual item (16px + 2em)
+     * So 100% - 4 item widths gets us the remaining available space if
+     * #context-navigation is wider than that.
+     * Then divide by 6 to get the 1/6 of that extra space, and add this space
+     * to the width of the first/last items.
+     * This ensures that the 3 visual gaps between the 4 icons are all the same
+     * size, with each 1/3 of the available space evenly distributed between
+     * the 2 items on either side of the gap.
+     */
+    width: calc(var(--menuitem-min-width) + calc(100% - 4 * var(--menuitem-min-width)) / 6);
+  }
+
 
   /* Other menu separators don't extend all the way to the menu edges, but the
      one below the navigation buttons in the content context menu should. */
