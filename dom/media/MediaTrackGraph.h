@@ -1047,10 +1047,6 @@ class MediaTrackGraph {
   static MediaTrackGraph* CreateNonRealtimeInstance(
       TrackRate aSampleRate, nsPIDOMWindowInner* aWindowId);
 
-  // Return the correct main thread for this graph. This always returns
-  // something that is valid. Thread safe.
-  AbstractThread* AbstractMainThread();
-
   // Idempotent
   void ForceShutDown();
 
