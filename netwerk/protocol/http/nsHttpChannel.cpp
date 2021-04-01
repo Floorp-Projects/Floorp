@@ -6646,7 +6646,7 @@ nsresult nsHttpChannel::BeginConnect() {
 
     nsCOMPtr<nsIConsoleService> consoleService =
         do_GetService(NS_CONSOLESERVICE_CONTRACTID);
-    if (consoleService) {
+    if (consoleService && !host.Equals(mapping->AlternateHost())) {
       nsAutoString message(u"Alternate Service Mapping found: "_ns);
       AppendASCIItoUTF16(scheme, message);
       message.AppendLiteral(u"://");
