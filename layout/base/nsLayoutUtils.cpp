@@ -6659,6 +6659,27 @@ bool nsLayoutUtils::HasNonZeroCornerOnSide(const BorderRadius& aCorners,
 }
 
 /* static */
+LayoutDeviceIntSize nsLayoutUtils::GetBorderRadiusForMenuDropShadow(
+    const nsIFrame* aFrame) {
+  if (aFrame->StyleUIReset()->mWindowShadow == StyleWindowShadow::Cliprounded) {
+    const auto& corners = aFrame->StyleBorder()->mBorderRadius;
+
+    // Get the width and height of the top-left corner.
+    const LengthPercentage& cornerX = corners.Get(eCornerTopLeftX);
+    const LengthPercentage& cornerY = corners.Get(eCornerTopLeftY);
+    nscoord lengthX = (cornerX.IsLength() ? cornerX.ToLength() : 0);
+    nscoord lengthY = (cornerY.IsLength() ? cornerY.ToLength() : 0);
+    if (lengthX || lengthY) {
+      const nsPresContext* presContext = aFrame->PresContext();
+      return LayoutDeviceIntSize(presContext->AppUnitsToDevPixels(lengthX),
+                                 presContext->AppUnitsToDevPixels(lengthY));
+    }
+  }
+
+  return LayoutDeviceIntSize();
+}
+
+/* static */
 nsTransparencyMode nsLayoutUtils::GetFrameTransparency(
     nsIFrame* aBackgroundFrame, nsIFrame* aCSSRootFrame) {
   if (aCSSRootFrame->StyleEffects()->mOpacity < 1.0f)
