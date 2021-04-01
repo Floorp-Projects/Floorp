@@ -127,6 +127,31 @@ nsBoxFrame::nsBoxFrame(ComputedStyle* aStyle, nsPresContext* aPresContext,
 
 nsBoxFrame::~nsBoxFrame() = default;
 
+nsIFrame* nsBoxFrame::SlowOrdinalGroupAwareSibling(nsIFrame* aBox, bool aNext) {
+  nsIFrame* parent = aBox->GetParent();
+  if (!parent) {
+    return nullptr;
+  }
+  CSSOrderAwareFrameIterator iter(
+      parent, layout::kPrincipalList,
+      CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
+      CSSOrderAwareFrameIterator::OrderState::Unknown,
+      CSSOrderAwareFrameIterator::OrderingProperty::BoxOrdinalGroup);
+
+  nsIFrame* prevSibling = nullptr;
+  for (; !iter.AtEnd(); iter.Next()) {
+    nsIFrame* current = iter.get();
+    if (!aNext && current == aBox) {
+      return prevSibling;
+    }
+    if (aNext && prevSibling == aBox) {
+      return current;
+    }
+    prevSibling = current;
+  }
+  return nullptr;
+}
+
 void nsBoxFrame::SetInitialChildList(ChildListID aListID,
                                      nsFrameList& aChildList) {
   nsContainerFrame::SetInitialChildList(aListID, aChildList);

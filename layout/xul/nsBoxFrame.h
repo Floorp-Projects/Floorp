@@ -152,6 +152,10 @@ class nsBoxFrame : public nsContainerFrame {
    */
   void AppendDirectlyOwnedAnonBoxes(nsTArray<OwnedAnonBox>& aResult) override;
 
+  // Gets a next / prev sibling accounting for ordinal group. Slow, please avoid
+  // usage if possible.
+  static nsIFrame* SlowOrdinalGroupAwareSibling(nsIFrame*, bool aNext);
+
  private:
   explicit nsBoxFrame(ComputedStyle* aStyle, nsPresContext* aPresContext)
       : nsBoxFrame(aStyle, aPresContext, kClassID, false, nullptr) {}

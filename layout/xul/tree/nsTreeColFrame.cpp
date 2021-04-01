@@ -86,24 +86,7 @@ void nsDisplayXULTreeColSplitterTarget::HitTest(
   }
 
   if (left || right) {
-    CSSOrderAwareFrameIterator iter(
-        mFrame->GetParent(), layout::kPrincipalList,
-        CSSOrderAwareFrameIterator::ChildFilter::IncludeAll,
-        CSSOrderAwareFrameIterator::OrderState::Unknown,
-        CSSOrderAwareFrameIterator::OrderingProperty::BoxOrdinalGroup);
-
-    nsIFrame* child = nullptr;
-    for (; !iter.AtEnd(); iter.Next()) {
-      if (left && iter.get() == mFrame) {
-        break;
-      }
-      if (right && child == mFrame) {
-        child = iter.get();
-        break;
-      }
-      child = iter.get();
-    }
-
+    nsIFrame* child = nsBoxFrame::SlowOrdinalGroupAwareSibling(mFrame, right);
     // We are a header. Look for the correct splitter.
     if (child && child->GetContent()->IsXULElement(nsGkAtoms::splitter)) {
       aOutFrames->AppendElement(child);
