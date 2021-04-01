@@ -18,6 +18,10 @@ add_task(async function test_tab_options_modals() {
     }
   }
 
+  await SpecialPowers.pushPrefEnv({
+    set: [["prompts.contentPromptSubDialog", false]],
+  });
+
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "temporary",
 
