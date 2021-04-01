@@ -104,6 +104,10 @@ function createSoundIndicatorObserver(tab) {
 function hoverIcon(icon, tooltip) {
   disableNonTestMouse(true);
 
+  if (!tooltip) {
+    tooltip = document.getElementById("tabbrowser-tab-tooltip");
+  }
+
   let popupShownPromise = BrowserTestUtils.waitForEvent(tooltip, "popupshown");
   EventUtils.synthesizeMouse(icon, 1, 1, { type: "mouseover" });
   EventUtils.synthesizeMouse(icon, 2, 2, { type: "mousemove" });
@@ -141,7 +145,7 @@ function leaveIcon(icon) {
  *        the icon on which we want to mouse hover
  */
 async function clickIcon(icon) {
-  await hoverIcon(icon, document.getElementById("tabbrowser-tab-tooltip"));
+  await hoverIcon(icon);
   EventUtils.synthesizeMouseAtCenter(icon, { button: 0 });
   leaveIcon(icon);
 }

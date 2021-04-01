@@ -261,6 +261,7 @@
     }
 
     get _overPlayingIcon() {
+      // TODO (bug 1702652): Simplify this getter during Proton cleanup
       let iconVisible =
         this.soundPlaying || this.muted || this.activeMediaBlocked;
 
@@ -273,7 +274,9 @@
     }
 
     get soundPlayingIcon() {
-      return gProton ? null : this.querySelector(".tab-icon-sound");
+      return gProton
+        ? this.querySelector(".tab-icon-overlay")
+        : this.querySelector(".tab-icon-sound");
     }
 
     get overlayIcon() {
