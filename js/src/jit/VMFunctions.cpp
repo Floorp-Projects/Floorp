@@ -101,10 +101,6 @@ struct TypeToDataType<BlockLexicalEnvironmentObject*> {
   static const DataType result = Type_Object;
 };
 template <>
-struct TypeToDataType<ClassBodyLexicalEnvironmentObject*> {
-  static const DataType result = Type_Object;
-};
-template <>
 struct TypeToDataType<ArgumentsObject*> {
   static const DataType result = Type_Object;
 };
@@ -187,10 +183,6 @@ struct TypeToDataType<Handle<WithScope*> > {
 };
 template <>
 struct TypeToDataType<Handle<LexicalScope*> > {
-  static const DataType result = Type_Handle;
-};
-template <>
-struct TypeToDataType<Handle<ClassBodyScope*> > {
   static const DataType result = Type_Handle;
 };
 template <>
@@ -296,11 +288,6 @@ template <>
 struct TypeToArgProperties<Handle<LexicalScope*> > {
   static const uint32_t result =
       TypeToArgProperties<LexicalScope*>::result | VMFunctionData::ByRef;
-};
-template <>
-struct TypeToArgProperties<Handle<ClassBodyScope*> > {
-  static const uint32_t result =
-      TypeToArgProperties<ClassBodyScope*>::result | VMFunctionData::ByRef;
 };
 template <>
 struct TypeToArgProperties<Handle<Scope*> > {
@@ -420,10 +407,6 @@ struct TypeToRootType<Handle<RegExpObject*> > {
 };
 template <>
 struct TypeToRootType<Handle<LexicalScope*> > {
-  static const uint32_t result = VMFunctionData::RootCell;
-};
-template <>
-struct TypeToRootType<Handle<ClassBodyScope*> > {
   static const uint32_t result = VMFunctionData::RootCell;
 };
 template <>
@@ -1472,14 +1455,14 @@ bool PushLexicalEnv(JSContext* cx, BaselineFrame* frame,
 }
 
 bool PopLexicalEnv(JSContext* cx, BaselineFrame* frame) {
-  frame->popOffEnvironmentChain<ScopedLexicalEnvironmentObject>();
+  frame->popOffEnvironmentChain<BlockLexicalEnvironmentObject>();
   return true;
 }
 
 bool DebugLeaveThenPopLexicalEnv(JSContext* cx, BaselineFrame* frame,
                                  jsbytecode* pc) {
   MOZ_ALWAYS_TRUE(DebugLeaveLexicalEnv(cx, frame, pc));
-  frame->popOffEnvironmentChain<ScopedLexicalEnvironmentObject>();
+  frame->popOffEnvironmentChain<BlockLexicalEnvironmentObject>();
   return true;
 }
 
@@ -1510,11 +1493,6 @@ bool DebugLeaveLexicalEnv(JSContext* cx, BaselineFrame* frame, jsbytecode* pc) {
     DebugEnvironments::onPopLexical(cx, frame, pc);
   }
   return true;
-}
-
-bool PushClassBodyEnv(JSContext* cx, BaselineFrame* frame,
-                      Handle<ClassBodyScope*> scope) {
-  return frame->pushClassBodyEnvironment(cx, scope);
 }
 
 bool PushVarEnv(JSContext* cx, BaselineFrame* frame, HandleScope scope) {

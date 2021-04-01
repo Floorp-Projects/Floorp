@@ -953,11 +953,7 @@ BlockLexicalEnvironmentObject* BlockLexicalEnvironmentObject::create(
 BlockLexicalEnvironmentObject* BlockLexicalEnvironmentObject::createForFrame(
     JSContext* cx, Handle<LexicalScope*> scope, AbstractFramePtr frame) {
   RootedObject enclosing(cx, frame.environmentChain());
-  auto* env = create(cx, scope, enclosing, gc::DefaultHeap);
-  if (!env) {
-    return nullptr;
-  }
-  return &env->as<BlockLexicalEnvironmentObject>();
+  return create(cx, scope, enclosing, gc::DefaultHeap);
 }
 
 /* static */
@@ -996,8 +992,9 @@ BlockLexicalEnvironmentObject::createHollowForDebug(
     return nullptr;
   }
 
-  env->as<ScopedLexicalEnvironmentObject>().initScope(scope);
-  return &env->as<BlockLexicalEnvironmentObject>();
+  auto blockEnv = &env->as<BlockLexicalEnvironmentObject>();
+  blockEnv->initScope(scope);
+  return blockEnv;
 }
 
 /* static */
@@ -1076,33 +1073,6 @@ NamedLambdaObject* NamedLambdaObject::create(JSContext* cx,
 size_t NamedLambdaObject::lambdaSlot() {
   // Named lambda environments have exactly one name.
   return JSSLOT_FREE(&LexicalEnvironmentObject::class_);
-}
-
-/* static */
-ClassBodyLexicalEnvironmentObject* ClassBodyLexicalEnvironmentObject::create(
-    JSContext* cx, Handle<ClassBodyScope*> scope, HandleObject enclosing,
-    gc::InitialHeap heap) {
-  cx->check(enclosing);
-  MOZ_ASSERT(scope->hasEnvironment());
-
-  RootedShape shape(cx, scope->environmentShape());
-  auto* env = static_cast<ClassBodyLexicalEnvironmentObject*>(
-      createTemplateObject(cx, shape, enclosing, heap));
-  if (!env) {
-    return nullptr;
-  }
-
-  env->initScope(scope);
-  return env;
-}
-
-/* static */
-ClassBodyLexicalEnvironmentObject*
-ClassBodyLexicalEnvironmentObject::createForFrame(JSContext* cx,
-                                                  Handle<ClassBodyScope*> scope,
-                                                  AbstractFramePtr frame) {
-  RootedObject enclosing(cx, frame.environmentChain());
-  return create(cx, scope, enclosing, gc::DefaultHeap);
 }
 
 JSObject* ExtensibleLexicalEnvironmentObject::thisObject() const {
@@ -1638,7 +1608,14 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
       }
 
       RootedScope scope(cx, getEnvironmentScope(*env));
-      uint32_t firstFrameSlot = scope->firstFrameSlot();
+      uint32_t firstFrameSlot;
+      if (scope->is<LexicalScope>()) {
+        firstFrameSlot = scope->as<LexicalScope>().firstFrameSlot();
+      } else if (scope->is<VarScope>()) {
+        firstFrameSlot = scope->as<VarScope>().firstFrameSlot();
+      } else {
+        firstFrameSlot = scope->as<EvalScope>().firstFrameSlot();
+      }
 
       BindingIter bi(scope);
       while (bi && NameToId(bi.name()->asPropertyName()) != id) {
@@ -1806,7 +1783,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
   }
 
   static bool isNonExtensibleLexicalEnvironment(const JSObject& env) {
-    return env.is<ScopedLexicalEnvironmentObject>();
+    return env.is<BlockLexicalEnvironmentObject>();
   }
 
   static Scope* getEnvironmentScope(const JSObject& env) {
@@ -1819,7 +1796,7 @@ class DebugEnvironmentProxyHandler : public BaseProxyHandler {
       return script ? script->bodyScope() : nullptr;
     }
     if (isNonExtensibleLexicalEnvironment(env)) {
-      return &env.as<ScopedLexicalEnvironmentObject>().scope();
+      return &env.as<BlockLexicalEnvironmentObject>().scope();
     }
     if (env.is<VarEnvironmentObject>()) {
       return &env.as<VarEnvironmentObject>().scope();
@@ -2908,7 +2885,7 @@ void DebugEnvironments::onPopGeneric(JSContext* cx, const EnvironmentIter& ei) {
 }
 
 void DebugEnvironments::onPopLexical(JSContext* cx, const EnvironmentIter& ei) {
-  onPopGeneric<ScopedLexicalEnvironmentObject, LexicalScope>(cx, ei);
+  onPopGeneric<BlockLexicalEnvironmentObject, LexicalScope>(cx, ei);
 }
 
 void DebugEnvironments::onPopVar(JSContext* cx, const EnvironmentIter& ei) {

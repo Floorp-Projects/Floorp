@@ -27,7 +27,7 @@ struct BytecodeEmitter;
 //
 //   `name;`
 //     NameOpEmitter noe(this, atom_of_name
-//                       NameOpEmitter::Kind::Get);
+//                       ElemOpEmitter::Kind::Get);
 //     noe.emitGet();
 //
 //   `name();`
@@ -35,19 +35,19 @@ struct BytecodeEmitter;
 //
 //   `name++;`
 //     NameOpEmitter noe(this, atom_of_name
-//                       NameOpEmitter::Kind::PostIncrement);
+//                       ElemOpEmitter::Kind::PostIncrement);
 //     noe.emitIncDec();
 //
 //   `name = 10;`
 //     NameOpEmitter noe(this, atom_of_name
-//                       NameOpEmitter::Kind::SimpleAssignment);
+//                       ElemOpEmitter::Kind::SimpleAssignment);
 //     noe.prepareForRhs();
 //     emit(10);
 //     noe.emitAssignment();
 //
 //   `name += 10;`
 //     NameOpEmitter noe(this, atom_of_name
-//                       NameOpEmitter::Kind::CompoundAssignment);
+//                       ElemOpEmitter::Kind::CompoundAssignment);
 //     noe.prepareForRhs();
 //     emit(10);
 //     emit_add_op_here();
@@ -55,7 +55,7 @@ struct BytecodeEmitter;
 //
 //   `name = 10;` part of `let name = 10;`
 //     NameOpEmitter noe(this, atom_of_name
-//                       NameOpEmitter::Kind::Initialize);
+//                       ElemOpEmitter::Kind::Initialize);
 //     noe.prepareForRhs();
 //     emit(10);
 //     noe.emitAssignment();

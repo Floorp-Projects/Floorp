@@ -316,8 +316,6 @@ class BaselineFrame {
   [[nodiscard]] inline bool recreateLexicalEnvironment(JSContext* cx);
 
   [[nodiscard]] bool initFunctionEnvironmentObjects(JSContext* cx);
-  [[nodiscard]] bool pushClassBodyEnvironment(JSContext* cx,
-                                              Handle<ClassBodyScope*> scope);
   [[nodiscard]] bool pushVarEnvironment(JSContext* cx, HandleScope scope);
 
   void initArgsObjUnchecked(ArgumentsObject& argsobj) {

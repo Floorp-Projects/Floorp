@@ -249,10 +249,11 @@ extern PropertyName* EnvironmentCoordinateNameSlow(JSScript* script,
  *       |
  *   NonSyntacticLexicalEnvironmentObject[this=messageManager]
  *
- * D. DOM event handlers
+ * D. XBL and DOM event handlers
  *
- * DOM event handlers are compiled as functions with HTML elements on the
- * environment chain. For a chain of elements e0,e1,...:
+ * XBL methods are compiled as functions with XUL elements on the env chain,
+ * and DOM event handlers are compiled as functions with HTML elements on the
+ * env chain. For a chain of elements e0,e1,...:
  *
  *      ...
  *       |
@@ -533,6 +534,7 @@ class LexicalEnvironmentObject : public EnvironmentObject {
   static const JSClass class_;
 
   static constexpr uint32_t RESERVED_SLOTS = 2;
+  static constexpr ObjectFlags OBJECT_FLAGS = {ObjectFlag::NotExtensible};
 
  protected:
   static LexicalEnvironmentObject* createTemplateObject(JSContext* cx,
@@ -557,24 +559,7 @@ class LexicalEnvironmentObject : public EnvironmentObject {
 //
 // Used for blocks (ScopeKind::Lexical) and several other scope kinds,
 // including Catch, NamedLambda, FunctionLexical, and ClassBody.
-class ScopedLexicalEnvironmentObject : public LexicalEnvironmentObject {
- public:
-  static constexpr ObjectFlags OBJECT_FLAGS = {ObjectFlag::NotExtensible};
-
-  Scope& scope() const {
-    Value v = getReservedSlot(THIS_VALUE_OR_SCOPE_SLOT);
-    MOZ_ASSERT(!isExtensible() && v.isPrivateGCThing());
-    return *static_cast<Scope*>(v.toGCThing());
-  }
-
-  bool isClassBody() const { return scope().kind() == ScopeKind::ClassBody; }
-
-  void initScope(Scope* scope) {
-    initReservedSlot(THIS_VALUE_OR_SCOPE_SLOT, PrivateGCThingValue(scope));
-  }
-};
-
-class BlockLexicalEnvironmentObject : public ScopedLexicalEnvironmentObject {
+class BlockLexicalEnvironmentObject : public LexicalEnvironmentObject {
  public:
   static constexpr ObjectFlags OBJECT_FLAGS = {ObjectFlag::NotExtensible};
 
@@ -601,7 +586,14 @@ class BlockLexicalEnvironmentObject : public ScopedLexicalEnvironmentObject {
 
   // The LexicalScope that created this environment.
   LexicalScope& scope() const {
-    return ScopedLexicalEnvironmentObject::scope().as<LexicalScope>();
+    Value v = getReservedSlot(THIS_VALUE_OR_SCOPE_SLOT);
+    MOZ_ASSERT(!isExtensible() && v.isPrivateGCThing());
+    return *static_cast<LexicalScope*>(v.toGCThing());
+  }
+
+ private:
+  void initScope(LexicalScope* scope) {
+    initReservedSlot(THIS_VALUE_OR_SCOPE_SLOT, PrivateGCThingValue(scope));
   }
 };
 
@@ -620,22 +612,6 @@ class NamedLambdaObject : public BlockLexicalEnvironmentObject {
 
   // For JITs.
   static size_t lambdaSlot();
-};
-
-class ClassBodyLexicalEnvironmentObject
-    : public ScopedLexicalEnvironmentObject {
- public:
-  static ClassBodyLexicalEnvironmentObject* create(
-      JSContext* cx, Handle<ClassBodyScope*> scope, HandleObject enclosing,
-      gc::InitialHeap heap);
-
-  static ClassBodyLexicalEnvironmentObject* createForFrame(
-      JSContext* cx, Handle<ClassBodyScope*> scope, AbstractFramePtr frame);
-
-  // The ClassBodyScope that created this environment.
-  ClassBodyScope& scope() const {
-    return ScopedLexicalEnvironmentObject::scope().as<ClassBodyScope>();
-  }
 };
 
 // Global and non-syntactic lexical environments are extensible.
@@ -1154,21 +1130,9 @@ inline bool JSObject::is<js::EnvironmentObject>() const {
 }
 
 template <>
-inline bool JSObject::is<js::ScopedLexicalEnvironmentObject>() const {
+inline bool JSObject::is<js::BlockLexicalEnvironmentObject>() const {
   return is<js::LexicalEnvironmentObject>() &&
          !as<js::LexicalEnvironmentObject>().isExtensible();
-}
-
-template <>
-inline bool JSObject::is<js::BlockLexicalEnvironmentObject>() const {
-  return is<js::ScopedLexicalEnvironmentObject>() &&
-         !as<js::ScopedLexicalEnvironmentObject>().isClassBody();
-}
-
-template <>
-inline bool JSObject::is<js::ClassBodyLexicalEnvironmentObject>() const {
-  return is<js::ScopedLexicalEnvironmentObject>() &&
-         as<js::ScopedLexicalEnvironmentObject>().isClassBody();
 }
 
 template <>
