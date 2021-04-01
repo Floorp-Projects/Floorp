@@ -438,8 +438,11 @@ nsresult nsGenericHTMLElement::BindToTree(BindContext& aContext,
   nsresult rv = nsGenericHTMLElementBase::BindToTree(aContext, aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (IsInUncomposedDoc()) {
+  if (IsInComposedDoc()) {
     RegUnRegAccessKey(true);
+  }
+
+  if (IsInUncomposedDoc()) {
     if (HasName() && CanHaveName(NodeInfo()->NameAtom())) {
       aContext.OwnerDoc().AddToNameTable(
           this, GetParsedAttr(nsGkAtoms::name)->GetAtomValue());
@@ -477,7 +480,7 @@ nsresult nsGenericHTMLElement::BindToTree(BindContext& aContext,
 }
 
 void nsGenericHTMLElement::UnbindFromTree(bool aNullParent) {
-  if (IsInUncomposedDoc()) {
+  if (IsInComposedDoc()) {
     RegUnRegAccessKey(false);
   }
 
@@ -2407,7 +2410,7 @@ bool nsGenericHTMLElement::IsHTMLFocusable(bool aWithMouse, bool* aIsFocusable,
 
 bool nsGenericHTMLElement::PerformAccesskey(bool aKeyCausesActivation,
                                             bool aIsTrustedEvent) {
-  nsPresContext* presContext = GetPresContext(eForUncomposedDoc);
+  nsPresContext* presContext = GetPresContext(eForComposedDoc);
   if (!presContext) {
     return false;
   }
