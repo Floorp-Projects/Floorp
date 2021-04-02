@@ -239,6 +239,10 @@ void nsWaylandDisplay::QueueSyncBegin() {
 }
 
 void nsWaylandDisplay::WaitForSyncEnd() {
+  MOZ_RELEASE_ASSERT(
+      NS_IsMainThread(),
+      "nsWaylandDisplay::WaitForSyncEnd() can be called in main thread only!");
+
   // We're done here
   if (!mSyncCallback) {
     return;
