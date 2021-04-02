@@ -951,18 +951,19 @@ nsCSSRendering::CreateBorderRendererForNonThemedOutline(
     return Nothing();
   }
 
+  const nscoord offset = ourOutline->mOutlineOffset.ToAppUnits();
+  nsRect innerRect = aInnerRect;
+  innerRect.Inflate(offset);
+
   // If the dirty rect is completely inside the border area (e.g., only the
   // content is being painted), then we can skip out now
   // XXX this isn't exactly true for rounded borders, where the inside curves
   // may encroach into the content area.  A safer calculation would be to
   // shorten insideRect by the radius one each side before performing this test.
-  if (aInnerRect.Contains(aDirtyRect)) {
+  if (innerRect.Contains(aDirtyRect)) {
     return Nothing();
   }
 
-  const nscoord offset = ourOutline->mOutlineOffset.ToAppUnits();
-  nsRect innerRect = aInnerRect;
-  innerRect.Inflate(offset);
   nscoord width = ourOutline->GetOutlineWidth();
 
   StyleBorderStyle outlineStyle;
