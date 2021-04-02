@@ -116,6 +116,13 @@
       <menuitem id="context-copylink"
                 data-l10n-id="main-context-menu-copy-link-simple"
                 oncommand="gContextMenu.copyLink();"/>
+      <menu id="context-sendlinktodevice"
+            class="sync-ui-item"
+            data-l10n-id="main-context-menu-link-send-to-device"
+            hidden="true">
+            <menupopup id="context-sendlinktodevice-popup"
+                  onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, gContextMenu.linkURL, gContextMenu.linkTextStr);"/>
+      </menu>
       <menuseparator id="context-sep-copylink"/>
       <menuitem id="context-media-play"
                 data-l10n-id="main-context-menu-media-play"
@@ -299,15 +306,6 @@
       <menuitem id="context-print-selection"
                 data-l10n-id="main-context-menu-print-selection"
                 oncommand="gContextMenu.printSelection();"/>
-      <menuseparator id="context-sep-sendlinktodevice" class="sync-ui-item"
-                hidden="true"/>
-      <menu id="context-sendlinktodevice"
-            class="sync-ui-item"
-            data-l10n-id="main-context-menu-link-send-to-device"
-            hidden="true">
-        <menupopup id="context-sendlinktodevice-popup"
-                   onpopupshowing="gSync.populateSendTabToDevicesMenu(event.target, gContextMenu.linkURL, gContextMenu.linkTextStr);"/>
-      </menu>
       <menuseparator id="context-sep-selectall"/>
       <menuitem id="context-keywordfield"
                 data-l10n-id="main-context-menu-keyword"
