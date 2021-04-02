@@ -472,19 +472,19 @@ PlacesController.prototype = {
       return selectionTypes.includes("none");
     }
 
-    var forceHideAttr = aMenuItem.getAttribute("forcehideselection");
-    if (forceHideAttr) {
-      var forceHideRules = forceHideAttr.split("|");
+    var hideAttr = aMenuItem.getAttribute("hideifnodetype");
+    if (hideAttr) {
+      var hideRules = hideAttr.split("|");
       for (let i = 0; i < aMetaData.length; ++i) {
-        for (let j = 0; j < forceHideRules.length; ++j) {
-          if (forceHideRules[j] in aMetaData[i]) {
+        for (let j = 0; j < hideRules.length; ++j) {
+          if (hideRules[j] in aMetaData[i]) {
             return false;
           }
         }
       }
     }
 
-    var selectionAttr = aMenuItem.getAttribute("selection");
+    var selectionAttr = aMenuItem.getAttribute("nodetype");
     if (!selectionAttr) {
       return !aMenuItem.hidden;
     }
@@ -515,42 +515,37 @@ PlacesController.prototype = {
   },
 
   /**
-   * Detects information (meta-data rules) about the current selection in the
-   * view (see _buildSelectionMetadata) and sets the visibility state for each
-   * of the menu-items in the given popup with the following rules applied:
-   *  0) The "ignoreitem" attribute may be set to "true" for this code not to
-   *     handle that menuitem.
-   *  1) The "selectiontype" attribute may be set on a menu-item to "single"
-   *     if the menu-item should be visible only if there is a single node
-   *     selected, or to "multiple" if the menu-item should be visible only if
-   *     multiple nodes are selected, or to "none" if the menuitems should be
-   *     visible for if there are no selected nodes, or to a |-separated
-   *     combination of these.
-   *     If the attribute is not set or set to an invalid value, the menu-item
-   *     may be visible irrespective of the selection.
-   *  2) The "selection" attribute may be set on a menu-item to the various
-   *     meta-data rules for which it may be visible. The rules should be
-   *     separated with the | character.
-   *  3) A menu-item may be visible only if at least one of the rules set in
-   *     its selection attribute apply to each of the selected nodes in the
-   *     view.
-   *  4) The "forcehideselection" attribute may be set on a menu-item to rules
-   *     for which it should be hidden. This attribute takes priority over the
-   *     selection attribute. A menu-item would be hidden if at least one of the
-   *     given rules apply to one of the selected nodes. The rules should be
-   *     separated with the | character.
-   *  5) The "hideifnoinsertionpoint" attribute may be set on a menu-item to
-   *     true if it should be hidden when there's no insertion point
-   *  6) The visibility state of a menu-item is unchanged if none of these
-   *     attribute are set.
-   *  7) These attributes should not be set on separators for which the
-   *     visibility state is "auto-detected."
-   *  8) The "hideifprivatebrowsing" attribute may be set on a menu-item to
-   *     true if it should be hidden inside the private browsing mode
-   *  9) The "forcehideintabbrowser" attribute may be set on a menu-item if
-   *     it should be hidden when we're in a tabbed browsing window.
-   * 10) The "forcehidenotintabbrowser" attribute may be set on a menu-item if
-   *     it should be hidden when we're not in a tabbed browsing window.
+   * Uses meta-data rules set as attributes on the menuitems, representing the
+   * current selection in the view (see `_buildSelectionMetadata`) and sets the
+   * visibility state for each menuitem according to the following rules:
+   *  1) The visibility state is unchanged if none of the attributes are set.
+   *  2) Attributes should not be set on menuseparators.
+   *  3) The boolean `ignoreitem` attribute may be set when this code should
+   *     not handle that menuitem.
+   *  4) The `selectiontype` attribute may be set to:
+   *      - `single` if it should be visible only when there is a single node
+   *         selected
+   *      - `multiple` if it should be visible only when multiple nodes are
+   *         selected
+   *      - `none` if it should be visible when there are no selected nodes
+   *      - a `|` separated combination of the above.
+   *  5) The `nodetype` attribute may be set to values representing the
+   *     type of the node triggering the context menu. The menuitem will be
+   *     visible when one of the rules (separated by `|`) matches.
+   *     In case of multiple selection, the menuitem is visible only if all of
+   *     the selected nodes match one of the rule.
+   *  6) The `hideifnodetype` accepts the same rules as `nodetype`, but
+   *     hides the menuitem if the nodes match at least one of the rules.
+   *     It takes priority over `nodetype`.
+   *  7) The boolean `hideifnoinsertionpoint` attribute may be set to hide a
+   *     menuitem when there's no insertion point. An insertion point represents
+   *     a point in the view where a new item can be inserted.
+   *  8) The boolean `hideifprivatebrowsing` attribute may be set to hide a
+   *     menuitem in private browsing mode
+   *  9) The boolean `hideiftabbrowser` attribute may be set to hide a
+   *     menuitem when we're in a tabbed browsing window.
+   * 10) The boolean `hideifnotabbrowser` attribute may be set to hide a
+   *     menuitem when we're not in a tabbed browsing window.
    * @param   aPopup
    *          The menupopup to build children into.
    * @return true if at least one item is visible, false otherwise.
@@ -563,9 +558,9 @@ PlacesController.prototype = {
     if (window.top.gBrowser) {
       var openInCurrentTab = document.getElementById("placesContext_open");
       if (!PlacesUIUtils.loadBookmarksInTabs) {
-        openInCurrentTab.setAttribute("forcehideintabbrowser", "true");
+        openInCurrentTab.setAttribute("hideiftabbrowser", "true");
       } else {
-        openInCurrentTab.removeAttribute("forcehideintabbrowser");
+        openInCurrentTab.removeAttribute("hideiftabbrowser");
       }
     }
     var metadata = this._buildSelectionMetadata();
@@ -586,19 +581,19 @@ PlacesController.prototype = {
           item.getAttribute("hideifnoinsertionpoint") == "true" &&
           noIp &&
           !(ip && ip.isTag && item.id == "placesContext_paste");
-        var hideIfInTabBrowser =
-          item.getAttribute("forcehideintabbrowser") == "true" &&
+        var hideIfTabBrowser =
+          item.getAttribute("hideiftabbrowser") == "true" &&
           window.top.gBrowser;
-        var hideIfNotInTabBrowser =
-          item.getAttribute("forcehidenotintabbrowser") == "true" &&
+        var hideIfNotTabBrowser =
+          item.getAttribute("hidenifnottabbrowser") == "true" &&
           !window.top.gBrowser;
         var hideIfPrivate =
           item.getAttribute("hideifprivatebrowsing") == "true" &&
           PrivateBrowsingUtils.isWindowPrivate(window);
         var shouldHideItem =
           hideIfNoIP ||
-          hideIfInTabBrowser ||
-          hideIfNotInTabBrowser ||
+          hideIfTabBrowser ||
+          hideIfNotTabBrowser ||
           hideIfPrivate ||
           !this._shouldShowMenuItem(item, metadata);
         item.hidden = item.disabled = shouldHideItem;
