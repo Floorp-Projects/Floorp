@@ -226,15 +226,6 @@ class Raptor(
                 },
             ],
             [
-                ["--no-conditioned-profile"],
-                {
-                    "action": "store_true",
-                    "dest": "no_conditioned_profile",
-                    "default": False,
-                    "help": "Run without the conditioned profile.",
-                },
-            ],
-            [
                 ["--device-name"],
                 {
                     "dest": "device_name",
@@ -394,12 +385,12 @@ class Raptor(
                 },
             ],
             [
-                ["--conditioned-profile-scenario"],
+                ["--conditioned-profile"],
                 {
-                    "dest": "conditioned_profile_scenario",
+                    "dest": "conditioned_profile",
                     "type": "str",
-                    "default": "settled",
-                    "help": "Name of profile scenario.",
+                    "default": None,
+                    "help": "Name of conditioned profile to use.",
                 },
             ],
             [
@@ -607,9 +598,7 @@ class Raptor(
         self.live_sites = self.config.get("live_sites")
         self.chimera = self.config.get("chimera")
         self.disable_perf_tuning = self.config.get("disable_perf_tuning")
-        self.conditioned_profile_scenario = self.config.get(
-            "conditioned_profile_scenario", "settled"
-        )
+        self.conditioned_profile = self.config.get("conditioned_profile")
         self.extra_prefs = self.config.get("extra_prefs")
         self.environment = self.config.get("environment")
         self.is_release_build = self.config.get("is_release_build")
@@ -846,10 +835,8 @@ class Raptor(
             kw_options["device-name"] = self.config["device_name"]
         if self.config.get("activity") is not None:
             kw_options["activity"] = self.config["activity"]
-        if self.config.get("conditioned_profile_scenario") is not None:
-            kw_options["conditioned-profile-scenario"] = self.config[
-                "conditioned_profile_scenario"
-            ]
+        if self.config.get("conditioned_profile") is not None:
+            kw_options["conditioned-profile"] = self.config["conditioned_profile"]
 
         kw_options.update(kw)
         if self.host:
@@ -884,8 +871,6 @@ class Raptor(
             options.extend(["--cold"])
         if self.config.get("enable_webrender", False):
             options.extend(["--enable-webrender"])
-        if self.config.get("no_conditioned_profile", False):
-            options.extend(["--no-conditioned-profile"])
         if self.config.get("enable_fission", False):
             options.extend(["--enable-fission"])
         if self.config.get("verbose", False):
