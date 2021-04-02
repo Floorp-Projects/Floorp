@@ -30,7 +30,6 @@ nsLookAndFeel::nsLookAndFeel()
       mColorTextSelectBackground(0),
       mColorTextSelectBackgroundDisabled(0),
       mColorHighlight(0),
-      mColorTextSelectForeground(0),
       mColorAlternateSelectedControlText(0),
       mColorControlText(0),
       mColorText(0),
@@ -167,7 +166,7 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       aColor = mColorHighlight;
       break;
     case ColorID::TextSelectForeground:
-      aColor = mColorTextSelectForeground;
+      aColor = NS_DONT_CHANGE_COLOR;
       break;
     case ColorID::Highlighttext:  // CSS2 color
     case ColorID::MozAccentColorForeground:
@@ -602,8 +601,6 @@ void nsLookAndFeel::EnsureInit() {
 
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK
 
-  nscolor color;
-
   bool appearanceIsDark = false;
 
   if (@available(macOS 10.14, *)) {
@@ -626,13 +623,6 @@ void nsLookAndFeel::EnsureInit() {
   mColorTextSelectBackgroundDisabled = GetColorFromNSColor([NSColor secondarySelectedControlColor]);
 
   mColorHighlight = GetColorFromNSColor([NSColor alternateSelectedControlColor]);
-
-  GetColor(ColorID::TextSelectBackground, color);
-  if (color == 0x000000) {
-    mColorTextSelectForeground = NS_RGB(0xff, 0xff, 0xff);
-  } else {
-    mColorTextSelectForeground = NS_DONT_CHANGE_COLOR;
-  }
 
   mColorAlternateSelectedControlText =
       GetColorFromNSColor([NSColor alternateSelectedControlTextColor]);
