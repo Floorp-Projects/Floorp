@@ -3414,10 +3414,7 @@ static void ScrollToShowRect(nsIScrollableFrame* aFrameAsScrollable,
   const nsRect visibleRect(scrollPt,
                            aFrameAsScrollable->GetVisualViewportSize());
 
-  const nsMargin scrollPadding =
-      (aScrollFlags & ScrollFlags::IgnoreMarginAndPadding)
-          ? nsMargin()
-          : aFrameAsScrollable->GetScrollPadding();
+  const nsMargin scrollPadding = aFrameAsScrollable->GetScrollPadding();
 
   const nsRect rectToScrollIntoView = [&] {
     nsRect r(aRect);
@@ -3586,10 +3583,7 @@ void PresShell::DoScrollContentIntoView() {
 
   // Get the scroll-margin here since |frame| is going to be changed to iterate
   // over all continuation frames below.
-  nsMargin scrollMargin;
-  if (!(data->mContentToScrollToFlags & ScrollFlags::IgnoreMarginAndPadding)) {
-    scrollMargin = frame->StyleMargin()->GetScrollMargin();
-  }
+  const nsMargin scrollMargin = frame->StyleMargin()->GetScrollMargin();
 
   // This is a two-step process.
   // Step 1: Find the bounds of the rect we want to scroll into view.  For
@@ -8974,8 +8968,7 @@ bool PresShell::EventHandler::PrepareToUseCaretPosition(
             ->ScrollContentIntoView(
                 content, ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
                 ScrollAxis(kScrollMinimum, WhenToScroll::IfNotVisible),
-                ScrollFlags::ScrollOverflowHidden |
-                    ScrollFlags::IgnoreMarginAndPadding);
+                ScrollFlags::ScrollOverflowHidden);
     NS_ENSURE_SUCCESS(rv, false);
     frame = content->GetPrimaryFrame();
     NS_WARNING_ASSERTION(frame, "No frame for focused content?");
