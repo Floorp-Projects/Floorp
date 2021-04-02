@@ -458,6 +458,28 @@ MOZ_ALWAYS_INLINE Shape* Shape::searchNoHashify(Shape* start, jsid id) {
                                      entry, keep);
 }
 
+MOZ_ALWAYS_INLINE ObjectFlags GetObjectFlagsForNewProperty(Shape* last, jsid id,
+                                                           unsigned attrs,
+                                                           JSContext* cx) {
+  ObjectFlags flags = last->objectFlags();
+
+  uint32_t index;
+  if (IdIsIndex(id, &index)) {
+    flags.setFlag(ObjectFlag::Indexed);
+  } else if (JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id)->isInterestingSymbol()) {
+    flags.setFlag(ObjectFlag::HasInterestingSymbol);
+  }
+
+  if ((attrs & (JSPROP_READONLY | JSPROP_GETTER | JSPROP_SETTER |
+                JSPROP_CUSTOM_DATA_PROP)) &&
+      last->getObjectClass() == &PlainObject::class_ &&
+      !JSID_IS_ATOM(id, cx->names().proto)) {
+    flags.setFlag(ObjectFlag::HasNonWritableOrAccessorPropExclProto);
+  }
+
+  return flags;
+}
+
 } /* namespace js */
 
 #endif /* vm_Shape_inl_h */
