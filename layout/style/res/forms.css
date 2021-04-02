@@ -109,6 +109,7 @@ input::placeholder {
 }
 
 textarea {
+  display: inline-block;
   appearance: auto;
   -moz-default-appearance: textarea;
   margin-block: 1px;
