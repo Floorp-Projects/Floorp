@@ -5127,7 +5127,6 @@ class nsDisplayOutline final : public nsPaintedDisplayItem {
   void Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) override;
 
  private:
-  nsRect GetInnerRect() const;
   bool IsThemedOutline() const;
   bool HasRadius() const;
 };
