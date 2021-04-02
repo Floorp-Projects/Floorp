@@ -5,6 +5,7 @@
 import React from "react";
 import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
 import { Localized } from "./MSLocalized";
+import { Themes } from "./Themes";
 import { Zap } from "./Zap";
 import { HelpText } from "./HelpText";
 import { SecondaryCTA, StepsIndicator } from "./MultiStageAboutWelcome";
@@ -58,52 +59,11 @@ export class MultiStageScreen extends React.PureComponent {
         ) : null;
       case "theme":
         return this.props.content.tiles.data ? (
-          <div className="tiles-theme-container">
-            <div>
-              <fieldset className="tiles-theme-section">
-                <Localized text={this.props.content.subtitle}>
-                  <legend className="sr-only" />
-                </Localized>
-                {this.props.content.tiles.data.map(
-                  ({ theme, label, tooltip, description }) => (
-                    <Localized
-                      key={theme + label}
-                      text={typeof tooltip === "object" ? tooltip : {}}
-                    >
-                      <label
-                        className={`theme${
-                          theme === this.props.activeTheme ? " selected" : ""
-                        }`}
-                        title={theme + label}
-                      >
-                        <Localized
-                          text={
-                            typeof description === "object" ? description : {}
-                          }
-                        >
-                          <input
-                            type="radio"
-                            value={theme}
-                            name="theme"
-                            checked={theme === this.props.activeTheme}
-                            className="sr-only input"
-                            onClick={this.props.handleAction}
-                            data-l10n-attrs="aria-description"
-                          />
-                        </Localized>
-                        <div className={`icon ${theme}`} />
-                        {label && (
-                          <Localized text={label}>
-                            <div className="text" />
-                          </Localized>
-                        )}
-                      </label>
-                    </Localized>
-                  )
-                )}
-              </fieldset>
-            </div>
-          </div>
+          <Themes
+            content={this.props.content}
+            activeTheme={this.props.activeTheme}
+            handleAction={this.props.handleAction}
+          />
         ) : null;
       case "video":
         return this.props.content.tiles.source ? (

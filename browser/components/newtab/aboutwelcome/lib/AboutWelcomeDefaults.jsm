@@ -197,8 +197,142 @@ const DEFAULT_WELCOME_CONTENT = {
 };
 
 const DEFAULT_PROTON_WELCOME_CONTENT = {
-  ...DEFAULT_WELCOME_CONTENT,
   id: "DEFAULT_ABOUTWELCOME_PROTON",
+  template: "multistage",
+  screens: [
+    {
+      id: "AW_SET_DEFAULT",
+      order: 0,
+      content: {
+        title: "Welcome to Firefox",
+        subtitle: "An inspiring headline goes here",
+        help_text: {
+          text: "Placeholder Name - Metal drummer, Firefox aficianado",
+        },
+        primary_button: {
+          label: "Always use Firefox",
+          action: {
+            navigate: true,
+            type: "SET_DEFAULT_BROWSER",
+          },
+        },
+        secondary_button: {
+          label: {
+            string_id:
+              "onboarding-multistage-set-default-secondary-button-label",
+          },
+          action: {
+            navigate: true,
+          },
+        },
+      },
+    },
+    {
+      id: "AW_IMPORT_SETTINGS",
+      order: 1,
+      content: {
+        title: "Dive right in",
+        subtitle: "Import your passwords, bookmarks, and more",
+        primary_button: {
+          label: {
+            string_id: "onboarding-multistage-import-primary-button-label",
+          },
+          action: {
+            type: "SHOW_MIGRATION_WIZARD",
+            navigate: true,
+          },
+        },
+        secondary_button: {
+          label: {
+            string_id: "onboarding-multistage-import-secondary-button-label",
+          },
+          action: {
+            navigate: true,
+          },
+        },
+      },
+    },
+    {
+      id: "AW_CHOOSE_THEME",
+      order: 2,
+      content: {
+        title: "Get a fresh look",
+        subtitle: {
+          string_id: "onboarding-multistage-theme-subtitle",
+        },
+        tiles: {
+          type: "theme",
+          action: {
+            theme: "<event>",
+          },
+          data: [
+            {
+              theme: "automatic",
+              label: "Automatic",
+              tooltip: {
+                string_id: "onboarding-multistage-theme-tooltip-automatic-2",
+              },
+              description: {
+                string_id:
+                  "onboarding-multistage-theme-description-automatic-2",
+              },
+            },
+            {
+              theme: "light",
+              label: {
+                string_id: "onboarding-multistage-theme-label-light",
+              },
+              tooltip: {
+                string_id: "onboarding-multistage-theme-tooltip-light-2",
+              },
+              description: {
+                string_id: "onboarding-multistage-theme-description-light",
+              },
+            },
+            {
+              theme: "dark",
+              label: {
+                string_id: "onboarding-multistage-theme-label-dark",
+              },
+              tooltip: {
+                string_id: "onboarding-multistage-theme-tooltip-dark-2",
+              },
+              description: {
+                string_id: "onboarding-multistage-theme-description-dark",
+              },
+            },
+            {
+              theme: "alpenglow",
+              label: "Alpenglow",
+              tooltip: {
+                string_id: "onboarding-multistage-theme-tooltip-alpenglow-2",
+              },
+              description: {
+                string_id: "onboarding-multistage-theme-description-alpenglow",
+              },
+            },
+          ],
+        },
+        primary_button: {
+          label: {
+            string_id: "onboarding-multistage-theme-primary-button-label2",
+          },
+          action: {
+            navigate: true,
+          },
+        },
+        secondary_button: {
+          label: {
+            string_id: "onboarding-multistage-theme-secondary-button-label",
+          },
+          action: {
+            theme: "automatic",
+            navigate: true,
+          },
+        },
+      },
+    },
+  ],
 };
 
 // Helper function to determine if Windows platform supports
