@@ -39,7 +39,7 @@
     <!-- Text for context menu item to add to a contact. -->
     <string name="mozac_feature_contextmenu_add_to_contact">Apondre als contactes</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
-    <string name="mozac_selection_context_menu_search_2">Recèrca</string>
+    <string name="mozac_selection_context_menu_search_2">Cercar</string>
     <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text-->
     <string name="mozac_selection_context_menu_search_privately_2">Recèrca privada</string>
     <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
