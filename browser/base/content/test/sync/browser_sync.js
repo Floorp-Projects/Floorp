@@ -192,6 +192,7 @@ add_task(async function test_ui_state_signedin() {
   }
 
   checkMenuBarItem("sync-syncnowitem");
+  checkPanelHeader();
   checkFxaToolbarButtonPanel({
     headerTitle: "Manage Account",
     headerDescription: "foo@bar.com",
@@ -421,6 +422,7 @@ add_task(async function test_ui_state_syncdisabled() {
   }
 
   checkMenuBarItem("sync-enable");
+  checkPanelHeader();
   checkFxaToolbarButtonPanel({
     headerTitle: "Manage Account",
     headerDescription: "foo@bar.com",
@@ -478,6 +480,7 @@ add_task(async function test_ui_state_unverified() {
   );
 
   checkMenuBarItem("sync-unverifieditem");
+  checkPanelHeader();
   checkFxaToolbarButtonPanel({
     headerTitle: expectedLabel,
     headerDescription: state.email,
@@ -533,6 +536,7 @@ add_task(async function test_ui_state_loginFailed() {
   );
 
   checkMenuBarItem("sync-reauthitem");
+  checkPanelHeader();
   checkFxaToolbarButtonPanel({
     headerTitle: expectedLabel,
     headerDescription: state.email,
@@ -646,6 +650,15 @@ function checkMenuBarItem(expectedShownItemId) {
       "sync-unverifieditem",
     ],
     expectedShownItemId
+  );
+}
+
+function checkPanelHeader() {
+  let fxaPanelView = PanelMultiView.getViewNode(document, "PanelUI-fxa");
+  is(
+    fxaPanelView.getAttribute("title"),
+    gSync.fluentStrings.formatValueSync("appmenu-fxa-header2"),
+    "Panel title is correct"
   );
 }
 

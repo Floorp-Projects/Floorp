@@ -359,6 +359,7 @@ var gSync = {
         "browser/accounts.ftl",
         "browser/appmenu.ftl",
         "browser/sync.ftl",
+        "browser/branding/sync-brand.ftl",
       ],
       true
     ));
@@ -1036,6 +1037,7 @@ var gSync = {
       document,
       "appMenu-header-description"
     );
+    const fxaPanelView = PanelMultiView.getViewNode(document, "PanelUI-fxa");
 
     let defaultLabel = PanelUI.protonAppMenuEnabled
       ? this.fluentStrings.formatValueSync("appmenu-fxa-signed-in-label")
@@ -1115,6 +1117,10 @@ var gSync = {
     appMenuStatus.setAttribute("fxastatus", "signedin");
     appMenuLabel.setAttribute("label", state.email);
     appMenuLabel.classList.add("subviewbutton-nav");
+    fxaPanelView.setAttribute(
+      "title",
+      this.fluentStrings.formatValueSync("appmenu-fxa-header2")
+    );
     appMenuStatus.removeAttribute("tooltiptext");
   },
 
