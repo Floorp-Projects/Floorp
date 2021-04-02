@@ -43,7 +43,7 @@ let tests = [
       .then(function(response) {
         return response.arrayBuffer();
       }).then((b) => {
-        v.src = URL.createObjectURL(new Blob(new Uint8Array(b), ["audio/mpeg"]));
+        v.src = URL.createObjectURL(new Blob([new Uint8Array(b)], ["audio/mpeg"]));
         queueTaskAndStep(function() {
           assert_not_equals(v.currentSrc, "", "currentSrc must be not equal to the empty string after load if playing a Blob from the src attribute");
           next();
