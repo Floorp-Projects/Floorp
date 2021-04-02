@@ -528,6 +528,7 @@ PlacesController.prototype = {
    *      - `multiple` if it should be visible only when multiple nodes are
    *         selected
    *      - `none` if it should be visible when there are no selected nodes
+   *      - `any` if it should be visible for any kind of selection
    *      - a `|` separated combination of the above.
    *  5) The `nodetype` attribute may be set to values representing the
    *     type of the node triggering the context menu. The menuitem will be
