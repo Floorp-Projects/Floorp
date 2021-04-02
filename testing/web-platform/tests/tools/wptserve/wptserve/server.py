@@ -22,7 +22,7 @@ from h2.utilities import extract_method_header
 from urllib.parse import urlsplit, urlunsplit
 
 from mod_pywebsocket import dispatch
-from mod_pywebsocket.handshake import HandshakeException
+from mod_pywebsocket.handshake import HandshakeException, AbortedByUserException
 
 from . import routes as default_routes
 from .config import ConfigBuilder
@@ -482,6 +482,9 @@ class Http2WebTestRequestHandler(BaseWebTestRequestHandler):
             h2response.set_error(e.status)
             h2response.write()
             return
+        except AbortedByUserException:
+            h2response.write()
+            return
 
         # h2 Handshaker prepares the headers but does not send them down the
         # wire. Flush the headers here.
@@ -883,6 +886,7 @@ class _WebSocketRequest(object):
         """
 
         self.connection = _WebSocketConnection(request_handler, response)
+        self.protocol = "HTTP/2"
         self._response = response
 
         self.uri = request_handler.path
