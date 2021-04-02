@@ -199,10 +199,13 @@ struct nsCSSRendering {
       const nsStyleBorder& aBorderStyle, mozilla::ComputedStyle* aStyle,
       bool* aOutBorderIsEmpty, Sides aSkipSides = Sides());
 
-  static mozilla::Maybe<nsCSSBorderRenderer> CreateBorderRendererForOutline(
-      nsPresContext* aPresContext, gfxContext* aRenderingContext,
-      nsIFrame* aForFrame, const nsRect& aDirtyRect, const nsRect& aBorderArea,
-      mozilla::ComputedStyle* aStyle);
+  static mozilla::Maybe<nsCSSBorderRenderer>
+  CreateBorderRendererForNonThemedOutline(nsPresContext* aPresContext,
+                                          DrawTarget* aDrawTarget,
+                                          nsIFrame* aForFrame,
+                                          const nsRect& aDirtyRect,
+                                          const nsRect& aInnerRect,
+                                          mozilla::ComputedStyle* aStyle);
 
   static ImgDrawResult CreateWebRenderCommandsForBorder(
       nsDisplayItem* aItem, nsIFrame* aForFrame, const nsRect& aBorderArea,
@@ -229,13 +232,14 @@ struct nsCSSRendering {
       const nsStyleBorder& aStyleBorder);
 
   /**
-   * Render the outline for an element using css rendering rules
-   * for borders.
+   * Render the outline for an element using css rendering rules for borders.
    */
-  static void PaintOutline(nsPresContext* aPresContext,
-                           gfxContext& aRenderingContext, nsIFrame* aForFrame,
-                           const nsRect& aDirtyRect, const nsRect& aBorderArea,
-                           mozilla::ComputedStyle* aStyle);
+  static void PaintNonThemedOutline(nsPresContext* aPresContext,
+                                    gfxContext& aRenderingContext,
+                                    nsIFrame* aForFrame,
+                                    const nsRect& aDirtyRect,
+                                    const nsRect& aInnerRect,
+                                    mozilla::ComputedStyle* aStyle);
 
   /**
    * Render keyboard focus on an element.
