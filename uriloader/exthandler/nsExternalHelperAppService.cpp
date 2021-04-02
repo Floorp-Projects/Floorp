@@ -2344,6 +2344,12 @@ nsresult nsExternalAppHandler::CreateFailedTransfer() {
   rv = GetDownloadDirectory(getter_AddRefs(pseudoFile), true);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  // We won't pass the temp file to the transfer, so if we have one it needs to
+  // get deleted now.
+  if (mTempFile) {
+    mTempFile->Remove(false);
+  }
+
   // Append the default suggested filename. If the user restarts the transfer
   // we will re-trigger a filename check anyway to ensure that it is unique.
   rv = pseudoFile->Append(mSuggestedFileName);
