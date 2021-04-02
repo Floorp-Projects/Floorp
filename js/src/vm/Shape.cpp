@@ -974,10 +974,11 @@ Shape* NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj,
   ObjectFlags objectFlags = GetObjectFlagsForNewShape<IsAccessor::No>(
       obj->lastProperty(), id, attrs, cx);
 
-  // Now that we've possibly preserved slot, check whether all members match.
-  // If so, this is a redundant "put" and we can return without more work.
-  if (shape->matchesParamsAfterId(obj->lastProperty()->base(), objectFlags,
-                                  slot, attrs, nullptr, nullptr)) {
+  // Now that we've possibly preserved slot, check whether the property info and
+  // object flags match. If so, this is a redundant "put" and we can return
+  // without more work.
+  if (shape->matchesPropertyParamsAfterId(slot, attrs, nullptr, nullptr) &&
+      obj->lastProperty()->objectFlags() == objectFlags) {
     return shape;
   }
 
@@ -1083,10 +1084,11 @@ Shape* NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj,
   ObjectFlags objectFlags = GetObjectFlagsForNewShape<IsAccessor::Yes>(
       obj->lastProperty(), id, attrs, cx);
 
-  // Check whether all members match. If so, this is a redundant "put" and we
-  // can return without more work.
-  if (shape->matchesParamsAfterId(obj->lastProperty()->base(), objectFlags,
-                                  SHAPE_INVALID_SLOT, attrs, getter, setter)) {
+  // Check whether the property info and object flags match. If so, this is a
+  // redundant "put" and we can return without more work.
+  if (shape->matchesPropertyParamsAfterId(SHAPE_INVALID_SLOT, attrs, getter,
+                                          setter) &&
+      obj->lastProperty()->objectFlags() == objectFlags) {
     return shape;
   }
 
