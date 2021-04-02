@@ -10817,6 +10817,18 @@
     "description": "The length of time (in seconds) that a call lasted.",
     "releaseChannelCollection": "opt-out"
   },
+  "WEBRTC_AV_CALL_DURATION": {
+    "bug_numbers": [1695378],
+    "record_in_processes": ["content"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["webrtc-telemetry-alerts@mozilla.com", "nohlmeier@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 100,
+    "description": "The length of time (in seconds) that a call with audio or video in it lasted.",
+    "releaseChannelCollection": "opt-out"
+  },
   "WEBRTC_CALL_COUNT_3": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
