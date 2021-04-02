@@ -33,7 +33,27 @@
 return /******/ (() => { // webpackBootstrap
 /******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ([
-/* 0 */,
+/* 0 */
+/***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+Object.defineProperty(exports, "initSandbox", ({
+  enumerable: true,
+  get: function () {
+    return _initialization.initSandbox;
+  }
+}));
+
+var _initialization = __w_pdfjs_require__(1);
+
+const pdfjsVersion = '2.8.243';
+const pdfjsBuild = 'a16494135';
+
+/***/ }),
 /* 1 */
 /***/ ((__unused_webpack_module, exports, __w_pdfjs_require__) => {
 
@@ -4642,29 +4662,10 @@ exports.Util = Util;
 /******/ 	}
 /******/ 	
 /************************************************************************/
-var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be isolated against other modules in the chunk.
-(() => {
-var exports = __webpack_exports__;
-
-
-Object.defineProperty(exports, "__esModule", ({
-  value: true
-}));
-Object.defineProperty(exports, "initSandbox", ({
-  enumerable: true,
-  get: function () {
-    return _initialization.initSandbox;
-  }
-}));
-
-var _initialization = __w_pdfjs_require__(1);
-
-const pdfjsVersion = '2.8.243';
-const pdfjsBuild = 'a16494135';
-})();
-
-/******/ 	return __webpack_exports__;
+/******/ 	// module exports must be returned from runtime so entry inlining is disabled
+/******/ 	// startup
+/******/ 	// Load entry module and return exports
+/******/ 	return __w_pdfjs_require__(0);
 /******/ })()
 ;
 });
