@@ -35,8 +35,8 @@ def browser_kwargs(logger, test_type, run_info_data, config, **kwargs):
             "device_serial": kwargs["device_serial"],
             "webdriver_binary": kwargs["webdriver_binary"],
             "webdriver_args": kwargs.get("webdriver_args"),
-            "stackwalk_binary": kwargs.get("stackwalk_binary"),
-            "symbols_path": kwargs.get("symbols_path")}
+            "stackparser_script": kwargs.get("stackparser_script"),
+            "output_directory": kwargs.get("output_directory")}
 
 
 def executor_kwargs(logger, test_type, server_config, cache_manager, run_info_data,
@@ -127,12 +127,12 @@ class ChromeAndroidBrowserBase(Browser):
                  remote_queue = None,
                  device_serial=None,
                  webdriver_args=None,
-                 stackwalk_binary=None,
-                 symbols_path=None):
+                 stackparser_script=None,
+                 output_directory=None):
         super(ChromeAndroidBrowserBase, self).__init__(logger)
         self.device_serial = device_serial
-        self.stackwalk_binary = stackwalk_binary
-        self.symbols_path = symbols_path
+        self.stackparser_script = stackparser_script
+        self.output_directory = output_directory
         self.remote_queue = remote_queue
         self.server = ChromeDriverServer(self.logger,
                                          binary=webdriver_binary,
@@ -189,21 +189,15 @@ class ChromeAndroidBrowserBase(Browser):
         cmd.extend(['logcat', '*:D'])
         return cmd
 
-    def check_crash(self, process, test):
-        self.maybe_parse_tombstone()
-        # Existence of a tombstone does not necessarily mean test target has
-        # crashed. Always return False so we don't change the test results.
-        return False
-
-    def maybe_parse_tombstone(self):
-        if self.stackwalk_binary:
-            cmd = [self.stackwalk_binary, "-a", "-w"]
+    def maybe_parse_tombstone(self, logger):
+        if self.stackparser_script:
+            cmd = [self.stackparser_script, "-a", "-w"]
             if self.device_serial:
                 cmd.extend(["--device", self.device_serial])
-            cmd.extend(["--output-directory", self.symbols_path])
+            cmd.extend(["--output-directory", self.output_directory])
             raw_output = subprocess.check_output(cmd)
             for line in raw_output.splitlines():
-                self.logger.process_output("TRACE", line, "logcat")
+                logger.process_output("TRACE", line, "logcat")
 
     def setup_adb_reverse(self):
         self._adb_run(['wait-for-device'])
@@ -223,10 +217,10 @@ class ChromeAndroidBrowser(ChromeAndroidBrowserBase):
                  remote_queue = None,
                  device_serial=None,
                  webdriver_args=None,
-                 stackwalk_binary=None,
-                 symbols_path=None):
+                 stackparser_script=None,
+                 output_directory=None):
         super(ChromeAndroidBrowser, self).__init__(logger,
                 webdriver_binary, remote_queue, device_serial,
-                webdriver_args, stackwalk_binary, symbols_path)
+                webdriver_args, stackparser_script, output_directory)
         self.package_name = package_name
         self.wptserver_ports = _wptserve_ports
