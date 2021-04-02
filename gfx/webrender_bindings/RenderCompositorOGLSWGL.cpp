@@ -304,7 +304,7 @@ class PBOUnpackSurface : public gfx::DataSourceSurface {
 
   // PBO offsets need to start from a 0 address, but DataSourceSurface::Map
   // checks for failure by comparing the address against nullptr. Override Map
-  // to work around this. Due to DataSourceSurface::Map checking for failure via
+  // to work around this.
   bool Map(MapType, MappedSurface* aMappedSurface) override {
     aMappedSurface->mData = GetData();
     aMappedSurface->mStride = Stride();
