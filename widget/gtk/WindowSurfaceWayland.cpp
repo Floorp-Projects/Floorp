@@ -742,10 +742,6 @@ already_AddRefed<gfx::DrawTarget> WindowSurfaceWayland::Lock(
     return nullptr;
   }
 
-  // Wait until all pending events are processed. There may be queued
-  // wl_buffer release event which releases our wl_buffer for further rendering.
-  mWaylandDisplay->WaitForSyncEnd();
-
   // Lock the surface *after* WaitForSyncEnd() call as is can fire
   // FlushPendingCommits().
   MutexAutoLock lock(mSurfaceLock);
