@@ -3721,8 +3721,8 @@ ImgDrawResult nsTreeBodyFrame::PaintBackgroundLayer(
       aPresContext, aRenderingContext, this, aDirtyRect, aRect, *myBorder,
       mComputedStyle, PaintBorderFlags::SyncDecodeImages);
 
-  nsCSSRendering::PaintOutline(aPresContext, aRenderingContext, this,
-                               aDirtyRect, aRect, aComputedStyle);
+  nsCSSRendering::PaintNonThemedOutline(aPresContext, aRenderingContext, this,
+                                        aDirtyRect, aRect, aComputedStyle);
 
   return result;
 }
