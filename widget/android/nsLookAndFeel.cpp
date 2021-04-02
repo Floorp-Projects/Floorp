@@ -81,7 +81,8 @@ void nsLookAndFeel::RefreshImpl() {
   mSystemUsesDarkThemeCached = false;
 }
 
-nsresult nsLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
+nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme,
+                                       nscolor& aColor) {
   nsresult rv = NS_OK;
 
   EnsureInitSystemColors();

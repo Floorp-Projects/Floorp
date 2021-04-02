@@ -40,7 +40,7 @@ void nsLookAndFeel::RefreshImpl() {
   mInitialized = false;
 }
 
-nsresult nsLookAndFeel::NativeGetColor(const ColorID aID, nscolor& aResult) {
+nsresult nsLookAndFeel::NativeGetColor(ColorID, ColorScheme, nscolor& aResult) {
   EnsureInit();
 
   nsresult res = NS_OK;
