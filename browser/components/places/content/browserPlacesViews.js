@@ -174,6 +174,10 @@ PlacesViewBase.prototype = {
     return selectedNode ? [selectedNode] : [];
   },
 
+  get singleClickOpens() {
+    return true;
+  },
+
   get removableSelectionRanges() {
     // On static content the current selectedNode would be the selection's
     // parent node. We don't want to allow removing a node when the

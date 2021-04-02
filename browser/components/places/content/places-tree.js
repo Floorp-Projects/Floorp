@@ -192,9 +192,6 @@
       return this.getAttribute("flatList") == "true";
     }
 
-    /**
-     * nsIPlacesView
-     */
     get result() {
       try {
         return this.view.QueryInterface(Ci.nsINavHistoryResultObserver).result;
@@ -202,9 +199,7 @@
         return null;
       }
     }
-    /**
-     * nsIPlacesView
-     */
+
     set place(val) {
       this.setAttribute("place", val);
 
@@ -217,15 +212,11 @@
     get place() {
       return this.getAttribute("place");
     }
-    /**
-     * nsIPlacesView
-     */
+
     get hasSelection() {
       return this.view && this.view.selection.count >= 1;
     }
-    /**
-     * nsIPlacesView
-     */
+
     get selectedNodes() {
       let nodes = [];
       if (!this.hasSelection) {
@@ -245,9 +236,7 @@
       }
       return nodes;
     }
-    /**
-     * nsIPlacesView
-     */
+
     get removableSelectionRanges() {
       // This property exists in addition to selectedNodes because it
       // encodes selection ranges (which only occur in list views) into
@@ -303,15 +292,11 @@
       }
       return nodes;
     }
-    /**
-     * nsIPlacesView
-     */
+
     get draggableSelection() {
       return this.selectedNodes;
     }
-    /**
-     * nsIPlacesView
-     */
+
     get selectedNode() {
       var view = this.view;
       if (!view || view.selection.count != 1) {
@@ -325,9 +310,11 @@
 
       return this.view.nodeForTreeIndex(min.value);
     }
-    /**
-     * nsIPlacesView
-     */
+
+    get singleClickOpens() {
+      return this.getAttribute("singleclickopens") == "true";
+    }
+
     get insertionPoint() {
       // invalidated on selection and focus changes
       if (this._cachedInsertionPoint !== undefined) {
@@ -664,9 +651,6 @@
       });
     }
 
-    /**
-     * nsIPlacesView
-     */
     selectAll() {
       this.view.selection.selectAll();
     }

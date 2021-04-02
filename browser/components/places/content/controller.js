@@ -542,6 +542,8 @@ PlacesController.prototype = {
    *     a point in the view where a new item can be inserted.
    *  8) The boolean `hideifprivatebrowsing` attribute may be set to hide a
    *     menuitem in private browsing mode
+   *  9) The boolean `hideifsingleclickopens` attribute may be set to hide a
+   *     menuitem in views opening entries with a single click.
    *  9) The boolean `hideiftabbrowser` attribute may be set to hide a
    *     menuitem when we're in a tabbed browsing window.
    * 10) The boolean `hideifnotabbrowser` attribute may be set to hide a
@@ -590,11 +592,16 @@ PlacesController.prototype = {
         var hideIfPrivate =
           item.getAttribute("hideifprivatebrowsing") == "true" &&
           PrivateBrowsingUtils.isWindowPrivate(window);
+        var hideIfSingleClickOpens =
+          item.getAttribute("hideifsingleclickopens") == "true" &&
+          this._view.singleClickOpens;
+
         var shouldHideItem =
           hideIfNoIP ||
           hideIfTabBrowser ||
           hideIfNotTabBrowser ||
           hideIfPrivate ||
+          hideIfSingleClickOpens ||
           !this._shouldShowMenuItem(item, metadata);
         item.hidden = item.disabled = shouldHideItem;
 

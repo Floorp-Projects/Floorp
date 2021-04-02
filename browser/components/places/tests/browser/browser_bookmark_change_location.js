@@ -52,9 +52,7 @@ add_task(async function test_change_location_from_Toolbar() {
         button: 2,
         type: "contextmenu",
       });
-      console.log("JKJKJKJKJKafterBEFORE");
       await promisePopup;
-      console.log("JKJKJKJKJKafter");
 
       let properties = document.getElementById(
         "placesContext_show_bookmark:info"
