@@ -140,15 +140,6 @@ class LookAndFeel {
     WindowsGlass,
 
     /*
-     * A Boolean value to determine whether the device is a touch enabled
-     * device. Currently this is only supported by the Windows 7 Touch API.
-     *
-     * Platforms that do not support this metric should return
-     * NS_ERROR_NOT_IMPLEMENTED when queried for this metric.
-     */
-    TouchEnabled,
-
-    /*
      * A Boolean value to determine whether the Mac graphite theme is
      * being used.
      *
@@ -284,6 +275,30 @@ class LookAndFeel {
      */
     GTKCSDCloseButton,
 
+    /**
+     * An Integer value that will represent the position of the Minimize button
+     * in GTK Client side decoration header. Its value will be between 0 and 2
+     * if it is on the left side of the tabbar, otherwise it will be between
+     * 3 and 5.
+     */
+    GTKCSDMinimizeButtonPosition,
+
+    /**
+     * An Integer value that will represent the position of the Maximize button
+     * in GTK Client side decoration header. Its value will be between 0 and 2
+     * if it is on the left side of the tabbar, otherwise it will be between
+     * 3 and 5.
+     */
+    GTKCSDMaximizeButtonPosition,
+
+    /**
+     * An Integer value that will represent the position of the Close button
+     * in GTK Client side decoration header. Its value will be between 0 and 2
+     * if it is on the left side of the tabbar, otherwise it will be between
+     * 3 and 5.
+     */
+    GTKCSDCloseButtonPosition,
+
     /*
      * A boolean value indicating whether titlebar buttons are located
      * in left titlebar corner.
@@ -318,30 +333,6 @@ class LookAndFeel {
      * 'Coarse | Fine | Hover'.
      */
     AllPointerCapabilities,
-    /**
-     * An Integer value that will represent the position of the Close button
-     * in GTK Client side decoration header. Its value will be between 0 and 2
-     * if it is on the left side of the tabbar, otherwise it will be between
-     * 3 and 5.
-     */
-    GTKCSDCloseButtonPosition,
-
-    /**
-     * An Integer value that will represent the position of the Minimize button
-     * in GTK Client side decoration header. Its value will be between 0 and 2
-     * if it is on the left side of the tabbar, otherwise it will be between
-     * 3 and 5.
-     */
-    GTKCSDMinimizeButtonPosition,
-
-    /**
-     * An Integer value that will represent the position of the Maximize button
-     * in GTK Client side decoration header. Its value will be between 0 and 2
-     * if it is on the left side of the tabbar, otherwise it will be between
-     * 3 and 5.
-     */
-    GTKCSDMaximizeButtonPosition,
-
     /** The vertical scrollbar width, in CSS pixels. */
     SystemVerticalScrollbarWidth,
 
