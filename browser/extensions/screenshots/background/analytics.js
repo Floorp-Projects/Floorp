@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* globals main, auth, browser, catcher, deviceInfo, communication, log */
+/* globals main, auth, browser, catcher, deviceInfo, log */
 
 "use strict";
 
@@ -33,7 +33,9 @@ this.analytics = (function() {
   };
 
   function shouldSendEvents() {
-    return !hasReturnedGone && serverFailedResponses > 0 && myGaSegment < GA_PORTION;
+    return (
+      !hasReturnedGone && serverFailedResponses > 0 && myGaSegment < GA_PORTION
+    );
   }
 
   function flushEvents() {
@@ -47,11 +49,17 @@ this.analytics = (function() {
 
     pendingEvents.forEach(event => {
       event.queueTime = sendTime - event.eventTime;
-      log.info(`sendEvent ${event.event}/${event.action}/${event.label || "none"} ${JSON.stringify(event.options)}`);
+      log.info(
+        `sendEvent ${event.event}/${event.action}/${event.label ||
+          "none"} ${JSON.stringify(event.options)}`
+      );
     });
 
-    const body = JSON.stringify({deviceId, events: pendingEvents});
-    const fetchRequest = fetch(eventsUrl, Object.assign({body}, fetchOptions));
+    const body = JSON.stringify({ deviceId, events: pendingEvents });
+    const fetchRequest = fetch(
+      eventsUrl,
+      Object.assign({ body }, fetchOptions)
+    );
     fetchWatcher(fetchRequest);
     pendingEvents = [];
   }
@@ -63,11 +71,16 @@ this.analytics = (function() {
 
     const timingsUrl = `${main.getBackend()}/timing`;
     const deviceId = auth.getDeviceId();
-    const body = JSON.stringify({deviceId, timings: pendingTimings});
-    const fetchRequest = fetch(timingsUrl, Object.assign({body}, fetchOptions));
+    const body = JSON.stringify({ deviceId, timings: pendingTimings });
+    const fetchRequest = fetch(
+      timingsUrl,
+      Object.assign({ body }, fetchOptions)
+    );
     fetchWatcher(fetchRequest);
     pendingTimings.forEach(t => {
-      log.info(`sendTiming ${t.timingCategory}/${t.timingLabel}/${t.timingVar}: ${t.timingValue}`);
+      log.info(
+        `sendTiming ${t.timingCategory}/${t.timingLabel}/${t.timingVar}: ${t.timingValue}`
+      );
     });
     pendingTimings = [];
   }
@@ -100,7 +113,10 @@ this.analytics = (function() {
       return Promise.resolve();
     }
     if (!telemetryEnabled) {
-      log.info(`Cancelled sendEvent ${eventCategory}/${action}/${label || "none"} ${JSON.stringify(options)}`);
+      log.info(
+        `Cancelled sendEvent ${eventCategory}/${action}/${label ||
+          "none"} ${JSON.stringify(options)}`
+      );
       return Promise.resolve();
     }
     measureTiming(action, label);
@@ -109,7 +125,7 @@ this.analytics = (function() {
     if (action === "internal") {
       return Promise.resolve();
     }
-    if (typeof label === "object" && (!options)) {
+    if (typeof label === "object" && !options) {
       options = label;
       label = undefined;
     }
@@ -159,21 +175,26 @@ this.analytics = (function() {
       log.warn(err);
       return Promise.resolve();
     }
-    return browser.telemetry.scalarAdd(`screenshots.${scalar}`, 1).catch(err => {
-      log.warn(`incrementCount failed with error: ${err}`);
-    });
+    return browser.telemetry
+      .scalarAdd(`screenshots.${scalar}`, 1)
+      .catch(err => {
+        log.warn(`incrementCount failed with error: ${err}`);
+      });
   };
 
   exports.refreshTelemetryPref = function() {
-    return browser.telemetry.canUpload().then((result) => {
-      telemetryPrefKnown = true;
-      telemetryEnabled = result;
-    }, (error) => {
-      // If there's an error reading the pref, we should assume that we shouldn't send data
-      telemetryPrefKnown = true;
-      telemetryEnabled = false;
-      throw error;
-    });
+    return browser.telemetry.canUpload().then(
+      result => {
+        telemetryPrefKnown = true;
+        telemetryEnabled = result;
+      },
+      error => {
+        // If there's an error reading the pref, we should assume that we shouldn't send data
+        telemetryPrefKnown = true;
+        telemetryEnabled = false;
+        throw error;
+      }
+    );
   };
 
   exports.isTelemetryEnabled = function() {
@@ -190,125 +211,141 @@ this.analytics = (function() {
   // and cd1 value is the elapsed time in milliseconds.
   // If a cancel event happens between the start and end events, the start time
   // is deleted.
-  const rules = [{
-    name: "page-action",
-    start: { action: "start-shot", label: "toolbar-button" },
-    end: { action: "internal", label: "unhide-preselection-frame" },
-    cancel: [
-      { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" },
-      { action: "internal", label: "unhide-onboarding-frame" },
-    ],
-  }, {
-    name: "context-menu",
-    start: { action: "start-shot", label: "context-menu" },
-    end: { action: "internal", label: "unhide-preselection-frame" },
-    cancel: [
-      { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" },
-      { action: "internal", label: "unhide-onboarding-frame" },
-    ],
-  }, {
-    name: "page-action-onboarding",
-    start: { action: "start-shot", label: "toolbar-button" },
-    end: { action: "internal", label: "unhide-onboarding-frame" },
-    cancel: [
-      { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" },
-      { action: "internal", label: "unhide-preselection-frame" },
-    ],
-  }, {
-    name: "context-menu-onboarding",
-    start: { action: "start-shot", label: "context-menu" },
-    end: { action: "internal", label: "unhide-onboarding-frame" },
-    cancel: [
-      { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" },
-      { action: "internal", label: "unhide-preselection-frame" },
-    ],
-  }, {
-    name: "capture-full-page",
-    start: { action: "capture-full-page" },
-    end: { action: "internal", label: "unhide-preview-frame" },
-    cancel: [
-      { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" },
-    ],
-  }, {
-    name: "capture-visible",
-    start: { action: "capture-visible" },
-    end: { action: "internal", label: "unhide-preview-frame" },
-    cancel: [
-      { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" },
-    ],
-  }, {
-    name: "make-selection",
-    start: { action: "make-selection" },
-    end: { action: "internal", label: "unhide-selection-frame" },
-    cancel: [
-      { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" },
-    ],
-  }, {
-    name: "save-shot",
-    start: { action: "save-shot" },
-    end: { action: "internal", label: "open-shot-tab" },
-    cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }],
-  }, {
-    name: "save-visible",
-    start: { action: "save-visible" },
-    end: { action: "internal", label: "open-shot-tab" },
-    cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }],
-  }, {
-    name: "save-full-page",
-    start: { action: "save-full-page" },
-    end: { action: "internal", label: "open-shot-tab" },
-    cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }],
-  }, {
-    name: "save-full-page-truncated",
-    start: { action: "save-full-page-truncated" },
-    end: { action: "internal", label: "open-shot-tab" },
-    cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }],
-  }, {
-    name: "download-shot",
-    start: { action: "download-shot" },
-    end: { action: "internal", label: "deactivate" },
-    cancel: [
-      { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" },
-    ],
-  }, {
-    name: "download-full-page",
-    start: { action: "download-full-page" },
-    end: { action: "internal", label: "deactivate" },
-    cancel: [
-      { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" },
-    ],
-  }, {
-    name: "download-full-page-truncated",
-    start: { action: "download-full-page-truncated" },
-    end: { action: "internal", label: "deactivate" },
-    cancel: [
-      { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" },
-    ],
-  }, {
-    name: "download-visible",
-    start: { action: "download-visible" },
-    end: { action: "internal", label: "deactivate" },
-    cancel: [
-      { action: "cancel-shot" },
-      { action: "internal", label: "document-hidden" },
-    ],
-  }];
+  const rules = [
+    {
+      name: "page-action",
+      start: { action: "start-shot", label: "toolbar-button" },
+      end: { action: "internal", label: "unhide-preselection-frame" },
+      cancel: [
+        { action: "cancel-shot" },
+        { action: "internal", label: "document-hidden" },
+        { action: "internal", label: "unhide-onboarding-frame" },
+      ],
+    },
+    {
+      name: "context-menu",
+      start: { action: "start-shot", label: "context-menu" },
+      end: { action: "internal", label: "unhide-preselection-frame" },
+      cancel: [
+        { action: "cancel-shot" },
+        { action: "internal", label: "document-hidden" },
+        { action: "internal", label: "unhide-onboarding-frame" },
+      ],
+    },
+    {
+      name: "page-action-onboarding",
+      start: { action: "start-shot", label: "toolbar-button" },
+      end: { action: "internal", label: "unhide-onboarding-frame" },
+      cancel: [
+        { action: "cancel-shot" },
+        { action: "internal", label: "document-hidden" },
+        { action: "internal", label: "unhide-preselection-frame" },
+      ],
+    },
+    {
+      name: "context-menu-onboarding",
+      start: { action: "start-shot", label: "context-menu" },
+      end: { action: "internal", label: "unhide-onboarding-frame" },
+      cancel: [
+        { action: "cancel-shot" },
+        { action: "internal", label: "document-hidden" },
+        { action: "internal", label: "unhide-preselection-frame" },
+      ],
+    },
+    {
+      name: "capture-full-page",
+      start: { action: "capture-full-page" },
+      end: { action: "internal", label: "unhide-preview-frame" },
+      cancel: [
+        { action: "cancel-shot" },
+        { action: "internal", label: "document-hidden" },
+      ],
+    },
+    {
+      name: "capture-visible",
+      start: { action: "capture-visible" },
+      end: { action: "internal", label: "unhide-preview-frame" },
+      cancel: [
+        { action: "cancel-shot" },
+        { action: "internal", label: "document-hidden" },
+      ],
+    },
+    {
+      name: "make-selection",
+      start: { action: "make-selection" },
+      end: { action: "internal", label: "unhide-selection-frame" },
+      cancel: [
+        { action: "cancel-shot" },
+        { action: "internal", label: "document-hidden" },
+      ],
+    },
+    {
+      name: "save-shot",
+      start: { action: "save-shot" },
+      end: { action: "internal", label: "open-shot-tab" },
+      cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }],
+    },
+    {
+      name: "save-visible",
+      start: { action: "save-visible" },
+      end: { action: "internal", label: "open-shot-tab" },
+      cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }],
+    },
+    {
+      name: "save-full-page",
+      start: { action: "save-full-page" },
+      end: { action: "internal", label: "open-shot-tab" },
+      cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }],
+    },
+    {
+      name: "save-full-page-truncated",
+      start: { action: "save-full-page-truncated" },
+      end: { action: "internal", label: "open-shot-tab" },
+      cancel: [{ action: "cancel-shot" }, { action: "upload-failed" }],
+    },
+    {
+      name: "download-shot",
+      start: { action: "download-shot" },
+      end: { action: "internal", label: "deactivate" },
+      cancel: [
+        { action: "cancel-shot" },
+        { action: "internal", label: "document-hidden" },
+      ],
+    },
+    {
+      name: "download-full-page",
+      start: { action: "download-full-page" },
+      end: { action: "internal", label: "deactivate" },
+      cancel: [
+        { action: "cancel-shot" },
+        { action: "internal", label: "document-hidden" },
+      ],
+    },
+    {
+      name: "download-full-page-truncated",
+      start: { action: "download-full-page-truncated" },
+      end: { action: "internal", label: "deactivate" },
+      cancel: [
+        { action: "cancel-shot" },
+        { action: "internal", label: "document-hidden" },
+      ],
+    },
+    {
+      name: "download-visible",
+      start: { action: "download-visible" },
+      end: { action: "internal", label: "deactivate" },
+      cancel: [
+        { action: "cancel-shot" },
+        { action: "internal", label: "document-hidden" },
+      ],
+    },
+  ];
 
   // Match a filter (action and optional label) against an action and label.
   function match(filter, action, label) {
-    return filter.label ?
-      filter.action === action && filter.label === label :
-      filter.action === action;
+    return filter.label
+      ? filter.action === action && filter.label === label
+      : filter.action === action;
   }
 
   function anyMatches(filters, action, label) {
@@ -331,31 +368,36 @@ this.analytics = (function() {
   }
 
   function fetchWatcher(request) {
-    request.then(response => {
-      if (response.status === 410 || response.status === 404) { // Gone
-        hasReturnedGone = true;
-        pendingEvents = [];
-        pendingTimings = [];
-      }
-      if (!response.ok) {
-        log.debug(`Error code in event response: ${response.status} ${response.statusText}`);
-      }
-    }).catch(error => {
-      serverFailedResponses--;
-      if (serverFailedResponses <= 0) {
-        log.info(`Server is not responding, no more events will be sent`);
-        pendingEvents = [];
-        pendingTimings = [];
-      }
-      log.debug(`Error event in response: ${error}`);
-    });
+    request
+      .then(response => {
+        if (response.status === 410 || response.status === 404) {
+          // Gone
+          hasReturnedGone = true;
+          pendingEvents = [];
+          pendingTimings = [];
+        }
+        if (!response.ok) {
+          log.debug(
+            `Error code in event response: ${response.status} ${response.statusText}`
+          );
+        }
+      })
+      .catch(error => {
+        serverFailedResponses--;
+        if (serverFailedResponses <= 0) {
+          log.info(`Server is not responding, no more events will be sent`);
+          pendingEvents = [];
+          pendingTimings = [];
+        }
+        log.debug(`Error event in response: ${error}`);
+      });
   }
 
   async function init() {
     const result = await browser.storage.local.get(["myGaSegment"]);
     if (!result.myGaSegment) {
       myGaSegment = Math.random();
-      await browser.storage.local.set({myGaSegment});
+      await browser.storage.local.set({ myGaSegment });
     } else {
       myGaSegment = result.myGaSegment;
     }
