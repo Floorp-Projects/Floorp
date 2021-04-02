@@ -443,7 +443,7 @@ DeviceColor nsDisplaySelectionOverlay::ComputeColor() const {
   }
 
   return ApplyTransparencyIfNecessary(
-      LookAndFeel::Color(colorID, mFrame, NS_RGB(255, 255, 255)));
+      LookAndFeel::GetColor(colorID, NS_RGB(255, 255, 255)));
 }
 
 void nsDisplaySelectionOverlay::Paint(nsDisplayListBuilder* aBuilder,
