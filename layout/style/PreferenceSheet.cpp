@@ -14,7 +14,6 @@
 #include "mozilla/StaticPrefs_devtools.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/LookAndFeel.h"
-#include "mozilla/ServoBindings.h"
 #include "mozilla/dom/Document.h"
 #include "nsContentUtils.h"
 
@@ -89,28 +88,30 @@ void PreferenceSheet::Prefs::Load(bool aIsChrome) {
   mFocusRingStyle = StaticPrefs::browser_display_focus_ring_style();
   mFocusRingOnAnything = StaticPrefs::browser_display_focus_ring_on_anything();
 
-  const bool useStandins = nsContentUtils::UseStandinsForNativeColors();
-  const bool usePrefColors = !useStandins && !aIsChrome && !mUseAccessibilityTheme &&
+  const bool usePrefColors = !aIsChrome && !mUseAccessibilityTheme &&
                              !StaticPrefs::browser_display_use_system_colors();
-  if (usePrefColors) {
+
+  if (nsContentUtils::UseStandinsForNativeColors()) {
+    mDefaultColor = LookAndFeel::GetColorUsingStandins(
+        LookAndFeel::ColorID::Windowtext, mDefaultColor);
+    mDefaultBackgroundColor = LookAndFeel::GetColorUsingStandins(
+        LookAndFeel::ColorID::Window, mDefaultBackgroundColor);
+    mLinkColor = LookAndFeel::GetColorUsingStandins(
+        LookAndFeel::ColorID::MozNativehyperlinktext, mLinkColor);
+  } else if (usePrefColors) {
     GetColor("browser.display.background_color", mDefaultBackgroundColor);
     GetColor("browser.display.foreground_color", mDefaultColor);
     GetColor("browser.anchor_color", mLinkColor);
   } else {
-    using ColorID = LookAndFeel::ColorID;
-    const auto standins = LookAndFeel::UseStandins(useStandins);
-    // TODO(emilio): In the future we probably want to keep both sets of colors
-    // around or something.
-    const auto scheme = LookAndFeel::ColorScheme::Light;
-    mDefaultColor = LookAndFeel::Color(
-        ColorID::WindowForeground, scheme, standins, mDefaultColor);
-    mDefaultBackgroundColor = LookAndFeel::Color(
-        ColorID::WindowBackground, scheme, standins, mDefaultBackgroundColor);
-    mLinkColor = LookAndFeel::Color(
-        ColorID::MozNativehyperlinktext, scheme, standins, mLinkColor);
+    mDefaultColor = LookAndFeel::GetColor(
+        LookAndFeel::ColorID::WindowForeground, mDefaultColor);
+    mDefaultBackgroundColor = LookAndFeel::GetColor(
+        LookAndFeel::ColorID::WindowBackground, mDefaultBackgroundColor);
+    mLinkColor = LookAndFeel::GetColor(
+        LookAndFeel::ColorID::MozNativehyperlinktext, mLinkColor);
   }
 
-  if (mUseAccessibilityTheme && !useStandins) {
+  if (mUseAccessibilityTheme && !nsContentUtils::UseStandinsForNativeColors()) {
     mActiveLinkColor = mLinkColor;
     // Visited link color is produced by preserving the foreground's green
     // and averaging the foreground and background for the red and blue.
