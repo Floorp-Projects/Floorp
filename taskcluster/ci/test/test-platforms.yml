@@ -365,6 +365,9 @@ macosx1015-64-shippable-qr/opt:
         - raptor-profiling
         - talos-profiling
         - macosx1015-64-qr-tests
+        - web-platform-tests
+        - web-platform-tests-backlog
+        - web-platform-tests-wdspec-headless
 
 macosx1015-64/debug:
     build-platform: macosx64/debug
@@ -376,10 +379,23 @@ macosx1015-64-devedition/opt:
     test-sets:
         - macosx1015-64-tests
 
+macosx1015-64-devedition-qr/opt:
+    build-platform: macosx64-devedition/opt
+    test-sets:
+        - web-platform-tests
+
 macosx1015-64-qr/opt:
     build-platform: macosx64/opt
     test-sets:
         - macosx1015-64-qr-tests
+        - web-platform-tests
+        - web-platform-tests-backlog
+        - web-platform-tests-wdspec-headless
+
+macosx1015-64-qr/debug:
+    build-platform: macosx64/debug
+    test-sets:
+        - web-platform-tests
 
 macosx1014-64/debug:
     build-platform: macosx64/debug
@@ -396,30 +412,22 @@ macosx1014-64-qr/opt:
     test-sets:
         - macosx1014-64-qr-tests
         - desktop-screenshot-capture
-        - web-platform-tests
-        - web-platform-tests-backlog
-        - web-platform-tests-wdspec-headless
 
 macosx1014-64-shippable-qr/opt:
     build-platform: macosx64-shippable/opt
     test-sets:
         - macosx1014-64-qr-tests
         - desktop-screenshot-capture
-        - web-platform-tests
-        - web-platform-tests-backlog
-        - web-platform-tests-wdspec-headless
 
 macosx1014-64-devedition-qr/opt:
     build-platform: macosx64-devedition/opt
     test-sets:
         - macosx1014-64-qr-tests
-        - web-platform-tests
 
 macosx1014-64-qr/debug:
     build-platform: macosx64/debug
     test-sets:
         - macosx1014-64-qr-tests
-        - web-platform-tests
 
 macosx1014-64-ccov-qr/opt:
     build-platform: macosx64-ccov/opt
