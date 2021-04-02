@@ -16,14 +16,15 @@ add_task(async function test_inject_srcdoc() {
   const addon = await AddonManager.getAddonByID("screenshots@mozilla.org");
   const isEnabled = addon.enabled;
   if (!isEnabled) {
-    await addon.enable({allowSystemAddons: true});
+    await addon.enable({ allowSystemAddons: true });
     registerCleanupFunction(async () => {
-      await addon.disable({allowSystemAddons: true});
+      await addon.disable({ allowSystemAddons: true });
     });
   }
 
-  await BrowserTestUtils.withNewTab(TEST_PATH + "injection-page.html",
-    async (browser) => {
+  await BrowserTestUtils.withNewTab(
+    TEST_PATH + "injection-page.html",
+    async browser => {
       // Set up the content hijacking. Do this so we can see it without
       // awaiting - the promise should never resolve.
       let response = null;
@@ -31,12 +32,12 @@ add_task(async function test_inject_srcdoc() {
         return new Promise(resolve => {
           // We can't pass `resolve` directly because of sandboxing.
           // `responseHandler` gets invoked from the content page.
-          content.wrappedJSObject.responseHandler = Cu.exportFunction(
-            function(arg) {
-              resolve(arg)
-            },
-            content
-          );
+          content.wrappedJSObject.responseHandler = Cu.exportFunction(function(
+            arg
+          ) {
+            resolve(arg);
+          },
+          content);
         });
       }).then(
         r => {
@@ -54,7 +55,9 @@ add_task(async function test_inject_srcdoc() {
       let error;
       let errorPromise = new Promise(resolve => {
         SpecialPowers.registerConsoleListener(msg => {
-          if (msg.message?.match(/iframe URL does not match expected blank.html/)) {
+          if (
+            msg.message?.match(/iframe URL does not match expected blank.html/)
+          ) {
             error = msg;
             resolve();
           }
@@ -68,5 +71,6 @@ add_task(async function test_inject_srcdoc() {
       ok(!response, "Should not get a response from the webpage.");
 
       SpecialPowers.postConsoleSentinel();
-    });
+    }
+  );
 });
