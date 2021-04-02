@@ -23,6 +23,14 @@
 
 namespace mozilla::widget {
 
+// A cached copy of the data extracted by ExtractData.
+//
+// Storing this lets us avoid doing most of the work of ExtractData each
+// time we create a new content process.
+//
+// Only used in the parent process.
+static StaticAutoPtr<FullLookAndFeel> sCachedLookAndFeelData;
+
 RemoteLookAndFeel::RemoteLookAndFeel(FullLookAndFeel&& aData)
     : mTables(std::move(aData.tables())) {
   MOZ_ASSERT(XRE_IsContentProcess(),
@@ -241,7 +249,5 @@ void RemoteLookAndFeel::ClearCachedData() {
   MOZ_ASSERT(XRE_IsParentProcess());
   sCachedLookAndFeelData = nullptr;
 }
-
-StaticAutoPtr<FullLookAndFeel> RemoteLookAndFeel::sCachedLookAndFeelData;
 
 }  // namespace mozilla::widget
