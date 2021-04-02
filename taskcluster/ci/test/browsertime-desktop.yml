@@ -35,6 +35,7 @@ job-defaults:
                     - raptor/linux_config.py
         extra-options:
             - --browsertime
+            - --no-conditioned-profile
     variants:
         by-app:
             firefox:
@@ -62,10 +63,12 @@ browsertime-tp6:
                     windows10.*shippable.*-qr.*:
                         - --chimera
                         - --browsertime
+                        - --no-conditioned-profile
                         - --browsertime-no-ffwindowrecorder
                     default:
                         - --chimera
                         - --browsertime
+                        - --no-conditioned-profile
         raptor-test: tp6
         run-on-projects:
             by-variant:
