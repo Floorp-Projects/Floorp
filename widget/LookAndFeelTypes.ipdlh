@@ -30,10 +30,6 @@ namespace widget {
  * to indexes into the value arrays.  The map arrays are of fixed
  * length, determined by the maximum ID value.  If a value for a
  * particular ID is not present, the entry in the map is set to -1.
- *
- * (Note that fontMap is different from the others since it maps from a
- * LookAndFeel::FontID value minus 1, as 1 is the minimum value of that
- * enum.)
  */
 struct LookAndFeelTables {
     int32_t[] ints;
