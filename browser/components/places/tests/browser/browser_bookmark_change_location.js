@@ -13,12 +13,39 @@ const TEST_URL3 = "about:credits";
 
 // Setup.
 add_task(async function setup() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.toolbars.bookmarks.visibility", "always"]],
+  });
+
+  // The following initialization code is necessary to avoid a frequent
+  // intermittent failure in verify-fission where, due to timings, we may or
+  // may not import default bookmarks. We also want to avoid the empty toolbar
+  // placeholder shifting stuff around.
+  info("Ensure Places init is complete");
+  let placesInitCompleteObserved = TestUtils.topicObserved(
+    "places-browser-init-complete"
+  );
+  Cc["@mozilla.org/browser/browserglue;1"]
+    .getService(Ci.nsIObserver)
+    .observe(null, "browser-glue-test", "places-browser-init-complete");
+  await placesInitCompleteObserved;
+  info("Add a bookmark to avoid showing the empty toolbar placeholder.");
+  await PlacesUtils.bookmarks.insert({
+    parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+    title: "initial",
+    url: TEST_URL,
+  });
+
   let toolbar = document.getElementById("PersonalToolbar");
   let wasCollapsed = toolbar.collapsed;
-
-  // Uncollapse the personal toolbar if needed.
   if (wasCollapsed) {
+    info("Show the bookmarks toolbar");
     await promiseSetToolbarVisibility(toolbar, true);
+    info("Ensure toolbar visibility was updated");
+    await BrowserTestUtils.waitForEvent(
+      toolbar,
+      "BookmarksToolbarVisibilityUpdated"
+    );
   }
 
   // Cleanup.
