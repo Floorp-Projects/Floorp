@@ -237,12 +237,16 @@ static bool TeeReaderReadHandler(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    // Step 4: Resolve cancelPromise with undefined.
-    Rooted<PromiseObject*> unwrappedCancelPromise(
-        cx, unwrappedTeeState->cancelPromise());
-    MOZ_ASSERT(unwrappedCancelPromise != nullptr);
-    if (!ResolveUnwrappedPromiseWithUndefined(cx, unwrappedCancelPromise)) {
-      return false;
+    // Step 4: If canceled1 is false or canceled2 is false,
+    //         resolve cancelPromise with undefined.
+    if (!unwrappedTeeState->canceled1() || !unwrappedTeeState->canceled2()) {
+      Rooted<PromiseObject*> unwrappedCancelPromise(
+          cx, unwrappedTeeState->cancelPromise());
+      MOZ_ASSERT(unwrappedCancelPromise != nullptr);
+
+      if (!ResolveUnwrappedPromiseWithUndefined(cx, unwrappedCancelPromise)) {
+        return false;
+      }
     }
 
     args.rval().setUndefined();
