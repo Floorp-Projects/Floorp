@@ -2,97 +2,66 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 XPCOMUtils.defineLazyModuleGetters(this, {
+  EnterprisePolicyTesting:
+    "resource://testing-common/EnterprisePolicyTesting.jsm",
   ExtensionCommon: "resource://gre/modules/ExtensionCommon.jsm",
   PlacesTestUtils: "resource://testing-common/PlacesTestUtils.jsm",
+  sinon: "resource://testing-common/Sinon.jsm",
+  TelemetryTestUtils: "resource://testing-common/TelemetryTestUtils.jsm",
 });
 
-function promisePageActionPanelOpen(eventDict = {}) {
-  let dwu = window.windowUtils;
-  return BrowserTestUtils.waitForCondition(() => {
+async function promisePageActionPanelOpen(win = window, eventDict = {}) {
+  await BrowserTestUtils.waitForCondition(() => {
     // Wait for the main page action button to become visible.  It's hidden for
     // some URIs, so depending on when this is called, it may not yet be quite
     // visible.  It's up to the caller to make sure it will be visible.
     info("Waiting for main page action button to have non-0 size");
-    let bounds = dwu.getBoundsWithoutFlushing(
-      BrowserPageActions.mainButtonNode
+    let bounds = win.windowUtils.getBoundsWithoutFlushing(
+      win.BrowserPageActions.mainButtonNode
     );
     return bounds.width > 0 && bounds.height > 0;
-  })
-    .then(() => {
-      // Wait for the panel to become open, by clicking the button if necessary.
-      info("Waiting for main page action panel to be open");
-      if (BrowserPageActions.panelNode.state == "open") {
-        return Promise.resolve();
-      }
-      let shownPromise = promisePageActionPanelShown();
-      EventUtils.synthesizeMouseAtCenter(
-        BrowserPageActions.mainButtonNode,
-        eventDict
-      );
-      return shownPromise;
-    })
-    .then(() => {
-      // Wait for items in the panel to become visible.
-      return promisePageActionViewChildrenVisible(
-        BrowserPageActions.mainViewNode
-      );
-    });
-}
+  });
 
-async function waitForActivatedActionPanel() {
-  if (!BrowserPageActions.activatedActionPanelNode) {
-    info("Waiting for activated-action panel to be added to mainPopupSet");
-    await new Promise(resolve => {
-      let observer = new MutationObserver(mutations => {
-        if (BrowserPageActions.activatedActionPanelNode) {
-          observer.disconnect();
-          resolve();
-        }
-      });
-      let popupSet = document.getElementById("mainPopupSet");
-      observer.observe(popupSet, { childList: true });
-    });
-    info("Activated-action panel added to mainPopupSet");
+  // Wait for the panel to become open, by clicking the button if necessary.
+  info("Waiting for main page action panel to be open");
+  if (win.BrowserPageActions.panelNode.state == "open") {
+    return;
   }
-  if (!BrowserPageActions.activatedActionPanelNode.state == "open") {
-    info("Waiting for activated-action panel popupshown");
-    await promisePanelShown(BrowserPageActions.activatedActionPanelNode);
-    info("Got activated-action panel popupshown");
-  }
-  let panelView = BrowserPageActions.activatedActionPanelNode.querySelector(
-    "panelview"
+  let shownPromise = promisePageActionPanelShown(win);
+  EventUtils.synthesizeMouseAtCenter(
+    win.BrowserPageActions.mainButtonNode,
+    eventDict,
+    win
   );
-  if (panelView) {
-    await BrowserTestUtils.waitForEvent(
-      BrowserPageActions.activatedActionPanelNode,
-      "ViewShown"
-    );
-    await promisePageActionViewChildrenVisible(panelView);
-  }
-  return panelView;
+  await shownPromise;
+  info("Wait for items in the panel to become visible.");
+  await promisePageActionViewChildrenVisible(
+    win.BrowserPageActions.mainViewNode,
+    win
+  );
 }
 
-function promisePageActionPanelShown() {
-  return promisePanelShown(BrowserPageActions.panelNode);
+function promisePageActionPanelShown(win = window) {
+  return promisePanelShown(win.BrowserPageActions.panelNode, win);
 }
 
-function promisePageActionPanelHidden() {
-  return promisePanelHidden(BrowserPageActions.panelNode);
+function promisePageActionPanelHidden(win = window) {
+  return promisePanelHidden(win.BrowserPageActions.panelNode, win);
 }
 
-function promisePanelShown(panelIDOrNode) {
-  return promisePanelEvent(panelIDOrNode, "popupshown");
+function promisePanelShown(panelIDOrNode, win = window) {
+  return promisePanelEvent(panelIDOrNode, "popupshown", win);
 }
 
-function promisePanelHidden(panelIDOrNode) {
-  return promisePanelEvent(panelIDOrNode, "popuphidden");
+function promisePanelHidden(panelIDOrNode, win = window) {
+  return promisePanelEvent(panelIDOrNode, "popuphidden", win);
 }
 
-function promisePanelEvent(panelIDOrNode, eventType) {
+function promisePanelEvent(panelIDOrNode, eventType, win = window) {
   return new Promise(resolve => {
     let panel = panelIDOrNode;
     if (typeof panel == "string") {
-      panel = document.getElementById(panelIDOrNode);
+      panel = win.document.getElementById(panelIDOrNode);
       if (!panel) {
         throw new Error(`Panel with ID "${panelIDOrNode}" does not exist.`);
       }
@@ -114,34 +83,22 @@ function promisePanelEvent(panelIDOrNode, eventType) {
   });
 }
 
-function promisePageActionViewShown() {
-  info("promisePageActionViewShown waiting for ViewShown");
-  return BrowserTestUtils.waitForEvent(
-    BrowserPageActions.panelNode,
-    "ViewShown"
-  ).then(async event => {
-    let panelViewNode = event.originalTarget;
-    await promisePageActionViewChildrenVisible(panelViewNode);
-    return panelViewNode;
-  });
-}
-
-function promisePageActionViewChildrenVisible(panelViewNode) {
-  return promiseNodeVisible(panelViewNode.firstElementChild.firstElementChild);
-}
-
-function promiseNodeVisible(node) {
+async function promisePageActionViewChildrenVisible(
+  panelViewNode,
+  win = window
+) {
   info(
-    `promiseNodeVisible waiting, node.id=${node.id} node.localeName=${node.localName}\n`
+    "promisePageActionViewChildrenVisible waiting for a child node to be visible"
   );
-  let dwu = window.windowUtils;
-  return BrowserTestUtils.waitForCondition(() => {
-    let bounds = dwu.getBoundsWithoutFlushing(node);
-    if (bounds.width > 0 && bounds.height > 0) {
-      info(
-        `promiseNodeVisible OK, node.id=${node.id} node.localeName=${node.localName}\n`
-      );
-      return true;
+  await new Promise(win.requestAnimationFrame);
+  let dwu = win.windowUtils;
+  return TestUtils.waitForCondition(() => {
+    let bodyNode = panelViewNode.firstElementChild;
+    for (let childNode of bodyNode.children) {
+      let bounds = dwu.getBoundsWithoutFlushing(childNode);
+      if (bounds.width > 0 && bounds.height > 0) {
+        return true;
+      }
     }
     return false;
   });
@@ -163,4 +120,44 @@ function promiseAddonUninstalled(addonId) {
 async function promiseAnimationFrame(win = window) {
   await new Promise(resolve => win.requestAnimationFrame(resolve));
   await win.promiseDocumentFlushed(() => {});
+}
+
+async function promisePopupNotShown(id, win = window) {
+  let deferred = PromiseUtils.defer();
+  function listener(e) {
+    deferred.reject("Unexpected popupshown");
+  }
+  let panel = win.document.getElementById(id);
+  panel.addEventListener("popupshown", listener);
+  try {
+    await Promise.race([
+      deferred.promise,
+      new Promise(resolve => {
+        /* eslint-disable mozilla/no-arbitrary-setTimeout */
+        win.setTimeout(resolve, 300);
+      }),
+    ]);
+  } finally {
+    panel.removeEventListener("popupshown", listener);
+  }
+}
+
+// TODO (Bug 1700780): Why is this necessary? Without this trick the test
+// fails intermittently on Ubuntu.
+function promiseStableResize(expectedWidth, win = window) {
+  let deferred = PromiseUtils.defer();
+  let id;
+  function listener() {
+    win.clearTimeout(id);
+    info(`Got resize event: ${win.innerWidth} x ${win.innerHeight}`);
+    if (win.innerWidth <= expectedWidth) {
+      id = win.setTimeout(() => {
+        win.removeEventListener("resize", listener);
+        deferred.resolve();
+      }, 100);
+    }
+  }
+  win.addEventListener("resize", listener);
+  win.resizeTo(expectedWidth, win.outerHeight);
+  return deferred.promise;
 }
