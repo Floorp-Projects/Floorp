@@ -318,3 +318,41 @@ add_task(async function test_library_bookmark_contextmenu_contents() {
     );
   });
 });
+
+add_task(async function test_sidebar_mixedselection_contextmenu_contents() {
+  let optionItems = [
+    "placesContext_delete",
+    "placesContext_cut",
+    "placesContext_copy",
+    "placesContext_paste_group",
+    "placesContext_new:bookmark",
+    "placesContext_new:folder",
+    "placesContext_new:separator",
+  ];
+
+  await withSidebarTree("bookmarks", async tree => {
+    await checkContextMenu(
+      async bookmark => {
+        let folder = await PlacesUtils.bookmarks.insert({
+          parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+          title: "folder",
+          type: PlacesUtils.bookmarks.TYPE_FOLDER,
+        });
+        tree.selectItems([bookmark.guid, folder.guid]);
+
+        let contextMenu = SidebarUI.browser.contentDocument.getElementById(
+          "placesContext"
+        );
+        let popupShownPromise = BrowserTestUtils.waitForEvent(
+          contextMenu,
+          "popupshown"
+        );
+        synthesizeClickOnSelectedTreeCell(tree, { type: "contextmenu" });
+        await popupShownPromise;
+        return contextMenu;
+      },
+      optionItems,
+      SidebarUI.browser.contentDocument
+    );
+  });
+});
