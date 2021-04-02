@@ -157,14 +157,15 @@ static ALWAYS_INLINE bool matchTextureFormat(S s, UNUSED uint8_t* buf) {
 
 // Quantizes the UVs to the 2^7 scale needed for calculating fractional offsets
 // for linear sampling.
-#define LINEAR_QUANTIZE_UV(sampler, uv, uv_step, uv_rect, min_uv, max_uv)   \
-  uv = swgl_linearQuantize(sampler, uv);                                    \
-  vec2_scalar uv_step =                                                     \
-      float(swgl_StepSize) * vec2_scalar{uv.x.y - uv.x.x, uv.y.y - uv.y.x}; \
-  vec2_scalar min_uv =                                                      \
-      swgl_linearQuantize(sampler, vec2_scalar{uv_rect.x, uv_rect.y});      \
-  vec2_scalar max_uv =                                                      \
-      swgl_linearQuantize(sampler, vec2_scalar{uv_rect.z, uv_rect.w});
+#define LINEAR_QUANTIZE_UV(sampler, uv, uv_step, uv_rect, min_uv, max_uv)     \
+  uv = swgl_linearQuantize(sampler, uv);                                      \
+  vec2_scalar uv_step =                                                       \
+      float(swgl_StepSize) * vec2_scalar{uv.x.y - uv.x.x, uv.y.y - uv.y.x};   \
+  vec2_scalar min_uv = max(                                                   \
+      swgl_linearQuantize(sampler, vec2_scalar{uv_rect.x, uv_rect.y}), 0.0f); \
+  vec2_scalar max_uv =                                                        \
+      max(swgl_linearQuantize(sampler, vec2_scalar{uv_rect.z, uv_rect.w}),    \
+          min_uv);
 
 // Implements the fallback linear filter that can deal with clamping and
 // arbitrary scales.
