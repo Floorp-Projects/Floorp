@@ -1363,17 +1363,17 @@ void nsHTMLFramesetBorderFrame::PaintBorder(DrawTarget* aDrawTarget,
 
   if (widthInPixels <= 0) return;
 
-  ColorPattern bgColor(ToDeviceColor(LookAndFeel::GetColor(
-      LookAndFeel::ColorID::WidgetBackground, NS_RGB(200, 200, 200))));
+  ColorPattern bgColor(ToDeviceColor(LookAndFeel::Color(
+      LookAndFeel::ColorID::WidgetBackground, this, NS_RGB(200, 200, 200))));
 
-  ColorPattern fgColor(ToDeviceColor(LookAndFeel::GetColor(
-      LookAndFeel::ColorID::WidgetForeground, NS_RGB(0, 0, 0))));
+  ColorPattern fgColor(ToDeviceColor(LookAndFeel::Color(
+      LookAndFeel::ColorID::WidgetForeground, this, NS_RGB(0, 0, 0))));
 
-  ColorPattern hltColor(ToDeviceColor(LookAndFeel::GetColor(
-      LookAndFeel::ColorID::Widget3DHighlight, NS_RGB(255, 255, 255))));
+  ColorPattern hltColor(ToDeviceColor(LookAndFeel::Color(
+      LookAndFeel::ColorID::Widget3DHighlight, this, NS_RGB(255, 255, 255))));
 
-  ColorPattern sdwColor(ToDeviceColor(LookAndFeel::GetColor(
-      LookAndFeel::ColorID::Widget3DShadow, NS_RGB(128, 128, 128))));
+  ColorPattern sdwColor(ToDeviceColor(LookAndFeel::Color(
+      LookAndFeel::ColorID::Widget3DShadow, this, NS_RGB(128, 128, 128))));
 
   ColorPattern color(ToDeviceColor(NS_RGB(255, 255, 255)));  // default to white
   if (mVisibility) {
