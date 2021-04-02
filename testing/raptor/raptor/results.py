@@ -18,7 +18,7 @@ from output import RaptorOutput, BrowsertimeOutput
 
 LOG = RaptorLogger(component="perftest-results-handler")
 KNOWN_TEST_MODIFIERS = [
-    "condprof-settled",
+    "nocondprof",
     "fission",
     "live",
     "gecko_profile",
@@ -39,7 +39,7 @@ class PerftestResultsHandler(object):
         memory_test=False,
         live_sites=False,
         app=None,
-        conditioned_profile=None,
+        no_conditioned_profile=False,
         cold=False,
         enable_webrender=False,
         chimera=False,
@@ -51,7 +51,6 @@ class PerftestResultsHandler(object):
         self.memory_test = memory_test
         self.live_sites = live_sites
         self.app = app
-        self.conditioned_profile = conditioned_profile
         self.results = []
         self.page_timeout_list = []
         self.images = []
@@ -62,6 +61,7 @@ class PerftestResultsHandler(object):
         self.webrender_enabled = enable_webrender
         self.browser_version = None
         self.browser_name = None
+        self.no_conditioned_profile = no_conditioned_profile
         self.cold = cold
         self.chimera = chimera
 
@@ -76,8 +76,8 @@ class PerftestResultsHandler(object):
         # checking all known fields. Otherwise, we only check
         # the fields that were given to us.
         if modifiers is None:
-            if self.conditioned_profile:
-                extra_options.append("condprof-%s" % self.conditioned_profile)
+            if self.no_conditioned_profile:
+                extra_options.append("nocondprof")
             if self.fission_enabled:
                 extra_options.append("fission")
             if self.live_sites:
@@ -256,10 +256,7 @@ class RaptorResultsHandler(PerftestResultsHandler):
         new_result_json.setdefault("extra_options", []).extend(
             self.build_extra_options(
                 [
-                    (
-                        self.conditioned_profile,
-                        "condprof-%s" % self.conditioned_profile,
-                    ),
+                    (self.no_conditioned_profile, "nocondprof"),
                     (self.fission_enabled, "fission"),
                     (self.webrender_enabled, "webrender"),
                 ]

@@ -23,6 +23,7 @@ def options(request):
     opts = {
         "app": "firefox",
         "binary": "path/to/dummy/browser",
+        "no_conditioned_profile": True,
         "browsertime_visualmetrics": False,
     }
 
