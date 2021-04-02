@@ -531,29 +531,6 @@ static bool ShouldConvertToDictionary(NativeObject* obj) {
   return obj->lastProperty()->entryCount() >= PropertyTree::MAX_HEIGHT;
 }
 
-enum class IsAccessor : bool { No, Yes };
-
-template <IsAccessor isAccessor>
-static MOZ_ALWAYS_INLINE ObjectFlags
-GetObjectFlagsForNewShape(Shape* last, jsid id, unsigned attrs, JSContext* cx) {
-  ObjectFlags flags = last->objectFlags();
-
-  uint32_t index;
-  if (IdIsIndex(id, &index)) {
-    flags.setFlag(ObjectFlag::Indexed);
-  } else if (JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id)->isInterestingSymbol()) {
-    flags.setFlag(ObjectFlag::HasInterestingSymbol);
-  }
-
-  if ((isAccessor == IsAccessor::Yes || (attrs & JSPROP_READONLY)) &&
-      last->getObjectClass() == &PlainObject::class_ &&
-      !JSID_IS_ATOM(id, cx->names().proto)) {
-    flags.setFlag(ObjectFlag::HasNonWritableOrAccessorPropExclProto);
-  }
-
-  return flags;
-}
-
 namespace js {
 
 class MOZ_RAII AutoCheckShapeConsistency {
@@ -654,8 +631,7 @@ Shape* NativeObject::addAccessorPropertyInternal(
   RootedShape shape(cx);
   {
     RootedShape last(cx, obj->lastProperty());
-    ObjectFlags objectFlags =
-        GetObjectFlagsForNewShape<IsAccessor::Yes>(last, id, attrs, cx);
+    ObjectFlags objectFlags = GetObjectFlagsForNewProperty(last, id, attrs, cx);
 
     Rooted<StackShape> child(cx, StackShape(last->base(), objectFlags, id,
                                             SHAPE_INVALID_SLOT, attrs));
@@ -697,8 +673,7 @@ Shape* NativeObject::addDataPropertyInternal(JSContext* cx,
   RootedShape shape(cx);
   {
     RootedShape last(cx, obj->lastProperty());
-    ObjectFlags objectFlags =
-        GetObjectFlagsForNewShape<IsAccessor::No>(last, id, attrs, cx);
+    ObjectFlags objectFlags = GetObjectFlagsForNewProperty(last, id, attrs, cx);
 
     Rooted<StackShape> child(
         cx, StackShape(last->base(), objectFlags, id, slot, attrs));
@@ -754,8 +729,8 @@ Shape* NativeObject::addEnumerableDataProperty(JSContext* cx,
   AutoCheckShapeConsistency check(obj);
 
   constexpr unsigned attrs = JSPROP_ENUMERATE;
-  ObjectFlags objectFlags = GetObjectFlagsForNewShape<IsAccessor::No>(
-      obj->lastProperty(), id, attrs, cx);
+  ObjectFlags objectFlags =
+      GetObjectFlagsForNewProperty(obj->lastProperty(), id, attrs, cx);
 
   // Fast path for non-dictionary shapes with a single child.
   do {
@@ -971,8 +946,8 @@ Shape* NativeObject::putDataProperty(JSContext* cx, HandleNativeObject obj,
   uint32_t oldSlot = shape->maybeSlot();
   uint32_t slot = hadSlot ? oldSlot : SHAPE_INVALID_SLOT;
 
-  ObjectFlags objectFlags = GetObjectFlagsForNewShape<IsAccessor::No>(
-      obj->lastProperty(), id, attrs, cx);
+  ObjectFlags objectFlags =
+      GetObjectFlagsForNewProperty(obj->lastProperty(), id, attrs, cx);
 
   // Now that we've possibly preserved slot, check whether the property info and
   // object flags match. If so, this is a redundant "put" and we can return
@@ -1081,8 +1056,8 @@ Shape* NativeObject::putAccessorProperty(JSContext* cx, HandleNativeObject obj,
   bool hadSlot = shape->isDataProperty();
   uint32_t oldSlot = shape->maybeSlot();
 
-  ObjectFlags objectFlags = GetObjectFlagsForNewShape<IsAccessor::Yes>(
-      obj->lastProperty(), id, attrs, cx);
+  ObjectFlags objectFlags =
+      GetObjectFlagsForNewProperty(obj->lastProperty(), id, attrs, cx);
 
   // Check whether the property info and object flags match. If so, this is a
   // redundant "put" and we can return without more work.

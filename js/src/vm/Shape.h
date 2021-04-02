@@ -1578,6 +1578,7 @@ class WrappedPtrOperations<StackShape, Wrapper> {
   bool isAccessorShape() const { return ss().isAccessorShape(); }
   uint8_t attrs() const { return ss().attrs; }
   ObjectFlags objectFlags() const { return ss().objectFlags; }
+  jsid propid() const { return ss().propid; }
 };
 
 template <typename Wrapper>
