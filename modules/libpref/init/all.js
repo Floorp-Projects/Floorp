@@ -691,6 +691,21 @@ pref("accessibility.browsewithcaret_shortcut.enabled", true);
   pref("ui.scrollToClick", 0);
 #endif
 
+// These are some selection-related colors which have no per platform
+// implementation.
+#if !defined(XP_MACOSX)
+pref("ui.textSelectBackgroundDisabled", "#b0b0b0");
+#endif
+// This makes the selection stand out when typeaheadfind is on.
+// Used with nsISelectionController::SELECTION_ATTENTION
+pref("ui.textSelectBackgroundAttention", "#38d878");
+// This makes the matched text stand out when findbar highlighting is on.
+// Used with nsISelectionController::SELECTION_FIND
+pref("ui.textHighlightBackground", "#ef0fff");
+// The foreground color for the matched text in findbar highlighting
+// Used with nsISelectionController::SELECTION_FIND
+pref("ui.textHighlightForeground", "#ffffff");
+
 // We want the ability to forcibly disable platform a11y, because
 // some non-a11y-related components attempt to bring it up.  See bug
 // 538530 for details about Windows; we have a pref here that allows it
