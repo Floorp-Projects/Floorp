@@ -9462,7 +9462,7 @@ static void ComputeAndIncludeOutlineArea(nsIFrame* aFrame,
     }
   }
 
-  // Keep this code in sync with nsDisplayOutline::GetInnerRect.
+  // Keep this code in sync with GetOutlineInnerRect in nsCSSRendering.cpp.
   SetOrUpdateRectValuedProperty(aFrame, nsIFrame::OutlineInnerRectProperty(),
                                 innerRect);
   const nscoord offset = outline->mOutlineOffset.ToAppUnits();
