@@ -56,14 +56,6 @@ class RemoteLookAndFeel final : public nsXPLookAndFeel {
 
  private:
   LookAndFeelTables mTables;
-
-  // A cached copy of the data extracted by ExtractData.
-  //
-  // Storing this lets us avoid doing most of the work of ExtractData each
-  // time we create a new content process.
-  //
-  // Only used in the parent process.
-  static StaticAutoPtr<FullLookAndFeel> sCachedLookAndFeelData;
 };
 
 }  // namespace mozilla::widget
