@@ -187,7 +187,10 @@ function getFilename(defaultName) {
 
   const date = new Date();
   const monthString = (date.getMonth() + 1).toString().padStart(2, "0");
-  const dayString = (date.getDate() + 1).toString().padStart(2, "0");
+  const dayString = date
+    .getDate()
+    .toString()
+    .padStart(2, "0");
   const dateString = `${date.getFullYear()}-${monthString}-${dayString}`;
 
   const timeString = date

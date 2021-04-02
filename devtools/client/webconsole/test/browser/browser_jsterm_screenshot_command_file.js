@@ -81,6 +81,31 @@ add_task(async function() {
     label: "The remote iframe is rendered properly in the screenshot",
   });
 
+  info("Test :screenshot to file default filename");
+  const message = await executeAndWaitForMessage(
+    hud,
+    `:screenshot ${dpr}`,
+    `Saved to`
+  );
+  const date = new Date();
+  const monthString = (date.getMonth() + 1).toString().padStart(2, "0");
+  const dayString = date
+    .getDate()
+    .toString()
+    .padStart(2, "0");
+  const expectedDateString = `${date.getFullYear()}-${monthString}-${dayString}`;
+
+  const {
+    renderedDate,
+  } = /Saved to .*Screen Shot (?<renderedDate>\d{4}-\d{2}-\d{2}) at \d{2}.\d{2}.\d{2}/.exec(
+    message.node.textContent
+  ).groups;
+  is(
+    renderedDate,
+    expectedDateString,
+    `Screenshot file has expected default name (full message: ${message.node.textContent})`
+  );
+
   info("Remove the downloaded screenshot file and cleanup downloads");
   await OS.File.remove(file.path);
   await resetDownloads();
