@@ -789,42 +789,6 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID,
     }
   }
 
-  // There are no system color settings for these, so set them manually
-#ifndef XP_MACOSX
-  if (aID == ColorID::TextSelectBackgroundDisabled) {
-    // This is used to gray out the selection when it's not focused
-    // Used with nsISelectionController::SELECTION_DISABLED
-    aResult = NS_RGB(0xb0, 0xb0, 0xb0);
-    return NS_OK;
-  }
-#endif
-
-  if (aID == ColorID::TextSelectBackgroundAttention) {
-    if (StaticPrefs::findbar_modalHighlight() && !mozilla::FissionAutostart()) {
-      aResult = NS_RGBA(0, 0, 0, 0);
-      return NS_OK;
-    }
-
-    // This makes the selection stand out when typeaheadfind is on
-    // Used with nsISelectionController::SELECTION_ATTENTION
-    aResult = NS_RGB(0x38, 0xd8, 0x78);
-    return NS_OK;
-  }
-
-  if (aID == ColorID::TextHighlightBackground) {
-    // This makes the matched text stand out when findbar highlighting is on
-    // Used with nsISelectionController::SELECTION_FIND
-    aResult = NS_RGB(0xef, 0x0f, 0xff);
-    return NS_OK;
-  }
-
-  if (aID == ColorID::TextHighlightForeground) {
-    // The foreground color for the matched text in findbar highlighting
-    // Used with nsISelectionController::SELECTION_FIND
-    aResult = NS_RGB(0xff, 0xff, 0xff);
-    return NS_OK;
-  }
-
   if (aUseStandinsForNativeColors) {
     aResult = GetStandinForNativeColor(aID);
     return NS_OK;
