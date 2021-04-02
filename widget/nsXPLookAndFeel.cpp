@@ -593,48 +593,6 @@ static bool IsSpecialColor(LookAndFeel::ColorID aID, nscolor aColor) {
   return false;
 }
 
-// Returns whether there is a CSS color name for this color.
-static bool ColorIsCSSAccessible(LookAndFeel::ColorID aID) {
-  using ColorID = LookAndFeel::ColorID;
-
-  switch (aID) {
-    case ColorID::WindowBackground:
-    case ColorID::WindowForeground:
-    case ColorID::WidgetBackground:
-    case ColorID::WidgetForeground:
-    case ColorID::WidgetSelectBackground:
-    case ColorID::WidgetSelectForeground:
-    case ColorID::Widget3DHighlight:
-    case ColorID::Widget3DShadow:
-    case ColorID::TextBackground:
-    case ColorID::TextForeground:
-    case ColorID::TextSelectBackground:
-    case ColorID::TextSelectForeground:
-    case ColorID::TextSelectBackgroundDisabled:
-    case ColorID::TextSelectBackgroundAttention:
-    case ColorID::TextHighlightBackground:
-    case ColorID::TextHighlightForeground:
-    case ColorID::IMERawInputBackground:
-    case ColorID::IMERawInputForeground:
-    case ColorID::IMERawInputUnderline:
-    case ColorID::IMESelectedRawTextBackground:
-    case ColorID::IMESelectedRawTextForeground:
-    case ColorID::IMESelectedRawTextUnderline:
-    case ColorID::IMEConvertedTextBackground:
-    case ColorID::IMEConvertedTextForeground:
-    case ColorID::IMEConvertedTextUnderline:
-    case ColorID::IMESelectedConvertedTextBackground:
-    case ColorID::IMESelectedConvertedTextForeground:
-    case ColorID::IMESelectedConvertedTextUnderline:
-    case ColorID::SpellCheckerUnderline:
-      return false;
-    default:
-      break;
-  }
-
-  return true;
-}
-
 nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID) {
   // The stand-in colors are taken from the Windows 7 Aero theme
   // except Mac-specific colors which are taken from Mac OS 10.7.
@@ -823,9 +781,6 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID,
   }
 #endif
 
-  // We only use standins for colors that we can access via CSS.
-  aUseStandinsForNativeColors =
-      aUseStandinsForNativeColors && ColorIsCSSAccessible(aID);
 
   if (!aUseStandinsForNativeColors) {
     if (const nscolor* cached = sColorCache.Get(aID)) {
@@ -1103,11 +1058,53 @@ Maybe<nscolor> LookAndFeel::GetColor(ColorID aId, ColorScheme,
   return Some(result);
 }
 
+// Returns whether there is a CSS color name for this color.
+static bool ColorIsCSSAccessible(LookAndFeel::ColorID aId) {
+  using ColorID = LookAndFeel::ColorID;
+
+  switch (aId) {
+    case ColorID::WindowBackground:
+    case ColorID::WindowForeground:
+    case ColorID::WidgetBackground:
+    case ColorID::WidgetForeground:
+    case ColorID::WidgetSelectBackground:
+    case ColorID::WidgetSelectForeground:
+    case ColorID::Widget3DHighlight:
+    case ColorID::Widget3DShadow:
+    case ColorID::TextBackground:
+    case ColorID::TextForeground:
+    case ColorID::TextSelectBackground:
+    case ColorID::TextSelectForeground:
+    case ColorID::TextSelectBackgroundDisabled:
+    case ColorID::TextSelectBackgroundAttention:
+    case ColorID::TextHighlightBackground:
+    case ColorID::TextHighlightForeground:
+    case ColorID::IMERawInputBackground:
+    case ColorID::IMERawInputForeground:
+    case ColorID::IMERawInputUnderline:
+    case ColorID::IMESelectedRawTextBackground:
+    case ColorID::IMESelectedRawTextForeground:
+    case ColorID::IMESelectedRawTextUnderline:
+    case ColorID::IMEConvertedTextBackground:
+    case ColorID::IMEConvertedTextForeground:
+    case ColorID::IMEConvertedTextUnderline:
+    case ColorID::IMESelectedConvertedTextBackground:
+    case ColorID::IMESelectedConvertedTextForeground:
+    case ColorID::IMESelectedConvertedTextUnderline:
+    case ColorID::SpellCheckerUnderline:
+      return false;
+    default:
+      break;
+  }
+
+  return true;
+}
+
 Maybe<nscolor> LookAndFeel::GetColor(ColorID aId, const dom::Document& aDoc) {
   const bool useStandins =
       ShouldUseStandinsForNativeColorForNonNativeTheme(aDoc, aId) ||
       (nsContentUtils::UseStandinsForNativeColors() &&
-       !nsContentUtils::IsChromeDoc(&aDoc));
+       !nsContentUtils::IsChromeDoc(&aDoc) && ColorIsCSSAccessible(aId));
   return GetColor(aId, ColorSchemeForDocument(aDoc), UseStandins(useStandins));
 }
 
