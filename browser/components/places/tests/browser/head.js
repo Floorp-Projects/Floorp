@@ -468,6 +468,28 @@ var withSidebarTree = async function(type, taskFn) {
   }
 };
 
+/**
+ * Executes a task after opening the Library on a given root. Takes care
+ * of closing the library once done.
+ *
+ * @param hierarchy
+ *        The left pane hierarchy to open.
+ * @param taskFn
+ *        The task to execute once the Library is ready.
+ *        Will get { left, right } trees as argument.
+ */
+var withLibraryWindow = async function(hierarchy, taskFn) {
+  let library = await promiseLibrary(hierarchy);
+  let left = library.document.getElementById("placesList");
+  let right = library.document.getElementById("placeContent");
+  info("withLibrary: executing the task");
+  try {
+    await taskFn({ left, right });
+  } finally {
+    await promiseLibraryClosed(library);
+  }
+};
+
 function promisePlacesInitComplete() {
   const gBrowserGlue = Cc["@mozilla.org/browser/browserglue;1"].getService(
     Ci.nsIObserver
