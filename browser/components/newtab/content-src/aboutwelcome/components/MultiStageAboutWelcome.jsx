@@ -280,11 +280,7 @@ export class WelcomeScreen extends React.PureComponent {
         <MultiStageProtonScreen
           content={newContent}
           id={this.props.id}
-          order={this.props.order}
-          activeTheme={this.props.activeTheme}
-          totalNumberOfScreens={this.props.totalNumberOfScreens}
           handleAction={this.handleAction}
-          design={this.props.design}
         />
       );
     }
