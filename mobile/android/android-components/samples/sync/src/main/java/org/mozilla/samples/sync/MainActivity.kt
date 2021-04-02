@@ -49,6 +49,7 @@ import mozilla.components.service.fxa.Server
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.sync.SyncReason
 import mozilla.components.service.fxa.toAuthType
+import mozilla.components.service.sync.autofill.AutofillCreditCardsAddressesStorage
 import mozilla.components.service.sync.logins.SyncableLoginsStorage
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.log.sink.AndroidLogSink
@@ -83,6 +84,12 @@ class MainActivity :
 
     private val passwordsStorage = lazy { SyncableLoginsStorage(this, passwordsEncryptionKey) }
 
+    private val creditCardsAddressesStorage = lazy {
+        AutofillCreditCardsAddressesStorage(this, lazy { securePreferences })
+    }
+
+    private val creditCardKeyProvider by lazy { creditCardsAddressesStorage.value.crypto }
+
     private val accountManager by lazy {
         FxaAccountManager(
                 this,
@@ -94,7 +101,10 @@ class MainActivity :
                     secureStateAtRest = true
                 ),
                 SyncConfig(
-                    setOf(SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords),
+                    setOf(
+                        SyncEngine.History, SyncEngine.Bookmarks, SyncEngine.Passwords,
+                        SyncEngine.Addresses, SyncEngine.CreditCards
+                    ),
                     periodicSyncConfig = PeriodicSyncConfig(periodMinutes = 15, initialDelayMinutes = 5)
                 )
         )
@@ -169,6 +179,11 @@ class MainActivity :
         GlobalSyncableStoreProvider.configureStore(SyncEngine.History to historyStorage)
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Bookmarks to bookmarksStorage)
         GlobalSyncableStoreProvider.configureStore(SyncEngine.Passwords to passwordsStorage)
+        GlobalSyncableStoreProvider.configureStore(
+            storePair = SyncEngine.CreditCards to creditCardsAddressesStorage,
+            keyProvider = lazy { creditCardKeyProvider }
+        )
+        GlobalSyncableStoreProvider.configureStore(SyncEngine.Addresses to creditCardsAddressesStorage)
 
         launch {
             // Now that our account state observer is registered, we can kick off the account manager.

@@ -105,6 +105,11 @@ open class RemoteTabsStorage : Storage, SyncableStore {
     override fun getHandle(): Long {
         return api.getHandle()
     }
+
+    override fun registerWithSyncManager() {
+        // See https://github.com/mozilla-mobile/android-components/issues/10128
+        throw NotImplementedError("Use getHandle instead")
+    }
 }
 
 /**

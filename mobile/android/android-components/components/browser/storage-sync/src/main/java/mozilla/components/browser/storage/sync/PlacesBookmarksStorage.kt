@@ -192,4 +192,9 @@ open class PlacesBookmarksStorage(context: Context) : PlacesStorage(context), Bo
     override fun getHandle(): Long {
         return places.getHandle()
     }
+
+    override fun registerWithSyncManager() {
+        // See https://github.com/mozilla-mobile/android-components/issues/10128
+        throw NotImplementedError("Use getHandle instead")
+    }
 }

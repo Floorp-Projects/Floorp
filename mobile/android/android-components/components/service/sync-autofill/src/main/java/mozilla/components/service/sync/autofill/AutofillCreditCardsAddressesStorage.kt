@@ -11,33 +11,109 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.withContext
 import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCard
+import mozilla.components.concept.storage.CreditCardNumber
 import mozilla.components.concept.storage.CreditCardsAddressesStorage
+import mozilla.components.concept.storage.NewCreditCardFields
 import mozilla.components.concept.storage.UpdatableAddressFields
 import mozilla.components.concept.storage.UpdatableCreditCardFields
+import mozilla.components.concept.sync.SyncableStore
+import mozilla.components.lib.dataprotect.KeyGenerationReason
+import mozilla.components.lib.dataprotect.KeyRecoveryHandler
+import mozilla.components.lib.dataprotect.SecureAbove22Preferences
+import mozilla.components.support.base.log.logger.Logger
 import java.io.Closeable
 import mozilla.appservices.autofill.Store as RustAutofillStorage
 
 const val AUTOFILL_DB_NAME = "autofill.sqlite"
 
 /**
- * An implementation of [CreditCardsAddressesStorage] back by the application-services' `autofill`
+ * An implementation of [CreditCardsAddressesStorage] backed by the application-services' `autofill`
  * library.
+ *
+ * @param context A [Context] used for disk access.
+ * @param securePrefs A [SecureAbove22Preferences] wrapped in [Lazy] to avoid eager instantiation.
+ * Used for storing encryption key material.
  */
 class AutofillCreditCardsAddressesStorage(
-    context: Context
-) : CreditCardsAddressesStorage, AutoCloseable {
+    context: Context,
+    securePrefs: Lazy<SecureAbove22Preferences>
+) : CreditCardsAddressesStorage, KeyRecoveryHandler, SyncableStore, AutoCloseable {
+    private val logger = Logger("AutofillCCAddressesStorage")
 
     private val coroutineContext by lazy { Dispatchers.IO }
+
+    val crypto by lazy { AutofillCrypto(context, securePrefs.value, this) }
 
     private val conn by lazy {
         AutofillStorageConnection.init(dbPath = context.getDatabasePath(AUTOFILL_DB_NAME).absolutePath)
         AutofillStorageConnection
     }
 
-    override suspend fun addCreditCard(creditCardFields: UpdatableCreditCardFields): CreditCard =
-        withContext(coroutineContext) {
-            conn.getStorage().addCreditCard(creditCardFields.into()).into()
+    override fun recoverFromBadKey(reason: KeyGenerationReason.RecoveryNeeded) {
+        when (reason) {
+            // At this point, we need A-S API to recover: https://github.com/mozilla/application-services/issues/4015
+            is KeyGenerationReason.RecoveryNeeded.Lost -> logger.warn("CC key lost, new one generated")
+            is KeyGenerationReason.RecoveryNeeded.Corrupt -> logger.warn("CC key was corrupted, new one generated")
+            is KeyGenerationReason.RecoveryNeeded.AbnormalState -> logger.warn(
+                "CC key lost due to storage malfunction, new one generated"
+            )
         }
+    }
+
+    override suspend fun addCreditCard(
+        creditCardFields: NewCreditCardFields
+    ): CreditCard = withContext(coroutineContext) {
+        val key = crypto.key()
+
+        // Assume our key is good, and that this operation shouldn't fail.
+        val encryptedCardNumber = crypto.encrypt(key, creditCardFields.plaintextCardNumber)!!
+        val updatableCreditCardFields = UpdatableCreditCardFields(
+            billingName = creditCardFields.billingName,
+            cardNumber = encryptedCardNumber,
+            cardNumberLast4 = creditCardFields.cardNumberLast4,
+            expiryMonth = creditCardFields.expiryMonth,
+            expiryYear = creditCardFields.expiryYear,
+            cardType = creditCardFields.cardType
+        )
+
+        conn.getStorage().addCreditCard(updatableCreditCardFields.into()).into()
+    }
+
+    override suspend fun updateCreditCard(
+        guid: String,
+        creditCardFields: UpdatableCreditCardFields
+    ) = withContext(coroutineContext) {
+        val updatableCreditCardFields = when (creditCardFields.cardNumber) {
+            // If credit card number changed, we need to encrypt it.
+            is CreditCardNumber.Plaintext -> {
+                val key = crypto.key()
+                // Assume our key is good, and that this operation shouldn't fail.
+                val encryptedCardNumber = crypto.encrypt(
+                    key, creditCardFields.cardNumber as CreditCardNumber.Plaintext
+                )!!
+                UpdatableCreditCardFields(
+                    billingName = creditCardFields.billingName,
+                    cardNumber = encryptedCardNumber,
+                    cardNumberLast4 = creditCardFields.cardNumberLast4,
+                    expiryMonth = creditCardFields.expiryMonth,
+                    expiryYear = creditCardFields.expiryYear,
+                    cardType = creditCardFields.cardType
+                )
+            }
+            // If card number didn't change, we're just round-tripping an existing encrypted version.
+            is CreditCardNumber.Encrypted -> {
+                UpdatableCreditCardFields(
+                    billingName = creditCardFields.billingName,
+                    cardNumber = creditCardFields.cardNumber,
+                    cardNumberLast4 = creditCardFields.cardNumberLast4,
+                    expiryMonth = creditCardFields.expiryMonth,
+                    expiryYear = creditCardFields.expiryYear,
+                    cardType = creditCardFields.cardType
+                )
+            }
+        }
+        conn.getStorage().updateCreditCard(guid, updatableCreditCardFields.into())
+    }
 
     override suspend fun getCreditCard(guid: String): CreditCard = withContext(coroutineContext) {
         conn.getStorage().getCreditCard(guid).into()
@@ -45,13 +121,6 @@ class AutofillCreditCardsAddressesStorage(
 
     override suspend fun getAllCreditCards(): List<CreditCard> = withContext(coroutineContext) {
         conn.getStorage().getAllCreditCards().map { it.into() }
-    }
-
-    override suspend fun updateCreditCard(
-        guid: String,
-        creditCardFields: UpdatableCreditCardFields
-    ) = withContext(coroutineContext) {
-        conn.getStorage().updateCreditCard(guid, creditCardFields.into())
     }
 
     override suspend fun deleteCreditCard(guid: String): Boolean = withContext(coroutineContext) {
@@ -86,6 +155,14 @@ class AutofillCreditCardsAddressesStorage(
 
     override suspend fun touchAddress(guid: String) = withContext(coroutineContext) {
         conn.getStorage().touchAddress(guid)
+    }
+
+    override fun registerWithSyncManager() {
+        conn.getStorage().registerWithSyncManager()
+    }
+
+    override fun getHandle(): Long {
+        throw NotImplementedError("Use registerWithSyncManager instead")
     }
 
     override fun close() {

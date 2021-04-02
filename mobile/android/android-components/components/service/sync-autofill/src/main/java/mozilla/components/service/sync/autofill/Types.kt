@@ -6,8 +6,9 @@ package mozilla.components.service.sync.autofill
 
 import mozilla.components.concept.storage.Address
 import mozilla.components.concept.storage.CreditCard
-import mozilla.appservices.autofill.UpdatableAddressFields
-import mozilla.appservices.autofill.UpdatableCreditCardFields
+import mozilla.components.concept.storage.CreditCardNumber
+import mozilla.components.concept.storage.UpdatableAddressFields
+import mozilla.components.concept.storage.UpdatableCreditCardFields
 
 // We have type definitions at the concept level, and "external" types defined within Autofill.
 // In practice these two types are largely the same, and this file is the conversion point.
@@ -15,8 +16,8 @@ import mozilla.appservices.autofill.UpdatableCreditCardFields
 /**
  * Conversion from a generic [UpdatableAddressFields] into its richer comrade within the 'autofill' lib.
  */
-internal fun mozilla.components.concept.storage.UpdatableAddressFields.into(): UpdatableAddressFields {
-    return UpdatableAddressFields(
+internal fun UpdatableAddressFields.into(): mozilla.appservices.autofill.UpdatableAddressFields {
+    return mozilla.appservices.autofill.UpdatableAddressFields(
         givenName = this.givenName,
         additionalName = this.additionalName,
         familyName = this.familyName,
@@ -33,12 +34,17 @@ internal fun mozilla.components.concept.storage.UpdatableAddressFields.into(): U
 }
 
 /**
- * Conversion from a generic [UpdatableCreditCardFields] into its richer comrade within the 'autofill' lib.
+ * Conversion from a generic [UpdatableCreditCardFields] into its comrade within the 'autofill' lib.
  */
-internal fun mozilla.components.concept.storage.UpdatableCreditCardFields.into(): UpdatableCreditCardFields {
-    return UpdatableCreditCardFields(
+internal fun UpdatableCreditCardFields.into(): mozilla.appservices.autofill.UpdatableCreditCardFields {
+    val encryptedCardNumber = when (this.cardNumber) {
+        is CreditCardNumber.Encrypted -> this.cardNumber.number
+        is CreditCardNumber.Plaintext -> throw AutofillStorageException.TriedToPersistPlaintextCardNumber()
+    }
+    return mozilla.appservices.autofill.UpdatableCreditCardFields(
         ccName = this.billingName,
-        ccNumber = this.cardNumber,
+        ccNumberEnc = encryptedCardNumber,
+        ccNumberLast4 = this.cardNumberLast4,
         ccExpMonth = this.expiryMonth,
         ccExpYear = this.expiryYear,
         ccType = this.cardType
@@ -77,7 +83,8 @@ internal fun mozilla.appservices.autofill.CreditCard.into(): CreditCard {
     return CreditCard(
         guid = this.guid,
         billingName = this.ccName,
-        cardNumber = this.ccNumber,
+        encryptedCardNumber = CreditCardNumber.Encrypted(this.ccNumberEnc),
+        cardNumberLast4 = this.ccNumberLast4,
         expiryMonth = this.ccExpMonth,
         expiryYear = this.ccExpYear,
         cardType = this.ccType,

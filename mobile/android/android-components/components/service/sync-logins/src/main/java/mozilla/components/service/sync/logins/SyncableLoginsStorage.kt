@@ -225,6 +225,10 @@ class SyncableLoginsStorage(
 
     override fun getHandle() = conn.getHandle()
 
+    override fun registerWithSyncManager() {
+        throw NotImplementedError("Use getHandle instead")
+    }
+
     /**
      * @throws [LoginsStorageException] If DB isn't empty during an import; also, on unexpected errors
      * (IO failure, rust panics, etc).

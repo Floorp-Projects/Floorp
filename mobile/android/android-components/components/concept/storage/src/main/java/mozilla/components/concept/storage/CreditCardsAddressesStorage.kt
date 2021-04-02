@@ -17,10 +17,18 @@ interface CreditCardsAddressesStorage {
      * Inserts the provided credit card into the database, and returns
      * the newly added [CreditCard].
      *
-     * @param creditCardFields A [UpdatableCreditCardFields] record to add.
+     * @param creditCardFields A [NewCreditCardFields] record to add.
      * @return [CreditCard] for the added credit card.
      */
-    suspend fun addCreditCard(creditCardFields: UpdatableCreditCardFields): CreditCard
+    suspend fun addCreditCard(creditCardFields: NewCreditCardFields): CreditCard
+
+    /**
+     * Updates the fields in the provided credit card.
+     *
+     * @param guid Unique identifier for the desired credit card.
+     * @param creditCardFields A set of credit card fields, wrapped in [UpdatableCreditCardFields], to update.
+     */
+    suspend fun updateCreditCard(guid: String, creditCardFields: UpdatableCreditCardFields)
 
     /**
      * Retrieves the credit card from the underlying storage layer by its unique identifier.
@@ -36,14 +44,6 @@ interface CreditCardsAddressesStorage {
      * @return A list of all [CreditCard].
      */
     suspend fun getAllCreditCards(): List<CreditCard>
-
-    /**
-     * Updates the fields in the provided credit card.
-     *
-     * @param guid Unique identifier for the desired credit card.
-     * @param creditCardFields The credit card fields to update.
-     */
-    suspend fun updateCreditCard(guid: String, creditCardFields: UpdatableCreditCardFields)
 
     /**
      * Deletes the credit card with the given [guid].
@@ -107,11 +107,30 @@ interface CreditCardsAddressesStorage {
 }
 
 /**
+ * A credit card number. This structure exists to provide better typing at the API surface.
+ *
+ * @property number Either a plaintext or a ciphertext of the credit card number, depending on the subtype.
+ */
+sealed class CreditCardNumber(val number: String) {
+    /**
+     * An encrypted credit card number.
+     */
+    @Parcelize
+    data class Encrypted(private val data: String) : CreditCardNumber(data), Parcelable
+
+    /**
+     * A plaintext, non-encrypted credit card number.
+     */
+    data class Plaintext(private val data: String) : CreditCardNumber(data)
+}
+
+/**
  * Information about a credit card.
  *
  * @property guid The unique identifier for this credit card.
  * @property billingName The credit card billing name.
- * @property cardNumber The credit card number.
+ * @property encryptedCardNumber The encrypted credit card number.
+ * @property cardNumberLast4 The last 4 digits of the credit card number.
  * @property expiryMonth The credit card expiry month.
  * @property expiryYear The credit card expiry year.
  * @property cardType The credit card network ID.
@@ -124,7 +143,8 @@ interface CreditCardsAddressesStorage {
 data class CreditCard(
     val guid: String,
     val billingName: String,
-    val cardNumber: String,
+    val encryptedCardNumber: CreditCardNumber.Encrypted,
+    val cardNumberLast4: String,
     val expiryMonth: Long,
     val expiryYear: Long,
     val cardType: String,
@@ -135,17 +155,41 @@ data class CreditCard(
 ) : Parcelable
 
 /**
- * Information about a new credit card. This is what you pass to create or update a credit card.
+ * Information about a new credit card.
+ * Use this when creating a credit card via [CreditCardsAddressesStorage.addCreditCard].
  *
  * @property billingName The credit card billing name.
- * @property cardNumber The credit card number.
+ * @property plaintextCardNumber A plaintext credit card number.
+ * @property cardNumberLast4 The last 4 digits of the credit card number.
+ * @property expiryMonth The credit card expiry month.
+ * @property expiryYear The credit card expiry year.
+ * @property cardType The credit card network ID.
+ */
+data class NewCreditCardFields(
+    val billingName: String,
+    val plaintextCardNumber: CreditCardNumber.Plaintext,
+    val cardNumberLast4: String,
+    val expiryMonth: Long,
+    val expiryYear: Long,
+    val cardType: String
+)
+
+/**
+ * Information about a new credit card.
+ * Use this when creating a credit card via [CreditCardsAddressesStorage.updateAddress].
+ *
+ * @property billingName The credit card billing name.
+ * @property cardNumber A [CreditCardNumber] that is either encrypted or plaintext. Passing in plaintext
+ * version will update the stored credit card number.
+ * @property cardNumberLast4 The last 4 digits of the credit card number.
  * @property expiryMonth The credit card expiry month.
  * @property expiryYear The credit card expiry year.
  * @property cardType The credit card network ID.
  */
 data class UpdatableCreditCardFields(
     val billingName: String,
-    val cardNumber: String,
+    val cardNumber: CreditCardNumber,
+    val cardNumberLast4: String,
     val expiryMonth: Long,
     val expiryYear: Long,
     val cardType: String

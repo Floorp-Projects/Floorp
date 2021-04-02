@@ -9,6 +9,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineScope
+import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Before
 import org.junit.Test
@@ -20,7 +21,7 @@ import org.mockito.Mockito.verify
 @RunWith(AndroidJUnit4::class)
 class GeckoCreditCardsAddressesStorageDelegateTest {
 
-    private val storage = AutofillCreditCardsAddressesStorage(testContext)
+    private val storage = AutofillCreditCardsAddressesStorage(testContext, mock())
     private lateinit var delegate: GeckoCreditCardsAddressesStorageDelegate
     private lateinit var scope: TestCoroutineScope
 

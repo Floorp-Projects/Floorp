@@ -38,6 +38,10 @@ data class SyncConfig(
  * do not know about. At the public API level, we expose a concrete [SyncEngine] type to allow for more
  * robust integrations. We do not expose "unknown" engines via our public API, but do handle them
  * internally (by persisting their enabled/disabled status).
+ *
+ * [nativeName] must match engine strings defined in the sync15 crate, e.g. https://github.com/mozilla/application-services/blob/main/components/sync15/src/state.rs#L23-L38
+ *
+ * @property nativeName Name of the corresponding Sync1.5 collection.
 */
 sealed class SyncEngine(val nativeName: String) {
     // NB: When adding new types, make sure to think through implications for the SyncManager.
@@ -62,6 +66,16 @@ sealed class SyncEngine(val nativeName: String) {
      * A remote tabs engine.
      */
     object Tabs : SyncEngine("tabs")
+
+    /**
+     * A credit cards engine.
+     */
+    object CreditCards : SyncEngine("creditcards")
+
+    /**
+     * An addresses engine.
+     */
+    object Addresses : SyncEngine("addresses")
 
     /**
      * An engine that's none of the above, described by [name].

@@ -5,6 +5,7 @@
 package mozilla.components.service.fxa.sync
 
 import mozilla.components.concept.sync.SyncableStore
+import mozilla.components.lib.dataprotect.KeyProvider
 import mozilla.components.service.fxa.SyncConfig
 import mozilla.components.service.fxa.SyncEngine
 import mozilla.components.service.fxa.manager.SyncEnginesStorage
@@ -69,6 +70,19 @@ interface SyncStatusObserver {
 }
 
 /**
+ * A lazy instance of a [SyncableStore] with an optional [KeyProvider] instance, used if this store
+ * has encrypted contents. Lazy wrapping is in place to ensure we don't eagerly instantiate the storage.
+ *
+ * @property lazyStore A [SyncableStore] wrapped in [Lazy].
+ * @property keyProvider An optional [KeyProvider] wrapped in [Lazy]. If present, it'll be used for
+ * crypto operations on the storage.
+ */
+data class LazyStoreWithKey(
+    val lazyStore: Lazy<SyncableStore>,
+    val keyProvider: Lazy<KeyProvider>? = null
+)
+
+/**
  * A singleton registry of [SyncableStore] objects. [WorkManagerSyncDispatcher] will use this to
  * access configured [SyncableStore] instances.
  *
@@ -76,18 +90,18 @@ interface SyncStatusObserver {
  * available instances of stores within an application.
  */
 object GlobalSyncableStoreProvider {
-    private val stores: MutableMap<String, Lazy<SyncableStore>> = mutableMapOf()
+    private val stores: MutableMap<SyncEngine, LazyStoreWithKey> = mutableMapOf()
 
     /**
      * Configure an instance of [SyncableStore] for a [SyncEngine] enum.
      * @param storePair A pair associating [SyncableStore] with a [SyncEngine].
      */
-    fun configureStore(storePair: Pair<SyncEngine, Lazy<SyncableStore>>) {
-        stores[storePair.first.nativeName] = storePair.second
+    fun configureStore(storePair: Pair<SyncEngine, Lazy<SyncableStore>>, keyProvider: Lazy<KeyProvider>? = null) {
+        stores[storePair.first] = LazyStoreWithKey(lazyStore = storePair.second, keyProvider = keyProvider)
     }
 
-    internal fun getStore(name: String): SyncableStore? {
-        return stores[name]?.value
+    internal fun getLazyStoreWithKey(syncEngine: SyncEngine): LazyStoreWithKey? {
+        return stores[syncEngine]
     }
 }
 

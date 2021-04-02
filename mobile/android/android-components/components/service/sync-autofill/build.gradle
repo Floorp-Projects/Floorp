@@ -27,6 +27,9 @@ dependencies {
     api Dependencies.mozilla_sync_autofill
 
     api project(':concept-storage')
+    api project(':concept-sync')
+    api project(':concept-base')
+    api project(':lib-dataprotect')
 
     implementation project(':support-utils')
 

@@ -23,7 +23,7 @@ import androidx.work.WorkerParameters
 import mozilla.appservices.syncmanager.SyncParams
 import mozilla.appservices.syncmanager.SyncServiceStatus
 import mozilla.appservices.syncmanager.SyncManager as RustSyncManager
-import mozilla.components.concept.sync.SyncableStore
+import mozilla.components.lib.dataprotect.KeyProvider
 import mozilla.components.service.fxa.FxaDeviceSettingsCache
 import mozilla.components.service.fxa.SyncAuthInfoCache
 import mozilla.components.service.fxa.SyncConfig
@@ -293,9 +293,11 @@ internal class WorkManagerSyncWorker(
                 SyncEngine.Bookmarks.nativeName -> SyncEngine.Bookmarks
                 SyncEngine.Passwords.nativeName -> SyncEngine.Passwords
                 SyncEngine.Tabs.nativeName -> SyncEngine.Tabs
+                SyncEngine.CreditCards.nativeName -> SyncEngine.CreditCards
+                SyncEngine.Addresses.nativeName -> SyncEngine.Addresses
                 else -> throw IllegalStateException("Invalid syncable store: $it")
             }
-            engine to checkNotNull(GlobalSyncableStoreProvider.getStore(engine.nativeName)) {
+            engine to checkNotNull(GlobalSyncableStoreProvider.getLazyStoreWithKey(engine)) {
                 "SyncableStore missing from GlobalSyncableStoreProvider: ${engine.nativeName}"
             }
         }.ifEmpty {
@@ -308,17 +310,42 @@ internal class WorkManagerSyncWorker(
     }
 
     @Suppress("LongMethod", "ComplexMethod")
-    private suspend fun doSync(syncableStores: Map<SyncEngine, SyncableStore>): Result {
+    private suspend fun doSync(syncableStores: Map<SyncEngine, LazyStoreWithKey>): Result {
+        val engineKeyProviders = mutableMapOf<SyncEngine, KeyProvider>()
+
+        // We need to tell RustSyncManager which engines to sync.
+        // - 'null' means "sync all engines for which storage is registered with the sync manager"
+        // - empty list means sync metadata only (e.g. which engines are enabled)
+        // Currently, we pass along a list of all engines configured to sync.
+        // These should be Sync1.5 collection names for these engines.
+        val enginesToSync = syncableStores.map { it.key.nativeName }
+
         // We need to tell RustSyncManager about instances of supported stores ('places' and 'logins').
         syncableStores.entries.forEach {
             // We're assuming all syncable stores live in Rust.
             // Currently `RustSyncManager` doesn't support non-Rust sync engines.
             when (it.key) {
                 // NB: History and Bookmarks will have the same handle.
-                SyncEngine.History -> RustSyncManager.setPlaces(it.value.getHandle())
-                SyncEngine.Bookmarks -> RustSyncManager.setPlaces(it.value.getHandle())
-                SyncEngine.Passwords -> RustSyncManager.setLogins(it.value.getHandle())
-                SyncEngine.Tabs -> RustSyncManager.setTabs(it.value.getHandle())
+                SyncEngine.History -> RustSyncManager.setPlaces(it.value.lazyStore.value.getHandle())
+                SyncEngine.Bookmarks -> RustSyncManager.setPlaces(it.value.lazyStore.value.getHandle())
+                SyncEngine.Passwords -> RustSyncManager.setLogins(it.value.lazyStore.value.getHandle())
+                SyncEngine.Tabs -> RustSyncManager.setTabs(it.value.lazyStore.value.getHandle())
+
+                // These stores don't expose `getHandle` (yay!), and instead are able to handle
+                // sync manager registration on their own.
+                SyncEngine.CreditCards -> {
+                    it.value.lazyStore.value.registerWithSyncManager()
+
+                    checkNotNull(it.value.keyProvider) {
+                        "CreditCards store must be configured with a KeyProvider"
+                    }
+
+                    engineKeyProviders[it.key] = it.value.keyProvider!!.value
+                }
+                SyncEngine.Addresses -> {
+                    it.value.lazyStore.value.registerWithSyncManager()
+                }
+                else -> throw NotImplementedError("Unsupported engine: ${it.key}")
             }
         }
 
@@ -356,11 +383,6 @@ internal class WorkManagerSyncWorker(
             else -> emptyMap()
         }
 
-        // We need to tell RustSyncManager which engines to sync. 'null' means "sync all", which is an
-        // intersection of stores for which we've set a 'handle' and those that are enabled.
-        // This should be an empty list if we only want to sync metadata (e.g. which engines are enabled).
-        val enginesToSync = null
-
         // We need to tell RustSyncManager about our current FxA device. It needs that information
         // in order to sync the 'clients' collection.
         // We're depending on cache being populated. An alternative to using a "cache" is to
@@ -372,6 +394,14 @@ internal class WorkManagerSyncWorker(
         // to implement/reason about than worker reconfiguration.
         val deviceSettings = FxaDeviceSettingsCache(context).getCached()!!
 
+        // Obtain encryption keys for stores that came along with KeyProviders.
+        // This can take a bit of time!
+        val localEncryptionKeys = engineKeyProviders.mapKeys {
+            it.key.nativeName
+        }.mapValues {
+            it.value.key().key
+        }
+
         // We're now ready to sync.
         val syncParams = SyncParams(
             reason = reason.toRustSyncReason(),
@@ -379,7 +409,8 @@ internal class WorkManagerSyncWorker(
             authInfo = syncAuthInfo.toNative(),
             enabledChanges = enabledChanges,
             persistedState = currentSyncState,
-            deviceSettings = deviceSettings
+            deviceSettings = deviceSettings,
+            localEncryptionKeys = localEncryptionKeys
         )
 
         val syncResult = RustSyncManager.sync(syncParams)
