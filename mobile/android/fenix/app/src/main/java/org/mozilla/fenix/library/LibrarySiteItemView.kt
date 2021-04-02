@@ -19,34 +19,8 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.increaseTapArea
 import org.mozilla.fenix.ext.loadIntoView
-
-/**
- * Interactor for items that can be selected on the bookmarks and history screens.
- */
-interface SelectionInteractor<T> {
-    /**
-     * Called when an item is tapped to open it.
-     * @param item the tapped item to open.
-     */
-    fun open(item: T)
-
-    /**
-     * Called when an item is long pressed and selection mode is started,
-     * or when selection mode has already started an an item is tapped.
-     * @param item the item to select.
-     */
-    fun select(item: T)
-
-    /**
-     * Called when a selected item is tapped in selection mode and should no longer be selected.
-     * @param item the item to deselect.
-     */
-    fun deselect(item: T)
-}
-
-interface SelectionHolder<T> {
-    val selectedItems: Set<T>
-}
+import org.mozilla.fenix.selection.SelectionHolder
+import org.mozilla.fenix.selection.SelectionInteractor
 
 class LibrarySiteItemView @JvmOverloads constructor(
     context: Context,

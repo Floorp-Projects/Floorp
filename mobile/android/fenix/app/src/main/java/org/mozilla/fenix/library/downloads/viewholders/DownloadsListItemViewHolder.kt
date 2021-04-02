@@ -11,7 +11,7 @@ import kotlinx.android.synthetic.main.download_list_item.view.*
 import kotlinx.android.synthetic.main.library_site_item.view.*
 import mozilla.components.feature.downloads.toMegabyteOrKilobyteString
 import org.mozilla.fenix.R
-import org.mozilla.fenix.library.SelectionHolder
+import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.library.downloads.DownloadInteractor
 import org.mozilla.fenix.library.downloads.DownloadItem
 import org.mozilla.fenix.ext.getIcon

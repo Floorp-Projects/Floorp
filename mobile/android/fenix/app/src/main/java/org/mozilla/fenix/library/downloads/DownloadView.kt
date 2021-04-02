@@ -17,7 +17,7 @@ import kotlinx.android.synthetic.main.component_history.view.swipe_refresh
 import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.library.LibraryPageView
-import org.mozilla.fenix.library.SelectionInteractor
+import org.mozilla.fenix.selection.SelectionInteractor
 
 /**
  * Interface for the DownloadViewInteractor. This interface is implemented by objects that want

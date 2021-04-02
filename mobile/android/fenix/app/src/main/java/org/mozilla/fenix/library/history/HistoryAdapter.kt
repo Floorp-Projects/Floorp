@@ -11,7 +11,7 @@ import android.view.ViewGroup
 import androidx.paging.PagedListAdapter
 import androidx.recyclerview.widget.DiffUtil
 import org.mozilla.fenix.R
-import org.mozilla.fenix.library.SelectionHolder
+import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.library.history.viewholders.HistoryListItemViewHolder
 import java.util.Calendar
 import java.util.Date

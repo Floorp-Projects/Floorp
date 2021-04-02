@@ -17,7 +17,7 @@ import mozilla.components.support.base.feature.UserInteractionHandler
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.library.LibraryPageView
-import org.mozilla.fenix.library.SelectionInteractor
+import org.mozilla.fenix.selection.SelectionInteractor
 import org.mozilla.fenix.theme.ThemeManager
 
 /**

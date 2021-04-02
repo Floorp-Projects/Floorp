@@ -15,7 +15,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.hideAndDisable
 import org.mozilla.fenix.ext.showAndEnable
-import org.mozilla.fenix.library.SelectionHolder
+import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.library.history.HistoryFragmentState
 import org.mozilla.fenix.library.history.HistoryInteractor
 import org.mozilla.fenix.library.history.HistoryItem

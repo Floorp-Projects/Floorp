@@ -9,7 +9,7 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.lib.state.Action
 import mozilla.components.lib.state.State
 import mozilla.components.lib.state.Store
-import org.mozilla.fenix.library.SelectionHolder
+import org.mozilla.fenix.selection.SelectionHolder
 
 class BookmarkFragmentStore(
     initialState: BookmarkFragmentState

@@ -8,7 +8,7 @@ import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
-import org.mozilla.fenix.library.SelectionHolder
+import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.library.downloads.viewholders.DownloadsListItemViewHolder
 
 class DownloadAdapter(
