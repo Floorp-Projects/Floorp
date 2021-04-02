@@ -544,6 +544,7 @@ bool js::SetIntegrityLevel(JSContext* cx, HandleObject obj,
 
     for (Shape* shape : shapes) {
       Rooted<StackShape> child(cx, StackShape(shape));
+
       bool isPrivate = JSID_IS_SYMBOL(child.get().propid) &&
                        JSID_TO_SYMBOL(child.get().propid)->isPrivateName();
       // Private fields are not visible to SetIntegrity.
@@ -551,6 +552,10 @@ bool js::SetIntegrityLevel(JSContext* cx, HandleObject obj,
         child.setAttrs(child.attrs() |
                        GetSealedOrFrozenAttributes(child.attrs(), level));
       }
+
+      ObjectFlags flags =
+          GetObjectFlagsForNewProperty(last, child.propid(), child.attrs(), cx);
+      child.setObjectFlags(flags);
 
       last = cx->zone()->propertyTree().getChild(cx, last, child);
       if (!last) {
@@ -1201,6 +1206,11 @@ static bool InitializePropertiesFromCompatibleNativeObject(
     for (Shape* shapeToClone : shapes) {
       Rooted<StackShape> child(cx, StackShape(shapeToClone));
       child.setBase(nbase);
+
+      ObjectFlags flags = GetObjectFlagsForNewProperty(shape, child.propid(),
+                                                       child.attrs(), cx);
+      child.setObjectFlags(flags);
+
       shape = cx->zone()->propertyTree().getChild(cx, shape, child);
       if (!shape) {
         return false;

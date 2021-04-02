@@ -100,3 +100,13 @@ function testNonWritableFrom() {
     assertEq(Object.getOwnPropertyDescriptor(to, "x").writable, true);
 }
 testNonWritableFrom();
+
+function testFrozenProto() {
+    var proto = Object.freeze({x: 1});
+    var target = Object.create(proto);
+    Object.assign(target, {foo: 1});
+    assertEq(target.foo, 1);
+    assertThrowsInstanceOf(() => Object.assign(target, {x: 2}), TypeError);
+    assertEq(target.x, 1);
+}
+testFrozenProto();
