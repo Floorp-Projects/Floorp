@@ -97,7 +97,7 @@ const COMMON_PROTOCOLS = ["http", "https", "ftp", "file"];
 XPCOMUtils.defineLazyGetter(
   this,
   "userPasswordRegex",
-  () => /^([a-z+.-]+:\/{0,3})*[^\/@]+@.+/i
+  () => /^([a-z+.-]+:\/{0,3})*([^\/@]+@).+/i
 );
 
 // Regex used to identify specific URI characteristics to disallow searching.
@@ -883,12 +883,13 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext) {
   // "mozilla'.org" - Things that have a quote before the first dot/colon
   // "mozilla/test" - unknown host
   // ".mozilla", "mozilla." - starts or ends with a dot ()
+  // "user@nonQualifiedHost"
 
   // These other strings should not be searched, because they could be URIs:
   // "www.blah.com" - Domain with a standard or known suffix
   // "knowndomain" - known domain
   // "nonQualifiedHost:8888?something" - has a port
-  // "user@nonQualifiedHost"
+  // "user:pass@nonQualifiedHost"
   // "blah.com."
 
   // We do keyword lookups if the input starts with a question mark.
@@ -901,12 +902,16 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext) {
   }
 
   // Check for IPs.
-  if (IPv4LikeRegex.test(uriString) || IPv6LikeRegex.test(uriString)) {
+  const userPassword = userPasswordRegex.exec(uriString);
+  const ipString = userPassword
+    ? uriString.replace(userPassword[2], "")
+    : uriString;
+  if (IPv4LikeRegex.test(ipString) || IPv6LikeRegex.test(ipString)) {
     return false;
   }
 
-  // Avoid lookup if we can identify a host and it's known, or ends with
-  // a dot and has some path.
+  // Avoid keyword lookup if we can identify a host and it's known, or ends
+  // with a dot and has some path.
   // Note that if dnsFirstForSingleWords is true isDomainKnown will always
   // return true, so we can avoid checking dnsFirstForSingleWords after this.
   let asciiHost = fixupInfo.fixedURI?.asciiHost;
@@ -919,16 +924,17 @@ function keywordURIFixup(uriString, fixupInfo, isPrivateContext) {
     return false;
   }
 
-  // Even if the host is invalid, avoid lookup if the string has uri-like
-  // characteristics.
-  // Also avoid lookup if there's a valid userPass. We only check for spaces,
-  // the URI parser has encoded any disallowed chars at this point, but if the
-  // user typed spaces before the first @, it's unlikely a valid userPass, plus
-  // some urlbar features use the @ char and we don't want to break them.
-  let userPass = fixupInfo.fixedURI?.userPass;
+  // Avoid keyword lookup if the url seems to have password.
+  if (fixupInfo.fixedURI?.password) {
+    return false;
+  }
+
+  // Even if the host is unknown, avoid keyword lookup if the string has
+  // uri-like characteristics, unless it looks like "user@unknownHost".
+  // Note we already excluded passwords at this point.
   if (
-    !uriLikeRegex.test(uriString) &&
-    !(userPass && /^[^\s@]+@/.test(uriString))
+    !uriLikeRegex.test(uriString) ||
+    (fixupInfo.fixedURI?.userPass && fixupInfo.fixedURI?.pathQueryRef === "/")
   ) {
     return tryKeywordFixupForURIInfo(
       fixupInfo.originalInput,

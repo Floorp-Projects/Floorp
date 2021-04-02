@@ -595,6 +595,84 @@ add_task(async function() {
       });
     }
   }
+
+  info(
+    "Test the format inputed is user@host, and the host is in domainwhitelist"
+  );
+  Services.prefs.setBoolPref("browser.fixup.domainwhitelist.test-host", true);
+  registerCleanupFunction(() => {
+    Services.prefs.clearUserPref("browser.fixup.domainwhitelist.test-host");
+  });
+
+  query = "any@test-host";
+  context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        uri: `http://${query}/`,
+        title: `http://${query}/`,
+        heuristic: true,
+      }),
+      makeSearchResult(context, {
+        engineName: SUGGESTIONS_ENGINE_NAME,
+      }),
+    ],
+  });
+
+  info(
+    "Test the format inputed is user@host, but the host is not in domainwhitelist"
+  );
+  query = "any@not-host";
+  context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeSearchResult(context, {
+        heuristic: true,
+        query,
+        engineName: SUGGESTIONS_ENGINE_NAME,
+      }),
+    ],
+  });
+
+  info(
+    "Test if the format of user:pass@host is handled as visit even if the host is not in domainwhitelist"
+  );
+  query = "user:pass@not-host";
+  context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        uri: "http://user:pass@not-host/",
+        title: "http://user:pass@not-host/",
+        heuristic: true,
+      }),
+    ],
+  });
+
+  info("Test if the format of user@ipaddress is handled as visit");
+  query = "user@192.168.0.1";
+  context = createContext(query, { isPrivate: false });
+  await check_results({
+    context,
+    matches: [
+      makeVisitResult(context, {
+        source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
+        uri: "http://user@192.168.0.1/",
+        title: "http://user@192.168.0.1/",
+        heuristic: true,
+      }),
+      makeSearchResult(context, {
+        heuristic: false,
+        query,
+        engineName: SUGGESTIONS_ENGINE_NAME,
+      }),
+    ],
+  });
 });
 
 /**
