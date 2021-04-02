@@ -37,7 +37,8 @@ class HeadlessLookAndFeel : public nsXPLookAndFeel {
   void NativeInit() final{};
   virtual nsresult NativeGetInt(IntID aID, int32_t& aResult) override;
   virtual nsresult NativeGetFloat(FloatID aID, float& aResult) override;
-  virtual nsresult NativeGetColor(ColorID aID, nscolor& aResult) override;
+  virtual nsresult NativeGetColor(ColorID, ColorScheme,
+                                  nscolor& aResult) override;
   virtual bool NativeGetFont(FontID aID, nsString& aFontName,
                              gfxFontStyle& aFontStyle) override;
 

@@ -93,7 +93,8 @@ class EnumeratedCache {
   }
 };
 
-static EnumeratedCache<ColorID, Maybe<nscolor>, ColorID::End> sColorCache;
+static EnumeratedCache<ColorID, Maybe<nscolor>, ColorID::End> sLightColorCache;
+static EnumeratedCache<ColorID, Maybe<nscolor>, ColorID::End> sDarkColorCache;
 static EnumeratedCache<FloatID, Maybe<float>, FloatID::End> sFloatCache;
 static EnumeratedCache<IntID, Maybe<int32_t>, IntID::End> sIntCache;
 static EnumeratedCache<FontID, widget::LookAndFeelFont, FontID::End> sFontCache;
@@ -680,7 +681,9 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID, ColorScheme aScheme,
     return NS_OK;
   }
 
-  if (const auto* cached = sColorCache.Get(aID)) {
+  auto& cache =
+      aScheme == ColorScheme::Light ? sLightColorCache : sDarkColorCache;
+  if (const auto* cached = cache.Get(aID)) {
     if (cached->isNothing()) {
       return NS_ERROR_FAILURE;
     }
@@ -689,11 +692,11 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID, ColorScheme aScheme,
   }
 
   if (NS_SUCCEEDED(GetColorFromPref(aID, aResult))) {
-    sColorCache.Insert(aID, Some(aResult));
+    cache.Insert(aID, Some(aResult));
     return NS_OK;
   }
 
-  if (NS_SUCCEEDED(NativeGetColor(aID, aResult))) {
+  if (NS_SUCCEEDED(NativeGetColor(aID, aScheme, aResult))) {
     if (gfxPlatform::GetCMSMode() == CMSMode::All &&
         !IsSpecialColor(aID, aResult)) {
       qcms_transform* transform = gfxPlatform::GetCMSInverseRGBTransform();
@@ -710,11 +713,11 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID, ColorScheme aScheme,
 
     // NOTE: Servo holds a lock and the main thread is paused, so writing to the
     // global cache here is fine.
-    sColorCache.Insert(aID, Some(aResult));
+    cache.Insert(aID, Some(aResult));
     return NS_OK;
   }
 
-  sColorCache.Insert(aID, Nothing());
+  cache.Insert(aID, Nothing());
   return NS_ERROR_FAILURE;
 }
 
@@ -832,7 +835,8 @@ bool nsXPLookAndFeel::GetFontValue(FontID aID, nsString& aName,
 
 void nsXPLookAndFeel::RefreshImpl() {
   // Wipe out our caches.
-  sColorCache.Clear();
+  sLightColorCache.Clear();
+  sDarkColorCache.Clear();
   sFontCache.Clear();
   sFloatCache.Clear();
   sIntCache.Clear();

@@ -34,13 +34,15 @@ namespace widget {
 struct LookAndFeelTables {
     int32_t[] ints;
     float[] floats;
-    nscolor[] colors;
     LookAndFeelFont[] fonts;
+    nscolor[] lightColors;
+    nscolor[] darkColors;
 
     uint8_t[] intMap;
     uint8_t[] floatMap;
-    uint8_t[] colorMap;
     uint8_t[] fontMap;
+    uint8_t[] lightColorMap;
+    uint8_t[] darkColorMap;
 
     uint16_t passwordChar;
     bool passwordEcho;
