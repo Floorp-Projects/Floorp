@@ -299,7 +299,7 @@ class Browsertime(Perftest):
             browsertime_options.extend(["--video", "false", "--visualMetrics", "false"])
 
         # have browsertime use our newly-created conditioned-profile path
-        if self.using_condprof:
+        if self.config.get("conditioned_profile"):
             self.profile.profile = self.conditioned_profile_dir
 
         if self.config["gecko_profile"]:
