@@ -48,20 +48,6 @@ using FloatID = mozilla::LookAndFeel::FloatID;
 using ColorID = mozilla::LookAndFeel::ColorID;
 using FontID = mozilla::LookAndFeel::FontID;
 
-struct nsLookAndFeelIntPref {
-  const char* name;
-  IntID id;
-  bool isSet;
-  int32_t intVar;
-};
-
-struct nsLookAndFeelFloatPref {
-  const char* name;
-  FloatID id;
-  bool isSet;
-  float floatVar;
-};
-
 template <typename Index, typename Value, Index kEnd>
 class EnumeratedCache {
   static constexpr uint32_t ChunkFor(Index aIndex) {
@@ -106,9 +92,9 @@ class EnumeratedCache {
   }
 };
 
-static EnumeratedCache<ColorID, nscolor, ColorID::End> sColorCache;
-static EnumeratedCache<FloatID, float, FloatID::End> sFloatCache;
-static EnumeratedCache<IntID, int32_t, IntID::End> sIntCache;
+static EnumeratedCache<ColorID, Maybe<nscolor>, ColorID::End> sColorCache;
+static EnumeratedCache<FloatID, Maybe<float>, FloatID::End> sFloatCache;
+static EnumeratedCache<IntID, Maybe<int32_t>, IntID::End> sIntCache;
 static EnumeratedCache<FontID, widget::LookAndFeelFont, FontID::End> sFontCache;
 
 // To make one of these prefs toggleable from a reftest add a user
@@ -117,80 +103,94 @@ static EnumeratedCache<FontID, widget::LookAndFeelFont, FontID::End> sFontCache;
 //
 // user_pref("ui.useAccessibilityTheme", 0);
 //
-static nsLookAndFeelIntPref sIntPrefs[] = {
-    {"ui.caretBlinkTime", IntID::CaretBlinkTime, false, 0},
-    {"ui.caretWidth", IntID::CaretWidth, false, 0},
-    {"ui.caretVisibleWithSelection", IntID::ShowCaretDuringSelection, false, 0},
-    {"ui.submenuDelay", IntID::SubmenuDelay, false, 0},
-    {"ui.dragThresholdX", IntID::DragThresholdX, false, 0},
-    {"ui.dragThresholdY", IntID::DragThresholdY, false, 0},
-    {"ui.useAccessibilityTheme", IntID::UseAccessibilityTheme, false, 0},
-    {"ui.menusCanOverlapOSBar", IntID::MenusCanOverlapOSBar, false, 0},
-    {"ui.useOverlayScrollbars", IntID::UseOverlayScrollbars, false, 0},
-    {"ui.scrollbarDisplayOnMouseMove", IntID::ScrollbarDisplayOnMouseMove,
-     false, 0},
-    {"ui.scrollbarFadeBeginDelay", IntID::ScrollbarFadeBeginDelay, false, 0},
-    {"ui.scrollbarFadeDuration", IntID::ScrollbarFadeDuration, false, 0},
-    {"ui.showHideScrollbars", IntID::ShowHideScrollbars, false, 0},
-    {"ui.skipNavigatingDisabledMenuItem", IntID::SkipNavigatingDisabledMenuItem,
-     false, 0},
-    {"ui.treeOpenDelay", IntID::TreeOpenDelay, false, 0},
-    {"ui.treeCloseDelay", IntID::TreeCloseDelay, false, 0},
-    {"ui.treeLazyScrollDelay", IntID::TreeLazyScrollDelay, false, 0},
-    {"ui.treeScrollDelay", IntID::TreeScrollDelay, false, 0},
-    {"ui.treeScrollLinesMax", IntID::TreeScrollLinesMax, false, 0},
-    {"accessibility.tabfocus", IntID::TabFocusModel, false, 0},
-    {"ui.alertNotificationOrigin", IntID::AlertNotificationOrigin, false, 0},
-    {"ui.scrollToClick", IntID::ScrollToClick, false, 0},
-    {"ui.IMERawInputUnderlineStyle", IntID::IMERawInputUnderlineStyle, false,
-     0},
-    {"ui.IMESelectedRawTextUnderlineStyle",
-     IntID::IMESelectedRawTextUnderlineStyle, false, 0},
-    {"ui.IMEConvertedTextUnderlineStyle", IntID::IMEConvertedTextUnderlineStyle,
-     false, 0},
-    {"ui.IMESelectedConvertedTextUnderlineStyle",
-     IntID::IMESelectedConvertedTextUnderline, false, 0},
-    {"ui.SpellCheckerUnderlineStyle", IntID::SpellCheckerUnderlineStyle, false,
-     0},
-    {"ui.scrollbarButtonAutoRepeatBehavior",
-     IntID::ScrollbarButtonAutoRepeatBehavior, false, 0},
-    {"ui.tooltipDelay", IntID::TooltipDelay, false, 0},
-    {"ui.contextMenuOffsetVertical", IntID::ContextMenuOffsetVertical, false,
-     0},
-    {"ui.contextMenuOffsetHorizontal", IntID::ContextMenuOffsetHorizontal,
-     false, 0},
-    {"ui.GtkCSDAvailable", IntID::GTKCSDAvailable, false, 0},
-    {"ui.GtkCSDHideTitlebarByDefault", IntID::GTKCSDHideTitlebarByDefault,
-     false, 0},
-    {"ui.GtkCSDTransparentBackground", IntID::GTKCSDTransparentBackground,
-     false, 0},
-    {"ui.GtkCSDMinimizeButton", IntID::GTKCSDMinimizeButton, false, 0},
-    {"ui.GtkCSDMaximizeButton", IntID::GTKCSDMaximizeButton, false, 0},
-    {"ui.GtkCSDCloseButton", IntID::GTKCSDCloseButton, false, 0},
-    {"ui.systemUsesDarkTheme", IntID::SystemUsesDarkTheme, false, 0},
-    {"ui.prefersReducedMotion", IntID::PrefersReducedMotion, false, 0},
-    {"ui.primaryPointerCapabilities", IntID::PrimaryPointerCapabilities, false,
-     6 /* fine and hover-capable pointer, i.e. mouse-type */},
-    {"ui.allPointerCapabilities", IntID::AllPointerCapabilities, false,
-     6 /* fine and hover-capable pointer, i.e. mouse-type */},
-    {"ui.scrollArrowStyle", IntID::ScrollArrowStyle, false, 0},
+// This needs to be of the same length and in the same order as
+// LookAndFeel::IntID values.
+static const char sIntPrefs[][42] = {
+    "ui.caretBlinkTime",
+    "ui.caretWidth",
+    "ui.caretVisibleWithSelection",
+    "ui.selectTextfieldsOnKeyFocus",
+    "ui.submenuDelay",
+    "ui.menusCanOverlapOSBar",
+    "ui.useOverlayScrollbars",
+    "ui.allowOverlayScrollbarsOverlap",
+    "ui.showHideScrollbars",
+    "ui.skipNavigatingDisabledMenuItem",
+    "ui.dragThresholdX",
+    "ui.dragThresholdY",
+    "ui.useAccessibilityTheme",
+    "ui.scrollArrowStyle",
+    "ui.scrollSliderStyle",
+    "ui.scrollButtonLeftMouseButtonAction",
+    "ui.scrollButtonMiddleMouseButtonAction",
+    "ui.scrollButtonRightMouseButtonAction",
+    "ui.treeOpenDelay",
+    "ui.treeCloseDelay",
+    "ui.treeLazyScrollDelay",
+    "ui.treeScrollDelay",
+    "ui.treeScrollLinesMax",
+    "accessibility.tabfocus",  // Weird one...
+    "ui.chosenMenuItemsShouldBlink",
+    "ui.windowsAccentColorInTitlebar",
+    "ui.windowsDefaultTheme",
+    "ui.dwmCompositor",
+    "ui.windowsClassic",
+    "ui.windowsGlass",
+    "ui.macGraphiteTheme",
+    "ui.macBigSurTheme",
+    "ui.alertNotificationOrigin",
+    "ui.scrollToClick",
+    "ui.IMERawInputUnderlineStyle",
+    "ui.IMESelectedRawTextUnderlineStyle",
+    "ui.IMEConvertedTextUnderlineStyle",
+    "ui.IMESelectedConvertedTextUnderlineStyle",
+    "ui.SpellCheckerUnderlineStyle",
+    "ui.menuBarDrag",
+    "ui.windowsThemeIdentifier",
+    "ui.operatingSystemVersionIdentifier",
+    "ui.scrollbarButtonAutoRepeatBehavior",
+    "ui.tooltipDelay",
+    "ui.swipeAnimationEnabled",
+    "ui.scrollbarDisplayOnMouseMove",
+    "ui.scrollbarFadeBeginDelay",
+    "ui.scrollbarFadeDuration",
+    "ui.contextMenuOffsetVertical",
+    "ui.contextMenuOffsetHorizontal",
+    "ui.GtkCSDAvailable",
+    "ui.GtkCSDHideTitlebarByDefault",
+    "ui.GtkCSDTransparentBackground",
+    "ui.GtkCSDMinimizeButton",
+    "ui.GtkCSDMaximizeButton",
+    "ui.GtkCSDCloseButton",
+    "ui.GtkCSDMinimizeButtonPosition",
+    "ui.GtkCSDMaximizeButtonPosition",
+    "ui.GtkCSDCloseButtonPosition",
+    "ui.GtkCSDReversedPlacement",
+    "ui.systemUsesDarkTheme",
+    "ui.prefersReducedMotion",
+    "ui.primaryPointerCapabilities",
+    "ui.allPointerCapabilities",
+    "ui.systemVerticalScrollbarWidth",
+    "ui.systemHorizontalScrollbarHeight",
 };
 
-static nsLookAndFeelFloatPref sFloatPrefs[] = {
-    {"ui.IMEUnderlineRelativeSize", FloatID::IMEUnderlineRelativeSize, false,
-     0},
-    {"ui.SpellCheckerUnderlineRelativeSize",
-     FloatID::SpellCheckerUnderlineRelativeSize, false, 0},
-    {"ui.caretAspectRatio", FloatID::CaretAspectRatio, false, 0},
+static_assert(ArrayLength(sIntPrefs) == size_t(LookAndFeel::IntID::End),
+              "Should have a pref for each int value");
+
+// This array MUST be kept in the same order as the float id list in
+// LookAndFeel.h
+static const char sFloatPrefs[][37] = {
+    "ui.IMEUnderlineRelativeSize",
+    "ui.SpellCheckerUnderlineRelativeSize",
+    "ui.caretAspectRatio",
+    "ui.textScaleFactor",
 };
+
+static_assert(ArrayLength(sFloatPrefs) == size_t(LookAndFeel::FloatID::End),
+              "Should have a pref for each float value");
 
 // This array MUST be kept in the same order as the color list in
 // specified/color.rs
-/* XXX If you add any strings longer than
- * "ui.-moz-mac-active-source-list-selection"
- * to the following array then you MUST update the
- * sizes of the sColorPrefs array in nsXPLookAndFeel.h
- */
 static const char sColorPrefs[][41] = {
     "ui.windowBackground",
     "ui.windowForeground",
@@ -311,6 +311,9 @@ static const char sColorPrefs[][41] = {
     "ui.-moz-colheadertext",
     "ui.-moz-colheaderhovertext"};
 
+static_assert(ArrayLength(sColorPrefs) == size_t(LookAndFeel::ColorID::End),
+              "Should have a pref for each color value");
+
 bool nsXPLookAndFeel::sInitialized = false;
 
 nsXPLookAndFeel* nsXPLookAndFeel::sInstance = nullptr;
@@ -370,128 +373,22 @@ void nsXPLookAndFeel::Shutdown() {
 }
 
 // static
-static void IntPrefChanged(nsLookAndFeelIntPref* data) {
-  if (!data) {
-    return;
-  }
-
-  int32_t intpref;
-  nsresult rv = Preferences::GetInt(data->name, &intpref);
-  if (NS_FAILED(rv)) {
-    data->isSet = false;
-
-#ifdef DEBUG_akkana
-    printf("====== Cleared int pref %s\n", data->name);
-#endif
-  } else {
-    data->intVar = intpref;
-    data->isSet = true;
-
-#ifdef DEBUG_akkana
-    printf("====== Changed int pref %s to %d\n", data->name, data->intVar);
-#endif
-  }
-
+static void IntPrefChanged() {
   // Int prefs can't change our system colors or fonts.
   LookAndFeel::NotifyChangedAllWindows(
       widget::ThemeChangeKind::MediaQueriesOnly);
 }
 
-static void FloatPrefChanged(nsLookAndFeelFloatPref* data) {
-  if (!data) {
-    return;
-  }
-
-  int32_t intpref;
-  nsresult rv = Preferences::GetInt(data->name, &intpref);
-  if (NS_FAILED(rv)) {
-    data->isSet = false;
-
-#ifdef DEBUG_akkana
-    printf("====== Cleared float pref %s\n", data->name);
-#endif
-  } else {
-    data->floatVar = (float)intpref / 100.0f;
-    data->isSet = true;
-
-#ifdef DEBUG_akkana
-    printf("====== Changed float pref %s to %f\n", data->name);
-#endif
-  }
-
+static void FloatPrefChanged() {
   // Float prefs can't change our system colors or fonts.
   LookAndFeel::NotifyChangedAllWindows(
       widget::ThemeChangeKind::MediaQueriesOnly);
 }
 
 // static
-static void ColorPrefChanged(unsigned int index, const char* prefName) {
-  nsAutoString colorStr;
-  nsresult rv = Preferences::GetString(prefName, colorStr);
-  if (NS_SUCCEEDED(rv) && !colorStr.IsEmpty()) {
-    nscolor thecolor;
-    if (colorStr[0] == char16_t('#')) {
-      if (NS_HexToRGBA(nsDependentString(colorStr, 1), nsHexColorType::NoAlpha,
-                       &thecolor)) {
-        sColorCache.Insert(ColorID(index), thecolor);
-      }
-    } else if (NS_ColorNameToRGB(colorStr, &thecolor)) {
-      sColorCache.Insert(ColorID(index), thecolor);
-#ifdef DEBUG_akkana
-      printf("====== Changed color pref %s to 0x%lx\n", prefName, thecolor);
-#endif
-    }
-  } else {
-    // Reset to the default color, by clearing the cache
-    // to force lookup when the color is next used
-    sColorCache.Remove(ColorID(index));
-
-#ifdef DEBUG_akkana
-    printf("====== Cleared color pref %s\n", prefName);
-#endif
-  }
-
+static void ColorPrefChanged() {
   // Color prefs affect style, because they by definition change system colors.
   LookAndFeel::NotifyChangedAllWindows(widget::ThemeChangeKind::Style);
-}
-
-static void InitFromPref(nsLookAndFeelIntPref* aPref) {
-  int32_t intpref;
-  nsresult rv = Preferences::GetInt(aPref->name, &intpref);
-  if (NS_SUCCEEDED(rv)) {
-    aPref->isSet = true;
-    aPref->intVar = intpref;
-  }
-}
-
-static void InitFromPref(nsLookAndFeelFloatPref* aPref) {
-  int32_t intpref;
-  nsresult rv = Preferences::GetInt(aPref->name, &intpref);
-  if (NS_SUCCEEDED(rv)) {
-    aPref->isSet = true;
-    aPref->floatVar = (float)intpref / 100.0f;
-  }
-}
-
-static void InitColorFromPref(int32_t i) {
-  static_assert(ArrayLength(sColorPrefs) == size_t(ColorID::End),
-                "Should have a pref for each color value");
-
-  nsAutoString colorStr;
-  nsresult rv = Preferences::GetString(sColorPrefs[i], colorStr);
-  if (NS_FAILED(rv) || colorStr.IsEmpty()) {
-    return;
-  }
-  nscolor thecolor;
-  if (colorStr[0] == char16_t('#')) {
-    nsAutoString hexString;
-    colorStr.Right(hexString, colorStr.Length() - 1);
-    if (NS_HexToRGBA(hexString, nsHexColorType::NoAlpha, &thecolor)) {
-      sColorCache.Insert(ColorID(i), thecolor);
-    }
-  } else if (NS_ColorNameToRGB(colorStr, &thecolor)) {
-    sColorCache.Insert(ColorID(i), thecolor);
-  }
 }
 
 // static
@@ -499,30 +396,28 @@ void nsXPLookAndFeel::OnPrefChanged(const char* aPref, void* aClosure) {
   // looping in the same order as in ::Init
 
   nsDependentCString prefName(aPref);
-  unsigned int i;
-  for (i = 0; i < ArrayLength(sIntPrefs); ++i) {
-    if (prefName.Equals(sIntPrefs[i].name)) {
-      IntPrefChanged(&sIntPrefs[i]);
+  for (const char* pref : sIntPrefs) {
+    if (prefName.Equals(pref)) {
+      IntPrefChanged();
       return;
     }
   }
 
-  for (i = 0; i < ArrayLength(sFloatPrefs); ++i) {
-    if (prefName.Equals(sFloatPrefs[i].name)) {
-      FloatPrefChanged(&sFloatPrefs[i]);
+  for (const char* pref : sFloatPrefs) {
+    if (prefName.Equals(pref)) {
+      FloatPrefChanged();
       return;
     }
   }
 
-  for (i = 0; i < ArrayLength(sColorPrefs); ++i) {
-    if (prefName.Equals(sColorPrefs[i])) {
-      ColorPrefChanged(i, sColorPrefs[i]);
+  for (const char* pref : sColorPrefs) {
+    if (prefName.Equals(pref)) {
+      ColorPrefChanged();
       return;
     }
   }
 }
 
-//
 // Read values from the user's preferences.
 // This is done once at startup, but since the user's preferences
 // haven't actually been read yet at that time, we also have to
@@ -542,19 +437,6 @@ void nsXPLookAndFeel::Init() {
   // We really do just want the accessibility.tabfocus pref, not other prefs
   // that start with that string.
   Preferences::RegisterCallback(OnPrefChanged, "accessibility.tabfocus");
-
-  unsigned int i;
-  for (i = 0; i < ArrayLength(sIntPrefs); ++i) {
-    InitFromPref(&sIntPrefs[i]);
-  }
-
-  for (i = 0; i < ArrayLength(sFloatPrefs); ++i) {
-    InitFromPref(&sFloatPrefs[i]);
-  }
-
-  for (i = 0; i < ArrayLength(sColorPrefs); ++i) {
-    InitColorFromPref(i);
-  }
 }
 
 nsXPLookAndFeel::~nsXPLookAndFeel() {
@@ -764,12 +646,30 @@ static nsresult SystemColorUseDebuggingColor(LookAndFeel::ColorID aID,
 }
 #endif
 
+static nsresult GetColorFromPref(LookAndFeel::ColorID aID, nscolor& aResult) {
+  const char* prefName = sColorPrefs[size_t(aID)];
+  nsAutoString colorStr;
+  MOZ_TRY(Preferences::GetString(prefName, colorStr));
+  if (colorStr.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
+  if (colorStr[0] == char16_t('#')) {
+    if (NS_HexToRGBA(nsDependentString(colorStr, 1), nsHexColorType::NoAlpha,
+                     &aResult)) {
+      return NS_OK;
+    }
+  } else if (NS_ColorNameToRGB(colorStr, &aResult)) {
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
+
 // All these routines will return NS_OK if they have a value,
 // in which case the nsLookAndFeel should use that value;
 // otherwise we'll return NS_ERROR_NOT_AVAILABLE, in which case, the
 // platform-specific nsLookAndFeel should use its own values instead.
-nsresult nsXPLookAndFeel::GetColorValue(ColorID aID,
-                                        bool aUseStandinsForNativeColors,
+nsresult nsXPLookAndFeel::GetColorValue(ColorID aID, ColorScheme aScheme,
+                                        UseStandins aUseStandins,
                                         nscolor& aResult) {
   if (!sInitialized) {
     Init();
@@ -781,16 +681,21 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID,
   }
 #endif
 
-
-  if (!aUseStandinsForNativeColors) {
-    if (const nscolor* cached = sColorCache.Get(aID)) {
-      aResult = *cached;
-      return NS_OK;
-    }
+  if (aUseStandins == UseStandins::Yes) {
+    aResult = GetStandinForNativeColor(aID);
+    return NS_OK;
   }
 
-  if (aUseStandinsForNativeColors) {
-    aResult = GetStandinForNativeColor(aID);
+  if (const auto* cached = sColorCache.Get(aID)) {
+    if (cached->isNothing()) {
+      return NS_ERROR_FAILURE;
+    }
+    aResult = cached->value();
+    return NS_OK;
+  }
+
+  if (NS_SUCCEEDED(GetColorFromPref(aID, aResult))) {
+    sColorCache.Insert(aID, Some(aResult));
     return NS_OK;
   }
 
@@ -811,11 +716,12 @@ nsresult nsXPLookAndFeel::GetColorValue(ColorID aID,
 
     // NOTE: Servo holds a lock and the main thread is paused, so writing to the
     // global cache here is fine.
-    sColorCache.Insert(aID, aResult);
+    sColorCache.Insert(aID, Some(aResult));
     return NS_OK;
   }
 
-  return NS_ERROR_NOT_AVAILABLE;
+  sColorCache.Insert(aID, Nothing());
+  return NS_ERROR_FAILURE;
 }
 
 nsresult nsXPLookAndFeel::GetIntValue(IntID aID, int32_t& aResult) {
@@ -823,21 +729,25 @@ nsresult nsXPLookAndFeel::GetIntValue(IntID aID, int32_t& aResult) {
     Init();
   }
 
-  if (const int32_t* cached = sIntCache.Get(aID)) {
-    aResult = *cached;
+  if (const auto* cached = sIntCache.Get(aID)) {
+    if (cached->isNothing()) {
+      return NS_ERROR_FAILURE;
+    }
+    aResult = cached->value();
     return NS_OK;
   }
 
-  for (unsigned int i = 0; i < ArrayLength(sIntPrefs); ++i) {
-    if (sIntPrefs[i].isSet && (sIntPrefs[i].id == aID)) {
-      aResult = sIntPrefs[i].intVar;
-      sIntCache.Insert(aID, aResult);
-      return NS_OK;
-    }
+  if (NS_SUCCEEDED(Preferences::GetInt(sIntPrefs[size_t(aID)], &aResult))) {
+    sIntCache.Insert(aID, Some(aResult));
+    return NS_OK;
   }
 
-  MOZ_TRY(NativeGetInt(aID, aResult));
-  sIntCache.Insert(aID, aResult);
+  if (NS_FAILED(NativeGetInt(aID, aResult))) {
+    sIntCache.Insert(aID, Nothing());
+    return NS_ERROR_FAILURE;
+  }
+
+  sIntCache.Insert(aID, Some(aResult));
   return NS_OK;
 }
 
@@ -846,21 +756,27 @@ nsresult nsXPLookAndFeel::GetFloatValue(FloatID aID, float& aResult) {
     Init();
   }
 
-  if (const float* cached = sFloatCache.Get(aID)) {
-    aResult = *cached;
+  if (const auto* cached = sFloatCache.Get(aID)) {
+    if (cached->isNothing()) {
+      return NS_ERROR_FAILURE;
+    }
+    aResult = cached->value();
     return NS_OK;
   }
 
-  for (unsigned int i = 0; i < ArrayLength(sFloatPrefs); ++i) {
-    if (sFloatPrefs[i].isSet && sFloatPrefs[i].id == aID) {
-      aResult = sFloatPrefs[i].floatVar;
-      sFloatCache.Insert(aID, aResult);
-      return NS_OK;
-    }
+  int32_t pref = 0;
+  if (NS_SUCCEEDED(Preferences::GetInt(sFloatPrefs[size_t(aID)], &pref))) {
+    aResult = float(pref) / 100.0f;
+    sFloatCache.Insert(aID, Some(aResult));
+    return NS_OK;
   }
 
-  MOZ_TRY(NativeGetFloat(aID, aResult));
-  sFloatCache.Insert(aID, aResult);
+  if (NS_FAILED(NativeGetFloat(aID, aResult))) {
+    sFloatCache.Insert(aID, Nothing());
+    return NS_ERROR_FAILURE;
+  }
+
+  sFloatCache.Insert(aID, Some(aResult));
   return NS_OK;
 }
 
@@ -926,11 +842,6 @@ void nsXPLookAndFeel::RefreshImpl() {
   sFontCache.Clear();
   sFloatCache.Clear();
   sIntCache.Clear();
-
-  // Reinit color cache from prefs.
-  for (uint32_t i = 0; i < uint32_t(ColorID::End); ++i) {
-    InitColorFromPref(i);
-  }
 
   // Clear any cached FullLookAndFeel data, which is now invalid.
   if (XRE_IsParentProcess()) {
@@ -1010,12 +921,11 @@ static LookAndFeel::ColorScheme ColorSchemeForDocument(const dom::Document&) {
 }
 
 // static
-Maybe<nscolor> LookAndFeel::GetColor(ColorID aId, ColorScheme,
+Maybe<nscolor> LookAndFeel::GetColor(ColorID aId, ColorScheme aScheme,
                                      UseStandins aUseStandins) {
-  // TODO(emilio): Actually use ColorScheme.
   nscolor result;
   nsresult rv = nsLookAndFeel::GetInstance()->GetColorValue(
-      aId, bool(aUseStandins), result);
+      aId, aScheme, aUseStandins, result);
   if (NS_FAILED(rv)) {
     return Nothing();
   }
