@@ -664,6 +664,53 @@ var testcases = [
     fixedURI: "http://www.mozilla/",
     protocolChange: true,
   },
+  {
+    input: "user@localhost",
+    fixedURI: "http://user@localhost/",
+    protocolChange: true,
+    shouldRunTest: () => gSingleWordDNSLookup,
+  },
+  {
+    input: "user@localhost",
+    fixedURI: "http://user@localhost/",
+    keywordLookup: true,
+    protocolChange: true,
+    shouldRunTest: () => !gSingleWordDNSLookup,
+  },
+  {
+    input: "user@192.168.0.1",
+    fixedURI: "http://user@192.168.0.1/",
+    protocolChange: true,
+  },
+  {
+    input: "user@dummy-host",
+    fixedURI: "http://user@dummy-host/",
+    protocolChange: true,
+    shouldRunTest: () => gSingleWordDNSLookup,
+  },
+  {
+    input: "user@dummy-host",
+    fixedURI: "http://user@dummy-host/",
+    keywordLookup: true,
+    protocolChange: true,
+    shouldRunTest: () => !gSingleWordDNSLookup,
+  },
+  {
+    input: "user:pass@dummy-host",
+    fixedURI: "http://user:pass@dummy-host/",
+    protocolChange: true,
+  },
+  {
+    input: ":pass@dummy-host",
+    fixedURI: "http://:pass@dummy-host/",
+    protocolChange: true,
+  },
+  {
+    input: "user@dummy-host/path",
+    fixedURI: "http://user@dummy-host/path",
+    protocolChange: true,
+    shouldRunTest: () => gSingleWordDNSLookup,
+  },
 ];
 
 if (AppConstants.platform == "win") {
