@@ -45,6 +45,8 @@ Object.defineProperty(exports, "__esModule", ({
 exports.addLinkAttributes = addLinkAttributes;
 exports.deprecated = deprecated;
 exports.getFilenameFromUrl = getFilenameFromUrl;
+exports.getPdfFilenameFromUrl = getPdfFilenameFromUrl;
+exports.isDataScheme = isDataScheme;
 exports.isFetchSupported = isFetchSupported;
 exports.isPdfFile = isPdfFile;
 exports.isValidFetchUrl = isValidFetchUrl;
@@ -227,8 +229,11 @@ class PageViewport {
     const centerX = (viewBox[2] + viewBox[0]) / 2;
     const centerY = (viewBox[3] + viewBox[1]) / 2;
     let rotateA, rotateB, rotateC, rotateD;
-    rotation = rotation % 360;
-    rotation = rotation < 0 ? rotation + 360 : rotation;
+    rotation %= 360;
+
+    if (rotation < 0) {
+      rotation += 360;
+    }
 
     switch (rotation) {
       case 180:
@@ -390,6 +395,17 @@ function addLinkAttributes(link, {
   link.rel = typeof rel === "string" ? rel : DEFAULT_LINK_REL;
 }
 
+function isDataScheme(url) {
+  const ii = url.length;
+  let i = 0;
+
+  while (i < ii && url[i].trim() === "") {
+    i++;
+  }
+
+  return url.substring(i, i + 5).toLowerCase() === "data:";
+}
+
 function isPdfFile(filename) {
   return typeof filename === "string" && /\.pdf$/i.test(filename);
 }
@@ -399,6 +415,34 @@ function getFilenameFromUrl(url) {
   const query = url.indexOf("?");
   const end = Math.min(anchor > 0 ? anchor : url.length, query > 0 ? query : url.length);
   return url.substring(url.lastIndexOf("/", end) + 1, end);
+}
+
+function getPdfFilenameFromUrl(url, defaultFilename = "document.pdf") {
+  if (typeof url !== "string") {
+    return defaultFilename;
+  }
+
+  if (isDataScheme(url)) {
+    (0, _util.warn)('getPdfFilenameFromUrl: ignore "data:"-URL for performance reasons.');
+    return defaultFilename;
+  }
+
+  const reURI = /^(?:(?:[^:]+:)?\/\/[^/]+)?([^?#]*)(\?[^#]*)?(#.*)?$/;
+  const reFilename = /[^/?#=]+\.pdf\b(?!.*\.pdf\b)/i;
+  const splitURI = reURI.exec(url);
+  let suggestedFilename = reFilename.exec(splitURI[1]) || reFilename.exec(splitURI[2]) || reFilename.exec(splitURI[3]);
+
+  if (suggestedFilename) {
+    suggestedFilename = suggestedFilename[0];
+
+    if (suggestedFilename.includes("%")) {
+      try {
+        suggestedFilename = reFilename.exec(decodeURIComponent(suggestedFilename))[0];
+      } catch (ex) {}
+    }
+  }
+
+  return suggestedFilename || defaultFilename;
 }
 
 class StatTimer {
@@ -1521,7 +1565,7 @@ function getDocument(src) {
   const task = new PDFDocumentLoadingTask();
   let source;
 
-  if (typeof src === "string") {
+  if (typeof src === "string" || src instanceof URL) {
     source = {
       url: src
     };
@@ -1535,7 +1579,7 @@ function getDocument(src) {
     };
   } else {
     if (typeof src !== "object") {
-      throw new Error("Invalid parameter in getDocument, " + "need either Uint8Array, string or a parameter object");
+      throw new Error("Invalid parameter in getDocument, " + "need either string, URL, Uint8Array, or parameter object.");
     }
 
     if (!src.url && !src.data && !src.range) {
@@ -1550,34 +1594,49 @@ function getDocument(src) {
       worker = null;
 
   for (const key in source) {
-    if (key === "url" && typeof window !== "undefined") {
-      params[key] = new URL(source[key], window.location).href;
-      continue;
-    } else if (key === "range") {
-      rangeTransport = source[key];
-      continue;
-    } else if (key === "worker") {
-      worker = source[key];
-      continue;
-    } else if (key === "data") {
-      const pdfBytes = source[key];
+    const value = source[key];
 
-      if (pdfBytes instanceof Uint8Array) {
-        params[key] = pdfBytes;
-      } else if (typeof pdfBytes === "string") {
-        params[key] = (0, _util.stringToBytes)(pdfBytes);
-      } else if (typeof pdfBytes === "object" && pdfBytes !== null && !isNaN(pdfBytes.length)) {
-        params[key] = new Uint8Array(pdfBytes);
-      } else if ((0, _util.isArrayBuffer)(pdfBytes)) {
-        params[key] = new Uint8Array(pdfBytes);
-      } else {
-        throw new Error("Invalid PDF binary data: either typed array, " + "string, or array-like object is expected in the data property.");
-      }
+    switch (key) {
+      case "url":
+        if (typeof window !== "undefined") {
+          try {
+            params[key] = new URL(value, window.location).href;
+            continue;
+          } catch (ex) {
+            (0, _util.warn)(`Cannot create valid URL: "${ex}".`);
+          }
+        } else if (typeof value === "string" || value instanceof URL) {
+          params[key] = value.toString();
+          continue;
+        }
 
-      continue;
+        throw new Error("Invalid PDF url data: " + "either string or URL-object is expected in the url property.");
+
+      case "range":
+        rangeTransport = value;
+        continue;
+
+      case "worker":
+        worker = value;
+        continue;
+
+      case "data":
+        if (value instanceof Uint8Array) {
+          break;
+        } else if (typeof value === "string") {
+          params[key] = (0, _util.stringToBytes)(value);
+        } else if (typeof value === "object" && value !== null && !isNaN(value.length)) {
+          params[key] = new Uint8Array(value);
+        } else if ((0, _util.isArrayBuffer)(value)) {
+          params[key] = new Uint8Array(value);
+        } else {
+          throw new Error("Invalid PDF binary data: either typed array, " + "string, or array-like object is expected in the data property.");
+        }
+
+        continue;
     }
 
-    params[key] = source[key];
+    params[key] = value;
   }
 
   params.rangeChunkSize = params.rangeChunkSize || DEFAULT_RANGE_CHUNK_SIZE;
@@ -1585,6 +1644,11 @@ function getDocument(src) {
   params.ignoreErrors = params.stopAtErrors !== true;
   params.fontExtraProperties = params.fontExtraProperties === true;
   params.pdfBug = params.pdfBug === true;
+  params.enableXfa = params.enableXfa === true;
+
+  if (typeof params.docBaseUrl !== "string" || (0, _display_utils.isDataScheme)(params.docBaseUrl)) {
+    params.docBaseUrl = null;
+  }
 
   if (!Number.isInteger(params.maxImageSize)) {
     params.maxImageSize = -1;
@@ -1688,7 +1752,7 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
 
   return worker.messageHandler.sendWithPromise("GetDocRequest", {
     docId,
-    apiVersion: '2.8.243',
+    apiVersion: '2.8.320',
     source: {
       data: source.data,
       url: source.url,
@@ -1703,7 +1767,8 @@ function _fetchDocument(worker, source, pdfDataRangeTransport, docId) {
     docBaseUrl: source.docBaseUrl,
     ignoreErrors: source.ignoreErrors,
     isEvalSupported: source.isEvalSupported,
-    fontExtraProperties: source.fontExtraProperties
+    fontExtraProperties: source.fontExtraProperties,
+    enableXfa: source.enableXfa
   }).then(function (workerId) {
     if (worker.destroyed) {
       throw new Error("Worker was destroyed");
@@ -1840,6 +1905,10 @@ class PDFDocumentProxy {
 
   get fingerprint() {
     return this._pdfInfo.fingerprint;
+  }
+
+  get isPureXfa() {
+    return this._pdfInfo.isPureXfa;
   }
 
   getPage(pageNumber) {
@@ -2024,6 +2093,10 @@ class PDFPageProxy {
 
   getJSActions() {
     return this._jsActionsPromise ||= this._transport.getPageJSActions(this._pageIndex);
+  }
+
+  getXfa() {
+    return this._xfaPromise ||= this._transport.getPageXfa(this._pageIndex);
   }
 
   render({
@@ -2286,6 +2359,7 @@ class PDFPageProxy {
     this.objs.clear();
     this.annotationsPromise = null;
     this._jsActionsPromise = null;
+    this._xfaPromise = null;
     this.pendingCleanup = false;
     return Promise.all(waitOn);
   }
@@ -2314,6 +2388,7 @@ class PDFPageProxy {
     this.objs.clear();
     this.annotationsPromise = null;
     this._jsActionsPromise = null;
+    this._xfaPromise = null;
 
     if (resetStats && this._stats) {
       this._stats = new _display_utils.StatTimer();
@@ -3389,6 +3464,12 @@ class WorkerTransport {
     });
   }
 
+  getPageXfa(pageIndex) {
+    return this.messageHandler.sendWithPromise("GetPageXfa", {
+      pageIndex
+    });
+  }
+
   getOutline() {
     return this.messageHandler.sendWithPromise("GetOutline", null);
   }
@@ -3694,9 +3775,9 @@ const InternalRenderTask = function InternalRenderTaskClosure() {
   return InternalRenderTask;
 }();
 
-const version = '2.8.243';
+const version = '2.8.320';
 exports.version = version;
-const build = 'a16494135';
+const build = 'ca7f54682';
 exports.build = build;
 
 /***/ }),
@@ -4121,6 +4202,7 @@ const MAX_GROUP_SIZE = 4096;
 const COMPILE_TYPE3_GLYPHS = true;
 const MAX_SIZE_TO_COMPILE = 1000;
 const FULL_CHUNK_HEIGHT = 16;
+const LINEWIDTH_SCALE_FACTOR = 1.000001;
 
 function addContextCurrentTransform(ctx) {
   if (!ctx.mozCurrentTransform) {
@@ -4131,8 +4213,24 @@ function addContextCurrentTransform(ctx) {
     ctx._originalTranslate = ctx.translate;
     ctx._originalTransform = ctx.transform;
     ctx._originalSetTransform = ctx.setTransform;
+    ctx._originalResetTransform = ctx.resetTransform;
     ctx._transformMatrix = ctx._transformMatrix || [1, 0, 0, 1, 0, 0];
     ctx._transformStack = [];
+
+    try {
+      const desc = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(ctx), "lineWidth");
+      ctx._setLineWidth = desc.set;
+      ctx._getLineWidth = desc.get;
+      Object.defineProperty(ctx, "lineWidth", {
+        set: function setLineWidth(width) {
+          this._setLineWidth(width * LINEWIDTH_SCALE_FACTOR);
+        },
+        get: function getLineWidth() {
+          return this._getLineWidth();
+        }
+      });
+    } catch (_) {}
+
     Object.defineProperty(ctx, "mozCurrentTransform", {
       get: function getCurrentTransform() {
         return this._transformMatrix;
@@ -4202,6 +4300,12 @@ function addContextCurrentTransform(ctx) {
       this._transformMatrix = [a, b, c, d, e, f];
 
       ctx._originalSetTransform(a, b, c, d, e, f);
+    };
+
+    ctx.resetTransform = function ctxResetTransform() {
+      this._transformMatrix = [1, 0, 0, 1, 0, 0];
+
+      ctx._originalResetTransform();
     };
 
     ctx.rotate = function ctxRotate(angle) {
@@ -6316,7 +6420,7 @@ const CanvasGraphics = function CanvasGraphicsClosure() {
         if (sqNorm1 !== sqNorm2 && this._combinedScaleFactor * pixelHeight > 1) {
           this._cachedGetSinglePixelWidth = -(this._combinedScaleFactor * pixelHeight);
         } else if (absDet > Number.EPSILON) {
-          this._cachedGetSinglePixelWidth = pixelHeight * 1.0000001;
+          this._cachedGetSinglePixelWidth = pixelHeight;
         } else {
           this._cachedGetSinglePixelWidth = 1;
         }
@@ -8842,9 +8946,11 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
     let element = null;
 
     if (this.renderInteractiveForms) {
-      const textContent = storage.getValue(id, {
-        value: this.data.fieldValue
-      }).value;
+      const storedData = storage.getValue(id, {
+        value: this.data.fieldValue,
+        valueAsString: this.data.fieldValue
+      });
+      const textContent = storedData.valueAsString || storedData.value || "";
       const elementData = {
         userValue: null,
         formattedValue: null,
@@ -10993,6 +11099,95 @@ let SVGGraphics = function () {
 exports.SVGGraphics = SVGGraphics;
 ;
 
+/***/ }),
+/* 22 */
+/***/ ((__unused_webpack_module, exports) => {
+
+
+
+Object.defineProperty(exports, "__esModule", ({
+  value: true
+}));
+exports.XfaLayer = void 0;
+
+class XfaLayer {
+  static setAttributes(html, attrs) {
+    for (const [key, value] of Object.entries(attrs)) {
+      if (value === null || value === undefined) {
+        continue;
+      }
+
+      if (key !== "style") {
+        html.setAttribute(key, value);
+      } else {
+        Object.assign(html.style, value);
+      }
+    }
+  }
+
+  static render(parameters) {
+    const root = parameters.xfa;
+    const rootHtml = document.createElement(root.name);
+
+    if (root.attributes) {
+      XfaLayer.setAttributes(rootHtml, root.attributes);
+    }
+
+    const stack = [[root, -1, rootHtml]];
+    const rootDiv = parameters.div;
+    rootDiv.appendChild(rootHtml);
+    const coeffs = parameters.viewport.transform.join(",");
+    rootDiv.style.transform = `matrix(${coeffs})`;
+    rootDiv.setAttribute("class", "xfaLayer xfaFont");
+
+    while (stack.length > 0) {
+      const [parent, i, html] = stack[stack.length - 1];
+
+      if (i + 1 === parent.children.length) {
+        stack.pop();
+        continue;
+      }
+
+      const child = parent.children[++stack[stack.length - 1][1]];
+
+      if (child === null) {
+        continue;
+      }
+
+      const {
+        name
+      } = child;
+
+      if (name === "#text") {
+        html.appendChild(document.createTextNode(child.value));
+        continue;
+      }
+
+      const childHtml = document.createElement(name);
+      html.appendChild(childHtml);
+
+      if (child.attributes) {
+        XfaLayer.setAttributes(childHtml, child.attributes);
+      }
+
+      if (child.children && child.children.length > 0) {
+        stack.push([child, -1, childHtml]);
+      } else if (child.value) {
+        childHtml.appendChild(document.createTextNode(child.value));
+      }
+    }
+  }
+
+  static update(parameters) {
+    const transform = `matrix(${parameters.viewport.transform.join(",")})`;
+    parameters.div.style.transform = transform;
+    parameters.div.hidden = false;
+  }
+
+}
+
+exports.XfaLayer = XfaLayer;
+
 /***/ })
 /******/ 	]);
 /************************************************************************/
@@ -11002,8 +11197,9 @@ exports.SVGGraphics = SVGGraphics;
 /******/ 	// The require function
 /******/ 	function __w_pdfjs_require__(moduleId) {
 /******/ 		// Check if module is in cache
-/******/ 		if(__webpack_module_cache__[moduleId]) {
-/******/ 			return __webpack_module_cache__[moduleId].exports;
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
@@ -11039,6 +11235,12 @@ Object.defineProperty(exports, "getFilenameFromUrl", ({
   enumerable: true,
   get: function () {
     return _display_utils.getFilenameFromUrl;
+  }
+}));
+Object.defineProperty(exports, "getPdfFilenameFromUrl", ({
+  enumerable: true,
+  get: function () {
+    return _display_utils.getPdfFilenameFromUrl;
   }
 }));
 Object.defineProperty(exports, "isPdfFile", ({
@@ -11227,6 +11429,12 @@ Object.defineProperty(exports, "SVGGraphics", ({
     return _svg.SVGGraphics;
   }
 }));
+Object.defineProperty(exports, "XfaLayer", ({
+  enumerable: true,
+  get: function () {
+    return _xfa_layer.XfaLayer;
+  }
+}));
 
 var _display_utils = __w_pdfjs_require__(1);
 
@@ -11244,8 +11452,10 @@ var _text_layer = __w_pdfjs_require__(20);
 
 var _svg = __w_pdfjs_require__(21);
 
-const pdfjsVersion = '2.8.243';
-const pdfjsBuild = 'a16494135';
+var _xfa_layer = __w_pdfjs_require__(22);
+
+const pdfjsVersion = '2.8.320';
+const pdfjsBuild = 'ca7f54682';
 ;
 })();
 
