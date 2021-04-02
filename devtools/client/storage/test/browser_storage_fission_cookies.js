@@ -35,16 +35,21 @@ add_task(async function() {
   checkCookieData("lorem", "ipsum");
 
   info("Add more cookies");
+  const onUpdated = gUI.once("store-objects-edit");
   await SpecialPowers.spawn(gBrowser.selectedBrowser, [], async function() {
     content.window.document.cookie = "foo2=bar2";
+
     const iframe = content.document.querySelector("iframe");
     return SpecialPowers.spawn(iframe, [], () => {
       content.document.cookie = "lorem2=ipsum2";
     });
   });
-  // check that the new data is shown in the table
+  await onUpdated;
+
+  // check that the new data is shown in the table for the iframe document
+  checkCookieData("lorem2", "ipsum2");
+
+  // check that the new data is shown in the table for the top-level document
   await selectTreeItem(["cookies", "http://example.com"]);
   checkCookieData("foo2", "bar2");
-  await selectTreeItem(["cookies", "http://example.net"]);
-  checkCookieData("lorem2", "ipsum2");
 });
