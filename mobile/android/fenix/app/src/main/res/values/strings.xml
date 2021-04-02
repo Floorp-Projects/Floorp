@@ -2,16 +2,6 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <resources>
-    <!-- Generic Strings -->
-    <!-- A 'Cancel' string to be used for labeling any UI elements. -->
-    <string name="cancel">Cancel</string>
-    <!-- A 'Save' string to be used for labeling UI elements. -->
-    <string name="save">Save</string>
-    <!-- An 'Add' string to be used for labeling UI elements. -->
-    <string name="add">Add</string>
-    <!-- An 'Edit' string to be used for labeling UI elements. -->
-    <string name="edit">Edit</string>
-
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Private %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
@@ -185,6 +175,11 @@
     <string name="browser_menu_read_appearance">Appearance</string>
     <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
     <string name="browser_menu_customize_reader_view">Customize reader view</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Add</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Edit</string>
+
     <!-- Error message to show when the user tries to access a scheme not
         handled by the app (Ex: blob, tel etc) -->
     <string name="unknown_scheme_error_message">Unable to connect. Unrecognizable URL scheme.</string>
@@ -1533,8 +1528,14 @@
     <string name="credit_cards_name_on_card">Name on Card</string>
     <!-- The header for the nickname for a credit card -->
     <string name="credit_cards_card_nickname">Card Nickname</string>
-    <!-- The text for the "Delete card" button -->
-    <string name="credit_cards_delete_card">Delete card</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">Delete card</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">Save</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">Save</string>
+    <!-- The text for the "Cancel" button for cancelling adding or updating a credit card -->
+    <string name="credit_cards_cancel_button">Cancel</string>
 
     <!-- Title of the Add search engine screen -->
     <string name="search_engine_add_custom_search_engine_title">Add search engine</string>
@@ -1644,6 +1645,8 @@
     <string name="save_changes_to_login">Save changes to login.</string>
     <!--  The button description to discard changes to an edited login. -->
     <string name="discard_changes">Discard changes</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">Edit</string>
     <!--  The error message in edit login view when password field is blank. -->
     <string name="saved_login_password_required">Password required</string>
     <!-- Voice search button content description  -->

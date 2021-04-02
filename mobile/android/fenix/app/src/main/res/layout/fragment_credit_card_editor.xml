@@ -199,7 +199,7 @@
             android:layout_height="0dp"
             android:letterSpacing="0"
             android:padding="10dp"
-            android:text="@string/credit_cards_delete_card"
+            android:text="@string/credit_cards_delete_card_button"
             android:textAllCaps="false"
             android:textColor="@color/destructive_button_text_color"
             android:visibility="gone"
@@ -214,7 +214,7 @@
             android:layout_height="0dp"
             android:letterSpacing="0"
             android:padding="10dp"
-            android:text="@string/cancel"
+            android:text="@string/credit_cards_cancel_button"
             android:textAllCaps="false"
             android:textColor="?primaryText"
             android:textStyle="bold"
@@ -228,7 +228,7 @@
             android:layout_width="wrap_content"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
-            android:text="@string/save"
+            android:text="@string/credit_cards_save_button"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
