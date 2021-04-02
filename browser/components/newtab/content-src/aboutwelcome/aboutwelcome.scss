@@ -509,14 +509,247 @@ body {
     }
   }
 
-  // TBD: Styles specific to Proton multistage welcome UI
+  // Styles specific to Proton multistage welcome UI
   &.proton {
-    background-image: url('chrome://branding/content/about-logo.svg');
-    background-repeat: no-repeat;
-    background-size: 25em;
+    background: url('chrome://activity-stream/content/data/content/assets/proton-bkg.avif') center / cover no-repeat fixed;
+
+    .screen {
+      flex-flow: row nowrap;
+    }
+
+    .section-main {
+      background-color: var(--newtab-card-background-color);
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
 
     .welcome-text {
-      margin-top: 10vw;
+      h1,
+      h2 {
+        width: 376px;
+      }
+
+      h1 {
+        color: var(--newtab-text-primary-color);
+        font-size: 24px;
+        line-height: 36px;
+        font-weight: normal;
+      }
+
+      h2 {
+        font-size: 16px;
+        line-height: 24px;
+      }
+    }
+
+    .brand-logo {
+      background: url('chrome://branding/content/about-logo.svg') top
+      center / 80px no-repeat;
+      padding: 80px 0 10px;
+    }
+
+    .primary,
+    .secondary {
+      font-size: 13px;
+      line-height: 16px;
+    }
+
+    .steps {
+      padding-bottom: 44px;
+
+      .indicator {
+        width: 6px;
+        height: 6px;
+        background: #E0E0E6;
+
+        &.current {
+          background: #0090ED;
+        }
+      }
+    }
+
+    .tiles-theme-section {
+      border: var(--tiles-theme-section-border-width)
+      solid
+      var(--newtab-card-background-color);
+    }
+
+    .theme {
+      align-items: center;
+      width: auto;
+      min-width: 80px;
+      height: initial;
+      background-color: var(--newtab-card-background-color);
+      box-shadow: none;
+
+      &:focus,
+      &:active {
+        outline: initial;
+        outline-offset: initial;
+      }
+
+      .text {
+        font-weight: normal;
+        line-height: 20px;
+      }
+
+      .icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 40px;
+        margin-inline-start: 12px;
+
+        &.selected {
+          outline: 4px solid #0090ED;
+          outline-offset: -4px;
+        }
+
+        &:focus,
+        &:active {
+          outline: 4px solid #0090ED;
+          outline-offset: -4px;
+        }
+
+        &.light {
+          background-image: none;
+          background-color: #F0F0F4;
+          border: 1px solid #BFBFC9;
+        }
+
+        &.dark {
+          background-image: none;
+          background-color: #15141A;
+          border: 1px solid #8F8F9D;
+        }
+
+        &.alpenglow {
+          background-image: none;
+          background: linear-gradient(51.22deg, #9059FF 8.75%, #FF4AA2 56.28%, #FFBD4F 100.01%);
+        }
+
+        &.automatic {
+          background-image: none;
+          background-color: rgba(21, 20, 26, 0.4);
+          border: 1px solid #BFBFC9;
+        }
+      }
+    }
+
+
+    .screen-0 {
+      /**
+       * Proton welcome content is above white background noodle on first screen even when
+       * using the RTL UI direction; below rule enforce that ordering.
+       */
+      direction: ltr;
+      @media (max-width: $break-point-large) {
+        width: 800px;
+      }
+
+      @media (max-width: $break-point-medium) {
+        width: 700px;
+      }
+
+      .section-left {
+        width: 50%;
+        display: flex;
+        flex-direction: column;
+        margin: 0 0 0 101px;
+
+        @media (max-width: $break-point-widest) {
+          margin: 0 0 0 71px;
+        }
+
+        .message-text {
+          flex-grow: 1;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+
+          h1 {
+            color: #FFF;
+            font-weight: bold;
+            font-size: 64px;
+            line-height: 72px;
+            margin: 0 6px;
+            width: 517px;
+            text-align: initial;
+
+            @media (max-width: $break-point-widest) {
+              width: 300px;
+              font-size: 48px;
+              line-height: 56px;
+            }
+
+            @media (max-width: $break-point-large) {
+              width: 284px;
+              font-size: 48px;
+              line-height: 56px;
+            }
+
+            @media (max-width: $break-point-medium) {
+              width: 208px;
+              font-size: 48px;
+              line-height: 56px;
+            }
+          }
+        }
+
+        .attrib-text {
+          height: 18px;
+          width: 517px;
+          margin-bottom: 25px;
+          text-align: left;
+          font-size: 12px;
+          line-height: 18px;
+          color: #F9F9FB;
+          text-shadow: 0 0 7px rgba(0, 0, 0, 0.6);
+        }
+      }
+
+      // TBD: Update below section to show up above solid
+      // background noodle
+      .section-main {
+        z-index: 1;
+        height: 350px;
+        position: sticky;
+        top: 60%;
+        left: 80%;
+
+        .brand-logo {
+          margin-top: 0;
+        }
+
+        .welcome-text {
+          margin-bottom: 5px;
+
+          h1 {
+            width: 283px;
+          }
+        }
+      }
+    }
+
+    .screen-1,
+    .screen-2 {
+
+      .section-main {
+        width: 504px;
+        height: 503px;
+        margin: auto;
+
+        @media (max-width: $break-point-large) {
+          width: 450px;
+          height: auto;
+        }
+
+        @media (max-width: $break-point-medium) {
+          width: 420px;
+          height: auto;
+        }
+      }
     }
   }
 }

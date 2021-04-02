@@ -13,8 +13,20 @@ describe("MultiStageAboutWelcomeProton module", () => {
       };
       const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
       assert.ok(wrapper.exists());
-      assert.equal(wrapper.find("h1").text(), "test title");
-      assert.equal(wrapper.find("h2").text(), "test subtitle");
+    });
+
+    it("should render section left on first screen", () => {
+      const SCREEN_PROPS = {
+        order: 0,
+        content: {
+          title: "test title",
+          subtitle: "test subtitle",
+        },
+      };
+      const wrapper = mount(<MultiStageProtonScreen {...SCREEN_PROPS} />);
+      assert.ok(wrapper.exists());
+      assert.equal(wrapper.find(".welcome-text h1").text(), "test title");
+      assert.equal(wrapper.find(".section-left h1").text(), "test subtitle");
     });
   });
 });
