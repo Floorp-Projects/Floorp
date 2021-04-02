@@ -1223,10 +1223,11 @@ bool nsNativeThemeGTK::CreateWebRenderCommandsForWidget(
   switch (aAppearance) {
     case StyleAppearance::Window:
     case StyleAppearance::Dialog:
-      aBuilder.PushRect(
-          bounds, bounds, true,
-          wr::ToColorF(ToDeviceColor(LookAndFeel::GetColor(
-              LookAndFeel::ColorID::WindowBackground, NS_RGBA(0, 0, 0, 0)))));
+      aBuilder.PushRect(bounds, bounds, true,
+                        wr::ToColorF(ToDeviceColor(LookAndFeel::Color(
+                            LookAndFeel::ColorID::WindowBackground,
+                            LookAndFeel::ColorScheme::Light,
+                            LookAndFeel::UseStandins::No, NS_TRANSPARENT))));
       return true;
 
     default:
