@@ -21,6 +21,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/ServoStyleSet.h"
+#include "mozilla/ServoCSSParser.h"
 #include "mozilla/StaticPrefs_editor.h"
 #include "mozilla/StaticPrefs_findbar.h"
 #include "mozilla/StaticPrefs_ui.h"
@@ -648,20 +649,13 @@ static nsresult SystemColorUseDebuggingColor(LookAndFeel::ColorID aID,
 
 static nsresult GetColorFromPref(LookAndFeel::ColorID aID, nscolor& aResult) {
   const char* prefName = sColorPrefs[size_t(aID)];
-  nsAutoString colorStr;
-  MOZ_TRY(Preferences::GetString(prefName, colorStr));
-  if (colorStr.IsEmpty()) {
+  nsAutoCString colorStr;
+  MOZ_TRY(Preferences::GetCString(prefName, colorStr));
+  if (!ServoCSSParser::ComputeColor(nullptr, NS_RGB(0, 0, 0), colorStr,
+                                    &aResult)) {
     return NS_ERROR_FAILURE;
   }
-  if (colorStr[0] == char16_t('#')) {
-    if (NS_HexToRGBA(nsDependentString(colorStr, 1), nsHexColorType::NoAlpha,
-                     &aResult)) {
-      return NS_OK;
-    }
-  } else if (NS_ColorNameToRGB(colorStr, &aResult)) {
-    return NS_OK;
-  }
-  return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 // All these routines will return NS_OK if they have a value,
