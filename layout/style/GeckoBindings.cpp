@@ -693,10 +693,52 @@ bool Gecko_IsDocumentBody(const Element* aElement) {
   return doc && doc->GetBodyElement() == aElement;
 }
 
+static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
+    const Document& aDoc, LookAndFeel::ColorID aColor) {
+  using ColorID = LookAndFeel::ColorID;
+  if (!aDoc.ShouldAvoidNativeTheme()) {
+    return false;
+  }
+
+  // The native theme doesn't use system colors backgrounds etc, except when in
+  // high-contrast mode, so spoof some of the colors with stand-ins to prevent
+  // lack of contrast.
+  switch (aColor) {
+    case ColorID::Buttonface:
+    case ColorID::Buttontext:
+    case ColorID::MozButtonhoverface:
+    case ColorID::MozButtonhovertext:
+    case ColorID::MozGtkButtonactivetext:
+
+    case ColorID::MozCombobox:
+    case ColorID::MozComboboxtext:
+
+    case ColorID::Field:
+    case ColorID::Fieldtext:
+
+    case ColorID::Graytext:
+
+      return !PreferenceSheet::PrefsFor(aDoc)
+                  .NonNativeThemeShouldUseSystemColors();
+
+    default:
+      break;
+  }
+
+  return false;
+}
+
 nscolor Gecko_GetLookAndFeelSystemColor(int32_t aId, const Document* aDoc) {
   auto colorId = static_cast<LookAndFeel::ColorID>(aId);
+  const bool useStandinsForNativeColors =
+      ShouldUseStandinsForNativeColorForNonNativeTheme(*aDoc, colorId) ||
+      (nsContentUtils::UseStandinsForNativeColors() &&
+       !nsContentUtils::IsChromeDoc(aDoc));
+
   AutoWriteLock guard(*sServoFFILock);
-  return LookAndFeel::Color(colorId, *aDoc);
+  nscolor result = 0;
+  LookAndFeel::GetColor(colorId, useStandinsForNativeColors, &result);
+  return result;
 }
 
 bool Gecko_MatchLang(const Element* aElement, nsAtom* aOverrideLang,

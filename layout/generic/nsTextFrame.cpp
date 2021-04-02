@@ -357,7 +357,7 @@ class nsTextPaintStyle {
                                      float* aRelativeSize, uint8_t* aStyle);
 
   // if this returns false, we don't need to draw underline.
-  static bool GetSelectionUnderline(nsIFrame*, int32_t aIndex,
+  static bool GetSelectionUnderline(nsPresContext* aPresContext, int32_t aIndex,
                                     nscolor* aLineColor, float* aRelativeSize,
                                     uint8_t* aStyle);
 
@@ -3899,13 +3899,14 @@ void nsTextPaintStyle::GetHighlightColors(nscolor* aForeColor,
   }
 
   if (!customColors) {
-    nscolor backColor = LookAndFeel::Color(
-        LookAndFeel::ColorID::TextHighlightBackground, mFrame);
-    nscolor foreColor = LookAndFeel::Color(
-        LookAndFeel::ColorID::TextHighlightForeground, mFrame);
+    nscolor backColor =
+        LookAndFeel::GetColor(LookAndFeel::ColorID::TextHighlightBackground);
+    nscolor foreColor =
+        LookAndFeel::GetColor(LookAndFeel::ColorID::TextHighlightForeground);
     EnsureSufficientContrast(&foreColor, &backColor);
     *aForeColor = foreColor;
     *aBackColor = backColor;
+
     return;
   }
 
@@ -4033,9 +4034,9 @@ void nsTextPaintStyle::InitCommonColors() {
   mFrameBackgroundColor = NS_ComposeColors(defaultBgColor, bgColor);
 
   mSystemFieldForegroundColor =
-      LookAndFeel::Color(LookAndFeel::ColorID::Fieldtext, mFrame);
+      LookAndFeel::GetColor(LookAndFeel::ColorID::Fieldtext);
   mSystemFieldBackgroundColor =
-      LookAndFeel::Color(LookAndFeel::ColorID::Field, mFrame);
+      LookAndFeel::GetColor(LookAndFeel::ColorID::Field);
 
   if (bgFrame->IsThemed()) {
     // Assume a native widget has sufficient contrast always
@@ -4048,11 +4049,11 @@ void nsTextPaintStyle::InitCommonColors() {
                "default background color is not opaque");
 
   nscolor defaultWindowBackgroundColor =
-      LookAndFeel::Color(LookAndFeel::ColorID::WindowBackground, mFrame);
+      LookAndFeel::GetColor(LookAndFeel::ColorID::WindowBackground);
   nscolor selectionTextColor =
-      LookAndFeel::Color(LookAndFeel::ColorID::TextSelectForeground, mFrame);
+      LookAndFeel::GetColor(LookAndFeel::ColorID::TextSelectForeground);
   nscolor selectionBGColor =
-      LookAndFeel::Color(LookAndFeel::ColorID::TextSelectBackground, mFrame);
+      LookAndFeel::GetColor(LookAndFeel::ColorID::TextSelectBackground);
 
   mSufficientContrast = std::min(
       std::min(NS_SUFFICIENT_LUMINOSITY_DIFFERENCE,
@@ -4100,12 +4101,12 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
   }
 
   nscolor selectionBGColor =
-      LookAndFeel::Color(LookAndFeel::ColorID::TextSelectBackground, mFrame);
+      LookAndFeel::GetColor(LookAndFeel::ColorID::TextSelectBackground);
 
   switch (selectionStatus) {
     case nsISelectionController::SELECTION_ATTENTION: {
-      mSelectionBGColor = LookAndFeel::Color(
-          LookAndFeel::ColorID::TextSelectBackgroundAttention, mFrame);
+      mSelectionBGColor = LookAndFeel::GetColor(
+          LookAndFeel::ColorID::TextSelectBackgroundAttention);
       mSelectionBGColor =
           EnsureDifferentColors(mSelectionBGColor, selectionBGColor);
       break;
@@ -4115,8 +4116,8 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
       break;
     }
     default: {
-      mSelectionBGColor = LookAndFeel::Color(
-          LookAndFeel::ColorID::TextSelectBackgroundDisabled, mFrame);
+      mSelectionBGColor = LookAndFeel::GetColor(
+          LookAndFeel::ColorID::TextSelectBackgroundDisabled);
       mSelectionBGColor =
           EnsureDifferentColors(mSelectionBGColor, selectionBGColor);
       break;
@@ -4124,7 +4125,7 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
   }
 
   mSelectionTextColor =
-      LookAndFeel::Color(LookAndFeel::ColorID::TextSelectForeground, mFrame);
+      LookAndFeel::GetColor(LookAndFeel::ColorID::TextSelectForeground);
 
   if (mResolveColors) {
     // On MacOS X, only the background color gets set,
@@ -4144,8 +4145,8 @@ bool nsTextPaintStyle::InitSelectionColorsAndShadow() {
               : mFrame->GetVisitedDependentColor(
                     &nsStyleText::mWebkitTextFillColor);
       if (frameColor == mSelectionBGColor) {
-        mSelectionTextColor = LookAndFeel::Color(
-            LookAndFeel::ColorID::TextSelectForegroundCustom, mFrame);
+        mSelectionTextColor = LookAndFeel::GetColor(
+            LookAndFeel::ColorID::TextSelectForegroundCustom);
       }
     } else {
       EnsureSufficientContrast(&mSelectionTextColor, &mSelectionBGColor);
@@ -4206,12 +4207,12 @@ void nsTextPaintStyle::InitSelectionStyle(int32_t aIndex) {
   if (styleIDs->mForeground == LookAndFeel::ColorID::End) {
     foreColor = NS_SAME_AS_FOREGROUND_COLOR;
   } else {
-    foreColor = LookAndFeel::Color(styleIDs->mForeground, mFrame);
+    foreColor = LookAndFeel::GetColor(styleIDs->mForeground);
   }
   if (styleIDs->mBackground == LookAndFeel::ColorID::End) {
     backColor = NS_TRANSPARENT;
   } else {
-    backColor = LookAndFeel::Color(styleIDs->mBackground, mFrame);
+    backColor = LookAndFeel::GetColor(styleIDs->mBackground);
   }
 
   // Convert special color to actual color
@@ -4232,7 +4233,8 @@ void nsTextPaintStyle::InitSelectionStyle(int32_t aIndex) {
   nscolor lineColor;
   float relativeSize;
   uint8_t lineStyle;
-  GetSelectionUnderline(mFrame, aIndex, &lineColor, &relativeSize, &lineStyle);
+  GetSelectionUnderline(mPresContext, aIndex, &lineColor, &relativeSize,
+                        &lineStyle);
 
   if (mResolveColors)
     lineColor = GetResolvedForeColor(lineColor, foreColor, backColor);
@@ -4246,18 +4248,19 @@ void nsTextPaintStyle::InitSelectionStyle(int32_t aIndex) {
 }
 
 /* static */
-bool nsTextPaintStyle::GetSelectionUnderline(nsIFrame* aFrame, int32_t aIndex,
+bool nsTextPaintStyle::GetSelectionUnderline(nsPresContext* aPresContext,
+                                             int32_t aIndex,
                                              nscolor* aLineColor,
                                              float* aRelativeSize,
                                              uint8_t* aStyle) {
-  NS_ASSERTION(aFrame, "aFrame is null");
+  NS_ASSERTION(aPresContext, "aPresContext is null");
   NS_ASSERTION(aRelativeSize, "aRelativeSize is null");
   NS_ASSERTION(aStyle, "aStyle is null");
   NS_ASSERTION(aIndex >= 0 && aIndex < 5, "Index out of range");
 
   StyleIDs& styleID = SelectionStyleIDs[aIndex];
 
-  nscolor color = LookAndFeel::Color(styleID.mLine, aFrame);
+  nscolor color = LookAndFeel::GetColor(styleID.mLine);
   int32_t style = LookAndFeel::GetInt(styleID.mLineStyle);
   if (style > NS_STYLE_TEXT_DECORATION_STYLE_MAX) {
     NS_ERROR("Invalid underline style value is specified");
@@ -7372,7 +7375,7 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
         sd->mSelectionType);
     if (sd->mSelectionType == SelectionType::eSpellCheck) {
       if (!nsTextPaintStyle::GetSelectionUnderline(
-              this, index, nullptr, &relativeSize, &params.style)) {
+              aPresContext, index, nullptr, &relativeSize, &params.style)) {
         continue;
       }
     } else {
@@ -7386,7 +7389,8 @@ bool nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
         params.style = ToStyleLineStyle(rangeStyle);
         relativeSize = rangeStyle.mIsBoldLine ? 2.0f : 1.0f;
       } else if (!nsTextPaintStyle::GetSelectionUnderline(
-                     this, index, nullptr, &relativeSize, &params.style)) {
+                     aPresContext, index, nullptr, &relativeSize,
+                     &params.style)) {
         continue;
       }
     }

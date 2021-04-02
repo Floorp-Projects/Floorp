@@ -85,7 +85,11 @@ nsresult HeadlessLookAndFeel::NativeGetColor(ColorID aID, nscolor& aColor) {
       aColor = NS_RGB(0xaa, 0xaa, 0xaa);
       break;
     case ColorID::TextSelectForeground:
-      aColor = NS_DONT_CHANGE_COLOR;
+      GetColor(ColorID::TextSelectBackground, aColor);
+      if (aColor == 0x000000)
+        aColor = NS_RGB(0xff, 0xff, 0xff);
+      else
+        aColor = NS_DONT_CHANGE_COLOR;
       break;
     case ColorID::Widget3DHighlight:
       aColor = NS_RGB(0xa0, 0xa0, 0xa0);

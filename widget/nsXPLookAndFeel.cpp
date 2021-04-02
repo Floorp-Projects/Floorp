@@ -14,7 +14,6 @@
 #include "nsContentUtils.h"
 #include "nsCRT.h"
 #include "nsFont.h"
-#include "nsIFrame.h"
 #include "nsIXULRuntime.h"
 #include "nsNativeBasicTheme.h"
 #include "mozilla/dom/ContentChild.h"
@@ -25,8 +24,6 @@
 #include "mozilla/StaticPrefs_findbar.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/StaticPrefs_widget.h"
-#include "mozilla/dom/Document.h"
-#include "mozilla/PreferenceSheet.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/widget/WidgetMessageUtils.h"
 #include "mozilla/Telemetry.h"
@@ -65,7 +62,7 @@ struct nsLookAndFeelFloatPref {
 template <typename Index, typename Value, Index kEnd>
 class EnumeratedCache {
   static constexpr uint32_t ChunkFor(Index aIndex) {
-    return uint32_t(aIndex) >> 5;  // >> 5 is the same as / 32.
+    return uint32_t(aIndex) >> 5; // >> 5 is the same as / 32.
   }
   static constexpr uint32_t BitFor(Index aIndex) {
     return 1u << (uint32_t(aIndex) & 31);
@@ -1050,69 +1047,15 @@ void LookAndFeel::NotifyChangedAllWindows(widget::ThemeChangeKind aKind) {
   }
 }
 
-static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
-    const dom::Document& aDoc, LookAndFeel::ColorID aColor) {
-  using ColorID = LookAndFeel::ColorID;
-  if (!aDoc.ShouldAvoidNativeTheme()) {
-    return false;
-  }
-
-  // The native theme doesn't use system colors backgrounds etc, except when in
-  // high-contrast mode, so spoof some of the colors with stand-ins to prevent
-  // lack of contrast.
-  switch (aColor) {
-    case ColorID::Buttonface:
-    case ColorID::Buttontext:
-    case ColorID::MozButtonhoverface:
-    case ColorID::MozButtonhovertext:
-    case ColorID::MozGtkButtonactivetext:
-
-    case ColorID::MozCombobox:
-    case ColorID::MozComboboxtext:
-
-    case ColorID::Field:
-    case ColorID::Fieldtext:
-
-    case ColorID::Graytext:
-
-      return !PreferenceSheet::PrefsFor(aDoc)
-                  .NonNativeThemeShouldUseSystemColors();
-
-    default:
-      break;
-  }
-
-  return false;
-}
-
-static LookAndFeel::ColorScheme ColorSchemeForDocument(const dom::Document&) {
-  // TODO(emilio): Actually compute a useful color scheme.
-  return LookAndFeel::ColorScheme::Light;
-}
-
 // static
-Maybe<nscolor> LookAndFeel::GetColor(ColorID aId, ColorScheme,
-                                     UseStandins aUseStandins) {
-  // TODO(emilio): Actually use ColorScheme.
-  nscolor result;
-  nsresult rv = nsLookAndFeel::GetInstance()->GetColorValue(
-      aId, bool(aUseStandins), result);
-  if (NS_FAILED(rv)) {
-    return Nothing();
-  }
-  return Some(result);
+nsresult LookAndFeel::GetColor(ColorID aID, nscolor* aResult) {
+  return nsLookAndFeel::GetInstance()->GetColorValue(aID, false, *aResult);
 }
 
-Maybe<nscolor> LookAndFeel::GetColor(ColorID aId, const dom::Document& aDoc) {
-  const bool useStandins =
-      ShouldUseStandinsForNativeColorForNonNativeTheme(aDoc, aId) ||
-      (nsContentUtils::UseStandinsForNativeColors() &&
-       !nsContentUtils::IsChromeDoc(&aDoc));
-  return GetColor(aId, ColorSchemeForDocument(aDoc), UseStandins(useStandins));
-}
-
-Maybe<nscolor> LookAndFeel::GetColor(ColorID aId, const nsIFrame* aFrame) {
-  return GetColor(aId, *aFrame->PresContext()->Document());
+nsresult LookAndFeel::GetColor(ColorID aID, bool aUseStandinsForNativeColors,
+                               nscolor* aResult) {
+  return nsLookAndFeel::GetInstance()->GetColorValue(
+      aID, aUseStandinsForNativeColors, *aResult);
 }
 
 // static

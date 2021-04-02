@@ -72,12 +72,9 @@ static LayoutDeviceIntCoord SnapBorderWidth(
 
 static nscolor ThemedAccentColor(bool aBackground) {
   MOZ_ASSERT(StaticPrefs::widget_non_native_theme_use_theme_accent());
-  // TODO(emilio): In the future we should probably add dark-color-scheme
-  // support for non-native form controls.
-  nscolor color = LookAndFeel::Color(
+  nscolor color = LookAndFeel::GetColor(
       aBackground ? LookAndFeel::ColorID::MozAccentColor
-                  : LookAndFeel::ColorID::MozAccentColorForeground,
-      LookAndFeel::ColorScheme::Light, LookAndFeel::UseStandins::No);
+                  : LookAndFeel::ColorID::MozAccentColorForeground);
   if (NS_GET_A(color) != 0xff) {
     // Blend with white, ensuring the color is opaque to avoid surprises if we
     // overdraw.
@@ -199,20 +196,7 @@ static bool IsScrollbarWidthThin(nsIFrame* aFrame) {
 }
 
 static sRGBColor SystemColor(StyleSystemColor aColor) {
-  // TODO(emilio): We could not hardcode light appearance here with a bit of
-  // work, but doesn't matter for now.
-  return sRGBColor::FromABGR(LookAndFeel::Color(
-      aColor, LookAndFeel::ColorScheme::Light, LookAndFeel::UseStandins::No));
-}
-
-template <typename Compute>
-static sRGBColor SystemColorOrElse(StyleSystemColor aColor, Compute aCompute) {
-  if (auto color =
-          LookAndFeel::GetColor(aColor, LookAndFeel::ColorScheme::Light,
-                                LookAndFeel::UseStandins::No)) {
-    return sRGBColor::FromABGR(*color);
-  }
-  return aCompute();
+  return sRGBColor::FromABGR(LookAndFeel::GetColor(aColor));
 }
 
 static std::pair<sRGBColor, sRGBColor> SystemColorPair(
@@ -555,16 +539,17 @@ sRGBColor nsNativeBasicTheme::ComputeScrollbarColor(
   if (ShouldUseDarkScrollbar(aFrame, aStyle)) {
     return sRGBColor::FromU8(20, 20, 25, 77);
   }
+  nscolor color;
   if (ui->mScrollbarColor.IsColors()) {
-    return sRGBColor::FromABGR(
-        ui->mScrollbarColor.AsColors().track.CalcColor(aStyle));
+    color = ui->mScrollbarColor.AsColors().track.CalcColor(aStyle);
+  } else if (aDocumentState.HasAllStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
+    color = LookAndFeel::GetColor(LookAndFeel::ColorID::ThemedScrollbarInactive,
+                                  sScrollbarColor.ToABGR());
+  } else {
+    color = LookAndFeel::GetColor(LookAndFeel::ColorID::ThemedScrollbar,
+                                  sScrollbarColor.ToABGR());
   }
-  if (aDocumentState.HasAllStates(NS_DOCUMENT_STATE_WINDOW_INACTIVE)) {
-    return SystemColorOrElse(StyleSystemColor::ThemedScrollbarInactive,
-                             [] { return sScrollbarColor; });
-  }
-  return SystemColorOrElse(StyleSystemColor::ThemedScrollbar,
-                           [] { return sScrollbarColor; });
+  return gfx::sRGBColor::FromABGR(color);
 }
 
 nscolor nsNativeBasicTheme::AdjustUnthemedScrollbarThumbColor(
@@ -683,6 +668,7 @@ sRGBColor nsNativeBasicTheme::ComputeScrollbarThumbColor(
   }
 
   const nsStyleUI* ui = aStyle.StyleUI();
+  nscolor color;
   if (ui->mScrollbarColor.IsColors()) {
     return sRGBColor::FromABGR(AdjustUnthemedScrollbarThumbColor(
         ui->mScrollbarColor.AsColors().thumb.CalcColor(aStyle), aElementState));
@@ -710,10 +696,11 @@ sRGBColor nsNativeBasicTheme::ComputeScrollbarThumbColor(
     return StyleSystemColor::ThemedScrollbarThumb;
   }();
 
-  return SystemColorOrElse(systemColor, [&] {
-    return sRGBColor::FromABGR(AdjustUnthemedScrollbarThumbColor(
-        sScrollbarThumbColor.ToABGR(), aElementState));
-  });
+  if (NS_FAILED(LookAndFeel::GetColor(systemColor, &color))) {
+    color = AdjustUnthemedScrollbarThumbColor(sScrollbarThumbColor.ToABGR(),
+                                              aElementState);
+  }
+  return gfx::sRGBColor::FromABGR(color);
 }
 
 std::pair<sRGBColor, sRGBColor>
