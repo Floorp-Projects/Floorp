@@ -524,11 +524,19 @@ static MOZ_ALWAYS_INLINE T UnspecifiedNaN() {
  */
 template <typename T>
 static inline bool NumbersAreIdentical(T aValue1, T aValue2) {
-  typedef FloatingPoint<T> Traits;
-  typedef typename Traits::Bits Bits;
+  using Bits = typename FloatingPoint<T>::Bits;
   if (IsNaN(aValue1)) {
     return IsNaN(aValue2);
   }
+  return BitwiseCast<Bits>(aValue1) == BitwiseCast<Bits>(aValue2);
+}
+
+/**
+ * Compare two floating point values for bit-wise equality.
+ */
+template <typename T>
+static inline bool NumbersAreBitwiseIdentical(T aValue1, T aValue2) {
+  using Bits = typename FloatingPoint<T>::Bits;
   return BitwiseCast<Bits>(aValue1) == BitwiseCast<Bits>(aValue2);
 }
 
