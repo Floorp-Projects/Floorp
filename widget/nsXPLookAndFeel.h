@@ -31,8 +31,7 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
   //
   // NS_ERROR_NOT_AVAILABLE is returned if there is neither an override pref or
   // a platform-specific value.
-  nsresult GetColorValue(ColorID aID, bool aUseStandinsForNativeColors,
-                         nscolor& aResult);
+  nsresult GetColorValue(ColorID, ColorScheme, UseStandins, nscolor& aResult);
   nsresult GetIntValue(IntID aID, int32_t& aResult);
   nsresult GetFloatValue(FloatID aID, float& aResult);
   // Same, but returns false if there is no platform-specific value.
