@@ -40,7 +40,7 @@ class nsXPLookAndFeel : public mozilla::LookAndFeel {
 
   virtual nsresult NativeGetInt(IntID aID, int32_t& aResult) = 0;
   virtual nsresult NativeGetFloat(FloatID aID, float& aResult) = 0;
-  virtual nsresult NativeGetColor(ColorID aID, nscolor& aResult) = 0;
+  virtual nsresult NativeGetColor(ColorID, ColorScheme, nscolor& aResult) = 0;
   virtual bool NativeGetFont(FontID aID, nsString& aName,
                              gfxFontStyle& aStyle) = 0;
 

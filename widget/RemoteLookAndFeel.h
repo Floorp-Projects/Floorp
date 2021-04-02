@@ -25,9 +25,9 @@ class RemoteLookAndFeel final : public nsXPLookAndFeel {
 
   void NativeInit() override {}
 
-  nsresult NativeGetInt(IntID aID, int32_t& aResult) override;
-  nsresult NativeGetFloat(FloatID aID, float& aResult) override;
-  nsresult NativeGetColor(ColorID aID, nscolor& aResult) override;
+  nsresult NativeGetInt(IntID, int32_t& aResult) override;
+  nsresult NativeGetFloat(FloatID, float& aResult) override;
+  nsresult NativeGetColor(ColorID, ColorScheme, nscolor& aResult) override;
   bool NativeGetFont(FontID aID, nsString& aFontName,
                      gfxFontStyle& aFontStyle) override;
 
