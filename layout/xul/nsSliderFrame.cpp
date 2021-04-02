@@ -55,7 +55,6 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using mozilla::dom::Document;
 using mozilla::dom::Event;
-using mozilla::layers::APZCCallbackHelper;
 using mozilla::layers::AsyncDragMetrics;
 using mozilla::layers::InputAPZContext;
 using mozilla::layers::ScrollbarData;
@@ -293,7 +292,7 @@ void nsDisplaySliderMarks::PaintMarks(nsDisplayListBuilder* aDisplayListBuilder,
 
   // Use the text highlight color for the tick marks.
   nscolor highlightColor =
-      LookAndFeel::GetColor(LookAndFeel::ColorID::TextHighlightBackground);
+      LookAndFeel::Color(LookAndFeel::ColorID::TextHighlightBackground, mFrame);
   DeviceColor fillColor = ToDeviceColor(highlightColor);
   fillColor.a = 0.3;  // make the mark mostly transparent
 
