@@ -1552,9 +1552,7 @@ class BrowsertimeOutput(PerftestOutput):
                     subtests, vals = self.parseAresSixOutput(test)
                 if "motionmark" in test["measurements"]:
                     subtests, vals = self.parseMotionmarkOutput(test)
-                if any(
-                    "youtube-playback" in key for key in test["measurements"].keys()
-                ):
+                if "youtube-playback" in test["name"]:
                     subtests, vals = self.parseYoutubePlaybackPerformanceOutput(test)
                 if "unity-webgl" in test["name"]:
                     subtests, vals = self.parseUnityWebGLOutput(test)

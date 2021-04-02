@@ -55,11 +55,15 @@ module.exports = async function(context, commands) {
       context.log.info("Value of benchmark data: ", data);
       data = JSON.parse(data);
 
-      commands.measure.addObject({
-        browsertime_benchmark: {
-          [data[1]]: data.slice(2),
-        },
-      });
+      if (!Array.isArray(data)) {
+        commands.measure.addObject({ browsertime_benchmark: data });
+      } else {
+        commands.measure.addObject({
+          browsertime_benchmark: {
+            [data[1]]: data.slice(2),
+          },
+        });
+      }
       ret = true;
     }
   }
