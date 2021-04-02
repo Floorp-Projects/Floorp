@@ -1810,7 +1810,7 @@ nsresult AutoScroller::DoAutoScroll(nsIFrame* aFrame, nsPoint aPoint) {
   while (true) {
     didScroll = presShell->ScrollFrameRectIntoView(
         aFrame, nsRect(aPoint, nsSize(0, 0)), ScrollAxis(), ScrollAxis(),
-        ScrollFlags::IgnoreMarginAndPadding);
+        ScrollFlags::None);
     if (!weakFrame || !weakRootFrame) {
       return NS_OK;
     }
@@ -2996,7 +2996,7 @@ nsresult Selection::ScrollIntoView(SelectionRegion aRegion,
   // vertical scrollbar or the scroll range is at least one device pixel)
   aVertical.mOnlyIfPerceivedScrollableDirection = true;
 
-  ScrollFlags scrollFlags = ScrollFlags::IgnoreMarginAndPadding;
+  auto scrollFlags = ScrollFlags::None;
   if (aFlags & Selection::SCROLL_FIRST_ANCESTOR_ONLY) {
     scrollFlags |= ScrollFlags::ScrollFirstAncestorOnly;
   }
