@@ -1298,7 +1298,7 @@ void nsNativeBasicTheme::PaintRange(nsIFrame* aFrame,
   }
 
   const CSSCoord borderWidth = 1.0f;
-  const CSSCoord radius = 2.0f;
+  const CSSCoord radius = 3.0f;
 
   auto [progressColor, progressBorderColor] =
       ComputeRangeProgressColors(aState, aUseSystemColors);
@@ -1344,7 +1344,7 @@ void nsNativeBasicTheme::PaintProgress(nsIFrame* aFrame,
                                        UseSystemColors aUseSystemColors,
                                        DPIRatio aDpiRatio, bool aIsMeter) {
   const CSSCoord borderWidth = 1.0f;
-  const CSSCoord radius = aIsMeter ? 5.0f : 2.0f;
+  const CSSCoord radius = aIsMeter ? 6.0f : 3.0f;
 
   LayoutDeviceRect rect(aRect);
   const LayoutDeviceCoord thickness =
