@@ -470,7 +470,6 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
     case IntID::DWMCompositor:
     case IntID::WindowsClassic:
     case IntID::WindowsDefaultTheme:
-    case IntID::TouchEnabled:
     case IntID::WindowsThemeIdentifier:
     case IntID::OperatingSystemVersionIdentifier:
       aResult = 0;
