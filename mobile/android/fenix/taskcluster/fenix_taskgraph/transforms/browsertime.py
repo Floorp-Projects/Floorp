@@ -77,15 +77,17 @@ def build_browsertime_task(config, tasks):
         abi = task["attributes"]["abi"]
         apk = task["attributes"]["apk"]
 
-        test_name = task.pop("test-name")
-
-        task["name"] = "{}-{}-{}".format(task["name"], build_type, abi)
-        task["description"] = "{}-{}".format(build_type, abi)
-
         for key in ("args", "treeherder.platform", "worker-type"):
             resolve_keyed_by(task, key, item_name=task["name"], **{"abi": abi})
 
         task["treeherder"] = inherit_treeherder_from_dep(task, signing)
+
+        test_name = task.pop("test-name")
+        platform = task["treeherder"]["platform"]
+
+        task_name = "{}-{}-{}-{}".format(platform, test_name, build_type, abi)
+        task["name"] = task_name
+        task["description"] = task_name
 
         extra_config = {
             "installer_url": "<signing/{}>".format(apk),
@@ -150,15 +152,13 @@ def enable_webrender(config, tasks):
     for task in tasks:
         if not task.pop("web-render-only", False):
             newtask = copy.deepcopy(task)
+            newtask["name"] = newtask["name"].replace("-qr", "")
+            newtask["description"] = newtask["description"].replace("-qr", "")
+            newtask["treeherder"]["platform"] = newtask["treeherder"][
+                "platform"
+            ].replace("-qr", "")
             yield newtask
         task["run"]["command"].append("--enable-webrender")
-        task["name"] += "-wr"
-        task["description"] += "-wr"
-
-        # Setup group symbol
-        group, sym = task["treeherder"]["symbol"].split("(")
-        task["treeherder"]["symbol"] = "{}-wr({})".format(group, sym[:-1])
-
         yield task
 
 
