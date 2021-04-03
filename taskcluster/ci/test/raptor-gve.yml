@@ -21,8 +21,6 @@ job-defaults:
         script: raptor_script.py
         config:
             - raptor/android_hw_config.py
-        extra-options:
-            - --no-conditioned-profile
     optimization:
         skip-unless-backstop: null
     python-3: true
