@@ -85,7 +85,6 @@ job-defaults:
             - '--cfg=mozharness/configs/raptor/android_hw_config.py'
             - '--app=fenix'
             - '--browsertime'
-            - '--no-conditioned-profile'
             - '--binary=org.mozilla.fenix'
             - '--activity=org.mozilla.fenix.IntentReceiverActivity'
             - '--download-symbols=ondemand'
