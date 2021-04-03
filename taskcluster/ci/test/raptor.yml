@@ -81,8 +81,6 @@ job-defaults:
             # Bug 1626522: Temporarily enable extension logging for
             # an easier investigation of intermittents on mobile devices
             - --setpref=extensions.logging.enabled=true
-            # Bug 1663449: Disable conditioned profiles for raptor tests because of test failures
-            - --no-conditioned-profile
     fetches:
         fetch:
             by-app:
