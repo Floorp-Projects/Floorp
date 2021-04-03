@@ -29,6 +29,7 @@ preference = "image.avif.enabled"
 type = "boolean"
 bug-numbers = [1443863]
 is-public = {default = false, nightly = true}
+default-value = false
 
 [web-api-inputmode]
 title = "experimental-features-web-api-inputmode"
