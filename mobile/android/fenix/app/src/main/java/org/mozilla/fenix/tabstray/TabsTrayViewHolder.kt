@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.tabstray
 
-import android.view.MotionEvent
 import android.view.View
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -12,8 +11,8 @@ import android.widget.TextView
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatImageButton
+import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
-import androidx.recyclerview.selection.ItemDetailsLookup
 import kotlinx.android.synthetic.main.checkbox_item.view.*
 import mozilla.components.browser.state.selector.findTabOrCustomTab
 import mozilla.components.browser.state.store.BrowserStore
@@ -36,6 +35,8 @@ import org.mozilla.fenix.ext.removeAndDisable
 import org.mozilla.fenix.ext.removeTouchDelegate
 import org.mozilla.fenix.ext.showAndEnable
 import org.mozilla.fenix.ext.toShortUrl
+import org.mozilla.fenix.selection.SelectionHolder
+import org.mozilla.fenix.selection.SelectionInteractor
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 
 /**
@@ -45,7 +46,9 @@ abstract class TabsTrayViewHolder(
     itemView: View,
     private val imageLoader: ImageLoader,
     private val thumbnailSize: Int,
-    private val browserTrayInteractor: BrowserTrayInteractor?,
+    private val browserTrayInteractor: BrowserTrayInteractor,
+    private val trayStore: TabsTrayStore,
+    private val selectionHolder: SelectionHolder<Tab>?,
     private val store: BrowserStore = itemView.context.components.core.store,
     private val metrics: MetricController = itemView.context.components.analytics.metrics
 ) : TabViewHolder(itemView) {
@@ -81,13 +84,63 @@ abstract class TabsTrayViewHolder(
         updateFavicon(tab)
         updateCloseButtonDescription(tab.title)
         updateSelectedTabIndicator(isSelected)
+        updateMediaState(tab)
+
+        selectionHolder?.let {
+            setSelectionInteractor(tab, it, browserTrayInteractor)
+        }
 
         if (tab.thumbnail != null) {
             thumbnailView.setImageBitmap(tab.thumbnail)
         } else {
             loadIntoThumbnailView(thumbnailView, tab.id)
         }
+    }
 
+    fun showTabIsMultiSelectEnabled(isSelected: Boolean) {
+        itemView.selected_mask.isVisible = isSelected
+        closeView.isInvisible = trayStore.state.mode is TabsTrayState.Mode.Select
+    }
+
+    private fun updateFavicon(tab: Tab) {
+        if (tab.icon != null) {
+            faviconView?.visibility = View.VISIBLE
+            faviconView?.setImageBitmap(tab.icon)
+        } else {
+            faviconView?.visibility = View.GONE
+        }
+    }
+
+    private fun updateTitle(tab: Tab) {
+        val title = if (tab.title.isNotEmpty()) {
+            tab.title
+        } else {
+            tab.url
+        }
+        titleView.text = title
+    }
+
+    private fun updateUrl(tab: Tab) {
+        // Truncate to MAX_URI_LENGTH to prevent the UI from locking up for
+        // extremely large URLs such as data URIs or bookmarklets. The same
+        // is done in the toolbar and awesomebar:
+        // https://github.com/mozilla-mobile/fenix/issues/1824
+        // https://github.com/mozilla-mobile/android-components/issues/6985
+        urlView?.text = tab.url
+            .toShortUrl(itemView.context.components.publicSuffixList)
+            .take(MAX_URI_LENGTH)
+    }
+
+    private fun updateCloseButtonDescription(title: String) {
+        closeView.contentDescription =
+            closeView.context.getString(R.string.close_tab_title, title)
+    }
+
+    /**
+     * NB: Why do we query for the media state from the store, when we have [Tab.playbackState] and
+     * [Tab.controller] already mapped?
+     */
+    private fun updateMediaState(tab: Tab) {
         // Media state
         playPauseButtonView.increaseTapArea(PLAY_PAUSE_BUTTON_EXTRA_DPS)
 
@@ -136,63 +189,34 @@ abstract class TabsTrayViewHolder(
                 }
             }
         }
-
-        closeView.setOnClickListener {
-            observable.notifyObservers { onTabClosed(tab) }
-        }
-    }
-
-    fun getItemDetails() = object : ItemDetailsLookup.ItemDetails<Long>() {
-        override fun getPosition(): Int = bindingAdapterPosition
-        override fun getSelectionKey(): Long = itemId
-        override fun inSelectionHotspot(e: MotionEvent): Boolean {
-            return browserTrayInteractor?.isMultiSelectMode() == true
-        }
-    }
-
-    fun showTabIsMultiSelectEnabled(isSelected: Boolean) {
-        itemView.selected_mask.isVisible = isSelected
-        // TODO Enable this with https://github.com/mozilla-mobile/fenix/issues/18656
-        // itemView.mozac_browser_tabstray_close.isVisible =
-        //    browserTrayInteractor?.isMultiSelectMode() == false
-    }
-
-    private fun updateFavicon(tab: Tab) {
-        if (tab.icon != null) {
-            faviconView?.visibility = View.VISIBLE
-            faviconView?.setImageBitmap(tab.icon)
-        } else {
-            faviconView?.visibility = View.GONE
-        }
-    }
-
-    private fun updateTitle(tab: Tab) {
-        val title = if (tab.title.isNotEmpty()) {
-            tab.title
-        } else {
-            tab.url
-        }
-        titleView.text = title
-    }
-
-    private fun updateUrl(tab: Tab) {
-        // Truncate to MAX_URI_LENGTH to prevent the UI from locking up for
-        // extremely large URLs such as data URIs or bookmarklets. The same
-        // is done in the toolbar and awesomebar:
-        // https://github.com/mozilla-mobile/fenix/issues/1824
-        // https://github.com/mozilla-mobile/android-components/issues/6985
-        urlView?.text = tab.url
-            .toShortUrl(itemView.context.components.publicSuffixList)
-            .take(MAX_URI_LENGTH)
-    }
-
-    private fun updateCloseButtonDescription(title: String) {
-        closeView.contentDescription =
-            closeView.context.getString(R.string.close_tab_title, title)
     }
 
     private fun loadIntoThumbnailView(thumbnailView: ImageView, id: String) {
         imageLoader.loadIntoView(thumbnailView, ImageLoadRequest(id, thumbnailSize))
+    }
+
+    private fun setSelectionInteractor(
+        item: Tab,
+        holder: SelectionHolder<Tab>,
+        interactor: SelectionInteractor<Tab>
+    ) {
+        itemView.setOnClickListener {
+            val selected = holder.selectedItems
+            when {
+                selected.isEmpty() -> interactor.open(item)
+                item in selected -> interactor.deselect(item)
+                else -> interactor.select(item)
+            }
+        }
+
+        itemView.setOnLongClickListener {
+            if (holder.selectedItems.isEmpty()) {
+                interactor.select(item)
+                true
+            } else {
+                false
+            }
+        }
     }
 
     companion object {

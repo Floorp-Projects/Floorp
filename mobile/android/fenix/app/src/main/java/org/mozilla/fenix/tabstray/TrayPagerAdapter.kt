@@ -18,14 +18,15 @@ import org.mozilla.fenix.sync.SyncedTabsAdapter
 import org.mozilla.fenix.tabstray.viewholders.SyncedTabViewHolder
 
 class TrayPagerAdapter(
-    val context: Context,
-    val interactor: TabsTrayInteractor,
-    val browserInteractor: BrowserTrayInteractor,
-    val syncedTabsInteractor: SyncedTabsView.Listener
+    private val context: Context,
+    private val store: TabsTrayStore,
+    private val browserInteractor: BrowserTrayInteractor,
+    private val syncedTabsInteractor: SyncedTabsView.Listener,
+    private val interactor: TabsTrayInteractor
 ) : RecyclerView.Adapter<AbstractTrayViewHolder>() {
 
-    private val normalAdapter by lazy { BrowserTabsAdapter(context, browserInteractor) }
-    private val privateAdapter by lazy { BrowserTabsAdapter(context, browserInteractor) }
+    private val normalAdapter by lazy { BrowserTabsAdapter(context, browserInteractor, store) }
+    private val privateAdapter by lazy { BrowserTabsAdapter(context, browserInteractor, store) }
     private val syncedTabsAdapter by lazy { SyncedTabsAdapter(syncedTabsInteractor) }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AbstractTrayViewHolder {
@@ -33,6 +34,7 @@ class TrayPagerAdapter(
 
         return when (viewType) {
             NormalBrowserTabViewHolder.LAYOUT_ID -> NormalBrowserTabViewHolder(
+                store,
                 itemView,
                 interactor
             )

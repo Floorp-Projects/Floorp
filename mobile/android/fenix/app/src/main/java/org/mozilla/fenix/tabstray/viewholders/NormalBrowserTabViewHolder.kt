@@ -5,49 +5,39 @@
 package org.mozilla.fenix.tabstray.viewholders
 
 import android.view.View
-import androidx.recyclerview.selection.SelectionPredicates
-import androidx.recyclerview.selection.SelectionTracker
-import androidx.recyclerview.selection.StorageStrategy
 import androidx.recyclerview.widget.RecyclerView
+import mozilla.components.concept.tabstray.Tab
 import org.mozilla.fenix.R
+import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
+import org.mozilla.fenix.tabstray.TabsTrayStore
 import org.mozilla.fenix.tabstray.browser.BrowserTabsAdapter
-import org.mozilla.fenix.tabstray.browser.TabsDetailsLookup
-import org.mozilla.fenix.tabstray.browser.TabsItemKeyProvider
 
 /**
  * View holder for the normal tabs tray list.
  */
 class NormalBrowserTabViewHolder(
+    private val store: TabsTrayStore,
     containerView: View,
     interactor: TabsTrayInteractor
-) : BaseBrowserTabViewHolder(containerView, interactor) {
+) : BaseBrowserTabViewHolder(containerView, interactor), SelectionHolder<Tab> {
 
-    private lateinit var selectionTracker: SelectionTracker<Long>
+    /**
+     * Holds the list of selected tabs.
+     *
+     * Implementation notes: we do this here because we only want the normal tabs list to be able
+     * to select tabs.
+     */
+    override val selectedItems: Set<Tab>
+        get() = store.state.mode.selectedTabs
 
     override fun bind(
         adapter: RecyclerView.Adapter<out RecyclerView.ViewHolder>,
         layoutManager: RecyclerView.LayoutManager
     ) {
+        (adapter as BrowserTabsAdapter).selectionHolder = this
+
         super.bind(adapter, layoutManager)
-
-        selectionTracker = SelectionTracker.Builder(
-            "mySelection",
-            trayList,
-            TabsItemKeyProvider(trayList),
-            TabsDetailsLookup(trayList),
-            StorageStrategy.createLongStorage()
-        ).withSelectionPredicate(
-            SelectionPredicates.createSelectAnything()
-        ).build()
-
-        (adapter as BrowserTabsAdapter).tracker = selectionTracker
-
-        selectionTracker.addObserver(object : SelectionTracker.SelectionObserver<Long>() {
-            override fun onItemStateChanged(key: Long, selected: Boolean) {
-                // TODO Do nothing for now; remove in a future patch if needed.
-            }
-        })
     }
 
     companion object {

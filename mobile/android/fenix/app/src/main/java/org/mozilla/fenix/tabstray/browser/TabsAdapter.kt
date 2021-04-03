@@ -31,17 +31,9 @@ abstract class TabsAdapter<T : TabViewHolder>(
     protected var tabs: Tabs? = null
     protected var styling: TabsTrayStyling = TabsTrayStyling()
 
-    private val idStorage = TabAdapterIdStorage()
-
-    init {
-        setHasStableIds(true)
-    }
-
     @CallSuper
     override fun updateTabs(tabs: Tabs) {
         this.tabs = tabs
-
-        idStorage.resizeCacheIfNeeded(tabs.list.size)
 
         notifyObservers { onTabsUpdated() }
     }
@@ -51,13 +43,6 @@ abstract class TabsAdapter<T : TabViewHolder>(
         val tabs = tabs ?: return
 
         holder.bind(tabs.list[position], isTabSelected(tabs, position), styling, this)
-    }
-
-    override fun getItemId(position: Int): Long {
-        val key = tabs?.list?.get(position)
-            ?: throw IllegalStateException("Unknown tab for position $position")
-
-        return idStorage.getStableId(key)
     }
 
     override fun getItemCount(): Int = tabs?.list?.size ?: 0

@@ -19,7 +19,6 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayout
 import kotlinx.android.synthetic.main.component_tabstray2.*
 import kotlinx.android.synthetic.main.component_tabstray2.view.*
-import org.mozilla.fenix.HomeActivity
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import mozilla.components.browser.state.selector.normalTabs
 import mozilla.components.lib.state.ext.consumeFrom
@@ -29,6 +28,8 @@ import org.mozilla.fenix.NavGraphDirections
 import org.mozilla.fenix.R
 import org.mozilla.fenix.components.metrics.Event
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.HomeActivity
+import org.mozilla.fenix.components.StoreProvider
 import org.mozilla.fenix.ext.requireComponents
 import org.mozilla.fenix.home.HomeScreenViewModel
 import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
@@ -39,7 +40,6 @@ import org.mozilla.fenix.tabstray.syncedtabs.SyncedTabsInteractor
 
 class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
-    private lateinit var behavior: BottomSheetBehavior<ConstraintLayout>
     private lateinit var navigationInteractor: NavigationInteractor
 
     private val tabLayout: TabLayout? get() =
@@ -47,6 +47,9 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
     private val isPrivateModeSelected: Boolean get() =
         tabLayout?.selectedTabPosition == TrayPagerAdapter.POSITION_PRIVATE_TABS
+    private lateinit var tabsTrayStore: TabsTrayStore
+    private lateinit var browserTrayInteractor: BrowserTrayInteractor
+    private lateinit var behavior: BottomSheetBehavior<ConstraintLayout>
 
     private val tabLayoutMediator = ViewBoundFeatureWrapper<TabLayoutMediator>()
 
@@ -60,7 +63,8 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
     }
 
     private val removeUseCases by lazy {
-        RemoveTabUseCaseWrapper(requireComponents.analytics.metrics
+        RemoveTabUseCaseWrapper(
+            requireComponents.analytics.metrics
         ) {
             tabRemoved(it)
         }
@@ -70,6 +74,9 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         super.onCreate(savedInstanceState)
         setStyle(STYLE_NO_TITLE, R.style.TabTrayDialogStyle)
     }
+
+    override fun onCreateDialog(savedInstanceState: Bundle?) =
+        TabsTrayDialog(requireContext(), theme) { browserTrayInteractor }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -92,6 +99,8 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
                 dismissTabTrayAndNavigateHome = ::dismissTabTrayAndNavigateHome
             )
 
+        tabsTrayStore = StoreProvider.get(this) { TabsTrayStore() }
+
         return containerView
     }
 
@@ -100,11 +109,12 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         super.onViewCreated(view, savedInstanceState)
         setupMenu(view)
 
-        val browserTrayInteractor = DefaultBrowserTrayInteractor(
-            this,
+        browserTrayInteractor = DefaultBrowserTrayInteractor(
+            tabsTrayStore,
             selectTabUseCase,
             removeUseCases,
-            requireComponents.settings
+            requireComponents.settings,
+            this
         )
 
         val syncedTabsTrayInteractor = SyncedTabsInteractor(
@@ -113,7 +123,13 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
             this
         )
 
-        setupPager(view.context, this, browserTrayInteractor, syncedTabsTrayInteractor)
+        setupPager(
+            view.context,
+            tabsTrayStore,
+            this,
+            browserTrayInteractor,
+            syncedTabsTrayInteractor
+        )
 
         tabLayoutMediator.set(
             feature = TabLayoutMediator(
@@ -160,6 +176,7 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
 
     private fun setupPager(
         context: Context,
+        store: TabsTrayStore,
         trayInteractor: TabsTrayInteractor,
         browserInteractor: BrowserTrayInteractor,
         syncedTabsTrayInteractor: SyncedTabsInteractor
@@ -167,9 +184,10 @@ class TabsTrayFragment : AppCompatDialogFragment(), TabsTrayInteractor {
         tabsTray.apply {
             adapter = TrayPagerAdapter(
                 context,
-                trayInteractor,
+                store,
                 browserInteractor,
-                syncedTabsTrayInteractor
+                syncedTabsTrayInteractor,
+                trayInteractor
             )
             isUserInputEnabled = false
         }

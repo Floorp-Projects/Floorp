@@ -32,7 +32,7 @@ class DefaultBrowserTrayInteractorTest {
 
     @Test
     fun `WHEN pager position is synced tabs THEN return a list layout manager`() {
-        val interactor = DefaultBrowserTrayInteractor(mockk(), mockk(), mockk(), mockk())
+        val interactor = DefaultBrowserTrayInteractor(mockk(), mockk(), mockk(), mockk(), mockk())
 
         val result = interactor.getLayoutManagerForPosition(
             mockk(),
@@ -46,7 +46,7 @@ class DefaultBrowserTrayInteractorTest {
     fun `WHEN setting is grid view THEN return grid layout manager`() {
         val context = mockk<Context>()
         val settings = mockk<Settings>()
-        val interactor = DefaultBrowserTrayInteractor(mockk(), mockk(), mockk(), settings)
+        val interactor = DefaultBrowserTrayInteractor(mockk(), mockk(), mockk(), settings, mockk())
 
         every { context.numberOfGridColumns }.answers { 4 }
         every { settings.gridTabView }.answers { true }
@@ -63,7 +63,7 @@ class DefaultBrowserTrayInteractorTest {
     fun `WHEN setting is list view THEN return list layout manager`() {
         val context = mockk<Context>()
         val settings = mockk<Settings>()
-        val interactor = DefaultBrowserTrayInteractor(mockk(), mockk(), mockk(), settings)
+        val interactor = DefaultBrowserTrayInteractor(mockk(), mockk(), mockk(), settings, mockk())
 
         every { context.numberOfGridColumns }.answers { 4 }
         every { settings.gridTabView }.answers { false }

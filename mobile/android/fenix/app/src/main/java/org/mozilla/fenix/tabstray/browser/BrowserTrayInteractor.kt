@@ -9,31 +9,26 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import mozilla.components.concept.tabstray.Tab
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.support.base.feature.UserInteractionHandler
+import org.mozilla.fenix.selection.SelectionInteractor
+import org.mozilla.fenix.tabstray.TabsTrayAction
 import org.mozilla.fenix.tabstray.TabsTrayInteractor
 import org.mozilla.fenix.tabstray.TrayPagerAdapter
 import org.mozilla.fenix.tabstray.ext.numberOfGridColumns
 import org.mozilla.fenix.utils.Settings
+import org.mozilla.fenix.tabstray.TabsTrayState.Mode
+import org.mozilla.fenix.tabstray.TabsTrayStore
 
 /**
  * For interacting with UI that is specifically for [BaseBrowserTrayList] and other browser
  * tab tray views.
  */
-interface BrowserTrayInteractor {
-
-    /**
-     * Select the tab.
-     */
-    fun onOpenTab(tab: Tab)
+interface BrowserTrayInteractor : SelectionInteractor<Tab>, UserInteractionHandler {
 
     /**
      * Close the tab.
      */
-    fun onCloseTab(tab: Tab)
-
-    /**
-     * If multi-select mode is enabled or disabled.
-     */
-    fun isMultiSelectMode(): Boolean
+    fun close(tab: Tab)
 
     /**
      * Returns the appropriate [RecyclerView.LayoutManager] to be used at [position].
@@ -45,32 +40,52 @@ interface BrowserTrayInteractor {
  * A default implementation of [BrowserTrayInteractor].
  */
 class DefaultBrowserTrayInteractor(
-    private val trayInteractor: TabsTrayInteractor,
+    private val store: TabsTrayStore,
     private val selectTabUseCase: TabsUseCases.SelectTabUseCase,
     private val removeUseCases: TabsUseCases.RemoveTabUseCase,
-    private val settings: Settings
+    private val settings: Settings,
+    private val trayInteractor: TabsTrayInteractor
 ) : BrowserTrayInteractor {
 
     /**
-     * See [BrowserTrayInteractor.onOpenTab].
+     * See [SelectionInteractor.open]
      */
-    override fun onOpenTab(tab: Tab) {
-        selectTabUseCase.invoke(tab.id)
+    override fun open(item: Tab) {
+        selectTabUseCase.invoke(item.id)
         trayInteractor.navigateToBrowser()
     }
 
     /**
-     * See [BrowserTrayInteractor.onCloseTab].
+     * See [BrowserTrayInteractor.close].
      */
-    override fun onCloseTab(tab: Tab) {
+    override fun close(tab: Tab) {
         removeUseCases.invoke(tab.id)
     }
 
     /**
-     * See [BrowserTrayInteractor.isMultiSelectMode].
+     * See [SelectionInteractor.select]
      */
-    override fun isMultiSelectMode(): Boolean {
-        // Needs https://github.com/mozilla-mobile/fenix/issues/18513 to change this value
+    override fun select(item: Tab) {
+        store.dispatch(TabsTrayAction.AddSelectTab(item))
+    }
+
+    /**
+     * See [SelectionInteractor.deselect]
+     */
+    override fun deselect(item: Tab) {
+        store.dispatch(TabsTrayAction.RemoveSelectTab(item))
+    }
+
+    /**
+     * See [UserInteractionHandler.onBackPressed]
+     *
+     * TODO move this to the navigation interactor when it lands.
+     */
+    override fun onBackPressed(): Boolean {
+        if (store.state.mode is Mode.Select) {
+            store.dispatch(TabsTrayAction.ExitSelectMode)
+            return true
+        }
         return false
     }
 
