@@ -63,7 +63,7 @@ class RaptorRunner(MozbuildObject):
         self.cpu_test = kwargs["cpu_test"]
         self.live_sites = kwargs["live_sites"]
         self.disable_perf_tuning = kwargs["disable_perf_tuning"]
-        self.conditioned_profile_scenario = kwargs["conditioned_profile_scenario"]
+        self.conditioned_profile = kwargs["conditioned_profile"]
         self.device_name = kwargs["device_name"]
         self.enable_marionette_trace = kwargs["enable_marionette_trace"]
         self.browsertime_visualmetrics = kwargs["browsertime_visualmetrics"]
@@ -173,7 +173,7 @@ class RaptorRunner(MozbuildObject):
             "cpu_test": self.cpu_test,
             "live_sites": self.live_sites,
             "disable_perf_tuning": self.disable_perf_tuning,
-            "conditioned_profile_scenario": self.conditioned_profile_scenario,
+            "conditioned_profile": self.conditioned_profile,
             "is_release_build": self.is_release_build,
             "device_name": self.device_name,
             "enable_marionette_trace": self.enable_marionette_trace,

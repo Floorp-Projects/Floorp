@@ -55,7 +55,6 @@ job-defaults:
             - --browsertime
             # Bug 1635749, disable window recorder temporarily
             - --browsertime-no-ffwindowrecorder
-            - --no-conditioned-profile
     optimization:
         skip-unless-backstop: null
     python-3: true

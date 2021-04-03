@@ -271,13 +271,6 @@ def create_parser(mach_interface=False):
         help="Enable the WebRender compositor in Gecko.",
     )
     add_arg(
-        "--no-conditioned-profile",
-        dest="no_conditioned_profile",
-        action="store_true",
-        default=False,
-        help="Run Raptor tests without a conditioned profile.",
-    )
-    add_arg(
         "--device-name",
         dest="device_name",
         default=None,
@@ -343,11 +336,11 @@ def create_parser(mach_interface=False):
         help="Disable performance tuning on android.",
     )
     add_arg(
-        "--conditioned-profile-scenario",
-        dest="conditioned_profile_scenario",
-        default="settled",
+        "--conditioned-profile",
+        dest="conditioned_profile",
+        default=None,
         type=str,
-        help="Name of profile scenario.",
+        help="Name of conditioned profile to use.",
     )
 
     # for browsertime jobs, cold page load is determined by a '--cold' cmd line argument
