@@ -4,9 +4,7 @@
 
 package org.mozilla.fenix.tabstray.browser
 
-import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatImageButton
 import mozilla.components.browser.tabstray.TabsTrayStyling
@@ -21,34 +19,25 @@ import kotlinx.android.synthetic.main.tab_tray_grid_item.view.tab_tray_grid_item
 import org.mozilla.fenix.tabstray.TabsTrayViewHolder
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayStore
-import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 
 /**
  * A RecyclerView ViewHolder implementation for "tab" items with grid layout.
  */
 class TabsTrayGridViewHolder(
-    parent: ViewGroup,
     imageLoader: ImageLoader,
-    browserTrayInteractor: BrowserTrayInteractor,
+    override val browserTrayInteractor: BrowserTrayInteractor,
     store: TabsTrayStore,
     selectionHolder: SelectionHolder<Tab>? = null,
-    itemView: View =
-        LayoutInflater.from(parent.context).inflate(R.layout.tab_tray_grid_item, parent, false),
-    thumbnailSize: Int =
-        max(
+    itemView: View
+) : TabsTrayViewHolder(itemView, imageLoader, store, selectionHolder) {
+
+    private val closeButton: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
+
+    override val thumbnailSize: Int
+        get() = max(
             itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_grid_item_thumbnail_height),
             itemView.resources.getDimensionPixelSize(R.dimen.tab_tray_grid_item_thumbnail_width)
         )
-) : TabsTrayViewHolder(
-    itemView,
-    imageLoader,
-    thumbnailSize,
-    browserTrayInteractor,
-    store,
-    selectionHolder
-) {
-
-    private val closeButton: AppCompatImageButton = itemView.findViewById(R.id.mozac_browser_tabstray_close)
 
     override fun updateSelectedTabIndicator(showAsSelected: Boolean) {
         itemView.tab_tray_grid_item.background = if (showAsSelected) {

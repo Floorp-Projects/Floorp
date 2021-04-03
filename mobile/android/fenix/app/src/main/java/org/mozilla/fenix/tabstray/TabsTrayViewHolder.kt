@@ -45,8 +45,6 @@ import org.mozilla.fenix.tabstray.browser.BrowserTrayInteractor
 abstract class TabsTrayViewHolder(
     itemView: View,
     private val imageLoader: ImageLoader,
-    private val thumbnailSize: Int,
-    private val browserTrayInteractor: BrowserTrayInteractor,
     private val trayStore: TabsTrayStore,
     private val selectionHolder: SelectionHolder<Tab>?,
     private val store: BrowserStore = itemView.context.components.core.store,
@@ -64,6 +62,9 @@ abstract class TabsTrayViewHolder(
     @VisibleForTesting
     internal val urlView: TextView? = itemView.findViewById(R.id.mozac_browser_tabstray_url)
     private val playPauseButtonView: ImageButton = itemView.findViewById(R.id.play_pause_button)
+
+    abstract val browserTrayInteractor: BrowserTrayInteractor
+    abstract val thumbnailSize: Int
 
     override var tab: Tab? = null
 

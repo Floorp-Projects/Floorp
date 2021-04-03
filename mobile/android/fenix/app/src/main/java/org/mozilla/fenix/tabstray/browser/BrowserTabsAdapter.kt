@@ -5,6 +5,7 @@
 package org.mozilla.fenix.tabstray.browser
 
 import android.content.Context
+import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.tab_tray_item.view.*
@@ -15,6 +16,7 @@ import mozilla.components.concept.tabstray.Tab
 import mozilla.components.concept.tabstray.TabsTray
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
+import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.tabstray.TabsTrayStore
@@ -33,9 +35,9 @@ class BrowserTabsAdapter(
     /**
      * The layout types for the tabs.
      */
-    enum class ViewType {
-        LIST,
-        GRID
+    enum class ViewType(val layoutRes: Int) {
+        LIST(R.layout.tab_tray_item),
+        GRID(R.layout.tab_tray_grid_item)
     }
 
     /**
@@ -48,28 +50,20 @@ class BrowserTabsAdapter(
 
     override fun getItemViewType(position: Int): Int {
         return if (context.components.settings.gridTabView) {
-            ViewType.GRID.ordinal
+            ViewType.GRID.layoutRes
         } else {
-            ViewType.LIST.ordinal
+            ViewType.LIST.layoutRes
         }
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TabsTrayViewHolder {
+        val view = LayoutInflater.from(parent.context).inflate(viewType, parent, false)
+
         return when (viewType) {
-            ViewType.GRID.ordinal -> TabsTrayGridViewHolder(
-                parent,
-                imageLoader,
-                interactor,
-                store,
-                selectionHolder
-            )
-            else -> TabsTrayListViewHolder(
-                parent,
-                imageLoader,
-                interactor,
-                store,
-                selectionHolder
-            )
+            ViewType.GRID.layoutRes ->
+                TabsTrayGridViewHolder(imageLoader, interactor, store, selectionHolder, view)
+            else ->
+                TabsTrayListViewHolder(imageLoader, interactor, store, selectionHolder, view)
         }
     }
 
