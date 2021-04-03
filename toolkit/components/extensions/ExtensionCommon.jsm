@@ -191,6 +191,10 @@ function makeWidgetId(id) {
   return id.replace(/[^a-z0-9_-]/g, "_");
 }
 
+function isDeadOrRemote(obj) {
+  return Cu.isDeadWrapper(obj) || Cu.isRemoteProxy(obj);
+}
+
 /**
  * A sentinel class to indicate that an array of values should be
  * treated as an array when used as a promise resolution value, but as a
@@ -399,7 +403,8 @@ class InnerWindowReference {
     // pageshow listener was dispatched) or during the unload event.
     if (
       !this.needWindowIDCheck ||
-      getInnerWindowID(this.contentWindow) === this.innerWindowID
+      (!isDeadOrRemote(this.contentWindow) &&
+        getInnerWindowID(this.contentWindow) === this.innerWindowID)
     ) {
       return this.contentWindow;
     }
@@ -410,7 +415,7 @@ class InnerWindowReference {
     // If invalidate() is called while the inner window is in the bfcache, then
     // we are unable to remove the event listener, and handleEvent will be
     // called once more if the page is revived from the bfcache.
-    if (this.contentWindow && !Cu.isDeadWrapper(this.contentWindow)) {
+    if (this.contentWindow && !isDeadOrRemote(this.contentWindow)) {
       this.contentWindow.removeEventListener("pagehide", this, {
         mozSystemGroup: true,
       });
