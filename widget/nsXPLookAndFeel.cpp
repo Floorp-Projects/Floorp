@@ -913,8 +913,30 @@ static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
   return false;
 }
 
-static LookAndFeel::ColorScheme ColorSchemeForDocument(const dom::Document&) {
-  // TODO(emilio): Actually compute a useful color scheme.
+static LookAndFeel::ColorScheme ColorSchemeForDocument(
+    const dom::Document& aDoc) {
+#ifdef XP_MACOSX
+  if (nsContentUtils::IsChromeDoc(&aDoc) &&
+      StaticPrefs::widget_macos_respect_system_appearance()) {
+    const auto* doc = &aDoc;
+    while (const auto* parent = doc->GetInProcessParentDocument()) {
+      doc = parent;
+    }
+    switch (doc->ThreadSafeGetDocumentLWTheme()) {
+      case dom::Document::Doc_Theme_None:
+        return LookAndFeel::SystemColorScheme();
+      case dom::Document::Doc_Theme_Dark:
+        return LookAndFeel::ColorScheme::Light;
+      case dom::Document::Doc_Theme_Bright:
+        // NOTE(emilio): This looks backwards, but it's actually correct.
+        // Doc_Theme_Bright means that the theme has bright _text_ (and thus
+        // dark background). Tricky!
+        return LookAndFeel::ColorScheme::Dark;
+      default:
+        break;
+    }
+  }
+#endif
   return LookAndFeel::ColorScheme::Light;
 }
 
