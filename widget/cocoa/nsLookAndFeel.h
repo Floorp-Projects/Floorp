@@ -30,36 +30,45 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   static nscolor ProcessSelectionBackground(nscolor aColor);
 
  private:
-  nscolor mColorTextSelectBackground;
-  nscolor mColorTextSelectBackgroundDisabled;
-  nscolor mColorHighlight;
-  nscolor mColorAlternateSelectedControlText;
-  nscolor mColorControlText;
-  nscolor mColorText;
-  nscolor mColorWindowText;
-  nscolor mColorGrid;
-  nscolor mColorActiveBorder;
-  nscolor mColorGrayText;
-  nscolor mColorControlBackground;
-  nscolor mColorScrollbar;
-  nscolor mColorThreeDHighlight;
-  nscolor mColorDialog;
-  nscolor mColorDragTargetZone;
-  nscolor mColorChromeActive;
-  nscolor mColorChromeInactive;
-  nscolor mColorFocusRing;
-  nscolor mColorTextSelect;
-  nscolor mColorDisabledToolbarText;
-  nscolor mColorMenuSelect;
-  nscolor mColorCellHighlight;
-  nscolor mColorEvenTreeRow;
-  nscolor mColorOddTreeRow;
-  nscolor mColorMenuFontSmoothingBg;
-  nscolor mColorSourceListFontSmoothingBg;
-  nscolor mColorSourceListSelectionFontSmoothingBg;
-  nscolor mColorActiveSourceListSelectionFontSmoothingBg;
+  struct ColorSet {
+    void Refresh(ColorScheme);
 
-  bool mInitialized;
+    mozilla::Maybe<nscolor> Get(ColorID) const;
+
+    nscolor mColorTextSelectBackground = 0;
+    nscolor mColorTextSelectBackgroundDisabled = 0;
+    nscolor mColorHighlight = 0;
+    nscolor mColorAlternateSelectedControlText = 0;
+    nscolor mColorControlText = 0;
+    nscolor mColorText = 0;
+    nscolor mColorWindowText = 0;
+    nscolor mColorGrid = 0;
+    nscolor mColorActiveBorder = 0;
+    nscolor mColorGrayText = 0;
+    nscolor mColorControlBackground = 0;
+    nscolor mColorScrollbar = 0;
+    nscolor mColorThreeDHighlight = 0;
+    nscolor mColorDialog = 0;
+    nscolor mColorDragTargetZone = 0;
+    nscolor mColorChromeActive = 0;
+    nscolor mColorChromeInactive = 0;
+    nscolor mColorFocusRing = 0;
+    nscolor mColorTextSelect = 0;
+    nscolor mColorDisabledToolbarText = 0;
+    nscolor mColorMenuSelect = 0;
+    nscolor mColorCellHighlight = 0;
+    nscolor mColorEvenTreeRow = 0;
+    nscolor mColorOddTreeRow = 0;
+    nscolor mColorMenuFontSmoothingBg = 0;
+    nscolor mColorSourceListFontSmoothingBg = 0;
+    nscolor mColorSourceListSelectionFontSmoothingBg = 0;
+    nscolor mColorActiveSourceListSelectionFontSmoothingBg = 0;
+  };
+
+  bool mInitialized = false;
+
+  ColorSet mLightColorSet;
+  ColorSet mDarkColorSet;
 
   void EnsureInit();
 };
