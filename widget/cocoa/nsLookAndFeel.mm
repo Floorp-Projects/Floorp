@@ -25,39 +25,11 @@
 // This must be included last:
 #include "nsObjCExceptions.h"
 
-nsLookAndFeel::nsLookAndFeel()
-    : nsXPLookAndFeel(),
-      mColorTextSelectBackground(0),
-      mColorTextSelectBackgroundDisabled(0),
-      mColorHighlight(0),
-      mColorAlternateSelectedControlText(0),
-      mColorControlText(0),
-      mColorText(0),
-      mColorWindowText(0),
-      mColorGrid(0),
-      mColorActiveBorder(0),
-      mColorGrayText(0),
-      mColorControlBackground(0),
-      mColorScrollbar(0),
-      mColorThreeDHighlight(0),
-      mColorDialog(0),
-      mColorDragTargetZone(0),
-      mColorChromeActive(0),
-      mColorChromeInactive(0),
-      mColorFocusRing(0),
-      mColorTextSelect(0),
-      mColorDisabledToolbarText(0),
-      mColorMenuSelect(0),
-      mColorCellHighlight(0),
-      mColorEvenTreeRow(0),
-      mColorOddTreeRow(0),
-      mColorMenuFontSmoothingBg(0),
-      mColorSourceListFontSmoothingBg(0),
-      mColorSourceListSelectionFontSmoothingBg(0),
-      mColorActiveSourceListSelectionFontSmoothingBg(0),
-      mInitialized(false) {}
+using namespace mozilla;
 
-nsLookAndFeel::~nsLookAndFeel() {}
+nsLookAndFeel::nsLookAndFeel() = default;
+
+nsLookAndFeel::~nsLookAndFeel() = default;
 
 static nscolor GetColorFromNSColor(NSColor* aColor) {
   NSColor* deviceColor = [aColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
@@ -115,86 +87,92 @@ nscolor nsLookAndFeel::ProcessSelectionBackground(nscolor aColor) {
   return resultColor;
 }
 
-nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme, nscolor& aColor) {
+nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme aScheme, nscolor& aColor) {
   EnsureInit();
 
-  nsresult res = NS_OK;
+  auto& colorSet = aScheme == ColorScheme::Light ? mLightColorSet : mDarkColorSet;
+  auto color = colorSet.Get(aID);
+  aColor = color.valueOr(NS_RGB(0xff, 0xff, 0xff));
+  return color ? NS_OK : NS_ERROR_FAILURE;
+}
 
+Maybe<nscolor> nsLookAndFeel::ColorSet::Get(ColorID aID) const {
+  nscolor color = 0;
   switch (aID) {
     case ColorID::WindowBackground:
-      aColor = NS_RGB(0xff, 0xff, 0xff);
+      color = NS_RGB(0xff, 0xff, 0xff);
       break;
     case ColorID::WindowForeground:
-      aColor = NS_RGB(0x00, 0x00, 0x00);
+      color = NS_RGB(0x00, 0x00, 0x00);
       break;
     case ColorID::WidgetBackground:
     case ColorID::Infobackground:
-      aColor = NS_RGB(0xdd, 0xdd, 0xdd);
+      color = NS_RGB(0xdd, 0xdd, 0xdd);
       break;
     case ColorID::WidgetForeground:
-      aColor = NS_RGB(0x00, 0x00, 0x00);
+      color = NS_RGB(0x00, 0x00, 0x00);
       break;
     case ColorID::WidgetSelectBackground:
-      aColor = NS_RGB(0x80, 0x80, 0x80);
+      color = NS_RGB(0x80, 0x80, 0x80);
       break;
     case ColorID::WidgetSelectForeground:
-      aColor = NS_RGB(0x00, 0x00, 0x80);
+      color = NS_RGB(0x00, 0x00, 0x80);
       break;
     case ColorID::Widget3DHighlight:
-      aColor = NS_RGB(0xa0, 0xa0, 0xa0);
+      color = NS_RGB(0xa0, 0xa0, 0xa0);
       break;
     case ColorID::Widget3DShadow:
-      aColor = NS_RGB(0x40, 0x40, 0x40);
+      color = NS_RGB(0x40, 0x40, 0x40);
       break;
     case ColorID::TextBackground:
-      aColor = NS_RGB(0xff, 0xff, 0xff);
+      color = NS_RGB(0xff, 0xff, 0xff);
       break;
     case ColorID::TextForeground:
-      aColor = NS_RGB(0x00, 0x00, 0x00);
+      color = NS_RGB(0x00, 0x00, 0x00);
       break;
     case ColorID::TextSelectBackground:
-      aColor = ProcessSelectionBackground(mColorTextSelectBackground);
+      color = ProcessSelectionBackground(mColorTextSelectBackground);
       break;
     // This is used to gray out the selection when it's not focused. Used with
     // nsISelectionController::SELECTION_DISABLED.
     case ColorID::TextSelectBackgroundDisabled:
-      aColor = ProcessSelectionBackground(mColorTextSelectBackgroundDisabled);
+      color = ProcessSelectionBackground(mColorTextSelectBackgroundDisabled);
       break;
     case ColorID::Highlight:  // CSS2 color
     case ColorID::MozAccentColor:
     case ColorID::MozMenuhover:
-      aColor = mColorHighlight;
+      color = mColorHighlight;
       break;
     case ColorID::TextSelectForeground:
-      aColor = NS_DONT_CHANGE_COLOR;
+      color = NS_DONT_CHANGE_COLOR;
       break;
     case ColorID::Highlighttext:  // CSS2 color
     case ColorID::MozAccentColorForeground:
     case ColorID::MozMenuhovertext:
-      aColor = mColorAlternateSelectedControlText;
+      color = mColorAlternateSelectedControlText;
       break;
     case ColorID::IMESelectedRawTextBackground:
     case ColorID::IMESelectedConvertedTextBackground:
     case ColorID::IMERawInputBackground:
     case ColorID::IMEConvertedTextBackground:
-      aColor = NS_TRANSPARENT;
+      color = NS_TRANSPARENT;
       break;
     case ColorID::IMESelectedRawTextForeground:
     case ColorID::IMESelectedConvertedTextForeground:
     case ColorID::IMERawInputForeground:
     case ColorID::IMEConvertedTextForeground:
-      aColor = NS_SAME_AS_FOREGROUND_COLOR;
+      color = NS_SAME_AS_FOREGROUND_COLOR;
       break;
     case ColorID::IMERawInputUnderline:
     case ColorID::IMEConvertedTextUnderline:
-      aColor = NS_40PERCENT_FOREGROUND_COLOR;
+      color = NS_40PERCENT_FOREGROUND_COLOR;
       break;
     case ColorID::IMESelectedRawTextUnderline:
     case ColorID::IMESelectedConvertedTextUnderline:
-      aColor = NS_SAME_AS_FOREGROUND_COLOR;
+      color = NS_SAME_AS_FOREGROUND_COLOR;
       break;
     case ColorID::SpellCheckerUnderline:
-      aColor = NS_RGB(0xff, 0, 0);
+      color = NS_RGB(0xff, 0, 0);
       break;
 
       //
@@ -210,145 +188,145 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme, nscolor& aColor
       //
     case ColorID::MozMacButtonactivetext:
     case ColorID::MozMacDefaultbuttontext:
-      aColor = NS_RGB(0xFF, 0xFF, 0xFF);
+      color = NS_RGB(0xFF, 0xFF, 0xFF);
       break;
     case ColorID::Buttontext:
     case ColorID::MozButtonhovertext:
-      aColor = mColorControlText;
+      color = mColorControlText;
       break;
     case ColorID::Captiontext:
     case ColorID::Menutext:
     case ColorID::Infotext:
     case ColorID::MozMenubartext:
-      aColor = mColorText;
+      color = mColorText;
       break;
     case ColorID::Windowtext:
-      aColor = mColorWindowText;
+      color = mColorWindowText;
       break;
     case ColorID::Activecaption:
-      aColor = mColorGrid;
+      color = mColorGrid;
       break;
     case ColorID::Activeborder:
-      aColor = mColorActiveBorder;
+      color = mColorActiveBorder;
       break;
     case ColorID::Appworkspace:
-      aColor = NS_RGB(0xFF, 0xFF, 0xFF);
+      color = NS_RGB(0xFF, 0xFF, 0xFF);
       break;
     case ColorID::Background:
-      aColor = NS_RGB(0x63, 0x63, 0xCE);
+      color = NS_RGB(0x63, 0x63, 0xCE);
       break;
     case ColorID::Buttonface:
     case ColorID::MozButtonhoverface:
-      aColor = NS_RGB(0xF0, 0xF0, 0xF0);
+      color = NS_RGB(0xF0, 0xF0, 0xF0);
       break;
     case ColorID::Buttonhighlight:
-      aColor = NS_RGB(0xFF, 0xFF, 0xFF);
+      color = NS_RGB(0xFF, 0xFF, 0xFF);
       break;
     case ColorID::Buttonshadow:
-      aColor = NS_RGB(0xDC, 0xDC, 0xDC);
+      color = NS_RGB(0xDC, 0xDC, 0xDC);
       break;
     case ColorID::Graytext:
-      aColor = mColorGrayText;
+      color = mColorGrayText;
       break;
     case ColorID::Inactiveborder:
     case ColorID::Inactivecaption:
-      aColor = mColorControlBackground;
+      color = mColorControlBackground;
       break;
     case ColorID::Inactivecaptiontext:
-      aColor = NS_RGB(0x45, 0x45, 0x45);
+      color = NS_RGB(0x45, 0x45, 0x45);
       break;
     case ColorID::Scrollbar:
-      aColor = mColorScrollbar;
+      color = mColorScrollbar;
       break;
     case ColorID::Threeddarkshadow:
-      aColor = NS_RGB(0xDC, 0xDC, 0xDC);
+      color = NS_RGB(0xDC, 0xDC, 0xDC);
       break;
     case ColorID::Threedshadow:
-      aColor = NS_RGB(0xE0, 0xE0, 0xE0);
+      color = NS_RGB(0xE0, 0xE0, 0xE0);
       break;
     case ColorID::Threedface:
-      aColor = NS_RGB(0xF0, 0xF0, 0xF0);
+      color = NS_RGB(0xF0, 0xF0, 0xF0);
       break;
     case ColorID::Threedhighlight:
-      aColor = mColorThreeDHighlight;
+      color = mColorThreeDHighlight;
       break;
     case ColorID::Threedlightshadow:
-      aColor = NS_RGB(0xDA, 0xDA, 0xDA);
+      color = NS_RGB(0xDA, 0xDA, 0xDA);
       break;
     case ColorID::Menu:
-      aColor = mColorAlternateSelectedControlText;
+      color = mColorAlternateSelectedControlText;
       break;
     case ColorID::Windowframe:
-      aColor = mColorGrid;
+      color = mColorGrid;
       break;
     case ColorID::Window:
-      aColor = NS_RGB(0xff, 0xff, 0xff);
+      color = NS_RGB(0xff, 0xff, 0xff);
       break;
     case ColorID::Field:
     case ColorID::MozCombobox:
-      aColor = mColorControlBackground;
+      color = mColorControlBackground;
       break;
     case ColorID::Fieldtext:
     case ColorID::MozComboboxtext:
-      aColor = mColorControlText;
+      color = mColorControlText;
       break;
     case ColorID::MozDialog:
-      aColor = mColorDialog;
+      color = mColorDialog;
       break;
     case ColorID::MozDialogtext:
     case ColorID::MozCellhighlighttext:
     case ColorID::MozHtmlCellhighlighttext:
     case ColorID::MozColheadertext:
     case ColorID::MozColheaderhovertext:
-      aColor = mColorControlText;
+      color = mColorControlText;
       break;
     case ColorID::MozDragtargetzone:
-      aColor = mColorDragTargetZone;
+      color = mColorDragTargetZone;
       break;
     case ColorID::MozMacChromeActive:
-      aColor = mColorChromeActive;
+      color = mColorChromeActive;
       break;
     case ColorID::MozMacChromeInactive:
-      aColor = mColorChromeInactive;
+      color = mColorChromeInactive;
       break;
     case ColorID::MozMacFocusring:
-      aColor = mColorFocusRing;
+      color = mColorFocusRing;
       break;
     case ColorID::MozMacMenushadow:
-      aColor = NS_RGB(0xA3, 0xA3, 0xA3);
+      color = NS_RGB(0xA3, 0xA3, 0xA3);
       break;
     case ColorID::MozMacMenutextdisable:
-      aColor = NS_RGB(0x98, 0x98, 0x98);
+      color = NS_RGB(0x98, 0x98, 0x98);
       break;
     case ColorID::MozMacMenutextselect:
-      aColor = mColorTextSelect;
+      color = mColorTextSelect;
       break;
     case ColorID::MozMacDisabledtoolbartext:
-      aColor = mColorDisabledToolbarText;
+      color = mColorDisabledToolbarText;
       break;
     case ColorID::MozMacMenuselect:
-      aColor = mColorMenuSelect;
+      color = mColorMenuSelect;
       break;
     case ColorID::MozButtondefault:
-      aColor = NS_RGB(0xDC, 0xDC, 0xDC);
+      color = NS_RGB(0xDC, 0xDC, 0xDC);
       break;
     case ColorID::MozCellhighlight:
     case ColorID::MozHtmlCellhighlight:
     case ColorID::MozMacSecondaryhighlight:
       // For inactive list selection
-      aColor = mColorCellHighlight;
+      color = mColorCellHighlight;
       break;
     case ColorID::MozEventreerow:
       // Background color of even list rows.
-      aColor = mColorEvenTreeRow;
+      color = mColorEvenTreeRow;
       break;
     case ColorID::MozOddtreerow:
       // Background color of odd list rows.
-      aColor = mColorOddTreeRow;
+      color = mColorOddTreeRow;
       break;
     case ColorID::MozNativehyperlinktext:
       // There appears to be no available system defined color. HARDCODING to the appropriate color.
-      aColor = NS_RGB(0x14, 0x4F, 0xAE);
+      color = NS_RGB(0x14, 0x4F, 0xAE);
       break;
     // The following colors are supposed to be used as font-smoothing background
     // colors, in the chrome-only -moz-font-smoothing-background-color property.
@@ -359,34 +337,32 @@ nsresult nsLookAndFeel::NativeGetColor(ColorID aID, ColorScheme, nscolor& aColor
     // requires the use of the private API
     // -[NSVisualEffectView fontSmoothingBackgroundColor].
     case ColorID::MozMacVibrantTitlebarLight:
-      aColor = NS_RGB(0xe6, 0xe6, 0xe6);
+      color = NS_RGB(0xe6, 0xe6, 0xe6);
       break;
     case ColorID::MozMacVibrantTitlebarDark:
-      aColor = NS_RGB(0x28, 0x28, 0x28);
+      color = NS_RGB(0x28, 0x28, 0x28);
       break;
     case ColorID::MozMacTooltip:
     case ColorID::MozMacMenupopup:
     case ColorID::MozMacMenuitem:
-      aColor = mColorMenuFontSmoothingBg;
+      color = mColorMenuFontSmoothingBg;
       break;
     case ColorID::MozMacSourceList:
-      aColor = mColorSourceListFontSmoothingBg;
+      color = mColorSourceListFontSmoothingBg;
       break;
     case ColorID::MozMacSourceListSelection:
-      aColor = mColorSourceListSelectionFontSmoothingBg;
+      color = mColorSourceListSelectionFontSmoothingBg;
       break;
     case ColorID::MozMacActiveMenuitem:
     case ColorID::MozMacActiveSourceListSelection:
-      aColor = mColorActiveSourceListSelectionFontSmoothingBg;
+      color = mColorActiveSourceListSelectionFontSmoothingBg;
       break;
     default:
       NS_WARNING("Someone asked nsILookAndFeel for a color I don't know about");
-      aColor = NS_RGB(0xff, 0xff, 0xff);
-      res = NS_ERROR_FAILURE;
-      break;
+      return Nothing();
   }
 
-  return res;
+  return Some(color);
 }
 
 nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
@@ -600,24 +576,24 @@ void nsLookAndFeel::EnsureInit() {
 
   NS_OBJC_BEGIN_TRY_IGNORE_BLOCK
 
-  bool appearanceIsDark = false;
+  // Get the light colors first.
+  if (@available(macOS 10.14, *)) {
+    NSAppearance.currentAppearance = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+  }
+  mLightColorSet.Refresh(ColorScheme::Light);
 
   if (@available(macOS 10.14, *)) {
-    // Make sure NSColor takes our app's current appearance into account.
-    // NSAppearance.currentAppearance is global state that can be changed at will to influence the
-    // behavior of NSColor and probably others.
-    // NSAppearance.currentAppearance does not update automatically if the user switches between
-    // Light Mode and Dark Mode, but MOZGlobalAppearance.sharedInstance.effectiveAppearance does
-    // (unless the respect-system-appearance pref is set to false, in which case it will always be
-    // Aqua).
-    NSAppearance.currentAppearance = MOZGlobalAppearance.sharedInstance.effectiveAppearance;
-
-    // Check if the current appearance is dark.
-    NSAppearanceName aquaOrDarkAqua = [MOZGlobalAppearance.sharedInstance.effectiveAppearance
-        bestMatchFromAppearancesWithNames:@[ NSAppearanceNameAqua, @"NSAppearanceNameDarkAqua" ]];
-    appearanceIsDark = [aquaOrDarkAqua isEqualToString:@"NSAppearanceNameDarkAqua"];
+    NSAppearance.currentAppearance = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
+    mDarkColorSet.Refresh(ColorScheme::Dark);
+  } else {
+    mDarkColorSet = mLightColorSet;
   }
 
+  RecordTelemetry();
+  NS_OBJC_END_TRY_IGNORE_BLOCK
+}
+
+void nsLookAndFeel::ColorSet::Refresh(ColorScheme aScheme) {
   mColorTextSelectBackground = GetColorFromNSColor([NSColor selectedTextBackgroundColor]);
   mColorTextSelectBackgroundDisabled = GetColorFromNSColor([NSColor secondarySelectedControlColor]);
 
@@ -655,14 +631,10 @@ void nsLookAndFeel::EnsureInit() {
   mColorOddTreeRow =
       GetColorFromNSColor([[NSColor controlAlternatingRowBackgroundColors] objectAtIndex:1]);
 
-  bool isLight = !appearanceIsDark;
+  bool isLight = aScheme == ColorScheme::Light;
   mColorMenuFontSmoothingBg = isLight ? NS_RGB(0xf6, 0xf6, 0xf6) : NS_RGB(0x28, 0x28, 0x28);
   mColorSourceListFontSmoothingBg = isLight ? NS_RGB(0xf6, 0xf6, 0xf6) : NS_RGB(0x2d, 0x2d, 0x2d);
   mColorSourceListSelectionFontSmoothingBg =
       isLight ? NS_RGB(0xd3, 0xd3, 0xd3) : NS_RGB(0x2d, 0x2d, 0x2d);
   mColorActiveSourceListSelectionFontSmoothingBg = GetColorFromNSColor(ControlAccentColor());
-
-  RecordTelemetry();
-
-  NS_OBJC_END_TRY_IGNORE_BLOCK
 }
