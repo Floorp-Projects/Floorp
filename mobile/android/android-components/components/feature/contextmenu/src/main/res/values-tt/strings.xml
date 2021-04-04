@@ -10,12 +10,20 @@
     <string name="mozac_feature_contextmenu_share_image">Рәсемне уртаклашу</string>
     <!-- Text for context menu item to copy the link to the clipboard. -->
     <string name="mozac_feature_contextmenu_copy_link">Сылтаманы күчереп алу</string>
+    <!-- Text for context menu item to copy the URL pointing to the image to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_image_location">Рәсемнең сылтамасын күчереп алу</string>
     <!-- Text for context menu item to save / download the image. -->
     <string name="mozac_feature_contextmenu_save_image">Рәсемне саклау</string>
     <!-- Action shown in a "snacbkar" after opening a new/private tab. Clicking this action will switch to the newly opened tab. -->
     <string name="mozac_feature_contextmenu_snackbar_action_switch">Күчү</string>
+    <!-- Text for context menu item to copy the email address to the clipboard. -->
+    <string name="mozac_feature_contextmenu_copy_email_address">Эл. почта адресын күчереп алу</string>
+    <!-- Text for context menu item to add to a contact. -->
+    <string name="mozac_feature_contextmenu_add_to_contact">Контактларга өстәү</string>
     <!-- Action shown in a text selection context menu. This will prompt a search using the selected text.-->
     <string name="mozac_selection_context_menu_search_2">Эзләү</string>
+    <!-- Action shown in a text selection context menu. This will prompt a search in a private tab using the selected text-->
+    <string name="mozac_selection_context_menu_search_privately_2">Хосусый эзләү</string>
     <!-- Action shown in a text selection context menu. This will prompt a share of the selected text. -->
     <string name="mozac_selection_context_menu_share">Уртаклашу</string>
     <!-- Action shown in a text selection context menu. This will prompt a new email from the selected text. -->
