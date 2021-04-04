@@ -5,7 +5,6 @@
 
 #include "nsNativeThemeCocoa.h"
 
-#include "AppearanceOverride.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/PathHelpers.h"
@@ -41,6 +40,7 @@
 #include "mozilla/StaticPrefs_widget.h"
 #include "nsLookAndFeel.h"
 #include "MacThemeGeometryType.h"
+#include "SDKDeclarations.h"
 #include "VibrancyManager.h"
 
 #include "gfxContext.h"
@@ -2649,7 +2649,9 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
 
   bool hidpi = IsHiDPIContext(aFrame->PresContext()->DeviceContext());
 
-  RenderWidget(*widgetInfo, *aContext->GetDrawTarget(), nativeWidgetRect,
+  auto colorScheme = LookAndFeel::ColorSchemeForDocument(*aFrame->PresContext()->Document());
+
+  RenderWidget(*widgetInfo, colorScheme, *aContext->GetDrawTarget(), nativeWidgetRect,
                NSRectToRect(aDirtyRect, p2a), hidpi ? 2.0f : 1.0f);
 
   return NS_OK;
@@ -2657,12 +2659,13 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
   NS_OBJC_END_TRY_BLOCK_RETURN(NS_ERROR_FAILURE);
 }
 
-void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget& aDrawTarget,
+void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo,
+                                      LookAndFeel::ColorScheme aScheme, DrawTarget& aDrawTarget,
                                       const gfx::Rect& aWidgetRect, const gfx::Rect& aDirtyRect,
                                       float aScale) {
   // Some of the drawing below uses NSAppearance.currentAppearance behind the scenes.
-  // Set it to the appearance we want.
-  NSAppearance.currentAppearance = MOZGlobalAppearance.sharedInstance.effectiveAppearance;
+  // Set it to the appearance we want, the same way as nsLookAndFeel::NativeGetColor.
+  NSAppearance.currentAppearance = NSAppearanceForColorScheme(aScheme);
 
   // Also set the cell draw window's appearance; this is respected by NSTextFieldCell (and its
   // subclass NSSearchFieldCell).
