@@ -11,6 +11,7 @@
 
 #include "mozilla/Variant.h"
 
+#include "LookAndFeel.h"
 #include "nsITheme.h"
 #include "nsCOMPtr.h"
 #include "nsAtom.h"
@@ -315,8 +316,7 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   // The nsITheme interface.
   NS_IMETHOD DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
                                   StyleAppearance aAppearance, const nsRect& aRect,
-                                  const nsRect& aDirtyRect,
-                                  DrawOverflow) override;
+                                  const nsRect& aDirtyRect, DrawOverflow) override;
   bool CreateWebRenderCommandsForWidget(mozilla::wr::DisplayListBuilder& aBuilder,
                                         mozilla::wr::IpcResourceUpdateQueue& aResources,
                                         const mozilla::layers::StackingContextHelper& aSc,
@@ -423,9 +423,9 @@ class nsNativeThemeCocoa : private nsNativeTheme, public nsITheme {
   void DrawSourceListSelection(CGContextRef aContext, const CGRect& aRect, bool aWindowIsActive,
                                bool aSelectionIsActive);
 
-  void RenderWidget(const WidgetInfo& aWidgetInfo, mozilla::gfx::DrawTarget& aDrawTarget,
-                    const mozilla::gfx::Rect& aWidgetRect, const mozilla::gfx::Rect& aDirtyRect,
-                    float aScale);
+  void RenderWidget(const WidgetInfo& aWidgetInfo, mozilla::LookAndFeel::ColorScheme,
+                    mozilla::gfx::DrawTarget& aDrawTarget, const mozilla::gfx::Rect& aWidgetRect,
+                    const mozilla::gfx::Rect& aDirtyRect, float aScale);
 
  private:
   NSButtonCell* mDisclosureButtonCell;
