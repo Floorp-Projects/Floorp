@@ -6,8 +6,11 @@
 #ifndef nsNativeThemeColors_h_
 #define nsNativeThemeColors_h_
 
-#include "nsCocoaFeatures.h"
 #import <Cocoa/Cocoa.h>
+
+#include "LookAndFeel.h"
+#include "nsCocoaFeatures.h"
+#include "SDKDeclarations.h"
 
 enum ColorName {
   toolbarTopBorderGrey,
@@ -61,6 +64,16 @@ inline NSColor* ControlAccentColor() {
   return [NSColor currentControlTint] == NSGraphiteControlTint
              ? [NSColor colorWithSRGBRed:0.635 green:0.635 blue:0.655 alpha:1.0]
              : [NSColor colorWithSRGBRed:0.247 green:0.584 blue:0.965 alpha:1.0];
+}
+
+inline NSAppearance* NSAppearanceForColorScheme(mozilla::LookAndFeel::ColorScheme aScheme) {
+  using ColorScheme = mozilla::LookAndFeel::ColorScheme;
+  if (@available(macOS 10.14, *)) {
+    NSAppearanceName appearanceName =
+        aScheme == ColorScheme::Light ? NSAppearanceNameAqua : NSAppearanceNameDarkAqua;
+    return [NSAppearance appearanceNamed:appearanceName];
+  }
+  return [NSAppearance appearanceNamed:NSAppearanceNameAqua];
 }
 
 #endif  // nsNativeThemeColors_h_
