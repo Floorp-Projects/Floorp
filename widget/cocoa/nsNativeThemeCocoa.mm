@@ -773,26 +773,17 @@ static void DrawCellWithSnapping(NSCell* cell, CGContextRef cgContext, const HIR
 + (CUIRendererRef)coreUIRenderer;
 @end
 
-static id GetAppAppearance() {
-  // Use MOZGlobalAppearance.sharedInstance.effectiveAppearance, which is consistent with
-  // what nsLookAndFeel uses for CSS system colors; it's either the system appearance or our Aqua
-  // override. We could also make nsNativeThemeCocoa respect the per-window appearance, but only
-  // once CSS system colors also respect the window appearance.
-  return MOZGlobalAppearance.sharedInstance.effectiveAppearance;
-}
-
 @interface NSObject (NSAppearanceCoreUIRendering)
 - (void)_drawInRect:(CGRect)rect context:(CGContextRef)cgContext options:(id)options;
 @end
 
 static void RenderWithCoreUI(CGRect aRect, CGContextRef cgContext, NSDictionary* aOptions,
                              bool aSkipAreaCheck = false) {
-  NSAppearance* appearance = GetAppAppearance();
-
   if (!aSkipAreaCheck && aRect.size.width * aRect.size.height > BITMAP_MAX_AREA) {
     return;
   }
 
+  NSAppearance* appearance = NSAppearance.currentAppearance;
   if (appearance && [appearance respondsToSelector:@selector(_drawInRect:context:options:)]) {
     // Render through NSAppearance on Mac OS 10.10 and up. This will call
     // CUIDraw with a CoreUI renderer that will give us the correct 10.10
@@ -2669,17 +2660,14 @@ nsNativeThemeCocoa::DrawWidgetBackground(gfxContext* aContext, nsIFrame* aFrame,
 void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget& aDrawTarget,
                                       const gfx::Rect& aWidgetRect, const gfx::Rect& aDirtyRect,
                                       float aScale) {
-  if (@available(macOS 10.14, *)) {
-    // Some of the drawing below uses NSAppearance.currentAppearance behind the scenes.
-    // Set it to the appearance we want, to overwrite any state that's still around from earlier
-    // paints.
-    NSAppearance.currentAppearance = GetAppAppearance();
+  // Some of the drawing below uses NSAppearance.currentAppearance behind the scenes.
+  // Set it to the appearance we want.
+  NSAppearance.currentAppearance = MOZGlobalAppearance.sharedInstance.effectiveAppearance;
 
-    // Also set the cell draw window's appearance; this is respected by NSTextFieldCell (and its
-    // subclass NSSearchFieldCell).
-    if (mCellDrawWindow) {
-      mCellDrawWindow.appearance = NSAppearance.currentAppearance;
-    }
+  // Also set the cell draw window's appearance; this is respected by NSTextFieldCell (and its
+  // subclass NSSearchFieldCell).
+  if (mCellDrawWindow) {
+    mCellDrawWindow.appearance = NSAppearance.currentAppearance;
   }
 
   const Widget widget = aWidgetInfo.Widget();
@@ -2879,7 +2867,6 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo, DrawTarget&
         }
         case Widget::eListBox: {
           // Fill the content with the control color.
-          NSAppearance.currentAppearance = GetAppAppearance();
           CGContextSetFillColorWithColor(cgContext, [NSColor.controlColor CGColor]);
           CGContextFillRect(cgContext, macRect);
           // Draw the frame using kCUIWidgetScrollViewFrame. This is what NSScrollView uses in
