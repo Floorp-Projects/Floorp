@@ -3,7 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 module.exports = {
-  plugins: ["react", "mozilla", "babel", "prettier", "import", "file-header"],
+  plugins: ["react", "mozilla", "@babel", "prettier", "import", "file-header"],
   globals: {
     atob: true,
     btoa: true,
@@ -29,7 +29,7 @@ module.exports = {
     global: true,
     L10N: true,
   },
-  extends: ["prettier", "prettier/react", "plugin:jest/recommended"],
+  extends: ["prettier", "plugin:jest/recommended"],
   parserOptions: {
     ecmaVersion: 2016,
     sourceType: "module",

@@ -46,6 +46,7 @@ export function convertLinks(
           data-do_not_autoblock={doNotAutoBlock}
           data-entrypoint_name={links[linkTag].entrypoint_name}
           data-entrypoint_value={links[linkTag].entrypoint_value}
+          rel="noreferrer"
           onClick={sendClick}
         />
       );
