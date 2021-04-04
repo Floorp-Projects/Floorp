@@ -7,14 +7,19 @@ package org.mozilla.fenix.library.recentlyclosed
 import android.view.View
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.android.synthetic.main.history_list_item.view.*
+import kotlinx.android.synthetic.main.library_site_item.view.*
 import mozilla.components.browser.state.state.recover.RecoverableTab
 import org.mozilla.fenix.R
+import org.mozilla.fenix.ext.hideAndDisable
+import org.mozilla.fenix.ext.showAndEnable
+import org.mozilla.fenix.selection.SelectionHolder
 import org.mozilla.fenix.library.history.HistoryItemMenu
 import org.mozilla.fenix.utils.Do
 
 class RecentlyClosedItemViewHolder(
     view: View,
-    private val recentlyClosedFragmentInteractor: RecentlyClosedFragmentInteractor
+    private val recentlyClosedFragmentInteractor: RecentlyClosedFragmentInteractor,
+    private val selectionHolder: SelectionHolder<RecoverableTab>
 ) : RecyclerView.ViewHolder(view) {
 
     private var item: RecoverableTab? = null
@@ -30,12 +35,17 @@ class RecentlyClosedItemViewHolder(
             if (item.title.isNotEmpty()) item.title else item.url
         itemView.history_layout.urlView.text = item.url
 
+        itemView.history_layout.setSelectionInteractor(item, selectionHolder, recentlyClosedFragmentInteractor)
+        itemView.history_layout.changeSelected(item in selectionHolder.selectedItems)
+
         if (this.item?.url != item.url) {
             itemView.history_layout.loadFavicon(item.url)
         }
 
-        itemView.setOnClickListener {
-            recentlyClosedFragmentInteractor.restore(item)
+        if (selectionHolder.selectedItems.isEmpty()) {
+            itemView.overflow_menu.showAndEnable()
+        } else {
+            itemView.overflow_menu.hideAndDisable()
         }
 
         this.item = item
@@ -53,9 +63,7 @@ class RecentlyClosedItemViewHolder(
                 HistoryItemMenu.Item.OpenInPrivateTab -> recentlyClosedFragmentInteractor.onOpenInPrivateTab(
                     item
                 )
-                HistoryItemMenu.Item.Delete -> recentlyClosedFragmentInteractor.onDeleteOne(
-                    item
-                )
+                HistoryItemMenu.Item.Delete -> recentlyClosedFragmentInteractor.onDelete(item)
             }
         }
 

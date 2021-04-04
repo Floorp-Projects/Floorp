@@ -24,13 +24,19 @@ class RecentlyClosedFragmentStore(initialState: RecentlyClosedFragmentState) :
  */
 sealed class RecentlyClosedFragmentAction : Action {
     data class Change(val list: List<RecoverableTab>) : RecentlyClosedFragmentAction()
+    data class Select(val tab: RecoverableTab) : RecentlyClosedFragmentAction()
+    data class Deselect(val tab: RecoverableTab) : RecentlyClosedFragmentAction()
+    object DeselectAll : RecentlyClosedFragmentAction()
 }
 
 /**
  * The state for the Recently Closed Screen
  * @property items List of recently closed tabs to display
  */
-data class RecentlyClosedFragmentState(val items: List<RecoverableTab> = emptyList()) : State
+data class RecentlyClosedFragmentState(
+    val items: List<RecoverableTab> = emptyList(),
+    val selectedTabs: Set<RecoverableTab>
+) : State
 
 /**
  * The RecentlyClosedFragmentState Reducer.
@@ -41,5 +47,12 @@ private fun recentlyClosedStateReducer(
 ): RecentlyClosedFragmentState {
     return when (action) {
         is RecentlyClosedFragmentAction.Change -> state.copy(items = action.list)
+        is RecentlyClosedFragmentAction.Select -> {
+            state.copy(selectedTabs = state.selectedTabs + action.tab)
+        }
+        is RecentlyClosedFragmentAction.Deselect -> {
+            state.copy(selectedTabs = state.selectedTabs - action.tab)
+        }
+        RecentlyClosedFragmentAction.DeselectAll -> state.copy(selectedTabs = emptySet())
     }
 }

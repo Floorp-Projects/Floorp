@@ -21,18 +21,27 @@ import org.mozilla.fenix.browser.browsingmode.BrowsingMode
 import org.mozilla.fenix.components.FenixSnackbar
 import org.mozilla.fenix.ext.navigateBlockingForAsyncNavGraph
 
+@Suppress("TooManyFunctions")
 interface RecentlyClosedController {
-    fun handleOpen(item: RecoverableTab, mode: BrowsingMode? = null)
-    fun handleDeleteOne(tab: RecoverableTab)
+    fun handleOpen(tab: RecoverableTab, mode: BrowsingMode? = null)
+    fun handleOpen(tabs: Set<RecoverableTab>, mode: BrowsingMode? = null)
+    fun handleDelete(tab: RecoverableTab)
+    fun handleDelete(tabs: Set<RecoverableTab>)
     fun handleCopyUrl(item: RecoverableTab)
-    fun handleShare(item: RecoverableTab)
+    fun handleShare(tab: RecoverableTab)
+    fun handleShare(tabs: Set<RecoverableTab>)
     fun handleNavigateToHistory()
     fun handleRestore(item: RecoverableTab)
+    fun handleSelect(tab: RecoverableTab)
+    fun handleDeselect(tab: RecoverableTab)
+    fun handleBackPressed(): Boolean
 }
 
+@Suppress("TooManyFunctions")
 class DefaultRecentlyClosedController(
     private val navController: NavController,
-    private val store: BrowserStore,
+    private val browserStore: BrowserStore,
+    private val recentlyClosedStore: RecentlyClosedFragmentStore,
     private val tabsUseCases: TabsUseCases,
     private val resources: Resources,
     private val snackbar: FenixSnackbar,
@@ -40,12 +49,30 @@ class DefaultRecentlyClosedController(
     private val activity: HomeActivity,
     private val openToBrowser: (item: RecoverableTab, mode: BrowsingMode?) -> Unit
 ) : RecentlyClosedController {
-    override fun handleOpen(item: RecoverableTab, mode: BrowsingMode?) {
-        openToBrowser(item, mode)
+    override fun handleOpen(tab: RecoverableTab, mode: BrowsingMode?) {
+        openToBrowser(tab, mode)
     }
 
-    override fun handleDeleteOne(tab: RecoverableTab) {
-        store.dispatch(RecentlyClosedAction.RemoveClosedTabAction(tab))
+    override fun handleOpen(tabs: Set<RecoverableTab>, mode: BrowsingMode?) {
+        recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.DeselectAll)
+        tabs.forEach { tab -> handleOpen(tab, mode) }
+    }
+
+    override fun handleSelect(tab: RecoverableTab) {
+        recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.Select(tab))
+    }
+
+    override fun handleDeselect(tab: RecoverableTab) {
+        recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.Deselect(tab))
+    }
+
+    override fun handleDelete(tab: RecoverableTab) {
+        browserStore.dispatch(RecentlyClosedAction.RemoveClosedTabAction(tab))
+    }
+
+    override fun handleDelete(tabs: Set<RecoverableTab>) {
+        recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.DeselectAll)
+        tabs.forEach { tab -> handleDelete(tab) }
     }
 
     override fun handleNavigateToHistory() {
@@ -64,10 +91,13 @@ class DefaultRecentlyClosedController(
         }
     }
 
-    override fun handleShare(item: RecoverableTab) {
+    override fun handleShare(tab: RecoverableTab) = handleShare(setOf(tab))
+
+    override fun handleShare(tabs: Set<RecoverableTab>) {
+        val shareData = tabs.map { ShareData(url = it.url, title = it.title) }
         navController.navigateBlockingForAsyncNavGraph(
             RecentlyClosedFragmentDirections.actionGlobalShareFragment(
-                data = arrayOf(ShareData(url = item.url, title = item.title))
+                data = shareData.toTypedArray()
             )
         )
     }
@@ -75,12 +105,21 @@ class DefaultRecentlyClosedController(
     override fun handleRestore(item: RecoverableTab) {
         tabsUseCases.restore(item)
 
-        store.dispatch(
+        browserStore.dispatch(
             RecentlyClosedAction.RemoveClosedTabAction(item)
         )
 
         activity.openToBrowser(
             from = BrowserDirection.FromRecentlyClosed
         )
+    }
+
+    override fun handleBackPressed(): Boolean {
+        return if (recentlyClosedStore.state.selectedTabs.isNotEmpty()) {
+            recentlyClosedStore.dispatch(RecentlyClosedFragmentAction.DeselectAll)
+            true
+        } else {
+            false
+        }
     }
 }
