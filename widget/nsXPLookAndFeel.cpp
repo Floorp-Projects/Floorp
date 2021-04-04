@@ -913,7 +913,7 @@ static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
   return false;
 }
 
-static LookAndFeel::ColorScheme ColorSchemeForDocument(
+LookAndFeel::ColorScheme LookAndFeel::ColorSchemeForDocument(
     const dom::Document& aDoc) {
 #ifdef XP_MACOSX
   if (nsContentUtils::IsChromeDoc(&aDoc) &&
