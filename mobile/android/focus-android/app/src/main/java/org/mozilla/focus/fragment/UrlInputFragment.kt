@@ -182,7 +182,7 @@ class UrlInputFragment :
                 .replace(searchViewContainer.id, SearchSuggestionsFragment.create())
                 .commit()
 
-        searchSuggestionsViewModel.selectedSearchSuggestion.observe(this, Observer {
+        searchSuggestionsViewModel.selectedSearchSuggestion.observe(viewLifecycleOwner, Observer {
             val isSuggestion = searchSuggestionsViewModel.searchQuery.value != it
             it?.let {
                 if (searchSuggestionsViewModel.alwaysSearch) {

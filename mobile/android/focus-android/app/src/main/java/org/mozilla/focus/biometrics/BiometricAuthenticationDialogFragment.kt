@@ -58,9 +58,9 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
         this.isCancelable = true
         biometricDialog?.setCanceledOnTouchOutside(false)
         biometricDialog?.setTitle(
-            context!!.getString(
+            requireContext().getString(
                 R.string.biometric_auth_title,
-                context!!.getString(R.string.app_name)
+                requireContext().getString(R.string.app_name)
             )
         )
 
@@ -119,7 +119,7 @@ class BiometricAuthenticationDialogFragment : AppCompatDialogFragment(), Lifecyc
     }
 
     fun onFailure() {
-        displayError(context!!.getString(R.string.biometric_auth_not_recognized_error))
+        displayError(requireContext().getString(R.string.biometric_auth_not_recognized_error))
     }
 
     fun updateNewSessionButton() {

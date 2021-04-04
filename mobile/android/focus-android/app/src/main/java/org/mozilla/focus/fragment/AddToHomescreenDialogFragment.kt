@@ -28,12 +28,12 @@ class AddToHomescreenDialogFragment : DialogFragment() {
 
     @Suppress("LongMethod")
     override fun onCreateDialog(bundle: Bundle?): AlertDialog {
-        val url = arguments!!.getString(URL)
-        val title = arguments!!.getString(TITLE)
-        val blockingEnabled = arguments!!.getBoolean(BLOCKING_ENABLED)
-        val requestDesktop = arguments!!.getBoolean(REQUEST_DESKTOP)
+        val url = requireArguments().getString(URL)
+        val title = requireArguments().getString(TITLE)
+        val blockingEnabled = requireArguments().getBoolean(BLOCKING_ENABLED)
+        val requestDesktop = requireArguments().getBoolean(REQUEST_DESKTOP)
 
-        val builder = AlertDialog.Builder(activity!!, R.style.DialogStyle)
+        val builder = AlertDialog.Builder(requireActivity(), R.style.DialogStyle)
         builder.setCancelable(true)
         builder.setTitle(requireActivity().getString(R.string.menu_add_to_home_screen))
 
@@ -44,7 +44,7 @@ class AddToHomescreenDialogFragment : DialogFragment() {
         // For the dialog we display the Pre Oreo version of the icon because the Oreo+
         // adaptive launcher icon does not have a mask applied until we create the shortcut
         val iconBitmap = IconGenerator.generateLauncherIconPreOreo(
-            context!!,
+            requireContext(),
             IconGenerator.getRepresentativeCharacter(url)
         )
         val iconView = dialogView.findViewById<ImageView>(R.id.homescreen_icon)
@@ -76,7 +76,7 @@ class AddToHomescreenDialogFragment : DialogFragment() {
         addToHomescreenDialogConfirmButton.setOnClickListener {
             HomeScreen.installShortCut(
                 context,
-                IconGenerator.generateLauncherIcon(context!!, url),
+                IconGenerator.generateLauncherIcon(requireContext(), url),
                 url,
                 editableTitle.text.toString().trim { it <= ' ' },
                 blockingEnabled,
@@ -85,7 +85,7 @@ class AddToHomescreenDialogFragment : DialogFragment() {
             TelemetryWrapper.addToHomescreenShortcutEvent()
             PreferenceManager.getDefaultSharedPreferences(context).edit()
                 .putBoolean(
-                    context!!.getString(R.string.has_added_to_home_screen),
+                    requireContext().getString(R.string.has_added_to_home_screen),
                     true
                 ).apply()
             dismiss()

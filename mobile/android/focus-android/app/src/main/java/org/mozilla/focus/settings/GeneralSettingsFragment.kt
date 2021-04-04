@@ -84,7 +84,7 @@ class GeneralSettingsFragment : BaseSettingsFragment(),
 
             // Manually notify SettingsActivity of locale changes (in most other cases activities
             // will detect changes in onActivityResult(), but that doesn't apply to SettingsActivity).
-            requireActivity().onConfigurationChanged(activity!!.resources.configuration)
+            requireActivity().onConfigurationChanged(requireActivity().resources.configuration)
 
             // And ensure that the calling LocaleAware*Activity knows that the locale changed:
             requireActivity().setResult(SettingsActivity.ACTIVITY_RESULT_LOCALE_CHANGED)

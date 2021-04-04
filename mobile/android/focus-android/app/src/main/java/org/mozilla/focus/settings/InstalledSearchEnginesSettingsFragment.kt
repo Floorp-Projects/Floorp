@@ -45,7 +45,7 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
     override fun onPrepareOptionsMenu(menu: Menu) {
         super.onPrepareOptionsMenu(menu)
         menu.findItem(R.id.menu_restore_default_engines)?.let {
-            it.isEnabled = !CustomSearchEngineStore.hasAllDefaultSearchEngines(activity!!)
+            it.isEnabled = !CustomSearchEngineStore.hasAllDefaultSearchEngines(requireActivity())
         }
     }
 
@@ -65,7 +65,7 @@ class InstalledSearchEnginesSettingsFragment : BaseSettingsFragment() {
     }
 
     private fun restoreSearchEngines() {
-        CustomSearchEngineStore.restoreDefaultSearchEngines(activity!!)
+        CustomSearchEngineStore.restoreDefaultSearchEngines(requireActivity())
         refetchSearchEngines()
         TelemetryWrapper.menuRestoreEnginesEvent()
         languageChanged = false

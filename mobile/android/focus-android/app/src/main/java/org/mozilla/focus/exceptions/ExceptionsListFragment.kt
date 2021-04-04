@@ -135,7 +135,7 @@ open class ExceptionsListFragment : Fragment(), CoroutineScope {
             updateIcon(R.drawable.ic_back)
         }
 
-        (exceptionList.adapter as DomainListAdapter).refresh(activity!!) {
+        (exceptionList.adapter as DomainListAdapter).refresh(requireActivity()) {
             if ((exceptionList.adapter as DomainListAdapter).itemCount == 0) {
                 @Suppress("DEPRECATION")
                 requireFragmentManager().popBackStack()

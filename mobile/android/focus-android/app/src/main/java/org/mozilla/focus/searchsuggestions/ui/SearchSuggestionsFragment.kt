@@ -51,7 +51,9 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        searchSuggestionsViewModel = ViewModelProviders.of(parentFragment!!).get(SearchSuggestionsViewModel::class.java)
+        searchSuggestionsViewModel = ViewModelProviders
+            .of(requireParentFragment())
+            .get(SearchSuggestionsViewModel::class.java)
     }
 
     override fun onResume() {
@@ -72,18 +74,18 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
 
-        searchSuggestionsViewModel.searchQuery.observe(this, Observer {
+        searchSuggestionsViewModel.searchQuery.observe(viewLifecycleOwner, Observer {
             searchView.text = it
-            searchView.contentDescription = context!!.getString(R.string.search_hint, it)
+            searchView.contentDescription = requireContext().getString(R.string.search_hint, it)
         })
 
-        searchSuggestionsViewModel.suggestions.observe(this, Observer { suggestions ->
+        searchSuggestionsViewModel.suggestions.observe(viewLifecycleOwner, Observer { suggestions ->
             launch(IO) {
                 suggestions?.apply { (suggestionList.adapter as SuggestionsAdapter).refresh(this) }
             }
         })
 
-        searchSuggestionsViewModel.state.observe(this, Observer { state ->
+        searchSuggestionsViewModel.state.observe(viewLifecycleOwner, Observer { state ->
             enable_search_suggestions_container.visibility = View.GONE
             no_suggestions_container.visibility = View.GONE
             suggestionList.visibility = View.GONE
@@ -174,7 +176,7 @@ class SearchSuggestionsFragment : Fragment(), CoroutineScope {
 
         spannable.setSpan(learnMoreSpan, startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
         val color = ForegroundColorSpan(
-                ContextCompat.getColor(context!!, R.color.searchSuggestionPromptButtonTextColor))
+                ContextCompat.getColor(requireContext(), R.color.searchSuggestionPromptButtonTextColor))
         spannable.setSpan(color, startIndex, endIndex, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
 
         return spannable

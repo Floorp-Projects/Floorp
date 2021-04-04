@@ -653,7 +653,7 @@ class BrowserFragment :
             }
 
             biometricController = null
-            view!!.alpha = 1f
+            requireView().alpha = 1f
         }
     }
 
@@ -663,7 +663,7 @@ class BrowserFragment :
 
         // Check that we need to auth and that the fragment isn't already displayed
         if (biometricController!!.needsAuth || openedFromExternalLink) {
-            view!!.alpha = 0f
+            requireView().alpha = 0f
             biometricController!!.startAuthentication(openedFromExternalLink)
             openedFromExternalLink = false
 
@@ -683,7 +683,7 @@ class BrowserFragment :
                 // allowed after that anymore.
             }
         } else {
-            view!!.alpha = 1f
+            requireView().alpha = 1f
         }
     }
 

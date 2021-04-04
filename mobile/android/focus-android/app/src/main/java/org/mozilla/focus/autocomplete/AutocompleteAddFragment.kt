@@ -77,7 +77,7 @@ class AutocompleteAddFragment : Fragment(), CoroutineScope {
                     .toLowerCase()
 
             launch(IO) {
-                val domains = CustomDomains.load(activity!!)
+                val domains = CustomDomains.load(requireActivity())
                 val error = when {
                     domain.isEmpty() -> getString(R.string.preference_autocomplete_add_error)
                     domains.contains(domain) -> getString(R.string.preference_autocomplete_duplicate_url_error)
@@ -88,7 +88,7 @@ class AutocompleteAddFragment : Fragment(), CoroutineScope {
                     if (error != null) {
                         domainView.error = error
                     } else {
-                        saveDomainAndClose(activity!!.applicationContext, domain)
+                        saveDomainAndClose(requireActivity().applicationContext, domain)
                     }
                 }
             }

@@ -24,7 +24,7 @@ class ExceptionsRemoveFragment : ExceptionsListFragment() {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean = when (item.itemId) {
         R.id.remove -> {
-            removeSelectedDomains(activity!!.applicationContext)
+            removeSelectedDomains(requireActivity().applicationContext)
             true
         }
         else -> super.onOptionsItemSelected(item)

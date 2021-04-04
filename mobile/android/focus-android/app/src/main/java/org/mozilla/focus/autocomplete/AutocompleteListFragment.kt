@@ -140,7 +140,7 @@ open class AutocompleteListFragment : Fragment(), CoroutineScope {
             updateIcon(R.drawable.ic_back)
         }
 
-        (domainList.adapter as DomainListAdapter).refresh(activity!!) {
+        (domainList.adapter as DomainListAdapter).refresh(requireActivity()) {
             activity?.invalidateOptionsMenu()
         }
     }
